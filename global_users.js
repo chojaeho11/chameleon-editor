@@ -10,15 +10,17 @@ let currentMemberPage = 1;
 const memberItemsPerPage = 30; // 한 페이지당 30명
 
 // [회원 목록 로드] - 원상복구
-window.loadMembers = async (isNewSearch = false) => { 
+window.loadMembers = async (isNewSearch = false) => {
     if(isNewSearch) currentMemberPage = 1;
 
     const keyword = document.getElementById('memberSearchInput') ? document.getElementById('memberSearchInput').value.trim() : '';
     const sortVal = document.getElementById('memberSort').value;
     const roleVal = document.getElementById('memberFilterRole').value;
-    const tbody = document.getElementById('memberListBody'); 
-    
+    const tbody = document.getElementById('memberListBody');
+
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
+
+    try {
     
     let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at', { count: 'exact' });
     if (roleVal !== 'all') query = query.eq('role', roleVal);
@@ -40,7 +42,13 @@ window.loadMembers = async (isNewSearch = false) => {
 
     const from = (currentMemberPage - 1) * memberItemsPerPage;
     const to = from + memberItemsPerPage - 1;
-    const { data: members, count } = await query.range(from, to);
+    const { data: members, count, error } = await query.range(from, to);
+
+    if (error) {
+        console.error('회원 목록 로드 오류:', error);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#ef4444;">로딩 오류: ' + error.message + '<br><button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="loadMembers()">다시 시도</button></td></tr>';
+        return;
+    }
 
     document.getElementById('totalMemberCount').innerText = `${(count||0).toLocaleString()}명`;
     const totalPages = Math.ceil((count||0) / memberItemsPerPage) || 1;
@@ -125,6 +133,11 @@ window.loadMembers = async (isNewSearch = false) => {
             </tr>
         `;
     });
+
+    } catch(e) {
+        console.error('회원 목록 로드 예외:', e);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#ef4444;">로딩 오류: ' + (e.message||e) + '<br><button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="loadMembers()">다시 시도</button></td></tr>';
+    }
 };
 
 // [페이지 변경 함수]

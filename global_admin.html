@@ -193,7 +193,7 @@
             <li class="nav-item active" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
                 <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
             </li>
-            <li class="nav-item" onclick="location.href='order_management.html'" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 🛒 통합 주문 관리</li>
+            <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 🛒 통합 주문 관리</li>
             <li class="nav-item" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
@@ -201,7 +201,7 @@
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
 
             <div class="nav-label">Marketing</div>
-            <li class="nav-item" onclick="location.href='marketing_bot.html'" style="color:#a78bfa;"><i class="fa-solid fa-robot" style="color:#a78bfa;"></i> 🤖 마케팅 봇</li>
+            <li class="nav-item" onclick="window.open('marketing_bot.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-robot" style="color:#a78bfa;"></i> 🤖 마케팅 봇</li>
 
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
@@ -2965,13 +2965,19 @@ async function saveCommonInfo() {
     }
     setTimeout(updateNotifyUI, 200);
 
+    // ── Realtime 재연결 관리 ──
+    var _rtRetryRoom = 0;
+    var _rtRetryMsg = 0;
+    var _rtMaxRetry = 30000; // 최대 30초 대기
+    function rtDelay(count) { return Math.min(3000 * Math.pow(1.5, count), _rtMaxRetry); }
+
     // ── 전역 구독: chat_rooms (새 방 / 상태 변경) ──
     function startGlobalRoomWatch() {
         var sb = getSb();
         if (!sb) { console.log('⏳ [알림] sb 미준비(room), 2초 후 재시도'); setTimeout(startGlobalRoomWatch, 2000); return; }
-        if (globalRoomSub) { globalRoomSub.unsubscribe(); }
+        if (globalRoomSub) { try { globalRoomSub.unsubscribe(); } catch(e){} globalRoomSub = null; }
         console.log('✅ [알림] startGlobalRoomWatch 구독 시작');
-        globalRoomSub = sb.channel('global-room-watch')
+        globalRoomSub = sb.channel('global-room-watch-' + Date.now())
             .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_rooms'}, function(p) {
                 var rm = p.new;
                 console.log('📨 [알림] chat_rooms INSERT:', rm.customer_name, rm.status);
@@ -3005,17 +3011,25 @@ async function saveCommonInfo() {
             })
             .subscribe(function(status) {
                 console.log('📡 [알림] global-room-watch 상태:', status);
+                if (status === 'SUBSCRIBED') { _rtRetryRoom = 0; }
+                else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    var delay = rtDelay(_rtRetryRoom++);
+                    console.warn('⚠️ [알림] room-watch 오류, ' + delay + 'ms 후 재연결 (시도 ' + _rtRetryRoom + ')');
+                    try { globalRoomSub.unsubscribe(); } catch(e){}
+                    globalRoomSub = null;
+                    setTimeout(startGlobalRoomWatch, delay);
+                }
             });
     }
     setTimeout(startGlobalRoomWatch, 1500);
 
     // ── 전역 구독: chat_messages (모든 고객 메시지 알림) ──
     function startMessageWatch() {
-        if (_msgSubChannel) return;
         var sb = getSb();
         if (!sb) { console.log('⏳ [알림] sb 미준비, 2초 후 재시도'); setTimeout(startMessageWatch, 2000); return; }
+        if (_msgSubChannel) { try { _msgSubChannel.unsubscribe(); } catch(e){} _msgSubChannel = null; }
         console.log('✅ [알림] startMessageWatch 구독 시작');
-        _msgSubChannel = sb.channel('global-msg-watch')
+        _msgSubChannel = sb.channel('global-msg-watch-' + Date.now())
             .on('postgres_changes', {event:'INSERT', schema:'public', table:'chat_messages'}, async function(p) {
                 var msg = p.new;
                 console.log('📨 [알림] chat_messages INSERT 수신:', msg.sender_type, msg.message ? msg.message.substring(0,20) : '(파일)');
@@ -3052,13 +3066,29 @@ async function saveCommonInfo() {
             })
             .subscribe(function(status) {
                 console.log('📡 [알림] global-msg-watch 상태:', status);
+                if (status === 'SUBSCRIBED') { _rtRetryMsg = 0; }
+                else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    var delay = rtDelay(_rtRetryMsg++);
+                    console.warn('⚠️ [알림] msg-watch 오류, ' + delay + 'ms 후 재연결 (시도 ' + _rtRetryMsg + ')');
+                    try { _msgSubChannel.unsubscribe(); } catch(e){}
+                    _msgSubChannel = null;
+                    setTimeout(startMessageWatch, delay);
+                }
             });
     }
     function stopMessageWatch() {
-        if (_msgSubChannel) { _msgSubChannel.unsubscribe(); _msgSubChannel = null; }
+        if (_msgSubChannel) { try { _msgSubChannel.unsubscribe(); } catch(e){} _msgSubChannel = null; }
     }
     // ★ 항상 메시지 감시 시작 (알림 설정과 무관)
     setTimeout(startMessageWatch, 2000);
+    // ★ 탭 복귀 시 구독 상태 확인 및 재연결
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            console.log('👁️ [알림] 탭 복귀 — 구독 상태 점검');
+            if (!globalRoomSub) startGlobalRoomWatch();
+            if (!_msgSubChannel) startMessageWatch();
+        }
+    });
     // ★ 브라우저 알림 권한 항상 요청
     if ('Notification' in window && Notification.permission === 'default') {
         setTimeout(function() { Notification.requestPermission(); }, 3000);
@@ -3096,6 +3126,7 @@ async function saveCommonInfo() {
 
     window.lcLoadRooms = async function() {
         var sb=getSb(); if(!sb) return;
+        try {
         var q = sb.from('chat_rooms').select('*').order('created_at',{ascending:false}).limit(50);
         if (currentFilter === 'ai_chatting') {
             q = q.eq('status', 'ai_chatting');
@@ -3103,6 +3134,7 @@ async function saveCommonInfo() {
             q = q.eq('status', currentFilter);
         }
         var r = await q;
+        if (r.error) { console.error('채팅방 로드 오류:', r.error); document.getElementById('lcRoomList').innerHTML='<div style="text-align:center;color:#ef4444;padding:20px;">로딩 오류<br><button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="lcLoadRooms()">다시 시도</button></div>'; return; }
         // 매니저 이름 필터 적용
         var filterMgr = myManagerName || '';
         if (filterMgr && filterMgr !== '' && r.data) {
@@ -3176,6 +3208,7 @@ async function saveCommonInfo() {
             if(rm.ai_summary) h+='<div style="font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px;">🤖 '+rm.ai_summary.substring(0,50)+'</div>';
             h+='</div>';
         }); list.innerHTML=h;
+        } catch(e) { console.error('채팅방 로드 예외:', e); }
     };
 
     // ══════════════════════════════════════
@@ -3442,7 +3475,14 @@ async function saveCommonInfo() {
             }
             // 메시지 수신 시 방 목록 순서 갱신
             lcLoadRooms();
-        }).subscribe();
+        }).subscribe(function(status) {
+            console.log('📡 [채팅] room-' + roomId + ' 상태:', status);
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                console.warn('⚠️ [채팅] room 구독 오류, 3초 후 재구독');
+                if(subscription){try{subscription.unsubscribe();}catch(e){}subscription=null;}
+                setTimeout(function(){ if(currentRoom && currentRoom.id===roomId) lcSelectRoom(roomId); }, 3000);
+            }
+        });
         lcLoadRooms();
     };
     function renderMsg(m){
