@@ -2522,15 +2522,16 @@ async function saveCommonInfo() {
         if (myManagerName && assignedMgr === myManagerName) return (notifyMgr || notifyAll);
         return false;
     }
-    // ── 사운드+토스트는 항상 울릴지 판단 ──
+    // ── 알림을 울릴지 판단 (토글 상태 반영) ──
     function shouldAlwaysAlert(assignedMgr) {
-        // 미배정 → 항상 알림 (누군가 응답해야)
-        if (!assignedMgr) return true;
-        // 내 담당 → 항상 알림
-        if (myManagerName && assignedMgr === myManagerName) return true;
-        // 매니저 미선택 → 전체 알림
-        if (!myManagerName) return true;
-        return false;
+        // 둘 다 OFF → 알림 없음
+        if (!notifyAll && !notifyMgr) return false;
+        // 미배정 고객 → 일반유입(notifyAll) ON일 때만
+        if (!assignedMgr) return notifyAll;
+        // 내 담당 고객 → 내담당(notifyMgr) 또는 일반유입(notifyAll) ON일 때
+        if (myManagerName && assignedMgr === myManagerName) return (notifyMgr || notifyAll);
+        // 다른 담당자 고객 → 일반유입(notifyAll) ON일 때만
+        return notifyAll;
     }
 
     // ── 강화된 알림음: 고객 메시지 (카카오톡 스타일 3연타) ──
@@ -2716,6 +2717,11 @@ async function saveCommonInfo() {
     function startRepeatAlarm() {
         if (_repeatAlarmTimer) return;
         _repeatAlarmTimer = setInterval(function() {
+            // 알림 토글 OFF면 반복 알람 중지
+            if (!notifyAll && !notifyMgr) {
+                stopRepeatAlarm();
+                return;
+            }
             // 채팅 섹션을 보고 있으면 알람 중지
             var chatSec = document.getElementById('sec-live-chat');
             if (chatSec && chatSec.classList.contains('active') && !document.hidden) {
@@ -2826,16 +2832,14 @@ async function saveCommonInfo() {
             // 새 미확인 발생 시 또는 계속 미확인이 있으면 알림
             // ★ 알림 토글이 OFF이면 사운드/토스트 발생 안 함
             if (myUnread > 0) {
-                if (!isChatActive) {
-                    if (notifyAll || notifyMgr) {
-                        // 새 미확인 증가 시 강한 알림
-                        if (myUnread > _lastUnreadTotal) {
-                            playKakaoSound();
-                            showChatToast('📬 미확인 메시지 ' + myUnread + '건', '확인하지 않은 고객 메시지가 있습니다', true);
-                        } else {
-                            // 계속 미확인 → 부드러운 반복 알림
-                            playRepeatAlarm();
-                        }
+                if (!isChatActive && (notifyAll || notifyMgr)) {
+                    // 새 미확인 증가 시 강한 알림
+                    if (myUnread > _lastUnreadTotal) {
+                        playKakaoSound();
+                        showChatToast('📬 미확인 메시지 ' + myUnread + '건', '확인하지 않은 고객 메시지가 있습니다', true);
+                    } else {
+                        // 계속 미확인 → 부드러운 반복 알림
+                        playRepeatAlarm();
                     }
                     flashTitle('미확인 메시지 ' + myUnread + '건');
                 }
@@ -2857,7 +2861,7 @@ async function saveCommonInfo() {
     }
     setTimeout(startUnreadPolling, 3000); // 페이지 로드 3초 후 시작
 
-    // ── 통합 알림 발송 v4 — 사운드+토스트는 항상, TTS/데스크톱은 필터 ──
+    // ── 통합 알림 발송 v5 — 토글 OFF면 모든 알림 없음 ──
     function sendNotification(title, body, ttsText, assignedMgr, isUrgent, roomId) {
         console.log('🔔 [sendNotification] 호출:', title, '| mgr:', assignedMgr, '| urgent:', isUrgent);
         var now = Date.now();
@@ -2868,19 +2872,20 @@ async function saveCommonInfo() {
         }
         _lastAlarmTime = now;
 
-        // ★ 사운드+토스트는 항상 (관련 고객이면)
+        // ★ 토글 상태 확인 — 둘 다 OFF면 모든 알림 스킵
         var alert = shouldAlwaysAlert(assignedMgr);
-        console.log('🔔 [sendNotification] shouldAlwaysAlert:', alert, '| myName:', myManagerName);
-        if (alert) {
-            try { if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); } } catch(e) { console.error('사운드 에러:', e); }
-            try { showChatToast(title, body, isUrgent, roomId); } catch(e) { console.error('토스트 에러:', e); }
-            try { flashTitle(title); } catch(e) { console.error('타이틀 에러:', e); }
-            try { updateUnreadBadge(1); } catch(e) { console.error('배지 에러:', e); }
-            try { startRepeatAlarm(); } catch(e) { console.error('반복알람 에러:', e); }
-        }
+        console.log('🔔 [sendNotification] shouldAlert:', alert, '| notifyAll:', notifyAll, '| notifyMgr:', notifyMgr);
+        if (!alert) return;
 
-        // TTS + 데스크톱 알림 = 토글 ON일 때만
-        if ((notifyAll || notifyMgr) && isMyNotification(assignedMgr)) {
+        // 사운드 + 토스트 + 배지
+        try { if (isUrgent) { playNewChatSound(); } else { playKakaoSound(); } } catch(e) { console.error('사운드 에러:', e); }
+        try { showChatToast(title, body, isUrgent, roomId); } catch(e) { console.error('토스트 에러:', e); }
+        try { flashTitle(title); } catch(e) { console.error('타이틀 에러:', e); }
+        try { updateUnreadBadge(1); } catch(e) { console.error('배지 에러:', e); }
+        try { startRepeatAlarm(); } catch(e) { console.error('반복알람 에러:', e); }
+
+        // TTS + 데스크톱 알림
+        if (isMyNotification(assignedMgr)) {
             if (ttsText) speakTTS(ttsText);
             showDesktopNotify(title, body);
         }
@@ -2904,6 +2909,8 @@ async function saveCommonInfo() {
         } else {
             notifyAll = false; localStorage.setItem('lcNotifyAll', 'off');
             updateNotifyUI();
+            // 둘 다 OFF면 반복알람 중지
+            if (!notifyAll && !notifyMgr) stopRepeatAlarm();
         }
     };
 
@@ -2918,6 +2925,8 @@ async function saveCommonInfo() {
         } else {
             notifyMgr = false; localStorage.setItem('lcNotifyMgr', 'off');
             updateNotifyUI();
+            // 둘 다 OFF면 반복알람 중지
+            if (!notifyAll && !notifyMgr) stopRepeatAlarm();
         }
     };
 
@@ -3425,8 +3434,10 @@ async function saveCommonInfo() {
             }
             if(m.sender_type==='customer') {
                 sb.from('chat_messages').update({is_read:true}).eq('id',m.id).then(function(){});
-                // ★ 항상 알림음 재생 (현재 방 메시지)
-                playKakaoSound();
+                // 알림 토글 ON일 때만 소리 재생
+                if (notifyAll || notifyMgr) {
+                    playKakaoSound();
+                }
                 if(document.hidden) flashTitle('💬 새 메시지');
             }
             // 메시지 수신 시 방 목록 순서 갱신
