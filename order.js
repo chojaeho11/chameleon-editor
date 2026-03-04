@@ -1016,7 +1016,7 @@ async function addCanvasToCart() {
     // 상품 정보 복구 로직
     if (!product || (product.is_custom_size && product.price === 0)) {
         try {
-            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, addons, category').eq('code', key).maybeSingle();
+            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, addons, category, is_file_upload, is_custom_size').eq('code', key).maybeSingle();
             
             if (prodData) {
                 const scaleFactor = 3.7795;
@@ -1197,6 +1197,7 @@ async function addCanvasToCart() {
         category: product.category || '',
         addons: product.addons || [],
         is_custom_size: product.is_custom_size || false,
+        is_file_upload: product.is_file_upload || false,
         _calculated_price: product._calculated_price || false,
         _base_sqm_price: product._base_sqm_price || 0,
         partner_id: product.partner_id || null
@@ -1228,9 +1229,13 @@ async function addCanvasToCart() {
     } else if (window.__paperDisplayData) {
         calcProduct.is_custom = true;
         calcProduct._calculated_price = true;
+    // ★ 사이즈고정상품: 고정단가 유지 (면적 재계산 안함)
+    } else if (product.is_file_upload) {
+        calcProduct._calculated_price = true;
+        calcProduct.is_custom_size = true;
     } else if (product.is_custom_size) {
         // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지
-        if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || 0) - currentMmW) < 5) {
+        if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || product.width_mm || 0) - currentMmW) < 5) {
         } else {
             // 제품 실제 회배 단가(price)로 면적 계산
             const sqmPrice = product._base_sqm_price || product.price || 50000;

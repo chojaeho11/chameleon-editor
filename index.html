@@ -6729,15 +6729,20 @@ window.showChoiceModal = async function(key) {
                     </div>
                 </div>
             </div>
-            <div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
+            ${isFixedSize ? `<div data-npc="size" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:10px; text-align:center;">
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📐 ${lang==='ja'?'製品サイズ':lang==='zh'?'产品尺寸':lang==='ar'?'حجم المنتج':lang==='es'?'Tamaño':lang==='de'?'Größe':lang==='fr'?'Taille':lang==='en'?'Product Size':'제품사이즈'}</div>
+                <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${product.width_mm || 0}<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>${product.height_mm || 0}<span style="font-size:13px; color:#64748b; margin-left:4px;">mm</span></div>
+                <input type="hidden" id="inputCustW" value="${product.width_mm || 0}">
+                <input type="hidden" id="inputCustH" value="${product.height_mm || 0}">
+            </div>` : `<div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
                 <div style="display:flex; gap:5px;">
                     <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('w'); window.calcCustomPrice(); window.updateModalTotal();">
                     <span style="display:flex; align-items:center; color:#999;">x</span>
                     <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
-                <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\'IA vérifiera le fichier et calculera l\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
-            </div>`;
+                <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\\\'IA vérifiera le fichier et calculera l\\\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
+            </div>`}`;
     } else {
         // 대량 주문제작상품: 수량 드롭다운 / 일반: +/- 수량 버튼
         const isBulk = product.is_bulk_order && product.quantity_options && product.quantity_options.length > 0;
@@ -6819,6 +6824,13 @@ window.showChoiceModal = async function(key) {
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
 
+    // ★ 사이즈고정상품: 즉시 가격 표시 (sqm 계산 없이 고정단가)
+    if (isFixedSize) {
+        setTimeout(() => {
+            if (window.calcCustomPrice) window.calcCustomPrice();
+            if (window.updateModalTotal) window.updateModalTotal();
+        }, 50);
+    }
 
     // ★ 상품 설명 내 링크 → 새 탭으로 열기 (페이지 이탈 방지)
     modal.querySelectorAll('.product-detail-render a, .choice-left-content a').forEach(a => {
@@ -7107,11 +7119,22 @@ window.updateModalTotal = function() {
             return Math.floor(val).toLocaleString() + '원';
         };
 
+        // ★ 사이즈고정상품: 면적 계산 없이 고정 단가 사용
+        if (product.is_file_upload) {
+            const fixedPrice = unitPrice * qty;
+            if (priceDisplay) {
+                priceDisplay.innerText = formatValue(fixedPrice);
+                priceDisplay.dataset.rawPrice = fixedPrice;
+            }
+            if (sizeDisplay) sizeDisplay.innerText = `${product.width_mm || 0}mm x ${product.height_mm || 0}mm`;
+            return;
+        }
+
         // [수정] 키링(3cm~5cm)도 입력되도록 100을 30으로 변경
 if (w >= 20 && h >= 20) {
             // 1. 면적 계산 (㎡)
             const area = (w * h) / 1000000;
-            
+
             // 2. 단가 계산
             let pricePerItem = area * unitPrice;
             const MIN_PRICE = 2000;
@@ -7179,19 +7202,27 @@ if (w >= 20 && h >= 20) {
 
         // 커스텀 모드일 경우 재계산
         if (window.isCustomModeCurrent) {
-            finalW = parseInt(document.getElementById('inputCustW').value || 0);
-            finalH = parseInt(document.getElementById('inputCustH').value || 0);
             finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
-            
-            if (mode !== 'upload' && (finalW < 20 || finalH < 20)) { showToast(lang==='ja'?'先にサイズを入力してください。':lang==='zh'?'请先输入尺寸。':lang==='ar'?'يرجى إدخال الحجم أولاً.':lang==='es'?'Por favor, ingrese el tamaño primero.':lang==='de'?'Bitte geben Sie zuerst die Größe ein.':lang==='fr'?'Veuillez d\'abord saisir la taille.':lang==='en'?'Please enter the size first.':'먼저 사이즈를 입력해 주세요.', 'warn'); return; }
-            
-            const area = (finalW * finalH) / 1000000;
-            let rawPrice = area * unitPrice;
 
-            if (lang === 'kr') {
-                finalPricePerItem = Math.floor(rawPrice / 10) * 10;
+            // ★ 사이즈고정상품: DB 사이즈 + 고정단가 사용 (회배계산X)
+            if (product.is_file_upload) {
+                finalW = product.width_mm || parseInt(document.getElementById('inputCustW').value || 0);
+                finalH = product.height_mm || parseInt(document.getElementById('inputCustH').value || 0);
+                finalPricePerItem = unitPrice;
             } else {
-                finalPricePerItem = Math.floor(rawPrice);
+                finalW = parseInt(document.getElementById('inputCustW').value || 0);
+                finalH = parseInt(document.getElementById('inputCustH').value || 0);
+
+                if (mode !== 'upload' && (finalW < 20 || finalH < 20)) { showToast(lang==='ja'?'先にサイズを入力してください。':lang==='zh'?'请先输入尺寸。':lang==='ar'?'يرجى إدخال الحجم أولاً.':lang==='es'?'Por favor, ingrese el tamaño primero.':lang==='de'?'Bitte geben Sie zuerst die Größe ein.':lang==='fr'?'Veuillez d\'abord saisir la taille.':lang==='en'?'Please enter the size first.':'먼저 사이즈를 입력해 주세요.', 'warn'); return; }
+
+                const area = (finalW * finalH) / 1000000;
+                let rawPrice = area * unitPrice;
+
+                if (lang === 'kr') {
+                    finalPricePerItem = Math.floor(rawPrice / 10) * 10;
+                } else {
+                    finalPricePerItem = Math.floor(rawPrice);
+                }
             }
         } else {
             // 일반 상품이면 기본 사이즈 사용
