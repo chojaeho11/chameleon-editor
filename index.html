@@ -458,7 +458,7 @@
     <div class="hero-section">
     <h1 class="hero-title" data-i18n="hero_title">&nbsp;</h1>
     <div class="hero-cta-row" style="flex-direction:column; align-items:center;">
-        <p class="hero-desc" data-i18n="hero_desc_event">2026 봄 무료 회원가입 이벤트</p>
+        <button class="hero-desc" style="cursor:pointer; border:none;" data-i18n="hero_desc_event" onclick="document.getElementById('loginModal').style.display='flex'; setTimeout(function(){var b=document.getElementById('btnSwitchAuthMode'); if(b && document.getElementById('loginPwConfirm').style.display==='none') b.click();},100);">2026 봄 무료 회원가입 이벤트</button>
 
         <!-- 프로모션 배너 (비로그인 시만 표시) -->
         <div id="promoTimerBox" style="display:none; background:linear-gradient(135deg,#1e0a3c,#2d1052); border-radius:16px; padding:20px 28px; margin-bottom:16px; text-align:center; box-shadow:0 8px 30px rgba(99,102,241,0.3); border:1px solid rgba(168,85,247,0.3); max-width:420px; width:100%;">
@@ -480,10 +480,6 @@
             <p style="color:#67e8f9; font-size:15px; font-weight:800; margin:0;" data-i18n="promo_line3">전제품 10% 추가할인</p>
         </div>
 
-        <button id="heroSignupBtn" onclick="document.getElementById('loginModal').style.display='flex'; setTimeout(function(){var b=document.getElementById('btnSwitchAuthMode'); if(b && document.getElementById('loginPwConfirm').style.display==='none') b.click();},100);"
-            class="hero-signup-btn">
-            <span data-i18n="hero_signup_btn">1초 회원가입</span>
-        </button>
     </div>
     <p class="hero-signup-desc" data-i18n="hero_signup_desc">개인정보 인증없이 아이디와 비번만으로 바로 가입됩니다.</p>
 </div>
@@ -540,16 +536,16 @@
                 }
             });
         } else {
-            // sb 로드 전이면 일단 표시
-            if (box) { box.style.display = 'block'; startTimer(); }
+            // sb 아직 로드 안 됨 → 1초 후 재시도 (깜빡임 방지)
+            setTimeout(checkAndShow, 500);
         }
     }
 
-    // DOM 로드 후 실행
+    // DOM 로드 후 실행 (sb 로딩 대기)
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { setTimeout(checkAndShow, 500); });
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(checkAndShow, 800); });
     } else {
-        setTimeout(checkAndShow, 500);
+        setTimeout(checkAndShow, 800);
     }
 
     // 로그인 시 숨기기
@@ -678,7 +674,7 @@
     <div style="text-align:center; margin: 8px auto 14px auto; max-width:1000px; padding:0 15px;">
         <button onclick="window.openProductPickerModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; font-size:16px; font-weight:800; cursor:pointer; padding:14px 36px; border-radius:50px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 3px 12px rgba(99,102,241,0.35); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 5px 20px rgba(99,102,241,0.45)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 12px rgba(99,102,241,0.35)'">
             <i class="fa-solid fa-magnifying-glass" style="font-size:15px;"></i>
-            <span data-i18n="btn_manual_search">>> 수동으로 제품 찾기</span>
+            <span data-i18n="btn_manual_search">수동으로 제품 찾기</span>
         </button>
     </div>
 
@@ -976,32 +972,6 @@
     }
 })();
 </script>
-
-<!-- 제품검색 버튼 (핫딜 바로 위) -->
-<style>
-    #btnDesignStart {
-        padding: 16px 48px !important;
-        width: 100% !important;
-        max-width: 800px !important;
-        background: linear-gradient(135deg, #7c3aed, #6366f1, #8b5cf6) !important;
-        background-size: 200% 200% !important;
-        color: #fff !important;
-        border: none !important;
-        border-radius: 50px !important;
-        font-size: 17px !important;
-        font-weight: 800 !important;
-        box-shadow: 0 4px 20px rgba(124,58,237,0.35) !important;
-    }
-    #btnDesignStart:hover {
-        transform: scale(1.02) !important;
-        box-shadow: 0 6px 28px rgba(124,58,237,0.45) !important;
-    }
-</style>
-<div style="text-align:center; margin: 20px auto 15px auto; max-width:1000px; padding:0 15px;">
-    <button id="btnDesignStart" onclick="window.openProductPickerModal()">
-        <i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> <span data-i18n="dsm_btn_start">제품검색</span>
-    </button>
-</div>
 
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
@@ -1652,12 +1622,6 @@ async function handleSubReturn() {
     >
     <button id="btnStartSearch" class="hero-search-btn">
         <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">Search</span>
-    </button>
-</div>
-<div style="text-align:center; margin-top:8px;">
-    <button id="btnAiAdvisor" class="hero-ai-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7,#ec4899); background-size:300% 300%; animation:kapuGlow 4s ease infinite; color:#fff; border:none; padding:14px 28px; border-radius:50px; font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 3px 16px rgba(139,92,246,0.35);">
-        <span class="kapu-icon-bounce" style="margin-right:4px; margin-left:-30px;"><i class="fa-solid fa-arrow-right" style="font-size:24px; color:#fff; -webkit-text-stroke:1px #fff;"></i></span>
-        <span data-i18n="btn_kapu_guide">카푸가 쇼핑을 안내해 드립니다</span>
     </button>
 </div>
 <div class="pagination-wrapper" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:20px 0 15px 0;">
@@ -4144,7 +4108,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./canvas-objects.js?v=123"></script>
 <script type="module" src="./canvas-image.js?v=123"></script>
 <script type="module" src="./canvas-template.js?v=123"></script> 
-<script type="module" src="./canvas-ai.js?v=123"></script>
+<script type="module" src="./canvas-ai.js?v=124"></script>
 <script type="module" src="./canvas-retouch.js?v=123"></script>
 <script type="module" src="./canvas-utils.js?v=123"></script>
 <script type="module" src="./shortcuts.js?v=123"></script>
@@ -4154,7 +4118,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=123"></script>
 <script type="module" src="./my-design.js?v=123"></script>
 <script type="module" src="./ppt-mode.js?v=123"></script>
-<script type="module" src="./main.js?v=123"></script>
+<script type="module" src="./main.js?v=125"></script>
 
 <script type="module">
     import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js";
@@ -6488,14 +6452,16 @@ window.showChoiceModal = async function(key) {
         product.is_general_product = true;
     }
 
-    // 종이매대: 커스텀 사이즈 강제 (NPC 위자드에서 전용 플로우로 처리)
-    if (product.code && product.code.startsWith('pd_') && dbIsCustomSize !== false) {
+    // 종이매대: 에디터 진입 필수 (NPC 위자드에서 전용 플로우로 처리)
+    const isPaperDisplayProduct = product.code && product.code.startsWith('pd_');
+    if (isPaperDisplayProduct) {
         product.is_custom_size = true;
+        product.is_general_product = false;
     }
 
     // ★ 최종 판정: 관리자가 "사이즈 입력 허용"을 체크하지 않은 상품은 무조건 일반상품
-    // 카테고리 하드코드보다 관리자 설정이 우선
-    if (!dbIsCustomSize) {
+    // 카테고리 하드코드보다 관리자 설정이 우선 (단, 종이매대는 제외)
+    if (!dbIsCustomSize && !isPaperDisplayProduct) {
         product.is_custom_size = false;
         product.is_general_product = true;
     }
@@ -6827,10 +6793,11 @@ window.showChoiceModal = async function(key) {
         a.setAttribute('rel', 'noopener');
     });
 
-    // ★ NPC 가이드 위자드 비활성화 (간소화 플로우 적용)
-    // if (window.NpcWizard && !window.pendingTemplate) {
-    //     setTimeout(() => window.NpcWizard.init(product), 100);
-    // }
+    // ★ NPC 가이드 위자드: 종이매대(pd_)는 전용 위자드 필요
+    const _isPd = product.code && product.code.startsWith('pd_');
+    if (_isPd && window.NpcWizard && !window.pendingTemplate) {
+        setTimeout(() => window.NpcWizard.init(product), 100);
+    }
 
     // ★ 추천상품 로드 (대분류 기준 4개, 모바일에서 옵션과 상세설명 사이)
     (async function loadRelatedProducts() {
@@ -8196,7 +8163,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=123');
+                    const mod = await import('./canvas-ai.js?v=124');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -8212,7 +8179,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=123');
+                    const mod = await import('./canvas-ai.js?v=124');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -8279,7 +8246,8 @@ if (w >= 20 && h >= 20) {
 
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
         const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');
-        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE) {
+        const hasUploadedFiles = window._pendingEditorFiles && window._pendingEditorFiles.length > 0;
+        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
                 const _kw = window.pendingTemplateKeyword;

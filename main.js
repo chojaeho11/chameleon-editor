@@ -20,7 +20,7 @@ import { initContextMenu } from "./context-menu.js?v=123";
 import { createVectorOutline } from "./outlineMaker.js?v=123";
 import { initVideoMaker } from "./video-maker.js?v=123";
 import { initPptMode } from "./ppt-mode.js?v=123";
-import { initWeddingMode } from "./wedding-mode.js?v=123";
+import { initWeddingMode } from "./wedding-mode.js?v=124";
 import { initIconTools } from "./canvas-icons.js?v=123";
 import { initRetouchTools } from "./canvas-retouch.js?v=123";
 
@@ -575,8 +575,8 @@ function initMobileTextEditor() {
         origHandleSelection(e);
         if (activeTextObj) syncEditorUI(activeTextObj);
     };
-    window.canvas.off('selection:created');
-    window.canvas.off('selection:updated');
+    window.canvas.off('selection:created', origHandleSelection);
+    window.canvas.off('selection:updated', origHandleSelection);
     window.canvas.on('selection:created', handleSelection);
     window.canvas.on('selection:updated', handleSelection);
 }
