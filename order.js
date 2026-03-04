@@ -301,12 +301,13 @@ export async function initOrderSystem() {
             const btn = btnPrintQuote;
             btn.innerText = window.t('msg_generating_quote') || "Generating Quote..."; btn.disabled = true;
             try {
-                const info = { 
+                const info = {
                     manager: currentUser?.user_metadata?.full_name || window.t('default_customer') || 'Customer',
-                    phone: currentUser?.user_metadata?.phone || '-', 
-                    address: '-', 
-                    note: '', 
-                    date: new Date().toLocaleDateString() 
+                    phone: currentUser?.user_metadata?.phone || '-',
+                    address: '-',
+                    note: '',
+                    date: new Date().toLocaleDateString(),
+                    shippingFee: window._nonMetroFeeApplied || 0
                 };
                 const blob = await generateQuotationPDF(info, cartData);
                 if(blob) downloadBlob(blob, "quotation.pdf");
@@ -463,7 +464,8 @@ function getOrderInfo() {
         phone: document.getElementById("orderPhone").value || "",
         address: document.getElementById("orderAddr").value || "",
         note: document.getElementById("orderMemo").value || "",
-        date: selectedDeliveryDate || new Date().toISOString().split('T')[0]
+        date: selectedDeliveryDate || new Date().toISOString().split('T')[0],
+        shippingFee: window._nonMetroFeeApplied || 0
     };
 }
 
@@ -1315,13 +1317,19 @@ async function addCanvasToCart() {
         }
     }
 
-    const newItem = { 
-        uid: Date.now() + Math.random().toString(36).substr(2, 5), 
+    // ★ 가벽: 벽 수 저장 (PDF 견적서에서 "N벽" 표시용)
+    const _wallCount = (window.__wallMode && window.__wallConfig && window.__wallConfig.walls)
+        ? window.__wallConfig.walls.length : 0;
+
+    const newItem = {
+        uid: Date.now() + Math.random().toString(36).substr(2, 5),
         product: calcProduct,
         type: 'design',
-        thumb: thumbUrl, 
+        thumb: thumbUrl,
         json: null,      // 로컬에는 거대 데이터를 저장하지 않음
         pages: [],       // 로컬에는 거대 데이터를 저장하지 않음
+        pageCount: finalPages.length, // ★ 페이지(면) 수 보존
+        wallCount: _wallCount,        // ★ 가벽 수 보존
         jsonUrl: savedJsonUrl,
         designPdfUrl: designPdfUrl,
         boxLayoutPdfUrl: boxLayoutPdfUrl,

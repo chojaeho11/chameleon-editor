@@ -1338,6 +1338,13 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         let pdfPrice = item.product.price;
         let pdfOptionLabel = TEXT.opt_default;
 
+        // ★ 가벽: 벽 수 표시 (예: "허니콤 가벽 (2벽)")
+        if (item.wallCount && item.wallCount > 1) {
+            pdfName += ` (${item.wallCount}벽)`;
+        } else if (item.pageCount && item.pageCount > 1 && !item.wallCount) {
+            pdfName += ` (${item.pageCount}면)`;
+        }
+
         // 제품 사이즈 표시
         const _wMm = item.product.w_mm || item.product.width_mm || 0;
         const _hMm = item.product.h_mm || item.product.height_mm || 0;
@@ -1478,7 +1485,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         
         doc.setTextColor(100, 100, 100); 
         drawText(doc, `[${methodLabel}]`, summaryX, y, {align:'right'});
-        drawText(doc, prefix + finalAmt.toLocaleString() + suffix, 195, y, {align:'right'});
+        drawText(doc, _fmtSummary(finalAmt), 195, y, {align:'right'});
         doc.setTextColor(0, 0, 0); 
     }
 
@@ -1526,7 +1533,19 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
         const item = cartItems[i];
         if (!item.product) continue;
 
-        const itemPages = (item.pages && item.pages.length > 0) ? item.pages : (item.json ? [item.json] : []);
+        // ★ jsonUrl에서 페이지 데이터 복원 (로컬 pages/json이 비어있는 경우)
+        let itemPages = (item.pages && item.pages.length > 0) ? item.pages : (item.json ? [item.json] : []);
+        if (itemPages.length === 0 && item.jsonUrl) {
+            try {
+                const resp = await fetch(item.jsonUrl);
+                const jsonData = await resp.json();
+                if (jsonData.pages && jsonData.pages.length > 0) {
+                    itemPages = jsonData.pages;
+                } else if (jsonData.main) {
+                    itemPages = [jsonData.main];
+                }
+            } catch(e) { console.warn('jsonUrl 로드 실패:', e); }
+        }
         const loopCount = itemPages.length > 0 ? itemPages.length : 1;
 
         for (let p = 0; p < loopCount; p++) {
@@ -1598,11 +1617,21 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             drawText(doc, `${TEXT.ordersheet_qty_label}: ${item.qty}${TEXT.ordersheet_qty_unit}`, 185, prodY + 7, {align:'right', weight:'bold', fontSize:12}, "#ff0000");
 
             const infoY = prodY + 18; doc.setFontSize(16);
-            drawText(doc, `${item.product.name}`, 20, infoY, {weight:'bold'});
+            const _pageLabel = loopCount > 1 ? ` [${p + 1}/${loopCount}]` : '';
+            drawText(doc, `${item.product.name}${_pageLabel}`, 20, infoY, {weight:'bold'});
             doc.setFontSize(11); let optY = infoY + 8;
-            // 제품 사이즈 표시
-            const _wMm2 = item.product.w_mm || item.product.width_mm || 0;
-            const _hMm2 = item.product.h_mm || item.product.height_mm || 0;
+            // ★ 페이지별 보드 사이즈 추출 (가벽 등 멀티페이지)
+            let _wMm2 = item.product.w_mm || item.product.width_mm || 0;
+            let _hMm2 = item.product.h_mm || item.product.height_mm || 0;
+            const _curPageJson = itemPages[p];
+            if (_curPageJson && _curPageJson.objects) {
+                const _brd = _curPageJson.objects.find(o => o.isBoard);
+                if (_brd) {
+                    const _mmScale = 3.7795;
+                    _wMm2 = Math.round((_brd.width * (_brd.scaleX || 1)) / _mmScale);
+                    _hMm2 = Math.round((_brd.height * (_brd.scaleY || 1)) / _mmScale);
+                }
+            }
             if (_wMm2 && _hMm2) {
                 drawText(doc, `${TEXT.ordersheet_size || '사이즈'} : ${Math.round(_wMm2)} x ${Math.round(_hMm2)} mm`, 25, optY, {}, "#555555");
                 optY += 6;
