@@ -779,16 +779,19 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
             tempCanvas.setWidth(pw); tempCanvas.setHeight(ph);
             tempCanvas.setBackgroundColor('#ffffff'); // 배경 흰색
 
-            // 목업 오브젝트 제거 (PDF에 포함하지 않음)
+            // 목업 오브젝트 제거 + 대지 정리 (PDF에 불필요한 에디터 속성 제거)
             const filteredJson = { ...json };
             if (filteredJson.objects) {
-                filteredJson.objects = filteredJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+                filteredJson.objects = filteredJson.objects
+                    .filter(o => !o.isMockup && !o.excludeFromExport)
+                    .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
             }
 
             await new Promise((resolve) => {
                 tempCanvas.loadFromJSON(filteredJson, () => {
+                    // ★ 배경 복원 (loadFromJSON이 덮어쓸 수 있음)
+                    tempCanvas.setBackgroundColor('#ffffff');
                     // ★ 핵심: 뷰포트를 이동시켜서 대지 영역을 (0,0)으로 맞춤
-                    // 대지의 시작점(x, y)만큼 반대로 이동(-x, -y)시키면 대지가 캔버스의 (0,0)에 오게 됨
                     if (filteredJson.objects) tempCanvas.setViewportTransform([1, 0, 0, 1, -px, -py]);
                     tempCanvas.renderAll();
                     setTimeout(resolve, 500);
@@ -987,14 +990,16 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0, perPageSi
             tempCvs.setWidth(pw); tempCvs.setHeight(ph);
             tempCvs.setBackgroundColor('#ffffff'); // 흰색 배경
 
-            // 목업 오브젝트 제거
+            // 목업 오브젝트 제거 + 대지 정리
             if (pageJson.objects) {
-                pageJson.objects = pageJson.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+                pageJson.objects = pageJson.objects
+                    .filter(o => !o.isMockup && !o.excludeFromExport)
+                    .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
             }
 
             await new Promise(resolve => {
                 tempCvs.loadFromJSON(pageJson, () => {
-                    // 좌표 보정
+                    tempCvs.setBackgroundColor('#ffffff');
                     tempCvs.setViewportTransform([1, 0, 0, 1, -px, -py]);
                     tempCvs.renderAll();
                     setTimeout(resolve, 500);
@@ -1208,11 +1213,14 @@ export async function generateWallPanelPDF(pdfPages, wallConfigs, boardX, boardY
 
             const filtered = { ...pn.pageJson };
             if (filtered.objects) {
-                filtered.objects = filtered.objects.filter(o => !o.isMockup && !o.excludeFromExport);
+                filtered.objects = filtered.objects
+                    .filter(o => !o.isMockup && !o.excludeFromExport)
+                    .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
             }
 
             await new Promise(resolve => {
                 tempCvs.loadFromJSON(filtered, () => {
+                    tempCvs.setBackgroundColor('#ffffff');
                     // 뷰포트 이동: 대지 원점 + 패널 수평 오프셋
                     tempCvs.setViewportTransform([1, 0, 0, 1, -(boardX + offsetPx), -boardY]);
                     tempCvs.renderAll();
