@@ -117,8 +117,8 @@ function renderColorPalette() {
     function _applyColor(color) {
         const obj = _getActiveObj();
         if (obj) {
-            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('fill', color));
-            else obj.set('fill', color);
+            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set({ fill: color, opacity: 1 }));
+            else obj.set({ fill: color, opacity: 1 });
             canvas.requestRenderAll();
             try { canvas.setActiveObject(obj); } catch(e) {}
         } else {
@@ -133,8 +133,8 @@ function renderColorPalette() {
                 coords: { x1: 0, y1: 0, x2: obj.width || 100, y2: obj.height || 100 },
                 colorStops: [{ offset: 0, color: c1 }, { offset: 1, color: c2 }]
             });
-            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set('fill', grad));
-            else obj.set('fill', grad);
+            if (obj.type === 'activeSelection') obj.forEachObject(o => o.set({ fill: grad, opacity: 1 }));
+            else obj.set({ fill: grad, opacity: 1 });
             canvas.requestRenderAll();
             try { canvas.setActiveObject(obj); } catch(e) {}
         } else {
