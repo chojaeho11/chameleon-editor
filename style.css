@@ -99,11 +99,12 @@ button, input, textarea, select { font-family: inherit; }
 
 /* 이벤트 프로모션 박스 (인스타 그라데이션) */
 .hero-promo-box {
-    max-width: 1000px; margin: 0 auto 20px; padding: 36px 40px 32px;
-    background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    width: 100%; max-width: 1000px; margin: 0 auto 20px; padding: 36px 40px 32px;
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 15%, #dc2743 30%, #cc2366 50%, #bc1888 65%, #833ab4 80%, #5851db 100%);
     border-radius: 16px;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(220,39,67,0.25);
+    box-shadow: 0 10px 30px rgba(131,58,180,0.3);
+    box-sizing: border-box;
 }
 .hero-promo-box .hero-desc {
     background: #fff !important; color: #333 !important;
