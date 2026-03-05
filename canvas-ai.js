@@ -1544,3 +1544,102 @@ async function _wzSticker(keywords, bW, bH, bL, bT) {
         });
     }
 }
+
+// ==========================================================
+// [명함 기본폼] 6종 템플릿 적용
+// ==========================================================
+export function applyBizCardTemplate(tplId) {
+    if (!canvas) return;
+    const board = canvas.getObjects().find(o => o._isBoard);
+    if (!board) return;
+
+    const bL = board.left, bT = board.top, bW = board.width * board.scaleX, bH = board.height * board.scaleY;
+    const F_TITLE = 'Noto Sans KR', F_SUB = 'Noto Sans KR';
+    const ACCENT = '#6366f1';
+
+    const txt = (str, opts) => {
+        const t = new fabric.IText(str, {
+            fontFamily: F_SUB, fontSize: 14, fill: '#1e293b', fontWeight: '400',
+            originX: 'left', originY: 'top', ...opts
+        });
+        canvas.add(t); canvas.bringToFront(t);
+        return t;
+    };
+
+    const rect = (opts) => {
+        const r = new fabric.Rect({ fill: ACCENT, ...opts });
+        canvas.add(r); canvas.bringToFront(r);
+        return r;
+    };
+
+    // ── 가로형 h1: 클래식 (좌: 회사+슬로건, 구분선, 우: 이름+연락처) ──
+    if (tplId === 'h1') {
+        txt('카멜레온 프린팅', { left: bL + bW*0.08, top: bT + bH*0.28, fontSize: Math.round(bH*0.12), fontWeight: '700', fill: '#1e293b' });
+        txt('Creative Design Solution', { left: bL + bW*0.08, top: bT + bH*0.46, fontSize: Math.round(bH*0.055), fill: '#94a3b8' });
+        // 구분선
+        rect({ left: bL + bW*0.50, top: bT + bH*0.20, width: 1, height: bH*0.6, fill: '#e2e8f0' });
+        txt('홍길동', { left: bL + bW*0.56, top: bT + bH*0.22, fontSize: Math.round(bH*0.11), fontWeight: '700' });
+        txt('대리 / Design Team', { left: bL + bW*0.56, top: bT + bH*0.38, fontSize: Math.round(bH*0.055), fill: '#94a3b8' });
+        txt('010-1234-5678', { left: bL + bW*0.56, top: bT + bH*0.58, fontSize: Math.round(bH*0.05), fill: '#64748b' });
+        txt('hello@example.com', { left: bL + bW*0.56, top: bT + bH*0.70, fontSize: Math.round(bH*0.05), fill: '#64748b' });
+        txt('서울시 강남구 역삼동 123-45', { left: bL + bW*0.56, top: bT + bH*0.82, fontSize: Math.round(bH*0.05), fill: '#64748b' });
+    }
+
+    // ── 가로형 h2: 모던 (상단 회사 중앙, 하단 이름+연락처 좌정렬, 컬러바) ──
+    else if (tplId === 'h2') {
+        txt('카멜레온 프린팅', { left: bL + bW*0.5, top: bT + bH*0.15, fontSize: Math.round(bH*0.11), fontWeight: '700', originX: 'center', textAlign: 'center' });
+        txt('홍길동', { left: bL + bW*0.10, top: bT + bH*0.45, fontSize: Math.round(bH*0.10), fontWeight: '700' });
+        txt('대리 / Design Team', { left: bL + bW*0.10, top: bT + bH*0.60, fontSize: Math.round(bH*0.055), fill: '#64748b' });
+        txt('010-1234-5678  |  hello@example.com', { left: bL + bW*0.10, top: bT + bH*0.73, fontSize: Math.round(bH*0.05), fill: '#64748b' });
+        // 하단 컬러바
+        rect({ left: bL, top: bT + bH*0.90, width: bW, height: bH*0.10, fill: ACCENT });
+    }
+
+    // ── 가로형 h3: 미니멀 (이름 크게 중앙, 하단 연락처 한줄) ──
+    else if (tplId === 'h3') {
+        txt('홍길동', { left: bL + bW*0.5, top: bT + bH*0.30, fontSize: Math.round(bH*0.18), fontWeight: '700', originX: 'center', textAlign: 'center', letterSpacing: 200 });
+        txt('대리 / Design Team', { left: bL + bW*0.5, top: bT + bH*0.55, fontSize: Math.round(bH*0.06), fill: '#94a3b8', originX: 'center', textAlign: 'center' });
+        txt('010-1234-5678  ·  hello@example.com  ·  서울시 강남구', { left: bL + bW*0.5, top: bT + bH*0.78, fontSize: Math.round(bH*0.045), fill: '#64748b', originX: 'center', textAlign: 'center' });
+    }
+
+    // ── 가로형 h4: 컬러블록 (좌 40% 컬러배경+이름, 우 60% 연락처) ──
+    else if (tplId === 'h4') {
+        // 좌 컬러블록
+        rect({ left: bL, top: bT, width: bW*0.40, height: bH, fill: '#1e293b' });
+        txt('홍길동', { left: bL + bW*0.20, top: bT + bH*0.35, fontSize: Math.round(bH*0.13), fontWeight: '700', fill: '#ffffff', originX: 'center', textAlign: 'center' });
+        txt('대리', { left: bL + bW*0.20, top: bT + bH*0.55, fontSize: Math.round(bH*0.06), fill: '#94a3b8', originX: 'center', textAlign: 'center' });
+        // 우 연락처
+        txt('카멜레온 프린팅', { left: bL + bW*0.48, top: bT + bH*0.20, fontSize: Math.round(bH*0.07), fontWeight: '700', fill: '#1e293b' });
+        txt('010-1234-5678', { left: bL + bW*0.48, top: bT + bH*0.42, fontSize: Math.round(bH*0.055), fill: '#64748b' });
+        txt('hello@example.com', { left: bL + bW*0.48, top: bT + bH*0.55, fontSize: Math.round(bH*0.055), fill: '#64748b' });
+        txt('서울시 강남구 역삼동 123-45', { left: bL + bW*0.48, top: bT + bH*0.68, fontSize: Math.round(bH*0.055), fill: '#64748b' });
+    }
+
+    // ── 세로형 v1: 세로 클래식 (상단 회사명, 중간 이름, 하단 연락처) ──
+    else if (tplId === 'v1') {
+        txt('카멜레온 프린팅', { left: bL + bW*0.5, top: bT + bH*0.12, fontSize: Math.round(bW*0.11), fontWeight: '700', originX: 'center', textAlign: 'center' });
+        txt('Creative Design Solution', { left: bL + bW*0.5, top: bT + bH*0.22, fontSize: Math.round(bW*0.05), fill: '#94a3b8', originX: 'center', textAlign: 'center' });
+        // 구분선
+        rect({ left: bL + bW*0.25, top: bT + bH*0.30, width: bW*0.5, height: 1, fill: '#e2e8f0' });
+        txt('홍길동', { left: bL + bW*0.5, top: bT + bH*0.38, fontSize: Math.round(bW*0.14), fontWeight: '700', originX: 'center', textAlign: 'center' });
+        txt('대리 / Design Team', { left: bL + bW*0.5, top: bT + bH*0.50, fontSize: Math.round(bW*0.055), fill: '#94a3b8', originX: 'center', textAlign: 'center' });
+        txt('010-1234-5678', { left: bL + bW*0.5, top: bT + bH*0.68, fontSize: Math.round(bW*0.05), fill: '#64748b', originX: 'center', textAlign: 'center' });
+        txt('hello@example.com', { left: bL + bW*0.5, top: bT + bH*0.75, fontSize: Math.round(bW*0.05), fill: '#64748b', originX: 'center', textAlign: 'center' });
+        txt('서울시 강남구 역삼동 123-45', { left: bL + bW*0.5, top: bT + bH*0.82, fontSize: Math.round(bW*0.05), fill: '#64748b', originX: 'center', textAlign: 'center' });
+    }
+
+    // ── 세로형 v2: 세로 컬러 (상단 40% 컬러+이름, 하단 60% 연락처) ──
+    else if (tplId === 'v2') {
+        // 상단 컬러블록
+        rect({ left: bL, top: bT, width: bW, height: bH*0.40, fill: '#1e293b' });
+        txt('홍길동', { left: bL + bW*0.5, top: bT + bH*0.13, fontSize: Math.round(bW*0.14), fontWeight: '700', fill: '#ffffff', originX: 'center', textAlign: 'center' });
+        txt('대리 / Design Team', { left: bL + bW*0.5, top: bT + bH*0.27, fontSize: Math.round(bW*0.055), fill: '#94a3b8', originX: 'center', textAlign: 'center' });
+        // 하단 연락처
+        txt('카멜레온 프린팅', { left: bL + bW*0.5, top: bT + bH*0.48, fontSize: Math.round(bW*0.08), fontWeight: '700', fill: '#1e293b', originX: 'center', textAlign: 'center' });
+        txt('010-1234-5678', { left: bL + bW*0.5, top: bT + bH*0.62, fontSize: Math.round(bW*0.05), fill: '#64748b', originX: 'center', textAlign: 'center' });
+        txt('hello@example.com', { left: bL + bW*0.5, top: bT + bH*0.70, fontSize: Math.round(bW*0.05), fill: '#64748b', originX: 'center', textAlign: 'center' });
+        txt('서울시 강남구 역삼동 123-45', { left: bL + bW*0.5, top: bT + bH*0.78, fontSize: Math.round(bW*0.05), fill: '#64748b', originX: 'center', textAlign: 'center' });
+    }
+
+    canvas.renderAll();
+}

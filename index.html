@@ -17,7 +17,7 @@
 
 // [버전 체크] 캐시된 구버전 HTML 감지 시 강제 새로고침
 (function(){
-    var CV = '20260305a';
+    var CV = '20260305b';
     if (sessionStorage.getItem('_vr') === CV) return;
     try {
         fetch('/version.txt?_t=' + Date.now(), {cache:'no-store'})
@@ -3111,6 +3111,68 @@ async function handleSubReturn() {
         </div>
     </div>
 </div>
+<!-- 명함 기본폼 선택 모달 -->
+<div id="bizCardTemplateModal" class="modal-bg" style="display:none; z-index:20000;">
+    <div class="modal-box" style="width:700px; max-width:95%; padding:30px;">
+        <h3 style="margin:0 0 8px 0; font-size:20px; color:#1e293b;">명함 디자인 선택</h3>
+        <p style="color:#64748b; font-size:13px; margin:0 0 20px 0;">기본 디자인을 선택하면 텍스트만 수정하여 바로 명함을 만들 수 있습니다.</p>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:16px;">
+            <!-- 가로형 4종 -->
+            <div class="biz-tpl-card" onclick="window._bizTplResolve('h1')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:10px; padding:10px; text-align:center; transition:all 0.2s;">
+                <div style="width:100%; aspect-ratio:1.8; background:#fff; border:1px solid #eee; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+                    <div style="position:absolute;left:8%;top:25%;text-align:left;"><div style="font-size:9px;font-weight:bold;color:#1e293b;">COMPANY</div><div style="font-size:5px;color:#94a3b8;">Slogan here</div></div>
+                    <div style="position:absolute;left:50%;top:15%;bottom:15%;width:1px;background:#e2e8f0;"></div>
+                    <div style="position:absolute;right:8%;top:25%;text-align:right;"><div style="font-size:8px;font-weight:bold;color:#1e293b;">Name</div><div style="font-size:5px;color:#94a3b8;">Title</div></div>
+                    <div style="position:absolute;right:8%;bottom:20%;text-align:right;"><div style="font-size:4px;color:#64748b;">010-1234-5678</div><div style="font-size:4px;color:#64748b;">email@test.com</div></div>
+                </div>
+                <div style="font-size:12px; font-weight:bold; color:#334155;">클래식</div>
+            </div>
+            <div class="biz-tpl-card" onclick="window._bizTplResolve('h2')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:10px; padding:10px; text-align:center; transition:all 0.2s;">
+                <div style="width:100%; aspect-ratio:1.8; background:#fff; border:1px solid #eee; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+                    <div style="position:absolute;top:20%;left:0;right:0;text-align:center;font-size:8px;font-weight:bold;color:#1e293b;">COMPANY</div>
+                    <div style="position:absolute;bottom:30%;left:10%;text-align:left;"><div style="font-size:7px;font-weight:bold;color:#1e293b;">Name</div><div style="font-size:4px;color:#64748b;">010-1234-5678 | email@test.com</div></div>
+                    <div style="position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:0 0 5px 5px;"></div>
+                </div>
+                <div style="font-size:12px; font-weight:bold; color:#334155;">모던</div>
+            </div>
+            <div class="biz-tpl-card" onclick="window._bizTplResolve('h3')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:10px; padding:10px; text-align:center; transition:all 0.2s;">
+                <div style="width:100%; aspect-ratio:1.8; background:#fff; border:1px solid #eee; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+                    <div style="text-align:center;"><div style="font-size:11px;font-weight:bold;color:#1e293b;letter-spacing:2px;">Name</div><div style="font-size:5px;color:#94a3b8;margin-top:3px;">010-1234-5678 &middot; email@test.com</div></div>
+                </div>
+                <div style="font-size:12px; font-weight:bold; color:#334155;">미니멀</div>
+            </div>
+            <div class="biz-tpl-card" onclick="window._bizTplResolve('h4')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:10px; padding:10px; text-align:center; transition:all 0.2s;">
+                <div style="width:100%; aspect-ratio:1.8; background:#fff; border:1px solid #eee; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:40%;background:#1e293b;border-radius:5px 0 0 5px;display:flex;align-items:center;justify-content:center;"><div style="font-size:8px;font-weight:bold;color:#fff;">Name</div></div>
+                    <div style="position:absolute;right:8%;top:30%;text-align:right;"><div style="font-size:5px;color:#64748b;">010-1234-5678</div><div style="font-size:5px;color:#64748b;">email@test.com</div><div style="font-size:5px;color:#64748b;">Seoul, Korea</div></div>
+                </div>
+                <div style="font-size:12px; font-weight:bold; color:#334155;">컬러블록</div>
+            </div>
+            <!-- 세로형 2종 -->
+            <div class="biz-tpl-card" onclick="window._bizTplResolve('v1')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:10px; padding:10px; text-align:center; transition:all 0.2s;">
+                <div style="width:60%; margin:0 auto; aspect-ratio:0.556; background:#fff; border:1px solid #eee; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+                    <div style="position:absolute;top:15%;left:0;right:0;text-align:center;font-size:7px;font-weight:bold;color:#1e293b;">COMPANY</div>
+                    <div style="text-align:center;"><div style="font-size:9px;font-weight:bold;color:#1e293b;">Name</div><div style="font-size:5px;color:#94a3b8;">Title</div></div>
+                    <div style="position:absolute;bottom:15%;left:0;right:0;text-align:center;"><div style="font-size:4px;color:#64748b;">010-1234-5678</div><div style="font-size:4px;color:#64748b;">email@test.com</div></div>
+                </div>
+                <div style="font-size:12px; font-weight:bold; color:#334155;">세로 클래식</div>
+            </div>
+            <div class="biz-tpl-card" onclick="window._bizTplResolve('v2')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:10px; padding:10px; text-align:center; transition:all 0.2s;">
+                <div style="width:60%; margin:0 auto; aspect-ratio:0.556; background:#fff; border:1px solid #eee; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+                    <div style="position:absolute;top:0;left:0;right:0;height:40%;background:#1e293b;border-radius:5px 5px 0 0;display:flex;align-items:center;justify-content:center;"><div style="font-size:9px;font-weight:bold;color:#fff;">Name</div></div>
+                    <div style="position:absolute;bottom:15%;left:0;right:0;text-align:center;"><div style="font-size:5px;color:#64748b;">010-1234-5678</div><div style="font-size:5px;color:#64748b;">email@test.com</div><div style="font-size:5px;color:#64748b;">Seoul, Korea</div></div>
+                </div>
+                <div style="font-size:12px; font-weight:bold; color:#334155;">세로 컬러</div>
+            </div>
+        </div>
+        <div style="text-align:center;">
+            <button onclick="window._bizTplResolve('blank')" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:10px 24px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">빈 캔버스로 시작</button>
+        </div>
+    </div>
+</div>
+<style>
+.biz-tpl-card:hover { border-color:#6366f1 !important; transform:translateY(-2px); box-shadow:0 4px 12px rgba(99,102,241,0.15); }
+</style>
 <!-- PC 텍스트 퀵 툴바 (캔버스 위 플로팅) -->
 <div id="pcTextQuickBar" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:6px 10px; gap:6px; align-items:center; flex-wrap:nowrap;">
     <button onclick="window.pcTextAlign('left')" class="pc-tq-align pc-tq-align-active" data-align="left" style="border:none; background:#f1f5f9; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:13px; color:#334155;"><i class="fa-solid fa-align-left"></i></button>
@@ -8156,6 +8218,25 @@ if (w >= 20 && h >= 20) {
 
         const product = window.PRODUCT_DB[key];
 
+        // ★ 명함 상품: 기본폼 선택 모달 표시
+        let _bizTplId = null;
+        if (typeof key === 'string' && key.startsWith('pp_bc_')) {
+            const modal = document.getElementById('bizCardTemplateModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                _bizTplId = await new Promise(resolve => {
+                    window._bizTplResolve = (id) => {
+                        modal.style.display = 'none';
+                        resolve(id);
+                    };
+                });
+                // 세로형 선택 시 치수 변경 (50x90mm)
+                if (_bizTplId === 'v1' || _bizTplId === 'v2') {
+                    customW = 50; customH = 90;
+                }
+            }
+        }
+
         // 사이즈고정상품 플래그 (에디터에서 크기 변경 차단)
         window.__fixedSizeProduct = !!(product && product.is_file_upload);
 
@@ -8349,6 +8430,16 @@ if (w >= 20 && h >= 20) {
 
         if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');
 
+        // ★ 명함 템플릿 적용
+        if (_bizTplId && _bizTplId !== 'blank') {
+            setTimeout(async () => {
+                try {
+                    const mod = await import('./canvas-ai.js?v=124');
+                    if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
+                } catch(e) { console.error('Biz card template error:', e); }
+            }, 600);
+        }
+
         // ★ 사이즈고정상품: 에디터 내 사이즈 변경 UI 비활성화
         if (window.__fixedSizeProduct) {
             ['inputUserW','inputUserH'].forEach(id => { const el = document.getElementById(id); if(el) { el.disabled = true; el.style.opacity = '0.5'; } });
@@ -8367,7 +8458,8 @@ if (w >= 20 && h >= 20) {
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
         const isHoneycombKey = typeof key === 'string' && key.startsWith('hb_');
         const hasUploadedFiles = window._pendingEditorFiles && window._pendingEditorFiles.length > 0;
-        if (!isHoneycombKey && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
+        const isBizCardTpl = _bizTplId && _bizTplId !== 'blank';
+        if (!isHoneycombKey && !isBizCardTpl && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
                 const _kw = window.pendingTemplateKeyword;
