@@ -91,16 +91,24 @@ export function initAuth() {
     // 4. 소셜 로그인
     const btnGoogle = document.getElementById("btnGoogleLogin");
     const btnKakao = document.getElementById("btnKakaoLogin");
+    const btnLine = document.getElementById("btnLineLogin");
     const btnApple = document.getElementById("btnAppleLogin");
 
     if (btnGoogle) btnGoogle.onclick = () => handleSocialLogin("google");
     if (btnKakao) btnKakao.onclick = () => handleSocialLogin("kakao");
+    if (btnLine) btnLine.onclick = () => handleSocialLogin("line");
     if (btnApple) btnApple.onclick = () => handleSocialLogin("apple");
 
-    // 국가별 소셜 로그인 버튼 표시: Apple은 JP/US에서만
+    // 국가별 소셜 로그인 버튼 표시
     const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    if (btnApple && country !== 'KR') {
-        btnApple.style.display = 'flex';
+    // KR: 카카오 표시 (기본), JP: LINE 표시, 해외: Apple 표시
+    if (country === 'JP') {
+        if (btnKakao) btnKakao.style.display = 'none';
+        if (btnLine) btnLine.style.display = 'flex';
+        if (btnApple) btnApple.style.display = 'flex';
+    } else if (country !== 'KR') {
+        if (btnKakao) btnKakao.style.display = 'none';
+        if (btnApple) btnApple.style.display = 'flex';
     }
     
     // 5. 엔터키 입력 처리
