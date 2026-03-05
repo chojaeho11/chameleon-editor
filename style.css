@@ -100,10 +100,10 @@ button, input, textarea, select { font-family: inherit; }
 /* 이벤트 프로모션 박스 (인스타 그라데이션) */
 .hero-promo-box {
     width: 98%; max-width: 1200px; margin: 0 auto 20px; padding: 36px 40px 32px;
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 15%, #dc2743 30%, #cc2366 50%, #bc1888 65%, #833ab4 80%, #5851db 100%);
+    background: linear-gradient(135deg, #00b950 0%, #03C75A 40%, #00d68f 70%, #02a84c 100%);
     border-radius: 16px;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(131,58,180,0.3);
+    box-shadow: 0 10px 30px rgba(3,199,90,0.3);
     box-sizing: border-box;
 }
 .hero-promo-box .hero-desc {
