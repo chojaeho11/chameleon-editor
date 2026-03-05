@@ -6145,6 +6145,9 @@ window.categoryCache = {};
 
 // [최종 통합] 카테고리 클릭 시 상품 목록 로드 (상세정보는 제외하여 로딩 속도 최적화)
 window.showCategoryProducts = async function(catKey, catName, catDesc, backAction) {
+    // ★ 현재 카테고리 키 저장 (검색 초기화 시 복원용)
+    window._currentCatKey = catKey;
+    window._currentCatName = catName;
     if (!window._navNavigating) {
         var langParam = new URLSearchParams(window.location.search).get('lang');
         var catUrl = '/?cat=' + catKey + (langParam ? '&lang=' + langParam : '');
@@ -10398,6 +10401,7 @@ window.modalGlobalData = {
 
 // 1. 모달 열기 및 데이터 준비
 window.showCategorySelectionModal = async function() {
+    window._currentCatKey = null; // 검색 모달에서는 카테고리 키 초기화
     const modal = document.getElementById('categoryDetailModal');
     const grid = document.getElementById('catProductGrid');
     const titleEl = document.getElementById('catModalTitle');
@@ -10428,7 +10432,7 @@ window.showCategorySelectionModal = async function() {
 
         // (2) 상품 데이터 가져오기 (코드, 가격, 이미지 포함)
         const { data: products } = await sb.from('admin_products')
-            .select('category, img_url, name, code, price, width_mm, height_mm, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr')
+            .select('category, img_url, name, code, price, width_mm, height_mm, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, description')
             .not('img_url', 'is', null)
             .neq('img_url', '');
 
@@ -10472,6 +10476,12 @@ window.filterModalItems = function(keyword) {
     const term = keyword.toLowerCase().trim();
     const grid = document.getElementById('catProductGrid');
     if (!grid) return;
+
+    // ★ 카테고리 상품 보기 중이면 검색어 없을 때 원래 상품 복원
+    if (term === '' && window._currentCatKey) {
+        window.showCategoryProducts(window._currentCatKey, window._currentCatName || '', null, window._catModalBackAction || null);
+        return;
+    }
 
     // A. 검색어가 없을 때 -> 핫딜+업자용핫딜 추천상품 24개 표시
     if (term === '') {
@@ -10578,11 +10588,11 @@ window.filterModalItems = function(keyword) {
         return n.includes('원단') || n.includes('자재') || n.includes('롤지') || n.includes('생지');
     };
 
-    // 모든 언어 필드에서 검색
+    // 모든 언어 필드에서 검색 (description/태그 포함)
     const _matchProd = (prod, s) => {
         return [prod.name, prod.name_jp, prod.name_us, prod.name_cn,
                 prod.name_ar, prod.name_es, prod.name_de, prod.name_fr,
-                prod.code, prod.category
+                prod.code, prod.category, prod.description
         ].some(f => (f || '').toLowerCase().includes(s));
     };
 
