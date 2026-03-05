@@ -6628,6 +6628,13 @@ window.showChoiceModal = async function(key) {
         product.is_general_product = false;
     }
 
+    // ★ 고객작품판매: 커스텀사이즈 모드 + 파일올리기 숨김
+    const isArtworkProduct = (product.category || '').startsWith('ua_');
+    if (isArtworkProduct) {
+        product.is_custom_size = true;
+        product.is_general_product = false;
+    }
+
     const isCustom = product.is_custom_size === true;
     const isFixedSize = !!(product.is_file_upload);
     window.isCustomModeCurrent = isCustom;
@@ -6831,8 +6838,9 @@ window.showChoiceModal = async function(key) {
 
     let rightSideUI = "";
     if (isCustom) {
+        const hideFileUpload = isArtworkProduct;
         rightSideUI = productHeaderHtml + `
-            <button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">
+            <button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:${hideFileUpload ? 'none' : 'flex'}; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">
                 <div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일올리기'}
                 </div>
@@ -6944,6 +6952,15 @@ window.showChoiceModal = async function(key) {
     modal.style.display = 'flex';
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
+
+    // ★ 고객작품: 이미지 비율로 자동 사이즈 계산 활성화
+    if (isArtworkProduct && product.img_url) {
+        const artImg = new Image();
+        artImg.onload = function() {
+            window._uploadedFileDimensions = { w: artImg.width, h: artImg.height, ratio: artImg.width / artImg.height };
+        };
+        artImg.src = product.img_url;
+    }
 
     // ★ 사이즈고정상품: 즉시 가격 표시 (sqm 계산 없이 고정단가)
     if (isFixedSize) {

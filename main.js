@@ -1287,7 +1287,16 @@ window.submitArtworkUpload = async function() {
         const { data: pubData } = sb.storage.from('design').getPublicUrl(path);
         const imgUrl = pubData.publicUrl;
 
-        // 3. 3종 상품 DB 등록 (admin_products)
+        // 3. 패브릭 옵션 코드 조회 (패브릭미싱 + 패브릭고리)
+        let fabricAddons = '';
+        try {
+            const { data: addonRows } = await sb.from('admin_addons').select('code').in('category_code', ['2342434', '23442423']);
+            if (addonRows && addonRows.length > 0) {
+                fabricAddons = addonRows.map(r => r.code).join(',');
+            }
+        } catch(e) { console.warn('패브릭 옵션 조회 실패', e); }
+
+        // 4. 3종 상품 DB 등록 (admin_products)
         const ARTWORK_CATS = ['ua_paper', 'ua_fabric', 'ua_canvas'];
         const catNames = {
             ua_paper:  { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター' },
@@ -1309,7 +1318,7 @@ window.submitArtworkUpload = async function() {
                 price: price,
                 price_us: Math.round(price * 0.001),
                 img_url: imgUrl,
-                addons: '',
+                addons: cat === 'ua_fabric' ? fabricAddons : '',
                 description: tags,
                 partner_id: window.currentUser.id,
                 is_custom_size: true,
