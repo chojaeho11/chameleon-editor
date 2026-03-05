@@ -182,11 +182,13 @@ function totalDur() { return vm.clips.reduce((s,c)=>s+clipEffDur(c),0); }
 
 function addFiles(fileList) {
     console.log('[VE] addFiles called, count:', fileList?.length);
+    const videoExts=/\.(mp4|webm|mov|avi|mkv|wmv|flv|m4v|3gp|ogv|ts|mts|m2ts)$/i;
+    const imageExts=/\.(jpg|jpeg|png|gif|bmp|webp|svg|tiff?|ico|heic|heif|avif)$/i;
     Array.from(fileList).forEach(f => {
         console.log('[VE] processing file:', f.name, f.type, f.size);
-        if (f.type.startsWith('image/')) addImageFile(f);
-        else if (f.type.startsWith('video/')) addVideoFile(f);
-        else console.warn('[VE] unknown file type:', f.type);
+        if (f.type.startsWith('image/') || imageExts.test(f.name)) addImageFile(f);
+        else if (f.type.startsWith('video/') || videoExts.test(f.name)) addVideoFile(f);
+        else console.warn('[VE] unknown file type:', f.type, f.name);
     });
 }
 
@@ -539,7 +541,7 @@ function _triggerFileInput(){
 }
 
 function renderMediaTab(el) {
-    let h = `<div class="ve-sec"><button class="ve-import-btn" id="veImportBtn" style="cursor:pointer;border:1px dashed #4a4a6a;"><i class="fa-solid fa-plus"></i> Import</button></div>`;
+    let h = `<div class="ve-sec"><button class="ve-import-btn" style="cursor:pointer;border:1px dashed #4a4a6a;"><i class="fa-solid fa-plus"></i> Import</button></div>`;
     if (vm.clips.length) {
         h += '<div class="ve-media-grid">';
         vm.clips.forEach((c,i) => {
@@ -555,14 +557,14 @@ function renderMediaTab(el) {
     } else {
         h += `<p class="ve-empty">${_t('ve_add_clip','이미지 또는 영상을 추가하세요')}</p>`;
     }
-    h += `<div class="ve-media-empty-area" id="veEmptyArea" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;">
+    h += `<div class="ve-media-empty-area" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;">
         <span style="color:#4a5568;font-size:11px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>${_t('ve_click_to_add','클릭하여 추가')}</span>
     </div>`;
     el.innerHTML = h;
-    // 이벤트 리스너를 직접 부착 (inline onclick 대신)
-    const importBtn=document.getElementById('veImportBtn');
+    // 이벤트 리스너를 직접 부착 (el 내부에서 찾기 — ID 충돌 방지)
+    const importBtn=el.querySelector('.ve-import-btn');
     if(importBtn) importBtn.addEventListener('click', _triggerFileInput);
-    const emptyArea=document.getElementById('veEmptyArea');
+    const emptyArea=el.querySelector('.ve-media-empty-area');
     if(emptyArea){
         emptyArea.addEventListener('click', _triggerFileInput);
         emptyArea.addEventListener('mouseover', function(){this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)';});
