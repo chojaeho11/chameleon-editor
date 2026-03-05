@@ -1755,5 +1755,21 @@
   "biz_ph_title_short": "Manager",
   "biz_ph_phone": "+1-234-567-8900",
   "biz_ph_email": "hello@example.com",
-  "biz_ph_address": "123 Main St, New York, NY"
+  "biz_ph_address": "123 Main St, New York, NY",
+  "promo_tpl_title": "Print Format Selection",
+  "promo_fmt_desc": "Choose the format of your print material.",
+  "promo_fmt_single": "Single-sided (1 page)",
+  "promo_fmt_single_desc": "Flyers, Posters",
+  "promo_fmt_double": "Double-sided (2 pages)",
+  "promo_fmt_double_desc": "Double-sided flyers, Postcards",
+  "promo_fmt_half_fold": "Half-fold (4 pages)",
+  "promo_fmt_half_fold_desc": "Menus, Invitations",
+  "promo_fmt_tri_fold": "Tri-fold (6 pages)",
+  "promo_fmt_tri_fold_desc": "Leaflets, Brochures",
+  "promo_size_title": "Paper Size",
+  "promo_orient_v": "Portrait",
+  "promo_orient_h": "Landscape",
+  "promo_back": "Back",
+  "promo_confirm_title": "Confirm Format",
+  "promo_confirm": "Start"
 }

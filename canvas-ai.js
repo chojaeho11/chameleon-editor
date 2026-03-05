@@ -1649,3 +1649,123 @@ export function applyBizCardTemplate(tplId) {
 
     canvas.renderAll();
 }
+
+// ★ 홍보물 인쇄 가이드 (재단선 + 접는선 + 추가 페이지)
+export function applyPromoGuides(selection) {
+    if (!canvas) return;
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) { console.warn('[Promo] board not found'); return; }
+
+    const bL = board.left, bT = board.top;
+    const bW = board.width * (board.scaleX || 1);
+    const bH = board.height * (board.scaleY || 1);
+    const BLEED_PX = Math.round(3 * 3.7795); // 3mm = ~11.3px
+
+    const guideOpts = {
+        selectable: false, evented: false, excludeFromExport: true,
+        isGuide: true, hoverCursor: 'default'
+    };
+
+    function drawGuidesOnCurrentPage() {
+        // 1. 재단선 (trim line) — 3mm 안쪽 빨간 점선
+        const trimRect = new fabric.Rect({
+            left: bL + BLEED_PX, top: bT + BLEED_PX,
+            width: bW - BLEED_PX * 2, height: bH - BLEED_PX * 2,
+            fill: 'transparent', stroke: '#ef4444', strokeWidth: 0.8,
+            strokeDashArray: [6, 4], ...guideOpts
+        });
+        canvas.add(trimRect);
+
+        // 2. 재단여백 라벨
+        const bleedLabel = new fabric.Text('3mm', {
+            left: bL + 2, top: bT + 2,
+            fontSize: 9, fill: '#ef4444', fontFamily: 'Arial',
+            opacity: 0.7, ...guideOpts
+        });
+        canvas.add(bleedLabel);
+
+        // 3. 접는선 (fold lines)
+        if (selection.foldType === 'half') {
+            // 반접지: 중앙 1개
+            if (selection.orientation === 'vertical') {
+                // 세로형: 수직 접는선
+                const cx = bL + bW / 2;
+                const foldLine = new fabric.Line([cx, bT + BLEED_PX, cx, bT + bH - BLEED_PX], {
+                    stroke: '#3b82f6', strokeWidth: 1.2, strokeDashArray: [8, 4], ...guideOpts
+                });
+                canvas.add(foldLine);
+                const foldLabel = new fabric.Text('FOLD', {
+                    left: cx + 4, top: bT + bH / 2 - 6,
+                    fontSize: 10, fill: '#3b82f6', fontFamily: 'Arial',
+                    fontWeight: 'bold', opacity: 0.8, ...guideOpts
+                });
+                canvas.add(foldLabel);
+            } else {
+                // 가로형: 수평 접는선
+                const cy = bT + bH / 2;
+                const foldLine = new fabric.Line([bL + BLEED_PX, cy, bL + bW - BLEED_PX, cy], {
+                    stroke: '#3b82f6', strokeWidth: 1.2, strokeDashArray: [8, 4], ...guideOpts
+                });
+                canvas.add(foldLine);
+                const foldLabel = new fabric.Text('FOLD', {
+                    left: bL + bW / 2 - 14, top: cy + 4,
+                    fontSize: 10, fill: '#3b82f6', fontFamily: 'Arial',
+                    fontWeight: 'bold', opacity: 0.8, ...guideOpts
+                });
+                canvas.add(foldLabel);
+            }
+        } else if (selection.foldType === 'tri') {
+            // 3단접지: 1/3, 2/3 위치 2개
+            if (selection.orientation === 'vertical') {
+                const x1 = bL + bW / 3;
+                const x2 = bL + (bW * 2) / 3;
+                [x1, x2].forEach((x, i) => {
+                    const line = new fabric.Line([x, bT + BLEED_PX, x, bT + bH - BLEED_PX], {
+                        stroke: '#3b82f6', strokeWidth: 1.2, strokeDashArray: [8, 4], ...guideOpts
+                    });
+                    canvas.add(line);
+                    const label = new fabric.Text('FOLD ' + (i + 1), {
+                        left: x + 4, top: bT + bH / 2 - 6,
+                        fontSize: 10, fill: '#3b82f6', fontFamily: 'Arial',
+                        fontWeight: 'bold', opacity: 0.8, ...guideOpts
+                    });
+                    canvas.add(label);
+                });
+            } else {
+                const y1 = bT + bH / 3;
+                const y2 = bT + (bH * 2) / 3;
+                [y1, y2].forEach((y, i) => {
+                    const line = new fabric.Line([bL + BLEED_PX, y, bL + bW - BLEED_PX, y], {
+                        stroke: '#3b82f6', strokeWidth: 1.2, strokeDashArray: [8, 4], ...guideOpts
+                    });
+                    canvas.add(line);
+                    const label = new fabric.Text('FOLD ' + (i + 1), {
+                        left: bL + bW / 2 - 18, top: y + 4,
+                        fontSize: 10, fill: '#3b82f6', fontFamily: 'Arial',
+                        fontWeight: 'bold', opacity: 0.8, ...guideOpts
+                    });
+                    canvas.add(label);
+                });
+            }
+        }
+
+        canvas.renderAll();
+    }
+
+    // 현재 페이지(1페이지)에 가이드 그리기
+    drawGuidesOnCurrentPage();
+
+    // 추가 페이지 생성 (양면/접지: 2페이지)
+    if (selection.pageCount > 1 && window.addPage) {
+        setTimeout(() => {
+            window.addPage();
+            // 2페이지에도 동일한 가이드 적용
+            setTimeout(() => drawGuidesOnCurrentPage(), 300);
+            // 1페이지로 돌아가기
+            setTimeout(() => { if (window.goToPage) window.goToPage(0); }, 600);
+        }, 400);
+    }
+
+    window.__promoSelection = selection;
+    console.log('[Promo] Guides applied:', selection);
+}

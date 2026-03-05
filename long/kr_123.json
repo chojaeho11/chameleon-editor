@@ -1370,5 +1370,21 @@
   "biz_ph_title_short": "대리",
   "biz_ph_phone": "010-1234-5678",
   "biz_ph_email": "hello@example.com",
-  "biz_ph_address": "서울시 강남구 역삼동 123-45"
+  "biz_ph_address": "서울시 강남구 역삼동 123-45",
+  "promo_tpl_title": "인쇄 규격 선택",
+  "promo_fmt_desc": "인쇄물의 형태를 선택하세요.",
+  "promo_fmt_single": "단면 (1페이지)",
+  "promo_fmt_single_desc": "전단지, 포스터",
+  "promo_fmt_double": "양면 (2페이지)",
+  "promo_fmt_double_desc": "양면 전단지, 엽서",
+  "promo_fmt_half_fold": "반접지 (4페이지)",
+  "promo_fmt_half_fold_desc": "메뉴판, 초대장",
+  "promo_fmt_tri_fold": "3단접지 (6페이지)",
+  "promo_fmt_tri_fold_desc": "리플릿, 브로슈어",
+  "promo_size_title": "용지 크기",
+  "promo_orient_v": "세로형",
+  "promo_orient_h": "가로형",
+  "promo_back": "뒤로",
+  "promo_confirm_title": "규격 확인",
+  "promo_confirm": "시작하기"
 }

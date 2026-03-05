@@ -1752,5 +1752,21 @@
   "biz_ph_title_short": "主任",
   "biz_ph_phone": "03-1234-5678",
   "biz_ph_email": "hello@example.com",
-  "biz_ph_address": "東京都渋谷区神宮前1-2-3"
+  "biz_ph_address": "東京都渋谷区神宮前1-2-3",
+  "promo_tpl_title": "印刷規格選択",
+  "promo_fmt_desc": "印刷物の形式を選択してください。",
+  "promo_fmt_single": "片面（1ページ）",
+  "promo_fmt_single_desc": "チラシ、ポスター",
+  "promo_fmt_double": "両面（2ページ）",
+  "promo_fmt_double_desc": "両面チラシ、ポストカード",
+  "promo_fmt_half_fold": "二つ折り（4ページ）",
+  "promo_fmt_half_fold_desc": "メニュー、招待状",
+  "promo_fmt_tri_fold": "三つ折り（6ページ）",
+  "promo_fmt_tri_fold_desc": "リーフレット、パンフレット",
+  "promo_size_title": "用紙サイズ",
+  "promo_orient_v": "縦型",
+  "promo_orient_h": "横型",
+  "promo_back": "戻る",
+  "promo_confirm_title": "規格確認",
+  "promo_confirm": "開始する"
 }
