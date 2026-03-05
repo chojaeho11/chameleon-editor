@@ -1324,6 +1324,7 @@ window.submitArtworkUpload = async function() {
                 addons: cat === 'ua_fabric' ? fabricAddons : '',
                 description: tags,
                 partner_id: window.currentUser.id,
+                partner_status: 'approved',
                 is_custom_size: true,
                 sort_order: 999
             });
