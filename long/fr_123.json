@@ -1843,5 +1843,18 @@
   "artwork_fabric": "Poster Tissu",
   "artwork_fabric_unit": "par unité (A3)",
   "artwork_canvas": "Cadre Canvas",
-  "artwork_canvas_unit": "par unité (A3)"
+  "artwork_canvas_unit": "par unité (A3)",
+  "artwork_modal_title": "🎨 Enregistrer une Œuvre",
+  "artwork_modal_desc": "En téléchargeant l’image, elle sera automatiquement enregistrée en 3 produits (Poster Papier, Poster Tissu, Cadre Canvas).",
+  "artwork_label_image": "Image de l’œuvre",
+  "artwork_label_title": "Nom de l’œuvre (Mots-clés)",
+  "artwork_ph_title": "Ex: Paysage de cerisiers, Art abstrait, Illustration de chats",
+  "artwork_submit": "Enregistrer l’œuvre",
+  "artwork_close": "Fermer",
+  "artwork_label_calc": "💰 Calculateur de Prix",
+  "artwork_width": "Largeur (mm)",
+  "artwork_height": "Hauteur (mm)",
+  "artwork_auto_size": "Calcul auto",
+  "label_artwork_revenue": "Revenus Artistiques",
+  "label_contributor_reward": "Récompense Contributeur"
 }

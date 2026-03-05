@@ -1843,5 +1843,18 @@
   "artwork_fabric": "Póster Tela",
   "artwork_fabric_unit": "por unidad (A3)",
   "artwork_canvas": "Marco Canvas",
-  "artwork_canvas_unit": "por unidad (A3)"
+  "artwork_canvas_unit": "por unidad (A3)",
+  "artwork_modal_title": "🎨 Registrar Obra",
+  "artwork_modal_desc": "Al subir la imagen, se registrará automáticamente como 3 productos (Póster Papel, Póster Tela, Marco Canvas).",
+  "artwork_label_image": "Imagen de la Obra",
+  "artwork_label_title": "Nombre de la Obra (Palabras clave)",
+  "artwork_ph_title": "Ej: Paisaje de cerezos, Arte abstracto, Ilustración de gatos",
+  "artwork_submit": "Registrar Obra",
+  "artwork_close": "Cerrar",
+  "artwork_label_calc": "💰 Calculadora de Precios",
+  "artwork_width": "Ancho (mm)",
+  "artwork_height": "Alto (mm)",
+  "artwork_auto_size": "Cálculo automático",
+  "label_artwork_revenue": "Ingresos por Obra",
+  "label_contributor_reward": "Recompensa de Contribuidor"
 }

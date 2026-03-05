@@ -1843,5 +1843,18 @@
   "artwork_fabric": "Stoffposter",
   "artwork_fabric_unit": "pro Stück (A3)",
   "artwork_canvas": "Leinwandrahmen",
-  "artwork_canvas_unit": "pro Stück (A3)"
+  "artwork_canvas_unit": "pro Stück (A3)",
+  "artwork_modal_title": "🎨 Kunstwerk Registrieren",
+  "artwork_modal_desc": "Beim Hochladen wird das Bild automatisch als 3 Produkte registriert (Papierposter, Stoffposter, Leinwandrahmen).",
+  "artwork_label_image": "Kunstwerk-Bild",
+  "artwork_label_title": "Werkname (Suchbegriffe)",
+  "artwork_ph_title": "z.B.: Kirschblütenlandschaft, Abstrakte Kunst, Katzen-Illustration",
+  "artwork_submit": "Kunstwerk Registrieren",
+  "artwork_close": "Schließen",
+  "artwork_label_calc": "💰 Preisrechner",
+  "artwork_width": "Breite (mm)",
+  "artwork_height": "Höhe (mm)",
+  "artwork_auto_size": "Auto-Berechnung",
+  "label_artwork_revenue": "Kunstwerk-Einnahmen",
+  "label_contributor_reward": "Mitwirkenden-Belohnung"
 }

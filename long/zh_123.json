@@ -1843,5 +1843,18 @@
   "artwork_fabric": "布质海报",
   "artwork_fabric_unit": "每张 (A3)",
   "artwork_canvas": "帆布相框",
-  "artwork_canvas_unit": "每张 (A3)"
+  "artwork_canvas_unit": "每张 (A3)",
+  "artwork_modal_title": "🎨 作品登记",
+  "artwork_modal_desc": "上传图片后，将自动登记为3种商品（纸质海报、布质海报、帆布相框）。",
+  "artwork_label_image": "作品图片",
+  "artwork_label_title": "作品名（搜索关键词）",
+  "artwork_ph_title": "例如：樱花风景、抽象画、猫咪插画",
+  "artwork_submit": "登记作品",
+  "artwork_close": "关闭",
+  "artwork_label_calc": "💰 价格计算器",
+  "artwork_width": "宽度 (mm)",
+  "artwork_height": "高度 (mm)",
+  "artwork_auto_size": "自动计算",
+  "label_artwork_revenue": "作品收入",
+  "label_contributor_reward": "贡献者奖励"
 }

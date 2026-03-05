@@ -1844,5 +1844,18 @@
   "artwork_fabric": "ملصق قماشي",
   "artwork_fabric_unit": "للقطعة (A3)",
   "artwork_canvas": "إطار كانفاس",
-  "artwork_canvas_unit": "للقطعة (A3)"
+  "artwork_canvas_unit": "للقطعة (A3)",
+  "artwork_modal_title": "🎨 تسجيل عمل فني",
+  "artwork_modal_desc": "عند رفع الصورة، سيتم تسجيلها تلقائياً كـ 3 منتجات (ملصق ورقي، ملصق قماشي، إطار كانفاس).",
+  "artwork_label_image": "صورة العمل الفني",
+  "artwork_label_title": "اسم العمل (كلمات البحث)",
+  "artwork_ph_title": "مثال: مناظر طبيعية، فن تجريدي، رسوم قطط",
+  "artwork_submit": "تسجيل العمل الفني",
+  "artwork_close": "إغلاق",
+  "artwork_label_calc": "💰 حاسبة الأسعار",
+  "artwork_width": "العرض (mm)",
+  "artwork_height": "الارتفاع (mm)",
+  "artwork_auto_size": "حساب تلقائي",
+  "label_artwork_revenue": "إيرادات العمل الفني",
+  "label_contributor_reward": "مكافأة المساهم"
 }
