@@ -996,23 +996,37 @@ window.loadEditorLibraries = function() {
                 });
             });
         }
-        // 상품 초기 표시
-        setTimeout(function() {
+        // 상품 초기 표시 (원본 미로드 시 재시도)
+        function _syncModalProducts(attempt) {
             var srcGrid = document.getElementById('quickMenuContainer');
             var dstGrid = document.getElementById('modalProductGrid');
-            if (srcGrid && dstGrid) { dstGrid.innerHTML = srcGrid.innerHTML; }
-        }, 100);
+            if (srcGrid && dstGrid) {
+                if (srcGrid.children.length > 0) {
+                    dstGrid.innerHTML = srcGrid.innerHTML;
+                } else if (attempt < 20) {
+                    setTimeout(function(){ _syncModalProducts(attempt + 1); }, 300);
+                }
+            }
+        }
+        _syncModalProducts(0);
     };
     // 검색 연동
     var modalSearch = document.getElementById('modalCategorySearch');
     if (modalSearch) {
         modalSearch.addEventListener('input', function() {
             if (window.filterMainIcons) window.filterMainIcons(this.value);
-            setTimeout(function() {
+            // 필터 적용 후 동기화 (DOM 업데이트 대기)
+            function _syncAfterFilter(n) {
                 var srcGrid = document.getElementById('quickMenuContainer');
                 var dstGrid = document.getElementById('modalProductGrid');
-                if (srcGrid && dstGrid) { dstGrid.innerHTML = srcGrid.innerHTML; }
-            }, 300);
+                if (srcGrid && dstGrid) {
+                    dstGrid.innerHTML = srcGrid.innerHTML;
+                    if (srcGrid.children.length === 0 && n < 5) {
+                        setTimeout(function(){ _syncAfterFilter(n+1); }, 200);
+                    }
+                }
+            }
+            setTimeout(function(){ _syncAfterFilter(0); }, 300);
         });
     }
     // 배경 클릭으로 닫기
