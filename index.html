@@ -1700,28 +1700,88 @@ async function handleSubReturn() {
 
 <div class="gallery-section">
 
-<div class="partner-recruit-banner" style="max-width:1000px; margin: 30px auto; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 40px; color: white; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
-    
-    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(99, 102, 241, 0.2); border-radius: 50%;"></div>
-    
-    <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-        <div style="flex: 1; min-width: 300px;">
-            <span style="background: #6366f1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 10px; display: inline-block;">PARTNER CENTER</span>
-            <h2 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 800;" data-i18n="partner_banner_title">업자들을 위한 수수료 저렴한 쿠팡<br><span style="color: #818cf8;">마진이 높은 해외판매, 카멜레온에게 맡기세요!</span></h2>
-            <p style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6;" data-i18n="partner_banner_desc">
-                배송부터 서류까지 카멜레온에 등록만 하면 오케이!<br>광고계의 도매꾹으로 티셔츠인쇄·굿즈제작·판촉물·기타 공산품이나 선물을 등록하세요.<br><b style="color:#818cf8;">6.5% 업계 최저 수수료</b>와 전국 1위 광고인쇄 출력업체의 모든 고객들,<br>그리고 <b style="color:#818cf8;">2배 가격으로 해외 시장 공략</b>이 가능합니다. 지금 최상단 위치를 선점하세요!
-            </p>
+<!-- 고객 작품 판매 마켓플레이스 -->
+<div id="artworkMarketBanner" style="max-width:1200px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:40px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3);">
+    <div style="position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:rgba(99,102,241,0.15); border-radius:50%;"></div>
+    <div style="position:absolute; bottom:-40px; left:-40px; width:150px; height:150px; background:rgba(168,85,247,0.1); border-radius:50%;"></div>
+
+    <div style="position:relative; z-index:2;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px; margin-bottom:28px;">
+            <div style="flex:1; min-width:280px;">
+                <span style="background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:800; display:inline-block; margin-bottom:12px;" data-i18n="artwork_badge">ARTWORK MARKETPLACE</span>
+                <h2 style="margin:0 0 10px; font-size:26px; font-weight:900; line-height:1.3;" data-i18n="artwork_title">내 작품을 상품으로 판매하세요!<br><span style="color:#a78bfa;">판매금의 10%를 수익으로 지급합니다</span></h2>
+                <p style="margin:0; color:#94a3b8; font-size:14px; line-height:1.7;" data-i18n="artwork_desc">사진, 일러스트, 그림 등 내 이미지를 업로드하면<br>종이포스터 · 패브릭포스터 · 캔버스액자 3종 상품으로 자동 등록됩니다.<br>고객이 원하는 크기로 주문하면 <b style="color:#a78bfa;">판매금의 10%</b>가 수익금으로 적립됩니다.</p>
+            </div>
+            <button onclick="window.openArtworkUpload()" style="background:#fff; color:#1e1b4b; font-weight:800; font-size:16px; padding:16px 32px; border:none; border-radius:14px; cursor:pointer; box-shadow:0 4px 15px rgba(255,255,255,0.2); transition:transform .2s; white-space:nowrap;" onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'" data-i18n="artwork_upload_btn">
+                <i class="fa-solid fa-cloud-arrow-up"></i> 작품 등록하기
+            </button>
         </div>
-        
-        <div style="text-align: right;">
-    <button id="btnPartnerConsole" onclick="location.href='partner.html'" class="btn-round" style="display: none; background: #fff; color: #0f172a; font-weight: 800; padding: 15px 30px; border: none; font-size: 16px; box-shadow: 0 4px 15px rgba(255,255,255,0.2);">
-        <i class="fa-solid fa-store"></i> <span data-i18n="btn_partner_console">파트너스 센터 입장</span>
-    </button>
-    
-    <button id="btnPartnerApply" onclick="document.getElementById('partnerApplyModal').style.display='flex'" class="btn-round" style="background: transparent; border: 2px solid #6366f1; color: #fff; font-weight: 800; padding: 12px 25px;">
-        <span data-i18n="btn_partner_apply">가맹점 신청하기</span>
-    </button>
+
+        <!-- 3종 상품 카드 -->
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px;">
+            <div style="background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border-radius:14px; padding:20px; text-align:center; border:1px solid rgba(255,255,255,0.1);">
+                <div style="font-size:32px; margin-bottom:8px;">🖼️</div>
+                <div style="font-size:15px; font-weight:800; margin-bottom:4px;" data-i18n="artwork_paper">종이 포스터</div>
+                <div style="font-size:12px; color:#94a3b8;" data-i18n="artwork_paper_unit">1회배(A3) 기준</div>
+                <div style="font-size:22px; font-weight:900; color:#6ee7b7; margin-top:6px;" id="artPricePaper">10,000원</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border-radius:14px; padding:20px; text-align:center; border:1px solid rgba(255,255,255,0.1);">
+                <div style="font-size:32px; margin-bottom:8px;">🎨</div>
+                <div style="font-size:15px; font-weight:800; margin-bottom:4px;" data-i18n="artwork_fabric">패브릭 포스터</div>
+                <div style="font-size:12px; color:#94a3b8;" data-i18n="artwork_fabric_unit">1회배(A3) 기준</div>
+                <div style="font-size:22px; font-weight:900; color:#6ee7b7; margin-top:6px;" id="artPriceFabric">20,000원</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border-radius:14px; padding:20px; text-align:center; border:1px solid rgba(255,255,255,0.1);">
+                <div style="font-size:32px; margin-bottom:8px;">🏛️</div>
+                <div style="font-size:15px; font-weight:800; margin-bottom:4px;" data-i18n="artwork_canvas">캔버스 액자</div>
+                <div style="font-size:12px; color:#94a3b8;" data-i18n="artwork_canvas_unit">1회배(A3) 기준</div>
+                <div style="font-size:22px; font-weight:900; color:#6ee7b7; margin-top:6px;" id="artPriceCanvas">40,000원</div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- 작품 업로드 모달 -->
+<div id="artworkUploadModal" class="modal-bg" style="z-index:20000; display:none; align-items:center; justify-content:center;">
+    <div class="modal-box" style="width:560px; max-width:95%; max-height:90vh; overflow-y:auto;">
+        <h3 style="margin-top:0;" data-i18n="artwork_modal_title">🎨 작품 등록하기</h3>
+        <p style="color:#666; font-size:13px; margin-bottom:16px;" data-i18n="artwork_modal_desc">이미지를 업로드하면 3종 상품(종이포스터, 패브릭포스터, 캔버스액자)으로 자동 등록됩니다.</p>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:700; font-size:13px; display:block; margin-bottom:6px;" data-i18n="artwork_label_image">작품 이미지</label>
+            <input type="file" id="artworkFileInput" accept="image/*" style="width:100%;" onchange="window._artworkPreview(this)">
+            <div id="artworkPreviewArea" style="margin-top:10px; text-align:center; display:none;">
+                <img id="artworkPreviewImg" style="max-width:100%; max-height:200px; border-radius:10px; border:1px solid #e2e8f0;">
+                <p style="font-size:12px; color:#64748b; margin-top:6px;" id="artworkDimInfo"></p>
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:700; font-size:13px; display:block; margin-bottom:6px;" data-i18n="artwork_label_title">작품명 (검색 키워드)</label>
+            <input type="text" id="artworkTitle" class="ai-input-pretty" data-i18n-placeholder="artwork_ph_title" placeholder="예: 벚꽃 풍경, 추상화, 고양이 일러스트">
+        </div>
+
+        <!-- 회배 가격 계산기 -->
+        <div style="background:#f8fafc; border-radius:12px; padding:16px; margin-bottom:16px; border:1px solid #e2e8f0;">
+            <label style="font-weight:700; font-size:13px; display:block; margin-bottom:8px;" data-i18n="artwork_label_calc">💰 가격 계산기 (회배 기준)</label>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <div style="flex:1; min-width:100px;">
+                    <label style="font-size:11px; color:#64748b;" data-i18n="artwork_width">가로 (mm)</label>
+                    <input type="number" id="artCalcW" class="ai-input-pretty" placeholder="420" style="width:100%;" oninput="window._artCalcPrice()">
+                </div>
+                <span style="font-size:18px; color:#94a3b8; padding-top:16px;">×</span>
+                <div style="flex:1; min-width:100px;">
+                    <label style="font-size:11px; color:#64748b;" data-i18n="artwork_height">세로 (mm)</label>
+                    <input type="number" id="artCalcH" class="ai-input-pretty" placeholder="297" style="width:100%;" oninput="window._artCalcPrice()">
+                </div>
+                <button onclick="window._artAutoFillDim()" style="background:#6366f1; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; margin-top:16px; white-space:nowrap;" data-i18n="artwork_auto_size">자동계산</button>
+            </div>
+            <div id="artCalcResult" style="margin-top:12px; font-size:13px; color:#334155; line-height:1.8; display:none;">
+            </div>
+        </div>
+
+        <button onclick="window.submitArtworkUpload()" class="btn-round primary" style="width:100%; font-size:15px; padding:14px;" data-i18n="artwork_submit">작품 등록하기</button>
+        <button onclick="document.getElementById('artworkUploadModal').style.display='none'" class="btn-round" style="width:100%; margin-top:8px; background:#f1f5f9; color:#333; border:none;" data-i18n="artwork_close">닫기</button>
     </div>
 </div>
 <!-- 기여자시스템 -->
@@ -10033,36 +10093,6 @@ if (w >= 20 && h >= 20) {
     </div>
 </div>
 
-<div id="partnerApplyModal" class="modal-bg" style="z-index: 20000; display: none; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 500px; max-width: 95%;">
-        <h3 style="margin-top:0;" data-i18n="partner_apply_title">🤝 파트너(가맹점) 신청</h3>
-        <p style="color:#666; font-size:13px; margin-bottom:20px;" data-i18n="partner_apply_desc">지역 광고/제조 파트너가 되어 수익을 창출하세요.</p>
-
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_company">업체명 (상호)</label>
-            <input id="applyCompName" class="ai-input-pretty" placeholder="예: 카멜레온디자인" data-i18n-placeholder="partner_ph_company">
-        </div>
-
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_phone">연락처</label>
-            <input id="applyPhone" class="ai-input-pretty" placeholder="010-1234-5678" data-i18n-placeholder="partner_ph_phone">
-        </div>
-
-        <div style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_region">활동 지역 (다중 입력 가능)</label>
-            <input id="applyRegion" class="ai-input-pretty" placeholder="예: 서울 강남구, 서초구, 경기 화성시 (쉼표로 구분)" data-i18n-placeholder="partner_ph_region">
-            <p style="font-size:11px; color:#ef4444; margin-top:5px;" data-i18n="partner_region_hint">* 여러 지역 활동 시 쉼표(,)로 구분하여 모두 적어주세요.</p>
-        </div>
-        <div style="margin-bottom:20px;">
-            <label class="form-label" style="font-weight:bold;" data-i18n="partner_label_items">주 생산 품목 (제조사인 경우)</label>
-            <input id="applyMainItems" class="ai-input-pretty" placeholder="예: 현수막, 아크릴, 간판 (광고사는 '기획/디자인' 입력)" data-i18n-placeholder="partner_ph_items">
-        </div>
-
-        <button onclick="window.submitRealPartnerApp()" class="btn-round primary" style="width:100%;" data-i18n="partner_btn_apply">신청하기</button>
-        <button onclick="window.cancelPartnerApp()" class="btn-round" style="width:100%; margin-top:5px; background:#fff1f2; color:#be123c; border:1px solid #fda4af;" data-i18n="partner_btn_cancel">신청 철회하기</button>
-        <button onclick="document.getElementById('partnerApplyModal').style.display='none'" class="btn-round" style="width:100%; margin-top:10px; background:#f1f5f9; color:#333; border:none;" data-i18n="partner_btn_close">닫기</button>
-    </div>
-</div>
 
 <script>
 function updateVipFileList(input) {

@@ -738,25 +738,6 @@ async function checkPartnerStatus() {
     }
 }
 
-async function applyForPartner() {
-    const { data: { user } } = await sb.auth.getUser();
-    
-    if (!user) {
-        showToast(window.t('msg_login_required') || "로그인이 필요합니다.", "warn");
-        const loginModal = document.getElementById('loginModal');
-        if(loginModal) loginModal.style.display = 'flex';
-        return;
-    }
-
-    // 구린 입력창(prompt) 대신 index.html에 있는 예쁜 모달 띄우기
-    const modal = document.getElementById('partnerApplyModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    } else {
-        console.error("partnerApplyModal 요소를 찾을 수 없습니다.");
-        showToast(window.t('msg_cannot_load_form'), "error");
-    }
-}
 
 // [파트너 마켓플레이스] 기존 시공주문 접수/입찰 시스템 제거됨 — partner.html로 이전
 // ============================================================
@@ -1229,6 +1210,235 @@ window.openTemplateCreator = function() {
     if(confirm(window.t('confirm_go_editor'))) window.startEditorDirect('custom');
 };
 
+// ============================================================
+// [작품 마켓플레이스] 고객 작품 판매 시스템
+// ============================================================
+
+// 회배 기준 가격 (KRW) — 1회배 = A3 (297×420mm) = 124,740 mm²
+const ART_HOEBAE_BASE = 297 * 420; // 124,740 mm²
+const ART_PRICES_KRW = { paper: 10000, fabric: 20000, canvas: 40000 };
+const ART_REVENUE_RATE = 0.10; // 판매금의 10% 수익
+
+// 통화 변환 표시
+function _artFmtPrice(krw) {
+    const cfg = window.SITE_CONFIG || {};
+    const country = cfg.COUNTRY || 'KR';
+    const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+    const v = krw * rate;
+    if (country === 'JP') return '¥' + Math.floor(v).toLocaleString();
+    if (country === 'US') return '$' + (v < 1 ? v.toFixed(2) : v.toFixed(0));
+    if (country === 'CN') return '¥' + Math.round(v).toLocaleString();
+    if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + v.toFixed(2);
+    return v.toLocaleString() + '원';
+}
+
+// 배너 가격 표시 초기화
+function _initArtworkPrices() {
+    const el1 = document.getElementById('artPricePaper');
+    const el2 = document.getElementById('artPriceFabric');
+    const el3 = document.getElementById('artPriceCanvas');
+    if (el1) el1.textContent = _artFmtPrice(ART_PRICES_KRW.paper);
+    if (el2) el2.textContent = _artFmtPrice(ART_PRICES_KRW.fabric);
+    if (el3) el3.textContent = _artFmtPrice(ART_PRICES_KRW.canvas);
+}
+// DOM 로드 후 가격 표시
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _initArtworkPrices);
+else setTimeout(_initArtworkPrices, 500);
+
+// 작품 업로드 모달 열기
+window.openArtworkUpload = function() {
+    if (!window.currentUser) {
+        showToast(window.t?.('msg_login_required', '로그인이 필요합니다') || '로그인이 필요합니다', 'warn');
+        document.getElementById('loginModal').style.display = 'flex';
+        return;
+    }
+    document.getElementById('artworkFileInput').value = '';
+    document.getElementById('artworkTitle').value = '';
+    document.getElementById('artworkPreviewArea').style.display = 'none';
+    document.getElementById('artCalcW').value = '';
+    document.getElementById('artCalcH').value = '';
+    document.getElementById('artCalcResult').style.display = 'none';
+    window._artImgRatio = null;
+    document.getElementById('artworkUploadModal').style.display = 'flex';
+};
+
+// 이미지 미리보기 + 비율 저장
+window._artworkPreview = function(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            window._artImgRatio = img.width / img.height;
+            document.getElementById('artworkPreviewImg').src = e.target.result;
+            document.getElementById('artworkPreviewArea').style.display = 'block';
+            document.getElementById('artworkDimInfo').textContent = `${img.width} × ${img.height} px (${(img.width/img.height).toFixed(2)})`;
+            // 자동으로 A3 기준 치수 세팅
+            if (img.width >= img.height) {
+                document.getElementById('artCalcW').value = 420;
+                document.getElementById('artCalcH').value = Math.round(420 / window._artImgRatio);
+            } else {
+                document.getElementById('artCalcH').value = 420;
+                document.getElementById('artCalcW').value = Math.round(420 * window._artImgRatio);
+            }
+            window._artCalcPrice();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+// 자동 치수 계산 (한쪽만 입력 시 비율로 계산)
+window._artAutoFillDim = function() {
+    if (!window._artImgRatio) { showToast(window.t?.('artwork_upload_first', '이미지를 먼저 업로드하세요') || '이미지를 먼저 업로드하세요', 'info'); return; }
+    const w = parseInt(document.getElementById('artCalcW').value);
+    const h = parseInt(document.getElementById('artCalcH').value);
+    if (w && !h) document.getElementById('artCalcH').value = Math.round(w / window._artImgRatio);
+    else if (h && !w) document.getElementById('artCalcW').value = Math.round(h * window._artImgRatio);
+    else if (!w && !h) {
+        document.getElementById('artCalcW').value = 420;
+        document.getElementById('artCalcH').value = Math.round(420 / window._artImgRatio);
+    }
+    window._artCalcPrice();
+};
+
+// 회배 가격 계산
+window._artCalcPrice = function() {
+    const w = parseInt(document.getElementById('artCalcW').value) || 0;
+    const h = parseInt(document.getElementById('artCalcH').value) || 0;
+    const result = document.getElementById('artCalcResult');
+    if (!w || !h) { result.style.display = 'none'; return; }
+
+    const area = w * h;
+    const hoebae = Math.max(1, Math.ceil(area / ART_HOEBAE_BASE * 10) / 10); // 소수 1자리
+    const pPaper = Math.round(ART_PRICES_KRW.paper * hoebae);
+    const pFabric = Math.round(ART_PRICES_KRW.fabric * hoebae);
+    const pCanvas = Math.round(ART_PRICES_KRW.canvas * hoebae);
+
+    result.style.display = 'block';
+    result.innerHTML = `
+        <div style="font-weight:800; margin-bottom:6px;">📐 ${w}×${h}mm = <span style="color:#6366f1;">${hoebae}회배</span></div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
+            <div style="background:#f0fdf4; padding:8px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#666;">🖼️ 종이포스터</div>
+                <div style="font-weight:800; color:#059669;">${_artFmtPrice(pPaper)}</div>
+                <div style="font-size:10px; color:#94a3b8;">수익 ${_artFmtPrice(Math.round(pPaper * ART_REVENUE_RATE))}</div>
+            </div>
+            <div style="background:#faf5ff; padding:8px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#666;">🎨 패브릭포스터</div>
+                <div style="font-weight:800; color:#7c3aed;">${_artFmtPrice(pFabric)}</div>
+                <div style="font-size:10px; color:#94a3b8;">수익 ${_artFmtPrice(Math.round(pFabric * ART_REVENUE_RATE))}</div>
+            </div>
+            <div style="background:#fffbeb; padding:8px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#666;">🏛️ 캔버스액자</div>
+                <div style="font-weight:800; color:#d97706;">${_artFmtPrice(pCanvas)}</div>
+                <div style="font-size:10px; color:#94a3b8;">수익 ${_artFmtPrice(Math.round(pCanvas * ART_REVENUE_RATE))}</div>
+            </div>
+        </div>
+    `;
+};
+
+// 작품 업로드 실행 → 3종 상품 자동 등록
+window.submitArtworkUpload = async function() {
+    if (!window.currentUser) { showToast(window.t?.('msg_login_required') || '로그인 필요', 'warn'); return; }
+
+    const file = document.getElementById('artworkFileInput').files[0];
+    const title = document.getElementById('artworkTitle').value.trim();
+    if (!file) { showToast(window.t?.('artwork_no_file', '이미지를 선택하세요') || '이미지를 선택하세요', 'warn'); return; }
+    if (!title) { showToast(window.t?.('artwork_no_title', '작품명을 입력하세요') || '작품명을 입력하세요', 'warn'); return; }
+
+    const loading = document.getElementById('loading');
+    if (loading) { loading.style.display = 'flex'; const p = loading.querySelector('p'); if (p) p.innerText = '작품 등록 중...'; }
+
+    try {
+        // 1. 키워드 번역 (한/영/일)
+        let tags = title;
+        try {
+            const [koT, enT, jaT] = await Promise.all([
+                googleTranslate(title, 'ko'), googleTranslate(title, 'en'), googleTranslate(title, 'ja')
+            ]);
+            const combined = new Set([...title.split(',').map(s=>s.trim()), ...(koT||'').split(',').map(s=>s.trim()), ...(enT||'').split(',').map(s=>s.trim()), ...(jaT||'').split(',').map(s=>s.trim())]);
+            tags = Array.from(combined).filter(Boolean).join(', ');
+        } catch(e) { console.warn('번역 실패, 원본만 사용', e); }
+
+        // 2. 이미지 업로드
+        const ts = Date.now();
+        const ext = file.name.split('.').pop();
+        const safeName = `${ts}_${Math.random().toString(36).substring(2,10)}.${ext}`;
+        const path = `user_artwork/${window.currentUser.id}_${safeName}`;
+        const { error: upErr } = await sb.storage.from('design').upload(path, file);
+        if (upErr) throw upErr;
+        const { data: pubData } = sb.storage.from('design').getPublicUrl(path);
+        const imgUrl = pubData.publicUrl;
+
+        // 3. 3종 상품 DB 등록 (admin_products)
+        const ARTWORK_CATS = ['ua_paper', 'ua_fabric', 'ua_canvas'];
+        const catNames = {
+            ua_paper:  { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター' },
+            ua_fabric: { name: '패브릭포스터', name_us: 'Fabric Poster', name_jp: 'ファブリックポスター' },
+            ua_canvas: { name: '캔버스액자', name_us: 'Canvas Frame', name_jp: 'キャンバス額' }
+        };
+        const basePrices = { ua_paper: 10000, ua_fabric: 20000, ua_canvas: 40000 };
+
+        for (const cat of ARTWORK_CATS) {
+            const cn = catNames[cat];
+            const price = basePrices[cat];
+            const productCode = `${cat}_${window.currentUser.id.substring(0,8)}_${ts}`;
+            await sb.from('admin_products').insert({
+                code: productCode,
+                name: `${title} - ${cn.name}`,
+                name_us: `${title} - ${cn.name_us}`,
+                name_jp: `${title} - ${cn.name_jp}`,
+                category: cat,
+                price: price,
+                price_us: Math.round(price * 0.001),
+                img_url: imgUrl,
+                tags: tags,
+                custom_w: 0,
+                custom_h: 0,
+                artwork_owner: window.currentUser.id,
+                artwork_revenue_rate: ART_REVENUE_RATE,
+                sort_order: 999
+            });
+        }
+
+        showToast(window.t?.('artwork_success', '작품이 3종 상품으로 등록되었습니다!') || '작품이 3종 상품으로 등록되었습니다!', 'success');
+        document.getElementById('artworkUploadModal').style.display = 'none';
+
+    } catch(e) {
+        console.error('작품 등록 실패:', e);
+        showToast((window.t?.('artwork_fail', '등록 실패: ') || '등록 실패: ') + e.message, 'error');
+    } finally {
+        if (loading) loading.style.display = 'none';
+    }
+};
+
+// 카테고리 자동 생성 (최초 1회) — 관리자 콘솔에서 실행
+window._setupArtworkCategories = async function() {
+    if (!sb) return;
+    // 대분류
+    const { data: existing } = await sb.from('admin_top_categories').select('code').eq('code', 'user_artwork');
+    if (!existing || existing.length === 0) {
+        await sb.from('admin_top_categories').insert({
+            code: 'user_artwork', name: '고객작품판매', name_us: 'Artwork Shop', name_jp: '作品販売',
+            name_cn: '作品商店', name_ar: 'متجر الأعمال', name_es: 'Tienda de Arte', name_de: 'Kunstshop', name_fr: 'Boutique Art',
+            icon: 'fa-solid fa-paintbrush', sort_order: 50
+        });
+    }
+    // 소분류 3개
+    const subs = [
+        { code: 'ua_paper', name: '종이 포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', top_category_code: 'user_artwork', icon: '🖼️', sort_order: 1 },
+        { code: 'ua_fabric', name: '패브릭 포스터', name_us: 'Fabric Poster', name_jp: 'ファブリックポスター', top_category_code: 'user_artwork', icon: '🎨', sort_order: 2 },
+        { code: 'ua_canvas', name: '캔버스 액자', name_us: 'Canvas Frame', name_jp: 'キャンバス額', top_category_code: 'user_artwork', icon: '🏛️', sort_order: 3 }
+    ];
+    for (const s of subs) {
+        const { data: ex } = await sb.from('admin_categories').select('code').eq('code', s.code);
+        if (!ex || ex.length === 0) await sb.from('admin_categories').insert(s);
+    }
+    console.log('✅ 작품 마켓플레이스 카테고리 설정 완료');
+};
+
 // [수정] 디자인 판매 등록 (관리자 전용)
 window.openSellModal = async function() {
     // 1. 로그인 체크
@@ -1428,60 +1638,6 @@ async function calculateFileHash(file) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 // ============================================================
-// [신규] 파트너(가맹점) 신청 제출 함수
-// ============================================================
-window.submitRealPartnerApp = async function() {
-    // 1. 로그인 체크
-    if (!currentUser) {
-        showToast(window.t('msg_login_required'), "warn");
-        document.getElementById('loginModal').style.display = 'flex';
-        return;
-    }
-
-    // 2. 입력값 가져오기
-    const comp = document.getElementById('applyCompName').value;
-    const phone = document.getElementById('applyPhone').value;
-    const region = document.getElementById('applyRegion').value;
-    const items = document.getElementById('applyMainItems').value;
-
-    // 3. 유효성 검사
-    if(!comp || !phone || !region) { showToast(window.t('msg_partner_fields_required'), "warn"); return; }
-
-    // 4. DB 전송
-    try {
-        const { error } = await sb.from('partner_applications').insert({
-            user_id: currentUser.id,
-            email: currentUser.email, // 유저 이메일 저장
-            company_name: comp,
-            contact_phone: phone,
-            region: region,
-            main_items: items,
-            status: 'pending' // 대기 상태로 저장
-        });
-
-        if (error) throw error;
-
-        showToast(window.t('msg_partner_applied'), "success");
-        document.getElementById('partnerApplyModal').style.display = 'none';
-        
-        // 입력창 초기화
-        document.getElementById('applyCompName').value = '';
-        document.getElementById('applyPhone').value = '';
-        document.getElementById('applyRegion').value = '';
-        document.getElementById('applyMainItems').value = '';
-
-    } catch (e) {
-        console.error(e);
-        showToast(window.t('msg_apply_error') + e.message, "error");
-    }
-};
-
-// 신청 철회(취소) 함수
-window.cancelPartnerApp = function() {
-    if(confirm(window.t('confirm_cancel_form'))) {
-        document.getElementById('partnerApplyModal').style.display = 'none';
-    }
-};
 // [공통] 구글 무료 번역 함수 (global_products.js에서 가져옴)
 async function googleTranslate(text, targetLang) {
     if (!text) return "";
