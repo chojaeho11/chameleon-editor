@@ -3108,6 +3108,9 @@ async function handleSubReturn() {
             <div id="pdFaceTabs" class="pd-face-tabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3);">
             </div>
 
+            <!-- 홍보물 패널 네비게이션 바 -->
+            <div id="promoPanelNav" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:100; background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.12); padding:4px; gap:2px; align-items:center;">
+            </div>
             <div id="pageControls" class="page-controls-bar">
                 <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
                     <i class="fa-solid fa-chevron-left"></i>
@@ -3297,26 +3300,22 @@ async function handleSubReturn() {
 <script>
 (function(){
     // 프리셋 정의: { format, paperW(mm), paperH(mm), orientation, foldType, pageCount, canvasWmm, canvasHmm }
+    // 각 패널이 독립 페이지로 생성됨 (캔버스 = 단일 패널 크기)
     var PRESETS = {
-        flyer_single:  { format:'single',    pw:210, ph:297, orient:'vertical',   fold:null,   pages:1 },
-        flyer_double:  { format:'double',    pw:210, ph:297, orient:'vertical',   fold:null,   pages:2 },
-        postcard:      { format:'double',    pw:148, ph:100, orient:'horizontal', fold:null,   pages:2 },
-        invitation:    { format:'half_fold', pw:130, ph:190, orient:'vertical',   fold:'half', pages:2 },
-        a4_half:       { format:'half_fold', pw:210, ph:297, orient:'vertical',   fold:'half', pages:2 },
-        tri_leaflet:   { format:'tri_fold',  pw:210, ph:297, orient:'vertical',   fold:'tri',  pages:2 }
+        flyer_single:  { format:'single',    pw:210, ph:297, orient:'vertical',   fold:null,   panels:1 },
+        flyer_double:  { format:'double',    pw:210, ph:297, orient:'vertical',   fold:null,   panels:2 },
+        postcard:      { format:'double',    pw:148, ph:100, orient:'horizontal', fold:null,   panels:2 },
+        invitation:    { format:'half_fold', pw:130, ph:190, orient:'vertical',   fold:'half', panels:4 },
+        a4_half:       { format:'half_fold', pw:210, ph:297, orient:'vertical',   fold:'half', panels:4 },
+        tri_leaflet:   { format:'tri_fold',  pw:210, ph:297, orient:'vertical',   fold:'tri',  panels:6 }
     };
 
     function calcCanvas(p) {
-        var cw, ch;
-        if (p.fold === 'half') {
-            cw = p.pw * 2 + 6; ch = p.ph + 6;
-        } else if (p.fold === 'tri') {
-            cw = p.pw * 3 + 6; ch = p.ph + 6;
-        } else {
-            cw = p.pw + 6; ch = p.ph + 6;
-        }
+        // 캔버스 = 단일 패널 크기 (용지 + 재단여백 6mm)
+        var cw = p.pw + 6, ch = p.ph + 6;
         return { format:p.format, paperKey:'custom', orientation:p.orient,
-                 canvasWmm:cw, canvasHmm:ch, pageCount:p.pages, foldType:p.fold, paperW:p.pw, paperH:p.ph };
+                 canvasWmm:cw, canvasHmm:ch, panelCount:p.panels, pageCount:1,
+                 foldType:p.fold, paperW:p.pw, paperH:p.ph };
     }
 
     window._promoPickPreset = function(id) {
@@ -8634,14 +8633,14 @@ if (w >= 20 && h >= 20) {
             }, 600);
         }
 
-        // ★ 홍보물 가이드 적용 (재단선 + 접는선 + 추가 페이지)
+        // ★ 홍보물: 패널별 페이지 생성 + 네비게이션 바 + 배경잠금
         if (_promoSelection) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
                     const mod = await import('./canvas-ai.js?v=124');
-                    if (mod.applyPromoGuides) mod.applyPromoGuides(_promoSelection);
-                } catch(e) { console.error('Promo guides error:', e); }
+                    if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
+                } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
         }
 
@@ -8665,6 +8664,7 @@ if (w >= 20 && h >= 20) {
         const hasUploadedFiles = window._pendingEditorFiles && window._pendingEditorFiles.length > 0;
         const isBizCardTpl = _bizTplId && _bizTplId !== 'blank';
         const isPromoTpl = !!_promoSelection;
+        // 홍보물은 페이지 생성 후 마법사 자동 오픈 (applyPromoPages에서 처리)
         if (!isHoneycombKey && !isBizCardTpl && !isPromoTpl && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성

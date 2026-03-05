@@ -278,6 +278,8 @@ function loadPage(index) {
             if (boardIdx >= 0) canvas.moveTo(bg, boardIdx + 1);
         });
         guides.forEach(g => canvas.bringToFront(g));
+        // 홍보물 패널 네비 동기화
+        if (window.__promoNavSync) window.__promoNavSync(index);
         updatePageCounter();
         if (window.resizeCanvasToFit) window.resizeCanvasToFit();
         canvas.requestRenderAll();
