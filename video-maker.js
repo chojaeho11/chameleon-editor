@@ -2,6 +2,10 @@
 // Dark theme, timeline, video+image clips, format selector, overlays, music, adjustments
 const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 
+// window._veImport: 외부(index.html inline onclick 등)에서도 호출 가능하도록 등록
+// _triggerFileInput은 아래에서 정의됨 (hoisted function)
+window._veImport=function(){ _triggerFileInput(); };
+
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
@@ -177,32 +181,41 @@ function clipStart(i) { let t=0; for(let j=0;j<i;j++) t+=clipEffDur(vm.clips[j])
 function totalDur() { return vm.clips.reduce((s,c)=>s+clipEffDur(c),0); }
 
 function addFiles(fileList) {
+    console.log('[VE] addFiles called, count:', fileList?.length);
     Array.from(fileList).forEach(f => {
+        console.log('[VE] processing file:', f.name, f.type, f.size);
         if (f.type.startsWith('image/')) addImageFile(f);
         else if (f.type.startsWith('video/')) addVideoFile(f);
+        else console.warn('[VE] unknown file type:', f.type);
     });
 }
 
 function addImageFile(f) {
+    console.log('[VE] addImageFile:', f.name);
     const url = URL.createObjectURL(f);
     const img = new Image();
     img.onload = () => {
+        console.log('[VE] image loaded:', img.naturalWidth, 'x', img.naturalHeight);
         // thumbnail
         const tc = document.createElement('canvas'); tc.width=160; tc.height=90;
         const tx = tc.getContext('2d'); tx.drawImage(img,0,0,160,90);
         vm.clips.push({ type:'image', file:f, url, img, thumbUrl:tc.toDataURL('image/jpeg',0.7),
             duration:3, overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
             locked:true, panX:0, panY:0, imgScale:1 });
+        console.log('[VE] clip added, total clips:', vm.clips.length);
         selectClip(vm.clips.length-1);
     };
+    img.onerror = (e) => { console.error('[VE] image load error:', e); };
     img.src = url;
 }
 
 function addVideoFile(f) {
+    console.log('[VE] addVideoFile:', f.name);
     const url = URL.createObjectURL(f);
     const video = document.createElement('video');
     video.src = url; video.muted = true; video.preload = 'auto'; video.playsInline = true;
     video.onloadedmetadata = () => {
+        console.log('[VE] video metadata loaded, duration:', video.duration);
         video.currentTime = 0.5;
         video.onseeked = () => {
             const tc = document.createElement('canvas'); tc.width=160; tc.height=90;
@@ -212,10 +225,13 @@ function addVideoFile(f) {
                 overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
                 locked:true, panX:0, panY:0, imgScale:1 });
             video.onseeked = null;
+            console.log('[VE] video clip added, total clips:', vm.clips.length);
             selectClip(vm.clips.length-1);
         };
     };
+    video.onerror = (e) => { console.error('[VE] video load error:', e); };
 }
+
 
 function duplicateClip(i) {
     const c = vm.clips[i]; if (!c) return;
@@ -514,27 +530,54 @@ function refreshLeftPanel() {
     }
 }
 
+function _triggerFileInput(){
+    _ensureFileInputListener();
+    const fi=document.getElementById('veFileInput');
+    if(!fi) { console.error('[VE] veFileInput not found'); return; }
+    console.log('[VE] clicking file input');
+    fi.click();
+}
+
 function renderMediaTab(el) {
-    let h = `<div class="ve-sec"><label class="ve-import-btn" for="veFileInput" style="cursor:pointer;"><i class="fa-solid fa-plus"></i> Import</label></div>`;
+    let h = `<div class="ve-sec"><button class="ve-import-btn" id="veImportBtn" style="cursor:pointer;border:1px dashed #4a4a6a;"><i class="fa-solid fa-plus"></i> Import</button></div>`;
     if (vm.clips.length) {
         h += '<div class="ve-media-grid">';
         vm.clips.forEach((c,i) => {
-            h += `<div class="ve-media-item${i===vm.ci?' active':''}" onclick="window._veSelectClip(${i})">`;
+            h += `<div class="ve-media-item${i===vm.ci?' active':''}" data-clip="${i}">`;
             h += `<img src="${c.thumbUrl}">`;
             if(c.type==='video') h += `<span class="ve-media-dur">${fmtTime(c.duration)}</span>`;
             h += `<span class="ve-media-type">${c.type==='video'?'🎬':'🖼️'}</span>`;
-            h += `<button class="ve-media-dup" onclick="event.stopPropagation();window._veDuplicateClip(${i})" title="${_t('ve_duplicate','복제')}" style="position:absolute;top:2px;right:22px;background:rgba(99,102,241,0.8);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-copy"></i></button>`;
-            h += `<button class="ve-media-del" onclick="event.stopPropagation();window._veRemoveClip(${i})">×</button>`;
+            h += `<button class="ve-media-dup" data-dup="${i}" title="${_t('ve_duplicate','복제')}" style="position:absolute;top:2px;right:22px;background:rgba(99,102,241,0.8);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-copy"></i></button>`;
+            h += `<button class="ve-media-del" data-del="${i}">×</button>`;
             h += `</div>`;
         });
         h += '</div>';
     } else {
         h += `<p class="ve-empty">${_t('ve_add_clip','이미지 또는 영상을 추가하세요')}</p>`;
     }
-    h += `<label for="veFileInput" class="ve-media-empty-area" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;" onmouseover="this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)'" onmouseout="this.style.borderColor='transparent';this.style.background='transparent'">
+    h += `<div class="ve-media-empty-area" id="veEmptyArea" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;">
         <span style="color:#4a5568;font-size:11px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>${_t('ve_click_to_add','클릭하여 추가')}</span>
-    </label>`;
+    </div>`;
     el.innerHTML = h;
+    // 이벤트 리스너를 직접 부착 (inline onclick 대신)
+    const importBtn=document.getElementById('veImportBtn');
+    if(importBtn) importBtn.addEventListener('click', _triggerFileInput);
+    const emptyArea=document.getElementById('veEmptyArea');
+    if(emptyArea){
+        emptyArea.addEventListener('click', _triggerFileInput);
+        emptyArea.addEventListener('mouseover', function(){this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)';});
+        emptyArea.addEventListener('mouseout', function(){this.style.borderColor='transparent';this.style.background='transparent';});
+    }
+    // 클립 선택/복제/삭제
+    el.querySelectorAll('.ve-media-item').forEach(item=>{
+        item.addEventListener('click', ()=>{ const i=parseInt(item.dataset.clip); if(!isNaN(i)) selectClip(i); });
+    });
+    el.querySelectorAll('.ve-media-dup').forEach(btn=>{
+        btn.addEventListener('click', e=>{ e.stopPropagation(); const i=parseInt(btn.dataset.dup); if(!isNaN(i)) duplicateClip(i); });
+    });
+    el.querySelectorAll('.ve-media-del').forEach(btn=>{
+        btn.addEventListener('click', e=>{ e.stopPropagation(); const i=parseInt(btn.dataset.del); if(!isNaN(i)) removeClip(i); });
+    });
 }
 
 function filterTagsByCountry(tags) {
@@ -2054,11 +2097,23 @@ window.veExport = async function() {
 // ═══════════════════════════════════════════════════════════════
 // INIT & EVENTS
 // ═══════════════════════════════════════════════════════════════
+function _ensureFileInputListener(){
+    const fi=document.getElementById('veFileInput');
+    if(fi&&!fi._veAttached){
+        fi.addEventListener('change',e=>{
+            console.log('[VE] change fired, files:', e.target.files?.length);
+            addFiles(e.target.files);
+            e.target.value='';
+        });
+        fi._veAttached=true;
+        console.log('[VE] file input listener attached');
+    }
+}
+
 export function initVideoMaker() {
     const modal=document.getElementById('videoMakerModal'); if(!modal) return;
-    const fi=document.getElementById('veFileInput');
     const dz=document.getElementById('veDropOverlay');
-    if(fi) fi.addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
+    _ensureFileInputListener();
     // drag & drop on canvas area
     const center=document.querySelector('.ve-center');
     if(center){
@@ -2153,8 +2208,7 @@ function onDown(e){
     if(vm.playing&&!vm.paused)return;
     // Click on empty canvas → trigger file upload
     if(!vm.clips.length){
-        const fi=document.getElementById('veFileInput');
-        if(fi) fi.click();
+        _triggerFileInput();
         return;
     }
     const{x,y}=canvasXY(e);
@@ -2318,6 +2372,7 @@ window.openVideoMaker = function(label) {
     vm.w=f.w;vm.h=f.h;
     const modal=document.getElementById('videoMakerModal');if(!modal)return;
     modal.style.display='flex';
+    _ensureFileInputListener();
     // push history state for back button handling
     history.pushState({veOpen:true},'','');
     // hide site UI that has high z-index
