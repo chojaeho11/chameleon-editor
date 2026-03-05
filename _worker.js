@@ -341,7 +341,7 @@ export default {
 <meta property="og:type" content="website">
 <meta property="og:title" content="${escHtml(homeData.title)}">
 <meta property="og:description" content="${escHtml(homeData.desc)}">
-<meta property="og:image" content="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png">
+<meta property="og:image" content="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1772681692107_1409904-0a2de3f2-b797-472d-bf50-914c6ed0d8a4.png">
 <meta property="og:url" content="${homeData.domain}/">
 <meta property="og:site_name" content="${escHtml(homeData.siteName)}">
 <link rel="canonical" href="${homeData.domain}/">
@@ -428,7 +428,7 @@ ${hreflangTags('/')}
                         };
 
                         const ed = editorSeo;
-                        const edImg = 'https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png';
+                        const edImg = 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1772681692107_1409904-0a2de3f2-b797-472d-bf50-914c6ed0d8a4.png';
 
                         const featHtml = ed.features.map(f =>
                             `<div style="display:inline-block;vertical-align:top;width:280px;margin:15px;padding:20px;border:1px solid #eee;border-radius:12px;">
