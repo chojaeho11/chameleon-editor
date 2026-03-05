@@ -402,6 +402,12 @@ async function handleAuthAction() {
 
 async function handleSocialLogin(provider) {
     if (!sb) { showToast(window.t('err_db_connection', 'DB 미연결'), "error"); return; }
+
+    // ★ LINE은 Supabase 기본 provider가 아니므로 수동 OAuth 처리
+    if (provider === 'line') {
+        return handleLineLogin();
+    }
+
     // ★ 현재 URL의 lang 파라미터를 유지하여 로그인 후 같은 언어 페이지로 복귀
     const redirectUrl = window.location.href.split('#')[0];
     const { data, error } = await sb.auth.signInWithOAuth({
@@ -413,6 +419,28 @@ async function handleSocialLogin(provider) {
         const errPrefix = window.t('err_login_fail', '로그인 실패: ');
         showToast(errPrefix + error.message, "error");
     }
+}
+
+// ============================================================
+// LINE 로그인 (수동 OAuth2 → Supabase 자동 가입/로그인)
+// ============================================================
+const LINE_CHANNEL_ID = '2009335849';
+const LINE_CALLBACK_PATH = '/line_callback.html';
+
+function handleLineLogin() {
+    const redirectUri = window.location.origin + LINE_CALLBACK_PATH;
+    const state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('line_oauth_state', state);
+    sessionStorage.setItem('line_return_url', window.location.href);
+
+    const authUrl = 'https://access.line.me/oauth2/v2.1/authorize'
+        + '?response_type=code'
+        + '&client_id=' + LINE_CHANNEL_ID
+        + '&redirect_uri=' + encodeURIComponent(redirectUri)
+        + '&state=' + state
+        + '&scope=profile%20openid%20email';
+
+    window.location.href = authUrl;
 }
 
 // ── 비밀번호 재설정 모달 ──

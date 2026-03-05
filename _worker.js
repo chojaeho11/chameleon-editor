@@ -240,6 +240,62 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
+        // ========== LINE OAuth Token Exchange ==========
+        if (path === 'api/line_token' && request.method === 'POST') {
+            try {
+                const body = await request.json();
+                const { code, redirect_uri } = body;
+                if (!code || !redirect_uri) return new Response(JSON.stringify({ error: 'missing params' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+                const LINE_CHANNEL_ID = '2009335849';
+                const LINE_CHANNEL_SECRET = 'D85996B7E6DF621133C6644C461111C';
+
+                // 1. Exchange code for token
+                const tokenRes = await fetch('https://api.line.me/oauth2/v2.1/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        grant_type: 'authorization_code',
+                        code,
+                        redirect_uri,
+                        client_id: LINE_CHANNEL_ID,
+                        client_secret: LINE_CHANNEL_SECRET,
+                    }),
+                });
+                const tokenData = await tokenRes.json();
+                if (tokenData.error) return new Response(JSON.stringify({ error: tokenData.error_description || tokenData.error }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+                // 2. Get user profile
+                const profileRes = await fetch('https://api.line.me/v2/profile', {
+                    headers: { 'Authorization': 'Bearer ' + tokenData.access_token },
+                });
+                const profile = await profileRes.json();
+
+                // 3. Decode id_token for email (if available)
+                let email = null;
+                if (tokenData.id_token) {
+                    try {
+                        const payload = JSON.parse(atob(tokenData.id_token.split('.')[1]));
+                        email = payload.email || null;
+                    } catch (e) {}
+                }
+
+                return new Response(JSON.stringify({
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    pictureUrl: profile.pictureUrl || '',
+                    email: email,
+                    access_token: tokenData.access_token,
+                }), { status: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+            } catch (e) {
+                return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+            }
+        }
+        // CORS preflight for LINE API
+        if (path === 'api/line_token' && request.method === 'OPTIONS') {
+            return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type' } });
+        }
+
         // ========== BOT PRE-RENDERING ==========
         // Skip if request is FROM Prerender.io's renderer (avoid infinite loop)
         const isPrerender = request.headers.get('X-Prerender') === '1' || /prerender/i.test(ua);

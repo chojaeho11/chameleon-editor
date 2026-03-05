@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINE Login - Chameleon Printing</title>
+<style>
+body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: -apple-system, sans-serif; background: #f8fafc; }
+.box { text-align: center; padding: 40px; }
+.spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #06C755; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.err { color: #dc2626; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="box">
+    <div class="spinner" id="spinner"></div>
+    <p id="msg">LINE Login processing...</p>
+    <p class="err" id="errMsg" style="display:none;"></p>
+</div>
+<script type="module">
+import { sb } from './config.js?v=123';
+
+const params = new URLSearchParams(window.location.search);
+const code = params.get('code');
+const state = params.get('state');
+const error = params.get('error');
+
+const savedState = sessionStorage.getItem('line_oauth_state');
+const returnUrl = sessionStorage.getItem('line_return_url') || '/';
+
+function showError(msg) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('msg').style.display = 'none';
+    const errEl = document.getElementById('errMsg');
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    setTimeout(() => { window.location.href = returnUrl; }, 3000);
+}
+
+if (error) {
+    showError('LINE login cancelled: ' + (params.get('error_description') || error));
+} else if (!code) {
+    showError('No authorization code received.');
+} else if (state !== savedState) {
+    showError('Invalid state parameter.');
+} else {
+    (async () => {
+        try {
+            document.getElementById('msg').textContent = 'Verifying LINE account...';
+
+            // 1. Exchange code for profile via worker API
+            const res = await fetch('/api/line_token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code,
+                    redirect_uri: window.location.origin + '/line_callback.html',
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            // 2. Create or sign in with Supabase using LINE profile
+            const lineEmail = data.email || ('line_' + data.userId + '@line.chameleon.user');
+            const linePassword = 'LINE_' + data.userId + '_chameleon_2024';
+            const displayName = data.displayName || 'LINE User';
+
+            // Try sign in first
+            const { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({
+                email: lineEmail,
+                password: linePassword,
+            });
+
+            if (signInErr) {
+                // Sign up if not exists
+                const { data: signUpData, error: signUpErr } = await sb.auth.signUp({
+                    email: lineEmail,
+                    password: linePassword,
+                    options: {
+                        data: {
+                            full_name: displayName,
+                            avatar_url: data.pictureUrl || '',
+                            provider: 'line',
+                            line_user_id: data.userId,
+                        },
+                    },
+                });
+
+                if (signUpErr) throw new Error(signUpErr.message);
+
+                // Auto sign in after signup
+                await sb.auth.signInWithPassword({
+                    email: lineEmail,
+                    password: linePassword,
+                });
+            }
+
+            // 3. Update profile name if needed
+            try {
+                await sb.auth.updateUser({
+                    data: { full_name: displayName, avatar_url: data.pictureUrl || '' },
+                });
+            } catch (e) {}
+
+            document.getElementById('msg').textContent = 'Login successful! Redirecting...';
+            sessionStorage.removeItem('line_oauth_state');
+            sessionStorage.removeItem('line_return_url');
+
+            setTimeout(() => { window.location.href = returnUrl; }, 500);
+
+        } catch (e) {
+            showError('LINE login failed: ' + e.message);
+        }
+    })();
+}
+</script>
+</body>
+</html>
