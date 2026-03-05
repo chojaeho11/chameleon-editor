@@ -139,22 +139,32 @@ const resizeImageToBlob = (file) => {
     });
 };
 
-// 파일 업로드 헬퍼
-async function uploadFileToSupabase(file, folder) {
+// 파일 업로드 헬퍼 (최대 3회 재시도)
+async function uploadFileToSupabase(file, folder, retries = 3) {
     if (!sb) return null;
     const timestamp = Date.now();
     const ext = file.name ? file.name.split('.').pop() : 'jpg';
     const randomStr = Math.random().toString(36).substring(2, 8);
     const safeName = `${timestamp}_${randomStr}.${ext}`;
     const filePath = `${folder}/${safeName}`;
-    
-    const { data, error } = await sb.storage.from('orders').upload(filePath, file);
-    if (error) { 
-        console.error("업로드 에러:", error); 
-        return null; 
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const { data, error } = await sb.storage.from('orders').upload(filePath, file);
+            if (error) {
+                console.error(`업로드 에러 (시도 ${attempt}/${retries}):`, error);
+                if (attempt < retries) { await new Promise(r => setTimeout(r, 1000 * attempt)); continue; }
+                return null;
+            }
+            const { data: publicData } = sb.storage.from('orders').getPublicUrl(filePath);
+            return publicData.publicUrl;
+        } catch(e) {
+            console.error(`업로드 예외 (시도 ${attempt}/${retries}):`, e);
+            if (attempt < retries) { await new Promise(r => setTimeout(r, 1000 * attempt)); continue; }
+            return null;
+        }
     }
-    const { data: publicData } = sb.storage.from('orders').getPublicUrl(filePath);
-    return publicData.publicUrl;
+    return null;
 }
 
 // ★ 장바구니 키: 로그인 무관 단일 키 (로그인/로그아웃해도 장바구니 유지)
@@ -2177,8 +2187,9 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
     };
 
     const isMobile = window.innerWidth <= 768;
-    const PDF_TIMEOUT = isMobile ? 30000 : 60000;
-    const UPLOAD_TIMEOUT = 20000;
+    const PDF_TIMEOUT = isMobile ? 45000 : 90000;   // ★ 타임아웃 여유 확보 (30→45, 60→90)
+    const UPLOAD_TIMEOUT = 30000;                     // ★ 업로드 타임아웃 확보 (20→30)
+    const errors = []; // ★ 에러 추적용
 
     try {
         if (loading) loading.querySelector('p').innerText = window.t('msg_generating_docs', "Generating documents...");
@@ -2186,14 +2197,19 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
         if(orderSheetBlob) {
             const url = await withTimeout(uploadFileToSupabase(orderSheetBlob, `orders/${orderId}/order_sheet.pdf`), UPLOAD_TIMEOUT);
             if(url) uploadedFiles.push({ name: `order_sheet.pdf`, url: url, type: 'order_sheet' });
-        }
+            else errors.push('order_sheet upload failed');
+        } else { errors.push('order_sheet PDF generation timeout/failed'); }
 
         const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate, useMileage), PDF_TIMEOUT);
         if(quoteBlob) {
             const url = await withTimeout(uploadFileToSupabase(quoteBlob, `orders/${orderId}/quotation.pdf`), UPLOAD_TIMEOUT);
             if(url) uploadedFiles.push({ name: `quotation.pdf`, url: url, type: 'quotation' });
-        }
-    } catch(pdfErr) { console.warn("문서 생성 오류:", pdfErr); }
+            else errors.push('quotation upload failed');
+        } else { errors.push('quotation PDF generation timeout/failed'); }
+    } catch(pdfErr) {
+        console.error("문서 생성 오류:", pdfErr);
+        errors.push('doc generation error: ' + (pdfErr.message || pdfErr));
+    }
 
     // [3] 디자인 PDF 업로드
     for (let i = 0; i < cartData.length; i++) {
@@ -2204,22 +2220,27 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
                 const res = await withTimeout(fetch(item.designPdfUrl), PDF_TIMEOUT);
-                if (res.ok) {
+                if (res && res.ok) {
                     const pdfBlob = await res.blob();
                     const url = await withTimeout(uploadFileToSupabase(pdfBlob, `orders/${orderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
                     if (url) uploadedFiles.push({ name: `product_${idx}_${item.product?.name || 'design'}.pdf`, url: url, type: 'product' });
-                }
-            } catch(err) { console.warn("사전생성 PDF 전송 실패:", err); }
+                    else errors.push(`design_${idx} upload failed`);
+                } else { errors.push(`design_${idx} fetch failed`); }
+            } catch(err) {
+                console.error("사전생성 PDF 전송 실패:", err);
+                errors.push(`design_${idx}: ${err.message || err}`);
+            }
 
             if (item.boxLayoutPdfUrl) {
                 try {
                     const layoutRes = await withTimeout(fetch(item.boxLayoutPdfUrl), PDF_TIMEOUT);
-                    if (layoutRes.ok) {
+                    if (layoutRes && layoutRes.ok) {
                         const layoutBlob = await layoutRes.blob();
                         const layoutUrl = await withTimeout(uploadFileToSupabase(layoutBlob, `orders/${orderId}/box_layout_${idx}.pdf`), UPLOAD_TIMEOUT);
                         if (layoutUrl) uploadedFiles.push({ name: `box_layout_${idx}_${item.product?.name || 'layout'}.pdf`, url: layoutUrl, type: 'box_layout' });
+                        else errors.push(`box_layout_${idx} upload failed`);
                     }
-                } catch(err) { console.warn("박스 배치도 PDF 전송 실패:", err); }
+                } catch(err) { errors.push(`box_layout_${idx}: ${err.message || err}`); }
             }
             continue;
         }
@@ -2243,15 +2264,37 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
                 if(fileBlob) {
                     const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${orderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
                     if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.pdf`, url: url, type: 'product' });
-                }
-            } catch(err) { console.warn("디자인 변환 실패:", err); }
+                    else errors.push(`product_${idx} upload failed`);
+                } else { errors.push(`product_${idx} PDF generation timeout/failed`); }
+            } catch(err) {
+                console.error("디자인 변환 실패:", err);
+                errors.push(`product_${idx}: ${err.message || err}`);
+            }
         }
     }
 
-    // [4] DB 업데이트
-    if (uploadedFiles.length > 0) {
-        await sb.from('orders').update({ files: uploadedFiles }).eq('id', orderId);
-    } else if (cartData.length > 0) {
+    // [4] DB 업데이트 (파일 목록 + 에러 기록)
+    // ★ 에러를 files 배열 끝에 메타 항목으로 추가 (별도 컬럼 불필요)
+    if (errors.length > 0) {
+        uploadedFiles.push({ name: '_upload_errors', type: '_error_log', url: '', errors: errors });
+        console.error(`[파일업로드경고] 주문 ${orderId}: ${errors.length}건 에러 — ${errors.join(', ')}`);
+    }
+    const updatePayload = { files: uploadedFiles };
+
+    try {
+        const { error: updateError } = await sb.from('orders').update(updatePayload).eq('id', orderId);
+        if (updateError) {
+            console.error(`[DB업데이트실패] 주문 ${orderId} 파일 정보 저장 실패:`, updateError);
+            // ★ 1회 재시도
+            await new Promise(r => setTimeout(r, 2000));
+            const { error: retryErr } = await sb.from('orders').update(updatePayload).eq('id', orderId);
+            if (retryErr) console.error(`[DB업데이트재시도실패] 주문 ${orderId}:`, retryErr);
+        }
+    } catch(dbErr) {
+        console.error(`[DB업데이트예외] 주문 ${orderId}:`, dbErr);
+    }
+
+    if (uploadedFiles.length === 0 && cartData.length > 0) {
         console.error(`[파일누락경고] 주문 ${orderId}: 장바구니 ${cartData.length}개 상품이 있지만 업로드된 파일이 0개`);
     }
 
@@ -2376,7 +2419,18 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
     window.currentDbId = newOrderId; 
 
     // ★ 공통 함수로 파일 업로드 (고객파일 + PDF 생성)
-    await uploadOrderFiles(newOrderId, cartData, useMileage);
+    // ★ try-catch로 감싸서 파일 업로드 실패해도 주문 자체는 유지
+    try {
+        await uploadOrderFiles(newOrderId, cartData, useMileage);
+    } catch(uploadErr) {
+        console.error(`[파일업로드실패] 주문 ${newOrderId}: 파일 업로드 중 오류 발생, 주문은 유지됨`, uploadErr);
+        // 에러 기록을 DB에 남김 (files 배열에 에러 로그 저장)
+        try {
+            await sb.from('orders').update({
+                files: [{ name: '_upload_errors', type: '_error_log', url: '', errors: ['CRITICAL: ' + (uploadErr.message || uploadErr)] }]
+            }).eq('id', newOrderId);
+        } catch(e) { /* ignore */ }
+    }
 
     // [파트너 마켓플레이스] 파트너 상품이 포함된 경우 partner_settlements 생성
     try {
@@ -2493,7 +2547,16 @@ async function processFinalPayment() {
             await sb.from('orders').update(_updateData).eq('id', window.currentDbId);
 
             // ★ [버그수정] 재진입 시에도 파일 업로드 실행 (기존: 파일 업로드가 완전히 건너뛰어짐)
-            await uploadOrderFiles(window.currentDbId, cartData, useMileage);
+            try {
+                await uploadOrderFiles(window.currentDbId, cartData, useMileage);
+            } catch(uploadErr) {
+                console.error(`[파일업로드실패-재진입] 주문 ${window.currentDbId}:`, uploadErr);
+                try {
+                    await sb.from('orders').update({
+                        files: [{ name: '_upload_errors', type: '_error_log', url: '', errors: ['RETRY CRITICAL: ' + (uploadErr.message || uploadErr)] }]
+                    }).eq('id', window.currentDbId);
+                } catch(e) { /* ignore */ }
+            }
         }
 
         const orderId = window.currentDbId; 
