@@ -592,34 +592,19 @@ window.loadEditorLibraries = function() {
         tid = setInterval(tick, 1000);
     }
 
-    // 로그인 상태 체크 후 표시
-    function checkAndShow() {
-        // Supabase 세션 확인
-        if (window.sb && window.sb.auth) {
-            window.sb.auth.getSession().then(function(res) {
-                if (!res.data.session && box) {
-                    box.style.display = 'block';
-                    startTimer();
-                }
-            });
-        } else {
-            // sb 아직 로드 안 됨 → 1초 후 재시도 (깜빡임 방지)
-            setTimeout(checkAndShow, 500);
+    // 항상 표시 (로그인 여부 무관)
+    function showTimer() {
+        if (box) {
+            box.style.display = 'block';
+            startTimer();
         }
     }
 
-    // DOM 로드 후 실행 (sb 로딩 대기)
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { setTimeout(checkAndShow, 800); });
+        document.addEventListener('DOMContentLoaded', showTimer);
     } else {
-        setTimeout(checkAndShow, 800);
+        showTimer();
     }
-
-    // 로그인 시 숨기기
-    window.addEventListener('authStateChange', function() {
-        if (box) box.style.display = 'none';
-        if (tid) clearInterval(tid);
-    });
 })();
 </script>
 
