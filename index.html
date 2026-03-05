@@ -2514,7 +2514,7 @@ async function handleSubReturn() {
                 <i class="fa-solid fa-shapes"></i><span data-i18n="menu_element">요소</span>
             </div>
             <div class="icon-item" data-panel="sub-icon">
-                <i class="fa-solid fa-icons"></i><span data-i18n="menu_icon">아이콘</span>
+                <i class="fa-solid fa-swatchbook"></i><span data-i18n="tab_ornaments">장식</span>
             </div>
             <div class="icon-item" data-panel="sub-text">
                 <i class="fa-solid fa-font"></i><span data-i18n="menu_text">텍스트</span>
@@ -2621,15 +2621,15 @@ async function handleSubReturn() {
             <!-- 2-1. 아이콘 & 로고 (Iconify) -->
             <div id="sub-icon" class="sub-content">
                 <!-- 탭: 아이콘 | 로고 -->
-                <div style="display:flex; gap:0; margin-bottom:10px; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0;">
-                    <button id="iconTabIcon" class="icon-tab active" style="flex:1; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s;">
-                        <i class="fa-solid fa-icons" style="margin-right:4px;"></i><span data-i18n="tab_icons">아이콘</span>
+                <div style="display:flex; gap:0; margin-bottom:10px; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; width:100%;">
+                    <button id="iconTabOrnament" class="icon-tab active" style="flex:1 1 33.33%; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s; min-width:0;">
+                        <span data-i18n="tab_ornaments">장식</span>
                     </button>
-                    <button id="iconTabLogo" class="icon-tab" style="flex:1; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s;">
-                        <i class="fa-solid fa-copyright" style="margin-right:4px;"></i><span data-i18n="tab_logos">로고</span>
+                    <button id="iconTabLogo" class="icon-tab" style="flex:1 1 33.33%; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s; min-width:0;">
+                        <span data-i18n="tab_logos">로고</span>
                     </button>
-                    <button id="iconTabOrnament" class="icon-tab" style="flex:1; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s;">
-                        <i class="fa-solid fa-swatchbook" style="margin-right:4px;"></i><span data-i18n="tab_ornaments">장식</span>
+                    <button id="iconTabIcon" class="icon-tab" style="flex:1 1 33.33%; padding:8px 0; font-size:12px; font-weight:700; border:none; cursor:pointer; transition:all 0.15s; min-width:0;">
+                        <span data-i18n="tab_icons">아이콘</span>
                     </button>
                 </div>
                 <!-- 검색바 -->

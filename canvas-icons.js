@@ -121,8 +121,8 @@ export function initIconTools() {
         loadMoreBtn.onclick = () => doSearch(iconCurrentQuery, false);
     }
 
-    // Start with icon mode
-    switchMode('icon');
+    // Start with ornament mode (default tab)
+    switchMode('ornament');
 }
 
 function switchMode(mode) {
