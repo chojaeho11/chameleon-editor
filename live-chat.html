@@ -367,7 +367,7 @@ var LANG = {
 function t(key) { return (LANG[site.lang] || LANG.kr)[key] || key; }
 
 // ===== Init =====
-function init() {
+async function init() {
     sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
     isEmbed = new URLSearchParams(location.search).get('embed') === 'true';
     if (isEmbed) document.body.classList.add('embed');
@@ -377,14 +377,45 @@ function init() {
     if (session && session.roomId) {
         roomId = session.roomId;
         customerName = session.name;
+
+        // ★ DB에서 채팅방 존재 여부 확인 (새로고침 시 방이 삭제됐을 수 있음)
+        try {
+            var roomCheck = await sb.from('chat_rooms').select('id, status').eq('id', roomId).single();
+            if (!roomCheck.data) {
+                // 방이 DB에 없으면 세션 초기화
+                clearSession();
+                showNameView();
+                return;
+            }
+            roomStatus = roomCheck.data.status;
+        } catch(e) {
+            // DB 조회 실패 시에도 기존 세션으로 진행 (오프라인 대비)
+            console.warn('Room check failed, proceeding with cached session:', e);
+        }
+
         showChatView();
         loadMessages();
         startSubscriptions();
+        // ★ 세션 타임스탬프 갱신 (새로고침할 때마다 연장)
+        saveSession();
     } else {
         showNameView();
     }
 
     if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+
+    // ★ Heartbeat: 30초마다 구독 상태 확인, 끊겼으면 자동 재연결
+    setInterval(function() {
+        if (!roomId || document.hidden) return;
+        try {
+            if (!subscription || subscription.state !== 'joined') {
+                console.log('[Chat] Heartbeat: subscription lost, reconnecting...');
+                startSubscriptions();
+            }
+        } catch(e) {
+            startSubscriptions();
+        }
+    }, 30000);
 }
 
 function applyLanguage() {
@@ -619,36 +650,43 @@ async function loadMessages() {
         }
 
         var res = await sb.from('chat_messages').select('*').eq('room_id', roomId).order('created_at', { ascending: true }).limit(500);
-        if (res.data) {
-            var area = document.getElementById('chatMessages');
-            area.innerHTML = '';
-            conversationHistory = [];
-            res.data.forEach(function(m) {
-                if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
-                sentMsgIds.add(m.id);
+        if (res.error) throw res.error;
+        if (!res.data) return;
 
-                // Rebuild conversation history for AI context
-                if (m.sender_type === 'customer') {
-                    conversationHistory.push({ role: 'user', content: m.message });
-                } else if (m.sender_type === 'chatbot') {
-                    var cleanMsg = (m.message || '').replace(/\n<!--PRODUCTS:.*?-->/s, '');
-                    conversationHistory.push({ role: 'assistant', content: cleanMsg });
-                }
+        // ★ DB 조회 성공 후에만 DOM 클리어 (실패 시 기존 메시지 유지)
+        var area = document.getElementById('chatMessages');
+        area.innerHTML = '';
+        conversationHistory = [];
+        sentMsgIds.clear();
 
-                // Parse embedded products
-                var products = [];
-                if (m.message && m.message.indexOf('<!--PRODUCTS:') >= 0) {
-                    try {
-                        var match = m.message.match(/<!--PRODUCTS:(.*?)-->/s);
-                        if (match) products = JSON.parse(match[1]);
-                    } catch(e) {}
-                }
-                m._products = products;
-                appendMessage(m, false);
-            });
-            scrollToBottom();
-        }
-    } catch(err) { console.error('Load messages error:', err); }
+        res.data.forEach(function(m) {
+            if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
+            sentMsgIds.add(m.id);
+
+            // Rebuild conversation history for AI context
+            if (m.sender_type === 'customer') {
+                conversationHistory.push({ role: 'user', content: m.message });
+            } else if (m.sender_type === 'chatbot') {
+                var cleanMsg = (m.message || '').replace(/\n<!--PRODUCTS:.*?-->/s, '');
+                conversationHistory.push({ role: 'assistant', content: cleanMsg });
+            }
+
+            // Parse embedded products
+            var products = [];
+            if (m.message && m.message.indexOf('<!--PRODUCTS:') >= 0) {
+                try {
+                    var match = m.message.match(/<!--PRODUCTS:(.*?)-->/s);
+                    if (match) products = JSON.parse(match[1]);
+                } catch(e) {}
+            }
+            m._products = products;
+            appendMessage(m, false);
+        });
+        scrollToBottom();
+    } catch(err) {
+        console.error('Load messages error:', err);
+        // ★ 실패 시 기존 DOM 메시지 유지 (클리어하지 않음)
+    }
 }
 
 // ===== Realtime =====
@@ -662,6 +700,9 @@ function startSubscriptions() {
             if (m.sender_type === 'customer') return;
             if (m.sender_type === 'chatbot') return; // AI messages rendered locally
             if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
+            // ★ 중복 방지: 이미 로드된 메시지는 스킵
+            if (m.id && sentMsgIds.has(m.id)) return;
+            if (m.id) sentMsgIds.add(m.id);
 
             // Manager or system message from realtime
             appendMessage(m);
@@ -715,6 +756,9 @@ function scheduleReconnect() {
 // 탭 복귀 시 연결 상태 확인 + 재연결
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden && roomId) {
+        // ★ 항상 놓친 메시지 복구 (탭이 백그라운드일 때 realtime 메시지를 놓칠 수 있음)
+        loadMessages();
+
         // 채널 상태 확인 후 필요시 재연결
         var needsReconnect = false;
         try {
@@ -723,7 +767,6 @@ document.addEventListener('visibilitychange', function() {
 
         if (needsReconnect) {
             startSubscriptions();
-            loadMessages(); // 놓친 메시지 복구
         }
     }
 });
