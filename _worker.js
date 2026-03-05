@@ -248,9 +248,11 @@ export default {
             if (!skipPaths.includes(path)) {
                 // Pages with custom-built HTML (no SPA route → skip Prerender.io)
                 const CUSTOM_LANDING = ['editor'];
+                // ★ ?product= 쿼리파라미터가 있으면 Prerender.io 건너뛰기 (SPA가 홈으로 렌더링됨)
+                const hasProductParam = url.searchParams.has('product') || url.searchParams.has('_p');
 
-                // Try Prerender.io first (skip for custom landing pages)
-                if (!CUSTOM_LANDING.includes(path)) try {
+                // Try Prerender.io first (skip for custom landing pages and product URLs)
+                if (!CUSTOM_LANDING.includes(path) && !hasProductParam) try {
                     const prerenderRes = await fetch(`https://service.prerender.io/${request.url}`, {
                         headers: {
                             'X-Prerender-Token': PRERENDER_TOKEN,
