@@ -6199,11 +6199,16 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
 
     try {
         // [핵심 최적화] 무거운 description(상세설명) 필드를 빼고 목록에 필요한 최소 데이터만 가져옴
-        const { data: products, error } = await sb.from('admin_products')
+        // 고객작품(ua_) 카테고리는 최신순, 그 외는 sort_order순
+        const isArtworkCat = catKey.startsWith('ua_');
+        let prodQuery = sb.from('admin_products')
             .select('code, name, price, img_url, width_mm, height_mm, is_general_product, is_custom_size, name_jp, price_jp, name_us, price_us, name_cn, name_ar, name_es, name_de, name_fr, partner_id')
-            .eq('category', catKey)
-            .or('partner_id.is.null,partner_status.eq.approved')
-            .order('sort_order', { ascending: true });
+            .eq('category', catKey);
+        if (!isArtworkCat) prodQuery = prodQuery.or('partner_id.is.null,partner_status.eq.approved');
+        prodQuery = isArtworkCat
+            ? prodQuery.order('created_at', { ascending: false })
+            : prodQuery.order('sort_order', { ascending: true });
+        const { data: products, error } = await prodQuery;
 
         if (error) throw error;
         grid.innerHTML = '';

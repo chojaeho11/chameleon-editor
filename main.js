@@ -1269,10 +1269,13 @@ window.submitArtworkUpload = async function() {
     try {
         // 1. 키워드 번역 (한/영/일)
         let tags = title;
+        let titleEN = title, titleJP = title;
         try {
             const [koT, enT, jaT] = await Promise.all([
                 googleTranslate(title, 'ko'), googleTranslate(title, 'en'), googleTranslate(title, 'ja')
             ]);
+            titleEN = enT || title;
+            titleJP = jaT || title;
             const combined = new Set([...title.split(',').map(s=>s.trim()), ...(koT||'').split(',').map(s=>s.trim()), ...(enT||'').split(',').map(s=>s.trim()), ...(jaT||'').split(',').map(s=>s.trim())]);
             tags = Array.from(combined).filter(Boolean).join(', ');
         } catch(e) { console.warn('번역 실패, 원본만 사용', e); }
@@ -1312,8 +1315,8 @@ window.submitArtworkUpload = async function() {
             const { error: insErr } = await sb.from('admin_products').insert({
                 code: productCode,
                 name: `${title} - ${cn.name}`,
-                name_us: `${title} - ${cn.name_us}`,
-                name_jp: `${title} - ${cn.name_jp}`,
+                name_us: `${titleEN} - ${cn.name_us}`,
+                name_jp: `${titleJP} - ${cn.name_jp}`,
                 category: cat,
                 price: price,
                 price_us: Math.round(price * 0.001),
