@@ -2199,6 +2199,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
     const errors = []; // ★ 에러 추적용
 
     try {
+        if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
         if (loading) loading.querySelector('p').innerText = window.t('msg_generating_docs', "Generating documents...");
         const orderSheetBlob = await withTimeout(generateOrderSheetPDF(orderInfoForPDF, cartData), PDF_TIMEOUT);
         if(orderSheetBlob) {
