@@ -865,10 +865,10 @@ window.submitOrderReview = async function() {
 let currentUploadType = 'png'; 
 
 const REWARD_RATES = {
-    'png': 200,
-    'svg': 200,
-    'logo': 200,
-    'template': 200,
+    'png': 100,
+    'svg': 100,
+    'logo': 100,
+    'template': 100,
     'usage_share': 0.1
 };
 
@@ -945,11 +945,11 @@ function updateContributorUI(balance) {
     updateContributorRewardDisplay();
 }
 
-// 기여자 보상금 표시 환산 (200 KRW → 현지 통화) - 로그인 불필요
+// 기여자 보상금 표시 환산 (100 KRW → 현지 통화) - 로그인 불필요
 function updateContributorRewardDisplay() {
     const cfg = window.SITE_CONFIG || {};
     const cRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
-    const baseKRW = 200;
+    const baseKRW = 100;
     const baseReward = baseKRW * cRate;
     const rewardDisplay = cfg.COUNTRY === 'JP' ? Math.floor(baseReward) : cfg.COUNTRY === 'US' ? baseReward.toFixed(1) : baseReward;
     document.querySelectorAll('.c-reward').forEach(el => {
