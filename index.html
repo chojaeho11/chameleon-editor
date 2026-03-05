@@ -3111,6 +3111,19 @@ async function handleSubReturn() {
         </div>
     </div>
 </div>
+<!-- PC 텍스트 퀵 툴바 (캔버스 위 플로팅) -->
+<div id="pcTextQuickBar" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:6px 10px; gap:6px; align-items:center; flex-wrap:nowrap;">
+    <button onclick="window.pcTextAlign('left')" class="pc-tq-align pc-tq-align-active" data-align="left" style="border:none; background:#f1f5f9; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:13px; color:#334155;"><i class="fa-solid fa-align-left"></i></button>
+    <button onclick="window.pcTextAlign('center')" class="pc-tq-align" data-align="center" style="border:none; background:#f1f5f9; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:13px; color:#334155;"><i class="fa-solid fa-align-center"></i></button>
+    <button onclick="window.pcTextAlign('right')" class="pc-tq-align" data-align="right" style="border:none; background:#f1f5f9; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:13px; color:#334155;"><i class="fa-solid fa-align-right"></i></button>
+    <span style="width:1px; height:20px; background:#e2e8f0; margin:0 2px;"></span>
+    <span onclick="window.pcTextColor('#FFFFFF')" class="pc-tq-color" data-color="#FFFFFF" style="width:22px; height:22px; border-radius:50%; background:#FFFFFF; border:1.5px solid #ccc; cursor:pointer; display:inline-block;"></span>
+    <span onclick="window.pcTextColor('#000000')" class="pc-tq-color" data-color="#000000" style="width:22px; height:22px; border-radius:50%; background:#000000; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
+    <span onclick="window.pcTextColor('#EF4444')" class="pc-tq-color" data-color="#EF4444" style="width:22px; height:22px; border-radius:50%; background:#EF4444; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
+    <span onclick="window.pcTextColor('#3B82F6')" class="pc-tq-color" data-color="#3B82F6" style="width:22px; height:22px; border-radius:50%; background:#3B82F6; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
+    <span onclick="window.pcTextColor('#FACC15')" class="pc-tq-color" data-color="#FACC15" style="width:22px; height:22px; border-radius:50%; background:#FACC15; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
+    <span onclick="window.pcTextColor('#22C55E')" class="pc-tq-color" data-color="#22C55E" style="width:22px; height:22px; border-radius:50%; background:#22C55E; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
+</div>
 <div id="mobileTextEditor" style="display:none;">
     <div class="m-text-header">
         <span style="color:#6366f1; font-weight:bold; font-size:13px;"><i class="fa-solid fa-pen"></i> <span data-i18n="editor_text_label">텍스트</span></span>

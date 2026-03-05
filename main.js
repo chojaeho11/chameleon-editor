@@ -95,6 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 ['Export', initExport],
                 ['MyDesign', initMyDesign],
                 ['MobileTextEditor', initMobileTextEditor],
+                ['PcTextQuickBar', initPcTextQuickBar],
                 ['OutlineTool', initOutlineTool],
                 ['FileUpload', initFileUploadListeners],
                 ['PptMode', initPptMode],
@@ -594,6 +595,88 @@ function initMobileTextEditor() {
     window.canvas.off('selection:updated', origHandleSelection);
     window.canvas.on('selection:created', handleSelection);
     window.canvas.on('selection:updated', handleSelection);
+}
+
+// ============================================================
+// [PC 텍스트 퀵 툴바] — 텍스트 선택 시 캔버스 위에 플로팅 표시
+// ============================================================
+function initPcTextQuickBar() {
+    const bar = document.getElementById('pcTextQuickBar');
+    if (!bar || !window.canvas) return;
+    let activeObj = null;
+
+    function showBar(obj) {
+        if (window.innerWidth <= 768) return; // 모바일은 기존 에디터 사용
+        activeObj = obj;
+        bar.style.display = 'flex';
+        positionBar(obj);
+        syncBarUI(obj);
+    }
+
+    function hideBar() {
+        bar.style.display = 'none';
+        activeObj = null;
+    }
+
+    function positionBar(obj) {
+        const canvasEl = document.querySelector('.canvas-container') || document.getElementById('designCanvas');
+        if (!canvasEl) return;
+        const canvasRect = canvasEl.getBoundingClientRect();
+        const zoom = window.canvas.getZoom();
+        const vp = window.canvas.viewportTransform;
+        // 오브젝트의 화면 좌표 계산
+        const objLeft = obj.left * zoom + vp[4];
+        const objTop = obj.top * zoom + vp[5];
+        const objWidth = (obj.width * (obj.scaleX || 1)) * zoom;
+        // 바를 오브젝트 위에 배치
+        const barX = canvasRect.left + objLeft + objWidth / 2;
+        const barY = canvasRect.top + objTop - 50;
+        bar.style.left = Math.max(10, barX - bar.offsetWidth / 2) + 'px';
+        bar.style.top = Math.max(10, barY) + 'px';
+    }
+
+    function syncBarUI(obj) {
+        // 정렬 상태
+        document.querySelectorAll('.pc-tq-align').forEach(b => {
+            b.style.background = b.dataset.align === (obj.textAlign || 'left') ? '#6366f1' : '#f1f5f9';
+            b.style.color = b.dataset.align === (obj.textAlign || 'left') ? '#fff' : '#334155';
+        });
+        // 색상 상태
+        const fill = (obj.fill || '#000000').toUpperCase();
+        document.querySelectorAll('.pc-tq-color').forEach(d => {
+            d.style.outline = d.dataset.color === fill ? '2px solid #6366f1' : 'none';
+            d.style.outlineOffset = '2px';
+        });
+    }
+
+    function handleSel(e) {
+        const obj = e.selected ? e.selected[0] : window.canvas.getActiveObject();
+        if (obj && (obj.type === 'i-text' || obj.type === 'textbox' || obj.type === 'text')) {
+            showBar(obj);
+        } else {
+            hideBar();
+        }
+    }
+
+    window.canvas.on('selection:created', handleSel);
+    window.canvas.on('selection:updated', handleSel);
+    window.canvas.on('selection:cleared', hideBar);
+    window.canvas.on('object:moving', function() { if (activeObj) positionBar(activeObj); });
+    window.canvas.on('object:modified', function() { if (activeObj) positionBar(activeObj); });
+
+    window.pcTextAlign = function(align) {
+        if (!activeObj) return;
+        activeObj.set('textAlign', align);
+        window.canvas.requestRenderAll();
+        syncBarUI(activeObj);
+    };
+
+    window.pcTextColor = function(color) {
+        if (!activeObj) return;
+        activeObj.set('fill', color);
+        window.canvas.requestRenderAll();
+        syncBarUI(activeObj);
+    };
 }
 
 // ============================================================

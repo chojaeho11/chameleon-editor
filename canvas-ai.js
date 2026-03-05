@@ -1230,7 +1230,7 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
         fontFamily: font, fontSize: sz, fontWeight: 'normal',
         fill: '#ffffff',
         originX:'left', originY:'center', textAlign:'left',
-        left: bL + bW * 0.05, top: bT + bH * 0.25,
+        left: bL + bW * 0.05, top: bT + bH * 0.30,
         width: bW * 0.60, lineHeight: isJP ? 1.1 : 0.95,
         charSpacing: isJP ? 40 : 80,
         splitByGrapheme: isJP ? true : false
@@ -1283,7 +1283,7 @@ function _wzBodyText(bodyText, descFont, bW, bH, bL, bT) {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
         fontWeight: '500', fill: 'rgba(255,255,255,0.95)',
         originX:'left', originY:'top', textAlign:'left',
-        left: bL + bW * 0.05, top: bT + bH * 0.38,
+        left: bL + bW * 0.05, top: bT + bH * 0.43,
         width: bW * 0.55,
         lineHeight: 1.5,
         splitByGrapheme: true,
@@ -1306,7 +1306,7 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     const boxLeft = bL + bW * 0.05;
     // 본문이 있으면 더 아래로
     const bodyObj = canvas.getObjects().find(o => o.isWizardBody);
-    const boxTop = bodyObj ? (bodyObj.top + bodyObj.height + bH * 0.03) : (bT + bH * 0.48);
+    const boxTop = bodyObj ? (bodyObj.top + bodyObj.height + bH * 0.03) : (bT + bH * 0.53);
 
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
