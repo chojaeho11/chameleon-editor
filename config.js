@@ -23,8 +23,8 @@ export function initConfig() {
 
     // 백업 파일과 동일한 IIFE 구조 사용 (가장 안정적)
     initPromise = (async () => {
-        // 1. 라이브러리 로드 대기
-        if (typeof window.supabase === 'undefined') {
+        // 1. 라이브러리 로드 대기 (최대 3초, 100ms 간격)
+        for (let i = 0; i < 30 && typeof window.supabase === 'undefined'; i++) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         if (typeof window.supabase === 'undefined') return;
