@@ -1263,7 +1263,7 @@ function renderImageTab(el) {
     let h = `<div class="ve-sec">
         <b><i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa;margin-right:4px"></i>${_t('ve_ai_img_gen','AI 이미지 생성')}</b>
         <p style="font-size:10px;color:#6b7280;margin:0 0 8px">${_t('ve_ai_img_desc','프롬프트로 이미지를 생성하여 클립 또는 오버레이로 추가')}</p>
-        <textarea id="veAiImgPrompt" class="ve-search-inp" rows="3" placeholder="${_t('ve_ai_img_placeholder','예: a beautiful sunset over the ocean, cinematic lighting')}" style="resize:vertical;min-height:50px;font-size:11px;line-height:1.4;padding:8px;"></textarea>
+        <textarea id="veAiImgPrompt" class="ve-search-inp" rows="3" placeholder="${_t('ve_ai_img_placeholder','한글 또는 영어로 입력\n예: 바다 위 아름다운 석양, 영화같은 조명')}" style="resize:vertical;min-height:50px;font-size:11px;line-height:1.4;padding:8px;"></textarea>
         <div style="display:flex;gap:6px;margin-top:6px;">
             <select id="veAiImgMode" style="flex:1;padding:6px 8px;background:#222;color:#ddd;border:1px solid #333;border-radius:6px;font-size:11px;">
                 <option value="overlay">${_t('ve_ai_as_overlay','오버레이로 추가')}</option>
@@ -1354,6 +1354,26 @@ window._veAddImgTemplate = function(idx) {
     showToast(_t('ve_img_tpl_added','이미지 템플릿 추가됨'));
 };
 
+// 한글 감지 → GPT로 영어 이미지 프롬프트 변환
+async function _veTranslatePrompt(sb, prompt){
+    const hasKo=/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(prompt);
+    const hasJa=/[ぁ-んァ-ヶー]/.test(prompt);
+    if(!hasKo&&!hasJa) return prompt; // 영어면 그대로
+    try {
+        const { data, error } = await sb.functions.invoke('generate-text', {
+            body: {
+                prompt: `Translate the following text into a detailed English image generation prompt suitable for AI image generators like Flux/DALL-E. Keep the meaning but make it descriptive and visual. Return ONLY the English prompt, nothing else.\n\nText: "${prompt}"`,
+                max_tokens: 300
+            }
+        });
+        if(!error&&data){
+            const text=(typeof data==='string'?data:data.text||data.result||'').trim();
+            if(text.length>5) { console.log('[VE] Translated prompt:', text); return text; }
+        }
+    } catch(e){ console.warn('[VE] Translation failed, using original:', e); }
+    return prompt;
+}
+
 // AI 이미지 생성
 window._veAiGenerateImg = async function() {
     const promptEl=document.getElementById('veAiImgPrompt');
@@ -1363,8 +1383,8 @@ window._veAiGenerateImg = async function() {
     const statusText=document.getElementById('veAiImgStatusText');
     const resultEl=document.getElementById('veAiImgResult');
 
-    const prompt=promptEl?promptEl.value.trim():'';
-    if(!prompt) return showToast(_t('ve_ai_enter_prompt','프롬프트를 입력하세요'),'warn');
+    const rawPrompt=promptEl?promptEl.value.trim():'';
+    if(!rawPrompt) return showToast(_t('ve_ai_enter_prompt','프롬프트를 입력하세요'),'warn');
 
     const sb=window.sb;
     if(!sb) return showToast(_t('ve_db_required','DB 연결이 필요합니다'),'warn');
@@ -1374,11 +1394,15 @@ window._veAiGenerateImg = async function() {
     // UI 업데이트
     if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';}
     if(statusEl)statusEl.style.display='block';
-    if(statusText)statusText.textContent=_t('ve_ai_generating_img','이미지 생성 중...');
     if(resultEl)resultEl.style.display='none';
 
     try {
-        // Supabase Edge Function으로 이미지 생성
+        // 1. 한글/일본어면 GPT로 영어 프롬프트 변환
+        if(statusText)statusText.textContent=_t('ve_ai_translating','프롬프트 번역 중...');
+        const prompt=await _veTranslatePrompt(sb, rawPrompt);
+
+        // 2. Flux 이미지 생성
+        if(statusText)statusText.textContent=_t('ve_ai_generating_img','AI 이미지 생성 중...');
         const { data, error } = await sb.functions.invoke('generate-image-flux', {
             body: { prompt: prompt, ratio: '1:1' }
         });
@@ -1402,7 +1426,6 @@ window._veAiGenerateImg = async function() {
         if(statusEl)statusEl.style.display='none';
 
         if(mode==='clip'){
-            // 새 클립으로 추가
             const tc=document.createElement('canvas');tc.width=160;tc.height=90;
             tc.getContext('2d').drawImage(img,0,0,160,90);
             vm.clips.push({type:'image',file:null,url:imageUrl,img,thumbUrl:tc.toDataURL('image/jpeg',0.7),
@@ -1411,7 +1434,6 @@ window._veAiGenerateImg = async function() {
             selectClip(vm.clips.length-1);
             showToast(_t('ve_ai_clip_added','AI 이미지 클립 추가됨'));
         } else if(mode==='background'){
-            // 현재 클립 배경 교체
             const c=curClip();
             if(!c){showToast(_t('ve_clip_required','클립을 먼저 추가하세요'),'warn');return;}
             c.type='image';c.img=img;c.url=imageUrl;
@@ -1421,14 +1443,13 @@ window._veAiGenerateImg = async function() {
             render();updateAll();
             showToast(_t('ve_ai_bg_replaced','배경이 AI 이미지로 교체됨'));
         } else {
-            // 오버레이로 추가
             const c=curClip();
             if(!c){showToast(_t('ve_clip_required','클립을 먼저 추가하세요'),'warn');return;}
             addOverlay('image',vm.w*.1,vm.h*.1,{url:imageUrl,w:vm.w*.5,h:vm.h*.5});
             showToast(_t('ve_ai_overlay_added','AI 이미지 오버레이 추가됨'));
         }
 
-        // 결과 미리보기
+        // 결과 미리보기 + 영상 변환 버튼
         if(resultEl){
             resultEl.style.display='block';
             resultEl.innerHTML=`<div style="position:relative;border-radius:6px;overflow:hidden;border:1px solid #333;">
@@ -1436,8 +1457,14 @@ window._veAiGenerateImg = async function() {
                 <div style="position:absolute;bottom:0;left:0;right:0;padding:4px 8px;background:rgba(0,0,0,0.7);font-size:10px;color:#a78bfa;">
                     <i class="fa-solid fa-check" style="color:#34d399;margin-right:3px"></i>${_t('ve_ai_img_done','생성 완료')}
                 </div>
-            </div>`;
+            </div>
+            <button onclick="window._veAiImg2Video()" style="width:100%;margin-top:6px;padding:8px;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">
+                <i class="fa-solid fa-film" style="margin-right:4px"></i>${_t('ve_ai_to_video','이 이미지로 AI 영상 생성')}
+            </button>`;
         }
+        // 최근 생성 URL 저장 (영상 변환용)
+        vm._lastAiImageUrl=imageUrl;
+        vm._lastAiImg=img;
     } catch(err){
         console.error('AI Image Error:', err);
         showToast(_t('ve_ai_img_fail','AI 이미지 생성 실패')+': '+(err.message||'Unknown'),'error');
@@ -1445,6 +1472,35 @@ window._veAiGenerateImg = async function() {
     } finally {
         if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> '+_t('ve_ai_generate','생성');}
     }
+};
+
+// AI 이미지 → AI 영상 변환 (generate-video Edge Function 활용)
+window._veAiImg2Video = async function() {
+    if(!vm._lastAiImg) return showToast(_t('ve_ai_no_img','먼저 AI 이미지를 생성하세요'),'warn');
+    const sb=window.sb;
+    if(!sb) return showToast(_t('ve_db_required','DB 연결이 필요합니다'),'warn');
+
+    // 이미지를 클립으로 추가 (없으면)
+    const img=vm._lastAiImg;
+    let ci=vm.clips.findIndex(c=>c.url===vm._lastAiImageUrl);
+    if(ci<0){
+        const tc=document.createElement('canvas');tc.width=160;tc.height=90;
+        tc.getContext('2d').drawImage(img,0,0,160,90);
+        vm.clips.push({type:'image',file:null,url:vm._lastAiImageUrl,img,thumbUrl:tc.toDataURL('image/jpeg',0.7),
+            duration:3,overlays:[],adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0},transition:'fade',speed:1.0,
+            locked:true,panX:0,panY:0,imgScale:1});
+        ci=vm.clips.length-1;
+    }
+    selectClip(ci);
+
+    // AI 프롬프트 바에 포커스 → 기존 _veAiGenerate 사용
+    const promptEl=document.getElementById('veAiPrompt');
+    if(promptEl){
+        promptEl.value=document.getElementById('veAiImgPrompt')?.value||'';
+        promptEl.focus();
+        showToast(_t('ve_ai_img2video_hint','하단 AI 바에서 움직임 프롬프트를 입력 후 생성하세요'));
+    }
+    updateAiBar();
 };
 
 function renderTransitionTab(el) {
