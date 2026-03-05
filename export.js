@@ -1250,6 +1250,7 @@ export async function generateWallPanelPDF(pdfPages, wallConfigs, boardX, boardY
 // ==========================================================
 
 export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
+    if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
     if (!window.jspdf) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
@@ -1259,14 +1260,16 @@ export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 
 }
 
 export async function generateTransactionStatementPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
+    if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
     if (!window.jspdf) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    await loadPdfFonts(doc); 
+    await loadPdfFonts(doc);
     return generateCommonDocument(doc, TEXT.statement_title, orderInfo, cartItems, discountRate, usedMileage);
 }
 
 export async function generateReceiptPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
+    if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
     if (!window.jspdf) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
@@ -1530,7 +1533,7 @@ function formatCurrencyForPDF(val) {
 
 // 4. 작업지시서 (Order Sheet)
 export async function generateOrderSheetPDF(orderInfo, cartItems) {
-    // [수정] 다국어 적용
+    if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
     if (!window.jspdf) { showToast(window.t('msg_loading', "Loading PDF library..."), "warn"); return; }
     
     const { jsPDF } = window.jspdf;
