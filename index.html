@@ -8500,6 +8500,32 @@ if (w >= 20 && h >= 20) {
             }, 600);
         }
 
+        // ★ 고객작품: 에디터 진입 시 작품 이미지를 캔버스에 자동 배치
+        const _isArtworkKey = typeof key === 'string' && key.startsWith('ua_');
+        if (_isArtworkKey && product && product.img_url) {
+            setTimeout(() => {
+                fabric.Image.fromURL(product.img_url, (img) => {
+                    if (!img || !canvas) return;
+                    const board = canvas.getObjects().find(o => o.isBoard);
+                    const bW = board ? board.width * board.scaleX : canvasW;
+                    const bH = board ? board.height * board.scaleY : canvasH;
+                    const bLeft = board ? board.left : 0;
+                    const bTop = board ? board.top : 0;
+                    const scale = Math.min(bW / img.width, bH / img.height);
+                    img.set({
+                        left: bLeft + (bW - img.width * scale) / 2,
+                        top: bTop + (bH - img.height * scale) / 2,
+                        scaleX: scale,
+                        scaleY: scale,
+                        selectable: true
+                    });
+                    canvas.add(img);
+                    canvas.setActiveObject(img);
+                    canvas.renderAll();
+                }, { crossOrigin: 'anonymous' });
+            }, 800);
+        }
+
         // ★ 사이즈고정상품: 에디터 내 사이즈 변경 UI 비활성화
         if (window.__fixedSizeProduct) {
             ['inputUserW','inputUserH'].forEach(id => { const el = document.getElementById(id); if(el) { el.disabled = true; el.style.opacity = '0.5'; } });
@@ -8521,7 +8547,7 @@ if (w >= 20 && h >= 20) {
         const isBizCardTpl = _bizTplId && _bizTplId !== 'blank';
         const isPromoTpl = !!_promoSelection;
         // 홍보물은 페이지 생성 후 마법사 자동 오픈 (applyPromoPages에서 처리)
-        if (!isHoneycombKey && !isBizCardTpl && !isPromoTpl && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
+        if (!isHoneycombKey && !isBizCardTpl && !isPromoTpl && !_isArtworkKey && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
                 const _kw = window.pendingTemplateKeyword;
