@@ -314,7 +314,15 @@
                             </select>
                             <button class="btn btn-primary" onclick="resetPage(); loadOrders()"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
                             <button class="btn btn-vip" onclick="openManualOrderModal()" style="font-weight:700;">✏️ 수동주문</button>
+                            <button class="btn btn-outline" onclick="document.getElementById('recoveryPanel').style.display=document.getElementById('recoveryPanel').style.display==='none'?'block':'none'" style="font-weight:600; font-size:12px;">🔧 문서복구</button>
                             <div id="action-buttons" style="margin-left:auto; display:flex; gap:5px;"></div>
+                        </div>
+                        <div id="recoveryPanel" style="display:none; background:#fffbeb; border:1px solid #fbbf24; padding:12px 15px; border-radius:8px; margin-bottom:8px;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                                <span style="font-weight:700; color:#92400e;">🔧 견적서/작업지시서 누락 복구</span>
+                                <button class="btn btn-primary btn-sm" onclick="recoverMissingDocs()" style="font-weight:700;">일괄 복구 실행</button>
+                            </div>
+                            <div id="recoveryLog" style="max-height:200px; overflow-y:auto; font-size:12px; color:#78350f; font-family:monospace; background:#fef3c7; padding:8px; border-radius:4px;"></div>
                         </div>
                         <div id="orderSummaryBar" style="display:flex; gap:20px; align-items:center; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:10px 15px; border-radius:6px; font-size:14px;">
                             <div>📦 검색된 주문: <b id="sumCount">0</b></div>
