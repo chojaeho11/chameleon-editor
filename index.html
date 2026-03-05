@@ -532,7 +532,7 @@ window.loadEditorLibraries = function() {
             <button class="hero-desc" style="cursor:pointer; border:none; background:#fff; color:#333; font-weight:800; padding:14px 36px; border-radius:30px; font-size:17px; box-shadow:0 4px 15px rgba(0,0,0,0.15); transition:transform .2s;" onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'" data-i18n="hero_desc_event" onclick="document.getElementById('loginModal').style.display='flex'; setTimeout(function(){var b=document.getElementById('btnSwitchAuthMode'); if(b && document.getElementById('loginPwConfirm').style.display==='none') b.click();},100);">1초 회원가입</button>
 
             <!-- 프로모션 배너 (비로그인 시만 표시) -->
-            <div id="promoTimerBox" style="display:none; background:rgba(0,0,0,0.25); backdrop-filter:blur(8px); border-radius:14px; padding:18px 24px; text-align:center; border:1px solid rgba(255,255,255,0.15); width:100%; max-width:420px;">
+            <div id="promoTimerBox" style="display:none; background:rgba(0,0,0,0.25); backdrop-filter:blur(8px); border-radius:14px; padding:18px 24px; text-align:center; border:1px solid rgba(255,255,255,0.15); width:100%;">
                 <!-- 카운트다운 타이머 -->
                 <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:12px;">
                     <span style="font-size:18px;">&#x23F0;</span>
@@ -575,74 +575,14 @@ window.loadEditorLibraries = function() {
         </div>
     </div>
 
-<!-- 프로모션 타이머 스크립트 -->
+<!-- 프로모션 배너 (타이머 제거, 혜택만 표시) -->
 <script>
 (function() {
     var box = document.getElementById('promoTimerBox');
     if (!box) return;
-
-    // 해외 사용자 감지
-    var isKR = true;
-    var hn = window.location.hostname;
-    var lp = new URLSearchParams(window.location.search).get('lang');
-    if (hn.includes('cafe0101') || hn.includes('cafe3355')) isKR = false;
-    if (lp && lp !== 'ko' && lp !== 'kr') isKR = false;
-    if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') isKR = false;
-
-    if (!isKR) {
-        // 해외: 카운트다운 타이머 행 숨기고 혜택 텍스트만 표시
-        var timerRow = box.children[0];
-        if (timerRow) timerRow.style.display = 'none';
-        box.style.display = 'block';
-        return;
-    }
-
-    // 한국: 기존 카운트다운 타이머 유지
-    var KEY = 'promo_start_ts';
-    var DURATION = 2 * 60 * 60;
-    var hEl = document.getElementById('promoH');
-    var mEl = document.getElementById('promoM');
-    var sEl = document.getElementById('promoS');
-
-    function pad(n) { return n < 10 ? '0' + n : '' + n; }
-
-    function startTimer() {
-        var startTs = localStorage.getItem(KEY);
-        if (!startTs) {
-            startTs = Date.now();
-            localStorage.setItem(KEY, startTs);
-        }
-        startTs = parseInt(startTs);
-
-        function tick() {
-            var elapsed = Math.floor((Date.now() - startTs) / 1000);
-            var remain = DURATION - elapsed;
-            if (remain <= 0) {
-                localStorage.setItem(KEY, Date.now());
-                startTs = Date.now();
-                remain = DURATION;
-            }
-            var h = Math.floor(remain / 3600);
-            var m = Math.floor((remain % 3600) / 60);
-            var s = remain % 60;
-            if (hEl) hEl.textContent = pad(h);
-            if (mEl) mEl.textContent = pad(m);
-            if (sEl) sEl.textContent = pad(s);
-        }
-        tick();
-        setInterval(tick, 1000);
-    }
-
-    function showTimer() {
-        box.style.display = 'block';
-        startTimer();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', showTimer);
-    } else {
-        showTimer();
-    }
+    var timerRow = box.children[0];
+    if (timerRow) timerRow.style.display = 'none';
+    box.style.display = 'block';
 })();
 </script>
 <script>
