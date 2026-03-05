@@ -696,13 +696,7 @@ async function checkPartnerStatus() {
     // 1. 비로그인 상태
     if (!user) {
         if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
-        if (btnApply) {
-            btnApply.style.display = 'inline-flex';
-            btnApply.onclick = () => {
-                const modal = document.getElementById('partnerApplyModal');
-                if(modal) modal.style.display = 'flex';
-            };
-        }
+        if (btnApply) btnApply.style.display = 'none';
         return;
     }
 
@@ -728,12 +722,9 @@ async function checkPartnerStatus() {
             window.currentPartnerRegion = data.region;
         } 
         else {
-            // [권한 없음] 입장 버튼 숨기기 / 신청 버튼 보이기
+            // [권한 없음] 입장 버튼 숨기기
             if (btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
-            if (btnApply) {
-                btnApply.style.display = 'inline-flex';
-                btnApply.onclick = applyForPartner;
-            }
+            if (btnApply) btnApply.style.display = 'none';
         }
     }
 }
@@ -1232,18 +1223,6 @@ function _artFmtPrice(krw) {
     return v.toLocaleString() + '원';
 }
 
-// 배너 가격 표시 초기화
-function _initArtworkPrices() {
-    const el1 = document.getElementById('artPricePaper');
-    const el2 = document.getElementById('artPriceFabric');
-    const el3 = document.getElementById('artPriceCanvas');
-    if (el1) el1.textContent = _artFmtPrice(ART_PRICES_KRW.paper);
-    if (el2) el2.textContent = _artFmtPrice(ART_PRICES_KRW.fabric);
-    if (el3) el3.textContent = _artFmtPrice(ART_PRICES_KRW.canvas);
-}
-// DOM 로드 후 가격 표시
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _initArtworkPrices);
-else setTimeout(_initArtworkPrices, 500);
 
 // 작품 업로드 모달 열기
 window.openArtworkUpload = function() {
