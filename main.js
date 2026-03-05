@@ -51,63 +51,72 @@ window.addEventListener("DOMContentLoaded", async () => {
     try {
         if(loading) loading.style.display = 'flex';
 
-        // 1. 필수 설정 및 캔버스 초기화
+        // 1. 필수 설정 (Supabase, 인증, 상품 데이터)
         window.loadProductFixedTemplate = loadProductFixedTemplate;
         await initConfig(); // DB 연결 및 PRODUCT_DB 로드 대기
-        initCanvas();       
-        
-        // 2. 각종 도구 초기화 (개별 try/catch로 하나가 실패해도 나머지 계속 실행)
-        const inits = [
-            ['CanvasUtils', initCanvasUtils],
-            ['Shortcuts', initShortcuts],
-            ['ContextMenu', initContextMenu],
-            ['SizeControls', initSizeControls],
-            ['Guides', initGuides],
-            ['ZoomPan', initZoomPan],
-            ['ObjectTools', initObjectTools],
-            ['ImageTools', initImageTools],
-            ['PageTools', initPageTools],
-            ['TemplateTools', initTemplateTools],
-            ['AiTools', initAiTools],
-            ['RetouchTools', initRetouchTools],
-            ['IconTools', initIconTools],
-            ['Export', initExport],
-            ['OrderSystem', initOrderSystem],
-            ['Auth', initAuth],
-            ['MyDesign', initMyDesign],
-            ['MobileTextEditor', initMobileTextEditor],
-            ['OutlineTool', initOutlineTool],
-            ['FileUpload', initFileUploadListeners],
-            ['PptMode', initPptMode],
-            ['WeddingMode', initWeddingMode],
-        ];
-        for (const [name, fn] of inits) {
-            try { fn(); } catch(e) { console.warn(`⚠️ ${name} init failed:`, e); }
-        }
 
-        // 3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
-        if (currentUser) {
-            await checkPartnerStatus();
-            await initContributorSystem(); 
-            // [추가] 유저 등급(파트너스) 및 수익금(예치금) UI 강제 갱신
-            if(window.updateMainPageUserInfo) await window.updateMainPageUserInfo();
-        }
+        // 1-1. Fabric.js 없이 동작하는 필수 초기화
+        try { initAuth(); } catch(e) { console.warn('⚠️ Auth init failed:', e); }
+        try { initOrderSystem(); } catch(e) { console.warn('⚠️ OrderSystem init failed:', e); }
 
-        // 폰트 미리 로드
-        if(window.preloadLanguageFont) await window.preloadLanguageFont();
-
-        // 3. 마이페이지 버튼 연결
+        // 1-2. 마이페이지 버튼 연결
         const btnMyPage = document.getElementById("btnMyLibrary");
         if (btnMyPage) {
             btnMyPage.onclick = () => {
-                // [수정] 다국어 적용
                 if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
                 location.href = 'mypage.html';
             };
         }
 
-        initVideoMaker();
-        console.log("🚀 에디터 모듈 초기화 완료");
+        // 1-3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
+        if (currentUser) {
+            await checkPartnerStatus();
+            await initContributorSystem();
+            if(window.updateMainPageUserInfo) await window.updateMainPageUserInfo();
+        }
+
+        // 2. ★ 에디터 초기화 (Fabric.js 필요) — 라이브러리 로드 후 실행
+        function runEditorInits() {
+            initCanvas();
+            const editorInits = [
+                ['CanvasUtils', initCanvasUtils],
+                ['Shortcuts', initShortcuts],
+                ['ContextMenu', initContextMenu],
+                ['SizeControls', initSizeControls],
+                ['Guides', initGuides],
+                ['ZoomPan', initZoomPan],
+                ['ObjectTools', initObjectTools],
+                ['ImageTools', initImageTools],
+                ['PageTools', initPageTools],
+                ['TemplateTools', initTemplateTools],
+                ['AiTools', initAiTools],
+                ['RetouchTools', initRetouchTools],
+                ['IconTools', initIconTools],
+                ['Export', initExport],
+                ['MyDesign', initMyDesign],
+                ['MobileTextEditor', initMobileTextEditor],
+                ['OutlineTool', initOutlineTool],
+                ['FileUpload', initFileUploadListeners],
+                ['PptMode', initPptMode],
+                ['WeddingMode', initWeddingMode],
+            ];
+            for (const [name, fn] of editorInits) {
+                try { fn(); } catch(e) { console.warn(`⚠️ ${name} init failed:`, e); }
+            }
+            initVideoMaker();
+            // 폰트 로드
+            if(window.preloadLanguageFont) window.preloadLanguageFont();
+            console.log("🚀 에디터 모듈 초기화 완료");
+        }
+
+        if (typeof fabric !== 'undefined') {
+            // Fabric.js가 이미 로드됨 (캐시/빠른 네트워크)
+            runEditorInits();
+        } else {
+            // Fabric.js 미로드 → startEditorDirect()에서 로드 후 실행
+            window._pendingEditorInits = runEditorInits;
+            console.log("⏳ 에디터 라이브러리 대기 (에디터 진입 시 로드)");
+        }
 
         // =========================================================
         // ★ 마이페이지 연동 로직 (편집/재주문 복구)
@@ -118,6 +127,12 @@ window.addEventListener("DOMContentLoaded", async () => {
         // [CASE A] 디자인 편집으로 들어온 경우
         if (loadId) {
             try { localStorage.removeItem('load_design_id'); } catch(e) {}
+
+            // ★ 에디터 라이브러리 동적 로드 (마이페이지→편집 복구)
+            if (!window._editorLibsLoaded && window.loadEditorLibraries) {
+                await window.loadEditorLibraries();
+                if (window._pendingEditorInits) { window._pendingEditorInits(); delete window._pendingEditorInits; }
+            }
 
             // 화면 강제 전환
             if(startScreen) startScreen.style.display = 'none';
