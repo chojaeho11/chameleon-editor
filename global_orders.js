@@ -857,7 +857,7 @@ window.uploadFileDirect = async (orderId, input) => {
 };
 
 // ================================================================
-// [문서 복구] 누락된 견적서/작업지시서 일괄 재생성
+// [문서 복구] 견적서/작업지시서 재생성 (옵션+이미지 포함 완전판)
 // ================================================================
 async function loadJsPDF() {
     if (window.jspdf) return;
@@ -869,94 +869,128 @@ async function loadJsPDF() {
     });
 }
 
-let _recoveryFontCache = null;
-async function loadRecoveryFont(doc) {
-    const fontName = 'NanumGothic';
-    const fontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf';
-    if (!_recoveryFontCache) {
-        const res = await fetch(fontUrl, { mode: 'cors' });
-        _recoveryFontCache = await res.arrayBuffer();
+let _rcFontCache = null;
+const _FONT_NAME = 'NanumGothic';
+async function _rcLoadFont(doc) {
+    if (!_rcFontCache) {
+        const res = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf', { mode: 'cors' });
+        _rcFontCache = await res.arrayBuffer();
     }
-    const bytes = new Uint8Array(_recoveryFontCache);
-    let binary = ''; for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-    const fontData = window.btoa(binary);
-    if (!doc.existsFileInVFS(fontName + '.ttf')) {
-        doc.addFileToVFS(fontName + '.ttf', fontData);
-        doc.addFont(fontName + '.ttf', fontName, 'normal');
-        doc.addFont(fontName + '.ttf', fontName, 'bold');
+    const bytes = new Uint8Array(_rcFontCache);
+    let bin = ''; for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+    if (!doc.existsFileInVFS(_FONT_NAME + '.ttf')) {
+        doc.addFileToVFS(_FONT_NAME + '.ttf', window.btoa(bin));
+        doc.addFont(_FONT_NAME + '.ttf', _FONT_NAME, 'normal');
+        doc.addFont(_FONT_NAME + '.ttf', _FONT_NAME, 'bold');
     }
-    doc.setFont(fontName);
-    return fontName;
+    doc.setFont(_FONT_NAME);
 }
 
-function _dt(doc, fontName, text, x, y, opts = {}, color = '#000000') {
+function _dt(doc, text, x, y, opts = {}, color = '#000000') {
     if (!text) return;
     const hex = color.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16), g = parseInt(hex.substring(2, 4), 16), b = parseInt(hex.substring(4, 6), 16);
-    doc.setTextColor(r, g, b);
-    doc.setFont(fontName, opts.weight || 'normal');
+    doc.setTextColor(parseInt(hex.substring(0,2),16), parseInt(hex.substring(2,4),16), parseInt(hex.substring(4,6),16));
+    doc.setFont(_FONT_NAME, opts.weight || 'normal');
+    if (opts.fontSize) doc.setFontSize(opts.fontSize);
     doc.text(String(text), x, y, opts);
 }
 
-function _dc(doc, fontName, x, y, w, h, text, align = 'center', fontSize = 9, isHeader = false) {
+function _dc(doc, x, y, w, h, text, align = 'center', fontSize = 9, isHeader = false) {
     doc.setFontSize(fontSize);
-    if (isHeader) { doc.setFillColor(240, 240, 240); doc.rect(x, y, w, h, 'F'); }
-    doc.setDrawColor(0); doc.setLineWidth(0.1); doc.rect(x, y, w, h);
-    doc.setTextColor(0, 0, 0); doc.setFont(fontName, isHeader ? 'bold' : 'normal');
-    const textX = align === 'left' ? x + 2 : (align === 'right' ? x + w - 2 : x + w / 2);
+    if (isHeader) { doc.setFillColor(240,240,240); doc.rect(x,y,w,h,'F'); }
+    doc.setDrawColor(0); doc.setLineWidth(0.1); doc.rect(x,y,w,h);
+    doc.setTextColor(0,0,0); doc.setFont(_FONT_NAME, isHeader ? 'bold' : 'normal');
+    const tx = align==='left' ? x+2 : (align==='right' ? x+w-2 : x+w/2);
     if (Array.isArray(text)) {
-        const lh = fontSize * 0.45;
-        const totalH = (text.length - 1) * lh * 1.15;
-        const startY = y + (h / 2) - (totalH / 2) + (fontSize / 3.5);
-        doc.text(text, textX, startY, { align, lineHeightFactor: 1.15 });
+        const totalH = (text.length-1) * fontSize * 0.45 * 1.15;
+        doc.text(text, tx, y+(h/2)-(totalH/2)+(fontSize/3.5), { align, lineHeightFactor:1.15 });
     } else {
-        doc.text(String(text), textX, y + (h / 2) + (fontSize / 3.5), { align, maxWidth: w - 4 });
+        doc.text(String(text), tx, y+(h/2)+(fontSize/3.5), { align, maxWidth: w-4 });
     }
 }
 
-async function generateRecoveryQuotation(order, fontName) {
+// 이미지 URL → dataURL 변환 (CORS 안전)
+function _rcLoadImage(url, timeoutMs = 10000) {
+    return new Promise(resolve => {
+        if (!url) return resolve(null);
+        const timer = setTimeout(() => resolve(null), timeoutMs);
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+            clearTimeout(timer);
+            try {
+                let w = img.width, h = img.height;
+                const MAX = 1500;
+                if (w > MAX || h > MAX) {
+                    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                    else { w = Math.round(w * MAX / h); h = MAX; }
+                }
+                const c = document.createElement('canvas'); c.width = w; c.height = h;
+                c.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(c.toDataURL('image/jpeg', 0.85));
+            } catch(e) { resolve(null); }
+        };
+        img.onerror = () => { clearTimeout(timer); resolve(null); };
+        img.src = url;
+    });
+}
+
+// addon DB 로드 (관리자 페이지용)
+let _rcAddonDB = null;
+async function _rcLoadAddons() {
+    if (_rcAddonDB) return _rcAddonDB;
+    const { data } = await sb.from('addons').select('*');
+    _rcAddonDB = {};
+    if (data) data.forEach(a => { _rcAddonDB[a.code] = a; });
+    return _rcAddonDB;
+}
+
+// ───── 견적서 (옵션 포함) ─────
+async function generateRecoveryQuotation(order, addonDB) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    await loadRecoveryFont(doc);
+    const doc = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
+    await _rcLoadFont(doc);
 
     doc.setFontSize(26);
-    _dt(doc, fontName, '견 적 서', 105, 22, { align: 'center', weight: 'bold' });
-    doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(15, 28, 195, 28);
+    _dt(doc, '견 적 서', 105, 22, { align:'center', weight:'bold' });
+    doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(15,28,195,28);
 
     doc.setFontSize(10);
-    _dt(doc, fontName, '[ 수신자 ]', 15, 35);
-    _dt(doc, fontName, `성   명 :  ${order.manager_name || '-'}`, 15, 43);
-    _dt(doc, fontName, `연 락 처 :  ${order.phone || '-'}`, 15, 49);
-    _dt(doc, fontName, `주   소 :  ${order.address || '-'}`, 15, 55, { maxWidth: 85 });
+    _dt(doc, '[ 수신자 ]', 15, 35);
+    _dt(doc, `성   명 :  ${order.manager_name||'-'}`, 15, 43);
+    _dt(doc, `연 락 처 :  ${order.phone||'-'}`, 15, 49);
+    _dt(doc, `주   소 :  ${order.address||'-'}`, 15, 55, { maxWidth:85 });
 
-    const provLabels = ['등록번호', '상      호', '대      표', '주      소', '업      태', '연 락 처'];
-    const provValues = ['470-81-02808', '(주)카멜레온프린팅', '조재호', '경기 화성시 우정읍 한말길 72-2', '제조업 / 서비스업', '031-366-1984'];
-    const boxX = 105, boxY = 32, cellH = 7, labelW = 20, valW = 70;
-    provLabels.forEach((lbl, i) => {
-        _dc(doc, fontName, boxX, boxY + i * cellH, labelW, cellH, lbl, 'center', 9, true);
-        _dc(doc, fontName, boxX + labelW, boxY + i * cellH, valW, cellH, provValues[i], 'left', 9, false);
+    const pL = ['등록번호','상      호','대      표','주      소','업      태','연 락 처'];
+    const pV = ['470-81-02808','(주)카멜레온프린팅','조재호','경기 화성시 우정읍 한말길 72-2','제조업 / 서비스업','031-366-1984'];
+    pL.forEach((l,i) => {
+        _dc(doc, 105, 32+i*7, 20, 7, l, 'center', 9, true);
+        _dc(doc, 125, 32+i*7, 70, 7, pV[i], 'left', 9, false);
     });
 
     // 직인
     try {
-        const stampRes = await fetch('https://gdadmin.signmini.com/data/etc/stampImage');
-        const stampBlob = await stampRes.blob();
-        const stampData = await new Promise(r => { const rd = new FileReader(); rd.onloadend = () => r(rd.result); rd.readAsDataURL(stampBlob); });
-        if (stampData) doc.addImage(stampData, 'PNG', boxX + labelW + 45, boxY + cellH + 1, 14, 14);
-    } catch (e) {}
+        const sr = await fetch('https://gdadmin.signmini.com/data/etc/stampImage');
+        const sb2 = await sr.blob();
+        const sd = await new Promise(r => { const rd = new FileReader(); rd.onloadend = () => r(rd.result); rd.readAsDataURL(sb2); });
+        if (sd) doc.addImage(sd, 'PNG', 170, 40, 14, 14);
+    } catch(e){}
 
     let y = 85;
-    const cols = [10, 50, 40, 20, 30, 30];
-    const headers = ['No', '품목명', '규격/옵션', '수량', '단가', '금액'];
-    let curX = 15;
-    headers.forEach((h, i) => { _dc(doc, fontName, curX, y, cols[i], 8, h, 'center', 10, true); curX += cols[i]; });
+    const cols = [10,50,40,20,30,30];
+    ['No','품목명','규격/옵션','수량','단가','금액'].forEach((h,i) => {
+        let cx = 15; for(let j=0;j<i;j++) cx+=cols[j];
+        _dc(doc, cx, y, cols[i], 8, h, 'center', 10, true);
+    });
     y += 8;
 
-    const items = order.items || [];
     let totalAmt = 0, no = 1;
-    items.forEach(item => {
+    (order.items||[]).forEach(item => {
         if (!item.product) return;
-        const pName = item.product.name || '-';
+        let pName = item.product.name || '-';
+        if (item.wallCount && item.wallCount > 1) pName += ` (${item.wallCount}벽)`;
+        else if (item.pageCount && item.pageCount > 1) pName += ` (${item.pageCount}면)`;
+
         const price = item.product.price || 0;
         const qty = item.qty || 1;
         const pTotal = price * qty;
@@ -966,46 +1000,69 @@ async function generateRecoveryQuotation(order, fontName) {
         const hMm = item.product.h_mm || item.product.height_mm || 0;
         const optLabel = (wMm && hMm) ? `${Math.round(wMm)}x${Math.round(hMm)}mm` : '기본 사양';
 
-        const splitTitle = doc.splitTextToSize(pName, cols[1] - 4);
-        const rowH = Math.max(8, 4 + splitTitle.length * 5);
-        curX = 15;
-        _dc(doc, fontName, curX, y, cols[0], rowH, String(no++), 'center'); curX += cols[0];
-        _dc(doc, fontName, curX, y, cols[1], rowH, splitTitle, 'left'); curX += cols[1];
-        _dc(doc, fontName, curX, y, cols[2], rowH, optLabel, 'left'); curX += cols[2];
-        _dc(doc, fontName, curX, y, cols[3], rowH, String(qty), 'center'); curX += cols[3];
-        _dc(doc, fontName, curX, y, cols[4], rowH, price.toLocaleString(), 'right'); curX += cols[4];
-        _dc(doc, fontName, curX, y, cols[5], rowH, pTotal.toLocaleString(), 'right');
-        y += rowH;
+        const split = doc.splitTextToSize(pName, cols[1]-4);
+        const rh = Math.max(8, 4 + split.length * 5);
+        let cx = 15;
+        _dc(doc, cx, y, cols[0], rh, String(no++), 'center'); cx+=cols[0];
+        _dc(doc, cx, y, cols[1], rh, split, 'left'); cx+=cols[1];
+        _dc(doc, cx, y, cols[2], rh, optLabel, 'left'); cx+=cols[2];
+        _dc(doc, cx, y, cols[3], rh, String(qty), 'center'); cx+=cols[3];
+        _dc(doc, cx, y, cols[4], rh, price.toLocaleString(), 'right'); cx+=cols[4];
+        _dc(doc, cx, y, cols[5], rh, pTotal.toLocaleString(), 'right');
+        y += rh;
         if (y > 260) { doc.addPage(); y = 20; }
+
+        // ★ 옵션(addon) 렌더링
+        if (item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = addonDB[code]; if (!add) return;
+                const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                const addPrice = add.price || 0;
+                const aTotal = addPrice * uQty;
+                totalAmt += aTotal;
+                const addName = '└ ' + (add.display_name || add.name || code);
+                const splitA = doc.splitTextToSize(addName, cols[1]-4);
+                const ah = Math.max(8, 4 + splitA.length * 5);
+                cx = 15;
+                _dc(doc, cx, y, cols[0], ah, '', 'center'); cx+=cols[0];
+                _dc(doc, cx, y, cols[1], ah, splitA, 'left', 8); cx+=cols[1];
+                _dc(doc, cx, y, cols[2], ah, '추가 옵션', 'left', 8); cx+=cols[2];
+                _dc(doc, cx, y, cols[3], ah, String(uQty), 'center'); cx+=cols[3];
+                _dc(doc, cx, y, cols[4], ah, addPrice.toLocaleString(), 'right'); cx+=cols[4];
+                _dc(doc, cx, y, cols[5], ah, aTotal.toLocaleString(), 'right');
+                y += ah;
+                if (y > 260) { doc.addPage(); y = 20; }
+            });
+        }
     });
 
     y += 5;
-    const vat = Math.floor(totalAmt / 11);
-    const supply = totalAmt - vat;
     const discount = order.discount_amount || 0;
     const finalAmt = totalAmt - discount;
+    const vat = Math.floor(finalAmt / 11);
+    const supply = finalAmt - vat;
 
-    _dt(doc, fontName, '공급가액 :', 105, y + 5, { align: 'right' }); _dt(doc, fontName, supply.toLocaleString() + '원', 195, y + 5, { align: 'right' }); y += 6;
-    _dt(doc, fontName, '부 가 세 :', 105, y + 5, { align: 'right' }); _dt(doc, fontName, vat.toLocaleString() + '원', 195, y + 5, { align: 'right' }); y += 6;
+    _dt(doc, '공급가액 :', 105, y+5, {align:'right'}); _dt(doc, supply.toLocaleString()+'원', 195, y+5, {align:'right'}); y+=6;
+    _dt(doc, '부 가 세 :', 105, y+5, {align:'right'}); _dt(doc, vat.toLocaleString()+'원', 195, y+5, {align:'right'}); y+=6;
     if (discount > 0) {
-        _dt(doc, fontName, '할인/마일리지 :', 105, y + 5, { align: 'right' }, '#ff0000');
-        _dt(doc, fontName, '-' + discount.toLocaleString() + '원', 195, y + 5, { align: 'right' }, '#ff0000'); y += 6;
+        _dt(doc, '할인/마일리지 :', 105, y+5, {align:'right'}, '#ff0000');
+        _dt(doc, '-'+discount.toLocaleString()+'원', 195, y+5, {align:'right'}, '#ff0000'); y+=6;
     }
-    y += 2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(85, y, 195, y); y += 8;
-    _dt(doc, fontName, '합계금액 (VAT포함)', 105, y, { align: 'right', weight: 'bold' });
+    y+=2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(85,y,195,y); y+=8;
+    _dt(doc, '합계금액 (VAT포함)', 105, y, {align:'right', weight:'bold'});
     doc.setFontSize(14);
-    _dt(doc, fontName, finalAmt.toLocaleString() + '원', 195, y, { align: 'right', weight: 'bold' }, '#1a237e');
+    _dt(doc, finalAmt.toLocaleString()+'원', 195, y, {align:'right', weight:'bold'}, '#1a237e');
     doc.setFontSize(10);
-    _dt(doc, fontName, '위와 같이 청구(영수)합니다.', 105, 250, { align: 'center' });
-    _dt(doc, fontName, new Date(order.created_at || Date.now()).toLocaleDateString(), 105, 262, { align: 'center' });
-
+    _dt(doc, '위와 같이 청구(영수)합니다.', 105, 250, {align:'center'});
+    _dt(doc, new Date(order.created_at||Date.now()).toLocaleDateString(), 105, 262, {align:'center'});
     return doc.output('blob');
 }
 
-async function generateRecoveryOrderSheet(order, fontName) {
+// ───── 작업지시서 (옵션+이미지 포함) ─────
+async function generateRecoveryOrderSheet(order, addonDB) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    await loadRecoveryFont(doc);
+    const doc = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
+    await _rcLoadFont(doc);
 
     const items = order.items || [];
     for (let i = 0; i < items.length; i++) {
@@ -1013,90 +1070,129 @@ async function generateRecoveryOrderSheet(order, fontName) {
         if (!item.product) continue;
         if (i > 0) doc.addPage();
 
-        // 상단 네이비 바
-        doc.setFillColor(26, 35, 126); doc.rect(0, 0, 210, 20, 'F');
-        doc.setTextColor(255, 255, 255); doc.setFontSize(22);
-        doc.setFont(fontName, 'bold'); doc.text('작 업 지 시 서', 105, 14, { align: 'center' });
+        // 네이비 헤더
+        doc.setFillColor(26,35,126); doc.rect(0,0,210,20,'F');
+        doc.setTextColor(255,255,255); doc.setFontSize(22);
+        doc.setFont(_FONT_NAME,'bold'); doc.text('작 업 지 시 서', 105, 14, {align:'center'});
 
-        // 주문 정보 박스
+        // 주문 정보
         const startY = 30, boxH = 50;
-        doc.setTextColor(0); doc.setDrawColor(0); doc.setLineWidth(0.4); doc.rect(15, startY, 180, boxH);
+        doc.setTextColor(0); doc.setDrawColor(0); doc.setLineWidth(0.4); doc.rect(15,startY,180,boxH);
         doc.setFontSize(10);
         let cy = startY + 8;
-        _dt(doc, fontName, `주 문 번 호 :  ${order.id || '-'}`, 20, cy, { weight: 'bold' });
-        _dt(doc, fontName, `접 수 일 자 :  ${new Date(order.created_at || Date.now()).toLocaleDateString()}`, 80, cy);
-        doc.setDrawColor(200); doc.setLineWidth(0.1); doc.line(20, cy + 3, 130, cy + 3); cy += 8;
+        _dt(doc, `주 문 번 호 :  ${order.id||'-'}`, 20, cy, {weight:'bold'});
+        _dt(doc, `접 수 일 자 :  ${new Date(order.created_at||Date.now()).toLocaleDateString()}`, 80, cy);
+        doc.setDrawColor(200); doc.setLineWidth(0.1); doc.line(20,cy+3,130,cy+3); cy+=8;
         doc.setFontSize(11);
-        _dt(doc, fontName, `주   문   자 :  ${order.manager_name || '-'}`, 20, cy); cy += 6;
-        _dt(doc, fontName, `연   락   처 :  ${order.phone || '-'}`, 20, cy); cy += 6;
-        _dt(doc, fontName, `배 송 주 소 :`, 20, cy); doc.setFontSize(10); _dt(doc, fontName, order.address || '-', 45, cy, { maxWidth: 90 }); cy += 10;
+        _dt(doc, `주   문   자 :  ${order.manager_name||'-'}`, 20, cy); cy+=6;
+        _dt(doc, `연   락   처 :  ${order.phone||'-'}`, 20, cy); cy+=6;
+        _dt(doc, '배 송 주 소 :', 20, cy); doc.setFontSize(10); _dt(doc, order.address||'-', 45, cy, {maxWidth:90}); cy+=10;
         doc.setFontSize(11);
-        _dt(doc, fontName, `요 청 사 항 :`, 20, cy);
-        _dt(doc, fontName, order.request_note || '없음', 45, cy, { maxWidth: 130, weight: 'bold' }, '#1d4ed8');
+        _dt(doc, '요 청 사 항 :', 20, cy);
+        // 추천인 태그 제거
+        let reqNote = (order.request_note || '없음').replace(/\n?##REF:[^#]+##/g, '').trim() || '없음';
+        _dt(doc, reqNote, 45, cy, {maxWidth:130, weight:'bold'}, '#1d4ed8');
 
         // 배송 희망일
         let dateStr = '미지정';
         if (order.delivery_target_date) {
             const parts = order.delivery_target_date.split('-');
-            if (parts.length === 3) dateStr = `${parts[1]}.${parts[2]}`;
-            else dateStr = order.delivery_target_date;
+            dateStr = parts.length===3 ? `${parts[1]}.${parts[2]}` : order.delivery_target_date;
         }
         doc.setFontSize(12);
-        _dt(doc, fontName, '배송 희망일', 165, startY + 12, { align: 'center', weight: 'bold' }, '#ff0000');
+        _dt(doc, '배송 희망일', 165, startY+12, {align:'center', weight:'bold'}, '#ff0000');
         doc.setFontSize(42);
-        _dt(doc, fontName, dateStr, 165, startY + 32, { align: 'center', weight: 'bold' }, '#ff0000');
-        doc.setDrawColor(255, 0, 0); doc.setLineWidth(0.5); doc.roundedRect(135, startY + 5, 55, 35, 3, 3);
+        _dt(doc, dateStr, 165, startY+32, {align:'center', weight:'bold'}, '#ff0000');
+        doc.setDrawColor(255,0,0); doc.setLineWidth(0.5); doc.roundedRect(135,startY+5,55,35,3,3);
 
         // 담당자 바
         const staffY = startY + boxH + 5;
-        doc.setFillColor(255, 247, 237); doc.setDrawColor(249, 115, 22); doc.setLineWidth(0.3);
-        doc.rect(15, staffY, 180, 14, 'FD');
+        doc.setFillColor(255,247,237); doc.setDrawColor(249,115,22); doc.setLineWidth(0.3);
+        doc.rect(15,staffY,180,14,'FD');
         doc.setFontSize(10);
-        _dt(doc, fontName, '배송책임자 : 서용규 (010-8272-3017)   |   제작책임자 : 변지웅 (010-5512-5366)', 105, staffY + 8.5, { align: 'center', weight: 'bold' }, '#c2410c');
+        _dt(doc, '배송책임자 : 서용규 (010-8272-3017)   |   제작책임자 : 변지웅 (010-5512-5366)', 105, staffY+8.5, {align:'center',weight:'bold'}, '#c2410c');
 
         // 제품 사양
         const prodY = staffY + 20;
-        doc.setFillColor(240, 240, 240); doc.setDrawColor(0); doc.setLineWidth(0.1); doc.rect(15, prodY, 180, 10, 'FD');
+        doc.setFillColor(240,240,240); doc.setDrawColor(0); doc.setLineWidth(0.1);
+        doc.rect(15,prodY,180,10,'FD');
         doc.setTextColor(0); doc.setFontSize(11);
-        _dt(doc, fontName, '제 작 사 양', 20, prodY + 7, { weight: 'bold' });
-        _dt(doc, fontName, `수량: ${item.qty || 1}개`, 185, prodY + 7, { align: 'right', weight: 'bold' }, '#ff0000');
+        _dt(doc, '제 작 사 양', 20, prodY+7, {weight:'bold'});
+        _dt(doc, `수량: ${item.qty||1}개`, 185, prodY+7, {align:'right',weight:'bold'}, '#ff0000');
 
-        const infoY = prodY + 18; doc.setFontSize(16);
-        _dt(doc, fontName, item.product.name || '-', 20, infoY, { weight: 'bold' });
-        doc.setFontSize(11); let optY = infoY + 8;
+        const infoY = prodY + 18;
+        doc.setFontSize(16);
+        let prodName = item.product.name || '-';
+        if (item.wallCount && item.wallCount > 1) prodName += ` (${item.wallCount}벽)`;
+        _dt(doc, prodName, 20, infoY, {weight:'bold'});
+        doc.setFontSize(11);
+        let optY = infoY + 8;
+
         const wMm = item.product.w_mm || item.product.width_mm || 0;
         const hMm = item.product.h_mm || item.product.height_mm || 0;
         if (wMm && hMm) {
-            _dt(doc, fontName, `사이즈 : ${Math.round(wMm)} x ${Math.round(hMm)} mm`, 25, optY, {}, '#555555');
+            _dt(doc, `사이즈 : ${Math.round(wMm)} x ${Math.round(hMm)} mm`, 25, optY, {}, '#555555');
             optY += 6;
         }
-        _dt(doc, fontName, '• 기본 사양', 25, optY);
 
-        // 디자인 미리보기 영역 (비어있음)
-        const imgBoxY = optY + 12; const imgBoxH = 255 - imgBoxY - 5;
-        doc.setDrawColor(0); doc.setLineWidth(0.2); doc.rect(15, imgBoxY, 180, imgBoxH);
-        doc.setFontSize(9); doc.setTextColor(136, 136, 136);
-        doc.text('< 디자인 시안 확인 >', 105, imgBoxY - 2, { align: 'center' });
-        doc.setTextColor(180, 180, 180); doc.setFontSize(12);
-        doc.text('이미지 없음 (파일 별도 확인)', 105, imgBoxY + imgBoxH / 2, { align: 'center' });
+        // ★ 옵션 표시
+        if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = addonDB[code]; if (!add) return;
+                const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                _dt(doc, `• ${add.display_name || add.name || code} (x${qty})`, 25, optY);
+                optY += 6;
+            });
+        } else {
+            _dt(doc, '• 기본 사양', 25, optY); optY += 6;
+        }
+
+        // ★ 디자인 미리보기 (썸네일/원본 이미지)
+        const imgBoxY = optY + 5;
+        const footerY = 255;
+        const imgBoxH = footerY - imgBoxY - 5;
+        doc.setDrawColor(0); doc.setLineWidth(0.2); doc.rect(15,imgBoxY,180,imgBoxH);
+        doc.setFontSize(9); doc.setTextColor(136,136,136);
+        doc.text('< 디자인 시안 확인 >', 105, imgBoxY-2, {align:'center'});
+
+        // 이미지 로드 시도: thumb → originalUrl
+        let imgData = null;
+        if (item.thumb) {
+            imgData = await _rcLoadImage(item.thumb);
+        }
+        if (!imgData && item.originalUrl) {
+            imgData = await _rcLoadImage(item.originalUrl);
+        }
+
+        if (imgData) {
+            try {
+                let fmt = 'PNG'; if (imgData.startsWith('data:image/jpeg')) fmt = 'JPEG';
+                const imgProps = doc.getImageProperties(imgData);
+                const innerW = 176, innerH = imgBoxH - 4;
+                let w = innerW, h = (imgProps.height * w) / imgProps.width;
+                if (h > innerH) { h = innerH; w = (imgProps.width * h) / imgProps.height; }
+                doc.addImage(imgData, fmt, 105-(w/2), imgBoxY+(imgBoxH/2)-(h/2), w, h);
+            } catch(e) {}
+        } else {
+            doc.setTextColor(180,180,180); doc.setFontSize(12);
+            doc.text('이미지 없음 (파일 별도 확인)', 105, imgBoxY + imgBoxH/2, {align:'center'});
+        }
     }
 
     if (items.length === 0) {
-        _dt(doc, fontName, '주문 항목 없음', 105, 100, { align: 'center' });
+        _dt(doc, '주문 항목 없음', 105, 100, {align:'center'});
     }
     return doc.output('blob');
 }
 
+// ───── 복구 실행 (기존 복구 문서 삭제 후 재생성) ─────
 window.recoverMissingDocs = async () => {
     const logEl = document.getElementById('recoveryLog');
-    const log = (msg) => {
-        console.log(msg);
-        if (logEl) logEl.innerHTML += msg + '<br>';
-    };
+    if (logEl) logEl.innerHTML = '';
+    const log = (msg) => { console.log(msg); if (logEl) logEl.innerHTML += msg + '<br>'; };
 
-    log('🔍 누락된 문서 검색 중...');
+    log('🔍 주문 조회 중...');
 
-    // 최근 200개 주문 조회
     const { data: orders, error } = await sb.from('orders')
         .select('id, manager_name, phone, address, request_note, delivery_target_date, created_at, items, files, total_amount, discount_amount, site_code')
         .order('created_at', { ascending: false })
@@ -1104,71 +1200,83 @@ window.recoverMissingDocs = async () => {
 
     if (error) { log('❌ 조회 실패: ' + error.message); return; }
 
-    const missing = orders.filter(o => {
-        const realFiles = (o.files || []).filter(f => f.type !== '_error_log');
-        const hasOrderSheet = realFiles.some(f => f.type === 'order_sheet');
-        const hasQuotation = realFiles.some(f => f.type === 'quotation');
-        return !hasOrderSheet || !hasQuotation;
+    // 모든 주문에서 견적서/작업지시서 누락 또는 복구본(recovery) 찾기
+    const targets = orders.filter(o => {
+        const files = (o.files || []).filter(f => f.type !== '_error_log');
+        const hasRealOrderSheet = files.some(f => f.type === 'order_sheet' && f.url && !f.url.includes('recovery'));
+        const hasRealQuotation = files.some(f => f.type === 'quotation' && f.url && !f.url.includes('recovery'));
+        const hasRecovery = files.some(f => f.url && f.url.includes('recovery'));
+        return !hasRealOrderSheet || !hasRealQuotation || hasRecovery;
     });
 
-    if (missing.length === 0) { log('✅ 모든 주문에 문서가 존재합니다.'); return; }
-    log(`📋 ${missing.length}건의 주문에서 누락된 문서 발견`);
+    if (targets.length === 0) { log('✅ 모든 주문에 정상 문서가 존재합니다.'); return; }
+    log(`📋 ${targets.length}건 대상 (누락 또는 이전 복구본 교체)`);
 
-    // 에러 로그 표시
-    missing.forEach(o => {
-        const errLog = (o.files || []).find(f => f.type === '_error_log');
-        const realFiles = (o.files || []).filter(f => f.type !== '_error_log');
-        const types = realFiles.map(f => f.type).join(', ');
-        log(`  📌 ${o.id} [${o.manager_name || '-'}] 보유: [${types || '없음'}]${errLog ? ' ⚠️에러: ' + (errLog.errors || []).join('; ') : ''}`);
+    targets.forEach(o => {
+        const files = (o.files||[]).filter(f => f.type !== '_error_log');
+        const types = files.map(f => f.type + (f.url?.includes('recovery')?' (복구)':'')).join(', ');
+        log(`  📌 ${o.id} [${o.manager_name||'-'}] : ${types||'없음'}`);
     });
 
-    if (!confirm(`${missing.length}건의 주문에 대해 누락된 견적서/작업지시서를 재생성하시겠습니까?`)) {
+    if (!confirm(`${targets.length}건의 견적서/작업지시서를 (재)생성하시겠습니까?\n기존 복구본은 삭제 후 새로 만듭니다.`)) {
         log('⏹ 취소됨'); return;
     }
 
     await loadJsPDF();
     log('📦 jsPDF 로드 완료');
 
-    const fontName = 'NanumGothic';
+    const addonDB = await _rcLoadAddons();
+    log(`📦 옵션 DB 로드 완료 (${Object.keys(addonDB).length}개)`);
+
     let success = 0, fail = 0;
-
-    for (const order of missing) {
-        const realFiles = (order.files || []).filter(f => f.type !== '_error_log');
-        const hasOrderSheet = realFiles.some(f => f.type === 'order_sheet');
-        const hasQuotation = realFiles.some(f => f.type === 'quotation');
-        const updatedFiles = [...realFiles];
-
+    for (const order of targets) {
         try {
-            if (!hasQuotation) {
-                const blob = await generateRecoveryQuotation(order, fontName);
+            // 기존 복구본 제거, 정상 파일만 유지
+            const cleanFiles = (order.files||[]).filter(f =>
+                f.type !== '_error_log' &&
+                f.type !== 'order_sheet' &&
+                f.type !== 'quotation'
+            );
+            // 정상본(recovery가 아닌)은 유지
+            const origOS = (order.files||[]).find(f => f.type === 'order_sheet' && f.url && !f.url.includes('recovery'));
+            const origQ = (order.files||[]).find(f => f.type === 'quotation' && f.url && !f.url.includes('recovery'));
+
+            const updatedFiles = [...cleanFiles];
+            if (origOS) updatedFiles.push(origOS);
+            if (origQ) updatedFiles.push(origQ);
+
+            // 견적서 재생성
+            if (!origQ) {
+                const blob = await generateRecoveryQuotation(order, addonDB);
                 if (blob) {
-                    const path = `orders/${order.id}/quotation_recovery.pdf`;
+                    const ts = Date.now();
+                    const path = `orders/${order.id}/quotation_recovery_${ts}.pdf`;
                     const { error: upErr } = await sb.storage.from('orders').upload(path, blob, { upsert: true });
                     if (!upErr) {
                         const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
                         updatedFiles.push({ name: '견적서.pdf', url: urlData.publicUrl, type: 'quotation' });
-                        log(`  ✅ ${order.id} 견적서 생성`);
-                    } else { log(`  ⚠️ ${order.id} 견적서 업로드 실패: ${upErr.message}`); }
+                        log(`  ✅ ${order.id} 견적서`);
+                    } else { log(`  ⚠️ ${order.id} 견적서 업로드 실패`); }
                 }
             }
-            if (!hasOrderSheet) {
-                const blob = await generateRecoveryOrderSheet(order, fontName);
+
+            // 작업지시서 재생성
+            if (!origOS) {
+                const blob = await generateRecoveryOrderSheet(order, addonDB);
                 if (blob) {
-                    const path = `orders/${order.id}/order_sheet_recovery.pdf`;
+                    const ts = Date.now();
+                    const path = `orders/${order.id}/order_sheet_recovery_${ts}.pdf`;
                     const { error: upErr } = await sb.storage.from('orders').upload(path, blob, { upsert: true });
                     if (!upErr) {
                         const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
                         updatedFiles.push({ name: '작업지시서.pdf', url: urlData.publicUrl, type: 'order_sheet' });
-                        log(`  ✅ ${order.id} 작업지시서 생성`);
-                    } else { log(`  ⚠️ ${order.id} 작업지시서 업로드 실패: ${upErr.message}`); }
+                        log(`  ✅ ${order.id} 작업지시서`);
+                    } else { log(`  ⚠️ ${order.id} 작업지시서 업로드 실패`); }
                 }
             }
 
-            // DB 업데이트
-            if (updatedFiles.length !== realFiles.length) {
-                await sb.from('orders').update({ files: updatedFiles }).eq('id', order.id);
-                success++;
-            }
+            await sb.from('orders').update({ files: updatedFiles }).eq('id', order.id);
+            success++;
         } catch (e) {
             log(`  ❌ ${order.id} 오류: ${e.message}`);
             fail++;
@@ -1176,7 +1284,7 @@ window.recoverMissingDocs = async () => {
     }
 
     log(`\n🎉 완료! 성공: ${success}건, 실패: ${fail}건`);
-    log('페이지를 새로고침하면 반영됩니다.');
+    log('새로고침하면 반영됩니다.');
 };
 
 // ================================================================
