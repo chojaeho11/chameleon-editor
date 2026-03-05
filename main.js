@@ -1300,7 +1300,7 @@ window.submitArtworkUpload = async function() {
             const cn = catNames[cat];
             const price = basePrices[cat];
             const productCode = `${cat}_${window.currentUser.id.substring(0,8)}_${ts}`;
-            await sb.from('admin_products').insert({
+            const { error: insErr } = await sb.from('admin_products').insert({
                 code: productCode,
                 name: `${title} - ${cn.name}`,
                 name_us: `${title} - ${cn.name_us}`,
@@ -1309,13 +1309,12 @@ window.submitArtworkUpload = async function() {
                 price: price,
                 price_us: Math.round(price * 0.001),
                 img_url: imgUrl,
-                tags: tags,
-                custom_w: 0,
-                custom_h: 0,
-                artwork_owner: window.currentUser.id,
-                artwork_revenue_rate: ART_REVENUE_RATE,
+                description: tags,
+                partner_id: window.currentUser.id,
+                is_custom_size: true,
                 sort_order: 999
             });
+            if (insErr) throw insErr;
         }
 
         showToast(window.t?.('artwork_success', '작품이 3종 상품으로 등록되었습니다!') || '작품이 3종 상품으로 등록되었습니다!', 'success');
