@@ -185,6 +185,12 @@ async function loadSystemData() {
                 } else if (country === 'ES') {
                     dName = item.name_es || item.name_us || item.name;
                     if (item.price_us) dbPrice = Math.round(item.price_us / rate);
+                } else if (country === 'DE') {
+                    dName = item.name_de || item.name_us || item.name;
+                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
+                } else if (country === 'FR') {
+                    dName = item.name_fr || item.name_us || item.name;
+                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 }
                 ADDON_DB[item.code] = { ...item, display_name: dName, price: dbPrice };
             });
