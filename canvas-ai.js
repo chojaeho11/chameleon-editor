@@ -632,13 +632,41 @@ function _wzRender(steps, idx) {
 export async function runDesignWizard(title, style, bodyText) {
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) throw new Error('No canvas board');
-    const bW = board.width * (board.scaleX||1), bH = board.height * (board.scaleY||1);
-    const bL = board.left, bT = board.top;
+    const fullBW = board.width * (board.scaleX||1), fullBH = board.height * (board.scaleY||1);
+    const fullBL = board.left, fullBT = board.top;
+
+    // ★ 프로모 모드: 선택된 패널 영역에만 마법사 적용
+    const promoSel = window.__promoSelection;
+    const promoPanel = window.__activePromoPanel;
+    const isPromo = promoSel && typeof promoPanel === 'number';
+    let bW, bH, bL, bT;
+    if (isPromo) {
+        const panels = promoSel.panelCount || 1;
+        const pw = fullBW / panels;
+        bL = fullBL + pw * promoPanel;
+        bT = fullBT;
+        bW = pw;
+        bH = fullBH;
+    } else {
+        bW = fullBW; bH = fullBH; bL = fullBL; bT = fullBT;
+    }
+
     const S = WIZARD_STYLES[style] || WIZARD_STYLES.blue;
     const steps = _wzSteps();
 
-    // ★ 기존 오브젝트 모두 삭제 (보드, 고정 오버레이 제외)
-    canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+    // ★ 기존 오브젝트 삭제
+    if (isPromo) {
+        // 프로모 모드: 해당 패널 영역의 일반 오브젝트만 삭제 (패널배경, 가이드, 하이라이트 보존)
+        canvas.getObjects().filter(o => {
+            if (o.isBoard || o.id === 'product_fixed_overlay') return false;
+            if (o._promoPanelBg || o.isGuide || o._promoHighlight) return false;
+            // 해당 패널 영역 안에 있는 오브젝트만 삭제
+            const oL = o.left || 0;
+            return oL >= bL - 5 && oL < bL + bW + 5;
+        }).forEach(o => canvas.remove(o));
+    } else {
+        canvas.getObjects().filter(o => !o.isBoard && o.id !== 'product_fixed_overlay').forEach(o => canvas.remove(o));
+    }
     canvas.discardActiveObject();
     canvas.requestRenderAll();
 
@@ -707,11 +735,19 @@ export async function runDesignWizard(title, style, bodyText) {
         isBottomOverlay: true
     });
     canvas.add(bottomOverlay);
-    // 배경(templateBg) 바로 위로 보내기
-    const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
-    if (bgObj) {
-        const bgIdx = canvas.getObjects().indexOf(bgObj);
-        canvas.moveTo(bottomOverlay, bgIdx + 1);
+    // 배경(templateBg) 또는 패널배경 바로 위로 보내기
+    if (isPromo) {
+        const panelBg = canvas.getObjects().find(o => o._promoPanelBg && o._promoPanel === promoPanel);
+        if (panelBg) {
+            const idx = canvas.getObjects().indexOf(panelBg);
+            canvas.moveTo(bottomOverlay, idx + 1);
+        }
+    } else {
+        const bgObj = canvas.getObjects().find(o => o.isTemplateBackground);
+        if (bgObj) {
+            const bgIdx = canvas.getObjects().indexOf(bgObj);
+            canvas.moveTo(bottomOverlay, bgIdx + 1);
+        }
     }
 
     // ─── Step 2: Title ───
@@ -735,6 +771,19 @@ export async function runDesignWizard(title, style, bodyText) {
     // ─── Step 5: 완성 ───
     _wzRender(steps, 4);
     canvas.discardActiveObject();
+
+    // ★ 프로모 모드: 가이드/패널배경 레이어 순서 복구
+    if (isPromo) {
+        const objs = canvas.getObjects();
+        const boardObj = objs.find(o => o.isBoard);
+        const boardIdx = boardObj ? objs.indexOf(boardObj) : -1;
+        objs.filter(o => o._promoPanelBg).forEach(bg => {
+            if (boardIdx >= 0) canvas.moveTo(bg, boardIdx + 1);
+        });
+        objs.filter(o => o.isGuide || o._promoHighlight).forEach(g => canvas.bringToFront(g));
+        if (window.savePageState) window.savePageState();
+    }
+
     canvas.requestRenderAll();
 
     // ★ 클립아트 검색창에 첫 번째 키워드 자동 입력
@@ -1167,19 +1216,33 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     ];
     const angle = angles[Math.floor(Math.random() * angles.length)];
 
+    const gradFill = new fabric.Gradient({
+        type: 'linear',
+        coords: { x1: angle.x1 * bW, y1: angle.y1 * bH, x2: angle.x2 * bW, y2: angle.y2 * bH },
+        colorStops: [
+            { offset: 0, color: c1 },
+            { offset: 1, color: c2 }
+        ]
+    });
+
+    // ★ 프로모 모드: 패널 배경 rect의 fill을 직접 변경 (별도 rect 불필요)
+    const promoSel = window.__promoSelection;
+    const promoPanel = window.__activePromoPanel;
+    if (promoSel && typeof promoPanel === 'number') {
+        const panelBg = canvas.getObjects().find(o => o._promoPanelBg && o._promoPanel === promoPanel);
+        if (panelBg) {
+            panelBg.set('fill', gradFill);
+            canvas.requestRenderAll();
+            return;
+        }
+    }
+
     // ★ 서브픽셀 렌더링으로 인한 흰색 테두리 방지: 배경을 2px씩 크게 (clipPath가 잘라줌)
     const bgRect = new fabric.Rect({
         width: bW + 4, height: bH + 4,
         left: bL - 2, top: bT - 2,
         originX:'left', originY:'top',
-        fill: new fabric.Gradient({
-            type: 'linear',
-            coords: { x1: angle.x1 * bW, y1: angle.y1 * bH, x2: angle.x2 * bW, y2: angle.y2 * bH },
-            colorStops: [
-                { offset: 0, color: c1 },
-                { offset: 1, color: c2 }
-            ]
-        }),
+        fill: gradFill,
         selectable: false, evented: false,
         lockMovementX: true, lockMovementY: true,
         lockRotation: true, lockScalingX: true, lockScalingY: true,
