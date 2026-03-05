@@ -541,7 +541,8 @@ function _triggerFileInput(){
 }
 
 function renderMediaTab(el) {
-    let h = `<div class="ve-sec"><button class="ve-import-btn" style="cursor:pointer;border:1px dashed #4a4a6a;"><i class="fa-solid fa-plus"></i> Import</button></div>`;
+    _ensureFileInputListener();
+    let h = `<div class="ve-sec"><label class="ve-import-btn" for="veFileInput" style="cursor:pointer;border:1px dashed #4a4a6a;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;background:#2a2a4a;color:#818cf8;border-radius:8px;font-size:12px;font-weight:600;"><i class="fa-solid fa-plus"></i> Import</label></div>`;
     if (vm.clips.length) {
         h += '<div class="ve-media-grid">';
         vm.clips.forEach((c,i) => {
@@ -557,19 +558,10 @@ function renderMediaTab(el) {
     } else {
         h += `<p class="ve-empty">${_t('ve_add_clip','이미지 또는 영상을 추가하세요')}</p>`;
     }
-    h += `<div class="ve-media-empty-area" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;">
+    h += `<label for="veFileInput" class="ve-media-empty-area" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;" onmouseover="this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)'" onmouseout="this.style.borderColor='transparent';this.style.background='transparent'">
         <span style="color:#4a5568;font-size:11px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>${_t('ve_click_to_add','클릭하여 추가')}</span>
-    </div>`;
+    </label>`;
     el.innerHTML = h;
-    // 이벤트 리스너를 직접 부착 (el 내부에서 찾기 — ID 충돌 방지)
-    const importBtn=el.querySelector('.ve-import-btn');
-    if(importBtn) importBtn.addEventListener('click', _triggerFileInput);
-    const emptyArea=el.querySelector('.ve-media-empty-area');
-    if(emptyArea){
-        emptyArea.addEventListener('click', _triggerFileInput);
-        emptyArea.addEventListener('mouseover', function(){this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)';});
-        emptyArea.addEventListener('mouseout', function(){this.style.borderColor='transparent';this.style.background='transparent';});
-    }
     // 클립 선택/복제/삭제
     el.querySelectorAll('.ve-media-item').forEach(item=>{
         item.addEventListener('click', ()=>{ const i=parseInt(item.dataset.clip); if(!isNaN(i)) selectClip(i); });
@@ -2112,11 +2104,15 @@ function _ensureFileInputListener(){
     }
 }
 
-export function initVideoMaker() {
+let _veEventsAttached=false;
+function _veAttachEvents(){
+    if(_veEventsAttached) return;
     const modal=document.getElementById('videoMakerModal'); if(!modal) return;
-    const dz=document.getElementById('veDropOverlay');
+    _veEventsAttached=true;
+    console.log('[VE] attaching all events');
     _ensureFileInputListener();
     // drag & drop on canvas area
+    const dz=document.getElementById('veDropOverlay');
     const center=document.querySelector('.ve-center');
     if(center){
         center.addEventListener('dragover',e=>{e.preventDefault();if(dz)dz.style.display='flex';});
@@ -2149,6 +2145,10 @@ export function initVideoMaker() {
     // tabs
     document.querySelectorAll('.ve-ltab').forEach(b=>b.addEventListener('click',()=>{vm.leftTab=b.dataset.tab;refreshLeftPanel();}));
     document.querySelectorAll('.ve-fmt-btn').forEach(b=>b.addEventListener('click',()=>window._veChangeFormat(b.dataset.fmt)));
+}
+
+export function initVideoMaker() {
+    _veAttachEvents();
     // timeline click + drag-scroll
     const tlScroll=document.getElementById('veTlScroll');
     if(tlScroll){
@@ -2374,7 +2374,7 @@ window.openVideoMaker = function(label) {
     vm.w=f.w;vm.h=f.h;
     const modal=document.getElementById('videoMakerModal');if(!modal)return;
     modal.style.display='flex';
-    _ensureFileInputListener();
+    _veAttachEvents();
     // push history state for back button handling
     history.pushState({veOpen:true},'','');
     // hide site UI that has high z-index
