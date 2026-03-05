@@ -17,7 +17,7 @@
 
 // [버전 체크] 캐시된 구버전 HTML 감지 시 강제 새로고침
 (function(){
-    var CV = '20260304h';
+    var CV = '20260305a';
     if (sessionStorage.getItem('_vr') === CV) return;
     try {
         fetch('/version.txt?_t=' + Date.now(), {cache:'no-store'})
