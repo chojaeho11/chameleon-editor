@@ -282,8 +282,10 @@ export async function initOrderSystem() {
                 const item = cartData[i];
                 if (!item.product || !item.product.addons) continue;
                 const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
-                const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
-                const categories = [...new Set(allAddons.map(a => a.category_code).filter(Boolean))];
+                const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name)
+                    .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
+                const categories = [...new Set(allAddons.map(a => a.category_code).filter(Boolean))]
+                    .sort((a, b) => ((ADDON_CAT_DB[a]||{}).sort_order||999) - ((ADDON_CAT_DB[b]||{}).sort_order||999));
 
                 for (const cat of categories) {
                     const catInfo = ADDON_CAT_DB[cat];
@@ -1643,9 +1645,11 @@ else if (item.product && item.product.img && item.product.img.startsWith('http')
         console.log(`[renderCart] item[${idx}] selectedAddons:`, JSON.stringify(item.selectedAddons), 'product.addons:', item.product.addons);
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
-            const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
+            const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name)
+                .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
             console.log(`[renderCart] item[${idx}] addonCodes:`, addonCodes, 'allAddons:', allAddons.map(a => a.code));
-            const categories = [...new Set(allAddons.map(a => a.category_code || '_default'))];
+            const categories = [...new Set(allAddons.map(a => a.category_code || '_default'))]
+                .sort((a, b) => ((ADDON_CAT_DB[a]||{}).sort_order||999) - ((ADDON_CAT_DB[b]||{}).sort_order||999));
 
             if(categories.length > 0 && allAddons.length > 0) {
                 categories.forEach(cat => {

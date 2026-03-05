@@ -144,7 +144,7 @@ async function loadSystemData() {
         // 옵션 카테고리 + 옵션 병렬 로드
         const [catResult, addonResult] = await Promise.all([
             sb.from('addon_categories').select('*').order('sort_order', {ascending: true}),
-            sb.from('admin_addons').select('*')
+            sb.from('admin_addons').select('*').order('sort_order', {ascending: true})
         ]);
         const addonCats = catResult.data;
         if (addonCats) {

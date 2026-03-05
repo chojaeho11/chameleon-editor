@@ -6695,12 +6695,13 @@ window.showChoiceModal = async function(key) {
     const addonCodes = Array.isArray(product.addons) ? product.addons : (product.addons ? product.addons.split(',') : []);
     
     if (addonCodes.length > 0) {
-        const { data: addons } = await _sb.from('admin_addons').select('*').in('code', addonCodes);
+        const { data: addons } = await _sb.from('admin_addons').select('*').in('code', addonCodes).order('sort_order', {ascending: true});
         const { data: addonCats } = await _sb.from('addon_categories').select('*').order('sort_order', {ascending: true});
 
         if (addons && addonCats) {
             addonCats.forEach(cat => {
-                const catAddons = addons.filter(a => a.category_code === cat.code);
+                const catAddons = addons.filter(a => a.category_code === cat.code)
+                    .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
                 if (catAddons.length > 0) {
                     let catName = cat.name_kr || cat.name;
                     if (lang === 'ja' && cat.name_jp) catName = cat.name_jp;

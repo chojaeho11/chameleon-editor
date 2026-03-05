@@ -461,7 +461,8 @@ window.renderAddonsInRow = (rowId, categoryCode) => {
     area.innerHTML = '';
     if (!categoryCode) return;
 
-    const filtered = (window.cachedAddons || []).filter(a => a.category_code === categoryCode);
+    const filtered = (window.cachedAddons || []).filter(a => a.category_code === categoryCode)
+        .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
     if (filtered.length === 0) {
         area.innerHTML = '<span style="font-size:11px; color:#94a3b8; padding:5px;">옵션이 없습니다.</span>';
         return;
