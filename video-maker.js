@@ -212,26 +212,73 @@ function addImageFile(f) {
 }
 
 function addVideoFile(f) {
-    console.log('[VE] addVideoFile:', f.name);
+    console.log('[VE] addVideoFile:', f.name, f.type, f.size);
     const url = URL.createObjectURL(f);
     const video = document.createElement('video');
-    video.src = url; video.muted = true; video.preload = 'auto'; video.playsInline = true;
-    video.onloadedmetadata = () => {
-        console.log('[VE] video metadata loaded, duration:', video.duration);
-        video.currentTime = 0.5;
-        video.onseeked = () => {
+    video.muted = true; video.preload = 'auto'; video.playsInline = true;
+    video.crossOrigin = 'anonymous';
+    let added = false;
+
+    function finishAdd(){
+        if(added) return; added=true;
+        let dur = video.duration;
+        if(!dur || !isFinite(dur) || isNaN(dur)) dur = 10;
+        let thumbUrl = '';
+        try {
             const tc = document.createElement('canvas'); tc.width=160; tc.height=90;
             tc.getContext('2d').drawImage(video,0,0,160,90);
-            vm.clips.push({ type:'video', file:f, url, video, thumbUrl:tc.toDataURL('image/jpeg',0.7),
-                duration: Math.min(Math.round(video.duration*10)/10, 60),
-                overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
-                locked:true, panX:0, panY:0, imgScale:1 });
-            video.onseeked = null;
-            console.log('[VE] video clip added, total clips:', vm.clips.length);
-            selectClip(vm.clips.length-1);
-        };
+            thumbUrl = tc.toDataURL('image/jpeg',0.7);
+        } catch(e) { console.warn('[VE] thumb failed:', e); }
+        vm.clips.push({ type:'video', file:f, url, video, thumbUrl,
+            duration: Math.min(Math.round(dur*10)/10, 60),
+            overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0}, transition:'fade', speed:1.0,
+            locked:true, panX:0, panY:0, imgScale:1 });
+        console.log('[VE] video clip added, total clips:', vm.clips.length);
+        selectClip(vm.clips.length-1);
+    }
+
+    // 여러 이벤트로 시도 (일부 브라우저/코덱에서 특정 이벤트만 발생)
+    video.onloadeddata = () => {
+        console.log('[VE] video loadeddata, duration:', video.duration, 'readyState:', video.readyState);
+        if(video.duration > 1){
+            video.currentTime = 0.5;
+            video.onseeked = () => { video.onseeked=null; finishAdd(); };
+            // onseeked 실패 대비 타임아웃
+            setTimeout(()=>finishAdd(), 2000);
+        } else {
+            finishAdd();
+        }
     };
-    video.onerror = (e) => { console.error('[VE] video load error:', e); };
+    video.onloadedmetadata = () => {
+        console.log('[VE] video metadata, duration:', video.duration, 'readyState:', video.readyState);
+        // loadeddata가 안 올 경우를 대비
+        setTimeout(()=>{
+            if(!added && video.readyState >= 2){
+                if(video.duration > 1) { video.currentTime = 0.5; setTimeout(()=>finishAdd(), 500); }
+                else finishAdd();
+            }
+        }, 1000);
+    };
+    video.onerror = (e) => {
+        console.error('[VE] video load error:', e, video.error);
+        // 에러 시에도 클립 추가 시도 (재생은 안될 수 있지만 목록에는 표시)
+        if(!added){
+            added=true;
+            vm.clips.push({ type:'video', file:f, url, video, thumbUrl:'',
+                duration:10, overlays:[], adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0},
+                transition:'fade', speed:1.0, locked:true, panX:0, panY:0, imgScale:1 });
+            console.log('[VE] video added with error, total clips:', vm.clips.length);
+            selectClip(vm.clips.length-1);
+        }
+    };
+    // 전체 타임아웃 (5초 후에도 아무것도 안 되면 강제 추가)
+    setTimeout(()=>{
+        if(!added){
+            console.warn('[VE] video timeout, force adding:', f.name);
+            finishAdd();
+        }
+    }, 5000);
+    video.src = url;
 }
 
 
@@ -410,7 +457,10 @@ function renderClip(ci, ctx, showSel, clipTime) {
     ctx.filter=`brightness(${1+a.brightness/100}) contrast(${1+a.contrast/100}) saturate(${a.saturation}%) blur(${a.blur}px) hue-rotate(${a.hue}deg)`;
     ctx.fillStyle='#000'; ctx.fillRect(0,0,vm.w,vm.h);
     const src = c.type==='video' ? c.video : c.img;
-    if (src) drawCover(ctx, src, vm.w, vm.h, c.panX||0, c.panY||0, c.imgScale||1);
+    if (src) {
+        try { drawCover(ctx, src, vm.w, vm.h, c.panX||0, c.panY||0, c.imgScale||1); }
+        catch(e){ /* video not ready yet */ }
+    }
     ctx.filter='none';
     c.overlays.forEach((o,i) => {
         // check time range (during playback/export)
