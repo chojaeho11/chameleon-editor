@@ -1108,6 +1108,8 @@
   "mp_sub_discount_val": "전제품 10% 할인 적용 중",
   "mp_sub_days": "일",
   "mp_sub_active": "활성",
+  "badge_product": "상품",
+  "auth_terms_notice": "가입 시 <a href='/terms.html' target='_blank' style='color:#6366f1; text-decoration:underline;'>이용약관</a> 및 <a href='/privacy.html' target='_blank' style='color:#6366f1; text-decoration:underline;'>개인정보처리방침</a>에 동의하게 됩니다.",
   "gm_upload_video": "영상에서 프레임 추출",
   "ppt_export": "PPT 내보내기",
   "ppt_trans_none": "없음",
@@ -1397,5 +1399,13 @@
   "promo_orient_h": "가로형",
   "promo_back": "뒤로",
   "promo_confirm_title": "규격 확인",
-  "promo_confirm": "시작하기"
+  "promo_confirm": "시작하기",
+  "promo_tpl_company": "회사명",
+  "promo_tpl_tagline": "슬로건을 입력하세요",
+  "promo_tpl_map": "찾아오시는 길",
+  "promo_tpl_address": "주소를 입력하세요",
+  "promo_tpl_about": "회사 소개",
+  "promo_tpl_about_desc": "회사 또는 서비스에 대한 간단한 소개를 작성하세요. 고객이 선택해야 하는 이유를 설명합니다.",
+  "promo_tpl_section": "섹션",
+  "promo_tpl_lorem": "이 영역에 내용을 입력하세요. 서비스, 제품 또는 강조하고 싶은 특징을 설명합니다."
 }

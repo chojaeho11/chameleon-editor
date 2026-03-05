@@ -1754,18 +1754,291 @@ export function applyPromoGuides(selection) {
 
     // 현재 페이지(1페이지)에 가이드 그리기
     drawGuidesOnCurrentPage();
+    // 1면 기본 템플릿 적용
+    applyPromoTemplate(selection, 0);
+    // 페이지 저장
+    if (window.savePageState) window.savePageState();
 
     // 추가 페이지 생성 (양면/접지: 2페이지)
     if (selection.pageCount > 1 && window.addPage) {
         setTimeout(() => {
             window.addPage();
             // 2페이지에도 동일한 가이드 적용
-            setTimeout(() => drawGuidesOnCurrentPage(), 300);
-            // 1페이지로 돌아가기
-            setTimeout(() => { if (window.goToPage) window.goToPage(0); }, 600);
+            setTimeout(() => {
+                drawGuidesOnCurrentPage();
+                applyPromoTemplate(selection, 1);
+                if (window.savePageState) window.savePageState();
+                // 1페이지로 돌아가기
+                setTimeout(() => { if (window.goToPage) window.goToPage(0); }, 300);
+            }, 300);
         }, 400);
     }
 
     window.__promoSelection = selection;
     console.log('[Promo] Guides applied:', selection);
+}
+
+// ── 리플릿 기본 템플릿 디자인 ──
+function applyPromoTemplate(selection, pageIndex) {
+    if (!canvas) return;
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
+
+    const bL = board.left, bT = board.top;
+    const bW = board.width * (board.scaleX || 1);
+    const bH = board.height * (board.scaleY || 1);
+    const BLEED = Math.round(3 * 3.7795);
+    const isVert = selection.orientation === 'vertical';
+    const _t = (k, fb) => (window.t ? window.t(k, fb) : fb);
+
+    const tplOpts = { selectable: true, evented: true };
+
+    // 패널 영역 계산 (접지선 기준)
+    function getPanels() {
+        if (selection.foldType === 'tri') {
+            if (isVert) {
+                const pw = (bW - BLEED * 2) / 3;
+                return [
+                    { x: bL + BLEED, y: bT + BLEED, w: pw, h: bH - BLEED * 2 },
+                    { x: bL + BLEED + pw, y: bT + BLEED, w: pw, h: bH - BLEED * 2 },
+                    { x: bL + BLEED + pw * 2, y: bT + BLEED, w: pw, h: bH - BLEED * 2 }
+                ];
+            } else {
+                const ph = (bH - BLEED * 2) / 3;
+                return [
+                    { x: bL + BLEED, y: bT + BLEED, w: bW - BLEED * 2, h: ph },
+                    { x: bL + BLEED, y: bT + BLEED + ph, w: bW - BLEED * 2, h: ph },
+                    { x: bL + BLEED, y: bT + BLEED + ph * 2, w: bW - BLEED * 2, h: ph }
+                ];
+            }
+        } else if (selection.foldType === 'half') {
+            if (isVert) {
+                const pw = (bW - BLEED * 2) / 2;
+                return [
+                    { x: bL + BLEED, y: bT + BLEED, w: pw, h: bH - BLEED * 2 },
+                    { x: bL + BLEED + pw, y: bT + BLEED, w: pw, h: bH - BLEED * 2 }
+                ];
+            } else {
+                const ph = (bH - BLEED * 2) / 2;
+                return [
+                    { x: bL + BLEED, y: bT + BLEED, w: bW - BLEED * 2, h: ph },
+                    { x: bL + BLEED, y: bT + BLEED + ph, w: bW - BLEED * 2, h: ph }
+                ];
+            }
+        }
+        // 단면/양면: 전체 1패널
+        return [{ x: bL + BLEED, y: bT + BLEED, w: bW - BLEED * 2, h: bH - BLEED * 2 }];
+    }
+
+    const panels = getPanels();
+
+    // 패널에 배경색 Rect 추가 (개별 면 배경)
+    function addPanelBg(panel, color, idx) {
+        const bg = new fabric.Rect({
+            left: panel.x, top: panel.y, width: panel.w, height: panel.h,
+            fill: color, ...tplOpts,
+            _promoPanel: idx, _promoPanelBg: true
+        });
+        canvas.add(bg);
+        canvas.sendToBack(bg);
+        // board 뒤로 보내지 않게 보드 바로 위에 배치
+        const boardObj = canvas.getObjects().find(o => o.isBoard);
+        if (boardObj) {
+            const boardIdx = canvas.getObjects().indexOf(boardObj);
+            canvas.moveTo(bg, boardIdx + 1);
+        }
+        return bg;
+    }
+
+    // 텍스트 헬퍼
+    function addText(text, opts) {
+        const t = new fabric.Textbox(text, {
+            fontFamily: 'Pretendard, Noto Sans JP, Inter, sans-serif',
+            fill: '#1e293b', textAlign: 'center',
+            ...tplOpts, ...opts
+        });
+        canvas.add(t);
+        return t;
+    }
+
+    // 이미지 플레이스홀더 (회색 박스 + 아이콘)
+    function addImagePlaceholder(x, y, w, h) {
+        const rect = new fabric.Rect({
+            left: x, top: y, width: w, height: h,
+            fill: '#f1f5f9', stroke: '#cbd5e1', strokeWidth: 1,
+            rx: 4, ry: 4, ...tplOpts
+        });
+        canvas.add(rect);
+        const icon = new fabric.Text('\uf03e', {
+            left: x + w / 2 - 12, top: y + h / 2 - 12,
+            fontSize: 24, fill: '#94a3b8', fontFamily: 'Font Awesome 6 Free',
+            fontWeight: '900', ...tplOpts, selectable: false, evented: false
+        });
+        canvas.add(icon);
+        return rect;
+    }
+
+    // ── 6면 3단접지 템플릿 ──
+    if (selection.foldType === 'tri') {
+        if (pageIndex === 0) {
+            // 겉면: 패널0=제목면, 패널1=찾아오시는길, 패널2=중간내용
+            addPanelBg(panels[0], '#f5f3ff', 0);
+            addPanelBg(panels[1], '#ffffff', 1);
+            addPanelBg(panels[2], '#fefce8', 2);
+
+            // 패널0: 제목
+            addText(_t('promo_tpl_company', 'Company Name'), {
+                left: panels[0].x + 10, top: panels[0].y + panels[0].h * 0.3,
+                width: panels[0].w - 20, fontSize: 22, fontWeight: 'bold', fill: '#7c3aed'
+            });
+            addText(_t('promo_tpl_tagline', 'Your tagline goes here'), {
+                left: panels[0].x + 10, top: panels[0].y + panels[0].h * 0.5,
+                width: panels[0].w - 20, fontSize: 12, fill: '#64748b'
+            });
+            addText('Tel: 000-0000-0000', {
+                left: panels[0].x + 10, top: panels[0].y + panels[0].h * 0.75,
+                width: panels[0].w - 20, fontSize: 10, fill: '#94a3b8'
+            });
+
+            // 패널1: 찾아오시는길
+            addText(_t('promo_tpl_map', 'Location / Map'), {
+                left: panels[1].x + 10, top: panels[1].y + 15,
+                width: panels[1].w - 20, fontSize: 14, fontWeight: 'bold', fill: '#059669'
+            });
+            addImagePlaceholder(
+                panels[1].x + panels[1].w * 0.1,
+                panels[1].y + panels[1].h * 0.15,
+                panels[1].w * 0.8,
+                panels[1].h * 0.5
+            );
+            addText(_t('promo_tpl_address', 'Address details here'), {
+                left: panels[1].x + 10, top: panels[1].y + panels[1].h * 0.72,
+                width: panels[1].w - 20, fontSize: 9, fill: '#64748b'
+            });
+
+            // 패널2: 중간 내용
+            addText(_t('promo_tpl_about', 'About Us'), {
+                left: panels[2].x + 10, top: panels[2].y + 15,
+                width: panels[2].w - 20, fontSize: 14, fontWeight: 'bold', fill: '#d97706'
+            });
+            addText(_t('promo_tpl_about_desc', 'Write a brief introduction about your company or service. Describe what makes you unique and why customers should choose you.'), {
+                left: panels[2].x + 10, top: panels[2].y + panels[2].h * 0.15,
+                width: panels[2].w - 20, fontSize: 10, fill: '#334155', lineHeight: 1.6
+            });
+
+        } else {
+            // 뒷면: 각 면마다 이미지 2개 + 텍스트
+            const colors = ['#eff6ff', '#fef2f2', '#f0fdf4'];
+            panels.forEach((panel, i) => {
+                addPanelBg(panel, colors[i], i);
+                const imgH = panel.h * 0.25;
+                const imgW = panel.w * 0.42;
+                const gap = panel.w * 0.05;
+                // 이미지 2개 (상단 좌/우)
+                addImagePlaceholder(panel.x + gap, panel.y + panel.h * 0.08, imgW, imgH);
+                addImagePlaceholder(panel.x + panel.w - gap - imgW, panel.y + panel.h * 0.08, imgW, imgH);
+                // 제목
+                addText(_t('promo_tpl_section', 'Section') + ' ' + (i + 1), {
+                    left: panel.x + 10, top: panel.y + panel.h * 0.42,
+                    width: panel.w - 20, fontSize: 13, fontWeight: 'bold', fill: '#1e293b'
+                });
+                // 설명
+                addText(_t('promo_tpl_lorem', 'Add your content here. Describe services, products, or features you want to highlight in this section.'), {
+                    left: panel.x + 10, top: panel.y + panel.h * 0.53,
+                    width: panel.w - 20, fontSize: 9, fill: '#475569', lineHeight: 1.5
+                });
+            });
+        }
+    }
+
+    // ── 4면 반접지 템플릿 ──
+    else if (selection.foldType === 'half') {
+        if (pageIndex === 0) {
+            // 겉면: 패널0=제목, 패널1=지도
+            addPanelBg(panels[0], '#f5f3ff', 0);
+            addPanelBg(panels[1], '#ffffff', 1);
+
+            // 패널0: 제목
+            addText(_t('promo_tpl_company', 'Company Name'), {
+                left: panels[0].x + 10, top: panels[0].y + panels[0].h * 0.3,
+                width: panels[0].w - 20, fontSize: 24, fontWeight: 'bold', fill: '#7c3aed'
+            });
+            addText(_t('promo_tpl_tagline', 'Your tagline goes here'), {
+                left: panels[0].x + 10, top: panels[0].y + panels[0].h * 0.5,
+                width: panels[0].w - 20, fontSize: 13, fill: '#64748b'
+            });
+            addText('www.example.com', {
+                left: panels[0].x + 10, top: panels[0].y + panels[0].h * 0.7,
+                width: panels[0].w - 20, fontSize: 11, fill: '#94a3b8'
+            });
+
+            // 패널1: 지도/위치
+            addText(_t('promo_tpl_map', 'Location / Map'), {
+                left: panels[1].x + 10, top: panels[1].y + 15,
+                width: panels[1].w - 20, fontSize: 16, fontWeight: 'bold', fill: '#059669'
+            });
+            addImagePlaceholder(
+                panels[1].x + panels[1].w * 0.1,
+                panels[1].y + panels[1].h * 0.12,
+                panels[1].w * 0.8,
+                panels[1].h * 0.55
+            );
+            addText(_t('promo_tpl_address', 'Address details here'), {
+                left: panels[1].x + 10, top: panels[1].y + panels[1].h * 0.75,
+                width: panels[1].w - 20, fontSize: 10, fill: '#64748b'
+            });
+
+        } else {
+            // 안쪽면: 양쪽 동일 구조
+            panels.forEach((panel, i) => {
+                addPanelBg(panel, i === 0 ? '#eff6ff' : '#fef2f2', i);
+                const imgH = panel.h * 0.3;
+                const imgW = panel.w * 0.42;
+                const gap = panel.w * 0.05;
+                addImagePlaceholder(panel.x + gap, panel.y + panel.h * 0.06, imgW, imgH);
+                addImagePlaceholder(panel.x + panel.w - gap - imgW, panel.y + panel.h * 0.06, imgW, imgH);
+                addText(_t('promo_tpl_section', 'Section') + ' ' + (i + 1), {
+                    left: panel.x + 10, top: panel.y + panel.h * 0.42,
+                    width: panel.w - 20, fontSize: 14, fontWeight: 'bold', fill: '#1e293b'
+                });
+                addText(_t('promo_tpl_lorem', 'Add your content here. Describe services, products, or features you want to highlight in this section.'), {
+                    left: panel.x + 10, top: panel.y + panel.h * 0.55,
+                    width: panel.w - 20, fontSize: 10, fill: '#475569', lineHeight: 1.5
+                });
+            });
+        }
+    }
+
+    // ── 단면/양면 ──
+    else {
+        if (pageIndex === 0) {
+            addPanelBg(panels[0], '#f8fafc', 0);
+            addText(_t('promo_tpl_company', 'Company Name'), {
+                left: panels[0].x + 20, top: panels[0].y + panels[0].h * 0.15,
+                width: panels[0].w - 40, fontSize: 28, fontWeight: 'bold', fill: '#7c3aed'
+            });
+            addImagePlaceholder(
+                panels[0].x + panels[0].w * 0.15,
+                panels[0].y + panels[0].h * 0.3,
+                panels[0].w * 0.7,
+                panels[0].h * 0.35
+            );
+            addText(_t('promo_tpl_tagline', 'Your tagline goes here'), {
+                left: panels[0].x + 20, top: panels[0].y + panels[0].h * 0.72,
+                width: panels[0].w - 40, fontSize: 14, fill: '#475569'
+            });
+        } else {
+            addPanelBg(panels[0], '#ffffff', 0);
+            addText(_t('promo_tpl_section', 'Section') + ' 1', {
+                left: panels[0].x + 20, top: panels[0].y + 20,
+                width: panels[0].w - 40, fontSize: 18, fontWeight: 'bold', fill: '#1e293b'
+            });
+            addText(_t('promo_tpl_lorem', 'Add your content here. Describe services, products, or features you want to highlight in this section.'), {
+                left: panels[0].x + 20, top: panels[0].y + panels[0].h * 0.15,
+                width: panels[0].w - 40, fontSize: 11, fill: '#475569', lineHeight: 1.6
+            });
+        }
+    }
+
+    canvas.renderAll();
 }

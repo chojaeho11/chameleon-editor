@@ -578,7 +578,8 @@ ${hreflangTags('/editor')}
         return new HTMLRewriter()
             .on('html', { element(el) { el.setAttribute('lang', siteData.lang); } })
             .on('head', { element(el) {
-                el.append('<style>#btnKakaoLogin{display:none!important;}</style>', { html: true });
+                el.append('<style>#btnKakaoLogin{display:none!important;}[data-i18n]:not([data-i18n=""]){visibility:hidden}[data-i18n-placeholder]:not([data-i18n-placeholder=""]){visibility:hidden}.hero-signup-desc{visibility:hidden}</style>', { html: true });
+                el.append('<script>window.__i18nReady=false;window.addEventListener("load",function(){setTimeout(function(){if(!window.__i18nReady){document.querySelectorAll("[data-i18n]").forEach(function(e){e.style.visibility="visible"});document.querySelectorAll("[data-i18n-placeholder]").forEach(function(e){e.style.visibility="visible"});document.querySelectorAll(".hero-signup-desc").forEach(function(e){e.style.visibility="visible"})}},3000)})</script>', { html: true });
                 const jsonLd = JSON.stringify({"@context":"https://schema.org","@type":"Organization","name":siteData.siteName,"url":siteData.url,"logo":siteData.url+"favicon.ico","sameAs":["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"]});
                 el.append(`<script type="application/ld+json">${jsonLd}</script>`, { html: true });
             } })

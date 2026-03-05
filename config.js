@@ -302,7 +302,7 @@ export function getLocalizedData(item) {
     let formattedPrice = '';
 
     if (country === 'JP') {
-        name = item.name_jp || item.name;
+        name = item.name_jp || item.name_us || item.name;
         price = Number(item.price_jp) || price;
         formattedPrice = '¥' + Math.floor(price).toLocaleString();
     } else if (country === 'US') {

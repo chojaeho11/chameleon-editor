@@ -91,9 +91,17 @@ export function initAuth() {
     // 4. 소셜 로그인
     const btnGoogle = document.getElementById("btnGoogleLogin");
     const btnKakao = document.getElementById("btnKakaoLogin");
+    const btnApple = document.getElementById("btnAppleLogin");
 
     if (btnGoogle) btnGoogle.onclick = () => handleSocialLogin("google");
     if (btnKakao) btnKakao.onclick = () => handleSocialLogin("kakao");
+    if (btnApple) btnApple.onclick = () => handleSocialLogin("apple");
+
+    // 국가별 소셜 로그인 버튼 표시: Apple은 JP/US에서만
+    const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    if (btnApple && country !== 'KR') {
+        btnApple.style.display = 'flex';
+    }
     
     // 5. 엔터키 입력 처리
     const inputPw = document.getElementById("loginPw");
@@ -250,8 +258,13 @@ async function handleAuthAction() {
     if (!email.includes('@')) {
         email = email + '@cafe2626.com';
     }
-    // ★ Supabase 최소 6자 요구 → 짧은 비번은 자동 패딩 (가입/로그인 모두 동일 처리)
+    // ★ 신규 가입: 6자 이상 필수 검증 / 로그인: 기존 호환성을 위해 패딩 유지
     let paddedPassword = password;
+    if (isSignUpMode && password.length < 6) {
+        showToast(window.t('err_pw_length', "Password must be at least 6 characters."), "warn");
+        return;
+    }
+    // 로그인 시 기존 짧은 비번 사용자 호환 (자동 패딩)
     while (paddedPassword.length < 6) paddedPassword += '0';
 
     const btn = document.getElementById("btnAuthAction");

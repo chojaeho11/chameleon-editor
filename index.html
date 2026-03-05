@@ -115,7 +115,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').c
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄">
 <meta name="twitter:description" content="허니콤보드, 패브릭인쇄, 아크릴굿즈, 배너, 간판, 포장까지. 무료 에디터로 직접 디자인하고 전국 당일배송.">
-<meta name="twitter:image" content="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png">
+<meta name="twitter:image" content="/mascot-character.png">
 
 <link rel="shortcut icon" href="https://gdadmin.signmini.com/data/common/favicon.ico">
 <link rel="canonical" href="https://www.cafe2626.com/">
@@ -269,7 +269,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').c
             "@type": "Organization",
             "name": s.siteName,
             "url": d,
-            "logo": "https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png",
+            "logo": "/mascot-character.png",
             "sameAs": [domains.KR, domains.JP, domains.US],
             "description": s.desc,
             "contactPoint": {
@@ -299,7 +299,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').c
             "description": pageDesc,
             "url": pageUrl,
             "brand": { "@type": "Brand", "name": s.siteName },
-            "image": (window.PRODUCT_SEO && window.PRODUCT_SEO[path] && window.PRODUCT_SEO[path].image) || "https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png",
+            "image": (window.PRODUCT_SEO && window.PRODUCT_SEO[path] && window.PRODUCT_SEO[path].image) || "/mascot-character.png",
             "offers": {
                 "@type": "Offer",
                 "availability": "https://schema.org/InStock",
@@ -554,13 +554,31 @@ window.loadEditorLibraries = function() {
 <!-- 프로모션 타이머 스크립트 -->
 <script>
 (function() {
-    var KEY = 'promo_start_ts';
-    var DURATION = 2 * 60 * 60; // 2시간 (초)
     var box = document.getElementById('promoTimerBox');
+    if (!box) return;
+
+    // 해외 사용자 감지
+    var isKR = true;
+    var hn = window.location.hostname;
+    var lp = new URLSearchParams(window.location.search).get('lang');
+    if (hn.includes('cafe0101') || hn.includes('cafe3355')) isKR = false;
+    if (lp && lp !== 'ko' && lp !== 'kr') isKR = false;
+    if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') isKR = false;
+
+    if (!isKR) {
+        // 해외: 카운트다운 타이머 행 숨기고 혜택 텍스트만 표시
+        var timerRow = box.children[0];
+        if (timerRow) timerRow.style.display = 'none';
+        box.style.display = 'block';
+        return;
+    }
+
+    // 한국: 기존 카운트다운 타이머 유지
+    var KEY = 'promo_start_ts';
+    var DURATION = 2 * 60 * 60;
     var hEl = document.getElementById('promoH');
     var mEl = document.getElementById('promoM');
     var sEl = document.getElementById('promoS');
-    var tid = null;
 
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
@@ -576,7 +594,6 @@ window.loadEditorLibraries = function() {
             var elapsed = Math.floor((Date.now() - startTs) / 1000);
             var remain = DURATION - elapsed;
             if (remain <= 0) {
-                // 타이머 만료 → 리셋 (마케팅용)
                 localStorage.setItem(KEY, Date.now());
                 startTs = Date.now();
                 remain = DURATION;
@@ -589,15 +606,12 @@ window.loadEditorLibraries = function() {
             if (sEl) sEl.textContent = pad(s);
         }
         tick();
-        tid = setInterval(tick, 1000);
+        setInterval(tick, 1000);
     }
 
-    // 항상 표시 (로그인 여부 무관)
     function showTimer() {
-        if (box) {
-            box.style.display = 'block';
-            startTimer();
-        }
+        box.style.display = 'block';
+        startTimer();
     }
 
     if (document.readyState === 'loading') {
@@ -608,10 +622,45 @@ window.loadEditorLibraries = function() {
 })();
 </script>
 
+<!-- 신뢰/차별점 섹션 (해외 사용자 전용) -->
+<div id="trustBadgeSection" style="display:none; max-width:700px; margin:0 auto 20px; padding:0 15px;">
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:center;">
+        <div style="background:#f8f7ff; border-radius:14px; padding:14px 10px; border:1px solid #e9e5f5;">
+            <div style="font-size:24px; margin-bottom:6px;"><i class="fa-solid fa-print" style="color:#7c3aed;"></i></div>
+            <div style="font-size:12px; font-weight:800; color:#1e293b; line-height:1.4;" data-i18n="trust_design_print">Design to Print</div>
+            <div style="font-size:10px; color:#64748b; margin-top:3px; line-height:1.4;" data-i18n="trust_design_print_sub">Design online, order prints directly</div>
+        </div>
+        <div style="background:#f0fdf4; border-radius:14px; padding:14px 10px; border:1px solid #d1fae5;">
+            <div style="font-size:24px; margin-bottom:6px;"><i class="fa-solid fa-shield-halved" style="color:#059669;"></i></div>
+            <div style="font-size:12px; font-weight:800; color:#1e293b; line-height:1.4;" data-i18n="trust_secure">Secure Payments</div>
+            <div style="font-size:10px; color:#64748b; margin-top:3px; line-height:1.4;" data-i18n="trust_secure_sub">Stripe & SSL encrypted</div>
+        </div>
+        <div style="background:#fffbeb; border-radius:14px; padding:14px 10px; border:1px solid #fde68a;">
+            <div style="font-size:24px; margin-bottom:6px;"><i class="fa-solid fa-truck-fast" style="color:#d97706;"></i></div>
+            <div style="font-size:12px; font-weight:800; color:#1e293b; line-height:1.4;" data-i18n="trust_shipping">Global Shipping</div>
+            <div style="font-size:10px; color:#64748b; margin-top:3px; line-height:1.4;" data-i18n="trust_shipping_sub">Worldwide delivery available</div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    var hn = window.location.hostname;
+    var lp = new URLSearchParams(window.location.search).get('lang');
+    var isKR = true;
+    if (hn.includes('cafe0101') || hn.includes('cafe3355')) isKR = false;
+    if (lp && lp !== 'ko' && lp !== 'kr') isKR = false;
+    if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') isKR = false;
+    if (!isKR) {
+        var el = document.getElementById('trustBadgeSection');
+        if (el) el.style.display = 'block';
+    }
+})();
+</script>
+
 <!-- 퀵메뉴와퍼 (통합) -->
 <div class="quick-menu-wrapper">
 
-    <img src="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png" class="bouncing-char" alt="캐릭터">
+    <img src="/mascot-character.png" class="bouncing-char" alt="Chameleon mascot">
 
     <!-- 무료 디자인 시작 버튼 (최상단) -->
     <style>
@@ -3505,7 +3554,13 @@ async function handleSubReturn() {
             <button id="btnKakaoLogin" class="btn-round" style="border-color:#FEE500; background:#FEE500; color:#3C1E1E; justify-content:center; display:flex;">
                 <i class="fa-solid fa-comment" style="margin-right:8px;"></i> <span data-i18n="btn_kakao_login">카카오로 시작하기</span>
             </button>
+            <button id="btnAppleLogin" class="btn-round" style="border-color:#000; background:#000; color:#fff; justify-content:center; display:none;">
+                <i class="fa-brands fa-apple" style="margin-right:8px; font-size:18px;"></i> <span data-i18n="btn_apple_login">Apple로 시작하기</span>
+            </button>
         </div>
+        <p style="margin:14px 0 0; font-size:11px; color:#94a3b8; text-align:center; line-height:1.6;">
+            <span data-i18n="auth_terms_notice">가입 시 <a href="/terms.html" target="_blank" style="color:#6366f1; text-decoration:underline;">이용약관</a> 및 <a href="/privacy.html" target="_blank" style="color:#6366f1; text-decoration:underline;">개인정보처리방침</a>에 동의하게 됩니다.</span>
+        </p>
     </div>
 </div>
 <!-- 비밀번호 재설정 모달 -->
@@ -5416,12 +5471,20 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadLanguageFont(); // 폰트 적용
 
             // ★ 번역 완료 → 한글 깜빡임 방지 해제
+            window.__i18nReady = true;
+            document.querySelectorAll('[data-i18n]').forEach(function(e){ e.style.visibility = 'visible'; });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(function(e){ e.style.visibility = 'visible'; });
+            document.querySelectorAll('.hero-signup-desc').forEach(function(e){ e.style.visibility = 'visible'; });
             var _hideStyle = document.getElementById('i18nHideStyle');
             if (_hideStyle) _hideStyle.remove();
 
         } catch (error) {
             console.error(`🚨 번역 로드 실패 (${CURRENT_LANG}):`, error);
             // 번역 실패 시에도 화면 표시
+            window.__i18nReady = true;
+            document.querySelectorAll('[data-i18n]').forEach(function(e){ e.style.visibility = 'visible'; });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(function(e){ e.style.visibility = 'visible'; });
+            document.querySelectorAll('.hero-signup-desc').forEach(function(e){ e.style.visibility = 'visible'; });
             var _hideStyle2 = document.getElementById('i18nHideStyle');
             if (_hideStyle2) _hideStyle2.remove();
             // 영어/일본어 파일이 없을 때만 한국어로 자동 전환 (무한루프 방지)
@@ -5946,15 +6009,15 @@ window._drawQuickItems = (list, isProductMode = false) => {
     list.forEach(item => {
         const isProduct = isProductMode || item.price !== undefined;
         
-        // [수정] 언어별 이름 적용 (이 코드가 모달 제목까지 해결합니다)
+        // [수정] 언어별 이름 적용 — 해당 언어 없으면 영어 → 한국어 순 fallback
         let name = item.name || '';
-        if (CURRENT_LANG === 'ja' && item.name_jp) name = item.name_jp;
-        if (CURRENT_LANG === 'en' && item.name_us) name = item.name_us;
-        if (CURRENT_LANG === 'zh' && (item.name_cn || item.name_us)) name = item.name_cn || item.name_us;
-        if (CURRENT_LANG === 'ar' && (item.name_ar || item.name_us)) name = item.name_ar || item.name_us;
-        if (CURRENT_LANG === 'es' && (item.name_es || item.name_us)) name = item.name_es || item.name_us;
-        if (CURRENT_LANG === 'de' && (item.name_de || item.name_us)) name = item.name_de || item.name_us;
-        if (CURRENT_LANG === 'fr' && (item.name_fr || item.name_us)) name = item.name_fr || item.name_us;
+        if (CURRENT_LANG === 'ja') name = item.name_jp || item.name_us || item.name || '';
+        else if (CURRENT_LANG === 'en') name = item.name_us || item.name || '';
+        else if (CURRENT_LANG === 'zh') name = item.name_cn || item.name_us || item.name || '';
+        else if (CURRENT_LANG === 'ar') name = item.name_ar || item.name_us || item.name || '';
+        else if (CURRENT_LANG === 'es') name = item.name_es || item.name_us || item.name || '';
+        else if (CURRENT_LANG === 'de') name = item.name_de || item.name_us || item.name || '';
+        else if (CURRENT_LANG === 'fr') name = item.name_fr || item.name_us || item.name || '';
 
         const itemCode = item.code || '';
         
@@ -5973,7 +6036,7 @@ window._drawQuickItems = (list, isProductMode = false) => {
         div.className = 'quick-item';
         div.innerHTML = `
             <div class="quick-icon" onclick="${clickAction}" style="position:relative; overflow:hidden; cursor:pointer;">
-                ${isProduct ? '<span style="position:absolute;top:6px;left:6px;background:#6366f1;color:white;font-size:10px;padding:2px 6px;border-radius:4px;z-index:2;font-weight:bold;">상품</span>' : ''}
+                ${isProduct ? `<span style="position:absolute;top:6px;left:6px;background:#6366f1;color:white;font-size:10px;padding:2px 6px;border-radius:4px;z-index:2;font-weight:bold;">${window.t ? window.t('badge_product','상품') : '상품'}</span>` : ''}
                 <img src="${tinyUrl}" alt="${name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/200?text=No+Img'">
             </div>
             <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
@@ -6044,8 +6107,8 @@ async function renderQuickMenu() {
 
             // [수정] 대분류 언어별 명칭 적용
             let tName = top.name;
-            if (CURRENT_LANG === 'ja' && top.name_jp) tName = top.name_jp;
-            if (CURRENT_LANG === 'en' && top.name_us) tName = top.name_us;
+            if (CURRENT_LANG === 'ja') tName = top.name_jp || top.name_us || tName;
+            if (CURRENT_LANG === 'en') tName = top.name_us || tName;
             if (CURRENT_LANG === 'zh') tName = top.name_cn || top.name_us || tName;
             if (CURRENT_LANG === 'ar') tName = top.name_ar || top.name_us || tName;
             if (CURRENT_LANG === 'es') tName = top.name_es || top.name_us || tName;
@@ -6227,8 +6290,14 @@ window.filterMainIcons = function(keyword) {
     }
 
     // matchedCats(카테고리) 검색을 생략하고 matchedProds(상품) 검색 결과만 추출
-    const matchedProds = window.globalProdImages.filter(prod => 
-        (prod.name || '').toLowerCase().includes(term)
+    const matchedProds = window.globalProdImages.filter(prod =>
+        (prod.name || '').toLowerCase().includes(term) ||
+        (prod.name_us || '').toLowerCase().includes(term) ||
+        (prod.name_jp || '').toLowerCase().includes(term) ||
+        (prod.name_cn || '').toLowerCase().includes(term) ||
+        (prod.name_es || '').toLowerCase().includes(term) ||
+        (prod.name_de || '').toLowerCase().includes(term) ||
+        (prod.name_fr || '').toLowerCase().includes(term)
     );
 
     // 상품 리스트만 그리도록 전달 (두 번째 인자 true는 상품 배지를 표시하기 위함)
@@ -10571,7 +10640,7 @@ window.filterModalItems = function(keyword) {
         // 다국어 이름/가격 헬퍼 (config.js getLocalizedData 동일 로직)
         const _c = _recLang;
         const _nameR = (p) => {
-            if (_c==='JP') return p.name_jp || p.name || '';
+            if (_c==='JP') return p.name_jp || p.name_us || p.name || '';
             if (_c==='US') return p.name_us || p.name || '';
             if (_c==='CN') return p.name_cn || p.name_us || p.name || '';
             if (_c==='AR') return p.name_ar || p.name_us || p.name || '';
@@ -10731,7 +10800,7 @@ window.filterModalItems = function(keyword) {
     // [헬퍼] 아이템 HTML 생성 함수 (다국어 대응)
     const _cc = (window.SITE_CONFIG?.COUNTRY||'KR');
     const _localName = (it) => {
-        if (_cc==='JP') return it.name_jp || it.name || '';
+        if (_cc==='JP') return it.name_jp || it.name_us || it.name || '';
         if (_cc==='US') return it.name_us || it.name || '';
         if (_cc==='CN') return it.name_cn || it.name_us || it.name || '';
         if (_cc==='AR') return it.name_ar || it.name_us || it.name || '';
@@ -13232,7 +13301,7 @@ window.dsmRenderProducts = async function(keyword) {
 <p>Chameleon Printing is a global online printing platform with a free built-in design editor. We serve customers in Korea, Japan, and the United States with 560+ manufacturing partners across 20+ countries.</p>
 
 <h2>Honeycomb Board Printing - Exhibition Booth & Pop-up Store Display</h2>
-<img src="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png" alt="Honeycomb board exhibition booth - 3m x 3m backlit booth set for trade shows and exhibitions" width="600" height="400">
+<img src="/mascot-character.png" alt="Honeycomb board exhibition booth - 3m x 3m backlit booth set for trade shows and exhibitions" width="600" height="400">
 <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="Honeycomb board temporary wall display - eco-friendly paper display for pop-up stores" width="600" height="400">
 <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770042960042_Honeycomb%20Board%20(945).jpg" alt="Honeycomb board life-size standee - custom printed exhibition display board" width="600" height="400">
 <p>Custom eco-friendly honeycomb board printing for exhibition booths, trade show displays, pop-up stores, and retail environments. Our honeycomb boards are lightweight, durable, and 100% recyclable — perfect for sustainable event displays. Available in custom sizes with full-color UV printing. Free online design editor included.</p>
@@ -13296,7 +13365,7 @@ window.dsmRenderProducts = async function(keyword) {
 
 <h2>カメレオンプリンティング - 商品一覧</h2>
 <h3>ハニカムボード印刷 - 展示ブース・ポップアップストア</h3>
-<img src="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png" alt="ハニカムボード展示ブース - 3m x 3m バックライト付きブースセット 展示会・イベント用" width="600" height="400">
+<img src="/mascot-character.png" alt="ハニカムボード展示ブース - 3m x 3m バックライト付きブースセット 展示会・イベント用" width="600" height="400">
 <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="ハニカムボード仮壁ディスプレイ - エコ紙ディスプレイ ポップアップストア用" width="600" height="400">
 <p>エコハニカムボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。軽量・耐久性・100%リサイクル可能。無料オンラインエディターでデザイン。</p>
 

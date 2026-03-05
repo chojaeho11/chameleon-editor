@@ -18,7 +18,7 @@ const GM = {
 window._gm = GM;
 
 /* ─── Open / Close ─── */
-window.openGifMaker = function() {
+window.openGifMaker = async function() {
     GM.frames = []; GM.overlays = []; GM.currentFrame = 0; GM.playing = false;
     const modal = document.getElementById('gifMakerModal');
     if (!modal) return;
@@ -28,6 +28,10 @@ window.openGifMaker = function() {
     const tb = document.querySelector('.topbar'); if(tb) tb.style.display='none';
     const dock = document.querySelector('.bottom-dock'); if(dock) dock.style.display='none';
     const mcd = document.getElementById('mobileControlDock'); if(mcd) mcd.style.display='none';
+    // fabric.js 미로드 시 에디터 라이브러리 로드
+    if (typeof fabric === 'undefined' && window.loadEditorLibraries) {
+        await window.loadEditorLibraries();
+    }
     // init canvas size from inputs
     GM.w = parseInt(document.getElementById('gifCanvasW').value) || 500;
     GM.h = parseInt(document.getElementById('gifCanvasH').value) || 500;
