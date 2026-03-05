@@ -3277,7 +3277,7 @@ async function handleSubReturn() {
                     <div style="position:absolute;top:50%;left:75%;transform:translate(-50%,-50%);font-size:6px;color:#6366f1;font-weight:bold;">P2</div>
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;">A4 반접지</div>
-                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">4페이지 · 420×297mm</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">4면 · 303×216mm</div>
             </div>
             <!-- 3단 리플릿 -->
             <div class="promo-preset-card" onclick="window._promoPickPreset('tri_leaflet')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; padding:14px 10px; text-align:center; transition:all 0.2s;">
@@ -3289,7 +3289,7 @@ async function handleSubReturn() {
                     <div style="position:absolute;top:50%;left:83.3%;transform:translate(-50%,-50%);font-size:5px;color:#10b981;font-weight:bold;">P3</div>
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;">3단 리플릿</div>
-                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">6페이지 · A4 3단접지</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">6면 · 303×216mm</div>
             </div>
         </div>
     </div>
@@ -3299,23 +3299,21 @@ async function handleSubReturn() {
 </style>
 <script>
 (function(){
-    // 프리셋 정의: { format, paperW(mm), paperH(mm), orientation, foldType, pageCount, canvasWmm, canvasHmm }
-    // 각 패널이 독립 페이지로 생성됨 (캔버스 = 단일 패널 크기)
+    // 프리셋 정의: cw/ch = 전체 캔버스(재단여백 포함), panels = 접지면 수, pages = 물리 페이지
+    // A4 접지: 가로 297mm를 접어서 나눔, 세로 210mm + 사방 3mm 재단여백
     var PRESETS = {
-        flyer_single:  { format:'single',    pw:210, ph:297, orient:'vertical',   fold:null,   panels:1 },
-        flyer_double:  { format:'double',    pw:210, ph:297, orient:'vertical',   fold:null,   panels:2 },
-        postcard:      { format:'double',    pw:148, ph:100, orient:'horizontal', fold:null,   panels:2 },
-        invitation:    { format:'half_fold', pw:130, ph:190, orient:'vertical',   fold:'half', panels:4 },
-        a4_half:       { format:'half_fold', pw:210, ph:297, orient:'vertical',   fold:'half', panels:4 },
-        tri_leaflet:   { format:'tri_fold',  pw:210, ph:297, orient:'vertical',   fold:'tri',  panels:6 }
+        flyer_single:  { format:'single',    cw:216, ch:303, fold:null,   panels:1, pages:1 },
+        flyer_double:  { format:'double',    cw:216, ch:303, fold:null,   panels:1, pages:2 },
+        postcard:      { format:'double',    cw:154, ch:106, fold:null,   panels:1, pages:2 },
+        invitation:    { format:'half_fold', cw:266, ch:196, fold:'half', panels:2, pages:2 },
+        a4_half:       { format:'half_fold', cw:303, ch:216, fold:'half', panels:2, pages:2 },
+        tri_leaflet:   { format:'tri_fold',  cw:303, ch:216, fold:'tri',  panels:3, pages:2 }
     };
 
     function calcCanvas(p) {
-        // 캔버스 = 단일 패널 크기 (용지 + 재단여백 6mm)
-        var cw = p.pw + 6, ch = p.ph + 6;
-        return { format:p.format, paperKey:'custom', orientation:p.orient,
-                 canvasWmm:cw, canvasHmm:ch, panelCount:p.panels, pageCount:1,
-                 foldType:p.fold, paperW:p.pw, paperH:p.ph };
+        return { format:p.format, paperKey:'custom', orientation:'horizontal',
+                 canvasWmm:p.cw, canvasHmm:p.ch, panelCount:p.panels, pageCount:p.pages,
+                 foldType:p.fold, paperW:p.cw-6, paperH:p.ch-6 };
     }
 
     window._promoPickPreset = function(id) {

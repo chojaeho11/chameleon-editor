@@ -1650,92 +1650,77 @@ export function applyBizCardTemplate(tplId) {
     canvas.renderAll();
 }
 
-// ★ 홍보물: 패널별 독립 페이지 생성 + 네비게이션 바
+// ★ 홍보물: 2페이지(앞/뒤) 전체 펼침 캔버스 + 접지선 + 패널 네비게이션
 export function applyPromoPages(selection) {
     if (!canvas) return;
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) { console.warn('[Promo] board not found'); return; }
 
-    const panelCount = selection.panelCount || 1;
     window.__promoSelection = selection;
+    const panels = selection.panelCount || 1;
+    const _t = (k, fb) => (window.t ? window.t(k, fb) : fb);
 
-    // 패널 라벨 생성
-    const panelLabels = _getPromoLabels(selection);
+    // 패널 라벨 (앞면 기준)
+    const frontLabels = _getPromoPanelLabels(selection, 'front');
+    const backLabels = _getPromoPanelLabels(selection, 'back');
 
-    // 현재(1번째) 페이지에 배경+재단선 추가
-    _addPromoPageContent(0, panelLabels, selection);
+    // 1페이지 (앞면): 패널 배경 + 재단선 + 접지선
+    _drawPromoPage(selection, frontLabels);
     if (window.savePageState) window.savePageState();
 
-    // 나머지 페이지 순차 생성
-    if (panelCount > 1) {
-        let idx = 1;
-        function createNext() {
-            if (idx >= panelCount) {
-                // 모두 생성 후 1페이지로 이동 + 네비게이션 바 구축
+    // 2페이지 (뒷면) 생성
+    if (selection.pageCount > 1 && window.addPage) {
+        setTimeout(() => {
+            window.addPage();
+            setTimeout(() => {
+                _drawPromoPage(selection, backLabels);
+                if (window.savePageState) window.savePageState();
+                // 1페이지로 돌아가기
                 setTimeout(() => {
                     if (window.goToPage) window.goToPage(0);
-                    _buildPromoNav(selection, panelLabels);
-                    // 마법사 자동 오픈
+                    // 네비게이션 바 구축
+                    _buildPromoNav(selection, frontLabels, backLabels);
+                    // 첫 패널 활성화 + 마법사 오픈
+                    window.__activePromoPanel = 0;
                     setTimeout(() => {
                         if (window.openDesignWizard) window.openDesignWizard();
                     }, 400);
                 }, 300);
-                return;
-            }
-            if (window.addPage) window.addPage();
-            setTimeout(() => {
-                _addPromoPageContent(idx, panelLabels, selection);
-                if (window.savePageState) window.savePageState();
-                idx++;
-                setTimeout(createNext, 300);
             }, 300);
-        }
-        setTimeout(createNext, 400);
+        }, 400);
     } else {
-        // 단면: 바로 네비게이션 + 마법사
-        _buildPromoNav(selection, panelLabels);
+        // 단면
+        _buildPromoNav(selection, frontLabels, []);
+        window.__activePromoPanel = 0;
         setTimeout(() => {
             if (window.openDesignWizard) window.openDesignWizard();
         }, 400);
     }
 
-    console.log('[Promo] Creating', panelCount, 'panel pages');
+    console.log('[Promo] Setup:', panels, 'panels per face,', selection.pageCount, 'pages');
 }
 
-// 패널 라벨 배열 생성
-function _getPromoLabels(sel) {
+// 앞면/뒷면 패널 라벨 배열
+function _getPromoPanelLabels(sel, face) {
     const _t = (k, fb) => (window.t ? window.t(k, fb) : fb);
+    const faceLabel = face === 'front' ? _t('promo_face_front','앞면') : _t('promo_face_back','뒷면');
     if (sel.foldType === 'tri') {
-        // 6면: 앞면 좌/중/우 + 뒷면 좌/중/우
         return [
-            { face: _t('promo_face_front','앞면'), pos: _t('promo_pos_left','좌측'), short: '1' },
-            { face: _t('promo_face_front','앞면'), pos: _t('promo_pos_center','중앙'), short: '2' },
-            { face: _t('promo_face_front','앞면'), pos: _t('promo_pos_right','우측'), short: '3' },
-            { face: _t('promo_face_back','뒷면'),  pos: _t('promo_pos_left','좌측'), short: '4' },
-            { face: _t('promo_face_back','뒷면'),  pos: _t('promo_pos_center','중앙'), short: '5' },
-            { face: _t('promo_face_back','뒷면'),  pos: _t('promo_pos_right','우측'), short: '6' }
+            { face: faceLabel, pos: _t('promo_pos_left','좌측') },
+            { face: faceLabel, pos: _t('promo_pos_center','중앙') },
+            { face: faceLabel, pos: _t('promo_pos_right','우측') }
         ];
     } else if (sel.foldType === 'half') {
-        // 4면: 앞면 좌/우 + 뒷면 좌/우
         return [
-            { face: _t('promo_face_front','앞면'), pos: _t('promo_pos_left','좌측'), short: '1' },
-            { face: _t('promo_face_front','앞면'), pos: _t('promo_pos_right','우측'), short: '2' },
-            { face: _t('promo_face_back','뒷면'),  pos: _t('promo_pos_left','좌측'), short: '3' },
-            { face: _t('promo_face_back','뒷면'),  pos: _t('promo_pos_right','우측'), short: '4' }
-        ];
-    } else if (sel.format === 'double') {
-        // 양면
-        return [
-            { face: _t('promo_face_front','앞면'), pos: '', short: '1' },
-            { face: _t('promo_face_back','뒷면'),  pos: '', short: '2' }
+            { face: faceLabel, pos: _t('promo_pos_left','좌측') },
+            { face: faceLabel, pos: _t('promo_pos_right','우측') }
         ];
     }
-    // 단면
-    return [{ face: _t('promo_face_front','앞면'), pos: '', short: '1' }];
+    return [{ face: faceLabel, pos: '' }];
 }
 
-// 각 페이지에 배경색 + 재단선 추가
-function _addPromoPageContent(panelIdx, labels, selection) {
+// 한 페이지에 패널 배경 + 재단선 + 접지선 그리기
+function _drawPromoPage(selection, panelLabels) {
     if (!canvas) return;
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) return;
@@ -1743,31 +1728,33 @@ function _addPromoPageContent(panelIdx, labels, selection) {
     const bL = board.left, bT = board.top;
     const bW = board.width * (board.scaleX || 1);
     const bH = board.height * (board.scaleY || 1);
-    const BLEED_PX = Math.round(3 * 3.7795);
+    const BP = Math.round(3 * 3.7795); // 3mm bleed in px
+    const panels = selection.panelCount || 1;
 
-    // 배경색 (패널별 다른 색상)
-    const bgColors = ['#f5f3ff','#ffffff','#fefce8','#eff6ff','#fef2f2','#f0fdf4'];
-    const bgColor = bgColors[panelIdx % bgColors.length];
-
-    const bg = new fabric.Rect({
-        left: bL, top: bT, width: bW, height: bH,
-        fill: bgColor,
-        selectable: false, evented: false, locked: true,
-        _promoPanel: panelIdx, _promoPanelBg: true
-    });
-    canvas.add(bg);
-    // board 바로 위에 배치
-    const boardIdx = canvas.getObjects().indexOf(board);
-    canvas.moveTo(bg, boardIdx + 1);
-
-    // 재단선 (trim line)
     const guideOpts = {
         selectable: false, evented: false, excludeFromExport: true,
         isGuide: true, hoverCursor: 'default'
     };
+
+    // 패널별 배경색 (보드 전체를 나눠서 채움)
+    const bgColors = ['#f5f3ff','#ffffff','#fefce8','#eff6ff','#fef2f2','#f0fdf4'];
+    for (let i = 0; i < panels; i++) {
+        const pw = bW / panels;
+        const bg = new fabric.Rect({
+            left: bL + pw * i, top: bT, width: pw, height: bH,
+            fill: bgColors[i % bgColors.length],
+            selectable: false, evented: false, locked: true,
+            _promoPanel: i, _promoPanelBg: true
+        });
+        canvas.add(bg);
+        const boardIdx = canvas.getObjects().indexOf(board);
+        canvas.moveTo(bg, boardIdx + 1);
+    }
+
+    // 재단선 (외곽 3mm 안쪽)
     const trimRect = new fabric.Rect({
-        left: bL + BLEED_PX, top: bT + BLEED_PX,
-        width: bW - BLEED_PX * 2, height: bH - BLEED_PX * 2,
+        left: bL + BP, top: bT + BP,
+        width: bW - BP * 2, height: bH - BP * 2,
         fill: 'transparent', stroke: '#dc2626', strokeWidth: 1.5,
         strokeDashArray: [8, 4], ...guideOpts
     });
@@ -1780,69 +1767,49 @@ function _addPromoPageContent(panelIdx, labels, selection) {
     });
     canvas.add(bleedLabel);
 
-    // 패널 라벨 (페이지 좌상단에 작게 표시)
-    const label = labels[panelIdx];
-    if (label) {
-        const labelText = label.pos ? `${label.face} - ${label.pos}` : label.face;
+    // 접지선 (패널 경계)
+    if (panels > 1) {
+        for (let i = 1; i < panels; i++) {
+            const x = bL + (bW / panels) * i;
+            const foldLine = new fabric.Line([x, bT + BP, x, bT + bH - BP], {
+                stroke: '#1d4ed8', strokeWidth: 2, strokeDashArray: [10, 5], ...guideOpts
+            });
+            canvas.add(foldLine);
+            const foldLabel = new fabric.Text('FOLD', {
+                left: x + 4, top: bT + bH / 2 - 6,
+                fontSize: 11, fill: '#1d4ed8', fontFamily: 'Arial',
+                fontWeight: 'bold', opacity: 1, ...guideOpts
+            });
+            canvas.add(foldLabel);
+        }
+    }
+
+    // 패널 라벨 (각 패널 좌상단에 작게)
+    panelLabels.forEach((label, i) => {
+        const pw = (bW - BP * 2) / panels;
+        const labelText = label.pos ? `${label.pos}` : label.face;
         const panelLabel = new fabric.Text(labelText, {
-            left: bL + BLEED_PX + 4, top: bT + BLEED_PX + 4,
-            fontSize: 11, fill: '#6366f1', fontFamily: 'Arial',
-            fontWeight: 'bold', opacity: 0.7, ...guideOpts
+            left: bL + BP + pw * i + 6, top: bT + BP + 4,
+            fontSize: 10, fill: '#6366f1', fontFamily: 'Arial',
+            fontWeight: 'bold', opacity: 0.6, ...guideOpts
         });
         canvas.add(panelLabel);
-    }
+    });
 
     canvas.renderAll();
 }
 
-// 패널 네비게이션 바 구축
-function _buildPromoNav(selection, labels) {
+// 패널 네비게이션 바 (앞면/뒷면 + 각 패널 선택)
+function _buildPromoNav(selection, frontLabels, backLabels) {
     const nav = document.getElementById('promoPanelNav');
     if (!nav) return;
 
     nav.innerHTML = '';
     nav.style.display = 'flex';
 
-    // 기존 pageControls 숨기기
-    const pc = document.getElementById('pageControls');
-    if (pc) pc.style.display = 'none';
-
-    // 앞면/뒷면 그룹으로 나누기
-    const frontCount = selection.foldType === 'tri' ? 3 : selection.foldType === 'half' ? 2 : 1;
-    const totalPanels = labels.length;
-    const hasFaces = totalPanels > 1;
-
-    labels.forEach((label, idx) => {
-        // 면 구분선 (뒷면 시작 전)
-        if (idx === frontCount && hasFaces && totalPanels > frontCount) {
-            const sep = document.createElement('div');
-            sep.style.cssText = 'width:1px;height:28px;background:#e2e8f0;margin:0 2px;';
-            nav.appendChild(sep);
-        }
-
-        const btn = document.createElement('button');
-        btn.className = 'promo-nav-btn' + (idx === 0 ? ' active' : '');
-        btn.dataset.panelIdx = idx;
-
-        const faceSpan = document.createElement('span');
-        faceSpan.style.cssText = 'font-size:10px;color:#94a3b8;display:block;line-height:1;';
-        faceSpan.textContent = label.face;
-
-        const posSpan = document.createElement('span');
-        posSpan.style.cssText = 'font-size:12px;font-weight:700;display:block;line-height:1.2;';
-        posSpan.textContent = label.pos || label.short + '면';
-
-        btn.appendChild(faceSpan);
-        btn.appendChild(posSpan);
-
-        btn.onclick = () => {
-            if (window.goToPage) window.goToPage(idx);
-            nav.querySelectorAll('.promo-nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        };
-
-        nav.appendChild(btn);
-    });
+    const panels = selection.panelCount || 1;
+    const hasBack = selection.pageCount > 1;
+    const allLabels = [...frontLabels, ...backLabels];
 
     // 스타일 주입 (한 번만)
     if (!document.getElementById('promoNavStyle')) {
@@ -1850,9 +1817,9 @@ function _buildPromoNav(selection, labels) {
         style.id = 'promoNavStyle';
         style.textContent = `
             .promo-nav-btn {
-                border: none; background: transparent; cursor: pointer; padding: 6px 12px;
-                border-radius: 8px; text-align: center; min-width: 52px; transition: all 0.2s;
-                color: #64748b;
+                border: none; background: transparent; cursor: pointer; padding: 6px 10px;
+                border-radius: 8px; text-align: center; min-width: 48px; transition: all 0.2s;
+                color: #64748b; position: relative;
             }
             .promo-nav-btn:hover { background: #f1f5f9; }
             .promo-nav-btn.active {
@@ -1860,14 +1827,93 @@ function _buildPromoNav(selection, labels) {
                 box-shadow: 0 2px 8px rgba(99,102,241,0.3);
             }
             .promo-nav-btn.active span { color: #fff !important; }
+            .promo-nav-sep { width:1px; height:28px; background:#e2e8f0; margin:0 4px; align-self:center; }
+            .promo-nav-face { font-size:9px; color:#94a3b8; display:block; line-height:1; margin-bottom:2px; }
+            .promo-nav-pos { font-size:12px; font-weight:700; display:block; line-height:1.2; }
         `;
         document.head.appendChild(style);
     }
 
-    // 페이지 전환 이벤트 감시 (외부에서 페이지 변경 시 네비 동기화)
+    function addBtn(label, globalIdx, pageIdx, panelIdx) {
+        const btn = document.createElement('button');
+        btn.className = 'promo-nav-btn' + (globalIdx === 0 ? ' active' : '');
+        btn.dataset.globalIdx = globalIdx;
+        btn.dataset.pageIdx = pageIdx;
+        btn.dataset.panelIdx = panelIdx;
+
+        const faceSpan = document.createElement('span');
+        faceSpan.className = 'promo-nav-face';
+        faceSpan.textContent = label.face;
+
+        const posSpan = document.createElement('span');
+        posSpan.className = 'promo-nav-pos';
+        posSpan.textContent = label.pos || (globalIdx + 1) + '면';
+
+        btn.appendChild(faceSpan);
+        btn.appendChild(posSpan);
+
+        btn.onclick = () => {
+            // 페이지 전환 (앞면=0, 뒷면=1)
+            if (window.goToPage) window.goToPage(pageIdx);
+            // 활성 패널 설정
+            window.__activePromoPanel = panelIdx;
+            nav.querySelectorAll('.promo-nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // 패널 영역 하이라이트
+            _highlightPromoPanel(selection, panelIdx);
+        };
+
+        nav.appendChild(btn);
+    }
+
+    // 앞면 패널 버튼
+    frontLabels.forEach((label, i) => addBtn(label, i, 0, i));
+
+    // 구분선
+    if (hasBack) {
+        const sep = document.createElement('div');
+        sep.className = 'promo-nav-sep';
+        nav.appendChild(sep);
+        // 뒷면 패널 버튼
+        backLabels.forEach((label, i) => addBtn(label, panels + i, 1, i));
+    }
+
+    // 페이지 전환 시 네비 동기화
     window.__promoNavSync = (pageIdx) => {
-        nav.querySelectorAll('.promo-nav-btn').forEach(b => {
-            b.classList.toggle('active', parseInt(b.dataset.panelIdx) === pageIdx);
-        });
+        // 해당 페이지의 첫 패널을 활성화
+        const firstBtn = nav.querySelector(`[data-page-idx="${pageIdx}"]`);
+        if (firstBtn) {
+            nav.querySelectorAll('.promo-nav-btn').forEach(b => b.classList.remove('active'));
+            firstBtn.classList.add('active');
+            window.__activePromoPanel = parseInt(firstBtn.dataset.panelIdx);
+        }
     };
+}
+
+// 선택된 패널 영역 하이라이트 (점선 사각형)
+function _highlightPromoPanel(selection, panelIdx) {
+    if (!canvas) return;
+    // 기존 하이라이트 제거
+    canvas.getObjects().filter(o => o._promoHighlight).forEach(o => canvas.remove(o));
+
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
+    const bL = board.left, bT = board.top;
+    const bW = board.width * (board.scaleX || 1);
+    const bH = board.height * (board.scaleY || 1);
+    const BP = Math.round(3 * 3.7795);
+    const panels = selection.panelCount || 1;
+    if (panels <= 1) return;
+
+    const pw = bW / panels;
+    const highlight = new fabric.Rect({
+        left: bL + pw * panelIdx, top: bT,
+        width: pw, height: bH,
+        fill: 'rgba(99,102,241,0.06)',
+        stroke: '#6366f1', strokeWidth: 2, strokeDashArray: [6, 3],
+        selectable: false, evented: false,
+        _promoHighlight: true, excludeFromExport: true
+    });
+    canvas.add(highlight);
+    canvas.renderAll();
 }
