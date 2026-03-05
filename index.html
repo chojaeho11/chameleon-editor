@@ -1755,25 +1755,6 @@ async function handleSubReturn() {
             <input type="text" id="artworkTitle" class="ai-input-pretty" data-i18n-placeholder="artwork_ph_title" placeholder="예: 벚꽃 풍경, 추상화, 고양이 일러스트">
         </div>
 
-        <!-- 회배 가격 계산기 -->
-        <div style="background:#f8fafc; border-radius:12px; padding:16px; margin-bottom:16px; border:1px solid #e2e8f0;">
-            <label style="font-weight:700; font-size:13px; display:block; margin-bottom:8px;" data-i18n="artwork_label_calc">💰 가격 계산기 (회배 기준)</label>
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                <div style="flex:1; min-width:100px;">
-                    <label style="font-size:11px; color:#64748b;" data-i18n="artwork_width">가로 (mm)</label>
-                    <input type="number" id="artCalcW" class="ai-input-pretty" placeholder="420" style="width:100%;" oninput="window._artCalcPrice()">
-                </div>
-                <span style="font-size:18px; color:#94a3b8; padding-top:16px;">×</span>
-                <div style="flex:1; min-width:100px;">
-                    <label style="font-size:11px; color:#64748b;" data-i18n="artwork_height">세로 (mm)</label>
-                    <input type="number" id="artCalcH" class="ai-input-pretty" placeholder="297" style="width:100%;" oninput="window._artCalcPrice()">
-                </div>
-                <button onclick="window._artAutoFillDim()" style="background:#6366f1; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; margin-top:16px; white-space:nowrap;" data-i18n="artwork_auto_size">자동계산</button>
-            </div>
-            <div id="artCalcResult" style="margin-top:12px; font-size:13px; color:#334155; line-height:1.8; display:none;">
-            </div>
-        </div>
-
         <button onclick="window.submitArtworkUpload()" class="btn-round primary" style="width:100%; font-size:15px; padding:14px;" data-i18n="artwork_submit">작품 등록하기</button>
         <button onclick="document.getElementById('artworkUploadModal').style.display='none'" class="btn-round" style="width:100%; margin-top:8px; background:#f1f5f9; color:#333; border:none;" data-i18n="artwork_close">닫기</button>
     </div>

@@ -1234,14 +1234,10 @@ window.openArtworkUpload = function() {
     document.getElementById('artworkFileInput').value = '';
     document.getElementById('artworkTitle').value = '';
     document.getElementById('artworkPreviewArea').style.display = 'none';
-    document.getElementById('artCalcW').value = '';
-    document.getElementById('artCalcH').value = '';
-    document.getElementById('artCalcResult').style.display = 'none';
-    window._artImgRatio = null;
     document.getElementById('artworkUploadModal').style.display = 'flex';
 };
 
-// 이미지 미리보기 + 비율 저장
+// 이미지 미리보기
 window._artworkPreview = function(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
@@ -1249,73 +1245,13 @@ window._artworkPreview = function(input) {
     reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-            window._artImgRatio = img.width / img.height;
             document.getElementById('artworkPreviewImg').src = e.target.result;
             document.getElementById('artworkPreviewArea').style.display = 'block';
-            document.getElementById('artworkDimInfo').textContent = `${img.width} × ${img.height} px (${(img.width/img.height).toFixed(2)})`;
-            // 자동으로 A3 기준 치수 세팅
-            if (img.width >= img.height) {
-                document.getElementById('artCalcW').value = 420;
-                document.getElementById('artCalcH').value = Math.round(420 / window._artImgRatio);
-            } else {
-                document.getElementById('artCalcH').value = 420;
-                document.getElementById('artCalcW').value = Math.round(420 * window._artImgRatio);
-            }
-            window._artCalcPrice();
+            document.getElementById('artworkDimInfo').textContent = `${img.width} × ${img.height} px`;
         };
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
-};
-
-// 자동 치수 계산 (한쪽만 입력 시 비율로 계산)
-window._artAutoFillDim = function() {
-    if (!window._artImgRatio) { showToast(window.t?.('artwork_upload_first', '이미지를 먼저 업로드하세요') || '이미지를 먼저 업로드하세요', 'info'); return; }
-    const w = parseInt(document.getElementById('artCalcW').value);
-    const h = parseInt(document.getElementById('artCalcH').value);
-    if (w && !h) document.getElementById('artCalcH').value = Math.round(w / window._artImgRatio);
-    else if (h && !w) document.getElementById('artCalcW').value = Math.round(h * window._artImgRatio);
-    else if (!w && !h) {
-        document.getElementById('artCalcW').value = 420;
-        document.getElementById('artCalcH').value = Math.round(420 / window._artImgRatio);
-    }
-    window._artCalcPrice();
-};
-
-// 회배 가격 계산
-window._artCalcPrice = function() {
-    const w = parseInt(document.getElementById('artCalcW').value) || 0;
-    const h = parseInt(document.getElementById('artCalcH').value) || 0;
-    const result = document.getElementById('artCalcResult');
-    if (!w || !h) { result.style.display = 'none'; return; }
-
-    const area = w * h;
-    const hoebae = Math.max(1, Math.ceil(area / ART_HOEBAE_BASE * 10) / 10); // 소수 1자리
-    const pPaper = Math.round(ART_PRICES_KRW.paper * hoebae);
-    const pFabric = Math.round(ART_PRICES_KRW.fabric * hoebae);
-    const pCanvas = Math.round(ART_PRICES_KRW.canvas * hoebae);
-
-    result.style.display = 'block';
-    result.innerHTML = `
-        <div style="font-weight:800; margin-bottom:6px;">📐 ${w}×${h}mm = <span style="color:#6366f1;">${hoebae}회배</span></div>
-        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
-            <div style="background:#f0fdf4; padding:8px; border-radius:8px; text-align:center;">
-                <div style="font-size:11px; color:#666;">🖼️ 종이포스터</div>
-                <div style="font-weight:800; color:#059669;">${_artFmtPrice(pPaper)}</div>
-                <div style="font-size:10px; color:#94a3b8;">수익 ${_artFmtPrice(Math.round(pPaper * ART_REVENUE_RATE))}</div>
-            </div>
-            <div style="background:#faf5ff; padding:8px; border-radius:8px; text-align:center;">
-                <div style="font-size:11px; color:#666;">🎨 패브릭포스터</div>
-                <div style="font-weight:800; color:#7c3aed;">${_artFmtPrice(pFabric)}</div>
-                <div style="font-size:10px; color:#94a3b8;">수익 ${_artFmtPrice(Math.round(pFabric * ART_REVENUE_RATE))}</div>
-            </div>
-            <div style="background:#fffbeb; padding:8px; border-radius:8px; text-align:center;">
-                <div style="font-size:11px; color:#666;">🏛️ 캔버스액자</div>
-                <div style="font-weight:800; color:#d97706;">${_artFmtPrice(pCanvas)}</div>
-                <div style="font-size:10px; color:#94a3b8;">수익 ${_artFmtPrice(Math.round(pCanvas * ART_REVENUE_RATE))}</div>
-            </div>
-        </div>
-    `;
 };
 
 // 작품 업로드 실행 → 3종 상품 자동 등록
