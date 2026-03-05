@@ -278,8 +278,9 @@
                                 <div style="display:flex; gap:4px; align-items:center;">
                                     <span style="font-size:11px; font-weight:bold; color:#dc2626; min-width:55px;">취소/환불</span>
                                     <button class="btn btn-outline btn-sm" id="btnFilterCancelReq" onclick="filterOrders('취소요청', this)" style="border-color:#f97316; color:#ea580c;">❌ 취소요청 <span id="cancelReqCount" class="badge" style="background:#ef4444;color:white;font-size:9px;display:none;margin-left:2px;">0</span></button>
-                                    <button class="btn btn-outline btn-sm" id="btnFilterCancelled" onclick="filterOrders('취소됨', this)" style="border-color:#94a3b8;">💰 환불완료</button>
-                                    <button class="btn btn-outline btn-sm" id="btnFilterRefundWait" onclick="filterOrders('환불대기', this)" style="border-color:#d97706; color:#d97706;">⏳ 환불대기</button>
+                                    <button class="btn btn-outline btn-sm" id="btnFilterOrderCancel" onclick="filterOrders('주문취소', this)" style="border-color:#94a3b8; color:#64748b;">🚫 주문취소</button>
+                                    <button class="btn btn-outline btn-sm" id="btnFilterRefundWait" onclick="filterOrders('환불대기', this)" style="border-color:#d97706; color:#d97706;">⏳ 환불대기 <span id="refundWaitCount" class="badge" style="background:#d97706;color:white;font-size:9px;display:none;margin-left:2px;">0</span></button>
+                                    <button class="btn btn-outline btn-sm" id="btnFilterCancelled" onclick="filterOrders('취소됨', this)" style="border-color:#15803d; color:#15803d;">💰 환불완료</button>
                                     <button class="btn btn-outline btn-sm" id="btnFilterRefundFail" onclick="filterOrders('환불실패', this)" style="border-color:#dc2626; color:#dc2626;">❌ 환불실패</button>
                                 </div>
                             </div>

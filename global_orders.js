@@ -165,7 +165,7 @@ window.loadOrders = async () => {
         } else if (currentOrderStatus === '취소됨') {
             query = query.eq('status', '취소됨').eq('payment_status', '환불완료');
         } else if (currentOrderStatus === '환불대기') {
-            query = query.eq('status', '취소됨').eq('payment_status', '환불대기');
+            query = query.eq('status', '취소됨').in('payment_status', ['환불대기', '본사승인']);
         } else if (currentOrderStatus === '환불실패') {
             query = query.eq('status', '취소됨').eq('payment_status', '환불실패');
         }
@@ -296,6 +296,8 @@ window.loadOrders = async () => {
                     statusHtml = `<span class="badge" style="background:#f0fdf4;color:#15803d;font-weight:bold;border:1px solid #bbf7d0;">✅ 환불완료</span>`;
                 } else if (refSt === '환불대기') {
                     statusHtml = `<span class="badge" style="background:#fffbeb;color:#d97706;font-weight:bold;border:1px solid #fde68a;">⏳ 환불대기</span>`;
+                } else if (refSt === '본사승인') {
+                    statusHtml = `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;border:1px solid #93c5fd;">✅ 본사승인</span>`;
                 } else if (refSt === '환불실패') {
                     statusHtml = `<span class="badge" style="background:#fef2f2;color:#dc2626;font-weight:bold;border:1px solid #fecaca;">❌ 환불실패</span>`;
                 } else if (refSt === '주문취소') {
@@ -425,7 +427,7 @@ window.updateActionButtons = () => {
     } else if (s === '취소됨') {
         div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '환불대기') {
-        div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#d97706;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">삭제</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="approveRefundHQ()" style="font-weight:bold;">✅ 본사승인</button><button class="btn" onclick="completeRefundSelected()" style="font-weight:bold;background:#2563eb;color:white;">💰 환불완료</button><button class="btn btn-outline" onclick="rejectRefundSelected()" style="font-weight:bold;">🔙 환불거절</button>`;
     } else if (s === '환불실패') {
         div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#dc2626;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else {
@@ -596,6 +598,129 @@ window.retryRefundSelected = async () => {
     loadOrders();
 };
 
+// [본사승인] 환불대기 건에 대해 PG 환불 API 호출 (카드) 또는 상태만 변경 (현금)
+window.approveRefundHQ = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건을 본사승인 처리하시겠습니까?\n(카드 결제건은 PG 환불이 자동 진행됩니다)`)) return;
+
+    showLoading(true);
+    let successCount = 0, failCount = 0;
+    for (const id of ids) {
+        try {
+            const { data: order } = await sb.from('orders')
+                .select('payment_status, payment_method, toss_payment_key, total_amount, user_id')
+                .eq('id', id).single();
+            if (!order || order.payment_status !== '환불대기') continue;
+
+            const pm = (order.payment_method || '').toLowerCase();
+            const isCard = pm.includes('카드') || pm.includes('card') || pm.includes('간편결제');
+            const isStripe = pm.includes('stripe');
+
+            // 카드건: PG 환불 API 호출
+            if ((isCard || isStripe) && order.toss_payment_key) {
+                try {
+                    if (isStripe) {
+                        const { data, error } = await sb.functions.invoke('cancel-stripe-payment', {
+                            body: { session_id: order.toss_payment_key, cancelReason: '본사승인 환불' }
+                        });
+                        if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
+                    } else {
+                        const { data, error } = await sb.functions.invoke('cancel-toss-payment', {
+                            body: { paymentKey: order.toss_payment_key, cancelReason: '본사승인 환불' }
+                        });
+                        if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
+                    }
+                    await sb.from('orders').update({ payment_status: '본사승인' }).eq('id', id);
+                    successCount++;
+                } catch (pgErr) {
+                    console.error(`Order ${id} PG refund error:`, pgErr);
+                    await sb.from('orders').update({ payment_status: '환불실패' }).eq('id', id);
+                    failCount++;
+                }
+            } else {
+                // 현금/무통장/예치금/기타: 상태만 변경
+                await sb.from('orders').update({ payment_status: '본사승인' }).eq('id', id);
+                successCount++;
+            }
+        } catch (e) {
+            console.error(`Order ${id} approve error:`, e);
+            failCount++;
+        }
+    }
+    showLoading(false);
+    showToast(`본사승인: ${successCount}건 완료${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
+    updateCancelReqBadge();
+    loadOrders();
+};
+
+// [환불완료] 본사승인 건에 대해 최종 환불완료 처리 + 마일리지 복원
+window.completeRefundSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건을 환불완료 처리하시겠습니까?\n(경리팀 확인 후 눌러주세요)`)) return;
+
+    showLoading(true);
+    let successCount = 0, failCount = 0;
+    for (const id of ids) {
+        try {
+            const { data: order } = await sb.from('orders')
+                .select('payment_status, discount_amount, user_id')
+                .eq('id', id).single();
+            if (!order || order.payment_status !== '본사승인') {
+                showToast(`주문 ${id}: 본사승인 상태가 아닙니다.`, 'warn');
+                continue;
+            }
+
+            // 마일리지 복원
+            if (order.discount_amount > 0 && order.user_id) {
+                const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
+                if (pf) {
+                    await sb.from('profiles').update({ mileage: (pf.mileage || 0) + order.discount_amount }).eq('id', order.user_id);
+                    await sb.from('wallet_logs').insert({
+                        user_id: order.user_id, type: 'refund_mileage',
+                        amount: order.discount_amount,
+                        description: `환불완료 마일리지 복원 (주문번호: ${id})`
+                    });
+                }
+            }
+
+            await sb.from('orders').update({ payment_status: '환불완료' }).eq('id', id);
+            successCount++;
+        } catch (e) {
+            console.error(`Order ${id} complete refund error:`, e);
+            failCount++;
+        }
+    }
+    showLoading(false);
+    showToast(`환불완료: ${successCount}건 처리${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
+    updateCancelReqBadge();
+    loadOrders();
+};
+
+// [환불거절] 환불대기 건을 접수됨+결제완료로 복원
+window.rejectRefundSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    if (!confirm(`${ids.length}건의 환불 요청을 거절하시겠습니까?\n주문이 '접수됨/결제완료' 상태로 복원됩니다.`)) return;
+
+    showLoading(true);
+    for (const id of ids) {
+        try {
+            const { data: order } = await sb.from('orders')
+                .select('payment_status').eq('id', id).single();
+            if (!order || order.payment_status !== '환불대기') continue;
+            await sb.from('orders').update({ status: '접수됨', payment_status: '결제완료' }).eq('id', id);
+        } catch (e) {
+            console.error(`Order ${id} reject refund error:`, e);
+        }
+    }
+    showLoading(false);
+    showToast(`${ids.length}건 환불거절 처리 완료`, 'success');
+    updateCancelReqBadge();
+    loadOrders();
+};
+
 // [뱃지 카운트 업데이트] — 취소요청 + 입금대기
 async function updateCancelReqBadge() {
     try {
@@ -617,6 +742,16 @@ async function updateCancelReqBadge() {
         if (dBadge) {
             dBadge.textContent = depositCount || 0;
             dBadge.style.display = (depositCount > 0) ? 'inline' : 'none';
+        }
+        // 환불대기 카운트 (환불대기 + 본사승인)
+        const { count: refundWaitCount } = await sb.from('orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', '취소됨')
+            .in('payment_status', ['환불대기', '본사승인']);
+        const rwBadge = document.getElementById('refundWaitCount');
+        if (rwBadge) {
+            rwBadge.textContent = refundWaitCount || 0;
+            rwBadge.style.display = (refundWaitCount > 0) ? 'inline' : 'none';
         }
     } catch (e) { /* ignore */ }
 }
