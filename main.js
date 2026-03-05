@@ -1309,6 +1309,7 @@ window.submitArtworkUpload = async function() {
                 price: price,
                 price_us: Math.round(price * 0.001),
                 img_url: imgUrl,
+                addons: '',
                 description: tags,
                 partner_id: window.currentUser.id,
                 is_custom_size: true,
