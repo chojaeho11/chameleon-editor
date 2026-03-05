@@ -1727,5 +1727,22 @@
   "dsm_custom_start": "Commencer",
   "dsm_width": "Largeur",
   "dsm_height": "Hauteur",
-  "dsm_size_min": "Taille min: 10mm"
+  "dsm_size_min": "Taille min: 10mm",
+  "biz_tpl_title": "Choisir un design de carte",
+  "biz_tpl_desc": "Sélectionnez un modèle et modifiez le texte pour créer votre carte de visite.",
+  "biz_tpl_classic": "Classique",
+  "biz_tpl_modern": "Moderne",
+  "biz_tpl_minimal": "Minimaliste",
+  "biz_tpl_colorblock": "Bloc couleur",
+  "biz_tpl_vert_classic": "Vertical classique",
+  "biz_tpl_vert_color": "Vertical couleur",
+  "biz_tpl_blank": "Commencer avec un canevas vide",
+  "biz_ph_company": "Chameleon Printing",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "Jean Dupont",
+  "biz_ph_title": "Responsable / Équipe Design",
+  "biz_ph_title_short": "Responsable",
+  "biz_ph_phone": "+33-1-23-45-67-89",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "123 Rue de Rivoli, Paris"
 }

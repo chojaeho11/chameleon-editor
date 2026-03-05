@@ -1727,5 +1727,22 @@
   "dsm_custom_start": "开始设计",
   "dsm_width": "宽",
   "dsm_height": "高",
-  "dsm_size_min": "最小尺寸: 10mm"
+  "dsm_size_min": "最小尺寸: 10mm",
+  "biz_tpl_title": "选择名片设计",
+  "biz_tpl_desc": "选择模板后只需修改文字即可完成名片设计。",
+  "biz_tpl_classic": "经典",
+  "biz_tpl_modern": "现代",
+  "biz_tpl_minimal": "极简",
+  "biz_tpl_colorblock": "色块",
+  "biz_tpl_vert_classic": "竖版经典",
+  "biz_tpl_vert_color": "竖版色块",
+  "biz_tpl_blank": "从空白画布开始",
+  "biz_ph_company": "变色龙印刷",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "张三",
+  "biz_ph_title": "经理 / 设计团队",
+  "biz_ph_title_short": "经理",
+  "biz_ph_phone": "+86-10-1234-5678",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "北京市朝阳区建国路123号"
 }

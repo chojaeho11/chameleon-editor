@@ -1728,5 +1728,22 @@
   "dsm_custom_start": "ابدأ التصميم",
   "dsm_width": "العرض",
   "dsm_height": "الارتفاع",
-  "dsm_size_min": "الحد الأدنى: 10 ملم"
+  "dsm_size_min": "الحد الأدنى: 10 ملم",
+  "biz_tpl_title": "اختر تصميم بطاقة العمل",
+  "biz_tpl_desc": "اختر قالبًا وعدّل النص فقط لإنشاء بطاقة عملك.",
+  "biz_tpl_classic": "كلاسيكي",
+  "biz_tpl_modern": "عصري",
+  "biz_tpl_minimal": "بسيط",
+  "biz_tpl_colorblock": "كتلة لونية",
+  "biz_tpl_vert_classic": "عمودي كلاسيكي",
+  "biz_tpl_vert_color": "عمودي ملون",
+  "biz_tpl_blank": "ابدأ بلوحة فارغة",
+  "biz_ph_company": "طباعة كاميليون",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "أحمد محمد",
+  "biz_ph_title": "مدير / فريق التصميم",
+  "biz_ph_title_short": "مدير",
+  "biz_ph_phone": "+966-12-345-6789",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "الرياض، شارع الملك فهد 123"
 }

@@ -1738,5 +1738,22 @@
   "dsm_custom_start": "Start Design",
   "dsm_width": "Width",
   "dsm_height": "Height",
-  "dsm_size_min": "Minimum size: 10mm"
+  "dsm_size_min": "Minimum size: 10mm",
+  "biz_tpl_title": "Choose Business Card Design",
+  "biz_tpl_desc": "Select a template and simply edit the text to create your business card.",
+  "biz_tpl_classic": "Classic",
+  "biz_tpl_modern": "Modern",
+  "biz_tpl_minimal": "Minimal",
+  "biz_tpl_colorblock": "Color Block",
+  "biz_tpl_vert_classic": "Vertical Classic",
+  "biz_tpl_vert_color": "Vertical Color",
+  "biz_tpl_blank": "Start with blank canvas",
+  "biz_ph_company": "Chameleon Printing",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "John Smith",
+  "biz_ph_title": "Manager / Design Team",
+  "biz_ph_title_short": "Manager",
+  "biz_ph_phone": "+1-234-567-8900",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "123 Main St, New York, NY"
 }

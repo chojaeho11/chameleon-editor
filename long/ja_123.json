@@ -1735,5 +1735,22 @@
   "dsm_custom_start": "デザイン開始",
   "dsm_width": "横",
   "dsm_height": "縦",
-  "dsm_size_min": "最小サイズ: 10mm"
+  "dsm_size_min": "最小サイズ: 10mm",
+  "biz_tpl_title": "名刺デザインを選択",
+  "biz_tpl_desc": "テンプレートを選んでテキストを編集するだけで名刺が作れます。",
+  "biz_tpl_classic": "クラシック",
+  "biz_tpl_modern": "モダン",
+  "biz_tpl_minimal": "ミニマル",
+  "biz_tpl_colorblock": "カラーブロック",
+  "biz_tpl_vert_classic": "縦型クラシック",
+  "biz_tpl_vert_color": "縦型カラー",
+  "biz_tpl_blank": "白紙キャンバスで開始",
+  "biz_ph_company": "カメレオンプリント",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "山田太郎",
+  "biz_ph_title": "主任 / デザインチーム",
+  "biz_ph_title_short": "主任",
+  "biz_ph_phone": "03-1234-5678",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "東京都渋谷区神宮前1-2-3"
 }

@@ -1353,5 +1353,22 @@
   "dsm_custom_start": "디자인 시작",
   "dsm_width": "가로",
   "dsm_height": "세로",
-  "dsm_size_min": "최소 크기: 10mm"
+  "dsm_size_min": "최소 크기: 10mm",
+  "biz_tpl_title": "명함 디자인 선택",
+  "biz_tpl_desc": "기본 디자인을 선택하면 텍스트만 수정하여 바로 명함을 만들 수 있습니다.",
+  "biz_tpl_classic": "클래식",
+  "biz_tpl_modern": "모던",
+  "biz_tpl_minimal": "미니멀",
+  "biz_tpl_colorblock": "컬러블록",
+  "biz_tpl_vert_classic": "세로 클래식",
+  "biz_tpl_vert_color": "세로 컬러",
+  "biz_tpl_blank": "빈 캔버스로 시작",
+  "biz_ph_company": "카멜레온 프린팅",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "홍길동",
+  "biz_ph_title": "대리 / Design Team",
+  "biz_ph_title_short": "대리",
+  "biz_ph_phone": "010-1234-5678",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "서울시 강남구 역삼동 123-45"
 }

@@ -1727,5 +1727,22 @@
   "dsm_custom_start": "Iniciar diseño",
   "dsm_width": "Ancho",
   "dsm_height": "Alto",
-  "dsm_size_min": "Tamaño mínimo: 10mm"
+  "dsm_size_min": "Tamaño mínimo: 10mm",
+  "biz_tpl_title": "Elige diseño de tarjeta",
+  "biz_tpl_desc": "Selecciona una plantilla y edita el texto para crear tu tarjeta de presentación.",
+  "biz_tpl_classic": "Clásico",
+  "biz_tpl_modern": "Moderno",
+  "biz_tpl_minimal": "Minimalista",
+  "biz_tpl_colorblock": "Bloque de color",
+  "biz_tpl_vert_classic": "Vertical clásico",
+  "biz_tpl_vert_color": "Vertical color",
+  "biz_tpl_blank": "Comenzar en blanco",
+  "biz_ph_company": "Chameleon Printing",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "Carlos García",
+  "biz_ph_title": "Gerente / Equipo de Diseño",
+  "biz_ph_title_short": "Gerente",
+  "biz_ph_phone": "+34-91-234-5678",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "Calle Gran Vía 123, Madrid"
 }

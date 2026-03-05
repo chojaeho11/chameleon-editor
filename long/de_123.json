@@ -1727,5 +1727,22 @@
   "dsm_custom_start": "Design starten",
   "dsm_width": "Breite",
   "dsm_height": "Höhe",
-  "dsm_size_min": "Mindestgröße: 10mm"
+  "dsm_size_min": "Mindestgröße: 10mm",
+  "biz_tpl_title": "Visitenkarten-Design wählen",
+  "biz_tpl_desc": "Wählen Sie eine Vorlage und bearbeiten Sie den Text, um Ihre Visitenkarte zu erstellen.",
+  "biz_tpl_classic": "Klassisch",
+  "biz_tpl_modern": "Modern",
+  "biz_tpl_minimal": "Minimal",
+  "biz_tpl_colorblock": "Farbblock",
+  "biz_tpl_vert_classic": "Vertikal Klassisch",
+  "biz_tpl_vert_color": "Vertikal Farbe",
+  "biz_tpl_blank": "Mit leerer Leinwand starten",
+  "biz_ph_company": "Chameleon Printing",
+  "biz_ph_slogan": "Creative Design Solution",
+  "biz_ph_name": "Max Mustermann",
+  "biz_ph_title": "Leiter / Design-Team",
+  "biz_ph_title_short": "Leiter",
+  "biz_ph_phone": "+49-30-1234-5678",
+  "biz_ph_email": "hello@example.com",
+  "biz_ph_address": "Berliner Str. 123, Berlin"
 }
