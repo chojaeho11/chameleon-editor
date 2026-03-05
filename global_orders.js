@@ -1114,6 +1114,14 @@ window.recoverMissingDocs = async () => {
     if (missing.length === 0) { log('✅ 모든 주문에 문서가 존재합니다.'); return; }
     log(`📋 ${missing.length}건의 주문에서 누락된 문서 발견`);
 
+    // 에러 로그 표시
+    missing.forEach(o => {
+        const errLog = (o.files || []).find(f => f.type === '_error_log');
+        const realFiles = (o.files || []).filter(f => f.type !== '_error_log');
+        const types = realFiles.map(f => f.type).join(', ');
+        log(`  📌 ${o.id} [${o.manager_name || '-'}] 보유: [${types || '없음'}]${errLog ? ' ⚠️에러: ' + (errLog.errors || []).join('; ') : ''}`);
+    });
+
     if (!confirm(`${missing.length}건의 주문에 대해 누락된 견적서/작업지시서를 재생성하시겠습니까?`)) {
         log('⏹ 취소됨'); return;
     }
