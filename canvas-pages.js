@@ -202,7 +202,7 @@ export function addNewPage() {
     }, 50);
 
     // 5. 배열에 추가 및 인덱스 이동
-    const newJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
+    const newJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', '_promoPanel', '_promoPanelBg']);
     pageDataList.push(newJson);
     currentPageIndex = pageDataList.length - 1;
 
@@ -248,11 +248,11 @@ export function deleteCurrentPage() {
 function saveCurrentPageState() {
     if (!canvas) return;
     // 사용자 정의 속성 포함하여 저장 (wedding placeholder 속성 포함)
-    const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', 'isWedPlaceholder', 'isWedPlaceholderText', 'wedPlaceholderId']);
+    const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', 'isWedPlaceholder', 'isWedPlaceholderText', 'wedPlaceholderId', '_promoPanel', '_promoPanelBg']);
     pageDataList[currentPageIndex] = json;
 }
 
-const _CUSTOM_PROPS_LOAD = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isWedPlaceholder','isWedPlaceholderText','wedPlaceholderId'];
+const _CUSTOM_PROPS_LOAD = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isWedPlaceholder','isWedPlaceholderText','wedPlaceholderId','_promoPanel','_promoPanelBg'];
 
 function loadPage(index) {
     const json = pageDataList[index];
@@ -269,6 +269,15 @@ function loadPage(index) {
                 absolutePositioned: true
             });
         }
+        // 패널 배경을 보드 바로 위에, 가이드를 맨 위에 배치
+        const objs = canvas.getObjects();
+        const boardIdx = board ? objs.indexOf(board) : -1;
+        const panelBgs = objs.filter(o => o._promoPanelBg);
+        const guides = objs.filter(o => o.isGuide);
+        panelBgs.forEach(bg => {
+            if (boardIdx >= 0) canvas.moveTo(bg, boardIdx + 1);
+        });
+        guides.forEach(g => canvas.bringToFront(g));
         updatePageCounter();
         if (window.resizeCanvasToFit) window.resizeCanvasToFit();
         canvas.requestRenderAll();
@@ -306,7 +315,7 @@ function updatePageCounter() {
 
 // ─── 박스 모드: 6면 페이지 ───
 
-const CUSTOM_PROPS = ['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', 'isWedPlaceholder', 'isWedPlaceholderText', 'wedPlaceholderId'];
+const CUSTOM_PROPS = ['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', 'isWedPlaceholder', 'isWedPlaceholderText', 'wedPlaceholderId', '_promoPanel', '_promoPanelBg'];
 
 const BOX_FACE_NAMES = ['Front', 'Back', 'Left', 'Right', 'Top', 'Bottom'];
 

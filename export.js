@@ -444,7 +444,7 @@ export function initExport() {
                 const cropX = board ? board.left : 0;
                 const cropY = board ? board.top : 0;
 
-                const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
+                const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', '_promoPanel', '_promoPanelBg']);
 
                 // 가상 캔버스 생성
                 const tempEl = document.createElement('canvas');
