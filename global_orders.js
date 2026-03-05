@@ -66,7 +66,8 @@ window.loadVipOrders = async () => {
         tbody.innerHTML = '';
         data.forEach(item => {
             let statusBadge = item.status === '확인됨' ? `<span class="badge" style="background:#dcfce7; color:#15803d;">확인완료</span>` : `<span class="badge" style="background:#fee2e2; color:#ef4444;">대기중</span>`;
-            let filesHtml = (item.files && item.files.length) ? item.files.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:2px;">💾 ${f.name}</a>`).join('') : '<span style="color:#ccc;">파일 없음</span>';
+            const realFiles = item.files ? item.files.filter(f => f.type !== '_error_log') : [];
+            let filesHtml = realFiles.length ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:2px;">💾 ${f.name}</a>`).join('') : '<span style="color:#ccc;">파일 없음</span>';
             
             tbody.innerHTML += `
                 <tr style="${item.status !== '확인됨' ? 'background:#fff7ed;' : ''}">
@@ -309,8 +310,8 @@ window.loadOrders = async () => {
                 statusHtml = `<span class="badge">${st}</span>`;
             }
 
-            // [파일 버튼] — 파일 없으면 경고 표시
-            const fCount = order.files?.length || 0;
+            // [파일 버튼] — 파일 없으면 경고 표시 (_error_log 제외)
+            const fCount = order.files ? order.files.filter(f => f.type !== '_error_log').length : 0;
             const fileIcon = fCount === 0 ? '⚠️' : '📂';
             const fileBtnStyle = fCount === 0 ? 'width:100%; padding:2px 0; font-size:12px; height:24px; background:#fef2f2; border-color:#fca5a5; color:#dc2626;' : 'width:100%; padding:2px 0; font-size:12px; height:24px;';
             const fileBtn = `<button class="btn btn-outline" style="${fileBtnStyle}" onclick="openFileModal('${order.id}')" title="파일목록">${fileIcon} ${fCount}</button>`;
@@ -795,7 +796,7 @@ window.deleteOrdersSelected = async (force) => {
 window.openFileModal = async (id) => {
     currentMgrOrderId = id;
     const { data } = await sb.from('orders').select('files').eq('id', id).single();
-    currentMgrFiles = data?.files || [];
+    currentMgrFiles = (data?.files || []).filter(f => f.type !== '_error_log');
     renderFileList();
     document.getElementById('fileManagerModal').style.display = 'flex';
 };
