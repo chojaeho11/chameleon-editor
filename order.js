@@ -319,6 +319,7 @@ export async function initOrderSystem() {
             const btn = btnPrintQuote;
             btn.innerText = window.t('msg_generating_quote') || "Generating Quote..."; btn.disabled = true;
             try {
+                if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
                 const info = {
                     manager: currentUser?.user_metadata?.full_name || window.t('default_customer') || 'Customer',
                     phone: currentUser?.user_metadata?.phone || '-',
@@ -372,6 +373,7 @@ export async function initOrderSystem() {
             const info = getOrderInfo();
             if(window.currentDbId) info.id = window.currentDbId;
             try {
+                if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
                 const blob = await generateOrderSheetPDF(info, cartData);
                 if(blob) downloadBlob(blob, `order_sheet_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_pdf_gen_failed', "PDF generation failed"), "error"); }
@@ -385,6 +387,7 @@ export async function initOrderSystem() {
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
+                if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
                 const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate, useMileage);
                 if(blob) downloadBlob(blob, `quotation_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_pdf_gen_failed', "PDF generation failed"), "error"); }
@@ -1608,11 +1611,11 @@ function renderCart() {
         // [수정됨] 썸네일 우선순위 및 유효성 검사 강화
         let displayImg = null;
 // 1. 에디터 작업물 또는 파일업로드인 경우 (업로드된 썸네일 URL이 있는 경우만)
-if ((item.type === 'design' || item.type === 'file_upload') && item.thumb && item.thumb.startsWith('http')) {
+if ((item.type === 'design' || item.type === 'file_upload') && item.thumb && (item.thumb.startsWith('http') || item.thumb.startsWith('data:'))) {
     displayImg = item.thumb;
 }
 // 2. 일반 제품이거나 썸네일이 없는 경우, 제품 DB의 이미지 URL을 직접 참조
-else if (item.product && item.product.img && item.product.img.startsWith('http')) {
+else if (item.product && item.product.img && (item.product.img.startsWith('http') || item.product.img.startsWith('data:') || item.product.img.startsWith('/'))) {
     displayImg = item.product.img;
 }
         
@@ -2938,7 +2941,7 @@ const cleanProduct = {
     price_jp: productInfo.price_jp || 0,
     price_us: productInfo.price_us || 0,
     code: productInfo.code || productInfo.key,
-    img: ((productInfo.img || productInfo.img_url) && (productInfo.img || productInfo.img_url).length < 500 && !(productInfo.img || productInfo.img_url).startsWith('data:')) ? (productInfo.img || productInfo.img_url) : null,
+    img: ((productInfo.img || productInfo.img_url) && (productInfo.img || productInfo.img_url).length < 2000 && !(productInfo.img || productInfo.img_url).startsWith('data:')) ? (productInfo.img || productInfo.img_url) : null,
     w: productInfo.w || productInfo.width_mm || 0,
     h: productInfo.h || productInfo.height_mm || 0,
     w_mm: productInfo.w_mm || productInfo.width_mm || 0,
