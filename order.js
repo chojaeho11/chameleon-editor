@@ -2200,14 +2200,14 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
         const orderSheetBlob = await withTimeout(generateOrderSheetPDF(orderInfoForPDF, cartData), PDF_TIMEOUT);
         if(orderSheetBlob) {
             const url = await withTimeout(uploadFileToSupabase(orderSheetBlob, `orders/${orderId}/order_sheet.pdf`), UPLOAD_TIMEOUT);
-            if(url) uploadedFiles.push({ name: `order_sheet.pdf`, url: url, type: 'order_sheet' });
+            if(url) uploadedFiles.push({ name: `작업지시서.pdf`, url: url, type: 'order_sheet' });
             else errors.push('order_sheet upload failed');
         } else { errors.push('order_sheet PDF generation timeout/failed'); }
 
         const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate, useMileage), PDF_TIMEOUT);
         if(quoteBlob) {
             const url = await withTimeout(uploadFileToSupabase(quoteBlob, `orders/${orderId}/quotation.pdf`), UPLOAD_TIMEOUT);
-            if(url) uploadedFiles.push({ name: `quotation.pdf`, url: url, type: 'quotation' });
+            if(url) uploadedFiles.push({ name: `견적서.pdf`, url: url, type: 'quotation' });
             else errors.push('quotation upload failed');
         } else { errors.push('quotation PDF generation timeout/failed'); }
     } catch(pdfErr) {

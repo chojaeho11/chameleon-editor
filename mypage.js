@@ -463,10 +463,18 @@ async function loadOrders() {
         } else if (o.status === '취소됨' && o.payment_status === '환불완료') {
             refundLabel = `<div style="font-size:10px; color:#15803d; font-weight:bold;">(${window.t('label_refund_done', '환불완료')})</div>`;
         } else if (o.status === '취소됨' && o.payment_status === '환불대기') {
-            refundLabel = `<div style="font-size:10px; color:#d97706; font-weight:bold;">(${window.t('label_refund_pending', '환불 처리중')})</div>`;
+            refundLabel = `<div style="font-size:10px; color:#d97706; font-weight:bold;">(${window.t('label_refund_pending', '환불 심사중')})</div>`;
+        } else if (o.status === '취소됨' && o.payment_status === '본사승인') {
+            refundLabel = `<div style="font-size:10px; color:#2563eb; font-weight:bold;">(${window.t('label_refund_processing', '환불 처리중')})</div>`;
+        } else if (o.status === '취소됨' && o.payment_status === '환불실패') {
+            refundLabel = `<div style="font-size:10px; color:#dc2626; font-weight:bold;">(${window.t('label_refund_failed', '환불 처리 지연')})</div>`;
+        } else if (o.status === '취소됨' && o.payment_status === '주문취소') {
+            refundLabel = `<div style="font-size:10px; color:#6b7280; font-weight:bold;">(${window.t('label_order_cancelled', '주문취소')})</div>`;
         }
 
-        const canCancel = ['접수대기','입금대기','접수됨'].includes(o.status);
+        // 고객 취소/환불 가능 범위: 미결제는 즉시취소, 결제완료~제작준비는 환불요청
+        const preProductionStatuses = ['접수대기','입금대기','접수됨','파일처리중','제작준비'];
+        const canCancel = preProductionStatuses.includes(o.status) && !['취소요청','취소됨'].includes(o.status);
         const safeId = String(o.id); 
         const displayId = safeId.length > 8 ? safeId.substring(0,8) + '...' : safeId;
 
@@ -552,20 +560,27 @@ async function loadOrders() {
 async function cancelOrder(orderId) {
     try {
         // 주문 결제상태 확인
-        const { data: order } = await sb.from('orders').select('payment_status').eq('id', orderId).single();
+        const { data: order } = await sb.from('orders').select('payment_status, status').eq('id', orderId).single();
         const isPaid = order && ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'].includes(order.payment_status);
 
+        // 제작 진입 후에는 고객 취소 불가
+        const productionStatuses = ['칼선작업', '제작중', '완료됨', '발송완료', '배송완료', '구매확정'];
+        if (order && productionStatuses.includes(order.status)) {
+            showToast(window.t('msg_cancel_not_allowed', '제작이 시작된 주문은 고객센터에 문의해주세요.'), 'warn');
+            return;
+        }
+
         if (isPaid) {
-            // 결제완료 주문 → 관리자 승인 필요 (취소요청)
-            if (!confirm(window.t('confirm_cancel_request', "주문 취소를 요청하시겠습니까?\n관리자 확인 후 환불이 진행됩니다."))) return;
-            showToast(window.t('msg_cancel_processing', '취소 요청 중...'), 'info');
-            const { error } = await sb.from('orders').update({ status: '취소요청' }).eq('id', orderId);
+            // ★ 결제완료 주문 → 환불대기로 이동 (본사 승인 대기)
+            if (!confirm(window.t('confirm_refund_request', "환불을 요청하시겠습니까?\n본사 확인 후 환불이 진행됩니다."))) return;
+            showToast(window.t('msg_refund_processing', '환불 요청 중...'), 'info');
+            const { error } = await sb.from('orders').update({ status: '취소됨', payment_status: '환불대기' }).eq('id', orderId);
             if (error) throw error;
-            showToast(window.t('msg_cancel_requested', '취소 요청이 접수되었습니다. 관리자 확인 후 환불이 처리됩니다.'), 'success');
+            showToast(window.t('msg_refund_requested', '환불 요청이 접수되었습니다. 본사 확인 후 환불이 처리됩니다.'), 'success');
         } else {
             // 미결제 주문 → 즉시 취소 (환불할 금액 없음)
             if (!confirm(window.t('confirm_cancel_unpaid', "주문을 취소하시겠습니까?"))) return;
-            const { error } = await sb.from('orders').update({ status: '취소됨', payment_status: '환불완료' }).eq('id', orderId);
+            const { error } = await sb.from('orders').update({ status: '취소됨', payment_status: '주문취소' }).eq('id', orderId);
             if (error) throw error;
             showToast(window.t('msg_cancel_done', '주문이 취소되었습니다.'), 'success');
         }
@@ -1538,7 +1553,7 @@ window.downloadOrderDoc = async function (orderId, docType) {
     // 1. 저장된 파일 먼저 찾기 (견적서/작업지시서)
     if (docType === 'quotation' || docType === 'order_sheet') {
         const files = order.files || [];
-        const found = files.find(f => f.type === docType || f.name === (docType === 'quotation' ? 'quotation.pdf' : 'order_sheet.pdf'));
+        const found = files.find(f => f.type === docType || f.name === (docType === 'quotation' ? 'quotation.pdf' : 'order_sheet.pdf') || f.name === (docType === 'quotation' ? '견적서.pdf' : '작업지시서.pdf'));
         if (found && found.url) {
             window.open(found.url, '_blank');
             return;

@@ -1138,7 +1138,7 @@ window.recoverMissingDocs = async () => {
                     const { error: upErr } = await sb.storage.from('orders').upload(path, blob, { upsert: true });
                     if (!upErr) {
                         const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
-                        updatedFiles.push({ name: 'quotation.pdf', url: urlData.publicUrl, type: 'quotation' });
+                        updatedFiles.push({ name: '견적서.pdf', url: urlData.publicUrl, type: 'quotation' });
                         log(`  ✅ ${order.id} 견적서 생성`);
                     } else { log(`  ⚠️ ${order.id} 견적서 업로드 실패: ${upErr.message}`); }
                 }
@@ -1150,7 +1150,7 @@ window.recoverMissingDocs = async () => {
                     const { error: upErr } = await sb.storage.from('orders').upload(path, blob, { upsert: true });
                     if (!upErr) {
                         const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
-                        updatedFiles.push({ name: 'order_sheet.pdf', url: urlData.publicUrl, type: 'order_sheet' });
+                        updatedFiles.push({ name: '작업지시서.pdf', url: urlData.publicUrl, type: 'order_sheet' });
                         log(`  ✅ ${order.id} 작업지시서 생성`);
                     } else { log(`  ⚠️ ${order.id} 작업지시서 업로드 실패: ${upErr.message}`); }
                 }
