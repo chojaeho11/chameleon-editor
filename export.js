@@ -1693,11 +1693,17 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                 } catch(e) {}
             }
 
-            // ★ [3순위] 원본 이미지 URL
+            // ★ [3순위] 원본 이미지 URL (썸네일 실패 시에도 시도)
             if (!imgData && p === 0) {
                 let targetUrl = null;
-                if (!item.thumb && item.originalUrl && item.mimeType?.startsWith('image')) targetUrl = item.originalUrl;
+                if (item.originalUrl) targetUrl = item.originalUrl;
+                else if (item.uploadedFiles && item.uploadedFiles[0] && item.uploadedFiles[0].originalUrl) targetUrl = item.uploadedFiles[0].originalUrl;
                 if (targetUrl) imgData = await getSafeImageDataUrl(targetUrl);
+            }
+            // ★ [4순위] 칼선 이미지 (키링 등)
+            if (!imgData && p === 0 && item.uploadedFiles && item.uploadedFiles[0]) {
+                const cutUrl = item.uploadedFiles[0].cutlineUrl || item.uploadedFiles[0].thumb;
+                if (cutUrl) imgData = await getSafeImageDataUrl(cutUrl);
             }
 
             if (imgData) {
