@@ -38,6 +38,18 @@ export function setBoardColor(color) {
     if (!canvas) return;
     _removeWizardBg();
 
+    // 홍보물 모드: 선택된 패널의 배경색만 변경
+    if (window.__promoSelection && typeof window.__activePromoPanel === 'number') {
+        const panelIdx = window.__activePromoPanel;
+        const panelBg = canvas.getObjects().find(o => o._promoPanelBg && o._promoPanel === panelIdx);
+        if (panelBg) {
+            panelBg.set('fill', color);
+            canvas.requestRenderAll();
+            saveCurrentPageState();
+            return;
+        }
+    }
+
     const board = canvas.getObjects().find(o => o.isBoard);
     if (board) {
         board.set('fill', color);
@@ -52,6 +64,26 @@ export function setBoardColor(color) {
 export function setBoardGradient(color1, color2) {
     if (!canvas) return;
     _removeWizardBg();
+
+    // 홍보물 모드: 선택된 패널에 그라데이션 적용
+    if (window.__promoSelection && typeof window.__activePromoPanel === 'number') {
+        const panelIdx = window.__activePromoPanel;
+        const panelBg = canvas.getObjects().find(o => o._promoPanelBg && o._promoPanel === panelIdx);
+        if (panelBg) {
+            const grad = new fabric.Gradient({
+                type: 'linear',
+                coords: { x1: 0, y1: 0, x2: panelBg.width, y2: panelBg.height },
+                colorStops: [
+                    { offset: 0, color: color1 },
+                    { offset: 1, color: color2 }
+                ]
+            });
+            panelBg.set('fill', grad);
+            canvas.requestRenderAll();
+            saveCurrentPageState();
+            return;
+        }
+    }
 
     const board = canvas.getObjects().find(o => o.isBoard);
     if (board) {
