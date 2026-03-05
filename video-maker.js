@@ -1259,7 +1259,28 @@ window._veAddLibImage = function(idx) {
 };
 
 function renderImageTab(el) {
-    let h = `<div class="ve-sec"><b>${_t('ve_img_templates','이미지 템플릿')}</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">${_t('ve_img_tpl_desc','에디터 이미지를 오버레이로 삽입')}</p>`;
+    // AI 이미지 생성기
+    let h = `<div class="ve-sec">
+        <b><i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa;margin-right:4px"></i>${_t('ve_ai_img_gen','AI 이미지 생성')}</b>
+        <p style="font-size:10px;color:#6b7280;margin:0 0 8px">${_t('ve_ai_img_desc','프롬프트로 이미지를 생성하여 클립 또는 오버레이로 추가')}</p>
+        <textarea id="veAiImgPrompt" class="ve-search-inp" rows="3" placeholder="${_t('ve_ai_img_placeholder','예: a beautiful sunset over the ocean, cinematic lighting')}" style="resize:vertical;min-height:50px;font-size:11px;line-height:1.4;padding:8px;"></textarea>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+            <select id="veAiImgMode" style="flex:1;padding:6px 8px;background:#222;color:#ddd;border:1px solid #333;border-radius:6px;font-size:11px;">
+                <option value="overlay">${_t('ve_ai_as_overlay','오버레이로 추가')}</option>
+                <option value="clip">${_t('ve_ai_as_clip','새 클립으로 추가')}</option>
+                <option value="background">${_t('ve_ai_as_bg','현재 클립 배경 교체')}</option>
+            </select>
+            <button id="veAiImgBtn" onclick="window._veAiGenerateImg()" style="padding:6px 14px;background:linear-gradient(135deg,#6366f1,#a78bfa);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ${_t('ve_ai_generate','생성')}
+            </button>
+        </div>
+        <div id="veAiImgStatus" style="display:none;margin-top:8px;padding:8px;background:#1a1a2e;border-radius:6px;font-size:11px;color:#a78bfa;text-align:center;">
+            <i class="fa-solid fa-spinner fa-spin" style="margin-right:4px"></i><span id="veAiImgStatusText">${_t('ve_ai_generating_img','이미지 생성 중...')}</span>
+        </div>
+        <div id="veAiImgResult" style="display:none;margin-top:8px;"></div>
+    </div>`;
+    // 이미지 템플릿
+    h += `<div class="ve-sec"><b>${_t('ve_img_templates','이미지 템플릿')}</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">${_t('ve_img_tpl_desc','에디터 이미지를 오버레이로 삽입')}</p>`;
     h += `<input class="ve-search-inp" id="veImgSearch" placeholder="${_t('ve_search','검색...')}" oninput="window._veSearchImg(this.value)">`;
     h += `<div id="veImgGrid" class="ve-lib-grid2"><p class="ve-empty" style="grid-column:1/-1">${_t('ve_loading','로딩 중...')}</p></div>`;
     h += `<button class="ve-lib-more" onclick="window._veLoadMoreImg()"><i class="fa-solid fa-angles-down"></i> ${_t('ve_load_more','더 보기')}</button>`;
@@ -1331,6 +1352,99 @@ window._veAddImgTemplate = function(idx) {
     const url=bestImageUrl(item);
     addOverlay('image', vm.w*.1, vm.h*.1, {url, w:vm.w*.5, h:vm.h*.5});
     showToast(_t('ve_img_tpl_added','이미지 템플릿 추가됨'));
+};
+
+// AI 이미지 생성
+window._veAiGenerateImg = async function() {
+    const promptEl=document.getElementById('veAiImgPrompt');
+    const modeEl=document.getElementById('veAiImgMode');
+    const btn=document.getElementById('veAiImgBtn');
+    const statusEl=document.getElementById('veAiImgStatus');
+    const statusText=document.getElementById('veAiImgStatusText');
+    const resultEl=document.getElementById('veAiImgResult');
+
+    const prompt=promptEl?promptEl.value.trim():'';
+    if(!prompt) return showToast(_t('ve_ai_enter_prompt','프롬프트를 입력하세요'),'warn');
+
+    const sb=window.sb;
+    if(!sb) return showToast(_t('ve_db_required','DB 연결이 필요합니다'),'warn');
+
+    const mode=modeEl?modeEl.value:'overlay';
+
+    // UI 업데이트
+    if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';}
+    if(statusEl)statusEl.style.display='block';
+    if(statusText)statusText.textContent=_t('ve_ai_generating_img','이미지 생성 중...');
+    if(resultEl)resultEl.style.display='none';
+
+    try {
+        // Supabase Edge Function으로 이미지 생성
+        const { data, error } = await sb.functions.invoke('generate-image-flux', {
+            body: { prompt: prompt, ratio: '1:1' }
+        });
+        if(error) throw new Error(error.message||'Edge function error');
+        let imageUrl=data.imageUrl||data;
+        if(Array.isArray(imageUrl)) imageUrl=imageUrl[0];
+        if(typeof imageUrl==='object'&&imageUrl.url) imageUrl=imageUrl.url;
+        if(!imageUrl) throw new Error('No image URL returned');
+
+        if(statusText)statusText.textContent=_t('ve_ai_img_loading','이미지 로딩 중...');
+
+        // 이미지 로드
+        const img=new Image();
+        img.crossOrigin='anonymous';
+        await new Promise((resolve,reject)=>{
+            img.onload=resolve;
+            img.onerror=()=>reject(new Error('Image load failed'));
+            img.src=imageUrl;
+        });
+
+        if(statusEl)statusEl.style.display='none';
+
+        if(mode==='clip'){
+            // 새 클립으로 추가
+            const tc=document.createElement('canvas');tc.width=160;tc.height=90;
+            tc.getContext('2d').drawImage(img,0,0,160,90);
+            vm.clips.push({type:'image',file:null,url:imageUrl,img,thumbUrl:tc.toDataURL('image/jpeg',0.7),
+                duration:3,overlays:[],adj:{brightness:0,contrast:0,saturation:100,blur:0,hue:0},transition:'fade',speed:1.0,
+                locked:true,panX:0,panY:0,imgScale:1});
+            selectClip(vm.clips.length-1);
+            showToast(_t('ve_ai_clip_added','AI 이미지 클립 추가됨'));
+        } else if(mode==='background'){
+            // 현재 클립 배경 교체
+            const c=curClip();
+            if(!c){showToast(_t('ve_clip_required','클립을 먼저 추가하세요'),'warn');return;}
+            c.type='image';c.img=img;c.url=imageUrl;
+            const tc=document.createElement('canvas');tc.width=160;tc.height=90;
+            tc.getContext('2d').drawImage(img,0,0,160,90);
+            c.thumbUrl=tc.toDataURL('image/jpeg',0.7);
+            render();updateAll();
+            showToast(_t('ve_ai_bg_replaced','배경이 AI 이미지로 교체됨'));
+        } else {
+            // 오버레이로 추가
+            const c=curClip();
+            if(!c){showToast(_t('ve_clip_required','클립을 먼저 추가하세요'),'warn');return;}
+            addOverlay('image',vm.w*.1,vm.h*.1,{url:imageUrl,w:vm.w*.5,h:vm.h*.5});
+            showToast(_t('ve_ai_overlay_added','AI 이미지 오버레이 추가됨'));
+        }
+
+        // 결과 미리보기
+        if(resultEl){
+            resultEl.style.display='block';
+            resultEl.innerHTML=`<div style="position:relative;border-radius:6px;overflow:hidden;border:1px solid #333;">
+                <img src="${imageUrl}" style="width:100%;display:block;border-radius:6px;">
+                <div style="position:absolute;bottom:0;left:0;right:0;padding:4px 8px;background:rgba(0,0,0,0.7);font-size:10px;color:#a78bfa;">
+                    <i class="fa-solid fa-check" style="color:#34d399;margin-right:3px"></i>${_t('ve_ai_img_done','생성 완료')}
+                </div>
+            </div>`;
+        }
+    } catch(err){
+        console.error('AI Image Error:', err);
+        showToast(_t('ve_ai_img_fail','AI 이미지 생성 실패')+': '+(err.message||'Unknown'),'error');
+        if(statusEl)statusEl.style.display='none';
+    } finally {
+        if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> '+_t('ve_ai_generate','생성');}
+    }
 };
 
 function renderTransitionTab(el) {
