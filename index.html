@@ -2769,7 +2769,32 @@ async function handleSubReturn() {
                         </button>
                     </div>
 
-                    <!-- ===== 3. 수동 조정 ===== -->
+                    <!-- ===== 3. AI 매직 편집 (Inpainting) ===== -->
+                    <div class="section-title" style="font-size:12px; margin-bottom:8px;">🪄 <span data-i18n="retouch_sec_magic">AI 매직 편집</span></div>
+                    <div id="retouchMagicPanel" style="margin-bottom:14px;">
+                        <p style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.4;" data-i18n="retouch_magic_desc">브러시로 영역을 칠한 후 제거하거나 다른 내용으로 교체합니다.</p>
+                        <div style="display:flex; gap:5px; margin-bottom:8px;">
+                            <button id="btnMagicBrush" class="btn-round" style="flex:1;height:32px;font-size:11px;justify-content:center;" onclick="window._rtMagicToggle && window._rtMagicToggle()">
+                                <i class="fa-solid fa-paintbrush"></i> <span data-i18n="retouch_magic_brush">브러시</span>
+                            </button>
+                            <button id="btnMagicClear" class="btn-round" style="flex:1;height:32px;font-size:11px;justify-content:center;" onclick="window._rtMagicClear && window._rtMagicClear()">
+                                <i class="fa-solid fa-eraser"></i> <span data-i18n="retouch_magic_clear">지우기</span>
+                            </button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                            <span style="font-size:10px; color:#94a3b8; flex-shrink:0;" data-i18n="retouch_magic_size">크기</span>
+                            <input type="range" id="rtMagicBrushSize" min="5" max="80" value="25" style="flex:1; height:4px; accent-color:#6366f1;">
+                            <span id="rtMagicBrushSizeVal" style="font-size:10px; color:#94a3b8; width:24px; text-align:right;">25</span>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <input type="text" id="rtMagicPrompt" placeholder="교체할 내용 (비우면 제거)" style="width:100%;height:32px;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px;font-size:12px;box-sizing:border-box;" data-i18n-placeholder="retouch_magic_prompt_ph">
+                        </div>
+                        <button id="btnMagicApply" class="btn-round" style="width:100%;height:34px;font-size:12px;justify-content:center;background:#6366f1;color:white;border:none;font-weight:700;" onclick="window._rtMagicApply && window._rtMagicApply()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="retouch_magic_apply">AI 적용</span>
+                        </button>
+                    </div>
+
+                    <!-- ===== 4. 수동 조정 ===== -->
                     <div class="section-title" style="font-size:12px; margin-bottom:6px;">🎨 <span data-i18n="retouch_sec_manual">수동 조정</span></div>
                     <div id="retouchSliders" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
                     <div style="display:flex; gap:6px; margin-bottom:12px;">
@@ -2781,7 +2806,7 @@ async function handleSubReturn() {
                         </button>
                     </div>
 
-                    <!-- ===== 4. 퀵 프리셋 ===== -->
+                    <!-- ===== 5. 퀵 프리셋 ===== -->
                     <div class="section-title" style="font-size:12px; margin-bottom:6px;">🎬 <span data-i18n="retouch_sec_presets">퀵 필터</span></div>
                     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:5px;">
                         <button class="btn-round" data-preset="portrait" style="height:28px; font-size:10px; justify-content:center;" data-i18n="retouch_preset_portrait">인물</button>

@@ -211,6 +211,9 @@ export function initRetouchTools() {
     document.querySelectorAll('[data-preset]').forEach(btn => {
         btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
     });
+
+    // 매직 편집 (인페인팅) 초기화
+    initMagicEdit();
 }
 
 // ==========================================================
@@ -754,4 +757,268 @@ function _showSkinAnalysis(analysis) {
     `;
     modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     document.body.appendChild(modal);
+}
+
+// ==========================================================
+// AI 매직 편집 (Inpainting) — 브러시 마스크 → ai-inpaint Edge Function
+// ==========================================================
+let _magicActive = false;
+let _magicMaskCanvas = null;
+let _magicMaskCtx = null;
+let _magicPainting = false;
+let _magicOverlay = null;
+let _magicTargetObj = null; // 브러시 대상 이미지 객체
+
+function _getMagicBrushSize() {
+    return parseInt(document.getElementById('rtMagicBrushSize')?.value || '25', 10);
+}
+
+window._rtMagicToggle = function () {
+    const obj = canvas.getActiveObject();
+    if (!obj || obj.type !== 'image') {
+        window.showToast?.(_t('retouch_select_image', '캔버스에서 이미지를 선택하세요'), 'warning');
+        return;
+    }
+
+    _magicActive = !_magicActive;
+    const btn = document.getElementById('btnMagicBrush');
+    if (btn) {
+        btn.style.background = _magicActive ? '#6366f1' : '';
+        btn.style.color = _magicActive ? '#fff' : '';
+    }
+
+    if (_magicActive) {
+        // 마스크 캔버스 초기화
+        _magicTargetObj = obj;
+        _saveOriginal(obj);
+        const el = obj._originalElement || obj._element;
+        const w = el?.naturalWidth || el?.width || obj.width;
+        const h = el?.naturalHeight || el?.height || obj.height;
+        _magicMaskCanvas = document.createElement('canvas');
+        _magicMaskCanvas.width = w;
+        _magicMaskCanvas.height = h;
+        _magicMaskCtx = _magicMaskCanvas.getContext('2d');
+        _magicMaskCtx.fillStyle = 'black';
+        _magicMaskCtx.fillRect(0, 0, w, h);
+
+        // Fabric.js 선택 비활성화
+        canvas.selection = false;
+        canvas.forEachObject(o => { o._origSelectable = o.selectable; o.selectable = false; });
+
+        // 오버레이 생성
+        _createMagicOverlay(obj);
+
+        window.showToast?.(_t('retouch_magic_brush_on', '브러시 모드 ON — 영역을 칠하세요'), 'info');
+    } else {
+        _magicTargetObj = null;
+        _removeMagicOverlay();
+        canvas.selection = true;
+        canvas.forEachObject(o => { if (o._origSelectable !== undefined) { o.selectable = o._origSelectable; delete o._origSelectable; } });
+        canvas.requestRenderAll();
+    }
+};
+
+window._rtMagicClear = function () {
+    if (!_magicMaskCanvas) return;
+    _magicMaskCtx.fillStyle = 'black';
+    _magicMaskCtx.fillRect(0, 0, _magicMaskCanvas.width, _magicMaskCanvas.height);
+    const obj = _magicTargetObj || canvas.getActiveObject();
+    if (obj) _updateMagicOverlay(obj);
+    window.showToast?.(_t('retouch_magic_cleared', '마스크 초기화'), 'info');
+};
+
+function _createMagicOverlay(imgObj) {
+    _removeMagicOverlay();
+    // 이미지 위에 반투명 오버레이를 fabric.Image로 추가
+    _updateMagicOverlay(imgObj);
+}
+
+function _updateMagicOverlay(imgObj) {
+    // 마스크를 빨간색 반투명으로 변환해서 오버레이
+    const w = _magicMaskCanvas.width, h = _magicMaskCanvas.height;
+    const overlayCanvas = document.createElement('canvas');
+    overlayCanvas.width = w;
+    overlayCanvas.height = h;
+    const ctx = overlayCanvas.getContext('2d');
+
+    // 마스크 데이터 읽기
+    const maskData = _magicMaskCtx.getImageData(0, 0, w, h);
+    const oData = ctx.createImageData(w, h);
+    for (let i = 0; i < maskData.data.length; i += 4) {
+        // 흰색(칠한 부분)만 빨간색 반투명으로
+        if (maskData.data[i] > 128) {
+            oData.data[i] = 255;     // R
+            oData.data[i + 1] = 50;  // G
+            oData.data[i + 2] = 50;  // B
+            oData.data[i + 3] = 100; // A
+        } else {
+            oData.data[i + 3] = 0;
+        }
+    }
+    ctx.putImageData(oData, 0, 0);
+
+    // 기존 오버레이 제거
+    if (_magicOverlay) {
+        canvas.remove(_magicOverlay);
+        _magicOverlay = null;
+    }
+
+    fabric.Image.fromURL(overlayCanvas.toDataURL(), (fImg) => {
+        fImg.set({
+            left: imgObj.left,
+            top: imgObj.top,
+            scaleX: imgObj.scaleX * (imgObj.width / w),
+            scaleY: imgObj.scaleY * (imgObj.height / h),
+            angle: imgObj.angle || 0,
+            originX: imgObj.originX,
+            originY: imgObj.originY,
+            selectable: false,
+            evented: false,
+            excludeFromExport: true,
+            _isMagicOverlay: true,
+        });
+        _magicOverlay = fImg;
+        canvas.add(fImg);
+        canvas.requestRenderAll();
+    });
+}
+
+function _removeMagicOverlay() {
+    if (_magicOverlay) {
+        canvas.remove(_magicOverlay);
+        _magicOverlay = null;
+    }
+    // 잔여 오버레이 제거
+    canvas.getObjects().filter(o => o._isMagicOverlay).forEach(o => canvas.remove(o));
+}
+
+// 브러시 좌표 변환: 캔버스 이벤트 좌표 → 이미지 원본 좌표
+function _magicEventToImageCoords(e, imgObj) {
+    const pointer = canvas.getPointer(e.e || e);
+    // 이미지 로컬 좌표로 변환
+    const localPoint = imgObj.toLocalPoint(new fabric.Point(pointer.x, pointer.y), 'left', 'top');
+    const el = imgObj._originalElement || imgObj._element;
+    const natW = el?.naturalWidth || el?.width || imgObj.width;
+    const natH = el?.naturalHeight || el?.height || imgObj.height;
+    const x = (localPoint.x / imgObj.width) * natW;
+    const y = (localPoint.y / imgObj.height) * natH;
+    return { x, y, natW, natH };
+}
+
+function _magicPaintAt(x, y) {
+    if (!_magicMaskCtx) return;
+    const size = _getMagicBrushSize();
+    // 브러시 크기를 이미지 비율로 스케일
+    const scale = _magicMaskCanvas.width / 300; // 기준 300px 대비
+    const r = size * Math.max(1, scale * 0.5);
+    _magicMaskCtx.fillStyle = 'white';
+    _magicMaskCtx.beginPath();
+    _magicMaskCtx.arc(x, y, r, 0, Math.PI * 2);
+    _magicMaskCtx.fill();
+}
+
+// 캔버스 마우스 이벤트 인터셉트
+function _initMagicEvents() {
+    canvas.on('mouse:down', (e) => {
+        if (!_magicActive || !_magicTargetObj) return;
+        _magicPainting = true;
+        const coords = _magicEventToImageCoords(e, _magicTargetObj);
+        _magicPaintAt(coords.x, coords.y);
+        _updateMagicOverlay(_magicTargetObj);
+    });
+    canvas.on('mouse:move', (e) => {
+        if (!_magicActive || !_magicPainting || !_magicTargetObj) return;
+        const coords = _magicEventToImageCoords(e, _magicTargetObj);
+        _magicPaintAt(coords.x, coords.y);
+        _updateMagicOverlay(_magicTargetObj);
+    });
+    canvas.on('mouse:up', () => {
+        _magicPainting = false;
+    });
+}
+
+// 브러시 사이즈 슬라이더
+function _initMagicSlider() {
+    const slider = document.getElementById('rtMagicBrushSize');
+    const val = document.getElementById('rtMagicBrushSizeVal');
+    if (slider && val) {
+        slider.addEventListener('input', () => { val.textContent = slider.value; });
+    }
+}
+
+// AI 적용
+window._rtMagicApply = async function () {
+    if (_aiProcessing) { window.showToast?.('처리 중입니다', 'info'); return; }
+    if (!_magicMaskCanvas) { window.showToast?.(_t('retouch_magic_brush_first', '먼저 브러시로 영역을 칠하세요'), 'warning'); return; }
+
+    // 마스크에 실제 칠해진 부분이 있는지 확인
+    const maskData = _magicMaskCtx.getImageData(0, 0, _magicMaskCanvas.width, _magicMaskCanvas.height);
+    let hasWhite = false;
+    for (let i = 0; i < maskData.data.length; i += 4) {
+        if (maskData.data[i] > 128) { hasWhite = true; break; }
+    }
+    if (!hasWhite) { window.showToast?.(_t('retouch_magic_brush_first', '먼저 브러시로 영역을 칠하세요'), 'warning'); return; }
+
+    const obj = _magicTargetObj || canvas.getObjects().find(o => o.type === 'image' && !o._isMagicOverlay);
+    if (!obj) { window.showToast?.(_t('retouch_select_image', '이미지를 선택하세요'), 'warning'); return; }
+
+    const prompt = document.getElementById('rtMagicPrompt')?.value?.trim() || '';
+    const mode = prompt ? 'replace' : 'remove';
+
+    // 브러시 모드 해제
+    _magicActive = false;
+    _magicTargetObj = null;
+    const brushBtn = document.getElementById('btnMagicBrush');
+    if (brushBtn) { brushBtn.style.background = ''; brushBtn.style.color = ''; }
+    _removeMagicOverlay();
+    canvas.selection = true;
+    canvas.forEachObject(o => { if (o._origSelectable !== undefined) { o.selectable = o._origSelectable; delete o._origSelectable; } });
+
+    const applyBtn = document.getElementById('btnMagicApply');
+    const origHTML = applyBtn ? applyBtn.innerHTML : '';
+    if (applyBtn) { applyBtn.disabled = true; applyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI 처리 중...'; }
+
+    _aiProcessing = true;
+    try {
+        _pushHistory(obj);
+
+        // 이미지 base64
+        const imageBase64 = await _getImageBase64(obj);
+
+        // 마스크 base64 (흰=편집영역, 검=유지영역)
+        const maskBase64 = _magicMaskCanvas.toDataURL('image/png').split(',')[1];
+
+        console.log(`[retouch-magic] mode=${mode}, prompt=${prompt}, mask=${(maskBase64.length * 0.75 / 1024).toFixed(0)}KB`);
+
+        const { data, error } = await sb.functions.invoke('ai-inpaint', {
+            body: { image_base64: imageBase64, mask_base64: maskBase64, prompt, mode }
+        });
+
+        if (error) throw new Error(error.message || 'Edge Function error');
+        if (data?.error) throw new Error(data.error);
+        if (!data?.imageUrl) throw new Error('결과 이미지가 없습니다');
+
+        // 결과 이미지 교체
+        await _replaceImage(obj, data.imageUrl);
+        _updateUndoBtn();
+        window.showToast?.(_t('retouch_magic_done', 'AI 매직 편집 완료!'), 'success');
+
+    } catch (e) {
+        console.error('[retouch-magic] Error:', e);
+        window.showToast?.('매직 편집 실패: ' + e.message, 'error');
+    } finally {
+        _aiProcessing = false;
+        if (applyBtn) { applyBtn.disabled = false; applyBtn.innerHTML = origHTML; }
+        // 마스크 리셋
+        if (_magicMaskCanvas && _magicMaskCtx) {
+            _magicMaskCtx.fillStyle = 'black';
+            _magicMaskCtx.fillRect(0, 0, _magicMaskCanvas.width, _magicMaskCanvas.height);
+        }
+    }
+};
+
+// initRetouchTools에서 호출될 매직 편집 초기화
+export function initMagicEdit() {
+    _initMagicEvents();
+    _initMagicSlider();
 }
