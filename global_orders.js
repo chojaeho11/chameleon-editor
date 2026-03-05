@@ -441,8 +441,51 @@ window.changeStatusSelected = async (status) => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if(ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
     await sb.from('orders').update({ status }).in('id', ids);
+
+    // ★ 완료 상태 전환 시 작품 판매 수익 정산 (partner_settlements → 예치금 지급)
+    const completedStates = ['완료됨', '발송완료', '배송완료', '구매확정'];
+    if (completedStates.includes(status)) {
+        for (const orderId of ids) {
+            try { await processArtworkSettlement(orderId); } catch(e) { console.error('정산 실패:', orderId, e); }
+        }
+    }
+
     loadOrders();
 };
+
+// ★ 작품 판매 수익 정산: partner_settlements에서 pending 건 찾아 예치금 지급
+async function processArtworkSettlement(orderId) {
+    const { data: settlements } = await sb.from('partner_settlements')
+        .select('*')
+        .eq('order_id', orderId)
+        .eq('settlement_status', 'pending');
+    if (!settlements || settlements.length === 0) return;
+
+    for (const s of settlements) {
+        const commissionKRW = s.commission_amount || 0;
+        if (commissionKRW <= 0 || !s.partner_id) continue;
+
+        // 1. 파트너 예치금 증가
+        const { data: pf } = await sb.from('profiles').select('deposit').eq('id', s.partner_id).single();
+        if (!pf) continue;
+        const newDeposit = (pf.deposit || 0) + commissionKRW;
+        await sb.from('profiles').update({ deposit: newDeposit }).eq('id', s.partner_id);
+
+        // 2. 거래 내역 기록
+        await sb.from('wallet_logs').insert({
+            user_id: s.partner_id,
+            type: 'artwork_revenue',
+            amount: commissionKRW,
+            description: `작품 판매 수익 (주문: ${orderId}, 상품: ${s.item_code || ''})`
+        });
+
+        // 3. 정산 완료 처리
+        await sb.from('partner_settlements').update({
+            settlement_status: 'completed'
+        }).eq('id', s.id);
+    }
+    console.log(`✅ 주문 ${orderId} 작품 정산 완료 (${settlements.length}건)`);
+}
 
 // [환불 헬퍼] 단건 환불 처리 — 여러 함수에서 공유
 async function refundSingleOrder(id, reason = '관리자 취소') {

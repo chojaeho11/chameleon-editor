@@ -1836,5 +1836,7 @@
   "artwork_height": "高さ（mm）",
   "artwork_auto_size": "自動計算",
   "artwork_submit": "アートワークを登録",
-  "artwork_close": "閉じる"
+  "artwork_close": "閉じる",
+  "label_artwork_revenue": "作品収益",
+  "label_contributor_reward": "貢献報酬"
 }

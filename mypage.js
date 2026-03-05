@@ -784,6 +784,8 @@ async function loadWalletLogs() {
         else if(log.type?.includes('payment')) typeName = window.t('label_payment', 'Payment');
         else if(log.type?.includes('withdraw')) typeName = window.t('label_withdrawal', 'Withdrawal');
         else if(log.type?.includes('admin')) typeName = window.t('label_admin_adjust', 'Admin Adjust');
+        else if(log.type === 'artwork_revenue') typeName = window.t('label_artwork_revenue', '작품수익');
+        else if(log.type === 'contributor_reward') typeName = window.t('label_contributor_reward', '기여보상');
 
         const badgeStyle = isReferral
             ? 'background:linear-gradient(135deg,#ede9fe,#e0e7ff); color:#7c3aed; border:1px solid #a78bfa; font-weight:bold;'
