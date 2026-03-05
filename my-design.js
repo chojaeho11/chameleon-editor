@@ -201,7 +201,7 @@ window.loadSavedDesigns = async function() {
             const thumbInner = item.thumb_url ? '' : '<i class="fa-solid fa-file" style="color:#cbd5e1; font-size:16px;"></i>';
 
             html += '<div style="border-radius:10px; border:1px solid #e2e8f0; overflow:hidden; cursor:pointer; transition:all 0.15s; background:#fff;" '
-                + 'onmouseenter="this.style.borderColor=\'#6366f1\';this.style.boxShadow=\'0 2px 8px rgba(99,102,241,0.12)\'" '
+                + 'onmouseenter="this.style.borderColor=\'#03C75A\';this.style.boxShadow=\'0 2px 8px rgba(3,199,90,0.12)\'" '
                 + 'onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.boxShadow=\'none\'">'
                 + '<div style="width:100%; aspect-ratio:4/3;' + thumbStyle + '">' + thumbInner + '</div>'
                 + '<div style="padding:8px 10px;">'
@@ -209,7 +209,7 @@ window.loadSavedDesigns = async function() {
                 + '<div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">'
                 + '<span style="font-size:10px; color:#94a3b8;">' + dateStr + '</span>'
                 + '<div style="display:flex; gap:5px;">'
-                + '<button onclick="event.stopPropagation(); window._loadSavedDesign(' + item.id + ')" style="font-size:10px; padding:3px 10px; border-radius:6px; border:1px solid #6366f1; background:#6366f1; color:#fff; cursor:pointer; font-weight:500;">Load</button>'
+                + '<button onclick="event.stopPropagation(); window._loadSavedDesign(' + item.id + ')" style="font-size:10px; padding:3px 10px; border-radius:6px; border:1px solid #03C75A; background:#03C75A; color:#fff; cursor:pointer; font-weight:500;">Load</button>'
                 + '<button onclick="event.stopPropagation(); window._deleteSavedDesign(' + item.id + ')" style="font-size:10px; padding:3px 10px; border-radius:6px; border:1px solid #e2e8f0; background:#fff; color:#94a3b8; cursor:pointer;">Del</button>'
                 + '</div></div></div></div>';
         });

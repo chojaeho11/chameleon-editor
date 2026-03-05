@@ -525,7 +525,7 @@
 
         // 3. [명함]
         else if (type === 'card') {
-            const ACCENT = '#6366f1';
+            const ACCENT = '#03C75A';
 
             const baseW = 500;
             const baseH = 300;

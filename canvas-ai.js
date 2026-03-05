@@ -375,7 +375,7 @@ const WIZARD_STYLES = {
     arctic:  { titleColor:'#1e3a5f', boxFill:'rgba(240,249,255,0.92)', boxStroke:'rgba(96,165,250,0.35)', boxTextColor:'#1e40af' },
     neon:    { titleColor:'#ffffff', boxFill:'rgba(30,0,50,0.88)',    boxStroke:'rgba(168,85,247,0.4)',  boxTextColor:'#d8b4fe' },
     flame:   { titleColor:'#ffffff', boxFill:'rgba(50,10,0,0.88)',    boxStroke:'rgba(251,146,60,0.4)',  boxTextColor:'#fed7aa' },
-    moody:   { titleColor:'#ffffff', boxFill:'rgba(20,20,30,0.88)',   boxStroke:'rgba(129,140,248,0.4)', boxTextColor:'#c7d2fe' },
+    moody:   { titleColor:'#ffffff', boxFill:'rgba(20,20,30,0.88)',   boxStroke:'rgba(129,140,248,0.4)', boxTextColor:'#86efac' },
     noir:    { titleColor:'#f0f0f0', boxFill:'rgba(10,10,10,0.88)',   boxStroke:'rgba(100,100,100,0.4)', boxTextColor:'#d4d4d4' }
 };
 
@@ -1616,7 +1616,7 @@ export function applyBizCardTemplate(tplId) {
 
     const bL = board.left, bT = board.top, bW = board.width * board.scaleX, bH = board.height * board.scaleY;
     const F_TITLE = 'Noto Sans KR', F_SUB = 'Noto Sans KR';
-    const ACCENT = '#6366f1';
+    const ACCENT = '#03C75A';
     const T = (k, fb) => (window.t ? window.t(k, fb) : fb);
 
     // 언어별 placeholder 텍스트
@@ -1792,7 +1792,7 @@ function _drawPromoPage(selection, panelLabels) {
     };
 
     // 패널별 배경색 (보드 전체를 나눠서 채움)
-    const bgColors = ['#f5f3ff','#ffffff','#fefce8','#eff6ff','#fef2f2','#f0fdf4'];
+    const bgColors = ['#ecfdf5','#ffffff','#fefce8','#ecfdf5','#fef2f2','#f0fdf4'];
     for (let i = 0; i < panels; i++) {
         const pw = bW / panels;
         const bg = new fabric.Rect({
@@ -1845,7 +1845,7 @@ function _drawPromoPage(selection, panelLabels) {
         const labelText = label.pos ? `${label.pos}` : label.face;
         const panelLabel = new fabric.Text(labelText, {
             left: bL + BP + pw * i + 6, top: bT + BP + 4,
-            fontSize: 10, fill: '#6366f1', fontFamily: 'Arial',
+            fontSize: 10, fill: '#03C75A', fontFamily: 'Arial',
             fontWeight: 'bold', opacity: 0.6, ...guideOpts
         });
         canvas.add(panelLabel);
@@ -1878,8 +1878,8 @@ function _buildPromoNav(selection, frontLabels, backLabels) {
             }
             .promo-nav-btn:hover { background: #f1f5f9; }
             .promo-nav-btn.active {
-                background: #6366f1; color: #fff !important;
-                box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+                background: #03C75A; color: #fff !important;
+                box-shadow: 0 2px 8px rgba(3,199,90,0.3);
             }
             .promo-nav-btn.active span { color: #fff !important; }
             .promo-nav-sep { width:1px; height:28px; background:#e2e8f0; margin:0 4px; align-self:center; }
@@ -1944,7 +1944,7 @@ function _buildPromoNav(selection, frontLabels, backLabels) {
         // 마법사 버튼
         const wizBtn = document.createElement('button');
         wizBtn.title = 'Design Wizard';
-        wizBtn.style.cssText = 'width:18px;height:18px;border:none;background:#f1f5f9;border-radius:50%;cursor:pointer;font-size:10px;color:#6366f1;display:flex;align-items:center;justify-content:center;padding:0;';
+        wizBtn.style.cssText = 'width:18px;height:18px;border:none;background:#f1f5f9;border-radius:50%;cursor:pointer;font-size:10px;color:#03C75A;display:flex;align-items:center;justify-content:center;padding:0;';
         wizBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:9px;"></i>';
         wizBtn.onclick = (e) => {
             e.stopPropagation();
@@ -1965,7 +1965,7 @@ function _buildPromoNav(selection, frontLabels, backLabels) {
     }
 
     function _getBgColors() {
-        return ['#f5f3ff','#ffffff','#fefce8','#eff6ff','#fef2f2','#f0fdf4'];
+        return ['#ecfdf5','#ffffff','#fefce8','#ecfdf5','#fef2f2','#f0fdf4'];
     }
 
     // 앞면 패널 버튼
@@ -2011,8 +2011,8 @@ function _highlightPromoPanel(selection, panelIdx) {
     const highlight = new fabric.Rect({
         left: bL + pw * panelIdx, top: bT,
         width: pw, height: bH,
-        fill: 'rgba(99,102,241,0.06)',
-        stroke: '#6366f1', strokeWidth: 2, strokeDashArray: [6, 3],
+        fill: 'rgba(3,199,90,0.06)',
+        stroke: '#03C75A', strokeWidth: 2, strokeDashArray: [6, 3],
         selectable: false, evented: false,
         _promoHighlight: true, excludeFromExport: true
     });

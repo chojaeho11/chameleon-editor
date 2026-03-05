@@ -136,7 +136,7 @@ async function loadDashboardCharts() {
         if (pageTitleEl) pageTitleEl.innerText = `통계 대시보드 (${currentYear}년)`;
 
         // 차트 그리기
-        renderChart('chartDaily', 'bar', dailyLabels, dailyData.map(d => d.sum), '#6366f1');
+        renderChart('chartDaily', 'bar', dailyLabels, dailyData.map(d => d.sum), '#03C75A');
         renderChart('chartMonthly', 'line', ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'], monthlySum, '#10b981');
 
     } catch(e) {

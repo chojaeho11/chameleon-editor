@@ -2,7 +2,7 @@
 (function () {
     'use strict';
 
-    const WALL_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+    const WALL_COLORS = ['#03C75A', '#f59e0b', '#10b981', '#ef4444', '#00b950', '#ec4899', '#14b8a6', '#f97316'];
     const ACCESSORY_COLOR = 0xFFD700; // Yellow for pillar & light
     const STAND_COLOR = 0xf0f0f0;    // White for outdoor stands
     const ACCESSORY_PRICES_KRW = { cornerPillar: 100000, topLight: 50000, outdoorStand: 80000 };

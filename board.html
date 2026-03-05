@@ -156,8 +156,8 @@
         }
         
         .country-badge { 
-            background: #eff6ff; 
-            color: #6366f1; 
+            background: #ecfdf5; 
+            color: #03C75A; 
             padding: 5px 12px; 
             border-radius: 30px; 
             font-size: 13px; 
@@ -191,7 +191,7 @@
         .post-card:hover { 
             transform: translateY(-7px); 
             box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
-            border-color: #6366f1; 
+            border-color: #03C75A; 
         }
         
         /* 썸네일 영역 */
@@ -463,7 +463,7 @@
         }
         .ai-input-pretty:focus {
             outline: none;
-            border-color: #6366f1;
+            border-color: #03C75A;
         }
 
         /* Quill 툴바 커스텀 */
@@ -716,7 +716,7 @@
         if (subName && category === 'review') {
             document.getElementById('pageTitle').innerText = `${subName} 후기`;
             const badge = document.getElementById('countryBadge');
-            badge.style.background = '#6366f1';
+            badge.style.background = '#03C75A';
             badge.style.color = '#fff';
             badge.innerText = "PRODUCT";
         } else {
@@ -739,7 +739,7 @@
         // i18n: 복제 버튼 (현재 국가 제외한 다른 국가들)
         const copyTargets = { KR: { flag: '🇰🇷', label: { KR:'한국어', JP:'韓国語', US:'Korean', CN:'韩语', AR:'كوري', ES:'Coreano', DE:'Koreanisch', FR:'Coréen' }}, JP: { flag: '🇯🇵', label: { KR:'일본어', JP:'日本語', US:'Japanese', CN:'日语', AR:'ياباني', ES:'Japonés', DE:'Japanisch', FR:'Japonais' }}, US: { flag: '🇺🇸', label: { KR:'영어', JP:'英語', US:'English', CN:'英语', AR:'إنجليزي', ES:'Inglés', DE:'Englisch', FR:'Anglais' }}, CN: { flag: '🇨🇳', label: { KR:'중국어', JP:'中国語', US:'Chinese', CN:'中文', AR:'صيني', ES:'Chino', DE:'Chinesisch', FR:'Chinois' }}, AR: { flag: '🇸🇦', label: { KR:'아랍어', JP:'アラビア語', US:'Arabic', CN:'阿拉伯语', AR:'عربي', ES:'Árabe', DE:'Arabisch', FR:'Arabe' }}, ES: { flag: '🇪🇸', label: { KR:'스페인어', JP:'スペイン語', US:'Spanish', CN:'西班牙语', AR:'إسباني', ES:'Español', DE:'Spanisch', FR:'Espagnol' }}, DE: { flag: '🇩🇪', label: { KR:'독일어', JP:'ドイツ語', US:'German', CN:'德语', AR:'ألماني', ES:'Alemán', DE:'Deutsch', FR:'Allemand' }}, FR: { flag: '🇫🇷', label: { KR:'프랑스어', JP:'フランス語', US:'French', CN:'法语', AR:'فرنسي', ES:'Francés', DE:'Französisch', FR:'Français' }}};
         const copyContainer = document.getElementById('copyLangButtons');
-        const colors = { KR:'#f0f0ff;border-color:#ccd', JP:'#fff0f0;border-color:#ffccd5', US:'#f0f7ff;border-color:#cce3ff', CN:'#fff0f0;border-color:#fca5a5', AR:'#fffbf0;border-color:#fcd34d', ES:'#f5f0ff;border-color:#c4b5fd', DE:'#f0f0f0;border-color:#ccc', FR:'#f0f5ff;border-color:#93c5fd' };
+        const colors = { KR:'#f0f0ff;border-color:#ccd', JP:'#fff0f0;border-color:#ffccd5', US:'#f0f7ff;border-color:#cce3ff', CN:'#fff0f0;border-color:#fca5a5', AR:'#fffbf0;border-color:#fcd34d', ES:'#f5f0ff;border-color:#86efac', DE:'#f0f0f0;border-color:#ccc', FR:'#f0f5ff;border-color:#93c5fd' };
         let copyHtml = '';
         for (const [code, cfg] of Object.entries(copyTargets)) {
             if (code === currentCountry) continue;
@@ -873,7 +873,7 @@
         const loadMoreArea = document.getElementById('loadMoreArea');
         
         if (!isAppend) {
-            listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#6366f1;"></i><br><br>로딩 중...</div>';
+            listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#03C75A;"></i><br><br>로딩 중...</div>';
             currentPage = 0;
             isLastPage = false;
         }
@@ -1124,7 +1124,7 @@
 
                 const btnHtml = `
                     <div style="margin-left:auto; font-size:12px; display:flex; gap:8px;">
-                        <span onclick="window.enableEditComment(${cmt.id})" style="cursor:pointer; color:#6366f1; font-weight:bold;">${T.edit}</span>
+                        <span onclick="window.enableEditComment(${cmt.id})" style="cursor:pointer; color:#03C75A; font-weight:bold;">${T.edit}</span>
                         <span onclick="window.deleteComment(${cmt.id})" style="cursor:pointer; color:#ef4444; font-weight:bold;">${T.delete}</span>
                     </div>
                 `;

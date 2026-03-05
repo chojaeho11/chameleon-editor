@@ -375,7 +375,7 @@ window.loadAddonCategories = async () => {
                 div.innerHTML = `
                     <i class="fa-solid fa-bars" style="color:#94a3b8; font-size:11px;"></i>
                     <b>${c.name_kr || c.name}</b> <small style="color:#94a3b8;">(${c.code})</small>
-                    <i class="fa-solid fa-pen" onclick="editCurrentAddonCategory('${c.code}')" style="cursor:pointer; color:#6366f1; margin-left:5px;" title="수정"></i>
+                    <i class="fa-solid fa-pen" onclick="editCurrentAddonCategory('${c.code}')" style="cursor:pointer; color:#03C75A; margin-left:5px;" title="수정"></i>
                 `;
                 catListArea.appendChild(div);
             });
@@ -516,7 +516,7 @@ window.loadSystemDB = debounce(async (filterSite) => {
             </div>
             <img src="${item.img_url || 'https://placehold.co/80'}" loading="lazy" style="width:50px; height:50px; border-radius:6px; object-fit:cover;">
             <div style="flex:1;">
-                <div style="font-size:10px; color:#6366f1; font-weight:800;">
+                <div style="font-size:10px; color:#03C75A; font-weight:800;">
                     ${item.category_code || '미분류'}
                     ${item.is_swatch ? '<span style="background:#fecaca; color:#dc2626; padding:1px 4px; border-radius:4px; margin-left:5px;">🎨Swatch</span>' : ''}
                 </div>
@@ -830,7 +830,7 @@ window.renderProductList = (products) => {
                     </div>
                 </td>
                 <td><img src="${p.img_url}" loading="lazy" style="width:40px; height:40px; object-fit:cover; border-radius:4px;"></td>
-                <td><small style="color:#6366f1">${p.code}</small><br><b>${name}</b></td>
+                <td><small style="color:#03C75A">${p.code}</small><br><b>${name}</b></td>
                 <td>${p.width_mm}x${p.height_mm}</td>
                 <td style="font-weight:bold;">${displayPrice}</td>
                 <td>
@@ -2039,7 +2039,7 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
             label.innerHTML = `
                 <input type="checkbox" name="userOption" value="${addon.code}" data-price="${addon.price}" 
                     style="position:absolute; opacity:0; width:0; height:0;">
-                <div class="check-overlay" style="position:absolute; inset:0; background:rgba(99,102,241,0.5); display:none; align-items:center; justify-content:center;">
+                <div class="check-overlay" style="position:absolute; inset:0; background:rgba(3,199,90,0.5); display:none; align-items:center; justify-content:center;">
                     <i class="fa-solid fa-check" style="color:white; font-size:20px;"></i>
                 </div>
             `;
@@ -2049,7 +2049,7 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
             
             input.addEventListener('change', () => {
                 if(input.checked) {
-                    label.style.borderColor = '#6366f1';
+                    label.style.borderColor = '#03C75A';
                     overlay.style.display = 'flex';
                 } else {
                     label.style.borderColor = '#e2e8f0';
@@ -2065,7 +2065,7 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
             const itemLabel = document.createElement('label');
             itemLabel.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; cursor:pointer; transition:0.2s; font-size:13px; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
             
-            itemLabel.onmouseover = () => { itemLabel.style.borderColor = "#6366f1"; itemLabel.style.background = "#f5f3ff"; };
+            itemLabel.onmouseover = () => { itemLabel.style.borderColor = "#03C75A"; itemLabel.style.background = "#ecfdf5"; };
             itemLabel.onmouseout = () => { 
                 const chk = itemLabel.querySelector('input');
                 if(!chk.checked) { itemLabel.style.borderColor = "#e2e8f0"; itemLabel.style.background = "#fff"; }
@@ -2073,17 +2073,17 @@ window.loadProductOptionsFront = async (addonCodesStr) => {
 
             itemLabel.innerHTML = `
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <input type="checkbox" name="userOption" value="${addon.code}" data-price="${addon.price}" style="width:18px; height:18px; accent-color:#6366f1; cursor:pointer;">
+                    <input type="checkbox" name="userOption" value="${addon.code}" data-price="${addon.price}" style="width:18px; height:18px; accent-color:#03C75A; cursor:pointer;">
                     ${addon.img_url ? `<img src="${addon.img_url}" style="width:30px; height:30px; border-radius:4px; object-fit:cover;">` : ''}
                     <span style="font-weight:600; color:#334155;">${addon.name_kr || addon.name}</span>
                 </div>
-                <span style="color:#6366f1; font-weight:800; font-size:14px;">${priceTag}</span>
+                <span style="color:#03C75A; font-weight:800; font-size:14px;">${priceTag}</span>
             `;
             
             const input = itemLabel.querySelector('input');
             input.addEventListener('change', () => {
-                itemLabel.style.borderColor = input.checked ? "#6366f1" : "#e2e8f0";
-                itemLabel.style.background = input.checked ? "#f5f3ff" : "#fff";
+                itemLabel.style.borderColor = input.checked ? "#03C75A" : "#e2e8f0";
+                itemLabel.style.background = input.checked ? "#ecfdf5" : "#fff";
                 // (중요) 모달의 총 금액 업데이트 함수 호출
                 if(window.updateModalTotal) window.updateModalTotal();
             });
@@ -2399,12 +2399,12 @@ window.switchCrawlMode = (mode) => {
         singleEl.style.display = 'none';
         batchEl.style.display = 'block';
         tabSingle.style.background = 'transparent'; tabSingle.style.color = '#a5b4fc';
-        tabBatch.style.background = '#6366f1'; tabBatch.style.color = '#fff';
+        tabBatch.style.background = '#03C75A'; tabBatch.style.color = '#fff';
         loadBatchTopCategories();
     } else {
         singleEl.style.display = 'block';
         batchEl.style.display = 'none';
-        tabSingle.style.background = '#6366f1'; tabSingle.style.color = '#fff';
+        tabSingle.style.background = '#03C75A'; tabSingle.style.color = '#fff';
         tabBatch.style.background = 'transparent'; tabBatch.style.color = '#a5b4fc';
     }
 };
@@ -3496,7 +3496,7 @@ window.wizRunPipeline = async () => {
                 const altText = focusKw || title;
                 htmlBody = `<p><img src="${thumbnailUrl}" alt="${altText}" style="max-width:100%; border-radius:12px; margin-bottom:20px;" loading="lazy"/></p><p>${htmlBody}</p>`;
                 if (content.hashtags?.length) {
-                    htmlBody += `<p style="color:#6366f1; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
+                    htmlBody += `<p style="color:#03C75A; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
                 }
 
                 // community_posts에 게시
@@ -3651,7 +3651,7 @@ window.wizRunPipeline = async () => {
                 ✅ 블로그 ${results.blogs}/8개 &nbsp;|&nbsp;
                 ${results.shorts ? '✅' : '❌'} 쇼츠
             </p>
-            ${results.shorts && typeof results.shorts === 'string' ? `<a href="https://youtube.com/shorts/${results.shorts}" target="_blank" style="color:#6366f1; font-size:13px;">YouTube에서 보기</a>` : ''}
+            ${results.shorts && typeof results.shorts === 'string' ? `<a href="https://youtube.com/shorts/${results.shorts}" target="_blank" style="color:#03C75A; font-size:13px;">YouTube에서 보기</a>` : ''}
         </div>`;
 
     pipeBtn.disabled = false;
@@ -3735,7 +3735,7 @@ window.wizRunDirectPipeline = async () => {
                     .replace(/## (.*)/g, '<h2>$1</h2>').replace(/### (.*)/g, '<h3>$1</h3>')
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 htmlBody = `<p><img src="${thumbnailUrl}" alt="${focusKw || title}" style="max-width:100%; border-radius:12px; margin-bottom:20px;" loading="lazy"/></p><p>${htmlBody}</p>`;
-                if (content.hashtags?.length) htmlBody += `<p style="color:#6366f1; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
+                if (content.hashtags?.length) htmlBody += `<p style="color:#03C75A; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
 
                 const seoMeta = JSON.stringify({ meta_description: content.meta_description || '', focus_keyword: focusKw, hashtags: content.hashtags || [], og_image: thumbnailUrl });
                 const { error: postErr } = await sb.from('community_posts').insert({
@@ -3834,7 +3834,7 @@ window.wizRunDirectPipeline = async () => {
 
     pipeResult.style.display = 'block';
     pipeResult.innerHTML = `<div style="text-align:center;"><p style="font-weight:800; font-size:16px; color:#1e1b4b;">✅ 블로그 ${results.blogs}/8개 &nbsp;|&nbsp; ${results.shorts ? '✅' : '❌'} 쇼츠</p>
-        ${results.shorts && typeof results.shorts === 'string' ? `<a href="https://youtube.com/shorts/${results.shorts}" target="_blank" style="color:#6366f1; font-size:13px;">YouTube에서 보기</a>` : ''}</div>`;
+        ${results.shorts && typeof results.shorts === 'string' ? `<a href="https://youtube.com/shorts/${results.shorts}" target="_blank" style="color:#03C75A; font-size:13px;">YouTube에서 보기</a>` : ''}</div>`;
     directBtn.disabled = false;
     directBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> 블로그 + 쇼츠만 바로 실행';
     showToast(`완료! 블로그 ${results.blogs}개 / 쇼츠${results.shorts?'✅':'❌'}`, 'success');
@@ -4523,7 +4523,7 @@ async function _adpGenerateBlogs(prod, thumbnailUrl) {
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             htmlBody = '<p><img src="' + thumbnailUrl + '" alt="' + (focusKw || prod.name) + '" style="max-width:100%; border-radius:12px; margin-bottom:20px;" loading="lazy"/></p><p>' + htmlBody + '</p>';
             if (content.hashtags?.length) {
-                htmlBody += '<p style="color:#6366f1; margin-top:20px;">' + content.hashtags.map(t => '#' + t).join(' ') + '</p>';
+                htmlBody += '<p style="color:#03C75A; margin-top:20px;">' + content.hashtags.map(t => '#' + t).join(' ') + '</p>';
             }
 
             const seoMeta = JSON.stringify({ meta_description: content.meta_description || '', focus_keyword: focusKw, hashtags: content.hashtags || [], og_image: thumbnailUrl });

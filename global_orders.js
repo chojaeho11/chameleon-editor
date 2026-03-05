@@ -257,7 +257,7 @@ window.loadOrders = async () => {
                     ? `<div style="font-size:10px;color:#15803d;font-weight:bold;">승인완료</div>`
                     : `<div style="font-size:10px;color:#ef4444;">미결제</div>`;
             } else if (isDeposit) {
-                payHtml = `<div style="font-size:11px;font-weight:bold;color:#7c3aed;">💰 예치금</div>`;
+                payHtml = `<div style="font-size:11px;font-weight:bold;color:#02a84c;">💰 예치금</div>`;
                 if (isPaid) payHtml += `<div style="font-size:10px;color:#15803d;">확인</div>`;
             } else if (isBank) {
                 payHtml = `<div style="font-size:11px;font-weight:bold;color:#d97706;">🏦 무통장</div>`;
@@ -326,7 +326,7 @@ window.loadOrders = async () => {
                         <span style="color:#334155;">${orderDate}</span>
                         ${deliveryHtml}
                     </td>
-                    <td><b style="cursor:pointer;color:#4f46e5;text-decoration:underline;" onclick="openCustomerInfo('${order.user_id || ''}','${(order.manager_name||'').replace(/'/g,"\\'")}','${order.phone||''}')">${order.manager_name}</b><br><span style="font-size:11px; color:#666;">${order.phone}</span></td>
+                    <td><b style="cursor:pointer;color:#02a84c;text-decoration:underline;" onclick="openCustomerInfo('${order.user_id || ''}','${(order.manager_name||'').replace(/'/g,"\\'")}','${order.phone||''}')">${order.manager_name}</b><br><span style="font-size:11px; color:#666;">${order.phone}</span></td>
                     
                     <td style="text-align:center; font-size:12px; color:#64748b; font-weight:bold;">${order.id}</td>
                     
@@ -1577,7 +1577,7 @@ async function renderAdminCalendar() {
         const allFull = ADMIN_SLOTS.every(s => slotTeams[s] >= ADMIN_MAX_TEAMS);
 
         let badges = '';
-        if (installOrders.length > 0) badges += `<div style="font-size:10px; background:${allFull?'#fecaca':'#ede9fe'}; color:${allFull?'#dc2626':'#6d28d9'}; border-radius:4px; padding:1px 5px; margin-top:2px;">🔧 ${installOrders.length}건</div>`;
+        if (installOrders.length > 0) badges += `<div style="font-size:10px; background:${allFull?'#fecaca':'#d1fae5'}; color:${allFull?'#dc2626':'#6d28d9'}; border-radius:4px; padding:1px 5px; margin-top:2px;">🔧 ${installOrders.length}건</div>`;
         if (deliveryOnly.length > 0) badges += `<div style="font-size:10px; background:#dbeafe; color:#2563eb; border-radius:4px; padding:1px 5px; margin-top:2px;">🚚 ${deliveryOnly.length}건</div>`;
 
         const cellBg = isToday ? '#fffbeb' : (allFull ? '#fef2f2' : '#fff');
@@ -1675,7 +1675,7 @@ window.openAdminSlotModal = async (dateStr) => {
                 const isBlock = o.manager_name?.startsWith('[차단]');
                 return `<div style="padding:2px 0; ${isBlock?'color:#94a3b8; font-style:italic;':''}">
                     <span style="font-weight:600;">${o.manager_name}</span>
-                    ${!isBlock && o.phone ? `<span style="color:#6366f1; margin-left:4px;">${o.phone}</span>` : ''}
+                    ${!isBlock && o.phone ? `<span style="color:#03C75A; margin-left:4px;">${o.phone}</span>` : ''}
                     ${info ? `<span style="color:#6d28d9; font-size:12px;">(${info.duration})</span>` : ''}
                 </div>`;
             }).join('') || '<span style="color:#cbd5e1;">-</span>';
@@ -1700,15 +1700,15 @@ window.openAdminSlotModal = async (dateStr) => {
         // 시간지정 배송 (설치 시간 있는 건)
         const timedDelivery = installOrders.filter(o => !o.manager_name?.startsWith('[차단]'));
         if (timedDelivery.length > 0) {
-            html += renderDeliveryGroup('⏰ 시간지정 설치', timedDelivery, '#6d28d9', '#ede9fe', true);
+            html += renderDeliveryGroup('⏰ 시간지정 설치', timedDelivery, '#6d28d9', '#d1fae5', true);
         }
 
         // 허니콤 수도권
-        if (dlvHcMetro.length > 0) html += renderDeliveryGroup('🔧 허니콤보드 · 수도권', dlvHcMetro, '#7c3aed', '#f5f3ff');
+        if (dlvHcMetro.length > 0) html += renderDeliveryGroup('🔧 허니콤보드 · 수도권', dlvHcMetro, '#02a84c', '#ecfdf5');
         // 허니콤 지방
         if (dlvHcLocal.length > 0) html += renderDeliveryGroup('🔧 허니콤보드 · 지방', dlvHcLocal, '#9333ea', '#faf5ff');
         // 기타 수도권
-        if (dlvOtherMetro.length > 0) html += renderDeliveryGroup('📦 기타제품 · 수도권', dlvOtherMetro, '#2563eb', '#eff6ff');
+        if (dlvOtherMetro.length > 0) html += renderDeliveryGroup('📦 기타제품 · 수도권', dlvOtherMetro, '#2563eb', '#ecfdf5');
         // 기타 지방
         if (dlvOtherLocal.length > 0) html += renderDeliveryGroup('📦 기타제품 · 지방', dlvOtherLocal, '#0284c7', '#f0f9ff');
 
@@ -1737,8 +1737,8 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <span style="font-weight:600;">${o.manager_name}</span>
-                    <span style="color:#6366f1; margin-left:6px;">${o.phone || ''}</span>
-                    ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; margin-left:6px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}
+                    <span style="color:#03C75A; margin-left:6px;">${o.phone || ''}</span>
+                    ${installInfo ? `<span style="background:#d1fae5; color:#6d28d9; padding:2px 6px; border-radius:3px; margin-left:6px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
                     ${driver ? `<span style="color:#059669; font-size:13px;">🚛${driver.name}</span>` : ''}
@@ -2190,7 +2190,7 @@ window.openCustomerInfo = async function(userId, name, phone) {
         html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">이름</div><div style="font-size:16px;font-weight:bold;">${name}</div></div>`;
         html += `<div style="background:#f8fafc;padding:14px 16px;border-radius:10px;border:1px solid #e2e8f0;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;">전화번호</div><div style="font-size:16px;font-weight:bold;">${phone || '-'}</div></div>`;
         if (profile) {
-            html += `<div style="background:#eff6ff;padding:14px 16px;border-radius:10px;border:1px solid #bfdbfe;">
+            html += `<div style="background:#ecfdf5;padding:14px 16px;border-radius:10px;border:1px solid #bfdbfe;">
                 <div style="font-size:11px;color:#3b82f6;margin-bottom:4px;">💰 마일리지</div>
                 <div style="font-size:18px;font-weight:bold;color:#1d4ed8;" id="custMileageVal">${(profile.mileage || 0).toLocaleString()}원</div>
                 <div style="display:flex;gap:4px;margin-top:8px;">
@@ -2200,11 +2200,11 @@ window.openCustomerInfo = async function(userId, name, phone) {
                 </div>
             </div>`;
             html += `<div style="background:#faf5ff;padding:14px 16px;border-radius:10px;border:1px solid #ddd6fe;">
-                <div style="font-size:11px;color:#7c3aed;margin-bottom:4px;">🏦 예치금</div>
+                <div style="font-size:11px;color:#02a84c;margin-bottom:4px;">🏦 예치금</div>
                 <div style="font-size:18px;font-weight:bold;color:#6d28d9;" id="custDepositVal">${(profile.deposit || 0).toLocaleString()}원</div>
                 <div style="display:flex;gap:4px;margin-top:8px;">
                     <input id="custDepositAmt" type="number" placeholder="금액" style="width:80px;border:1px solid #ddd6fe;border-radius:6px;padding:4px 6px;font-size:12px;">
-                    <button onclick="adjustBalance('${userId}','deposit',1)" style="background:#7c3aed;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">+ 지급</button>
+                    <button onclick="adjustBalance('${userId}','deposit',1)" style="background:#02a84c;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">+ 지급</button>
                     <button onclick="adjustBalance('${userId}','deposit',-1)" style="background:#ef4444;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">- 차감</button>
                 </div>
             </div>`;
@@ -2220,7 +2220,7 @@ window.openCustomerInfo = async function(userId, name, phone) {
         html += `<div style="margin-bottom:20px;">`;
         html += `<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">📝 관리자 메모</div>`;
         if (profile) {
-            html += `<div style="display:flex;gap:8px;"><textarea id="custMemoInput" style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:13px;min-height:60px;resize:vertical;">${memoVal}</textarea><button onclick="saveCustomerMemo('${userId}')" style="background:#4f46e5;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">저장</button></div>`;
+            html += `<div style="display:flex;gap:8px;"><textarea id="custMemoInput" style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:13px;min-height:60px;resize:vertical;">${memoVal}</textarea><button onclick="saveCustomerMemo('${userId}')" style="background:#02a84c;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;white-space:nowrap;">저장</button></div>`;
         } else {
             html += `<div style="color:#94a3b8;font-size:13px;padding:10px;background:#f8fafc;border-radius:8px;">비회원은 메모를 저장할 수 없습니다.</div>`;
         }

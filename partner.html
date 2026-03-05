@@ -61,12 +61,12 @@
         .tag-rejected{background:#fee2e2;color:#b91c1c;}
         .prod-card .body{padding:16px;}
         .prod-card .body h4{font-size:14px;font-weight:700;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1e293b;}
-        .prod-card .body .price{font-size:18px;font-weight:900;color:#6366f1;margin-bottom:8px;}
+        .prod-card .body .price{font-size:18px;font-weight:900;color:#03C75A;margin-bottom:8px;}
         .prod-card .body .meta{font-size:12px;color:#94a3b8;display:flex;gap:10px;}
         .prod-card .reject-msg{padding:8px 16px;background:#fef2f2;font-size:12px;color:#b91c1c;line-height:1.4;border-top:1px solid #fee2e2;}
         .prod-card .foot{display:flex;border-top:1px solid #f1f5f9;}
         .prod-card .foot button{flex:1;padding:11px;border:none;background:transparent;font-size:13px;font-weight:700;cursor:pointer;transition:0.15s;color:#64748b;}
-        .prod-card .foot button:hover{background:#f8fafc;color:#6366f1;}
+        .prod-card .foot button:hover{background:#f8fafc;color:#03C75A;}
         .prod-card .foot button+button{border-left:1px solid #f1f5f9;}
 
         /* 등록 폼 (2컬럼) */
@@ -81,7 +81,7 @@
 
         /* 이미지 업로드 */
         .img-upload{width:100%;aspect-ratio:1/1;border:2px dashed #d1d5db;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#94a3b8;transition:all 0.2s;background:#fafbfc;position:relative;overflow:hidden;}
-        .img-upload:hover{border-color:#818cf8;color:#818cf8;background:#f5f3ff;}
+        .img-upload:hover{border-color:#818cf8;color:#818cf8;background:#ecfdf5;}
         .img-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
         .img-upload i{font-size:36px;margin-bottom:10px;}
         .img-upload span{font-size:13px;font-weight:600;}
@@ -99,10 +99,10 @@
 
         /* 버튼 */
         .btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;}
-        .btn-primary{background:#6366f1;color:#fff;}.btn-primary:hover{background:#4f46e5;box-shadow:0 4px 12px rgba(99,102,241,0.3);}
+        .btn-primary{background:#03C75A;color:#fff;}.btn-primary:hover{background:#02a84c;box-shadow:0 4px 12px rgba(3,199,90,0.3);}
         .btn-success{background:#16a34a;color:#fff;}.btn-success:hover{background:#15803d;}
         .btn-outline{background:#fff;border:1px solid #d1d5db;color:#475569;}.btn-outline:hover{background:#f8fafc;}
-        .btn-translate{background:#eff6ff;color:#1d4ed8;font-size:12px;padding:7px 14px;border-radius:8px;}.btn-translate:hover{background:#dbeafe;}
+        .btn-translate{background:#ecfdf5;color:#1d4ed8;font-size:12px;padding:7px 14px;border-radius:8px;}.btn-translate:hover{background:#dbeafe;}
         .btn-lg{padding:14px 32px;font-size:16px;border-radius:12px;}
 
         /* 정산 요약 */
@@ -112,7 +112,7 @@
         .stat-box .stat-value{font-size:32px;font-weight:900;}
         .stat-box.green .stat-value{color:#16a34a;}
         .stat-box.yellow .stat-value{color:#d97706;}
-        .stat-box.purple .stat-value{color:#6366f1;}
+        .stat-box.purple .stat-value{color:#03C75A;}
 
         /* 테이블 */
         .data-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;}
@@ -223,7 +223,7 @@
     <div class="topbar">
         <h1 id="pageTitle" data-i18n="pt_tab_products">내 상품</h1>
         <div class="topbar-right">
-            <button onclick="switchTab('register')" style="background:#6366f1;color:#fff;border-color:#6366f1;"><i class="fa-solid fa-plus"></i> <span data-i18n="pt_tab_register">상품 등록</span></button>
+            <button onclick="switchTab('register')" style="background:#03C75A;color:#fff;border-color:#03C75A;"><i class="fa-solid fa-plus"></i> <span data-i18n="pt_tab_register">상품 등록</span></button>
             <button onclick="logout()" style="color:#ef4444;border-color:#fca5a5;"><i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="pt_btn_logout">로그아웃</span></button>
         </div>
     </div>
@@ -373,7 +373,7 @@
                     </ul>
                 </div>
                 <div class="guide-card">
-                    <h3><i class="fa-solid fa-calendar-check" style="color:#6366f1;"></i> <span data-i18n="pt_guide_settle_title">정산 및 입금일</span></h3>
+                    <h3><i class="fa-solid fa-calendar-check" style="color:#03C75A;"></i> <span data-i18n="pt_guide_settle_title">정산 및 입금일</span></h3>
                     <ul>
                         <li data-i18n="pt_guide_settle_1">고객 수령확인 후 <strong>15일 후</strong> 출금 가능</li>
                         <li data-i18n="pt_guide_settle_2">출금 시 <strong>세금계산서</strong> 첨부 필수</li>
@@ -826,7 +826,7 @@
                 <div class="order-body">
                     <div class="order-field"><label>${window.t('pt_recipient','수령인')}</label><div class="val">${o.manager_name||'-'}</div></div>
                     <div class="order-field"><label>${window.t('pt_contact','연락처')}</label><div class="val">${o.phone||'-'}</div></div>
-                    <div class="order-field"><label>${window.t('pt_order_amount','주문금액')}</label><div class="val" style="color:#6366f1;font-weight:800;">${fmtMoney(amt)}</div></div>
+                    <div class="order-field"><label>${window.t('pt_order_amount','주문금액')}</label><div class="val" style="color:#03C75A;font-weight:800;">${fmtMoney(amt)}</div></div>
                 </div>
                 <div style="font-size:13px;color:#64748b;margin-bottom:10px;"><i class="fa-solid fa-location-dot"></i> ${o.address||'-'}</div>
                 ${canShip ? `<button class="btn btn-success" onclick="shipOrder('${o.id}')"><i class="fa-solid fa-truck"></i> ${window.t('pt_ship_now','배송 출발')}</button>` : ''}
@@ -852,7 +852,7 @@
         } else {
             data.forEach(s => {
                 const now = new Date(); let st='', sc='#94a3b8';
-                if (s.settlement_status==='requested'||s.settlement_status==='withdrawn') { requested+=s.net_amount; st=window.t('pt_status_requested','출금신청됨'); sc='#6366f1'; }
+                if (s.settlement_status==='requested'||s.settlement_status==='withdrawn') { requested+=s.net_amount; st=window.t('pt_status_requested','출금신청됨'); sc='#03C75A'; }
                 else if (s.settlement_status==='waiting' && s.withdrawal_eligible_at) {
                     const ed = new Date(s.withdrawal_eligible_at);
                     if (now >= ed) { eligible+=s.net_amount; st=window.t('pt_withdrawable','출금가능'); sc='#16a34a'; }

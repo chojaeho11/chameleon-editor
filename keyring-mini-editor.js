@@ -102,7 +102,7 @@ function buildEditorHTML() {
     return `
         <div class="mini-keyring-editor">
             <div class="mkr-loading">
-                <div style="width:28px;height:28px;border:3px solid #e2e8f0;border-top:3px solid #6366f1;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                <div style="width:28px;height:28px;border:3px solid #e2e8f0;border-top:3px solid #03C75A;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
                 <p style="margin:8px 0 0;font-size:13px;color:#64748b;">${t('mkr_removing_bg', 'Removing background...')}</p>
             </div>
             <div class="mkr-canvas-wrapper" style="display:none;">
@@ -340,7 +340,7 @@ function drawKeyringHole(ctx, cx, cy, connX, connY, scale) {
     ctx.stroke();
 
     // 드래그 힌트 (반투명 이동 아이콘)
-    ctx.fillStyle = 'rgba(99,102,241,0.6)';
+    ctx.fillStyle = 'rgba(3,199,90,0.6)';
     ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('⤡', cx, cy + 3);

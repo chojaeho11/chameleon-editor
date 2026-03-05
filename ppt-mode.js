@@ -145,7 +145,7 @@ function activateSlidePanel() {
                 <span style="font-weight:800; font-size:14px; color:#1e293b;"><i class="fa-solid fa-file-powerpoint" style="color:#f97316; margin-right:4px;"></i>Slides</span>
                 <div style="display:flex; gap:4px;">
                     <button onclick="window.addPage()" title="${_t('ppt_add_slide','슬라이드 추가')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; color:#f97316;"><i class="fa-solid fa-plus"></i></button>
-                    <button onclick="window.pptDuplicateSlide()" title="${_t('ppt_duplicate_slide','슬라이드 복제')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#6366f1;"><i class="fa-solid fa-copy"></i></button>
+                    <button onclick="window.pptDuplicateSlide()" title="${_t('ppt_duplicate_slide','슬라이드 복제')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#03C75A;"><i class="fa-solid fa-copy"></i></button>
                     <button onclick="window.pptShowTemplates()" title="${_t('ppt_templates','템플릿')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#10b981;"><i class="fa-solid fa-table-cells-large"></i></button>
                     <button onclick="window.pptPreview()" title="${_t('ppt_preview','미리보기')}" style="width:30px; height:30px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#ec4899;"><i class="fa-solid fa-play"></i></button>
                 </div>

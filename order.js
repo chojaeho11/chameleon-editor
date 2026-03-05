@@ -745,7 +745,7 @@ async function openInstallationTimeModal() {
     }
 
     if (notice) notice.style.display = 'none';
-    grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:20px; color:#6366f1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:20px; color:#03C75A;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
     const bookedSlots = await fetchInstallationSlots(selectedDeliveryDate);
 
@@ -1666,7 +1666,7 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
 
                     addonHtml += `
                         <div style="margin-bottom:12px;">
-                            <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${catDisplayName}</div>`;
+                            <div style="font-size:11px; font-weight:800; color:#03C75A; margin-bottom:5px; opacity:0.8;"># ${catDisplayName}</div>`;
 
                     {
                         // 일반 옵션: 리스트형
@@ -1677,12 +1677,12 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                                     console.log(`[renderCart] addon check: opt.code='${opt.code}' type=${typeof opt.code}, values=`, _vals, '→ isSelected:', isSelected);
                                     const currentAddonQty = (item.addonQuantities && item.addonQuantities[opt.code]) || 1;
                                     return `
-                                        <div style="display:flex; flex-direction:column; padding:8px; border-radius:10px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; transition:0.2s; margin-bottom:6px;">
+                                        <div style="display:flex; flex-direction:column; padding:8px; border-radius:10px; border:1px solid ${isSelected ? '#03C75A' : '#f1f5f9'}; background:${isSelected ? '#ecfdf5' : '#fff'}; transition:0.2s; margin-bottom:6px;">
                                             <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
                                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
-                                                    <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:16px; height:16px; accent-color:#6366f1;">
+                                                    <input type="checkbox" onchange="window.toggleCartAddon(${idx}, '${opt.code}', this.checked)" ${isSelected ? 'checked' : ''} style="width:16px; height:16px; accent-color:#03C75A;">
                                                     <div style="display:flex; flex-direction:column;">
-                                                        <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#6366f1' : '#475569'};">${opt.display_name || opt.name}</span>
+                                                        <span style="font-size:11px; font-weight:bold; color:${isSelected ? '#03C75A' : '#475569'};">${opt.display_name || opt.name}</span>
                                                         <span style="font-size:10px; color:#94a3b8;">+${formatCurrency(opt.price)}</span>
                                                     </div>
                                                 </label>
@@ -1719,10 +1719,10 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
 
                     <div style="flex:1; min-width:200px;">
                         <h4 style="margin:0; font-size:18px; color:#1e293b; font-weight:900; line-height:1.4;">${localName(item.product)}</h4>
-                        ${(displayMmW && displayMmH) ? `<div style="font-size:12px; color:#6366f1; margin-top:4px; font-weight:bold;">📐 ${displayMmW}x${displayMmH}mm</div>` : ''}
+                        ${(displayMmW && displayMmH) ? `<div style="font-size:12px; color:#03C75A; margin-top:4px; font-weight:bold;">📐 ${displayMmW}x${displayMmH}mm</div>` : ''}
                         <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.type === 'file_upload' ? item.fileName : (item.fileName || window.t('msg_file_attached_separately', '(File attached separately)'))}</div>
                         <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
-                        ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:8px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
+                        ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:8px; border:1px solid #03C75A; background:#ecfdf5; color:#03C75A; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
                             <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
                                 <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">-</button>
@@ -1742,7 +1742,7 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                     <div style="width:160px; margin-left:auto; text-align:right; display:flex; flex-direction:column; justify-content:space-between; align-self:stretch; flex-shrink:0;">
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#cbd5e1; cursor:pointer; align-self:flex-end; font-size:18px;"><i class="fa-solid fa-trash-can"></i></button>
                         <div>
-                            <div style="font-size:11px; color:#6366f1; font-weight:bold; margin-bottom:3px;">${window.t('label_total_with_options', 'Total (incl. options)')}</div>
+                            <div style="font-size:11px; color:#03C75A; font-weight:bold; margin-bottom:3px;">${window.t('label_total_with_options', 'Total (incl. options)')}</div>
                             <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${formatCurrency(totalItemPrice)}</div>
                         </div>
                     </div>
@@ -1755,9 +1755,9 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                         <img src="${displayImg}" loading="lazy" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${localName(item.product)}</h4>
-                            ${(displayMmW && displayMmH) ? `<div style="font-size:11px; color:#6366f1; margin-top:2px; font-weight:bold;">📐 ${displayMmW}x${displayMmH}mm</div>` : ''}
+                            ${(displayMmW && displayMmH) ? `<div style="font-size:11px; color:#03C75A; margin-top:2px; font-weight:bold;">📐 ${displayMmW}x${displayMmH}mm</div>` : ''}
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
-                            ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:6px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
+                            ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:6px; border:1px solid #03C75A; background:#ecfdf5; color:#03C75A; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
                         </div>
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
@@ -1765,7 +1765,7 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                     ${addonHtml ? `
                     <div style="background:#f1f5f9; border-radius:12px; padding:12px;">
                         <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:5px;">
-                            <i class="fa-solid fa-circle-plus" style="color:#6366f1;"></i> ${window.t('label_manage_options', 'Manage Options')}
+                            <i class="fa-solid fa-circle-plus" style="color:#03C75A;"></i> ${window.t('label_manage_options', 'Manage Options')}
                         </div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             ${addonHtml}
