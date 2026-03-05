@@ -1279,6 +1279,34 @@ function renderImageTab(el) {
         </div>
         <div id="veAiImgResult" style="display:none;margin-top:8px;"></div>
     </div>`;
+    // AI 매직 편집 (인페인팅)
+    h += `<div class="ve-sec">
+        <b><i class="fa-solid fa-eraser" style="color:#ec4899;margin-right:4px"></i>${_t('ve_magic_edit','AI 매직 편집')}</b>
+        <p style="font-size:10px;color:#6b7280;margin:0 0 6px">${_t('ve_magic_edit_desc','현재 클립에서 원하는 부분을 브러시로 칠하고 삭제하거나 변경')}</p>
+        <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;">
+            <button id="veMagicBrushBtn" onclick="window._veMagicToggle()" style="flex:1;padding:6px;background:#2a2a4a;color:#ec4899;border:1px solid #4a4a6a;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">
+                <i class="fa-solid fa-paintbrush"></i> ${_t('ve_magic_brush','브러시 ON')}
+            </button>
+            <button onclick="window._veMagicClear()" style="padding:6px 10px;background:#2a2a4a;color:#888;border:1px solid #4a4a6a;border-radius:6px;font-size:11px;cursor:pointer;">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="font-size:10px;color:#888;white-space:nowrap;">${_t('ve_brush_size','크기')}</span>
+            <input type="range" id="veMagicBrushSize" min="5" max="100" value="30" style="flex:1;accent-color:#ec4899;">
+        </div>
+        <select id="veMagicMode" style="width:100%;padding:6px 8px;background:#222;color:#ddd;border:1px solid #333;border-radius:6px;font-size:11px;margin-bottom:6px;">
+            <option value="remove">${_t('ve_magic_remove','선택 영역 삭제 (지우개)')}</option>
+            <option value="replace">${_t('ve_magic_replace','선택 영역 변경 (프롬프트)')}</option>
+        </select>
+        <textarea id="veMagicPrompt" class="ve-search-inp" rows="2" placeholder="${_t('ve_magic_prompt_ph','변경할 내용 (예: 풍성한 머리카락, 푸른 하늘)')}" style="resize:vertical;min-height:36px;font-size:11px;padding:6px;display:none;"></textarea>
+        <button id="veMagicApplyBtn" onclick="window._veMagicApply()" style="width:100%;margin-top:4px;padding:8px;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> ${_t('ve_magic_apply','AI 편집 적용')}
+        </button>
+        <div id="veMagicStatus" style="display:none;margin-top:6px;padding:6px;background:#1a1a2e;border-radius:6px;font-size:11px;color:#ec4899;text-align:center;">
+            <i class="fa-solid fa-spinner fa-spin" style="margin-right:4px"></i><span id="veMagicStatusText"></span>
+        </div>
+    </div>`;
     // 이미지 템플릿
     h += `<div class="ve-sec"><b>${_t('ve_img_templates','이미지 템플릿')}</b><p style="font-size:10px;color:#6b7280;margin:0 0 8px">${_t('ve_img_tpl_desc','에디터 이미지를 오버레이로 삽입')}</p>`;
     h += `<input class="ve-search-inp" id="veImgSearch" placeholder="${_t('ve_search','검색...')}" oninput="window._veSearchImg(this.value)">`;
@@ -1287,6 +1315,7 @@ function renderImageTab(el) {
     h += '</div>';
     el.innerHTML = h;
     loadImageTemplates();
+    _magicInitModeSelect();
 }
 
 async function loadImageTemplates(search) {
@@ -1501,6 +1530,194 @@ window._veAiImg2Video = async function() {
         showToast(_t('ve_ai_img2video_hint','하단 AI 바에서 움직임 프롬프트를 입력 후 생성하세요'));
     }
     updateAiBar();
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MAGIC EDIT (Inpainting)
+// ═══════════════════════════════════════════════════════════════
+let _magicActive = false;
+let _magicMaskCanvas = null;
+let _magicMaskCtx = null;
+let _magicPainting = false;
+
+// mode 변경 시 프롬프트 표시/숨기기
+window._veMagicModeChange = function(){
+    const mode = document.getElementById('veMagicMode');
+    const prompt = document.getElementById('veMagicPrompt');
+    if(mode && prompt) prompt.style.display = mode.value==='replace' ? 'block' : 'none';
+};
+// select에 이벤트 부착 (renderImageTab 후 호출됨)
+function _magicInitModeSelect(){
+    const sel=document.getElementById('veMagicMode');
+    if(sel && !sel._attached){ sel.addEventListener('change', window._veMagicModeChange); sel._attached=true; }
+}
+
+window._veMagicToggle = function(){
+    _magicActive = !_magicActive;
+    const btn = document.getElementById('veMagicBrushBtn');
+    if(btn){
+        btn.style.background = _magicActive ? '#ec4899' : '#2a2a4a';
+        btn.style.color = _magicActive ? '#fff' : '#ec4899';
+        btn.innerHTML = `<i class="fa-solid fa-paintbrush"></i> ${_magicActive ? _t('ve_magic_brush_off','브러시 OFF') : _t('ve_magic_brush','브러시 ON')}`;
+    }
+    if(_magicActive){
+        // 마스크 캔버스 초기화
+        if(!_magicMaskCanvas){
+            _magicMaskCanvas = document.createElement('canvas');
+            _magicMaskCtx = _magicMaskCanvas.getContext('2d');
+        }
+        _magicMaskCanvas.width = vm.w;
+        _magicMaskCanvas.height = vm.h;
+        _magicMaskCtx.clearRect(0, 0, vm.w, vm.h);
+        if(vm.canvas) vm.canvas.style.cursor = 'crosshair';
+    } else {
+        if(vm.canvas) vm.canvas.style.cursor = 'default';
+    }
+    render();
+    _magicRenderOverlay();
+};
+
+window._veMagicClear = function(){
+    if(_magicMaskCtx) _magicMaskCtx.clearRect(0, 0, vm.w, vm.h);
+    _magicRenderOverlay();
+};
+
+function _magicRenderOverlay(){
+    if(!_magicActive || !_magicMaskCanvas || !vm.ctx) return;
+    // 마스크를 반투명 빨간색으로 오버레이
+    vm.ctx.save();
+    vm.ctx.globalAlpha = 0.4;
+    vm.ctx.drawImage(_magicMaskCanvas, 0, 0);
+    vm.ctx.restore();
+}
+
+// 캔버스에서 마스크 브러시 이벤트 처리 (onDown/onMove에 연결)
+function _magicOnDown(x, y){
+    if(!_magicActive || !_magicMaskCtx) return false;
+    _magicPainting = true;
+    _magicPaint(x, y);
+    return true;
+}
+function _magicOnMove(x, y){
+    if(!_magicPainting || !_magicMaskCtx) return false;
+    _magicPaint(x, y);
+    return true;
+}
+function _magicOnUp(){
+    _magicPainting = false;
+}
+function _magicPaint(x, y){
+    const size = parseInt(document.getElementById('veMagicBrushSize')?.value || '30');
+    _magicMaskCtx.fillStyle = '#ff0000';
+    _magicMaskCtx.beginPath();
+    _magicMaskCtx.arc(x, y, size/2, 0, Math.PI*2);
+    _magicMaskCtx.fill();
+    // 즉시 캔버스에 표시
+    render();
+    _magicRenderOverlay();
+}
+
+window._veMagicApply = async function(){
+    const c = curClip();
+    if(!c) return showToast(_t('ve_clip_required','클립을 먼저 추가하세요'),'warn');
+    if(!_magicMaskCanvas) return showToast(_t('ve_magic_no_mask','브러시로 편집할 영역을 칠해주세요'),'warn');
+
+    // 마스크에 그려진 게 있는지 확인
+    const maskData = _magicMaskCtx.getImageData(0, 0, vm.w, vm.h).data;
+    let hasPixels = false;
+    for(let i=3; i<maskData.length; i+=4){ if(maskData[i]>0){ hasPixels=true; break; } }
+    if(!hasPixels) return showToast(_t('ve_magic_no_mask','브러시로 편집할 영역을 칠해주세요'),'warn');
+
+    const sb = window.sb;
+    if(!sb) return showToast(_t('ve_db_required','DB 연결이 필요합니다'),'warn');
+
+    const mode = document.getElementById('veMagicMode')?.value || 'remove';
+    const prompt = document.getElementById('veMagicPrompt')?.value?.trim() || '';
+    if(mode==='replace' && !prompt) return showToast(_t('ve_magic_enter_prompt','변경할 내용을 입력하세요'),'warn');
+
+    const btn = document.getElementById('veMagicApplyBtn');
+    const statusEl = document.getElementById('veMagicStatus');
+    const statusText = document.getElementById('veMagicStatusText');
+    if(btn) btn.disabled = true;
+    if(statusEl) statusEl.style.display = 'block';
+    if(statusText) statusText.textContent = _t('ve_magic_processing','AI 편집 처리 중...');
+
+    try {
+        // 현재 클립을 캔버스에 그려서 이미지 추출
+        const srcCanvas = document.createElement('canvas');
+        srcCanvas.width = vm.w; srcCanvas.height = vm.h;
+        const srcCtx = srcCanvas.getContext('2d');
+        const src = c.type === 'video' ? c.video : c.img;
+        if(src){
+            try { drawCover(srcCtx, src, vm.w, vm.h, c.panX||0, c.panY||0, c.imgScale||1); } catch(e){}
+        }
+        const imageBase64 = srcCanvas.toDataURL('image/png');
+
+        // 마스크: 흰색(편집 영역) + 검은색(유지 영역) 형태로 변환
+        const maskExport = document.createElement('canvas');
+        maskExport.width = vm.w; maskExport.height = vm.h;
+        const mCtx = maskExport.getContext('2d');
+        // 전체 검은색
+        mCtx.fillStyle = '#000000';
+        mCtx.fillRect(0, 0, vm.w, vm.h);
+        // 칠한 영역을 흰색으로
+        const mData = _magicMaskCtx.getImageData(0, 0, vm.w, vm.h);
+        const exportData = mCtx.getImageData(0, 0, vm.w, vm.h);
+        for(let i=0; i<mData.data.length; i+=4){
+            if(mData.data[i+3] > 0){ // alpha가 있으면 = 칠한 부분
+                exportData.data[i] = 255;   // R
+                exportData.data[i+1] = 255; // G
+                exportData.data[i+2] = 255; // B
+                exportData.data[i+3] = 255; // A
+            }
+        }
+        mCtx.putImageData(exportData, 0, 0);
+        const maskBase64 = maskExport.toDataURL('image/png');
+
+        if(statusText) statusText.textContent = _t('ve_magic_sending','AI 서버에 요청 중...');
+
+        // Edge Function 호출
+        const { data, error } = await sb.functions.invoke('ai-inpaint', {
+            body: { image_base64: imageBase64, mask_base64: maskBase64, prompt, mode }
+        });
+        if(error) throw new Error(error.message || 'Edge function error');
+        if(data?.error) throw new Error(data.error);
+        const resultUrl = data?.imageUrl;
+        if(!resultUrl) throw new Error('No result image');
+
+        if(statusText) statusText.textContent = _t('ve_magic_loading','결과 이미지 로딩 중...');
+
+        // 결과 이미지 로드 후 현재 클립에 적용
+        const resultImg = new Image();
+        resultImg.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject)=>{
+            resultImg.onload = resolve;
+            resultImg.onerror = ()=>reject(new Error('Result image load failed'));
+            resultImg.src = resultUrl;
+        });
+
+        // 클립 업데이트
+        c.type = 'image';
+        c.img = resultImg;
+        c.url = resultUrl;
+        const tc = document.createElement('canvas'); tc.width=160; tc.height=90;
+        tc.getContext('2d').drawImage(resultImg, 0, 0, 160, 90);
+        c.thumbUrl = tc.toDataURL('image/jpeg', 0.7);
+
+        // 마스크 초기화, 브러시 OFF
+        _magicActive = false;
+        if(_magicMaskCtx) _magicMaskCtx.clearRect(0, 0, vm.w, vm.h);
+        if(vm.canvas) vm.canvas.style.cursor = 'default';
+        render(); updateAll();
+        showToast(_t('ve_magic_done','AI 편집 완료!'));
+
+    } catch(err){
+        console.error('Magic Edit Error:', err);
+        showToast(_t('ve_magic_fail','AI 편집 실패') + ': ' + (err.message||'Unknown'), 'error');
+    } finally {
+        if(btn) btn.disabled = false;
+        if(statusEl) statusEl.style.display = 'none';
+    }
 };
 
 function renderTransitionTab(el) {
@@ -2434,6 +2651,8 @@ function onDown(e){
         return;
     }
     const{x,y}=canvasXY(e);
+    // 매직 편집 브러시 모드
+    if(_magicActive && _magicOnDown(x,y)) return;
     if(vm.addMode){if(vm.addMode==='sticker')addOverlay('sticker',x,y,{emoji:vm.addSticker});else addOverlay(vm.addMode,x,y);vm.addMode=null;vm.canvas.style.cursor='default';return;}
     // check handles on currently selected overlay
     const c=curClip();
@@ -2461,6 +2680,7 @@ function onDown(e){
 }
 
 function onMove(e){
+    if(_magicActive){const{x,y}=canvasXY(e);if(_magicOnMove(x,y))return;}
     if(!vm.drag)return;
     const{x,y}=canvasXY(e);
     const c=curClip();if(!c)return;
@@ -2513,8 +2733,10 @@ function onMove(e){
 }
 
 function onUp(){
+    _magicOnUp();
     if(vm.drag&&(vm.drag.mode==='resize'||vm.drag.mode==='rotate'||vm.drag.mode==='pan'))vm.canvas.style.cursor='default';
     vm.drag=null; vm.snapLines=null; render();
+    if(_magicActive) _magicRenderOverlay();
 }
 
 // ── Right-click context menu ──
