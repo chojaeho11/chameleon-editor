@@ -5,8 +5,7 @@
 // 3. SPA fallback: non-file paths serve index.html
 // ================================================================
 
-const BOT_UA = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|slurp|duckduckbot|msnbot|applebot|petalbot|yeti|daumoa|sogou|360spider|bytespider|qwant|seznambot|ia_archiver|archive\.org_bot|semrushbot|ahrefsbot|mj12bot|dotbot|rogerbot/i;
-const SOCIAL_BOT_UA = /facebookexternalhit|twitterbot|linkedinbot|kakaotalk|line\//i;
+const BOT_UA = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|slurp|duckduckbot|msnbot|applebot|petalbot|yeti|daumoa|sogou|360spider|bytespider|qwant|seznambot|ia_archiver|archive\.org_bot|semrushbot|ahrefsbot|mj12bot|dotbot|rogerbot|facebookexternalhit|twitterbot|linkedinbot|kakaotalk-scrap|kakao|line\/|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|tumblr|embedly|quora link preview|outbrain|vkshare|w3c_validator/i;
 
 const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -213,7 +212,7 @@ function generateProductHtml(product, cc) {
     const currency = cc === 'JP' ? 'JPY' : cc === 'US' ? 'USD' : 'KRW';
 
     const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "Product", "name": name, "description": desc || name,
-        "url": `${domain}/${product.code}`, "image": product.img_url || '',
+        "url": `${domain}/?product=${product.code}`, "image": product.img_url || '',
         "brand": { "@type": "Brand", "name": siteName },
         "offers": { "@type": "Offer", "priceCurrency": currency, "price": price, "availability": "https://schema.org/InStock" } });
 
@@ -223,9 +222,9 @@ function generateProductHtml(product, cc) {
 <meta name="robots" content="index, follow">
 <meta property="og:title" content="${escHtml(name)}">
 <meta property="og:image" content="${escHtml(product.img_url || '')}">
-<meta property="og:url" content="${domain}/${product.code}">
-<link rel="canonical" href="${domain}/${product.code}">
-${hreflangTags('/' + product.code)}
+<meta property="og:url" content="${domain}/?product=${product.code}">
+<link rel="canonical" href="${domain}/?product=${product.code}">
+${hreflangTags('/?product=' + product.code)}
 <script type="application/ld+json">${jsonLd}</script>
 </head><body><h1>${escHtml(name)}</h1>
 ${product.img_url ? `<img src="${escHtml(product.img_url)}" alt="${escHtml(name)}" width="600" height="600" style="max-width:100%;object-fit:contain;">` : ''}
@@ -281,6 +280,20 @@ export default {
                 try {
                     const cc = getCountry(url.hostname);
 
+                    // ★ ?product=코드 쿼리 파라미터 → 개별 상품 프리렌더링
+                    const qProduct = url.searchParams.get('product') || url.searchParams.get('_p');
+                    if (qProduct) {
+                        const products = await fetchFromSupabase(
+                            `admin_products?select=code,name,name_jp,name_us,img_url,price,price_jp,price_us,description,description_jp,description_us&code=eq.${encodeURIComponent(qProduct)}&limit=1`
+                        );
+                        if (products && products.length > 0) {
+                            return new Response(generateProductHtml(products[0], cc), {
+                                status: 200,
+                                headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                            });
+                        }
+                    }
+
                     // Homepage fallback: generate rich HTML for bots
                     if (!path) {
                         const homeData = cc === 'JP' ? {
@@ -326,6 +339,7 @@ export default {
 <meta property="og:type" content="website">
 <meta property="og:title" content="${escHtml(homeData.title)}">
 <meta property="og:description" content="${escHtml(homeData.desc)}">
+<meta property="og:image" content="https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png">
 <meta property="og:url" content="${homeData.domain}/">
 <meta property="og:site_name" content="${escHtml(homeData.siteName)}">
 <link rel="canonical" href="${homeData.domain}/">
@@ -412,7 +426,7 @@ ${hreflangTags('/')}
                         };
 
                         const ed = editorSeo;
-                        const edImg = 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1769076824090_63416175887313310.png';
+                        const edImg = 'https://cdn-pro-web-159-230.cdn-nhncommerce.com/dnjsdudrjs13_godomall_com/data/editor/goods/251229/b74dea838f41881ce41d11b7c306629f_152347.png';
 
                         const featHtml = ed.features.map(f =>
                             `<div style="display:inline-block;vertical-align:top;width:280px;margin:15px;padding:20px;border:1px solid #eee;border-radius:12px;">
