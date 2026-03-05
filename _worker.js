@@ -251,8 +251,8 @@ export default {
                 // ★ ?product= 쿼리파라미터가 있으면 Prerender.io 건너뛰기 (SPA가 홈으로 렌더링됨)
                 const hasProductParam = url.searchParams.has('product') || url.searchParams.has('_p');
 
-                // Try Prerender.io first (skip for custom landing pages and product URLs)
-                if (!CUSTOM_LANDING.includes(path) && !hasProductParam) try {
+                // Try Prerender.io first (skip for homepage, custom landing pages and product URLs)
+                if (path && !CUSTOM_LANDING.includes(path) && !hasProductParam) try {
                     const prerenderRes = await fetch(`https://service.prerender.io/${request.url}`, {
                         headers: {
                             'X-Prerender-Token': PRERENDER_TOKEN,
@@ -291,7 +291,7 @@ export default {
                         if (products && products.length > 0) {
                             return new Response(generateProductHtml(products[0], cc), {
                                 status: 200,
-                                headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                                headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=300' }
                             });
                         }
                     }
@@ -361,7 +361,7 @@ ${hreflangTags('/')}
 </body></html>`;
                         return new Response(homeHtml, {
                             status: 200,
-                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=300' }
                         });
                     }
 
@@ -483,7 +483,7 @@ ${hreflangTags('/editor')}
 <p><a href="${ed.domain}/">${escHtml(ed.siteName)}</a></p>
 </body></html>`, {
                             status: 200,
-                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=300' }
                         });
                     }
 
@@ -513,7 +513,7 @@ ${hreflangTags('/editor')}
                         if (products && products.length > 0) {
                             return new Response(generateCategoryHtml(products, path, cc), {
                                 status: 200,
-                                headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                                headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=300' }
                             });
                         }
                     }
@@ -525,7 +525,7 @@ ${hreflangTags('/editor')}
                     if (products && products.length > 0) {
                         return new Response(generateProductHtml(products[0], cc), {
                             status: 200,
-                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=300' }
                         });
                     }
                 } catch (err) {
