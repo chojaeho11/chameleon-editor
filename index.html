@@ -8444,7 +8444,7 @@ if (w >= 20 && h >= 20) {
         if (window.__fixedSizeProduct) {
             ['inputUserW','inputUserH'].forEach(id => { const el = document.getElementById(id); if(el) { el.disabled = true; el.style.opacity = '0.5'; } });
             const _btnApply = document.getElementById('btnApplyUserSize');
-            if (_btnApply) { _btnApply.disabled = true; _btnApply.style.opacity = '0.5'; _btnApply.textContent = lang==='ja'?'サイズ固定':'Fixed Size'; }
+            if (_btnApply) { _btnApply.disabled = true; _btnApply.style.opacity = '0.5'; const _cc = (window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'KR'; _btnApply.textContent = _cc==='JP'?'サイズ固定':'Fixed Size'; }
             const _btnRotate = document.getElementById('btnRotateCanvas');
             if (_btnRotate) { _btnRotate.disabled = true; _btnRotate.style.opacity = '0.5'; }
         } else {

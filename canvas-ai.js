@@ -1550,8 +1550,8 @@ async function _wzSticker(keywords, bW, bH, bL, bT) {
 // ==========================================================
 export function applyBizCardTemplate(tplId) {
     if (!canvas) return;
-    const board = canvas.getObjects().find(o => o._isBoard);
-    if (!board) return;
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) { console.warn('[BizCard] board not found'); return; }
 
     const bL = board.left, bT = board.top, bW = board.width * board.scaleX, bH = board.height * board.scaleY;
     const F_TITLE = 'Noto Sans KR', F_SUB = 'Noto Sans KR';
