@@ -33,7 +33,7 @@ function fmtMoney(krw) {
     const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
     const converted = (krw || 0) * rate;
     if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
-    if (country === 'US') return '$' + Math.round(converted).toLocaleString();
+    if (country === 'US') return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
     if (country === 'ES') return '€' + converted.toFixed(2);
@@ -893,11 +893,11 @@ window.submitOrderReview = async function() {
 let currentUploadType = 'png'; 
 
 const REWARD_RATES = {
-    'png': 150,
-    'svg': 150,
-    'logo': 150,
-    'template': 150,
-    'usage_share': 0.1 
+    'png': 200,
+    'svg': 200,
+    'logo': 200,
+    'template': 200,
+    'usage_share': 0.1
 };
 
 const TIER_MULTIPLIERS = {
@@ -934,7 +934,8 @@ function updateContributorUI(balance) {
     const balEl = document.getElementById('contributorBalance');
     const bonusEls = document.querySelectorAll('.tier-bonus');
 
-    const _cl = window.CURRENT_LANG || 'ko';
+    const _cc = (window.SITE_CONFIG || {}).COUNTRY || '';
+    const _cl = window.CURRENT_LANG || (_cc === 'JP' ? 'ja' : _cc === 'US' ? 'en' : 'ko');
     const _tn = {
         ko: { regular: '일반 기여자', excellent: '🏆 우수 기여자 (x2)', hero: '👑 영웅 기여자 (x4)' },
         ja: { regular: '一般貢献者', excellent: '🏆 優秀貢献者 (x2)', hero: '👑 英雄貢献者 (x4)' },
@@ -972,12 +973,13 @@ function updateContributorUI(balance) {
     updateContributorRewardDisplay();
 }
 
-// 기여자 보상금 표시 환산 (150 KRW → 현지 통화) - 로그인 불필요
+// 기여자 보상금 표시 환산 (200 KRW → 현지 통화) - 로그인 불필요
 function updateContributorRewardDisplay() {
     const cfg = window.SITE_CONFIG || {};
     const cRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
-    const baseReward = 150 * cRate;
-    const rewardDisplay = cfg.COUNTRY === 'JP' ? Math.floor(baseReward) : cfg.COUNTRY === 'US' ? Math.round(baseReward) : baseReward;
+    const baseKRW = 200;
+    const baseReward = baseKRW * cRate;
+    const rewardDisplay = cfg.COUNTRY === 'JP' ? Math.floor(baseReward) : cfg.COUNTRY === 'US' ? baseReward.toFixed(1) : baseReward;
     document.querySelectorAll('.c-reward').forEach(el => {
         const bonusSpan = el.querySelector('.tier-bonus');
         el.textContent = rewardDisplay + ' ';

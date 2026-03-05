@@ -309,11 +309,9 @@ export function initAiTools() {
     window.openDesignWizard = function() {
         const modal = document.getElementById('designWizardModal');
         const input = document.getElementById('wizardTitleInput');
-        const bodyInput = document.getElementById('wizardBodyInput');
         const prog  = document.getElementById('wizardProgressArea');
         const btn   = document.getElementById('btnWizardGenerate');
         if (input) input.value = '';
-        if (bodyInput) bodyInput.value = '';
         if (prog)  prog.style.display = 'none';
         if (btn) { btn.disabled = false; btn.querySelector('span').textContent = window.t?.('wizard_generate','디자인 생성하기') || '디자인 생성하기'; }
         if (modal) { modal.style.display = 'flex'; setTimeout(() => input?.focus(), 150); }
@@ -333,7 +331,7 @@ export function initAiTools() {
         btnWizGen.onclick = async () => {
             const title = document.getElementById('wizardTitleInput')?.value.trim();
             if (!title) { showToast(window.t?.('msg_input_desc','제목을 입력해주세요') || '제목을 입력해주세요', "info"); return; }
-            const bodyText = document.getElementById('wizardBodyInput')?.value.trim() || '';
+            const bodyText = '';
             const styleBtn = document.querySelector('.wizard-style-btn.active');
             const style = styleBtn?.dataset.style || 'modern';
             btnWizGen.disabled = true;
@@ -1743,11 +1741,8 @@ export function applyPromoPages(selection) {
                     if (window.goToPage) window.goToPage(0);
                     // 네비게이션 바 구축
                     _buildPromoNav(selection, frontLabels, backLabels);
-                    // 첫 패널 활성화 + 마법사 오픈
+                    // 첫 패널 활성화
                     window.__activePromoPanel = 0;
-                    setTimeout(() => {
-                        if (window.openDesignWizard) window.openDesignWizard();
-                    }, 400);
                 }, 300);
             }, 300);
         }, 400);
@@ -1755,9 +1750,6 @@ export function applyPromoPages(selection) {
         // 단면
         _buildPromoNav(selection, frontLabels, []);
         window.__activePromoPanel = 0;
-        setTimeout(() => {
-            if (window.openDesignWizard) window.openDesignWizard();
-        }, 400);
     }
 
     console.log('[Promo] Setup:', panels, 'panels per face,', selection.pageCount, 'pages');
@@ -1962,9 +1954,6 @@ function _buildPromoNav(selection, frontLabels, backLabels) {
             nav.querySelectorAll('.promo-nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             _highlightPromoPanel(selection, panelIdx);
-            setTimeout(() => {
-                if (window.openDesignWizard) window.openDesignWizard();
-            }, 200);
         };
 
         actions.appendChild(colorInput);

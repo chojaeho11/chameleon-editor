@@ -97,6 +97,17 @@ button, input, textarea, select { font-family: inherit; }
     padding-bottom: 80px;
 }
 
+/* 통합 히어로 박스 */
+.hero-unified-box {
+    max-width: 620px; margin: 0 auto; padding: 40px 36px 32px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(99,102,241,0.08), 0 1px 3px rgba(0,0,0,0.04);
+    text-align: center;
+    margin-top: 32px;
+    margin-bottom: 20px;
+}
 /* 히어로 섹션 */
 .hero-section {
     width: 100%; padding: 50px 20px 30px;
@@ -1065,6 +1076,7 @@ button, input, textarea, select { font-family: inherit; }
     .foot-menu ul { flex-wrap: wrap; gap: 10px; }
 
     
+    .hero-unified-box { margin: 16px 12px 12px; padding: 24px 16px 20px; border-radius: 18px; }
     .hero-section { display: block !important; padding: 20px 15px 15px !important; margin-bottom: 0 !important; }
     .hero-title { font-size: 28px !important; word-break: keep-all; }
     .hero-title span { font-size: 20px !important; }

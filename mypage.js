@@ -7,7 +7,7 @@ function fmtMoney(krw) {
     const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
     const converted = (krw || 0) * rate;
     if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
-    if (country === 'US') return '$' + Math.round(converted).toLocaleString();
+    if (country === 'US') return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
     if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
