@@ -298,7 +298,8 @@ async function loadLogos(append) {
             .eq('status', 'approved')
             .eq('category', 'logo')
             .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
-            .order('created_at', { ascending: true })
+            .order('is_featured', { ascending: false, nullsFirst: false })
+            .order('created_at', { ascending: false })
             .range(logoPage * LOGO_PER_PAGE, (logoPage + 1) * LOGO_PER_PAGE - 1);
 
         if (logoKeyword) {
