@@ -1835,6 +1835,9 @@ function _buildPromoNav(selection, frontLabels, backLabels) {
     }
 
     function addBtn(label, globalIdx, pageIdx, panelIdx) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
+
         const btn = document.createElement('button');
         btn.className = 'promo-nav-btn' + (globalIdx === 0 ? ' active' : '');
         btn.dataset.globalIdx = globalIdx;
@@ -1863,7 +1866,54 @@ function _buildPromoNav(selection, frontLabels, backLabels) {
             _highlightPromoPanel(selection, panelIdx);
         };
 
-        nav.appendChild(btn);
+        // 하단 액션 (배경색 + 마법사)
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;gap:4px;align-items:center;';
+
+        // 배경색 피커
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.value = _getBgColors()[globalIdx % _getBgColors().length];
+        colorInput.title = label.pos ? label.face + ' ' + label.pos + ' BG' : 'BG';
+        colorInput.style.cssText = 'width:18px;height:18px;border:2px solid #e2e8f0;border-radius:50%;cursor:pointer;padding:0;overflow:hidden;-webkit-appearance:none;';
+        colorInput.onclick = (e) => e.stopPropagation();
+        colorInput.oninput = (e) => {
+            e.stopPropagation();
+            // 해당 페이지로 이동 후 패널 배경 변경
+            if (window.goToPage) window.goToPage(pageIdx);
+            setTimeout(() => {
+                _changePromoPanelBg(panelIdx, e.target.value);
+            }, 100);
+        };
+
+        // 마법사 버튼
+        const wizBtn = document.createElement('button');
+        wizBtn.title = 'Design Wizard';
+        wizBtn.style.cssText = 'width:18px;height:18px;border:none;background:#f1f5f9;border-radius:50%;cursor:pointer;font-size:10px;color:#6366f1;display:flex;align-items:center;justify-content:center;padding:0;';
+        wizBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:9px;"></i>';
+        wizBtn.onclick = (e) => {
+            e.stopPropagation();
+            // 해당 패널 선택 후 마법사 오픈
+            if (window.goToPage) window.goToPage(pageIdx);
+            window.__activePromoPanel = panelIdx;
+            nav.querySelectorAll('.promo-nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _highlightPromoPanel(selection, panelIdx);
+            setTimeout(() => {
+                if (window.openDesignWizard) window.openDesignWizard();
+            }, 200);
+        };
+
+        actions.appendChild(colorInput);
+        actions.appendChild(wizBtn);
+
+        wrap.appendChild(btn);
+        wrap.appendChild(actions);
+        nav.appendChild(wrap);
+    }
+
+    function _getBgColors() {
+        return ['#f5f3ff','#ffffff','#fefce8','#eff6ff','#fef2f2','#f0fdf4'];
     }
 
     // 앞면 패널 버튼
@@ -1916,4 +1966,15 @@ function _highlightPromoPanel(selection, panelIdx) {
     });
     canvas.add(highlight);
     canvas.renderAll();
+}
+
+// 패널 배경색 변경
+function _changePromoPanelBg(panelIdx, color) {
+    if (!canvas) return;
+    const bg = canvas.getObjects().find(o => o._promoPanelBg && o._promoPanel === panelIdx);
+    if (bg) {
+        bg.set('fill', color);
+        canvas.renderAll();
+        if (window.savePageState) window.savePageState();
+    }
 }
