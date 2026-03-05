@@ -311,27 +311,27 @@ export function getLocalizedData(item) {
         formattedPrice = '$' + Math.round(price).toLocaleString();
     } else if (country === 'CN') {
         name = item.name_cn || item.name_us || item.name;
-        const cnRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.01;
+        const cnRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.005;
         const cnPrice = price * cnRate;
         formattedPrice = '¥' + Math.round(cnPrice).toLocaleString();
     } else if (country === 'AR') {
         name = item.name_ar || item.name_us || item.name;
-        const arRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.005;
+        const arRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.003;
         const arPrice = price * arRate;
         formattedPrice = Math.round(arPrice).toLocaleString() + ' ﷼';
     } else if (country === 'ES') {
         name = item.name_es || item.name_us || item.name;
-        const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001;
+        const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.00065;
         const esPrice = price * esRate;
         formattedPrice = '€' + esPrice.toFixed(2);
     } else if (country === 'DE') {
         name = item.name_de || item.name_us || item.name;
-        const deRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.001;
+        const deRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.00065;
         const dePrice = price * deRate;
         formattedPrice = '€' + dePrice.toFixed(2);
     } else if (country === 'FR') {
         name = item.name_fr || item.name_us || item.name;
-        const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001;
+        const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.00065;
         const frPrice = price * frRate;
         formattedPrice = '€' + frPrice.toFixed(2);
     } else {

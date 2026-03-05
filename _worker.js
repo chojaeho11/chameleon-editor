@@ -95,14 +95,16 @@ const OG_DATA = {
         lang: 'ja',
         siteName: 'カメレオンプリンティング',
         title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-        description: 'ハニカムボード、ファブリック印刷、ポップアップストア専門。無料エディターで等身大パネル・バックウォールのデザインから印刷まで一括対応。',
+        description: 'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
+        keywords: 'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,無料エディター,オンライン印刷',
         url: 'https://www.cafe0101.com/',
     },
     'cafe3355.com': {
         lang: 'en',
         siteName: 'Chameleon Printing',
         title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-        description: 'Honeycomb boards, fabric printing, pop-up store displays. Free online editor for life-size cutouts, backwalls, and custom printing solutions.',
+        description: 'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace.',
+        keywords: 'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing',
         url: 'https://www.cafe3355.com/',
     },
 };
@@ -149,7 +151,7 @@ function hreflangTags(suffix) {
     return `<link rel="alternate" hreflang="ko" href="https://www.cafe2626.com${suffix}">
 <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com${suffix}">
 <link rel="alternate" hreflang="en" href="https://www.cafe3355.com${suffix}">
-<link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com${suffix}">`;
+<link rel="alternate" hreflang="x-default" href="https://www.cafe3355.com${suffix}">`;
 }
 
 function generateCategoryHtml(products, path, cc) {
@@ -575,9 +577,14 @@ ${hreflangTags('/editor')}
         // Rewrite OG/meta tags using HTMLRewriter
         return new HTMLRewriter()
             .on('html', { element(el) { el.setAttribute('lang', siteData.lang); } })
-            .on('head', { element(el) { el.append('<style>#btnKakaoLogin{display:none!important;}</style>', { html: true }); } })
+            .on('head', { element(el) {
+                el.append('<style>#btnKakaoLogin{display:none!important;}</style>', { html: true });
+                const jsonLd = JSON.stringify({"@context":"https://schema.org","@type":"Organization","name":siteData.siteName,"url":siteData.url,"logo":siteData.url+"favicon.ico","sameAs":["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"]});
+                el.append(`<script type="application/ld+json">${jsonLd}</script>`, { html: true });
+            } })
             .on('title', { element(el) { el.setInnerContent(siteData.title); } })
             .on('meta[name="description"]', { element(el) { el.setAttribute('content', siteData.description); } })
+            .on('meta[name="keywords"]', { element(el) { if (siteData.keywords) el.setAttribute('content', siteData.keywords); } })
             .on('meta[property="og:site_name"]', { element(el) { el.setAttribute('content', siteData.siteName); } })
             .on('meta[property="og:title"]', { element(el) { el.setAttribute('content', siteData.title); } })
             .on('meta[property="og:description"]', { element(el) { el.setAttribute('content', siteData.description); } })
@@ -593,7 +600,7 @@ ${hreflangTags('/editor')}
             .on('link[rel="alternate"][hreflang="es"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=es`); } })
             .on('link[rel="alternate"][hreflang="de"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=de`); } })
             .on('link[rel="alternate"][hreflang="fr"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=fr`); } })
-            .on('link[rel="alternate"][hreflang="x-default"]', { element(el) { el.setAttribute('href', `https://www.cafe2626.com${suffix}`); } })
+            .on('link[rel="alternate"][hreflang="x-default"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}`); } })
             .transform(response);
     }
 };

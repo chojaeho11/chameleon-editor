@@ -127,7 +127,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').c
     <link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es">
     <link rel="alternate" hreflang="de" href="https://www.cafe3355.com/?lang=de">
     <link rel="alternate" hreflang="fr" href="https://www.cafe3355.com/?lang=fr">
-    <link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/">
+    <link rel="alternate" hreflang="x-default" href="https://www.cafe3355.com/">
 
 <script src="product-seo.js"></script>
 <script>
@@ -6907,11 +6907,11 @@ window.showChoiceModal = async function(key) {
     const formatPriceSimple = (p) => {
         if(lang === 'ja') return `¥${p.toLocaleString()}`;
         if(lang === 'en') return `$${p.toLocaleString()}`;
-        if(lang === 'zh') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.01; return `¥${Math.round(p * r).toLocaleString()}`; }
-        if(lang === 'ar') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.005; return `${Math.round(p * r).toLocaleString()} ﷼`; }
-        if(lang === 'es') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001; return `€${(p * r).toFixed(2)}`; }
-        if(lang === 'de') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.001; return `€${(p * r).toFixed(2)}`; }
-        if(lang === 'fr') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001; return `€${(p * r).toFixed(2)}`; }
+        if(lang === 'zh') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.005; return `¥${Math.round(p * r).toLocaleString()}`; }
+        if(lang === 'ar') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.003; return `${Math.round(p * r).toLocaleString()} ﷼`; }
+        if(lang === 'es') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.00065; return `€${(p * r).toFixed(2)}`; }
+        if(lang === 'de') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.00065; return `€${(p * r).toFixed(2)}`; }
+        if(lang === 'fr') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.00065; return `€${(p * r).toFixed(2)}`; }
         return `${p.toLocaleString()}원`;
     };
 
