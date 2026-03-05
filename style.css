@@ -99,9 +99,9 @@ button, input, textarea, select { font-family: inherit; }
 
 /* 이벤트 프로모션 박스 (인스타 그라데이션) */
 .hero-promo-box {
-    margin: 0 0 20px; padding: 36px 40px 32px;
+    max-width: 1000px; margin: 0 auto 20px; padding: 36px 40px 32px;
     background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    border-radius: 0;
+    border-radius: 16px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(220,39,67,0.25);
 }
@@ -1076,7 +1076,7 @@ button, input, textarea, select { font-family: inherit; }
     .foot-menu ul { flex-wrap: wrap; gap: 10px; }
 
     
-    .hero-promo-box { margin: 0 0 12px; padding: 24px 16px 20px; }
+    .hero-promo-box { margin: 0 12px 12px; padding: 24px 16px 20px; border-radius: 16px; }
     .hero-section { display: block !important; padding: 20px 15px 15px !important; margin-bottom: 0 !important; }
     .hero-title { font-size: 28px !important; word-break: keep-all; }
     .hero-title span { font-size: 20px !important; }

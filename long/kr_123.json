@@ -1427,5 +1427,11 @@
   "promo_tpl_about": "회사 소개",
   "promo_tpl_about_desc": "회사 또는 서비스에 대한 간단한 소개를 작성하세요. 고객이 선택해야 하는 이유를 설명합니다.",
   "promo_tpl_section": "섹션",
-  "promo_tpl_lorem": "이 영역에 내용을 입력하세요. 서비스, 제품 또는 강조하고 싶은 특징을 설명합니다."
+  "promo_tpl_lorem": "이 영역에 내용을 입력하세요. 서비스, 제품 또는 강조하고 싶은 특징을 설명합니다.",
+  "trust_design_print": "디자인 & 인쇄",
+  "trust_design_print_sub": "온라인 디자인, 바로 인쇄 주문",
+  "trust_secure": "안전결제",
+  "trust_secure_sub": "SSL 암호화 보안 결제",
+  "trust_shipping": "전국 배송",
+  "trust_shipping_sub": "빠르고 안전한 택배 배송"
 }

@@ -647,16 +647,9 @@ window.loadEditorLibraries = function() {
 </script>
 <script>
 (function(){
-    var hn = window.location.hostname;
-    var lp = new URLSearchParams(window.location.search).get('lang');
-    var isKR = true;
-    if (hn.includes('cafe0101') || hn.includes('cafe3355')) isKR = false;
-    if (lp && lp !== 'ko' && lp !== 'kr') isKR = false;
-    if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') isKR = false;
-    if (!isKR) {
-        var el = document.getElementById('trustBadgeSection');
-        if (el) el.style.display = 'block';
-    }
+    // 모든 사이트에서 신뢰 뱃지 표시
+    var el = document.getElementById('trustBadgeSection');
+    if (el) el.style.display = 'block';
 })();
 </script>
 
