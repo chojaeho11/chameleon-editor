@@ -83,7 +83,7 @@ window.loadMembers = async (isNewSearch = false) => {
         if (m.role === 'gold') { badgeColor = '#fef9c3'; displayRole = '골드'; }
         if (m.role === 'platinum') { badgeColor = '#e0f2fe'; displayRole = '플레티넘'; }
         if (m.role === 'franchise') { badgeColor = '#f3e8ff'; displayRole = '가맹점'; }
-        if (m.role === 'subscriber') { badgeColor = '#d1fae5'; displayRole = '⭐구독자'; }
+        if (m.role === 'subscriber') { badgeColor = '#ede9fe'; displayRole = '⭐구독자'; }
         if (m.role === 'admin') { badgeColor = '#fee2e2'; displayRole = '관리자'; }
 
         // 추천인 적립 배지
@@ -124,7 +124,7 @@ window.loadMembers = async (isNewSearch = false) => {
                 <td style="padding:5px; text-align:center;">
     <button class="btn btn-outline btn-sm" onclick="openWalletModal('${m.id}', '${m.email}', ${m.deposit||0})">예치금</button>
     <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#d97706; border-color:#d97706;" onclick="editMileageManual('${m.id}', '${m.email}', ${m.mileage||0})">마일리지</button>
-    <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#03C75A; border-color:#03C75A;" onclick="openPwResetModal('${m.id}', '${m.email}')">🔑비번</button>
+    <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#6366f1; border-color:#6366f1;" onclick="openPwResetModal('${m.id}', '${m.email}')">🔑비번</button>
     <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#0891b2; border-color:#0891b2;" onclick="viewMemberOrders('${m.id}', '${name.replace(/'/g, "\\'")}')">📦주문</button>
 </td>
                 <td style="padding:5px 15px;">${memoHtml}</td>
@@ -433,7 +433,7 @@ window.viewMemberOrders = async (userId, name) => {
             <div style="font-size:11px;color:#64748b;">총 주문</div>
             <div style="font-size:18px;font-weight:bold;color:#15803d;">${orders.length}건</div>
         </div>
-        <div style="flex:1;background:#ecfdf5;padding:8px 12px;border-radius:8px;text-align:center;">
+        <div style="flex:1;background:#eff6ff;padding:8px 12px;border-radius:8px;text-align:center;">
             <div style="font-size:11px;color:#64748b;">총 결제</div>
             <div style="font-size:18px;font-weight:bold;color:#2563eb;">${totalSpend.toLocaleString()}원</div>
         </div>

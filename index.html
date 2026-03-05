@@ -450,7 +450,7 @@ window.loadEditorLibraries = function() {
             <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');" data-i18n="btn_mobile_template">🎨 템플릿</button>
             
             <button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template', this);" 
-    style="background: linear-gradient(135deg, #03C75A 0%, #00b950 100%); color: #fff; font-weight: 800; border: none; margin-right: 5px;">
+    style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-weight: 800; border: none; margin-right: 5px;">
     <span data-i18n="tab_all">🎨 템플릿 (배경)</span>
 </button>
 
@@ -473,7 +473,7 @@ window.loadEditorLibraries = function() {
         100% { background-position: 0% 50%; }
     }
     #btnOrderTop {
-        background: linear-gradient(135deg, #03C75A, #00b950, #00d68f, #02a84c, #03C75A) !important;
+        background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #f59e0b, #6366f1) !important;
         background-size: 400% 400% !important;
         animation: purchaseBtnGradient 3s ease infinite !important;
         color: #fff !important;
@@ -482,11 +482,11 @@ window.loadEditorLibraries = function() {
         font-size: 13px !important;
         padding: 8px 16px !important;
         border-radius: 10px !important;
-        box-shadow: 0 4px 15px rgba(3,199,90,0.4) !important;
+        box-shadow: 0 4px 15px rgba(99,102,241,0.4) !important;
         letter-spacing: 0.5px;
     }
     #btnOrderTop:hover {
-        box-shadow: 0 6px 20px rgba(3,199,90,0.5) !important;
+        box-shadow: 0 6px 20px rgba(99,102,241,0.5) !important;
         transform: translateY(-1px);
     }
 </style>
@@ -608,16 +608,16 @@ window.loadEditorLibraries = function() {
         #btnDesignStart {
             padding: 18px 48px;
             position: relative;
-            background: linear-gradient(135deg, #f0fff4, #ffffff, #ecfdf5, #ffffff, #f0fff4);
+            background: linear-gradient(135deg, #f8f8f8, #ffffff, #f0eff4, #ffffff, #f5f3f8);
             background-size: 400% 400%;
             animation: pearlShimmer 6s ease infinite;
             color: #1e293b;
-            border: 1.5px solid rgba(3, 199, 90, 0.3);
+            border: 1.5px solid rgba(200, 195, 215, 0.5);
             border-radius: 50px;
             font-size: 17px;
             font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 2px 16px rgba(3, 199, 90, 0.2), inset 0 1px 0 rgba(255,255,255,0.9);
+            box-shadow: 0 2px 16px rgba(180, 170, 200, 0.25), inset 0 1px 0 rgba(255,255,255,0.9);
             transition: transform 0.2s, box-shadow 0.2s;
             width: 100%;
             max-width: 600px;
@@ -650,7 +650,7 @@ window.loadEditorLibraries = function() {
             display: flex; align-items: center; justify-content: center; gap: 10px;
             width: 100%; max-width: 640px; margin: 0 auto 12px auto;
             padding: 18px 28px;
-            background: linear-gradient(135deg, #03C75A, #00b950, #00b950, #ec4899);
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7, #ec4899);
             background-size: 300% 300%;
             animation: kapuGlow 4s ease infinite;
             color: #fff; border: none; border-radius: 60px;
@@ -709,7 +709,7 @@ window.loadEditorLibraries = function() {
 
     <!-- 수동으로 제품 찾기 버튼 -->
     <div style="text-align:center; margin: 8px auto 14px auto; max-width:1000px; padding:0 15px;">
-        <button onclick="window.openProductPickerModal()" style="background:linear-gradient(135deg,#03C75A,#00b950); border:none; color:#fff; font-size:16px; font-weight:800; cursor:pointer; padding:14px 36px; border-radius:50px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 3px 12px rgba(3,199,90,0.35); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 5px 20px rgba(3,199,90,0.45)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 12px rgba(3,199,90,0.35)'">
+        <button onclick="window.openProductPickerModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; font-size:16px; font-weight:800; cursor:pointer; padding:14px 36px; border-radius:50px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 3px 12px rgba(99,102,241,0.35); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 5px 20px rgba(99,102,241,0.45)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 12px rgba(99,102,241,0.35)'">
             <i class="fa-solid fa-magnifying-glass" style="font-size:15px;"></i>
             <span data-i18n="btn_manual_search">수동으로 제품 찾기</span>
         </button>
@@ -720,13 +720,13 @@ window.loadEditorLibraries = function() {
         <div class="dsm-section-box">
         <h4 class="dsm-section-title"><i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span></h4>
         <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px;">
-            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')" style="border:2px solid #86efac;">
+            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')" style="border:2px solid #c4b5fd;">
                 <div class="dsm-icon" style="color:#ff0000;"><i class="fa-brands fa-youtube"></i></div>
                 <div class="dsm-name" data-i18n="dsm_video">영상제작</div>
                 <div class="dsm-size">1920 × 1080 px</div>
             </div>
             <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="border:2px solid #a78bfa;">
-                <div class="dsm-icon" style="color:#00b950;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                 <div class="dsm-name" data-i18n="dsm_retouch">사진보정</div>
                 <div class="dsm-size">AI Retouch</div>
             </div>
@@ -774,7 +774,7 @@ window.loadEditorLibraries = function() {
                 <div class="dsm-size">297 × 210 mm</div>
             </div>
             <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '정사각')">
-                <div class="dsm-icon" style="color:#00b950;"><i class="fa-regular fa-square"></i></div>
+                <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-regular fa-square"></i></div>
                 <div class="dsm-name" data-i18n="dsm_square">정사각</div>
                 <div class="dsm-size">1080 × 1080 px</div>
             </div>
@@ -841,25 +841,25 @@ window.loadEditorLibraries = function() {
                 <button onclick="document.getElementById('dsmCustomSizeModal').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer; color:#94a3b8; padding:0; line-height:1;">&times;</button>
             </div>
             <div style="display:flex; gap:10px; margin-bottom:16px; justify-content:center;">
-                <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:2px solid #e2e8f0; border-radius:10px; cursor:pointer; font-size:13px; font-weight:700; transition:all 0.15s;" onclick="this.querySelector('input').checked=true; this.style.borderColor='#03C75A'; this.style.background='#ecfdf5'; this.parentElement.children[1].style.borderColor='#e2e8f0'; this.parentElement.children[1].style.background='#fff';">
-                    <input type="radio" name="dsmCsUnit" value="px" checked style="accent-color:#03C75A;"> px
+                <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:2px solid #e2e8f0; border-radius:10px; cursor:pointer; font-size:13px; font-weight:700; transition:all 0.15s;" onclick="this.querySelector('input').checked=true; this.style.borderColor='#6366f1'; this.style.background='#eef2ff'; this.parentElement.children[1].style.borderColor='#e2e8f0'; this.parentElement.children[1].style.background='#fff';">
+                    <input type="radio" name="dsmCsUnit" value="px" checked style="accent-color:#6366f1;"> px
                 </label>
-                <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:2px solid #e2e8f0; border-radius:10px; cursor:pointer; font-size:13px; font-weight:700; transition:all 0.15s;" onclick="this.querySelector('input').checked=true; this.style.borderColor='#03C75A'; this.style.background='#ecfdf5'; this.parentElement.children[0].style.borderColor='#e2e8f0'; this.parentElement.children[0].style.background='#fff';">
-                    <input type="radio" name="dsmCsUnit" value="mm" style="accent-color:#03C75A;"> mm
+                <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:2px solid #e2e8f0; border-radius:10px; cursor:pointer; font-size:13px; font-weight:700; transition:all 0.15s;" onclick="this.querySelector('input').checked=true; this.style.borderColor='#6366f1'; this.style.background='#eef2ff'; this.parentElement.children[0].style.borderColor='#e2e8f0'; this.parentElement.children[0].style.background='#fff';">
+                    <input type="radio" name="dsmCsUnit" value="mm" style="accent-color:#6366f1;"> mm
                 </label>
             </div>
             <div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
                 <div style="flex:1;">
                     <label style="font-size:11px; color:#64748b; font-weight:600; display:block; margin-bottom:4px;" data-i18n="dsm_width">가로</label>
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="dsmCsW" placeholder="1920" autocomplete="off" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:16px; text-align:center; font-weight:700; outline:none; transition:border 0.15s;" onfocus="this.select(); this.style.borderColor='#03C75A'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter'){document.getElementById('dsmCsH').focus();}">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="dsmCsW" placeholder="1920" autocomplete="off" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:16px; text-align:center; font-weight:700; outline:none; transition:border 0.15s;" onfocus="this.select(); this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter'){document.getElementById('dsmCsH').focus();}">
                 </div>
                 <span style="font-size:18px; color:#94a3b8; margin-top:18px;">×</span>
                 <div style="flex:1;">
                     <label style="font-size:11px; color:#64748b; font-weight:600; display:block; margin-bottom:4px;" data-i18n="dsm_height">세로</label>
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="dsmCsH" placeholder="1080" autocomplete="off" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:16px; text-align:center; font-weight:700; outline:none; transition:border 0.15s;" onfocus="this.select(); this.style.borderColor='#03C75A'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter'){window.dsmCustomSizeApply();}">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="dsmCsH" placeholder="1080" autocomplete="off" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:16px; text-align:center; font-weight:700; outline:none; transition:border 0.15s;" onfocus="this.select(); this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter'){window.dsmCustomSizeApply();}">
                 </div>
             </div>
-            <button onclick="window.dsmCustomSizeApply()" style="width:100%; padding:14px; background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" data-i18n="dsm_custom_start">디자인 시작</button>
+            <button onclick="window.dsmCustomSizeApply()" style="width:100%; padding:14px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" data-i18n="dsm_custom_start">디자인 시작</button>
         </div>
     </div>
 
@@ -911,30 +911,30 @@ window.loadEditorLibraries = function() {
         <div style="padding:24px 30px 30px; clear:both;">
             <!-- 검색창 -->
             <div style="position:relative; margin-bottom:24px;">
-                <input type="text" id="modalCategorySearch" placeholder="오늘은 어떤 제품을 찾으시나요?" data-i18n-placeholder="search_placeholder" oninput="window.filterMainIcons(this.value)" style="width:100%; padding:16px 24px 16px 55px; border:2px solid #e2e8f0; border-radius:50px; font-size:16px; outline:none; color:#334155; font-weight:600; box-sizing:border-box;" onfocus="this.style.borderColor='#02a84c'" onblur="this.style.borderColor='#e2e8f0'">
-                <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:22px; top:50%; transform:translateY(-50%); color:#02a84c; font-size:20px; pointer-events:none;"></i>
+                <input type="text" id="modalCategorySearch" placeholder="오늘은 어떤 제품을 찾으시나요?" data-i18n-placeholder="search_placeholder" oninput="window.filterMainIcons(this.value)" style="width:100%; padding:16px 24px 16px 55px; border:2px solid #e2e8f0; border-radius:50px; font-size:16px; outline:none; color:#334155; font-weight:600; box-sizing:border-box;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:22px; top:50%; transform:translateY(-50%); color:#7c3aed; font-size:20px; pointer-events:none;"></i>
             </div>
             <!-- 카테고리 탭 -->
             <div id="modalCategoryTabs" class="category-tabs" style="margin-bottom:20px;"></div>
             <!-- 카테고리 설명 -->
             <div id="modalCategoryDesc" style="max-width:100%; margin:0 0 20px 0; padding:15px; background:#f8fafc; border-radius:12px; text-align:center; font-size:14px; color:#64748b; line-height:1.6; display:none; border:1px solid #e2e8f0; word-break:keep-all;"></div>
             <!-- 직접 입력 (커스텀 사이즈) -->
-            <div style="margin-bottom:20px; padding:18px 20px; background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius:16px; border:1.5px solid #86efac;">
+            <div style="margin-bottom:20px; padding:18px 20px; background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius:16px; border:1.5px solid #c4b5fd;">
                 <p style="margin:0 0 12px 0; font-size:13px; color:#6d28d9; text-align:center; line-height:1.5;">
                     <i class="fa-solid fa-pencil" style="margin-right:4px;"></i> <span data-i18n="dsm_custom_hint">제품없이 원하는 사이즈의 디자인만 필요할때 여기에 사이즈를 입력하세요</span>
                 </p>
                 <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
-                    <input type="number" id="dsmCustomW2" placeholder="가로(mm)" data-i18n-placeholder="dsm_ph_w" style="width:90px; padding:10px 12px; border:1.5px solid #86efac; border-radius:50px; font-size:14px; text-align:center; background:#fff; color:#334155; outline:none;" onfocus="this.style.borderColor='#02a84c'" onblur="this.style.borderColor='#86efac'">
-                    <span style="color:#02a84c; font-weight:700; font-size:16px;">×</span>
-                    <input type="number" id="dsmCustomH2" placeholder="세로(mm)" data-i18n-placeholder="dsm_ph_h" style="width:90px; padding:10px 12px; border:1.5px solid #86efac; border-radius:50px; font-size:14px; text-align:center; background:#fff; color:#334155; outline:none;" onfocus="this.style.borderColor='#02a84c'" onblur="this.style.borderColor='#86efac'">
-                    <button onclick="window.dsmOpenCustomInline()" style="padding:10px 32px; background:linear-gradient(135deg, #02a84c, #6d28d9); color:#fff; border:none; border-radius:50px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(124,58,237,0.3);" data-i18n="dsm_start">시작</button>
+                    <input type="number" id="dsmCustomW2" placeholder="가로(mm)" data-i18n-placeholder="dsm_ph_w" style="width:90px; padding:10px 12px; border:1.5px solid #c4b5fd; border-radius:50px; font-size:14px; text-align:center; background:#fff; color:#334155; outline:none;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#c4b5fd'">
+                    <span style="color:#7c3aed; font-weight:700; font-size:16px;">×</span>
+                    <input type="number" id="dsmCustomH2" placeholder="세로(mm)" data-i18n-placeholder="dsm_ph_h" style="width:90px; padding:10px 12px; border:1.5px solid #c4b5fd; border-radius:50px; font-size:14px; text-align:center; background:#fff; color:#334155; outline:none;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#c4b5fd'">
+                    <button onclick="window.dsmOpenCustomInline()" style="padding:10px 32px; background:linear-gradient(135deg, #7c3aed, #6d28d9); color:#fff; border:none; border-radius:50px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(124,58,237,0.3);" data-i18n="dsm_start">시작</button>
                 </div>
             </div>
             <!-- 상품 그리드 -->
             <style>
                 #modalProductGrid .quick-text { color: #1e293b !important; }
                 #modalProductGrid .quick-item { background: #fff !important; border-color: #e2e8f0 !important; border-radius: 16px !important; }
-                #modalProductGrid .quick-item:hover { border-color: #02a84c !important; box-shadow: 0 4px 12px rgba(124,58,237,0.15) !important; }
+                #modalProductGrid .quick-item:hover { border-color: #7c3aed !important; box-shadow: 0 4px 12px rgba(124,58,237,0.15) !important; }
                 #modalProductGrid .quick-icon { background: #f1f5f9 !important; }
             </style>
             <div class="quick-menu-track" id="modalProductGrid"></div>
@@ -1039,7 +1039,7 @@ window.loadEditorLibraries = function() {
 
 <div id="bizDealSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f8fafc; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
-        <h2 style="color: #02a84c;">💼 <span data-i18n="home_biz_title">업자용 대박할인</span> <span class="badge-hot" style="background:#02a84c;">B2B Only</span></h2>
+        <h2 style="color: #4f46e5;">💼 <span data-i18n="home_biz_title">업자용 대박할인</span> <span class="badge-hot" style="background:#4f46e5;">B2B Only</span></h2>
         <p data-i18n="home_biz_desc">광고사 기획사가 늘 사용하는 아이템 오늘 더 저렴하게 특가로 준비했습니다</p>
     </div>
     <div class="hotdeal-scroll-wrap">
@@ -1070,7 +1070,7 @@ function scrollHotdeal(gridId, dir) {
         .sc-modal-body { padding:16px 24px 24px; }
         .sc-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .sc-form input, .sc-form select { padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: all 0.2s; background: #f8fafc; color: #1e293b; font-weight: 500; }
-        .sc-form input:focus, .sc-form select:focus { border-color: #03C75A; box-shadow: 0 0 0 3px rgba(3,199,90,0.1); background: #fff; }
+        .sc-form input:focus, .sc-form select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); background: #fff; }
         .sc-form input::placeholder { color: #94a3b8; font-weight: 400; }
         .sc-form select { grid-column: 1 / -1; }
         .sc-btn { grid-column: 1 / -1; padding: 14px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(16,185,129,0.25); transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -1080,10 +1080,10 @@ function scrollHotdeal(gridId, dir) {
         .sc-ai-banner { background: linear-gradient(135deg, #1e1b4b, #3730a3); color: #fff; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; font-size: 14px; line-height: 1.7; display: flex; gap: 12px; align-items: flex-start; }
         .sc-ai-banner i { font-size: 22px; flex-shrink: 0; margin-top: 2px; color: #a5b4fc; }
         .sc-wh-tag { display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 20px; padding: 5px 14px; font-size: 12px; color: #475569; font-weight: 600; margin-bottom: 14px; }
-        .sc-wh-tag i { color: #03C75A; }
+        .sc-wh-tag i { color: #6366f1; }
         .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
         .sc-card { background: #f8fafc; border-radius: 12px; padding: 16px; border: 1.5px solid #e2e8f0; position: relative; transition: all 0.2s; }
-        .sc-card:hover:not(.unavailable) { border-color: #86efac; }
+        .sc-card:hover:not(.unavailable) { border-color: #c7d2fe; }
         .sc-card.best { background: linear-gradient(135deg, #f0fdf4, #ecfeff); border-color: #10b981; box-shadow: 0 3px 12px rgba(16,185,129,0.1); }
         .sc-card.unavailable { opacity: 0.45; }
         .sc-badge-best { position: absolute; top: -8px; right: 12px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 8px; letter-spacing: 0.5px; }
@@ -1101,8 +1101,8 @@ function scrollHotdeal(gridId, dir) {
         .sc-install { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #92400e; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
         .sc-disclaimer { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; text-align: center; }
         .sc-disclaimer p { margin: 0 0 10px 0; font-size: 12px; color: #64748b; line-height: 1.5; }
-        .sc-chat-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; background: linear-gradient(135deg, #03C75A, #4338ca); color: #fff; border: none; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 12px rgba(3,199,90,0.25); transition: all 0.2s; }
-        .sc-chat-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(3,199,90,0.35); }
+        .sc-chat-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; border: none; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 12px rgba(99,102,241,0.25); transition: all 0.2s; }
+        .sc-chat-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(99,102,241,0.35); }
         @media (max-width: 600px) {
             #shippingCalcSection { display: none !important; }
             #scModal { display: none !important; }
@@ -1221,7 +1221,7 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
 <div id="subscriptionSection" style="width:100%; max-width:1200px; padding:0 20px; box-sizing:border-box; margin:30px auto 0;">
 <style>
     .sub-hero { position:relative; overflow:hidden; background:linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #3730a3 50%, #312e81 70%, #1e1b4b 100%); border-radius:16px; padding:50px 30px 45px; text-align:center; }
-    .sub-hero::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:radial-gradient(ellipse at 20% 30%, rgba(139,92,246,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(3,199,90,0.1) 0%, transparent 50%); pointer-events:none; }
+    .sub-hero::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:radial-gradient(ellipse at 20% 30%, rgba(139,92,246,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(99,102,241,0.1) 0%, transparent 50%); pointer-events:none; }
     @keyframes subShimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
     .sub-shimmer { background:linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%); background-size:200% 100%; animation:subShimmer 4s linear infinite; position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; }
     .sub-badge { display:inline-block; background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; font-size:12px; font-weight:800; padding:5px 16px; border-radius:20px; letter-spacing:1px; margin-bottom:16px; }
@@ -1237,8 +1237,8 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     .sub-card-price small { font-size:14px; font-weight:500; opacity:0.6; }
     .sub-card-period { color:rgba(255,255,255,0.5); font-size:12px; margin-bottom:16px; }
     .sub-card-save { display:inline-block; background:rgba(16,185,129,0.2); color:#34d399; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; margin-bottom:16px; }
-    .sub-card-btn { display:block; width:100%; padding:12px; background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; }
-    .sub-card-btn:hover { transform:scale(1.02); box-shadow:0 4px 15px rgba(3,199,90,0.4); }
+    .sub-card-btn { display:block; width:100%; padding:12px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+    .sub-card-btn:hover { transform:scale(1.02); box-shadow:0 4px 15px rgba(99,102,241,0.4); }
     .sub-card.popular .sub-card-btn { background:linear-gradient(135deg,#f59e0b,#f97316); }
     .sub-mileage-cta { margin-top:12px; padding:8px 4px; font-size:12px; font-weight:700; color:#fbbf24; line-height:1.5; text-align:center; background:rgba(251,191,36,0.1); border-radius:8px; letter-spacing:-0.3px; }
     .sub-features { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-top:28px; position:relative; z-index:2; }
@@ -1316,7 +1316,7 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
         <div style="width:64px; height:64px; background:rgba(0,0,0,0.85); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:28px; color:#fbbf24;"><i class="fa-solid fa-crown"></i></div>
         <h3 style="margin:0 0 8px; font-size:20px; font-weight:800; color:#1e293b;" data-i18n="sub_premium_lock">프리미엄 템플릿입니다</h3>
         <p style="margin:0 0 24px; color:#64748b; font-size:14px; line-height:1.6;" data-i18n="sub_premium_msg">PRO 구독으로 모든 프리미엄 템플릿을 자유롭게 사용하세요</p>
-        <button onclick="window.startSubscription('monthly')" style="width:100%; padding:14px; background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px;" data-i18n="sub_btn">구독 시작하기</button>
+        <button onclick="window.startSubscription('monthly')" style="width:100%; padding:14px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px;" data-i18n="sub_btn">구독 시작하기</button>
         <button onclick="document.getElementById('subUpsellModal').style.display='none'" style="width:100%; padding:12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;" data-i18n="btn_close">닫기</button>
     </div>
 </div>
@@ -1324,18 +1324,18 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
 <!-- 이미지 템플릿 제목 입력 모달 -->
 <div id="tplTitleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:100003; justify-content:center; align-items:center; padding:16px;">
     <div style="background:#fff; border-radius:24px; max-width:440px; width:100%; padding:0; overflow:hidden; animation:scSlideUp 0.3s ease; box-shadow:0 25px 60px rgba(0,0,0,0.3);">
-        <div style="background:linear-gradient(135deg,#02a84c,#00b950); padding:28px 30px 20px; text-align:center;">
+        <div style="background:linear-gradient(135deg,#7c3aed,#a855f7); padding:28px 30px 20px; text-align:center;">
             <div style="font-size:40px; margin-bottom:8px;">🎨</div>
             <h3 id="tplTitleHead" style="margin:0 0 6px; font-size:20px; font-weight:800; color:#fff;">디자인 제목을 입력해주세요</h3>
             <p id="tplTitleSub" style="margin:0; color:rgba(255,255,255,0.85); font-size:13px;">입력한 제목이 디자인에 자동으로 적용됩니다</p>
         </div>
         <div style="padding:24px 30px 28px;">
             <div style="position:relative;">
-                <input type="text" id="tplTitleInput" maxlength="30" style="width:100%; padding:14px 16px; font-size:16px; font-weight:600; border:2px solid #e2e8f0; border-radius:12px; outline:none; transition:border-color 0.2s; box-sizing:border-box;" onfocus="this.style.borderColor='#02a84c'" onblur="this.style.borderColor='#e2e8f0'">
+                <input type="text" id="tplTitleInput" maxlength="30" style="width:100%; padding:14px 16px; font-size:16px; font-weight:600; border:2px solid #e2e8f0; border-radius:12px; outline:none; transition:border-color 0.2s; box-sizing:border-box;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'">
                 <div id="tplTitlePlaceholder" style="position:absolute; top:14px; left:16px; color:#94a3b8; font-size:16px; pointer-events:none;">예: 카페, 생일파티, 웨딩</div>
             </div>
             <div id="tplTitleWarn" style="display:none; color:#ef4444; font-size:12px; margin-top:8px; text-align:center;">제목을 입력해주세요</div>
-            <button id="tplTitleBtn" style="width:100%; margin-top:16px; padding:14px; background:linear-gradient(135deg,#02a84c,#00b950); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">✨ 다음</button>
+            <button id="tplTitleBtn" style="width:100%; margin-top:16px; padding:14px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">✨ 다음</button>
             <button id="tplTitleCancel" style="width:100%; margin-top:8px; padding:12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;">취소</button>
         </div>
     </div>
@@ -1694,7 +1694,7 @@ async function handleSubReturn() {
                placeholder="🔍 템플릿 검색..." data-i18n-placeholder="ph_search_template"
                onkeyup="if(window.searchTemplates) window.searchTemplates(this.value)"
                style="width:100%; padding:12px 12px 12px 15px; border:2px solid #e2e8f0; border-radius:12px; font-size:14px; outline:none; background:#f8fafc; transition:border-color 0.2s;"
-               onfocus="this.style.borderColor='#03C75A'" onblur="this.style.borderColor='#e2e8f0'">
+               onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
     </div>
     <div id="startTemplateGrid" class="template-grid-start"></div>
 
@@ -1702,13 +1702,13 @@ async function handleSubReturn() {
 
 <!-- 고객 작품 판매 마켓플레이스 -->
 <div id="artworkMarketBanner" style="max-width:1200px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:40px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3);">
-    <div style="position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:rgba(3,199,90,0.15); border-radius:50%;"></div>
+    <div style="position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:rgba(99,102,241,0.15); border-radius:50%;"></div>
     <div style="position:absolute; bottom:-40px; left:-40px; width:150px; height:150px; background:rgba(168,85,247,0.1); border-radius:50%;"></div>
 
     <div style="position:relative; z-index:2;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px; margin-bottom:28px;">
             <div style="flex:1; min-width:280px;">
-                <span style="background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:800; display:inline-block; margin-bottom:12px;" data-i18n="artwork_badge">ARTWORK MARKETPLACE</span>
+                <span style="background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:800; display:inline-block; margin-bottom:12px;" data-i18n="artwork_badge">ARTWORK MARKETPLACE</span>
                 <h2 style="margin:0 0 10px; font-size:26px; font-weight:900; line-height:1.3;" data-i18n="artwork_title">내 작품을 상품으로 판매하세요!<br><span style="color:#a78bfa;">판매금의 10%를 수익으로 지급합니다</span></h2>
                 <p style="margin:0; color:#94a3b8; font-size:14px; line-height:1.7;" data-i18n="artwork_desc">사진, 일러스트, 그림 등 내 이미지를 업로드하면<br>종이포스터 · 패브릭포스터 · 캔버스액자 3종 상품으로 자동 등록됩니다.<br>고객이 원하는 크기로 주문하면 <b style="color:#a78bfa;">판매금의 10%</b>가 수익금으로 적립됩니다.</p>
             </div>
@@ -1763,7 +1763,7 @@ async function handleSubReturn() {
 <div class="contributor-section">
     <div class="contributor-header">
         <div class="contributor-title">
-            <i class="fa-solid fa-gem" style="color:#03C75A;"></i> <span data-i18n="contrib_title">카멜레온 기여자 시스템</span>
+            <i class="fa-solid fa-gem" style="color:#6366f1;"></i> <span data-i18n="contrib_title">카멜레온 기여자 시스템</span>
             <span class="contributor-badge" id="myTierBadge">Loading...</span>
         </div>
         <div class="contributor-balance-box">
@@ -2060,7 +2060,7 @@ async function handleSubReturn() {
 
 <!-- 모바일 선택 액션바 (삭제 + 텍스트 편집) -->
 <div id="mobileActionBar" style="display:none; position:fixed; bottom:130px; left:50%; transform:translateX(-50%); z-index:10002; gap:8px; background:#fff; padding:6px 12px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.15); border:1px solid #e2e8f0;">
-    <button id="mobileEditBtn" style="display:none; padding:8px 14px; border:1px solid #03C75A; background:#03C75A; color:#fff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+    <button id="mobileEditBtn" style="display:none; padding:8px 14px; border:1px solid #6366f1; background:#6366f1; color:#fff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
         <i class="fa-solid fa-pen"></i> Edit
     </button>
     <button id="mobileDelBtn" style="padding:8px 14px; border:1px solid #ef4444; background:#fff; color:#ef4444; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
@@ -2080,7 +2080,7 @@ async function handleSubReturn() {
 </div>
 <style>
 .img-float-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#334155;transition:all .15s;white-space:nowrap}
-.img-float-btn:hover{background:#f1f5f9;color:#03C75A}
+.img-float-btn:hover{background:#f1f5f9;color:#6366f1}
 .img-float-btn:active{background:#e0e7ff}
 .img-float-btn i{font-size:14px}
 </style>
@@ -2092,14 +2092,14 @@ async function handleSubReturn() {
     <div id="eraserControlBar" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:10011;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.25);padding:12px 20px;display:flex;align-items:center;gap:14px;">
         <div style="display:flex;align-items:center;gap:8px;">
             <i class="fa-solid fa-circle" style="font-size:8px;color:#94a3b8;"></i>
-            <input type="range" id="eraserSizeSlider" min="5" max="100" value="30" style="width:120px;accent-color:#03C75A;">
+            <input type="range" id="eraserSizeSlider" min="5" max="100" value="30" style="width:120px;accent-color:#6366f1;">
             <i class="fa-solid fa-circle" style="font-size:18px;color:#94a3b8;"></i>
         </div>
         <div style="width:1px;height:30px;background:#e2e8f0;"></div>
-        <button id="eraserUndo" class="img-float-btn" style="color:#03C75A;"><i class="fa-solid fa-rotate-left"></i><span data-i18n="eraser_undo">되돌리기</span></button>
+        <button id="eraserUndo" class="img-float-btn" style="color:#6366f1;"><i class="fa-solid fa-rotate-left"></i><span data-i18n="eraser_undo">되돌리기</span></button>
         <div style="width:1px;height:30px;background:#e2e8f0;"></div>
         <button id="eraserCancel" class="img-float-btn" style="color:#ef4444;"><i class="fa-solid fa-xmark"></i><span data-i18n="eraser_cancel">취소</span></button>
-        <button id="eraserDone" class="img-float-btn" style="background:#03C75A;color:#fff;border-radius:10px;"><i class="fa-solid fa-check"></i><span data-i18n="eraser_done">완료</span></button>
+        <button id="eraserDone" class="img-float-btn" style="background:#6366f1;color:#fff;border-radius:10px;"><i class="fa-solid fa-check"></i><span data-i18n="eraser_done">완료</span></button>
     </div>
 </div>
 
@@ -2107,7 +2107,7 @@ async function handleSubReturn() {
 <div id="mobileTextEditBar" style="display:none; position:fixed; bottom:62px; left:0; right:0; z-index:10003; background:#fff; padding:10px 12px; border-top:1px solid #e2e8f0; box-shadow:0 -2px 10px rgba(0,0,0,0.1);">
     <div style="display:flex; gap:8px; align-items:center;">
         <input id="mobileActionTextInput" type="text" style="flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:16px; outline:none;" placeholder="텍스트 입력...">
-        <button id="mobileActionTextApply" style="padding:10px 18px; background:#03C75A; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;">적용</button>
+        <button id="mobileActionTextApply" style="padding:10px 18px; background:#6366f1; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;">적용</button>
         <button id="mobileActionTextCancel" style="padding:10px 12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;">✕</button>
     </div>
 </div>
@@ -2280,7 +2280,7 @@ async function handleSubReturn() {
         <button onclick="window.weddingPreview()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
             <i class="fa-solid fa-eye"></i> <span data-i18n="wed_preview">미리보기</span>
         </button>
-        <button onclick="window.shareWeddingInvitation()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#02a84c; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+        <button onclick="window.shareWeddingInvitation()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
             <i class="fa-solid fa-share-nodes"></i> <span data-i18n="wed_share">공유하기</span>
         </button>
     </div>
@@ -2322,7 +2322,7 @@ async function handleSubReturn() {
         <input id="boxH" type="number" placeholder="H" value="400" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
         <span style="color:#666;">×</span>
         <input id="boxD" type="number" placeholder="D" value="400" style="width:55px; padding:4px 6px; border:1px solid #444; border-radius:6px; background:#1e1e3e; color:#fff; font-size:12px; text-align:center;">
-        <button onclick="window.applyBoxDimensions()" style="padding:5px 12px; background:#03C75A; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" data-i18n="box_apply">적용</button>
+        <button onclick="window.applyBoxDimensions()" style="padding:5px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" data-i18n="box_apply">적용</button>
         <span id="boxPriceDisplay" style="display:none; align-items:center; gap:4px; color:#22c55e; font-size:12px; font-weight:700; white-space:nowrap;">
             <i class="fa-solid fa-calculator"></i>
             <span id="boxSheetCount">0</span><span data-i18n="box_sheets">매</span> =
@@ -2478,7 +2478,7 @@ async function handleSubReturn() {
                 </div>
                 <!-- 결과 그리드 -->
                 <div id="iconResultGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; min-height:60px;"></div>
-                <button id="iconLoadMore" style="display:none; width:100%; padding:8px; margin-top:8px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:12px; cursor:pointer; color:#03C75A; font-weight:600;" data-i18n="icon_load_more">더 보기</button>
+                <button id="iconLoadMore" style="display:none; width:100%; padding:8px; margin-top:8px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:12px; cursor:pointer; color:#6366f1; font-weight:600;" data-i18n="icon_load_more">더 보기</button>
             </div>
 
             <!-- 3. 텍스트 -->
@@ -2491,7 +2491,7 @@ async function handleSubReturn() {
                 <button class="btn-round" id="btnFontSelect" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height: 38px;">
                     <span data-i18n="btn_font" style="font-size:13px; font-weight:300; font-family:Inter,'Noto Sans KR',sans-serif;">🅰️ 폰트 전체보기</span>
                 </button>
-                <button id="btnTextEffect" class="btn-round" onclick="document.getElementById('textEffectModal').style.display='flex'" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height:38px; background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; border:none; font-weight:bold;">
+                <button id="btnTextEffect" class="btn-round" onclick="document.getElementById('textEffectModal').style.display='flex'" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; height:38px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; font-weight:bold;">
                     <span style="font-size:13px;" data-i18n="btn_text_effect">✨ 텍스트 효과</span>
                 </button>
                 <div id="leftTextSettings" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:10px; text-align: left;">
@@ -2531,7 +2531,7 @@ async function handleSubReturn() {
                 <div class="sub-panel-header" data-i18n="label_upload">업로드</div>
                 <label class="upload-box" for="imgUpload" style="height: 80px; padding: 15px; margin-bottom:10px;"><span style="font-size:24px;"><i class="fa-solid fa-cloud-arrow-up"></i></span> <span style="font-size: 13px;">Image / PDF</span></label>
                 <input id="imgUpload" type="file" accept="image/*,.svg,.pdf" style="display:none;">
-                <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="width: 100%; justify-content: center; height: 38px; background: #f8fafc; border: 1px solid #03C75A; color: #03C75A; margin-bottom:12px;">
+                <button class="btn-round" onclick="document.getElementById('logoUploadModal').style.display='flex'" style="width: 100%; justify-content: center; height: 38px; background: #f8fafc; border: 1px solid #6366f1; color: #6366f1; margin-bottom:12px;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_logo_share">로고 공유방</span>
                 </button>
 
@@ -2560,7 +2560,7 @@ async function handleSubReturn() {
             <!-- 4.5 보정 (Retouch) -->
             <style>
             .rt-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px 5px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;transition:all .2s;font-family:inherit}
-            .rt-card:hover{border-color:#03C75A;transform:translateY(-1px);box-shadow:0 3px 10px rgba(3,199,90,.12)}
+            .rt-card:hover{border-color:#6366f1;transform:translateY(-1px);box-shadow:0 3px 10px rgba(99,102,241,.12)}
             .rt-card:active{transform:scale(0.97)}
             .rt-card:disabled{opacity:.5;pointer-events:none}
             .rt-thumb{width:100%;aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.2)}
@@ -2653,7 +2653,7 @@ async function handleSubReturn() {
                     <div class="section-title" style="font-size:12px; margin-bottom:6px;">🎨 <span data-i18n="retouch_sec_manual">수동 조정</span></div>
                     <div id="retouchSliders" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
                     <div style="display:flex; gap:6px; margin-bottom:12px;">
-                        <button id="btnRetouchApply" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center; background:#03C75A; color:white; border:none;">
+                        <button id="btnRetouchApply" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center; background:#6366f1; color:white; border:none;">
                             <span data-i18n="retouch_apply">적용</span>
                         </button>
                         <button id="btnRetouchReset" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center;">
@@ -2731,7 +2731,7 @@ async function handleSubReturn() {
                 <div style="padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
                     <div style="font-size:12px; font-weight:700; color:#334155; margin-bottom:8px;" data-i18n="theme_custom">커스텀 색상</div>
                     <div style="display:flex; gap:8px; align-items:center;">
-                        <input type="color" id="themeCustomColor" value="#03C75A" style="width:40px; height:40px; border:none; cursor:pointer; border-radius:8px;">
+                        <input type="color" id="themeCustomColor" value="#6366f1" style="width:40px; height:40px; border:none; cursor:pointer; border-radius:8px;">
                         <div style="flex:1;">
                             <div style="display:flex; gap:6px;">
                                 <button id="btnApplyThemeTint" class="btn-round" style="flex:1; height:32px; font-size:11px; justify-content:center;" data-i18n="theme_tint">틴트</button>
@@ -2757,7 +2757,7 @@ async function handleSubReturn() {
             <!-- 7. 저장 -->
             <div id="sub-save" class="sub-content">
                 <div class="sub-panel-header" data-i18n="panel_save">저장 & 내보내기</div>
-                <button class="btn-round" id="btnOpenSaveModal" style="width:100%; justify-content: center; height: 42px; margin-bottom:8px; background:linear-gradient(135deg,#03C75A,#818cf8); color:#fff; border:none; font-weight:bold;">
+                <button class="btn-round" id="btnOpenSaveModal" style="width:100%; justify-content: center; height: 42px; margin-bottom:8px; background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border:none; font-weight:bold;">
                     <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_design" style="margin-left:4px;">디자인 저장</span>
                 </button>
                 <button class="btn-round" id="btnMyPageSide" style="width:100%; justify-content: center; height: 42px; margin-bottom:8px; background: white; border: 1px solid #ddd; color: #333;">
@@ -2784,7 +2784,7 @@ async function handleSubReturn() {
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
                 </div>
-                <button class="btn-round" onclick="window.addPage()" style="width:100%; justify-content:center; height:42px; margin-bottom:8px; background:#03C75A; color:#fff; border:none; font-weight:bold;">
+                <button class="btn-round" onclick="window.addPage()" style="width:100%; justify-content:center; height:42px; margin-bottom:8px; background:#6366f1; color:#fff; border:none; font-weight:bold;">
                     <i class="fa-solid fa-plus"></i> <span style="margin-left:4px;" data-i18n="btn_add_page">페이지 추가</span>
                 </button>
                 <button class="btn-round" onclick="window.deletePage()" style="width:100%; justify-content:center; height:42px; background:#fff; border:1px solid #ef4444; color:#ef4444;">
@@ -2798,7 +2798,7 @@ async function handleSubReturn() {
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:12px;">
                     <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between;">
                         <span data-i18n="tool_size_change">사이즈 변경(mm)</span>
-                        <span id="limitLabel" style="color:#03C75A;">Max: -</span>
+                        <span id="limitLabel" style="color:#6366f1;">Max: -</span>
                     </div>
                     <div style="display:flex; gap:5px; align-items:center;">
                         <input type="number" id="inputUserW" class="ai-input-pretty" placeholder="W" style="margin:0; padding:5px; font-size:12px; text-align:center;">
@@ -2844,7 +2844,7 @@ async function handleSubReturn() {
                     <button class="tool-btn" id="btnAlignMiddle" style="height:36px;"><i class="fa-solid fa-arrows-up-down"></i><br><span style="font-size:9px;" data-i18n="align_middle">중간</span></button>
                     <button class="tool-btn" id="btnAlignBottom" style="height:36px;"><i class="fa-solid fa-align-right" style="transform:rotate(90deg)"></i><br><span style="font-size:9px;" data-i18n="align_bottom">하</span></button>
                 </div>
-                <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="width:100%; justify-content:center; height:38px; margin-bottom:12px; background:#03C75A; color:#fff; border:none; font-weight:bold;">
+                <button class="btn-round" id="btnCenterObject" onclick="window.alignObject('center')" style="width:100%; justify-content:center; height:38px; margin-bottom:12px; background:#6366f1; color:#fff; border:none; font-weight:bold;">
                     🎯 <span data-i18n="btn_center_all">정중앙 배치</span>
                 </button>
 
@@ -2884,9 +2884,9 @@ async function handleSubReturn() {
             <!-- AI Design Wizard Trigger -->
             <style>
                 @keyframes wizardPulse {
-                    0%   { box-shadow:0 4px 15px rgba(3,199,90,0.4), 0 0 0 0 rgba(163,130,255,0.5); }
-                    50%  { box-shadow:0 4px 20px rgba(3,199,90,0.6), 0 0 0 10px rgba(163,130,255,0); }
-                    100% { box-shadow:0 4px 15px rgba(3,199,90,0.4), 0 0 0 0 rgba(163,130,255,0); }
+                    0%   { box-shadow:0 4px 15px rgba(99,102,241,0.4), 0 0 0 0 rgba(163,130,255,0.5); }
+                    50%  { box-shadow:0 4px 20px rgba(99,102,241,0.6), 0 0 0 10px rgba(163,130,255,0); }
+                    100% { box-shadow:0 4px 15px rgba(99,102,241,0.4), 0 0 0 0 rgba(163,130,255,0); }
                 }
                 @keyframes wizardSparkle {
                     0%, 100% { opacity:1; filter:brightness(1); }
@@ -2900,9 +2900,9 @@ async function handleSubReturn() {
             <button id="btnDesignWizard" onclick="window.openDesignWizard()" style="
                 position:absolute; top:15px; right:15px; z-index:50;
                 height:42px; padding:0 16px; border-radius:21px;
-                background:linear-gradient(135deg,#03C75A 0%,#00b950 100%);
+                background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%);
                 border:none; color:#fff; font-weight:700; font-size:12px;
-                box-shadow:0 4px 15px rgba(3,199,90,0.4);
+                box-shadow:0 4px 15px rgba(99,102,241,0.4);
                 cursor:pointer; display:flex; align-items:center; gap:7px;
                 transition:all .2s;
             " onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
@@ -2914,7 +2914,7 @@ async function handleSubReturn() {
             <button id="btn3DPreview" onclick="window.open3DPreview()" style="
                 position:absolute; top:65px; right:15px; z-index:50;
                 height:42px; padding:0 16px; border-radius:21px;
-                background:linear-gradient(135deg,#00b950 0%,#06b6d4 100%);
+                background:linear-gradient(135deg,#8b5cf6 0%,#06b6d4 100%);
                 border:none; color:#fff; font-weight:700; font-size:12px;
                 box-shadow:0 4px 15px rgba(139,92,246,0.4);
                 cursor:pointer; display:none; align-items:center; gap:7px;
@@ -2939,7 +2939,7 @@ async function handleSubReturn() {
             </button>
 
             <!-- Box Face Tabs -->
-            <div id="boxFaceTabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(3,199,90,0.3);">
+            <div id="boxFaceTabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3);">
                 <button class="box-face-tab active" onclick="window.switchBoxFace(0)" data-i18n="box_face_front">앞면</button>
                 <button class="box-face-tab" onclick="window.switchBoxFace(1)" data-i18n="box_face_back">뒷면</button>
                 <button class="box-face-tab" onclick="window.switchBoxFace(2)" data-i18n="box_face_left">좌면</button>
@@ -2948,10 +2948,10 @@ async function handleSubReturn() {
                 <button class="box-face-tab" onclick="window.switchBoxFace(5)" data-i18n="box_face_bottom">아랫면</button>
             </div>
             <!-- 가벽 양면 탭 -->
-            <div id="wallFaceTabs" style="display:none; position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(15,15,30,0.95); border-radius:10px; padding:6px 8px; gap:4px; backdrop-filter:blur(8px); border:1px solid rgba(3,199,90,0.4); pointer-events:auto;">
+            <div id="wallFaceTabs" style="display:none; position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(15,15,30,0.95); border-radius:10px; padding:6px 8px; gap:4px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.4); pointer-events:auto;">
             </div>
             <!-- 종이매대 면 탭 -->
-            <div id="pdFaceTabs" class="pd-face-tabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(3,199,90,0.3);">
+            <div id="pdFaceTabs" class="pd-face-tabs" style="display:none; position:absolute; top:55px; left:50%; transform:translateX(-50%); z-index:55; background:rgba(15,15,30,0.9); border-radius:10px; padding:4px; gap:2px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3);">
             </div>
 
             <!-- 홍보물 패널 네비게이션 바 -->
@@ -3028,7 +3028,7 @@ async function handleSubReturn() {
                 <div style="width:100%; aspect-ratio:1.8; background:#fff; border:1px solid #eee; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
                     <div style="position:absolute;top:20%;left:0;right:0;text-align:center;font-size:8px;font-weight:bold;color:#1e293b;">COMPANY</div>
                     <div style="position:absolute;bottom:30%;left:10%;text-align:left;"><div style="font-size:7px;font-weight:bold;color:#1e293b;">Name</div><div style="font-size:4px;color:#64748b;">010-1234-5678 | email@test.com</div></div>
-                    <div style="position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(90deg,#03C75A,#00b950);border-radius:0 0 5px 5px;"></div>
+                    <div style="position:absolute;bottom:0;left:0;right:0;height:12%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:0 0 5px 5px;"></div>
                 </div>
                 <div data-i18n="biz_tpl_modern" style="font-size:12px; font-weight:bold; color:#334155;">모던</div>
             </div>
@@ -3068,7 +3068,7 @@ async function handleSubReturn() {
     </div>
 </div>
 <style>
-.biz-tpl-card:hover { border-color:#03C75A !important; transform:translateY(-2px); box-shadow:0 4px 12px rgba(3,199,90,0.15); }
+.biz-tpl-card:hover { border-color:#6366f1 !important; transform:translateY(-2px); box-shadow:0 4px 12px rgba(99,102,241,0.15); }
 </style>
 
 <!-- ★ 홍보물 인쇄 규격 선택 모달 -->
@@ -3117,10 +3117,10 @@ async function handleSubReturn() {
             </div>
             <!-- A4 반접지 -->
             <div class="promo-preset-card" onclick="window._promoPickPreset('a4_half')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; padding:14px 10px; text-align:center; transition:all 0.2s;">
-                <div style="width:64px;height:44px;margin:0 auto 8px;border:2px solid #03C75A;border-radius:3px;background:#ecfdf5;position:relative;">
+                <div style="width:64px;height:44px;margin:0 auto 8px;border:2px solid #6366f1;border-radius:3px;background:#eef2ff;position:relative;">
                     <div style="position:absolute;left:50%;top:0;bottom:0;width:0;border-left:2px dashed #818cf8;"></div>
-                    <div style="position:absolute;top:50%;left:25%;transform:translate(-50%,-50%);font-size:6px;color:#03C75A;font-weight:bold;">P1</div>
-                    <div style="position:absolute;top:50%;left:75%;transform:translate(-50%,-50%);font-size:6px;color:#03C75A;font-weight:bold;">P2</div>
+                    <div style="position:absolute;top:50%;left:25%;transform:translate(-50%,-50%);font-size:6px;color:#6366f1;font-weight:bold;">P1</div>
+                    <div style="position:absolute;top:50%;left:75%;transform:translate(-50%,-50%);font-size:6px;color:#6366f1;font-weight:bold;">P2</div>
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;" data-i18n="promo_p_half">A4 반접지</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;" data-i18n="promo_p_half_d">4면 · 303×216mm</div>
@@ -3141,7 +3141,7 @@ async function handleSubReturn() {
     </div>
 </div>
 <style>
-.promo-preset-card:hover { border-color:#03C75A !important; transform:translateY(-2px); box-shadow:0 4px 12px rgba(3,199,90,0.15); }
+.promo-preset-card:hover { border-color:#6366f1 !important; transform:translateY(-2px); box-shadow:0 4px 12px rgba(99,102,241,0.15); }
 </style>
 <script>
 (function(){
@@ -3188,7 +3188,7 @@ async function handleSubReturn() {
 </div>
 <div id="mobileTextEditor" style="display:none;">
     <div class="m-text-header">
-        <span style="color:#03C75A; font-weight:bold; font-size:13px;"><i class="fa-solid fa-pen"></i> <span data-i18n="editor_text_label">텍스트</span></span>
+        <span style="color:#6366f1; font-weight:bold; font-size:13px;"><i class="fa-solid fa-pen"></i> <span data-i18n="editor_text_label">텍스트</span></span>
 
         <div style="display:flex; gap:2px; align-items:center;">
             <button onclick="window.alignMobileText('left')" id="btnAlignL" class="m-align-btn m-align-active" title="Left"><i class="fa-solid fa-align-left"></i></button>
@@ -3200,7 +3200,7 @@ async function handleSubReturn() {
             <button onclick="window.deleteMobileObject()" style="background:#ef4444; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:12px;">
                 <i class="fa-solid fa-trash"></i>
             </button>
-            <button onclick="window.closeMobileTextEditor()" style="background:#03C75A; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:12px;" data-i18n="btn_done_edit">
+            <button onclick="window.closeMobileTextEditor()" style="background:#6366f1; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:12px;" data-i18n="btn_done_edit">
                 완료
             </button>
         </div>
@@ -3225,7 +3225,7 @@ async function handleSubReturn() {
         
         <div style="display:flex; gap:15px;">
             <button id="btnActionAdd" class="btn-round" style="flex:1; height:120px; flex-direction:column; justify-content:center; gap:10px; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155;">
-                <i class="fa-solid fa-layer-group" style="font-size:32px; color:#03C75A;"></i>
+                <i class="fa-solid fa-layer-group" style="font-size:32px; color:#6366f1;"></i>
                 <span style="font-size:16px; font-weight:bold;" data-i18n="tpl_action_add">현재 작업에 추가</span>
                 <span style="font-size:12px; font-weight:normal; opacity:0.8;" data-i18n="tpl_action_add_desc">기존 디자인 위에 겹치기</span>
             </button>
@@ -3257,7 +3257,7 @@ async function handleSubReturn() {
     <div class="tpl-modal-box">
         <div class="tpl-sidebar">
             <button class="tpl-cate-btn active" onclick="window.filterTpl('group_template', this)">
-                <span style="font-weight:800; color:#03C75A; font-size:16px;" data-i18n="editor_tab_template">🎨 템플릿</span>
+                <span style="font-weight:800; color:#6366f1; font-size:16px;" data-i18n="editor_tab_template">🎨 템플릿</span>
             </button>
 
             <button class="tpl-cate-btn" onclick="window.filterTpl('group_asset', this)">
@@ -3289,12 +3289,12 @@ async function handleSubReturn() {
 <span style="color:#fff; font-weight:700; font-size:14px;"><i class="fa-solid fa-cube"></i> <span data-i18n="modal_3d_title">3D 미리보기</span> <span id="wall3dDimLabel" style="font-weight:400; color:#94a3b8; margin-left:8px;"></span></span>
 <div style="display:flex; gap:8px; align-items:center;">
 <button onclick="window.capture3DScreenshot()" style="padding:6px 12px; background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:6px; font-size:11px; cursor:pointer;" title="Screenshot"><i class="fa-solid fa-camera"></i></button>
-<button onclick="window.refresh3DTexture()" style="padding:6px 12px; background:#03C75A; color:#fff; border:none; border-radius:6px; font-size:11px; cursor:pointer;"><i class="fa-solid fa-sync"></i> <span data-i18n="btn_3d_refresh">디자인 새로고침</span></button>
+<button onclick="window.refresh3DTexture()" style="padding:6px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; cursor:pointer;"><i class="fa-solid fa-sync"></i> <span data-i18n="btn_3d_refresh">디자인 새로고침</span></button>
 <button id="wall3DCloseX" onclick="document.getElementById('wall3DModal').style.display='none'" style="width:32px; height:32px; background:rgba(255,255,255,0.1); color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:16px;">✕</button>
 </div></div>
 <div id="wall3DContentArea" style="display:flex; flex:1; overflow:hidden;">
 <!-- 가벽 사이드바 (wall mode only) -->
-<div id="wall3DSidebar" style="display:none; width:190px; flex-shrink:0; background:rgba(0,0,0,0.4); border-right:1px solid rgba(3,199,90,0.2); padding:12px; overflow-y:auto; flex-direction:column; gap:12px;">
+<div id="wall3DSidebar" style="display:none; width:190px; flex-shrink:0; background:rgba(0,0,0,0.4); border-right:1px solid rgba(99,102,241,0.2); padding:12px; overflow-y:auto; flex-direction:column; gap:12px;">
   <div>
     <div style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:8px;" data-i18n="wall_preset_title">프리셋</div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
@@ -3307,7 +3307,7 @@ async function handleSubReturn() {
   </div>
   <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:4px 0;">
   <div>
-    <button id="btnAddWall" onclick="window.addWallToScene()" style="width:100%; padding:8px; background:rgba(3,199,90,0.2); color:#a5b4fc; border:1px solid rgba(3,199,90,0.3); border-radius:8px; font-size:12px; cursor:pointer; font-weight:600;">
+    <button id="btnAddWall" onclick="window.addWallToScene()" style="width:100%; padding:8px; background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3); border-radius:8px; font-size:12px; cursor:pointer; font-weight:600;">
       <i class="fa-solid fa-plus"></i> <span data-i18n="wall_add_btn">가벽 추가</span>
     </button>
   </div>
@@ -3328,17 +3328,17 @@ async function handleSubReturn() {
     <div style="color:#94a3b8; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:8px;" data-i18n="wall_opt_label">옵션</div>
     <div style="display:flex; flex-direction:column; gap:6px;">
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
-        <input type="checkbox" id="opt3dCornerPillar" onchange="window.toggleAccessory('cornerPillar', this.checked)" style="accent-color:#03C75A;">
+        <input type="checkbox" id="opt3dCornerPillar" onchange="window.toggleAccessory('cornerPillar', this.checked)" style="accent-color:#6366f1;">
         <i class="fa-solid fa-archway" style="width:14px; color:#FFD700;"></i> <span data-i18n="wall_opt_corner_pillar">코너기둥</span>
         <span id="cornerPillarCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
-        <input type="checkbox" id="opt3dTopLight" onchange="window.toggleAccessory('topLight', this.checked)" style="accent-color:#03C75A;">
+        <input type="checkbox" id="opt3dTopLight" onchange="window.toggleAccessory('topLight', this.checked)" style="accent-color:#6366f1;">
         <i class="fa-solid fa-lightbulb" style="width:14px; color:#FFD700;"></i> <span data-i18n="wall_opt_top_light">상단조명 백색</span>
         <span id="topLightCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
       <label style="display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:11px; cursor:pointer;">
-        <input type="checkbox" id="opt3dOutdoorStand" onchange="window.toggleAccessory('outdoorStand', this.checked)" style="accent-color:#03C75A;">
+        <input type="checkbox" id="opt3dOutdoorStand" onchange="window.toggleAccessory('outdoorStand', this.checked)" style="accent-color:#6366f1;">
         <i class="fa-solid fa-wind" style="width:14px; color:#e2e8f0;"></i> <span data-i18n="wall_opt_outdoor_stand">외부받침 1조</span>
         <span id="outdoorStandCount" style="margin-left:auto; color:#94a3b8; font-size:10px;"></span>
       </label>
@@ -3351,7 +3351,7 @@ async function handleSubReturn() {
 </div>
 <div id="wall3DHint" style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.4); font-size:11px; pointer-events:none;"><span id="wall3dHint" data-i18n="hint_3d_controls">🖱 클릭+드래그: 벽 이동 | 빈 곳 드래그: 회전 | Space+드래그: 화면 이동 | 스크롤: 줌</span></div>
 <!-- 모바일 하단 닫기 버튼 -->
-<button id="wall3DCloseBtn" onclick="document.getElementById('wall3DModal').style.display='none'" style="display:none; width:100%; padding:16px; background:#03C75A; color:#fff; border:none; font-size:16px; font-weight:700; cursor:pointer; flex-shrink:0;">
+<button id="wall3DCloseBtn" onclick="document.getElementById('wall3DModal').style.display='none'" style="display:none; width:100%; padding:16px; background:#6366f1; color:#fff; border:none; font-size:16px; font-weight:700; cursor:pointer; flex-shrink:0;">
     <i class="fa-solid fa-xmark"></i> 닫기
 </button>
 </div></div>
@@ -3366,7 +3366,7 @@ async function handleSubReturn() {
         <h3 id="authTitle" style="margin-top:0; margin-bottom:5px;" data-i18n="modal_login_title">로그인</h3>
 
         <!-- ★ 간편 가입 안내 (회원가입 모드에서만 표시) -->
-        <div id="signupGuide" style="display:none; background:linear-gradient(135deg,#02a84c,#03C75A); border-radius:10px; padding:14px 16px; margin-bottom:14px; text-align:center;">
+        <div id="signupGuide" style="display:none; background:linear-gradient(135deg,#7c3aed,#6366f1); border-radius:10px; padding:14px 16px; margin-bottom:14px; text-align:center;">
             <div style="font-size:16px; font-weight:800; color:#fff; margin-bottom:4px;" data-i18n="signup_guide_title">1초 간편 가입</div>
             <div style="font-size:13px; color:rgba(255,255,255,0.9); line-height:1.5;" data-i18n="signup_guide_desc">아이디와 비밀번호 입력만으로<br>바로 가입됩니다. 인증 메일 없음!</div>
         </div>
@@ -3377,12 +3377,12 @@ async function handleSubReturn() {
             <input id="loginPwConfirm" class="ai-input-pretty" type="password" placeholder="비밀번호 확인" data-i18n-placeholder="placeholder_pw_confirm" style="margin:0; display:none;" autocomplete="new-password">
         </div>
         <div id="forgotPwLink" style="text-align:right; margin-bottom:10px;">
-            <span id="btnForgotPw" style="font-size:12px; color:#03C75A; cursor:pointer; text-decoration:underline;" data-i18n="btn_forgot_pw">비밀번호를 잊으셨나요?</span>
+            <span id="btnForgotPw" style="font-size:12px; color:#6366f1; cursor:pointer; text-decoration:underline;" data-i18n="btn_forgot_pw">비밀번호를 잊으셨나요?</span>
         </div>
         <button class="btn-round primary" id="btnAuthAction" style="width:100%; justify-content:center; height:45px; font-size:15px;" data-i18n="btn_login_submit">로그인</button>
         <!-- ★ 1초 회원가입 버튼 (로그인 모드에서만 표시) -->
         <button id="btnQuickSignup" onclick="document.getElementById('btnSwitchAuthMode').click()"
-                style="width:100%; height:40px; margin-top:8px; border:none; border-radius:22px; background:linear-gradient(135deg,#02a84c,#03C75A); color:#fff; font-size:14px; font-weight:800; cursor:pointer; letter-spacing:0.5px; box-shadow:0 2px 8px rgba(3,199,90,0.3); transition:0.2s; text-align:center; display:flex; align-items:center; justify-content:center;">
+                style="width:100%; height:40px; margin-top:8px; border:none; border-radius:22px; background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; font-size:14px; font-weight:800; cursor:pointer; letter-spacing:0.5px; box-shadow:0 2px 8px rgba(99,102,241,0.3); transition:0.2s; text-align:center; display:flex; align-items:center; justify-content:center;">
             <span data-i18n="btn_quick_signup">1초 회원가입</span>
         </button>
         <div id="authSwitchRow" style="margin-top:12px; font-size:13px; color:#666; display:none;">
@@ -3405,7 +3405,7 @@ async function handleSubReturn() {
             </button>
         </div>
         <p style="margin:14px 0 0; font-size:11px; color:#94a3b8; text-align:center; line-height:1.6;">
-            <span data-i18n="auth_terms_notice">가입 시 <a href="/terms.html" target="_blank" style="color:#03C75A; text-decoration:underline;">이용약관</a> 및 <a href="/privacy.html" target="_blank" style="color:#03C75A; text-decoration:underline;">개인정보처리방침</a>에 동의하게 됩니다.</span>
+            <span data-i18n="auth_terms_notice">가입 시 <a href="/terms.html" target="_blank" style="color:#6366f1; text-decoration:underline;">이용약관</a> 및 <a href="/privacy.html" target="_blank" style="color:#6366f1; text-decoration:underline;">개인정보처리방침</a>에 동의하게 됩니다.</span>
         </p>
     </div>
 </div>
@@ -3419,7 +3419,7 @@ async function handleSubReturn() {
             <input id="resetEmail" class="ai-input-pretty" placeholder="이메일 주소" data-i18n-placeholder="placeholder_email" style="margin:0 0 15px 0;">
             <button class="btn-round primary" id="btnSendResetEmail" style="width:100%; justify-content:center; height:45px; font-size:15px;" data-i18n="btn_send_reset_email">재설정 링크 발송</button>
             <div style="margin-top:15px; text-align:center;">
-                <span id="btnBackToLogin" style="font-size:13px; color:#03C75A; cursor:pointer; text-decoration:underline;" data-i18n="btn_back_to_login">로그인으로 돌아가기</span>
+                <span id="btnBackToLogin" style="font-size:13px; color:#6366f1; cursor:pointer; text-decoration:underline;" data-i18n="btn_back_to_login">로그인으로 돌아가기</span>
             </div>
         </div>
         <!-- 2단계: 새 비밀번호 입력 (이메일 링크 클릭 후) -->
@@ -3465,7 +3465,7 @@ async function handleSubReturn() {
             
             <div style="background:#ffe70e; padding:15px; border-radius:12px; border:1px dashed #ffde39; text-align:center;">
                 <p style="margin:0 0 10px 0; font-size:13px; color:#64748b;" data-i18n="cart_upload_guide">직접 디자인한 파일은 여기에 일괄 업로드 해주세요</p>
-                <button onclick="document.getElementById('bulkCartUpload').click()" class="btn-round" style="width:100%; justify-content:center; background:#f8fafc; border:1px solid #03C75A; color:#03C75A;">
+                <button onclick="document.getElementById('bulkCartUpload').click()" class="btn-round" style="width:100%; justify-content:center; background:#f8fafc; border:1px solid #6366f1; color:#6366f1;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="btn_bulk_upload">파일 일괄 업로드</span>
                 </button>
                 <input type="file" id="bulkCartUpload" multiple style="display:none;" onchange="window.handleBulkCartUpload(this)">
@@ -3493,7 +3493,7 @@ async function handleSubReturn() {
                         <span id="summaryDiscount">0원 (0%)</span>
                     </div>
 
-                    <div id="referralDiscountRow" style="display:none; justify-content:space-between; color:#02a84c; font-weight:bold; margin-bottom: 5px;">
+                    <div id="referralDiscountRow" style="display:none; justify-content:space-between; color:#7c3aed; font-weight:bold; margin-bottom: 5px;">
                         <span data-i18n="label_referral_discount">추천인 할인</span>
                         <span id="summaryReferralDiscount">-0원 (5%)</span>
                     </div>
@@ -3603,7 +3603,7 @@ async function handleSubReturn() {
         <textarea id="inputRequest" class="ai-input-pretty"></textarea>
 
         <!-- 추천인 섹션 -->
-        <div id="referralSection" style="margin-top:18px; background:linear-gradient(135deg,#d1fae5,#e0e7ff); padding:18px; border-radius:12px; border:2px solid #a78bfa;">
+        <div id="referralSection" style="margin-top:18px; background:linear-gradient(135deg,#ede9fe,#e0e7ff); padding:18px; border-radius:12px; border:2px solid #a78bfa;">
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
                 <span style="font-size:20px;">🎁</span>
                 <b style="color:#6d28d9; font-size:15px;" data-i18n="referral_title">추천인 코드</b>
@@ -3611,7 +3611,7 @@ async function handleSubReturn() {
             <p style="font-size:12px; color:#555; margin:0 0 10px; line-height:1.5;" data-i18n="referral_desc">추천인 이메일 입력 시 구매자 5% 할인 + 추천인 5% 적립!</p>
             <div style="display:flex; gap:8px;">
                 <input id="inputReferrerEmail" class="ai-input-pretty" type="email" placeholder="추천인 이메일 입력" data-i18n-placeholder="referral_placeholder" style="flex:1; margin:0;">
-                <button id="btnVerifyReferrer" class="btn-round" type="button" onclick="window.validateReferrer()" style="width:80px; background:#02a84c; color:white; border:none; justify-content:center; font-size:13px;" data-i18n="referral_verify">확인</button>
+                <button id="btnVerifyReferrer" class="btn-round" type="button" onclick="window.validateReferrer()" style="width:80px; background:#7c3aed; color:white; border:none; justify-content:center; font-size:13px;" data-i18n="referral_verify">확인</button>
             </div>
             <div id="referrerStatus" style="margin-top:8px; font-size:13px;"></div>
             <div id="referralNotice" style="display:none; margin-top:10px; padding:10px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; font-size:12px; color:#16a34a; line-height:1.5;">
@@ -3664,34 +3664,34 @@ async function handleSubReturn() {
         </div>
         <div style="text-align:right; margin-bottom:20px;">
             <div style="font-size:13px; color:#666;" data-i18n="label_final_pay_amount">최종 결제 금액</div>
-            <div id="finalPayAmountDisplay" style="font-size:24px; font-weight:900; color:#03C75A;">0원</div>
+            <div id="finalPayAmountDisplay" style="font-size:24px; font-weight:900; color:#6366f1;">0원</div>
         </div>
         <label style="font-size:14px; font-weight:bold; color:#333; margin-bottom:10px; display:block;" data-i18n="label_pay_method">결제 수단 선택</label>
         
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
             <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
-                <input type="radio" name="paymentMethod" value="card" checked style="margin-right:10px; accent-color:#03C75A;">
+                <input type="radio" name="paymentMethod" value="card" checked style="margin-right:10px; accent-color:#6366f1;">
                 <span data-i18n="label_card_pay">💳 카드 / 간편결제 (즉시 완료)</span>
             </label>
 
             <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
-                <input type="radio" name="paymentMethod" value="bank" style="margin-right:10px; accent-color:#03C75A;">
+                <input type="radio" name="paymentMethod" value="bank" style="margin-right:10px; accent-color:#6366f1;">
                 <span data-i18n="label_bank_transfer">🏦 무통장 입금 (확인 후 제작)</span>
             </label>
 
             <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
-                <input type="radio" name="paymentMethod" value="deposit" style="margin-right:10px; accent-color:#03C75A;">
+                <input type="radio" name="paymentMethod" value="deposit" style="margin-right:10px; accent-color:#6366f1;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
                     <span data-i18n="label_deposit_use">💰 나의 예치금 사용</span>
-                    <span id="myCurrentDepositDisplay" style="font-weight:bold; color:#03C75A;" data-i18n="label_balance_loading">(잔액 조회중...)</span>
+                    <span id="myCurrentDepositDisplay" style="font-weight:bold; color:#6366f1;" data-i18n="label_balance_loading">(잔액 조회중...)</span>
                 </div>
             </label>
         </div>
 
         <div id="checkoutReferralInfo" style="display:none; margin-bottom:15px; padding:12px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px;">
             <span style="font-weight:bold;">🎁 <span data-i18n="referral_applied">추천인 적용됨</span>:</span>
-            <span id="checkoutReferrerEmail" style="color:#02a84c; font-weight:bold;"></span>
-            <div style="margin-top:6px; font-size:13px; color:#02a84c; font-weight:bold;">
+            <span id="checkoutReferrerEmail" style="color:#7c3aed; font-weight:bold;"></span>
+            <div style="margin-top:6px; font-size:13px; color:#7c3aed; font-weight:bold;">
                 <span data-i18n="label_referral_discount">추천인 할인</span>: <span id="checkoutReferralDiscount"></span>
             </div>
             <div style="margin-top:4px; font-size:12px; color:#92400e;">
@@ -3816,12 +3816,12 @@ async function handleSubReturn() {
 .fx-tabs { display:flex; gap:6px; padding:12px 24px; overflow-x:auto; border-bottom:1px solid #f1f5f9; }
 .fx-tabs::-webkit-scrollbar { height:0; }
 .fx-tab { padding:6px 14px; border-radius:20px; border:1px solid #e2e8f0; background:#fff; font-size:12px; font-weight:600; color:#64748b; cursor:pointer; white-space:nowrap; transition:all .2s; }
-.fx-tab:hover { border-color:#03C75A; color:#03C75A; }
-.fx-tab.active { background:#03C75A; color:#fff; border-color:#03C75A; }
+.fx-tab:hover { border-color:#6366f1; color:#6366f1; }
+.fx-tab.active { background:#6366f1; color:#fff; border-color:#6366f1; }
 .fx-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:20px 24px; overflow-y:auto; max-height:calc(85vh - 140px); }
 @media (max-width:600px) { .fx-grid { grid-template-columns:repeat(3, 1fr); gap:8px; padding:12px; } }
 .fx-card { cursor:pointer; border:2px solid #f1f5f9; border-radius:12px; padding:10px 6px 8px; text-align:center; transition:all .2s; background:#fff; }
-.fx-card:hover { border-color:#03C75A; transform:translateY(-2px); box-shadow:0 4px 12px rgba(3,199,90,.15); }
+.fx-card:hover { border-color:#6366f1; transform:translateY(-2px); box-shadow:0 4px 12px rgba(99,102,241,.15); }
 .fx-preview { font-size:32px; font-weight:900; line-height:1.2; height:52px; display:flex; align-items:center; justify-content:center; margin-bottom:4px; font-family:'Inter','Pretendard',sans-serif; overflow:hidden; }
 .fx-name { font-size:10px; color:#64748b; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 </style>
@@ -3877,11 +3877,11 @@ async function handleSubReturn() {
         <div class="fx-name">White Outline</div>
     </div>
     <div class="fx-card" data-cat="outline" onclick="window.applyTextEffect('outline-double'); document.getElementById('textEffectModal').style.display='none';">
-        <div class="fx-preview" style="color:#fff; -webkit-text-stroke:2px #03C75A; text-shadow:0 0 0 #000, 3px 3px 0 #000;">Aa</div>
+        <div class="fx-preview" style="color:#fff; -webkit-text-stroke:2px #6366f1; text-shadow:0 0 0 #000, 3px 3px 0 #000;">Aa</div>
         <div class="fx-name">Double Outline</div>
     </div>
     <div class="fx-card" data-cat="outline" onclick="window.applyTextEffect('outline-color'); document.getElementById('textEffectModal').style.display='none';">
-        <div class="fx-preview" style="color:#fff; -webkit-text-stroke:2.5px #03C75A;">Aa</div>
+        <div class="fx-preview" style="color:#fff; -webkit-text-stroke:2.5px #6366f1;">Aa</div>
         <div class="fx-name">Color Outline</div>
     </div>
 
@@ -3957,7 +3957,7 @@ async function handleSubReturn() {
         <div class="fx-name">Emboss</div>
     </div>
     <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-purple'); document.getElementById('textEffectModal').style.display='none';">
-        <div class="fx-preview" style="background:linear-gradient(135deg,#03C75A,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Aa</div>
+        <div class="fx-preview" style="background:linear-gradient(135deg,#6366f1,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Aa</div>
         <div class="fx-name">Gradient</div>
     </div>
     <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-sunset'); document.getElementById('textEffectModal').style.display='none';">
@@ -3965,7 +3965,7 @@ async function handleSubReturn() {
         <div class="fx-name">Sunset</div>
     </div>
     <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-ocean'); document.getElementById('textEffectModal').style.display='none';">
-        <div class="fx-preview" style="background:linear-gradient(135deg,#06b6d4,#3b82f6,#03C75A); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Aa</div>
+        <div class="fx-preview" style="background:linear-gradient(135deg,#06b6d4,#3b82f6,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Aa</div>
         <div class="fx-name">Ocean</div>
     </div>
     <div class="fx-card" data-cat="retro" onclick="window.applyTextEffect('gradient-gold'); document.getElementById('textEffectModal').style.display='none';">
@@ -4001,7 +4001,7 @@ window.filterFxCards = function(cat, btn) {
 <div id="choiceProdDesc" class="info-desc-box product-desc" style="display:none;"></div>
 
 <p style="color:#666; font-size:14px; margin-bottom:20px; line-height:1.5;" data-i18n="choice_modal_desc">
-    선택하신 <span id="choiceProdName" style="color:#03C75A; font-weight:bold;">상품</span>으로 디자인을 시작하거나,<br>
+    선택하신 <span id="choiceProdName" style="color:#6366f1; font-weight:bold;">상품</span>으로 디자인을 시작하거나,<br>
     이미 완성된 파일이 있다면 바로 주문할 수 있습니다.
 </p>
 <div id="extraLinksArea" style="display:flex; gap:10px; margin-bottom:15px;">
@@ -4093,7 +4093,7 @@ window.filterFxCards = function(cat, btn) {
             <i class="fa-solid fa-xmark"></i>
         </button>
         <button id="catModalBackBtn" onclick="if(window._catModalBackAction) window._catModalBackAction();"
-                style="position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: #03C75A; z-index: 10; display:none; align-items:center; gap:4px; font-weight:600;">
+                style="position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: #6366f1; z-index: 10; display:none; align-items:center; gap:4px; font-weight:600;">
             <i class="fa-solid fa-arrow-left"></i> <span style="font-size:14px;" data-i18n="btn_go_back">뒤로</span>
         </button>
         <h3 id="catModalTitle" data-i18n="cat_select_size">📏 사이즈(제품)를 선택해주세요</h3>
@@ -4137,7 +4137,7 @@ window.filterFxCards = function(cat, btn) {
 <div id="designWizardModal" class="modal-bg" style="z-index:16000;">
     <div class="modal-box" style="width:720px;max-width:94%;padding:0;overflow:hidden;border-radius:20px;">
         <!-- Header -->
-        <div style="background:linear-gradient(135deg,#03C75A 0%,#00b950 100%);padding:24px 28px 20px;color:#fff;">
+        <div style="background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%);padding:24px 28px 20px;color:#fff;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 style="margin:0;font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -4156,12 +4156,12 @@ window.filterFxCards = function(cat, btn) {
             <input id="wizardTitleInput" type="text" class="ai-input-pretty"
                 data-i18n-placeholder="wizard_placeholder" placeholder="예: 카페, 구름, 바다, 여름, 생일"
                 style="font-size:15px;font-weight:600;padding:14px 16px;margin-bottom:12px;width:100%;box-sizing:border-box;border:2px solid #e2e8f0;border-radius:12px;outline:none;transition:border .2s;"
-                onfocus="this.style.borderColor='#03C75A'" onblur="this.style.borderColor='#e2e8f0'">
+                onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
 
             <label style="font-size:13px;font-weight:700;color:#334155;display:block;margin-bottom:6px;" data-i18n="wizard_label_style">스타일</label>
             <div id="wizardStyleGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
                 <button class="wizard-style-btn active" data-style="neon" style="background:linear-gradient(135deg,#5b00f5,#b030ff);color:#fff;">Neon</button>
-                <button class="wizard-style-btn" data-style="ocean" style="background:linear-gradient(135deg,#4f6cf7,#00b950);color:#fff;">Ocean</button>
+                <button class="wizard-style-btn" data-style="ocean" style="background:linear-gradient(135deg,#4f6cf7,#8b5cf6);color:#fff;">Ocean</button>
                 <button class="wizard-style-btn" data-style="flame" style="background:linear-gradient(135deg,#f02020,#ff8c00);color:#fff;">Flame</button>
                 <button class="wizard-style-btn" data-style="forest" style="background:linear-gradient(135deg,#059e7a,#34e89e);color:#fff;">Forest</button>
                 <button class="wizard-style-btn" data-style="noir" style="background:linear-gradient(135deg,#111,#333);color:#fff;">Noir</button>
@@ -4178,14 +4178,14 @@ window.filterFxCards = function(cat, btn) {
             <div id="wizardProgressArea" style="display:none;margin-bottom:16px;">
                 <div id="wizardStepList"></div>
                 <div style="background:#f1f5f9;border-radius:10px;height:6px;overflow:hidden;margin-top:12px;">
-                    <div id="wizardProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg,#03C75A,#00b950);border-radius:10px;transition:width .5s ease;"></div>
+                    <div id="wizardProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg,#6366f1,#a855f7);border-radius:10px;transition:width .5s ease;"></div>
                 </div>
             </div>
 
             <button id="btnWizardGenerate" style="width:100%;height:48px;font-size:15px;font-weight:800;
-                background:linear-gradient(135deg,#03C75A,#00b950);border:none;border-radius:12px;
+                background:linear-gradient(135deg,#6366f1,#a855f7);border:none;border-radius:12px;
                 color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-                transition:all .2s;box-shadow:0 4px 15px rgba(3,199,90,0.3);"
+                transition:all .2s;box-shadow:0 4px 15px rgba(99,102,241,0.3);"
                 onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                 <span data-i18n="wizard_generate">디자인 생성하기</span>
@@ -4199,18 +4199,18 @@ window.filterFxCards = function(cat, btn) {
 </div>
 <style>
 .wizard-style-btn{padding:10px 0;border-radius:12px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s ease;opacity:0.85;letter-spacing:0.3px}
-.wizard-style-btn.active{opacity:1!important;box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px #03C75A!important;transform:scale(1.02)}
+.wizard-style-btn.active{opacity:1!important;box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px #6366f1!important;transform:scale(1.02)}
 .wizard-style-btn:hover{opacity:1;transform:scale(1.02)}
 .wizard-step{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:#94a3b8;transition:all .3s}
-.wizard-step.active{color:#03C75A;font-weight:700}
+.wizard-step.active{color:#6366f1;font-weight:700}
 .wizard-step.done{color:#10b981}
 .wizard-step .step-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f1f5f9;font-size:11px;flex-shrink:0}
-.wizard-step.active .step-icon{background:#03C75A;color:#fff}
+.wizard-step.active .step-icon{background:#6366f1;color:#fff}
 .wizard-step.done .step-icon{background:#10b981;color:#fff}
 .ls-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
 .ls-type-card{border:2px solid #e2e8f0;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#fff}
-.ls-type-card:hover{border-color:#03C75A;background:#ecfdf5;transform:translateY(-2px);box-shadow:0 4px 12px rgba(3,199,90,.15)}
-.ls-type-card.selected{border-color:#03C75A;background:#d1fae5;box-shadow:0 0 0 2px #03C75A}
+.ls-type-card:hover{border-color:#6366f1;background:#f5f3ff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,.15)}
+.ls-type-card.selected{border-color:#6366f1;background:#ede9fe;box-shadow:0 0 0 2px #6366f1}
 .ls-type-card .ls-icon{font-size:28px;margin-bottom:6px}
 .ls-type-card .ls-name{font-size:13px;font-weight:700;color:#1e293b}
 .ls-type-card .ls-desc{font-size:11px;color:#64748b;margin-top:2px}
@@ -4488,7 +4488,7 @@ window.filterFxCards = function(cat, btn) {
         var btn = document.getElementById('btnSelectUploads');
         if (window._uploadSelectMode) {
             bar.style.display = 'flex';
-            btn.style.background = '#03C75A';
+            btn.style.background = '#6366f1';
             btn.style.color = 'white';
         } else {
             bar.style.display = 'none';
@@ -4558,12 +4558,12 @@ window.filterFxCards = function(cat, btn) {
                 if (selectMode) {
                     var isSelected = window._selectedUploads.has(file.name);
                     var check = document.createElement('div');
-                    check.style.cssText = 'position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:4px; border:2px solid ' + (isSelected ? '#03C75A' : '#cbd5e1') + '; background:' + (isSelected ? '#03C75A' : 'rgba(255,255,255,0.85)') + '; display:flex; align-items:center; justify-content:center; z-index:2; transition:all 0.15s;';
+                    check.style.cssText = 'position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:4px; border:2px solid ' + (isSelected ? '#6366f1' : '#cbd5e1') + '; background:' + (isSelected ? '#6366f1' : 'rgba(255,255,255,0.85)') + '; display:flex; align-items:center; justify-content:center; z-index:2; transition:all 0.15s;';
                     check.innerHTML = isSelected ? '<i class="fa-solid fa-check" style="color:white; font-size:11px;"></i>' : '';
                     thumb.appendChild(check);
                     if (isSelected) {
-                        thumb.style.border = '2px solid #03C75A';
-                        thumb.style.boxShadow = '0 0 0 1px #03C75A';
+                        thumb.style.border = '2px solid #6366f1';
+                        thumb.style.boxShadow = '0 0 0 1px #6366f1';
                     }
                     thumb.onclick = function() {
                         if (window._selectedUploads.has(file.name)) {
@@ -4575,11 +4575,11 @@ window.filterFxCards = function(cat, btn) {
                             thumb.style.boxShadow = 'none';
                         } else {
                             window._selectedUploads.add(file.name);
-                            check.style.border = '2px solid #03C75A';
-                            check.style.background = '#03C75A';
+                            check.style.border = '2px solid #6366f1';
+                            check.style.background = '#6366f1';
                             check.innerHTML = '<i class="fa-solid fa-check" style="color:white; font-size:11px;"></i>';
-                            thumb.style.border = '2px solid #03C75A';
-                            thumb.style.boxShadow = '0 0 0 1px #03C75A';
+                            thumb.style.border = '2px solid #6366f1';
+                            thumb.style.boxShadow = '0 0 0 1px #6366f1';
                         }
                         window._updateDeleteCount();
                     };
@@ -4614,7 +4614,7 @@ window.filterFxCards = function(cat, btn) {
             { name: 'Warm Sunset',  nameKey: 'theme_warm',   hue: 15,  colors: ['#ff6b35','#ff8c61','#ffd4b8','#fff0e5'] },
             { name: 'Cool Ocean',   nameKey: 'theme_ocean',  hue: 210, colors: ['#1e40af','#3b82f6','#93c5fd','#dbeafe'] },
             { name: 'Forest',       nameKey: 'theme_forest', hue: 145, colors: ['#166534','#22c55e','#86efac','#dcfce7'] },
-            { name: 'Royal Purple', nameKey: 'theme_purple', hue: 270, colors: ['#6d28d9','#00b950','#86efac','#d1fae5'] },
+            { name: 'Royal Purple', nameKey: 'theme_purple', hue: 270, colors: ['#6d28d9','#8b5cf6','#c4b5fd','#ede9fe'] },
             { name: 'Rose Pink',    nameKey: 'theme_pink',   hue: 340, colors: ['#be185d','#ec4899','#f9a8d4','#fce7f3'] },
             { name: 'Golden',       nameKey: 'theme_golden', hue: 42,  colors: ['#b45309','#f59e0b','#fcd34d','#fef3c7'] },
             { name: 'Monochrome',   nameKey: 'theme_mono',   hue: -1,  colors: ['#1e293b','#64748b','#cbd5e1','#f1f5f9'] },
@@ -4864,9 +4864,9 @@ window.filterFxCards = function(cat, btn) {
                     window.applyColorTheme(preset.hue, intensity, { desat: preset.desat || 0 });
                     // 선택 표시
                     document.querySelectorAll('#themePresetGrid .theme-card').forEach(function(c2) { c2.style.border = '2px solid #e2e8f0'; });
-                    card.style.border = '2px solid #03C75A';
+                    card.style.border = '2px solid #6366f1';
                 };
-                card.onmouseenter = function() { if (window._currentTheme !== preset) card.style.border = '2px solid #86efac'; };
+                card.onmouseenter = function() { if (window._currentTheme !== preset) card.style.border = '2px solid #c7d2fe'; };
                 card.onmouseleave = function() { if (window._currentTheme !== preset) card.style.border = '2px solid #e2e8f0'; };
                 grid.appendChild(card);
             });
@@ -4999,7 +4999,7 @@ window.filterFxCards = function(cat, btn) {
             <div style="margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <span id="genLabelTotal" style="font-size: 14px; color: #64748b;">총 결제금액</span>
-                    <span id="genProdTotal" style="font-size: 24px; font-weight: 900; color: #03C75A;">0원</span>
+                    <span id="genProdTotal" style="font-size: 24px; font-weight: 900; color: #6366f1;">0원</span>
                 </div>
 
                 <div style="display: flex; gap: 10px;">
@@ -5073,7 +5073,7 @@ window.filterFxCards = function(cat, btn) {
                 <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:10px; ${bgClass}">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-weight:bold; font-size:15px;">${bid.company_name || '파트너사'}</span>
-                        <span style="font-weight:bold; color:#03C75A; font-size:16px;">${fmtMoney(bid.price)}</span>
+                        <span style="font-weight:bold; color:#6366f1; font-size:16px;">${fmtMoney(bid.price)}</span>
                     </div>
                     <p style="font-size:13px; color:#475569; margin:10px 0; line-height:1.4;">"${bid.message}"</p>
                     ${actionArea}
@@ -5429,7 +5429,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
 
         const grid = document.getElementById('tplGrid');
         if (!grid) return;
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#03C75A;"></i></div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#6366f1;"></i></div>';
 
         if (!sb) { grid.innerHTML = ''; return; }
         try {
@@ -5483,7 +5483,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                 // 뱃지 표시 (벡터인지 확인용)
                 let badge = '';
                 if(tpl.category === 'vector' || tpl.category === 'user_vector') {
-                    badge = `<span style="position:absolute; top:5px; left:5px; background:#02a84c; color:white; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">VECTOR</span>`;
+                    badge = `<span style="position:absolute; top:5px; left:5px; background:#7c3aed; color:white; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">VECTOR</span>`;
                 }
 
                 div.innerHTML = `
@@ -5687,7 +5687,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
             const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : 'Option';
             
             // 뱃지 색상
-            const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : '#02a84c';
+            const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : '#4f46e5';
             const badgeText = flagColumn === 'is_hot_deal' ? 'HOT' : 'BIZ';
 
             // HTML 생성 (이제 name과 formattedPrice 변수만 넣으면 끝)
@@ -5739,7 +5739,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
 
         // 1. 모달 창 열기 & 로딩 표시
         modal.style.display = 'flex';
-        if(titleEl) titleEl.innerHTML = `<span style="color:#03C75A;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(세부 항목 선택)</span>`;
+        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(세부 항목 선택)</span>`;
         if(descEl) descEl.innerText = "원하시는 카테고리를 선택해주세요.";
 
         // pushState: 카테고리 모달 열릴 때 히스토리에 추가 (뒤로가기로 홈 복귀 가능)
@@ -5877,7 +5877,7 @@ window._drawQuickItems = (list, isProductMode = false) => {
         div.className = 'quick-item';
         div.innerHTML = `
             <div class="quick-icon" onclick="${clickAction}" style="position:relative; overflow:hidden; cursor:pointer;">
-                ${isProduct ? `<span style="position:absolute;top:6px;left:6px;background:#03C75A;color:white;font-size:10px;padding:2px 6px;border-radius:4px;z-index:2;font-weight:bold;">${window.t ? window.t('badge_product','상품') : '상품'}</span>` : ''}
+                ${isProduct ? `<span style="position:absolute;top:6px;left:6px;background:#6366f1;color:white;font-size:10px;padding:2px 6px;border-radius:4px;z-index:2;font-weight:bold;">${window.t ? window.t('badge_product','상품') : '상품'}</span>` : ''}
                 <img src="${tinyUrl}" alt="${name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/200?text=No+Img'">
             </div>
             <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
@@ -6175,7 +6175,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
     }
 
     // 1. UI 초기화
-    if(titleEl) titleEl.innerHTML = `<span style="color:#03C75A;">${catName}</span>`;
+    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${catName}</span>`;
     
     // 설명 박스 처리 (일본어 대응 포함)
     if (descBox) {
@@ -6235,7 +6235,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                     <img src="${thumbUrl}" alt="${localized.name}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
                 </div>
                 <div class="quick-text" style="display:block !important; font-weight:bold; margin-top:8px;">${localized.name}</div>
-                <div style="font-weight:bold; color:#03C75A; margin-top:5px;">${localized.formattedPrice}</div>
+                <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${localized.formattedPrice}</div>
             `;
 
             // 클릭 시 상세 정보를 로드하는 별도 함수 호출 (지연 로딩의 핵심)
@@ -6751,7 +6751,7 @@ window.showChoiceModal = async function(key) {
                     optionsHtml += `
                         <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
                             <div style="font-weight:800; font-size:14px; color:#1e1b4b; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-                                <i class="fa-solid fa-layer-group" style="color:#03C75A;"></i> ${catName}
+                                <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${catName}
                             </div>`;
 
                     if (isColorCategory) {
@@ -6781,11 +6781,11 @@ window.showChoiceModal = async function(key) {
                                            onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">
                                     <div class="color-btn-box" style="border:1px solid #e2e8f0; border-radius:8px; padding:4px 2px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; background-color:#fff;">
                                         <img src="${imgUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #eee; flex-shrink:0;">
-                                        ${colorPriceLabel ? `<span style="font-size:8px; color:#03C75A; margin-top:1px; font-weight:bold;">${colorPriceLabel}</span>` : ''}
+                                        ${colorPriceLabel ? `<span style="font-size:8px; color:#6366f1; margin-top:1px; font-weight:bold;">${colorPriceLabel}</span>` : ''}
                                     </div>
                                 </label>`;
                         });
-                        optionsHtml += `</div><style>.color-btn-item.selected .color-btn-box { border:2px solid #03C75A; background:#ecfdf5; box-shadow:0 0 0 1px #03C75A; }</style>`;
+                        optionsHtml += `</div><style>.color-btn-item.selected .color-btn-box { border:2px solid #6366f1; background:#eff6ff; box-shadow:0 0 0 1px #6366f1; }</style>`;
                     } else {
                         // 일반 옵션: 리스트형 + 썸네일 + data-category (배송비 구분용)
                         optionsHtml += `<div style="display:flex; flex-direction:column; gap:8px;">`;
@@ -6805,11 +6805,11 @@ window.showChoiceModal = async function(key) {
                             optionsHtml += `
                             <div class="addon-item-row" style="display:flex; align-items:center; justify-content:space-between; padding:12px; border:1px solid #f1f5f9; background:#fff; border-radius:8px;">
                                 <label style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;">
-                                    <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-category="${catName}" style="width:18px; height:18px; accent-color:#03C75A;" onchange="window.updateModalTotal(); this.closest('.addon-item-row').querySelector('.addon-qty-box').style.display = this.checked ? 'flex' : 'none';">
+                                    <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-category="${catName}" style="width:18px; height:18px; accent-color:#6366f1;" onchange="window.updateModalTotal(); this.closest('.addon-item-row').querySelector('.addon-qty-box').style.display = this.checked ? 'flex' : 'none';">
                                     <img src="${imgUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
                                     <div style="display:flex; flex-direction:column;">
                                         <span style="font-size:13px; font-weight:600; color:#333;">${optName}</span>
-                                        <span style="font-size:12px; color:#03C75A; font-weight:bold;">${priceStr}</span>
+                                        <span style="font-size:12px; color:#6366f1; font-weight:bold;">${priceStr}</span>
                                     </div>
                                 </label>
                                 <div class="addon-qty-box" style="display:none; align-items:center; border:1px solid #ddd; height:30px; border-radius:4px; overflow:hidden;">
@@ -6859,29 +6859,29 @@ window.showChoiceModal = async function(key) {
                     ${lang==='ja'?'印刷ファイルがある場合はPDFまたは画像でアップロードしてください。ファイルがなくても無料エディタで簡単にデザインできます。':lang==='zh'?'如果有印刷文件，请上传PDF或图片。没有文件也可以使用免费编辑器轻松设计。':lang==='ar'?'إذا كان لديك ملف للطباعة، يرجى رفعه بصيغة PDF أو صورة. إذا لم يكن لديك ملف، يمكنك التصميم بسهولة باستخدام المحرر المجاني.':lang==='es'?'Si tiene un archivo para imprimir, súbalo en PDF o imagen. Si no tiene archivo, puede diseñar fácilmente con el editor gratuito.':lang==='de'?'Falls Sie eine Druckdatei haben, laden Sie diese als PDF oder Bild hoch. Ohne Datei können Sie einfach mit dem kostenlosen Editor gestalten.':lang==='fr'?'Si vous avez un fichier d\'impression, envoyez-le en PDF ou image. Sans fichier, vous pouvez créer facilement avec l\'éditeur gratuit.':lang==='en'?'If you have a print file, upload it as PDF or image. No file? You can easily design with our free editor.':'인쇄할 파일이 있다면 PDF 또는 이미지로 올려주세요. 파일이 없어도 무료 에디터로 쉽게 디자인할 수 있습니다.'}
                 </div>
             </button>
-            <div id="uploadPreviewArea" data-npc="uploadPreview" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #d1fae5); border:1px solid #86efac; border-radius:12px; padding:14px;">
+            <div id="uploadPreviewArea" data-npc="uploadPreview" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc; box-shadow:0 2px 6px rgba(3,199,90,0.2);">
+                    <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc; box-shadow:0 2px 6px rgba(99,102,241,0.2);">
                     <div style="flex:1; min-width:0;">
                         <div id="uploadPreviewName" style="font-size:12px; font-weight:600; color:#1e40af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
                         <div style="font-size:11px; color:#16a34a; font-weight:500;">✅ ${lang==='ja'?'アップロード完了':lang==='zh'?'上传完成':lang==='ar'?'تم الرفع':lang==='es'?'Subido':lang==='de'?'Hochgeladen':lang==='fr'?'Envoi terminé':lang==='en'?'Upload complete':'업로드 완료'}</div>
-                        <div id="uploadPreviewDims" style="display:none; font-size:10px; color:#03C75A; font-weight:600; margin-top:2px;"></div>
+                        <div id="uploadPreviewDims" style="display:none; font-size:10px; color:#6366f1; font-weight:600; margin-top:2px;"></div>
                     </div>
                 </div>
             </div>
-            ${isFixedSize ? `<div data-npc="size" style="background:linear-gradient(135deg,#ecfdf5,#ecfdf5); border:1.5px solid #86efac; border-radius:12px; padding:14px; margin-top:10px; text-align:center;">
-                <div style="font-size:12px; font-weight:bold; color:#03C75A; margin-bottom:8px;">📐 ${lang==='ja'?'製品サイズ':lang==='zh'?'产品尺寸':lang==='ar'?'حجم المنتج':lang==='es'?'Tamaño':lang==='de'?'Größe':lang==='fr'?'Taille':lang==='en'?'Product Size':'제품사이즈'}</div>
+            ${isFixedSize ? `<div data-npc="size" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:10px; text-align:center;">
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📐 ${lang==='ja'?'製品サイズ':lang==='zh'?'产品尺寸':lang==='ar'?'حجم المنتج':lang==='es'?'Tamaño':lang==='de'?'Größe':lang==='fr'?'Taille':lang==='en'?'Product Size':'제품사이즈'}</div>
                 <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${product.width_mm || 0}<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>${product.height_mm || 0}<span style="font-size:13px; color:#64748b; margin-left:4px;">mm</span></div>
                 <input type="hidden" id="inputCustW" value="${product.width_mm || 0}">
                 <input type="hidden" id="inputCustH" value="${product.height_mm || 0}">
             </div>` : `<div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
-                <div style="font-size:12px; font-weight:bold; color:#03C75A; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
                 <div style="display:flex; gap:5px;">
                     <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('w'); window.calcCustomPrice(); window.updateModalTotal();">
                     <span style="display:flex; align-items:center; color:#999;">x</span>
                     <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
-                <div id="sizeAutoHint" style="font-size:11px; color:#00b950; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\\\'IA vérifiera le fichier et calculera l\\\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
+                <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\\\'IA vérifiera le fichier et calculera l\\\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
             </div>`}`;
     } else {
         // 대량 주문제작상품: 수량 드롭다운 / 일반: +/- 수량 버튼
@@ -6894,21 +6894,21 @@ window.showChoiceModal = async function(key) {
             qtyHtml = `
             <div data-npc="qty" style="margin-top:10px;">
                 <div style="font-size:12px; color:#6d28d9; font-weight:bold; margin-bottom:6px;">📦 ${qtyLabel} (${lang==='ja'?'ロット単位':lang==='en'?'Lot unit':'단위 선택'})</div>
-                <select id="fixedProdQty" onchange="window.updateModalTotal();" style="width:100%; height:44px; border:2px solid #02a84c; border-radius:10px; font-size:16px; font-weight:bold; text-align:center; color:#4c1d95; background:#ecfdf5; cursor:pointer;">
+                <select id="fixedProdQty" onchange="window.updateModalTotal();" style="width:100%; height:44px; border:2px solid #7c3aed; border-radius:10px; font-size:16px; font-weight:bold; text-align:center; color:#4c1d95; background:#f5f3ff; cursor:pointer;">
                     ${opts}
                 </select>
             </div>`;
         } else {
             qtyHtml = `
             <div style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold;">${qtyLabel}</div>
-            <div data-npc="qty" class="qty-wrapper" style="display:flex; border:2px solid #03C75A; border-radius:10px; overflow:hidden; height:44px; margin-top:6px;">
+            <div data-npc="qty" class="qty-wrapper" style="display:flex; border:2px solid #6366f1; border-radius:10px; overflow:hidden; height:44px; margin-top:6px;">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value)-1); window.updateModalTotal();" style="flex:1; border:none; background:#f0f0ff; cursor:pointer; font-weight:bold; font-size:18px;">-</button>
                 <input type="number" id="fixedProdQty" value="1" min="1" style="width:70px; text-align:center; border:none; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; font-weight:bold; font-size:16px;" oninput="window.updateModalTotal();">
                 <button onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value)+1; window.updateModalTotal();" style="flex:1; border:none; background:#f0f0ff; cursor:pointer; font-weight:bold; font-size:18px;">+</button>
             </div>`;
         }
         rightSideUI = productHeaderHtml + `
-            <div data-npc="price" style="background:linear-gradient(135deg, #03C75A, #00b950, #00b950); color:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0 15px; box-shadow:0 4px 15px rgba(3,199,90,0.3);">
+            <div data-npc="price" style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0 15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
                 <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 販売価格':lang==='zh'?'💰 售价':lang==='ar'?'💰 السعر':lang==='es'?'💰 Precio':lang==='de'?'💰 Preis':lang==='fr'?'💰 Prix':lang==='en'?'💰 Price':'💰 판매가'}${isBulk ? ` (${lang==='ja'?'1個あたり':lang==='en'?'per unit':'개당'})` : ''}</div>
                 <div style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${formatPriceSimple(dPrice)}</div>
             </div>
@@ -6935,13 +6935,13 @@ window.showChoiceModal = async function(key) {
             <div id="choiceRightActions" class="choice-right-actions" style="display:block; width:${window.innerWidth <= 768 ? '100%' : '380px'}; min-width:${window.innerWidth <= 768 ? 'auto' : '380px'}; background:#f8fafc; padding:30px; border-left:1px solid #eee; overflow-y:auto; max-height:90vh; min-height:0;">
                 ${rightSideUI}
                 ${optionsHtml}
-                ${isCustom ? '<div data-npc="estimate" style="background:linear-gradient(135deg,#f8fafc,#f0f4ff); border-radius:12px; padding:14px; margin-top:15px; border:1px solid #86efac;"><div style="font-size:12px; font-weight:bold; color:#03C75A; margin-bottom:8px;">\uD83D\uDDA8\uFE0F '+(lang==='ja'?'印刷費':lang==='zh'?'印刷费':lang==='ar'?'تكلفة الطباعة':lang==='es'?'Coste de impresión':lang==='de'?'Druckkosten':lang==='fr'?'Frais d\'impression':lang==='en'?'Printing Cost':'인쇄비')+'</div><div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#1e1b4b;" data-raw-price="0">0</div><div id="calcResultSize" style="font-size:11px; color:#64748b; margin-top:4px;">-</div></div><div data-npc="qtyLabel" style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">'+(lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량')+'</div><div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button><input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button></div>' : ''}
+                ${isCustom ? '<div data-npc="estimate" style="background:linear-gradient(135deg,#f8fafc,#f0f4ff); border-radius:12px; padding:14px; margin-top:15px; border:1px solid #c7d2fe;"><div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">\uD83D\uDDA8\uFE0F '+(lang==='ja'?'印刷費':lang==='zh'?'印刷费':lang==='ar'?'تكلفة الطباعة':lang==='es'?'Coste de impresión':lang==='de'?'Druckkosten':lang==='fr'?'Frais d\'impression':lang==='en'?'Printing Cost':'인쇄비')+'</div><div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#1e1b4b;" data-raw-price="0">0</div><div id="calcResultSize" style="font-size:11px; color:#64748b; margin-top:4px;">-</div></div><div data-npc="qtyLabel" style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">'+(lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량')+'</div><div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button><input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button></div>' : ''}
                 <div data-npc="total" style="border-radius:14px; margin-top:20px; overflow:hidden; border:1.5px solid #1e1e2e;">
                     <div style="background:#1e1e2e; padding:10px 16px;">
                         <span style="color:#fff; font-size:12px; font-weight:700; letter-spacing:0.5px;">${lang==='ja'?'オプション込み最終見積':lang==='zh'?'含选项最终报价':lang==='ar'?'السعر النهائي شامل الخيارات':lang==='es'?'Precio final con opciones':lang==='de'?'Endpreis inkl. Optionen':lang==='fr'?'Devis final options incluses':lang==='en'?'Final Quote incl. Options':'옵션을 포함한 최종견적'}</span>
                     </div>
                     <div style="background:#fff; padding:16px 16px; text-align:right;">
-                        <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#03C75A;">0</div>
+                        <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#6366f1;">0</div>
                     </div>
                 </div>
                 <div data-npc="buttons" style="display:flex; flex-direction:column; gap:12px; margin-top:20px; padding-bottom:50px;">
@@ -7034,7 +7034,7 @@ window.showChoiceModal = async function(key) {
                     </div>
                     <div style="padding:8px 10px;">
                         <div style="font-size:12px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${loc.name}</div>
-                        <div style="font-size:12px; font-weight:800; color:#03C75A; margin-top:2px;">${loc.formattedPrice}</div>
+                        <div style="font-size:12px; font-weight:800; color:#6366f1; margin-top:2px;">${loc.formattedPrice}</div>
                     </div>
                 </div>`;
             });
@@ -7065,7 +7065,7 @@ window.showChoiceModal = async function(key) {
                             </div>
                             <div style="padding:6px 8px;">
                                 <div style="font-size:11px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${loc.name}</div>
-                                <div style="font-size:11px; font-weight:800; color:#03C75A; margin-top:2px;">${loc.formattedPrice}</div>
+                                <div style="font-size:11px; font-weight:800; color:#6366f1; margin-top:2px;">${loc.formattedPrice}</div>
                             </div>
                         </div>`;
                     }).join('')}</div>
@@ -7934,7 +7934,7 @@ if (w >= 20 && h >= 20) {
                 </div>
                 <textarea id="prvComment" class="ai-input-pretty" placeholder="${window.t('rv_placeholder','상품에 대한 솔직한 리뷰를 남겨주세요')}" style="height:80px;width:100%;resize:vertical;"></textarea>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;color:#03C75A;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;color:#6366f1;">
                         <i class="fa-solid fa-camera"></i> ${window.t('rv_photo_add','사진 첨부')}
                         <input type="file" id="prvPhoto" accept="image/*" style="display:none;">
                     </label>
@@ -8942,9 +8942,9 @@ if (w >= 20 && h >= 20) {
                 let badgeColor = '#64748b'; // 기본 회색
 
                 switch (tpl.category) {
-                    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#02a84c'; break; // 보라색
+                    case 'user_vector': badgeText = 'User Vector'; badgeColor = '#7c3aed'; break; // 보라색
                     case 'user_image':  badgeText = 'User Image'; badgeColor = '#059669'; break;  // 초록색
-                    case 'vector':      badgeText = 'Vector'; badgeColor = '#02a84c'; break;
+                    case 'vector':      badgeText = 'Vector'; badgeColor = '#7c3aed'; break;
                     case 'photo-bg':    badgeText = 'Image'; badgeColor = '#059669'; break;
                     case 'graphic':     badgeText = 'Graphic'; badgeColor = '#2563eb'; break; // 파란색
                     case 'pattern':
@@ -9267,7 +9267,7 @@ if (w >= 20 && h >= 20) {
                 <i class="fa-solid fa-star" onclick="setReviewRating(4)" id="star4"></i>
                 <i class="fa-solid fa-star" onclick="setReviewRating(5)" id="star5"></i>
             </div>
-            <div id="ratingText" style="font-weight: bold; color: #03C75A; margin-top: 5px;">5점</div>
+            <div id="ratingText" style="font-weight: bold; color: #6366f1; margin-top: 5px;">5점</div>
         </div>
 
         <textarea id="reviewCommentInput" class="ai-input-pretty" placeholder="후기를 간단히 남겨주세요 (선택사항)" style="height: 80px;"></textarea>
@@ -9298,7 +9298,7 @@ if (w >= 20 && h >= 20) {
 
         <div style="margin-bottom: 15px;">
             <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px;">출금 요청 금액 (수수료 공제 후)</label>
-            <input id="wdAmount" class="ai-input-pretty" readonly style="background: #f8fafc; font-weight: 800; color: #03C75A; font-size: 18px;">
+            <input id="wdAmount" class="ai-input-pretty" readonly style="background: #f8fafc; font-weight: 800; color: #6366f1; font-size: 18px;">
             <div style="font-size: 11px; color: #64748b; margin-top: 5px; line-height: 1.4;">
                 * 공제 내역 (총 20%): 부가세(10%) + 카드수수료(3.5%) + 가맹수수료(6.5%)<br>
                 * 실제 입금은 신청일로부터 <strong>영업일 기준 5일 이내</strong> 처리됩니다.
@@ -9385,14 +9385,14 @@ if (w >= 20 && h >= 20) {
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
             <!-- 캔버스 크기 설정 -->
-            <span style="color:#86efac; font-size:13px;" data-i18n="gm_canvas_size">크기:</span>
+            <span style="color:#c4b5fd; font-size:13px;" data-i18n="gm_canvas_size">크기:</span>
             <input type="number" id="gifCanvasW" value="500" min="50" max="2000" style="width:60px; padding:6px 8px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; text-align:center; font-size:13px;">
             <span style="color:#a78bfa;">×</span>
             <input type="number" id="gifCanvasH" value="500" min="50" max="2000" style="width:60px; padding:6px 8px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; text-align:center; font-size:13px;">
-            <button onclick="window.gifResizeCanvas()" style="padding:6px 14px; background:#02a84c; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;" data-i18n="gm_apply">적용</button>
+            <button onclick="window.gifResizeCanvas()" style="padding:6px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;" data-i18n="gm_apply">적용</button>
             <div style="width:1px; height:28px; background:rgba(255,255,255,0.1); margin:0 6px;"></div>
             <!-- 프레임 속도 -->
-            <span style="color:#86efac; font-size:13px;" data-i18n="gm_speed_label">속도:</span>
+            <span style="color:#c4b5fd; font-size:13px;" data-i18n="gm_speed_label">속도:</span>
             <select id="gifSpeed" style="padding:6px 10px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; font-size:13px; cursor:pointer;">
                 <option value="100" data-i18n="gm_speed_fastest">매우 빠름 (0.1초)</option>
                 <option value="200" data-i18n="gm_speed_fast">빠름 (0.2초)</option>
@@ -9402,7 +9402,7 @@ if (w >= 20 && h >= 20) {
             </select>
             <div style="width:1px; height:28px; background:rgba(255,255,255,0.1); margin:0 6px;"></div>
             <!-- 화질 선택 -->
-            <span style="color:#86efac; font-size:13px;" data-i18n="gm_quality_label">화질:</span>
+            <span style="color:#c4b5fd; font-size:13px;" data-i18n="gm_quality_label">화질:</span>
             <select id="gifQuality" onchange="window.gifSetQuality(this.value)" style="padding:6px 10px; border-radius:8px; border:1px solid #4c1d95; background:#1e1b4b; color:#e0e7ff; font-size:13px; cursor:pointer;">
                 <option value="high" data-i18n="gm_quality_high">고화질 (느림)</option>
                 <option value="low" data-i18n="gm_quality_low">저화질 (빠름)</option>
@@ -9429,7 +9429,7 @@ if (w >= 20 && h >= 20) {
             <div id="gifTabContent" style="flex:1; overflow-y:auto; padding:16px;">
                 <!-- 프레임 탭 (기본) -->
                 <div id="gifTabFrames">
-                    <button onclick="document.getElementById('gifFileInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#02a84c,#00b950); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <button onclick="document.getElementById('gifFileInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i> <span data-i18n="gm_upload_photos">사진 업로드 (최대 10장)</span>
                     </button>
                     <button onclick="document.getElementById('gifVideoInput').click()" style="width:100%; padding:14px; background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -9490,9 +9490,9 @@ if (w >= 20 && h >= 20) {
                     <div style="width:100%; height:1px; background:rgba(255,255,255,0.08); margin-bottom:14px;"></div>
                     <!-- Supabase 요소 -->
                     <b style="color:#e0e7ff; font-size:13px; display:block; margin-bottom:8px;" data-i18n="gm_img_elements">이미지 요소</b>
-                    <input type="text" data-i18n-placeholder="gm_search_elements" placeholder="요소 검색..." oninput="window.gifSearchElements(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#00b950'" onblur="this.style.borderColor='#374151'">
+                    <input type="text" data-i18n-placeholder="gm_search_elements" placeholder="요소 검색..." oninput="window.gifSearchElements(this.value)" style="width:100%; padding:10px 14px 10px 36px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e0e7ff; font-size:13px; margin-bottom:12px; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='#374151'">
                     <div id="gifElemGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"><p style="color:#64748b; text-align:center; grid-column:1/-1;" data-i18n="gm_loading">로딩 중...</p></div>
-                    <button onclick="window.gifLoadMoreElements()" style="width:100%; padding:10px; background:rgba(168,85,247,0.15); color:#00b950; border:1px solid rgba(168,85,247,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i><span data-i18n="gm_load_more">더 보기</span></button>
+                    <button onclick="window.gifLoadMoreElements()" style="width:100%; padding:10px; background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px;"><i class="fa-solid fa-angles-down" style="margin-right:4px;"></i><span data-i18n="gm_load_more">더 보기</span></button>
                 </div>
                 <!-- 이미지 탭 (Supabase) -->
                 <div id="gifTabImage" style="display:none;">
@@ -9516,9 +9516,9 @@ if (w >= 20 && h >= 20) {
                 </div>
             </div>
             <!-- 진행률 -->
-            <div id="gifProgressBar" style="display:none; position:absolute; bottom:30px; left:50%; transform:translateX(-50%); background:rgba(30,27,75,0.95); padding:16px 32px; border-radius:16px; border:1px solid #02a84c; text-align:center;">
+            <div id="gifProgressBar" style="display:none; position:absolute; bottom:30px; left:50%; transform:translateX(-50%); background:rgba(30,27,75,0.95); padding:16px 32px; border-radius:16px; border:1px solid #7c3aed; text-align:center;">
                 <div style="width:200px; height:6px; background:#1e1b4b; border-radius:3px; overflow:hidden; margin-bottom:8px;">
-                    <div id="gifProgressFill" style="width:0%; height:100%; background:linear-gradient(90deg,#ec4899,#00b950); border-radius:3px; transition:width 0.3s;"></div>
+                    <div id="gifProgressFill" style="width:0%; height:100%; background:linear-gradient(90deg,#ec4899,#a855f7); border-radius:3px; transition:width 0.3s;"></div>
                 </div>
                 <span id="gifProgressText" style="color:#e0e7ff; font-size:13px;">GIF 생성 중...</span>
             </div>
@@ -9533,9 +9533,9 @@ if (w >= 20 && h >= 20) {
 
     <!-- 하단 프레임 바 -->
     <div style="height:90px; background:#1a1a2e; border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; padding:0 16px; gap:8px; flex-shrink:0; overflow-x:auto;">
-        <button onclick="window.gifPlayPreview()" id="gifPlayBtn" style="width:44px; height:44px; background:#02a84c; border:none; border-radius:50%; color:#fff; font-size:16px; cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-play"></i></button>
+        <button onclick="window.gifPlayPreview()" id="gifPlayBtn" style="width:44px; height:44px; background:#7c3aed; border:none; border-radius:50%; color:#fff; font-size:16px; cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-play"></i></button>
         <div id="gifFrameStrip" style="display:flex; gap:6px; flex:1; overflow-x:auto; padding:4px 0;"></div>
-        <button onclick="document.getElementById('gifFileInput').click()" style="width:44px; height:44px; background:rgba(124,58,237,0.3); border:2px dashed #02a84c; border-radius:12px; color:#a78bfa; font-size:20px; cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-plus"></i></button>
+        <button onclick="document.getElementById('gifFileInput').click()" style="width:44px; height:44px; background:rgba(124,58,237,0.3); border:2px dashed #7c3aed; border-radius:12px; color:#a78bfa; font-size:20px; cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-plus"></i></button>
     </div>
 
     <!-- 숨김 파일 입력 -->
@@ -9563,7 +9563,7 @@ if (w >= 20 && h >= 20) {
         flex-wrap:nowrap !important; gap:4px !important; overflow:hidden !important;
     }
     /* 라벨 "크기:", "속도:" 숨기기 */
-    #gifTopBar > div:last-child > span[style*="color:#86efac"] { display:none !important; }
+    #gifTopBar > div:last-child > span[style*="color:#c4b5fd"] { display:none !important; }
     /* × 표시 */
     #gifTopBar > div:last-child > span[style*="color:#a78bfa"] { font-size:11px !important; margin:0 1px !important; }
     /* 구분선 숨기기 */
@@ -9671,7 +9671,7 @@ if (w >= 20 && h >= 20) {
                         <!-- AI 효과 제거 바 -->
                         <div id="veAiRevert" class="ve-ai-bar" style="display:none;">
                             <div class="ve-ai-bar-icon"><i class="fa-solid fa-wand-magic-sparkles" style="color:#a78bfa"></i></div>
-                            <span style="flex:1;color:#86efac;font-size:12px;font-weight:500;" data-i18n="ve_ai_generated_label">AI로 생성된 영상입니다</span>
+                            <span style="flex:1;color:#c4b5fd;font-size:12px;font-weight:500;" data-i18n="ve_ai_generated_label">AI로 생성된 영상입니다</span>
                             <button class="ve-ai-revert-btn" onclick="window._veAiRevert()">
                                 <i class="fa-solid fa-rotate-left"></i> <span data-i18n="ve_ai_revert">원본 이미지로 복원</span>
                             </button>
@@ -9768,10 +9768,10 @@ if (w >= 20 && h >= 20) {
 .ve-fmt-group { display:flex; gap:2px; background:#0d0d1a; border-radius:6px; padding:2px; }
 .ve-fmt-btn { padding:4px 10px; border:none; border-radius:5px; background:transparent; color:#888; font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; }
 .ve-fmt-btn:hover { color:#ccc; }
-.ve-fmt-btn.active { background:#03C75A; color:#fff; }
+.ve-fmt-btn.active { background:#6366f1; color:#fff; }
 .ve-time { font-size:12px; color:#888; font-family:monospace; }
 .ve-time-sep { color:#444; font-size:12px; }
-.ve-export-btn { padding:5px 14px; background:#03C75A; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; }
+.ve-export-btn { padding:5px 14px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; }
 .ve-export-btn:hover { background:#5558e6; }
 .ve-export-btn:disabled { opacity:.5; cursor:not-allowed; }
 .ve-dl-btn { padding:5px 14px; background:#10b981; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
@@ -9797,7 +9797,7 @@ if (w >= 20 && h >= 20) {
 /* 캔버스 + 속성 */
 .ve-preview-row { flex:1; display:flex; min-height:0; overflow:hidden; }
 .ve-center { flex:1; display:flex; align-items:center; justify-content:center; background:#0d0d1a; position:relative; min-width:0; padding:10px; }
-.ve-drop-overlay { position:absolute; inset:0; background:rgba(3,199,90,0.15); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#818cf8; font-size:14px; z-index:5; border:2px dashed #818cf8; border-radius:6px; }
+.ve-drop-overlay { position:absolute; inset:0; background:rgba(99,102,241,0.15); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#818cf8; font-size:14px; z-index:5; border:2px dashed #818cf8; border-radius:6px; }
 .ve-toast { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); color:#fff; padding:8px 20px; border-radius:8px; font-size:12px; transition:opacity 0.3s; z-index:10; pointer-events:none; white-space:nowrap; }
 .ve-ctx { position:absolute; background:#1e1e36; border:1px solid #3a3a5a; border-radius:8px; padding:4px 0; z-index:20; min-width:140px; box-shadow:0 8px 24px rgba(0,0,0,0.6); }
 .ve-ctx button { display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; border:none; background:transparent; color:#ddd; font-size:12px; cursor:pointer; text-align:left; }
@@ -9805,18 +9805,18 @@ if (w >= 20 && h >= 20) {
 .ve-ctx button i { width:14px; text-align:center; font-size:11px; }
 .ve-ctx-sep { height:1px; background:#3a3a5a; margin:3px 0; }
 /* AI 영상 생성 바 */
-.ve-ai-bar { position:absolute; top:8px; left:8px; right:8px; z-index:15; display:flex; align-items:center; gap:8px; background:linear-gradient(135deg,rgba(3,199,90,0.15),rgba(168,85,247,0.15)); backdrop-filter:blur(12px); border:1px solid rgba(129,140,248,0.3); border-radius:12px; padding:8px 12px; }
+.ve-ai-bar { position:absolute; top:8px; left:8px; right:8px; z-index:15; display:flex; align-items:center; gap:8px; background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(168,85,247,0.15)); backdrop-filter:blur(12px); border:1px solid rgba(129,140,248,0.3); border-radius:12px; padding:8px 12px; }
 .ve-ai-bar-icon { color:#a78bfa; font-size:16px; flex-shrink:0; }
 .ve-ai-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(129,140,248,0.2); border-radius:8px; color:#e2e8f0; font-size:12px; padding:8px 12px; outline:none; min-width:0; }
 .ve-ai-input:focus { border-color:#818cf8; box-shadow:0 0 0 2px rgba(129,140,248,0.2); }
 .ve-ai-input::placeholder { color:#64748b; }
-.ve-ai-gen-btn { flex-shrink:0; background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; transition:opacity .2s; }
+.ve-ai-gen-btn { flex-shrink:0; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; transition:opacity .2s; }
 .ve-ai-gen-btn:hover { opacity:0.9; }
 .ve-ai-gen-btn:disabled { opacity:0.5; cursor:not-allowed; }
-.ve-ai-status { position:absolute; top:8px; left:8px; right:8px; z-index:15; display:flex; align-items:center; gap:10px; background:linear-gradient(135deg,rgba(3,199,90,0.2),rgba(168,85,247,0.2)); backdrop-filter:blur(12px); border:1px solid rgba(129,140,248,0.3); border-radius:12px; padding:10px 14px; }
+.ve-ai-status { position:absolute; top:8px; left:8px; right:8px; z-index:15; display:flex; align-items:center; gap:10px; background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(168,85,247,0.2)); backdrop-filter:blur(12px); border:1px solid rgba(129,140,248,0.3); border-radius:12px; padding:10px 14px; }
 .ve-ai-status-spinner { width:18px; height:18px; border:2px solid rgba(129,140,248,0.3); border-top-color:#a78bfa; border-radius:50%; animation:veSpin 0.8s linear infinite; flex-shrink:0; }
 @keyframes veSpin { to { transform:rotate(360deg); } }
-.ve-ai-status span { flex:1; color:#86efac; font-size:12px; font-weight:500; }
+.ve-ai-status span { flex:1; color:#c4b5fd; font-size:12px; font-weight:500; }
 .ve-ai-cancel-btn { flex-shrink:0; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:4px; }
 .ve-ai-cancel-btn:hover { background:rgba(239,68,68,0.25); }
 .ve-ai-revert-btn { flex-shrink:0; background:rgba(251,146,60,0.15); color:#fb923c; border:1px solid rgba(251,146,60,0.3); border-radius:8px; padding:6px 14px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; white-space:nowrap; transition:background .2s; }
@@ -9824,7 +9824,7 @@ if (w >= 20 && h >= 20) {
 
 .ve-progress { position:absolute; bottom:10px; left:10px; right:10px; display:flex; align-items:center; gap:8px; }
 .ve-progress-track { flex:1; height:4px; background:#2a2a4a; border-radius:4px; overflow:hidden; }
-.ve-progress-bar { height:100%; background:linear-gradient(90deg,#03C75A,#00b950); border-radius:4px; transition:width .3s; }
+.ve-progress-bar { height:100%; background:linear-gradient(90deg,#6366f1,#a855f7); border-radius:4px; transition:width .3s; }
 .ve-progress-text { font-size:10px; color:#aaa; white-space:nowrap; }
 
 /* 우측 속성 패널 */
@@ -9853,7 +9853,7 @@ if (w >= 20 && h >= 20) {
 /* 타임라인 클립 */
 .ve-tl-clip { height:100%; display:inline-flex; align-items:center; border:1px solid #333; border-radius:4px; overflow:hidden; cursor:pointer; position:relative; background:#2a2a4a; flex-shrink:0; }
 .ve-tl-clip img { height:100%; width:auto; object-fit:cover; opacity:.7; }
-.ve-tl-clip.active { border-color:#03C75A; box-shadow:0 0 0 1px #03C75A; }
+.ve-tl-clip.active { border-color:#6366f1; box-shadow:0 0 0 1px #6366f1; }
 .ve-tl-clip-dur { position:absolute; bottom:2px; right:4px; font-size:8px; color:#aaa; background:rgba(0,0,0,0.6); padding:1px 4px; border-radius:3px; }
 
 /* 오디오 트랙 */
@@ -9863,7 +9863,7 @@ if (w >= 20 && h >= 20) {
 /* 오버레이 트랙 */
 .ve-tl-overlay-empty { display:flex; align-items:center; justify-content:center; height:100%; font-size:9px; color:#444; width:100%; }
 .ve-tl-ol-item { display:inline-flex; align-items:center; gap:4px; height:26px; margin:3px 0; border-radius:3px; padding:0 6px; font-size:9px; cursor:grab; flex-shrink:0; border:1px solid transparent; white-space:nowrap; overflow:hidden; box-sizing:border-box; position:relative; }
-.ve-tl-ol-item.type-text { background:#3b1f6e; color:#86efac; }
+.ve-tl-ol-item.type-text { background:#3b1f6e; color:#c4b5fd; }
 .ve-tl-ol-item.type-rect { background:#1e3a5f; color:#93c5fd; }
 .ve-tl-ol-item.type-circle { background:#1e3a5f; color:#93c5fd; }
 .ve-tl-ol-item.type-sticker { background:#4a3728; color:#fbbf24; }
@@ -9882,11 +9882,11 @@ if (w >= 20 && h >= 20) {
 .ve-sec { margin-bottom:14px; }
 .ve-sec b { display:block; font-size:11px; color:#aaa; margin-bottom:8px; text-transform:uppercase; letter-spacing:.3px; }
 .ve-sec label { display:block; font-size:11px; color:#777; margin:5px 0 3px; }
-.ve-sec input[type=range] { width:100%; margin:2px 0; accent-color:#03C75A; }
+.ve-sec input[type=range] { width:100%; margin:2px 0; accent-color:#6366f1; }
 .ve-sec input[type=color] { width:100%; height:24px; border:1px solid #333; border-radius:4px; background:#222; cursor:pointer; }
 .ve-sec select { width:100%; padding:5px 8px; background:#222; color:#ddd; border:1px solid #333; border-radius:4px; font-size:11px; }
 .ve-inp { width:100%; padding:6px 8px; background:#0d0d1a; color:#e0e0e8; border:1px solid #333; border-radius:6px; font-size:12px; box-sizing:border-box; }
-.ve-inp:focus { border-color:#03C75A; outline:none; }
+.ve-inp:focus { border-color:#6366f1; outline:none; }
 .ve-empty { text-align:center; color:#555; font-size:12px; padding:20px 0; }
 
 /* 미디어 그리드 */
@@ -9895,7 +9895,7 @@ if (w >= 20 && h >= 20) {
 .ve-media-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
 .ve-media-item { position:relative; border-radius:6px; overflow:hidden; cursor:pointer; border:2px solid transparent; background:#0d0d1a; aspect-ratio:16/9; }
 .ve-media-item img { width:100%; height:100%; object-fit:cover; display:block; }
-.ve-media-item.active { border-color:#03C75A; }
+.ve-media-item.active { border-color:#6366f1; }
 .ve-media-item:hover { border-color:#4a4a6a; }
 .ve-media-dur { position:absolute; bottom:3px; right:4px; font-size:9px; color:#fff; background:rgba(0,0,0,.7); padding:1px 5px; border-radius:3px; }
 .ve-media-type { position:absolute; top:3px; left:4px; font-size:10px; }
@@ -9905,15 +9905,15 @@ if (w >= 20 && h >= 20) {
 /* 음악 행 */
 .ve-music-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #2a2a4a; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:all .15s; }
 .ve-music-row:hover { border-color:#4a4a6a; }
-.ve-music-row.selected { border-color:#03C75A; background:#1e1e40; }
+.ve-music-row.selected { border-color:#6366f1; background:#1e1e40; }
 .ve-music-play { width:28px; height:28px; border-radius:50%; border:1px solid #333; background:#222; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:10px; color:#818cf8; flex-shrink:0; }
-.ve-music-play:hover { background:#03C75A; color:#fff; }
+.ve-music-play:hover { background:#6366f1; color:#fff; }
 .ve-music-play.playing { background:#ef4444; color:#fff; border-color:#ef4444; }
 .ve-page-btn { padding:4px 12px; border:1px solid #3a3a5a; border-radius:6px; background:#1a1a2e; color:#aaa; font-size:11px; cursor:pointer; transition:all .15s; }
-.ve-page-btn:hover { border-color:#03C75A; color:#fff; background:#2a2a4a; }
+.ve-page-btn:hover { border-color:#6366f1; color:#fff; background:#2a2a4a; }
 .ve-save-row { display:flex; align-items:center; gap:6px; padding:8px 10px; border:1px solid #2a2a4a; border-radius:8px; margin-bottom:6px; }
 .ve-save-load,.ve-save-del { width:28px; height:28px; border-radius:6px; border:1px solid #333; background:#222; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; color:#818cf8; flex-shrink:0; }
-.ve-save-load:hover { background:#03C75A; color:#fff; }
+.ve-save-load:hover { background:#6366f1; color:#fff; }
 .ve-save-del { color:#ef4444; }
 .ve-save-del:hover { background:#ef4444; color:#fff; }
 
@@ -9921,17 +9921,17 @@ if (w >= 20 && h >= 20) {
 .ve-trans-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
 .ve-trans-btn { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 4px; background:#222; border:1px solid #333; border-radius:6px; cursor:pointer; font-size:9px; color:#888; }
 .ve-trans-btn:hover { border-color:#4a4a6a; }
-.ve-trans-btn.active { border-color:#03C75A; background:#1e1e40; color:#ccc; }
+.ve-trans-btn.active { border-color:#6366f1; background:#1e1e40; color:#ccc; }
 
 /* 요소 */
 .ve-elem-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .ve-elem-btn { display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:#222; border:1px solid #333; border-radius:8px; cursor:pointer; font-size:10px; color:#888; }
-.ve-elem-btn:hover { border-color:#03C75A; color:#ccc; }
+.ve-elem-btn:hover { border-color:#6366f1; color:#ccc; }
 .ve-elem-btn i { font-size:20px; color:#818cf8; }
 .ve-sticker-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:4px; }
 .ve-sticker-btn { padding:4px 2px; border:1px solid #333; border-radius:6px; background:#222; font-size:20px; cursor:pointer; text-align:center; line-height:1.2; }
-.ve-sticker-btn:hover { border-color:#03C75A; }
-.ve-sticker-btn.active { border-color:#03C75A; background:#1e1e40; }
+.ve-sticker-btn:hover { border-color:#6366f1; }
+.ve-sticker-btn.active { border-color:#6366f1; background:#1e1e40; }
 
 /* 버튼 */
 .ve-add-btn { display:flex; align-items:center; gap:6px; width:100%; padding:8px 12px; background:#2a2a4a; color:#818cf8; border:1px dashed #4a4a6a; border-radius:8px; font-size:12px; cursor:pointer; margin-top:6px; font-weight:600; }
@@ -9948,7 +9948,7 @@ if (w >= 20 && h >= 20) {
 
 /* 템플릿 */
 .ve-tpl-btn { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; background:#222; border:1px solid #333; border-radius:8px; cursor:pointer; margin-bottom:6px; text-align:left; font-size:12px; color:#ccc; }
-.ve-tpl-btn:hover { border-color:#03C75A; background:#1e1e40; }
+.ve-tpl-btn:hover { border-color:#6366f1; background:#1e1e40; }
 .ve-tpl-btn i { font-size:16px; color:#818cf8; width:20px; text-align:center; }
 
 /* 라이브러리 이미지 그리드 */
@@ -10089,7 +10089,7 @@ if (w >= 20 && h >= 20) {
             <style>
                 .manager-select input { display:none; }
                 .manager-select .mgr-box { border:1px solid #e2e8f0; padding:10px; text-align:center; border-radius:8px; cursor:pointer; font-weight:bold; color:#475569; transition:0.2s; font-size:13px; }
-                .manager-select input:checked + .mgr-box { background:#e0e7ff; border-color:#03C75A; color:#4338ca; box-shadow:0 0 0 2px #03C75A inset; }
+                .manager-select input:checked + .mgr-box { background:#e0e7ff; border-color:#6366f1; color:#4338ca; box-shadow:0 0 0 2px #6366f1 inset; }
             </style>
         </div>
 
@@ -10414,7 +10414,7 @@ window.showCategorySelectionModal = async function() {
     // UI 초기화
     const _lang = (window.SITE_CONFIG?.COUNTRY||'KR');
     const _searchTitle = {KR:'상품검색',JP:'商品検索',US:'Product Search',CN:'商品搜索',AR:'بحث المنتج',ES:'Buscar Producto',DE:'Produktsuche',FR:'Recherche Produit'}[_lang]||'상품검색';
-    if(titleEl) titleEl.innerHTML = `<span style="color:#03C75A;">${_searchTitle}</span>`;
+    if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${_searchTitle}</span>`;
     if(descEl) descEl.style.display = 'none'; // 설명 숨김
     
     // 검색창 초기화
@@ -10424,7 +10424,7 @@ window.showCategorySelectionModal = async function() {
     }
 
     modal.style.display = 'flex';
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#03C75A;"></i><br><br>데이터 로딩 중...</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#6366f1;"></i><br><br>데이터 로딩 중...</div>';
     
     try {
         if (typeof sb === 'undefined') throw new Error("DB 연결이 없습니다.");
@@ -10500,7 +10500,7 @@ window.filterModalItems = function(keyword) {
 
         grid.innerHTML = '';
         // 안내 문구
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:10px 0 5px; color:#94a3b8;"><span style="font-size:14px;">${_recGuide}</span></div><div style="grid-column:1/-1; display:flex; align-items:center; gap:8px; margin:5px 0 10px;"><span style="font-size:16px; font-weight:800; color:#03C75A;">🔥 ${_recTitle}</span><div style="flex:1; height:1px; background:#e2e8f0;"></div></div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:10px 0 5px; color:#94a3b8;"><span style="font-size:14px;">${_recGuide}</span></div><div style="grid-column:1/-1; display:flex; align-items:center; gap:8px; margin:5px 0 10px;"><span style="font-size:16px; font-weight:800; color:#6366f1;">🔥 ${_recTitle}</span><div style="flex:1; height:1px; background:#e2e8f0;"></div></div>`;
 
         // 다국어 이름/가격 헬퍼 (config.js getLocalizedData 동일 로직)
         const _c = _recLang;
@@ -10537,7 +10537,7 @@ window.filterModalItems = function(keyword) {
             div.className = 'quick-item';
             const iconUrl = window.getTinyThumb ? window.getTinyThumb(p.img_url||'', 150) : (p.img_url||'');
             const imgTag = iconUrl ? `<img src="${iconUrl}" alt="${_nameR(p)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">` : `<i class="fa-solid fa-cube" style="font-size:24px; color:#cbd5e1;"></i>`;
-            div.innerHTML = `<div style="position:relative; width:100%; aspect-ratio:1; background:#f8fafc; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${_nameR(p)}</div><div style="font-size:15px; font-weight:800; color:#03C75A; margin-top:6px;">${_fmtR(p)}</div><div style="font-size:12px; color:#94a3b8; margin-top:2px;">${p.width_mm||'-'} x ${p.height_mm||'-'} mm</div>`;
+            div.innerHTML = `<div style="position:relative; width:100%; aspect-ratio:1; background:#f8fafc; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${_nameR(p)}</div><div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">${_fmtR(p)}</div><div style="font-size:12px; color:#94a3b8; margin-top:2px;">${p.width_mm||'-'} x ${p.height_mm||'-'} mm</div>`;
             div.onclick = () => {
                 if (modalBox && Math.abs(modalBox.scrollTop - _scrollGuardY) > 10) return;
                 document.getElementById('categoryDetailModal').style.display = 'none';
@@ -10703,7 +10703,7 @@ window.filterModalItems = function(keyword) {
             <div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                 ${dName}
             </div>
-            <div style="font-size:15px; font-weight:800; color:#03C75A; margin-top:6px;">
+            <div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">
                 ${_localPrice(item)}
             </div>
             <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
@@ -10756,12 +10756,12 @@ window.filterModalItems = function(keyword) {
         <div id="dsm-main-view" style="padding: 0 30px 25px 30px;">
             <!-- 온라인/디지털 섹션 -->
             <div style="margin-bottom:20px;">
-                <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#03C75A; display:flex; align-items:center; gap:6px;">
+                <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#6366f1; display:flex; align-items:center; gap:6px;">
                     <i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span>
                 </h4>
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px;">
                     <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="border:2px solid #a78bfa;">
-                        <div class="dsm-icon" style="color:#00b950;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                         <div class="dsm-name" data-i18n="dsm_retouch">사진보정</div>
                         <div class="dsm-size">AI Retouch</div>
                     </div>
@@ -10820,7 +10820,7 @@ window.filterModalItems = function(keyword) {
                         <div class="dsm-size">297 × 210 mm</div>
                     </div>
                     <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '정사각')">
-                        <div class="dsm-icon" style="color:#00b950;"><i class="fa-regular fa-square"></i></div>
+                        <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-regular fa-square"></i></div>
                         <div class="dsm-name" data-i18n="dsm_square">정사각</div>
                         <div class="dsm-size">1080 × 1080 px</div>
                     </div>
@@ -10844,7 +10844,7 @@ window.filterModalItems = function(keyword) {
                     <input type="number" id="dsmCustomW" placeholder="가로" data-i18n-placeholder="dsm_ph_w" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
                     <span style="color:#cbd5e1;">×</span>
                     <input type="number" id="dsmCustomH" placeholder="세로" data-i18n-placeholder="dsm_ph_h" style="width:80px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; text-align:center;">
-                    <button onclick="window.dsmOpenCustom()" style="padding:10px 20px; background:#03C75A; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
+                    <button onclick="window.dsmOpenCustom()" style="padding:10px 20px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;" data-i18n="dsm_start">시작</button>
                 </div>
             </div>
 
@@ -10856,7 +10856,7 @@ window.filterModalItems = function(keyword) {
 
         <!-- 인쇄 카테고리 뷰 (처음에 숨김) -->
         <div id="dsm-print-view" style="display:none; padding: 0 30px 25px 30px; text-align:center;">
-            <button onclick="window.dsmBackToMain()" style="background:linear-gradient(135deg,#03C75A,#00b950); border:none; cursor:pointer; color:#fff; font-size:14px; font-weight:700; margin-bottom:16px; padding:10px 28px; border-radius:50px; box-shadow:0 2px 10px rgba(3,199,90,0.3); display:inline-flex; align-items:center; gap:6px;">
+            <button onclick="window.dsmBackToMain()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; cursor:pointer; color:#fff; font-size:14px; font-weight:700; margin-bottom:16px; padding:10px 28px; border-radius:50px; box-shadow:0 2px 10px rgba(99,102,241,0.3); display:inline-flex; align-items:center; gap:6px;">
                 <i class="fa-solid fa-arrow-left"></i> <span data-i18n="dsm_back">뒤로</span>
             </button>
             <h4 id="dsm-print-title" style="margin:0 0 16px 0; font-size:18px; font-weight:800; color:#1e293b; text-align:center;">A4 인쇄물 선택</h4>
@@ -10864,7 +10864,7 @@ window.filterModalItems = function(keyword) {
             <!-- 검색 -->
             <!-- 검색 -->
             <div style="position:relative; margin-bottom:20px; max-width:500px; margin-left:auto; margin-right:auto;">
-                <input type="text" id="dsmPrintSearch" placeholder="만들고 싶은 것을 검색해보세요!" data-i18n-placeholder="dsm_ph_search" oninput="window.dsmFilterPrintProducts(this.value)" style="width:100%; padding:14px 14px 14px 44px; border:2px solid #e2e8f0; border-radius:50px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#02a84c'" onblur="this.style.borderColor='#e2e8f0'">
+                <input type="text" id="dsmPrintSearch" placeholder="만들고 싶은 것을 검색해보세요!" data-i18n-placeholder="dsm_ph_search" oninput="window.dsmFilterPrintProducts(this.value)" style="width:100%; padding:14px 14px 14px 44px; border:2px solid #e2e8f0; border-radius:50px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'">
                 <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
             </div>
 
@@ -10920,9 +10920,9 @@ window.filterModalItems = function(keyword) {
     border-color: #a78bfa;
     background: #fff;
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(3,199,90,0.2);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.2);
 }
-.dsm-icon { font-size: 32px; color: #02a84c; margin-bottom: 8px; }
+.dsm-icon { font-size: 32px; color: #7c3aed; margin-bottom: 8px; }
 .dsm-name { font-size: 14px; font-weight: 700; color: #1e1b4b; margin-bottom: 3px; }
 .dsm-size { font-size: 11px; color: #94a3b8; }
 .dsm-cat-btn {
@@ -10937,7 +10937,7 @@ window.filterModalItems = function(keyword) {
     transition: all 0.15s;
 }
 .dsm-cat-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.25); }
-.dsm-cat-btn.active { background: #fff; color: #03C75A; border-color: #fff; }
+.dsm-cat-btn.active { background: #fff; color: #6366f1; border-color: #fff; }
 
 /* === 보라색 박스 안 카테고리 탭 === */
 .quick-menu-wrapper .cat-tab {
@@ -11359,7 +11359,7 @@ window.dsmRenderProducts = async function(keyword) {
         var displayName = window._dsmLocalName(p);
         var div = document.createElement('div');
         div.style.cssText = 'cursor:pointer; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; transition:all 0.2s; background:#fff;';
-        div.onmouseover = function() { div.style.borderColor='#03C75A'; div.style.transform='translateY(-2px)'; div.style.boxShadow='0 4px 12px rgba(3,199,90,0.12)'; };
+        div.onmouseover = function() { div.style.borderColor='#6366f1'; div.style.transform='translateY(-2px)'; div.style.boxShadow='0 4px 12px rgba(99,102,241,0.12)'; };
         div.onmouseout = function() { div.style.borderColor='#e2e8f0'; div.style.transform=''; div.style.boxShadow=''; };
         div.innerHTML = '<img src="' + (p.img_url || '') + '" style="width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc;">' +
             '<div style="padding:8px; text-align:center;"><div style="font-size:12px; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + displayName + '</div></div>';
@@ -11381,7 +11381,7 @@ window.dsmRenderProducts = async function(keyword) {
 <div id="templateCreatorModal" class="modal-bg" style="z-index: 21000; display: none; align-items: center; justify-content: center;">
     <div class="modal-box" style="width: 500px; max-width: 95%; text-align: left; border-radius: 16px; overflow: hidden; padding: 0;">
         
-        <div style="background: linear-gradient(135deg, #03C75A 0%, #818cf8 100%); padding: 20px 25px; color: white;">
+        <div style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); padding: 20px 25px; color: white;">
             <h3 style="margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-palette"></i> <span data-i18n="tpl_create_title">템플릿 만들기 시작</span>
             </h3>
@@ -11445,27 +11445,27 @@ window.dsmRenderProducts = async function(keyword) {
     </div>
     <div class="cham-messages" id="chamMessages"></div>
     <div id="chamConnectBar" style="padding:6px 14px; background:#f0f9ff; border-top:1px solid #e0e7ff; display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0;">
-        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : showToast(typeof _ct==='function'?_ct('connectAlert'):'Please refresh and try again.','info');" style="background:none; border:1px solid #03C75A; color:#03C75A; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#03C75A';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#03C75A'"><i class="fa-solid fa-headset"></i> <span id="chamConnectText" data-i18n="cham_connect">상담사 연결</span></button>
+        <button id="chamConnectBtn" onclick="window.ChamBot_connectHuman ? window.ChamBot_connectHuman() : showToast(typeof _ct==='function'?_ct('connectAlert'):'Please refresh and try again.','info');" style="background:none; border:1px solid #6366f1; color:#6366f1; padding:5px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#6366f1';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#6366f1'"><i class="fa-solid fa-headset"></i> <span id="chamConnectText" data-i18n="cham_connect">상담사 연결</span></button>
     </div>
     <div class="cham-input-area">
-        <label id="chamFileBtn" style="cursor:pointer; padding:8px; color:#03C75A; font-size:18px; display:flex; align-items:center;"><i class="fa-solid fa-paperclip"></i><input type="file" id="chamFileInput" style="display:none;" multiple accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp"></label>
+        <label id="chamFileBtn" style="cursor:pointer; padding:8px; color:#6366f1; font-size:18px; display:flex; align-items:center;"><i class="fa-solid fa-paperclip"></i><input type="file" id="chamFileInput" style="display:none;" multiple accept="image/*,.pdf,.ai,.psd,.eps,.zip,.doc,.docx,.xlsx,.hwp"></label>
         <input type="text" id="chamInput" placeholder="무엇이든 물어보세요..." data-i18n-placeholder="cham_placeholder">
         <button class="cham-send" id="chamSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 </div>
 
 <style>
-#cham-bot-trigger{position:fixed;bottom:24px;right:24px;width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,#03C75A,#4338ca);border:none;cursor:pointer;box-shadow:0 8px 30px rgba(3,199,90,.4);display:flex;align-items:center;justify-content:center;z-index:99998;transition:all .3s cubic-bezier(.4,0,.2,1);animation:chamPulse 2.5s infinite}
-#cham-bot-trigger:hover{transform:scale(1.08);box-shadow:0 12px 40px rgba(3,199,90,.55)}
+#cham-bot-trigger{position:fixed;bottom:24px;right:24px;width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4338ca);border:none;cursor:pointer;box-shadow:0 8px 30px rgba(99,102,241,.4);display:flex;align-items:center;justify-content:center;z-index:99998;transition:all .3s cubic-bezier(.4,0,.2,1);animation:chamPulse 2.5s infinite}
+#cham-bot-trigger:hover{transform:scale(1.08);box-shadow:0 12px 40px rgba(99,102,241,.55)}
 #cham-bot-trigger i{font-size:25px;color:#fff;transition:transform .3s}
 #cham-bot-trigger.open i{transform:rotate(90deg)}
 #cham-bot-badge{position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;transition:opacity .3s}
 #cham-bot-badge.hide{opacity:0;pointer-events:none}
-@keyframes chamPulse{0%,100%{box-shadow:0 8px 30px rgba(3,199,90,.4)}50%{box-shadow:0 8px 30px rgba(3,199,90,.6),0 0 0 10px rgba(3,199,90,.08)}}
+@keyframes chamPulse{0%,100%{box-shadow:0 8px 30px rgba(99,102,241,.4)}50%{box-shadow:0 8px 30px rgba(99,102,241,.6),0 0 0 10px rgba(99,102,241,.08)}}
 #cham-bot-window{position:fixed;bottom:100px;right:24px;width:400px;max-width:calc(100vw - 32px);height:640px;max-height:calc(100vh - 140px);background:#f8fafc;border-radius:18px;box-shadow:0 25px 80px rgba(30,27,75,.18);display:none;flex-direction:column;overflow:hidden;z-index:99999;border:1px solid #e2e8f0}
 #cham-bot-window.visible{display:flex;animation:chamSlide .35s cubic-bezier(.34,1.56,.64,1)}
 @keyframes chamSlide{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-.cham-header{background:linear-gradient(135deg,#03C75A 0%,#4338ca 100%);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cham-header{background:linear-gradient(135deg,#6366f1 0%,#4338ca 100%);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .cham-header-left{display:flex;align-items:center;gap:10px}
 .cham-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px}
 .cham-title{color:#fff;font-size:15px;font-weight:800}
@@ -11479,24 +11479,24 @@ window.dsmRenderProducts = async function(keyword) {
 .cm-row.bot{align-self:flex-start}
 .cm-row.user{align-self:flex-end;flex-direction:row-reverse}
 @keyframes cmIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.cm-ava{width:28px;height:28px;border-radius:50%;background:#03C75A;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;margin-top:2px}
+.cm-ava{width:28px;height:28px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;margin-top:2px}
 .cm-row.user .cm-ava{display:none}
 .cm-bub{padding:12px 16px;border-radius:16px;font-size:15px;line-height:1.7;word-break:keep-all;white-space:pre-line}
 .cm-row.bot .cm-bub{background:#fff;border:1px solid #e2e8f0;border-top-left-radius:4px;color:#1e293b}
-.cm-row.user .cm-bub{background:#03C75A;color:#fff;border-top-right-radius:4px}
+.cm-row.user .cm-bub{background:#6366f1;color:#fff;border-top-right-radius:4px}
 .cm-typing{display:flex;gap:4px;padding:12px 16px}
 .cm-typing span{width:6px;height:6px;background:#94a3b8;border-radius:50%;animation:cmBounce 1.4s infinite}
 .cm-typing span:nth-child(2){animation-delay:.2s}
 .cm-typing span:nth-child(3){animation-delay:.4s}
 @keyframes cmBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
 .cm-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.cm-qbtn{padding:7px 14px;border:1.5px solid #03C75A;border-radius:20px;background:#ecfdf5;color:#03C75A;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
-.cm-qbtn:hover{background:#03C75A;color:#fff;transform:translateY(-1px)}
+.cm-qbtn{padding:7px 14px;border:1.5px solid #6366f1;border-radius:20px;background:#f5f3ff;color:#6366f1;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
+.cm-qbtn:hover{background:#6366f1;color:#fff;transform:translateY(-1px)}
 .cham-input-area{padding:10px 14px;background:#fff;border-top:1px solid #e2e8f0;display:flex;gap:7px;align-items:center;flex-shrink:0}
 .cham-input-area input{flex:1;min-width:0;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;background:#f8fafc}
-.cham-input-area input:focus{border-color:#03C75A}
+.cham-input-area input:focus{border-color:#6366f1}
 .cham-input-area input::placeholder{color:#94a3b8}
-.cham-send{width:40px;height:40px;border-radius:50%;background:#03C75A;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.cham-send{width:40px;height:40px;border-radius:50%;background:#6366f1;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
 .cham-send:hover{background:#4338ca;transform:scale(1.05)}
 .cham-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .cham-send.loading i{animation:spin .8s linear infinite}
@@ -11711,7 +11711,7 @@ window.dsmRenderProducts = async function(keyword) {
         var c = getEl('chamMessages');
         if (!c) return;
         var h = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-        h += '<span style="font-size:12px; color:#03C75A; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + escHtml(name) + '</span>';
+        h += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + escHtml(name) + '</span>';
         h += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + escHtml(text) + '</div>';
         h += '</div>';
         c.insertAdjacentHTML('beforeend', h);
@@ -11966,7 +11966,7 @@ window.dsmRenderProducts = async function(keyword) {
         products.forEach(function(rec, i) {
             html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin:8px 44px 8px 0;">';
             html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">';
-            html += '<span style="background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">' + (i+1) + '</span>';
+            html += '<span style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">' + (i+1) + '</span>';
             html += '<span style="font-weight:700; color:#1e293b; font-size:14px;">' + escHtml(rec.name) + '</span>';
             html += '</div>';
             html += '<p style="color:#64748b; font-size:13px; margin:0 0 8px; line-height:1.4;">' + escHtml(rec.reason) + '</p>';
@@ -11975,8 +11975,8 @@ window.dsmRenderProducts = async function(keyword) {
             if (rec.price_display) html += '<span><i class="fa-solid fa-tag"></i> ' + escHtml(rec.price_display) + '</span>';
             html += '</div>';
             html += '<div style="display:flex; gap:6px;">';
-            html += '<button onclick="window._chamOpenEditor(' + i + ')" style="flex:1; padding:8px; border:none; border-radius:8px; background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; font-size:12px; font-weight:600; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'"><i class="fa-solid fa-palette"></i> ' + (editorLabel[_l] || editorLabel['us']) + '</button>';
-            html += '<button onclick="window._chamAddCart(' + i + ',this)" style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; color:#334155; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.borderColor=\'#03C75A\'" onmouseout="this.style.borderColor=\'#e2e8f0\'"><i class="fa-solid fa-cart-plus"></i> ' + (cartLabel[_l] || cartLabel['us']) + '</button>';
+            html += '<button onclick="window._chamOpenEditor(' + i + ')" style="flex:1; padding:8px; border:none; border-radius:8px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:12px; font-weight:600; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'"><i class="fa-solid fa-palette"></i> ' + (editorLabel[_l] || editorLabel['us']) + '</button>';
+            html += '<button onclick="window._chamAddCart(' + i + ',this)" style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; color:#334155; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.borderColor=\'#6366f1\'" onmouseout="this.style.borderColor=\'#e2e8f0\'"><i class="fa-solid fa-cart-plus"></i> ' + (cartLabel[_l] || cartLabel['us']) + '</button>';
             html += '</div>';
             html += '</div>';
         });
@@ -12163,13 +12163,13 @@ window.dsmRenderProducts = async function(keyword) {
                 var reader = new FileReader();
                 reader.onload = (function(f) {
                     return function(e) {
-                        c.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + e.target.result + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(3,199,90,0.2);" onclick="window.open(this.src)"></div>');
+                        c.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + e.target.result + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(99,102,241,0.2);" onclick="window.open(this.src)"></div>');
                         c.scrollTop = c.scrollHeight;
                     };
                 })(file);
                 reader.readAsDataURL(file);
             } else {
-                c.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:13px;">📎 ' + escHtml(file.name) + '</div></div>');
+                c.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:13px;">📎 ' + escHtml(file.name) + '</div></div>');
                 c.scrollTop = c.scrollHeight;
             }
         }
@@ -12367,7 +12367,7 @@ window.dsmRenderProducts = async function(keyword) {
         h += '<div style="font-size:11px; opacity:0.8; margin-top:2px;">' + _lt('selectSub') + '</div>';
         h += '</div>';
         h += '<div style="display:flex; flex-direction:column; gap:8px;">';
-        var colors = ['#02a84c','#02a84c','#2563eb','#0891b2','#059669'];
+        var colors = ['#4f46e5','#7c3aed','#2563eb','#0891b2','#059669'];
         managers.forEach(function(mgr, i) {
             var c = colors[i % colors.length];
             h += '<button class="cham-mgr-btn" data-name="' + mgr.name + '" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background=\'rgba(255,255,255,0.3)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">';
@@ -12544,7 +12544,7 @@ window.dsmRenderProducts = async function(keyword) {
                     if (m.sender_type === 'manager') {
                         var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
                         var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-                        mh += '<span style="font-size:12px; color:#03C75A; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
+                        mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
                         if (m.file_url) {
                             if (m.file_type && m.file_type.startsWith('image/'))
                                 mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
@@ -12600,9 +12600,9 @@ window.dsmRenderProducts = async function(keyword) {
                 else console.log('✅ 파일 메시지 DB 저장 성공, file_url:', url);
             });
             if (file.type.startsWith('image/'))
-                msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + url + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(3,199,90,0.2);cursor:pointer;" onclick="window.open(this.src)"></div>');
+                msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + url + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(99,102,241,0.2);cursor:pointer;" onclick="window.open(this.src)"></div>');
             else
-                msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:13px;">📎 ' + file.name + ' ✅</div></div>');
+                msgArea.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:13px;">📎 ' + file.name + ' ✅</div></div>');
             msgArea.scrollTop = msgArea.scrollHeight;
         });
     }
@@ -12637,7 +12637,7 @@ window.dsmRenderProducts = async function(keyword) {
         var msgArea = document.getElementById('chamMessages');
         // 메시지 ID를 부여해서 실패 시 표시용
         var msgId = 'lmsg_' + Date.now();
-        msgArea.insertAdjacentHTML('beforeend', '<div id="' + msgId + '" style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(3,199,90,0.2);">' + text + '</div></div>');
+        msgArea.insertAdjacentHTML('beforeend', '<div id="' + msgId + '" style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + text + '</div></div>');
         if (window._scrollChatBottom) window._scrollChatBottom();
         var sb = getSb();
         if (!sb) {
@@ -12716,7 +12716,7 @@ window.dsmRenderProducts = async function(keyword) {
                 if (m.sender_type === 'manager') {
                     var mn = m.sender_name || '매니저';
                     var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-                    mh += '<span style="font-size:12px; color:#03C75A; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + mn + '</span>';
+                    mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + mn + '</span>';
                     if (m.file_url) {
                         if (m.file_type && m.file_type.startsWith('image/'))
                             mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
@@ -12747,18 +12747,18 @@ window.dsmRenderProducts = async function(keyword) {
         if (m.sender_type === 'customer') {
             if (m.file_url) {
                 if (m.file_type && m.file_type.startsWith('image/'))
-                    ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + m.file_url + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(3,199,90,0.2);cursor:pointer;" onclick="window.open(this.src)"></div>');
+                    ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><img src="' + m.file_url + '" style="max-width:200px;border-radius:12px;box-shadow:0 2px 8px rgba(99,102,241,0.2);cursor:pointer;" onclick="window.open(this.src)"></div>');
                 else
-                    ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:14px;">📎 ' + (m.file_name||'File') + '</div></div>');
+                    ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; font-size:14px;">📎 ' + (m.file_name||'File') + '</div></div>');
             }
             if (m.message) {
                 var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#fff; text-decoration:underline;">$1</a>');
-                ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#03C75A,#00b950); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(3,199,90,0.2);">' + msgText + '</div></div>');
+                ma.insertAdjacentHTML('beforeend', '<div style="display:flex; justify-content:flex-end; padding:2px 0;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 2px 8px rgba(99,102,241,0.2);">' + msgText + '</div></div>');
             }
         } else if (m.sender_type === 'manager') {
             var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
             var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-            mh += '<span style="font-size:12px; color:#03C75A; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
+            mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
             if (m.file_url) {
                 if (m.file_type && m.file_type.startsWith('image/'))
                     mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
@@ -12792,7 +12792,7 @@ window.dsmRenderProducts = async function(keyword) {
                 if (m.sender_type === 'manager') {
                     var mn = m.sender_name || (_lang2 === 'ja' ? 'マネージャー' : _lang2 === 'en' ? 'Manager' : '매니저');
                     var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-                    mh += '<span style="font-size:12px; color:#03C75A; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
+                    mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">💬 ' + mn + '</span>';
                     if (m.file_url) {
                         if (m.file_type && m.file_type.startsWith('image/'))
                             mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
@@ -13043,20 +13043,20 @@ window.dsmRenderProducts = async function(keyword) {
 <!-- ═══ 청첩장 공유 다이얼로그 ═══ -->
 <div id="weddingShareDialog" style="display:none; position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.55); align-items:center; justify-content:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) window._closeShareDialog()">
     <div style="background:#fff; border-radius:20px; max-width:440px; width:90%; box-shadow:0 24px 80px rgba(0,0,0,0.35); animation:pptModalIn 0.25s ease; overflow:hidden;">
-        <div style="background:linear-gradient(135deg,#02a84c,#a78bfa); padding:18px 24px; display:flex; align-items:center; justify-content:space-between;">
+        <div style="background:linear-gradient(135deg,#7c3aed,#a78bfa); padding:18px 24px; display:flex; align-items:center; justify-content:space-between;">
             <div style="font-size:17px; font-weight:800; color:#fff;"><i class="fa-solid fa-share-nodes" style="margin-right:8px;"></i><span data-i18n="wed_share_title">청첩장 공유</span></div>
             <button onclick="window._closeShareDialog()" style="background:rgba(255,255,255,0.3); border:none; width:30px; height:30px; border-radius:50%; color:#fff; font-size:14px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div style="padding:24px;">
             <div id="wedShareProgress" style="text-align:center; padding:20px 0;">
-                <div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#02a84c;"></i></div>
+                <div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div>
                 <p style="color:#6b7280; font-size:14px;" data-i18n="wed_share_saving">저장 중...</p>
             </div>
             <div id="wedShareResult" style="display:none;">
                 <p style="font-size:13px; color:#6b7280; margin-bottom:8px;" data-i18n="wed_share_url">공유 링크</p>
                 <div style="display:flex; gap:8px;">
                     <input id="wedShareUrl" type="text" readonly style="flex:1; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:13px; color:#374151; background:#f9fafb; outline:none;">
-                    <button onclick="window._copyShareUrl()" style="padding:10px 16px; background:#02a84c; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                    <button onclick="window._copyShareUrl()" style="padding:10px 16px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">
                         <i class="fa-solid fa-copy"></i> <span data-i18n="wed_share_copy">복사</span>
                     </button>
                 </div>
@@ -13085,7 +13085,7 @@ window.dsmRenderProducts = async function(keyword) {
                 </div>
             </div>
             <div style="margin-bottom:16px;">
-                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;"><i class="fa-solid fa-person" style="color:#03C75A; margin-right:4px;"></i><span data-i18n="wed_groom_parents">신랑측 부모님</span></label>
+                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;"><i class="fa-solid fa-person" style="color:#6366f1; margin-right:4px;"></i><span data-i18n="wed_groom_parents">신랑측 부모님</span></label>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                     <input id="wedGroomFather" type="text" placeholder="아버지 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
                     <input id="wedGroomMother" type="text" placeholder="어머니 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">

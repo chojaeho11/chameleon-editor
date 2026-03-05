@@ -180,7 +180,7 @@ function renderSizeButtons(containerId, list) {
         const div = document.createElement('div');
         div.className = 'size-card';
         div.innerHTML = `
-            <div style="font-size:24px; margin-bottom:10px; color:#03C75A;"><i class="fa-regular fa-file"></i></div>
+            <div style="font-size:24px; margin-bottom:10px; color:#6366f1;"><i class="fa-regular fa-file"></i></div>
             <div style="font-weight:bold; font-size:14px;">${item.name}</div>
             <div style="font-size:11px; color:#888; margin-top:5px;">${item.w} x ${item.h}</div>
         `;

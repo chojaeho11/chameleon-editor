@@ -198,9 +198,9 @@ function buildTags(container, tags) {
         btn.textContent = tag.label;
         const isFirst = idx === 0 && iconCurrentMode === 'ornament';
         btn.style.cssText = 'padding:4px 8px; font-size:11px; border:1px solid #e2e8f0; border-radius:12px; cursor:pointer; white-space:nowrap; transition:all 0.15s;'
-            + (isFirst ? 'background:#03C75A; color:#fff; border-color:#03C75A;' : 'background:#fff; color:#000;');
+            + (isFirst ? 'background:#6366f1; color:#fff; border-color:#6366f1;' : 'background:#fff; color:#000;');
         btn.dataset.tagQ = tag.q;
-        btn.onmouseenter = () => { btn.style.background = '#03C75A'; btn.style.color = '#fff'; btn.style.borderColor = '#03C75A'; };
+        btn.onmouseenter = () => { btn.style.background = '#6366f1'; btn.style.color = '#fff'; btn.style.borderColor = '#6366f1'; };
         btn.onmouseleave = () => {
             if (!btn.classList.contains('active-tag')) {
                 btn.style.background = '#fff'; btn.style.color = '#000'; btn.style.borderColor = '#e2e8f0';
@@ -214,7 +214,7 @@ function buildTags(container, tags) {
                     b.style.background = '#fff'; b.style.color = '#000'; b.style.borderColor = '#e2e8f0';
                 });
                 btn.classList.add('active-tag');
-                btn.style.background = '#03C75A'; btn.style.color = '#fff'; btn.style.borderColor = '#03C75A';
+                btn.style.background = '#6366f1'; btn.style.color = '#fff'; btn.style.borderColor = '#6366f1';
                 const grid = document.getElementById('iconResultGrid');
                 renderOrnamentGrid(grid, tag.q);
             } else {
@@ -341,7 +341,7 @@ function renderLogoCell(grid, item) {
     div.innerHTML = '<img src="' + imgUrl + '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">';
     if (item.title) div.title = item.title;
 
-    div.onmouseenter = () => { div.style.borderColor = '#03C75A'; div.style.boxShadow = '0 2px 8px rgba(3,199,90,0.2)'; };
+    div.onmouseenter = () => { div.style.borderColor = '#6366f1'; div.style.boxShadow = '0 2px 8px rgba(99,102,241,0.2)'; };
     div.onmouseleave = () => { div.style.borderColor = '#e2e8f0'; div.style.boxShadow = 'none'; };
 
     div.onclick = () => {
@@ -415,7 +415,7 @@ function renderIconCell(grid, iconId) {
     // Inline SVG for color control
     fetchAndInlineSvg(svgUrl, cell, false);
 
-    cell.onmouseenter = () => { cell.style.borderColor = '#03C75A'; cell.style.boxShadow = '0 2px 8px rgba(3,199,90,0.2)'; };
+    cell.onmouseenter = () => { cell.style.borderColor = '#6366f1'; cell.style.boxShadow = '0 2px 8px rgba(99,102,241,0.2)'; };
     cell.onmouseleave = () => { cell.style.borderColor = '#f1f5f9'; cell.style.boxShadow = 'none'; };
 
     cell.onclick = () => addIconToCanvas(iconId);
@@ -603,12 +603,12 @@ const ORNAMENTS = [
     { id:'fl3', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><ellipse cx="50" cy="25" rx="8" ry="14" fill="#f472b6" transform="rotate(0,50,50)"/><ellipse cx="50" cy="25" rx="8" ry="14" fill="#fb7185" transform="rotate(72,50,50)"/><ellipse cx="50" cy="25" rx="8" ry="14" fill="#f472b6" transform="rotate(144,50,50)"/><ellipse cx="50" cy="25" rx="8" ry="14" fill="#fb7185" transform="rotate(216,50,50)"/><ellipse cx="50" cy="25" rx="8" ry="14" fill="#f472b6" transform="rotate(288,50,50)"/><circle cx="50" cy="50" r="7" fill="#facc15"/></svg>' },
     { id:'fl4', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><circle cx="50" cy="30" r="10" fill="#93c5fd"/><circle cx="30" cy="50" r="10" fill="#a5b4fc"/><circle cx="70" cy="50" r="10" fill="#a5b4fc"/><circle cx="50" cy="70" r="10" fill="#93c5fd"/><circle cx="50" cy="50" r="7" fill="#fde68a"/></svg>' },
     { id:'fl5', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 15 C55 25, 65 30, 75 25 C70 35, 75 45, 85 50 C75 55, 70 65, 75 75 C65 70, 55 75, 50 85 C45 75, 35 70, 25 75 C30 65, 25 55, 15 50 C25 45, 30 35, 25 25 C35 30, 45 25, 50 15Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/><circle cx="50" cy="50" r="10" fill="#fef08a"/><circle cx="47" cy="47" r="2" fill="#d97706"/><circle cx="53" cy="47" r="2" fill="#d97706"/><circle cx="50" cy="53" r="2" fill="#d97706"/></svg>' },
-    { id:'fl6', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 10 L55 40 L85 35 L60 50 L85 65 L55 60 L50 90 L45 60 L15 65 L40 50 L15 35 L45 40Z" fill="#c084fc" stroke="#00b950" stroke-width="0.8"/><circle cx="50" cy="50" r="8" fill="#fde68a"/></svg>' },
+    { id:'fl6', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 10 L55 40 L85 35 L60 50 L85 65 L55 60 L50 90 L45 60 L15 65 L40 50 L15 35 L45 40Z" fill="#c084fc" stroke="#a855f7" stroke-width="0.8"/><circle cx="50" cy="50" r="8" fill="#fde68a"/></svg>' },
     { id:'fl7', cat:'flower', color:true, svg:'<svg viewBox="0 0 120 50"><path d="M25 25 C20 15, 30 8, 35 18 C38 8, 48 15, 43 25" fill="#f87171"/><circle cx="34" cy="22" r="3" fill="#fbbf24"/><path d="M60 25 C55 15, 65 8, 70 18 C73 8, 83 15, 78 25" fill="#fb923c"/><circle cx="69" cy="22" r="3" fill="#fde68a"/><path d="M95 25 C90 15, 100 8, 105 18 C108 8, 118 15, 113 25" fill="#a78bfa"/><circle cx="104" cy="22" r="3" fill="#fcd34d"/><path d="M25 30 Q35 45, 60 30 Q75 45, 95 30" fill="none" stroke="#22c55e" stroke-width="1.5"/><path d="M40 36 Q38 32, 35 35" fill="none" stroke="#22c55e" stroke-width="1"/><path d="M80 36 Q82 32, 85 35" fill="none" stroke="#22c55e" stroke-width="1"/></svg>' },
     { id:'fl8', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 20 Q58 30, 50 40 Q42 30, 50 20Z" fill="#f9a8d4"/><path d="M50 20 Q58 30, 50 40 Q42 30, 50 20Z" fill="#f9a8d4" transform="rotate(60,50,40)"/><path d="M50 20 Q58 30, 50 40 Q42 30, 50 20Z" fill="#f9a8d4" transform="rotate(120,50,40)"/><path d="M50 20 Q58 30, 50 40 Q42 30, 50 20Z" fill="#f9a8d4" transform="rotate(180,50,40)"/><path d="M50 20 Q58 30, 50 40 Q42 30, 50 20Z" fill="#f9a8d4" transform="rotate(240,50,40)"/><path d="M50 20 Q58 30, 50 40 Q42 30, 50 20Z" fill="#f9a8d4" transform="rotate(300,50,40)"/><circle cx="50" cy="40" r="5" fill="#fbbf24"/><path d="M48 50 C47 70, 49 85, 50 95" stroke="#16a34a" stroke-width="2" fill="none"/><path d="M50 65 C55 58, 62 55, 68 58" stroke="#16a34a" stroke-width="1.5" fill="none"/><path d="M50 78 C45 72, 38 70, 32 73" stroke="#16a34a" stroke-width="1.5" fill="none"/></svg>' },
-    { id:'fl9', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 50"><circle cx="15" cy="25" r="8" fill="#fda4af"/><circle cx="15" cy="25" r="4" fill="#fde68a"/><circle cx="40" cy="20" r="10" fill="#86efac"/><circle cx="40" cy="20" r="5" fill="#fef08a"/><circle cx="65" cy="25" r="7" fill="#86efac"/><circle cx="65" cy="25" r="3.5" fill="#fde68a"/><circle cx="88" cy="22" r="9" fill="#7dd3fc"/><circle cx="88" cy="22" r="4.5" fill="#fef9c3"/><path d="M5 38 Q15 32, 25 38 Q40 30, 55 38 Q65 32, 75 38 Q88 30, 95 38" fill="none" stroke="#4ade80" stroke-width="1.5"/></svg>' },
+    { id:'fl9', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 50"><circle cx="15" cy="25" r="8" fill="#fda4af"/><circle cx="15" cy="25" r="4" fill="#fde68a"/><circle cx="40" cy="20" r="10" fill="#c4b5fd"/><circle cx="40" cy="20" r="5" fill="#fef08a"/><circle cx="65" cy="25" r="7" fill="#86efac"/><circle cx="65" cy="25" r="3.5" fill="#fde68a"/><circle cx="88" cy="22" r="9" fill="#7dd3fc"/><circle cx="88" cy="22" r="4.5" fill="#fef9c3"/><path d="M5 38 Q15 32, 25 38 Q40 30, 55 38 Q65 32, 75 38 Q88 30, 95 38" fill="none" stroke="#4ade80" stroke-width="1.5"/></svg>' },
     { id:'fl10', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 5 C60 20, 75 20, 80 10 C78 25, 90 35, 95 30 C88 42, 92 55, 98 55 C85 58, 80 70, 85 80 C72 72, 60 78, 55 88 C52 75, 40 70, 30 78 C38 68, 32 55, 20 52 C32 48, 35 35, 25 28 C38 32, 42 22, 40 10 C48 20, 50 5, 50 5Z" fill="none" stroke="#f472b6" stroke-width="1.5"/><circle cx="50" cy="45" r="12" fill="#fecdd3"/><circle cx="50" cy="45" r="6" fill="#fbbf24"/></svg>' },
-    { id:'fl11', cat:'flower', color:true, svg:'<svg viewBox="0 0 200 60"><path d="M30 30 Q50 10, 70 25" fill="none" stroke="#16a34a" stroke-width="1.5"/><circle cx="28" cy="28" r="8" fill="#fda4af"/><circle cx="28" cy="28" r="3.5" fill="#fde68a"/><path d="M55 25 Q40 18, 35 30" fill="none" stroke="#16a34a" stroke-width="1"/><path d="M70 25 Q100 15, 130 25" fill="none" stroke="#16a34a" stroke-width="1.5"/><circle cx="100" cy="18" r="6" fill="#86efac"/><circle cx="100" cy="18" r="3" fill="#fef08a"/><path d="M130 25 Q150 10, 172 28" fill="none" stroke="#16a34a" stroke-width="1.5"/><circle cx="174" cy="26" r="8" fill="#7dd3fc"/><circle cx="174" cy="26" r="3.5" fill="#fde68a"/><path d="M148 22 Q160 18, 168 25" fill="none" stroke="#16a34a" stroke-width="1"/></svg>' },
+    { id:'fl11', cat:'flower', color:true, svg:'<svg viewBox="0 0 200 60"><path d="M30 30 Q50 10, 70 25" fill="none" stroke="#16a34a" stroke-width="1.5"/><circle cx="28" cy="28" r="8" fill="#fda4af"/><circle cx="28" cy="28" r="3.5" fill="#fde68a"/><path d="M55 25 Q40 18, 35 30" fill="none" stroke="#16a34a" stroke-width="1"/><path d="M70 25 Q100 15, 130 25" fill="none" stroke="#16a34a" stroke-width="1.5"/><circle cx="100" cy="18" r="6" fill="#c4b5fd"/><circle cx="100" cy="18" r="3" fill="#fef08a"/><path d="M130 25 Q150 10, 172 28" fill="none" stroke="#16a34a" stroke-width="1.5"/><circle cx="174" cy="26" r="8" fill="#7dd3fc"/><circle cx="174" cy="26" r="3.5" fill="#fde68a"/><path d="M148 22 Q160 18, 168 25" fill="none" stroke="#16a34a" stroke-width="1"/></svg>' },
     { id:'fl12', cat:'flower', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 50 C30 30, 10 40, 20 55 C10 65, 25 80, 40 70 C35 85, 55 90, 55 75 C65 85, 80 80, 70 65 C85 65, 85 45, 70 48 C80 35, 65 25, 55 38 C55 22, 38 22, 42 38 C30 28, 20 40, 35 48Z" fill="#fb7185" opacity="0.7" stroke="#e11d48" stroke-width="0.8"/><circle cx="50" cy="52" r="7" fill="#fde047"/></svg>' },
 
     // ─── Leaves (8) ───
@@ -652,7 +652,7 @@ const ORNAMENTS = [
     // ─── Hearts (6) ───
     { id:'h1', cat:'heart', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 85 C20 60, 5 40, 15 25 C25 10, 45 15, 50 30 C55 15, 75 10, 85 25 C95 40, 80 60, 50 85Z" fill="#f87171" stroke="#dc2626" stroke-width="1"/></svg>' },
     { id:'h2', cat:'heart', svg:'<svg viewBox="0 0 100 100"><path d="M50 85 C20 60, 5 40, 15 25 C25 10, 45 15, 50 30 C55 15, 75 10, 85 25 C95 40, 80 60, 50 85Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
-    { id:'h3', cat:'heart', color:true, svg:'<svg viewBox="0 0 200 50"><path d="M30 40 C15 28, 8 18, 13 12 C18 6, 27 8, 30 15 C33 8, 42 6, 47 12 C52 18, 45 28, 30 40Z" fill="#fda4af"/><path d="M70 40 C55 28, 48 18, 53 12 C58 6, 67 8, 70 15 C73 8, 82 6, 87 12 C92 18, 85 28, 70 40Z" fill="#f9a8d4"/><path d="M110 40 C95 28, 88 18, 93 12 C98 6, 107 8, 110 15 C113 8, 122 6, 127 12 C132 18, 125 28, 110 40Z" fill="#86efac"/><path d="M150 40 C135 28, 128 18, 133 12 C138 6, 147 8, 150 15 C153 8, 162 6, 167 12 C172 18, 165 28, 150 40Z" fill="#93c5fd"/></svg>' },
+    { id:'h3', cat:'heart', color:true, svg:'<svg viewBox="0 0 200 50"><path d="M30 40 C15 28, 8 18, 13 12 C18 6, 27 8, 30 15 C33 8, 42 6, 47 12 C52 18, 45 28, 30 40Z" fill="#fda4af"/><path d="M70 40 C55 28, 48 18, 53 12 C58 6, 67 8, 70 15 C73 8, 82 6, 87 12 C92 18, 85 28, 70 40Z" fill="#f9a8d4"/><path d="M110 40 C95 28, 88 18, 93 12 C98 6, 107 8, 110 15 C113 8, 122 6, 127 12 C132 18, 125 28, 110 40Z" fill="#c4b5fd"/><path d="M150 40 C135 28, 128 18, 133 12 C138 6, 147 8, 150 15 C153 8, 162 6, 167 12 C172 18, 165 28, 150 40Z" fill="#93c5fd"/></svg>' },
     { id:'h4', cat:'heart', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 80 C25 58, 12 42, 18 28 C24 14, 42 18, 50 32 C58 18, 76 14, 82 28 C88 42, 75 58, 50 80Z" fill="#fecdd3" stroke="#fb7185" stroke-width="1.5"/><path d="M50 65 C35 52, 28 42, 32 34 C36 26, 45 28, 50 38 C55 28, 64 26, 68 34 C72 42, 65 52, 50 65Z" fill="#fb7185"/></svg>' },
     { id:'h5', cat:'heart', svg:'<svg viewBox="0 0 100 100"><path d="M50 85 C20 60, 5 40, 15 25 C25 10, 45 15, 50 30 C55 15, 75 10, 85 25 C95 40, 80 60, 50 85Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5,3"/></svg>' },
     { id:'h6', cat:'heart', color:true, svg:'<svg viewBox="0 0 200 60"><path d="M100 50 C60 30, 35 15, 45 8 C55 1, 75 5, 85 18 L100 35 L115 18 C125 5, 145 1, 155 8 C165 15, 140 30, 100 50Z" fill="none" stroke="#e11d48" stroke-width="1.5"/><path d="M70 25 Q80 15, 90 22" fill="none" stroke="#e11d48" stroke-width="0.8"/><path d="M130 25 Q120 15, 110 22" fill="none" stroke="#e11d48" stroke-width="0.8"/><circle cx="100" cy="30" r="2" fill="#e11d48"/></svg>' },
@@ -660,7 +660,7 @@ const ORNAMENTS = [
     // ─── Stars (6) ───
     { id:'s1', cat:'star', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 10 L61 38 L92 38 L67 56 L77 85 L50 68 L23 85 L33 56 L8 38 L39 38Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/></svg>' },
     { id:'s2', cat:'star', svg:'<svg viewBox="0 0 100 100"><path d="M50 10 L61 38 L92 38 L67 56 L77 85 L50 68 L23 85 L33 56 L8 38 L39 38Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>' },
-    { id:'s3', cat:'star', color:true, svg:'<svg viewBox="0 0 200 50"><path d="M25 8 L29 20 L42 20 L32 28 L35 40 L25 32 L15 40 L18 28 L8 20 L21 20Z" fill="#fbbf24"/><path d="M65 8 L69 20 L82 20 L72 28 L75 40 L65 32 L55 40 L58 28 L48 20 L61 20Z" fill="#f97316"/><path d="M105 8 L109 20 L122 20 L112 28 L115 40 L105 32 L95 40 L98 28 L88 20 L101 20Z" fill="#ef4444"/><path d="M145 8 L149 20 L162 20 L152 28 L155 40 L145 32 L135 40 L138 28 L128 20 L141 20Z" fill="#00b950"/><path d="M185 8 L189 20 L202 20 L192 28 L195 40 L185 32 L175 40 L178 28 L168 20 L181 20Z" fill="#3b82f6"/></svg>' },
+    { id:'s3', cat:'star', color:true, svg:'<svg viewBox="0 0 200 50"><path d="M25 8 L29 20 L42 20 L32 28 L35 40 L25 32 L15 40 L18 28 L8 20 L21 20Z" fill="#fbbf24"/><path d="M65 8 L69 20 L82 20 L72 28 L75 40 L65 32 L55 40 L58 28 L48 20 L61 20Z" fill="#f97316"/><path d="M105 8 L109 20 L122 20 L112 28 L115 40 L105 32 L95 40 L98 28 L88 20 L101 20Z" fill="#ef4444"/><path d="M145 8 L149 20 L162 20 L152 28 L155 40 L145 32 L135 40 L138 28 L128 20 L141 20Z" fill="#a855f7"/><path d="M185 8 L189 20 L202 20 L192 28 L195 40 L185 32 L175 40 L178 28 L168 20 L181 20Z" fill="#3b82f6"/></svg>' },
     { id:'s4', cat:'star', svg:'<svg viewBox="0 0 100 100"><path d="M50 15 L56 40 L80 25 L62 48 L88 50 L62 52 L80 75 L56 60 L50 85 L44 60 L20 75 L38 52 L12 50 L38 48 L20 25 L44 40Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>' },
     { id:'s5', cat:'star', color:true, svg:'<svg viewBox="0 0 100 100"><path d="M50 5 L58 35 L90 20 L65 45 L95 50 L65 55 L90 80 L58 65 L50 95 L42 65 L10 80 L35 55 L5 50 L35 45 L10 20 L42 35Z" fill="#fef08a" stroke="#eab308" stroke-width="1"/></svg>' },
     { id:'s6', cat:'star', svg:'<svg viewBox="0 0 100 100"><polygon points="50,5 58,38 92,38 64,58 75,90 50,70 25,90 36,58 8,38 42,38" fill="none" stroke="currentColor" stroke-width="1.5"/><polygon points="50,22 55,40 73,40 58,52 64,70 50,60 36,70 42,52 27,40 45,40" fill="none" stroke="currentColor" stroke-width="1"/></svg>' },
@@ -688,7 +688,7 @@ function renderOrnamentGrid(grid, category) {
         }
         cell.querySelector('svg').style.cssText = 'width:100%; height:100%;';
 
-        cell.onmouseenter = () => { cell.style.borderColor = '#03C75A'; cell.style.boxShadow = '0 2px 8px rgba(3,199,90,0.2)'; };
+        cell.onmouseenter = () => { cell.style.borderColor = '#6366f1'; cell.style.boxShadow = '0 2px 8px rgba(99,102,241,0.2)'; };
         cell.onmouseleave = () => { cell.style.borderColor = '#e2e8f0'; cell.style.boxShadow = 'none'; };
 
         cell.onclick = () => addOrnamentToCanvas(item);

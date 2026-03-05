@@ -765,12 +765,12 @@ function showTemplateModal() {
         });
 
         // Photo layout templates with visual previews
-        html += '<div style="grid-column:1/-1; font-size:13px; font-weight:800; color:#5c4033; margin:12px 0 2px; border-top:1px solid #f3e8f4; padding-top:12px;"><i class="fa-solid fa-images" style="color:#02a84c; margin-right:4px;"></i>사진 배치</div>';
+        html += '<div style="grid-column:1/-1; font-size:13px; font-weight:800; color:#5c4033; margin:12px 0 2px; border-top:1px solid #f3e8f4; padding-top:12px;"><i class="fa-solid fa-images" style="color:#7c3aed; margin-right:4px;"></i>사진 배치</div>';
         Object.entries(PHOTO_LAYOUTS).forEach(([id, layout]) => {
             const previewImg = _generateLayoutPreview(id);
             html += `
                 <div onclick="window.weddingApplyPhotoLayout('${id}')" style="padding:8px 6px; border:2px solid #e9d5ff; border-radius:12px; cursor:pointer; text-align:center; transition:all 0.15s; background:#fff;"
-                     onmouseenter="this.style.borderColor='#02a84c'; this.style.background='#ecfdf5';"
+                     onmouseenter="this.style.borderColor='#7c3aed'; this.style.background='#f5f3ff';"
                      onmouseleave="this.style.borderColor='#e9d5ff'; this.style.background='#fff';">
                     <img src="${previewImg}" style="width:60px; height:90px; border-radius:6px; margin-bottom:4px; display:block; margin-left:auto; margin-right:auto; box-shadow:0 1px 3px rgba(0,0,0,0.1);" draggable="false">
                     <div style="font-size:10px; font-weight:700; color:#5c4033;">${layout.name}</div>
@@ -1755,7 +1755,7 @@ async function shareWeddingInvitation() {
     const prog = document.getElementById('wedShareProgress');
     const result = document.getElementById('wedShareResult');
     if (dlg) { dlg.style.display = 'flex'; }
-    if (prog) { prog.style.display = 'block'; prog.innerHTML = '<div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#02a84c;"></i></div><p style="color:#6b7280; font-size:14px;">' + _t('wed_share_saving','저장 중...') + '</p>'; }
+    if (prog) { prog.style.display = 'block'; prog.innerHTML = '<div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div><p style="color:#6b7280; font-size:14px;">' + _t('wed_share_saving','저장 중...') + '</p>'; }
     if (result) result.style.display = 'none';
 
     try {

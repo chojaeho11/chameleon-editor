@@ -656,7 +656,7 @@ function subscribeLive(roomId) {
                 let html = `<div class="adv-row adv-row-ai">
                     <div class="adv-avatar" style="background:#10b981;"><i class="fa-solid fa-headset" style="color:#fff;"></i></div>
                     <div style="display:flex; flex-direction:column;">
-                        <span style="font-size:11px; color:#03C75A; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
+                        <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
                 if (m.file_url) {
                     if (m.file_type && m.file_type.startsWith('image/'))
                         html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:4px;" onclick="window.open(this.src)">`;
@@ -832,7 +832,7 @@ function renderRestoredMsg(m) {
     } else if (m.sender_type === 'manager') {
         const mn = m.sender_name || 'Manager';
         let html = `<div class="adv-row adv-row-ai"><div class="adv-avatar" style="background:#10b981;"><i class="fa-solid fa-headset" style="color:#fff;"></i></div><div style="display:flex;flex-direction:column;">
-            <span style="font-size:11px; color:#03C75A; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
+            <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
         if (m.file_url) {
             if (m.file_type && m.file_type.startsWith('image/'))
                 html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;" onclick="window.open(this.src)">`;
@@ -917,7 +917,7 @@ function buildAddonHtml(rec, i) {
 
     const optLabel = getLang() === 'ja' ? 'オプション選択' : getLang() === 'en' ? 'Select Options' : '옵션 선택';
     let html = `<div class="adv-addon-area" data-product-i="${i}">
-        <div style="font-size:11px;font-weight:700;color:#03C75A;margin:8px 0 4px;"><i class="fa-solid fa-sliders"></i> ${optLabel}</div>`;
+        <div style="font-size:11px;font-weight:700;color:#6366f1;margin:8px 0 4px;"><i class="fa-solid fa-sliders"></i> ${optLabel}</div>`;
 
     for (const [catName, addons] of Object.entries(groups)) {
         html += `<div style="margin-bottom:6px;">
@@ -1007,8 +1007,8 @@ function bindAddonEvents(wrap, products) {
                 chip.style.color = '#475569';
             } else {
                 selectedAddons[pCode].add(code);
-                chip.style.background = '#03C75A';
-                chip.style.borderColor = '#03C75A';
+                chip.style.background = '#6366f1';
+                chip.style.borderColor = '#6366f1';
                 chip.style.color = '#fff';
             }
         });

@@ -908,7 +908,7 @@ window.applyTextEffect = function(type) {
             canvas.requestRenderAll(); break;
         case 'outline-double': createDoubleOutlineEffect(originalText, strokeW); break;
         case 'outline-color':
-            originalText.set({ stroke: '#03C75A', strokeWidth: Math.max(2, fontSize * 0.08), paintFirst: 'stroke', strokeLineJoin: 'round' });
+            originalText.set({ stroke: '#6366f1', strokeWidth: Math.max(2, fontSize * 0.08), paintFirst: 'stroke', strokeLineJoin: 'round' });
             canvas.requestRenderAll(); break;
 
         // 3D
@@ -938,9 +938,9 @@ window.applyTextEffect = function(type) {
             originalText.set({ fill: '#ffdd00', stroke: '#000000', strokeWidth: Math.max(3, fontSize * 0.1), paintFirst: 'stroke', strokeLineJoin: 'round', shadow: new fabric.Shadow({ color: '#000000', blur: 0, offsetX: fontSize * 0.08, offsetY: fontSize * 0.08 }) });
             canvas.requestRenderAll(); break;
         case 'emboss': createEmbossEffect(originalText); break;
-        case 'gradient-purple': createGradientEffect(originalText, '#03C75A', '#ec4899'); break;
+        case 'gradient-purple': createGradientEffect(originalText, '#6366f1', '#ec4899'); break;
         case 'gradient-sunset': createGradientEffect(originalText, '#f97316', '#ef4444', '#ec4899'); break;
-        case 'gradient-ocean': createGradientEffect(originalText, '#06b6d4', '#3b82f6', '#03C75A'); break;
+        case 'gradient-ocean': createGradientEffect(originalText, '#06b6d4', '#3b82f6', '#6366f1'); break;
         case 'gradient-gold': createGradientEffect(originalText, '#fbbf24', '#f59e0b', '#d97706'); break;
 
         case 'reset':
@@ -1089,7 +1089,7 @@ function createDoubleOutlineEffect(original, strokeW) {
         layers.push(outer);
         original.clone((inner) => {
             inner.set({
-                stroke: '#03C75A', strokeWidth: strokeW * 1.5, fill: 'transparent',
+                stroke: '#6366f1', strokeWidth: strokeW * 1.5, fill: 'transparent',
                 paintFirst: 'stroke', strokeLineJoin: 'round',
                 selectable: false, isClone: true
             });

@@ -19,7 +19,7 @@ function _showPremiumUpsell() {
             <div style="width:64px;height:64px;background:rgba(0,0,0,0.85);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#fbbf24;"><i class="fa-solid fa-crown"></i></div>
             <h3 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#1e293b;">${t('sub_premium_lock', '프리미엄 템플릿입니다')}</h3>
             <p style="margin:0 0 24px;color:#64748b;font-size:14px;line-height:1.6;">${t('sub_premium_msg', 'PRO 구독으로 모든 프리미엄 템플릿을 자유롭게 사용하세요')}</p>
-            <button id="_premUpsellSubBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#03C75A,#00b950);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">${t('sub_btn', '구독 시작하기')}</button>
+            <button id="_premUpsellSubBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">${t('sub_btn', '구독 시작하기')}</button>
             <button id="_premUpsellCloseBtn" style="width:100%;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;cursor:pointer;">${t('btn_close', '닫기')}</button>
         </div>`;
     document.body.appendChild(overlay);
@@ -347,7 +347,7 @@ async function loadTemplatePage(pageIndex) {
             let badgeColor = '#64748b';
 
             switch(item.category) {
-                case 'vector': badgeText = 'VECTOR'; badgeColor = '#02a84c'; break;
+                case 'vector': badgeText = 'VECTOR'; badgeColor = '#7c3aed'; break;
                 case 'graphic': badgeText = 'PNG Object'; badgeColor = '#2563eb'; break;
                 case 'logo': badgeText = 'LOGO'; badgeColor = '#d97706'; break;
                 case 'user_vector': badgeText = 'USER VEC'; badgeColor = '#9333ea'; break;
@@ -472,8 +472,8 @@ function renderPaginationControls(isEnabled, dataCount = 0, limit = 12) {
         nextBtn.style.border = "1px solid #e2e8f0";
     } else {
         nextBtn.style.background = "#fff"; 
-        nextBtn.style.border = "1px solid #03C75A";
-        nextBtn.style.color = "#03C75A";
+        nextBtn.style.border = "1px solid #6366f1";
+        nextBtn.style.color = "#6366f1";
         nextBtn.onclick = () => changeModalTemplatePage(1);
     }
 
@@ -482,12 +482,12 @@ function renderPaginationControls(isEnabled, dataCount = 0, limit = 12) {
         if(btn.disabled) return;
         btn.onmouseover = () => { 
             btn.style.transform = "translateY(-1px)"; 
-            if(isPrimary) { btn.style.background = "#03C75A"; btn.style.color = "#fff"; }
+            if(isPrimary) { btn.style.background = "#6366f1"; btn.style.color = "#fff"; }
             else { btn.style.borderColor = "#94a3b8"; }
         };
         btn.onmouseout = () => { 
             btn.style.transform = "none"; 
-            if(isPrimary) { btn.style.background = "#fff"; btn.style.color = "#03C75A"; }
+            if(isPrimary) { btn.style.background = "#fff"; btn.style.color = "#6366f1"; }
             else { btn.style.borderColor = "#cbd5e1"; }
         };
     };
@@ -929,7 +929,7 @@ window.handleFileSelect = function(input) {
     } else {
         if(preview) preview.style.display = 'none';
         if(removeBtn) removeBtn.style.display = 'flex';
-        dropText.innerHTML = `<span style="color:#03C75A; font-weight:800;">${files.length}</span> files selected.`;
+        dropText.innerHTML = `<span style="color:#6366f1; font-weight:800;">${files.length}</span> files selected.`;
         subText.innerText = "Click upload to register all.";
         if(keywordInput) { keywordInput.value = ""; keywordInput.placeholder = "Enter common tags"; }
     }
@@ -1151,7 +1151,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     // [수정] 다국어 적용
     const loadingText = window.t('msg_loading', "Loading...");
     const msg = keyword ? `"${keyword}"...` : loadingText;
-    list.innerHTML = `<div style="padding:40px 20px; text-align:center; color:#64748b; font-size:13px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#03C75A; margin-bottom:10px;"></i><br>${msg}</div>`;
+    list.innerHTML = `<div style="padding:40px 20px; text-align:center; color:#64748b; font-size:13px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#6366f1; margin-bottom:10px;"></i><br>${msg}</div>`;
 
     try {
         const groups = {
@@ -1220,7 +1220,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
 
             let badgeHtml = "";
             if (sideCurrentGroup === 'group_asset' && tpl.category === 'vector') {
-                badgeHtml = `<div style="position:absolute; top:8px; left:8px; background:#02a84c; color:white; font-size:10px; padding:3px 6px; border-radius:4px; font-weight:bold;">Vector</div>`;
+                badgeHtml = `<div style="position:absolute; top:8px; left:8px; background:#7c3aed; color:white; font-size:10px; padding:3px 6px; border-radius:4px; font-weight:bold;">Vector</div>`;
             }
 
             // 프리미엄 크라운 뱃지
@@ -1299,11 +1299,11 @@ const TEXT_TPL_PRESETS = [
     // 1) 3D 골드
     { bg: 'linear-gradient(135deg, #1e1b4b, #4338ca)', effect: 'block-3d-gold',
         titleStyle: { fontSize: 40, fontWeight: '900', fill: '#fbbf24', cssShadow: '2px 2px 0 #78350f, 3px 3px 0 #451a03, 4px 4px 0 #351507' },
-        subStyle: { fontSize: 16, fontWeight: '300', fill: '#86efac' },
+        subStyle: { fontSize: 16, fontWeight: '300', fill: '#c7d2fe' },
         texts: { KR: { title: 'GRAND OPENING', sub: '최고의 서비스를 만나보세요' }, JP: { title: 'GRAND OPENING', sub: '最高のサービスをお届けします' }, EN: { title: 'GRAND OPENING', sub: 'Best Quality Service' }, CN: { title: 'GRAND OPENING', sub: '体验最优质的服务' }, AR: { title: 'GRAND OPENING', sub: 'أفضل خدمة جودة' }, ES: { title: 'GRAND OPENING', sub: 'Servicio de la Mejor Calidad' }, DE: { title: 'GRAND OPENING', sub: 'Bester Qualitätsservice' }, FR: { title: 'GRAND OPENING', sub: 'Service de Qualité Supérieure' } } },
     // 2) 네온 퍼플
     { bg: 'linear-gradient(135deg, #0f0c29, #302b63)', effect: 'neon-strong',
-        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#e0b0ff', cssShadow: '0 0 10px #00b950, 0 0 20px #02a84c, 0 0 40px #02a84c' },
+        titleStyle: { fontSize: 40, fontWeight: '900', fill: '#e0b0ff', cssShadow: '0 0 10px #a855f7, 0 0 20px #7c3aed, 0 0 40px #7c3aed' },
         subStyle: { fontSize: 16, fontWeight: '300', fill: '#a5b4fc' },
         texts: { KR: { title: 'SPECIAL SALE', sub: '최대 50% 할인' }, JP: { title: 'SPECIAL SALE', sub: '最大50%OFF' }, EN: { title: 'SPECIAL SALE', sub: 'Up to 50% OFF' }, CN: { title: 'SPECIAL SALE', sub: '最高五折优惠' }, AR: { title: 'SPECIAL SALE', sub: 'خصم يصل إلى 50%' }, ES: { title: 'SPECIAL SALE', sub: 'Hasta 50% de Descuento' }, DE: { title: 'SPECIAL SALE', sub: 'Bis zu 50% Rabatt' }, FR: { title: 'SPECIAL SALE', sub: "Jusqu'à 50% de Réduction" } } },
     // 3) 캔디 그린
@@ -1421,12 +1421,12 @@ const TEXT_TPL_PRESETS = [
 
 // 마법사 버튼 데이터 (영문 라벨)
 const WIZARD_BTNS = [
-    { key: 'basic',  icon: 'fa-store',       color: '#03C75A', label: 'Flyer' },
+    { key: 'basic',  icon: 'fa-store',       color: '#6366f1', label: 'Flyer' },
     { key: 'flyer',  icon: 'fa-bullhorn',     color: '#ef4444', label: 'Poster' },
     { key: 'card',   icon: 'fa-address-card', color: '#22c55e', label: 'Card' },
     { key: 'menu',   icon: 'fa-utensils',     color: '#f97316', label: 'Menu' },
     { key: 'banner-h', icon: 'fa-scroll',     color: '#3b82f6', label: 'Banner H' },
-    { key: 'banner-v', icon: 'fa-flag',       color: '#00b950', label: 'Banner V' },
+    { key: 'banner-v', icon: 'fa-flag',       color: '#8b5cf6', label: 'Banner V' },
     { key: 'fabric', icon: 'fa-shirt',        color: '#ec4899', label: 'SALE' },
     { key: 'vertical-text', icon: 'fa-text-height', color: '#14b8a6', label: 'Insta' }
 ];
@@ -1442,14 +1442,14 @@ window.loadTextTemplates = function(keyword) {
     // --- 마법사 버튼 섹션 (2열, 세로 아이콘+텍스트) ---
     if (!kw) {
         var wizSection = document.createElement('div');
-        wizSection.style.cssText = 'background:linear-gradient(135deg,#f0f4ff,#e8ecff); border-radius:12px; padding:12px; margin-bottom:14px; border:1px solid #86efac;';
+        wizSection.style.cssText = 'background:linear-gradient(135deg,#f0f4ff,#e8ecff); border-radius:12px; padding:12px; margin-bottom:14px; border:1px solid #c7d2fe;';
         wizSection.innerHTML = '<div style="font-size:14px; font-weight:900; color:#4338ca; margin-bottom:10px; text-align:center; font-family:Inter,Noto Sans KR,sans-serif; letter-spacing:1px;">DESIGN WIZARD</div>';
         var wizGrid = document.createElement('div');
         wizGrid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;';
         WIZARD_BTNS.forEach(function(wb) {
             var btn = document.createElement('button');
             btn.style.cssText = 'background:#fff; border:1px solid #e2e8f0; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:10px 4px; border-radius:10px; transition:all 0.15s; text-align:center; width:100%; box-sizing:border-box; overflow:hidden;';
-            btn.onmouseenter = function() { btn.style.background = '#f8fafc'; btn.style.borderColor = '#03C75A'; btn.style.transform = 'translateY(-1px)'; };
+            btn.onmouseenter = function() { btn.style.background = '#f8fafc'; btn.style.borderColor = '#6366f1'; btn.style.transform = 'translateY(-1px)'; };
             btn.onmouseleave = function() { btn.style.background = '#fff'; btn.style.borderColor = '#e2e8f0'; btn.style.transform = 'none'; };
             btn.innerHTML =
                 '<div style="width:34px; height:34px; border-radius:10px; background:' + wb.color + '; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
@@ -1626,7 +1626,7 @@ window.loadSideAssets = async function(page) {
     else sideAssetPage = 0;
     const list = document.getElementById('sideAssetList');
     if (!list || !sb) return;
-    list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin" style="color:#03C75A;"></i></div>';
+    list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin" style="color:#6366f1;"></i></div>';
     try {
         const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern'];
         let query = sb.from('library')
@@ -1656,7 +1656,7 @@ window.loadSideAssets = async function(page) {
             const pngUrl = _extractAssetPng(tpl);
             const imgUrl = pngUrl || (window.getTinyThumb ? window.getTinyThumb(tpl.thumb_url, 150) : tpl.thumb_url);
             let badge = '';
-            if (tpl.category === 'vector') badge = '<span style="position:absolute;top:3px;left:3px;background:#02a84c;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">V</span>';
+            if (tpl.category === 'vector') badge = '<span style="position:absolute;top:3px;left:3px;background:#7c3aed;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">V</span>';
             // 우선표시 뱃지
             const featBadge = tpl.is_featured ? '<span style="position:absolute;bottom:3px;left:3px;color:#f59e0b;font-size:10px;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.3));z-index:5;"><i class="fa-solid fa-star"></i></span>' : '';
             // 프리미엄 크라운 뱃지

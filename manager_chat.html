@@ -35,7 +35,7 @@ body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:
 /* === Filter Tabs === */
 .rl-filters{display:flex;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid #e5e7eb;overflow-x:auto;}
 .rl-filters button{flex-shrink:0;padding:6px 14px;border-radius:16px;border:1px solid #e5e7eb;background:#fff;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit;}
-.rl-filters button.active{background:#03C75A;color:#fff;border-color:#03C75A;}
+.rl-filters button.active{background:#6366f1;color:#fff;border-color:#6366f1;}
 /* === Room List === */
 .rl-list{flex:1;overflow-y:auto;overscroll-behavior:contain;}
 .room-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f0f0f0;background:#fff;cursor:pointer;transition:background .15s;}
@@ -43,7 +43,7 @@ body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:
 .room-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;color:#fff;}
 .room-avatar.waiting{background:#f59e0b;}
 .room-avatar.active{background:#22c55e;}
-.room-avatar.ai{background:#00b950;}
+.room-avatar.ai{background:#8b5cf6;}
 .room-avatar.closed{background:#94a3b8;}
 .room-info{flex:1;min-width:0;}
 .room-name{font-size:15px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -70,10 +70,10 @@ body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:
 .msg-sender{font-size:11px;font-weight:600;margin-bottom:3px;padding:0 4px;}
 .msg-sender.customer{color:#f59e0b;}
 .msg-sender.chatbot{color:#059669;}
-.msg-sender.manager{color:#03C75A;}
+.msg-sender.manager{color:#6366f1;}
 .msg-bubble{max-width:80%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.6;word-break:break-word;white-space:pre-wrap;}
 .msg-row.customer .msg-bubble{background:#fff;color:#1e293b;border-top-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
-.msg-row.manager .msg-bubble{background:#03C75A;color:#fff;border-top-right-radius:4px;}
+.msg-row.manager .msg-bubble{background:#6366f1;color:#fff;border-top-right-radius:4px;}
 .msg-row.chatbot .msg-bubble{background:#ecfdf5;color:#065f46;border-top-left-radius:4px;}
 .msg-row.system .msg-bubble{background:rgba(0,0,0,.05);color:#64748b;font-size:12px;padding:4px 14px;border-radius:20px;}
 .msg-time{font-size:10px;color:#94a3b8;margin-top:2px;padding:0 4px;}
@@ -81,10 +81,10 @@ body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:
 .msg-file{display:inline-block;background:#dbeafe;padding:8px 14px;border-radius:10px;color:#2563eb;text-decoration:none;font-size:13px;margin:4px 0;}
 /* === Input === */
 .ch-input{padding:8px 10px env(safe-area-inset-bottom,8px);background:#f5f5f5;border-top:1px solid #e5e7eb;display:flex;gap:8px;align-items:flex-end;}
-.ch-input label{color:#03C75A;font-size:22px;padding:8px;cursor:pointer;flex-shrink:0;}
+.ch-input label{color:#6366f1;font-size:22px;padding:8px;cursor:pointer;flex-shrink:0;}
 .ch-input label input{display:none;}
 .ch-input textarea{flex:1;border:1px solid #e5e7eb;border-radius:20px;padding:10px 16px;font-size:14px;resize:none;max-height:100px;min-height:40px;line-height:1.4;font-family:inherit;outline:none;background:#fff;}
-.ch-input button{width:40px;height:40px;border-radius:50%;background:#03C75A;border:none;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;}
+.ch-input button{width:40px;height:40px;border-radius:50%;background:#6366f1;border:none;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;}
 .ch-input button:disabled{opacity:.4;}
 /* === Settings Modal === */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
@@ -93,7 +93,7 @@ body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:
 .modal-box h3{font-size:18px;font-weight:800;margin-bottom:16px;}
 .modal-box select,.modal-box input{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;margin-bottom:12px;font-family:inherit;outline:none;}
 .modal-box button{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
-.modal-box .btn-primary{background:#03C75A;color:#fff;margin-bottom:8px;}
+.modal-box .btn-primary{background:#6366f1;color:#fff;margin-bottom:8px;}
 .modal-box .btn-secondary{background:#f3f4f6;color:#64748b;}
 /* === Empty State === */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#94a3b8;}
@@ -156,7 +156,7 @@ body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:
     <div class="file-preview" id="filePreview">
         <img id="fpImg" src="">
         <div class="fp-info"><div class="fp-name" id="fpName"></div></div>
-        <button onclick="confirmFile()" style="background:#03C75A;color:#fff;">전송</button>
+        <button onclick="confirmFile()" style="background:#6366f1;color:#fff;">전송</button>
         <button onclick="cancelFile()" style="background:#f3f4f6;color:#64748b;">취소</button>
     </div>
     <div class="ch-input">
@@ -177,10 +177,10 @@ body{font-family:'Pretendard',sans-serif;background:#f0f2f5;height:100vh;height:
         <label style="font-size:13px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">알림</label>
         <div style="display:flex;gap:8px;margin-bottom:16px;">
             <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                <input type="checkbox" id="chkSound" checked style="accent-color:#03C75A;"> 소리
+                <input type="checkbox" id="chkSound" checked style="accent-color:#6366f1;"> 소리
             </label>
             <label style="font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                <input type="checkbox" id="chkVibrate" checked style="accent-color:#03C75A;"> 진동
+                <input type="checkbox" id="chkVibrate" checked style="accent-color:#6366f1;"> 진동
             </label>
         </div>
         <button class="btn-primary" onclick="saveSettings()">저장</button>
@@ -424,7 +424,7 @@ window.doSearch = async function() {
         list.innerHTML = '<div class="empty"><i class="fa-solid fa-magnifying-glass"></i><p>"'+esc(q)+'" 결과 없음</p></div>';
         return;
     }
-    var h = '<div style="padding:8px 16px;font-size:12px;color:#03C75A;font-weight:600;">'+rooms.length+'개 결과</div>';
+    var h = '<div style="padding:8px 16px;font-size:12px;color:#6366f1;font-weight:600;">'+rooms.length+'개 결과</div>';
     rooms.forEach(function(rm) {
         var statusClass = rm.status==='waiting'?'waiting':rm.status==='active'?'active':rm.status==='ai_chatting'?'ai':'closed';
         var icon = rm.status==='waiting'?'⏳':rm.status==='active'?'💬':rm.status==='ai_chatting'?'🤖':'✅';
@@ -433,7 +433,7 @@ window.doSearch = async function() {
         h += '<div class="room-item" onclick="openRoom(\''+rm.id+'\')">';
         h += '<div class="room-avatar '+statusClass+'">'+icon+'</div>';
         h += '<div class="room-info"><div class="room-name">'+esc(rm.customer_name||'고객')+'</div>';
-        h += '<div class="room-last-msg" style="color:#03C75A;">'+esc(preview)+'</div></div>';
+        h += '<div class="room-last-msg" style="color:#6366f1;">'+esc(preview)+'</div></div>';
         h += '<div class="room-meta"><div class="room-time">'+new Date(rm.created_at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})+'</div></div>';
         h += '</div>';
     });
@@ -527,7 +527,7 @@ function renderMessage(m) {
     }
     // Text
     if (m.message) {
-        var text = esc(m.message).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(who==='manager'?'#86efac':'#2563eb')+';text-decoration:underline;">$1</a>');
+        var text = esc(m.message).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+(who==='manager'?'#c7d2fe':'#2563eb')+';text-decoration:underline;">$1</a>');
         h += '<div class="msg-bubble">'+text+'</div>';
     }
     h += '<div class="msg-time" style="text-align:'+(who==='manager'?'right':'left')+'">'+t+'</div>';

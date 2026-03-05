@@ -638,13 +638,13 @@ function initPcTextQuickBar() {
     function syncBarUI(obj) {
         // 정렬 상태
         document.querySelectorAll('.pc-tq-align').forEach(b => {
-            b.style.background = b.dataset.align === (obj.textAlign || 'left') ? '#03C75A' : '#f1f5f9';
+            b.style.background = b.dataset.align === (obj.textAlign || 'left') ? '#6366f1' : '#f1f5f9';
             b.style.color = b.dataset.align === (obj.textAlign || 'left') ? '#fff' : '#334155';
         });
         // 색상 상태
         const fill = (obj.fill || '#000000').toUpperCase();
         document.querySelectorAll('.pc-tq-color').forEach(d => {
-            d.style.outline = d.dataset.color === fill ? '2px solid #03C75A' : 'none';
+            d.style.outline = d.dataset.color === fill ? '2px solid #6366f1' : 'none';
             d.style.outlineOffset = '2px';
         });
     }
@@ -771,7 +771,7 @@ window.openMyOrderList = async function() {
         if (o.status === '배송중' || o.status === '제작준비') { 
             statusBadge = `<span class="badge" style="background:#e0e7ff; color:#4338ca;">🚚 ${o.status}</span>`;
             actionBtn = `
-                <button onclick="openReviewModal('${o.id}')" class="btn-round primary" style="width:auto; padding:8px 15px; font-size:13px; box-shadow:0 4px 10px rgba(3,199,90,0.3);">
+                <button onclick="openReviewModal('${o.id}')" class="btn-round primary" style="width:auto; padding:8px 15px; font-size:13px; box-shadow:0 4px 10px rgba(99,102,241,0.3);">
                     🎁 수령확인 & 구매확정
                 </button>
             `;

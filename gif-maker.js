@@ -448,7 +448,7 @@ function gifRenderStickerGrid() {
     var html = '';
     GIF_STICKERS.forEach(function(s) {
         var active = GM.selectedSticker === s;
-        html += '<button onclick="window.gifPickSticker(\'' + s + '\')" style="padding:6px; border:1px solid ' + (active ? '#00b950' : '#374151') + '; border-radius:6px; background:' + (active ? '#1e1b4b' : '#111827') + '; font-size:18px; cursor:pointer; text-align:center; transition:all 0.15s;">' + s + '</button>';
+        html += '<button onclick="window.gifPickSticker(\'' + s + '\')" style="padding:6px; border:1px solid ' + (active ? '#a855f7' : '#374151') + '; border-radius:6px; background:' + (active ? '#1e1b4b' : '#111827') + '; font-size:18px; cursor:pointer; text-align:center; transition:all 0.15s;">' + s + '</button>';
     });
     grid.innerHTML = html;
 }
@@ -674,7 +674,7 @@ function gifRenderElemGrid(grid) {
     var html = '';
     GM.elemItems.forEach(function(item, idx) {
         var url = gifBestUrl(item);
-        html += '<div onclick="window.gifAddLibElement('+idx+')" style="border-radius:10px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:border-color 0.15s; background:#111827;" onmouseenter="this.style.borderColor=\'#00b950\'" onmouseleave="this.style.borderColor=\'transparent\'">';
+        html += '<div onclick="window.gifAddLibElement('+idx+')" style="border-radius:10px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:border-color 0.15s; background:#111827;" onmouseenter="this.style.borderColor=\'#a855f7\'" onmouseleave="this.style.borderColor=\'transparent\'">';
         html += '<img src="'+url+'" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:contain; display:block; padding:4px;">';
         html += '</div>';
     });

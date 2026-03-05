@@ -35,9 +35,9 @@
         /* 마이페이지 전용 레이아웃 (style.css에 추가해도 됨) */
         body.mypage-body { background: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
         .mp-sidebar { width: 250px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 20px; }
-        .mp-logo { font-size: 20px; font-weight: 800; color: #03C75A; margin-bottom: 40px; cursor: pointer; }
+        .mp-logo { font-size: 20px; font-weight: 800; color: #6366f1; margin-bottom: 40px; cursor: pointer; }
         .mp-nav-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; color: #64748b; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .mp-nav-item:hover, .mp-nav-item.active { background: #ecfdf5; color: #03C75A; }
+        .mp-nav-item:hover, .mp-nav-item.active { background: #eff6ff; color: #6366f1; }
         
         .mp-main { flex: 1; padding: 40px; overflow-y: auto; }
         .mp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -47,7 +47,7 @@
         /* 대시보드 카드 (4칸으로 변경) */
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
         .stat-card { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .stat-icon { width: 50px; height: 50px; border-radius: 12px; background: #ecfdf5; color: #03C75A; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; background: #eff6ff; color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .stat-info strong { font-size: 28px; color: #1e293b; display: block; }
         .stat-info span { font-size: 14px; color: #64748b; }
         .stat-info span[id$="Display"], .stat-info span[id$="Count"] { font-size: 24px; font-weight: 800; color: #1e293b; display: block; margin-bottom: 4px; }
@@ -167,7 +167,7 @@
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon" style="background:#ecfdf5; color:#2563eb;">
+                    <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
                     <div class="stat-info">
@@ -188,7 +188,7 @@
             </div>
 
             <!-- 구독 정보 카드 -->
-            <div id="subscriptionInfoCard" style="display:none; background:linear-gradient(135deg,#03C75A,#00b950); border-radius:16px; padding:20px 24px; margin-bottom:20px; color:#fff;">
+            <div id="subscriptionInfoCard" style="display:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); border-radius:16px; padding:20px 24px; margin-bottom:20px; color:#fff;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <span style="font-size:16px; font-weight:800;"><i class="fa-solid fa-crown" style="color:#fbbf24;"></i> <span data-i18n="mp_sub_title">구독 중</span></span>
                     <span id="subPlanBadge" style="background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">PRO</span>
@@ -224,7 +224,7 @@
                 <h3 data-i18n="mp_sales_title">🎨 판매중인 디자인 (내가 등록한 템플릿)</h3>
                 <div style="text-align:right;">
                     <span style="font-size:12px; color:#666;" data-i18n="mp_sales_total">예상 수익 합계</span><br>
-                    <strong style="color:#03C75A; font-size:18px;" id="totalSalesPoint">0 P</strong>
+                    <strong style="color:#6366f1; font-size:18px;" id="totalSalesPoint">0 P</strong>
                 </div>
             </div>
             <p style="font-size:13px; color:#64748b; background:#f1f5f9; padding:10px; border-radius:8px;" data-i18n="mp_sales_guide">
@@ -267,7 +267,7 @@
                     </div>
 
                     <div style="display: flex; gap: 10px;">
-                        <button onclick="openWithdrawModal()" style="flex: 1; background: #02a84c; border: none; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_withdraw">
+                        <button onclick="openWithdrawModal()" style="flex: 1; background: #4f46e5; border: none; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_withdraw">
                             💸 출금 신청
                         </button>
                         <button onclick="showToast(window.t('mp_charge_notice','관리자 계좌로 입금 후 고객센터에 문의해주세요.'), 'info')" style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" data-i18n="mp_btn_charge">
@@ -333,7 +333,7 @@
         <div style="margin-bottom:10px;">
             <label style="font-size:12px; font-weight:bold;" data-i18n="mp_wd_amount">출금할 금액</label>
             <input type="number" id="wdAmount" class="input-text" style="width:100%; padding:8px; border:1px solid #ddd;" data-i18n-placeholder="mp_wd_amount_ph" placeholder="1000 이상 입력">
-            <div style="font-size:11px; color:#03C75A; margin-top:4px;"><span data-i18n="mp_wd_balance">보유</span>: <span id="wdCurrentMileage">0</span> <span id="wdCurrencyLabel">원</span></div>
+            <div style="font-size:11px; color:#6366f1; margin-top:4px;"><span data-i18n="mp_wd_balance">보유</span>: <span id="wdCurrentMileage">0</span> <span id="wdCurrencyLabel">원</span></div>
         </div>
 
         <div style="margin-bottom:10px;">

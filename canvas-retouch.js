@@ -174,7 +174,7 @@ export function initRetouchTools() {
         row.innerHTML = `
             <span style="font-size:11px; color:#64748b; width:48px; flex-shrink:0;" data-i18n="${s.i18n}">${_t(s.i18n, s.label)}</span>
             <input type="range" data-slider="${s.key}" min="${s.min}" max="${s.max}" value="${s.def}"
-                   style="flex:1; height:4px; accent-color:#03C75A; cursor:pointer;">
+                   style="flex:1; height:4px; accent-color:#6366f1; cursor:pointer;">
             <span data-val="${s.key}" style="font-size:10px; color:#94a3b8; width:28px; text-align:right;">${s.def}</span>
         `;
         container.appendChild(row);
@@ -487,7 +487,7 @@ function _showOptionModal(config) {
             const btn = document.createElement('button');
             btn.style.cssText = 'padding:10px 8px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:600;color:#334155;';
             btn.textContent = opt.key ? _t(opt.key, opt.label) : opt.label;
-            btn.onmouseover = () => { btn.style.borderColor = '#03C75A'; btn.style.background = '#ecfdf5'; };
+            btn.onmouseover = () => { btn.style.borderColor = '#6366f1'; btn.style.background = '#f5f3ff'; };
             btn.onmouseout = () => { btn.style.borderColor = '#e2e8f0'; btn.style.background = '#fff'; };
             btn.onclick = () => { modal.remove(); resolve(opt.value); };
             optContainer.appendChild(btn);
@@ -521,7 +521,7 @@ function _pickSecondImage(imageList) {
             const thumb = document.createElement('div');
             thumb.style.cssText = 'cursor:pointer;border:2px solid #e2e8f0;border-radius:10px;overflow:hidden;aspect-ratio:1;transition:all .2s;';
             thumb.innerHTML = `<img src="${el.src}" style="width:100%;height:100%;object-fit:cover;">`;
-            thumb.onmouseover = () => { thumb.style.borderColor = '#03C75A'; };
+            thumb.onmouseover = () => { thumb.style.borderColor = '#6366f1'; };
             thumb.onmouseout = () => { thumb.style.borderColor = '#e2e8f0'; };
             thumb.onclick = () => { modal.remove(); resolve(imgObj); };
             container.appendChild(thumb);
@@ -749,7 +749,7 @@ function _showSkinAnalysis(analysis) {
         <div style="background:#fff;border-radius:16px;padding:24px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
             <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#1e293b;">🔬 AI 피부 분석 결과</div>
             ${html}
-            <button onclick="this.closest('#retouchOptionModal').remove()" style="margin-top:16px;width:100%;height:38px;border:none;border-radius:10px;background:#03C75A;color:#fff;font-size:13px;cursor:pointer;font-weight:600;">확인</button>
+            <button onclick="this.closest('#retouchOptionModal').remove()" style="margin-top:16px;width:100%;height:38px;border:none;border-radius:10px;background:#6366f1;color:#fff;font-size:13px;cursor:pointer;font-weight:600;">확인</button>
         </div>
     `;
     modal.onclick = (e) => { if (e.target === modal) modal.remove(); };

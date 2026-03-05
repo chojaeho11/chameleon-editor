@@ -12,7 +12,7 @@
    카멜레온 AI 상담봇 - 챗봇 위젯 스타일
    ======================================== */
 :root {
-    --bot-primary: #03C75A;
+    --bot-primary: #6366f1;
     --bot-primary-dark: #4338ca;
     --bot-accent: #f59e0b;
     --bot-bg: #f8fafc;
@@ -21,7 +21,7 @@
     --bot-text-sub: #64748b;
     --bot-border: #e2e8f0;
     --bot-radius: 16px;
-    --bot-shadow: 0 20px 60px rgba(3, 199, 90, 0.15);
+    --bot-shadow: 0 20px 60px rgba(99, 102, 241, 0.15);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -62,7 +62,7 @@ body {
     background: linear-gradient(135deg, var(--bot-primary) 0%, var(--bot-primary-dark) 100%);
     border: none;
     cursor: pointer;
-    box-shadow: 0 8px 32px rgba(3, 199, 90, 0.4);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -72,7 +72,7 @@ body {
 }
 #chameleon-bot-trigger:hover {
     transform: scale(1.1);
-    box-shadow: 0 12px 40px rgba(3, 199, 90, 0.5);
+    box-shadow: 0 12px 40px rgba(99, 102, 241, 0.5);
 }
 #chameleon-bot-trigger i {
     font-size: 26px;
@@ -82,8 +82,8 @@ body {
 #chameleon-bot-trigger.open i { transform: rotate(90deg); }
 
 @keyframes bot-pulse {
-    0%, 100% { box-shadow: 0 8px 32px rgba(3, 199, 90, 0.4); }
-    50% { box-shadow: 0 8px 32px rgba(3, 199, 90, 0.6), 0 0 0 8px rgba(3, 199, 90, 0.1); }
+    0%, 100% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4); }
+    50% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.6), 0 0 0 8px rgba(99, 102, 241, 0.1); }
 }
 
 /* ===== 챗봇 윈도우 ===== */
@@ -250,7 +250,7 @@ body {
     padding: 7px 14px;
     border: 1px solid var(--bot-primary);
     border-radius: 20px;
-    background: #ecfdf5;
+    background: #f5f3ff;
     color: var(--bot-primary);
     font-size: 12px;
     font-weight: 700;
@@ -291,7 +291,7 @@ body {
 
 /* 견적 결과 카드 */
 .estimate-card {
-    background: linear-gradient(135deg, #d1fae5 0%, #e0e7ff 100%);
+    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
     border: 2px solid var(--bot-primary);
     border-radius: 14px;
     padding: 18px;

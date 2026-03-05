@@ -507,7 +507,7 @@ async function loadOrders() {
                     ${actionBtn}
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
                         ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="font-size:11px; padding:5px 10px;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
-                        <button onclick="reOrder('${o.id}')" style="height:28px; font-size:11px; padding:5px 10px; background:#ecfdf5; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;">${window.t('btn_reorder', 'Reorder')}</button>
+                        <button onclick="reOrder('${o.id}')" style="height:28px; font-size:11px; padding:5px 10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;">${window.t('btn_reorder', 'Reorder')}</button>
                         <div style="position:relative;">
                             <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:28px; font-size:11px; padding:5px 10px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
                             <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden; min-width:140px;">
@@ -539,7 +539,7 @@ async function loadOrders() {
                     <div style="display:flex; flex-direction:column; gap:3px;">
                         <div style="display:flex; gap:3px;">
                             ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="flex:1; font-size:10px; padding:3px 6px;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
-                            <button onclick="reOrder('${o.id}')" style="flex:1; height:24px; font-size:10px; background:#ecfdf5; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
+                            <button onclick="reOrder('${o.id}')" style="flex:1; height:24px; font-size:10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
                         </div>
                         <div style="position:relative;">
                             <button onclick="toggleDocDropdown(event, '${o.id}')" style="width:100%; height:24px; font-size:10px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
@@ -788,7 +788,7 @@ async function loadWalletLogs() {
         else if(log.type === 'contributor_reward') typeName = window.t('label_contributor_reward', '기여보상');
 
         const badgeStyle = isReferral
-            ? 'background:linear-gradient(135deg,#d1fae5,#e0e7ff); color:#02a84c; border:1px solid #a78bfa; font-weight:bold;'
+            ? 'background:linear-gradient(135deg,#ede9fe,#e0e7ff); color:#7c3aed; border:1px solid #a78bfa; font-weight:bold;'
             : 'background:#f1f5f9; color:#64748b;';
 
         let descHtml = log.description || '-';
@@ -804,7 +804,7 @@ async function loadWalletLogs() {
                     + ` (${window.t('label_order_num', '주문')}: ${orderNum})`;
             }
             descHtml = `<div style="font-weight:600; color:#6d28d9;">${refDesc}</div>
-                <div style="margin-top:4px; font-size:11px; color:#666; line-height:1.5; background:#ecfdf5; padding:6px 10px; border-radius:6px; border-left:3px solid #02a84c;">
+                <div style="margin-top:4px; font-size:11px; color:#666; line-height:1.5; background:#f5f3ff; padding:6px 10px; border-radius:6px; border-left:3px solid #7c3aed;">
                     ${window.t('referral_log_info', '예치금은 현금처럼 사용 가능합니다. 출금 시 3.3%의 세금이 공제됩니다.')}
                 </div>`;
         }
@@ -814,7 +814,7 @@ async function loadWalletLogs() {
                 <td>${new Date(log.created_at).toLocaleDateString()}</td>
                 <td><span class="status-badge" style="${badgeStyle}">${isReferral ? '🎁 ' : ''}${typeName}</span></td>
                 <td>${descHtml}</td>
-                <td style="text-align:right; font-weight:bold; color:${isReferral ? '#02a84c' : color};">${sign}${log.amount.toLocaleString()}</td>
+                <td style="text-align:right; font-weight:bold; color:${isReferral ? '#7c3aed' : color};">${sign}${log.amount.toLocaleString()}</td>
             </tr>`;
     });
 }
@@ -897,7 +897,7 @@ window.checkBidsForOrder = async function(orderId) {
                         <div style="font-weight:bold; font-size:16px; color:#1e293b;">${partnerInfo.company_name || window.t('label_partner', 'Partner')}</div>
                         <div style="margin-top:2px;">${stars} <span style="font-size:12px; font-weight:bold; color:#1e293b;">${score.toFixed(1)}</span> ${reviewText}</div>
                     </div>
-                    <div style="font-weight:800; color:#03C75A; font-size:18px;">${bid.price.toLocaleString()}</div>
+                    <div style="font-weight:800; color:#6366f1; font-size:18px;">${bid.price.toLocaleString()}</div>
                 </div>
                 <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:13px; color:#475569; line-height:1.5; margin-top:10px;">
                     "${bid.message}"

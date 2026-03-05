@@ -8,7 +8,7 @@
  *   <script>
  *     window.CHAMELEON_CHAT = {
  *       position: 'right',       // 'left' or 'right'
- *       color: '#03C75A',        // button color
+ *       color: '#6366f1',        // button color
  *       bottom: 100,             // bottom offset in px
  *       side: 24,                // side offset in px
  *       url: 'https://cafe2626.com/live-chat.html',
@@ -27,7 +27,7 @@
 
     var cfg = window.CHAMELEON_CHAT || {};
     var position = cfg.position || 'right';
-    var color = cfg.color || '#03C75A';
+    var color = cfg.color || '#6366f1';
     var bottom = cfg.bottom || 100;
     var side = cfg.side || 24;
     var zIndex = cfg.zIndex || 99990;
@@ -62,17 +62,17 @@
             'height:44px;border-radius:22px;background:' + color + ';' +
             'border:none;cursor:pointer;z-index:' + zIndex + ';' +
             'display:flex;align-items:center;gap:7px;padding:0 16px 0 12px;' +
-            'box-shadow:0 4px 20px rgba(3,199,90,0.35);' +
+            'box-shadow:0 4px 20px rgba(99,102,241,0.35);' +
             'transition:transform .2s,box-shadow .2s;animation:ccwPulse 3s infinite;' +
             'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
         '}' +
-        '#ccw-btn:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(3,199,90,0.5)}' +
+        '#ccw-btn:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(99,102,241,0.5)}' +
         '#ccw-btn svg{flex-shrink:0}' +
         '#ccw-btn .ccw-label{color:#fff;font-size:13px;font-weight:700;white-space:nowrap;line-height:1}' +
         '#ccw-btn.open .ccw-label{display:none}' +
         '#ccw-btn.open .ccw-icon-chat{display:none}' +
         '#ccw-btn:not(.open) .ccw-icon-close{display:none}' +
-        '@keyframes ccwPulse{0%,100%{box-shadow:0 4px 20px rgba(3,199,90,0.35)}50%{box-shadow:0 4px 20px rgba(3,199,90,0.35),0 0 0 8px rgba(3,199,90,0.1)}}' +
+        '@keyframes ccwPulse{0%,100%{box-shadow:0 4px 20px rgba(99,102,241,0.35)}50%{box-shadow:0 4px 20px rgba(99,102,241,0.35),0 0 0 8px rgba(99,102,241,0.1)}}' +
         // Auto-open tooltip bubble
         '#ccw-tooltip{' +
             'position:fixed;bottom:' + (bottom + 52) + 'px;' + position + ':' + side + 'px;' +

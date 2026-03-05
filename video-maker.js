@@ -42,7 +42,7 @@ const TEMPLATES = [
     { id:'title', get name(){ return _t('ve_tpl_title_card','타이틀 카드') }, icon:'fa-heading',
       mk:(w,h)=>[{type:'rect',x:0,y:h*.3,w,h:h*.4,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.45,text:_t('ve_tpl_enter_title','제목을 입력하세요'),fontSize:Math.round(w*.06),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.58,text:_t('ve_tpl_subtitle','부제목'),fontSize:Math.round(w*.025),color:'#ccc',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'}]},
     { id:'lower3rd', get name(){ return _t('ve_tpl_lower_third','하단 자막') }, icon:'fa-closed-captioning',
-      mk:(w,h)=>[{type:'rect',x:w*.05,y:h*.82,w:w*.5,h:h*.06,fill:'#03C75A',stroke:'',strokeW:0,radius:8},{type:'text',x:w*.3,y:h*.855,text:_t('ve_tpl_name','이름'),fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.05,y:h*.88,w:w*.35,h:h*.04,fill:'rgba(255,255,255,0.9)',stroke:'',strokeW:0,radius:6},{type:'text',x:w*.22,y:h*.905,text:_t('ve_tpl_job_title','직함'),fontSize:Math.round(w*.016),color:'#333',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
+      mk:(w,h)=>[{type:'rect',x:w*.05,y:h*.82,w:w*.5,h:h*.06,fill:'#6366f1',stroke:'',strokeW:0,radius:8},{type:'text',x:w*.3,y:h*.855,text:_t('ve_tpl_name','이름'),fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.05,y:h*.88,w:w*.35,h:h*.04,fill:'rgba(255,255,255,0.9)',stroke:'',strokeW:0,radius:6},{type:'text',x:w*.22,y:h*.905,text:_t('ve_tpl_job_title','직함'),fontSize:Math.round(w*.016),color:'#333',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
     { id:'caption', get name(){ return _t('ve_tpl_caption','자막') }, icon:'fa-align-center',
       mk:(w,h)=>[{type:'rect',x:0,y:h*.85,w,h:h*.15,fill:'rgba(0,0,0,0.65)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.935,text:_t('ve_tpl_caption_text','자막 텍스트'),fontSize:Math.round(w*.03),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'}]},
     { id:'quote', get name(){ return _t('ve_tpl_quote','인용문') }, icon:'fa-quote-left',
@@ -50,7 +50,7 @@ const TEMPLATES = [
     { id:'announce', get name(){ return _t('ve_tpl_announce','공지') }, icon:'fa-bullhorn',
       mk:(w,h)=>[{type:'rect',x:w*.1,y:h*.35,w:w*.8,h:h*.3,fill:'#ef4444',stroke:'#fff',strokeW:4,radius:16},{type:'text',x:w/2,y:h*.48,text:_t('ve_tpl_important','중요 공지'),fontSize:Math.round(w*.05),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.57,text:_t('ve_tpl_details','세부 내용'),fontSize:Math.round(w*.022),color:'#fecaca',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
     { id:'intro', get name(){ return _t('ve_tpl_intro','인트로') }, icon:'fa-play-circle',
-      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.7)',stroke:'',strokeW:0,radius:0},{type:'rect',x:w*.15,y:h*.25,w:w*.7,h:h*.5,fill:'rgba(3,199,90,0.3)',stroke:'#818cf8',strokeW:3,radius:20},{type:'text',x:w/2,y:h*.42,text:_t('ve_tpl_channel','채널명'),fontSize:Math.round(w*.07),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.56,text:_t('ve_tpl_video_title','영상 제목을 입력하세요'),fontSize:Math.round(w*.03),color:'#86efac',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.35,y:h*.65,w:w*.3,h:4,fill:'#818cf8',stroke:'',strokeW:0,radius:2}]},
+      mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.7)',stroke:'',strokeW:0,radius:0},{type:'rect',x:w*.15,y:h*.25,w:w*.7,h:h*.5,fill:'rgba(99,102,241,0.3)',stroke:'#818cf8',strokeW:3,radius:20},{type:'text',x:w/2,y:h*.42,text:_t('ve_tpl_channel','채널명'),fontSize:Math.round(w*.07),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.56,text:_t('ve_tpl_video_title','영상 제목을 입력하세요'),fontSize:Math.round(w*.03),color:'#c7d2fe',bold:false,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.35,y:h*.65,w:w*.3,h:4,fill:'#818cf8',stroke:'',strokeW:0,radius:2}]},
     { id:'outro', get name(){ return _t('ve_tpl_outro','아웃트로') }, icon:'fa-flag-checkered',
       mk:(w,h)=>[{type:'rect',x:0,y:0,w,h,fill:'rgba(0,0,0,0.75)',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.35,text:_t('ve_tpl_thanks','시청해주셔서 감사합니다'),fontSize:Math.round(w*.045),color:'#fff',bold:true,shadow:true,align:'center',fontFamily:'sans-serif'},{type:'rect',x:w*.25,y:h*.5,w:w*.5,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:12},{type:'text',x:w/2,y:h*.545,text:_t('ve_tpl_like_sub','👍 좋아요 & 구독'),fontSize:Math.round(w*.025),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'},{type:'text',x:w/2,y:h*.68,text:_t('ve_tpl_see_next','다음 영상에서 만나요!'),fontSize:Math.round(w*.022),color:'#94a3b8',bold:false,shadow:false,align:'center',fontFamily:'sans-serif'}]},
     { id:'countdown', get name(){ return _t('ve_tpl_countdown','카운트다운') }, icon:'fa-hourglass-half',
@@ -58,7 +58,7 @@ const TEMPLATES = [
     { id:'subscribe', get name(){ return _t('ve_tpl_subscribe_btn','구독 버튼') }, icon:'fa-bell',
       mk:(w,h)=>[{type:'rect',x:w*.3,y:h*.8,w:w*.4,h:h*.08,fill:'#ef4444',stroke:'',strokeW:0,radius:8},{type:'text',x:w/2,y:h*.845,text:_t('ve_tpl_subscribe','🔔 구독하기'),fontSize:Math.round(w*.028),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]},
     { id:'progress', get name(){ return _t('ve_tpl_progress','프로그레스') }, icon:'fa-battery-half',
-      mk:(w,h)=>[{type:'rect',x:0,y:h*.92,w,h:h*.08,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'rect',x:0,y:h*.92,w:w*.4,h:h*.08,fill:'#03C75A',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.965,text:_t('ve_tpl_complete_pct','40% 완료'),fontSize:Math.round(w*.02),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]}
+      mk:(w,h)=>[{type:'rect',x:0,y:h*.92,w,h:h*.08,fill:'rgba(0,0,0,0.6)',stroke:'',strokeW:0,radius:0},{type:'rect',x:0,y:h*.92,w:w*.4,h:h*.08,fill:'#6366f1',stroke:'',strokeW:0,radius:0},{type:'text',x:w/2,y:h*.965,text:_t('ve_tpl_complete_pct','40% 완료'),fontSize:Math.round(w*.02),color:'#fff',bold:true,shadow:false,align:'center',fontFamily:'sans-serif'}]}
 ];
 
 const TL_PPS = 60; // timeline pixels per second (base)
@@ -332,8 +332,8 @@ function addOverlay(type, x, y, props) {
     let o; const fs = Math.round(vm.w*0.04);
     switch(type) {
         case 'text': o={type:'text',x,y,text:props?.text||_t('ve_default_text','텍스트'),fontSize:props?.fontSize||fs,color:props?.color||'#fff',bold:props?.bold??true,shadow:props?.shadow??true,align:'center',fontFamily:props?.fontFamily||'sans-serif',strokeColor:props?.strokeColor||'#000',strokeWidth:props?.strokeWidth||0,bgBox:props?.bgBox||false,bgColor:props?.bgColor||'rgba(0,0,0,0.5)',lineHeight:props?.lineHeight||1.2}; break;
-        case 'rect': o={type:'rect',x,y,w:props?.w||vm.w*.3,h:props?.h||vm.h*.12,fill:props?.fill||'rgba(3,199,90,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2,radius:props?.radius||10}; break;
-        case 'circle': o={type:'circle',x,y,r:props?.r||vm.w*.06,fill:props?.fill||'rgba(3,199,90,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2}; break;
+        case 'rect': o={type:'rect',x,y,w:props?.w||vm.w*.3,h:props?.h||vm.h*.12,fill:props?.fill||'rgba(99,102,241,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2,radius:props?.radius||10}; break;
+        case 'circle': o={type:'circle',x,y,r:props?.r||vm.w*.06,fill:props?.fill||'rgba(99,102,241,0.5)',stroke:props?.stroke||'#fff',strokeW:props?.strokeW||2}; break;
         case 'sticker': o={type:'sticker',x,y,emoji:props?.emoji||'⭐',size:props?.size||Math.round(vm.w*.08)}; break;
         case 'image': {
             const img=new Image();
@@ -600,7 +600,7 @@ function renderMediaTab(el) {
             h += `<img src="${c.thumbUrl}">`;
             if(c.type==='video') h += `<span class="ve-media-dur">${fmtTime(c.duration)}</span>`;
             h += `<span class="ve-media-type">${c.type==='video'?'🎬':'🖼️'}</span>`;
-            h += `<button class="ve-media-dup" data-dup="${i}" title="${_t('ve_duplicate','복제')}" style="position:absolute;top:2px;right:22px;background:rgba(3,199,90,0.8);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-copy"></i></button>`;
+            h += `<button class="ve-media-dup" data-dup="${i}" title="${_t('ve_duplicate','복제')}" style="position:absolute;top:2px;right:22px;background:rgba(99,102,241,0.8);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-copy"></i></button>`;
             h += `<button class="ve-media-del" data-del="${i}">×</button>`;
             h += `</div>`;
         });
@@ -608,7 +608,7 @@ function renderMediaTab(el) {
     } else {
         h += `<p class="ve-empty">${_t('ve_add_clip','이미지 또는 영상을 추가하세요')}</p>`;
     }
-    h += `<label for="veFileInput" class="ve-media-empty-area" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;" onmouseover="this.style.borderColor='#4a5568';this.style.background='rgba(3,199,90,0.05)'" onmouseout="this.style.borderColor='transparent';this.style.background='transparent'">
+    h += `<label for="veFileInput" class="ve-media-empty-area" style="flex:1;min-height:80px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px dashed transparent;border-radius:8px;margin:8px 0;transition:border-color .2s,background .2s;" onmouseover="this.style.borderColor='#4a5568';this.style.background='rgba(99,102,241,0.05)'" onmouseout="this.style.borderColor='transparent';this.style.background='transparent'">
         <span style="color:#4a5568;font-size:11px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>${_t('ve_click_to_add','클릭하여 추가')}</span>
     </label>`;
     el.innerHTML = h;
@@ -1270,7 +1270,7 @@ function renderImageTab(el) {
                 <option value="clip">${_t('ve_ai_as_clip','새 클립으로 추가')}</option>
                 <option value="background">${_t('ve_ai_as_bg','현재 클립 배경 교체')}</option>
             </select>
-            <button id="veAiImgBtn" onclick="window._veAiGenerateImg()" style="padding:6px 14px;background:linear-gradient(135deg,#03C75A,#a78bfa);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            <button id="veAiImgBtn" onclick="window._veAiGenerateImg()" style="padding:6px 14px;background:linear-gradient(135deg,#6366f1,#a78bfa);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> ${_t('ve_ai_generate','생성')}
             </button>
         </div>
@@ -1458,7 +1458,7 @@ window._veAiGenerateImg = async function() {
                     <i class="fa-solid fa-check" style="color:#34d399;margin-right:3px"></i>${_t('ve_ai_img_done','생성 완료')}
                 </div>
             </div>
-            <button onclick="window._veAiImg2Video()" style="width:100%;margin-top:6px;padding:8px;background:linear-gradient(135deg,#ec4899,#00b950);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">
+            <button onclick="window._veAiImg2Video()" style="width:100%;margin-top:6px;padding:8px;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">
                 <i class="fa-solid fa-film" style="margin-right:4px"></i>${_t('ve_ai_to_video','이 이미지로 AI 영상 생성')}
             </button>`;
         }

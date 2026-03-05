@@ -1126,7 +1126,7 @@ window.NpcWizard = {
                         <div style="margin-bottom:10px;">
                             <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">${_t('lsTitleText')}</label>
                             <input type="text" id="npcLsTitle" value="${this._lsTitleText}" placeholder="${_t('lsTitlePlaceholder')}" maxlength="30"
-                                style="width:100%;padding:12px;border:2px solid #86efac;border-radius:10px;font-size:16px;font-weight:700;box-sizing:border-box;">
+                                style="width:100%;padding:12px;border:2px solid #c7d2fe;border-radius:10px;font-size:16px;font-weight:700;box-sizing:border-box;">
                         </div>
                         <div>
                             <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">${_t('lsBottomTextLabel')}</label>
@@ -1150,7 +1150,7 @@ window.NpcWizard = {
                             <label style="font-size:12px;font-weight:700;color:#475569;">${_t('lsWidthLabel')} <span style="color:#94a3b8;font-size:11px;">(max 240cm)</span></label>
                             <input type="number" id="npcLsWidth" value="${defaultW}" min="60" max="240" step="10" inputmode="numeric"
                                 oninput="window.NpcWizard._lsUpdatePrice()"
-                                style="width:100%;padding:12px;border:2px solid #86efac;border-radius:10px;font-size:18px;font-weight:700;box-sizing:border-box;text-align:center;">
+                                style="width:100%;padding:12px;border:2px solid #c7d2fe;border-radius:10px;font-size:18px;font-weight:700;box-sizing:border-box;text-align:center;">
                         </div>
                         <div id="npcLsPricePreview"></div>
                     `;
@@ -1165,7 +1165,7 @@ window.NpcWizard = {
                 if (lsSlot4) {
                     const styles = [
                         { key:'neon',     bg:'linear-gradient(135deg,#5b00f5,#b030ff)' },
-                        { key:'ocean',    bg:'linear-gradient(135deg,#4f6cf7,#00b950)' },
+                        { key:'ocean',    bg:'linear-gradient(135deg,#4f6cf7,#8b5cf6)' },
                         { key:'flame',    bg:'linear-gradient(135deg,#f02020,#ff8c00)' },
                         { key:'forest',   bg:'linear-gradient(135deg,#059e7a,#34e89e)' },
                         { key:'midnight', bg:'linear-gradient(135deg,#0a0033,#3b2d8b)' },
@@ -1176,7 +1176,7 @@ window.NpcWizard = {
                     let html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">';
                     styles.forEach(s => {
                         const sel = this._lsStyle === s.key;
-                        const border = sel ? 'border:2px solid #03C75A;box-shadow:0 0 0 2px rgba(3,199,90,0.3);' : 'border:2px solid #e2e8f0;';
+                        const border = sel ? 'border:2px solid #6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.3);' : 'border:2px solid #e2e8f0;';
                         html += `<button onclick="window.NpcWizard._lsPickStyle('${s.key}',this)" data-style="${s.key}"
                             style="padding:10px 4px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:#fff;background:${s.bg};${border};text-transform:capitalize;">${s.key}</button>`;
                     });
@@ -1204,7 +1204,7 @@ window.NpcWizard = {
                             <div class="pd-summary-row"><span>${_t('lsTitleText')}</span><strong>${this._lsTitleText}</strong></div>
                             <div class="pd-summary-row"><span>${_t('lsBottomTextLabel')}</span><strong>${this._lsBottomText || '-'}</strong></div>
                             <div class="pd-summary-row"><span>${_t('lsSize')}</span><strong>${lsW}cm x ${lsH}cm (${lsArea.toFixed(2)}m2)</strong></div>
-                            <div class="pd-summary-row"><span>${_t('lsPrice')}</span><strong style="color:#03C75A;font-size:18px;">${lsFmt}</strong></div>
+                            <div class="pd-summary-row"><span>${_t('lsPrice')}</span><strong style="color:#6366f1;font-size:18px;">${lsFmt}</strong></div>
                         </div>
                         <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._lsOpenEditor()">🎨 ${_t('lsEditInEditor')}</button>
                         <div style="margin-top:12px;">
@@ -1560,7 +1560,7 @@ window.NpcWizard = {
         const fmt = window.formatCurrency ? window.formatCurrency(price) : price.toLocaleString() + '원';
         const el = document.getElementById('npcLsPricePreview');
         if (el) {
-            el.innerHTML = `<div style="background:linear-gradient(135deg,#03C75A,#00b950);color:white;padding:14px;border-radius:10px;text-align:center;">
+            el.innerHTML = `<div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:14px;border-radius:10px;text-align:center;">
                 <div style="font-size:11px;opacity:0.9;">${_t('lsPrice')}</div>
                 <div style="font-size:22px;font-weight:800;color:#fbbf24;">${fmt}</div>
                 <div style="font-size:11px;opacity:0.7;">${w}cm (${(w/120).toFixed(1)}x)</div>
@@ -1579,8 +1579,8 @@ window.NpcWizard = {
     _lsPickStyle(style, el) {
         if (el) {
             el.parentElement.querySelectorAll('button').forEach(b => { b.style.borderColor = '#e2e8f0'; b.style.boxShadow = 'none'; });
-            el.style.borderColor = '#03C75A';
-            el.style.boxShadow = '0 0 0 2px rgba(3,199,90,0.3)';
+            el.style.borderColor = '#6366f1';
+            el.style.boxShadow = '0 0 0 2px rgba(99,102,241,0.3)';
         }
         this._lsStyle = style;
     },
