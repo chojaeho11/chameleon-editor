@@ -1310,11 +1310,13 @@ async function _wzGetDescText(title) {
             JP: `「${title}」に関するプロモーション文を3〜4行（200文字以内）で書いてください。感性的でプロフェッショナルに。テキストのみ返してください。`,
             US: `Write a 3-4 line promotional text about "${title}" (under 200 chars). Make it emotional and professional. Return text only.`
         };
-        const { data, error } = await sb.functions.invoke('generate-text', {
+        const _aiCall = sb.functions.invoke('generate-text', {
             body: { prompt: langPrompts[c] || langPrompts['US'], max_tokens: 200 }
         });
+        const _timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
+        const { data, error } = await Promise.race([_aiCall, _timeout]);
         if (!error && data) text = (typeof data === 'string' ? data : data.text || data.result || '').trim();
-    } catch(e) { /* fallback */ }
+    } catch(e) { console.warn('[Wizard] 설명 생성 실패/타임아웃:', e.message); }
 
     if (!text || text.length < 10) {
         const fb = {
