@@ -38,6 +38,320 @@ let currentOrderStatus = '전체';
 let currentPage = 1;
 const itemsPerPage = 10;
 
+// ================================================================
+// [자동 다운로드] 새 주문 파일 → ZIP (소재별 폴더 + 작업메모 + QR)
+// ================================================================
+let _autoDownloadActive = false;
+let _autoDownloadTimer = null;
+let _autoDownloadLastChecked = null;
+const _autoDownloadedIds = new Set();
+const AUTO_DL_INTERVAL = 300000; // 5분
+let _materialCache = {}; // product code → material
+
+const MATERIAL_LABELS = {
+    coated: '코팅지', sticker: '스티커', vinyl: '비닐_PVC', canvas: '캔버스_천',
+    transparent: '투명', kraft: '크라프트지', corrugated: '골판지', foam: '폼보드',
+    acrylic: '아크릴', metal: '금속', wood: '나무', pp: 'PP', pet: 'PET', other: '기타'
+};
+
+async function _loadMaterialCache() {
+    const { data } = await sb.from('admin_products').select('code, material');
+    if (data) {
+        _materialCache = {};
+        data.forEach(p => { if (p.material) _materialCache[p.code] = p.material; });
+    }
+}
+
+window.toggleAutoDownload = () => {
+    _autoDownloadActive = !_autoDownloadActive;
+    const btn = document.getElementById('autoDownloadBtn');
+    const status = document.getElementById('autoDownloadStatus');
+    if (_autoDownloadActive) {
+        btn.textContent = '📥 자동다운 ON';
+        btn.style.background = '#dcfce7';
+        btn.style.borderColor = '#22c55e';
+        btn.style.color = '#15803d';
+        status.style.display = 'inline';
+        status.textContent = '소재 DB 로딩...';
+        _loadMaterialCache().then(() => {
+            status.textContent = '대기중...';
+            _autoDownloadLastChecked = new Date().toISOString();
+            _runAutoDownloadCheck();
+            _autoDownloadTimer = setInterval(_runAutoDownloadCheck, AUTO_DL_INTERVAL);
+        });
+    } else {
+        btn.textContent = '📥 자동다운 OFF';
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        status.style.display = 'none';
+        if (_autoDownloadTimer) { clearInterval(_autoDownloadTimer); _autoDownloadTimer = null; }
+    }
+};
+
+// 수동 즉시 다운로드 (단일 주문)
+window.autoDownloadOrder = async (orderId) => {
+    const { data: order } = await sb.from('orders')
+        .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status')
+        .eq('id', orderId).single();
+    if (!order) { showToast('주문을 찾을 수 없습니다.', 'error'); return; }
+    if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
+    await _buildAndDownloadZip(order);
+    showToast('ZIP 다운로드 완료', 'success');
+};
+
+async function _runAutoDownloadCheck() {
+    if (!_autoDownloadActive) return;
+    const status = document.getElementById('autoDownloadStatus');
+    try {
+        let query = sb.from('orders')
+            .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status')
+            .neq('status', '임시작성').neq('status', '관리자차단')
+            .not('status', 'in', '("취소요청","취소됨")')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (_autoDownloadLastChecked) {
+            query = query.gte('created_at', _autoDownloadLastChecked);
+        }
+
+        const { data: orders, error } = await query;
+        if (error) { console.error('[자동다운] 조회 오류:', error); return; }
+
+        let zipCount = 0;
+        for (const order of (orders || [])) {
+            if (_autoDownloadedIds.has(order.id)) continue;
+            const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
+            if (files.length === 0) continue;
+
+            await _buildAndDownloadZip(order);
+            _autoDownloadedIds.add(order.id);
+            zipCount++;
+        }
+
+        _autoDownloadLastChecked = new Date().toISOString();
+        if (zipCount > 0) {
+            status.textContent = `${new Date().toLocaleTimeString()} - ${zipCount}건 ZIP 다운로드`;
+            status.style.color = '#22c55e';
+            showToast(`${zipCount}건 주문 ZIP 자동 다운로드 완료`, 'success');
+        } else {
+            status.textContent = `${new Date().toLocaleTimeString()} 체크완료`;
+            status.style.color = '#64748b';
+        }
+    } catch (err) {
+        console.error('[자동다운] 오류:', err);
+        status.textContent = '오류 발생';
+        status.style.color = '#ef4444';
+    }
+}
+
+async function _buildAndDownloadZip(order) {
+    const zip = new JSZip();
+    const safeName = (order.manager_name || 'unknown').replace(/[\\/:*?"<>|]/g, '_');
+    const zipName = `${order.id}_${safeName}`;
+    const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
+    const items = order.items || [];
+
+    // 1. 작업지시서 폴더: order_sheet, quotation 파일
+    const docFiles = files.filter(f => f.type === 'order_sheet' || f.type === 'quotation');
+    for (const f of docFiles) {
+        try {
+            const blob = await _fetchFileBlob(f.url);
+            if (blob) zip.file(`작업지시서/${f.name || 'document'}`, blob);
+        } catch (e) { console.error('[자동다운] 작업지시서 다운실패:', f.name, e); }
+    }
+
+    // 2. 아이템별 소재 분류 → 폴더 생성
+    const customerFiles = files.filter(f => f.type === 'customer_file' || f.type === 'cutline' || f.type === 'admin_added');
+
+    // 아이템별 소재 매핑
+    const itemMaterials = items.map(item => {
+        const code = item.product?.code || item.product?.category || '';
+        const mat = _materialCache[code] || '';
+        return { item, material: mat, label: mat ? (MATERIAL_LABELS[mat] || mat) : '미분류' };
+    });
+
+    // 소재별 그룹
+    const materialGroups = {};
+    itemMaterials.forEach(im => {
+        if (!materialGroups[im.label]) materialGroups[im.label] = [];
+        materialGroups[im.label].push(im);
+    });
+
+    // 고객 파일을 소재별 폴더에 분배
+    // 파일이 어떤 아이템에 속하는지 정확히 알 수 없으므로, 모든 고객 파일을 각 소재 폴더에 복사
+    // (아이템이 1개면 해당 소재 폴더에만)
+    if (Object.keys(materialGroups).length === 1) {
+        const folderName = Object.keys(materialGroups)[0];
+        for (const f of customerFiles) {
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) zip.file(`${folderName}/${f.name || 'file'}`, blob);
+            } catch (e) { console.error('[자동다운] 파일 다운실패:', f.name, e); }
+        }
+    } else if (Object.keys(materialGroups).length > 1) {
+        // 여러 소재: 파일을 공통 폴더에 넣고, 각 소재 폴더에는 메모만
+        for (const f of customerFiles) {
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) zip.file(`디자인파일/${f.name || 'file'}`, blob);
+            } catch (e) { console.error('[자동다운] 파일 다운실패:', f.name, e); }
+        }
+    } else {
+        // 아이템 없는 경우 (소재 미분류)
+        for (const f of customerFiles) {
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) zip.file(`미분류/${f.name || 'file'}`, blob);
+            } catch (e) { console.error('[자동다운] 파일 다운실패:', f.name, e); }
+        }
+    }
+
+    // 3. 각 소재별 작업메모 생성
+    for (const [matLabel, matItems] of Object.entries(materialGroups)) {
+        const memoPng = await _generateWorkMemo(order, matItems, matLabel);
+        if (memoPng) zip.file(`${matLabel}/작업메모_${matLabel}.png`, memoPng, { base64: true });
+    }
+
+    // 아이템이 없어도 전체 주문 메모는 생성
+    if (items.length === 0 && customerFiles.length > 0) {
+        const memoPng = await _generateWorkMemo(order, [], '미분류');
+        if (memoPng) zip.file(`미분류/작업메모.png`, memoPng, { base64: true });
+    }
+
+    // 4. ZIP 생성 및 다운로드
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, `${zipName}.zip`);
+}
+
+async function _fetchFileBlob(url) {
+    try {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) return null;
+        return await res.blob();
+    } catch (e) {
+        console.error('[자동다운] fetch 실패:', url, e);
+        return null;
+    }
+}
+
+// 작업메모 이미지 생성 (Canvas → PNG)
+async function _generateWorkMemo(order, matItems, matLabel) {
+    try {
+        const canvas = document.createElement('canvas');
+        const W = 600, lineH = 28;
+        const items = matItems.map(m => m.item);
+        const rowCount = Math.max(items.length, 1);
+        const H = 300 + rowCount * lineH * 2;
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
+
+        // 배경
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        // 헤더
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(0, 0, W, 50);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px Pretendard, sans-serif';
+        ctx.fillText(`작업지시 - 주문 #${order.id}`, 15, 33);
+
+        // 주문 기본 정보
+        ctx.fillStyle = '#334155';
+        ctx.font = '14px Pretendard, sans-serif';
+        let y = 75;
+        ctx.fillText(`고객명: ${order.manager_name || '-'}`, 15, y); y += 22;
+        ctx.fillText(`연락처: ${order.phone || '-'}`, 15, y); y += 22;
+        ctx.fillText(`주문일: ${order.created_at ? new Date(order.created_at).toLocaleString('ko-KR') : '-'}`, 15, y); y += 22;
+        ctx.fillText(`소재: ${matLabel}`, 15, y); y += 22;
+        if (order.request_note) {
+            ctx.fillText(`요청사항: ${order.request_note.substring(0, 50)}`, 15, y); y += 22;
+        }
+
+        // 구분선
+        y += 5;
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(15, y); ctx.lineTo(W - 15, y); ctx.stroke();
+        y += 15;
+
+        // 아이템 테이블 헤더
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fillRect(15, y, W - 30, 30);
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 13px Pretendard, sans-serif';
+        ctx.fillText('상품명', 25, y + 20);
+        ctx.fillText('수량', 320, y + 20);
+        ctx.fillText('크기', 400, y + 20);
+        ctx.fillText('옵션', 480, y + 20);
+        y += 35;
+
+        // 아이템 목록
+        ctx.font = '12px Pretendard, sans-serif';
+        for (const item of items) {
+            const pName = (item.product?.name || '-').substring(0, 20);
+            const qty = item.qty || 1;
+            const wMm = item.product?.w_mm || item.w_mm || 0;
+            const hMm = item.product?.h_mm || item.h_mm || 0;
+            const size = wMm && hMm ? `${Math.round(wMm)}x${Math.round(hMm)}mm` : '-';
+
+            // 옵션 요약
+            let optStr = '';
+            if (item.selectedAddons && typeof item.selectedAddons === 'object') {
+                const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
+                optStr = keys.slice(0, 3).join(', ');
+                if (keys.length > 3) optStr += '...';
+            }
+
+            ctx.fillStyle = '#334155';
+            ctx.fillText(pName, 25, y + 5);
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 14px Pretendard, sans-serif';
+            ctx.fillText(`${qty}개`, 320, y + 5);
+            ctx.fillStyle = '#334155';
+            ctx.font = '12px Pretendard, sans-serif';
+            ctx.fillText(size, 400, y + 5);
+            ctx.fillText(optStr.substring(0, 12), 480, y + 5);
+            y += lineH;
+        }
+
+        if (items.length === 0) {
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('(아이템 정보 없음)', 25, y + 5);
+            y += lineH;
+        }
+
+        // QR코드 (주문 상세 페이지 URL)
+        y += 15;
+        const qrUrl = `https://cafe2626.com/global_admin.html#order_${order.id}`;
+        try {
+            const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 120, margin: 1 });
+            const qrImg = new Image();
+            await new Promise((res, rej) => { qrImg.onload = res; qrImg.onerror = rej; qrImg.src = qrDataUrl; });
+            ctx.drawImage(qrImg, W - 145, y, 120, 120);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '10px Pretendard, sans-serif';
+            ctx.fillText('주문 상세 QR', W - 140, y + 135);
+        } catch (e) {
+            console.error('[자동다운] QR 생성 실패:', e);
+        }
+
+        // 하단 안내
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px Pretendard, sans-serif';
+        ctx.fillText(`Chameleon Printing - 자동 생성됨 (${new Date().toLocaleString('ko-KR')})`, 15, H - 10);
+
+        // Canvas → base64 PNG
+        const dataUrl = canvas.toDataURL('image/png');
+        return dataUrl.split(',')[1]; // base64 부분만
+    } catch (e) {
+        console.error('[자동다운] 작업메모 생성 실패:', e);
+        return null;
+    }
+}
+
 // window에 노출 (별도 페이지에서 사이드바 nav 접근용)
 Object.defineProperty(window, 'currentOrderStatus', { get: () => currentOrderStatus, set: v => { currentOrderStatus = v; } });
 Object.defineProperty(window, 'currentPage', { get: () => currentPage, set: v => { currentPage = v; } });
@@ -315,6 +629,7 @@ window.loadOrders = async () => {
             const fileIcon = fCount === 0 ? '⚠️' : '📂';
             const fileBtnStyle = fCount === 0 ? 'width:100%; padding:2px 0; font-size:12px; height:24px; background:#fef2f2; border-color:#fca5a5; color:#dc2626;' : 'width:100%; padding:2px 0; font-size:12px; height:24px;';
             const fileBtn = `<button class="btn btn-outline" style="${fileBtnStyle}" onclick="openFileModal('${order.id}')" title="파일목록">${fileIcon} ${fCount}</button>`;
+            const zipBtn = fCount > 0 ? `<button class="btn btn-outline" style="width:100%; padding:2px 0; font-size:12px; height:24px; margin-top:2px; background:#f0fdf4; border-color:#86efac;" onclick="autoDownloadOrder('${order.id}')" title="ZIP 다운로드">📦 ZIP</button>` : '';
             const addBtn = `<label class="btn btn-sky" style="width:100%; padding:2px 0; font-size:12px; height:24px; margin-top:2px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;" title="파일추가"><i class="fa-solid fa-plus"></i><input type="file" style="display:none;" onchange="uploadFileDirect('${order.id}', this)"></label>`;
 
             // [렌더링]
@@ -338,7 +653,7 @@ window.loadOrders = async () => {
                     <td style="text-align:right; font-weight:bold; color:#15803d;">${fmtAmt(order.actual_payment || total)}</td>
                     <td>${managerOpts} <div style="margin-top:2px;">${driverOpts}</div></td>
                     
-                    <td style="padding:2px 4px;">${fileBtn}${addBtn}</td>
+                    <td style="padding:2px 4px;">${fileBtn}${zipBtn}${addBtn}</td>
 
                     <td style="text-align:center; line-height:1.3; padding:2px;">${payHtml}</td>
                     <td style="text-align:center; padding:2px;">${statusHtml}</td>

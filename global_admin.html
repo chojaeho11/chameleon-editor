@@ -13,7 +13,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link rel="stylesheet" href="global_admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="global_admin.css">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <link rel="icon" href="data:;base64,iVBORw0KGgo">
@@ -315,6 +317,8 @@
                             <button class="btn btn-primary" onclick="resetPage(); loadOrders()"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
                             <button class="btn btn-vip" onclick="openManualOrderModal()" style="font-weight:700;">✏️ 수동주문</button>
                             <button class="btn btn-outline" onclick="document.getElementById('recoveryPanel').style.display=document.getElementById('recoveryPanel').style.display==='none'?'block':'none'" style="font-weight:600; font-size:12px;">🔧 문서복구</button>
+                            <button id="autoDownloadBtn" class="btn btn-outline" onclick="toggleAutoDownload()" style="font-weight:600; font-size:12px;">📥 자동다운 OFF</button>
+                            <span id="autoDownloadStatus" style="font-size:11px; color:#64748b; display:none;"></span>
                             <div id="action-buttons" style="margin-left:auto; display:flex; gap:5px;"></div>
                         </div>
                         <div id="recoveryPanel" style="display:none; background:#fffbeb; border:1px solid #fbbf24; padding:12px 15px; border-radius:8px; margin-bottom:8px;">
@@ -914,6 +918,26 @@
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#0891b2;">
                     <input type="checkbox" id="newProdIsFileUpload" style="width:18px; height:18px;"> 📐 사이즈고정상품 (에디터O, 사이즈변경X)
                 </label>
+                <div style="margin-top:10px; padding:10px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px;">
+                    <label class="form-label" style="font-weight:800; color:#92400e; font-size:12px;">🏭 출력 소재 (자동다운로드 폴더 분류용)</label>
+                    <select id="newProdMaterial" class="input-text" style="width:100%; margin-top:4px;">
+                        <option value="">미지정</option>
+                        <option value="coated">코팅지</option>
+                        <option value="sticker">스티커</option>
+                        <option value="vinyl">비닐/PVC</option>
+                        <option value="canvas">캔버스/천</option>
+                        <option value="transparent">투명</option>
+                        <option value="kraft">크라프트지</option>
+                        <option value="corrugated">골판지</option>
+                        <option value="foam">폼보드</option>
+                        <option value="acrylic">아크릴</option>
+                        <option value="metal">금속</option>
+                        <option value="wood">나무</option>
+                        <option value="pp">PP</option>
+                        <option value="pet">PET</option>
+                        <option value="other">기타</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group" style="margin-top: 25px; padding: 18px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">

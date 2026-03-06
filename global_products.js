@@ -1028,6 +1028,7 @@ window.addProductDB = async () => {
         description_fr: document.getElementById('newProdDetailFR') ? document.getElementById('newProdDetailFR').value : '',
         cutline_url: document.getElementById('newProdCutlineUrl') ? document.getElementById('newProdCutlineUrl').value : '',
         mockup_url: document.getElementById('newProdMockupUrl') ? document.getElementById('newProdMockupUrl').value : '',
+        material: document.getElementById('newProdMaterial') ? document.getElementById('newProdMaterial').value : '',
         addons: addons
     };
 
@@ -1101,6 +1102,11 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdDetailES').value = data.description_es || '';
     if (document.getElementById('newProdDetailDE')) document.getElementById('newProdDetailDE').value = data.description_de || '';
     if (document.getElementById('newProdDetailFR')) document.getElementById('newProdDetailFR').value = data.description_fr || '';
+
+    // 소재 로드
+    if (document.getElementById('newProdMaterial')) {
+        document.getElementById('newProdMaterial').value = data.material || '';
+    }
 
     // 칼선/목업 URL 로드
     if (document.getElementById('newProdCutlineUrl')) {
