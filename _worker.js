@@ -107,6 +107,14 @@ const OG_DATA = {
         keywords: 'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing',
         url: 'https://www.cafe3355.com/',
     },
+    'chameleon.design': {
+        lang: 'en',
+        siteName: 'Chameleon Printing',
+        title: 'Chameleon Printing - Free Design Editor & Global Printing',
+        description: 'Design and print online. Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free design editor. Worldwide shipping.',
+        keywords: 'chameleon printing,free design editor,online printing,global printing,honeycomb board,fabric printing',
+        url: 'https://chameleon.design/',
+    },
 };
 
 function getSiteData(hostname) {
@@ -116,9 +124,21 @@ function getSiteData(hostname) {
     return null;
 }
 
-function getCountry(hostname) {
+function getCountry(hostname, request) {
     if (hostname.includes('cafe0101')) return 'JP';
     if (hostname.includes('cafe3355')) return 'US';
+    if (hostname.includes('chameleon.design')) {
+        // Auto-detect country from Cloudflare geo
+        const cfCountry = (request && request.cf && request.cf.country) || 'US';
+        if (cfCountry === 'JP') return 'JP';
+        if (cfCountry === 'KR') return 'KR';
+        if (cfCountry === 'CN' || cfCountry === 'TW' || cfCountry === 'HK') return 'CN';
+        if (cfCountry === 'SA' || cfCountry === 'AE' || cfCountry === 'EG' || cfCountry === 'IQ' || cfCountry === 'JO' || cfCountry === 'KW' || cfCountry === 'QA' || cfCountry === 'BH' || cfCountry === 'OM' || cfCountry === 'YE' || cfCountry === 'LB' || cfCountry === 'SY' || cfCountry === 'PS' || cfCountry === 'LY' || cfCountry === 'SD' || cfCountry === 'TN' || cfCountry === 'DZ' || cfCountry === 'MA') return 'AR';
+        if (cfCountry === 'ES' || cfCountry === 'MX' || cfCountry === 'AR' || cfCountry === 'CO' || cfCountry === 'CL' || cfCountry === 'PE' || cfCountry === 'VE' || cfCountry === 'EC' || cfCountry === 'GT' || cfCountry === 'CU' || cfCountry === 'BO' || cfCountry === 'DO' || cfCountry === 'HN' || cfCountry === 'PY' || cfCountry === 'SV' || cfCountry === 'NI' || cfCountry === 'CR' || cfCountry === 'PA' || cfCountry === 'UY') return 'ES';
+        if (cfCountry === 'DE' || cfCountry === 'AT' || cfCountry === 'CH') return 'DE';
+        if (cfCountry === 'FR' || cfCountry === 'BE' || cfCountry === 'LU' || cfCountry === 'MC') return 'FR';
+        return 'US'; // Default English
+    }
     return 'KR';
 }
 
@@ -338,7 +358,7 @@ export default {
 
                 // Fallback: custom pre-rendering with Supabase data
                 try {
-                    const cc = getCountry(url.hostname);
+                    const cc = getCountry(url.hostname, request);
 
                     // ★ ?product=코드 쿼리 파라미터 → 개별 상품 프리렌더링
                     const qProduct = url.searchParams.get('product') || url.searchParams.get('_p');
@@ -623,8 +643,27 @@ ${hreflangTags('/editor')}
         noCacheHeaders.set('Expires', '0');
         response = new Response(response.body, { status: response.status, headers: noCacheHeaders });
 
-        const siteData = getSiteData(url.hostname);
-        if (!siteData) return response; // KR site, keep original Korean
+        let siteData = getSiteData(url.hostname);
+
+        // chameleon.design: auto-detect country and set __SITE_CODE + lang
+        const isChameleonDesign = url.hostname.includes('chameleon.design');
+        let chameleonCountry = null;
+        if (isChameleonDesign) {
+            chameleonCountry = getCountry(url.hostname, request);
+            const langMap = { KR: 'ko', JP: 'ja', US: 'en', CN: 'zh', AR: 'ar', ES: 'es', DE: 'de', FR: 'fr' };
+            const detectedLang = langMap[chameleonCountry] || 'en';
+            // Override siteData lang for chameleon.design
+            if (siteData) siteData = { ...siteData, lang: detectedLang };
+        }
+
+        if (!siteData) {
+            // KR site via cafe2626 or chameleon.design with KR detection
+            if (isChameleonDesign && chameleonCountry === 'KR') {
+                // Still need to inject __SITE_CODE for KR
+            } else {
+                return response;
+            }
+        }
 
         // Build correct page URL (not always homepage)
         const pageUrl = path ? `${siteData.url.replace(/\/$/, '')}/${path}` : siteData.url;
@@ -636,6 +675,10 @@ ${hreflangTags('/editor')}
             .on('head', { element(el) {
                 el.append('<style>#btnKakaoLogin{display:none!important;}[data-i18n]:not([data-i18n=""]){visibility:hidden}[data-i18n-placeholder]:not([data-i18n-placeholder=""]){visibility:hidden}.hero-signup-desc{visibility:hidden}</style>', { html: true });
                 el.append('<script>window.__i18nReady=false;window.addEventListener("load",function(){setTimeout(function(){if(!window.__i18nReady){document.querySelectorAll("[data-i18n]").forEach(function(e){e.style.visibility="visible"});document.querySelectorAll("[data-i18n-placeholder]").forEach(function(e){e.style.visibility="visible"});document.querySelectorAll(".hero-signup-desc").forEach(function(e){e.style.visibility="visible"})}},3000)})</script>', { html: true });
+                // chameleon.design: inject __SITE_CODE based on geo-detected country
+                if (isChameleonDesign && chameleonCountry) {
+                    el.append(`<script>window.__SITE_CODE="${chameleonCountry}";</script>`, { html: true });
+                }
                 const jsonLd = JSON.stringify({"@context":"https://schema.org","@type":"Organization","name":siteData.siteName,"url":siteData.url,"logo":siteData.url+"favicon.ico","sameAs":["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"]});
                 el.append(`<script type="application/ld+json">${jsonLd}</script>`, { html: true });
             } })
