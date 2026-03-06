@@ -155,6 +155,37 @@ window.autoDownloadOrder = async (orderId) => {
     }
 };
 
+window.manualDownloadSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast('선택된 주문이 없습니다.', 'warn'); return; }
+    if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
+
+    showToast(`${ids.length}건 다운로드 시작...`, 'info');
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+        try {
+            const { data: order } = await sb.from('orders')
+                .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time')
+                .eq('id', id).single();
+            if (!order) { fail++; continue; }
+            const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
+            if (files.length === 0) { continue; }
+
+            if (_rootDirHandle) {
+                await _saveOrderToFolder(order);
+            } else {
+                await _buildAndDownloadZip(order);
+            }
+            ok++;
+        } catch (e) {
+            console.error('[수동다운] 오류:', id, e);
+            fail++;
+        }
+    }
+    const msg = `${ok}건 저장 완료` + (fail > 0 ? `, ${fail}건 실패` : '');
+    showToast(msg, fail > 0 ? 'warn' : 'success');
+};
+
 async function _runAutoDownloadCheck() {
     if (!_autoDownloadActive || !_rootDirHandle) return;
     const status = document.getElementById('autoDownloadStatus');
@@ -940,6 +971,8 @@ window.updateActionButtons = () => {
         // 전체 탭
         div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">선택 삭제</button>`;
     }
+    // 모든 탭에 수동다운 버튼 추가
+    div.innerHTML += `<button class="btn" onclick="manualDownloadSelected()" style="background:#0ea5e9;color:white;margin-left:6px;">📥 수동다운</button>`;
 };
 
 window.changeStatusSelected = async (status) => {
