@@ -528,16 +528,10 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. PDF 생성 — 가벽 모드면 분판 PDF, 아니면 벡터→래스터 폴백
+                // 3. PDF 생성 — 벡터→래스터 폴백
                 let blob = null;
-                // 종이매대 모드: 페이지별 다른 사이즈
                 const isPdMode = window.__pdMode;
-                if (window.__wallMode && window.__wallConfig && window.__wallConfig.walls) {
-                    blob = await generateWallPanelPDF(targetPages, window.__wallConfig.walls, boardX, boardY);
-                }
-                if (!blob || blob.size < 1000) {
-                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
-                }
+                blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 if (!blob || blob.size < 1000) {
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 }
