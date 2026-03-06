@@ -58,11 +58,19 @@ const MATERIAL_LABELS = {
     pet_fabric: '패트천', ad_other: '기타_광고소재', transparent: '투명용지'
 };
 
+let _addonNameCache = {}; // addon code → display name
+
 async function _loadMaterialCache() {
     const { data } = await sb.from('admin_products').select('code, material');
     if (data) {
         _materialCache = {};
         data.forEach(p => { if (p.material) _materialCache[p.code] = p.material; });
+    }
+    // 옵션명 캐시
+    const { data: addons } = await sb.from('admin_addons').select('code, name');
+    if (addons) {
+        _addonNameCache = {};
+        addons.forEach(a => { _addonNameCache[a.code] = a.name; });
     }
 }
 
@@ -204,8 +212,9 @@ async function _saveOrderToFolder(order) {
         }
     }
 
-    // 2. 소재 분류
-    const customerFiles = files.filter(f => f.type === 'customer_file' || f.type === 'cutline' || f.type === 'admin_added');
+    // 2. 소재 분류 — 작업지시서/견적서 제외한 모든 파일
+    const customerFiles = files.filter(f => f.type !== 'order_sheet' && f.type !== 'quotation');
+    console.log(`[자동다운] 주문 #${order.id}: 전체파일 ${files.length}개, 고객파일 ${customerFiles.length}개`, customerFiles.map(f => f.type + ':' + f.name));
     const itemMaterials = items.map(item => {
         const code = item.product?.code || item.product?.category || '';
         const mat = _materialCache[code] || '';
@@ -229,8 +238,14 @@ async function _saveOrderToFolder(order) {
         // 고객 파일 저장
         for (const f of customerFiles) {
             try {
+                console.log(`[자동다운] 다운로드 시도: ${f.name} (${f.type})`, f.url?.substring(0, 80));
                 const blob = await _fetchFileBlob(f.url);
-                if (blob) await _writeFile(matDir, `${orderFolderName}_${f.name || 'file'}`, blob);
+                if (blob) {
+                    await _writeFile(matDir, `${orderFolderName}_${f.name || 'file'}`, blob);
+                    console.log(`[자동다운] 저장 성공: ${f.name} (${(blob.size/1024).toFixed(1)}KB)`);
+                } else {
+                    console.error(`[자동다운] 다운로드 실패 (blob=null): ${f.name}`, f.url);
+                }
             } catch (e) { console.error('[자동다운] 파일 저장실패:', f.name, e); }
         }
 
@@ -257,7 +272,7 @@ async function _buildAndDownloadZip(order) {
         } catch (e) { console.error('[자동다운] 작업지시서:', e); }
     }
 
-    const customerFiles = files.filter(f => f.type === 'customer_file' || f.type === 'cutline' || f.type === 'admin_added');
+    const customerFiles = files.filter(f => f.type !== 'order_sheet' && f.type !== 'quotation');
     const itemMaterials = items.map(item => {
         const code = item.product?.code || item.product?.category || '';
         const mat = _materialCache[code] || '';
@@ -276,7 +291,7 @@ async function _buildAndDownloadZip(order) {
             try {
                 const blob = await _fetchFileBlob(f.url);
                 if (blob) zip.file(`${matLabel}/${f.name || 'file'}`, blob);
-            } catch (e) {}
+            } catch (e) { console.error('[자동다운] ZIP 파일 추가 실패:', f.name, e); }
         }
         const matItems = materialGroups[matLabel] || [];
         const memoBlob = await _generateWorkMemo(order, matItems, matLabel);
@@ -290,22 +305,50 @@ async function _buildAndDownloadZip(order) {
 async function _fetchFileBlob(url) {
     try {
         const res = await fetch(url, { mode: 'cors' });
-        if (!res.ok) return null;
+        if (!res.ok) {
+            console.warn('[자동다운] fetch 응답 오류:', res.status, url);
+            return null;
+        }
         return await res.blob();
     } catch (e) {
-        console.error('[자동다운] fetch 실패:', url, e);
-        return null;
+        // CORS 또는 네트워크 실패 → XHR 폴백
+        console.warn('[자동다운] fetch 실패, XHR 시도:', url);
+        return await new Promise(resolve => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.responseType = 'blob';
+            xhr.onload = () => resolve(xhr.status === 200 ? xhr.response : null);
+            xhr.onerror = () => { console.error('[자동다운] XHR도 실패:', url); resolve(null); };
+            xhr.send();
+        });
     }
+}
+
+// 옵션 코드 → 표시명 변환
+function _resolveAddonName(code) {
+    if (_addonNameCache[code]) return _addonNameCache[code];
+    return code.replace(/^opt_/, '').replace(/_/g, ' ');
 }
 
 // ── 작업메모 이미지 (Canvas → Blob) ──
 async function _generateWorkMemo(order, matItems, matLabel) {
     try {
         const canvas = document.createElement('canvas');
-        const W = 600, lineH = 28;
+        const W = 700, lineH = 26;
         const items = matItems.map(m => m.item);
         const rowCount = Math.max(items.length, 1);
-        const H = 300 + rowCount * lineH * 2;
+
+        // 옵션 줄 수 미리 계산
+        let optLineCount = 0;
+        for (const item of items) {
+            if (item.selectedAddons && typeof item.selectedAddons === 'object') {
+                const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
+                optLineCount += Math.max(keys.length, 0);
+            }
+        }
+
+        // 높이: 헤더(50) + 정보(130) + 테이블(35 + rows*lineH) + 옵션상세(optLines*20) + QR(180) + 여백
+        const H = 50 + 140 + 35 + rowCount * lineH + optLineCount * 20 + 30 + 180 + 40;
         canvas.width = W;
         canvas.height = H;
         const ctx = canvas.getContext('2d');
@@ -313,89 +356,126 @@ async function _generateWorkMemo(order, matItems, matLabel) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, W, H);
 
-        // 헤더
+        // 헤더 바
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(0, 0, W, 50);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px Pretendard, sans-serif';
-        ctx.fillText(`작업지시 - 주문 #${order.id}`, 15, 33);
+        ctx.font = 'bold 22px Pretendard, sans-serif';
+        ctx.fillText(`작업지시 - 주문 #${order.id}`, 15, 35);
 
         // 주문 기본 정보
         ctx.fillStyle = '#334155';
-        ctx.font = '14px Pretendard, sans-serif';
+        ctx.font = '15px Pretendard, sans-serif';
         let y = 75;
-        ctx.fillText(`고객명: ${order.manager_name || '-'}`, 15, y); y += 22;
-        ctx.fillText(`연락처: ${order.phone || '-'}`, 15, y); y += 22;
-        ctx.fillText(`주문일: ${order.created_at ? new Date(order.created_at).toLocaleString('ko-KR') : '-'}`, 15, y); y += 22;
-        ctx.fillText(`소재: ${matLabel}`, 15, y); y += 22;
+        ctx.fillText(`고객명: ${order.manager_name || '-'}`, 15, y); y += 24;
+        ctx.fillText(`연락처: ${order.phone || '-'}`, 15, y); y += 24;
+        ctx.fillText(`주문일: ${order.created_at ? new Date(order.created_at).toLocaleString('ko-KR') : '-'}`, 15, y); y += 24;
+        ctx.font = 'bold 15px Pretendard, sans-serif';
+        ctx.fillStyle = '#7c3aed';
+        ctx.fillText(`소재: ${matLabel}`, 15, y); y += 24;
+        ctx.fillStyle = '#334155';
+        ctx.font = '14px Pretendard, sans-serif';
         if (order.request_note) {
-            ctx.fillText(`요청사항: ${order.request_note.substring(0, 50)}`, 15, y); y += 22;
+            const note = order.request_note.replace(/##REF:[^#]+##/, '').trim();
+            if (note) { ctx.fillText(`요청사항: ${note.substring(0, 60)}`, 15, y); y += 24; }
         }
 
+        // 구분선
         y += 5;
-        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(15, y); ctx.lineTo(W - 15, y); ctx.stroke();
-        y += 15;
+        y += 12;
 
-        // 테이블 헤더
+        // 상품 테이블 헤더
         ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(15, y, W - 30, 30);
+        ctx.fillRect(15, y, W - 30, 28);
+        ctx.strokeStyle = '#e2e8f0'; ctx.strokeRect(15, y, W - 30, 28);
         ctx.fillStyle = '#1e293b';
         ctx.font = 'bold 13px Pretendard, sans-serif';
-        ctx.fillText('상품명', 25, y + 20);
-        ctx.fillText('수량', 320, y + 20);
-        ctx.fillText('크기', 400, y + 20);
-        ctx.fillText('옵션', 480, y + 20);
-        y += 35;
+        ctx.fillText('상품명', 25, y + 19);
+        ctx.fillText('수량', 400, y + 19);
+        ctx.fillText('크기', 480, y + 19);
+        y += 32;
 
-        ctx.font = '12px Pretendard, sans-serif';
+        // 상품 행
         for (const item of items) {
-            const pName = (item.product?.name || '-').substring(0, 20);
+            const pName = (item.product?.name || '-').substring(0, 30);
             const qty = item.qty || 1;
             const wMm = item.product?.w_mm || item.w_mm || 0;
             const hMm = item.product?.h_mm || item.h_mm || 0;
             const size = wMm && hMm ? `${Math.round(wMm)}x${Math.round(hMm)}mm` : '-';
-            let optStr = '';
+
+            ctx.fillStyle = '#334155';
+            ctx.font = '13px Pretendard, sans-serif';
+            ctx.fillText(pName, 25, y + 5);
+
+            // 수량 강조
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 16px Pretendard, sans-serif';
+            ctx.fillText(`${qty}개`, 400, y + 5);
+
+            ctx.fillStyle = '#334155';
+            ctx.font = '13px Pretendard, sans-serif';
+            ctx.fillText(size, 480, y + 5);
+            y += lineH;
+
+            // 옵션 상세 (상품 바로 아래)
             if (item.selectedAddons && typeof item.selectedAddons === 'object') {
                 const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
-                optStr = keys.slice(0, 3).join(', ');
-                if (keys.length > 3) optStr += '...';
+                if (keys.length > 0) {
+                    ctx.font = '11px Pretendard, sans-serif';
+                    ctx.fillStyle = '#6366f1';
+                    for (const k of keys) {
+                        const addonName = _resolveAddonName(k);
+                        const addonVal = item.selectedAddons[k];
+                        const qtyStr = (item.addonQuantities && item.addonQuantities[k]) ? ` x${item.addonQuantities[k]}` : '';
+                        const valStr = (typeof addonVal === 'string' && addonVal !== 'true' && addonVal.length < 30) ? `: ${addonVal}` : '';
+                        ctx.fillText(`  → ${addonName}${valStr}${qtyStr}`, 35, y + 3);
+                        y += 20;
+                    }
+                }
             }
-            ctx.fillStyle = '#334155';
-            ctx.fillText(pName, 25, y + 5);
-            ctx.fillStyle = '#dc2626';
-            ctx.font = 'bold 14px Pretendard, sans-serif';
-            ctx.fillText(`${qty}개`, 320, y + 5);
-            ctx.fillStyle = '#334155';
-            ctx.font = '12px Pretendard, sans-serif';
-            ctx.fillText(size, 400, y + 5);
-            ctx.fillText(optStr.substring(0, 12), 480, y + 5);
-            y += lineH;
         }
         if (items.length === 0) {
             ctx.fillStyle = '#94a3b8';
+            ctx.font = '13px Pretendard, sans-serif';
             ctx.fillText('(아이템 정보 없음)', 25, y + 5);
             y += lineH;
         }
 
-        // QR코드
+        // 구분선
+        y += 10;
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(15, y); ctx.lineTo(W - 15, y); ctx.stroke();
         y += 15;
+
+        // QR코드 (충분한 공간 확보)
+        const qrSize = 140;
         try {
             const qrUrl = `https://cafe2626.com/order_management#order_${order.id}`;
-            const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 120, margin: 1 });
+            const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: qrSize, margin: 1 });
             const qrImg = new Image();
             await new Promise((res, rej) => { qrImg.onload = res; qrImg.onerror = rej; qrImg.src = qrDataUrl; });
-            ctx.drawImage(qrImg, W - 145, y, 120, 120);
+            ctx.drawImage(qrImg, W - qrSize - 25, y, qrSize, qrSize);
             ctx.fillStyle = '#64748b';
-            ctx.font = '10px Pretendard, sans-serif';
-            ctx.fillText('주문 상세 QR', W - 140, y + 135);
-        } catch (e) {}
+            ctx.font = '11px Pretendard, sans-serif';
+            ctx.fillText('주문 상세 QR', W - qrSize - 15, y + qrSize + 15);
+        } catch (e) {
+            console.error('[자동다운] QR 생성 실패:', e);
+        }
 
+        // QR 옆에 요약 정보
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px Pretendard, sans-serif';
+        ctx.fillText(`주문번호: #${order.id}`, 25, y + 20);
+        ctx.fillText(`상태: ${order.status || '-'}`, 25, y + 40);
+        ctx.fillText(`금액: ${(order.total_amount || 0).toLocaleString()}원`, 25, y + 60);
+
+        // 하단 푸터
         ctx.fillStyle = '#94a3b8';
         ctx.font = '10px Pretendard, sans-serif';
-        ctx.fillText(`Chameleon Printing - ${new Date().toLocaleString('ko-KR')}`, 15, H - 10);
+        ctx.fillText(`Chameleon Printing - ${new Date().toLocaleString('ko-KR')}`, 15, H - 12);
 
-        // Canvas → Blob (폴더 저장용)
         return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     } catch (e) {
         console.error('[자동다운] 작업메모 생성 실패:', e);
