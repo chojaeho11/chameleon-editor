@@ -39,14 +39,15 @@ let currentPage = 1;
 const itemsPerPage = 10;
 
 // ================================================================
-// [자동 다운로드] 새 주문 파일 → ZIP (소재별 폴더 + 작업메모 + QR)
+// [자동 다운로드] File System Access API — 소재별 폴더 직접 저장
 // ================================================================
 let _autoDownloadActive = false;
 let _autoDownloadTimer = null;
 let _autoDownloadLastChecked = null;
 const _autoDownloadedIds = new Set();
 const AUTO_DL_INTERVAL = 300000; // 5분
-let _materialCache = {}; // product code → material
+let _materialCache = {};
+let _rootDirHandle = null; // File System Access API 루트 폴더 핸들
 
 const MATERIAL_LABELS = {
     coated: '코팅지', sticker: '스티커', vinyl: '비닐_PVC', canvas: '캔버스_천',
@@ -62,24 +63,52 @@ async function _loadMaterialCache() {
     }
 }
 
-window.toggleAutoDownload = () => {
-    _autoDownloadActive = !_autoDownloadActive;
-    const btn = document.getElementById('autoDownloadBtn');
-    const status = document.getElementById('autoDownloadStatus');
-    if (_autoDownloadActive) {
+// 하위 폴더 핸들 가져오기 (없으면 생성)
+async function _getSubDir(parent, name) {
+    return await parent.getDirectoryHandle(name, { create: true });
+}
+
+// 폴더에 파일 쓰기
+async function _writeFile(dirHandle, fileName, blob) {
+    const safe = fileName.replace(/[\\/:*?"<>|]/g, '_');
+    const fh = await dirHandle.getFileHandle(safe, { create: true });
+    const writable = await fh.createWritable();
+    await writable.write(blob);
+    await writable.close();
+}
+
+window.toggleAutoDownload = async () => {
+    if (!_autoDownloadActive) {
+        // 켜기: 먼저 폴더 선택
+        if (!window.showDirectoryPicker) {
+            showToast('이 브라우저는 폴더 저장을 지원하지 않습니다. Chrome을 사용해주세요.', 'error');
+            return;
+        }
+        try {
+            _rootDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        } catch (e) {
+            // 사용자가 취소
+            return;
+        }
+        _autoDownloadActive = true;
+        const btn = document.getElementById('autoDownloadBtn');
+        const status = document.getElementById('autoDownloadStatus');
         btn.textContent = '📥 자동다운 ON';
         btn.style.background = '#dcfce7';
         btn.style.borderColor = '#22c55e';
         btn.style.color = '#15803d';
         status.style.display = 'inline';
         status.textContent = '소재 DB 로딩...';
-        _loadMaterialCache().then(() => {
-            status.textContent = '대기중...';
-            _autoDownloadLastChecked = new Date().toISOString();
-            _runAutoDownloadCheck();
-            _autoDownloadTimer = setInterval(_runAutoDownloadCheck, AUTO_DL_INTERVAL);
-        });
+        await _loadMaterialCache();
+        status.textContent = '대기중...';
+        _autoDownloadLastChecked = new Date().toISOString();
+        _runAutoDownloadCheck();
+        _autoDownloadTimer = setInterval(_runAutoDownloadCheck, AUTO_DL_INTERVAL);
     } else {
+        // 끄기
+        _autoDownloadActive = false;
+        const btn = document.getElementById('autoDownloadBtn');
+        const status = document.getElementById('autoDownloadStatus');
         btn.textContent = '📥 자동다운 OFF';
         btn.style.background = '';
         btn.style.borderColor = '';
@@ -89,19 +118,25 @@ window.toggleAutoDownload = () => {
     }
 };
 
-// 수동 즉시 다운로드 (단일 주문)
+// 수동 즉시 다운로드 (단일 주문) — ZIP 폴백
 window.autoDownloadOrder = async (orderId) => {
     const { data: order } = await sb.from('orders')
         .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status')
         .eq('id', orderId).single();
     if (!order) { showToast('주문을 찾을 수 없습니다.', 'error'); return; }
     if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
-    await _buildAndDownloadZip(order);
-    showToast('ZIP 다운로드 완료', 'success');
+
+    if (_rootDirHandle) {
+        await _saveOrderToFolder(order);
+        showToast('폴더 저장 완료', 'success');
+    } else {
+        await _buildAndDownloadZip(order);
+        showToast('ZIP 다운로드 완료', 'success');
+    }
 };
 
 async function _runAutoDownloadCheck() {
-    if (!_autoDownloadActive) return;
+    if (!_autoDownloadActive || !_rootDirHandle) return;
     const status = document.getElementById('autoDownloadStatus');
     try {
         let query = sb.from('orders')
@@ -118,53 +153,56 @@ async function _runAutoDownloadCheck() {
         const { data: orders, error } = await query;
         if (error) { console.error('[자동다운] 조회 오류:', error); return; }
 
-        let zipCount = 0;
+        let saveCount = 0;
         for (const order of (orders || [])) {
             if (_autoDownloadedIds.has(order.id)) continue;
             const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
             if (files.length === 0) continue;
 
-            await _buildAndDownloadZip(order);
+            await _saveOrderToFolder(order);
             _autoDownloadedIds.add(order.id);
-            zipCount++;
+            saveCount++;
         }
 
         _autoDownloadLastChecked = new Date().toISOString();
-        if (zipCount > 0) {
-            status.textContent = `${new Date().toLocaleTimeString()} - ${zipCount}건 ZIP 다운로드`;
+        const now = new Date().toLocaleTimeString();
+        if (saveCount > 0) {
+            status.textContent = `${now} - ${saveCount}건 저장완료`;
             status.style.color = '#22c55e';
-            showToast(`${zipCount}건 주문 ZIP 자동 다운로드 완료`, 'success');
+            showToast(`${saveCount}건 주문 파일 자동 저장 완료`, 'success');
         } else {
-            status.textContent = `${new Date().toLocaleTimeString()} 체크완료`;
+            status.textContent = `${now} 체크완료`;
             status.style.color = '#64748b';
         }
     } catch (err) {
         console.error('[자동다운] 오류:', err);
+        const status = document.getElementById('autoDownloadStatus');
         status.textContent = '오류 발생';
         status.style.color = '#ef4444';
     }
 }
 
-async function _buildAndDownloadZip(order) {
-    const zip = new JSZip();
-    const safeName = (order.manager_name || 'unknown').replace(/[\\/:*?"<>|]/g, '_');
-    const zipName = `${order.id}_${safeName}`;
+// ── 핵심: 주문을 선택한 폴더에 소재별로 분류 저장 ──
+async function _saveOrderToFolder(order) {
     const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
     const items = order.items || [];
+    const safeName = (order.manager_name || 'unknown').replace(/[\\/:*?"<>|]/g, '_');
+    const orderFolderName = `${order.id}_${safeName}`;
 
-    // 1. 작업지시서 폴더: order_sheet, quotation 파일
+    // 1. 작업지시서 → "작업지시서" 폴더
     const docFiles = files.filter(f => f.type === 'order_sheet' || f.type === 'quotation');
-    for (const f of docFiles) {
-        try {
-            const blob = await _fetchFileBlob(f.url);
-            if (blob) zip.file(`작업지시서/${f.name || 'document'}`, blob);
-        } catch (e) { console.error('[자동다운] 작업지시서 다운실패:', f.name, e); }
+    if (docFiles.length > 0) {
+        const docDir = await _getSubDir(_rootDirHandle, '작업지시서');
+        for (const f of docFiles) {
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) await _writeFile(docDir, `${orderFolderName}_${f.name || 'doc'}`, blob);
+            } catch (e) { console.error('[자동다운] 작업지시서 저장실패:', f.name, e); }
+        }
     }
 
-    // 2. 아이템별 소재 분류 → 폴더 생성
+    // 2. 소재 분류
     const customerFiles = files.filter(f => f.type === 'customer_file' || f.type === 'cutline' || f.type === 'admin_added');
-
-    // 아이템별 소재 매핑
     const itemMaterials = items.map(item => {
         const code = item.product?.code || item.product?.category || '';
         const mat = _materialCache[code] || '';
@@ -178,48 +216,70 @@ async function _buildAndDownloadZip(order) {
         materialGroups[im.label].push(im);
     });
 
-    // 고객 파일을 소재별 폴더에 분배
-    // 파일이 어떤 아이템에 속하는지 정확히 알 수 없으므로, 모든 고객 파일을 각 소재 폴더에 복사
-    // (아이템이 1개면 해당 소재 폴더에만)
-    if (Object.keys(materialGroups).length === 1) {
-        const folderName = Object.keys(materialGroups)[0];
+    // 소재가 1종이면 해당 폴더에, 여러 종이면 각 소재 폴더에 파일 복사
+    const matLabels = Object.keys(materialGroups);
+    const targetLabels = matLabels.length > 0 ? matLabels : ['미분류'];
+
+    for (const matLabel of targetLabels) {
+        const matDir = await _getSubDir(_rootDirHandle, matLabel);
+
+        // 고객 파일 저장
         for (const f of customerFiles) {
             try {
                 const blob = await _fetchFileBlob(f.url);
-                if (blob) zip.file(`${folderName}/${f.name || 'file'}`, blob);
-            } catch (e) { console.error('[자동다운] 파일 다운실패:', f.name, e); }
+                if (blob) await _writeFile(matDir, `${orderFolderName}_${f.name || 'file'}`, blob);
+            } catch (e) { console.error('[자동다운] 파일 저장실패:', f.name, e); }
         }
-    } else if (Object.keys(materialGroups).length > 1) {
-        // 여러 소재: 파일을 공통 폴더에 넣고, 각 소재 폴더에는 메모만
+
+        // 작업메모 PNG 생성 및 저장
+        const matItems = materialGroups[matLabel] || [];
+        const memoBlob = await _generateWorkMemo(order, matItems, matLabel);
+        if (memoBlob) await _writeFile(matDir, `${orderFolderName}_작업메모.png`, memoBlob);
+    }
+}
+
+// ── ZIP 폴백 (폴더 미선택 시 수동 다운로드용) ──
+async function _buildAndDownloadZip(order) {
+    const zip = new JSZip();
+    const safeName = (order.manager_name || 'unknown').replace(/[\\/:*?"<>|]/g, '_');
+    const zipName = `${order.id}_${safeName}`;
+    const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
+    const items = order.items || [];
+
+    const docFiles = files.filter(f => f.type === 'order_sheet' || f.type === 'quotation');
+    for (const f of docFiles) {
+        try {
+            const blob = await _fetchFileBlob(f.url);
+            if (blob) zip.file(`작업지시서/${f.name || 'document'}`, blob);
+        } catch (e) { console.error('[자동다운] 작업지시서:', e); }
+    }
+
+    const customerFiles = files.filter(f => f.type === 'customer_file' || f.type === 'cutline' || f.type === 'admin_added');
+    const itemMaterials = items.map(item => {
+        const code = item.product?.code || item.product?.category || '';
+        const mat = _materialCache[code] || '';
+        return { item, material: mat, label: mat ? (MATERIAL_LABELS[mat] || mat) : '미분류' };
+    });
+    const materialGroups = {};
+    itemMaterials.forEach(im => {
+        if (!materialGroups[im.label]) materialGroups[im.label] = [];
+        materialGroups[im.label].push(im);
+    });
+    const matLabels = Object.keys(materialGroups);
+    const targetLabels = matLabels.length > 0 ? matLabels : ['미분류'];
+
+    for (const matLabel of targetLabels) {
         for (const f of customerFiles) {
             try {
                 const blob = await _fetchFileBlob(f.url);
-                if (blob) zip.file(`디자인파일/${f.name || 'file'}`, blob);
-            } catch (e) { console.error('[자동다운] 파일 다운실패:', f.name, e); }
+                if (blob) zip.file(`${matLabel}/${f.name || 'file'}`, blob);
+            } catch (e) {}
         }
-    } else {
-        // 아이템 없는 경우 (소재 미분류)
-        for (const f of customerFiles) {
-            try {
-                const blob = await _fetchFileBlob(f.url);
-                if (blob) zip.file(`미분류/${f.name || 'file'}`, blob);
-            } catch (e) { console.error('[자동다운] 파일 다운실패:', f.name, e); }
-        }
+        const matItems = materialGroups[matLabel] || [];
+        const memoBlob = await _generateWorkMemo(order, matItems, matLabel);
+        if (memoBlob) zip.file(`${matLabel}/작업메모.png`, memoBlob);
     }
 
-    // 3. 각 소재별 작업메모 생성
-    for (const [matLabel, matItems] of Object.entries(materialGroups)) {
-        const memoPng = await _generateWorkMemo(order, matItems, matLabel);
-        if (memoPng) zip.file(`${matLabel}/작업메모_${matLabel}.png`, memoPng, { base64: true });
-    }
-
-    // 아이템이 없어도 전체 주문 메모는 생성
-    if (items.length === 0 && customerFiles.length > 0) {
-        const memoPng = await _generateWorkMemo(order, [], '미분류');
-        if (memoPng) zip.file(`미분류/작업메모.png`, memoPng, { base64: true });
-    }
-
-    // 4. ZIP 생성 및 다운로드
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `${zipName}.zip`);
 }
@@ -235,7 +295,7 @@ async function _fetchFileBlob(url) {
     }
 }
 
-// 작업메모 이미지 생성 (Canvas → PNG)
+// ── 작업메모 이미지 (Canvas → Blob) ──
 async function _generateWorkMemo(order, matItems, matLabel) {
     try {
         const canvas = document.createElement('canvas');
@@ -247,7 +307,6 @@ async function _generateWorkMemo(order, matItems, matLabel) {
         canvas.height = H;
         const ctx = canvas.getContext('2d');
 
-        // 배경
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, W, H);
 
@@ -270,14 +329,12 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             ctx.fillText(`요청사항: ${order.request_note.substring(0, 50)}`, 15, y); y += 22;
         }
 
-        // 구분선
         y += 5;
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(15, y); ctx.lineTo(W - 15, y); ctx.stroke();
         y += 15;
 
-        // 아이템 테이블 헤더
+        // 테이블 헤더
         ctx.fillStyle = '#f1f5f9';
         ctx.fillRect(15, y, W - 30, 30);
         ctx.fillStyle = '#1e293b';
@@ -288,7 +345,6 @@ async function _generateWorkMemo(order, matItems, matLabel) {
         ctx.fillText('옵션', 480, y + 20);
         y += 35;
 
-        // 아이템 목록
         ctx.font = '12px Pretendard, sans-serif';
         for (const item of items) {
             const pName = (item.product?.name || '-').substring(0, 20);
@@ -296,15 +352,12 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             const wMm = item.product?.w_mm || item.w_mm || 0;
             const hMm = item.product?.h_mm || item.h_mm || 0;
             const size = wMm && hMm ? `${Math.round(wMm)}x${Math.round(hMm)}mm` : '-';
-
-            // 옵션 요약
             let optStr = '';
             if (item.selectedAddons && typeof item.selectedAddons === 'object') {
                 const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
                 optStr = keys.slice(0, 3).join(', ');
                 if (keys.length > 3) optStr += '...';
             }
-
             ctx.fillStyle = '#334155';
             ctx.fillText(pName, 25, y + 5);
             ctx.fillStyle = '#dc2626';
@@ -316,17 +369,16 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             ctx.fillText(optStr.substring(0, 12), 480, y + 5);
             y += lineH;
         }
-
         if (items.length === 0) {
             ctx.fillStyle = '#94a3b8';
             ctx.fillText('(아이템 정보 없음)', 25, y + 5);
             y += lineH;
         }
 
-        // QR코드 (주문 상세 페이지 URL)
+        // QR코드
         y += 15;
-        const qrUrl = `https://cafe2626.com/global_admin.html#order_${order.id}`;
         try {
+            const qrUrl = `https://cafe2626.com/order_management#order_${order.id}`;
             const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 120, margin: 1 });
             const qrImg = new Image();
             await new Promise((res, rej) => { qrImg.onload = res; qrImg.onerror = rej; qrImg.src = qrDataUrl; });
@@ -334,18 +386,14 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             ctx.fillStyle = '#64748b';
             ctx.font = '10px Pretendard, sans-serif';
             ctx.fillText('주문 상세 QR', W - 140, y + 135);
-        } catch (e) {
-            console.error('[자동다운] QR 생성 실패:', e);
-        }
+        } catch (e) {}
 
-        // 하단 안내
         ctx.fillStyle = '#94a3b8';
         ctx.font = '10px Pretendard, sans-serif';
-        ctx.fillText(`Chameleon Printing - 자동 생성됨 (${new Date().toLocaleString('ko-KR')})`, 15, H - 10);
+        ctx.fillText(`Chameleon Printing - ${new Date().toLocaleString('ko-KR')}`, 15, H - 10);
 
-        // Canvas → base64 PNG
-        const dataUrl = canvas.toDataURL('image/png');
-        return dataUrl.split(',')[1]; // base64 부분만
+        // Canvas → Blob (폴더 저장용)
+        return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     } catch (e) {
         console.error('[자동다운] 작업메모 생성 실패:', e);
         return null;
