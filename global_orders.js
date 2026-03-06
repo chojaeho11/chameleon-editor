@@ -61,10 +61,19 @@ const MATERIAL_LABELS = {
 let _addonNameCache = {}; // addon code → display name
 
 async function _loadMaterialCache() {
-    const { data } = await sb.from('admin_products').select('code, material');
+    const { data } = await sb.from('admin_products').select('code, material, category');
     if (data) {
         _materialCache = {};
-        data.forEach(p => { if (p.material) _materialCache[p.code] = p.material; });
+        // code → material 매핑 + category → material 매핑 (폴백)
+        data.forEach(p => {
+            if (p.material) {
+                _materialCache[p.code] = p.material;
+                if (p.category && !_materialCache['_cat_' + p.category]) {
+                    _materialCache['_cat_' + p.category] = p.material;
+                }
+            }
+        });
+        console.log('[자동다운] 소재 캐시 로드:', Object.keys(_materialCache).length, '건', _materialCache);
     }
     // 옵션명 캐시
     const { data: addons } = await sb.from('admin_addons').select('code, name');
@@ -226,9 +235,13 @@ async function _saveOrderToFolder(order) {
     const customerFiles = files.filter(f => f.type !== 'order_sheet' && f.type !== 'quotation');
     console.log(`[자동다운] 주문 #${order.id}: 전체파일 ${files.length}개, 고객파일 ${customerFiles.length}개`, customerFiles.map(f => f.type + ':' + f.name));
     const itemMaterials = items.map(item => {
-        const code = item.product?.code || item.product?.category || '';
-        const mat = _materialCache[code] || '';
-        return { item, material: mat, label: mat ? (MATERIAL_LABELS[mat] || mat) : '미분류' };
+        const code = item.product?.code || '';
+        const cat = item.product?.category || '';
+        // 1차: 상품코드로 조회, 2차: 카테고리로 조회
+        const mat = _materialCache[code] || _materialCache['_cat_' + cat] || '';
+        // 폴더명: MATERIAL_LABELS에 있으면 매핑명, 없으면 DB값 그대로 (언더스코어→공백)
+        const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
+        return { item, material: mat, label };
     });
 
     // 소재별 그룹
@@ -283,9 +296,13 @@ async function _buildAndDownloadZip(order) {
 
     const customerFiles = files.filter(f => f.type !== 'order_sheet' && f.type !== 'quotation');
     const itemMaterials = items.map(item => {
-        const code = item.product?.code || item.product?.category || '';
-        const mat = _materialCache[code] || '';
-        return { item, material: mat, label: mat ? (MATERIAL_LABELS[mat] || mat) : '미분류' };
+        const code = item.product?.code || '';
+        const cat = item.product?.category || '';
+        // 1차: 상품코드로 조회, 2차: 카테고리로 조회
+        const mat = _materialCache[code] || _materialCache['_cat_' + cat] || '';
+        // 폴더명: MATERIAL_LABELS에 있으면 매핑명, 없으면 DB값 그대로 (언더스코어→공백)
+        const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
+        return { item, material: mat, label };
     });
     const materialGroups = {};
     itemMaterials.forEach(im => {

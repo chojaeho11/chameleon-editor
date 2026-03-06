@@ -1324,6 +1324,23 @@ window.addCustomMaterial = () => {
     showToast(`"${name.trim()}" 소재가 추가되었습니다.`, 'success');
 };
 
+// [소재] DB에 저장된 커스텀 소재를 드롭다운에 자동 추가
+window.loadCustomMaterials = async () => {
+    const select = document.getElementById('newProdMaterial');
+    if (!select) return;
+    const { data } = await sb.from('admin_products').select('material');
+    if (!data) return;
+    const existing = new Set(Array.from(select.options).map(o => o.value));
+    const custom = [...new Set(data.map(p => p.material).filter(m => m && !existing.has(m)))];
+    custom.forEach(mat => {
+        const opt = document.createElement('option');
+        opt.value = mat;
+        opt.textContent = mat.replace(/_/g, ' ');
+        select.appendChild(opt);
+    });
+    if (custom.length > 0) console.log('[소재] DB에서 커스텀 소재 로드:', custom);
+};
+
 // ==========================================
 // 번역 및 기타 기능
 // ==========================================

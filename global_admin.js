@@ -65,10 +65,11 @@ window.showSection = (secId, navEl) => {
             if(window.loadProductKeys) window.loadProductKeys();
             break;
         case 'sec-fonts': if(window.loadFonts) window.loadFonts(); break;
-        case 'sec-products': 
-            if(window.loadTopCategoriesList) window.loadTopCategoriesList(); 
-            if(window.loadCategories) window.loadCategories(); 
+        case 'sec-products':
+            if(window.loadTopCategoriesList) window.loadTopCategoriesList();
+            if(window.loadCategories) window.loadCategories();
             if(window.loadSystemDB) window.loadSystemDB();
+            if(window.loadCustomMaterials) window.loadCustomMaterials();
             break;
         case 'sec-staff': if(window.loadStaffList) window.loadStaffList(); break;
         case 'sec-withdrawals': if(window.loadWithdrawals) window.loadWithdrawals(); break;
