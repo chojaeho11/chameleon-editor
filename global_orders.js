@@ -50,7 +50,7 @@ let _materialCache = {};
 let _rootDirHandle = null; // File System Access API 루트 폴더 핸들
 
 const MATERIAL_LABELS = {
-    honeycomb_10: '허니콤보드_하드10mm', honeycomb_16: '허니콤보드_하드16mm',
+    honeycomb_10: '허니콤보드_화크10mm', honeycomb_16: '허니콤보드_화화16mm',
     fomax_3: '포맥스_3mm', fomax_5: '포맥스_5mm',
     foam_5: '폼보드_5mm', foam_10: '폼보드_10mm',
     banner: '현수막천', print: '인쇄물',
