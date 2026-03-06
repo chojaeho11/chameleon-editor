@@ -9,8 +9,7 @@ import {
     generateProductVectorPDF,
     generateRasterPDF,
     generateReceiptPDF,
-    generateTransactionStatementPDF,
-    generateWallPanelPDF
+    generateTransactionStatementPDF
 } from "./export.js?v=123";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
@@ -1157,11 +1156,7 @@ async function addCanvasToCart() {
 
         let pdfBlob = null;
 
-        // ★ 가벽 모드: 분판 PDF (1000mm 단위로 자동 분할, 인쇄 원판)
-        if (window.__wallMode && window.__wallConfig && window.__wallConfig.walls) {
-            pdfBlob = await generateWallPanelPDF(pdfPages, window.__wallConfig.walls, boardX, boardY);
-        }
-        // 1차: 벡터 PDF
+        // 1차: 벡터 PDF (원본 그대로)
         if (!pdfBlob || pdfBlob.size < 1000) {
             pdfBlob = await generateProductVectorPDF(pdfPages, finalW, finalH, boardX, boardY);
         }
