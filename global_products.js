@@ -1283,9 +1283,45 @@ window.bulkApplyAddonsToCategory = async () => {
     if(!cat) { showToast("카테고리 선택 필요", "warn"); return; }
     const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
     if(!confirm(`[${cat}] 카테고리 전체 상품에 현재 옵션을 적용합니까?`)) return;
-    
+
     const { error } = await sb.from('admin_products').update({ addons: addons }).eq('category', cat);
     if(error) showToast("실패: " + error.message, "error"); else showToast("적용 완료", "success");
+};
+
+// [소재] 카테고리 전체에 현재 소재 적용
+window.applyMaterialToCategory = async () => {
+    const cat = document.getElementById('newProdCategory').value;
+    const material = document.getElementById('newProdMaterial').value;
+    if (!cat) { showToast("카테고리를 먼저 선택하세요", "warn"); return; }
+    if (!material) { showToast("소재를 먼저 선택하세요", "warn"); return; }
+    const label = document.getElementById('newProdMaterial').selectedOptions[0].textContent;
+    if (!confirm(`[${cat}] 카테고리 전체 상품의 소재를 "${label}"(으)로 변경합니까?`)) return;
+    const { error } = await sb.from('admin_products').update({ material }).eq('category', cat);
+    if (error) showToast("실패: " + error.message, "error");
+    else showToast(`${cat} 카테고리 전체 → ${label} 적용 완료`, "success");
+};
+
+// [소재] 사용자 정의 소재 추가
+window.addCustomMaterial = () => {
+    const name = prompt('추가할 소재 이름을 입력하세요 (예: 알루미늄복합판 3mm)');
+    if (!name || !name.trim()) return;
+    const value = name.trim().replace(/[\s\/]/g, '_').toLowerCase();
+    const select = document.getElementById('newProdMaterial');
+    // 중복 체크
+    for (const opt of select.options) {
+        if (opt.value === value || opt.textContent === name.trim()) {
+            showToast('이미 존재하는 소재입니다.', 'warn');
+            select.value = opt.value;
+            return;
+        }
+    }
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = name.trim();
+    // "미지정" 다음에 삽입하지 않고 맨 끝에 추가
+    select.appendChild(opt);
+    select.value = value;
+    showToast(`"${name.trim()}" 소재가 추가되었습니다.`, 'success');
 };
 
 // ==========================================

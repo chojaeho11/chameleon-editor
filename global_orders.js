@@ -50,9 +50,12 @@ let _materialCache = {};
 let _rootDirHandle = null; // File System Access API 루트 폴더 핸들
 
 const MATERIAL_LABELS = {
-    coated: '코팅지', sticker: '스티커', vinyl: '비닐_PVC', canvas: '캔버스_천',
-    transparent: '투명', kraft: '크라프트지', corrugated: '골판지', foam: '폼보드',
-    acrylic: '아크릴', metal: '금속', wood: '나무', pp: 'PP', pet: 'PET', other: '기타'
+    honeycomb_10: '허니콤보드_하드10mm', honeycomb_16: '허니콤보드_하드16mm',
+    fomax_3: '포맥스_3mm', fomax_5: '포맥스_5mm',
+    foam_5: '폼보드_5mm', foam_10: '폼보드_10mm',
+    banner: '현수막천', print: '인쇄물',
+    acrylic_3: '투명아크릴_3mm', acrylic_5: '투명아크릴_5mm',
+    pet_fabric: '패트천', ad_other: '기타_광고소재', transparent: '투명용지'
 };
 
 async function _loadMaterialCache() {

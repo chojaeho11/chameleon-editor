@@ -922,21 +922,24 @@
                     <label class="form-label" style="font-weight:800; color:#92400e; font-size:12px;">🏭 출력 소재 (자동다운로드 폴더 분류용)</label>
                     <select id="newProdMaterial" class="input-text" style="width:100%; margin-top:4px;">
                         <option value="">미지정</option>
-                        <option value="coated">코팅지</option>
-                        <option value="sticker">스티커</option>
-                        <option value="vinyl">비닐/PVC</option>
-                        <option value="canvas">캔버스/천</option>
-                        <option value="transparent">투명</option>
-                        <option value="kraft">크라프트지</option>
-                        <option value="corrugated">골판지</option>
-                        <option value="foam">폼보드</option>
-                        <option value="acrylic">아크릴</option>
-                        <option value="metal">금속</option>
-                        <option value="wood">나무</option>
-                        <option value="pp">PP</option>
-                        <option value="pet">PET</option>
-                        <option value="other">기타</option>
+                        <option value="honeycomb_10">허니콤보드 하드 10mm</option>
+                        <option value="honeycomb_16">허니콤보드 하드 16mm</option>
+                        <option value="fomax_3">포맥스 3mm</option>
+                        <option value="fomax_5">포맥스 5mm</option>
+                        <option value="foam_5">폼보드 5mm</option>
+                        <option value="foam_10">폼보드 10mm</option>
+                        <option value="banner">현수막천</option>
+                        <option value="print">인쇄물</option>
+                        <option value="acrylic_3">투명아크릴 3mm</option>
+                        <option value="acrylic_5">투명아크릴 5mm</option>
+                        <option value="pet_fabric">패트천</option>
+                        <option value="ad_other">기타 광고소재</option>
+                        <option value="transparent">투명용지</option>
                     </select>
+                    <div style="display:flex; gap:5px; margin-top:6px;">
+                        <button type="button" class="btn btn-outline btn-sm" style="font-size:11px; flex:1;" onclick="applyMaterialToCategory()">📋 이 카테고리 전체 적용</button>
+                        <button type="button" class="btn btn-outline btn-sm" style="font-size:11px; color:#6366f1;" onclick="addCustomMaterial()">+ 소재 추가</button>
+                    </div>
                 </div>
             </div>
 
