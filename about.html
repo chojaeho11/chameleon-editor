@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Chameleon Printing | Global Print & Design Platform</title>
+    <meta name="description" content="Chameleon Printing is a global online printing and design platform headquartered in South Korea, serving customers in 190+ countries.">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1a1a2e; background: #fff; line-height: 1.7;
+        }
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+            border-bottom: 1px solid #eee; padding: 16px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-logo { font-size: 22px; font-weight: 900; color: #1a1a2e; text-decoration: none; }
+        .nav-logo span { color: #6366f1; }
+        .nav-links a { color: #64748b; text-decoration: none; font-size: 14px; font-weight: 600; margin-left: 28px; transition: color .2s; }
+        .nav-links a:hover { color: #6366f1; }
+
+        .hero {
+            padding: 140px 40px 80px; text-align: center;
+            background: linear-gradient(135deg, #f8faff 0%, #eef2ff 50%, #f5f3ff 100%);
+        }
+        .hero-badge {
+            display: inline-block; background: #6366f1; color: #fff;
+            font-size: 12px; font-weight: 700; padding: 6px 18px;
+            border-radius: 20px; letter-spacing: 1.5px; margin-bottom: 24px;
+        }
+        .hero h1 { font-size: 52px; font-weight: 900; letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 20px; }
+        .hero h1 span { background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 20px; color: #64748b; max-width: 680px; margin: 0 auto; font-weight: 400; }
+
+        section { padding: 80px 40px; max-width: 1100px; margin: 0 auto; }
+        .section-label { color: #6366f1; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+        .section-title { font-size: 36px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.5px; }
+        .section-desc { font-size: 17px; color: #64748b; max-width: 700px; line-height: 1.8; margin-bottom: 40px; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin: 60px 0;
+        }
+        .stat-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;
+            padding: 32px 24px; text-align: center;
+        }
+        .stat-num { font-size: 42px; font-weight: 900; color: #6366f1; letter-spacing: -1px; }
+        .stat-label { font-size: 14px; color: #64748b; font-weight: 600; margin-top: 8px; }
+
+        .mission-box {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
+            border-radius: 20px; padding: 60px 50px; margin: 40px 0;
+        }
+        .mission-box h2 { font-size: 32px; font-weight: 800; margin-bottom: 20px; }
+        .mission-box p { font-size: 18px; opacity: 0.9; line-height: 1.8; max-width: 800px; }
+
+        .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 40px; }
+        .feature-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+        .feature-icon { font-size: 32px; margin-bottom: 16px; }
+        .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .feature-card p { font-size: 14px; color: #64748b; line-height: 1.7; }
+
+        .timeline { position: relative; padding-left: 40px; margin-top: 40px; }
+        .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+        .tl-item { position: relative; margin-bottom: 36px; }
+        .tl-item::before {
+            content: ''; position: absolute; left: -33px; top: 6px;
+            width: 14px; height: 14px; background: #6366f1; border-radius: 50%;
+            border: 3px solid #fff; box-shadow: 0 0 0 2px #6366f1;
+        }
+        .tl-year { font-size: 14px; font-weight: 800; color: #6366f1; margin-bottom: 4px; }
+        .tl-text { font-size: 15px; color: #334155; }
+
+        .team-section { background: #f8fafc; padding: 80px 40px; }
+        .team-section .inner { max-width: 1100px; margin: 0 auto; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; }
+        .info-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 36px; }
+        .info-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .info-card p, .info-card li { font-size: 14px; color: #64748b; line-height: 1.8; }
+        .info-card ul { padding-left: 20px; }
+
+        .cta-section {
+            text-align: center; padding: 80px 40px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff;
+        }
+        .cta-section h2 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
+        .cta-section p { font-size: 17px; opacity: 0.7; margin-bottom: 32px; }
+        .cta-btn {
+            display: inline-block; background: #6366f1; color: #fff; font-size: 16px;
+            font-weight: 700; padding: 16px 40px; border-radius: 30px;
+            text-decoration: none; transition: transform .2s, box-shadow .2s;
+        }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
+
+        footer {
+            text-align: center; padding: 30px; font-size: 13px; color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .nav { padding: 12px 16px; }
+            .hero { padding: 110px 20px 60px; }
+            .hero h1 { font-size: 32px; }
+            .hero p { font-size: 16px; }
+            section { padding: 60px 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+            .stat-num { font-size: 32px; }
+            .features { grid-template-columns: 1fr; }
+            .info-grid { grid-template-columns: 1fr; }
+            .mission-box { padding: 40px 24px; }
+            .mission-box h2 { font-size: 24px; }
+            .section-title { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/" class="nav-logo">Chameleon<span>.</span></a>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+    </div>
+</nav>
+
+<div class="hero">
+    <div class="hero-badge">ABOUT CHAMELEON PRINTING</div>
+    <h1>We Make <span>Printing</span><br>Accessible to Everyone</h1>
+    <p>A global online design & print platform powered by technology, creativity, and a commitment to eco-friendly manufacturing.</p>
+</div>
+
+<section>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-num">190+</div>
+            <div class="stat-label">Countries Served</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num">8</div>
+            <div class="stat-label">Languages Supported</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num">500+</div>
+            <div class="stat-label">Product Varieties</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num">24/7</div>
+            <div class="stat-label">AI Customer Support</div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="mission-box">
+        <h2>Our Mission</h2>
+        <p>To democratize professional printing and design for businesses and individuals worldwide. We believe everyone deserves access to high-quality print products with an intuitive design experience &mdash; regardless of location, language, or technical skill.</p>
+    </div>
+</section>
+
+<section>
+    <div class="section-label">What We Do</div>
+    <div class="section-title">End-to-End Design & Print Solution</div>
+    <div class="section-desc">From free online design tools to global manufacturing and shipping, we handle the entire workflow so you can focus on your creative vision.</div>
+
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-pen-ruler"></i></div>
+            <h3>Free Design Editor</h3>
+            <p>A powerful browser-based editor with templates, AI tools, background removal, and text effects. No software installation required.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-print"></i></div>
+            <h3>Professional Printing</h3>
+            <p>Honeycomb boards, fabric banners, acrylic products, business cards, stickers, packaging, and 500+ product types with premium quality.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-earth-americas"></i></div>
+            <h3>Global Fulfillment</h3>
+            <p>Manufactured in South Korea and shipped worldwide. Fast domestic delivery and international shipping to 190+ countries.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-leaf"></i></div>
+            <h3>Eco-Friendly Materials</h3>
+            <p>Honeycomb board displays, recyclable packaging, and sustainable printing practices. Reducing environmental impact without compromising quality.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-store"></i></div>
+            <h3>Artist Marketplace</h3>
+            <p>Upload your artwork and sell it as printed products globally. Earn 10% revenue on every sale through our marketplace platform.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-robot"></i></div>
+            <h3>AI-Powered Support</h3>
+            <p>Instant product recommendations, automated quoting, and 24/7 AI customer service in 8 languages including English, Japanese, and Arabic.</p>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="section-label">Our Journey</div>
+    <div class="section-title">Company Milestones</div>
+
+    <div class="timeline">
+        <div class="tl-item">
+            <div class="tl-year">2024</div>
+            <div class="tl-text">Founded Chameleon Printing (Chameleon Canvas Inc.) in Hwaseong, South Korea. Launched domestic printing services with proprietary online design editor.</div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-year">2025 Q1</div>
+            <div class="tl-text">Expanded to Japan (cafe0101.com) with full Japanese localization. Integrated Stripe payments for international transactions.</div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-year">2025 Q2</div>
+            <div class="tl-text">Launched global platform (cafe3355.com) supporting English, Chinese, Arabic, Spanish, German, and French. Achieved 190+ country coverage.</div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-year">2025 Q3</div>
+            <div class="tl-text">Introduced AI-powered design assistant, auto-quoting engine, and Artist Marketplace for user-generated print products.</div>
+        </div>
+        <div class="tl-item">
+            <div class="tl-year">2026</div>
+            <div class="tl-text">Launched chameleon.design as the unified global gateway with automatic geo-based language detection. Continued expansion of eco-friendly product lines.</div>
+        </div>
+    </div>
+</section>
+
+<div class="team-section">
+    <div class="inner">
+        <div class="section-label">Corporate Information</div>
+        <div class="section-title">Company Details</div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <h3><i class="fa-solid fa-building"></i> Corporate Profile</h3>
+                <ul>
+                    <li><strong>Company Name:</strong> Chameleon Canvas Inc. (formerly Chameleon Printing)</li>
+                    <li><strong>CEO:</strong> Jaeho Cho</li>
+                    <li><strong>Founded:</strong> 2024</li>
+                    <li><strong>Business Registration:</strong> 470-81-02808</li>
+                    <li><strong>Industry:</strong> Online Printing, Design SaaS, E-commerce</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <h3><i class="fa-solid fa-location-dot"></i> Headquarters</h3>
+                <ul>
+                    <li><strong>Address:</strong> 72-2, Hanmal-gil, Ujeong-eup, Hwaseong-si, Gyeonggi-do, South Korea</li>
+                    <li><strong>Manufacturing:</strong> In-house printing facility</li>
+                    <li><strong>Support:</strong> Channel Talk (Live Chat)</li>
+                    <li><strong>Hours:</strong> Mon-Fri 09:00-18:00 KST</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <h3><i class="fa-solid fa-globe"></i> Global Websites</h3>
+                <ul>
+                    <li><strong>Global:</strong> <a href="https://chameleon.design" style="color:#6366f1;">chameleon.design</a></li>
+                    <li><strong>Korea:</strong> <a href="https://cafe2626.com" style="color:#6366f1;">cafe2626.com</a></li>
+                    <li><strong>Japan:</strong> <a href="https://cafe0101.com" style="color:#6366f1;">cafe0101.com</a></li>
+                    <li><strong>USA / International:</strong> <a href="https://cafe3355.com" style="color:#6366f1;">cafe3355.com</a></li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <h3><i class="fa-solid fa-shield-halved"></i> Trust & Security</h3>
+                <ul>
+                    <li><strong>Payments:</strong> Stripe, Toss Payments (PCI DSS compliant)</li>
+                    <li><strong>Security:</strong> SSL/TLS encryption, Cloudflare WAF</li>
+                    <li><strong>Privacy:</strong> GDPR & APPI compliant</li>
+                    <li><strong>Infrastructure:</strong> Cloudflare CDN (300+ PoPs)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section">
+    <h2>Ready to Start Creating?</h2>
+    <p>Join thousands of customers worldwide who trust Chameleon Printing.</p>
+    <a href="/" class="cta-btn">Start Designing for Free</a>
+</div>
+
+<footer>
+    Copyright &copy; 2024-2026 Chameleon Canvas Inc. All rights reserved.
+</footer>
+
+</body>
+</html>
