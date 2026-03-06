@@ -132,7 +132,7 @@ window.toggleAutoDownload = async () => {
 // 수동 즉시 다운로드 (단일 주문) — ZIP 폴백
 window.autoDownloadOrder = async (orderId) => {
     const { data: order } = await sb.from('orders')
-        .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status')
+        .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time')
         .eq('id', orderId).single();
     if (!order) { showToast('주문을 찾을 수 없습니다.', 'error'); return; }
     if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
@@ -151,7 +151,7 @@ async function _runAutoDownloadCheck() {
     const status = document.getElementById('autoDownloadStatus');
     try {
         let query = sb.from('orders')
-            .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status')
+            .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time')
             .neq('status', '임시작성').neq('status', '관리자차단')
             .not('status', 'in', '("취소요청","취소됨")')
             .order('created_at', { ascending: false })
@@ -200,15 +200,25 @@ async function _saveOrderToFolder(order) {
     const safeName = (order.manager_name || 'unknown').replace(/[\\/:*?"<>|]/g, '_');
     const orderFolderName = `${order.id}_${safeName}`;
 
-    // 1. 작업지시서 → "작업지시서" 폴더
-    const docFiles = files.filter(f => f.type === 'order_sheet' || f.type === 'quotation');
-    if (docFiles.length > 0) {
-        const docDir = await _getSubDir(_rootDirHandle, '작업지시서');
-        for (const f of docFiles) {
+    // 1. 작업지시서 / 견적서 → 각각 별도 폴더
+    const sheetFiles = files.filter(f => f.type === 'order_sheet');
+    const quoteFiles = files.filter(f => f.type === 'quotation');
+    if (sheetFiles.length > 0) {
+        const sheetDir = await _getSubDir(_rootDirHandle, '작업지시서');
+        for (const f of sheetFiles) {
             try {
                 const blob = await _fetchFileBlob(f.url);
-                if (blob) await _writeFile(docDir, `${orderFolderName}_${f.name || 'doc'}`, blob);
+                if (blob) await _writeFile(sheetDir, `${orderFolderName}_${f.name || 'sheet'}`, blob);
             } catch (e) { console.error('[자동다운] 작업지시서 저장실패:', f.name, e); }
+        }
+    }
+    if (quoteFiles.length > 0) {
+        const quoteDir = await _getSubDir(_rootDirHandle, '견적서');
+        for (const f of quoteFiles) {
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) await _writeFile(quoteDir, `${orderFolderName}_${f.name || 'quote'}`, blob);
+            } catch (e) { console.error('[자동다운] 견적서 저장실패:', f.name, e); }
         }
     }
 
@@ -264,12 +274,11 @@ async function _buildAndDownloadZip(order) {
     const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
     const items = order.items || [];
 
-    const docFiles = files.filter(f => f.type === 'order_sheet' || f.type === 'quotation');
-    for (const f of docFiles) {
-        try {
-            const blob = await _fetchFileBlob(f.url);
-            if (blob) zip.file(`작업지시서/${f.name || 'document'}`, blob);
-        } catch (e) { console.error('[자동다운] 작업지시서:', e); }
+    for (const f of files.filter(f => f.type === 'order_sheet')) {
+        try { const blob = await _fetchFileBlob(f.url); if (blob) zip.file(`작업지시서/${f.name || 'sheet'}`, blob); } catch (e) {}
+    }
+    for (const f of files.filter(f => f.type === 'quotation')) {
+        try { const blob = await _fetchFileBlob(f.url); if (blob) zip.file(`견적서/${f.name || 'quote'}`, blob); } catch (e) {}
     }
 
     const customerFiles = files.filter(f => f.type !== 'order_sheet' && f.type !== 'quotation');
@@ -334,7 +343,7 @@ function _resolveAddonName(code) {
 async function _generateWorkMemo(order, matItems, matLabel) {
     try {
         const canvas = document.createElement('canvas');
-        const W = 700, lineH = 26;
+        const W = 700, lineH = 28;
         const items = matItems.map(m => m.item);
         const rowCount = Math.max(items.length, 1);
 
@@ -342,96 +351,115 @@ async function _generateWorkMemo(order, matItems, matLabel) {
         let optLineCount = 0;
         for (const item of items) {
             if (item.selectedAddons && typeof item.selectedAddons === 'object') {
-                const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
-                optLineCount += Math.max(keys.length, 0);
+                optLineCount += Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]).length;
             }
         }
 
-        // 높이: 헤더(50) + 정보(130) + 테이블(35 + rows*lineH) + 옵션상세(optLines*20) + QR(180) + 여백
-        const H = 50 + 140 + 35 + rowCount * lineH + optLineCount * 20 + 30 + 180 + 40;
+        // 높이 넉넉하게
+        const H = 60 + 180 + 40 + rowCount * lineH + optLineCount * 22 + 50 + 200 + 50;
         canvas.width = W;
         canvas.height = H;
         const ctx = canvas.getContext('2d');
 
+        // 배경
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, W, H);
 
-        // 헤더 바
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(0, 0, W, 50);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px Pretendard, sans-serif';
-        ctx.fillText(`작업지시 - 주문 #${order.id}`, 15, 35);
+        // 헤더 바 — 국가별 색상
+        const site = order.site_code || 'KR';
+        const headerColor = site === 'JP' ? '#dc2626' : site === 'US' ? '#eab308' : '#1e293b';
+        const headerTextColor = site === 'US' ? '#1e293b' : '#ffffff';
+        ctx.fillStyle = headerColor;
+        ctx.fillRect(0, 0, W, 56);
+        ctx.fillStyle = headerTextColor;
+        ctx.font = 'bold 24px Pretendard, sans-serif';
+        ctx.fillText(`작업지시 - 주문 #${order.id}`, 18, 38);
+        // 국가 뱃지
+        const siteLabel = site === 'JP' ? '🇯🇵 JP' : site === 'US' ? '🇺🇸 US' : '🇰🇷 KR';
+        ctx.font = 'bold 14px Pretendard, sans-serif';
+        ctx.fillText(siteLabel, W - 70, 38);
 
         // 주문 기본 정보
+        let y = 76;
         ctx.fillStyle = '#334155';
         ctx.font = '15px Pretendard, sans-serif';
-        let y = 75;
-        ctx.fillText(`고객명: ${order.manager_name || '-'}`, 15, y); y += 24;
-        ctx.fillText(`연락처: ${order.phone || '-'}`, 15, y); y += 24;
-        ctx.fillText(`주문일: ${order.created_at ? new Date(order.created_at).toLocaleString('ko-KR') : '-'}`, 15, y); y += 24;
+        ctx.fillText(`고객명: ${order.manager_name || '-'}`, 18, y); y += 24;
+        ctx.fillText(`연락처: ${order.phone || '-'}`, 18, y); y += 24;
+        ctx.fillText(`주문일: ${order.created_at ? new Date(order.created_at).toLocaleString('ko-KR') : '-'}`, 18, y); y += 24;
+
+        // 배송일 + 설치시간
+        if (order.delivery_target_date) {
+            ctx.font = 'bold 15px Pretendard, sans-serif';
+            ctx.fillStyle = '#dc2626';
+            let deliveryStr = `배송일: ${order.delivery_target_date}`;
+            if (order.installation_time) deliveryStr += ` (설치 ${order.installation_time})`;
+            ctx.fillText(deliveryStr, 18, y); y += 24;
+        }
+
+        // 소재
         ctx.font = 'bold 15px Pretendard, sans-serif';
         ctx.fillStyle = '#7c3aed';
-        ctx.fillText(`소재: ${matLabel}`, 15, y); y += 24;
+        ctx.fillText(`소재: ${matLabel}`, 18, y); y += 24;
+
+        // 요청사항
         ctx.fillStyle = '#334155';
         ctx.font = '14px Pretendard, sans-serif';
         if (order.request_note) {
             const note = order.request_note.replace(/##REF:[^#]+##/, '').trim();
-            if (note) { ctx.fillText(`요청사항: ${note.substring(0, 60)}`, 15, y); y += 24; }
+            if (note) { ctx.fillText(`요청사항: ${note.substring(0, 60)}`, 18, y); y += 24; }
         }
 
         // 구분선
-        y += 5;
+        y += 8;
         ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(15, y); ctx.lineTo(W - 15, y); ctx.stroke();
-        y += 12;
+        ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(W - 18, y); ctx.stroke();
+        y += 14;
 
         // 상품 테이블 헤더
         ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(15, y, W - 30, 28);
-        ctx.strokeStyle = '#e2e8f0'; ctx.strokeRect(15, y, W - 30, 28);
+        ctx.fillRect(18, y, W - 36, 30);
+        ctx.strokeStyle = '#e2e8f0'; ctx.strokeRect(18, y, W - 36, 30);
         ctx.fillStyle = '#1e293b';
         ctx.font = 'bold 13px Pretendard, sans-serif';
-        ctx.fillText('상품명', 25, y + 19);
-        ctx.fillText('수량', 400, y + 19);
-        ctx.fillText('크기', 480, y + 19);
-        y += 32;
+        ctx.fillText('상품명', 28, y + 20);
+        ctx.fillText('수량', 420, y + 20);
+        ctx.fillText('크기', 510, y + 20);
+        y += 36;
 
         // 상품 행
         for (const item of items) {
-            const pName = (item.product?.name || '-').substring(0, 30);
+            const pName = (item.product?.name || '-').substring(0, 35);
             const qty = item.qty || 1;
             const wMm = item.product?.w_mm || item.w_mm || 0;
             const hMm = item.product?.h_mm || item.h_mm || 0;
             const size = wMm && hMm ? `${Math.round(wMm)}x${Math.round(hMm)}mm` : '-';
 
             ctx.fillStyle = '#334155';
-            ctx.font = '13px Pretendard, sans-serif';
-            ctx.fillText(pName, 25, y + 5);
+            ctx.font = '14px Pretendard, sans-serif';
+            ctx.fillText(pName, 28, y + 6);
 
-            // 수량 강조
             ctx.fillStyle = '#dc2626';
-            ctx.font = 'bold 16px Pretendard, sans-serif';
-            ctx.fillText(`${qty}개`, 400, y + 5);
+            ctx.font = 'bold 18px Pretendard, sans-serif';
+            ctx.fillText(`${qty}개`, 420, y + 6);
 
             ctx.fillStyle = '#334155';
             ctx.font = '13px Pretendard, sans-serif';
-            ctx.fillText(size, 480, y + 5);
-            y += lineH;
+            ctx.fillText(size, 510, y + 6);
+            y += lineH + 4;
 
-            // 옵션 상세 (상품 바로 아래)
+            // 옵션 상세
             if (item.selectedAddons && typeof item.selectedAddons === 'object') {
                 const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
                 if (keys.length > 0) {
-                    ctx.font = '11px Pretendard, sans-serif';
-                    ctx.fillStyle = '#6366f1';
                     for (const k of keys) {
                         const addonName = _resolveAddonName(k);
                         const addonVal = item.selectedAddons[k];
                         const qtyStr = (item.addonQuantities && item.addonQuantities[k]) ? ` x${item.addonQuantities[k]}` : '';
-                        const valStr = (typeof addonVal === 'string' && addonVal !== 'true' && addonVal.length < 30) ? `: ${addonVal}` : '';
-                        ctx.fillText(`  → ${addonName}${valStr}${qtyStr}`, 35, y + 3);
-                        y += 20;
+                        const valStr = (typeof addonVal === 'string' && addonVal !== 'true' && addonVal !== true && addonVal.length < 30) ? `: ${addonVal}` : '';
+                        ctx.font = '12px Pretendard, sans-serif';
+                        ctx.fillStyle = '#6366f1';
+                        ctx.fillText(`  ▸ ${addonName}${valStr}${qtyStr}`, 40, y + 2);
+                        y += 22;
                     }
                 }
             }
@@ -439,42 +467,56 @@ async function _generateWorkMemo(order, matItems, matLabel) {
         if (items.length === 0) {
             ctx.fillStyle = '#94a3b8';
             ctx.font = '13px Pretendard, sans-serif';
-            ctx.fillText('(아이템 정보 없음)', 25, y + 5);
+            ctx.fillText('(아이템 정보 없음)', 28, y + 6);
             y += lineH;
         }
 
         // 구분선
-        y += 10;
+        y += 12;
         ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.5;
-        ctx.beginPath(); ctx.moveTo(15, y); ctx.lineTo(W - 15, y); ctx.stroke();
-        y += 15;
+        ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(W - 18, y); ctx.stroke();
+        y += 18;
 
-        // QR코드 (충분한 공간 확보)
-        const qrSize = 140;
+        // QR코드 — 주문 정보 텍스트 포함
+        const qrSize = 150;
         try {
-            const qrUrl = `https://cafe2626.com/order_management#order_${order.id}`;
-            const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: qrSize, margin: 1 });
+            // QR 내용: 주문 핵심 정보
+            const qrContent = [
+                `주문 #${order.id}`,
+                `고객: ${order.manager_name || '-'}`,
+                `연락처: ${order.phone || '-'}`,
+                `소재: ${matLabel}`,
+                order.delivery_target_date ? `배송일: ${order.delivery_target_date}` : '',
+                order.installation_time ? `설치시간: ${order.installation_time}` : '',
+                `https://cafe2626.com/order_management`
+            ].filter(Boolean).join('\n');
+            const qrDataUrl = await QRCode.toDataURL(qrContent, { width: qrSize, margin: 1 });
             const qrImg = new Image();
             await new Promise((res, rej) => { qrImg.onload = res; qrImg.onerror = rej; qrImg.src = qrDataUrl; });
-            ctx.drawImage(qrImg, W - qrSize - 25, y, qrSize, qrSize);
-            ctx.fillStyle = '#64748b';
-            ctx.font = '11px Pretendard, sans-serif';
-            ctx.fillText('주문 상세 QR', W - qrSize - 15, y + qrSize + 15);
+            ctx.drawImage(qrImg, W - qrSize - 28, y, qrSize, qrSize);
         } catch (e) {
             console.error('[자동다운] QR 생성 실패:', e);
         }
 
-        // QR 옆에 요약 정보
-        ctx.fillStyle = '#64748b';
-        ctx.font = '12px Pretendard, sans-serif';
-        ctx.fillText(`주문번호: #${order.id}`, 25, y + 20);
-        ctx.fillText(`상태: ${order.status || '-'}`, 25, y + 40);
-        ctx.fillText(`금액: ${(order.total_amount || 0).toLocaleString()}원`, 25, y + 60);
+        // QR 왼쪽에 요약
+        ctx.fillStyle = '#334155';
+        ctx.font = 'bold 13px Pretendard, sans-serif';
+        ctx.fillText(`주문번호: #${order.id}`, 28, y + 20);
+        ctx.font = '13px Pretendard, sans-serif';
+        ctx.fillText(`상태: ${order.status || '-'}`, 28, y + 42);
+        ctx.fillText(`금액: ${(order.total_amount || 0).toLocaleString()}원`, 28, y + 64);
+        if (order.delivery_target_date) {
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 13px Pretendard, sans-serif';
+            let dlvStr = `배송: ${order.delivery_target_date}`;
+            if (order.installation_time) dlvStr += ` ${order.installation_time}`;
+            ctx.fillText(dlvStr, 28, y + 86);
+        }
 
         // 하단 푸터
         ctx.fillStyle = '#94a3b8';
         ctx.font = '10px Pretendard, sans-serif';
-        ctx.fillText(`Chameleon Printing - ${new Date().toLocaleString('ko-KR')}`, 15, H - 12);
+        ctx.fillText(`Chameleon Printing - ${new Date().toLocaleString('ko-KR')}`, 18, H - 14);
 
         return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     } catch (e) {
