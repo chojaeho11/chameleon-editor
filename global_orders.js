@@ -391,7 +391,10 @@ async function _fetchFileBlob(url) {
 // 옵션 코드 → 표시명 변환
 function _resolveAddonName(code) {
     if (_addonNameCache[code]) return _addonNameCache[code];
-    return code.replace(/^opt_/, '').replace(/_/g, ' ');
+    const stripped = code.replace(/^opt_/, '');
+    if (_addonNameCache[stripped]) return _addonNameCache[stripped];
+    if (_addonNameCache['opt_' + code]) return _addonNameCache['opt_' + code];
+    return stripped.replace(/_/g, ' ');
 }
 
 // ── 작업메모 이미지 (Canvas → Blob) ──
@@ -410,8 +413,8 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             }
         }
 
-        // 높이 넉넉하게
-        const H = 60 + 180 + 40 + rowCount * lineH + optLineCount * 22 + 50 + 200 + 50;
+        // 높이 넉넉하게 (상단 테이블 + 하단 상세 + QR)
+        const H = 60 + 180 + 40 + rowCount * lineH + optLineCount * 22 + 60 + rowCount * 50 + optLineCount * 18 + 80 + 180 + 50;
         canvas.width = W;
         canvas.height = H;
         const ctx = canvas.getContext('2d');
@@ -526,16 +529,85 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             y += lineH;
         }
 
-        // 구분선
+        // ── 주문 상세 요약 (상품별 수량/옵션/크기) ──
         y += 12;
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(W - 18, y); ctx.stroke();
+        y += 16;
+
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 14px Pretendard, sans-serif';
+        ctx.fillText('📋 주문 상세', 18, y); y += 24;
+
+        for (const item of items) {
+            const pName = (item.product?.name || '-').substring(0, 40);
+            const qty = item.qty || 1;
+            const wMm = item.product?.w_mm || item.w_mm || 0;
+            const hMm = item.product?.h_mm || item.h_mm || 0;
+            const sizeStr = wMm && hMm ? `${Math.round(wMm)}×${Math.round(hMm)}mm` : '';
+            const wallCount = item.wallCount || 0;
+
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 13px Pretendard, sans-serif';
+            ctx.fillText(`• ${pName}`, 28, y);
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 15px Pretendard, sans-serif';
+            ctx.fillText(`× ${qty}`, 450, y);
+            y += 20;
+
+            // 크기/벽수
+            if (sizeStr || wallCount) {
+                ctx.fillStyle = '#475569';
+                ctx.font = '12px Pretendard, sans-serif';
+                let detailStr = '';
+                if (sizeStr) detailStr += `크기: ${sizeStr}`;
+                if (wallCount) detailStr += (detailStr ? '  |  ' : '') + `벽 ${wallCount}개`;
+                ctx.fillText(`  ${detailStr}`, 40, y);
+                y += 18;
+            }
+
+            // 옵션 목록
+            if (item.selectedAddons && typeof item.selectedAddons === 'object') {
+                const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
+                for (const k of keys) {
+                    const addonName = _resolveAddonName(k);
+                    const addonVal = item.selectedAddons[k];
+                    const qtyStr = (item.addonQuantities && item.addonQuantities[k]) ? ` ×${item.addonQuantities[k]}` : '';
+                    const valStr = (typeof addonVal === 'string' && addonVal !== 'true' && addonVal !== k && addonVal.length < 30) ? `: ${addonVal}` : '';
+                    ctx.fillStyle = '#6366f1';
+                    ctx.font = '12px Pretendard, sans-serif';
+                    ctx.fillText(`    ▸ ${addonName}${valStr}${qtyStr}`, 40, y);
+                    y += 18;
+                }
+            }
+            y += 6;
+        }
+
+        // 총 금액
+        ctx.fillStyle = '#334155';
+        ctx.font = '13px Pretendard, sans-serif';
+        ctx.fillText(`총 금액: ${(order.total_amount || 0).toLocaleString()}원`, 28, y);
+        y += 20;
+
+        // 배송일
+        if (order.delivery_target_date) {
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 13px Pretendard, sans-serif';
+            let dlvStr = `배송일: ${order.delivery_target_date}`;
+            if (order.installation_time) dlvStr += `  |  설치: ${order.installation_time}`;
+            ctx.fillText(dlvStr, 28, y);
+            y += 20;
+        }
+
+        // 구분선
+        y += 8;
         ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.5;
         ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(W - 18, y); ctx.stroke();
         y += 18;
 
-        // QR코드 — 주문 정보 텍스트 포함
-        const qrSize = 150;
+        // QR코드
+        const qrSize = 130;
         try {
-            // QR 내용: 주문 핵심 정보
             const qrContent = [
                 `주문 #${order.id}`,
                 `고객: ${order.manager_name || '-'}`,
@@ -543,7 +615,6 @@ async function _generateWorkMemo(order, matItems, matLabel) {
                 `소재: ${matLabel}`,
                 order.delivery_target_date ? `배송일: ${order.delivery_target_date}` : '',
                 order.installation_time ? `설치시간: ${order.installation_time}` : '',
-                `https://cafe2626.com/order_management`
             ].filter(Boolean).join('\n');
             const qrDataUrl = await QRCode.toDataURL(qrContent, { width: qrSize, margin: 1 });
             const qrImg = new Image();
@@ -553,20 +624,14 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             console.error('[자동다운] QR 생성 실패:', e);
         }
 
-        // QR 왼쪽에 요약
+        // QR 왼쪽에 주문번호/상태
         ctx.fillStyle = '#334155';
         ctx.font = 'bold 13px Pretendard, sans-serif';
         ctx.fillText(`주문번호: #${order.id}`, 28, y + 20);
         ctx.font = '13px Pretendard, sans-serif';
         ctx.fillText(`상태: ${order.status || '-'}`, 28, y + 42);
-        ctx.fillText(`금액: ${(order.total_amount || 0).toLocaleString()}원`, 28, y + 64);
-        if (order.delivery_target_date) {
-            ctx.fillStyle = '#dc2626';
-            ctx.font = 'bold 13px Pretendard, sans-serif';
-            let dlvStr = `배송: ${order.delivery_target_date}`;
-            if (order.installation_time) dlvStr += ` ${order.installation_time}`;
-            ctx.fillText(dlvStr, 28, y + 86);
-        }
+        ctx.fillText(`소재: ${matLabel}`, 28, y + 64);
+        y += qrSize + 10;
 
         // 하단 푸터
         ctx.fillStyle = '#94a3b8';
