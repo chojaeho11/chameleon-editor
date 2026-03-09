@@ -81,6 +81,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         // 2. ★ 에디터 초기화 (Fabric.js 필요) — 라이브러리 로드 후 실행
         function runEditorInits() {
             initCanvas();
+            console.log('[main.js] after initCanvas, canvas =', canvas, '| window.canvas =', window.canvas);
             const editorInits = [
                 ['CanvasUtils', initCanvasUtils],
                 ['Shortcuts', initShortcuts],
