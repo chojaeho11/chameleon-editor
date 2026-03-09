@@ -77,6 +77,16 @@ function createAnim(container, stk, category) {
     else if (type === 'flower') animFlower(area);
     else if (type === 'star') animStar(area, colors);
     else if (type === 'fire') animFire(area);
+    else if (type === 'rainbow') animRainbow(area);
+    else if (type === 'lightning') animLightning(area, colors);
+    else if (type === 'bubbles') animBubbles(area, colors);
+    else if (type === 'shooting_star') animShootingStar(area, colors);
+    else if (type === 'party') animParty(area, colors);
+    else if (type === 'clap') animClap(area);
+    else if (type === 'money') animMoney(area);
+    else if (type === 'butterfly') animButterfly(area, colors);
+    else if (type === 'rocket') animRocket(area);
+    else if (type === 'love_letter') animLoveLetter(area, colors);
 
     container.appendChild(area);
 }
@@ -212,6 +222,139 @@ function animFire(el) {
     }, 350);
 }
 
+/* ═══ NEW EFFECTS ═══ */
+function animRainbow(el) {
+    _kf('gcRainbowAppear','0%{opacity:0;transform:scale(0.5) translateY(20%)} 30%{opacity:0.7;transform:scale(1) translateY(0)} 70%{opacity:0.7;transform:scale(1) translateY(0)} 100%{opacity:0;transform:scale(1.1) translateY(-10%)}');
+    var arc = document.createElement('div');
+    arc.style.cssText = 'position:absolute;left:10%;top:20%;width:80%;height:60%;border-radius:50% 50% 0 0;background:conic-gradient(from 180deg,#ff0000,#ff8800,#ffff00,#00ff00,#0088ff,#8800ff,#ff0000);opacity:0;animation:gcRainbowAppear 4s ease-in-out infinite;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 100%,transparent 50%,black 51%);mask-image:radial-gradient(ellipse 60% 70% at 50% 100%,transparent 50%,black 51%);';
+    el.appendChild(arc);
+}
+
+function animLightning(el, colors) {
+    _kf('gcLightningFlash','0%{transform:translateY(0) scale(1.5);opacity:1} 20%{opacity:1} 100%{transform:translateY(80%) scale(0.8);opacity:0}');
+    _kf('gcFlashOverlay','0%{opacity:0.4} 100%{opacity:0}');
+    setInterval(function() {
+        var bolt = document.createElement('div');
+        bolt.textContent = '\u26A1';
+        var sz = 20 + Math.random() * 24;
+        bolt.style.cssText = 'position:absolute;left:' + (10+Math.random()*80) + '%;top:5%;font-size:' + sz + 'px;animation:gcLightningFlash 0.6s ease-out forwards;filter:drop-shadow(0 0 8px #ffd700);';
+        el.appendChild(bolt);
+        var flash = document.createElement('div');
+        flash.style.cssText = 'position:absolute;inset:0;background:rgba(255,255,200,0.3);animation:gcFlashOverlay 0.3s ease-out forwards;';
+        el.appendChild(flash);
+        setTimeout(function() { bolt.remove(); flash.remove(); }, 800);
+    }, 2500);
+}
+
+function animBubbles(el, colors) {
+    _kf('gcBubbleRise','0%{transform:translateY(0) translateX(0) scale(0.5);opacity:0} 10%{opacity:0.8} 50%{transform:translateY(-150%) translateX(10px) scale(1)} 100%{transform:translateY(-300%) translateX(-5px) scale(1.2);opacity:0}');
+    for (var i = 0; i < 10; i++) {
+        var b = document.createElement('div');
+        var sz = 8 + Math.random() * 18;
+        var dur = 3 + Math.random() * 4;
+        var delay = Math.random() * 3;
+        var c = colors[Math.floor(Math.random() * colors.length)];
+        b.style.cssText = 'position:absolute;left:' + (Math.random()*90+5) + '%;bottom:-10%;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;border:2px solid ' + c + ';background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.8),transparent);animation:gcBubbleRise ' + dur + 's ' + delay + 's ease-in infinite;';
+        el.appendChild(b);
+    }
+}
+
+function animShootingStar(el, colors) {
+    _kf('gcShootingStar','0%{transform:translateX(0) translateY(0);opacity:1} 100%{transform:translateX(-200px) translateY(100px);opacity:0}');
+    setInterval(function() {
+        var s = document.createElement('div');
+        var c = colors[Math.floor(Math.random() * colors.length)];
+        s.style.cssText = 'position:absolute;right:-5%;top:' + Math.random()*40 + '%;width:3px;height:3px;background:' + c + ';border-radius:50%;box-shadow:0 0 6px ' + c + ',-8px 0 12px ' + c + ',-16px 0 8px ' + c + ';animation:gcShootingStar 1s ease-in forwards;';
+        el.appendChild(s);
+        setTimeout(function() { s.remove(); }, 1200);
+    }, 1200);
+}
+
+function animParty(el, colors) {
+    _kf('gcPartyPop','0%{transform:translateY(0) scale(0.3) rotate(0);opacity:0} 20%{opacity:1;transform:translateY(-30px) scale(1.2) rotate(-10deg)} 60%{transform:translateY(-80px) scale(1) rotate(15deg)} 100%{transform:translateY(-120px) scale(0.5) rotate(30deg);opacity:0}');
+    var items = ['\uD83C\uDF89','\uD83C\uDF88','\uD83C\uDF8A','\uD83E\uDD73','\uD83C\uDFB5','\uD83C\uDFB6','\uD83C\uDF7E'];
+    setInterval(function() {
+        var p = document.createElement('div');
+        p.textContent = items[Math.floor(Math.random() * items.length)];
+        p.style.cssText = 'position:absolute;left:' + (Math.random()*80+10) + '%;bottom:0;font-size:' + (14+Math.random()*18) + 'px;animation:gcPartyPop 2s ease-out forwards;';
+        el.appendChild(p);
+        setTimeout(function() { p.remove(); }, 2200);
+    }, 350);
+}
+
+function animClap(el) {
+    _kf('gcClap','0%,100%{transform:translate(-50%,-50%) scale(1)} 15%{transform:translate(-50%,-50%) scale(1.3)} 30%{transform:translate(-50%,-50%) scale(1)} 45%{transform:translate(-50%,-50%) scale(1.3)} 60%{transform:translate(-50%,-50%) scale(1)}');
+    _kf('gcSparklePulse','0%{transform:scale(0) rotate(0);opacity:0} 50%{transform:scale(1.2) rotate(180deg);opacity:1} 100%{transform:scale(0) rotate(360deg);opacity:0}');
+    var clap = document.createElement('div');
+    clap.textContent = '\uD83D\uDC4F';
+    clap.style.cssText = 'position:absolute;left:50%;top:50%;font-size:32px;transform:translate(-50%,-50%);animation:gcClap 1.2s ease-in-out infinite;';
+    el.appendChild(clap);
+    setInterval(function() {
+        for (var i = 0; i < 4; i++) {
+            var sp = document.createElement('div');
+            sp.textContent = '\u2728';
+            sp.style.cssText = 'position:absolute;left:' + (40+Math.random()*20) + '%;top:' + (40+Math.random()*20) + '%;font-size:' + (8+Math.random()*10) + 'px;animation:gcSparklePulse 0.8s ease-out forwards;';
+            el.appendChild(sp);
+            setTimeout(function(s) { return function() { s.remove(); }; }(sp), 900);
+        }
+    }, 1200);
+}
+
+function animMoney(el) {
+    _kf('gcMoneyRain','0%{transform:translateY(0) rotate(0) translateX(0);opacity:1} 25%{transform:translateY(75%) rotate(90deg) translateX(15px)} 50%{transform:translateY(150%) rotate(180deg) translateX(-10px)} 75%{transform:translateY(225%) rotate(270deg) translateX(8px)} 100%{transform:translateY(300%) rotate(360deg) translateX(0);opacity:0}');
+    var bills = ['\uD83D\uDCB5','\uD83D\uDCB4','\uD83D\uDCB6','\uD83D\uDCB7','\uD83D\uDCB0','\uD83E\uDE99'];
+    for (var i = 0; i < 10; i++) {
+        var m = document.createElement('div');
+        m.textContent = bills[Math.floor(Math.random() * bills.length)];
+        var dur = 2.5 + Math.random() * 3;
+        var delay = Math.random() * 2;
+        m.style.cssText = 'position:absolute;left:' + Math.random()*100 + '%;top:-10%;font-size:' + (12+Math.random()*16) + 'px;animation:gcMoneyRain ' + dur + 's ' + delay + 's linear infinite;';
+        el.appendChild(m);
+    }
+}
+
+function animButterfly(el, colors) {
+    _kf('gcButterfly0','0%{transform:translate(0,0) scaleX(1)} 25%{transform:translate(30px,-20px) scaleX(-1)} 50%{transform:translate(10px,-40px) scaleX(1)} 75%{transform:translate(-20px,-15px) scaleX(-1)} 100%{transform:translate(0,0) scaleX(1)}');
+    _kf('gcButterfly1','0%{transform:translate(0,0) scaleX(-1)} 25%{transform:translate(-25px,-30px) scaleX(1)} 50%{transform:translate(-5px,10px) scaleX(-1)} 75%{transform:translate(20px,-20px) scaleX(1)} 100%{transform:translate(0,0) scaleX(-1)}');
+    _kf('gcButterfly2','0%{transform:translate(0,0) scaleX(1)} 33%{transform:translate(20px,15px) scaleX(-1)} 66%{transform:translate(-15px,-25px) scaleX(1)} 100%{transform:translate(0,0) scaleX(1)}');
+    for (var i = 0; i < 4; i++) {
+        var b = document.createElement('div');
+        b.textContent = '\uD83E\uDD8B';
+        var dur = 5 + Math.random() * 4;
+        var delay = Math.random() * 3;
+        b.style.cssText = 'position:absolute;left:' + (Math.random()*80+10) + '%;top:' + (Math.random()*80+10) + '%;font-size:' + (16+Math.random()*14) + 'px;animation:gcButterfly' + (i%3) + ' ' + dur + 's ' + delay + 's ease-in-out infinite;';
+        el.appendChild(b);
+    }
+}
+
+function animRocket(el) {
+    _kf('gcRocketLaunch','0%{transform:translateY(0) rotate(-45deg);opacity:1} 70%{transform:translateY(-200%) rotate(-45deg);opacity:1} 100%{transform:translateY(-300%) rotate(-45deg);opacity:0}');
+    _kf('gcExhaust','0%{transform:scale(1);opacity:0.7} 100%{transform:scale(0.3) translateY(20px);opacity:0}');
+    var rocket = document.createElement('div');
+    rocket.textContent = '\uD83D\uDE80';
+    rocket.style.cssText = 'position:absolute;left:50%;bottom:0;font-size:28px;animation:gcRocketLaunch 3s ease-in infinite;';
+    el.appendChild(rocket);
+    setInterval(function() {
+        var trail = document.createElement('div');
+        trail.textContent = Math.random() > 0.5 ? '\uD83D\uDCA8' : '\uD83D\uDD25';
+        trail.style.cssText = 'position:absolute;left:' + (45+Math.random()*10) + '%;bottom:' + Math.random()*20 + '%;font-size:' + (10+Math.random()*8) + 'px;animation:gcExhaust 0.8s ease-out forwards;opacity:0.7;';
+        el.appendChild(trail);
+        setTimeout(function() { trail.remove(); }, 900);
+    }, 200);
+}
+
+function animLoveLetter(el, colors) {
+    _kf('gcLoveFloat','0%{transform:translateY(0) scale(0) rotate(-20deg);opacity:0} 20%{transform:translateY(-20px) scale(1.2) rotate(10deg);opacity:1} 50%{transform:translateY(-60px) scale(1) rotate(-5deg);opacity:0.9} 100%{transform:translateY(-120px) scale(0.7) rotate(15deg);opacity:0}');
+    var items = ['\uD83D\uDC8C','\uD83D\uDC9D','\uD83D\uDC98','\uD83D\uDC9E'];
+    setInterval(function() {
+        var l = document.createElement('div');
+        l.textContent = items[Math.floor(Math.random() * items.length)];
+        l.style.cssText = 'position:absolute;left:' + (20+Math.random()*60) + '%;bottom:0;font-size:' + (14+Math.random()*14) + 'px;animation:gcLoveFloat 3s ease-out forwards;';
+        el.appendChild(l);
+        setTimeout(function() { l.remove(); }, 3200);
+    }, 800);
+}
+
 /* ═══ Load card data ═══ */
 (async function(){
     var SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
@@ -223,7 +366,7 @@ function animFire(el) {
 
     try {
         var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        var d = sb.storage.from('public-assets').getPublicUrl('greeting-card/' + slug + '/meta.json');
+        var d = sb.storage.from('design').getPublicUrl('greeting-card/' + slug + '/meta.json');
         var resp = await fetch(d.data.publicUrl + '?t=' + Date.now());
         if (!resp.ok) throw new Error('Card not found');
         var meta = await resp.json();

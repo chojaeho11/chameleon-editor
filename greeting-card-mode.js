@@ -31,16 +31,26 @@ const CATEGORY_GREETINGS = {
 
 /* ─── Animated Sticker Definitions ─── */
 const ANIM_STICKERS = [
-    { id:'fireworks',  emoji:'🎆', name:'폭죽',     nameKey:'gc_stk_fireworks' },
-    { id:'hearts',     emoji:'💕', name:'하트뿜뿜', nameKey:'gc_stk_hearts' },
-    { id:'snow',       emoji:'❄️', name:'눈내림',   nameKey:'gc_stk_snow' },
-    { id:'confetti',   emoji:'🎊', name:'색종이',   nameKey:'gc_stk_confetti' },
-    { id:'sparkle',    emoji:'✨', name:'반짝이',   nameKey:'gc_stk_sparkle' },
-    { id:'bow',        emoji:'🙇', name:'세배',     nameKey:'gc_stk_bow' },
-    { id:'balloon',    emoji:'🎈', name:'풍선',     nameKey:'gc_stk_balloon' },
-    { id:'flower',     emoji:'🌸', name:'꽃날림',   nameKey:'gc_stk_flower' },
-    { id:'star',       emoji:'⭐', name:'별빛',     nameKey:'gc_stk_star' },
-    { id:'fire',       emoji:'🔥', name:'불꽃',     nameKey:'gc_stk_fire' },
+    { id:'fireworks',  emoji:'🎆', name:'폭죽',       nameKey:'gc_stk_fireworks' },
+    { id:'hearts',     emoji:'💕', name:'하트뿜뿜',   nameKey:'gc_stk_hearts' },
+    { id:'snow',       emoji:'❄️', name:'눈내림',     nameKey:'gc_stk_snow' },
+    { id:'confetti',   emoji:'🎊', name:'색종이',     nameKey:'gc_stk_confetti' },
+    { id:'sparkle',    emoji:'✨', name:'반짝이',     nameKey:'gc_stk_sparkle' },
+    { id:'bow',        emoji:'🙇', name:'세배',       nameKey:'gc_stk_bow' },
+    { id:'balloon',    emoji:'🎈', name:'풍선',       nameKey:'gc_stk_balloon' },
+    { id:'flower',     emoji:'🌸', name:'꽃날림',     nameKey:'gc_stk_flower' },
+    { id:'star',       emoji:'⭐', name:'별빛',       nameKey:'gc_stk_star' },
+    { id:'fire',       emoji:'🔥', name:'불꽃',       nameKey:'gc_stk_fire' },
+    { id:'rainbow',    emoji:'🌈', name:'무지개',     nameKey:'gc_stk_rainbow' },
+    { id:'lightning',  emoji:'⚡', name:'번개',       nameKey:'gc_stk_lightning' },
+    { id:'bubbles',    emoji:'🫧', name:'버블',       nameKey:'gc_stk_bubbles' },
+    { id:'shooting_star', emoji:'🌠', name:'별똥별',  nameKey:'gc_stk_shooting_star' },
+    { id:'party',      emoji:'🥳', name:'파티',       nameKey:'gc_stk_party' },
+    { id:'clap',       emoji:'👏', name:'박수',       nameKey:'gc_stk_clap' },
+    { id:'money',      emoji:'💰', name:'돈뿌리기',   nameKey:'gc_stk_money' },
+    { id:'butterfly',  emoji:'🦋', name:'나비',       nameKey:'gc_stk_butterfly' },
+    { id:'rocket',     emoji:'🚀', name:'로켓',       nameKey:'gc_stk_rocket' },
+    { id:'love_letter',emoji:'💌', name:'러브레터',   nameKey:'gc_stk_love_letter' },
 ];
 
 /* ─── State ─── */
@@ -566,27 +576,29 @@ function _createStickerAnimation(container, stk, colors) {
     const area = document.createElement('div');
     area.style.cssText = `position:absolute; left:${x - size/2}%; top:${y - size/2}%; width:${size}%; height:${size}%; pointer-events:none;`;
 
-    if (type === 'fireworks') {
-        _animFireworks(area, colors);
-    } else if (type === 'hearts') {
-        _animHearts(area, colors);
-    } else if (type === 'snow') {
-        _animSnow(area);
-    } else if (type === 'confetti') {
-        _animConfetti(area, colors);
-    } else if (type === 'sparkle') {
-        _animSparkle(area, colors);
-    } else if (type === 'bow') {
-        _animBow(area);
-    } else if (type === 'balloon') {
-        _animBalloon(area, colors);
-    } else if (type === 'flower') {
-        _animFlower(area);
-    } else if (type === 'star') {
-        _animStar(area, colors);
-    } else if (type === 'fire') {
-        _animFire(area);
-    }
+    const animMap = {
+        fireworks: () => _animFireworks(area, colors),
+        hearts: () => _animHearts(area, colors),
+        snow: () => _animSnow(area),
+        confetti: () => _animConfetti(area, colors),
+        sparkle: () => _animSparkle(area, colors),
+        bow: () => _animBow(area),
+        balloon: () => _animBalloon(area, colors),
+        flower: () => _animFlower(area),
+        star: () => _animStar(area, colors),
+        fire: () => _animFire(area),
+        rainbow: () => _animRainbow(area),
+        lightning: () => _animLightning(area, colors),
+        bubbles: () => _animBubbles(area, colors),
+        shooting_star: () => _animShootingStar(area, colors),
+        party: () => _animParty(area, colors),
+        clap: () => _animClap(area),
+        money: () => _animMoney(area),
+        butterfly: () => _animButterfly(area, colors),
+        rocket: () => _animRocket(area),
+        love_letter: () => _animLoveLetter(area, colors),
+    };
+    if (animMap[type]) animMap[type]();
 
     container.appendChild(area);
 }
@@ -730,6 +742,155 @@ function _animFire(el) {
         setTimeout(() => f.remove(), 1400);
     }, 350);
     _ensureKeyframe('gcFireRise', '0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-60px) scale(0.3);opacity:0}');
+}
+
+/* ─── NEW EFFECTS ─── */
+function _animRainbow(el) {
+    const arc = document.createElement('div');
+    arc.style.cssText = 'position:absolute; left:10%; top:20%; width:80%; height:60%; border-radius:50% 50% 0 0; background:conic-gradient(from 180deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0000); opacity:0; animation:gcRainbowAppear 4s ease-in-out infinite;';
+    el.appendChild(arc);
+    const inner = document.createElement('div');
+    inner.style.cssText = 'position:absolute; left:15%; top:25%; width:70%; height:55%; border-radius:50% 50% 0 0; background:inherit; mix-blend-mode:destination-out;';
+    // Use mask approach instead
+    arc.style.webkitMaskImage = 'radial-gradient(ellipse 60% 70% at 50% 100%, transparent 50%, black 51%)';
+    arc.style.maskImage = 'radial-gradient(ellipse 60% 70% at 50% 100%, transparent 50%, black 51%)';
+    _ensureKeyframe('gcRainbowAppear', '0%{opacity:0;transform:scale(0.5) translateY(20%)} 30%{opacity:0.7;transform:scale(1) translateY(0)} 70%{opacity:0.7;transform:scale(1) translateY(0)} 100%{opacity:0;transform:scale(1.1) translateY(-10%)}');
+}
+
+function _animLightning(el, colors) {
+    setInterval(() => {
+        const bolt = document.createElement('div');
+        bolt.textContent = '⚡';
+        const sz = 20 + Math.random() * 24;
+        const lx = 10 + Math.random() * 80;
+        bolt.style.cssText = `position:absolute; left:${lx}%; top:5%; font-size:${sz}px; animation:gcLightningFlash 0.6s ease-out forwards; filter:drop-shadow(0 0 8px #ffd700);`;
+        el.appendChild(bolt);
+        // Flash overlay
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:absolute; inset:0; background:rgba(255,255,200,0.3); animation:gcFlashOverlay 0.3s ease-out forwards;';
+        el.appendChild(flash);
+        setTimeout(() => { bolt.remove(); flash.remove(); }, 800);
+    }, 2500);
+    _ensureKeyframe('gcLightningFlash', '0%{transform:translateY(0) scale(1.5);opacity:1} 20%{opacity:1} 100%{transform:translateY(80%) scale(0.8);opacity:0}');
+    _ensureKeyframe('gcFlashOverlay', '0%{opacity:0.4} 100%{opacity:0}');
+}
+
+function _animBubbles(el, colors) {
+    for (let i = 0; i < 10; i++) {
+        const b = document.createElement('div');
+        const sz = 8 + Math.random() * 18;
+        const dur = 3 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        b.style.cssText = `position:absolute; left:${Math.random()*90+5}%; bottom:-10%; width:${sz}px; height:${sz}px; border-radius:50%; border:2px solid ${c}; background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), transparent); animation:gcBubbleRise ${dur}s ${delay}s ease-in infinite;`;
+        el.appendChild(b);
+    }
+    _ensureKeyframe('gcBubbleRise', '0%{transform:translateY(0) translateX(0) scale(0.5);opacity:0} 10%{opacity:0.8} 50%{transform:translateY(-150%) translateX(10px) scale(1)} 100%{transform:translateY(-300%) translateX(-5px) scale(1.2);opacity:0}');
+}
+
+function _animShootingStar(el, colors) {
+    setInterval(() => {
+        const s = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        s.style.cssText = `position:absolute; right:-5%; top:${Math.random()*40}%; width:3px; height:3px; background:${c}; border-radius:50%; box-shadow:0 0 6px ${c}, -8px 0 12px ${c}, -16px 0 8px ${c}; animation:gcShootingStar 1s ease-in forwards;`;
+        el.appendChild(s);
+        setTimeout(() => s.remove(), 1200);
+    }, 1200);
+    _ensureKeyframe('gcShootingStar', '0%{transform:translateX(0) translateY(0);opacity:1} 100%{transform:translateX(-200px) translateY(100px);opacity:0}');
+}
+
+function _animParty(el, colors) {
+    const items = ['🎉','🎈','🎊','🥳','🎵','🎶','🍾'];
+    setInterval(() => {
+        const p = document.createElement('div');
+        const sz = 14 + Math.random() * 18;
+        p.textContent = items[Math.floor(Math.random() * items.length)];
+        p.style.cssText = `position:absolute; left:${Math.random()*80+10}%; bottom:0; font-size:${sz}px; animation:gcPartyPop 2s ease-out forwards;`;
+        el.appendChild(p);
+        setTimeout(() => p.remove(), 2200);
+    }, 350);
+    _ensureKeyframe('gcPartyPop', '0%{transform:translateY(0) scale(0.3) rotate(0);opacity:0} 20%{opacity:1;transform:translateY(-30px) scale(1.2) rotate(-10deg)} 60%{transform:translateY(-80px) scale(1) rotate(15deg)} 100%{transform:translateY(-120px) scale(0.5) rotate(30deg);opacity:0}');
+}
+
+function _animClap(el) {
+    const clap = document.createElement('div');
+    clap.textContent = '👏';
+    clap.style.cssText = 'position:absolute; left:50%; top:50%; font-size:32px; transform:translate(-50%,-50%); animation:gcClap 1.2s ease-in-out infinite;';
+    el.appendChild(clap);
+    // Sparkle on clap
+    setInterval(() => {
+        for (let i = 0; i < 4; i++) {
+            const sp = document.createElement('div');
+            sp.textContent = '✨';
+            sp.style.cssText = `position:absolute; left:${40+Math.random()*20}%; top:${40+Math.random()*20}%; font-size:${8+Math.random()*10}px; animation:gcSparklePulse 0.8s ease-out forwards;`;
+            el.appendChild(sp);
+            setTimeout(() => sp.remove(), 900);
+        }
+    }, 1200);
+    _ensureKeyframe('gcClap', '0%,100%{transform:translate(-50%,-50%) scale(1)} 15%{transform:translate(-50%,-50%) scale(1.3)} 30%{transform:translate(-50%,-50%) scale(1)} 45%{transform:translate(-50%,-50%) scale(1.3)} 60%{transform:translate(-50%,-50%) scale(1)}');
+    _ensureKeyframe('gcSparklePulse', '0%{transform:scale(0) rotate(0);opacity:0} 50%{transform:scale(1.2) rotate(180deg);opacity:1} 100%{transform:scale(0) rotate(360deg);opacity:0}');
+}
+
+function _animMoney(el) {
+    const bills = ['💵','💴','💶','💷','💰','🪙'];
+    for (let i = 0; i < 10; i++) {
+        const m = document.createElement('div');
+        const sz = 12 + Math.random() * 16;
+        const dur = 2.5 + Math.random() * 3;
+        const delay = Math.random() * 2;
+        m.textContent = bills[Math.floor(Math.random() * bills.length)];
+        m.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-10%; font-size:${sz}px; animation:gcMoneyRain ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(m);
+    }
+    _ensureKeyframe('gcMoneyRain', '0%{transform:translateY(0) rotate(0) translateX(0);opacity:1} 25%{transform:translateY(75%) rotate(90deg) translateX(15px)} 50%{transform:translateY(150%) rotate(180deg) translateX(-10px)} 75%{transform:translateY(225%) rotate(270deg) translateX(8px)} 100%{transform:translateY(300%) rotate(360deg) translateX(0);opacity:0}');
+}
+
+function _animButterfly(el, colors) {
+    const butterflies = ['🦋','🦋','🦋'];
+    for (let i = 0; i < 4; i++) {
+        const b = document.createElement('div');
+        const sz = 16 + Math.random() * 14;
+        const dur = 5 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        const startX = Math.random() * 80 + 10;
+        const startY = Math.random() * 80 + 10;
+        b.textContent = butterflies[i % butterflies.length];
+        b.style.cssText = `position:absolute; left:${startX}%; top:${startY}%; font-size:${sz}px; animation:gcButterfly${i%3} ${dur}s ${delay}s ease-in-out infinite;`;
+        el.appendChild(b);
+    }
+    _ensureKeyframe('gcButterfly0', '0%{transform:translate(0,0) scaleX(1)} 25%{transform:translate(30px,-20px) scaleX(-1)} 50%{transform:translate(10px,-40px) scaleX(1)} 75%{transform:translate(-20px,-15px) scaleX(-1)} 100%{transform:translate(0,0) scaleX(1)}');
+    _ensureKeyframe('gcButterfly1', '0%{transform:translate(0,0) scaleX(-1)} 25%{transform:translate(-25px,-30px) scaleX(1)} 50%{transform:translate(-5px,10px) scaleX(-1)} 75%{transform:translate(20px,-20px) scaleX(1)} 100%{transform:translate(0,0) scaleX(-1)}');
+    _ensureKeyframe('gcButterfly2', '0%{transform:translate(0,0) scaleX(1)} 33%{transform:translate(20px,15px) scaleX(-1)} 66%{transform:translate(-15px,-25px) scaleX(1)} 100%{transform:translate(0,0) scaleX(1)}');
+}
+
+function _animRocket(el) {
+    const rocket = document.createElement('div');
+    rocket.textContent = '🚀';
+    rocket.style.cssText = 'position:absolute; left:50%; bottom:0; font-size:28px; animation:gcRocketLaunch 3s ease-in infinite;';
+    el.appendChild(rocket);
+    // Exhaust trail
+    setInterval(() => {
+        const trail = document.createElement('div');
+        trail.textContent = Math.random() > 0.5 ? '💨' : '🔥';
+        trail.style.cssText = `position:absolute; left:${45+Math.random()*10}%; bottom:${Math.random()*20}%; font-size:${10+Math.random()*8}px; animation:gcExhaust 0.8s ease-out forwards; opacity:0.7;`;
+        el.appendChild(trail);
+        setTimeout(() => trail.remove(), 900);
+    }, 200);
+    _ensureKeyframe('gcRocketLaunch', '0%{transform:translateY(0) rotate(-45deg);opacity:1} 70%{transform:translateY(-200%) rotate(-45deg);opacity:1} 100%{transform:translateY(-300%) rotate(-45deg);opacity:0}');
+    _ensureKeyframe('gcExhaust', '0%{transform:scale(1);opacity:0.7} 100%{transform:scale(0.3) translateY(20px);opacity:0}');
+}
+
+function _animLoveLetter(el, colors) {
+    const items = ['💌','💝','💘','💞'];
+    setInterval(() => {
+        const l = document.createElement('div');
+        const sz = 14 + Math.random() * 14;
+        l.textContent = items[Math.floor(Math.random() * items.length)];
+        l.style.cssText = `position:absolute; left:${20+Math.random()*60}%; bottom:0; font-size:${sz}px; animation:gcLoveFloat 3s ease-out forwards;`;
+        el.appendChild(l);
+        setTimeout(() => l.remove(), 3200);
+    }, 800);
+    _ensureKeyframe('gcLoveFloat', '0%{transform:translateY(0) scale(0) rotate(-20deg);opacity:0} 20%{transform:translateY(-20px) scale(1.2) rotate(10deg);opacity:1} 50%{transform:translateY(-60px) scale(1) rotate(-5deg);opacity:0.9} 100%{transform:translateY(-120px) scale(0.7) rotate(15deg);opacity:0}');
 }
 
 /* ─── CSS Keyframe injection helper ─── */
@@ -926,10 +1087,10 @@ async function shareGreetingCard() {
         // Upload card image
         const blob = await (await fetch(data.imageUrl)).blob();
         const imgPath = `greeting-card/${slug}/card.jpg`;
-        const { error: imgErr } = await sb.storage.from('public-assets').upload(imgPath, blob, { contentType:'image/jpeg', upsert:true });
+        const { error: imgErr } = await sb.storage.from('design').upload(imgPath, blob, { contentType:'image/jpeg', upsert:true });
         if (imgErr) throw imgErr;
 
-        const { data: imgData } = sb.storage.from('public-assets').getPublicUrl(imgPath);
+        const { data: imgData } = sb.storage.from('design').getPublicUrl(imgPath);
 
         // Upload meta.json with sticker data
         const meta = {
@@ -942,7 +1103,7 @@ async function shareGreetingCard() {
             createdAt: new Date().toISOString()
         };
         const metaBlob = new Blob([JSON.stringify(meta)], { type:'application/json' });
-        await sb.storage.from('public-assets').upload(`greeting-card/${slug}/meta.json`, metaBlob, { contentType:'application/json', upsert:true });
+        await sb.storage.from('design').upload(`greeting-card/${slug}/meta.json`, metaBlob, { contentType:'application/json', upsert:true });
 
         const shareUrl = `${window.location.origin}/gc.html?id=${slug}`;
         const urlInput = document.getElementById('gcShareUrl');
