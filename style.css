@@ -2788,7 +2788,7 @@ body {
 .hero-mascot {
     display: block !important;
     position: absolute;
-    right: -80px;
+    right: -120px;
     bottom: -10px;
     width: 160px;
     height: auto;
