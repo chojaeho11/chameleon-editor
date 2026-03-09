@@ -327,7 +327,10 @@ export async function initOrderSystem() {
                     date: new Date().toLocaleDateString(),
                     shippingFee: window._nonMetroFeeApplied || 0
                 };
-                const blob = await generateQuotationPDF(info, cartData);
+                const cartMileageInput = document.getElementById('cartUseMileage');
+                const cartUsedMileage = cartMileageInput ? (parseInt(cartMileageInput.value) || 0) : 0;
+                const totalDiscountRate = currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0);
+                const blob = await generateQuotationPDF(info, cartData, totalDiscountRate, cartUsedMileage);
                 if(blob) downloadBlob(blob, "quotation.pdf");
                 else showToast(window.t('err_quote_gen_failed') || "Failed to generate quotation.", "error");
             } catch(e) {
@@ -841,6 +844,16 @@ function renderTimeSlots(grid, bookedSlots, slotInfo) {
 function openDeliveryInfoModal() {
     document.getElementById("calendarModal").style.display = "none";
     document.getElementById("deliveryInfoModal").style.display = "flex";
+
+    // 장바구니에서 입력한 추천인 동기화
+    if (window.verifiedReferrerEmail) {
+        const refInput = document.getElementById('inputReferrerEmail');
+        const refStatus = document.getElementById('referrerStatus');
+        const refNotice = document.getElementById('referralNotice');
+        if (refInput) refInput.value = window.verifiedReferrerEmail;
+        if (refStatus) { refStatus.innerHTML = '✅ ' + window.t('referral_verified', '추천인이 확인되었습니다!'); refStatus.style.color = '#16a34a'; }
+        if (refNotice) refNotice.style.display = 'block';
+    }
 
     // 허니콤보드 포함 여부 체크 → 배송 지역 선택 표시
     const hasHoneycomb = hasHoneycombInCart();
@@ -1892,9 +1905,22 @@ function updateSummary(prodTotal, addonTotal, total) {
             elRefRow.style.display = 'none';
         }
     }
-    const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(finalTotal); 
-    const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`; 
-    const btnCart = document.getElementById("btnViewCart"); if (btnCart) btnCart.style.display = (cartData.length > 0 || (typeof currentUser !== 'undefined' && currentUser)) ? "inline-flex" : "none"; 
+    const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(finalTotal);
+    const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`;
+    const btnCart = document.getElementById("btnViewCart"); if (btnCart) btnCart.style.display = (cartData.length > 0 || (typeof currentUser !== 'undefined' && currentUser)) ? "inline-flex" : "none";
+
+    // 장바구니 추천인/마일리지 섹션: 로그인 시만 표시
+    const _cartRefSec = document.getElementById('cartReferralSection');
+    const _cartMileSec = document.getElementById('cartMileageSection');
+    const _isLoggedIn = typeof currentUser !== 'undefined' && currentUser;
+    if (_cartRefSec) _cartRefSec.style.display = _isLoggedIn ? 'block' : 'none';
+    if (_cartMileSec) _cartMileSec.style.display = _isLoggedIn ? 'block' : 'none';
+
+    // 장바구니 마일리지 한도 업데이트
+    if (_isLoggedIn) {
+        if (window._cartMileageLoaded && window.updateCartMileageLimit) window.updateCartMileageLimit();
+        else if (window.loadCartMileage) window.loadCartMileage();
+    }
 }
 
 // ============================================================
@@ -1931,12 +1957,18 @@ window.validateReferrer = async function() {
         window.verifiedReferrerId = data.id;
         window.verifiedReferrerEmail = email;
         if (notice) notice.style.display = 'block';
+        // 장바구니 추천인 필드 동기화
+        const cartRef = document.getElementById('cartReferrerEmail');
+        const cartStatus = document.getElementById('cartReferrerStatus');
+        if (cartRef) cartRef.value = email;
+        if (cartStatus) { cartStatus.innerHTML = '✅ ' + window.t('referral_verified', '추천인이 확인되었습니다!') + ' (-5%)'; cartStatus.style.color = '#16a34a'; }
     } else {
         if (status) { status.innerHTML = '❌ ' + window.t('referral_not_found', '존재하지 않는 이메일입니다.'); status.style.color = '#dc2626'; }
         window.verifiedReferrerId = null;
         window.verifiedReferrerEmail = null;
         if (notice) notice.style.display = 'none';
     }
+    renderCart();
 };
 
 // ============================================================
@@ -3119,5 +3151,136 @@ window.applyMaxMileage = function() {
         const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
         input.value = (window.mileageLimitMax || 0) * mileRate;
         window.calcMileageLimit(input);
+    }
+};
+
+// ============================================================
+// [장바구니] 추천인 검증 (장바구니 전용)
+// ============================================================
+window.validateCartReferrer = async function() {
+    const emailInput = document.getElementById('cartReferrerEmail');
+    const status = document.getElementById('cartReferrerStatus');
+    const email = (emailInput ? emailInput.value.trim() : '');
+
+    if (!email) {
+        window.verifiedReferrerId = null;
+        window.verifiedReferrerEmail = null;
+        if (status) status.innerHTML = '';
+        renderCart();
+        return;
+    }
+
+    if (currentUser && currentUser.email === email) {
+        if (status) { status.innerHTML = '❌ ' + window.t('referral_self_error', '자기 자신은 추천인으로 등록할 수 없습니다.'); status.style.color = '#dc2626'; }
+        window.verifiedReferrerId = null;
+        window.verifiedReferrerEmail = null;
+        return;
+    }
+
+    if (status) { status.innerHTML = '⏳ ...'; status.style.color = '#666'; }
+
+    const { data } = await sb.from('profiles').select('id, email').eq('email', email).maybeSingle();
+    if (data) {
+        if (status) { status.innerHTML = '✅ ' + window.t('referral_verified', '추천인이 확인되었습니다!') + ' (-5%)'; status.style.color = '#16a34a'; }
+        window.verifiedReferrerId = data.id;
+        window.verifiedReferrerEmail = email;
+        // 배송정보 모달의 추천인 필드도 동기화
+        const refInput = document.getElementById('inputReferrerEmail');
+        if (refInput) refInput.value = email;
+    } else {
+        if (status) { status.innerHTML = '❌ ' + window.t('referral_not_found', '존재하지 않는 이메일입니다.'); status.style.color = '#dc2626'; }
+        window.verifiedReferrerId = null;
+        window.verifiedReferrerEmail = null;
+    }
+    renderCart();
+};
+
+// ============================================================
+// [장바구니] 마일리지 로드 & 계산
+// ============================================================
+window._cartMileageLoaded = false;
+
+window.loadCartMileage = async function() {
+    if (!currentUser) {
+        const sec = document.getElementById('cartMileageSection');
+        if (sec) sec.style.display = 'none';
+        return;
+    }
+    try {
+        const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
+        const myMileage = profile ? (profile.mileage || 0) : 0;
+        window._cartUserMileage = myMileage;
+
+        const elOwn = document.getElementById('cartOwnMileage');
+        if (elOwn) elOwn.innerText = formatCurrency(myMileage).replace(/[원¥$]/g, '').trim() + ' P';
+
+        window._cartMileageLoaded = true;
+        window.updateCartMileageLimit();
+    } catch(e) { console.error(e); }
+};
+
+window.updateCartMileageLimit = function() {
+    const myMileage = window._cartUserMileage || 0;
+    const cartTotalKRW = calculateCartTotalKRW();
+
+    // 할인 적용 후 금액 계산
+    const gradeDiscount = Math.floor(cartTotalKRW * currentUserDiscountRate);
+    const referralDiscount = window.verifiedReferrerId ? Math.floor(cartTotalKRW * 0.05) : 0;
+    const afterDiscount = cartTotalKRW - gradeDiscount - referralDiscount;
+    const fivePercent = Math.floor(afterDiscount * 0.05);
+    const realLimit = Math.min(myMileage, fivePercent);
+
+    window._cartMileageLimitMax = realLimit;
+
+    const limitEl = document.getElementById('cartMileageLimit');
+    if (limitEl) limitEl.innerText = formatCurrency(realLimit).replace(/[원¥$]/g, '').trim() + ' P';
+
+    const mileInput = document.getElementById('cartUseMileage');
+    if (mileInput) {
+        mileInput.placeholder = `${window.t('label_max', 'Max')} ${formatCurrency(realLimit).replace(/[원¥$]/g, '').trim()}`;
+        const curVal = parseFloat(mileInput.value) || 0;
+        if (curVal > realLimit) mileInput.value = realLimit > 0 ? realLimit : '';
+    }
+    window.updateCartFinalTotal();
+};
+
+window.calcCartMileage = function(input) {
+    let val = parseFloat(input.value) || 0;
+    const limitKRW = window._cartMileageLimitMax || 0;
+    if (val > limitKRW) {
+        showToast(window.t('msg_mileage_limit', 'Mileage can be used up to 5% of purchase amount.'), 'warn');
+        val = limitKRW;
+        input.value = val;
+    }
+    window.updateCartFinalTotal();
+};
+
+window.applyCartMaxMileage = function() {
+    const input = document.getElementById('cartUseMileage');
+    if (input) {
+        input.value = window._cartMileageLimitMax || 0;
+        window.updateCartFinalTotal();
+    }
+};
+
+window.updateCartFinalTotal = function() {
+    const cartTotalKRW = calculateCartTotalKRW();
+    const gradeDiscount = Math.floor(cartTotalKRW * currentUserDiscountRate);
+    const referralDiscount = window.verifiedReferrerId ? Math.floor(cartTotalKRW * 0.05) : 0;
+    const afterDiscount = cartTotalKRW - gradeDiscount - referralDiscount;
+
+    const mileInput = document.getElementById('cartUseMileage');
+    const usedMileage = mileInput ? (parseInt(mileInput.value) || 0) : 0;
+    const finalTotal = afterDiscount - usedMileage;
+
+    const finalRow = document.getElementById('cartFinalRow');
+    const finalEl = document.getElementById('cartFinalTotal');
+    if (finalRow && finalEl) {
+        if (usedMileage > 0) {
+            finalRow.style.display = 'flex';
+            finalEl.innerText = formatCurrency(finalTotal);
+        } else {
+            finalRow.style.display = 'none';
+        }
     }
 };

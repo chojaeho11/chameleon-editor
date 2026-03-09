@@ -3559,10 +3559,46 @@ async function handleSubReturn() {
                         ⚠️ <span data-i18n="msg_min_order_notice">최소 주문금액 10,000원이 적용되었습니다.</span>
                     </div>
 
-                    <button id="btnGoCheckout" class="btn-round primary" style="margin-top:0; width:100%; height: 50px; font-size: 16px;">
+                    <!-- 추천인 등록 (장바구니) -->
+                    <div id="cartReferralSection" style="margin-top:15px; background:linear-gradient(135deg,#ede9fe,#e0e7ff); padding:15px; border-radius:10px; border:1px solid #a78bfa;">
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                            <span style="font-size:18px;">🎁</span>
+                            <b style="color:#6d28d9; font-size:14px;" data-i18n="referral_title">추천인 코드</b>
+                            <span style="font-size:11px; color:#7c3aed;">(5% <span data-i18n="label_grade_discount">할인</span>)</span>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <input id="cartReferrerEmail" class="ai-input-pretty" type="email" placeholder="추천인 이메일 입력" data-i18n-placeholder="referral_placeholder" style="flex:1; margin:0; height:38px; font-size:13px;">
+                            <button class="btn-round" type="button" onclick="window.validateCartReferrer()" style="width:70px; height:38px; background:#7c3aed; color:white; border:none; justify-content:center; font-size:12px;" data-i18n="referral_verify">확인</button>
+                        </div>
+                        <div id="cartReferrerStatus" style="margin-top:6px; font-size:12px;"></div>
+                    </div>
+
+                    <!-- 마일리지 사용 (장바구니) -->
+                    <div id="cartMileageSection" style="margin-top:10px; background:#f0f9ff; padding:15px; border-radius:10px; border:1px solid #bae6fd;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="font-weight:bold; color:#0369a1; font-size:14px;" data-i18n="label_mileage_use">Ⓜ️ 마일리지 사용</span>
+                            <span style="font-size:12px; color:#64748b;"><span data-i18n="label_mileage_owned">보유:</span> <b id="cartOwnMileage">0 P</b></span>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="number" id="cartUseMileage" class="ai-input-pretty" placeholder="0" style="margin:0; height:38px; text-align:right; font-weight:bold; color:#0369a1; font-size:13px;" oninput="window.calcCartMileage(this)">
+                            <button class="btn-round" onclick="window.applyCartMaxMileage()" style="width:55px; height:38px; font-size:11px; background:#fff; border:1px solid #cbd5e1; color:#333; justify-content:center;" data-i18n="btn_max">최대</button>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:11px;">
+                            <span style="color:#ef4444;" data-i18n="msg_mileage_5pct">* 결제금액의 5%까지만 사용 가능</span>
+                            <span style="color:#0369a1;"><span data-i18n="label_available_limit">한도:</span> <b id="cartMileageLimit">0 P</b></span>
+                        </div>
+                    </div>
+
+                    <!-- 마일리지 적용 후 합계 -->
+                    <div id="cartFinalRow" style="display:none; margin-top:10px; display:flex; justify-content:space-between; font-weight:bold; font-size:18px; color:#6366f1; padding:0 5px;">
+                        <span data-i18n="label_final_pay_amount">최종 결제 금액</span>
+                        <span id="cartFinalTotal">0원</span>
+                    </div>
+
+                    <button id="btnGoCheckout" class="btn-round primary" style="margin-top:15px; width:100%; height: 50px; font-size: 16px;">
                         💳 <span data-i18n="btn_do_checkout">결제하기</span>
                     </button>
-                    
+
                     <button id="btnPrintQuote" class="btn-round btn-secondary" style="margin-top:10px; width:100%;">
                         <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_print_quote">견적서 출력</span>
                     </button>
