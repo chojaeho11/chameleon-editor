@@ -211,10 +211,12 @@ export async function initOrderSystem() {
     
     window.excludedCategoryCodes = new Set();
     try {
-        const { data: topCats } = await sb.from('admin_top_categories').select('code').eq('is_excluded', true);
+        const _sb = sb || window.sb;
+        if (!_sb) throw new Error('DB not ready');
+        const { data: topCats } = await _sb.from('admin_top_categories').select('code').eq('is_excluded', true);
         if (topCats && topCats.length > 0) {
             const topCodes = topCats.map(c => c.code);
-            const { data: subCats } = await sb.from('admin_categories').select('code').in('top_category_code', topCodes);
+            const { data: subCats } = await _sb.from('admin_categories').select('code').in('top_category_code', topCodes);
             
             if (subCats) {
                 subCats.forEach(sc => window.excludedCategoryCodes.add(sc.code));

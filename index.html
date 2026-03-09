@@ -423,7 +423,7 @@ window.loadEditorLibraries = function() {
 </script>
 </head>
 <body>
-<script src="toast.js?v=123"></script>
+<script src="toast.js?v=125"></script>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 <script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
 
@@ -4321,26 +4321,26 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 <script type="module" src="./config.js?v=124"></script>
-<script type="module" src="./canvas-core.js?v=123"></script>
-<script src="./wall-3d-preview.js?v=123" defer></script>
-<script src="./wall-3d-walls.js?v=123" defer></script>
-<script type="module" src="./canvas-size.js?v=123"></script>
-<script type="module" src="./canvas-guides.js?v=123"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=123"></script>
-<script type="module" src="./canvas-objects.js?v=123"></script>
-<script type="module" src="./canvas-image.js?v=123"></script>
-<script type="module" src="./canvas-template.js?v=123"></script> 
+<script type="module" src="./canvas-core.js?v=125"></script>
+<script src="./wall-3d-preview.js?v=125" defer></script>
+<script src="./wall-3d-walls.js?v=125" defer></script>
+<script type="module" src="./canvas-size.js?v=125"></script>
+<script type="module" src="./canvas-guides.js?v=125"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=125"></script>
+<script type="module" src="./canvas-objects.js?v=125"></script>
+<script type="module" src="./canvas-image.js?v=125"></script>
+<script type="module" src="./canvas-template.js?v=125"></script>
 <script type="module" src="./canvas-ai.js?v=125"></script>
-<script type="module" src="./canvas-retouch.js?v=123"></script>
-<script type="module" src="./canvas-utils.js?v=123"></script>
-<script type="module" src="./shortcuts.js?v=123"></script>
-<script type="module" src="./context-menu.js?v=123"></script>
-<script type="module" src="./export.js?v=123"></script>
-<script type="module" src="./order.js?v=123"></script>
-<script type="module" src="./login.js?v=123"></script>
-<script type="module" src="./my-design.js?v=123"></script>
-<script type="module" src="./ppt-mode.js?v=123"></script>
-<script type="module" src="./main.js?v=129"></script>
+<script type="module" src="./canvas-retouch.js?v=125"></script>
+<script type="module" src="./canvas-utils.js?v=125"></script>
+<script type="module" src="./shortcuts.js?v=125"></script>
+<script type="module" src="./context-menu.js?v=125"></script>
+<script type="module" src="./export.js?v=125"></script>
+<script type="module" src="./order.js?v=125"></script>
+<script type="module" src="./login.js?v=125"></script>
+<script type="module" src="./my-design.js?v=125"></script>
+<script type="module" src="./ppt-mode.js?v=125"></script>
+<script type="module" src="./main.js?v=130"></script>
 
 <script type="module">
     import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js";
@@ -5214,10 +5214,10 @@ window.filterFxCards = function(cat, btn) {
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=123 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=123';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=123'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=123';
+    // ★ 여기 파일명 뒤에 ?v=125 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=125';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=125'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=125';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=124';
 
     // -----------------------------------------------------------
@@ -5697,6 +5697,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                 document.getElementById("startScreen").style.display = "none";
                 document.getElementById("mainEditor").style.display = "flex";
                 document.body.classList.add('editor-active');
+                window.history.pushState({ type: 'editor' }, '');
 
                 if (window.restoreDesignFromData) window.restoreDesignFromData(data);
             } catch (e) {
@@ -6538,24 +6539,30 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
         });
     }
 
+    // ★ 에디터 진입 시 beforeunload + 새로고침 방지
+    window.addEventListener('beforeunload', function(e) {
+        if (document.body.classList.contains('editor-active')) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
     window.addEventListener('popstate', function(event) {
-        // 모바일: 에디터가 열려있으면 뒤로가기로 나가지 않도록 차단
-        if (window.innerWidth <= 768) {
-            var ss = document.getElementById('startScreen');
-            var isEditorOpen = ss && window.getComputedStyle(ss).display === 'none';
-            if (isEditorOpen) {
-                // 1) subPanel 열려있으면 닫기
-                var sp = document.getElementById('subPanel');
-                if (sp && sp.style.display !== 'none' && sp.style.display !== '') {
-                    sp.style.display = 'none';
-                    sp.style.transform = '';
-                    document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
-                    document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
-                }
-                // 2) 에디터 상태 재삽입 (뒤로가기로 빠져나가지 않게)
-                window.history.pushState({ type: 'editor' }, '');
-                return;
+        // 에디터가 열려있으면 뒤로가기/새로고침으로 나가지 않도록 차단 (PC+모바일 모두)
+        var ss = document.getElementById('startScreen');
+        var isEditorOpen = ss && window.getComputedStyle(ss).display === 'none';
+        if (isEditorOpen || document.body.classList.contains('editor-active')) {
+            // subPanel 열려있으면 닫기
+            var sp = document.getElementById('subPanel');
+            if (sp && sp.style.display !== 'none' && sp.style.display !== '') {
+                sp.style.display = 'none';
+                sp.style.transform = '';
+                document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
+                document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
             }
+            // 에디터 상태 재삽입 (뒤로가기로 빠져나가지 않게)
+            window.history.pushState({ type: 'editor' }, '');
+            return;
         }
 
         var state = event.state;
@@ -7567,7 +7574,7 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=123');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=125');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
@@ -7634,7 +7641,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=123');
+                    const m = await import('./order.js?v=125');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -7704,7 +7711,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=123').then(m => {
+            import('./order.js?v=125').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -8196,7 +8203,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=123').then(m => {
+        import('./order.js?v=125').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -8532,7 +8539,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=123');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=125');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -8600,7 +8607,8 @@ if (w >= 20 && h >= 20) {
         
         const tplTabs = document.querySelector('.template-tabs');
         if(tplTabs) tplTabs.style.display = 'flex';
-        document.body.classList.add('editor-active'); 
+        document.body.classList.add('editor-active');
+        window.history.pushState({ type: 'editor' }, '');
 
         // 사이드바: PC에서 기본으로 요소 패널 + 팔레트 열기
         if (window.innerWidth > 768) {
@@ -8739,7 +8747,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=123');
+                await import('./canvas-objects.js?v=125');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -12136,7 +12144,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=123').then(function(mod) {
+            import('./order.js?v=125').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -13124,8 +13132,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=123"></script>
-<script src="./npc-wizard.js?v=123"></script>
+<script src="./gif-maker.js?v=125"></script>
+<script src="./npc-wizard.js?v=125"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">
