@@ -166,7 +166,7 @@ export function initAdvisorPanel() {
     if (chamTrigger) chamTrigger.style.display = 'none';
     if (chamWindow) chamWindow.style.display = 'none';
 
-    ['btnAiAdvisor', 'btnAiAdvisor2', 'btnKapuGuide'].forEach(id => {
+    ['btnAiAdvisor', 'btnAiAdvisor2', 'btnChatbotOpen'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
             btn.addEventListener('click', () => {

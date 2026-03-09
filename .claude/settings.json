@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(node --check:*)",
-      "Read(//c/Users/**)"
+      "Read(//c/Users/**)",
+      "Bash(nslookup chameleon.design)",
+      "Bash(dig chameleon.design +short)",
+      "Bash(ipconfig //flushdns)",
+      "Read(//c/Users/win 10/Desktop/작업/$APPDATA/**)"
     ]
   }
 }

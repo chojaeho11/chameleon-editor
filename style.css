@@ -1077,7 +1077,8 @@ button, input, textarea, select { font-family: inherit; }
     .foot-menu ul { flex-wrap: wrap; gap: 10px; }
 
     
-    .hero-promo-box { margin: 0 12px 12px; padding: 24px 16px 20px; border-radius: 16px; }
+    .hero-promo-box { margin: 0 auto 12px; padding: 24px 16px 20px; border-radius: 16px; width: calc(100% - 24px); box-sizing: border-box; }
+    #subscriptionSection { width: calc(100% - 24px) !important; padding: 0 !important; margin: 12px auto 0 !important; box-sizing: border-box; }
     .hero-section { display: block !important; padding: 20px 15px 15px !important; margin-bottom: 0 !important; }
     .hero-title { font-size: 28px !important; word-break: keep-all; }
     .hero-title span { font-size: 20px !important; }
@@ -1086,7 +1087,13 @@ button, input, textarea, select { font-family: inherit; }
     .hero-signup-btn { font-size: 14px !important; padding: 10px 24px !important; }
     .hero-signup-desc { font-size: 11px !important; }
     .quick-menu-track { grid-template-columns: repeat(2, 1fr) !important; }
-    
+
+    /* 온라인·디지털 & 디자인사이즈 카드: 모바일 2칸 고정 */
+    .dsm-section-box > div {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
     /* [수정됨] 템플릿 그리드: 모바일에서 2칸으로 고정 */
     .template-grid-start { 
         display: grid !important; 
@@ -2322,18 +2329,20 @@ body {
 
 @media (max-width: 768px) {
     .hotdeal-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
     }
     .hotdeal-img-box {
-        height: 120px;
+        height: auto;
+        aspect-ratio: 1;
     }
     .hotdeal-info {
-        padding: 8px 10px;
+        padding: 4px 6px 2px;
     }
-    .hotdeal-title { font-size: 12px; }
-    .hotdeal-meta { font-size: 10px; margin-bottom: 4px; }
-    .hotdeal-price { font-size: 13px; }
+    .hotdeal-title { font-size: 11px; margin-bottom: 2px; }
+    .hotdeal-meta { font-size: 9px; margin-bottom: 1px; }
+    .hotdeal-price { font-size: 12px; }
+    .hotdeal-card { border-radius: 8px; }
     .hotdeal-wrapper { padding: 0 12px; margin: 20px auto; }
     .hotdeal-header h2 { font-size: 18px; }
     .hotdeal-header p { font-size: 12px; }
@@ -2359,6 +2368,7 @@ body {
 .hotdeal-img-box {
     width: 100%;
     height: 180px;
+    aspect-ratio: 1;
     background: #f8fafc;
     overflow: hidden;
     position: relative;
@@ -2376,7 +2386,7 @@ body {
 }
 
 .hotdeal-info {
-    padding: 15px;
+    padding: 8px 10px 6px;
 }
 
 .hotdeal-title {
@@ -2755,8 +2765,8 @@ body {
 
     /* 여백 및 크기 초기화 */
     padding: 15px 12px 20px;
-    margin: 0 auto;
-    width: calc(100% - 16px); /* 양쪽 8px 여백 */
+    margin: 12px auto;
+    width: calc(100% - 24px); /* 양쪽 12px 여백 — 다른 섹션과 통일 */
     border-radius: 16px;
 
     /* 위치 강제 초기화 (PC 설정 무시) */
