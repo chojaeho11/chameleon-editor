@@ -2349,6 +2349,9 @@ async function handleSubReturn() {
         <button onclick="window.gcShareCard()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
             <i class="fa-solid fa-share-nodes"></i> <span data-i18n="gc_share">공유하기</span>
         </button>
+        <button onclick="window.gcDownloadGif()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-film"></i> GIF
+        </button>
     </div>
 
     <!-- 가벽 설정 모달 오버레이 -->
@@ -2846,9 +2849,12 @@ async function handleSubReturn() {
                 <div class="sub-panel-header"><i class="fa-solid fa-wand-magic-sparkles" style="color:#14b8a6; margin-right:6px;"></i>애니메이션 효과</div>
                 <p style="font-size:11px; color:#94a3b8; margin-bottom:12px;">효과를 선택하면 캔버스에 추가됩니다. 위치와 크기를 자유롭게 조절하세요.</p>
                 <div id="gcEffectGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:16px; max-height:calc(100vh - 280px); overflow-y:auto;"></div>
-                <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; gap:8px;">
-                    <button onclick="window.gcPreview()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-eye" style="margin-right:4px;"></i>미리보기</button>
-                    <button onclick="window.gcShareCard()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#7c3aed; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-share-nodes" style="margin-right:4px;"></i>공유하기</button>
+                <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="window.gcPreview()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-eye" style="margin-right:4px;"></i>미리보기</button>
+                        <button onclick="window.gcShareCard()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#7c3aed; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-share-nodes" style="margin-right:4px;"></i>공유하기</button>
+                    </div>
+                    <button onclick="window.gcDownloadGif()" style="width:100%; padding:10px; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-film" style="margin-right:4px;"></i>움짤(GIF) 저장</button>
                 </div>
             </div>
             <div id="sub-page" class="sub-content">

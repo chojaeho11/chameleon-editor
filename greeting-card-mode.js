@@ -98,6 +98,7 @@ export function initGreetingCardMode() {
     window.gcAddSticker = addAnimSticker;
     window.gcShowStickerPanel = showStickerPanel;
     window.gcActivatePanel = activateStickerPanel;
+    window.gcDownloadGif = downloadCardAsGif;
 
     setupPlaceholderUpload();
 
@@ -1416,6 +1417,141 @@ function _gcCopyShareUrl() {
         const msg = document.getElementById('gcShareCopiedMsg');
         if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2000); }
     });
+}
+
+/* ═══════════════════════════════════════════
+   9. DOWNLOAD AS ANIMATED GIF
+   ═══════════════════════════════════════════ */
+function _loadScript(src) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+async function downloadCardAsGif() {
+    // Show progress overlay
+    let overlay = document.getElementById('gcGifOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'gcGifOverlay';
+        overlay.style.cssText = 'position:fixed; inset:0; z-index:50000; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:sans-serif;';
+        overlay.innerHTML = `
+            <div style="background:#1e293b; border-radius:20px; padding:30px 40px; text-align:center; max-width:320px;">
+                <div id="gcGifSpinner" style="font-size:36px; margin-bottom:16px;">🎬</div>
+                <div id="gcGifStatus" style="font-size:15px; font-weight:700; margin-bottom:8px;">GIF 생성 중...</div>
+                <div id="gcGifProgress" style="font-size:12px; color:#94a3b8;">라이브러리 로딩 중...</div>
+                <div style="margin-top:16px; width:100%; height:6px; background:#334155; border-radius:3px; overflow:hidden;">
+                    <div id="gcGifBar" style="height:100%; background:linear-gradient(90deg,#14b8a6,#06b6d4); width:0%; transition:width 0.3s;"></div>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    const statusEl = document.getElementById('gcGifStatus');
+    const progressEl = document.getElementById('gcGifProgress');
+    const barEl = document.getElementById('gcGifBar');
+    const setProgress = (pct, msg) => { if (barEl) barEl.style.width = pct + '%'; if (progressEl) progressEl.textContent = msg; };
+
+    try {
+        // 1. Load libraries
+        setProgress(5, '라이브러리 로딩 중...');
+        await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+        await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js');
+
+        // 2. Capture card data
+        setProgress(10, '카드 캡처 중...');
+        const data = _captureCardData();
+        if (!data || !data.imageUrl) throw new Error('카드 캡처 실패');
+
+        // 3. Create hidden render container
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed; left:-9999px; top:0; z-index:-1;';
+        const frame = document.createElement('div');
+        frame.style.cssText = 'position:relative; width:360px; height:640px; overflow:hidden; background:#000;';
+        const imgEl = document.createElement('img');
+        imgEl.src = data.imageUrl;
+        imgEl.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block;';
+        frame.appendChild(imgEl);
+
+        // Add animation overlays
+        const animLayer = document.createElement('div');
+        animLayer.style.cssText = 'position:absolute; inset:0; pointer-events:none; overflow:hidden;';
+        _renderPreviewAnimations(animLayer, data.stickers, data.category);
+        frame.appendChild(animLayer);
+        container.appendChild(frame);
+        document.body.appendChild(container);
+
+        // Wait for image + animations to initialize
+        await new Promise(r => { imgEl.onload = r; setTimeout(r, 500); });
+        await new Promise(r => setTimeout(r, 800));
+
+        setProgress(15, '프레임 캡처 시작...');
+        if (statusEl) statusEl.textContent = '프레임 캡처 중...';
+
+        // 4. Create GIF encoder
+        const gif = new GIF({
+            workers: 2,
+            quality: 8,
+            width: 360,
+            height: 640,
+            workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+        });
+
+        // 5. Capture frames (25 frames, ~2.5 seconds of animation)
+        const TOTAL_FRAMES = 25;
+        const FRAME_DELAY = 100; // ms between frames
+        for (let i = 0; i < TOTAL_FRAMES; i++) {
+            const pct = 15 + Math.round((i / TOTAL_FRAMES) * 65);
+            setProgress(pct, `프레임 ${i + 1}/${TOTAL_FRAMES} 캡처 중...`);
+            const cvs = await html2canvas(frame, {
+                width: 360,
+                height: 640,
+                scale: 1,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+            });
+            gif.addFrame(cvs, { delay: FRAME_DELAY, copy: true });
+            await new Promise(r => setTimeout(r, FRAME_DELAY));
+        }
+
+        // 6. Render GIF
+        setProgress(80, 'GIF 인코딩 중...');
+        if (statusEl) statusEl.textContent = 'GIF 생성 중...';
+
+        const blob = await new Promise((resolve, reject) => {
+            gif.on('finished', resolve);
+            gif.on('error', reject);
+            gif.render();
+        });
+
+        // 7. Download
+        setProgress(100, '다운로드 중...');
+        if (statusEl) statusEl.textContent = '완료!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `greeting-card-${Date.now()}.gif`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+        // Cleanup
+        container.remove();
+        setTimeout(() => { overlay.style.display = 'none'; }, 1500);
+
+    } catch (e) {
+        console.error('GIF generation error:', e);
+        if (statusEl) statusEl.textContent = '오류 발생';
+        if (progressEl) progressEl.textContent = e.message;
+        setTimeout(() => { overlay.style.display = 'none'; }, 3000);
+    }
 }
 
 /* ═══ Export animation generators for gc.html (also used in preview) ═══ */
