@@ -13,9 +13,8 @@ export function initCanvas() {
     const stageElem = document.querySelector(".stage");
     const canvasElem = document.getElementById("designCanvas");
 
-    console.log('[canvas-core] initCanvas called', { stageElem: !!stageElem, canvasElem: !!canvasElem, fabric: typeof fabric });
-    if (!canvasElem || !stageElem) { console.error('[canvas-core] DOM not ready!'); return; }
-    if (typeof fabric === 'undefined') { console.error('[canvas-core] fabric not loaded!'); return; }
+    if (!canvasElem || !stageElem) return;
+    if (typeof fabric === 'undefined') return;
 
     // Fabric.js 전역 객체 설정
     fabric.Object.prototype.set({
@@ -59,7 +58,6 @@ export function initCanvas() {
     });
 
     window.canvas = canvas;
-    console.log('[canvas-core] canvas created:', !!canvas, canvas);
     // ★ [핵심 패치] 페이지 이동/저장 시 커스텀 속성(배경, 잠금 등) 유지하기
     fabric.Object.prototype.toObject = (function(toObject) {
         return function(propertiesToInclude) {
