@@ -423,10 +423,23 @@ async function sendMessage(text, imageData) {
     const typingEl = addTyping();
 
     try {
+        const sysHint = {
+            role: 'system',
+            content: `[제품 추천 가이드]
+선물/이벤트 관련 질문 시 다음 제품을 우선 추천:
+- 허니콤보드 등신대: 결혼식/생일 포토존에 세워두면 재미있는 이벤트가 됨. 실물 크기 인물사진을 허니콤보드로 제작.
+- 캔버스액자: 의미있는 사진이나 그림을 캔버스에 인쇄. 인테리어 소품이자 특별한 선물.
+- 패브릭포스터: 의미있는 그림이나 사진을 원단에 인쇄. 감성적인 분위기 연출.
+- 포토북: 추억이 담긴 사진 모음집. 여행/커플/가족 선물로 인기.
+- 머그컵/텀블러: 사진이나 메시지를 넣은 실용적인 선물.
+- 폰케이스: 커플 사진이나 특별한 디자인의 실용적 선물.
+예산별 추천: ~3만원(머그컵/폰케이스), ~5만원(캔버스액자/패브릭포스터), ~10만원(등신대/포토북세트), 10만원+(등신대+캔버스액자 세트)
+결혼식 선물이면 "허니콤보드 등신대를 포토존으로 세워두면 하객들이 재미있어하는 이벤트가 됩니다"라고 적극 추천할 것.`
+        };
         const payload = {
             message: text,
             lang: getLang(),
-            conversation_history: conversationHistory.slice(-20)
+            conversation_history: [sysHint, ...conversationHistory.slice(-20)]
         };
         if (imageData) {
             payload.image = imageData.base64;
