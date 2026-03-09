@@ -54,6 +54,7 @@ function hideFloatingToolbar() {
 }
 
 function hookSelectionEvents() {
+    const canvas = window.canvas; if (!canvas) return;
     const show = () => requestAnimationFrame(positionFloatingToolbar);
     canvas.on('selection:created', show);
     canvas.on('selection:updated', show);

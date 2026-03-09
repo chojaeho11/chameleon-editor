@@ -4,6 +4,7 @@ import { canvas } from "./canvas-core.js?v=125";
 window.isPanningMode = false;
 
 export function initZoomPan() {
+    const canvas = window.canvas; if (!canvas) { console.warn('ZoomPan: canvas not ready'); return; }
     // 1. 줌 인/아웃 버튼 로직
     const btnZoomIn = document.getElementById("btnZoomIn");
     const btnZoomOut = document.getElementById("btnZoomOut");

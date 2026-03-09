@@ -1233,6 +1233,7 @@ export function addToCenter(obj) {
 window.addToCenter = addToCenter;
 
 function initSelectionEffects() {
+    const canvas = window.canvas; if (!canvas) return;
     canvas.on("selection:created", syncSelectionUI);
     canvas.on("selection:updated", syncSelectionUI);
     canvas.on("selection:cleared", () => {

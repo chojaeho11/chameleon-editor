@@ -193,6 +193,7 @@ function renderSizeButtons(containerId, list) {
 // ★ [핵심] 대지 생성 함수 (기존 로직 유지)
 // =================================================================
 export function applySize(w, h, name, mode, action) {
+    const canvas = window.canvas; if (!canvas) { console.error('applySize: canvas not ready'); return; }
     setBaseSize(w, h);
     setGlobalMode(mode);
     setGlobalSizeName(name);
@@ -201,7 +202,7 @@ export function applySize(w, h, name, mode, action) {
     if (action === 'resize') {
         objectsToKeep = canvas.getObjects().filter(o => !o.isBoard);
         objectsToKeep.forEach(o => canvas.remove(o));
-    } 
+    }
 
     canvas.clear(); 
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);

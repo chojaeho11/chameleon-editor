@@ -192,9 +192,12 @@ export function initRetouchTools() {
     });
 
     // 캔버스 selection 이벤트
-    canvas.on('selection:created', onSelectionChange);
-    canvas.on('selection:updated', onSelectionChange);
-    canvas.on('selection:cleared', onSelectionClear);
+    const _cv = window.canvas;
+    if (_cv) {
+        _cv.on('selection:created', onSelectionChange);
+        _cv.on('selection:updated', onSelectionChange);
+        _cv.on('selection:cleared', onSelectionClear);
+    }
 
     // 버튼 이벤트
     document.getElementById('btnRetouchApply')?.addEventListener('click', () => applyFiltersHighQuality());
