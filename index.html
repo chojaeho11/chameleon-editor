@@ -532,11 +532,6 @@ window.loadEditorLibraries = function() {
 <!-- ★ 홈 섹션 순서 재배치 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 구독 프로모션에서 홈으로 이동 시 구독 섹션으로 스크롤
-    if(new URLSearchParams(window.location.search).get('scroll')==='subscription'){
-        history.replaceState(null,'','/');
-        setTimeout(function(){var el=document.getElementById('subscriptionSection');if(el)el.scrollIntoView({behavior:'smooth'});},800);
-    }
     var ss = document.getElementById('startScreen');
     if (!ss) return;
     var hero = ss.querySelector('.hero-section');
@@ -1289,6 +1284,49 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
         <p style="margin:0 0 24px; color:#64748b; font-size:14px; line-height:1.6;" data-i18n="sub_premium_msg">PRO 구독으로 모든 프리미엄 템플릿을 자유롭게 사용하세요</p>
         <button onclick="window.startSubscription('monthly')" style="width:100%; padding:14px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px;" data-i18n="sub_btn">구독 시작하기</button>
         <button onclick="document.getElementById('subUpsellModal').style.display='none'" style="width:100%; padding:12px; background:#f1f5f9; color:#64748b; border:none; border-radius:10px; font-size:14px; cursor:pointer;" data-i18n="btn_close">닫기</button>
+    </div>
+</div>
+
+<!-- 구독 팝업 모달 (상세페이지 프로모션 박스 클릭 시) -->
+<div id="subPopupModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:100003; justify-content:center; align-items:center; padding:16px;">
+    <div style="position:relative; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; border-radius:20px; animation:scSlideUp 0.3s ease;">
+        <button onclick="document.getElementById('subPopupModal').style.display='none'" style="position:sticky; top:10px; float:right; margin:10px 10px 0 0; width:36px; height:36px; background:rgba(255,255,255,0.2); backdrop-filter:blur(4px); border:none; border-radius:50%; color:#fff; font-size:18px; cursor:pointer; z-index:2; display:flex; align-items:center; justify-content:center;">✕</button>
+        <div class="sub-hero" style="border-radius:20px; margin:0; padding:36px 24px 32px;">
+            <div class="sub-shimmer"></div>
+            <div style="position:relative; z-index:2;">
+                <div class="sub-badge">🎁 PRO</div>
+                <h2 class="sub-title"><span data-i18n="sub_title">월 5,000원으로 받는 초특급 혜택</span></h2>
+                <div class="promo-discount-row">
+                    <span class="promo-item" style="color:#fbbf24;" data-i18n="promo_big_sub">구독 10%</span>
+                    <span class="promo-plus">+</span>
+                    <span class="promo-item" style="color:#34d399;" data-i18n="promo_big_ref">추천인 10%</span>
+                    <span class="promo-plus">+</span>
+                    <span class="promo-item" style="color:#a5b4fc;" data-i18n="promo_big_mile">마일리지 5%</span>
+                    <span class="promo-eq">=</span>
+                    <span class="promo-total" data-i18n="promo_big_total">최대 25% 즉시할인</span>
+                </div>
+                <div class="sub-cards">
+                    <div class="sub-card" onclick="window.startSubscription('monthly')">
+                        <div class="sub-card-plan" data-i18n="sub_monthly">월간 구독</div>
+                        <div class="sub-card-price" id="subPopupPriceMonthly">₩5,000<small>/월</small></div>
+                        <div class="sub-card-period" data-i18n="sub_monthly_period">매월 자동 결제</div>
+                        <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
+                    </div>
+                    <div class="sub-card popular" onclick="window.startSubscription('annual')">
+                        <div class="sub-card-plan" data-i18n="sub_annual">연간 구독</div>
+                        <div class="sub-card-price" id="subPopupPriceAnnual">₩48,000<small>/년</small></div>
+                        <div class="sub-card-period" data-i18n="sub_annual_period">연 1회 결제</div>
+                        <div class="sub-card-save" data-i18n="sub_save">20% 할인</div>
+                        <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
+                    </div>
+                </div>
+                <div class="sub-features" style="margin-top:20px;">
+                    <div class="sub-feature"><i class="fa-solid fa-crown"></i> <span data-i18n="sub_ft1">프리미엄 템플릿</span></div>
+                    <div class="sub-feature"><i class="fa-solid fa-percent"></i> <span data-i18n="sub_ft2">최대 25% 할인</span></div>
+                    <div class="sub-feature"><i class="fa-solid fa-coins"></i> <span data-i18n="sub_ft3">마일리지 적립</span></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -6896,7 +6934,7 @@ window.showChoiceModal = async function(key) {
                         <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#6366f1;">0</div>
                     </div>
                 </div>
-                <div id="promoDiscountBox" style="margin-top:12px; border-radius:14px; overflow:hidden; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;" onclick="document.getElementById('productDetailModal').style.display='none'; var ss=document.getElementById('subscriptionSection'); if(ss){ss.scrollIntoView({behavior:'smooth'});}else{window.location.href='/?scroll=subscription';}">
+                <div id="promoDiscountBox" style="margin-top:12px; border-radius:14px; overflow:hidden; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;" onclick="document.getElementById('subPopupModal').style.display='flex';">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
                         <span style="background:#f59e0b; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px;">${lang==='ja'?'最大20%OFF':lang==='zh'?'最高20%OFF':lang==='en'?'Up to 20% OFF':'최대 20% 할인'}</span>
                         <span style="font-size:12px; color:#92400e; font-weight:600;">${lang==='ja'?'定期購読+紹介ID+マイレージ':lang==='zh'?'订阅+推荐ID+积分':lang==='en'?'Subscribe+Referral+Mileage':'구독+추천아이디+마일리지'}</span>
