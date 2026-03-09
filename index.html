@@ -553,10 +553,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var popular = document.getElementById('popularSection');
     if (popular && quickMenuWrap) { ss.insertBefore(popular, quickMenuWrap); }
 
-    // 4) AI검색+템플릿 → 인기상품 바로 다음
-    var tplWrap = ss.querySelector('.hero-search-wrap');
-    if (tplWrap && popular) { popular.after(tplWrap); }
-    else if (tplWrap && quickMenuWrap) { ss.insertBefore(tplWrap, quickMenuWrap); }
     // 5) 구독 섹션 → 리뷰 바로 위로 이동
     var subSec = document.getElementById('subscriptionSection');
     var reviewSec = ss.querySelector('.review-section');
@@ -1621,27 +1617,6 @@ async function handleSubReturn() {
 </div>
 
     <!-- 디자인 검색 + 템플릿 갤러리 -->
-    <div class="hero-search-wrap">
-    <div style="display:none; opacity:0;">
-        <input type="text" name="fake_username_prevention" autocomplete="username">
-        <input type="password" name="fake_password_prevention" autocomplete="current-password">
-    </div>
-
-    <input type="search"
-           id="startSearchInput"
-           name="q_search_query_final_v2"
-           class="hero-search-input"
-           data-i18n-placeholder="search_placeholder_start"
-           placeholder=""
-           autocomplete="off"
-           readonly
-           onfocus="this.removeAttribute('readonly');"
-           onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();var _v=this.value.trim();if(_v&amp;&amp;window._startAdvisor){this.value='';this.blur();window._startAdvisor(_v);return false;}}"
-    >
-    <button id="btnStartSearch" class="hero-search-btn">
-        <i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">Search</span>
-    </button>
-</div>
 <div class="pagination-wrapper" style="display:flex; justify-content:center; align-items:center; gap:20px; margin:20px 0 15px 0;">
     <button id="btnTplPrev" class="btn-round" onclick="changeTemplatePage(-1)" style="width:100px; justify-content:center;" disabled>
         <i class="fa-solid fa-chevron-left"></i> <span data-i18n="btn_prev">이전</span>
