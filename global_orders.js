@@ -1212,10 +1212,8 @@ window.adminCancelSelected = async () => {
         });
     }
 
-    let msg = `${ids.length}건의 주문을 취소하시겠습니까?\n`;
-    if (cardCount > 0) msg += `\n💳 카드결제 ${cardCount}건 → 자동 환불 (PG 취소)\n`;
-    if (cashCount > 0) msg += `💰 현금/무통장 ${cashCount}건 → 취소 처리 (별도 환불 필요)\n`;
-    msg += `\n취소된 주문은 '취소됨'으로 표시됩니다.`;
+    let msg = `주문취소를 누르면 카드사에 자동환불을 요청합니다.\n${ids.length}건의 주문을 취소하시겠습니까?`;
+    if (cashCount > 0) msg += `\n\n💰 현금/무통장 ${cashCount}건은 별도 환불이 필요합니다.`;
 
     if (!confirm(msg)) return;
 
