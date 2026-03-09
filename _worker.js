@@ -267,8 +267,8 @@ export default {
                 const { code, redirect_uri } = body;
                 if (!code || !redirect_uri) return new Response(JSON.stringify({ error: 'missing params' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-                const LINE_CHANNEL_ID = '2009335849';
-                const LINE_CHANNEL_SECRET = 'D85996B7E6DF621133C6644C461111C';
+                const LINE_CHANNEL_ID = '2009373397';
+                const LINE_CHANNEL_SECRET = '7785ce20c77d49f90ae6bedded878352';
 
                 // 1. Exchange code for token
                 const tokenRes = await fetch('https://api.line.me/oauth2/v2.1/token', {

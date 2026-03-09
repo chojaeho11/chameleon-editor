@@ -424,7 +424,7 @@ async function handleSocialLogin(provider) {
 // ============================================================
 // LINE 로그인 (수동 OAuth2 → Supabase 자동 가입/로그인)
 // ============================================================
-const LINE_CHANNEL_ID = '2009335849';
+const LINE_CHANNEL_ID = '2009373397';
 const LINE_CALLBACK_PATH = '/line_callback.html';
 
 function handleLineLogin() {
