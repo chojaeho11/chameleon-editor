@@ -114,9 +114,9 @@ function clearChat() {
 }
 
 const WELCOME = {
-    kr: `어떤 제품을 찾으시나요? 🎨\n레퍼런스가 있으시면 이미지나 PDF로 올려주시면 견적을 내어드릴 수 있어요.\n아니면 끝말잇기 게임이나 오늘의 운세를 물어보셔도 좋아요 😄`,
-    ja: `どんな商品をお探しですか？🎨\nリファレンスがあれば、画像やPDFをアップロードしていただくとお見積りいたします。\nしりとりゲームや今日の占いもお気軽にどうぞ 😄`,
-    en: `What product are you looking for? 🎨\nIf you have a reference, upload an image or PDF and we can give you a quote.\nOr feel free to play a word game or ask about today's fortune 😄`,
+    kr: `어떤걸 만들지 고민하셨다면 알려주세요 🎨\n참고할만한 사진이 있으시면 올려주셔도 좋아요.\n"친구 결혼식인데 10만원 정도로 할 수 있는 기분 좋을만한 이벤트를 준비해줘" 라고 얘기하셔도 좋습니다.\n예산에 맞는 멋진 아이템을 추천해드릴게요 😊`,
+    ja: `何をお作りになりたいかお悩みでしたら、お聞かせください 🎨\n参考になる写真があればアップロードしていただいても構いません。\n「友人の結婚式で5万円くらいで素敵なイベントを準備したい」とお話しいただいてもOKです。\nご予算に合った素敵なアイテムをご提案します 😊`,
+    en: `Tell us what you'd like to create 🎨\nFeel free to upload a reference photo if you have one.\nYou can even say "I want to prepare a nice surprise for my friend's wedding with a $100 budget" — we'll recommend the perfect items.\nLet us help you find something amazing within your budget 😊`,
 };
 
 function showWelcomeMessage() {
