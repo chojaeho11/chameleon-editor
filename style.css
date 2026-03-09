@@ -2784,18 +2784,19 @@ body {
 .bouncing-char {
     display: none !important;
 }
-/* 히어로 캐릭터는 항상 표시 */
+/* 히어로 캐릭터는 항상 표시, 타이틀 옆 */
 .hero-mascot {
     display: block !important;
+    width: 140px;
+    height: auto;
     animation: bounceUpDn 3s ease-in-out infinite;
     pointer-events: none;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25));
+    flex-shrink: 0;
 }
 @media (max-width: 768px) {
     .hero-mascot {
-        width: 100px !important;
-        right: 10px !important;
-        bottom: -20px !important;
+        width: 80px !important;
     }
 }
 .quick-title-box {
