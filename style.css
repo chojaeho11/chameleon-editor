@@ -2800,7 +2800,7 @@ body {
 @media (max-width: 768px) {
     .hero-mascot {
         width: 100px !important;
-        right: -30px !important;
+        right: -60px !important;
         bottom: -5px !important;
     }
 }
