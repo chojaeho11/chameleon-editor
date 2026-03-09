@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <style>
         #btnKapuGuide {
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; max-width: 640px; margin: 0 auto 12px auto;
+            width: 100%; max-width: 1100px; margin: 0 auto 12px auto;
             padding: 18px 28px;
             background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7, #ec4899);
             background-size: 300% 300%;
@@ -736,7 +736,8 @@ document.addEventListener('DOMContentLoaded', function() {
             animation: kapuArrowMove 1.2s ease-in-out infinite;
             color: #fff;
             display: inline-flex; align-items: center; justify-content: center;
-            margin-left: -38px;
+            margin-left: 0;
+            flex-shrink: 0;
         }
         @keyframes kapuArrowMove {
             0%,100% { transform: translateX(0); opacity: 0.7; }
@@ -756,8 +757,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 
     <!-- 수동으로 제품 찾기 버튼 -->
-    <div style="text-align:center; margin: 8px auto 14px auto; max-width:1000px; padding:0 15px;">
-        <button onclick="window.openProductPickerModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; font-size:16px; font-weight:800; cursor:pointer; padding:14px 36px; border-radius:50px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 3px 12px rgba(99,102,241,0.35); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 5px 20px rgba(99,102,241,0.45)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 12px rgba(99,102,241,0.35)'">
+    <div style="text-align:center; margin: 8px auto 14px auto; max-width:1100px; padding:0 15px;">
+        <button onclick="window.openProductPickerModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; font-size:16px; font-weight:800; cursor:pointer; padding:16px 36px; border-radius:50px; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; box-shadow:0 3px 12px rgba(99,102,241,0.35); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 5px 20px rgba(99,102,241,0.45)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 12px rgba(99,102,241,0.35)'">
             <i class="fa-solid fa-magnifying-glass" style="font-size:15px;"></i>
             <span data-i18n="btn_manual_search">수동으로 제품 찾기</span>
         </button>
