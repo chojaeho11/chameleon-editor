@@ -113,7 +113,6 @@ button, input, textarea, select { font-family: inherit; }
 .hero-section {
     width: 100%; padding: 50px 20px 30px;
     text-align: center; background: #fff; margin-bottom: 0px;
-    overflow: hidden;
 }
 .hero-title {
     font-size: 64px; font-weight: 900; color: #111;
