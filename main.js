@@ -1304,7 +1304,7 @@ window.submitArtworkUpload = async function() {
         const catNames = {
             ua_paper:  { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター' },
             ua_fabric: { name: '패브릭포스터', name_us: 'Fabric Poster', name_jp: 'ファブリックポスター' },
-            ua_canvas: { name: '캔버스액자', name_us: 'Canvas Frame', name_jp: 'キャンバス額' }
+            ua_canvas: { name: '캔버스액자', name_us: 'Canvas Frame', name_jp: 'キャンバスフレーム' }
         };
         const basePrices = { ua_paper: 10000, ua_fabric: 20000, ua_canvas: 40000 };
 
@@ -1358,7 +1358,7 @@ window._setupArtworkCategories = async function() {
     const subs = [
         { code: 'ua_paper', name: '종이 포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', top_category_code: 'user_artwork', icon: '🖼️', sort_order: 1 },
         { code: 'ua_fabric', name: '패브릭 포스터', name_us: 'Fabric Poster', name_jp: 'ファブリックポスター', top_category_code: 'user_artwork', icon: '🎨', sort_order: 2 },
-        { code: 'ua_canvas', name: '캔버스 액자', name_us: 'Canvas Frame', name_jp: 'キャンバス額', top_category_code: 'user_artwork', icon: '🏛️', sort_order: 3 }
+        { code: 'ua_canvas', name: '캔버스 액자', name_us: 'Canvas Frame', name_jp: 'キャンバスフレーム', top_category_code: 'user_artwork', icon: '🏛️', sort_order: 3 }
     ];
     for (const s of subs) {
         const { data: ex } = await sb.from('admin_categories').select('code').eq('code', s.code);
