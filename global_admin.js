@@ -76,6 +76,7 @@ window.showSection = (secId, navEl) => {
         case 'sec-tasks': if(window.loadDailyTasks) window.loadDailyTasks(); break;
         case 'sec-live-chat': if(window.lcLoadRooms) window.lcLoadRooms(); if(window.lcLoadQuickReplies) window.lcLoadQuickReplies(); break;
         case 'sec-chatbot': if(window.cbShowTab) window.cbShowTab('knowledge'); break;
+        case 'sec-comments': if(window.loadRecentComments) window.loadRecentComments(); break;
     }
 };
 

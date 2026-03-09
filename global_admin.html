@@ -208,6 +208,9 @@
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
 
+            <div class="nav-label">Community</div>
+            <li class="nav-item" onclick="showSection('sec-comments', this)"><i class="fa-solid fa-comments"></i> 최근 댓글</li>
+
             <div class="nav-label">Management</div>
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
             <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
@@ -1604,6 +1607,49 @@
 </div>
 
 
+<!-- ===== 최근 댓글 관리 섹션 ===== -->
+<div id="sec-comments" class="section">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #6366f1; padding-bottom:15px;">
+            <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-comments" style="color:#6366f1;"></i> 최근 댓글 관리
+            </h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <select id="commentCountryFilter" class="input-text" style="width:120px; height:36px;" onchange="loadRecentComments()">
+                    <option value="">전체 국가</option>
+                    <option value="KR">🇰🇷 한국</option>
+                    <option value="JP">🇯🇵 일본</option>
+                    <option value="US">🇺🇸 미국</option>
+                    <option value="CN">🇨🇳 중국</option>
+                    <option value="AR">🇸🇦 아랍</option>
+                    <option value="ES">🇪🇸 스페인</option>
+                    <option value="DE">🇩🇪 독일</option>
+                    <option value="FR">🇫🇷 프랑스</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="loadRecentComments()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteSelectedComments()">선택 삭제</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th width="30"><input type="checkbox" onchange="toggleCommentChecks(this)"></th>
+                    <th width="140">작성일</th>
+                    <th width="60">국가</th>
+                    <th width="120">작성자</th>
+                    <th>댓글 내용</th>
+                    <th width="200">게시글 제목</th>
+                    <th width="70">관리</th>
+                </tr>
+            </thead>
+            <tbody id="commentListBody">
+                <tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">로딩 중...</td></tr>
+            </tbody>
+        </table>
+        <div id="commentPagination" style="display:flex; justify-content:center; gap:8px; margin-top:20px;"></div>
+    </div>
+</div>
+
 <!-- ===== AI 챗봇 학습 관리 섹션 ===== -->
 <div id="sec-chatbot" class="section">
     <div class="card">
@@ -2182,6 +2228,133 @@ async function saveCommonInfo() {
         document.getElementById('commonInfoModal').style.display = 'none';
     }
 }
+</script>
+
+<script>
+// ═══ 최근 댓글 관리 ═══
+(function() {
+    const PAGE_SIZE = 30;
+    let commentPage = 0;
+    let commentTotal = 0;
+
+    function getSb() { return window.sb; }
+
+    window.loadRecentComments = async function() {
+        const sb = getSb(); if (!sb) return;
+        const body = document.getElementById('commentListBody');
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">로딩 중...</td></tr>';
+
+        const countryFilter = document.getElementById('commentCountryFilter')?.value || '';
+
+        try {
+            // 댓글 + 게시글 country_code 조인 조회 (최신순)
+            const { data: allComments, error } = await sb
+                .from('community_comments')
+                .select('id, post_id, author_name, content, created_at, community_posts(title, country_code)')
+                .order('created_at', { ascending: false })
+                .limit(500);
+            if (error) throw error;
+
+            if (!allComments || allComments.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">댓글이 없습니다.</td></tr>';
+                document.getElementById('commentPagination').innerHTML = '';
+                return;
+            }
+
+            // 국가 필터 적용 (게시글의 country_code 기준)
+            let filtered = allComments;
+            if (countryFilter) {
+                filtered = allComments.filter(c => {
+                    const cc = c.community_posts?.country_code || '';
+                    return cc === countryFilter;
+                });
+            }
+            commentTotal = filtered.length;
+
+            if (filtered.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">해당 국가의 댓글이 없습니다.</td></tr>';
+                document.getElementById('commentPagination').innerHTML = '';
+                return;
+            }
+
+            // 페이지네이션
+            const paged = filtered.slice(commentPage * PAGE_SIZE, (commentPage + 1) * PAGE_SIZE);
+            const FLAG = { KR:'🇰🇷', JP:'🇯🇵', US:'🇺🇸', CN:'🇨🇳', AR:'🇸🇦', ES:'🇪🇸', DE:'🇩🇪', FR:'🇫🇷' };
+
+            body.innerHTML = paged.map(c => {
+                const cc = c.community_posts?.country_code || '-';
+                const flag = FLAG[cc] || '';
+                const name = (c.author_name || '익명').replace(/</g, '&lt;');
+                const content = (c.content || '').replace(/</g, '&lt;').replace(/\n/g, ' ');
+                const short = content.length > 80 ? content.substring(0, 80) + '…' : content;
+                const postTitle = c.community_posts?.title ? c.community_posts.title.replace(/</g, '&lt;') : '-';
+                const shortTitle = postTitle.length > 25 ? postTitle.substring(0, 25) + '…' : postTitle;
+                const date = new Date(c.created_at).toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+                return `<tr>
+                    <td><input type="checkbox" class="cmt-check" value="${c.id}"></td>
+                    <td style="font-size:12px;color:#666;">${date}</td>
+                    <td style="text-align:center;">${flag} ${cc}</td>
+                    <td style="font-weight:600;">${name}</td>
+                    <td title="${content}">${short}</td>
+                    <td style="font-size:12px;color:#888;" title="${postTitle}">${shortTitle}</td>
+                    <td style="text-align:center;">
+                        <button class="btn btn-danger btn-sm" style="font-size:11px;padding:2px 8px;" onclick="deleteSingleComment(${c.id})">삭제</button>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            renderCommentPagination();
+        } catch (e) {
+            console.error(e);
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">오류: ' + e.message + '</td></tr>';
+        }
+    };
+
+    function renderCommentPagination() {
+        const totalPages = Math.ceil(commentTotal / PAGE_SIZE);
+        const div = document.getElementById('commentPagination');
+        if (totalPages <= 1) { div.innerHTML = ''; return; }
+        let html = '';
+        if (commentPage > 0) html += `<button class="btn btn-outline btn-sm" onclick="goCommentPage(${commentPage - 1})">◀</button>`;
+        const start = Math.max(0, commentPage - 3);
+        const end = Math.min(totalPages, commentPage + 4);
+        for (let i = start; i < end; i++) {
+            html += `<button class="btn ${i === commentPage ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="goCommentPage(${i})">${i + 1}</button>`;
+        }
+        if (commentPage < totalPages - 1) html += `<button class="btn btn-outline btn-sm" onclick="goCommentPage(${commentPage + 1})">▶</button>`;
+        html += `<span style="font-size:12px;color:#999;margin-left:10px;">총 ${commentTotal}건</span>`;
+        div.innerHTML = html;
+    }
+
+    window.goCommentPage = function(page) {
+        commentPage = page;
+        window.loadRecentComments();
+    };
+
+    window.toggleCommentChecks = function(masterCb) {
+        document.querySelectorAll('.cmt-check').forEach(cb => cb.checked = masterCb.checked);
+    };
+
+    window.deleteSelectedComments = async function() {
+        const sb = getSb(); if (!sb) return;
+        const ids = [...document.querySelectorAll('.cmt-check:checked')].map(cb => Number(cb.value));
+        if (ids.length === 0) { if(window.showToast) showToast('삭제할 댓글을 선택하세요.','warn'); return; }
+        if (!confirm(`${ids.length}개 댓글을 삭제하시겠습니까?`)) return;
+        const { error } = await sb.from('community_comments').delete().in('id', ids);
+        if (error) { if(window.showToast) showToast('삭제 실패: ' + error.message,'error'); return; }
+        if(window.showToast) showToast(`${ids.length}개 댓글 삭제 완료`,'success');
+        window.loadRecentComments();
+    };
+
+    window.deleteSingleComment = async function(id) {
+        const sb = getSb(); if (!sb) return;
+        if (!confirm('이 댓글을 삭제하시겠습니까?')) return;
+        const { error } = await sb.from('community_comments').delete().eq('id', id);
+        if (error) { if(window.showToast) showToast('삭제 실패: ' + error.message,'error'); return; }
+        if(window.showToast) showToast('댓글 삭제 완료','success');
+        window.loadRecentComments();
+    };
+})();
 </script>
 
 <script>
