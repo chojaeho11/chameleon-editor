@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=123";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=124";
-import { SITE_CONFIG } from "./site-config.js?v=123";
-import { applySize } from "./canvas-size.js?v=123";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=123";
+import { canvas } from "./canvas-core.js?v=125";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=125";
+import { SITE_CONFIG } from "./site-config.js?v=125";
+import { applySize } from "./canvas-size.js?v=125";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=125";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=123";
+} from "./export.js?v=125";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1180,7 +1180,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=123');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=125');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,

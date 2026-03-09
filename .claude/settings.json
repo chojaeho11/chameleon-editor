@@ -9,7 +9,11 @@
       "Read(//c/Users/win 10/Desktop/작업/$APPDATA/**)",
       "Bash(for file in \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\"/*.sql)",
       "Bash(do grep -l \"JP\\\\|japan\\\\|japanese\" \"$file\")",
-      "Read(///.marquee/,//**)"
+      "Read(///.marquee/,//**)",
+      "Bash(for f in advisor-panel.js canvas-ai.js canvas-core.js canvas-guides.js canvas-image.js canvas-objects.js canvas-pages.js canvas-retouch.js canvas-size.js canvas-template.js canvas-utils.js canvas-zoom-pan.js config.js context-menu.js export.js greeting-card-mode.js my-design.js npc-wizard.js order.js ppt-mode.js shortcuts.js)",
+      "Bash(do sed -i 's/?v=123/?v=125/g' \"$f\")",
+      "Bash(for f in canvas-ai.js canvas-icons.js canvas-objects.js canvas-retouch.js canvas-template.js export.js greeting-card-mode.js keyring-mini-editor.js login.js my-design.js mypage.js order.js)",
+      "Bash(do sed -i 's/?v=124/?v=125/g' \"$f\")"
     ]
   }
 }
