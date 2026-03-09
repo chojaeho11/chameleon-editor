@@ -7,27 +7,27 @@ const corsHeaders = {
 
 // Stripe Price IDs per country and plan type
 // These must be created in Stripe Dashboard first
-const PRICE_MAP: Record<string, { monthly: string; annual: string; currency: string }> = {
-  'KR': { monthly: 'price_kr_monthly', annual: 'price_kr_annual', currency: 'krw' },
-  'JP': { monthly: 'price_jp_monthly', annual: 'price_jp_annual', currency: 'jpy' },
-  'US': { monthly: 'price_us_monthly', annual: 'price_us_annual', currency: 'usd' },
-  'CN': { monthly: 'price_cn_monthly', annual: 'price_cn_annual', currency: 'cny' },
-  'AR': { monthly: 'price_ar_monthly', annual: 'price_ar_annual', currency: 'sar' },
-  'ES': { monthly: 'price_es_monthly', annual: 'price_es_annual', currency: 'eur' },
-  'DE': { monthly: 'price_de_monthly', annual: 'price_de_annual', currency: 'eur' },
-  'FR': { monthly: 'price_fr_monthly', annual: 'price_fr_annual', currency: 'eur' },
+const PRICE_MAP: Record<string, { monthly: string; annual: string; lifetime: string; currency: string }> = {
+  'KR': { monthly: 'price_kr_monthly', annual: 'price_kr_annual', lifetime: 'price_kr_lifetime', currency: 'krw' },
+  'JP': { monthly: 'price_jp_monthly', annual: 'price_jp_annual', lifetime: 'price_jp_lifetime', currency: 'jpy' },
+  'US': { monthly: 'price_us_monthly', annual: 'price_us_annual', lifetime: 'price_us_lifetime', currency: 'usd' },
+  'CN': { monthly: 'price_cn_monthly', annual: 'price_cn_annual', lifetime: 'price_cn_lifetime', currency: 'cny' },
+  'AR': { monthly: 'price_ar_monthly', annual: 'price_ar_annual', lifetime: 'price_ar_lifetime', currency: 'sar' },
+  'ES': { monthly: 'price_es_monthly', annual: 'price_es_annual', lifetime: 'price_es_lifetime', currency: 'eur' },
+  'DE': { monthly: 'price_de_monthly', annual: 'price_de_annual', lifetime: 'price_de_lifetime', currency: 'eur' },
+  'FR': { monthly: 'price_fr_monthly', annual: 'price_fr_annual', lifetime: 'price_fr_lifetime', currency: 'eur' },
 }
 
 // Fallback: create price on-the-fly if no Price ID configured
-const AMOUNT_MAP: Record<string, { monthly: number; annual: number; currency: string }> = {
-  'KR': { monthly: 5000, annual: 48000, currency: 'krw' },
-  'JP': { monthly: 900, annual: 8640, currency: 'jpy' },
-  'US': { monthly: 900, annual: 8640, currency: 'usd' },   // cents
-  'CN': { monthly: 6000, annual: 57600, currency: 'cny' },
-  'AR': { monthly: 3500, annual: 33600, currency: 'sar' },
-  'ES': { monthly: 900, annual: 8640, currency: 'eur' },    // cents
-  'DE': { monthly: 900, annual: 8640, currency: 'eur' },
-  'FR': { monthly: 900, annual: 8640, currency: 'eur' },
+const AMOUNT_MAP: Record<string, { monthly: number; annual: number; lifetime: number; currency: string }> = {
+  'KR': { monthly: 30000, annual: 165000, lifetime: 1000000, currency: 'krw' },
+  'JP': { monthly: 3000, annual: 16500, lifetime: 100000, currency: 'jpy' },
+  'US': { monthly: 3000, annual: 16500, lifetime: 100000, currency: 'usd' },   // cents
+  'CN': { monthly: 20000, annual: 110000, lifetime: 700000, currency: 'cny' },
+  'AR': { monthly: 11500, annual: 62000, lifetime: 375000, currency: 'sar' },
+  'ES': { monthly: 2800, annual: 15400, lifetime: 93000, currency: 'eur' },    // cents
+  'DE': { monthly: 2800, annual: 15400, lifetime: 93000, currency: 'eur' },
+  'FR': { monthly: 2800, annual: 15400, lifetime: 93000, currency: 'eur' },
 }
 
 // Zero-decimal currencies (no cents)
@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
       throw new Error('Missing required fields')
     }
 
-    if (plan_type !== 'monthly' && plan_type !== 'annual') {
-      throw new Error('plan_type must be monthly or annual')
+    if (plan_type !== 'monthly' && plan_type !== 'annual' && plan_type !== 'lifetime') {
+      throw new Error('plan_type must be monthly, annual, or lifetime')
     }
 
     const secretKey = Deno.env.get('STRIPE_SECRET_KEY')
@@ -56,11 +56,12 @@ Deno.serve(async (req) => {
 
     const priceConfig = PRICE_MAP[country] || PRICE_MAP['US']
     const amountConfig = AMOUNT_MAP[country] || AMOUNT_MAP['US']
-    const priceId = plan_type === 'monthly' ? priceConfig.monthly : priceConfig.annual
+    const priceId = priceConfig[plan_type as keyof typeof priceConfig] as string
+    const isLifetime = plan_type === 'lifetime'
 
     // Build Stripe Checkout Session params
     const params = new URLSearchParams()
-    params.append('mode', 'subscription')
+    params.append('mode', isLifetime ? 'payment' : 'subscription')
     params.append('payment_method_types[]', 'card')
 
     // Check if we have a real Stripe Price ID (starts with 'price_' from Stripe)
@@ -71,15 +72,22 @@ Deno.serve(async (req) => {
     } else {
       // Create price inline using amount
       const currency = amountConfig.currency
-      const amount = plan_type === 'monthly' ? amountConfig.monthly : amountConfig.annual
-      const interval = plan_type === 'monthly' ? 'month' : 'year'
+      const amount = amountConfig[plan_type as keyof typeof amountConfig] as number
+      const descriptions: Record<string, string> = {
+        monthly: 'Monthly PRO subscription',
+        annual: 'Annual PRO subscription (50% OFF)',
+        lifetime: 'Lifetime PRO subscription'
+      }
 
       params.append('line_items[0][price_data][currency]', currency)
-      params.append('line_items[0][price_data][product_data][name]', 'Chameleon PRO Subscription')
-      params.append('line_items[0][price_data][product_data][description]',
-        plan_type === 'monthly' ? 'Monthly PRO subscription' : 'Annual PRO subscription (20% OFF)')
+      params.append('line_items[0][price_data][product_data][name]',
+        isLifetime ? 'Chameleon PRO Lifetime' : 'Chameleon PRO Subscription')
+      params.append('line_items[0][price_data][product_data][description]', descriptions[plan_type] || '')
       params.append('line_items[0][price_data][unit_amount]', String(amount))
-      params.append('line_items[0][price_data][recurring][interval]', interval)
+      if (!isLifetime) {
+        const interval = plan_type === 'monthly' ? 'month' : 'year'
+        params.append('line_items[0][price_data][recurring][interval]', interval)
+      }
       params.append('line_items[0][quantity]', '1')
     }
 
