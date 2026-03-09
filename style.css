@@ -1136,6 +1136,16 @@ button, input, textarea, select { font-family: inherit; }
 
     /* 모바일에서는 도움말 텍스트 숨김 */
     .bottom-dock .help-text { display: none !important; }
+
+    /* ─── 웨딩 모드 모바일 최적화 ─── */
+    #weddingSlideList {
+        max-height: calc(100vh - 200px) !important;
+    }
+    /* 웨딩 모바일 하단 네비 공간 확보 */
+    body.wedding-mode .stage {
+        bottom: 56px !important;
+        height: calc(100% - 56px) !important;
+    }
 }
 
 /* 모바일 텍스트 에디터 (항상 최상위) */

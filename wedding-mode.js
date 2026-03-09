@@ -292,6 +292,7 @@ let previewState = { pages:[], scrollContainer:null };
    1. INITIALIZATION
    ═══════════════════════════════════════════ */
 export function initWeddingMode() {
+    document.body.classList.add('wedding-mode');
     // Watch page counter changes to re-render slide panel from cache (lightweight)
     const pc = document.getElementById('pageCounter');
     if (pc) {
@@ -325,7 +326,52 @@ export function initWeddingMode() {
     /* ─── Placeholder click-to-upload handler ─── */
     setupPlaceholderUpload();
 
+    /* ─── Mobile: 하단 페이지 네비게이터 ─── */
+    if (window.innerWidth <= 768) {
+        _createMobileWedNav();
+    }
+
     console.log('✅ Wedding Mode initialized');
+}
+
+/* ═══ Mobile Wedding Page Navigator ═══ */
+function _createMobileWedNav() {
+    if (document.getElementById('wedMobileNav')) return;
+    const nav = document.createElement('div');
+    nav.id = 'wedMobileNav';
+    nav.style.cssText = 'position:fixed; bottom:0; left:0; right:0; z-index:9500; background:#fff; border-top:2px solid #f9a8d4; padding:6px 10px; display:flex; align-items:center; justify-content:space-between; gap:6px; box-shadow:0 -2px 10px rgba(0,0,0,0.1);';
+    nav.innerHTML = `
+        <button onclick="window.weddingGoToSlide(Math.max(0, (window._getPageIndex?window._getPageIndex():0)-1))" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fff;color:#ec4899;font-size:16px;cursor:pointer;flex-shrink:0;"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="wedMobileSlideStrip" style="flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px 0;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;"></div>
+        <button onclick="window.weddingGoToSlide(Math.min((window.__pageDataList||[]).length-1, (window._getPageIndex?window._getPageIndex():0)+1))" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fff;color:#ec4899;font-size:16px;cursor:pointer;flex-shrink:0;"><i class="fa-solid fa-chevron-right"></i></button>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+            <button onclick="window.addPage()" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fdf2f8;color:#ec4899;font-size:14px;cursor:pointer;" title="추가"><i class="fa-solid fa-plus"></i></button>
+            <button onclick="window.weddingShowTemplates()" style="width:36px;height:36px;border:1px solid #d4a373;border-radius:8px;background:#fffbeb;color:#d4a373;font-size:14px;cursor:pointer;" title="템플릿"><i class="fa-solid fa-table-cells-large"></i></button>
+            <button onclick="window.weddingPreview()" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fdf2f8;color:#ec4899;font-size:14px;cursor:pointer;" title="미리보기"><i class="fa-solid fa-eye"></i></button>
+        </div>
+    `;
+    document.body.appendChild(nav);
+    _updateMobileSlideStrip();
+}
+
+function _updateMobileSlideStrip() {
+    const strip = document.getElementById('wedMobileSlideStrip');
+    if (!strip) return;
+    const pages = window.__pageDataList || pageDataList;
+    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
+    strip.innerHTML = '';
+    for (let i = 0; i < pages.length; i++) {
+        const thumb = _wedThumbCache[i] || null;
+        const isActive = i === curIdx;
+        const el = document.createElement('div');
+        el.style.cssText = `flex-shrink:0; width:36px; height:64px; border-radius:4px; overflow:hidden; cursor:pointer; border:2px solid ${isActive?'#ec4899':'#e2e8f0'}; background:${isActive?'#fdf2f8':'#f8fafc'}; scroll-snap-align:center;`;
+        el.innerHTML = thumb ? `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8;font-weight:bold;">${i+1}</div>`;
+        el.onclick = () => window.weddingGoToSlide(i);
+        strip.appendChild(el);
+    }
+    // active 슬라이드를 중앙에 스크롤
+    const activeEl = strip.children[curIdx];
+    if (activeEl) setTimeout(() => activeEl.scrollIntoView({ inline:'center', behavior:'smooth' }), 50);
 }
 
 /* ═══════════════════════════════════════════
@@ -612,6 +658,9 @@ function _renderThumbsFromCache() {
 
     const activeEl = container.querySelector('[style*="border:2px solid #ec4899"]');
     if (activeEl) activeEl.scrollIntoView({ block:'nearest', behavior:'smooth' });
+
+    // 모바일 하단 슬라이드 스트립도 업데이트
+    _updateMobileSlideStrip();
 }
 
 /* ═══════════════════════════════════════════
