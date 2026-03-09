@@ -6891,6 +6891,16 @@ window.showChoiceModal = async function(key) {
                         <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#6366f1;">0</div>
                     </div>
                 </div>
+                <div id="promoDiscountBox" style="margin-top:12px; border-radius:14px; overflow:hidden; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;" onclick="document.getElementById('subscriptionSection')?.scrollIntoView({behavior:'smooth'}); document.getElementById('productDetailModal').style.display='none';">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <span style="background:#f59e0b; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px;">${lang==='ja'?'最大20%OFF':lang==='zh'?'最高20%OFF':lang==='en'?'Up to 20% OFF':'최대 20% 할인'}</span>
+                        <span style="font-size:12px; color:#92400e; font-weight:600;">${lang==='ja'?'定期購読+紹介ID+マイレージ':lang==='zh'?'订阅+推荐ID+积分':lang==='en'?'Subscribe+Referral+Mileage':'구독+추천아이디+마일리지'}</span>
+                    </div>
+                    <div style="display:flex; align-items:baseline; justify-content:flex-end; gap:8px;">
+                        <span id="promoDiscountPrice" style="font-size:24px; font-weight:900; color:#d97706;">0</span>
+                        <span style="font-size:11px; color:#92400e; text-decoration:underline;">${lang==='ja'?'定期購読を見る →':lang==='zh'?'查看订阅 →':lang==='en'?'View Plans →':'구독 알아보기 →'}</span>
+                    </div>
+                </div>
                 <div data-npc="buttons" style="display:flex; flex-direction:column; gap:12px; margin-top:20px; padding-bottom:50px;">
                     ${product.cutline_url ? '<a href="'+product.cutline_url+'" target="_blank" download class="btn-round" style="height:44px; font-size:13px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; text-decoration:none;">✂️ '+(lang==='ja'?'カットライン ダウンロード':lang==='zh'?'刀线下载':lang==='ar'?'تحميل خط القطع':lang==='es'?'Descargar línea de corte':lang==='de'?'Stanzlinie herunterladen':lang==='fr'?'Télécharger la ligne de coupe':lang==='en'?'Download Die-cut Line':'칼선 다운받기')+'</a>' : ''}
                     <div id="miniKeyringEditorContainer" style="display:none;"></div>
@@ -7162,6 +7172,12 @@ window.updateModalTotal = function() {
     const finalTotal = productTotal + optionTotal;
     const display = document.getElementById('modalRealtimeTotal');
     if(display) display.innerText = fmtLocal(finalTotal);
+    // 20% 할인 프로모션 가격 업데이트
+    const promoEl = document.getElementById('promoDiscountPrice');
+    if(promoEl) {
+        const discounted = Math.floor(finalTotal * 0.8);
+        promoEl.innerText = fmtLocal(discounted);
+    }
 };
 
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
