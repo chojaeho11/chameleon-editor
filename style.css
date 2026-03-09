@@ -2784,13 +2784,13 @@ body {
 .bouncing-char {
     display: none !important;
 }
-/* 히어로 캐릭터: 타이틀 우측 상단에 겹치게 */
+/* 히어로 캐릭터: 타이틀 우측에 겹치게 */
 .hero-mascot {
     display: block !important;
     position: absolute;
-    right: -60px;
-    top: -30px;
-    width: 180px;
+    right: -80px;
+    bottom: -10px;
+    width: 160px;
     height: auto;
     animation: bounceUpDn 3s ease-in-out infinite;
     pointer-events: none;
@@ -2801,7 +2801,7 @@ body {
     .hero-mascot {
         width: 100px !important;
         right: -30px !important;
-        top: -20px !important;
+        bottom: -5px !important;
     }
 }
 .quick-title-box {
