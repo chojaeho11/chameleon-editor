@@ -2437,6 +2437,9 @@ async function handleSubReturn() {
             <div class="icon-item" data-panel="sub-align">
                 <i class="fa-solid fa-border-all"></i><span data-i18n="menu_align">정렬</span>
             </div>
+            <div class="icon-item" data-panel="sub-gceffect" id="iconGcEffect" style="display:none;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i><span>효과</span>
+            </div>
             <div class="icon-item" data-panel="sub-page">
                 <i class="fa-solid fa-copy"></i><span data-i18n="menu_page">PAGE</span>
             </div>
@@ -2839,6 +2842,15 @@ async function handleSubReturn() {
             </div>
 
             <!-- 8. 페이지 -->
+            <div id="sub-gceffect" class="sub-content">
+                <div class="sub-panel-header"><i class="fa-solid fa-wand-magic-sparkles" style="color:#14b8a6; margin-right:6px;"></i>애니메이션 효과</div>
+                <p style="font-size:11px; color:#94a3b8; margin-bottom:12px;">효과를 선택하면 캔버스에 추가됩니다. 위치와 크기를 자유롭게 조절하세요.</p>
+                <div id="gcEffectGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:16px;"></div>
+                <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; gap:8px;">
+                    <button onclick="window.gcPreview()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-eye" style="margin-right:4px;"></i>미리보기</button>
+                    <button onclick="window.gcShareCard()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#7c3aed; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-share-nodes" style="margin-right:4px;"></i>공유하기</button>
+                </div>
+            </div>
             <div id="sub-page" class="sub-content">
                 <div class="sub-panel-header" data-i18n="panel_page">페이지 관리</div>
                 <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:15px;">
@@ -11166,9 +11178,10 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
             if (gtb) gtb.style.display = 'flex';
             var gStkBtn = document.getElementById('gcStickerFloat');
             if (gStkBtn) gStkBtn.style.display = 'flex';
+            var gcEffIcon = document.getElementById('iconGcEffect');
+            if (gcEffIcon) gcEffIcon.style.display = '';
             setTimeout(function() {
                 if (window.gcActivatePanel) window.gcActivatePanel();
-                if (window.gcInitPages) window.gcInitPages();
             }, 500);
         }
     } else {

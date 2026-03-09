@@ -203,21 +203,11 @@ function replacePlaceholderWithImage(file, placeholderRect) {
 }
 
 /* ═══════════════════════════════════════════
-   2. SINGLE PAGE INIT
+   2. SINGLE PAGE INIT (blank canvas)
    ═══════════════════════════════════════════ */
 function initSinglePage() {
+    // No default template — start with blank canvas
     if (!window.__GREETING_CARD_MODE || !canvas) return;
-
-    const board = canvas.getObjects().find(o => o.isBoard);
-    if (!board) return;
-
-    const p = PALETTES[_gcCategory] || PALETTES.christmas;
-    board.set({ fill: p.bg });
-
-    // Apply default cover template
-    _applyDefaultCover();
-
-    canvas.requestRenderAll();
     setTimeout(() => _mobileFitScreen(), 400);
 }
 
@@ -290,83 +280,53 @@ function _mobileFitScreen() {
    3. ANIMATED STICKER PANEL
    ═══════════════════════════════════════════ */
 function activateStickerPanel() {
-    const pageBtn = document.querySelector('#iconBar .icon-item[data-panel="sub-page"]');
-    if (pageBtn) pageBtn.click();
+    // Populate the gcEffectGrid in the sub-gceffect panel
+    const grid = document.getElementById('gcEffectGrid');
+    if (!grid || grid.children.length > 0) return; // already populated
+    ANIM_STICKERS.forEach(stk => {
+        const card = document.createElement('div');
+        card.style.cssText = 'border:2px solid #e2e8f0; border-radius:10px; padding:8px 4px; text-align:center; cursor:pointer; transition:all 0.15s; background:#fff;';
+        card.onmouseenter = () => { card.style.borderColor='#14b8a6'; card.style.background='#f0fdfa'; };
+        card.onmouseleave = () => { card.style.borderColor='#e2e8f0'; card.style.background='#fff'; };
+        card.innerHTML = `<div style="font-size:22px; margin-bottom:2px;">${stk.emoji}</div><div style="font-size:9px; font-weight:700; color:#334155;">${_t(stk.nameKey, stk.name)}</div>`;
+        card.onclick = () => addAnimSticker(stk.id);
+        grid.appendChild(card);
+    });
 
-    setTimeout(() => {
-        const subPage = document.getElementById('sub-page');
-        if (!subPage) return;
-        _renderStickerPanel(subPage);
-    }, 100);
+    // Auto-open the effect panel
+    const effBtn = document.querySelector('#iconBar .icon-item[data-panel="sub-gceffect"]');
+    if (effBtn) effBtn.click();
 }
 
 function showStickerPanel() {
-    // For mobile: show sticker panel as bottom sheet
-    let panel = document.getElementById('gcStickerSheet');
-    if (panel) {
-        panel.style.display = 'flex';
+    // Open the effect panel tab
+    const effBtn = document.querySelector('#iconBar .icon-item[data-panel="sub-gceffect"]');
+    if (effBtn) {
+        effBtn.click();
         return;
     }
+    // Fallback for mobile: open as bottom sheet
+    let panel = document.getElementById('gcStickerSheet');
+    if (panel) { panel.style.display = 'flex'; return; }
     panel = document.createElement('div');
     panel.id = 'gcStickerSheet';
     panel.style.cssText = 'position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.4); display:flex; align-items:flex-end; justify-content:center;';
     panel.onclick = (e) => { if (e.target === panel) panel.style.display = 'none'; };
-
     const sheet = document.createElement('div');
     sheet.style.cssText = 'background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:500px; max-height:60vh; overflow-y:auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom, 0));';
-
-    const title = document.createElement('div');
-    title.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;';
-    title.innerHTML = `<span style="font-size:16px; font-weight:800; color:#0f766e;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px; color:#14b8a6;"></i>${_t('gc_sticker_title','애니메이션 효과')}</span><button onclick="document.getElementById('gcStickerSheet').style.display='none'" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>`;
-    sheet.appendChild(title);
-
+    sheet.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font-size:16px;font-weight:800;color:#0f766e;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px;color:#14b8a6;"></i>${_t('gc_sticker_title','애니메이션 효과')}</span><button onclick="document.getElementById('gcStickerSheet').style.display='none'" style="background:none;border:none;font-size:18px;color:#94a3b8;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button></div>`;
     const grid = document.createElement('div');
     grid.style.cssText = 'display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;';
     ANIM_STICKERS.forEach(stk => {
         const btn = document.createElement('button');
-        btn.style.cssText = 'border:2px solid #e2e8f0; border-radius:14px; padding:12px 4px; text-align:center; cursor:pointer; background:#fff; transition:all 0.15s;';
-        btn.innerHTML = `<div style="font-size:28px; margin-bottom:4px;">${stk.emoji}</div><div style="font-size:10px; font-weight:700; color:#334155;">${_t(stk.nameKey, stk.name)}</div>`;
-        btn.onmouseenter = () => { btn.style.borderColor='#14b8a6'; btn.style.background='#f0fdfa'; };
-        btn.onmouseleave = () => { btn.style.borderColor='#e2e8f0'; btn.style.background='#fff'; };
+        btn.style.cssText = 'border:2px solid #e2e8f0;border-radius:14px;padding:12px 4px;text-align:center;cursor:pointer;background:#fff;transition:all 0.15s;';
+        btn.innerHTML = `<div style="font-size:28px;margin-bottom:4px;">${stk.emoji}</div><div style="font-size:10px;font-weight:700;color:#334155;">${_t(stk.nameKey, stk.name)}</div>`;
         btn.onclick = () => { addAnimSticker(stk.id); panel.style.display = 'none'; };
         grid.appendChild(btn);
     });
     sheet.appendChild(grid);
-
-    // Info text
-    const info = document.createElement('p');
-    info.style.cssText = 'margin-top:12px; font-size:11px; color:#94a3b8; text-align:center;';
-    info.textContent = _t('gc_sticker_info', '효과를 선택하면 캔버스에 추가됩니다. 위치와 크기를 자유롭게 조절하세요.');
-    sheet.appendChild(info);
-
     panel.appendChild(sheet);
     document.body.appendChild(panel);
-}
-
-function _renderStickerPanel(container) {
-    container.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0 2px 10px; border-bottom:1px solid #5eead4; margin-bottom:10px;">
-            <span style="font-weight:800; font-size:14px; color:#1e293b;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#14b8a6; margin-right:4px;"></i>${_t('gc_sticker_title','애니메이션 효과')}</span>
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-bottom:14px;" id="gcStickerGrid"></div>
-        <div style="border-top:1px solid #e2e8f0; padding-top:10px;">
-            <div style="display:flex; gap:6px;">
-                <button onclick="window.gcPreview()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-eye" style="margin-right:4px;"></i>${_t('gc_preview','미리보기')}</button>
-                <button onclick="window.gcShareCard()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#7c3aed; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-share-nodes" style="margin-right:4px;"></i>${_t('gc_share','공유하기')}</button>
-            </div>
-        </div>
-    `;
-    const grid = container.querySelector('#gcStickerGrid');
-    if (!grid) return;
-    ANIM_STICKERS.forEach(stk => {
-        const card = document.createElement('div');
-        card.style.cssText = 'border:2px solid #e2e8f0; border-radius:10px; padding:10px 6px; text-align:center; cursor:pointer; transition:all 0.15s; background:#fff;';
-        card.onmouseenter = () => { card.style.borderColor='#14b8a6'; card.style.background='#f0fdfa'; };
-        card.onmouseleave = () => { card.style.borderColor='#e2e8f0'; card.style.background='#fff'; };
-        card.innerHTML = `<div style="font-size:24px; margin-bottom:2px;">${stk.emoji}</div><div style="font-size:10px; font-weight:700; color:#334155;">${_t(stk.nameKey, stk.name)}</div>`;
-        card.onclick = () => addAnimSticker(stk.id);
-        grid.appendChild(card);
-    });
 }
 
 /* ═══════════════════════════════════════════
