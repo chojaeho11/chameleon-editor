@@ -1,13 +1,12 @@
-/* ═══ Greeting Card Mode v1 ═══ */
-import { pageDataList, currentPageIndex, goToPage, addNewPage, deleteCurrentPage } from "./canvas-pages.js?v=123";
+/* ═══ Greeting Card Mode v2 — Single Page + Animated Stickers ═══ */
 import { canvas } from "./canvas-core.js?v=123";
 
 const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 
-/* ─── Constants ─── */
-const CUSTOM_PROPS = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isGcPlaceholder','isGcPlaceholderText','gcPlaceholderId'];
+/* ─── Custom properties for fabric serialization ─── */
+const CUSTOM_PROPS = ['id','isBoard','selectable','evented','locked','isGuide','isMockup','excludeFromExport','isEffectGroup','isMainText','isClone','paintFirst','isGcPlaceholder','isGcPlaceholderText','gcPlaceholderId','isAnimSticker','animStickerType'];
 
-/* ─── Category Color Palettes ─── */
+/* ─── Category Palettes ─── */
 const PALETTES = {
     christmas: { bg:'#1a472a', accent:'#c41e3a', text:'#fff', sub:'#ffd700', light:'#2d5a3f' },
     newyear:   { bg:'#0f172a', accent:'#f59e0b', text:'#fff', sub:'#a78bfa', light:'#1e293b' },
@@ -30,97 +29,22 @@ const CATEGORY_GREETINGS = {
     valentines:{ title:'Happy Valentine\'s Day', sub:'사랑합니다' }
 };
 
-/* ─── Card Templates ─── */
-const CARD_TEMPLATES = {
-    cover: {
-        name: _t('gc_tpl_cover','표지'), icon: 'fa-image',
-        build(w, h, cat='christmas') {
-            const p = PALETTES[cat] || PALETTES.christmas;
-            const g = CATEGORY_GREETINGS[cat] || CATEGORY_GREETINGS.christmas;
-            const emoji = CATEGORY_EMOJIS[cat] || '✨';
-            return [
-                { type:'textbox', text:emoji, left:w*0.35, top:h*0.08, width:w*0.3,
-                  fontSize:Math.round(h*0.06), fontFamily:'Georgia, serif',
-                  fill:p.accent, textAlign:'center' },
-                { type:'textbox', text:g.title, left:w*0.05, top:h*0.18, width:w*0.9,
-                  fontSize:Math.round(h*0.045), fontFamily:'Georgia, serif', fontWeight:'bold',
-                  fill:p.text, textAlign:'center' },
-                { type:'rect', left:w*0.1, top:h*0.28, width:w*0.8, height:h*0.38,
-                  fill:p.light, rx:16, ry:16, stroke:p.accent, strokeWidth:2,
-                  isGcPlaceholder:true, gcPlaceholderId:'cover_main' },
-                { type:'textbox', text:_t('gc_photo_here','사진을 넣어주세요'), left:w*0.2, top:h*0.44, width:w*0.6,
-                  fontSize:Math.round(h*0.022), fontFamily:'Georgia, serif',
-                  fill:p.sub, textAlign:'center', editable:false,
-                  isGcPlaceholderText:true, gcPlaceholderId:'cover_main' },
-                { type:'textbox', text:g.sub, left:w*0.1, top:h*0.72, width:w*0.8,
-                  fontSize:Math.round(h*0.028), fontFamily:'Georgia, serif',
-                  fill:p.text, textAlign:'center' },
-                { type:'rect', left:w*0.3, top:h*0.82, width:w*0.4, height:2,
-                  fill:p.accent },
-                { type:'textbox', text:'From. ___', left:w*0.15, top:h*0.87, width:w*0.7,
-                  fontSize:Math.round(h*0.022), fontFamily:'Georgia, serif',
-                  fill:p.sub, textAlign:'center' }
-            ];
-        }
-    },
-    message: {
-        name: _t('gc_tpl_message','메시지'), icon: 'fa-comment-dots',
-        build(w, h, cat='christmas') {
-            const p = PALETTES[cat] || PALETTES.christmas;
-            const emoji = CATEGORY_EMOJIS[cat] || '✨';
-            return [
-                { type:'textbox', text:emoji, left:w*0.42, top:h*0.06, width:w*0.16,
-                  fontSize:Math.round(h*0.035), fontFamily:'Georgia, serif',
-                  fill:p.accent, textAlign:'center' },
-                { type:'rect', left:w*0.25, top:h*0.14, width:w*0.5, height:2, fill:p.accent },
-                { type:'textbox',
-                  text:_t('gc_your_message','여기에 마음을 담은\n메시지를 적어주세요\n\n따뜻한 마음이\n전해지기를 바랍니다'),
-                  left:w*0.08, top:h*0.2, width:w*0.84,
-                  fontSize:Math.round(h*0.026), fontFamily:'Georgia, serif',
-                  fill:p.text, textAlign:'center', lineHeight:1.8 },
-                { type:'rect', left:w*0.25, top:h*0.7, width:w*0.5, height:2, fill:p.accent },
-                { type:'textbox', text:emoji + ' ' + emoji + ' ' + emoji,
-                  left:w*0.2, top:h*0.76, width:w*0.6,
-                  fontSize:Math.round(h*0.025), fontFamily:'Georgia, serif',
-                  fill:p.sub, textAlign:'center' }
-            ];
-        }
-    },
-    gallery: {
-        name: _t('gc_tpl_gallery','갤러리'), icon: 'fa-images',
-        build(w, h, cat='christmas') {
-            const p = PALETTES[cat] || PALETTES.christmas;
-            return [
-                { type:'textbox', text:_t('gc_gallery_title','Our Moments'), left:w*0.1, top:h*0.06, width:w*0.8,
-                  fontSize:Math.round(h*0.03), fontFamily:'Georgia, serif', fontWeight:'300',
-                  fill:p.text, textAlign:'center' },
-                { type:'rect', left:w*0.35, top:h*0.13, width:w*0.3, height:2, fill:p.accent },
-                { type:'rect', left:w*0.08, top:h*0.18, width:w*0.84, height:h*0.4,
-                  fill:p.light, rx:12, ry:12, stroke:p.accent, strokeWidth:1,
-                  isGcPlaceholder:true, gcPlaceholderId:'gallery_main' },
-                { type:'textbox', text:_t('gc_drag_photo','사진을 넣어주세요'), left:w*0.25, top:h*0.36, width:w*0.5,
-                  fontSize:Math.round(h*0.02), fontFamily:'Georgia, serif',
-                  fill:p.sub, textAlign:'center', editable:false,
-                  isGcPlaceholderText:true, gcPlaceholderId:'gallery_main' },
-                { type:'rect', left:w*0.08, top:h*0.62, width:w*0.4, height:h*0.25,
-                  fill:p.light, rx:10, ry:10, stroke:p.accent, strokeWidth:1,
-                  isGcPlaceholder:true, gcPlaceholderId:'gallery_sub1' },
-                { type:'rect', left:w*0.52, top:h*0.62, width:w*0.4, height:h*0.25,
-                  fill:p.light, rx:10, ry:10, stroke:p.accent, strokeWidth:1,
-                  isGcPlaceholder:true, gcPlaceholderId:'gallery_sub2' }
-            ];
-        }
-    },
-    blank: {
-        name: _t('gc_tpl_blank','빈 페이지'), icon: 'fa-square',
-        build() { return []; }
-    }
-};
+/* ─── Animated Sticker Definitions ─── */
+const ANIM_STICKERS = [
+    { id:'fireworks',  emoji:'🎆', name:'폭죽',     nameKey:'gc_stk_fireworks' },
+    { id:'hearts',     emoji:'💕', name:'하트뿜뿜', nameKey:'gc_stk_hearts' },
+    { id:'snow',       emoji:'❄️', name:'눈내림',   nameKey:'gc_stk_snow' },
+    { id:'confetti',   emoji:'🎊', name:'색종이',   nameKey:'gc_stk_confetti' },
+    { id:'sparkle',    emoji:'✨', name:'반짝이',   nameKey:'gc_stk_sparkle' },
+    { id:'bow',        emoji:'🙇', name:'세배',     nameKey:'gc_stk_bow' },
+    { id:'balloon',    emoji:'🎈', name:'풍선',     nameKey:'gc_stk_balloon' },
+    { id:'flower',     emoji:'🌸', name:'꽃날림',   nameKey:'gc_stk_flower' },
+    { id:'star',       emoji:'⭐', name:'별빛',     nameKey:'gc_stk_star' },
+    { id:'fire',       emoji:'🔥', name:'불꽃',     nameKey:'gc_stk_fire' },
+];
 
 /* ─── State ─── */
-let _gcThumbCache = [];
 let _gcCategory = 'christmas';
-let _gcAnimation = 'snow';
 let _gcPhotos = [];
 
 /* ═══════════════════════════════════════════
@@ -129,37 +53,21 @@ let _gcPhotos = [];
 export function initGreetingCardMode() {
     document.body.classList.add('greeting-card-mode');
 
-    const pc = document.getElementById('pageCounter');
-    if (pc) {
-        const obs = new MutationObserver(() => {
-            if (window.__GREETING_CARD_MODE) {
-                clearTimeout(window.__gcThumbTimer);
-                window.__gcThumbTimer = setTimeout(() => _renderThumbsFromCache(), 200);
-            }
-        });
-        obs.observe(pc, { childList:true, characterData:true, subtree:true });
-    }
-
     // Expose to window
-    window.gcActivatePanel = activateSlidePanel;
-    window.gcInitPages = initDefaultPages;
-    window.gcDuplicateSlide = duplicateSlide;
-    window.gcDeleteSlide = gcDeleteSlide;
+    window.gcInitPages = initSinglePage;
     window.gcPreview = openGcPreview;
     window.gcClosePreview = closeGcPreview;
-    window.gcApplyTemplate = applyTemplate;
-    window.gcGoToSlide = gcGoToSlide;
-    window.gcShowTemplates = showTemplateModal;
-    window.gcHideTemplates = hideTemplateModal;
-    window.renderGcThumbs = renderSlideThumbs;
-    window.openGreetingCardWizard = openGcWizard;
-    window.handleGcPhotos = handleGcPhotos;
-    window.runGcGeneration = runGcGeneration;
-    window._gcRemovePhoto = _gcRemovePhoto;
     window.gcShareCard = shareGreetingCard;
     window._gcCloseShare = _gcCloseShare;
     window._gcCopyShareUrl = _gcCopyShareUrl;
     window._gcSelectCat = _gcSelectCat;
+    window.openGreetingCardWizard = openGcWizard;
+    window.handleGcPhotos = handleGcPhotos;
+    window.runGcGeneration = runGcGeneration;
+    window._gcRemovePhoto = _gcRemovePhoto;
+    window.gcAddSticker = addAnimSticker;
+    window.gcShowStickerPanel = showStickerPanel;
+    window.gcActivatePanel = activateStickerPanel;
 
     setupPlaceholderUpload();
 
@@ -184,50 +92,19 @@ function _createMobileGcNav() {
     nav.id = 'gcMobileNav';
     nav.style.cssText = 'position:fixed; bottom:0; left:0; right:0; z-index:9500; background:#fff; border-top:2px solid #5eead4; display:flex; flex-direction:column; box-shadow:0 -4px 20px rgba(0,0,0,0.12); padding-bottom:env(safe-area-inset-bottom, 0);';
     nav.innerHTML = `
-        <div style="display:flex; align-items:center; padding:6px 8px; gap:4px;">
-            <button onclick="window.gcGoToSlide(Math.max(0, (window._getPageIndex?window._getPageIndex():0)-1))" style="width:40px;height:40px;border:1px solid #5eead4;border-radius:10px;background:#fff;color:#14b8a6;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-chevron-left"></i></button>
-            <div id="gcMobileSlideStrip" style="flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px 0;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;"></div>
-            <button onclick="window.gcGoToSlide(Math.min((window.__pageDataList||[]).length-1, (window._getPageIndex?window._getPageIndex():0)+1))" style="width:40px;height:40px;border:1px solid #5eead4;border-radius:10px;background:#fff;color:#14b8a6;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-        <div style="display:flex; align-items:center; justify-content:space-around; padding:4px 8px 6px; border-top:1px solid #d1fae5;">
-            <button onclick="window.addPage()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#14b8a6;font-size:16px;cursor:pointer;padding:4px 10px;">
-                <i class="fa-solid fa-plus"></i><span style="font-size:9px;font-weight:700;">추가</span>
+        <div style="display:flex; align-items:center; justify-content:space-around; padding:8px 8px 10px; border-top:1px solid #d1fae5;">
+            <button onclick="window.gcShowStickerPanel()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#14b8a6;font-size:18px;cursor:pointer;padding:4px 10px;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i><span style="font-size:9px;font-weight:700;">효과</span>
             </button>
-            <button onclick="window.gcDuplicateSlide()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#14b8a6;font-size:16px;cursor:pointer;padding:4px 10px;">
-                <i class="fa-solid fa-copy"></i><span style="font-size:9px;font-weight:700;">복제</span>
-            </button>
-            <button onclick="window.gcShowTemplates()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#0d9488;font-size:16px;cursor:pointer;padding:4px 10px;">
-                <i class="fa-solid fa-table-cells-large"></i><span style="font-size:9px;font-weight:700;">섹션</span>
-            </button>
-            <button onclick="window.gcPreview()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#16a34a;font-size:16px;cursor:pointer;padding:4px 10px;">
+            <button onclick="window.gcPreview()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#16a34a;font-size:18px;cursor:pointer;padding:4px 10px;">
                 <i class="fa-solid fa-eye"></i><span style="font-size:9px;font-weight:700;">미리보기</span>
             </button>
-            <button onclick="window.gcShareCard()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#7c3aed;font-size:16px;cursor:pointer;padding:4px 10px;">
+            <button onclick="window.gcShareCard()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#7c3aed;font-size:18px;cursor:pointer;padding:4px 10px;">
                 <i class="fa-solid fa-share-nodes"></i><span style="font-size:9px;font-weight:700;">공유</span>
             </button>
         </div>
     `;
     document.body.appendChild(nav);
-    _updateMobileSlideStrip();
-}
-
-function _updateMobileSlideStrip() {
-    const strip = document.getElementById('gcMobileSlideStrip');
-    if (!strip) return;
-    const pages = window.__pageDataList || pageDataList;
-    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
-    strip.innerHTML = '';
-    for (let i = 0; i < pages.length; i++) {
-        const thumb = _gcThumbCache[i] || null;
-        const isActive = i === curIdx;
-        const el = document.createElement('div');
-        el.style.cssText = `flex-shrink:0; width:40px; height:70px; border-radius:6px; overflow:hidden; cursor:pointer; border:2px solid ${isActive?'#14b8a6':'#e2e8f0'}; background:${isActive?'#f0fdfa':'#f8fafc'}; scroll-snap-align:center;`;
-        el.innerHTML = thumb ? `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8;font-weight:bold;">${i+1}</div>`;
-        el.onclick = () => window.gcGoToSlide(i);
-        strip.appendChild(el);
-    }
-    const activeEl = strip.children[curIdx];
-    if (activeEl) setTimeout(() => activeEl.scrollIntoView({ inline:'center', behavior:'smooth' }), 50);
 }
 
 /* ═══════════════════════════════════════════
@@ -316,40 +193,68 @@ function replacePlaceholderWithImage(file, placeholderRect) {
 }
 
 /* ═══════════════════════════════════════════
-   2. DEFAULT PAGES
+   2. SINGLE PAGE INIT
    ═══════════════════════════════════════════ */
-let _gcInitCancelled = false;
-
-function initDefaultPages() {
+function initSinglePage() {
     if (!window.__GREETING_CARD_MODE || !canvas) return;
-    if (_gcInitCancelled) return;
-    if (pageDataList.length > 1) return;
 
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) return;
 
     const p = PALETTES[_gcCategory] || PALETTES.christmas;
     board.set({ fill: p.bg });
+
+    // Apply default cover template
+    _applyDefaultCover();
+
     canvas.requestRenderAll();
+    setTimeout(() => _mobileFitScreen(), 400);
+}
 
-    applyTemplateToCanvas('cover');
+function _applyDefaultCover() {
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
 
-    if (window.addPage) window.addPage();
-    setTimeout(() => {
-        if (_gcInitCancelled) return;
-        const b2 = canvas.getObjects().find(o => o.isBoard);
-        if (b2) b2.set({ fill: p.bg });
-        applyTemplateToCanvas('message');
+    const p = PALETTES[_gcCategory] || PALETTES.christmas;
+    const g = CATEGORY_GREETINGS[_gcCategory] || CATEGORY_GREETINGS.christmas;
+    const emoji = CATEGORY_EMOJIS[_gcCategory] || '✨';
+    const bw = board.width * (board.scaleX || 1);
+    const bh = board.height * (board.scaleY || 1);
+    const bx = board.left || 0;
+    const by = board.top || 0;
 
-        setTimeout(() => {
-            if (_gcInitCancelled) return;
-            goToPage(0);
-            setTimeout(() => {
-                renderSlideThumbs();
-                _mobileFitScreen();
-            }, 400);
-        }, 200);
-    }, 300);
+    // Remove non-board objects
+    canvas.getObjects().filter(o => !o.isBoard && !o.isMockup && !o.isGuide).forEach(o => canvas.remove(o));
+
+    const items = [
+        { type:'textbox', text:emoji, left:bw*0.35, top:bh*0.06, width:bw*0.3,
+          fontSize:Math.round(bh*0.07), fontFamily:'Georgia, serif', fill:p.accent, textAlign:'center' },
+        { type:'textbox', text:g.title, left:bw*0.05, top:bh*0.17, width:bw*0.9,
+          fontSize:Math.round(bh*0.05), fontFamily:'Georgia, serif', fontWeight:'bold', fill:p.text, textAlign:'center' },
+        { type:'rect', left:bw*0.1, top:bh*0.28, width:bw*0.8, height:bh*0.35,
+          fill:p.light, rx:16, ry:16, stroke:p.accent, strokeWidth:2,
+          isGcPlaceholder:true, gcPlaceholderId:'cover_main' },
+        { type:'textbox', text:_t('gc_photo_here','사진을 넣어주세요'), left:bw*0.2, top:bh*0.43, width:bw*0.6,
+          fontSize:Math.round(bh*0.022), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center', editable:false,
+          isGcPlaceholderText:true, gcPlaceholderId:'cover_main' },
+        { type:'textbox', text:g.sub, left:bw*0.1, top:bh*0.7, width:bw*0.8,
+          fontSize:Math.round(bh*0.03), fontFamily:'Georgia, serif', fill:p.text, textAlign:'center' },
+        { type:'rect', left:bw*0.3, top:bh*0.8, width:bw*0.4, height:2, fill:p.accent },
+        { type:'textbox', text:'From. ___', left:bw*0.15, top:bh*0.85, width:bw*0.7,
+          fontSize:Math.round(bh*0.024), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center' }
+    ];
+
+    items.forEach(cfg => {
+        cfg.left = (cfg.left || 0) + bx;
+        cfg.top = (cfg.top || 0) + by;
+        let obj;
+        if (cfg.type === 'textbox') obj = new fabric.Textbox(cfg.text || '', cfg);
+        else if (cfg.type === 'rect') obj = new fabric.Rect(cfg);
+        if (obj) {
+            CUSTOM_PROPS.forEach(pr => { if (cfg[pr] !== undefined) obj.set(pr, cfg[pr]); });
+            canvas.add(obj);
+        }
+    });
 }
 
 /* ═══ Mobile fit screen ═══ */
@@ -358,7 +263,7 @@ function _mobileFitScreen() {
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) return;
     const cW = canvas.width, cH = canvas.height;
-    const padTop = 20, padBot = 130, padSide = 20;
+    const padTop = 20, padBot = 80, padSide = 20;
     const availW = cW - padSide * 2;
     const availH = cH - padTop - padBot;
     const bW = board.width * (board.scaleX || 1);
@@ -372,181 +277,95 @@ function _mobileFitScreen() {
 }
 
 /* ═══════════════════════════════════════════
-   3. SLIDE PANEL
+   3. ANIMATED STICKER PANEL
    ═══════════════════════════════════════════ */
-function activateSlidePanel() {
+function activateStickerPanel() {
     const pageBtn = document.querySelector('#iconBar .icon-item[data-panel="sub-page"]');
     if (pageBtn) pageBtn.click();
 
     setTimeout(() => {
         const subPage = document.getElementById('sub-page');
         if (!subPage) return;
-        subPage.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:0 2px 10px; border-bottom:1px solid #5eead4; margin-bottom:10px;">
-                <span style="font-weight:800; font-size:14px; color:#1e293b;"><i class="fa-solid fa-envelope-open-text" style="color:#14b8a6; margin-right:4px;"></i>${_t('gc_pages','페이지')}</span>
-                <div style="display:flex; gap:4px;">
-                    <button onclick="window.addPage()" title="${_t('gc_add_page','페이지 추가')}" style="width:30px; height:30px; border:1px solid #5eead4; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; color:#14b8a6;"><i class="fa-solid fa-plus"></i></button>
-                    <button onclick="window.gcDuplicateSlide()" title="${_t('gc_duplicate','복제')}" style="width:30px; height:30px; border:1px solid #5eead4; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#14b8a6;"><i class="fa-solid fa-copy"></i></button>
-                    <button onclick="window.gcShowTemplates()" title="${_t('gc_templates','섹션 템플릿')}" style="width:30px; height:30px; border:1px solid #5eead4; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#0d9488;"><i class="fa-solid fa-table-cells-large"></i></button>
-                    <button onclick="window.gcPreview()" title="${_t('gc_preview','미리보기')}" style="width:30px; height:30px; border:1px solid #5eead4; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; color:#14b8a6;"><i class="fa-solid fa-eye"></i></button>
-                </div>
-            </div>
-            <div id="gcSlideList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; max-height:calc(100vh - 320px);"></div>
-        `;
-        renderSlideThumbs();
+        _renderStickerPanel(subPage);
     }, 100);
 }
 
-/* ═══════════════════════════════════════════
-   4. THUMBNAILS
-   ═══════════════════════════════════════════ */
-function _withTimeout(promise, ms) {
-    return Promise.race([promise, new Promise(r => setTimeout(() => r(null), ms))]);
-}
-
-async function _captureAllPages(scale) {
-    const c = canvas || window.canvas;
-    if (!c) return [];
-    if (window.savePageState) window.savePageState();
-    const origVpt = c.viewportTransform.slice();
-    const origW = c.getWidth(), origH = c.getHeight();
-    const results = [];
-    for (let i = 0; i < pageDataList.length; i++) {
-        try {
-            goToPage(i);
-            await new Promise(r => setTimeout(r, 150));
-            const board = c.getObjects().find(o => o.isBoard);
-            if (!board) { results.push(null); continue; }
-            c.setViewportTransform([1, 0, 0, 1, -board.left, -board.top]);
-            c.setDimensions({ width: board.width * (board.scaleX||1), height: board.height * (board.scaleY||1) });
-            c.requestRenderAll();
-            await new Promise(r => setTimeout(r, 100));
-            const url = c.toDataURL({ format:'jpeg', quality:0.7, multiplier:scale, enableRetinaScaling:false });
-            results.push(url);
-        } catch(e) { results.push(null); }
+function showStickerPanel() {
+    // For mobile: show sticker panel as bottom sheet
+    let panel = document.getElementById('gcStickerSheet');
+    if (panel) {
+        panel.style.display = 'flex';
+        return;
     }
-    goToPage(window._getPageIndex ? window._getPageIndex() : 0);
-    c.setViewportTransform(origVpt);
-    c.setDimensions({ width:origW, height:origH });
-    c.requestRenderAll();
-    return results;
+    panel = document.createElement('div');
+    panel.id = 'gcStickerSheet';
+    panel.style.cssText = 'position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.4); display:flex; align-items:flex-end; justify-content:center;';
+    panel.onclick = (e) => { if (e.target === panel) panel.style.display = 'none'; };
+
+    const sheet = document.createElement('div');
+    sheet.style.cssText = 'background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:500px; max-height:60vh; overflow-y:auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom, 0));';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;';
+    title.innerHTML = `<span style="font-size:16px; font-weight:800; color:#0f766e;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px; color:#14b8a6;"></i>${_t('gc_sticker_title','애니메이션 효과')}</span><button onclick="document.getElementById('gcStickerSheet').style.display='none'" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>`;
+    sheet.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;';
+    ANIM_STICKERS.forEach(stk => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'border:2px solid #e2e8f0; border-radius:14px; padding:12px 4px; text-align:center; cursor:pointer; background:#fff; transition:all 0.15s;';
+        btn.innerHTML = `<div style="font-size:28px; margin-bottom:4px;">${stk.emoji}</div><div style="font-size:10px; font-weight:700; color:#334155;">${_t(stk.nameKey, stk.name)}</div>`;
+        btn.onmouseenter = () => { btn.style.borderColor='#14b8a6'; btn.style.background='#f0fdfa'; };
+        btn.onmouseleave = () => { btn.style.borderColor='#e2e8f0'; btn.style.background='#fff'; };
+        btn.onclick = () => { addAnimSticker(stk.id); panel.style.display = 'none'; };
+        grid.appendChild(btn);
+    });
+    sheet.appendChild(grid);
+
+    // Info text
+    const info = document.createElement('p');
+    info.style.cssText = 'margin-top:12px; font-size:11px; color:#94a3b8; text-align:center;';
+    info.textContent = _t('gc_sticker_info', '효과를 선택하면 캔버스에 추가됩니다. 위치와 크기를 자유롭게 조절하세요.');
+    sheet.appendChild(info);
+
+    panel.appendChild(sheet);
+    document.body.appendChild(panel);
 }
 
-async function renderSlideThumbs() {
-    if (!window.__GREETING_CARD_MODE) return;
-    if (window.savePageState) window.savePageState();
-    const thumbs = await _captureAllPages(0.2);
-    _gcThumbCache = thumbs;
-    _renderThumbsFromCache();
-}
-
-function _renderThumbsFromCache() {
-    const container = document.getElementById('gcSlideList');
-    if (!container) return;
-    const pages = window.__pageDataList || pageDataList;
-    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
-
-    container.innerHTML = '';
-    for (let i = 0; i < pages.length; i++) {
-        const thumbUrl = _gcThumbCache[i] || null;
-        const isActive = i === curIdx;
-
-        const div = document.createElement('div');
-        div.style.cssText = 'display:flex; align-items:flex-start; gap:6px; padding:6px; border-radius:8px; cursor:pointer; border:2px solid ' + (isActive ? '#14b8a6' : 'transparent') + '; background:' + (isActive ? '#f0fdfa' : 'transparent') + '; transition:all 0.15s; position:relative;';
-        div.onclick = () => gcGoToSlide(i);
-        div.onmouseenter = () => { const a = div.querySelector('.gc-sl-act'); if(a) a.style.display='flex'; };
-        div.onmouseleave = () => { const a = div.querySelector('.gc-sl-act'); if(a) a.style.display='none'; };
-
-        div.innerHTML = `
-            <span style="font-size:11px; font-weight:700; color:${isActive?'#14b8a6':'#94a3b8'}; min-width:18px; text-align:center; padding-top:4px;">${i+1}</span>
-            <div style="flex:1; border-radius:4px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1); aspect-ratio:9/16; background:#f0fdfa;">
-                ${thumbUrl ? '<img src="'+thumbUrl+'" style="width:100%; height:100%; object-fit:cover; display:block;" draggable="false">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#14b8a6;font-size:11px;">'+(i+1)+'</div>'}
+function _renderStickerPanel(container) {
+    container.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0 2px 10px; border-bottom:1px solid #5eead4; margin-bottom:10px;">
+            <span style="font-weight:800; font-size:14px; color:#1e293b;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#14b8a6; margin-right:4px;"></i>${_t('gc_sticker_title','애니메이션 효과')}</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-bottom:14px;" id="gcStickerGrid"></div>
+        <div style="border-top:1px solid #e2e8f0; padding-top:10px;">
+            <div style="display:flex; gap:6px;">
+                <button onclick="window.gcPreview()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-eye" style="margin-right:4px;"></i>${_t('gc_preview','미리보기')}</button>
+                <button onclick="window.gcShareCard()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#7c3aed; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-share-nodes" style="margin-right:4px;"></i>${_t('gc_share','공유하기')}</button>
             </div>
-            <div class="gc-sl-act" style="display:none; position:absolute; top:4px; right:4px; gap:2px;">
-                <button onclick="event.stopPropagation(); window.gcDuplicateSlide(${i})" title="${_t('gc_duplicate','복제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-copy"></i></button>
-                <button onclick="event.stopPropagation(); window.gcDeleteSlide(${i})" title="${_t('gc_delete','삭제')}" style="width:22px; height:22px; border:none; border-radius:4px; background:rgba(239,68,68,0.8); color:#fff; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" ${pages.length<=1?'disabled':''}><i class="fa-solid fa-trash"></i></button>
-            </div>
-        `;
-        container.appendChild(div);
-    }
-
-    const activeEl = container.querySelector('[style*="border:2px solid #14b8a6"]');
-    if (activeEl) activeEl.scrollIntoView({ block:'nearest', behavior:'smooth' });
-    _updateMobileSlideStrip();
+        </div>
+    `;
+    const grid = container.querySelector('#gcStickerGrid');
+    if (!grid) return;
+    ANIM_STICKERS.forEach(stk => {
+        const card = document.createElement('div');
+        card.style.cssText = 'border:2px solid #e2e8f0; border-radius:10px; padding:10px 6px; text-align:center; cursor:pointer; transition:all 0.15s; background:#fff;';
+        card.onmouseenter = () => { card.style.borderColor='#14b8a6'; card.style.background='#f0fdfa'; };
+        card.onmouseleave = () => { card.style.borderColor='#e2e8f0'; card.style.background='#fff'; };
+        card.innerHTML = `<div style="font-size:24px; margin-bottom:2px;">${stk.emoji}</div><div style="font-size:10px; font-weight:700; color:#334155;">${_t(stk.nameKey, stk.name)}</div>`;
+        card.onclick = () => addAnimSticker(stk.id);
+        grid.appendChild(card);
+    });
 }
 
 /* ═══════════════════════════════════════════
-   5. NAVIGATION
+   4. ADD ANIMATED STICKER TO CANVAS
    ═══════════════════════════════════════════ */
-function gcGoToSlide(index) {
-    const curIdx = window._getPageIndex ? window._getPageIndex() : currentPageIndex;
-    if (index === curIdx) return;
-    if (window.savePageState) window.savePageState();
-    goToPage(index);
-    setTimeout(() => {
-        _renderThumbsFromCache();
-        _mobileFitScreen();
-    }, 400);
-}
-
-/* ═══════════════════════════════════════════
-   6. DUPLICATE / DELETE
-   ═══════════════════════════════════════════ */
-function duplicateSlide(index) {
-    if (window.savePageState) window.savePageState();
-    const srcIdx = (typeof index === 'number') ? index : currentPageIndex;
-    if (!pageDataList[srcIdx]) return;
-    const cloned = JSON.parse(JSON.stringify(pageDataList[srcIdx]));
-    pageDataList.splice(srcIdx + 1, 0, cloned);
-    goToPage(srcIdx + 1);
-    setTimeout(() => renderSlideThumbs(), 300);
-}
-
-function gcDeleteSlide(index) {
-    if (pageDataList.length <= 1) return;
-    if (!confirm(_t('gc_delete_confirm','이 페이지를 삭제하시겠습니까?'))) return;
-    pageDataList.splice(index, 1);
-    const newIdx = Math.min(index, pageDataList.length - 1);
-    goToPage(newIdx);
-    setTimeout(() => renderSlideThumbs(), 300);
-}
-
-/* ═══════════════════════════════════════════
-   7. SECTION TEMPLATES
-   ═══════════════════════════════════════════ */
-function showTemplateModal() {
-    const modal = document.getElementById('gcTemplateModal');
-    if (!modal) return;
-
-    const grid = document.getElementById('gcTemplateGrid');
-    if (grid) {
-        grid.innerHTML = '';
-        Object.entries(CARD_TEMPLATES).forEach(([key, tpl]) => {
-            const card = document.createElement('div');
-            card.style.cssText = 'border:2px solid #e2e8f0; border-radius:12px; padding:16px 8px; text-align:center; cursor:pointer; transition:all 0.15s; background:#fff;';
-            card.onmouseenter = () => { card.style.borderColor='#14b8a6'; card.style.background='#f0fdfa'; };
-            card.onmouseleave = () => { card.style.borderColor='#e2e8f0'; card.style.background='#fff'; };
-            card.innerHTML = `<i class="fa-solid ${tpl.icon}" style="font-size:24px; color:#14b8a6; margin-bottom:6px; display:block;"></i><div style="font-size:12px; font-weight:700; color:#334155;">${tpl.name}</div>`;
-            card.onclick = () => { applyTemplate(key); hideTemplateModal(); };
-            grid.appendChild(card);
-        });
-    }
-    modal.style.display = 'flex';
-}
-
-function hideTemplateModal() {
-    const modal = document.getElementById('gcTemplateModal');
-    if (modal) modal.style.display = 'none';
-}
-
-function applyTemplate(templateKey) {
-    applyTemplateToCanvas(templateKey);
-    setTimeout(() => renderSlideThumbs(), 300);
-}
-
-function applyTemplateToCanvas(templateKey) {
-    const tpl = CARD_TEMPLATES[templateKey];
-    if (!tpl) return;
+function addAnimSticker(stickerType) {
+    if (!canvas) return;
+    const stkDef = ANIM_STICKERS.find(s => s.id === stickerType);
+    if (!stkDef) return;
 
     const board = canvas.getObjects().find(o => o.isBoard);
     if (!board) return;
@@ -556,60 +375,371 @@ function applyTemplateToCanvas(templateKey) {
     const bx = board.left || 0;
     const by = board.top || 0;
 
-    // Remove non-board objects
-    canvas.getObjects().filter(o => !o.isBoard && !o.isMockup && !o.isGuide).forEach(o => canvas.remove(o));
+    const size = Math.min(bw, bh) * 0.18;
 
-    const items = tpl.build(bw, bh, _gcCategory);
-    items.forEach(cfg => {
-        cfg.left = (cfg.left || 0) + bx;
-        cfg.top = (cfg.top || 0) + by;
-        let obj;
-        if (cfg.type === 'textbox') {
-            obj = new fabric.Textbox(cfg.text || '', cfg);
-        } else if (cfg.type === 'rect') {
-            obj = new fabric.Rect(cfg);
-        } else if (cfg.type === 'line') {
-            obj = new fabric.Line([cfg.x1||0, cfg.y1||0, cfg.x2||0, cfg.y2||0], cfg);
-        }
-        if (obj) {
-            CUSTOM_PROPS.forEach(p => { if (cfg[p] !== undefined) obj.set(p, cfg[p]); });
-            canvas.add(obj);
-        }
+    // Create the sticker as a group: emoji + animated badge
+    const emojiText = new fabric.Text(stkDef.emoji, {
+        fontSize: size * 0.7,
+        originX: 'center',
+        originY: 'center',
+        left: 0,
+        top: -4,
     });
+
+    const badge = new fabric.Rect({
+        width: size * 0.5,
+        height: size * 0.18,
+        rx: size * 0.09,
+        ry: size * 0.09,
+        fill: '#14b8a6',
+        originX: 'center',
+        originY: 'center',
+        left: 0,
+        top: size * 0.35,
+    });
+
+    const badgeText = new fabric.Text('ANIM', {
+        fontSize: size * 0.1,
+        fontFamily: 'Arial, sans-serif',
+        fontWeight: 'bold',
+        fill: '#fff',
+        originX: 'center',
+        originY: 'center',
+        left: 0,
+        top: size * 0.35,
+    });
+
+    const border = new fabric.Rect({
+        width: size,
+        height: size,
+        rx: size * 0.15,
+        ry: size * 0.15,
+        fill: 'transparent',
+        stroke: '#14b8a6',
+        strokeWidth: 2,
+        strokeDashArray: [6, 4],
+        originX: 'center',
+        originY: 'center',
+        left: 0,
+        top: 0,
+    });
+
+    const group = new fabric.Group([border, emojiText, badge, badgeText], {
+        left: bx + bw * 0.3 + Math.random() * bw * 0.4,
+        top: by + bh * 0.3 + Math.random() * bh * 0.4,
+        originX: 'center',
+        originY: 'center',
+        // Custom properties
+        isAnimSticker: true,
+        animStickerType: stickerType,
+        excludeFromExport: true,
+    });
+
+    canvas.add(group);
+    canvas.setActiveObject(group);
     canvas.requestRenderAll();
 }
 
 /* ═══════════════════════════════════════════
-   8. PREVIEW
+   5. CAPTURE CANVAS + STICKER POSITIONS
+   ═══════════════════════════════════════════ */
+function _captureCardData() {
+    const c = canvas;
+    if (!c) return null;
+
+    const board = c.getObjects().find(o => o.isBoard);
+    if (!board) return null;
+
+    const bw = board.width * (board.scaleX || 1);
+    const bh = board.height * (board.scaleY || 1);
+    const bx = board.left || 0;
+    const by = board.top || 0;
+
+    // Collect sticker positions (relative to board, as %)
+    const stickers = [];
+    c.getObjects().forEach(obj => {
+        if (!obj.isAnimSticker) return;
+        const center = obj.getCenterPoint();
+        const relX = ((center.x - bx) / bw) * 100;
+        const relY = ((center.y - by) / bh) * 100;
+        const objW = (obj.width * (obj.scaleX || 1));
+        const relSize = (objW / bw) * 100;
+        stickers.push({
+            type: obj.animStickerType,
+            x: Math.round(relX * 10) / 10,
+            y: Math.round(relY * 10) / 10,
+            size: Math.round(relSize * 10) / 10,
+        });
+    });
+
+    // Temporarily hide stickers and capture the image
+    const stickerObjs = c.getObjects().filter(o => o.isAnimSticker);
+    stickerObjs.forEach(o => o.set('visible', false));
+    c.requestRenderAll();
+
+    // Capture
+    const origVpt = c.viewportTransform.slice();
+    const origW = c.getWidth(), origH = c.getHeight();
+    c.setViewportTransform([1, 0, 0, 1, -bx, -by]);
+    c.setDimensions({ width: bw, height: bh });
+    c.requestRenderAll();
+    const imageUrl = c.toDataURL({ format: 'jpeg', quality: 0.85, multiplier: 2, enableRetinaScaling: false });
+
+    // Restore
+    c.setViewportTransform(origVpt);
+    c.setDimensions({ width: origW, height: origH });
+    stickerObjs.forEach(o => o.set('visible', true));
+    c.requestRenderAll();
+
+    return { imageUrl, stickers, category: _gcCategory };
+}
+
+/* ═══════════════════════════════════════════
+   6. PREVIEW
    ═══════════════════════════════════════════ */
 async function openGcPreview() {
     const overlay = document.getElementById('gcPreviewOverlay');
     if (!overlay) return;
-
-    const p = PALETTES[_gcCategory] || PALETTES.christmas;
-    overlay.style.background = `linear-gradient(135deg, ${p.bg}, ${p.light})`;
     overlay.style.display = 'flex';
 
     const scroll = document.getElementById('gcPreviewScroll');
-    scroll.innerHTML = '<div style="text-align:center; padding:40px; color:#fff; font-size:14px;"><i class="fa-solid fa-spinner fa-spin"></i> 미리보기 생성 중...</div>';
+    scroll.innerHTML = '<div style="text-align:center; padding:40px; color:#0f766e; font-size:14px;"><i class="fa-solid fa-spinner fa-spin"></i> 미리보기 생성 중...</div>';
 
-    if (window.savePageState) window.savePageState();
-    const thumbs = await _captureAllPages(0.8);
+    await new Promise(r => setTimeout(r, 100));
+    const data = _captureCardData();
+    if (!data || !data.imageUrl) {
+        scroll.innerHTML = '<div style="text-align:center; padding:40px; color:#ef4444;">캡처 실패</div>';
+        return;
+    }
 
+    const p = PALETTES[_gcCategory] || PALETTES.christmas;
+    overlay.style.background = `linear-gradient(135deg, ${p.bg}, ${p.light})`;
+
+    // Build preview with iframe showing animated version
     scroll.innerHTML = '';
-    thumbs.forEach((url, i) => {
-        if (!url) return;
-        const wrap = document.createElement('div');
-        wrap.style.cssText = 'text-align:center; margin-bottom:16px; position:relative;';
-        const img = document.createElement('img');
-        img.src = url;
-        img.style.cssText = 'max-width:380px; width:90%; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);';
-        wrap.appendChild(img);
-        scroll.appendChild(wrap);
-    });
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex; align-items:center; justify-content:center; padding:20px; height:100%;';
+
+    const frame = document.createElement('div');
+    frame.style.cssText = 'position:relative; max-width:380px; width:90%; border-radius:16px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,0.3); aspect-ratio:9/16;';
+
+    const img = document.createElement('img');
+    img.src = data.imageUrl;
+    img.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block;';
+    frame.appendChild(img);
+
+    // Add animated sticker overlays
+    const animLayer = document.createElement('div');
+    animLayer.style.cssText = 'position:absolute; inset:0; pointer-events:none; overflow:hidden;';
+    _renderPreviewAnimations(animLayer, data.stickers, data.category);
+    frame.appendChild(animLayer);
+
+    wrap.appendChild(frame);
+    scroll.appendChild(wrap);
 
     const counter = document.getElementById('gcPreviewCounter');
-    if (counter) counter.textContent = `${thumbs.filter(Boolean).length} pages`;
+    if (counter) counter.textContent = `${data.stickers.length} effects`;
+}
+
+function _renderPreviewAnimations(container, stickers, category) {
+    const colors = _getCategoryColors(category);
+    stickers.forEach(stk => {
+        _createStickerAnimation(container, stk, colors);
+    });
+}
+
+function _getCategoryColors(category) {
+    const C = {
+        christmas: ['#fff','#ffd700','#c41e3a','#ffa500'],
+        newyear:   ['#ffd700','#a78bfa','#fff','#f59e0b'],
+        birthday:  ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa'],
+        thankyou:  ['#86efac','#16a34a','#fbbf24','#fff'],
+        congrats:  ['#f97316','#fbbf24','#ef4444','#a78bfa','#34d399'],
+        valentines:['#ec4899','#f9a8d4','#fff','#f472b6']
+    };
+    return C[category] || C.christmas;
+}
+
+function _createStickerAnimation(container, stk, colors) {
+    const { type, x, y, size } = stk;
+    const area = document.createElement('div');
+    area.style.cssText = `position:absolute; left:${x - size/2}%; top:${y - size/2}%; width:${size}%; height:${size}%; pointer-events:none;`;
+
+    if (type === 'fireworks') {
+        _animFireworks(area, colors);
+    } else if (type === 'hearts') {
+        _animHearts(area, colors);
+    } else if (type === 'snow') {
+        _animSnow(area);
+    } else if (type === 'confetti') {
+        _animConfetti(area, colors);
+    } else if (type === 'sparkle') {
+        _animSparkle(area, colors);
+    } else if (type === 'bow') {
+        _animBow(area);
+    } else if (type === 'balloon') {
+        _animBalloon(area, colors);
+    } else if (type === 'flower') {
+        _animFlower(area);
+    } else if (type === 'star') {
+        _animStar(area, colors);
+    } else if (type === 'fire') {
+        _animFire(area);
+    }
+
+    container.appendChild(area);
+}
+
+/* ─── Individual animation generators (for preview + gc.html) ─── */
+function _animFireworks(el, colors) {
+    setInterval(() => {
+        const cx = 30 + Math.random() * 40, cy = 20 + Math.random() * 40;
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        for (let j = 0; j < 12; j++) {
+            const dot = document.createElement('div');
+            const angle = (j / 12) * Math.PI * 2;
+            const dist = 25 + Math.random() * 25;
+            const tx = Math.cos(angle) * dist, ty = Math.sin(angle) * dist;
+            dot.style.cssText = `position:absolute; left:${cx}%; top:${cy}%; width:4px; height:4px; border-radius:50%; background:${c}; transition:all 1s ease-out; transform:scale(1); opacity:1;`;
+            el.appendChild(dot);
+            requestAnimationFrame(() => {
+                dot.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
+                dot.style.opacity = '0';
+            });
+            setTimeout(() => dot.remove(), 1200);
+        }
+    }, 1800);
+}
+
+function _animHearts(el, colors) {
+    const heartChars = ['♥','💕','💗','💖'];
+    setInterval(() => {
+        const h = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const ch = heartChars[Math.floor(Math.random() * heartChars.length)];
+        const sz = 12 + Math.random() * 16;
+        h.textContent = ch;
+        h.style.cssText = `position:absolute; left:${20+Math.random()*60}%; bottom:0; font-size:${sz}px; color:${c}; opacity:1; transition:all 2.5s ease-out; pointer-events:none;`;
+        el.appendChild(h);
+        requestAnimationFrame(() => {
+            h.style.bottom = '100%';
+            h.style.opacity = '0';
+            h.style.transform = `translateX(${-20+Math.random()*40}px) scale(1.3)`;
+        });
+        setTimeout(() => h.remove(), 2800);
+    }, 400);
+}
+
+function _animSnow(el) {
+    for (let i = 0; i < 8; i++) {
+        const flake = document.createElement('div');
+        const sz = 6 + Math.random() * 12;
+        const dur = 3 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        flake.textContent = Math.random() > 0.5 ? '❄' : '•';
+        flake.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-10%; font-size:${sz}px; color:#fff; opacity:0.8; animation:gcSnowFall ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(flake);
+    }
+    _ensureKeyframe('gcSnowFall', '0%{transform:translateY(0) rotate(0);opacity:1} 100%{transform:translateY(200%) rotate(360deg);opacity:0.2}');
+}
+
+function _animConfetti(el, colors) {
+    for (let i = 0; i < 15; i++) {
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const w = 5 + Math.random() * 6, h = 3 + Math.random() * 5;
+        const dur = 2 + Math.random() * 3;
+        const delay = Math.random() * 2;
+        const piece = document.createElement('div');
+        piece.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-5%; width:${w}px; height:${h}px; background:${c}; border-radius:${Math.random()>0.5?'50%':'1px'}; animation:gcConfettiFall ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(piece);
+    }
+    _ensureKeyframe('gcConfettiFall', '0%{transform:translateY(0) rotate(0) scale(1);opacity:1} 100%{transform:translateY(300%) rotate(720deg) scale(0.5);opacity:0}');
+}
+
+function _animSparkle(el, colors) {
+    setInterval(() => {
+        const s = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const sz = 10 + Math.random() * 18;
+        s.textContent = '✨';
+        s.style.cssText = `position:absolute; left:${Math.random()*80+10}%; top:${Math.random()*80+10}%; font-size:${sz}px; color:${c}; animation:gcSparklePulse 1s ease-in-out forwards;`;
+        el.appendChild(s);
+        setTimeout(() => s.remove(), 1200);
+    }, 500);
+    _ensureKeyframe('gcSparklePulse', '0%{transform:scale(0) rotate(0);opacity:0} 50%{transform:scale(1.2) rotate(180deg);opacity:1} 100%{transform:scale(0) rotate(360deg);opacity:0}');
+}
+
+function _animBow(el) {
+    const person = document.createElement('div');
+    person.textContent = '🙇';
+    person.style.cssText = 'position:absolute; left:50%; top:50%; font-size:36px; transform:translate(-50%,-50%); animation:gcBow 2.5s ease-in-out infinite;';
+    el.appendChild(person);
+    _ensureKeyframe('gcBow', '0%,100%{transform:translate(-50%,-50%) rotate(0)} 30%{transform:translate(-50%,-30%) rotate(-45deg)} 60%{transform:translate(-50%,-30%) rotate(-45deg)} 80%{transform:translate(-50%,-50%) rotate(0)}');
+}
+
+function _animBalloon(el, colors) {
+    const balloonEmojis = ['🎈','🎈','🎈'];
+    for (let i = 0; i < 4; i++) {
+        const b = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const dur = 4 + Math.random() * 3;
+        const delay = Math.random() * 3;
+        b.textContent = balloonEmojis[i % balloonEmojis.length];
+        b.style.cssText = `position:absolute; left:${15+Math.random()*70}%; bottom:-20%; font-size:${20+Math.random()*12}px; animation:gcBalloonFloat ${dur}s ${delay}s ease-out infinite;`;
+        el.appendChild(b);
+    }
+    _ensureKeyframe('gcBalloonFloat', '0%{transform:translateY(0) scale(0.8);opacity:0} 10%{opacity:1} 100%{transform:translateY(-300%) scale(1.1);opacity:0}');
+}
+
+function _animFlower(el) {
+    const flowers = ['🌸','🌺','🌼','💮'];
+    for (let i = 0; i < 8; i++) {
+        const f = document.createElement('div');
+        const sz = 10 + Math.random() * 14;
+        const dur = 3 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        f.textContent = flowers[Math.floor(Math.random() * flowers.length)];
+        f.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-10%; font-size:${sz}px; animation:gcFlowerFall ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(f);
+    }
+    _ensureKeyframe('gcFlowerFall', '0%{transform:translateY(0) rotate(0) translateX(0);opacity:1} 50%{transform:translateY(150%) rotate(180deg) translateX(20px);opacity:0.8} 100%{transform:translateY(300%) rotate(360deg) translateX(-10px);opacity:0}');
+}
+
+function _animStar(el, colors) {
+    setInterval(() => {
+        const s = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const sz = 8 + Math.random() * 14;
+        s.textContent = Math.random() > 0.5 ? '⭐' : '🌟';
+        s.style.cssText = `position:absolute; left:${Math.random()*80+10}%; top:${Math.random()*80+10}%; font-size:${sz}px; color:${c}; animation:gcStarTwinkle 1.5s ease-in-out forwards;`;
+        el.appendChild(s);
+        setTimeout(() => s.remove(), 1700);
+    }, 600);
+    _ensureKeyframe('gcStarTwinkle', '0%{transform:scale(0) rotate(0);opacity:0} 40%{transform:scale(1.3) rotate(90deg);opacity:1} 100%{transform:scale(0) rotate(180deg);opacity:0}');
+}
+
+function _animFire(el) {
+    const fires = ['🔥','🔥','💥'];
+    setInterval(() => {
+        const f = document.createElement('div');
+        const sz = 14 + Math.random() * 16;
+        f.textContent = fires[Math.floor(Math.random() * fires.length)];
+        f.style.cssText = `position:absolute; left:${20+Math.random()*60}%; bottom:10%; font-size:${sz}px; animation:gcFireRise 1.2s ease-out forwards;`;
+        el.appendChild(f);
+        setTimeout(() => f.remove(), 1400);
+    }, 350);
+    _ensureKeyframe('gcFireRise', '0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-60px) scale(0.3);opacity:0}');
+}
+
+/* ─── CSS Keyframe injection helper ─── */
+const _injectedKeyframes = new Set();
+function _ensureKeyframe(name, body) {
+    if (_injectedKeyframes.has(name)) return;
+    _injectedKeyframes.add(name);
+    const style = document.createElement('style');
+    style.textContent = `@keyframes ${name} { ${body} }`;
+    document.head.appendChild(style);
 }
 
 function closeGcPreview() {
@@ -618,16 +748,9 @@ function closeGcPreview() {
 }
 
 /* ═══════════════════════════════════════════
-   9. WIZARD
+   7. WIZARD
    ═══════════════════════════════════════════ */
 function openGcWizard() {
-    // If already in editor, show wizard modal
-    if (window.__GREETING_CARD_MODE) {
-        const modal = document.getElementById('gcWizardModal');
-        if (modal) modal.style.display = 'flex';
-        return;
-    }
-    // Otherwise open editor first, then wizard
     const modal = document.getElementById('gcWizardModal');
     if (modal) modal.style.display = 'flex';
 }
@@ -674,14 +797,10 @@ async function runGcGeneration() {
     const catBtn = document.querySelector('.gc-cat-btn.gc-cat-active');
     _gcCategory = catBtn ? catBtn.dataset.cat : 'christmas';
 
-    const animBtn = document.querySelector('.gc-anim-btn.gc-anim-active');
-    _gcAnimation = animBtn ? animBtn.dataset.anim : 'snow';
-
     const fromName = document.getElementById('gcFromName')?.value || '';
     const toName = document.getElementById('gcToName')?.value || '';
     const message = document.getElementById('gcMessage')?.value || '';
 
-    // Close wizard
     const modal = document.getElementById('gcWizardModal');
 
     // If not in editor yet, open editor first
@@ -690,59 +809,59 @@ async function runGcGeneration() {
         if (window.dsmOpenEditor) {
             await window.dsmOpenEditor(286, 508, '인사말카드');
         }
-        // Wait for editor to be ready
         await new Promise(r => setTimeout(r, 1500));
     }
 
-    // Now apply templates with user data
     const p = PALETTES[_gcCategory] || PALETTES.christmas;
     const g = CATEGORY_GREETINGS[_gcCategory] || CATEGORY_GREETINGS.christmas;
     const emoji = CATEGORY_EMOJIS[_gcCategory] || '✨';
 
-    // Store selection for sharing
-    window.__gcSelection = { category: _gcCategory, animation: _gcAnimation, fromName, toName, message };
+    window.__gcSelection = { category: _gcCategory, fromName, toName, message };
 
-    // Set board background
     const board = canvas.getObjects().find(o => o.isBoard);
     if (board) board.set({ fill: p.bg });
 
-    // Clear and build cover page
+    // Clear canvas
     canvas.getObjects().filter(o => !o.isBoard && !o.isMockup && !o.isGuide).forEach(o => canvas.remove(o));
     const bw = board.width * (board.scaleX || 1);
     const bh = board.height * (board.scaleY || 1);
     const bx = board.left || 0;
     const by = board.top || 0;
 
-    // Custom cover with user data
-    const coverItems = [
-        { type:'textbox', text:emoji, left:bw*0.35+bx, top:bh*0.06+by, width:bw*0.3,
+    // Build single-page card
+    const items = [
+        { type:'textbox', text:emoji, left:bw*0.35+bx, top:bh*0.04+by, width:bw*0.3,
           fontSize:Math.round(bh*0.07), fontFamily:'Georgia, serif', fill:p.accent, textAlign:'center' },
-        { type:'textbox', text:g.title, left:bw*0.05+bx, top:bh*0.17+by, width:bw*0.9,
-          fontSize:Math.round(bh*0.05), fontFamily:'Georgia, serif', fontWeight:'bold', fill:p.text, textAlign:'center' }
+        { type:'textbox', text:g.title, left:bw*0.05+bx, top:bh*0.14+by, width:bw*0.9,
+          fontSize:Math.round(bh*0.045), fontFamily:'Georgia, serif', fontWeight:'bold', fill:p.text, textAlign:'center' },
     ];
 
     if (_gcPhotos.length > 0) {
-        // Will add photo after loading
+        // photo will be added separately
     } else {
-        coverItems.push(
-            { type:'rect', left:bw*0.1+bx, top:bh*0.28+by, width:bw*0.8, height:bh*0.35,
+        items.push(
+            { type:'rect', left:bw*0.1+bx, top:bh*0.24+by, width:bw*0.8, height:bh*0.3,
               fill:p.light, rx:16, ry:16, stroke:p.accent, strokeWidth:2,
-              isGcPlaceholder:true, gcPlaceholderId:'cover_main' },
-            { type:'textbox', text:_t('gc_photo_here','사진을 넣어주세요'), left:bw*0.2+bx, top:bh*0.43+by, width:bw*0.6,
-              fontSize:Math.round(bh*0.022), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center', editable:false,
-              isGcPlaceholderText:true, gcPlaceholderId:'cover_main' }
+              isGcPlaceholder:true, gcPlaceholderId:'main_photo' },
+            { type:'textbox', text:_t('gc_photo_here','사진을 넣어주세요'), left:bw*0.2+bx, top:bh*0.37+by, width:bw*0.6,
+              fontSize:Math.round(bh*0.02), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center', editable:false,
+              isGcPlaceholderText:true, gcPlaceholderId:'main_photo' }
         );
     }
 
-    coverItems.push(
-        { type:'textbox', text: toName ? `To. ${toName}` : g.sub, left:bw*0.1+bx, top:bh*0.7+by, width:bw*0.8,
-          fontSize:Math.round(bh*0.03), fontFamily:'Georgia, serif', fill:p.text, textAlign:'center' },
-        { type:'rect', left:bw*0.3+bx, top:bh*0.8+by, width:bw*0.4, height:2, fill:p.accent },
-        { type:'textbox', text: fromName ? `From. ${fromName}` : 'From. ___', left:bw*0.15+bx, top:bh*0.85+by, width:bw*0.7,
-          fontSize:Math.round(bh*0.024), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center' }
+    // Message
+    const msgText = message || g.sub;
+    items.push(
+        { type:'textbox', text: toName ? `Dear ${toName},` : '', left:bw*0.1+bx, top:bh*0.58+by, width:bw*0.8,
+          fontSize:Math.round(bh*0.022), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center' },
+        { type:'textbox', text:msgText, left:bw*0.08+bx, top:bh*0.64+by, width:bw*0.84,
+          fontSize:Math.round(bh*0.026), fontFamily:'Georgia, serif', fill:p.text, textAlign:'center', lineHeight:1.6 },
+        { type:'rect', left:bw*0.3+bx, top:bh*0.82+by, width:bw*0.4, height:2, fill:p.accent },
+        { type:'textbox', text: fromName ? `From. ${fromName}` : 'From. ___', left:bw*0.15+bx, top:bh*0.86+by, width:bw*0.7,
+          fontSize:Math.round(bh*0.022), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center' }
     );
 
-    coverItems.forEach(cfg => {
+    items.forEach(cfg => {
         let obj;
         if (cfg.type === 'textbox') obj = new fabric.Textbox(cfg.text || '', cfg);
         else if (cfg.type === 'rect') obj = new fabric.Rect(cfg);
@@ -752,51 +871,12 @@ async function runGcGeneration() {
         }
     });
 
-    // Add photo to cover if available
+    // Add photo if available
     if (_gcPhotos.length > 0) {
-        await _addPhotoToCanvas(_gcPhotos[0], bw*0.1+bx, bh*0.28+by, bw*0.8, bh*0.35, 16);
+        await _addPhotoToCanvas(_gcPhotos[0], bw*0.1+bx, bh*0.24+by, bw*0.8, bh*0.3, 16);
     }
 
     canvas.requestRenderAll();
-
-    // Add message page
-    if (window.addPage) window.addPage();
-    await new Promise(r => setTimeout(r, 400));
-    const b2 = canvas.getObjects().find(o => o.isBoard);
-    if (b2) b2.set({ fill: p.bg });
-    canvas.getObjects().filter(o => !o.isBoard && !o.isMockup && !o.isGuide).forEach(o => canvas.remove(o));
-
-    const msgText = message || _t('gc_default_message','따뜻한 마음을 전합니다\n\n행복한 시간 되세요');
-    const msgItems = [
-        { type:'textbox', text:emoji, left:bw*0.42+bx, top:bh*0.06+by, width:bw*0.16,
-          fontSize:Math.round(bh*0.04), fontFamily:'Georgia, serif', fill:p.accent, textAlign:'center' },
-        { type:'rect', left:bw*0.25+bx, top:bh*0.14+by, width:bw*0.5, height:2, fill:p.accent },
-        { type:'textbox', text:msgText, left:bw*0.08+bx, top:bh*0.2+by, width:bw*0.84,
-          fontSize:Math.round(bh*0.028), fontFamily:'Georgia, serif', fill:p.text, textAlign:'center', lineHeight:1.8 },
-        { type:'rect', left:bw*0.25+bx, top:bh*0.75+by, width:bw*0.5, height:2, fill:p.accent },
-        { type:'textbox', text:`${emoji} ${emoji} ${emoji}`, left:bw*0.2+bx, top:bh*0.8+by, width:bw*0.6,
-          fontSize:Math.round(bh*0.03), fontFamily:'Georgia, serif', fill:p.sub, textAlign:'center' }
-    ];
-    msgItems.forEach(cfg => {
-        let obj;
-        if (cfg.type === 'textbox') obj = new fabric.Textbox(cfg.text || '', cfg);
-        else if (cfg.type === 'rect') obj = new fabric.Rect(cfg);
-        if (obj) canvas.add(obj);
-    });
-    canvas.requestRenderAll();
-
-    // Add gallery page if we have multiple photos
-    if (_gcPhotos.length > 1) {
-        if (window.addPage) window.addPage();
-        await new Promise(r => setTimeout(r, 400));
-        const b3 = canvas.getObjects().find(o => o.isBoard);
-        if (b3) b3.set({ fill: p.bg });
-        applyTemplateToCanvas('gallery');
-    }
-
-    // Go back to page 0
-    goToPage(0);
-    setTimeout(() => renderSlideThumbs(), 500);
 
     if (modal) modal.style.display = 'none';
     if (progress) progress.style.display = 'none';
@@ -821,48 +901,44 @@ function _addPhotoToCanvas(dataUrl, x, y, w, h, r) {
 }
 
 /* ═══════════════════════════════════════════
-   10. SHARE
+   8. SHARE (Upload + generate animated link)
    ═══════════════════════════════════════════ */
 async function shareGreetingCard() {
     const dialog = document.getElementById('gcShareDialog');
     if (!dialog) return;
     dialog.style.display = 'flex';
 
-    const progress = document.getElementById('gcShareProgress');
+    const progressEl = document.getElementById('gcShareProgress');
     const result = document.getElementById('gcShareResult');
-    if (progress) progress.style.display = 'block';
+    if (progressEl) progressEl.style.display = 'block';
     if (result) result.style.display = 'none';
 
     try {
-        if (window.savePageState) window.savePageState();
-        const images = await _captureAllPages(1.0);
+        await new Promise(r => setTimeout(r, 100));
+        const data = _captureCardData();
+        if (!data || !data.imageUrl) throw new Error('Card capture failed');
+
         const slug = 'gc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
 
         const sb = window.sb || (await import('./config.js?v=123')).sb;
         if (!sb) throw new Error('Supabase not available');
 
-        // Upload each page image
-        const imageUrls = [];
-        for (let i = 0; i < images.length; i++) {
-            if (!images[i]) continue;
-            const blob = await (await fetch(images[i])).blob();
-            const path = `greeting-card/${slug}/page_${i}.jpg`;
-            const { error } = await sb.storage.from('public-assets').upload(path, blob, { contentType:'image/jpeg', upsert:true });
-            if (!error) {
-                const { data } = sb.storage.from('public-assets').getPublicUrl(path);
-                imageUrls.push(data.publicUrl);
-            }
-        }
+        // Upload card image
+        const blob = await (await fetch(data.imageUrl)).blob();
+        const imgPath = `greeting-card/${slug}/card.jpg`;
+        const { error: imgErr } = await sb.storage.from('public-assets').upload(imgPath, blob, { contentType:'image/jpeg', upsert:true });
+        if (imgErr) throw imgErr;
 
-        // Upload meta
+        const { data: imgData } = sb.storage.from('public-assets').getPublicUrl(imgPath);
+
+        // Upload meta.json with sticker data
         const meta = {
             slug,
-            category: _gcCategory,
-            animation: _gcAnimation,
+            category: data.category,
+            image: imgData.publicUrl,
+            stickers: data.stickers,
             fromName: window.__gcSelection?.fromName || '',
             toName: window.__gcSelection?.toName || '',
-            message: window.__gcSelection?.message || '',
-            pages: imageUrls,
             createdAt: new Date().toISOString()
         };
         const metaBlob = new Blob([JSON.stringify(meta)], { type:'application/json' });
@@ -871,11 +947,11 @@ async function shareGreetingCard() {
         const shareUrl = `${window.location.origin}/gc.html?id=${slug}`;
         const urlInput = document.getElementById('gcShareUrl');
         if (urlInput) urlInput.value = shareUrl;
-        if (progress) progress.style.display = 'none';
+        if (progressEl) progressEl.style.display = 'none';
         if (result) result.style.display = 'block';
     } catch(e) {
         console.error('Share error:', e);
-        if (progress) progress.innerHTML = `<p style="color:#ef4444; font-size:14px;">공유 중 오류가 발생했습니다: ${e.message}</p>`;
+        if (progressEl) progressEl.innerHTML = `<p style="color:#ef4444; font-size:14px;">공유 중 오류가 발생했습니다: ${e.message}</p>`;
     }
 }
 
@@ -893,3 +969,13 @@ function _gcCopyShareUrl() {
         if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2000); }
     });
 }
+
+/* ═══ Export animation generators for gc.html (also used in preview) ═══ */
+export {
+    ANIM_STICKERS,
+    _getCategoryColors,
+    _createStickerAnimation,
+    _ensureKeyframe,
+    _animFireworks, _animHearts, _animSnow, _animConfetti, _animSparkle,
+    _animBow, _animBalloon, _animFlower, _animStar, _animFire,
+};

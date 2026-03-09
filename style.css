@@ -1157,7 +1157,7 @@ button, input, textarea, select { font-family: inherit; }
     /* 인사말카드 모바일: 불필요한 플로팅 버튼 숨기기 */
     body.greeting-card-mode #btnBgLockFloat { display: none !important; }
     body.greeting-card-mode #btnDesignWizard { display: none !important; }
-    body.greeting-card-mode #gcAddPageFloat { display: none !important; }
+    body.greeting-card-mode #gcStickerFloat { display: none !important; }
     body.greeting-card-mode #btn3DPreview { display: none !important; }
 
     /* 인사말카드 모바일: 하단 독바 위치 조정 */
@@ -1181,16 +1181,6 @@ button, input, textarea, select { font-family: inherit; }
 
 /* ═══ 인사말카드 모달 모바일 최적화 ═══ */
 @media (max-width: 768px) {
-    #gcTemplateModal > div {
-        width: 96% !important;
-        padding: 16px !important;
-        border-radius: 16px !important;
-        max-height: 80vh !important;
-    }
-    #gcTemplateGrid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
-    }
     #gcWizardModal > div {
         width: 100% !important;
         max-width: 100% !important;
