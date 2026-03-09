@@ -1860,7 +1860,7 @@ function updateSummary(prodTotal, addonTotal, total) {
         
         let realLimit = 0;
         if (discountableAmount > 0) {
-            const fivePercent = Math.floor((discountableAmount - discountAmount) * 0.05);
+            const fivePercent = Math.floor(discountableAmount * 0.05);
             realLimit = Math.min(myMileage, fivePercent);
         }
         
@@ -2136,8 +2136,8 @@ async function processOrderSubmission() {
     if (currentUser) {
         const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
         const myMileage = profile ? (profile.mileage || 0) : 0;
-        
-        const fivePercent = Math.floor(finalTotal * 0.05);
+
+        const fivePercent = Math.floor(rawTotal * 0.05);
         const realLimit = Math.min(myMileage, fivePercent);
 
         window.mileageLimitMax = realLimit; 
@@ -3223,11 +3223,8 @@ window.updateCartMileageLimit = function() {
     const myMileage = window._cartUserMileage || 0;
     const cartTotalKRW = calculateCartTotalKRW();
 
-    // 할인 적용 후 금액 계산
-    const gradeDiscount = Math.floor(cartTotalKRW * currentUserDiscountRate);
-    const referralDiscount = window.verifiedReferrerId ? Math.floor(cartTotalKRW * 0.05) : 0;
-    const afterDiscount = cartTotalKRW - gradeDiscount - referralDiscount;
-    const fivePercent = Math.floor(afterDiscount * 0.05);
+    // 원래 금액 기준 5% 한도 계산
+    const fivePercent = Math.floor(cartTotalKRW * 0.05);
     const realLimit = Math.min(myMileage, fivePercent);
 
     window._cartMileageLimitMax = realLimit;
