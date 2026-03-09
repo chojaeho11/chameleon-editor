@@ -1330,6 +1330,10 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     </div>
 </div>
 
+<script>
+window.openSubPopup = function(){ document.getElementById('subPopupModal').style.display='flex'; };
+</script>
+
 <!-- 이미지 템플릿 제목 입력 모달 -->
 <div id="tplTitleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:100003; justify-content:center; align-items:center; padding:16px;">
     <div style="background:#fff; border-radius:24px; max-width:440px; width:100%; padding:0; overflow:hidden; animation:scSlideUp 0.3s ease; box-shadow:0 25px 60px rgba(0,0,0,0.3);">
@@ -6934,7 +6938,7 @@ window.showChoiceModal = async function(key) {
                         <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#6366f1;">0</div>
                     </div>
                 </div>
-                <div id="promoDiscountBox" style="margin-top:12px; border-radius:14px; overflow:hidden; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;" onclick="document.getElementById('subPopupModal').style.display='flex';">
+                <div id="promoDiscountBox" style="margin-top:12px; border-radius:14px; overflow:hidden; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;" onclick="window.openSubPopup&&window.openSubPopup()">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
                         <span style="background:#f59e0b; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px;">${lang==='ja'?'最大20%OFF':lang==='zh'?'最高20%OFF':lang==='en'?'Up to 20% OFF':'최대 20% 할인'}</span>
                         <span style="font-size:12px; color:#92400e; font-weight:600;">${lang==='ja'?'定期購読+紹介ID+マイレージ':lang==='zh'?'订阅+推荐ID+积分':lang==='en'?'Subscribe+Referral+Mileage':'구독+추천아이디+마일리지'}</span>
