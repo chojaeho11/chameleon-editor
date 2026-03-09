@@ -385,7 +385,7 @@ export async function initOrderSystem() {
         btnDownQuote.onclick = async () => {
             if(cartData.length === 0) { showToast(window.t('msg_no_data', "No data available."), "warn"); return; }
             const info = getOrderInfo();
-            const mileageInput = document.getElementById('inputUseMileage');
+            const mileageInput = document.getElementById('cartUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
@@ -409,7 +409,7 @@ export async function initOrderSystem() {
             // 입금자명이 입력되어 있으면 쓰고, 없으면 주문자명 사용
             info.depositor = (depositorInput && depositorInput.value) ? depositorInput.value : info.manager;
 
-            const mileageInput = document.getElementById('inputUseMileage');
+            const mileageInput = document.getElementById('cartUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
@@ -433,7 +433,7 @@ export async function initOrderSystem() {
             // 입금자명이 입력되어 있으면 쓰고, 없으면 주문자명 사용
             info.depositor = (depositorInput && depositorInput.value) ? depositorInput.value : info.manager;
 
-            const mileageInput = document.getElementById('inputUseMileage');
+            const mileageInput = document.getElementById('cartUseMileage');
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
@@ -844,16 +844,6 @@ function renderTimeSlots(grid, bookedSlots, slotInfo) {
 function openDeliveryInfoModal() {
     document.getElementById("calendarModal").style.display = "none";
     document.getElementById("deliveryInfoModal").style.display = "flex";
-
-    // 장바구니에서 입력한 추천인 동기화
-    if (window.verifiedReferrerEmail) {
-        const refInput = document.getElementById('inputReferrerEmail');
-        const refStatus = document.getElementById('referrerStatus');
-        const refNotice = document.getElementById('referralNotice');
-        if (refInput) refInput.value = window.verifiedReferrerEmail;
-        if (refStatus) { refStatus.innerHTML = '✅ ' + window.t('referral_verified', '추천인이 확인되었습니다!'); refStatus.style.color = '#16a34a'; }
-        if (refNotice) refNotice.style.display = 'block';
-    }
 
     // 허니콤보드 포함 여부 체크 → 배송 지역 선택 표시
     const hasHoneycomb = hasHoneycombInCart();
@@ -1855,25 +1845,25 @@ function updateSummary(prodTotal, addonTotal, total) {
     finalPaymentAmount = finalTotal;
 
     if (typeof currentUser !== 'undefined' && currentUser) {
-        const elOwn = document.getElementById('userOwnMileage');
+        const elOwn = document.getElementById('cartOwnMileage');
         const myMileage = elOwn ? parseInt(elOwn.innerText.replace(/[^0-9]/g, '')) || 0 : 0;
-        
+
         let realLimit = 0;
         if (discountableAmount > 0) {
             const fivePercent = Math.floor(discountableAmount * 0.05);
             realLimit = Math.min(myMileage, fivePercent);
         }
-        
+
         window.mileageLimitMax = realLimit; // KRW 기준 저장
 
         // 표시용 환산
         const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
         const limitLocal = realLimit * mileRate;
 
-        const limitDisp = document.getElementById('mileageLimitDisplay');
+        const limitDisp = document.getElementById('cartMileageLimit');
         if(limitDisp) limitDisp.innerText = formatCurrency(realLimit).replace(/[원¥$]/g, '').trim() + ' P';
 
-        const mileInput = document.getElementById('inputUseMileage');
+        const mileInput = document.getElementById('cartUseMileage');
         if(mileInput) {
             mileInput.placeholder = `${window.t('label_max', 'Max')} ${formatCurrency(realLimit).replace(/[원¥$]/g, '').trim()}`;
             if (realLimit === 0 && hasExcludedItem) {
@@ -2133,29 +2123,16 @@ async function processOrderSubmission() {
         }
     }
 
-    if (currentUser) {
-        const { data: profile } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
-        const myMileage = profile ? (profile.mileage || 0) : 0;
+    // 장바구니에서 입력한 마일리지 반영
+    const cartMileageInput = document.getElementById('cartUseMileage');
+    const cartUsedMileage = cartMileageInput ? (parseInt(cartMileageInput.value) || 0) : 0;
+    const checkoutFinal = finalTotal - cartUsedMileage;
 
-        const fivePercent = Math.floor(rawTotal * 0.05);
-        const realLimit = Math.min(myMileage, fivePercent);
+    window.originalPayAmount = checkoutFinal > 0 ? checkoutFinal : 0;
+    window.finalPaymentAmount = window.originalPayAmount;
 
-        window.mileageLimitMax = realLimit; 
-        
-        document.getElementById('userOwnMileage').innerText = formatCurrency(myMileage).replace(/[원¥$]/g, '').trim() + ' P';
-        document.getElementById('mileageLimitDisplay').innerText = formatCurrency(realLimit).replace(/[원¥$]/g, '').trim() + ' P';
-        document.getElementById('inputUseMileage').value = '';
-        document.getElementById('inputUseMileage').placeholder = `${window.t('label_max', 'Max')} ${formatCurrency(realLimit).replace(/[원¥$]/g, '').trim()}`;
-        document.getElementById('finalPayAmountDisplay').innerText = formatCurrency(finalTotal);
-
-        document.getElementById('btnFinalPay').innerText = `${formatCurrency(finalTotal)} ${window.t('btn_pay', 'Pay')}`;
-    } else {
-        window.mileageLimitMax = 0;
-        document.getElementById('userOwnMileage').innerText = '-';
-        document.getElementById('mileageLimitDisplay').innerText = '0 P';
-        document.getElementById('finalPayAmountDisplay').innerText = formatCurrency(finalTotal);
-        document.getElementById('btnFinalPay').innerText = `${formatCurrency(finalTotal)} ${window.t('btn_pay', 'Pay')}`;
-    }
+    document.getElementById('finalPayAmountDisplay').innerText = formatCurrency(window.finalPaymentAmount);
+    document.getElementById('btnFinalPay').innerText = `${formatCurrency(window.finalPaymentAmount)} ${window.t('btn_pay', 'Pay')}`;
 
     if(currentUser) {
         const { data: profile } = await sb.from('profiles').select('deposit').eq('id', currentUser.id).maybeSingle();
@@ -2508,7 +2485,7 @@ async function processFinalPayment() {
 
     if (!window.tempOrderInfo && !window.currentDbId) { showToast(window.t('msg_no_order_info', "No order info. Please try again from the start."), "error"); return; }
 
-    const mileageInput = document.getElementById('inputUseMileage');
+    const mileageInput = document.getElementById('cartUseMileage');
     const localMileageVal = mileageInput ? (parseFloat(mileageInput.value) || 0) : 0;
     // 역환산: 현지 통화 → KRW
     const payRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
@@ -3146,7 +3123,7 @@ window.calcMileageLimit = function(input) {
 };
 
 window.applyMaxMileage = function() {
-    const input = document.getElementById('inputUseMileage');
+    const input = document.getElementById('cartUseMileage');
     if(input) {
         const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
         input.value = (window.mileageLimitMax || 0) * mileRate;
