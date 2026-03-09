@@ -107,9 +107,11 @@ Deno.serve(async (req) => {
     params.append('metadata[user_id]', user_id)
     params.append('metadata[country]', country)
     params.append('metadata[plan_type]', plan_type)
-    params.append('subscription_data[metadata][user_id]', user_id)
-    params.append('subscription_data[metadata][country]', country)
-    params.append('subscription_data[metadata][plan_type]', plan_type)
+    if (!isLifetime) {
+      params.append('subscription_data[metadata][user_id]', user_id)
+      params.append('subscription_data[metadata][country]', country)
+      params.append('subscription_data[metadata][plan_type]', plan_type)
+    }
 
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
