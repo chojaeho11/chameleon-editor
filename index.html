@@ -1345,6 +1345,24 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
 
 <script>
 window.openSubPopup = function(){ document.getElementById('subPopupModal').style.display='flex'; };
+window.goToSubscription = function(){
+    // 상품 상세 모달 닫기
+    ['productDetailModal','choiceModal','generalProductModal','categoryDetailModal'].forEach(function(id){
+        var m = document.getElementById(id);
+        if (m) m.style.display = 'none';
+    });
+    // 구독 섹션으로 스크롤
+    setTimeout(function(){
+        var el = document.getElementById('subscriptionSection');
+        if (el) {
+            el.scrollIntoView({ behavior:'smooth', block:'start' });
+        } else {
+            // fallback: 홈 URL로 이동
+            window.location.href = window.location.pathname + '#subscriptionSection';
+            window.location.reload();
+        }
+    }, 200);
+};
 // 프로모 박스 hover 툴팁 + 구독버튼 클릭
 (function(){
     var hoverTimer = null;
@@ -1368,8 +1386,9 @@ window.openSubPopup = function(){ document.getElementById('subPopupModal').style
     // 구독하러가기 버튼 클릭
     document.addEventListener('click', function(e) {
         if (e.target.closest('#promoTooltipBtn')) {
+            e.preventDefault();
             e.stopPropagation();
-            window.openSubPopup();
+            window.goToSubscription();
             return;
         }
         // 모바일: 프로모 박스 직접 클릭 시 (터치)
