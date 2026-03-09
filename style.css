@@ -2780,9 +2780,23 @@ body {
     border-radius: 0;
 }
 
-/* 모바일에서는 캐릭터 숨김, 타이틀은 표시 */
+/* 기본: 캐릭터 숨김 */
 .bouncing-char {
     display: none !important;
+}
+/* 히어로 캐릭터는 항상 표시 */
+.hero-mascot {
+    display: block !important;
+    animation: bounceUpDn 3s ease-in-out infinite;
+    pointer-events: none;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+}
+@media (max-width: 768px) {
+    .hero-mascot {
+        width: 100px !important;
+        right: 10px !important;
+        bottom: -20px !important;
+    }
 }
 .quick-title-box {
     display: block !important;
