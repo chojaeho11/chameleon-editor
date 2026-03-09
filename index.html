@@ -592,7 +592,7 @@ window.loadEditorLibraries = function() {
     if (el) el.style.display = 'block';
 })();
 </script>
-<!-- ★ 홈 섹션 순서 재배치: 챗봇+제품찾기 → 핫딜+업자할인 → 템플릿 → 온라인디지털 → 회원가입/구독 -->
+<!-- ★ 홈 섹션 순서 재배치 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var ss = document.getElementById('startScreen');
@@ -600,19 +600,24 @@ document.addEventListener('DOMContentLoaded', function() {
     var hero = ss.querySelector('.hero-section');
     if (!hero) return;
 
-    // 1) 챗봇 버튼 + 제품찾기 버튼 → 히어로 바로 다음
+    // 1) 챗봇 버튼 + 제품찾기 버튼 → 히어로 바로 다음 + 넓게
     var kapuWrap = document.getElementById('btnKapuGuide');
     if (kapuWrap) kapuWrap = kapuWrap.closest('div[style*="text-align:center"]');
     var advisorPanel = document.getElementById('advisorPanel');
-    var manualBtn = kapuWrap ? kapuWrap.nextElementSibling : null;
-    // 수동 제품찾기 버튼 찾기
-    if (!manualBtn || !manualBtn.querySelector('[data-i18n="btn_manual_search"]')) {
-        var allBtns = ss.querySelectorAll('div[style*="text-align:center"]');
-        for (var i = 0; i < allBtns.length; i++) {
-            if (allBtns[i].querySelector('[data-i18n="btn_manual_search"]')) { manualBtn = allBtns[i]; break; }
-        }
+    var manualBtn = null;
+    var allBtns = ss.querySelectorAll('div[style*="text-align:center"]');
+    for (var i = 0; i < allBtns.length; i++) {
+        if (allBtns[i].querySelector('[data-i18n="btn_manual_search"]')) { manualBtn = allBtns[i]; break; }
     }
-    var ref = hero.nextElementSibling; // hero-promo-box
+    // 버튼 넓게 (max-width 확장)
+    if (kapuWrap) kapuWrap.style.maxWidth = '1100px';
+    if (manualBtn) manualBtn.style.maxWidth = '1100px';
+    var kapuBtn = document.getElementById('btnKapuGuide');
+    if (kapuBtn) kapuBtn.style.maxWidth = '100%';
+    var manualBtnEl = manualBtn ? manualBtn.querySelector('button') : null;
+    if (manualBtnEl) { manualBtnEl.style.width = '100%'; manualBtnEl.style.maxWidth = '100%'; manualBtnEl.style.padding = '16px 36px'; }
+
+    var ref = hero.nextElementSibling;
     if (kapuWrap && ref) { ss.insertBefore(kapuWrap, ref); }
     if (advisorPanel && ref) { ss.insertBefore(advisorPanel, ref); }
     if (manualBtn && ref) { ss.insertBefore(manualBtn, ref); }
@@ -624,16 +629,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (hotDeal && promoBox) { ss.insertBefore(hotDeal, promoBox); }
     if (bizDeal && promoBox) { ss.insertBefore(bizDeal, promoBox); }
 
-    // 3) 디자인 템플릿 (검색+그리드) → 핫딜 다음
+    // 3) 온라인디지털(보라색) → 핫딜 다음, 회원가입 위
+    var quickMenuWrap = ss.querySelector('.quick-menu-wrapper');
+    if (quickMenuWrap && promoBox) { ss.insertBefore(quickMenuWrap, promoBox); }
+
+    // 4) 디자인 템플릿 검색+그리드 → 온라인디지털 다음, 회원가입 위
     var tplWrap = ss.querySelector('.hero-search-wrap');
-    var tplPagination = tplWrap ? tplWrap.nextElementSibling : null;
-    var tplSearchBox = tplPagination ? tplPagination.nextElementSibling : null;
-    var tplGrid = document.getElementById('startTemplateGrid');
     if (tplWrap && promoBox) { ss.insertBefore(tplWrap, promoBox); }
 
-    // 4) 온라인디지털 + 디자인사이즈 → 템플릿 다음 (quick-menu-wrapper 안에 있음, 기존 위치 유지)
-
-    // 5) 회원가입/구독은 이미 아래에 있으므로 자연스럽게 아래로 밀림
+    // 최종 순서: 히어로 → 챗봇+제품찾기 → 핫딜+업자 → 보라색(온라인디지털) → 템플릿검색 → 회원가입/프로모 → 구독 → ...
 });
 </script>
 
