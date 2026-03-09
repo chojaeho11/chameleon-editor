@@ -54,7 +54,7 @@ function liveKey() { return 'kapu_live_current'; }
 
 function saveChat() {
     try {
-        localStorage.setItem(chatKey(), JSON.stringify({
+        sessionStorage.setItem(chatKey(), JSON.stringify({
             html: chatArea ? chatArea.innerHTML : '',
             history: conversationHistory,
             lastProducts
@@ -74,21 +74,11 @@ function saveLiveState() {
 
 function loadChat() {
     try {
-        let raw = localStorage.getItem(chatKey());
-        // 마이그레이션: 이전 키(guest/user별)에서 데이터 복구
-        if (!raw) {
-            const u = window.currentUser;
-            const oldKey = u ? 'kapu_chat_' + u.id : 'kapu_chat_guest';
-            raw = localStorage.getItem(oldKey) || localStorage.getItem('kapu_chat_guest');
-            if (raw) {
-                localStorage.setItem(chatKey(), raw); // 새 키로 복사
-            }
-        }
+        const raw = sessionStorage.getItem(chatKey());
         if (!raw) return false;
         const data = JSON.parse(raw);
         if (chatArea && data.html) {
             chatArea.innerHTML = data.html;
-            // 제품 카드 이벤트 다시 바인딩
             rebindCardEvents();
         }
         conversationHistory = data.history || [];
@@ -109,7 +99,9 @@ function clearChat() {
     conversationHistory = [];
     lastProducts = [];
     if (chatArea) chatArea.innerHTML = '';
-    try { localStorage.removeItem(chatKey()); } catch(e) {}
+    try { sessionStorage.removeItem(chatKey()); } catch(e) {}
+    // 이전 localStorage 데이터도 정리
+    try { localStorage.removeItem(chatKey()); localStorage.removeItem('kapu_chat_guest'); } catch(e) {}
     showWelcomeMessage();
 }
 
