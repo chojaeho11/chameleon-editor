@@ -1290,9 +1290,9 @@ async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const obj = new fabric.Textbox(displayTitle, {
         fontFamily: font, fontSize: sz, fontWeight: 'normal',
         fill: '#ffffff',
-        originX:'left', originY:'center', textAlign:'left',
-        left: bL + bW * 0.05, top: bT + bH * 0.30,
-        width: bW * 0.60, lineHeight: isJP ? 1.1 : 0.95,
+        originX:'center', originY:'center', textAlign:'center',
+        left: bL + bW * 0.5, top: bT + bH * 0.30,
+        width: bW * 0.80, lineHeight: isJP ? 1.1 : 0.95,
         charSpacing: isJP ? 40 : 80,
         splitByGrapheme: isJP ? true : false
     });
@@ -1345,8 +1345,8 @@ function _wzBodyText(bodyText, descFont, bW, bH, bL, bT) {
     const obj = new fabric.Textbox(bodyText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
         fontWeight: '500', fill: 'rgba(255,255,255,0.95)',
-        originX:'left', originY:'top', textAlign:'left',
-        left: bL + bW * 0.05, top: bT + bH * 0.43,
+        originX:'center', originY:'top', textAlign:'center',
+        left: bL + bW * 0.5, top: bT + bH * 0.43,
         width: bW * 0.55,
         lineHeight: 1.5,
         splitByGrapheme: true,
@@ -1374,12 +1374,11 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
         fontWeight:'400', fill: '#ffffff',
-        originX:'left', originY:'top', textAlign:'left',
-        left: boxLeft, top: boxTop,
+        originX:'center', originY:'top', textAlign:'center',
+        left: bL + bW * 0.5, top: boxTop,
         width: maxW,
         lineHeight: 1.6,
-        splitByGrapheme: true,
-        shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 4, offsetX: 1, offsetY: 1 })
+        splitByGrapheme: true
     });
     // 텍스트가 보드 하단을 넘으면 폰트 축소
     if (obj.height > bH * 0.25) {
