@@ -1245,7 +1245,7 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
                 <div class="sub-card-plan" data-i18n="sub_monthly">월간 구독</div>
                 <div class="sub-card-price" id="subPriceMonthly">₩30,000<small>/월</small></div>
                 <div class="sub-card-period" data-i18n="sub_monthly_period">매월 자동 결제</div>
-                <div class="sub-card-save" style="background:rgba(99,102,241,0.2); color:#a5b4fc;">10% 할인</div>
+                <div class="sub-card-save" style="background:rgba(99,102,241,0.2); color:#a5b4fc;" data-i18n="sub_benefit">제품 10% 할인 + 유료기능 무제한</div>
                 <div class="sub-mileage-cta" data-i18n="sub_mileage_cta">🎁 구독료만큼 마일리지 적립</div>
                 <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
             </div>
@@ -1253,15 +1253,16 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
                 <div class="sub-card-plan" data-i18n="sub_annual">연간 구독</div>
                 <div class="sub-card-price" id="subPriceAnnual">₩165,000<small>/년</small></div>
                 <div class="sub-card-period" data-i18n="sub_annual_period">연 1회 결제</div>
-                <div class="sub-card-save" data-i18n="sub_save">50% 할인</div>
+                <div class="sub-card-save" style="background:rgba(99,102,241,0.2); color:#a5b4fc;" data-i18n="sub_benefit">제품 10% 할인 + 유료기능 무제한</div>
                 <div class="sub-mileage-cta" data-i18n="sub_mileage_cta">🎁 구독료만큼 마일리지 적립</div>
                 <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
             </div>
             <div class="sub-card" onclick="window.startSubscription('lifetime')" style="border-color:rgba(251,191,36,0.3); background:rgba(251,191,36,0.05);">
                 <div class="sub-card-plan" style="color:#fbbf24;" data-i18n="sub_lifetime">평생 구독</div>
-                <div class="sub-card-price" id="subPriceLifetime">₩1,000,000</div>
+                <div class="sub-card-price" id="subPriceLifetime">₩330,000</div>
                 <div class="sub-card-period" data-i18n="sub_lifetime_period">1회 결제, 평생 이용</div>
-                <div class="sub-card-save" style="background:rgba(251,191,36,0.2); color:#fbbf24;">10% 할인 + 마일리지 100만원</div>
+                <div class="sub-card-save" style="background:rgba(251,191,36,0.2); color:#fbbf24;" data-i18n="sub_benefit">제품 10% 할인 + 유료기능 무제한</div>
+                <div class="sub-mileage-cta" data-i18n="sub_mileage_cta">🎁 구독료만큼 마일리지 적립</div>
                 <button class="sub-card-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);" data-i18n="sub_btn">구독 시작하기</button>
             </div>
         </div>
@@ -1311,7 +1312,7 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
                         <div class="sub-card-plan" data-i18n="sub_monthly">월간 구독</div>
                         <div class="sub-card-price" id="subPopupPriceMonthly">₩30,000<small>/월</small></div>
                         <div class="sub-card-period" data-i18n="sub_monthly_period">매월 자동 결제</div>
-                        <div class="sub-card-save" style="background:rgba(99,102,241,0.2); color:#a5b4fc;">10% 할인</div>
+                        <div class="sub-card-save" style="background:rgba(99,102,241,0.2); color:#a5b4fc;" data-i18n="sub_benefit">제품 10% 할인 + 유료기능 무제한</div>
                         <div class="sub-mileage-cta" data-i18n="sub_mileage_cta">🎁 구독료만큼 마일리지 적립</div>
                         <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
                     </div>
@@ -1319,22 +1320,23 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
                         <div class="sub-card-plan" data-i18n="sub_annual">연간 구독</div>
                         <div class="sub-card-price" id="subPopupPriceAnnual">₩165,000<small>/년</small></div>
                         <div class="sub-card-period" data-i18n="sub_annual_period">연 1회 결제</div>
-                        <div class="sub-card-save" data-i18n="sub_save">50% 할인</div>
+                        <div class="sub-card-save" style="background:rgba(99,102,241,0.2); color:#a5b4fc;" data-i18n="sub_benefit">제품 10% 할인 + 유료기능 무제한</div>
                         <div class="sub-mileage-cta" data-i18n="sub_mileage_cta">🎁 구독료만큼 마일리지 적립</div>
                         <button class="sub-card-btn" data-i18n="sub_btn">구독 시작하기</button>
                     </div>
                     <div class="sub-card" onclick="window.startSubscription('lifetime')" style="border-color:rgba(251,191,36,0.3); background:rgba(251,191,36,0.05);">
                         <div class="sub-card-plan" style="color:#fbbf24;" data-i18n="sub_lifetime">평생 구독</div>
-                        <div class="sub-card-price" id="subPopupPriceLifetime">₩1,000,000</div>
+                        <div class="sub-card-price" id="subPopupPriceLifetime">₩330,000</div>
                         <div class="sub-card-period" data-i18n="sub_lifetime_period">1회 결제, 평생 이용</div>
-                        <div class="sub-card-save" style="background:rgba(251,191,36,0.2); color:#fbbf24;">10% 할인 + 마일리지 100만원</div>
+                        <div class="sub-card-save" style="background:rgba(251,191,36,0.2); color:#fbbf24;" data-i18n="sub_benefit">제품 10% 할인 + 유료기능 무제한</div>
+                        <div class="sub-mileage-cta" data-i18n="sub_mileage_cta">🎁 구독료만큼 마일리지 적립</div>
                         <button class="sub-card-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);" data-i18n="sub_btn">구독 시작하기</button>
                     </div>
                 </div>
                 <div class="sub-features" style="margin-top:20px;">
-                    <div class="sub-feature"><i class="fa-solid fa-crown"></i> <span data-i18n="sub_ft1">프리미엄 템플릿</span></div>
-                    <div class="sub-feature"><i class="fa-solid fa-percent"></i> <span data-i18n="sub_ft2">10% 할인</span></div>
-                    <div class="sub-feature"><i class="fa-solid fa-coins"></i> <span data-i18n="sub_ft3">마일리지 적립</span></div>
+                    <div class="sub-feature"><i class="fa-solid fa-percent"></i> <span data-i18n="sub_ft2">제품 10% 할인</span></div>
+                    <div class="sub-feature"><i class="fa-solid fa-crown"></i> <span data-i18n="sub_ft1">유료기능 무제한</span></div>
+                    <div class="sub-feature"><i class="fa-solid fa-coins"></i> <span data-i18n="sub_ft3">구독료 마일리지 적립</span></div>
                 </div>
             </div>
         </div>
@@ -1377,14 +1379,14 @@ window.subscriptionPlan = null;
 
 // Pricing per country
 const SUB_PRICING = {
-    'KR': { monthly: '₩30,000', annual: '₩165,000', lifetime: '₩1,000,000', monthlyPer: '/월', annualPer: '/년', lifetimePer: '', currency: 'krw', mileage: '100만원', annualSave: '50%' },
-    'JP': { monthly: '¥3,000', annual: '¥16,500', lifetime: '¥100,000', monthlyPer: '/月', annualPer: '/年', lifetimePer: '', currency: 'jpy', mileage: '100万円', annualSave: '50%' },
-    'US': { monthly: '$30', annual: '$165', lifetime: '$1,000', monthlyPer: '/mo', annualPer: '/yr', lifetimePer: '', currency: 'usd', mileage: '$1,000', annualSave: '50%' },
-    'CN': { monthly: '¥200', annual: '¥1,100', lifetime: '¥7,000', monthlyPer: '/月', annualPer: '/年', lifetimePer: '', currency: 'cny', mileage: '¥7,000', annualSave: '50%' },
-    'AR': { monthly: '﷼115', annual: '﷼620', lifetime: '﷼3,750', monthlyPer: '/شهر', annualPer: '/سنة', lifetimePer: '', currency: 'sar', mileage: '﷼3,750', annualSave: '50%' },
-    'ES': { monthly: '€28', annual: '€154', lifetime: '€930', monthlyPer: '/mes', annualPer: '/año', lifetimePer: '', currency: 'eur', mileage: '€930', annualSave: '50%' },
-    'DE': { monthly: '€28', annual: '€154', lifetime: '€930', monthlyPer: '/Mo', annualPer: '/Jahr', lifetimePer: '', currency: 'eur', mileage: '€930', annualSave: '50%' },
-    'FR': { monthly: '28€', annual: '154€', lifetime: '930€', monthlyPer: '/mois', annualPer: '/an', lifetimePer: '', currency: 'eur', mileage: '930€', annualSave: '50%' },
+    'KR': { monthly: '₩30,000', annual: '₩165,000', lifetime: '₩330,000', monthlyPer: '/월', annualPer: '/년', lifetimePer: '', currency: 'krw' },
+    'JP': { monthly: '¥3,000', annual: '¥16,500', lifetime: '¥33,000', monthlyPer: '/月', annualPer: '/年', lifetimePer: '', currency: 'jpy' },
+    'US': { monthly: '$30', annual: '$165', lifetime: '$330', monthlyPer: '/mo', annualPer: '/yr', lifetimePer: '', currency: 'usd' },
+    'CN': { monthly: '¥200', annual: '¥1,100', lifetime: '¥2,200', monthlyPer: '/月', annualPer: '/年', lifetimePer: '', currency: 'cny' },
+    'AR': { monthly: '﷼115', annual: '﷼620', lifetime: '﷼1,240', monthlyPer: '/شهر', annualPer: '/سنة', lifetimePer: '', currency: 'sar' },
+    'ES': { monthly: '€28', annual: '€154', lifetime: '€310', monthlyPer: '/mes', annualPer: '/año', lifetimePer: '', currency: 'eur' },
+    'DE': { monthly: '€28', annual: '€154', lifetime: '€310', monthlyPer: '/Mo', annualPer: '/Jahr', lifetimePer: '', currency: 'eur' },
+    'FR': { monthly: '28€', annual: '154€', lifetime: '310€', monthlyPer: '/mois', annualPer: '/an', lifetimePer: '', currency: 'eur' },
 };
 
 // Set prices based on country

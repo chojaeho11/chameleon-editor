@@ -20,14 +20,14 @@ const PRICE_MAP: Record<string, { monthly: string; annual: string; lifetime: str
 
 // Fallback: create price on-the-fly if no Price ID configured
 const AMOUNT_MAP: Record<string, { monthly: number; annual: number; lifetime: number; currency: string }> = {
-  'KR': { monthly: 30000, annual: 165000, lifetime: 1000000, currency: 'krw' },
-  'JP': { monthly: 3000, annual: 16500, lifetime: 100000, currency: 'jpy' },
-  'US': { monthly: 3000, annual: 16500, lifetime: 100000, currency: 'usd' },   // cents
-  'CN': { monthly: 20000, annual: 110000, lifetime: 700000, currency: 'cny' },
-  'AR': { monthly: 11500, annual: 62000, lifetime: 375000, currency: 'sar' },
-  'ES': { monthly: 2800, annual: 15400, lifetime: 93000, currency: 'eur' },    // cents
-  'DE': { monthly: 2800, annual: 15400, lifetime: 93000, currency: 'eur' },
-  'FR': { monthly: 2800, annual: 15400, lifetime: 93000, currency: 'eur' },
+  'KR': { monthly: 30000, annual: 165000, lifetime: 330000, currency: 'krw' },
+  'JP': { monthly: 3000, annual: 16500, lifetime: 33000, currency: 'jpy' },
+  'US': { monthly: 3000, annual: 16500, lifetime: 33000, currency: 'usd' },   // cents
+  'CN': { monthly: 20000, annual: 110000, lifetime: 220000, currency: 'cny' },
+  'AR': { monthly: 11500, annual: 62000, lifetime: 124000, currency: 'sar' },
+  'ES': { monthly: 2800, annual: 15400, lifetime: 31000, currency: 'eur' },    // cents
+  'DE': { monthly: 2800, annual: 15400, lifetime: 31000, currency: 'eur' },
+  'FR': { monthly: 2800, annual: 15400, lifetime: 31000, currency: 'eur' },
 }
 
 // Zero-decimal currencies (no cents)

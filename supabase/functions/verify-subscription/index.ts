@@ -106,14 +106,14 @@ Deno.serve(async (req) => {
     // 7. Grant mileage equal to subscription fee (KRW basis)
     //    Monthly: 30,000 / Annual: 165,000 / Lifetime: 1,000,000
     const MILEAGE_MAP: Record<string, Record<string, number>> = {
-      'KR': { monthly: 30000, annual: 165000, lifetime: 1000000 },
-      'JP': { monthly: 30000, annual: 165000, lifetime: 1000000 },
-      'US': { monthly: 30000, annual: 165000, lifetime: 1000000 },
-      'CN': { monthly: 30000, annual: 165000, lifetime: 1000000 },
-      'AR': { monthly: 30000, annual: 165000, lifetime: 1000000 },
-      'ES': { monthly: 30000, annual: 165000, lifetime: 1000000 },
-      'DE': { monthly: 30000, annual: 165000, lifetime: 1000000 },
-      'FR': { monthly: 30000, annual: 165000, lifetime: 1000000 },
+      'KR': { monthly: 30000, annual: 165000, lifetime: 330000 },
+      'JP': { monthly: 30000, annual: 165000, lifetime: 330000 },
+      'US': { monthly: 30000, annual: 165000, lifetime: 330000 },
+      'CN': { monthly: 30000, annual: 165000, lifetime: 330000 },
+      'AR': { monthly: 30000, annual: 165000, lifetime: 330000 },
+      'ES': { monthly: 30000, annual: 165000, lifetime: 330000 },
+      'DE': { monthly: 30000, annual: 165000, lifetime: 330000 },
+      'FR': { monthly: 30000, annual: 165000, lifetime: 330000 },
     }
     const mileageAmount = (MILEAGE_MAP[country] || MILEAGE_MAP['KR'])[planType] || 30000
     const mileageKey = `sub_mileage_${planType}_${session.id}`
