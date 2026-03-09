@@ -550,11 +550,19 @@ document.addEventListener('DOMContentLoaded', function() {
     var quickMenuWrap = ss.querySelector('.quick-menu-wrapper');
     if (hotDeal && quickMenuWrap) { ss.insertBefore(hotDeal, quickMenuWrap); }
     if (bizDeal && quickMenuWrap) { ss.insertBefore(bizDeal, quickMenuWrap); }
+    var popular = document.getElementById('popularSection');
+    if (popular && quickMenuWrap) { ss.insertBefore(popular, quickMenuWrap); }
 
-    // 4) AI검색+템플릿 → 핫딜과 보라색 사이로 이동
+    // 4) AI검색+템플릿 → 인기상품 바로 다음
     var tplWrap = ss.querySelector('.hero-search-wrap');
-    if (tplWrap && quickMenuWrap) { ss.insertBefore(tplWrap, quickMenuWrap); }
-    // 최종 순서: 히어로 → 챗봇+제품찾기 → 핫딜+업자 → AI검색+템플릿 → 보라색(온라인디지털) → 회원가입/프로모 → 구독
+    if (tplWrap && popular) { popular.after(tplWrap); }
+    else if (tplWrap && quickMenuWrap) { ss.insertBefore(tplWrap, quickMenuWrap); }
+    // 5) 구독 섹션 → 리뷰 바로 위로 이동
+    var subSec = document.getElementById('subscriptionSection');
+    var reviewSec = ss.querySelector('.review-section');
+    if (subSec && reviewSec) { reviewSec.parentNode.insertBefore(subSec, reviewSec); }
+
+    // 최종 순서: 히어로 → 챗봇+제품찾기 → 핫딜+업자+인기 → AI검색+템플릿 → 보라색(온라인디지털) → 커뮤니티 → 구독 → 리뷰 → 푸터
 });
 </script>
 
@@ -838,7 +846,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     </div>
-</div>
 
 <!-- 제품 선택 모달 -->
 <div id="productPickerModal" onclick="if(event.target===this)this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10001; justify-content:center; align-items:flex-start; padding:80px 10px 20px; box-sizing:border-box; overflow-y:auto; backdrop-filter:blur(4px);">
@@ -972,8 +979,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
-        <h2>🔥 <span data-i18n="home_hotdeal_title">오늘의 핫딜</span> <span class="badge-hot">Time Sale</span></h2>
-        <p data-i18n="home_hotdeal_desc">행사 이벤트 팝업스토어 준비물 오늘 사면 더 저렴해요</p>
+        <h2>🧱 <span data-i18n="home_hotdeal_title">허니콤보드</span> <span class="badge-hot" style="background:#f59e0b;">Honeycomb</span></h2>
+        <p data-i18n="home_hotdeal_desc">전시부스, 팝업스토어, 인테리어에 최적화된 허니콤보드</p>
     </div>
     <div class="hotdeal-scroll-wrap">
         <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('hotDealGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -984,13 +991,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div id="bizDealSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f8fafc; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
-        <h2 style="color: #4f46e5;">💼 <span data-i18n="home_biz_title">업자용 대박할인</span> <span class="badge-hot" style="background:#4f46e5;">B2B Only</span></h2>
-        <p data-i18n="home_biz_desc">광고사 기획사가 늘 사용하는 아이템 오늘 더 저렴하게 특가로 준비했습니다</p>
+        <h2 style="color: #4f46e5;">🎨 <span data-i18n="home_biz_title">패브릭인쇄</span> <span class="badge-hot" style="background:#4f46e5;">Fabric</span></h2>
+        <p data-i18n="home_biz_desc">현수막, 천막, 배너 등 다양한 패브릭 인쇄 제품</p>
     </div>
     <div class="hotdeal-scroll-wrap">
         <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('bizDealGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
         <div id="bizDealGrid" class="hotdeal-grid"></div>
         <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('bizDealGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<div id="popularSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #fefce8; padding: 20px; border-radius: 12px;">
+    <div class="hotdeal-header">
+        <h2 style="color: #dc2626;">⭐ <span data-i18n="home_popular_title">인기상품</span> <span class="badge-hot" style="background:#dc2626;">Popular</span></h2>
+        <p data-i18n="home_popular_desc">가장 많이 찾는 인기 제품을 만나보세요</p>
+    </div>
+    <div class="hotdeal-scroll-wrap">
+        <button class="hotdeal-arrow left" onclick="scrollHotdeal('popularGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="popularGrid" class="hotdeal-grid"></div>
+        <button class="hotdeal-arrow right" onclick="scrollHotdeal('popularGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 <script>
@@ -5467,6 +5486,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (typeof loadSpecialProducts === 'function') {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 12);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 12);
+            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 12);
         }
         // 배송비 계산기 항상 표시
         var scSec = document.getElementById('shippingCalcSection');
@@ -8767,6 +8787,7 @@ if (w >= 20 && h >= 20) {
         if (typeof loadSpecialProducts === 'function') {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 12);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 12);
+            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 12);
         }
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
@@ -10386,13 +10407,16 @@ window.showCategorySelectionModal = async function() {
             .neq('img_url', '');
 
         // (2-b) 핫딜 + 업자용핫딜 추천상품 로드
-        const [{ data: hotDeals }, { data: bizDeals }] = await Promise.all([
+        const [{ data: hotDeals }, { data: bizDeals }, { data: popularProducts }] = await Promise.all([
             sb.from('admin_products')
                 .select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, category')
                 .eq('is_hot_deal', true).order('sort_order', { ascending: true }).limit(12),
             sb.from('admin_products')
                 .select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, category')
-                .eq('is_biz_deal', true).order('sort_order', { ascending: true }).limit(12)
+                .eq('is_biz_deal', true).order('sort_order', { ascending: true }).limit(12),
+            sb.from('admin_products')
+                .select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, category')
+                .eq('is_popular', true).order('sort_order', { ascending: true }).limit(12)
         ]);
 
         // (3) 데이터 전역 저장
@@ -10400,6 +10424,7 @@ window.showCategorySelectionModal = async function() {
         window.modalGlobalData.products = products || [];
         window.modalGlobalData.hotDeals = hotDeals || [];
         window.modalGlobalData.bizDeals = bizDeals || [];
+        window.modalGlobalData.popularProducts = popularProducts || [];
         window.modalGlobalData.thumbMap = {};
 
         // 썸네일 매핑 (카테고리 대표 이미지용)
