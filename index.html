@@ -1346,22 +1346,34 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
 <script>
 window.openSubPopup = function(){ document.getElementById('subPopupModal').style.display='flex'; };
 window.goToSubscription = function(){
-    // 상품 상세 모달 닫기
-    ['productDetailModal','choiceModal','generalProductModal','categoryDetailModal'].forEach(function(id){
+    // 모든 상품 모달 닫기 + 홈 화면 복원
+    ['choiceModal','generalProductModal','categoryDetailModal','productDetailModal'].forEach(function(id){
         var m = document.getElementById(id);
-        if (m) m.style.display = 'none';
+        if (m) {
+            m.style.display = 'none';
+            m.classList.remove('product-full-page');
+            m.style.padding = '';
+            m.style.background = '';
+            var box = m.querySelector('.modal-box');
+            if (box) {
+                box.style = '';
+                var h = box.querySelector('.product-full-header');
+                var g = box.querySelector('.product-guide-banner');
+                if (h) h.remove();
+                if (g) g.remove();
+            }
+        }
     });
+    // 홈 화면 보이기
+    var ss = document.getElementById('startScreen');
+    if (ss) ss.style.display = '';
+    // URL 정리
+    window.history.pushState({ type: 'home' }, '', '/');
     // 구독 섹션으로 스크롤
     setTimeout(function(){
         var el = document.getElementById('subscriptionSection');
-        if (el) {
-            el.scrollIntoView({ behavior:'smooth', block:'start' });
-        } else {
-            // fallback: 홈 URL로 이동
-            window.location.href = window.location.pathname + '#subscriptionSection';
-            window.location.reload();
-        }
-    }, 200);
+        if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 300);
 };
 // 프로모 박스 hover 툴팁 + 구독버튼 클릭
 (function(){
