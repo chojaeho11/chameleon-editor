@@ -1345,11 +1345,47 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
 
 <script>
 window.openSubPopup = function(){ document.getElementById('subPopupModal').style.display='flex'; };
-// 이벤트 위임: promoDiscountBox 클릭 감지
-document.addEventListener('click', function(e) {
-    var box = e.target.closest('#promoDiscountBox');
-    if (box) { e.stopPropagation(); window.openSubPopup(); }
-});
+// 프로모 박스 hover 툴팁 + 구독버튼 클릭
+(function(){
+    var hoverTimer = null;
+    document.addEventListener('mouseover', function(e) {
+        var box = e.target.closest('#promoDiscountBox');
+        if (box) {
+            clearTimeout(hoverTimer);
+            var tip = box.querySelector('#promoTooltip');
+            if (tip) tip.style.display = 'block';
+        }
+    });
+    document.addEventListener('mouseout', function(e) {
+        var box = e.target.closest('#promoDiscountBox');
+        if (box) {
+            hoverTimer = setTimeout(function(){
+                var tip = box.querySelector('#promoTooltip');
+                if (tip) tip.style.display = 'none';
+            }, 200);
+        }
+    });
+    // 구독하러가기 버튼 클릭
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#promoTooltipBtn')) {
+            e.stopPropagation();
+            window.openSubPopup();
+            return;
+        }
+        // 모바일: 프로모 박스 직접 클릭 시 (터치)
+        var box = e.target.closest('#promoDiscountBox');
+        if (box && !e.target.closest('#promoTooltip')) {
+            var tip = box.querySelector('#promoTooltip');
+            if (tip) {
+                if (tip.style.display === 'block') {
+                    tip.style.display = 'none';
+                } else {
+                    tip.style.display = 'block';
+                }
+            }
+        }
+    });
+})();
 </script>
 
 <!-- 이미지 템플릿 제목 입력 모달 -->
@@ -6921,7 +6957,7 @@ window.showChoiceModal = async function(key) {
                         <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#6366f1;">0</div>
                     </div>
                 </div>
-                <div id="promoDiscountBox" style="margin-top:12px; border-radius:14px; overflow:hidden; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;" onclick="window.openSubPopup&&window.openSubPopup()">
+                <div id="promoDiscountBox" style="position:relative; margin-top:12px; border-radius:14px; overflow:visible; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
                         <span style="background:#f59e0b; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px;">${lang==='ja'?'10%OFF':lang==='zh'?'10%OFF':lang==='en'?'10% OFF':'10% 할인'}</span>
                         <span style="font-size:12px; color:#92400e; font-weight:600;">${lang==='ja'?'定期購読+マイレージ':lang==='zh'?'订阅+积分':lang==='en'?'Subscribe+Mileage':'구독+마일리지'}</span>
@@ -6929,6 +6965,17 @@ window.showChoiceModal = async function(key) {
                     <div style="display:flex; align-items:baseline; justify-content:flex-end; gap:8px;">
                         <span id="promoDiscountPrice" style="font-size:24px; font-weight:900; color:#d97706;">0</span>
                         <span style="font-size:11px; color:#92400e; text-decoration:underline;">${lang==='ja'?'定期購読を見る →':lang==='zh'?'查看订阅 →':lang==='en'?'View Plans →':'구독 알아보기 →'}</span>
+                    </div>
+                    <div id="promoTooltip" style="display:none; position:absolute; left:0; right:0; bottom:calc(100% + 10px); background:#1e293b; color:#fff; border-radius:14px; padding:18px 16px; z-index:999; box-shadow:0 8px 30px rgba(0,0,0,0.25); animation:scSlideUp 0.2s ease;">
+                        <div style="position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:8px solid #1e293b;"></div>
+                        <div style="font-size:15px; font-weight:800; margin-bottom:10px; color:#fbbf24;">🎁 ${lang==='ja'?'PRO定期購読サービス':lang==='en'?'PRO Subscription':'PRO 구독 서비스'}</div>
+                        <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; line-height:1.5; color:#cbd5e1; margin-bottom:14px;">
+                            <div style="display:flex; align-items:center; gap:6px;"><span style="color:#34d399;">✓</span> ${lang==='ja'?'全商品10%割引':lang==='en'?'10% off all products':'전 제품 10% 할인'}</div>
+                            <div style="display:flex; align-items:center; gap:6px;"><span style="color:#34d399;">✓</span> ${lang==='ja'?'有料機能無制限利用':lang==='en'?'Unlimited premium features':'유료기능 무제한 사용'}</div>
+                            <div style="display:flex; align-items:center; gap:6px;"><span style="color:#34d399;">✓</span> ${lang==='ja'?'購読料分マイレージ積立':lang==='en'?'Mileage equal to subscription fee':'구독료만큼 마일리지 적립'}</div>
+                            <div style="display:flex; align-items:center; gap:6px;"><span style="color:#34d399;">✓</span> ${lang==='ja'?'プレミアムテンプレート全て利用可能':lang==='en'?'Access all premium templates':'프리미엄 템플릿 모두 이용'}</div>
+                        </div>
+                        <button id="promoTooltipBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${lang==='ja'?'定期購読する →':lang==='en'?'Subscribe Now →':'구독하러가기 →'}</button>
                     </div>
                 </div>
                 <div data-npc="buttons" style="display:flex; flex-direction:column; gap:12px; margin-top:20px; padding-bottom:50px;">
