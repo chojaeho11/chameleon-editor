@@ -4,6 +4,100 @@ import { sb, currentUser } from "./config.js?v=123";
 import { canvas } from "./canvas-core.js?v=123";
 import { applySize } from "./canvas-size.js?v=123";
 
+/* ─── 연관 검색어 확장 맵 ─── */
+const SEARCH_SYNONYMS = {
+    // 새해/설날 계열
+    '새해': ['설날','신년','복주머니','한옥','떡','부채','봄','매화','한복','세배','덕담','소나무','대나무','사군자','연하장','갑진년','을사년','용','뱀','복','연','춘','정월','연하','세뱃돈','홍등','금','전통','korea','new year','lunar','spring'],
+    '설날': ['새해','신년','복주머니','한옥','떡','부채','매화','한복','세배','덕담','소나무','전통','세뱃돈'],
+    '신년': ['새해','설날','new year','happy new year','복','한옥','전통'],
+    'new year': ['새해','신년','설날','happy new year','celebration','fireworks','party','2026','lunar'],
+    // 크리스마스 계열
+    '크리스마스': ['christmas','xmas','산타','루돌프','트리','눈사람','겨울','선물','벨','별','양말','장식','리스','캐롤','홀리','캔디','진저브레드','눈','촛불','snow','santa','rudolph','gift','ornament'],
+    'christmas': ['크리스마스','xmas','santa','rudolph','tree','snowman','winter','gift','bell','star','ornament','snow','candle','wreath','candy','gingerbread'],
+    '산타': ['크리스마스','christmas','santa','루돌프','선물','눈사람'],
+    // 생일 계열
+    '생일': ['birthday','축하','케이크','파티','선물','풍선','촛불','축','happy birthday','congratulations'],
+    'birthday': ['생일','축하','cake','party','gift','balloon','candle','celebration','congratulations','happy birthday'],
+    // 결혼/웨딩 계열
+    '결혼': ['웨딩','wedding','축하','청첩장','부케','반지','축의','결혼식','신랑','신부','marriage','bridal'],
+    'wedding': ['결혼','웨딩','축하','bridal','marriage','ring','bouquet','ceremony','love'],
+    // 감사/축하 계열
+    '감사': ['thank','thanks','고마워','감사합니다','thank you','appreciation','gratitude'],
+    '축하': ['congratulations','congrats','생일','결혼','졸업','합격','승진','celebration','party'],
+    // 카페/음료 계열
+    '카페': ['커피','coffee','음료','라떼','에스프레소','cafe','bakery','빵','디저트','케이크','브런치','메뉴','drink','tea','차'],
+    '커피': ['카페','coffee','라떼','에스프레소','아메리카노','cafe','음료','drink'],
+    'coffee': ['카페','커피','cafe','latte','espresso','americano','drink','beverage','tea'],
+    // 음식/식당 계열
+    '음식': ['food','맛집','식당','restaurant','menu','메뉴','요리','cooking','배달','delivery','치킨','피자','hamburger','sushi'],
+    '식당': ['음식','food','restaurant','맛집','메뉴','menu','요리','배달'],
+    'food': ['음식','맛집','식당','restaurant','menu','cooking','delivery','meal'],
+    // 세일/할인 계열
+    '세일': ['sale','할인','discount','이벤트','event','프로모션','promotion','특가','bargain','off','쿠폰','coupon'],
+    'sale': ['세일','할인','discount','event','promotion','special','off','coupon','deal','clearance'],
+    '할인': ['세일','sale','discount','이벤트','event','프로모션','특가','coupon','쿠폰'],
+    // 꽃/플라워 계열
+    '꽃': ['flower','플라워','장미','rose','튤립','해바라기','벚꽃','봄','garden','floral','bouquet','petal'],
+    'flower': ['꽃','플라워','rose','장미','tulip','sunflower','cherry blossom','spring','floral','garden','bouquet'],
+    '봄': ['spring','벚꽃','꽃','플라워','새싹','나비','butterfly','flower','cherry','blossom','pastel'],
+    // 여름 계열
+    '여름': ['summer','바다','해변','beach','수박','아이스크림','휴가','vacation','sun','pool','surf','tropical'],
+    'summer': ['여름','바다','beach','해변','sun','vacation','pool','tropical','ice cream','watermelon'],
+    // 가을 계열
+    '가을': ['autumn','fall','단풍','낙엽','추수','harvest','maple','leaves','thanksgiving','pumpkin','halloween'],
+    'autumn': ['가을','fall','단풍','maple','leaves','harvest','thanksgiving','pumpkin'],
+    // 겨울 계열
+    '겨울': ['winter','눈','snow','크리스마스','christmas','따뜻','hot chocolate','스키','snowflake','cold'],
+    'winter': ['겨울','눈','snow','christmas','크리스마스','snowflake','cold','frost','ice'],
+    // 비즈니스 계열
+    '비즈니스': ['business','사업','회사','기업','명함','corporate','office','professional','company'],
+    'business': ['비즈니스','사업','회사','corporate','office','professional','company','명함'],
+    // 교육 계열
+    '학교': ['school','교육','education','학생','졸업','graduation','study','university','college'],
+    '졸업': ['graduation','학교','축하','congrats','대학','university','학위','diploma','commencement'],
+    // 동물 계열
+    '동물': ['animal','고양이','cat','강아지','dog','pet','펫','rabbit','bear','곰','토끼','새','bird'],
+    '고양이': ['cat','동물','animal','pet','펫','kitten','kitty','cute','귀여운'],
+    '강아지': ['dog','동물','animal','pet','펫','puppy','cute','귀여운'],
+    // 발렌타인 계열
+    '발렌타인': ['valentine','사랑','love','하트','heart','초콜릿','chocolate','couple','연인','romantic'],
+    'valentine': ['발렌타인','사랑','love','heart','하트','chocolate','초콜릿','romantic','couple'],
+    '사랑': ['love','하트','heart','발렌타인','valentine','romantic','couple','연인','wedding'],
+    // 할로윈 계열
+    '할로윈': ['halloween','호박','pumpkin','유령','ghost','마녀','witch','scary','horror','trick','treat','costume','spider','bat'],
+    'halloween': ['할로윈','호박','pumpkin','ghost','유령','witch','마녀','scary','costume','spider','bat'],
+    // 부동산/인테리어
+    '부동산': ['real estate','집','house','아파트','apartment','건물','건축','인테리어','interior','home','property'],
+    '인테리어': ['interior','집','home','가구','furniture','디자인','design','부동산','house','decoration','room'],
+    // 뷰티/패션
+    '뷰티': ['beauty','화장품','cosmetics','메이크업','makeup','스킨케어','skincare','헤어','hair','네일','nail','패션','fashion'],
+    '패션': ['fashion','옷','clothes','의류','스타일','style','뷰티','beauty','쇼핑','shopping','브랜드','brand'],
+    // 여행
+    '여행': ['travel','관광','tour','tourism','trip','vacation','비행기','airplane','호텔','hotel','해외','abroad','풍경','landscape'],
+    'travel': ['여행','관광','tour','trip','vacation','airplane','hotel','landscape','adventure','explore'],
+    // 운동/스포츠
+    '운동': ['exercise','fitness','gym','헬스','sport','스포츠','요가','yoga','다이어트','diet','health','건강'],
+    '스포츠': ['sports','운동','축구','soccer','야구','baseball','농구','basketball','골프','golf','fitness'],
+    // 음악
+    '음악': ['music','노래','song','콘서트','concert','악기','instrument','밴드','band','DJ','piano','guitar'],
+    'music': ['음악','노래','concert','콘서트','song','instrument','band','DJ','piano','guitar','note'],
+    // 키즈
+    '키즈': ['kids','어린이','children','아이','baby','유아','동화','cartoon','귀여운','cute','놀이','play','toy'],
+    '어린이': ['kids','키즈','children','아이','baby','유아','cartoon','cute','toy','놀이'],
+};
+
+function _expandSearchKeywords(keyword) {
+    const kw = keyword.toLowerCase();
+    const result = [keyword]; // 원본 포함
+    for (const [key, synonyms] of Object.entries(SEARCH_SYNONYMS)) {
+        if (kw === key.toLowerCase() || kw.includes(key.toLowerCase()) || key.toLowerCase().includes(kw)) {
+            synonyms.forEach(s => { if (!result.includes(s)) result.push(s); });
+        }
+    }
+    // 최대 15개로 제한 (쿼리 길이 제한)
+    return result.slice(0, 15);
+}
+
 // ─── 프리미엄 접근 제어: 비구독자용 안내 모달 ───
 function _showPremiumUpsell() {
     // 기존 모달이 있으면 사용
@@ -1181,8 +1275,9 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         }
 
         if (keyword && keyword.trim() !== "") {
-            const term = keyword.trim();
-            query = query.or(`title.ilike.%${term}%,tags.ilike.%${term}%`);
+            const terms = _expandSearchKeywords(keyword.trim());
+            const orParts = terms.flatMap(t => [`title.ilike.%${t}%`, `tags.ilike.%${t}%`]);
+            query = query.or(orParts.join(','));
         }
 
         const { data, error } = await query;
@@ -1630,7 +1725,9 @@ window.loadSideAssets = async function(page) {
             .order('created_at', { ascending: false })
             .range(sideAssetPage * SIDE_ASSET_PER_PAGE, (sideAssetPage + 1) * SIDE_ASSET_PER_PAGE - 1);
         if (sideAssetKeyword) {
-            query = query.or('title.ilike.%' + sideAssetKeyword + '%,tags.ilike.%' + sideAssetKeyword + '%');
+            const terms = _expandSearchKeywords(sideAssetKeyword);
+            const orParts = terms.flatMap(t => ['title.ilike.%' + t + '%', 'tags.ilike.%' + t + '%']);
+            query = query.or(orParts.join(','));
         }
         const { data, error } = await query;
         if (error) throw error;
