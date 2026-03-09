@@ -1,5 +1,5 @@
 import { canvas } from "./canvas-core.js?v=123";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=123";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=124";
 import { SITE_CONFIG } from "./site-config.js?v=123";
 import { applySize } from "./canvas-size.js?v=123";
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=123";

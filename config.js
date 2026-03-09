@@ -46,8 +46,12 @@ export function initConfig() {
             } else {
             }
             
-            // 2. 세션 상태 확인
-            const { data: { session } } = await sb.auth.getSession();
+            // 2. 세션 상태 확인 + 데이터 로드 병렬 실행
+            const [sessionResult] = await Promise.all([
+                sb.auth.getSession(),
+                loadSystemData()
+            ]);
+            const { data: { session } } = sessionResult;
             updateUserSession(session);
 
             // 2-1. ★ 소셜 로그인 리다이렉트 후 복원 (getSession으로 세션 확인된 경우)
@@ -125,8 +129,7 @@ export function initConfig() {
                 setTimeout(() => showPasswordResetModal(), 500);
             }
 
-            // 4. 데이터 로드 (이 부분만 최적화됨)
-            await loadSystemData();
+            // 4. 데이터 로드 — 이미 위에서 병렬 실행 완료
 
         } catch (e) {
             console.error("설정 오류:", e);

@@ -119,7 +119,7 @@ function showWelcomeMessage() {
     chatArea.insertAdjacentHTML('beforeend', `
         <div class="adv-row adv-row-ai">
             <div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-            <div class="adv-bubble adv-bubble-ai">${formatted}</div>
+            <div class="adv-bubble adv-bubble-ai" style="text-align:center;">${formatted}</div>
         </div>
     `);
     scrollChat();

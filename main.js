@@ -1,6 +1,6 @@
 // main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=123";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=124";
 import { initCanvas, canvas } from "./canvas-core.js?v=123";
 import { initSizeControls, applySize } from "./canvas-size.js?v=123";
 import { initGuides } from "./canvas-guides.js?v=123";
@@ -68,11 +68,13 @@ window.addEventListener("DOMContentLoaded", async () => {
             };
         }
 
-        // 1-3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만)
+        // 1-3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만, 병렬)
         if (currentUser) {
-            await checkPartnerStatus();
-            await initContributorSystem();
-            if(window.updateMainPageUserInfo) await window.updateMainPageUserInfo();
+            await Promise.all([
+                checkPartnerStatus().catch(e => console.warn('⚠️ Partner check failed:', e)),
+                initContributorSystem().catch(e => console.warn('⚠️ Contributor init failed:', e)),
+                window.updateMainPageUserInfo ? window.updateMainPageUserInfo().catch(e => console.warn('⚠️ UserInfo update failed:', e)) : Promise.resolve()
+            ]);
         }
 
         // 2. ★ 에디터 초기화 (Fabric.js 필요) — 라이브러리 로드 후 실행

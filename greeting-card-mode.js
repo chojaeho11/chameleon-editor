@@ -1369,7 +1369,7 @@ async function shareGreetingCard() {
 
         const slug = 'gc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
 
-        const sb = window.sb || (await import('./config.js?v=123')).sb;
+        const sb = window.sb || (await import('./config.js?v=124')).sb;
         if (!sb) throw new Error('Supabase not available');
 
         // Upload card image

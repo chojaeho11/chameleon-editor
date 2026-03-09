@@ -8,7 +8,8 @@
       "Bash(ipconfig //flushdns)",
       "Read(//c/Users/win 10/Desktop/작업/$APPDATA/**)",
       "Bash(for file in \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\"/*.sql)",
-      "Bash(do grep -l \"JP\\\\|japan\\\\|japanese\" \"$file\")"
+      "Bash(do grep -l \"JP\\\\|japan\\\\|japanese\" \"$file\")",
+      "Read(///.marquee/,//**)"
     ]
   }
 }

@@ -1,6 +1,6 @@
 /* canvas-template.js - 버튼 페이징 버전 */
 
-import { sb, currentUser } from "./config.js?v=123";
+import { sb, currentUser } from "./config.js?v=124";
 import { canvas } from "./canvas-core.js?v=123";
 import { applySize } from "./canvas-size.js?v=123";
 
