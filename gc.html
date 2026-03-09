@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Greeting Card</title>
+<meta property="og:title" content="Greeting Card">
+<meta property="og:description" content="A special greeting card for you">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✉️</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Georgia','Times New Roman',serif;overflow-x:hidden;min-height:100vh}
+.container{max-width:420px;margin:0 auto;position:relative;min-height:100vh}
+.page-section{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:8px 0}
+.page-section img{max-width:100%;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2);display:block}
+.animation-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:10}
+.loading{text-align:center;padding:80px 20px;color:#fff;font-size:16px}
+.loading .spinner{display:inline-block;width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer-bar{text-align:center;padding:30px 20px 50px;opacity:0.7}
+.footer-bar a{color:#fff;text-decoration:none;font-size:13px;font-weight:600;background:rgba(255,255,255,0.15);padding:10px 20px;border-radius:20px;backdrop-filter:blur(4px)}
+.footer-bar a:hover{background:rgba(255,255,255,0.25)}
+
+/* ═══ Particle: Snowfall ═══ */
+@keyframes snowfall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(360deg);opacity:0.3}}
+.snowflake{position:absolute;color:#fff;opacity:0.8;animation:snowfall linear infinite;filter:blur(0.5px)}
+
+/* ═══ Particle: Confetti ═══ */
+@keyframes confetti-drop{0%{transform:translateY(-10vh) rotate(0deg) scale(1);opacity:1}100%{transform:translateY(110vh) rotate(720deg) scale(0.5);opacity:0}}
+.confetti{position:absolute;width:8px;height:8px;animation:confetti-drop linear infinite}
+
+/* ═══ Particle: Sparkle ═══ */
+@keyframes sparkle-pulse{0%,100%{transform:scale(0) rotate(0deg);opacity:0}50%{transform:scale(1) rotate(180deg);opacity:1}}
+.sparkle{position:absolute;animation:sparkle-pulse ease-in-out infinite}
+
+/* ═══ Particle: Hearts ═══ */
+@keyframes float-heart{0%{transform:translateY(110vh) scale(0.5);opacity:0}20%{opacity:1}100%{transform:translateY(-10vh) scale(1.2);opacity:0}}
+.heart{position:absolute;animation:float-heart linear infinite}
+
+/* ═══ Particle: Fireworks ═══ */
+@keyframes fw-burst{0%{transform:translate(0,0) scale(0);opacity:1}100%{opacity:0}}
+.firework-dot{position:absolute;width:4px;height:4px;border-radius:50%;animation:fw-burst ease-out infinite}
+
+/* ═══ Text animation ═══ */
+.anim-fade-in{opacity:0;transform:translateY(20px);transition:opacity 0.8s ease,transform 0.8s ease}
+.anim-fade-in.visible{opacity:1;transform:translateY(0)}
+
+/* ═══ Palette themes ═══ */
+.theme-christmas{background:linear-gradient(180deg,#1a472a 0%,#0f2d1a 100%)}
+.theme-newyear{background:linear-gradient(180deg,#0f172a 0%,#020617 100%)}
+.theme-birthday{background:linear-gradient(180deg,#fef3c7 0%,#fde68a 100%)}
+.theme-thankyou{background:linear-gradient(180deg,#f0fdf4 0%,#dcfce7 100%)}
+.theme-congrats{background:linear-gradient(180deg,#fef9c3 0%,#fef08a 100%)}
+.theme-valentines{background:linear-gradient(180deg,#fdf2f8 0%,#fce7f3 100%)}
+</style>
+</head>
+<body>
+<div class="container" id="viewer">
+    <div class="loading">
+        <div class="spinner"></div>
+        <p style="margin-top:16px">Loading your card...</p>
+    </div>
+</div>
+<div class="animation-layer" id="animLayer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function(){
+    const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2MDA3NjgsImV4cCI6MjA1MzE3Njc2OH0.2ltjJQx86tvdK-hFx_x4x1hZmE1YFZiaxEGVxDn3vFI';
+
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('id');
+    if (!slug) { document.getElementById('viewer').innerHTML = '<div class="loading"><p>Invalid card link</p></div>'; return; }
+
+    try {
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const { data } = sb.storage.from('public-assets').getPublicUrl(`greeting-card/${slug}/meta.json`);
+        const resp = await fetch(data.publicUrl + '?t=' + Date.now());
+        if (!resp.ok) throw new Error('Card not found');
+        const meta = await resp.json();
+
+        // Apply theme
+        document.body.className = 'theme-' + (meta.category || 'christmas');
+        document.title = meta.toName ? `To ${meta.toName} - Greeting Card` : 'Greeting Card';
+
+        // Render pages
+        const viewer = document.getElementById('viewer');
+        viewer.innerHTML = '';
+
+        if (meta.pages && meta.pages.length) {
+            meta.pages.forEach((url, i) => {
+                const section = document.createElement('div');
+                section.className = 'page-section anim-fade-in';
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Card page ' + (i+1);
+                img.loading = i === 0 ? 'eager' : 'lazy';
+                section.appendChild(img);
+                viewer.appendChild(section);
+            });
+        }
+
+        // Footer
+        const footer = document.createElement('div');
+        footer.className = 'footer-bar';
+        footer.innerHTML = '<a href="https://cafe2626.com" target="_blank">Make Your Own Card</a>';
+        viewer.appendChild(footer);
+
+        // IntersectionObserver for fade-in
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.2 });
+        document.querySelectorAll('.anim-fade-in').forEach(el => obs.observe(el));
+
+        // Particles
+        const animType = meta.animation || 'snow';
+        const layer = document.getElementById('animLayer');
+        if (animType !== 'none') createParticles(layer, animType, meta.category);
+
+    } catch(e) {
+        console.error(e);
+        document.getElementById('viewer').innerHTML = '<div class="loading"><p>Card not found or expired</p></div>';
+    }
+})();
+
+function createParticles(container, type, category) {
+    const COLORS = {
+        christmas: ['#fff','#ffd700','#c41e3a','#ffa500'],
+        newyear: ['#ffd700','#a78bfa','#fff','#f59e0b'],
+        birthday: ['#f472b6','#a78bfa','#fbbf24','#34d399','#60a5fa'],
+        thankyou: ['#86efac','#16a34a','#fbbf24','#fff'],
+        congrats: ['#f97316','#fbbf24','#ef4444','#a78bfa','#34d399'],
+        valentines: ['#ec4899','#f9a8d4','#fff','#f472b6']
+    };
+    const colors = COLORS[category] || COLORS.christmas;
+
+    if (type === 'snow') {
+        for (let i = 0; i < 35; i++) {
+            const el = document.createElement('div');
+            el.className = 'snowflake';
+            const size = 8 + Math.random() * 16;
+            el.style.cssText = `left:${Math.random()*100}%;font-size:${size}px;animation-duration:${5+Math.random()*10}s;animation-delay:${Math.random()*5}s;`;
+            el.textContent = Math.random() > 0.5 ? '\u2744' : '\u2022';
+            container.appendChild(el);
+        }
+    } else if (type === 'confetti') {
+        for (let i = 0; i < 50; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti';
+            const c = colors[Math.floor(Math.random()*colors.length)];
+            const w = 6+Math.random()*8, h = 4+Math.random()*6;
+            el.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${h}px;background:${c};border-radius:${Math.random()>0.5?'50%':'2px'};animation-duration:${3+Math.random()*6}s;animation-delay:${Math.random()*4}s;`;
+            container.appendChild(el);
+        }
+    } else if (type === 'sparkle') {
+        for (let i = 0; i < 25; i++) {
+            const el = document.createElement('div');
+            el.className = 'sparkle';
+            const size = 10+Math.random()*20;
+            const c = colors[Math.floor(Math.random()*colors.length)];
+            el.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${size}px;height:${size}px;animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*3}s;`;
+            el.textContent = '\u2728';
+            el.style.fontSize = size+'px';
+            el.style.color = c;
+            container.appendChild(el);
+        }
+    } else if (type === 'hearts') {
+        for (let i = 0; i < 20; i++) {
+            const el = document.createElement('div');
+            el.className = 'heart';
+            const size = 14+Math.random()*20;
+            const c = colors[Math.floor(Math.random()*colors.length)];
+            el.style.cssText = `left:${Math.random()*100}%;font-size:${size}px;color:${c};animation-duration:${6+Math.random()*8}s;animation-delay:${Math.random()*5}s;`;
+            el.textContent = '\u2665';
+            container.appendChild(el);
+        }
+    } else if (type === 'fireworks') {
+        setInterval(() => {
+            const cx = Math.random()*100, cy = Math.random()*60+10;
+            const c = colors[Math.floor(Math.random()*colors.length)];
+            for (let j = 0; j < 12; j++) {
+                const dot = document.createElement('div');
+                dot.className = 'firework-dot';
+                const angle = (j/12)*Math.PI*2;
+                const dist = 30+Math.random()*40;
+                const tx = Math.cos(angle)*dist, ty = Math.sin(angle)*dist;
+                dot.style.cssText = `left:${cx}%;top:${cy}%;background:${c};animation-duration:${1+Math.random()*0.5}s;animation-delay:${Math.random()*0.2}s;`;
+                dot.style.setProperty('animation-name','none');
+                container.appendChild(dot);
+                // Animate with transform
+                requestAnimationFrame(()=>{
+                    dot.style.transition = `all ${1+Math.random()*0.5}s ease-out`;
+                    dot.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
+                    dot.style.opacity = '0';
+                });
+                setTimeout(()=>dot.remove(), 2000);
+            }
+        }, 1500);
+    }
+}
+</script>
+</body>
+</html>

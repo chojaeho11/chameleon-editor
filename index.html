@@ -717,9 +717,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="dsm-name" data-i18n="dsm_gifmaker">움짤만들기</div>
                 <div class="dsm-size">GIF Animator</div>
             </div>
-            <div class="dsm-card" onclick="if(window.openWeddingWizard) window.openWeddingWizard(); else window.dsmOpenEditor(286, 508, '청첩장');" style="border:2px solid #f9a8d4;">
-                <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-heart"></i></div>
-                <div class="dsm-name" data-i18n="dsm_wedding">청첩장</div>
+            <div class="dsm-card" onclick="if(window.openGreetingCardWizard) window.openGreetingCardWizard(); else window.dsmOpenEditor(286, 508, '인사말카드');" style="border:2px solid #5eead4;">
+                <div class="dsm-icon" style="color:#14b8a6;"><i class="fa-solid fa-envelope-open-text"></i></div>
+                <div class="dsm-name" data-i18n="dsm_greeting_card">인사말카드</div>
                 <div class="dsm-size">1080 × 1920 px</div>
             </div>
             <div class="dsm-card" onclick="window.dsmOpenEditor(227, 291, '상세페이지')">
@@ -2313,29 +2313,29 @@ async function handleSubReturn() {
         </button>
     </div>
 
-    <!-- ═══ 청첩장 모드 툴바 ═══ -->
-    <div id="weddingToolbar" style="display:none; align-items:center; gap:8px; padding:8px 16px; background:linear-gradient(135deg,#ec4899,#db2777); color:#fff; font-size:13px; font-weight:600;">
-        <i class="fa-solid fa-heart" style="font-size:18px;"></i>
-        <span style="margin-right:2px; font-weight:800;" data-i18n="dsm_wedding">청첩장</span>
-        <button onclick="window.addPage()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:#fff; color:#ec4899; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
-            <i class="fa-solid fa-plus"></i> <span data-i18n="wed_add_page">추가</span>
+    <!-- ═══ 인사말카드 모드 툴바 ═══ -->
+    <div id="greetingCardToolbar" style="display:none; align-items:center; gap:8px; padding:8px 16px; background:linear-gradient(135deg,#14b8a6,#0d9488); color:#fff; font-size:13px; font-weight:600;">
+        <i class="fa-solid fa-envelope-open-text" style="font-size:18px;"></i>
+        <span style="margin-right:2px; font-weight:800;" data-i18n="dsm_greeting_card">인사말카드</span>
+        <button onclick="window.addPage()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:#fff; color:#14b8a6; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="gc_add_page">추가</span>
         </button>
-        <button onclick="window.weddingDuplicateSlide()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
-            <i class="fa-solid fa-copy"></i> <span data-i18n="wed_duplicate">복제</span>
+        <button onclick="window.gcDuplicateSlide()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
+            <i class="fa-solid fa-copy"></i> <span data-i18n="gc_duplicate">복제</span>
         </button>
-        <button onclick="window.weddingShowTemplates()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
-            <i class="fa-solid fa-table-cells-large"></i> <span data-i18n="wed_templates">섹션</span>
+        <button onclick="window.gcShowTemplates()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
+            <i class="fa-solid fa-table-cells-large"></i> <span data-i18n="gc_templates">섹션</span>
         </button>
         <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
             <button onclick="window.changePage(-1)" style="padding:4px 10px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></button>
-            <span id="weddingPageCounter" style="min-width:60px; text-align:center;">1 / 1</span>
+            <span id="gcPageCounter" style="min-width:60px; text-align:center;">1 / 1</span>
             <button onclick="window.changePage(1)" style="padding:4px 10px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button onclick="window.weddingPreview()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
-            <i class="fa-solid fa-eye"></i> <span data-i18n="wed_preview">미리보기</span>
+        <button onclick="window.gcPreview()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-eye"></i> <span data-i18n="gc_preview">미리보기</span>
         </button>
-        <button onclick="window.shareWeddingInvitation()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
-            <i class="fa-solid fa-share-nodes"></i> <span data-i18n="wed_share">공유하기</span>
+        <button onclick="window.gcShareCard()" style="display:inline-flex; align-items:center; gap:4px; padding:5px 14px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-share-nodes"></i> <span data-i18n="gc_share">공유하기</span>
         </button>
     </div>
 
@@ -3026,7 +3026,7 @@ async function handleSubReturn() {
             <button id="pptAddSlideFloat" onclick="window.addPage()" style="display:none; position:absolute; bottom:90px; right:20px; z-index:60; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#f97316,#d97706); color:#fff; border:none; box-shadow:0 4px 15px rgba(249,115,22,0.4); cursor:pointer; align-items:center; justify-content:center; font-size:24px; transition:transform 0.2s;" title="슬라이드 추가">
                 <i class="fa-solid fa-plus"></i>
             </button>
-            <button id="weddingAddPageFloat" onclick="window.addPage()" style="display:none; position:absolute; bottom:90px; right:20px; z-index:60; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#ec4899,#db2777); color:#fff; border:none; box-shadow:0 4px 15px rgba(236,72,153,0.4); cursor:pointer; align-items:center; justify-content:center; font-size:24px; transition:transform 0.2s;" title="페이지 추가">
+            <button id="gcAddPageFloat" onclick="window.addPage()" style="display:none; position:absolute; bottom:90px; right:20px; z-index:60; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#14b8a6,#0d9488); color:#fff; border:none; box-shadow:0 4px 15px rgba(20,184,166,0.4); cursor:pointer; align-items:center; justify-content:center; font-size:24px; transition:transform 0.2s;" title="페이지 추가">
                 <i class="fa-solid fa-plus"></i>
             </button>
             <div class="bottom-dock">
@@ -8565,12 +8565,12 @@ if (w >= 20 && h >= 20) {
             var _pf = document.getElementById('pptAddSlideFloat');
             if (_pf) _pf.style.display = 'none';
         }
-        // 청첩장 UI: 비-청첩장 모드일 때 툴바 숨기기
-        if (!window.__WEDDING_MODE) {
-            var _wt = document.getElementById('weddingToolbar');
-            if (_wt) _wt.style.display = 'none';
-            var _wf = document.getElementById('weddingAddPageFloat');
-            if (_wf) _wf.style.display = 'none';
+        // 인사말카드 UI: 비-인사말카드 모드일 때 툴바 숨기기
+        if (!window.__GREETING_CARD_MODE) {
+            var _gt = document.getElementById('greetingCardToolbar');
+            if (_gt) _gt.style.display = 'none';
+            var _gf = document.getElementById('gcAddPageFloat');
+            if (_gf) _gf.style.display = 'none';
         }
         
         const tplTabs = document.querySelector('.template-tabs');
@@ -8659,7 +8659,7 @@ if (w >= 20 && h >= 20) {
         const isBizCardTpl = _bizTplId && _bizTplId !== 'blank';
         const isPromoTpl = !!_promoSelection;
         // 홍보물은 페이지 생성 후 마법사 자동 오픈 (applyPromoPages에서 처리)
-        if (!isHoneycombKey && !isBizCardTpl && !isPromoTpl && !_isArtworkKey && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__WEDDING_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
+        if (!isHoneycombKey && !isBizCardTpl && !isPromoTpl && !_isArtworkKey && mode === 'standard' && !isPaperDisplay && !isLetterSignMode && !window.__GREETING_CARD_MODE && !window.__RETOUCH_MODE && !hasUploadedFiles) {
             if (window.pendingTemplate && window.pendingTemplateKeyword) {
                 // 이미지 선택 + 검색어 있음 → 마법사 스킵, 자동 디자인 구성
                 const _kw = window.pendingTemplateKeyword;
@@ -10882,9 +10882,9 @@ window.filterModalItems = function(keyword) {
                         <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
                         <div class="dsm-size">891 × 1260 px</div>
                     </div>
-                    <div class="dsm-card" onclick="if(window.openWeddingWizard) window.openWeddingWizard(); else window.dsmOpenEditor(286, 508, '청첩장');" style="border:2px solid #f9a8d4;">
-                        <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-heart"></i></div>
-                        <div class="dsm-name" data-i18n="dsm_wedding">청첩장</div>
+                    <div class="dsm-card" onclick="if(window.openGreetingCardWizard) window.openGreetingCardWizard(); else window.dsmOpenEditor(286, 508, '인사말카드');" style="border:2px solid #5eead4;">
+                        <div class="dsm-icon" style="color:#14b8a6;"><i class="fa-solid fa-envelope-open-text"></i></div>
+                        <div class="dsm-name" data-i18n="dsm_greeting_card">인사말카드</div>
                         <div class="dsm-size">1080 × 1920 px</div>
                     </div>
                     <div class="dsm-card" onclick="window.dsmOpenEditor(227, 291, '상세페이지')">
@@ -11134,8 +11134,8 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
     // 파워포인트 모드 설정
     window.__PPT_MODE = (label === '파워포인트');
     window.__pptTransitions = window.__pptTransitions || {};
-    // 청첩장 모드 설정
-    window.__WEDDING_MODE = (label === '청첩장');
+    // 인사말카드 모드 설정
+    window.__GREETING_CARD_MODE = (label === '인사말카드');
     if (window.startEditorDirect) {
         await window.startEditorDirect('custom', wMM, hMM);
         // PPT 모드 UI 활성화
@@ -11144,20 +11144,19 @@ window.dsmOpenEditor = async function(wMM, hMM, label) {
             if (tb) tb.style.display = 'flex';
             var addBtn = document.getElementById('pptAddSlideFloat');
             if (addBtn) addBtn.style.display = 'flex';
-            // 슬라이드 패널 활성화
             setTimeout(function() {
                 if (window.pptActivateSlidePanel) window.pptActivateSlidePanel();
             }, 500);
         }
-        // 청첩장 모드 UI 활성화
-        if (window.__WEDDING_MODE) {
-            var wtb = document.getElementById('weddingToolbar');
-            if (wtb) wtb.style.display = 'flex';
-            var wAddBtn = document.getElementById('weddingAddPageFloat');
-            if (wAddBtn) wAddBtn.style.display = 'flex';
+        // 인사말카드 모드 UI 활성화
+        if (window.__GREETING_CARD_MODE) {
+            var gtb = document.getElementById('greetingCardToolbar');
+            if (gtb) gtb.style.display = 'flex';
+            var gAddBtn = document.getElementById('gcAddPageFloat');
+            if (gAddBtn) gAddBtn.style.display = 'flex';
             setTimeout(function() {
-                if (window.weddingActivatePanel) window.weddingActivatePanel();
-                if (window.weddingInitPages) window.weddingInitPages();
+                if (window.gcActivatePanel) window.gcActivatePanel();
+                if (window.gcInitPages) window.gcInitPages();
             }, 500);
         }
     } else {
@@ -11267,9 +11266,9 @@ window._pptSetTransition = function(val) {
                 var obs = new MutationObserver(function() {
                     var pptC = document.getElementById('pptPageCounter');
                     if (pptC && window.__PPT_MODE) pptC.textContent = pc.textContent;
-                    // 청첩장 카운터 동기화
-                    var wedC = document.getElementById('weddingPageCounter');
-                    if (wedC && window.__WEDDING_MODE) wedC.textContent = pc.textContent;
+                    // 인사말카드 카운터 동기화
+                    var gcC = document.getElementById('gcPageCounter');
+                    if (gcC && window.__GREETING_CARD_MODE) gcC.textContent = pc.textContent;
                     // 전환 효과 select 동기화
                     var sel = document.getElementById('pptTransition');
                     if (sel && window.__PPT_MODE) {
@@ -13137,134 +13136,139 @@ window.dsmRenderProducts = async function(keyword) {
 @keyframes pptModalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
 </style>
 
-<!-- ═══ 청첩장 세로 스크롤 미리보기 ═══ -->
-<div id="weddingPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:linear-gradient(135deg,#fdf2f8,#fce7f3); flex-direction:column; align-items:center;">
-    <div id="weddingPreviewScroll" style="flex:1; overflow-y:auto; width:100%; padding:20px 0; -webkit-overflow-scrolling:touch;"></div>
-    <!-- 하단 컨트롤 -->
+<!-- ═══ 인사말카드 세로 스크롤 미리보기 ═══ -->
+<div id="gcPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:linear-gradient(135deg,#f0fdfa,#ccfbf1); flex-direction:column; align-items:center;">
+    <div id="gcPreviewScroll" style="flex:1; overflow-y:auto; width:100%; padding:20px 0; -webkit-overflow-scrolling:touch;"></div>
     <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:14px; padding:10px 24px; background:rgba(0,0,0,0.65); border-radius:30px; backdrop-filter:blur(8px); z-index:100000;">
-        <span id="weddingPreviewCounter" style="color:#fff; font-size:14px; font-weight:600;">1 pages</span>
+        <span id="gcPreviewCounter" style="color:#fff; font-size:14px; font-weight:600;">1 pages</span>
         <div style="width:1px; height:22px; background:rgba(255,255,255,0.25);"></div>
-        <button onclick="window.weddingClosePreview()" style="background:none; border:none; color:rgba(255,255,255,0.7); font-size:13px; cursor:pointer; padding:4px 8px; display:flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> ESC</button>
+        <button onclick="window.gcClosePreview()" style="background:none; border:none; color:rgba(255,255,255,0.7); font-size:13px; cursor:pointer; padding:4px 8px; display:flex; align-items:center; gap:4px;"><i class="fa-solid fa-xmark"></i> ESC</button>
     </div>
 </div>
 
-<!-- ═══ 청첩장 공유 다이얼로그 ═══ -->
-<div id="weddingShareDialog" style="display:none; position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.55); align-items:center; justify-content:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) window._closeShareDialog()">
+<!-- ═══ 인사말카드 공유 다이얼로그 ═══ -->
+<div id="gcShareDialog" style="display:none; position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.55); align-items:center; justify-content:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) window._gcCloseShare()">
     <div style="background:#fff; border-radius:20px; max-width:440px; width:90%; box-shadow:0 24px 80px rgba(0,0,0,0.35); animation:pptModalIn 0.25s ease; overflow:hidden;">
-        <div style="background:linear-gradient(135deg,#7c3aed,#a78bfa); padding:18px 24px; display:flex; align-items:center; justify-content:space-between;">
-            <div style="font-size:17px; font-weight:800; color:#fff;"><i class="fa-solid fa-share-nodes" style="margin-right:8px;"></i><span data-i18n="wed_share_title">청첩장 공유</span></div>
-            <button onclick="window._closeShareDialog()" style="background:rgba(255,255,255,0.3); border:none; width:30px; height:30px; border-radius:50%; color:#fff; font-size:14px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        <div style="background:linear-gradient(135deg,#14b8a6,#0d9488); padding:18px 24px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:17px; font-weight:800; color:#fff;"><i class="fa-solid fa-share-nodes" style="margin-right:8px;"></i><span data-i18n="gc_share_title">카드 공유</span></div>
+            <button onclick="window._gcCloseShare()" style="background:rgba(255,255,255,0.3); border:none; width:30px; height:30px; border-radius:50%; color:#fff; font-size:14px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div style="padding:24px;">
-            <div id="wedShareProgress" style="text-align:center; padding:20px 0;">
-                <div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#7c3aed;"></i></div>
-                <p style="color:#6b7280; font-size:14px;" data-i18n="wed_share_saving">저장 중...</p>
+            <div id="gcShareProgress" style="text-align:center; padding:20px 0;">
+                <div style="font-size:32px; margin-bottom:12px;"><i class="fa-solid fa-spinner fa-spin" style="color:#14b8a6;"></i></div>
+                <p style="color:#6b7280; font-size:14px;" data-i18n="gc_share_saving">저장 중...</p>
             </div>
-            <div id="wedShareResult" style="display:none;">
-                <p style="font-size:13px; color:#6b7280; margin-bottom:8px;" data-i18n="wed_share_url">공유 링크</p>
+            <div id="gcShareResult" style="display:none;">
+                <p style="font-size:13px; color:#6b7280; margin-bottom:8px;" data-i18n="gc_share_url">공유 링크</p>
                 <div style="display:flex; gap:8px;">
-                    <input id="wedShareUrl" type="text" readonly style="flex:1; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:13px; color:#374151; background:#f9fafb; outline:none;">
-                    <button onclick="window._copyShareUrl()" style="padding:10px 16px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">
-                        <i class="fa-solid fa-copy"></i> <span data-i18n="wed_share_copy">복사</span>
+                    <input id="gcShareUrl" type="text" readonly style="flex:1; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:13px; color:#374151; background:#f9fafb; outline:none;">
+                    <button onclick="window._gcCopyShareUrl()" style="padding:10px 16px; background:#14b8a6; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                        <i class="fa-solid fa-copy"></i> <span data-i18n="gc_share_copy">복사</span>
                     </button>
                 </div>
-                <p id="wedShareCopiedMsg" style="display:none; color:#16a34a; font-size:12px; margin-top:6px; text-align:center;" data-i18n="wed_share_copied">복사되었습니다!</p>
+                <p id="gcShareCopiedMsg" style="display:none; color:#16a34a; font-size:12px; margin-top:6px; text-align:center;" data-i18n="gc_share_copied">복사되었습니다!</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ═══ 청첩장 위저드 모달 ═══ -->
-<div id="weddingWizardModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.55); align-items:center; justify-content:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) this.style.display='none'">
+<!-- ═══ 인사말카드 위저드 모달 ═══ -->
+<div id="gcWizardModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.55); align-items:center; justify-content:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) this.style.display='none'">
     <div style="background:#fff; border-radius:24px; max-width:640px; width:94%; max-height:90vh; overflow-y:auto; box-shadow:0 24px 80px rgba(0,0,0,0.35); animation:pptModalIn 0.25s ease;">
-        <div style="background:linear-gradient(135deg,#ec4899,#f9a8d4,#d4a373); padding:22px 28px; border-radius:24px 24px 0 0; display:flex; align-items:center; justify-content:space-between;">
-            <div style="font-size:20px; font-weight:800; color:#fff;"><i class="fa-solid fa-heart" style="margin-right:8px;"></i><span data-i18n="wed_wizard_title">청첩장 만들기</span></div>
-            <button onclick="document.getElementById('weddingWizardModal').style.display='none'" style="background:rgba(255,255,255,0.35); border:none; width:38px; height:38px; border-radius:50%; color:#fff; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-xmark"></i></button>
+        <div style="background:linear-gradient(135deg,#14b8a6,#5eead4,#0d9488); padding:22px 28px; border-radius:24px 24px 0 0; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:20px; font-weight:800; color:#fff;"><i class="fa-solid fa-envelope-open-text" style="margin-right:8px;"></i><span data-i18n="gc_wizard_title">인사말카드 만들기</span></div>
+            <button onclick="document.getElementById('gcWizardModal').style.display='none'" style="background:rgba(255,255,255,0.35); border:none; width:38px; height:38px; border-radius:50%; color:#fff; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div style="padding:24px 28px;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_groom_name">신랑 이름</label>
-                    <input id="wedGroomName" type="text" placeholder="홍길동" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
-                </div>
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_bride_name">신부 이름</label>
-                    <input id="wedBrideName" type="text" placeholder="김영희" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
-                </div>
-            </div>
-            <div style="margin-bottom:16px;">
-                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;"><i class="fa-solid fa-person" style="color:#6366f1; margin-right:4px;"></i><span data-i18n="wed_groom_parents">신랑측 부모님</span></label>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <input id="wedGroomFather" type="text" placeholder="아버지 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
-                    <input id="wedGroomMother" type="text" placeholder="어머니 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
-                </div>
-            </div>
-            <div style="margin-bottom:16px;">
-                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;"><i class="fa-solid fa-person-dress" style="color:#ec4899; margin-right:4px;"></i><span data-i18n="wed_bride_parents">신부측 부모님</span></label>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <input id="wedBrideFather" type="text" placeholder="아버지 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
-                    <input id="wedBrideMother" type="text" placeholder="어머니 성함" style="width:100%; padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
-                </div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_date">예식 날짜</label>
-                    <input id="wedDate" type="date" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
-                </div>
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_time_label">예식 시간</label>
-                    <input id="wedTime" type="time" value="12:00" style="width:100%; padding:10px 12px; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#f9a8d4'">
-                </div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_venue">예식장 이름</label>
-                    <input id="wedVenueName" type="text" placeholder="○○웨딩홀" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
-                </div>
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_address">예식장 주소</label>
-                    <input id="wedVenueAddr" type="text" placeholder="서울특별시 ○○구 ○○로 000" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#ec4899'" onblur="this.style.borderColor='#e2e8f0'">
-                </div>
-            </div>
-            <div style="margin-bottom:16px;">
-                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:8px;" data-i18n="wed_style">스타일</label>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="wed-style-btn wed-style-active" data-style="classic" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:80px; padding:10px 8px; border:2px solid #b8860b; border-radius:10px; background:#faf3eb; cursor:pointer; font-weight:700; font-size:13px; color:#3e2723; transition:all 0.15s;" data-i18n="wed_style_classic">클래식</button>
-                    <button class="wed-style-btn" data-style="insta" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:80px; padding:10px 8px; border:2px solid transparent; border-radius:10px; background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); cursor:pointer; font-weight:700; font-size:13px; color:#fff; transition:all 0.15s;" data-i18n="wed_style_insta">인스타</button>
-                    <button class="wed-style-btn" data-style="romantic" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:80px; padding:10px 8px; border:2px solid #e91e63; border-radius:10px; background:linear-gradient(135deg,#fce4ec,#f8bbd0,#f48fb1); cursor:pointer; font-weight:700; font-size:13px; color:#880e4f; transition:all 0.15s;" data-i18n="wed_style_romantic">로맨틱</button>
-                    <button class="wed-style-btn" data-style="modern" onclick="document.querySelectorAll('.wed-style-btn').forEach(b=>b.classList.remove('wed-style-active'));this.classList.add('wed-style-active');" style="flex:1; min-width:80px; padding:10px 8px; border:2px solid #444; border-radius:10px; background:#1a1a1a; cursor:pointer; font-weight:700; font-size:13px; color:#f5f5f5; transition:all 0.15s;" data-i18n="wed_style_modern">모던</button>
-                </div>
-            </div>
+            <!-- 이벤트 종류 선택 -->
             <div style="margin-bottom:20px;">
-                <label style="font-size:12px; font-weight:700; color:#5c4033; display:block; margin-bottom:4px;" data-i18n="wed_photos">사진 업로드 (최대 10장)</label>
-                <p style="font-size:11px; color:#94a3b8; margin:0 0 8px;" data-i18n="wed_photo_main_note">첫번째 사진이 표지에 사용됩니다</p>
-                <div id="wedPhotoDropZone" style="border:2px dashed #f9a8d4; border-radius:14px; padding:20px; text-align:center; cursor:pointer; background:#fdf2f8; transition:all 0.15s;" onclick="document.getElementById('wedPhotoInput').click()" ondragover="event.preventDefault(); this.style.borderColor='#ec4899'; this.style.background='#fce7f3';" ondragleave="this.style.borderColor='#f9a8d4'; this.style.background='#fdf2f8';" ondrop="event.preventDefault(); this.style.borderColor='#f9a8d4'; this.style.background='#fdf2f8'; if(window.handleWeddingPhotos) window.handleWeddingPhotos(event.dataTransfer.files);">
-                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px; color:#ec4899; display:block; margin-bottom:6px;"></i>
-                    <span style="font-size:13px; color:#8b5e3c;" data-i18n="wed_photo_drop">클릭 또는 드래그해서 사진 업로드</span>
-                    <input id="wedPhotoInput" type="file" accept="image/*" multiple style="display:none;" onchange="if(window.handleWeddingPhotos) window.handleWeddingPhotos(this.files)">
+                <label style="font-size:13px; font-weight:700; color:#0f766e; display:block; margin-bottom:10px;" data-i18n="gc_category">이벤트 종류</label>
+                <div id="gcCategoryGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+                    <button class="gc-cat-btn gc-cat-active" data-cat="christmas" onclick="window._gcSelectCat(this)" style="padding:14px 8px; border:2px solid #14b8a6; border-radius:12px; background:#f0fdfa; cursor:pointer; text-align:center; transition:all 0.15s;">
+                        <div style="font-size:28px; margin-bottom:4px;">🎄</div>
+                        <div style="font-size:11px; font-weight:700; color:#0f766e;" data-i18n="gc_cat_christmas">크리스마스</div>
+                    </button>
+                    <button class="gc-cat-btn" data-cat="newyear" onclick="window._gcSelectCat(this)" style="padding:14px 8px; border:2px solid transparent; border-radius:12px; background:#f8fafc; cursor:pointer; text-align:center; transition:all 0.15s;">
+                        <div style="font-size:28px; margin-bottom:4px;">🎆</div>
+                        <div style="font-size:11px; font-weight:700; color:#334155;" data-i18n="gc_cat_newyear">새해</div>
+                    </button>
+                    <button class="gc-cat-btn" data-cat="birthday" onclick="window._gcSelectCat(this)" style="padding:14px 8px; border:2px solid transparent; border-radius:12px; background:#f8fafc; cursor:pointer; text-align:center; transition:all 0.15s;">
+                        <div style="font-size:28px; margin-bottom:4px;">🎂</div>
+                        <div style="font-size:11px; font-weight:700; color:#334155;" data-i18n="gc_cat_birthday">생일</div>
+                    </button>
+                    <button class="gc-cat-btn" data-cat="thankyou" onclick="window._gcSelectCat(this)" style="padding:14px 8px; border:2px solid transparent; border-radius:12px; background:#f8fafc; cursor:pointer; text-align:center; transition:all 0.15s;">
+                        <div style="font-size:28px; margin-bottom:4px;">🙏</div>
+                        <div style="font-size:11px; font-weight:700; color:#334155;" data-i18n="gc_cat_thankyou">감사</div>
+                    </button>
+                    <button class="gc-cat-btn" data-cat="congrats" onclick="window._gcSelectCat(this)" style="padding:14px 8px; border:2px solid transparent; border-radius:12px; background:#f8fafc; cursor:pointer; text-align:center; transition:all 0.15s;">
+                        <div style="font-size:28px; margin-bottom:4px;">🎉</div>
+                        <div style="font-size:11px; font-weight:700; color:#334155;" data-i18n="gc_cat_congrats">축하</div>
+                    </button>
+                    <button class="gc-cat-btn" data-cat="valentines" onclick="window._gcSelectCat(this)" style="padding:14px 8px; border:2px solid transparent; border-radius:12px; background:#f8fafc; cursor:pointer; text-align:center; transition:all 0.15s;">
+                        <div style="font-size:28px; margin-bottom:4px;">💕</div>
+                        <div style="font-size:11px; font-weight:700; color:#334155;" data-i18n="gc_cat_valentines">발렌타인</div>
+                    </button>
                 </div>
-                <div id="wedPhotoGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-top:10px;"></div>
             </div>
-            <div id="wedWizardProgress" style="display:none; text-align:center; padding:20px 0;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:32px; color:#ec4899;"></i>
-                <p id="wedWizardStep" style="margin:12px 0 0; font-size:14px; font-weight:600; color:#5c4033;" data-i18n="wed_generating">청첩장을 만들고 있습니다...</p>
+            <!-- 보내는 사람 / 받는 사람 -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#0f766e; display:block; margin-bottom:4px;" data-i18n="gc_from">보내는 사람</label>
+                    <input id="gcFromName" type="text" placeholder="" style="width:100%; padding:10px 12px; border:2px solid #5eead4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='#5eead4'">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#0f766e; display:block; margin-bottom:4px;" data-i18n="gc_to">받는 사람</label>
+                    <input id="gcToName" type="text" placeholder="" style="width:100%; padding:10px 12px; border:2px solid #5eead4; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='#5eead4'">
+                </div>
             </div>
-            <button id="btnWedGenerate" onclick="if(window.runWeddingGeneration) window.runWeddingGeneration()" style="width:100%; padding:14px; background:linear-gradient(135deg,#ec4899,#d4a373); color:#fff; font-size:16px; font-weight:800; border:none; border-radius:14px; cursor:pointer; transition:all 0.15s; box-shadow:0 4px 16px rgba(236,72,153,0.3);" onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(236,72,153,0.4)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 4px 16px rgba(236,72,153,0.3)';"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px;"></i><span data-i18n="wed_generate">청첩장 생성하기</span></button>
-            <button onclick="document.getElementById('weddingWizardModal').style.display='none'" style="width:100%; margin-top:8px; padding:10px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕ <span data-i18n="btn_close">닫기</span></button>
+            <!-- 메시지 -->
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#0f766e; display:block; margin-bottom:4px;" data-i18n="gc_message">메시지</label>
+                <textarea id="gcMessage" rows="3" placeholder="" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box; resize:vertical; font-family:inherit;" onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+            </div>
+            <!-- 애니메이션 효과 선택 -->
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#0f766e; display:block; margin-bottom:8px;" data-i18n="gc_animation">애니메이션 효과</label>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="gc-anim-btn gc-anim-active" data-anim="snow" onclick="document.querySelectorAll('.gc-anim-btn').forEach(b=>b.classList.remove('gc-anim-active'));this.classList.add('gc-anim-active');" style="flex:1; min-width:70px; padding:10px 6px; border:2px solid #14b8a6; border-radius:10px; background:#f0fdfa; cursor:pointer; font-weight:700; font-size:12px; color:#0f766e; text-align:center; transition:all 0.15s;">❄️ <span data-i18n="gc_anim_snow">눈</span></button>
+                    <button class="gc-anim-btn" data-anim="confetti" onclick="document.querySelectorAll('.gc-anim-btn').forEach(b=>b.classList.remove('gc-anim-active'));this.classList.add('gc-anim-active');" style="flex:1; min-width:70px; padding:10px 6px; border:2px solid transparent; border-radius:10px; background:#f8fafc; cursor:pointer; font-weight:700; font-size:12px; color:#334155; text-align:center; transition:all 0.15s;">🎊 <span data-i18n="gc_anim_confetti">색종이</span></button>
+                    <button class="gc-anim-btn" data-anim="sparkle" onclick="document.querySelectorAll('.gc-anim-btn').forEach(b=>b.classList.remove('gc-anim-active'));this.classList.add('gc-anim-active');" style="flex:1; min-width:70px; padding:10px 6px; border:2px solid transparent; border-radius:10px; background:#f8fafc; cursor:pointer; font-weight:700; font-size:12px; color:#334155; text-align:center; transition:all 0.15s;">✨ <span data-i18n="gc_anim_sparkle">반짝임</span></button>
+                    <button class="gc-anim-btn" data-anim="hearts" onclick="document.querySelectorAll('.gc-anim-btn').forEach(b=>b.classList.remove('gc-anim-active'));this.classList.add('gc-anim-active');" style="flex:1; min-width:70px; padding:10px 6px; border:2px solid transparent; border-radius:10px; background:#f8fafc; cursor:pointer; font-weight:700; font-size:12px; color:#334155; text-align:center; transition:all 0.15s;">💕 <span data-i18n="gc_anim_hearts">하트</span></button>
+                    <button class="gc-anim-btn" data-anim="fireworks" onclick="document.querySelectorAll('.gc-anim-btn').forEach(b=>b.classList.remove('gc-anim-active'));this.classList.add('gc-anim-active');" style="flex:1; min-width:70px; padding:10px 6px; border:2px solid transparent; border-radius:10px; background:#f8fafc; cursor:pointer; font-weight:700; font-size:12px; color:#334155; text-align:center; transition:all 0.15s;">🎆 <span data-i18n="gc_anim_fireworks">불꽃</span></button>
+                    <button class="gc-anim-btn" data-anim="none" onclick="document.querySelectorAll('.gc-anim-btn').forEach(b=>b.classList.remove('gc-anim-active'));this.classList.add('gc-anim-active');" style="flex:1; min-width:70px; padding:10px 6px; border:2px solid transparent; border-radius:10px; background:#f8fafc; cursor:pointer; font-weight:700; font-size:12px; color:#334155; text-align:center; transition:all 0.15s;">🚫 <span data-i18n="gc_anim_none">없음</span></button>
+                </div>
+            </div>
+            <!-- 사진 업로드 -->
+            <div style="margin-bottom:20px;">
+                <label style="font-size:12px; font-weight:700; color:#0f766e; display:block; margin-bottom:4px;" data-i18n="gc_photos">사진 업로드 (최대 5장)</label>
+                <div id="gcPhotoDropZone" style="border:2px dashed #5eead4; border-radius:14px; padding:20px; text-align:center; cursor:pointer; background:#f0fdfa; transition:all 0.15s;" onclick="document.getElementById('gcPhotoInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px; color:#14b8a6; display:block; margin-bottom:6px;"></i>
+                    <span style="font-size:13px; color:#0f766e;" data-i18n="gc_photo_drop">클릭하여 사진 업로드</span>
+                    <input id="gcPhotoInput" type="file" accept="image/*" multiple style="display:none;" onchange="if(window.handleGcPhotos) window.handleGcPhotos(this.files)">
+                </div>
+                <div id="gcPhotoGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-top:10px;"></div>
+            </div>
+            <div id="gcWizardProgress" style="display:none; text-align:center; padding:20px 0;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:32px; color:#14b8a6;"></i>
+                <p id="gcWizardStep" style="margin:12px 0 0; font-size:14px; font-weight:600; color:#0f766e;" data-i18n="gc_generating">카드를 만들고 있습니다...</p>
+            </div>
+            <button id="btnGcGenerate" onclick="if(window.runGcGeneration) window.runGcGeneration()" style="width:100%; padding:14px; background:linear-gradient(135deg,#14b8a6,#0d9488); color:#fff; font-size:16px; font-weight:800; border:none; border-radius:14px; cursor:pointer; transition:all 0.15s; box-shadow:0 4px 16px rgba(20,184,166,0.3);"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px;"></i><span data-i18n="gc_generate">카드 생성하기</span></button>
+            <button onclick="document.getElementById('gcWizardModal').style.display='none'" style="width:100%; margin-top:8px; padding:10px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕ <span data-i18n="btn_close">닫기</span></button>
         </div>
     </div>
 </div>
-<style>.wed-style-active { border-color:#ec4899 !important; background:#fdf2f8 !important; box-shadow:0 0 0 3px rgba(236,72,153,0.15); }</style>
+<style>.gc-cat-active { border-color:#14b8a6 !important; background:#f0fdfa !important; box-shadow:0 0 0 3px rgba(20,184,166,0.15); }
+.gc-anim-active { border-color:#14b8a6 !important; background:#f0fdfa !important; color:#0f766e !important; }</style>
 
-<!-- ═══ 청첩장 섹션 템플릿 모달 ═══ -->
-<div id="weddingTemplateModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) window.weddingHideTemplates()">
+<!-- ═══ 인사말카드 섹션 템플릿 모달 ═══ -->
+<div id="gcTemplateModal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) window.gcHideTemplates()">
     <div style="background:#fff; border-radius:20px; padding:28px; max-width:600px; width:94%; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:pptModalIn 0.2s ease;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-            <div style="font-size:18px; font-weight:800; color:#5c4033;"><i class="fa-solid fa-heart" style="color:#ec4899; margin-right:6px;"></i>섹션 템플릿</div>
-            <button onclick="window.weddingHideTemplates()" style="background:none; border:none; font-size:20px; color:#94a3b8; cursor:pointer; padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+            <div style="font-size:18px; font-weight:800; color:#0f766e;"><i class="fa-solid fa-envelope-open-text" style="color:#14b8a6; margin-right:6px;"></i><span data-i18n="gc_section_templates">섹션 템플릿</span></div>
+            <button onclick="window.gcHideTemplates()" style="background:none; border:none; font-size:20px; color:#94a3b8; cursor:pointer; padding:4px;"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="weddingTemplateGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;"></div>
-        <p style="margin-top:14px; font-size:12px; color:#94a3b8; text-align:center;">현재 페이지의 내용이 교체됩니다</p>
+        <div id="gcTemplateGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;"></div>
+        <p style="margin-top:14px; font-size:12px; color:#94a3b8; text-align:center;" data-i18n="gc_tpl_replace_note">현재 페이지의 내용이 교체됩니다</p>
     </div>
 </div>
 

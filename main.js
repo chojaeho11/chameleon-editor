@@ -20,7 +20,7 @@ import { initContextMenu } from "./context-menu.js?v=123";
 import { createVectorOutline } from "./outlineMaker.js?v=123";
 import { initVideoMaker } from "./video-maker.js?v=123";
 import { initPptMode } from "./ppt-mode.js?v=123";
-import { initWeddingMode } from "./wedding-mode.js?v=124";
+import { initGreetingCardMode } from "./greeting-card-mode.js?v=123";
 import { initIconTools } from "./canvas-icons.js?v=123";
 import { initRetouchTools } from "./canvas-retouch.js?v=125";
 
@@ -99,7 +99,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 ['OutlineTool', initOutlineTool],
                 ['FileUpload', initFileUploadListeners],
                 ['PptMode', initPptMode],
-                ['WeddingMode', initWeddingMode],
+                ['GreetingCardMode', initGreetingCardMode],
             ];
             for (const [name, fn] of editorInits) {
                 try { fn(); } catch(e) { console.warn(`⚠️ ${name} init failed:`, e); }

@@ -1137,103 +1137,94 @@ button, input, textarea, select { font-family: inherit; }
     /* 모바일에서는 도움말 텍스트 숨김 */
     .bottom-dock .help-text { display: none !important; }
 
-    /* ─── 웨딩 모드 모바일 최적화 ─── */
-    #weddingSlideList {
+    /* ─── 인사말카드 모드 모바일 최적화 ─── */
+    #gcSlideList {
         max-height: calc(100vh - 200px) !important;
     }
 
-    /* ═══ 웨딩 모바일: 전체 레이아웃 ═══ */
-    body.wedding-mode .stage {
+    /* ═══ 인사말카드 모바일: 전체 레이아웃 ═══ */
+    body.greeting-card-mode .stage {
         bottom: 0 !important;
         height: 100% !important;
-        padding-bottom: 64px; /* wedMobileNav 공간 */
+        padding-bottom: 64px;
     }
 
-    /* 웨딩 툴바: 모바일에서 숨김 (하단 네비로 대체) */
-    body.wedding-mode #weddingToolbar {
+    /* 인사말카드 툴바: 모바일에서 숨김 (하단 네비로 대체) */
+    body.greeting-card-mode #greetingCardToolbar {
         display: none !important;
     }
 
-    /* 웨딩 모바일: 불필요한 플로팅 버튼 숨기기 */
-    body.wedding-mode #btnBgLockFloat { display: none !important; }
-    body.wedding-mode #btnDesignWizard { display: none !important; }
-    body.wedding-mode #weddingAddPageFloat { display: none !important; }
-    body.wedding-mode #btn3DPreview { display: none !important; }
+    /* 인사말카드 모바일: 불필요한 플로팅 버튼 숨기기 */
+    body.greeting-card-mode #btnBgLockFloat { display: none !important; }
+    body.greeting-card-mode #btnDesignWizard { display: none !important; }
+    body.greeting-card-mode #gcAddPageFloat { display: none !important; }
+    body.greeting-card-mode #btn3DPreview { display: none !important; }
 
-    /* 웨딩 모바일: 하단 독바 위치 조정 (모바일 네비 위) */
-    body.wedding-mode .bottom-dock {
+    /* 인사말카드 모바일: 하단 독바 위치 조정 */
+    body.greeting-card-mode .bottom-dock {
         bottom: 120px !important;
         padding: 6px 14px !important;
         gap: 8px !important;
     }
-    body.wedding-mode .bottom-dock .zoom-btn {
+    body.greeting-card-mode .bottom-dock .zoom-btn {
         width: 32px !important;
         height: 32px !important;
         font-size: 14px !important;
     }
-    body.wedding-mode .bottom-dock .help-text,
-    body.wedding-mode .bottom-dock .divider { display: none !important; }
+    body.greeting-card-mode .bottom-dock .help-text,
+    body.greeting-card-mode .bottom-dock .divider { display: none !important; }
 
-    /* FAB 버튼 위치 조정 (웨딩 모드) */
-    body.wedding-mode .mobile-fab.left { top: 60px !important; }
-    body.wedding-mode .mobile-fab.right { bottom: 140px !important; }
+    /* FAB 버튼 위치 조정 (인사말카드 모드) */
+    body.greeting-card-mode .mobile-fab.left { top: 60px !important; }
+    body.greeting-card-mode .mobile-fab.right { bottom: 140px !important; }
 }
 
-/* ═══ 웨딩 모바일 전용 하단 네비게이터 ═══ */
-#wedMobileNav {
-    /* 초기 스타일은 JS에서 인라인으로 설정됨, 여기서 보강 */
-}
-
-/* ═══ 웨딩 모달 모바일 최적화 ═══ */
+/* ═══ 인사말카드 모달 모바일 최적화 ═══ */
 @media (max-width: 768px) {
-    /* 섹션 템플릿 모달: 2열 그리드 */
-    #weddingTemplateModal > div {
+    #gcTemplateModal > div {
         width: 96% !important;
         padding: 16px !important;
         border-radius: 16px !important;
         max-height: 80vh !important;
     }
-    #weddingTemplateGrid {
+    #gcTemplateGrid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 8px !important;
     }
-
-    /* 위저드 모달: 풀스크린 */
-    #weddingWizardModal > div {
+    #gcWizardModal > div {
         width: 100% !important;
         max-width: 100% !important;
         max-height: 100vh !important;
         border-radius: 0 !important;
         height: 100vh !important;
     }
-    #weddingWizardModal > div > div:first-child {
+    #gcWizardModal > div > div:first-child {
         border-radius: 0 !important;
         padding: 14px 16px !important;
     }
-    #weddingWizardModal > div > div:last-child {
+    #gcWizardModal > div > div:last-child {
         padding: 16px !important;
     }
-    #wedPhotoGrid {
+    #gcPhotoGrid {
         grid-template-columns: repeat(4, 1fr) !important;
     }
-    .wed-style-btn {
-        min-width: 60px !important;
-        padding: 8px 4px !important;
-        font-size: 12px !important;
+    #gcCategoryGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
     }
-
-    /* 공유 다이얼로그 */
-    #weddingShareDialog > div {
+    .gc-anim-btn {
+        min-width: 55px !important;
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+    }
+    #gcShareDialog > div {
         width: 95% !important;
         border-radius: 16px !important;
     }
-
-    /* 미리보기 오버레이 */
-    #weddingPreviewOverlay #weddingPreviewScroll {
+    #gcPreviewOverlay #gcPreviewScroll {
         padding: 10px 0 !important;
     }
-    #weddingPreviewOverlay #weddingPreviewScroll img,
-    #weddingPreviewOverlay #weddingPreviewScroll canvas {
+    #gcPreviewOverlay #gcPreviewScroll img,
+    #gcPreviewOverlay #gcPreviewScroll canvas {
         max-width: 95vw !important;
     }
 }

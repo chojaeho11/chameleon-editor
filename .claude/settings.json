@@ -6,7 +6,9 @@
       "Bash(nslookup chameleon.design)",
       "Bash(dig chameleon.design +short)",
       "Bash(ipconfig //flushdns)",
-      "Read(//c/Users/win 10/Desktop/작업/$APPDATA/**)"
+      "Read(//c/Users/win 10/Desktop/작업/$APPDATA/**)",
+      "Bash(for file in \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\"/*.sql)",
+      "Bash(do grep -l \"JP\\\\|japan\\\\|japanese\" \"$file\")"
     ]
   }
 }
