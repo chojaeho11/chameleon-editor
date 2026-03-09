@@ -2240,20 +2240,24 @@ async function saveCommonInfo() {
     function getSb() { return window.sb; }
 
     window.loadRecentComments = async function() {
-        const sb = getSb(); if (!sb) return;
+        const sb = getSb();
+        if (!sb) { console.error('[댓글] sb 없음'); return; }
         const body = document.getElementById('commentListBody');
         body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">로딩 중...</td></tr>';
 
         const countryFilter = document.getElementById('commentCountryFilter')?.value || '';
 
         try {
-            // 댓글 + 게시글 country_code 조인 조회 (최신순)
+            console.log('[댓글] 로딩 시작...');
+
+            // 1단계: 댓글 조회
             const { data: allComments, error } = await sb
                 .from('community_comments')
-                .select('id, post_id, author_name, content, created_at, community_posts(title, country_code)')
+                .select('id, post_id, author_name, content, created_at')
                 .order('created_at', { ascending: false })
                 .limit(500);
             if (error) throw error;
+            console.log('[댓글] 조회 결과:', allComments?.length, '건');
 
             if (!allComments || allComments.length === 0) {
                 body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">댓글이 없습니다.</td></tr>';
@@ -2261,12 +2265,20 @@ async function saveCommonInfo() {
                 return;
             }
 
+            // 2단계: 게시글 제목+국가 일괄 조회
+            const postIds = [...new Set(allComments.map(c => c.post_id).filter(Boolean))];
+            let postMap = {};
+            if (postIds.length > 0) {
+                const { data: posts } = await sb.from('community_posts').select('id, title, country_code').in('id', postIds);
+                if (posts) posts.forEach(p => { postMap[p.id] = { title: p.title || '', cc: p.country_code || 'KR' }; });
+            }
+
             // 국가 필터 적용 (게시글의 country_code 기준)
             let filtered = allComments;
             if (countryFilter) {
                 filtered = allComments.filter(c => {
-                    const cc = c.community_posts?.country_code || '';
-                    return cc === countryFilter;
+                    const info = postMap[c.post_id];
+                    return info && info.cc === countryFilter;
                 });
             }
             commentTotal = filtered.length;
@@ -2282,12 +2294,13 @@ async function saveCommonInfo() {
             const FLAG = { KR:'🇰🇷', JP:'🇯🇵', US:'🇺🇸', CN:'🇨🇳', AR:'🇸🇦', ES:'🇪🇸', DE:'🇩🇪', FR:'🇫🇷' };
 
             body.innerHTML = paged.map(c => {
-                const cc = c.community_posts?.country_code || '-';
+                const info = postMap[c.post_id] || { title: '-', cc: '-' };
+                const cc = info.cc;
                 const flag = FLAG[cc] || '';
                 const name = (c.author_name || '익명').replace(/</g, '&lt;');
                 const content = (c.content || '').replace(/</g, '&lt;').replace(/\n/g, ' ');
                 const short = content.length > 80 ? content.substring(0, 80) + '…' : content;
-                const postTitle = c.community_posts?.title ? c.community_posts.title.replace(/</g, '&lt;') : '-';
+                const postTitle = info.title.replace(/</g, '&lt;');
                 const shortTitle = postTitle.length > 25 ? postTitle.substring(0, 25) + '…' : postTitle;
                 const date = new Date(c.created_at).toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
                 return `<tr>
@@ -2305,8 +2318,8 @@ async function saveCommonInfo() {
 
             renderCommentPagination();
         } catch (e) {
-            console.error(e);
-            body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">오류: ' + e.message + '</td></tr>';
+            console.error('[댓글] 오류:', e);
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ef4444;">오류: ' + (e.message || e) + '</td></tr>';
         }
     };
 
