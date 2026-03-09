@@ -51,6 +51,26 @@ const ANIM_STICKERS = [
     { id:'butterfly',  emoji:'🦋', name:'나비',       nameKey:'gc_stk_butterfly' },
     { id:'rocket',     emoji:'🚀', name:'로켓',       nameKey:'gc_stk_rocket' },
     { id:'love_letter',emoji:'💌', name:'러브레터',   nameKey:'gc_stk_love_letter' },
+    { id:'cherry_blossom', emoji:'🌸', name:'벚꽃비', nameKey:'gc_stk_cherry_blossom' },
+    { id:'galaxy',     emoji:'🌌', name:'은하수',     nameKey:'gc_stk_galaxy' },
+    { id:'aurora',     emoji:'🏔️', name:'오로라',    nameKey:'gc_stk_aurora' },
+    { id:'wave',       emoji:'🌊', name:'파도',       nameKey:'gc_stk_wave' },
+    { id:'leaves',     emoji:'🍂', name:'낙엽',       nameKey:'gc_stk_leaves' },
+    { id:'spotlight',  emoji:'🔦', name:'스포트라이트', nameKey:'gc_stk_spotlight' },
+    { id:'neon',       emoji:'💡', name:'네온사인',   nameKey:'gc_stk_neon' },
+    { id:'rose_petals',emoji:'🌹', name:'장미꽃잎',   nameKey:'gc_stk_rose_petals' },
+    { id:'music_notes',emoji:'🎵', name:'음표',       nameKey:'gc_stk_music_notes' },
+    { id:'glitter',    emoji:'💎', name:'글리터',     nameKey:'gc_stk_glitter' },
+    { id:'fairy_dust', emoji:'🧚', name:'요정먼지',   nameKey:'gc_stk_fairy_dust' },
+    { id:'firefly',    emoji:'✨', name:'반딧불',     nameKey:'gc_stk_firefly' },
+    { id:'ribbon',     emoji:'🎀', name:'리본',       nameKey:'gc_stk_ribbon' },
+    { id:'champagne',  emoji:'🍾', name:'샴페인',     nameKey:'gc_stk_champagne' },
+    { id:'snowman',    emoji:'⛄', name:'눈사람',     nameKey:'gc_stk_snowman' },
+    { id:'gift',       emoji:'🎁', name:'선물',       nameKey:'gc_stk_gift' },
+    { id:'dove',       emoji:'🕊️', name:'비둘기',    nameKey:'gc_stk_dove' },
+    { id:'rain',       emoji:'🌧️', name:'비',        nameKey:'gc_stk_rain' },
+    { id:'tornado',    emoji:'🌪️', name:'회오리',    nameKey:'gc_stk_tornado' },
+    { id:'crown',      emoji:'👑', name:'왕관',       nameKey:'gc_stk_crown' },
 ];
 
 /* ─── State ─── */
@@ -282,7 +302,8 @@ function _mobileFitScreen() {
 function activateStickerPanel() {
     // Populate the gcEffectGrid in the sub-gceffect panel
     const grid = document.getElementById('gcEffectGrid');
-    if (!grid || grid.children.length > 0) return; // already populated
+    if (!grid) return;
+    grid.innerHTML = ''; // always rebuild
     ANIM_STICKERS.forEach(stk => {
         const card = document.createElement('div');
         card.style.cssText = 'border:2px solid #e2e8f0; border-radius:10px; padding:8px 4px; text-align:center; cursor:pointer; transition:all 0.15s; background:#fff;';
@@ -294,13 +315,15 @@ function activateStickerPanel() {
     });
 
     // Auto-open the effect panel
-    const effBtn = document.querySelector('#iconBar .icon-item[data-panel="sub-gceffect"]');
-    if (effBtn) effBtn.click();
+    setTimeout(() => {
+        const effBtn = document.querySelector('.icon-item[data-panel="sub-gceffect"]');
+        if (effBtn) effBtn.click();
+    }, 100);
 }
 
 function showStickerPanel() {
     // Open the effect panel tab
-    const effBtn = document.querySelector('#iconBar .icon-item[data-panel="sub-gceffect"]');
+    const effBtn = document.querySelector('.icon-item[data-panel="sub-gceffect"]');
     if (effBtn) {
         effBtn.click();
         return;
@@ -557,6 +580,26 @@ function _createStickerAnimation(container, stk, colors) {
         butterfly: () => _animButterfly(area, colors),
         rocket: () => _animRocket(area),
         love_letter: () => _animLoveLetter(area, colors),
+        cherry_blossom: () => _animCherryBlossom(area),
+        galaxy: () => _animGalaxy(area, colors),
+        aurora: () => _animAurora(area),
+        wave: () => _animWave(area, colors),
+        leaves: () => _animLeaves(area),
+        spotlight: () => _animSpotlight(area, colors),
+        neon: () => _animNeon(area, colors),
+        rose_petals: () => _animRosePetals(area),
+        music_notes: () => _animMusicNotes(area, colors),
+        glitter: () => _animGlitter(area, colors),
+        fairy_dust: () => _animFairyDust(area, colors),
+        firefly: () => _animFirefly(area),
+        ribbon: () => _animRibbon(area, colors),
+        champagne: () => _animChampagne(area, colors),
+        snowman: () => _animSnowman(area),
+        gift: () => _animGift(area, colors),
+        dove: () => _animDove(area),
+        rain: () => _animRain(area),
+        tornado: () => _animTornado(area, colors),
+        crown: () => _animCrown(area, colors),
     };
     if (animMap[type]) animMap[type]();
 
@@ -853,6 +896,290 @@ function _animLoveLetter(el, colors) {
     _ensureKeyframe('gcLoveFloat', '0%{transform:translateY(0) scale(0) rotate(-20deg);opacity:0} 20%{transform:translateY(-20px) scale(1.2) rotate(10deg);opacity:1} 50%{transform:translateY(-60px) scale(1) rotate(-5deg);opacity:0.9} 100%{transform:translateY(-120px) scale(0.7) rotate(15deg);opacity:0}');
 }
 
+/* ─── NEW 20 EFFECTS ─── */
+function _animCherryBlossom(el) {
+    const petals = ['🌸','💮','🏵️'];
+    for (let i = 0; i < 12; i++) {
+        const p = document.createElement('div');
+        const sz = 10 + Math.random() * 14;
+        const dur = 4 + Math.random() * 5;
+        const delay = Math.random() * 4;
+        p.textContent = petals[Math.floor(Math.random() * petals.length)];
+        p.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-10%; font-size:${sz}px; animation:gcCherryFall ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(p);
+    }
+    _ensureKeyframe('gcCherryFall', '0%{transform:translateY(0) rotate(0) translateX(0);opacity:0.9} 25%{transform:translateY(75%) rotate(90deg) translateX(25px)} 50%{transform:translateY(150%) rotate(180deg) translateX(-15px);opacity:0.7} 75%{transform:translateY(225%) rotate(270deg) translateX(20px)} 100%{transform:translateY(320%) rotate(360deg) translateX(-5px);opacity:0}');
+}
+
+function _animGalaxy(el, colors) {
+    for (let i = 0; i < 25; i++) {
+        const s = document.createElement('div');
+        const sz = 2 + Math.random() * 4;
+        const dur = 2 + Math.random() * 3;
+        const delay = Math.random() * 3;
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const cx = 50, cy = 50;
+        const r = 15 + Math.random() * 35;
+        const angle = Math.random() * 360;
+        s.style.cssText = `position:absolute; left:${cx}%; top:${cy}%; width:${sz}px; height:${sz}px; border-radius:50%; background:${c}; box-shadow:0 0 ${sz*2}px ${c}; animation:gcGalaxySpin${i%3} ${dur}s ${delay}s linear infinite; transform-origin:${r}px 0;`;
+        el.appendChild(s);
+    }
+    _ensureKeyframe('gcGalaxySpin0', '0%{transform:rotate(0) translateX(30px);opacity:0.8} 50%{opacity:1} 100%{transform:rotate(360deg) translateX(30px);opacity:0.8}');
+    _ensureKeyframe('gcGalaxySpin1', '0%{transform:rotate(120deg) translateX(20px);opacity:0.6} 50%{opacity:1} 100%{transform:rotate(480deg) translateX(20px);opacity:0.6}');
+    _ensureKeyframe('gcGalaxySpin2', '0%{transform:rotate(240deg) translateX(40px);opacity:0.7} 50%{opacity:1} 100%{transform:rotate(600deg) translateX(40px);opacity:0.7}');
+}
+
+function _animAurora(el) {
+    for (let i = 0; i < 3; i++) {
+        const band = document.createElement('div');
+        const hue = 120 + i * 60;
+        const dur = 5 + i * 2;
+        band.style.cssText = `position:absolute; left:-20%; top:${10+i*20}%; width:140%; height:30%; background:linear-gradient(90deg, transparent, hsla(${hue},80%,60%,0.3), hsla(${hue+30},80%,60%,0.2), transparent); filter:blur(10px); animation:gcAurora${i} ${dur}s ease-in-out infinite;`;
+        el.appendChild(band);
+    }
+    _ensureKeyframe('gcAurora0', '0%{transform:translateX(-10%) skewX(-5deg);opacity:0.4} 50%{transform:translateX(10%) skewX(5deg);opacity:0.7} 100%{transform:translateX(-10%) skewX(-5deg);opacity:0.4}');
+    _ensureKeyframe('gcAurora1', '0%{transform:translateX(5%) skewX(3deg);opacity:0.3} 50%{transform:translateX(-5%) skewX(-3deg);opacity:0.6} 100%{transform:translateX(5%) skewX(3deg);opacity:0.3}');
+    _ensureKeyframe('gcAurora2', '0%{transform:translateX(-8%) skewX(-4deg);opacity:0.35} 50%{transform:translateX(8%) skewX(4deg);opacity:0.55} 100%{transform:translateX(-8%) skewX(-4deg);opacity:0.35}');
+}
+
+function _animWave(el, colors) {
+    for (let i = 0; i < 3; i++) {
+        const w = document.createElement('div');
+        const c = colors[i % colors.length];
+        const dur = 3 + i;
+        w.style.cssText = `position:absolute; left:-10%; bottom:${i*8}%; width:120%; height:25%; background:${c}; border-radius:50% 50% 0 0; opacity:0.3; animation:gcWave ${dur}s ${i*0.5}s ease-in-out infinite;`;
+        el.appendChild(w);
+    }
+    _ensureKeyframe('gcWave', '0%{transform:translateX(-5%) scaleY(1)} 50%{transform:translateX(5%) scaleY(1.3)} 100%{transform:translateX(-5%) scaleY(1)}');
+}
+
+function _animLeaves(el) {
+    const leaves = ['🍂','🍁','🍃','🌿'];
+    for (let i = 0; i < 10; i++) {
+        const l = document.createElement('div');
+        const sz = 12 + Math.random() * 14;
+        const dur = 4 + Math.random() * 5;
+        const delay = Math.random() * 4;
+        l.textContent = leaves[Math.floor(Math.random() * leaves.length)];
+        l.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-10%; font-size:${sz}px; animation:gcLeafFall ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(l);
+    }
+    _ensureKeyframe('gcLeafFall', '0%{transform:translateY(0) rotate(0) translateX(0);opacity:1} 30%{transform:translateY(90%) rotate(120deg) translateX(30px)} 60%{transform:translateY(180%) rotate(240deg) translateX(-20px);opacity:0.7} 100%{transform:translateY(320%) rotate(400deg) translateX(10px);opacity:0}');
+}
+
+function _animSpotlight(el, colors) {
+    const sp = document.createElement('div');
+    sp.style.cssText = 'position:absolute; left:50%; top:50%; width:80%; height:80%; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 60%); animation:gcSpotlight 3s ease-in-out infinite;';
+    el.appendChild(sp);
+    _ensureKeyframe('gcSpotlight', '0%{transform:translate(-50%,-50%) scale(0.8);opacity:0.3} 50%{transform:translate(-50%,-50%) scale(1.2);opacity:0.7} 100%{transform:translate(-50%,-50%) scale(0.8);opacity:0.3}');
+}
+
+function _animNeon(el, colors) {
+    const c = colors[0] || '#ff00ff';
+    const box = document.createElement('div');
+    box.style.cssText = `position:absolute; left:10%; top:10%; width:80%; height:80%; border:3px solid ${c}; border-radius:12px; box-shadow:0 0 10px ${c}, inset 0 0 10px ${c}; animation:gcNeonPulse 2s ease-in-out infinite;`;
+    el.appendChild(box);
+    _ensureKeyframe('gcNeonPulse', `0%{box-shadow:0 0 5px ${c},inset 0 0 5px ${c};opacity:0.6} 50%{box-shadow:0 0 20px ${c},0 0 40px ${c},inset 0 0 20px ${c};opacity:1} 100%{box-shadow:0 0 5px ${c},inset 0 0 5px ${c};opacity:0.6}`);
+}
+
+function _animRosePetals(el) {
+    for (let i = 0; i < 10; i++) {
+        const p = document.createElement('div');
+        const sz = 8 + Math.random() * 10;
+        const dur = 3 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        const hue = 340 + Math.random() * 30;
+        p.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-5%; width:${sz}px; height:${sz*0.7}px; background:hsl(${hue},80%,60%); border-radius:50% 50% 50% 0; animation:gcPetalDrift ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(p);
+    }
+    _ensureKeyframe('gcPetalDrift', '0%{transform:translateY(0) rotate(0) translateX(0);opacity:0.9} 33%{transform:translateY(100%) rotate(120deg) translateX(20px)} 66%{transform:translateY(200%) rotate(240deg) translateX(-15px);opacity:0.6} 100%{transform:translateY(320%) rotate(380deg) translateX(5px);opacity:0}');
+}
+
+function _animMusicNotes(el, colors) {
+    const notes = ['🎵','🎶','♪','♫','🎼'];
+    setInterval(() => {
+        const n = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const sz = 14 + Math.random() * 16;
+        n.textContent = notes[Math.floor(Math.random() * notes.length)];
+        n.style.cssText = `position:absolute; left:${10+Math.random()*80}%; bottom:0; font-size:${sz}px; color:${c}; animation:gcNoteDance 2.5s ease-out forwards;`;
+        el.appendChild(n);
+        setTimeout(() => n.remove(), 2700);
+    }, 500);
+    _ensureKeyframe('gcNoteDance', '0%{transform:translateY(0) rotate(0) scale(0.5);opacity:0} 20%{opacity:1;transform:translateY(-20px) rotate(-15deg) scale(1.1)} 60%{transform:translateY(-70px) rotate(15deg) scale(1)} 100%{transform:translateY(-120px) rotate(-10deg) scale(0.7);opacity:0}');
+}
+
+function _animGlitter(el, colors) {
+    setInterval(() => {
+        for (let i = 0; i < 3; i++) {
+            const g = document.createElement('div');
+            const c = colors[Math.floor(Math.random() * colors.length)];
+            const sz = 3 + Math.random() * 5;
+            g.style.cssText = `position:absolute; left:${Math.random()*100}%; top:${Math.random()*100}%; width:${sz}px; height:${sz}px; background:${c}; border-radius:50%; box-shadow:0 0 ${sz}px ${c}; animation:gcGlitterPop 0.8s ease-out forwards;`;
+            el.appendChild(g);
+            setTimeout(() => g.remove(), 900);
+        }
+    }, 300);
+    _ensureKeyframe('gcGlitterPop', '0%{transform:scale(0);opacity:0} 40%{transform:scale(1.5);opacity:1} 100%{transform:scale(0);opacity:0}');
+}
+
+function _animFairyDust(el, colors) {
+    setInterval(() => {
+        const d = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const sz = 4 + Math.random() * 6;
+        const startX = Math.random() * 100;
+        d.style.cssText = `position:absolute; left:${startX}%; top:${20+Math.random()*60}%; width:${sz}px; height:${sz}px; background:${c}; border-radius:50%; box-shadow:0 0 ${sz*3}px ${c}; animation:gcFairyTrail 1.5s ease-out forwards;`;
+        el.appendChild(d);
+        setTimeout(() => d.remove(), 1600);
+    }, 150);
+    _ensureKeyframe('gcFairyTrail', '0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(${-20+Math.random()*40}px, ${-30+Math.random()*60}px) scale(0);opacity:0}');
+}
+
+function _animFirefly(el) {
+    for (let i = 0; i < 8; i++) {
+        const f = document.createElement('div');
+        const sz = 4 + Math.random() * 4;
+        const dur = 3 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        const x = Math.random() * 80 + 10;
+        const y = Math.random() * 80 + 10;
+        f.style.cssText = `position:absolute; left:${x}%; top:${y}%; width:${sz}px; height:${sz}px; background:#ffd700; border-radius:50%; box-shadow:0 0 ${sz*3}px #ffd700, 0 0 ${sz*6}px rgba(255,215,0,0.3); animation:gcFirefly${i%3} ${dur}s ${delay}s ease-in-out infinite;`;
+        el.appendChild(f);
+    }
+    _ensureKeyframe('gcFirefly0', '0%{transform:translate(0,0);opacity:0.3} 25%{transform:translate(15px,-10px);opacity:1} 50%{transform:translate(-5px,-20px);opacity:0.5} 75%{transform:translate(-15px,5px);opacity:1} 100%{transform:translate(0,0);opacity:0.3}');
+    _ensureKeyframe('gcFirefly1', '0%{transform:translate(0,0);opacity:0.5} 30%{transform:translate(-20px,10px);opacity:1} 60%{transform:translate(10px,15px);opacity:0.4} 100%{transform:translate(0,0);opacity:0.5}');
+    _ensureKeyframe('gcFirefly2', '0%{transform:translate(0,0);opacity:0.4} 40%{transform:translate(10px,20px);opacity:1} 80%{transform:translate(-10px,-5px);opacity:0.6} 100%{transform:translate(0,0);opacity:0.4}');
+}
+
+function _animRibbon(el, colors) {
+    const ribbons = ['🎀','🎀','🎗️'];
+    for (let i = 0; i < 5; i++) {
+        const r = document.createElement('div');
+        const c = colors[i % colors.length];
+        const dur = 4 + Math.random() * 3;
+        const delay = Math.random() * 3;
+        r.textContent = ribbons[i % ribbons.length];
+        r.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-10%; font-size:${16+Math.random()*12}px; color:${c}; animation:gcRibbonTwirl ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(r);
+    }
+    _ensureKeyframe('gcRibbonTwirl', '0%{transform:translateY(0) rotate(0) scaleX(1);opacity:1} 25%{transform:translateY(80%) rotate(90deg) scaleX(-1)} 50%{transform:translateY(160%) rotate(180deg) scaleX(1);opacity:0.7} 75%{transform:translateY(240%) rotate(270deg) scaleX(-1)} 100%{transform:translateY(320%) rotate(360deg) scaleX(1);opacity:0}');
+}
+
+function _animChampagne(el, colors) {
+    const bottle = document.createElement('div');
+    bottle.textContent = '🍾';
+    bottle.style.cssText = 'position:absolute; left:50%; bottom:10%; font-size:28px; transform:translateX(-50%); animation:gcChampagnePop 3s ease-in-out infinite;';
+    el.appendChild(bottle);
+    setInterval(() => {
+        for (let i = 0; i < 6; i++) {
+            const b = document.createElement('div');
+            const c = colors[Math.floor(Math.random() * colors.length)];
+            b.style.cssText = `position:absolute; left:${40+Math.random()*20}%; bottom:40%; width:${3+Math.random()*4}px; height:${3+Math.random()*4}px; background:${c}; border-radius:50%; animation:gcBubblePop 1.5s ease-out forwards;`;
+            el.appendChild(b);
+            setTimeout(() => b.remove(), 1600);
+        }
+    }, 700);
+    _ensureKeyframe('gcChampagnePop', '0%{transform:translateX(-50%) rotate(0)} 10%{transform:translateX(-50%) rotate(-15deg)} 20%{transform:translateX(-50%) rotate(0)} 100%{transform:translateX(-50%) rotate(0)}');
+    _ensureKeyframe('gcBubblePop', '0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-80px) scale(0.5);opacity:0}');
+}
+
+function _animSnowman(el) {
+    const sm = document.createElement('div');
+    sm.textContent = '⛄';
+    sm.style.cssText = 'position:absolute; left:50%; top:50%; font-size:36px; transform:translate(-50%,-50%); animation:gcSnowmanWobble 2s ease-in-out infinite;';
+    el.appendChild(sm);
+    // Snow around snowman
+    for (let i = 0; i < 6; i++) {
+        const s = document.createElement('div');
+        s.textContent = '❄';
+        const sz = 8 + Math.random() * 8;
+        const dur = 3 + Math.random() * 3;
+        const delay = Math.random() * 3;
+        s.style.cssText = `position:absolute; left:${Math.random()*100}%; top:-10%; font-size:${sz}px; color:#b0d4f1; animation:gcSnowFall ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(s);
+    }
+    _ensureKeyframe('gcSnowmanWobble', '0%,100%{transform:translate(-50%,-50%) rotate(0)} 25%{transform:translate(-50%,-50%) rotate(5deg)} 75%{transform:translate(-50%,-50%) rotate(-5deg)}');
+    _ensureKeyframe('gcSnowFall', '0%{transform:translateY(0) rotate(0);opacity:1} 100%{transform:translateY(200%) rotate(360deg);opacity:0.2}');
+}
+
+function _animGift(el, colors) {
+    const gift = document.createElement('div');
+    gift.textContent = '🎁';
+    gift.style.cssText = 'position:absolute; left:50%; top:50%; font-size:32px; transform:translate(-50%,-50%); animation:gcGiftShake 1.5s ease-in-out infinite;';
+    el.appendChild(gift);
+    setInterval(() => {
+        for (let i = 0; i < 5; i++) {
+            const sp = document.createElement('div');
+            sp.textContent = '✨';
+            const c = colors[Math.floor(Math.random() * colors.length)];
+            sp.style.cssText = `position:absolute; left:${35+Math.random()*30}%; top:${35+Math.random()*30}%; font-size:${8+Math.random()*12}px; color:${c}; animation:gcSparklePulse 0.8s ease-out forwards;`;
+            el.appendChild(sp);
+            setTimeout(() => sp.remove(), 900);
+        }
+    }, 1500);
+    _ensureKeyframe('gcGiftShake', '0%,100%{transform:translate(-50%,-50%) rotate(0) scale(1)} 10%{transform:translate(-50%,-50%) rotate(-8deg) scale(1.05)} 20%{transform:translate(-50%,-50%) rotate(8deg) scale(1.05)} 30%{transform:translate(-50%,-50%) rotate(-5deg)} 40%{transform:translate(-50%,-50%) rotate(5deg)} 50%{transform:translate(-50%,-50%) rotate(0) scale(1)}');
+}
+
+function _animDove(el) {
+    for (let i = 0; i < 3; i++) {
+        const d = document.createElement('div');
+        d.textContent = '🕊️';
+        const sz = 18 + Math.random() * 14;
+        const dur = 5 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        const startY = 20 + Math.random() * 40;
+        d.style.cssText = `position:absolute; right:-15%; top:${startY}%; font-size:${sz}px; animation:gcDoveFly${i%2} ${dur}s ${delay}s ease-in-out infinite;`;
+        el.appendChild(d);
+    }
+    _ensureKeyframe('gcDoveFly0', '0%{transform:translateX(0) translateY(0) scaleX(-1);opacity:0} 10%{opacity:1} 50%{transform:translateX(-120px) translateY(-30px) scaleX(-1)} 90%{opacity:1} 100%{transform:translateX(-250px) translateY(-10px) scaleX(-1);opacity:0}');
+    _ensureKeyframe('gcDoveFly1', '0%{transform:translateX(0) translateY(0) scaleX(-1);opacity:0} 10%{opacity:1} 50%{transform:translateX(-100px) translateY(20px) scaleX(-1)} 90%{opacity:1} 100%{transform:translateX(-230px) translateY(-20px) scaleX(-1);opacity:0}');
+}
+
+function _animRain(el) {
+    for (let i = 0; i < 15; i++) {
+        const r = document.createElement('div');
+        const dur = 0.8 + Math.random() * 0.7;
+        const delay = Math.random() * 1.5;
+        const x = Math.random() * 100;
+        r.style.cssText = `position:absolute; left:${x}%; top:-5%; width:2px; height:${10+Math.random()*12}px; background:linear-gradient(transparent, rgba(120,180,255,0.6)); border-radius:1px; animation:gcRainDrop ${dur}s ${delay}s linear infinite;`;
+        el.appendChild(r);
+    }
+    _ensureKeyframe('gcRainDrop', '0%{transform:translateY(0);opacity:0.8} 100%{transform:translateY(300%);opacity:0.2}');
+}
+
+function _animTornado(el, colors) {
+    for (let i = 0; i < 15; i++) {
+        const p = document.createElement('div');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const sz = 3 + Math.random() * 5;
+        const dur = 1.5 + Math.random() * 1.5;
+        const delay = Math.random() * 2;
+        const radius = 10 + (i/15) * 30;
+        p.style.cssText = `position:absolute; left:50%; top:${80 - (i/15)*70}%; width:${sz}px; height:${sz}px; background:${c}; border-radius:50%; animation:gcTornadoSpin ${dur}s ${delay}s linear infinite; transform-origin:${radius}px 0;`;
+        el.appendChild(p);
+    }
+    _ensureKeyframe('gcTornadoSpin', '0%{transform:rotate(0)} 100%{transform:rotate(360deg)}');
+}
+
+function _animCrown(el, colors) {
+    const crown = document.createElement('div');
+    crown.textContent = '👑';
+    crown.style.cssText = 'position:absolute; left:50%; top:30%; font-size:32px; transform:translate(-50%,-50%); animation:gcCrownFloat 3s ease-in-out infinite;';
+    el.appendChild(crown);
+    setInterval(() => {
+        for (let i = 0; i < 3; i++) {
+            const sp = document.createElement('div');
+            const c = colors[Math.floor(Math.random() * colors.length)];
+            sp.textContent = '✨';
+            sp.style.cssText = `position:absolute; left:${30+Math.random()*40}%; top:${20+Math.random()*30}%; font-size:${6+Math.random()*10}px; color:${c}; animation:gcSparklePulse 0.8s ease-out forwards;`;
+            el.appendChild(sp);
+            setTimeout(() => sp.remove(), 900);
+        }
+    }, 1000);
+    _ensureKeyframe('gcCrownFloat', '0%{transform:translate(-50%,-50%) translateY(0) rotate(-3deg)} 50%{transform:translate(-50%,-50%) translateY(-10px) rotate(3deg)} 100%{transform:translate(-50%,-50%) translateY(0) rotate(-3deg)}');
+}
+
 /* ─── CSS Keyframe injection helper ─── */
 const _injectedKeyframes = new Set();
 function _ensureKeyframe(name, body) {
@@ -1047,10 +1374,10 @@ async function shareGreetingCard() {
         // Upload card image
         const blob = await (await fetch(data.imageUrl)).blob();
         const imgPath = `greeting-card/${slug}/card.jpg`;
-        const { error: imgErr } = await sb.storage.from('design').upload(imgPath, blob, { contentType:'image/jpeg', upsert:true });
+        const { error: imgErr } = await sb.storage.from('orders').upload(imgPath, blob, { contentType:'image/jpeg', upsert:true });
         if (imgErr) throw imgErr;
 
-        const { data: imgData } = sb.storage.from('design').getPublicUrl(imgPath);
+        const { data: imgData } = sb.storage.from('orders').getPublicUrl(imgPath);
 
         // Upload meta.json with sticker data
         const meta = {
@@ -1063,7 +1390,7 @@ async function shareGreetingCard() {
             createdAt: new Date().toISOString()
         };
         const metaBlob = new Blob([JSON.stringify(meta)], { type:'application/json' });
-        await sb.storage.from('design').upload(`greeting-card/${slug}/meta.json`, metaBlob, { contentType:'application/json', upsert:true });
+        await sb.storage.from('orders').upload(`greeting-card/${slug}/meta.json`, metaBlob, { contentType:'application/json', upsert:true });
 
         const shareUrl = `${window.location.origin}/gc.html?id=${slug}`;
         const urlInput = document.getElementById('gcShareUrl');

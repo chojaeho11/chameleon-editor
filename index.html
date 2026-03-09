@@ -2845,7 +2845,7 @@ async function handleSubReturn() {
             <div id="sub-gceffect" class="sub-content">
                 <div class="sub-panel-header"><i class="fa-solid fa-wand-magic-sparkles" style="color:#14b8a6; margin-right:6px;"></i>애니메이션 효과</div>
                 <p style="font-size:11px; color:#94a3b8; margin-bottom:12px;">효과를 선택하면 캔버스에 추가됩니다. 위치와 크기를 자유롭게 조절하세요.</p>
-                <div id="gcEffectGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:16px;"></div>
+                <div id="gcEffectGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:16px; max-height:calc(100vh - 280px); overflow-y:auto;"></div>
                 <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; gap:8px;">
                     <button onclick="window.gcPreview()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-eye" style="margin-right:4px;"></i>미리보기</button>
                     <button onclick="window.gcShareCard()" style="flex:1; padding:10px; border:none; border-radius:10px; background:#7c3aed; color:#fff; font-size:12px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-share-nodes" style="margin-right:4px;"></i>공유하기</button>

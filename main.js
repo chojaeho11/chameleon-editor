@@ -20,7 +20,7 @@ import { initContextMenu } from "./context-menu.js?v=123";
 import { createVectorOutline } from "./outlineMaker.js?v=123";
 import { initVideoMaker } from "./video-maker.js?v=123";
 import { initPptMode } from "./ppt-mode.js?v=123";
-import { initGreetingCardMode } from "./greeting-card-mode.js?v=123";
+import { initGreetingCardMode } from "./greeting-card-mode.js?v=124";
 import { initIconTools } from "./canvas-icons.js?v=123";
 import { initRetouchTools } from "./canvas-retouch.js?v=125";
 
