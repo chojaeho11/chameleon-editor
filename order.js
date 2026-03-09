@@ -495,7 +495,7 @@ function getOrderInfo() {
 let currentCalDate = new Date();
 let selectedInstallationTime = null;
 
-const LEAD_DAYS_MAP = { 'KR': 3, 'JP': 10, 'US': 15 };
+const LEAD_DAYS_MAP = { 'KR': 3, 'JP': 5, 'US': 5 };
 const INSTALL_TIME_SLOTS = ["08:00","10:00","12:00","14:00","16:00","18:00","20:00"];
 const MAX_TEAMS = 3;
 
