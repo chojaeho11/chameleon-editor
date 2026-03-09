@@ -1160,21 +1160,13 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
             'group_asset': ['vector', 'graphic', 'transparent-graphic', 'pattern']
         };
 
-        // 글씨 템플릿은 오래된 순 (ascending), 나머지는 최신순 (descending)
-        const isAsc = (sideCurrentGroup === 'group_text_tpl');
-        const isAsset = (sideCurrentGroup === 'group_asset');
-
         let query = sb.from('library')
             .select('id, thumb_url, data_url, title, category, product_key, tags, is_featured')
             .eq('status', 'approved');
-        // 요소/템플릿: 우선표시 먼저
-        if (isAsset || sideCurrentGroup === 'group_template') {
-            query = query
-                .order('is_featured', { ascending: false, nullsFirst: false })
-                .order('created_at', { ascending: isAsset });
-        } else {
-            query = query.order('created_at', { ascending: isAsc });
-        }
+        // 모든 그룹: 우선표시 먼저, 최신순
+        query = query
+            .order('is_featured', { ascending: false, nullsFirst: false })
+            .order('created_at', { ascending: false });
         query = query.range(sideCurrentPage * SIDE_ITEMS_PER_PAGE, (sideCurrentPage + 1) * SIDE_ITEMS_PER_PAGE - 1);
 
         const targetCats = groups[sideCurrentGroup];
@@ -1635,7 +1627,7 @@ window.loadSideAssets = async function(page) {
             .in('category', cats)
             .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
             .order('is_featured', { ascending: false, nullsFirst: false })
-            .order('created_at', { ascending: true })
+            .order('created_at', { ascending: false })
             .range(sideAssetPage * SIDE_ASSET_PER_PAGE, (sideAssetPage + 1) * SIDE_ASSET_PER_PAGE - 1);
         if (sideAssetKeyword) {
             query = query.or('title.ilike.%' + sideAssetKeyword + '%,tags.ilike.%' + sideAssetKeyword + '%');
