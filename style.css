@@ -2754,16 +2754,17 @@ body {
     background: linear-gradient(160deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%) !important;
 
     /* 여백 및 크기 초기화 */
-    padding: 15px 0 20px;
-    margin: 0;
-    width: 100%; /* 부모 너비에 딱 맞춤 */
+    padding: 15px 12px 20px;
+    margin: 0 auto;
+    width: calc(100% - 16px); /* 양쪽 8px 여백 */
+    border-radius: 16px;
 
     /* 위치 강제 초기화 (PC 설정 무시) */
     position: static;
     left: auto;
     transform: none;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 
     box-shadow: none;
     border-radius: 0;
