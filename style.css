@@ -2339,9 +2339,9 @@ body {
     .hotdeal-info {
         padding: 4px 6px 2px;
     }
-    .hotdeal-title { font-size: 11px; margin-bottom: 2px; }
-    .hotdeal-meta { font-size: 9px; margin-bottom: 1px; }
-    .hotdeal-price { font-size: 12px; }
+    .hotdeal-title { font-size: 11px; margin-bottom: 0; }
+    .hotdeal-meta { display: none; }
+    .hotdeal-price { display: none; }
     .hotdeal-card { border-radius: 8px; }
     .hotdeal-wrapper { padding: 0 12px; margin: 20px auto; }
     .hotdeal-header h2 { font-size: 18px; }
