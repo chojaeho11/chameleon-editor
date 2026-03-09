@@ -390,7 +390,7 @@ export async function initOrderSystem() {
 
             try {
                 if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
-                const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate, useMileage);
+                const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0), useMileage);
                 if(blob) downloadBlob(blob, `quotation_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_pdf_gen_failed', "PDF generation failed"), "error"); }
         };
@@ -413,7 +413,7 @@ export async function initOrderSystem() {
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
-                const blob = await generateReceiptPDF(info, cartData, currentUserDiscountRate, useMileage);
+                const blob = await generateReceiptPDF(info, cartData, currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0), useMileage);
                 if(blob) downloadBlob(blob, `receipt_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_receipt_gen_failed', "Receipt generation failed: ") + e.message, "error"); }
         };
@@ -437,7 +437,7 @@ export async function initOrderSystem() {
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
-                const blob = await generateTransactionStatementPDF(info, cartData, currentUserDiscountRate, useMileage);
+                const blob = await generateTransactionStatementPDF(info, cartData, currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0), useMileage);
                 if(blob) downloadBlob(blob, `statement_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_statement_gen_failed', "Statement generation failed: ") + e.message, "error"); }
         };
