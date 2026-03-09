@@ -127,6 +127,32 @@ Deno.serve(async (req) => {
         break
       }
 
+      case 'checkout.session.completed': {
+        // Handle lifetime payment (mode=payment, not subscription)
+        const sess = event.data.object
+        if (sess.mode === 'payment' && sess.metadata?.plan_type === 'lifetime') {
+          const userId = sess.metadata?.user_id
+          if (userId && sess.payment_status === 'paid') {
+            // Upsert subscription as lifetime
+            await supabase
+              .from('subscriptions')
+              .upsert({
+                user_id: userId,
+                stripe_subscription_id: `lifetime_${sess.id}`,
+                stripe_customer_id: sess.customer,
+                plan_type: 'lifetime',
+                status: 'active',
+                current_period_end: '2099-12-31T23:59:59.000Z',
+                updated_at: new Date().toISOString(),
+              }, { onConflict: 'user_id' })
+
+            await supabase.from('profiles').update({ role: 'subscriber' }).eq('id', userId)
+            console.log(`Lifetime subscription activated for user ${userId}`)
+          }
+        }
+        break
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }

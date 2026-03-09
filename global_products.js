@@ -764,7 +764,7 @@ window.filterProductList = debounce(async () => {
     showLoading(true);
 
     try {
-        let query = sb.from('admin_products').select('id, site_code, code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, sort_order, category, is_hot_deal, is_biz_deal, partner_id, partner_status');
+        let query = sb.from('admin_products').select('id, site_code, code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, sort_order, category, is_hot_deal, is_biz_deal, is_popular, partner_id, partner_status');
 
         if(cat && cat !== 'all') {
             query = query.eq('category', cat);
@@ -985,6 +985,7 @@ window.addProductDB = async () => {
     const isGeneral = document.getElementById('newProdIsGeneral').checked;
     const isHotDeal = document.getElementById('newProdIsHotDeal').checked;
     const isBizDeal = document.getElementById('newProdIsBizDeal').checked;
+    const isPopular = document.getElementById('newProdIsPopular') ? document.getElementById('newProdIsPopular').checked : false;
     const isFileUpload = document.getElementById('newProdIsFileUpload').checked;
     const isBulkOrder = document.getElementById('newProdIsBulkOrder').checked;
     const bulkQtyStr = document.getElementById('newProdBulkQtyOptions') ? document.getElementById('newProdBulkQtyOptions').value : '';
@@ -1003,6 +1004,7 @@ window.addProductDB = async () => {
         is_general_product: isGeneral,
         is_hot_deal: isHotDeal,
         is_biz_deal: isBizDeal,
+        is_popular: isPopular,
         is_file_upload: isFileUpload,
         is_bulk_order: isBulkOrder,
         quantity_options: quantityOptions,
@@ -1087,6 +1089,7 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdIsGeneral').checked = data.is_general_product || false;
     document.getElementById('newProdIsHotDeal').checked = data.is_hot_deal || false;
     document.getElementById('newProdIsBizDeal').checked = data.is_biz_deal || false;
+    if (document.getElementById('newProdIsPopular')) document.getElementById('newProdIsPopular').checked = data.is_popular || false;
     document.getElementById('newProdIsFileUpload').checked = data.is_file_upload || false;
     document.getElementById('newProdIsBulkOrder').checked = data.is_bulk_order || false;
     const bulkDiv = document.getElementById('bulkOrderOptions');

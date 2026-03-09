@@ -1456,27 +1456,7 @@ async function checkSubscription() {
             if (krNotice) krNotice.style.display = 'none';
             document.querySelectorAll('.sub-card').forEach(function(c) { c.style.display = 'none'; });
 
-            // 구독 마일리지 미지급 시 자동 지급 (signup_promo는 제외 — 가입보너스와 중복방지)
-            var _isPaidSub = window.subscriptionPlan && window.subscriptionPlan !== 'signup_promo';
-            if (_isPaidSub) {
-            try {
-                var { data: mLog } = await window.sb.from('wallet_logs')
-                    .select('id').eq('user_id', session.user.id)
-                    .eq('type', 'subscription_mileage').maybeSingle();
-                if (!mLog) {
-                    var cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-                    var mAmt = cc === 'JP' ? 100000 : cc === 'US' ? 2000000 : 1000000;
-                    var mLabel = cc === 'JP' ? '¥100,000' : cc === 'US' ? '$2,000' : '₩1,000,000';
-                    var { data: pf } = await window.sb.from('profiles').select('mileage').eq('id', session.user.id).single();
-                    await window.sb.from('profiles').update({ mileage: (parseInt(pf?.mileage || 0)) + mAmt }).eq('id', session.user.id);
-                    await window.sb.from('wallet_logs').insert({
-                        user_id: session.user.id, type: 'subscription_mileage',
-                        amount: mAmt, description: '##SUB_MILEAGE## Auto-grant (' + mLabel + ')'
-                    });
-                    console.log('[구독 마일리지] 자동 지급:', mLabel);
-                }
-            } catch (me) { console.warn('[구독 마일리지] 체크 오류:', me); }
-            }
+            // 구독 마일리지: verify-subscription에서 서버측 지급 (프론트 중복 지급 제거)
         } else {
             window.isSubscriber = false;
             window.subscriptionPlan = null;
@@ -1622,30 +1602,9 @@ async function handleSubReturn() {
             window.isSubscriber = true;
             window.subscriptionPlan = data.plan_type;
 
-            // 구독 시 마일리지 자동 지급 (중복 방지: wallet_logs 확인)
-            try {
-                var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-                var mileageAmount = country === 'JP' ? 100000 : country === 'US' ? 2000000 : 1000000; // KRW 기준 저장 (US $2000 = 2,000,000원)
-                var mileageLabel = country === 'JP' ? '¥100,000' : country === 'US' ? '$2,000' : '₩1,000,000';
-
-                // 중복 지급 방지: 이미 구독 마일리지를 받은 적 있는지 확인
-                var { data: existingLog } = await window.sb.from('wallet_logs')
-                    .select('id').eq('user_id', session.user.id)
-                    .eq('type', 'subscription_mileage').maybeSingle();
-
-                if (!existingLog) {
-                    // 현재 마일리지 조회 후 적립
-                    var { data: pf } = await window.sb.from('profiles').select('mileage').eq('id', session.user.id).single();
-                    var newMileage = (parseInt(pf?.mileage || 0)) + mileageAmount;
-                    await window.sb.from('profiles').update({ mileage: newMileage }).eq('id', session.user.id);
-                    await window.sb.from('wallet_logs').insert({
-                        user_id: session.user.id, type: 'subscription_mileage',
-                        amount: mileageAmount, description: '##SUB_MILEAGE## PRO subscription mileage grant (' + mileageLabel + ')'
-                    });
-                    console.log('[구독 마일리지] 지급 완료:', mileageLabel);
-                }
-            } catch (mileErr) {
-                console.warn('[구독 마일리지] 지급 오류:', mileErr);
+            // 마일리지는 verify-subscription 서버에서 자동 지급됨
+            if (data.mileage_granted) {
+                console.log('[구독 마일리지] 서버 지급 완료:', data.mileage_granted);
             }
 
             // Clean URL
