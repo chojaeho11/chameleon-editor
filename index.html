@@ -553,7 +553,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var popular = document.getElementById('popularSection');
     if (popular && quickMenuWrap) { ss.insertBefore(popular, quickMenuWrap); }
 
-    // 5) 구독 섹션 → 리뷰 바로 위로 이동
+    // 5) 기여자 시스템 → 마켓플레이스 위로 (기여자가 먼저, 작품판매가 아래)
+    var contribSec = ss.querySelector('.contributor-section');
+    var artworkBanner = document.getElementById('artworkMarketBanner');
+    if (contribSec && artworkBanner) { artworkBanner.parentNode.insertBefore(contribSec, artworkBanner); }
+
+    // 6) 구독 섹션 → 리뷰 바로 위로 이동
     var subSec = document.getElementById('subscriptionSection');
     var reviewSec = ss.querySelector('.review-section');
     if (subSec && reviewSec) { reviewSec.parentNode.insertBefore(subSec, reviewSec); }
