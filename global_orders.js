@@ -1022,11 +1022,11 @@ window.updateActionButtons = () => {
     if (s === '입금대기') {
         div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">일괄 입금처리</button><button class="btn btn-danger" onclick="cancelDepositSelected()">일괄 취소</button>`;
     } else if (s === '결제완료') {
-        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="deleteOrdersSelected(false)">삭제</button>`;
+        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button>`;
     } else if (s === '칼선작업') {
-        div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button>`;
     } else if (s === '완료됨') {
-        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('발송완료')">발송처리</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('발송완료')">발송처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button>`;
     } else if (s === '배송') {
         div.innerHTML = `<button class="btn btn-outline" onclick="changeStatusSelected('배송완료')">배송완료</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '취소요청') {
@@ -1041,7 +1041,7 @@ window.updateActionButtons = () => {
         div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#dc2626;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else {
         // 전체 탭
-        div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">선택 삭제</button>`;
+        div.innerHTML = `<button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">선택 삭제</button>`;
     }
     // 모든 탭에 수동다운 버튼 추가
     div.innerHTML += `<button class="btn" onclick="manualDownloadSelected()" style="background:#0ea5e9;color:white;margin-left:6px;">📥 수동다운</button>`;
@@ -1189,6 +1189,55 @@ window.rejectCancelSelected = async () => {
 
     await sb.from('orders').update({ status: '접수됨' }).in('id', ids);
     showToast(`${ids.length}건 취소 거절 처리 완료`, 'success');
+    updateCancelReqBadge();
+    loadOrders();
+};
+
+// [관리자 직접 취소] 선택된 주문을 관리자가 직접 취소 (카드=PG환불, 현금/무통장=상태만 변경)
+window.adminCancelSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+
+    // 선택 주문의 결제수단 확인
+    const { data: orders } = await sb.from('orders')
+        .select('id, payment_method, toss_payment_key, total_amount')
+        .in('id', ids);
+
+    let cardCount = 0, cashCount = 0;
+    if (orders) {
+        orders.forEach(o => {
+            const pm = (o.payment_method || '').toLowerCase();
+            if (pm.includes('카드') || pm.includes('card') || pm.includes('stripe')) cardCount++;
+            else cashCount++;
+        });
+    }
+
+    let msg = `${ids.length}건의 주문을 취소하시겠습니까?\n`;
+    if (cardCount > 0) msg += `\n💳 카드결제 ${cardCount}건 → 자동 환불 (PG 취소)\n`;
+    if (cashCount > 0) msg += `💰 현금/무통장 ${cashCount}건 → 취소 처리 (별도 환불 필요)\n`;
+    msg += `\n취소된 주문은 '취소됨'으로 표시됩니다.`;
+
+    if (!confirm(msg)) return;
+
+    showLoading(true);
+    let successCount = 0, failCount = 0;
+    for (const id of ids) {
+        try {
+            const newPaymentStatus = await refundSingleOrder(id, '관리자 직접 취소');
+            await sb.from('orders').update({ status: '취소됨', payment_status: newPaymentStatus }).eq('id', id);
+            successCount++;
+        } catch (e) {
+            console.error(`Order ${id} cancel error:`, e);
+            // 카드 환불 실패 시
+            await sb.from('orders').update({ status: '취소됨', payment_status: '환불실패' }).eq('id', id);
+            failCount++;
+        }
+    }
+    showLoading(false);
+
+    let resultMsg = `주문취소 완료: 성공 ${successCount}건`;
+    if (failCount > 0) resultMsg += `, 환불실패 ${failCount}건 (환불실패 탭에서 재시도)`;
+    showToast(resultMsg, failCount > 0 ? 'warn' : 'success');
     updateCancelReqBadge();
     loadOrders();
 };
