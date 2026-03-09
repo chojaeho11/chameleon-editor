@@ -6690,13 +6690,17 @@ window.showChoiceModal = async function(key) {
                     if (lang === 'fr') catName = cat.name_fr || cat.name_us || catName;
 
                     const isColorCategory = cat.is_swatch || catAddons.some(a => a.is_swatch) || cat.code.includes('color') || catName.includes('컬러') || catName.includes('Color');
+                    const isFabricSewing = (cat.code === '2342434');
                     const _cr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
 
+                    const _reqMsg = lang==='ja'?'ファブリックのミシンオプションは1つ必ず選択してください':lang==='en'?'You must select at least one fabric sewing option':lang==='zh'?'面料缝纫选项必须至少选择一个':lang==='ar'?'يجب اختيار خيار خياطة واحد على الأقل':lang==='es'?'Debe seleccionar al menos una opción de costura':lang==='de'?'Sie müssen mindestens eine Nähoption wählen':lang==='fr'?'Vous devez sélectionner au moins une option de couture':'패브릭의 미싱옵션은 1개는 꼭 선택해야 합니다';
+
                     optionsHtml += `
-                        <div style="background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
-                            <div style="font-weight:800; font-size:14px; color:#1e1b4b; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-                                <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${catName}
-                            </div>`;
+                        <div style="background:#fff; border:1px solid ${isFabricSewing ? '#f59e0b' : '#e2e8f0'}; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02);" ${isFabricSewing ? 'data-required-cat="2342434"' : ''}>
+                            <div style="font-weight:800; font-size:14px; color:#1e1b4b; margin-bottom:${isFabricSewing ? '6' : '12'}px; display:flex; align-items:center; gap:6px;">
+                                <i class="fa-solid fa-layer-group" style="color:#6366f1;"></i> ${catName} ${isFabricSewing ? '<span style="color:#ef4444; font-size:11px; font-weight:700;">(*)</span>' : ''}
+                            </div>
+                            ${isFabricSewing ? '<div style="background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:8px 12px; margin-bottom:12px; font-size:12px; color:#92400e; font-weight:600;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i> ' + _reqMsg + '</div>' : ''}`;
 
                     if (isColorCategory) {
                         // 컬러: 5열 그리드 + 이름 삭제
@@ -7268,6 +7272,20 @@ if (w >= 20 && h >= 20) {
         // ★ [핵심] 상품 코드 확실하게 가져오기 (변수 의존성 제거)
         const targetCode = product.code || window.currentProductKey;
         if (!targetCode) { showToast("상품 코드가 누락되었습니다.", 'error'); return; }
+
+        // ★ 패브릭미싱 필수 선택 검증
+        const reqCatBox = document.querySelector('[data-required-cat="2342434"]');
+        if (reqCatBox) {
+            const checked = reqCatBox.querySelectorAll('input[name="userOption"]:checked');
+            if (checked.length === 0) {
+                reqCatBox.style.border = '2px solid #ef4444';
+                reqCatBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const _l = (window.location.hostname.includes('cafe0101.com')) ? 'ja' : (window.location.hostname.includes('cafe3355.com')) ? 'en' : 'kr';
+                const _m = _l==='ja'?'ファブリックのミシンオプションは1つ必ず選択してください':_l==='en'?'You must select at least one fabric sewing option':'패브릭의 미싱옵션은 1개는 꼭 선택해야 합니다';
+                showToast(_m, 'error');
+                return;
+            }
+        }
 
         // 2. 언어 감지
         const urlParams = new URLSearchParams(window.location.search);
