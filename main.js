@@ -54,6 +54,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         // 1. 필수 설정 (Supabase, 인증, 상품 데이터)
         window.loadProductFixedTemplate = loadProductFixedTemplate;
         await initConfig(); // DB 연결 및 PRODUCT_DB 로드 대기
+        if (sb) window.sb = sb; // ★ 전역 참조 갱신
 
         // 1-1. Fabric.js 없이 동작하는 필수 초기화
         try { initAuth(); } catch(e) { console.warn('⚠️ Auth init failed:', e); }

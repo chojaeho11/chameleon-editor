@@ -430,9 +430,11 @@ async function loadDynamicFonts() {
 
     // 1단계: DB 폰트 로드 (실패해도 계속 진행)
     try {
+        const _sb = sb || window.sb;
+        if (!_sb) throw new Error('DB not ready');
         const codeAliases = { 'JA': ['JA','JP'], 'EN': ['EN','US'] };
         const codes = codeAliases[CURRENT_LANG] || [CURRENT_LANG];
-        const { data, error } = await sb.from('site_fonts')
+        const { data, error } = await _sb.from('site_fonts')
             .select('*')
             .in('site_code', codes)
             .order('created_at', { ascending: true });

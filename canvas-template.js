@@ -362,7 +362,8 @@ async function loadTemplatePage(pageIndex) {
     // 2. 페이징 컨트롤 비활성화
     renderPaginationControls(false); 
 
-    if (!sb) {
+    const _sb2 = sb || window.sb;
+    if (!_sb2) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">DB Not Connected</div>';
         tplIsLoading = false;
         return;
@@ -373,7 +374,7 @@ async function loadTemplatePage(pageIndex) {
         const currentIsMobile = window.innerWidth < 768;
         const dynamicPerPage = currentIsMobile ? 8 : 12;
 
-        let query = sb.from('library')
+        let query = _sb2.from('library')
             .select('id, thumb_url, data_url, tags, category, product_key, created_at')
             .order('created_at', { ascending: false })
             .range(pageIndex * dynamicPerPage, (pageIndex + 1) * dynamicPerPage - 1);
@@ -1248,13 +1249,16 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     list.innerHTML = `<div style="padding:40px 20px; text-align:center; color:#64748b; font-size:13px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#6366f1; margin-bottom:10px;"></i><br>${msg}</div>`;
 
     try {
+        const _sb = sb || window.sb;
+        if (!_sb) { list.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#94a3b8;">DB 연결 대기 중...</div>'; return; }
+
         const groups = {
             'group_template': ['user_vector', 'user_image', 'photo-bg'],
             'group_text_tpl': ['text'],
             'group_asset': ['vector', 'graphic', 'transparent-graphic', 'pattern']
         };
 
-        let query = sb.from('library')
+        let query = _sb.from('library')
             .select('id, thumb_url, data_url, title, category, product_key, tags, is_featured')
             .eq('status', 'approved');
         // 모든 그룹: 우선표시 먼저, 최신순
@@ -1712,11 +1716,12 @@ window.loadSideAssets = async function(page) {
     if (typeof page === 'number') sideAssetPage = page;
     else sideAssetPage = 0;
     const list = document.getElementById('sideAssetList');
-    if (!list || !sb) return;
+    const _sb3 = sb || window.sb;
+    if (!list || !_sb3) return;
     list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin" style="color:#6366f1;"></i></div>';
     try {
         const cats = ['vector', 'graphic', 'transparent-graphic', 'pattern'];
-        let query = sb.from('library')
+        let query = _sb3.from('library')
             .select('id, thumb_url, data_url, title, category, tags, is_featured')
             .eq('status', 'approved')
             .in('category', cats)
