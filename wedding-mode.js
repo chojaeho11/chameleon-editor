@@ -326,9 +326,14 @@ export function initWeddingMode() {
     /* ─── Placeholder click-to-upload handler ─── */
     setupPlaceholderUpload();
 
-    /* ─── Mobile: 하단 페이지 네비게이터 ─── */
+    /* ─── Mobile: 하단 페이지 네비게이터 + 자동 맞춤 ─── */
     if (window.innerWidth <= 768) {
         _createMobileWedNav();
+        // 모바일에서 캔버스 자동 화면 맞춤
+        setTimeout(() => {
+            const fitBtn = document.getElementById('btnFitScreen');
+            if (fitBtn) fitBtn.click();
+        }, 800);
     }
 
     console.log('✅ Wedding Mode initialized');
@@ -339,15 +344,29 @@ function _createMobileWedNav() {
     if (document.getElementById('wedMobileNav')) return;
     const nav = document.createElement('div');
     nav.id = 'wedMobileNav';
-    nav.style.cssText = 'position:fixed; bottom:0; left:0; right:0; z-index:9500; background:#fff; border-top:2px solid #f9a8d4; padding:6px 10px; display:flex; align-items:center; justify-content:space-between; gap:6px; box-shadow:0 -2px 10px rgba(0,0,0,0.1);';
+    nav.style.cssText = 'position:fixed; bottom:0; left:0; right:0; z-index:9500; background:#fff; border-top:2px solid #f9a8d4; display:flex; flex-direction:column; box-shadow:0 -4px 20px rgba(0,0,0,0.12); padding-bottom:env(safe-area-inset-bottom, 0);';
     nav.innerHTML = `
-        <button onclick="window.weddingGoToSlide(Math.max(0, (window._getPageIndex?window._getPageIndex():0)-1))" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fff;color:#ec4899;font-size:16px;cursor:pointer;flex-shrink:0;"><i class="fa-solid fa-chevron-left"></i></button>
-        <div id="wedMobileSlideStrip" style="flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px 0;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;"></div>
-        <button onclick="window.weddingGoToSlide(Math.min((window.__pageDataList||[]).length-1, (window._getPageIndex?window._getPageIndex():0)+1))" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fff;color:#ec4899;font-size:16px;cursor:pointer;flex-shrink:0;"><i class="fa-solid fa-chevron-right"></i></button>
-        <div style="display:flex;gap:4px;flex-shrink:0;">
-            <button onclick="window.addPage()" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fdf2f8;color:#ec4899;font-size:14px;cursor:pointer;" title="추가"><i class="fa-solid fa-plus"></i></button>
-            <button onclick="window.weddingShowTemplates()" style="width:36px;height:36px;border:1px solid #d4a373;border-radius:8px;background:#fffbeb;color:#d4a373;font-size:14px;cursor:pointer;" title="템플릿"><i class="fa-solid fa-table-cells-large"></i></button>
-            <button onclick="window.weddingPreview()" style="width:36px;height:36px;border:1px solid #f9a8d4;border-radius:8px;background:#fdf2f8;color:#ec4899;font-size:14px;cursor:pointer;" title="미리보기"><i class="fa-solid fa-eye"></i></button>
+        <div style="display:flex; align-items:center; padding:6px 8px; gap:4px;">
+            <button onclick="window.weddingGoToSlide(Math.max(0, (window._getPageIndex?window._getPageIndex():0)-1))" style="width:40px;height:40px;border:1px solid #f9a8d4;border-radius:10px;background:#fff;color:#ec4899;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-chevron-left"></i></button>
+            <div id="wedMobileSlideStrip" style="flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px 0;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;"></div>
+            <button onclick="window.weddingGoToSlide(Math.min((window.__pageDataList||[]).length-1, (window._getPageIndex?window._getPageIndex():0)+1))" style="width:40px;height:40px;border:1px solid #f9a8d4;border-radius:10px;background:#fff;color:#ec4899;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-around; padding:4px 8px 6px; border-top:1px solid #fce7f3;">
+            <button onclick="window.addPage()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#ec4899;font-size:16px;cursor:pointer;padding:4px 10px;">
+                <i class="fa-solid fa-plus"></i><span style="font-size:9px;font-weight:700;">추가</span>
+            </button>
+            <button onclick="window.weddingDuplicateSlide()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#ec4899;font-size:16px;cursor:pointer;padding:4px 10px;">
+                <i class="fa-solid fa-copy"></i><span style="font-size:9px;font-weight:700;">복제</span>
+            </button>
+            <button onclick="window.weddingShowTemplates()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#d4a373;font-size:16px;cursor:pointer;padding:4px 10px;">
+                <i class="fa-solid fa-table-cells-large"></i><span style="font-size:9px;font-weight:700;">섹션</span>
+            </button>
+            <button onclick="window.weddingPreview()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#16a34a;font-size:16px;cursor:pointer;padding:4px 10px;">
+                <i class="fa-solid fa-eye"></i><span style="font-size:9px;font-weight:700;">미리보기</span>
+            </button>
+            <button onclick="window.shareWeddingInvitation()" style="display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;color:#7c3aed;font-size:16px;cursor:pointer;padding:4px 10px;">
+                <i class="fa-solid fa-share-nodes"></i><span style="font-size:9px;font-weight:700;">공유</span>
+            </button>
         </div>
     `;
     document.body.appendChild(nav);
@@ -364,7 +383,7 @@ function _updateMobileSlideStrip() {
         const thumb = _wedThumbCache[i] || null;
         const isActive = i === curIdx;
         const el = document.createElement('div');
-        el.style.cssText = `flex-shrink:0; width:36px; height:64px; border-radius:4px; overflow:hidden; cursor:pointer; border:2px solid ${isActive?'#ec4899':'#e2e8f0'}; background:${isActive?'#fdf2f8':'#f8fafc'}; scroll-snap-align:center;`;
+        el.style.cssText = `flex-shrink:0; width:40px; height:70px; border-radius:6px; overflow:hidden; cursor:pointer; border:2px solid ${isActive?'#ec4899':'#e2e8f0'}; background:${isActive?'#fdf2f8':'#f8fafc'}; scroll-snap-align:center;`;
         el.innerHTML = thumb ? `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8;font-weight:bold;">${i+1}</div>`;
         el.onclick = () => window.weddingGoToSlide(i);
         strip.appendChild(el);
