@@ -2123,10 +2123,9 @@ async function processOrderSubmission() {
         }
     }
 
-    // 장바구니에서 입력한 마일리지 반영
-    const cartMileageInput = document.getElementById('cartUseMileage');
-    const cartUsedMileage = cartMileageInput ? (parseInt(cartMileageInput.value) || 0) : 0;
-    const checkoutFinal = finalTotal - cartUsedMileage;
+    // 장바구니에서 입력한 마일리지 반영 (현지 통화 → KRW 역환산)
+    const cartUsedMileageKRW = window.getCartMileageKRW ? window.getCartMileageKRW() : 0;
+    const checkoutFinal = finalTotal - cartUsedMileageKRW;
 
     window.originalPayAmount = checkoutFinal > 0 ? checkoutFinal : 0;
     window.finalPaymentAmount = window.originalPayAmount;
@@ -2212,7 +2211,10 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             else errors.push('order_sheet upload failed');
         } else { errors.push('order_sheet PDF generation timeout/failed'); }
 
-        const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, currentUserDiscountRate, useMileage), PDF_TIMEOUT);
+        const _totalDiscRate = currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0);
+        const _mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+        const _localMileage = Math.round(useMileage * _mileRate);
+        const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, _totalDiscRate, _localMileage), PDF_TIMEOUT);
         if(quoteBlob) {
             const url = await withTimeout(uploadFileToSupabase(quoteBlob, `orders/${orderId}/quotation.pdf`), UPLOAD_TIMEOUT);
             if(url) uploadedFiles.push({ name: `견적서.pdf`, url: url, type: 'quotation' });
@@ -2485,13 +2487,10 @@ async function processFinalPayment() {
 
     if (!window.tempOrderInfo && !window.currentDbId) { showToast(window.t('msg_no_order_info', "No order info. Please try again from the start."), "error"); return; }
 
-    const mileageInput = document.getElementById('cartUseMileage');
-    const localMileageVal = mileageInput ? (parseFloat(mileageInput.value) || 0) : 0;
-    // 역환산: 현지 통화 → KRW
-    const payRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
-    const useMileage = Math.round(localMileageVal / payRate);
+    // 마일리지는 이미 originalPayAmount에 반영됨 (processOrderSubmission에서 차감)
+    const useMileage = window.getCartMileageKRW ? window.getCartMileageKRW() : 0;
     const baseAmount = window.originalPayAmount || 0;
-    let realFinalPayAmount = baseAmount - useMileage;
+    let realFinalPayAmount = baseAmount; // 이미 마일리지 차감된 금액
 
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
@@ -3197,34 +3196,41 @@ window.loadCartMileage = async function() {
 };
 
 window.updateCartMileageLimit = function() {
-    const myMileage = window._cartUserMileage || 0;
+    const myMileage = window._cartUserMileage || 0; // KRW
     const cartTotalKRW = calculateCartTotalKRW();
+    const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
 
-    // 원래 금액 기준 5% 한도 계산
-    const fivePercent = Math.floor(cartTotalKRW * 0.05);
-    const realLimit = Math.min(myMileage, fivePercent);
+    // 원래 금액 기준 5% 한도 계산 (KRW)
+    const fivePercentKRW = Math.floor(cartTotalKRW * 0.05);
+    const realLimitKRW = Math.min(myMileage, fivePercentKRW);
 
-    window._cartMileageLimitMax = realLimit;
+    window._cartMileageLimitMax = realLimitKRW; // KRW 기준 저장
+
+    // 표시는 현지 통화로
+    const limitLocal = Math.floor(realLimitKRW * mileRate);
 
     const limitEl = document.getElementById('cartMileageLimit');
-    if (limitEl) limitEl.innerText = formatCurrency(realLimit).replace(/[원¥$]/g, '').trim() + ' P';
+    if (limitEl) limitEl.innerText = limitLocal.toLocaleString() + ' P';
 
     const mileInput = document.getElementById('cartUseMileage');
     if (mileInput) {
-        mileInput.placeholder = `${window.t('label_max', 'Max')} ${formatCurrency(realLimit).replace(/[원¥$]/g, '').trim()}`;
+        mileInput.placeholder = `${window.t('label_max', 'Max')} ${limitLocal.toLocaleString()}`;
         const curVal = parseFloat(mileInput.value) || 0;
-        if (curVal > realLimit) mileInput.value = realLimit > 0 ? realLimit : '';
+        if (curVal > limitLocal) mileInput.value = limitLocal > 0 ? limitLocal : '';
     }
     window.updateCartFinalTotal();
 };
 
 window.calcCartMileage = function(input) {
-    let val = parseFloat(input.value) || 0;
-    const limitKRW = window._cartMileageLimitMax || 0;
-    if (val > limitKRW) {
+    // 사용자 입력은 현지 통화 기준
+    let localVal = parseFloat(input.value) || 0;
+    const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+    const limitLocal = Math.floor((window._cartMileageLimitMax || 0) * mileRate);
+
+    if (localVal > limitLocal) {
         showToast(window.t('msg_mileage_limit', 'Mileage can be used up to 5% of purchase amount.'), 'warn');
-        val = limitKRW;
-        input.value = val;
+        localVal = limitLocal;
+        input.value = localVal;
     }
     window.updateCartFinalTotal();
 };
@@ -3232,7 +3238,8 @@ window.calcCartMileage = function(input) {
 window.applyCartMaxMileage = function() {
     const input = document.getElementById('cartUseMileage');
     if (input) {
-        input.value = window._cartMileageLimitMax || 0;
+        const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+        input.value = Math.floor((window._cartMileageLimitMax || 0) * mileRate);
         window.updateCartFinalTotal();
     }
 };
@@ -3241,20 +3248,31 @@ window.updateCartFinalTotal = function() {
     const cartTotalKRW = calculateCartTotalKRW();
     const gradeDiscount = Math.floor(cartTotalKRW * currentUserDiscountRate);
     const referralDiscount = window.verifiedReferrerId ? Math.floor(cartTotalKRW * 0.05) : 0;
-    const afterDiscount = cartTotalKRW - gradeDiscount - referralDiscount;
+    const afterDiscountKRW = cartTotalKRW - gradeDiscount - referralDiscount;
 
+    // 입력값(현지 통화)을 KRW로 역환산
+    const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
     const mileInput = document.getElementById('cartUseMileage');
-    const usedMileage = mileInput ? (parseInt(mileInput.value) || 0) : 0;
-    const finalTotal = afterDiscount - usedMileage;
+    const localMileageVal = mileInput ? (parseFloat(mileInput.value) || 0) : 0;
+    const usedMileageKRW = mileRate > 0 ? Math.round(localMileageVal / mileRate) : 0;
+    const finalTotalKRW = afterDiscountKRW - usedMileageKRW;
 
     const finalRow = document.getElementById('cartFinalRow');
     const finalEl = document.getElementById('cartFinalTotal');
     if (finalRow && finalEl) {
-        if (usedMileage > 0) {
+        if (localMileageVal > 0) {
             finalRow.style.display = 'flex';
-            finalEl.innerText = formatCurrency(finalTotal);
+            finalEl.innerText = formatCurrency(finalTotalKRW);
         } else {
             finalRow.style.display = 'none';
         }
     }
+};
+
+// 장바구니 마일리지 값을 KRW로 반환하는 헬퍼
+window.getCartMileageKRW = function() {
+    const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+    const mileInput = document.getElementById('cartUseMileage');
+    const localVal = mileInput ? (parseFloat(mileInput.value) || 0) : 0;
+    return mileRate > 0 ? Math.round(localVal / mileRate) : 0;
 };
