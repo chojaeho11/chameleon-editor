@@ -1452,17 +1452,21 @@ async function addCanvasToCart() {
         console.log('[장바구니] 최종 selectedAddons:', JSON.stringify(latestItem.selectedAddons));
     }
 
+    // ★ [버그수정] pendingSelectedAddons 초기화 (다음 렌더링에서 다른 아이템에 잘못 적용 방지)
+    window.pendingSelectedAddons = null;
+    window.pendingSelectedAddonQtys = null;
+
     renderCart();
 
     if(loading) loading.style.display = "none";
-    
+
     const modal = document.getElementById('cartAddedModal');
     if (modal) modal.style.display = 'none';
 
     const cartPage = document.getElementById('cartPage');
     if (cartPage) cartPage.style.display = 'block';
-    
-    document.body.classList.remove('editor-active'); 
+
+    document.body.classList.remove('editor-active');
 }
 
 async function addFileToCart(e) {
@@ -1527,9 +1531,13 @@ async function addFileToCart(e) {
             addonQuantities: addonQuantities
         });
 
+        // ★ pendingSelectedAddons 초기화
+        window.pendingSelectedAddons = null;
+        window.pendingSelectedAddonQtys = null;
+
         saveCart();
-        document.getElementById("productDetailModal").style.display = "none"; 
-        renderCart(); 
+        document.getElementById("productDetailModal").style.display = "none";
+        renderCart();
         showToast(window.t('msg_file_added_to_cart') || "File order added to cart.", "success");
     } catch(err) { 
         console.error(err); 
@@ -1577,16 +1585,7 @@ function renderCart() {
         if (item.isOpen === undefined) item.isOpen = true;
         if (!item.selectedAddons) item.selectedAddons = {};
 
-        // ★ [안전장치] pendingSelectedAddons가 있고 이 아이템의 selectedAddons가 비어있으면 강제 적용
-        if (Object.keys(item.selectedAddons).length === 0 && window.pendingSelectedAddons && window.pendingSelectedAddons.length > 0) {
-            const _sq = window.pendingSelectedAddonQtys || {};
-            window.pendingSelectedAddons.forEach(code => {
-                item.selectedAddons[`opt_${code}`] = code;
-                if (!item.addonQuantities) item.addonQuantities = {};
-                item.addonQuantities[code] = _sq[code] || 1;
-            });
-            console.log(`[renderCart] item[${idx}] addon 강제 적용:`, JSON.stringify(item.selectedAddons));
-        }
+        // pendingSelectedAddons는 addCanvasToCart/addFileToCart/addProductToCartDirectly에서 이미 적용 후 초기화됨
         
         let baseProductTotal = (item.product.price || 0) * item.qty;
         let optionTotal = 0;
@@ -2797,8 +2796,15 @@ window.toggleCartAccordion = function(idx) {
 };
 window.removeCartItem = function(idx) {
     if (confirm(window.t('confirm_delete', "Delete this item?"))) {
+        console.log('[removeCartItem] before:', cartData.length, 'items, removing idx:', idx);
         cartData.splice(idx, 1);
+        console.log('[removeCartItem] after splice:', cartData.length, 'items');
         saveCart();
+        // ★ localStorage 검증
+        try {
+            const saved = JSON.parse(localStorage.getItem(cartStorageKey()) || '[]');
+            console.log('[removeCartItem] localStorage after save:', saved.length, 'items');
+        } catch(e) {}
         renderCart();
     }
 };
@@ -2983,13 +2989,16 @@ const newItem = {
 
     currentCartList.push(newItem);
 
+    currentCartList.push(newItem);
+
     cartData.length = 0;
     currentCartList.forEach(item => cartData.push(item));
 
-    saveCart(); // 중복 코드를 제거하고 최적화된 saveCart 함수를 사용합니다.
-    
-    // 만약 saveCart 내부에서 에러가 처리되었더라도, 여기서 UI 렌더링은 진행
+    // ★ pendingSelectedAddons 초기화
+    window.pendingSelectedAddons = null;
+    window.pendingSelectedAddonQtys = null;
 
+    saveCart();
     renderCart();
 }
 window.updateCartQty = function(idx, delta) {
