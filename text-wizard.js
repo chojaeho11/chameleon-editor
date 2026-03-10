@@ -1131,7 +1131,7 @@
         }, 100);
     }
 
-    function _buildMenuOnCanvas(menuData, canvas, board, F) {
+    function _buildMenuOnCanvas(menuData, canvas, board, F, opts) {
         let boardW = canvas.width, boardH = canvas.height;
         let cx = canvas.width / 2, cy = canvas.height / 2;
         if (board) {
@@ -1141,96 +1141,135 @@
             cy = board.top + boardH / 2;
         }
 
+        // opts가 있으면 이전 위치/크기 사용 (리빌드 시)
+        const targetW = (opts && opts.width) || boardW * 0.7;
+        const targetH = (opts && opts.height) || null;
+        const targetCx = (opts && opts.cx) || cx;
+        const targetCy = (opts && opts.cy) || cy;
+
         const TEXT_COLOR = '#333333';
         const PRICE_COLOR = '#1e293b';
         const DOT_COLOR = '#d1d5db';
         const LINE_COLOR = '#e2e8f0';
 
         const fontSize = Math.max(12, Math.min(18, boardH * 0.025));
-        const gap = fontSize * 2.4;
-        const totalH = menuData.length * gap;
-        const startY = cy - totalH / 2 + gap / 2;
-        const padX = boardW * 0.1;
-        const textLeft = cx - boardW / 2 + padX;
-        const priceRight = cx + boardW / 2 - padX;
-        const contentW = priceRight - textLeft;
+        const padX = 10;
+        const contentW = targetW - padX * 2;
+
+        // 행간: targetH가 있으면 균등 배분, 없으면 기본
+        let gap;
+        if (targetH && menuData.length > 0) {
+            gap = Math.max(fontSize * 1.6, (targetH - fontSize) / menuData.length);
+        } else {
+            gap = fontSize * 2.4;
+        }
+
+        const totalH = menuData.length * gap + gap * 0.6;
+        const halfW = targetW / 2;
+        const halfH = totalH / 2;
 
         const objs = [];
 
-        // 상단 구분선
-        objs.push(new fabric.Line([textLeft, startY - gap * 0.6, priceRight, startY - gap * 0.6], {
+        // 상단 구분선 (그룹 로컬 좌표: 0,0이 그룹 중앙)
+        objs.push(new fabric.Line([-halfW + padX, -halfH, halfW - padX, -halfH], {
             stroke: LINE_COLOR, strokeWidth: 1, selectable: false
         }));
 
         menuData.forEach((item, i) => {
-            const currentY = startY + i * gap;
+            const localY = -halfH + gap * 0.5 + i * gap;
 
-            const nameText = new fabric.IText(item.name, {
+            const nameText = new fabric.Text(item.name, {
                 fontFamily: F.SUB || 'Noto Sans KR', fontSize: fontSize, fill: TEXT_COLOR,
                 fontWeight: '500', originX: 'left', originY: 'center',
-                left: textLeft, top: currentY
+                left: -halfW + padX, top: localY
             });
 
-            const priceText = new fabric.IText(item.price, {
+            const priceText = new fabric.Text(item.price, {
                 fontFamily: F.SUB || 'Noto Sans KR', fontSize: fontSize, fill: PRICE_COLOR,
                 fontWeight: '700', originX: 'right', originY: 'center',
-                left: priceRight, top: currentY
+                left: halfW - padX, top: localY
             });
 
-            // 점선
-            const dotStr = '\u00B7'.repeat(80);
+            // 점선 (name~price 사이만)
+            const dotStr = '\u00B7'.repeat(120);
             const dots = new fabric.Text(dotStr, {
-                fontFamily: 'monospace', fontSize: fontSize * 0.6, fill: DOT_COLOR,
+                fontFamily: 'monospace', fontSize: fontSize * 0.55, fill: DOT_COLOR,
                 originX: 'center', originY: 'center',
-                left: cx, top: currentY, width: contentW * 0.95,
-                clipPath: new fabric.Rect({
-                    width: contentW * 0.95, height: fontSize,
-                    originX: 'center', originY: 'center'
-                })
+                left: 0, top: localY
             });
-            if (dots.width > contentW * 0.95) dots.scaleX = (contentW * 0.95) / dots.width;
+            if (dots.width > contentW * 0.92) dots.scaleX = (contentW * 0.92) / dots.width;
 
             objs.push(dots, nameText, priceText);
         });
 
         // 하단 구분선
-        const lastY = startY + (menuData.length - 1) * gap;
-        objs.push(new fabric.Line([textLeft, lastY + gap * 0.6, priceRight, lastY + gap * 0.6], {
+        const botY = -halfH + gap * 0.5 + (menuData.length - 1) * gap + gap * 0.5;
+        objs.push(new fabric.Line([-halfW + padX, botY, halfW - padX, botY], {
             stroke: LINE_COLOR, strokeWidth: 1, selectable: false
         }));
 
-        // 그룹으로 묶기
+        // 그룹 생성 (스케일 1:1, 크기는 이미 계산됨)
         const group = new fabric.Group(objs, {
-            left: cx, top: cy, originX: 'center', originY: 'center'
+            left: targetCx, top: targetCy,
+            originX: 'center', originY: 'center'
         });
 
-        // 보드 기준 스케일
-        const safeW = boardW * 0.85;
-        const safeH = boardH * 0.85;
-        const scale = Math.min(safeW / group.width, safeH / group.height, 1);
-        group.scale(scale);
-        group.setCoords();
-
-        // 메뉴 데이터 저장 (수정 시 복원용)
+        // 메뉴 데이터 저장
         group._menuData = menuData;
         group._isMenuGroup = true;
+        group._menuFont = F;
 
         canvas.add(group);
         canvas.setActiveObject(group);
         canvas.requestRenderAll();
+
+        return group;
     }
 
-    // 메뉴 그룹 더블클릭 → 수정 모달
+    // 스케일링 후 리빌드 (찌그러짐 방지)
+    function _rebuildMenuAfterScale(group, canvas) {
+        if (!group || !group._isMenuGroup || !group._menuData) return;
+
+        const effectiveW = group.width * group.scaleX;
+        const effectiveH = group.height * group.scaleY;
+        const cx = group.left;
+        const cy = group.top;
+        const menuData = group._menuData;
+        const F = group._menuFont || getFonts();
+        const board = canvas.getObjects().find(o => o.isBoard);
+
+        canvas.remove(group);
+
+        _buildMenuOnCanvas(menuData, canvas, board, F, {
+            width: effectiveW,
+            height: effectiveH,
+            cx: cx,
+            cy: cy
+        });
+    }
+
+    // 이벤트 바인딩
     function _initMenuGroupEdit() {
         const checkCanvas = setInterval(() => {
             if (!window.canvas) return;
             clearInterval(checkCanvas);
-            window.canvas.on('mouse:dblclick', function(opt) {
+            const c = window.canvas;
+
+            // 더블클릭 → 수정 모달
+            c.on('mouse:dblclick', function(opt) {
                 const target = opt.target;
                 if (target && target._isMenuGroup && target._menuData) {
-                    const board = window.canvas.getObjects().find(o => o.isBoard);
-                    const F = getFonts();
-                    _openMenuEditor(target, window.canvas, board, F);
+                    const board = c.getObjects().find(o => o.isBoard);
+                    const F = target._menuFont || getFonts();
+                    _openMenuEditor(target, c, board, F);
+                }
+            });
+
+            // 스케일링 완료 후 리빌드
+            c.on('object:modified', function(opt) {
+                const target = opt.target;
+                if (target && target._isMenuGroup && (target.scaleX !== 1 || target.scaleY !== 1)) {
+                    setTimeout(() => _rebuildMenuAfterScale(target, c), 50);
                 }
             });
         }, 500);
