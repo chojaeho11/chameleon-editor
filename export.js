@@ -797,8 +797,11 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
 
             // ★ 안전장치: 변환 안 된 텍스트가 남아있으면 래스터로 전환 (외계어 방지)
             const hasText = (objs) => objs.some(o => {
-                if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
-                if (o.type === 'group') return hasText(o.getObjects());
+                if (['i-text', 'text', 'textbox'].includes(o.type)) {
+                    console.warn("[hasText] 미변환 텍스트:", o.type, o.text?.substring(0, 20), "font:", o.fontFamily);
+                    return true;
+                }
+                if (o.type === 'group') return hasText(o._objects || o.getObjects());
                 return false;
             });
 
@@ -909,7 +912,8 @@ async function convertCanvasTextToPaths(fabricCanvas) {
 
     // 그룹 내부 텍스트 처리 (Z-order 유지: _objects 배열 직접 교체)
     const processGroup = async (grp) => {
-        const objs = grp.getObjects(); // 내부 _objects 참조
+        // ★ _objects 직접 접근 (getObjects()는 복사본을 반환할 수 있음)
+        const objs = grp._objects || grp.getObjects();
         for (let i = 0; i < objs.length; i++) {
             const obj = objs[i];
             if (obj.type === 'group') {
@@ -925,6 +929,9 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                 }
             }
         }
+        // 그룹 내부 변경 반영
+        grp.dirty = true;
+        if (grp.setCoords) grp.setCoords();
     };
 
     // 최상위 오브젝트 처리

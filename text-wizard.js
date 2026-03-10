@@ -1181,7 +1181,7 @@
             stroke: LINE_COLOR, strokeWidth: 1, selectable: false
         }));
 
-        const MENU_FONT = 'NanumGothic';
+        const MENU_FONT = 'JalnanGothic';
 
         menuData.forEach((item, i) => {
             const localY = -halfH + gap * 0.5 + i * gap;
