@@ -1420,7 +1420,7 @@ button, input, textarea, select { font-family: inherit; }
 .advisor-panel {
     max-width: 900px;
     width: 100%;
-    margin: 20px auto 0;
+    margin: 20px auto 18px;
     padding: 0 15px;
     box-sizing: border-box;
     animation: advSlideIn 0.35s ease-out;

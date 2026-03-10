@@ -329,7 +329,7 @@ export async function initOrderSystem() {
                     address: '-',
                     note: '',
                     date: new Date().toLocaleDateString(),
-                    shippingFee: window._nonMetroFeeApplied || 0
+                    shippingFee: (window._nonMetroFeeApplied || 0) + (window._smallOrderShippingFee || 0)
                 };
                 const cartMileageInput = document.getElementById('cartUseMileage');
                 const cartUsedMileage = cartMileageInput ? (parseInt(cartMileageInput.value) || 0) : 0;
@@ -492,7 +492,7 @@ function getOrderInfo() {
         address: document.getElementById("orderAddr").value || "",
         note: document.getElementById("orderMemo").value || "",
         date: selectedDeliveryDate || new Date().toISOString().split('T')[0],
-        shippingFee: window._nonMetroFeeApplied || 0
+        shippingFee: (window._nonMetroFeeApplied || 0) + (window._smallOrderShippingFee || 0)
     };
 }
 
@@ -647,6 +647,72 @@ function isHoneycombProduct(product) {
 }
 function hasHoneycombInCart() {
     return cartData.some(item => isHoneycombProduct(item.product));
+}
+
+// ── 보드류 감지 (허니콤보드, 포맥스, 폼보드) ──
+function isBoardProduct(product) {
+    if (!product) return false;
+    if (isHoneycombProduct(product)) return true;
+    const cat = (product.category || '').toLowerCase();
+    if (cat.includes('pvc') || cat.includes('foamex') || cat.includes('foam') || cat.includes('fomax')) return true;
+    if (window.globalSubCats) {
+        const sub = window.globalSubCats.find(s => s.code === product.category);
+        if (sub && sub.top_category_code) {
+            const top = sub.top_category_code.toLowerCase();
+            if (top.includes('pvc') || top.includes('foamex') || top.includes('foam') || top.includes('fomax')) return true;
+        }
+    }
+    const name = ((product.name || '') + ' ' + (product.name_jp || '') + ' ' + (product.name_us || '')).toLowerCase();
+    if (name.includes('포맥스') || name.includes('폼보드') || name.includes('foamex') || name.includes('foam board') || name.includes('fomax') || name.includes('フォームボード') || name.includes('フォーマックス')) return true;
+    return false;
+}
+function hasBoardInCart() {
+    return cartData.some(item => isBoardProduct(item.product));
+}
+
+// ── 소량주문 배송비 계산 (KRW 기준) ──
+// KR: 10만원 미만 → 일반 1만원, 보드류 3만원
+// JP: 1만엔(=10만원) 미만 → 일반 1천엔(=1만원), 보드류 3천엔(=3만원)
+// US: $100(=미정) 미만 → 별도 (TODO: 금액 설정 필요)
+// ── 배송비 안내 메시지 (다국어) ──
+function _buildShippingFeeMsg(feeKRW) {
+    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const fee = formatCurrency(feeKRW);
+    const board = hasBoardInCart();
+    const lang = (window.CURRENT_LANG || 'kr').toLowerCase();
+    if (lang === 'ja' || lang === 'jp') {
+        const min = '¥10,000';
+        return board
+            ? 'ボード類のご注文が最低注文金額(' + min + ')未満のため、送料 ' + fee + ' が追加されます。'
+            : 'ご注文が最低注文金額(' + min + ')未満のため、送料 ' + fee + ' が追加されます。';
+    }
+    if (lang === 'en' || lang === 'us') {
+        const min = '$100';
+        return board
+            ? 'Board order is below minimum (' + min + '). Shipping fee of ' + fee + ' has been added.'
+            : 'Order is below minimum (' + min + '). Shipping fee of ' + fee + ' has been added.';
+    }
+    if (lang === 'cn' || lang === 'zh') {
+        const min = _cc === 'US' ? '$100' : '¥700';
+        return board
+            ? '\u677F\u6750\u8BA2\u5355\u4F4E\u4E8E\u6700\u4F4E\u8BA2\u5355\u91D1\u989D(' + min + ')\uFF0C\u5DF2\u6DFB\u52A0\u8FD0\u8D39 ' + fee
+            : '\u8BA2\u5355\u4F4E\u4E8E\u6700\u4F4E\u8BA2\u5355\u91D1\u989D(' + min + ')\uFF0C\u5DF2\u6DFB\u52A0\u8FD0\u8D39 ' + fee;
+    }
+    // 한국어 (기본)
+    const min = '10\uB9CC\uC6D0';
+    return board
+        ? '\uBCF4\uB4DC\uB958 \uC8FC\uBB38\uC758 \uCD5C\uC18C \uC8FC\uBB38\uAE08\uC561(' + min + ') \uC774\uD558\uC774\uBBC0\uB85C \uBC30\uC1A1\uBE44 ' + fee + '\uC774 \uCD94\uAC00\uB429\uB2C8\uB2E4.'
+        : '\uCD5C\uC18C \uC8FC\uBB38\uAE08\uC561(' + min + ') \uC774\uD558\uC774\uBBC0\uB85C \uBC30\uC1A1\uBE44 ' + fee + '\uC774 \uCD94\uAC00\uB429\uB2C8\uB2E4.';
+}
+
+function calcSmallOrderShippingFee() {
+    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const totalKRW = calculateCartTotalKRW();
+    const MIN_ORDER = _cc === 'KR' ? 100000 : _cc === 'JP' ? 100000 : 50000;
+    if (totalKRW >= MIN_ORDER || totalKRW <= 0) return 0;
+    const hasBoard = hasBoardInCart();
+    if (_cc === 'US') return hasBoard ? 15000 : 5000; // $30 / $10
+    return hasBoard ? 30000 : 10000; // KR: 3만/1만, JP: ¥3000/¥1000
 }
 
 // ── 장바구니 합계 (KRW) ──
@@ -1814,14 +1880,15 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
 function updateSummary(prodTotal, addonTotal, total) {
     const elMinNotice = document.getElementById("minOrderNotice");
 
-    // 최소주문금액 체크 (KRW 기준: KR=10000, JP=5000(=¥1,000), 그 외 없음)
-    // 예외: 1000원단위 주문 상품(21355677)은 최소금액 미적용
-    const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW = _country === 'KR' ? 10000 : _country === 'JP' ? 10000 : 0;
-    const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
-    if (MIN_ORDER_KRW > 0 && total > 0 && total < MIN_ORDER_KRW && !_hasUnitOrder) {
-        total = MIN_ORDER_KRW;
-        if (elMinNotice) elMinNotice.style.display = 'block';
+    // 소량주문 배송비 (10만원 미만 주문 시 배송비 추가)
+    const _shippingFee = calcSmallOrderShippingFee();
+    window._smallOrderShippingFee = _shippingFee;
+    if (_shippingFee > 0) {
+        total += _shippingFee;
+        if (elMinNotice) {
+            elMinNotice.style.display = 'block';
+            elMinNotice.innerHTML = '\u{1F69A} ' + _buildShippingFeeMsg(_shippingFee);
+        }
     } else {
         if (elMinNotice) elMinNotice.style.display = 'none';
     }
@@ -2090,19 +2157,14 @@ async function processOrderSubmission() {
     const discountAmt = gradeDisc + refDisc;
     let finalTotal = rawTotal - discountAmt;
 
-    // 최소주문금액 적용 (KR: 10000원, JP: 10000원 = ¥1,000)
-    const _minCountry = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW = _minCountry === 'KR' ? 10000 : _minCountry === 'JP' ? 10000 : 0;
-    const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
+    // 소량주문 배송비 적용
+    const _shippingFee = calcSmallOrderShippingFee();
     const elMinCheckout = document.getElementById('minOrderCheckoutNotice');
-    if (MIN_ORDER_KRW > 0 && finalTotal > 0 && finalTotal < MIN_ORDER_KRW && !_hasUnitOrder) {
-        finalTotal = MIN_ORDER_KRW;
+    if (_shippingFee > 0) {
+        finalTotal += _shippingFee;
         if (elMinCheckout) {
             elMinCheckout.style.display = 'block';
-            // 동적으로 최소금액 텍스트 설정 (현지 통화로 표시)
-            const minAmt = formatCurrency(MIN_ORDER_KRW);
-            const _t = window.t || ((k, d) => d);
-            elMinCheckout.innerHTML = '⚠️ ' + _t('msg_min_order_notice', '최소 주문금액 ' + minAmt + '이 적용되었습니다.');
+            elMinCheckout.innerHTML = '\u{1F69A} ' + _buildShippingFeeMsg(_shippingFee);
         }
     } else {
         if (elMinCheckout) elMinCheckout.style.display = 'none';
@@ -2216,7 +2278,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
     const orderInfoForPDF = {
         id: orderId,
         manager, phone, address, note: request, date: deliveryDate,
-        shippingFee: window._nonMetroFeeApplied || 0
+        shippingFee: (window._nonMetroFeeApplied || 0) + (window._smallOrderShippingFee || 0)
     };
 
     const isMobile = window.innerWidth <= 768;
@@ -2517,12 +2579,10 @@ async function processFinalPayment() {
 
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
-    // 최소주문금액 적용 (1000원단위 주문 상품 예외)
-    const _country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const MIN_ORDER_KRW_PAY = _country === 'KR' ? 10000 : _country === 'JP' ? 10000 : 0;
-    const _hasUnitOrder = cartData.some(i => i.product && i.product.code === '21355677');
-    if (MIN_ORDER_KRW_PAY > 0 && realFinalPayAmount > 0 && realFinalPayAmount < MIN_ORDER_KRW_PAY && !_hasUnitOrder) {
-        realFinalPayAmount = MIN_ORDER_KRW_PAY;
+    // 소량주문 배송비 적용
+    const _payShippingFee = calcSmallOrderShippingFee();
+    if (_payShippingFee > 0) {
+        realFinalPayAmount += _payShippingFee;
     }
 
     if (useMileage > 0) {
