@@ -505,7 +505,6 @@ export function initExport() {
                 // 1. 데이터 최신화 (현재 작업중인 페이지 저장)
                 if (window.savePageState) window.savePageState(); // 현재 페이지 상태 저장
                 const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
-
                 let targetPages = [];
 
                 // ★ window.__pageDataList 우선 사용 (모듈 인스턴스 불일치 방지)
@@ -529,90 +528,10 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. PDF 생성 — ★ 항상 원본 캔버스 직접 캡처 (폰트 문제 완전 회피)
-                console.log("[PDF v134] 원본 캔버스 직접 캡처 시작");
+                // 3. PDF 생성 — 벡터→래스터 폴백
                 let blob = null;
                 const isPdMode = window.__pdMode;
-
-                try {
-                    const MM_TO_PX = 3.7795;
-                    const { jsPDF } = window.jspdf;
-                    const wMM = finalW / MM_TO_PX, hMM = finalH / MM_TO_PX;
-                    const doc = new jsPDF({ orientation: wMM > hMM ? 'l' : 'p', unit: 'mm', format: [wMM, hMM], compress: true });
-
-                    // 원본 캔버스의 뷰포트 백업
-                    const origVpt = canvas.viewportTransform.slice();
-                    const origBg = canvas.backgroundColor;
-
-                    // ★ 가이드/목업 숨기기
-                    const _hiddenObjs = [];
-                    canvas.getObjects().forEach(o => {
-                        if ((o.excludeFromExport || o.isMockup || o.isGuide) && o.visible !== false) {
-                            o.set('visible', false);
-                            _hiddenObjs.push(o);
-                        }
-                    });
-
-                    // 뷰포트를 보드 기준으로 리셋 (보드 영역만 캡처)
-                    canvas.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
-                    canvas.setBackgroundColor('#ffffff');
-                    canvas.renderAll();
-
-                    // 고해상도 캡처 (4배, 최대 64M 픽셀)
-                    const maxPixels = 67108864;
-                    let mult = 4;
-                    if (finalW * finalH * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / (finalW * finalH))));
-
-                    const imgData = canvas.toDataURL({
-                        format: 'jpeg', quality: 0.98, multiplier: mult,
-                        left: 0, top: 0, width: finalW, height: finalH
-                    });
-                    doc.addImage(imgData, 'JPEG', 0, 0, wMM, hMM);
-
-                    // ★ 멀티페이지 지원: 다른 페이지들도 처리
-                    if (targetPages.length > 1) {
-                        const _cpi2 = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : 0;
-                        for (let pi = 0; pi < targetPages.length; pi++) {
-                            if (pi === _cpi2) continue; // 현재 페이지는 이미 처리됨
-                            // 다른 페이지는 기존 래스터 방식으로 처리
-                            const pgJson = targetPages[pi];
-                            doc.addPage([wMM, hMM], wMM > hMM ? 'l' : 'p');
-                            const tempEl = document.createElement('canvas');
-                            const tempCvs = new fabric.StaticCanvas(tempEl);
-                            tempCvs.setWidth(finalW); tempCvs.setHeight(finalH);
-                            tempCvs.setBackgroundColor('#ffffff');
-                            await new Promise(r => {
-                                tempCvs.loadFromJSON(pgJson, () => {
-                                    tempCvs.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
-                                    tempCvs.renderAll();
-                                    setTimeout(r, 500);
-                                });
-                            });
-                            const pgImg = tempCvs.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult, left: 0, top: 0, width: finalW, height: finalH });
-                            doc.addImage(pgImg, 'JPEG', 0, 0, wMM, hMM);
-                            tempCvs.dispose();
-                        }
-                    }
-
-                    // 뷰포트 & 상태 원복
-                    canvas.setViewportTransform(origVpt);
-                    canvas.setBackgroundColor(origBg || '');
-                    _hiddenObjs.forEach(o => o.set('visible', true));
-                    canvas.renderAll();
-
-                    blob = doc.output('blob');
-                    console.log("[PDF v134] 캡처 완료, blob:", blob.size);
-                } catch(capErr) {
-                    console.error("[PDF v134] 캡처 실패:", capErr);
-                    // 뷰포트 안전 원복
-                    try { canvas.renderAll(); } catch(e) {}
-                }
-
-                // 폴백: 기존 벡터 → 래스터 파이프라인
-                if (!blob || blob.size < 1000) {
-                    console.log("[PDF v134] 폴백: 벡터 파이프라인");
-                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
-                }
+                blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 if (!blob || blob.size < 1000) {
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 }
@@ -862,22 +781,6 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
                     .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
             }
 
-            // ★ 폰트 프리로드: JSON에서 사용된 모든 fontFamily를 미리 로드
-            const usedFonts = new Set();
-            const _collectFonts = (objs) => {
-                if (!objs) return;
-                objs.forEach(o => {
-                    if (o.fontFamily) usedFonts.add(o.fontFamily.split(',')[0].trim());
-                    if (o.objects) _collectFonts(o.objects); // 그룹 내부
-                });
-            };
-            _collectFonts(filteredJson.objects);
-            // 브라우저 폰트 로드 보장
-            for (const fn of usedFonts) {
-                try { await document.fonts.load(`16px "${fn}"`); } catch(e) { /* ignore */ }
-            }
-            await document.fonts.ready;
-
             await new Promise((resolve) => {
                 tempCanvas.loadFromJSON(filteredJson, () => {
                     // ★ 배경 복원 (loadFromJSON이 덮어쓸 수 있음)
@@ -889,19 +792,13 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
                 });
             });
 
-            // ★ PDF 변환 전: 메뉴 그룹(텍스트 포함 그룹)을 고해상도 이미지로 래스터화
-            try { await _rasterizeTextGroups(tempCanvas); } catch(ue) { console.warn("그룹 래스터화 실패:", ue); }
-
-            // 텍스트 패스 변환 (글자 깨짐 방지) — 래스터화 안 된 일반 텍스트만 처리
+            // 텍스트 패스 변환 (글자 깨짐 방지)
             try { await convertCanvasTextToPaths(tempCanvas); } catch(convErr) { console.warn("텍스트 패스 변환 실패:", convErr); }
 
             // ★ 안전장치: 변환 안 된 텍스트가 남아있으면 래스터로 전환 (외계어 방지)
             const hasText = (objs) => objs.some(o => {
-                if (['i-text', 'text', 'textbox'].includes(o.type)) {
-                    console.warn("[hasText] 미변환 텍스트:", o.type, o.text?.substring(0, 20), "font:", o.fontFamily);
-                    return true;
-                }
-                if (o.type === 'group') return hasText(o._objects || o.getObjects());
+                if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
+                if (o.type === 'group') return hasText(o.getObjects());
                 return false;
             });
 
@@ -932,61 +829,6 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
     } catch (e) { console.error("Vector Gen Error:", e); return null; }
 }
 
-// ★ 텍스트 포함 그룹을 고해상도 이미지로 래스터화 (글씨효과와 동일 방식)
-async function _rasterizeTextGroups(fabricCanvas) {
-    const objs = fabricCanvas.getObjects().slice();
-    for (const obj of objs) {
-        if (obj.type !== 'group' || obj.isBoard) continue;
-
-        // 그룹 내부에 텍스트가 있는지 확인
-        const hasTextInside = (o) => {
-            if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
-            if (o.type === 'group' && o._objects) return o._objects.some(hasTextInside);
-            return false;
-        };
-        if (!hasTextInside(obj)) continue;
-
-        console.log("[PDF 래스터화] 텍스트 그룹 발견, 이미지로 변환...");
-
-        try {
-            // 그룹을 고해상도 이미지로 캡처 (3배 해상도)
-            const mult = 3;
-            const dataUrl = obj.toDataURL({ format: 'png', multiplier: mult });
-
-            // 이미지 로드
-            const img = await new Promise((resolve, reject) => {
-                fabric.Image.fromURL(dataUrl, (img) => {
-                    if (img) resolve(img);
-                    else reject(new Error('이미지 로드 실패'));
-                });
-            });
-
-            // 원본 그룹과 동일한 위치/크기로 설정
-            img.set({
-                left: obj.left,
-                top: obj.top,
-                originX: obj.originX || 'center',
-                originY: obj.originY || 'center',
-                scaleX: (obj.width * (obj.scaleX || 1)) / (img.width),
-                scaleY: (obj.height * (obj.scaleY || 1)) / (img.height),
-                angle: obj.angle || 0
-            });
-            img.setCoords();
-
-            // 그룹을 이미지로 교체
-            const idx = fabricCanvas.getObjects().indexOf(obj);
-            fabricCanvas.remove(obj);
-            if (idx >= 0) fabricCanvas.insertAt(img, idx);
-            else fabricCanvas.add(img);
-
-            console.log("[PDF 래스터화] 그룹 → 이미지 교체 완료");
-        } catch(err) {
-            console.warn("[PDF 래스터화] 실패:", err.message);
-        }
-    }
-    fabricCanvas.renderAll();
-}
-
 // 텍스트 패스 변환 헬퍼 (벡터 PDF용)
 // ★ 그룹 내 Z-order 유지 + 에러 로깅
 async function convertCanvasTextToPaths(fabricCanvas) {
@@ -1000,20 +842,14 @@ async function convertCanvasTextToPaths(fabricCanvas) {
     const loadedFonts = {};
     const findFontUrl = (name) => {
         if (!name) return TARGET_FONT.url;
-        // CSS fallback 제거 (예: 'Noto Sans KR, sans-serif' → 'Noto Sans KR')
-        const cleanName = name.split(',')[0].trim();
-        const target = cleanName.toLowerCase().replace(/[\s\-_]/g, '');
-        // 0. Google Fonts 한글 폰트 직접 매핑
-        if (target.includes('notosanskr') || target.includes('notosans kr')) {
-            return 'https://fonts.gstatic.com/s/notosanskr/v42/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLTq8H4hfeE.ttf';
-        }
+        const target = name.toLowerCase().replace(/[\s\-_]/g, '');
         // 1. DB site_fonts 테이블 검색
         const match = fontList.find(f => target.includes(f.normalized));
         if (match) return match.url;
         // 2. fonts.js FONT_URLS 맵 검색 (JalnanGothic 등 Supabase 스토리지 폰트)
-        const aliasKey = FONT_ALIASES?.[cleanName] || cleanName;
+        const aliasKey = FONT_ALIASES?.[name] || name;
         if (FONT_URLS?.[aliasKey]) return FONT_URLS[aliasKey];
-        if (FONT_URLS?.[cleanName]) return FONT_URLS[cleanName];
+        if (FONT_URLS?.[name]) return FONT_URLS[name];
         return TARGET_FONT.url;
     };
 
@@ -1067,8 +903,7 @@ async function convertCanvasTextToPaths(fabricCanvas) {
 
     // 그룹 내부 텍스트 처리 (Z-order 유지: _objects 배열 직접 교체)
     const processGroup = async (grp) => {
-        // ★ _objects 직접 접근 (getObjects()는 복사본을 반환할 수 있음)
-        const objs = grp._objects || grp.getObjects();
+        const objs = grp.getObjects(); // 내부 _objects 참조
         for (let i = 0; i < objs.length; i++) {
             const obj = objs[i];
             if (obj.type === 'group') {
@@ -1084,9 +919,6 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                 }
             }
         }
-        // 그룹 내부 변경 반영
-        grp.dirty = true;
-        if (grp.setCoords) grp.setCoords();
     };
 
     // 최상위 오브젝트 처리
