@@ -781,6 +781,22 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
                     .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
             }
 
+            // ★ 폰트 프리로드: JSON에서 사용된 모든 fontFamily를 미리 로드
+            const usedFonts = new Set();
+            const _collectFonts = (objs) => {
+                if (!objs) return;
+                objs.forEach(o => {
+                    if (o.fontFamily) usedFonts.add(o.fontFamily.split(',')[0].trim());
+                    if (o.objects) _collectFonts(o.objects); // 그룹 내부
+                });
+            };
+            _collectFonts(filteredJson.objects);
+            // 브라우저 폰트 로드 보장
+            for (const fn of usedFonts) {
+                try { await document.fonts.load(`16px "${fn}"`); } catch(e) { /* ignore */ }
+            }
+            await document.fonts.ready;
+
             await new Promise((resolve) => {
                 tempCanvas.loadFromJSON(filteredJson, () => {
                     // ★ 배경 복원 (loadFromJSON이 덮어쓸 수 있음)
@@ -792,8 +808,12 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
                 });
             });
 
-            // ★ PDF 변환 전: 모든 그룹을 해체하여 텍스트를 최상위로 꺼냄
+            // ★ PDF 변환 전: 그룹 내부 텍스트를 최상위로 꺼냄
             try { _ungroupAllForPDF(tempCanvas); } catch(ue) { console.warn("그룹 해체 실패:", ue); }
+
+            // 폰트 다시 로드 후 렌더 (해체된 텍스트에 폰트 적용 보장)
+            tempCanvas.renderAll();
+            await new Promise(r => setTimeout(r, 200));
 
             // 텍스트 패스 변환 (글자 깨짐 방지)
             try { await convertCanvasTextToPaths(tempCanvas); } catch(convErr) { console.warn("텍스트 패스 변환 실패:", convErr); }
@@ -844,55 +864,103 @@ function _ungroupAllForPDF(fabricCanvas) {
         safety++;
         const objs = fabricCanvas.getObjects().slice();
         for (const obj of objs) {
-            if (obj.type === 'group' && !obj.isBoard) {
-                // 그룹 내부에 텍스트가 있는 경우에만 해체
-                const hasTextInside = (o) => {
-                    if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
-                    if (o.type === 'group' && o._objects) return o._objects.some(hasTextInside);
-                    return false;
-                };
-                if (!hasTextInside(obj)) continue;
+            if (obj.type !== 'group' || obj.isBoard) continue;
 
-                // 그룹 해체: 각 하위 객체를 절대 좌표로 변환 후 캔버스에 추가
-                const items = obj._objects || obj.getObjects();
-                const groupLeft = obj.left || 0;
-                const groupTop = obj.top || 0;
-                const groupScaleX = obj.scaleX || 1;
-                const groupScaleY = obj.scaleY || 1;
-                const groupAngle = obj.angle || 0;
+            // 그룹 내부에 텍스트가 있는 경우에만 해체
+            const hasTextInside = (o) => {
+                if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
+                if (o.type === 'group' && o._objects) return o._objects.some(hasTextInside);
+                return false;
+            };
+            if (!hasTextInside(obj)) continue;
 
-                // fabric.js의 transformMatrix 사용
-                const groupMatrix = obj.calcTransformMatrix();
+            console.log("[PDF ungroup] 그룹 해체 시작, 하위 객체:", (obj._objects || []).length);
 
-                items.forEach(item => {
-                    // 아이템의 로컬 좌표를 그룹의 월드 좌표로 변환
-                    const itemMatrix = item.calcTransformMatrix();
-                    // 그룹 내 아이템의 절대 변환 계산
-                    const fullMatrix = fabric.util.multiplyTransformMatrices(groupMatrix, itemMatrix);
-                    const decomposed = fabric.util.qrDecompose(fullMatrix);
+            // 그룹 좌표 정보
+            const gCx = obj.left || 0;  // group center X (originX: 'center')
+            const gCy = obj.top || 0;   // group center Y
+            const gSx = obj.scaleX || 1;
+            const gSy = obj.scaleY || 1;
+            const gW = obj.width || 0;
+            const gH = obj.height || 0;
 
-                    const clone = fabric.util.object.clone(item);
-                    clone.set({
-                        left: decomposed.translateX,
-                        top: decomposed.translateY,
-                        scaleX: decomposed.scaleX,
-                        scaleY: decomposed.scaleY,
-                        angle: decomposed.angle,
-                        skewX: decomposed.skewX || 0,
-                        skewY: decomposed.skewY || 0,
-                        group: undefined
+            const items = (obj._objects || []).slice();
+            items.forEach(item => {
+                // 그룹 내부 아이템의 로컬 좌표 → 절대 좌표 변환
+                // 그룹의 origin은 center, 아이템의 left/top은 그룹 중심 기준 상대값
+                const itemLeft = item.left || 0;
+                const itemTop = item.top || 0;
+
+                // 절대 좌표 = 그룹 중심 + (아이템 로컬 좌표 × 그룹 스케일)
+                const absLeft = gCx + (itemLeft * gSx);
+                const absTop = gCy + (itemTop * gSy);
+
+                // 새 fabric 객체 생성 (타입별)
+                let newObj;
+                if (['text', 'i-text', 'textbox'].includes(item.type)) {
+                    const TextClass = item.type === 'textbox' ? fabric.Textbox :
+                                      item.type === 'i-text' ? fabric.IText : fabric.Text;
+                    newObj = new TextClass(item.text, {
+                        fontFamily: item.fontFamily,
+                        fontSize: (item.fontSize || 16) * gSy,
+                        fill: item.fill,
+                        fontWeight: item.fontWeight,
+                        fontStyle: item.fontStyle,
+                        textAlign: item.textAlign,
+                        originX: item.originX || 'left',
+                        originY: item.originY || 'top',
+                        left: absLeft,
+                        top: absTop,
+                        scaleX: (item.scaleX || 1),
+                        scaleY: (item.scaleY || 1),
+                        angle: item.angle || 0,
+                        opacity: item.opacity != null ? item.opacity : 1,
+                        stroke: item.stroke,
+                        strokeWidth: item.strokeWidth,
+                        lineHeight: item.lineHeight,
+                        charSpacing: item.charSpacing,
+                        shadow: item.shadow
                     });
-                    clone.setCoords();
-                    fabricCanvas.add(clone);
-                });
+                    console.log("[PDF ungroup] 텍스트 추출:", item.text, "font:", item.fontFamily, "→ absPos:", absLeft.toFixed(0), absTop.toFixed(0));
+                } else if (item.type === 'line') {
+                    newObj = new fabric.Line([
+                        (item.x1 || 0) * gSx + gCx,
+                        (item.y1 || 0) * gSy + gCy,
+                        (item.x2 || 0) * gSx + gCx,
+                        (item.y2 || 0) * gSy + gCy
+                    ], {
+                        stroke: item.stroke,
+                        strokeWidth: (item.strokeWidth || 1),
+                        strokeDashArray: item.strokeDashArray,
+                        opacity: item.opacity != null ? item.opacity : 1
+                    });
+                } else {
+                    // 기타 객체: 원본 유지하되 좌표만 변환
+                    try {
+                        const fullMatrix = fabric.util.multiplyTransformMatrices(
+                            obj.calcTransformMatrix(),
+                            item.calcTransformMatrix()
+                        );
+                        const d = fabric.util.qrDecompose(fullMatrix);
+                        item.set({ left: d.translateX, top: d.translateY, scaleX: d.scaleX, scaleY: d.scaleY, angle: d.angle, group: undefined });
+                        item.setCoords();
+                        newObj = item;
+                    } catch(e) { return; }
+                }
 
-                fabricCanvas.remove(obj);
-                found = true;
-            }
+                if (newObj) {
+                    newObj.setCoords();
+                    fabricCanvas.add(newObj);
+                }
+            });
+
+            fabricCanvas.remove(obj);
+            found = true;
         }
     }
     fabricCanvas.renderAll();
-    console.log("[PDF] 그룹 해체 완료, 남은 객체:", fabricCanvas.getObjects().length);
+    console.log("[PDF] 그룹 해체 완료, 최상위 객체:", fabricCanvas.getObjects().length,
+        "텍스트:", fabricCanvas.getObjects().filter(o => ['text','i-text','textbox'].includes(o.type)).length);
 }
 
 // 텍스트 패스 변환 헬퍼 (벡터 PDF용)
