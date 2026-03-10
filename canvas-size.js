@@ -253,10 +253,12 @@ export function applySize(w, h, name, mode, action) {
 export function resizeCanvasToFit() {
     const stage = document.querySelector('.stage');
     if (!stage) return;
+    const c = canvas || window.canvas;
+    if (!c || !c.setDimensions) return;
 
-    canvas.setDimensions({ width: stage.clientWidth, height: stage.clientHeight });
-    
-    const board = canvas.getObjects().find(o => o.isBoard);
+    c.setDimensions({ width: stage.clientWidth, height: stage.clientHeight });
+
+    const board = c.getObjects().find(o => o.isBoard);
     if(!board) return;
 
     const padding = 160;
@@ -264,12 +266,12 @@ export function resizeCanvasToFit() {
     const availH = stage.clientHeight - padding;
 
     const zoom = Math.min(availW / board.width, availH / board.height);
-    
+
     const panX = (stage.clientWidth - board.width * zoom) / 2;
     const panY = (stage.clientHeight - board.height * zoom) / 2;
 
-    canvas.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);
-    canvas.requestRenderAll();
+    c.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);
+    c.requestRenderAll();
 }
 
 // =================================================================

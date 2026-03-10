@@ -2797,15 +2797,34 @@ window.toggleCartAccordion = function(idx) {
 window.removeCartItem = function(idx) {
     if (confirm(window.t('confirm_delete', "Delete this item?"))) {
         console.log('[removeCartItem] before:', cartData.length, 'items, removing idx:', idx);
-        cartData.splice(idx, 1);
-        console.log('[removeCartItem] after splice:', cartData.length, 'items');
-        saveCart();
-        // ★ localStorage 검증
+
+        // ★ [버그수정] localStorage 기반으로 삭제 (메모리 참조 불일치 방지)
+        const storageKey = cartStorageKey();
+        let stored = [];
         try {
-            const saved = JSON.parse(localStorage.getItem(cartStorageKey()) || '[]');
-            console.log('[removeCartItem] localStorage after save:', saved.length, 'items');
+            stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        } catch(e) { stored = []; }
+
+        if (idx >= 0 && idx < stored.length) {
+            stored.splice(idx, 1);
+        }
+
+        // localStorage에 먼저 저장
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(stored));
         } catch(e) {}
-        renderCart();
+
+        // 메모리 동기화
+        cartData.length = 0;
+        stored.forEach(item => cartData.push(item));
+
+        console.log('[removeCartItem] after:', cartData.length, 'items in memory,', stored.length, 'in localStorage');
+
+        try {
+            renderCart();
+        } catch(e) {
+            console.error('[removeCartItem] renderCart error:', e);
+        }
     }
 };
 
