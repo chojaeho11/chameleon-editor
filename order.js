@@ -2339,13 +2339,14 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 const res = await withTimeout(fetch(item.designPdfUrl), PDF_TIMEOUT);
                 if (res && res.ok) {
-                    const pdfBlob = await res.blob();
-                    const url = await withTimeout(uploadFileToSupabase(pdfBlob, `orders/${orderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
-                    if (url) uploadedFiles.push({ name: `product_${idx}_${item.product?.name || 'design'}.pdf`, url: url, type: 'product' });
+                    const imgBlob = await res.blob();
+                    const ext = (imgBlob.type && imgBlob.type.includes('png')) ? 'png' : 'png';
+                    const url = await withTimeout(uploadFileToSupabase(imgBlob, `orders/${orderId}/design_${idx}.${ext}`), UPLOAD_TIMEOUT);
+                    if (url) uploadedFiles.push({ name: `product_${idx}_${item.product?.name || 'design'}.${ext}`, url: url, type: 'product' });
                     else errors.push(`design_${idx} upload failed`);
                 } else { errors.push(`design_${idx} fetch failed`); }
             } catch(err) {
-                console.error("사전생성 PDF 전송 실패:", err);
+                console.error("사전생성 디자인 전송 실패:", err);
                 errors.push(`design_${idx}: ${err.message || err}`);
             }
 
