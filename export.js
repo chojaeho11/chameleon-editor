@@ -842,14 +842,20 @@ async function convertCanvasTextToPaths(fabricCanvas) {
     const loadedFonts = {};
     const findFontUrl = (name) => {
         if (!name) return TARGET_FONT.url;
-        const target = name.toLowerCase().replace(/[\s\-_]/g, '');
+        // CSS fallback 제거 (예: 'Noto Sans KR, sans-serif' → 'Noto Sans KR')
+        const cleanName = name.split(',')[0].trim();
+        const target = cleanName.toLowerCase().replace(/[\s\-_]/g, '');
+        // 0. Google Fonts 한글 폰트 직접 매핑
+        if (target.includes('notosanskr') || target.includes('notosans kr')) {
+            return 'https://fonts.gstatic.com/s/notosanskr/v42/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLTq8H4hfeE.ttf';
+        }
         // 1. DB site_fonts 테이블 검색
         const match = fontList.find(f => target.includes(f.normalized));
         if (match) return match.url;
         // 2. fonts.js FONT_URLS 맵 검색 (JalnanGothic 등 Supabase 스토리지 폰트)
-        const aliasKey = FONT_ALIASES?.[name] || name;
+        const aliasKey = FONT_ALIASES?.[cleanName] || cleanName;
         if (FONT_URLS?.[aliasKey]) return FONT_URLS[aliasKey];
-        if (FONT_URLS?.[name]) return FONT_URLS[name];
+        if (FONT_URLS?.[cleanName]) return FONT_URLS[cleanName];
         return TARGET_FONT.url;
     };
 
