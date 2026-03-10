@@ -683,29 +683,101 @@ function drawCutlineOutline(ctx, dx, dy, dw, dh) {
 }
 
 // ============================================================
-// 배경 제거 (Remove.bg API)
+// 배경 제거 (BiRefNet 무료 - Hugging Face Inference API)
 // ============================================================
 async function removeBackground(imageDataURL) {
-    const key = await getApiKey('REMOVE_BG_API_KEY');
-    if (!key) throw new Error('No API key');
+    const hfKey = await getApiKey('HF_API_KEY');
+    if (!hfKey) throw new Error('HF_API_KEY not found in secrets');
 
     const blob = await (await fetch(imageDataURL)).blob();
-    const form = new FormData();
-    form.append('image_file', blob);
-    form.append('size', 'auto');
 
-    const res = await fetch('https://api.remove.bg/v1.0/removebg', {
-        method: 'POST',
-        headers: { 'X-Api-Key': key },
-        body: form
-    });
+    // BiRefNet 호출
+    const HF_MODELS = [
+        'https://router.huggingface.co/hf-inference/models/briaai/RMBG-2.0',
+        'https://router.huggingface.co/hf-inference/models/ZhengPeng7/BiRefNet'
+    ];
 
-    if (!res.ok) {
-        const errTxt = await res.text();
-        throw new Error(errTxt);
+    let rawBlob = null;
+    let lastError;
+    for (const modelUrl of HF_MODELS) {
+        try {
+            let res = await fetch(modelUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
+                body: blob
+            });
+            // Cold start 대기
+            if (res.status === 503) {
+                const body = await res.json().catch(() => ({}));
+                await new Promise(r => setTimeout(r, Math.min((body.estimated_time || 20) * 1000, 60000)));
+                res = await fetch(modelUrl, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
+                    body: blob
+                });
+            }
+            if (res.ok && (res.headers.get('content-type') || '').includes('image')) {
+                rawBlob = await res.blob();
+                break;
+            }
+            lastError = new Error(`${res.status}`);
+        } catch (e) { lastError = e; }
     }
+    if (!rawBlob) throw lastError || new Error('BiRefNet failed');
 
-    return URL.createObjectURL(await res.blob());
+    // Alpha 후처리
+    const processed = await postProcessAlphaKeyring(rawBlob);
+    return URL.createObjectURL(processed);
+}
+
+// Alpha 후처리 (Alpha Matting + Threshold + Median Filter)
+function postProcessAlphaKeyring(imageBlob) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width; c.height = img.height;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(img.src);
+
+            const imageData = ctx.getImageData(0, 0, c.width, c.height);
+            const d = imageData.data;
+            const w = c.width, h = c.height;
+
+            // Alpha Matting: fg=240, bg=10
+            for (let i = 3; i < d.length; i += 4) {
+                if (d[i] < 10) { d[i] = 0; d[i-3] = 0; d[i-2] = 0; d[i-1] = 0; }
+                else if (d[i] > 240) { d[i] = 255; }
+            }
+            // 미세 투명도: <25→0, >230→255
+            for (let i = 3; i < d.length; i += 4) {
+                if (d[i] < 25) { d[i] = 0; d[i-3] = 0; d[i-2] = 0; d[i-1] = 0; }
+                else if (d[i] > 230) { d[i] = 255; }
+            }
+            // Median Filter 3x3
+            const alphaOrig = new Uint8Array(w * h);
+            for (let i = 0; i < alphaOrig.length; i++) alphaOrig[i] = d[i * 4 + 3];
+            const nb = new Uint8Array(9);
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    let ni = 0;
+                    for (let dy = -1; dy <= 1; dy++)
+                        for (let dx = -1; dx <= 1; dx++)
+                            nb[ni++] = alphaOrig[(y + dy) * w + (x + dx)];
+                    nb.sort();
+                    const idx = (y * w + x) * 4;
+                    d[idx + 3] = nb[4];
+                    if (nb[4] === 0) { d[idx] = 0; d[idx+1] = 0; d[idx+2] = 0; }
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            c.toBlob((blob) => resolve(blob), 'image/png');
+        };
+        img.onerror = () => reject(new Error('Alpha post-process failed'));
+        img.src = URL.createObjectURL(imageBlob);
+    });
 }
 
 async function getApiKey(keyName) {

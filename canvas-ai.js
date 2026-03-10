@@ -24,6 +24,136 @@ async function getApiKey(keyName) {
 }
 
 // ==========================================================
+// [코어] BiRefNet 배경 제거 (무료 - Hugging Face Inference API)
+// ==========================================================
+
+// HF Inference API로 BRIA RMBG-2.0 모델 호출
+async function callBiRefNet(imageBlob, hfKey) {
+    const HF_MODELS = [
+        'https://router.huggingface.co/hf-inference/models/briaai/RMBG-2.0',
+        'https://router.huggingface.co/hf-inference/models/ZhengPeng7/BiRefNet'
+    ];
+
+    let lastError;
+    for (const modelUrl of HF_MODELS) {
+        try {
+            const res = await fetch(modelUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${hfKey}`,
+                    'Content-Type': 'application/octet-stream'
+                },
+                body: imageBlob
+            });
+
+            if (res.ok) {
+                const contentType = res.headers.get('content-type') || '';
+                if (contentType.includes('image')) {
+                    return await res.blob();
+                }
+            }
+
+            // 모델 로딩 중 (cold start) - 최대 60초 대기 후 재시도
+            if (res.status === 503) {
+                const body = await res.json().catch(() => ({}));
+                const wait = Math.min((body.estimated_time || 20) * 1000, 60000);
+                await new Promise(r => setTimeout(r, wait));
+
+                const retry = await fetch(modelUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${hfKey}`,
+                        'Content-Type': 'application/octet-stream'
+                    },
+                    body: imageBlob
+                });
+                if (retry.ok) return await retry.blob();
+                throw new Error(`Model loading timeout (${res.status})`);
+            }
+
+            const errText = await res.text().catch(() => '');
+            lastError = new Error(`${modelUrl}: ${res.status} ${errText}`);
+        } catch (e) {
+            lastError = e;
+        }
+    }
+    throw lastError || new Error('BiRefNet API call failed');
+}
+
+// ==========================================================
+// [코어] Alpha 후처리 (Alpha Matting + Threshold + Median Filter)
+// ==========================================================
+
+function postProcessAlpha(imageBlob) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width;
+            c.height = img.height;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(img.src);
+
+            const imageData = ctx.getImageData(0, 0, c.width, c.height);
+            const d = imageData.data;
+            const w = c.width, h = c.height;
+
+            // ── 1단계: Alpha Matting 경계 처리 ──
+            // foreground_threshold=240, background_threshold=10
+            for (let i = 3; i < d.length; i += 4) {
+                if (d[i] < 10) {
+                    d[i] = 0; d[i-3] = 0; d[i-2] = 0; d[i-1] = 0;
+                } else if (d[i] > 240) {
+                    d[i] = 255;
+                }
+                // 10~240 사이는 반투명 경계로 유지
+            }
+
+            // ── 2단계: 미세 투명도 정리 ──
+            // alpha < 25 → 완전 투명, alpha > 230 → 완전 불투명
+            for (let i = 3; i < d.length; i += 4) {
+                if (d[i] < 25) {
+                    d[i] = 0; d[i-3] = 0; d[i-2] = 0; d[i-1] = 0;
+                } else if (d[i] > 230) {
+                    d[i] = 255;
+                }
+            }
+
+            // ── 3단계: Median Filter 3x3 (알파 채널 노이즈 제거) ──
+            const alphaOrig = new Uint8Array(w * h);
+            for (let i = 0; i < alphaOrig.length; i++) {
+                alphaOrig[i] = d[i * 4 + 3];
+            }
+
+            const neighbors = new Uint8Array(9);
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    let ni = 0;
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            neighbors[ni++] = alphaOrig[(y + dy) * w + (x + dx)];
+                        }
+                    }
+                    neighbors.sort();
+                    const median = neighbors[4];
+                    const idx = (y * w + x) * 4;
+                    d[idx + 3] = median;
+                    if (median === 0) {
+                        d[idx] = 0; d[idx+1] = 0; d[idx+2] = 0;
+                    }
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            c.toBlob((blob) => resolve(blob), 'image/png');
+        };
+        img.onerror = () => reject(new Error('Alpha post-process: image load failed'));
+        img.src = URL.createObjectURL(imageBlob);
+    });
+}
+
+// ==========================================================
 // [코어] Flux 이미지 생성
 // ==========================================================
 async function generateImageCore(prompt) {
@@ -148,66 +278,44 @@ export function initAiTools() {
         };
     }
     
-    // --- 3. 배경 제거 (수정됨: 고해상도 유지) ---
+    // --- 3. 배경 제거 (BiRefNet 무료 + Alpha 후처리) ---
     const btnCutout = document.getElementById("btnCutout");
     if (btnCutout) {
         btnCutout.onclick = async () => {
             const active = canvas.getActiveObject();
-            
-            // [수정] 다국어 적용 (전역 window.t 사용)
             if (!active || active.type !== 'image') { showToast(window.t('msg_select_image', "Please select an image."), "info"); return; }
-            const key = await getApiKey('REMOVE_BG_API_KEY');
-            if (!key) { showToast("API Key Error", "error"); return; }
-            
+            const hfKey = await getApiKey('HF_API_KEY');
+            if (!hfKey) { showToast("HF API Key not found. Add 'HF_API_KEY' to secrets.", "error"); return; }
+
             if(!confirm(window.t('confirm_bg_remove', "Remove the background?"))) return;
-            
+
             const originalText = btnCutout.innerText;
             btnCutout.innerText = window.t('msg_processing', "Processing...");
             try {
-                // 1. 원본 해상도 추출 (multiplier 중요)
-                // 화면에 보이는 크기가 아니라, 원본 파일의 크기를 계산해서 가져옵니다.
-                const restoreScale = 1 / active.scaleX; 
+                // 1. 원본 해상도 추출
+                const restoreScale = 1 / active.scaleX;
                 const imgData = active.toDataURL({ format: 'png', multiplier: restoreScale });
-                
                 const blob = await (await fetch(imgData)).blob();
-                const form = new FormData();
-                form.append('image_file', blob);
-                
-                // ★ [핵심 수정] size: 'auto' -> 'full' 로 변경
-                // 'full' 옵션은 Remove.bg 유료 크레딧(1크레딧)을 소모하지만 원본 해상도를 유지합니다.
-                // 무료 계정은 월 1회만 full 지원하며 이후엔 작은 크기로 올 수 있습니다.
-                form.append('size', 'full'); 
-                
-                const res = await fetch('https://api.remove.bg/v1.0/removebg', {
-                    method: 'POST', headers: { 'X-Api-Key': key }, body: form
-                });
 
-                if(!res.ok) {
-                    const errTxt = await res.text();
-                    // 무료 계정 제한 등으로 'full'이 안 될 경우 재시도 안내
-                    if(res.status === 402 || errTxt.includes("credits")) {
-                        throw new Error(window.t('msg_credits_insufficient', "Insufficient credits for high-res conversion (free account limit)"));
-                    }
-                    throw new Error(errTxt);
-                }
-                
-                const url = URL.createObjectURL(await res.blob());
+                // 2. BiRefNet (BRIA RMBG-2.0) via Hugging Face Inference API
+                const rawResult = await callBiRefNet(blob, hfKey);
+
+                // 3. Alpha 후처리 (Alpha Matting + Threshold + Median Filter)
+                btnCutout.innerText = window.t('msg_alpha_processing', "Alpha processing...");
+                const processedBlob = await postProcessAlpha(rawResult);
+
+                // 4. 캔버스에 적용
+                const url = URL.createObjectURL(processedBlob);
                 fabric.Image.fromURL(url, (newImg) => {
-                    // 위치는 그대로 유지
-                    newImg.set({ 
-                        left: active.left, 
+                    newImg.set({
+                        left: active.left,
                         top: active.top,
                         angle: active.angle,
                         originX: active.originX,
                         originY: active.originY
                     });
-
-                    // ★ 크기 조정 로직 변경
-                    // 배경 제거된 이미지가 원본 해상도로 돌아오면, 
-                    // 화면상에서는 너무 커보일 수 있으므로 '이전 객체의 시각적 크기'에 맞춥니다.
                     const visualWidth = active.getScaledWidth();
                     const visualHeight = active.getScaledHeight();
-                    
                     newImg.scaleToWidth(visualWidth);
                     newImg.scaleToHeight(visualHeight);
 
@@ -215,10 +323,11 @@ export function initAiTools() {
                     canvas.add(newImg);
                     canvas.setActiveObject(newImg);
                     canvas.requestRenderAll();
+                    URL.revokeObjectURL(url);
                     showToast(window.t('msg_upload_success', "Success!"), "success");
                 });
             } catch(e) {
-                console.error(e);
+                console.error('[BiRefNet]', e);
                 showToast(window.t('msg_failed', "Failed: ") + e.message, "error");
             }
             finally { btnCutout.innerText = originalText; }
