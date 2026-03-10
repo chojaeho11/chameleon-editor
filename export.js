@@ -1,7 +1,7 @@
-import { canvas } from "./canvas-core.js?v=135";
-import { ADDON_DB, currentUser, sb } from "./config.js?v=135";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=135"; // 페이지 인덱스 가져오기
-import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=135";
+import { canvas } from "./canvas-core.js?v=136";
+import { ADDON_DB, currentUser, sb } from "./config.js?v=136";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=136"; // 페이지 인덱스 가져오기
+import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=136";
 
 // [안전장치] 언어별 기본 폰트 URL 설정
 const FONT_CONFIG = {
@@ -462,11 +462,11 @@ export function initExport() {
                     });
                 });
 
-                // 고해상도 PNG: maxPixels 안전장치 적용
-                const _maxPx = 67108864; // 64M pixels
+                // 고해상도 PNG: 300 DPI 인쇄용 (150M pixels 안전장치)
+                const _maxPx = 150000000; // 150M pixels
                 const _basePx = finalW * finalH;
-                let _pngMult = 4;
-                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(1, Math.floor(Math.sqrt(_maxPx / _basePx)));
+                let _pngMult = 6;
+                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
                 const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: _pngMult });
                 
                 const link = document.createElement('a');
@@ -1174,9 +1174,9 @@ export async function generateDesignPNG(jsonData, w, h, x = 0, y = 0) {
         });
     });
 
-    const _maxPx = 100000000;
+    const _maxPx = 150000000; // 150M pixels
     const _basePx = w * h;
-    let mult = 4;
+    let mult = 6;
     if (_basePx * mult * mult > _maxPx) mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
 
     const dataUrl = tempCvs.toDataURL({ format: 'png', multiplier: mult });

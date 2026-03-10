@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=135";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=135";
-import { SITE_CONFIG } from "./site-config.js?v=135";
-import { applySize } from "./canvas-size.js?v=135";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=135";
+import { canvas } from "./canvas-core.js?v=136";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=136";
+import { SITE_CONFIG } from "./site-config.js?v=136";
+import { applySize } from "./canvas-size.js?v=136";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=136";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=135";
+} from "./export.js?v=136";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1256,10 +1256,12 @@ async function addCanvasToCart() {
             });
         });
 
-        const _maxPx = 67108864;
+        // 300 DPI 인쇄 기준: 캔버스 px ÷ 3.7795 = mm, mm ÷ 25.4 × 300 = 필요 px
+        // mult = 필요 px ÷ 캔버스 px ≈ 300 / 96 ≈ 3.125 → 최소 4, 목표 6
+        const _maxPx = 150000000; // 150M pixels
         const _basePx = finalW * finalH;
-        let _mult = 4;
-        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(1, Math.floor(Math.sqrt(_maxPx / _basePx)));
+        let _mult = 6;
+        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
 
         const _dataUrl = _tempCvs.toDataURL({ format: 'png', multiplier: _mult });
         _tempCvs.dispose();
@@ -1278,7 +1280,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=135');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=136');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2376,7 +2378,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=135');
+                const { generateDesignPNG } = await import('./export.js?v=136');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
