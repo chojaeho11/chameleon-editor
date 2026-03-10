@@ -8,7 +8,6 @@ import {
     generateQuotationPDF,
     generateProductVectorPDF,
     generateRasterPDF,
-    generateDesignPNG,
     generateReceiptPDF,
     generateTransactionStatementPDF
 } from "./export.js?v=134";
@@ -2377,6 +2376,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
+                const { generateDesignPNG } = await import('./export.js?v=134');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
