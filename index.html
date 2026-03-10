@@ -2,15 +2,19 @@
 <html lang="ko">
 <head>
 <script>
-// [SPA 라우팅] 서브패스 → URL 유지 (리다이렉트 없음, SEO 친화적)
-// /honeycomb → URL 그대로 유지, JS에서 slug를 읽어 제품/카테고리 표시
+// [SPA 라우팅] 서브패스 → history.replaceState (SEO 친화적, 리다이렉트 아님)
+// Google 렌더러: replaceState는 리다이렉트가 아니므로 원래 URL(/honeycomb)로 색인
+// 사용자: URL이 /?_p=honeycomb으로 변경되지만 페이지 이동 없음 (SPA 정상 작동)
 (function(){
     var p = location.pathname;
     if (p && p !== '/' && p !== '/index.html' && p.indexOf('.') === -1) {
         var slug = p.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
         if (slug) {
-            // 리다이렉트하지 않고, slug를 전역 변수로 저장
             window.__SPA_SLUG = slug;
+            // replaceState: 페이지 이동 없이 URL만 변경 (Google은 리다이렉트로 안 봄)
+            var qs = location.search;
+            var sep = qs ? qs + '&' : '?';
+            try { history.replaceState(null, '', '/' + sep + '_p=' + encodeURIComponent(slug)); } catch(e) {}
         }
     }
 })();
