@@ -679,12 +679,21 @@ document.addEventListener('DOMContentLoaded', function() {
             display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
         }
         @keyframes kapuArrowMove{0%,100%{transform:translateX(0);opacity:0.7}50%{transform:translateX(8px);opacity:1}}
+        .kapu-txt{text-align:center; line-height:1.4; display:flex; align-items:center; justify-content:center; gap:4px;}
+        .kapu-sub{font-size:17px; font-weight:600; opacity:0.95;}
+        .kapu-sep{font-size:19px; opacity:0.6;}
+        @media (max-width:768px) {
+            .kapu-txt{flex-direction:column; gap:2px;}
+            .kapu-sep{display:none;}
+            .kapu-sub{font-size:15px; margin-top:1px;}
+        }
     </style>
     <div id="chatbotBtnWrap" style="text-align:center; margin: 0 auto 12px auto; max-width:1100px; padding:0 15px;">
         <button id="btnChatbotOpen" onclick="if(window.toggleAdvisorPanel) window.toggleAdvisorPanel();">
-            <span style="text-align:center; line-height:1.4;">
+            <span class="kapu-txt">
                 <span data-i18n="btn_kapu_guide" style="font-size:19px;">도매전문 인쇄 쇼핑몰</span>
-                <span style="display:block; font-size:15px; font-weight:600; opacity:0.95; margin-top:3px;" data-i18n="btn_kapu_sub">반값제작 무료배송 탁월한 퀄리티</span>
+                <span class="kapu-sep"> · </span>
+                <span class="kapu-sub" data-i18n="btn_kapu_sub">반값제작 무료배송 탁월한 퀄리티</span>
             </span>
         </button>
     </div>
