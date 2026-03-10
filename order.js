@@ -8,6 +8,7 @@ import {
     generateQuotationPDF,
     generateProductVectorPDF,
     generateRasterPDF,
+    generateDesignPNG,
     generateReceiptPDF,
     generateTransactionStatementPDF
 } from "./export.js?v=133";
@@ -2372,9 +2373,9 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
 
             if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
-                // 고화질 PNG 래스터 생성 (loadFromJSON 방식 — 주문 시점엔 라이브 캔버스 없음)
+                // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                let fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
                     const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${orderId}/design_${idx}.png`), UPLOAD_TIMEOUT);

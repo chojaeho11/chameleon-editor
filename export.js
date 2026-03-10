@@ -1151,6 +1151,41 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0, perPageSi
     } catch (e) { console.error("[PDF] 래스터 생성 오류:", e); return null; }
 }
 
+// 고화질 PNG Blob 생성 (주문 시 관리자에게 전송용)
+export async function generateDesignPNG(jsonData, w, h, x = 0, y = 0) {
+    const tempEl = document.createElement('canvas');
+    const tempCvs = new fabric.StaticCanvas(tempEl);
+    tempCvs.setWidth(w); tempCvs.setHeight(h);
+    tempCvs.setBackgroundColor('#ffffff');
+
+    const pageJson = { ...(Array.isArray(jsonData) ? jsonData[0] : jsonData) };
+    if (pageJson.objects) {
+        pageJson.objects = pageJson.objects
+            .filter(o => !o.isMockup && !o.excludeFromExport)
+            .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
+    }
+
+    await new Promise(resolve => {
+        tempCvs.loadFromJSON(pageJson, () => {
+            tempCvs.setBackgroundColor('#ffffff');
+            tempCvs.setViewportTransform([1, 0, 0, 1, -x, -y]);
+            tempCvs.renderAll();
+            setTimeout(resolve, 600);
+        });
+    });
+
+    const _maxPx = 100000000;
+    const _basePx = w * h;
+    let mult = 4;
+    if (_basePx * mult * mult > _maxPx) mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+
+    const dataUrl = tempCvs.toDataURL({ format: 'png', multiplier: mult });
+    tempCvs.dispose();
+
+    const resp = await fetch(dataUrl);
+    return await resp.blob();
+}
+
 // ==========================================================
 // [4-B] 박스 배치도 PDF (Box Layout / Nesting)
 // ==========================================================
