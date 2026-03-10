@@ -1,8 +1,11 @@
 /* canvas-template.js - 버튼 페이징 버전 */
 
-import { sb, currentUser } from "./config.js?v=128";
-import { canvas } from "./canvas-core.js?v=128";
-import { applySize } from "./canvas-size.js?v=128";
+import { sb as _importedSb, currentUser } from "./config.js?v=129";
+import { canvas } from "./canvas-core.js?v=129";
+import { applySize } from "./canvas-size.js?v=129";
+
+// ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
+function _getSb() { return _importedSb || window.sb; }
 
 /* ─── 연관 검색어 확장 맵 ─── */
 const SEARCH_SYNONYMS = {
@@ -137,7 +140,7 @@ async function addRewardPoints(userId, amount, desc) {
 
     try {
         // 1. 현재 '예치금(deposit)' 조회 (mileage 아님!)
-        const { data: pf, error: fetchErr } = await sb.from('profiles')
+        const { data: pf, error: fetchErr } = await _getSb().from('profiles')
             .select('deposit')  // ★ 여기가 핵심: deposit 조회
             .eq('id', userId)
             .single();
@@ -152,7 +155,7 @@ async function addRewardPoints(userId, amount, desc) {
         const newDeposit = currentDeposit + addAmount;
 
         // 2. 프로필 테이블의 'deposit' 컬럼 업데이트
-        const { error: updateErr } = await sb.from('profiles')
+        const { error: updateErr } = await _getSb().from('profiles')
             .update({ deposit: newDeposit }) // ★ 여기가 핵심: deposit 업데이트
             .eq('id', userId);
         
@@ -163,7 +166,7 @@ async function addRewardPoints(userId, amount, desc) {
         }
 
         // 3. 로그 기록 (type을 'deposit'이나 'revenue'로 구분하면 더 좋습니다)
-        await sb.from('wallet_logs').insert({ 
+        await _getSb().from('wallet_logs').insert({ 
             user_id: userId, 
             type: 'deposit', // ★ 타입 변경: reward -> deposit
             amount: addAmount, 
@@ -624,7 +627,7 @@ async function processLoad(mode) {
 
     try {
         // 1. 데이터 가져오기
-        const { data, error } = await sb
+        const { data, error } = await _getSb()
             .from('library')
             .select('data_url, width, height, category') 
             .eq('id', selectedTpl.id)
@@ -871,10 +874,10 @@ function dataURLtoBlob(dataurl) {
 // [수정] 템플릿 등록 및 보상 지급 함수
 // [수정] 템플릿 등록 함수
 async function registerUserTemplate() {
-    if (!sb) { showToast(window.t('msg_db_connection_failed', "Database connection failed"), "error"); return; }
+    if (!_getSb()) { showToast(window.t('msg_db_connection_failed', "Database connection failed"), "error"); return; }
 
     // 최신 유저 정보 확인
-    const { data: { user: freshUser }, error: authError } = await sb.auth.getUser();
+    const { data: { user: freshUser }, error: authError } = await _getSb().auth.getUser();
 
     if (authError || !freshUser) {
         showToast(window.t('msg_session_expired', "Login session has expired. Please refresh."), "warn");
@@ -947,9 +950,9 @@ async function registerUserTemplate() {
         const blob = dataURLtoBlob(dataUrl);
         const fileName = `${freshUser.id}/${Date.now()}.jpg`;
 
-        const { error: uploadError } = await sb.storage.from('templates').upload(fileName, blob);
+        const { error: uploadError } = await _getSb().storage.from('templates').upload(fileName, blob);
         if (uploadError) throw uploadError;
-        const { data: publicUrlData } = sb.storage.from('templates').getPublicUrl(fileName);
+        const { data: publicUrlData } = _getSb().storage.from('templates').getPublicUrl(fileName);
 
         // DB 저장
         const payload = {
@@ -967,7 +970,7 @@ async function registerUserTemplate() {
             product_key: window.currentProductKey || 'custom'
         };
 
-        const { error: dbError } = await sb.from('library').insert([payload]);
+        const { error: dbError } = await _getSb().from('library').insert([payload]);
         if (dbError) throw dbError;
 
         // ★ [핵심] 이제 'deposit(예치금)' 컬럼에 500원이 더해집니다.
@@ -1066,16 +1069,16 @@ window.uploadUserLogo = async function() {
             const fileExt = file.name.split('.').pop();
             const timestamp = Date.now();
             const fileName = `logo_${timestamp}_${Math.floor(Math.random()*1000)}.${fileExt}`;
-            const { error: uploadError } = await sb.storage.from('logos').upload(fileName, file);
+            const { error: uploadError } = await _getSb().storage.from('logos').upload(fileName, file);
             if (uploadError) { failCount++; continue; }
-            const { data: publicData } = sb.storage.from('logos').getPublicUrl(fileName);
+            const { data: publicData } = _getSb().storage.from('logos').getPublicUrl(fileName);
             const payload = {
                 category: 'logo', tags: autoTags,
                 thumb_url: publicData.publicUrl, data_url: publicData.publicUrl,
                 created_at: new Date(),
                 width: 500, height: 500, product_key: 'custom'
             };
-            const { error: dbError } = await sb.from('library').insert([payload]);
+            const { error: dbError } = await _getSb().from('library').insert([payload]);
             if (dbError) {
                 failCount++;
             } else {
@@ -1249,7 +1252,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     list.innerHTML = `<div style="padding:40px 20px; text-align:center; color:#64748b; font-size:13px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#6366f1; margin-bottom:10px;"></i><br>${msg}</div>`;
 
     try {
-        const _sb = sb || window.sb;
+        const _sb = _getSb();
         if (!_sb) { list.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#94a3b8;">DB 연결 대기 중...</div>'; return; }
 
         const groups = {
@@ -1859,7 +1862,7 @@ window.processLoad = async function(mode) {
 
     try {
         // 1. DB 데이터 조회
-        const { data, error } = await sb
+        const { data, error } = await _getSb()
             .from('library')
             .select('data_url, width, height, category') 
             .eq('id', window.selectedTpl.id)
@@ -2053,7 +2056,7 @@ window.processLoad = async function(mode) {
 
     try {
         // 1. DB 데이터 조회
-        const { data, error } = await sb
+        const { data, error } = await _getSb()
             .from('library')
             .select('data_url, width, height, category') 
             .eq('id', window.selectedTpl.id)

@@ -1,17 +1,21 @@
 // canvas-ai.js
-import { canvas } from "./canvas-core.js?v=128";
-import { sb, currentUser } from "./config.js?v=128";
+import { canvas } from "./canvas-core.js?v=129";
+import { sb as _importedSb, currentUser } from "./config.js?v=129";
+
+// ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
+function _getSb() { return _importedSb || window.sb; }
 
 // ==========================================================
 // [유틸] DB secrets 테이블에서 API 키 가져오기
 // ==========================================================
 async function getApiKey(keyName) {
-    if (!sb) {
+    const __sb = _getSb();
+    if (!__sb) {
         console.error("Supabase 클라이언트가 초기화되지 않았습니다.");
         return null;
     }
-    const { data, error } = await sb
-        .from('secrets') 
+    const { data, error } = await __sb
+        .from('secrets')
         .select('value')
         .eq('name', keyName)
         .single();
@@ -157,8 +161,9 @@ function postProcessAlpha(imageBlob) {
 // [코어] Flux 이미지 생성
 // ==========================================================
 async function generateImageCore(prompt) {
-    if (!sb) throw new Error("Supabase connection failed");
-    const { data, error } = await sb.functions.invoke('generate-image-flux', {
+    const _sb = sb || window.sb;
+    if (!_sb) throw new Error("Supabase connection failed");
+    const { data, error } = await _sb.functions.invoke('generate-image-flux', {
         body: { prompt: prompt, ratio: "1:1" }
     });
     if (error) throw new Error(error.message);
@@ -367,7 +372,9 @@ export function initAiTools() {
                     multiplier: mult 
                 });
                 
-                const { data, error } = await sb.functions.invoke('upscale-image', {
+                const _sb = sb || window.sb;
+                if (!_sb) throw new Error('DB not ready');
+                const { data, error } = await _sb.functions.invoke('upscale-image', {
                     body: { image: imageUrl, scale: 2 }
                 });
 
@@ -1330,11 +1337,12 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
 
     // ★ 템플릿 이미지 검색 (photo-bg, user_image 카테고리 우선)
     let bgImageUrl = null;
-    if (sb) {
+    const _sb = sb || window.sb;
+    if (_sb) {
         const searchKws = _wzTranslateForSearch(keywords);
         const allKws = [...new Set([...searchKws, ...keywords])];
         for (const kw of allKws.slice(0, 5)) {
-            const { data } = await sb.from('library')
+            const { data } = await _sb.from('library')
                 .select('id, thumb_url, data_url, category')
                 .in('category', ['photo-bg', 'user_image'])
                 .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
@@ -1350,7 +1358,7 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
         }
         // 폴백: 아무 photo-bg 이미지
         if (!bgImageUrl) {
-            const { data } = await sb.from('library')
+            const { data } = await _sb.from('library')
                 .select('id, thumb_url, data_url, category')
                 .in('category', ['photo-bg', 'user_image'])
                 .eq('status', 'approved')
@@ -1494,7 +1502,9 @@ async function _wzGetDescText(title) {
             JP: `「${title}」に関するプロモーション文を3〜4行（200文字以内）で書いてください。感性的でプロフェッショナルに。テキストのみ返してください。`,
             US: `Write a 3-4 line promotional text about "${title}" (under 200 chars). Make it emotional and professional. Return text only.`
         };
-        const _aiCall = sb.functions.invoke('generate-text', {
+        const _sbFn = sb || window.sb;
+        if (!_sbFn) throw new Error('DB not ready');
+        const _aiCall = _sbFn.functions.invoke('generate-text', {
             body: { prompt: langPrompts[c] || langPrompts['US'], max_tokens: 200 }
         });
         const _timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
@@ -1567,7 +1577,8 @@ function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
 
 // ─── Step 4: Related elements (keyword search, 2 items — 하단 박스 좌우) ───
 async function _wzElem(keywords, bW, bH, bL, bT) {
-    if (!sb) return;
+    const _sb = sb || window.sb;
+    if (!_sb) return;
 
     // ★ JP/EN → KR 번역 후 검색 (라이브러리가 KR 태그 기반)
     const searchKws = _wzTranslateForSearch(keywords);
@@ -1577,7 +1588,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     const usedIds = new Set();
     // ★ 마법사는 transparent-graphic (관리자 고화질) 카테고리만 사용, 우선표시 우선
     async function _searchKw(kw) {
-        const res = await sb.from('library')
+        const res = await _sb.from('library')
             .select('id, thumb_url, data_url, category, is_featured')
             .eq('category', 'transparent-graphic')
             .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
@@ -1611,7 +1622,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     // ★ 검색 결과 없으면 우선표시(is_featured)된 요소로 폴백
     if (!allItems.length) {
-        const res = await sb.from('library')
+        const res = await _sb.from('library')
             .select('id, thumb_url, data_url, category, is_featured')
             .eq('category', 'transparent-graphic')
             .eq('status','approved')
@@ -1627,7 +1638,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     }
     // ★ 우선표시도 없으면 최종 폴백: 최근 등록순
     if (!allItems.length) {
-        const res = await sb.from('library')
+        const res = await _sb.from('library')
             .select('id, thumb_url, data_url, category, is_featured')
             .eq('category', 'transparent-graphic')
             .eq('status','approved')
@@ -1773,9 +1784,10 @@ async function _wzSticker(keywords, bW, bH, bL, bT) {
 
     // Try searching library for stickers matching keywords
     let stickerUrls = [];
-    if (sb) {
+    const _sb2 = sb || window.sb;
+    if (_sb2) {
         for (const kw of keywords) {
-            const { data } = await sb.from('library')
+            const { data } = await _sb2.from('library')
                 .select('id, thumb_url')
                 .in('category', ['vector','graphic','transparent-graphic'])
                 .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
@@ -1790,7 +1802,7 @@ async function _wzSticker(keywords, bW, bH, bL, bT) {
         }
         // If not enough results from keyword search, get random approved ones
         if (stickerUrls.length < 3) {
-            const { data } = await sb.from('library')
+            const { data } = await _sb2.from('library')
                 .select('id, thumb_url')
                 .in('category', ['vector','graphic','transparent-graphic'])
                 .eq('status','approved')
