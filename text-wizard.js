@@ -555,77 +555,9 @@
 
         // 4. [메뉴판]
         else if (type === 'menu') {
-            const BG_COLOR = '#FFFDF9';
-            const BORDER_COLOR = '#c9b88c';
-            const TEXT_COLOR = '#5a5a5a';
-            const ACCENT = '#8B7355';
-
-            const archPath = "M -250 350 L -250 -150 A 250 250 0 0 1 250 -150 L 250 350 Z";
-
-            const bgArch = new fabric.Path(archPath, {
-                fill: BG_COLOR, stroke: BORDER_COLOR, strokeWidth: 1,
-                opacity: 0.85, originX: 'center', originY: 'center',
-                left: cx, top: cy,
-                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.06)', blur: 15, offsetX: 3, offsetY: 3 })
-            });
-            objs.push(bgArch);
-
-            const title = new fabric.IText(data.menu.title, {
-                fontFamily: F.TITLE, fontSize: 38, fill: ACCENT,
-                charSpacing: 200, fontWeight: '100',
-                originX: 'center', originY: 'center',
-                left: cx, top: cy - 260
-            });
-
-            const titleLine = new fabric.Rect({
-                width: 40, height: 1, fill: BORDER_COLOR,
-                originX: 'center', originY: 'center',
-                left: cx, top: cy - 225
-            });
-            objs.push(title, titleLine);
-
-            const startY = cy - 140;
-            const gap = 35;
-            const textLeft = cx - 180;
-            const priceRight = cx + 180;
-
-            const makeDotLine = (y) => {
-                const dots = new fabric.IText("..........................................", {
-                    fontFamily: F.SUB, fontSize: 10, fill: '#ddd',
-                    originX: 'center', originY: 'center', left: cx, top: y
-                });
-                if(dots.width > 280) dots.scaleX = 280 / dots.width;
-                return dots;
-            };
-
-            data.menu.items.forEach((item, i) => {
-                const currentY = startY + (i * gap);
-
-                const menuName = new fabric.IText(item, {
-                    fontFamily: F.SUB, fontSize: 14, fill: TEXT_COLOR,
-                    fontWeight: '300', textAlign: 'left',
-                    originX: 'left', originY: 'center',
-                    left: textLeft, top: currentY
-                });
-
-                const menuPrice = new fabric.IText(data.menu.prices[i], {
-                    fontFamily: F.SUB, fontSize: 14, fill: ACCENT,
-                    fontWeight: '300', textAlign: 'right',
-                    originX: 'right', originY: 'center',
-                    left: priceRight, top: currentY
-                });
-
-                const dotLine = makeDotLine(currentY + 2);
-                objs.push(dotLine, menuName, menuPrice);
-            });
-
-            const footer = new fabric.IText("Bon Appetit", {
-                fontFamily: F.DECO, fontSize: 22, fill: BORDER_COLOR,
-                fontWeight: '300',
-                originX: 'center', originY: 'center',
-                left: cx, top: cy + 280
-            });
-            objs.push(footer);
+            // 메뉴 입력 모달을 띄우고 리턴 (별도 처리)
+            _openMenuEditor(null, canvas, board, F);
+            return;
         }
 
         // 5. [가로 현수막]
@@ -1072,4 +1004,240 @@
             }
         }
     };
+
+    // ═══════════════════════════════════════════════
+    // 메뉴 입력 에디터 (스프레드시트 스타일)
+    // ═══════════════════════════════════════════════
+
+    function _openMenuEditor(existingGroup, canvas, board, F) {
+        // 기존 데이터 복원
+        let rows = [{ name: '', price: '' }];
+        if (existingGroup && existingGroup._menuData) {
+            rows = existingGroup._menuData.map(r => ({ ...r }));
+        }
+
+        // 모달 생성
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;';
+
+        const modal = document.createElement('div');
+        modal.style.cssText = 'background:#fff;border-radius:14px;padding:24px 20px;width:420px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;';
+
+        // 헤더
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+        header.innerHTML = '<div style="font-size:17px;font-weight:800;color:#1e293b;">Menu Editor</div>';
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '\u2715';
+        closeBtn.style.cssText = 'background:none;border:none;font-size:18px;cursor:pointer;color:#94a3b8;padding:4px 8px;';
+        closeBtn.onclick = () => overlay.remove();
+        header.appendChild(closeBtn);
+        modal.appendChild(header);
+
+        // 테이블 헤더
+        const thRow = document.createElement('div');
+        thRow.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;padding:0 4px;';
+        thRow.innerHTML = '<div style="flex:3;font-size:12px;font-weight:700;color:#64748b;">메뉴명</div><div style="flex:1;font-size:12px;font-weight:700;color:#64748b;text-align:right;">가격</div><div style="width:28px;"></div>';
+        modal.appendChild(thRow);
+
+        // 스크롤 영역
+        const scrollArea = document.createElement('div');
+        scrollArea.style.cssText = 'flex:1;overflow-y:auto;max-height:50vh;margin-bottom:14px;';
+        modal.appendChild(scrollArea);
+
+        function renderRows() {
+            scrollArea.innerHTML = '';
+            rows.forEach((row, idx) => {
+                const r = document.createElement('div');
+                r.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:4px;padding:0 4px;';
+
+                const nameInput = document.createElement('input');
+                nameInput.value = row.name;
+                nameInput.placeholder = '메뉴 ' + (idx + 1);
+                nameInput.style.cssText = 'flex:3;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;transition:border 0.15s;';
+                nameInput.onfocus = () => nameInput.style.borderColor = '#6366f1';
+                nameInput.onblur = () => nameInput.style.borderColor = '#e2e8f0';
+                nameInput.oninput = () => { rows[idx].name = nameInput.value; };
+
+                const priceInput = document.createElement('input');
+                priceInput.value = row.price;
+                priceInput.placeholder = '0';
+                priceInput.style.cssText = 'flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:right;outline:none;transition:border 0.15s;';
+                priceInput.onfocus = () => priceInput.style.borderColor = '#6366f1';
+                priceInput.onblur = () => priceInput.style.borderColor = '#e2e8f0';
+                priceInput.oninput = () => { rows[idx].price = priceInput.value; };
+
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '\u2212';
+                delBtn.style.cssText = 'width:28px;height:28px;border:none;background:#fee2e2;color:#ef4444;border-radius:6px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+                delBtn.onclick = () => { if (rows.length > 1) { rows.splice(idx, 1); renderRows(); } };
+
+                r.appendChild(nameInput);
+                r.appendChild(priceInput);
+                r.appendChild(delBtn);
+                scrollArea.appendChild(r);
+
+                // 마지막 행에서 Tab → 자동 추가
+                priceInput.onkeydown = (e) => {
+                    if (e.key === 'Tab' && !e.shiftKey && idx === rows.length - 1) {
+                        e.preventDefault();
+                        rows.push({ name: '', price: '' });
+                        renderRows();
+                        const inputs = scrollArea.querySelectorAll('input');
+                        if (inputs.length >= 2) inputs[inputs.length - 2].focus();
+                    }
+                };
+            });
+        }
+        renderRows();
+
+        // 행 추가 버튼
+        const addBtn = document.createElement('button');
+        addBtn.textContent = '+ 행 추가';
+        addBtn.style.cssText = 'background:#f1f5f9;border:1px dashed #cbd5e1;border-radius:8px;padding:8px;cursor:pointer;font-size:13px;font-weight:600;color:#64748b;width:100%;margin-bottom:14px;transition:background 0.15s;';
+        addBtn.onmouseenter = () => addBtn.style.background = '#e2e8f0';
+        addBtn.onmouseleave = () => addBtn.style.background = '#f1f5f9';
+        addBtn.onclick = () => { rows.push({ name: '', price: '' }); renderRows(); scrollArea.scrollTop = scrollArea.scrollHeight; };
+        modal.appendChild(addBtn);
+
+        // 확인 버튼
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = existingGroup ? '수정 완료' : '메뉴 생성';
+        confirmBtn.style.cssText = 'background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;padding:12px;cursor:pointer;font-size:15px;font-weight:700;width:100%;transition:transform 0.15s;';
+        confirmBtn.onmouseenter = () => confirmBtn.style.transform = 'scale(1.02)';
+        confirmBtn.onmouseleave = () => confirmBtn.style.transform = 'scale(1)';
+        confirmBtn.onclick = () => {
+            const validRows = rows.filter(r => r.name.trim() || r.price.trim());
+            if (validRows.length === 0) { overlay.remove(); return; }
+
+            // 기존 그룹 삭제
+            if (existingGroup && canvas.contains(existingGroup)) {
+                canvas.remove(existingGroup);
+            }
+
+            _buildMenuOnCanvas(validRows, canvas, board, F);
+            overlay.remove();
+        };
+        modal.appendChild(confirmBtn);
+
+        overlay.appendChild(modal);
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        document.body.appendChild(overlay);
+
+        // 첫 번째 입력에 포커스
+        setTimeout(() => {
+            const firstInput = scrollArea.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }, 100);
+    }
+
+    function _buildMenuOnCanvas(menuData, canvas, board, F) {
+        let boardW = canvas.width, boardH = canvas.height;
+        let cx = canvas.width / 2, cy = canvas.height / 2;
+        if (board) {
+            boardW = board.width * board.scaleX;
+            boardH = board.height * board.scaleY;
+            cx = board.left + boardW / 2;
+            cy = board.top + boardH / 2;
+        }
+
+        const TEXT_COLOR = '#333333';
+        const PRICE_COLOR = '#1e293b';
+        const DOT_COLOR = '#d1d5db';
+        const LINE_COLOR = '#e2e8f0';
+
+        const fontSize = Math.max(12, Math.min(18, boardH * 0.025));
+        const gap = fontSize * 2.4;
+        const totalH = menuData.length * gap;
+        const startY = cy - totalH / 2 + gap / 2;
+        const padX = boardW * 0.1;
+        const textLeft = cx - boardW / 2 + padX;
+        const priceRight = cx + boardW / 2 - padX;
+        const contentW = priceRight - textLeft;
+
+        const objs = [];
+
+        // 상단 구분선
+        objs.push(new fabric.Line([textLeft, startY - gap * 0.6, priceRight, startY - gap * 0.6], {
+            stroke: LINE_COLOR, strokeWidth: 1, selectable: false
+        }));
+
+        menuData.forEach((item, i) => {
+            const currentY = startY + i * gap;
+
+            const nameText = new fabric.IText(item.name, {
+                fontFamily: F.SUB || 'Noto Sans KR', fontSize: fontSize, fill: TEXT_COLOR,
+                fontWeight: '500', originX: 'left', originY: 'center',
+                left: textLeft, top: currentY
+            });
+
+            const priceText = new fabric.IText(item.price, {
+                fontFamily: F.SUB || 'Noto Sans KR', fontSize: fontSize, fill: PRICE_COLOR,
+                fontWeight: '700', originX: 'right', originY: 'center',
+                left: priceRight, top: currentY
+            });
+
+            // 점선
+            const dotStr = '\u00B7'.repeat(80);
+            const dots = new fabric.Text(dotStr, {
+                fontFamily: 'monospace', fontSize: fontSize * 0.6, fill: DOT_COLOR,
+                originX: 'center', originY: 'center',
+                left: cx, top: currentY, width: contentW * 0.95,
+                clipPath: new fabric.Rect({
+                    width: contentW * 0.95, height: fontSize,
+                    originX: 'center', originY: 'center'
+                })
+            });
+            if (dots.width > contentW * 0.95) dots.scaleX = (contentW * 0.95) / dots.width;
+
+            objs.push(dots, nameText, priceText);
+        });
+
+        // 하단 구분선
+        const lastY = startY + (menuData.length - 1) * gap;
+        objs.push(new fabric.Line([textLeft, lastY + gap * 0.6, priceRight, lastY + gap * 0.6], {
+            stroke: LINE_COLOR, strokeWidth: 1, selectable: false
+        }));
+
+        // 그룹으로 묶기
+        const group = new fabric.Group(objs, {
+            left: cx, top: cy, originX: 'center', originY: 'center'
+        });
+
+        // 보드 기준 스케일
+        const safeW = boardW * 0.85;
+        const safeH = boardH * 0.85;
+        const scale = Math.min(safeW / group.width, safeH / group.height, 1);
+        group.scale(scale);
+        group.setCoords();
+
+        // 메뉴 데이터 저장 (수정 시 복원용)
+        group._menuData = menuData;
+        group._isMenuGroup = true;
+
+        canvas.add(group);
+        canvas.setActiveObject(group);
+        canvas.requestRenderAll();
+    }
+
+    // 메뉴 그룹 더블클릭 → 수정 모달
+    function _initMenuGroupEdit() {
+        const checkCanvas = setInterval(() => {
+            if (!window.canvas) return;
+            clearInterval(checkCanvas);
+            window.canvas.on('mouse:dblclick', function(opt) {
+                const target = opt.target;
+                if (target && target._isMenuGroup && target._menuData) {
+                    const board = window.canvas.getObjects().find(o => o.isBoard);
+                    const F = getFonts();
+                    _openMenuEditor(target, window.canvas, board, F);
+                }
+            });
+        }, 500);
+    }
+    _initMenuGroupEdit();
+
+    // 외부에서 호출 가능하도록
+    window._openMenuEditor = _openMenuEditor;
+
 })();
