@@ -1037,7 +1037,8 @@
         // 테이블 헤더
         const thRow = document.createElement('div');
         thRow.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;padding:0 4px;';
-        thRow.innerHTML = '<div style="flex:3;font-size:12px;font-weight:700;color:#64748b;">메뉴명</div><div style="flex:1;font-size:12px;font-weight:700;color:#64748b;text-align:right;">가격</div><div style="width:28px;"></div>';
+        const _t = window.t || ((k, d) => d);
+        thRow.innerHTML = `<div style="flex:3;font-size:12px;font-weight:700;color:#64748b;">${_t('menu_col_name', '메뉴명')}</div><div style="flex:1;font-size:12px;font-weight:700;color:#64748b;text-align:right;">${_t('menu_col_price', '가격')}</div><div style="width:28px;"></div>`;
         modal.appendChild(thRow);
 
         // 스크롤 영역
@@ -1053,7 +1054,7 @@
 
                 const nameInput = document.createElement('input');
                 nameInput.value = row.name;
-                nameInput.placeholder = '메뉴 ' + (idx + 1);
+                nameInput.placeholder = _t('menu_item', 'Menu') + ' ' + (idx + 1);
                 nameInput.style.cssText = 'flex:3;min-width:0;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;transition:border 0.15s;box-sizing:border-box;';
                 nameInput.onfocus = () => nameInput.style.borderColor = '#6366f1';
                 nameInput.onblur = () => nameInput.style.borderColor = '#e2e8f0';
@@ -1093,7 +1094,7 @@
 
         // 행 추가 버튼
         const addBtn = document.createElement('button');
-        addBtn.textContent = '+ 행 추가';
+        addBtn.textContent = '+ ' + _t('menu_add_row', '행 추가');
         addBtn.style.cssText = 'background:#f1f5f9;border:1px dashed #cbd5e1;border-radius:8px;padding:8px;cursor:pointer;font-size:13px;font-weight:600;color:#64748b;width:100%;margin-bottom:14px;transition:background 0.15s;';
         addBtn.onmouseenter = () => addBtn.style.background = '#e2e8f0';
         addBtn.onmouseleave = () => addBtn.style.background = '#f1f5f9';
@@ -1103,12 +1104,12 @@
         // 안내 문구
         const helpText = document.createElement('div');
         helpText.style.cssText = 'font-size:11px;color:#94a3b8;text-align:center;margin-bottom:10px;line-height:1.5;';
-        helpText.textContent = '메뉴 작성 후 대지에서 크기를 조절하면 자동으로 레이아웃이 맞춰집니다.';
+        helpText.textContent = _t('menu_help_text', '메뉴 작성 후 대지에서 크기를 조절하면 자동으로 레이아웃이 맞춰집니다.');
         modal.appendChild(helpText);
 
         // 확인 버튼
         const confirmBtn = document.createElement('button');
-        confirmBtn.textContent = existingGroup ? '수정 완료' : '메뉴 생성';
+        confirmBtn.textContent = existingGroup ? _t('menu_edit_done', '수정 완료') : _t('menu_create', '메뉴 생성');
         confirmBtn.style.cssText = 'background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;padding:12px;cursor:pointer;font-size:15px;font-weight:700;width:100%;transition:transform 0.15s;';
         confirmBtn.onmouseenter = () => confirmBtn.style.transform = 'scale(1.02)';
         confirmBtn.onmouseleave = () => confirmBtn.style.transform = 'scale(1)';

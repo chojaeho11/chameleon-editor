@@ -502,79 +502,9 @@ export function initExport() {
             btn.disabled = true;
 
             try {
-                // 0. ★ 원본 캔버스에서 텍스트 포함 그룹을 고해상도 이미지로 래스터화
-                // 원본 캔버스의 실제 <canvas> 요소에서 직접 크롭하여 캡처 (폰트 문제 완전 회피)
-                const _rasterizedGroups = []; // 원복용 백업
-                const liveCanvas = canvas.getElement(); // 실제 <canvas> DOM 요소
-                const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
-                const _canvasObjs = canvas.getObjects().slice();
-
-                for (const obj of _canvasObjs) {
-                    if (obj.type !== 'group' || obj.isBoard) continue;
-                    const _ht = (o) => {
-                        if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
-                        if (o.type === 'group' && o._objects) return o._objects.some(_ht);
-                        return false;
-                    };
-                    if (!_ht(obj)) continue;
-
-                    try {
-                        // 그룹의 바운딩 박스를 화면 좌표로 변환
-                        const bound = obj.getBoundingRect(true); // absolute coords on viewport
-                        const mult = 3; // 고해상도
-
-                        // 원본 캔버스에서 해당 영역 크롭
-                        const cropCanvas = document.createElement('canvas');
-                        cropCanvas.width = Math.ceil(bound.width * mult);
-                        cropCanvas.height = Math.ceil(bound.height * mult);
-                        const cropCtx = cropCanvas.getContext('2d');
-                        cropCtx.scale(mult, mult);
-                        cropCtx.drawImage(liveCanvas,
-                            bound.left, bound.top, bound.width, bound.height,
-                            0, 0, bound.width, bound.height
-                        );
-
-                        const dataUrl = cropCanvas.toDataURL('image/png');
-                        const imgObj = await new Promise((res) => {
-                            fabric.Image.fromURL(dataUrl, (img) => res(img));
-                        });
-                        if (!imgObj) continue;
-
-                        // 화면 좌표 → 캔버스 좌표 역변환
-                        const realLeft = (bound.left - vpt[4]) / vpt[0];
-                        const realTop = (bound.top - vpt[5]) / vpt[3];
-                        const realW = bound.width / vpt[0];
-                        const realH = bound.height / vpt[3];
-
-                        imgObj.set({
-                            left: realLeft,
-                            top: realTop,
-                            originX: 'left', originY: 'top',
-                            scaleX: realW / imgObj.width,
-                            scaleY: realH / imgObj.height,
-                        });
-                        imgObj.setCoords();
-
-                        const idx = canvas.getObjects().indexOf(obj);
-                        canvas.remove(obj);
-                        canvas.insertAt(imgObj, idx >= 0 ? idx : canvas.getObjects().length);
-                        _rasterizedGroups.push({ original: obj, replacement: imgObj, index: idx });
-                        console.log("[PDF] 텍스트 그룹 래스터화 완료 (캔버스 크롭 방식)", bound.width.toFixed(0), "x", bound.height.toFixed(0));
-                    } catch(re) { console.warn("[PDF] 그룹 래스터화 실패:", re.message); }
-                }
-                canvas.renderAll();
-
                 // 1. 데이터 최신화 (현재 작업중인 페이지 저장)
                 if (window.savePageState) window.savePageState(); // 현재 페이지 상태 저장
                 const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
-
-                // ★ 원본 캔버스 원복 (래스터화된 그룹을 원래 그룹으로 되돌림)
-                for (const entry of _rasterizedGroups) {
-                    const repIdx = canvas.getObjects().indexOf(entry.replacement);
-                    canvas.remove(entry.replacement);
-                    canvas.insertAt(entry.original, repIdx >= 0 ? repIdx : entry.index);
-                }
-                canvas.renderAll();
 
                 let targetPages = [];
 
@@ -599,10 +529,65 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. PDF 생성 — 벡터→래스터 폴백
+                // 3. PDF 생성
+                // ★ 텍스트 포함 그룹이 있으면 원본 캔버스에서 직접 캡처 (폰트 문제 완전 회피)
+                const _hasTextGroup = canvas.getObjects().some(obj => {
+                    if (obj.type !== 'group' || obj.isBoard) return false;
+                    const _ht = (o) => {
+                        if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
+                        if (o.type === 'group' && o._objects) return o._objects.some(_ht);
+                        return false;
+                    };
+                    return _ht(obj);
+                });
+
                 let blob = null;
                 const isPdMode = window.__pdMode;
-                blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
+
+                if (_hasTextGroup) {
+                    // ★ 원본 캔버스에서 직접 고해상도 캡처 → PDF (폰트가 확실히 렌더링됨)
+                    console.log("[PDF] 텍스트 그룹 감지 → 원본 캔버스 직접 캡처 모드");
+                    try {
+                        const MM_TO_PX = 3.7795;
+                        const { jsPDF } = window.jspdf;
+                        const wMM = finalW / MM_TO_PX, hMM = finalH / MM_TO_PX;
+                        const doc = new jsPDF({ orientation: wMM > hMM ? 'l' : 'p', unit: 'mm', format: [wMM, hMM], compress: true });
+
+                        // 원본 캔버스의 뷰포트 백업
+                        const origVpt = canvas.viewportTransform.slice();
+
+                        // 뷰포트를 보드 기준으로 리셋 (보드 영역만 캡처)
+                        canvas.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
+                        canvas.renderAll();
+
+                        // 고해상도 캡처
+                        const maxPixels = 67108864;
+                        let mult = 4;
+                        if (finalW * finalH * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / (finalW * finalH))));
+
+                        const imgData = canvas.toDataURL({
+                            format: 'jpeg', quality: 0.98, multiplier: mult,
+                            left: 0, top: 0, width: finalW, height: finalH
+                        });
+                        doc.addImage(imgData, 'JPEG', 0, 0, wMM, hMM);
+
+                        // 뷰포트 원복
+                        canvas.setViewportTransform(origVpt);
+                        canvas.renderAll();
+
+                        blob = doc.output('blob');
+                        console.log("[PDF] 원본 캔버스 캡처 완료, blob 크기:", blob.size);
+                    } catch(capErr) {
+                        console.error("[PDF] 원본 캡처 실패:", capErr);
+                        // 폴백
+                        canvas.setViewportTransform(canvas.viewportTransform);
+                        canvas.renderAll();
+                    }
+                }
+
+                if (!blob || blob.size < 1000) {
+                    blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
+                }
                 if (!blob || blob.size < 1000) {
                     blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 }
