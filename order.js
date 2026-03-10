@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=130";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=130";
-import { SITE_CONFIG } from "./site-config.js?v=130";
-import { applySize } from "./canvas-size.js?v=130";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=130";
+import { canvas } from "./canvas-core.js?v=131";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=131";
+import { SITE_CONFIG } from "./site-config.js?v=131";
+import { applySize } from "./canvas-size.js?v=131";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=131";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=130";
+} from "./export.js?v=131";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1183,7 +1183,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=130');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=131');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2799,34 +2799,55 @@ window.toggleCartAccordion = function(idx) {
 };
 window.removeCartItem = function(idx) {
     if (confirm(window.t('confirm_delete', "Delete this item?"))) {
-        console.log('[removeCartItem] before:', cartData.length, 'items, removing idx:', idx);
-
-        // ★ [버그수정] localStorage 기반으로 삭제 (메모리 참조 불일치 방지)
         const storageKey = cartStorageKey();
-        let stored = [];
-        try {
-            stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        } catch(e) { stored = []; }
 
-        if (idx >= 0 && idx < stored.length) {
-            stored.splice(idx, 1);
+        // ★ 진단: 삭제 전 상태 스냅샷
+        let storedBefore = [];
+        try { storedBefore = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
+        console.log('[removeCartItem] === DELETE START ===');
+        console.log('[removeCartItem] storageKey:', storageKey);
+        console.log('[removeCartItem] localStorage items:', storedBefore.length, storedBefore.map(i => i.product?.name));
+        console.log('[removeCartItem] cartData items:', cartData.length, cartData.map(i => i.product?.name));
+        console.log('[removeCartItem] removing idx:', idx);
+
+        // 삭제 실행: localStorage에서 직접 삭제
+        if (idx >= 0 && idx < storedBefore.length) {
+            storedBefore.splice(idx, 1);
+        } else {
+            console.error('[removeCartItem] INVALID idx:', idx, 'stored length:', storedBefore.length);
         }
 
-        // localStorage에 먼저 저장
+        // localStorage에 저장
         try {
-            localStorage.setItem(storageKey, JSON.stringify(stored));
-        } catch(e) {}
+            localStorage.setItem(storageKey, JSON.stringify(storedBefore));
+        } catch(e) { console.error('[removeCartItem] localStorage write error:', e); }
 
-        // 메모리 동기화
+        // ★ 검증: 저장 후 다시 읽어서 확인
+        let storedAfter = [];
+        try { storedAfter = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
+        console.log('[removeCartItem] after splice, localStorage:', storedAfter.length, 'items');
+
+        // 메모리 동기화: localStorage에서 다시 읽은 데이터로 덮어쓰기
         cartData.length = 0;
-        stored.forEach(item => cartData.push(item));
+        storedAfter.forEach(item => cartData.push(item));
+        console.log('[removeCartItem] cartData synced:', cartData.length, 'items');
 
-        console.log('[removeCartItem] after:', cartData.length, 'items in memory,', stored.length, 'in localStorage');
-
+        // renderCart 호출
         try {
             renderCart();
+            console.log('[removeCartItem] renderCart completed OK');
         } catch(e) {
-            console.error('[removeCartItem] renderCart error:', e);
+            console.error('[removeCartItem] renderCart CRASHED:', e);
+        }
+
+        // ★ 최종 검증: renderCart 후 localStorage/cartData 재확인
+        let finalStored = [];
+        try { finalStored = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
+        console.log('[removeCartItem] === FINAL STATE ===');
+        console.log('[removeCartItem] localStorage:', finalStored.length, 'items');
+        console.log('[removeCartItem] cartData:', cartData.length, 'items');
+        if (finalStored.length !== storedAfter.length) {
+            console.error('[removeCartItem] !!!! DATA CHANGED DURING RENDER !!!! before:', storedAfter.length, 'after:', finalStored.length);
         }
     }
 };
