@@ -1192,8 +1192,13 @@
                 left: halfW - padX, top: localY
             });
 
-            // 점선
-            const dotLine = new fabric.Line([-halfW + padX + 5, localY, halfW - padX - 5, localY], {
+            // 점선 (텍스트 너비 측정 후 여백 확보)
+            const nameW = nameText.getBoundingRect ? nameText.width : (item.name.length * fontSize * 0.6);
+            const priceW = priceText.getBoundingRect ? priceText.width : (item.price.length * fontSize * 0.6);
+            const dotMargin = fontSize * 0.4;
+            const dotX1 = -halfW + padX + nameW + dotMargin;
+            const dotX2 = halfW - padX - priceW - dotMargin;
+            const dotLine = new fabric.Line([dotX1, localY, dotX2, localY], {
                 stroke: DOT_COLOR, strokeWidth: 1,
                 strokeDashArray: [2, 4], selectable: false
             });
