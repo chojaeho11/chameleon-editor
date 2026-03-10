@@ -260,6 +260,31 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
+        // ========== SITEMAP PROXY (for Google Search Console) ==========
+        if (path === 'sitemap-products.xml' || path === 'sitemap-blog.xml') {
+            const cc = getCountry(url.hostname, request);
+            const type = path.replace('.xml', ''); // sitemap-products or sitemap-blog
+            const supaUrl = `${SUPABASE_URL}/functions/v1/${type}?country=${cc}`;
+            try {
+                const res = await fetch(supaUrl, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    }
+                });
+                if (res.ok) {
+                    const body = await res.text();
+                    return new Response(body, {
+                        status: 200,
+                        headers: {
+                            'Content-Type': 'application/xml; charset=utf-8',
+                            'Cache-Control': 'public, max-age=3600',
+                        },
+                    });
+                }
+            } catch (e) {}
+        }
+
         // ========== LINE OAuth Token Exchange ==========
         if (path === 'api/line_token' && request.method === 'POST') {
             try {
