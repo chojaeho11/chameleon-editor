@@ -2798,6 +2798,12 @@ window.toggleCartAccordion = function(idx) {
     } 
 };
 window.removeCartItem = function(idx) {
+    // ★ 디버그: 삭제 전 상태 표시 (반드시 보이는 alert)
+    var beforeLen = cartData.length;
+    var lsData = [];
+    try { lsData = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]'); } catch(e) {}
+    alert('[v132 removeCartItem] idx=' + idx + ', cartData=' + beforeLen + '개, localStorage=' + lsData.length + '개');
+
     if (confirm(window.t('confirm_delete', "Delete this item?"))) {
         // ★ cartData를 직접 수정 (updateCartQty 등과 동일한 패턴)
         if (idx >= 0 && idx < cartData.length) {
@@ -2805,6 +2811,12 @@ window.removeCartItem = function(idx) {
         }
         saveCart();
         renderCart();
+
+        // ★ 디버그: 삭제 후 상태
+        var afterLen = cartData.length;
+        var lsAfter = [];
+        try { lsAfter = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]'); } catch(e) {}
+        alert('[v132 삭제완료] cartData=' + afterLen + '개, localStorage=' + lsAfter.length + '개');
     }
 };
 
