@@ -27,6 +27,13 @@ const SEO_CATEGORIES = {
     'tshirt-print': { top: '77777' },
     'banner-stand': { prefix: 'bn_' },
     standee: { prefix: 'hb_point' },
+    curtain: { prefix: 'ct_' },
+    'shopping-bag': { prefix: 'pp_sb' },
+    'box-package': { prefix: 'box' },
+    'rubber-magnet': { prefix: 'magnet' },
+    'flex-sign': { prefix: 'fx_' },
+    'blackout-blind': { prefix: 'bl_' },
+    'flexible-package': { prefix: 'fp_' },
 };
 
 // Multilingual SEO metadata for category pages (JP/US)
@@ -86,6 +93,34 @@ const CATEGORY_SEO = {
     standee: {
         JP: { title: '等身大パネル制作 - ライフサイズスタンディー | カメレオンプリンティング', desc: '等身大パネル（ライフサイズパネル）のカスタム制作。アイドル・キャラクター・イベント用。無料エディター付き。', keywords: '等身大パネル,ライフサイズパネル,スタンディー,アイドルパネル,キャラクターパネル' },
         US: { title: 'Life-Size Standee - Custom Cutout Display | Chameleon Printing', desc: 'Custom life-size standees & cutout displays. For celebrities, characters, events & promotions. Free design editor, high-quality UV print.', keywords: 'life-size standee,standee,cutout display,life-size cutout,cardboard standee,promotional standee' },
+    },
+    curtain: {
+        JP: { title: 'カーテン印刷 - オリジナルカーテン制作 | カメレオンプリンティング', desc: 'カスタムカーテン印刷。インテリア・店舗・イベント用。写真カーテン、多様な生地、オーダーサイズ対応。無料デザインエディター。', keywords: 'カーテン印刷,オリジナルカーテン,写真カーテン,インテリアカーテン,イベントカーテン' },
+        US: { title: 'Custom Printed Curtains - Photo Curtains | Chameleon Printing', desc: 'Custom printed curtains for interior, stores & events. Photo curtains with various fabrics, custom sizes, free design editor.', keywords: 'custom curtain,printed curtain,photo curtain,interior curtain,event curtain' },
+    },
+    'shopping-bag': {
+        JP: { title: 'ショッピングバッグ制作 - 紙袋・不織布バッグ | カメレオンプリンティング', desc: 'カスタムショッピングバッグ印刷。紙袋・不織布バッグ・エコバッグ。ブランドロゴ印刷、多様なサイズ、少量から大量まで。', keywords: 'ショッピングバッグ,紙袋,不織布バッグ,エコバッグ,カスタムバッグ,ブランドバッグ' },
+        US: { title: 'Shopping Bags - Custom Paper & Non-woven Bags | Chameleon Printing', desc: 'Custom printed shopping bags. Paper bags, non-woven bags & tote bags. Brand logo printing, various sizes.', keywords: 'shopping bag,paper bag,non-woven bag,tote bag,custom bag,branded bag' },
+    },
+    'box-package': {
+        JP: { title: 'ボックスパッケージ制作 - カスタム箱印刷 | カメレオンプリンティング', desc: 'カスタムボックスパッケージ印刷。商品箱・ギフトボックス・配送箱。無料エディターでデザイン、少量注文OK。', keywords: 'ボックス印刷,パッケージ印刷,ギフトボックス,商品箱,カスタム箱' },
+        US: { title: 'Box Packaging - Custom Box Printing | Chameleon Printing', desc: 'Custom box packaging. Product boxes, gift boxes & shipping boxes. Free design editor, small orders available.', keywords: 'box packaging,custom box,gift box,product box,packaging printing' },
+    },
+    'rubber-magnet': {
+        JP: { title: 'ゴムマグネット制作 - カスタム冷蔵庫マグネット | カメレオンプリンティング', desc: 'カスタムゴムマグネット印刷。冷蔵庫マグネット・販促品・記念品。無料エディター、少量注文可能。', keywords: 'ゴムマグネット,冷蔵庫マグネット,カスタムマグネット,販促マグネット,記念品マグネット' },
+        US: { title: 'Rubber Magnets - Custom Fridge Magnets | Chameleon Printing', desc: 'Custom rubber magnet printing. Fridge magnets for promotions, souvenirs & gifts. Free design editor.', keywords: 'rubber magnet,fridge magnet,custom magnet,promotional magnet,souvenir magnet' },
+    },
+    'flex-sign': {
+        JP: { title: 'フレックスサイン - 屋外広告看板 | カメレオンプリンティング', desc: 'カスタムフレックスサイン制作。店舗・建物・屋外広告看板。耐候性素材、大型サイズ対応。', keywords: 'フレックスサイン,屋外看板,広告看板,店舗看板,建物看板' },
+        US: { title: 'Flex Signs - Outdoor Advertising Signs | Chameleon Printing', desc: 'Custom flex signs for outdoor advertising. Store fronts, buildings & commercial signs. Weather-resistant, large formats.', keywords: 'flex sign,outdoor sign,advertising sign,store sign,building sign' },
+    },
+    'blackout-blind': {
+        JP: { title: '遮光ブラインド - カスタム印刷ロールスクリーン | カメレオンプリンティング', desc: 'カスタム遮光ブラインド印刷。店舗・オフィス・住宅用。99%遮光、オーダーサイズ、無料エディター。', keywords: '遮光ブラインド,ロールスクリーン,カスタムブラインド,遮光カーテン,印刷ブラインド' },
+        US: { title: 'Blackout Blinds - Custom Printed Roller Blinds | Chameleon Printing', desc: 'Custom printed blackout blinds. For stores, offices & homes. 99% light blocking, custom sizes.', keywords: 'blackout blind,roller blind,custom blind,light blocking blind,printed blind' },
+    },
+    'flexible-package': {
+        JP: { title: '軟包装印刷 - カスタムパウチ・袋 | カメレオンプリンティング', desc: 'カスタム軟包装印刷。食品パウチ・ジッパー袋・スタンドパウチ。少量から大量まで対応。', keywords: '軟包装,パウチ印刷,ジッパー袋,スタンドパウチ,食品包装' },
+        US: { title: 'Flexible Packaging - Custom Pouches & Bags | Chameleon Printing', desc: 'Custom flexible packaging printing. Food pouches, zipper bags & stand-up pouches. Small to bulk orders.', keywords: 'flexible packaging,custom pouch,zipper bag,stand-up pouch,food packaging' },
     },
 };
 
