@@ -23,3 +23,8 @@ Sitemap: https://www.cafe3355.com/sitemap-products.xml
 Sitemap: https://www.cafe2626.com/sitemap-blog.xml
 Sitemap: https://www.cafe0101.com/sitemap-blog.xml
 Sitemap: https://www.cafe3355.com/sitemap-blog.xml
+
+# chameleon.design (global gateway)
+Sitemap: https://chameleon.design/sitemap.xml
+Sitemap: https://chameleon.design/sitemap-products.xml
+Sitemap: https://chameleon.design/sitemap-blog.xml
