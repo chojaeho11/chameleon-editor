@@ -1,5 +1,5 @@
-import { canvas } from "./canvas-core.js?v=126";
-import { addToCenter } from "./canvas-objects.js?v=126";
+import { canvas } from "./canvas-core.js?v=127";
+import { addToCenter } from "./canvas-objects.js?v=127";
 
 /* ─────────────────────────────────────────────
    Canva-style Floating Toolbar + Eraser + BG Remove

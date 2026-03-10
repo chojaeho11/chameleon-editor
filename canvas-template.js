@@ -1,8 +1,8 @@
 /* canvas-template.js - 버튼 페이징 버전 */
 
-import { sb, currentUser } from "./config.js?v=126";
-import { canvas } from "./canvas-core.js?v=126";
-import { applySize } from "./canvas-size.js?v=126";
+import { sb, currentUser } from "./config.js?v=127";
+import { canvas } from "./canvas-core.js?v=127";
+import { applySize } from "./canvas-size.js?v=127";
 
 /* ─── 연관 검색어 확장 맵 ─── */
 const SEARCH_SYNONYMS = {
