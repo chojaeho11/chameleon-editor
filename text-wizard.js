@@ -1118,8 +1118,8 @@
             if (validRows.length === 0) { overlay.remove(); return; }
 
             // 기존 그룹 삭제
-            if (existingGroup && canvas.contains(existingGroup)) {
-                canvas.remove(existingGroup);
+            if (existingGroup) {
+                try { canvas.remove(existingGroup); } catch(e) {}
             }
 
             _buildMenuOnCanvas(validRows, canvas, board, F);

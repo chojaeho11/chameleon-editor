@@ -530,16 +530,23 @@ export function initExport() {
                 const boardY = board ? board.top : 0;
 
                 // 3. PDF 생성
-                // ★ 텍스트 포함 그룹이 있으면 원본 캔버스에서 직접 캡처 (폰트 문제 완전 회피)
-                const _hasTextGroup = canvas.getObjects().some(obj => {
-                    if (obj.type !== 'group' || obj.isBoard) return false;
-                    const _ht = (o) => {
-                        if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
-                        if (o.type === 'group' && o._objects) return o._objects.some(_ht);
+                // ★ JSON에서 그룹 내 텍스트 존재 여부 확인 (가장 확실한 방법)
+                const _findTextInJson = (objs) => {
+                    if (!objs) return false;
+                    return objs.some(o => {
+                        if (o.isBoard) return false;
+                        if (o.type === 'group' && o.objects) return _findTextInJson(o.objects);
+                        if (o.type === 'group' && !o.objects) return false;
                         return false;
-                    };
-                    return _ht(obj);
-                });
+                    }) || objs.some(o => {
+                        if (o.type === 'group' && o.objects) {
+                            return o.objects.some(c => ['i-text', 'text', 'textbox'].includes(c.type));
+                        }
+                        return false;
+                    });
+                };
+                const _hasTextGroup = _findTextInJson(currentJson.objects);
+                console.log("[PDF] 텍스트 그룹 감지:", _hasTextGroup, "객체 수:", currentJson.objects?.length);
 
                 let blob = null;
                 const isPdMode = window.__pdMode;
