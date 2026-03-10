@@ -143,7 +143,15 @@ const resizeImageToBlob = (file) => {
 async function uploadFileToSupabase(file, folder, retries = 3) {
     if (!sb) return null;
     const timestamp = Date.now();
-    const ext = file.name ? file.name.split('.').pop() : 'jpg';
+    // Blob type에서 확장자 추출 (file.name이 없는 경우)
+    let ext = 'jpg';
+    if (file.name) { ext = file.name.split('.').pop(); }
+    else if (file.type) {
+        if (file.type.includes('png')) ext = 'png';
+        else if (file.type.includes('pdf')) ext = 'pdf';
+        else if (file.type.includes('jpeg') || file.type.includes('jpg')) ext = 'jpg';
+        else if (file.type.includes('svg')) ext = 'svg';
+    }
     const randomStr = Math.random().toString(36).substring(2, 8);
     const safeName = `${timestamp}_${randomStr}.${ext}`;
     const filePath = `${folder}/${safeName}`;
@@ -1223,52 +1231,45 @@ async function addCanvasToCart() {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
-    // ★ 라이브 캔버스에서 직접 고화질 PNG 캡처 → 관리자에 전송
+    // ★ PNG 다운로드와 100% 동일한 방식으로 고화질 PNG 캡처
     let designPdfUrl = null;
     try {
-        const origVT = canvas.viewportTransform.slice();
-        const activeObj = canvas.getActiveObject();
-        canvas.discardActiveObject();
-        canvas.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
+        const _tempEl = document.createElement('canvas');
+        const _tempCvs = new fabric.StaticCanvas(_tempEl);
+        _tempCvs.setWidth(finalW);
+        _tempCvs.setHeight(finalH);
+        _tempCvs.setBackgroundColor('#ffffff');
 
-        // 목업/가이드/보드테두리 숨기기
-        const _hiddenObjs = [];
-        canvas.getObjects().forEach(o => {
-            if (o.isMockup || o.excludeFromExport || o.isGuide) {
-                if (o.visible !== false) { o.visible = false; _hiddenObjs.push(o); }
-            }
-            if (o.isBoard && (o.stroke || o.shadow)) {
-                o._origStroke = o.stroke; o._origShadow = o.shadow;
-                o.stroke = null; o.shadow = null; _hiddenObjs.push(o);
-            }
+        // 목업/가이드 제거, 보드 테두리 제거
+        const _filteredJson = { ...json };
+        if (_filteredJson.objects) {
+            _filteredJson.objects = _filteredJson.objects
+                .filter(o => !o.isMockup && !o.excludeFromExport)
+                .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
+        }
+
+        await new Promise(resolve => {
+            _tempCvs.loadFromJSON(_filteredJson, () => {
+                _tempCvs.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
+                _tempCvs.setBackgroundColor('#ffffff');
+                _tempCvs.renderAll();
+                setTimeout(resolve, 500);
+            });
         });
-        canvas.renderAll();
 
-        // 고화질 PNG 캡처 (4배)
-        const _maxPx = 100000000;
+        const _maxPx = 67108864;
         const _basePx = finalW * finalH;
         let _mult = 4;
-        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(1, Math.floor(Math.sqrt(_maxPx / _basePx)));
 
-        const pngDataUrl = canvas.toDataURL({ format: 'png', multiplier: _mult, width: finalW, height: finalH, left: 0, top: 0 });
-
-        // 원래 상태 복원
-        _hiddenObjs.forEach(o => {
-            if (o.isMockup || o.excludeFromExport || o.isGuide) o.visible = true;
-            if (o.isBoard) {
-                if (o._origStroke !== undefined) { o.stroke = o._origStroke; delete o._origStroke; }
-                if (o._origShadow !== undefined) { o.shadow = o._origShadow; delete o._origShadow; }
-            }
-        });
-        canvas.setViewportTransform(origVT);
-        if (activeObj) canvas.setActiveObject(activeObj);
-        canvas.renderAll();
+        const _dataUrl = _tempCvs.toDataURL({ format: 'png', multiplier: _mult });
+        _tempCvs.dispose();
 
         // DataURL → Blob → 업로드
-        const pngResp = await fetch(pngDataUrl);
-        const pngBlob = await pngResp.blob();
-        if (pngBlob && pngBlob.size > 500) {
-            designPdfUrl = await uploadFileToSupabase(pngBlob, 'cart_pdf');
+        const _resp = await fetch(_dataUrl);
+        const _blob = await _resp.blob();
+        if (_blob && _blob.size > 500) {
+            designPdfUrl = await uploadFileToSupabase(_blob, 'cart_designs');
         }
     } catch(e) {
         console.warn("디자인 PNG 캡처 실패:", e);
