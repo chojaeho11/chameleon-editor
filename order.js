@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=134";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=134";
-import { SITE_CONFIG } from "./site-config.js?v=134";
-import { applySize } from "./canvas-size.js?v=134";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=134";
+import { canvas } from "./canvas-core.js?v=135";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=135";
+import { SITE_CONFIG } from "./site-config.js?v=135";
+import { applySize } from "./canvas-size.js?v=135";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=135";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=134";
+} from "./export.js?v=135";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1278,7 +1278,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=134');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=135');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2376,7 +2376,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=134');
+                const { generateDesignPNG } = await import('./export.js?v=135');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
