@@ -792,6 +792,9 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
                 });
             });
 
+            // ★ PDF 변환 전: 모든 그룹을 해체하여 텍스트를 최상위로 꺼냄
+            try { _ungroupAllForPDF(tempCanvas); } catch(ue) { console.warn("그룹 해체 실패:", ue); }
+
             // 텍스트 패스 변환 (글자 깨짐 방지)
             try { await convertCanvasTextToPaths(tempCanvas); } catch(convErr) { console.warn("텍스트 패스 변환 실패:", convErr); }
 
@@ -830,6 +833,66 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
         }
         return doc.output('blob');
     } catch (e) { console.error("Vector Gen Error:", e); return null; }
+}
+
+// ★ PDF 변환 전 그룹 해체 (텍스트를 최상위로 꺼내서 아웃라인 변환 가능하게)
+function _ungroupAllForPDF(fabricCanvas) {
+    let found = true;
+    let safety = 0;
+    while (found && safety < 20) {
+        found = false;
+        safety++;
+        const objs = fabricCanvas.getObjects().slice();
+        for (const obj of objs) {
+            if (obj.type === 'group' && !obj.isBoard) {
+                // 그룹 내부에 텍스트가 있는 경우에만 해체
+                const hasTextInside = (o) => {
+                    if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
+                    if (o.type === 'group' && o._objects) return o._objects.some(hasTextInside);
+                    return false;
+                };
+                if (!hasTextInside(obj)) continue;
+
+                // 그룹 해체: 각 하위 객체를 절대 좌표로 변환 후 캔버스에 추가
+                const items = obj._objects || obj.getObjects();
+                const groupLeft = obj.left || 0;
+                const groupTop = obj.top || 0;
+                const groupScaleX = obj.scaleX || 1;
+                const groupScaleY = obj.scaleY || 1;
+                const groupAngle = obj.angle || 0;
+
+                // fabric.js의 transformMatrix 사용
+                const groupMatrix = obj.calcTransformMatrix();
+
+                items.forEach(item => {
+                    // 아이템의 로컬 좌표를 그룹의 월드 좌표로 변환
+                    const itemMatrix = item.calcTransformMatrix();
+                    // 그룹 내 아이템의 절대 변환 계산
+                    const fullMatrix = fabric.util.multiplyTransformMatrices(groupMatrix, itemMatrix);
+                    const decomposed = fabric.util.qrDecompose(fullMatrix);
+
+                    const clone = fabric.util.object.clone(item);
+                    clone.set({
+                        left: decomposed.translateX,
+                        top: decomposed.translateY,
+                        scaleX: decomposed.scaleX,
+                        scaleY: decomposed.scaleY,
+                        angle: decomposed.angle,
+                        skewX: decomposed.skewX || 0,
+                        skewY: decomposed.skewY || 0,
+                        group: undefined
+                    });
+                    clone.setCoords();
+                    fabricCanvas.add(clone);
+                });
+
+                fabricCanvas.remove(obj);
+                found = true;
+            }
+        }
+    }
+    fabricCanvas.renderAll();
+    console.log("[PDF] 그룹 해체 완료, 남은 객체:", fabricCanvas.getObjects().length);
 }
 
 // 텍스트 패스 변환 헬퍼 (벡터 PDF용)
