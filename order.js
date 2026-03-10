@@ -1222,37 +1222,55 @@ async function addCanvasToCart() {
     const boardX = board ? board.left : 0;
     const boardY = board ? board.top : 0;
 
-    // ★ [핵심] 벡터 PDF 우선 (텍스트→패스 변환, 효과 그룹 Z-order 유지)
+    // ★ 라이브 캔버스에서 직접 고화질 PNG 캡처 → 관리자에 전송
     let designPdfUrl = null;
     try {
-        // ★ window.__pageDataList 우선 사용 (모듈 인스턴스 불일치 방지)
-        if (window.savePageState) window.savePageState();
-        const _pdl = window.__pageDataList || pageDataList;
-        const _cpi = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : currentPageIndex;
+        const origVT = canvas.viewportTransform.slice();
+        const activeObj = canvas.getActiveObject();
+        canvas.discardActiveObject();
+        canvas.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
 
-        let pdfPages = [json];
-        if (_pdl && _pdl.length > 0) {
-            pdfPages = [..._pdl];
-            if (typeof _cpi === 'number' && _cpi >= 0 && _cpi < pdfPages.length) {
-                pdfPages[_cpi] = json;
+        // 목업/가이드/보드테두리 숨기기
+        const _hiddenObjs = [];
+        canvas.getObjects().forEach(o => {
+            if (o.isMockup || o.excludeFromExport || o.isGuide) {
+                if (o.visible !== false) { o.visible = false; _hiddenObjs.push(o); }
             }
-        }
+            if (o.isBoard && (o.stroke || o.shadow)) {
+                o._origStroke = o.stroke; o._origShadow = o.shadow;
+                o.stroke = null; o.shadow = null; _hiddenObjs.push(o);
+            }
+        });
+        canvas.renderAll();
 
-        let pdfBlob = null;
+        // 고화질 PNG 캡처 (4배)
+        const _maxPx = 100000000;
+        const _basePx = finalW * finalH;
+        let _mult = 4;
+        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
 
-        // 1차: 벡터 PDF (원본 그대로)
-        if (!pdfBlob || pdfBlob.size < 1000) {
-            pdfBlob = await generateProductVectorPDF(pdfPages, finalW, finalH, boardX, boardY);
-        }
-        // 2차: 벡터 실패 시 래스터 폴백
-        if (!pdfBlob || pdfBlob.size < 1000) {
-            pdfBlob = await generateRasterPDF(pdfPages, finalW, finalH, boardX, boardY);
-        }
-        if (pdfBlob && pdfBlob.size > 500) {
-            designPdfUrl = await uploadFileToSupabase(pdfBlob, 'cart_pdf');
+        const pngDataUrl = canvas.toDataURL({ format: 'png', multiplier: _mult, width: finalW, height: finalH, left: 0, top: 0 });
+
+        // 원래 상태 복원
+        _hiddenObjs.forEach(o => {
+            if (o.isMockup || o.excludeFromExport || o.isGuide) o.visible = true;
+            if (o.isBoard) {
+                if (o._origStroke !== undefined) { o.stroke = o._origStroke; delete o._origStroke; }
+                if (o._origShadow !== undefined) { o.shadow = o._origShadow; delete o._origShadow; }
+            }
+        });
+        canvas.setViewportTransform(origVT);
+        if (activeObj) canvas.setActiveObject(activeObj);
+        canvas.renderAll();
+
+        // DataURL → Blob → 업로드
+        const pngResp = await fetch(pngDataUrl);
+        const pngBlob = await pngResp.blob();
+        if (pngBlob && pngBlob.size > 500) {
+            designPdfUrl = await uploadFileToSupabase(pngBlob, 'cart_pdf');
         }
     } catch(e) {
-        console.warn("사전 PDF 생성 실패:", e);
+        console.warn("디자인 PNG 캡처 실패:", e);
     }
 
     // ★ 박스 배치도 PDF 생성 + 업로드
@@ -2354,17 +2372,15 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
 
             if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
+                // 고화질 PNG 래스터 생성 (loadFromJSON 방식 — 주문 시점엔 라이브 캔버스 없음)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                let fileBlob = await withTimeout(generateProductVectorPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
-                if (!fileBlob || fileBlob.size < 5000) {
-                    fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
-                }
+                let fileBlob = await withTimeout(generateRasterPDF(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
-                    const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${orderId}/design_${idx}.pdf`), UPLOAD_TIMEOUT);
-                    if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.pdf`, url: url, type: 'product' });
+                    const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${orderId}/design_${idx}.png`), UPLOAD_TIMEOUT);
+                    if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.png`, url: url, type: 'product' });
                     else errors.push(`product_${idx} upload failed`);
-                } else { errors.push(`product_${idx} PDF generation timeout/failed`); }
+                } else { errors.push(`product_${idx} PNG generation timeout/failed`); }
             } catch(err) {
                 console.error("디자인 변환 실패:", err);
                 errors.push(`product_${idx}: ${err.message || err}`);
