@@ -1410,7 +1410,7 @@
   "trust_shipping": "전국 배송",
   "trust_shipping_sub": "빠르고 안전한 택배 배송",
   "artwork_badge": "작품 마켓플레이스",
-  "artwork_title": "내 작품을 상품으로 판매하세요!<br><span style='color:#a78bfa;'>판매금의 10%를 수익으로 지급합니다</span>",
+  "artwork_title": "내 작품판매<br><span style='color:#a78bfa;'>판매금의 10%를 수익으로 지급합니다</span>",
   "artwork_desc": "사진, 일러스트, 그림 등 내 이미지를 업로드하면<br>종이포스터 · 패브릭포스터 · 캔버스액자 3종 상품으로 자동 등록됩니다.<br>고객이 원하는 크기로 주문하면 <b style='color:#a78bfa;'>판매금의 10%</b>가 수익금으로 적립됩니다.",
   "artwork_upload_btn": "작품 등록하기",
   "artwork_paper": "종이 포스터",
