@@ -502,40 +502,80 @@ export function initExport() {
             btn.disabled = true;
 
             try {
-                // 1. 데이터 최신화 (현재 작업중인 페이지 저장)
-                if (window.savePageState) window.savePageState(); // 현재 페이지 상태 저장
-                const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
-                let targetPages = [];
+                // ★ PNG 저장과 동일: 현재 라이브 캔버스에서 직접 고화질 캡처
+                if (window.savePageState) window.savePageState();
 
-                // ★ window.__pageDataList 우선 사용 (모듈 인스턴스 불일치 방지)
-                const _pdl = window.__pageDataList || pageDataList;
-                const _cpi = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : currentPageIndex;
-
-                if (_pdl && _pdl.length > 0) {
-                    targetPages = [..._pdl];
-                    // 현재 보고 있는 페이지 업데이트
-                    if (typeof _cpi === 'number' && _cpi >= 0 && _cpi < targetPages.length) {
-                        targetPages[_cpi] = currentJson;
-                    }
-                } else {
-                    targetPages = [currentJson];
-                }
-
-                // 2. 대지 정보 계산 (주문 시스템과 동일한 기준)
                 const board = canvas.getObjects().find(o => o.isBoard);
                 const finalW = board ? board.width * board.scaleX : canvas.width;
                 const finalH = board ? board.height * board.scaleY : canvas.height;
-                const boardX = board ? board.left : 0;
-                const boardY = board ? board.top : 0;
+                const cropX = board ? board.left : 0;
+                const cropY = board ? board.top : 0;
 
-                // 3. PDF 생성 — 초고화질 래스터 이미지 (인쇄용)
-                let blob = null;
-                const isPdMode = window.__pdMode;
-                blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
+                const MM_TO_PX = 3.7795;
+                const pwMM = finalW / MM_TO_PX;
+                const phMM = finalH / MM_TO_PX;
 
+                // 다중 페이지 지원
+                const _pdl = window.__pageDataList || pageDataList;
+                const _cpi = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : currentPageIndex;
+                const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', '_promoPanel', '_promoPanelBg']);
+
+                let allPages = [];
+                if (_pdl && _pdl.length > 0) {
+                    allPages = [..._pdl];
+                    if (typeof _cpi === 'number' && _cpi >= 0 && _cpi < allPages.length) {
+                        allPages[_cpi] = currentJson;
+                    }
+                } else {
+                    allPages = [currentJson];
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: pwMM > phMM ? 'l' : 'p', unit: 'mm', format: [pwMM, phMM], compress: true });
+
+                for (let pg = 0; pg < allPages.length; pg++) {
+                    if (pg > 0) doc.addPage([pwMM, phMM], pwMM > phMM ? 'l' : 'p');
+
+                    const pageJson = { ...allPages[pg] };
+                    // 목업/가이드 제거
+                    if (pageJson.objects) {
+                        pageJson.objects = pageJson.objects
+                            .filter(o => !o.isMockup && !o.excludeFromExport)
+                            .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
+                    }
+
+                    const tempEl = document.createElement('canvas');
+                    const tempCvs = new fabric.StaticCanvas(tempEl);
+                    tempCvs.setWidth(finalW);
+                    tempCvs.setHeight(finalH);
+                    tempCvs.setBackgroundColor('#ffffff');
+
+                    await new Promise(resolve => {
+                        tempCvs.loadFromJSON(pageJson, () => {
+                            tempCvs.setViewportTransform([1, 0, 0, 1, -cropX, -cropY]);
+                            tempCvs.setBackgroundColor('#ffffff');
+                            tempCvs.renderAll();
+                            setTimeout(resolve, 500);
+                        });
+                    });
+
+                    // 300 DPI 고화질 캡처 (PNG 저장과 동일 방식)
+                    const _maxPx = 100000000; // 100M pixels
+                    const _basePx = finalW * finalH;
+                    let _mult = 4;
+                    if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+
+                    const imgData = tempCvs.toDataURL({ format: 'png', multiplier: _mult });
+                    doc.addImage(imgData, 'PNG', 0, 0, pwMM, phMM, undefined, 'NONE');
+
+                    const actualDPI = Math.round((finalW * _mult / pwMM) * 25.4);
+                    console.log(`[PDF] 페이지${pg+1}: ${Math.round(pwMM)}×${Math.round(phMM)}mm, ${Math.round(finalW*_mult)}×${Math.round(finalH*_mult)}px, ${actualDPI}DPI`);
+                    tempCvs.dispose();
+                }
+
+                const blob = doc.output('blob');
                 if (blob) {
                     downloadBlob(blob, `design_result_${Date.now()}.pdf`);
-                    // [수정] 다국어 적용
                     showToast(window.t('msg_design_saved', "PDF Downloaded!"), "success");
                 } else {
                     throw new Error("PDF Generation Failed.");
