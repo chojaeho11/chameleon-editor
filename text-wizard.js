@@ -1175,31 +1175,30 @@
             stroke: LINE_COLOR, strokeWidth: 1, selectable: false
         }));
 
+        const MENU_FONT = 'Noto Sans KR, sans-serif';
+
         menuData.forEach((item, i) => {
             const localY = -halfH + gap * 0.5 + i * gap;
 
             const nameText = new fabric.Text(item.name, {
-                fontFamily: F.SUB || 'Noto Sans KR', fontSize: fontSize, fill: TEXT_COLOR,
+                fontFamily: MENU_FONT, fontSize: fontSize, fill: TEXT_COLOR,
                 fontWeight: '500', originX: 'left', originY: 'center',
                 left: -halfW + padX, top: localY
             });
 
             const priceText = new fabric.Text(item.price, {
-                fontFamily: F.SUB || 'Noto Sans KR', fontSize: fontSize, fill: PRICE_COLOR,
+                fontFamily: MENU_FONT, fontSize: fontSize, fill: PRICE_COLOR,
                 fontWeight: '700', originX: 'right', originY: 'center',
                 left: halfW - padX, top: localY
             });
 
-            // 점선 (name~price 사이만)
-            const dotStr = '\u00B7'.repeat(120);
-            const dots = new fabric.Text(dotStr, {
-                fontFamily: 'monospace', fontSize: fontSize * 0.55, fill: DOT_COLOR,
-                originX: 'center', originY: 'center',
-                left: 0, top: localY
+            // 점선
+            const dotLine = new fabric.Line([-halfW + padX + 5, localY, halfW - padX - 5, localY], {
+                stroke: DOT_COLOR, strokeWidth: 1,
+                strokeDashArray: [2, 4], selectable: false
             });
-            if (dots.width > contentW * 0.92) dots.scaleX = (contentW * 0.92) / dots.width;
 
-            objs.push(dots, nameText, priceText);
+            objs.push(dotLine, nameText, priceText);
         });
 
         // 하단 구분선
