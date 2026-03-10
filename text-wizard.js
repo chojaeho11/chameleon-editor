@@ -1159,8 +1159,8 @@
         const DOT_COLOR = '#d1d5db';
         const LINE_COLOR = '#e2e8f0';
 
-        const fontSize = Math.max(12, Math.min(18, boardH * 0.025));
-        const padX = 10;
+        const fontSize = Math.max(40, Math.min(60, boardH * 0.06));
+        const padX = fontSize * 0.5;
         const contentW = targetW - padX * 2;
 
         // 행간: targetH가 있으면 균등 배분, 없으면 기본

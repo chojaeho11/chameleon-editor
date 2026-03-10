@@ -16,7 +16,17 @@
       "Bash(do sed -i 's/?v=124/?v=125/g' \"$f\")",
       "WebFetch(domain:cafe2626.com)",
       "Bash(for f in *.js)",
-      "Bash(do sed -i 's/?v=125/?v=126/g' \"$f\")"
+      "Bash(do sed -i 's/?v=125/?v=126/g' \"$f\")",
+      "WebFetch(domain:www.google.com)",
+      "WebFetch(domain:webcache.googleusercontent.com)",
+      "WebFetch(domain:search.google.com)",
+      "WebFetch(domain:www.google.co.jp)",
+      "Bash(for path:*)",
+      "Bash(do echo:*)",
+      "Bash(grep -n \"key: ''''menu''''\\\\|Menu\\\\|Flyer\\\\|Poster\" canvas-template.js)",
+      "Bash(grep -n \"applyNewWizard\\\\|key: ''''menu''''\" canvas-template.js)",
+      "Bash(while read:*)",
+      "Bash(do sed:*)"
     ]
   }
 }
