@@ -529,70 +529,88 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. PDF 생성
-                // ★ JSON에서 그룹 내 텍스트 존재 여부 확인 (가장 확실한 방법)
-                const _findTextInJson = (objs) => {
-                    if (!objs) return false;
-                    return objs.some(o => {
-                        if (o.isBoard) return false;
-                        if (o.type === 'group' && o.objects) return _findTextInJson(o.objects);
-                        if (o.type === 'group' && !o.objects) return false;
-                        return false;
-                    }) || objs.some(o => {
-                        if (o.type === 'group' && o.objects) {
-                            return o.objects.some(c => ['i-text', 'text', 'textbox'].includes(c.type));
-                        }
-                        return false;
-                    });
-                };
-                const _hasTextGroup = _findTextInJson(currentJson.objects);
-                console.log("[PDF] 텍스트 그룹 감지:", _hasTextGroup, "객체 수:", currentJson.objects?.length);
-
+                // 3. PDF 생성 — ★ 항상 원본 캔버스 직접 캡처 (폰트 문제 완전 회피)
+                console.log("[PDF v134] 원본 캔버스 직접 캡처 시작");
                 let blob = null;
                 const isPdMode = window.__pdMode;
 
-                if (_hasTextGroup) {
-                    // ★ 원본 캔버스에서 직접 고해상도 캡처 → PDF (폰트가 확실히 렌더링됨)
-                    console.log("[PDF] 텍스트 그룹 감지 → 원본 캔버스 직접 캡처 모드");
-                    try {
-                        const MM_TO_PX = 3.7795;
-                        const { jsPDF } = window.jspdf;
-                        const wMM = finalW / MM_TO_PX, hMM = finalH / MM_TO_PX;
-                        const doc = new jsPDF({ orientation: wMM > hMM ? 'l' : 'p', unit: 'mm', format: [wMM, hMM], compress: true });
+                try {
+                    const MM_TO_PX = 3.7795;
+                    const { jsPDF } = window.jspdf;
+                    const wMM = finalW / MM_TO_PX, hMM = finalH / MM_TO_PX;
+                    const doc = new jsPDF({ orientation: wMM > hMM ? 'l' : 'p', unit: 'mm', format: [wMM, hMM], compress: true });
 
-                        // 원본 캔버스의 뷰포트 백업
-                        const origVpt = canvas.viewportTransform.slice();
+                    // 원본 캔버스의 뷰포트 백업
+                    const origVpt = canvas.viewportTransform.slice();
+                    const origBg = canvas.backgroundColor;
 
-                        // 뷰포트를 보드 기준으로 리셋 (보드 영역만 캡처)
-                        canvas.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
-                        canvas.renderAll();
+                    // ★ 가이드/목업 숨기기
+                    const _hiddenObjs = [];
+                    canvas.getObjects().forEach(o => {
+                        if ((o.excludeFromExport || o.isMockup || o.isGuide) && o.visible !== false) {
+                            o.set('visible', false);
+                            _hiddenObjs.push(o);
+                        }
+                    });
 
-                        // 고해상도 캡처
-                        const maxPixels = 67108864;
-                        let mult = 4;
-                        if (finalW * finalH * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / (finalW * finalH))));
+                    // 뷰포트를 보드 기준으로 리셋 (보드 영역만 캡처)
+                    canvas.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
+                    canvas.setBackgroundColor('#ffffff');
+                    canvas.renderAll();
 
-                        const imgData = canvas.toDataURL({
-                            format: 'jpeg', quality: 0.98, multiplier: mult,
-                            left: 0, top: 0, width: finalW, height: finalH
-                        });
-                        doc.addImage(imgData, 'JPEG', 0, 0, wMM, hMM);
+                    // 고해상도 캡처 (4배, 최대 64M 픽셀)
+                    const maxPixels = 67108864;
+                    let mult = 4;
+                    if (finalW * finalH * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / (finalW * finalH))));
 
-                        // 뷰포트 원복
-                        canvas.setViewportTransform(origVpt);
-                        canvas.renderAll();
+                    const imgData = canvas.toDataURL({
+                        format: 'jpeg', quality: 0.98, multiplier: mult,
+                        left: 0, top: 0, width: finalW, height: finalH
+                    });
+                    doc.addImage(imgData, 'JPEG', 0, 0, wMM, hMM);
 
-                        blob = doc.output('blob');
-                        console.log("[PDF] 원본 캔버스 캡처 완료, blob 크기:", blob.size);
-                    } catch(capErr) {
-                        console.error("[PDF] 원본 캡처 실패:", capErr);
-                        // 폴백
-                        canvas.setViewportTransform(canvas.viewportTransform);
-                        canvas.renderAll();
+                    // ★ 멀티페이지 지원: 다른 페이지들도 처리
+                    if (targetPages.length > 1) {
+                        const _cpi2 = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : 0;
+                        for (let pi = 0; pi < targetPages.length; pi++) {
+                            if (pi === _cpi2) continue; // 현재 페이지는 이미 처리됨
+                            // 다른 페이지는 기존 래스터 방식으로 처리
+                            const pgJson = targetPages[pi];
+                            doc.addPage([wMM, hMM], wMM > hMM ? 'l' : 'p');
+                            const tempEl = document.createElement('canvas');
+                            const tempCvs = new fabric.StaticCanvas(tempEl);
+                            tempCvs.setWidth(finalW); tempCvs.setHeight(finalH);
+                            tempCvs.setBackgroundColor('#ffffff');
+                            await new Promise(r => {
+                                tempCvs.loadFromJSON(pgJson, () => {
+                                    tempCvs.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
+                                    tempCvs.renderAll();
+                                    setTimeout(r, 500);
+                                });
+                            });
+                            const pgImg = tempCvs.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult, left: 0, top: 0, width: finalW, height: finalH });
+                            doc.addImage(pgImg, 'JPEG', 0, 0, wMM, hMM);
+                            tempCvs.dispose();
+                        }
                     }
+
+                    // 뷰포트 & 상태 원복
+                    canvas.setViewportTransform(origVpt);
+                    canvas.setBackgroundColor(origBg || '');
+                    _hiddenObjs.forEach(o => o.set('visible', true));
+                    canvas.renderAll();
+
+                    blob = doc.output('blob');
+                    console.log("[PDF v134] 캡처 완료, blob:", blob.size);
+                } catch(capErr) {
+                    console.error("[PDF v134] 캡처 실패:", capErr);
+                    // 뷰포트 안전 원복
+                    try { canvas.renderAll(); } catch(e) {}
                 }
 
+                // 폴백: 기존 벡터 → 래스터 파이프라인
                 if (!blob || blob.size < 1000) {
+                    console.log("[PDF v134] 폴백: 벡터 파이프라인");
                     blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
                 }
                 if (!blob || blob.size < 1000) {
