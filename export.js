@@ -502,9 +502,57 @@ export function initExport() {
             btn.disabled = true;
 
             try {
+                // 0. ★ 원본 캔버스에서 텍스트 포함 그룹을 고해상도 이미지로 래스터화
+                // (원본 캔버스에는 폰트가 로드되어 있으므로 확실하게 렌더링됨)
+                const _rasterizedGroups = []; // 원복용 백업
+                const _canvasObjs = canvas.getObjects().slice();
+                for (const obj of _canvasObjs) {
+                    if (obj.type !== 'group' || obj.isBoard) continue;
+                    const _ht = (o) => {
+                        if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
+                        if (o.type === 'group' && o._objects) return o._objects.some(_ht);
+                        return false;
+                    };
+                    if (!_ht(obj)) continue;
+
+                    try {
+                        const mult = 3;
+                        const dataUrl = obj.toDataURL({ format: 'png', multiplier: mult });
+                        const imgObj = await new Promise((res) => {
+                            fabric.Image.fromURL(dataUrl, (img) => res(img));
+                        });
+                        if (!imgObj) continue;
+
+                        imgObj.set({
+                            left: obj.left, top: obj.top,
+                            originX: obj.originX || 'center', originY: obj.originY || 'center',
+                            scaleX: (obj.width * (obj.scaleX || 1)) / imgObj.width,
+                            scaleY: (obj.height * (obj.scaleY || 1)) / imgObj.height,
+                            angle: obj.angle || 0
+                        });
+                        imgObj.setCoords();
+
+                        const idx = canvas.getObjects().indexOf(obj);
+                        canvas.remove(obj);
+                        canvas.insertAt(imgObj, idx >= 0 ? idx : canvas.getObjects().length);
+                        _rasterizedGroups.push({ original: obj, replacement: imgObj, index: idx });
+                        console.log("[PDF] 텍스트 그룹 래스터화 완료");
+                    } catch(re) { console.warn("[PDF] 그룹 래스터화 실패:", re); }
+                }
+                canvas.renderAll();
+
                 // 1. 데이터 최신화 (현재 작업중인 페이지 저장)
                 if (window.savePageState) window.savePageState(); // 현재 페이지 상태 저장
                 const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst']);
+
+                // ★ 원본 캔버스 원복 (래스터화된 그룹을 원래 그룹으로 되돌림)
+                for (const entry of _rasterizedGroups) {
+                    const repIdx = canvas.getObjects().indexOf(entry.replacement);
+                    canvas.remove(entry.replacement);
+                    canvas.insertAt(entry.original, repIdx >= 0 ? repIdx : entry.index);
+                }
+                canvas.renderAll();
+
                 let targetPages = [];
 
                 // ★ window.__pageDataList 우선 사용 (모듈 인스턴스 불일치 방지)
@@ -808,14 +856,10 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
                 });
             });
 
-            // ★ PDF 변환 전: 그룹 내부 텍스트를 최상위로 꺼냄
-            try { _ungroupAllForPDF(tempCanvas); } catch(ue) { console.warn("그룹 해체 실패:", ue); }
+            // ★ PDF 변환 전: 메뉴 그룹(텍스트 포함 그룹)을 고해상도 이미지로 래스터화
+            try { await _rasterizeTextGroups(tempCanvas); } catch(ue) { console.warn("그룹 래스터화 실패:", ue); }
 
-            // 폰트 다시 로드 후 렌더 (해체된 텍스트에 폰트 적용 보장)
-            tempCanvas.renderAll();
-            await new Promise(r => setTimeout(r, 200));
-
-            // 텍스트 패스 변환 (글자 깨짐 방지)
+            // 텍스트 패스 변환 (글자 깨짐 방지) — 래스터화 안 된 일반 텍스트만 처리
             try { await convertCanvasTextToPaths(tempCanvas); } catch(convErr) { console.warn("텍스트 패스 변환 실패:", convErr); }
 
             // ★ 안전장치: 변환 안 된 텍스트가 남아있으면 래스터로 전환 (외계어 방지)
@@ -855,112 +899,59 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
     } catch (e) { console.error("Vector Gen Error:", e); return null; }
 }
 
-// ★ PDF 변환 전 그룹 해체 (텍스트를 최상위로 꺼내서 아웃라인 변환 가능하게)
-function _ungroupAllForPDF(fabricCanvas) {
-    let found = true;
-    let safety = 0;
-    while (found && safety < 20) {
-        found = false;
-        safety++;
-        const objs = fabricCanvas.getObjects().slice();
-        for (const obj of objs) {
-            if (obj.type !== 'group' || obj.isBoard) continue;
+// ★ 텍스트 포함 그룹을 고해상도 이미지로 래스터화 (글씨효과와 동일 방식)
+async function _rasterizeTextGroups(fabricCanvas) {
+    const objs = fabricCanvas.getObjects().slice();
+    for (const obj of objs) {
+        if (obj.type !== 'group' || obj.isBoard) continue;
 
-            // 그룹 내부에 텍스트가 있는 경우에만 해체
-            const hasTextInside = (o) => {
-                if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
-                if (o.type === 'group' && o._objects) return o._objects.some(hasTextInside);
-                return false;
-            };
-            if (!hasTextInside(obj)) continue;
+        // 그룹 내부에 텍스트가 있는지 확인
+        const hasTextInside = (o) => {
+            if (['i-text', 'text', 'textbox'].includes(o.type)) return true;
+            if (o.type === 'group' && o._objects) return o._objects.some(hasTextInside);
+            return false;
+        };
+        if (!hasTextInside(obj)) continue;
 
-            console.log("[PDF ungroup] 그룹 해체 시작, 하위 객체:", (obj._objects || []).length);
+        console.log("[PDF 래스터화] 텍스트 그룹 발견, 이미지로 변환...");
 
-            // 그룹 좌표 정보
-            const gCx = obj.left || 0;  // group center X (originX: 'center')
-            const gCy = obj.top || 0;   // group center Y
-            const gSx = obj.scaleX || 1;
-            const gSy = obj.scaleY || 1;
-            const gW = obj.width || 0;
-            const gH = obj.height || 0;
+        try {
+            // 그룹을 고해상도 이미지로 캡처 (3배 해상도)
+            const mult = 3;
+            const dataUrl = obj.toDataURL({ format: 'png', multiplier: mult });
 
-            const items = (obj._objects || []).slice();
-            items.forEach(item => {
-                // 그룹 내부 아이템의 로컬 좌표 → 절대 좌표 변환
-                // 그룹의 origin은 center, 아이템의 left/top은 그룹 중심 기준 상대값
-                const itemLeft = item.left || 0;
-                const itemTop = item.top || 0;
-
-                // 절대 좌표 = 그룹 중심 + (아이템 로컬 좌표 × 그룹 스케일)
-                const absLeft = gCx + (itemLeft * gSx);
-                const absTop = gCy + (itemTop * gSy);
-
-                // 새 fabric 객체 생성 (타입별)
-                let newObj;
-                if (['text', 'i-text', 'textbox'].includes(item.type)) {
-                    const TextClass = item.type === 'textbox' ? fabric.Textbox :
-                                      item.type === 'i-text' ? fabric.IText : fabric.Text;
-                    newObj = new TextClass(item.text, {
-                        fontFamily: item.fontFamily,
-                        fontSize: (item.fontSize || 16) * gSy,
-                        fill: item.fill,
-                        fontWeight: item.fontWeight,
-                        fontStyle: item.fontStyle,
-                        textAlign: item.textAlign,
-                        originX: item.originX || 'left',
-                        originY: item.originY || 'top',
-                        left: absLeft,
-                        top: absTop,
-                        scaleX: (item.scaleX || 1),
-                        scaleY: (item.scaleY || 1),
-                        angle: item.angle || 0,
-                        opacity: item.opacity != null ? item.opacity : 1,
-                        stroke: item.stroke,
-                        strokeWidth: item.strokeWidth,
-                        lineHeight: item.lineHeight,
-                        charSpacing: item.charSpacing,
-                        shadow: item.shadow
-                    });
-                    console.log("[PDF ungroup] 텍스트 추출:", item.text, "font:", item.fontFamily, "→ absPos:", absLeft.toFixed(0), absTop.toFixed(0));
-                } else if (item.type === 'line') {
-                    newObj = new fabric.Line([
-                        (item.x1 || 0) * gSx + gCx,
-                        (item.y1 || 0) * gSy + gCy,
-                        (item.x2 || 0) * gSx + gCx,
-                        (item.y2 || 0) * gSy + gCy
-                    ], {
-                        stroke: item.stroke,
-                        strokeWidth: (item.strokeWidth || 1),
-                        strokeDashArray: item.strokeDashArray,
-                        opacity: item.opacity != null ? item.opacity : 1
-                    });
-                } else {
-                    // 기타 객체: 원본 유지하되 좌표만 변환
-                    try {
-                        const fullMatrix = fabric.util.multiplyTransformMatrices(
-                            obj.calcTransformMatrix(),
-                            item.calcTransformMatrix()
-                        );
-                        const d = fabric.util.qrDecompose(fullMatrix);
-                        item.set({ left: d.translateX, top: d.translateY, scaleX: d.scaleX, scaleY: d.scaleY, angle: d.angle, group: undefined });
-                        item.setCoords();
-                        newObj = item;
-                    } catch(e) { return; }
-                }
-
-                if (newObj) {
-                    newObj.setCoords();
-                    fabricCanvas.add(newObj);
-                }
+            // 이미지 로드
+            const img = await new Promise((resolve, reject) => {
+                fabric.Image.fromURL(dataUrl, (img) => {
+                    if (img) resolve(img);
+                    else reject(new Error('이미지 로드 실패'));
+                });
             });
 
+            // 원본 그룹과 동일한 위치/크기로 설정
+            img.set({
+                left: obj.left,
+                top: obj.top,
+                originX: obj.originX || 'center',
+                originY: obj.originY || 'center',
+                scaleX: (obj.width * (obj.scaleX || 1)) / (img.width),
+                scaleY: (obj.height * (obj.scaleY || 1)) / (img.height),
+                angle: obj.angle || 0
+            });
+            img.setCoords();
+
+            // 그룹을 이미지로 교체
+            const idx = fabricCanvas.getObjects().indexOf(obj);
             fabricCanvas.remove(obj);
-            found = true;
+            if (idx >= 0) fabricCanvas.insertAt(img, idx);
+            else fabricCanvas.add(img);
+
+            console.log("[PDF 래스터화] 그룹 → 이미지 교체 완료");
+        } catch(err) {
+            console.warn("[PDF 래스터화] 실패:", err.message);
         }
     }
     fabricCanvas.renderAll();
-    console.log("[PDF] 그룹 해체 완료, 최상위 객체:", fabricCanvas.getObjects().length,
-        "텍스트:", fabricCanvas.getObjects().filter(o => ['text','i-text','textbox'].includes(o.type)).length);
 }
 
 // 텍스트 패스 변환 헬퍼 (벡터 PDF용)
