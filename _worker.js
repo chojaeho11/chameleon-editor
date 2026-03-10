@@ -34,6 +34,8 @@ const SEO_CATEGORIES = {
     'flex-sign': { prefix: 'fx_' },
     'blackout-blind': { prefix: 'bl_' },
     'flexible-package': { prefix: 'fp_' },
+    placard: { prefix: 'placard' },
+    'roll-blind': { prefix: 'rb_' },
 };
 
 // Multilingual SEO metadata for category pages (JP/US)
@@ -121,6 +123,14 @@ const CATEGORY_SEO = {
     'flexible-package': {
         JP: { title: '軟包装印刷 - カスタムパウチ・袋 | カメレオンプリンティング', desc: 'カスタム軟包装印刷。食品パウチ・ジッパー袋・スタンドパウチ。少量から大量まで対応。', keywords: '軟包装,パウチ印刷,ジッパー袋,スタンドパウチ,食品包装' },
         US: { title: 'Flexible Packaging - Custom Pouches & Bags | Chameleon Printing', desc: 'Custom flexible packaging printing. Food pouches, zipper bags & stand-up pouches. Small to bulk orders.', keywords: 'flexible packaging,custom pouch,zipper bag,stand-up pouch,food packaging' },
+    },
+    placard: {
+        JP: { title: 'プラカード制作 - カスタムプラカード印刷 | カメレオンプリンティング', desc: 'カスタムプラカード印刷。イベント・応援・デモ・販促用。無料エディター、オーダーサイズ対応。', keywords: 'プラカード,プラカード印刷,応援プラカード,イベントプラカード' },
+        US: { title: 'Placards - Custom Sign Boards | Chameleon Printing', desc: 'Custom printed placards for events, campaigns & promotions. Free design editor, various sizes.', keywords: 'placard,sign board,custom placard,event sign,campaign sign' },
+    },
+    'roll-blind': {
+        JP: { title: 'ロールブラインド - カスタム印刷ロールスクリーン | カメレオンプリンティング', desc: 'カスタムロールブラインド印刷。店舗・オフィス・住宅用。オーダーサイズ、無料デザインエディター。', keywords: 'ロールブラインド,ロールスクリーン,カスタムブラインド,印刷ブラインド' },
+        US: { title: 'Roll Blinds - Custom Printed Roller Blinds | Chameleon Printing', desc: 'Custom printed roll blinds for stores, offices & homes. Custom sizes, free design editor.', keywords: 'roll blind,roller blind,custom blind,printed blind,window blind' },
     },
 };
 
