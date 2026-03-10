@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=132";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=132";
-import { SITE_CONFIG } from "./site-config.js?v=132";
-import { applySize } from "./canvas-size.js?v=132";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=132";
+import { canvas } from "./canvas-core.js?v=133";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=133";
+import { SITE_CONFIG } from "./site-config.js?v=133";
+import { applySize } from "./canvas-size.js?v=133";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=133";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=132";
+} from "./export.js?v=133";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1183,7 +1183,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=132');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=133');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2798,25 +2798,29 @@ window.toggleCartAccordion = function(idx) {
     } 
 };
 window.removeCartItem = function(idx) {
-    // ★ 디버그: 삭제 전 상태 표시 (반드시 보이는 alert)
-    var beforeLen = cartData.length;
-    var lsData = [];
-    try { lsData = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]'); } catch(e) {}
-    alert('[v132 removeCartItem] idx=' + idx + ', cartData=' + beforeLen + '개, localStorage=' + lsData.length + '개');
+    if (idx < 0 || idx >= cartData.length) return;
+    // ★ confirm 전에 삭제 대상 참조를 캡처 (confirm 중 onAuthStateChange로 cartData 변경 가능)
+    const targetItem = cartData[idx];
 
     if (confirm(window.t('confirm_delete', "Delete this item?"))) {
-        // ★ cartData를 직접 수정 (updateCartQty 등과 동일한 패턴)
-        if (idx >= 0 && idx < cartData.length) {
-            cartData.splice(idx, 1);
+        // ★ confirm 후 cartData가 loadUserCart로 변경됐을 수 있으므로 인덱스 재검색
+        let realIdx = cartData.indexOf(targetItem);
+        if (realIdx === -1) {
+            // 참조가 사라진 경우 (loadUserCart가 배열을 재생성했을 때) → localStorage에서 직접 처리
+            const storageKey = cartStorageKey();
+            let stored = [];
+            try { stored = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
+            if (idx >= 0 && idx < stored.length) {
+                stored.splice(idx, 1);
+                try { localStorage.setItem(storageKey, JSON.stringify(stored)); } catch(e) {}
+                cartData.length = 0;
+                stored.forEach(item => cartData.push(item));
+            }
+        } else {
+            cartData.splice(realIdx, 1);
         }
         saveCart();
         renderCart();
-
-        // ★ 디버그: 삭제 후 상태
-        var afterLen = cartData.length;
-        var lsAfter = [];
-        try { lsAfter = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]'); } catch(e) {}
-        alert('[v132 삭제완료] cartData=' + afterLen + '개, localStorage=' + lsAfter.length + '개');
     }
 };
 

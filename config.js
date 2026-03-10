@@ -1,6 +1,6 @@
 // config.js
 
-import { SITE_CONFIG } from "./site-config.js?v=132";
+import { SITE_CONFIG } from "./site-config.js?v=133";
 
 // 전역 변수
 export let apiKeys = {}; 
@@ -75,6 +75,11 @@ export function initConfig() {
 
             // 3. 리스너 등록
             sb.auth.onAuthStateChange((event, session) => {
+                // ★ TOKEN_REFRESHED는 장바구니 리로드 불필요 (race condition 방지)
+                if (event === 'TOKEN_REFRESHED') {
+                    currentUser = session?.user || null;
+                    return;
+                }
                 updateUserSession(session);
                 // UI 갱신
                 const btnLogin = document.getElementById("btnLoginBtn");
@@ -368,7 +373,7 @@ function showPasswordResetModal() {
         return;
     }
     // 아직 login.js가 로드되지 않았을 수 있으므로 동적 import
-    import('./login.js?v=132').then(m => {
+    import('./login.js?v=133').then(m => {
         if (m.openResetPwStep2) m.openResetPwStep2();
     }).catch(() => {
         // 최후 수단: DOM 직접 조작
