@@ -1870,5 +1870,12 @@
   "gc_section_templates": "区块模板",
   "gc_tpl_replace_note": "当前页面内容将被替换",
   "gc_pages": "页面",
-  "gc_delete_confirm": "确定删除此页面？"
+  "gc_delete_confirm": "确定删除此页面？",
+  "menu_col_name": "菜单名",
+  "menu_col_price": "价格",
+  "menu_item": "菜单",
+  "menu_add_row": "添加行",
+  "menu_help_text": "创建菜单后，在画布上调整大小以自动调整布局。",
+  "menu_edit_done": "完成编辑",
+  "menu_create": "创建菜单"
 }

@@ -1870,5 +1870,12 @@
   "gc_section_templates": "Abschnittsvorlagen",
   "gc_tpl_replace_note": "Der aktuelle Seiteninhalt wird ersetzt",
   "gc_pages": "Seiten",
-  "gc_delete_confirm": "Diese Seite löschen?"
+  "gc_delete_confirm": "Diese Seite löschen?",
+  "menu_col_name": "Name",
+  "menu_col_price": "Preis",
+  "menu_item": "Menü",
+  "menu_add_row": "Zeile hinzufügen",
+  "menu_help_text": "Nach dem Erstellen des Menüs können Sie die Größe auf der Leinwand anpassen.",
+  "menu_edit_done": "Fertig",
+  "menu_create": "Menü erstellen"
 }

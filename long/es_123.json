@@ -1870,5 +1870,12 @@
   "gc_section_templates": "Plantillas de Sección",
   "gc_tpl_replace_note": "El contenido de la página actual será reemplazado",
   "gc_pages": "Páginas",
-  "gc_delete_confirm": "¿Eliminar esta página?"
+  "gc_delete_confirm": "¿Eliminar esta página?",
+  "menu_col_name": "Nombre",
+  "menu_col_price": "Precio",
+  "menu_item": "Menú",
+  "menu_add_row": "Añadir fila",
+  "menu_help_text": "Después de crear el menú, cambie el tamaño en el lienzo para ajustar el diseño automáticamente.",
+  "menu_edit_done": "Listo",
+  "menu_create": "Crear Menú"
 }

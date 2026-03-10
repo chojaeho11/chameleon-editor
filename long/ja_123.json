@@ -1852,5 +1852,12 @@
   "gc_section_templates": "セクションテンプレート",
   "gc_tpl_replace_note": "現在のページの内容が置き換えられます",
   "gc_pages": "ページ",
-  "gc_delete_confirm": "このページを削除しますか？"
+  "gc_delete_confirm": "このページを削除しますか？",
+  "menu_col_name": "メニュー名",
+  "menu_col_price": "価格",
+  "menu_item": "メニュー",
+  "menu_add_row": "行を追加",
+  "menu_help_text": "メニュー作成後、キャンバスでサイズを調整するとレイアウトが自動調整されます。",
+  "menu_edit_done": "編集完了",
+  "menu_create": "メニュー作成"
 }

@@ -1871,5 +1871,12 @@
   "gc_section_templates": "قوالب الأقسام",
   "gc_tpl_replace_note": "سيتم استبدال محتوى الصفحة الحالية",
   "gc_pages": "الصفحات",
-  "gc_delete_confirm": "هل تريد حذف هذه الصفحة؟"
+  "gc_delete_confirm": "هل تريد حذف هذه الصفحة؟",
+  "menu_col_name": "اسم القائمة",
+  "menu_col_price": "السعر",
+  "menu_item": "قائمة",
+  "menu_add_row": "إضافة صف",
+  "menu_help_text": "بعد إنشاء القائمة، قم بتغيير الحجم على اللوحة لضبط التخطيط تلقائيًا.",
+  "menu_edit_done": "تم التعديل",
+  "menu_create": "إنشاء القائمة"
 }

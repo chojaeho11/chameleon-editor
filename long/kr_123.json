@@ -1468,5 +1468,12 @@
   "gc_section_templates": "섹션 템플릿",
   "gc_tpl_replace_note": "현재 페이지의 내용이 교체됩니다",
   "gc_pages": "페이지",
-  "gc_delete_confirm": "이 페이지를 삭제하시겠습니까?"
+  "gc_delete_confirm": "이 페이지를 삭제하시겠습니까?",
+  "menu_col_name": "메뉴명",
+  "menu_col_price": "가격",
+  "menu_item": "메뉴",
+  "menu_add_row": "행 추가",
+  "menu_help_text": "메뉴 작성 후 대지에서 크기를 조절하면 자동으로 레이아웃이 맞춰집니다.",
+  "menu_edit_done": "수정 완료",
+  "menu_create": "메뉴 생성"
 }

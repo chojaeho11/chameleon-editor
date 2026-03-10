@@ -1855,5 +1855,12 @@
   "gc_section_templates": "Section Templates",
   "gc_tpl_replace_note": "Current page content will be replaced",
   "gc_pages": "Pages",
-  "gc_delete_confirm": "Delete this page?"
+  "gc_delete_confirm": "Delete this page?",
+  "menu_col_name": "Menu Name",
+  "menu_col_price": "Price",
+  "menu_item": "Menu",
+  "menu_add_row": "Add Row",
+  "menu_help_text": "After creating the menu, resize it on the canvas to auto-adjust the layout.",
+  "menu_edit_done": "Done",
+  "menu_create": "Create Menu"
 }
