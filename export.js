@@ -528,13 +528,10 @@ export function initExport() {
                 const boardX = board ? board.left : 0;
                 const boardY = board ? board.top : 0;
 
-                // 3. PDF 생성 — 벡터→래스터 폴백
+                // 3. PDF 생성 — 초고화질 래스터 이미지 (인쇄용)
                 let blob = null;
                 const isPdMode = window.__pdMode;
-                blob = await generateProductVectorPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
-                if (!blob || blob.size < 1000) {
-                    blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
-                }
+                blob = await generateRasterPDF(targetPages, finalW, finalH, boardX, boardY, isPdMode);
 
                 if (blob) {
                     downloadBlob(blob, `design_result_${Date.now()}.pdf`);
@@ -1051,7 +1048,7 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0, perPageSi
         const MM_TO_PX = 3.7795;
         const widthMM = w / MM_TO_PX; const heightMM = h / MM_TO_PX;
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM] });
+        const doc = new jsPDF({ orientation: widthMM > heightMM ? 'l' : 'p', unit: 'mm', format: [widthMM, heightMM], compress: true });
 
         for (let i = 0; i < pages.length; i++) {
             const pageJson = { ...pages[i] };
@@ -1075,10 +1072,25 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0, perPageSi
                 doc.internal.pageSize.height = phMM;
             }
 
+            // ★ 초고화질 인쇄용: 300 DPI 기준 multiplier 계산
+            // 300 DPI = 11.811 px/mm, 기본 캔버스 = 3.7795 px/mm
+            // 필요 multiplier = 300 DPI / 기본 DPI ≈ 3.125 → 최소 4배
+            const isMobileDevice = window.innerWidth <= 768;
+            const targetDPI = isMobileDevice ? 200 : 300;
+            const baseDPI = MM_TO_PX * 25.4; // ~96 DPI
+            let mult = Math.ceil(targetDPI / baseDPI); // 300/96 ≈ 4
+            if (mult < 3) mult = 3;
+            // 메모리 안전장치: 최대 100M 픽셀
+            const maxPixels = 100000000;
+            const basePixels = pw * ph;
+            if (basePixels * mult * mult > maxPixels) {
+                mult = Math.max(2, Math.floor(Math.sqrt(maxPixels / basePixels)));
+            }
+
             const tempEl = document.createElement('canvas');
             const tempCvs = new fabric.StaticCanvas(tempEl);
             tempCvs.setWidth(pw); tempCvs.setHeight(ph);
-            tempCvs.setBackgroundColor('#ffffff'); // 흰색 배경
+            tempCvs.setBackgroundColor('#ffffff');
 
             // 목업 오브젝트 제거 + 대지 정리
             if (pageJson.objects) {
@@ -1092,21 +1104,23 @@ export async function generateRasterPDF(inputData, w, h, x = 0, y = 0, perPageSi
                     tempCvs.setBackgroundColor('#ffffff');
                     tempCvs.setViewportTransform([1, 0, 0, 1, -px, -py]);
                     tempCvs.renderAll();
-                    setTimeout(resolve, 500);
+                    setTimeout(resolve, 600);
                 });
             });
-            const isMobileDevice = window.innerWidth <= 768;
-            // 고해상도 인쇄용 PDF: 픽셀 면적 기준으로 multiplier 조절
-            const maxPixels = 67108864; // 64M pixels - 고해상도
-            const basePixels = pw * ph;
-            let mult = isMobileDevice ? 2 : 4;
-            if (basePixels * mult * mult > maxPixels) mult = Math.max(1, Math.floor(Math.sqrt(maxPixels / basePixels)));
-            const imgData = tempCvs.toDataURL({ format: 'jpeg', quality: 0.98, multiplier: mult });
-            doc.addImage(imgData, 'JPEG', 0, 0, pwMM, phMM);
+
+            // ★ 초고화질 PNG 캡처 (무손실) → PDF 삽입
+            const imgData = tempCvs.toDataURL({ format: 'png', multiplier: mult });
+            doc.addImage(imgData, 'PNG', 0, 0, pwMM, phMM, undefined, 'NONE');
+
+            const actualW = Math.round(pw * mult);
+            const actualH = Math.round(ph * mult);
+            const actualDPI = Math.round((actualW / pwMM) * 25.4);
+            console.log(`[PDF] 페이지${i+1}: ${Math.round(pwMM)}×${Math.round(phMM)}mm, ${actualW}×${actualH}px, ${actualDPI}DPI, mult=${mult}`);
+
             tempCvs.dispose();
         }
         return doc.output('blob');
-    } catch (e) { return null; }
+    } catch (e) { console.error("[PDF] 래스터 생성 오류:", e); return null; }
 }
 
 // ==========================================================
