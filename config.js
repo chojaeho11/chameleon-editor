@@ -1,6 +1,6 @@
 // config.js
 
-import { SITE_CONFIG } from "./site-config.js?v=131";
+import { SITE_CONFIG } from "./site-config.js?v=132";
 
 // 전역 변수
 export let apiKeys = {}; 
@@ -251,23 +251,27 @@ window.updateUserSession = updateUserSession;
 function loadUserCart() {
     // ★ [수정] order.js와 동일한 통합 키 사용
     const storageKey = 'chameleon_cart_current';
-    cartData.length = 0;
     try {
         let saved = localStorage.getItem(storageKey);
-        console.log('[config.loadUserCart] key:', storageKey, 'found:', saved ? JSON.parse(saved).length + ' items' : 'null');
         // 마이그레이션: 통합 키에 없으면 이전 키에서 복구 (1회만)
         if (!saved) {
             const oldKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
             saved = localStorage.getItem(oldKey) || localStorage.getItem('chameleon_cart_guest');
             if (saved) {
                 localStorage.setItem(storageKey, saved);
-                // ★ 구 키 삭제 (좀비 데이터 재발 방지)
                 try { Object.keys(localStorage).forEach(k => {
                     if (k.startsWith('chameleon_cart_') && k !== storageKey) localStorage.removeItem(k);
                 }); } catch(e2) {}
             }
         }
-        if (saved) JSON.parse(saved).forEach(item => cartData.push(item));
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+                cartData.length = 0;
+                parsed.forEach(item => cartData.push(item));
+            }
+        }
+        // ★ saved가 null이면 cartData를 건드리지 않음 (기존 메모리 데이터 보존)
     } catch(e) {}
 
     const countEl = document.getElementById("cartCount");
@@ -364,7 +368,7 @@ function showPasswordResetModal() {
         return;
     }
     // 아직 login.js가 로드되지 않았을 수 있으므로 동적 import
-    import('./login.js?v=131').then(m => {
+    import('./login.js?v=132').then(m => {
         if (m.openResetPwStep2) m.openResetPwStep2();
     }).catch(() => {
         // 최후 수단: DOM 직접 조작
