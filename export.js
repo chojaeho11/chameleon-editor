@@ -829,34 +829,44 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
     } catch (e) { console.error("Vector Gen Error:", e); return null; }
 }
 
-// Google Fonts CSS에서 폰트 파일 URL을 추출하는 캐시
+// Google Fonts 전체 파일 URL 캐시 (CSS v1 API 사용 → unicode-range 서브셋 없이 전체 파일)
 let _googleFontUrlMap = null;
 async function buildGoogleFontUrlMap() {
     if (_googleFontUrlMap) return _googleFontUrlMap;
     _googleFontUrlMap = {};
-    const link = document.getElementById('google-fonts-link');
-    if (!link || !link.href) return _googleFontUrlMap;
-    try {
-        const resp = await fetch(link.href);
-        const css = await resp.text();
-        // @font-face 블록에서 font-family와 src url 추출
-        const blocks = css.split('@font-face');
-        for (const block of blocks) {
-            const familyMatch = block.match(/font-family:\s*['"]?([^'";\n}]+)['"]?\s*;/);
-            const urlMatch = block.match(/src:\s*url\(([^)]+)\)/);
-            if (familyMatch && urlMatch) {
-                const family = familyMatch[1].trim();
-                const url = urlMatch[1].replace(/['"]/g, '');
-                // 같은 폰트의 첫 번째 URL만 저장 (보통 400 weight)
-                if (!_googleFontUrlMap[family]) {
-                    _googleFontUrlMap[family] = url;
+
+    // window.DYNAMIC_FONTS에서 Google Fonts 목록 가져오기
+    const dynamicFonts = window.DYNAMIC_FONTS || [];
+    const googleFonts = dynamicFonts.filter(f => f.is_google_font && f.font_family);
+    if (googleFonts.length === 0) return _googleFontUrlMap;
+
+    // Google Fonts CSS v1 API: 서브셋 분할 없이 전체 폰트 파일 1개 반환
+    // 폰트 수가 많으면 URL이 길어지므로 20개씩 나눠서 요청
+    const batchSize = 20;
+    for (let i = 0; i < googleFonts.length; i += batchSize) {
+        const batch = googleFonts.slice(i, i + batchSize);
+        const families = batch.map(f => f.font_family.replace(/ /g, '+')).join('|');
+        const cssUrl = `https://fonts.googleapis.com/css?family=${families}`;
+        try {
+            const resp = await fetch(cssUrl);
+            const css = await resp.text();
+            const blocks = css.split('@font-face');
+            for (const block of blocks) {
+                const familyMatch = block.match(/font-family:\s*['"]?([^'";\n}]+)['"]?\s*;/);
+                const urlMatch = block.match(/src:\s*[^;]*url\(([^)]+)\)/);
+                if (familyMatch && urlMatch) {
+                    const family = familyMatch[1].trim();
+                    const url = urlMatch[1].replace(/['"]/g, '');
+                    if (!_googleFontUrlMap[family]) {
+                        _googleFontUrlMap[family] = url;
+                    }
                 }
             }
+        } catch(e) {
+            console.warn('[패스변환] Google Fonts CSS v1 요청 실패:', e);
         }
-        console.log("[패스변환] Google Fonts URL 맵 구축 완료:", Object.keys(_googleFontUrlMap).length, "개");
-    } catch(e) {
-        console.warn('[패스변환] Google Fonts CSS 파싱 실패:', e);
     }
+    console.log("[패스변환] Google Fonts URL 맵 구축 완료:", Object.keys(_googleFontUrlMap).length, "개");
     return _googleFontUrlMap;
 }
 
