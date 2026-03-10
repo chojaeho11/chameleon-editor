@@ -174,6 +174,7 @@ export function loadCartFromStorage() {
     try {
         const storageKey = cartStorageKey();
         let savedCart = localStorage.getItem(storageKey);
+        console.log('[loadCart] key:', storageKey, 'found:', savedCart ? JSON.parse(savedCart).length + ' items' : 'null');
         // 마이그레이션: 이전 키에서 복구 (1회만 — 복구 후 구 키 삭제)
         if (!savedCart) {
             const oldKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
@@ -895,8 +896,9 @@ function openDeliveryInfoModal() {
 }
 
 // [수정] 용량 초과 방지: 잘못된 이미지 데이터 자동 청소
-function saveCart() { 
+function saveCart() {
     const storageKey = cartStorageKey();
+    console.log('[saveCart] cartData.length:', cartData.length, 'key:', storageKey);
 
     // 1. 데이터 다이어트: 무거운 데이터는 빼고 저장
     const cleanData = cartData.map(item => {
@@ -3005,8 +3007,6 @@ const newItem = {
     if (extraFields && typeof extraFields === 'object') {
         Object.assign(newItem, extraFields);
     }
-
-    currentCartList.push(newItem);
 
     currentCartList.push(newItem);
 

@@ -254,6 +254,7 @@ function loadUserCart() {
     cartData.length = 0;
     try {
         let saved = localStorage.getItem(storageKey);
+        console.log('[config.loadUserCart] key:', storageKey, 'found:', saved ? JSON.parse(saved).length + ' items' : 'null');
         // 마이그레이션: 통합 키에 없으면 이전 키에서 복구 (1회만)
         if (!saved) {
             const oldKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
