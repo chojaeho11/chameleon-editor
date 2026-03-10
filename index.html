@@ -2,15 +2,15 @@
 <html lang="ko">
 <head>
 <script>
-// [SPA 라우팅] 서브패스 → 루트 리다이렉트
+// [SPA 라우팅] 서브패스 → URL 유지 (리다이렉트 없음, SEO 친화적)
+// /honeycomb → URL 그대로 유지, JS에서 slug를 읽어 제품/카테고리 표시
 (function(){
     var p = location.pathname;
     if (p && p !== '/' && p !== '/index.html' && p.indexOf('.') === -1) {
         var slug = p.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
         if (slug) {
-            var qs = location.search;
-            var sep = qs ? qs + '&' : '?';
-            location.replace('/' + sep + '_p=' + encodeURIComponent(slug));
+            // 리다이렉트하지 않고, slug를 전역 변수로 저장
+            window.__SPA_SLUG = slug;
         }
     }
 })();
@@ -191,9 +191,9 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
     if (!s) return;
     var d = domains[cc];
 
-    // ★ 제품 경로 감지 (/honeycomb, /fabric-print 등) + ?_p= 리다이렉트 파라미터
+    // ★ 제품 경로 감지 (/honeycomb, /fabric-print 등) + __SPA_SLUG + ?_p= 파라미터
     var path = location.pathname.replace(/^\/|\/$/g, '').replace(/\.html$/, '');
-    if (!path) path = new URLSearchParams(location.search).get('_p') || '';
+    if (!path) path = window.__SPA_SLUG || new URLSearchParams(location.search).get('_p') || '';
     var productSeo = window.PRODUCT_SEO && window.PRODUCT_SEO[path] && window.PRODUCT_SEO[path][cc];
     var isProductPage = !!productSeo;
 
@@ -6622,10 +6622,15 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
         window._navNavigating = false;
     });
 
-    // 3. [초기 접속] URL에 ?product=코드, ?_p=코드, 또는 /제품코드 경로가 있으면 바로 열기 (sb 대기 포함)
+    // 3. [초기 접속] URL에 ?product=코드, ?_p=코드, __SPA_SLUG, 또는 /제품코드 경로가 있으면 바로 열기 (sb 대기 포함)
     (async () => {
         const urlParams = new URLSearchParams(window.location.search);
         let productCode = urlParams.get('product') || urlParams.get('_p');
+
+        // SPA 슬러그 (리다이렉트 없이 URL 유지)
+        if (!productCode && window.__SPA_SLUG) {
+            productCode = window.__SPA_SLUG;
+        }
 
         // 경로 기반 제품 감지 (/honeycomb 등 SEO 슬러그)
         if (!productCode && window._SEO_PRODUCT_CODE) {
