@@ -503,9 +503,12 @@ export function initExport() {
 
             try {
                 // 0. ★ 원본 캔버스에서 텍스트 포함 그룹을 고해상도 이미지로 래스터화
-                // (원본 캔버스에는 폰트가 로드되어 있으므로 확실하게 렌더링됨)
+                // 원본 캔버스의 실제 <canvas> 요소에서 직접 크롭하여 캡처 (폰트 문제 완전 회피)
                 const _rasterizedGroups = []; // 원복용 백업
+                const liveCanvas = canvas.getElement(); // 실제 <canvas> DOM 요소
+                const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
                 const _canvasObjs = canvas.getObjects().slice();
+
                 for (const obj of _canvasObjs) {
                     if (obj.type !== 'group' || obj.isBoard) continue;
                     const _ht = (o) => {
@@ -516,19 +519,39 @@ export function initExport() {
                     if (!_ht(obj)) continue;
 
                     try {
-                        const mult = 3;
-                        const dataUrl = obj.toDataURL({ format: 'png', multiplier: mult });
+                        // 그룹의 바운딩 박스를 화면 좌표로 변환
+                        const bound = obj.getBoundingRect(true); // absolute coords on viewport
+                        const mult = 3; // 고해상도
+
+                        // 원본 캔버스에서 해당 영역 크롭
+                        const cropCanvas = document.createElement('canvas');
+                        cropCanvas.width = Math.ceil(bound.width * mult);
+                        cropCanvas.height = Math.ceil(bound.height * mult);
+                        const cropCtx = cropCanvas.getContext('2d');
+                        cropCtx.scale(mult, mult);
+                        cropCtx.drawImage(liveCanvas,
+                            bound.left, bound.top, bound.width, bound.height,
+                            0, 0, bound.width, bound.height
+                        );
+
+                        const dataUrl = cropCanvas.toDataURL('image/png');
                         const imgObj = await new Promise((res) => {
                             fabric.Image.fromURL(dataUrl, (img) => res(img));
                         });
                         if (!imgObj) continue;
 
+                        // 화면 좌표 → 캔버스 좌표 역변환
+                        const realLeft = (bound.left - vpt[4]) / vpt[0];
+                        const realTop = (bound.top - vpt[5]) / vpt[3];
+                        const realW = bound.width / vpt[0];
+                        const realH = bound.height / vpt[3];
+
                         imgObj.set({
-                            left: obj.left, top: obj.top,
-                            originX: obj.originX || 'center', originY: obj.originY || 'center',
-                            scaleX: (obj.width * (obj.scaleX || 1)) / imgObj.width,
-                            scaleY: (obj.height * (obj.scaleY || 1)) / imgObj.height,
-                            angle: obj.angle || 0
+                            left: realLeft,
+                            top: realTop,
+                            originX: 'left', originY: 'top',
+                            scaleX: realW / imgObj.width,
+                            scaleY: realH / imgObj.height,
                         });
                         imgObj.setCoords();
 
@@ -536,8 +559,8 @@ export function initExport() {
                         canvas.remove(obj);
                         canvas.insertAt(imgObj, idx >= 0 ? idx : canvas.getObjects().length);
                         _rasterizedGroups.push({ original: obj, replacement: imgObj, index: idx });
-                        console.log("[PDF] 텍스트 그룹 래스터화 완료");
-                    } catch(re) { console.warn("[PDF] 그룹 래스터화 실패:", re); }
+                        console.log("[PDF] 텍스트 그룹 래스터화 완료 (캔버스 크롭 방식)", bound.width.toFixed(0), "x", bound.height.toFixed(0));
+                    } catch(re) { console.warn("[PDF] 그룹 래스터화 실패:", re.message); }
                 }
                 canvas.renderAll();
 
