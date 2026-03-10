@@ -899,7 +899,17 @@ function openDeliveryInfoModal() {
 // [수정] 용량 초과 방지: 잘못된 이미지 데이터 자동 청소
 function saveCart() {
     const storageKey = cartStorageKey();
-    // debug log removed
+
+    // ★ 안전장치: cartData가 비어있는데 localStorage에 데이터가 있으면 덮어쓰지 않음
+    if (cartData.length === 0) {
+        try {
+            const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            if (existing.length > 0) {
+                console.warn('[saveCart] BLOCKED: cartData is empty but localStorage has', existing.length, 'items. Refusing to overwrite.');
+                return;
+            }
+        } catch(e) {}
+    }
 
     // 1. 데이터 다이어트: 무거운 데이터는 빼고 저장
     const cleanData = cartData.map(item => {
@@ -1555,15 +1565,24 @@ async function addFileToCart(e) {
 // [5] 장바구니 렌더링
 // ============================================================
 function renderCart() {
-    const listArea = document.getElementById("cartListArea"); 
+    const listArea = document.getElementById("cartListArea");
     if(!listArea) return;
-    listArea.innerHTML = ""; 
-    
+
+    // ★ renderCart 진입 시 localStorage와 cartData 동기화 (모듈 버전 불일치 방어)
+    try {
+        const stored = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]');
+        if (Array.isArray(stored) && stored.length > 0 && cartData.length === 0) {
+            stored.forEach(item => cartData.push(item));
+        }
+    } catch(e) {}
+
+    listArea.innerHTML = "";
+
     let grandTotal = 0; let grandProductTotal = 0; let grandAddonTotal = 0;
-    
-    if(cartData.length === 0) { 
-        listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">${window.t('msg_cart_empty')}</div>`; 
-        updateSummary(0, 0, 0); return; 
+
+    if(cartData.length === 0) {
+        listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">${window.t('msg_cart_empty')}</div>`;
+        updateSummary(0, 0, 0); return;
     }
 
     // 기존 장바구니 데이터 보강: name_jp/name_us 없으면 PRODUCT_DB에서 채움
@@ -2798,30 +2817,35 @@ window.toggleCartAccordion = function(idx) {
     } 
 };
 window.removeCartItem = function(idx) {
-    if (idx < 0 || idx >= cartData.length) return;
-    // ★ confirm 전에 삭제 대상 참조를 캡처 (confirm 중 onAuthStateChange로 cartData 변경 가능)
-    const targetItem = cartData[idx];
+    // ★★★ v133 완전 재구성: localStorage를 유일한 진실의 원천으로 사용 ★★★
+    // cartData 모듈 바인딩에 의존하지 않음 (버전 불일치 시에도 안전)
+    const CART_KEY = 'chameleon_cart_current';
 
-    if (confirm(window.t('confirm_delete', "Delete this item?"))) {
-        // ★ confirm 후 cartData가 loadUserCart로 변경됐을 수 있으므로 인덱스 재검색
-        let realIdx = cartData.indexOf(targetItem);
-        if (realIdx === -1) {
-            // 참조가 사라진 경우 (loadUserCart가 배열을 재생성했을 때) → localStorage에서 직접 처리
-            const storageKey = cartStorageKey();
-            let stored = [];
-            try { stored = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
-            if (idx >= 0 && idx < stored.length) {
-                stored.splice(idx, 1);
-                try { localStorage.setItem(storageKey, JSON.stringify(stored)); } catch(e) {}
-                cartData.length = 0;
-                stored.forEach(item => cartData.push(item));
-            }
-        } else {
-            cartData.splice(realIdx, 1);
-        }
-        saveCart();
-        renderCart();
+    // 1. localStorage에서 직접 읽기
+    let items = [];
+    try { items = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return; }
+
+    if (idx < 0 || idx >= items.length) return;
+
+    if (!confirm(window.t('confirm_delete', "Delete this item?"))) return;
+
+    // 2. confirm 후 localStorage를 다시 읽기 (confirm 중 변경 대비)
+    try { items = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return; }
+
+    // 3. splice 후 즉시 localStorage에 쓰기
+    if (idx >= 0 && idx < items.length) {
+        items.splice(idx, 1);
     }
+    try { localStorage.setItem(CART_KEY, JSON.stringify(items)); } catch(e) {}
+
+    // 4. 모든 cartData 참조 동기화 (어떤 모듈 인스턴스든)
+    try {
+        cartData.length = 0;
+        items.forEach(item => cartData.push(item));
+    } catch(e) {}
+
+    // 5. 렌더링
+    renderCart();
 };
 
 // ★ 장바구니 아이템 다시 편집하기
