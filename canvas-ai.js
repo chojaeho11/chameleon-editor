@@ -857,21 +857,24 @@ export async function runDesignWizard(title, style, bodyText) {
         }
     }
 
-    // ─── Step 2: Title ───
+    // ─── Step 2: Title (중앙 상단) ───
     _wzRender(steps, 1);
     await _wzTitle(title, titleFont, S, bW, bH, bL, bT);
 
-    // ─── Step 2.5: Body Text (사용자 입력 본문 — 중간 크기 고딕) ───
+    // ─── Step 2.3: 장식 1개 (타이틀 아래 중앙) ───
+    _wzDecoration(bW, bH, bL, bT);
+
+    // ─── Step 2.5: Body Text (사용자 입력 본문) ───
     if (bodyText) {
         _wzBodyText(bodyText, descFont, bW, bH, bL, bT);
     }
 
-    // ─── Step 3: Description (하단 박스 안에 삽입) ───
+    // ─── Step 3: Description (하단 배치) ───
     _wzRender(steps, 2);
     const descText = await _wzGetDescText(title);
     _wzBottomBox(descText, S, descFont, bW, bH, bL, bT);
 
-    // ─── Step 4: Elements (제목 위에 배치) ───
+    // ─── Step 4: Elements (좌측 상단 배치) ───
     _wzRender(steps, 3);
     await _wzElem(keywords, bW, bH, bL, bT);
 
@@ -1308,43 +1311,98 @@ const _WZ_GRADIENT_PALETTES = {
 };
 
 async function _wzBg(keywords, bW, bH, bL, bT) {
-    const style = window._wzCurrentStyle || 'blue';
-    const palettes = _WZ_GRADIENT_PALETTES[style] || _WZ_GRADIENT_PALETTES.blue;
-    const [c1, c2] = palettes[Math.floor(Math.random() * palettes.length)];
-    window._wzBgColors = [c1, c2]; // 글자색 자동 판별용
-
-    // 랜덤 각도 (대각선 변형)
-    const angles = [
-        { x1:0, y1:0, x2:1, y2:1 },
-        { x1:0, y1:1, x2:1, y2:0 },
-        { x1:0, y1:0.5, x2:1, y2:0.5 },
-        { x1:0.5, y1:0, x2:0.5, y2:1 },
-        { x1:0, y1:0, x2:0.7, y2:1 },
-    ];
-    const angle = angles[Math.floor(Math.random() * angles.length)];
-
-    const gradFill = new fabric.Gradient({
-        type: 'linear',
-        coords: { x1: angle.x1 * bW, y1: angle.y1 * bH, x2: angle.x2 * bW, y2: angle.y2 * bH },
-        colorStops: [
-            { offset: 0, color: c1 },
-            { offset: 1, color: c2 }
-        ]
-    });
-
-    // ★ 프로모 모드: 패널 배경 rect의 fill을 직접 변경 (별도 rect 불필요)
+    // ★ 프로모 모드: 기존 그라데이션 방식 유지
     const promoSel = window.__promoSelection;
     const promoPanel = window.__activePromoPanel;
     if (promoSel && typeof promoPanel === 'number') {
+        const style = window._wzCurrentStyle || 'blue';
+        const palettes = _WZ_GRADIENT_PALETTES[style] || _WZ_GRADIENT_PALETTES.blue;
+        const [c1, c2] = palettes[Math.floor(Math.random() * palettes.length)];
+        window._wzBgColors = [c1, c2];
+        const gradFill = new fabric.Gradient({
+            type: 'linear',
+            coords: { x1: 0, y1: 0, x2: bW, y2: bH },
+            colorStops: [{ offset: 0, color: c1 }, { offset: 1, color: c2 }]
+        });
         const panelBg = canvas.getObjects().find(o => o._promoPanelBg && o._promoPanel === promoPanel);
-        if (panelBg) {
-            panelBg.set('fill', gradFill);
-            canvas.requestRenderAll();
-            return;
+        if (panelBg) { panelBg.set('fill', gradFill); canvas.requestRenderAll(); return; }
+    }
+
+    // ★ 템플릿 이미지 검색 (photo-bg, user_image 카테고리 우선)
+    let bgImageUrl = null;
+    if (sb) {
+        const searchKws = _wzTranslateForSearch(keywords);
+        const allKws = [...new Set([...searchKws, ...keywords])];
+        for (const kw of allKws.slice(0, 5)) {
+            const { data } = await sb.from('library')
+                .select('id, thumb_url, data_url, category')
+                .in('category', ['photo-bg', 'user_image'])
+                .or(`tags.ilike.%${kw}%,title.ilike.%${kw}%`)
+                .eq('status', 'approved')
+                .order('is_featured', { ascending: false, nullsFirst: false })
+                .limit(5);
+            const filtered = _wzFilterPremium(data);
+            if (filtered && filtered.length) {
+                const item = filtered[Math.floor(Math.random() * Math.min(filtered.length, 3))];
+                bgImageUrl = _wzExtractBgUrl(item);
+                if (bgImageUrl) break;
+            }
+        }
+        // 폴백: 아무 photo-bg 이미지
+        if (!bgImageUrl) {
+            const { data } = await sb.from('library')
+                .select('id, thumb_url, data_url, category')
+                .in('category', ['photo-bg', 'user_image'])
+                .eq('status', 'approved')
+                .order('is_featured', { ascending: false, nullsFirst: false })
+                .order('created_at', { ascending: false })
+                .limit(10);
+            const filtered = _wzFilterPremium(data);
+            if (filtered && filtered.length) {
+                const item = filtered[Math.floor(Math.random() * Math.min(filtered.length, 5))];
+                bgImageUrl = _wzExtractBgUrl(item);
+            }
         }
     }
 
-    // ★ 서브픽셀 렌더링으로 인한 흰색 테두리 방지: 배경을 2px씩 크게 (clipPath가 잘라줌)
+    // 이미지 배경 적용
+    if (bgImageUrl) {
+        window._wzBgColors = ['#222222', '#111111']; // 사진 위 → 흰 글씨
+        await new Promise((resolve) => {
+            fabric.Image.fromURL(bgImageUrl, (img) => {
+                if (!img) { resolve(); return; }
+                const scale = Math.max((bW + 4) / img.width, (bH + 4) / img.height);
+                img.set({
+                    scaleX: scale, scaleY: scale,
+                    left: bL + bW / 2, top: bT + bH / 2,
+                    originX: 'center', originY: 'center',
+                    selectable: false, evented: false,
+                    lockMovementX: true, lockMovementY: true,
+                    lockRotation: true, lockScalingX: true, lockScalingY: true,
+                    hasControls: false, hasBorders: false,
+                    isTemplateBackground: true
+                });
+                canvas.add(img);
+                canvas.sendToBack(img);
+                const board = canvas.getObjects().find(o => o.isBoard);
+                if (board) { canvas.sendToBack(img); canvas.sendToBack(board); }
+                canvas.requestRenderAll();
+                resolve();
+            }, { crossOrigin: 'anonymous' });
+        });
+        return;
+    }
+
+    // ★ 폴백: 그라데이션 배경
+    const style = window._wzCurrentStyle || 'blue';
+    const palettes = _WZ_GRADIENT_PALETTES[style] || _WZ_GRADIENT_PALETTES.blue;
+    const [c1, c2] = palettes[Math.floor(Math.random() * palettes.length)];
+    window._wzBgColors = [c1, c2];
+    const gradFill = new fabric.Gradient({
+        type: 'linear',
+        coords: { x1: 0, y1: 0, x2: bW, y2: bH },
+        colorStops: [{ offset: 0, color: c1 }, { offset: 1, color: c2 }]
+    });
     const bgRect = new fabric.Rect({
         width: bW + 4, height: bH + 4,
         left: bL - 2, top: bT - 2,
@@ -1358,10 +1416,27 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
     });
     canvas.add(bgRect);
     canvas.sendToBack(bgRect);
-    // 보드가 있으면 보드 바로 위로
     const board = canvas.getObjects().find(o => o.isBoard);
     if (board) { canvas.sendToBack(bgRect); canvas.sendToBack(board); }
     canvas.requestRenderAll();
+}
+
+// 배경 이미지 URL 추출 헬퍼
+function _wzExtractBgUrl(item) {
+    if (!item) return null;
+    const raw = item.data_url;
+    if (!raw) return item.thumb_url;
+    if (typeof raw === 'string' && (raw.startsWith('http') || raw.startsWith('data:'))) return raw;
+    try {
+        const json = typeof raw === 'object' ? raw : JSON.parse(raw);
+        if (typeof json === 'string') return json;
+        if (json.objects) {
+            for (const obj of json.objects) {
+                if (obj.src && (obj.src.startsWith('http') || obj.src.startsWith('data:'))) return obj.src;
+            }
+        }
+    } catch(e) {}
+    return item.thumb_url;
 }
 
 // ★ 배경 밝기 자동 감지 → 밝으면 검정 글씨, 어두우면 흰색 글씨
@@ -1377,8 +1452,8 @@ function _wzIsDarkBg() {
 // ─── Step 2: Title text (효과 없이 깔끔한 텍스트) ───
 async function _wzTitle(title, font, S, bW, bH, bL, bT) {
     const country = window.SITE_CONFIG?.COUNTRY || 'KR';
-    // JP: 더 작게 (팝 서체는 자체가 두꺼움), 2/3 이내
-    const sz = Math.round(bW * (country === 'JP' ? 0.055 : 0.075));
+    // ★ 타이틀 크기 확대 (0.075 → 0.095)
+    const sz = Math.round(bW * (country === 'JP' ? 0.07 : 0.095));
 
     // 줄바꿈: 윗줄에 많이, 아랫줄에 적게 (마지막 어절만 아래로)
     let displayTitle = title;
@@ -1470,27 +1545,20 @@ function _wzBodyText(bodyText, descFont, bW, bH, bL, bT) {
 
 // ─── Step 3b: 하단 불투명 박스 + 설명 텍스트 (박스 안에 삽입) ───
 function _wzBottomBox(descText, S, descFont, bW, bH, bL, bT) {
-    // 하단 네모박스: Forest 스타일 컬러 사용
-    const boxS = WIZARD_STYLES.forest;
-    const maxW = bW * 0.38;
+    // ★ 설명글 하단 배치 (대지 하단 안쪽에 정렬)
+    const maxW = bW * 0.55;
     const fSize = Math.round(bW * 0.014);
-    const padX = bW * 0.02, padY = bH * 0.015;
-    const boxLeft = bL + bW * 0.05;
-    // 본문이 있으면 더 아래로
-    const bodyObj = canvas.getObjects().find(o => o.isWizardBody);
-    const boxTop = bodyObj ? (bodyObj.top + bodyObj.height + bH * 0.03) : (bT + bH * 0.53);
 
     const obj = new fabric.Textbox(descText, {
         fontFamily: descFont + ', sans-serif', fontSize: fSize,
-        fontWeight:'400', fill: '#ffffff',
-        originX:'center', originY:'top', textAlign:'center',
-        left: bL + bW * 0.5, top: boxTop,
+        fontWeight:'400', fill: 'rgba(255,255,255,0.9)',
+        originX:'center', originY:'bottom', textAlign:'center',
+        left: bL + bW * 0.5, top: bT + bH * 0.96,
         width: maxW,
         lineHeight: 1.6,
         splitByGrapheme: true
     });
-    // 텍스트가 보드 하단을 넘으면 폰트 축소
-    if (obj.height > bH * 0.25) {
+    if (obj.height > bH * 0.20) {
         obj.set('fontSize', Math.round(fSize * 0.8));
     }
     canvas.add(obj);
@@ -1573,12 +1641,11 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         }
     }
     if (!allItems.length) return;
-    // ★ 큰 요소 1개만 배치 (우측, 대지 안에 맞춤)
+    // ★ 요소 1개 좌측 상단에 배치
     const data = [allItems[0]];
-    const bigSize = bW * 0.55;
-    const rnd = (min, max) => min + Math.random() * (max - min);
+    const bigSize = bW * 0.45;
     const positions = [
-        { left: bL + bW * 0.60, top: bT + bH * rnd(0.25, 0.35), size: bigSize }
+        { left: bL + bW * 0.18, top: bT + bH * 0.18, size: bigSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
@@ -1628,6 +1695,49 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         if (o._objects && o._objects.some(c => c.isMainText)) canvas.bringToFront(o);
     });
     canvas.requestRenderAll();
+}
+
+// ─── Step 4.5: 장식 1개 (타이틀 아래 중앙) ───
+function _wzDecoration(bW, bH, bL, bT) {
+    // ORNAMENTS에서 divider 또는 flourish 랜덤 1개 선택
+    let ornaments;
+    try { ornaments = window._ORNAMENTS_LIST; } catch(e) {}
+    if (!ornaments || !ornaments.length) {
+        // 인라인 장식 SVG (flourish 스타일)
+        const defaultSvgs = [
+            '<svg viewBox="0 0 200 60"><path d="M100 50 C100 30, 60 20, 30 25 C20 27, 15 35, 25 38 C35 41, 50 30, 60 25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M100 50 C100 30, 140 20, 170 25 C180 27, 185 35, 175 38 C165 41, 150 30, 140 25" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="100" cy="50" r="3" fill="currentColor"/></svg>',
+            '<svg viewBox="0 0 200 60"><path d="M30 30 C50 10, 80 10, 100 30 C120 10, 150 10, 170 30" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M50 30 C65 45, 85 45, 100 30 C115 45, 135 45, 150 30" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="100" cy="30" r="3" fill="currentColor"/></svg>',
+            '<svg viewBox="0 0 200 30"><path d="M10 15 Q50 0 100 15 Q150 30 190 15" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="100" cy="15" r="3" fill="currentColor"/></svg>',
+            '<svg viewBox="0 0 200 30"><line x1="10" y1="15" x2="85" y2="15" stroke="currentColor" stroke-width="1"/><circle cx="100" cy="15" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="100" cy="15" r="2" fill="currentColor"/><line x1="115" y1="15" x2="190" y2="15" stroke="currentColor" stroke-width="1"/></svg>'
+        ];
+        ornaments = defaultSvgs;
+    }
+
+    const svgRaw = ornaments[Math.floor(Math.random() * ornaments.length)];
+    const svgStr = typeof svgRaw === 'object' ? svgRaw.svg : svgRaw;
+    // currentColor → 흰색으로 변환
+    const coloredSvg = svgStr.replace(/currentColor/g, 'rgba(255,255,255,0.8)');
+    const decoW = bW * 0.30;
+    const decoH = decoW * 0.2;
+
+    fabric.loadSVGFromString(coloredSvg, (objects, options) => {
+        if (!objects || !objects.length) return;
+        const group = fabric.util.groupSVGElements(objects, options);
+        const scale = decoW / (group.width || 200);
+        group.set({
+            scaleX: scale, scaleY: scale,
+            left: bL + bW * 0.5,
+            top: bT + bH * 0.44,
+            originX: 'center', originY: 'center'
+        });
+        canvas.add(group);
+        canvas.bringToFront(group);
+        // 텍스트는 항상 장식보다 앞에
+        canvas.getObjects().forEach(o => {
+            if (o.type === 'textbox' || o.type === 'i-text') canvas.bringToFront(o);
+        });
+        canvas.requestRenderAll();
+    });
 }
 
 // ─── Step 5: Decorative shapes (악센트 라인) ───

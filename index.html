@@ -2947,19 +2947,44 @@ async function handleSubReturn() {
         </div>
 
         <div class="stage" id="stage">
-            <!-- 배경풀기 플로팅 원형 버튼 -->
+            <!-- 배경풀기 플로팅 원형 버튼 (대지 좌측 위에 동적 배치) -->
             <button id="btnBgLockFloat" onclick="window.toggleBackgroundLock()" style="
-                position:absolute; top:15px; left:15px; z-index:50;
-                width:50px; height:50px; border-radius:50%;
+                position:absolute; z-index:50;
+                width:44px; height:44px; border-radius:50%;
                 background:#fff; border:2px solid #e2e8f0;
-                box-shadow:0 4px 15px rgba(0,0,0,0.15);
+                box-shadow:0 2px 10px rgba(0,0,0,0.12);
                 cursor:pointer; display:flex; flex-direction:column;
                 align-items:center; justify-content:center; gap:1px;
-                transition: all 0.2s;
+                transition: all 0.2s; display:none;
             ">
-                <span style="font-size:18px;">🔒</span>
-                <span style="font-size:7px; font-weight:bold; color:#64748b; white-space:nowrap;" data-i18n="editor_unlock_bg">배경풀기</span>
+                <span style="font-size:16px;">🔒</span>
+                <span style="font-size:6px; font-weight:bold; color:#64748b; white-space:nowrap;" data-i18n="editor_unlock_bg">배경풀기</span>
             </button>
+            <script>
+            // 배경풀기 버튼: 대지 좌측 위에 자동 배치
+            (function() {
+                function posBtn() {
+                    const btn = document.getElementById('btnBgLockFloat');
+                    const c = window.canvas;
+                    if (!btn || !c) return;
+                    const board = c.getObjects().find(o => o.isBoard);
+                    if (!board) { btn.style.display = 'none'; return; }
+                    const vp = c.viewportTransform || [1,0,0,1,0,0];
+                    const bx = board.left * vp[0] + vp[4];
+                    const by = board.top * vp[3] + vp[5];
+                    btn.style.left = Math.round(bx - 50) + 'px';
+                    btn.style.top = Math.round(by - 50) + 'px';
+                    btn.style.display = 'flex';
+                }
+                const _int = setInterval(() => {
+                    if (window.canvas) {
+                        posBtn();
+                        window.canvas.on('after:render', posBtn);
+                        clearInterval(_int);
+                    }
+                }, 500);
+            })();
+            </script>
             <!-- AI Design Wizard Trigger -->
             <style>
                 @keyframes wizardPulse {
