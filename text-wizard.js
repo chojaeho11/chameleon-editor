@@ -1228,6 +1228,8 @@
     // 스케일링 후 리빌드 (찌그러짐 방지)
     function _rebuildMenuAfterScale(group, canvas) {
         if (!group || !group._isMenuGroup || !group._menuData) return;
+        if (group.__rebuilding) return;
+        group.__rebuilding = true;
 
         const effectiveW = group.width * group.scaleX;
         const effectiveH = group.height * group.scaleY;
@@ -1237,7 +1239,9 @@
         const F = group._menuFont || getFonts();
         const board = canvas.getObjects().find(o => o.isBoard);
 
+        canvas.discardActiveObject();
         canvas.remove(group);
+        canvas.requestRenderAll();
 
         _buildMenuOnCanvas(menuData, canvas, board, F, {
             width: effectiveW,
