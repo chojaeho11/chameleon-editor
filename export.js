@@ -829,36 +829,107 @@ export async function generateProductVectorPDF(inputData, w, h, x = 0, y = 0, pe
     } catch (e) { console.error("Vector Gen Error:", e); return null; }
 }
 
+// Google Fonts CSS에서 폰트 파일 URL을 추출하는 캐시
+let _googleFontUrlMap = null;
+async function buildGoogleFontUrlMap() {
+    if (_googleFontUrlMap) return _googleFontUrlMap;
+    _googleFontUrlMap = {};
+    const link = document.getElementById('google-fonts-link');
+    if (!link || !link.href) return _googleFontUrlMap;
+    try {
+        const resp = await fetch(link.href);
+        const css = await resp.text();
+        // @font-face 블록에서 font-family와 src url 추출
+        const blocks = css.split('@font-face');
+        for (const block of blocks) {
+            const familyMatch = block.match(/font-family:\s*['"]?([^'";\n}]+)['"]?\s*;/);
+            const urlMatch = block.match(/src:\s*url\(([^)]+)\)/);
+            if (familyMatch && urlMatch) {
+                const family = familyMatch[1].trim();
+                const url = urlMatch[1].replace(/['"]/g, '');
+                // 같은 폰트의 첫 번째 URL만 저장 (보통 400 weight)
+                if (!_googleFontUrlMap[family]) {
+                    _googleFontUrlMap[family] = url;
+                }
+            }
+        }
+        console.log("[패스변환] Google Fonts URL 맵 구축 완료:", Object.keys(_googleFontUrlMap).length, "개");
+    } catch(e) {
+        console.warn('[패스변환] Google Fonts CSS 파싱 실패:', e);
+    }
+    return _googleFontUrlMap;
+}
+
 // 텍스트 패스 변환 헬퍼 (벡터 PDF용)
 // ★ 그룹 내 Z-order 유지 + 에러 로깅
 async function convertCanvasTextToPaths(fabricCanvas) {
     if (!window.opentype) { console.warn("[패스변환] opentype.js 없음"); return; }
+
+    // 1. DB site_fonts 테이블에서 폰트 URL 로드
     const fontList = [];
     try {
         const { data } = await sb.from('site_fonts').select('font_family, file_url');
-        if (data) data.forEach(f => fontList.push({ normalized: f.font_family.toLowerCase().replace(/[\s\-_]/g, ''), url: f.file_url }));
+        if (data) data.forEach(f => fontList.push({
+            original: f.font_family,
+            normalized: f.font_family.toLowerCase().replace(/[\s\-_]/g, ''),
+            url: f.file_url
+        }));
     } catch(e) { console.warn("[패스변환] 폰트 목록 로드 실패:", e); }
+
+    // 2. Google Fonts URL 맵 구축
+    const googleFontMap = await buildGoogleFontUrlMap();
 
     const loadedFonts = {};
     const findFontUrl = (name) => {
         if (!name) return TARGET_FONT.url;
         const target = name.toLowerCase().replace(/[\s\-_]/g, '');
-        // 1. DB site_fonts 테이블 검색
-        const match = fontList.find(f => target.includes(f.normalized));
-        if (match) return match.url;
-        // 2. fonts.js FONT_URLS 맵 검색 (JalnanGothic 등 Supabase 스토리지 폰트)
-        const aliasKey = FONT_ALIASES?.[name] || name;
-        if (FONT_URLS?.[aliasKey]) return FONT_URLS[aliasKey];
+
+        // 1단계: DB site_fonts - 정확히 일치
+        const exactMatch = fontList.find(f => f.normalized === target);
+        if (exactMatch) return exactMatch.url;
+
+        // 2단계: DB site_fonts - 부분 일치
+        const partialMatch = fontList.find(f =>
+            (target.includes(f.normalized) && f.normalized.length > 3) ||
+            (f.normalized.includes(target) && target.length > 3)
+        );
+        if (partialMatch) return partialMatch.url;
+
+        // 3단계: fonts.js FONT_URLS 직접 검색
         if (FONT_URLS?.[name]) return FONT_URLS[name];
+
+        // 4단계: fonts.js FONT_ALIASES → FONT_URLS
+        const aliasKey = FONT_ALIASES?.[name];
+        if (aliasKey && FONT_URLS?.[aliasKey]) return FONT_URLS[aliasKey];
+
+        // 5단계: Google Fonts CSS에서 추출한 URL (WOFF2)
+        if (googleFontMap[name]) return googleFontMap[name];
+        // 대소문자 무시 검색
+        const googleKey = Object.keys(googleFontMap).find(k =>
+            k.toLowerCase().replace(/[\s\-_]/g, '') === target
+        );
+        if (googleKey) return googleFontMap[googleKey];
+
+        console.warn("[패스변환] 폰트 URL 미발견, 폴백 사용:", name);
         return TARGET_FONT.url;
     };
 
     // 폰트 로드 헬퍼 (실패 시 폴백 폰트 재시도)
     const loadFont = async (url) => {
         if (loadedFonts[url]) return loadedFonts[url];
-        const buffer = await (await fetch(url)).arrayBuffer();
-        loadedFonts[url] = window.opentype.parse(buffer);
-        return loadedFonts[url];
+        try {
+            const buffer = await (await fetch(url)).arrayBuffer();
+            loadedFonts[url] = window.opentype.parse(buffer);
+            return loadedFonts[url];
+        } catch(e) {
+            console.warn("[패스변환] 폰트 파일 로드/파싱 실패:", url, e.message);
+            // WOFF2 파싱 실패 시 폴백
+            if (url !== TARGET_FONT.url) {
+                console.warn("[패스변환] 폴백 폰트로 재시도");
+                return loadFont(TARGET_FONT.url);
+            }
+            throw e;
+        }
     };
 
     // 단일 텍스트 → 패스 변환
@@ -869,11 +940,22 @@ async function convertCanvasTextToPaths(fabricCanvas) {
             font = await loadFont(fontUrl);
         } catch(e) {
             console.warn("[패스변환] 폰트 로드 실패, 폴백 시도:", obj.fontFamily, e.message);
-            font = await loadFont(TARGET_FONT.url); // 폴백 폰트
+            font = await loadFont(TARGET_FONT.url);
         }
+
+        // 폰트에 해당 글리프가 있는지 검증 (첫 글자로 체크)
+        const testChar = (obj.text || '').replace(/[\s\d\.\,\-]/g, '').charAt(0);
+        if (testChar && font.charToGlyph) {
+            const glyph = font.charToGlyph(testChar);
+            if (glyph && glyph.index === 0 && fontUrl !== TARGET_FONT.url) {
+                // .notdef 글리프 = 해당 문자 없음 → 폴백 폰트 사용
+                console.warn("[패스변환] 글리프 미지원, 폴백:", obj.fontFamily, testChar);
+                font = await loadFont(TARGET_FONT.url);
+            }
+        }
+
         const fontSize = obj.fontSize;
         const lineHeightPx = obj.lineHeight * fontSize;
-        // textbox는 자동 줄바꿈된 textLines 사용, 그 외에는 명시적 줄바꿈으로 분리
         const textLines = (obj.type === 'textbox' && obj.textLines && obj.textLines.length > 0)
             ? obj.textLines
             : obj.text.split(/\r\n|\r|\n/);
@@ -903,7 +985,8 @@ async function convertCanvasTextToPaths(fabricCanvas) {
 
     // 그룹 내부 텍스트 처리 (Z-order 유지: _objects 배열 직접 교체)
     const processGroup = async (grp) => {
-        const objs = grp.getObjects(); // 내부 _objects 참조
+        // ★ _objects 직접 접근 (getObjects()는 일부 fabric 버전에서 복사본 반환)
+        const objs = grp._objects || grp.getObjects();
         for (let i = 0; i < objs.length; i++) {
             const obj = objs[i];
             if (obj.type === 'group') {
@@ -912,17 +995,20 @@ async function convertCanvasTextToPaths(fabricCanvas) {
                 try {
                     const pathObj = await textToPath(obj);
                     pathObj.group = grp;
-                    objs[i] = pathObj; // ★ 배열 직접 교체 → Z-order 완벽 유지
+                    objs[i] = pathObj;
                     obj.group = undefined;
                 } catch (err) {
                     console.warn("[패스변환] 그룹 내 텍스트 변환 실패:", obj.text, err.message);
                 }
             }
         }
+        // ★ 그룹 변경 알림 → SVG 렌더링 시 반영
+        grp.dirty = true;
+        if (grp._calcBounds) grp._calcBounds();
     };
 
     // 최상위 오브젝트 처리
-    const topObjects = fabricCanvas.getObjects().slice(); // 복사본으로 순회
+    const topObjects = fabricCanvas.getObjects().slice();
     for (let i = 0; i < topObjects.length; i++) {
         const obj = topObjects[i];
         if (obj.type === 'group') {
