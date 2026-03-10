@@ -502,9 +502,7 @@ export function initExport() {
             btn.disabled = true;
 
             try {
-                // ★ PNG 저장과 동일: 현재 라이브 캔버스에서 직접 고화질 캡처
-                if (window.savePageState) window.savePageState();
-
+                // ★ 라이브 캔버스에서 직접 고화질 캡처 (loadFromJSON 없음)
                 const board = canvas.getObjects().find(o => o.isBoard);
                 const finalW = board ? board.width * board.scaleX : canvas.width;
                 const finalH = board ? board.height * board.scaleY : canvas.height;
@@ -515,63 +513,53 @@ export function initExport() {
                 const pwMM = finalW / MM_TO_PX;
                 const phMM = finalH / MM_TO_PX;
 
-                // 다중 페이지 지원
-                const _pdl = window.__pageDataList || pageDataList;
-                const _cpi = (typeof window._getPageIndex === 'function') ? window._getPageIndex() : currentPageIndex;
-                const currentJson = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', '_promoPanel', '_promoPanelBg']);
+                // 현재 뷰포트/선택 상태 저장
+                const origVT = canvas.viewportTransform.slice();
+                const activeObj = canvas.getActiveObject();
+                canvas.discardActiveObject();
 
-                let allPages = [];
-                if (_pdl && _pdl.length > 0) {
-                    allPages = [..._pdl];
-                    if (typeof _cpi === 'number' && _cpi >= 0 && _cpi < allPages.length) {
-                        allPages[_cpi] = currentJson;
+                // 뷰포트를 대지 기준으로 리셋
+                canvas.setViewportTransform([1, 0, 0, 1, -cropX, -cropY]);
+                // 목업/가이드/보드 테두리 숨기기
+                const hiddenObjs = [];
+                canvas.getObjects().forEach(o => {
+                    if (o.isMockup || o.excludeFromExport || o.isGuide) {
+                        if (o.visible !== false) { o.visible = false; hiddenObjs.push(o); }
                     }
-                } else {
-                    allPages = [currentJson];
-                }
+                    if (o.isBoard && (o.stroke || o.shadow)) {
+                        o._origStroke = o.stroke; o._origShadow = o.shadow;
+                        o.stroke = null; o.shadow = null; hiddenObjs.push(o);
+                    }
+                });
+                canvas.renderAll();
 
+                // 고화질 캡처
+                const _maxPx = 100000000;
+                const _basePx = finalW * finalH;
+                let _mult = 4;
+                if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+
+                const imgData = canvas.toDataURL({ format: 'png', multiplier: _mult, width: finalW, height: finalH, left: 0, top: 0 });
+
+                // 원래 상태 복원
+                hiddenObjs.forEach(o => {
+                    if (o.isMockup || o.excludeFromExport || o.isGuide) o.visible = true;
+                    if (o.isBoard) {
+                        if (o._origStroke !== undefined) { o.stroke = o._origStroke; delete o._origStroke; }
+                        if (o._origShadow !== undefined) { o.shadow = o._origShadow; delete o._origShadow; }
+                    }
+                });
+                canvas.setViewportTransform(origVT);
+                if (activeObj) canvas.setActiveObject(activeObj);
+                canvas.renderAll();
+
+                // PDF 생성
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({ orientation: pwMM > phMM ? 'l' : 'p', unit: 'mm', format: [pwMM, phMM], compress: true });
+                doc.addImage(imgData, 'PNG', 0, 0, pwMM, phMM, undefined, 'NONE');
 
-                for (let pg = 0; pg < allPages.length; pg++) {
-                    if (pg > 0) doc.addPage([pwMM, phMM], pwMM > phMM ? 'l' : 'p');
-
-                    const pageJson = { ...allPages[pg] };
-                    // 목업/가이드 제거
-                    if (pageJson.objects) {
-                        pageJson.objects = pageJson.objects
-                            .filter(o => !o.isMockup && !o.excludeFromExport)
-                            .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
-                    }
-
-                    const tempEl = document.createElement('canvas');
-                    const tempCvs = new fabric.StaticCanvas(tempEl);
-                    tempCvs.setWidth(finalW);
-                    tempCvs.setHeight(finalH);
-                    tempCvs.setBackgroundColor('#ffffff');
-
-                    await new Promise(resolve => {
-                        tempCvs.loadFromJSON(pageJson, () => {
-                            tempCvs.setViewportTransform([1, 0, 0, 1, -cropX, -cropY]);
-                            tempCvs.setBackgroundColor('#ffffff');
-                            tempCvs.renderAll();
-                            setTimeout(resolve, 500);
-                        });
-                    });
-
-                    // 300 DPI 고화질 캡처 (PNG 저장과 동일 방식)
-                    const _maxPx = 100000000; // 100M pixels
-                    const _basePx = finalW * finalH;
-                    let _mult = 4;
-                    if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
-
-                    const imgData = tempCvs.toDataURL({ format: 'png', multiplier: _mult });
-                    doc.addImage(imgData, 'PNG', 0, 0, pwMM, phMM, undefined, 'NONE');
-
-                    const actualDPI = Math.round((finalW * _mult / pwMM) * 25.4);
-                    console.log(`[PDF] 페이지${pg+1}: ${Math.round(pwMM)}×${Math.round(phMM)}mm, ${Math.round(finalW*_mult)}×${Math.round(finalH*_mult)}px, ${actualDPI}DPI`);
-                    tempCvs.dispose();
-                }
+                const actualDPI = Math.round((finalW * _mult / pwMM) * 25.4);
+                console.log(`[PDF] ${Math.round(pwMM)}×${Math.round(phMM)}mm, ${Math.round(finalW*_mult)}×${Math.round(finalH*_mult)}px, ${actualDPI}DPI`);
 
                 const blob = doc.output('blob');
                 if (blob) {
