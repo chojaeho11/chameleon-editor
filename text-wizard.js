@@ -1181,7 +1181,7 @@
             stroke: LINE_COLOR, strokeWidth: 1, selectable: false
         }));
 
-        const MENU_FONT = 'Noto Sans KR, sans-serif';
+        const MENU_FONT = 'NanumGothic';
 
         menuData.forEach((item, i) => {
             const localY = -halfH + gap * 0.5 + i * gap;
