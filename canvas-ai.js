@@ -1,6 +1,6 @@
 // canvas-ai.js
-import { canvas } from "./canvas-core.js?v=129";
-import { sb as _importedSb, currentUser } from "./config.js?v=129";
+import { canvas } from "./canvas-core.js?v=130";
+import { sb as _importedSb, currentUser } from "./config.js?v=130";
 
 // ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
 function _getSb() { return _importedSb || window.sb; }
@@ -1652,11 +1652,13 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
         }
     }
     if (!allItems.length) return;
-    // ★ 요소 1개 좌측 상단에 배치
-    const data = [allItems[0]];
-    const bigSize = bW * 0.45;
+    // ★ 요소 2개 배치: 좌측 상단 + 우측 상단
+    const data = allItems.length >= 2 ? [allItems[0], allItems[1]] : [allItems[0]];
+    const bigSize = bW * 0.32;
+    const smallSize = bW * 0.25;
     const positions = [
-        { left: bL + bW * 0.18, top: bT + bH * 0.18, size: bigSize }
+        { left: bL + bW * 0.18, top: bT + bH * 0.20, size: bigSize },
+        { left: bL + bW * 0.85, top: bT + bH * 0.15, size: smallSize }
     ];
 
     // data_url에서 실제 이미지 URL 추출 (Fabric JSON → objects[].src)
@@ -1738,7 +1740,7 @@ function _wzDecoration(bW, bH, bL, bT) {
         group.set({
             scaleX: scale, scaleY: scale,
             left: bL + bW * 0.5,
-            top: bT + bH * 0.44,
+            top: bT + bH * 0.72,
             originX: 'center', originY: 'center'
         });
         canvas.add(group);
