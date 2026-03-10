@@ -1054,7 +1054,7 @@
                 const nameInput = document.createElement('input');
                 nameInput.value = row.name;
                 nameInput.placeholder = '메뉴 ' + (idx + 1);
-                nameInput.style.cssText = 'flex:3;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;transition:border 0.15s;';
+                nameInput.style.cssText = 'flex:3;min-width:0;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;transition:border 0.15s;box-sizing:border-box;';
                 nameInput.onfocus = () => nameInput.style.borderColor = '#6366f1';
                 nameInput.onblur = () => nameInput.style.borderColor = '#e2e8f0';
                 nameInput.oninput = () => { rows[idx].name = nameInput.value; };
@@ -1062,7 +1062,7 @@
                 const priceInput = document.createElement('input');
                 priceInput.value = row.price;
                 priceInput.placeholder = '0';
-                priceInput.style.cssText = 'flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:right;outline:none;transition:border 0.15s;';
+                priceInput.style.cssText = 'flex:1;min-width:0;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:right;outline:none;transition:border 0.15s;box-sizing:border-box;';
                 priceInput.onfocus = () => priceInput.style.borderColor = '#6366f1';
                 priceInput.onblur = () => priceInput.style.borderColor = '#e2e8f0';
                 priceInput.oninput = () => { rows[idx].price = priceInput.value; };
@@ -1099,6 +1099,12 @@
         addBtn.onmouseleave = () => addBtn.style.background = '#f1f5f9';
         addBtn.onclick = () => { rows.push({ name: '', price: '' }); renderRows(); scrollArea.scrollTop = scrollArea.scrollHeight; };
         modal.appendChild(addBtn);
+
+        // 안내 문구
+        const helpText = document.createElement('div');
+        helpText.style.cssText = 'font-size:11px;color:#94a3b8;text-align:center;margin-bottom:10px;line-height:1.5;';
+        helpText.textContent = '메뉴 작성 후 대지에서 크기를 조절하면 자동으로 레이아웃이 맞춰집니다.';
+        modal.appendChild(helpText);
 
         // 확인 버튼
         const confirmBtn = document.createElement('button');
