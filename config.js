@@ -1,6 +1,6 @@
 // config.js
 
-import { SITE_CONFIG } from "./site-config.js?v=127";
+import { SITE_CONFIG } from "./site-config.js?v=128";
 
 // 전역 변수
 export let apiKeys = {}; 
@@ -364,7 +364,7 @@ function showPasswordResetModal() {
         return;
     }
     // 아직 login.js가 로드되지 않았을 수 있으므로 동적 import
-    import('./login.js?v=127').then(m => {
+    import('./login.js?v=128').then(m => {
         if (m.openResetPwStep2) m.openResetPwStep2();
     }).catch(() => {
         // 최후 수단: DOM 직접 조작

@@ -1,6 +1,6 @@
 // canvas-ai.js
-import { canvas } from "./canvas-core.js?v=127";
-import { sb, currentUser } from "./config.js?v=127";
+import { canvas } from "./canvas-core.js?v=128";
+import { sb, currentUser } from "./config.js?v=128";
 
 // ==========================================================
 // [유틸] DB secrets 테이블에서 API 키 가져오기

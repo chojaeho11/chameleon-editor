@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=127";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=127";
-import { SITE_CONFIG } from "./site-config.js?v=127";
-import { applySize } from "./canvas-size.js?v=127";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=127";
+import { canvas } from "./canvas-core.js?v=128";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=128";
+import { SITE_CONFIG } from "./site-config.js?v=128";
+import { applySize } from "./canvas-size.js?v=128";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=128";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=127";
+} from "./export.js?v=128";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -174,7 +174,7 @@ export function loadCartFromStorage() {
     try {
         const storageKey = cartStorageKey();
         let savedCart = localStorage.getItem(storageKey);
-        console.log('[loadCart] key:', storageKey, 'found:', savedCart ? JSON.parse(savedCart).length + ' items' : 'null');
+        // debug log removed
         // 마이그레이션: 이전 키에서 복구 (1회만 — 복구 후 구 키 삭제)
         if (!savedCart) {
             const oldKey = currentUser ? `chameleon_cart_${currentUser.id}` : 'chameleon_cart_guest';
@@ -252,8 +252,9 @@ export async function initOrderSystem() {
         }
     };
 
-    // addCanvasToCart를 외부에서도 접근 가능하게
+    // addCanvasToCart, renderCart를 외부에서도 접근 가능하게
     window.addCanvasToCart = addCanvasToCart;
+    window.renderCart = renderCart;
 
     const btnViewCart = document.getElementById("btnViewCart");
     if (btnViewCart) {
@@ -898,7 +899,7 @@ function openDeliveryInfoModal() {
 // [수정] 용량 초과 방지: 잘못된 이미지 데이터 자동 청소
 function saveCart() {
     const storageKey = cartStorageKey();
-    console.log('[saveCart] cartData.length:', cartData.length, 'key:', storageKey);
+    // debug log removed
 
     // 1. 데이터 다이어트: 무거운 데이터는 빼고 저장
     const cleanData = cartData.map(item => {
@@ -1182,7 +1183,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=127');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=128');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -1646,12 +1647,12 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
 
         let addonHtml = '';
         // ★ [디버그] 장바구니 addon 렌더링 진단
-        console.log(`[renderCart] item[${idx}] selectedAddons:`, JSON.stringify(item.selectedAddons), 'product.addons:', item.product.addons);
+        // debug log removed
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
             const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name)
                 .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
-            console.log(`[renderCart] item[${idx}] addonCodes:`, addonCodes, 'allAddons:', allAddons.map(a => a.code));
+            // debug log removed
             const categories = [...new Set(allAddons.map(a => a.category_code || '_default'))]
                 .sort((a, b) => ((ADDON_CAT_DB[a]||{}).sort_order||999) - ((ADDON_CAT_DB[b]||{}).sort_order||999));
 
@@ -1675,7 +1676,7 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                                 ${catAddons.map(opt => {
                                     const _vals = Object.values(item.selectedAddons);
                                     const isSelected = _vals.includes(opt.code);
-                                    console.log(`[renderCart] addon check: opt.code='${opt.code}' type=${typeof opt.code}, values=`, _vals, '→ isSelected:', isSelected);
+                                    // debug log removed
                                     const currentAddonQty = (item.addonQuantities && item.addonQuantities[opt.code]) || 1;
                                     return `
                                         <div style="display:flex; flex-direction:column; padding:8px; border-radius:10px; border:1px solid ${isSelected ? '#6366f1' : '#f1f5f9'}; background:${isSelected ? '#f5f3ff' : '#fff'}; transition:0.2s; margin-bottom:6px;">
@@ -2930,6 +2931,18 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
     if (!productInfo) return;
 
     const now = Date.now();
+    const productCode = productInfo.code || productInfo.key || '';
+
+    // ★ 중복 추가 방지: 같은 상품이 3초 이내에 다시 추가되면 차단
+    if (window._lastCartAdd && productCode) {
+        const elapsed = now - window._lastCartAdd.time;
+        if (elapsed < 3000 && window._lastCartAdd.code === productCode) {
+            console.warn('[addProductToCartDirectly] BLOCKED duplicate add:', productCode, 'elapsed:', elapsed, 'ms');
+            return;
+        }
+    }
+    window._lastCartAdd = { code: productCode, time: now };
+
     window.isDirectCartAddInProgress = true;
     setTimeout(() => { window.isDirectCartAddInProgress = false; }, 2000);
 
