@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=140';
+import { SITE_CONFIG } from './site-config.js?v=141';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=140');
+        const { addProductToCartDirectly } = await import('./order.js?v=141');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1163,9 +1163,19 @@ function _psFmtPrice(krw) {
 // ── 폰트 로드 ──
 (function(){
     const fl = document.createElement('link');
-    fl.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap';
+    fl.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Noto+Sans:wght@400;700&display=swap';
     fl.rel = 'stylesheet'; document.head.appendChild(fl);
 })();
+
+// 비라틴 문자 감지 (한글, 일본어, 중국어 등)
+function _psHasNonLatin(text) {
+    return /[^\u0000-\u024F\u1E00-\u1EFF]/.test(text);
+}
+
+// 텍스트에 맞는 폰트 결정
+function _psGetFont(text) {
+    return _psHasNonLatin(text) ? '"Noto Sans", sans-serif' : '"Dancing Script", cursive';
+}
 
 function enterStudioMode() {
     if (!chatArea) return;
@@ -1273,10 +1283,12 @@ async function _psApplyText() {
     ctx.drawImage(img, 0, 0);
 
     if (_psText.trim()) {
-        try { await document.fonts.load('48px "Dancing Script"'); } catch(e) {}
+        const fontStr = _psGetFont(_psText);
+        const fontFamily = _psHasNonLatin(_psText) ? 'Noto Sans' : 'Dancing Script';
+        try { await document.fonts.load(`48px "${fontFamily}"`); } catch(e) {}
         await new Promise(r => setTimeout(r, 200));
-        const fs = Math.round(img.width * 0.065);
-        ctx.font = `${fs}px "Dancing Script", cursive`;
+        const fs = Math.round(img.width * (_psHasNonLatin(_psText) ? 0.045 : 0.065));
+        ctx.font = `700 ${fs}px ${fontStr}`;
         ctx.fillStyle = _psTextColor;
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
@@ -1361,6 +1373,14 @@ function _psShowResult() {
     // 이벤트 바인딩
     document.getElementById('psRetryBtn')?.addEventListener('click', enterStudioMode);
 
+    // 텍스트 입력시 폰트 자동변경
+    const psTextIn = document.getElementById('psTextInput');
+    if (psTextIn) {
+        psTextIn.style.fontFamily = _psGetFont(_psText);
+        psTextIn.addEventListener('input', () => {
+            psTextIn.style.fontFamily = _psGetFont(psTextIn.value);
+        });
+    }
     // 텍스트 적용
     document.getElementById('psApplyText')?.addEventListener('click', async () => {
         _psText = document.getElementById('psTextInput').value;
@@ -1475,32 +1495,51 @@ function _psGoToEditor() {
         wMM = parseInt(selBtn.dataset.w);
         hMM = parseInt(selBtn.dataset.h);
     }
-    // 이미지 저장
+    // 이미지를 전역에 저장 (에디터가 읽을 수 있게)
     try { sessionStorage.setItem('ps_artwork', _psImgDataUrl); } catch(e) {}
     window._photoStudioImage = _psImgDataUrl;
     window._photoStudioSize = { w: wMM, h: hMM };
 
     // 스튜디오 종료 + 에디터 시작
     exitStudioMode();
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.startEditorDirect) {
-            window.startEditorDirect('custom', wMM, hMM);
-            // 이미지 로드 대기 후 캔버스에 배치
-            setTimeout(() => {
-                if (window._photoStudioImage && window.canvas) {
-                    fabric.Image.fromURL(window._photoStudioImage, (fImg) => {
-                        const board = window.canvas.getObjects().find(o => o.isBoardBackground);
-                        if (board) {
-                            const scale = Math.min(board.width / fImg.width, board.height / fImg.height);
-                            fImg.set({ left: board.left, top: board.top, scaleX: scale, scaleY: scale });
-                        }
-                        window.canvas.add(fImg);
-                        window.canvas.renderAll();
-                    });
-                }
-            }, 1500);
+            await window.startEditorDirect('custom', wMM, hMM);
+            // 에디터 캔버스 준비 대기
+            _psWaitForCanvasAndInsert();
         }
     }, 300);
+}
+
+function _psWaitForCanvasAndInsert(retries = 0) {
+    if (retries > 20) return; // 최대 10초
+    const cvs = window.canvas;
+    const imgData = window._photoStudioImage;
+    if (!cvs || !imgData) {
+        setTimeout(() => _psWaitForCanvasAndInsert(retries + 1), 500);
+        return;
+    }
+    // board가 준비될 때까지 대기
+    const board = cvs.getObjects().find(o => o.isBoardBackground);
+    if (!board) {
+        setTimeout(() => _psWaitForCanvasAndInsert(retries + 1), 500);
+        return;
+    }
+    // 이미지 삽입
+    fabric.Image.fromURL(imgData, (fImg) => {
+        if (!fImg) return;
+        const scale = Math.min(board.width / fImg.width, board.height / fImg.height);
+        fImg.set({
+            left: board.left + (board.width - fImg.width * scale) / 2,
+            top: board.top + (board.height - fImg.height * scale) / 2,
+            scaleX: scale,
+            scaleY: scale
+        });
+        cvs.add(fImg);
+        cvs.setActiveObject(fImg);
+        cvs.renderAll();
+        window._photoStudioImage = null; // 한번만 삽입
+    }, { crossOrigin: 'anonymous' });
 }
 
 function _psShowSizing(key) {
