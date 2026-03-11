@@ -5298,7 +5298,7 @@ window.filterFxCards = function(cat, btn) {
         const cfg = window.SITE_CONFIG || {};
         const country = cfg.COUNTRY || 'KR';
         if (country === 'JP') return '¥' + Math.floor(amt).toLocaleString();
-        if (country === 'US') return '$' + Math.round(amt||0).toLocaleString();
+        if (country === 'US') { const r = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE.US) || 0.001; return '$' + Math.round((amt||0) * r).toLocaleString(); }
         const rates = cfg.CURRENCY_RATE || {};
         if (country === 'CN') return '¥' + Math.round((amt||0) * (rates.CN || 0.01)).toLocaleString();
         if (country === 'AR') return Math.round((amt||0) * (rates.AR || 0.05)).toLocaleString() + ' ﷼';
@@ -6743,7 +6743,7 @@ window.showChoiceModal = async function(key) {
     } else if (lang === 'en') {
         if (product.name_us) dName = product.name_us;
         if (product.description_us) dDesc = product.description_us;
-        if (product.price_us) dPrice = product.price_us;
+        // price_us는 구버전 환율로 계산된 값이므로 사용 안 함 → dPrice = KRW (formatPriceSimple에서 환산)
     } else if (lang === 'zh') {
         dName = product.name_cn || product.name_us || dName;
         dDesc = product.description_cn || product.description_us || dDesc;
@@ -6927,12 +6927,13 @@ window.showChoiceModal = async function(key) {
                         catAddons.forEach(a => {
                             let basePrice = a.price_kr || a.price || 0;
                             if (lang === 'ja' && a.price_jp) basePrice = a.price_jp;
-                            else if (lang === 'en' && a.price_us) basePrice = a.price_us;
+                            // EN: price_us(구버전 환율) 사용 안 함 → KRW 유지
                             const imgUrl = a.img_url || 'https://placehold.co/40/eeeeee/cccccc?text=+';
                             let colorPriceLabel = '';
                             if (basePrice > 0) {
+                                const _usR = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001;
                                 if (lang === 'ja') colorPriceLabel = `+¥${basePrice.toLocaleString()}`;
-                                else if (lang === 'en') colorPriceLabel = `+$${basePrice.toLocaleString()}`;
+                                else if (lang === 'en') colorPriceLabel = `+$${Math.round(basePrice * _usR).toLocaleString()}`;
                                 else if (lang === 'zh') colorPriceLabel = `+¥${Math.round(basePrice * (_cr.CN || 0.01)).toLocaleString()}`;
                                 else if (lang === 'ar') colorPriceLabel = `+${Math.round(basePrice * (_cr.AR || 0.05)).toLocaleString()} ﷼`;
                                 else if (lang === 'es') colorPriceLabel = `+€${(basePrice * (_cr.ES || 0.001)).toFixed(2)}`;
@@ -6961,7 +6962,7 @@ window.showChoiceModal = async function(key) {
                             let basePrice = a.price_kr || a.price || 0;
                             let priceStr = `+${basePrice.toLocaleString()}원`;
                             if (lang === 'ja') { if (a.name_jp) optName = a.name_jp; if (a.price_jp) { basePrice = a.price_jp; priceStr = `+¥${basePrice.toLocaleString()}`; } }
-                            else if (lang === 'en') { if (a.name_us) optName = a.name_us; if (a.price_us) { basePrice = a.price_us; priceStr = `+$${basePrice.toLocaleString()}`; } }
+                            else if (lang === 'en') { if (a.name_us) optName = a.name_us; const _usR2 = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001; priceStr = `+$${Math.round(basePrice * _usR2).toLocaleString()}`; }
                             else if (lang === 'zh') { optName = a.name_cn || a.name_us || optName; const _r = (_cr && _cr.CN) || 0.01; priceStr = `+¥${Math.round(basePrice * _r).toLocaleString()}`; }
                             else if (lang === 'ar') { optName = a.name_ar || a.name_us || optName; const _r = (_cr && _cr.AR) || 0.05; priceStr = `+${Math.round(basePrice * _r).toLocaleString()} ﷼`; }
                             else if (lang === 'es') { optName = a.name_es || a.name_us || optName; const _r = (_cr && _cr.ES) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
@@ -6998,7 +6999,7 @@ window.showChoiceModal = async function(key) {
     // 5. 우측 UI (기존 유지)
     const formatPriceSimple = (p) => {
         if(lang === 'ja') return `¥${p.toLocaleString()}`;
-        if(lang === 'en') return `$${p.toLocaleString()}`;
+        if(lang === 'en') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001; return `$${Math.round(p * r).toLocaleString()}`; }
         if(lang === 'zh') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.05; return `¥${Math.round(p * r).toLocaleString()}`; }
         if(lang === 'ar') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.001; return `${Math.round(p * r).toLocaleString()} ﷼`; }
         if(lang === 'es') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001; return `€${(p * r).toFixed(2)}`; }
@@ -7370,7 +7371,7 @@ window.updateModalTotal = function() {
 
         let unitPrice = product.price; // KRW 기본
         if (lang === 'ja' && product.price_jp) unitPrice = product.price_jp;
-        else if (lang === 'en' && product.price_us) unitPrice = product.price_us;
+        // EN: price_us(구버전 환율)는 사용 안 함 → KRW 유지 (fmtLocal에서 환산)
         // CN/AR/ES: KRW 원가 유지 (fmtLocal에서 환산)
 
         productTotal = unitPrice * prodQty;
