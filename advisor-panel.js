@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=144';
+import { SITE_CONFIG } from './site-config.js?v=145';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=144');
+        const { addProductToCartDirectly } = await import('./order.js?v=145');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1500,7 +1500,7 @@ async function _psRunRetouch(action, value, btnEl) {
 
         // 파라미터 구성
         const paramKeys = { cartoon:'type', emotion:'service_choice', age_gender:'action_type', face_filter:'resource_type', hairstyle:'hair_style' };
-        const params = { action, [paramKeys[action] || 'type']: value };
+        const params = { [paramKeys[action] || 'type']: value };
 
         // 이미지를 base64로
         const res = await fetch(_psRawDataUrl);
@@ -1508,16 +1508,25 @@ async function _psRunRetouch(action, value, btnEl) {
         const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(blob); });
 
         const { data, error } = await _sb.functions.invoke('portrait-retouch', {
-            body: { image_base64: base64, ...params }
+            body: { action, image_base64: base64, params }
         });
 
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         if (data && data.image_base64) {
-            _psRawDataUrl = 'data:image/jpeg;base64,' + data.image_base64;
+            _psRawDataUrl = 'data:image/png;base64,' + data.image_base64;
             await _psApplyText();
             document.getElementById('psPreviewImg').src = _psImgDataUrl;
             if (btnEl) { btnEl.textContent = '✅'; btnEl.style.background = '#10b981'; btnEl.style.color = '#fff'; }
-        } else throw new Error('No result');
+        } else if (data && data.image_url) {
+            // URL → fetch → dataUrl
+            const imgRes = await fetch(data.image_url);
+            const imgBlob = await imgRes.blob();
+            _psRawDataUrl = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(imgBlob); });
+            await _psApplyText();
+            document.getElementById('psPreviewImg').src = _psImgDataUrl;
+            if (btnEl) { btnEl.textContent = '✅'; btnEl.style.background = '#10b981'; btnEl.style.color = '#fff'; }
+        } else throw new Error(data?.error || 'No result');
     } catch(e) {
         console.error('Retouch error:', e);
         if (btnEl) { btnEl.textContent = '❌'; setTimeout(() => { btnEl.textContent = btnEl.dataset.value; btnEl.disabled = false; }, 2000); }
@@ -1546,6 +1555,7 @@ async function _psRemoveBg() {
             body: { image_base64: base64 }
         });
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         if (!data || !data.image_base64) throw new Error('No result');
 
         // 결과를 배경색 위에 합성
