@@ -1,6 +1,6 @@
 // login.js
 
-import { sb, currentUser, isAdmin } from "./config.js?v=153";
+import { sb, currentUser, isAdmin } from "./config.js?v=154";
 
 let isSignUpMode = false; 
 
@@ -38,6 +38,8 @@ export function initAuth() {
 
                 btnLogin.innerText = _t('msg_processing', "처리 중...");
 
+                // ★ SIGNED_OUT 이벤트의 location.reload() 방지 (해외몰 도메인 유지)
+                window.__authInProgress = true;
                 try {
                     if (sb && sb.auth) {
                         await sb.auth.signOut();
@@ -45,6 +47,7 @@ export function initAuth() {
                 } catch (e) {
                     console.error("로그아웃 오류(무시):", e);
                 } finally {
+                    window.__authInProgress = false;
                     // ★ 에디터 활성 중이면 새로고침/리다이렉트 없이 UI만 갱신
                     if (document.body.classList.contains('editor-active')) {
                         localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token');
@@ -61,9 +64,13 @@ export function initAuth() {
                         document.cookie.split(";").forEach((c) => {
                             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
                         });
-                        // ★ 현재 언어 파라미터를 유지하여 같은 언어 페이지로 복귀
-                        const _lp = new URLSearchParams(window.location.search).get('lang');
-                        window.location.replace(_lp ? '/?lang=' + _lp : '/');
+                        // ★ URL 파라미터가 아닌 현재 도메인(hostname)으로 언어 결정 → 해외몰은 해외몰에 머뭄
+                        const _hn = window.location.hostname;
+                        let _redirectUrl = '/';
+                        if (_hn.includes('cafe0101.com')) _redirectUrl = '/?lang=ja';
+                        else if (_hn.includes('cafe3355.com')) _redirectUrl = '/';
+                        // cafe2626.com은 그냥 '/' (KR)
+                        window.location.replace(_redirectUrl);
                     }
                 }
             } else {
