@@ -1515,16 +1515,19 @@ button, input, textarea, select { font-family: inherit; }
 .ps-color-swatch:hover { transform:scale(1.15); }
 .ps-color-swatch.active { border-color:#7c3aed !important; box-shadow:0 0 0 2px rgba(124,58,237,.3); }
 .ps-color-picker-input { width:24px; height:24px; border:none; padding:0; cursor:pointer; border-radius:50%; background:none; }
-.ps-size-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
-.ps-sz { padding:6px 8px; border:1.5px solid #cbd5e1; border-radius:8px; background:#fff; font-size:11px; font-weight:600; cursor:pointer; transition:all .2s; color:#475569; text-align:center; }
-.ps-sz .ps-sz-sub { display:block; font-size:9px; font-weight:400; color:#94a3b8; margin-top:1px; }
-.ps-sz:hover { border-color:#7c3aed; color:#7c3aed; }
-.ps-sz.active { background:#7c3aed; color:#fff; border-color:#7c3aed; }
-.ps-sz.active .ps-sz-sub { color:rgba(255,255,255,.7); }
-.ps-custom-row { display:flex; gap:8px; align-items:center; }
-.ps-custom-w { width:90px; padding:5px 8px; border:1.5px solid #cbd5e1; border-radius:7px; font-size:12px; }
-.ps-custom-w:focus { border-color:#7c3aed; outline:none; }
-.ps-auto-h { font-size:11px; color:#64748b; font-weight:600; }
+.ps-size-input-row { display:flex; align-items:center; gap:6px; }
+.ps-size-field { flex:1; }
+.ps-size-field label { font-size:10px; font-weight:600; color:#64748b; display:block; margin-bottom:2px; }
+.ps-size-input-wrap { display:flex; align-items:center; border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#fff; }
+.ps-size-in { flex:1; padding:7px 8px; border:none; font-size:13px; font-weight:600; text-align:center; outline:none; width:60px; }
+.ps-size-in:focus { background:#faf5ff; }
+.ps-size-unit { font-size:10px; color:#94a3b8; padding-right:8px; font-weight:600; }
+.ps-size-x { font-size:16px; font-weight:700; color:#cbd5e1; margin-top:14px; }
+.ps-sewing-section { background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:8px; }
+.ps-sewing-options { display:flex; flex-direction:column; gap:4px; }
+.ps-sew-opt { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#334155; cursor:pointer; padding:4px 6px; border-radius:6px; transition:background .2s; }
+.ps-sew-opt:hover { background:rgba(245,158,11,.1); }
+.ps-sew-opt input[type="radio"] { accent-color:#f59e0b; }
 .ps-editor-link-wrap { text-align:center; padding:8px 10px 12px; border-top:1px solid #f1f5f9; }
 .ps-editor-link { color:#7c3aed; font-size:12px; font-weight:600; cursor:pointer; text-decoration:none; }
 .ps-editor-link:hover { text-decoration:underline; }

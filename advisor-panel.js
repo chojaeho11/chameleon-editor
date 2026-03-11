@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=141';
+import { SITE_CONFIG } from './site-config.js?v=142';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=141');
+        const { addProductToCartDirectly } = await import('./order.js?v=142');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1475,7 +1475,15 @@ async function _psRemoveBg() {
         }
         ctx.putImageData(id, 0, 0);
 
-        _psRawDataUrl = cvs.toDataURL('image/png');
+        // 흰색 배경 위에 누끼 이미지 합성
+        const whiteCvs = document.createElement('canvas');
+        whiteCvs.width = cvs.width; whiteCvs.height = cvs.height;
+        const wCtx = whiteCvs.getContext('2d');
+        wCtx.fillStyle = '#ffffff';
+        wCtx.fillRect(0, 0, whiteCvs.width, whiteCvs.height);
+        wCtx.drawImage(cvs, 0, 0);
+
+        _psRawDataUrl = whiteCvs.toDataURL('image/jpeg', 0.92);
         await _psApplyText();
         document.getElementById('psPreviewImg').src = _psImgDataUrl;
         btn.textContent = '✅ ' + ps('removeBg');
@@ -1544,84 +1552,234 @@ function _psWaitForCanvasAndInsert(retries = 0) {
 
 function _psShowSizing(key) {
     _psSelectedProduct = key;
-    // 가로 기준: 300, 400, 500, 600mm → 세로는 이미지 비율로 자동계산
-    const widths = [300, 400, 500, 600];
-    const sizes = widths.map(w => {
-        const h = Math.round(w / _psImgRatio);
-        return { l: `${w}×${h}`, w, h, wCm: w / 10 };
-    });
-    const btns = sizes.map(s => `<button class="ps-sz" data-w="${s.w}" data-h="${s.h}">${ps('width')} ${s.wCm}cm<span class="ps-sz-sub">${s.l}mm</span></button>`).join('');
+    const isFabric = (key === 'fabric');
 
     document.getElementById('psSizingArea').innerHTML = `
         <div class="ps-tool-section" style="margin-top:6px;">
             <div class="ps-tool-label">📐 ${ps('size')}</div>
-            <div class="ps-size-grid">${btns}</div>
-            <div class="ps-custom-row" style="margin-top:6px;">
-                <input type="number" id="psCW" class="ps-custom-w" placeholder="${ps('width')}(mm)" min="100" max="5000">
-                <span class="ps-auto-h" id="psAutoH">${ps('height')}: --</span>
+            <div class="ps-size-input-row">
+                <div class="ps-size-field">
+                    <label>${ps('width')}</label>
+                    <div class="ps-size-input-wrap">
+                        <input type="number" id="psCW" class="ps-size-in" placeholder="300" min="50" max="5000" value="">
+                        <span class="ps-size-unit">mm</span>
+                    </div>
+                </div>
+                <span class="ps-size-x">×</span>
+                <div class="ps-size-field">
+                    <label>${ps('height')}</label>
+                    <div class="ps-size-input-wrap">
+                        <input type="number" id="psCH" class="ps-size-in" placeholder="${ps('autoCalc')}" min="50" max="5000" value="">
+                        <span class="ps-size-unit">mm</span>
+                    </div>
+                </div>
             </div>
+            ${isFabric ? `<div id="psFabricSewArea" class="ps-sewing-section" style="margin-top:8px;"></div>` : ''}
             <div id="psPriceOut"></div>
         </div>
     `;
 
-    // 가로 입력 → 세로 자동계산
-    document.getElementById('psCW')?.addEventListener('input', (e) => {
-        const w = parseInt(e.target.value);
-        if (w >= 50) {
-            const h = Math.round(w / _psImgRatio);
-            document.getElementById('psAutoH').textContent = `${ps('height')}: ${h}mm`;
-            // deselect preset buttons
-            document.querySelectorAll('#psSizingArea .ps-sz').forEach(x => x.classList.remove('active'));
-            _psCalcPrice(w, h);
+    const cwEl = document.getElementById('psCW');
+    const chEl = document.getElementById('psCH');
+
+    // 가로 입력 → 세로 자동
+    cwEl?.addEventListener('input', () => {
+        const w = parseInt(cwEl.value);
+        if (w >= 50 && !chEl.dataset.manual) {
+            chEl.value = Math.round(w / _psImgRatio);
+            _psUpdatePrice();
+        } else if (w >= 50) _psUpdatePrice();
+    });
+    // 세로 입력 → 가로 자동
+    chEl?.addEventListener('input', () => {
+        const h = parseInt(chEl.value);
+        if (h >= 50) {
+            chEl.dataset.manual = '1';
+            if (!cwEl.value) cwEl.value = Math.round(h * _psImgRatio);
+            _psUpdatePrice();
         }
     });
-
-    document.getElementById('psSizingArea').querySelectorAll('.ps-sz').forEach(b => {
-        b.addEventListener('click', () => {
-            document.querySelectorAll('#psSizingArea .ps-sz').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            const w = parseInt(b.dataset.w), h = parseInt(b.dataset.h);
-            document.getElementById('psCW').value = w;
-            document.getElementById('psAutoH').textContent = `${ps('height')}: ${h}mm`;
-            _psCalcPrice(w, h);
-        });
+    // 세로 필드 비우면 자동모드 복원
+    chEl?.addEventListener('change', () => {
+        if (!chEl.value) { delete chEl.dataset.manual; }
     });
+
+    // 패브릭이면 미싱 옵션 로드
+    if (isFabric) _psLoadFabricSewing();
+
     scrollChat();
+}
+
+// 패브릭 미싱 옵션 로드 (DB에서)
+async function _psLoadFabricSewing() {
+    const area = document.getElementById('psFabricSewArea');
+    if (!area) return;
+    try {
+        const _sb = window.sb;
+        if (!_sb) throw new Error('no sb');
+        const { data, error } = await _sb.from('admin_addons')
+            .select('*')
+            .eq('category_code', '2342434')
+            .order('sort_order', { ascending: true });
+        if (error || !data || data.length === 0) {
+            area.innerHTML = '';
+            return;
+        }
+
+        const lang = getLang();
+        const reqMsg = lang === 'ja' ? 'ミシンオプションを1つ選択してください (必須)' :
+                       lang === 'en' ? 'Select at least one sewing option (required)' :
+                       '미싱옵션을 1개 선택해주세요 (필수)';
+
+        let html = `<div class="ps-tool-label">🧵 ${lang === 'ja' ? 'ミシンオプション' : lang === 'en' ? 'Sewing Option' : '패브릭 미싱'} <span style="color:#ef4444; font-size:10px;">(*)</span></div>`;
+        html += `<div style="background:#fef3c7; border-radius:6px; padding:4px 8px; font-size:10px; color:#92400e; margin-bottom:6px;">${reqMsg}</div>`;
+        html += `<div class="ps-sewing-options">`;
+        data.forEach(addon => {
+            const name = lang === 'ja' ? (addon.name_jp || addon.name) :
+                         lang === 'en' ? (addon.name_us || addon.name) : addon.name;
+            const price = lang === 'ja' ? (addon.price_jp || addon.price) :
+                          lang === 'en' ? (addon.price_us || addon.price) : addon.price;
+            const priceStr = _psFmtPrice(price);
+            html += `<label class="ps-sew-opt"><input type="radio" name="psSewing" value="${addon.code}" data-price="${addon.price}"> ${name} <span style="color:#7c3aed; font-size:10px;">${priceStr}</span></label>`;
+        });
+        html += `</div>`;
+        area.innerHTML = html;
+
+        // 미싱 선택 시 가격 업데이트
+        area.querySelectorAll('input[name="psSewing"]').forEach(r => {
+            r.addEventListener('change', () => _psUpdatePrice());
+        });
+
+        // 미싱 데이터 저장
+        window._psFabricSewAddons = data;
+    } catch(e) {
+        area.innerHTML = '';
+    }
+}
+
+function _psUpdatePrice() {
+    const w = parseInt(document.getElementById('psCW')?.value);
+    const h = parseInt(document.getElementById('psCH')?.value);
+    if (w >= 50 && h >= 50) {
+        _psCalcPrice(w, h);
+    }
 }
 
 function _psCalcPrice(w, h) {
     const prod = PS_PRODUCTS[_psSelectedProduct];
     const area = (w / 1000) * (h / 1000);
-    let price = Math.round((area * prod.sqm) / 100) * 100;
+    let price = Math.round((area * prod.sqm) / 10) * 10;
     if (price < prod.min) price = prod.min;
 
+    // 미싱 옵션 가격 추가
+    let sewingPrice = 0;
+    const sewingRadio = document.querySelector('input[name="psSewing"]:checked');
+    if (sewingRadio) {
+        sewingPrice = parseInt(sewingRadio.dataset.price) || 0;
+    }
+    const totalPrice = price + sewingPrice;
+
+    const isFabric = (_psSelectedProduct === 'fabric');
+    const cartLabel = getLang() === 'ja' ? 'カートに入れる' : getLang() === 'en' ? 'Add to Cart' : '장바구니 담기';
+
     document.getElementById('psPriceOut').innerHTML = `
-        <div class="ps-price-bar">
-            <span class="ps-pl">${ps('price')} (${w}×${h}mm)</span>
-            <span class="ps-pv">${_psFmtPrice(price)}</span>
+        <div class="ps-price-bar" style="margin-top:8px;">
+            <span class="ps-pl">${w}×${h}mm</span>
+            <span class="ps-pv">${_psFmtPrice(totalPrice)}</span>
         </div>
-        <button class="ps-order-btn" id="psOrderBtn">🛒 ${ps('order')}</button>
+        <button class="ps-order-btn" id="psOrderBtn">🛒 ${cartLabel}</button>
     `;
     document.getElementById('psOrderBtn')?.addEventListener('click', () => {
-        _psOrder(w, h, _psSelectedProduct);
+        // 패브릭이면 미싱 필수 확인
+        if (isFabric) {
+            const checked = document.querySelector('input[name="psSewing"]:checked');
+            if (!checked) {
+                const msg = getLang() === 'ja' ? 'ミシンオプションを選択してください' :
+                            getLang() === 'en' ? 'Please select a sewing option' :
+                            '미싱옵션을 선택해주세요';
+                alert(msg);
+                return;
+            }
+        }
+        _psGoToCart(w, h, _psSelectedProduct, price);
     });
     scrollChat();
 }
 
-function _psOrder(w, h, productKey) {
-    // 이미지 저장
+function _psGoToCart(w, h, productKey, basePrice) {
+    const prod = PS_PRODUCTS[productKey];
+    const names = {
+        fabric: { kr:'패브릭 인쇄', ja:'ファブリック印刷', en:'Fabric Print' },
+        paper: { kr:'종이 인쇄물', ja:'紙印刷', en:'Paper Print' },
+        honeycomb: { kr:'허니콤보드', ja:'ハニカムボード', en:'Honeycomb Board' },
+        canvas: { kr:'캔버스 액자', ja:'キャンバス額', en:'Canvas Frame' },
+        blind: { kr:'롤블라인드', ja:'ロールブラインド', en:'Roller Blind' }
+    };
+    const lang = getLang();
+    const nameObj = names[productKey] || names.fabric;
+    const displayName = nameObj[lang] || nameObj.en;
+
+    // 썸네일: 이미지를 작게 압축 (localStorage 제한 방지)
+    let thumbUrl = null;
+    try {
+        const thumbCvs = document.createElement('canvas');
+        const thumbImg = new Image();
+        thumbImg.src = _psImgDataUrl;
+        thumbCvs.width = 200;
+        thumbCvs.height = Math.round(200 / _psImgRatio);
+        thumbCvs.getContext('2d').drawImage(thumbImg, 0, 0, thumbCvs.width, thumbCvs.height);
+        thumbUrl = thumbCvs.toDataURL('image/jpeg', 0.7);
+    } catch(e) {}
+
+    // 미싱 옵션
+    const addonCodes = [];
+    const addonQtys = {};
+    const sewingRadio = document.querySelector('input[name="psSewing"]:checked');
+    if (sewingRadio) {
+        addonCodes.push(sewingRadio.value);
+        addonQtys[sewingRadio.value] = 1;
+    }
+
+    // 원본 이미지 저장 (주문시 사용)
     try { sessionStorage.setItem('ps_artwork', _psImgDataUrl); } catch(e) {}
     window._photoStudioImage = _psImgDataUrl;
 
-    // AI 상담 모드로 전환 + 주문 메시지 전달梦
+    // 카테고리 매핑
+    const catMap = { fabric: 'ua_fabric', paper: 'ua_paper', canvas: 'ua_canvas', honeycomb: 'pp_hc_', blind: 'pp_bl_' };
+
+    const productInfo = {
+        name: displayName,
+        name_jp: nameObj.ja,
+        name_us: nameObj.en,
+        code: `ps_${productKey}_${Date.now()}`,
+        price: basePrice,
+        price_jp: Math.round(basePrice * 0.1),
+        price_us: Math.round(basePrice * 0.001),
+        img: null,
+        w: w, h: h,
+        w_mm: w, h_mm: h,
+        width_mm: w, height_mm: h,
+        category: catMap[productKey] || productKey,
+        addons: productKey === 'fabric' ? addonCodes.join(',') : '',
+        is_custom_size: true,
+        is_custom: true,
+        _calculated_price: true,
+        _base_sqm_price: prod.sqm
+    };
+
+    // 스튜디오 종료
     exitStudioMode();
+
+    // 장바구니에 추가
     setTimeout(() => {
-        const names = { fabric:ps('fabric'), paper:ps('paper'), honeycomb:ps('honeycomb'), canvas:ps('canvas'), blind:ps('blind') };
-        const msg = `${names[productKey]} ${w}×${h}mm 주문하고 싶습니다`;
-        const inp = document.getElementById('advInput');
-        if (inp) { inp.value = msg; }
-        sendFromInput();
-    }, 300);
+        if (window.addProductToCartDirectly) {
+            const extra = { thumb: thumbUrl };
+            window.addProductToCartDirectly(productInfo, 1, addonCodes, addonQtys, extra);
+            // 장바구니 페이지 표시
+            const cartPage = document.getElementById('cartPage');
+            if (cartPage) cartPage.style.display = 'block';
+        }
+    }, 200);
 }
 
 function _psShowSell() {
