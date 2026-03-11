@@ -7067,15 +7067,46 @@ window.showChoiceModal = async function(key) {
                 <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${window._isUSsite && window._isUSsite() ? ((product.width_mm||0)/25.4).toFixed(2) : (product.width_mm||0)}<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>${window._isUSsite && window._isUSsite() ? ((product.height_mm||0)/25.4).toFixed(2) : (product.height_mm||0)}<span style="font-size:13px; color:#64748b; margin-left:4px;">${window._dimUnit ? window._dimUnit() : 'mm'}</span></div>
                 <input type="hidden" id="inputCustW" value="${product.width_mm || 0}">
                 <input type="hidden" id="inputCustH" value="${product.height_mm || 0}">
-            </div>` : `<div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
+            </div>` : (() => {
+                // 허니콤 벽 제품 감지 → 사이즈 선택 피커 표시
+                const _isWall = product.category === 'hb_display_wall' || (product.code && product.code.startsWith('hb_dw'));
+                const _isUS2 = window._isUSsite && window._isUSsite();
+                if (_isWall) {
+                    // WALL_WIDTHS: [1000,2000,3000,4000,5000]mm, WALL_HEIGHTS: [2000,2200,2400,3000]mm
+                    const _wOpts = [1000,2000,3000,4000,5000];
+                    const _hOpts = [2000,2200,2400,3000];
+                    const _wLabel = (mm) => _isUS2 ? (mm/304.8).toFixed(1)+' ft' : (mm/1000)+'m';
+                    const _hLabel = (mm) => _isUS2 ? (mm/304.8).toFixed(1)+' ft' : (mm/1000)+'m';
+                    const _wBtns = _wOpts.map((mm,i) => `<button type="button" id="wallW_${mm}" onclick="window._wallPickW(${mm})" style="padding:8px 10px; border:2px solid ${i===1?'#6366f1':'#e2e8f0'}; border-radius:8px; background:${i===1?'#eef2ff':'#fff'}; color:${i===1?'#4f46e5':'#475569'}; font-size:13px; font-weight:${i===1?'800':'600'}; cursor:pointer; transition:all 0.15s;">${_wLabel(mm)}</button>`).join('');
+                    const _hBtns = _hOpts.map((mm,i) => `<button type="button" id="wallH_${mm}" onclick="window._wallPickH(${mm})" style="padding:8px 10px; border:2px solid ${i===1?'#6366f1':'#e2e8f0'}; border-radius:8px; background:${i===1?'#eef2ff':'#fff'}; color:${i===1?'#4f46e5':'#475569'}; font-size:13px; font-weight:${i===1?'800':'600'}; cursor:pointer; transition:all 0.15s;">${_hLabel(mm)}</button>`).join('');
+                    const _sizeTitle = lang==='ja'?'サイズを選択':lang==='en'?'Select Size':'사이즈 선택';
+                    const _wTitle = lang==='ja'?'幅':lang==='en'?'Width':'가로';
+                    const _hTitle = lang==='ja'?'高さ':lang==='en'?'Height':'세로';
+                    return `<div data-npc="size" style="background:#f8fafc; border-radius:12px; padding:14px; margin-top:10px;">
+                        <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:10px;">📐 ${_sizeTitle}</div>
+                        <div style="margin-bottom:10px;">
+                            <div style="font-size:11px; color:#64748b; font-weight:700; margin-bottom:6px;">${_wTitle}</div>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px;">${_wBtns}</div>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <div style="font-size:11px; color:#64748b; font-weight:700; margin-bottom:6px;">${_hTitle}</div>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px;">${_hBtns}</div>
+                        </div>
+                        <div id="wallSizeResult" style="font-size:13px; color:#6366f1; font-weight:700; margin-top:8px; text-align:center;">2m × 2.2m</div>
+                        <input type="hidden" id="inputCustW" value="2000">
+                        <input type="hidden" id="inputCustH" value="2200">
+                    </div>`;
+                }
+                return `<div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
                 <div style="display:flex; gap:5px;">
-                    <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="${window._isUSsite && window._isUSsite() ? 'W (in)' : 'W (mm)'}" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('w'); window.calcCustomPrice(); window.updateModalTotal();">
+                    <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="${_isUS2 ? 'W (in)' : 'W (mm)'}" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('w'); window.calcCustomPrice(); window.updateModalTotal();">
                     <span style="display:flex; align-items:center; color:#999;">x</span>
-                    <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="${window._isUSsite && window._isUSsite() ? 'H (in)' : 'H (mm)'}" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
+                    <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="${_isUS2 ? 'H (in)' : 'H (mm)'}" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
                 <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\\\'IA vérifiera le fichier et calculera l\\\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
-            </div>`}`;
+            </div>`;
+            })()}`;
     } else {
         // 대량 주문제작상품: 수량 드롭다운 / 일반: +/- 수량 버튼
         const isBulk = product.is_bulk_order && product.quantity_options && product.quantity_options.length > 0;
@@ -7441,6 +7472,69 @@ window.updateModalTotal = function() {
 
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
+    // 허니콤 벽 사이즈 피커 핸들러
+    window._wallPickState = { w: 2000, h: 2200 };
+    window._wallPickW = function(mm) {
+        window._wallPickState.w = mm;
+        window._wallPickRefresh();
+    };
+    window._wallPickH = function(mm) {
+        window._wallPickState.h = mm;
+        window._wallPickRefresh();
+    };
+    window._wallPickRefresh = function() {
+        const s = window._wallPickState;
+        const _isUS2 = window._isUSsite && window._isUSsite();
+        const fmt = (mm) => _isUS2 ? (mm/304.8).toFixed(1)+' ft' : (mm/1000)+'m';
+        // inputCustW/H에 mm값 직접 설정 (calcCustomPrice는 _getInputMm으로 읽으므로 여기선 mm 직접)
+        const iw = document.getElementById('inputCustW'); if (iw) { iw.value = s.w; iw.type = 'hidden'; }
+        const ih = document.getElementById('inputCustH'); if (ih) { ih.value = s.h; ih.type = 'hidden'; }
+        // 결과 라벨 업데이트
+        const res = document.getElementById('wallSizeResult'); if (res) res.textContent = fmt(s.w)+' × '+fmt(s.h);
+        // 버튼 스타일 업데이트
+        [1000,2000,3000,4000,5000].forEach(mm => {
+            const btn = document.getElementById('wallW_'+mm);
+            if (!btn) return;
+            const sel = mm === s.w;
+            btn.style.borderColor = sel ? '#6366f1' : '#e2e8f0';
+            btn.style.background  = sel ? '#eef2ff' : '#fff';
+            btn.style.color       = sel ? '#4f46e5' : '#475569';
+            btn.style.fontWeight  = sel ? '800' : '600';
+        });
+        [2000,2200,2400,3000].forEach(mm => {
+            const btn = document.getElementById('wallH_'+mm);
+            if (!btn) return;
+            const sel = mm === s.h;
+            btn.style.borderColor = sel ? '#6366f1' : '#e2e8f0';
+            btn.style.background  = sel ? '#eef2ff' : '#fff';
+            btn.style.color       = sel ? '#4f46e5' : '#475569';
+            btn.style.fontWeight  = sel ? '800' : '600';
+        });
+        // 가격 계산: mm값을 직접 사용 (US 변환 없이)
+        if (window.selectedProductForChoice) {
+            const product = window.selectedProductForChoice;
+            const w = s.w, h = s.h;
+            const area = (w * h) / 1000000;
+            let unitPrice = product.price || 0;
+            const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
+            const _r = _rates.US || 0.001;
+            const lang = window.CURRENT_LANG || 'kr';
+            const formatValue = (val) => {
+                if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
+                if (lang === 'en') return '$' + Math.round(val * _r).toLocaleString();
+                return Math.floor(val).toLocaleString() + '원';
+            };
+            if (area > 0 && unitPrice > 0) {
+                const total = Math.floor(area * unitPrice);
+                const pd = document.getElementById('calcResultPrice');
+                if (pd) { pd.innerText = formatValue(total); pd.dataset.rawPrice = total; }
+                const sd = document.getElementById('calcResultSize');
+                if (sd) sd.innerText = _isUS2 ? `${(w/304.8).toFixed(1)} × ${(h/304.8).toFixed(1)} ft (${(area*10.764).toFixed(2)} sq ft)` : `${w/1000}m × ${h/1000}m (${area.toFixed(2)}㎡)`;
+            }
+            window.updateModalTotal();
+        }
+    };
+
     window.calcCustomPrice = function() {
         const wInput = document.getElementById('inputCustW');
         const hInput = document.getElementById('inputCustH');
@@ -7450,9 +7544,10 @@ window.updateModalTotal = function() {
 
         if (!wInput || !hInput || !window.selectedProductForChoice) return;
 
-        // US: 사용자가 인치로 입력 → 내부 계산은 mm로 변환
-        const w = window._getInputMm ? window._getInputMm(wInput.value || 0) : parseInt(wInput.value || 0);
-        const h = window._getInputMm ? window._getInputMm(hInput.value || 0) : parseInt(hInput.value || 0);
+        // wall 피커(hidden input)는 이미 mm 단위; 일반 visible input은 US=인치→mm 변환
+        const _isHidden = wInput.type === 'hidden';
+        const w = _isHidden ? parseInt(wInput.value || 0) : (window._getInputMm ? window._getInputMm(wInput.value || 0) : parseInt(wInput.value || 0));
+        const h = _isHidden ? parseInt(hInput.value || 0) : (window._getInputMm ? window._getInputMm(hInput.value || 0) : parseInt(hInput.value || 0));
         const qty = parseInt(qInput ? qInput.value : 1) || 1;
         const product = window.selectedProductForChoice;
 
