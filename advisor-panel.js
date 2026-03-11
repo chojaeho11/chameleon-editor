@@ -1928,42 +1928,75 @@ async function _psGoToCart(w, h, productKey, basePrice) {
     const lang = getLang();
     const nameObj = names[productKey] || names.fabric;
     const displayName = nameObj[lang] || nameObj.en;
+    const _sb = window.sb;
 
-    // 썸네일: 이미지를 작게 압축 후 Supabase Storage 업로드
+    // ─── 썸네일: Supabase Storage 업로드 ───
     let thumbUrl = null;
     try {
-        const thumbCvs = document.createElement('canvas');
-        const thumbImg = new Image();
-        thumbImg.src = _psImgDataUrl;
-        thumbCvs.width = 200;
-        thumbCvs.height = Math.round(200 / _psImgRatio);
-        thumbCvs.getContext('2d').drawImage(thumbImg, 0, 0, thumbCvs.width, thumbCvs.height);
-        // Supabase Storage에 업로드하여 http URL 확보 (saveCart에서 data: URL은 삭제됨)
-        const _sb = window.sb;
-        if (_sb) {
-            const blob = await new Promise(r => thumbCvs.toBlob(r, 'image/jpeg', 0.7));
+        if (_sb && _psImgDataUrl) {
+            // data URL → blob 변환
+            const res = await fetch(_psImgDataUrl);
+            const origBlob = await res.blob();
+            // 리사이즈
+            const thumbCvs = document.createElement('canvas');
+            const thumbImg = await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = _psImgDataUrl;
+            });
+            thumbCvs.width = 300;
+            thumbCvs.height = Math.round(300 / _psImgRatio);
+            thumbCvs.getContext('2d').drawImage(thumbImg, 0, 0, thumbCvs.width, thumbCvs.height);
+            const blob = await new Promise(r => thumbCvs.toBlob(r, 'image/jpeg', 0.8));
             if (blob) {
                 const ts = Date.now();
                 const rnd = Math.random().toString(36).substring(2, 8);
                 const path = `thumbs/ps_${ts}_${rnd}.jpg`;
-                const { data: upData, error: upErr } = await _sb.storage.from('orders').upload(path, blob);
+                const { error: upErr } = await _sb.storage.from('orders').upload(path, blob);
                 if (!upErr) {
                     const { data: pubData } = _sb.storage.from('orders').getPublicUrl(path);
                     thumbUrl = pubData?.publicUrl || null;
                 }
             }
         }
-        // fallback: 업로드 실패시 data URL
-        if (!thumbUrl) thumbUrl = thumbCvs.toDataURL('image/jpeg', 0.7);
-    } catch(e) {}
+    } catch(e) { console.warn('[PS] thumb upload failed:', e); }
 
-    // 미싱 옵션
-    const addonCodes = [];
-    const addonQtys = {};
+    // ─── 실제 상품의 addon 코드를 DB에서 조회 ───
+    // 카테고리로 대표 상품을 찾아 addon 코드를 가져옴
+    const catSearchMap = {
+        fabric: ['ua_fabric', 'fabric'],
+        paper: ['ua_paper', 'paper'],
+        canvas: ['ua_canvas', 'canvas'],
+        honeycomb: ['hb_printing', 'pp_hc_', 'honeycomb'],
+        blind: ['pp_bl_', 'blind']
+    };
+    let realAddonStr = '';
+    try {
+        if (_sb) {
+            const cats = catSearchMap[productKey] || [];
+            for (const cat of cats) {
+                const { data: prodRows } = await _sb.from('admin_products')
+                    .select('code, addons, category')
+                    .eq('category', cat)
+                    .not('addons', 'is', null)
+                    .limit(1);
+                if (prodRows && prodRows.length > 0 && prodRows[0].addons) {
+                    realAddonStr = prodRows[0].addons;
+                    console.log(`[PS] Found addons from ${prodRows[0].code} (cat=${cat}): ${realAddonStr}`);
+                    break;
+                }
+            }
+        }
+    } catch(e) { console.warn('[PS] addon lookup failed:', e); }
+
+    // Photo Studio에서 선택한 미싱 옵션 (미리 선택됨)
+    const preSelectedCodes = [];
+    const preSelectedQtys = {};
     const sewingRadio = document.querySelector('input[name="psSewing"]:checked');
     if (sewingRadio) {
-        addonCodes.push(sewingRadio.value);
-        addonQtys[sewingRadio.value] = 1;
+        preSelectedCodes.push(sewingRadio.value);
+        preSelectedQtys[sewingRadio.value] = 1;
     }
 
     // 원본 이미지 저장 (주문시 사용)
@@ -1986,7 +2019,8 @@ async function _psGoToCart(w, h, productKey, basePrice) {
         w_mm: w, h_mm: h,
         width_mm: w, height_mm: h,
         category: catMap[productKey] || productKey,
-        addons: productKey === 'fabric' ? addonCodes.join(',') : '',
+        // 실제 상품의 addon 코드를 그대로 전달 → 장바구니에서 옵션 표시/선택 가능
+        addons: realAddonStr,
         is_custom_size: true,
         is_custom: true,
         _calculated_price: true,
@@ -1998,10 +2032,9 @@ async function _psGoToCart(w, h, productKey, basePrice) {
 
     // 장바구니에 추가 후 장바구니 페이지로 이동
     setTimeout(() => {
-        // order.js에서 import된 함수 (window에 노출됨)
         if (window.addProductToCartDirectly) {
             const extra = { thumb: thumbUrl };
-            window.addProductToCartDirectly(productInfo, 1, addonCodes, addonQtys, extra);
+            window.addProductToCartDirectly(productInfo, 1, preSelectedCodes, preSelectedQtys, extra);
         } else {
             console.error('[PhotoStudio] addProductToCartDirectly not found on window');
         }
