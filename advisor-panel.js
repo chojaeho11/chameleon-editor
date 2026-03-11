@@ -2190,7 +2190,7 @@ async function _psLoadKeyringRings() {
         });
     } catch (e) {
         console.warn('[PS] Ring load failed:', e);
-        container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${lang==='ja'?'カートで選択可能':lang==='en'?'Select in cart':'장바구니에서 선택 가능'}</span>`;
+        container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${lang==='ja'?'基本キーリングで出荷されます':lang==='en'?'Ships with default keyring hook':'기본 키링고리로 출고됩니다'}</span>`;
     }
 }
 
