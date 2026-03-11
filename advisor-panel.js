@@ -1904,92 +1904,183 @@ function _psShowSizing(key) {
     scrollChat();
 }
 
-// ─── 티셔츠 목업 렌더링 ───
+// ─── 티셔츠 목업 렌더링 (드래그/리사이즈) ───
+let _tsMockupImg = null;    // 캐시된 사용자 이미지
+let _tsImgX = 0, _tsImgY = 0, _tsImgScale = 1; // 이미지 위치/크기
+
+function _psTshirtPath(ctx, W, H) {
+    // 참고 이미지 기반 깔끔한 라운드 넥 티셔츠
+    const cx = W / 2;
+    ctx.beginPath();
+    // 왼쪽 소매 끝
+    ctx.moveTo(12, 95);
+    // 왼쪽 소매 아래
+    ctx.quadraticCurveTo(18, 130, 62, 135);
+    // 왼쪽 겨드랑이
+    ctx.lineTo(68, 115);
+    // 왼쪽 몸통
+    ctx.lineTo(68, H - 15);
+    // 밑단
+    ctx.quadraticCurveTo(cx, H - 5, W - 68, H - 15);
+    // 오른쪽 몸통
+    ctx.lineTo(W - 68, 115);
+    // 오른쪽 겨드랑이
+    ctx.lineTo(W - 62, 135);
+    // 오른쪽 소매 아래
+    ctx.quadraticCurveTo(W - 18, 130, W - 12, 95);
+    // 오른쪽 소매 위
+    ctx.quadraticCurveTo(W - 20, 55, W - 68, 45);
+    // 오른쪽 어깨
+    ctx.lineTo(cx + 28, 25);
+    // 목 라인 (U자)
+    ctx.quadraticCurveTo(cx + 15, 50, cx, 55);
+    ctx.quadraticCurveTo(cx - 15, 50, cx - 28, 25);
+    // 왼쪽 어깨
+    ctx.lineTo(68, 45);
+    // 왼쪽 소매 위
+    ctx.quadraticCurveTo(20, 55, 12, 95);
+    ctx.closePath();
+}
+
 function _psRenderTshirtMockup() {
     const container = document.getElementById('psTshirtMockup');
     if (!container) return;
 
-    const cvs = document.createElement('canvas');
-    cvs.width = 300; cvs.height = 360;
-    const ctx = cvs.getContext('2d');
+    const W = 280, H = 320;
 
-    // 배경
-    ctx.fillStyle = '#f1f5f9';
-    ctx.fillRect(0, 0, 300, 360);
-
-    const color = _psTshirtColor || '#ffffff';
-
-    // 티셔츠 shape 그리기
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    // 어깨 ~ 목
-    ctx.moveTo(60, 60);   // 왼쪽 어깨 끝
-    ctx.lineTo(105, 40);  // 왼쪽 목
-    ctx.quadraticCurveTo(150, 25, 195, 40); // 목 곡선
-    ctx.lineTo(240, 60);  // 오른쪽 어깨 끝
-    // 오른쪽 소매
-    ctx.lineTo(270, 110);
-    ctx.lineTo(225, 120);
-    ctx.lineTo(220, 90);
-    // 오른쪽 몸통
-    ctx.lineTo(215, 310);
-    // 아래
-    ctx.quadraticCurveTo(150, 320, 85, 310);
-    // 왼쪽 몸통
-    ctx.lineTo(80, 90);
-    ctx.lineTo(75, 120);
-    ctx.lineTo(30, 110);
-    ctx.closePath();
-    ctx.fill();
-
-    // 테두리
-    ctx.strokeStyle = _psLightenDarken(color, -40);
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // 목 라인
-    ctx.beginPath();
-    ctx.moveTo(115, 45);
-    ctx.quadraticCurveTo(150, 55, 185, 45);
-    ctx.strokeStyle = _psLightenDarken(color, -30);
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // 사용자 이미지를 가슴 영역에 합성
-    const artImg = new Image();
-    artImg.onload = () => {
-        // 프린트 영역: 가슴 중앙
-        const printW = 110, printH = 110;
-        const px = (300 - printW) / 2;
-        const py = 100;
-
-        // 이미지 비율 유지
-        const imgRatio = artImg.width / artImg.height;
-        let dw = printW, dh = printH;
-        if (imgRatio > 1) { dh = printW / imgRatio; }
-        else { dw = printH * imgRatio; }
-        const dx = px + (printW - dw) / 2;
-        const dy = py + (printH - dh) / 2;
-
-        ctx.drawImage(artImg, dx, dy, dw, dh);
-
-        // 프린트 영역 점선 테두리
-        ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(px, py, printW, printH);
-        ctx.setLineDash([]);
-
-        container.innerHTML = '';
+    // 첫 렌더링: 캔버스 생성 + 이벤트 바인딩
+    let cvs = container.querySelector('canvas');
+    if (!cvs) {
+        cvs = document.createElement('canvas');
+        cvs.width = W; cvs.height = H;
         cvs.style.borderRadius = '12px';
         cvs.style.maxWidth = '100%';
+        cvs.style.cursor = 'move';
+        cvs.style.touchAction = 'none';
+        container.innerHTML = '';
         container.appendChild(cvs);
-    };
-    artImg.src = _psNoBgDataUrl || _psRawDataUrl || _psImgDataUrl;
+
+        // 초기 이미지 위치/크기
+        _tsImgX = W / 2; _tsImgY = 155; _tsImgScale = 1;
+
+        // 드래그 이벤트
+        let dragging = false, lastX = 0, lastY = 0;
+        const getPos = (e) => {
+            const r = cvs.getBoundingClientRect();
+            const t = e.touches ? e.touches[0] : e;
+            return { x: t.clientX - r.left, y: t.clientY - r.top };
+        };
+        const onDown = (e) => { e.preventDefault(); dragging = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
+        const onMove = (e) => {
+            if (!dragging) return;
+            e.preventDefault();
+            const p = getPos(e);
+            _tsImgX += (p.x - lastX); _tsImgY += (p.y - lastY);
+            lastX = p.x; lastY = p.y;
+            _psDrawTshirt(cvs);
+        };
+        const onUp = () => { dragging = false; };
+        cvs.addEventListener('mousedown', onDown);
+        cvs.addEventListener('mousemove', onMove);
+        cvs.addEventListener('mouseup', onUp);
+        cvs.addEventListener('mouseleave', onUp);
+        cvs.addEventListener('touchstart', onDown, { passive: false });
+        cvs.addEventListener('touchmove', onMove, { passive: false });
+        cvs.addEventListener('touchend', onUp);
+
+        // 휠 = 크기 조절
+        cvs.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            _tsImgScale *= e.deltaY < 0 ? 1.08 : 0.92;
+            _tsImgScale = Math.max(0.2, Math.min(3, _tsImgScale));
+            _psDrawTshirt(cvs);
+        }, { passive: false });
+
+        // 사용자 이미지 로드
+        const artSrc = _psNoBgDataUrl || _psRawDataUrl || _psImgDataUrl;
+        if (artSrc) {
+            const img = new Image();
+            img.onload = () => { _tsMockupImg = img; _psDrawTshirt(cvs); };
+            img.src = artSrc;
+        }
+
+        // 크기 조절 슬라이더 추가
+        const lang = getLang();
+        const ctrl = document.createElement('div');
+        ctrl.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:6px;justify-content:center;';
+        ctrl.innerHTML = `<span style="font-size:10px;color:#64748b;">🔍</span>
+            <input type="range" id="psTsScale" min="20" max="200" value="100" style="width:140px;accent-color:#7c3aed;">
+            <span style="font-size:9px;color:#94a3b8;">${lang==='ja'?'ドラッグで移動':lang==='en'?'Drag to move':'드래그로 이동'}</span>`;
+        container.appendChild(ctrl);
+        document.getElementById('psTsScale')?.addEventListener('input', (e) => {
+            _tsImgScale = parseInt(e.target.value) / 100;
+            _psDrawTshirt(cvs);
+        });
+    }
+
+    _psDrawTshirt(cvs);
+}
+
+function _psDrawTshirt(cvs) {
+    const ctx = cvs.getContext('2d');
+    const W = cvs.width, H = cvs.height;
+    const color = _psTshirtColor || '#ffffff';
+
+    // 배경 (체크무늬 — 투명 표시)
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, W, H);
+
+    // 티셔츠 그림자
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.15)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    _psTshirtPath(ctx, W, H);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+
+    // 티셔츠 채우기 (그림자 없이)
+    _psTshirtPath(ctx, W, H);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // 주름/음영 (미묘한 그라데이션 오버레이)
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, 'rgba(255,255,255,0.08)');
+    grad.addColorStop(0.3, 'rgba(0,0,0,0.03)');
+    grad.addColorStop(0.7, 'rgba(255,255,255,0.05)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.06)');
+    _psTshirtPath(ctx, W, H);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 클리핑: 사용자 이미지를 티셔츠 안에만 표시
+    if (_tsMockupImg) {
+        ctx.save();
+        _psTshirtPath(ctx, W, H);
+        ctx.clip();
+
+        const imgW = _tsMockupImg.width;
+        const imgH = _tsMockupImg.height;
+        const ratio = imgW / imgH;
+        const baseSize = 120;
+        let dw = baseSize * _tsImgScale;
+        let dh = dw / ratio;
+        ctx.drawImage(_tsMockupImg, _tsImgX - dw / 2, _tsImgY - dh / 2, dw, dh);
+        ctx.restore();
+    }
+
+    // 테두리
+    _psTshirtPath(ctx, W, H);
+    ctx.strokeStyle = _psLightenDarken(color, -25);
+    ctx.lineWidth = 1;
+    ctx.stroke();
 }
 
 // 색상 밝기 조절 유틸
 function _psLightenDarken(hex, amt) {
+    if (!hex || !hex.startsWith('#')) return hex;
     let r = parseInt(hex.slice(1,3),16) + amt;
     let g = parseInt(hex.slice(3,5),16) + amt;
     let b = parseInt(hex.slice(5,7),16) + amt;
