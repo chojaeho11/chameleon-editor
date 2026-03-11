@@ -88,7 +88,22 @@ serve(async (req) => {
 
     // ─── 2차: remove.bg API (유료 fallback) ───
     if (!resultBlob) {
-      const removeBgKey = Deno.env.get("REMOVEBG_API_KEY");
+      let removeBgKey = Deno.env.get("REMOVEBG_API_KEY") || Deno.env.get("REMOVE_BG_API_KEY");
+      // DB secrets 테이블에서도 조회
+      if (!removeBgKey) {
+        try {
+          const sb2 = createClient(
+            Deno.env.get("SUPABASE_URL") || "",
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
+          );
+          const { data: d1 } = await sb2.from("secrets").select("value").eq("name", "REMOVE_BG_API_KEY").single();
+          removeBgKey = d1?.value;
+          if (!removeBgKey) {
+            const { data: d2 } = await sb2.from("secrets").select("value").eq("name", "REMOVEBG_API_KEY").single();
+            removeBgKey = d2?.value;
+          }
+        } catch(_) {}
+      }
       if (removeBgKey) {
         try {
           console.log("[bg-remove] Trying remove.bg...");
