@@ -447,7 +447,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 4초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},4000);
 </script>
-<script src="toast.js?v=160"></script>
+<script src="toast.js?v=161"></script>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 <script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
 
@@ -4374,30 +4374,30 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=160"></script>
-<script type="module" src="./canvas-core.js?v=160"></script>
-<script src="./wall-3d-preview.js?v=160" defer></script>
-<script src="./wall-3d-walls.js?v=160" defer></script>
-<script type="module" src="./canvas-size.js?v=160"></script>
-<script type="module" src="./canvas-guides.js?v=160"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=160"></script>
-<script type="module" src="./canvas-objects.js?v=160"></script>
-<script type="module" src="./canvas-image.js?v=160"></script>
-<script type="module" src="./canvas-template.js?v=160"></script>
-<script type="module" src="./canvas-ai.js?v=160"></script>
-<script type="module" src="./canvas-retouch.js?v=160"></script>
-<script type="module" src="./canvas-utils.js?v=160"></script>
-<script type="module" src="./shortcuts.js?v=160"></script>
-<script type="module" src="./context-menu.js?v=160"></script>
-<script type="module" src="./export.js?v=160"></script>
-<script type="module" src="./order.js?v=160"></script>
-<script type="module" src="./login.js?v=160"></script>
-<script type="module" src="./my-design.js?v=160"></script>
-<script type="module" src="./ppt-mode.js?v=160"></script>
-<script type="module" src="./main.js?v=160"></script>
+<script type="module" src="./config.js?v=161"></script>
+<script type="module" src="./canvas-core.js?v=161"></script>
+<script src="./wall-3d-preview.js?v=161" defer></script>
+<script src="./wall-3d-walls.js?v=161" defer></script>
+<script type="module" src="./canvas-size.js?v=161"></script>
+<script type="module" src="./canvas-guides.js?v=161"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=161"></script>
+<script type="module" src="./canvas-objects.js?v=161"></script>
+<script type="module" src="./canvas-image.js?v=161"></script>
+<script type="module" src="./canvas-template.js?v=161"></script>
+<script type="module" src="./canvas-ai.js?v=161"></script>
+<script type="module" src="./canvas-retouch.js?v=161"></script>
+<script type="module" src="./canvas-utils.js?v=161"></script>
+<script type="module" src="./shortcuts.js?v=161"></script>
+<script type="module" src="./context-menu.js?v=161"></script>
+<script type="module" src="./export.js?v=161"></script>
+<script type="module" src="./order.js?v=161"></script>
+<script type="module" src="./login.js?v=161"></script>
+<script type="module" src="./my-design.js?v=161"></script>
+<script type="module" src="./ppt-mode.js?v=161"></script>
+<script type="module" src="./main.js?v=161"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=160";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=161";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -5269,10 +5269,10 @@ window.filterFxCards = function(cat, btn) {
 
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=158 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=160';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=160'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=160';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=160';
+    import { canvas, setMaxLimits } from './canvas-core.js?v=161';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=161'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=161';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=161';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -5324,20 +5324,22 @@ window.filterFxCards = function(cat, btn) {
 
 window.getTinyThumb = function(url, size = 150) {
     if (!url) return '';
-    
+
     // 1. Base64 데이터는 그대로 반환
     if (url.startsWith('data:image')) return url;
 
-    // [★수정] 이미 Supabase 리사이징 옵션이 붙어있다면 원본 그대로 반환 (중복 방지)
-    if (url.includes('width=') && url.includes('resize=')) {
-        return url;
+    // 2. 이미 리사이징 파라미터가 있으면 그대로
+    if (url.includes('width=') && url.includes('quality=')) return url;
+
+    // 3. Supabase Storage: /object/public/ → /render/image/public/ 로 변환 (실제 리사이징)
+    if (url.includes('/storage/v1/object/public/')) {
+        const renderUrl = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+        return `${renderUrl}?width=${size}&height=${size}&resize=cover&quality=60`;
     }
 
-    // 2. URL 파라미터 연결자 결정
+    // 4. 그 외 URL: 쿼리파라미터 추가 시도
     const separator = url.includes('?') ? '&' : '?';
-
-    // 3. 리사이징 파라미터 추가 (HiDPI 대응: quality 80)
-    return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=80&format=webp`;
+    return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=60`;
 };
     window.openProductDetail = openProductDetail;
     window.startDesignFromProduct = startDesignFromProduct;
@@ -5694,7 +5696,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=160').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=161').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -7047,16 +7049,15 @@ window.showChoiceModal = async function(key) {
 
     let rightSideUI = "";
     if (isCustom) {
-        const hideFileUpload = isArtworkProduct;
         rightSideUI = productHeaderHtml + `
-            <button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:${hideFileUpload ? 'none' : 'flex'}; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">
+            ${isArtworkProduct ? '' : `<button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">
                 <div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일올리기'}
                 </div>
                 <div style="font-size:11px; font-weight:400; color:#cbd5e1; line-height:1.5; text-align:center; margin-top:2px;">
                     ${lang==='ja'?'印刷ファイルがある場合はPDFまたは画像でアップロードしてください。ファイルがなくても無料エディタで簡単にデザインできます。':lang==='zh'?'如果有印刷文件，请上传PDF或图片。没有文件也可以使用免费编辑器轻松设计。':lang==='ar'?'إذا كان لديك ملف للطباعة، يرجى رفعه بصيغة PDF أو صورة. إذا لم يكن لديك ملف، يمكنك التصميم بسهولة باستخدام المحرر المجاني.':lang==='es'?'Si tiene un archivo para imprimir, súbalo en PDF o imagen. Si no tiene archivo, puede diseñar fácilmente con el editor gratuito.':lang==='de'?'Falls Sie eine Druckdatei haben, laden Sie diese als PDF oder Bild hoch. Ohne Datei können Sie einfach mit dem kostenlosen Editor gestalten.':lang==='fr'?'Si vous avez un fichier d\'impression, envoyez-le en PDF ou image. Sans fichier, vous pouvez créer facilement avec l\'éditeur gratuit.':lang==='en'?'If you have a print file, upload it as PDF or image. No file? You can easily design with our free editor.':'인쇄할 파일이 있다면 PDF 또는 이미지로 올려주세요. 파일이 없어도 무료 에디터로 쉽게 디자인할 수 있습니다.'}
                 </div>
-            </button>
+            </button>`}
             <div id="uploadPreviewArea" data-npc="uploadPreview" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
                     <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc; box-shadow:0 2px 6px rgba(99,102,241,0.2);">
@@ -7783,14 +7784,14 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=160');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=161');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=160')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=161')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -7842,7 +7843,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=160')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=161')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -7850,7 +7851,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=160');
+                    const m = await import('./order.js?v=161');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -7920,7 +7921,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=160').then(m => {
+            import('./order.js?v=161').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -8412,7 +8413,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=160').then(m => {
+        import('./order.js?v=161').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -8746,7 +8747,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=160');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=161');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -8764,7 +8765,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=160');
+                    const mod = await import('./canvas-ai.js?v=161');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -8780,7 +8781,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=160');
+                    const mod = await import('./canvas-ai.js?v=161');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -8835,7 +8836,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=160');
+                    const mod = await import('./canvas-ai.js?v=161');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -8846,7 +8847,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=160');
+                    const mod = await import('./canvas-ai.js?v=161');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -8954,7 +8955,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=160');
+                await import('./canvas-objects.js?v=161');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -10507,7 +10508,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=160';
+    import { sb, initConfig } from './config.js?v=161';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
@@ -12356,7 +12357,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=160').then(function(mod) {
+            import('./order.js?v=161').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -13344,8 +13345,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=160"></script>
-<script src="./npc-wizard.js?v=160"></script>
+<script src="./gif-maker.js?v=161"></script>
+<script src="./npc-wizard.js?v=161"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">
