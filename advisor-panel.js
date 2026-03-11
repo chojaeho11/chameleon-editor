@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=139';
+import { SITE_CONFIG } from './site-config.js?v=140';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=139');
+        const { addProductToCartDirectly } = await import('./order.js?v=140');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1130,9 +1130,9 @@ function scrollChat() {
 // 포토 스튜디오 모드 (채팅창 내부)
 // ═══════════════════════════════════════
 const PS_T = {
-    kr: { title:'✨ Photo Studio', desc:'사진 한 장으로 멋진 작품을 만들 수 있어요.\n자동으로 보정하고 디자인합니다.', upload:'사진 올리기', drag:'또는 여기에 드래그', processing:'보정 중...', done:'작품이 완성되었습니다!', orderTitle:'이 작품으로 주문하기', fabric:'패브릭 인쇄', paper:'종이 인쇄물', honeycomb:'허니콤보드', canvas:'캔버스 액자', blind:'롤블라인드', sell:'내 작품 판매하기', size:'사이즈(mm)', price:'예상 금액', order:'주문하기', retry:'다른 사진으로', custom:'직접 입력', back:'← AI 상담으로', fromPrice:'~부터', sellMsg:'곧 카멜레온 마켓플레이스가 오픈합니다!\n내 작품을 상품으로 판매해보세요.', sellDone:'등록되었습니다!' },
-    ja: { title:'✨ Photo Studio', desc:'写真1枚で素敵な作品が作れます。\n自動で補正してデザインします。', upload:'写真をアップ', drag:'またはここにドラッグ', processing:'補正中...', done:'作品が完成しました！', orderTitle:'この作品で注文する', fabric:'ファブリック', paper:'紙印刷', honeycomb:'ハニカムボード', canvas:'キャンバス額', blind:'ロールブラインド', sell:'作品を販売', size:'サイズ(mm)', price:'予想金額', order:'注文する', retry:'別の写真で', custom:'カスタム', back:'← AI相談へ', fromPrice:'〜から', sellMsg:'マーケットプレイスが間もなくオープン！', sellDone:'登録しました！' },
-    en: { title:'✨ Photo Studio', desc:'Turn a single photo into stunning artwork.\nAuto-enhanced and beautifully designed.', upload:'Upload Photo', drag:'or drag & drop here', processing:'Enhancing...', done:'Your artwork is ready!', orderTitle:'Order this artwork', fabric:'Fabric Print', paper:'Paper Print', honeycomb:'Honeycomb Board', canvas:'Canvas Frame', blind:'Roller Blind', sell:'Sell My Art', size:'Size(mm)', price:'Est. Price', order:'Order Now', retry:'Try another', custom:'Custom', back:'← Back to AI', fromPrice:'from', sellMsg:'Chameleon Marketplace coming soon!\nSell your artwork as products.', sellDone:'Registered!' },
+    kr: { title:'✨ Photo Studio', desc:'사진 한 장으로 멋진 작품을 만들 수 있어요.\n자동으로 보정하고 디자인합니다.', upload:'사진 올리기', drag:'또는 여기에 드래그', processing:'보정 중...', done:'작품이 완성되었습니다!', orderTitle:'이 작품으로 주문하기', fabric:'패브릭 인쇄', paper:'종이 인쇄물', honeycomb:'허니콤보드', canvas:'캔버스 액자', blind:'롤블라인드', sell:'내 작품 판매하기', size:'사이즈 선택', price:'예상 금액', order:'주문하기', retry:'다른 사진으로', custom:'직접 입력', back:'← AI 상담으로', fromPrice:'~부터', sellMsg:'판매금액의 10%가\n현금으로 찾을 수 있는\n적립금으로 적립됩니다!', sellDone:'등록되었습니다!', textLabel:'텍스트', textPh:'문구를 입력하세요', removeBg:'누끼따기', removeBgDesc:'배경 제거', colorLabel:'텍스트 색상', applyText:'적용', width:'가로', height:'세로(자동)', autoCalc:'자동계산', editorLink:'디테일한 수정이 필요하시면 에디터로 이동하세요', mypage:'마이페이지', sellExplain:'내 작품을 상품으로 등록하고 판매할 수 있습니다.', commission:'판매금액의 10%가 현금으로 찾을 수 있는 적립금으로 적립됩니다.', removingBg:'배경 제거 중...' },
+    ja: { title:'✨ Photo Studio', desc:'写真1枚で素敵な作品が作れます。\n自動で補正してデザインします。', upload:'写真をアップ', drag:'またはここにドラッグ', processing:'補正中...', done:'作品が完成しました！', orderTitle:'この作品で注文する', fabric:'ファブリック', paper:'紙印刷', honeycomb:'ハニカムボード', canvas:'キャンバス額', blind:'ロールブラインド', sell:'作品を販売', size:'サイズ選択', price:'予想金額', order:'注文する', retry:'別の写真で', custom:'カスタム', back:'← AI相談へ', fromPrice:'〜から', sellMsg:'販売金額の10%が\nキャッシュバック可能な\nポイントとして積立されます！', sellDone:'登録しました！', textLabel:'テキスト', textPh:'テキストを入力', removeBg:'背景除去', removeBgDesc:'背景を削除', colorLabel:'テキスト色', applyText:'適用', width:'横', height:'縦(自動)', autoCalc:'自動計算', editorLink:'詳細な編集はエディターへ移動してください', mypage:'マイページ', sellExplain:'作品を商品として登録・販売できます。', commission:'販売金額の10%がキャッシュバック可能なポイントとして積立されます。', removingBg:'背景除去中...' },
+    en: { title:'✨ Photo Studio', desc:'Turn a single photo into stunning artwork.\nAuto-enhanced and beautifully designed.', upload:'Upload Photo', drag:'or drag & drop here', processing:'Enhancing...', done:'Your artwork is ready!', orderTitle:'Order this artwork', fabric:'Fabric Print', paper:'Paper Print', honeycomb:'Honeycomb Board', canvas:'Canvas Frame', blind:'Roller Blind', sell:'Sell My Art', size:'Select Size', price:'Est. Price', order:'Order Now', retry:'Try another', custom:'Custom', back:'← Back to AI', fromPrice:'from', sellMsg:'Earn 10% of sales\nas cashback credits!', sellDone:'Registered!', textLabel:'Text', textPh:'Enter your text', removeBg:'Remove BG', removeBgDesc:'Remove background', colorLabel:'Text Color', applyText:'Apply', width:'Width', height:'Height(auto)', autoCalc:'Auto', editorLink:'Need detailed editing? Move to the editor', mypage:'My Page', sellExplain:'Register and sell your artwork as products.', commission:'10% of sales are credited as cashback you can withdraw.', removingBg:'Removing background...' },
 };
 function ps(k) { return (PS_T[getLang()] && PS_T[getLang()][k]) || PS_T.en[k] || k; }
 
@@ -1145,6 +1145,11 @@ const PS_PRODUCTS = {
 };
 
 let _psImgRatio = 1, _psImgDataUrl = null, _psSelectedProduct = null;
+let _psRawDataUrl = null;   // enhanced but no text overlay
+let _psOrigDataUrl = null;  // original unprocessed
+let _psText = 'Love of my life';
+let _psTextColor = '#ffffff';
+let _psImgW = 0, _psImgH = 0; // pixel dimensions
 
 function _psFmtPrice(krw) {
     const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
@@ -1214,7 +1219,6 @@ function exitStudioMode() {
 }
 
 async function _psProcess(file) {
-    // 로딩
     chatArea.innerHTML = `<div style="text-align:center; padding:50px 20px;"><div style="width:40px;height:40px;border:4px solid #e9d5ff;border-top:4px solid #7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;"></div><p style="color:#7c3aed;font-weight:600;font-size:14px;">${ps('processing')}</p></div>`;
 
     const img = new Image();
@@ -1225,7 +1229,15 @@ async function _psProcess(file) {
         const mx = 2000;
         if (w > mx || h > mx) { const s = mx / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
         _psImgRatio = w / h;
+        _psImgW = w; _psImgH = h;
 
+        // 원본 저장 (리사이즈만)
+        const origCvs = document.createElement('canvas');
+        origCvs.width = w; origCvs.height = h;
+        origCvs.getContext('2d').drawImage(img, 0, 0, w, h);
+        _psOrigDataUrl = origCvs.toDataURL('image/jpeg', 0.92);
+
+        // 보정 이미지 (텍스트 없이)
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
@@ -1240,25 +1252,41 @@ async function _psProcess(file) {
         ctx.fillStyle = grad;
         ctx.fillRect(0, h * 0.55, w, h * 0.45);
 
-        // 폰트
-        try { await document.fonts.load('48px "Dancing Script"'); } catch(e) {}
-        await new Promise(r => setTimeout(r, 300));
+        _psRawDataUrl = cvs.toDataURL('image/jpeg', 0.92);
 
-        const fs = Math.round(w * 0.065);
-        ctx.font = `${fs}px "Dancing Script", cursive`;
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 2;
-        ctx.fillText('Love of my life', w / 2, h * 0.88);
-        ctx.shadowColor = 'transparent';
-
-        _psImgDataUrl = cvs.toDataURL('image/jpeg', 0.92);
+        // 텍스트 적용 버전
+        _psText = 'Love of my life';
+        _psTextColor = '#ffffff';
+        await _psApplyText();
         _psShowResult();
     };
     img.onerror = () => enterStudioMode();
     img.src = url;
+}
+
+async function _psApplyText() {
+    const img = new Image();
+    await new Promise((resolve) => { img.onload = resolve; img.src = _psRawDataUrl; });
+    const cvs = document.createElement('canvas');
+    cvs.width = img.width; cvs.height = img.height;
+    const ctx = cvs.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    if (_psText.trim()) {
+        try { await document.fonts.load('48px "Dancing Script"'); } catch(e) {}
+        await new Promise(r => setTimeout(r, 200));
+        const fs = Math.round(img.width * 0.065);
+        ctx.font = `${fs}px "Dancing Script", cursive`;
+        ctx.fillStyle = _psTextColor;
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 2;
+        ctx.fillText(_psText, img.width / 2, img.height * 0.88);
+        ctx.shadowColor = 'transparent';
+    }
+
+    _psImgDataUrl = cvs.toDataURL('image/jpeg', 0.92);
 }
 
 function _psShowResult() {
@@ -1272,24 +1300,104 @@ function _psShowResult() {
     const prodBtns = prods.map(p => `<div class="ps-prod-item" data-pk="${p.key}"><span class="ps-pi">${p.icon}</span>${p.name}<span class="ps-pp">${_psFmtPrice(PS_PRODUCTS[p.key].min)} ${ps('fromPrice')}</span></div>`).join('');
 
     chatArea.innerHTML = `
-        <div style="padding:10px;">
-            <div class="ps-preview-wrap">
-                <img src="${_psImgDataUrl}" alt="artwork">
-                <div class="ps-preview-badge">✨ ${ps('done')}</div>
+        <div class="ps-studio-layout">
+            <!-- 좌측: 사진 프리뷰 -->
+            <div class="ps-left">
+                <div class="ps-preview-wrap">
+                    <img src="${_psImgDataUrl}" alt="artwork" id="psPreviewImg">
+                    <div class="ps-preview-badge">✨ ${ps('done')}</div>
+                </div>
+                <div style="text-align:center; margin-top:6px;">
+                    <a style="color:#94a3b8; font-size:11px; cursor:pointer; text-decoration:none;" id="psRetryBtn">🔄 ${ps('retry')}</a>
+                </div>
             </div>
-            <div style="font-size:13px; font-weight:700; color:#1e1b4b; margin:12px 0 6px;">🛒 ${ps('orderTitle')}</div>
-            <div class="ps-prod-grid">
-                ${prodBtns}
-                <div class="ps-prod-item ps-sell-item" data-pk="sell"><span class="ps-pi">💰</span>${ps('sell')}</div>
-            </div>
-            <div id="psSizingArea"></div>
-            <div style="text-align:center; margin-top:10px;">
-                <a style="color:#94a3b8; font-size:12px; cursor:pointer; text-decoration:none;" id="psRetryBtn">🔄 ${ps('retry')}</a>
+            <!-- 우측: 편집 도구 -->
+            <div class="ps-right">
+                <!-- 텍스트 편집 -->
+                <div class="ps-tool-section">
+                    <div class="ps-tool-label">✏️ ${ps('textLabel')}</div>
+                    <div class="ps-text-row">
+                        <input type="text" id="psTextInput" class="ps-text-input" value="${_psText}" placeholder="${ps('textPh')}">
+                        <button class="ps-apply-btn" id="psApplyText">${ps('applyText')}</button>
+                    </div>
+                </div>
+                <!-- 누끼따기 (배경제거) -->
+                <div class="ps-tool-section">
+                    <button class="ps-tool-btn" id="psRemoveBg">✂️ ${ps('removeBg')}</button>
+                    <span class="ps-tool-desc">${ps('removeBgDesc')}</span>
+                </div>
+                <!-- 텍스트 색상 -->
+                <div class="ps-tool-section">
+                    <div class="ps-tool-label">🎨 ${ps('colorLabel')}</div>
+                    <div class="ps-color-row">
+                        <div class="ps-color-swatch active" data-color="#ffffff" style="background:#fff;border:2px solid #ccc;"></div>
+                        <div class="ps-color-swatch" data-color="#000000" style="background:#000;"></div>
+                        <div class="ps-color-swatch" data-color="#ff6b6b" style="background:#ff6b6b;"></div>
+                        <div class="ps-color-swatch" data-color="#ffd93d" style="background:#ffd93d;"></div>
+                        <div class="ps-color-swatch" data-color="#6bcb77" style="background:#6bcb77;"></div>
+                        <div class="ps-color-swatch" data-color="#4d96ff" style="background:#4d96ff;"></div>
+                        <div class="ps-color-swatch" data-color="#ff6eb4" style="background:#ff6eb4;"></div>
+                        <input type="color" id="psColorPicker" value="${_psTextColor}" class="ps-color-picker-input" title="Custom">
+                    </div>
+                </div>
+                <!-- 제품 선택 -->
+                <div class="ps-tool-section">
+                    <div class="ps-tool-label">🛒 ${ps('orderTitle')}</div>
+                    <div class="ps-prod-grid">
+                        ${prodBtns}
+                        <div class="ps-prod-item ps-sell-item" data-pk="sell"><span class="ps-pi">💰</span>${ps('sell')}</div>
+                    </div>
+                </div>
+                <!-- 사이즈 영역 -->
+                <div id="psSizingArea"></div>
             </div>
         </div>
+        <!-- 하단: 에디터 이동 링크 -->
+        <div class="ps-editor-link-wrap">
+            <a id="psEditorLink" class="ps-editor-link">🖌️ ${ps('editorLink')}</a>
+        </div>
     `;
+
+    // 이벤트 바인딩
     document.getElementById('psRetryBtn')?.addEventListener('click', enterStudioMode);
 
+    // 텍스트 적용
+    document.getElementById('psApplyText')?.addEventListener('click', async () => {
+        _psText = document.getElementById('psTextInput').value;
+        await _psApplyText();
+        document.getElementById('psPreviewImg').src = _psImgDataUrl;
+    });
+    // Enter 키로도 적용
+    document.getElementById('psTextInput')?.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            _psText = e.target.value;
+            await _psApplyText();
+            document.getElementById('psPreviewImg').src = _psImgDataUrl;
+        }
+    });
+
+    // 누끼따기 (배경 제거)
+    document.getElementById('psRemoveBg')?.addEventListener('click', _psRemoveBg);
+
+    // 색상 선택
+    chatArea.querySelectorAll('.ps-color-swatch').forEach(sw => {
+        sw.addEventListener('click', async () => {
+            chatArea.querySelectorAll('.ps-color-swatch').forEach(s => s.classList.remove('active'));
+            sw.classList.add('active');
+            _psTextColor = sw.dataset.color;
+            document.getElementById('psColorPicker').value = _psTextColor;
+            await _psApplyText();
+            document.getElementById('psPreviewImg').src = _psImgDataUrl;
+        });
+    });
+    document.getElementById('psColorPicker')?.addEventListener('input', async (e) => {
+        _psTextColor = e.target.value;
+        chatArea.querySelectorAll('.ps-color-swatch').forEach(s => s.classList.remove('active'));
+        await _psApplyText();
+        document.getElementById('psPreviewImg').src = _psImgDataUrl;
+    });
+
+    // 제품 선택
     chatArea.querySelectorAll('.ps-prod-item').forEach(btn => {
         btn.addEventListener('click', () => {
             chatArea.querySelectorAll('.ps-prod-item').forEach(b => b.classList.remove('active'));
@@ -1299,48 +1407,145 @@ function _psShowResult() {
             else _psShowSizing(pk);
         });
     });
+
+    // 에디터로 이동
+    document.getElementById('psEditorLink')?.addEventListener('click', _psGoToEditor);
+
     scrollChat();
+}
+
+async function _psRemoveBg() {
+    const btn = document.getElementById('psRemoveBg');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = '⏳ ' + ps('removingBg');
+
+    try {
+        // remove.bg API (free tier) — fallback: 간단한 canvas 기반 배경 제거 시뮬
+        const img = new Image();
+        await new Promise((resolve) => { img.onload = resolve; img.src = _psRawDataUrl; });
+        const cvs = document.createElement('canvas');
+        cvs.width = img.width; cvs.height = img.height;
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        // 간단 배경 제거: 모서리 색상 기반 chroma key (기본 방식)
+        const id = ctx.getImageData(0, 0, cvs.width, cvs.height);
+        const d = id.data;
+        // 모서리 4곳 색상 평균
+        const corners = [
+            [0, 0], [cvs.width - 1, 0],
+            [0, cvs.height - 1], [cvs.width - 1, cvs.height - 1]
+        ];
+        let rr = 0, gg = 0, bb = 0;
+        corners.forEach(([cx, cy]) => {
+            const i = (cy * cvs.width + cx) * 4;
+            rr += d[i]; gg += d[i + 1]; bb += d[i + 2];
+        });
+        rr = Math.round(rr / 4); gg = Math.round(gg / 4); bb = Math.round(bb / 4);
+
+        const threshold = 60;
+        for (let i = 0; i < d.length; i += 4) {
+            const dr = Math.abs(d[i] - rr);
+            const dg = Math.abs(d[i + 1] - gg);
+            const db = Math.abs(d[i + 2] - bb);
+            if (dr < threshold && dg < threshold && db < threshold) {
+                d[i + 3] = 0; // transparent
+            }
+        }
+        ctx.putImageData(id, 0, 0);
+
+        _psRawDataUrl = cvs.toDataURL('image/png');
+        await _psApplyText();
+        document.getElementById('psPreviewImg').src = _psImgDataUrl;
+        btn.textContent = '✅ ' + ps('removeBg');
+        btn.style.background = '#10b981';
+        btn.style.color = '#fff';
+    } catch (e) {
+        btn.textContent = '✂️ ' + ps('removeBg');
+        btn.disabled = false;
+    }
+}
+
+function _psGoToEditor() {
+    // 에디터로 이동: 사진 + 선택된 사이즈를 가지고
+    const selBtn = document.querySelector('#psSizingArea .ps-sz.active');
+    let wMM = 300, hMM = Math.round(300 / _psImgRatio);
+    if (selBtn && selBtn.dataset.w) {
+        wMM = parseInt(selBtn.dataset.w);
+        hMM = parseInt(selBtn.dataset.h);
+    }
+    // 이미지 저장
+    try { sessionStorage.setItem('ps_artwork', _psImgDataUrl); } catch(e) {}
+    window._photoStudioImage = _psImgDataUrl;
+    window._photoStudioSize = { w: wMM, h: hMM };
+
+    // 스튜디오 종료 + 에디터 시작
+    exitStudioMode();
+    setTimeout(() => {
+        if (window.startEditorDirect) {
+            window.startEditorDirect('custom', wMM, hMM);
+            // 이미지 로드 대기 후 캔버스에 배치
+            setTimeout(() => {
+                if (window._photoStudioImage && window.canvas) {
+                    fabric.Image.fromURL(window._photoStudioImage, (fImg) => {
+                        const board = window.canvas.getObjects().find(o => o.isBoardBackground);
+                        if (board) {
+                            const scale = Math.min(board.width / fImg.width, board.height / fImg.height);
+                            fImg.set({ left: board.left, top: board.top, scaleX: scale, scaleY: scale });
+                        }
+                        window.canvas.add(fImg);
+                        window.canvas.renderAll();
+                    });
+                }
+            }, 1500);
+        }
+    }, 300);
 }
 
 function _psShowSizing(key) {
     _psSelectedProduct = key;
-    const shorts = [300, 500, 700, 900, 1200];
-    const sizes = shorts.map(s => {
-        let w, h;
-        if (_psImgRatio >= 1) { h = s; w = Math.round(s * _psImgRatio); } else { w = s; h = Math.round(s / _psImgRatio); }
-        return { l: `${w}×${h}`, w, h };
+    // 가로 기준: 300, 400, 500, 600mm → 세로는 이미지 비율로 자동계산
+    const widths = [300, 400, 500, 600];
+    const sizes = widths.map(w => {
+        const h = Math.round(w / _psImgRatio);
+        return { l: `${w}×${h}`, w, h, wCm: w / 10 };
     });
-    const btns = sizes.map(s => `<button class="ps-sz" data-w="${s.w}" data-h="${s.h}">${s.l}</button>`).join('');
+    const btns = sizes.map(s => `<button class="ps-sz" data-w="${s.w}" data-h="${s.h}">${ps('width')} ${s.wCm}cm<span class="ps-sz-sub">${s.l}mm</span></button>`).join('');
 
     document.getElementById('psSizingArea').innerHTML = `
-        <div style="background:#f8fafc; border-radius:10px; padding:10px; margin-top:8px;">
-            <div style="font-size:12px; font-weight:600; color:#475569; margin-bottom:6px;">📐 ${ps('size')}</div>
-            <div class="ps-size-row">${btns}<button class="ps-sz" data-c="1">${ps('custom')}</button></div>
-            <div id="psCustomArea" style="display:none;" class="ps-custom-inputs">
-                <input type="number" id="psCW" placeholder="가로" min="100" max="5000">
-                <span style="color:#94a3b8; font-weight:600;">×</span>
-                <input type="number" id="psCH" placeholder="세로" min="100" max="5000">
-                <button class="ps-sz" id="psCOk">OK</button>
+        <div class="ps-tool-section" style="margin-top:6px;">
+            <div class="ps-tool-label">📐 ${ps('size')}</div>
+            <div class="ps-size-grid">${btns}</div>
+            <div class="ps-custom-row" style="margin-top:6px;">
+                <input type="number" id="psCW" class="ps-custom-w" placeholder="${ps('width')}(mm)" min="100" max="5000">
+                <span class="ps-auto-h" id="psAutoH">${ps('height')}: --</span>
             </div>
             <div id="psPriceOut"></div>
         </div>
     `;
+
+    // 가로 입력 → 세로 자동계산
+    document.getElementById('psCW')?.addEventListener('input', (e) => {
+        const w = parseInt(e.target.value);
+        if (w >= 50) {
+            const h = Math.round(w / _psImgRatio);
+            document.getElementById('psAutoH').textContent = `${ps('height')}: ${h}mm`;
+            // deselect preset buttons
+            document.querySelectorAll('#psSizingArea .ps-sz').forEach(x => x.classList.remove('active'));
+            _psCalcPrice(w, h);
+        }
+    });
+
     document.getElementById('psSizingArea').querySelectorAll('.ps-sz').forEach(b => {
         b.addEventListener('click', () => {
             document.querySelectorAll('#psSizingArea .ps-sz').forEach(x => x.classList.remove('active'));
             b.classList.add('active');
-            if (b.dataset.c) {
-                document.getElementById('psCustomArea').style.display = 'flex';
-            } else {
-                document.getElementById('psCustomArea').style.display = 'none';
-                _psCalcPrice(parseInt(b.dataset.w), parseInt(b.dataset.h));
-            }
+            const w = parseInt(b.dataset.w), h = parseInt(b.dataset.h);
+            document.getElementById('psCW').value = w;
+            document.getElementById('psAutoH').textContent = `${ps('height')}: ${h}mm`;
+            _psCalcPrice(w, h);
         });
-    });
-    document.getElementById('psCOk')?.addEventListener('click', () => {
-        const w = parseInt(document.getElementById('psCW').value);
-        const h = parseInt(document.getElementById('psCH').value);
-        if (w >= 100 && h >= 100) _psCalcPrice(w, h);
     });
     scrollChat();
 }
@@ -1382,15 +1587,37 @@ function _psOrder(w, h, productKey) {
 
 function _psShowSell() {
     document.getElementById('psSizingArea').innerHTML = `
-        <div style="text-align:center; padding:8px 0;">
-            <p style="font-size:13px; color:#64748b; white-space:pre-line; line-height:1.5; margin:0 0 8px;">${ps('sellMsg')}</p>
-            <button class="ps-order-btn" style="background:#f59e0b;" id="psSellRegBtn">🎨 ${ps('sell')}</button>
+        <div class="ps-sell-panel">
+            <div class="ps-sell-info">
+                <p style="font-size:13px; font-weight:600; color:#1e1b4b; margin:0 0 6px;">💰 ${ps('sellExplain')}</p>
+                <p style="font-size:12px; color:#7c3aed; line-height:1.5; margin:0 0 10px; background:#f5f3ff; padding:8px; border-radius:8px;">
+                    ${ps('commission')}
+                </p>
+            </div>
+            <button class="ps-order-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);" id="psSellRegBtn">🎨 ${ps('sell')}</button>
+            <a class="ps-mypage-link" id="psMypageBtn">📋 ${ps('mypage')}</a>
         </div>
     `;
-    document.getElementById('psSellRegBtn')?.addEventListener('click', function() {
-        this.textContent = '✅ ' + ps('sellDone');
-        this.style.background = '#10b981';
+    document.getElementById('psSellRegBtn')?.addEventListener('click', async function() {
         this.disabled = true;
+        this.textContent = '⏳...';
+        try {
+            // 자동 등록: 이미지를 마켓에 등록
+            const imgData = _psImgDataUrl;
+            try { sessionStorage.setItem('ps_sell_artwork', imgData); } catch(e) {}
+            // TODO: Supabase에 실제 등록 연동
+            await new Promise(r => setTimeout(r, 800));
+            this.textContent = '✅ ' + ps('sellDone');
+            this.style.background = '#10b981';
+        } catch(e) {
+            this.textContent = '❌ Error';
+            this.style.background = '#ef4444';
+            this.disabled = false;
+        }
+    });
+    document.getElementById('psMypageBtn')?.addEventListener('click', () => {
+        // 마이페이지로 이동
+        window.location.href = window.location.pathname + '?page=mypage';
     });
     scrollChat();
 }

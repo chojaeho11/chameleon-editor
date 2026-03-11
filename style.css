@@ -1494,6 +1494,50 @@ button, input, textarea, select { font-family: inherit; }
 .ps-price-bar .ps-pv { font-size:18px; font-weight:800; }
 .ps-order-btn { width:100%; padding:12px; background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
 .ps-order-btn:hover { opacity:.9; }
+
+/* ── Photo Studio 새 레이아웃 ── */
+.ps-studio-layout { display:flex; gap:10px; padding:10px; min-height:0; }
+.ps-left { flex:0 0 45%; min-width:0; }
+.ps-right { flex:1; min-width:0; overflow-y:auto; max-height:500px; }
+.ps-tool-section { margin-bottom:10px; }
+.ps-tool-label { font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; }
+.ps-text-row { display:flex; gap:4px; }
+.ps-text-input { flex:1; padding:6px 8px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12px; font-family:'Dancing Script',cursive; }
+.ps-text-input:focus { border-color:#7c3aed; outline:none; }
+.ps-apply-btn { padding:6px 12px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.ps-apply-btn:hover { background:#6d28d9; }
+.ps-tool-btn { padding:8px 14px; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; color:#334155; }
+.ps-tool-btn:hover { border-color:#7c3aed; color:#7c3aed; background:#faf5ff; }
+.ps-tool-btn:disabled { opacity:.6; cursor:default; }
+.ps-tool-desc { font-size:10px; color:#94a3b8; margin-left:6px; }
+.ps-color-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.ps-color-swatch { width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all .2s; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+.ps-color-swatch:hover { transform:scale(1.15); }
+.ps-color-swatch.active { border-color:#7c3aed !important; box-shadow:0 0 0 2px rgba(124,58,237,.3); }
+.ps-color-picker-input { width:24px; height:24px; border:none; padding:0; cursor:pointer; border-radius:50%; background:none; }
+.ps-size-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.ps-sz { padding:6px 8px; border:1.5px solid #cbd5e1; border-radius:8px; background:#fff; font-size:11px; font-weight:600; cursor:pointer; transition:all .2s; color:#475569; text-align:center; }
+.ps-sz .ps-sz-sub { display:block; font-size:9px; font-weight:400; color:#94a3b8; margin-top:1px; }
+.ps-sz:hover { border-color:#7c3aed; color:#7c3aed; }
+.ps-sz.active { background:#7c3aed; color:#fff; border-color:#7c3aed; }
+.ps-sz.active .ps-sz-sub { color:rgba(255,255,255,.7); }
+.ps-custom-row { display:flex; gap:8px; align-items:center; }
+.ps-custom-w { width:90px; padding:5px 8px; border:1.5px solid #cbd5e1; border-radius:7px; font-size:12px; }
+.ps-custom-w:focus { border-color:#7c3aed; outline:none; }
+.ps-auto-h { font-size:11px; color:#64748b; font-weight:600; }
+.ps-editor-link-wrap { text-align:center; padding:8px 10px 12px; border-top:1px solid #f1f5f9; }
+.ps-editor-link { color:#7c3aed; font-size:12px; font-weight:600; cursor:pointer; text-decoration:none; }
+.ps-editor-link:hover { text-decoration:underline; }
+.ps-sell-panel { padding:8px 0; }
+.ps-mypage-link { display:block; text-align:center; margin-top:8px; color:#6366f1; font-size:12px; font-weight:600; cursor:pointer; text-decoration:none; }
+.ps-mypage-link:hover { text-decoration:underline; }
+
+/* 모바일: 세로 스택 */
+@media (max-width:500px) {
+    .ps-studio-layout { flex-direction:column; }
+    .ps-left { flex:none; }
+    .ps-right { max-height:none; }
+}
 .adv-header-btn {
     background: rgba(255,255,255,0.15);
     border: none;
