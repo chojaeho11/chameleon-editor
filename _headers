@@ -12,6 +12,10 @@
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
   Pragma: no-cache
 
+/long/*.json
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Content-Type: application/json; charset=utf-8
+
 /text-wizard.js
   Cache-Control: no-cache, must-revalidate
 

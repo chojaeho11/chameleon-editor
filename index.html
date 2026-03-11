@@ -5343,16 +5343,14 @@ window.getTinyThumb = function(url, size = 150) {
     const urlParams = new URLSearchParams(window.location.search);
     let detectedLang = urlParams.get('lang');
 
-    // 1. 파라미터가 없으면 도메인으로 판단
-    if (!detectedLang) {
-        const hostname = window.location.hostname;
-        if (hostname.includes('cafe3355.com')) {
-            detectedLang = 'en'; // 영어 도메인
-        } else if (hostname.includes('cafe0101.com')) {
-            detectedLang = 'ja'; // 일본어 도메인
-        } else {
-            detectedLang = 'kr'; // 그 외 한국어
-        }
+    // 1. 해외 도메인은 URL 파라미터 무관하게 도메인으로 강제 결정
+    const _langHostname = window.location.hostname;
+    if (_langHostname.includes('cafe3355.com')) {
+        detectedLang = 'en'; // 미국 도메인 → 항상 영어
+    } else if (_langHostname.includes('cafe0101.com')) {
+        detectedLang = 'ja'; // 일본 도메인 → 항상 일본어
+    } else if (!detectedLang) {
+        detectedLang = 'kr'; // 그 외 파라미터 없으면 한국어
     }
     
     // 언어 코드 소문자로 통일
@@ -5468,7 +5466,10 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             var _sp2 = document.getElementById('splash');
             if (_sp2) { _sp2.style.opacity = '0'; setTimeout(function(){ _sp2.remove(); }, 500); }
             // 영어/일본어 파일이 없을 때만 한국어로 자동 전환 (무한루프 방지)
-            if (CURRENT_LANG !== 'kr') {
+            // 해외 도메인(cafe0101/cafe3355)에서는 절대 한국어로 전환하지 않음
+            const _fbHostname = window.location.hostname;
+            const _isOverseas = _fbHostname.includes('cafe0101') || _fbHostname.includes('cafe3355');
+            if (CURRENT_LANG !== 'kr' && !_isOverseas) {
                 console.warn("⚠️ 한국어로 전환합니다.");
                 CURRENT_LANG = 'kr';
                 loadAndApplyTranslations();
