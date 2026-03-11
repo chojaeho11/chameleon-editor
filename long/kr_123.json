@@ -1493,5 +1493,18 @@
   "btn_edit": "편집",
   "btn_delete": "삭제",
   "msg_no_records": "내역이 없습니다.",
-  "msg_select_object": "객체를 선택해주세요."
+  "msg_select_object": "객체를 선택해주세요.",
+  "retouch_undo_done": "되돌리기 완료",
+  "retouch_no_original": "원본 데이터가 없습니다",
+  "retouch_restored": "원본으로 복원 완료",
+  "retouch_processing": "처리 중입니다. 잠시만 기다려주세요.",
+  "retouch_select_image": "캔버스에서 이미지를 선택하세요",
+  "retouch_need_2_images": "얼굴 합성은 캔버스에 2개 이상의 이미지가 필요합니다",
+  "retouch_done": "보정 완료!",
+  "retouch_failed": "보정 실패: ",
+  "retouch_no_result": "분석 결과가 없습니다",
+  "box_dims_required": "W, H, D 값을 모두 입력하세요",
+  "pdf_gen_failed": "PDF 생성 실패",
+  "design_storage_full": "보관함이 가득 찼습니다 (최대 20개). 마이페이지에서 기존 디자인을 삭제해주세요.",
+  "design_load_failed": "디자인 로드 실패: "
 }

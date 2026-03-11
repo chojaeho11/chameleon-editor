@@ -1,6 +1,6 @@
 // canvas-retouch.js — AI 보정 패널 (고품질 필터 + AILab Tools 전체 API)
-import { canvas } from "./canvas-core.js?v=162";
-import { sb } from "./config.js?v=162";
+import { canvas } from "./canvas-core.js?v=163";
+import { sb } from "./config.js?v=163";
 
 // ==========================================================
 // 슬라이더 & 프리셋 정의
@@ -301,7 +301,7 @@ function undoRetouch() {
         canvas.requestRenderAll();
         _updateUndoBtn();
     }, { crossOrigin: 'anonymous' });
-    window.showToast?.('되돌리기 완료', 'success');
+    window.showToast?.(window.t?.('retouch_undo_done','Undo complete'), 'success');
 }
 
 function restoreToOriginal() {
@@ -311,7 +311,7 @@ function restoreToOriginal() {
     // 진짜 원본에서 복원
     const trueOriginal = _trueOriginalMap.get(obj);
     if (!trueOriginal) {
-        window.showToast?.('원본 데이터가 없습니다', 'warning');
+        window.showToast?.(window.t?.('retouch_no_original','No original data'), 'warning');
         return;
     }
 
@@ -333,7 +333,7 @@ function restoreToOriginal() {
         canvas.requestRenderAll();
         _updateUndoBtn();
     }, { crossOrigin: 'anonymous' });
-    window.showToast?.('원본으로 복원 완료', 'success');
+    window.showToast?.(window.t?.('retouch_restored','Restored to original'), 'success');
 }
 
 function _resetSliderUI() {
@@ -588,10 +588,10 @@ function _replaceImage(obj, imgSrc) {
 // ==========================================================
 let _aiProcessing = false;
 async function handleAiRetouch(action) {
-    if (_aiProcessing) { window.showToast?.('처리 중입니다. 잠시만 기다려주세요.', 'info'); return; }
+    if (_aiProcessing) { window.showToast?.(window.t?.('retouch_processing','Processing, please wait...'), 'info'); return; }
     const obj = canvas.getActiveObject();
     if (!obj || obj.type !== 'image') {
-        window.showToast?.('캔버스에서 이미지를 선택하세요', 'warning');
+        window.showToast?.(window.t?.('retouch_select_image','Please select an image on the canvas'), 'warning');
         return;
     }
 
@@ -613,7 +613,7 @@ async function handleAiRetouch(action) {
     if (action === 'face_fusion') {
         const allImages = canvas.getObjects().filter(o => o.type === 'image' && o !== obj);
         if (allImages.length === 0) {
-            window.showToast?.('얼굴 합성은 캔버스에 2개 이상의 이미지가 필요합니다', 'warning');
+            window.showToast?.(window.t?.('retouch_need_2_images','Face swap requires 2+ images on canvas'), 'warning');
             return;
         }
         // 두 번째 이미지 선택 모달
@@ -668,11 +668,11 @@ async function handleAiRetouch(action) {
 
         await _replaceImage(obj, imgSrc);
         _updateUndoBtn();
-        window.showToast?.('보정 완료!', 'success');
+        window.showToast?.(window.t?.('retouch_done','Enhancement complete!'), 'success');
 
     } catch (e) {
         console.error('AI Retouch error:', e);
-        window.showToast?.('보정 실패: ' + e.message, 'error');
+        window.showToast?.(window.t?.('retouch_failed','Enhancement failed: ') + e.message, 'error');
     } finally {
         _aiProcessing = false;
         if (btn) {
@@ -688,7 +688,7 @@ async function handleAiRetouch(action) {
 // ==========================================================
 function _showSkinAnalysis(analysis) {
     document.getElementById('retouchOptionModal')?.remove();
-    if (!analysis) { window.showToast?.('분석 결과가 없습니다', 'warning'); return; }
+    if (!analysis) { window.showToast?.(window.t?.('retouch_no_result','No analysis result'), 'warning'); return; }
 
     const r = analysis.result || analysis;
     let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';

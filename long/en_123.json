@@ -1879,5 +1879,18 @@
   "btn_edit": "Edit",
   "btn_delete": "Delete",
   "msg_no_records": "No records found.",
-  "msg_select_object": "Please select an object first."
+  "msg_select_object": "Please select an object first.",
+  "retouch_undo_done": "Undo complete",
+  "retouch_no_original": "No original data available",
+  "retouch_restored": "Restored to original",
+  "retouch_processing": "Processing, please wait...",
+  "retouch_select_image": "Please select an image on the canvas",
+  "retouch_need_2_images": "Face swap requires 2 or more images on the canvas",
+  "retouch_done": "Enhancement complete!",
+  "retouch_failed": "Enhancement failed: ",
+  "retouch_no_result": "No analysis result",
+  "box_dims_required": "Please enter W, H, D values",
+  "pdf_gen_failed": "PDF generation failed",
+  "design_storage_full": "Storage full (max 20). Please delete designs from My Page.",
+  "design_load_failed": "Failed to load design: "
 }

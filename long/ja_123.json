@@ -1876,5 +1876,18 @@
   "btn_edit": "編集",
   "btn_delete": "削除",
   "msg_no_records": "履歴がありません。",
-  "msg_select_object": "オブジェクトを選択してください。"
+  "msg_select_object": "オブジェクトを選択してください。",
+  "retouch_undo_done": "元に戻しました",
+  "retouch_no_original": "元データがありません",
+  "retouch_restored": "元の画像に復元しました",
+  "retouch_processing": "処理中です。しばらくお待ちください。",
+  "retouch_select_image": "キャンバスで画像を選択してください",
+  "retouch_need_2_images": "顔合成にはキャンバスに2枚以上の画像が必要です",
+  "retouch_done": "補正完了！",
+  "retouch_failed": "補正失敗: ",
+  "retouch_no_result": "解析結果がありません",
+  "box_dims_required": "W、H、D の値をすべて入力してください",
+  "pdf_gen_failed": "PDF生成失敗",
+  "design_storage_full": "保管庫がいっぱいです（最大20件）。マイページから既存デザインを削除してください。",
+  "design_load_failed": "デザインの読み込み失敗: "
 }

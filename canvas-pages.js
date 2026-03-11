@@ -1,7 +1,7 @@
 /* canvas-pages.js */
-import { canvas } from "./canvas-core.js?v=162";
-import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=162";
-import { calculateBoxPrice } from "./box-nesting.js?v=162";
+import { canvas } from "./canvas-core.js?v=163";
+import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=163";
+import { calculateBoxPrice } from "./box-nesting.js?v=163";
 
 // 페이지 데이터를 저장할 배열
 export let pageDataList = [];
@@ -603,7 +603,7 @@ window.applyBoxDimensions = function() {
     const w = parseInt(document.getElementById('boxW').value);
     const h = parseInt(document.getElementById('boxH').value);
     const d = parseInt(document.getElementById('boxD').value);
-    if (!w || !h || !d) { showToast('W, H, D 값을 모두 입력하세요', "warn"); return; }
+    if (!w || !h || !d) { showToast(window.t?.('box_dims_required','Please enter W, H, D values'), "warn"); return; }
 
     // 전역 저장 (3D에서 사용)
     window.__boxDims = { w, h, d };
@@ -810,7 +810,7 @@ window.downloadBoxLayoutPDF = async function() {
     if (btn) { btn.innerText = '...'; btn.disabled = true; }
 
     try {
-        const { generateBoxLayoutPDF } = await import('./export.js?v=162');
+        const { generateBoxLayoutPDF } = await import('./export.js?v=163');
         const blob = await generateBoxLayoutPDF(
             window.__boxNesting.sheets,
             window.__boxDims,
@@ -828,7 +828,7 @@ window.downloadBoxLayoutPDF = async function() {
         }
     } catch (e) {
         console.error('Layout PDF error:', e);
-        showToast('PDF 생성 실패', "error");
+        showToast(window.t?.('pdf_gen_failed','PDF generation failed'), "error");
     } finally {
         if (btn) { btn.innerText = orig; btn.disabled = false; }
     }

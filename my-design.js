@@ -1,6 +1,6 @@
-import { sb, currentUser, cartData, PRODUCT_DB } from "./config.js?v=162";
-import { canvas } from "./canvas-core.js?v=162";
-import { applySize } from "./canvas-size.js?v=162";
+import { sb, currentUser, cartData, PRODUCT_DB } from "./config.js?v=163";
+import { canvas } from "./canvas-core.js?v=163";
+import { applySize } from "./canvas-size.js?v=163";
 
 // [초기화] 에디터 로드 시 버튼 연결
 export function initMyDesign() {
@@ -73,7 +73,7 @@ async function saveCurrentDesign() {
 
         if (countError) throw countError;
         if (count >= 20) {
-            showToast("보관함이 가득 찼습니다 (최대 20개). 마이페이지에서 기존 디자인을 삭제해주세요.", "warn");
+            showToast(window.t?.('design_storage_full','Storage full (max 20). Please delete designs from My Page.'), "warn");
             btn.innerText = originalText;
             return;
         }
@@ -284,7 +284,7 @@ window._loadSavedDesign = async function(id) {
         });
     } catch(e) {
         console.error('Load design error:', e);
-        showToast('디자인 로드 실패: ' + e.message, "error");
+        showToast(window.t?.('design_load_failed','Failed to load design: ') + e.message, "error");
         if (loading) loading.style.display = 'none';
     }
 };
