@@ -370,7 +370,8 @@ function renderWallConfigUI() {
         wSel.className = 'wl-sel';
         WALL_WIDTHS.forEach(w => {
             const opt = document.createElement('option');
-            opt.value = w; opt.textContent = (w / 1000) + 'm';
+            const _isUS = window._isUSsite && window._isUSsite();
+            opt.value = w; opt.textContent = _isUS ? (w/304.8).toFixed(1)+' ft' : (w / 1000) + 'm';
             if (w === wall.widthMM) opt.selected = true;
             wSel.appendChild(opt);
         });
@@ -386,7 +387,8 @@ function renderWallConfigUI() {
         hSel.className = 'wl-sel';
         WALL_HEIGHTS.forEach(h => {
             const opt = document.createElement('option');
-            opt.value = h; opt.textContent = (h / 10) + 'cm';
+            const _isUS = window._isUSsite && window._isUSsite();
+            opt.value = h; opt.textContent = _isUS ? (h/304.8).toFixed(1)+' ft' : (h / 10) + 'cm';
             if (h === wall.heightMM) opt.selected = true;
             hSel.appendChild(opt);
         });

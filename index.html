@@ -772,12 +772,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="dsm-card" onclick="window.dsmOpenEditor(210, 297, 'A4세로형')">
                 <div class="dsm-icon"><i class="fa-regular fa-file"></i></div>
                 <div class="dsm-name" data-i18n="dsm_a4_portrait">A4 세로형</div>
-                <div class="dsm-size">210 × 297 mm</div>
+                <div class="dsm-size" id="dsmSizeA4p">210 × 297 mm</div>
             </div>
             <div class="dsm-card" onclick="window.dsmOpenEditor(297, 210, '가로형')">
                 <div class="dsm-icon" style="color:#3b82f6;"><i class="fa-solid fa-image"></i></div>
                 <div class="dsm-name" data-i18n="dsm_landscape">가로형</div>
-                <div class="dsm-size">297 × 210 mm</div>
+                <div class="dsm-size" id="dsmSizeA4l">297 × 210 mm</div>
             </div>
             <div class="dsm-card" onclick="window.dsmOpenEditor(286, 286, '정사각')">
                 <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-regular fa-square"></i></div>
@@ -4176,13 +4176,13 @@ window.filterFxCards = function(cat, btn) {
             <h3 style="text-align:center; color:#334155; margin-top:0;">📏 사이즈 입력</h3>
             
             <div style="margin-bottom:15px;">
-                <label style="font-weight:bold; font-size:13px; color:#64748b;">가로 (Width) mm</label>
-                <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="예: 1000" oninput="window.calcCustomPrice()">
+                <label style="font-weight:bold; font-size:13px; color:#64748b;" id="labelCustW">Width (mm)</label>
+                <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="e.g. 1000" oninput="window.calcCustomPrice()">
             </div>
 
             <div style="margin-bottom:15px;">
-                <label style="font-weight:bold; font-size:13px; color:#64748b;">세로 (Height) mm</label>
-                <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="예: 2000" oninput="window.calcCustomPrice()">
+                <label style="font-weight:bold; font-size:13px; color:#64748b;" id="labelCustH">Height (mm)</label>
+                <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="e.g. 2000" oninput="window.calcCustomPrice()">
             </div>
 
             <input type="hidden" id="inputCustQty" value="1">
@@ -5308,6 +5308,16 @@ window.filterFxCards = function(cat, btn) {
         return (amt||0).toLocaleString() + '원';
     }
 
+    // ── US 단위(인치) 헬퍼 ──────────────────────────────────────
+    window._isUSsite = () => (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'US';
+    window._mmToIn  = (mm)  => +(mm / 25.4).toFixed(2);
+    window._inToMm  = (val) => Math.round(parseFloat(val) * 25.4);
+    window._fmtDim  = (mm)  => window._isUSsite() ? (mm/25.4).toFixed(2)+' in' : mm+' mm';
+    window._dimUnit = ()    => window._isUSsite() ? 'in' : 'mm';
+    // 입력 필드에서 mm 값 읽기 (US이면 인치→mm 변환)
+    window._getInputMm = (val) => window._isUSsite() ? window._inToMm(val) : parseInt(val);
+    // ──────────────────────────────────────────────────────────
+
     window.canvas = canvas;
     window.sb = sb; // ★ [핵심] 데이터베이스 연결 도구 전역 등록
     // index.html 내부 스크립트 수정
@@ -5441,6 +5451,21 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             // ★ 카카오 버튼은 CSS로만 해외몰 숨김 (html:not([lang="ko"]))
 
             loadLanguageFont(); // 폰트 적용
+
+            // US 사이트: mm 관련 라벨/placeholder를 인치로 교체
+            if (CURRENT_LANG === 'en') {
+                const _lw = document.getElementById('labelCustW'); if (_lw) _lw.textContent = 'Width (in)';
+                const _lh = document.getElementById('labelCustH'); if (_lh) _lh.textContent = 'Height (in)';
+                const _iw = document.getElementById('inputCustW'); if (_iw && !_iw.value) _iw.placeholder = 'e.g. 40';
+                const _ih = document.getElementById('inputCustH'); if (_ih && !_ih.value) _ih.placeholder = 'e.g. 80';
+                // 에디터 사이드패널 사이즈 라벨
+                const _ts = document.querySelector('[data-i18n="tool_size_change"]');
+                if (_ts) _ts.textContent = 'Size (in)';
+                // 디자인 위저드 프리셋 카드 사이즈 인치로 변환
+                const _mmIn = (mm) => +(mm/25.4).toFixed(2);
+                const _sa4p = document.getElementById('dsmSizeA4p'); if (_sa4p) _sa4p.textContent = `${_mmIn(210)} × ${_mmIn(297)} in`;
+                const _sa4l = document.getElementById('dsmSizeA4l'); if (_sa4l) _sa4l.textContent = `${_mmIn(297)} × ${_mmIn(210)} in`;
+            }
 
             // ★ 번역 완료 → 한글 깜빡임 방지 해제
             window.__i18nReady = true;
@@ -7039,15 +7064,15 @@ window.showChoiceModal = async function(key) {
             </div>
             ${isFixedSize ? `<div data-npc="size" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:10px; text-align:center;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📐 ${lang==='ja'?'製品サイズ':lang==='zh'?'产品尺寸':lang==='ar'?'حجم المنتج':lang==='es'?'Tamaño':lang==='de'?'Größe':lang==='fr'?'Taille':lang==='en'?'Product Size':'제품사이즈'}</div>
-                <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${product.width_mm || 0}<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>${product.height_mm || 0}<span style="font-size:13px; color:#64748b; margin-left:4px;">mm</span></div>
+                <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${window._isUSsite && window._isUSsite() ? ((product.width_mm||0)/25.4).toFixed(2) : (product.width_mm||0)}<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>${window._isUSsite && window._isUSsite() ? ((product.height_mm||0)/25.4).toFixed(2) : (product.height_mm||0)}<span style="font-size:13px; color:#64748b; margin-left:4px;">${window._dimUnit ? window._dimUnit() : 'mm'}</span></div>
                 <input type="hidden" id="inputCustW" value="${product.width_mm || 0}">
                 <input type="hidden" id="inputCustH" value="${product.height_mm || 0}">
             </div>` : `<div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
                 <div style="display:flex; gap:5px;">
-                    <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="W (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('w'); window.calcCustomPrice(); window.updateModalTotal();">
+                    <input type="number" id="inputCustW" class="ai-input-pretty" placeholder="${window._isUSsite && window._isUSsite() ? 'W (in)' : 'W (mm)'}" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('w'); window.calcCustomPrice(); window.updateModalTotal();">
                     <span style="display:flex; align-items:center; color:#999;">x</span>
-                    <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="H (mm)" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
+                    <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="${window._isUSsite && window._isUSsite() ? 'H (in)' : 'H (mm)'}" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
                 <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\\\'IA vérifiera le fichier et calculera l\\\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
             </div>`}`;
@@ -7425,8 +7450,9 @@ window.updateModalTotal = function() {
 
         if (!wInput || !hInput || !window.selectedProductForChoice) return;
 
-        const w = parseInt(wInput.value || 0);
-        const h = parseInt(hInput.value || 0);
+        // US: 사용자가 인치로 입력 → 내부 계산은 mm로 변환
+        const w = window._getInputMm ? window._getInputMm(wInput.value || 0) : parseInt(wInput.value || 0);
+        const h = window._getInputMm ? window._getInputMm(hInput.value || 0) : parseInt(hInput.value || 0);
         const qty = parseInt(qInput ? qInput.value : 1) || 1;
         const product = window.selectedProductForChoice;
 
@@ -7446,17 +7472,14 @@ window.updateModalTotal = function() {
         if (lang === 'ja' && product.price_jp && product.price_jp > 0) {
             unitPrice = product.price_jp;
         } 
-        // 영어면 price_us 사용
-        else if (lang === 'en' && product.price_us && product.price_us > 0) {
-            unitPrice = product.price_us;
-        }
+        // EN: price_us(구버전 환율) 사용 안 함 → KRW 유지 (formatValue에서 환산)
         // CN/AR/ES: KRW 원가 유지 (formatValue에서 환산)
 
         // 화폐 포맷팅 함수 (KRW 값을 현지통화로 환산 표시)
         const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
-            if (lang === 'en') return '$' + Math.round(val).toLocaleString();
+            if (lang === 'en') { const _r = _rates.US || 0.001; return '$' + Math.round(val * _r).toLocaleString(); }
             if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.01)).toLocaleString();
             if (lang === 'ar') return Math.round(val * (_rates.AR || 0.05)).toLocaleString() + ' ﷼';
             if (lang === 'es') return '€' + (val * (_rates.ES || 0.001)).toFixed(2);
@@ -7472,7 +7495,7 @@ window.updateModalTotal = function() {
                 priceDisplay.innerText = formatValue(fixedPrice);
                 priceDisplay.dataset.rawPrice = fixedPrice;
             }
-            if (sizeDisplay) sizeDisplay.innerText = `${product.width_mm || 0}mm x ${product.height_mm || 0}mm`;
+            if (sizeDisplay) sizeDisplay.innerText = window._fmtDim ? `${window._fmtDim(product.width_mm||0)} x ${window._fmtDim(product.height_mm||0)}` : `${product.width_mm||0}mm x ${product.height_mm||0}mm`;
             return;
         }
 
@@ -7500,7 +7523,15 @@ if (w >= 20 && h >= 20) {
                 priceDisplay.innerText = formatValue(totalPrice);
                 priceDisplay.dataset.rawPrice = totalPrice; // ★ 원본 숫자 저장
             }
-            if (sizeDisplay) sizeDisplay.innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
+            if (sizeDisplay) {
+                if (window._isUSsite && window._isUSsite()) {
+                    const wIn = (w/25.4).toFixed(2), hIn = (h/25.4).toFixed(2);
+                    const sqft = (area * 10.764).toFixed(2);
+                    sizeDisplay.innerText = `${wIn} x ${hIn} in (${sqft} sq ft)`;
+                } else {
+                    sizeDisplay.innerText = `${w}mm x ${h}mm (${area.toFixed(2)}㎡)`;
+                }
+            }
         } else {
             if (priceDisplay) {
                 priceDisplay.innerText = formatValue(0);
