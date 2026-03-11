@@ -4374,7 +4374,7 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=158"></script>
+<script type="module" src="./config.js?v=159"></script>
 <script type="module" src="./canvas-core.js?v=158"></script>
 <script src="./wall-3d-preview.js?v=158" defer></script>
 <script src="./wall-3d-walls.js?v=158" defer></script>
@@ -5272,7 +5272,7 @@ window.filterFxCards = function(cat, btn) {
     import { canvas, setMaxLimits } from './canvas-core.js?v=158';
     import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=158'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=159';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=158';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=159';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -7786,7 +7786,7 @@ if (w >= 20 && h >= 20) {
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=158')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=159')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -7838,7 +7838,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=158')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=159')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -10503,7 +10503,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=158';
+    import { sb, initConfig } from './config.js?v=159';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {

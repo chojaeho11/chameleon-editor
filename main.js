@@ -1,6 +1,6 @@
 // main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=158";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=159";
 import { initCanvas, canvas } from "./canvas-core.js?v=158";
 import { initSizeControls, applySize } from "./canvas-size.js?v=159";
 import { initGuides } from "./canvas-guides.js?v=158";
