@@ -437,8 +437,20 @@ window.loadEditorLibraries = function() {
     }
 </script>
 </head>
-<body style="opacity:0; transition:opacity 0.3s ease;">
-<script>setTimeout(function(){document.body.style.opacity='1';},3000);</script>
+<body>
+<!-- ★ 스플래시 스크린 (즉시 표시, 번역 완료 후 페이드아웃) -->
+<div id="splash" style="position:fixed;inset:0;z-index:99999;background:#1e1b4b;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
+    <img src="favicon.ico" alt="" style="width:64px;height:64px;margin-bottom:16px;animation:splashPulse 1.5s ease-in-out infinite;">
+    <div style="color:#fff;font-size:20px;font-weight:700;letter-spacing:1px;">Chameleon</div>
+    <div style="margin-top:20px;width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top:3px solid #a78bfa;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+</div>
+<style>
+@keyframes splashPulse{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.08);opacity:1}}
+</style>
+<script>
+// 스플래시 안전장치: 4초 후 강제 제거
+setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},4000);
+</script>
 <script src="toast.js?v=137"></script>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 <script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
@@ -5446,8 +5458,9 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             document.querySelectorAll('.hero-signup-desc').forEach(function(e){ e.style.visibility = 'visible'; });
             var _hideStyle = document.getElementById('i18nHideStyle');
             if (_hideStyle) _hideStyle.remove();
-            // ★ 페이지 페이드인
-            document.body.style.opacity = '1';
+            // ★ 스플래시 페이드아웃
+            var _sp = document.getElementById('splash');
+            if (_sp) { _sp.style.opacity = '0'; setTimeout(function(){ _sp.remove(); }, 500); }
 
         } catch (error) {
             console.error(`🚨 번역 로드 실패 (${CURRENT_LANG}):`, error);
@@ -5458,8 +5471,9 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             document.querySelectorAll('.hero-signup-desc').forEach(function(e){ e.style.visibility = 'visible'; });
             var _hideStyle2 = document.getElementById('i18nHideStyle');
             if (_hideStyle2) _hideStyle2.remove();
-            // ★ 페이지 페이드인
-            document.body.style.opacity = '1';
+            // ★ 스플래시 페이드아웃
+            var _sp2 = document.getElementById('splash');
+            if (_sp2) { _sp2.style.opacity = '0'; setTimeout(function(){ _sp2.remove(); }, 500); }
             // 영어/일본어 파일이 없을 때만 한국어로 자동 전환 (무한루프 방지)
             if (CURRENT_LANG !== 'kr') {
                 console.warn("⚠️ 한국어로 전환합니다.");
