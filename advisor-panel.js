@@ -1966,6 +1966,7 @@ function _psShowSizing(key) {
                 chEl.value = Math.round(w / _psImgRatio);
                 _psUpdatePrice();
             } else if (w >= 50) _psUpdatePrice();
+            if (isFabric) _psCheckFabricWidth();
         });
         // 세로 입력 → 가로 자동
         chEl?.addEventListener('input', () => {
@@ -1975,6 +1976,7 @@ function _psShowSizing(key) {
                 if (!cwEl.value) cwEl.value = Math.round(h * _psImgRatio);
                 _psUpdatePrice();
             }
+            if (isFabric) _psCheckFabricWidth();
         });
         // 세로 필드 비우면 자동모드 복원
         chEl?.addEventListener('change', () => {
@@ -2474,8 +2476,46 @@ async function _psLoadFabricSewing() {
 
         // 미싱 데이터 저장
         window._psFabricSewAddons = data;
+        // 이미 입력된 사이즈가 1300 초과면 이어박기 자동 선택
+        _psCheckFabricWidth();
     } catch(e) {
         area.innerHTML = '';
+    }
+}
+
+// 패브릭 최대폭 1300mm 체크 → 초과 시 이어박기 강제 선택
+function _psCheckFabricWidth() {
+    const w = parseInt(document.getElementById('psCW')?.value) || 0;
+    const h = parseInt(document.getElementById('psCH')?.value) || 0;
+    const minDim = Math.min(w, h);  // 짧은 쪽이 폭
+    const exceeds = minDim > 1300;
+
+    // 경고 메시지
+    let warn = document.getElementById('psFabricWidthWarn');
+    if (exceeds && !warn) {
+        const lang = getLang();
+        const msg = lang==='ja' ? '⚠️ パブリックの最大幅は1300mmです。これを超える場合は「つなぎ縫い」オプションが必要です。' :
+                    lang==='en' ? '⚠️ Max fabric width is 1300mm. Seam-joining option is required for wider prints.' :
+                    '⚠️ 패브릭 최대폭은 1300mm입니다. 초과 시 이어박기 옵션이 필요합니다.';
+        warn = document.createElement('div');
+        warn.id = 'psFabricWidthWarn';
+        warn.style.cssText = 'background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:6px 8px;font-size:10px;color:#92400e;margin-top:6px;';
+        warn.textContent = msg;
+        document.getElementById('psFabricSewArea')?.after(warn);
+    } else if (!exceeds && warn) {
+        warn.remove();
+    }
+
+    // 이어박기 옵션 자동 선택 (이어박기/つなぎ/seam 포함하는 라디오)
+    if (exceeds) {
+        const radios = document.querySelectorAll('input[name="psSewing"]');
+        radios.forEach(r => {
+            const label = r.closest('label')?.textContent || '';
+            if (label.includes('이어') || label.includes('つなぎ') || label.toLowerCase().includes('seam') || label.toLowerCase().includes('join')) {
+                r.checked = true;
+                r.dispatchEvent(new Event('change'));
+            }
+        });
     }
 }
 
