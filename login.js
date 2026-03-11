@@ -1,6 +1,6 @@
 // login.js
 
-import { sb, currentUser, isAdmin } from "./config.js?v=151";
+import { sb, currentUser, isAdmin } from "./config.js?v=152";
 
 let isSignUpMode = false; 
 
