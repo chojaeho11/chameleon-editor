@@ -34,7 +34,7 @@ function buildHero(data) {
 <div class="ch-cards">
 ${pointCards}
 </div>
-<div class="ch-ft">${data.note}</div>
+${data.note ? `<div class="ch-ft">${data.note}</div>` : ''}
 </div>
 <div class="ch-slogan">${data.slogan}</div>
 </div>`;
@@ -69,24 +69,24 @@ ${stepCards}
 // ═══════════════════════════════════════
 
 const hero_kr = buildHero({
-    headline: '도매 전문몰',
+    headline: '도매 쇼핑몰',
     sub: '압도적 가격과 퀄리티 보장<br>더 저렴하거나 더 품질이 좋은 곳은 세상에 없다',
     points: [
         { label: '국내 업체 평균 대비 절반 가격', desc: '국내 유일 초고사양 10컬러 라텍스 프린터' },
-        { label: '도매몰 최소 주문 10만원, 하지만 확실한 보장', desc: '가격과 퀄리티 모두 최고 수준으로 준비했습니다' },
+        { label: '수도권 무료배송, 빠른제작', desc: '가격과 퀄리티 모두 최고 수준으로 준비했습니다' },
     ],
-    note: '10만원 이하 소량주문은 배송비가 별도 발생합니다',
+    note: '',
     slogan: '반값제작 무료배송 압도적퀄리티 카멜레온과 함께'
 });
 
 const hero_jp = buildHero({
-    headline: '卸売専門モール',
+    headline: '卸売ショッピングモール',
     sub: '圧倒的な価格と品質を保証<br>これより安く、これより品質が良い場所は世界にない',
     points: [
         { label: '業界平均の半額', desc: '国内唯一の超高性能10カラーラテックスプリンター' },
-        { label: '最低注文¥10,000、確かな保証', desc: '価格も品質も最高水準でご用意しました' },
+        { label: '首都圏送料無料、迅速制作', desc: '価格も品質も最高水準でご用意しました' },
     ],
-    note: '¥10,000未満の少量注文は送料が別途発生します',
+    note: '',
     slogan: '半額制作 送料無料 圧倒的クオリティ カメレオンと共に'
 });
 
@@ -95,31 +95,31 @@ const hero_us = buildHero({
     sub: 'Unbeatable price and quality guaranteed<br>Nowhere cheaper, nowhere better',
     points: [
         { label: 'Half the industry average price', desc: 'The only ultra high-spec 10-color latex printer' },
-        { label: 'Min. $100, Absolutely Guaranteed', desc: 'We deliver the best in both price and quality' },
+        { label: 'Free Metro Shipping, Fast Production', desc: 'We deliver the best in both price and quality' },
     ],
-    note: 'Orders under $100 are subject to a separate shipping fee',
+    note: '',
     slogan: 'Half-price production · Free shipping · Unbeatable quality · With Chameleon'
 });
 
 const hero_cn = buildHero({
-    headline: '批发专业商城',
+    headline: '批发购物商城',
     sub: '压倒性价格与品质保证<br>没有比这更便宜或品质更好的地方',
     points: [
         { label: '行业平均价格的一半', desc: '国内唯一超高规格10色乳胶打印机' },
-        { label: '最低订单¥700，确实保障', desc: '价格与品质均以最高水准准备' },
+        { label: '首都圈免费配送，快速制作', desc: '价格与品质均以最高水准准备' },
     ],
-    note: '¥700以下小批量订单需另付运费',
+    note: '',
     slogan: '半价制作 免费配送 压倒性品质 与变色龙一起'
 });
 
 const hero_ar = buildHero({
-    headline: 'سوق الجملة المتخصص',
+    headline: 'سوق الجملة للتسوق',
     sub: 'أسعار وجودة لا تُضاهى<br>لا يوجد مكان أرخص أو أفضل جودة',
     points: [
         { label: 'نصف متوسط أسعار الصناعة', desc: 'الطابعة اللاتكس الوحيدة فائقة المواصفات بـ10 ألوان' },
-        { label: 'الحد الأدنى $100، مضمون تماماً', desc: 'نقدم الأفضل في السعر والجودة معاً' },
+        { label: 'شحن مجاني للمنطقة الحضرية، إنتاج سريع', desc: 'نقدم الأفضل في السعر والجودة معاً' },
     ],
-    note: 'الطلبات أقل من $100 تخضع لرسوم شحن منفصلة',
+    note: '',
     slogan: 'إنتاج بنصف السعر · شحن مجاني · جودة لا تُضاهى · مع كاميليون'
 });
 
@@ -128,9 +128,9 @@ const hero_es = buildHero({
     sub: 'Precio y calidad imbatibles garantizados<br>No existe lugar más barato ni de mejor calidad',
     points: [
         { label: 'Mitad del precio promedio del sector', desc: 'La única impresora látex de ultra alta gama con 10 colores' },
-        { label: 'Mín. $100, garantía absoluta', desc: 'Ofrecemos lo mejor en precio y calidad' },
+        { label: 'Envío gratis zona metro, producción rápida', desc: 'Ofrecemos lo mejor en precio y calidad' },
     ],
-    note: 'Pedidos menores de $100 tienen costo de envío adicional',
+    note: '',
     slogan: 'Producción a mitad de precio · Envío gratis · Calidad insuperable · Con Chameleon'
 });
 
@@ -139,9 +139,9 @@ const hero_de = buildHero({
     sub: 'Unschlagbarer Preis und Qualität garantiert<br>Nirgendwo günstiger, nirgendwo besser',
     points: [
         { label: 'Halber Branchendurchschnittspreis', desc: 'Der einzige Ultra-High-Spec 10-Farben Latexdrucker' },
-        { label: 'Min. 100€, absolut garantiert', desc: 'Wir bieten das Beste in Preis und Qualität' },
+        { label: 'Kostenloser Versand in der Metropolregion, schnelle Produktion', desc: 'Wir bieten das Beste in Preis und Qualität' },
     ],
-    note: 'Bestellungen unter 100€ unterliegen zusätzlichen Versandkosten',
+    note: '',
     slogan: 'Halber Preis · Kostenloser Versand · Überlegene Qualität · Mit Chameleon'
 });
 
@@ -150,9 +150,9 @@ const hero_fr = buildHero({
     sub: "Prix et qualité imbattables garantis<br>Nulle part moins cher, nulle part meilleur",
     points: [
         { label: "Moitié du prix moyen du secteur", desc: "La seule imprimante latex ultra haut de gamme 10 couleurs" },
-        { label: 'Min. 100€, garantie absolue', desc: 'Nous offrons le meilleur en prix et en qualité' },
+        { label: 'Livraison gratuite en zone métropolitaine, production rapide', desc: 'Nous offrons le meilleur en prix et en qualité' },
     ],
-    note: 'Les commandes inférieures à 100€ sont soumises à des frais de livraison',
+    note: '',
     slogan: 'Production à moitié prix · Livraison gratuite · Qualité imbattable · Avec Chameleon'
 });
 

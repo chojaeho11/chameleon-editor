@@ -714,13 +714,8 @@ function _buildShippingFeeMsg(feeKRW) {
 }
 
 function calcSmallOrderShippingFee() {
-    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    const totalKRW = calculateCartTotalKRW();
-    const MIN_ORDER = _cc === 'KR' ? 100000 : _cc === 'JP' ? 100000 : 50000;
-    if (totalKRW >= MIN_ORDER || totalKRW <= 0) return 0;
-    const hasBoard = hasBoardInCart();
-    if (_cc === 'US') return hasBoard ? 15000 : 5000; // $30 / $10
-    return hasBoard ? 30000 : 10000; // KR: 3만/1만, JP: ¥3000/¥1000
+    // 최소주문금액 정책 삭제 — 항상 0 반환
+    return 0;
 }
 
 // ── 장바구니 합계 (KRW) ──
