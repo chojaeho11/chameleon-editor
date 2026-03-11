@@ -1,6 +1,6 @@
 // config.js
 
-import { SITE_CONFIG } from "./site-config.js?v=154";
+import { SITE_CONFIG } from "./site-config.js?v=155";
 
 // 전역 변수
 export let apiKeys = {}; 
@@ -117,7 +117,13 @@ export function initConfig() {
                     });
                 }
 
-                if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active') && !sessionStorage.getItem('_pendingEditorAction')) location.reload();
+                if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active') && !sessionStorage.getItem('_pendingEditorAction')) {
+                    // ★ 도메인 고정 사이트는 해당 도메인 루트로 이동 (cafe2626.com 이동 방지)
+                    const _soh = window.location.hostname;
+                    if (_soh.includes('cafe0101')) window.location.replace('/?lang=ja');
+                    else if (_soh.includes('cafe3355')) window.location.replace('/');
+                    else location.reload();
+                }
 
                 // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시
                 if (event === 'PASSWORD_RECOVERY') {
@@ -373,7 +379,7 @@ function showPasswordResetModal() {
         return;
     }
     // 아직 login.js가 로드되지 않았을 수 있으므로 동적 import
-    import('./login.js?v=154').then(m => {
+    import('./login.js?v=155').then(m => {
         if (m.openResetPwStep2) m.openResetPwStep2();
     }).catch(() => {
         // 최후 수단: DOM 직접 조작
