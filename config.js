@@ -322,16 +322,19 @@ export function getLocalizedData(item) {
 
     if (!item) return { name: '', price: 0, formattedPrice: '0' };
 
-    let name = item.name || '';
+    // 제품명에 포함된 사이즈 수치 (예: "(4.3 × 3.0 ft)", "(1300×910mm)", "(130cm×91cm)") 제거 헬퍼
+    const _stripSize = (n) => (n || '').replace(/\s*\([\d.,]+\s*[×xX]\s*[\d.,]+\s*(ft|in|mm|cm|m)\)/gi, '').trim();
+
+    let name = _stripSize(item.name || '');
     let price = Number(item.price) || 0;
     let formattedPrice = '';
 
     if (country === 'JP') {
-        name = item.name_jp || item.name_us || item.name;
+        name = _stripSize(item.name_jp || item.name_us || item.name);
         price = Number(item.price_jp) || price;
         formattedPrice = '¥' + Math.floor(price).toLocaleString();
     } else if (country === 'US') {
-        name = item.name_us || item.name;
+        name = _stripSize(item.name_us || item.name);
         price = Number(item.price_us) || price;
         formattedPrice = '$' + Math.round(price).toLocaleString();
     } else if (country === 'CN') {
