@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=145';
+import { SITE_CONFIG } from './site-config.js?v=146';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=145');
+        const { addProductToCartDirectly } = await import('./order.js?v=146');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1533,6 +1533,56 @@ async function _psRunRetouch(action, value, btnEl) {
     }
 }
 
+// Alpha 후처리 (Alpha Matting + Threshold + Median Filter 3x3)
+function _psPostProcessAlpha(imageBlob) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width; c.height = img.height;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(img.src);
+
+            const imageData = ctx.getImageData(0, 0, c.width, c.height);
+            const d = imageData.data;
+            const w = c.width, h = c.height;
+
+            // 1단계: Alpha Matting 경계 처리 (fg=240, bg=10)
+            for (let i = 3; i < d.length; i += 4) {
+                if (d[i] < 10) { d[i] = 0; d[i-3] = 0; d[i-2] = 0; d[i-1] = 0; }
+                else if (d[i] > 240) { d[i] = 255; }
+            }
+            // 2단계: 미세 투명도 정리 (<25→투명, >230→불투명)
+            for (let i = 3; i < d.length; i += 4) {
+                if (d[i] < 25) { d[i] = 0; d[i-3] = 0; d[i-2] = 0; d[i-1] = 0; }
+                else if (d[i] > 230) { d[i] = 255; }
+            }
+            // 3단계: Median Filter 3x3 (알파 채널 노이즈 제거)
+            const alphaOrig = new Uint8Array(w * h);
+            for (let i = 0; i < alphaOrig.length; i++) alphaOrig[i] = d[i * 4 + 3];
+            const nb = new Uint8Array(9);
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    let ni = 0;
+                    for (let dy = -1; dy <= 1; dy++)
+                        for (let dx = -1; dx <= 1; dx++)
+                            nb[ni++] = alphaOrig[(y + dy) * w + (x + dx)];
+                    nb.sort();
+                    const idx = (y * w + x) * 4;
+                    d[idx + 3] = nb[4];
+                    if (nb[4] === 0) { d[idx] = 0; d[idx+1] = 0; d[idx+2] = 0; }
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            c.toBlob((blob) => resolve(blob), 'image/png');
+        };
+        img.onerror = () => reject(new Error('Alpha post-process failed'));
+        img.src = URL.createObjectURL(imageBlob);
+    });
+}
+
 async function _psRemoveBg() {
     const btn = document.getElementById('psRemoveBg');
     if (!btn || btn.disabled) return;
@@ -1558,12 +1608,19 @@ async function _psRemoveBg() {
         if (data?.error) throw new Error(data.error);
         if (!data || !data.image_base64) throw new Error('No result');
 
+        // Alpha 후처리 (Alpha Matting + Threshold + Median Filter)
+        btn.textContent = '⏳ Alpha 처리중...';
+        const rawBlob = await (await fetch('data:image/png;base64,' + data.image_base64)).blob();
+        const processedBlob = await _psPostProcessAlpha(rawBlob);
+
         // 결과를 배경색 위에 합성
         const rImg = new Image();
+        const processedUrl = URL.createObjectURL(processedBlob);
         await new Promise((resolve) => {
             rImg.onload = resolve;
-            rImg.src = 'data:image/png;base64,' + data.image_base64;
+            rImg.src = processedUrl;
         });
+        URL.revokeObjectURL(processedUrl);
         const cvs = document.createElement('canvas');
         cvs.width = rImg.width; cvs.height = rImg.height;
         const ctx = cvs.getContext('2d');

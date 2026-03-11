@@ -1,6 +1,6 @@
 // canvas-ai.js
-import { canvas } from "./canvas-core.js?v=145";
-import { sb as _importedSb, currentUser } from "./config.js?v=145";
+import { canvas } from "./canvas-core.js?v=146";
+import { sb as _importedSb, currentUser } from "./config.js?v=146";
 
 // ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
 function _getSb() { return _importedSb || window.sb; }
@@ -283,33 +283,41 @@ export function initAiTools() {
         };
     }
     
-    // --- 3. 배경 제거 (BiRefNet 무료 + Alpha 후처리) ---
+    // --- 3. 배경 제거 (Edge Function + Alpha 후처리) ---
     const btnCutout = document.getElementById("btnCutout");
     if (btnCutout) {
         btnCutout.onclick = async () => {
             const active = canvas.getActiveObject();
             if (!active || active.type !== 'image') { showToast(window.t('msg_select_image', "Please select an image."), "info"); return; }
-            const hfKey = await getApiKey('HF_API_KEY');
-            if (!hfKey) { showToast("HF API Key not found. Add 'HF_API_KEY' to secrets.", "error"); return; }
 
             if(!confirm(window.t('confirm_bg_remove', "Remove the background?"))) return;
 
             const originalText = btnCutout.innerText;
             btnCutout.innerText = window.t('msg_processing', "Processing...");
             try {
-                // 1. 원본 해상도 추출
+                // 1. 원본 해상도 추출 → base64
                 const restoreScale = 1 / active.scaleX;
                 const imgData = active.toDataURL({ format: 'png', multiplier: restoreScale });
-                const blob = await (await fetch(imgData)).blob();
+                const base64 = imgData.split(',')[1];
 
-                // 2. BiRefNet (BRIA RMBG-2.0) via Hugging Face Inference API
-                const rawResult = await callBiRefNet(blob, hfKey);
+                // 2. Edge Function 호출 (서버에서 HF API key 관리)
+                const __sb = _getSb();
+                if (!__sb) throw new Error('Supabase not ready');
+                const { data, error } = await __sb.functions.invoke('bg-remove', {
+                    body: { image_base64: base64 }
+                });
+                if (error) throw error;
+                if (data?.error) throw new Error(data.error);
+                if (!data?.image_base64) throw new Error('No result from bg-remove');
 
-                // 3. Alpha 후처리 (Alpha Matting + Threshold + Median Filter)
+                // 3. base64 → blob
+                const rawBlob = await (await fetch('data:image/png;base64,' + data.image_base64)).blob();
+
+                // 4. Alpha 후처리 (Alpha Matting + Threshold + Median Filter)
                 btnCutout.innerText = window.t('msg_alpha_processing', "Alpha processing...");
-                const processedBlob = await postProcessAlpha(rawResult);
+                const processedBlob = await postProcessAlpha(rawBlob);
 
-                // 4. 캔버스에 적용
+                // 5. 캔버스에 적용
                 const url = URL.createObjectURL(processedBlob);
                 fabric.Image.fromURL(url, (newImg) => {
                     newImg.set({

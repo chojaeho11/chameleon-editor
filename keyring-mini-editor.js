@@ -1,7 +1,7 @@
 // keyring-mini-editor.js — 키링 미니 에디터 (모달 내 자동 누끼 + 지우개 + 아크릴 미리보기)
 // 순수 Canvas 2D API만 사용 (Fabric.js 의존 없음)
 
-import { sb } from './config.js?v=145';
+import { sb } from './config.js?v=146';
 
 let es = null; // editor state
 
@@ -683,49 +683,27 @@ function drawCutlineOutline(ctx, dx, dy, dw, dh) {
 }
 
 // ============================================================
-// 배경 제거 (BiRefNet 무료 - Hugging Face Inference API)
+// 배경 제거 (Edge Function + Alpha 후처리)
 // ============================================================
 async function removeBackground(imageDataURL) {
-    const hfKey = await getApiKey('HF_API_KEY');
-    if (!hfKey) throw new Error('HF_API_KEY not found in secrets');
+    const _sb = sb || window.sb;
+    if (!_sb) throw new Error('Supabase not ready');
 
-    const blob = await (await fetch(imageDataURL)).blob();
+    // dataURL → base64
+    const base64 = imageDataURL.split(',')[1];
 
-    // BiRefNet 호출
-    const HF_MODELS = [
-        'https://router.huggingface.co/hf-inference/models/briaai/RMBG-2.0',
-        'https://router.huggingface.co/hf-inference/models/ZhengPeng7/BiRefNet'
-    ];
+    // Edge Function 호출 (서버에서 HF API key 관리)
+    const { data, error } = await _sb.functions.invoke('bg-remove', {
+        body: { image_base64: base64 }
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    if (!data?.image_base64) throw new Error('No result from bg-remove');
 
-    let rawBlob = null;
-    let lastError;
-    for (const modelUrl of HF_MODELS) {
-        try {
-            let res = await fetch(modelUrl, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
-                body: blob
-            });
-            // Cold start 대기
-            if (res.status === 503) {
-                const body = await res.json().catch(() => ({}));
-                await new Promise(r => setTimeout(r, Math.min((body.estimated_time || 20) * 1000, 60000)));
-                res = await fetch(modelUrl, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
-                    body: blob
-                });
-            }
-            if (res.ok && (res.headers.get('content-type') || '').includes('image')) {
-                rawBlob = await res.blob();
-                break;
-            }
-            lastError = new Error(`${res.status}`);
-        } catch (e) { lastError = e; }
-    }
-    if (!rawBlob) throw lastError || new Error('BiRefNet failed');
+    // base64 → blob
+    const rawBlob = await (await fetch('data:image/png;base64,' + data.image_base64)).blob();
 
-    // Alpha 후처리
+    // Alpha 후처리 (Alpha Matting + Threshold + Median Filter)
     const processed = await postProcessAlphaKeyring(rawBlob);
     return URL.createObjectURL(processed);
 }
