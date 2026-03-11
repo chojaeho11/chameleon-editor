@@ -1443,12 +1443,16 @@ function _psShowResult() {
 
     // 제품 선택
     chatArea.querySelectorAll('.ps-prod-item').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             chatArea.querySelectorAll('.ps-prod-item').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const pk = btn.dataset.pk;
-            if (pk === 'sell') _psShowSell();
-            else _psShowSizing(pk);
+            if (pk === 'sell') { _psShowSell(); return; }
+            // 키링: 자동 누끼 후 사이징
+            if (pk === 'keyring' && !_psNoBgDataUrl) {
+                await _psAutoRemoveBg();
+            }
+            _psShowSizing(pk);
         });
     });
 
@@ -1475,31 +1479,32 @@ function _psShowRetouchMenu() {
         { action:'skin_analysis', icon:'🔬', l:lang==='ja'?'肌分析':lang==='en'?'Analyze':'피부 분석', g:['#e0f7fa','#80deea'] },
     ];
 
+    const _t3 = (kr,ja,en) => lang==='ja'?ja:lang==='en'?en:kr;
     const categories = [
-        { action:'cartoon', icon:'🎨', label: lang==='ja'?'漫画スタイル':lang==='en'?'Cartoon':'만화 스타일',
+        { action:'cartoon', icon:'🎨', label: _t3('만화 스타일','漫画スタイル','Cartoon'),
           options: [
             { v:'3d_cartoon', l:'3D', g:['#e3f2fd','#90caf9'] }, { v:'pixar', l:'Pixar', g:['#fce4ec','#f48fb1'] },
-            { v:'anime', l:lang==='ja'?'アニメ':'애니메', g:['#f3e5f5','#ce93d8'] }, { v:'sketch', l:lang==='ja'?'スケッチ':'스케치', g:['#eceff1','#b0bec5'] },
-            { v:'comic', l:lang==='ja'?'コミック':'코믹', g:['#fff3e0','#ffcc80'] }, { v:'handdrawn', l:lang==='ja'?'手描き':'손그림', g:['#e8f5e9','#a5d6a7'] },
-            { v:'3d_game', l:'3D Game', g:['#e1f5fe','#4fc3f7'] }, { v:'classic_cartoon', l:lang==='ja'?'クラシック':'클래식', g:['#fbe9e7','#ffab91'] },
+            { v:'anime', l:_t3('애니메','アニメ','Anime'), g:['#f3e5f5','#ce93d8'] }, { v:'sketch', l:_t3('스케치','スケッチ','Sketch'), g:['#eceff1','#b0bec5'] },
+            { v:'comic', l:_t3('코믹','コミック','Comic'), g:['#fff3e0','#ffcc80'] }, { v:'handdrawn', l:_t3('손그림','手描き','Hand-drawn'), g:['#e8f5e9','#a5d6a7'] },
+            { v:'3d_game', l:'3D Game', g:['#e1f5fe','#4fc3f7'] }, { v:'classic_cartoon', l:_t3('클래식','クラシック','Classic'), g:['#fbe9e7','#ffab91'] },
           ]},
-        { action:'emotion', icon:'😊', label: lang==='ja'?'表情変換':lang==='en'?'Expression':'표정 변환',
+        { action:'emotion', icon:'😊', label: _t3('표정 변환','表情変換','Expression'),
           options: [
-            { v:'10', l:lang==='ja'?'微笑み':'미소', g:['#fce4ec','#f48fb1'] }, { v:'12', l:lang==='ja'?'笑顔':'활짝', g:['#fff9c4','#ffee58'] },
-            { v:'13', l:lang==='ja'?'大笑い':'함박', g:['#fff3e0','#ffcc80'] }, { v:'14', l:lang==='ja'?'クール':'쿨', g:['#e3f2fd','#90caf9'] },
-            { v:'15', l:lang==='ja'?'悲しみ':'슬픔', g:['#e8eaf6','#9fa8da'] }, { v:'100', l:lang==='ja'?'目を開ける':'눈뜨기', g:['#e0f2f1','#80cbc4'] },
+            { v:'10', l:_t3('미소','微笑み','Smile'), g:['#fce4ec','#f48fb1'] }, { v:'12', l:_t3('활짝','笑顔','Grin'), g:['#fff9c4','#ffee58'] },
+            { v:'13', l:_t3('함박','大笑い','Laugh'), g:['#fff3e0','#ffcc80'] }, { v:'14', l:_t3('쿨','クール','Cool'), g:['#e3f2fd','#90caf9'] },
+            { v:'15', l:_t3('슬픔','悲しみ','Sad'), g:['#e8eaf6','#9fa8da'] }, { v:'100', l:_t3('눈뜨기','目を開ける','Open Eyes'), g:['#e0f2f1','#80cbc4'] },
           ]},
-        { action:'age_gender', icon:'👤', label: lang==='ja'?'年齢/性別':lang==='en'?'Age/Gender':'나이/성별',
+        { action:'age_gender', icon:'👤', label: _t3('나이/성별','年齢/性別','Age/Gender'),
           options: [
-            { v:'TO_KID', l:lang==='ja'?'子供':'어린이', g:['#fff9c4','#ffee58'] }, { v:'TO_OLD', l:lang==='ja'?'老人':'노인', g:['#efebe9','#bcaaa4'] },
-            { v:'TO_FEMALE', l:lang==='ja'?'女性':'여성', g:['#fce4ec','#f48fb1'] }, { v:'TO_MALE', l:lang==='ja'?'男性':'남성', g:['#e3f2fd','#90caf9'] },
+            { v:'TO_KID', l:_t3('어린이','子供','Kid'), g:['#fff9c4','#ffee58'] }, { v:'TO_OLD', l:_t3('노인','老人','Old'), g:['#efebe9','#bcaaa4'] },
+            { v:'TO_FEMALE', l:_t3('여성','女性','Female'), g:['#fce4ec','#f48fb1'] }, { v:'TO_MALE', l:_t3('남성','男性','Male'), g:['#e3f2fd','#90caf9'] },
           ]},
-        { action:'face_filter', icon:'✨', label: lang==='ja'?'フィルター':lang==='en'?'Filter':'얼굴 필터',
+        { action:'face_filter', icon:'✨', label: _t3('얼굴 필터','フィルター','Filter'),
           options: [
-            { v:'10001', l:lang==='ja'?'ナチュラル':'내추럴', g:['#e8f5e9','#a5d6a7'] }, { v:'10002', l:lang==='ja'?'美白':'화이트닝', g:['#fce4ec','#f8bbd0'] },
-            { v:'10015', l:lang==='ja'?'レトロ':'레트로', g:['#fff3e0','#ffcc80'] }, { v:'10020', l:lang==='ja'?'シネマ':'시네마', g:['#e8eaf6','#9fa8da'] },
-            { v:'10025', l:lang==='ja'?'ビンテージ':'빈티지', g:['#efebe9','#bcaaa4'] }, { v:'10030', l:lang==='ja'?'暖色':'따뜻한 톤', g:['#fff9c4','#ffcc80'] },
-            { v:'10050', l:lang==='ja'?'モノクロ':'모노크롬', g:['#eceff1','#90a4ae'] },
+            { v:'10001', l:_t3('내추럴','ナチュラル','Natural'), g:['#e8f5e9','#a5d6a7'] }, { v:'10002', l:_t3('화이트닝','美白','Whiten'), g:['#fce4ec','#f8bbd0'] },
+            { v:'10015', l:_t3('레트로','レトロ','Retro'), g:['#fff3e0','#ffcc80'] }, { v:'10020', l:_t3('시네마','シネマ','Cinema'), g:['#e8eaf6','#9fa8da'] },
+            { v:'10025', l:_t3('빈티지','ビンテージ','Vintage'), g:['#efebe9','#bcaaa4'] }, { v:'10030', l:_t3('따뜻한 톤','暖色','Warm'), g:['#fff9c4','#ffcc80'] },
+            { v:'10050', l:_t3('모노크롬','モノクロ','Mono'), g:['#eceff1','#90a4ae'] },
           ]},
     ];
 
@@ -1661,6 +1666,53 @@ async function _psUndo() {
             if (b.dataset.thumbstyle) th.setAttribute('style', b.dataset.thumbstyle);
         }
     });
+}
+
+// 키링용 자동 누끼 (버튼 없이 자동 실행)
+async function _psAutoRemoveBg() {
+    if (_psNoBgDataUrl) return; // 이미 누끼 완료
+    const preview = document.getElementById('psPreviewImg');
+    const loadingMsg = document.createElement('div');
+    loadingMsg.id = 'psAutoRemoveLoading';
+    loadingMsg.style.cssText = 'text-align:center;padding:12px;font-size:12px;color:#6366f1;';
+    loadingMsg.innerHTML = '⏳ ' + (getLang()==='ja'?'背景除去中...':getLang()==='en'?'Removing background...':'배경 제거 중...');
+    document.getElementById('psSizingArea')?.before(loadingMsg);
+    try {
+        const img = new Image();
+        await new Promise(r => { img.onload = r; img.src = _psRawDataUrl; });
+        const srcCvs = document.createElement('canvas');
+        srcCvs.width = img.width; srcCvs.height = img.height;
+        srcCvs.getContext('2d').drawImage(img, 0, 0);
+        const base64 = srcCvs.toDataURL('image/png').split(',')[1];
+        const _sb = window.sb;
+        if (!_sb) throw new Error('DB not ready');
+        const { data, error } = await _sb.functions.invoke('bg-remove', { body: { image_base64: base64 } });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        if (!data?.image_base64) throw new Error('No result');
+        const rawBlob = await (await fetch('data:image/png;base64,' + data.image_base64)).blob();
+        const processedBlob = await _psPostProcessAlpha(rawBlob);
+        const rImg = new Image();
+        const pUrl = URL.createObjectURL(processedBlob);
+        await new Promise(r => { rImg.onload = r; rImg.src = pUrl; });
+        URL.revokeObjectURL(pUrl);
+        const pngCvs = document.createElement('canvas');
+        pngCvs.width = rImg.width; pngCvs.height = rImg.height;
+        pngCvs.getContext('2d').drawImage(rImg, 0, 0);
+        _psNoBgDataUrl = pngCvs.toDataURL('image/png');
+        // 히스토리에 이전 상태 저장
+        _psHistory.push(_psRawDataUrl);
+        // 투명 PNG를 현재 이미지로 (배경 없이)
+        _psRawDataUrl = _psNoBgDataUrl;
+        await _psApplyText();
+        if (preview) preview.src = _psImgDataUrl;
+        // 누끼 버튼도 완료 상태로
+        const btn = document.getElementById('psRemoveBg');
+        if (btn) { btn.textContent = '✅ ' + ps('removeBg'); btn.style.background = '#10b981'; btn.style.color = '#fff'; btn.disabled = true; }
+    } catch(e) {
+        console.warn('[PS] Auto bg-remove failed:', e);
+    }
+    loadingMsg.remove();
 }
 
 async function _psRemoveBg() {
