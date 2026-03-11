@@ -437,7 +437,8 @@ window.loadEditorLibraries = function() {
     }
 </script>
 </head>
-<body>
+<body style="opacity:0; transition:opacity 0.3s ease;">
+<script>setTimeout(function(){document.body.style.opacity='1';},3000);</script>
 <script src="toast.js?v=137"></script>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 <script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
@@ -5445,6 +5446,8 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             document.querySelectorAll('.hero-signup-desc').forEach(function(e){ e.style.visibility = 'visible'; });
             var _hideStyle = document.getElementById('i18nHideStyle');
             if (_hideStyle) _hideStyle.remove();
+            // ★ 페이지 페이드인
+            document.body.style.opacity = '1';
 
         } catch (error) {
             console.error(`🚨 번역 로드 실패 (${CURRENT_LANG}):`, error);
@@ -5455,6 +5458,8 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             document.querySelectorAll('.hero-signup-desc').forEach(function(e){ e.style.visibility = 'visible'; });
             var _hideStyle2 = document.getElementById('i18nHideStyle');
             if (_hideStyle2) _hideStyle2.remove();
+            // ★ 페이지 페이드인
+            document.body.style.opacity = '1';
             // 영어/일본어 파일이 없을 때만 한국어로 자동 전환 (무한루프 방지)
             if (CURRENT_LANG !== 'kr') {
                 console.warn("⚠️ 한국어로 전환합니다.");
