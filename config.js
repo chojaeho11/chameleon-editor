@@ -1,6 +1,6 @@
 // config.js
 
-import { SITE_CONFIG } from "./site-config.js?v=156";
+import { SITE_CONFIG } from "./site-config.js?v=157";
 
 // 전역 변수
 export let apiKeys = {}; 
@@ -336,27 +336,27 @@ export function getLocalizedData(item) {
         formattedPrice = '$' + Math.round(price).toLocaleString();
     } else if (country === 'CN') {
         name = item.name_cn || item.name_us || item.name;
-        const cnRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.005;
+        const cnRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.05;
         const cnPrice = price * cnRate;
         formattedPrice = '¥' + Math.round(cnPrice).toLocaleString();
     } else if (country === 'AR') {
         name = item.name_ar || item.name_us || item.name;
-        const arRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.003;
+        const arRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.001;
         const arPrice = price * arRate;
         formattedPrice = Math.round(arPrice).toLocaleString() + ' ﷼';
     } else if (country === 'ES') {
         name = item.name_es || item.name_us || item.name;
-        const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.00065;
+        const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001;
         const esPrice = price * esRate;
         formattedPrice = '€' + esPrice.toFixed(2);
     } else if (country === 'DE') {
         name = item.name_de || item.name_us || item.name;
-        const deRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.00065;
+        const deRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.001;
         const dePrice = price * deRate;
         formattedPrice = '€' + dePrice.toFixed(2);
     } else if (country === 'FR') {
         name = item.name_fr || item.name_us || item.name;
-        const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.00065;
+        const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001;
         const frPrice = price * frRate;
         formattedPrice = '€' + frPrice.toFixed(2);
     } else {
@@ -379,7 +379,7 @@ function showPasswordResetModal() {
         return;
     }
     // 아직 login.js가 로드되지 않았을 수 있으므로 동적 import
-    import('./login.js?v=156').then(m => {
+    import('./login.js?v=157').then(m => {
         if (m.openResetPwStep2) m.openResetPwStep2();
     }).catch(() => {
         // 최후 수단: DOM 직접 조작

@@ -858,7 +858,7 @@
                 </div>
                 <div style="display:flex; gap:5px; margin-bottom:5px;">
                     <input id="newProdName" class="input-text" placeholder="🇰🇷 상품명" style="flex:2;">
-                    <input id="newProdPrice" type="number" class="input-text" placeholder="₩ 가격" style="flex:1;">
+                    <input id="newProdPrice" type="number" class="input-text" placeholder="₩ 가격" style="flex:1;" oninput="autoFillPrices(this.value)">
                 </div>
                 <div style="display:flex; gap:5px; margin-bottom:5px;">
                     <input id="newProdNameJP" class="input-text" placeholder="🇯🇵 일본어" style="flex:2;">
@@ -1294,7 +1294,7 @@
                     </div>
                     
                     <div style="display:flex; gap:10px; margin-top:12px;">
-                        <div style="flex:1;"><label class="form-label">🇰🇷 명칭/가격</label><input id="nmKR" class="input-text"><input id="prKR" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
+                        <div style="flex:1;"><label class="form-label">🇰🇷 명칭/가격</label><input id="nmKR" class="input-text"><input id="prKR" type="number" class="input-text" style="margin-top:2px;" placeholder="0" oninput="autoFillAddonPrices(this.value)"></div>
                         <div style="flex:1;"><label class="form-label">🇯🇵 명칭/가격</label><input id="nmJP" class="input-text"><input id="prJP" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
                         <div style="flex:1;"><label class="form-label">🇺🇸 명칭/가격</label><input id="nmUS" class="input-text"><input id="prUS" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>
                         <div style="flex:1;"><label class="form-label">🇨🇳 명칭/가격</label><input id="nmCN" class="input-text"><input id="prCN" type="number" class="input-text" style="margin-top:2px;" placeholder="0"></div>

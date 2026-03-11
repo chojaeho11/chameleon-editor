@@ -1360,6 +1360,24 @@ async function googleTranslate(text, targetLang) {
     }
 }
 
+// ★ KRW 가격 입력 시 실시간 환율 자동계산
+window.autoFillPrices = (krwVal) => {
+    const krw = parseFloat(krwVal) || 0;
+    if (krw <= 0) return;
+    const rates = { JP: 0.1, US: 0.001, CN: 0.05, AR: 0.001, EUR: 0.001 };
+    const setVal = (id, val, dec) => {
+        const el = document.getElementById(id);
+        if (el) el.value = dec ? val.toFixed(dec) : Math.round(val);
+    };
+    setVal('newProdPriceJP', krw * rates.JP);
+    setVal('newProdPriceUS', krw * rates.US, 2);
+    setVal('newProdPriceCN', krw * rates.CN);
+    setVal('newProdPriceAR', krw * rates.AR, 2);
+    setVal('newProdPriceES', krw * rates.EUR, 2);
+    setVal('newProdPriceDE', krw * rates.EUR, 2);
+    setVal('newProdPriceFR', krw * rates.EUR, 2);
+};
+
 window.autoTranslateInputs = async () => {
     const krName = document.getElementById('newProdName').value;
     const krPrice = document.getElementById('newProdPrice').value;
@@ -1376,7 +1394,7 @@ window.autoTranslateInputs = async () => {
     btn.disabled = true;
 
     try {
-        const rateJPY = 0.1, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
+        const rateJPY = 0.1, rateUSD = 0.001, rateCNY = 0.05, rateSAR = 0.001, rateEUR = 0.001;
 
         if (krPrice && krPrice > 0) {
             document.getElementById('newProdPriceJP').value = Math.round(krPrice * rateJPY);
@@ -1443,11 +1461,22 @@ window.autoTranslateCategoryInputs = async () => {
     showToast("소분류 번역 완료", "success");
 };
 
+window.autoFillAddonPrices = (krwVal) => {
+    const krw = parseFloat(krwVal) || 0;
+    if (krw <= 0) return;
+    const r = { JP: 0.1, US: 0.001, CN: 0.05, AR: 0.001, EUR: 0.001 };
+    const s = (id, v, d) => { const el = document.getElementById(id); if (el) el.value = d ? v.toFixed(d) : Math.round(v); };
+    s('prJP', krw * r.JP); s('prUS', krw * r.US, 2); s('prCN', krw * r.CN);
+    s('prAR', krw * r.AR, 2); s('prES', krw * r.EUR, 2);
+    if (document.getElementById('prDE')) s('prDE', krw * r.EUR, 2);
+    if (document.getElementById('prFR')) s('prFR', krw * r.EUR, 2);
+};
+
 window.autoTranslateAddonInputs = async () => {
     const krName = document.getElementById('nmKR').value;
     const krPrice = document.getElementById('prKR').value;
     if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
-    const rateJPY = 0.1, rateUSD = 0.002, rateCNY = 0.01, rateSAR = 0.005, rateEUR = 0.001;
+    const rateJPY = 0.1, rateUSD = 0.001, rateCNY = 0.05, rateSAR = 0.001, rateEUR = 0.001;
     if (krPrice) {
         document.getElementById('prJP').value = Math.round(krPrice * rateJPY);
         document.getElementById('prUS').value = (krPrice * rateUSD).toFixed(2);
@@ -1623,7 +1652,7 @@ window.updateAllCurrency = async () => {
         for (const p of products) {
             const krw = p.price || 0;
             const priceJP = Math.round(krw * 0.1);
-            const priceUS = Math.round(krw * 0.002); 
+            const priceUS = Math.round(krw * 0.001); 
             const { error: updateErr } = await sb.from('admin_products')
                 .update({ 
                     price_jp: priceJP, 
@@ -2620,7 +2649,7 @@ window.batchCrawlProducts = async () => {
                 description: detailHtml.kr || product.description || '',
                 name_jp: '', name_us: '', name_cn: '', name_ar: '', name_es: '',
                 price_jp: Math.round(price * 0.1),
-                price_us: Math.round(price * 0.002),
+                price_us: Math.round(price * 0.001),
                 description_jp: detailHtml.jp || '',
                 description_us: detailHtml.us || '',
                 description_cn: detailHtml.cn || '',

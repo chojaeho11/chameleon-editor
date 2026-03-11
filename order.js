@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=156";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=156";
-import { SITE_CONFIG } from "./site-config.js?v=156";
-import { applySize } from "./canvas-size.js?v=156";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=156";
+import { canvas } from "./canvas-core.js?v=157";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=157";
+import { SITE_CONFIG } from "./site-config.js?v=157";
+import { applySize } from "./canvas-size.js?v=157";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=157";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=156";
+} from "./export.js?v=157";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -688,15 +688,16 @@ function hasBoardInCart() {
 // ── 최소 주문금액 설정 (KRW 기준) ──
 // KR: 10,000 KRW | JP: ¥1,000 = 10,000 KRW | US: $10 = 10,000 KRW
 // CN: ¥100 CNY = 20,000 KRW | ES/DE/FR: €10 ≈ 15,385 KRW
+// 환율 기준: 1,000원 = ¥100 = $1 = ¥50위안 = €1 = ﷼1
 const MIN_ORDER_KRW = {
     KR: 10000,
-    JP: 10000,   // ¥1,000
-    US: 10000,   // $10
-    CN: 20000,   // ¥100 CNY
-    AR: 15000,   // ﷼50
-    ES: 15385,   // €10
-    DE: 15385,
-    FR: 15385,
+    JP: 10000,   // ¥1,000  (rate 0.1)
+    US: 10000,   // $10     (rate 0.001)
+    CN: 10000,   // ¥500    (rate 0.05)
+    AR: 10000,   // ﷼10    (rate 0.001)
+    ES: 10000,   // €10     (rate 0.001)
+    DE: 10000,
+    FR: 10000,
 };
 
 function getMinOrderKRW() {
@@ -711,8 +712,8 @@ function getMinOrderDisplay() {
         KR: '₩10,000',
         JP: '¥1,000',
         US: '$10',
-        CN: '¥100',
-        AR: '﷼50',
+        CN: '¥500',
+        AR: '﷼10',
         ES: '€10', DE: '€10', FR: '€10',
     };
     return displays[cc] || '₩10,000';
@@ -1325,7 +1326,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=156');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=157');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2427,7 +2428,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=156');
+                const { generateDesignPNG } = await import('./export.js?v=157');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {

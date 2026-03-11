@@ -159,8 +159,8 @@ window.executeBulkUpload = async function() {
     const basePrice = parseInt(priceVal);
 
     // 환율 자동 계산 (근사치)
-    const priceUS = Math.round(basePrice / 1350); 
-    const priceJP = Math.round(basePrice / 9);    
+    const priceUS = Math.round(basePrice / 1000); 
+    const priceJP = Math.round(basePrice / 10);    
 
     let successCount = 0;
     let failCount = 0;
