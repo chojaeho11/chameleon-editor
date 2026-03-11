@@ -1946,13 +1946,13 @@ let _tsMockupImg = null;    // 캐시된 사용자 이미지
 let _tsImgX = 0, _tsImgY = 0, _tsImgScale = 1; // 이미지 위치/크기
 
 function _psTshirtPath(ctx, W, H) {
-    // 참고 이미지 기반 깔끔한 라운드 넥 티셔츠
+    // 각진 소매 티셔츠 실루엣
     const cx = W / 2;
     ctx.beginPath();
-    // 왼쪽 소매 끝
-    ctx.moveTo(12, 95);
-    // 왼쪽 소매 아래
-    ctx.quadraticCurveTo(18, 130, 62, 135);
+    // 왼쪽 소매 끝 (각진 꼭짓점)
+    ctx.moveTo(8, 110);
+    // 왼쪽 소매 아래 → 겨드랑이 (직선)
+    ctx.lineTo(65, 130);
     // 왼쪽 겨드랑이
     ctx.lineTo(68, 115);
     // 왼쪽 몸통
@@ -1961,21 +1961,21 @@ function _psTshirtPath(ctx, W, H) {
     ctx.quadraticCurveTo(cx, H - 5, W - 68, H - 15);
     // 오른쪽 몸통
     ctx.lineTo(W - 68, 115);
-    // 오른쪽 겨드랑이
-    ctx.lineTo(W - 62, 135);
-    // 오른쪽 소매 아래
-    ctx.quadraticCurveTo(W - 18, 130, W - 12, 95);
-    // 오른쪽 소매 위
-    ctx.quadraticCurveTo(W - 20, 55, W - 68, 45);
+    // 오른쪽 겨드랑이 → 소매 아래 (직선)
+    ctx.lineTo(W - 65, 130);
+    // 오른쪽 소매 끝 (각진 꼭짓점)
+    ctx.lineTo(W - 8, 110);
+    // 오른쪽 소매 위 → 어깨 (직선)
+    ctx.lineTo(W - 68, 42);
     // 오른쪽 어깨
     ctx.lineTo(cx + 28, 25);
     // 목 라인 (U자)
     ctx.quadraticCurveTo(cx + 15, 50, cx, 55);
     ctx.quadraticCurveTo(cx - 15, 50, cx - 28, 25);
     // 왼쪽 어깨
-    ctx.lineTo(68, 45);
-    // 왼쪽 소매 위
-    ctx.quadraticCurveTo(20, 55, 12, 95);
+    ctx.lineTo(68, 42);
+    // 왼쪽 소매 위 (직선)
+    ctx.lineTo(8, 110);
     ctx.closePath();
 }
 
