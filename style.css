@@ -1456,18 +1456,30 @@ button, input, textarea, select { font-family: inherit; }
     margin-left: 4px;
 }
 .adv-studio-btn {
-    background: rgba(255,255,255,0.2);
-    border: 1.5px solid rgba(255,255,255,0.5);
+    background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
+    background-size: 200% 200%;
+    border: 2px solid rgba(255,255,255,0.6);
     color: #fff;
-    padding: 3px 10px;
+    padding: 6px 16px;
     border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 800;
     cursor: pointer;
     margin-left: 6px;
     transition: all 0.2s;
+    animation: studioPulse 2s ease-in-out infinite, studioGlow 3s ease-in-out infinite;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 0 8px rgba(245,158,11,0.5);
 }
-.adv-studio-btn:hover { background: rgba(255,255,255,0.35); }
+.adv-studio-btn:hover { transform: scale(1.08); box-shadow: 0 0 16px rgba(245,158,11,0.7); }
+@keyframes studioPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+@keyframes studioGlow {
+    0%, 100% { box-shadow: 0 0 8px rgba(245,158,11,0.5); background-position: 0% 50%; }
+    50% { box-shadow: 0 0 18px rgba(236,72,153,0.7), 0 0 6px rgba(245,158,11,0.4); background-position: 100% 50%; }
+}
 .ps-upload-zone { border:2px dashed #c4b5fd; border-radius:14px; padding:28px 16px; text-align:center; cursor:pointer; transition:all .3s; background:#faf5ff; margin:8px 0; }
 .ps-upload-zone:hover { border-color:#7c3aed; background:#f3e8ff; }
 .ps-preview-wrap { position:relative; border-radius:12px; overflow:hidden; margin:10px 0; box-shadow:0 4px 16px rgba(0,0,0,0.1); }
@@ -1594,13 +1606,13 @@ button, input, textarea, select { font-family: inherit; }
 
 /* 채팅 영역 */
 .adv-chat-area {
-    background: #f8fafc;
+    background: #374151;
     min-height: 420px;
     max-height: 600px;
     overflow-y: auto;
     padding: 20px;
-    border-left: 1px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
+    border-left: 1px solid #4b5563;
+    border-right: 1px solid #4b5563;
     scroll-behavior: smooth;
 }
 
