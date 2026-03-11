@@ -1,6 +1,6 @@
-import { sb, currentUser, cartData, PRODUCT_DB } from "./config.js?v=161";
-import { canvas } from "./canvas-core.js?v=161";
-import { applySize } from "./canvas-size.js?v=161";
+import { sb, currentUser, cartData, PRODUCT_DB } from "./config.js?v=162";
+import { canvas } from "./canvas-core.js?v=162";
+import { applySize } from "./canvas-size.js?v=162";
 
 // [초기화] 에디터 로드 시 버튼 연결
 export function initMyDesign() {

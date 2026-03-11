@@ -1,6 +1,6 @@
 // canvas-ai.js
-import { canvas } from "./canvas-core.js?v=161";
-import { sb as _importedSb, currentUser } from "./config.js?v=161";
+import { canvas } from "./canvas-core.js?v=162";
+import { sb as _importedSb, currentUser } from "./config.js?v=162";
 
 // ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
 function _getSb() { return _importedSb || window.sb; }
