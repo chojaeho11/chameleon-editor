@@ -414,8 +414,8 @@ body {
     <div class="bot-header">
         <div class="bot-avatar">🦎</div>
         <div class="bot-header-info">
-            <h3>카멜레온 AI 상담</h3>
-            <span><i class="fa-solid fa-circle" style="color:#4ade80; font-size:8px;"></i> 24시간 자동응답</span>
+            <h3 id="botHeaderTitle">카멜레온 AI 상담</h3>
+            <span><i class="fa-solid fa-circle" style="color:#4ade80; font-size:8px;"></i> <span id="botHeaderStatus">24시간 자동응답</span></span>
         </div>
         <button class="bot-header-close" onclick="toggleBot()">
             <i class="fa-solid fa-xmark"></i>
@@ -425,7 +425,7 @@ body {
     <div class="bot-messages" id="botMessages"></div>
 
     <div class="bot-input-area">
-        <input type="text" id="botInput" placeholder="궁금한 점을 입력하세요..." 
+        <input type="text" id="botInput" placeholder="궁금한 점을 입력하세요..."
                onkeydown="if(event.key==='Enter')sendMessage()">
         <button class="bot-send-btn" onclick="sendMessage()">
             <i class="fa-solid fa-paper-plane"></i>
@@ -449,6 +449,48 @@ try {
         sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
 } catch(e) { console.warn('Supabase 미연결 - 데모 모드로 작동합니다.'); }
+
+// ── 다국어 UI 텍스트 ──
+const BOT_LANG = (function(){
+    const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) ||
+               (new URLSearchParams(location.search).get('lang') || 'kr').toUpperCase();
+    if (cc === 'JP' || cc === 'JA') return 'ja';
+    if (cc === 'US' || cc === 'EN') return 'en';
+    if (cc === 'CN' || cc === 'ZH') return 'zh';
+    if (cc === 'ES') return 'es';
+    if (cc === 'DE') return 'de';
+    if (cc === 'FR') return 'fr';
+    if (cc === 'AR') return 'ar';
+    return 'kr';
+})();
+
+const BOT_UI = {
+    kr: { title: '카멜레온 AI 상담', status: '24시간 자동응답', placeholder: '궁금한 점을 입력하세요...',
+          welcome: '안녕하세요! 🦎 <b>카멜레온프린팅</b> AI 상담봇입니다.\n\n친환경 전시·팝업스토어 인쇄 전문 쇼핑몰에 오신 것을 환영합니다. 무엇을 도와드릴까요?',
+          q1: '💰 가격/견적 문의', q2: '🔍 상품 검색', q3: '📦 주문 조회', q4: '❓ 자주 묻는 질문' },
+    ja: { title: 'カメレオン AI相談', status: '24時間自動応答', placeholder: 'ご質問を入力してください...',
+          welcome: 'こんにちは！🦎 <b>カメレオンプリンティング</b> AI相談ボットです。\n\nエコ展示・ポップアップストア印刷専門モールへようこそ。何をお手伝いしましょうか？',
+          q1: '💰 価格/見積り', q2: '🔍 商品検索', q3: '📦 注文確認', q4: '❓ よくある質問' },
+    en: { title: 'Chameleon AI Chat', status: '24/7 Auto Response', placeholder: 'Type your question...',
+          welcome: 'Hello! 🦎 Welcome to <b>Chameleon Printing</b> AI assistant.\n\nYour one-stop shop for eco-friendly exhibition & pop-up store printing. How can I help you?',
+          q1: '💰 Pricing / Quote', q2: '🔍 Search Products', q3: '📦 Order Tracking', q4: '❓ FAQ' },
+    zh: { title: '变色龙 AI咨询', status: '24小时自动回复', placeholder: '请输入您的问题...',
+          welcome: '您好！🦎 欢迎来到<b>变色龙印刷</b>AI咨询。\n\n环保展览·快闪店印刷专业商城，有什么可以帮您的？',
+          q1: '💰 价格/报价', q2: '🔍 搜索商品', q3: '📦 订单查询', q4: '❓ 常见问题' },
+    es: { title: 'Chameleon AI Chat', status: 'Respuesta automática 24/7', placeholder: 'Escribe tu pregunta...',
+          welcome: '¡Hola! 🦎 Bienvenido al asistente AI de <b>Chameleon Printing</b>.\n\n¿En qué podemos ayudarte?',
+          q1: '💰 Precios', q2: '🔍 Buscar', q3: '📦 Pedidos', q4: '❓ FAQ' },
+    de: { title: 'Chameleon AI Chat', status: '24/7 Automatische Antwort', placeholder: 'Ihre Frage eingeben...',
+          welcome: 'Hallo! 🦎 Willkommen beim <b>Chameleon Printing</b> AI-Assistenten.\n\nWie können wir Ihnen helfen?',
+          q1: '💰 Preise', q2: '🔍 Suche', q3: '📦 Bestellungen', q4: '❓ FAQ' },
+    fr: { title: 'Chameleon AI Chat', status: 'Réponse auto 24/7', placeholder: 'Posez votre question...',
+          welcome: 'Bonjour ! 🦎 Bienvenue sur l\'assistant AI de <b>Chameleon Printing</b>.\n\nComment pouvons-nous vous aider ?',
+          q1: '💰 Prix', q2: '🔍 Recherche', q3: '📦 Commandes', q4: '❓ FAQ' },
+    ar: { title: 'كاميليون AI', status: 'رد تلقائي 24/7', placeholder: '...اكتب سؤالك',
+          welcome: '!مرحباً 🦎 مرحباً بكم في مساعد <b>كاميليون للطباعة</b>.\n\nكيف يمكننا مساعدتك؟',
+          q1: '💰 الأسعار', q2: '🔍 البحث', q3: '📦 الطلبات', q4: '❓ الأسئلة' },
+};
+const _ui = BOT_UI[BOT_LANG] || BOT_UI['en'];
 
 // ============================================================
 // [1] 가격 계산 엔진 (order.js의 로직을 그대로 이식)
@@ -687,14 +729,22 @@ function escapeHtml(str) {
 // [5] 환영 메시지
 // ============================================================
 function showWelcome() {
-    addMessage(`안녕하세요! 🦎 <b>카멜레온프린팅</b> AI 상담봇입니다.\n\n친환경 전시·팝업스토어 인쇄 전문 쇼핑몰에 오신 것을 환영합니다. 무엇을 도와드릴까요?`);
-    
+    // 다국어 UI 적용
+    const t = document.getElementById('botHeaderTitle');
+    const s = document.getElementById('botHeaderStatus');
+    const inp = document.getElementById('botInput');
+    if (t) t.textContent = _ui.title;
+    if (s) s.textContent = _ui.status;
+    if (inp) inp.placeholder = _ui.placeholder;
+
+    addMessage(_ui.welcome);
+
     setTimeout(() => {
         addQuickActions([
-            { label: '💰 가격/견적 문의', value: '견적' },
-            { label: '🔍 상품 검색', value: '상품검색' },
-            { label: '📦 주문 조회', value: '주문조회' },
-            { label: '❓ 자주 묻는 질문', value: 'FAQ' }
+            { label: _ui.q1, value: '견적' },
+            { label: _ui.q2, value: '상품검색' },
+            { label: _ui.q3, value: '주문조회' },
+            { label: _ui.q4, value: 'FAQ' }
         ]);
     }, 100);
 }

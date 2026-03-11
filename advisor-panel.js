@@ -10,8 +10,9 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const API_URL = SUPA_URL + '/functions/v1/product-advisor';
 
 function getLang() {
-    if (SITE_CONFIG.COUNTRY === 'JP') return 'ja';
-    if (SITE_CONFIG.COUNTRY === 'US' || SITE_CONFIG.COUNTRY === 'EN') return 'en';
+    const cc = (window.SITE_CONFIG && SITE_CONFIG.COUNTRY) || '';
+    if (cc === 'JP') return 'ja';
+    if (cc === 'US' || cc === 'EN' || cc === 'CN' || cc === 'ZH' || cc === 'AR' || cc === 'ES' || cc === 'DE' || cc === 'FR') return 'en';
     return 'kr';
 }
 
