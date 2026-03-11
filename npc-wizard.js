@@ -1301,7 +1301,7 @@ window.NpcWizard = {
         const product = this.product;
         if (!product) return;
 
-        import('./order.js?v=152').then(m => {
+        import('./order.js?v=153').then(m => {
             const productToCart = { ...product };
             productToCart.price = amount;
             productToCart.is_custom = false;
@@ -1496,7 +1496,7 @@ window.NpcWizard = {
         if (!product) return;
         const qty = parseInt(document.getElementById('npcPdQty')?.value) || 1;
 
-        import('./order.js?v=152').then(m => {
+        import('./order.js?v=153').then(m => {
             const productToCart = { ...product };
             // 가로x높이를 mm로 변환하여 설정
             productToCart.w_mm = this._pdWidth * 10;
@@ -1609,7 +1609,7 @@ window.NpcWizard = {
         const product = this.product;
         if (!product) return;
         const qty = parseInt(document.getElementById('npcLsQty')?.value) || 1;
-        import('./order.js?v=152').then(m => {
+        import('./order.js?v=153').then(m => {
             const p = { ...product };
             p.w_mm = this._lsWidthCm * 10;
             p.h_mm = Math.round(this._lsWidthCm * 0.5) * 10;
