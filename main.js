@@ -2,7 +2,7 @@
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=158";
 import { initCanvas, canvas } from "./canvas-core.js?v=158";
-import { initSizeControls, applySize } from "./canvas-size.js?v=158";
+import { initSizeControls, applySize } from "./canvas-size.js?v=159";
 import { initGuides } from "./canvas-guides.js?v=158";
 import { initZoomPan } from "./canvas-zoom-pan.js?v=158";
 import { initObjectTools } from "./canvas-objects.js?v=158";

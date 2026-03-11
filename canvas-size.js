@@ -346,9 +346,15 @@ function renderWallConfigUI() {
     const container = document.getElementById('wallListContainer');
     if (!container) return;
 
+    // ★ 먼저 pricePerSqm 확정 (row 가격 계산 전에 호출해야 $0 방지)
+    calcWallTotalPrice();
+
     container.innerHTML = '';
     const fmt = window.formatCurrency || (v => v.toLocaleString() + '원');
     const sides = cfg.doubleSided ? 2 : 1;
+    // US 여부: SITE_CONFIG.COUNTRY 직접 확인 (window._isUSsite 타이밍 이슈 방지)
+    const _isUS = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'US') ||
+                  window.location.hostname.includes('cafe3355');
 
     cfg.walls.forEach((wall, i) => {
         const isActive = i === cfg.activeIndex;
@@ -370,7 +376,6 @@ function renderWallConfigUI() {
         wSel.className = 'wl-sel';
         WALL_WIDTHS.forEach(w => {
             const opt = document.createElement('option');
-            const _isUS = window._isUSsite && window._isUSsite();
             opt.value = w; opt.textContent = _isUS ? (w/304.8).toFixed(1)+' ft' : (w / 1000) + 'm';
             if (w === wall.widthMM) opt.selected = true;
             wSel.appendChild(opt);
@@ -387,7 +392,6 @@ function renderWallConfigUI() {
         hSel.className = 'wl-sel';
         WALL_HEIGHTS.forEach(h => {
             const opt = document.createElement('option');
-            const _isUS = window._isUSsite && window._isUSsite();
             opt.value = h; opt.textContent = _isUS ? (h/304.8).toFixed(1)+' ft' : (h / 10) + 'cm';
             if (h === wall.heightMM) opt.selected = true;
             hSel.appendChild(opt);
@@ -413,8 +417,7 @@ function renderWallConfigUI() {
         container.appendChild(row);
     });
 
-    // 합계
-    calcWallTotalPrice();
+    // 합계 (이미 함수 시작 시 calcWallTotalPrice() 호출됨)
     const totalEl = document.getElementById('wallTotalPrice');
     if (totalEl) totalEl.textContent = fmt(cfg.totalPrice);
 
