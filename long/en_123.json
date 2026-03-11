@@ -1862,5 +1862,22 @@
   "menu_add_row": "Add Row",
   "menu_help_text": "After creating the menu, resize it on the canvas to auto-adjust the layout.",
   "menu_edit_done": "Done",
-  "menu_create": "Create Menu"
+  "menu_create": "Create Menu",
+  "err_no_edit_data": "Edit data not found.",
+  "msg_loading_design": "Loading design data...",
+  "err_load_edit_data": "Cannot load edit data: ",
+  "msg_partner_selected": "Partner selected! Check their contact info to schedule.",
+  "msg_no_bids": "No quotes received yet.\nPartners are reviewing your request, please wait a moment.",
+  "msg_data_load_error": "An error occurred while loading data.",
+  "msg_product_not_found": "Product information not found.",
+  "msg_product_code_missing": "Product code is missing.",
+  "msg_cart_add_failed": "Failed to add to cart: ",
+  "msg_select_category": "Please select a category.",
+  "msg_select_image_for_bg": "Please select an image to set as background.",
+  "msg_delivery_cat_not_found": "Delivery category not found. Please contact admin.",
+  "msg_no_designs": "No saved designs.",
+  "btn_edit": "Edit",
+  "btn_delete": "Delete",
+  "msg_no_records": "No records found.",
+  "msg_select_object": "Please select an object first."
 }

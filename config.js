@@ -241,13 +241,13 @@ function updateUserSession(session) {
         if (currentUser) {
             const _isAdm = ADMIN_EMAILS.includes(currentUser.email);
             btnLogin.innerText = _isAdm
-                ? (window.t ? window.t('btn_admin_logout', '관리자 로그아웃') : '관리자 로그아웃')
-                : (window.t ? window.t('btn_logout', '로그아웃') : '로그아웃');
+                ? (window.t ? window.t('btn_admin_logout', 'Admin Logout') : 'Admin Logout')
+                : (window.t ? window.t('btn_logout', 'Logout') : 'Logout');
             btnLogin.classList.add('primary');
             if (_isAdm) btnLogin.style.backgroundColor = '#dc2626';
             else btnLogin.style.backgroundColor = '';
         } else {
-            btnLogin.innerText = window.t ? window.t('btn_login', '로그인') : '로그인';
+            btnLogin.innerText = window.t ? window.t('btn_login', 'Login') : 'Login';
             btnLogin.classList.remove('primary');
             btnLogin.style.backgroundColor = '';
         }
@@ -382,7 +382,7 @@ function showPasswordResetModal() {
         return;
     }
     // 아직 login.js가 로드되지 않았을 수 있으므로 동적 import
-    import('./login.js?v=158').then(m => {
+    import('./login.js?v=159').then(m => {
         if (m.openResetPwStep2) m.openResetPwStep2();
     }).catch(() => {
         // 최후 수단: DOM 직접 조작

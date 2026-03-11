@@ -1,5 +1,5 @@
-import { canvas } from "./canvas-core.js?v=158";
-import { updateLockUI } from "./canvas-utils.js?v=158";
+import { canvas } from "./canvas-core.js?v=159";
+import { updateLockUI } from "./canvas-utils.js?v=159";
 import { sb, currentUser } from "./config.js?v=159";
 
 // ============================================================

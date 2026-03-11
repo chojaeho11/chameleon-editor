@@ -1859,5 +1859,22 @@
   "menu_add_row": "行を追加",
   "menu_help_text": "メニュー作成後、キャンバスでサイズを調整するとレイアウトが自動調整されます。",
   "menu_edit_done": "編集完了",
-  "menu_create": "メニュー作成"
+  "menu_create": "メニュー作成",
+  "err_no_edit_data": "編集データが見つかりません。",
+  "msg_loading_design": "デザインデータを読み込んでいます...",
+  "err_load_edit_data": "編集データを読み込めません: ",
+  "msg_partner_selected": "パートナー選択完了！連絡先を確認してスケジュールを調整してください。",
+  "msg_no_bids": "まだ見積もりが届いていません。\nパートナーが確認中ですのでしばらくお待ちください。",
+  "msg_data_load_error": "データの読み込みエラーが発生しました。",
+  "msg_product_not_found": "商品情報が見つかりません。",
+  "msg_product_code_missing": "商品コードが見つかりません。",
+  "msg_cart_add_failed": "カートへの追加に失敗しました: ",
+  "msg_select_category": "カテゴリを選択してください。",
+  "msg_select_image_for_bg": "背景にする画像を選択してください。",
+  "msg_delivery_cat_not_found": "配送カテゴリが見つかりません。管理者にお問い合わせください。",
+  "msg_no_designs": "保存されたデザインがありません。",
+  "btn_edit": "編集",
+  "btn_delete": "削除",
+  "msg_no_records": "履歴がありません。",
+  "msg_select_object": "オブジェクトを選択してください。"
 }

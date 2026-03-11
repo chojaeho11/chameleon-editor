@@ -447,7 +447,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 4초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},4000);
 </script>
-<script src="toast.js?v=158"></script>
+<script src="toast.js?v=159"></script>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 <script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
 
@@ -4375,29 +4375,29 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 <script type="module" src="./config.js?v=159"></script>
-<script type="module" src="./canvas-core.js?v=158"></script>
-<script src="./wall-3d-preview.js?v=158" defer></script>
-<script src="./wall-3d-walls.js?v=158" defer></script>
+<script type="module" src="./canvas-core.js?v=159"></script>
+<script src="./wall-3d-preview.js?v=159" defer></script>
+<script src="./wall-3d-walls.js?v=159" defer></script>
 <script type="module" src="./canvas-size.js?v=159"></script>
-<script type="module" src="./canvas-guides.js?v=158"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=158"></script>
-<script type="module" src="./canvas-objects.js?v=158"></script>
-<script type="module" src="./canvas-image.js?v=158"></script>
-<script type="module" src="./canvas-template.js?v=158"></script>
-<script type="module" src="./canvas-ai.js?v=158"></script>
-<script type="module" src="./canvas-retouch.js?v=158"></script>
-<script type="module" src="./canvas-utils.js?v=158"></script>
-<script type="module" src="./shortcuts.js?v=158"></script>
-<script type="module" src="./context-menu.js?v=158"></script>
-<script type="module" src="./export.js?v=158"></script>
-<script type="module" src="./order.js?v=158"></script>
-<script type="module" src="./login.js?v=158"></script>
-<script type="module" src="./my-design.js?v=158"></script>
-<script type="module" src="./ppt-mode.js?v=158"></script>
-<script type="module" src="./main.js?v=158"></script>
+<script type="module" src="./canvas-guides.js?v=159"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=159"></script>
+<script type="module" src="./canvas-objects.js?v=159"></script>
+<script type="module" src="./canvas-image.js?v=159"></script>
+<script type="module" src="./canvas-template.js?v=159"></script>
+<script type="module" src="./canvas-ai.js?v=159"></script>
+<script type="module" src="./canvas-retouch.js?v=159"></script>
+<script type="module" src="./canvas-utils.js?v=159"></script>
+<script type="module" src="./shortcuts.js?v=159"></script>
+<script type="module" src="./context-menu.js?v=159"></script>
+<script type="module" src="./export.js?v=159"></script>
+<script type="module" src="./order.js?v=159"></script>
+<script type="module" src="./login.js?v=159"></script>
+<script type="module" src="./my-design.js?v=159"></script>
+<script type="module" src="./ppt-mode.js?v=159"></script>
+<script type="module" src="./main.js?v=159"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=158";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=159";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -5173,7 +5173,7 @@ window.filterFxCards = function(cat, btn) {
             .order('price', { ascending: true }); // 저렴한 순
 
         if(error || !bids || bids.length === 0) {
-            showToast("아직 도착한 견적서가 없습니다.\n파트너사들이 확인 중이니 조금만 기다려주세요.", 'info');
+            showToast(window.t ? window.t('msg_no_bids', 'No quotes received yet.\nPartners are reviewing your request, please wait a moment.') : 'No quotes received yet.', 'info');
             return;
         }
 
@@ -5238,7 +5238,7 @@ window.filterFxCards = function(cat, btn) {
         // 3. 주문 상태 변경 (제작준비)
         await sb.from('orders').update({ status: '제작준비' }).eq('id', orderId);
 
-        showToast("파트너 선택 완료! 연락처를 확인하여 일정을 조율하세요.", "success");
+        showToast(window.t ? window.t('msg_partner_selected', 'Partner selected! Check their contact info to schedule.') : 'Partner selected!', "success");
         document.getElementById('bidListModal').remove();
         checkBidsForOrder(orderId); // 모달 다시 열어서 결과 보여줌
     };
@@ -5269,8 +5269,8 @@ window.filterFxCards = function(cat, btn) {
 
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=158 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=158';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=158'; // [수정] 함수 추가됨
+    import { canvas, setMaxLimits } from './canvas-core.js?v=159';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=159'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=159';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=159';
 
@@ -5694,7 +5694,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=158').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=159').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -5795,7 +5795,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                 if (window.restoreDesignFromData) window.restoreDesignFromData(data);
             } catch (e) {
                 console.error(e);
-                showToast("불러오기 실패: " + e.message, 'error');
+                showToast((window.t ? window.t('msg_load_failed', 'Failed to load: ') : 'Failed to load: ') + e.message, 'error');
                 if(loading) loading.style.display = 'none';
             }
         }, 800);
@@ -5857,7 +5857,11 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
             const card = document.createElement('div');
             card.className = 'hotdeal-card';
             const imgSrc = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
-            const sizeText = (p.width_mm && p.height_mm) ? `${p.width_mm} x ${p.height_mm}mm` : 'Option';
+            const sizeText = (p.width_mm && p.height_mm)
+                ? (window._isUSsite && window._isUSsite()
+                    ? `${(p.width_mm/25.4).toFixed(1)} x ${(p.height_mm/25.4).toFixed(1)} in`
+                    : `${p.width_mm} x ${p.height_mm}mm`)
+                : 'Option';
             
             // 뱃지 색상
             const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : '#4f46e5';
@@ -5913,7 +5917,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         // 1. 모달 창 열기 & 로딩 표시
         modal.style.display = 'flex';
         if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(세부 항목 선택)</span>`;
-        if(descEl) descEl.innerText = "원하시는 카테고리를 선택해주세요.";
+        if(descEl) descEl.innerText = window.t ? window.t('msg_select_category', 'Please select a category.') : 'Please select a category.';
 
         // pushState: 카테고리 모달 열릴 때 히스토리에 추가 (뒤로가기로 홈 복귀 가능)
         if (!window._navNavigating) {
@@ -6143,7 +6147,7 @@ async function renderQuickMenu() {
 
     } catch (err) {
         console.error("초기 로딩 실패:", err);
-        itemContainer.innerHTML = "데이터 로드 오류가 발생했습니다.";
+        itemContainer.innerHTML = window.t ? window.t('msg_data_load_error', 'An error occurred while loading data.') : 'An error occurred while loading data.';
     }
 }
 
@@ -6285,7 +6289,7 @@ window.goHome = function() {
 
         } catch (e) {
             console.error(e);
-            showToast("오류: " + e.message, 'error');
+            showToast((window.t ? window.t('err_prefix', 'Error: ') : 'Error: ') + e.message, 'error');
             window.history.back();
         } finally {
             if(loading) loading.style.display = 'none';
@@ -6608,7 +6612,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
 
         } catch (e) {
             console.error(e);
-            showToast("오류: " + e.message, 'error');
+            showToast((window.t ? window.t('err_prefix', 'Error: ') : 'Error: ') + e.message, 'error');
             window.history.back();
         } finally {
             if(loading) loading.style.display = 'none';
@@ -6741,7 +6745,7 @@ window.showChoiceModal = async function(key) {
     let product = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
     if (!product || !product.description) {
         const { data, error } = await _sb.from('admin_products').select('*').eq('code', key).single();
-        if (error || !data) { showToast("상품 정보를 찾을 수 없습니다.", 'error'); return; }
+        if (error || !data) { showToast(window.t ? window.t('msg_product_not_found', 'Product information not found.') : 'Product information not found.', 'error'); return; }
         product = data;
         if(!window.PRODUCT_DB) window.PRODUCT_DB = {};
         window.PRODUCT_DB[key] = product;
@@ -7643,11 +7647,11 @@ if (w >= 20 && h >= 20) {
         
         // 1. 상품 정보 확인 (없으면 중단)
         const product = window.selectedProductForChoice;
-        if (!product) { showToast("상품 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.", 'error'); return; }
+        if (!product) { showToast(window.t ? window.t('msg_product_not_found', 'Product information not found.') : 'Product information not found.', 'error'); return; }
 
         // ★ [핵심] 상품 코드 확실하게 가져오기 (변수 의존성 제거)
         const targetCode = product.code || window.currentProductKey;
-        if (!targetCode) { showToast("상품 코드가 누락되었습니다.", 'error'); return; }
+        if (!targetCode) { showToast(window.t ? window.t('msg_product_code_missing', 'Product code is missing.') : 'Product code is missing.', 'error'); return; }
 
         // ★ 패브릭미싱 필수 선택 검증
         const reqCatBox = document.querySelector('[data-required-cat="2342434"]');
@@ -7779,7 +7783,7 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=158');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=159');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
@@ -7846,7 +7850,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=158');
+                    const m = await import('./order.js?v=159');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -7916,7 +7920,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=158').then(m => {
+            import('./order.js?v=159').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -7945,7 +7949,7 @@ if (w >= 20 && h >= 20) {
                 document.getElementById('cartAddedModal').style.display = 'flex';
             }).catch(err => {
                 console.error('장바구니 추가 오류:', err);
-                showToast('장바구니 담기 실패: ' + err.message, 'error');
+                showToast((window.t ? window.t('msg_cart_add_failed', 'Failed to add to cart: ') : 'Failed to add to cart: ') + err.message, 'error');
                 window.isDirectCartAddInProgress = false;
             });
         }
@@ -8408,7 +8412,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=158').then(m => {
+        import('./order.js?v=159').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -8421,7 +8425,7 @@ if (w >= 20 && h >= 20) {
             if (!file) return;
 
             const product = window.selectedProductForChoice;
-            if (!product) { showToast("상품 정보가 없습니다.", 'error'); return; }
+            if (!product) { showToast(window.t ? window.t('msg_no_product_info', 'No product information available.') : 'No product information available.', 'error'); return; }
 
             const loading = document.getElementById("loading");
             if (loading) loading.style.display = "flex";
@@ -8491,7 +8495,7 @@ if (w >= 20 && h >= 20) {
                 
             } catch (err) {
                 console.error(err);
-                showToast("파일 처리 중 오류가 발생했습니다.", 'error');
+                showToast((window.t ? window.t('err_prefix', 'Error: ') : 'Error: ') + err.message, 'error');
             } finally {
                 if (loading) loading.style.display = "none";
                 directUploadInput.value = ''; 
@@ -8568,7 +8572,7 @@ if (w >= 20 && h >= 20) {
             return;
         }
 
-        if (!key) { showToast("상품 코드가 올바르지 않습니다.", 'error'); return; }
+        if (!key) { showToast(window.t ? window.t('msg_product_code_missing', 'Product code is missing.') : 'Product code is missing.', 'error'); return; }
 
         // ★ 로그인 확인 완료 — NPC 모달 등 이전 모달 닫기
         const _choiceModal = document.getElementById('choiceModal');
@@ -8591,7 +8595,7 @@ if (w >= 20 && h >= 20) {
             const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, is_custom_size, is_file_upload, is_bulk_order, quantity_options, is_general_product').eq('code', key).single();
             if (error || !prodData) {
                 console.error("상품 로드 실패:", error);
-                showToast("상품 정보를 찾을 수 없습니다.", 'error'); return;
+                showToast(window.t ? window.t('msg_product_not_found', 'Product information not found.') : 'Product information not found.', 'error'); return;
             }
             window.PRODUCT_DB[key] = prodData;
         }
@@ -8742,7 +8746,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=158');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=159');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -8760,7 +8764,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=158');
+                    const mod = await import('./canvas-ai.js?v=159');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -8776,7 +8780,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=158');
+                    const mod = await import('./canvas-ai.js?v=159');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -8831,7 +8835,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=158');
+                    const mod = await import('./canvas-ai.js?v=159');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -8842,7 +8846,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=158');
+                    const mod = await import('./canvas-ai.js?v=159');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -8950,7 +8954,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=158');
+                await import('./canvas-objects.js?v=159');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -9406,12 +9410,12 @@ if (w >= 20 && h >= 20) {
     };
 
     // 기타 유틸
-    window.toggleLockSelection = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a){showToast("선택필요",'info');return;} const l=!a.lockMovementX; a.set({lockMovementX:l,lockMovementY:l,lockRotation:l,lockScalingX:l,lockScalingY:l,hasControls:!l,selectable:true}); canvas.discardActiveObject(); canvas.requestRenderAll(); };
+    window.toggleLockSelection = function() { if(!canvas)return; const a=canvas.getActiveObject(); if(!a){showToast(window.t ? window.t('msg_select_object', 'Please select an object first.') : 'Please select an object first.','info');return;} const l=!a.lockMovementX; a.set({lockMovementX:l,lockMovementY:l,lockRotation:l,lockScalingX:l,lockScalingY:l,hasControls:!l,selectable:true}); canvas.discardActiveObject(); canvas.requestRenderAll(); };
     window.setAsBackground = function() { 
     if(!canvas) return; 
     
     const a = canvas.getActiveObject(); 
-    if(!a) { showToast("배경으로 만들 이미지를 선택해주세요.", 'info'); return; }
+    if(!a) { showToast(window.t ? window.t('msg_select_image_for_bg', 'Please select an image to set as background.') : 'Please select an image to set as background.', 'info'); return; }
     
     const b = canvas.getObjects().find(o => o.isBoard); 
     if(!b) return; 
@@ -9452,7 +9456,7 @@ if (w >= 20 && h >= 20) {
     window.openGeneralProductModal = function(code) {
         // 상품 정보 가져오기 (이미 전역변수에 로드됨)
         const product = window.PRODUCT_DB[code];
-        if (!product) { showToast("상품 정보를 찾을 수 없습니다.", 'error'); return; }
+        if (!product) { showToast(window.t ? window.t('msg_product_not_found', 'Product information not found.') : 'Product information not found.', 'error'); return; }
 
         window.currentGenProduct = product;
 
@@ -10650,7 +10654,7 @@ window.loadHomeHcGrid = function(){
                 .single();
 
             if (error || !data) {
-                showToast("배송 카테고리를 찾을 수 없습니다. 관리자에게 문의해주세요.", 'error');
+                showToast(window.t ? window.t('msg_delivery_cat_not_found', 'Delivery category not found. Please contact admin.') : 'Delivery category not found. Please contact admin.', 'error');
                 modal.style.display = 'none';
                 return;
             }
@@ -10660,7 +10664,7 @@ window.loadHomeHcGrid = function(){
 
         } catch (e) {
             console.error(e);
-            showToast("오류가 발생했습니다.", 'error');
+            showToast((window.t ? window.t('err_prefix', 'Error: ') : 'Error: ') + e.message, 'error');
             modal.style.display = 'none';
         }
     };
@@ -10884,7 +10888,8 @@ window.filterModalItems = function(keyword) {
             div.className = 'quick-item';
             const iconUrl = window.getTinyThumb ? window.getTinyThumb(p.img_url||'', 150) : (p.img_url||'');
             const imgTag = iconUrl ? `<img src="${iconUrl}" alt="${_nameR(p)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">` : `<i class="fa-solid fa-cube" style="font-size:24px; color:#cbd5e1;"></i>`;
-            div.innerHTML = `<div style="position:relative; width:100%; aspect-ratio:1; background:#f8fafc; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${_nameR(p)}</div><div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">${_fmtR(p)}</div><div style="font-size:12px; color:#94a3b8; margin-top:2px;">${p.width_mm||'-'} x ${p.height_mm||'-'} mm</div>`;
+            const _szR = (p) => (p.width_mm && p.height_mm) ? (window._isUSsite && window._isUSsite() ? `${(p.width_mm/25.4).toFixed(1)} x ${(p.height_mm/25.4).toFixed(1)} in` : `${p.width_mm} x ${p.height_mm} mm`) : '-';
+            div.innerHTML = `<div style="position:relative; width:100%; aspect-ratio:1; background:#f8fafc; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${_nameR(p)}</div><div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">${_fmtR(p)}</div><div style="font-size:12px; color:#94a3b8; margin-top:2px;">${_szR(p)}</div>`;
             div.onclick = () => {
                 if (modalBox && Math.abs(modalBox.scrollTop - _scrollGuardY) > 10) return;
                 document.getElementById('categoryDetailModal').style.display = 'none';
@@ -11054,7 +11059,7 @@ window.filterModalItems = function(keyword) {
                 ${_localPrice(item)}
             </div>
             <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
-                ${item.width_mm || '-'} x ${item.height_mm || '-'} mm
+                ${(item.width_mm && item.height_mm) ? (window._isUSsite && window._isUSsite() ? `${(item.width_mm/25.4).toFixed(1)} x ${(item.height_mm/25.4).toFixed(1)} in` : `${item.width_mm} x ${item.height_mm} mm`) : '-'}
             </div>
         `;
 
@@ -12351,7 +12356,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=158').then(function(mod) {
+            import('./order.js?v=159').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -13339,8 +13344,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=158"></script>
-<script src="./npc-wizard.js?v=158"></script>
+<script src="./gif-maker.js?v=159"></script>
+<script src="./npc-wizard.js?v=159"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">

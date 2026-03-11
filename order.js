@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=158";
+import { canvas } from "./canvas-core.js?v=159";
 import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=159";
 import { SITE_CONFIG } from "./site-config.js?v=159";
 import { applySize } from "./canvas-size.js?v=159";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=158";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=159";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=158";
+} from "./export.js?v=159";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1326,7 +1326,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=158');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=159');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2428,7 +2428,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=158');
+                const { generateDesignPNG } = await import('./export.js?v=159');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
@@ -2989,10 +2989,10 @@ window.removeCartItem = function(idx) {
 // ★ 장바구니 아이템 다시 편집하기
 window.reEditCartItem = async function(idx) {
     const item = cartData[idx];
-    if (!item || !item.jsonUrl) { showToast("편집 데이터를 찾을 수 없습니다.", "error"); return; }
+    if (!item || !item.jsonUrl) { showToast(window.t ? window.t('err_no_edit_data', 'Edit data not found.') : 'Edit data not found.', "error"); return; }
 
     const loading = document.getElementById("loading");
-    if (loading) { loading.style.display = "flex"; loading.querySelector('p').innerText = "디자인 데이터 로딩 중..."; }
+    if (loading) { loading.style.display = "flex"; loading.querySelector('p').innerText = window.t ? window.t('msg_loading_design', 'Loading design data...') : 'Loading design data...'; }
 
     try {
         // 1. 클라우드에서 JSON 복구
@@ -3034,7 +3034,7 @@ window.reEditCartItem = async function(idx) {
     } catch(e) {
         console.error("다시 편집 실패:", e);
         if (loading) loading.style.display = "none";
-        showToast("편집 데이터를 불러올 수 없습니다: " + e.message, "error");
+        showToast((window.t ? window.t('err_load_edit_data', 'Cannot load edit data: ') : 'Cannot load edit data: ') + e.message, "error");
     }
 };
 window.updateCartOption = function(idx, key, value) { 

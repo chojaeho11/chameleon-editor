@@ -1,5 +1,5 @@
 /* ═══ Greeting Card Mode v2 — Single Page + Animated Stickers ═══ */
-import { canvas } from "./canvas-core.js?v=158";
+import { canvas } from "./canvas-core.js?v=159";
 
 const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 

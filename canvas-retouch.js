@@ -1,5 +1,5 @@
 // canvas-retouch.js — AI 보정 패널 (고품질 필터 + AILab Tools 전체 API)
-import { canvas } from "./canvas-core.js?v=158";
+import { canvas } from "./canvas-core.js?v=159";
 import { sb } from "./config.js?v=159";
 
 // ==========================================================

@@ -1,28 +1,28 @@
 // main.js - Complete Integrated Version
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=159";
-import { initCanvas, canvas } from "./canvas-core.js?v=158";
+import { initCanvas, canvas } from "./canvas-core.js?v=159";
 import { initSizeControls, applySize } from "./canvas-size.js?v=159";
-import { initGuides } from "./canvas-guides.js?v=158";
-import { initZoomPan } from "./canvas-zoom-pan.js?v=158";
-import { initObjectTools } from "./canvas-objects.js?v=158";
-import { initPageTools } from "./canvas-pages.js?v=158"; // [추가] 페이지 도구
-import { initImageTools } from "./canvas-image.js?v=158";
-import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=158";
-import { initAiTools } from "./canvas-ai.js?v=158";
-import { initExport } from "./export.js?v=158";
-import { initOrderSystem } from "./order.js?v=158";
-import { initAuth } from "./login.js?v=158";
-import { initMyDesign } from "./my-design.js?v=158";
-import { initCanvasUtils } from "./canvas-utils.js?v=158";
-import { initShortcuts } from "./shortcuts.js?v=158";
-import { initContextMenu } from "./context-menu.js?v=158";
-import { createVectorOutline } from "./outlineMaker.js?v=158";
-import { initVideoMaker } from "./video-maker.js?v=158";
-import { initPptMode } from "./ppt-mode.js?v=158";
-import { initGreetingCardMode } from "./greeting-card-mode.js?v=158";
-import { initIconTools } from "./canvas-icons.js?v=158";
-import { initRetouchTools } from "./canvas-retouch.js?v=158";
+import { initGuides } from "./canvas-guides.js?v=159";
+import { initZoomPan } from "./canvas-zoom-pan.js?v=159";
+import { initObjectTools } from "./canvas-objects.js?v=159";
+import { initPageTools } from "./canvas-pages.js?v=159"; // [추가] 페이지 도구
+import { initImageTools } from "./canvas-image.js?v=159";
+import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=159";
+import { initAiTools } from "./canvas-ai.js?v=159";
+import { initExport } from "./export.js?v=159";
+import { initOrderSystem } from "./order.js?v=159";
+import { initAuth } from "./login.js?v=159";
+import { initMyDesign } from "./my-design.js?v=159";
+import { initCanvasUtils } from "./canvas-utils.js?v=159";
+import { initShortcuts } from "./shortcuts.js?v=159";
+import { initContextMenu } from "./context-menu.js?v=159";
+import { createVectorOutline } from "./outlineMaker.js?v=159";
+import { initVideoMaker } from "./video-maker.js?v=159";
+import { initPptMode } from "./ppt-mode.js?v=159";
+import { initGreetingCardMode } from "./greeting-card-mode.js?v=159";
+import { initIconTools } from "./canvas-icons.js?v=159";
+import { initRetouchTools } from "./canvas-retouch.js?v=159";
 
 window.currentUploadedPdfUrl = null;
 
@@ -170,11 +170,18 @@ window.addEventListener("DOMContentLoaded", async () => {
                         window.selectedProductForChoice = PRODUCT_DB[savedKey];
                         const p = PRODUCT_DB[savedKey];
                         const limitLabel = document.getElementById("limitLabel");
-                        if(limitLabel) limitLabel.innerText = `Max: ${p.w_mm || 210}x${p.h_mm || 297}`;
+                        if(limitLabel) {
+                            const _wMm = p.w_mm || 210, _hMm = p.h_mm || 297;
+                            if (window._isUSsite && window._isUSsite()) {
+                                limitLabel.innerText = `Max: ${(_wMm/25.4).toFixed(2)} x ${(_hMm/25.4).toFixed(2)} in`;
+                            } else {
+                                limitLabel.innerText = `Max: ${_wMm} x ${_hMm} mm`;
+                            }
+                        }
                         const inpW = document.getElementById("inputUserW");
                         const inpH = document.getElementById("inputUserH");
-                        if(inpW) inpW.value = p.w_mm || 210;
-                        if(inpH) inpH.value = p.h_mm || 297;
+                        if(inpW) inpW.value = (window._isUSsite && window._isUSsite()) ? ((p.w_mm || 210)/25.4).toFixed(2) : (p.w_mm || 210);
+                        if(inpH) inpH.value = (window._isUSsite && window._isUSsite()) ? ((p.h_mm || 297)/25.4).toFixed(2) : (p.h_mm || 297);
                     }
 
                     if(window.applySize) {
