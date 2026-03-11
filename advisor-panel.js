@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=142';
+import { SITE_CONFIG } from './site-config.js?v=143';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=142');
+        const { addProductToCartDirectly } = await import('./order.js?v=143');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1130,18 +1130,19 @@ function scrollChat() {
 // 포토 스튜디오 모드 (채팅창 내부)
 // ═══════════════════════════════════════
 const PS_T = {
-    kr: { title:'✨ Photo Studio', desc:'사진 한 장으로 멋진 작품을 만들 수 있어요.\n자동으로 보정하고 디자인합니다.', upload:'사진 올리기', drag:'또는 여기에 드래그', processing:'보정 중...', done:'작품이 완성되었습니다!', orderTitle:'이 작품으로 주문하기', fabric:'패브릭 인쇄', paper:'종이 인쇄물', honeycomb:'허니콤보드', canvas:'캔버스 액자', blind:'롤블라인드', sell:'내 작품 판매하기', size:'사이즈 선택', price:'예상 금액', order:'주문하기', retry:'다른 사진으로', custom:'직접 입력', back:'← AI 상담으로', fromPrice:'~부터', sellMsg:'판매금액의 10%가\n현금으로 찾을 수 있는\n적립금으로 적립됩니다!', sellDone:'등록되었습니다!', textLabel:'텍스트', textPh:'문구를 입력하세요', removeBg:'누끼따기', removeBgDesc:'배경 제거', colorLabel:'텍스트 색상', applyText:'적용', width:'가로', height:'세로(자동)', autoCalc:'자동계산', editorLink:'디테일한 수정이 필요하시면 에디터로 이동하세요', mypage:'마이페이지', sellExplain:'내 작품을 상품으로 등록하고 판매할 수 있습니다.', commission:'판매금액의 10%가 현금으로 찾을 수 있는 적립금으로 적립됩니다.', removingBg:'배경 제거 중...' },
-    ja: { title:'✨ Photo Studio', desc:'写真1枚で素敵な作品が作れます。\n自動で補正してデザインします。', upload:'写真をアップ', drag:'またはここにドラッグ', processing:'補正中...', done:'作品が完成しました！', orderTitle:'この作品で注文する', fabric:'ファブリック', paper:'紙印刷', honeycomb:'ハニカムボード', canvas:'キャンバス額', blind:'ロールブラインド', sell:'作品を販売', size:'サイズ選択', price:'予想金額', order:'注文する', retry:'別の写真で', custom:'カスタム', back:'← AI相談へ', fromPrice:'〜から', sellMsg:'販売金額の10%が\nキャッシュバック可能な\nポイントとして積立されます！', sellDone:'登録しました！', textLabel:'テキスト', textPh:'テキストを入力', removeBg:'背景除去', removeBgDesc:'背景を削除', colorLabel:'テキスト色', applyText:'適用', width:'横', height:'縦(自動)', autoCalc:'自動計算', editorLink:'詳細な編集はエディターへ移動してください', mypage:'マイページ', sellExplain:'作品を商品として登録・販売できます。', commission:'販売金額の10%がキャッシュバック可能なポイントとして積立されます。', removingBg:'背景除去中...' },
-    en: { title:'✨ Photo Studio', desc:'Turn a single photo into stunning artwork.\nAuto-enhanced and beautifully designed.', upload:'Upload Photo', drag:'or drag & drop here', processing:'Enhancing...', done:'Your artwork is ready!', orderTitle:'Order this artwork', fabric:'Fabric Print', paper:'Paper Print', honeycomb:'Honeycomb Board', canvas:'Canvas Frame', blind:'Roller Blind', sell:'Sell My Art', size:'Select Size', price:'Est. Price', order:'Order Now', retry:'Try another', custom:'Custom', back:'← Back to AI', fromPrice:'from', sellMsg:'Earn 10% of sales\nas cashback credits!', sellDone:'Registered!', textLabel:'Text', textPh:'Enter your text', removeBg:'Remove BG', removeBgDesc:'Remove background', colorLabel:'Text Color', applyText:'Apply', width:'Width', height:'Height(auto)', autoCalc:'Auto', editorLink:'Need detailed editing? Move to the editor', mypage:'My Page', sellExplain:'Register and sell your artwork as products.', commission:'10% of sales are credited as cashback you can withdraw.', removingBg:'Removing background...' },
+    kr: { title:'✨ 작품만들기', desc:'사진 한 장으로 멋진 작품을 만들 수 있어요.\n자동으로 보정하고 디자인합니다.', upload:'사진 올리기', drag:'또는 여기에 드래그', processing:'보정 중...', done:'작품이 완성되었습니다!', orderTitle:'이 작품으로 주문하기', fabric:'패브릭 인쇄', paper:'종이 인쇄물', honeycomb:'허니콤보드', canvas:'캔버스 액자', blind:'롤블라인드', sell:'내 작품 판매하기', size:'사이즈', price:'예상 금액', order:'주문하기', retry:'다른 사진으로', custom:'직접 입력', back:'← 상담으로', fromPrice:'~부터', sellMsg:'판매금액의 10%가\n현금으로 찾을 수 있는\n적립금으로 적립됩니다!', sellDone:'등록되었습니다!', textLabel:'텍스트', textPh:'문구를 입력하세요', removeBg:'누끼따기', removeBgDesc:'배경 제거', colorLabel:'텍스트/배경', applyText:'적용', width:'가로', height:'세로(자동)', autoCalc:'자동계산', editorLink:'디테일한 수정이 필요하시면 에디터로 이동하세요', mypage:'마이페이지', sellExplain:'내 작품을 상품으로 등록하고 판매할 수 있습니다.', commission:'판매금액의 10%가 현금으로 찾을 수 있는 적립금으로 적립됩니다.', removingBg:'배경 제거 중...', retouch:'사진보정', cartConfirm:'장바구니로 이동하시겠어요?', bgColor:'배경색', registering:'작품 등록 중...', sellGuide:'작품이 3종(패브릭/종이/캔버스) 상품으로\n자동 등록됩니다.\n판매금액의 10%가 적립금으로 적립됩니다.', paperOpt:'용지', standOpt:'받침대', handleOpt:'손잡이 위치', handleL:'좌측', handleR:'우측' },
+    ja: { title:'✨ 作品作り', desc:'写真1枚で素敵な作品が作れます。\n自動で補正してデザインします。', upload:'写真をアップ', drag:'またはここにドラッグ', processing:'補正中...', done:'作品が完成しました！', orderTitle:'この作品で注文する', fabric:'ファブリック', paper:'紙印刷', honeycomb:'ハニカムボード', canvas:'キャンバス額', blind:'ロールブラインド', sell:'作品を販売', size:'サイズ', price:'予想金額', order:'注文する', retry:'別の写真で', custom:'カスタム', back:'← 相談へ', fromPrice:'〜から', sellMsg:'販売金額の10%が\nキャッシュバック可能な\nポイントとして積立されます！', sellDone:'登録しました！', textLabel:'テキスト', textPh:'テキストを入力', removeBg:'背景除去', removeBgDesc:'背景を削除', colorLabel:'テキスト/背景', applyText:'適用', width:'横', height:'縦(自動)', autoCalc:'自動計算', editorLink:'詳細な編集はエディターへ移動してください', mypage:'マイページ', sellExplain:'作品を商品として登録・販売できます。', commission:'販売金額の10%がキャッシュバック可能なポイントとして積立されます。', removingBg:'背景除去中...', retouch:'写真補正', cartConfirm:'カートに移動しますか？', bgColor:'背景色', registering:'作品登録中...', sellGuide:'作品が3種(ファブリック/紙/キャンバス)商品として\n自動登録されます。\n販売金額の10%がポイントとして積立されます。', paperOpt:'用紙', standOpt:'スタンド', handleOpt:'ハンドル位置', handleL:'左側', handleR:'右側' },
+    en: { title:'✨ Create Art', desc:'Turn a single photo into stunning artwork.\nAuto-enhanced and beautifully designed.', upload:'Upload Photo', drag:'or drag & drop here', processing:'Enhancing...', done:'Your artwork is ready!', orderTitle:'Order this artwork', fabric:'Fabric Print', paper:'Paper Print', honeycomb:'Honeycomb Board', canvas:'Canvas Frame', blind:'Roller Blind', sell:'Sell My Art', size:'Size', price:'Est. Price', order:'Order Now', retry:'Try another', custom:'Custom', back:'← Consult', fromPrice:'from', sellMsg:'Earn 10% of sales\nas cashback credits!', sellDone:'Registered!', textLabel:'Text', textPh:'Enter your text', removeBg:'Remove BG', removeBgDesc:'Remove background', colorLabel:'Text/BG', applyText:'Apply', width:'Width', height:'Height(auto)', autoCalc:'Auto', editorLink:'Need detailed editing? Move to the editor', mypage:'My Page', sellExplain:'Register and sell your artwork as products.', commission:'10% of sales are credited as cashback you can withdraw.', removingBg:'Removing background...', retouch:'Enhance', cartConfirm:'Go to cart?', bgColor:'BG Color', registering:'Registering...', sellGuide:'Your artwork will be auto-registered as 3 products\n(Fabric/Paper/Canvas).\n10% of sales credited as cashback.', paperOpt:'Paper', standOpt:'Stand', handleOpt:'Handle Side', handleL:'Left', handleR:'Right' },
 };
 function ps(k) { return (PS_T[getLang()] && PS_T[getLang()][k]) || PS_T.en[k] || k; }
 
+// 회베 단가 (1m² 당 KRW)
 const PS_PRODUCTS = {
-    fabric:    { icon:'🧵', sqm:50000,  min:25000 },
-    paper:     { icon:'📄', sqm:15000,  min:5000 },
-    honeycomb: { icon:'🍯', sqm:80000,  min:40000 },
-    canvas:    { icon:'🖼️', sqm:120000, min:50000 },
-    blind:     { icon:'🪟', sqm:90000,  min:40000 },
+    fabric:    { icon:'🧵', sqm:15000,  min:15000 },
+    paper:     { icon:'📄', sqm:10000,  min:10000 },
+    honeycomb: { icon:'🍯', sqm:60000,  min:60000 },
+    canvas:    { icon:'🖼️', sqm:100000, min:100000 },
+    blind:     { icon:'🪟', sqm:30000,  min:30000 },
 };
 
 let _psImgRatio = 1, _psImgDataUrl = null, _psSelectedProduct = null;
@@ -1149,6 +1150,7 @@ let _psRawDataUrl = null;   // enhanced but no text overlay
 let _psOrigDataUrl = null;  // original unprocessed
 let _psText = 'Love of my life';
 let _psTextColor = '#ffffff';
+let _psBgColor = '#ffffff';
 let _psImgW = 0, _psImgH = 0; // pixel dimensions
 
 function _psFmtPrice(krw) {
@@ -1313,17 +1315,15 @@ function _psShowResult() {
 
     chatArea.innerHTML = `
         <div class="ps-studio-layout">
-            <!-- 좌측: 사진 프리뷰 -->
             <div class="ps-left">
                 <div class="ps-preview-wrap">
                     <img src="${_psImgDataUrl}" alt="artwork" id="psPreviewImg">
                     <div class="ps-preview-badge">✨ ${ps('done')}</div>
                 </div>
                 <div style="text-align:center; margin-top:6px;">
-                    <a style="color:#94a3b8; font-size:11px; cursor:pointer; text-decoration:none;" id="psRetryBtn">🔄 ${ps('retry')}</a>
+                    <a style="color:#94a3b8; font-size:11px; cursor:pointer;" id="psRetryBtn">🔄 ${ps('retry')}</a>
                 </div>
             </div>
-            <!-- 우측: 편집 도구 -->
             <div class="ps-right">
                 <!-- 텍스트 편집 -->
                 <div class="ps-tool-section">
@@ -1333,23 +1333,25 @@ function _psShowResult() {
                         <button class="ps-apply-btn" id="psApplyText">${ps('applyText')}</button>
                     </div>
                 </div>
-                <!-- 누끼따기 (배경제거) -->
-                <div class="ps-tool-section">
-                    <button class="ps-tool-btn" id="psRemoveBg">✂️ ${ps('removeBg')}</button>
-                    <span class="ps-tool-desc">${ps('removeBgDesc')}</span>
-                </div>
-                <!-- 텍스트 색상 -->
+                <!-- 텍스트 색상 (흰/검) + 배경색 (알약 토글) -->
                 <div class="ps-tool-section">
                     <div class="ps-tool-label">🎨 ${ps('colorLabel')}</div>
                     <div class="ps-color-row">
-                        <div class="ps-color-swatch active" data-color="#ffffff" style="background:#fff;border:2px solid #ccc;"></div>
-                        <div class="ps-color-swatch" data-color="#000000" style="background:#000;"></div>
-                        <div class="ps-color-swatch" data-color="#ff6b6b" style="background:#ff6b6b;"></div>
-                        <div class="ps-color-swatch" data-color="#ffd93d" style="background:#ffd93d;"></div>
-                        <div class="ps-color-swatch" data-color="#6bcb77" style="background:#6bcb77;"></div>
-                        <div class="ps-color-swatch" data-color="#4d96ff" style="background:#4d96ff;"></div>
-                        <div class="ps-color-swatch" data-color="#ff6eb4" style="background:#ff6eb4;"></div>
-                        <input type="color" id="psColorPicker" value="${_psTextColor}" class="ps-color-picker-input" title="Custom">
+                        <div class="ps-color-swatch active" data-color="#ffffff" style="background:#fff;border:2px solid #ccc;" title="White"></div>
+                        <div class="ps-color-swatch" data-color="#000000" style="background:#000;" title="Black"></div>
+                        <span style="color:#cbd5e1; margin:0 4px;">|</span>
+                        <span style="font-size:10px; color:#64748b; font-weight:600;">${ps('bgColor')}</span>
+                        <div class="ps-bg-pill">
+                            <input type="color" id="psBgColorPicker" value="${_psBgColor}" class="ps-bg-pill-input">
+                            <span class="ps-bg-pill-label" id="psBgLabel" style="background:${_psBgColor}"></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 누끼따기 + 사진보정 -->
+                <div class="ps-tool-section">
+                    <div class="ps-btn-row">
+                        <button class="ps-tool-btn" id="psRemoveBg">✂️ ${ps('removeBg')}</button>
+                        <button class="ps-tool-btn" id="psRetouchBtn">✨ ${ps('retouch')}</button>
                     </div>
                 </div>
                 <!-- 제품 선택 -->
@@ -1360,62 +1362,54 @@ function _psShowResult() {
                         <div class="ps-prod-item ps-sell-item" data-pk="sell"><span class="ps-pi">💰</span>${ps('sell')}</div>
                     </div>
                 </div>
-                <!-- 사이즈 영역 -->
                 <div id="psSizingArea"></div>
             </div>
         </div>
-        <!-- 하단: 에디터 이동 링크 -->
         <div class="ps-editor-link-wrap">
             <a id="psEditorLink" class="ps-editor-link">🖌️ ${ps('editorLink')}</a>
         </div>
     `;
 
-    // 이벤트 바인딩
+    // 이벤트
     document.getElementById('psRetryBtn')?.addEventListener('click', enterStudioMode);
 
-    // 텍스트 입력시 폰트 자동변경
+    // 텍스트 폰트 자동변경
     const psTextIn = document.getElementById('psTextInput');
     if (psTextIn) {
         psTextIn.style.fontFamily = _psGetFont(_psText);
-        psTextIn.addEventListener('input', () => {
-            psTextIn.style.fontFamily = _psGetFont(psTextIn.value);
-        });
+        psTextIn.addEventListener('input', () => { psTextIn.style.fontFamily = _psGetFont(psTextIn.value); });
     }
-    // 텍스트 적용
     document.getElementById('psApplyText')?.addEventListener('click', async () => {
         _psText = document.getElementById('psTextInput').value;
         await _psApplyText();
         document.getElementById('psPreviewImg').src = _psImgDataUrl;
     });
-    // Enter 키로도 적용
     document.getElementById('psTextInput')?.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-            _psText = e.target.value;
-            await _psApplyText();
-            document.getElementById('psPreviewImg').src = _psImgDataUrl;
-        }
+        if (e.key === 'Enter') { _psText = e.target.value; await _psApplyText(); document.getElementById('psPreviewImg').src = _psImgDataUrl; }
     });
 
-    // 누끼따기 (배경 제거)
-    document.getElementById('psRemoveBg')?.addEventListener('click', _psRemoveBg);
-
-    // 색상 선택
+    // 텍스트 색상 (흰/검만)
     chatArea.querySelectorAll('.ps-color-swatch').forEach(sw => {
         sw.addEventListener('click', async () => {
             chatArea.querySelectorAll('.ps-color-swatch').forEach(s => s.classList.remove('active'));
             sw.classList.add('active');
             _psTextColor = sw.dataset.color;
-            document.getElementById('psColorPicker').value = _psTextColor;
             await _psApplyText();
             document.getElementById('psPreviewImg').src = _psImgDataUrl;
         });
     });
-    document.getElementById('psColorPicker')?.addEventListener('input', async (e) => {
-        _psTextColor = e.target.value;
-        chatArea.querySelectorAll('.ps-color-swatch').forEach(s => s.classList.remove('active'));
-        await _psApplyText();
-        document.getElementById('psPreviewImg').src = _psImgDataUrl;
+
+    // 배경색 선택 (알약 형태)
+    document.getElementById('psBgColorPicker')?.addEventListener('input', (e) => {
+        _psBgColor = e.target.value;
+        document.getElementById('psBgLabel').style.background = _psBgColor;
     });
+
+    // 누끼
+    document.getElementById('psRemoveBg')?.addEventListener('click', _psRemoveBg);
+
+    // 사진보정 (에디터 AI retouch 기능)
+    document.getElementById('psRetouchBtn')?.addEventListener('click', _psShowRetouchMenu);
 
     // 제품 선택
     chatArea.querySelectorAll('.ps-prod-item').forEach(btn => {
@@ -1434,6 +1428,76 @@ function _psShowResult() {
     scrollChat();
 }
 
+// 사진보정 메뉴 (에디터의 AI 기능들)
+function _psShowRetouchMenu() {
+    const lang = getLang();
+    const items = [
+        { action:'cartoon', icon:'🎨', label: lang==='ja'?'漫画スタイル':lang==='en'?'Cartoon Style':'만화 스타일' },
+        { action:'emotion', icon:'😊', label: lang==='ja'?'表情変換':lang==='en'?'Expression':'표정 변환' },
+        { action:'age_gender', icon:'👤', label: lang==='ja'?'年齢/性別':lang==='en'?'Age/Gender':'나이/성별' },
+        { action:'face_filter', icon:'✨', label: lang==='ja'?'フィルター':lang==='en'?'Face Filter':'얼굴 필터' },
+        { action:'hairstyle', icon:'💇', label: lang==='ja'?'ヘアスタイル':lang==='en'?'Hairstyle':'헤어스타일' },
+    ];
+    const btns = items.map(i => `<button class="ps-retouch-item" data-action="${i.action}">${i.icon} ${i.label}</button>`).join('');
+
+    // 팝업 형태로 표시
+    let popup = document.getElementById('psRetouchPopup');
+    if (popup) { popup.remove(); return; } // 토글
+    popup = document.createElement('div');
+    popup.id = 'psRetouchPopup';
+    popup.className = 'ps-retouch-popup';
+    popup.innerHTML = btns;
+    document.getElementById('psRetouchBtn')?.parentElement?.appendChild(popup);
+
+    popup.querySelectorAll('.ps-retouch-item').forEach(b => {
+        b.addEventListener('click', () => {
+            popup.remove();
+            _psRunRetouch(b.dataset.action);
+        });
+    });
+}
+
+async function _psRunRetouch(action) {
+    // portrait-retouch Edge Function 호출
+    const retouchBtn = document.getElementById('psRetouchBtn');
+    if (retouchBtn) { retouchBtn.disabled = true; retouchBtn.textContent = '⏳...'; }
+
+    try {
+        const _sb = window.sb;
+        if (!_sb) throw new Error('DB not ready');
+
+        // 선택 팝업: AI_OPTIONS 형태에서 첫번째 옵션 사용 (간단 적용)
+        const optMap = {
+            cartoon: { action:'cartoon', type:'3d_cartoon' },
+            emotion: { action:'emotion', service_choice:'12' },
+            age_gender: { action:'age_gender', action_type:'TO_KID' },
+            face_filter: { action:'face_filter', resource_type:'10001' },
+            hairstyle: { action:'hairstyle', hair_style:'BobCut' },
+        };
+        const params = optMap[action] || optMap.cartoon;
+
+        // 이미지를 blob으로 변환
+        const res = await fetch(_psRawDataUrl);
+        const blob = await res.blob();
+        const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(blob); });
+
+        const { data, error } = await _sb.functions.invoke('portrait-retouch', {
+            body: { image_base64: base64, ...params }
+        });
+
+        if (error) throw error;
+        if (data && data.image_base64) {
+            _psRawDataUrl = 'data:image/jpeg;base64,' + data.image_base64;
+            await _psApplyText();
+            document.getElementById('psPreviewImg').src = _psImgDataUrl;
+        } else throw new Error('No result');
+    } catch(e) {
+        console.error('Retouch error:', e);
+    } finally {
+        if (retouchBtn) { retouchBtn.disabled = false; retouchBtn.textContent = '✨ ' + ps('retouch'); }
+    }
+}
+
 async function _psRemoveBg() {
     const btn = document.getElementById('psRemoveBg');
     if (!btn || btn.disabled) return;
@@ -1441,57 +1505,75 @@ async function _psRemoveBg() {
     btn.textContent = '⏳ ' + ps('removingBg');
 
     try {
-        // remove.bg API (free tier) — fallback: 간단한 canvas 기반 배경 제거 시뮬
+        // HF API key from Supabase secrets
+        const _sb = window.sb;
+        let hfKey = null;
+        if (_sb) {
+            const { data } = await _sb.from('secrets').select('value').eq('name', 'HF_API_KEY').single();
+            if (data) hfKey = data.value;
+        }
+
         const img = new Image();
         await new Promise((resolve) => { img.onload = resolve; img.src = _psRawDataUrl; });
-        const cvs = document.createElement('canvas');
-        cvs.width = img.width; cvs.height = img.height;
-        const ctx = cvs.getContext('2d');
-        ctx.drawImage(img, 0, 0);
+        const srcCvs = document.createElement('canvas');
+        srcCvs.width = img.width; srcCvs.height = img.height;
+        srcCvs.getContext('2d').drawImage(img, 0, 0);
+        const blob = await new Promise(r => srcCvs.toBlob(r, 'image/png'));
 
-        // 간단 배경 제거: 모서리 색상 기반 chroma key (기본 방식)
-        const id = ctx.getImageData(0, 0, cvs.width, cvs.height);
-        const d = id.data;
-        // 모서리 4곳 색상 평균
-        const corners = [
-            [0, 0], [cvs.width - 1, 0],
-            [0, cvs.height - 1], [cvs.width - 1, cvs.height - 1]
-        ];
-        let rr = 0, gg = 0, bb = 0;
-        corners.forEach(([cx, cy]) => {
-            const i = (cy * cvs.width + cx) * 4;
-            rr += d[i]; gg += d[i + 1]; bb += d[i + 2];
-        });
-        rr = Math.round(rr / 4); gg = Math.round(gg / 4); bb = Math.round(bb / 4);
-
-        const threshold = 60;
-        for (let i = 0; i < d.length; i += 4) {
-            const dr = Math.abs(d[i] - rr);
-            const dg = Math.abs(d[i + 1] - gg);
-            const db = Math.abs(d[i + 2] - bb);
-            if (dr < threshold && dg < threshold && db < threshold) {
-                d[i + 3] = 0; // transparent
+        let resultBlob;
+        if (hfKey) {
+            // BiRefNet (BRIA RMBG-2.0) via Hugging Face
+            const models = [
+                'https://router.huggingface.co/hf-inference/models/briaai/RMBG-2.0',
+                'https://router.huggingface.co/hf-inference/models/ZhengPeng7/BiRefNet'
+            ];
+            for (const modelUrl of models) {
+                try {
+                    const res = await fetch(modelUrl, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
+                        body: blob
+                    });
+                    if (res.ok) { resultBlob = await res.blob(); break; }
+                    if (res.status === 503) {
+                        const body = await res.json().catch(() => ({}));
+                        await new Promise(r => setTimeout(r, Math.min((body.estimated_time || 20) * 1000, 30000)));
+                        const retry = await fetch(modelUrl, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
+                            body: blob
+                        });
+                        if (retry.ok) { resultBlob = await retry.blob(); break; }
+                    }
+                } catch(e) { console.warn('BiRefNet model fail:', e); }
             }
         }
-        ctx.putImageData(id, 0, 0);
 
-        // 흰색 배경 위에 누끼 이미지 합성
-        const whiteCvs = document.createElement('canvas');
-        whiteCvs.width = cvs.width; whiteCvs.height = cvs.height;
-        const wCtx = whiteCvs.getContext('2d');
-        wCtx.fillStyle = '#ffffff';
-        wCtx.fillRect(0, 0, whiteCvs.width, whiteCvs.height);
-        wCtx.drawImage(cvs, 0, 0);
+        if (!resultBlob) throw new Error('API unavailable');
 
-        _psRawDataUrl = whiteCvs.toDataURL('image/jpeg', 0.92);
+        // 결과를 흰색 배경 위에 합성
+        const rImg = new Image();
+        await new Promise((resolve) => { rImg.onload = resolve; rImg.src = URL.createObjectURL(resultBlob); });
+        const cvs = document.createElement('canvas');
+        cvs.width = rImg.width; cvs.height = rImg.height;
+        const ctx = cvs.getContext('2d');
+        // 배경색 적용
+        ctx.fillStyle = _psBgColor || '#ffffff';
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
+        ctx.drawImage(rImg, 0, 0);
+
+        _psRawDataUrl = cvs.toDataURL('image/jpeg', 0.92);
         await _psApplyText();
         document.getElementById('psPreviewImg').src = _psImgDataUrl;
         btn.textContent = '✅ ' + ps('removeBg');
         btn.style.background = '#10b981';
         btn.style.color = '#fff';
     } catch (e) {
-        btn.textContent = '✂️ ' + ps('removeBg');
-        btn.disabled = false;
+        console.error('BG remove error:', e);
+        btn.textContent = '❌ ' + ps('removeBg');
+        btn.style.background = '#ef4444';
+        btn.style.color = '#fff';
+        setTimeout(() => { btn.textContent = '✂️ ' + ps('removeBg'); btn.style.background = ''; btn.style.color = ''; btn.disabled = false; }, 2000);
     }
 }
 
@@ -1553,6 +1635,42 @@ function _psWaitForCanvasAndInsert(retries = 0) {
 function _psShowSizing(key) {
     _psSelectedProduct = key;
     const isFabric = (key === 'fabric');
+    const isPaper = (key === 'paper');
+    const isHoneycomb = (key === 'honeycomb');
+    const isBlind = (key === 'blind');
+    const defaultW = 300;
+    const defaultH = Math.round(defaultW / _psImgRatio);
+
+    // 상품별 옵션 HTML
+    let optionsHtml = '';
+    if (isFabric) {
+        optionsHtml = `<div id="psFabricSewArea" class="ps-sewing-section" style="margin-top:8px;"></div>`;
+    } else if (isPaper) {
+        optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
+            <div class="ps-tool-label">📋 ${ps('paperOpt')}</div>
+            <div class="ps-opt-row">
+                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="matte" checked> ${getLang()==='ja'?'マット紙':getLang()==='en'?'Matte':'무광지'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="glossy"> ${getLang()==='ja'?'光沢紙':getLang()==='en'?'Glossy':'유광지'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="semi"> ${getLang()==='ja'?'半光沢':getLang()==='en'?'Semi-Glossy':'반광지'}</label>
+            </div>
+        </div>`;
+    } else if (isHoneycomb) {
+        optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
+            <div class="ps-tool-label">🧱 ${ps('standOpt')}</div>
+            <div class="ps-opt-row">
+                <label class="ps-opt-item"><input type="radio" name="psStandOpt" value="none" checked> ${getLang()==='ja'?'なし':getLang()==='en'?'None':'없음'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psStandOpt" value="stand"> ${getLang()==='ja'?'スタンド付き':getLang()==='en'?'With Stand':'받침대 포함'}</label>
+            </div>
+        </div>`;
+    } else if (isBlind) {
+        optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
+            <div class="ps-tool-label">🔧 ${ps('handleOpt')}</div>
+            <div class="ps-opt-row">
+                <label class="ps-opt-item"><input type="radio" name="psHandleOpt" value="left" checked> ${ps('handleL')}</label>
+                <label class="ps-opt-item"><input type="radio" name="psHandleOpt" value="right"> ${ps('handleR')}</label>
+            </div>
+        </div>`;
+    }
 
     document.getElementById('psSizingArea').innerHTML = `
         <div class="ps-tool-section" style="margin-top:6px;">
@@ -1561,7 +1679,7 @@ function _psShowSizing(key) {
                 <div class="ps-size-field">
                     <label>${ps('width')}</label>
                     <div class="ps-size-input-wrap">
-                        <input type="number" id="psCW" class="ps-size-in" placeholder="300" min="50" max="5000" value="">
+                        <input type="number" id="psCW" class="ps-size-in" min="50" max="5000" value="${defaultW}">
                         <span class="ps-size-unit">mm</span>
                     </div>
                 </div>
@@ -1569,12 +1687,12 @@ function _psShowSizing(key) {
                 <div class="ps-size-field">
                     <label>${ps('height')}</label>
                     <div class="ps-size-input-wrap">
-                        <input type="number" id="psCH" class="ps-size-in" placeholder="${ps('autoCalc')}" min="50" max="5000" value="">
+                        <input type="number" id="psCH" class="ps-size-in" min="50" max="5000" value="${defaultH}">
                         <span class="ps-size-unit">mm</span>
                     </div>
                 </div>
             </div>
-            ${isFabric ? `<div id="psFabricSewArea" class="ps-sewing-section" style="margin-top:8px;"></div>` : ''}
+            ${optionsHtml}
             <div id="psPriceOut"></div>
         </div>
     `;
@@ -1607,6 +1725,8 @@ function _psShowSizing(key) {
     // 패브릭이면 미싱 옵션 로드
     if (isFabric) _psLoadFabricSewing();
 
+    // 기본 300mm로 가격 즉시 계산
+    _psUpdatePrice();
     scrollChat();
 }
 
@@ -1701,6 +1821,8 @@ function _psCalcPrice(w, h) {
                 return;
             }
         }
+        // 장바구니 이동 확인
+        if (!confirm(ps('cartConfirm'))) return;
         _psGoToCart(w, h, _psSelectedProduct, price);
     });
     scrollChat();
@@ -1786,7 +1908,7 @@ function _psShowSell() {
     document.getElementById('psSizingArea').innerHTML = `
         <div class="ps-sell-panel">
             <div class="ps-sell-info">
-                <p style="font-size:13px; font-weight:600; color:#1e1b4b; margin:0 0 6px;">💰 ${ps('sellExplain')}</p>
+                <p style="font-size:12px; color:#475569; line-height:1.6; margin:0 0 8px; white-space:pre-line;">${ps('sellGuide')}</p>
                 <p style="font-size:12px; color:#7c3aed; line-height:1.5; margin:0 0 10px; background:#f5f3ff; padding:8px; border-radius:8px;">
                     ${ps('commission')}
                 </p>
@@ -1796,24 +1918,75 @@ function _psShowSell() {
         </div>
     `;
     document.getElementById('psSellRegBtn')?.addEventListener('click', async function() {
-        this.disabled = true;
-        this.textContent = '⏳...';
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = '⏳ ' + ps('registering');
         try {
-            // 자동 등록: 이미지를 마켓에 등록
-            const imgData = _psImgDataUrl;
-            try { sessionStorage.setItem('ps_sell_artwork', imgData); } catch(e) {}
-            // TODO: Supabase에 실제 등록 연동
-            await new Promise(r => setTimeout(r, 800));
-            this.textContent = '✅ ' + ps('sellDone');
-            this.style.background = '#10b981';
+            const _sb = window.sb;
+            if (!_sb || !window.currentUser) throw new Error('Login required');
+
+            // 1. 이미지를 blob으로 변환 후 업로드
+            const res = await fetch(_psImgDataUrl);
+            const blob = await res.blob();
+            const ext = 'jpg';
+            const ts = Date.now();
+            const safeName = `${ts}_${Math.random().toString(36).substring(2,10)}.${ext}`;
+            const path = `user_artwork/${window.currentUser.id}_${safeName}`;
+            const { error: upErr } = await _sb.storage.from('design').upload(path, blob);
+            if (upErr) throw upErr;
+            const { data: pubData } = _sb.storage.from('design').getPublicUrl(path);
+            const imgUrl = pubData.publicUrl;
+
+            // 2. 패브릭 옵션 코드 조회
+            let fabricAddons = '';
+            try {
+                const { data: addonRows } = await _sb.from('admin_addons').select('code').in('category_code', ['2342434', '23442423']);
+                if (addonRows && addonRows.length > 0) fabricAddons = addonRows.map(r => r.code).join(',');
+            } catch(e) {}
+
+            // 3. 3종 상품 등록
+            const title = _psText || 'My Artwork';
+            const CATS = ['ua_paper', 'ua_fabric', 'ua_canvas'];
+            const catNames = {
+                ua_paper: { name:'종이포스터', name_us:'Paper Poster', name_jp:'紙ポスター' },
+                ua_fabric: { name:'패브릭포스터', name_us:'Fabric Poster', name_jp:'ファブリックポスター' },
+                ua_canvas: { name:'캔버스액자', name_us:'Canvas Frame', name_jp:'キャンバスフレーム' }
+            };
+            const basePrices = { ua_paper: 10000, ua_fabric: 20000, ua_canvas: 40000 };
+
+            for (const cat of CATS) {
+                const cn = catNames[cat];
+                const price = basePrices[cat];
+                const productCode = `${cat}_${window.currentUser.id.substring(0,8)}_${ts}`;
+                const { error: insErr } = await _sb.from('admin_products').insert({
+                    code: productCode,
+                    name: `${title} - ${cn.name}`,
+                    name_us: `${title} - ${cn.name_us}`,
+                    name_jp: `${title} - ${cn.name_jp}`,
+                    category: cat,
+                    price: price,
+                    price_us: Math.round(price * 0.001),
+                    img_url: imgUrl,
+                    addons: cat === 'ua_fabric' ? fabricAddons : '',
+                    partner_id: window.currentUser.id,
+                    partner_status: 'approved',
+                    is_custom_size: true,
+                    sort_order: 999
+                });
+                if (insErr) throw insErr;
+            }
+
+            btn.textContent = '✅ ' + ps('sellDone');
+            btn.style.background = '#10b981';
         } catch(e) {
-            this.textContent = '❌ Error';
-            this.style.background = '#ef4444';
-            this.disabled = false;
+            console.error('Sell register error:', e);
+            const errMsg = !window.currentUser ? (getLang()==='ja'?'ログインが必要です':getLang()==='en'?'Login required':'로그인이 필요합니다') : e.message;
+            btn.textContent = '❌ ' + errMsg;
+            btn.style.background = '#ef4444';
+            setTimeout(() => { btn.textContent = '🎨 ' + ps('sell'); btn.style.background = ''; btn.disabled = false; }, 3000);
         }
     });
     document.getElementById('psMypageBtn')?.addEventListener('click', () => {
-        // 마이페이지로 이동
         window.location.href = window.location.pathname + '?page=mypage';
     });
     scrollChat();

@@ -1,5 +1,5 @@
 /* ═══ Greeting Card Mode v2 — Single Page + Animated Stickers ═══ */
-import { canvas } from "./canvas-core.js?v=142";
+import { canvas } from "./canvas-core.js?v=143";
 
 const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 
@@ -1369,7 +1369,7 @@ async function shareGreetingCard() {
 
         const slug = 'gc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
 
-        const sb = window.sb || (await import('./config.js?v=142')).sb;
+        const sb = window.sb || (await import('./config.js?v=143')).sb;
         if (!sb) throw new Error('Supabase not available');
 
         // Upload card image

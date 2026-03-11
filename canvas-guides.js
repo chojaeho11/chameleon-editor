@@ -1,5 +1,5 @@
 /* canvas-guides.js */
-import { canvas, isGuideOn, setGuideOn, baseW, baseH } from "./canvas-core.js?v=142";
+import { canvas, isGuideOn, setGuideOn, baseW, baseH } from "./canvas-core.js?v=143";
 
 // 현재 가이드 모드 상태 (기본값: 십자)
 let currentGuideMode = 'cross'; 
