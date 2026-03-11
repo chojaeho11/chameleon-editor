@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=155";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=155";
-import { SITE_CONFIG } from "./site-config.js?v=155";
-import { applySize } from "./canvas-size.js?v=155";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=155";
+import { canvas } from "./canvas-core.js?v=156";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=156";
+import { SITE_CONFIG } from "./site-config.js?v=156";
+import { applySize } from "./canvas-size.js?v=156";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=156";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=155";
+} from "./export.js?v=156";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -284,6 +284,13 @@ export async function initOrderSystem() {
     if(btnGoCheckout) {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
+            // ★ 최소 주문금액 체크
+            const _totalKRW = calculateCartTotalKRW();
+            const _minKRW = getMinOrderKRW();
+            if (_totalKRW < _minKRW) {
+                showToast('⚠️ ' + buildMinOrderMsg(), "warn");
+                return;
+            }
 
             // 배송 옵션 필수 체크 (묶음배송: 전체 상품 중 1개라도 배송옵션 선택되면 OK)
             const shippingKeywords = ['배송', 'shipping', 'delivery', '配送', '発送', '운송'];
@@ -678,10 +685,53 @@ function hasBoardInCart() {
     return cartData.some(item => isBoardProduct(item.product));
 }
 
-// ── 소량주문 배송비 계산 (KRW 기준) ──
-// KR: 10만원 미만 → 일반 1만원, 보드류 3만원
-// JP: 1만엔(=10만원) 미만 → 일반 1천엔(=1만원), 보드류 3천엔(=3만원)
-// US: $100(=미정) 미만 → 별도 (TODO: 금액 설정 필요)
+// ── 최소 주문금액 설정 (KRW 기준) ──
+// KR: 10,000 KRW | JP: ¥1,000 = 10,000 KRW | US: $10 = 10,000 KRW
+// CN: ¥100 CNY = 20,000 KRW | ES/DE/FR: €10 ≈ 15,385 KRW
+const MIN_ORDER_KRW = {
+    KR: 10000,
+    JP: 10000,   // ¥1,000
+    US: 10000,   // $10
+    CN: 20000,   // ¥100 CNY
+    AR: 15000,   // ﷼50
+    ES: 15385,   // €10
+    DE: 15385,
+    FR: 15385,
+};
+
+function getMinOrderKRW() {
+    const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    return MIN_ORDER_KRW[cc] || 10000;
+}
+
+function getMinOrderDisplay() {
+    const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const lang = (window.CURRENT_LANG || 'kr').toLowerCase();
+    const displays = {
+        KR: '₩10,000',
+        JP: '¥1,000',
+        US: '$10',
+        CN: '¥100',
+        AR: '﷼50',
+        ES: '€10', DE: '€10', FR: '€10',
+    };
+    return displays[cc] || '₩10,000';
+}
+
+function buildMinOrderMsg() {
+    const min = getMinOrderDisplay();
+    const lang = (window.CURRENT_LANG || 'kr').toLowerCase();
+    if (lang === 'ja') return `最低注文金額は ${min} です。`;
+    if (lang === 'en') return `Minimum order amount is ${min}.`;
+    if (lang === 'zh') return `最低订单金额为 ${min}。`;
+    if (lang === 'ar') return `الحد الأدنى للطلب هو ${min}.`;
+    if (lang === 'es') return `El importe mínimo del pedido es ${min}.`;
+    if (lang === 'de') return `Mindestbestellbetrag ist ${min}.`;
+    if (lang === 'fr') return `Le montant minimum de commande est ${min}.`;
+    return `최소 주문금액은 ${min} 입니다.`;
+}
+
+// ── 소량주문 배송비 계산 (항상 0, 최소주문금액으로 대체) ──
 // ── 배송비 안내 메시지 (다국어) ──
 function _buildShippingFeeMsg(feeKRW) {
     const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
@@ -1275,7 +1325,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=155');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=156');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -1896,18 +1946,22 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
 function updateSummary(prodTotal, addonTotal, total) {
     const elMinNotice = document.getElementById("minOrderNotice");
 
-    // 소량주문 배송비 (10만원 미만 주문 시 배송비 추가)
+    // ★ 최소 주문금액 안내
+    const _totalForMin = prodTotal + addonTotal;
+    const _minKRW = getMinOrderKRW();
+    if (_totalForMin < _minKRW && _totalForMin > 0 && elMinNotice) {
+        elMinNotice.style.display = 'block';
+        elMinNotice.style.background = '#fff7ed';
+        elMinNotice.style.borderColor = '#f97316';
+        elMinNotice.style.color = '#c2410c';
+        elMinNotice.innerHTML = '⚠️ ' + buildMinOrderMsg();
+    } else if (elMinNotice) {
+        elMinNotice.style.display = 'none';
+    }
+
+    // 소량주문 배송비 (현재 항상 0)
     const _shippingFee = calcSmallOrderShippingFee();
     window._smallOrderShippingFee = _shippingFee;
-    if (_shippingFee > 0) {
-        total += _shippingFee;
-        if (elMinNotice) {
-            elMinNotice.style.display = 'block';
-            elMinNotice.innerHTML = '\u{1F69A} ' + _buildShippingFeeMsg(_shippingFee);
-        }
-    } else {
-        if (elMinNotice) elMinNotice.style.display = 'none';
-    }
 
     const elItem = document.getElementById("summaryItemPrice"); if(elItem) elItem.innerText = formatCurrency(prodTotal);
     const elAddon = document.getElementById("summaryAddonPrice"); if(elAddon) elAddon.innerText = formatCurrency(addonTotal);
@@ -2373,7 +2427,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=155');
+                const { generateDesignPNG } = await import('./export.js?v=156');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
@@ -2594,6 +2648,13 @@ async function processFinalPayment() {
     let realFinalPayAmount = baseAmount; // 이미 마일리지 차감된 금액
 
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
+
+    // ★ 최소 주문금액 체크 (결제 직전 최종 확인)
+    const _cartTotalKRW = calculateCartTotalKRW();
+    if (_cartTotalKRW < getMinOrderKRW()) {
+        showToast('⚠️ ' + buildMinOrderMsg(), "warn");
+        return;
+    }
 
     // 소량주문 배송비 적용
     const _payShippingFee = calcSmallOrderShippingFee();
