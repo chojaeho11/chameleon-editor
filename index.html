@@ -5673,10 +5673,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         // AI 어드바이저 패널 초기화
         import('./advisor-panel.js?v=138').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
-        // Photo Studio 미니 에디터
-        const _psScript = document.createElement('script');
-        _psScript.src = './photo-studio.js?v=138';
-        document.body.appendChild(_psScript);
+        // Photo Studio는 advisor-panel.js에 통합됨
 
         // PRO 구독 초기화
         if (typeof updateSubPrices === 'function') updateSubPrices();

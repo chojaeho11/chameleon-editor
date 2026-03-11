@@ -17,9 +17,9 @@ function getLang() {
 }
 
 const T = {
-    kr: { title: '카프', subtitle: '쇼핑을 안내해 드립니다', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 korea900@hanmail.net으로 보내주세요.', error: '멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작은 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요 😊', reset: '대화 초기화', consultant: '상담사 연결', selectMgr: '상담 매니저를 선택해주세요', selectSub: '선택하시면 바로 연결됩니다', mgrSuffix: ' 매니저', enterName: '상담사 연결을 위해 정보를 입력해주세요', namePh: '이름', phonePh: '연락처 (010-0000-0000)', nameBtn: '다음', nameErr: '이름을 입력해주세요', phoneErr: '연락처를 입력해주세요', connecting: '연결 요청!', pleaseWait: '잠시만 기다려주세요 😊', tipFile: '아래 📎 버튼으로 사진/파일도 보낼 수 있어요!', consulting: '상담 중', hqConsultant: '본사 상담사', waiting: '님 연결 대기 중...', connectErr: '연결 중 오류! 잠시 후 다시 시도해주세요.', endChat: '상담 종료', backToAi: '카프 AI로 돌아가기' },
-    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはsupport@cafe0101.comへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は、専門の担当者が丁寧に確認・ご案内するのがベストです。上の🎧担当者接続ボタンを押してください！製品制作は担当者へ、出荷・制作状況の確認は本社担当者をお選びください 😊', reset: 'チャットリセット', consultant: '担当者に接続', selectMgr: '相談マネージャーを選択してください', selectSub: '選択するとすぐに接続されます', mgrSuffix: '', enterName: '接続のため情報を入力してください', namePh: 'お名前', phonePh: '電話番号', nameBtn: '次へ', nameErr: '名前を入力', phoneErr: '電話番号を入力', connecting: 'に接続リクエスト！', pleaseWait: '少々お待ちください 😊', tipFile: '下の📎ボタンで写真/ファイルも送れます！', consulting: '相談中', hqConsultant: '本社担当者', waiting: '様 接続待機中...', connectErr: '接続エラー！しばらくしてからお試しください。', endChat: '相談終了', backToAi: 'カプAIに戻る' },
-    en: { title: 'Kapu', subtitle: 'Your shopping guide', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email support@cafe3355.com.', error: 'What an amazing project you have in mind! ✨ For this kind of product, our expert consultants can help you best. Please tap the 🎧 Connect Agent button above! For product inquiries, choose a consultant. For shipping/production status, choose HQ Consultant 😊', reset: 'Reset chat', consultant: 'Connect agent', selectMgr: 'Please select a consultant', selectSub: "You'll be connected right away", mgrSuffix: '', enterName: 'Please enter your info to connect', namePh: 'Name', phonePh: 'Phone number', nameBtn: 'Next', nameErr: 'Please enter your name', phoneErr: 'Please enter phone', connecting: ' - Connection requested!', pleaseWait: 'Please wait a moment 😊', tipFile: 'You can send photos/files using the 📎 button below!', consulting: 'In consultation', hqConsultant: 'HQ Consultant', waiting: ' connecting...', connectErr: 'Connection error! Please try again.', endChat: 'End chat', backToAi: 'Back to Kapu AI' },
+    kr: { title: '카프', subtitle: '쇼핑을 안내해 드립니다', studio: '작품만들기', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 korea900@hanmail.net으로 보내주세요.', error: '멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작은 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요 😊', reset: '대화 초기화', consultant: '상담사 연결', selectMgr: '상담 매니저를 선택해주세요', selectSub: '선택하시면 바로 연결됩니다', mgrSuffix: ' 매니저', enterName: '상담사 연결을 위해 정보를 입력해주세요', namePh: '이름', phonePh: '연락처 (010-0000-0000)', nameBtn: '다음', nameErr: '이름을 입력해주세요', phoneErr: '연락처를 입력해주세요', connecting: '연결 요청!', pleaseWait: '잠시만 기다려주세요 😊', tipFile: '아래 📎 버튼으로 사진/파일도 보낼 수 있어요!', consulting: '상담 중', hqConsultant: '본사 상담사', waiting: '님 연결 대기 중...', connectErr: '연결 중 오류! 잠시 후 다시 시도해주세요.', endChat: '상담 종료', backToAi: '카프 AI로 돌아가기' },
+    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', studio: '作品作り', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはsupport@cafe0101.comへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は、専門の担当者が丁寧に確認・ご案内するのがベストです。上の🎧担当者接続ボタンを押してください！製品制作は担当者へ、出荷・制作状況の確認は本社担当者をお選びください 😊', reset: 'チャットリセット', consultant: '担当者に接続', selectMgr: '相談マネージャーを選択してください', selectSub: '選択するとすぐに接続されます', mgrSuffix: '', enterName: '接続のため情報を入力してください', namePh: 'お名前', phonePh: '電話番号', nameBtn: '次へ', nameErr: '名前を入力', phoneErr: '電話番号を入力', connecting: 'に接続リクエスト！', pleaseWait: '少々お待ちください 😊', tipFile: '下の📎ボタンで写真/ファイルも送れます！', consulting: '相談中', hqConsultant: '本社担当者', waiting: '様 接続待機中...', connectErr: '接続エラー！しばらくしてからお試しください。', endChat: '相談終了', backToAi: 'カプAIに戻る' },
+    en: { title: 'Kapu', subtitle: 'Your shopping guide', studio: 'Create Art', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email support@cafe3355.com.', error: 'What an amazing project you have in mind! ✨ For this kind of product, our expert consultants can help you best. Please tap the 🎧 Connect Agent button above! For product inquiries, choose a consultant. For shipping/production status, choose HQ Consultant 😊', reset: 'Reset chat', consultant: 'Connect agent', selectMgr: 'Please select a consultant', selectSub: "You'll be connected right away", mgrSuffix: '', enterName: 'Please enter your info to connect', namePh: 'Name', phonePh: 'Phone number', nameBtn: 'Next', nameErr: 'Please enter your name', phoneErr: 'Please enter phone', connecting: ' - Connection requested!', pleaseWait: 'Please wait a moment 😊', tipFile: 'You can send photos/files using the 📎 button below!', consulting: 'In consultation', hqConsultant: 'HQ Consultant', waiting: ' connecting...', connectErr: 'Connection error! Please try again.', endChat: 'End chat', backToAi: 'Back to Kapu AI' },
 };
 function t(key) { const l = getLang(); return (T[l] && T[l][key]) || T['en'][key] || ''; }
 
@@ -204,7 +204,7 @@ function buildPanelUI() {
         <div class="adv-panel-header">
             <div class="adv-panel-title">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> ${t('title')}
-                <span class="adv-panel-sub">${t('subtitle')}</span>
+                <button class="adv-studio-btn" id="advStudioBtn">🎨 ${t('studio')}</button>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
                 <button class="adv-header-btn" id="advConsultantBtn" title="${t('consultant')}">
@@ -292,13 +292,17 @@ function buildPanelUI() {
     if (liveMode && liveRoom) {
         updateHeaderForLive(liveRoom.assigned_manager || '');
     }
+
+    // 포토스튜디오 버튼
+    document.getElementById('advStudioBtn')?.addEventListener('click', () => enterStudioMode());
 }
 
 // ─── 헤더 업데이트 ───
 function updateHeaderForAI() {
     const titleEl = panelEl?.querySelector('.adv-panel-title');
     if (titleEl) {
-        titleEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${t('title')} <span class="adv-panel-sub">${t('subtitle')}</span>`;
+        titleEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${t('title')} <button class="adv-studio-btn" id="advStudioBtn">🎨 ${t('studio')}</button>`;
+        document.getElementById('advStudioBtn')?.addEventListener('click', () => enterStudioMode());
     }
 }
 function updateHeaderForLive(managerName) {
@@ -1105,4 +1109,273 @@ function scrollChat() {
     if (chatArea) {
         setTimeout(() => { chatArea.scrollTop = chatArea.scrollHeight; }, 50);
     }
+}
+
+// ═══════════════════════════════════════
+// 포토 스튜디오 모드 (채팅창 내부)
+// ═══════════════════════════════════════
+const PS_T = {
+    kr: { title:'✨ Photo Studio', desc:'사진 한 장으로 멋진 작품을 만들 수 있어요.\n자동으로 보정하고 디자인합니다.', upload:'사진 올리기', drag:'또는 여기에 드래그', processing:'보정 중...', done:'작품이 완성되었습니다!', orderTitle:'이 작품으로 주문하기', fabric:'패브릭 인쇄', paper:'종이 인쇄물', honeycomb:'허니콤보드', canvas:'캔버스 액자', blind:'롤블라인드', sell:'내 작품 판매하기', size:'사이즈(mm)', price:'예상 금액', order:'주문하기', retry:'다른 사진으로', custom:'직접 입력', back:'← AI 상담으로', fromPrice:'~부터', sellMsg:'곧 카멜레온 마켓플레이스가 오픈합니다!\n내 작품을 상품으로 판매해보세요.', sellDone:'등록되었습니다!' },
+    ja: { title:'✨ Photo Studio', desc:'写真1枚で素敵な作品が作れます。\n自動で補正してデザインします。', upload:'写真をアップ', drag:'またはここにドラッグ', processing:'補正中...', done:'作品が完成しました！', orderTitle:'この作品で注文する', fabric:'ファブリック', paper:'紙印刷', honeycomb:'ハニカムボード', canvas:'キャンバス額', blind:'ロールブラインド', sell:'作品を販売', size:'サイズ(mm)', price:'予想金額', order:'注文する', retry:'別の写真で', custom:'カスタム', back:'← AI相談へ', fromPrice:'〜から', sellMsg:'マーケットプレイスが間もなくオープン！', sellDone:'登録しました！' },
+    en: { title:'✨ Photo Studio', desc:'Turn a single photo into stunning artwork.\nAuto-enhanced and beautifully designed.', upload:'Upload Photo', drag:'or drag & drop here', processing:'Enhancing...', done:'Your artwork is ready!', orderTitle:'Order this artwork', fabric:'Fabric Print', paper:'Paper Print', honeycomb:'Honeycomb Board', canvas:'Canvas Frame', blind:'Roller Blind', sell:'Sell My Art', size:'Size(mm)', price:'Est. Price', order:'Order Now', retry:'Try another', custom:'Custom', back:'← Back to AI', fromPrice:'from', sellMsg:'Chameleon Marketplace coming soon!\nSell your artwork as products.', sellDone:'Registered!' },
+};
+function ps(k) { return (PS_T[getLang()] && PS_T[getLang()][k]) || PS_T.en[k] || k; }
+
+const PS_PRODUCTS = {
+    fabric:    { icon:'🧵', sqm:50000,  min:25000 },
+    paper:     { icon:'📄', sqm:15000,  min:5000 },
+    honeycomb: { icon:'🍯', sqm:80000,  min:40000 },
+    canvas:    { icon:'🖼️', sqm:120000, min:50000 },
+    blind:     { icon:'🪟', sqm:90000,  min:40000 },
+};
+
+let _psImgRatio = 1, _psImgDataUrl = null, _psSelectedProduct = null;
+
+function _psFmtPrice(krw) {
+    const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    if (cc === 'JP') return '¥' + Math.floor(krw * 0.1).toLocaleString();
+    if (cc === 'US' || cc === 'EN') return '$' + Math.round(krw * 0.001).toLocaleString();
+    if (cc === 'CN') return '¥' + Math.round(krw * 0.005).toLocaleString();
+    if (cc === 'ES' || cc === 'DE' || cc === 'FR') return '€' + (krw * 0.00065).toFixed(0);
+    return krw.toLocaleString() + '원';
+}
+
+// ── 폰트 로드 ──
+(function(){
+    const fl = document.createElement('link');
+    fl.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap';
+    fl.rel = 'stylesheet'; document.head.appendChild(fl);
+})();
+
+function enterStudioMode() {
+    if (!chatArea) return;
+    // 헤더 업데이트
+    const titleEl = panelEl?.querySelector('.adv-panel-title');
+    if (titleEl) {
+        titleEl.innerHTML = `<span style="font-size:15px;">${ps('title')}</span> <button class="adv-studio-btn" id="advBackBtn">${ps('back')}</button>`;
+        document.getElementById('advBackBtn')?.addEventListener('click', exitStudioMode);
+    }
+    // 입력 영역 숨기기
+    const inputArea = panelEl?.querySelector('.adv-input-area');
+    const imgPreview = document.getElementById('advImgPreview');
+    if (inputArea) inputArea.style.display = 'none';
+    if (imgPreview) imgPreview.style.display = 'none';
+
+    // 채팅 영역에 스튜디오 UI 표시
+    chatArea.innerHTML = `
+        <div style="padding:12px; text-align:center;">
+            <div style="font-size:36px; margin-bottom:8px;">📸</div>
+            <p style="color:#64748b; font-size:13px; line-height:1.6; white-space:pre-line; margin:0 0 16px;">${ps('desc')}</p>
+            <div class="ps-upload-zone" id="psUpZone">
+                <div style="font-size:28px; color:#7c3aed; margin-bottom:6px;">☁️</div>
+                <div style="font-size:14px; font-weight:600; color:#7c3aed;">${ps('upload')}</div>
+                <div style="font-size:11px; color:#a78bfa; margin-top:4px;">${ps('drag')}</div>
+            </div>
+            <input type="file" id="psFileIn" accept="image/*" style="display:none">
+        </div>
+    `;
+    const zone = document.getElementById('psUpZone');
+    const fin = document.getElementById('psFileIn');
+    zone.onclick = () => fin.click();
+    zone.ondragover = (e) => { e.preventDefault(); zone.style.borderColor = '#7c3aed'; };
+    zone.ondragleave = () => { zone.style.borderColor = '#c4b5fd'; };
+    zone.ondrop = (e) => { e.preventDefault(); if (e.dataTransfer.files[0]) _psProcess(e.dataTransfer.files[0]); };
+    fin.onchange = (e) => { if (e.target.files[0]) _psProcess(e.target.files[0]); };
+}
+
+function exitStudioMode() {
+    // 헤더 복원
+    updateHeaderForAI();
+    // 입력 영역 복원
+    const inputArea = panelEl?.querySelector('.adv-input-area');
+    if (inputArea) inputArea.style.display = '';
+    // 대화 복원
+    const restored = loadChat();
+    if (!restored) {
+        chatArea.innerHTML = '';
+        showWelcomeMessage();
+    }
+    scrollChat();
+}
+
+async function _psProcess(file) {
+    // 로딩
+    chatArea.innerHTML = `<div style="text-align:center; padding:50px 20px;"><div style="width:40px;height:40px;border:4px solid #e9d5ff;border-top:4px solid #7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;"></div><p style="color:#7c3aed;font-weight:600;font-size:14px;">${ps('processing')}</p></div>`;
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = async () => {
+        URL.revokeObjectURL(url);
+        let w = img.width, h = img.height;
+        const mx = 2000;
+        if (w > mx || h > mx) { const s = mx / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+        _psImgRatio = w / h;
+
+        const cvs = document.createElement('canvas');
+        cvs.width = w; cvs.height = h;
+        const ctx = cvs.getContext('2d');
+        ctx.filter = 'brightness(1.12) contrast(1.08) saturate(1.05)';
+        ctx.drawImage(img, 0, 0, w, h);
+        ctx.filter = 'none';
+
+        // 하단 그라데이션
+        const grad = ctx.createLinearGradient(0, h * 0.55, 0, h);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.35)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, h * 0.55, w, h * 0.45);
+
+        // 폰트
+        try { await document.fonts.load('48px "Dancing Script"'); } catch(e) {}
+        await new Promise(r => setTimeout(r, 300));
+
+        const fs = Math.round(w * 0.065);
+        ctx.font = `${fs}px "Dancing Script", cursive`;
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 2;
+        ctx.fillText('Love of my life', w / 2, h * 0.88);
+        ctx.shadowColor = 'transparent';
+
+        _psImgDataUrl = cvs.toDataURL('image/jpeg', 0.92);
+        _psShowResult();
+    };
+    img.onerror = () => enterStudioMode();
+    img.src = url;
+}
+
+function _psShowResult() {
+    const prods = [
+        { key:'fabric', icon:'🧵', name:ps('fabric') },
+        { key:'paper', icon:'📄', name:ps('paper') },
+        { key:'honeycomb', icon:'🍯', name:ps('honeycomb') },
+        { key:'canvas', icon:'🖼️', name:ps('canvas') },
+        { key:'blind', icon:'🪟', name:ps('blind') },
+    ];
+    const prodBtns = prods.map(p => `<div class="ps-prod-item" data-pk="${p.key}"><span class="ps-pi">${p.icon}</span>${p.name}<span class="ps-pp">${_psFmtPrice(PS_PRODUCTS[p.key].min)} ${ps('fromPrice')}</span></div>`).join('');
+
+    chatArea.innerHTML = `
+        <div style="padding:10px;">
+            <div class="ps-preview-wrap">
+                <img src="${_psImgDataUrl}" alt="artwork">
+                <div class="ps-preview-badge">✨ ${ps('done')}</div>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:#1e1b4b; margin:12px 0 6px;">🛒 ${ps('orderTitle')}</div>
+            <div class="ps-prod-grid">
+                ${prodBtns}
+                <div class="ps-prod-item ps-sell-item" data-pk="sell"><span class="ps-pi">💰</span>${ps('sell')}</div>
+            </div>
+            <div id="psSizingArea"></div>
+            <div style="text-align:center; margin-top:10px;">
+                <a style="color:#94a3b8; font-size:12px; cursor:pointer; text-decoration:none;" id="psRetryBtn">🔄 ${ps('retry')}</a>
+            </div>
+        </div>
+    `;
+    document.getElementById('psRetryBtn')?.addEventListener('click', enterStudioMode);
+
+    chatArea.querySelectorAll('.ps-prod-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            chatArea.querySelectorAll('.ps-prod-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const pk = btn.dataset.pk;
+            if (pk === 'sell') _psShowSell();
+            else _psShowSizing(pk);
+        });
+    });
+    scrollChat();
+}
+
+function _psShowSizing(key) {
+    _psSelectedProduct = key;
+    const shorts = [300, 500, 700, 900, 1200];
+    const sizes = shorts.map(s => {
+        let w, h;
+        if (_psImgRatio >= 1) { h = s; w = Math.round(s * _psImgRatio); } else { w = s; h = Math.round(s / _psImgRatio); }
+        return { l: `${w}×${h}`, w, h };
+    });
+    const btns = sizes.map(s => `<button class="ps-sz" data-w="${s.w}" data-h="${s.h}">${s.l}</button>`).join('');
+
+    document.getElementById('psSizingArea').innerHTML = `
+        <div style="background:#f8fafc; border-radius:10px; padding:10px; margin-top:8px;">
+            <div style="font-size:12px; font-weight:600; color:#475569; margin-bottom:6px;">📐 ${ps('size')}</div>
+            <div class="ps-size-row">${btns}<button class="ps-sz" data-c="1">${ps('custom')}</button></div>
+            <div id="psCustomArea" style="display:none;" class="ps-custom-inputs">
+                <input type="number" id="psCW" placeholder="가로" min="100" max="5000">
+                <span style="color:#94a3b8; font-weight:600;">×</span>
+                <input type="number" id="psCH" placeholder="세로" min="100" max="5000">
+                <button class="ps-sz" id="psCOk">OK</button>
+            </div>
+            <div id="psPriceOut"></div>
+        </div>
+    `;
+    document.getElementById('psSizingArea').querySelectorAll('.ps-sz').forEach(b => {
+        b.addEventListener('click', () => {
+            document.querySelectorAll('#psSizingArea .ps-sz').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            if (b.dataset.c) {
+                document.getElementById('psCustomArea').style.display = 'flex';
+            } else {
+                document.getElementById('psCustomArea').style.display = 'none';
+                _psCalcPrice(parseInt(b.dataset.w), parseInt(b.dataset.h));
+            }
+        });
+    });
+    document.getElementById('psCOk')?.addEventListener('click', () => {
+        const w = parseInt(document.getElementById('psCW').value);
+        const h = parseInt(document.getElementById('psCH').value);
+        if (w >= 100 && h >= 100) _psCalcPrice(w, h);
+    });
+    scrollChat();
+}
+
+function _psCalcPrice(w, h) {
+    const prod = PS_PRODUCTS[_psSelectedProduct];
+    const area = (w / 1000) * (h / 1000);
+    let price = Math.round((area * prod.sqm) / 100) * 100;
+    if (price < prod.min) price = prod.min;
+
+    document.getElementById('psPriceOut').innerHTML = `
+        <div class="ps-price-bar">
+            <span class="ps-pl">${ps('price')} (${w}×${h}mm)</span>
+            <span class="ps-pv">${_psFmtPrice(price)}</span>
+        </div>
+        <button class="ps-order-btn" id="psOrderBtn">🛒 ${ps('order')}</button>
+    `;
+    document.getElementById('psOrderBtn')?.addEventListener('click', () => {
+        _psOrder(w, h, _psSelectedProduct);
+    });
+    scrollChat();
+}
+
+function _psOrder(w, h, productKey) {
+    // 이미지 저장
+    try { sessionStorage.setItem('ps_artwork', _psImgDataUrl); } catch(e) {}
+    window._photoStudioImage = _psImgDataUrl;
+
+    // AI 상담 모드로 전환 + 주문 메시지 전달梦
+    exitStudioMode();
+    setTimeout(() => {
+        const names = { fabric:ps('fabric'), paper:ps('paper'), honeycomb:ps('honeycomb'), canvas:ps('canvas'), blind:ps('blind') };
+        const msg = `${names[productKey]} ${w}×${h}mm 주문하고 싶습니다`;
+        const inp = document.getElementById('advInput');
+        if (inp) { inp.value = msg; }
+        sendFromInput();
+    }, 300);
+}
+
+function _psShowSell() {
+    document.getElementById('psSizingArea').innerHTML = `
+        <div style="text-align:center; padding:8px 0;">
+            <p style="font-size:13px; color:#64748b; white-space:pre-line; line-height:1.5; margin:0 0 8px;">${ps('sellMsg')}</p>
+            <button class="ps-order-btn" style="background:#f59e0b;" id="psSellRegBtn">🎨 ${ps('sell')}</button>
+        </div>
+    `;
+    document.getElementById('psSellRegBtn')?.addEventListener('click', function() {
+        this.textContent = '✅ ' + ps('sellDone');
+        this.style.background = '#10b981';
+        this.disabled = true;
+    });
+    scrollChat();
 }
