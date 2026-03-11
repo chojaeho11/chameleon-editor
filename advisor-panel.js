@@ -1130,9 +1130,9 @@ function scrollChat() {
 // 포토 스튜디오 모드 (채팅창 내부)
 // ═══════════════════════════════════════
 const PS_T = {
-    kr: { title:'✨ 작품만들기', desc:'사진 한 장으로 멋진 작품을 만들 수 있어요.\n자동으로 보정하고 디자인합니다.', upload:'사진 올리기', drag:'또는 여기에 드래그', processing:'보정 중...', done:'작품이 완성되었습니다!', orderTitle:'이 작품으로 주문하기', fabric:'패브릭 인쇄', paper:'종이 인쇄물', honeycomb:'허니콤보드', canvas:'캔버스 액자', blind:'롤블라인드', sell:'내 작품 판매하기', size:'사이즈', price:'예상 금액', order:'주문하기', retry:'다른 사진으로', custom:'직접 입력', back:'← 상담으로', fromPrice:'~부터', sellMsg:'판매금액의 10%가\n현금으로 찾을 수 있는\n적립금으로 적립됩니다!', sellDone:'등록되었습니다!', textLabel:'텍스트', textPh:'문구를 입력하세요', removeBg:'누끼따기', removeBgDesc:'배경 제거', colorLabel:'텍스트/배경', applyText:'적용', width:'가로', height:'세로(자동)', autoCalc:'자동계산', editorLink:'디테일한 수정이 필요하시면 에디터로 이동하세요', mypage:'마이페이지', sellExplain:'내 작품을 상품으로 등록하고 판매할 수 있습니다.', commission:'판매금액의 10%가 현금으로 찾을 수 있는 적립금으로 적립됩니다.', removingBg:'배경 제거 중...', retouch:'사진보정', cartConfirm:'장바구니로 이동하시겠어요?', bgColor:'배경색', registering:'작품 등록 중...', sellGuide:'작품이 3종(패브릭/종이/캔버스) 상품으로\n자동 등록됩니다.\n판매금액의 10%가 적립금으로 적립됩니다.', paperOpt:'용지', standOpt:'받침대', handleOpt:'손잡이 위치', handleL:'좌측', handleR:'우측' },
-    ja: { title:'✨ 作品作り', desc:'写真1枚で素敵な作品が作れます。\n自動で補正してデザインします。', upload:'写真をアップ', drag:'またはここにドラッグ', processing:'補正中...', done:'作品が完成しました！', orderTitle:'この作品で注文する', fabric:'ファブリック', paper:'紙印刷', honeycomb:'ハニカムボード', canvas:'キャンバス額', blind:'ロールブラインド', sell:'作品を販売', size:'サイズ', price:'予想金額', order:'注文する', retry:'別の写真で', custom:'カスタム', back:'← 相談へ', fromPrice:'〜から', sellMsg:'販売金額の10%が\nキャッシュバック可能な\nポイントとして積立されます！', sellDone:'登録しました！', textLabel:'テキスト', textPh:'テキストを入力', removeBg:'背景除去', removeBgDesc:'背景を削除', colorLabel:'テキスト/背景', applyText:'適用', width:'横', height:'縦(自動)', autoCalc:'自動計算', editorLink:'詳細な編集はエディターへ移動してください', mypage:'マイページ', sellExplain:'作品を商品として登録・販売できます。', commission:'販売金額の10%がキャッシュバック可能なポイントとして積立されます。', removingBg:'背景除去中...', retouch:'写真補正', cartConfirm:'カートに移動しますか？', bgColor:'背景色', registering:'作品登録中...', sellGuide:'作品が3種(ファブリック/紙/キャンバス)商品として\n自動登録されます。\n販売金額の10%がポイントとして積立されます。', paperOpt:'用紙', standOpt:'スタンド', handleOpt:'ハンドル位置', handleL:'左側', handleR:'右側' },
-    en: { title:'✨ Create Art', desc:'Turn a single photo into stunning artwork.\nAuto-enhanced and beautifully designed.', upload:'Upload Photo', drag:'or drag & drop here', processing:'Enhancing...', done:'Your artwork is ready!', orderTitle:'Order this artwork', fabric:'Fabric Print', paper:'Paper Print', honeycomb:'Honeycomb Board', canvas:'Canvas Frame', blind:'Roller Blind', sell:'Sell My Art', size:'Size', price:'Est. Price', order:'Order Now', retry:'Try another', custom:'Custom', back:'← Consult', fromPrice:'from', sellMsg:'Earn 10% of sales\nas cashback credits!', sellDone:'Registered!', textLabel:'Text', textPh:'Enter your text', removeBg:'Remove BG', removeBgDesc:'Remove background', colorLabel:'Text/BG', applyText:'Apply', width:'Width', height:'Height(auto)', autoCalc:'Auto', editorLink:'Need detailed editing? Move to the editor', mypage:'My Page', sellExplain:'Register and sell your artwork as products.', commission:'10% of sales are credited as cashback you can withdraw.', removingBg:'Removing background...', retouch:'Enhance', cartConfirm:'Go to cart?', bgColor:'BG Color', registering:'Registering...', sellGuide:'Your artwork will be auto-registered as 3 products\n(Fabric/Paper/Canvas).\n10% of sales credited as cashback.', paperOpt:'Paper', standOpt:'Stand', handleOpt:'Handle Side', handleL:'Left', handleR:'Right' },
+    kr: { title:'✨ 작품만들기', desc:'사진 한 장으로 멋진 작품을 만들 수 있어요.\n자동으로 보정하고 디자인합니다.', upload:'사진 올리기', drag:'또는 여기에 드래그', processing:'보정 중...', done:'작품이 완성되었습니다!', orderTitle:'이 작품으로 주문하기', fabric:'패브릭 인쇄', paper:'종이 인쇄물', honeycomb:'허니콤보드', canvas:'캔버스 액자', blind:'롤블라인드', banner:'현수막', keyring:'아크릴키링', tshirt:'티셔츠 인쇄', sell:'내 작품 판매하기', size:'사이즈', price:'예상 금액', order:'주문하기', retry:'다른 사진으로', custom:'직접 입력', back:'← 상담으로', fromPrice:'~부터', sellMsg:'판매금액의 10%가\n현금으로 찾을 수 있는\n적립금으로 적립됩니다!', sellDone:'등록되었습니다!', textLabel:'텍스트', textPh:'문구를 입력하세요', removeBg:'누끼따기', removeBgDesc:'배경 제거', colorLabel:'텍스트/배경', applyText:'적용', width:'가로', height:'세로(자동)', autoCalc:'자동계산', editorLink:'디테일한 수정이 필요하시면 에디터로 이동하세요', mypage:'마이페이지', sellExplain:'내 작품을 상품으로 등록하고 판매할 수 있습니다.', commission:'판매금액의 10%가 현금으로 찾을 수 있는 적립금으로 적립됩니다.', removingBg:'배경 제거 중...', retouch:'사진보정', cartConfirm:'장바구니로 이동하시겠어요?', bgColor:'배경색', registering:'작품 등록 중...', sellGuide:'작품이 3종(패브릭/종이/캔버스) 상품으로\n자동 등록됩니다.\n판매금액의 10%가 적립금으로 적립됩니다.', paperOpt:'용지', standOpt:'받침대', handleOpt:'손잡이 위치', handleL:'좌측', handleR:'우측' },
+    ja: { title:'✨ 作品作り', desc:'写真1枚で素敵な作品が作れます。\n自動で補正してデザインします。', upload:'写真をアップ', drag:'またはここにドラッグ', processing:'補正中...', done:'作品が完成しました！', orderTitle:'この作品で注文する', fabric:'ファブリック', paper:'紙印刷', honeycomb:'ハニカムボード', canvas:'キャンバス額', blind:'ロールブラインド', banner:'横断幕', keyring:'アクリルキーリング', tshirt:'Tシャツ印刷', sell:'作品を販売', size:'サイズ', price:'予想金額', order:'注文する', retry:'別の写真で', custom:'カスタム', back:'← 相談へ', fromPrice:'〜から', sellMsg:'販売金額の10%が\nキャッシュバック可能な\nポイントとして積立されます！', sellDone:'登録しました！', textLabel:'テキスト', textPh:'テキストを入力', removeBg:'背景除去', removeBgDesc:'背景を削除', colorLabel:'テキスト/背景', applyText:'適用', width:'横', height:'縦(自動)', autoCalc:'自動計算', editorLink:'詳細な編集はエディターへ移動してください', mypage:'マイページ', sellExplain:'作品を商品として登録・販売できます。', commission:'販売金額の10%がキャッシュバック可能なポイントとして積立されます。', removingBg:'背景除去中...', retouch:'写真補正', cartConfirm:'カートに移動しますか？', bgColor:'背景色', registering:'作品登録中...', sellGuide:'作品が3種(ファブリック/紙/キャンバス)商品として\n自動登録されます。\n販売金額の10%がポイントとして積立されます。', paperOpt:'用紙', standOpt:'スタンド', handleOpt:'ハンドル位置', handleL:'左側', handleR:'右側' },
+    en: { title:'✨ Create Art', desc:'Turn a single photo into stunning artwork.\nAuto-enhanced and beautifully designed.', upload:'Upload Photo', drag:'or drag & drop here', processing:'Enhancing...', done:'Your artwork is ready!', orderTitle:'Order this artwork', fabric:'Fabric Print', paper:'Paper Print', honeycomb:'Honeycomb Board', canvas:'Canvas Frame', blind:'Roller Blind', banner:'Banner', keyring:'Acrylic Keyring', tshirt:'T-shirt Print', sell:'Sell My Art', size:'Size', price:'Est. Price', order:'Order Now', retry:'Try another', custom:'Custom', back:'← Consult', fromPrice:'from', sellMsg:'Earn 10% of sales\nas cashback credits!', sellDone:'Registered!', textLabel:'Text', textPh:'Enter your text', removeBg:'Remove BG', removeBgDesc:'Remove background', colorLabel:'Text/BG', applyText:'Apply', width:'Width', height:'Height(auto)', autoCalc:'Auto', editorLink:'Need detailed editing? Move to the editor', mypage:'My Page', sellExplain:'Register and sell your artwork as products.', commission:'10% of sales are credited as cashback you can withdraw.', removingBg:'Removing background...', retouch:'Enhance', cartConfirm:'Go to cart?', bgColor:'BG Color', registering:'Registering...', sellGuide:'Your artwork will be auto-registered as 3 products\n(Fabric/Paper/Canvas).\n10% of sales credited as cashback.', paperOpt:'Paper', standOpt:'Stand', handleOpt:'Handle Side', handleL:'Left', handleR:'Right' },
 };
 function ps(k) { return (PS_T[getLang()] && PS_T[getLang()][k]) || PS_T.en[k] || k; }
 
@@ -1143,11 +1143,15 @@ const PS_PRODUCTS = {
     honeycomb: { icon:'🍯', sqm:60000 },
     canvas:    { icon:'🖼️', sqm:100000 },
     blind:     { icon:'🪟', sqm:30000 },
+    banner:    { icon:'🏳️', sqm:10000 },
+    keyring:   { icon:'🔑', fixed:3000 },
+    tshirt:    { icon:'👕', fixed:10000 },
 };
 
 let _psImgRatio = 1, _psImgDataUrl = null, _psSelectedProduct = null;
 let _psRawDataUrl = null;   // enhanced but no text overlay
 let _psOrigDataUrl = null;  // original unprocessed
+let _psNoBgDataUrl = null;  // transparent PNG after bg-remove (for bg color re-composite)
 let _psText = 'Love of my life';
 let _psTextColor = '#ffffff';
 let _psBgColor = '#ffffff';
@@ -1311,8 +1315,15 @@ function _psShowResult() {
         { key:'honeycomb', icon:'🍯', name:ps('honeycomb') },
         { key:'canvas', icon:'🖼️', name:ps('canvas') },
         { key:'blind', icon:'🪟', name:ps('blind') },
+        { key:'banner', icon:'🏳️', name:ps('banner') },
+        { key:'keyring', icon:'🔑', name:ps('keyring') },
+        { key:'tshirt', icon:'👕', name:ps('tshirt') },
     ];
-    const prodBtns = prods.map(p => `<div class="ps-prod-item" data-pk="${p.key}"><span class="ps-pi">${p.icon}</span>${p.name}<span class="ps-pp">${_psFmtPrice(PS_PRODUCTS[p.key].sqm)}/㎡</span></div>`).join('');
+    const prodBtns = prods.map(p => {
+        const prod = PS_PRODUCTS[p.key];
+        const priceLabel = prod.fixed ? _psFmtPrice(prod.fixed) : `${_psFmtPrice(prod.sqm)}/㎡`;
+        return `<div class="ps-prod-item" data-pk="${p.key}"><span class="ps-pi">${p.icon}</span>${p.name}<span class="ps-pp">${priceLabel}</span></div>`;
+    }).join('');
 
     chatArea.innerHTML = `
         <div class="ps-studio-layout">
@@ -1401,10 +1412,23 @@ function _psShowResult() {
         });
     });
 
-    // 배경색 선택 (알약 형태)
-    document.getElementById('psBgColorPicker')?.addEventListener('input', (e) => {
+    // 배경색 선택 — 투명 PNG가 있으면 재합성
+    document.getElementById('psBgColorPicker')?.addEventListener('input', async (e) => {
         _psBgColor = e.target.value;
         document.getElementById('psBgLabel').style.background = _psBgColor;
+        if (_psNoBgDataUrl) {
+            const img = new Image();
+            await new Promise(r => { img.onload = r; img.src = _psNoBgDataUrl; });
+            const cvs = document.createElement('canvas');
+            cvs.width = img.width; cvs.height = img.height;
+            const ctx = cvs.getContext('2d');
+            ctx.fillStyle = _psBgColor;
+            ctx.fillRect(0, 0, cvs.width, cvs.height);
+            ctx.drawImage(img, 0, 0);
+            _psRawDataUrl = cvs.toDataURL('image/jpeg', 0.92);
+            await _psApplyText();
+            document.getElementById('psPreviewImg').src = _psImgDataUrl;
+        }
     });
 
     // 누끼
@@ -1635,7 +1659,7 @@ async function _psRemoveBg() {
         const rawBlob = await (await fetch('data:image/png;base64,' + data.image_base64)).blob();
         const processedBlob = await _psPostProcessAlpha(rawBlob);
 
-        // 결과를 배경색 위에 합성
+        // 투명 PNG를 저장 (배경색 변경시 재합성용)
         const rImg = new Image();
         const processedUrl = URL.createObjectURL(processedBlob);
         await new Promise((resolve) => {
@@ -1643,6 +1667,14 @@ async function _psRemoveBg() {
             rImg.src = processedUrl;
         });
         URL.revokeObjectURL(processedUrl);
+
+        // 투명 PNG 저장
+        const pngCvs = document.createElement('canvas');
+        pngCvs.width = rImg.width; pngCvs.height = rImg.height;
+        pngCvs.getContext('2d').drawImage(rImg, 0, 0);
+        _psNoBgDataUrl = pngCvs.toDataURL('image/png');
+
+        // 배경색 위에 합성
         const cvs = document.createElement('canvas');
         cvs.width = rImg.width; cvs.height = rImg.height;
         const ctx = cvs.getContext('2d');
@@ -1726,8 +1758,10 @@ function _psShowSizing(key) {
     const isPaper = (key === 'paper');
     const isHoneycomb = (key === 'honeycomb');
     const isBlind = (key === 'blind');
-    const defaultW = 300;
-    const defaultH = Math.round(defaultW / _psImgRatio);
+    const isKeyring = (key === 'keyring');
+    const isTshirt = (key === 'tshirt');
+    const defaultW = isKeyring ? 50 : 300;
+    const defaultH = isKeyring ? 50 : Math.round(defaultW / _psImgRatio);
 
     // 상품별 옵션 HTML
     let optionsHtml = '';
@@ -1758,28 +1792,48 @@ function _psShowSizing(key) {
                 <label class="ps-opt-item"><input type="radio" name="psHandleOpt" value="right"> ${ps('handleR')}</label>
             </div>
         </div>`;
+    } else if (isKeyring) {
+        const lang = getLang();
+        optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
+            <div class="ps-tool-label">🔑 ${lang==='ja'?'3mmアクリルキーリング':lang==='en'?'3mm Acrylic Keyring':'3mm 아크릴키링'}</div>
+            <p style="font-size:10px; color:#64748b; margin:4px 0;">${lang==='ja'?'キーリングのフックはカートで選択できます':lang==='en'?'You can select hooks in the cart':'고리는 장바구니에서 선택할 수 있습니다'}</p>
+        </div>`;
+    } else if (isTshirt) {
+        const lang = getLang();
+        optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
+            <div class="ps-tool-label">👕 ${lang==='ja'?'サイズ・カラー':lang==='en'?'Size & Color':'사이즈/컬러'}</div>
+            <p style="font-size:10px; color:#64748b; margin:4px 0;">${lang==='ja'?'サイズとカラーはカートで選択できます':lang==='en'?'Size and color can be selected in the cart':'사이즈와 컬러는 장바구니에서 선택할 수 있습니다'}</p>
+        </div>`;
     }
+
+    // 키링/티셔츠는 사이즈 입력 불필요 (고정 가격)
+    const showSizeInput = !isKeyring && !isTshirt;
+
+    const sizeInputHtml = showSizeInput ? `
+        <div class="ps-tool-label">📐 ${ps('size')}</div>
+        <div class="ps-size-input-row">
+            <div class="ps-size-field">
+                <label>${ps('width')}</label>
+                <div class="ps-size-input-wrap">
+                    <input type="number" id="psCW" class="ps-size-in" min="50" max="5000" value="${defaultW}">
+                    <span class="ps-size-unit">mm</span>
+                </div>
+            </div>
+            <span class="ps-size-x">×</span>
+            <div class="ps-size-field">
+                <label>${ps('height')}</label>
+                <div class="ps-size-input-wrap">
+                    <input type="number" id="psCH" class="ps-size-in" min="50" max="5000" value="${defaultH}">
+                    <span class="ps-size-unit">mm</span>
+                </div>
+            </div>
+        </div>` : `
+        <input type="hidden" id="psCW" value="${defaultW}">
+        <input type="hidden" id="psCH" value="${defaultH}">`;
 
     document.getElementById('psSizingArea').innerHTML = `
         <div class="ps-tool-section" style="margin-top:6px;">
-            <div class="ps-tool-label">📐 ${ps('size')}</div>
-            <div class="ps-size-input-row">
-                <div class="ps-size-field">
-                    <label>${ps('width')}</label>
-                    <div class="ps-size-input-wrap">
-                        <input type="number" id="psCW" class="ps-size-in" min="50" max="5000" value="${defaultW}">
-                        <span class="ps-size-unit">mm</span>
-                    </div>
-                </div>
-                <span class="ps-size-x">×</span>
-                <div class="ps-size-field">
-                    <label>${ps('height')}</label>
-                    <div class="ps-size-input-wrap">
-                        <input type="number" id="psCH" class="ps-size-in" min="50" max="5000" value="${defaultH}">
-                        <span class="ps-size-unit">mm</span>
-                    </div>
-                </div>
-            </div>
+            ${sizeInputHtml}
             ${optionsHtml}
             <div id="psPriceOut"></div>
         </div>
@@ -1788,32 +1842,34 @@ function _psShowSizing(key) {
     const cwEl = document.getElementById('psCW');
     const chEl = document.getElementById('psCH');
 
-    // 가로 입력 → 세로 자동
-    cwEl?.addEventListener('input', () => {
-        const w = parseInt(cwEl.value);
-        if (w >= 50 && !chEl.dataset.manual) {
-            chEl.value = Math.round(w / _psImgRatio);
-            _psUpdatePrice();
-        } else if (w >= 50) _psUpdatePrice();
-    });
-    // 세로 입력 → 가로 자동
-    chEl?.addEventListener('input', () => {
-        const h = parseInt(chEl.value);
-        if (h >= 50) {
-            chEl.dataset.manual = '1';
-            if (!cwEl.value) cwEl.value = Math.round(h * _psImgRatio);
-            _psUpdatePrice();
-        }
-    });
-    // 세로 필드 비우면 자동모드 복원
-    chEl?.addEventListener('change', () => {
-        if (!chEl.value) { delete chEl.dataset.manual; }
-    });
+    if (showSizeInput) {
+        // 가로 입력 → 세로 자동
+        cwEl?.addEventListener('input', () => {
+            const w = parseInt(cwEl.value);
+            if (w >= 50 && !chEl.dataset.manual) {
+                chEl.value = Math.round(w / _psImgRatio);
+                _psUpdatePrice();
+            } else if (w >= 50) _psUpdatePrice();
+        });
+        // 세로 입력 → 가로 자동
+        chEl?.addEventListener('input', () => {
+            const h = parseInt(chEl.value);
+            if (h >= 50) {
+                chEl.dataset.manual = '1';
+                if (!cwEl.value) cwEl.value = Math.round(h * _psImgRatio);
+                _psUpdatePrice();
+            }
+        });
+        // 세로 필드 비우면 자동모드 복원
+        chEl?.addEventListener('change', () => {
+            if (!chEl.value) { delete chEl.dataset.manual; }
+        });
+    }
 
     // 패브릭이면 미싱 옵션 로드
     if (isFabric) _psLoadFabricSewing();
 
-    // 기본 300mm로 가격 즉시 계산
+    // 가격 즉시 계산
     _psUpdatePrice();
     scrollChat();
 }
@@ -1875,8 +1931,15 @@ function _psUpdatePrice() {
 
 function _psCalcPrice(w, h) {
     const prod = PS_PRODUCTS[_psSelectedProduct];
-    const area = (w / 1000) * (h / 1000); // m² 면적
-    let price = Math.round((area * prod.sqm) / 10) * 10;
+    let price;
+    if (prod.fixed) {
+        // 고정 가격 상품 (키링, 티셔츠)
+        price = prod.fixed;
+    } else {
+        // 회베(면적) 기반 가격
+        const area = (w / 1000) * (h / 1000); // m² 면적
+        price = Math.round((area * prod.sqm) / 10) * 10;
+    }
     if (price < 100) price = 100; // 최소 100원
 
     // 미싱 옵션 가격 추가
@@ -1890,9 +1953,11 @@ function _psCalcPrice(w, h) {
     const isFabric = (_psSelectedProduct === 'fabric');
     const cartLabel = getLang() === 'ja' ? 'カートに入れる' : getLang() === 'en' ? 'Add to Cart' : '장바구니 담기';
 
+    const isFixed = PS_PRODUCTS[_psSelectedProduct]?.fixed;
+    const sizeLabel = isFixed ? PS_PRODUCTS[_psSelectedProduct].icon : `${w}×${h}mm`;
     document.getElementById('psPriceOut').innerHTML = `
         <div class="ps-price-bar" style="margin-top:8px;">
-            <span class="ps-pl">${w}×${h}mm</span>
+            <span class="ps-pl">${sizeLabel}</span>
             <span class="ps-pv">${_psFmtPrice(totalPrice)}</span>
         </div>
         <button class="ps-order-btn" id="psOrderBtn">🛒 ${cartLabel}</button>
@@ -1923,7 +1988,10 @@ async function _psGoToCart(w, h, productKey, basePrice) {
         paper: { kr:'종이 인쇄물', ja:'紙印刷', en:'Paper Print' },
         honeycomb: { kr:'허니콤보드', ja:'ハニカムボード', en:'Honeycomb Board' },
         canvas: { kr:'캔버스 액자', ja:'キャンバス額', en:'Canvas Frame' },
-        blind: { kr:'롤블라인드', ja:'ロールブラインド', en:'Roller Blind' }
+        blind: { kr:'롤블라인드', ja:'ロールブラインド', en:'Roller Blind' },
+        banner: { kr:'현수막', ja:'横断幕', en:'Banner' },
+        keyring: { kr:'아크릴키링', ja:'アクリルキーリング', en:'Acrylic Keyring' },
+        tshirt: { kr:'티셔츠 인쇄', ja:'Tシャツ印刷', en:'T-shirt Print' },
     };
     const lang = getLang();
     const nameObj = names[productKey] || names.fabric;
@@ -1969,7 +2037,10 @@ async function _psGoToCart(w, h, productKey, basePrice) {
         paper: ['ua_paper', 'paper'],
         canvas: ['ua_canvas', 'canvas'],
         honeycomb: ['hb_printing', 'pp_hc_', 'honeycomb'],
-        blind: ['pp_bl_', 'blind']
+        blind: ['pp_bl_', 'blind'],
+        banner: ['ua_banner', 'banner'],
+        keyring: ['kr_acrylic', 'keyring'],
+        tshirt: ['ua_tshirt', 'tshirt'],
     };
     let realAddonStr = '';
     try {
@@ -2004,7 +2075,7 @@ async function _psGoToCart(w, h, productKey, basePrice) {
     window._photoStudioImage = _psImgDataUrl;
 
     // 카테고리 매핑
-    const catMap = { fabric: 'ua_fabric', paper: 'ua_paper', canvas: 'ua_canvas', honeycomb: 'pp_hc_', blind: 'pp_bl_' };
+    const catMap = { fabric: 'ua_fabric', paper: 'ua_paper', canvas: 'ua_canvas', honeycomb: 'pp_hc_', blind: 'pp_bl_', banner: 'ua_banner', keyring: 'kr_acrylic', tshirt: 'ua_tshirt' };
 
     const productInfo = {
         name: displayName,
