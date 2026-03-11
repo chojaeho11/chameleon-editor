@@ -1,6 +1,6 @@
 // canvas-retouch.js — AI 보정 패널 (고품질 필터 + AILab Tools 전체 API)
-import { canvas } from "./canvas-core.js?v=136";
-import { sb } from "./config.js?v=136";
+import { canvas } from "./canvas-core.js?v=137";
+import { sb } from "./config.js?v=137";
 
 // ==========================================================
 // 슬라이더 & 프리셋 정의
