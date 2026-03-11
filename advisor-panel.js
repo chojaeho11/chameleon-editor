@@ -1464,9 +1464,19 @@ function _psShowRetouchMenu() {
     if (existing) { existing.remove(); return; } // 토글
 
     const lang = getLang();
+
+    // AI 뷰티 6종 (단일 실행, 옵션 없음)
+    const beautyItems = [
+        { action:'smart_beauty', icon:'✨', l:lang==='ja'?'ワンクリック':lang==='en'?'One-click':'원클릭 뷰티', g:['#fce4ec','#f48fb1'] },
+        { action:'face_beauty_pro', icon:'🧴', l:lang==='ja'?'肌補正':lang==='en'?'Skin Fix':'피부 보정', g:['#fff3e0','#ffcc80'] },
+        { action:'smart_skin', icon:'🫧', l:lang==='ja'?'シミ除去':lang==='en'?'Blemish':'잡티 제거', g:['#e8f5e9','#a5d6a7'] },
+        { action:'face_enhancer', icon:'⚡', l:lang==='ja'?'顔鮮明化':lang==='en'?'Sharpen':'얼굴 선명화', g:['#e3f2fd','#90caf9'] },
+        { action:'face_slimming', icon:'🪄', l:lang==='ja'?'顔スリム':lang==='en'?'Slim':'얼굴 슬리밍', g:['#f3e5f5','#ce93d8'] },
+        { action:'skin_analysis', icon:'🔬', l:lang==='ja'?'肌分析':lang==='en'?'Analyze':'피부 분석', g:['#e0f7fa','#80deea'] },
+    ];
+
     const categories = [
         { action:'cartoon', icon:'🎨', label: lang==='ja'?'漫画スタイル':lang==='en'?'Cartoon':'만화 스타일',
-          grad: ['#fff9c4','#ffee58','#fdd835'],
           options: [
             { v:'3d_cartoon', l:'3D', g:['#e3f2fd','#90caf9'] }, { v:'pixar', l:'Pixar', g:['#fce4ec','#f48fb1'] },
             { v:'anime', l:lang==='ja'?'アニメ':'애니메', g:['#f3e5f5','#ce93d8'] }, { v:'sketch', l:lang==='ja'?'スケッチ':'스케치', g:['#eceff1','#b0bec5'] },
@@ -1494,13 +1504,28 @@ function _psShowRetouchMenu() {
     ];
 
     let html = '<div id="psRetouchPanel" class="ps-retouch-panel">';
+
+    // AI 뷰티 6종 (맨 위)
+    const beautyLabel = lang==='ja'?'AI ビューティー':lang==='en'?'AI Beauty':'AI 뷰티';
+    html += `<div class="ps-rt-cat">
+        <div class="ps-rt-cat-title">💎 ${beautyLabel}</div>
+        <div class="ps-rt-grid">`;
+    beautyItems.forEach(b => {
+        html += `<button class="ps-rt-card" data-action="${b.action}" data-value="" data-label="${b.l}" data-icon="${b.icon}" data-thumbstyle="background:linear-gradient(135deg,${b.g[0]},${b.g[1]});font-size:22px;display:flex;align-items:center;justify-content:center;">
+            <div class="ps-rt-thumb" style="background:linear-gradient(135deg,${b.g[0]},${b.g[1]});font-size:22px;display:flex;align-items:center;justify-content:center;">${b.icon}</div>
+            <span>${b.l}</span>
+        </button>`;
+    });
+    html += `</div></div>`;
+
+    // 나머지 카테고리
     categories.forEach(cat => {
         html += `<div class="ps-rt-cat">
             <div class="ps-rt-cat-title">${cat.icon} ${cat.label}</div>
             <div class="ps-rt-grid">`;
         cat.options.forEach(opt => {
             const g = opt.g || ['#e2e8f0','#cbd5e1'];
-            html += `<button class="ps-rt-card" data-action="${cat.action}" data-value="${opt.v}" data-label="${opt.l}">
+            html += `<button class="ps-rt-card" data-action="${cat.action}" data-value="${opt.v}" data-label="${opt.l}" data-icon="" data-thumbstyle="background:linear-gradient(135deg,${g[0]},${g[1]})">
                 <div class="ps-rt-thumb" style="background:linear-gradient(135deg,${g[0]},${g[1]})"></div>
                 <span>${opt.l}</span>
             </button>`;
@@ -1518,7 +1543,7 @@ function _psShowRetouchMenu() {
 }
 
 async function _psRunRetouch(action, value, btnEl) {
-    if (btnEl) { btnEl.disabled = true; const origLabel = btnEl.dataset.label || btnEl.textContent; btnEl.textContent = '⏳'; }
+    if (btnEl) { btnEl.disabled = true; const th = btnEl.querySelector('.ps-rt-thumb'); if(th) th.innerHTML = '⏳'; }
 
     // 되돌리기용 히스토리 저장
     _psHistory.push(_psRawDataUrl);
@@ -1547,7 +1572,7 @@ async function _psRunRetouch(action, value, btnEl) {
             _psRawDataUrl = 'data:image/png;base64,' + data.image_base64;
             await _psApplyText();
             document.getElementById('psPreviewImg').src = _psImgDataUrl;
-            if (btnEl) { btnEl.textContent = '✅'; btnEl.style.background = '#10b981'; btnEl.style.color = '#fff'; }
+            if (btnEl) { btnEl.classList.add('ps-rt-done'); const th = btnEl.querySelector('.ps-rt-thumb'); if(th) th.innerHTML = '✅'; }
         } else if (data && data.image_url) {
             // URL → fetch → dataUrl
             const imgRes = await fetch(data.image_url);
@@ -1555,12 +1580,12 @@ async function _psRunRetouch(action, value, btnEl) {
             _psRawDataUrl = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(imgBlob); });
             await _psApplyText();
             document.getElementById('psPreviewImg').src = _psImgDataUrl;
-            if (btnEl) { btnEl.textContent = '✅'; btnEl.style.background = '#10b981'; btnEl.style.color = '#fff'; }
+            if (btnEl) { btnEl.classList.add('ps-rt-done'); const th = btnEl.querySelector('.ps-rt-thumb'); if(th) th.innerHTML = '✅'; }
         } else throw new Error(data?.error || 'No result');
     } catch(e) {
         console.error('Retouch error:', e);
         _psHistory.pop(); // 실패 시 히스토리 롤백
-        if (btnEl) { btnEl.textContent = '❌'; setTimeout(() => { btnEl.textContent = btnEl.dataset.label || btnEl.dataset.value; btnEl.disabled = false; }, 2000); }
+        if (btnEl) { const th = btnEl.querySelector('.ps-rt-thumb'); if(th) th.innerHTML = '❌'; setTimeout(() => { btnEl.disabled = false; btnEl.classList.remove('ps-rt-done'); if(th) th.innerHTML = btnEl.dataset.icon || ''; }, 2000); }
     }
 }
 
@@ -1624,6 +1649,18 @@ async function _psUndo() {
     await _psApplyText();
     const preview = document.getElementById('psPreviewImg');
     if (preview) preview.src = _psImgDataUrl;
+
+    // 보정 버튼 체크 상태 리셋 (다시 클릭 가능하게)
+    document.querySelectorAll('#psRetouchPanel .ps-rt-card').forEach(b => {
+        b.disabled = false;
+        b.classList.remove('ps-rt-done');
+        const th = b.querySelector('.ps-rt-thumb');
+        if (th) {
+            // 아이콘 복원
+            th.innerHTML = b.dataset.icon || '';
+            if (b.dataset.thumbstyle) th.setAttribute('style', b.dataset.thumbstyle);
+        }
+    });
 }
 
 async function _psRemoveBg() {

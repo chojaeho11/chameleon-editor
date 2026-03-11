@@ -1561,6 +1561,8 @@ button, input, textarea, select { font-family: inherit; }
 .ps-rt-card:hover { border-color:#7c3aed; transform:translateY(-1px); box-shadow:0 2px 8px rgba(124,58,237,.12); }
 .ps-rt-card:active { transform:scale(0.96); }
 .ps-rt-card:disabled { opacity:.5; pointer-events:none; }
+.ps-rt-card.ps-rt-done { border-color:#10b981; background:#ecfdf5; }
+.ps-rt-card.ps-rt-done:disabled { opacity:.8; }
 .ps-rt-thumb { width:100%; aspect-ratio:1; border-radius:6px; }
 .ps-rt-card span { font-size:9px; font-weight:600; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
 .ps-option-section { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; }
