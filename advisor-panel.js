@@ -2473,8 +2473,7 @@ async function _psLoadFabricSewing() {
         data.forEach(addon => {
             const name = lang === 'ja' ? (addon.name_jp || addon.name) :
                          lang === 'en' ? (addon.name_us || addon.name) : addon.name;
-            const price = lang === 'ja' ? (addon.price_jp || addon.price) :
-                          lang === 'en' ? (addon.price_us || addon.price) : addon.price;
+            const price = addon.price_kr || addon.price || 0; // always KRW for _psFmtPrice conversion
             const priceStr = _psFmtPrice(price);
             html += `<label class="ps-sew-opt"><input type="radio" name="psSewing" value="${addon.code}" data-price="${addon.price}"> ${name} <span style="color:#7c3aed; font-size:10px;">${priceStr}</span></label>`;
         });
