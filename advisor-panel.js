@@ -1152,6 +1152,7 @@ let _psImgRatio = 1, _psImgDataUrl = null, _psSelectedProduct = null;
 let _psRawDataUrl = null;   // enhanced but no text overlay
 let _psOrigDataUrl = null;  // original unprocessed
 let _psNoBgDataUrl = null;  // transparent PNG after bg-remove (for bg color re-composite)
+let _psTshirtColor = '#ffffff'; // 티셔츠 목업 색상
 let _psText = 'Love of my life';
 let _psTextColor = '#ffffff';
 let _psBgColor = '#ffffff';
@@ -1800,9 +1801,23 @@ function _psShowSizing(key) {
         </div>`;
     } else if (isTshirt) {
         const lang = getLang();
+        const tColors = [
+            {hex:'#ffffff',name:'White'},{hex:'#000000',name:'Black'},{hex:'#1e3a5f',name:'Navy'},
+            {hex:'#cccccc',name:'Gray'},{hex:'#c0392b',name:'Red'},{hex:'#f39c12',name:'Yellow'},
+            {hex:'#27ae60',name:'Green'},{hex:'#e8d5b7',name:'Beige'},{hex:'#8e44ad',name:'Purple'},
+            {hex:'#2980b9',name:'Blue'},{hex:'#ff69b4',name:'Pink'},{hex:'#d35400',name:'Orange'},
+        ];
+        const sizes = ['S','M','L','XL','2XL'];
         optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
-            <div class="ps-tool-label">👕 ${lang==='ja'?'サイズ・カラー':lang==='en'?'Size & Color':'사이즈/컬러'}</div>
-            <p style="font-size:10px; color:#64748b; margin:4px 0;">${lang==='ja'?'サイズとカラーはカートで選択できます':lang==='en'?'Size and color can be selected in the cart':'사이즈와 컬러는 장바구니에서 선택할 수 있습니다'}</p>
+            <div class="ps-tool-label">🎨 ${lang==='ja'?'カラー':lang==='en'?'Color':'컬러'}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;">
+                ${tColors.map((c,i) => `<div class="ps-tshirt-color${i===0?' active':''}" data-color="${c.hex}" style="width:28px;height:28px;border-radius:50%;background:${c.hex};border:2px solid ${i===0?'#7c3aed':'#e2e8f0'};cursor:pointer;" title="${c.name}"></div>`).join('')}
+            </div>
+            <div class="ps-tool-label" style="margin-top:6px;">📏 ${lang==='ja'?'サイズ':lang==='en'?'Size':'사이즈'}</div>
+            <div style="display:flex;gap:6px;margin:6px 0;">
+                ${sizes.map((s,i) => `<label class="ps-opt-item" style="min-width:36px;text-align:center;"><input type="radio" name="psTshirtSize" value="${s}"${i===2?' checked':''}> ${s}</label>`).join('')}
+            </div>
+            <div id="psTshirtMockup" style="margin:10px auto;text-align:center;"></div>
         </div>`;
     }
 
@@ -1869,9 +1884,119 @@ function _psShowSizing(key) {
     // 패브릭이면 미싱 옵션 로드
     if (isFabric) _psLoadFabricSewing();
 
+    // 티셔츠 목업 렌더링 + 컬러 선택 이벤트
+    if (isTshirt) {
+        _psTshirtColor = '#ffffff';
+        _psRenderTshirtMockup();
+        document.querySelectorAll('.ps-tshirt-color').forEach(el => {
+            el.addEventListener('click', () => {
+                document.querySelectorAll('.ps-tshirt-color').forEach(e => e.style.border = '2px solid #e2e8f0');
+                el.style.border = '2px solid #7c3aed';
+                el.classList.add('active');
+                _psTshirtColor = el.dataset.color;
+                _psRenderTshirtMockup();
+            });
+        });
+    }
+
     // 가격 즉시 계산
     _psUpdatePrice();
     scrollChat();
+}
+
+// ─── 티셔츠 목업 렌더링 ───
+function _psRenderTshirtMockup() {
+    const container = document.getElementById('psTshirtMockup');
+    if (!container) return;
+
+    const cvs = document.createElement('canvas');
+    cvs.width = 300; cvs.height = 360;
+    const ctx = cvs.getContext('2d');
+
+    // 배경
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(0, 0, 300, 360);
+
+    const color = _psTshirtColor || '#ffffff';
+
+    // 티셔츠 shape 그리기
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    // 어깨 ~ 목
+    ctx.moveTo(60, 60);   // 왼쪽 어깨 끝
+    ctx.lineTo(105, 40);  // 왼쪽 목
+    ctx.quadraticCurveTo(150, 25, 195, 40); // 목 곡선
+    ctx.lineTo(240, 60);  // 오른쪽 어깨 끝
+    // 오른쪽 소매
+    ctx.lineTo(270, 110);
+    ctx.lineTo(225, 120);
+    ctx.lineTo(220, 90);
+    // 오른쪽 몸통
+    ctx.lineTo(215, 310);
+    // 아래
+    ctx.quadraticCurveTo(150, 320, 85, 310);
+    // 왼쪽 몸통
+    ctx.lineTo(80, 90);
+    ctx.lineTo(75, 120);
+    ctx.lineTo(30, 110);
+    ctx.closePath();
+    ctx.fill();
+
+    // 테두리
+    ctx.strokeStyle = _psLightenDarken(color, -40);
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // 목 라인
+    ctx.beginPath();
+    ctx.moveTo(115, 45);
+    ctx.quadraticCurveTo(150, 55, 185, 45);
+    ctx.strokeStyle = _psLightenDarken(color, -30);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 사용자 이미지를 가슴 영역에 합성
+    const artImg = new Image();
+    artImg.onload = () => {
+        // 프린트 영역: 가슴 중앙
+        const printW = 110, printH = 110;
+        const px = (300 - printW) / 2;
+        const py = 100;
+
+        // 이미지 비율 유지
+        const imgRatio = artImg.width / artImg.height;
+        let dw = printW, dh = printH;
+        if (imgRatio > 1) { dh = printW / imgRatio; }
+        else { dw = printH * imgRatio; }
+        const dx = px + (printW - dw) / 2;
+        const dy = py + (printH - dh) / 2;
+
+        ctx.drawImage(artImg, dx, dy, dw, dh);
+
+        // 프린트 영역 점선 테두리
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px, py, printW, printH);
+        ctx.setLineDash([]);
+
+        container.innerHTML = '';
+        cvs.style.borderRadius = '12px';
+        cvs.style.maxWidth = '100%';
+        container.appendChild(cvs);
+    };
+    artImg.src = _psNoBgDataUrl || _psRawDataUrl || _psImgDataUrl;
+}
+
+// 색상 밝기 조절 유틸
+function _psLightenDarken(hex, amt) {
+    let r = parseInt(hex.slice(1,3),16) + amt;
+    let g = parseInt(hex.slice(3,5),16) + amt;
+    let b = parseInt(hex.slice(5,7),16) + amt;
+    r = Math.max(0,Math.min(255,r));
+    g = Math.max(0,Math.min(255,g));
+    b = Math.max(0,Math.min(255,b));
+    return `rgb(${r},${g},${b})`;
 }
 
 // 패브릭 미싱 옵션 로드 (DB에서)
