@@ -1916,7 +1916,7 @@ function _psCalcPrice(w, h) {
     scrollChat();
 }
 
-function _psGoToCart(w, h, productKey, basePrice) {
+async function _psGoToCart(w, h, productKey, basePrice) {
     const prod = PS_PRODUCTS[productKey];
     const names = {
         fabric: { kr:'패브릭 인쇄', ja:'ファブリック印刷', en:'Fabric Print' },
@@ -1929,7 +1929,7 @@ function _psGoToCart(w, h, productKey, basePrice) {
     const nameObj = names[productKey] || names.fabric;
     const displayName = nameObj[lang] || nameObj.en;
 
-    // 썸네일: 이미지를 작게 압축 (localStorage 제한 방지)
+    // 썸네일: 이미지를 작게 압축 후 Supabase Storage 업로드
     let thumbUrl = null;
     try {
         const thumbCvs = document.createElement('canvas');
@@ -1938,7 +1938,23 @@ function _psGoToCart(w, h, productKey, basePrice) {
         thumbCvs.width = 200;
         thumbCvs.height = Math.round(200 / _psImgRatio);
         thumbCvs.getContext('2d').drawImage(thumbImg, 0, 0, thumbCvs.width, thumbCvs.height);
-        thumbUrl = thumbCvs.toDataURL('image/jpeg', 0.7);
+        // Supabase Storage에 업로드하여 http URL 확보 (saveCart에서 data: URL은 삭제됨)
+        const _sb = window.sb;
+        if (_sb) {
+            const blob = await new Promise(r => thumbCvs.toBlob(r, 'image/jpeg', 0.7));
+            if (blob) {
+                const ts = Date.now();
+                const rnd = Math.random().toString(36).substring(2, 8);
+                const path = `thumbs/ps_${ts}_${rnd}.jpg`;
+                const { data: upData, error: upErr } = await _sb.storage.from('orders').upload(path, blob);
+                if (!upErr) {
+                    const { data: pubData } = _sb.storage.from('orders').getPublicUrl(path);
+                    thumbUrl = pubData?.publicUrl || null;
+                }
+            }
+        }
+        // fallback: 업로드 실패시 data URL
+        if (!thumbUrl) thumbUrl = thumbCvs.toDataURL('image/jpeg', 0.7);
     } catch(e) {}
 
     // 미싱 옵션
@@ -1965,7 +1981,7 @@ function _psGoToCart(w, h, productKey, basePrice) {
         price: basePrice,
         price_jp: Math.round(basePrice * 0.1),
         price_us: Math.round(basePrice * 0.001),
-        img: null,
+        img: thumbUrl,
         w: w, h: h,
         w_mm: w, h_mm: h,
         width_mm: w, height_mm: h,
