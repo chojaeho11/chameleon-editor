@@ -1982,17 +1982,22 @@ function _psGoToCart(w, h, productKey, basePrice) {
 
     // 장바구니에 추가 후 장바구니 페이지로 이동
     setTimeout(() => {
+        // order.js에서 import된 함수 (window에 노출됨)
         if (window.addProductToCartDirectly) {
             const extra = { thumb: thumbUrl };
             window.addProductToCartDirectly(productInfo, 1, addonCodes, addonQtys, extra);
-
-            // 어드바이저 패널 닫고 장바구니 표시
-            const advPanel = document.getElementById('advisorPanel');
-            if (advPanel) advPanel.style.display = 'none';
-            document.body.classList.remove('advisor-open');
-            const cartPage = document.getElementById('cartPage');
-            if (cartPage) cartPage.style.display = 'block';
+        } else {
+            console.error('[PhotoStudio] addProductToCartDirectly not found on window');
         }
+
+        // 어드바이저 패널 닫고 장바구니 표시
+        const advPanel = document.getElementById('advisorPanel');
+        if (advPanel) advPanel.style.display = 'none';
+        document.body.classList.remove('advisor-open');
+
+        const cartPage = document.getElementById('cartPage');
+        if (cartPage) cartPage.style.display = 'block';
+        if (window.renderCart) window.renderCart();
     }, 200);
 }
 
