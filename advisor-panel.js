@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=150';
+import { SITE_CONFIG } from './site-config.js?v=151';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=150');
+        const { addProductToCartDirectly } = await import('./order.js?v=151');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1465,12 +1465,6 @@ function _psShowRetouchMenu() {
             { v:'10015', l:lang==='ja'?'レトロ':'레트로', g:['#fff3e0','#ffcc80'] }, { v:'10020', l:lang==='ja'?'シネマ':'시네마', g:['#e8eaf6','#9fa8da'] },
             { v:'10025', l:lang==='ja'?'ビンテージ':'빈티지', g:['#efebe9','#bcaaa4'] }, { v:'10030', l:lang==='ja'?'暖色':'따뜻한 톤', g:['#fff9c4','#ffcc80'] },
             { v:'10050', l:lang==='ja'?'モノクロ':'모노크롬', g:['#eceff1','#90a4ae'] },
-          ]},
-        { action:'hairstyle', icon:'💇', label: lang==='ja'?'ヘアスタイル':lang==='en'?'Hairstyle':'헤어스타일',
-          options: [
-            { v:'BobCut', l:lang==='ja'?'ボブ':'밥컷', g:['#efebe9','#bcaaa4'] }, { v:'LongStraight', l:lang==='ja'?'ロング':'롱', g:['#fce4ec','#f48fb1'] },
-            { v:'Ponytail', l:lang==='ja'?'ポニーテール':'포니테일', g:['#e3f2fd','#90caf9'] }, { v:'PixieCut', l:lang==='ja'?'ピクシー':'픽시컷', g:['#f3e5f5','#ce93d8'] },
-            { v:'TwoBlockHaircut', l:lang==='ja'?'ツーブロック':'투블럭', g:['#e8eaf6','#7986cb'] }, { v:'Afro', l:lang==='ja'?'アフロ':'아프로', g:['#fff3e0','#ffab91'] },
           ]},
     ];
 

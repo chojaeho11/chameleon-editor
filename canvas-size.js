@@ -1,8 +1,8 @@
 // canvas-size.js
 // [수정] currentMode 추가 import (현재 작업 모드 'standard'/'wall' 유지를 위해)
-import { canvas, setBaseSize, setGlobalMode, setGlobalSizeName, setGuideOn, maxLimitMM, currentMode } from "./canvas-core.js?v=150";
-import { drawGuides } from "./canvas-guides.js?v=150";
-import { openProductDetail } from "./order.js?v=150";
+import { canvas, setBaseSize, setGlobalMode, setGlobalSizeName, setGuideOn, maxLimitMM, currentMode } from "./canvas-core.js?v=151";
+import { drawGuides } from "./canvas-guides.js?v=151";
+import { openProductDetail } from "./order.js?v=151";
 
 export function initSizeControls() {
     // 1. 제품 데이터 정의

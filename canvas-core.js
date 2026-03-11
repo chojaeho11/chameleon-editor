@@ -1,5 +1,5 @@
 // canvas-core.js
-import { updateLockUI } from "./canvas-utils.js?v=150";
+import { updateLockUI } from "./canvas-utils.js?v=151";
 
 export let canvas;
 export let baseW = 1000;

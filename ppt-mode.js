@@ -1,6 +1,6 @@
 /* ═══ PPT Presentation Mode v1 ═══ */
-import { pageDataList, currentPageIndex, goToPage, addNewPage, deleteCurrentPage } from "./canvas-pages.js?v=150";
-import { canvas } from "./canvas-core.js?v=150";
+import { pageDataList, currentPageIndex, goToPage, addNewPage, deleteCurrentPage } from "./canvas-pages.js?v=151";
+import { canvas } from "./canvas-core.js?v=151";
 
 const _t=(k,fb)=>(window.t?window.t(k,fb):fb||k);
 

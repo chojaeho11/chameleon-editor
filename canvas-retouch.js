@@ -1,6 +1,6 @@
 // canvas-retouch.js — AI 보정 패널 (고품질 필터 + AILab Tools 전체 API)
-import { canvas } from "./canvas-core.js?v=150";
-import { sb } from "./config.js?v=150";
+import { canvas } from "./canvas-core.js?v=151";
+import { sb } from "./config.js?v=151";
 
 // ==========================================================
 // 슬라이더 & 프리셋 정의
@@ -94,40 +94,6 @@ const AI_OPTIONS = {
             { value: '10070', key: 'opt_sunset', label: '선셋' },
         ],
         paramKey: 'resource_type',
-    },
-    hairstyle: {
-        titleKey: 'opt_title_hair', title: '헤어스타일 선택',
-        options: [
-            { value: 'BobCut', key: 'opt_bobcut', label: '밥컷' },
-            { value: 'LongStraight', key: 'opt_long_straight', label: '롱 스트레이트' },
-            { value: 'LongWavy', key: 'opt_long_wavy', label: '롱 웨이브' },
-            { value: 'LongCurly', key: 'opt_long_curly', label: '롱 컬리' },
-            { value: 'PixieCut', key: 'opt_pixie', label: '픽시컷' },
-            { value: 'CurlyBob', key: 'opt_curly_bob', label: '컬리 밥' },
-            { value: 'Ponytail', key: 'opt_ponytail', label: '포니테일' },
-            { value: 'Updo', key: 'opt_updo', label: '업도' },
-            { value: 'Chignon', key: 'opt_chignon', label: '시뇽' },
-            { value: 'FishtailBraid', key: 'opt_fishtail', label: '피쉬테일' },
-            { value: 'TwinBraids', key: 'opt_twin_braids', label: '트윈 브레이드' },
-            { value: 'ShortPixieWithShavedSides', key: 'opt_shaved_sides', label: '사이드 쉐이브' },
-            { value: 'DoubleBun', key: 'opt_double_bun', label: '더블 번' },
-            { value: 'Dreadlocks', key: 'opt_dreadlocks', label: '드레드락' },
-            { value: 'ShoulderLengthHair', key: 'opt_shoulder', label: '어깨 길이' },
-            { value: 'BoxBraids', key: 'opt_box_braids', label: '박스 브레이드' },
-            { value: 'BuzzCut', key: 'opt_buzzcut', label: '버즈컷' },
-            { value: 'UnderCut', key: 'opt_undercut', label: '언더컷' },
-            { value: 'Pompadour', key: 'opt_pompadour', label: '퐁파두르' },
-            { value: 'SlickBack', key: 'opt_slickback', label: '슬릭백' },
-            { value: 'CurlyShag', key: 'opt_curly_shag', label: '컬리 쉐그' },
-            { value: 'WavyShag', key: 'opt_wavy_shag', label: '웨이비 쉐그' },
-            { value: 'FauxHawk', key: 'opt_fauxhawk', label: '포호크' },
-            { value: 'TwoBlockHaircut', key: 'opt_twoblock', label: '투블럭' },
-            { value: 'ManBun', key: 'opt_manbun', label: '맨번' },
-            { value: 'CombOver', key: 'opt_combover', label: '콤오버' },
-            { value: 'Afro', key: 'opt_afro', label: '아프로' },
-            { value: 'CornrowBraids', key: 'opt_cornrow', label: '콘로우' },
-        ],
-        paramKey: 'hair_style',
     },
     lips_color: {
         titleKey: 'opt_title_lips', title: '립 컬러 선택',
