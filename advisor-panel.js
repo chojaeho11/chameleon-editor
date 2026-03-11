@@ -1832,9 +1832,21 @@ function _psShowSizing(key) {
         </div>`;
     } else if (isKeyring) {
         const lang = getLang();
+        const holeLabels = {
+            top: lang==='ja'?'上':lang==='en'?'Top':'상',
+            left: lang==='ja'?'左':lang==='en'?'Left':'좌',
+            right: lang==='ja'?'右':lang==='en'?'Right':'우',
+            bottom: lang==='ja'?'下':lang==='en'?'Bottom':'하',
+        };
         optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
             <div class="ps-tool-label">🔑 ${lang==='ja'?'3mmアクリルキーリング':lang==='en'?'3mm Acrylic Keyring':'3mm 아크릴키링'}</div>
-            <p style="font-size:10px; color:#64748b; margin:4px 0;">${lang==='ja'?'キーリングのフックはカートで選択できます':lang==='en'?'You can select hooks in the cart':'고리는 장바구니에서 선택할 수 있습니다'}</p>
+            <div id="psKeyringPreview" style="margin:8px auto;text-align:center;background:#f1f5f9;border-radius:10px;padding:8px;"></div>
+            <div class="ps-tool-label" style="margin-top:8px;">📍 ${lang==='ja'?'穴の位置':lang==='en'?'Hole Position':'고리 위치'}</div>
+            <div style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;">
+                ${['top','left','right','bottom'].map((pos,i) => `<label class="ps-opt-item" style="min-width:40px;text-align:center;"><input type="radio" name="psHolePos" value="${pos}"${i===0?' checked':''}> ${holeLabels[pos]}</label>`).join('')}
+            </div>
+            <div class="ps-tool-label" style="margin-top:8px;">🪝 ${lang==='ja'?'リング選択':lang==='en'?'Ring Type':'고리 선택'}</div>
+            <div id="psKeyringRings" style="margin:6px 0;"><span style="font-size:10px;color:#94a3b8;">Loading...</span></div>
         </div>`;
     } else if (isTshirt) {
         const lang = getLang();
@@ -1936,9 +1948,250 @@ function _psShowSizing(key) {
         });
     }
 
+    // 키링이면 칼선 미리보기 + 고리 옵션 로드
+    if (isKeyring) {
+        _psKeyringHolePos = 'top';
+        _psRenderKeyringPreview();
+        document.querySelectorAll('input[name="psHolePos"]').forEach(r => {
+            r.addEventListener('change', () => { _psKeyringHolePos = r.value; _psRenderKeyringPreview(); });
+        });
+        _psLoadKeyringRings();
+    }
+
     // 가격 즉시 계산
     _psUpdatePrice();
     scrollChat();
+}
+
+// ─── 키링 칼선 미리보기 + 고리 옵션 ───
+let _psKeyringHolePos = 'top';
+let _psSelectedRing = null;
+
+function _psRenderKeyringPreview() {
+    const container = document.getElementById('psKeyringPreview');
+    if (!container || !_psImgDataUrl) return;
+
+    const W = 220, H = 220;
+    let cvs = container.querySelector('canvas');
+    if (!cvs) {
+        cvs = document.createElement('canvas');
+        cvs.width = W; cvs.height = H;
+        cvs.style.maxWidth = '100%';
+        cvs.style.borderRadius = '8px';
+        container.innerHTML = '';
+        container.appendChild(cvs);
+    }
+    const ctx = cvs.getContext('2d');
+
+    const img = new Image();
+    img.onload = () => {
+        ctx.clearRect(0, 0, W, H);
+        // 체크보드 배경
+        for (let y = 0; y < H; y += 8) for (let x = 0; x < W; x += 8) {
+            ctx.fillStyle = ((Math.floor(x/8)+Math.floor(y/8))%2===0) ? '#f8f8f8':'#e8e8e8';
+            ctx.fillRect(x, y, 8, 8);
+        }
+
+        // 이미지 영역 (고리 공간 확보)
+        const holePad = 30;
+        let availX = 15, availY = 15, availW = W - 30, availH = H - 30;
+        const pos = _psKeyringHolePos;
+        if (pos === 'top') { availY += holePad; availH -= holePad; }
+        else if (pos === 'bottom') { availH -= holePad; }
+        else if (pos === 'left') { availX += holePad; availW -= holePad; }
+        else if (pos === 'right') { availW -= holePad; }
+
+        const scale = Math.min(availW / img.width, availH / img.height);
+        const dw = img.width * scale, dh = img.height * scale;
+        const dx = availX + (availW - dw) / 2;
+        const dy = availY + (availH - dh) / 2;
+
+        // 아크릴 외곽 (blur+threshold)
+        _psDrawAcrylicOutline(ctx, img, dx, dy, dw, dh);
+
+        // 이미지
+        ctx.drawImage(img, dx, dy, dw, dh);
+
+        // 고리 구멍
+        let hx, hy;
+        if (pos === 'top') { hx = dx + dw/2; hy = dy - 18; }
+        else if (pos === 'bottom') { hx = dx + dw/2; hy = dy + dh + 18; }
+        else if (pos === 'left') { hx = dx - 18; hy = dy + dh/2; }
+        else { hx = dx + dw + 18; hy = dy + dh/2; }
+
+        // 연결 바
+        const cx = dx + dw/2, cy = dy + dh/2;
+        // 이미지 가장자리의 연결점
+        let connX = hx, connY = hy;
+        if (pos === 'top') connY = dy;
+        else if (pos === 'bottom') connY = dy + dh;
+        else if (pos === 'left') connX = dx;
+        else connX = dx + dw;
+
+        ctx.beginPath();
+        ctx.moveTo(connX, connY);
+        ctx.lineTo(hx, hy);
+        ctx.strokeStyle = 'rgba(200,200,200,0.6)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // 고리 구멍 (외곽원 + 내부원)
+        const outerR = 12, innerR = 7;
+        ctx.beginPath();
+        ctx.arc(hx, hy, outerR, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(200,200,200,0.3)';
+        ctx.fill();
+        ctx.strokeStyle = '#FF0000';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3,2]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(hx, hy, innerR, 0, Math.PI*2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.strokeStyle = '#FF0000';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 칼선 (빨간 점선 외곽)
+        _psDrawCutline(ctx, img, dx, dy, dw, dh);
+    };
+    img.src = _psNoBgDataUrl || _psRawDataUrl;
+}
+
+function _psDrawAcrylicOutline(ctx, img, dx, dy, dw, dh) {
+    const tmpW = Math.round(dw + 16), tmpH = Math.round(dh + 16);
+    const tc = document.createElement('canvas');
+    tc.width = tmpW; tc.height = tmpH;
+    const tctx = tc.getContext('2d');
+    tctx.drawImage(img, 8, 8, dw, dh);
+    tctx.globalCompositeOperation = 'source-in';
+    tctx.fillStyle = '#fff';
+    tctx.fillRect(0, 0, tmpW, tmpH);
+
+    const ec = document.createElement('canvas');
+    ec.width = tmpW; ec.height = tmpH;
+    const ectx = ec.getContext('2d');
+    ectx.filter = 'blur(5px)';
+    ectx.drawImage(tc, 0, 0);
+    ectx.drawImage(ec, 0, 0);
+    ectx.filter = 'none';
+
+    const id = ectx.getImageData(0, 0, tmpW, tmpH);
+    for (let i = 3; i < id.data.length; i += 4) id.data[i] = id.data[i] > 15 ? 255 : 0;
+    ectx.putImageData(id, 0, 0);
+
+    ctx.save();
+    ctx.globalAlpha = 0.1;
+    ctx.drawImage(ec, dx - 8, dy - 8);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+}
+
+function _psDrawCutline(ctx, img, dx, dy, dw, dh) {
+    const tmpW = Math.round(dw + 16), tmpH = Math.round(dh + 16);
+    const tc = document.createElement('canvas');
+    tc.width = tmpW; tc.height = tmpH;
+    const tctx = tc.getContext('2d');
+    tctx.drawImage(img, 8, 8, dw, dh);
+    tctx.globalCompositeOperation = 'source-in';
+    tctx.fillStyle = '#fff';
+    tctx.fillRect(0, 0, tmpW, tmpH);
+
+    const ec = document.createElement('canvas');
+    ec.width = tmpW; ec.height = tmpH;
+    const ectx = ec.getContext('2d');
+    ectx.filter = 'blur(5px)';
+    ectx.drawImage(tc, 0, 0);
+    ectx.drawImage(ec, 0, 0);
+    ectx.filter = 'none';
+
+    const id = ectx.getImageData(0, 0, tmpW, tmpH);
+    const d = id.data;
+    for (let i = 3; i < d.length; i += 4) d[i] = d[i] > 15 ? 255 : 0;
+    ectx.putImageData(id, 0, 0);
+
+    // edge 추출 (외곽 - erode)
+    const imgData2 = ectx.getImageData(0, 0, tmpW, tmpH);
+    const copy = new Uint8ClampedArray(imgData2.data);
+    // erode 1px
+    for (let y = 1; y < tmpH-1; y++) for (let x = 1; x < tmpW-1; x++) {
+        const idx = (y * tmpW + x) * 4 + 3;
+        if (copy[idx] === 0) continue;
+        let edge = false;
+        for (let dy = -1; dy <= 1 && !edge; dy++)
+            for (let ddx = -1; ddx <= 1 && !edge; ddx++)
+                if (copy[((y+dy)*tmpW+(x+ddx))*4+3] === 0) edge = true;
+        if (!edge) imgData2.data[idx] = 0;
+    }
+    // 빨간색으로
+    for (let i = 0; i < imgData2.data.length; i += 4) {
+        if (imgData2.data[i+3] > 0) {
+            imgData2.data[i] = 255; imgData2.data[i+1] = 0; imgData2.data[i+2] = 0; imgData2.data[i+3] = 180;
+        }
+    }
+    ectx.putImageData(imgData2, 0, 0);
+
+    ctx.save();
+    ctx.setLineDash([4, 3]);
+    ctx.drawImage(ec, dx - 8, dy - 8);
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+async function _psLoadKeyringRings() {
+    const container = document.getElementById('psKeyringRings');
+    if (!container) return;
+    const lang = getLang();
+
+    try {
+        const _sb = window.sb;
+        if (!_sb) throw new Error('DB not ready');
+
+        // opt_8796 카테고리에서 고리 옵션 조회
+        const { data: addons, error } = await _sb.from('admin_addons')
+            .select('code, name, display_name, price, image_url, is_swatch')
+            .eq('category_code', 'opt_8796')
+            .order('sort_order', { ascending: true });
+
+        if (error) throw error;
+        if (!addons || addons.length === 0) {
+            container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${lang==='ja'?'リングオプションなし':lang==='en'?'No ring options':'고리 옵션 없음'}</span>`;
+            return;
+        }
+
+        let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+        addons.forEach((ring, i) => {
+            const name = ring.display_name || ring.name;
+            const priceStr = ring.price > 0 ? ` +${ring.price.toLocaleString()}` : '';
+            const imgStyle = ring.image_url ? `background-image:url(${ring.image_url});background-size:cover;background-position:center;` : 'background:#e2e8f0;';
+            html += `<div class="ps-ring-opt${i===0?' active':''}" data-code="${ring.code}" data-price="${ring.price||0}" data-name="${name}" style="cursor:pointer;text-align:center;border:2px solid ${i===0?'#7c3aed':'#e2e8f0'};border-radius:8px;padding:4px;width:60px;transition:all .2s;">
+                <div style="width:48px;height:48px;border-radius:6px;margin:0 auto 3px;${imgStyle}"></div>
+                <div style="font-size:9px;font-weight:600;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                <div style="font-size:8px;color:#94a3b8;">${priceStr || 'Free'}</div>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+        // 첫 번째 자동 선택
+        _psSelectedRing = addons[0];
+
+        // 클릭 이벤트
+        container.querySelectorAll('.ps-ring-opt').forEach(el => {
+            el.addEventListener('click', () => {
+                container.querySelectorAll('.ps-ring-opt').forEach(e => e.style.border = '2px solid #e2e8f0');
+                el.style.border = '2px solid #7c3aed';
+                el.classList.add('active');
+                _psSelectedRing = addons.find(a => a.code === el.dataset.code) || null;
+            });
+        });
+    } catch (e) {
+        console.warn('[PS] Ring load failed:', e);
+        container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${lang==='ja'?'カートで選択可能':lang==='en'?'Select in cart':'장바구니에서 선택 가능'}</span>`;
+    }
 }
 
 // ─── 티셔츠 목업 렌더링 (드래그/리사이즈) ───
@@ -2314,13 +2567,18 @@ async function _psGoToCart(w, h, productKey, basePrice) {
         }
     } catch(e) { console.warn('[PS] addon lookup failed:', e); }
 
-    // Photo Studio에서 선택한 미싱 옵션 (미리 선택됨)
+    // Photo Studio에서 선택한 옵션 (미리 선택됨)
     const preSelectedCodes = [];
     const preSelectedQtys = {};
     const sewingRadio = document.querySelector('input[name="psSewing"]:checked');
     if (sewingRadio) {
         preSelectedCodes.push(sewingRadio.value);
         preSelectedQtys[sewingRadio.value] = 1;
+    }
+    // 키링 고리 옵션 (스와치: 수량 = 제품 수량)
+    if (productKey === 'keyring' && _psSelectedRing) {
+        preSelectedCodes.push(_psSelectedRing.code);
+        preSelectedQtys[_psSelectedRing.code] = 1;
     }
 
     // 원본 이미지 저장 (주문시 사용)
