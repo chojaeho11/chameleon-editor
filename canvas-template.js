@@ -1,8 +1,8 @@
 /* canvas-template.js - 버튼 페이징 버전 */
 
-import { sb as _importedSb, currentUser } from "./config.js?v=159";
-import { canvas } from "./canvas-core.js?v=159";
-import { applySize } from "./canvas-size.js?v=159";
+import { sb as _importedSb, currentUser } from "./config.js?v=160";
+import { canvas } from "./canvas-core.js?v=160";
+import { applySize } from "./canvas-size.js?v=160";
 
 // ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
 function _getSb() { return _importedSb || window.sb; }
