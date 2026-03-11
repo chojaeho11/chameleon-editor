@@ -202,6 +202,18 @@ export function initAdvisorPanel() {
         }
     }, 800);
 
+    // URL 파라미터 ?chat=1 → 챗봇 자동 오픈 + 스크롤
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('chat') === '1') {
+            setTimeout(() => {
+                openPanel();
+                panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => { const inp = document.getElementById('advInput'); if (inp) inp.focus(); }, 400);
+            }, 1000);
+        }
+    } catch(e) {}
+
     console.log('✅ Advisor panel initialized (AI + consultant unified)');
 }
 
