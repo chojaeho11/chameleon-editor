@@ -1,7 +1,7 @@
-import { canvas } from "./canvas-core.js?v=143";
-import { ADDON_DB, currentUser, sb } from "./config.js?v=143";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=143"; // 페이지 인덱스 가져오기
-import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=143";
+import { canvas } from "./canvas-core.js?v=144";
+import { ADDON_DB, currentUser, sb } from "./config.js?v=144";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=144"; // 페이지 인덱스 가져오기
+import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=144";
 
 // [안전장치] 언어별 기본 폰트 URL 설정
 const FONT_CONFIG = {

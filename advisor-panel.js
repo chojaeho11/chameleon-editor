@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=143';
+import { SITE_CONFIG } from './site-config.js?v=144';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=143');
+        const { addProductToCartDirectly } = await import('./order.js?v=144');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1428,55 +1428,81 @@ function _psShowResult() {
     scrollChat();
 }
 
-// 사진보정 메뉴 (에디터의 AI 기능들)
+// 사진보정 메뉴 (에디터의 AI 기능들) — 아래로 펼쳐지는 패널
 function _psShowRetouchMenu() {
+    const existing = document.getElementById('psRetouchPanel');
+    if (existing) { existing.remove(); return; } // 토글
+
     const lang = getLang();
-    const items = [
-        { action:'cartoon', icon:'🎨', label: lang==='ja'?'漫画スタイル':lang==='en'?'Cartoon Style':'만화 스타일' },
-        { action:'emotion', icon:'😊', label: lang==='ja'?'表情変換':lang==='en'?'Expression':'표정 변환' },
-        { action:'age_gender', icon:'👤', label: lang==='ja'?'年齢/性別':lang==='en'?'Age/Gender':'나이/성별' },
-        { action:'face_filter', icon:'✨', label: lang==='ja'?'フィルター':lang==='en'?'Face Filter':'얼굴 필터' },
-        { action:'hairstyle', icon:'💇', label: lang==='ja'?'ヘアスタイル':lang==='en'?'Hairstyle':'헤어스타일' },
+    // 카테고리별 옵션 (에디터 AI_OPTIONS 동일)
+    const categories = [
+        { action:'cartoon', icon:'🎨', label: lang==='ja'?'漫画スタイル':lang==='en'?'Cartoon Style':'만화 스타일',
+          options: [
+            { v:'3d_cartoon', l:'3D' }, { v:'pixar', l:'Pixar' }, { v:'anime', l:lang==='ja'?'アニメ':'애니메' },
+            { v:'sketch', l:lang==='ja'?'スケッチ':'스케치' }, { v:'comic', l:lang==='ja'?'コミック':'코믹' },
+            { v:'handdrawn', l:lang==='ja'?'手描き':'손그림' }, { v:'3d_game', l:'3D Game' },
+            { v:'classic_cartoon', l:lang==='ja'?'クラシック':'클래식' },
+          ]},
+        { action:'emotion', icon:'😊', label: lang==='ja'?'表情変換':lang==='en'?'Expression':'표정 변환',
+          options: [
+            { v:'10', l:lang==='ja'?'微笑み':'보조개 미소' }, { v:'12', l:lang==='ja'?'笑顔':'활짝 웃기' },
+            { v:'13', l:lang==='ja'?'大笑い':'함박 웃음' }, { v:'14', l:lang==='ja'?'クール':'쿨 포즈' },
+            { v:'15', l:lang==='ja'?'悲しみ':'슬픔' }, { v:'100', l:lang==='ja'?'目を開ける':'눈뜨기' },
+          ]},
+        { action:'age_gender', icon:'👤', label: lang==='ja'?'年齢/性別':lang==='en'?'Age/Gender':'나이/성별',
+          options: [
+            { v:'TO_KID', l:lang==='ja'?'子供':lang==='en'?'Kid':'어린이' },
+            { v:'TO_OLD', l:lang==='ja'?'老人':lang==='en'?'Old':'노인' },
+            { v:'TO_FEMALE', l:lang==='ja'?'女性':lang==='en'?'Female':'여성' },
+            { v:'TO_MALE', l:lang==='ja'?'男性':lang==='en'?'Male':'남성' },
+          ]},
+        { action:'face_filter', icon:'✨', label: lang==='ja'?'フィルター':lang==='en'?'Face Filter':'얼굴 필터',
+          options: [
+            { v:'10001', l:lang==='ja'?'ナチュラル':'내추럴' }, { v:'10002', l:lang==='ja'?'美白':'화이트닝' },
+            { v:'10015', l:lang==='ja'?'レトロ':'레트로' }, { v:'10020', l:lang==='ja'?'シネマ':'시네마' },
+            { v:'10025', l:lang==='ja'?'ビンテージ':'빈티지' }, { v:'10030', l:lang==='ja'?'暖色':'따뜻한 톤' },
+            { v:'10050', l:lang==='ja'?'モノクロ':'모노크롬' },
+          ]},
+        { action:'hairstyle', icon:'💇', label: lang==='ja'?'ヘアスタイル':lang==='en'?'Hairstyle':'헤어스타일',
+          options: [
+            { v:'BobCut', l:lang==='ja'?'ボブ':'밥컷' }, { v:'LongStraight', l:lang==='ja'?'ロングストレート':'롱 스트레이트' },
+            { v:'Ponytail', l:lang==='ja'?'ポニーテール':'포니테일' }, { v:'PixieCut', l:lang==='ja'?'ピクシー':'픽시컷' },
+            { v:'TwoBlockHaircut', l:lang==='ja'?'ツーブロック':'투블럭' }, { v:'Afro', l:lang==='ja'?'アフロ':'아프로' },
+          ]},
     ];
-    const btns = items.map(i => `<button class="ps-retouch-item" data-action="${i.action}">${i.icon} ${i.label}</button>`).join('');
 
-    // 팝업 형태로 표시
-    let popup = document.getElementById('psRetouchPopup');
-    if (popup) { popup.remove(); return; } // 토글
-    popup = document.createElement('div');
-    popup.id = 'psRetouchPopup';
-    popup.className = 'ps-retouch-popup';
-    popup.innerHTML = btns;
-    document.getElementById('psRetouchBtn')?.parentElement?.appendChild(popup);
-
-    popup.querySelectorAll('.ps-retouch-item').forEach(b => {
-        b.addEventListener('click', () => {
-            popup.remove();
-            _psRunRetouch(b.dataset.action);
+    let html = '<div id="psRetouchPanel" class="ps-retouch-panel">';
+    categories.forEach(cat => {
+        html += `<div class="ps-rt-cat">
+            <div class="ps-rt-cat-title">${cat.icon} ${cat.label}</div>
+            <div class="ps-rt-opts">`;
+        cat.options.forEach(opt => {
+            html += `<button class="ps-rt-opt" data-action="${cat.action}" data-value="${opt.v}">${opt.l}</button>`;
         });
+        html += `</div></div>`;
+    });
+    html += '</div>';
+
+    const btnRow = document.getElementById('psRetouchBtn')?.closest('.ps-tool-section');
+    if (btnRow) btnRow.insertAdjacentHTML('afterend', html);
+
+    document.getElementById('psRetouchPanel')?.querySelectorAll('.ps-rt-opt').forEach(b => {
+        b.addEventListener('click', () => _psRunRetouch(b.dataset.action, b.dataset.value, b));
     });
 }
 
-async function _psRunRetouch(action) {
-    // portrait-retouch Edge Function 호출
-    const retouchBtn = document.getElementById('psRetouchBtn');
-    if (retouchBtn) { retouchBtn.disabled = true; retouchBtn.textContent = '⏳...'; }
+async function _psRunRetouch(action, value, btnEl) {
+    if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳'; }
 
     try {
         const _sb = window.sb;
         if (!_sb) throw new Error('DB not ready');
 
-        // 선택 팝업: AI_OPTIONS 형태에서 첫번째 옵션 사용 (간단 적용)
-        const optMap = {
-            cartoon: { action:'cartoon', type:'3d_cartoon' },
-            emotion: { action:'emotion', service_choice:'12' },
-            age_gender: { action:'age_gender', action_type:'TO_KID' },
-            face_filter: { action:'face_filter', resource_type:'10001' },
-            hairstyle: { action:'hairstyle', hair_style:'BobCut' },
-        };
-        const params = optMap[action] || optMap.cartoon;
+        // 파라미터 구성
+        const paramKeys = { cartoon:'type', emotion:'service_choice', age_gender:'action_type', face_filter:'resource_type', hairstyle:'hair_style' };
+        const params = { action, [paramKeys[action] || 'type']: value };
 
-        // 이미지를 blob으로 변환
+        // 이미지를 base64로
         const res = await fetch(_psRawDataUrl);
         const blob = await res.blob();
         const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result.split(',')[1]); rd.readAsDataURL(blob); });
@@ -1490,11 +1516,11 @@ async function _psRunRetouch(action) {
             _psRawDataUrl = 'data:image/jpeg;base64,' + data.image_base64;
             await _psApplyText();
             document.getElementById('psPreviewImg').src = _psImgDataUrl;
+            if (btnEl) { btnEl.textContent = '✅'; btnEl.style.background = '#10b981'; btnEl.style.color = '#fff'; }
         } else throw new Error('No result');
     } catch(e) {
         console.error('Retouch error:', e);
-    } finally {
-        if (retouchBtn) { retouchBtn.disabled = false; retouchBtn.textContent = '✨ ' + ps('retouch'); }
+        if (btnEl) { btnEl.textContent = '❌'; setTimeout(() => { btnEl.textContent = btnEl.dataset.value; btnEl.disabled = false; }, 2000); }
     }
 }
 
@@ -1505,59 +1531,32 @@ async function _psRemoveBg() {
     btn.textContent = '⏳ ' + ps('removingBg');
 
     try {
-        // HF API key from Supabase secrets
-        const _sb = window.sb;
-        let hfKey = null;
-        if (_sb) {
-            const { data } = await _sb.from('secrets').select('value').eq('name', 'HF_API_KEY').single();
-            if (data) hfKey = data.value;
-        }
-
+        // 이미지를 base64로 변환
         const img = new Image();
         await new Promise((resolve) => { img.onload = resolve; img.src = _psRawDataUrl; });
         const srcCvs = document.createElement('canvas');
         srcCvs.width = img.width; srcCvs.height = img.height;
         srcCvs.getContext('2d').drawImage(img, 0, 0);
-        const blob = await new Promise(r => srcCvs.toBlob(r, 'image/png'));
+        const base64 = srcCvs.toDataURL('image/png').split(',')[1];
 
-        let resultBlob;
-        if (hfKey) {
-            // BiRefNet (BRIA RMBG-2.0) via Hugging Face
-            const models = [
-                'https://router.huggingface.co/hf-inference/models/briaai/RMBG-2.0',
-                'https://router.huggingface.co/hf-inference/models/ZhengPeng7/BiRefNet'
-            ];
-            for (const modelUrl of models) {
-                try {
-                    const res = await fetch(modelUrl, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
-                        body: blob
-                    });
-                    if (res.ok) { resultBlob = await res.blob(); break; }
-                    if (res.status === 503) {
-                        const body = await res.json().catch(() => ({}));
-                        await new Promise(r => setTimeout(r, Math.min((body.estimated_time || 20) * 1000, 30000)));
-                        const retry = await fetch(modelUrl, {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/octet-stream' },
-                            body: blob
-                        });
-                        if (retry.ok) { resultBlob = await retry.blob(); break; }
-                    }
-                } catch(e) { console.warn('BiRefNet model fail:', e); }
-            }
-        }
+        // Edge Function 호출 (서버에서 HF API key 관리)
+        const _sb = window.sb;
+        if (!_sb) throw new Error('Supabase not ready');
+        const { data, error } = await _sb.functions.invoke('bg-remove', {
+            body: { image_base64: base64 }
+        });
+        if (error) throw error;
+        if (!data || !data.image_base64) throw new Error('No result');
 
-        if (!resultBlob) throw new Error('API unavailable');
-
-        // 결과를 흰색 배경 위에 합성
+        // 결과를 배경색 위에 합성
         const rImg = new Image();
-        await new Promise((resolve) => { rImg.onload = resolve; rImg.src = URL.createObjectURL(resultBlob); });
+        await new Promise((resolve) => {
+            rImg.onload = resolve;
+            rImg.src = 'data:image/png;base64,' + data.image_base64;
+        });
         const cvs = document.createElement('canvas');
         cvs.width = rImg.width; cvs.height = rImg.height;
         const ctx = cvs.getContext('2d');
-        // 배경색 적용
         ctx.fillStyle = _psBgColor || '#ffffff';
         ctx.fillRect(0, 0, cvs.width, cvs.height);
         ctx.drawImage(rImg, 0, 0);
@@ -1573,7 +1572,7 @@ async function _psRemoveBg() {
         btn.textContent = '❌ ' + ps('removeBg');
         btn.style.background = '#ef4444';
         btn.style.color = '#fff';
-        setTimeout(() => { btn.textContent = '✂️ ' + ps('removeBg'); btn.style.background = ''; btn.style.color = ''; btn.disabled = false; }, 2000);
+        setTimeout(() => { btn.textContent = '✂️ ' + ps('removeBg'); btn.style.background = ''; btn.style.color = ''; btn.disabled = false; }, 3000);
     }
 }
 
