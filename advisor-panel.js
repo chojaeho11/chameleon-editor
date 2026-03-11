@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=146';
+import { SITE_CONFIG } from './site-config.js?v=147';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=146');
+        const { addProductToCartDirectly } = await import('./order.js?v=147');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1136,13 +1136,13 @@ const PS_T = {
 };
 function ps(k) { return (PS_T[getLang()] && PS_T[getLang()][k]) || PS_T.en[k] || k; }
 
-// 회베 단가 (1m² 당 KRW)
+// 회베 단가 (1m² 당 KRW) — 최소가격 없음, 순수 면적 계산
 const PS_PRODUCTS = {
-    fabric:    { icon:'🧵', sqm:15000,  min:15000 },
-    paper:     { icon:'📄', sqm:10000,  min:10000 },
-    honeycomb: { icon:'🍯', sqm:60000,  min:60000 },
-    canvas:    { icon:'🖼️', sqm:100000, min:100000 },
-    blind:     { icon:'🪟', sqm:30000,  min:30000 },
+    fabric:    { icon:'🧵', sqm:15000 },
+    paper:     { icon:'📄', sqm:10000 },
+    honeycomb: { icon:'🍯', sqm:60000 },
+    canvas:    { icon:'🖼️', sqm:100000 },
+    blind:     { icon:'🪟', sqm:30000 },
 };
 
 let _psImgRatio = 1, _psImgDataUrl = null, _psSelectedProduct = null;
@@ -1853,9 +1853,9 @@ function _psUpdatePrice() {
 
 function _psCalcPrice(w, h) {
     const prod = PS_PRODUCTS[_psSelectedProduct];
-    const area = (w / 1000) * (h / 1000);
+    const area = (w / 1000) * (h / 1000); // m² 면적
     let price = Math.round((area * prod.sqm) / 10) * 10;
-    if (price < prod.min) price = prod.min;
+    if (price < 100) price = 100; // 최소 100원
 
     // 미싱 옵션 가격 추가
     let sewingPrice = 0;
@@ -1955,15 +1955,19 @@ function _psGoToCart(w, h, productKey, basePrice) {
         _base_sqm_price: prod.sqm
     };
 
-    // 스튜디오 종료
+    // 스튜디오 종료 + 어드바이저 패널 닫기
     exitStudioMode();
 
-    // 장바구니에 추가
+    // 장바구니에 추가 후 장바구니 페이지로 이동
     setTimeout(() => {
         if (window.addProductToCartDirectly) {
             const extra = { thumb: thumbUrl };
             window.addProductToCartDirectly(productInfo, 1, addonCodes, addonQtys, extra);
-            // 장바구니 페이지 표시
+
+            // 어드바이저 패널 닫고 장바구니 표시
+            const advPanel = document.getElementById('advisorPanel');
+            if (advPanel) advPanel.style.display = 'none';
+            document.body.classList.remove('advisor-open');
             const cartPage = document.getElementById('cartPage');
             if (cartPage) cartPage.style.display = 'block';
         }
