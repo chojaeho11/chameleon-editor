@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI + 인간 상담 통합
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=148';
+import { SITE_CONFIG } from './site-config.js?v=149';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -1083,7 +1083,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=148');
+        const { addProductToCartDirectly } = await import('./order.js?v=149');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
@@ -1152,6 +1152,7 @@ let _psText = 'Love of my life';
 let _psTextColor = '#ffffff';
 let _psBgColor = '#ffffff';
 let _psImgW = 0, _psImgH = 0; // pixel dimensions
+let _psHistory = [];            // 되돌리기 히스토리
 
 function _psFmtPrice(krw) {
     const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
@@ -1347,11 +1348,12 @@ function _psShowResult() {
                         </div>
                     </div>
                 </div>
-                <!-- 누끼따기 + 사진보정 -->
+                <!-- 누끼따기 + 사진보정 + 되돌리기 -->
                 <div class="ps-tool-section">
                     <div class="ps-btn-row">
                         <button class="ps-tool-btn" id="psRemoveBg">✂️ ${ps('removeBg')}</button>
                         <button class="ps-tool-btn" id="psRetouchBtn">✨ ${ps('retouch')}</button>
+                        <button class="ps-tool-btn" id="psUndoBtn" style="background:#f1f5f9; color:#64748b;">↩️ ${lang==='ja'?'戻す':lang==='en'?'Undo':'되돌리기'}</button>
                     </div>
                 </div>
                 <!-- 제품 선택 -->
@@ -1411,6 +1413,9 @@ function _psShowResult() {
     // 사진보정 (에디터 AI retouch 기능)
     document.getElementById('psRetouchBtn')?.addEventListener('click', _psShowRetouchMenu);
 
+    // 되돌리기
+    document.getElementById('psUndoBtn')?.addEventListener('click', _psUndo);
+
     // 제품 선택
     chatArea.querySelectorAll('.ps-prod-item').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1434,40 +1439,38 @@ function _psShowRetouchMenu() {
     if (existing) { existing.remove(); return; } // 토글
 
     const lang = getLang();
-    // 카테고리별 옵션 (에디터 AI_OPTIONS 동일)
     const categories = [
-        { action:'cartoon', icon:'🎨', label: lang==='ja'?'漫画スタイル':lang==='en'?'Cartoon Style':'만화 스타일',
+        { action:'cartoon', icon:'🎨', label: lang==='ja'?'漫画スタイル':lang==='en'?'Cartoon':'만화 스타일',
+          grad: ['#fff9c4','#ffee58','#fdd835'],
           options: [
-            { v:'3d_cartoon', l:'3D' }, { v:'pixar', l:'Pixar' }, { v:'anime', l:lang==='ja'?'アニメ':'애니메' },
-            { v:'sketch', l:lang==='ja'?'スケッチ':'스케치' }, { v:'comic', l:lang==='ja'?'コミック':'코믹' },
-            { v:'handdrawn', l:lang==='ja'?'手描き':'손그림' }, { v:'3d_game', l:'3D Game' },
-            { v:'classic_cartoon', l:lang==='ja'?'クラシック':'클래식' },
+            { v:'3d_cartoon', l:'3D', g:['#e3f2fd','#90caf9'] }, { v:'pixar', l:'Pixar', g:['#fce4ec','#f48fb1'] },
+            { v:'anime', l:lang==='ja'?'アニメ':'애니메', g:['#f3e5f5','#ce93d8'] }, { v:'sketch', l:lang==='ja'?'スケッチ':'스케치', g:['#eceff1','#b0bec5'] },
+            { v:'comic', l:lang==='ja'?'コミック':'코믹', g:['#fff3e0','#ffcc80'] }, { v:'handdrawn', l:lang==='ja'?'手描き':'손그림', g:['#e8f5e9','#a5d6a7'] },
+            { v:'3d_game', l:'3D Game', g:['#e1f5fe','#4fc3f7'] }, { v:'classic_cartoon', l:lang==='ja'?'クラシック':'클래식', g:['#fbe9e7','#ffab91'] },
           ]},
         { action:'emotion', icon:'😊', label: lang==='ja'?'表情変換':lang==='en'?'Expression':'표정 변환',
           options: [
-            { v:'10', l:lang==='ja'?'微笑み':'보조개 미소' }, { v:'12', l:lang==='ja'?'笑顔':'활짝 웃기' },
-            { v:'13', l:lang==='ja'?'大笑い':'함박 웃음' }, { v:'14', l:lang==='ja'?'クール':'쿨 포즈' },
-            { v:'15', l:lang==='ja'?'悲しみ':'슬픔' }, { v:'100', l:lang==='ja'?'目を開ける':'눈뜨기' },
+            { v:'10', l:lang==='ja'?'微笑み':'미소', g:['#fce4ec','#f48fb1'] }, { v:'12', l:lang==='ja'?'笑顔':'활짝', g:['#fff9c4','#ffee58'] },
+            { v:'13', l:lang==='ja'?'大笑い':'함박', g:['#fff3e0','#ffcc80'] }, { v:'14', l:lang==='ja'?'クール':'쿨', g:['#e3f2fd','#90caf9'] },
+            { v:'15', l:lang==='ja'?'悲しみ':'슬픔', g:['#e8eaf6','#9fa8da'] }, { v:'100', l:lang==='ja'?'目を開ける':'눈뜨기', g:['#e0f2f1','#80cbc4'] },
           ]},
         { action:'age_gender', icon:'👤', label: lang==='ja'?'年齢/性別':lang==='en'?'Age/Gender':'나이/성별',
           options: [
-            { v:'TO_KID', l:lang==='ja'?'子供':lang==='en'?'Kid':'어린이' },
-            { v:'TO_OLD', l:lang==='ja'?'老人':lang==='en'?'Old':'노인' },
-            { v:'TO_FEMALE', l:lang==='ja'?'女性':lang==='en'?'Female':'여성' },
-            { v:'TO_MALE', l:lang==='ja'?'男性':lang==='en'?'Male':'남성' },
+            { v:'TO_KID', l:lang==='ja'?'子供':'어린이', g:['#fff9c4','#ffee58'] }, { v:'TO_OLD', l:lang==='ja'?'老人':'노인', g:['#efebe9','#bcaaa4'] },
+            { v:'TO_FEMALE', l:lang==='ja'?'女性':'여성', g:['#fce4ec','#f48fb1'] }, { v:'TO_MALE', l:lang==='ja'?'男性':'남성', g:['#e3f2fd','#90caf9'] },
           ]},
-        { action:'face_filter', icon:'✨', label: lang==='ja'?'フィルター':lang==='en'?'Face Filter':'얼굴 필터',
+        { action:'face_filter', icon:'✨', label: lang==='ja'?'フィルター':lang==='en'?'Filter':'얼굴 필터',
           options: [
-            { v:'10001', l:lang==='ja'?'ナチュラル':'내추럴' }, { v:'10002', l:lang==='ja'?'美白':'화이트닝' },
-            { v:'10015', l:lang==='ja'?'レトロ':'레트로' }, { v:'10020', l:lang==='ja'?'シネマ':'시네마' },
-            { v:'10025', l:lang==='ja'?'ビンテージ':'빈티지' }, { v:'10030', l:lang==='ja'?'暖色':'따뜻한 톤' },
-            { v:'10050', l:lang==='ja'?'モノクロ':'모노크롬' },
+            { v:'10001', l:lang==='ja'?'ナチュラル':'내추럴', g:['#e8f5e9','#a5d6a7'] }, { v:'10002', l:lang==='ja'?'美白':'화이트닝', g:['#fce4ec','#f8bbd0'] },
+            { v:'10015', l:lang==='ja'?'レトロ':'레트로', g:['#fff3e0','#ffcc80'] }, { v:'10020', l:lang==='ja'?'シネマ':'시네마', g:['#e8eaf6','#9fa8da'] },
+            { v:'10025', l:lang==='ja'?'ビンテージ':'빈티지', g:['#efebe9','#bcaaa4'] }, { v:'10030', l:lang==='ja'?'暖色':'따뜻한 톤', g:['#fff9c4','#ffcc80'] },
+            { v:'10050', l:lang==='ja'?'モノクロ':'모노크롬', g:['#eceff1','#90a4ae'] },
           ]},
         { action:'hairstyle', icon:'💇', label: lang==='ja'?'ヘアスタイル':lang==='en'?'Hairstyle':'헤어스타일',
           options: [
-            { v:'BobCut', l:lang==='ja'?'ボブ':'밥컷' }, { v:'LongStraight', l:lang==='ja'?'ロングストレート':'롱 스트레이트' },
-            { v:'Ponytail', l:lang==='ja'?'ポニーテール':'포니테일' }, { v:'PixieCut', l:lang==='ja'?'ピクシー':'픽시컷' },
-            { v:'TwoBlockHaircut', l:lang==='ja'?'ツーブロック':'투블럭' }, { v:'Afro', l:lang==='ja'?'アフロ':'아프로' },
+            { v:'BobCut', l:lang==='ja'?'ボブ':'밥컷', g:['#efebe9','#bcaaa4'] }, { v:'LongStraight', l:lang==='ja'?'ロング':'롱', g:['#fce4ec','#f48fb1'] },
+            { v:'Ponytail', l:lang==='ja'?'ポニーテール':'포니테일', g:['#e3f2fd','#90caf9'] }, { v:'PixieCut', l:lang==='ja'?'ピクシー':'픽시컷', g:['#f3e5f5','#ce93d8'] },
+            { v:'TwoBlockHaircut', l:lang==='ja'?'ツーブロック':'투블럭', g:['#e8eaf6','#7986cb'] }, { v:'Afro', l:lang==='ja'?'アフロ':'아프로', g:['#fff3e0','#ffab91'] },
           ]},
     ];
 
@@ -1475,9 +1478,13 @@ function _psShowRetouchMenu() {
     categories.forEach(cat => {
         html += `<div class="ps-rt-cat">
             <div class="ps-rt-cat-title">${cat.icon} ${cat.label}</div>
-            <div class="ps-rt-opts">`;
+            <div class="ps-rt-grid">`;
         cat.options.forEach(opt => {
-            html += `<button class="ps-rt-opt" data-action="${cat.action}" data-value="${opt.v}">${opt.l}</button>`;
+            const g = opt.g || ['#e2e8f0','#cbd5e1'];
+            html += `<button class="ps-rt-card" data-action="${cat.action}" data-value="${opt.v}" data-label="${opt.l}">
+                <div class="ps-rt-thumb" style="background:linear-gradient(135deg,${g[0]},${g[1]})"></div>
+                <span>${opt.l}</span>
+            </button>`;
         });
         html += `</div></div>`;
     });
@@ -1486,13 +1493,17 @@ function _psShowRetouchMenu() {
     const btnRow = document.getElementById('psRetouchBtn')?.closest('.ps-tool-section');
     if (btnRow) btnRow.insertAdjacentHTML('afterend', html);
 
-    document.getElementById('psRetouchPanel')?.querySelectorAll('.ps-rt-opt').forEach(b => {
+    document.getElementById('psRetouchPanel')?.querySelectorAll('.ps-rt-card').forEach(b => {
         b.addEventListener('click', () => _psRunRetouch(b.dataset.action, b.dataset.value, b));
     });
 }
 
 async function _psRunRetouch(action, value, btnEl) {
-    if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳'; }
+    if (btnEl) { btnEl.disabled = true; const origLabel = btnEl.dataset.label || btnEl.textContent; btnEl.textContent = '⏳'; }
+
+    // 되돌리기용 히스토리 저장
+    _psHistory.push(_psRawDataUrl);
+    if (_psHistory.length > 20) _psHistory.shift();
 
     try {
         const _sb = window.sb;
@@ -1529,7 +1540,8 @@ async function _psRunRetouch(action, value, btnEl) {
         } else throw new Error(data?.error || 'No result');
     } catch(e) {
         console.error('Retouch error:', e);
-        if (btnEl) { btnEl.textContent = '❌'; setTimeout(() => { btnEl.textContent = btnEl.dataset.value; btnEl.disabled = false; }, 2000); }
+        _psHistory.pop(); // 실패 시 히스토리 롤백
+        if (btnEl) { btnEl.textContent = '❌'; setTimeout(() => { btnEl.textContent = btnEl.dataset.label || btnEl.dataset.value; btnEl.disabled = false; }, 2000); }
     }
 }
 
@@ -1583,11 +1595,27 @@ function _psPostProcessAlpha(imageBlob) {
     });
 }
 
+async function _psUndo() {
+    if (_psHistory.length === 0) {
+        // 히스토리 없으면 원본으로 복원
+        _psRawDataUrl = _psOrigDataUrl;
+    } else {
+        _psRawDataUrl = _psHistory.pop();
+    }
+    await _psApplyText();
+    const preview = document.getElementById('psPreviewImg');
+    if (preview) preview.src = _psImgDataUrl;
+}
+
 async function _psRemoveBg() {
     const btn = document.getElementById('psRemoveBg');
     if (!btn || btn.disabled) return;
     btn.disabled = true;
     btn.textContent = '⏳ ' + ps('removingBg');
+
+    // 되돌리기용 히스토리 저장
+    _psHistory.push(_psRawDataUrl);
+    if (_psHistory.length > 20) _psHistory.shift();
 
     try {
         // 이미지를 base64로 변환
