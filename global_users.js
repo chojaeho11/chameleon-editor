@@ -40,13 +40,30 @@ window.loadMembers = async (isNewSearch = false) => {
     else if (sortVal === 'spend_desc') query = query.order('total_spend', { ascending: false });
     else query = query.order('created_at', { ascending: false });
 
+    // 먼저 count만 가져와서 페이지 범위 보정
+    const countQuery = sb.from('profiles').select('id', { count: 'exact', head: true });
+    if (roleVal !== 'all') countQuery.eq('role', roleVal);
+    if (keyword) {
+        const isUUID2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keyword);
+        if (isUUID2) countQuery.eq('id', keyword);
+        else countQuery.or(`email.ilike.%${keyword}%,username.ilike.%${keyword}%`);
+    }
+    const { count: totalCount } = await countQuery;
+    const maxPage = Math.ceil((totalCount || 0) / memberItemsPerPage) || 1;
+    if (currentMemberPage > maxPage) currentMemberPage = maxPage;
+
     const from = (currentMemberPage - 1) * memberItemsPerPage;
-    const to = from + memberItemsPerPage - 1;
+    const to = Math.min(from + memberItemsPerPage - 1, (totalCount || 1) - 1);
     const { data: members, count, error } = await query.range(from, to);
 
     if (error) {
         console.error('회원 목록 로드 오류:', error);
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#ef4444;">로딩 오류: ' + error.message + '<br><button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="loadMembers()">다시 시도</button></td></tr>';
+        // 416 에러 시 첫 페이지로 리셋 후 재시도
+        if (currentMemberPage > 1) {
+            currentMemberPage = 1;
+            return window.loadMembers();
+        }
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#ef4444;">로딩 오류: ' + (error.message || '알 수 없는 오류') + '<br><button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="loadMembers()">다시 시도</button></td></tr>';
         return;
     }
 
