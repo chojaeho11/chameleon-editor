@@ -688,6 +688,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var quickMenuWrap = ss.querySelector('.quick-menu-wrapper');
     if (hotDeal && quickMenuWrap) { ss.insertBefore(hotDeal, quickMenuWrap); }
     if (bizDeal && quickMenuWrap) { ss.insertBefore(bizDeal, quickMenuWrap); }
+    var printService = document.getElementById('printServiceSection');
+    if (printService && quickMenuWrap) { ss.insertBefore(printService, quickMenuWrap); }
     var popular = document.getElementById('popularSection');
     if (popular && quickMenuWrap) { ss.insertBefore(popular, quickMenuWrap); }
 
@@ -1144,6 +1146,18 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('bizDealGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
         <div id="bizDealGrid" class="hotdeal-grid"></div>
         <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('bizDealGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<div id="printServiceSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f0fdf4; padding: 20px; border-radius: 12px;">
+    <div class="hotdeal-header">
+        <h2 style="color: #059669;">🖨️ <span data-i18n="home_print_title">인쇄서비스</span> <span class="badge-hot" style="background:#059669;">Print</span></h2>
+        <p data-i18n="home_print_desc">전단지, 포스터, 명함 등 다양한 인쇄 서비스</p>
+    </div>
+    <div class="hotdeal-scroll-wrap">
+        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('printServiceGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="printServiceGrid" class="hotdeal-grid"></div>
+        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('printServiceGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 
@@ -5799,6 +5813,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (typeof loadSpecialProducts === 'function') {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 12);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 12);
+            loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 12);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 12);
         }
         // 배송비 계산기 항상 표시
@@ -5976,8 +5991,8 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                 : 'Option';
             
             // 뱃지 색상
-            const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : '#4f46e5';
-            const badgeText = flagColumn === 'is_hot_deal' ? 'HOT' : 'BIZ';
+            const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : flagColumn === 'is_print_service' ? '#059669' : flagColumn === 'is_popular' ? '#dc2626' : '#4f46e5';
+            const badgeText = flagColumn === 'is_hot_deal' ? 'HOT' : flagColumn === 'is_print_service' ? 'PRINT' : flagColumn === 'is_popular' ? 'BEST' : 'BIZ';
 
             // HTML 생성 (이제 name과 formattedPrice 변수만 넣으면 끝)
             card.innerHTML = `
@@ -9276,6 +9291,7 @@ if (w >= 20 && h >= 20) {
         if (typeof loadSpecialProducts === 'function') {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 12);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 12);
+            loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 12);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 12);
         }
         // 배송비 계산기 항상 표시
