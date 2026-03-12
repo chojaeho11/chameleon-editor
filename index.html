@@ -9108,6 +9108,7 @@ if (w >= 20 && h >= 20) {
             const addonList = typeof product.addons === 'string' ? product.addons.split(',') : (product.addons || []);
             const colorAddons = addonList.filter(a => a.trim().startsWith('co_'));
             if (colorAddons.length > 0) {
+                window._tshirtMockupUrl = product.mockup_url || '';
                 (async () => {
                     try {
                         const { data: colors } = await sb.from('admin_addons')
@@ -9123,18 +9124,33 @@ if (w >= 20 && h >= 20) {
             }
         }
 
+        // 목업에 색상 필터 적용
+        window._applyMockupColor = function(hexColor) {
+            const mockupObj = canvas.getObjects().find(o => o.isMockup);
+            if (!mockupObj) return;
+            mockupObj.filters = [];
+            if (hexColor && hexColor !== '#ffffff') {
+                mockupObj.filters.push(new fabric.Image.filters.BlendColor({
+                    color: hexColor, mode: 'multiply', alpha: 0.85
+                }));
+            }
+            mockupObj.applyFilters();
+            canvas.renderAll();
+        };
+
         function _showTshirtColorPanel(colors) {
-            // 기존 패널 제거
             const old = document.getElementById('tshirtColorPanel');
             if (old) old.remove();
 
+            const TSHIRT_SVG = `<svg viewBox="0 0 32 32" width="100%" height="100%"><path d="M8 4L4 8L8 12V28H24V12L28 8L24 4H20C20 6.2 18.2 8 16 8C13.8 8 12 6.2 12 4H8Z" fill="currentColor" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/></svg>`;
+
             const panel = document.createElement('div');
             panel.id = 'tshirtColorPanel';
-            panel.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); border-radius:16px; padding:10px 16px; box-shadow:0 4px 24px rgba(0,0,0,0.15); display:flex; align-items:center; gap:8px; border:1px solid #e2e8f0;';
+            panel.style.cssText = 'position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(255,255,255,0.97); backdrop-filter:blur(12px); border-radius:14px; padding:8px 14px; box-shadow:0 4px 20px rgba(0,0,0,0.12); display:flex; align-items:center; gap:6px; border:1px solid #e2e8f0;';
 
             const label = document.createElement('span');
             label.textContent = '👕';
-            label.style.cssText = 'font-size:20px; flex-shrink:0;';
+            label.style.cssText = 'font-size:18px; flex-shrink:0; margin-right:2px;';
             panel.appendChild(label);
 
             const HEX_MAP = {
@@ -9146,19 +9162,21 @@ if (w >= 20 && h >= 20) {
             colors.forEach((c, i) => {
                 const btn = document.createElement('button');
                 const hex = HEX_MAP[c.code] || '#cccccc';
-                btn.style.cssText = `width:32px; height:32px; border-radius:50%; border:2.5px solid ${i === 0 ? '#6366f1' : '#e2e8f0'}; background:${hex}; cursor:pointer; transition:all 0.2s; flex-shrink:0; position:relative;`;
-                if (hex === '#ffffff') btn.style.border = i === 0 ? '2.5px solid #6366f1' : '2.5px solid #d1d5db';
+                const isWhite = hex === '#ffffff';
+                const isActive = i === 0;
+                btn.style.cssText = `width:34px; height:34px; border-radius:8px; border:2.5px solid ${isActive ? '#6366f1' : 'transparent'}; background:transparent; cursor:pointer; transition:all 0.2s; flex-shrink:0; padding:2px; color:${hex};`;
+                if (isWhite) btn.style.cssText += `filter:drop-shadow(0 0 1px rgba(0,0,0,0.3));`;
+                btn.innerHTML = TSHIRT_SVG;
                 btn.title = c.name_kr || c.name || c.code;
                 btn.dataset.code = c.code;
-                btn.dataset.imgUrl = c.img_url || '';
+                btn.dataset.hex = hex;
 
                 btn.onmouseenter = () => { if (!btn.classList.contains('active')) btn.style.transform = 'scale(1.15)'; };
                 btn.onmouseleave = () => { btn.style.transform = 'scale(1)'; };
 
                 btn.onclick = () => {
-                    // 선택 상태 업데이트
                     panel.querySelectorAll('button').forEach(b => {
-                        b.style.borderColor = HEX_MAP[b.dataset.code] === '#ffffff' ? '#d1d5db' : '#e2e8f0';
+                        b.style.borderColor = 'transparent';
                         b.style.transform = 'scale(1)';
                         b.classList.remove('active');
                     });
@@ -9166,13 +9184,10 @@ if (w >= 20 && h >= 20) {
                     btn.classList.add('active');
                     btn.style.transform = 'scale(1.1)';
 
-                    // 목업 교체
-                    if (c.img_url) {
-                        window._loadMockupImage(c.img_url);
-                    }
-                    // 선택된 색상 저장
+                    // 원본 목업에 색상 필터 적용
+                    if (window._applyMockupColor) window._applyMockupColor(hex);
                     window._selectedTshirtColor = c.code;
-                    console.log('👕 티셔츠 색상:', c.name, c.code);
+                    console.log('👕 티셔츠 색상:', c.name, hex);
                 };
 
                 panel.appendChild(btn);
