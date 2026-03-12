@@ -5983,7 +5983,8 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
 
             const card = document.createElement('div');
             card.className = 'hotdeal-card';
-            const imgSrc = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
+            const rawImg = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
+            const imgSrc = window.getTinyThumb ? window.getTinyThumb(rawImg, 400) : rawImg;
             const sizeText = (p.width_mm && p.height_mm)
                 ? (window._isUSsite && window._isUSsite()
                     ? `${(p.width_mm/25.4).toFixed(1)} x ${(p.height_mm/25.4).toFixed(1)} in`
@@ -10625,10 +10626,11 @@ window.loadHomeHcGrid = function(){
     const thumbMap = window.globalCatThumbMap || {};
     let html = '';
     hcSubs.forEach(sc => {
-        const img = sc.thumb_url || thumbMap[sc.code] || '';
+        const rawThumb = sc.thumb_url || thumbMap[sc.code] || '';
+        const img = window.getTinyThumb ? window.getTinyThumb(rawThumb, 300) : rawThumb;
         const name = sc.name || sc.code;
         html += `<div class="hc-home-card" onclick="document.getElementById('vipOrderModal').style.display='flex';">`;
-        if(img) html += `<img src="${img}" alt="${name}" onerror="this.style.display='none'">`;
+        if(img) html += `<img src="${img}" alt="${name}" loading="lazy" onerror="this.style.display='none'">`;
         else html += `<div style="width:100%;aspect-ratio:1;background:rgba(255,255,255,0.15);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:28px;"><i class="fa-solid fa-box"></i></div>`;
         html += `<div class="hc-label">${name}</div></div>`;
     });
