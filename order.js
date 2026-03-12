@@ -1950,10 +1950,11 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
 function updateSummary(prodTotal, addonTotal, total) {
     const elMinNotice = document.getElementById("minOrderNotice");
 
-    // ★ 최소 주문금액 안내
+    // ★ 최소 주문금액 안내 (천원단위 주문 상품은 제외)
     const _totalForMin = prodTotal + addonTotal;
     const _minKRW = getMinOrderKRW();
-    if (_totalForMin < _minKRW && _totalForMin > 0 && elMinNotice) {
+    const _isUnitOrderSummary = cartData.every(item => item.product === '21355677' || item.product === '21355677_copy');
+    if (!_isUnitOrderSummary && _totalForMin < _minKRW && _totalForMin > 0 && elMinNotice) {
         elMinNotice.style.display = 'block';
         elMinNotice.style.background = '#fff7ed';
         elMinNotice.style.borderColor = '#f97316';
