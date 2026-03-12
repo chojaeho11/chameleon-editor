@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js";
-import { showLoading } from "./global_common.js";
+import { sb } from "./global_config.js?v=168";
+import { showLoading } from "./global_common.js?v=168";
 
 // [전역 변수]
 let currentTplPage = 1;

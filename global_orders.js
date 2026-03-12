@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js";
-import { showLoading } from "./global_common.js";
+import { sb } from "./global_config.js?v=168";
+import { showLoading } from "./global_common.js?v=168";
 
 // [추천인] 무통장입금 확인 시 추천인 적립
 async function creditReferralBonus(orderId) {

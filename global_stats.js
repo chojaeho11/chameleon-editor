@@ -1,4 +1,4 @@
-import { sb } from "./global_config.js";
+import { sb } from "./global_config.js?v=168";
 
 // [매출 통계 로드] - 검색 버튼 클릭 시 실행
 window.loadStatsData = async () => {

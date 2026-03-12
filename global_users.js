@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js";
-import { showLoading } from "./global_common.js";
+import { sb } from "./global_config.js?v=168";
+import { showLoading } from "./global_common.js?v=168";
 
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
