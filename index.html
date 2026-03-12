@@ -9059,11 +9059,17 @@ if (w >= 20 && h >= 20) {
         // 허니콤 박스: 마법사 없이 빈 화면 시작 (사용자가 수동으로 마법사 클릭)
 
         // 목업 이미지 로드 (잠금 배경 레이어)
-        window._loadMockupImage = function(mockupUrl) {
+        window._loadMockupImage = function(mockupUrl, isTshirt) {
             if (!mockupUrl) return;
             // 기존 목업 제거
             const oldMockups = canvas.getObjects().filter(o => o.isMockup);
             oldMockups.forEach(o => canvas.remove(o));
+
+            // 티셔츠: 보드 배경을 연한 회색으로 (티셔츠 형태 강조)
+            if (isTshirt) {
+                const board = canvas.getObjects().find(o => o.isBoard);
+                if (board) { board.set('fill', '#f0f0f0'); canvas.renderAll(); }
+            }
 
             fabric.Image.fromURL(mockupUrl, (img) => {
                 if (!img) return;
@@ -9088,7 +9094,7 @@ if (w >= 20 && h >= 20) {
                     lockMovementY: true,
                     isMockup: true,
                     excludeFromExport: true,
-                    opacity: 0.5
+                    opacity: isTshirt ? 1.0 : 0.5
                 });
                 const boardIdx = board ? canvas.getObjects().indexOf(board) : -1;
                 canvas.insertAt(img, boardIdx + 1);
@@ -9096,17 +9102,12 @@ if (w >= 20 && h >= 20) {
             }, { crossOrigin: 'anonymous' });
         };
 
-        if (product && product.mockup_url) {
-            setTimeout(() => {
-                window._loadMockupImage(product.mockup_url);
-                console.log('✅ 목업 이미지 로드 완료');
-            }, 800);
-        }
-
         // ★ 티셔츠 색상 선택 패널 (color addon 감지)
+        let _hasTshirtColors = false;
         if (product && product.addons) {
             const addonList = typeof product.addons === 'string' ? product.addons.split(',') : (product.addons || []);
             const colorAddons = addonList.filter(a => a.trim().startsWith('co_'));
+            _hasTshirtColors = colorAddons.length > 0;
             if (colorAddons.length > 0) {
                 window._tshirtMockupUrl = product.mockup_url || '';
                 (async () => {
@@ -9124,6 +9125,13 @@ if (w >= 20 && h >= 20) {
             }
         }
 
+        if (product && product.mockup_url) {
+            setTimeout(() => {
+                window._loadMockupImage(product.mockup_url, _hasTshirtColors);
+                console.log('✅ 목업 이미지 로드 완료');
+            }, 800);
+        }
+
         // 목업에 색상 필터 적용
         window._applyMockupColor = function(hexColor) {
             const mockupObj = canvas.getObjects().find(o => o.isMockup);
@@ -9131,7 +9139,7 @@ if (w >= 20 && h >= 20) {
             mockupObj.filters = [];
             if (hexColor && hexColor !== '#ffffff') {
                 mockupObj.filters.push(new fabric.Image.filters.BlendColor({
-                    color: hexColor, mode: 'multiply', alpha: 0.85
+                    color: hexColor, mode: 'multiply', alpha: 1.0
                 }));
             }
             mockupObj.applyFilters();
