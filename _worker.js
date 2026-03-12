@@ -275,7 +275,9 @@ function generateProductHtml(product, cc) {
     const domains = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.cafe3355.com' };
     const domain = domains[cc];
     const name = getProductName(product, cc);
-    const desc = cc === 'JP' ? (product.description_jp || '') : cc === 'US' ? (product.description_us || '') : (product.description || '');
+    const rawDesc = cc === 'JP' ? (product.description_jp || '') : cc === 'US' ? (product.description_us || '') : (product.description || '');
+    const desc = rawDesc.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    const shortDesc = desc.length > 150 ? desc.substring(0, 150) + '...' : desc;
     const price = cc === 'JP' ? (product.price_jp || product.price || 0) : cc === 'US' ? (product.price_us || product.price || 0) : (product.price || 0);
     const currency = cc === 'JP' ? 'JPY' : cc === 'US' ? 'USD' : 'KRW';
 
@@ -286,9 +288,12 @@ function generateProductHtml(product, cc) {
 
     return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escHtml(name)} - ${escHtml(siteName)}</title>
-<meta name="description" content="${escHtml(desc || name)}">
+<meta name="description" content="${escHtml(shortDesc || name)}">
 <meta name="robots" content="index, follow">
+<meta property="og:type" content="product">
+<meta property="og:site_name" content="${escHtml(siteName)}">
 <meta property="og:title" content="${escHtml(name)}">
+<meta property="og:description" content="${escHtml(shortDesc || name)}">
 <meta property="og:image" content="${escHtml(product.img_url || '')}">
 <meta property="og:url" content="${domain}/?product=${product.code}">
 <link rel="canonical" href="${domain}/?product=${product.code}">

@@ -284,12 +284,15 @@ export async function initOrderSystem() {
     if(btnGoCheckout) {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
-            // ★ 최소 주문금액 체크
-            const _totalKRW = calculateCartTotalKRW();
-            const _minKRW = getMinOrderKRW();
-            if (_totalKRW < _minKRW) {
-                showToast('⚠️ ' + buildMinOrderMsg(), "warn");
-                return;
+            // ★ 최소 주문금액 체크 (천원단위 주문 상품은 제외)
+            const _isUnitOrder = cartData.every(item => item.product === '21355677' || item.product === '21355677_copy');
+            if (!_isUnitOrder) {
+                const _totalKRW = calculateCartTotalKRW();
+                const _minKRW = getMinOrderKRW();
+                if (_totalKRW < _minKRW) {
+                    showToast('⚠️ ' + buildMinOrderMsg(), "warn");
+                    return;
+                }
             }
 
             // 배송 옵션 필수 체크 (묶음배송: 전체 상품 중 1개라도 배송옵션 선택되면 OK)
@@ -2650,11 +2653,14 @@ async function processFinalPayment() {
 
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
-    // ★ 최소 주문금액 체크 (결제 직전 최종 확인)
-    const _cartTotalKRW = calculateCartTotalKRW();
-    if (_cartTotalKRW < getMinOrderKRW()) {
-        showToast('⚠️ ' + buildMinOrderMsg(), "warn");
-        return;
+    // ★ 최소 주문금액 체크 (결제 직전 최종 확인, 천원단위 주문 제외)
+    const _isUnitOrderFinal = cartData.every(item => item.product === '21355677' || item.product === '21355677_copy');
+    if (!_isUnitOrderFinal) {
+        const _cartTotalKRW = calculateCartTotalKRW();
+        if (_cartTotalKRW < getMinOrderKRW()) {
+            showToast('⚠️ ' + buildMinOrderMsg(), "warn");
+            return;
+        }
     }
 
     // 소량주문 배송비 적용
