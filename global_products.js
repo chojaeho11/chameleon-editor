@@ -1,6 +1,9 @@
 import { sb } from "./global_config.js";
 import { showLoading, formatCurrency } from "./global_common.js";
 
+// i18n helper (admin UI — falls back to Korean for admin context)
+const _t = (k, kr) => (window.t ? window.t(k, kr) : kr);
+
 // [전역 변수]
 let editingTopCatId = null;
 let editingCategoryId = null;
@@ -89,7 +92,7 @@ window.editTopCategoryLoad = async (id) => {
     if(document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = data.description_us || '';
 
     const btn = document.getElementById('btnTopCatSave');
-    btn.innerText = "수정하기";
+    btn.innerText = _t('btn_edit','Edit');
     btn.classList.remove('btn-primary');
     btn.classList.add('btn-vip');
 };
@@ -97,7 +100,7 @@ window.editTopCategoryLoad = async (id) => {
 window.addTopCategoryDB = async () => {
     const code = document.getElementById('newTopCatCode').value;
     const name = document.getElementById('newTopCatName').value;
-    if(!code || !name) { showToast("코드와 한국명은 필수입니다.", "warn"); return; }
+    if(!code || !name) { showToast(_t("gp_code_name_required","Code and name are required."), "warn"); return; }
 
     const isExcluded = document.getElementById('newTopCatExcluded') ? document.getElementById('newTopCatExcluded').checked : false;
 
@@ -125,9 +128,9 @@ window.addTopCategoryDB = async () => {
         error = res.error;
     }
 
-    if(error) showToast("오류: " + error.message, "error");
+    if(error) showToast(_t('err_prefix','Error: ') + error.message, "error");
     else {
-        showToast(editingTopCatId ? "수정되었습니다." : "저장되었습니다.", "success");
+        showToast(editingTopCatId ? _t('msg_updated','Updated.') : _t('msg_saved','Saved.'), "success");
         resetTopCategoryForm();
     }
 };
@@ -249,7 +252,7 @@ window.editCategoryLoad = async (id) => {
     if(document.getElementById('newCatDescES')) document.getElementById('newCatDescES').value = data.description_es || '';
 
     const btn = document.getElementById('btnCatSave');
-    btn.innerText = "수정하기";
+    btn.innerText = _t('btn_edit','Edit');
     btn.classList.remove('btn-primary');
     btn.classList.add('btn-vip');
 };
@@ -257,7 +260,7 @@ window.editCategoryLoad = async (id) => {
 window.addCategoryDB = async () => {
     const code = document.getElementById('newCatCode').value;
     const name = document.getElementById('newCatName').value;
-    if(!code || !name) { showToast("필수 항목 누락", "warn"); return; }
+    if(!code || !name) { showToast(_t('err_required_fields','Required fields missing'), "warn"); return; }
 
     const payload = {
         code, name,
@@ -288,9 +291,9 @@ window.addCategoryDB = async () => {
         error = res.error;
     }
 
-    if(error) showToast("오류: " + error.message, "error");
+    if(error) showToast(_t('err_prefix','Error: ') + error.message, "error");
     else {
-        showToast(editingCategoryId ? "수정되었습니다." : "저장되었습니다.", "success");
+        showToast(editingCategoryId ? _t('msg_updated','Updated.') : _t('msg_saved','Saved.'), "success");
         resetCategoryForm();
     }
 };
@@ -415,13 +418,13 @@ window.previewAddonImage = async (input) => {
         const imgInput = document.getElementById('newAddonImgUrl');
         if (imgInput) {
             imgInput.value = data.publicUrl;
-            showToast("이미지 업로드 성공!", "success");
+            showToast(_t('msg_image_uploaded','Image uploaded!'), "success");
         }
     } catch(e) { 
         console.error("이미지 업로드 오류:", e);
-        showToast("업로드 실패: " + e.message, "error");
-    } finally { 
-        showLoading(false); 
+        showToast(_t('err_upload_failed','Upload failed: ') + e.message, "error");
+    } finally {
+        showLoading(false);
     }
 };
 
@@ -581,14 +584,14 @@ window.deleteAddonDB = async (id) => {
     try {
         const { error } = await sb.from('admin_addons').delete().eq('id', id);
         if (error) throw error;
-        showToast("삭제되었습니다.", "success");
+        showToast(_t('msg_deleted','Deleted.'), "success");
         loadAddonCategories();
-    } catch (err) { showToast("삭제 실패: " + err.message, "error"); } finally { showLoading(false); }
+    } catch (err) { showToast(_t('err_delete_failed','Delete failed: ') + err.message, "error"); } finally { showLoading(false); }
 };
 
 window.addAddonDB = async () => {
     const code = document.getElementById('newAddonCode').value;
-    if(!code) { showToast("코드를 입력하세요.", "warn"); return; }
+    if(!code) { showToast(_t('err_code_required','Please enter a code.'), "warn"); return; }
 
     const isSwatchEl = document.getElementById('newAddonIsSwatch');
     const isSwatch = isSwatchEl ? isSwatchEl.checked : false;
@@ -620,10 +623,10 @@ window.addAddonDB = async () => {
         else error = (await sb.from('admin_addons').insert([payload])).error;
 
         if(error) throw error;
-        showToast("저장되었습니다.", "success");
+        showToast(_t('msg_saved','Saved.'), "success");
         resetAddonForm();
         loadAddonCategories();
-    } catch (err) { showToast("저장 실패: " + err.message, "error"); } finally { showLoading(false); }
+    } catch (err) { showToast(_t('err_save_failed','Save failed: ') + err.message, "error"); } finally { showLoading(false); }
 };
 
 window.resetAddonForm = () => {
@@ -658,7 +661,7 @@ window.openAddonCatManager = async () => {
 
 window.autoTranslateAddonCatModal = async () => {
     const krName = document.getElementById('modalCatNameKR').value;
-    if(!krName) { showToast("한국어 명칭을 먼저 입력해주세요.", "warn"); return; }
+    if(!krName) { showToast(_t('err_kr_name_required','Please enter a Korean name first.'), "warn"); return; }
 
     const btn = document.querySelector('button[onclick="autoTranslateAddonCatModal()"]');
     const oldHtml = btn.innerHTML;
@@ -676,7 +679,7 @@ window.autoTranslateAddonCatModal = async () => {
         document.getElementById('modalCatNameDE').value = await googleTranslate(en, 'de');
         document.getElementById('modalCatNameFR').value = await googleTranslate(en, 'fr');
     } catch(e) {
-        showToast("번역 오류: " + e.message, "error");
+        showToast(_t('err_translation_failed','Translation error: ') + e.message, "error");
     } finally {
         btn.innerHTML = oldHtml;
         btn.disabled = false;
@@ -689,7 +692,7 @@ window.saveAddonCategoryFromModal = async () => {
     const nameJP = document.getElementById('modalCatNameJP').value.trim();
     const nameUS = document.getElementById('modalCatNameUS').value.trim();
 
-    if(!code || !nameKR) { showToast("코드와 한국어 명칭은 필수입니다.", "warn"); return; }
+    if(!code || !nameKR) { showToast(_t('err_code_kr_required','Code and Korean name are required.'), "warn"); return; }
 
     showLoading(true);
     try {
@@ -715,11 +718,11 @@ window.saveAddonCategoryFromModal = async () => {
             error = inErr;
         }
         if(error) throw error;
-        showToast("카테고리가 저장되었습니다.", "success");
+        showToast(_t('msg_category_saved','Category saved.'), "success");
         document.getElementById('addonCatModal').style.display = 'none';
         loadAddonCategories();
     } catch(e) {
-        showToast("저장 실패: " + e.message, "error");
+        showToast(_t('err_save_failed','Save failed: ') + e.message, "error");
     } finally {
         showLoading(false);
     }
@@ -728,9 +731,9 @@ window.saveAddonCategoryFromModal = async () => {
 window.editCurrentAddonCategory = async () => {
     const select = document.getElementById('newAddonCatCode');
     const selectedCode = select.value;
-    if (!selectedCode) { showToast("수정할 카테고리를 선택해주세요.", "warn"); return; }
+    if (!selectedCode) { showToast(_t('err_select_category','Please select a category to edit.'), "warn"); return; }
     const catData = window.cachedAddonCategories.find(c => c.code === selectedCode);
-    if (!catData) { showToast("정보를 찾을 수 없습니다.", "warn"); return; }
+    if (!catData) { showToast(_t('err_not_found','Information not found.'), "warn"); return; }
     document.getElementById('modalCatCode').value = catData.code;
     document.getElementById('modalCatCode').disabled = true;
     document.getElementById('modalCatNameKR').value = catData.name_kr || catData.name || "";
@@ -917,7 +920,7 @@ window.previewMockupFile = async function(input) {
         document.getElementById('btnMockupClear').style.display = 'inline-flex';
     } catch(e) {
         console.error('목업 업로드 실패:', e);
-        showToast('목업 업로드 실패: ' + e.message, "error");
+        showToast(_t('err_mockup_upload_failed','Mockup upload failed: ') + e.message, "error");
     }
 };
 window.clearMockup = function() {
@@ -936,7 +939,7 @@ window.addProductDB = async () => {
     // 1. 입력값 가져오기
     let imgUrl = document.getElementById('newProdImg').value; // let으로 선언 (수정 가능하게)
 
-    if(!cat || !code) { showToast("카테고리와 코드는 필수입니다.", "warn"); return; }
+    if(!cat || !code) { showToast(_t('err_cat_code_required','Category and code are required.'), "warn"); return; }
 
     // 2. [핵심] 이미지가 Base64(긴 문자열)인지 확인 후 자동 업로드 처리
     if (imgUrl && imgUrl.startsWith('data:image')) {
@@ -973,7 +976,7 @@ window.addProductDB = async () => {
             console.error("이미지 변환 실패:", err);
             btn.innerText = oldText;
             btn.disabled = false;
-            showToast("이미지 자동 업로드에 실패했습니다. 용량이 너무 크거나 네트워크 문제일 수 있습니다.\n(직접 파일 선택 버튼으로 업로드해주세요)", "error"); return;
+            showToast(_t('err_auto_upload_failed','Auto upload failed. File may be too large or network issue.\n(Please use the file select button.)'), "error"); return;
         }
         
         btn.innerText = oldText;
@@ -1043,9 +1046,9 @@ window.addProductDB = async () => {
         error = res.error;
     }
 
-    if(error) showToast("실패: " + error.message, "error");
+    if(error) showToast(_t('err_failed','Failed: ') + error.message, "error");
     else {
-        showToast("저장되었습니다.", "success");
+        showToast(_t('msg_saved','Saved.'), "success");
         resetProductForm();
         if(document.getElementById('filterProdCat').value === cat) {
             filterProductList();
@@ -1262,9 +1265,9 @@ window.previewProductImage = async (input) => {
         if (error) {
             console.error("Supabase Storage Error:", error);
             if (error.message.includes("Bucket not found") || error.statusCode === '404') {
-                showToast("오류: Supabase에 'products' 스토리지 버킷이 없습니다.", "error");
+                showToast(_t('err_prefix','Error: ') + "Supabase에 'products' 스토리지 버킷이 없습니다.", "error");
             } else {
-                showToast("업로드 실패: " + error.message, "error");
+                showToast(_t('err_upload_failed','Upload failed: ') + error.message, "error");
             }
             return;
         }
@@ -1274,7 +1277,7 @@ window.previewProductImage = async (input) => {
         document.getElementById('newProdImg').value = data.publicUrl;
 
     } catch(e) { 
-        showToast("업로드 처리 중 오류 발생", "error");
+        showToast(_t('err_upload_processing','Upload processing error'), "error");
     } 
     finally { 
         btn.innerText = oldText; 
@@ -1283,25 +1286,25 @@ window.previewProductImage = async (input) => {
 };
 window.bulkApplyAddonsToCategory = async () => {
     const cat = document.getElementById('newProdCategory').value;
-    if(!cat) { showToast("카테고리 선택 필요", "warn"); return; }
+    if(!cat) { showToast(_t('err_category_required','Category selection required.'), "warn"); return; }
     const addons = Array.from(document.querySelectorAll('input[name="prodAddon"]:checked')).map(cb => cb.value).join(',');
     if(!confirm(`[${cat}] 카테고리 전체 상품에 현재 옵션을 적용합니까?`)) return;
 
     const { error } = await sb.from('admin_products').update({ addons: addons }).eq('category', cat);
-    if(error) showToast("실패: " + error.message, "error"); else showToast("적용 완료", "success");
+    if(error) showToast(_t('err_failed','Failed: ') + error.message, "error"); else showToast(_t('msg_applied','Applied.'), "success");
 };
 
 // [소재] 카테고리 전체에 현재 소재 적용
 window.applyMaterialToCategory = async () => {
     const cat = document.getElementById('newProdCategory').value;
     const material = document.getElementById('newProdMaterial').value;
-    if (!cat) { showToast("카테고리를 먼저 선택하세요", "warn"); return; }
-    if (!material) { showToast("소재를 먼저 선택하세요", "warn"); return; }
+    if (!cat) { showToast(_t('err_select_cat_first','Please select a category first.'), "warn"); return; }
+    if (!material) { showToast(_t('err_select_material_first','Please select a material first.'), "warn"); return; }
     const label = document.getElementById('newProdMaterial').selectedOptions[0].textContent;
     if (!confirm(`[${cat}] 카테고리 전체 상품의 소재를 "${label}"(으)로 변경합니까?`)) return;
     const { error } = await sb.from('admin_products').update({ material }).eq('category', cat);
-    if (error) showToast("실패: " + error.message, "error");
-    else showToast(`${cat} 카테고리 전체 → ${label} 적용 완료`, "success");
+    if (error) showToast(_t('err_failed','Failed: ') + error.message, "error");
+    else showToast(`${cat}: "${label}" ` + _t('msg_applied','applied.'), "success");
 };
 
 // [소재] 사용자 정의 소재 추가
@@ -1313,7 +1316,7 @@ window.addCustomMaterial = () => {
     // 중복 체크
     for (const opt of select.options) {
         if (opt.value === value || opt.textContent === name.trim()) {
-            showToast('이미 존재하는 소재입니다.', 'warn');
+            showToast(_t('err_material_exists','Material already exists.'), 'warn');
             select.value = opt.value;
             return;
         }
@@ -1324,7 +1327,7 @@ window.addCustomMaterial = () => {
     // "미지정" 다음에 삽입하지 않고 맨 끝에 추가
     select.appendChild(opt);
     select.value = value;
-    showToast(`"${name.trim()}" 소재가 추가되었습니다.`, 'success');
+    showToast(`"${name.trim()}" ` + _t('msg_material_added','material added.'), 'success');
 };
 
 // [소재] DB에 저장된 커스텀 소재를 드롭다운에 자동 추가
@@ -1382,7 +1385,7 @@ window.autoTranslateInputs = async () => {
     const krName = document.getElementById('newProdName').value;
     const krPrice = document.getElementById('newProdPrice').value;
 
-    if (!krName) { showToast("한국어 상품명을 입력해주세요.", "warn"); return; }
+    if (!krName) { showToast(_t('err_kr_product_name_required','Please enter a Korean product name.'), "warn"); return; }
 
     if (document.getElementById('newProdNameJP').value || document.getElementById('newProdNameUS').value) {
         if (!confirm("이미 입력된 번역 데이터가 있습니다. 기존 내용을 유지하시겠습니까? (취소 시 새로 번역)")) return;
@@ -1413,10 +1416,10 @@ window.autoTranslateInputs = async () => {
         if (document.getElementById('newProdNameDE')) document.getElementById('newProdNameDE').value = await googleTranslate(enName, 'de');
         if (document.getElementById('newProdNameFR')) document.getElementById('newProdNameFR').value = await googleTranslate(enName, 'fr');
 
-        showToast("상품명 및 가격 번역 완료!", "success");
+        showToast(_t('msg_product_translated','Product name and price translated!'), "success");
 
     } catch (e) {
-        showToast("번역 실패: " + e.message, "error");
+        showToast(_t('err_translation_failed','Translation failed: ') + e.message, "error");
     } finally {
         btn.innerHTML = oldText;
         btn.disabled = false;
@@ -1426,7 +1429,7 @@ window.autoTranslateInputs = async () => {
 window.autoTranslateTopCategoryInputs = async () => {
     const krName = document.getElementById('newTopCatName').value;
     const krDesc = document.getElementById('newTopCatDesc') ? document.getElementById('newTopCatDesc').value : '';
-    if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
+    if (!krName) { showToast(_t('err_kr_name_input_required','Please enter a Korean name.'), "warn"); return; }
     document.getElementById('newTopCatNameJP').value = await googleTranslate(krName, 'ja');
     const enName = await googleTranslate(krName, 'en');
     document.getElementById('newTopCatNameUS').value = enName;
@@ -1437,13 +1440,13 @@ window.autoTranslateTopCategoryInputs = async () => {
         if(document.getElementById('newTopCatDescJP')) document.getElementById('newTopCatDescJP').value = await googleTranslate(krDesc, 'ja');
         if(document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = await googleTranslate(krDesc, 'en');
     }
-    showToast("대분류 번역 완료", "success");
+    showToast(_t('msg_top_cat_translated','Top category translated.'), "success");
 };
 
 window.autoTranslateCategoryInputs = async () => {
     const krName = document.getElementById('newCatName').value;
     const krDesc = document.getElementById('newCatDesc') ? document.getElementById('newCatDesc').value : '';
-    if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
+    if (!krName) { showToast(_t('err_kr_name_input_required','Please enter a Korean name.'), "warn"); return; }
     document.getElementById('newCatNameJP').value = await googleTranslate(krName, 'ja');
     const enName = await googleTranslate(krName, 'en');
     document.getElementById('newCatNameUS').value = enName;
@@ -1458,7 +1461,7 @@ window.autoTranslateCategoryInputs = async () => {
         if(document.getElementById('newCatDescAR')) document.getElementById('newCatDescAR').value = await googleTranslate(enDesc, 'ar');
         if(document.getElementById('newCatDescES')) document.getElementById('newCatDescES').value = await googleTranslate(enDesc, 'es');
     }
-    showToast("소분류 번역 완료", "success");
+    showToast(_t('msg_sub_cat_translated','Sub category translated.'), "success");
 };
 
 window.autoFillAddonPrices = (krwVal) => {
@@ -1475,7 +1478,7 @@ window.autoFillAddonPrices = (krwVal) => {
 window.autoTranslateAddonInputs = async () => {
     const krName = document.getElementById('nmKR').value;
     const krPrice = document.getElementById('prKR').value;
-    if (!krName) { showToast("한국어 명칭을 입력해주세요.", "warn"); return; }
+    if (!krName) { showToast(_t('err_kr_name_input_required','Please enter a Korean name.'), "warn"); return; }
     const rateJPY = 0.1, rateUSD = 0.001, rateCNY = 0.05, rateSAR = 0.001, rateEUR = 0.001;
     if (krPrice) {
         document.getElementById('prJP').value = Math.round(krPrice * rateJPY);
@@ -1492,7 +1495,7 @@ window.autoTranslateAddonInputs = async () => {
     document.getElementById('nmES').value = await googleTranslate(enName, 'es');
     if (document.getElementById('nmDE')) document.getElementById('nmDE').value = await googleTranslate(enName, 'de');
     if (document.getElementById('nmFR')) document.getElementById('nmFR').value = await googleTranslate(enName, 'fr');
-    showToast("옵션 번역 완료", "success");
+    showToast(_t('msg_option_translated','Option translated.'), "success");
 };
 
 window.bulkTranslateAll = async () => {
@@ -1612,9 +1615,9 @@ window.bulkTranslateAll = async () => {
         }
 
         const total = pCount + aCount + tcCount + scCount + acCount;
-        showToast(`일괄 번역 완료!\n\n상품 ${pCount}개 | 옵션 ${aCount}개 | 대분류 ${tcCount}개 | 소분류 ${scCount}개 | 옵션카테고리 ${acCount}개\n총 ${total}개 업데이트`, "success");
+        showToast(_t('msg_bulk_translate_done','Bulk translation done!') + `\nP:${pCount} | A:${aCount} | TC:${tcCount} | SC:${scCount} | AC:${acCount} | Total:${total}`, "success");
     } catch (e) {
-        showToast("일괄 번역 중 오류: " + e.message, "error");
+        showToast(_t('err_bulk_translate_failed','Bulk translation error: ') + e.message, "error");
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -1632,7 +1635,7 @@ window.cloneProductMode = () => {
     document.getElementById('btnProductSave').classList.add('btn-primary');
     document.getElementById('btnCloneProduct').style.display = 'none';
     document.getElementById('btnCancelEdit').style.display = 'none';
-    showToast("내용이 복제되었습니다.\n새로운 [상품코드]를 입력하고 저장 버튼을 눌러주세요.", "info");
+    showToast(_t('msg_cloned','Content cloned. Enter a new [product code] and click Save.'), "info");
 };
 
 window.updateAllCurrency = async () => {
@@ -1645,7 +1648,7 @@ window.updateAllCurrency = async () => {
         const { data: products, error } = await sb.from('admin_products').select('id, price');
         if (error) throw error;
         if (!products || products.length === 0) {
-            showToast("상품이 없습니다.", "warn");
+            showToast(_t('err_no_products','No products found.'), "warn");
             return;
         }
         let successCount = 0;
@@ -1661,11 +1664,11 @@ window.updateAllCurrency = async () => {
                 .eq('id', p.id);
             if (!updateErr) successCount++;
         }
-        showToast(`총 ${successCount}개 상품의 환율 가격이 업데이트되었습니다.`, "success");
+        showToast(_t('msg_price_updated','FX prices updated: ') + successCount, "success");
         if (window.filterProductList) window.filterProductList();
     } catch (e) {
         console.error(e);
-        showToast("업데이트 중 오류 발생: " + e.message, "error");
+        showToast(_t('err_update_failed','Update error: ') + e.message, "error");
     } finally {
         btn.innerText = oldText;
         btn.disabled = false;
@@ -1876,7 +1879,7 @@ window.initPopupQuill = () => {
                                 
                             } catch (err) {
                                 console.error("자동 업로드 실패:", err);
-                                showToast("이미지 업로드 중 오류가 발생했습니다. 파일 크기나 네트워크를 확인해주세요.", "error");
+                                showToast(_t('err_img_upload_error','Image upload error. Check file size or network.'), "error");
                             }
                         };
                     }
@@ -1890,7 +1893,7 @@ window.initPopupQuill = () => {
     popupQuill.clipboard.addMatcher('img', (node, delta) => {
         let ops = delta.ops.map(op => {
             if (op.insert && op.insert.image && op.insert.image.startsWith('data:')) {
-                showToast("이미지는 복사+붙여넣기 대신 '이미지 버튼'을 눌러서 업로드해주세요. (웹사이트 속도 유지 목적)", "warn");
+                showToast(_t('err_paste_image','Please use the image button instead of copy+paste to upload images.'), "warn");
                 return { insert: '' }; // 이미지 삽입 무효화
             }
             return op;
@@ -1909,7 +1912,7 @@ window.initPopupQuill = () => {
 // ==========================================
 window.openCommonInfoModal = async () => {
     const dbClient = window.sb || window._supabase;
-    if (!dbClient) { showToast("DB 연결 실패", "error"); return; }
+    if (!dbClient) { showToast(_t('err_db_connection','DB connection failed'), "error"); return; }
 
     document.getElementById('commonInfoModal').style.display = 'flex';
     
@@ -1987,12 +1990,12 @@ window.saveCommonInfo = async () => {
     };
 
     const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
-    if (error) showToast("저장 실패: " + error.message, "error");
-    else { showToast("저장 및 백업 완료!", "success"); loadCommonInfoContent(catCode); }
+    if (error) showToast(_t('err_save_failed','Save failed: ') + error.message, "error");
+    else { showToast(_t('msg_saved_and_backed_up','Saved and backed up!'), "success"); loadCommonInfoContent(catCode); }
 };
 
 window.restoreCommonInfo = async (data) => {
-    if(!confirm("가장 최근 백업본으로 되돌리시겠습니까?")) return;
+    if(!confirm(_t('confirm_restore_backup','Restore to most recent backup?'))) return;
     document.getElementById('commonHtmlKR').value = data.content_backup || '';
     document.getElementById('commonHtmlJP').value = data.content_backup_jp || '';
     document.getElementById('commonHtmlUS').value = data.content_backup_us || '';
@@ -2001,7 +2004,7 @@ window.restoreCommonInfo = async (data) => {
     document.getElementById('commonHtmlES').value = data.content_backup_es || '';
     document.getElementById('commonHtmlDE').value = data.content_backup_de || '';
     document.getElementById('commonHtmlFR').value = data.content_backup_fr || '';
-    showToast("백업본을 불러왔습니다. [저장] 버튼을 눌러 확정하세요.", "info");
+    showToast(_t('msg_backup_restored','Backup loaded. Click [Save] to confirm.'), "info");
 };
 
 window.openDetailPageEditor = () => {
@@ -3414,7 +3417,7 @@ window.wizApplyToExisting = async () => {
 
     const { error } = await sb.from('admin_products').update(updates).eq('id', prodId);
     if (error) {
-        showToast('저장 실패: ' + error.message, 'error');
+        showToast(_t('err_save_failed','Save failed: ') + error.message, 'error');
     } else {
         showToast('기존 상품 상세페이지 업데이트 완료! 🎉', 'success');
     }
@@ -3920,7 +3923,7 @@ window.wizRunDirectPipeline = async () => {
         }
     } catch(e) {
         console.error('다이렉트 파이프라인 오류:', e);
-        showToast('오류: ' + e.message, 'error');
+        showToast(_t('err_prefix','Error: ') + e.message, 'error');
     }
 
     pipeResult.style.display = 'block';

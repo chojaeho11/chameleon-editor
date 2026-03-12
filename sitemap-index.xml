@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- cafe2626.com (Korea - KR) -->
+  <sitemap>
+    <loc>https://www.cafe2626.com/sitemap.xml</loc>
+    <lastmod>2026-03-12</lastmod>
+  </sitemap>
+
+  <!-- cafe0101.com (Japan - JP) -->
+  <sitemap>
+    <loc>https://www.cafe0101.com/sitemap.xml</loc>
+    <lastmod>2026-03-12</lastmod>
+  </sitemap>
+
+  <!-- cafe3355.com (US/Global - EN) -->
+  <sitemap>
+    <loc>https://www.cafe3355.com/sitemap.xml</loc>
+    <lastmod>2026-03-12</lastmod>
+  </sitemap>
+
+  <!-- chameleon.design (Global English Gateway) -->
+  <sitemap>
+    <loc>https://chameleon.design/sitemap.xml</loc>
+    <lastmod>2026-03-12</lastmod>
+  </sitemap>
+
+</sitemapindex>
