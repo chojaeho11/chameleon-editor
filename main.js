@@ -69,13 +69,9 @@ window.addEventListener("DOMContentLoaded", async () => {
             };
         }
 
-        // 1-3. 기여자 시스템 및 파트너스 초기화 (로그인 상태일 때만, 병렬)
+        // 1-3. 파트너스 초기화 (로그인 상태일 때만)
         if (currentUser) {
-            await Promise.all([
-                checkPartnerStatus().catch(e => console.warn('⚠️ Partner check failed:', e)),
-                initContributorSystem().catch(e => console.warn('⚠️ Contributor init failed:', e)),
-                window.updateMainPageUserInfo ? window.updateMainPageUserInfo().catch(e => console.warn('⚠️ UserInfo update failed:', e)) : Promise.resolve()
-            ]);
+            await checkPartnerStatus().catch(e => console.warn('⚠️ Partner check failed:', e));
         }
 
         // 2. ★ 에디터 초기화 (Fabric.js 필요) — 라이브러리 로드 후 실행
@@ -868,359 +864,13 @@ window.submitOrderReview = async function() {
 };
 
 // ============================================================
-// [기여자 시스템] 통합 관리 스크립트 (Contributor System)
-// ============================================================
-
-// 전역 변수
-let currentUploadType = 'png'; 
-
-const REWARD_RATES = {
-    'png': 100,
-    'svg': 100,
-    'logo': 100,
-    'template': 100,
-    'usage_share': 0.1
-};
-
-const TIER_MULTIPLIERS = {
-    'regular': 1,
-    'excellent': 2,
-    'hero': 4
-};
-
-let currentUserTier = 'regular';
-let currentMultiplier = 1;
-
-// 1. 초기화
-window.initContributorSystem = async function() {
-    // 비로그인 상태에서도 보상금 표시는 환산
-    updateContributorRewardDisplay();
-
-    if (!window.currentUser) return;
-    if (!sb) { console.warn("[initContributorSystem] sb가 아직 초기화되지 않음"); return; }
-
-    const { data: profile } = await sb.from('profiles')
-        .select('contributor_tier, mileage, deposit')
-        .eq('id', window.currentUser.id)
-        .single();
-
-    if (profile) {
-        currentUserTier = profile.contributor_tier || 'regular';
-        currentMultiplier = TIER_MULTIPLIERS[currentUserTier] || 1;
-        updateContributorUI(profile.deposit || 0);
-    }
-};
-
-function updateContributorUI(balance) {
-    const badge = document.getElementById('myTierBadge');
-    const balEl = document.getElementById('contributorBalance');
-    const bonusEls = document.querySelectorAll('.tier-bonus');
-
-    const _cc = (window.SITE_CONFIG || {}).COUNTRY || '';
-    const _cl = window.CURRENT_LANG || (_cc === 'JP' ? 'ja' : _cc === 'US' ? 'en' : 'ko');
-    const _tn = {
-        ko: { regular: '일반 기여자', excellent: '🏆 우수 기여자 (x2)', hero: '👑 영웅 기여자 (x4)' },
-        ja: { regular: '一般貢献者', excellent: '🏆 優秀貢献者 (x2)', hero: '👑 英雄貢献者 (x4)' },
-        en: { regular: 'Contributor', excellent: '🏆 Top Contributor (x2)', hero: '👑 Hero Contributor (x4)' },
-        zh: { regular: '普通贡献者', excellent: '🏆 优秀贡献者 (x2)', hero: '👑 英雄贡献者 (x4)' },
-        ar: { regular: 'مساهم', excellent: '🏆 مساهم ممتاز (x2)', hero: '👑 مساهم بطل (x4)' },
-        es: { regular: 'Contribuidor', excellent: '🏆 Top Contribuidor (x2)', hero: '👑 Héroe Contribuidor (x4)' },
-        de: { regular: 'Mitwirkender', excellent: '🏆 Top-Mitwirkender (x2)', hero: '👑 Held-Mitwirkender (x4)' },
-        fr: { regular: 'Contributeur', excellent: '🏆 Top Contributeur (x2)', hero: '👑 Héros Contributeur (x4)' },
-    };
-    const _tl = _tn[_cl] || _tn.ko;
-    let tierName = _tl.regular;
-    let badgeClass = 'contributor-badge';
-
-    if (currentUserTier === 'excellent') {
-        tierName = _tl.excellent;
-        badgeClass += ' badge-excellent';
-    } else if (currentUserTier === 'hero') {
-        tierName = _tl.hero;
-        badgeClass += ' badge-hero';
-    }
-
-    if(badge) {
-        badge.className = badgeClass;
-        badge.innerText = tierName;
-    }
-
-    if(balEl) balEl.innerText = fmtMoney(balance);
-
-    if (currentMultiplier > 1) {
-        bonusEls.forEach(el => el.innerText = ` (x${currentMultiplier})`);
-    }
-
-    // 로그인 상태에서도 보상금 표시 갱신
-    updateContributorRewardDisplay();
-}
-
-// 기여자 보상금 표시 환산 (100 KRW → 현지 통화) - 로그인 불필요
-function updateContributorRewardDisplay() {
-    const cfg = window.SITE_CONFIG || {};
-    const cRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
-    const baseKRW = 100;
-    const baseReward = baseKRW * cRate;
-    const rewardDisplay = cfg.COUNTRY === 'JP' ? Math.floor(baseReward) : cfg.COUNTRY === 'US' ? baseReward.toFixed(1) : baseReward;
-    document.querySelectorAll('.c-reward').forEach(el => {
-        const bonusSpan = el.querySelector('.tier-bonus');
-        el.textContent = rewardDisplay + ' ';
-        if(bonusSpan) el.appendChild(bonusSpan);
-    });
-
-    // 로고 업로드 placeholder 보상금 환산
-    const logoInput = document.getElementById('logoKeywordInput');
-    if(logoInput) {
-        const unit = cfg.COUNTRY === 'JP' ? '¥' : cfg.COUNTRY === 'US' ? '$' : '';
-        const suffix = cfg.COUNTRY === 'KR' ? '원' : '';
-        logoInput.placeholder = `PNG로고 등록시 ${unit}${rewardDisplay}${suffix} 즉시 지급 MY page에서 확인`;
-    }
-}
-
-// 2. 태그 자동 완성 (파일명 기반)
-window.autoFillTags = function(input) {
-    if (input.files && input.files.length > 0) {
-        const file = input.files[0];
-        const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-        const tagInput = document.getElementById('cUploadTags');
-        if(tagInput && !tagInput.value) { 
-            tagInput.value = name;
-        }
-    }
-};
-
-// 3. 업로드 모달 열기
-window.handleContributorUpload = function(type) {
-    if (!window.currentUser) {
-        showToast(window.t('msg_login_required'), "warn");
-        document.getElementById('loginModal').style.display = 'flex';
-        return;
-    }
-
-    currentUploadType = type;
-    const modal = document.getElementById('contributorUploadModal');
-    const title = document.getElementById('cUploadTitle');
-    const svgArea = document.getElementById('cUploadSvgArea');
-    const simpleArea = document.getElementById('cUploadSimpleArea');
-    
-    document.getElementById('cUploadTags').value = '';
-    document.getElementById('cFileThumb').value = '';
-    document.getElementById('cFileSvg').value = '';
-    document.getElementById('cFileSimple').value = '';
-
-    if (type === 'svg') {
-        title.innerText = '📤 ' + window.t('contrib_upload_svg', 'SVG Vector Upload');
-        svgArea.style.display = 'flex';
-        simpleArea.style.display = 'none';
-    } else if (type === 'logo') {
-        title.innerText = '📤 ' + window.t('contrib_upload_logo', 'Logo Upload');
-        svgArea.style.display = 'none';
-        simpleArea.style.display = 'block';
-    } else {
-        title.innerText = '📤 ' + window.t('contrib_upload_png', 'PNG Object Upload');
-        svgArea.style.display = 'none';
-        simpleArea.style.display = 'block';
-    }
-
-    modal.style.display = 'flex';
-};
-
-// 4. 업로드 실행
-window.submitContributorUpload = async function() {
-    // 1. 입력값 가져오기
-    let tagsInput = document.getElementById('cUploadTags').value.trim();
-    const loading = document.getElementById('loading');
-    
-    if (!tagsInput) { showToast(window.t('msg_input_search_keyword'), "warn"); return; }
-    
-    if(loading) loading.style.display = 'flex';
-
-    // ★ [추가됨] 자동 번역 로직 (한글 -> 영어, 일본어)
-    try {
-        if(loading.querySelector('p')) loading.querySelector('p').innerText = "키워드 번역 중...";
-
-        // ★ [수정] 한/영/일 3개 국어 모두 번역 요청 (입력 언어가 무엇이든 상관없음)
-        const [koText, enText, jpText] = await Promise.all([
-            googleTranslate(tagsInput, 'ko'), // 한국어 변환 추가
-            googleTranslate(tagsInput, 'en'),
-            googleTranslate(tagsInput, 'ja')
-        ]);
-
-        // 콤마(,)로 분리하여 배열로 만듦
-        const originalTags = tagsInput.split(',').map(t => t.trim());
-        const koTags = koText ? koText.split(',').map(t => t.trim()) : [];
-        const enTags = enText ? enText.split(',').map(t => t.trim()) : [];
-        const jpTags = jpText ? jpText.split(',').map(t => t.trim()) : [];
-
-        // 원본 + 한/영/일 합치기 (Set이 알아서 중복 제거함)
-        const combinedSet = new Set([
-            ...originalTags, 
-            ...koTags, 
-            ...enTags, 
-            ...jpTags
-        ]);
-        
-        // 최종 태그 문자열 (예: "사과, Apple, Ringo")
-        // tags 변수는 const가 아닌 let으로 선언하거나, 아래 로직에서 바로 사용
-        tagsInput = Array.from(combinedSet).join(', ');
-        
-        console.log("최종 저장 태그:", tagsInput);
-
-    } catch (e) {
-        console.warn("번역 실패, 원본만 저장합니다.", e);
-    }
-    
-    // 변수명 통일 (기존 로직과 연결)
-    const tags = tagsInput; 
-
-    try {
-        let uploadCount = 0;
-        let totalReward = 0;
-        // ... (이하 기존 코드 그대로 유지)
-
-        if (currentUploadType === 'svg') {
-            const thumbFile = document.getElementById('cFileThumb').files[0];
-            const svgFile = document.getElementById('cFileSvg').files[0];
-
-            if (!thumbFile || !svgFile) {
-                if(loading) loading.style.display = 'none';
-                showToast(window.t('msg_select_thumb_svg'), "warn"); return;
-            }
-
-            await processSingleUpload(thumbFile, svgFile, tags, 'vector'); 
-            uploadCount = 1;
-
-        } else {
-            const files = document.getElementById('cFileSimple').files;
-            if (files.length === 0) {
-                if(loading) loading.style.display = 'none';
-                showToast(window.t('msg_select_file'), "warn"); return;
-            }
-
-            const category = currentUploadType === 'logo' ? 'logo' : 'graphic';
-
-            for (const file of files) {
-                // 1. 파일 해시 계산
-                const fileHash = await calculateFileHash(file);
-
-                // 2. DB 중복 체크 (내 보관함에 같은 파일이 있는지)
-                const { data: duplicate } = await sb.from('library')
-                    .select('id')
-                    .eq('file_hash', fileHash)
-                    .eq('user_id', window.currentUser.id) // 내 파일 중에서만 체크 (전체에서 체크하려면 이 줄 삭제)
-                    .maybeSingle();
-
-                if (duplicate) {
-                    showToast(window.t('msg_file_already_uploaded').replace('{name}', file.name), "warn");
-                    continue; // 업로드 건너뛰기
-                }
-
-                // 3. 중복이 아니면 업로드 진행 (해시값 전달)
-                await processSingleUpload(file, null, tags, category, fileHash);
-                uploadCount++;
-            }
-        }
-
-        // [수정] 보상금 계산 로직 (패널티 적용)
-        let baseAmount = REWARD_RATES[currentUploadType] || 100;
-        
-        // ★ 패널티 등급 확인 (currentUserTier 변수 사용)
-        if (currentUserTier === 'penalty') {
-            baseAmount = 50;       // 기본금을 50원으로 강제 변경
-            currentMultiplier = 1; // 배율도 1배로 고정 (혹시 모를 보너스 방지)
-        }
-
-        const finalAmount = (baseAmount * currentMultiplier) * uploadCount;
-        
-        await addReward(finalAmount, `${currentUploadType.toUpperCase()} 업로드 보상 (${uploadCount}개)`);
-
-        showToast(window.t('msg_upload_complete_points').replace('{amount}', fmtMoney(finalAmount)), "success");
-        document.getElementById('contributorUploadModal').style.display = 'none';
-        
-        window.initContributorSystem();
-        if(window.searchTemplates) window.searchTemplates('');
-
-    } catch (e) {
-        console.error(e);
-        showToast(window.t('msg_upload_failed') + e.message, "error");
-    } finally {
-        if(loading) loading.style.display = 'none';
-    }
-};
-
-// 5. 단일 파일 업로드 (리사이징 제거 & 1MB 용량 제한 적용)
-async function processSingleUpload(file1, file2, userTags, category, fileHash = null) {
-    // [1] 용량 체크 (1MB = 1024 * 1024 bytes)
-    const MAX_SIZE = 1 * 1024 * 1024;
-    if (file1.size > MAX_SIZE) {
-        showToast(window.t('msg_image_too_large').replace('{size}', (file1.size/1024/1024).toFixed(1)), "warn");
-        throw new Error("File size limit exceeded"); // 실행 중단
-    }
-
-    const timestamp = Date.now();
-    let thumbUrl = '';
-    let dataUrl = '';
-
-    // [2] 이미지 파일 업로드 (원본 그대로)
-    const ext1 = file1.name.split('.').pop();
-    // 한글 파일명 오류 방지를 위해 영문 랜덤명 생성
-    const safeName1 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext1}`;
-    
-    const path1 = `user_assets/${currentUploadType}/${window.currentUser.id}_${safeName1}`;
-    const { error: err1 } = await sb.storage.from('design').upload(path1, file1);
-    
-    if (err1) throw err1;
-    
-    const { data: public1 } = sb.storage.from('design').getPublicUrl(path1);
-    thumbUrl = public1.publicUrl;
-
-    // [3] SVG 파일이 있으면 추가 업로드 (SVG 모드인 경우)
-    if (file2 && currentUploadType === 'svg') {
-        const ext2 = file2.name.split('.').pop();
-        const safeName2 = `${timestamp}_${Math.random().toString(36).substring(2, 10)}.${ext2}`;
-        const path2 = `user_assets/svg/${window.currentUser.id}_${safeName2}`;
-        
-        const { error: err2 } = await sb.storage.from('design').upload(path2, file2);
-        if (err2) throw err2;
-        
-        const { data: public2 } = sb.storage.from('design').getPublicUrl(path2);
-        dataUrl = public2.publicUrl;
-    } else {
-        // PNG/로고 모드면 썸네일 주소 = 원본 주소
-        dataUrl = thumbUrl;
-    }
-
-    // [4] DB 저장
-    const { error: dbErr } = await sb.from('library').insert({
-        category: category,
-        tags: userTags, 
-        thumb_url: thumbUrl,
-        data_url: dataUrl,
-        user_id: window.currentUser.id,
-        created_at: new Date(),
-        status: 'approved',
-        contributor_type: currentUploadType,
-        file_hash: fileHash // [추가] 해시값 저장
-    });
-
-    if (dbErr) throw dbErr;
-}
-
-window.openTemplateCreator = function() {
-    if (!window.currentUser) { showToast(window.t('msg_login_required'), "warn"); return; }
-    if(confirm(window.t('confirm_go_editor'))) window.startEditorDirect('custom');
-};
-
-// ============================================================
 // [작품 마켓플레이스] 고객 작품 판매 시스템
 // ============================================================
 
-// 회배 기준 가격 (KRW) — 1회배 = A3 (297×420mm) = 124,740 mm²
-const ART_HOEBAE_BASE = 297 * 420; // 124,740 mm²
+const ART_HOEBAE_BASE = 297 * 420;
 const ART_PRICES_KRW = { paper: 10000, fabric: 20000, canvas: 40000 };
-const ART_REVENUE_RATE = 0.10; // 판매금의 10% 수익
+const ART_REVENUE_RATE = 0.10;
 
-// 통화 변환 표시
 function _artFmtPrice(krw) {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
@@ -1233,8 +883,6 @@ function _artFmtPrice(krw) {
     return v.toLocaleString() + '원';
 }
 
-
-// 작품 업로드 모달 열기
 window.openArtworkUpload = function() {
     if (!window.currentUser) {
         showToast(window.t?.('msg_login_required', '로그인이 필요합니다') || '로그인이 필요합니다', 'warn');
@@ -1247,7 +895,6 @@ window.openArtworkUpload = function() {
     document.getElementById('artworkUploadModal').style.display = 'flex';
 };
 
-// 이미지 미리보기
 window._artworkPreview = function(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
@@ -1264,7 +911,6 @@ window._artworkPreview = function(input) {
     reader.readAsDataURL(file);
 };
 
-// 작품 업로드 실행 → 3종 상품 자동 등록
 window.submitArtworkUpload = async function() {
     if (!window.currentUser) { showToast(window.t?.('msg_login_required') || '로그인 필요', 'warn'); return; }
 
@@ -1277,7 +923,6 @@ window.submitArtworkUpload = async function() {
     if (loading) { loading.style.display = 'flex'; const p = loading.querySelector('p'); if (p) p.innerText = '작품 등록 중...'; }
 
     try {
-        // 1. 키워드 번역 (한/영/일)
         let tags = title;
         let titleEN = title, titleJP = title;
         try {
@@ -1290,7 +935,6 @@ window.submitArtworkUpload = async function() {
             tags = Array.from(combined).filter(Boolean).join(', ');
         } catch(e) { console.warn('번역 실패, 원본만 사용', e); }
 
-        // 2. 이미지 업로드
         const ts = Date.now();
         const ext = file.name.split('.').pop();
         const safeName = `${ts}_${Math.random().toString(36).substring(2,10)}.${ext}`;
@@ -1300,7 +944,6 @@ window.submitArtworkUpload = async function() {
         const { data: pubData } = sb.storage.from('design').getPublicUrl(path);
         const imgUrl = pubData.publicUrl;
 
-        // 3. 패브릭 옵션 코드 조회 (패브릭미싱 + 패브릭고리)
         let fabricAddons = '';
         try {
             const { data: addonRows } = await sb.from('admin_addons').select('code').in('category_code', ['2342434', '23442423']);
@@ -1309,7 +952,6 @@ window.submitArtworkUpload = async function() {
             }
         } catch(e) { console.warn('패브릭 옵션 조회 실패', e); }
 
-        // 4. 3종 상품 DB 등록 (admin_products)
         const ARTWORK_CATS = ['ua_paper', 'ua_fabric', 'ua_canvas'];
         const catNames = {
             ua_paper:  { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター' },
@@ -1352,10 +994,8 @@ window.submitArtworkUpload = async function() {
     }
 };
 
-// 카테고리 자동 생성 (최초 1회) — 관리자 콘솔에서 실행
 window._setupArtworkCategories = async function() {
     if (!sb) return;
-    // 대분류
     const { data: existing } = await sb.from('admin_top_categories').select('code').eq('code', 'user_artwork');
     if (!existing || existing.length === 0) {
         await sb.from('admin_top_categories').insert({
@@ -1364,7 +1004,6 @@ window._setupArtworkCategories = async function() {
             icon: 'fa-solid fa-paintbrush', sort_order: 50
         });
     }
-    // 소분류 3개
     const subs = [
         { code: 'ua_paper', name: '종이 포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', top_category_code: 'user_artwork', icon: '🖼️', sort_order: 1 },
         { code: 'ua_fabric', name: '패브릭 포스터', name_us: 'Fabric Poster', name_jp: 'ファブリックポスター', top_category_code: 'user_artwork', icon: '🎨', sort_order: 2 },
@@ -1374,7 +1013,7 @@ window._setupArtworkCategories = async function() {
         const { data: ex } = await sb.from('admin_categories').select('code').eq('code', s.code);
         if (!ex || ex.length === 0) await sb.from('admin_categories').insert(s);
     }
-    console.log('✅ 작품 마켓플레이스 카테고리 설정 완료');
+    console.log('작품 마켓플레이스 카테고리 설정 완료');
 };
 
 // [수정] 디자인 판매 등록 (관리자 전용)
@@ -1410,42 +1049,6 @@ window.openSellModal = async function() {
     }
 };
 
-async function addReward(amount, description) {
-    try {
-        const { data: pf } = await sb.from('profiles').select('deposit').eq('id', window.currentUser.id).single();
-        const currentDeposit = pf?.deposit || 0;
-        
-        await sb.from('profiles').update({ 
-            deposit: currentDeposit + amount 
-        }).eq('id', window.currentUser.id);
-
-        await sb.from('wallet_logs').insert({
-            user_id: window.currentUser.id,
-            type: 'contributor_reward',
-            amount: amount,
-            description: description
-        });
-    } catch (e) { console.error("보상 지급 실패:", e); }
-}
-
-window.triggerUsageReward = async function(templateOwnerId, type) {
-    if (!window.currentUser || window.currentUser.id === templateOwnerId) return;
-
-    try {
-        const { data: owner } = await sb.from('profiles').select('contributor_tier, deposit').eq('id', templateOwnerId).single();
-        if (!owner) return;
-
-        const tier = owner.contributor_tier || 'regular';
-        const multiplier = TIER_MULTIPLIERS[tier] || 1;
-        const base = REWARD_RATES[type] || 100;
-        const reward = (base * REWARD_RATES.usage_share) * multiplier;
-
-        if (reward > 0) {
-            await sb.from('profiles').update({ deposit: (owner.deposit || 0) + reward }).eq('id', templateOwnerId);
-            await sb.from('wallet_logs').insert({ user_id: templateOwnerId, type: 'usage_royalty', amount: reward, description: `내 디자인(${type}) 사용됨` });
-        }
-    } catch (e) { console.error("사용료 지급 오류:", e); }
-};
 // ============================================================
 // [VIP 주문] 전용 접수 로직 (다중 파일 + 매니저 + 메모)
 // ============================================================
@@ -1522,52 +1125,6 @@ window.submitVipOrder = async function() {
     }
 };
 
-// [신규] 메인 페이지 유저 정보(등급/수익금) UI 갱신 함수
-window.updateMainPageUserInfo = async function() {
-    if (!sb) { console.warn("[updateMainPageUserInfo] sb가 아직 초기화되지 않음"); return; }
-    // 1. 로그인 정보 확인
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user) return;
-
-    // 2. 프로필 정보 가져오기 (role, deposit 확인)
-    const { data: profile } = await sb.from('profiles')
-        .select('role, deposit, contributor_tier')
-        .eq('id', user.id)
-        .single();
-
-    if (profile) {
-        // (1) 등급 뱃지 표시 ('platinum' -> 'PARTNERS')
-        const badgeEl = document.getElementById('myTierBadge');
-        if (badgeEl) {
-            let role = profile.role || 'customer';
-            
-            if (role === 'platinum') {
-                badgeEl.innerText = 'PARTNERS'; // 파트너스 표시
-                badgeEl.style.backgroundColor = '#e0e7ff';
-                badgeEl.style.color = '#4338ca';
-                badgeEl.style.fontWeight = '800';
-            } else if (role === 'franchise') {
-                badgeEl.innerText = 'PARTNER (가맹)';
-                badgeEl.style.backgroundColor = '#f3e8ff';
-                badgeEl.style.color = '#7e22ce';
-            } else if (role === 'gold') {
-                badgeEl.innerText = 'GOLD';
-                badgeEl.style.backgroundColor = '#fef9c3';
-                badgeEl.style.color = '#ca8a04';
-            } else {
-                // 그 외(일반)는 기여자 등급(Hero/Excellent) 등을 보여주거나 기본값
-                // initContributorSystem에서 처리한 내용을 유지하거나 여기서 덮어씌움
-                if(badgeEl.innerText === 'Loading...') badgeEl.innerText = 'USER';
-            }
-        }
-
-        // (2) 수익금(예치금 deposit) 표시
-        const balanceEl = document.getElementById('contributorBalance');
-        if (balanceEl) {
-            balanceEl.innerText = fmtMoney(profile.deposit || 0);
-        }
-    }
-};
 // [신규] 파일의 고유 해시값(SHA-256) 계산 함수
 async function calculateFileHash(file) {
     const buffer = await file.arrayBuffer();

@@ -693,12 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var popular = document.getElementById('popularSection');
     if (popular && quickMenuWrap) { ss.insertBefore(popular, quickMenuWrap); }
 
-    // 5) 기여자 시스템 → 마켓플레이스 위로 (기여자가 먼저, 작품판매가 아래)
-    var contribSec = ss.querySelector('.contributor-section');
-    var artworkBanner = document.getElementById('artworkMarketBanner');
-    if (contribSec && artworkBanner) { artworkBanner.parentNode.insertBefore(contribSec, artworkBanner); }
-
-    // 6) 구독 섹션 → 리뷰 바로 위로 이동
+    // 5) 구독 섹션 → 리뷰 바로 위로 이동
     var subSec = document.getElementById('subscriptionSection');
     var reviewSec = ss.querySelector('.review-section');
     if (subSec && reviewSec) { reviewSec.parentNode.insertBefore(subSec, reviewSec); }
@@ -1971,59 +1966,7 @@ async function handleSubReturn() {
         <button onclick="document.getElementById('artworkUploadModal').style.display='none'" class="btn-round" style="width:100%; margin-top:8px; background:#f1f5f9; color:#333; border:none;" data-i18n="artwork_close">닫기</button>
     </div>
 </div>
-<!-- 기여자시스템 -->
-<div class="contributor-section">
-    <div class="contributor-header">
-        <div class="contributor-title">
-            <i class="fa-solid fa-gem" style="color:#6366f1;"></i> <span data-i18n="contrib_title">카멜레온 기여자 시스템</span>
-            <span class="contributor-badge" id="myTierBadge">Loading...</span>
-        </div>
-        <div class="contributor-balance-box">
-            <span style="font-size:12px; color:#64748b;" data-i18n="contrib_balance_label">내 누적 수익금</span>
-            <div class="live-money" id="contributorBalance">0</div>
-        </div>
-    </div>
 
-    <div class="contributor-desc" data-i18n="contrib_desc">
-        내가 만든 디자인 소스를 공유하고 현금을 적립받으세요. <br>저품질 이미지를 반복해서 올리면 등급이 하락합니다.등급 상승 2배 4배, 하락 시 절반 비용이 지급됩니다.<br><span style='color:#ef4444; font-weight:bold;'>카테고리 확인!</span> 객체 로고 등 카테고리를 맞추지 않거나 키워드를 3개 이하 등록 시 등록 권한이 삭제됩니다.
-    </div>
-
-    <div class="contributor-grid">
-        <button class="contrib-btn" onclick="window.handleContributorUpload('png')">
-            <div class="c-icon-box bg-blue"><i class="fa-solid fa-image"></i></div>
-            <div class="c-info">
-                <span class="c-name" data-i18n="contrib_btn_png">PNG 객체</span>
-                <span class="c-reward">100 <span class="tier-bonus"></span></span>
-            </div>
-        </button>
-
-        <button class="contrib-btn" onclick="window.handleContributorUpload('svg')">
-            <div class="c-icon-box bg-purple"><i class="fa-solid fa-bezier-curve"></i></div>
-            <div class="c-info">
-                <span class="c-name" data-i18n="contrib_btn_svg">SVG 객체</span>
-                <span class="c-reward">100 <span class="tier-bonus"></span></span>
-            </div>
-        </button>
-
-        <button class="contrib-btn" onclick="window.handleContributorUpload('logo')">
-            <div class="c-icon-box bg-orange"><i class="fa-solid fa-icons"></i></div>
-            <div class="c-info">
-                <span class="c-name" data-i18n="contrib_btn_logo">로고 업로드</span>
-                <span class="c-reward">100 <span class="tier-bonus"></span></span>
-            </div>
-        </button>
-
-        <button class="contrib-btn" onclick="window.openTemplateCreator()">
-            <div class="c-icon-box bg-green"><i class="fa-solid fa-palette"></i></div>
-            <div class="c-info">
-                <span class="c-name" data-i18n="contrib_btn_template">템플릿 만들기</span>
-                <span class="c-reward">100 <span class="tier-bonus"></span></span>
-            </div>
-        </button>
-    </div>
-
-    <input type="file" id="contributorFileInput" style="display:none;" multiple>
-</div>
 <!-- 파트너 콘솔 모달 제거됨 — partner.html로 이동 -->
 
 <div id="myOrderModal" class="modal-bg" onclick="if(event.target===this)this.style.display='none'" style="z-index: 16000; display: none; align-items: center; justify-content: center;">
@@ -8738,7 +8681,7 @@ if (w >= 20 && h >= 20) {
         // ★ [핵심] 데이터가 비어있으면 DB에서 불러오는 안전장치
         if (!window.PRODUCT_DB[key]) {
             console.log("🔄 에디터용 상품 정보 로딩 중...");
-            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, is_custom_size, is_file_upload, is_bulk_order, quantity_options, is_general_product').eq('code', key).single();
+            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, is_custom_size, is_file_upload, is_bulk_order, quantity_options, is_general_product, mockup_url').eq('code', key).single();
             if (error || !prodData) {
                 console.error("상품 로드 실패:", error);
                 showToast(window.t ? window.t('msg_product_not_found', 'Product information not found.') : 'Product information not found.', 'error'); return;
@@ -9961,38 +9904,6 @@ if (w >= 20 && h >= 20) {
 
 <audio id="orderAlertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-<div id="contributorUploadModal" class="modal-bg" style="display: none; z-index: 20000; align-items: center; justify-content: center;">
-    <div class="modal-box" style="width: 500px; max-width: 95%;">
-        <h3 id="cUploadTitle" style="margin-top:0;" data-i18n="contrib_upload_title">📤 업로드</h3>
-
-        <div style="margin-bottom: 15px;">
-            <label class="form-label" style="font-weight:bold; display:block; margin-bottom:5px;" data-i18n="contrib_label_tags">검색 키워드 (태그)</label>
-            <input type="text" id="cUploadTags" class="ai-input-pretty" data-i18n-placeholder="contrib_ph_tags" placeholder="파일을 선택하면 자동 입력됩니다.">
-        </div>
-
-        <div id="cUploadSvgArea" style="display:none; gap:10px; margin-bottom:15px;">
-            <div style="flex:1;">
-                <label class="form-label" style="font-size:12px; font-weight:bold;" data-i18n="contrib_label_thumb">1. 썸네일 (JPG/PNG)</label>
-                <input type="file" id="cFileThumb" class="ai-input-pretty" accept="image/png, image/jpeg" style="padding:5px;" onchange="window.autoFillTags(this)">
-            </div>
-            <div style="flex:1;">
-                <label class="form-label" style="font-size:12px; font-weight:bold;" data-i18n="contrib_label_svg">2. SVG 원본</label>
-                <input type="file" id="cFileSvg" class="ai-input-pretty" accept=".svg" style="padding:5px;">
-            </div>
-        </div>
-
-        <div id="cUploadSimpleArea" style="margin-bottom:15px;">
-            <label class="form-label" style="font-weight:bold; display:block; margin-bottom:5px;" data-i18n="contrib_label_file">파일 선택</label>
-            <input type="file" id="cFileSimple" class="ai-input-pretty" accept="image/png, image/jpeg" multiple style="padding:5px;" onchange="window.autoFillTags(this)">
-            <p style="font-size:11px; color:#666; margin-top:5px;" data-i18n="contrib_file_tip">* 배경이 투명한 PNG 파일을 권장합니다.</p>
-        </div>
-
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="window.submitContributorUpload()" class="btn-round primary" style="flex:1;" data-i18n="contrib_btn_submit">업로드 및 적립받기</button>
-            <button onclick="document.getElementById('contributorUploadModal').style.display='none'" class="btn-round" style="flex:1; background:#f1f5f9; color:#333;" data-i18n="contrib_btn_cancel">취소</button>
-        </div>
-    </div>
-</div>
 <script src="./text-wizard.js"></script>
 
 <!-- ═══ 움짤(GIF) 메이커 모달 ═══ -->
@@ -10984,7 +10895,7 @@ window.loadHomeHcGrid = function(){
         window.selectedTpl = null; // ★ 이 부분이 중요합니다 (갤러리 선택 해제)
         
         // 파일 입력창들도 싹 비우기
-        const inputs = ['contributorFileInput', 'imgUpload', 'logoFileInput', 'vipFileInput'];
+        const inputs = ['imgUpload', 'logoFileInput', 'vipFileInput'];
         inputs.forEach(id => {
             const el = document.getElementById(id);
             if(el) el.value = '';
