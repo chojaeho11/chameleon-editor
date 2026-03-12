@@ -9132,17 +9132,35 @@ if (w >= 20 && h >= 20) {
             }, 800);
         }
 
-        // 목업에 색상 필터 적용
+        // 목업에 색상 오버레이 적용 (multiply 합성)
         window._applyMockupColor = function(hexColor) {
+            // 기존 색상 오버레이 제거
+            const oldOverlay = canvas.getObjects().find(o => o._isMockupColorOverlay);
+            if (oldOverlay) canvas.remove(oldOverlay);
+
+            if (!hexColor || hexColor === '#ffffff') { canvas.renderAll(); return; }
+
             const mockupObj = canvas.getObjects().find(o => o.isMockup);
             if (!mockupObj) return;
-            mockupObj.filters = [];
-            if (hexColor && hexColor !== '#ffffff') {
-                mockupObj.filters.push(new fabric.Image.filters.BlendColor({
-                    color: hexColor, mode: 'multiply', alpha: 1.0
-                }));
-            }
-            mockupObj.applyFilters();
+
+            const overlay = new fabric.Rect({
+                left: mockupObj.left,
+                top: mockupObj.top,
+                width: mockupObj.width * mockupObj.scaleX,
+                height: mockupObj.height * mockupObj.scaleY,
+                originX: mockupObj.originX,
+                originY: mockupObj.originY,
+                fill: hexColor,
+                globalCompositeOperation: 'multiply',
+                selectable: false,
+                evented: false,
+                hasControls: false,
+                hasBorders: false,
+                _isMockupColorOverlay: true,
+                excludeFromExport: true
+            });
+            const mockupIdx = canvas.getObjects().indexOf(mockupObj);
+            canvas.insertAt(overlay, mockupIdx + 1);
             canvas.renderAll();
         };
 
