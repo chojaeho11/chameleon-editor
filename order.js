@@ -1,3 +1,4 @@
+console.log('🔵 order.js v174 loaded');
 import { canvas } from "./canvas-core.js?v=174";
 import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=174";
 import { SITE_CONFIG } from "./site-config.js?v=174";

@@ -704,8 +704,14 @@ ${hreflangTags('/editor')}
             response = await env.ASSETS.fetch(new Request(new URL('/', url.origin), request));
         }
 
-        // Only rewrite HTML responses for social crawler OG tags
+        // JS/CSS: 캐시 방지 (배포 즉시 반영)
         const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('javascript') || contentType.includes('css') || path.endsWith('.js') || path.endsWith('.css')) {
+            const noCacheJs = new Headers(response.headers);
+            noCacheJs.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+            noCacheJs.set('Pragma', 'no-cache');
+            return new Response(response.body, { status: response.status, headers: noCacheJs });
+        }
         if (!contentType.includes('text/html')) return response;
 
         // ★ 모든 HTML 응답에 강력한 캐시 방지 헤더 적용 (인앱 브라우저 캐시 문제 방지)
