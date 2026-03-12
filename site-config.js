@@ -17,6 +17,8 @@ if (country === 'KR') {
         country = 'JP';
     } else if (hostname.includes('cafe3355.com') || hostname.includes('cafe3355')) {
         country = 'US';
+    } else if (hostname.includes('chameleon.design')) {
+        country = 'US'; // chameleon.design = global English site
     }
 }
 

@@ -838,6 +838,103 @@ window.PRODUCT_SEO = {
             keywords: 'cortina personalizada,cortina impresa,cortina fotográfica,cortina de interior,cortina de evento'
         }
     }
+    standee: {
+        image: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1772681692107_1409904-0a2de3f2-b797-472d-bf50-914c6ed0d8a4.png',
+        KR: {
+            title: '등신대 제작 - 인물 실물크기 패널 인쇄 | 카멜레온프린팅',
+            desc: '인물·캐릭터 등신대 맞춤 제작. 팝업스토어·전시·행사 포토존에 최적. 무료 에디터로 직접 디자인, 전국 배송.',
+            keywords: '등신대,등신대제작,실물크기패널,인물패널,캐릭터등신대,포토존,팝업스토어등신대,전시등신대,행사포토존'
+        },
+        JP: {
+            title: '等身大パネル制作 - 等身大ポップアップパネル | カメレオンプリンティング',
+            desc: '人物・キャラクターの等身大パネルをカスタム制作。ポップアップストア・展示・イベントフォトゾーンに最適。無料エディター付き。',
+            keywords: '等身大パネル,等身大制作,等身大ポップ,キャラクターパネル,フォトゾーン,イベントパネル'
+        },
+        US: {
+            title: 'Life-Size Standee - Custom Cardboard Cutouts & Character Panels | Chameleon Printing',
+            desc: 'Custom life-size standees and cardboard cutouts. Perfect for pop-up stores, trade shows, photo zones & events. Free online design editor included.',
+            keywords: 'life size standee,cardboard cutout,life-size cutout,custom standee,character standee,photo zone standee,pop-up store cutout,trade show standee,event standee,custom cardboard cutout'
+        },
+        CN: {
+            title: '等身大立牌制作 - 人物等身大展示牌 | 变色龙印刷',
+            desc: '定制人物、角色等身大展示立牌。适用于快闪店、展览、活动拍照区。附赠免费在线设计编辑器。',
+            keywords: '等身大立牌,等身大制作,人物立牌,角色立牌,拍照区,活动立牌'
+        },
+        AR: {
+            title: 'لوحات بالحجم الطبيعي - قصاصات كرتونية مخصصة | طباعة كاميليون',
+            desc: 'لوحات مخصصة بالحجم الطبيعي وقصاصات كرتونية. مثالية للمتاجر المؤقتة والمعارض ومناطق التصوير. محرر تصميم مجاني.',
+            keywords: 'لوحة بالحجم الطبيعي,قصاصة كرتونية,لوحة شخصية,منطقة تصوير,لوحة حدث'
+        },
+        ES: {
+            title: 'Standee de Tamaño Real - Recortes de Cartón Personalizados | Chameleon Printing',
+            desc: 'Standees a tamaño real y recortes de cartón personalizados. Perfectos para tiendas pop-up, ferias, zonas de fotos y eventos. Editor de diseño gratuito.',
+            keywords: 'standee tamaño real,recorte cartón,standee personalizado,standee personaje,zona de fotos,feria standee'
+        }
+    },
+    placard: {
+        KR: {
+            title: '플래카드 제작 - 현수막·플래카드 인쇄 | 카멜레온프린팅',
+            desc: '맞춤 플래카드·현수막 제작. 행사·개업·축하·홍보용 현수막 소량부터 대량까지. 무료 에디터로 디자인, 전국 배송.',
+            keywords: '플래카드,현수막,플래카드제작,현수막인쇄,행사현수막,개업현수막,축하현수막,홍보현수막,소량현수막'
+        },
+        JP: {
+            title: 'プラカード・横断幕制作 - イベント横断幕印刷 | カメレオンプリンティング',
+            desc: 'カスタムプラカード・横断幕制作。イベント・開業・お祝い・広告用横断幕を少量から大量まで対応。無料エディター付き。',
+            keywords: 'プラカード,横断幕,垂れ幕,イベント横断幕,開業横断幕,お祝い横断幕'
+        },
+        US: {
+            title: 'Custom Placard & Banner Printing - Event Banners | Chameleon Printing',
+            desc: 'Custom placards and banners for events, grand openings, promotions. Small to large quantities, fast turnaround. Free online design editor.',
+            keywords: 'custom placard,custom banner,event banner,grand opening banner,promotional banner,vinyl banner printing,outdoor banner'
+        },
+        CN: {
+            title: '横幅标语制作 - 活动横幅·宣传标语 | 变色龙印刷',
+            desc: '定制横幅标语制作。适用于活动、开业、祝贺、宣传。从小批量到大批量。附赠免费在线设计编辑器。',
+            keywords: '横幅,标语,横幅制作,活动横幅,开业横幅,宣传横幅'
+        },
+        AR: {
+            title: 'لافتات وبانرات مخصصة - طباعة بانرات الفعاليات | طباعة كاميليون',
+            desc: 'لافتات وبانرات مخصصة للفعاليات والافتتاح والترويج. من الكميات الصغيرة إلى الكبيرة. محرر تصميم مجاني.',
+            keywords: 'لافتة مخصصة,بانر فعالية,بانر افتتاح,بانر ترويجي'
+        },
+        ES: {
+            title: 'Pancartas y Banners Personalizados - Banners para Eventos | Chameleon Printing',
+            desc: 'Pancartas y banners personalizados para eventos, inauguraciones y promociones. Pequeñas y grandes cantidades. Editor de diseño gratuito.',
+            keywords: 'pancarta personalizada,banner evento,banner inauguración,banner promocional'
+        }
+    },
+    goods: {
+        KR: {
+            title: '굿즈 제작 - 키링·아크릴·커스텀 굿즈 인쇄 | 카멜레온프린팅',
+            desc: '커스텀 굿즈 전문 제작. 키링·아크릴스탠딩·배지·폰케이스 등 소량부터 제작 가능. 무료 에디터로 디자인, 빠른 배송.',
+            keywords: '굿즈제작,커스텀굿즈,키링,아크릴굿즈,아크릴스탠딩,배지,폰케이스,캐릭터굿즈,팬굿즈,소량굿즈'
+        },
+        JP: {
+            title: 'グッズ製作 - キーリング・アクリル・カスタムグッズ印刷 | カメレオンプリンティング',
+            desc: 'カスタムグッズ専門製作。キーリング・アクリルスタンディング・バッジ・スマホケースなど小ロットから製作可能。無料エディター付き。',
+            keywords: 'グッズ製作,カスタムグッズ,キーリング,アクリルグッズ,アクリルスタンド,バッジ,ファングッズ'
+        },
+        US: {
+            title: 'Custom Goods & Merchandise Printing - Keyrings, Acrylic Standees & More | Chameleon Printing',
+            desc: 'Custom merchandise and goods production. Keyrings, acrylic standees, badges, phone cases and more — no minimum order. Free online design editor.',
+            keywords: 'custom goods,custom merchandise,keyring,keychain,acrylic standee,acrylic goods,custom badge,custom phone case,fan merchandise,character goods,small batch merchandise'
+        },
+        CN: {
+            title: '周边产品制作 - 钥匙扣·亚克力·定制周边 | 变色龙印刷',
+            desc: '定制周边产品专业制作。钥匙扣、亚克力立牌、徽章、手机壳等，小批量可制作。附赠免费在线设计编辑器。',
+            keywords: '周边制作,定制周边,钥匙扣,亚克力周边,亚克力立牌,徽章,粉丝周边'
+        },
+        AR: {
+            title: 'منتجات مخصصة - حلقات مفاتيح وأكريليك وسلع مخصصة | طباعة كاميليون',
+            desc: 'إنتاج متخصص للسلع المخصصة. حلقات مفاتيح وأكريليك وشارات وأغطية هاتف وغيرها. لا حد أدنى للطلب. محرر تصميم مجاني.',
+            keywords: 'سلع مخصصة,حلقة مفاتيح,أكريليك,شارة مخصصة,غطاء هاتف مخصص'
+        },
+        ES: {
+            title: 'Merchandising Personalizado - Llaveros, Acrílico y Más | Chameleon Printing',
+            desc: 'Producción especializada de merchandising personalizado. Llaveros, soportes de acrílico, insignias, fundas para teléfono y más. Sin cantidad mínima. Editor gratuito.',
+            keywords: 'merchandising personalizado,llavero,acrílico,insignia personalizada,funda teléfono,fan merchandising'
+        }
+    }
 };
 
 // 제품 코드 목록 (경로 매칭용)

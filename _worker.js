@@ -155,9 +155,9 @@ const OG_DATA = {
     'chameleon.design': {
         lang: 'en',
         siteName: 'Chameleon Printing',
-        title: 'Chameleon Printing - Free Design Editor & Global Printing',
-        description: 'Design and print online. Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free design editor. Worldwide shipping.',
-        keywords: 'chameleon printing,free design editor,online printing,global printing,honeycomb board,fabric printing',
+        title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
+        description: 'Design and print online. Honeycomb boards, fabric printing, acrylic goods, banners, life-size standees & packaging. Free Canva-like design editor. Worldwide shipping.',
+        keywords: 'chameleon printing,free design editor,online printing,global printing,honeycomb board,fabric printing,pop-up store,trade show display,life-size standee,acrylic print,banner stand,eco printing',
         url: 'https://chameleon.design/',
     },
 };
@@ -216,7 +216,8 @@ function hreflangTags(suffix) {
     return `<link rel="alternate" hreflang="ko" href="https://www.cafe2626.com${suffix}">
 <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com${suffix}">
 <link rel="alternate" hreflang="en" href="https://www.cafe3355.com${suffix}">
-<link rel="alternate" hreflang="x-default" href="https://www.cafe3355.com${suffix}">`;
+<link rel="alternate" hreflang="en-gb" href="https://chameleon.design${suffix}">
+<link rel="alternate" hreflang="x-default" href="https://chameleon.design${suffix}">`;
 }
 
 function generateCategoryHtml(products, path, cc) {
@@ -749,7 +750,7 @@ ${hreflangTags('/editor')}
                 if (isChameleonDesign && chameleonCountry) {
                     el.append(`<script>window.__SITE_CODE="${chameleonCountry}";</script>`, { html: true });
                 }
-                const jsonLd = JSON.stringify({"@context":"https://schema.org","@type":"Organization","name":siteData.siteName,"url":siteData.url,"logo":siteData.url+"favicon.ico","sameAs":["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"]});
+                const jsonLd = JSON.stringify({"@context":"https://schema.org","@type":"Organization","name":siteData.siteName,"url":siteData.url,"logo":siteData.url+"mascot-character.png","sameAs":["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com","https://chameleon.design"]});
                 el.append(`<script type="application/ld+json">${jsonLd}</script>`, { html: true });
             } })
             .on('title', { element(el) { el.setInnerContent(siteData.title); } })
@@ -759,18 +760,24 @@ ${hreflangTags('/editor')}
             .on('meta[property="og:title"]', { element(el) { el.setAttribute('content', siteData.title); } })
             .on('meta[property="og:description"]', { element(el) { el.setAttribute('content', siteData.description); } })
             .on('meta[property="og:url"]', { element(el) { el.setAttribute('content', pageUrl); } })
+            .on('meta[property="og:locale"]', { element(el) {
+                const localeMap = {KR:'ko_KR',JP:'ja_JP',US:'en_US',CN:'zh_CN',AR:'ar_AR',ES:'es_ES',DE:'de_DE',FR:'fr_FR'};
+                const cc2 = isChameleonDesign ? (chameleonCountry || 'US') : (url.hostname.includes('cafe0101') ? 'JP' : 'US');
+                el.setAttribute('content', localeMap[cc2] || 'en_US');
+            } })
             .on('meta[name="twitter:title"]', { element(el) { el.setAttribute('content', siteData.title); } })
             .on('meta[name="twitter:description"]', { element(el) { el.setAttribute('content', siteData.description); } })
             .on('link[rel="canonical"]', { element(el) { el.setAttribute('href', pageUrl); } })
             .on('link[rel="alternate"][hreflang="ko"]', { element(el) { el.setAttribute('href', `https://www.cafe2626.com${suffix}`); } })
             .on('link[rel="alternate"][hreflang="ja"]', { element(el) { el.setAttribute('href', `https://www.cafe0101.com${suffix}`); } })
             .on('link[rel="alternate"][hreflang="en"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}`); } })
+            .on('link[rel="alternate"][hreflang="en-gb"]', { element(el) { el.setAttribute('href', `https://chameleon.design${suffix}`); } })
             .on('link[rel="alternate"][hreflang="zh"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=zh`); } })
             .on('link[rel="alternate"][hreflang="ar"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=ar`); } })
             .on('link[rel="alternate"][hreflang="es"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=es`); } })
             .on('link[rel="alternate"][hreflang="de"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=de`); } })
             .on('link[rel="alternate"][hreflang="fr"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}${suffix === '/' ? '?' : '&'}lang=fr`); } })
-            .on('link[rel="alternate"][hreflang="x-default"]', { element(el) { el.setAttribute('href', `https://www.cafe3355.com${suffix}`); } })
+            .on('link[rel="alternate"][hreflang="x-default"]', { element(el) { el.setAttribute('href', `https://chameleon.design${suffix}`); } })
             .transform(response);
     }
 };
