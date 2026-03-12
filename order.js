@@ -285,7 +285,7 @@ export async function initOrderSystem() {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
             // ★ 최소 주문금액 체크 (천원단위 주문 상품은 제외)
-            const _isUnitOrder = cartData.every(item => item.product && (item.product.code === '21355677' || item.product.code === '21355677_copy'));
+            const _isUnitOrder = cartData.every(item => item.product && String(item.product.code) === '21355677');
             if (!_isUnitOrder) {
                 const _totalKRW = calculateCartTotalKRW();
                 const _minKRW = getMinOrderKRW();
@@ -1953,7 +1953,7 @@ function updateSummary(prodTotal, addonTotal, total) {
     // ★ 최소 주문금액 안내 (천원단위 주문 상품은 제외)
     const _totalForMin = prodTotal + addonTotal;
     const _minKRW = getMinOrderKRW();
-    const _isUnitOrderSummary = cartData.every(item => item.product && (item.product.code === '21355677' || item.product.code === '21355677_copy'));
+    const _isUnitOrderSummary = cartData.every(item => item.product && String(item.product.code) === '21355677');
     if (!_isUnitOrderSummary && _totalForMin < _minKRW && _totalForMin > 0 && elMinNotice) {
         elMinNotice.style.display = 'block';
         elMinNotice.style.background = '#fff7ed';
@@ -2655,7 +2655,7 @@ async function processFinalPayment() {
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
     // ★ 최소 주문금액 체크 (결제 직전 최종 확인, 천원단위 주문 제외)
-    const _isUnitOrderFinal = cartData.every(item => item.product && (item.product.code === '21355677' || item.product.code === '21355677_copy'));
+    const _isUnitOrderFinal = cartData.every(item => item.product && String(item.product.code) === '21355677');
     if (!_isUnitOrderFinal) {
         const _cartTotalKRW = calculateCartTotalKRW();
         if (_cartTotalKRW < getMinOrderKRW()) {
