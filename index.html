@@ -5479,12 +5479,12 @@ window.getTinyThumb = function(url, size = 150) {
     const urlParams = new URLSearchParams(window.location.search);
     let detectedLang = urlParams.get('lang');
 
-    // 1. 해외 도메인은 URL 파라미터 무관하게 도메인으로 강제 결정
+    // 1. 도메인 기본값 설정 (lang 파라미터가 있으면 파라미터 우선)
     const _langHostname = window.location.hostname;
     if (_langHostname.includes('cafe3355.com')) {
-        detectedLang = 'en'; // 미국 도메인 → 항상 영어
+        if (!detectedLang) detectedLang = 'en'; // 미국 도메인: lang 파라미터 없으면 영어
     } else if (_langHostname.includes('cafe0101.com')) {
-        detectedLang = 'ja'; // 일본 도메인 → 항상 일본어
+        if (!detectedLang) detectedLang = 'ja'; // 일본 도메인: lang 파라미터 없으면 일본어
     } else if (!detectedLang) {
         detectedLang = 'kr'; // 그 외 파라미터 없으면 한국어
     }
