@@ -1,8 +1,8 @@
-import { canvas } from "./canvas-core.js?v=170";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=170";
-import { SITE_CONFIG } from "./site-config.js?v=170";
-import { applySize } from "./canvas-size.js?v=170";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=170";
+import { canvas } from "./canvas-core.js?v=171";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=171";
+import { SITE_CONFIG } from "./site-config.js?v=171";
+import { applySize } from "./canvas-size.js?v=171";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=171";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -10,7 +10,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=170";
+} from "./export.js?v=171";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -285,7 +285,10 @@ export async function initOrderSystem() {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
             // ★ 최소 주문금액 체크 (천원단위 주문 상품은 제외)
-            const _isUnitOrder = cartData.every(item => item.product && String(item.product.code) === '21355677');
+            const _isUnitOrder = cartData.length > 0 && cartData.every(item => {
+                const code = item.product && (item.product.code || item.product.key || '');
+                return String(code) === '21355677';
+            });
             if (!_isUnitOrder) {
                 const _totalKRW = calculateCartTotalKRW();
                 const _minKRW = getMinOrderKRW();
@@ -1329,7 +1332,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=170');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=171');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -1953,7 +1956,11 @@ function updateSummary(prodTotal, addonTotal, total) {
     // ★ 최소 주문금액 안내 (천원단위 주문 상품은 제외)
     const _totalForMin = prodTotal + addonTotal;
     const _minKRW = getMinOrderKRW();
-    const _isUnitOrderSummary = cartData.every(item => item.product && String(item.product.code) === '21355677');
+    const _isUnitOrderSummary = cartData.length > 0 && cartData.every(item => {
+        const code = item.product && (item.product.code || item.product.key || '');
+        return String(code) === '21355677';
+    });
+    console.log('[MinOrder] cartData:', cartData.length, 'items, codes:', cartData.map(i => i.product?.code), 'isUnit:', _isUnitOrderSummary);
     if (!_isUnitOrderSummary && _totalForMin < _minKRW && _totalForMin > 0 && elMinNotice) {
         elMinNotice.style.display = 'block';
         elMinNotice.style.background = '#fff7ed';
@@ -2432,7 +2439,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=170');
+                const { generateDesignPNG } = await import('./export.js?v=171');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
@@ -2655,7 +2662,10 @@ async function processFinalPayment() {
     if (realFinalPayAmount < 0) { showToast(window.t('msg_payment_amount_error', "Payment amount error."), "error"); return; }
 
     // ★ 최소 주문금액 체크 (결제 직전 최종 확인, 천원단위 주문 제외)
-    const _isUnitOrderFinal = cartData.every(item => item.product && String(item.product.code) === '21355677');
+    const _isUnitOrderFinal = cartData.length > 0 && cartData.every(item => {
+        const code = item.product && (item.product.code || item.product.key || '');
+        return String(code) === '21355677';
+    });
     if (!_isUnitOrderFinal) {
         const _cartTotalKRW = calculateCartTotalKRW();
         if (_cartTotalKRW < getMinOrderKRW()) {
