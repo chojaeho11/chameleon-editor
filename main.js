@@ -1,28 +1,28 @@
 // main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=165";
-import { initCanvas, canvas } from "./canvas-core.js?v=165";
-import { initSizeControls, applySize } from "./canvas-size.js?v=165";
-import { initGuides } from "./canvas-guides.js?v=165";
-import { initZoomPan } from "./canvas-zoom-pan.js?v=165";
-import { initObjectTools } from "./canvas-objects.js?v=165";
-import { initPageTools } from "./canvas-pages.js?v=165"; // [추가] 페이지 도구
-import { initImageTools } from "./canvas-image.js?v=165";
-import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=165";
-import { initAiTools } from "./canvas-ai.js?v=165";
-import { initExport } from "./export.js?v=165";
-import { initOrderSystem } from "./order.js?v=165";
-import { initAuth } from "./login.js?v=165";
-import { initMyDesign } from "./my-design.js?v=165";
-import { initCanvasUtils } from "./canvas-utils.js?v=165";
-import { initShortcuts } from "./shortcuts.js?v=165";
-import { initContextMenu } from "./context-menu.js?v=165";
-import { createVectorOutline } from "./outlineMaker.js?v=165";
-import { initVideoMaker } from "./video-maker.js?v=165";
-import { initPptMode } from "./ppt-mode.js?v=165";
-import { initGreetingCardMode } from "./greeting-card-mode.js?v=165";
-import { initIconTools } from "./canvas-icons.js?v=165";
-import { initRetouchTools } from "./canvas-retouch.js?v=165";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=166";
+import { initCanvas, canvas } from "./canvas-core.js?v=166";
+import { initSizeControls, applySize } from "./canvas-size.js?v=166";
+import { initGuides } from "./canvas-guides.js?v=166";
+import { initZoomPan } from "./canvas-zoom-pan.js?v=166";
+import { initObjectTools } from "./canvas-objects.js?v=166";
+import { initPageTools } from "./canvas-pages.js?v=166"; // [추가] 페이지 도구
+import { initImageTools } from "./canvas-image.js?v=166";
+import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=166";
+import { initAiTools } from "./canvas-ai.js?v=166";
+import { initExport } from "./export.js?v=166";
+import { initOrderSystem } from "./order.js?v=166";
+import { initAuth } from "./login.js?v=166";
+import { initMyDesign } from "./my-design.js?v=166";
+import { initCanvasUtils } from "./canvas-utils.js?v=166";
+import { initShortcuts } from "./shortcuts.js?v=166";
+import { initContextMenu } from "./context-menu.js?v=166";
+import { createVectorOutline } from "./outlineMaker.js?v=166";
+import { initVideoMaker } from "./video-maker.js?v=166";
+import { initPptMode } from "./ppt-mode.js?v=166";
+import { initGreetingCardMode } from "./greeting-card-mode.js?v=166";
+import { initIconTools } from "./canvas-icons.js?v=166";
+import { initRetouchTools } from "./canvas-retouch.js?v=166";
 
 window.currentUploadedPdfUrl = null;
 
