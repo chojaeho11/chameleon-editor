@@ -549,6 +549,19 @@ window.loadEditorLibraries = function() {
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},4000);
 </script>
 <script src="toast.js?v=175"></script>
+<script>
+// v175: 서비스 워커 + 모든 캐시 강제 삭제
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+    });
+}
+if ('caches' in window) {
+    caches.keys().then(function(names) {
+        names.forEach(function(name) { caches.delete(name); });
+    });
+}
+</script>
 <div id="loading"><div class="loading-spin"></div><p style="margin-top:15px; font-weight:600;" data-i18n="msg_loading">로딩 중입니다...</p></div>
 <script>setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.style.display='none';}},15000);</script>
 
