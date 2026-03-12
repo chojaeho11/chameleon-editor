@@ -6287,9 +6287,13 @@ history.replaceState({ type: 'home' }, '', window.location.href);
 
 // [신규] 언어 설정을 유지하면서 홈으로 이동하는 함수
 window.goHome = function() {
+    // 티셔츠 색상 패널 제거
+    const _tcp = document.getElementById('tshirtColorPanel');
+    if (_tcp) _tcp.remove();
+    window._selectedTshirtColor = null;
+
     const urlParams = new URLSearchParams(window.location.search);
     const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : null);
-    // 채팅 내역은 localStorage에 저장되어 있으므로 새로고침 후 자동 복원됨
     window.location.href = currentLang ? '/?lang=' + currentLang : '/';
 };
 
@@ -7342,6 +7346,19 @@ window.showChoiceModal = async function(key) {
     modal.style.display = 'flex';
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
+
+    // ★ 에디터에서 선택한 티셔츠 색상 자동 체크
+    if (window._selectedTshirtColor) {
+        setTimeout(() => {
+            const chk = modal.querySelector(`input[name="userOption"][value="${window._selectedTshirtColor}"]`);
+            if (chk && !chk.checked) {
+                chk.checked = true;
+                chk.dispatchEvent(new Event('change'));
+                const lbl = chk.closest('.color-btn-item');
+                if (lbl) lbl.classList.add('selected');
+            }
+        }, 100);
+    }
 
     // ★ 고객작품: 이미지 비율로 자동 사이즈 계산 활성화
     if (isArtworkProduct && product.img_url) {
@@ -9042,40 +9059,126 @@ if (w >= 20 && h >= 20) {
         // 허니콤 박스: 마법사 없이 빈 화면 시작 (사용자가 수동으로 마법사 클릭)
 
         // 목업 이미지 로드 (잠금 배경 레이어)
+        window._loadMockupImage = function(mockupUrl) {
+            if (!mockupUrl) return;
+            // 기존 목업 제거
+            const oldMockups = canvas.getObjects().filter(o => o.isMockup);
+            oldMockups.forEach(o => canvas.remove(o));
+
+            fabric.Image.fromURL(mockupUrl, (img) => {
+                if (!img) return;
+                const board = canvas.getObjects().find(o => o.isBoard);
+                const bW = board ? board.width * board.scaleX : canvas.width;
+                const bH = board ? board.height * board.scaleY : canvas.height;
+                const bLeft = board ? board.left : 0;
+                const bTop = board ? board.top : 0;
+                const scale = Math.min(bW / img.width, bH / img.height);
+                img.set({
+                    left: bLeft + bW / 2,
+                    top: bTop + bH / 2,
+                    originX: 'center',
+                    originY: 'center',
+                    scaleX: scale,
+                    scaleY: scale,
+                    selectable: false,
+                    evented: false,
+                    hasControls: false,
+                    hasBorders: false,
+                    lockMovementX: true,
+                    lockMovementY: true,
+                    isMockup: true,
+                    excludeFromExport: true,
+                    opacity: 0.5
+                });
+                const boardIdx = board ? canvas.getObjects().indexOf(board) : -1;
+                canvas.insertAt(img, boardIdx + 1);
+                canvas.renderAll();
+            }, { crossOrigin: 'anonymous' });
+        };
+
         if (product && product.mockup_url) {
             setTimeout(() => {
-                fabric.Image.fromURL(product.mockup_url, (img) => {
-                    if (!img) return;
-                    const board = canvas.getObjects().find(o => o.isBoard);
-                    const bW = board ? board.width * board.scaleX : canvasW;
-                    const bH = board ? board.height * board.scaleY : canvasH;
-                    const bLeft = board ? board.left : 0;
-                    const bTop = board ? board.top : 0;
-                    const scale = Math.min(bW / img.width, bH / img.height);
-                    img.set({
-                        left: bLeft + bW / 2,
-                        top: bTop + bH / 2,
-                        originX: 'center',
-                        originY: 'center',
-                        scaleX: scale,
-                        scaleY: scale,
-                        selectable: false,
-                        evented: false,
-                        hasControls: false,
-                        hasBorders: false,
-                        lockMovementX: true,
-                        lockMovementY: true,
-                        isMockup: true,
-                        excludeFromExport: true,
-                        opacity: 0.5
-                    });
-                    // board 바로 위에 삽입 (인덱스 1)
-                    const boardIdx = board ? canvas.getObjects().indexOf(board) : -1;
-                    canvas.insertAt(img, boardIdx + 1);
-                    canvas.renderAll();
-                    console.log('✅ 목업 이미지 로드 완료');
-                }, { crossOrigin: 'anonymous' });
+                window._loadMockupImage(product.mockup_url);
+                console.log('✅ 목업 이미지 로드 완료');
             }, 800);
+        }
+
+        // ★ 티셔츠 색상 선택 패널 (color addon 감지)
+        if (product && product.addons) {
+            const addonList = typeof product.addons === 'string' ? product.addons.split(',') : (product.addons || []);
+            const colorAddons = addonList.filter(a => a.trim().startsWith('co_'));
+            if (colorAddons.length > 0) {
+                (async () => {
+                    try {
+                        const { data: colors } = await sb.from('admin_addons')
+                            .select('code, name, name_kr, name_jp, name_us, img_url, is_swatch')
+                            .in('code', colorAddons.map(c => c.trim()))
+                            .order('sort_order', { ascending: true });
+                        if (colors && colors.length > 0) {
+                            window._tshirtColors = colors;
+                            _showTshirtColorPanel(colors);
+                        }
+                    } catch(e) { console.error('색상 로드 실패:', e); }
+                })();
+            }
+        }
+
+        function _showTshirtColorPanel(colors) {
+            // 기존 패널 제거
+            const old = document.getElementById('tshirtColorPanel');
+            if (old) old.remove();
+
+            const panel = document.createElement('div');
+            panel.id = 'tshirtColorPanel';
+            panel.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); border-radius:16px; padding:10px 16px; box-shadow:0 4px 24px rgba(0,0,0,0.15); display:flex; align-items:center; gap:8px; border:1px solid #e2e8f0;';
+
+            const label = document.createElement('span');
+            label.textContent = '👕';
+            label.style.cssText = 'font-size:20px; flex-shrink:0;';
+            panel.appendChild(label);
+
+            const HEX_MAP = {
+                co_wh:'#ffffff', co_blk:'#222222', co_nv:'#1e3a5f', co_gy:'#9ca3af',
+                co_rd:'#ef4444', co_bl:'#3b82f6', co_gr:'#22c55e', co_ol:'#84cc16',
+                co_pp:'#a855f7', co_pk:'#f472b6', co_mt:'#2dd4bf', co_yr:'#facc15', co_or:'#f97316'
+            };
+
+            colors.forEach((c, i) => {
+                const btn = document.createElement('button');
+                const hex = HEX_MAP[c.code] || '#cccccc';
+                btn.style.cssText = `width:32px; height:32px; border-radius:50%; border:2.5px solid ${i === 0 ? '#6366f1' : '#e2e8f0'}; background:${hex}; cursor:pointer; transition:all 0.2s; flex-shrink:0; position:relative;`;
+                if (hex === '#ffffff') btn.style.border = i === 0 ? '2.5px solid #6366f1' : '2.5px solid #d1d5db';
+                btn.title = c.name_kr || c.name || c.code;
+                btn.dataset.code = c.code;
+                btn.dataset.imgUrl = c.img_url || '';
+
+                btn.onmouseenter = () => { if (!btn.classList.contains('active')) btn.style.transform = 'scale(1.15)'; };
+                btn.onmouseleave = () => { btn.style.transform = 'scale(1)'; };
+
+                btn.onclick = () => {
+                    // 선택 상태 업데이트
+                    panel.querySelectorAll('button').forEach(b => {
+                        b.style.borderColor = HEX_MAP[b.dataset.code] === '#ffffff' ? '#d1d5db' : '#e2e8f0';
+                        b.style.transform = 'scale(1)';
+                        b.classList.remove('active');
+                    });
+                    btn.style.borderColor = '#6366f1';
+                    btn.classList.add('active');
+                    btn.style.transform = 'scale(1.1)';
+
+                    // 목업 교체
+                    if (c.img_url) {
+                        window._loadMockupImage(c.img_url);
+                    }
+                    // 선택된 색상 저장
+                    window._selectedTshirtColor = c.code;
+                    console.log('👕 티셔츠 색상:', c.name, c.code);
+                };
+
+                panel.appendChild(btn);
+            });
+
+            document.body.appendChild(panel);
         }
 
         // 4. 리소스 로딩
