@@ -61,7 +61,7 @@ const MATERIAL_LABELS = {
 let _addonNameCache = {}; // addon code → display name
 
 async function _loadMaterialCache() {
-    const { data } = await sb.from('admin_products').select('code, material, category');
+    const { data } = await sb.from('admin_products').select('code, material, category').limit(10000);
     if (data) {
         _materialCache = {};
         // code → material 매핑 + category → material 매핑 (폴백)
@@ -256,7 +256,7 @@ async function _saveOrderToFolder(order) {
     const itemMaterials = items.map(item => {
         const code = item.product?.code || '';
         const cat = item.product?.category || '';
-        const mat = _materialCache[code] || _materialCache['_cat_' + cat] || '';
+        const mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || '';
         const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
         return { item, material: mat, label };
     });
@@ -329,7 +329,7 @@ async function _buildAndDownloadZip(order) {
     const itemMaterials = items.map(item => {
         const code = item.product?.code || '';
         const cat = item.product?.category || '';
-        const mat = _materialCache[code] || _materialCache['_cat_' + cat] || '';
+        const mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || '';
         const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
         return { item, material: mat, label };
     });
@@ -1851,6 +1851,16 @@ async function generateRecoveryOrderSheet(order, addonDB) {
             optY += 6;
         }
 
+        // ★ 소재 표시
+        const _itemCode = item.product.code || '';
+        const _itemCat = item.product.category || '';
+        const _itemMat = _materialCache[_itemCode] || item.product?.material || _materialCache['_cat_' + _itemCat] || '';
+        if (_itemMat) {
+            const _matDisplay = MATERIAL_LABELS[_itemMat] || _itemMat.replace(/_/g, ' ');
+            _dt(doc, `소  재 : ${_matDisplay}`, 25, optY, {weight:'bold'}, '#7c3aed');
+            optY += 6;
+        }
+
         // ★ 옵션 표시
         if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
             Object.values(item.selectedAddons).forEach(code => {
@@ -1943,6 +1953,7 @@ window.recoverMissingDocs = async () => {
 
     const addonDB = await _rcLoadAddons();
     log(`📦 옵션 DB 로드 완료 (${Object.keys(addonDB).length}개)`);
+    if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
 
     let success = 0, fail = 0;
     for (const order of targets) {
@@ -2559,8 +2570,9 @@ async function regenerateWorkOrder(orderId) {
     const addonDB = {};
     if (addons) addons.forEach(a => addonDB[a.code] = a);
 
-    // jsPDF 로드
+    // jsPDF 로드 + 소재 캐시
     await loadJsPDF();
+    if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
 
     // 기존 작업지시서를 '_old' 마크 (삭제 대신 보존)
     const files = order.files || [];

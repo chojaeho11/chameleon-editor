@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=175";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=175";
-import { SITE_CONFIG } from "./site-config.js?v=175";
-import { applySize } from "./canvas-size.js?v=175";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=175";
+import { canvas } from "./canvas-core.js?v=176";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=176";
+import { SITE_CONFIG } from "./site-config.js?v=176";
+import { applySize } from "./canvas-size.js?v=176";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=176";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=175";
+} from "./export.js?v=176";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1081,7 +1081,7 @@ async function addCanvasToCart() {
     // 상품 정보 복구 로직
     if (!product || (product.is_custom_size && product.price === 0)) {
         try {
-            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, addons, category, is_file_upload, is_custom_size').eq('code', key).maybeSingle();
+            const { data: prodData, error } = await sb.from('admin_products').select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, addons, category, is_file_upload, is_custom_size, material').eq('code', key).maybeSingle();
             
             if (prodData) {
                 const scaleFactor = 3.7795;
@@ -1239,7 +1239,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=175');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=176');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -1274,7 +1274,8 @@ async function addCanvasToCart() {
         is_file_upload: product.is_file_upload || false,
         _calculated_price: product._calculated_price || false,
         _base_sqm_price: product._base_sqm_price || 0,
-        partner_id: product.partner_id || null
+        partner_id: product.partner_id || null,
+        material: product.material || ''
     };
 
     const mmToPx = 3.7795;
@@ -2311,7 +2312,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=175');
+                const { generateDesignPNG } = await import('./export.js?v=176');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
@@ -3019,7 +3020,8 @@ const cleanProduct = {
     h_mm: productInfo.h_mm || productInfo.height_mm || 0,
     category: productInfo.category || '',
     addons: productInfo.addons || [],
-    partner_id: productInfo.partner_id || null
+    partner_id: productInfo.partner_id || null,
+    material: productInfo.material || ''
 };
 
 // [2] 장바구니 아이템 생성
