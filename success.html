@@ -185,11 +185,73 @@
 
             } catch (e) {
                 console.error("Payment verification error:", e);
+
+                // ★ 핵심 수정: confirm-payment 실패해도 결제 자체는 완료됨
+                // paymentKey가 있으면 DB에 결제완료 + paymentKey 저장 (미결제 방지)
+                if (paymentKey && dbId) {
+                    try {
+                        await updateOrder(dbId, {
+                            status: '접수됨',
+                            payment_status: '결제완료',
+                            payment_method: '카드/간편결제',
+                            toss_payment_key: paymentKey
+                        });
+                        console.log("★ confirm-payment 실패했지만 DB 업데이트 성공 (paymentKey 저장됨)");
+
+                        // 추천인 적립도 시도
+                        if (refId) await creditReferralBonus(dbId, refId);
+
+                        // 장바구니 비우기
+                        try {
+                            localStorage.removeItem('chameleon_cart_current');
+                            localStorage.removeItem('chameleon_cart_guest');
+                            Object.keys(localStorage).forEach(key => {
+                                if (key.startsWith('chameleon_cart_')) localStorage.removeItem(key);
+                            });
+                        } catch(e2) {}
+
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('title').innerText = "Payment Successful!";
+                        document.getElementById('desc').innerText = "Redirecting...";
+                        setTimeout(() => window.location.href = "index.html", 1500);
+                        return;
+                    } catch (updateErr) {
+                        console.error("DB 업데이트도 실패:", updateErr);
+                    }
+                }
+
+                // Stripe도 마찬가지
+                if (sessionId && dbId) {
+                    try {
+                        await updateOrder(dbId, {
+                            status: '접수됨',
+                            payment_status: '결제완료',
+                            payment_method: 'Stripe Card',
+                            toss_payment_key: sessionId
+                        });
+                        console.log("★ verify-stripe 실패했지만 DB 업데이트 성공");
+                        if (refId) await creditReferralBonus(dbId, refId);
+                        try {
+                            localStorage.removeItem('chameleon_cart_current');
+                            localStorage.removeItem('chameleon_cart_guest');
+                            Object.keys(localStorage).forEach(key => {
+                                if (key.startsWith('chameleon_cart_')) localStorage.removeItem(key);
+                            });
+                        } catch(e2) {}
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('title').innerText = "Payment Successful!";
+                        document.getElementById('desc').innerText = "Redirecting...";
+                        setTimeout(() => window.location.href = "index.html", 1500);
+                        return;
+                    } catch (updateErr) {
+                        console.error("DB 업데이트도 실패:", updateErr);
+                    }
+                }
+
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('title').innerText = "Payment Error";
                 document.getElementById('desc').innerText = e.message;
 
-                // 에러가 나도 결제 자체는 완료됨 → 5초 후 홈으로 이동
                 setTimeout(() => {
                     showToast("Payment was processed but verification encountered an issue. Please contact support if your order doesn't appear.", "warn");
                     window.location.href = "index.html";

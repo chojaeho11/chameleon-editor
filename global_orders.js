@@ -845,7 +845,9 @@ window.loadOrders = async () => {
             if (order.delivery_target_date) {
                 const dd = new Date(order.delivery_target_date);
                 const delDate = `${dd.getMonth() + 1}.${dd.getDate()}`;
-                deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px;">(배)${delDate}</div>`;
+                deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px; cursor:pointer; text-decoration:underline dotted;" onclick="event.stopPropagation(); openDeliveryDateEdit('${order.id}','${order.delivery_target_date}')" title="클릭하여 배송일 변경">(배)${delDate}</div>`;
+            } else {
+                deliveryHtml = `<div style="font-size:10px; color:#94a3b8; cursor:pointer; margin-top:2px;" onclick="event.stopPropagation(); openDeliveryDateEdit('${order.id}','')" title="배송일 지정">+배송일</div>`;
             }
 
             // ═══ [결제 칼럼] 결제수단 + 결제확인 상태만 표시 ═══
@@ -1105,7 +1107,7 @@ async function refundSingleOrder(id, reason = '관리자 취소') {
     if (!order) throw new Error('주문 조회 실패');
 
     const pm = (order.payment_method || '').toLowerCase();
-    const isCard = pm.includes('카드') || pm.includes('card');
+    const isCard = pm.includes('카드') || pm.includes('card') || pm.includes('간편');
     const isStripe = pm.includes('stripe');
     const isDeposit = pm.includes('예치금');
     let newPaymentStatus = '환불완료';
@@ -2281,7 +2283,7 @@ window.openAdminSlotModal = async (dateStr) => {
 
     try {
         const { data: orders } = await sb.from('orders')
-            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id, items')
+            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id, items, delivery_target_date')
             .eq('delivery_target_date', dateStr);
         const dayOrders = orders || [];
 
@@ -2400,6 +2402,7 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
                 <div style="display:flex; align-items:center; gap:6px;">
                     ${driver ? `<span style="color:#059669; font-size:13px;">🚛${driver.name}</span>` : ''}
                     ${isDone ? '<span style="color:#22c55e;">✅</span>' : `<span style="color:#94a3b8; font-size:12px;">${o.status}</span>`}
+                    <button style="background:#f0f4ff; border:1px solid #c7d2fe; color:#4f46e5; border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer; margin-left:4px;" onclick="openDeliveryDateEdit('${o.id}','${o.delivery_target_date||''}')" title="배송일 변경">📅변경</button>
                 </div>
             </div>
             ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : ''}
@@ -2453,6 +2456,119 @@ window.adminAddSlotBlock = async () => {
         showToast('차단 추가 실패: ' + e.message, 'error');
     }
 };
+
+// ── 배송일 변경 팝업 ──
+window.openDeliveryDateEdit = (orderId, currentDate) => {
+    // 간단한 팝업으로 날짜 선택
+    const modal = document.createElement('div');
+    modal.id = '_deliveryDateModal';
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:10000;';
+    modal.innerHTML = `
+        <div style="background:white; border-radius:12px; padding:24px; min-width:340px; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+            <h3 style="margin:0 0 16px 0; font-size:18px; color:#1e293b;">📅 배송일 변경</h3>
+            <div style="margin-bottom:12px; color:#64748b; font-size:13px;">주문번호: <b style="color:#4f46e5;">${orderId}</b></div>
+            <div style="margin-bottom:8px; font-size:13px; color:#64748b;">현재 배송일: <b style="color:#e11d48;">${currentDate || '미지정'}</b></div>
+            <input type="date" id="_newDeliveryDate" value="${currentDate}" style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:8px; font-size:15px; margin-bottom:16px;">
+            <div style="display:flex; gap:8px;">
+                <button onclick="document.getElementById('_deliveryDateModal').remove()" style="flex:1; padding:10px; border:1px solid #e2e8f0; border-radius:8px; background:white; cursor:pointer; font-size:14px;">취소</button>
+                <button onclick="_saveDeliveryDate('${orderId}')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#4f46e5; color:white; cursor:pointer; font-size:14px; font-weight:bold;">변경</button>
+                ${currentDate ? `<button onclick="_clearDeliveryDate('${orderId}')" style="padding:10px 14px; border:none; border-radius:8px; background:#ef4444; color:white; cursor:pointer; font-size:14px;">삭제</button>` : ''}
+            </div>
+            <div style="margin-top:12px; padding:10px; background:#fffbeb; border-radius:6px; font-size:12px; color:#92400e;">
+                ⚠️ 배송일 변경 시 작업지시서가 새로 생성됩니다.
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+};
+
+window._saveDeliveryDate = async (orderId) => {
+    const newDate = document.getElementById('_newDeliveryDate').value;
+    if (!newDate) { showToast('날짜를 선택해주세요.', 'warn'); return; }
+
+    try {
+        showLoading(true);
+        // 1. 배송일 업데이트
+        const { error } = await sb.from('orders').update({ delivery_target_date: newDate }).eq('id', orderId);
+        if (error) throw error;
+
+        // 2. 작업지시서 새로 생성
+        try {
+            await regenerateWorkOrder(orderId);
+        } catch(e2) {
+            console.warn('작업지시서 재생성 실패 (수동 생성 필요):', e2);
+        }
+
+        document.getElementById('_deliveryDateModal')?.remove();
+        showToast(`배송일이 ${newDate}로 변경되었습니다. 작업지시서가 새로 생성됩니다.`, 'success');
+        loadOrders();
+        if (typeof renderAdminCalendar === 'function') renderAdminCalendar();
+        // 캘린더 슬롯 모달이 열려있으면 새로고침
+        if (window._adminSlotDate && document.getElementById('adminSlotModal')?.style.display === 'flex') {
+            openAdminSlotModal(window._adminSlotDate);
+        }
+    } catch (e) {
+        showToast('배송일 변경 실패: ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+};
+
+window._clearDeliveryDate = async (orderId) => {
+    if (!confirm('배송일을 삭제하시겠습니까?')) return;
+    try {
+        showLoading(true);
+        await sb.from('orders').update({ delivery_target_date: null }).eq('id', orderId);
+        document.getElementById('_deliveryDateModal')?.remove();
+        showToast('배송일이 삭제되었습니다.', 'success');
+        loadOrders();
+        if (typeof renderAdminCalendar === 'function') renderAdminCalendar();
+        if (window._adminSlotDate && document.getElementById('adminSlotModal')?.style.display === 'flex') {
+            openAdminSlotModal(window._adminSlotDate);
+        }
+    } catch (e) {
+        showToast('삭제 실패: ' + e.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+};
+
+// 작업지시서 재생성 (배송일 변경 시)
+async function regenerateWorkOrder(orderId) {
+    const { data: order } = await sb.from('orders')
+        .select('id, manager_name, phone, address, request_note, delivery_target_date, created_at, items, files, total_amount, discount_amount, site_code')
+        .eq('id', orderId).single();
+    if (!order) return;
+
+    // addon DB 로드
+    const { data: addons } = await sb.from('admin_addons').select('code, name, display_name');
+    const addonDB = {};
+    if (addons) addons.forEach(a => addonDB[a.code] = a);
+
+    // jsPDF 로드
+    await loadJsPDF();
+
+    // 기존 작업지시서를 '_old' 마크 (삭제 대신 보존)
+    const files = order.files || [];
+    const updatedFiles = files.map(f => {
+        if (f.type === 'order_sheet') return { ...f, type: 'order_sheet_old', note: `배송일변경으로_교체_${new Date().toISOString().slice(0,10)}` };
+        return f;
+    });
+
+    // 새 작업지시서 생성 (기존 복구 함수 재활용)
+    const blob = await generateRecoveryOrderSheet(order, addonDB);
+    if (blob) {
+        const ts = Date.now();
+        const path = `orders/${orderId}/order_sheet_${ts}.pdf`;
+        const { error: upErr } = await sb.storage.from('orders').upload(path, blob, { upsert: true });
+        if (!upErr) {
+            const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+            updatedFiles.push({ type: 'order_sheet', url: urlData.publicUrl, name: '작업지시서.pdf', created_at: new Date().toISOString() });
+        }
+    }
+
+    await sb.from('orders').update({ files: updatedFiles }).eq('id', orderId);
+}
 
 // [헬퍼] 배송 데이터 업데이트
 window.updateTaskDB = async (orderId, field, value) => {
