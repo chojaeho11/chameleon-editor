@@ -6581,40 +6581,12 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             const { data: product, error } = await sb.from('admin_products')
                 .select('*').eq('code', productCode).single();
 
-            // 상품이 없으면 카테고리 슬러그인지 확인
+            // 상품이 없으면 카테고리 슬러그인지 확인 → 그냥 메인 홈 표시 (SEO 메타는 이미 적용됨)
             if (error || !product) {
                 const _catCode = _SEO_CAT_MAP[productCode];
-                if (_catCode && window.openTopMenu) {
+                if (_catCode) {
                     if(loading) loading.style.display = 'none';
-                    // SEO 슬러그에 맞는 타이틀 조회
-                    const _cc = window._SEO_CC || 'KR';
-                    const _seoTitle = (window.PRODUCT_SEO && window.PRODUCT_SEO[productCode] && window.PRODUCT_SEO[productCode][_cc]?.title) || productCode;
-                    const _cleanTitle = _seoTitle.split(' - ')[0].split(' | ')[0];
-
-                    // 홈 화면 숨기고 카테고리 모달을 메인 페이지로 전환
-                    const startScreen = document.getElementById('startScreen');
-                    if(startScreen) startScreen.style.display = 'none';
-
-                    await window.openTopMenu(_catCode, _cleanTitle);
-
-                    // 카테고리 모달을 풀스크린 메인 페이지로 변환
-                    const catModal = document.getElementById('categoryDetailModal');
-                    if (catModal) {
-                        const catBox = catModal.querySelector('.modal-box');
-                        catModal.classList.add('product-full-page');
-                        catModal.style.display = 'flex';
-                        catModal.style.padding = '0';
-                        catModal.style.background = '#ffffff';
-                        if (catBox) {
-                            catBox.style.width = '100%';
-                            catBox.style.maxWidth = '100%';
-                            catBox.style.height = '100%';
-                            catBox.style.borderRadius = '0';
-                            catBox.style.boxShadow = 'none';
-                            catBox.style.margin = '0';
-                            catBox.style.overflowY = 'auto';
-                        }
-                    }
+                    // 카테고리 슬러그 → 메인 홈 표시 (SEO 메타태그는 product-seo.js에서 이미 설정됨)
                     return;
                 }
                 throw new Error("상품 정보를 찾을 수 없습니다.");
