@@ -1598,6 +1598,8 @@ async function addFileToCart(e) {
         document.getElementById("productDetailModal").style.display = "none";
         renderCart();
         showToast(window.t('msg_file_added_to_cart') || "File order added to cart.", "success");
+        // Google Ads 전환 추적
+        if (window.gtagTrackAddToCart) window.gtagTrackAddToCart();
     } catch(err) { 
         console.error(err); 
         showToast((window.t('msg_failed') || "Failed: ") + err.message, "error");
@@ -3143,6 +3145,7 @@ export async function processBulkCartUpload(files) {
         
         if (successCount > 0) {
             showToast(`${successCount} ${window.t('msg_files_added_to_cart', "file(s) added to cart.")}`, "success");
+            if (window.gtagTrackAddToCart) window.gtagTrackAddToCart();
         } else {
             showToast(window.t('msg_upload_failed', "File upload failed."), "error");
         }

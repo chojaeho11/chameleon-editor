@@ -261,5 +261,24 @@
 
         processSuccess();
     </script>
+
+    <!-- Google Ads tag (결제완료 전환 + 리마케팅) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11349651713"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-11349651713');
+      // 결제 완료 전환 이벤트
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('db_id') && (params.get('paymentKey') || params.get('session_id'))) {
+          gtag('event', 'conversion', {
+              'send_to': 'AW-11349651713/purchase',
+              'value': parseFloat(params.get('amount')) || 0,
+              'currency': 'KRW',
+              'transaction_id': params.get('db_id')
+          });
+      }
+    </script>
 </body>
 </html>

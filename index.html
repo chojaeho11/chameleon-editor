@@ -9805,13 +9805,36 @@ if (w >= 20 && h >= 20) {
 
   gtag('config', 'AW-11349651713');
 </script>
-<!-- Event snippet for Google Shopping App Add To Cart conversion page -->
+<!-- Google Ads 전환추적 + 리마케팅 헬퍼 -->
 <script>
-  gtag('event', 'conversion', {
-      'send_to': 'AW-11349651713/P7AtCKeNgfYaEIHi96Mq',
-      'value': 1.0,
-      'currency': 'KRW'
-  });
+  // ★ 장바구니 추가 전환 (실제 장바구니 추가 시에만 호출)
+  window.gtagTrackAddToCart = function(value, currency) {
+      if (typeof gtag === 'function') {
+          gtag('event', 'conversion', {
+              'send_to': 'AW-11349651713/P7AtCKeNgfYaEIHi96Mq',
+              'value': value || 1.0,
+              'currency': currency || 'KRW'
+          });
+      }
+  };
+
+  // ★ 리마케팅: 페이지뷰 + 제품 조회 이벤트 (디스플레이 광고 리타겟팅용)
+  (function() {
+      // 제품 페이지인지 감지
+      var slug = window.__SPA_SLUG || new URLSearchParams(location.search).get('_p') || '';
+      if (slug && window.PRODUCT_SEO && window.PRODUCT_SEO[slug]) {
+          // 제품 페이지 → view_item 이벤트 (리마케팅 잠재고객 자동 생성)
+          gtag('event', 'view_item', {
+              'send_to': 'AW-11349651713',
+              'value': 1.0,
+              'items': [{ 'id': slug, 'google_business_vertical': 'custom' }]
+          });
+      }
+      // 모든 페이지 → page_view (기본 리마케팅)
+      gtag('event', 'page_view', {
+          'send_to': 'AW-11349651713'
+      });
+  })();
 
   // [선택된 디자인 배경 만들기 - 10% 확대 + 오류 수정 버전]
 
