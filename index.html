@@ -502,7 +502,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=177">
+<link rel="stylesheet" href="./style.css?v=178">
 
 <meta name="naver-site-verification" content="141eed82fa50fd6f98fa7bfe8dc481a202beb8cf" />
 
@@ -548,7 +548,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 4초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},4000);
 </script>
-<script src="toast.js?v=177"></script>
+<script src="toast.js?v=178"></script>
 <script>
 // v175: 서비스 워커 + 모든 캐시 강제 삭제
 if ('serviceWorker' in navigator) {
@@ -3161,6 +3161,34 @@ async function handleSubReturn() {
             <!-- 홍보물 패널 네비게이션 바 -->
             <div id="promoPanelNav" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:100; background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.12); padding:4px; gap:2px; align-items:center;">
             </div>
+
+            <!-- ★ 패브릭 마감옵션 패널 (에디터 상단) -->
+            <div id="fabricAddonPanel" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:120; background:#fff; border-radius:14px; box-shadow:0 4px 20px rgba(0,0,0,0.15); padding:12px 16px; max-width:90vw; min-width:600px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-weight:800; font-size:13px; color:#1e1b4b;"><i class="fa-solid fa-scissors" style="color:#6366f1; margin-right:4px;"></i> <span data-i18n="fb_finish_options">마감 옵션 선택</span></span>
+                    <button id="fabricAddonToggleBtn" onclick="document.getElementById('fabricAddonBody').style.display = document.getElementById('fabricAddonBody').style.display==='none'?'flex':'none'; this.querySelector('i').classList.toggle('fa-chevron-up'); this.querySelector('i').classList.toggle('fa-chevron-down');" style="border:none; background:none; cursor:pointer; color:#94a3b8; font-size:14px; padding:2px 6px;">
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </button>
+                </div>
+                <div id="fabricAddonBody" style="display:flex; gap:16px; flex-wrap:wrap;">
+                    <div id="fabricSewingCol" style="flex:1; min-width:260px;">
+                        <div style="font-weight:700; font-size:12px; color:#334155; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
+                            <span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
+                            <span id="fabricSewingTitle">미싱마감</span>
+                            <span style="color:#ef4444; font-size:10px; font-weight:700;">(*)</span>
+                        </div>
+                        <div id="fabricSewingList" style="display:flex; flex-direction:column; gap:4px; max-height:200px; overflow-y:auto;"></div>
+                    </div>
+                    <div style="width:1px; background:#e2e8f0; align-self:stretch;"></div>
+                    <div id="fabricLoopCol" style="flex:1; min-width:260px;">
+                        <div style="font-weight:700; font-size:12px; color:#334155; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
+                            <span style="width:8px; height:8px; border-radius:50%; background:#3b82f6; display:inline-block;"></span>
+                            <span id="fabricLoopTitle">고리옵션</span>
+                        </div>
+                        <div id="fabricLoopList" style="display:flex; flex-direction:column; gap:4px; max-height:200px; overflow-y:auto;"></div>
+                    </div>
+                </div>
+            </div>
             <div id="pageControls" class="page-controls-bar">
                 <button class="btn-icon-only" id="btnPagePrev" onclick="window.changePage(-1)" title="이전 페이지">
                     <i class="fa-solid fa-chevron-left"></i>
@@ -4441,30 +4469,30 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=177"></script>
-<script type="module" src="./canvas-core.js?v=177"></script>
-<script src="./wall-3d-preview.js?v=177" defer></script>
-<script src="./wall-3d-walls.js?v=177" defer></script>
-<script type="module" src="./canvas-size.js?v=177"></script>
-<script type="module" src="./canvas-guides.js?v=177"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=177"></script>
-<script type="module" src="./canvas-objects.js?v=177"></script>
-<script type="module" src="./canvas-image.js?v=177"></script>
-<script type="module" src="./canvas-template.js?v=177"></script>
-<script type="module" src="./canvas-ai.js?v=177"></script>
-<script type="module" src="./canvas-retouch.js?v=177"></script>
-<script type="module" src="./canvas-utils.js?v=177"></script>
-<script type="module" src="./shortcuts.js?v=177"></script>
-<script type="module" src="./context-menu.js?v=177"></script>
-<script type="module" src="./export.js?v=177"></script>
-<script type="module" src="./order.js?v=177"></script>
-<script type="module" src="./login.js?v=177"></script>
-<script type="module" src="./my-design.js?v=177"></script>
-<script type="module" src="./ppt-mode.js?v=177"></script>
-<script type="module" src="./main.js?v=177"></script>
+<script type="module" src="./config.js?v=178"></script>
+<script type="module" src="./canvas-core.js?v=178"></script>
+<script src="./wall-3d-preview.js?v=178" defer></script>
+<script src="./wall-3d-walls.js?v=178" defer></script>
+<script type="module" src="./canvas-size.js?v=178"></script>
+<script type="module" src="./canvas-guides.js?v=178"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=178"></script>
+<script type="module" src="./canvas-objects.js?v=178"></script>
+<script type="module" src="./canvas-image.js?v=178"></script>
+<script type="module" src="./canvas-template.js?v=178"></script>
+<script type="module" src="./canvas-ai.js?v=178"></script>
+<script type="module" src="./canvas-retouch.js?v=178"></script>
+<script type="module" src="./canvas-utils.js?v=178"></script>
+<script type="module" src="./shortcuts.js?v=178"></script>
+<script type="module" src="./context-menu.js?v=178"></script>
+<script type="module" src="./export.js?v=178"></script>
+<script type="module" src="./order.js?v=178"></script>
+<script type="module" src="./login.js?v=178"></script>
+<script type="module" src="./my-design.js?v=178"></script>
+<script type="module" src="./ppt-mode.js?v=178"></script>
+<script type="module" src="./main.js?v=178"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=177";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=178";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -5217,7 +5245,7 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
-<script src="./text-wizard.js?v=177"></script> 
+<script src="./text-wizard.js?v=178"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -5335,11 +5363,11 @@ window.filterFxCards = function(cat, btn) {
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=177 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=177';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=177'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=177';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=177';
+    // ★ 여기 파일명 뒤에 ?v=178 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=178';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=178'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=178';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=178';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -5764,7 +5792,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=177').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=178').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -7829,6 +7857,139 @@ if (w >= 20 && h >= 20) {
         return match ? match.top_category_code : null;
     };
 
+    // ★ 패브릭 마감옵션 에디터 패널 초기화
+    window._initFabricAddonPanel = async function(productCode) {
+        const panel = document.getElementById('fabricAddonPanel');
+        if (!panel) return;
+
+        const _sb = window.sb || (window.supabaseClient);
+        if (!_sb) return;
+
+        // 언어 감지
+        const _lang = window.location.hostname.includes('cafe0101.com') ? 'ja' : window.location.hostname.includes('cafe3355.com') ? 'en' : 'kr';
+        const _cr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
+
+        // 상품의 addon 코드 가져오기
+        let product = null;
+        if (window.PRODUCT_DB && window.PRODUCT_DB[productCode]) {
+            product = window.PRODUCT_DB[productCode];
+        } else {
+            const { data } = await _sb.from('admin_products').select('addons').eq('code', productCode).single();
+            if (data) product = data;
+        }
+        if (!product || !product.addons) { panel.style.display = 'none'; return; }
+
+        const addonCodes = Array.isArray(product.addons) ? product.addons : product.addons.split(',');
+        if (addonCodes.length === 0) { panel.style.display = 'none'; return; }
+
+        // addon + category 로드
+        const [{ data: addons }, { data: addonCats }] = await Promise.all([
+            _sb.from('admin_addons').select('*').in('code', addonCodes).order('sort_order', {ascending: true}),
+            _sb.from('addon_categories').select('*').in('code', ['2342434', '23442423']).order('sort_order', {ascending: true})
+        ]);
+        if (!addons || !addonCats) { panel.style.display = 'none'; return; }
+
+        const sewingAddons = addons.filter(a => a.category_code === '2342434');
+        const loopAddons = addons.filter(a => a.category_code === '23442423');
+
+        if (sewingAddons.length === 0 && loopAddons.length === 0) { panel.style.display = 'none'; return; }
+
+        // 카테고리 이름 설정
+        const sewCat = addonCats.find(c => c.code === '2342434');
+        const loopCat = addonCats.find(c => c.code === '23442423');
+        if (sewCat) {
+            const n = _lang==='ja' ? (sewCat.name_jp||sewCat.name_kr||sewCat.name) : _lang==='en' ? (sewCat.name_us||sewCat.name_kr||sewCat.name) : (sewCat.name_kr||sewCat.name);
+            document.getElementById('fabricSewingTitle').textContent = n;
+        }
+        if (loopCat) {
+            const n = _lang==='ja' ? (loopCat.name_jp||loopCat.name_kr||loopCat.name) : _lang==='en' ? (loopCat.name_us||loopCat.name_kr||loopCat.name) : (loopCat.name_kr||loopCat.name);
+            document.getElementById('fabricLoopTitle').textContent = n;
+        }
+
+        // 가격 포맷 헬퍼
+        const fmtPrice = (basePrice) => {
+            if (basePrice <= 0) return '';
+            if (_lang==='ja') return `+¥${basePrice.toLocaleString()}`;
+            if (_lang==='en') { const r = _cr.US || 0.001; return `+$${Math.round(basePrice * r).toLocaleString()}`; }
+            return `+${basePrice.toLocaleString()}원`;
+        };
+
+        // 아이템 렌더 헬퍼
+        const renderItem = (a) => {
+            let optName = _lang==='ja' ? (a.name_jp||a.name_kr||a.name) : _lang==='en' ? (a.name_us||a.name_kr||a.name) : (a.name_kr||a.name);
+            let basePrice = a.price_kr || a.price || 0;
+            if (_lang==='ja' && a.price_jp) basePrice = a.price_jp;
+            const priceStr = fmtPrice(basePrice);
+            const isPreSelected = window.pendingSelectedAddons && window.pendingSelectedAddons.includes(a.code);
+            return `<label style="display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid ${isPreSelected ? '#6366f1' : '#f1f5f9'}; border-radius:8px; cursor:pointer; transition:all 0.15s; background:${isPreSelected ? '#eff6ff' : '#fff'};"
+                    onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background=this.querySelector('input').checked?'#eff6ff':'#fff'">
+                <input type="checkbox" name="fabricAddon" value="${a.code}" data-price="${basePrice}" data-name="${optName}"
+                       ${isPreSelected ? 'checked' : ''}
+                       style="width:16px; height:16px; accent-color:#6366f1; flex-shrink:0;"
+                       onchange="window._onFabricAddonChange()">
+                <div style="display:flex; flex-direction:column; flex:1; min-width:0;">
+                    <span style="font-size:12px; font-weight:600; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${optName}</span>
+                    ${priceStr ? `<span style="font-size:11px; color:#6366f1; font-weight:bold;">${priceStr}</span>` : ''}
+                </div>
+            </label>`;
+        };
+
+        // 렌더링
+        document.getElementById('fabricSewingList').innerHTML = sewingAddons.map(renderItem).join('');
+        document.getElementById('fabricLoopList').innerHTML = loopAddons.map(renderItem).join('');
+
+        // 미싱 없으면 컬럼 숨기기
+        if (sewingAddons.length === 0) document.getElementById('fabricSewingCol').style.display = 'none';
+        if (loopAddons.length === 0) document.getElementById('fabricLoopCol').style.display = 'none';
+
+        panel.style.display = 'block';
+    };
+
+    // ★ 패브릭 마감옵션 변경 시 → 가이드 업데이트 + pendingSelectedAddons 동기화
+    window._onFabricAddonChange = function() {
+        const checkboxes = document.querySelectorAll('#fabricAddonPanel input[name="fabricAddon"]');
+        const selectedCodes = [];
+        const selectedQtys = {};
+        const config = window.__fabricGuideConfig || {};
+        config.seamJoin = false;
+        config.topLoop = false;
+        config.slit = false;
+        config.addonNames = {};
+
+        checkboxes.forEach(chk => {
+            const label = chk.closest('label');
+            if (label) {
+                label.style.borderColor = chk.checked ? '#6366f1' : '#f1f5f9';
+                label.style.background = chk.checked ? '#eff6ff' : '#fff';
+            }
+            if (chk.checked) {
+                selectedCodes.push(chk.value);
+                selectedQtys[chk.value] = 1;
+                const name = chk.dataset.name || '';
+                config.addonNames[chk.value] = name;
+                if (name.includes('이어') || name.includes('つなぎ') || name.toLowerCase().includes('seam') || name.toLowerCase().includes('join')) {
+                    config.seamJoin = true;
+                }
+                if (name.includes('고리') || name.includes('リング') || name.includes('끈') || name.toLowerCase().includes('loop') || name.toLowerCase().includes('grommet') || name.includes('봉마감') || name.includes('봉 별매') || name.includes('멜빵') || name.includes('타공') || name.includes('アイレット')) {
+                    config.topLoop = true;
+                }
+                if (name.includes('트임') || name.includes('スリット') || name.toLowerCase().includes('slit')) {
+                    config.slit = true;
+                }
+            }
+        });
+
+        // pendingSelectedAddons 동기화
+        window.pendingSelectedAddons = selectedCodes;
+        window.pendingSelectedAddonQtys = selectedQtys;
+        window.__fabricGuideConfig = config;
+
+        // 캔버스 가이드 재적용
+        import('./canvas-ai.js?v=178').then(mod => {
+            if (mod.applyFabricGuides) mod.applyFabricGuides(config);
+        }).catch(e => console.error('Fabric guide update error:', e));
+    };
+
     // [3] 선택 완료 -> 에디터 이동 또는 장바구니 (안전성 강화 버전)
     window.confirmChoice = function(mode) {
         if (window.isDirectCartAddInProgress) return;
@@ -8009,14 +8170,14 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=177');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=178');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=177')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=178')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -8068,7 +8229,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=177')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=178')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -8076,7 +8237,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=177');
+                    const m = await import('./order.js?v=178');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -8146,7 +8307,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=177').then(m => {
+            import('./order.js?v=178').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -8638,7 +8799,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=177').then(m => {
+        import('./order.js?v=178').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -8808,6 +8969,10 @@ if (w >= 20 && h >= 20) {
         window.currentProductKey = key;
         if(canvas) canvas.currentProductKey = key;
 
+        // ★ 패브릭 애드온 패널 초기화 (비패브릭 상품일 때 숨김)
+        const _fabPanel = document.getElementById('fabricAddonPanel');
+        if (_fabPanel) _fabPanel.style.display = 'none';
+
         if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
 
         // ★ 'custom' 키: DB 조회 없이 빈 캔버스로 바로 진입
@@ -8972,7 +9137,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=177');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=178');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -8990,7 +9155,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=177');
+                    const mod = await import('./canvas-ai.js?v=178');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -9006,7 +9171,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=177');
+                    const mod = await import('./canvas-ai.js?v=178');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -9061,7 +9226,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=177');
+                    const mod = await import('./canvas-ai.js?v=178');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -9072,7 +9237,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=177');
+                    const mod = await import('./canvas-ai.js?v=178');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -9123,10 +9288,12 @@ if (w >= 20 && h >= 20) {
         if (window.__fabricGuideConfig) {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=177');
+                    const mod = await import('./canvas-ai.js?v=178');
                     if (mod.applyFabricGuides) mod.applyFabricGuides(window.__fabricGuideConfig);
                 } catch(e) { console.error('Fabric guide error:', e); }
             }, 800);
+            // ★ 패브릭 마감옵션 패널 로드
+            window._initFabricAddonPanel(key);
         }
 
         // ★ 허니콤보드(hb_) 외 제품: 에디터 진입 시 디자인 마법사 자동 오픈
@@ -9318,7 +9485,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=177');
+                await import('./canvas-objects.js?v=178');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -10871,7 +11038,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=177';
+    import { sb, initConfig } from './config.js?v=178';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
@@ -12840,7 +13007,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=177').then(function(mod) {
+            import('./order.js?v=178').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -13828,8 +13995,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=177"></script>
-<script src="./npc-wizard.js?v=177"></script>
+<script src="./gif-maker.js?v=178"></script>
+<script src="./npc-wizard.js?v=178"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">
