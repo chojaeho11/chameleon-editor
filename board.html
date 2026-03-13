@@ -1463,12 +1463,34 @@
     function getTrafficSource() {
         const params = new URLSearchParams(window.location.search);
         const referrer = document.referrer;
-        
+
+        // ★ 광고 파라미터 감지 시 sessionStorage에 저장
+        if (params.has('gclid') || params.has('na_click_id') || params.has('nclid') || params.has('n_campaign_type') ||
+            params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
+            const adSource = params.has('gclid') ? 'google' :
+                (params.has('na_click_id') || params.has('nclid') || params.get('utm_source') === 'naver') ? 'naver' : 'other';
+            try { sessionStorage.setItem('_ch_ad_source', adSource); } catch(e) {}
+        }
+
         // 1. [광고 체크]
-        if (params.has('gclid') || params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
+        if (params.has('gclid') || (params.get('utm_source') === 'google' && params.get('utm_medium') === 'cpc')) {
             return 'Google Ads (광고)';
         }
-        
+        if (params.has('na_click_id') || params.has('nclid') || (params.get('utm_source') === 'naver' && params.get('utm_medium') === 'cpc')) {
+            return 'Naver Ads (광고)';
+        }
+        if (params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
+            return `${params.get('utm_source')||'other'} Ads (광고)`;
+        }
+
+        // ★ 세션에 광고 이력이 있으면
+        try {
+            const savedAd = sessionStorage.getItem('_ch_ad_source');
+            if (savedAd && (!referrer || referrer.trim() === '')) {
+                return `${savedAd === 'google' ? 'Google' : savedAd === 'naver' ? 'Naver' : savedAd} Ads (광고)|세션복원`;
+            }
+        } catch(e) {}
+
         // 2. [직접 접속]
         if (!referrer || referrer.trim() === '') {
             return 'Direct (즐겨찾기/주소입력)';
@@ -1478,17 +1500,18 @@
         try {
             const refUrl = new URL(referrer);
             const hostname = refUrl.hostname.toLowerCase();
-
-            // 내부 이동 (메인 -> 블로그 등)
             if (hostname.includes(window.location.hostname)) return 'Internal (내부이동)';
-
             if (hostname.includes('google.')) return 'Google Search (자연검색)';
             if (hostname.includes('naver.')) return 'Naver Search (자연검색)';
             if (hostname.includes('daum.') || hostname.includes('kakao.')) return 'Daum/Kakao';
-            if (hostname.includes('instagram.')) return 'Instagram';
-            if (hostname.includes('facebook.') || hostname.includes('fb.com')) return 'Facebook';
-            if (hostname.includes('youtube.')) return 'Youtube';
-            
+            if (hostname.includes('yahoo.')) return 'Yahoo Search (자연검색)';
+            if (hostname.includes('bing.')) return 'Bing Search (자연검색)';
+            if (hostname.includes('instagram.')) return 'Instagram (SNS)';
+            if (hostname.includes('facebook.') || hostname.includes('fb.com')) return 'Facebook (SNS)';
+            if (hostname.includes('youtube.')) return 'Youtube (SNS)';
+            if (hostname.includes('tiktok.')) return 'Tiktok (SNS)';
+            if (hostname.includes('line.me')) return 'LINE (SNS)';
+            if (hostname.includes('pinterest.')) return 'Pinterest (SNS)';
             return hostname;
         } catch (e) {
             return 'Other Websites';
@@ -1496,36 +1519,57 @@
     }
 
     async function trackVisit() {
-        // ★ [핵심 수정] DB(sb)가 아직 준비 안 됐으면(null이면), 강제로 연결을 시도하고 기다립니다.
         if (!sb || !sb.from) {
-            console.log("⏳ DB 연결 대기 중..."); 
+            console.log("⏳ DB 연결 대기 중...");
             if(typeof initConfig === 'function') await initConfig();
         }
 
         try {
-            // 상세 분석된 유입 경로 가져오기
             const sourceName = getTrafficSource();
-            // 블로그 유입임을 표시하기 위해 [Blog] 태그 추가
-            const finalReferrer = `[Blog] ${sourceName}`; 
+            const finalReferrer = `[Blog] ${sourceName}`;
 
-            // 타임존 기반 실제 국가 감지
+            // 타임존 기반 국가 감지 (세분화)
             function _detectCountry() {
                 try {
                     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
                     if (tz.includes('Seoul') || tz.includes('Korea')) return 'KR';
                     if (tz.includes('Tokyo') || tz.includes('Japan')) return 'JP';
                     if (tz.includes('Taipei')) return 'TW';
-                    if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Chongqing') || tz.includes('Urumqi') || tz.includes('Macau')) return 'CN';
+                    if (tz.includes('Hong_Kong')) return 'HK';
+                    if (tz.includes('Shanghai') || tz.includes('Chongqing') || tz.includes('Urumqi') || tz.includes('Macau')) return 'CN';
                     if (tz.includes('Kolkata') || tz.includes('Calcutta') || tz.includes('Mumbai') || tz.includes('Delhi') || tz.includes('Asia/Colombo')) return 'IN';
-                    if (tz.includes('Bangkok') || tz.includes('Ho_Chi_Minh') || tz.includes('Singapore') || tz.includes('Jakarta') || tz.includes('Manila') || tz.includes('Kuala_Lumpur') || tz.includes('Phnom_Penh') || tz.includes('Yangon') || tz.includes('Vientiane')) return 'SEA';
-                    if (tz.includes('Riyadh') || tz.includes('Arabia') || tz.includes('Kuwait') || tz.includes('Dubai') || tz.includes('Qatar') || tz.includes('Bahrain') || tz.includes('Muscat') || tz.includes('Baghdad') || tz.includes('Tehran') || tz.includes('Istanbul') || tz.includes('Beirut') || tz.includes('Jerusalem') || tz.includes('Amman')) return 'ME';
-                    if (tz.includes('Australia') || tz.includes('Auckland') || tz.includes('Pacific/Fiji')) return 'AU';
+                    if (tz.includes('Bangkok')) return 'SEA:TH';
+                    if (tz.includes('Ho_Chi_Minh')) return 'SEA:VN';
+                    if (tz.includes('Singapore')) return 'SEA:SG';
+                    if (tz.includes('Jakarta')) return 'SEA:ID';
+                    if (tz.includes('Manila')) return 'SEA:PH';
+                    if (tz.includes('Kuala_Lumpur')) return 'SEA:MY';
+                    if (tz.includes('Phnom_Penh') || tz.includes('Yangon') || tz.includes('Vientiane')) return 'SEA';
+                    if (tz.includes('Riyadh') || tz.includes('Arabia')) return 'ME:SA';
+                    if (tz.includes('Dubai')) return 'ME:AE';
+                    if (tz.includes('Tehran')) return 'ME:IR';
+                    if (tz.includes('Istanbul')) return 'ME:TR';
+                    if (tz.includes('Baghdad') || tz.includes('Kuwait') || tz.includes('Qatar') || tz.includes('Bahrain') || tz.includes('Muscat') || tz.includes('Beirut') || tz.includes('Jerusalem') || tz.includes('Amman')) return 'ME';
+                    if (tz.includes('Australia')) return 'AU';
+                    if (tz.includes('Auckland')) return 'NZ';
                     if (tz.includes('Moscow') || tz.includes('Vladivostok') || tz.includes('Novosibirsk') || tz.includes('Yekaterinburg') || tz.includes('Kamchatka') || tz.includes('Irkutsk') || tz.includes('Krasnoyarsk') || tz.includes('Magadan') || tz.includes('Sakhalin')) return 'RU';
-                    if (tz.includes('Mexico') || tz.includes('Buenos_Aires') || tz.includes('Bogota') || tz.includes('Lima') || tz.includes('Santiago') || tz.includes('Sao_Paulo') || tz.includes('Caracas') || tz.includes('Havana') || tz.includes('Argentina') || tz.includes('Brazil') || tz.includes('Colombia')) return 'LATAM';
+                    if (tz.includes('Mexico')) return 'LATAM:MX';
+                    if (tz.includes('Buenos_Aires') || tz.includes('Argentina')) return 'LATAM:AR';
+                    if (tz.includes('Bogota') || tz.includes('Colombia')) return 'LATAM:CO';
+                    if (tz.includes('Lima')) return 'LATAM:PE';
+                    if (tz.includes('Santiago')) return 'LATAM:CL';
+                    if (tz.includes('Sao_Paulo') || tz.includes('Brazil')) return 'LATAM:BR';
+                    if (tz.includes('Caracas') || tz.includes('Havana')) return 'LATAM';
+                    if (tz.includes('Toronto') || tz.includes('Vancouver') || tz.includes('Edmonton') || tz.includes('Winnipeg')) return 'CA';
                     if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) return 'US';
                     if (tz.includes('Africa') || tz.includes('Cairo') || tz.includes('Lagos') || tz.includes('Nairobi') || tz.includes('Johannesburg') || tz.includes('Casablanca')) return 'AF';
-                    if (tz.includes('Europe') || tz.includes('London') || tz.includes('Berlin') || tz.includes('Paris') || tz.includes('Madrid') || tz.includes('Rome') || tz.includes('Amsterdam') || tz.includes('Warsaw')) return 'EU';
-                    return 'OTHER';
+                    if (tz.includes('London')) return 'EU:GB';
+                    if (tz.includes('Berlin')) return 'EU:DE';
+                    if (tz.includes('Paris')) return 'EU:FR';
+                    if (tz.includes('Madrid')) return 'EU:ES';
+                    if (tz.includes('Rome')) return 'EU:IT';
+                    if (tz.includes('Europe')) return 'EU';
+                    return 'OTHER:' + tz.replace(/\//g, '_');
                 } catch(e) { return 'KR'; }
             }
 

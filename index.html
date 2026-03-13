@@ -10699,20 +10699,54 @@ window.loadHomeHcGrid = function(){
     function getTrafficSource() {
         const params = new URLSearchParams(window.location.search);
         const referrer = document.referrer;
-        const currentUrl = window.location.href;
 
-        // 1. [광고 체크] URL에 광고 추적 파라미터가 있는지 확인
+        // ★ 광고 파라미터 감지 시 sessionStorage에 저장 (리다이렉트 후에도 추적)
+        if (params.has('gclid') || params.has('na_click_id') || params.has('nclid') || params.has('n_campaign_type') ||
+            params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
+            const adSource = params.has('gclid') ? 'google' :
+                (params.has('na_click_id') || params.has('nclid') || params.has('n_campaign_type') || params.get('utm_source') === 'naver') ? 'naver' : 'other';
+            try {
+                sessionStorage.setItem('_ch_ad_source', adSource);
+                sessionStorage.setItem('_ch_ad_campaign', params.get('utm_campaign') || params.get('n_campaign_type') || '');
+                sessionStorage.setItem('_ch_ad_keyword', params.get('utm_term') || params.get('query') || '');
+            } catch(e) {}
+        }
+
+        // 1. [광고 체크] URL 파라미터 또는 sessionStorage에 광고 이력
         if (params.has('gclid') || (params.get('utm_source') === 'google' && params.get('utm_medium') === 'cpc')) {
-            return 'Google Ads (광고)';
+            const campaign = params.get('utm_campaign') || '';
+            const keyword = params.get('utm_term') || '';
+            let tag = 'Google Ads (광고)';
+            if (campaign) tag += `|캠페인:${campaign}`;
+            if (keyword) tag += `|키워드:${keyword}`;
+            return tag;
         }
         if (params.has('na_click_id') || params.has('n_campaign_type') || params.has('nclid') ||
             (params.get('utm_source') === 'naver' && params.get('utm_medium') === 'cpc')) {
-            return 'Naver Ads (광고)';
+            const campaign = params.get('utm_campaign') || params.get('n_campaign_type') || '';
+            const keyword = params.get('utm_term') || params.get('query') || '';
+            let tag = 'Naver Ads (광고)';
+            if (campaign) tag += `|캠페인:${campaign}`;
+            if (keyword) tag += `|키워드:${keyword}`;
+            return tag;
         }
         if (params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
-            return 'Ads (광고)';
+            const src = params.get('utm_source') || 'unknown';
+            return `${src} Ads (광고)|캠페인:${params.get('utm_campaign')||''}`;
         }
-        
+
+        // ★ 세션에 광고 이력이 있으면 (리다이렉트로 파라미터 사라진 경우)
+        try {
+            const savedAd = sessionStorage.getItem('_ch_ad_source');
+            if (savedAd && (!referrer || referrer.trim() === '')) {
+                const campaign = sessionStorage.getItem('_ch_ad_campaign') || '';
+                const keyword = sessionStorage.getItem('_ch_ad_keyword') || '';
+                if (savedAd === 'google') return `Google Ads (광고)|세션복원${campaign?'|캠페인:'+campaign:''}${keyword?'|키워드:'+keyword:''}`;
+                if (savedAd === 'naver') return `Naver Ads (광고)|세션복원${campaign?'|캠페인:'+campaign:''}${keyword?'|키워드:'+keyword:''}`;
+                return `${savedAd} Ads (광고)|세션복원`;
+            }
+        } catch(e) {}
+
         // 2. [직접 접속/즐겨찾기] 리퍼러가 없는 경우
         if (!referrer || referrer.trim() === '') {
             return 'Direct (즐겨찾기/주소입력)';
@@ -10722,16 +10756,44 @@ window.loadHomeHcGrid = function(){
         try {
             const refUrl = new URL(referrer);
             const hostname = refUrl.hostname.toLowerCase();
+            const fullPath = hostname + refUrl.pathname;
 
-            if (hostname.includes('google.')) return 'Google Search (자연검색)';
-            if (hostname.includes('naver.')) return 'Naver Search (자연검색)';
+            // 검색엔진 (검색어 추출 시도)
+            if (hostname.includes('google.')) {
+                const q = refUrl.searchParams.get('q') || '';
+                return q ? `Google Search (자연검색)|검색어:${q}` : 'Google Search (자연검색)';
+            }
+            if (hostname.includes('naver.')) {
+                const q = refUrl.searchParams.get('query') || refUrl.searchParams.get('where') || '';
+                return q ? `Naver Search (자연검색)|검색어:${q}` : 'Naver Search (자연검색)';
+            }
             if (hostname.includes('daum.') || hostname.includes('kakao.')) return 'Daum/Kakao';
-            if (hostname.includes('instagram.')) return 'Instagram';
-            if (hostname.includes('facebook.') || hostname.includes('fb.com')) return 'Facebook';
-            if (hostname.includes('youtube.')) return 'Youtube';
-            if (hostname.includes('bing.')) return 'Bing Search';
+            if (hostname.includes('yahoo.')) {
+                const q = refUrl.searchParams.get('p') || '';
+                return q ? `Yahoo Search (자연검색)|검색어:${q}` : 'Yahoo Search (자연검색)';
+            }
+            if (hostname.includes('bing.')) {
+                const q = refUrl.searchParams.get('q') || '';
+                return q ? `Bing Search (자연검색)|검색어:${q}` : 'Bing Search (자연검색)';
+            }
 
-            // 그 외 사이트 (블로그 등)는 도메인 그대로 표시
+            // SNS
+            if (hostname.includes('instagram.')) return 'Instagram (SNS)';
+            if (hostname.includes('facebook.') || hostname.includes('fb.com')) return 'Facebook (SNS)';
+            if (hostname.includes('youtube.')) return 'Youtube (SNS)';
+            if (hostname.includes('tiktok.')) return 'Tiktok (SNS)';
+            if (hostname.includes('twitter.') || hostname.includes('t.co')) return 'Twitter/X (SNS)';
+            if (hostname.includes('line.me') || hostname.includes('line.naver')) return 'LINE (SNS)';
+            if (hostname.includes('pinterest.')) return 'Pinterest (SNS)';
+
+            // 블로그 플랫폼
+            if (hostname.includes('blog.naver.com')) return '[Blog] 네이버블로그';
+            if (hostname.includes('tistory.com')) return '[Blog] 티스토리';
+            if (hostname.includes('velog.io')) return '[Blog] velog';
+            if (hostname.includes('medium.com')) return '[Blog] Medium';
+            if (hostname.includes('ameblo.jp')) return '[Blog] Ameblo';
+
+            // 그 외 사이트는 도메인 그대로 표시
             return hostname;
         } catch (e) {
             return 'Other Websites';
@@ -10755,47 +10817,105 @@ window.loadHomeHcGrid = function(){
                 return;
             }
 
-            // 타임존 기반 실제 국가 감지 (세분화)
+            // 타임존 기반 실제 국가 감지 (세분화 + 타임존 값 보존)
             function _detectCountry() {
                 try {
                     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                    const lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+
                     // 한국
                     if (tz.includes('Seoul') || tz.includes('Korea')) return 'KR';
                     // 일본
                     if (tz.includes('Tokyo') || tz.includes('Japan')) return 'JP';
                     // 대만
                     if (tz.includes('Taipei')) return 'TW';
-                    // 중국 (홍콩 포함)
-                    if (tz.includes('Shanghai') || tz.includes('Hong_Kong') || tz.includes('Chongqing') || tz.includes('Urumqi') || tz.includes('Macau')) return 'CN';
+                    // 홍콩 (별도 분리)
+                    if (tz.includes('Hong_Kong')) return 'HK';
+                    // 중국
+                    if (tz.includes('Shanghai') || tz.includes('Chongqing') || tz.includes('Urumqi') || tz.includes('Macau')) return 'CN';
                     // 인도
                     if (tz.includes('Kolkata') || tz.includes('Calcutta') || tz.includes('Mumbai') || tz.includes('Delhi') || tz.includes('Asia/Colombo')) return 'IN';
-                    // 동남아
-                    if (tz.includes('Bangkok') || tz.includes('Ho_Chi_Minh') || tz.includes('Singapore') || tz.includes('Jakarta') || tz.includes('Manila') || tz.includes('Kuala_Lumpur') || tz.includes('Phnom_Penh') || tz.includes('Yangon') || tz.includes('Vientiane')) return 'SEA';
-                    // 중동 (아랍)
-                    if (tz.includes('Riyadh') || tz.includes('Arabia') || tz.includes('Kuwait') || tz.includes('Dubai') || tz.includes('Qatar') || tz.includes('Bahrain') || tz.includes('Muscat') || tz.includes('Baghdad') || tz.includes('Tehran') || tz.includes('Istanbul') || tz.includes('Beirut') || tz.includes('Jerusalem') || tz.includes('Amman')) return 'ME';
+                    // 동남아 (국가별 세분화)
+                    if (tz.includes('Bangkok')) return 'SEA:TH';
+                    if (tz.includes('Ho_Chi_Minh')) return 'SEA:VN';
+                    if (tz.includes('Singapore')) return 'SEA:SG';
+                    if (tz.includes('Jakarta')) return 'SEA:ID';
+                    if (tz.includes('Manila')) return 'SEA:PH';
+                    if (tz.includes('Kuala_Lumpur')) return 'SEA:MY';
+                    if (tz.includes('Phnom_Penh')) return 'SEA:KH';
+                    if (tz.includes('Yangon')) return 'SEA:MM';
+                    if (tz.includes('Vientiane')) return 'SEA:LA';
+                    // 중동 (국가별)
+                    if (tz.includes('Riyadh') || tz.includes('Arabia')) return 'ME:SA';
+                    if (tz.includes('Dubai')) return 'ME:AE';
+                    if (tz.includes('Tehran')) return 'ME:IR';
+                    if (tz.includes('Istanbul')) return 'ME:TR';
+                    if (tz.includes('Baghdad')) return 'ME:IQ';
+                    if (tz.includes('Kuwait')) return 'ME:KW';
+                    if (tz.includes('Qatar')) return 'ME:QA';
+                    if (tz.includes('Bahrain')) return 'ME:BH';
+                    if (tz.includes('Muscat')) return 'ME:OM';
+                    if (tz.includes('Beirut')) return 'ME:LB';
+                    if (tz.includes('Jerusalem') || tz.includes('Tel_Aviv')) return 'ME:IL';
+                    if (tz.includes('Amman')) return 'ME:JO';
                     // 호주/뉴질랜드
-                    if (tz.includes('Australia') || tz.includes('Auckland') || tz.includes('Pacific/Fiji')) return 'AU';
+                    if (tz.includes('Australia')) return 'AU';
+                    if (tz.includes('Auckland')) return 'NZ';
+                    if (tz.includes('Pacific/Fiji')) return 'FJ';
                     // 러시아
                     if (tz.includes('Moscow') || tz.includes('Vladivostok') || tz.includes('Novosibirsk') || tz.includes('Yekaterinburg') || tz.includes('Kamchatka') || tz.includes('Irkutsk') || tz.includes('Krasnoyarsk') || tz.includes('Magadan') || tz.includes('Sakhalin')) return 'RU';
-                    // 중남미 (America/ 중 구체적 도시 먼저 체크)
-                    if (tz.includes('Mexico') || tz.includes('Buenos_Aires') || tz.includes('Bogota') || tz.includes('Lima') || tz.includes('Santiago') || tz.includes('Sao_Paulo') || tz.includes('Caracas') || tz.includes('Havana') || tz.includes('Argentina') || tz.includes('Brazil') || tz.includes('Colombia')) return 'LATAM';
-                    // 북미 (US/Canada - 중남미 이후에 체크)
-                    if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) return 'US';
+                    // 중남미 (America/ 중 구체적 도시 먼저)
+                    if (tz.includes('Mexico')) return 'LATAM:MX';
+                    if (tz.includes('Buenos_Aires') || tz.includes('Argentina')) return 'LATAM:AR';
+                    if (tz.includes('Bogota') || tz.includes('Colombia')) return 'LATAM:CO';
+                    if (tz.includes('Lima')) return 'LATAM:PE';
+                    if (tz.includes('Santiago')) return 'LATAM:CL';
+                    if (tz.includes('Sao_Paulo') || tz.includes('Brazil')) return 'LATAM:BR';
+                    if (tz.includes('Caracas')) return 'LATAM:VE';
+                    if (tz.includes('Havana')) return 'LATAM:CU';
+                    // 북미 (US/Canada)
+                    if (tz.includes('America') || tz.includes('US/') || tz.includes('Canada') || tz.includes('Pacific/Honolulu')) {
+                        // Canada 구분
+                        if (tz.includes('Toronto') || tz.includes('Vancouver') || tz.includes('Edmonton') || tz.includes('Winnipeg') || tz.includes('Halifax') || tz.includes('St_Johns')) return 'CA';
+                        return 'US';
+                    }
                     // 아프리카
                     if (tz.includes('Africa') || tz.includes('Cairo') || tz.includes('Lagos') || tz.includes('Nairobi') || tz.includes('Johannesburg') || tz.includes('Casablanca')) return 'AF';
-                    // 유럽
-                    if (tz.includes('Europe') || tz.includes('London') || tz.includes('Berlin') || tz.includes('Paris') || tz.includes('Madrid') || tz.includes('Rome') || tz.includes('Amsterdam') || tz.includes('Warsaw')) return 'EU';
-                    return 'OTHER';
+                    // 유럽 (주요국 세분화)
+                    if (tz.includes('London')) return 'EU:GB';
+                    if (tz.includes('Berlin')) return 'EU:DE';
+                    if (tz.includes('Paris')) return 'EU:FR';
+                    if (tz.includes('Madrid')) return 'EU:ES';
+                    if (tz.includes('Rome')) return 'EU:IT';
+                    if (tz.includes('Amsterdam')) return 'EU:NL';
+                    if (tz.includes('Warsaw')) return 'EU:PL';
+                    if (tz.includes('Lisbon')) return 'EU:PT';
+                    if (tz.includes('Stockholm')) return 'EU:SE';
+                    if (tz.includes('Helsinki')) return 'EU:FI';
+                    if (tz.includes('Prague')) return 'EU:CZ';
+                    if (tz.includes('Vienna')) return 'EU:AT';
+                    if (tz.includes('Zurich')) return 'EU:CH';
+                    if (tz.includes('Brussels')) return 'EU:BE';
+                    if (tz.includes('Athens')) return 'EU:GR';
+                    if (tz.includes('Budapest')) return 'EU:HU';
+                    if (tz.includes('Bucharest')) return 'EU:RO';
+                    if (tz.includes('Copenhagen')) return 'EU:DK';
+                    if (tz.includes('Oslo')) return 'EU:NO';
+                    if (tz.includes('Dublin')) return 'EU:IE';
+                    if (tz.includes('Europe')) return 'EU';
+                    // ★ "기타" 대신 타임존 값 자체를 저장 (분석용)
+                    return 'OTHER:' + tz.replace(/\//g, '_');
                 } catch(e) { return 'KR'; }
             }
 
             // 1. 방문 기록 저장
+            const detectedSite = _detectCountry();
             const { data, error } = await sb
                 .from('page_views')
                 .insert([{
                     referrer: visitSource,
                     duration: 0,
-                    site: _detectCountry()
+                    site: detectedSite
                 }])
                 .select()
                 .single();
