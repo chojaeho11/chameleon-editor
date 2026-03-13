@@ -2522,7 +2522,7 @@ function _psCheckFabricWidth() {
         const radios = document.querySelectorAll('input[name="psSewing"]');
         radios.forEach(r => {
             const label = r.closest('label')?.textContent || '';
-            if (label.includes('이어') || label.includes('つなぎ') || label.toLowerCase().includes('seam') || label.toLowerCase().includes('join')) {
+            if (label.includes('이어') || label.includes('つなぎ') || label.includes('接続') || label.toLowerCase().includes('seam') || label.toLowerCase().includes('join') || label.toLowerCase().includes('connect')) {
                 r.checked = true;
                 r.dispatchEvent(new Event('change'));
             }

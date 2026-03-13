@@ -7616,7 +7616,7 @@ window.updateModalTotal = function() {
         let _hasSeam = false;
         _sewBox.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
             const lbl = chk.closest('label')?.textContent || chk.closest('.addon-item-row')?.textContent || '';
-            if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.toLowerCase().includes('seam') || lbl.toLowerCase().includes('join')) _hasSeam = true;
+            if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.includes('接続') || lbl.toLowerCase().includes('seam') || lbl.toLowerCase().includes('join') || lbl.toLowerCase().includes('connect')) _hasSeam = true;
         });
         if (_hasSeam) {
             _sewBox.querySelectorAll('input[name="userOption"]').forEach(chk => {
@@ -7878,7 +7878,7 @@ if (w >= 20 && h >= 20) {
                 if (_sewBox1400) {
                     _sewBox1400.querySelectorAll('input[name="userOption"]').forEach(chk => {
                         const lbl = chk.closest('label')?.textContent || chk.closest('.addon-item-row')?.textContent || '';
-                        if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.toLowerCase().includes('seam') || lbl.toLowerCase().includes('join') ||
+                        if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.includes('接続') || lbl.toLowerCase().includes('seam') || lbl.toLowerCase().includes('join') || lbl.toLowerCase().includes('connect') ||
                             lbl.includes('오버록') || lbl.includes('オーバーロック') || lbl.toLowerCase().includes('overlock')) {
                             chk.checked = true;
                             chk.dispatchEvent(new Event('change', {bubbles:true}));
@@ -7988,7 +7988,7 @@ if (w >= 20 && h >= 20) {
         let hasSeamJoin = false;
         checkboxes.forEach(chk => {
             const nm = chk.dataset.name || '';
-            if (chk.checked && (nm.includes('이어') || nm.includes('つなぎ') || nm.toLowerCase().includes('seam') || nm.toLowerCase().includes('join'))) {
+            if (chk.checked && (nm.includes('이어') || nm.includes('つなぎ') || nm.includes('接続') || nm.toLowerCase().includes('seam') || nm.toLowerCase().includes('join') || nm.toLowerCase().includes('connect'))) {
                 hasSeamJoin = true;
             }
         });
@@ -8032,7 +8032,7 @@ if (w >= 20 && h >= 20) {
                 const name = chk.dataset.name || '';
                 const nl = name.toLowerCase();
                 config.addonNames[chk.value] = name;
-                if (name.includes('이어') || name.includes('つなぎ') || name.includes('繋ぎ') || nl.includes('seam') || nl.includes('join')) config.seamJoin = true;
+                if (name.includes('이어') || name.includes('つなぎ') || name.includes('繋ぎ') || name.includes('接続') || nl.includes('seam') || nl.includes('join') || nl.includes('connect')) config.seamJoin = true;
                 if (name.includes('오버록') || name.includes('オーバー') || nl.includes('overlock') || nl.includes('over lock')) config.overlock = true;
                 if (name.includes('인터록') || name.includes('インター') || nl.includes('interlock') || nl.includes('inter lock')) config.interlock = true;
                 if (name.includes('트임') || name.includes('スリット') || name.includes('真ん中') || nl.includes('slit') || nl.includes('center')) config.centerSlit = true;
@@ -8180,7 +8180,7 @@ if (w >= 20 && h >= 20) {
                 const ll = lbl.toLowerCase();
                 const code = chk.value;
                 _fabricGuides.addonNames[code] = lbl.trim();
-                if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.includes('繋ぎ') || ll.includes('seam') || ll.includes('join')) _fabricGuides.seamJoin = true;
+                if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.includes('繋ぎ') || lbl.includes('接続') || ll.includes('seam') || ll.includes('join') || ll.includes('connect')) _fabricGuides.seamJoin = true;
                 if (lbl.includes('오버록') || lbl.includes('オーバー') || ll.includes('overlock') || ll.includes('over lock')) _fabricGuides.overlock = true;
                 if (lbl.includes('인터록') || lbl.includes('インター') || ll.includes('interlock') || ll.includes('inter lock')) _fabricGuides.interlock = true;
                 if (lbl.includes('트임') || lbl.includes('スリット') || lbl.includes('真ん中') || ll.includes('slit') || ll.includes('center')) _fabricGuides.centerSlit = true;
