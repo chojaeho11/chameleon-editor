@@ -6540,11 +6540,52 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             else if (_hn.includes('cafe3355')) currentLang = new URLSearchParams(window.location.search).get('lang') || 'en'; // US 도메인 → lang 파라미터 허용
             else currentLang = new URLSearchParams(window.location.search).get('lang') || null; // KR 등
 
+            // SEO 슬러그 → 카테고리 매핑 (상품코드가 아닌 카테고리 슬러그 처리)
+            const _SEO_CAT_MAP = {
+                'honeycomb': 'honeycomb_board',
+                'fabric-print': '23434242',
+                'paper-stand': 'pd_',
+                'paper-furniture': 'honeycomb_board',
+                'goods': '77777',
+                'acrylic-print': 'acrylic',
+                'foamex-print': 'PVC',
+                'foamboard-print': 'Foam',
+                'foamex-stand': 'foamex',
+                'biz-print': 'pp_',
+                'promo-items': '888999',
+                'tshirt-print': '77777',
+                'banner-stand': 'bn_',
+                'standee': 'hb_point',
+                'roll-blind': 'pp_bl_',
+                'home-interior': 'ua_',
+                'flexible-package': 'pkg_flex',
+                'box-package': 'pkg_box',
+                'shopping-bag': 'pkg_bag',
+                'sheet-print': 'st_',
+                'flex-sign': 'sign_',
+                'uv-print': 'uv_',
+                'blackout-blind': 'pp_bk_',
+                'curtain': 'pp_ct_',
+                'rubber-magnet': 'rm_',
+                'placard': 'pk_',
+            };
+
             // DB 조회
             const { data: product, error } = await sb.from('admin_products')
                 .select('*').eq('code', productCode).single();
 
-            if (error || !product) throw new Error("상품 정보를 찾을 수 없습니다.");
+            // 상품이 없으면 카테고리 슬러그인지 확인
+            if (error || !product) {
+                const _catCode = _SEO_CAT_MAP[productCode];
+                if (_catCode && window.openTopMenu) {
+                    if(loading) loading.style.display = 'none';
+                    // SEO 슬러그에 맞는 타이틀 조회
+                    const _seoTitle = (window.PRODUCT_SEO && window.PRODUCT_SEO[productCode] && window.PRODUCT_SEO[productCode][window._SEO_CC || 'KR']?.title) || productCode;
+                    window.openTopMenu(_catCode, _seoTitle.split(' - ')[0].split(' | ')[0]);
+                    return;
+                }
+                throw new Error("상품 정보를 찾을 수 없습니다.");
+            }
 
             // 전역 변수 저장
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
