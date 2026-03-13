@@ -7841,17 +7841,19 @@ if (w >= 20 && h >= 20) {
         const targetCode = product.code || window.currentProductKey;
         if (!targetCode) { showToast(window.t ? window.t('msg_product_code_missing', 'Product code is missing.') : 'Product code is missing.', 'error'); return; }
 
-        // ★ 패브릭미싱 필수 선택 검증
-        const reqCatBox = document.querySelector('[data-required-cat="2342434"]');
-        if (reqCatBox) {
-            const checked = reqCatBox.querySelectorAll('input[name="userOption"]:checked');
-            if (checked.length === 0) {
-                reqCatBox.style.border = '2px solid #ef4444';
-                reqCatBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                const _l = (window.location.hostname.includes('cafe0101.com')) ? 'ja' : (window.location.hostname.includes('cafe3355.com')) ? 'en' : 'kr';
-                const _m = _l==='ja'?'ファブリックのミシンオプションは1つ必ず選択してください':_l==='en'?'You must select at least one fabric sewing option':'패브릭의 미싱옵션은 1개는 꼭 선택해야 합니다';
-                showToast(_m, 'error');
-                return;
+        // ★ 패브릭미싱 필수 선택 검증 (파일업로드 시에는 건너뜀)
+        if (mode !== 'upload') {
+            const reqCatBox = document.querySelector('[data-required-cat="2342434"]');
+            if (reqCatBox) {
+                const checked = reqCatBox.querySelectorAll('input[name="userOption"]:checked');
+                if (checked.length === 0) {
+                    reqCatBox.style.border = '2px solid #ef4444';
+                    reqCatBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const _l = (window.location.hostname.includes('cafe0101.com')) ? 'ja' : (window.location.hostname.includes('cafe3355.com')) ? 'en' : 'kr';
+                    const _m = _l==='ja'?'ファブリックのミシンオプションは1つ必ず選択してください':_l==='en'?'You must select at least one fabric sewing option':'패브릭의 미싱옵션은 1개는 꼭 선택해야 합니다';
+                    showToast(_m, 'error');
+                    return;
+                }
             }
         }
 
