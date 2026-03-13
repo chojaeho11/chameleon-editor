@@ -2284,7 +2284,13 @@ export function applyFabricGuides(config) {
     const bL = board.left, bT = board.top;
     const bW = board.width * (board.scaleX || 1);
     const bH = board.height * (board.scaleY || 1);
-    const mm = bW / (config.widthMm || 1000);
+    // widthMm 안전 폴백: 없으면 보드 픽셀÷3.7795로 계산
+    if (!config.widthMm || config.widthMm < 10) {
+        config.widthMm = Math.round(bW / 3.7795);
+        config.heightMm = Math.round(bH / 3.7795);
+    }
+    const mm = bW / config.widthMm;
+    console.log('[Fabric] mm ratio:', mm, 'widthMm:', config.widthMm, 'bW:', bW);
     const _gp = { _fabricGuide: true, excludeFromExport: true, selectable: false, evented: false };
 
     // 기존 패브릭 가이드 제거
