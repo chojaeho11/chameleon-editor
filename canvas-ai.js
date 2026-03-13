@@ -2392,23 +2392,35 @@ export function applyFabricGuides(config) {
         G.push(marginRect, marginLabel);
     }
 
-    // ─── 3. 가운데트임 (상단 이어지고 하단 트여짐) ───
+    // ─── 3. 가운데트임 (위→아래 전체, 분할점 드래그 가능) ───
     if (config.centerSlit) {
-        const slitLenMm = Math.min(config.heightMm * 0.35, 300);
-        const slitLenPx = slitLenMm * mm;
-        const slitTopY = bT + bH - slitLenPx;
         const cx = bL + bW / 2;
         const SC = '#ff0000';
-        // 가운데 세로 절개선 (하단에서 위로)
-        const slitLine = new fabric.Line([cx, slitTopY, cx, bT + bH], {
-            stroke: SC, strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
-        });
-        // 상단 이어지는 부분 (솔리드 횡선)
-        const joinLine = new fabric.Line([cx - 25*mm, slitTopY, cx + 25*mm, slitTopY], {
+        // 기본 분할점: 상단에서 65% 지점 (위쪽 이어짐, 아래쪽 트임)
+        const defaultSplitY = bT + bH * 0.35;
+
+        // 상단 이어짐 구간 (솔리드 라인)
+        const joinLine = new fabric.Line([cx, bT, cx, defaultSplitY], {
             stroke: SC, strokeWidth: 3, ..._gp
         });
-        const joinLabel = new fabric.Text('── 이어짐 ──', {
-            left: cx, top: slitTopY - 22, fontSize: 12, fill: '#fff', originX: 'center',
+        // 하단 트임 구간 (점선)
+        const slitLine = new fabric.Line([cx, defaultSplitY, cx, bT + bH], {
+            stroke: SC, strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
+        });
+        // 분할점 드래그 핸들 (가로선 + 라벨)
+        const handleW = 30 * mm;
+        const splitHandle = new fabric.Rect({
+            left: cx - handleW/2, top: defaultSplitY - 4*mm,
+            width: handleW, height: 8*mm,
+            fill: 'rgba(255,0,0,0.25)', stroke: SC, strokeWidth: 2,
+            rx: 3*mm, ry: 3*mm,
+            selectable: true, evented: true, hasControls: false, hasBorders: true,
+            lockMovementX: true, lockRotation: true, lockScalingX: true, lockScalingY: true,
+            _fabricGuide: true, _fabricGuideType: 'slit_handle', excludeFromExport: true,
+            hoverCursor: 'ns-resize', moveCursor: 'ns-resize'
+        });
+        const handleLabel = new fabric.Text('▲ 이어짐 | 트임 ▼  ↕드래그', {
+            left: cx, top: defaultSplitY - 8, fontSize: 11, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
         });
@@ -2418,7 +2430,7 @@ export function applyFabricGuides(config) {
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
         });
-        // 양쪽 벌어짐 (V자 형태)
+        // V자 벌어짐
         const vSize = 12 * mm;
         const vLeft = new fabric.Line([cx, bT + bH, cx - vSize, bT + bH + vSize*0.7], {
             stroke: SC, strokeWidth: 3, ..._gp
@@ -2426,36 +2438,65 @@ export function applyFabricGuides(config) {
         const vRight = new fabric.Line([cx, bT + bH, cx + vSize, bT + bH + vSize*0.7], {
             stroke: SC, strokeWidth: 3, ..._gp
         });
-        G.push(slitLine, joinLine, joinLabel, splitLabel, vLeft, vRight);
+
+        // 드래그로 분할점 이동
+        splitHandle.on('moving', function() {
+            const sy = Math.max(bT + 20, Math.min(bT + bH - 20, this.top + 4*mm));
+            this.set('top', sy - 4*mm);
+            joinLine.set({ y2: sy });
+            slitLine.set({ y1: sy });
+            handleLabel.set('top', sy - 8);
+            canvas.renderAll();
+        });
+
+        G.push(joinLine, slitLine, splitHandle, handleLabel, splitLabel, vLeft, vRight);
     }
 
     // ─── 4. 사방타공 (Corner Grommets) ───
     if (config.cornerGrommet) {
         const inset = 20 * mm;
-        const triSz = 30 * mm;
+        const triSz = 35 * mm;
         const holeR = 5 * mm;
-        const corners = [
-            { x: bL + inset, y: bT + inset, a: 0 },
-            { x: bL + bW - inset, y: bT + inset, a: 90 },
-            { x: bL + bW - inset, y: bT + bH - inset, a: 180 },
-            { x: bL + inset, y: bT + bH - inset, a: 270 }
+        // 각 모서리에 직각삼각형 (Polygon)으로 정확히 맞춤
+        const cornerDefs = [
+            { // 좌상단
+                pts: [{x:0,y:0},{x:triSz,y:0},{x:0,y:triSz}],
+                cx: triSz/3, cy: triSz/3,
+                ox: bL, oy: bT
+            },
+            { // 우상단
+                pts: [{x:0,y:0},{x:-triSz,y:0},{x:0,y:triSz}],
+                cx: -triSz/3, cy: triSz/3,
+                ox: bL + bW, oy: bT
+            },
+            { // 우하단
+                pts: [{x:0,y:0},{x:-triSz,y:0},{x:0,y:-triSz}],
+                cx: -triSz/3, cy: -triSz/3,
+                ox: bL + bW, oy: bT + bH
+            },
+            { // 좌하단
+                pts: [{x:0,y:0},{x:triSz,y:0},{x:0,y:-triSz}],
+                cx: triSz/3, cy: -triSz/3,
+                ox: bL, oy: bT + bH
+            }
         ];
-        corners.forEach(c => {
-            const tri = new fabric.Triangle({
-                left: c.x, top: c.y,
-                width: triSz, height: triSz, angle: c.a + 45,
+        cornerDefs.forEach(c => {
+            const tri = new fabric.Polygon(c.pts, {
+                left: c.ox, top: c.oy,
                 fill: 'rgba(255,255,255,0.9)', stroke: '#ff0000', strokeWidth: 2,
-                originX: 'center', originY: 'center',
+                originX: 'left', originY: 'top',
                 shadow: new fabric.Shadow({ color: 'rgba(255,0,0,0.25)', blur: 6, offsetX: 0, offsetY: 0 }),
                 ..._gp
             });
+            const hx = c.ox + c.cx;
+            const hy = c.oy + c.cy;
             const ring = new fabric.Circle({
-                left: c.x - holeR - 3, top: c.y - holeR - 3,
+                left: hx - holeR - 3, top: hy - holeR - 3,
                 radius: holeR + 3, fill: 'transparent',
                 stroke: '#999', strokeWidth: 2, ..._gp
             });
             const hole = new fabric.Circle({
-                left: c.x - holeR, top: c.y - holeR,
+                left: hx - holeR, top: hy - holeR,
                 radius: holeR, fill: 'transparent',
                 stroke: '#ff0000', strokeWidth: 2.5, ..._gp
             });
@@ -2509,18 +2550,18 @@ export function applyFabricGuides(config) {
         G.push(poleBar, poleLine, poleLabel);
     }
 
-    // ─── 6. 상단끈고리 (양쪽 1개씩 흰색 고리 - 대지 밖 크게) ───
+    // ─── 6. 상단끈고리 (좌우 끝 대지 밖 사각형) ───
     if (config.topLoop) {
-        const loopH = 80 * mm;   // 크게
-        const loopW = 25 * mm;
-        const loopInset = bW * 0.2;
-        const positions = [bL + loopInset, bL + bW - loopInset];
+        const loopH = 80 * mm;
+        const loopW = 30 * mm;
+        // 좌우 끝에 배치 (대지 경계에 걸치도록)
+        const positions = [bL, bL + bW];
         positions.forEach(lx => {
             const loopBody = new fabric.Rect({
                 left: lx - loopW/2, top: bT - loopH,
-                width: loopW, height: loopH + 10*mm,
+                width: loopW, height: loopH + 8*mm,
                 fill: '#fff', stroke: '#ff0000', strokeWidth: 3,
-                rx: loopW/2, ry: loopW/2,
+                rx: 4*mm, ry: 4*mm,
                 shadow: new fabric.Shadow({ color: 'rgba(255,0,0,0.3)', blur: 8, offsetX: 0, offsetY: 2 }),
                 ..._gp
             });
