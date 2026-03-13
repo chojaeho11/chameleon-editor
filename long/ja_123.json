@@ -1872,6 +1872,7 @@
   "msg_product_code_missing": "商品コードが見つかりません。",
   "msg_cart_add_failed": "カートへの追加に失敗しました: ",
   "msg_select_category": "カテゴリを選択してください。",
+  "msg_sub_select": "詳細項目を選択",
   "msg_select_image_for_bg": "背景にする画像を選択してください。",
   "msg_delivery_cat_not_found": "配送カテゴリが見つかりません。管理者にお問い合わせください。",
   "msg_no_designs": "保存されたデザインがありません。",

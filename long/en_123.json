@@ -1875,6 +1875,7 @@
   "msg_product_code_missing": "Product code is missing.",
   "msg_cart_add_failed": "Failed to add to cart: ",
   "msg_select_category": "Please select a category.",
+  "msg_sub_select": "Select subcategory",
   "msg_select_image_for_bg": "Please select an image to set as background.",
   "msg_delivery_cat_not_found": "Delivery category not found. Please contact admin.",
   "msg_no_designs": "No saved designs.",

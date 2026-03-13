@@ -5987,7 +5987,8 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
 
         // 1. 모달 창 열기 & 로딩 표시
         modal.style.display = 'flex';
-        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(세부 항목 선택)</span>`;
+        const _subSelectText = window.t ? window.t('msg_sub_select', 'Select subcategory') : 'Select subcategory';
+        if(titleEl) titleEl.innerHTML = `<span style="color:#6366f1;">${titleText}</span> <span style="font-size:14px; color:#888; font-weight:normal;">(${_subSelectText})</span>`;
         if(descEl) descEl.innerText = window.t ? window.t('msg_select_category', 'Please select a category.') : 'Please select a category.';
 
         // pushState: 카테고리 모달 열릴 때 히스토리에 추가 (뒤로가기로 홈 복귀 가능)
@@ -6049,16 +6050,22 @@ let iconUrl = window.getTinyThumb(rawUrl, 150);
                     imgTag = `<i class="fa-solid fa-folder-open" style="font-size:24px; color:#cbd5e1;"></i>`;
                 }
 
+                // 언어별 카테고리 이름
+                const _hn2 = window.location.hostname;
+                let _catName = cat.name || '';
+                if (_hn2.includes('cafe0101') && cat.name_jp) _catName = cat.name_jp;
+                else if (_hn2.includes('cafe3355') && cat.name_us) _catName = cat.name_us;
+
                 div.innerHTML = `
                     <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center;">
                         ${imgTag}
                     </div>
-                    <div class="quick-text">${cat.name}</div>
+                    <div class="quick-text">${_catName}</div>
                 `;
 
                 // 클릭하면 상품 목록으로 이동 (뒤로가기 액션 전달)
                 div.onclick = () => {
-                    window.showCategoryProducts(cat.code, cat.name, null, () => window.openTopMenu(topCode, titleText));
+                    window.showCategoryProducts(cat.code, _catName, null, () => window.openTopMenu(topCode, titleText));
                 };
 
                 grid.appendChild(div);
@@ -6580,8 +6587,34 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                 if (_catCode && window.openTopMenu) {
                     if(loading) loading.style.display = 'none';
                     // SEO 슬러그에 맞는 타이틀 조회
-                    const _seoTitle = (window.PRODUCT_SEO && window.PRODUCT_SEO[productCode] && window.PRODUCT_SEO[productCode][window._SEO_CC || 'KR']?.title) || productCode;
-                    window.openTopMenu(_catCode, _seoTitle.split(' - ')[0].split(' | ')[0]);
+                    const _cc = window._SEO_CC || 'KR';
+                    const _seoTitle = (window.PRODUCT_SEO && window.PRODUCT_SEO[productCode] && window.PRODUCT_SEO[productCode][_cc]?.title) || productCode;
+                    const _cleanTitle = _seoTitle.split(' - ')[0].split(' | ')[0];
+
+                    // 홈 화면 숨기고 카테고리 모달을 메인 페이지로 전환
+                    const startScreen = document.getElementById('startScreen');
+                    if(startScreen) startScreen.style.display = 'none';
+
+                    await window.openTopMenu(_catCode, _cleanTitle);
+
+                    // 카테고리 모달을 풀스크린 메인 페이지로 변환
+                    const catModal = document.getElementById('categoryDetailModal');
+                    if (catModal) {
+                        const catBox = catModal.querySelector('.modal-box');
+                        catModal.classList.add('product-full-page');
+                        catModal.style.display = 'flex';
+                        catModal.style.padding = '0';
+                        catModal.style.background = '#ffffff';
+                        if (catBox) {
+                            catBox.style.width = '100%';
+                            catBox.style.maxWidth = '100%';
+                            catBox.style.height = '100%';
+                            catBox.style.borderRadius = '0';
+                            catBox.style.boxShadow = 'none';
+                            catBox.style.margin = '0';
+                            catBox.style.overflowY = 'auto';
+                        }
+                    }
                     return;
                 }
                 throw new Error("상품 정보를 찾을 수 없습니다.");
