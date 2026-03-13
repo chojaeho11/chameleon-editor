@@ -1107,7 +1107,7 @@ async function refundSingleOrder(id, reason = '관리자 취소') {
     if (!order) throw new Error('주문 조회 실패');
 
     const pm = (order.payment_method || '').toLowerCase();
-    const isCard = pm.includes('카드') || pm.includes('card') || pm.includes('간편');
+    const isCard = pm.includes('카드') || pm.includes('card') || pm.includes('간편') || pm.includes('페이') || pm.includes('pay');
     const isStripe = pm.includes('stripe');
     const isDeposit = pm.includes('예치금');
     let newPaymentStatus = '환불완료';
@@ -1317,10 +1317,10 @@ window.approveRefundHQ = async () => {
             if (!order || order.payment_status !== '환불대기') continue;
 
             const pm = (order.payment_method || '').toLowerCase();
-            const isCard = pm.includes('카드') || pm.includes('card') || pm.includes('간편결제');
+            const isCard = pm.includes('카드') || pm.includes('card') || pm.includes('간편') || pm.includes('페이') || pm.includes('pay');
             const isStripe = pm.includes('stripe');
 
-            // 카드건: PG 환불 API 호출
+            // 카드/간편결제건: PG 환불 API 호출
             if ((isCard || isStripe) && order.toss_payment_key) {
                 try {
                     if (isStripe) {
@@ -1334,7 +1334,21 @@ window.approveRefundHQ = async () => {
                         });
                         if (error || (data && data.error)) throw new Error((data && data.error) || error?.message);
                     }
-                    await sb.from('orders').update({ payment_status: '본사승인' }).eq('id', id);
+                    // PG 취소 성공 → 바로 환불완료 + 마일리지 복원
+                    if (order.discount_amount > 0 && order.user_id) {
+                        try {
+                            const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
+                            if (pf) {
+                                await sb.from('profiles').update({ mileage: (pf.mileage || 0) + order.discount_amount }).eq('id', order.user_id);
+                                await sb.from('wallet_logs').insert({
+                                    user_id: order.user_id, type: 'refund_mileage',
+                                    amount: order.discount_amount,
+                                    description: `환불완료 마일리지 복원 (주문번호: ${id})`
+                                });
+                            }
+                        } catch(me) { console.error('마일리지 복원 오류:', me); }
+                    }
+                    await sb.from('orders').update({ payment_status: '환불완료', status: '취소됨' }).eq('id', id);
                     successCount++;
                 } catch (pgErr) {
                     console.error(`Order ${id} PG refund error:`, pgErr);
@@ -1342,8 +1356,8 @@ window.approveRefundHQ = async () => {
                     failCount++;
                 }
             } else {
-                // 현금/무통장/예치금/기타: 상태만 변경
-                await sb.from('orders').update({ payment_status: '본사승인' }).eq('id', id);
+                // 현금/무통장/예치금/기타: 바로 환불완료
+                await sb.from('orders').update({ payment_status: '환불완료', status: '취소됨' }).eq('id', id);
                 successCount++;
             }
         } catch (e) {
@@ -1352,7 +1366,7 @@ window.approveRefundHQ = async () => {
         }
     }
     showLoading(false);
-    showToast(`본사승인: ${successCount}건 완료${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
+    showToast(`환불처리: ${successCount}건 완료${failCount > 0 ? `, 실패 ${failCount}건` : ''}`, failCount > 0 ? 'warn' : 'success');
     updateCancelReqBadge();
     loadOrders();
 };

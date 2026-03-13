@@ -44,7 +44,41 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 결제 승인 성공 — DB 업데이트 (paymentKey 저장)
+    // 결제수단 세분화 (토스 응답에서 실제 결제수단 추출)
+    let paymentMethod = '카드/간편결제'
+    const easyPayProvider = data.easyPay?.provider || ''
+    const tossMethod = data.method || ''
+
+    if (easyPayProvider) {
+      // 간편결제 (카카오페이, 네이버페이, 토스페이 등)
+      const providerMap: Record<string, string> = {
+        '카카오페이': '카카오페이',
+        '네이버페이': '네이버페이',
+        '토스페이': '토스페이',
+        '삼성페이': '삼성페이',
+        '애플페이': '애플페이',
+        'KAKAOPAY': '카카오페이',
+        'NAVERPAY': '네이버페이',
+        'TOSSPAY': '토스페이',
+        'SAMSUNGPAY': '삼성페이',
+        'APPLEPAY': '애플페이',
+      }
+      paymentMethod = providerMap[easyPayProvider] || easyPayProvider
+    } else if (tossMethod === '카드' || tossMethod === 'CARD') {
+      // 신용/체크카드 — 카드사 정보 추가
+      const cardCompany = data.card?.company || data.card?.issuerCode || ''
+      paymentMethod = cardCompany ? `카드(${cardCompany})` : '카드결제'
+    } else if (tossMethod === '가상계좌' || tossMethod === 'VIRTUAL_ACCOUNT') {
+      paymentMethod = '가상계좌'
+    } else if (tossMethod === '계좌이체' || tossMethod === 'TRANSFER') {
+      paymentMethod = '계좌이체'
+    } else if (tossMethod === '휴대폰' || tossMethod === 'MOBILE_PHONE') {
+      paymentMethod = '휴대폰결제'
+    } else if (tossMethod) {
+      paymentMethod = tossMethod
+    }
+
+    // 결제 승인 성공 — DB 업데이트 (paymentKey + 실제 결제수단 저장)
     if (dbId) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -61,7 +95,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             status: '접수됨',
             payment_status: '결제완료',
-            payment_method: '카드/간편결제',
+            payment_method: paymentMethod,
             toss_payment_key: paymentKey,
           }),
         })
@@ -69,7 +103,11 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, paymentKey: data.paymentKey || paymentKey }),
+      JSON.stringify({
+        success: true,
+        paymentKey: data.paymentKey || paymentKey,
+        paymentMethod,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 

@@ -151,12 +151,16 @@
                         throw new Error(data.error);
                     }
 
-                    await updateOrder(dbId, {
-                        status: '접수됨',
-                        payment_status: '결제완료',
-                        payment_method: '카드/간편결제',
-                        toss_payment_key: paymentKey
-                    });
+                    // confirm-payment이 DB 업데이트를 이미 처리함 (실제 결제수단 포함)
+                    // 혹시 실패했을 때를 대비한 fallback
+                    if (!data.paymentMethod) {
+                        await updateOrder(dbId, {
+                            status: '접수됨',
+                            payment_status: '결제완료',
+                            payment_method: '카드/간편결제',
+                            toss_payment_key: paymentKey
+                        });
+                    }
 
                 } else {
                     throw new Error("No payment verification data found.");
