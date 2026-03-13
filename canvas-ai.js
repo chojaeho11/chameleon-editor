@@ -2581,12 +2581,19 @@ export function applyFabricGuides(config) {
         G.push(loopLabel);
     }
 
-    // ─── 7. 멜빵고리 (좌우 끝 2개 + 중간 2개 = 총 4개) ───
+    // ─── 7. 멜빵고리 (가로 길이에 따라 25cm 이내 균등 분할) ───
     if (config.strapLoop) {
-        const strapH = 90 * mm;  // 크게
+        const strapH = 90 * mm;
         const strapW = 35 * mm;
-        // 좌끝, 1/3, 2/3, 우끝 위치
-        const positions = [bL, bL + bW/3, bL + bW*2/3, bL + bW];
+        const widthMm = config.widthMm || 1000;
+        const maxGapMm = 250; // 최대 간격 25cm
+        // 최소 2구간(좌끝+우끝=최소2개), 구간수 = ceil(가로/250)
+        const segments = Math.max(2, Math.ceil(widthMm / maxGapMm));
+        const count = segments + 1; // 양 끝 포함 개수
+        const positions = [];
+        for (let i = 0; i < count; i++) {
+            positions.push(bL + (bW * i / (count - 1)));
+        }
         for (let i = 0; i < positions.length; i++) {
             const sx = positions[i];
             const strap = new fabric.Rect({
@@ -2603,7 +2610,6 @@ export function applyFabricGuides(config) {
                 radius: holeR, fill: 'transparent',
                 stroke: '#ff0000', strokeWidth: 3, ..._gp
             });
-            // 봉 통과 슬롯 (가로 직사각형)
             const slotW = strapW * 0.6;
             const slot = new fabric.Rect({
                 left: sx - slotW/2, top: bT - strapH*0.3,
@@ -2613,7 +2619,7 @@ export function applyFabricGuides(config) {
             });
             G.push(strap, hole, slot);
         }
-        const strapLabel = new fabric.Text('멜빵고리 ×4', {
+        const strapLabel = new fabric.Text(`멜빵고리 ×${count}`, {
             left: bL + bW/2, top: bT - strapH - 22, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
