@@ -2274,7 +2274,7 @@ function _changePromoPanelBg(panelIdx, color) {
 }
 
 // ═══════════════════════════════════════════════
-// ★ 패브릭 인쇄 가이드 (이어박기, 끈고리, 트임)
+// ★ 패브릭 인쇄 가이드 (전체 리뉴얼)
 // ═══════════════════════════════════════════════
 export function applyFabricGuides(config) {
     if (!canvas) return;
@@ -2284,316 +2284,356 @@ export function applyFabricGuides(config) {
     const bL = board.left, bT = board.top;
     const bW = board.width * (board.scaleX || 1);
     const bH = board.height * (board.scaleY || 1);
-    const mmToPx = bW / (config.widthMm || 1000); // 1mm당 px
-    const _t = (k, fb) => (window.t ? window.t(k, fb) : fb);
+    const mm = bW / (config.widthMm || 1000);
+    const _gp = { _fabricGuide: true, excludeFromExport: true, selectable: false, evented: false };
 
     // 기존 패브릭 가이드 제거
     canvas.getObjects().filter(o => o._fabricGuide).forEach(o => canvas.remove(o));
+    // 이어박기 컨트롤 UI 제거
+    const _oldCtrl = document.getElementById('fabricSeamCtrl');
+    if (_oldCtrl) _oldCtrl.remove();
 
-    const guideObjs = [];
+    const G = [];
 
-    // ─── 1. 이어박기 (Seam Join) 가이드 ───
+    // ─── 1. 이어박기 (Seam Join) ───
     if (config.seamJoin) {
-        // 중앙에 드래그 가능한 이어박기 라인 + 양쪽 겹침 영역(30mm)
-        const seamX = bL + bW / 2;
-        const overlapPx = 30 * mmToPx; // 30mm overlap
+        const isH = !!config._seamHorizontal; // 수평 모드
+        const overlapPx = 30 * mm;
 
-        // 겹침 영역 (반투명)
-        const overlapRect = new fabric.Rect({
-            left: seamX - overlapPx / 2,
-            top: bT,
-            width: overlapPx,
-            height: bH,
-            fill: 'rgba(239, 68, 68, 0.08)',
-            stroke: '#ef4444',
-            strokeWidth: 1,
-            strokeDashArray: [4, 4],
-            selectable: true,
-            evented: true,
-            hasControls: false,
-            hasBorders: true,
-            lockMovementY: true,
-            lockRotation: true,
-            lockScalingX: true,
-            lockScalingY: true,
-            _fabricGuide: true,
-            _fabricGuideType: 'seam_overlap',
-            excludeFromExport: true,
-            hoverCursor: 'ew-resize',
-            moveCursor: 'ew-resize'
-        });
-
-        // 중심 라인 (빨간 점선)
-        const seamLine = new fabric.Line(
-            [seamX, bT, seamX, bT + bH],
-            {
-                stroke: '#ef4444',
-                strokeWidth: 2,
-                strokeDashArray: [8, 4],
-                selectable: false,
-                evented: false,
-                _fabricGuide: true,
-                _fabricGuideType: 'seam_line',
-                excludeFromExport: true
-            }
-        );
-
-        // 라벨
-        const seamLabel = new fabric.Text(_t('fb_seam_line', '← 이어박기 위치 (드래그) →'), {
-            left: seamX,
-            top: bT + 10,
-            fontSize: 12,
-            fill: '#ef4444',
-            fontWeight: 'bold',
-            fontFamily: 'Pretendard, sans-serif',
-            originX: 'center',
-            selectable: false,
-            evented: false,
-            _fabricGuide: true,
-            _fabricGuideType: 'seam_label',
-            excludeFromExport: true
-        });
-
-        // 겹침 라벨
-        const overlapLabel = new fabric.Text('30mm', {
-            left: seamX,
-            top: bT + bH - 25,
-            fontSize: 10,
-            fill: '#ef4444',
-            fontFamily: 'Pretendard, sans-serif',
-            originX: 'center',
-            selectable: false,
-            evented: false,
-            _fabricGuide: true,
-            excludeFromExport: true
-        });
-
-        // 드래그 시 연동
-        overlapRect.on('moving', function() {
-            const cx = this.left + this.width / 2;
-            // 보드 범위 내 제한
-            const minX = bL + overlapPx / 2;
-            const maxX = bL + bW - overlapPx / 2;
-            const clampX = Math.max(minX, Math.min(maxX, cx));
-            this.set('left', clampX - overlapPx / 2);
-            seamLine.set({ x1: clampX, x2: clampX });
-            seamLabel.set('left', clampX);
-            overlapLabel.set('left', clampX);
-            canvas.renderAll();
-        });
-
-        guideObjs.push(overlapRect, seamLine, seamLabel, overlapLabel);
-    }
-
-    // ─── 2. 상단 끈고리 (Top Loop/Grommet) 가이드 ───
-    if (config.topLoop) {
-        const loopExtendMm = 40; // 고리 돌출 40mm
-        const loopExtendPx = loopExtendMm * mmToPx;
-        const loopWidthMm = 60; // 고리 폭 60mm
-        const loopWidthPx = loopWidthMm * mmToPx;
-        const loopX = bL + bW / 2; // 기본 중앙
-
-        // 고리 영역 (보드 상단 위로 돌출)
-        const loopRect = new fabric.Rect({
-            left: loopX - loopWidthPx / 2,
-            top: bT - loopExtendPx,
-            width: loopWidthPx,
-            height: loopExtendPx + 10 * mmToPx, // 보드 안쪽 10mm 겹침
-            fill: 'rgba(59, 130, 246, 0.1)',
-            stroke: '#3b82f6',
-            strokeWidth: 1.5,
-            strokeDashArray: [6, 3],
-            rx: 4, ry: 4,
-            selectable: true,
-            evented: true,
-            hasControls: false,
-            hasBorders: true,
-            lockMovementY: true,
-            lockRotation: true,
-            lockScalingX: true,
-            lockScalingY: true,
-            _fabricGuide: true,
-            _fabricGuideType: 'top_loop',
-            excludeFromExport: true,
-            hoverCursor: 'ew-resize',
-            moveCursor: 'ew-resize'
-        });
-
-        // 고리 구멍 표시 (원형)
-        const holeRadius = 5 * mmToPx;
-        const loopHole = new fabric.Circle({
-            left: loopX - holeRadius,
-            top: bT - loopExtendPx / 2 - holeRadius,
-            radius: holeRadius,
-            fill: 'transparent',
-            stroke: '#3b82f6',
-            strokeWidth: 2,
-            selectable: false,
-            evented: false,
-            _fabricGuide: true,
-            _fabricGuideType: 'loop_hole',
-            excludeFromExport: true
-        });
-
-        // 라벨
-        const loopLabel = new fabric.Text(_t('fb_loop_pos', '↔ 끈고리 위치 (드래그)'), {
-            left: loopX,
-            top: bT - loopExtendPx - 16,
-            fontSize: 11,
-            fill: '#3b82f6',
-            fontWeight: 'bold',
-            fontFamily: 'Pretendard, sans-serif',
-            originX: 'center',
-            selectable: false,
-            evented: false,
-            _fabricGuide: true,
-            excludeFromExport: true
-        });
-
-        // 드래그 시 연동
-        loopRect.on('moving', function() {
-            const cx = this.left + this.width / 2;
-            const minX = bL + loopWidthPx / 2;
-            const maxX = bL + bW - loopWidthPx / 2;
-            const clampX = Math.max(minX, Math.min(maxX, cx));
-            this.set('left', clampX - loopWidthPx / 2);
-            loopHole.set('left', clampX - holeRadius);
-            loopLabel.set('left', clampX);
-            canvas.renderAll();
-        });
-
-        guideObjs.push(loopRect, loopHole, loopLabel);
-    }
-
-    // ─── 3. 트임 (Slit) 가이드 ───
-    if (config.slit) {
-        const slitLenMm = 150; // 트임 기본 길이 150mm
-        const slitLenPx = slitLenMm * mmToPx;
-
-        // 좌측 하단 트임
-        const leftSlitX = bL + 2;
-        const slitY = bT + bH - slitLenPx;
-        const leftSlit = new fabric.Line(
-            [leftSlitX, slitY, leftSlitX, bT + bH],
-            {
-                stroke: '#16a34a',
-                strokeWidth: 2.5,
-                strokeDashArray: [6, 3],
-                selectable: true,
-                evented: true,
-                hasControls: false,
-                lockMovementX: true,
-                lockRotation: true,
-                _fabricGuide: true,
-                _fabricGuideType: 'slit_left',
-                excludeFromExport: true,
-                hoverCursor: 'ns-resize',
-                moveCursor: 'ns-resize'
-            }
-        );
-
-        // 우측 하단 트임
-        const rightSlitX = bL + bW - 2;
-        const rightSlit = new fabric.Line(
-            [rightSlitX, slitY, rightSlitX, bT + bH],
-            {
-                stroke: '#16a34a',
-                strokeWidth: 2.5,
-                strokeDashArray: [6, 3],
-                selectable: true,
-                evented: true,
-                hasControls: false,
-                lockMovementX: true,
-                lockRotation: true,
-                _fabricGuide: true,
-                _fabricGuideType: 'slit_right',
-                excludeFromExport: true,
-                hoverCursor: 'ns-resize',
-                moveCursor: 'ns-resize'
-            }
-        );
-
-        // 트임 라벨
-        const slitLabelL = new fabric.Text(_t('fb_slit', '트임') + ' ↕', {
-            left: leftSlitX + 8,
-            top: slitY + 5,
-            fontSize: 10,
-            fill: '#16a34a',
-            fontWeight: 'bold',
-            fontFamily: 'Pretendard, sans-serif',
-            selectable: false,
-            evented: false,
-            _fabricGuide: true,
-            excludeFromExport: true
-        });
-        const slitLabelR = new fabric.Text('↕ ' + _t('fb_slit', '트임'), {
-            left: rightSlitX - 45,
-            top: slitY + 5,
-            fontSize: 10,
-            fill: '#16a34a',
-            fontWeight: 'bold',
-            fontFamily: 'Pretendard, sans-serif',
-            selectable: false,
-            evented: false,
-            _fabricGuide: true,
-            excludeFromExport: true
-        });
-
-        // 트임 드래그 (상하 이동으로 길이 조절)
-        leftSlit.on('moving', function() {
-            const newY1 = Math.max(bT, Math.min(bT + bH - 20, this.y1 + (this.top - (this.y1))));
-            this.set({ y1: this.top, x1: leftSlitX, x2: leftSlitX, y2: bT + bH, top: this.top });
-            slitLabelL.set('top', this.top + 5);
-            // 동기화 (우측도 같은 길이)
-            rightSlit.set({ y1: this.y1, top: this.top });
-            slitLabelR.set('top', this.top + 5);
-            canvas.renderAll();
-        });
-        rightSlit.on('moving', function() {
-            this.set({ y1: this.top, x1: rightSlitX, x2: rightSlitX, y2: bT + bH, top: this.top });
-            slitLabelR.set('top', this.top + 5);
-            leftSlit.set({ y1: this.y1, top: this.top });
-            slitLabelL.set('top', this.top + 5);
-            canvas.renderAll();
-        });
-
-        guideObjs.push(leftSlit, rightSlit, slitLabelL, slitLabelR);
-    }
-
-    // ─── 4. 패브릭 가이드 범례 패널 ───
-    const legendItems = [];
-    if (config.seamJoin) legendItems.push({ color: '#ef4444', text: _t('fb_seam_join', '이어박기') });
-    if (config.topLoop) legendItems.push({ color: '#3b82f6', text: _t('fb_top_loop', '상단 끈고리') });
-    if (config.slit) legendItems.push({ color: '#16a34a', text: _t('fb_slit_opt', '트임') });
-
-    if (legendItems.length > 0) {
-        let legendY = bT + bH + 15;
-        legendItems.forEach((item, i) => {
-            const dot = new fabric.Circle({
-                left: bL + 10, top: legendY + i * 18,
-                radius: 4, fill: item.color,
-                selectable: false, evented: false,
-                _fabricGuide: true, excludeFromExport: true
+        if (!isH) {
+            // ── 수직 모드 (기본) ──
+            const seamX = bL + bW / 2;
+            const overlapRect = new fabric.Rect({
+                left: seamX - overlapPx / 2, top: bT, width: overlapPx, height: bH,
+                fill: 'rgba(239,68,68,0.12)', stroke: '#ef4444', strokeWidth: 2,
+                strokeDashArray: [6, 4],
+                selectable: true, evented: true, hasControls: false, hasBorders: true,
+                lockMovementY: true, lockRotation: true, lockScalingX: true, lockScalingY: true,
+                _fabricGuide: true, _fabricGuideType: 'seam_overlap', excludeFromExport: true,
+                hoverCursor: 'move', moveCursor: 'move'
             });
-            const txt = new fabric.Text(item.text + ' (드래그하여 위치 조정)', {
-                left: bL + 22, top: legendY + i * 18 - 3,
-                fontSize: 11, fill: '#64748b',
+            const seamLine = new fabric.Line([seamX, bT, seamX, bT + bH], {
+                stroke: '#ef4444', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
+            });
+            const seamLabel = new fabric.Text('← 이어박기 →', {
+                left: seamX, top: bT + 14, fontSize: 13, fill: '#fff', fontWeight: 'bold',
+                fontFamily: 'Pretendard, sans-serif', originX: 'center',
+                backgroundColor: 'rgba(239,68,68,0.85)', padding: 4, ..._gp
+            });
+            const overlapLabel = new fabric.Text('30mm', {
+                left: seamX, top: bT + bH - 28, fontSize: 11, fill: '#fff', originX: 'center',
+                fontFamily: 'Pretendard, sans-serif', backgroundColor: 'rgba(239,68,68,0.7)', padding: 2, ..._gp
+            });
+            overlapRect.on('moving', function() {
+                const cx = this.left + this.width / 2;
+                const clampX = Math.max(bL + overlapPx/2, Math.min(bL + bW - overlapPx/2, cx));
+                this.set('left', clampX - overlapPx / 2);
+                seamLine.set({ x1: clampX, x2: clampX });
+                [seamLabel, overlapLabel].forEach(o => o.set('left', clampX));
+                canvas.renderAll();
+            });
+            overlapRect.on('selected', function() { _showSeamControls(overlapRect, seamLine, seamLabel, overlapLabel, overlapPx, bL, bT, bW, bH, false); });
+            overlapRect.on('deselected', function() { const c = document.getElementById('fabricSeamCtrl'); if(c) c.style.display='none'; });
+            G.push(overlapRect, seamLine, seamLabel, overlapLabel);
+        } else {
+            // ── 수평 모드 ──
+            const seamY = bT + bH / 2;
+            const overlapRect = new fabric.Rect({
+                left: bL, top: seamY - overlapPx / 2, width: bW, height: overlapPx,
+                fill: 'rgba(239,68,68,0.12)', stroke: '#ef4444', strokeWidth: 2,
+                strokeDashArray: [6, 4],
+                selectable: true, evented: true, hasControls: false, hasBorders: true,
+                lockMovementX: true, lockRotation: true, lockScalingX: true, lockScalingY: true,
+                _fabricGuide: true, _fabricGuideType: 'seam_overlap', excludeFromExport: true,
+                hoverCursor: 'move', moveCursor: 'move'
+            });
+            const seamLine = new fabric.Line([bL, seamY, bL + bW, seamY], {
+                stroke: '#ef4444', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
+            });
+            const seamLabel = new fabric.Text('↑ 이어박기 ↓', {
+                left: bL + 12, top: seamY - 8, fontSize: 13, fill: '#fff', fontWeight: 'bold',
                 fontFamily: 'Pretendard, sans-serif',
-                selectable: false, evented: false,
-                _fabricGuide: true, excludeFromExport: true
+                backgroundColor: 'rgba(239,68,68,0.85)', padding: 4, ..._gp
             });
-            guideObjs.push(dot, txt);
+            const overlapLabel = new fabric.Text('30mm', {
+                left: bL + bW - 50, top: seamY - 7, fontSize: 11, fill: '#fff',
+                fontFamily: 'Pretendard, sans-serif', backgroundColor: 'rgba(239,68,68,0.7)', padding: 2, ..._gp
+            });
+            overlapRect.on('moving', function() {
+                const cy = this.top + this.height / 2;
+                const clampY = Math.max(bT + overlapPx/2, Math.min(bT + bH - overlapPx/2, cy));
+                this.set('top', clampY - overlapPx / 2);
+                seamLine.set({ y1: clampY, y2: clampY });
+                seamLabel.set('top', clampY - 8);
+                overlapLabel.set('top', clampY - 7);
+                canvas.renderAll();
+            });
+            overlapRect.on('selected', function() { _showSeamControls(overlapRect, seamLine, seamLabel, overlapLabel, overlapPx, bL, bT, bW, bH, true); });
+            overlapRect.on('deselected', function() { const c = document.getElementById('fabricSeamCtrl'); if(c) c.style.display='none'; });
+            G.push(overlapRect, seamLine, seamLabel, overlapLabel);
+        }
+    }
+
+    // ─── 2. 오버록/인터록 (5mm 여백 점선) ───
+    if (config.overlock || config.interlock) {
+        const marginPx = 5 * mm;
+        const label = config.interlock ? '인터록 5mm' : '오버록 5mm';
+        const color = '#f97316';
+        const marginRect = new fabric.Rect({
+            left: bL + marginPx, top: bT + marginPx,
+            width: bW - marginPx * 2, height: bH - marginPx * 2,
+            fill: 'transparent', stroke: color, strokeWidth: 1.5,
+            strokeDashArray: [5, 3], ..._gp
         });
+        const marginLabel = new fabric.Text(label, {
+            left: bL + marginPx + 6, top: bT + marginPx + 4,
+            fontSize: 10, fill: '#fff', fontWeight: 'bold', fontFamily: 'Pretendard, sans-serif',
+            backgroundColor: 'rgba(249,115,22,0.8)', padding: 2, ..._gp
+        });
+        G.push(marginRect, marginLabel);
+    }
+
+    // ─── 3. 가운데트임 (상단 이어지고 하단 트여짐) ───
+    if (config.centerSlit) {
+        const slitLenMm = Math.min(config.heightMm * 0.35, 300);
+        const slitLenPx = slitLenMm * mm;
+        const slitTopY = bT + bH - slitLenPx;
+        const cx = bL + bW / 2;
+        // 가운데 세로 절개선 (하단에서 위로)
+        const slitLine = new fabric.Line([cx, slitTopY, cx, bT + bH], {
+            stroke: '#16a34a', strokeWidth: 3, strokeDashArray: [8, 4], ..._gp
+        });
+        // 상단 이어지는 부분 표시 (솔리드 횡선)
+        const joinLine = new fabric.Line([cx - 20*mm, slitTopY, cx + 20*mm, slitTopY], {
+            stroke: '#16a34a', strokeWidth: 2, ..._gp
+        });
+        // "이어짐" 라벨
+        const joinLabel = new fabric.Text('── 이어짐 ──', {
+            left: cx, top: slitTopY - 18, fontSize: 10, fill: '#fff', originX: 'center',
+            fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
+            backgroundColor: 'rgba(22,163,106,0.85)', padding: 2, ..._gp
+        });
+        // 하단 "트임" 화살표
+        const splitLabel = new fabric.Text('↓ 트임 ↓', {
+            left: cx, top: bT + bH - 22, fontSize: 11, fill: '#fff', originX: 'center',
+            fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
+            backgroundColor: 'rgba(22,163,106,0.85)', padding: 3, ..._gp
+        });
+        // 양쪽 벌어지는 효과 (작은 삼각형)
+        const triSize = 8 * mm;
+        const triL = new fabric.Triangle({
+            left: cx - triSize - 2, top: bT + bH - triSize,
+            width: triSize, height: triSize, angle: -30,
+            fill: 'rgba(22,163,106,0.2)', stroke: '#16a34a', strokeWidth: 1, ..._gp
+        });
+        const triR = new fabric.Triangle({
+            left: cx + 2, top: bT + bH - triSize,
+            width: triSize, height: triSize, angle: 30,
+            fill: 'rgba(22,163,106,0.2)', stroke: '#16a34a', strokeWidth: 1, ..._gp
+        });
+        G.push(slitLine, joinLine, joinLabel, splitLabel, triL, triR);
+    }
+
+    // ─── 4. 사방타공 (Corner Grommets) ───
+    if (config.cornerGrommet) {
+        const inset = 15 * mm;
+        const triSz = 20 * mm;
+        const holeR = 4 * mm;
+        const corners = [
+            { x: bL + inset, y: bT + inset, a: 0 },
+            { x: bL + bW - inset, y: bT + inset, a: 90 },
+            { x: bL + bW - inset, y: bT + bH - inset, a: 180 },
+            { x: bL + inset, y: bT + bH - inset, a: 270 }
+        ];
+        corners.forEach(c => {
+            // 흰색 삼각 스티커
+            const tri = new fabric.Triangle({
+                left: c.x - triSz/2, top: c.y - triSz/2,
+                width: triSz, height: triSz, angle: c.a + 45,
+                fill: '#fff', stroke: '#94a3b8', strokeWidth: 1,
+                originX: 'center', originY: 'center',
+                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.15)', blur: 4, offsetX: 1, offsetY: 1 }),
+                ..._gp
+            });
+            tri.set({ left: c.x, top: c.y });
+            // 타공 원형
+            const hole = new fabric.Circle({
+                left: c.x - holeR, top: c.y - holeR,
+                radius: holeR, fill: 'transparent',
+                stroke: '#475569', strokeWidth: 2, ..._gp
+            });
+            // 메탈 링 효과
+            const ring = new fabric.Circle({
+                left: c.x - holeR - 2, top: c.y - holeR - 2,
+                radius: holeR + 2, fill: 'transparent',
+                stroke: '#94a3b8', strokeWidth: 1, ..._gp
+            });
+            G.push(tri, ring, hole);
+        });
+        const gLabel = new fabric.Text('사방타공', {
+            left: bL + bW / 2, top: bT - 18, fontSize: 10, fill: '#fff', originX: 'center',
+            fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
+            backgroundColor: 'rgba(71,85,105,0.85)', padding: 2, ..._gp
+        });
+        G.push(gLabel);
+    }
+
+    // ─── 5. 상단봉마감 (8cm 아래 봉 점선) ───
+    if (config.topPole || config.topBottomPole) {
+        const polePx = 80 * mm; // 8cm
+        const poleY = bT + polePx;
+        const poleLine = new fabric.Line([bL, poleY, bL + bW, poleY], {
+            stroke: '#8b5cf6', strokeWidth: 2, strokeDashArray: [8, 4], ..._gp
+        });
+        const poleLabel = new fabric.Text('── 봉마감 위치 (상단 8cm) ──', {
+            left: bL + bW/2, top: poleY - 16, fontSize: 10, fill: '#fff', originX: 'center',
+            fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
+            backgroundColor: 'rgba(139,92,246,0.85)', padding: 2, ..._gp
+        });
+        // 봉 아이콘 (회색 원통)
+        const poleBar = new fabric.Rect({
+            left: bL + 10*mm, top: poleY - 3*mm, width: bW - 20*mm, height: 6*mm,
+            fill: 'rgba(139,92,246,0.1)', stroke: '#8b5cf6', strokeWidth: 1,
+            rx: 3*mm, ry: 3*mm, ..._gp
+        });
+        G.push(poleBar, poleLine, poleLabel);
+    }
+    if (config.topBottomPole) {
+        const polePx = 80 * mm;
+        const poleY = bT + bH - polePx;
+        const poleLine = new fabric.Line([bL, poleY, bL + bW, poleY], {
+            stroke: '#8b5cf6', strokeWidth: 2, strokeDashArray: [8, 4], ..._gp
+        });
+        const poleLabel = new fabric.Text('── 봉마감 위치 (하단 8cm) ──', {
+            left: bL + bW/2, top: poleY + 4, fontSize: 10, fill: '#fff', originX: 'center',
+            fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
+            backgroundColor: 'rgba(139,92,246,0.85)', padding: 2, ..._gp
+        });
+        const poleBar = new fabric.Rect({
+            left: bL + 10*mm, top: poleY - 3*mm, width: bW - 20*mm, height: 6*mm,
+            fill: 'rgba(139,92,246,0.1)', stroke: '#8b5cf6', strokeWidth: 1,
+            rx: 3*mm, ry: 3*mm, ..._gp
+        });
+        G.push(poleBar, poleLine, poleLabel);
+    }
+
+    // ─── 6. 상단끈고리 (양쪽 1개씩 흰색 고리) ───
+    if (config.topLoop) {
+        const loopH = 35 * mm;
+        const loopW = 15 * mm;
+        const loopInset = bW * 0.2;
+        const positions = [bL + loopInset, bL + bW - loopInset];
+        positions.forEach(lx => {
+            // 흰색 고리 (보드 위로 돌출)
+            const loopBody = new fabric.Rect({
+                left: lx - loopW/2, top: bT - loopH,
+                width: loopW, height: loopH + 5*mm,
+                fill: '#fff', stroke: '#64748b', strokeWidth: 1.5,
+                rx: loopW/2, ry: loopW/2,
+                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.12)', blur: 3, offsetX: 0, offsetY: 2 }),
+                ..._gp
+            });
+            // 안쪽 구멍
+            const holeR = 3 * mm;
+            const loopHole = new fabric.Circle({
+                left: lx - holeR, top: bT - loopH/2 - holeR + 2*mm,
+                radius: holeR, fill: 'transparent',
+                stroke: '#94a3b8', strokeWidth: 1.5, ..._gp
+            });
+            G.push(loopBody, loopHole);
+        });
+        const loopLabel = new fabric.Text('끈고리 (좌/우)', {
+            left: bL + bW/2, top: bT - loopH - 16, fontSize: 10, fill: '#fff', originX: 'center',
+            fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
+            backgroundColor: 'rgba(59,130,246,0.85)', padding: 2, ..._gp
+        });
+        G.push(loopLabel);
+    }
+
+    // ─── 7. 멜빵고리 (상단 4개 두꺼운 끈고리) ───
+    if (config.strapLoop) {
+        const strapH = 45 * mm;
+        const strapW = 22 * mm;
+        const count = 4;
+        const spacing = bW / (count + 1);
+        for (let i = 1; i <= count; i++) {
+            const sx = bL + spacing * i;
+            // 두꺼운 끈
+            const strap = new fabric.Rect({
+                left: sx - strapW/2, top: bT - strapH,
+                width: strapW, height: strapH + 8*mm,
+                fill: '#f5f5f4', stroke: '#78716c', strokeWidth: 2,
+                rx: strapW/2, ry: strapW/2,
+                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.15)', blur: 4, offsetX: 0, offsetY: 2 }),
+                ..._gp
+            });
+            // 봉 통과 구멍
+            const holeR = 4 * mm;
+            const hole = new fabric.Circle({
+                left: sx - holeR, top: bT - strapH/2 - holeR,
+                radius: holeR, fill: 'transparent',
+                stroke: '#78716c', strokeWidth: 2, ..._gp
+            });
+            G.push(strap, hole);
+        }
+        const strapLabel = new fabric.Text('멜빵고리 ×4', {
+            left: bL + bW/2, top: bT - strapH - 18, fontSize: 10, fill: '#fff', originX: 'center',
+            fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
+            backgroundColor: 'rgba(120,113,108,0.85)', padding: 2, ..._gp
+        });
+        G.push(strapLabel);
     }
 
     // 모든 가이드 추가
-    guideObjs.forEach(obj => canvas.add(obj));
+    G.forEach(obj => canvas.add(obj));
     canvas.renderAll();
 
-    console.log('[Fabric] Guides applied:', {
-        seamJoin: config.seamJoin,
-        topLoop: config.topLoop,
-        slit: config.slit,
-        size: `${config.widthMm}x${config.heightMm}mm`
-    });
+    console.log('[Fabric] Guides applied:', config);
+}
+
+// ─── 이어박기 회전/가운데맞춤 컨트롤 ───
+function _showSeamControls(rect, line, label, oLabel, overlapPx, bL, bT, bW, bH, isHorizontal) {
+    let ctrl = document.getElementById('fabricSeamCtrl');
+    if (!ctrl) {
+        ctrl = document.createElement('div');
+        ctrl.id = 'fabricSeamCtrl';
+        ctrl.style.cssText = 'position:fixed; z-index:99999; display:flex; gap:4px; background:rgba(15,15,30,0.92); border-radius:8px; padding:4px 6px; backdrop-filter:blur(6px); border:1px solid rgba(239,68,68,0.4); box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+        ctrl.innerHTML = `
+            <button id="seamBtnRotate" title="회전" style="border:none;background:rgba(239,68,68,0.2);color:#ef4444;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:14px;font-weight:bold;">↻</button>
+            <button id="seamBtnCenter" title="가운데 맞춤" style="border:none;background:rgba(239,68,68,0.2);color:#ef4444;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:12px;font-weight:bold;">⊕</button>`;
+        document.body.appendChild(ctrl);
+    }
+    ctrl.style.display = 'flex';
+
+    const canvasEl = canvas.getElement();
+    const cr = canvasEl.getBoundingClientRect();
+    const vp = canvas.viewportTransform || [1,0,0,1,0,0];
+    const screenX = rect.left * vp[0] + vp[4] + cr.left;
+    const screenY = rect.top * vp[3] + vp[5] + cr.top;
+    ctrl.style.left = Math.round(screenX) + 'px';
+    ctrl.style.top = Math.round(screenY - 44) + 'px';
+
+    document.getElementById('seamBtnRotate').onclick = () => {
+        ctrl.style.display = 'none';
+        const cfg = window.__fabricGuideConfig;
+        cfg._seamHorizontal = !isHorizontal;
+        applyFabricGuides(cfg);
+    };
+
+    document.getElementById('seamBtnCenter').onclick = () => {
+        if (!isHorizontal) {
+            const cx = bL + bW / 2;
+            rect.set('left', cx - overlapPx / 2);
+            line.set({ x1: cx, x2: cx });
+            [label, oLabel].forEach(o => o.set('left', cx));
+        } else {
+            const cy = bT + bH / 2;
+            rect.set('top', cy - overlapPx / 2);
+            line.set({ y1: cy, y2: cy });
+            label.set('top', cy - 8);
+            oLabel.set('top', cy - 7);
+        }
+        canvas.renderAll();
+        ctrl.style.display = 'none';
+    };
 }
