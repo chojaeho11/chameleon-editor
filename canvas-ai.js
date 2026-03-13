@@ -2305,7 +2305,7 @@ export function applyFabricGuides(config) {
             const seamX = bL + bW / 2;
             const overlapRect = new fabric.Rect({
                 left: seamX - overlapPx / 2, top: bT, width: overlapPx, height: bH,
-                fill: 'rgba(239,68,68,0.12)', stroke: '#ef4444', strokeWidth: 2,
+                fill: 'rgba(255,0,0,0.15)', stroke: '#ff0000', strokeWidth: 2,
                 strokeDashArray: [6, 4],
                 selectable: true, evented: true, hasControls: false, hasBorders: true,
                 lockMovementY: true, lockRotation: true, lockScalingX: true, lockScalingY: true,
@@ -2313,16 +2313,16 @@ export function applyFabricGuides(config) {
                 hoverCursor: 'move', moveCursor: 'move'
             });
             const seamLine = new fabric.Line([seamX, bT, seamX, bT + bH], {
-                stroke: '#ef4444', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
+                stroke: '#ff0000', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
             });
             const seamLabel = new fabric.Text('← 이어박기 →', {
                 left: seamX, top: bT + 14, fontSize: 13, fill: '#fff', fontWeight: 'bold',
                 fontFamily: 'Pretendard, sans-serif', originX: 'center',
-                backgroundColor: 'rgba(239,68,68,0.85)', padding: 4, ..._gp
+                backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
             });
             const overlapLabel = new fabric.Text('30mm', {
                 left: seamX, top: bT + bH - 28, fontSize: 11, fill: '#fff', originX: 'center',
-                fontFamily: 'Pretendard, sans-serif', backgroundColor: 'rgba(239,68,68,0.7)', padding: 2, ..._gp
+                fontFamily: 'Pretendard, sans-serif', backgroundColor: 'rgba(255,0,0,0.7)', padding: 2, ..._gp
             });
             overlapRect.on('moving', function() {
                 const cx = this.left + this.width / 2;
@@ -2340,7 +2340,7 @@ export function applyFabricGuides(config) {
             const seamY = bT + bH / 2;
             const overlapRect = new fabric.Rect({
                 left: bL, top: seamY - overlapPx / 2, width: bW, height: overlapPx,
-                fill: 'rgba(239,68,68,0.12)', stroke: '#ef4444', strokeWidth: 2,
+                fill: 'rgba(255,0,0,0.15)', stroke: '#ff0000', strokeWidth: 2,
                 strokeDashArray: [6, 4],
                 selectable: true, evented: true, hasControls: false, hasBorders: true,
                 lockMovementX: true, lockRotation: true, lockScalingX: true, lockScalingY: true,
@@ -2348,16 +2348,16 @@ export function applyFabricGuides(config) {
                 hoverCursor: 'move', moveCursor: 'move'
             });
             const seamLine = new fabric.Line([bL, seamY, bL + bW, seamY], {
-                stroke: '#ef4444', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
+                stroke: '#ff0000', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
             });
             const seamLabel = new fabric.Text('↑ 이어박기 ↓', {
                 left: bL + 12, top: seamY - 8, fontSize: 13, fill: '#fff', fontWeight: 'bold',
                 fontFamily: 'Pretendard, sans-serif',
-                backgroundColor: 'rgba(239,68,68,0.85)', padding: 4, ..._gp
+                backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
             });
             const overlapLabel = new fabric.Text('30mm', {
                 left: bL + bW - 50, top: seamY - 7, fontSize: 11, fill: '#fff',
-                fontFamily: 'Pretendard, sans-serif', backgroundColor: 'rgba(239,68,68,0.7)', padding: 2, ..._gp
+                fontFamily: 'Pretendard, sans-serif', backgroundColor: 'rgba(255,0,0,0.7)', padding: 2, ..._gp
             });
             overlapRect.on('moving', function() {
                 const cy = this.top + this.height / 2;
@@ -2378,17 +2378,16 @@ export function applyFabricGuides(config) {
     if (config.overlock || config.interlock) {
         const marginPx = 5 * mm;
         const label = config.interlock ? '인터록 5mm' : '오버록 5mm';
-        const color = '#f97316';
         const marginRect = new fabric.Rect({
             left: bL + marginPx, top: bT + marginPx,
             width: bW - marginPx * 2, height: bH - marginPx * 2,
-            fill: 'transparent', stroke: color, strokeWidth: 1.5,
-            strokeDashArray: [5, 3], ..._gp
+            fill: 'transparent', stroke: '#ff0000', strokeWidth: 2.5,
+            strokeDashArray: [8, 4], ..._gp
         });
         const marginLabel = new fabric.Text(label, {
-            left: bL + marginPx + 6, top: bT + marginPx + 4,
-            fontSize: 10, fill: '#fff', fontWeight: 'bold', fontFamily: 'Pretendard, sans-serif',
-            backgroundColor: 'rgba(249,115,22,0.8)', padding: 2, ..._gp
+            left: bL + marginPx + 8, top: bT + marginPx + 6,
+            fontSize: 12, fill: '#fff', fontWeight: 'bold', fontFamily: 'Pretendard, sans-serif',
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
         });
         G.push(marginRect, marginLabel);
     }
@@ -2399,46 +2398,42 @@ export function applyFabricGuides(config) {
         const slitLenPx = slitLenMm * mm;
         const slitTopY = bT + bH - slitLenPx;
         const cx = bL + bW / 2;
+        const SC = '#ff0000';
         // 가운데 세로 절개선 (하단에서 위로)
         const slitLine = new fabric.Line([cx, slitTopY, cx, bT + bH], {
-            stroke: '#16a34a', strokeWidth: 3, strokeDashArray: [8, 4], ..._gp
+            stroke: SC, strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
         });
-        // 상단 이어지는 부분 표시 (솔리드 횡선)
-        const joinLine = new fabric.Line([cx - 20*mm, slitTopY, cx + 20*mm, slitTopY], {
-            stroke: '#16a34a', strokeWidth: 2, ..._gp
+        // 상단 이어지는 부분 (솔리드 횡선)
+        const joinLine = new fabric.Line([cx - 25*mm, slitTopY, cx + 25*mm, slitTopY], {
+            stroke: SC, strokeWidth: 3, ..._gp
         });
-        // "이어짐" 라벨
         const joinLabel = new fabric.Text('── 이어짐 ──', {
-            left: cx, top: slitTopY - 18, fontSize: 10, fill: '#fff', originX: 'center',
+            left: cx, top: slitTopY - 22, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
-            backgroundColor: 'rgba(22,163,106,0.85)', padding: 2, ..._gp
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
         });
-        // 하단 "트임" 화살표
-        const splitLabel = new fabric.Text('↓ 트임 ↓', {
-            left: cx, top: bT + bH - 22, fontSize: 11, fill: '#fff', originX: 'center',
+        // 하단 벌어지는 표시
+        const splitLabel = new fabric.Text('◁ 트임 ▷', {
+            left: cx, top: bT + bH - 26, fontSize: 13, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
-            backgroundColor: 'rgba(22,163,106,0.85)', padding: 3, ..._gp
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
         });
-        // 양쪽 벌어지는 효과 (작은 삼각형)
-        const triSize = 8 * mm;
-        const triL = new fabric.Triangle({
-            left: cx - triSize - 2, top: bT + bH - triSize,
-            width: triSize, height: triSize, angle: -30,
-            fill: 'rgba(22,163,106,0.2)', stroke: '#16a34a', strokeWidth: 1, ..._gp
+        // 양쪽 벌어짐 (V자 형태)
+        const vSize = 12 * mm;
+        const vLeft = new fabric.Line([cx, bT + bH, cx - vSize, bT + bH + vSize*0.7], {
+            stroke: SC, strokeWidth: 3, ..._gp
         });
-        const triR = new fabric.Triangle({
-            left: cx + 2, top: bT + bH - triSize,
-            width: triSize, height: triSize, angle: 30,
-            fill: 'rgba(22,163,106,0.2)', stroke: '#16a34a', strokeWidth: 1, ..._gp
+        const vRight = new fabric.Line([cx, bT + bH, cx + vSize, bT + bH + vSize*0.7], {
+            stroke: SC, strokeWidth: 3, ..._gp
         });
-        G.push(slitLine, joinLine, joinLabel, splitLabel, triL, triR);
+        G.push(slitLine, joinLine, joinLabel, splitLabel, vLeft, vRight);
     }
 
     // ─── 4. 사방타공 (Corner Grommets) ───
     if (config.cornerGrommet) {
-        const inset = 15 * mm;
-        const triSz = 20 * mm;
-        const holeR = 4 * mm;
+        const inset = 20 * mm;
+        const triSz = 30 * mm;
+        const holeR = 5 * mm;
         const corners = [
             { x: bL + inset, y: bT + inset, a: 0 },
             { x: bL + bW - inset, y: bT + inset, a: 90 },
@@ -2446,146 +2441,148 @@ export function applyFabricGuides(config) {
             { x: bL + inset, y: bT + bH - inset, a: 270 }
         ];
         corners.forEach(c => {
-            // 흰색 삼각 스티커
             const tri = new fabric.Triangle({
-                left: c.x - triSz/2, top: c.y - triSz/2,
+                left: c.x, top: c.y,
                 width: triSz, height: triSz, angle: c.a + 45,
-                fill: '#fff', stroke: '#94a3b8', strokeWidth: 1,
+                fill: 'rgba(255,255,255,0.9)', stroke: '#ff0000', strokeWidth: 2,
                 originX: 'center', originY: 'center',
-                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.15)', blur: 4, offsetX: 1, offsetY: 1 }),
+                shadow: new fabric.Shadow({ color: 'rgba(255,0,0,0.25)', blur: 6, offsetX: 0, offsetY: 0 }),
                 ..._gp
             });
-            tri.set({ left: c.x, top: c.y });
-            // 타공 원형
+            const ring = new fabric.Circle({
+                left: c.x - holeR - 3, top: c.y - holeR - 3,
+                radius: holeR + 3, fill: 'transparent',
+                stroke: '#999', strokeWidth: 2, ..._gp
+            });
             const hole = new fabric.Circle({
                 left: c.x - holeR, top: c.y - holeR,
                 radius: holeR, fill: 'transparent',
-                stroke: '#475569', strokeWidth: 2, ..._gp
-            });
-            // 메탈 링 효과
-            const ring = new fabric.Circle({
-                left: c.x - holeR - 2, top: c.y - holeR - 2,
-                radius: holeR + 2, fill: 'transparent',
-                stroke: '#94a3b8', strokeWidth: 1, ..._gp
+                stroke: '#ff0000', strokeWidth: 2.5, ..._gp
             });
             G.push(tri, ring, hole);
         });
-        const gLabel = new fabric.Text('사방타공', {
-            left: bL + bW / 2, top: bT - 18, fontSize: 10, fill: '#fff', originX: 'center',
+        const gLabel = new fabric.Text('사방타공 (아일렛)', {
+            left: bL + bW / 2, top: bT - 22, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
-            backgroundColor: 'rgba(71,85,105,0.85)', padding: 2, ..._gp
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
         });
         G.push(gLabel);
     }
 
     // ─── 5. 상단봉마감 (8cm 아래 봉 점선) ───
     if (config.topPole || config.topBottomPole) {
-        const polePx = 80 * mm; // 8cm
+        const polePx = 80 * mm;
         const poleY = bT + polePx;
-        const poleLine = new fabric.Line([bL, poleY, bL + bW, poleY], {
-            stroke: '#8b5cf6', strokeWidth: 2, strokeDashArray: [8, 4], ..._gp
+        const PC = '#ff0000';
+        const poleLine = new fabric.Line([bL - 10*mm, poleY, bL + bW + 10*mm, poleY], {
+            stroke: PC, strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
         });
         const poleLabel = new fabric.Text('── 봉마감 위치 (상단 8cm) ──', {
-            left: bL + bW/2, top: poleY - 16, fontSize: 10, fill: '#fff', originX: 'center',
+            left: bL + bW/2, top: poleY - 20, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
-            backgroundColor: 'rgba(139,92,246,0.85)', padding: 2, ..._gp
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
         });
-        // 봉 아이콘 (회색 원통)
         const poleBar = new fabric.Rect({
-            left: bL + 10*mm, top: poleY - 3*mm, width: bW - 20*mm, height: 6*mm,
-            fill: 'rgba(139,92,246,0.1)', stroke: '#8b5cf6', strokeWidth: 1,
-            rx: 3*mm, ry: 3*mm, ..._gp
+            left: bL + 5*mm, top: poleY - 4*mm, width: bW - 10*mm, height: 8*mm,
+            fill: 'rgba(255,0,0,0.08)', stroke: PC, strokeWidth: 1.5,
+            rx: 4*mm, ry: 4*mm, ..._gp
         });
         G.push(poleBar, poleLine, poleLabel);
     }
     if (config.topBottomPole) {
         const polePx = 80 * mm;
         const poleY = bT + bH - polePx;
-        const poleLine = new fabric.Line([bL, poleY, bL + bW, poleY], {
-            stroke: '#8b5cf6', strokeWidth: 2, strokeDashArray: [8, 4], ..._gp
+        const PC = '#ff0000';
+        const poleLine = new fabric.Line([bL - 10*mm, poleY, bL + bW + 10*mm, poleY], {
+            stroke: PC, strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
         });
         const poleLabel = new fabric.Text('── 봉마감 위치 (하단 8cm) ──', {
-            left: bL + bW/2, top: poleY + 4, fontSize: 10, fill: '#fff', originX: 'center',
+            left: bL + bW/2, top: poleY + 6, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
-            backgroundColor: 'rgba(139,92,246,0.85)', padding: 2, ..._gp
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
         });
         const poleBar = new fabric.Rect({
-            left: bL + 10*mm, top: poleY - 3*mm, width: bW - 20*mm, height: 6*mm,
-            fill: 'rgba(139,92,246,0.1)', stroke: '#8b5cf6', strokeWidth: 1,
-            rx: 3*mm, ry: 3*mm, ..._gp
+            left: bL + 5*mm, top: poleY - 4*mm, width: bW - 10*mm, height: 8*mm,
+            fill: 'rgba(255,0,0,0.08)', stroke: PC, strokeWidth: 1.5,
+            rx: 4*mm, ry: 4*mm, ..._gp
         });
         G.push(poleBar, poleLine, poleLabel);
     }
 
-    // ─── 6. 상단끈고리 (양쪽 1개씩 흰색 고리) ───
+    // ─── 6. 상단끈고리 (양쪽 1개씩 흰색 고리 - 대지 밖 크게) ───
     if (config.topLoop) {
-        const loopH = 35 * mm;
-        const loopW = 15 * mm;
+        const loopH = 80 * mm;   // 크게
+        const loopW = 25 * mm;
         const loopInset = bW * 0.2;
         const positions = [bL + loopInset, bL + bW - loopInset];
         positions.forEach(lx => {
-            // 흰색 고리 (보드 위로 돌출)
             const loopBody = new fabric.Rect({
                 left: lx - loopW/2, top: bT - loopH,
-                width: loopW, height: loopH + 5*mm,
-                fill: '#fff', stroke: '#64748b', strokeWidth: 1.5,
+                width: loopW, height: loopH + 10*mm,
+                fill: '#fff', stroke: '#ff0000', strokeWidth: 3,
                 rx: loopW/2, ry: loopW/2,
-                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.12)', blur: 3, offsetX: 0, offsetY: 2 }),
+                shadow: new fabric.Shadow({ color: 'rgba(255,0,0,0.3)', blur: 8, offsetX: 0, offsetY: 2 }),
                 ..._gp
             });
-            // 안쪽 구멍
-            const holeR = 3 * mm;
+            const holeR = 5 * mm;
             const loopHole = new fabric.Circle({
-                left: lx - holeR, top: bT - loopH/2 - holeR + 2*mm,
+                left: lx - holeR, top: bT - loopH*0.55 - holeR,
                 radius: holeR, fill: 'transparent',
-                stroke: '#94a3b8', strokeWidth: 1.5, ..._gp
+                stroke: '#ff0000', strokeWidth: 2.5, ..._gp
             });
             G.push(loopBody, loopHole);
         });
         const loopLabel = new fabric.Text('끈고리 (좌/우)', {
-            left: bL + bW/2, top: bT - loopH - 16, fontSize: 10, fill: '#fff', originX: 'center',
+            left: bL + bW/2, top: bT - loopH - 22, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
-            backgroundColor: 'rgba(59,130,246,0.85)', padding: 2, ..._gp
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
         });
         G.push(loopLabel);
     }
 
-    // ─── 7. 멜빵고리 (상단 4개 두꺼운 끈고리) ───
+    // ─── 7. 멜빵고리 (상단 4개 두꺼운 끈고리 - 대지 밖 크게) ───
     if (config.strapLoop) {
-        const strapH = 45 * mm;
-        const strapW = 22 * mm;
+        const strapH = 90 * mm;  // 크게
+        const strapW = 35 * mm;
         const count = 4;
         const spacing = bW / (count + 1);
         for (let i = 1; i <= count; i++) {
             const sx = bL + spacing * i;
-            // 두꺼운 끈
             const strap = new fabric.Rect({
                 left: sx - strapW/2, top: bT - strapH,
-                width: strapW, height: strapH + 8*mm,
-                fill: '#f5f5f4', stroke: '#78716c', strokeWidth: 2,
+                width: strapW, height: strapH + 12*mm,
+                fill: '#f5f5f4', stroke: '#ff0000', strokeWidth: 3,
                 rx: strapW/2, ry: strapW/2,
-                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.15)', blur: 4, offsetX: 0, offsetY: 2 }),
+                shadow: new fabric.Shadow({ color: 'rgba(255,0,0,0.3)', blur: 8, offsetX: 0, offsetY: 2 }),
                 ..._gp
             });
-            // 봉 통과 구멍
-            const holeR = 4 * mm;
+            const holeR = 6 * mm;
             const hole = new fabric.Circle({
-                left: sx - holeR, top: bT - strapH/2 - holeR,
+                left: sx - holeR, top: bT - strapH*0.5 - holeR,
                 radius: holeR, fill: 'transparent',
-                stroke: '#78716c', strokeWidth: 2, ..._gp
+                stroke: '#ff0000', strokeWidth: 3, ..._gp
             });
-            G.push(strap, hole);
+            // 봉 통과 슬롯 (가로 직사각형)
+            const slotW = strapW * 0.6;
+            const slot = new fabric.Rect({
+                left: sx - slotW/2, top: bT - strapH*0.3,
+                width: slotW, height: 4*mm,
+                fill: 'transparent', stroke: '#ff0000', strokeWidth: 2,
+                rx: 2*mm, ry: 2*mm, ..._gp
+            });
+            G.push(strap, hole, slot);
         }
         const strapLabel = new fabric.Text('멜빵고리 ×4', {
-            left: bL + bW/2, top: bT - strapH - 18, fontSize: 10, fill: '#fff', originX: 'center',
+            left: bL + bW/2, top: bT - strapH - 22, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
-            backgroundColor: 'rgba(120,113,108,0.85)', padding: 2, ..._gp
+            backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
         });
         G.push(strapLabel);
     }
 
-    // 모든 가이드 추가
+    // 모든 가이드 추가 + 최상단 레이어로
     G.forEach(obj => canvas.add(obj));
+    G.forEach(obj => canvas.bringToFront(obj));
     canvas.renderAll();
 
     console.log('[Fabric] Guides applied:', config);
@@ -2597,10 +2594,10 @@ function _showSeamControls(rect, line, label, oLabel, overlapPx, bL, bT, bW, bH,
     if (!ctrl) {
         ctrl = document.createElement('div');
         ctrl.id = 'fabricSeamCtrl';
-        ctrl.style.cssText = 'position:fixed; z-index:99999; display:flex; gap:4px; background:rgba(15,15,30,0.92); border-radius:8px; padding:4px 6px; backdrop-filter:blur(6px); border:1px solid rgba(239,68,68,0.4); box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+        ctrl.style.cssText = 'position:fixed; z-index:99999; display:flex; gap:4px; background:rgba(15,15,30,0.92); border-radius:8px; padding:4px 6px; backdrop-filter:blur(6px); border:1px solid rgba(255,0,0,0.4); box-shadow:0 2px 10px rgba(0,0,0,0.3);';
         ctrl.innerHTML = `
-            <button id="seamBtnRotate" title="회전" style="border:none;background:rgba(239,68,68,0.2);color:#ef4444;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:14px;font-weight:bold;">↻</button>
-            <button id="seamBtnCenter" title="가운데 맞춤" style="border:none;background:rgba(239,68,68,0.2);color:#ef4444;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:12px;font-weight:bold;">⊕</button>`;
+            <button id="seamBtnRotate" title="회전" style="border:none;background:rgba(255,0,0,0.2);color:#ff0000;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:14px;font-weight:bold;">↻</button>
+            <button id="seamBtnCenter" title="가운데 맞춤" style="border:none;background:rgba(255,0,0,0.2);color:#ff0000;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:12px;font-weight:bold;">⊕</button>`;
         document.body.appendChild(ctrl);
     }
     ctrl.style.display = 'flex';
