@@ -4273,6 +4273,128 @@ window.pfPreviewFooter = function() {
     area.style.display = area.style.display === 'none' ? 'block' : 'none';
 };
 
+// ===== 블로그 일괄 번역 함수 (콘솔에서 실행용) =====
+window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) {
+    const sb = window.sb;
+    if (!sb) { console.error('Supabase 미연결'); return; }
+    const langMap = { JP: 'ja', US: 'en', CN: 'zh', AR: 'ar', ES: 'es', DE: 'de', FR: 'fr' };
+
+    const { data: krPosts, error } = await sb.from('community_posts')
+        .select('*').eq('category', 'blog').eq('country_code', 'KR')
+        .order('created_at', { ascending: false });
+    if (error || !krPosts) { console.error('KR 글 조회 실패', error); return; }
+
+    const { data: existingTranslated } = await sb.from('community_posts')
+        .select('id, country_code, markdown')
+        .eq('category', 'blog')
+        .in('country_code', targetCountries);
+
+    const existingMap = {};
+    (existingTranslated || []).forEach(p => {
+        try {
+            const meta = JSON.parse(p.markdown || '{}');
+            if (meta.source_id) existingMap[`${meta.source_id}:${p.country_code}`] = true;
+        } catch(e) {}
+    });
+
+    console.log(`📋 KR 블로그 글: ${krPosts.length}건`);
+    console.log(`📋 이미 번역됨: ${Object.keys(existingMap).length}건`);
+
+    async function translateSafe(text, target) {
+        if (!text || text.trim().length === 0) return text;
+        try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=${target}&dt=t&q=${encodeURIComponent(text.substring(0, 4500))}`;
+            const res = await fetch(url);
+            const json = await res.json();
+            return json[0].map(item => item[0]).join('');
+        } catch (e) { return text; }
+    }
+
+    async function translateHTML(html, targetTag) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        async function translateNode(node) {
+            for (let child of node.childNodes) {
+                if (child.nodeType === 3 && child.nodeValue.trim().length > 0) {
+                    child.nodeValue = await translateSafe(child.nodeValue, targetTag);
+                } else if (child.nodeType === 1) {
+                    await translateNode(child);
+                }
+            }
+        }
+        await translateNode(tempDiv);
+        return tempDiv.innerHTML;
+    }
+
+    let created = 0, skipped = 0, failed = 0;
+
+    for (const post of krPosts) {
+        for (const tc of targetCountries) {
+            const key = `${post.id}:${tc}`;
+            if (existingMap[key]) { skipped++; continue; }
+
+            const targetTag = langMap[tc];
+            if (!targetTag) continue;
+
+            try {
+                console.log(`🔄 [${post.id}] → ${tc} 번역 중: ${post.title.substring(0, 30)}...`);
+
+                const translatedTitle = await translateSafe(post.title, targetTag);
+                const translatedContent = await translateHTML(post.content, targetTag);
+
+                let seoMeta = {};
+                try { seoMeta = JSON.parse(post.markdown || '{}'); } catch(e) {}
+                const translatedMeta = { ...seoMeta, source_id: post.id };
+                if (seoMeta.meta_description) {
+                    translatedMeta.meta_description = await translateSafe(seoMeta.meta_description, targetTag);
+                }
+                if (seoMeta.focus_keyword) {
+                    translatedMeta.focus_keyword = await translateSafe(seoMeta.focus_keyword, targetTag);
+                }
+                if (seoMeta.hashtags && seoMeta.hashtags.length > 0) {
+                    const translatedTags = [];
+                    for (const tag of seoMeta.hashtags) {
+                        translatedTags.push(await translateSafe(tag, targetTag));
+                    }
+                    translatedMeta.hashtags = translatedTags;
+                }
+
+                if (!seoMeta.source_id) {
+                    const origMeta = { ...seoMeta, source_id: post.id };
+                    await sb.from('community_posts').update({ markdown: JSON.stringify(origMeta) }).eq('id', post.id);
+                }
+
+                const newPost = {
+                    title: translatedTitle,
+                    content: translatedContent,
+                    category: 'blog',
+                    country_code: tc,
+                    author_id: post.author_id,
+                    author_name: post.author_name,
+                    author_email: post.author_email,
+                    thumbnail: post.thumbnail,
+                    target_code: post.target_code,
+                    markdown: JSON.stringify(translatedMeta),
+                    view_count: 0
+                };
+
+                const { error: insertErr } = await sb.from('community_posts').insert(newPost);
+                if (insertErr) throw insertErr;
+
+                created++;
+                console.log(`✅ [${post.id}] → ${tc} 완료: ${translatedTitle.substring(0, 40)}`);
+
+                await new Promise(r => setTimeout(r, 500));
+            } catch (e) {
+                console.error(`❌ [${post.id}] → ${tc} 실패:`, e.message);
+                failed++;
+            }
+        }
+    }
+
+    console.log(`🎉 일괄 번역 완료! 생성: ${created}건 | 건너뜀: ${skipped}건 | 실패: ${failed}건`);
+};
+
 </script>
 
 </body>
