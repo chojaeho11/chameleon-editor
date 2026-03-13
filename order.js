@@ -1063,8 +1063,9 @@ export async function startDesignFromProduct() {
 
 // [수정됨] 장바구니 담기 (용량 초과 방지: JSON 클라우드 업로드)
 async function addCanvasToCart() {
-    if (window.isDirectCartAddInProgress) return;
-    if (!canvas) return;
+    if (window.isDirectCartAddInProgress) { console.warn('[장바구니] isDirectCartAddInProgress 중복 방지'); return; }
+    if (!canvas) { console.warn('[장바구니] canvas 없음'); showToast('Canvas not ready', 'error'); return; }
+    console.log('[장바구니] addCanvasToCart 시작');
     
     const loading = document.getElementById("loading");
     if(loading) {
@@ -2265,7 +2266,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
         errors.push('doc generation error: ' + (pdfErr.message || pdfErr));
     }
 
-    // [3] 디자인 PDF 업로드
+    // [3] 디자인 PDF 업로드 + 가이드 캡처본
     for (let i = 0; i < cartData.length; i++) {
         const item = cartData[i];
         const idx = String(i + 1).padStart(2, '0');
@@ -2284,6 +2285,18 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             } catch(err) {
                 console.error("사전생성 디자인 전송 실패:", err);
                 errors.push(`design_${idx}: ${err.message || err}`);
+            }
+
+            // ★ 가이드 위치 캡처본 (thumb) 도 함께 업로드
+            if (item.thumb && item.thumb.startsWith('http')) {
+                try {
+                    const thumbRes = await withTimeout(fetch(item.thumb), PDF_TIMEOUT);
+                    if (thumbRes && thumbRes.ok) {
+                        const thumbBlob = await thumbRes.blob();
+                        const thumbUrl = await withTimeout(uploadFileToSupabase(thumbBlob, `orders/${orderId}/guide_preview_${idx}.jpg`), UPLOAD_TIMEOUT);
+                        if (thumbUrl) uploadedFiles.push({ name: `guide_preview_${idx}_${item.product?.name || 'preview'}.jpg`, url: thumbUrl, type: 'guide_preview' });
+                    }
+                } catch(err) { console.warn('가이드 캡처본 업로드 실패:', err); }
             }
 
             if (item.boxLayoutPdfUrl) {
@@ -2323,6 +2336,18 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             } catch(err) {
                 console.error("디자인 변환 실패:", err);
                 errors.push(`product_${idx}: ${err.message || err}`);
+            }
+
+            // ★ 가이드 위치 캡처본 (JSON fallback 경로에서도)
+            if (item.thumb && item.thumb.startsWith('http')) {
+                try {
+                    const thumbRes = await withTimeout(fetch(item.thumb), PDF_TIMEOUT);
+                    if (thumbRes && thumbRes.ok) {
+                        const thumbBlob = await thumbRes.blob();
+                        const thumbUrl = await withTimeout(uploadFileToSupabase(thumbBlob, `orders/${orderId}/guide_preview_${idx}.jpg`), UPLOAD_TIMEOUT);
+                        if (thumbUrl) uploadedFiles.push({ name: `guide_preview_${idx}_${item.product?.name || 'preview'}.jpg`, url: thumbUrl, type: 'guide_preview' });
+                    }
+                } catch(err) { console.warn('가이드 캡처본 업로드 실패:', err); }
             }
         }
     }

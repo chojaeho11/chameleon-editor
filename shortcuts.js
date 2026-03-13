@@ -1,6 +1,6 @@
-import { canvas } from "./canvas-core.js?v=175";
+import { canvas } from "./canvas-core.js?v=185";
 // canvas-utils.js에 구현된(혹은 구현될) 기능들을 가져옵니다.
-import { undo, redo, copy, paste, deleteActiveObject, toggleLockWizard } from "./canvas-utils.js?v=175";
+import { undo, redo, copy, paste, deleteActiveObject, toggleLockWizard } from "./canvas-utils.js?v=185";
 
 export function initShortcuts() {
     document.addEventListener('keydown', (e) => {

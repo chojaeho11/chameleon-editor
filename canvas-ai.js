@@ -1,6 +1,6 @@
 // canvas-ai.js
-import { canvas } from "./canvas-core.js?v=175";
-import { sb as _importedSb, currentUser } from "./config.js?v=175";
+import { canvas } from "./canvas-core.js?v=185";
+import { sb as _importedSb, currentUser } from "./config.js?v=185";
 
 // ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
 function _getSb() { return _importedSb || window.sb; }
@@ -2581,14 +2581,14 @@ export function applyFabricGuides(config) {
         G.push(loopLabel);
     }
 
-    // ─── 7. 멜빵고리 (상단 4개 두꺼운 끈고리 - 대지 밖 크게) ───
+    // ─── 7. 멜빵고리 (좌우 끝 2개 + 중간 2개 = 총 4개) ───
     if (config.strapLoop) {
         const strapH = 90 * mm;  // 크게
         const strapW = 35 * mm;
-        const count = 4;
-        const spacing = bW / (count + 1);
-        for (let i = 1; i <= count; i++) {
-            const sx = bL + spacing * i;
+        // 좌끝, 1/3, 2/3, 우끝 위치
+        const positions = [bL, bL + bW/3, bL + bW*2/3, bL + bW];
+        for (let i = 0; i < positions.length; i++) {
+            const sx = positions[i];
             const strap = new fabric.Rect({
                 left: sx - strapW/2, top: bT - strapH,
                 width: strapW, height: strapH + 12*mm,
