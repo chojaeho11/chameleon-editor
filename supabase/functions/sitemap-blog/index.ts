@@ -32,20 +32,41 @@ serve(async (req) => {
         const url = new URL(req.url);
         const filterCountry = url.searchParams.get("country")?.toUpperCase(); // KR, JP, US
 
-        // 블로그 포스트 조회 (최근 500개)
-        let query = sb
+        // 블로그 포스트 조회 (최근 1000개, markdown 포함 for source_id)
+        const { data: posts, error } = await sb
             .from("community_posts")
-            .select("id, title, created_at, country_code, thumbnail")
+            .select("id, title, created_at, country_code, thumbnail, markdown")
             .eq("category", "blog")
             .order("created_at", { ascending: false })
-            .limit(500);
+            .limit(1000);
 
-        if (filterCountry && domainMap[filterCountry]) {
-            query = query.eq("country_code", filterCountry);
+        if (error) throw error;
+
+        // source_id 기반 번역 그룹 구축
+        // KR 원본: markdown에 source_id 없음 → 자기 id가 sourceId
+        // 번역본: markdown JSON에 source_id 있음 → 원본 id를 가리킴
+        const allPosts = posts || [];
+        const postById: Record<string, any> = {};
+        const translationGroups: Record<string, string[]> = {}; // sourceId → [postId, ...]
+
+        for (const p of allPosts) {
+            postById[p.id] = p;
+            let sourceId: string | null = null;
+            if (p.markdown) {
+                try {
+                    const md = typeof p.markdown === "string" ? JSON.parse(p.markdown) : p.markdown;
+                    if (md.source_id) sourceId = String(md.source_id);
+                } catch {}
+            }
+            const groupKey = sourceId || String(p.id);
+            if (!translationGroups[groupKey]) translationGroups[groupKey] = [];
+            translationGroups[groupKey].push(String(p.id));
         }
 
-        const { data: posts, error } = await query;
-        if (error) throw error;
+        // 필터 적용 (country 파라미터가 있으면 해당 국가 포스트만 URL로 생성)
+        const filteredPosts = filterCountry && domainMap[filterCountry]
+            ? allPosts.filter(p => (p.country_code || "KR") === filterCountry)
+            : allPosts;
 
         // XML 사이트맵 생성
         let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -54,7 +75,7 @@ serve(async (req) => {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 `;
 
-        for (const post of (posts || [])) {
+        for (const post of filteredPosts) {
             const cc = post.country_code || "KR";
             const domain = domainMap[cc] || domainMap.KR;
             const postUrl = `${domain}/board.html?cat=blog&country=${cc}&id=${post.id}`;
@@ -66,6 +87,38 @@ serve(async (req) => {
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
 `;
+
+            // hreflang alternate links (번역 그룹 내 형제 포스트들)
+            let sourceId: string | null = null;
+            if (post.markdown) {
+                try {
+                    const md = typeof post.markdown === "string" ? JSON.parse(post.markdown) : post.markdown;
+                    if (md.source_id) sourceId = String(md.source_id);
+                } catch {}
+            }
+            const groupKey = sourceId || String(post.id);
+            const siblings = translationGroups[groupKey] || [];
+            if (siblings.length > 1) {
+                for (const sibId of siblings) {
+                    const sib = postById[sibId];
+                    if (!sib) continue;
+                    const sibCC = sib.country_code || "KR";
+                    const sibDomain = domainMap[sibCC] || domainMap.KR;
+                    const sibLang = langMap[sibCC] || "en";
+                    const sibUrl = `${sibDomain}/board.html?cat=blog&country=${sibCC}&id=${sib.id}`;
+                    xml += `    <xhtml:link rel="alternate" hreflang="${sibLang}" href="${escapeXml(sibUrl)}" />
+`;
+                }
+                // x-default (KR 원본)
+                const defaultPost = postById[groupKey];
+                if (defaultPost) {
+                    const defCC = defaultPost.country_code || "KR";
+                    const defDomain = domainMap[defCC] || domainMap.KR;
+                    const defUrl = `${defDomain}/board.html?cat=blog&country=${defCC}&id=${defaultPost.id}`;
+                    xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(defUrl)}" />
+`;
+                }
+            }
 
             // 이미지 사이트맵 (썸네일이 있으면)
             if (post.thumbnail) {
