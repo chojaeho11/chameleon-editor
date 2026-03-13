@@ -837,7 +837,7 @@ window.PRODUCT_SEO = {
             desc: 'Cortinas impresas personalizadas. Para interiores, tiendas y eventos. Cortinas fotográficas con diversas telas, tamaños personalizados, editor de diseño gratuito.',
             keywords: 'cortina personalizada,cortina impresa,cortina fotográfica,cortina de interior,cortina de evento'
         }
-    }
+    },
     standee: {
         image: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1772681692107_1409904-0a2de3f2-b797-472d-bf50-914c6ed0d8a4.png',
         KR: {
