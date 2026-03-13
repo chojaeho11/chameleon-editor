@@ -3163,8 +3163,8 @@ async function handleSubReturn() {
             </div>
 
             <!-- ★ 패브릭 마감옵션 패널 (에디터 상단 - 아이콘 버튼) -->
-            <div id="fabricAddonPanel" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:120; background:rgba(15,15,30,0.92); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.3); padding:6px 10px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3);">
-                <div style="display:flex; align-items:center; gap:8px;">
+            <div id="fabricAddonPanel" style="display:none; position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:120; background:rgba(15,15,30,0.92); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.3); padding:6px 10px; backdrop-filter:blur(8px); border:1px solid rgba(99,102,241,0.3); max-width:calc(100vw - 16px); overflow-x:auto; -webkit-overflow-scrolling:touch;">
+                <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                     <div id="fabricSewingCol" style="display:flex; align-items:center; gap:2px;">
                         <span style="font-size:10px; color:#f59e0b; font-weight:700; margin-right:2px; white-space:nowrap;" id="fabricSewingTitle">미싱 <span style="color:#ef4444;">*</span></span>
                         <div id="fabricSewingList" style="display:flex; gap:3px;"></div>
@@ -4612,29 +4612,60 @@ window.filterFxCards = function(cat, btn) {
             document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
         }
 
-        // 패널 전체에서 터치 시작 (스크롤 맨 위일때만 드래그 활성화)
-        subPanel.addEventListener('touchstart', function(e) {
-            if (subPanel.scrollTop <= 0) {
+        // 패널 전체에서 터치 시작 (스크롤 맨 위 + 아래로 스와이프일 때만 드래그 활성화)
+        var handleEl = document.getElementById('subPanelDragHandle');
+        var touchOnHandle = false;
+
+        if (handleEl) {
+            handleEl.addEventListener('touchstart', function(e) {
+                touchOnHandle = true;
                 startY = e.touches[0].clientY;
                 diffY = 0;
                 dragging = true;
                 subPanel.style.transition = 'none';
-            }
+            }, { passive: true });
+        }
+
+        subPanel.addEventListener('touchstart', function(e) {
+            if (touchOnHandle) return;
+            startY = e.touches[0].clientY;
+            diffY = 0;
+            dragging = false; // 패널 본문에서는 기본적으로 드래그 비활성화
         }, { passive: true });
 
         subPanel.addEventListener('touchmove', function(e) {
-            if (!dragging) return;
-            diffY = e.touches[0].clientY - startY;
-            if (diffY > 0) {
-                subPanel.style.transform = 'translateY(' + diffY + 'px)';
-                e.preventDefault();
-            } else {
-                dragging = false;
-                subPanel.style.transform = '';
+            if (touchOnHandle && dragging) {
+                diffY = e.touches[0].clientY - startY;
+                if (diffY > 0) {
+                    subPanel.style.transform = 'translateY(' + diffY + 'px)';
+                    e.preventDefault();
+                }
+                return;
+            }
+            // 패널 본문: 스크롤 맨 위에서 아래로 20px 이상 당기면 드래그 전환
+            if (!dragging && subPanel.scrollTop <= 0) {
+                var curDiff = e.touches[0].clientY - startY;
+                if (curDiff > 20) {
+                    dragging = true;
+                    startY = e.touches[0].clientY;
+                    diffY = 0;
+                    subPanel.style.transition = 'none';
+                }
+            }
+            if (dragging) {
+                diffY = e.touches[0].clientY - startY;
+                if (diffY > 0) {
+                    subPanel.style.transform = 'translateY(' + diffY + 'px)';
+                    e.preventDefault();
+                } else {
+                    dragging = false;
+                    subPanel.style.transform = '';
+                }
             }
         }, { passive: false });
 
         document.addEventListener('touchend', function() {
+            touchOnHandle = false;
             if (!dragging) return;
             dragging = false;
             subPanel.style.transition = 'transform 0.3s ease';
