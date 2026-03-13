@@ -16,14 +16,16 @@ window.loadMembers = async (isNewSearch = false) => {
     const keyword = document.getElementById('memberSearchInput') ? document.getElementById('memberSearchInput').value.trim() : '';
     const sortVal = document.getElementById('memberSort').value;
     const roleVal = document.getElementById('memberFilterRole').value;
+    const siteVal = document.getElementById('memberFilterSite') ? document.getElementById('memberFilterSite').value : 'all';
     const tbody = document.getElementById('memberListBody');
 
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
 
     try {
-    
-    let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at', { count: 'exact' });
+
+    let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at, site', { count: 'exact' });
     if (roleVal !== 'all') query = query.eq('role', roleVal);
+    if (siteVal !== 'all') query = query.eq('site', siteVal);
     if (keyword) {
         // UUID 형식이면 ID 직접 검색, 아니면 이메일/이름 검색
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keyword);
@@ -43,6 +45,7 @@ window.loadMembers = async (isNewSearch = false) => {
     // 먼저 count만 가져와서 페이지 범위 보정
     const countQuery = sb.from('profiles').select('id', { count: 'exact', head: true });
     if (roleVal !== 'all') countQuery.eq('role', roleVal);
+    if (siteVal !== 'all') countQuery.eq('site', siteVal);
     if (keyword) {
         const isUUID2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keyword);
         if (isUUID2) countQuery.eq('id', keyword);
@@ -128,11 +131,13 @@ window.loadMembers = async (isNewSearch = false) => {
             </div>
         `;
 
+        const siteFlag = m.site === 'JP' ? '🇯🇵' : m.site === 'US' ? '🇺🇸' : m.site === 'KR' ? '🇰🇷' : '🌐';
+
         tbody.innerHTML += `
             <tr style="border-bottom:1px solid #f1f5f9; height:50px;${ref ? ' background:#fffbeb;' : ''}">
                 <td style="color:#64748b; font-size:12px; text-align:center;">${new Date(m.created_at).toLocaleDateString()}</td>
                 <td style="padding:10px 15px;">
-                    <div style="font-weight:bold; font-size:14px; color:#1e293b;">${name}${refBadge}</div>
+                    <div style="font-weight:bold; font-size:14px; color:#1e293b;">${siteFlag} ${name}${refBadge}</div>
                     <div style="font-size:12px; color:#64748b;">${m.email}</div>
                 </td>
                 <td style="text-align:right; padding:10px 15px;">

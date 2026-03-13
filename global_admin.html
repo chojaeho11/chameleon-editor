@@ -1430,6 +1430,13 @@
                     <option value="admin">🛠 관리자</option>
                 </select>
 
+                <select id="memberFilterSite" class="input-text" style="width:100px; font-size:12px; font-weight:bold;" onchange="loadMembers()">
+                    <option value="all">🌐 전체국가</option>
+                    <option value="KR">🇰🇷 한국</option>
+                    <option value="JP">🇯🇵 일본</option>
+                    <option value="US">🇺🇸 미국</option>
+                </select>
+
                 <input type="text" id="memberSearchInput" class="input-text" placeholder="이름/이메일/고객ID 검색" style="width:200px;" onkeyup="if(event.key=='Enter') loadMembers()">
                 <button class="btn btn-primary" onclick="loadMembers()"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
