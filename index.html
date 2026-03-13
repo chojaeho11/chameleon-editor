@@ -7793,7 +7793,7 @@ if (w >= 20 && h >= 20) {
 
         // ★ 패브릭 1300mm 최대폭 체크 → 이어박기 자동 선택
         const _topCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-        if (_topCat === '패브릭인쇄22222' && w > 0 && h > 0) {
+        if (_topCat === '22222' && w > 0 && h > 0) {
             const _bothExceed = (w > 1300 && h > 1300);
             let _fbWarn = document.getElementById('fabricWidthWarn');
             if (_bothExceed && !_fbWarn) {
@@ -7936,7 +7936,7 @@ if (w >= 20 && h >= 20) {
 
         // ★ 패브릭인쇄22222: 항상 에디터로 이동 (장바구니/파일업로드도 에디터 경유)
         const _fabricTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-        if (_fabricTopCat === '패브릭인쇄22222' && mode !== 'editor') {
+        if (_fabricTopCat === '22222' && mode !== 'editor') {
             // 파일 업로드 후에도 에디터로 이동
             if (mode === 'upload') {
                 // 파일 업로드 먼저 처리 후 에디터로 이동
@@ -7947,7 +7947,7 @@ if (w >= 20 && h >= 20) {
         }
 
         // ★ 패브릭 가이드 정보 저장 (에디터에서 사용)
-        if (_fabricTopCat === '패브릭인쇄22222') {
+        if (_fabricTopCat === '22222') {
             const _fabricGuides = { seamJoin: false, topLoop: false, slit: false, addonNames: {} };
             document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
                 const lbl = chk.closest('label')?.textContent || chk.closest('.addon-item-row')?.textContent || '';
@@ -9367,7 +9367,14 @@ if (w >= 20 && h >= 20) {
         if (window._pendingEditorFiles && window._pendingEditorFiles.length > 0) {
             const editorFiles = window._pendingEditorFiles;
             window._pendingEditorFiles = null;
+            const _waitForCanvas = () => new Promise(resolve => {
+                if (window.canvas) return resolve(window.canvas);
+                const _iv = setInterval(() => { if (window.canvas) { clearInterval(_iv); resolve(window.canvas); } }, 200);
+                setTimeout(() => { clearInterval(_iv); resolve(null); }, 10000);
+            });
             setTimeout(async () => {
+                const canvas = await _waitForCanvas();
+                if (!canvas) { console.error('Canvas not ready for file load'); return; }
                 const loading = document.getElementById("loading");
                 if(loading) loading.style.display = 'flex';
                 try {
