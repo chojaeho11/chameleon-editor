@@ -1158,9 +1158,9 @@ window._loadArtworkGenreGrid = async function() {
             div.onmouseenter = () => { div.style.transform = 'scale(1.03)'; };
             div.onmouseleave = () => { div.style.transform = 'scale(1)'; };
             div.innerHTML = `
-                <div style="width:100%; aspect-ratio:3/4; background:#1e1b4b; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                <div style="width:100%; aspect-ratio:1/1; background:#1e1b4b; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                     ${thumbUrl
-                        ? `<img src="${thumbUrl}" alt="${gName}" loading="lazy" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=font-size:48px>${g.icon}</div>'">`
+                        ? `<img src="${thumbUrl}" alt="${gName}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=font-size:48px>${g.icon}</div>'">`
                         : `<div style="font-size:48px;">${g.icon}</div>`}
                 </div>
                 <div style="padding:8px 8px 10px; text-align:center;">
@@ -1270,7 +1270,7 @@ window._openArtworkGallery = async function(genreCode, genreName) {
                 div.onmouseenter = () => { div.style.transform = 'scale(1.03)'; div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; };
                 div.onmouseleave = () => { div.style.transform = 'scale(1)'; div.style.boxShadow = 'none'; };
                 div.innerHTML = `
-                    <img src="${thumbUrl}" alt="${pName}" loading="lazy" style="width:100%; aspect-ratio:3/4; object-fit:contain; background:#f8fafc;" onerror="if(!this.dataset.retry && '${p.img_url}'){this.dataset.retry='1';this.src='${p.img_url}';}else{this.src='https://placehold.co/220x330?text=No+Img';}">
+                    <img src="${thumbUrl}" alt="${pName}" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; background:#f8fafc;" onerror="if(!this.dataset.retry && '${p.img_url}'){this.dataset.retry='1';this.src='${p.img_url}';}else{this.src='https://placehold.co/220x330?text=No+Img';}">
                     <div style="padding:8px; font-size:12px; font-weight:600; color:#1e1b4b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pName}</div>
                 `;
                 div.onclick = () => {
