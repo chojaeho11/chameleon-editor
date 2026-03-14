@@ -2346,8 +2346,9 @@ async function handleSubReturn() {
         function showBar() {
             const active = c.getActiveObject();
             if (!active || active.isBoard) { bar.style.display = 'none'; return; }
+            // 이미지 선택 시 플로팅 툴바에 삭제 있으므로 중복 표시 안함
+            if (active.type === 'image') { bar.style.display = 'none'; return; }
             bar.style.display = 'flex';
-            // Edit 버튼 숨김 (상단 mobileTextEditor가 텍스트 편집 담당)
             editBtn.style.display = 'none';
         }
 
@@ -6425,9 +6426,13 @@ window.startCanvasCrop = function() {
         canvas.off('object:moving');
     };
 
-    // 버튼 스타일 변경
+    // 버튼 스타일 변경 + 다른 바 숨김
     const cropBtn = document.getElementById('imgToolCrop');
     if (cropBtn) { cropBtn.style.background = '#6366f1'; cropBtn.style.color = '#fff'; }
+    const _mab = document.getElementById('mobileActionBar');
+    if (_mab) _mab.style.display = 'none';
+    const _ift = document.getElementById('imageFloatingToolbar');
+    if (_ift) _ift.style.display = 'none';
 };
 
 window.applyCanvasCrop = function() {
