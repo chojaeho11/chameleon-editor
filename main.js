@@ -986,6 +986,37 @@ window.submitArtworkUpload = async function() {
         const { data: pubData } = sb.storage.from('design').getPublicUrl(path);
         const imgUrl = pubData.publicUrl;
 
+        // ★ 썸네일 생성 (400px로 리사이즈 후 별도 업로드)
+        let thumbUrl = imgUrl;
+        try {
+            const thumbBlob = await new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const MAX = 400;
+                    let w = img.width, h = img.height;
+                    if (w > MAX || h > MAX) {
+                        const ratio = Math.min(MAX / w, MAX / h);
+                        w = Math.round(w * ratio);
+                        h = Math.round(h * ratio);
+                    }
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(img, 0, 0, w, h);
+                    c.toBlob(blob => resolve(blob), 'image/jpeg', 0.75);
+                };
+                img.onerror = () => resolve(null);
+                img.src = URL.createObjectURL(file);
+            });
+            if (thumbBlob) {
+                const thumbPath = `user_artwork/thumb_${window.currentUser.id}_${safeName.replace(/\.\w+$/, '.jpg')}`;
+                const { error: thErr } = await sb.storage.from('design').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' });
+                if (!thErr) {
+                    const { data: thPub } = sb.storage.from('design').getPublicUrl(thumbPath);
+                    thumbUrl = thPub.publicUrl;
+                }
+            }
+        } catch(e) { console.warn('썸네일 생성 실패, 원본 사용', e); }
+
         // 패브릭 옵션 (제품 타입에 패브릭이 포함되므로 항상 가져옴)
         let fabricAddons = '';
         try {
@@ -1011,7 +1042,7 @@ window.submitArtworkUpload = async function() {
             category: genre,
             price: basePrice,
             price_us: Math.round(basePrice * 0.001),
-            img_url: imgUrl,
+            img_url: thumbUrl,
             addons: fabricAddons,
             description: tags,
             partner_id: window.currentUser.id,

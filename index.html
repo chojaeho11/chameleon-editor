@@ -9904,7 +9904,14 @@ if (w >= 20 && h >= 20) {
         // ★ 고객작품: 에디터 진입 시 작품 이미지를 캔버스에 자동 배치
         const _isArtworkKey = typeof key === 'string' && key.startsWith('ua_');
         if (_isArtworkKey && product && product.img_url) {
-            console.log('🎨 작품 이미지 로딩 시작:', product.img_url);
+            // 썸네일 URL(img_url)에서 원본 URL 복원: thumb_ 접두사 제거
+            let _artImgUrl = product.img_url;
+            if (_artImgUrl.includes('/thumb_')) {
+                _artImgUrl = _artImgUrl.replace('/thumb_', '/');
+                // jpg 썸네일 → 원본 확장자 (png/jpg/webp 등, 원본이 jpg가 아닐 수 있음)
+                // 원본을 시도하고 실패하면 썸네일로 fallback
+            }
+            console.log('🎨 작품 이미지 로딩 시작:', _artImgUrl);
             setTimeout(() => {
                 const _c = window.canvas;
                 if (!_c) { console.warn('🎨 canvas 미초기화'); return; }
@@ -9932,13 +9939,20 @@ if (w >= 20 && h >= 20) {
                     _placeOnCanvas(new fabric.Image(_htmlImg));
                 };
                 _htmlImg.onerror = () => {
-                    console.warn('🎨 CORS 실패, crossOrigin 없이 재시도');
+                    console.warn('🎨 원본 실패, 썸네일로 재시도');
                     const _retry = new Image();
+                    _retry.crossOrigin = 'anonymous';
                     _retry.onload = () => _placeOnCanvas(new fabric.Image(_retry));
-                    _retry.onerror = () => console.error('🎨 작품 이미지 로딩 완전 실패:', product.img_url);
+                    _retry.onerror = () => {
+                        // 최종: crossOrigin 없이
+                        const _r2 = new Image();
+                        _r2.onload = () => _placeOnCanvas(new fabric.Image(_r2));
+                        _r2.onerror = () => console.error('🎨 작품 이미지 로딩 완전 실패');
+                        _r2.src = product.img_url;
+                    };
                     _retry.src = product.img_url;
                 };
-                _htmlImg.src = product.img_url;
+                _htmlImg.src = _artImgUrl;
             }, 1200);
         }
 
