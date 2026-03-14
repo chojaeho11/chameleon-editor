@@ -2079,29 +2079,37 @@ window._ciLoadProducts = async () => {
 
 // 현재 선택된 레벨과 코드 결정
 function _ciGetTarget() {
-    const top = document.getElementById('ciTopCat').value;
-    const sub = document.getElementById('ciSubCat').value;
-    const prod = document.getElementById('ciProduct').value;
+    const topSel = document.getElementById('ciTopCat');
+    const subSel = document.getElementById('ciSubCat');
+    const prodSel = document.getElementById('ciProduct');
+    const top = topSel.value;
+    const sub = subSel.value;
+    const prod = prodSel.value;
     const badge = document.getElementById('ciLevelBadge');
+
+    // 드롭다운 텍스트에서 실제 이름 추출
+    const topName = topSel.selectedOptions[0]?.textContent || '';
+    const subName = subSel.selectedOptions[0]?.textContent || '';
+    const prodName = prodSel.selectedOptions[0]?.textContent?.replace(/\s*\(.*\)\s*$/, '') || '';
 
     if (prod) {
         badge.textContent = '제품 상세';
         badge.style.background = '#059669';
-        return { mode: 'product', id: prod, label: '제품 상세' };
+        return { mode: 'product', id: prod, label: '제품 상세', name: prodName, categoryName: subName, topCategoryName: topName };
     }
     if (sub) {
         badge.textContent = '소분류 공통';
         badge.style.background = '#d97706';
-        return { mode: 'common', code: sub, label: '소분류: ' + sub };
+        return { mode: 'common', code: sub, label: '소분류 공통', name: subName, topCategoryName: topName };
     }
     if (top && top !== 'all') {
         badge.textContent = '대분류 공통';
         badge.style.background = '#2563eb';
-        return { mode: 'common', code: top, label: '대분류: ' + top };
+        return { mode: 'common', code: top, label: '대분류 공통', name: topName };
     }
     badge.textContent = '전체 공통';
     badge.style.background = '#7c3aed';
-    return { mode: 'common', code: 'all', label: '전체 공통' };
+    return { mode: 'common', code: 'all', label: '전체 공통', name: '카멜레온 프린팅 전체 상품' };
 }
 
 window._ciLoadContent = async () => {
@@ -2235,15 +2243,24 @@ window._ciGenerate = async () => {
 
         // 2단계: AI 상세페이지 생성 (한국어)
         status.textContent = '🤖 AI가 상세페이지를 생성 중... (약 30초)';
-        const targetLabel = target.label || '상품';
+
+        // 실제 카테고리/제품 이름 사용
+        const productName = target.name || '상품';
+        const categoryName = target.categoryName || target.topCategoryName || target.name || '';
+
+        // 기존 내용이 있으면 AI에 전달하여 참고하도록
+        const existingKrHtml = document.getElementById('ciHtmlKR').value || '';
+
+        console.log('[CI] AI 생성 요청:', { productName, categoryName, imageUrls: imageUrls.length, descText: descText.substring(0, 50), existingContent: existingKrHtml.length });
 
         const { data, error } = await dbClient.functions.invoke('generate-product-detail', {
             body: {
-                product_name: targetLabel,
-                product_category: target.code || 'general',
+                product_name: productName,
+                product_category: categoryName,
                 image_urls: imageUrls,
                 image_url: imageUrls[0] || '',
                 reference_text: descText,
+                original_description: existingKrHtml || '',
                 price: 0,
                 mode: 'wizard',
                 langs: ['kr']
@@ -2251,10 +2268,11 @@ window._ciGenerate = async () => {
         });
 
         if (error) throw new Error(error.message);
+        console.log('[CI] AI 응답:', { success: data?.success, hasKr: !!data?.details?.kr, krLen: data?.details?.kr?.length, errors: data?.errors });
         if (!data || !data.success) throw new Error((data && data.error) || '생성 실패');
 
         const krHtml = data.details?.kr;
-        if (!krHtml) throw new Error('한국어 생성 실패');
+        if (!krHtml) throw new Error('한국어 생성 실패 (AI가 빈 결과 반환)');
 
         document.getElementById('ciHtmlKR').value = krHtml;
 
@@ -2316,6 +2334,60 @@ window._ciGenerate = async () => {
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-robot"></i> AI 상세페이지 생성 + 7개국어 번역';
+    }
+};
+
+// 한국어 → 7개국어 번역만 (AI 재생성 없이)
+window._ciTranslateOnly = async () => {
+    const dbClient = window.sb || window._supabase;
+    const status = document.getElementById('ciStatus');
+    const btn = document.getElementById('ciTranslateOnlyBtn');
+
+    // Quill에서 현재 한국어 내용 가져오기
+    if (_ciQuill && _ciCurrentLang === 'KR') {
+        const curHtml = _ciQuill.root.innerHTML;
+        if (curHtml && curHtml !== '<p><br></p>') {
+            document.getElementById('ciHtmlKR').value = curHtml;
+        }
+    }
+
+    const krHtml = document.getElementById('ciHtmlKR').value;
+    if (!krHtml || krHtml.length < 10) {
+        showToast('번역할 한국어 내용이 없습니다. 먼저 AI 생성 또는 직접 작성해주세요.', 'warn');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
+    status.textContent = '🌐 Claude AI 7개국어 번역 중...';
+
+    try {
+        const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
+            body: { text: krHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
+        });
+        if (trError) throw trError;
+        const tr = trData?.translations || {};
+        if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
+        if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
+        if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
+        if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
+        if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
+        if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
+        if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
+        status.textContent = '✅ 7개국어 번역 완료!';
+        showToast('Claude AI 7개국어 번역 완료! 탭을 눌러 확인하세요.', 'success');
+
+        // 미리보기가 아직 없으면 표시
+        if (document.getElementById('ciPreviewSection').style.display === 'none') {
+            _ciShowPreview(krHtml);
+        }
+    } catch(e) {
+        console.error('Translate only error:', e);
+        status.textContent = '❌ 번역 실패: ' + (e.message || e);
+        showToast('번역 실패: ' + (e.message || e), 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-language"></i> 한국어 → 7개국어 번역만';
     }
 };
 
