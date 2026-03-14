@@ -1237,7 +1237,7 @@ window._openArtworkGallery = async function(genreCode, genreName) {
                 div.onmouseenter = () => { div.style.transform = 'scale(1.03)'; div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; };
                 div.onmouseleave = () => { div.style.transform = 'scale(1)'; div.style.boxShadow = 'none'; };
                 div.innerHTML = `
-                    <img src="${thumbUrl}" alt="${pName}" loading="lazy" style="width:100%; aspect-ratio:2/3; object-fit:cover;" onerror="this.src='https://placehold.co/220x330?text=No+Img'">
+                    <img src="${thumbUrl}" alt="${pName}" loading="lazy" style="width:100%; aspect-ratio:2/3; object-fit:cover;" onerror="if(!this.dataset.retry && '${p.img_url}'){this.dataset.retry='1';this.src='${p.img_url}';}else{this.src='https://placehold.co/220x330?text=No+Img';}">
                     <div style="padding:8px; font-size:12px; font-weight:600; color:#1e1b4b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pName}</div>
                 `;
                 div.onclick = () => {
