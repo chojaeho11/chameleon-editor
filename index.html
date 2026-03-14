@@ -6346,10 +6346,46 @@ window.startCanvasCrop = function() {
         isCropRect: true,
         excludeFromExport: true
     });
+    // 크롭 외곽 어둡게 (대지 외곽과 동일한 진회색 오버레이 4개)
+    const _dimColor = 'rgba(46,46,46,0.85)';
+    const _canvasW = canvas.getWidth();
+    const _canvasH = canvas.getHeight();
+    const _makeDim = (props) => new fabric.Rect(Object.assign({
+        fill: _dimColor, selectable: false, evented: false, excludeFromExport: true, isCropDim: true, hoverCursor: 'default'
+    }, props));
+
+    const _updateDimOverlays = () => {
+        const r = window._cropOverlay;
+        if (!r || !window._cropDims) return;
+        const rL = r.left, rT = r.top;
+        const rW = r.width * (r.scaleX || 1), rH = r.height * (r.scaleY || 1);
+        const cW2 = canvas.getWidth(), cH2 = canvas.getHeight();
+        const dims = window._cropDims;
+        // top
+        dims[0].set({ left: 0, top: 0, width: cW2, height: Math.max(0, rT) });
+        // bottom
+        dims[1].set({ left: 0, top: rT + rH, width: cW2, height: Math.max(0, cH2 - rT - rH) });
+        // left
+        dims[2].set({ left: 0, top: rT, width: Math.max(0, rL), height: rH });
+        // right
+        dims[3].set({ left: rL + rW, top: rT, width: Math.max(0, cW2 - rL - rW), height: rH });
+        dims.forEach(d => { d.setCoords(); canvas.bringToFront(d); });
+        canvas.bringToFront(r);
+    };
+
+    const dimTop = _makeDim({ left: 0, top: 0, width: _canvasW, height: cropRect.top });
+    const dimBottom = _makeDim({ left: 0, top: cropRect.top + cropRect.height, width: _canvasW, height: _canvasH - cropRect.top - cropRect.height });
+    const dimLeft = _makeDim({ left: 0, top: cropRect.top, width: cropRect.left, height: cropRect.height });
+    const dimRight = _makeDim({ left: cropRect.left + cropRect.width, top: cropRect.top, width: _canvasW - cropRect.left - cropRect.width, height: cropRect.height });
+    window._cropDims = [dimTop, dimBottom, dimLeft, dimRight];
+    window._cropDims.forEach(d => canvas.add(d));
+
     canvas.add(cropRect);
     canvas.setActiveObject(cropRect);
     canvas.bringToFront(cropRect);
     window._cropOverlay = cropRect;
+
+    _updateDimOverlays();
 
     // 크롭 확인/취소 버튼 UI
     const bar = document.createElement('div');
@@ -6389,8 +6425,8 @@ window.startCanvasCrop = function() {
             info.textContent = w + ' × ' + h + ' mm';
         }
     };
-    canvas.on('object:scaling', (e) => { if (e.target && e.target.isCropRect) _updateCropInfo(); });
-    canvas.on('object:moving', (e) => { if (e.target && e.target.isCropRect) _updateCropInfo(); });
+    canvas.on('object:scaling', (e) => { if (e.target && e.target.isCropRect) { _updateCropInfo(); _updateDimOverlays(); } });
+    canvas.on('object:moving', (e) => { if (e.target && e.target.isCropRect) { _updateCropInfo(); _updateDimOverlays(); } });
     window._cropEventCleanup = () => {
         canvas.off('object:scaling');
         canvas.off('object:moving');
@@ -6415,12 +6451,13 @@ window.applyCanvasCrop = function() {
     const cropW = cropRect.width * cropRect.scaleX;
     const cropH = cropRect.height * cropRect.scaleY;
 
-    // 크롭 사각형 제거
+    // 크롭 사각형 + 어두운 오버레이 제거
     canvas.remove(cropRect);
+    if (window._cropDims) { window._cropDims.forEach(d => canvas.remove(d)); window._cropDims = null; }
     window._cropOverlay = null;
 
     // 모든 오브젝트를 크롭 영역 기준으로 이동
-    const objects = canvas.getObjects().filter(o => !o.isBoard);
+    const objects = canvas.getObjects().filter(o => !o.isBoard && !o.isCropDim);
     objects.forEach(o => {
         o.left = o.left - cropLeft;
         o.top = o.top - cropTop;
@@ -6444,6 +6481,11 @@ window.cancelCanvasCrop = function(skipRemoveRect) {
     if (!skipRemoveRect && window._cropOverlay && canvas) {
         canvas.remove(window._cropOverlay);
     }
+    // 어두운 오버레이 제거
+    if (window._cropDims && canvas) {
+        window._cropDims.forEach(d => canvas.remove(d));
+    }
+    window._cropDims = null;
     window._cropOverlay = null;
 
     const bar = document.getElementById('cropActionBar');
