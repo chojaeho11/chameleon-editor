@@ -1196,7 +1196,7 @@ window._openArtworkGallery = async function(genreCode, genreName) {
     modal.style.display = 'flex';
 
     let page = 0;
-    const PAGE_SIZE = 20;
+    const PAGE_SIZE = 8;
     let allItems = [];
     let searchTerm = '';
 
@@ -1230,7 +1230,7 @@ window._openArtworkGallery = async function(genreCode, genreName) {
     };
 
     async function _loadPage() {
-        if (page === 0) gridEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        gridEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
         try {
             let query = sb.from('admin_products')
@@ -1243,7 +1243,6 @@ window._openArtworkGallery = async function(genreCode, genreName) {
             }
             query = query.eq('partner_status', 'approved');
 
-            // 검색어가 있으면 이름/설명에서 필터
             if (searchTerm) {
                 query = query.or(`name.ilike.%${searchTerm}%,name_jp.ilike.%${searchTerm}%,name_us.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
             }
@@ -1252,7 +1251,7 @@ window._openArtworkGallery = async function(genreCode, genreName) {
                 .order('created_at', { ascending: false })
                 .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-            if (page === 0) gridEl.innerHTML = '';
+            gridEl.innerHTML = '';
 
             if (!items || items.length === 0) {
                 if (page === 0) gridEl.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:14px;">${_noResult}</div>`;
@@ -1278,19 +1277,24 @@ window._openArtworkGallery = async function(genreCode, genreName) {
                 gridEl.appendChild(div);
             });
 
-            // 더보기 버튼
-            if (items.length >= PAGE_SIZE) {
-                moreEl.innerHTML = `<button onclick="window._artworkGalleryNextPage()" style="padding:10px 30px; border:2px solid #6366f1; border-radius:10px; background:#fff; color:#6366f1; font-weight:700; cursor:pointer; font-size:14px;">${_loadMore}</button>`;
-            } else {
-                moreEl.innerHTML = '';
-            }
-            page++;
+            // 이전/다음 페이지네이션
+            const hasPrev = page > 0;
+            const hasNext = items.length >= PAGE_SIZE;
+            const _prevLabel = lang==='ja' ? '← 前へ' : lang==='en' ? '← Prev' : '← 이전';
+            const _nextLabel = lang==='ja' ? '次へ →' : lang==='en' ? 'Next →' : '다음 →';
+            const _pageLabel = lang==='ja' ? 'ページ' : lang==='en' ? 'Page' : '페이지';
+            moreEl.innerHTML = `<div style="display:flex; gap:12px; align-items:center; justify-content:center;">
+                <button onclick="window._artworkGalleryPrev()" style="padding:8px 20px; border:1.5px solid ${hasPrev ? '#6366f1' : '#e2e8f0'}; border-radius:8px; background:#fff; color:${hasPrev ? '#6366f1' : '#cbd5e1'}; font-weight:700; cursor:${hasPrev ? 'pointer' : 'default'}; font-size:13px;" ${hasPrev ? '' : 'disabled'}>${_prevLabel}</button>
+                <span style="font-size:13px; color:#64748b; font-weight:600;">${_pageLabel} ${page + 1}</span>
+                <button onclick="window._artworkGalleryNext()" style="padding:8px 20px; border:1.5px solid ${hasNext ? '#6366f1' : '#e2e8f0'}; border-radius:8px; background:#fff; color:${hasNext ? '#6366f1' : '#cbd5e1'}; font-weight:700; cursor:${hasNext ? 'pointer' : 'default'}; font-size:13px;" ${hasNext ? '' : 'disabled'}>${_nextLabel}</button>
+            </div>`;
         } catch(e) {
             console.warn('갤러리 로딩 실패:', e);
         }
     }
 
-    window._artworkGalleryNextPage = _loadPage;
+    window._artworkGalleryNext = () => { page++; _loadPage(); };
+    window._artworkGalleryPrev = () => { if (page > 0) { page--; _loadPage(); } };
     _loadPage();
 
     // 모바일 반응형
