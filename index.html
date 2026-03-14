@@ -7899,6 +7899,40 @@ window.showChoiceModal = async function(key) {
         img.style.height = 'auto';
     });
 
+    // 공통 상세페이지 모바일 반응형 후처리
+    if (window.innerWidth <= 768) {
+        modalBox.querySelectorAll('.common-info-area table').forEach(tbl => {
+            tbl.style.width = '100%';
+            tbl.style.tableLayout = 'auto';
+            tbl.style.fontSize = '12px';
+            tbl.style.wordBreak = 'keep-all';
+            // 테이블을 스크롤 가능한 래퍼로 감싸기
+            if (!tbl.parentElement.classList.contains('table-scroll-wrap')) {
+                const wrap = document.createElement('div');
+                wrap.className = 'table-scroll-wrap';
+                wrap.style.cssText = 'overflow-x:auto; -webkit-overflow-scrolling:touch; margin:10px 0; width:100%;';
+                tbl.parentNode.insertBefore(wrap, tbl);
+                wrap.appendChild(tbl);
+            }
+        });
+        // flex 컨테이너 wrap 처리 (수익 시뮬레이션 카드 등)
+        modalBox.querySelectorAll('.common-info-area div').forEach(div => {
+            const cs = div.style;
+            if (cs.display === 'flex' && cs.flexDirection !== 'column') {
+                cs.flexWrap = 'wrap';
+                cs.gap = cs.gap || '8px';
+            }
+            // 고정 너비 제거
+            if (cs.width && cs.width.includes('px') && parseInt(cs.width) > 300) {
+                cs.width = '100%';
+                cs.maxWidth = '100%';
+            }
+            if (cs.minWidth && parseInt(cs.minWidth) > 200) {
+                cs.minWidth = 'auto';
+            }
+        });
+    }
+
     // ★★★ [핵심] 애니메이션(AOS) 강제 재실행 (블랙스크린 방지) ★★★
     setTimeout(() => {
         // 비디오 자동 재생

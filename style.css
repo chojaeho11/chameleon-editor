@@ -4500,6 +4500,44 @@ video {
     .choice-left-content { order: 2; padding: 30px 20px; border-right: none; }
     .choice-left-content h2 { font-size: 24px; }
 }
+
+/* 공통 상세페이지 모바일 반응형 */
+.common-info-area { width: 100%; overflow-x: hidden; }
+.common-info-area > * { max-width: 100% !important; box-sizing: border-box !important; }
+.common-info-area table {
+    width: 100% !important; max-width: 100% !important;
+    table-layout: fixed !important; word-break: break-word;
+    font-size: 14px;
+}
+.common-info-area table td,
+.common-info-area table th {
+    padding: 8px 6px !important; vertical-align: middle;
+    word-break: keep-all; overflow-wrap: break-word;
+}
+@media (max-width: 768px) {
+    .common-info-area table { font-size: 12px !important; }
+    .common-info-area table td,
+    .common-info-area table th { padding: 6px 4px !important; font-size: 12px !important; }
+    /* 수익 시뮬레이션 카드 등 flex row → wrap */
+    .common-info-area div[style*="display: flex"],
+    .common-info-area div[style*="display:flex"] {
+        flex-wrap: wrap !important; gap: 8px !important; justify-content: center !important;
+    }
+    /* 카드 최소 너비 확보 */
+    .common-info-area div[style*="display: flex"] > div,
+    .common-info-area div[style*="display:flex"] > div {
+        min-width: 100px !important; flex: 1 1 calc(50% - 8px) !important; max-width: 100% !important;
+    }
+    .common-info-area div[style*="border-radius"] {
+        max-width: 100% !important; overflow: hidden;
+    }
+    /* 내부 텍스트 크기 조정 */
+    .common-info-area h2 { font-size: 18px !important; }
+    .common-info-area h3 { font-size: 16px !important; }
+    .common-info-area p, .common-info-area span, .common-info-area div {
+        max-width: 100% !important;
+    }
+}
 /* =========================================================
    [대분류 탭 최적화] PC는 7열 유지 / 모바일은 가로스크롤 알약
    ========================================================= */
