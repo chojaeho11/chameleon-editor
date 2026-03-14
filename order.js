@@ -2321,6 +2321,25 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             continue;
         }
 
+        // ★ 작품 마켓플레이스: 원본 이미지 업로드 (product_only + partner_id)
+        if (item.type === 'product_only' && item.product?.partner_id && item.product?.img) {
+            try {
+                // 썸네일 URL에서 원본 URL 도출 (thumb_ 접두사 제거)
+                let artOrigUrl = item.product.img;
+                if (artOrigUrl.includes('/thumb_')) {
+                    artOrigUrl = artOrigUrl.replace('/thumb_', '/');
+                }
+                const artRes = await withTimeout(fetch(artOrigUrl), PDF_TIMEOUT);
+                if (artRes && artRes.ok) {
+                    const artBlob = await artRes.blob();
+                    const artExt = (artBlob.type && artBlob.type.includes('png')) ? 'png' : 'jpg';
+                    const artUrl = await withTimeout(uploadFileToSupabase(artBlob, `orders/${orderId}/artwork_${idx}.${artExt}`), UPLOAD_TIMEOUT);
+                    if (artUrl) uploadedFiles.push({ name: `artwork_${idx}_${item.product?.name || 'artwork'}.${artExt}`, url: artUrl, type: 'product' });
+                }
+            } catch(err) { console.warn('작품 원본 이미지 업로드 실패:', err); }
+            continue;
+        }
+
         if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
             let hasContent = false;
             if (item.json.objects && Array.isArray(item.json.objects)) {
@@ -2438,7 +2457,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                 name: localName(item.product),
                 price: item.product.price,
                 code: item.product.code || item.product.key,
-                img: item.product.img 
+                img: item.product.img,
+                partner_id: item.product.partner_id || null
             },
             productName: localName(item.product),
             qty: qty, 

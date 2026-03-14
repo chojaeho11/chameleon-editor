@@ -1832,7 +1832,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
             let imgData = null;
 
             // ★ [1순위] 썸네일 사용 (단일 페이지일 때만 — 멀티페이지는 JSON에서 각각 렌더링)
-            if (p === 0 && loopCount <= 1 && item.thumb && item.type !== 'product_only') {
+            if (p === 0 && loopCount <= 1 && item.thumb) {
                 try { imgData = await getSafeImageDataUrl(item.thumb); } catch(e) {}
             }
 
