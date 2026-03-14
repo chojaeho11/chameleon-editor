@@ -1962,12 +1962,12 @@ window.initPopupQuill = () => {
 // ==========================================
 // [통합] 상세페이지 편집기 (공통정보 + 소분류 + 제품 상세)
 // ==========================================
-let _ciQuill = null;
 let _ciCurrentLang = 'KR';
 let _ciBackupData = null;
 let _ciEditMode = 'common'; // 'common' or 'product'
 let _ciEditProductId = null;
 let _ciImages = []; // [{file, preview, url}]
+let _ciSourceMode = false; // false=preview, true=source
 
 // 이미지 추가
 window._ciAddImages = (files) => {
@@ -2004,7 +2004,8 @@ window._ciReset = () => {
     const desc = document.getElementById('ciDescription');
     if (desc) desc.value = '';
     ['KR','JP','US','CN','AR','ES','DE','FR'].forEach(l => { document.getElementById('ciHtml'+l).value = ''; });
-    if (_ciQuill) _ciQuill.root.innerHTML = '';
+    _ciRenderPreview('');
+    _ciSourceMode = false;
     document.getElementById('ciPreviewSection').style.display = 'none';
     document.getElementById('ciSaveSection').style.display = 'none';
     document.getElementById('ciStatus').textContent = '';
@@ -2159,47 +2160,103 @@ window._ciLoadContent = async () => {
     }
 };
 
-// Quill 초기화 후 미리보기 표시
-async function _ciShowPreview(krHtml) {
+// iframe에 HTML 렌더링
+function _ciRenderPreview(html) {
+    const frame = document.getElementById('ciPreviewFrame');
+    if (!frame) return;
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    doc.open();
+    doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;} img{max-width:100%;height:auto;}</style></head><body>${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</body></html>`);
+    doc.close();
+    // iframe 높이 자동 조절
+    setTimeout(() => {
+        try {
+            const h = doc.body.scrollHeight;
+            frame.style.height = Math.max(h + 20, 300) + 'px';
+        } catch(e) {}
+    }, 200);
+}
+
+// 미리보기 표시
+function _ciShowPreview(html) {
     const previewSec = document.getElementById('ciPreviewSection');
     const saveSec = document.getElementById('ciSaveSection');
     previewSec.style.display = 'block';
     saveSec.style.display = 'block';
 
-    if (!_ciQuill) {
-        // display:block 후 Quill 초기화 전 딜레이 (emit 버그 방지)
-        await new Promise(r => setTimeout(r, 150));
-        try {
-            _ciQuill = new Quill('#ci-quill-editor', {
-                theme: 'snow',
-                modules: { toolbar: [
-                    [{ header: [1,2,3,false] }], ['bold','italic','underline','strike'],
-                    [{ color: [] }, { background: [] }], [{ align: [] }],
-                    ['link','image','video'], ['blockquote','code-block'],
-                    [{ list:'ordered' }, { list:'bullet' }], ['clean']
-                ]},
-                placeholder: '한국어 상세 내용...'
-            });
-        } catch(e) { console.error('Quill init:', e); return; }
-    }
     _ciCurrentLang = 'KR';
     document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
     const krTab = document.querySelector('.ci-lang-tab[data-lang="KR"]');
     if (krTab) krTab.classList.add('active');
-    _ciQuill.root.innerHTML = (krHtml && krHtml !== '<p><br></p>') ? krHtml : '';
+
+    // 소스 모드 초기화
+    _ciSourceMode = false;
+    document.getElementById('ciPreviewView').style.display = 'block';
+    document.getElementById('ciSourceView').style.display = 'none';
+    const toggleBtn = document.getElementById('ciViewToggle');
+    if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-code"></i> 소스 편집';
+
+    _ciRenderPreview(html);
     previewSec.scrollIntoView({ behavior: 'smooth' });
 }
 
-window._ciSwitchLang = (lang) => {
-    if (!_ciQuill) return;
-    // 현재 탭 저장
-    const curHtml = _ciQuill.root.innerHTML;
-    if (curHtml !== '<p><br></p>') {
-        document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
+// 소스/미리보기 토글
+window._ciToggleView = () => {
+    const previewView = document.getElementById('ciPreviewView');
+    const sourceView = document.getElementById('ciSourceView');
+    const toggleBtn = document.getElementById('ciViewToggle');
+    const sourceEditor = document.getElementById('ciSourceEditor');
+
+    if (_ciSourceMode) {
+        // 소스 → 미리보기: 소스 내용을 hidden field에 저장 후 미리보기
+        const editedHtml = sourceEditor.value;
+        document.getElementById('ciHtml' + _ciCurrentLang).value = editedHtml;
+        _ciRenderPreview(editedHtml);
+        previewView.style.display = 'block';
+        sourceView.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fa-solid fa-code"></i> 소스 편집';
+        _ciSourceMode = false;
+    } else {
+        // 미리보기 → 소스: hidden field 내용을 textarea에 표시
+        const html = document.getElementById('ciHtml' + _ciCurrentLang).value;
+        sourceEditor.value = html;
+        previewView.style.display = 'none';
+        sourceView.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i> 미리보기';
+        _ciSourceMode = true;
     }
+};
+
+// 소스 적용 버튼
+window._ciApplySource = () => {
+    const sourceEditor = document.getElementById('ciSourceEditor');
+    const html = sourceEditor.value;
+    document.getElementById('ciHtml' + _ciCurrentLang).value = html;
+    _ciRenderPreview(html);
+    document.getElementById('ciPreviewView').style.display = 'block';
+    document.getElementById('ciSourceView').style.display = 'none';
+    document.getElementById('ciViewToggle').innerHTML = '<i class="fa-solid fa-code"></i> 소스 편집';
+    _ciSourceMode = false;
+    showToast('소스 적용 완료', 'success');
+};
+
+// 언어 탭 전환
+window._ciSwitchLang = (lang) => {
+    // 소스 모드이면 현재 소스 저장
+    if (_ciSourceMode) {
+        const sourceEditor = document.getElementById('ciSourceEditor');
+        document.getElementById('ciHtml' + _ciCurrentLang).value = sourceEditor.value;
+    }
+
     _ciCurrentLang = lang;
-    const saved = document.getElementById('ciHtml' + lang).value;
-    _ciQuill.root.innerHTML = (saved && saved !== '<p><br></p>') ? saved : '';
+    const saved = document.getElementById('ciHtml' + lang).value || '';
+
+    if (_ciSourceMode) {
+        document.getElementById('ciSourceEditor').value = saved;
+    } else {
+        _ciRenderPreview(saved);
+    }
+
     document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
     const target = document.querySelector(`.ci-lang-tab[data-lang="${lang}"]`);
     if (target) target.classList.add('active');
@@ -2343,12 +2400,9 @@ window._ciTranslateOnly = async () => {
     const status = document.getElementById('ciStatus');
     const btn = document.getElementById('ciTranslateOnlyBtn');
 
-    // Quill에서 현재 한국어 내용 가져오기
-    if (_ciQuill && _ciCurrentLang === 'KR') {
-        const curHtml = _ciQuill.root.innerHTML;
-        if (curHtml && curHtml !== '<p><br></p>') {
-            document.getElementById('ciHtmlKR').value = curHtml;
-        }
+    // 소스 편집 중이면 현재 내용 저장
+    if (_ciSourceMode) {
+        document.getElementById('ciHtml' + _ciCurrentLang).value = document.getElementById('ciSourceEditor').value;
     }
 
     const krHtml = document.getElementById('ciHtmlKR').value;
@@ -2395,12 +2449,9 @@ window._ciSave = async () => {
     const dbClient = window.sb || window._supabase;
     const target = _ciGetTarget();
 
-    // 현재 Quill 탭 저장
-    if (_ciQuill) {
-        const curHtml = _ciQuill.root.innerHTML;
-        if (curHtml !== '<p><br></p>') {
-            document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
-        }
+    // 소스 편집 중이면 현재 내용 저장
+    if (_ciSourceMode) {
+        document.getElementById('ciHtml' + _ciCurrentLang).value = document.getElementById('ciSourceEditor').value;
     }
 
     if (!confirm(`[${target.label}] 상세정보를 저장하시겠습니까?`)) return;
