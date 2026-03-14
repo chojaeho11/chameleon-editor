@@ -1005,6 +1005,9 @@ window.submitArtworkUpload = async function() {
         showToast(window.t?.('artwork_success', '작품이 마켓플레이스에 등록되었습니다!') || '작품이 마켓플레이스에 등록되었습니다!', 'success');
         document.getElementById('artworkUploadModal').style.display = 'none';
 
+        // ★ 등록 후 장르 그리드 즉시 새로고침
+        if (typeof window._loadArtworkGenreGrid === 'function') window._loadArtworkGenreGrid();
+
     } catch(e) {
         console.error('작품 등록 실패:', e);
         showToast((window.t?.('artwork_fail', '등록 실패: ') || '등록 실패: ') + e.message, 'error');
@@ -1060,14 +1063,20 @@ window._loadArtworkGenreGrid = async function() {
 
     const lang = window.CURRENT_LANG || 'kr';
     const genres = UA_GENRE_CATS;
+    const _allLabel = lang==='ja'?'全体':lang==='en'?'All':lang==='zh'?'全部':'전체';
 
-    // 장르 탭 생성
+    // 탭 생성: "전체" + 장르별
     tabBox.innerHTML = '';
-    genres.forEach((g, i) => {
-        const gName = lang==='ja' ? g.name_jp : lang==='en' ? g.name_us : lang==='zh' ? g.name_cn : lang==='es' ? g.name_es : lang==='de' ? g.name_de : lang==='fr' ? g.name_fr : g.name;
+    const allTabs = [{ code: 'ua_all', icon: '🔥', label: _allLabel }, ...genres.map(g => ({
+        code: g.code,
+        icon: g.icon,
+        label: lang==='ja' ? g.name_jp : lang==='en' ? g.name_us : lang==='zh' ? g.name_cn : lang==='es' ? g.name_es : lang==='de' ? g.name_de : lang==='fr' ? g.name_fr : g.name
+    }))];
+
+    allTabs.forEach((g, i) => {
         const btn = document.createElement('button');
         btn.style.cssText = 'padding:6px 14px; border:1px solid rgba(255,255,255,0.2); border-radius:20px; background:' + (i===0?'rgba(99,102,241,0.3)':'rgba(255,255,255,0.08)') + '; color:#fff; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all 0.15s;';
-        btn.textContent = g.icon + ' ' + gName;
+        btn.textContent = g.icon + ' ' + g.label;
         btn.onclick = () => {
             tabBox.querySelectorAll('button').forEach(b => { b.style.background = 'rgba(255,255,255,0.08)'; });
             btn.style.background = 'rgba(99,102,241,0.3)';
@@ -1080,9 +1089,16 @@ window._loadArtworkGenreGrid = async function() {
     async function _renderGenreItems(genreCode) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
         try {
-            const { data: items } = await sb.from('admin_products')
-                .select('code, name, name_jp, name_us, img_url')
-                .eq('category', genreCode)
+            let query = sb.from('admin_products')
+                .select('code, name, name_jp, name_us, img_url, category');
+
+            if (genreCode === 'ua_all') {
+                // 전체: ua_로 시작하는 모든 카테고리 (구 ua_paper/ua_fabric/ua_canvas 포함)
+                query = query.like('category', 'ua_%');
+            } else {
+                query = query.eq('category', genreCode);
+            }
+            const { data: items } = await query
                 .eq('partner_status', 'approved')
                 .order('created_at', { ascending: false })
                 .limit(5);
