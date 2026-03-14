@@ -1843,6 +1843,25 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                 drawText(doc, `${TEXT.ordersheet_size || '사이즈'} : ${Math.round(_wMm2)} x ${Math.round(_hMm2)} mm`, 25, optY, {}, "#555555");
                 optY += 6;
             }
+            // ★ 제품 타입 (패브릭/캔버스/티셔츠 등)
+            const _typeNames = { fabric:'패브릭인쇄', canvas:'캔버스액자', paper:'종이포스터', acrylic:'아크릴액자', blind:'롤블라인드', mug:'머그컵', tshirt:'티셔츠인쇄', sticker:'스티커', cushion:'쿠션', keyring:'키링' };
+            const _aType = item.product?._artworkType;
+            if (_aType && _typeNames[_aType]) {
+                drawText(doc, `• 제품종류: ${_typeNames[_aType]}`, 25, optY, {weight:'bold'}, "#4f46e5"); optY += 6;
+            }
+            // ★ 티셔츠 색상/사이즈
+            if (item.product?._tshirtColorName) {
+                drawText(doc, `• 티셔츠 컬러: ${item.product._tshirtColorName}`, 25, optY); optY += 6;
+            }
+            if (item.product?._tshirtSize) {
+                drawText(doc, `• 티셔츠 사이즈: ${item.product._tshirtSize}`, 25, optY); optY += 6;
+            }
+            // ★ 블라인드 방향
+            if (item.product?._blindSide) {
+                const sideLabel = item.product._blindSide === 'left' ? '좌측' : '우측';
+                drawText(doc, `• 내림손잡이: ${sideLabel}`, 25, optY); optY += 6;
+            }
+            // ★ 선택된 추가 옵션
             if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
                 Object.entries(item.selectedAddons).forEach(([key, code]) => {
                     const add = ADDON_DB[code];
@@ -1850,7 +1869,7 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                     const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
                     drawText(doc, `• ${addonName} (x${qty})`, 25, optY); optY += 6;
                 });
-            } else {
+            } else if (!_aType) {
                 drawText(doc, "• " + TEXT.opt_default, 25, optY); optY += 6;
             }
 

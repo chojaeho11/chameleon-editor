@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=187";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=187";
-import { SITE_CONFIG } from "./site-config.js?v=187";
-import { applySize } from "./canvas-size.js?v=187";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=187";
+import { canvas } from "./canvas-core.js?v=188";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=188";
+import { SITE_CONFIG } from "./site-config.js?v=188";
+import { applySize } from "./canvas-size.js?v=188";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=188";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=187";
+} from "./export.js?v=188";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1241,7 +1241,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=187');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=188');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2352,7 +2352,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=187');
+                const { generateDesignPNG } = await import('./export.js?v=188');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
@@ -2458,17 +2458,24 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                 price: item.product.price,
                 code: item.product.code || item.product.key,
                 img: item.product.img,
-                partner_id: item.product.partner_id || null
+                partner_id: item.product.partner_id || null,
+                w_mm: item.product.w_mm || item.product.width_mm || 0,
+                h_mm: item.product.h_mm || item.product.height_mm || 0,
+                _artworkType: item.product._artworkType || '',
+                _tshirtColor: item.product._tshirtColor || '',
+                _tshirtColorName: item.product._tshirtColorName || '',
+                _tshirtSize: item.product._tshirtSize || '',
+                _blindSide: item.product._blindSide || ''
             },
             productName: localName(item.product),
-            qty: qty, 
-            price: compatibleUnitPrice, 
-            selectedAddons: item.selectedAddons || {}, 
-            addonQuantities: item.addonQuantities || {}, 
-            type: item.type || 'design',     
-            json: item.json || null,         
-            thumb: item.thumb || '',         
-            width: item.width || 0,          
+            qty: qty,
+            price: compatibleUnitPrice,
+            selectedAddons: item.selectedAddons || {},
+            addonQuantities: item.addonQuantities || {},
+            type: item.type || 'design',
+            json: item.json || null,
+            thumb: item.thumb || '',
+            width: item.width || 0,
             height: item.height || 0,
             fileName: item.fileName || '',
             originalUrl: item.originalUrl || '',
@@ -3092,7 +3099,13 @@ const cleanProduct = {
     category: productInfo.category || '',
     addons: productInfo.addons || [],
     partner_id: productInfo.partner_id || null,
-    material: productInfo.material || ''
+    material: productInfo.material || '',
+    // ★ 마켓플레이스/커스텀 제품 추가 정보
+    _artworkType: productInfo._artworkType || '',
+    _tshirtColor: productInfo._tshirtColor || '',
+    _tshirtColorName: productInfo._tshirtColorName || '',
+    _tshirtSize: productInfo._tshirtSize || '',
+    _blindSide: productInfo._blindSide || ''
 };
 
 // [2] 장바구니 아이템 생성

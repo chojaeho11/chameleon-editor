@@ -405,9 +405,13 @@ async function _generateWorkMemo(order, matItems, matLabel) {
         const items = matItems.map(m => m.item);
         const rowCount = Math.max(items.length, 1);
 
-        // 옵션 줄 수 미리 계산
+        // 옵션 줄 수 미리 계산 (제품타입/티셔츠/블라인드 포함)
         let optLineCount = 0;
         for (const item of items) {
+            if (item.product?._artworkType) optLineCount++;
+            if (item.product?._tshirtColorName) optLineCount++;
+            if (item.product?._tshirtSize) optLineCount++;
+            if (item.product?._blindSide) optLineCount++;
             if (item.selectedAddons && typeof item.selectedAddons === 'object') {
                 optLineCount += Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]).length;
             }
@@ -505,6 +509,36 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             ctx.fillText(size, 510, y + 6);
             y += lineH + 4;
 
+            // ★ 제품 타입 (패브릭/캔버스/티셔츠 등)
+            const _typeNames = { fabric:'패브릭인쇄', canvas:'캔버스액자', paper:'종이포스터', acrylic:'아크릴액자', blind:'롤블라인드', mug:'머그컵', tshirt:'티셔츠인쇄', sticker:'스티커', cushion:'쿠션', keyring:'키링' };
+            const _aType = item.product?._artworkType;
+            if (_aType && _typeNames[_aType]) {
+                ctx.font = 'bold 13px Pretendard, sans-serif';
+                ctx.fillStyle = '#4f46e5';
+                ctx.fillText(`  ▸ 제품종류: ${_typeNames[_aType]}`, 40, y + 2);
+                y += 22;
+            }
+            // ★ 티셔츠 색상/사이즈
+            if (item.product?._tshirtColorName) {
+                ctx.font = '12px Pretendard, sans-serif';
+                ctx.fillStyle = '#7c3aed';
+                ctx.fillText(`  ▸ 티셔츠 컬러: ${item.product._tshirtColorName}`, 40, y + 2);
+                y += 22;
+            }
+            if (item.product?._tshirtSize) {
+                ctx.font = '12px Pretendard, sans-serif';
+                ctx.fillStyle = '#7c3aed';
+                ctx.fillText(`  ▸ 티셔츠 사이즈: ${item.product._tshirtSize}`, 40, y + 2);
+                y += 22;
+            }
+            // ★ 블라인드 방향
+            if (item.product?._blindSide) {
+                ctx.font = '12px Pretendard, sans-serif';
+                ctx.fillStyle = '#0284c7';
+                ctx.fillText(`  ▸ 내림손잡이: ${item.product._blindSide === 'left' ? '좌측' : '우측'}`, 40, y + 2);
+                y += 22;
+            }
+
             // 옵션 상세
             if (item.selectedAddons && typeof item.selectedAddons === 'object') {
                 const keys = Object.keys(item.selectedAddons).filter(k => item.selectedAddons[k]);
@@ -564,6 +598,25 @@ async function _generateWorkMemo(order, matItems, matLabel) {
                 if (wallCount) detailStr += (detailStr ? '  |  ' : '') + `벽 ${wallCount}개`;
                 ctx.fillText(`  ${detailStr}`, 40, y);
                 y += 18;
+            }
+
+            // ★ 제품 타입/티셔츠/블라인드 정보
+            const _tn2 = { fabric:'패브릭인쇄', canvas:'캔버스액자', paper:'종이포스터', acrylic:'아크릴액자', blind:'롤블라인드', mug:'머그컵', tshirt:'티셔츠인쇄', sticker:'스티커', cushion:'쿠션', keyring:'키링' };
+            if (item.product?._artworkType && _tn2[item.product._artworkType]) {
+                ctx.fillStyle = '#4f46e5'; ctx.font = 'bold 12px Pretendard, sans-serif';
+                ctx.fillText(`    ▸ 제품종류: ${_tn2[item.product._artworkType]}`, 40, y); y += 18;
+            }
+            if (item.product?._tshirtColorName) {
+                ctx.fillStyle = '#7c3aed'; ctx.font = '12px Pretendard, sans-serif';
+                ctx.fillText(`    ▸ 컬러: ${item.product._tshirtColorName}`, 40, y); y += 18;
+            }
+            if (item.product?._tshirtSize) {
+                ctx.fillStyle = '#7c3aed'; ctx.font = '12px Pretendard, sans-serif';
+                ctx.fillText(`    ▸ 사이즈: ${item.product._tshirtSize}`, 40, y); y += 18;
+            }
+            if (item.product?._blindSide) {
+                ctx.fillStyle = '#0284c7'; ctx.font = '12px Pretendard, sans-serif';
+                ctx.fillText(`    ▸ 내림손잡이: ${item.product._blindSide === 'left' ? '좌측' : '우측'}`, 40, y); y += 18;
             }
 
             // 옵션 목록
