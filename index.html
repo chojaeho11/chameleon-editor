@@ -8738,6 +8738,11 @@ if (w >= 20 && h >= 20) {
 
         // 6. 실행 (에디터 or 장바구니)
 
+        // ★ 티셔츠/머그컵/스티커 등 고정가 상품: 에디터 불필요, 바로 장바구니
+        if (product._artworkTypeFixed && mode === 'editor') {
+            mode = 'cart';
+        }
+
         // ★ 패브릭인쇄22222: 항상 에디터로 이동 (장바구니/파일업로드도 에디터 경유)
         const _fabricTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
         if (_fabricTopCat === '22222' && mode !== 'editor') {
