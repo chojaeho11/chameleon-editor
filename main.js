@@ -1041,7 +1041,8 @@ const UA_GENRE_CATS = [
     { code: 'ua_anime', name: '애니메이션', name_us: 'Animation', name_jp: 'アニメ', name_cn: '动漫', name_ar: 'أنمي', name_es: 'Animación', name_de: 'Animation', name_fr: 'Animation', top_category_code: 'user_artwork', icon: '🎬', sort_order: 2 },
     { code: 'ua_landscape', name: '풍경', name_us: 'Landscape', name_jp: '風景', name_cn: '风景', name_ar: 'مناظر طبيعية', name_es: 'Paisaje', name_de: 'Landschaft', name_fr: 'Paysage', top_category_code: 'user_artwork', icon: '🏞️', sort_order: 3 },
     { code: 'ua_interior', name: '인테리어', name_us: 'Interior', name_jp: 'インテリア', name_cn: '室内', name_ar: 'ديكور', name_es: 'Interior', name_de: 'Interieur', name_fr: 'Intérieur', top_category_code: 'user_artwork', icon: '🏠', sort_order: 4 },
-    { code: 'ua_fengshui', name: '풍수그림', name_us: 'Feng Shui Art', name_jp: '風水画', name_cn: '风水画', name_ar: 'فنغ شوي', name_es: 'Feng Shui', name_de: 'Feng Shui', name_fr: 'Feng Shui', top_category_code: 'user_artwork', icon: '🐉', sort_order: 5 }
+    { code: 'ua_fengshui', name: '풍수그림', name_us: 'Feng Shui Art', name_jp: '風水画', name_cn: '风水画', name_ar: 'فنغ شوي', name_es: 'Feng Shui', name_de: 'Feng Shui', name_fr: 'Feng Shui', top_category_code: 'user_artwork', icon: '🐉', sort_order: 5 },
+    { code: 'ua_personal', name: '개인작품', name_us: 'Personal Art', name_jp: '個人作品', name_cn: '个人作品', name_ar: 'أعمال شخصية', name_es: 'Arte Personal', name_de: 'Persönliche Kunst', name_fr: 'Art Personnel', top_category_code: 'user_artwork', icon: '✨', sort_order: 6 }
 ];
 
 // ★ 작품 제품 타입별 단가
