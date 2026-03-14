@@ -7274,8 +7274,8 @@ window.showChoiceModal = async function(key) {
             } else {
                 priceLabel = formatPriceSimple(t.price_krw) + '/m²';
             }
-            btns += `<button type="button" class="ua-type-btn" data-type="${k}" data-price="${t.price_krw}" data-fixed="${t.fixed?'1':'0'}" data-blind="${t.hasBlindOption?'1':'0'}" onclick="window._selectArtworkType(this)"
-                style="flex:1; min-width:calc(33% - 6px); padding:10px 6px; border:2px solid ${isFirst?'#6366f1':'#e2e8f0'}; border-radius:10px; background:${isFirst?'#eef2ff':'#fff'}; cursor:pointer; text-align:center; transition:all 0.15s;">
+            btns += `<button type="button" class="ua-type-btn" data-type="${k}" data-price="${t.price_krw}" data-fixed="${t.fixed?'1':'0'}" data-blind="${t.hasBlindOption?'1':'0'}" data-maxw="${t.maxW||0}" data-maxh="${t.maxH||0}" onclick="window._selectArtworkType(this)"
+                style="flex:1; min-width:calc(50% - 6px); max-width:calc(50% - 3px); padding:10px 6px; border:2px solid ${isFirst?'#6366f1':'#e2e8f0'}; border-radius:10px; background:${isFirst?'#eef2ff':'#fff'}; cursor:pointer; text-align:center; transition:all 0.15s;">
                 <div style="font-size:18px;">${t.icon}</div>
                 <div style="font-size:11px; font-weight:700; color:${isFirst?'#4f46e5':'#334155'}; margin-top:2px;">${tName}</div>
                 <div style="font-size:9px; color:#6366f1; font-weight:600; margin-top:2px;">${priceLabel}</div>
@@ -7362,6 +7362,7 @@ window.showChoiceModal = async function(key) {
                     <input type="number" id="inputCustH" class="ai-input-pretty" placeholder="${_isUS2 ? 'H (in)' : 'H (mm)'}" style="flex:1; margin:0; text-align:center;" oninput="window._autoFillFromFile('h'); window.calcCustomPrice(); window.updateModalTotal();">
                 </div>
                 <div id="sizeAutoHint" style="font-size:11px; color:#8b5cf6; margin-top:6px; line-height:1.4;">💡 ${lang==='ja'?'片方のサイズを入力するだけで、AIがファイルを確認してもう片方を算出します':lang==='zh'?'只需输入一边尺寸，AI会检查文件并计算另一边':lang==='ar'?'أدخل بُعداً واحداً فقط وسيتحقق الذكاء الاصطناعي من الملف ويحسب الجانب الآخر':lang==='es'?'Ingrese solo un lado y la IA verificará el archivo y calculará el otro':lang==='de'?'Geben Sie nur eine Seite ein — KI prüft die Datei und berechnet die andere Seite':lang==='fr'?'Entrez un seul côté, l\\\'IA vérifiera le fichier et calculera l\\\'autre côté':lang==='en'?'Just enter one side and AI will check your file to calculate the other side':'제작할 제품의 한쪽길이만 입력하면 반대쪽은 인공지능이 파일을 확인하여 적어줍니다'}</div>
+                <div id="artworkSizeMaxHint" style="display:none; font-size:11px; color:#f59e0b; font-weight:700; margin-top:4px;"></div>
             </div>`;
             })()}`;
     } else {
@@ -7912,6 +7913,20 @@ window.updateModalTotal = function() {
             return;
         }
 
+        // ★ 종이포스터 최대 사이즈 제한 (A3: 297×420mm)
+        if (product._artworkMaxW > 0 && product._artworkMaxH > 0) {
+            const mW = product._artworkMaxW, mH = product._artworkMaxH;
+            const wInput2 = document.getElementById('inputCustW');
+            const hInput2 = document.getElementById('inputCustH');
+            if (w > mH || h > mH) {  // 긴쪽 기준 mH(420), 짧은쪽 mW(297)
+                const _maxMsg = (lang==='ja') ? `最大サイズは${mW}×${mH}mmです` : (lang==='en') ? `Max size is ${mW}×${mH}mm` : `최대 사이즈는 ${mW}×${mH}mm입니다`;
+                if (w > mH && wInput2) wInput2.value = mH;
+                if (h > mH && hInput2) hInput2.value = mH;
+                showToast(_maxMsg, 'warn');
+                return;
+            }
+        }
+
         // [수정] 키링(3cm~5cm)도 입력되도록 100을 30으로 변경
 if (w >= 20 && h >= 20) {
             // 1. 면적 계산 (㎡)
@@ -8003,27 +8018,37 @@ if (w >= 20 && h >= 20) {
         const isFixed = btn.dataset.fixed === '1';
         const isBlind = btn.dataset.blind === '1';
         const isFabric = typeKey === 'fabric';
+        const maxW = parseInt(btn.dataset.maxw) || 0;
+        const maxH = parseInt(btn.dataset.maxh) || 0;
 
         if (window.selectedProductForChoice) {
             window.selectedProductForChoice._artworkTypePrice = typePrice;
             window.selectedProductForChoice._artworkType = typeKey;
             window.selectedProductForChoice._artworkTypeFixed = isFixed;
+            window.selectedProductForChoice._artworkMaxW = maxW;
+            window.selectedProductForChoice._artworkMaxH = maxH;
         }
 
         // ★ 고정가 상품: 사이즈 입력 숨기기 / 면적상품: 사이즈 입력 보이기
         const sizeBox = document.querySelector('[data-npc="size"]');
-        const estimateBox = document.querySelector('[data-npc="estimate"]');
-        const qtyBox = document.querySelector('[data-npc="qtyLabel"]');
-        const qtyWrap = document.querySelector('[data-npc="qty"]');
         if (sizeBox) sizeBox.style.display = isFixed ? 'none' : '';
-        // 수량은 항상 보여줌
 
-        // ★ 패브릭 옵션: fabric만 보이기
-        const fabricOptBoxes = document.querySelectorAll('[data-required-cat="2342434"]');
-        fabricOptBoxes.forEach(b => { b.style.display = isFabric ? '' : 'none'; });
-        // 패브릭 라벨도 토글
-        const fabricLabel = document.querySelector('[data-npc="fabricLabel"]');
-        if (fabricLabel) fabricLabel.style.display = isFabric ? '' : 'none';
+        // ★ 종이포스터 최대 사이즈 힌트
+        const sizeHint = document.getElementById('artworkSizeMaxHint');
+        if (sizeHint) {
+            if (maxW > 0 && maxH > 0) {
+                const _l = window.CURRENT_LANG || 'kr';
+                const _maxTxt = _l==='ja'?`最大サイズ: ${maxW}×${maxH}mm (A3)`:_l==='en'?`Max size: ${maxW}×${maxH}mm (A3)`:`최대 사이즈: ${maxW}×${maxH}mm (A3)`;
+                sizeHint.textContent = '📐 ' + _maxTxt;
+                sizeHint.style.display = '';
+            } else {
+                sizeHint.style.display = 'none';
+            }
+        }
+
+        // ★ 전체 옵션 영역: 패브릭만 보이기 (패브릭고리, 미싱 등)
+        const addonArea = document.getElementById('addonCategoryArea');
+        if (addonArea) addonArea.style.display = isFabric ? '' : 'none';
 
         // ★ 블라인드 옵션: blind만 보이기
         const blindBox = document.getElementById('blindOptionBox');
@@ -8288,6 +8313,15 @@ if (w >= 20 && h >= 20) {
                 finalH = window._getInputMm ? window._getInputMm(_hRaw) : parseInt(_hRaw);
 
                 if (mode !== 'upload' && (finalW < 20 || finalH < 20)) { showToast(lang==='ja'?'先にサイズを入力してください。':lang==='zh'?'请先输入尺寸。':lang==='ar'?'يرجى إدخال الحجم أولاً.':lang==='es'?'Por favor, ingrese el tamaño primero.':lang==='de'?'Bitte geben Sie zuerst die Größe ein.':lang==='fr'?'Veuillez d\'abord saisir la taille.':lang==='en'?'Please enter the size first.':'먼저 사이즈를 입력해 주세요.', 'warn'); return; }
+
+                // ★ 종이포스터 최대 사이즈 제한
+                if (product._artworkMaxW > 0 && product._artworkMaxH > 0) {
+                    const mH = product._artworkMaxH;
+                    if (finalW > mH || finalH > mH) {
+                        showToast(lang==='ja'?`最大サイズは${product._artworkMaxW}×${mH}mmです`:lang==='en'?`Max size is ${product._artworkMaxW}×${mH}mm`:`최대 사이즈는 ${product._artworkMaxW}×${mH}mm입니다`, 'warn');
+                        return;
+                    }
+                }
 
                 const area = (finalW * finalH) / 1000000;
                 let rawPrice = area * unitPrice;

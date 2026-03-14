@@ -1050,8 +1050,8 @@ const UA_GENRE_CATS = [
 const UA_PRODUCT_TYPES = {
     fabric:  { name: '패브릭인쇄', name_us: 'Fabric Print', name_jp: 'ファブリック印刷', icon: '🎨', price_krw: 15000 },
     canvas:  { name: '캔버스액자', name_us: 'Canvas Frame', name_jp: 'キャンバスフレーム', icon: '🖼️', price_krw: 100000 },
-    paper:   { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', icon: '📄', price_krw: 10000 },
-    acrylic: { name: '아크릴액자', name_us: 'Acrylic Frame', name_jp: 'アクリルフレーム', icon: '💎', price_krw: 200000 },
+    paper:   { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', icon: '📄', price_krw: 10000, maxW: 297, maxH: 420 },
+    acrylic: { name: '아크릴액자', name_us: 'Acrylic Frame', name_jp: 'アクリルフレーム', icon: '💎', price_krw: 400000 },
     blind:   { name: '롤블라인드', name_us: 'Roll Blind', name_jp: 'ロールブラインド', icon: '🪟', price_krw: 40000, hasBlindOption: true },
     mug:     { name: '머그컵', name_us: 'Mug Cup', name_jp: 'マグカップ', icon: '☕', price_krw: 5000, fixed: true },
     tshirt:  { name: '티셔츠인쇄', name_us: 'T-shirt Print', name_jp: 'Tシャツ印刷', icon: '👕', price_krw: 10000, fixed: true },
