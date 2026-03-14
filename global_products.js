@@ -1967,28 +1967,54 @@ let _ciCurrentLang = 'KR';
 let _ciBackupData = null;
 let _ciEditMode = 'common'; // 'common' or 'product'
 let _ciEditProductId = null;
+let _ciImages = []; // [{file, preview, url}]
+
+// 이미지 추가
+window._ciAddImages = (files) => {
+    if (!files || !files.length) return;
+    Array.from(files).forEach(file => {
+        if (_ciImages.length >= 20) return;
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            _ciImages.push({ file, preview: e.target.result, url: null });
+            _ciRenderImgGrid();
+        };
+        reader.readAsDataURL(file);
+    });
+};
+window._ciRemoveImage = (idx) => {
+    _ciImages.splice(idx, 1);
+    _ciRenderImgGrid();
+};
+function _ciRenderImgGrid() {
+    const grid = document.getElementById('ciImgGrid');
+    grid.innerHTML = _ciImages.map((img, i) => `
+        <div class="ci-img-card">
+            <img src="${img.preview}" alt="img${i}">
+            <button class="ci-rm" onclick="event.stopPropagation(); window._ciRemoveImage(${i});">&times;</button>
+        </div>
+    `).join('');
+}
+
+// 초기화
+window._ciReset = () => {
+    _ciImages = [];
+    _ciRenderImgGrid();
+    const desc = document.getElementById('ciDescription');
+    if (desc) desc.value = '';
+    ['KR','JP','US','CN','AR','ES','DE','FR'].forEach(l => { document.getElementById('ciHtml'+l).value = ''; });
+    if (_ciQuill) _ciQuill.root.innerHTML = '';
+    document.getElementById('ciPreviewSection').style.display = 'none';
+    document.getElementById('ciSaveSection').style.display = 'none';
+    document.getElementById('ciStatus').textContent = '';
+    showToast('초기화되었습니다.', 'info');
+};
 
 window.openCommonInfoModal = async () => {
     const dbClient = window.sb || window._supabase;
     if (!dbClient) { showToast('DB 연결 실패', 'error'); return; }
     document.getElementById('commonInfoModal').style.display = 'flex';
-
-    // Quill 초기화 (display 후 딜레이 필수 - Quill 1.x emit 버그 방지)
-    if (!_ciQuill) {
-        await new Promise(r => setTimeout(r, 100));
-        try {
-            _ciQuill = new Quill('#ci-quill-editor', {
-                theme: 'snow',
-                modules: { toolbar: [
-                    [{ header: [1,2,3,false] }], ['bold','italic','underline','strike'],
-                    [{ color: [] }, { background: [] }], [{ align: [] }],
-                    ['link','image','video'], ['blockquote','code-block'],
-                    [{ list:'ordered' }, { list:'bullet' }], ['clean']
-                ]},
-                placeholder: '한국어 상세 내용을 입력하세요...'
-            });
-        } catch(e) { console.error('Quill init error:', e); return; }
-    }
 
     // 대분류 로드
     const topSel = document.getElementById('ciTopCat');
@@ -2087,11 +2113,7 @@ function _ciGetTarget() {
 window._ciLoadContent = async () => {
     const dbClient = window.sb || window._supabase;
     const target = _ciGetTarget();
-
-    // 현재 탭 한국어로 초기화
     _ciCurrentLang = 'KR';
-    document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('.ci-lang-tab[data-lang="KR"]').classList.add('active');
     ['KR','JP','US','CN','AR','ES','DE','FR'].forEach(l => { document.getElementById('ciHtml'+l).value = ''; });
 
     if (target.mode === 'product') {
@@ -2109,7 +2131,6 @@ window._ciLoadContent = async () => {
             document.getElementById('ciHtmlFR').value = data.description_fr || '';
         }
         _ciBackupData = null;
-        document.getElementById('btnCiRestore').disabled = true;
     } else {
         _ciEditMode = 'common';
         _ciEditProductId = null;
@@ -2128,69 +2149,177 @@ window._ciLoadContent = async () => {
         } else {
             _ciBackupData = null;
         }
-        const btnR = document.getElementById('btnCiRestore');
-        btnR.disabled = !_ciBackupData;
     }
-
-    // Quill에 한국어 로드
+    // 기존 내용이 있으면 미리보기 표시
     const krHtml = document.getElementById('ciHtmlKR').value;
-    _ciQuill.root.innerHTML = (krHtml && krHtml !== '<p><br></p>') ? krHtml : '';
+    if (krHtml && krHtml.length > 10) {
+        _ciShowPreview(krHtml);
+    }
 };
 
+// Quill 초기화 후 미리보기 표시
+function _ciShowPreview(krHtml) {
+    const previewSec = document.getElementById('ciPreviewSection');
+    const saveSec = document.getElementById('ciSaveSection');
+    previewSec.style.display = 'block';
+    saveSec.style.display = 'block';
+
+    if (!_ciQuill) {
+        try {
+            _ciQuill = new Quill('#ci-quill-editor', {
+                theme: 'snow',
+                modules: { toolbar: [
+                    [{ header: [1,2,3,false] }], ['bold','italic','underline','strike'],
+                    [{ color: [] }, { background: [] }], [{ align: [] }],
+                    ['link','image','video'], ['blockquote','code-block'],
+                    [{ list:'ordered' }, { list:'bullet' }], ['clean']
+                ]},
+                placeholder: '한국어 상세 내용...'
+            });
+        } catch(e) { console.error('Quill init:', e); return; }
+    }
+    _ciCurrentLang = 'KR';
+    document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
+    const krTab = document.querySelector('.ci-lang-tab[data-lang="KR"]');
+    if (krTab) krTab.classList.add('active');
+    _ciQuill.root.innerHTML = (krHtml && krHtml !== '<p><br></p>') ? krHtml : '';
+    previewSec.scrollIntoView({ behavior: 'smooth' });
+}
+
 window._ciSwitchLang = (lang) => {
+    if (!_ciQuill) return;
     // 현재 탭 저장
     const curHtml = _ciQuill.root.innerHTML;
     if (curHtml !== '<p><br></p>') {
         document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
     }
-    // 새 탭 로드
     _ciCurrentLang = lang;
     const saved = document.getElementById('ciHtml' + lang).value;
     _ciQuill.root.innerHTML = (saved && saved !== '<p><br></p>') ? saved : '';
     document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`.ci-lang-tab[data-lang="${lang}"]`).classList.add('active');
+    const target = document.querySelector(`.ci-lang-tab[data-lang="${lang}"]`);
+    if (target) target.classList.add('active');
 };
 
-window._ciAutoTranslate = async () => {
-    // 현재 탭 저장
-    const curHtml = _ciQuill.root.innerHTML;
-    document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
+// AI 생성 + 번역
+window._ciGenerate = async () => {
+    const dbClient = window.sb || window._supabase;
+    const target = _ciGetTarget();
+    const descText = document.getElementById('ciDescription').value.trim();
+    const status = document.getElementById('ciStatus');
+    const btn = document.getElementById('ciGenerateBtn');
 
-    const sourceHtml = document.getElementById('ciHtmlKR').value;
-    if (!sourceHtml || sourceHtml === '<p><br></p>') { showToast('번역할 한국어 내용이 없습니다.', 'warn'); return; }
-    if (!confirm('한국어 내용을 Claude AI로 7개 국어에 번역합니다. 진행하시겠습니까?')) return;
+    if (!descText && _ciImages.length === 0) {
+        showToast('사진을 올리거나 내용을 입력해주세요.', 'warn');
+        return;
+    }
 
-    const btn = document.getElementById('btnCiTranslate');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
     btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중...';
 
     try {
-        const dbClient = window.sb || window._supabase;
-        const { data, error } = await dbClient.functions.invoke('translate', {
-            body: { text: sourceHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
-        });
-        if (error) throw error;
-        const tr = data?.translations || {};
-        if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
-        if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
-        if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
-        if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
-        if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
-        if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
-        if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
-
-        // 현재 탭이 KR이 아니면 새 번역 내용 로드
-        if (_ciCurrentLang !== 'KR') {
-            const v = document.getElementById('ciHtml' + _ciCurrentLang).value;
-            _ciQuill.root.innerHTML = v || '';
+        // 1단계: 이미지 업로드
+        let imageUrls = [];
+        if (_ciImages.length > 0) {
+            status.textContent = '📤 이미지 업로드 중...';
+            const timestamp = Date.now();
+            await Promise.all(_ciImages.map(async (img, i) => {
+                if (img.url) return;
+                const resp = await fetch(img.preview);
+                const blob = await resp.blob();
+                const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';
+                const path = `common/${timestamp}_${i}.${ext}`;
+                const { error } = await dbClient.storage.from('products').upload(path, blob, { contentType: blob.type });
+                if (error) throw new Error('이미지 업로드 실패: ' + error.message);
+                const { data: urlData } = dbClient.storage.from('products').getPublicUrl(path);
+                img.url = urlData.publicUrl;
+            }));
+            imageUrls = _ciImages.map(img => img.url);
         }
-        showToast('7개국 번역 완료! 탭을 눌러 확인하세요.', 'success');
-    } catch (e) {
-        console.error(e);
-        showToast('번역 중 오류 발생: ' + (e.message || e), 'error');
+
+        // 2단계: AI 상세페이지 생성 (한국어)
+        status.textContent = '🤖 AI가 상세페이지를 생성 중... (약 30초)';
+        const targetLabel = target.label || '상품';
+
+        const { data, error } = await dbClient.functions.invoke('generate-product-detail', {
+            body: {
+                product_name: targetLabel,
+                product_category: target.code || 'general',
+                image_urls: imageUrls,
+                image_url: imageUrls[0] || '',
+                reference_text: descText,
+                price: 0,
+                mode: 'wizard',
+                langs: ['kr']
+            }
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data || !data.success) throw new Error((data && data.error) || '생성 실패');
+
+        const krHtml = data.details?.kr;
+        if (!krHtml) throw new Error('한국어 생성 실패');
+
+        document.getElementById('ciHtmlKR').value = krHtml;
+
+        // 3단계: 7개국어 번역
+        status.textContent = '🌐 Claude AI 7개국어 번역 중...';
+        const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
+            body: { text: krHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
+        });
+        if (!trError && trData?.translations) {
+            const tr = trData.translations;
+            if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
+            if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
+            if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
+            if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
+            if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
+            if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
+            if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
+        }
+
+        // 4단계: 미리보기 표시
+        status.textContent = '✅ 8개 언어 상세페이지 생성 + 번역 완료!';
+        _ciShowPreview(krHtml);
+        showToast('AI 생성 + 7개국어 번역 완료! 미리보기를 확인하세요.', 'success');
+
+    } catch(e) {
+        console.error('CI Generate error:', e);
+        status.textContent = '❌ 실패: ' + e.message;
+
+        // 사진만 있고 AI 생성이 안될 때 → 사진 그리드 HTML 직접 생성
+        if (_ciImages.length > 0) {
+            const imageUrls = _ciImages.filter(img => img.url).map(img => img.url);
+            if (imageUrls.length > 0) {
+                let fallbackHtml = descText ? `<p>${descText}</p>` : '';
+                fallbackHtml += imageUrls.map(u => `<p><img src="${u}" style="max-width:100%;"></p>`).join('');
+                document.getElementById('ciHtmlKR').value = fallbackHtml;
+                status.textContent = '⚠ AI 생성 실패 → 사진+텍스트로 기본 페이지 생성됨. 번역 시도 중...';
+
+                // 번역 시도
+                try {
+                    const { data: trData } = await dbClient.functions.invoke('translate', {
+                        body: { text: fallbackHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
+                    });
+                    if (trData?.translations) {
+                        const tr = trData.translations;
+                        if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
+                        if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
+                        if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
+                        if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
+                        if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
+                        if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
+                        if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
+                    }
+                } catch(te) { console.error('fallback translate error:', te); }
+
+                _ciShowPreview(fallbackHtml);
+                status.textContent = '⚠ 기본 페이지 생성됨 (미리보기에서 편집 가능)';
+            }
+        }
     } finally {
-        btn.innerHTML = '<i class="fa-solid fa-language"></i> Claude AI 자동번역';
         btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-robot"></i> AI 상세페이지 생성 + 7개국어 번역';
     }
 };
 
@@ -2198,10 +2327,12 @@ window._ciSave = async () => {
     const dbClient = window.sb || window._supabase;
     const target = _ciGetTarget();
 
-    // 현재 탭 저장
-    const curHtml = _ciQuill.root.innerHTML;
-    if (curHtml !== '<p><br></p>') {
-        document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
+    // 현재 Quill 탭 저장
+    if (_ciQuill) {
+        const curHtml = _ciQuill.root.innerHTML;
+        if (curHtml !== '<p><br></p>') {
+            document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
+        }
     }
 
     if (!confirm(`[${target.label}] 상세정보를 저장하시겠습니까?`)) return;
@@ -2223,7 +2354,6 @@ window._ciSave = async () => {
         if (error) showToast('저장 실패: ' + error.message, 'error');
         else showToast('제품 상세페이지 저장 완료!', 'success');
     } else {
-        // 기존 백업
         const { data: oldData } = await dbClient.from('common_info')
             .select('*').eq('section', 'top').eq('category_code', target.code).single();
         const payload = {
@@ -2241,7 +2371,7 @@ window._ciSave = async () => {
         };
         const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
         if (error) showToast('저장 실패: ' + error.message, 'error');
-        else { showToast('저장 및 백업 완료!', 'success'); _ciLoadContent(); }
+        else showToast('저장 및 백업 완료!', 'success');
     }
 };
 
@@ -2256,10 +2386,7 @@ window._ciRestoreBackup = () => {
     document.getElementById('ciHtmlES').value = _ciBackupData.content_backup_es || '';
     document.getElementById('ciHtmlDE').value = _ciBackupData.content_backup_de || '';
     document.getElementById('ciHtmlFR').value = _ciBackupData.content_backup_fr || '';
-    _ciQuill.root.innerHTML = _ciBackupData.content_backup || '';
-    _ciCurrentLang = 'KR';
-    document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('.ci-lang-tab[data-lang="KR"]').classList.add('active');
+    _ciShowPreview(_ciBackupData.content_backup || '');
     showToast('백업 불러옴. [저장 및 적용]을 눌러 확정하세요.', 'info');
 };
 
