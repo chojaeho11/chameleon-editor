@@ -289,9 +289,9 @@ button, input, textarea, select { font-family: inherit; }
     border: none; font-weight: 800; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); 
 }
 
-/* 자르기 버튼: 에디터 진입 전 숨김, 에디터 활성 시 표시 */
+/* 자르기 버튼: 에디터 하단 dock, 에디터 활성 시만 표시 */
 #btnCropCanvas { display: none !important; }
-body.editor-active #btnCropCanvas { display: inline-flex !important; }
+body.editor-active #btnCropCanvas { display: inline-flex !important; gap: 4px; align-items: center; }
 
 /* 에디터 메인 영역 */
 .editor-wrap { 

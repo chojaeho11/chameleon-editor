@@ -597,10 +597,6 @@ if ('caches' in window) {
         
         <div style="flex:1;"></div>
 
-        <button class="btn" id="btnCropCanvas" onclick="window.startCanvasCrop()" style="display:none; margin-right:5px; background:#fff; border:1px solid #6366f1; color:#6366f1; padding:8px 12px; font-weight:700;">
-            <i class="fa-solid fa-crop"></i> <span data-i18n="btn_crop_canvas">자르기</span>
-        </button>
-
         <button class="btn" id="btnHomeTop" onclick="window.goHome()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
     <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
 </button>
@@ -3236,6 +3232,10 @@ async function handleSubReturn() {
                         <i class="fa-solid fa-ruler-horizontal"></i> <span data-i18n="btn_guide_on">가이드</span>
                     </button>
                 </div>
+                <div class="divider"></div>
+                <button id="btnCropCanvas" onclick="window.startCanvasCrop()" class="zoom-btn" style="width:auto; padding:0 15px; border-radius:20px; font-size:12px; display:none;" title="대지 자르기">
+                    <i class="fa-solid fa-crop"></i> <span data-i18n="btn_crop_canvas">자르기</span>
+                </button>
                 <span class="help-text" data-i18n="help_text_shortcuts">Space: 이동 / 휠: 줌</span>
             </div>
             
@@ -6393,7 +6393,7 @@ window.startCanvasCrop = function() {
 
     // 버튼 스타일 변경
     const cropBtn = document.getElementById('btnCropCanvas');
-    if (cropBtn) { cropBtn.style.background = '#6366f1'; cropBtn.style.color = '#fff'; }
+    if (cropBtn) { cropBtn.style.background = '#6366f1'; cropBtn.style.color = '#fff'; cropBtn.style.borderColor = '#6366f1'; }
 };
 
 window.applyCanvasCrop = function() {
@@ -6447,7 +6447,7 @@ window.cancelCanvasCrop = function(skipRemoveRect) {
     if (window._cropEventCleanup) { window._cropEventCleanup(); window._cropEventCleanup = null; }
 
     const cropBtn = document.getElementById('btnCropCanvas');
-    if (cropBtn) { cropBtn.style.background = '#fff'; cropBtn.style.color = '#6366f1'; }
+    if (cropBtn) { cropBtn.style.background = ''; cropBtn.style.color = ''; cropBtn.style.borderColor = ''; }
 };
 
 window.goHome = function() {
@@ -9764,12 +9764,10 @@ if (w >= 20 && h >= 20) {
         if (_isArtworkKey && product && product.img_url) {
             console.log('🎨 작품 이미지 로딩 시작:', product.img_url);
             setTimeout(() => {
-                const _htmlImg = new Image();
-                _htmlImg.crossOrigin = 'anonymous';
-                _htmlImg.onload = () => {
-                    console.log('🎨 HTMLImage 로딩 성공:', _htmlImg.width, 'x', _htmlImg.height);
-                    const fImg = new fabric.Image(_htmlImg);
-                    const board = canvas.getObjects().find(o => o.isBoard);
+                const _c = window.canvas;
+                if (!_c) { console.warn('🎨 canvas 미초기화'); return; }
+                const _placeOnCanvas = (fImg) => {
+                    const board = _c.getObjects().find(o => o.isBoard);
                     const bW = board ? board.width * board.scaleX : canvasW;
                     const bH = board ? board.height * board.scaleY : canvasH;
                     const bLeft = board ? board.left : 0;
@@ -9780,32 +9778,21 @@ if (w >= 20 && h >= 20) {
                         top: bTop + (bH - fImg.height * scale) / 2,
                         scaleX: scale, scaleY: scale, selectable: true
                     });
-                    canvas.add(fImg);
-                    canvas.setActiveObject(fImg);
-                    canvas.renderAll();
+                    _c.add(fImg);
+                    _c.setActiveObject(fImg);
+                    _c.renderAll();
                     console.log('🎨 작품 이미지 배치 완료');
+                };
+                const _htmlImg = new Image();
+                _htmlImg.crossOrigin = 'anonymous';
+                _htmlImg.onload = () => {
+                    console.log('🎨 HTMLImage 로딩 성공:', _htmlImg.width, 'x', _htmlImg.height);
+                    _placeOnCanvas(new fabric.Image(_htmlImg));
                 };
                 _htmlImg.onerror = () => {
                     console.warn('🎨 CORS 실패, crossOrigin 없이 재시도');
                     const _retry = new Image();
-                    _retry.onload = () => {
-                        const fImg2 = new fabric.Image(_retry);
-                        const board = canvas.getObjects().find(o => o.isBoard);
-                        const bW = board ? board.width * board.scaleX : canvasW;
-                        const bH = board ? board.height * board.scaleY : canvasH;
-                        const bLeft = board ? board.left : 0;
-                        const bTop = board ? board.top : 0;
-                        const scale = Math.min(bW / fImg2.width, bH / fImg2.height);
-                        fImg2.set({
-                            left: bLeft + (bW - fImg2.width * scale) / 2,
-                            top: bTop + (bH - fImg2.height * scale) / 2,
-                            scaleX: scale, scaleY: scale, selectable: true
-                        });
-                        canvas.add(fImg2);
-                        canvas.setActiveObject(fImg2);
-                        canvas.renderAll();
-                        console.log('🎨 작품 이미지 배치 완료 (no-cors)');
-                    };
+                    _retry.onload = () => _placeOnCanvas(new fabric.Image(_retry));
                     _retry.onerror = () => console.error('🎨 작품 이미지 로딩 완전 실패:', product.img_url);
                     _retry.src = product.img_url;
                 };
