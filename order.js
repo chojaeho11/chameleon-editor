@@ -2539,23 +2539,41 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         } catch(e) { /* ignore */ }
     }
 
-    // [파트너 마켓플레이스] 파트너 상품이 포함된 경우 partner_settlements 생성
+    // [파트너 마켓플레이스] 파트너 상품이 포함된 경우 partner_settlements 생성 + 예치금 적립
     try {
         const partnerItems = itemsToSave.filter(i => i.product?.partner_id);
         if (partnerItems.length > 0) {
             await sb.from('orders').update({ has_partner_items: true }).eq('id', newOrderId);
+            // 파트너별 수익 합산
+            const partnerCommMap = {};
             for (const item of partnerItems) {
                 const amt = (item.price || 0) * (item.qty || 1);
                 const comm = Math.floor(amt * 0.10);
+                const pid = item.product.partner_id;
                 await sb.from('partner_settlements').insert({
                     order_id: newOrderId,
-                    partner_id: item.product.partner_id,
+                    partner_id: pid,
                     item_code: item.product.code || 'unknown',
                     item_amount: amt,
                     commission_rate: 10.0,
                     commission_amount: comm,
                     net_amount: amt - comm,
-                    settlement_status: 'pending'
+                    settlement_status: 'completed'
+                });
+                if (!partnerCommMap[pid]) partnerCommMap[pid] = 0;
+                partnerCommMap[pid] += comm;
+            }
+            // 파트너별 예치금 적립
+            for (const [pid, totalComm] of Object.entries(partnerCommMap)) {
+                if (totalComm <= 0) continue;
+                const { data: pf } = await sb.from('profiles').select('deposit').eq('id', pid).single();
+                const newDeposit = (parseInt(pf?.deposit || 0)) + totalComm;
+                await sb.from('profiles').update({ deposit: newDeposit }).eq('id', pid);
+                await sb.from('wallet_logs').insert({
+                    user_id: pid,
+                    type: 'partner_commission',
+                    amount: totalComm,
+                    description: `작품 판매 수익 적립 (주문: ${newOrderId})`
                 });
             }
         }
