@@ -39,26 +39,29 @@ function positionFloatingToolbar() {
     tb.style.display = 'flex';
     tb.style.flexDirection = 'column';
 
+    // PC/모바일 모두 이미지 위에 표시
+    tb.style.bottom = '';
+    tb.style.transform = '';
+    tb.style.maxWidth = '';
+    const b = getScreenBounds(active);
+    const tbW = tb.offsetWidth;
+    let left = b.left + (b.width - tbW) / 2;
+    let top  = b.top - tb.offsetHeight - TOOLBAR_GAP;
+    // 화면 위로 넘어가면 아래로
+    if (top < 4) top = b.top + b.height + TOOLBAR_GAP;
+    // 하단 독바 아래로 안 내려가게
+    if (isMobile && top + (tb.offsetHeight || 80) > window.innerHeight - 60) {
+        top = b.top - (tb.offsetHeight || 80) - 8;
+        if (top < 4) top = 4;
+    }
+    // 좌우 클램프
+    left = Math.max(4, Math.min(left, window.innerWidth - tbW - 4));
+    tb.style.left = left + 'px';
+    tb.style.top  = top  + 'px';
+    // 모바일: Del 바 숨기기 (플로팅 바에 삭제 있으므로)
     if (isMobile) {
-        // 모바일: CSS에서 하단 고정 처리 (@media), JS는 display만
-        tb.style.top = 'auto';
-        tb.style.bottom = '56px';
-        tb.style.left = '0';
-        tb.style.transform = '';
-    } else {
-        tb.style.transform = '';
-        tb.style.bottom = '';
-        tb.style.maxWidth = '';
-        const b = getScreenBounds(active);
-        const tbW = tb.offsetWidth;
-        let left = b.left + (b.width - tbW) / 2;
-        let top  = b.top - tb.offsetHeight - TOOLBAR_GAP;
-        // 화면 위로 넘어가면 아래로
-        if (top < 4) top = b.top + b.height + TOOLBAR_GAP;
-        // 좌우 클램프
-        left = Math.max(4, Math.min(left, window.innerWidth - tbW - 4));
-        tb.style.left = left + 'px';
-        tb.style.top  = top  + 'px';
+        const mab = document.getElementById('mobileActionBar');
+        if (mab) mab.style.display = 'none';
     }
 }
 

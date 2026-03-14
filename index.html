@@ -2269,6 +2269,8 @@ async function handleSubReturn() {
         <button id="imgToolEraser" class="img-float-btn"><i class="fa-solid fa-eraser"></i><span data-i18n="img_tool_eraser">지우개</span></button>
         <div style="width:1px;height:24px;background:#e2e8f0;"></div>
         <button id="imgToolReplace" class="img-float-btn" onclick="window.replaceSelectedImage && window.replaceSelectedImage()"><i class="fa-solid fa-arrow-right-arrow-left"></i><span data-i18n="img_tool_replace">교체</span></button>
+        <div style="width:1px;height:24px;background:#e2e8f0;"></div>
+        <button id="imgToolDelete" class="img-float-btn" style="color:#ef4444;" onclick="window.canvas && window.canvas.getActiveObject() && (window.canvas.remove(window.canvas.getActiveObject()), window.canvas.discardActiveObject(), window.canvas.renderAll())"><i class="fa-solid fa-trash"></i><span data-i18n="ctx_delete">삭제</span></button>
     </div>
     <div style="display:flex; gap:4px; align-items:center; border-top:1px solid #e2e8f0; margin-top:4px; padding-top:4px;">
         <button id="imgToolCrop" class="img-float-btn" onclick="window.startCanvasCrop()"><i class="fa-solid fa-crop"></i><span data-i18n="btn_crop_canvas">자르기</span></button>
@@ -2284,10 +2286,11 @@ async function handleSubReturn() {
 .img-float-btn:active{background:#e0e7ff}
 .img-float-btn i{font-size:14px}
 @media(max-width:768px){
-  .img-float-btn{padding:6px 10px;font-size:12px;gap:4px}
+  .img-float-btn{padding:5px 8px;font-size:11px;gap:3px}
   .img-float-btn i{font-size:12px}
-  #imageFloatingToolbar{padding:4px 6px !important;border-radius:14px 14px 0 0 !important;box-shadow:0 -4px 20px rgba(0,0,0,0.15) !important;width:100vw !important;left:0 !important;transform:none !important;}
-  #imageFloatingToolbar>div{justify-content:center;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .img-float-btn span{display:none}
+  #imageFloatingToolbar{padding:4px 6px !important;}
+  #imageFloatingToolbar>div{gap:2px !important;}
 }
 </style>
 
@@ -4674,8 +4677,7 @@ window.filterFxCards = function(cat, btn) {
                 return;
             }
             // 패널 본문: 핸들이 아닌 경우 스크롤만 허용 (드래그 닫기 비활성)
-            // 핸들에서만 드래그로 닫을 수 있음
-        }, { passive: true });
+        }, { passive: false });
 
         document.addEventListener('touchend', function() {
             touchOnHandle = false;
@@ -6335,9 +6337,9 @@ window.startCanvasCrop = function() {
         excludeFromExport: true
     });
     // 크롭 외곽 어둡게 (대지 외곽과 동일한 진회색 오버레이 4개)
-    const _dimColor = 'rgba(46,46,46,0.85)';
-    const _canvasW = canvas.getWidth();
-    const _canvasH = canvas.getHeight();
+    const _dimColor = 'rgba(46,46,46,0.82)';
+    // 충분히 큰 범위로 확장 (줌/팬에 관계없이 커버)
+    const _EXT = 50000;
     const _makeDim = (props) => new fabric.Rect(Object.assign({
         fill: _dimColor, selectable: false, evented: false, excludeFromExport: true, isCropDim: true, hoverCursor: 'default'
     }, props));
@@ -6347,24 +6349,25 @@ window.startCanvasCrop = function() {
         if (!r || !window._cropDims) return;
         const rL = r.left, rT = r.top;
         const rW = r.width * (r.scaleX || 1), rH = r.height * (r.scaleY || 1);
-        const cW2 = canvas.getWidth(), cH2 = canvas.getHeight();
         const dims = window._cropDims;
-        // top
-        dims[0].set({ left: 0, top: 0, width: cW2, height: Math.max(0, rT) });
-        // bottom
-        dims[1].set({ left: 0, top: rT + rH, width: cW2, height: Math.max(0, cH2 - rT - rH) });
-        // left
-        dims[2].set({ left: 0, top: rT, width: Math.max(0, rL), height: rH });
-        // right
-        dims[3].set({ left: rL + rW, top: rT, width: Math.max(0, cW2 - rL - rW), height: rH });
+        // top (크롭 위 전체)
+        dims[0].set({ left: -_EXT, top: -_EXT, width: _EXT * 3, height: rT + _EXT });
+        // bottom (크롭 아래 전체)
+        dims[1].set({ left: -_EXT, top: rT + rH, width: _EXT * 3, height: _EXT * 2 });
+        // left (크롭 왼쪽)
+        dims[2].set({ left: -_EXT, top: rT, width: rL + _EXT, height: rH });
+        // right (크롭 오른쪽)
+        dims[3].set({ left: rL + rW, top: rT, width: _EXT * 2, height: rH });
         dims.forEach(d => { d.setCoords(); canvas.bringToFront(d); });
         canvas.bringToFront(r);
     };
 
-    const dimTop = _makeDim({ left: 0, top: 0, width: _canvasW, height: cropRect.top });
-    const dimBottom = _makeDim({ left: 0, top: cropRect.top + cropRect.height, width: _canvasW, height: _canvasH - cropRect.top - cropRect.height });
-    const dimLeft = _makeDim({ left: 0, top: cropRect.top, width: cropRect.left, height: cropRect.height });
-    const dimRight = _makeDim({ left: cropRect.left + cropRect.width, top: cropRect.top, width: _canvasW - cropRect.left - cropRect.width, height: cropRect.height });
+    const rL0 = cropRect.left, rT0 = cropRect.top;
+    const rW0 = cropRect.width, rH0 = cropRect.height;
+    const dimTop = _makeDim({ left: -_EXT, top: -_EXT, width: _EXT * 3, height: rT0 + _EXT });
+    const dimBottom = _makeDim({ left: -_EXT, top: rT0 + rH0, width: _EXT * 3, height: _EXT * 2 });
+    const dimLeft = _makeDim({ left: -_EXT, top: rT0, width: rL0 + _EXT, height: rH0 });
+    const dimRight = _makeDim({ left: rL0 + rW0, top: rT0, width: _EXT * 2, height: rH0 });
     window._cropDims = [dimTop, dimBottom, dimLeft, dimRight];
     window._cropDims.forEach(d => canvas.add(d));
 
@@ -6390,14 +6393,16 @@ window.startCanvasCrop = function() {
     bar.appendChild(infoSpan);
 
     const confirmBtn = document.createElement('button');
-    confirmBtn.style.cssText = 'padding:10px 24px; background:#6366f1; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer;';
-    confirmBtn.innerHTML = '<i class="fa-solid fa-check"></i> ' + (lang==='ja'?'切り抜き適用':lang==='en'?'Apply Crop':'자르기 적용');
+    confirmBtn.style.cssText = 'width:44px; height:44px; background:#6366f1; color:#fff; border:none; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;';
+    confirmBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+    confirmBtn.title = lang==='ja'?'切り抜き適用':lang==='en'?'Apply Crop':'자르기 적용';
     confirmBtn.onclick = () => window.applyCanvasCrop();
     bar.appendChild(confirmBtn);
 
     const cancelBtn = document.createElement('button');
-    cancelBtn.style.cssText = 'padding:10px 20px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer;';
-    cancelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> ' + (lang==='ja'?'キャンセル':lang==='en'?'Cancel':'취소');
+    cancelBtn.style.cssText = 'width:44px; height:44px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;';
+    cancelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    cancelBtn.title = lang==='ja'?'キャンセル':lang==='en'?'Cancel':'취소';
     cancelBtn.onclick = () => window.cancelCanvasCrop();
     bar.appendChild(cancelBtn);
 
