@@ -8738,11 +8738,6 @@ if (w >= 20 && h >= 20) {
 
         // 6. 실행 (에디터 or 장바구니)
 
-        // ★ 티셔츠/머그컵/스티커 등 고정가 상품: 에디터 불필요, 바로 장바구니
-        if (product._artworkTypeFixed && mode === 'editor') {
-            mode = 'cart';
-        }
-
         // ★ 패브릭인쇄22222: 항상 에디터로 이동 (장바구니/파일업로드도 에디터 경유)
         const _fabricTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
         if (_fabricTopCat === '22222' && mode !== 'editor') {
@@ -10059,35 +10054,7 @@ if (w >= 20 && h >= 20) {
             }, { crossOrigin: 'anonymous' });
         };
 
-        // ★ 티셔츠 색상 선택 패널 (color addon 감지)
-        let _hasTshirtColors = false;
-        if (product && product.addons) {
-            const addonList = typeof product.addons === 'string' ? product.addons.split(',') : (product.addons || []);
-            const colorAddons = addonList.filter(a => a.trim().startsWith('co_'));
-            _hasTshirtColors = colorAddons.length > 0;
-            if (colorAddons.length > 0) {
-                window._tshirtMockupUrl = product.mockup_url || '';
-                (async () => {
-                    try {
-                        const { data: colors } = await sb.from('admin_addons')
-                            .select('code, name, name_kr, name_jp, name_us, img_url, is_swatch')
-                            .in('code', colorAddons.map(c => c.trim()))
-                            .order('sort_order', { ascending: true });
-                        if (colors && colors.length > 0) {
-                            window._tshirtColors = colors;
-                            _showTshirtColorPanel(colors);
-                        }
-                    } catch(e) { console.error('색상 로드 실패:', e); }
-                })();
-            }
-        }
-
-        if (product && product.mockup_url) {
-            setTimeout(() => {
-                window._loadMockupImage(product.mockup_url, _hasTshirtColors);
-                console.log('✅ 목업 이미지 로드 완료');
-            }, 800);
-        }
+        // ★ 티셔츠 색상 패널 / 목업 제거됨 (불필요)
 
         // 목업에 색상 오버레이 적용 (multiply 합성)
         window._applyMockupColor = function(hexColor) {

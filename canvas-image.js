@@ -38,24 +38,37 @@ function positionFloatingToolbar() {
     const isMobile = window.innerWidth <= 768;
     tb.style.display = 'flex';
     tb.style.flexDirection = 'column';
-
-    // PC/모바일 모두 이미지 위에 표시
     tb.style.bottom = '';
     tb.style.transform = '';
     tb.style.maxWidth = '';
-    const b = getScreenBounds(active);
+
+    // ★ 대지(board) 바로 위에 고정
+    const board = canvas.getObjects().find(o => o.isBoard);
     const tbW = tb.offsetWidth;
-    let left = b.left + (b.width - tbW) / 2;
-    let top  = b.top - tb.offsetHeight - TOOLBAR_GAP;
-    // 화면 위로 넘어가면 아래로
-    if (top < 4) top = b.top + b.height + TOOLBAR_GAP;
-    // 하단 독바 아래로 안 내려가게
-    if (isMobile && top + (tb.offsetHeight || 80) > window.innerHeight - 60) {
-        top = b.top - (tb.offsetHeight || 80) - 8;
-        if (top < 4) top = 4;
+    const tbH = tb.offsetHeight || 40;
+    let left, top;
+
+    if (board) {
+        const bb = getScreenBounds(board);
+        left = bb.left + (bb.width - tbW) / 2;
+        top = bb.top - tbH - TOOLBAR_GAP;
+        // 화면 위로 넘어가면 대지 아래로
+        if (top < 4) top = bb.top + bb.height + TOOLBAR_GAP;
+    } else {
+        // board 없으면 이미지 기준 fallback
+        const b = getScreenBounds(active);
+        left = b.left + (b.width - tbW) / 2;
+        top = b.top - tbH - TOOLBAR_GAP;
+        if (top < 4) top = b.top + b.height + TOOLBAR_GAP;
     }
+
     // 좌우 클램프
     left = Math.max(4, Math.min(left, window.innerWidth - tbW - 4));
+    // 상하 클램프
+    if (top < 4) top = 4;
+    if (isMobile && top + tbH > window.innerHeight - 60) {
+        top = Math.max(4, (board ? getScreenBounds(board).top : 60) - tbH - 8);
+    }
     tb.style.left = left + 'px';
     tb.style.top  = top  + 'px';
     // 모바일: Del 바 숨기기 (플로팅 바에 삭제 있으므로)
