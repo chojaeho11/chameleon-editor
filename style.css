@@ -2070,7 +2070,7 @@ button, input, textarea, select { font-family: inherit; }
 /* 실제 이미지 스타일 */
 .quick-icon-img-box img {
     width: 100%; height: 100%;
-    object-fit: cover; /* 이미지를 박스에 꽉 차게 (잘림 허용) */
+    object-fit: contain; /* 이미지 전체가 보이게 */
 }
 
 /* 마우스 올렸을 때 효과 */
@@ -2111,13 +2111,13 @@ button, input, textarea, select { font-family: inherit; }
     justify-content: center;
 }
 
-/* [수정됨] 이미지 스타일 (잘려서 중앙이 보이게) */
+/* [수정됨] 이미지 스타일 (전체 보이게) */
 #catProductGrid .quick-icon-img-box img {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important; /* ★ 핵심: 박스에 꽉 차게 (넘치면 잘림) */
-    object-position: center !important; /* 잘릴 때 중앙을 보여줌 */
-    padding: 0 !important; /* 패딩 제거 */
+    object-fit: contain !important; /* ★ 핵심: 이미지 전체가 보이게 */
+    object-position: center !important;
+    padding: 0 !important;
 }
 
 /* 팝업창 안의 텍스트 크기 조정 */
@@ -2211,11 +2211,11 @@ button, input, textarea, select { font-family: inherit; }
     color: #cbd5e1;
 }
 
-/* 5. 이미지 (꽉 차게) */
+/* 5. 이미지 (전체 보이게) */
 #catProductGrid .quick-icon-img-box img {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     object-position: center !important;
     padding: 0 !important;
     display: block !important;
@@ -3659,12 +3659,12 @@ body {
         border: 1px solid #e2e8f0 !important;
     }
 
-    /* 4. 이미지 내부 스타일: 찌그러짐 방지 */
-    .quick-icon img, 
+    /* 4. 이미지 내부 스타일: 전체 보이게 */
+    .quick-icon img,
     .quick-icon-img-box img {
         width: 100% !important;
         height: 100% !important;
-        object-fit: cover !important; /* 꽉 채우되 비율 유지 (넘치면 잘림) */
+        object-fit: contain !important; /* 이미지 전체가 보이게 */
     }
 
     /* 5. 텍스트 스타일: 이미지가 커진 만큼 글씨도 조정 */
