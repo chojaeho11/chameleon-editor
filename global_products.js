@@ -2016,25 +2016,24 @@ window.openCommonInfoModal = async () => {
     if (!dbClient) { showToast('DB 연결 실패', 'error'); return; }
     document.getElementById('commonInfoModal').style.display = 'flex';
 
-    // 대분류 로드
+    // 대분류 로드 (DB에서)
     const topSel = document.getElementById('ciTopCat');
-    if (topSel.options.length <= 2) {
+    if (topSel.options.length <= 1) {
         const { data: cats } = await dbClient.from('admin_top_categories').select('code, name').order('sort_order');
         if (cats) {
-            // 기본 대분류 그룹
-            const grp = document.createElement('optgroup');
-            grp.label = '기본 대분류';
             cats.forEach(c => {
                 const o = document.createElement('option');
                 o.value = c.code; o.textContent = c.name;
-                grp.appendChild(o);
+                topSel.appendChild(o);
             });
-            topSel.appendChild(grp);
         }
     }
+    document.getElementById('ciSubCat').innerHTML = '<option value="">-- 소분류 선택 --</option>';
     document.getElementById('ciSubCat').disabled = true;
+    document.getElementById('ciProduct').innerHTML = '<option value="">-- 제품 선택 --</option>';
     document.getElementById('ciProduct').disabled = true;
-    _ciLoadContent();
+    topSel.value = 'all';
+    _ciGetTarget();
 };
 
 window._ciLoadSubCats = async () => {
@@ -2042,13 +2041,13 @@ window._ciLoadSubCats = async () => {
     const topCode = document.getElementById('ciTopCat').value;
     const subSel = document.getElementById('ciSubCat');
     const prodSel = document.getElementById('ciProduct');
-    subSel.innerHTML = '<option value="">-- 전체 --</option>';
-    prodSel.innerHTML = '<option value="">-- 전체 --</option>';
+    subSel.innerHTML = '<option value="">-- 소분류 선택 --</option>';
+    prodSel.innerHTML = '<option value="">-- 제품 선택 --</option>';
     prodSel.disabled = true;
 
-    if (topCode === 'all' || topCode === 'custom_sale') {
+    if (topCode === 'all') {
         subSel.disabled = true;
-        _ciLoadContent();
+        _ciGetTarget();
         return;
     }
     subSel.disabled = false;
@@ -2056,18 +2055,18 @@ window._ciLoadSubCats = async () => {
     (data || []).forEach(c => {
         subSel.innerHTML += `<option value="${c.code}">${c.name}</option>`;
     });
-    _ciLoadContent();
+    _ciGetTarget();
 };
 
 window._ciLoadProducts = async () => {
     const dbClient = window.sb || window._supabase;
     const subCode = document.getElementById('ciSubCat').value;
     const prodSel = document.getElementById('ciProduct');
-    prodSel.innerHTML = '<option value="">-- 전체 --</option>';
+    prodSel.innerHTML = '<option value="">-- 제품 선택 --</option>';
 
     if (!subCode) {
         prodSel.disabled = true;
-        _ciLoadContent();
+        _ciGetTarget();
         return;
     }
     prodSel.disabled = false;
@@ -2075,7 +2074,7 @@ window._ciLoadProducts = async () => {
     (data || []).forEach(p => {
         prodSel.innerHTML += `<option value="${p.id}">${p.name} (${p.code})</option>`;
     });
-    _ciLoadContent();
+    _ciGetTarget();
 };
 
 // 현재 선택된 레벨과 코드 결정
@@ -2095,15 +2094,10 @@ function _ciGetTarget() {
         badge.style.background = '#d97706';
         return { mode: 'common', code: sub, label: '소분류: ' + sub };
     }
-    if (top && top !== 'all' && top !== 'custom_sale') {
+    if (top && top !== 'all') {
         badge.textContent = '대분류 공통';
         badge.style.background = '#2563eb';
         return { mode: 'common', code: top, label: '대분류: ' + top };
-    }
-    if (top === 'custom_sale') {
-        badge.textContent = '고객직품판매';
-        badge.style.background = '#7c3aed';
-        return { mode: 'common', code: 'custom_sale', label: '고객직품판매' };
     }
     badge.textContent = '전체 공통';
     badge.style.background = '#7c3aed';
@@ -2135,7 +2129,7 @@ window._ciLoadContent = async () => {
         _ciEditMode = 'common';
         _ciEditProductId = null;
         const { data } = await dbClient.from('common_info').select('*')
-            .eq('section', 'top').eq('category_code', target.code).single();
+            .eq('section', 'top').eq('category_code', target.code).maybeSingle();
         if (data) {
             document.getElementById('ciHtmlKR').value = data.content || '';
             document.getElementById('ciHtmlJP').value = data.content_jp || '';
@@ -2158,13 +2152,15 @@ window._ciLoadContent = async () => {
 };
 
 // Quill 초기화 후 미리보기 표시
-function _ciShowPreview(krHtml) {
+async function _ciShowPreview(krHtml) {
     const previewSec = document.getElementById('ciPreviewSection');
     const saveSec = document.getElementById('ciSaveSection');
     previewSec.style.display = 'block';
     saveSec.style.display = 'block';
 
     if (!_ciQuill) {
+        // display:block 후 Quill 초기화 전 딜레이 (emit 버그 방지)
+        await new Promise(r => setTimeout(r, 150));
         try {
             _ciQuill = new Quill('#ci-quill-editor', {
                 theme: 'snow',
@@ -2355,7 +2351,7 @@ window._ciSave = async () => {
         else showToast('제품 상세페이지 저장 완료!', 'success');
     } else {
         const { data: oldData } = await dbClient.from('common_info')
-            .select('*').eq('section', 'top').eq('category_code', target.code).single();
+            .select('*').eq('section', 'top').eq('category_code', target.code).maybeSingle();
         const payload = {
             section: 'top', category_code: target.code,
             content: kr, content_jp: jp, content_us: us, content_cn: cn,
