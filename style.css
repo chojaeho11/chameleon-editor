@@ -289,9 +289,7 @@ button, input, textarea, select { font-family: inherit; }
     border: none; font-weight: 800; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); 
 }
 
-/* 자르기 버튼: 에디터 하단 dock, 에디터 활성 시만 표시 */
-#btnCropCanvas { display: none !important; }
-body.editor-active #btnCropCanvas { display: inline-flex !important; gap: 4px; align-items: center; }
+/* (자르기 버튼: 플로팅 툴바로 이동됨) */
 
 /* 에디터 메인 영역 */
 .editor-wrap { 
@@ -2751,10 +2749,6 @@ body {
         align-items: center;
         justify-content: center;
     }
-    /* 자르기 버튼: 에디터 진입 전 숨김 */
-    #btnCropCanvas { display: none !important; }
-    body.editor-active #btnCropCanvas { display: inline-flex !important; }
-
     /* (선택사항) 공간이 너무 좁으면 글자 숨기고 아이콘만 보이게 처리 */
     /* 필요시 아래 주석을 해제하세요 */
     /*
@@ -3381,8 +3375,6 @@ body {
         justify-content: center;
     }
     /* 자르기 버튼: 에디터 진입 전 숨김 */
-    #btnCropCanvas { display: none !important; }
-    body.editor-active #btnCropCanvas { display: inline-flex !important; }
 }
 /* =========================================
    [삭제됨] 기여자 시스템 (Contributor) 스타일 — 제거완료

@@ -2260,14 +2260,23 @@ async function handleSubReturn() {
 </div>
 
 <!-- Canva-style Floating Image Toolbar -->
-<div id="imageFloatingToolbar" style="display:none; position:fixed; z-index:10005; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.05); padding:6px 8px; gap:4px; align-items:center;">
-    <button id="imgToolEdit" class="img-float-btn"><i class="fa-solid fa-sliders"></i><span data-i18n="img_tool_edit">편집</span></button>
-    <div style="width:1px;height:24px;background:#e2e8f0;"></div>
-    <button id="imgToolBgRemove" class="img-float-btn"><i class="fa-solid fa-scissors"></i><span data-i18n="img_tool_bg_remove">배경 제거</span></button>
-    <div style="width:1px;height:24px;background:#e2e8f0;"></div>
-    <button id="imgToolEraser" class="img-float-btn"><i class="fa-solid fa-eraser"></i><span data-i18n="img_tool_eraser">지우개</span></button>
-    <div style="width:1px;height:24px;background:#e2e8f0;"></div>
-    <button id="imgToolReplace" class="img-float-btn" onclick="window.replaceSelectedImage && window.replaceSelectedImage()"><i class="fa-solid fa-arrow-right-arrow-left"></i><span data-i18n="img_tool_replace">교체</span></button>
+<div id="imageFloatingToolbar" style="display:none; position:fixed; z-index:10005; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.05); padding:6px 8px;">
+    <div style="display:flex; gap:4px; align-items:center;">
+        <button id="imgToolEdit" class="img-float-btn"><i class="fa-solid fa-sliders"></i><span data-i18n="img_tool_edit">편집</span></button>
+        <div style="width:1px;height:24px;background:#e2e8f0;"></div>
+        <button id="imgToolBgRemove" class="img-float-btn"><i class="fa-solid fa-scissors"></i><span data-i18n="img_tool_bg_remove">배경 제거</span></button>
+        <div style="width:1px;height:24px;background:#e2e8f0;"></div>
+        <button id="imgToolEraser" class="img-float-btn"><i class="fa-solid fa-eraser"></i><span data-i18n="img_tool_eraser">지우개</span></button>
+        <div style="width:1px;height:24px;background:#e2e8f0;"></div>
+        <button id="imgToolReplace" class="img-float-btn" onclick="window.replaceSelectedImage && window.replaceSelectedImage()"><i class="fa-solid fa-arrow-right-arrow-left"></i><span data-i18n="img_tool_replace">교체</span></button>
+    </div>
+    <div style="display:flex; gap:4px; align-items:center; border-top:1px solid #e2e8f0; margin-top:4px; padding-top:4px;">
+        <button id="imgToolCrop" class="img-float-btn" onclick="window.startCanvasCrop()"><i class="fa-solid fa-crop"></i><span data-i18n="btn_crop_canvas">자르기</span></button>
+        <div style="width:1px;height:24px;background:#e2e8f0;"></div>
+        <button id="imgToolLock" class="img-float-btn" onclick="window.lockSelectedObject()"><i class="fa-solid fa-thumbtack"></i><span data-i18n="img_tool_lock">배경고정</span></button>
+        <div style="width:1px;height:24px;background:#e2e8f0;"></div>
+        <button id="imgToolBeauty" class="img-float-btn" onclick="window.oneClickBeauty()"><i class="fa-solid fa-wand-magic-sparkles"></i><span data-i18n="img_tool_beauty">보정</span></button>
+    </div>
 </div>
 <style>
 .img-float-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#334155;transition:all .15s;white-space:nowrap}
@@ -3232,10 +3241,6 @@ async function handleSubReturn() {
                         <i class="fa-solid fa-ruler-horizontal"></i> <span data-i18n="btn_guide_on">가이드</span>
                     </button>
                 </div>
-                <div class="divider"></div>
-                <button id="btnCropCanvas" onclick="window.startCanvasCrop()" class="zoom-btn" style="width:auto; padding:0 15px; border-radius:20px; font-size:12px; display:none;" title="대지 자르기">
-                    <i class="fa-solid fa-crop"></i> <span data-i18n="btn_crop_canvas">자르기</span>
-                </button>
                 <span class="help-text" data-i18n="help_text_shortcuts">Space: 이동 / 휠: 줌</span>
             </div>
             
@@ -6392,8 +6397,8 @@ window.startCanvasCrop = function() {
     };
 
     // 버튼 스타일 변경
-    const cropBtn = document.getElementById('btnCropCanvas');
-    if (cropBtn) { cropBtn.style.background = '#6366f1'; cropBtn.style.color = '#fff'; cropBtn.style.borderColor = '#6366f1'; }
+    const cropBtn = document.getElementById('imgToolCrop');
+    if (cropBtn) { cropBtn.style.background = '#6366f1'; cropBtn.style.color = '#fff'; }
 };
 
 window.applyCanvasCrop = function() {
@@ -6446,8 +6451,71 @@ window.cancelCanvasCrop = function(skipRemoveRect) {
 
     if (window._cropEventCleanup) { window._cropEventCleanup(); window._cropEventCleanup = null; }
 
-    const cropBtn = document.getElementById('btnCropCanvas');
-    if (cropBtn) { cropBtn.style.background = ''; cropBtn.style.color = ''; cropBtn.style.borderColor = ''; }
+    const cropBtn = document.getElementById('imgToolCrop');
+    if (cropBtn) { cropBtn.style.background = ''; cropBtn.style.color = ''; }
+};
+
+// ★ 선택 객체 배경고정 (그 자리에 고정/해제)
+window.lockSelectedObject = function() {
+    const canvas = window.canvas;
+    if (!canvas) return;
+    const obj = canvas.getActiveObject();
+    if (!obj) { showToast(window.t ? window.t('msg_select_object','객체를 선택하세요') : '객체를 선택하세요', 'warn'); return; }
+    const isLocked = obj.lockMovementX && obj.lockMovementY;
+    obj.set({
+        lockMovementX: !isLocked, lockMovementY: !isLocked,
+        lockScalingX: !isLocked, lockScalingY: !isLocked,
+        lockRotation: !isLocked,
+        hasControls: isLocked, hasBorders: isLocked,
+        selectable: true, evented: true
+    });
+    canvas.renderAll();
+    const lockBtn = document.getElementById('imgToolLock');
+    if (lockBtn) {
+        const icon = lockBtn.querySelector('i');
+        if (!isLocked) {
+            lockBtn.style.background = '#6366f1'; lockBtn.style.color = '#fff';
+            if (icon) icon.className = 'fa-solid fa-lock';
+        } else {
+            lockBtn.style.background = ''; lockBtn.style.color = '';
+            if (icon) icon.className = 'fa-solid fa-thumbtack';
+        }
+    }
+    showToast(!isLocked ? (window.t ? window.t('msg_object_locked','객체가 고정되었습니다') : '객체가 고정되었습니다') : (window.t ? window.t('msg_object_unlocked','고정이 해제되었습니다') : '고정이 해제되었습니다'), 'success');
+};
+
+// ★ 원클릭 뷰티 보정 (밝기/대비/채도 자동 보정)
+window.oneClickBeauty = function() {
+    const canvas = window.canvas;
+    if (!canvas) return;
+    const obj = canvas.getActiveObject();
+    if (!obj || obj.type !== 'image') { showToast(window.t ? window.t('msg_select_image','이미지를 선택하세요') : '이미지를 선택하세요', 'warn'); return; }
+
+    // 이미 보정됨 → 원복
+    if (obj._beautyApplied) {
+        obj.filters = (obj._origFilters || []).slice();
+        obj.applyFilters();
+        obj._beautyApplied = false;
+        canvas.renderAll();
+        const btn = document.getElementById('imgToolBeauty');
+        if (btn) { btn.style.background = ''; btn.style.color = ''; }
+        showToast(window.t ? window.t('msg_beauty_reset','보정이 해제되었습니다') : '보정이 해제되었습니다', 'info');
+        return;
+    }
+
+    // 원본 필터 백업 후 보정 적용
+    obj._origFilters = (obj.filters || []).slice();
+    obj.filters = obj._origFilters.concat([
+        new fabric.Image.filters.Brightness({ brightness: 0.08 }),
+        new fabric.Image.filters.Contrast({ contrast: 0.12 }),
+        new fabric.Image.filters.Saturation({ saturation: 0.15 }),
+    ]);
+    obj.applyFilters();
+    obj._beautyApplied = true;
+    canvas.renderAll();
+    const btn = document.getElementById('imgToolBeauty');
+    if (btn) { btn.style.background = '#6366f1'; btn.style.color = '#fff'; }
+    showToast(window.t ? window.t('msg_beauty_applied','원클릭 뷰티 보정 적용!') : '원클릭 뷰티 보정 적용!', 'success');
 };
 
 window.goHome = function() {
