@@ -2333,21 +2333,27 @@ window._ciGenerate = async () => {
 
         document.getElementById('ciHtmlKR').value = krHtml;
 
-        // 3단계: 7개국어 번역
-        status.textContent = '🌐 Claude AI 7개국어 번역 중...';
-        const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
-            body: { text: krHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
-        });
-        if (!trError && trData?.translations) {
-            const tr = trData.translations;
-            if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
-            if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
-            if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
-            if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
-            if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
-            if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
-            if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
-        }
+        // 3단계: 7개국어 번역 (각 언어 개별 호출 — HTML이 길면 배치 호출 시 타임아웃 발생)
+        status.textContent = '🌐 Claude AI 7개국어 번역 중... (1/7)';
+        const langMap = { ja: 'JP', en: 'US', zh: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
+        const langs = ['ja','en','zh','ar','es','de','fr'];
+        let trCount = 0;
+        await Promise.all(langs.map(async (lang) => {
+            try {
+                const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
+                    body: { text: krHtml, from: 'ko', to: lang, html: true }
+                });
+                if (trError) { console.error(`[CI] 번역 오류 (${lang}):`, trError); return; }
+                const translated = trData?.translated;
+                if (translated) {
+                    document.getElementById('ciHtml' + langMap[lang]).value = translated;
+                } else {
+                    console.warn(`[CI] 번역 빈 결과 (${lang}):`, trData);
+                }
+            } catch(e) { console.error(`[CI] 번역 예외 (${lang}):`, e); }
+            trCount++;
+            status.textContent = `🌐 Claude AI 7개국어 번역 중... (${trCount}/7)`;
+        }));
 
         // 4단계: 미리보기 표시
         status.textContent = '✅ 8개 언어 상세페이지 생성 + 번역 완료!';
@@ -2413,21 +2419,24 @@ window._ciTranslateOnly = async () => {
 
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
-    status.textContent = '🌐 Claude AI 7개국어 번역 중...';
+    status.textContent = '🌐 Claude AI 7개국어 번역 중... (0/7)';
 
     try {
-        const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
-            body: { text: krHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
-        });
-        if (trError) throw trError;
-        const tr = trData?.translations || {};
-        if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
-        if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
-        if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
-        if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
-        if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
-        if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
-        if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
+        const langMap = { ja: 'JP', en: 'US', zh: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
+        const langs = ['ja','en','zh','ar','es','de','fr'];
+        let trCount = 0;
+        await Promise.all(langs.map(async (lang) => {
+            try {
+                const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
+                    body: { text: krHtml, from: 'ko', to: lang, html: true }
+                });
+                if (!trError && trData?.translated) {
+                    document.getElementById('ciHtml' + langMap[lang]).value = trData.translated;
+                }
+            } catch(e) { console.error(`[CI] 번역 예외 (${lang}):`, e); }
+            trCount++;
+            status.textContent = `🌐 Claude AI 7개국어 번역 중... (${trCount}/7)`;
+        }));
         status.textContent = '✅ 7개국어 번역 완료!';
         showToast('Claude AI 7개국어 번역 완료! 탭을 눌러 확인하세요.', 'success');
 

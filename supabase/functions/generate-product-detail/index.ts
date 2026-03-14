@@ -58,8 +58,9 @@ DESIGN PHILOSOPHY:
 - Dark backgrounds (#1a1a2e, #16213e, #0f3460, #1b1b2f) with light text (#f0f0f0, #e0e0e0)
 - Luxurious, high-end, magazine-quality feel
 - LOTS of breathing space / whitespace between sections (use padding and margins generously)
-- Images should be LARGE and IMPACTFUL — always full width (100%), one image per row
-- NEVER place two images side-by-side. Each image gets its own full-width row
+- Hero image: full width (100%), one image
+- Gallery images: display in a 3-column grid (3 images per row), with matched heights
+- If images don't fill a full row, that's fine (e.g., 8 images = 3+3+2)
 - Short, punchy text — let the images do the talking
 - Elegant typography with subtle accent colors (#c9a84c gold, #e74c3c red, #3498db blue)
 
@@ -67,8 +68,8 @@ HTML RULES:
 - You CAN use <div> with inline styles for layout
 - You CAN use inline style="" attributes (this is important for the dark theme)
 - Use: <div>, <h2>, <h3>, <p>, <strong>, <em>, <ul>, <li>, <img>, <hr>, <br>
-- Full-width image: <div style="margin:40px 0;"><img src="URL" alt="text" style="width:100%; border-radius:8px;"></div>
-- NEVER use side-by-side layout. Always one image per row, full width
+- Full-width image (hero): <div style="margin:40px 0;"><img src="URL" alt="text" style="width:100%; border-radius:8px;"></div>
+- 3-column image grid: <div style="display:flex; flex-wrap:wrap; gap:8px; padding:20px 40px;"> then each image: <div style="flex:0 0 calc(33.33% - 6px);"><img src="URL" alt="text" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
 - Section wrapper: <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
 
 PRODUCT INFO:
@@ -110,9 +111,14 @@ REQUIRED STRUCTURE:
      </ul>
    </div>
 
-5. IMAGE GALLERY — All images full-width, one per row, with dark spacers between
-${allImages.length >= 2 ? `   Each image full-width (100%) with spacer section between them` : ''}
-${allImages.length >= 3 ? `   Use <div style="background:#1b1b2f; padding:20px 0;"> as spacer between images` : ''}
+5. IMAGE GALLERY — 3 images per row grid layout
+   <div style="background:#1b1b2f; padding:40px;">
+     <h3 style="color:#c9a84c; text-align:center; font-size:22px; margin-bottom:24px;">Gallery</h3>
+     <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+       <!-- For each image (skip first hero image): -->
+       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_URL" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
+     </div>
+   </div>
 
 6. DETAILS SECTION — Specs, materials, use cases
    <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
@@ -125,7 +131,8 @@ ${allImages.length >= 3 ? `   Use <div style="background:#1b1b2f; padding:20px 0
 
 CRITICAL RULES:
 - Use ALL ${allImages.length} images throughout the page
-- Every image must be full-width (100%), one per row — NEVER side-by-side
+- First image as full-width hero, remaining images in 3-column grid (3 per row)
+- Grid images: use flex layout with calc(33.33% - 6px) width, 220px height, object-fit:cover
 - Every section must have generous padding (50px-80px vertical)
 - Background colors should alternate between the dark palette
 - Text should be light (#e0e0e0, #d0d0d0) on dark backgrounds
