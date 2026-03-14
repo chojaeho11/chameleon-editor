@@ -1064,6 +1064,7 @@ export async function startDesignFromProduct() {
 // [수정됨] 장바구니 담기 (용량 초과 방지: JSON 클라우드 업로드)
 async function addCanvasToCart() {
     if (window.isDirectCartAddInProgress) { console.warn('[장바구니] isDirectCartAddInProgress 중복 방지'); return; }
+    const canvas = window.canvas;
     if (!canvas) { console.warn('[장바구니] canvas 없음'); showToast('Canvas not ready', 'error'); return; }
     console.log('[장바구니] addCanvasToCart 시작');
     
