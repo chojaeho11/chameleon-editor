@@ -6036,7 +6036,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
     window.openTopMenu = async function(topCode, titleText) {
         // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
         if (topCode === 'user_artwork') {
-            document.getElementById('quickMenuModal').style.display = 'none';
+            document.getElementById('productPickerModal').style.display = 'none';
             const el = document.getElementById('artworkMarketBanner');
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
@@ -6281,7 +6281,7 @@ async function renderQuickMenu() {
             btn.onclick = () => {
                 // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
                 if (top.code === 'user_artwork') {
-                    document.getElementById('quickMenuModal').style.display = 'none';
+                    document.getElementById('productPickerModal').style.display = 'none';
                     const el = document.getElementById('artworkMarketBanner');
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     return;
