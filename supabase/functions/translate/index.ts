@@ -37,7 +37,7 @@ serve(async (req) => {
         };
 
         const isHtml = body.html === true;
-        const model = isHtml ? "claude-sonnet-4-6-20250514" : "claude-haiku-4-5-20251001";
+        const model = isHtml ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
 
         // 배치 번역 모드 (targetLangs가 배열이면)
         const targetLangs = body.targetLangs;

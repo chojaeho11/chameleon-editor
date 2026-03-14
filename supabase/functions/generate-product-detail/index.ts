@@ -95,8 +95,15 @@ REQUIRED STRUCTURE:
      <p style="color:#a0a0a0; font-size:16px; margin-top:16px;">Short elegant tagline</p>
    </div>
 
-2. HERO IMAGE — First image full-width, no padding
-   <div style="margin:0;"><img src="IMAGE_1" style="width:100%; display:block;"></div>
+2. IMAGE GALLERY — ALL images in a 3-column grid (3 per row), with matched heights
+   <div style="background:#1b1b2f; padding:40px;">
+     <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_1" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
+       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_2" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
+       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_3" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
+       <!-- continue for all images, 3 per row -->
+     </div>
+   </div>
 
 3. INTRO — Dark bg, centered text, generous padding
    <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
@@ -111,28 +118,19 @@ REQUIRED STRUCTURE:
      </ul>
    </div>
 
-5. IMAGE GALLERY — 3 images per row grid layout
-   <div style="background:#1b1b2f; padding:40px;">
-     <h3 style="color:#c9a84c; text-align:center; font-size:22px; margin-bottom:24px;">Gallery</h3>
-     <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
-       <!-- For each image (skip first hero image): -->
-       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_URL" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
-     </div>
-   </div>
-
-6. DETAILS SECTION — Specs, materials, use cases
+5. DETAILS SECTION — Specs, materials, use cases
    <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
 
-7. CLOSING — Order info, CTA feel
+6. CLOSING — Order info, CTA feel
    <div style="background:#0f3460; padding:50px 40px; text-align:center;">
      <p style="color:#c9a84c; font-size:18px;">Chameleon Printing</p>
      <p style="color:#808080; font-size:13px;">tagline</p>
    </div>
 
 CRITICAL RULES:
-- Use ALL ${allImages.length} images throughout the page
-- First image as full-width hero, remaining images in 3-column grid (3 per row)
+- Use ALL ${allImages.length} images in a 3-column grid (3 images per row)
 - Grid images: use flex layout with calc(33.33% - 6px) width, 220px height, object-fit:cover
+- If images don't fill a complete row, that's fine (e.g. 8 images = 3+3+2)
 - Every section must have generous padding (50px-80px vertical)
 - Background colors should alternate between the dark palette
 - Text should be light (#e0e0e0, #d0d0d0) on dark backgrounds

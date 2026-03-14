@@ -2333,32 +2333,10 @@ window._ciGenerate = async () => {
 
         document.getElementById('ciHtmlKR').value = krHtml;
 
-        // 3단계: 7개국어 번역 (각 언어 개별 호출 — HTML이 길면 배치 호출 시 타임아웃 발생)
-        status.textContent = '🌐 Claude AI 7개국어 번역 중... (1/7)';
-        const langMap = { ja: 'JP', en: 'US', zh: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
-        const langs = ['ja','en','zh','ar','es','de','fr'];
-        let trCount = 0;
-        await Promise.all(langs.map(async (lang) => {
-            try {
-                const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
-                    body: { text: krHtml, from: 'ko', to: lang, html: true }
-                });
-                if (trError) { console.error(`[CI] 번역 오류 (${lang}):`, trError); return; }
-                const translated = trData?.translated;
-                if (translated) {
-                    document.getElementById('ciHtml' + langMap[lang]).value = translated;
-                } else {
-                    console.warn(`[CI] 번역 빈 결과 (${lang}):`, trData);
-                }
-            } catch(e) { console.error(`[CI] 번역 예외 (${lang}):`, e); }
-            trCount++;
-            status.textContent = `🌐 Claude AI 7개국어 번역 중... (${trCount}/7)`;
-        }));
-
-        // 4단계: 미리보기 표시
-        status.textContent = '✅ 8개 언어 상세페이지 생성 + 번역 완료!';
+        // 한국어만 생성 완료 — 번역은 별도 버튼으로
+        status.textContent = '✅ 한국어 상세페이지 생성 완료! 검토 후 [7개국어 번역만] 버튼을 눌러주세요.';
         _ciShowPreview(krHtml);
-        showToast('AI 생성 + 7개국어 번역 완료! 미리보기를 확인하세요.', 'success');
+        showToast('한국어 상세페이지 생성 완료! 검토 후 번역하세요.', 'success');
 
     } catch(e) {
         console.error('CI Generate error:', e);
@@ -2371,32 +2349,13 @@ window._ciGenerate = async () => {
                 let fallbackHtml = descText ? `<p>${descText}</p>` : '';
                 fallbackHtml += imageUrls.map(u => `<p><img src="${u}" style="max-width:100%;"></p>`).join('');
                 document.getElementById('ciHtmlKR').value = fallbackHtml;
-                status.textContent = '⚠ AI 생성 실패 → 사진+텍스트로 기본 페이지 생성됨. 번역 시도 중...';
-
-                // 번역 시도
-                try {
-                    const { data: trData } = await dbClient.functions.invoke('translate', {
-                        body: { text: fallbackHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
-                    });
-                    if (trData?.translations) {
-                        const tr = trData.translations;
-                        if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
-                        if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
-                        if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
-                        if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
-                        if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
-                        if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
-                        if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
-                    }
-                } catch(te) { console.error('fallback translate error:', te); }
-
                 _ciShowPreview(fallbackHtml);
-                status.textContent = '⚠ 기본 페이지 생성됨 (미리보기에서 편집 가능)';
+                status.textContent = '⚠ AI 생성 실패 → 사진+텍스트로 기본 페이지 생성됨';
             }
         }
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-robot"></i> AI 상세페이지 생성 + 7개국어 번역';
+        btn.innerHTML = '<i class="fa-solid fa-robot"></i> AI 한국어 상세페이지 생성';
     }
 };
 
@@ -2493,9 +2452,7 @@ window._ciSave = async () => {
             content_backup_us: oldData ? oldData.content_us : null,
             content_backup_cn: oldData ? oldData.content_cn : null,
             content_backup_ar: oldData ? oldData.content_ar : null,
-            content_backup_es: oldData ? oldData.content_es : null,
-            content_backup_de: oldData ? oldData.content_de : null,
-            content_backup_fr: oldData ? oldData.content_fr : null
+            content_backup_es: oldData ? oldData.content_es : null
         };
         const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
         if (error) showToast('저장 실패: ' + error.message, 'error');
