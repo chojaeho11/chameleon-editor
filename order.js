@@ -3005,29 +3005,57 @@ window.toggleCartAddon = function(idx, code, isChecked) {
             const _addonInfo = ADDON_DB[code];
             const _isSwatchAddon = _addonInfo && (_addonInfo.category_code === 'opt_8796' || _addonInfo.is_swatch);
             cartData[idx].addonQuantities[code] = _isSwatchAddon ? (cartData[idx].qty || 1) : (cartData[idx].addonQuantities[code] || 1);
-        } else { 
-            // 해제 시: 키값(Prefix)이 'addon_'인지 'opt_'인지 상관없이
-            // 해당 옵션 코드를 값으로 가지고 있는 모든 항목을 찾아서 삭제
+        } else {
+            // 해제 시
             const addons = cartData[idx].selectedAddons;
             Object.keys(addons).forEach(key => {
                 if (addons[key] === code) {
                     delete addons[key];
                 }
             });
+            if (cartData[idx].addonQuantities) delete cartData[idx].addonQuantities[code];
         }
-        saveCart(); 
+        // ★ 스와치 옵션 체크/해제 후 전체 수량 동기화
+        const _ai = ADDON_DB[code];
+        if (_ai && (_ai.category_code === 'opt_8796' || _ai.is_swatch)) {
+            let totalSw = 0;
+            Object.values(cartData[idx].selectedAddons || {}).forEach(ac => {
+                const ad = ADDON_DB[ac];
+                if (ad && (ad.category_code === 'opt_8796' || ad.is_swatch)) {
+                    totalSw += (cartData[idx].addonQuantities[ac] || 1);
+                }
+            });
+            if (totalSw > 0) cartData[idx].qty = totalSw;
+        }
+        saveCart();
         renderCart();
     }
 };
 window.updateCartAddonQty = function(idx, code, qty) {
-    let quantity = parseInt(qty); 
+    let quantity = parseInt(qty);
     if (isNaN(quantity) || quantity < 1) quantity = 1;
-    
-    if (cartData[idx]) { 
+
+    if (cartData[idx]) {
         if (!cartData[idx].addonQuantities) cartData[idx].addonQuantities = {};
-        cartData[idx].addonQuantities[code] = quantity; 
-        saveCart(); 
-        renderCart(); 
+        cartData[idx].addonQuantities[code] = quantity;
+
+        // ★ 스와치(사이즈/색상) 옵션: 전체 스와치 수량 합계 = 제품 수량
+        const addonInfo = ADDON_DB[code];
+        const isSwatch = addonInfo && (addonInfo.category_code === 'opt_8796' || addonInfo.is_swatch);
+        if (isSwatch) {
+            let totalSwatchQty = 0;
+            const selectedAddons = cartData[idx].selectedAddons || {};
+            Object.values(selectedAddons).forEach(addonCode => {
+                const ad = ADDON_DB[addonCode];
+                if (ad && (ad.category_code === 'opt_8796' || ad.is_swatch)) {
+                    totalSwatchQty += (cartData[idx].addonQuantities[addonCode] || 1);
+                }
+            });
+            if (totalSwatchQty > 0) cartData[idx].qty = totalSwatchQty;
+        }
+
+        saveCart();
+        renderCart();
     }
 };
 
