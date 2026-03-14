@@ -1278,7 +1278,9 @@ async function addCanvasToCart() {
         partner_id: product.partner_id || null,
         material: product.material || '',
         artworkType: product._artworkType || null,
-        artworkTypePrice: product._artworkTypePrice || null
+        artworkTypePrice: product._artworkTypePrice || null,
+        artworkTypeFixed: product._artworkTypeFixed || false,
+        blindSide: product._blindSide || null
     };
 
     const mmToPx = 3.7795;

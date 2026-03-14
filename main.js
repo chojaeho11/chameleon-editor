@@ -1044,13 +1044,18 @@ const UA_GENRE_CATS = [
     { code: 'ua_fengshui', name: '풍수그림', name_us: 'Feng Shui Art', name_jp: '風水画', name_cn: '风水画', name_ar: 'فنغ شوي', name_es: 'Feng Shui', name_de: 'Feng Shui', name_fr: 'Feng Shui', top_category_code: 'user_artwork', icon: '🐉', sort_order: 5 }
 ];
 
-// ★ 작품 제품 타입별 회배 단가 (KRW per m²)
+// ★ 작품 제품 타입별 단가
+// area-based: KRW per m² (패브릭/캔버스/종이/아크릴/블라인드)
+// fixed: 고정가 (머그컵/티셔츠/스티커)
 const UA_PRODUCT_TYPES = {
     fabric:  { name: '패브릭인쇄', name_us: 'Fabric Print', name_jp: 'ファブリック印刷', icon: '🎨', price_krw: 15000 },
     canvas:  { name: '캔버스액자', name_us: 'Canvas Frame', name_jp: 'キャンバスフレーム', icon: '🖼️', price_krw: 100000 },
     paper:   { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', icon: '📄', price_krw: 10000 },
     acrylic: { name: '아크릴액자', name_us: 'Acrylic Frame', name_jp: 'アクリルフレーム', icon: '💎', price_krw: 200000 },
-    blind:   { name: '롤블라인드', name_us: 'Roll Blind', name_jp: 'ロールブラインド', icon: '🪟', price_krw: 40000 }
+    blind:   { name: '롤블라인드', name_us: 'Roll Blind', name_jp: 'ロールブラインド', icon: '🪟', price_krw: 40000, hasBlindOption: true },
+    mug:     { name: '머그컵', name_us: 'Mug Cup', name_jp: 'マグカップ', icon: '☕', price_krw: 5000, fixed: true },
+    tshirt:  { name: '티셔츠인쇄', name_us: 'T-shirt Print', name_jp: 'Tシャツ印刷', icon: '👕', price_krw: 10000, fixed: true },
+    sticker: { name: '스티커', name_us: 'Stickers', name_jp: 'ステッカー', icon: '🏷️', price_krw: 50000, fixed: true, desc: '7~10cm 1,000매', desc_us: '7-10cm ×1,000', desc_jp: '7-10cm 1,000枚' }
 };
 window.UA_PRODUCT_TYPES = UA_PRODUCT_TYPES;
 window.UA_GENRE_CATS = UA_GENRE_CATS;

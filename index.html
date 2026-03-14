@@ -7247,19 +7247,42 @@ window.showChoiceModal = async function(key) {
         Object.keys(types).forEach((k, i) => {
             const t = types[k];
             const tName = lang==='ja' ? t.name_jp : lang==='en' ? t.name_us : t.name;
-            const tPrice = formatPriceSimple(t.price_krw);
             const isFirst = i === 0;
-            btns += `<button type="button" class="ua-type-btn" data-type="${k}" data-price="${t.price_krw}" onclick="window._selectArtworkType(this)"
-                style="flex:1; min-width:calc(50% - 6px); padding:10px 6px; border:2px solid ${isFirst?'#6366f1':'#e2e8f0'}; border-radius:10px; background:${isFirst?'#eef2ff':'#fff'}; cursor:pointer; text-align:center; transition:all 0.15s;">
+            let priceLabel = '';
+            if (t.fixed) {
+                // 고정가 상품: 통화별 환산
+                const _r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
+                if (lang==='ja') priceLabel = '¥' + Math.floor(t.price_krw * (_r.JP || 0.1)).toLocaleString();
+                else if (lang==='en') priceLabel = '$' + Math.round(t.price_krw * (_r.US || 0.001)).toLocaleString();
+                else priceLabel = t.price_krw.toLocaleString() + '원';
+                if (t.desc) {
+                    const descTxt = lang==='ja' ? (t.desc_jp||t.desc) : lang==='en' ? (t.desc_us||t.desc) : t.desc;
+                    priceLabel += ` (${descTxt})`;
+                }
+            } else {
+                priceLabel = formatPriceSimple(t.price_krw) + '/m²';
+            }
+            btns += `<button type="button" class="ua-type-btn" data-type="${k}" data-price="${t.price_krw}" data-fixed="${t.fixed?'1':'0'}" data-blind="${t.hasBlindOption?'1':'0'}" onclick="window._selectArtworkType(this)"
+                style="flex:1; min-width:calc(33% - 6px); padding:10px 6px; border:2px solid ${isFirst?'#6366f1':'#e2e8f0'}; border-radius:10px; background:${isFirst?'#eef2ff':'#fff'}; cursor:pointer; text-align:center; transition:all 0.15s;">
                 <div style="font-size:18px;">${t.icon}</div>
                 <div style="font-size:11px; font-weight:700; color:${isFirst?'#4f46e5':'#334155'}; margin-top:2px;">${tName}</div>
-                <div style="font-size:10px; color:#6366f1; font-weight:600; margin-top:2px;">${tPrice}/m²</div>
+                <div style="font-size:9px; color:#6366f1; font-weight:600; margin-top:2px;">${priceLabel}</div>
             </button>`;
         });
+        const _blindLabel = lang==='ja'?'操作位置':lang==='en'?'Pull Side':'내림손잡이 위치';
+        const _blindL = lang==='ja'?'左':lang==='en'?'Left':'좌측';
+        const _blindR = lang==='ja'?'右':lang==='en'?'Right':'우측';
         artworkTypeSelectorHtml = `
             <div data-npc="artworkType" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">🏷️ ${_ptLabel}</div>
                 <div style="display:flex; flex-wrap:wrap; gap:6px;">${btns}</div>
+            </div>
+            <div id="blindOptionBox" style="display:none; background:#f0f9ff; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #bae6fd;">
+                <div style="font-size:12px; font-weight:bold; color:#0284c7; margin-bottom:8px;">🪟 ${_blindLabel}</div>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="blind-side-btn" data-side="left" onclick="window._selectBlindSide(this)" style="flex:1; padding:10px; border:2px solid #0284c7; border-radius:10px; background:#e0f2fe; cursor:pointer; font-weight:700; font-size:13px; color:#0369a1;">← ${_blindL}</button>
+                    <button type="button" class="blind-side-btn" data-side="right" onclick="window._selectBlindSide(this)" style="flex:1; padding:10px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-weight:700; font-size:13px; color:#334155;">${_blindR} →</button>
+                </div>
             </div>`;
     }
 
@@ -7819,28 +7842,42 @@ window.updateModalTotal = function() {
             else lang = 'kr';
         }
 
+        // 화폐 포맷팅 함수 (KRW 값을 현지통화로 환산 표시)
+        const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
+
         // ★ [핵심] 단가(unitPrice)를 언어에 맞게 가져오기
         let unitPrice = product.price || 0; // 기본 한국 가격
 
         // ★ 작품 제품타입 선택 시 해당 타입 단가 사용 (KRW/m² → 언어별 환산)
         if (product._artworkTypePrice) {
             unitPrice = product._artworkTypePrice;
-            // JP: price_jp = KRW × 0.1 (site-config CURRENCY_RATE.JP)
+            // JP: KRW × 0.1
             if (lang === 'ja') {
-                const jpRate = (_rates.JP || 0.1);
-                unitPrice = product._artworkTypePrice * jpRate;
+                unitPrice = product._artworkTypePrice * (_rates.JP || 0.1);
             }
+        }
+
+        // ★ 고정가 상품 (머그컵/티셔츠/스티커): 면적 계산 없이 바로 고정가 표시
+        if (product._artworkTypeFixed) {
+            const fixedKRW = product._artworkTypePrice || 0;
+            const fixedPrice = fixedKRW * qty;
+            const formatValue = (val) => {
+                if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
+                if (lang === 'en') return '$' + Math.round(val * (_rates.US || 0.001)).toLocaleString();
+                return Math.floor(val).toLocaleString() + '원';
+            };
+            if (priceDisplay) {
+                priceDisplay.innerText = formatValue(fixedPrice);
+                priceDisplay.dataset.rawPrice = fixedPrice;
+            }
+            if (sizeDisplay) sizeDisplay.innerText = '';
+            return;
         }
 
         // 일본어면 price_jp 사용 (작품 제품타입은 위에서 처리됨)
         if (!product._artworkTypePrice && lang === 'ja' && product.price_jp && product.price_jp > 0) {
             unitPrice = product.price_jp;
         }
-        // EN: price_us(구버전 환율) 사용 안 함 → KRW 유지 (formatValue에서 환산)
-        // CN/AR/ES: KRW 원가 유지 (formatValue에서 환산)
-
-        // 화폐 포맷팅 함수 (KRW 값을 현지통화로 환산 표시)
-        const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
             if (lang === 'en') { const _r = _rates.US || 0.001; return '$' + Math.round(val * _r).toLocaleString(); }
@@ -7949,14 +7986,54 @@ if (w >= 20 && h >= 20) {
         btn.style.background = '#eef2ff';
         btn.querySelector('div:nth-child(2)').style.color = '#4f46e5';
 
-        // 선택한 타입의 단가를 product에 반영하고 재계산
+        const typeKey = btn.dataset.type;
         const typePrice = parseInt(btn.dataset.price);
+        const isFixed = btn.dataset.fixed === '1';
+        const isBlind = btn.dataset.blind === '1';
+        const isFabric = typeKey === 'fabric';
+
         if (window.selectedProductForChoice) {
             window.selectedProductForChoice._artworkTypePrice = typePrice;
-            window.selectedProductForChoice._artworkType = btn.dataset.type;
+            window.selectedProductForChoice._artworkType = typeKey;
+            window.selectedProductForChoice._artworkTypeFixed = isFixed;
         }
+
+        // ★ 고정가 상품: 사이즈 입력 숨기기 / 면적상품: 사이즈 입력 보이기
+        const sizeBox = document.querySelector('[data-npc="size"]');
+        const estimateBox = document.querySelector('[data-npc="estimate"]');
+        const qtyBox = document.querySelector('[data-npc="qtyLabel"]');
+        const qtyWrap = document.querySelector('[data-npc="qty"]');
+        if (sizeBox) sizeBox.style.display = isFixed ? 'none' : '';
+        // 수량은 항상 보여줌
+
+        // ★ 패브릭 옵션: fabric만 보이기
+        const fabricOptBoxes = document.querySelectorAll('[data-required-cat="2342434"]');
+        fabricOptBoxes.forEach(b => { b.style.display = isFabric ? '' : 'none'; });
+        // 패브릭 라벨도 토글
+        const fabricLabel = document.querySelector('[data-npc="fabricLabel"]');
+        if (fabricLabel) fabricLabel.style.display = isFabric ? '' : 'none';
+
+        // ★ 블라인드 옵션: blind만 보이기
+        const blindBox = document.getElementById('blindOptionBox');
+        if (blindBox) blindBox.style.display = isBlind ? '' : 'none';
+
         window.calcCustomPrice();
         window.updateModalTotal();
+    };
+
+    // ★ 블라인드 내림손잡이 선택 핸들러
+    window._selectBlindSide = function(btn) {
+        document.querySelectorAll('.blind-side-btn').forEach(b => {
+            b.style.borderColor = '#e2e8f0';
+            b.style.background = '#fff';
+            b.style.color = '#334155';
+        });
+        btn.style.borderColor = '#0284c7';
+        btn.style.background = '#e0f2fe';
+        btn.style.color = '#0369a1';
+        if (window.selectedProductForChoice) {
+            window.selectedProductForChoice._blindSide = btn.dataset.side;
+        }
     };
 
     // ★ 대분류 카테고리 코드 조회 헬퍼
@@ -8135,10 +8212,11 @@ if (w >= 20 && h >= 20) {
         const targetCode = product.code || window.currentProductKey;
         if (!targetCode) { showToast(window.t ? window.t('msg_product_code_missing', 'Product code is missing.') : 'Product code is missing.', 'error'); return; }
 
-        // ★ 패브릭미싱 필수 선택 검증 (파일업로드 시에는 건너뜀)
-        if (mode !== 'upload') {
+        // ★ 패브릭미싱 필수 선택 검증 (패브릭 타입만, 파일업로드 시에는 건너뜀)
+        const _isFabricType = !product._artworkType || product._artworkType === 'fabric';
+        if (mode !== 'upload' && _isFabricType) {
             const reqCatBox = document.querySelector('[data-required-cat="2342434"]');
-            if (reqCatBox) {
+            if (reqCatBox && reqCatBox.style.display !== 'none') {
                 const checked = reqCatBox.querySelectorAll('input[name="userOption"]:checked');
                 if (checked.length === 0) {
                     reqCatBox.style.border = '2px solid #ef4444';
@@ -8182,8 +8260,12 @@ if (w >= 20 && h >= 20) {
         if (window.isCustomModeCurrent) {
             finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
 
+            // ★ 고정가 작품상품 (머그컵/티셔츠/스티커): 사이즈 불필요, 고정단가
+            if (product._artworkTypeFixed) {
+                finalW = 0; finalH = 0;
+                finalPricePerItem = unitPrice;
             // ★ 사이즈고정상품: DB 사이즈 + 고정단가 사용 (회배계산X)
-            if (product.is_file_upload) {
+            } else if (product.is_file_upload) {
                 finalW = product.width_mm || parseInt(document.getElementById('inputCustW').value || 0);
                 finalH = product.height_mm || parseInt(document.getElementById('inputCustH').value || 0);
                 finalPricePerItem = unitPrice;
