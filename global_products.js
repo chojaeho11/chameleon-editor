@@ -1973,18 +1973,21 @@ window.openCommonInfoModal = async () => {
     if (!dbClient) { showToast('DB 연결 실패', 'error'); return; }
     document.getElementById('commonInfoModal').style.display = 'flex';
 
-    // Quill 초기화
+    // Quill 초기화 (display 후 딜레이 필수 - Quill 1.x emit 버그 방지)
     if (!_ciQuill) {
-        _ciQuill = new Quill('#ci-quill-editor', {
-            theme: 'snow',
-            modules: { toolbar: [
-                [{ header: [1,2,3,false] }], ['bold','italic','underline','strike'],
-                [{ color: [] }, { background: [] }], [{ align: [] }],
-                ['link','image','video'], ['blockquote','code-block'],
-                [{ list:'ordered' }, { list:'bullet' }], ['clean']
-            ]},
-            placeholder: '한국어 상세 내용을 입력하세요...'
-        });
+        await new Promise(r => setTimeout(r, 100));
+        try {
+            _ciQuill = new Quill('#ci-quill-editor', {
+                theme: 'snow',
+                modules: { toolbar: [
+                    [{ header: [1,2,3,false] }], ['bold','italic','underline','strike'],
+                    [{ color: [] }, { background: [] }], [{ align: [] }],
+                    ['link','image','video'], ['blockquote','code-block'],
+                    [{ list:'ordered' }, { list:'bullet' }], ['clean']
+                ]},
+                placeholder: '한국어 상세 내용을 입력하세요...'
+            });
+        } catch(e) { console.error('Quill init error:', e); return; }
     }
 
     // 대분류 로드
