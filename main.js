@@ -1068,7 +1068,7 @@ window.submitArtworkUpload = async function() {
 
 // ★ 작품 마켓플레이스 장르 카테고리 (제품타입 → 장르 기반으로 변경)
 const UA_GENRE_CATS = [
-    { code: 'ua_game', name: '게임', name_us: 'Game', name_jp: 'ゲーム', name_cn: '游戏', name_ar: 'ألعاب', name_es: 'Juegos', name_de: 'Spiele', name_fr: 'Jeux', top_category_code: 'user_artwork', icon: '🎮', sort_order: 1 },
+    { code: 'ua_game', name: '게임 영화', name_us: 'Game Movie', name_jp: 'ゲーム映画', name_cn: '游戏电影', name_ar: 'ألعاب أفلام', name_es: 'Juegos Películas', name_de: 'Spiele Filme', name_fr: 'Jeux Films', top_category_code: 'user_artwork', icon: '🎮', sort_order: 1 },
     { code: 'ua_anime', name: '애니메이션', name_us: 'Animation', name_jp: 'アニメ', name_cn: '动漫', name_ar: 'أنمي', name_es: 'Animación', name_de: 'Animation', name_fr: 'Animation', top_category_code: 'user_artwork', icon: '🎬', sort_order: 2 },
     { code: 'ua_landscape', name: '풍경', name_us: 'Landscape', name_jp: '風景', name_cn: '风景', name_ar: 'مناظر طبيعية', name_es: 'Paisaje', name_de: 'Landschaft', name_fr: 'Paysage', top_category_code: 'user_artwork', icon: '🏞️', sort_order: 3 },
     { code: 'ua_interior', name: '인테리어', name_us: 'Interior', name_jp: 'インテリア', name_cn: '室内', name_ar: 'ديكور', name_es: 'Interior', name_de: 'Interieur', name_fr: 'Intérieur', top_category_code: 'user_artwork', icon: '🏠', sort_order: 4 },
