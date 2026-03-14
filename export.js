@@ -1526,9 +1526,19 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         // 제품 사이즈 표시
         const _wMm = item.product.w_mm || item.product.width_mm || 0;
         const _hMm = item.product.h_mm || item.product.height_mm || 0;
+        const optParts = [];
         if (_wMm && _hMm) {
-            pdfOptionLabel = `${Math.round(_wMm)}x${Math.round(_hMm)}mm`;
+            optParts.push(`${Math.round(_wMm)}x${Math.round(_hMm)}mm`);
         }
+        // 스와치/추가 옵션 이름도 규격 컬럼에 표시
+        if (item.selectedAddons) {
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = ADDON_DB[code];
+                if (add) optParts.push(add.display_name || add.name);
+                else optParts.push(code.replace(/_/g, ' '));
+            });
+        }
+        if (optParts.length > 0) pdfOptionLabel = optParts.join('\n');
 
         if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
             if (item.product.name_jp) pdfName = item.product.name_jp;
@@ -1565,9 +1575,27 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         
         if (item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
-                const add = ADDON_DB[code]; if(!add) return;
+                const add = ADDON_DB[code];
+                if (!add) {
+                    // ADDON_DB에 없는 옵션도 이름이라도 표시
+                    const fallbackName = code.replace(/_/g, ' ');
+                    const addonName = "└ " + fallbackName;
+                    const splitAddon = doc.splitTextToSize(addonName, nameColWidth - 4);
+                    const addonRows = splitAddon.length;
+                    const addonHeight = Math.max(8, 4 + (addonRows * 5));
+                    curX = 15;
+                    drawCell(doc, curX, y, cols[0], addonHeight, "", 'center'); curX += cols[0];
+                    drawCell(doc, curX, y, cols[1], addonHeight, splitAddon, 'left', 8); curX += cols[1];
+                    drawCell(doc, curX, y, cols[2], addonHeight, TEXT.opt_add, 'left', 8); curX += cols[2];
+                    drawCell(doc, curX, y, cols[3], addonHeight, "1", 'center'); curX += cols[3];
+                    drawCell(doc, curX, y, cols[4], addonHeight, "-", 'right'); curX += cols[4];
+                    drawCell(doc, curX, y, cols[5], addonHeight, "-", 'right');
+                    y += addonHeight;
+                    if(y > 260) { doc.addPage(); y = 20; }
+                    return;
+                }
                 const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                
+
                 // [수정] 옵션 가격 다국어 처리 (ADDON_DB.price는 KRW 등가 - config.js에서 역환산 완료)
                 let addPrice = add.price;
                 let addName = add.display_name || add.name;
@@ -1777,7 +1805,8 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                     if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
                         const optNames = [];
                         Object.values(item.selectedAddons).forEach(code => {
-                            const add = ADDON_DB[code]; if(add) optNames.push(add.name);
+                            const add = ADDON_DB[code];
+                            optNames.push(add ? (add.display_name || add.name) : code.replace(/_/g, ' '));
                         });
                         if(optNames.length > 0) optionText = optNames.join(", ");
                     }
@@ -1815,10 +1844,11 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                 optY += 6;
             }
             if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
-                Object.values(item.selectedAddons).forEach(code => {
-                    const add = ADDON_DB[code]; if(!add) return;
+                Object.entries(item.selectedAddons).forEach(([key, code]) => {
+                    const add = ADDON_DB[code];
+                    const addonName = add ? (add.display_name || add.name) : code.replace(/_/g, ' ');
                     const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                    drawText(doc, `• ${add.name} (x${qty})`, 25, optY); optY += 6;
+                    drawText(doc, `• ${addonName} (x${qty})`, 25, optY); optY += 6;
                 });
             } else {
                 drawText(doc, "• " + TEXT.opt_default, 25, optY); optY += 6;
