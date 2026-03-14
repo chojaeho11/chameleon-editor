@@ -56,7 +56,20 @@ const I18N_KO = {
     "confirm_logout": "로그아웃 하시겠습니까?",
     "btn_close": "닫기",
     "msg_no_bids_yet": "아직 입찰이 없습니다.\n파트너가 검토 중입니다. 잠시만 기다려주세요.",
-    "msg_no_sales": "판매 중인 디자인이 없습니다.",
+    "mp_sales_title": "🎨 마켓플레이스 판매 작품",
+    "mp_sales_total": "누적 수익",
+    "mp_total_products": "등록 작품",
+    "mp_total_sold": "판매 건수",
+    "mp_total_revenue": "누적 수익",
+    "mp_sales_guide": '<i class="fa-solid fa-circle-info"></i> 마켓플레이스에 등록한 작품이 판매되면 <b>매출액의 10%</b>가 예치금으로 적립됩니다.<br>적립된 예치금은 <b>수익금 & 예치금</b> 메뉴에서 출금 신청할 수 있습니다.',
+    "msg_no_sales": "등록된 판매 작품이 없습니다.",
+    "msg_go_upload": "작품 등록하러 가기",
+    "status_on_sale": "판매중",
+    "status_pending": "심사중",
+    "label_revenue": "수익",
+    "label_pending": "정산대기",
+    "label_sold": "판매",
+    "unit_count": "건",
     "msg_no_records": "내역이 없습니다.",
     "msg_no_reviews": "등록된 후기가 없습니다.",
     "label_partner_reviews": "파트너 후기",
@@ -622,7 +635,8 @@ async function loadMySales() {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
     const currUnit = { KR: '원', JP: '¥', US: '$' }[country] || '원';
-    const rate = cfg.CURRENCY_RATE || 1;
+    const rateMap = cfg.CURRENCY_RATE || { KR:1, JP:0.1, US:0.001 };
+    const rate = (typeof rateMap === 'object') ? (rateMap[country] || 1) : (rateMap || 1);
 
     // 1. 내가 등록한 마켓플레이스 작품 조회 (partner_id = currentUser.id)
     const { data: products } = await sb.from('admin_products')
