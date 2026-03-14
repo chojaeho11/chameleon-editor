@@ -1556,8 +1556,32 @@ window.cancelDepositSelected = async () => {
 window.deleteOrdersSelected = async (force) => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if(ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
-    if(!confirm("삭제하시겠습니까?")) return;
-    await sb.from('orders').delete().in('id', ids);
+    if(!confirm(`${ids.length}건의 주문을 삭제하시겠습니까?`)) return;
+    try {
+        // 외래키 참조 테이블 먼저 삭제
+        for (const id of ids) {
+            await sb.from('order_items').delete().eq('order_id', id).then(() => {});
+            await sb.from('partner_settlements').delete().eq('order_id', id).then(() => {});
+            // 스토리지 파일 삭제 시도
+            try {
+                const { data: files } = await sb.storage.from('orders').list(`${id}`);
+                if (files && files.length > 0) {
+                    const paths = files.map(f => `${id}/${f.name}`);
+                    await sb.storage.from('orders').remove(paths);
+                }
+            } catch(e) {}
+        }
+        const { error } = await sb.from('orders').delete().in('id', ids);
+        if (error) {
+            console.error('주문 삭제 실패:', error);
+            showToast(`삭제 실패: ${error.message}`, 'error');
+        } else {
+            showToast(`${ids.length}건 삭제 완료`, 'success');
+        }
+    } catch(e) {
+        console.error('삭제 오류:', e);
+        showToast('삭제 중 오류가 발생했습니다.', 'error');
+    }
     loadOrders();
 };
 
