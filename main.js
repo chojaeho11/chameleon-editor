@@ -952,14 +952,28 @@ window.submitArtworkUpload = async function() {
 
     try {
         let tags = title;
-        let titleEN = title, titleJP = title;
+        let titleEN = title, titleJP = title, titleCN = title, titleAR = title, titleES = title, titleDE = title, titleFR = title;
         try {
-            const [koT, enT, jaT] = await Promise.all([
-                googleTranslate(title, 'ko'), googleTranslate(title, 'en'), googleTranslate(title, 'ja')
+            const [koT, enT, jaT, zhT, arT, esT, deT, frT] = await Promise.all([
+                googleTranslate(title, 'ko'), googleTranslate(title, 'en'), googleTranslate(title, 'ja'),
+                googleTranslate(title, 'zh'), googleTranslate(title, 'ar'), googleTranslate(title, 'es'),
+                googleTranslate(title, 'de'), googleTranslate(title, 'fr')
             ]);
             titleEN = enT || title;
             titleJP = jaT || title;
-            const combined = new Set([...title.split(',').map(s=>s.trim()), ...(koT||'').split(',').map(s=>s.trim()), ...(enT||'').split(',').map(s=>s.trim()), ...(jaT||'').split(',').map(s=>s.trim())]);
+            titleCN = zhT || title;
+            titleAR = arT || title;
+            titleES = esT || title;
+            titleDE = deT || title;
+            titleFR = frT || title;
+            const combined = new Set([
+                ...title.split(',').map(s=>s.trim()),
+                ...(koT||'').split(',').map(s=>s.trim()),
+                ...(enT||'').split(',').map(s=>s.trim()),
+                ...(jaT||'').split(',').map(s=>s.trim()),
+                ...(zhT||'').split(',').map(s=>s.trim()),
+                ...(esT||'').split(',').map(s=>s.trim())
+            ]);
             tags = Array.from(combined).filter(Boolean).join(', ');
         } catch(e) { console.warn('번역 실패, 원본만 사용', e); }
 
@@ -989,6 +1003,11 @@ window.submitArtworkUpload = async function() {
             name: title,
             name_us: titleEN,
             name_jp: titleJP,
+            name_cn: titleCN,
+            name_ar: titleAR,
+            name_es: titleES,
+            name_de: titleDE,
+            name_fr: titleFR,
             category: genre,
             price: basePrice,
             price_us: Math.round(basePrice * 0.001),
@@ -1054,82 +1073,187 @@ window._setupArtworkCategories = async function() {
     console.log('작품 마켓플레이스 장르 카테고리 설정 완료');
 };
 
-// ★ 메인 페이지: 장르별 최신 작품 로딩
+// ★ 메인 페이지: 카테고리별 최신 1개씩 세로 카드
 window._loadArtworkGenreGrid = async function() {
     if (!sb) return;
     const tabBox = document.getElementById('artworkGenreTabs');
     const grid = document.getElementById('artworkGenreGrid');
     if (!tabBox || !grid) return;
+    tabBox.style.display = 'none'; // 탭 숨김 (카테고리 카드로 대체)
 
     const lang = window.CURRENT_LANG || 'kr';
     const genres = UA_GENRE_CATS;
-    const _allLabel = lang==='ja'?'全体':lang==='en'?'All':lang==='zh'?'全部':'전체';
 
-    // 탭 생성: "전체" + 장르별
-    tabBox.innerHTML = '';
-    const allTabs = [{ code: 'ua_all', icon: '🔥', label: _allLabel }, ...genres.map(g => ({
-        code: g.code,
-        icon: g.icon,
-        label: lang==='ja' ? g.name_jp : lang==='en' ? g.name_us : lang==='zh' ? g.name_cn : lang==='es' ? g.name_es : lang==='de' ? g.name_de : lang==='fr' ? g.name_fr : g.name
-    }))];
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
-    allTabs.forEach((g, i) => {
-        const btn = document.createElement('button');
-        btn.style.cssText = 'padding:6px 14px; border:1px solid rgba(255,255,255,0.2); border-radius:20px; background:' + (i===0?'rgba(99,102,241,0.3)':'rgba(255,255,255,0.08)') + '; color:#fff; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all 0.15s;';
-        btn.textContent = g.icon + ' ' + g.label;
-        btn.onclick = () => {
-            tabBox.querySelectorAll('button').forEach(b => { b.style.background = 'rgba(255,255,255,0.08)'; });
-            btn.style.background = 'rgba(99,102,241,0.3)';
-            _renderGenreItems(g.code);
-        };
-        tabBox.appendChild(btn);
-    });
+    try {
+        // 각 장르별 최신 1개씩 가져오기
+        const promises = genres.map(g =>
+            sb.from('admin_products')
+                .select('code, name, name_jp, name_us, img_url')
+                .eq('category', g.code)
+                .eq('partner_status', 'approved')
+                .order('created_at', { ascending: false })
+                .limit(1)
+        );
+        const results = await Promise.all(promises);
 
-    // 작품 로딩 함수
-    async function _renderGenreItems(genreCode) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        grid.innerHTML = '';
+        genres.forEach((g, i) => {
+            const items = results[i].data;
+            const gName = lang==='ja' ? g.name_jp : lang==='en' ? g.name_us : lang==='zh' ? g.name_cn : lang==='es' ? g.name_es : lang==='de' ? g.name_de : lang==='fr' ? g.name_fr : g.name;
+            const p = items && items[0];
+            const thumbUrl = p ? (window.getTinyThumb ? window.getTinyThumb(p.img_url, 240) : p.img_url) : '';
+
+            const div = document.createElement('div');
+            div.style.cssText = 'cursor:pointer; border-radius:12px; overflow:hidden; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); transition:transform 0.2s;';
+            div.onmouseenter = () => { div.style.transform = 'scale(1.03)'; };
+            div.onmouseleave = () => { div.style.transform = 'scale(1)'; };
+            div.innerHTML = `
+                <div style="width:100%; aspect-ratio:2/3; background:#1e1b4b; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    ${thumbUrl
+                        ? `<img src="${thumbUrl}" alt="${gName}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=font-size:48px>${g.icon}</div>'">`
+                        : `<div style="font-size:48px;">${g.icon}</div>`}
+                </div>
+                <div style="padding:8px 8px 10px; text-align:center;">
+                    <div style="font-size:12px; font-weight:800; color:#e2e8f0;">${g.icon} ${gName}</div>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:2px;">${p ? (lang==='ja'?'作品あり':lang==='en'?'Browse':'작품 보기') : (lang==='ja'?'近日公開':lang==='en'?'Coming soon':'준비중')}</div>
+                </div>
+            `;
+            div.onclick = () => { window._openArtworkGallery(g.code, gName); };
+            grid.appendChild(div);
+        });
+    } catch(e) {
+        console.warn('장르 작품 로딩 실패:', e);
+        grid.innerHTML = '';
+    }
+};
+
+// ★ 장르별 전체 작품 갤러리 (검색 + 페이징)
+window._openArtworkGallery = async function(genreCode, genreName) {
+    const lang = window.CURRENT_LANG || 'kr';
+    const _searchPh = lang==='ja'?'作品を検索...':lang==='en'?'Search artworks...':'작품 검색...';
+    const _noResult = lang==='ja'?'作品がありません':lang==='en'?'No artworks found':'작품이 없습니다';
+    const _loadMore = lang==='ja'?'もっと見る':lang==='en'?'Load More':'더 보기';
+    const _backLabel = lang==='ja'?'戻る':lang==='en'?'Back':'뒤로';
+
+    // 모달 생성
+    let modal = document.getElementById('artworkGalleryModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'artworkGalleryModal';
+        modal.className = 'modal-bg';
+        modal.style.cssText = 'z-index:18000; display:none; align-items:center; justify-content:center;';
+        modal.innerHTML = '<div class="modal-box" style="width:900px; max-width:95%; max-height:90vh; overflow-y:auto; padding:0;"></div>';
+        document.body.appendChild(modal);
+    }
+    const box = modal.querySelector('.modal-box');
+    modal.style.display = 'flex';
+
+    let page = 0;
+    const PAGE_SIZE = 20;
+    let allItems = [];
+    let searchTerm = '';
+
+    box.innerHTML = `
+        <div style="position:sticky; top:0; z-index:2; background:#fff; padding:16px 20px; border-bottom:1px solid #e2e8f0;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                <button onclick="document.getElementById('artworkGalleryModal').style.display='none'" style="background:none; border:none; cursor:pointer; font-size:18px; color:#64748b;"><i class="fa-solid fa-arrow-left"></i></button>
+                <h3 style="margin:0; font-size:18px; font-weight:800; color:#1e1b4b; flex:1;">${genreName}</h3>
+                <button onclick="document.getElementById('artworkGalleryModal').style.display='none'" style="background:none; border:none; cursor:pointer; font-size:22px; color:#94a3b8;">&times;</button>
+            </div>
+            <input type="text" id="artworkGallerySearch" placeholder="${_searchPh}" style="width:100%; padding:10px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
+        </div>
+        <div id="artworkGalleryGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:16px 20px;"></div>
+        <div id="artworkGalleryMore" style="text-align:center; padding:16px;"></div>
+    `;
+
+    const gridEl = document.getElementById('artworkGalleryGrid');
+    const moreEl = document.getElementById('artworkGalleryMore');
+    const searchInput = document.getElementById('artworkGallerySearch');
+
+    // 검색 디바운스
+    let _searchTimer;
+    searchInput.oninput = () => {
+        clearTimeout(_searchTimer);
+        _searchTimer = setTimeout(() => {
+            searchTerm = searchInput.value.trim().toLowerCase();
+            page = 0;
+            allItems = [];
+            _loadPage();
+        }, 300);
+    };
+
+    async function _loadPage() {
+        if (page === 0) gridEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+
         try {
             let query = sb.from('admin_products')
-                .select('code, name, name_jp, name_us, img_url, category');
+                .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url, description');
 
             if (genreCode === 'ua_all') {
-                // 전체: ua_로 시작하는 모든 카테고리 (구 ua_paper/ua_fabric/ua_canvas 포함)
                 query = query.like('category', 'ua_%');
             } else {
                 query = query.eq('category', genreCode);
             }
-            const { data: items } = await query
-                .eq('partner_status', 'approved')
-                .order('created_at', { ascending: false })
-                .limit(5);
+            query = query.eq('partner_status', 'approved');
 
-            grid.innerHTML = '';
+            // 검색어가 있으면 이름/설명에서 필터
+            if (searchTerm) {
+                query = query.or(`name.ilike.%${searchTerm}%,name_jp.ilike.%${searchTerm}%,name_us.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+            }
+
+            const { data: items } = await query
+                .order('created_at', { ascending: false })
+                .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+            if (page === 0) gridEl.innerHTML = '';
+
             if (!items || items.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:13px;">' + (lang==='ja'?'まだ作品がありません':lang==='en'?'No artworks yet':'아직 작품이 없습니다') + '</div>';
+                if (page === 0) gridEl.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:14px;">${_noResult}</div>`;
+                moreEl.innerHTML = '';
                 return;
             }
+
             items.forEach(p => {
                 const pName = lang==='ja' ? (p.name_jp||p.name_us||p.name) : lang==='en' ? (p.name_us||p.name) : p.name;
-                const thumbUrl = window.getTinyThumb ? window.getTinyThumb(p.img_url, 180) : p.img_url;
+                const thumbUrl = window.getTinyThumb ? window.getTinyThumb(p.img_url, 220) : p.img_url;
                 const div = document.createElement('div');
-                div.style.cssText = 'cursor:pointer; border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); transition:transform 0.2s;';
-                div.onmouseenter = () => { div.style.transform = 'scale(1.03)'; };
-                div.onmouseleave = () => { div.style.transform = 'scale(1)'; };
+                div.style.cssText = 'cursor:pointer; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; transition:transform 0.2s; background:#fff;';
+                div.onmouseenter = () => { div.style.transform = 'scale(1.03)'; div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; };
+                div.onmouseleave = () => { div.style.transform = 'scale(1)'; div.style.boxShadow = 'none'; };
                 div.innerHTML = `
-                    <img src="${thumbUrl}" alt="${pName}" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover;" onerror="this.src='https://placehold.co/180?text=No+Img'">
-                    <div style="padding:6px 8px; font-size:11px; font-weight:600; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pName}</div>
+                    <img src="${thumbUrl}" alt="${pName}" loading="lazy" style="width:100%; aspect-ratio:2/3; object-fit:cover;" onerror="this.src='https://placehold.co/220x330?text=No+Img'">
+                    <div style="padding:8px; font-size:12px; font-weight:600; color:#1e1b4b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pName}</div>
                 `;
-                div.onclick = () => { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
-                grid.appendChild(div);
+                div.onclick = () => {
+                    modal.style.display = 'none';
+                    if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code);
+                };
+                gridEl.appendChild(div);
             });
+
+            // 더보기 버튼
+            if (items.length >= PAGE_SIZE) {
+                moreEl.innerHTML = `<button onclick="window._artworkGalleryNextPage()" style="padding:10px 30px; border:2px solid #6366f1; border-radius:10px; background:#fff; color:#6366f1; font-weight:700; cursor:pointer; font-size:14px;">${_loadMore}</button>`;
+            } else {
+                moreEl.innerHTML = '';
+            }
+            page++;
         } catch(e) {
-            console.warn('장르 작품 로딩 실패:', e);
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;">-</div>';
+            console.warn('갤러리 로딩 실패:', e);
         }
     }
 
-    // 첫 번째 장르 자동 로딩
-    if (genres.length > 0) _renderGenreItems(genres[0].code);
+    window._artworkGalleryNextPage = _loadPage;
+    _loadPage();
+
+    // 모바일 반응형
+    if (window.innerWidth <= 768) {
+        gridEl.style.gridTemplateColumns = 'repeat(2, 1fr)';
+        gridEl.style.gap = '8px';
+        gridEl.style.padding = '12px';
+    }
 };
 
 // [수정] 디자인 판매 등록 (관리자 전용)
