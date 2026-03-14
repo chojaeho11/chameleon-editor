@@ -35,22 +35,36 @@ function positionFloatingToolbar() {
     const active = canvas.getActiveObject();
     if (!active || active.type !== 'image') { tb.style.display = 'none'; return; }
 
-    const b = getScreenBounds(active);
+    const isMobile = window.innerWidth <= 768;
     tb.style.display = 'flex';
-    const tbW = tb.offsetWidth;
-    let left = b.left + (b.width - tbW) / 2;
-    let top  = b.top - tb.offsetHeight - TOOLBAR_GAP;
-    // 화면 위로 넘어가면 아래로
-    if (top < 4) top = b.top + b.height + TOOLBAR_GAP;
-    // 좌우 클램프
-    left = Math.max(4, Math.min(left, window.innerWidth - tbW - 4));
-    tb.style.left = left + 'px';
-    tb.style.top  = top  + 'px';
+    tb.style.flexDirection = 'column';
+
+    if (isMobile) {
+        // 모바일: CSS에서 하단 고정 처리 (@media), JS는 display만
+        tb.style.top = 'auto';
+        tb.style.bottom = '56px';
+        tb.style.left = '0';
+        tb.style.transform = '';
+    } else {
+        tb.style.transform = '';
+        tb.style.bottom = '';
+        tb.style.maxWidth = '';
+        const b = getScreenBounds(active);
+        const tbW = tb.offsetWidth;
+        let left = b.left + (b.width - tbW) / 2;
+        let top  = b.top - tb.offsetHeight - TOOLBAR_GAP;
+        // 화면 위로 넘어가면 아래로
+        if (top < 4) top = b.top + b.height + TOOLBAR_GAP;
+        // 좌우 클램프
+        left = Math.max(4, Math.min(left, window.innerWidth - tbW - 4));
+        tb.style.left = left + 'px';
+        tb.style.top  = top  + 'px';
+    }
 }
 
 function hideFloatingToolbar() {
     const tb = document.getElementById('imageFloatingToolbar');
-    if (tb) tb.style.display = 'none';
+    if (tb) { tb.style.display = 'none'; tb.style.bottom = ''; tb.style.transform = ''; }
 }
 
 function hookSelectionEvents() {

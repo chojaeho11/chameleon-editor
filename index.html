@@ -2283,6 +2283,12 @@ async function handleSubReturn() {
 .img-float-btn:hover{background:#f1f5f9;color:#6366f1}
 .img-float-btn:active{background:#e0e7ff}
 .img-float-btn i{font-size:14px}
+@media(max-width:768px){
+  .img-float-btn{padding:6px 10px;font-size:12px;gap:4px}
+  .img-float-btn i{font-size:12px}
+  #imageFloatingToolbar{padding:4px 6px !important;border-radius:14px 14px 0 0 !important;box-shadow:0 -4px 20px rgba(0,0,0,0.15) !important;width:100vw !important;left:0 !important;transform:none !important;}
+  #imageFloatingToolbar>div{justify-content:center;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+}
 </style>
 
 <!-- Eraser Mode Overlay -->
@@ -4667,27 +4673,9 @@ window.filterFxCards = function(cat, btn) {
                 }
                 return;
             }
-            // 패널 본문: 스크롤 맨 위에서 아래로 20px 이상 당기면 드래그 전환
-            if (!dragging && subPanel.scrollTop <= 0) {
-                var curDiff = e.touches[0].clientY - startY;
-                if (curDiff > 20) {
-                    dragging = true;
-                    startY = e.touches[0].clientY;
-                    diffY = 0;
-                    subPanel.style.transition = 'none';
-                }
-            }
-            if (dragging) {
-                diffY = e.touches[0].clientY - startY;
-                if (diffY > 0) {
-                    subPanel.style.transform = 'translateY(' + diffY + 'px)';
-                    e.preventDefault();
-                } else {
-                    dragging = false;
-                    subPanel.style.transform = '';
-                }
-            }
-        }, { passive: false });
+            // 패널 본문: 핸들이 아닌 경우 스크롤만 허용 (드래그 닫기 비활성)
+            // 핸들에서만 드래그로 닫을 수 있음
+        }, { passive: true });
 
         document.addEventListener('touchend', function() {
             touchOnHandle = false;
