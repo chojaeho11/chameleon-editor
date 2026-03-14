@@ -52,34 +52,28 @@ serve(async (req) => {
       const lc = langMap[lang];
       if (!lc) return '';
 
-      return `You are a world-class e-commerce product detail page designer. Create a PREMIUM, DARK-THEMED product detail page for Chameleon Printing.
+      return `You are a world-class e-commerce product detail page designer. Create a CLEAN, WHITE-THEMED product detail page for Chameleon Printing.
 
 DESIGN PHILOSOPHY:
-- Dark backgrounds (#1a1a2e, #16213e, #0f3460, #1b1b2f) with light text (#f0f0f0, #e0e0e0)
-- Luxurious, high-end, magazine-quality feel
-- LOTS of breathing space / whitespace between sections (use padding and margins generously)
-- Hero image: full width (100%), one image
-- Gallery images: display in a 3-column grid (3 images per row), with matched heights
-- If images don't fill a full row, that's fine (e.g., 8 images = 3+3+2)
-- Short, punchy text — let the images do the talking
-- Elegant typography with subtle accent colors (#c9a84c gold, #e74c3c red, #3498db blue)
+- Clean white background with dark text (#333, #111)
+- Professional, modern, easy-to-read layout
+- Images displayed in a 2-column grid (2 images per row)
+- Short, informative text — let the images do the talking
+- Accent colors: #6366f1 (indigo), #4f46e5 (blue), #16a34a (green)
 
 HTML RULES:
 - You CAN use <div> with inline styles for layout
-- You CAN use inline style="" attributes (this is important for the dark theme)
 - Use: <div>, <h2>, <h3>, <p>, <strong>, <em>, <ul>, <li>, <img>, <hr>, <br>
-- Full-width image (hero): <div style="margin:40px 0;"><img src="URL" alt="text" style="width:100%; border-radius:8px;"></div>
-- 3-column image grid: <div style="display:flex; flex-wrap:wrap; gap:8px; padding:20px 40px;"> then each image: <div style="flex:0 0 calc(33.33% - 6px);"><img src="URL" alt="text" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
-- Section wrapper: <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
+- 2-column image grid: <div style="display:flex; flex-wrap:wrap; gap:8px;"> then each image: <div style="flex:0 0 calc(50% - 4px);"><img src="URL" alt="text" style="width:100%; height:auto; object-fit:cover; border-radius:8px;"></div>
+- DO NOT use dark backgrounds. All backgrounds must be white or transparent.
+- Text color must be dark (#333 or #111).
 
 PRODUCT INFO:
 - Name: ${product_name}
 - Category: ${product_category || 'General'}
-${''/* 가격은 상세페이지에 포함하지 않음 */}
 ${reference_text ? `- Reference/Notes: ${reference_text}` : ''}
 ${original_description ? `
-EXISTING PRODUCT DESCRIPTION (IMPORTANT — incorporate this content):
-The product already has this description. Extract useful product details, features, specs, and selling points from it. Combine with your own creative writing to make the page RICHER and MORE DETAILED. Do NOT simply copy — rewrite elegantly in the dark theme style.
+EXISTING PRODUCT DESCRIPTION (incorporate useful details):
 ---
 ${original_description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').substring(0, 2000)}
 ---` : ''}
@@ -89,55 +83,34 @@ ${imageListText}
 
 REQUIRED STRUCTURE:
 
-1. HERO SECTION — Dark bg (#0f3460), product name in large gold text, 1-2 line tagline in light gray
-   <div style="background:#0f3460; padding:80px 40px; text-align:center;">
-     <h2 style="color:#c9a84c; font-size:32px; margin:0; letter-spacing:2px;">PRODUCT NAME</h2>
-     <p style="color:#a0a0a0; font-size:16px; margin-top:16px;">Short elegant tagline</p>
+1. PRODUCT TITLE
+   <h2 style="font-size:24px; font-weight:900; color:#111; margin-bottom:20px;">${product_name}</h2>
+
+2. IMAGE GALLERY — ALL images in a 2-column grid (2 per row)
+   <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+     <div style="flex:0 0 calc(50% - 4px);"><img src="IMAGE_1" alt="product" style="width:100%; height:auto; object-fit:cover; border-radius:8px;"></div>
+     <div style="flex:0 0 calc(50% - 4px);"><img src="IMAGE_2" alt="product" style="width:100%; height:auto; object-fit:cover; border-radius:8px;"></div>
    </div>
 
-2. IMAGE GALLERY — ALL images in a 3-column grid (3 per row), with matched heights
-   <div style="background:#1b1b2f; padding:40px;">
-     <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
-       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_1" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
-       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_2" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
-       <div style="flex:0 0 calc(33.33% - 6px);"><img src="IMAGE_3" alt="product" style="width:100%; height:220px; object-fit:cover; border-radius:8px;"></div>
-       <!-- continue for all images, 3 per row -->
-     </div>
-   </div>
+3. PRODUCT DESCRIPTION — 2-3 sentences about the product
+   <p style="color:#333; font-size:15px; line-height:1.8;">Description text</p>
 
-3. INTRO — Dark bg, centered text, generous padding
-   <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
-     <p style="color:#e0e0e0; font-size:17px; line-height:1.9; max-width:700px; margin:0 auto;">2-3 elegant sentences</p>
-   </div>
+4. KEY FEATURES
+   <h3 style="color:#111; font-size:18px; margin-top:20px;">Features</h3>
+   <ul style="color:#444; font-size:14px; line-height:2;">
+     <li>Feature text</li>
+   </ul>
 
-4. KEY FEATURES — Dark bg with subtle border accents
-   <div style="background:#16213e; padding:50px 40px;">
-     <h3 style="color:#c9a84c; text-align:center; font-size:22px;">Features heading</h3>
-     <ul style="color:#d0d0d0; font-size:15px; line-height:2.2; max-width:600px; margin:20px auto;">
-       <li>Feature with <strong style="color:#fff;">emphasis</strong></li>
-     </ul>
-   </div>
-
-5. DETAILS SECTION — Specs, materials, use cases
-   <div style="background:#1a1a2e; padding:60px 40px; text-align:center;">
-
-6. CLOSING — Order info, CTA feel
-   <div style="background:#0f3460; padding:50px 40px; text-align:center;">
-     <p style="color:#c9a84c; font-size:18px;">Chameleon Printing</p>
-     <p style="color:#808080; font-size:13px;">tagline</p>
-   </div>
+5. DETAILS — Specs, materials, use cases (if applicable)
 
 CRITICAL RULES:
-- Use ALL ${allImages.length} images in a 3-column grid (3 images per row)
-- Grid images: use flex layout with calc(33.33% - 6px) width, 220px height, object-fit:cover
-- If images don't fill a complete row, that's fine (e.g. 8 images = 3+3+2)
-- Every section must have generous padding (50px-80px vertical)
-- Background colors should alternate between the dark palette
-- Text should be light (#e0e0e0, #d0d0d0) on dark backgrounds
-- Headings in gold (#c9a84c) or white
-- Keep text SHORT and ELEGANT — this is a visual showcase, not an essay
-- Make it look like a premium brand's product page
-- NEVER include any price, cost, or monetary amount in the page — no won, yen, dollar amounts
+- Use ALL ${allImages.length} images in a 2-column grid (2 images per row)
+- Grid: flex layout with calc(50% - 4px) width, height:auto
+- NO dark backgrounds — white/transparent only
+- NO dark text colors — use #333 or #111
+- Keep text concise and informative
+- NEVER include any price, cost, or monetary amount
+- Do NOT use <table> tags
 
 ${lc.instruction}
 
