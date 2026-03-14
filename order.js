@@ -1280,7 +1280,10 @@ async function addCanvasToCart() {
         artworkType: product._artworkType || null,
         artworkTypePrice: product._artworkTypePrice || null,
         artworkTypeFixed: product._artworkTypeFixed || false,
-        blindSide: product._blindSide || null
+        blindSide: product._blindSide || null,
+        tshirtColor: product._tshirtColor || null,
+        tshirtColorName: product._tshirtColorName || null,
+        tshirtSize: product._tshirtSize || null
     };
 
     const mmToPx = 3.7795;

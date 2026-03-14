@@ -7295,6 +7295,18 @@ window.showChoiceModal = async function(key) {
                     <button type="button" class="blind-side-btn" data-side="left" onclick="window._selectBlindSide(this)" style="flex:1; padding:10px; border:2px solid #0284c7; border-radius:10px; background:#e0f2fe; cursor:pointer; font-weight:700; font-size:13px; color:#0369a1;">← ${_blindL}</button>
                     <button type="button" class="blind-side-btn" data-side="right" onclick="window._selectBlindSide(this)" style="flex:1; padding:10px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-weight:700; font-size:13px; color:#334155;">${_blindR} →</button>
                 </div>
+            </div>
+            <div id="tshirtOptionBox" style="display:none; background:#fdf4ff; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e9d5ff;">
+                <div style="font-size:12px; font-weight:bold; color:#7c3aed; margin-bottom:10px;">👕 ${lang==='ja'?'Tシャツオプション':lang==='en'?'T-shirt Options':'티셔츠 옵션'}</div>
+                <div style="margin-bottom:10px;">
+                    <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:6px;">${lang==='ja'?'カラー':lang==='en'?'Color':'컬러'}</div>
+                    <div id="tshirtColorBtns" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+                    <div id="tshirtColorLabel" style="font-size:10px; color:#7c3aed; font-weight:600; margin-top:4px;">${lang==='ja'?'ホワイト':lang==='en'?'White':'화이트'}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:6px;">${lang==='ja'?'サイズ':lang==='en'?'Size':'사이즈'}</div>
+                    <div id="tshirtSizeBtns" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+                </div>
             </div>`;
     }
 
@@ -7501,6 +7513,37 @@ window.showChoiceModal = async function(key) {
             if (window.calcCustomPrice) window.calcCustomPrice();
             if (window.updateModalTotal) window.updateModalTotal();
         }, 50);
+    }
+
+    // ★ 티셔츠 컬러/사이즈 버튼 동적 생성
+    const _tColorBox = document.getElementById('tshirtColorBtns');
+    const _tSizeBox = document.getElementById('tshirtSizeBtns');
+    if (_tColorBox) {
+        const _tColors = [
+            {code:'white', name:lang==='ja'?'ホワイト':lang==='en'?'White':'화이트', hex:'#FFFFFF', border:true},
+            {code:'black', name:lang==='ja'?'ブラック':lang==='en'?'Black':'블랙', hex:'#1a1a1a'},
+            {code:'navy', name:lang==='ja'?'ネイビー':lang==='en'?'Navy':'네이비', hex:'#1e3a5f'},
+            {code:'gray', name:lang==='ja'?'グレー':lang==='en'?'Gray':'그레이', hex:'#9ca3af'},
+            {code:'red', name:lang==='ja'?'レッド':lang==='en'?'Red':'레드', hex:'#dc2626'},
+            {code:'blue', name:lang==='ja'?'ブルー':lang==='en'?'Blue':'블루', hex:'#2563eb'},
+            {code:'pink', name:lang==='ja'?'ピンク':lang==='en'?'Pink':'핑크', hex:'#ec4899'},
+            {code:'yellow', name:lang==='ja'?'イエロー':lang==='en'?'Yellow':'옐로우', hex:'#eab308'},
+            {code:'green', name:lang==='ja'?'グリーン':lang==='en'?'Green':'그린', hex:'#16a34a'},
+            {code:'orange', name:lang==='ja'?'オレンジ':lang==='en'?'Orange':'오렌지', hex:'#ea580c'}
+        ];
+        _tColorBox.innerHTML = _tColors.map((c, i) => {
+            const sel = i === 0;
+            const bd = sel ? '#7c3aed' : (c.border ? '#d1d5db' : 'transparent');
+            const shadow = sel ? 'box-shadow:0 0 0 2px #7c3aed;' : '';
+            return '<button type="button" class="tshirt-color-btn" data-color="' + c.code + '" data-colorname="' + c.name + '" onclick="window._selectTshirtColor(this)" style="width:32px; height:32px; border-radius:50%; background:' + c.hex + '; border:2px solid ' + bd + '; cursor:pointer; transition:all 0.15s; ' + shadow + '" title="' + c.name + '"></button>';
+        }).join('');
+    }
+    if (_tSizeBox) {
+        const _tSizes = ['XS','S','M','L','XL','2XL','3XL'];
+        _tSizeBox.innerHTML = _tSizes.map((s, i) => {
+            const sel = i === 2; // M default
+            return '<button type="button" class="tshirt-size-btn" data-size="' + s + '" onclick="window._selectTshirtSize(this)" style="padding:6px 12px; border:2px solid ' + (sel ? '#7c3aed' : '#e2e8f0') + '; border-radius:8px; background:' + (sel ? '#f3e8ff' : '#fff') + '; cursor:pointer; font-size:12px; font-weight:700; color:' + (sel ? '#7c3aed' : '#334155') + '; transition:all 0.15s;">' + s + '</button>';
+        }).join('');
     }
 
     // ★ 상품 설명 내 링크 → 새 탭으로 열기 (페이지 이탈 방지)
@@ -8054,6 +8097,10 @@ if (w >= 20 && h >= 20) {
         const blindBox = document.getElementById('blindOptionBox');
         if (blindBox) blindBox.style.display = isBlind ? '' : 'none';
 
+        // ★ 티셔츠 옵션: tshirt만 보이기
+        const tshirtBox = document.getElementById('tshirtOptionBox');
+        if (tshirtBox) tshirtBox.style.display = (typeKey === 'tshirt') ? '' : 'none';
+
         window.calcCustomPrice();
         window.updateModalTotal();
     };
@@ -8070,6 +8117,37 @@ if (w >= 20 && h >= 20) {
         btn.style.color = '#0369a1';
         if (window.selectedProductForChoice) {
             window.selectedProductForChoice._blindSide = btn.dataset.side;
+        }
+    };
+
+    // ★ 티셔츠 컬러 선택 핸들러
+    window._selectTshirtColor = function(btn) {
+        document.querySelectorAll('.tshirt-color-btn').forEach(b => {
+            b.style.borderColor = b.dataset.color === 'white' ? '#d1d5db' : 'transparent';
+            b.style.boxShadow = 'none';
+        });
+        btn.style.borderColor = '#7c3aed';
+        btn.style.boxShadow = '0 0 0 2px #7c3aed';
+        const label = document.getElementById('tshirtColorLabel');
+        if (label) label.textContent = btn.dataset.colorname;
+        if (window.selectedProductForChoice) {
+            window.selectedProductForChoice._tshirtColor = btn.dataset.color;
+            window.selectedProductForChoice._tshirtColorName = btn.dataset.colorname;
+        }
+    };
+
+    // ★ 티셔츠 사이즈 선택 핸들러
+    window._selectTshirtSize = function(btn) {
+        document.querySelectorAll('.tshirt-size-btn').forEach(b => {
+            b.style.borderColor = '#e2e8f0';
+            b.style.background = '#fff';
+            b.style.color = '#334155';
+        });
+        btn.style.borderColor = '#7c3aed';
+        btn.style.background = '#f3e8ff';
+        btn.style.color = '#7c3aed';
+        if (window.selectedProductForChoice) {
+            window.selectedProductForChoice._tshirtSize = btn.dataset.size;
         }
     };
 
