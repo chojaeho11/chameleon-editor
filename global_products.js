@@ -2049,6 +2049,7 @@ window._ciLoadSubCats = async () => {
     if (topCode === 'all') {
         subSel.disabled = true;
         _ciGetTarget();
+        window._ciLoadContent();
         return;
     }
     subSel.disabled = false;
@@ -2057,6 +2058,7 @@ window._ciLoadSubCats = async () => {
         subSel.innerHTML += `<option value="${c.code}">${c.name}</option>`;
     });
     _ciGetTarget();
+    window._ciLoadContent();
 };
 
 window._ciLoadProducts = async () => {
@@ -2068,6 +2070,7 @@ window._ciLoadProducts = async () => {
     if (!subCode) {
         prodSel.disabled = true;
         _ciGetTarget();
+        window._ciLoadContent();
         return;
     }
     prodSel.disabled = false;
@@ -2076,6 +2079,7 @@ window._ciLoadProducts = async () => {
         prodSel.innerHTML += `<option value="${p.id}">${p.name} (${p.code})</option>`;
     });
     _ciGetTarget();
+    window._ciLoadContent();
 };
 
 // 현재 선택된 레벨과 코드 결정
@@ -2153,8 +2157,26 @@ window._ciLoadContent = async () => {
             _ciBackupData = null;
         }
     }
-    // 기존 내용이 있으면 미리보기 표시
+    // 기존 내용 상태 표시
     const krHtml = document.getElementById('ciHtmlKR').value;
+    const statusBox = document.getElementById('ciExistingStatus');
+    if (statusBox) {
+        const langs = [];
+        if (document.getElementById('ciHtmlKR').value) langs.push('🇰🇷');
+        if (document.getElementById('ciHtmlJP').value) langs.push('🇯🇵');
+        if (document.getElementById('ciHtmlUS').value) langs.push('🇺🇸');
+        if (document.getElementById('ciHtmlCN').value) langs.push('🇨🇳');
+        if (document.getElementById('ciHtmlAR').value) langs.push('🇸🇦');
+        if (document.getElementById('ciHtmlES').value) langs.push('🇪🇸');
+        if (document.getElementById('ciHtmlDE').value) langs.push('🇩🇪');
+        if (document.getElementById('ciHtmlFR').value) langs.push('🇫🇷');
+        if (langs.length > 0) {
+            statusBox.style.display = 'block';
+            document.getElementById('ciExistingLangs').textContent = langs.join(' ');
+        } else {
+            statusBox.style.display = 'none';
+        }
+    }
     if (krHtml && krHtml.length > 10) {
         _ciShowPreview(krHtml);
     }
@@ -2473,6 +2495,40 @@ window._ciRestoreBackup = () => {
     document.getElementById('ciHtmlFR').value = _ciBackupData.content_backup_fr || '';
     _ciShowPreview(_ciBackupData.content_backup || '');
     showToast('백업 불러옴. [저장 및 적용]을 눌러 확정하세요.', 'info');
+};
+
+// 기존 내용 미리보기 버튼
+window._ciPreviewExisting = () => {
+    const krHtml = document.getElementById('ciHtmlKR').value;
+    if (krHtml) _ciShowPreview(krHtml);
+    else showToast('미리볼 내용이 없습니다.', 'info');
+};
+
+// 기존 내용 삭제
+window._ciDelete = async () => {
+    const dbClient = window.sb || window._supabase;
+    const target = _ciGetTarget();
+    if (!confirm(`[${target.label}] "${target.name}" 의 상세정보를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+
+    if (target.mode === 'product') {
+        const { error } = await dbClient.from('admin_products').update({
+            description: null, description_jp: null, description_us: null, description_cn: null,
+            description_ar: null, description_es: null, description_de: null, description_fr: null
+        }).eq('id', target.id);
+        if (error) { showToast('삭제 실패: ' + error.message, 'error'); return; }
+        showToast('제품 상세페이지 삭제 완료!', 'success');
+    } else {
+        const { error } = await dbClient.from('common_info')
+            .delete().eq('section', 'top').eq('category_code', target.code);
+        if (error) { showToast('삭제 실패: ' + error.message, 'error'); return; }
+        showToast('공통 정보 삭제 완료!', 'success');
+    }
+    // 입력 필드 초기화
+    ['KR','JP','US','CN','AR','ES','DE','FR'].forEach(l => { document.getElementById('ciHtml'+l).value = ''; });
+    const statusBox = document.getElementById('ciExistingStatus');
+    if (statusBox) statusBox.style.display = 'none';
+    document.getElementById('ciPreviewSection').style.display = 'none';
+    document.getElementById('ciSaveSection').style.display = 'none';
 };
 
 // 기존 호환용 - old functions redirect
