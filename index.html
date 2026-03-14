@@ -9762,27 +9762,38 @@ if (w >= 20 && h >= 20) {
         // ★ 고객작품: 에디터 진입 시 작품 이미지를 캔버스에 자동 배치
         const _isArtworkKey = typeof key === 'string' && key.startsWith('ua_');
         if (_isArtworkKey && product && product.img_url) {
+            console.log('🎨 작품 이미지 로딩 시작:', product.img_url);
             setTimeout(() => {
-                fabric.Image.fromURL(product.img_url, (img) => {
-                    if (!img || !canvas) return;
+                const _placeArtwork = (imgEl) => {
+                    if (!imgEl || !canvas) { console.warn('🎨 작품 이미지 로딩 실패'); return; }
                     const board = canvas.getObjects().find(o => o.isBoard);
                     const bW = board ? board.width * board.scaleX : canvasW;
                     const bH = board ? board.height * board.scaleY : canvasH;
                     const bLeft = board ? board.left : 0;
                     const bTop = board ? board.top : 0;
-                    const scale = Math.min(bW / img.width, bH / img.height);
-                    img.set({
-                        left: bLeft + (bW - img.width * scale) / 2,
-                        top: bTop + (bH - img.height * scale) / 2,
-                        scaleX: scale,
-                        scaleY: scale,
-                        selectable: true
+                    const scale = Math.min(bW / imgEl.width, bH / imgEl.height);
+                    imgEl.set({
+                        left: bLeft + (bW - imgEl.width * scale) / 2,
+                        top: bTop + (bH - imgEl.height * scale) / 2,
+                        scaleX: scale, scaleY: scale, selectable: true
                     });
-                    canvas.add(img);
-                    canvas.setActiveObject(img);
+                    canvas.add(imgEl);
+                    canvas.setActiveObject(imgEl);
                     canvas.renderAll();
-                }, { crossOrigin: 'anonymous' });
-            }, 800);
+                    console.log('🎨 작품 이미지 배치 완료');
+                };
+                // Fabric.js 5.x fromURL (callback)
+                try {
+                    fabric.Image.fromURL(product.img_url, _placeArtwork, { crossOrigin: 'anonymous' });
+                } catch(e) {
+                    console.warn('🎨 fabric.Image.fromURL 실패, HTMLImage fallback:', e);
+                    const _fi = new Image();
+                    _fi.crossOrigin = 'anonymous';
+                    _fi.onload = () => { const fi = new fabric.Image(_fi); _placeArtwork(fi); };
+                    _fi.onerror = () => console.error('🎨 작품 이미지 로딩 완전 실패:', product.img_url);
+                    _fi.src = product.img_url;
+                }
+            }, 1200);
         }
 
         // ★ 사이즈고정상품: 에디터 내 사이즈 변경 UI 비활성화
