@@ -596,7 +596,11 @@ if ('caches' in window) {
         </div>
         
         <div style="flex:1;"></div>
-        
+
+        <button class="btn" id="btnCropCanvas" onclick="window.startCanvasCrop()" style="display:none; margin-right:5px; background:#fff; border:1px solid #6366f1; color:#6366f1; padding:8px 12px; font-weight:700;">
+            <i class="fa-solid fa-crop"></i> <span data-i18n="btn_crop_canvas">자르기</span>
+        </button>
+
         <button class="btn" id="btnHomeTop" onclick="window.goHome()" style="margin-right:5px; background:rgb(206, 14, 78); border:1px solid #ddd; color:#ffffff; padding:8px 12px;">
     <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
 </button>
@@ -6302,6 +6306,150 @@ window._navNavigating = false; // popstate 처리 중 pushState 방지 플래그
 history.replaceState({ type: 'home' }, '', window.location.href);
 
 // [신규] 언어 설정을 유지하면서 홈으로 이동하는 함수
+// ★ 대지 자르기 (Canvas Crop) 기능
+window.startCanvasCrop = function() {
+    const canvas = window.canvas;
+    if (!canvas) return;
+
+    // 이미 크롭 모드이면 취소
+    if (window._cropOverlay) { window.cancelCanvasCrop(); return; }
+
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
+
+    const lang = window.CURRENT_LANG || 'kr';
+
+    // 크롭 영역 사각형 (반투명 오버레이 + 드래그/리사이즈 가능)
+    const cropRect = new fabric.Rect({
+        left: board.left + board.width * 0.1,
+        top: board.top + board.height * 0.1,
+        width: board.width * 0.8,
+        height: board.height * 0.8,
+        fill: 'rgba(99,102,241,0.08)',
+        stroke: '#6366f1',
+        strokeWidth: 2,
+        strokeDashArray: [8, 4],
+        cornerColor: '#6366f1',
+        cornerStrokeColor: '#fff',
+        cornerSize: 12,
+        transparentCorners: false,
+        cornerStyle: 'circle',
+        borderColor: '#6366f1',
+        borderScaleFactor: 2,
+        hasRotatingPoint: false,
+        lockRotation: true,
+        isCropRect: true,
+        excludeFromExport: true
+    });
+    canvas.add(cropRect);
+    canvas.setActiveObject(cropRect);
+    canvas.bringToFront(cropRect);
+    window._cropOverlay = cropRect;
+
+    // 크롭 확인/취소 버튼 UI
+    const bar = document.createElement('div');
+    bar.id = 'cropActionBar';
+    bar.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:10010; display:flex; gap:10px; background:#fff; padding:10px 16px; border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.2); align-items:center;';
+
+    const _mmToPx = 3.7795;
+    const infoSpan = document.createElement('span');
+    infoSpan.id = 'cropSizeInfo';
+    infoSpan.style.cssText = 'font-size:12px; color:#6366f1; font-weight:700; min-width:120px;';
+    const cW = Math.round(cropRect.width * cropRect.scaleX / _mmToPx);
+    const cH = Math.round(cropRect.height * cropRect.scaleY / _mmToPx);
+    infoSpan.textContent = cW + ' × ' + cH + ' mm';
+    bar.appendChild(infoSpan);
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.style.cssText = 'padding:10px 24px; background:#6366f1; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer;';
+    confirmBtn.innerHTML = '<i class="fa-solid fa-check"></i> ' + (lang==='ja'?'切り抜き適用':lang==='en'?'Apply Crop':'자르기 적용');
+    confirmBtn.onclick = () => window.applyCanvasCrop();
+    bar.appendChild(confirmBtn);
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.style.cssText = 'padding:10px 20px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer;';
+    cancelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> ' + (lang==='ja'?'キャンセル':lang==='en'?'Cancel':'취소');
+    cancelBtn.onclick = () => window.cancelCanvasCrop();
+    bar.appendChild(cancelBtn);
+
+    document.body.appendChild(bar);
+
+    // 크롭 사각형 이동/리사이즈 시 사이즈 실시간 표시
+    const _updateCropInfo = () => {
+        const info = document.getElementById('cropSizeInfo');
+        if (info && window._cropOverlay) {
+            const r = window._cropOverlay;
+            const w = Math.round(r.width * r.scaleX / _mmToPx);
+            const h = Math.round(r.height * r.scaleY / _mmToPx);
+            info.textContent = w + ' × ' + h + ' mm';
+        }
+    };
+    canvas.on('object:scaling', (e) => { if (e.target && e.target.isCropRect) _updateCropInfo(); });
+    canvas.on('object:moving', (e) => { if (e.target && e.target.isCropRect) _updateCropInfo(); });
+    window._cropEventCleanup = () => {
+        canvas.off('object:scaling');
+        canvas.off('object:moving');
+    };
+
+    // 버튼 스타일 변경
+    const cropBtn = document.getElementById('btnCropCanvas');
+    if (cropBtn) { cropBtn.style.background = '#6366f1'; cropBtn.style.color = '#fff'; }
+};
+
+window.applyCanvasCrop = function() {
+    const canvas = window.canvas;
+    const cropRect = window._cropOverlay;
+    if (!canvas || !cropRect) return;
+
+    const board = canvas.getObjects().find(o => o.isBoard);
+    if (!board) return;
+
+    // 크롭 영역 좌표 (절대)
+    const cropLeft = cropRect.left;
+    const cropTop = cropRect.top;
+    const cropW = cropRect.width * cropRect.scaleX;
+    const cropH = cropRect.height * cropRect.scaleY;
+
+    // 크롭 사각형 제거
+    canvas.remove(cropRect);
+    window._cropOverlay = null;
+
+    // 모든 오브젝트를 크롭 영역 기준으로 이동
+    const objects = canvas.getObjects().filter(o => !o.isBoard);
+    objects.forEach(o => {
+        o.left = o.left - cropLeft;
+        o.top = o.top - cropTop;
+        o.setCoords();
+    });
+
+    // 새 대지 크기 적용
+    import('./canvas-size.js?v=186').then(mod => {
+        if (mod.applySize) {
+            mod.applySize(Math.round(cropW), Math.round(cropH), 'CroppedCustom', 'standard', 'resize');
+            // 오브젝트 다시 추가 (applySize가 resize 모드에서 보존)
+        }
+    });
+
+    // UI 정리
+    window.cancelCanvasCrop(true);
+};
+
+window.cancelCanvasCrop = function(skipRemoveRect) {
+    const canvas = window.canvas;
+    if (!skipRemoveRect && window._cropOverlay && canvas) {
+        canvas.remove(window._cropOverlay);
+    }
+    window._cropOverlay = null;
+
+    const bar = document.getElementById('cropActionBar');
+    if (bar) bar.remove();
+
+    if (window._cropEventCleanup) { window._cropEventCleanup(); window._cropEventCleanup = null; }
+
+    const cropBtn = document.getElementById('btnCropCanvas');
+    if (cropBtn) { cropBtn.style.background = '#fff'; cropBtn.style.color = '#6366f1'; }
+};
+
 window.goHome = function() {
     // 티셔츠 색상 패널 제거
     const _tcp = document.getElementById('tshirtColorPanel');
@@ -9567,6 +9715,10 @@ if (w >= 20 && h >= 20) {
         if(tplTabs) tplTabs.style.display = 'flex';
         document.body.classList.add('editor-active');
         window.history.pushState({ type: 'editor' }, '');
+
+        // ★ 대지 자르기 버튼 표시
+        const _cropBtn = document.getElementById('btnCropCanvas');
+        if (_cropBtn) _cropBtn.style.display = '';
 
         // 사이드바: PC에서 기본으로 요소 패널 + 팔레트 열기
         if (window.innerWidth > 768) {

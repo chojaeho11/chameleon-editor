@@ -1582,6 +1582,7 @@
   "dsm_size_error": "Please enter width and height correctly.",
   "dsm_editor_error": "An error occurred while loading the editor.",
   "img_tool_replace": "Replace",
+  "btn_crop_canvas": "Crop",
   "menu_retouch": "Retouch",
   "panel_retouch": "Portrait Retouch",
   "retouch_select_image": "Select an image on canvas",

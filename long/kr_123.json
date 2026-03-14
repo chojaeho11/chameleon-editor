@@ -1189,6 +1189,7 @@
   "dsm_size_error": "가로/세로를 올바르게 입력해주세요.",
   "dsm_editor_error": "에디터를 불러오는 중 오류가 발생했습니다.",
   "img_tool_replace": "교체",
+  "btn_crop_canvas": "자르기",
   "menu_retouch": "보정",
   "panel_retouch": "인물 보정",
   "retouch_select_image": "캔버스에서 이미지를 선택하세요",
