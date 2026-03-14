@@ -992,9 +992,7 @@ window.runImageTemplateDesign = async function(keyword) {
                 { offset: 1, color: 'rgba(0,0,0,0.75)' }
             ]
         }),
-        selectable: false, evented: false,
-        lockMovementX: true, lockMovementY: true,
-        hasControls: false, hasBorders: false
+        selectable: true, evented: true,
     });
     canvas.add(bottomOverlay);
     // 배경 바로 위로
@@ -1268,7 +1266,6 @@ export async function runDesignWizardForLetterSign(titleText, bottomText, style)
         originX: 'center', originY: 'top',
         left: bL + bW / 2 + 3, top: titleTop + 4,
         width: bW * 0.90, lineHeight: 1.1, charSpacing: 50,
-        selectable: false, evented: false,
     }));
 
     // 타이틀 메인 (테마색 = 박스색)
@@ -1392,10 +1389,6 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
                     scaleX: scale, scaleY: scale,
                     left: bL + bW / 2, top: bT + bH / 2,
                     originX: 'center', originY: 'center',
-                    selectable: false, evented: false,
-                    lockMovementX: true, lockMovementY: true,
-                    lockRotation: true, lockScalingX: true, lockScalingY: true,
-                    hasControls: false, hasBorders: false,
                     isTemplateBackground: true
                 });
                 canvas.add(img);
@@ -1424,10 +1417,6 @@ async function _wzBg(keywords, bW, bH, bL, bT) {
         left: bL - 2, top: bT - 2,
         originX:'left', originY:'top',
         fill: gradFill,
-        selectable: false, evented: false,
-        lockMovementX: true, lockMovementY: true,
-        lockRotation: true, lockScalingX: true, lockScalingY: true,
-        hasControls: false, hasBorders: false,
         isTemplateBackground: true
     });
     canvas.add(bgRect);
