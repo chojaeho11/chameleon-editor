@@ -1960,104 +1960,310 @@ window.initPopupQuill = () => {
     if(divBtn) { divBtn.innerHTML = '<b>―</b>'; divBtn.title = "구분선 넣기"; }
 };
 // ==========================================
-// [개선] 공통 정보(Common Info) 관리 로직 (다국어 + 카테고리 + 백업)
+// [통합] 상세페이지 편집기 (공통정보 + 소분류 + 제품 상세)
 // ==========================================
+let _ciQuill = null;
+let _ciCurrentLang = 'KR';
+let _ciBackupData = null;
+let _ciEditMode = 'common'; // 'common' or 'product'
+let _ciEditProductId = null;
+
 window.openCommonInfoModal = async () => {
     const dbClient = window.sb || window._supabase;
-    if (!dbClient) { showToast(_t('err_db_connection','DB connection failed'), "error"); return; }
-
+    if (!dbClient) { showToast('DB 연결 실패', 'error'); return; }
     document.getElementById('commonInfoModal').style.display = 'flex';
-    
-    // 카테고리 목록 로드
-    const catSelect = document.getElementById('commonInfoCategory');
-    if (catSelect.options.length <= 1) { 
-        const { data: cats } = await dbClient.from('admin_top_categories').select('code, name');
-        if(cats) {
+
+    // Quill 초기화
+    if (!_ciQuill) {
+        _ciQuill = new Quill('#ci-quill-editor', {
+            theme: 'snow',
+            modules: { toolbar: [
+                [{ header: [1,2,3,false] }], ['bold','italic','underline','strike'],
+                [{ color: [] }, { background: [] }], [{ align: [] }],
+                ['link','image','video'], ['blockquote','code-block'],
+                [{ list:'ordered' }, { list:'bullet' }], ['clean']
+            ]},
+            placeholder: '한국어 상세 내용을 입력하세요...'
+        });
+    }
+
+    // 대분류 로드
+    const topSel = document.getElementById('ciTopCat');
+    if (topSel.options.length <= 2) {
+        const { data: cats } = await dbClient.from('admin_top_categories').select('code, name').order('sort_order');
+        if (cats) {
+            // 기본 대분류 그룹
+            const grp = document.createElement('optgroup');
+            grp.label = '기본 대분류';
             cats.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.code;
-                opt.innerText = c.name;
-                catSelect.appendChild(opt);
+                const o = document.createElement('option');
+                o.value = c.code; o.textContent = c.name;
+                grp.appendChild(o);
             });
+            topSel.appendChild(grp);
         }
     }
-    loadCommonInfoContent('all');
+    document.getElementById('ciSubCat').disabled = true;
+    document.getElementById('ciProduct').disabled = true;
+    _ciLoadContent();
 };
 
-window.loadCommonInfoContent = async (categoryCode) => {
+window._ciLoadSubCats = async () => {
     const dbClient = window.sb || window._supabase;
-    ['commonHtmlKR', 'commonHtmlJP', 'commonHtmlUS', 'commonHtmlCN', 'commonHtmlAR', 'commonHtmlES', 'commonHtmlDE', 'commonHtmlFR'].forEach(id => { const el = document.getElementById(id); if(el) el.value = "로딩 중..."; });
+    const topCode = document.getElementById('ciTopCat').value;
+    const subSel = document.getElementById('ciSubCat');
+    const prodSel = document.getElementById('ciProduct');
+    subSel.innerHTML = '<option value="">-- 전체 --</option>';
+    prodSel.innerHTML = '<option value="">-- 전체 --</option>';
+    prodSel.disabled = true;
 
-    const { data } = await dbClient.from('common_info').select('*')
-        .eq('section', 'top').eq('category_code', categoryCode).single();
+    if (topCode === 'all' || topCode === 'custom_sale') {
+        subSel.disabled = true;
+        _ciLoadContent();
+        return;
+    }
+    subSel.disabled = false;
+    const { data } = await dbClient.from('admin_categories').select('code, name').eq('top_category_code', topCode).order('sort_order');
+    (data || []).forEach(c => {
+        subSel.innerHTML += `<option value="${c.code}">${c.name}</option>`;
+    });
+    _ciLoadContent();
+};
 
-    document.getElementById('commonHtmlKR').value = data ? (data.content || '') : '';
-    document.getElementById('commonHtmlJP').value = data ? (data.content_jp || '') : '';
-    document.getElementById('commonHtmlUS').value = data ? (data.content_us || '') : '';
-    document.getElementById('commonHtmlCN').value = data ? (data.content_cn || '') : '';
-    document.getElementById('commonHtmlAR').value = data ? (data.content_ar || '') : '';
-    document.getElementById('commonHtmlES').value = data ? (data.content_es || '') : '';
-    document.getElementById('commonHtmlDE').value = data ? (data.content_de || '') : '';
-    document.getElementById('commonHtmlFR').value = data ? (data.content_fr || '') : '';
-    
-    const btnRestore = document.getElementById('btnRestoreCommon');
-    if (data && (data.content_backup || data.content_backup_jp)) {
-        btnRestore.disabled = false;
-        btnRestore.innerText = "↺ 이전 백업 불러오기";
-        btnRestore.onclick = () => restoreCommonInfo(data);
+window._ciLoadProducts = async () => {
+    const dbClient = window.sb || window._supabase;
+    const subCode = document.getElementById('ciSubCat').value;
+    const prodSel = document.getElementById('ciProduct');
+    prodSel.innerHTML = '<option value="">-- 전체 --</option>';
+
+    if (!subCode) {
+        prodSel.disabled = true;
+        _ciLoadContent();
+        return;
+    }
+    prodSel.disabled = false;
+    const { data } = await dbClient.from('admin_products').select('id, code, name').eq('category', subCode).order('name');
+    (data || []).forEach(p => {
+        prodSel.innerHTML += `<option value="${p.id}">${p.name} (${p.code})</option>`;
+    });
+    _ciLoadContent();
+};
+
+// 현재 선택된 레벨과 코드 결정
+function _ciGetTarget() {
+    const top = document.getElementById('ciTopCat').value;
+    const sub = document.getElementById('ciSubCat').value;
+    const prod = document.getElementById('ciProduct').value;
+    const badge = document.getElementById('ciLevelBadge');
+
+    if (prod) {
+        badge.textContent = '제품 상세';
+        badge.style.background = '#059669';
+        return { mode: 'product', id: prod, label: '제품 상세' };
+    }
+    if (sub) {
+        badge.textContent = '소분류 공통';
+        badge.style.background = '#d97706';
+        return { mode: 'common', code: sub, label: '소분류: ' + sub };
+    }
+    if (top && top !== 'all' && top !== 'custom_sale') {
+        badge.textContent = '대분류 공통';
+        badge.style.background = '#2563eb';
+        return { mode: 'common', code: top, label: '대분류: ' + top };
+    }
+    if (top === 'custom_sale') {
+        badge.textContent = '고객직품판매';
+        badge.style.background = '#7c3aed';
+        return { mode: 'common', code: 'custom_sale', label: '고객직품판매' };
+    }
+    badge.textContent = '전체 공통';
+    badge.style.background = '#7c3aed';
+    return { mode: 'common', code: 'all', label: '전체 공통' };
+}
+
+window._ciLoadContent = async () => {
+    const dbClient = window.sb || window._supabase;
+    const target = _ciGetTarget();
+
+    // 현재 탭 한국어로 초기화
+    _ciCurrentLang = 'KR';
+    document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.ci-lang-tab[data-lang="KR"]').classList.add('active');
+    ['KR','JP','US','CN','AR','ES','DE','FR'].forEach(l => { document.getElementById('ciHtml'+l).value = ''; });
+
+    if (target.mode === 'product') {
+        _ciEditMode = 'product';
+        _ciEditProductId = target.id;
+        const { data } = await dbClient.from('admin_products').select('*').eq('id', target.id).single();
+        if (data) {
+            document.getElementById('ciHtmlKR').value = data.description || '';
+            document.getElementById('ciHtmlJP').value = data.description_jp || '';
+            document.getElementById('ciHtmlUS').value = data.description_us || '';
+            document.getElementById('ciHtmlCN').value = data.description_cn || '';
+            document.getElementById('ciHtmlAR').value = data.description_ar || '';
+            document.getElementById('ciHtmlES').value = data.description_es || '';
+            document.getElementById('ciHtmlDE').value = data.description_de || '';
+            document.getElementById('ciHtmlFR').value = data.description_fr || '';
+        }
+        _ciBackupData = null;
+        document.getElementById('btnCiRestore').disabled = true;
     } else {
-        btnRestore.disabled = true;
-        btnRestore.innerText = "이전 백업 없음";
+        _ciEditMode = 'common';
+        _ciEditProductId = null;
+        const { data } = await dbClient.from('common_info').select('*')
+            .eq('section', 'top').eq('category_code', target.code).single();
+        if (data) {
+            document.getElementById('ciHtmlKR').value = data.content || '';
+            document.getElementById('ciHtmlJP').value = data.content_jp || '';
+            document.getElementById('ciHtmlUS').value = data.content_us || '';
+            document.getElementById('ciHtmlCN').value = data.content_cn || '';
+            document.getElementById('ciHtmlAR').value = data.content_ar || '';
+            document.getElementById('ciHtmlES').value = data.content_es || '';
+            document.getElementById('ciHtmlDE').value = data.content_de || '';
+            document.getElementById('ciHtmlFR').value = data.content_fr || '';
+            _ciBackupData = (data.content_backup || data.content_backup_jp) ? data : null;
+        } else {
+            _ciBackupData = null;
+        }
+        const btnR = document.getElementById('btnCiRestore');
+        btnR.disabled = !_ciBackupData;
+    }
+
+    // Quill에 한국어 로드
+    const krHtml = document.getElementById('ciHtmlKR').value;
+    _ciQuill.root.innerHTML = (krHtml && krHtml !== '<p><br></p>') ? krHtml : '';
+};
+
+window._ciSwitchLang = (lang) => {
+    // 현재 탭 저장
+    const curHtml = _ciQuill.root.innerHTML;
+    if (curHtml !== '<p><br></p>') {
+        document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
+    }
+    // 새 탭 로드
+    _ciCurrentLang = lang;
+    const saved = document.getElementById('ciHtml' + lang).value;
+    _ciQuill.root.innerHTML = (saved && saved !== '<p><br></p>') ? saved : '';
+    document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.ci-lang-tab[data-lang="${lang}"]`).classList.add('active');
+};
+
+window._ciAutoTranslate = async () => {
+    // 현재 탭 저장
+    const curHtml = _ciQuill.root.innerHTML;
+    document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
+
+    const sourceHtml = document.getElementById('ciHtmlKR').value;
+    if (!sourceHtml || sourceHtml === '<p><br></p>') { showToast('번역할 한국어 내용이 없습니다.', 'warn'); return; }
+    if (!confirm('한국어 내용을 Claude AI로 7개 국어에 번역합니다. 진행하시겠습니까?')) return;
+
+    const btn = document.getElementById('btnCiTranslate');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
+    btn.disabled = true;
+
+    try {
+        const dbClient = window.sb || window._supabase;
+        const { data, error } = await dbClient.functions.invoke('translate', {
+            body: { text: sourceHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
+        });
+        if (error) throw error;
+        const tr = data?.translations || {};
+        if (tr.ja) document.getElementById('ciHtmlJP').value = tr.ja;
+        if (tr.en) document.getElementById('ciHtmlUS').value = tr.en;
+        if (tr.zh) document.getElementById('ciHtmlCN').value = tr.zh;
+        if (tr.ar) document.getElementById('ciHtmlAR').value = tr.ar;
+        if (tr.es) document.getElementById('ciHtmlES').value = tr.es;
+        if (tr.de) document.getElementById('ciHtmlDE').value = tr.de;
+        if (tr.fr) document.getElementById('ciHtmlFR').value = tr.fr;
+
+        // 현재 탭이 KR이 아니면 새 번역 내용 로드
+        if (_ciCurrentLang !== 'KR') {
+            const v = document.getElementById('ciHtml' + _ciCurrentLang).value;
+            _ciQuill.root.innerHTML = v || '';
+        }
+        showToast('7개국 번역 완료! 탭을 눌러 확인하세요.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('번역 중 오류 발생: ' + (e.message || e), 'error');
+    } finally {
+        btn.innerHTML = '<i class="fa-solid fa-language"></i> Claude AI 자동번역';
+        btn.disabled = false;
     }
 };
 
-window.saveCommonInfo = async () => {
+window._ciSave = async () => {
     const dbClient = window.sb || window._supabase;
-    const catCode = document.getElementById('commonInfoCategory').value || 'all';
-    
-    if(!confirm(`[${catCode === 'all' ? '전체상품' : catCode}] 공통정보를 저장하시겠습니까?`)) return;
+    const target = _ciGetTarget();
 
-    // 기존 데이터 백업용 조회
-    const { data: oldData } = await dbClient.from('common_info')
-        .select('*').eq('section', 'top').eq('category_code', catCode).single();
+    // 현재 탭 저장
+    const curHtml = _ciQuill.root.innerHTML;
+    if (curHtml !== '<p><br></p>') {
+        document.getElementById('ciHtml' + _ciCurrentLang).value = curHtml;
+    }
 
-    const payload = {
-        section: 'top', category_code: catCode,
-        content: document.getElementById('commonHtmlKR').value,
-        content_jp: document.getElementById('commonHtmlJP').value,
-        content_us: document.getElementById('commonHtmlUS').value,
-        content_cn: document.getElementById('commonHtmlCN').value,
-        content_ar: document.getElementById('commonHtmlAR').value,
-        content_es: document.getElementById('commonHtmlES').value,
-        content_de: document.getElementById('commonHtmlDE').value,
-        content_fr: document.getElementById('commonHtmlFR').value,
-        content_backup: oldData ? oldData.content : null,
-        content_backup_jp: oldData ? oldData.content_jp : null,
-        content_backup_us: oldData ? oldData.content_us : null,
-        content_backup_cn: oldData ? oldData.content_cn : null,
-        content_backup_ar: oldData ? oldData.content_ar : null,
-        content_backup_es: oldData ? oldData.content_es : null,
-        content_backup_de: oldData ? oldData.content_de : null,
-        content_backup_fr: oldData ? oldData.content_fr : null
-    };
+    if (!confirm(`[${target.label}] 상세정보를 저장하시겠습니까?`)) return;
 
-    const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
-    if (error) showToast(_t('err_save_failed','Save failed: ') + error.message, "error");
-    else { showToast(_t('msg_saved_and_backed_up','Saved and backed up!'), "success"); loadCommonInfoContent(catCode); }
+    const kr = document.getElementById('ciHtmlKR').value;
+    const jp = document.getElementById('ciHtmlJP').value;
+    const us = document.getElementById('ciHtmlUS').value;
+    const cn = document.getElementById('ciHtmlCN').value;
+    const ar = document.getElementById('ciHtmlAR').value;
+    const es = document.getElementById('ciHtmlES').value;
+    const de = document.getElementById('ciHtmlDE').value;
+    const fr = document.getElementById('ciHtmlFR').value;
+
+    if (target.mode === 'product') {
+        const { error } = await dbClient.from('admin_products').update({
+            description: kr, description_jp: jp, description_us: us, description_cn: cn,
+            description_ar: ar, description_es: es, description_de: de, description_fr: fr
+        }).eq('id', target.id);
+        if (error) showToast('저장 실패: ' + error.message, 'error');
+        else showToast('제품 상세페이지 저장 완료!', 'success');
+    } else {
+        // 기존 백업
+        const { data: oldData } = await dbClient.from('common_info')
+            .select('*').eq('section', 'top').eq('category_code', target.code).single();
+        const payload = {
+            section: 'top', category_code: target.code,
+            content: kr, content_jp: jp, content_us: us, content_cn: cn,
+            content_ar: ar, content_es: es, content_de: de, content_fr: fr,
+            content_backup: oldData ? oldData.content : null,
+            content_backup_jp: oldData ? oldData.content_jp : null,
+            content_backup_us: oldData ? oldData.content_us : null,
+            content_backup_cn: oldData ? oldData.content_cn : null,
+            content_backup_ar: oldData ? oldData.content_ar : null,
+            content_backup_es: oldData ? oldData.content_es : null,
+            content_backup_de: oldData ? oldData.content_de : null,
+            content_backup_fr: oldData ? oldData.content_fr : null
+        };
+        const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
+        if (error) showToast('저장 실패: ' + error.message, 'error');
+        else { showToast('저장 및 백업 완료!', 'success'); _ciLoadContent(); }
+    }
 };
 
-window.restoreCommonInfo = async (data) => {
-    if(!confirm(_t('confirm_restore_backup','Restore to most recent backup?'))) return;
-    document.getElementById('commonHtmlKR').value = data.content_backup || '';
-    document.getElementById('commonHtmlJP').value = data.content_backup_jp || '';
-    document.getElementById('commonHtmlUS').value = data.content_backup_us || '';
-    document.getElementById('commonHtmlCN').value = data.content_backup_cn || '';
-    document.getElementById('commonHtmlAR').value = data.content_backup_ar || '';
-    document.getElementById('commonHtmlES').value = data.content_backup_es || '';
-    document.getElementById('commonHtmlDE').value = data.content_backup_de || '';
-    document.getElementById('commonHtmlFR').value = data.content_backup_fr || '';
-    showToast(_t('msg_backup_restored','Backup loaded. Click [Save] to confirm.'), "info");
+window._ciRestoreBackup = () => {
+    if (!_ciBackupData) return;
+    if (!confirm('이전 백업으로 복원하시겠습니까?')) return;
+    document.getElementById('ciHtmlKR').value = _ciBackupData.content_backup || '';
+    document.getElementById('ciHtmlJP').value = _ciBackupData.content_backup_jp || '';
+    document.getElementById('ciHtmlUS').value = _ciBackupData.content_backup_us || '';
+    document.getElementById('ciHtmlCN').value = _ciBackupData.content_backup_cn || '';
+    document.getElementById('ciHtmlAR').value = _ciBackupData.content_backup_ar || '';
+    document.getElementById('ciHtmlES').value = _ciBackupData.content_backup_es || '';
+    document.getElementById('ciHtmlDE').value = _ciBackupData.content_backup_de || '';
+    document.getElementById('ciHtmlFR').value = _ciBackupData.content_backup_fr || '';
+    _ciQuill.root.innerHTML = _ciBackupData.content_backup || '';
+    _ciCurrentLang = 'KR';
+    document.querySelectorAll('.ci-lang-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.ci-lang-tab[data-lang="KR"]').classList.add('active');
+    showToast('백업 불러옴. [저장 및 적용]을 눌러 확정하세요.', 'info');
 };
+
+// 기존 호환용 - old functions redirect
+window.loadCommonInfoContent = (code) => { document.getElementById('ciTopCat').value = code; _ciLoadContent(); };
+window.saveCommonInfo = () => { _ciSave(); };
+window.restoreCommonInfo = () => { _ciRestoreBackup(); };
 
 window.openDetailPageEditor = () => {
     window.initPopupQuill();
@@ -2091,33 +2297,32 @@ window.saveDetailAndClose = () => {
 window.autoTranslatePopupDetail = async () => {
     const sourceHtml = popupQuill.root.innerHTML;
     if(!sourceHtml || sourceHtml === "<p><br></p>") { showToast("번역할 한국어 내용이 없습니다.", "warn"); return; }
-    if(!confirm("한국어 본문을 바탕으로 일본어와 영어 상세페이지를 자동 생성하시겠습니까?")) return;
+    if(!confirm("한국어 본문을 Claude AI로 7개국어 번역합니다. 진행하시겠습니까?")) return;
 
     const btn = document.querySelector('button[onclick*="autoTranslatePopupDetail"]');
     const oldText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Claude AI 번역 중...';
     btn.disabled = true;
 
     try {
-        const targets = [ {code:'ja', f:'JP'}, {code:'en', f:'US'}, {code:'zh-CN', f:'CN'}, {code:'ar', f:'AR'}, {code:'es', f:'ES'}, {code:'de', f:'DE'}, {code:'fr', f:'FR'} ];
-        for(const t of targets) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = sourceHtml;
-            async function translateNode(node) {
-                for (let child of node.childNodes) {
-                    if (child.nodeType === 3 && child.nodeValue.trim().length > 0) {
-                        child.nodeValue = await window.googleTranslateSimple(child.nodeValue, t.code);
-                    } else if (child.nodeType === 1) await translateNode(child);
-                }
-            }
-            await translateNode(tempDiv);
-            document.getElementById(`newProdDetail${t.f}`).value = tempDiv.innerHTML;
-        }
-        showToast("다국어 번역 완료! 탭을 넘겨 확인하세요.", "success");
-    } catch(e) { 
+        const dbClient = window.sb || window._supabase;
+        const { data, error } = await dbClient.functions.invoke('translate', {
+            body: { text: sourceHtml, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
+        });
+        if (error) throw error;
+        const tr = data?.translations || {};
+        if (tr.ja) document.getElementById('newProdDetailJP').value = tr.ja;
+        if (tr.en) document.getElementById('newProdDetailUS').value = tr.en;
+        if (tr.zh) document.getElementById('newProdDetailCN').value = tr.zh;
+        if (tr.ar) document.getElementById('newProdDetailAR').value = tr.ar;
+        if (tr.es) document.getElementById('newProdDetailES').value = tr.es;
+        if (tr.de) document.getElementById('newProdDetailDE').value = tr.de;
+        if (tr.fr) document.getElementById('newProdDetailFR').value = tr.fr;
+        showToast("Claude AI 7개국 번역 완료! 탭을 넘겨 확인하세요.", "success");
+    } catch(e) {
         console.error(e);
-        showToast("번역 중 오류 발생", "error");
-    } finally { 
+        showToast("번역 중 오류 발생: " + (e.message || e), "error");
+    } finally {
         btn.innerHTML = oldText;
         btn.disabled = false;
     }

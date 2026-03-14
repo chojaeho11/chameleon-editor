@@ -36,11 +36,44 @@ serve(async (req) => {
             zh: "Chinese Simplified", ar: "Arabic", es: "Spanish", de: "German", fr: "French"
         };
 
+        const isHtml = body.html === true;
+        const model = isHtml ? "claude-sonnet-4-6-20250514" : "claude-haiku-4-5-20251001";
+
         // 배치 번역 모드 (targetLangs가 배열이면)
         const targetLangs = body.targetLangs;
         const sourceLang = body.sourceLang || body.from || "auto";
         if (targetLangs && Array.isArray(targetLangs)) {
             const fromName = langNames[sourceLang] || "auto-detect";
+
+            if (isHtml) {
+                // HTML 배치: 각 언어별 개별 번역 (품질 보장)
+                const translations: Record<string, string> = {};
+                for (const lang of targetLangs) {
+                    const toLang = langNames[lang] || lang;
+                    const htmlPrompt = `You are a professional translator specializing in e-commerce product pages. Translate the following HTML content ${fromName !== 'auto-detect' ? 'from ' + fromName + ' ' : ''}to ${toLang}.
+Rules:
+- Output ONLY the translated HTML, nothing else.
+- Preserve ALL HTML tags, attributes, classes, styles, and structure exactly.
+- Do NOT translate image URLs, CSS, class names, or HTML attributes.
+- Translate only the visible text content between tags.
+- Use natural, fluent ${toLang} appropriate for product descriptions and marketing.
+- Maintain the tone and style of the original.
+- Do not add any markdown formatting or code blocks.`;
+                    try {
+                        const r = await fetch("https://api.anthropic.com/v1/messages", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+                            body: JSON.stringify({ model, max_tokens: 8000, system: htmlPrompt, messages: [{ role: "user", content: text }] }),
+                        });
+                        if (r.ok) {
+                            const d = await r.json();
+                            translations[lang] = d.content.map((b: any) => b.type === "text" ? b.text : "").join("");
+                        }
+                    } catch (e) { console.error(`HTML translate ${lang} error:`, e); }
+                }
+                return new Response(JSON.stringify({ translations }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+
             const langList = targetLangs.map((l: string) => `${l}: ${langNames[l] || l}`).join(', ');
             const batchPrompt = `You are a professional translator. Translate the following text ${fromName !== 'auto-detect' ? 'from ' + fromName + ' ' : ''}into these languages: ${langList}.
 Rules:
@@ -51,7 +84,7 @@ Rules:
             const batchRes = await fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-                body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 2000, system: batchPrompt, messages: [{ role: "user", content: text }] }),
+                body: JSON.stringify({ model, max_tokens: 2000, system: batchPrompt, messages: [{ role: "user", content: text }] }),
             });
             if (!batchRes.ok) {
                 return new Response(JSON.stringify({ translations: {}, error: "API " + batchRes.status }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -69,7 +102,16 @@ Rules:
         const fromLang = langNames[from] || "auto-detect";
         const toLang = langNames[to] || "Korean";
 
-        const systemPrompt = `You are a professional translator. Translate the following text ${fromLang !== 'auto-detect' ? 'from ' + fromLang + ' ' : ''}to ${toLang}.
+        const systemPrompt = isHtml
+            ? `You are a professional translator specializing in e-commerce product pages. Translate the following HTML content ${fromLang !== 'auto-detect' ? 'from ' + fromLang + ' ' : ''}to ${toLang}.
+Rules:
+- Output ONLY the translated HTML, nothing else.
+- Preserve ALL HTML tags, attributes, classes, styles, and structure exactly.
+- Do NOT translate image URLs, CSS, class names, or HTML attributes.
+- Translate only the visible text content between tags.
+- Use natural, fluent ${toLang} appropriate for product descriptions and marketing.
+- Do not add any markdown formatting or code blocks.`
+            : `You are a professional translator. Translate the following text ${fromLang !== 'auto-detect' ? 'from ' + fromLang + ' ' : ''}to ${toLang}.
 Rules:
 - Output ONLY the translated text, nothing else.
 - Preserve formatting, line breaks, and emojis.
@@ -84,8 +126,8 @@ Rules:
                 "anthropic-version": "2023-06-01",
             },
             body: JSON.stringify({
-                model: "claude-haiku-4-5-20251001",
-                max_tokens: 1000,
+                model,
+                max_tokens: isHtml ? 8000 : 1000,
                 system: systemPrompt,
                 messages: [{ role: "user", content: text }],
             }),
