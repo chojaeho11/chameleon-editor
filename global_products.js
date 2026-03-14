@@ -37,9 +37,24 @@ const _UA_GENRE_CATS = [
 ];
 const _OLD_UA_CODES = ['ua_paper', 'ua_fabric', 'ua_canvas'];
 
-(async function _syncArtworkCats() {
+// 관리자 인증 후 실행 (3초 대기)
+setTimeout(async () => {
     if (!sb) return;
     try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) { console.log('[소분류] 미인증 — 건너뜀'); return; }
+
+        // 0. 대분류(user_artwork) 확인/생성
+        const { data: topEx } = await sb.from('admin_top_categories').select('code').eq('code', 'user_artwork');
+        if (!topEx || topEx.length === 0) {
+            const { error: topErr } = await sb.from('admin_top_categories').insert({
+                code: 'user_artwork', name: '고객작품판매', name_us: 'Artwork Shop', name_jp: '作品販売',
+                name_cn: '作品商店', name_ar: 'متجر الأعمال', name_es: 'Tienda de Arte', name_de: 'Kunstshop', name_fr: 'Boutique Art',
+                icon: 'fa-solid fa-paintbrush', sort_order: 50
+            });
+            if (topErr) { console.warn('대분류 생성 실패:', topErr.message); return; }
+        }
+
         // 1. 예전 제품타입 카테고리 삭제
         for (const code of _OLD_UA_CODES) {
             await sb.from('admin_categories').delete().eq('code', code);
@@ -48,15 +63,15 @@ const _OLD_UA_CODES = ['ua_paper', 'ua_fabric', 'ua_canvas'];
         for (const cat of _UA_GENRE_CATS) {
             const { data: ex } = await sb.from('admin_categories').select('code').eq('code', cat.code);
             if (!ex || ex.length === 0) {
-                await sb.from('admin_categories').insert(cat);
+                const { error: insErr } = await sb.from('admin_categories').insert(cat);
+                if (insErr) console.warn(`[소분류] ${cat.code} 삽입 실패:`, insErr.message);
             } else {
-                // 이름 업데이트
                 await sb.from('admin_categories').update({ name: cat.name, name_us: cat.name_us, name_jp: cat.name_jp, name_cn: cat.name_cn, name_ar: cat.name_ar, name_es: cat.name_es, name_de: cat.name_de, name_fr: cat.name_fr, icon: cat.icon, sort_order: cat.sort_order }).eq('code', cat.code);
             }
         }
         console.log('✅ 작품 마켓플레이스 장르 카테고리 동기화 완료');
     } catch(e) { console.warn('작품 카테고리 동기화:', e); }
-})();
+}, 3000);
 
 // ==========================================
 // 1. 대분류 관리 (Top Categories)
