@@ -1087,7 +1087,9 @@ const UA_PRODUCT_TYPES = {
     blind:   { name: '롤블라인드', name_us: 'Roll Blind', name_jp: 'ロールブラインド', icon: '🪟', price_krw: 40000, hasBlindOption: true },
     mug:     { name: '머그컵', name_us: 'Mug Cup', name_jp: 'マグカップ', icon: '☕', price_krw: 5000, fixed: true },
     tshirt:  { name: '티셔츠인쇄', name_us: 'T-shirt Print', name_jp: 'Tシャツ印刷', icon: '👕', price_krw: 10000, fixed: true },
-    sticker: { name: '스티커', name_us: 'Stickers', name_jp: 'ステッカー', icon: '🏷️', price_krw: 50000, fixed: true, desc: '7~10cm 1,000매', desc_us: '7-10cm ×1,000', desc_jp: '7-10cm 1,000枚' }
+    sticker: { name: '스티커', name_us: 'Stickers', name_jp: 'ステッカー', icon: '🏷️', price_krw: 50000, fixed: true, desc: '7~10cm 1,000매', desc_us: '7-10cm ×1,000', desc_jp: '7-10cm 1,000枚' },
+    cushion: { name: '쿠션', name_us: 'Cushion', name_jp: 'クッション', icon: '🛋️', price_krw: 150000 },
+    keyring: { name: '키링', name_us: 'Keyring', name_jp: 'キーホルダー', icon: '🔑', price_krw: 5000, fixed: true, desc: '가로 5cm', desc_us: '5cm wide', desc_jp: '横5cm' }
 };
 window.UA_PRODUCT_TYPES = UA_PRODUCT_TYPES;
 window.UA_GENRE_CATS = UA_GENRE_CATS;
