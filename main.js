@@ -1112,7 +1112,8 @@ window._setupArtworkCategories = async function() {
         for (const s of UA_GENRE_CATS) {
             const { data: ex } = await sb.from('admin_categories').select('code').eq('code', s.code);
             if (!ex || ex.length === 0) {
-                const { error: e2 } = await sb.from('admin_categories').insert(s);
+                const { icon: _skip, ...sData } = s;
+                const { error: e2 } = await sb.from('admin_categories').insert(sData);
                 if (e2) { console.log('작품 카테고리 설정: 관리자 권한 필요 (정상)'); return; }
             }
         }

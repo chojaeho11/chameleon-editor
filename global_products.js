@@ -28,12 +28,12 @@ const debounce = (func, delay) => {
 // 0. 작품 마켓플레이스 장르 카테고리 자동 정리 (관리자 권한으로 실행)
 // ==========================================
 const _UA_GENRE_CATS = [
-    { code: 'ua_game', name: '게임 영화', name_us: 'Game Movie', name_jp: 'ゲーム映画', name_cn: '游戏电影', name_ar: 'ألعاب أفلام', name_es: 'Juegos Películas', name_de: 'Spiele Filme', name_fr: 'Jeux Films', top_category_code: 'user_artwork', icon: '🎮', sort_order: 1 },
-    { code: 'ua_anime', name: '애니메이션', name_us: 'Animation', name_jp: 'アニメ', name_cn: '动漫', name_ar: 'أنمي', name_es: 'Animación', name_de: 'Animation', name_fr: 'Animation', top_category_code: 'user_artwork', icon: '🎬', sort_order: 2 },
-    { code: 'ua_landscape', name: '풍경', name_us: 'Landscape', name_jp: '風景', name_cn: '风景', name_ar: 'مناظر طبيعية', name_es: 'Paisaje', name_de: 'Landschaft', name_fr: 'Paysage', top_category_code: 'user_artwork', icon: '🏞️', sort_order: 3 },
-    { code: 'ua_interior', name: '인테리어', name_us: 'Interior', name_jp: 'インテリア', name_cn: '室内', name_ar: 'ديكور', name_es: 'Interior', name_de: 'Interieur', name_fr: 'Intérieur', top_category_code: 'user_artwork', icon: '🏠', sort_order: 4 },
-    { code: 'ua_fengshui', name: '풍수그림', name_us: 'Feng Shui Art', name_jp: '風水画', name_cn: '风水画', name_ar: 'فنغ شوي', name_es: 'Feng Shui', name_de: 'Feng Shui', name_fr: 'Feng Shui', top_category_code: 'user_artwork', icon: '🐉', sort_order: 5 },
-    { code: 'ua_personal', name: '개인작품', name_us: 'Personal Art', name_jp: '個人作品', name_cn: '个人作品', name_ar: 'أعمال شخصية', name_es: 'Arte Personal', name_de: 'Persönliche Kunst', name_fr: 'Art Personnel', top_category_code: 'user_artwork', icon: '✨', sort_order: 6 }
+    { code: 'ua_game', name: '게임 영화', name_us: 'Game Movie', name_jp: 'ゲーム映画', name_cn: '游戏电影', name_ar: 'ألعاب أفلام', name_es: 'Juegos Películas', name_de: 'Spiele Filme', name_fr: 'Jeux Films', top_category_code: 'user_artwork', sort_order: 1 },
+    { code: 'ua_anime', name: '애니메이션', name_us: 'Animation', name_jp: 'アニメ', name_cn: '动漫', name_ar: 'أنمي', name_es: 'Animación', name_de: 'Animation', name_fr: 'Animation', top_category_code: 'user_artwork', sort_order: 2 },
+    { code: 'ua_landscape', name: '풍경', name_us: 'Landscape', name_jp: '風景', name_cn: '风景', name_ar: 'مناظر طبيعية', name_es: 'Paisaje', name_de: 'Landschaft', name_fr: 'Paysage', top_category_code: 'user_artwork', sort_order: 3 },
+    { code: 'ua_interior', name: '인테리어', name_us: 'Interior', name_jp: 'インテリア', name_cn: '室内', name_ar: 'ديكور', name_es: 'Interior', name_de: 'Interieur', name_fr: 'Intérieur', top_category_code: 'user_artwork', sort_order: 4 },
+    { code: 'ua_fengshui', name: '풍수그림', name_us: 'Feng Shui Art', name_jp: '風水画', name_cn: '风水画', name_ar: 'فنغ شوي', name_es: 'Feng Shui', name_de: 'Feng Shui', name_fr: 'Feng Shui', top_category_code: 'user_artwork', sort_order: 5 },
+    { code: 'ua_personal', name: '개인작품', name_us: 'Personal Art', name_jp: '個人作品', name_cn: '个人作品', name_ar: 'أعمال شخصية', name_es: 'Arte Personal', name_de: 'Persönliche Kunst', name_fr: 'Art Personnel', top_category_code: 'user_artwork', sort_order: 6 }
 ];
 const _OLD_UA_CODES = ['ua_paper', 'ua_fabric', 'ua_canvas'];
 
@@ -66,7 +66,7 @@ setTimeout(async () => {
                 const { error: insErr } = await sb.from('admin_categories').insert(cat);
                 if (insErr) console.warn(`[소분류] ${cat.code} 삽입 실패:`, insErr.message);
             } else {
-                await sb.from('admin_categories').update({ name: cat.name, name_us: cat.name_us, name_jp: cat.name_jp, name_cn: cat.name_cn, name_ar: cat.name_ar, name_es: cat.name_es, name_de: cat.name_de, name_fr: cat.name_fr, icon: cat.icon, sort_order: cat.sort_order }).eq('code', cat.code);
+                await sb.from('admin_categories').update({ name: cat.name, name_us: cat.name_us, name_jp: cat.name_jp, name_cn: cat.name_cn, name_ar: cat.name_ar, name_es: cat.name_es, name_de: cat.name_de, name_fr: cat.name_fr, sort_order: cat.sort_order }).eq('code', cat.code);
             }
         }
         console.log('✅ 작품 마켓플레이스 장르 카테고리 동기화 완료');
