@@ -9764,35 +9764,52 @@ if (w >= 20 && h >= 20) {
         if (_isArtworkKey && product && product.img_url) {
             console.log('🎨 작품 이미지 로딩 시작:', product.img_url);
             setTimeout(() => {
-                const _placeArtwork = (imgEl) => {
-                    if (!imgEl || !canvas) { console.warn('🎨 작품 이미지 로딩 실패'); return; }
+                const _htmlImg = new Image();
+                _htmlImg.crossOrigin = 'anonymous';
+                _htmlImg.onload = () => {
+                    console.log('🎨 HTMLImage 로딩 성공:', _htmlImg.width, 'x', _htmlImg.height);
+                    const fImg = new fabric.Image(_htmlImg);
                     const board = canvas.getObjects().find(o => o.isBoard);
                     const bW = board ? board.width * board.scaleX : canvasW;
                     const bH = board ? board.height * board.scaleY : canvasH;
                     const bLeft = board ? board.left : 0;
                     const bTop = board ? board.top : 0;
-                    const scale = Math.min(bW / imgEl.width, bH / imgEl.height);
-                    imgEl.set({
-                        left: bLeft + (bW - imgEl.width * scale) / 2,
-                        top: bTop + (bH - imgEl.height * scale) / 2,
+                    const scale = Math.min(bW / fImg.width, bH / fImg.height);
+                    fImg.set({
+                        left: bLeft + (bW - fImg.width * scale) / 2,
+                        top: bTop + (bH - fImg.height * scale) / 2,
                         scaleX: scale, scaleY: scale, selectable: true
                     });
-                    canvas.add(imgEl);
-                    canvas.setActiveObject(imgEl);
+                    canvas.add(fImg);
+                    canvas.setActiveObject(fImg);
                     canvas.renderAll();
                     console.log('🎨 작품 이미지 배치 완료');
                 };
-                // Fabric.js 5.x fromURL (callback)
-                try {
-                    fabric.Image.fromURL(product.img_url, _placeArtwork, { crossOrigin: 'anonymous' });
-                } catch(e) {
-                    console.warn('🎨 fabric.Image.fromURL 실패, HTMLImage fallback:', e);
-                    const _fi = new Image();
-                    _fi.crossOrigin = 'anonymous';
-                    _fi.onload = () => { const fi = new fabric.Image(_fi); _placeArtwork(fi); };
-                    _fi.onerror = () => console.error('🎨 작품 이미지 로딩 완전 실패:', product.img_url);
-                    _fi.src = product.img_url;
-                }
+                _htmlImg.onerror = () => {
+                    console.warn('🎨 CORS 실패, crossOrigin 없이 재시도');
+                    const _retry = new Image();
+                    _retry.onload = () => {
+                        const fImg2 = new fabric.Image(_retry);
+                        const board = canvas.getObjects().find(o => o.isBoard);
+                        const bW = board ? board.width * board.scaleX : canvasW;
+                        const bH = board ? board.height * board.scaleY : canvasH;
+                        const bLeft = board ? board.left : 0;
+                        const bTop = board ? board.top : 0;
+                        const scale = Math.min(bW / fImg2.width, bH / fImg2.height);
+                        fImg2.set({
+                            left: bLeft + (bW - fImg2.width * scale) / 2,
+                            top: bTop + (bH - fImg2.height * scale) / 2,
+                            scaleX: scale, scaleY: scale, selectable: true
+                        });
+                        canvas.add(fImg2);
+                        canvas.setActiveObject(fImg2);
+                        canvas.renderAll();
+                        console.log('🎨 작품 이미지 배치 완료 (no-cors)');
+                    };
+                    _retry.onerror = () => console.error('🎨 작품 이미지 로딩 완전 실패:', product.img_url);
+                    _retry.src = product.img_url;
+                };
+                _htmlImg.src = product.img_url;
             }, 1200);
         }
 
