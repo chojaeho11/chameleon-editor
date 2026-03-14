@@ -417,8 +417,9 @@ async function _generateWorkMemo(order, matItems, matLabel) {
             }
         }
 
-        // 높이 넉넉하게 (상단 테이블 + 하단 상세 + QR)
-        const H = 60 + 180 + 40 + rowCount * lineH + optLineCount * 22 + 60 + rowCount * 50 + optLineCount * 18 + 80 + 180 + 50;
+        // 높이 넉넉하게 (상단 테이블 + 하단 상세 + QR + 이미지)
+        const imgH = 200; // 각 아이템 이미지 높이
+        const H = 60 + 180 + 40 + rowCount * lineH + optLineCount * 22 + 60 + rowCount * 50 + optLineCount * 18 + 80 + 180 + 50 + rowCount * (imgH + 30);
         canvas.width = W;
         canvas.height = H;
         const ctx = canvas.getContext('2d');
@@ -686,12 +687,71 @@ async function _generateWorkMemo(order, matItems, matLabel) {
         ctx.fillText(`소재: ${matLabel}`, 28, y + 64);
         y += qrSize + 10;
 
+        // ★ 아이템별 디자인 시안 이미지
+        for (const item of items) {
+            // 이미지 URL 후보: thumb > originalUrl > uploadedFiles > product.img
+            let imgUrl = item.thumb || item.originalUrl;
+            if (!imgUrl && item.uploadedFiles && item.uploadedFiles[0]) {
+                imgUrl = item.uploadedFiles[0].thumb || item.uploadedFiles[0].originalUrl;
+            }
+            if (!imgUrl && item.product?.img) imgUrl = item.product.img;
+            if (!imgUrl) continue;
+
+            try {
+                y += 10;
+                ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.5;
+                ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(W - 18, y); ctx.stroke();
+                y += 10;
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = 'bold 11px Pretendard, sans-serif';
+                ctx.fillText(`< 디자인 시안 - ${(item.product?.name || '').substring(0, 30)} >`, 28, y);
+                y += 14;
+
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                await new Promise((res, rej) => {
+                    img.onload = res;
+                    img.onerror = rej;
+                    const ts = imgUrl.includes('?') ? '&t=' + Date.now() : '?t=' + Date.now();
+                    img.src = imgUrl + ts;
+                });
+
+                const maxW = W - 60;
+                const maxH = imgH;
+                let dw = img.width, dh = img.height;
+                if (dw > maxW) { dh = dh * maxW / dw; dw = maxW; }
+                if (dh > maxH) { dw = dw * maxH / dh; dh = maxH; }
+                const imgX = (W - dw) / 2;
+
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+                ctx.strokeRect(imgX - 2, y - 2, dw + 4, dh + 4);
+                ctx.drawImage(img, imgX, y, dw, dh);
+                y += dh + 10;
+            } catch(e) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '11px Pretendard, sans-serif';
+                ctx.fillText('(이미지 로드 실패)', 28, y);
+                y += 20;
+            }
+        }
+
         // 하단 푸터
+        y += 10;
         ctx.fillStyle = '#94a3b8';
         ctx.font = '10px Pretendard, sans-serif';
-        ctx.fillText(`Chameleon Printing - ${new Date().toLocaleString('ko-KR')}`, 18, H - 14);
+        ctx.fillText(`Chameleon Printing - ${new Date().toLocaleString('ko-KR')}`, 18, y);
+        y += 20;
 
-        return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        // ★ 실제 사용한 높이로 캔버스 잘라내기 (빈 공간 제거)
+        const finalH = Math.min(y, H);
+        const trimmedCanvas = document.createElement('canvas');
+        trimmedCanvas.width = W;
+        trimmedCanvas.height = finalH;
+        const trimCtx = trimmedCanvas.getContext('2d');
+        trimCtx.drawImage(canvas, 0, 0);
+
+        return await new Promise(resolve => trimmedCanvas.toBlob(resolve, 'image/png'));
     } catch (e) {
         console.error('[자동다운] 작업메모 생성 실패:', e);
         return null;
