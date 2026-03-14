@@ -657,17 +657,16 @@ async function loadMySales() {
     let totalSold = 0;
     if (settlements) {
         settlements.forEach(s => {
-            // 같은 원본 이미지의 여러 제품(패브릭,캔버스 등)을 그룹핑
-            // item_code에서 원본 작품 코드 추출 (ua_로 시작하는 코드의 base)
             const code = s.item_code;
             if (!salesMap[code]) salesMap[code] = { count: 0, revenue: 0, pending: 0 };
             salesMap[code].count++;
             totalSold++;
-            if (s.settlement_status === 'completed') {
-                salesMap[code].revenue += (s.commission_amount || 0);
-                totalRevenue += (s.commission_amount || 0);
-            } else {
-                salesMap[code].pending += (s.commission_amount || 0);
+            const amt = s.commission_amount || 0;
+            // 수익 = completed + pending 모두 합산 (정산 완료/대기 구분 없이 총 수익)
+            salesMap[code].revenue += amt;
+            totalRevenue += amt;
+            if (s.settlement_status !== 'completed') {
+                salesMap[code].pending += amt;
             }
         });
     }
@@ -732,7 +731,7 @@ async function loadMySales() {
                 <i class="fa-solid fa-coins"></i> ${window.t('label_revenue', '수익')}: ${displayRevenue.toLocaleString()}${currUnit}
             </div>`;
             if (displayPending > 0) {
-                revenueHtml += `<div style="font-size:11px; color:#a16207;">(${window.t('label_pending', '정산대기')}: ${displayPending.toLocaleString()}${currUnit})</div>`;
+                revenueHtml += `<div style="font-size:11px; color:#a16207;">(${window.t('label_pending_of', '정산대기 포함')}: ${displayPending.toLocaleString()}${currUnit})</div>`;
             }
         }
 
