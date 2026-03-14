@@ -1918,8 +1918,20 @@ async function handleSubReturn() {
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px; margin-bottom:20px;">
             <div style="flex:1; min-width:280px;">
                 <span style="background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:800; display:inline-block; margin-bottom:12px;" data-i18n="artwork_badge">ARTWORK MARKETPLACE</span>
-                <h2 style="margin:0 0 10px; font-size:26px; font-weight:900; line-height:1.3;" data-i18n="artwork_title">내 작품판매<br><span style="color:#a78bfa;">판매금의 10%를 수익으로 지급합니다</span></h2>
-                <p style="margin:0; color:#94a3b8; font-size:14px; line-height:1.7;" data-i18n="artwork_desc">사진, 일러스트, 그림 등 내 이미지를 업로드하면 마켓플레이스에 등록됩니다.<br>고객이 제품 종류와 크기를 선택하여 주문하면 <b style="color:#a78bfa;">판매금의 10%</b>가 수익금으로 적립됩니다.</p>
+                <h2 style="margin:0 0 10px; font-size:26px; font-weight:900; line-height:1.3;" data-i18n="artwork_title">내 작품판매</h2>
+                <div style="display:inline-block; background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#1e1b4b; padding:8px 18px; border-radius:10px; font-size:18px; font-weight:900; margin-bottom:14px; box-shadow:0 2px 10px rgba(251,191,36,0.4);" data-i18n="artwork_revenue">💰 판매금의 10%를 수익으로 지급합니다</div>
+                <p style="margin:0 0 10px; color:#cbd5e1; font-size:13px; line-height:1.8;" data-i18n="artwork_desc">내 사진, 일러스트, 그림을 업로드하면 아래 <b style="color:#fff;">8종 제품</b>으로 판매됩니다.</p>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">🎨 패브릭인쇄</span>
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">🖼️ 캔버스액자</span>
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">📄 종이포스터</span>
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">💎 아크릴액자</span>
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">🪟 롤블라인드</span>
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">☕ 머그컵</span>
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">👕 티셔츠</span>
+                    <span style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; color:#c7d2fe;">🏷️ 스티커</span>
+                </div>
+                <p style="margin:0; color:#f87171; font-size:12px; font-weight:700; line-height:1.5;" data-i18n="artwork_copyright">⚠️ 작품의 저작권에 대한 책임은 업로드한 판매자에게 있습니다.</p>
             </div>
             <button onclick="window.openArtworkUpload()" style="background:#fff; color:#1e1b4b; font-weight:800; font-size:16px; padding:16px 32px; border:none; border-radius:14px; cursor:pointer; box-shadow:0 4px 15px rgba(255,255,255,0.2); transition:transform .2s; white-space:nowrap;" onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'" data-i18n="artwork_upload_btn">
                 <i class="fa-solid fa-cloud-arrow-up"></i> 작품 등록하기
