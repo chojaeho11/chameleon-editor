@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=185";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=185";
-import { SITE_CONFIG } from "./site-config.js?v=185";
-import { applySize } from "./canvas-size.js?v=185";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=185";
+import { canvas } from "./canvas-core.js?v=186";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=186";
+import { SITE_CONFIG } from "./site-config.js?v=186";
+import { applySize } from "./canvas-size.js?v=186";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=186";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=185";
+} from "./export.js?v=186";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1240,7 +1240,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=185');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=186');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -1276,7 +1276,9 @@ async function addCanvasToCart() {
         _calculated_price: product._calculated_price || false,
         _base_sqm_price: product._base_sqm_price || 0,
         partner_id: product.partner_id || null,
-        material: product.material || ''
+        material: product.material || '',
+        artworkType: product._artworkType || null,
+        artworkTypePrice: product._artworkTypePrice || null
     };
 
     const mmToPx = 3.7795;
@@ -2325,7 +2327,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=185');
+                const { generateDesignPNG } = await import('./export.js?v=186');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {

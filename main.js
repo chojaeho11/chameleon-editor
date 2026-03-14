@@ -1,28 +1,28 @@
 // main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=185";
-import { initCanvas, canvas } from "./canvas-core.js?v=185";
-import { initSizeControls, applySize } from "./canvas-size.js?v=185";
-import { initGuides } from "./canvas-guides.js?v=185";
-import { initZoomPan } from "./canvas-zoom-pan.js?v=185";
-import { initObjectTools } from "./canvas-objects.js?v=185";
-import { initPageTools } from "./canvas-pages.js?v=185"; // [추가] 페이지 도구
-import { initImageTools } from "./canvas-image.js?v=185";
-import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=185";
-import { initAiTools } from "./canvas-ai.js?v=185";
-import { initExport } from "./export.js?v=185";
-import { initOrderSystem } from "./order.js?v=185";
-import { initAuth } from "./login.js?v=185";
-import { initMyDesign } from "./my-design.js?v=185";
-import { initCanvasUtils } from "./canvas-utils.js?v=185";
-import { initShortcuts } from "./shortcuts.js?v=185";
-import { initContextMenu } from "./context-menu.js?v=185";
-import { createVectorOutline } from "./outlineMaker.js?v=185";
-import { initVideoMaker } from "./video-maker.js?v=185";
-import { initPptMode } from "./ppt-mode.js?v=185";
-import { initGreetingCardMode } from "./greeting-card-mode.js?v=185";
-import { initIconTools } from "./canvas-icons.js?v=185";
-import { initRetouchTools } from "./canvas-retouch.js?v=185";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=186";
+import { initCanvas, canvas } from "./canvas-core.js?v=186";
+import { initSizeControls, applySize } from "./canvas-size.js?v=186";
+import { initGuides } from "./canvas-guides.js?v=186";
+import { initZoomPan } from "./canvas-zoom-pan.js?v=186";
+import { initObjectTools } from "./canvas-objects.js?v=186";
+import { initPageTools } from "./canvas-pages.js?v=186"; // [추가] 페이지 도구
+import { initImageTools } from "./canvas-image.js?v=186";
+import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=186";
+import { initAiTools } from "./canvas-ai.js?v=186";
+import { initExport } from "./export.js?v=186";
+import { initOrderSystem } from "./order.js?v=186";
+import { initAuth } from "./login.js?v=186";
+import { initMyDesign } from "./my-design.js?v=186";
+import { initCanvasUtils } from "./canvas-utils.js?v=186";
+import { initShortcuts } from "./shortcuts.js?v=186";
+import { initContextMenu } from "./context-menu.js?v=186";
+import { createVectorOutline } from "./outlineMaker.js?v=186";
+import { initVideoMaker } from "./video-maker.js?v=186";
+import { initPptMode } from "./ppt-mode.js?v=186";
+import { initGreetingCardMode } from "./greeting-card-mode.js?v=186";
+import { initIconTools } from "./canvas-icons.js?v=186";
+import { initRetouchTools } from "./canvas-retouch.js?v=186";
 
 window.currentUploadedPdfUrl = null;
 
@@ -867,8 +867,6 @@ window.submitOrderReview = async function() {
 // [작품 마켓플레이스] 고객 작품 판매 시스템
 // ============================================================
 
-const ART_HOEBAE_BASE = 297 * 420;
-const ART_PRICES_KRW = { paper: 10000, fabric: 20000, canvas: 40000 };
 const ART_REVENUE_RATE = 0.10;
 
 function _artFmtPrice(krw) {
@@ -891,8 +889,36 @@ window.openArtworkUpload = function() {
     }
     document.getElementById('artworkFileInput').value = '';
     document.getElementById('artworkTitle').value = '';
+    document.getElementById('artworkGenre').value = '';
     document.getElementById('artworkPreviewArea').style.display = 'none';
+
+    // 장르 버튼 동적 생성 (다국어 지원)
+    const lang = window.CURRENT_LANG || 'kr';
+    const btnBox = document.getElementById('artworkGenreButtons');
+    if (btnBox && UA_GENRE_CATS) {
+        btnBox.innerHTML = '';
+        UA_GENRE_CATS.forEach(g => {
+            const gName = lang==='ja' ? g.name_jp : lang==='en' ? g.name_us : lang==='zh' ? g.name_cn : lang==='es' ? g.name_es : lang==='de' ? g.name_de : lang==='fr' ? g.name_fr : g.name;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'artwork-genre-btn';
+            btn.dataset.genre = g.code;
+            btn.style.cssText = 'padding:8px 16px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.15s;';
+            btn.textContent = g.icon + ' ' + gName;
+            btn.onclick = function() { window._selectArtworkGenre(this); };
+            btnBox.appendChild(btn);
+        });
+    }
+
     document.getElementById('artworkUploadModal').style.display = 'flex';
+};
+
+window._selectArtworkGenre = function(btn) {
+    document.querySelectorAll('.artwork-genre-btn').forEach(b => { b.style.borderColor = '#e2e8f0'; b.style.background = '#fff'; b.style.color = '#333'; });
+    btn.style.borderColor = '#6366f1';
+    btn.style.background = '#eef2ff';
+    btn.style.color = '#4f46e5';
+    document.getElementById('artworkGenre').value = btn.dataset.genre;
 };
 
 window._artworkPreview = function(input) {
@@ -916,7 +942,9 @@ window.submitArtworkUpload = async function() {
 
     const file = document.getElementById('artworkFileInput').files[0];
     const title = document.getElementById('artworkTitle').value.trim();
+    const genre = document.getElementById('artworkGenre').value;
     if (!file) { showToast(window.t?.('artwork_no_file', '이미지를 선택하세요') || '이미지를 선택하세요', 'warn'); return; }
+    if (!genre) { showToast('카테고리를 선택해주세요', 'warn'); return; }
     if (!title) { showToast(window.t?.('artwork_no_title', '작품명을 입력하세요') || '작품명을 입력하세요', 'warn'); return; }
 
     const loading = document.getElementById('loading');
@@ -944,6 +972,7 @@ window.submitArtworkUpload = async function() {
         const { data: pubData } = sb.storage.from('design').getPublicUrl(path);
         const imgUrl = pubData.publicUrl;
 
+        // 패브릭 옵션 (제품 타입에 패브릭이 포함되므로 항상 가져옴)
         let fabricAddons = '';
         try {
             const { data: addonRows } = await sb.from('admin_addons').select('code').in('category_code', ['2342434', '23442423']);
@@ -952,38 +981,28 @@ window.submitArtworkUpload = async function() {
             }
         } catch(e) { console.warn('패브릭 옵션 조회 실패', e); }
 
-        const ARTWORK_CATS = ['ua_paper', 'ua_fabric', 'ua_canvas'];
-        const catNames = {
-            ua_paper:  { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター' },
-            ua_fabric: { name: '패브릭포스터', name_us: 'Fabric Poster', name_jp: 'ファブリックポスター' },
-            ua_canvas: { name: '캔버스액자', name_us: 'Canvas Frame', name_jp: 'キャンバスフレーム' }
-        };
-        const basePrices = { ua_paper: 10000, ua_fabric: 20000, ua_canvas: 40000 };
+        // ★ 1개의 상품만 생성 (장르 카테고리, 기본 단가 = 패브릭 15000 KRW/m²)
+        const productCode = `ua_${window.currentUser.id.substring(0,8)}_${ts}`;
+        const basePrice = 15000; // 기본 단가 (패브릭 기준, 제품타입별 가격은 주문 시 선택)
+        const { error: insErr } = await sb.from('admin_products').insert({
+            code: productCode,
+            name: title,
+            name_us: titleEN,
+            name_jp: titleJP,
+            category: genre,
+            price: basePrice,
+            price_us: Math.round(basePrice * 0.001),
+            img_url: imgUrl,
+            addons: fabricAddons,
+            description: tags,
+            partner_id: window.currentUser.id,
+            partner_status: 'approved',
+            is_custom_size: true,
+            sort_order: 999
+        });
+        if (insErr) throw insErr;
 
-        for (const cat of ARTWORK_CATS) {
-            const cn = catNames[cat];
-            const price = basePrices[cat];
-            const productCode = `${cat}_${window.currentUser.id.substring(0,8)}_${ts}`;
-            const { error: insErr } = await sb.from('admin_products').insert({
-                code: productCode,
-                name: `${title} - ${cn.name}`,
-                name_us: `${titleEN} - ${cn.name_us}`,
-                name_jp: `${titleJP} - ${cn.name_jp}`,
-                category: cat,
-                price: price,
-                price_us: Math.round(price * 0.001),
-                img_url: imgUrl,
-                addons: cat === 'ua_fabric' ? fabricAddons : '',
-                description: tags,
-                partner_id: window.currentUser.id,
-                partner_status: 'approved',
-                is_custom_size: true,
-                sort_order: 999
-            });
-            if (insErr) throw insErr;
-        }
-
-        showToast(window.t?.('artwork_success', '작품이 3종 상품으로 등록되었습니다!') || '작품이 3종 상품으로 등록되었습니다!', 'success');
+        showToast(window.t?.('artwork_success', '작품이 마켓플레이스에 등록되었습니다!') || '작품이 마켓플레이스에 등록되었습니다!', 'success');
         document.getElementById('artworkUploadModal').style.display = 'none';
 
     } catch(e) {
@@ -993,6 +1012,26 @@ window.submitArtworkUpload = async function() {
         if (loading) loading.style.display = 'none';
     }
 };
+
+// ★ 작품 마켓플레이스 장르 카테고리 (제품타입 → 장르 기반으로 변경)
+const UA_GENRE_CATS = [
+    { code: 'ua_game', name: '게임', name_us: 'Game', name_jp: 'ゲーム', name_cn: '游戏', name_ar: 'ألعاب', name_es: 'Juegos', name_de: 'Spiele', name_fr: 'Jeux', top_category_code: 'user_artwork', icon: '🎮', sort_order: 1 },
+    { code: 'ua_anime', name: '애니메이션', name_us: 'Animation', name_jp: 'アニメ', name_cn: '动漫', name_ar: 'أنمي', name_es: 'Animación', name_de: 'Animation', name_fr: 'Animation', top_category_code: 'user_artwork', icon: '🎬', sort_order: 2 },
+    { code: 'ua_landscape', name: '풍경', name_us: 'Landscape', name_jp: '風景', name_cn: '风景', name_ar: 'مناظر طبيعية', name_es: 'Paisaje', name_de: 'Landschaft', name_fr: 'Paysage', top_category_code: 'user_artwork', icon: '🏞️', sort_order: 3 },
+    { code: 'ua_interior', name: '인테리어', name_us: 'Interior', name_jp: 'インテリア', name_cn: '室内', name_ar: 'ديكور', name_es: 'Interior', name_de: 'Interieur', name_fr: 'Intérieur', top_category_code: 'user_artwork', icon: '🏠', sort_order: 4 },
+    { code: 'ua_fengshui', name: '풍수그림', name_us: 'Feng Shui Art', name_jp: '風水画', name_cn: '风水画', name_ar: 'فنغ شوي', name_es: 'Feng Shui', name_de: 'Feng Shui', name_fr: 'Feng Shui', top_category_code: 'user_artwork', icon: '🐉', sort_order: 5 }
+];
+
+// ★ 작품 제품 타입별 회배 단가 (KRW per m²)
+const UA_PRODUCT_TYPES = {
+    fabric:  { name: '패브릭인쇄', name_us: 'Fabric Print', name_jp: 'ファブリック印刷', icon: '🎨', price_krw: 15000 },
+    canvas:  { name: '캔버스액자', name_us: 'Canvas Frame', name_jp: 'キャンバスフレーム', icon: '🖼️', price_krw: 100000 },
+    paper:   { name: '종이포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', icon: '📄', price_krw: 10000 },
+    acrylic: { name: '아크릴액자', name_us: 'Acrylic Frame', name_jp: 'アクリルフレーム', icon: '💎', price_krw: 200000 },
+    blind:   { name: '롤블라인드', name_us: 'Roll Blind', name_jp: 'ロールブラインド', icon: '🪟', price_krw: 40000 }
+};
+window.UA_PRODUCT_TYPES = UA_PRODUCT_TYPES;
+window.UA_GENRE_CATS = UA_GENRE_CATS;
 
 window._setupArtworkCategories = async function() {
     if (!sb) return;
@@ -1004,16 +1043,77 @@ window._setupArtworkCategories = async function() {
             icon: 'fa-solid fa-paintbrush', sort_order: 50
         });
     }
-    const subs = [
-        { code: 'ua_paper', name: '종이 포스터', name_us: 'Paper Poster', name_jp: '紙ポスター', top_category_code: 'user_artwork', icon: '🖼️', sort_order: 1 },
-        { code: 'ua_fabric', name: '패브릭 포스터', name_us: 'Fabric Poster', name_jp: 'ファブリックポスター', top_category_code: 'user_artwork', icon: '🎨', sort_order: 2 },
-        { code: 'ua_canvas', name: '캔버스 액자', name_us: 'Canvas Frame', name_jp: 'キャンバスフレーム', top_category_code: 'user_artwork', icon: '🏛️', sort_order: 3 }
-    ];
-    for (const s of subs) {
+    // 장르 카테고리 생성
+    for (const s of UA_GENRE_CATS) {
         const { data: ex } = await sb.from('admin_categories').select('code').eq('code', s.code);
         if (!ex || ex.length === 0) await sb.from('admin_categories').insert(s);
     }
-    console.log('작품 마켓플레이스 카테고리 설정 완료');
+    console.log('작품 마켓플레이스 장르 카테고리 설정 완료');
+};
+
+// ★ 메인 페이지: 장르별 최신 작품 로딩
+window._loadArtworkGenreGrid = async function() {
+    if (!sb) return;
+    const tabBox = document.getElementById('artworkGenreTabs');
+    const grid = document.getElementById('artworkGenreGrid');
+    if (!tabBox || !grid) return;
+
+    const lang = window.CURRENT_LANG || 'kr';
+    const genres = UA_GENRE_CATS;
+
+    // 장르 탭 생성
+    tabBox.innerHTML = '';
+    genres.forEach((g, i) => {
+        const gName = lang==='ja' ? g.name_jp : lang==='en' ? g.name_us : lang==='zh' ? g.name_cn : lang==='es' ? g.name_es : lang==='de' ? g.name_de : lang==='fr' ? g.name_fr : g.name;
+        const btn = document.createElement('button');
+        btn.style.cssText = 'padding:6px 14px; border:1px solid rgba(255,255,255,0.2); border-radius:20px; background:' + (i===0?'rgba(99,102,241,0.3)':'rgba(255,255,255,0.08)') + '; color:#fff; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all 0.15s;';
+        btn.textContent = g.icon + ' ' + gName;
+        btn.onclick = () => {
+            tabBox.querySelectorAll('button').forEach(b => { b.style.background = 'rgba(255,255,255,0.08)'; });
+            btn.style.background = 'rgba(99,102,241,0.3)';
+            _renderGenreItems(g.code);
+        };
+        tabBox.appendChild(btn);
+    });
+
+    // 작품 로딩 함수
+    async function _renderGenreItems(genreCode) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        try {
+            const { data: items } = await sb.from('admin_products')
+                .select('code, name, name_jp, name_us, img_url')
+                .eq('category', genreCode)
+                .eq('partner_status', 'approved')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            grid.innerHTML = '';
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:13px;">' + (lang==='ja'?'まだ作品がありません':lang==='en'?'No artworks yet':'아직 작품이 없습니다') + '</div>';
+                return;
+            }
+            items.forEach(p => {
+                const pName = lang==='ja' ? (p.name_jp||p.name_us||p.name) : lang==='en' ? (p.name_us||p.name) : p.name;
+                const thumbUrl = window.getTinyThumb ? window.getTinyThumb(p.img_url, 180) : p.img_url;
+                const div = document.createElement('div');
+                div.style.cssText = 'cursor:pointer; border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); transition:transform 0.2s;';
+                div.onmouseenter = () => { div.style.transform = 'scale(1.03)'; };
+                div.onmouseleave = () => { div.style.transform = 'scale(1)'; };
+                div.innerHTML = `
+                    <img src="${thumbUrl}" alt="${pName}" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover;" onerror="this.src='https://placehold.co/180?text=No+Img'">
+                    <div style="padding:6px 8px; font-size:11px; font-weight:600; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pName}</div>
+                `;
+                div.onclick = () => { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
+                grid.appendChild(div);
+            });
+        } catch(e) {
+            console.warn('장르 작품 로딩 실패:', e);
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;">-</div>';
+        }
+    }
+
+    // 첫 번째 장르 자동 로딩
+    if (genres.length > 0) _renderGenreItems(genres[0].code);
 };
 
 // [수정] 디자인 판매 등록 (관리자 전용)

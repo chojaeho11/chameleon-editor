@@ -502,7 +502,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=185">
+<link rel="stylesheet" href="./style.css?v=186">
 
 <meta name="naver-site-verification" content="141eed82fa50fd6f98fa7bfe8dc481a202beb8cf" />
 
@@ -548,7 +548,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 4초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},4000);
 </script>
-<script src="toast.js?v=185"></script>
+<script src="toast.js?v=186"></script>
 <script>
 // v175: 서비스 워커 + 모든 캐시 강제 삭제
 if ('serviceWorker' in navigator) {
@@ -775,6 +775,8 @@ document.addEventListener('DOMContentLoaded', function() {
         #twoBtnWrap { gap:8px !important; padding:0 12px !important; }
         #twoBtnWrap button { padding:12px 10px !important; font-size:13px !important; gap:6px !important; border-radius:50px !important; }
         #twoBtnWrap button i { font-size:13px !important; }
+        #artworkGenreGrid { grid-template-columns:repeat(3,1fr) !important; }
+        #artworkMarketBanner { padding:20px !important; }
     }
     </style>
     <!-- 챗봇 안내 버튼 (화려한 그라데이션) -->
@@ -1913,31 +1915,21 @@ async function handleSubReturn() {
     <div style="position:absolute; bottom:-40px; left:-40px; width:150px; height:150px; background:rgba(168,85,247,0.1); border-radius:50%;"></div>
 
     <div style="position:relative; z-index:2;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px; margin-bottom:28px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px; margin-bottom:20px;">
             <div style="flex:1; min-width:280px;">
                 <span style="background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:800; display:inline-block; margin-bottom:12px;" data-i18n="artwork_badge">ARTWORK MARKETPLACE</span>
                 <h2 style="margin:0 0 10px; font-size:26px; font-weight:900; line-height:1.3;" data-i18n="artwork_title">내 작품판매<br><span style="color:#a78bfa;">판매금의 10%를 수익으로 지급합니다</span></h2>
-                <p style="margin:0; color:#94a3b8; font-size:14px; line-height:1.7;" data-i18n="artwork_desc">사진, 일러스트, 그림 등 내 이미지를 업로드하면<br>종이포스터 · 패브릭포스터 · 캔버스액자 3종 상품으로 자동 등록됩니다.<br>고객이 원하는 크기로 주문하면 <b style="color:#a78bfa;">판매금의 10%</b>가 수익금으로 적립됩니다.</p>
+                <p style="margin:0; color:#94a3b8; font-size:14px; line-height:1.7;" data-i18n="artwork_desc">사진, 일러스트, 그림 등 내 이미지를 업로드하면 마켓플레이스에 등록됩니다.<br>고객이 제품 종류와 크기를 선택하여 주문하면 <b style="color:#a78bfa;">판매금의 10%</b>가 수익금으로 적립됩니다.</p>
             </div>
             <button onclick="window.openArtworkUpload()" style="background:#fff; color:#1e1b4b; font-weight:800; font-size:16px; padding:16px 32px; border:none; border-radius:14px; cursor:pointer; box-shadow:0 4px 15px rgba(255,255,255,0.2); transition:transform .2s; white-space:nowrap;" onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'" data-i18n="artwork_upload_btn">
                 <i class="fa-solid fa-cloud-arrow-up"></i> 작품 등록하기
             </button>
         </div>
 
-        <!-- 3종 상품 카드 -->
-        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px;">
-            <div style="background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border-radius:14px; padding:16px; text-align:center; border:1px solid rgba(255,255,255,0.1);">
-                <div style="font-size:32px; margin-bottom:6px;">🖼️</div>
-                <div style="font-size:14px; font-weight:800;" data-i18n="artwork_paper">종이 포스터</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border-radius:14px; padding:16px; text-align:center; border:1px solid rgba(255,255,255,0.1);">
-                <div style="font-size:32px; margin-bottom:6px;">🎨</div>
-                <div style="font-size:14px; font-weight:800;" data-i18n="artwork_fabric">패브릭 포스터</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); backdrop-filter:blur(4px); border-radius:14px; padding:16px; text-align:center; border:1px solid rgba(255,255,255,0.1);">
-                <div style="font-size:32px; margin-bottom:6px;">🏛️</div>
-                <div style="font-size:14px; font-weight:800;" data-i18n="artwork_canvas">캔버스 액자</div>
-            </div>
+        <!-- 장르별 최신 작품 (JS로 동적 로딩) -->
+        <div id="artworkGenreTabs" style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; -webkit-overflow-scrolling:touch;"></div>
+        <div id="artworkGenreGrid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; min-height:120px;">
+            <div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>
         </div>
     </div>
 </div>
@@ -1946,7 +1938,7 @@ async function handleSubReturn() {
 <div id="artworkUploadModal" class="modal-bg" style="z-index:20000; display:none; align-items:center; justify-content:center;">
     <div class="modal-box" style="width:560px; max-width:95%; max-height:90vh; overflow-y:auto;">
         <h3 style="margin-top:0;" data-i18n="artwork_modal_title">🎨 작품 등록하기</h3>
-        <p style="color:#666; font-size:13px; margin-bottom:16px;" data-i18n="artwork_modal_desc">이미지를 업로드하면 3종 상품(종이포스터, 패브릭포스터, 캔버스액자)으로 자동 등록됩니다.</p>
+        <p style="color:#666; font-size:13px; margin-bottom:16px;" data-i18n="artwork_modal_desc">이미지를 업로드하면 마켓플레이스에 등록됩니다. 고객이 제품 종류와 사이즈를 선택하여 주문합니다.</p>
 
         <div style="margin-bottom:14px;">
             <label style="font-weight:700; font-size:13px; display:block; margin-bottom:6px;" data-i18n="artwork_label_image">작품 이미지</label>
@@ -1955,6 +1947,18 @@ async function handleSubReturn() {
                 <img id="artworkPreviewImg" style="max-width:100%; max-height:200px; border-radius:10px; border:1px solid #e2e8f0;">
                 <p style="font-size:12px; color:#64748b; margin-top:6px;" id="artworkDimInfo"></p>
             </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:700; font-size:13px; display:block; margin-bottom:6px;">카테고리 선택</label>
+            <div id="artworkGenreButtons" style="display:flex; flex-wrap:wrap; gap:8px;">
+                <button type="button" class="artwork-genre-btn" data-genre="ua_game" onclick="window._selectArtworkGenre(this)" style="padding:8px 16px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.15s;">🎮 게임</button>
+                <button type="button" class="artwork-genre-btn" data-genre="ua_anime" onclick="window._selectArtworkGenre(this)" style="padding:8px 16px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.15s;">🎬 애니메이션</button>
+                <button type="button" class="artwork-genre-btn" data-genre="ua_landscape" onclick="window._selectArtworkGenre(this)" style="padding:8px 16px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.15s;">🏞️ 풍경</button>
+                <button type="button" class="artwork-genre-btn" data-genre="ua_interior" onclick="window._selectArtworkGenre(this)" style="padding:8px 16px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.15s;">🏠 인테리어</button>
+                <button type="button" class="artwork-genre-btn" data-genre="ua_fengshui" onclick="window._selectArtworkGenre(this)" style="padding:8px 16px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.15s;">🐉 풍수그림</button>
+            </div>
+            <input type="hidden" id="artworkGenre" value="">
         </div>
 
         <div style="margin-bottom:14px;">
@@ -4456,30 +4460,30 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=185"></script>
-<script type="module" src="./canvas-core.js?v=185"></script>
-<script src="./wall-3d-preview.js?v=185" defer></script>
-<script src="./wall-3d-walls.js?v=185" defer></script>
-<script type="module" src="./canvas-size.js?v=185"></script>
-<script type="module" src="./canvas-guides.js?v=185"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=185"></script>
-<script type="module" src="./canvas-objects.js?v=185"></script>
-<script type="module" src="./canvas-image.js?v=185"></script>
-<script type="module" src="./canvas-template.js?v=185"></script>
-<script type="module" src="./canvas-ai.js?v=185"></script>
-<script type="module" src="./canvas-retouch.js?v=185"></script>
-<script type="module" src="./canvas-utils.js?v=185"></script>
-<script type="module" src="./shortcuts.js?v=185"></script>
-<script type="module" src="./context-menu.js?v=185"></script>
-<script type="module" src="./export.js?v=185"></script>
-<script type="module" src="./order.js?v=185"></script>
-<script type="module" src="./login.js?v=185"></script>
-<script type="module" src="./my-design.js?v=185"></script>
-<script type="module" src="./ppt-mode.js?v=185"></script>
-<script type="module" src="./main.js?v=185"></script>
+<script type="module" src="./config.js?v=186"></script>
+<script type="module" src="./canvas-core.js?v=186"></script>
+<script src="./wall-3d-preview.js?v=186" defer></script>
+<script src="./wall-3d-walls.js?v=186" defer></script>
+<script type="module" src="./canvas-size.js?v=186"></script>
+<script type="module" src="./canvas-guides.js?v=186"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=186"></script>
+<script type="module" src="./canvas-objects.js?v=186"></script>
+<script type="module" src="./canvas-image.js?v=186"></script>
+<script type="module" src="./canvas-template.js?v=186"></script>
+<script type="module" src="./canvas-ai.js?v=186"></script>
+<script type="module" src="./canvas-retouch.js?v=186"></script>
+<script type="module" src="./canvas-utils.js?v=186"></script>
+<script type="module" src="./shortcuts.js?v=186"></script>
+<script type="module" src="./context-menu.js?v=186"></script>
+<script type="module" src="./export.js?v=186"></script>
+<script type="module" src="./order.js?v=186"></script>
+<script type="module" src="./login.js?v=186"></script>
+<script type="module" src="./my-design.js?v=186"></script>
+<script type="module" src="./ppt-mode.js?v=186"></script>
+<script type="module" src="./main.js?v=186"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=185";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=186";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -5263,7 +5267,7 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
-<script src="./text-wizard.js?v=185"></script> 
+<script src="./text-wizard.js?v=186"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -5381,11 +5385,11 @@ window.filterFxCards = function(cat, btn) {
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=185 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=185';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=185'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=185';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=185';
+    // ★ 여기 파일명 뒤에 ?v=186 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=186';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=186'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=186';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=186';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -5794,6 +5798,10 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         // ★ [중요] 아래에 있는 함수들을 여기서 호출하여 화면을 그립니다.
         if (typeof renderQuickMenu === 'function') renderQuickMenu();
 
+        // ★ 작품 마켓플레이스 장르 카테고리 설정 + 최신 작품 로딩
+        if (typeof window._setupArtworkCategories === 'function') window._setupArtworkCategories();
+        if (typeof window._loadArtworkGenreGrid === 'function') window._loadArtworkGenreGrid();
+
         // 허니콤보드 소분류 그리드 (메인 VIP 섹션)
         if (typeof window.loadHomeHcGrid === 'function') window.loadHomeHcGrid();
 
@@ -5810,7 +5818,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=185').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=186').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -7230,9 +7238,34 @@ window.showChoiceModal = async function(key) {
         </div>
     `;
 
+    // ★ 작품 제품타입 선택 UI
+    let artworkTypeSelectorHtml = '';
+    if (isArtworkProduct && window.UA_PRODUCT_TYPES) {
+        const types = window.UA_PRODUCT_TYPES;
+        const _ptLabel = lang==='ja'?'製品タイプを選択':lang==='en'?'Select Product Type':'제품 종류 선택';
+        let btns = '';
+        Object.keys(types).forEach((k, i) => {
+            const t = types[k];
+            const tName = lang==='ja' ? t.name_jp : lang==='en' ? t.name_us : t.name;
+            const tPrice = formatPriceSimple(t.price_krw);
+            const isFirst = i === 0;
+            btns += `<button type="button" class="ua-type-btn" data-type="${k}" data-price="${t.price_krw}" onclick="window._selectArtworkType(this)"
+                style="flex:1; min-width:calc(50% - 6px); padding:10px 6px; border:2px solid ${isFirst?'#6366f1':'#e2e8f0'}; border-radius:10px; background:${isFirst?'#eef2ff':'#fff'}; cursor:pointer; text-align:center; transition:all 0.15s;">
+                <div style="font-size:18px;">${t.icon}</div>
+                <div style="font-size:11px; font-weight:700; color:${isFirst?'#4f46e5':'#334155'}; margin-top:2px;">${tName}</div>
+                <div style="font-size:10px; color:#6366f1; font-weight:600; margin-top:2px;">${tPrice}/m²</div>
+            </button>`;
+        });
+        artworkTypeSelectorHtml = `
+            <div data-npc="artworkType" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">🏷️ ${_ptLabel}</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">${btns}</div>
+            </div>`;
+    }
+
     let rightSideUI = "";
     if (isCustom) {
-        rightSideUI = productHeaderHtml + `
+        rightSideUI = productHeaderHtml + artworkTypeSelectorHtml + `
             ${isArtworkProduct ? '' : `<button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">
                 <div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일올리기'}
@@ -7380,6 +7413,10 @@ window.showChoiceModal = async function(key) {
                         <button id="promoTooltipBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${lang==='ja'?'定期購読する →':lang==='zh'?'去订阅 →':lang==='ar'?'اشترك الآن →':lang==='es'?'Suscribirse →':lang==='de'?'Jetzt abonnieren →':lang==='fr'?'S\'abonner →':lang==='en'?'Subscribe Now →':'구독하러가기 →'}</button>
                     </div>
                 </div>
+                ${isArtworkProduct ? `<div style="background:linear-gradient(135deg,#eef2ff,#faf5ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:15px;">
+                    <div style="font-size:13px; font-weight:700; color:#4f46e5; margin-bottom:6px;"><i class="fa-solid fa-crop-simple"></i> ${lang==='ja'?'エディタで自由にトリミングできます':lang==='en'?'Crop freely in the Editor':'에디터에서 원하는 비율로 자를 수 있습니다'}</div>
+                    <div style="font-size:11px; color:#64748b; line-height:1.6;">${lang==='ja'?'エディタに入ると、画像を好きな比率でトリミング・配置できます。サイズを入力してエディタボタンを押してください。':lang==='en'?'In the editor, you can crop and arrange the image to any ratio. Enter your size and click the Editor button.':'에디터에 들어가면 이미지를 원하는 비율로 자르고 배치할 수 있습니다. 사이즈를 입력하고 에디터 버튼을 눌러주세요.'}</div>
+                </div>` : ''}
                 <div data-npc="buttons" style="display:flex; flex-direction:column; gap:12px; margin-top:20px; padding-bottom:50px;">
                     ${product.cutline_url ? '<a href="'+product.cutline_url+'" target="_blank" download class="btn-round" style="height:44px; font-size:13px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; text-decoration:none;">✂️ '+(lang==='ja'?'カットライン ダウンロード':lang==='zh'?'刀线下载':lang==='ar'?'تحميل خط القطع':lang==='es'?'Descargar línea de corte':lang==='de'?'Stanzlinie herunterladen':lang==='fr'?'Télécharger la ligne de coupe':lang==='en'?'Download Die-cut Line':'칼선 다운받기')+'</a>' : ''}
                     <div id="miniKeyringEditorContainer" style="display:none;"></div>
@@ -7785,10 +7822,20 @@ window.updateModalTotal = function() {
         // ★ [핵심] 단가(unitPrice)를 언어에 맞게 가져오기
         let unitPrice = product.price || 0; // 기본 한국 가격
 
-        // 일본어면 price_jp 사용
-        if (lang === 'ja' && product.price_jp && product.price_jp > 0) {
+        // ★ 작품 제품타입 선택 시 해당 타입 단가 사용 (KRW/m² → 언어별 환산)
+        if (product._artworkTypePrice) {
+            unitPrice = product._artworkTypePrice;
+            // JP: price_jp = KRW × 0.1 (site-config CURRENCY_RATE.JP)
+            if (lang === 'ja') {
+                const jpRate = (_rates.JP || 0.1);
+                unitPrice = product._artworkTypePrice * jpRate;
+            }
+        }
+
+        // 일본어면 price_jp 사용 (작품 제품타입은 위에서 처리됨)
+        if (!product._artworkTypePrice && lang === 'ja' && product.price_jp && product.price_jp > 0) {
             unitPrice = product.price_jp;
-        } 
+        }
         // EN: price_us(구버전 환율) 사용 안 함 → KRW 유지 (formatValue에서 환산)
         // CN/AR/ES: KRW 원가 유지 (formatValue에서 환산)
 
@@ -7889,6 +7936,27 @@ if (w >= 20 && h >= 20) {
                 _fb1400Warn.remove();
             }
         }
+    };
+
+    // ★ 작품 제품타입 선택 핸들러
+    window._selectArtworkType = function(btn) {
+        document.querySelectorAll('.ua-type-btn').forEach(b => {
+            b.style.borderColor = '#e2e8f0';
+            b.style.background = '#fff';
+            b.querySelector('div:nth-child(2)').style.color = '#334155';
+        });
+        btn.style.borderColor = '#6366f1';
+        btn.style.background = '#eef2ff';
+        btn.querySelector('div:nth-child(2)').style.color = '#4f46e5';
+
+        // 선택한 타입의 단가를 product에 반영하고 재계산
+        const typePrice = parseInt(btn.dataset.price);
+        if (window.selectedProductForChoice) {
+            window.selectedProductForChoice._artworkTypePrice = typePrice;
+            window.selectedProductForChoice._artworkType = btn.dataset.type;
+        }
+        window.calcCustomPrice();
+        window.updateModalTotal();
     };
 
     // ★ 대분류 카테고리 코드 조회 헬퍼
@@ -8050,7 +8118,7 @@ if (w >= 20 && h >= 20) {
         window.__fabricGuideConfig = config;
 
         // 캔버스 가이드 재적용
-        import('./canvas-ai.js?v=185').then(mod => {
+        import('./canvas-ai.js?v=186').then(mod => {
             if (mod.applyFabricGuides) mod.applyFabricGuides(config);
         }).catch(e => console.error('Fabric guide update error:', e));
     };
@@ -8093,10 +8161,13 @@ if (w >= 20 && h >= 20) {
         }
 
         // 3. 단가 결정 (KRW 기준 - formatCurrency가 표시 시 환산)
-        // 관리자가 설정한 현지 가격(price_us/price_jp)이 있으면 KRW 역환산하여 formatCurrency 환산 시 정확하게 표시
         let unitPrice = product.price || 0;
         const _cRate = window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE;
-        if (lang === 'ja' && product.price_jp && _cRate && _cRate.JP) {
+
+        // ★ 작품 제품타입 선택 시 해당 타입 단가 사용
+        if (product._artworkTypePrice) {
+            unitPrice = product._artworkTypePrice;
+        } else if (lang === 'ja' && product.price_jp && _cRate && _cRate.JP) {
             unitPrice = product.price_jp / _cRate.JP;
         } else if (lang === 'en' && product.price_us && _cRate && _cRate.US) {
             unitPrice = product.price_us / _cRate.US;
@@ -8236,14 +8307,14 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=185');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=186');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=185')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=186')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -8295,7 +8366,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=185')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=186')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -8303,7 +8374,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=185');
+                    const m = await import('./order.js?v=186');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -8373,7 +8444,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=185').then(m => {
+            import('./order.js?v=186').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -8882,7 +8953,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=185').then(m => {
+        import('./order.js?v=186').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -9220,7 +9291,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=185');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=186');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -9238,7 +9309,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=185');
+                    const mod = await import('./canvas-ai.js?v=186');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -9254,7 +9325,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=185');
+                    const mod = await import('./canvas-ai.js?v=186');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -9309,7 +9380,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=185');
+                    const mod = await import('./canvas-ai.js?v=186');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -9320,7 +9391,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=185');
+                    const mod = await import('./canvas-ai.js?v=186');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -9371,7 +9442,7 @@ if (w >= 20 && h >= 20) {
         if (window.__fabricGuideConfig) {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=185');
+                    const mod = await import('./canvas-ai.js?v=186');
                     if (mod.applyFabricGuides) mod.applyFabricGuides(window.__fabricGuideConfig);
                 } catch(e) { console.error('Fabric guide error:', e); }
             }, 800);
@@ -9568,7 +9639,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=185');
+                await import('./canvas-objects.js?v=186');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -11131,7 +11202,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=185';
+    import { sb, initConfig } from './config.js?v=186';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
@@ -13100,7 +13171,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=185').then(function(mod) {
+            import('./order.js?v=186').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -14088,8 +14159,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=185"></script>
-<script src="./npc-wizard.js?v=185"></script>
+<script src="./gif-maker.js?v=186"></script>
+<script src="./npc-wizard.js?v=186"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">

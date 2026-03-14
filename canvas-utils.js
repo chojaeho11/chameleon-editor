@@ -1,4 +1,4 @@
-import { canvas } from "./canvas-core.js?v=185";
+import { canvas } from "./canvas-core.js?v=186";
 
 // --- History (Undo/Redo) State ---
 let undoStack = [];
