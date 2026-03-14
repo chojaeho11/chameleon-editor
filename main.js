@@ -1063,19 +1063,27 @@ window.UA_GENRE_CATS = UA_GENRE_CATS;
 
 window._setupArtworkCategories = async function() {
     if (!sb) return;
-    const { data: existing } = await sb.from('admin_top_categories').select('code').eq('code', 'user_artwork');
-    if (!existing || existing.length === 0) {
-        await sb.from('admin_top_categories').insert({
-            code: 'user_artwork', name: '고객작품판매', name_us: 'Artwork Shop', name_jp: '作品販売',
-            name_cn: '作品商店', name_ar: 'متجر الأعمال', name_es: 'Tienda de Arte', name_de: 'Kunstshop', name_fr: 'Boutique Art',
-            icon: 'fa-solid fa-paintbrush', sort_order: 50
-        });
-    }
-    // 장르 카테고리 생성
-    for (const s of UA_GENRE_CATS) {
-        const { data: ex } = await sb.from('admin_categories').select('code').eq('code', s.code);
-        if (!ex || ex.length === 0) await sb.from('admin_categories').insert(s);
-    }
+    // admin_top_categories / admin_categories는 RLS상 관리자만 INSERT 가능
+    // 일반 사용자는 SELECT만 (400 에러 방지)
+    try {
+        const { data: existing } = await sb.from('admin_top_categories').select('code').eq('code', 'user_artwork');
+        if (!existing || existing.length === 0) {
+            const { error: e1 } = await sb.from('admin_top_categories').insert({
+                code: 'user_artwork', name: '고객작품판매', name_us: 'Artwork Shop', name_jp: '作品販売',
+                name_cn: '作品商店', name_ar: 'متجر الأعمال', name_es: 'Tienda de Arte', name_de: 'Kunstshop', name_fr: 'Boutique Art',
+                icon: 'fa-solid fa-paintbrush', sort_order: 50
+            });
+            if (e1) { console.log('작품 카테고리 설정: 관리자 권한 필요 (정상)'); return; }
+        }
+        // 장르 카테고리 생성
+        for (const s of UA_GENRE_CATS) {
+            const { data: ex } = await sb.from('admin_categories').select('code').eq('code', s.code);
+            if (!ex || ex.length === 0) {
+                const { error: e2 } = await sb.from('admin_categories').insert(s);
+                if (e2) { console.log('작품 카테고리 설정: 관리자 권한 필요 (정상)'); return; }
+            }
+        }
+    } catch(e) { /* 비관리자 — 무시 */ }
     console.log('작품 마켓플레이스 장르 카테고리 설정 완료');
 };
 
