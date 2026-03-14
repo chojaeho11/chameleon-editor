@@ -221,15 +221,29 @@
         </div>
         <div id="tab-sales" class="mp-section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 data-i18n="mp_sales_title">🎨 판매중인 디자인 (내가 등록한 템플릿)</h3>
+                <h3 data-i18n="mp_sales_title">🎨 마켓플레이스 판매 작품</h3>
                 <div style="text-align:right;">
-                    <span style="font-size:12px; color:#666;" data-i18n="mp_sales_total">예상 수익 합계</span><br>
-                    <strong style="color:#6366f1; font-size:18px;" id="totalSalesPoint">0 P</strong>
+                    <span style="font-size:12px; color:#666;" data-i18n="mp_sales_total">누적 수익</span><br>
+                    <strong style="color:#6366f1; font-size:18px;" id="totalSalesPoint">0</strong>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#f0f4ff,#e8ecff); padding:14px; border-radius:12px; text-align:center;">
+                    <div style="font-size:11px; color:#6366f1; font-weight:600;" data-i18n="mp_total_products">등록 작품</div>
+                    <div style="font-size:22px; font-weight:900; color:#1e1b4b;" id="salesProductCount">0</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); padding:14px; border-radius:12px; text-align:center;">
+                    <div style="font-size:11px; color:#16a34a; font-weight:600;" data-i18n="mp_total_sold">판매 건수</div>
+                    <div style="font-size:22px; font-weight:900; color:#14532d;" id="salesTotalSold">0</div>
+                </div>
+                <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#fefce8,#fef9c3); padding:14px; border-radius:12px; text-align:center;">
+                    <div style="font-size:11px; color:#a16207; font-weight:600;" data-i18n="mp_total_revenue">누적 수익</div>
+                    <div style="font-size:22px; font-weight:900; color:#713f12;" id="salesTotalRevenue">0</div>
                 </div>
             </div>
             <p style="font-size:13px; color:#64748b; background:#f1f5f9; padding:10px; border-radius:8px;" data-i18n="mp_sales_guide">
-                <i class="fa-solid fa-circle-info"></i> 템플릿 등록 시 <b>100P</b>, 로고 등록 시 <b>150P</b>가 즉시 적립됩니다.<br>
-                다른 유저가 내 디자인을 구매(사용)하면 건당 <b>200P</b>가 추가로 적립됩니다.
+                <i class="fa-solid fa-circle-info"></i> 마켓플레이스에 등록한 작품이 판매되면 <b>매출액의 10%</b>가 예치금으로 적립됩니다.<br>
+                적립된 예치금은 <b>수익금 & 예치금</b> 메뉴에서 출금 신청할 수 있습니다.
             </p>
             <div id="mySalesGrid" class="mp-grid"></div>
         </div>

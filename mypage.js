@@ -18,7 +18,7 @@ function fmtMoney(krw) {
 const I18N_KO = {
     "mp_menu_dashboard": "대시보드",
     "mp_menu_designs": "내 디자인",
-    "mp_menu_sales": "판매중 (수익)",
+    "mp_menu_sales": "작품판매 (수익)",
     "mp_menu_orders": "주문 내역",
     "mp_menu_profit": "수익금 & 예치금",
     "btn_logout": "로그아웃",
@@ -612,62 +612,141 @@ async function reOrder(orderId) {
     }
 }
 
-// [신규] 판매중인 디자인 로드
-// [신규] 판매중인 디자인 로드 (패널티 적용 수정판)
+// [수정] 마켓플레이스 판매 작품 로드 (admin_products + partner_settlements 연동)
 async function loadMySales() {
     const grid = document.getElementById('mySalesGrid');
     if(!grid) return;
     grid.innerHTML = window.t('msg_loading', 'Loading...');
 
-    // 1. 라이브러리(디자인) 조회
-    const { data } = await sb.from('library').select('id, thumb_url, title, category, tags, product_key, usage_count, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(200);
-    
-    if(!data || data.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">${window.t('msg_no_sales', 'No designs for sale.')}</div>`;
+    const lang = window.CURRENT_LANG || 'kr';
+    const cfg = window.SITE_CONFIG || {};
+    const country = cfg.COUNTRY || 'KR';
+    const currUnit = { KR: '원', JP: '¥', US: '$' }[country] || '원';
+    const rate = cfg.CURRENCY_RATE || 1;
+
+    // 1. 내가 등록한 마켓플레이스 작품 조회 (partner_id = currentUser.id)
+    const { data: products } = await sb.from('admin_products')
+        .select('code, name, name_jp, name_us, img_url, price, category, created_at, partner_status')
+        .eq('partner_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+    // 2. 내 작품 판매 정산 내역 조회
+    const { data: settlements } = await sb.from('partner_settlements')
+        .select('item_code, commission_amount, settlement_status, created_at')
+        .eq('partner_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+    // 작품코드별 정산 집계
+    const salesMap = {};
+    let totalRevenue = 0;
+    let totalSold = 0;
+    if (settlements) {
+        settlements.forEach(s => {
+            // 같은 원본 이미지의 여러 제품(패브릭,캔버스 등)을 그룹핑
+            // item_code에서 원본 작품 코드 추출 (ua_로 시작하는 코드의 base)
+            const code = s.item_code;
+            if (!salesMap[code]) salesMap[code] = { count: 0, revenue: 0, pending: 0 };
+            salesMap[code].count++;
+            totalSold++;
+            if (s.settlement_status === 'completed') {
+                salesMap[code].revenue += (s.commission_amount || 0);
+                totalRevenue += (s.commission_amount || 0);
+            } else {
+                salesMap[code].pending += (s.commission_amount || 0);
+            }
+        });
+    }
+
+    // 작품 그룹핑: 같은 img_url 기준으로 대표 1개만 표시
+    const artworkGroups = {};
+    if (products) {
+        products.forEach(p => {
+            const imgKey = p.img_url || p.code;
+            if (!artworkGroups[imgKey]) {
+                artworkGroups[imgKey] = {
+                    name: country === 'JP' ? (p.name_jp || p.name) : country === 'US' ? (p.name_us || p.name) : p.name,
+                    img_url: p.img_url,
+                    category: p.category,
+                    created_at: p.created_at,
+                    status: p.partner_status,
+                    codes: [],
+                    totalSold: 0,
+                    totalRevenue: 0,
+                    totalPending: 0
+                };
+            }
+            artworkGroups[imgKey].codes.push(p.code);
+            const s = salesMap[p.code];
+            if (s) {
+                artworkGroups[imgKey].totalSold += s.count;
+                artworkGroups[imgKey].totalRevenue += s.revenue;
+                artworkGroups[imgKey].totalPending += s.pending;
+            }
+        });
+    }
+
+    const groups = Object.values(artworkGroups);
+
+    if (groups.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">
+            <i class="fa-solid fa-store" style="font-size:40px; color:#cbd5e1; margin-bottom:12px;"></i><br>
+            ${window.t('msg_no_sales', '등록된 판매 작품이 없습니다.')}<br>
+            <a href="index.html" style="color:#6366f1; font-weight:600; margin-top:8px; display:inline-block;">
+                ${window.t('msg_go_upload', '작품 등록하러 가기')} →
+            </a>
+        </div>`;
+        // 상단 통계 초기화
+        _updateSalesStats(0, 0, 0, currUnit, rate);
         return;
     }
 
-    // ★ [핵심] 현재 유저의 '패널티 등급' 여부를 DB에서 다시 조회
-    const { data: profile } = await sb.from('profiles')
-        .select('contributor_tier')
-        .eq('id', currentUser.id)
-        .single();
-    
-    // 패널티인지 확인
-    const isPenalty = profile?.contributor_tier === 'penalty';
+    // 상단 통계 업데이트
+    _updateSalesStats(groups.length, totalSold, totalRevenue, currUnit, rate);
 
     grid.innerHTML = '';
-    let total = 0;
+    groups.forEach(g => {
+        const displayRevenue = Math.round(g.totalRevenue * rate);
+        const displayPending = Math.round(g.totalPending * rate);
+        const statusBadge = g.status === 'approved'
+            ? `<span style="background:#dcfce7; color:#16a34a; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700;">${window.t('status_on_sale', '판매중')}</span>`
+            : `<span style="background:#fef3c7; color:#a16207; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700;">${window.t('status_pending', '심사중')}</span>`;
 
-    data.forEach(d => {
-        // 기본 보상: 로고 150P, 기타 100P
-        let reward = d.category === 'logo' ? 150 : 100;
-        
-        // ★ [패널티 적용] 등급이 penalty라면 무조건 50P로 고정
-        if (isPenalty) {
-            reward = 50; 
+        let revenueHtml = '';
+        if (g.totalSold > 0) {
+            revenueHtml = `<div style="margin-top:6px; font-size:12px; color:#16a34a; font-weight:700;">
+                <i class="fa-solid fa-coins"></i> ${window.t('label_revenue', '수익')}: ${displayRevenue.toLocaleString()}${currUnit}
+            </div>`;
+            if (displayPending > 0) {
+                revenueHtml += `<div style="font-size:11px; color:#a16207;">(${window.t('label_pending', '정산대기')}: ${displayPending.toLocaleString()}${currUnit})</div>`;
+            }
         }
 
-        total += reward;
-        
-        // 화면 표시 스타일 (패널티면 빨간색)
-        const rewardStyle = isPenalty ? 'color:#ef4444; font-weight:bold;' : 'color:#16a34a;';
-        const displayReward = fmtMoney(reward).replace(/[원¥$]/g, '').trim();
-        const rewardText = isPenalty ? `${window.t('msg_penalty_applied', 'Penalty applied')}: ${displayReward}P` : `${window.t('msg_registration_reward', 'Registration reward')}: ${displayReward}P`;
-
         grid.innerHTML += `
-            <div class="mp-design-card">
-                <img src="${d.thumb_url}" class="mp-design-thumb" style="height:150px; object-fit:cover;">
+            <div class="mp-design-card" style="position:relative;">
+                <img src="${g.img_url}" class="mp-design-thumb" style="height:150px; object-fit:cover;">
                 <div class="mp-design-body">
-                    <div style="font-weight:bold;">${d.title || window.t('msg_untitled', 'Untitled')}</div>
-                    <div style="font-size:12px; color:#666;">${d.category}</div>
-                    <div style="margin-top:5px; font-size:12px; ${rewardStyle}">${rewardText}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${g.name || window.t('msg_untitled', 'Untitled')}</div>
+                        ${statusBadge}
+                    </div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${g.category || ''} · ${window.t('label_sold', '판매')} ${g.totalSold}${window.t('unit_count', '건')}</div>
+                    ${revenueHtml}
                 </div>
             </div>`;
     });
+}
 
-    const elTotal = document.getElementById('totalSalesPoint');
-    if(elTotal) elTotal.innerText = fmtMoney(total).replace(/[원¥$]/g, '').trim() + ' P';
+function _updateSalesStats(productCount, soldCount, revenueKRW, currUnit, rate) {
+    const el1 = document.getElementById('salesProductCount');
+    const el2 = document.getElementById('salesTotalSold');
+    const el3 = document.getElementById('salesTotalRevenue');
+    const el4 = document.getElementById('totalSalesPoint');
+    const displayRevenue = Math.round(revenueKRW * rate);
+    if (el1) el1.textContent = productCount;
+    if (el2) el2.textContent = soldCount + (window.t('unit_count', '건') || '건');
+    if (el3) el3.textContent = displayRevenue.toLocaleString() + currUnit;
+    if (el4) el4.textContent = displayRevenue.toLocaleString() + currUnit;
 }
 
 // [수정] 출금 모달 열기 (예치금 deposit 조회)
