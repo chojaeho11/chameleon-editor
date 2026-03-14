@@ -6034,6 +6034,13 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         window.open(url, '_blank');
     };
     window.openTopMenu = async function(topCode, titleText) {
+        // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
+        if (topCode === 'user_artwork') {
+            document.getElementById('quickMenuModal').style.display = 'none';
+            const el = document.getElementById('artworkMarketBanner');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
         if (!sb) { console.warn("[openTopMenu] sb가 아직 초기화되지 않음"); return; }
         const modal = document.getElementById('categoryDetailModal');
         const grid = document.getElementById('catProductGrid');
@@ -6272,6 +6279,13 @@ async function renderQuickMenu() {
             btn.innerText = tName;
 
             btn.onclick = () => {
+                // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
+                if (top.code === 'user_artwork') {
+                    document.getElementById('quickMenuModal').style.display = 'none';
+                    const el = document.getElementById('artworkMarketBanner');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
                 document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
                 btn.classList.add('active');
                 const filteredSub = subCats.filter(s => s.top_category_code === top.code);
