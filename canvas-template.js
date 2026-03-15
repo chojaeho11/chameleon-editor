@@ -1533,78 +1533,67 @@ const WIZARD_BTNS = [
     { key: 'vertical-text', icon: 'fa-text-height', color: '#14b8a6', label: 'Insta' }
 ];
 
-window.loadTextTemplates = function(keyword) {
-    var list = document.getElementById('sideTextTplList');
-    if (!list) return;
-    list.innerHTML = '';
+// ★ 글씨효과 PNG 갤러리 로드 (Supabase storage: text-effects/)
+window.loadTextEffectGallery = function() {
+    var gallery = document.getElementById('textEffectGallery');
+    if (!gallery) return;
+    var _sb = window.sb || (typeof sb !== 'undefined' ? sb : null);
+    if (!_sb) { gallery.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ccc; font-size:11px;">DB 연결 대기</div>'; return; }
 
-    var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    var kw = (keyword || '').trim().toLowerCase();
-
-    // --- 마법사 버튼 섹션 (2열, 세로 아이콘+텍스트) ---
-    if (!kw) {
-        var wizSection = document.createElement('div');
-        wizSection.style.cssText = 'background:linear-gradient(135deg,#f0f4ff,#e8ecff); border-radius:12px; padding:12px; margin-bottom:14px; border:1px solid #c7d2fe;';
-        wizSection.innerHTML = '<div style="font-size:14px; font-weight:900; color:#4338ca; margin-bottom:10px; text-align:center; font-family:Inter,Noto Sans KR,sans-serif; letter-spacing:1px;">DESIGN WIZARD</div>';
-        var wizGrid = document.createElement('div');
-        wizGrid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;';
-        WIZARD_BTNS.forEach(function(wb) {
-            var btn = document.createElement('button');
-            btn.style.cssText = 'background:#fff; border:1px solid #e2e8f0; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:10px 4px; border-radius:10px; transition:all 0.15s; text-align:center; width:100%; box-sizing:border-box; overflow:hidden;';
-            btn.onmouseenter = function() { btn.style.background = '#f8fafc'; btn.style.borderColor = '#6366f1'; btn.style.transform = 'translateY(-1px)'; };
-            btn.onmouseleave = function() { btn.style.background = '#fff'; btn.style.borderColor = '#e2e8f0'; btn.style.transform = 'none'; };
-            btn.innerHTML =
-                '<div style="width:34px; height:34px; border-radius:10px; background:' + wb.color + '; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
-                '<i class="fa-solid ' + wb.icon + '" style="color:#fff; font-size:14px;"></i></div>' +
-                '<span style="font-size:11px; font-weight:300; color:#334155; font-family:Inter,Noto Sans KR,sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">' + wb.label + '</span>';
-            btn.onclick = function() { window.applyNewWizard && window.applyNewWizard(wb.key); };
-            wizGrid.appendChild(btn);
+    _sb.storage.from('products').list('text-effects', { limit: 200, sortBy: { column: 'name', order: 'asc' } })
+        .then(function(res) {
+            if (res.error || !res.data || res.data.length === 0) {
+                gallery.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:11px; padding:15px 0;">글씨효과 이미지를 업로드해주세요<br><span style="font-size:10px; color:#cbd5e1;">Storage > products > text-effects</span></div>';
+                return;
+            }
+            var files = res.data.filter(function(f) { return f.name && /\.(png|jpg|jpeg|webp|svg)$/i.test(f.name); });
+            if (files.length === 0) {
+                gallery.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:11px; padding:15px 0;">이미지 파일 없음</div>';
+                return;
+            }
+            var html = '';
+            files.forEach(function(f) {
+                var url = _sb.storage.from('products').getPublicUrl('text-effects/' + f.name).data.publicUrl;
+                html += '<div style="cursor:pointer; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#fff; transition:all 0.15s;" onclick="window.addTextEffectToCanvas(\'' + url.replace(/'/g, "\\'") + '\')" onmouseenter="this.style.borderColor=\'#6366f1\';this.style.transform=\'scale(1.03)\'" onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.transform=\'none\'">' +
+                    '<img src="' + url + '" style="width:100%; display:block; object-fit:contain; background:#f8fafc;" loading="lazy">' +
+                    '</div>';
+            });
+            gallery.innerHTML = html;
         });
-        wizSection.appendChild(wizGrid);
-        list.appendChild(wizSection);
-
-        // 글씨 템플릿 구분 제목
-        var secTitle = document.createElement('div');
-        secTitle.style.cssText = 'font-size:11px; font-weight:300; color:#94a3b8; margin:10px 0 8px; text-transform:uppercase; letter-spacing:0.5px; font-family:Inter,Noto Sans KR,sans-serif;';
-        secTitle.setAttribute('data-i18n', 'editor_tab_text_tpl');
-        secTitle.textContent = window.t ? window.t('editor_tab_text_tpl', 'Text Templates') : 'Text Templates';
-        list.appendChild(secTitle);
-    }
-
-    // --- 글씨 템플릿 프리셋 ---
-    var filtered = TEXT_TPL_PRESETS.filter(function(preset) {
-        if (!kw) return true;
-        var t = preset.texts[country] || preset.texts['EN'];
-        return (t.title.toLowerCase().indexOf(kw) >= 0 || t.sub.toLowerCase().indexOf(kw) >= 0);
-    });
-
-    if (filtered.length === 0 && kw) {
-        list.innerHTML += '<div style="text-align:center; color:#94a3b8; font-size:12px; padding:30px;">' + window.t('msg_no_search_result', 'No results') + '</div>';
-        return;
-    }
-
-    var grid = document.createElement('div');
-    grid.style.cssText = 'display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;';
-
-    filtered.forEach(function(preset, idx) {
-        var t = preset.texts[country] || preset.texts['EN'];
-        var titleShadow = preset.titleStyle.cssShadow ? ('text-shadow:' + preset.titleStyle.cssShadow + ';') : '';
-        var titleStroke = '';
-        var card = document.createElement('div');
-        card.style.cssText = 'cursor:pointer; border-radius:12px; overflow:hidden; aspect-ratio:4/3; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 10px; text-align:center; background:' + preset.bg + '; transition:transform 0.15s;';
-        card.onmouseenter = function() { card.style.transform = 'scale(1.03)'; };
-        card.onmouseleave = function() { card.style.transform = 'scale(1)'; };
-
-        card.innerHTML =
-            '<div style="font-size:16px; font-weight:900; color:' + preset.titleStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.2; margin-bottom:6px; letter-spacing:0.5px;' + titleShadow + titleStroke + '">' + t.title + '</div>' +
-            '<div style="font-size:10px; font-weight:300; color:' + preset.subStyle.fill + '; font-family:Inter,Noto Sans KR,sans-serif; line-height:1.4;">' + t.sub + '</div>';
-
-        card.onclick = function() { window.applyTextTemplate(preset, idx); };
-        grid.appendChild(card);
-    });
-
-    list.appendChild(grid);
 };
+
+// 글씨효과 PNG를 캔버스에 추가
+window.addTextEffectToCanvas = function(url) {
+    var c = window.canvas;
+    if (!c) return;
+    fabric.Image.fromURL(url, function(img) {
+        if (!img || !img.width) return;
+        var board = c.getObjects().find(function(o) { return o.isBoard; });
+        var bW = board ? board.getScaledWidth() : c.width;
+        var bH = board ? board.getScaledHeight() : c.height;
+        var centerX = board ? board.left + bW / 2 : c.width / 2;
+        var centerY = board ? board.top + bH / 2 : c.height / 2;
+        var scale = (bW * 0.6) / img.width;
+        if (scale > 1) scale = 1;
+        img.set({
+            left: centerX, top: centerY,
+            originX: 'center', originY: 'center',
+            scaleX: scale, scaleY: scale,
+            selectable: true, evented: true
+        });
+        c.add(img);
+        c.setActiveObject(img);
+        c.requestRenderAll();
+        // 모바일: 패널 닫기
+        if (window.innerWidth <= 768) {
+            var panel = document.getElementById('subPanel');
+            if (panel) panel.style.display = 'none';
+        }
+    }, { crossOrigin: 'anonymous' });
+};
+
+// 기존 loadTextTemplates는 갤러리로 대체
+window.loadTextTemplates = function() { window.loadTextEffectGallery(); };
 
 // 국가별 기본 고딕 폰트
 window._getDefaultGothic = function(country) {
