@@ -1533,7 +1533,13 @@ const WIZARD_BTNS = [
     { key: 'vertical-text', icon: 'fa-text-height', color: '#14b8a6', label: 'Insta' }
 ];
 
-// ★ 글씨효과 PNG 갤러리 로드 (DB: library 테이블, category='text-effect')
+// ★ 글씨효과 PNG 갤러리 (페이지네이션 + 검색)
+window._teAllData = [];
+window._tePage = 0;
+window._teMaxPage = 0;
+window._teSearchKw = '';
+var TE_PER_PAGE = 8;
+
 window.loadTextEffectGallery = function() {
     var gallery = document.getElementById('textEffectGallery');
     if (!gallery) return;
@@ -1544,21 +1550,59 @@ window.loadTextEffectGallery = function() {
         .eq('category', 'text-effect')
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(100)
+        .limit(500)
         .then(function(res) {
-            if (res.error || !res.data || res.data.length === 0) {
-                gallery.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:11px; padding:15px 0;">글씨효과 이미지를 업로드해주세요<br><span style="font-size:10px; color:#cbd5e1;">관리자 > 템플릿 & 로고 > 텍스트 효과</span></div>';
-                return;
-            }
-            var html = '';
-            res.data.forEach(function(t) {
-                var url = t.thumb_url;
-                html += '<div style="cursor:pointer; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#fff; transition:all 0.15s;" onclick="window.addTextEffectToCanvas(\'' + url.replace(/'/g, "\\'") + '\')" onmouseenter="this.style.borderColor=\'#6366f1\';this.style.transform=\'scale(1.03)\'" onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.transform=\'none\'">' +
-                    '<img src="' + url + '" style="width:100%; display:block; object-fit:contain; background:#f8fafc;" loading="lazy">' +
-                    '</div>';
-            });
-            gallery.innerHTML = html;
+            if (res.error || !res.data) { window._teAllData = []; }
+            else { window._teAllData = res.data; }
+            window._tePage = 0;
+            window._teSearchKw = '';
+            var searchInput = document.getElementById('textEffectSearch');
+            if (searchInput) searchInput.value = '';
+            window._teRenderPage();
         });
+};
+
+window._teRenderPage = function() {
+    var gallery = document.getElementById('textEffectGallery');
+    var pager = document.getElementById('textEffectPager');
+    var pageInfo = document.getElementById('tePageInfo');
+    if (!gallery) return;
+
+    var kw = (window._teSearchKw || '').trim().toLowerCase();
+    var filtered = window._teAllData;
+    if (kw) {
+        filtered = filtered.filter(function(t) {
+            return t.tags && t.tags.toLowerCase().indexOf(kw) >= 0;
+        });
+    }
+
+    if (filtered.length === 0) {
+        gallery.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:11px; padding:15px 0;">' + (kw ? '검색 결과 없음' : '글씨효과 이미지를 업로드해주세요') + '</div>';
+        if (pager) pager.style.display = 'none';
+        return;
+    }
+
+    var totalPages = Math.ceil(filtered.length / TE_PER_PAGE);
+    window._teMaxPage = totalPages - 1;
+    if (window._tePage > window._teMaxPage) window._tePage = window._teMaxPage;
+    if (window._tePage < 0) window._tePage = 0;
+
+    var start = window._tePage * TE_PER_PAGE;
+    var pageItems = filtered.slice(start, start + TE_PER_PAGE);
+
+    var html = '';
+    pageItems.forEach(function(t) {
+        var url = t.thumb_url;
+        html += '<div style="cursor:pointer; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#fff; transition:all 0.15s;" onclick="window.addTextEffectToCanvas(\'' + url.replace(/'/g, "\\'") + '\')" onmouseenter="this.style.borderColor=\'#6366f1\';this.style.transform=\'scale(1.03)\'" onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.transform=\'none\'">' +
+            '<img src="' + url + '" style="width:100%; display:block; object-fit:contain; background:#f8fafc;" loading="lazy">' +
+            '</div>';
+    });
+    gallery.innerHTML = html;
+
+    if (pager) {
+        pager.style.display = totalPages > 1 ? 'block' : 'none';
+        if (pageInfo) pageInfo.textContent = (window._tePage + 1) + '/' + totalPages;
+    }
 };
 
 // 글씨효과 PNG를 캔버스에 추가
