@@ -1881,5 +1881,7 @@
   "menu_add_row": "Ajouter une ligne",
   "menu_help_text": "Après avoir créé le menu, redimensionnez-le sur le canevas pour ajuster automatiquement la mise en page.",
   "menu_edit_done": "Terminé",
-  "menu_create": "Créer le menu"
+  "menu_create": "Créer le menu",
+  "msg_object_locked": "Objet verrouillé",
+  "msg_object_unlocked": "Objet déverrouillé"
 }

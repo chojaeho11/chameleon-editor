@@ -1879,5 +1879,7 @@
   "menu_add_row": "添加行",
   "menu_help_text": "创建菜单后，在画布上调整大小以自动调整布局。",
   "menu_edit_done": "完成编辑",
-  "menu_create": "创建菜单"
+  "menu_create": "创建菜单",
+  "msg_object_locked": "对象已锁定",
+  "msg_object_unlocked": "对象已解锁"
 }

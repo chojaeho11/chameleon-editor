@@ -1881,5 +1881,7 @@
   "menu_add_row": "Añadir fila",
   "menu_help_text": "Después de crear el menú, cambie el tamaño en el lienzo para ajustar el diseño automáticamente.",
   "menu_edit_done": "Listo",
-  "menu_create": "Crear Menú"
+  "menu_create": "Crear Menú",
+  "msg_object_locked": "Objeto bloqueado",
+  "msg_object_unlocked": "Objeto desbloqueado"
 }

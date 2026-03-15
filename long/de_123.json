@@ -1881,5 +1881,7 @@
   "menu_add_row": "Zeile hinzufügen",
   "menu_help_text": "Nach dem Erstellen des Menüs können Sie die Größe auf der Leinwand anpassen.",
   "menu_edit_done": "Fertig",
-  "menu_create": "Menü erstellen"
+  "menu_create": "Menü erstellen",
+  "msg_object_locked": "Objekt gesperrt",
+  "msg_object_unlocked": "Objekt entsperrt"
 }
