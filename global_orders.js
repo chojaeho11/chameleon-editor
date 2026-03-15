@@ -1135,11 +1135,11 @@ window.updateActionButtons = () => {
     if(!div) return;
     const s = currentOrderStatus;
     if (s === '입금대기') {
-        div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">일괄 입금처리</button><button class="btn btn-danger" onclick="cancelDepositSelected()">일괄 취소</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">일괄 입금처리</button><button class="btn btn-danger" onclick="cancelDepositSelected()">🚫 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button>`;
     } else if (s === '결제완료') {
-        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button>`;
+        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button>`;
     } else if (s === '칼선작업') {
-        div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button>`;
     } else if (s === '완료됨') {
         div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('발송완료')">발송처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button>`;
     } else if (s === '배송') {
@@ -1600,58 +1600,108 @@ window.confirmDepositSelected = async () => {
     loadOrders();
 };
 
-// [일괄 취소] 입금대기 탭에서 사용 — 취소 사유 메시지 입력 가능
-window.cancelDepositSelected = async () => {
-    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
-    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
-
-    // 취소 사유 입력 모달
-    const reason = await new Promise(resolve => {
+// ★ 공통 모달 — 사유 입력 팝업
+function _showReasonModal(title, emoji, placeholder, btnText, btnColor) {
+    return new Promise(resolve => {
         const overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:20000;display:flex;align-items:center;justify-content:center;';
         overlay.innerHTML = `
             <div style="background:#fff;border-radius:16px;padding:28px;width:440px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                <h3 style="margin:0 0 6px;font-size:18px;">🚫 주문 취소 (${ids.length}건)</h3>
-                <p style="margin:0 0 16px;font-size:13px;color:#64748b;">고객에게 전달할 취소 사유를 입력해주세요.</p>
-                <textarea id="_cancelReasonInput" rows="3" placeholder="예: 입금 미확인으로 자동 취소되었습니다." style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;resize:vertical;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+                <h3 style="margin:0 0 6px;font-size:18px;">${emoji} ${title}</h3>
+                <p style="margin:0 0 16px;font-size:13px;color:#64748b;">고객에게 전달할 메시지를 입력해주세요.</p>
+                <textarea id="_reasonInput" rows="3" placeholder="${placeholder}" style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;resize:vertical;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
                 <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
-                    <button onclick="this.closest('div[style]').parentElement.remove();window._cancelResolve('');" style="padding:10px 20px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;font-size:13px;color:#64748b;">취소</button>
-                    <button onclick="window._cancelResolve(document.getElementById('_cancelReasonInput').value);this.closest('div[style]').parentElement.remove();" style="padding:10px 20px;border:none;background:#ef4444;color:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold;">취소처리 실행</button>
+                    <button onclick="this.closest('div[style]').parentElement.remove();window._reasonResolve(null);" style="padding:10px 20px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;font-size:13px;color:#64748b;">닫기</button>
+                    <button onclick="window._reasonResolve(document.getElementById('_reasonInput').value);this.closest('div[style]').parentElement.remove();" style="padding:10px 20px;border:none;background:${btnColor};color:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold;">${btnText}</button>
                 </div>
             </div>`;
         document.body.appendChild(overlay);
-        window._cancelResolve = resolve;
-        document.getElementById('_cancelReasonInput').focus();
+        window._reasonResolve = resolve;
+        document.getElementById('_reasonInput').focus();
     });
+}
 
-    if (reason === '') return; // 모달에서 취소 클릭
+// ★ 고객 메시지 전송 헬퍼
+async function _sendCustomerMessage(orderId, msgContent) {
+    try {
+        const { data: order } = await sb.from('orders').select('user_id, order_number').eq('id', orderId).single();
+        if (order?.user_id) {
+            await sb.from('messages').insert({
+                user_id: order.user_id,
+                sender: 'admin',
+                content: msgContent,
+                is_read: false
+            });
+        }
+    } catch(e) { console.warn('알림 발송 실패:', e); }
+}
+
+// [주문취소] 입금대기 탭 — 결제 취소 + 고객 메시지
+window.cancelDepositSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+
+    const reason = await _showReasonModal(
+        `주문 취소 (${ids.length}건)`, '🚫',
+        '예: 입금 미확인으로 자동 취소되었습니다.',
+        '주문취소 + 환불처리', '#ef4444'
+    );
+    if (reason === null) return;
 
     const cancelMsg = reason.trim() || '주문이 취소되었습니다.';
+    let successCount = 0, failCount = 0;
 
     for (const id of ids) {
-        // 주문 상태 업데이트 + 취소 사유 저장
-        await sb.from('orders').update({
-            status: '취소됨',
-            payment_status: '주문취소',
-            admin_note: cancelMsg
-        }).eq('id', id);
-
-        // 고객 알림 메시지 저장 (messages 테이블)
         try {
-            const { data: order } = await sb.from('orders').select('user_id, order_number').eq('id', id).single();
-            if (order?.user_id) {
-                await sb.from('messages').insert({
-                    user_id: order.user_id,
-                    sender: 'admin',
-                    content: `[주문취소] 주문번호 ${order.order_number || id}\n${cancelMsg}`,
-                    is_read: false
-                });
-            }
-        } catch(e) { console.warn('알림 발송 실패:', e); }
+            // PG 결제건이면 자동 환불
+            const newPaymentStatus = await refundSingleOrder(id, cancelMsg);
+            await sb.from('orders').update({
+                status: '취소됨',
+                payment_status: newPaymentStatus,
+                admin_note: cancelMsg
+            }).eq('id', id);
+            await _sendCustomerMessage(id, `[주문취소] 주문번호 ${id}\n${cancelMsg}`);
+            successCount++;
+        } catch(e) {
+            console.error(`Order ${id} cancel error:`, e);
+            // 결제 환불 실패해도 주문은 취소 처리
+            await sb.from('orders').update({
+                status: '취소됨',
+                payment_status: '주문취소',
+                admin_note: cancelMsg
+            }).eq('id', id);
+            await _sendCustomerMessage(id, `[주문취소] 주문번호 ${id}\n${cancelMsg}`);
+            failCount++;
+        }
     }
-    showToast(`${ids.length}건 취소처리 완료 (사유: ${cancelMsg})`, 'success');
+    showToast(`${successCount}건 취소완료${failCount > 0 ? `, ${failCount}건 환불실패(수동처리 필요)` : ''}`, failCount > 0 ? 'warn' : 'success');
     loadOrders();
     updateCancelReqBadge();
+};
+
+// [파일에러] 주문 취소 없이 고객에게 파일 오류 메시지만 전송
+window.sendFileErrorSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+
+    const msg = await _showReasonModal(
+        `파일에러 알림 (${ids.length}건)`, '⚠️',
+        '예: 업로드하신 파일의 해상도가 낮습니다. 300dpi 이상의 파일로 다시 업로드해주세요.',
+        '파일에러 메시지 전송', '#f59e0b'
+    );
+    if (msg === null) return;
+
+    const errorMsg = msg.trim() || '업로드하신 파일에 문제가 있습니다. 확인 후 다시 업로드해주세요.';
+
+    for (const id of ids) {
+        // admin_note에 파일에러 기록
+        const { data: existing } = await sb.from('orders').select('admin_note').eq('id', id).single();
+        const prevNote = existing?.admin_note || '';
+        const newNote = prevNote ? `${prevNote}\n[파일에러] ${errorMsg}` : `[파일에러] ${errorMsg}`;
+        await sb.from('orders').update({ admin_note: newNote }).eq('id', id);
+        await _sendCustomerMessage(id, `[파일에러] 주문번호 ${id}\n${errorMsg}\n\n파일을 수정하여 다시 업로드해주세요.`);
+    }
+    showToast(`${ids.length}건 파일에러 알림 전송 완료`, 'success');
 };
 
 window.deleteOrdersSelected = async (force) => {
