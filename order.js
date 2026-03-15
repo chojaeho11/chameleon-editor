@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=256";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=256";
-import { SITE_CONFIG } from "./site-config.js?v=256";
-import { applySize } from "./canvas-size.js?v=256";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=256";
+import { canvas } from "./canvas-core.js?v=257";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=257";
+import { SITE_CONFIG } from "./site-config.js?v=257";
+import { applySize } from "./canvas-size.js?v=257";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=257";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=256";
+} from "./export.js?v=257";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1241,7 +1241,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=256');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=257');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2119,7 +2119,7 @@ async function processOrderSubmission() {
 
     // ★ 최소 주문금액 30,000원 (천원단위 주문상품 21355677 예외)
     const MIN_ORDER_KRW = 30000;
-    const isExempt = cartData.some(item => item.product && String(item.product.product_key || item.product.id) === '21355677');
+    const isExempt = cartData.some(item => item.product && (String(item.product.code) === '21355677' || String(item.product.product_key) === '21355677' || String(item.product.id) === '21355677'));
     if (!isExempt && rawTotal < MIN_ORDER_KRW) {
         const lang = CURRENT_LANG;
         const minAmounts = { kr: '30,000원', ja: '3,000円', en: '$30', zh: '¥200', ar: '30,000 ₩', es: '$30', de: '30€', fr: '30€' };
@@ -2387,7 +2387,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=256');
+                const { generateDesignPNG } = await import('./export.js?v=257');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
