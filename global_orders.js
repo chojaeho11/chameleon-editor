@@ -1051,7 +1051,12 @@ window.loadOrders = async () => {
                     </td>
                     <td><b style="cursor:pointer;color:#4f46e5;text-decoration:underline;" onclick="openCustomerInfo('${order.user_id || ''}','${(order.manager_name||'').replace(/'/g,"\\'")}','${order.phone||''}')">${order.manager_name}</b><br><span style="font-size:11px; color:#666;">${order.phone}</span></td>
                     
-                    <td style="text-align:center; font-size:12px; color:#64748b; font-weight:bold;">${order.id}</td>
+                    <td style="text-align:center; font-size:12px; color:#64748b; font-weight:bold; position:relative;">
+                        <div>${order.id}</div>
+                        <div style="cursor:pointer;margin-top:2px;" onclick="event.stopPropagation();openOrderMemo('${order.id}')" title="${(order.admin_note||'').replace(/"/g,'&quot;').replace(/\n/g,' ')}">
+                            ${order.admin_note ? '<span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;font-size:10px;line-height:18px;text-align:center;font-weight:bold;">✉</span>' : '<span style="font-size:14px;opacity:0.3;">💬</span>'}
+                        </div>
+                    </td>
                     
                     <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${i.productName || '상품'} (${i.qty})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${i.productName || '상품'} (${i.qty})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
                     
@@ -1702,6 +1707,33 @@ window.sendFileErrorSelected = async () => {
         await _sendCustomerMessage(id, `[파일에러] 주문번호 ${id}\n${errorMsg}\n\n파일을 수정하여 다시 업로드해주세요.`);
     }
     showToast(`${ids.length}건 파일에러 알림 전송 완료`, 'success');
+};
+
+// ★ 주문 메모 열기/수정
+window.openOrderMemo = async (orderId) => {
+    const { data: order } = await sb.from('orders').select('admin_note, id').eq('id', orderId).single();
+    const currentNote = order?.admin_note || '';
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:20000;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:24px;width:420px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+            <h3 style="margin:0 0 4px;font-size:16px;">📝 주문 메모 (${orderId})</h3>
+            <p style="margin:0 0 12px;font-size:12px;color:#94a3b8;">관리자/스태프 간 공유 메모</p>
+            <textarea id="_memoInput" rows="4" style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;resize:vertical;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">${currentNote}</textarea>
+            <div style="display:flex;gap:8px;margin-top:12px;justify-content:space-between;">
+                <button onclick="document.getElementById('_memoInput').value='';sb.from('orders').update({admin_note:null}).eq('id','${orderId}').then(()=>{showToast('메모 삭제됨','success');this.closest('div[style*=fixed]').remove();loadOrders();});" style="padding:8px 16px;border:1px solid #fca5a5;background:#fff;border-radius:8px;cursor:pointer;font-size:12px;color:#ef4444;">삭제</button>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="this.closest('div[style*=fixed]').remove();" style="padding:8px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;font-size:12px;color:#64748b;">닫기</button>
+                    <button onclick="const v=document.getElementById('_memoInput').value;sb.from('orders').update({admin_note:v||null}).eq('id','${orderId}').then(()=>{showToast('메모 저장됨','success');this.closest('div[style*=fixed]').remove();loadOrders();});" style="padding:8px 16px;border:none;background:#6366f1;color:#fff;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">저장</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    const ta = document.getElementById('_memoInput');
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
 };
 
 window.deleteOrdersSelected = async (force) => {
