@@ -523,30 +523,29 @@ function initMobileTextEditor() {
     window.canvas.on('selection:cleared', closeMobileEditor);
     function handleSelection(e) {
         if (window.innerWidth > 768) return;
-        let obj = e.selected ? e.selected[0] : window.canvas.getActiveObject();
+        const active = window.canvas.getActiveObject();
+        if (!active) { closeMobileEditor(); return; }
+
         // activeSelection이면 자동 해제 → 개별 탭 가능하게
-        if (obj && obj.type === 'activeSelection') {
+        if (active.type === 'activeSelection') {
             window.canvas.discardActiveObject();
             window.canvas.requestRenderAll();
             closeMobileEditor();
             return;
         }
-        // group 내부 텍스트 감지
-        if (obj && obj.type === 'group') {
-            const textObjs = obj.getObjects().filter(o => o.type === 'i-text' || o.type === 'textbox');
-            if (textObjs.length > 0) {
-                // 그룹 해제하여 개별 선택 가능하게
-                window.canvas.setActiveObject(obj);
-                obj.toActiveSelection();
-                window.canvas.discardActiveObject();
-                window.canvas.requestRenderAll();
-            }
+        // group이면 해제
+        if (active.type === 'group') {
+            window.canvas.setActiveObject(active);
+            active.toActiveSelection();
+            window.canvas.discardActiveObject();
+            window.canvas.requestRenderAll();
             closeMobileEditor();
             return;
         }
-        if (obj && (obj.type === 'i-text' || obj.type === 'textbox' || obj.type === 'text')) {
-            activeTextObj = obj;
-            if(mobileInput) mobileInput.value = obj.text;
+        // 텍스트 객체면 편집기 표시
+        if (active.type === 'i-text' || active.type === 'textbox' || active.type === 'text') {
+            activeTextObj = active;
+            if(mobileInput) mobileInput.value = active.text;
             if(mobileEditor) mobileEditor.style.display = 'flex';
         } else {
             closeMobileEditor();
