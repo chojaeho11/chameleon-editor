@@ -1629,14 +1629,16 @@ function _showReasonModal(title, emoji, placeholder, btnText, btnColor) {
 // ★ 고객 메시지 전송 헬퍼
 async function _sendCustomerMessage(orderId, msgContent) {
     try {
-        const { data: order } = await sb.from('orders').select('user_id, order_number').eq('id', orderId).single();
+        const { data: order, error: oErr } = await sb.from('orders').select('user_id').eq('id', orderId).single();
+        if (oErr) { console.warn('주문 조회 실패:', oErr.message); return; }
         if (order?.user_id) {
-            await sb.from('messages').insert({
+            const { error: iErr } = await sb.from('messages').insert({
                 user_id: order.user_id,
                 sender: 'admin',
                 content: msgContent,
                 is_read: false
             });
+            if (iErr) console.warn('메시지 저장 실패:', iErr.message);
         }
     } catch(e) { console.warn('알림 발송 실패:', e); }
 }
@@ -1698,15 +1700,20 @@ window.sendFileErrorSelected = async () => {
 
     const errorMsg = msg.trim() || '업로드하신 파일에 문제가 있습니다. 확인 후 다시 업로드해주세요.';
 
+    let ok = 0;
     for (const id of ids) {
-        // admin_note에 파일에러 기록
-        const { data: existing } = await sb.from('orders').select('admin_note').eq('id', id).single();
-        const prevNote = existing?.admin_note || '';
-        const newNote = prevNote ? `${prevNote}\n[파일에러] ${errorMsg}` : `[파일에러] ${errorMsg}`;
-        await sb.from('orders').update({ admin_note: newNote }).eq('id', id);
-        await _sendCustomerMessage(id, `[파일에러] 주문번호 ${id}\n${errorMsg}\n\n파일을 수정하여 다시 업로드해주세요.`);
+        try {
+            // admin_note에 파일에러 기록
+            const { data: existing } = await sb.from('orders').select('admin_note').eq('id', id).single();
+            const prevNote = existing?.admin_note || '';
+            const newNote = prevNote ? `${prevNote}\n[파일에러] ${errorMsg}` : `[파일에러] ${errorMsg}`;
+            await sb.from('orders').update({ admin_note: newNote }).eq('id', id);
+            await _sendCustomerMessage(id, `[파일에러] 주문번호 ${id}\n${errorMsg}\n\n파일을 수정하여 다시 업로드해주세요.`);
+            ok++;
+        } catch(e) { console.warn('파일에러 처리 실패:', id, e); }
     }
-    showToast(`${ids.length}건 파일에러 알림 전송 완료`, 'success');
+    showToast(`${ok}건 파일에러 알림 전송 완료`, 'success');
+    loadOrders();
 };
 
 // ★ 주문 메모 열기/수정
