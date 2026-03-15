@@ -639,9 +639,10 @@ async function processLoad(mode) {
         selectedTpl.height = data.height || 1000;
         selectedTpl.category = data.category;
 
-        // 배경으로 취급할 카테고리 정의
+        // 배경으로 취급할 카테고리 정의 (잠금 없이 꽉 채우기만)
         const bgCategories = ['user_vector', 'user_image', 'photo-bg', 'vector', 'transparent-graphic', 'pattern'];
-        const isBgMode = bgCategories.includes(selectedTpl.category);
+        const isBgLike = bgCategories.includes(selectedTpl.category); // 크기만 꽉 채움
+        const isBgMode = false; // 잠금하지 않음
 
         let rawData = data.data_url;
         let finalJson = null;
@@ -679,8 +680,8 @@ async function processLoad(mode) {
 
             let finalScale = 1;
 
-            if (isBgMode) {
-                // 배경 모드: 꽉 채우기 (110% 여백 방지)
+            if (isBgLike) {
+                // 배경류 카테고리: 꽉 채우기 (110% 여백 방지)
                 finalScale = Math.max(bW / obj.width, bH / obj.height) * 1.1;
             } else {
                 // 객체 모드: 적당히 줄이기 (30%)
