@@ -752,8 +752,27 @@ document.addEventListener('DOMContentLoaded', function() {
             box-shadow: 0 6px 24px rgba(180, 170, 200, 0.4), inset 0 1px 0 rgba(255,255,255,0.9);
         }
     </style>
-    <!-- ★ 쿠폰 이벤트 배너 (독립 div) -->
-    
+    <!-- ★ 쿠폰 이벤트 배너 (독립 div) — 주석처리 (2026-03-16) -->
+    <!--
+    <div id="couponEventBanner" style="max-width:1100px; margin:15px auto 0; padding:0 15px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div onclick="window.showCouponDetail('first')" style="flex:1; min-width:240px; cursor:pointer; background:linear-gradient(135deg,#6366f1,#a855f7); border-radius:16px; padding:18px 20px; color:#fff; position:relative; overflow:hidden; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,0.1);border-radius:50%;"></div>
+                <div style="font-size:12px;opacity:0.85;margin-bottom:3px;" data-i18n="coupon_first_label">🎉 첫 구매 고객 한정</div>
+                <div style="font-size:20px;font-weight:900;margin-bottom:4px;" data-i18n="coupon_first_title">3만원 무료 쿠폰</div>
+                <div style="font-size:11px;opacity:0.8;line-height:1.4;" data-i18n="coupon_first_desc">회원가입 후 첫 주문 시 3만원까지 무료!</div>
+                <div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;" data-i18n="coupon_detail_btn">자세히 보기 →</div>
+            </div>
+            <div onclick="window.showCouponDetail('honeycomb')" style="flex:1; min-width:240px; cursor:pointer; background:linear-gradient(135deg,#f59e0b,#ef4444); border-radius:16px; padding:18px 20px; color:#fff; position:relative; overflow:hidden; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,0.1);border-radius:50%;"></div>
+                <div style="font-size:12px;opacity:0.85;margin-bottom:3px;" data-i18n="coupon_hc_label">🏗️ 허니콤보드 특별 혜택</div>
+                <div style="font-size:20px;font-weight:900;margin-bottom:4px;" data-i18n="coupon_hc_title">전시부스 무료 제작</div>
+                <div style="font-size:11px;opacity:0.8;line-height:1.4;" data-i18n="coupon_hc_desc">해외: 제작+배송+설치 무료 | 한국: 100만원 할인</div>
+                <div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;" data-i18n="coupon_detail_btn">자세히 보기 →</div>
+            </div>
+        </div>
+    </div>
+    -->
     <!-- 카프 쇼핑 안내 (화려한 메인 버튼) -->
     <div id="twoBtnWrap" style="display:flex; gap:12px; margin: 12px auto 15px auto; max-width:1100px; padding:0 15px;">
         <button id="btnProductSearch" onclick="window.openProductPickerModal()" style="flex:1; display:flex; align-items:center; justify-content:center; gap:10px; padding:18px 28px; background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; font-size:17px; font-weight:800; cursor:pointer; border-radius:60px; box-shadow:0 4px 16px rgba(99,102,241,0.4); transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
@@ -5530,7 +5549,7 @@ window.filterFxCards = function(cat, btn) {
         let content = '';
         if (type === 'first') {
             const t = {
-                kr: { title:'🎉 첫 구매 고객 무료 쿠폰', amount:'10,000원', rules:['회원가입 후 첫 주문에 자동 적용','3만원 이내 주문 시 결제금액 0원','최소 주문금액 제한 없음 (이 쿠폰 사용 시)','3만원 미만 주문 시 남은 금액은 소진 (이월 불가)','1인 1회 사용, 가입 후 30일 이내 유효'] },
+                kr: { title:'🎉 첫 구매 고객 무료 쿠폰', amount:'30,000원', rules:['회원가입 후 첫 주문에 자동 적용','3만원 이내 주문 시 결제금액 0원','최소 주문금액 제한 없음 (이 쿠폰 사용 시)','3만원 미만 주문 시 남은 금액은 소진 (이월 불가)','1인 1회 사용, 가입 후 30일 이내 유효'] },
                 ja: { title:'🎉 初回購入 無料クーポン', amount:'¥3,000', rules:['会員登録後、初回注文に自動適用','3,000円以内の注文は無料','最低注文金額の制限なし（クーポン使用時）','3,000円未満の注文の場合、残額は消滅','1人1回、登録後30日以内有効'] },
                 en: { title:'🎉 First Purchase Free Coupon', amount:'$30', rules:['Automatically applied to your first order after signup','Orders under $30 are completely free','No minimum order amount (with this coupon)','Remaining balance is forfeited if order is under $30','One-time use, valid 30 days after signup'] }
             };
