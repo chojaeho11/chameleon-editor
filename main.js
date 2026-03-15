@@ -545,6 +545,7 @@ function initMobileTextEditor() {
         // 텍스트 객체면 편집기 표시
         if (active.type === 'i-text' || active.type === 'textbox' || active.type === 'text') {
             activeTextObj = active;
+            activeTextObj._syncOrigText = active.text;
             if(mobileInput) mobileInput.value = active.text;
             if(mobileEditor) mobileEditor.style.display = 'flex';
         } else {
@@ -553,10 +554,23 @@ function initMobileTextEditor() {
     }
     if(mobileInput) {
         mobileInput.addEventListener('input', function() {
-            if (activeTextObj) {
-                activeTextObj.set('text', this.value);
-                window.canvas.requestRenderAll();
+            if (!activeTextObj) return;
+            const newText = this.value;
+            const oldText = activeTextObj._syncOrigText || activeTextObj.text;
+            activeTextObj.set('text', newText);
+            // ★ 같은 원본 텍스트를 가진 효과 레이어도 동기화
+            const c = window.canvas;
+            if (c) {
+                c.getObjects().forEach(o => {
+                    if (o === activeTextObj) return;
+                    if ((o.type === 'i-text' || o.type === 'textbox' || o.type === 'text') && o.text === oldText) {
+                        o.set('text', newText);
+                        o._syncOrigText = newText;
+                    }
+                });
             }
+            activeTextObj._syncOrigText = newText;
+            c.requestRenderAll();
         });
     }
     window.closeMobileTextEditor = closeMobileEditor;
@@ -637,6 +651,31 @@ function initMobileTextEditor() {
     window.canvas.off('selection:updated', origHandleSelection);
     window.canvas.on('selection:created', handleSelection);
     window.canvas.on('selection:updated', handleSelection);
+
+    // ★ PC 텍스트 편집 시 효과 레이어 동기화
+    window.canvas.on('text:changed', function(e) {
+        const target = e.target;
+        if (!target || !target._syncOrigText) return;
+        const oldText = target._syncOrigText;
+        const newText = target.text;
+        if (oldText === newText) return;
+        window.canvas.getObjects().forEach(o => {
+            if (o === target) return;
+            if ((o.type === 'i-text' || o.type === 'textbox' || o.type === 'text') && o.text === oldText) {
+                o.set('text', newText);
+                o._syncOrigText = newText;
+            }
+        });
+        target._syncOrigText = newText;
+        window.canvas.requestRenderAll();
+    });
+    // 선택 시 원본 텍스트 저장 (PC)
+    window.canvas.on('selection:created', function(e) {
+        const obj = window.canvas.getActiveObject();
+        if (obj && (obj.type === 'i-text' || obj.type === 'textbox') && !obj._syncOrigText) {
+            obj._syncOrigText = obj.text;
+        }
+    });
 }
 
 // ============================================================
