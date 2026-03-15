@@ -497,7 +497,7 @@
     </style>
 </head>
 <body>
-<script src="toast.js?v=224"></script>
+<script src="toast.js?v=225"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -1640,12 +1640,24 @@
 </script>
 <script type="module">
     // 1. config.js에서 sb와 initConfig를 가져옵니다.
-    import { sb, initConfig } from './config.js?v=224';
+    import { sb, initConfig } from './config.js?v=225';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
         const params = new URLSearchParams(window.location.search);
         const referrer = document.referrer;
+        const ua = (navigator.userAgent || '').toLowerCase();
+
+        // ★ 봇/크롤러 감지
+        const botPatterns = ['bot','crawler','spider','slurp','mediapartners','adsbot',
+            'facebookexternalhit','bytespider','yandex','baiduspider','semrush','ahrefs',
+            'mj12bot','dotbot','petalbot','sogou','headlesschrome','phantomjs','prerender',
+            'lighthouse','pagespeed','gtmetrix','pingdom','uptimerobot','curl','wget',
+            'python-requests','java/','go-http-client','node-fetch','scrapy','applebot',
+            'amazonbot','chatgpt','gptbot','claudebot','anthropic','ccbot'];
+        if (botPatterns.some(p => ua.includes(p)) || !ua || ua.length < 20 || navigator.webdriver === true) {
+            return '__BOT__';
+        }
 
         // ★ 광고 파라미터 감지 시 sessionStorage에 저장
         if (params.has('gclid') || params.has('na_click_id') || params.has('nclid') || params.has('n_campaign_type') ||
@@ -1659,7 +1671,8 @@
         if (params.has('gclid') || (params.get('utm_source') === 'google' && params.get('utm_medium') === 'cpc')) {
             return 'Google Ads (광고)';
         }
-        if (params.has('na_click_id') || params.has('nclid') || (params.get('utm_source') === 'naver' && params.get('utm_medium') === 'cpc')) {
+        if (params.has('na_click_id') || params.has('nclid') || params.has('n_campaign_type') ||
+            (params.get('utm_source') === 'naver' && params.get('utm_medium') === 'cpc')) {
             return 'Naver Ads (광고)';
         }
         if (params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
@@ -1683,18 +1696,27 @@
         try {
             const refUrl = new URL(referrer);
             const hostname = refUrl.hostname.toLowerCase();
-            if (hostname.includes(window.location.hostname)) return 'Internal (내부이동)';
+            if (hostname.includes('cafe2626.com') || hostname.includes('cafe0101.com') || hostname.includes('cafe3355.com') || hostname.includes(window.location.hostname)) return '__INTERNAL__';
+            // 광고 플랫폼 리퍼러
+            if (hostname.includes('googleads.') || hostname.includes('doubleclick.') || hostname.includes('googlesyndication.')) return 'Google Ads (광고)|리퍼러감지';
+            if (hostname.includes('searchad.naver.com') || hostname.includes('ad.search.naver.com')) return 'Naver Ads (광고)|리퍼러감지';
+            // 검색엔진
             if (hostname.includes('google.')) return 'Google Search (자연검색)';
-            if (hostname.includes('naver.')) return 'Naver Search (자연검색)';
+            if (hostname.includes('naver.')) {
+                if (refUrl.pathname.includes('/ad') || refUrl.searchParams.has('ad_id') || refUrl.searchParams.has('nclick')) return 'Naver Ads (광고)|리퍼러감지';
+                return 'Naver Search (자연검색)';
+            }
             if (hostname.includes('daum.') || hostname.includes('kakao.')) return 'Daum/Kakao';
             if (hostname.includes('yahoo.')) return 'Yahoo Search (자연검색)';
             if (hostname.includes('bing.')) return 'Bing Search (자연검색)';
+            // SNS
             if (hostname.includes('instagram.')) return 'Instagram (SNS)';
             if (hostname.includes('facebook.') || hostname.includes('fb.com')) return 'Facebook (SNS)';
             if (hostname.includes('youtube.')) return 'Youtube (SNS)';
             if (hostname.includes('tiktok.')) return 'Tiktok (SNS)';
             if (hostname.includes('line.me')) return 'LINE (SNS)';
             if (hostname.includes('pinterest.')) return 'Pinterest (SNS)';
+            if (hostname.includes('reddit.com')) return 'Reddit (SNS)';
             return hostname;
         } catch (e) {
             return 'Other Websites';
@@ -1709,6 +1731,8 @@
 
         try {
             const sourceName = getTrafficSource();
+            if (sourceName === '__BOT__') { console.log("[추적] 봇 감지 — 생략"); return; }
+            if (sourceName === '__INTERNAL__') { console.log("[추적] 내부 이동 — 생략"); return; }
             const finalReferrer = `[Blog] ${sourceName}`;
 
             // 타임존 기반 국가 감지 (세분화)
