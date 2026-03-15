@@ -528,7 +528,6 @@ function initMobileTextEditor() {
             activeTextObj = obj;
             if(mobileInput) mobileInput.value = obj.text;
             if(mobileEditor) mobileEditor.style.display = 'flex';
-            obj.enterEditing = function() {}; 
         } else {
             closeMobileEditor();
         }
