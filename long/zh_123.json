@@ -1882,5 +1882,12 @@
   "menu_create": "创建菜单",
   "msg_object_locked": "对象已锁定",
   "msg_object_unlocked": "对象已解锁",
-  "min_order_notice": "变色龙印刷是批发商城，最低订购金额为3万韩元。我们承诺最高品质与最低价格。"
+  "min_order_notice": "变色龙印刷是批发商城，最低订购金额为3万韩元。我们承诺最高品质与最低价格。",
+  "coupon_first_label": "🎉 首次购买限定",
+  "coupon_first_title": "3万韩元免费券",
+  "coupon_first_desc": "注册后首次订单最高免费3万韩元！",
+  "coupon_hc_label": "🏗️ 蜂窝板特别优惠",
+  "coupon_hc_title": "展示摊位免费制作",
+  "coupon_hc_desc": "海外: 制作+配送+安装免费 | 韩国: 100万韩元折扣",
+  "coupon_detail_btn": "了解更多 →"
 }

@@ -1521,5 +1521,12 @@
   "design_load_failed": "디자인 로드 실패: ",
   "msg_object_locked": "객체가 고정되었습니다",
   "msg_object_unlocked": "고정이 해제되었습니다",
-  "min_order_notice": "카멜레온프린팅은 도매 쇼핑몰로 최소 주문금액은 3만원입니다. 최고급 품질과 최저의 가격을 약속합니다."
+  "min_order_notice": "카멜레온프린팅은 도매 쇼핑몰로 최소 주문금액은 3만원입니다. 최고급 품질과 최저의 가격을 약속합니다.",
+  "coupon_first_label": "🎉 첫 구매 고객 한정",
+  "coupon_first_title": "3만원 무료 쿠폰",
+  "coupon_first_desc": "회원가입 후 첫 주문 시 3만원까지 무료!",
+  "coupon_hc_label": "🏗️ 허니콤보드 특별 혜택",
+  "coupon_hc_title": "전시부스 무료 제작",
+  "coupon_hc_desc": "해외: 제작+배송+설치 무료 | 한국: 100만원 할인",
+  "coupon_detail_btn": "자세히 보기 →"
 }

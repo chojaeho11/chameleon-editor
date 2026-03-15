@@ -1917,5 +1917,12 @@
   "design_load_failed": "Failed to load design: ",
   "msg_object_locked": "Object locked",
   "msg_object_unlocked": "Object unlocked",
-  "min_order_notice": "Chameleon Printing is a wholesale shop. Minimum order is $30. We promise the highest quality at the lowest prices."
+  "min_order_notice": "Chameleon Printing is a wholesale shop. Minimum order is $30. We promise the highest quality at the lowest prices.",
+  "coupon_first_label": "🎉 First Purchase Only",
+  "coupon_first_title": "$30 Free Coupon",
+  "coupon_first_desc": "Up to $30 free on your first order after signup!",
+  "coupon_hc_label": "🏗️ Honeycomb Board Special",
+  "coupon_hc_title": "Free Booth Production",
+  "coupon_hc_desc": "Production + Shipping + Installation FREE (under $700)",
+  "coupon_detail_btn": "Learn More →"
 }

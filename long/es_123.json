@@ -1884,5 +1884,12 @@
   "menu_create": "Crear Menú",
   "msg_object_locked": "Objeto bloqueado",
   "msg_object_unlocked": "Objeto desbloqueado",
-  "min_order_notice": "Chameleon Printing es mayorista. Pedido mínimo: 30,000 KRW. Prometemos la mejor calidad al mejor precio."
+  "min_order_notice": "Chameleon Printing es mayorista. Pedido mínimo: 30,000 KRW. Prometemos la mejor calidad al mejor precio.",
+  "coupon_first_label": "🎉 Solo primera compra",
+  "coupon_first_title": "Cupón gratis de 30,000 KRW",
+  "coupon_first_desc": "¡Hasta 30,000 KRW gratis en tu primer pedido!",
+  "coupon_hc_label": "🏗️ Oferta especial Honeycomb",
+  "coupon_hc_title": "Producción de stand gratis",
+  "coupon_hc_desc": "Producción + Envío + Instalación GRATIS",
+  "coupon_detail_btn": "Ver más →"
 }

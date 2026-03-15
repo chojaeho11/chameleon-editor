@@ -1884,5 +1884,12 @@
   "menu_create": "Créer le menu",
   "msg_object_locked": "Objet verrouillé",
   "msg_object_unlocked": "Objet déverrouillé",
-  "min_order_notice": "Chameleon Printing est un grossiste. Commande minimum: 30 000 KRW. Nous promettons la meilleure qualité au meilleur prix."
+  "min_order_notice": "Chameleon Printing est un grossiste. Commande minimum: 30 000 KRW. Nous promettons la meilleure qualité au meilleur prix.",
+  "coupon_first_label": "🎉 Premier achat uniquement",
+  "coupon_first_title": "Coupon gratuit 30 000 KRW",
+  "coupon_first_desc": "Jusqu'à 30 000 KRW gratuit sur la première commande!",
+  "coupon_hc_label": "🏗️ Offre spéciale panneau nid d'abeille",
+  "coupon_hc_title": "Production de stand gratuite",
+  "coupon_hc_desc": "Production + Livraison + Installation GRATUIT",
+  "coupon_detail_btn": "En savoir plus →"
 }

@@ -1914,5 +1914,12 @@
   "design_load_failed": "デザインの読み込み失敗: ",
   "msg_object_locked": "オブジェクトが固定されました",
   "msg_object_unlocked": "固定が解除されました",
-  "min_order_notice": "カメレオンプリンティングは卸売サイトです。最低注文金額は3,000円です。最高品質と最安値をお約束します。"
+  "min_order_notice": "カメレオンプリンティングは卸売サイトです。最低注文金額は3,000円です。最高品質と最安値をお約束します。",
+  "coupon_first_label": "🎉 初回購入限定",
+  "coupon_first_title": "¥3,000 無料クーポン",
+  "coupon_first_desc": "会員登録後の初回注文で3,000円まで無料！",
+  "coupon_hc_label": "🏗️ ハニカムボード特別特典",
+  "coupon_hc_title": "展示ブース無料制作",
+  "coupon_hc_desc": "制作+配送+設置 すべて無料（10万円以内）",
+  "coupon_detail_btn": "詳しく見る →"
 }
