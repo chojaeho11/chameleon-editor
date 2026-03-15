@@ -1161,7 +1161,7 @@ window.updateActionButtons = () => {
         div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#dc2626;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else {
         // 전체 탭
-        div.innerHTML = `<button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">선택 삭제</button>`;
+        div.innerHTML = `<button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">선택 삭제</button>`;
     }
     // 모든 탭에 수동다운 버튼 추가
     div.innerHTML += `<button class="btn" onclick="manualDownloadSelected()" style="background:#0ea5e9;color:white;margin-left:6px;">📥 수동다운</button>`;
