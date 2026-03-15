@@ -523,7 +523,14 @@ function initMobileTextEditor() {
     window.canvas.on('selection:cleared', closeMobileEditor);
     function handleSelection(e) {
         if (window.innerWidth > 768) return;
-        const obj = e.selected ? e.selected[0] : window.canvas.getActiveObject();
+        let obj = e.selected ? e.selected[0] : window.canvas.getActiveObject();
+        // activeSelection에서 텍스트 1개만 있으면 그걸 사용
+        if (obj && obj.type === 'activeSelection') {
+            const textObjs = obj.getObjects().filter(o => o.type === 'i-text' || o.type === 'textbox' || o.type === 'text');
+            if (textObjs.length === 1) obj = textObjs[0];
+            else if (textObjs.length > 1) { closeMobileEditor(); return; }
+            else { closeMobileEditor(); return; }
+        }
         if (obj && (obj.type === 'i-text' || obj.type === 'textbox' || obj.type === 'text')) {
             activeTextObj = obj;
             if(mobileInput) mobileInput.value = obj.text;
