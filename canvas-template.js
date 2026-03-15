@@ -773,6 +773,8 @@ async function processLoad(mode) {
             // [JSON 데이터]
             let jsonData = finalJson;
             const objectsToRender = jsonData.objects.filter(o => !o.isBoard);
+            // ★ text → textbox 변환 (enlivenObjects 전에 JSON 단계에서 변경)
+            objectsToRender.forEach(o => { if (o.type === 'text') o.type = 'textbox'; });
 
             fabric.util.enlivenObjects(objectsToRender, (objs) => {
                 if (objs.length === 0) {
@@ -790,30 +792,13 @@ async function processLoad(mode) {
                 const items = group.toActiveSelection();
                 canvas.discardActiveObject(); 
 
-                // ★ [핵심 패치] 불러온 모든 객체의 잠금을 일단 강제로 다 풉니다.
-                // text 타입은 편집 불가이므로 textbox로 교체
-                const finalObjs = [];
+                // ★ 잠금 해제
                 objs.forEach(o => {
-                    if (o.type === 'text') {
-                        // text → textbox 변환 (더블클릭 편집 가능하도록)
-                        const props = o.toObject();
-                        delete props.type;
-                        canvas.remove(o);
-                        const tb = new fabric.Textbox(o.text, props);
-                        canvas.add(tb);
-                        finalObjs.push(tb);
-                    } else {
-                        finalObjs.push(o);
-                    }
-                });
-                finalObjs.forEach(o => {
                     o.set({
-                        selectable: true,
-                        evented: true,
+                        selectable: true, evented: true,
                         lockMovementX: false, lockMovementY: false,
                         lockRotation: false, lockScalingX: false, lockScalingY: false,
-                        hasControls: true,
-                        isTemplateBackground: false
+                        hasControls: true, isTemplateBackground: false
                     });
                 });
 
@@ -822,7 +807,7 @@ async function processLoad(mode) {
                     let largestObj = null;
                     let maxArea = 0;
 
-                    finalObjs.forEach(o => {
+                    objs.forEach(o => {
                         if (o.type === 'text' || o.type === 'i-text' || o.type === 'textbox') return;
                         const area = (o.width * o.scaleX) * (o.height * o.scaleY);
                         if (area > maxArea) {
@@ -2016,36 +2001,23 @@ window.processLoad = async function(mode) {
         } else {
             // JSON 벡터 처리
             const objectsToLoad = jsonData.objects.filter(o => !o.isBoard);
+            objectsToLoad.forEach(o => { if (o.type === 'text') o.type = 'textbox'; });
             fabric.util.enlivenObjects(objectsToLoad, (objs) => {
                 if (!objs || objs.length === 0) { if(loading) loading.style.display="none"; return; }
 
                 const group = new fabric.Group(objs);
                 applyForcedSettings(group);
                 currentCanvas.add(group);
-                
-                // 그룹 해제
+
                 currentCanvas.setActiveObject(group);
-                const items = group.toActiveSelection(); 
-                currentCanvas.discardActiveObject(); 
-                
+                const items = group.toActiveSelection();
+                currentCanvas.discardActiveObject();
+
                 let largestObj = null;
                 let maxArea = 0;
 
-                // text → textbox 변환 + 잠금 해제
-                const finalObjs2 = [];
                 objs.forEach(o => {
                     o.setCoords();
-                    if (o.type === 'text') {
-                        const props = o.toObject(); delete props.type;
-                        currentCanvas.remove(o);
-                        const tb = new fabric.Textbox(o.text, props);
-                        currentCanvas.add(tb);
-                        finalObjs2.push(tb);
-                    } else {
-                        finalObjs2.push(o);
-                    }
-                });
-                finalObjs2.forEach(o => {
                     o.set({
                         selectable: true, evented: true,
                         lockMovementX: false, lockMovementY: false,
@@ -2065,7 +2037,7 @@ window.processLoad = async function(mode) {
                     });
                     currentCanvas.sendToBack(largestObj);
                 } else if (!isBgMode) {
-                    const sel = new fabric.ActiveSelection(finalObjs2, { canvas: currentCanvas });
+                    const sel = new fabric.ActiveSelection(objs, { canvas: currentCanvas });
                     currentCanvas.setActiveObject(sel);
                 }
 
@@ -2236,7 +2208,8 @@ window.processLoad = async function(mode) {
         } else {
             // [JSON 벡터 로드]
             const objectsToLoad = jsonData.objects.filter(o => !o.isBoard);
-            
+            objectsToLoad.forEach(o => { if (o.type === 'text') o.type = 'textbox'; });
+
             fabric.util.enlivenObjects(objectsToLoad, (objs) => {
                 if (!objs || objs.length === 0) {
                     if(loading) loading.style.display = "none";
@@ -2246,30 +2219,16 @@ window.processLoad = async function(mode) {
                 const group = new fabric.Group(objs);
                 applyForcedSettings(group);
                 canvas.add(group);
-                
-                // 그룹 해제 (낱개로 풀기 - 글씨 편집 가능하도록)
+
                 canvas.setActiveObject(group);
-                const items = group.toActiveSelection(); 
-                canvas.discardActiveObject(); 
-                
+                const items = group.toActiveSelection();
+                canvas.discardActiveObject();
+
                 let largestObj = null;
                 let maxArea = 0;
 
-                // text → textbox 변환 + 잠금 해제
-                const finalObjs3 = [];
                 objs.forEach(o => {
                     o.setCoords();
-                    if (o.type === 'text') {
-                        const props = o.toObject(); delete props.type;
-                        canvas.remove(o);
-                        const tb = new fabric.Textbox(o.text, props);
-                        canvas.add(tb);
-                        finalObjs3.push(tb);
-                    } else {
-                        finalObjs3.push(o);
-                    }
-                });
-                finalObjs3.forEach(o => {
                     o.set({
                         selectable: true, evented: true,
                         lockMovementX: false, lockMovementY: false,
@@ -2292,7 +2251,7 @@ window.processLoad = async function(mode) {
                     arrangeLayers();
                 }
                 else if (!isBgMode) {
-                    const sel = new fabric.ActiveSelection(finalObjs3, { canvas: canvas });
+                    const sel = new fabric.ActiveSelection(objs, { canvas: canvas });
                     canvas.setActiveObject(sel);
                     
                     if(loading) loading.style.display = "none";
