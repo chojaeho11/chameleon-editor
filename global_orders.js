@@ -1600,15 +1600,56 @@ window.confirmDepositSelected = async () => {
     loadOrders();
 };
 
-// [일괄 취소] 입금대기 탭에서 사용
+// [일괄 취소] 입금대기 탭에서 사용 — 취소 사유 메시지 입력 가능
 window.cancelDepositSelected = async () => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
-    if (!confirm(`${ids.length}건을 취소처리 하시겠습니까?`)) return;
+
+    // 취소 사유 입력 모달
+    const reason = await new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:20000;display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:28px;width:440px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <h3 style="margin:0 0 6px;font-size:18px;">🚫 주문 취소 (${ids.length}건)</h3>
+                <p style="margin:0 0 16px;font-size:13px;color:#64748b;">고객에게 전달할 취소 사유를 입력해주세요.</p>
+                <textarea id="_cancelReasonInput" rows="3" placeholder="예: 입금 미확인으로 자동 취소되었습니다." style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;resize:vertical;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+                <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                    <button onclick="this.closest('div[style]').parentElement.remove();window._cancelResolve('');" style="padding:10px 20px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;font-size:13px;color:#64748b;">취소</button>
+                    <button onclick="window._cancelResolve(document.getElementById('_cancelReasonInput').value);this.closest('div[style]').parentElement.remove();" style="padding:10px 20px;border:none;background:#ef4444;color:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold;">취소처리 실행</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        window._cancelResolve = resolve;
+        document.getElementById('_cancelReasonInput').focus();
+    });
+
+    if (reason === '') return; // 모달에서 취소 클릭
+
+    const cancelMsg = reason.trim() || '주문이 취소되었습니다.';
+
     for (const id of ids) {
-        await sb.from('orders').update({ status: '취소됨', payment_status: '주문취소' }).eq('id', id);
+        // 주문 상태 업데이트 + 취소 사유 저장
+        await sb.from('orders').update({
+            status: '취소됨',
+            payment_status: '주문취소',
+            admin_note: cancelMsg
+        }).eq('id', id);
+
+        // 고객 알림 메시지 저장 (messages 테이블)
+        try {
+            const { data: order } = await sb.from('orders').select('user_id, order_number').eq('id', id).single();
+            if (order?.user_id) {
+                await sb.from('messages').insert({
+                    user_id: order.user_id,
+                    sender: 'admin',
+                    content: `[주문취소] 주문번호 ${order.order_number || id}\n${cancelMsg}`,
+                    is_read: false
+                });
+            }
+        } catch(e) { console.warn('알림 발송 실패:', e); }
     }
-    showToast(`${ids.length}건 취소처리 완료`, 'success');
+    showToast(`${ids.length}건 취소처리 완료 (사유: ${cancelMsg})`, 'success');
     loadOrders();
     updateCancelReqBadge();
 };
