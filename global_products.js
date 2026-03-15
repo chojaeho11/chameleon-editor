@@ -1402,7 +1402,31 @@ window.loadCustomMaterials = async () => {
 // ==========================================
 // 번역 및 기타 기능
 // ==========================================
-async function googleTranslate(text, targetLang) {
+// ★ Claude AI 번역 (모든 언어를 한번에 번역)
+async function claudeTranslateAll(text) {
+    if (!text) return {};
+    try {
+        const { data, error } = await sb.functions.invoke('translate', {
+            body: {
+                text: text,
+                sourceLang: 'kr',
+                targetLangs: ['ja', 'en', 'zh', 'ar', 'es', 'de', 'fr']
+            }
+        });
+        if (error) throw error;
+        return (data && data.translations) || {};
+    } catch(e) {
+        console.warn('Claude 번역 실패, Google 번역으로 폴백:', e);
+        const result = {};
+        const langs = { ja: 'ja', en: 'en', zh: 'zh-CN', ar: 'ar', es: 'es', de: 'de', fr: 'fr' };
+        for (const [key, code] of Object.entries(langs)) {
+            result[key] = await googleTranslateFallback(text, code);
+        }
+        return result;
+    }
+}
+
+async function googleTranslateFallback(text, targetLang) {
     if (!text) return "";
     try {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=${targetLang}&dt=t&q=${encodeURI(text)}`;
@@ -1413,6 +1437,11 @@ async function googleTranslate(text, targetLang) {
         console.error("번역 API 오류:", e);
         return "";
     }
+}
+
+// 하위 호환용 (개별 언어 번역 — 기존 코드에서 사용)
+async function googleTranslate(text, targetLang) {
+    return googleTranslateFallback(text, targetLang);
 }
 
 // ★ KRW 가격 입력 시 실시간 환율 자동계산
@@ -1459,16 +1488,17 @@ window.autoTranslateInputs = async () => {
             document.getElementById('newProdPriceES').value = (krPrice * rateEUR).toFixed(2);
         }
 
-        document.getElementById('newProdNameJP').value = await googleTranslate(krName, 'ja');
-        const enName = await googleTranslate(krName, 'en');
-        document.getElementById('newProdNameUS').value = enName;
-        document.getElementById('newProdNameCN').value = await googleTranslate(enName, 'zh-CN');
-        document.getElementById('newProdNameAR').value = await googleTranslate(enName, 'ar');
-        document.getElementById('newProdNameES').value = await googleTranslate(enName, 'es');
-        if (document.getElementById('newProdNameDE')) document.getElementById('newProdNameDE').value = await googleTranslate(enName, 'de');
-        if (document.getElementById('newProdNameFR')) document.getElementById('newProdNameFR').value = await googleTranslate(enName, 'fr');
+        // Claude AI 번역 (한번에 모든 언어)
+        const tr = await claudeTranslateAll(krName);
+        if (tr.ja) document.getElementById('newProdNameJP').value = tr.ja;
+        if (tr.en) document.getElementById('newProdNameUS').value = tr.en;
+        if (tr.zh) document.getElementById('newProdNameCN').value = tr.zh;
+        if (tr.ar) document.getElementById('newProdNameAR').value = tr.ar;
+        if (tr.es) document.getElementById('newProdNameES').value = tr.es;
+        if (tr.de && document.getElementById('newProdNameDE')) document.getElementById('newProdNameDE').value = tr.de;
+        if (tr.fr && document.getElementById('newProdNameFR')) document.getElementById('newProdNameFR').value = tr.fr;
 
-        showToast(_t('msg_product_translated','Product name and price translated!'), "success");
+        showToast(_t('msg_product_translated','AI 번역 완료!'), "success");
 
     } catch (e) {
         showToast(_t('err_translation_failed','Translation failed: ') + e.message, "error");
@@ -1482,38 +1512,39 @@ window.autoTranslateTopCategoryInputs = async () => {
     const krName = document.getElementById('newTopCatName').value;
     const krDesc = document.getElementById('newTopCatDesc') ? document.getElementById('newTopCatDesc').value : '';
     if (!krName) { showToast(_t('err_kr_name_input_required','Please enter a Korean name.'), "warn"); return; }
-    document.getElementById('newTopCatNameJP').value = await googleTranslate(krName, 'ja');
-    const enName = await googleTranslate(krName, 'en');
-    document.getElementById('newTopCatNameUS').value = enName;
-    document.getElementById('newTopCatNameCN').value = await googleTranslate(enName, 'zh-CN');
-    document.getElementById('newTopCatNameAR').value = await googleTranslate(enName, 'ar');
-    document.getElementById('newTopCatNameES').value = await googleTranslate(enName, 'es');
+    const tr = await claudeTranslateAll(krName);
+    if (tr.ja) document.getElementById('newTopCatNameJP').value = tr.ja;
+    if (tr.en) document.getElementById('newTopCatNameUS').value = tr.en;
+    if (tr.zh) document.getElementById('newTopCatNameCN').value = tr.zh;
+    if (tr.ar) document.getElementById('newTopCatNameAR').value = tr.ar;
+    if (tr.es) document.getElementById('newTopCatNameES').value = tr.es;
     if (krDesc) {
-        if(document.getElementById('newTopCatDescJP')) document.getElementById('newTopCatDescJP').value = await googleTranslate(krDesc, 'ja');
-        if(document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = await googleTranslate(krDesc, 'en');
+        const trD = await claudeTranslateAll(krDesc);
+        if(trD.ja && document.getElementById('newTopCatDescJP')) document.getElementById('newTopCatDescJP').value = trD.ja;
+        if(trD.en && document.getElementById('newTopCatDescUS')) document.getElementById('newTopCatDescUS').value = trD.en;
     }
-    showToast(_t('msg_top_cat_translated','Top category translated.'), "success");
+    showToast(_t('msg_top_cat_translated','AI 번역 완료!'), "success");
 };
 
 window.autoTranslateCategoryInputs = async () => {
     const krName = document.getElementById('newCatName').value;
     const krDesc = document.getElementById('newCatDesc') ? document.getElementById('newCatDesc').value : '';
     if (!krName) { showToast(_t('err_kr_name_input_required','Please enter a Korean name.'), "warn"); return; }
-    document.getElementById('newCatNameJP').value = await googleTranslate(krName, 'ja');
-    const enName = await googleTranslate(krName, 'en');
-    document.getElementById('newCatNameUS').value = enName;
-    document.getElementById('newCatNameCN').value = await googleTranslate(enName, 'zh-CN');
-    document.getElementById('newCatNameAR').value = await googleTranslate(enName, 'ar');
-    document.getElementById('newCatNameES').value = await googleTranslate(enName, 'es');
+    const tr = await claudeTranslateAll(krName);
+    if (tr.ja) document.getElementById('newCatNameJP').value = tr.ja;
+    if (tr.en) document.getElementById('newCatNameUS').value = tr.en;
+    if (tr.zh) document.getElementById('newCatNameCN').value = tr.zh;
+    if (tr.ar) document.getElementById('newCatNameAR').value = tr.ar;
+    if (tr.es) document.getElementById('newCatNameES').value = tr.es;
     if (krDesc) {
-        if(document.getElementById('newCatDescJP')) document.getElementById('newCatDescJP').value = await googleTranslate(krDesc, 'ja');
-        const enDesc = await googleTranslate(krDesc, 'en');
-        if(document.getElementById('newCatDescUS')) document.getElementById('newCatDescUS').value = enDesc;
-        if(document.getElementById('newCatDescCN')) document.getElementById('newCatDescCN').value = await googleTranslate(enDesc, 'zh-CN');
-        if(document.getElementById('newCatDescAR')) document.getElementById('newCatDescAR').value = await googleTranslate(enDesc, 'ar');
-        if(document.getElementById('newCatDescES')) document.getElementById('newCatDescES').value = await googleTranslate(enDesc, 'es');
+        const trD = await claudeTranslateAll(krDesc);
+        if(trD.ja && document.getElementById('newCatDescJP')) document.getElementById('newCatDescJP').value = trD.ja;
+        if(trD.en && document.getElementById('newCatDescUS')) document.getElementById('newCatDescUS').value = trD.en;
+        if(trD.zh && document.getElementById('newCatDescCN')) document.getElementById('newCatDescCN').value = trD.zh;
+        if(trD.ar && document.getElementById('newCatDescAR')) document.getElementById('newCatDescAR').value = trD.ar;
+        if(trD.es && document.getElementById('newCatDescES')) document.getElementById('newCatDescES').value = trD.es;
     }
-    showToast(_t('msg_sub_cat_translated','Sub category translated.'), "success");
+    showToast(_t('msg_sub_cat_translated','AI 번역 완료!'), "success");
 };
 
 window.autoFillAddonPrices = (krwVal) => {
@@ -1539,15 +1570,16 @@ window.autoTranslateAddonInputs = async () => {
         document.getElementById('prAR').value = Math.round(krPrice * rateSAR);
         document.getElementById('prES').value = (krPrice * rateEUR).toFixed(2);
     }
-    document.getElementById('nmJP').value = await googleTranslate(krName, 'ja');
-    const enName = await googleTranslate(krName, 'en');
-    document.getElementById('nmUS').value = enName;
-    document.getElementById('nmCN').value = await googleTranslate(enName, 'zh-CN');
-    document.getElementById('nmAR').value = await googleTranslate(enName, 'ar');
-    document.getElementById('nmES').value = await googleTranslate(enName, 'es');
-    if (document.getElementById('nmDE')) document.getElementById('nmDE').value = await googleTranslate(enName, 'de');
-    if (document.getElementById('nmFR')) document.getElementById('nmFR').value = await googleTranslate(enName, 'fr');
-    showToast(_t('msg_option_translated','Option translated.'), "success");
+    // Claude AI 번역
+    const tr = await claudeTranslateAll(krName);
+    if (tr.ja) document.getElementById('nmJP').value = tr.ja;
+    if (tr.en) document.getElementById('nmUS').value = tr.en;
+    if (tr.zh) document.getElementById('nmCN').value = tr.zh;
+    if (tr.ar) document.getElementById('nmAR').value = tr.ar;
+    if (tr.es) document.getElementById('nmES').value = tr.es;
+    if (tr.de && document.getElementById('nmDE')) document.getElementById('nmDE').value = tr.de;
+    if (tr.fr && document.getElementById('nmFR')) document.getElementById('nmFR').value = tr.fr;
+    showToast(_t('msg_option_translated','AI 번역 완료!'), "success");
 };
 
 window.bulkTranslateAll = async () => {
