@@ -640,7 +640,7 @@ async function processLoad(mode) {
         selectedTpl.category = data.category;
 
         // 배경으로 취급할 카테고리 정의 (잠금 없이 꽉 채우기만)
-        const bgCategories = ['user_vector', 'user_image', 'photo-bg', 'vector', 'transparent-graphic', 'pattern'];
+        const bgCategories = ['user_vector', 'user_image', 'photo-bg'];
         const isBgLike = bgCategories.includes(selectedTpl.category); // 크기만 꽉 채움
         const isBgMode = false; // 잠금하지 않음
 
@@ -1908,7 +1908,7 @@ window.processLoad = async function(mode) {
         if (error || !data) throw new Error(window.t('msg_data_load_failed', "Data load failed"));
 
         // 배경류 카테고리 판별 (꽉 채우기용, 잠금하지 않음)
-        const _bgCats2 = ['user_vector', 'user_image', 'photo-bg', 'vector', 'transparent-graphic', 'pattern'];
+        const _bgCats2 = ['user_vector', 'user_image', 'photo-bg'];
         let isBgLike = _bgCats2.includes(data.category) || (window.sideCurrentGroup === 'group_template');
         if (mode === 'replace') isBgLike = true;
         const isBgMode = false; // 절대 잠금하지 않음
