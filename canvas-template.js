@@ -2031,15 +2031,26 @@ window.processLoad = async function(mode) {
                 let largestObj = null;
                 let maxArea = 0;
 
+                // text → textbox 변환 + 잠금 해제
+                const finalObjs2 = [];
                 objs.forEach(o => {
                     o.setCoords();
-                    // 기본 잠금 해제
+                    if (o.type === 'text') {
+                        const props = o.toObject(); delete props.type;
+                        currentCanvas.remove(o);
+                        const tb = new fabric.Textbox(o.text, props);
+                        currentCanvas.add(tb);
+                        finalObjs2.push(tb);
+                    } else {
+                        finalObjs2.push(o);
+                    }
+                });
+                finalObjs2.forEach(o => {
                     o.set({
                         selectable: true, evented: true,
                         lockMovementX: false, lockMovementY: false,
                         hasControls: true, isTemplateBackground: false
                     });
-
                     if (isBgMode && !o.type.includes('text')) {
                         const area = o.getScaledWidth() * o.getScaledHeight();
                         if (area > maxArea) { maxArea = area; largestObj = o; }
@@ -2054,7 +2065,7 @@ window.processLoad = async function(mode) {
                     });
                     currentCanvas.sendToBack(largestObj);
                 } else if (!isBgMode) {
-                    const sel = new fabric.ActiveSelection(objs, { canvas: currentCanvas });
+                    const sel = new fabric.ActiveSelection(finalObjs2, { canvas: currentCanvas });
                     currentCanvas.setActiveObject(sel);
                 }
 
@@ -2244,43 +2255,44 @@ window.processLoad = async function(mode) {
                 let largestObj = null;
                 let maxArea = 0;
 
+                // text → textbox 변환 + 잠금 해제
+                const finalObjs3 = [];
                 objs.forEach(o => {
                     o.setCoords();
-
-                    // 일단 모두 잠금 해제
+                    if (o.type === 'text') {
+                        const props = o.toObject(); delete props.type;
+                        canvas.remove(o);
+                        const tb = new fabric.Textbox(o.text, props);
+                        canvas.add(tb);
+                        finalObjs3.push(tb);
+                    } else {
+                        finalObjs3.push(o);
+                    }
+                });
+                finalObjs3.forEach(o => {
                     o.set({
                         selectable: true, evented: true,
                         lockMovementX: false, lockMovementY: false,
                         lockRotation: false, lockScalingX: false, lockScalingY: false,
                         hasControls: true, isTemplateBackground: false
                     });
-
-                    // 배경 모드라면 가장 큰 도형 찾기 (텍스트 제외)
-                    if (isBgMode) {
-                        if (!o.type.includes('text')) {
-                            const area = o.getScaledWidth() * o.getScaledHeight();
-                            if (area > maxArea) {
-                                maxArea = area;
-                                largestObj = o;
-                            }
-                        }
+                    if (isBgMode && !o.type.includes('text')) {
+                        const area = o.getScaledWidth() * o.getScaledHeight();
+                        if (area > maxArea) { maxArea = area; largestObj = o; }
                     }
                 });
 
-                // 배경 모드: 가장 큰 것만 잠그고 배경 태그 달기
                 if (isBgMode && largestObj) {
                     largestObj.set({
                         selectable: false, evented: false,
                         lockMovementX: true, lockMovementY: true,
-                        hasControls: false,
-                        isTemplateBackground: true
+                        hasControls: false, isTemplateBackground: true
                     });
                     canvas.sendToBack(largestObj);
-                    arrangeLayers(); // 레이어 재정렬
-                } 
-                // 객체 모드: 전체 선택
+                    arrangeLayers();
+                }
                 else if (!isBgMode) {
-                    const sel = new fabric.ActiveSelection(objs, { canvas: canvas });
+                    const sel = new fabric.ActiveSelection(finalObjs3, { canvas: canvas });
                     canvas.setActiveObject(sel);
                     
                     if(loading) loading.style.display = "none";
