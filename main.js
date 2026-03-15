@@ -524,12 +524,25 @@ function initMobileTextEditor() {
     function handleSelection(e) {
         if (window.innerWidth > 768) return;
         let obj = e.selected ? e.selected[0] : window.canvas.getActiveObject();
-        // activeSelection에서 텍스트 1개만 있으면 그걸 사용
+        // activeSelection이면 자동 해제 → 개별 탭 가능하게
         if (obj && obj.type === 'activeSelection') {
-            const textObjs = obj.getObjects().filter(o => o.type === 'i-text' || o.type === 'textbox' || o.type === 'text');
-            if (textObjs.length === 1) obj = textObjs[0];
-            else if (textObjs.length > 1) { closeMobileEditor(); return; }
-            else { closeMobileEditor(); return; }
+            window.canvas.discardActiveObject();
+            window.canvas.requestRenderAll();
+            closeMobileEditor();
+            return;
+        }
+        // group 내부 텍스트 감지
+        if (obj && obj.type === 'group') {
+            const textObjs = obj.getObjects().filter(o => o.type === 'i-text' || o.type === 'textbox');
+            if (textObjs.length > 0) {
+                // 그룹 해제하여 개별 선택 가능하게
+                window.canvas.setActiveObject(obj);
+                obj.toActiveSelection();
+                window.canvas.discardActiveObject();
+                window.canvas.requestRenderAll();
+            }
+            closeMobileEditor();
+            return;
         }
         if (obj && (obj.type === 'i-text' || obj.type === 'textbox' || obj.type === 'text')) {
             activeTextObj = obj;
