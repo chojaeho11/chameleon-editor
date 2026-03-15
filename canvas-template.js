@@ -1546,7 +1546,7 @@ window.loadTextEffectGallery = function() {
     var _sb = window.sb || (typeof sb !== 'undefined' ? sb : null);
     if (!_sb) { gallery.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ccc; font-size:11px;">DB 연결 대기</div>'; return; }
 
-    _sb.from('library').select('id, thumb_url, tags')
+    _sb.from('library').select('id, thumb_url, data_url, tags')
         .eq('category', 'text-effect')
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false })
@@ -1592,9 +1592,10 @@ window._teRenderPage = function() {
 
     var html = '';
     pageItems.forEach(function(t) {
-        var url = t.thumb_url;
-        html += '<div style="cursor:pointer; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#fff; transition:all 0.15s;" onclick="window.addTextEffectToCanvas(\'' + url.replace(/'/g, "\\'") + '\')" onmouseenter="this.style.borderColor=\'#6366f1\';this.style.transform=\'scale(1.03)\'" onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.transform=\'none\'">' +
-            '<img src="' + url + '" style="width:100%; display:block; object-fit:contain; background:#f8fafc;" loading="lazy">' +
+        var thumbUrl = t.thumb_url;
+        var fullUrl = t.data_url || t.thumb_url;
+        html += '<div style="cursor:pointer; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#fff; transition:all 0.15s;" onclick="window.addTextEffectToCanvas(\'' + fullUrl.replace(/'/g, "\\'") + '\')" onmouseenter="this.style.borderColor=\'#6366f1\';this.style.transform=\'scale(1.03)\'" onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.transform=\'none\'">' +
+            '<img src="' + thumbUrl + '" style="width:100%; display:block; object-fit:contain; background:#f8fafc;" loading="lazy">' +
             '</div>';
     });
     gallery.innerHTML = html;
