@@ -1617,7 +1617,7 @@ window.addTextEffectToCanvas = function(url) {
         var bH = board ? board.getScaledHeight() : c.height;
         var centerX = board ? board.left + bW / 2 : c.width / 2;
         var centerY = board ? board.top + bH / 2 : c.height / 2;
-        var scale = (bW * 0.6) / img.width;
+        var scale = (bW * 0.3) / img.width;
         if (scale > 1) scale = 1;
         img.set({
             left: centerX, top: centerY,
@@ -2153,8 +2153,8 @@ window.processLoad = async function(mode) {
                 const scaleY = bH / obj.height;
                 finalScale = Math.max(scaleX, scaleY) * 1.1;
             } else {
-                // 객체: 적당히 줄이기
-                const targetSize = Math.min(bW, bH) * 0.4;
+                // 객체: 작게 줄이기
+                const targetSize = Math.min(bW, bH) * 0.25;
                 const objSize = Math.max(obj.width, obj.height);
                 finalScale = targetSize / objSize;
                 if(finalScale > 1) finalScale = 1;
