@@ -1883,5 +1883,6 @@
   "menu_edit_done": "Terminé",
   "menu_create": "Créer le menu",
   "msg_object_locked": "Objet verrouillé",
-  "msg_object_unlocked": "Objet déverrouillé"
+  "msg_object_unlocked": "Objet déverrouillé",
+  "min_order_notice": "Chameleon Printing est un grossiste. Commande minimum: 30 000 KRW. Nous promettons la meilleure qualité au meilleur prix."
 }

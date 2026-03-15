@@ -1520,5 +1520,6 @@
   "design_storage_full": "보관함이 가득 찼습니다 (최대 20개). 마이페이지에서 기존 디자인을 삭제해주세요.",
   "design_load_failed": "디자인 로드 실패: ",
   "msg_object_locked": "객체가 고정되었습니다",
-  "msg_object_unlocked": "고정이 해제되었습니다"
+  "msg_object_unlocked": "고정이 해제되었습니다",
+  "min_order_notice": "카멜레온프린팅은 도매 쇼핑몰로 최소 주문금액은 3만원입니다. 최고급 품질과 최저의 가격을 약속합니다."
 }

@@ -1883,5 +1883,6 @@
   "menu_edit_done": "Fertig",
   "menu_create": "Menü erstellen",
   "msg_object_locked": "Objekt gesperrt",
-  "msg_object_unlocked": "Objekt entsperrt"
+  "msg_object_unlocked": "Objekt entsperrt",
+  "min_order_notice": "Chameleon Printing ist ein Großhandel. Mindestbestellwert: 30.000 KRW. Wir versprechen höchste Qualität zum besten Preis."
 }

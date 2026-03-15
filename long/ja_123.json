@@ -1913,5 +1913,6 @@
   "design_storage_full": "保管庫がいっぱいです（最大20件）。マイページから既存デザインを削除してください。",
   "design_load_failed": "デザインの読み込み失敗: ",
   "msg_object_locked": "オブジェクトが固定されました",
-  "msg_object_unlocked": "固定が解除されました"
+  "msg_object_unlocked": "固定が解除されました",
+  "min_order_notice": "カメレオンプリンティングは卸売サイトです。最低注文金額は3,000円です。最高品質と最安値をお約束します。"
 }

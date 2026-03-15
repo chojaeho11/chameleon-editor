@@ -1881,5 +1881,6 @@
   "menu_edit_done": "完成编辑",
   "menu_create": "创建菜单",
   "msg_object_locked": "对象已锁定",
-  "msg_object_unlocked": "对象已解锁"
+  "msg_object_unlocked": "对象已解锁",
+  "min_order_notice": "变色龙印刷是批发商城，最低订购金额为3万韩元。我们承诺最高品质与最低价格。"
 }

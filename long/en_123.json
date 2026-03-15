@@ -1916,5 +1916,6 @@
   "design_storage_full": "Storage full (max 20). Please delete designs from My Page.",
   "design_load_failed": "Failed to load design: ",
   "msg_object_locked": "Object locked",
-  "msg_object_unlocked": "Object unlocked"
+  "msg_object_unlocked": "Object unlocked",
+  "min_order_notice": "Chameleon Printing is a wholesale shop. Minimum order is $30. We promise the highest quality at the lowest prices."
 }
