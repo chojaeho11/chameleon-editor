@@ -724,14 +724,22 @@ async function processLoad(mode) {
                 
                 // 단일 이미지는 배경 모드면 잠금, 아니면 해제
                 if(isBgMode) {
-                    obj.set({ selectable: false, evented: false, isTemplateBackground: true });
+                    obj.set({ selectable: false, evented: false, isTemplateBackground: true,
+                        lockMovementX: true, lockMovementY: true, lockRotation: true,
+                        lockScalingX: true, lockScalingY: true, hasControls: false });
                 } else {
-                    obj.set({ selectable: true, evented: true, isTemplateBackground: false });
+                    obj.set({ selectable: true, evented: true, isTemplateBackground: false,
+                        lockMovementX: false, lockMovementY: false, lockRotation: false,
+                        lockScalingX: false, lockScalingY: false, hasControls: true });
                 }
 
                 canvas.add(obj);
                 arrangeLayers();
-                canvas.discardActiveObject();
+                if(!isBgMode) {
+                    canvas.setActiveObject(obj);
+                } else {
+                    canvas.discardActiveObject();
+                }
                 canvas.requestRenderAll();
 
                 // [강력 수정] 모바일 자동 맞춤 (버튼 클릭 + 스마트 함수)
