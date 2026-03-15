@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=254";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=254";
-import { SITE_CONFIG } from "./site-config.js?v=254";
-import { applySize } from "./canvas-size.js?v=254";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=254";
+import { canvas } from "./canvas-core.js?v=255";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=255";
+import { SITE_CONFIG } from "./site-config.js?v=255";
+import { applySize } from "./canvas-size.js?v=255";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=255";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=254";
+} from "./export.js?v=255";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1241,7 +1241,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=254');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=255');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2117,6 +2117,25 @@ async function processOrderSubmission() {
 
     const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
 
+    // ★ 최소 주문금액 30,000원 (천원단위 주문상품 21355677 예외)
+    const MIN_ORDER_KRW = 30000;
+    const isExempt = cartData.some(item => item.product && String(item.product.product_key || item.product.id) === '21355677');
+    if (!isExempt && rawTotal < MIN_ORDER_KRW) {
+        const lang = CURRENT_LANG;
+        const msgs = {
+            kr: '카멜레온프린팅은 도매쇼핑몰로 최소 주문금액은 3만원입니다.\n고퀄리티의 제품을 가장 저렴한 가격에 공급합니다.',
+            ja: 'カメレオンプリンティングは卸売サイトのため、最低注文金額は3万円です。\n最高品質の製品を最安値でご提供いたします。',
+            en: 'Chameleon Printing is a wholesale shop. The minimum order amount is $30.\nWe provide the highest quality products at the lowest prices.',
+            zh: '变色龙印刷是批发商城，最低订购金额为3万韩元。\n我们以最低的价格提供最高品质的产品。',
+            ar: 'طباعة كاميليون هو متجر جملة. الحد الأدنى للطلب هو 30,000 وون.\nنوفر أعلى جودة بأقل الأسعار.',
+            es: 'Chameleon Printing es una tienda mayorista. El pedido mínimo es de 30,000 KRW.\nOfrecemos productos de la más alta calidad al mejor precio.',
+            de: 'Chameleon Printing ist ein Großhandelsshop. Der Mindestbestellwert beträgt 30.000 KRW.\nWir bieten höchste Qualität zu den günstigsten Preisen.',
+            fr: 'Chameleon Printing est une boutique en gros. Le montant minimum de commande est de 30 000 KRW.\nNous offrons des produits de la plus haute qualité aux meilleurs prix.'
+        };
+        alert(msgs[lang] || msgs['kr']);
+        return;
+    }
+
     // 허니콤보드 용차 배송비 (KR: 200,000 KRW, JP: 310,000 KRW ≈ ¥40,000)
     const NON_METRO_FEE_KRW = _cc === 'JP' ? 310000 : 200000;
     const metroRadio = document.querySelector('input[name="metroArea"]:checked');
@@ -2352,7 +2371,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=254');
+                const { generateDesignPNG } = await import('./export.js?v=255');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
