@@ -1583,38 +1583,41 @@ window.autoTranslateAddonInputs = async () => {
 };
 
 window.bulkTranslateAll = async () => {
-    if (!confirm("전체 상품/옵션/카테고리의 빈 번역을 자동으로 채우시겠습니까?\n(JP/US/CN/AR/ES/DE/FR 모두 포함, 시간이 다소 소요됩니다)")) return;
+    const mode = confirm("전체 상품/옵션/카테고리를 Claude AI로 번역합니다.\n\n[확인] = 모든 번역을 새로 덮어쓰기\n[취소] = 빈 번역만 채우기");
+    const forceAll = mode;
     const btn = document.getElementById('btnBulkTranslate') || document.activeElement;
     const oldText = btn.innerText;
     btn.disabled = true;
 
-    // 영어 번역 캐시 (동일 원문 중복 호출 방지)
-    const enCache = {};
-    async function getEnglish(krText) {
-        if (!krText) return '';
-        if (enCache[krText]) return enCache[krText];
-        enCache[krText] = await googleTranslate(krText, 'en');
-        return enCache[krText];
+    // Claude 번역 캐시
+    const trCache = {};
+    async function getTranslations(krText) {
+        if (!krText) return {};
+        if (trCache[krText]) return trCache[krText];
+        trCache[krText] = await claudeTranslateAll(krText);
+        return trCache[krText];
     }
 
     try {
         // ── 1. 상품 (admin_products) ──
         const { data: products } = await sb.from('admin_products').select('id, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr');
         let pCount = 0;
-        for (let i = 0; i < products.length; i++) {
+        for (let i = 0; i < (products||[]).length; i++) {
             const p = products[i];
-            btn.innerText = `번역 중... (상품 ${i+1}/${products.length})`;
+            if (!p.name) continue;
+            btn.innerText = `AI 번역 중... (상품 ${i+1}/${products.length})`;
+            const needsAny = forceAll || !p.name_jp || !p.name_us || !p.name_cn || !p.name_ar || !p.name_es || !p.name_de || !p.name_fr;
+            if (!needsAny) continue;
+            const tr = await getTranslations(p.name);
             let updates = {};
-            let needUpdate = false;
-            if (!p.name_jp && p.name) { updates.name_jp = await googleTranslate(p.name, 'ja'); needUpdate = true; }
-            if (!p.name_us && p.name) { updates.name_us = await getEnglish(p.name); needUpdate = true; }
-            const enName = p.name_us || updates.name_us || await getEnglish(p.name);
-            if (!p.name_cn && enName) { updates.name_cn = await googleTranslate(enName, 'zh-CN'); needUpdate = true; }
-            if (!p.name_ar && enName) { updates.name_ar = await googleTranslate(enName, 'ar'); needUpdate = true; }
-            if (!p.name_es && enName) { updates.name_es = await googleTranslate(enName, 'es'); needUpdate = true; }
-            if (!p.name_de && enName) { updates.name_de = await googleTranslate(enName, 'de'); needUpdate = true; }
-            if (!p.name_fr && enName) { updates.name_fr = await googleTranslate(enName, 'fr'); needUpdate = true; }
-            if (needUpdate) {
+            if (tr.ja && (forceAll || !p.name_jp)) updates.name_jp = tr.ja;
+            if (tr.en && (forceAll || !p.name_us)) updates.name_us = tr.en;
+            if (tr.zh && (forceAll || !p.name_cn)) updates.name_cn = tr.zh;
+            if (tr.ar && (forceAll || !p.name_ar)) updates.name_ar = tr.ar;
+            if (tr.es && (forceAll || !p.name_es)) updates.name_es = tr.es;
+            if (tr.de && (forceAll || !p.name_de)) updates.name_de = tr.de;
+            if (tr.fr && (forceAll || !p.name_fr)) updates.name_fr = tr.fr;
+            if (Object.keys(updates).length > 0) {
                 await sb.from('admin_products').update(updates).eq('id', p.id);
                 pCount++;
             }
@@ -1623,21 +1626,23 @@ window.bulkTranslateAll = async () => {
         // ── 2. 옵션 (admin_addons) ──
         const { data: addons } = await sb.from('admin_addons').select('*');
         let aCount = 0;
-        for (let i = 0; i < addons.length; i++) {
+        for (let i = 0; i < (addons||[]).length; i++) {
             const a = addons[i];
-            btn.innerText = `번역 중... (옵션 ${i+1}/${addons.length})`;
-            let updates = {};
-            let needUpdate = false;
             const srcName = a.name_kr || a.name;
-            if (!a.name_jp && srcName) { updates.name_jp = await googleTranslate(srcName, 'ja'); needUpdate = true; }
-            if (!a.name_us && srcName) { updates.name_us = await getEnglish(srcName); needUpdate = true; }
-            const enName = a.name_us || updates.name_us || await getEnglish(srcName);
-            if (!a.name_cn && enName) { updates.name_cn = await googleTranslate(enName, 'zh-CN'); needUpdate = true; }
-            if (!a.name_ar && enName) { updates.name_ar = await googleTranslate(enName, 'ar'); needUpdate = true; }
-            if (!a.name_es && enName) { updates.name_es = await googleTranslate(enName, 'es'); needUpdate = true; }
-            if (!a.name_de && enName) { updates.name_de = await googleTranslate(enName, 'de'); needUpdate = true; }
-            if (!a.name_fr && enName) { updates.name_fr = await googleTranslate(enName, 'fr'); needUpdate = true; }
-            if (needUpdate) {
+            if (!srcName) continue;
+            btn.innerText = `AI 번역 중... (옵션 ${i+1}/${addons.length})`;
+            const needsAny = forceAll || !a.name_jp || !a.name_us || !a.name_cn || !a.name_ar || !a.name_es || !a.name_de || !a.name_fr;
+            if (!needsAny) continue;
+            const tr = await getTranslations(srcName);
+            let updates = {};
+            if (tr.ja && (forceAll || !a.name_jp)) updates.name_jp = tr.ja;
+            if (tr.en && (forceAll || !a.name_us)) updates.name_us = tr.en;
+            if (tr.zh && (forceAll || !a.name_cn)) updates.name_cn = tr.zh;
+            if (tr.ar && (forceAll || !a.name_ar)) updates.name_ar = tr.ar;
+            if (tr.es && (forceAll || !a.name_es)) updates.name_es = tr.es;
+            if (tr.de && (forceAll || !a.name_de)) updates.name_de = tr.de;
+            if (tr.fr && (forceAll || !a.name_fr)) updates.name_fr = tr.fr;
+            if (Object.keys(updates).length > 0) {
                 await sb.from('admin_addons').update(updates).eq('id', a.id);
                 aCount++;
             }
@@ -1647,55 +1652,55 @@ window.bulkTranslateAll = async () => {
         const { data: topCats } = await sb.from('admin_top_categories').select('*');
         let tcCount = 0;
         for (const tc of (topCats || [])) {
-            btn.innerText = `번역 중... (대분류)`;
+            if (!tc.name) continue;
+            btn.innerText = `AI 번역 중... (대분류)`;
+            const tr = await getTranslations(tc.name);
             let updates = {};
-            let needUpdate = false;
-            if (!tc.name_jp && tc.name) { updates.name_jp = await googleTranslate(tc.name, 'ja'); needUpdate = true; }
-            if (!tc.name_us && tc.name) { updates.name_us = await getEnglish(tc.name); needUpdate = true; }
-            const enN = tc.name_us || updates.name_us || await getEnglish(tc.name);
-            if (!tc.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
-            if (!tc.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
-            if (!tc.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
-            if (!tc.name_de && enN) { updates.name_de = await googleTranslate(enN, 'de'); needUpdate = true; }
-            if (!tc.name_fr && enN) { updates.name_fr = await googleTranslate(enN, 'fr'); needUpdate = true; }
-            if (needUpdate) { await sb.from('admin_top_categories').update(updates).eq('id', tc.id); tcCount++; }
+            if (tr.ja && (forceAll || !tc.name_jp)) updates.name_jp = tr.ja;
+            if (tr.en && (forceAll || !tc.name_us)) updates.name_us = tr.en;
+            if (tr.zh && (forceAll || !tc.name_cn)) updates.name_cn = tr.zh;
+            if (tr.ar && (forceAll || !tc.name_ar)) updates.name_ar = tr.ar;
+            if (tr.es && (forceAll || !tc.name_es)) updates.name_es = tr.es;
+            if (tr.de && (forceAll || !tc.name_de)) updates.name_de = tr.de;
+            if (tr.fr && (forceAll || !tc.name_fr)) updates.name_fr = tr.fr;
+            if (Object.keys(updates).length > 0) { await sb.from('admin_top_categories').update(updates).eq('id', tc.id); tcCount++; }
         }
 
         // ── 4. 소분류 (admin_categories) ──
         const { data: subCats } = await sb.from('admin_categories').select('*');
         let scCount = 0;
         for (const sc of (subCats || [])) {
-            btn.innerText = `번역 중... (소분류)`;
+            if (!sc.name) continue;
+            btn.innerText = `AI 번역 중... (소분류)`;
+            const tr = await getTranslations(sc.name);
             let updates = {};
-            let needUpdate = false;
-            if (!sc.name_jp && sc.name) { updates.name_jp = await googleTranslate(sc.name, 'ja'); needUpdate = true; }
-            if (!sc.name_us && sc.name) { updates.name_us = await getEnglish(sc.name); needUpdate = true; }
-            const enN = sc.name_us || updates.name_us || await getEnglish(sc.name);
-            if (!sc.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
-            if (!sc.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
-            if (!sc.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
-            if (!sc.name_de && enN) { updates.name_de = await googleTranslate(enN, 'de'); needUpdate = true; }
-            if (!sc.name_fr && enN) { updates.name_fr = await googleTranslate(enN, 'fr'); needUpdate = true; }
-            if (needUpdate) { await sb.from('admin_categories').update(updates).eq('id', sc.id); scCount++; }
+            if (tr.ja && (forceAll || !sc.name_jp)) updates.name_jp = tr.ja;
+            if (tr.en && (forceAll || !sc.name_us)) updates.name_us = tr.en;
+            if (tr.zh && (forceAll || !sc.name_cn)) updates.name_cn = tr.zh;
+            if (tr.ar && (forceAll || !sc.name_ar)) updates.name_ar = tr.ar;
+            if (tr.es && (forceAll || !sc.name_es)) updates.name_es = tr.es;
+            if (tr.de && (forceAll || !sc.name_de)) updates.name_de = tr.de;
+            if (tr.fr && (forceAll || !sc.name_fr)) updates.name_fr = tr.fr;
+            if (Object.keys(updates).length > 0) { await sb.from('admin_categories').update(updates).eq('id', sc.id); scCount++; }
         }
 
         // ── 5. 옵션 카테고리 (addon_categories) ──
         const { data: addonCats } = await sb.from('addon_categories').select('*');
         let acCount = 0;
         for (const ac of (addonCats || [])) {
-            btn.innerText = `번역 중... (옵션카테고리)`;
-            let updates = {};
-            let needUpdate = false;
             const src = ac.name_kr || ac.name;
-            if (!ac.name_jp && src) { updates.name_jp = await googleTranslate(src, 'ja'); needUpdate = true; }
-            if (!ac.name_us && src) { updates.name_us = await getEnglish(src); needUpdate = true; }
-            const enN = ac.name_us || updates.name_us || await getEnglish(src);
-            if (!ac.name_cn && enN) { updates.name_cn = await googleTranslate(enN, 'zh-CN'); needUpdate = true; }
-            if (!ac.name_ar && enN) { updates.name_ar = await googleTranslate(enN, 'ar'); needUpdate = true; }
-            if (!ac.name_es && enN) { updates.name_es = await googleTranslate(enN, 'es'); needUpdate = true; }
-            if (!ac.name_de && enN) { updates.name_de = await googleTranslate(enN, 'de'); needUpdate = true; }
-            if (!ac.name_fr && enN) { updates.name_fr = await googleTranslate(enN, 'fr'); needUpdate = true; }
-            if (needUpdate) { await sb.from('addon_categories').update(updates).eq('id', ac.id); acCount++; }
+            if (!src) continue;
+            btn.innerText = `AI 번역 중... (옵션카테고리)`;
+            const tr = await getTranslations(src);
+            let updates = {};
+            if (tr.ja && (forceAll || !ac.name_jp)) updates.name_jp = tr.ja;
+            if (tr.en && (forceAll || !ac.name_us)) updates.name_us = tr.en;
+            if (tr.zh && (forceAll || !ac.name_cn)) updates.name_cn = tr.zh;
+            if (tr.ar && (forceAll || !ac.name_ar)) updates.name_ar = tr.ar;
+            if (tr.es && (forceAll || !ac.name_es)) updates.name_es = tr.es;
+            if (tr.de && (forceAll || !ac.name_de)) updates.name_de = tr.de;
+            if (tr.fr && (forceAll || !ac.name_fr)) updates.name_fr = tr.fr;
+            if (Object.keys(updates).length > 0) { await sb.from('addon_categories').update(updates).eq('id', ac.id); acCount++; }
         }
 
         const total = pCount + aCount + tcCount + scCount + acCount;
