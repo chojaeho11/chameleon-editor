@@ -497,7 +497,7 @@
     </style>
 </head>
 <body>
-<script src="toast.js?v=225"></script>
+<script src="toast.js?v=226"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -1640,7 +1640,7 @@
 </script>
 <script type="module">
     // 1. config.js에서 sb와 initConfig를 가져옵니다.
-    import { sb, initConfig } from './config.js?v=225';
+    import { sb, initConfig } from './config.js?v=226';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
@@ -1648,79 +1648,65 @@
         const referrer = document.referrer;
         const ua = (navigator.userAgent || '').toLowerCase();
 
-        // ★ 봇/크롤러 감지
-        const botPatterns = ['bot','crawler','spider','slurp','mediapartners','adsbot',
-            'facebookexternalhit','bytespider','yandex','baiduspider','semrush','ahrefs',
-            'mj12bot','dotbot','petalbot','sogou','headlesschrome','phantomjs','prerender',
-            'lighthouse','pagespeed','gtmetrix','pingdom','uptimerobot','curl','wget',
-            'python-requests','java/','go-http-client','node-fetch','scrapy','applebot',
-            'amazonbot','chatgpt','gptbot','claudebot','anthropic','ccbot'];
-        if (botPatterns.some(p => ua.includes(p)) || !ua || ua.length < 20 || navigator.webdriver === true) {
-            return '__BOT__';
-        }
+        // ★ 봇 감지 (Bot 태그로 기록)
+        const botMap = [
+            ['googlebot','Googlebot'],['bingbot','Bingbot'],['yandexbot','YandexBot'],
+            ['baiduspider','Baidu'],['bytespider','ByteSpider'],['petalbot','PetalBot'],
+            ['semrush','SemrushBot'],['ahrefs','AhrefsBot'],['mj12bot','MJ12Bot'],
+            ['facebookexternalhit','Facebook-Crawler'],['chatgpt','ChatGPT'],['gptbot','GPTBot'],
+            ['claudebot','ClaudeBot'],['applebot','Applebot'],['amazonbot','Amazonbot'],
+            ['crawler','Crawler'],['spider','Spider'],['bot/','Bot'],
+            ['headlesschrome','HeadlessChrome'],['lighthouse','Lighthouse'],
+            ['curl/','curl'],['wget/','wget'],['python-requests','Python'],
+            ['java/','Java'],['go-http-client','Go'],['scrapy','Scrapy']
+        ];
+        for (const [p, n] of botMap) { if (ua.includes(p)) return `Bot (봇)|${n}`; }
+        if (!ua || ua.length < 20) return 'Bot (봇)|EmptyUA';
+        if (navigator.webdriver === true) return 'Bot (봇)|Webdriver';
 
-        // ★ 광고 파라미터 감지 시 sessionStorage에 저장
-        if (params.has('gclid') || params.has('na_click_id') || params.has('nclid') || params.has('n_campaign_type') ||
-            params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
-            const adSource = params.has('gclid') ? 'google' :
-                (params.has('na_click_id') || params.has('nclid') || params.get('utm_source') === 'naver') ? 'naver' : 'other';
-            try { sessionStorage.setItem('_ch_ad_source', adSource); } catch(e) {}
+        const hasGclid = params.has('gclid');
+        const hasNaverAd = params.has('na_click_id') || params.has('n_campaign_type') || params.has('nclid') || params.has('n_media');
+        if (hasGclid || hasNaverAd || params.get('utm_medium') === 'cpc') {
+            const adSrc = hasGclid ? 'google' : hasNaverAd ? 'naver' : (params.get('utm_source')||'other');
+            try { sessionStorage.setItem('_ch_ad_source', adSrc); } catch(e) {}
         }
-
-        // 1. [광고 체크]
-        if (params.has('gclid') || (params.get('utm_source') === 'google' && params.get('utm_medium') === 'cpc')) {
-            return 'Google Ads (광고)';
-        }
-        if (params.has('na_click_id') || params.has('nclid') || params.has('n_campaign_type') ||
-            (params.get('utm_source') === 'naver' && params.get('utm_medium') === 'cpc')) {
-            return 'Naver Ads (광고)';
-        }
-        if (params.get('utm_medium') === 'cpc' || params.get('utm_source') === 'ad') {
-            return `${params.get('utm_source')||'other'} Ads (광고)`;
-        }
-
-        // ★ 세션에 광고 이력이 있으면
+        if (hasGclid || (params.get('utm_source') === 'google' && params.get('utm_medium') === 'cpc')) return 'Google Ads (광고)';
+        if (hasNaverAd || params.has('n_query') || (params.get('utm_source') === 'naver' && params.get('utm_medium') === 'cpc')) return 'Naver Ads (광고)';
+        if (params.has('yclid')) return 'Yahoo Ads (광고)';
+        if (params.get('utm_medium') === 'cpc') return `${params.get('utm_source')||'other'} Ads (광고)`;
         try {
             const savedAd = sessionStorage.getItem('_ch_ad_source');
-            if (savedAd && (!referrer || referrer.trim() === '')) {
-                return `${savedAd === 'google' ? 'Google' : savedAd === 'naver' ? 'Naver' : savedAd} Ads (광고)|세션복원`;
-            }
+            if (savedAd && (!referrer || !referrer.trim())) return `${savedAd==='google'?'Google':savedAd==='naver'?'Naver':savedAd} Ads (광고)|세션복원`;
         } catch(e) {}
-
-        // 2. [직접 접속]
-        if (!referrer || referrer.trim() === '') {
-            return 'Direct (즐겨찾기/주소입력)';
-        }
-
-        // 3. [사이트 분석]
+        if (!referrer || !referrer.trim()) return 'Direct (즐겨찾기/주소입력)';
         try {
             const refUrl = new URL(referrer);
             const hostname = refUrl.hostname.toLowerCase();
-            if (hostname.includes('cafe2626.com') || hostname.includes('cafe0101.com') || hostname.includes('cafe3355.com') || hostname.includes(window.location.hostname)) return '__INTERNAL__';
-            // 광고 플랫폼 리퍼러
-            if (hostname.includes('googleads.') || hostname.includes('doubleclick.') || hostname.includes('googlesyndication.')) return 'Google Ads (광고)|리퍼러감지';
-            if (hostname.includes('searchad.naver.com') || hostname.includes('ad.search.naver.com')) return 'Naver Ads (광고)|리퍼러감지';
-            // 검색엔진
-            if (hostname.includes('google.')) return 'Google Search (자연검색)';
+            const path = refUrl.pathname.toLowerCase();
+            if (hostname.includes('cafe2626.com') || hostname.includes('cafe0101.com') || hostname.includes('cafe3355.com')) return '__INTERNAL__';
+            if (hostname.includes('googleads.') || hostname.includes('doubleclick.net') || hostname.includes('googlesyndication.')) return 'Google Ads (광고)|리퍼러감지';
+            if (hostname.includes('searchad.naver.com') || hostname.includes('ad.search.naver.com') || hostname.includes('ade.naver.com')) return 'Naver Ads (광고)|리퍼러감지';
+            if (hostname.includes('google.')) {
+                if (refUrl.searchParams.has('aclk') || path.includes('/aclk') || path.includes('/pagead')) return 'Google Ads (광고)|리퍼러감지';
+                return 'Google Search (자연검색)';
+            }
             if (hostname.includes('naver.')) {
-                if (refUrl.pathname.includes('/ad') || refUrl.searchParams.has('ad_id') || refUrl.searchParams.has('nclick')) return 'Naver Ads (광고)|리퍼러감지';
+                if (path.includes('/ad') || refUrl.searchParams.has('ad_id') || refUrl.searchParams.has('nclick') || refUrl.searchParams.has('tqa')) return 'Naver Ads (광고)|리퍼러감지';
                 return 'Naver Search (자연검색)';
             }
             if (hostname.includes('daum.') || hostname.includes('kakao.')) return 'Daum/Kakao';
             if (hostname.includes('yahoo.')) return 'Yahoo Search (자연검색)';
             if (hostname.includes('bing.')) return 'Bing Search (자연검색)';
-            // SNS
-            if (hostname.includes('instagram.')) return 'Instagram (SNS)';
+            if (hostname.includes('instagram.') || hostname.includes('ig.me')) return 'Instagram (SNS)';
             if (hostname.includes('facebook.') || hostname.includes('fb.com')) return 'Facebook (SNS)';
-            if (hostname.includes('youtube.')) return 'Youtube (SNS)';
+            if (hostname.includes('youtube.') || hostname.includes('youtu.be')) return 'Youtube (SNS)';
             if (hostname.includes('tiktok.')) return 'Tiktok (SNS)';
-            if (hostname.includes('line.me')) return 'LINE (SNS)';
+            if (hostname.includes('twitter.') || hostname.includes('t.co') || hostname.includes('x.com')) return 'Twitter/X (SNS)';
+            if (hostname.includes('line.me') || hostname.includes('liff.line.me')) return 'LINE (SNS)';
             if (hostname.includes('pinterest.')) return 'Pinterest (SNS)';
             if (hostname.includes('reddit.com')) return 'Reddit (SNS)';
             return hostname;
-        } catch (e) {
-            return 'Other Websites';
-        }
+        } catch (e) { return 'Other Websites'; }
     }
 
     async function trackVisit() {
@@ -1731,7 +1717,6 @@
 
         try {
             const sourceName = getTrafficSource();
-            if (sourceName === '__BOT__') { console.log("[추적] 봇 감지 — 생략"); return; }
             if (sourceName === '__INTERNAL__') { console.log("[추적] 내부 이동 — 생략"); return; }
             const finalReferrer = `[Blog] ${sourceName}`;
 
