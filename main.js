@@ -620,9 +620,11 @@ function initMobileTextEditor() {
 
     // 선택 시 현재 정렬/색상 상태 반영
     function syncEditorUI(obj) {
+        if (!obj) return;
         updateAlignUI(obj.textAlign || 'left');
-        const fill = obj.fill || '#000000';
-        updateColorUI(fill.toUpperCase());
+        const fill = obj.fill;
+        const color = (typeof fill === 'string') ? fill.toUpperCase() : '#000000';
+        updateColorUI(color);
     }
 
     // handleSelection 확장 — 기존 로직 후 UI 동기화
