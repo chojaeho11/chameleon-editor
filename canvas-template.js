@@ -1893,9 +1893,11 @@ window.processLoad = async function(mode) {
 
         if (error || !data) throw new Error(window.t('msg_data_load_failed', "Data load failed"));
 
-        // 배경 모드 여부 확인
-        let isBgMode = (window.sideCurrentGroup === 'group_template');
-        if (mode === 'replace') isBgMode = true;
+        // 배경류 카테고리 판별 (꽉 채우기용, 잠금하지 않음)
+        const _bgCats = ['user_vector', 'user_image', 'photo-bg', 'vector', 'transparent-graphic', 'pattern'];
+        let isBgLike = _bgCats.includes(data.category) || (window.sideCurrentGroup === 'group_template');
+        if (mode === 'replace') isBgLike = true;
+        const isBgMode = false; // 절대 잠금하지 않음
 
         // 2. 데이터 파싱
         let jsonData = null;
@@ -1905,7 +1907,7 @@ window.processLoad = async function(mode) {
         try {
             if (typeof data.data_url === 'object') jsonData = data.data_url;
             else jsonData = JSON.parse(data.data_url);
-            
+
             if (typeof jsonData === 'string') { isImage = true; imageUrl = jsonData; }
         } catch (e) {
             isImage = true; imageUrl = data.data_url;
@@ -1913,7 +1915,6 @@ window.processLoad = async function(mode) {
 
         // 3. [배경 교체] 기존 배경 삭제
         if (mode === 'replace') {
-            // 현재 캔버스에서 배경 태그가 있는 객체를 모두 찾음
             const oldBgs = currentCanvas.getObjects().filter(o => o.isTemplateBackground);
             oldBgs.forEach(o => currentCanvas.remove(o));
         }
@@ -1935,17 +1936,17 @@ window.processLoad = async function(mode) {
 
             let finalScale = 1;
 
-            if (isBgMode) {
-                // 배경: 꽉 채우기
+            if (isBgLike) {
+                // 배경류: 꽉 채우기
                 const scaleX = bW / obj.width;
                 const scaleY = bH / obj.height;
-                finalScale = Math.max(scaleX, scaleY) * 1.1; // 110% 여백 방지
+                finalScale = Math.max(scaleX, scaleY) * 1.1;
             } else {
                 // 요소: 적당히 맞추기
-                const targetSize = Math.min(bW, bH) * 0.4; 
+                const targetSize = Math.min(bW, bH) * 0.4;
                 const objSize = Math.max(obj.width, obj.height);
                 finalScale = targetSize / objSize;
-                if(finalScale > 1) finalScale = 1; 
+                if(finalScale > 1) finalScale = 1;
             }
 
             obj.set({
@@ -2087,9 +2088,11 @@ window.processLoad = async function(mode) {
 
         if (error || !data) throw new Error(window.t('msg_data_load_failed', "Data load failed"));
 
-        // ★ 배경 모드 여부 결정
-        let isBgMode = (window.sideCurrentGroup === 'group_template');
-        if (mode === 'replace') isBgMode = true;
+        // 배경류 카테고리 판별 (꽉 채우기용, 잠금하지 않음)
+        const _bgCats2 = ['user_vector', 'user_image', 'photo-bg', 'vector', 'transparent-graphic', 'pattern'];
+        let isBgLike = _bgCats2.includes(data.category) || (window.sideCurrentGroup === 'group_template');
+        if (mode === 'replace') isBgLike = true;
+        const isBgMode = false; // 절대 잠금하지 않음
 
         // 2. 데이터 파싱
         let jsonData = null;
@@ -2099,15 +2102,14 @@ window.processLoad = async function(mode) {
         try {
             if (typeof data.data_url === 'object') jsonData = data.data_url;
             else jsonData = JSON.parse(data.data_url);
-            
+
             if (typeof jsonData === 'string') { isImage = true; imageUrl = jsonData; }
         } catch (e) {
             isImage = true; imageUrl = data.data_url;
         }
 
-        // 3. ★ [핵심 수정] 기존 배경만 지우기 (글씨/요소 유지)
+        // 3. 기존 배경만 지우기
         if (mode === 'replace') {
-            // 캔버스 전체를 비우지 않고, '배경으로 지정된 객체'만 찾아서 제거합니다.
             const oldBgs = canvas.getObjects().filter(o => o.isTemplateBackground);
             oldBgs.forEach(o => canvas.remove(o));
         }
@@ -2129,17 +2131,17 @@ window.processLoad = async function(mode) {
 
             let finalScale = 1;
 
-            if (isBgMode) {
-                // [배경 모드] 꽉 채우기 (Cover)
+            if (isBgLike) {
+                // 배경류: 꽉 채우기
                 const scaleX = bW / obj.width;
                 const scaleY = bH / obj.height;
-                finalScale = Math.max(scaleX, scaleY) * 1.1; // 110% 여백 방지
+                finalScale = Math.max(scaleX, scaleY) * 1.1;
             } else {
-                // [객체 모드] 적당히 줄이기 (Fit)
-                const targetSize = Math.min(bW, bH) * 0.4; 
+                // 객체: 적당히 줄이기
+                const targetSize = Math.min(bW, bH) * 0.4;
                 const objSize = Math.max(obj.width, obj.height);
                 finalScale = targetSize / objSize;
-                if(finalScale > 1) finalScale = 1; 
+                if(finalScale > 1) finalScale = 1;
             }
 
             obj.set({
