@@ -560,6 +560,22 @@ function initMobileTextEditor() {
         });
     }
     window.closeMobileTextEditor = closeMobileEditor;
+    // ★ 다음 텍스트로 전환
+    window.cycleMobileText = function() {
+        const c = window.canvas;
+        if (!c) return;
+        const textObjs = c.getObjects().filter(o =>
+            (o.type === 'i-text' || o.type === 'textbox' || o.type === 'text') && o.selectable !== false
+        );
+        if (textObjs.length < 2) return;
+        const curIdx = textObjs.indexOf(activeTextObj);
+        const nextIdx = (curIdx + 1) % textObjs.length;
+        const next = textObjs[nextIdx];
+        c.setActiveObject(next);
+        c.requestRenderAll();
+        activeTextObj = next;
+        if(mobileInput) mobileInput.value = next.text;
+    };
     function closeMobileEditor() {
         if(mobileEditor) mobileEditor.style.display = 'none';
         activeTextObj = null;
