@@ -150,8 +150,16 @@ window.uploadTemplate = async () => {
         let thumbPublicUrl = '';
         let dataUrl = '';
 
-        // 1. 썸네일 업로드 (오디오는 선택)
-        if (thumbFile) {
+        // 1. 썸네일 업로드
+        if (cat === 'text-effect' && thumbFile) {
+            // 텍스트 효과: products/text-effects/ 폴더에 직접 저장
+            const tePath = `text-effects/${timestamp}_${thumbFile.name}`;
+            const { error: teErr } = await sb.storage.from('products').upload(tePath, thumbFile);
+            if (teErr) throw teErr;
+            const { data: teData } = sb.storage.from('products').getPublicUrl(tePath);
+            thumbPublicUrl = teData.publicUrl;
+            dataUrl = thumbPublicUrl;
+        } else if (thumbFile) {
             const thumbPath = `thumbs/${timestamp}_${thumbFile.name}`;
             const { error: thumbErr } = await sb.storage.from('design').upload(thumbPath, thumbFile);
             if (thumbErr) throw thumbErr;
@@ -160,7 +168,7 @@ window.uploadTemplate = async () => {
         }
 
         // 2. 데이터/음원 파일 업로드
-        if (dataFile) {
+        if (dataFile && cat !== 'text-effect') {
             const folder = cat === 'audio' ? 'audio' : 'assets';
             const dataPath = `${folder}/${timestamp}_${dataFile.name}`;
             const { error: dataErr } = await sb.storage.from('design').upload(dataPath, dataFile);
@@ -244,6 +252,12 @@ window.unfeatureSelectedTemplates = async () => {
 // [템플릿 삭제]
 window.deleteTemplate = async (id) => {
     if (!confirm("삭제하시겠습니까?")) return;
+    // 텍스트 효과면 스토리지 파일도 삭제
+    const { data: row } = await sb.from('library').select('category, thumb_url').eq('id', id).maybeSingle();
+    if (row && row.category === 'text-effect' && row.thumb_url) {
+        const match = row.thumb_url.match(/text-effects\/[^?]+/);
+        if (match) await sb.storage.from('products').remove([match[0]]);
+    }
     const { error } = await sb.from('library').delete().eq('id', id);
     if (error) showToast("실패: " + error.message, "error");
     else loadTemplates();
@@ -362,6 +376,10 @@ window.toggleFileInputs = () => {
         if(groupData) groupData.style.display = 'none';
         if(thumbInput) thumbInput.accept = thumbAccept;
         if(lblThumb) lblThumb.textContent = '1. 썸네일 (PNG만 가능)';
+    } else if (cat === 'text-effect') {
+        if(groupData) groupData.style.display = 'none';
+        if(thumbInput) thumbInput.accept = '.png,image/png,.webp';
+        if(lblThumb) lblThumb.textContent = '1. 텍스트 효과 이미지 (PNG)';
     } else {
         if(groupData) groupData.style.display = 'none';
         if(thumbInput) thumbInput.accept = thumbAccept;
