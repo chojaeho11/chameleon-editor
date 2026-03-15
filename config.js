@@ -256,6 +256,10 @@ function updateUserSession(session) {
     const btnLib = document.getElementById("btnMyLibrary");
     if (btnLib) btnLib.style.display = currentUser ? "inline-flex" : "none";
     loadUserCart();
+    // ★ 읽지 않은 관리자 메시지 팝업
+    if (currentUser) {
+        setTimeout(() => { window.checkUnreadMessages && window.checkUnreadMessages(); }, 1500);
+    }
 }
 // login.js에서 가입/로그인 후 새로고침 없이 세션 갱신 가능하도록 노출
 window.updateUserSession = updateUserSession;
