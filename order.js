@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=255";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=255";
-import { SITE_CONFIG } from "./site-config.js?v=255";
-import { applySize } from "./canvas-size.js?v=255";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=255";
+import { canvas } from "./canvas-core.js?v=256";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=256";
+import { SITE_CONFIG } from "./site-config.js?v=256";
+import { applySize } from "./canvas-size.js?v=256";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=256";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=255";
+} from "./export.js?v=256";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1241,7 +1241,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=255');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=256');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2122,17 +2122,33 @@ async function processOrderSubmission() {
     const isExempt = cartData.some(item => item.product && String(item.product.product_key || item.product.id) === '21355677');
     if (!isExempt && rawTotal < MIN_ORDER_KRW) {
         const lang = CURRENT_LANG;
-        const msgs = {
-            kr: '카멜레온프린팅은 도매쇼핑몰로 최소 주문금액은 3만원입니다.\n고퀄리티의 제품을 가장 저렴한 가격에 공급합니다.',
-            ja: 'カメレオンプリンティングは卸売サイトのため、最低注文金額は3万円です。\n最高品質の製品を最安値でご提供いたします。',
-            en: 'Chameleon Printing is a wholesale shop. The minimum order amount is $30.\nWe provide the highest quality products at the lowest prices.',
-            zh: '变色龙印刷是批发商城，最低订购金额为3万韩元。\n我们以最低的价格提供最高品质的产品。',
-            ar: 'طباعة كاميليون هو متجر جملة. الحد الأدنى للطلب هو 30,000 وون.\nنوفر أعلى جودة بأقل الأسعار.',
-            es: 'Chameleon Printing es una tienda mayorista. El pedido mínimo es de 30,000 KRW.\nOfrecemos productos de la más alta calidad al mejor precio.',
-            de: 'Chameleon Printing ist ein Großhandelsshop. Der Mindestbestellwert beträgt 30.000 KRW.\nWir bieten höchste Qualität zu den günstigsten Preisen.',
-            fr: 'Chameleon Printing est une boutique en gros. Le montant minimum de commande est de 30 000 KRW.\nNous offrons des produits de la plus haute qualité aux meilleurs prix.'
-        };
-        alert(msgs[lang] || msgs['kr']);
+        const minAmounts = { kr: '30,000원', ja: '3,000円', en: '$30', zh: '¥200', ar: '30,000 ₩', es: '$30', de: '30€', fr: '30€' };
+        const titles = { kr: '최소 주문금액 안내', ja: '最低注文金額のご案内', en: 'Minimum Order Notice', zh: '最低订购金额提示', ar: 'إشعار الحد الأدنى للطلب', es: 'Aviso de pedido mínimo', de: 'Mindestbestellwert', fr: 'Montant minimum de commande' };
+        const line1 = { kr: '카멜레온프린팅은 도매쇼핑몰로', ja: 'カメレオンプリンティングは卸売サイトのため', en: 'Chameleon Printing is a wholesale shop.', zh: '变色龙印刷是批发商城', ar: 'طباعة كاميليون متجر جملة', es: 'Chameleon Printing es una tienda mayorista.', de: 'Chameleon Printing ist ein Großhandelsshop.', fr: 'Chameleon Printing est une boutique en gros.' };
+        const line2 = { kr: '최소 주문금액은', ja: '最低注文金額は', en: 'The minimum order amount is', zh: '最低订购金额为', ar: 'الحد الأدنى للطلب', es: 'El pedido mínimo es de', de: 'Der Mindestbestellwert beträgt', fr: 'Le montant minimum est de' };
+        const line3 = { kr: '고퀄리티 제품을 가장 저렴한 가격에 공급합니다.', ja: '最高品質の製品を最安値でご提供いたします。', en: 'We provide the highest quality products at the lowest prices.', zh: '我们以最低的价格提供最高品质的产品。', ar: 'نوفر أعلى جودة بأقل الأسعار', es: 'Ofrecemos productos de la más alta calidad al mejor precio.', de: 'Wir bieten höchste Qualität zu den günstigsten Preisen.', fr: 'Nous offrons la plus haute qualité aux meilleurs prix.' };
+        const btnText = { kr: '확인', ja: '確認', en: 'OK', zh: '确认', ar: 'موافق', es: 'Aceptar', de: 'OK', fr: 'OK' };
+        const L = lang || 'kr';
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:30000;display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `<div style="background:#fff;border-radius:20px;width:400px;max-width:90%;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,0.3);text-align:center;">
+            <div style="background:linear-gradient(135deg,#f59e0b,#ef4444);padding:24px 20px 18px;">
+                <div style="font-size:42px;margin-bottom:8px;">🛒</div>
+                <div style="color:#fff;font-size:18px;font-weight:800;">${titles[L] || titles['kr']}</div>
+            </div>
+            <div style="padding:24px 28px 20px;">
+                <p style="margin:0 0 12px;font-size:14px;color:#475569;line-height:1.6;">${line1[L] || line1['kr']}</p>
+                <div style="background:linear-gradient(135deg,#fef3c7,#fffbeb);border:2px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:14px;">
+                    <span style="font-size:13px;color:#92400e;">${line2[L] || line2['kr']}</span>
+                    <div style="font-size:28px;font-weight:900;color:#d97706;margin:4px 0;">${minAmounts[L] || minAmounts['kr']}</div>
+                </div>
+                <p style="margin:0;font-size:13px;color:#64748b;line-height:1.5;">${line3[L] || line3['kr']}</p>
+            </div>
+            <div style="padding:0 28px 24px;">
+                <button onclick="this.closest('div[style*=fixed]').remove();" style="width:100%;padding:14px;border:none;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;">${btnText[L] || btnText['kr']}</button>
+            </div>
+        </div>`;
+        document.body.appendChild(overlay);
         return;
     }
 
@@ -2371,7 +2387,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=255');
+                const { generateDesignPNG } = await import('./export.js?v=256');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
