@@ -101,8 +101,9 @@ window.loadTopCategoriesList = async () => {
         div.dataset.id = t.id;
         div.style.cssText = "border:1px solid #fdba74; color:#c2410c; background:#fff7ed; padding:6px 10px; cursor:grab; display:flex; align-items:center; gap:5px;";
         div.innerHTML = `
-            <b>${t.name}</b> <small>(${t.code})</small> 
+            <b>${t.name}</b> <small>(${t.code})</small>
             <i class="fa-solid fa-pen" onclick="editTopCategoryLoad(${t.id})" style="cursor:pointer; color:#aaa; margin-left:3px;" title="수정"></i>
+            <i class="fa-solid fa-language" onclick="bulkTranslateDetailsByTopCat('${t.code}','${t.name}')" style="cursor:pointer; color:#6366f1; margin-left:3px;" title="이 대분류 상세페이지 일괄번역"></i>
             <i class="fa-solid fa-xmark" onclick="deleteTopCategoryDB(${t.id})" style="cursor:pointer; color:red; margin-left:3px;" title="삭제"></i>
         `;
         listArea.appendChild(div);
@@ -1711,6 +1712,101 @@ window.bulkTranslateAll = async () => {
         btn.innerText = oldText;
         btn.disabled = false;
     }
+};
+
+// ★ 대분류별 상세페이지 일괄 번역 (Claude AI)
+window.bulkTranslateDetailsByTopCat = async (topCatCode, topCatName) => {
+    // 해당 대분류의 소분류 코드 조회
+    const { data: subCats } = await sb.from('admin_categories').select('code').eq('parent_code', topCatCode);
+    const catCodes = [topCatCode, ...(subCats || []).map(c => c.code)];
+
+    // 해당 카테고리에 속하는 상품 조회
+    const { data: products } = await sb.from('admin_products')
+        .select('id, name, description, description_jp, description_us, description_cn, description_ar, description_es, description_de, description_fr, category')
+        .in('category', catCodes);
+
+    if (!products || products.length === 0) {
+        showToast(`[${topCatName}] 상품이 없습니다.`, 'warn');
+        return;
+    }
+
+    // 상세페이지가 있는 상품만 필터
+    const withDesc = products.filter(p => p.description && p.description.trim() && p.description !== '<p><br></p>');
+    if (withDesc.length === 0) {
+        showToast(`[${topCatName}] 상세페이지가 있는 상품이 없습니다.`, 'warn');
+        return;
+    }
+
+    const mode = confirm(`[${topCatName}] ${withDesc.length}개 상품의 상세페이지를 Claude AI로 번역합니다.\n\n[확인] = 모든 번역 덮어쓰기\n[취소] = 빈 번역만 채우기`);
+    const forceAll = mode;
+
+    // 진행 상태 오버레이
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:20000;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `<div style="background:#fff;border-radius:16px;padding:32px;width:420px;max-width:90%;text-align:center;">
+        <div style="font-size:36px;margin-bottom:12px;">🌐</div>
+        <div style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:8px;">${topCatName} 상세페이지 번역</div>
+        <div id="_bulkDetailProgress" style="font-size:14px;color:#6366f1;font-weight:bold;margin-bottom:16px;">준비 중...</div>
+        <div style="background:#f1f5f9;border-radius:8px;height:8px;overflow:hidden;"><div id="_bulkDetailBar" style="width:0%;height:100%;background:linear-gradient(90deg,#6366f1,#a855f7);transition:width 0.3s;"></div></div>
+        <div id="_bulkDetailLog" style="margin-top:12px;font-size:11px;color:#94a3b8;max-height:120px;overflow-y:auto;text-align:left;"></div>
+    </div>`;
+    document.body.appendChild(overlay);
+
+    const progressEl = document.getElementById('_bulkDetailProgress');
+    const barEl = document.getElementById('_bulkDetailBar');
+    const logEl = document.getElementById('_bulkDetailLog');
+    let successCount = 0, skipCount = 0, failCount = 0;
+
+    for (let i = 0; i < withDesc.length; i++) {
+        const p = withDesc[i];
+        const pct = Math.round(((i + 1) / withDesc.length) * 100);
+        progressEl.textContent = `${i + 1} / ${withDesc.length} (${pct}%)`;
+        barEl.style.width = pct + '%';
+
+        const needsAny = forceAll || !p.description_jp || !p.description_us || !p.description_cn || !p.description_ar || !p.description_es || !p.description_de || !p.description_fr;
+        if (!needsAny) { skipCount++; logEl.innerHTML += `<div>⏭ ${p.name} (이미 번역됨)</div>`; continue; }
+
+        try {
+            const { data, error } = await sb.functions.invoke('translate', {
+                body: { text: p.description, sourceLang: 'ko', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
+            });
+            if (error) throw error;
+            const tr = data?.translations || {};
+
+            let updates = {};
+            if (tr.ja && (forceAll || !p.description_jp)) updates.description_jp = tr.ja;
+            if (tr.en && (forceAll || !p.description_us)) updates.description_us = tr.en;
+            if (tr.zh && (forceAll || !p.description_cn)) updates.description_cn = tr.zh;
+            if (tr.ar && (forceAll || !p.description_ar)) updates.description_ar = tr.ar;
+            if (tr.es && (forceAll || !p.description_es)) updates.description_es = tr.es;
+            if (tr.de && (forceAll || !p.description_de)) updates.description_de = tr.de;
+            if (tr.fr && (forceAll || !p.description_fr)) updates.description_fr = tr.fr;
+
+            if (Object.keys(updates).length > 0) {
+                await sb.from('admin_products').update(updates).eq('id', p.id);
+                successCount++;
+                logEl.innerHTML += `<div style="color:#15803d;">✅ ${p.name}</div>`;
+            } else {
+                skipCount++;
+                logEl.innerHTML += `<div>⏭ ${p.name}</div>`;
+            }
+        } catch(e) {
+            failCount++;
+            logEl.innerHTML += `<div style="color:#ef4444;">❌ ${p.name}: ${e.message || e}</div>`;
+        }
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    progressEl.textContent = `완료! 성공: ${successCount} | 건너뜀: ${skipCount} | 실패: ${failCount}`;
+    barEl.style.width = '100%';
+    barEl.style.background = '#22c55e';
+
+    // 닫기 버튼
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '닫기';
+    closeBtn.style.cssText = 'margin-top:16px;padding:10px 30px;border:none;background:#6366f1;color:#fff;border-radius:8px;font-weight:bold;cursor:pointer;';
+    closeBtn.onclick = () => overlay.remove();
+    overlay.querySelector('div > div').appendChild(closeBtn);
 };
 
 window.cloneProductMode = () => {
