@@ -2258,6 +2258,11 @@ window._ciLoadContent = async () => {
     _ciCurrentLang = 'KR';
     ['KR','JP','US','CN','AR','ES','DE','FR'].forEach(l => { document.getElementById('ciHtml'+l).value = ''; });
 
+    // ★ 대상 전환 시 미리보기/저장 영역 리셋 (빈 상태에서 저장 방지)
+    document.getElementById('ciPreviewSection').style.display = 'none';
+    document.getElementById('ciSaveSection').style.display = 'none';
+    document.getElementById('ciStatus').textContent = '';
+
     if (target.mode === 'product') {
         _ciEditMode = 'product';
         _ciEditProductId = target.id;
@@ -2601,6 +2606,11 @@ window._ciSave = async () => {
         if (error) showToast('저장 실패: ' + error.message, 'error');
         else showToast('제품 상세페이지 저장 완료!', 'success');
     } else {
+        // ★ 빈 내용으로 공통페이지 덮어쓰기 방지
+        if (!kr && !jp && !us && !cn && !ar && !es && !de && !fr) {
+            showToast('저장할 내용이 없습니다. 먼저 AI 생성 또는 직접 작성해주세요.', 'warn');
+            return;
+        }
         const { data: oldData } = await dbClient.from('common_info')
             .select('*').eq('section', 'top').eq('category_code', target.code).maybeSingle();
         const payload = {
