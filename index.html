@@ -8429,16 +8429,16 @@ if (w >= 20 && h >= 20) {
 
             // 2. 단가 계산
             let pricePerItem = area * unitPrice;
-            const MIN_PRICE_KRW = 3000;
+            const MIN_PRICE_KRW = 2000;
 
             if (lang === 'kr') {
-                // 한국: 10원 단위 절사, 최소 3000원
+                // 한국: 10원 단위 절사, 최소 2000원
                 pricePerItem = Math.floor(pricePerItem / 10) * 10;
                 if (pricePerItem < MIN_PRICE_KRW) pricePerItem = MIN_PRICE_KRW;
             } else if (lang === 'ja') {
-                // 일본: 최소 300엔
+                // 일본: 최소 200엔
                 pricePerItem = Math.floor(pricePerItem);
-                if (pricePerItem < 300) pricePerItem = 300;
+                if (pricePerItem < 200) pricePerItem = 200;
             } else if (lang === 'en') {
                 // 미국: 최소 $3
                 pricePerItem = Math.floor(pricePerItem);
