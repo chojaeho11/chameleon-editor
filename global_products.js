@@ -2541,18 +2541,21 @@ window._ciTranslateOnly = async () => {
         const langMap = { ja: 'JP', en: 'US', zh: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
         const langs = ['ja','en','zh','ar','es','de','fr'];
         let trCount = 0;
-        await Promise.all(langs.map(async (lang) => {
+        // 순차 번역 (병렬 시 API rate limit으로 일부 실패 방지)
+        for (const lang of langs) {
             try {
                 const { data: trData, error: trError } = await dbClient.functions.invoke('translate', {
                     body: { text: krHtml, from: 'ko', to: lang, html: true }
                 });
                 if (!trError && trData?.translated) {
                     document.getElementById('ciHtml' + langMap[lang]).value = trData.translated;
+                } else {
+                    console.warn(`[CI] 번역 실패 (${lang}):`, trError);
                 }
             } catch(e) { console.error(`[CI] 번역 예외 (${lang}):`, e); }
             trCount++;
             status.textContent = `🌐 Claude AI 7개국어 번역 중... (${trCount}/7)`;
-        }));
+        }
         status.textContent = '✅ 7개국어 번역 완료!';
         showToast('Claude AI 7개국어 번역 완료! 탭을 눌러 확인하세요.', 'success');
 
