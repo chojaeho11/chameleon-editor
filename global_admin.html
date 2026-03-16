@@ -3741,7 +3741,7 @@
             if(mgrBadge){mgrBadge.textContent='담당: '+autoMgr;mgrBadge.style.background='#6366f1';}
             await sb.from('chat_messages').insert({room_id:roomId,sender_type:'system',message:sysMsg('connected', autoMgr||currentRoom.assigned_manager)});
         }
-        var mr=await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(100);
+        var mr=await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(200);
         var area=document.getElementById('lcChatMessages');
         if(!mr.data||mr.data.length===0){area.innerHTML='<div style="text-align:center;color:#94a3b8;padding:30px;">메시지 없음</div>';}
         else{var h='';mr.data.forEach(function(m){if(m.sender_type==='admin_memo') return; h+=renderMsg(m);});area.innerHTML=h;area.scrollTop=area.scrollHeight;}
