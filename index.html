@@ -665,8 +665,10 @@ if ('caches' in window) {
     </div>
 
 <!-- ★ 흘러가는 상품 배너 -->
-<div id="scrollBanner" style="display:none; overflow:hidden; padding:10px 0; background:#f8fafc; position:relative; z-index:10; align-self:stretch; width:100%; box-sizing:border-box;">
-    <div id="scrollBannerTrack" style="display:flex; gap:8px;"></div>
+<div id="scrollBanner" style="display:none; align-self:stretch; width:100%;">
+    <div id="scrollBannerClip" style="overflow:hidden; padding:10px 0; background:#f8fafc;">
+        <div id="scrollBannerTrack" style="display:flex; gap:8px;"></div>
+    </div>
 </div>
 <style>
 #scrollBanner { -webkit-user-select:none; user-select:none; touch-action:pan-y; }
@@ -6217,8 +6219,9 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
 // ★ 흘러가는 상품 배너
 async function loadScrollBanner() {
     const banner = document.getElementById('scrollBanner');
+    const clip = document.getElementById('scrollBannerClip');
     const track = document.getElementById('scrollBannerTrack');
-    if (!banner || !track || !sb) return;
+    if (!banner || !clip || !track || !sb) return;
     try {
         const flags = ['is_hot_deal','is_biz_deal','is_print_service','is_goods','is_popular'];
         const results = await Promise.all(flags.map(f =>
@@ -6240,7 +6243,7 @@ async function loadScrollBanner() {
         const gap = 8;
         const isMobile = window.innerWidth <= 768;
         const visibleCount = isMobile ? 2 : 5;
-        const bannerW = banner.offsetWidth;
+        const bannerW = clip.offsetWidth || banner.offsetWidth;
         const cardPx = Math.floor((bannerW - gap * (visibleCount - 1)) / visibleCount);
 
         // 무한 루프를 위해 3세트 복제
@@ -6287,17 +6290,17 @@ async function loadScrollBanner() {
 
         // 터치/드래그 지원
         let startX = 0, startPos = 0, dragging = false;
-        banner.addEventListener('pointerdown', e => {
+        clip.addEventListener('pointerdown', e => {
             dragging = true; isPaused = true; startX = e.clientX; startPos = pos;
             track.style.transition = 'none';
-            banner.setPointerCapture(e.pointerId);
+            clip.setPointerCapture(e.pointerId);
         });
-        banner.addEventListener('pointermove', e => {
+        clip.addEventListener('pointermove', e => {
             if (!dragging) return;
             const dx = startX - e.clientX;
             track.style.transform = 'translateX(-'+(startPos + dx)+'px)';
         });
-        banner.addEventListener('pointerup', e => {
+        clip.addEventListener('pointerup', e => {
             if (!dragging) return;
             dragging = false;
             const dx = startX - e.clientX;
@@ -6309,7 +6312,7 @@ async function loadScrollBanner() {
             track.style.transform = 'translateX(-'+pos+'px)';
             setTimeout(() => { isPaused = false; startAuto(); }, 2000);
         });
-        banner.addEventListener('pointercancel', () => { dragging = false; isPaused = false; startAuto(); });
+        clip.addEventListener('pointercancel', () => { dragging = false; isPaused = false; startAuto(); });
 
         const obs = new IntersectionObserver(entries => {
             entries.forEach(en => { if (en.isIntersecting) { isPaused = false; startAuto(); } else { isPaused = true; clearInterval(autoTimer); } });
