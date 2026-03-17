@@ -1886,6 +1886,7 @@
                     <button id="lcMemoBtn" class="btn btn-outline btn-sm" onclick="lcToggleMemo()" style="font-size:12px; padding:6px 12px;">📝 메모</button>
                     <button class="btn btn-outline btn-sm" onclick="lcSaveToKnowledge()" style="font-size:12px; padding:6px 12px;">📚 학습저장</button>
                     <button class="btn btn-outline btn-sm" onclick="lcCloseRoom()" style="font-size:12px; color:#ef4444; border-color:#ef4444; padding:6px 12px;">종료</button>
+                    <button class="btn btn-outline btn-sm" onclick="lcDeleteRoom()" style="font-size:12px; color:#94a3b8; border-color:#94a3b8; padding:6px 12px;">🗑️</button>
                 </div>
             </div>
             <div id="lcAiSummary" style="display:none; background:#ede9fe; padding:10px 24px; font-size:13px; color:#6366f1; border-bottom:1px solid #c4b5fd;"><b>🤖 AI 요약:</b> <span id="lcAiSummaryText"></span></div>
@@ -3733,7 +3734,7 @@
         var memoPanel=document.getElementById('lcMemoPanel'); if(memoPanel) memoPanel.style.display='none';
         lcLoadMemo();
         if(currentRoom.status==='waiting'){
-            // 미배정 방이면 현재 매니저로 자동 배정
+            // 미배정 방이면 현재 매니저로 자동 배정 (AI 상담 방은 제외)
             var autoMgr = currentRoom.assigned_manager;
             if (!autoMgr && myManagerName && myManagerName !== '__HQ__') {
                 autoMgr = myManagerName;
@@ -3743,6 +3744,10 @@
             currentRoom.status='active';
             if(mgrBadge){mgrBadge.textContent='담당: '+autoMgr;mgrBadge.style.background='#6366f1';}
             await sb.from('chat_messages').insert({room_id:roomId,sender_type:'system',message:sysMsg('connected', autoMgr||currentRoom.assigned_manager)});
+        }
+        // AI 상담 방은 읽기 전용 모드로 (실시간 대화 모니터링)
+        if(isAiChat){
+            if(statusBadge) statusBadge.textContent='🤖 AI 상담 실시간 보기';
         }
         var mr=await sb.from('chat_messages').select('*').eq('room_id',roomId).order('created_at',{ascending:true}).limit(200);
         var area=document.getElementById('lcChatMessages');
@@ -3962,6 +3967,22 @@
         var sb2=document.getElementById('lcChatStatusBadge');if(sb2)sb2.style.display='none';
         var cb=document.getElementById('lcChangeMgrBtn');if(cb)cb.style.display='none';
         document.getElementById('lcChatMessages').innerHTML='<div style="text-align:center;color:#94a3b8;padding:60px;">상담 종료</div>';lcLoadRooms();
+    };
+    // ── 방 삭제 (DB에서 완전 삭제) ──
+    window.lcDeleteRoom = async function(){
+        if(!currentRoom) { showToast('방을 먼저 선택하세요','warn'); return; }
+        if(!confirm('이 상담방을 완전히 삭제합니다.\n"'+currentRoom.customer_name+'" 방의 모든 메시지가 삭제됩니다.\n\n정말 삭제?')) return;
+        var sb=getSb();var rid=currentRoom.id;
+        await sb.from('chat_messages').delete().eq('room_id',rid);
+        await sb.from('chat_rooms').delete().eq('id',rid);
+        currentRoom=null;if(subscription){subscription.unsubscribe();subscription=null;}
+        document.getElementById('lcChatTitle').textContent='상담방을 선택하세요';
+        document.getElementById('lcChatMessages').innerHTML='<div style="text-align:center;color:#94a3b8;padding:60px;">삭제 완료</div>';
+        var mb=document.getElementById('lcChatManagerBadge');if(mb)mb.style.display='none';
+        var sb2=document.getElementById('lcChatStatusBadge');if(sb2)sb2.style.display='none';
+        var cb=document.getElementById('lcChangeMgrBtn');if(cb)cb.style.display='none';
+        lcLoadRooms();
+        showChatToast('상담방 삭제 완료','',false);
     };
     // ── 매니저 끼어들기 (AI 상담 → 매니저 상담으로 전환) ──
     window.lcIntervene = async function(){
