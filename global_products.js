@@ -817,7 +817,7 @@ window.filterProductList = debounce(async () => {
     showLoading(true);
 
     try {
-        let query = sb.from('admin_products').select('id, site_code, code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, sort_order, category, is_hot_deal, is_biz_deal, is_popular, is_print_service, partner_id, partner_status');
+        let query = sb.from('admin_products').select('id, site_code, code, name, name_jp, name_us, price, price_jp, price_us, width_mm, height_mm, img_url, sort_order, category, is_hot_deal, is_biz_deal, is_popular, is_print_service, is_goods, partner_id, partner_status');
 
         if(cat && cat !== 'all') {
             query = query.eq('category', cat);
@@ -1040,6 +1040,7 @@ window.addProductDB = async () => {
     const isBizDeal = document.getElementById('newProdIsBizDeal').checked;
     const isPopular = document.getElementById('newProdIsPopular') ? document.getElementById('newProdIsPopular').checked : false;
     const isPrintService = document.getElementById('newProdIsPrintService') ? document.getElementById('newProdIsPrintService').checked : false;
+    const isGoods = document.getElementById('newProdIsGoods') ? document.getElementById('newProdIsGoods').checked : false;
     const isFileUpload = document.getElementById('newProdIsFileUpload').checked;
     const isBulkOrder = document.getElementById('newProdIsBulkOrder').checked;
     const bulkQtyStr = document.getElementById('newProdBulkQtyOptions') ? document.getElementById('newProdBulkQtyOptions').value : '';
@@ -1060,6 +1061,7 @@ window.addProductDB = async () => {
         is_biz_deal: isBizDeal,
         is_popular: isPopular,
         is_print_service: isPrintService,
+        is_goods: isGoods,
         is_file_upload: isFileUpload,
         is_bulk_order: isBulkOrder,
         quantity_options: quantityOptions,
@@ -1146,6 +1148,7 @@ window.editProductLoad = async (id) => {
     document.getElementById('newProdIsBizDeal').checked = data.is_biz_deal || false;
     if (document.getElementById('newProdIsPopular')) document.getElementById('newProdIsPopular').checked = data.is_popular || false;
     if (document.getElementById('newProdIsPrintService')) document.getElementById('newProdIsPrintService').checked = data.is_print_service || false;
+    if (document.getElementById('newProdIsGoods')) document.getElementById('newProdIsGoods').checked = data.is_goods || false;
     document.getElementById('newProdIsFileUpload').checked = data.is_file_upload || false;
     document.getElementById('newProdIsBulkOrder').checked = data.is_bulk_order || false;
     const bulkDiv = document.getElementById('bulkOrderOptions');
