@@ -3813,7 +3813,27 @@
         var h='<div style="display:flex;flex-direction:column;align-items:'+al+';margin-bottom:14px;">';
         h+='<span style="font-size:13px;color:'+nameColor+';font-weight:700;margin-bottom:4px;">'+(isInternal?'':m.sender_type==='manager'?'💬 ':isBot?'':'👤 ')+name+' · '+t+'</span>';
         if(m.file_url){if(m.file_type&&m.file_type.startsWith('image/')){h+='<img src="'+m.file_url+'" style="max-width:300px;border-radius:14px;cursor:pointer;margin:4px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1);'+(isInternal?'border:2px dashed #fcd34d;':'')+'" onclick="window.open(this.src)">';}else{h+='<a href="'+m.file_url+'" target="_blank" style="background:'+(isInternal?'#fef3c7':'#dbeafe')+';padding:10px 16px;border-radius:14px;color:'+(isInternal?'#92400e':'#2563eb')+';text-decoration:none;font-size:16px;display:inline-block;margin:4px 0;">📎 '+(m.file_name||'파일')+'</a>';}}
-        if(m.message){var linkColor=isInternal?'#b45309':m.sender_type==='manager'?'#c7d2fe':'#2563eb';var mt=m.message.replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+linkColor+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:12px 18px;border-radius:'+bdRadius+';max-width:420px;font-size:16px;line-height:1.6;word-break:break-all;box-shadow:'+shadow+';'+(isInternal?'border:1px dashed #fcd34d;':'')+'">'+mt+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:3px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:11px;background:none;border:1px solid #e2e8f0;color:#64748b;padding:2px 8px;border-radius:6px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:12px;color:#6366f1;margin-left:4px;"></span></div>';}}
+        if(m.message){var linkColor=isInternal?'#b45309':m.sender_type==='manager'?'#c7d2fe':'#2563eb';
+        // 제품 카드 데이터 추출
+        var msgText=m.message;var productCards='';
+        var prodMatch=msgText.match(/<!--PRODUCTS:(.*?)-->/);
+        if(prodMatch){
+            msgText=msgText.replace(/<!--PRODUCTS:.*?-->/,'').trim();
+            try{
+                var prods=JSON.parse(prodMatch[1]);
+                productCards='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">';
+                prods.forEach(function(p){
+                    var siteUrl='https://www.cafe2626.com';
+                    productCards+='<div onclick="window.open(\''+siteUrl+'/?product='+p.code+'\')" style="cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:10px;width:140px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);">';
+                    if(p.img) productCards+='<img src="'+p.img+'" style="width:100%;height:90px;object-fit:cover;" onerror="this.style.display=\'none\'">';
+                    productCards+='<div style="padding:6px 8px;"><div style="font-size:11px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.name+'</div>';
+                    if(p.price) productCards+='<div style="font-size:11px;font-weight:800;color:#6366f1;margin-top:2px;">'+p.price+'</div>';
+                    productCards+='</div></div>';
+                });
+                productCards+='</div>';
+            }catch(e){}
+        }
+        var mt=msgText.replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:'+linkColor+';text-decoration:underline;">$1</a>');h+='<div style="background:'+bg+';color:'+cl+';padding:12px 18px;border-radius:'+bdRadius+';max-width:420px;font-size:16px;line-height:1.6;word-break:break-all;box-shadow:'+shadow+';'+(isInternal?'border:1px dashed #fcd34d;':'')+'">'+mt+productCards+'</div>';if(!isMgr&&m.message){var eid='trm_'+Math.random().toString(36).substr(2,8);h+='<div style="margin-top:3px;"><button onclick="lcTranslateMsg(this,\''+eid+'\')" data-msg="'+m.message.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" style="font-size:11px;background:none;border:1px solid #e2e8f0;color:#64748b;padding:2px 8px;border-radius:6px;cursor:pointer;" title="한국어로 번역"><i class="fa-solid fa-language"></i> 번역</button><span id="'+eid+'" style="font-size:12px;color:#6366f1;margin-left:4px;"></span></div>';}}
         return h+'</div>';
     }
     var _lastSentAt = 0; // 내가 보낸 메시지 중복 방지용

@@ -628,27 +628,30 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         let roomId = '';
 
         try {
-            // 1순위: 클라이언트가 보낸 room_id
+            // 1순위: 클라이언트가 보낸 room_id (확실한 캐시)
             if (clientRoomId) {
-                const { data: cr } = await sb.from('chat_rooms').select('id').eq('id', clientRoomId).limit(1);
-                if (cr && cr.length > 0) roomId = cr[0].id;
+                roomId = clientRoomId;
+                console.log("[chat] reusing client room_id:", roomId);
             }
-            // 2순위: session_id로 검색
+            // 2순위: source 필드로 검색
             if (!roomId && _sid) {
-                const { data: rooms } = await sb.from('chat_rooms')
-                    .select('id').eq('nickname', 'sid:' + _sid)
-                    .in('status', ['ai_chatting', 'active'])
+                const { data: rooms, error: findErr } = await sb.from('chat_rooms')
+                    .select('id').eq('source', 'bot-' + _sid)
                     .order('created_at', { ascending: false }).limit(1);
-                if (rooms && rooms.length > 0) roomId = rooms[0].id;
+                if (!findErr && rooms && rooms.length > 0) {
+                    roomId = rooms[0].id;
+                    console.log("[chat] found existing room:", roomId);
+                }
             }
             // 3순위: 새 방 생성
             if (!roomId) {
-                const { data: newRoom } = await sb.from('chat_rooms').insert({
+                const { data: newRoom, error: createErr } = await sb.from('chat_rooms').insert({
                     customer_name: custName, status: 'ai_chatting',
-                    source: 'chatbot', nickname: _sid ? 'sid:' + _sid : null,
+                    source: _sid ? 'bot-' + _sid : 'chatbot',
                     site_lang: _lang, assigned_manager: '',
                 }).select('id').single();
-                if (newRoom) roomId = newRoom.id;
+                if (createErr) console.error("[chat] room create error:", createErr);
+                if (newRoom) { roomId = newRoom.id; console.log("[chat] created new room:", roomId); }
             }
         } catch (roomErr: any) { console.error("Room find/create error:", roomErr.message); }
 
@@ -678,13 +681,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         room_id: _roomId, sender_type: 'customer', sender_name: custName,
                         message: _trimmedMsg || '(이미지)', created_at: new Date(now.getTime() - 1000).toISOString(),
                     });
-                    // AI 텍스트 응답
+                    // AI 텍스트 응답 + 제품 카드 데이터
                     let botMsg = _resultMsg;
-                    // 제품 추천이 있으면 메시지에 포함
                     if (_products && _products.length > 0) {
-                        botMsg += '\n\n📦 추천 상품:\n' + _products.map((p: any, i: number) =>
-                            `${i+1}. ${p.name} ${p.price ? '(' + p.price + ')' : ''}`
-                        ).join('\n');
+                        // JSON 블록으로 제품 데이터 포함 (관리자 렌더링용)
+                        botMsg += '\n<!--PRODUCTS:' + JSON.stringify(_products) + '-->';
                     }
                     await sb.from('chat_messages').insert({
                         room_id: _roomId, sender_type: 'chatbot', sender_name: 'AI 카푸',
