@@ -59,7 +59,7 @@ serve(async (req) => {
     let reqBody: any = {};
     try {
         reqBody = await req.json();
-        const { message, lang, image, image_type, conversation_history } = reqBody;
+        const { message, lang, image, image_type, conversation_history, session_id } = reqBody;
         const trimmedMsg = (message || '').trim();
         if (!trimmedMsg && !image) throw new Error("message or image is required");
         if (trimmedMsg.length > 2000) throw new Error("Message too long");
@@ -633,6 +633,50 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             });
         } catch (logErr: any) {
             console.error("QA log error:", logErr.message);
+        }
+
+        // ★ 실시간 상담 연동: chat_rooms + chat_messages 저장
+        try {
+            const sid = session_id || '';
+            const custNameMap: Record<string,string> = { kr: '웹 고객', ja: 'ウェブ顧客', us: 'Web Customer' };
+            const custName = custNameMap[clientLang] || '웹 고객';
+            let roomId = '';
+
+            if (sid) {
+                // 기존 세션 방 찾기
+                const { data: existRoom } = await sb.from('chat_rooms')
+                    .select('id')
+                    .eq('source', 'chatbot-' + sid)
+                    .eq('status', 'ai_chatting')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                if (existRoom) roomId = existRoom.id;
+            }
+
+            if (!roomId) {
+                // 새 방 생성
+                const { data: newRoom } = await sb.from('chat_rooms').insert({
+                    customer_name: custName,
+                    status: 'ai_chatting',
+                    source: sid ? 'chatbot-' + sid : 'chatbot',
+                    site_lang: clientLang,
+                    assigned_manager: '',
+                }).select('id').single();
+                if (newRoom) roomId = newRoom.id;
+            }
+
+            if (roomId) {
+                // 고객 메시지 + AI 응답 저장
+                const msgs = [
+                    { room_id: roomId, sender_type: 'customer', sender_name: custName, message: trimmedMsg || '(이미지)' },
+                    { room_id: roomId, sender_type: 'chatbot', sender_name: 'AI 카푸', message: (result.chat_message || result.summary || '').substring(0, 3000) },
+                ];
+                await sb.from('chat_messages').insert(msgs);
+                await sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId);
+            }
+        } catch (chatErr: any) {
+            console.error("Chat room sync error:", chatErr.message);
         }
 
         return new Response(
