@@ -6289,21 +6289,29 @@ async function loadScrollBanner() {
         startAuto();
 
         // 터치/드래그 지원
-        let startX = 0, startPos = 0, dragging = false;
+        let startX = 0, startY = 0, startPos = 0, dragging = false, didDrag = false;
         clip.addEventListener('pointerdown', e => {
-            dragging = true; isPaused = true; startX = e.clientX; startPos = pos;
+            dragging = true; didDrag = false; isPaused = true;
+            startX = e.clientX; startY = e.clientY; startPos = pos;
             track.style.transition = 'none';
-            clip.setPointerCapture(e.pointerId);
         });
         clip.addEventListener('pointermove', e => {
             if (!dragging) return;
             const dx = startX - e.clientX;
+            if (Math.abs(dx) > 5) didDrag = true;
             track.style.transform = 'translateX(-'+(startPos + dx)+'px)';
         });
         clip.addEventListener('pointerup', e => {
             if (!dragging) return;
             dragging = false;
             const dx = startX - e.clientX;
+            // 클릭 (드래그 안 함) → 해당 상품 열기
+            if (!didDrag || Math.abs(dx) < 5) {
+                isPaused = false; startAuto();
+                const card = e.target.closest('.sb-card');
+                if (card && card.onclick) card.onclick();
+                return;
+            }
             const moved = Math.round(dx / cardW);
             pos = startPos + moved * cardW;
             if (pos < 0) pos = totalOriginal * cardW;
