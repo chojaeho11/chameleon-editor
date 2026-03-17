@@ -728,11 +728,20 @@ if ('caches' in window) {
     border-radius:16px;
 }
 #scrollBannerTrack .sb-card .sb-label {
-    position:absolute; bottom:0; left:0; right:0; padding:20px 8px 8px;
-    background:linear-gradient(transparent, rgba(0,0,0,0.5));
-    color:#fff; font-size:12px; font-weight:600; text-align:center;
-    border-radius:0 0 16px 16px; pointer-events:none;
+    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+    max-width:90%; padding:5px 12px;
+    background:rgba(255,255,255,0.92); backdrop-filter:blur(4px);
+    color:#222; font-size:13px; font-weight:700; text-align:center;
+    border-radius:20px; pointer-events:none;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+#scrollBannerTrack .sb-card .sb-badge {
+    position:absolute; top:10px; left:10px;
+    padding:3px 10px; background:#fff; color:#6366f1;
+    font-size:10px; font-weight:800; border-radius:12px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.12); pointer-events:none;
+    letter-spacing:0.3px;
 }
 </style>
 
@@ -6279,17 +6288,18 @@ async function loadScrollBanner() {
                 .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url')
                 .eq(f, true).order('sort_order', { ascending: true }).limit(12)
         ));
-        // 섹션별로 분리 저장
-        const buckets = []; // [hotdeal[], biz[], print[], goods[], popular[]]
+        // 섹션별로 분리 저장 + 분류명 태그
+        const badgeNames = ['허니콤보드','천가게','인쇄소','굿즈샵','인기절정'];
+        const buckets = [];
         const seen = new Set();
-        results.forEach(r => {
+        results.forEach((r, idx) => {
             const arr = [];
             if (r.data) r.data.forEach(p => {
-                if (!seen.has(p.code)) { seen.add(p.code); arr.push(p); }
+                if (!seen.has(p.code)) { seen.add(p.code); p._badge = badgeNames[idx]; arr.push(p); }
             });
             buckets.push(arr);
         });
-        // 라운드로빈 섞기: 각 섹션에서 1개씩 번갈아 → 나머지 순서대로
+        // 라운드로빈 섞기
         const mixed = [];
         const maxLen = Math.max(...buckets.map(b => b.length));
         for (let i = 0; i < maxLen; i++) {
@@ -6315,7 +6325,8 @@ async function loadScrollBanner() {
             const card = document.createElement('div');
             card.className = 'sb-card';
             card.style.width = cardPx + 'px';
-            card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div class="sb-label">'+name+'</div>';
+            const badge = p._badge || '';
+            card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'">'+(badge?'<div class="sb-badge">'+badge+'</div>':'')+'<div class="sb-label">'+name+'</div>';
             card.onclick = () => { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
             track.appendChild(card);
         });
