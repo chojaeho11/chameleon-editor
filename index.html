@@ -6657,8 +6657,25 @@ async function renderQuickMenu() {
             }
             let activeTop = null;
 
+            // 소분류별 상품 로드 함수
+            async function loadSubCatProducts(catCode, container) {
+                const prods = (allProds || []).filter(p => p.category === catCode);
+                if (!prods.length) { container.innerHTML = '<p style="color:#999; padding:10px;">상품이 없습니다.</p>'; return; }
+                container.innerHTML = '';
+                prods.slice(0, 12).forEach(p => {
+                    const { name } = (typeof getLocalizedData === 'function') ? getLocalizedData(p) : { name: p.name };
+                    const img = p.img_url || 'https://placehold.co/120?text=No+Img';
+                    const src = window.getTinyThumb ? window.getTinyThumb(img, 200) : img;
+                    const item = document.createElement('div');
+                    item.style.cssText = 'display:inline-block; width:100px; margin:6px; cursor:pointer; text-align:center; vertical-align:top;';
+                    item.innerHTML = '<img src="'+src+'" style="width:100px; height:100px; object-fit:cover; border-radius:12px; background:#f1f5f9;" onerror="this.src=\'https://placehold.co/120?text=No+Img\'"><div style="font-size:11px; color:#333; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100px;">'+name+'</div>';
+                    item.onclick = (e) => { e.stopPropagation(); dropdown.style.display='none'; tcmTrack.querySelectorAll('.tcm-btn').forEach(b=>b.classList.remove('active')); if(window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
+                    container.appendChild(item);
+                });
+            }
+
             topCats.forEach(top => {
-                if (top.code === 'user_artwork') return; // 작품 카테고리 제외
+                if (top.code === 'user_artwork' || top.code === 'default') return; // 작품, 기본대분류 제외
                 const btn = document.createElement('button');
                 btn.className = 'tcm-btn';
                 let tName = top.name;
@@ -6676,9 +6693,11 @@ async function renderQuickMenu() {
                     if (wasActive) { dropdown.style.display = 'none'; activeTop = null; return; }
                     btn.classList.add('active');
                     activeTop = top.code;
-                    // 소분류 표시
                     const subs = subCats.filter(s => s.top_category_code === top.code);
                     dropdown.innerHTML = '';
+                    // 소분류 버튼들
+                    const subBar = document.createElement('div');
+                    subBar.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;';
                     subs.forEach(s => {
                         let sName = s.name;
                         if (CURRENT_LANG === 'ja') sName = s.name_jp || s.name_us || sName;
@@ -6691,22 +6710,24 @@ async function renderQuickMenu() {
                         const sub = document.createElement('span');
                         sub.className = 'tcd-sub';
                         sub.textContent = sName;
-                        sub.onclick = () => {
-                            dropdown.style.display = 'none';
-                            tcmTrack.querySelectorAll('.tcm-btn').forEach(b => b.classList.remove('active'));
-                            // 해당 카테고리의 상품 목록 열기
-                            if (window._drawQuickItems) {
-                                document.getElementById('productPickerModal').style.display = 'flex';
-                                const catTab = document.querySelector('.cat-tab[data-top-code="'+top.code+'"]');
-                                if (catTab) catTab.click();
-                                setTimeout(() => {
-                                    const subCard = document.querySelector('.quick-card[data-code="'+s.code+'"]');
-                                    if (subCard) subCard.click();
-                                }, 300);
-                            }
+                        sub.onclick = (e) => {
+                            e.stopPropagation();
+                            subBar.querySelectorAll('.tcd-sub').forEach(x => x.style.background='#f8fafc');
+                            sub.style.background = '#ede9fe';
+                            loadSubCatProducts(s.code, prodGrid);
                         };
-                        dropdown.appendChild(sub);
+                        subBar.appendChild(sub);
                     });
+                    dropdown.appendChild(subBar);
+                    // 상품 그리드
+                    const prodGrid = document.createElement('div');
+                    prodGrid.style.cssText = 'max-height:300px; overflow-y:auto;';
+                    dropdown.appendChild(prodGrid);
+                    // 첫 번째 소분류 자동 로드
+                    if (subs.length > 0) {
+                        subBar.children[0].style.background = '#ede9fe';
+                        loadSubCatProducts(subs[0].code, prodGrid);
+                    }
                     dropdown.style.display = 'block';
                 };
                 tcmTrack.appendChild(btn);
