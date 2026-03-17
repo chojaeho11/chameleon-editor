@@ -620,58 +620,69 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             }
         }
 
-        // ★ 로그 + 실시간 상담 연동 (비동기 — 응답 지연 없음)
+        // ★ 채팅방 찾기/생성 (동기 — 중복 방 방지)
+        const _sid = session_id || '';
+        const _lang = clientLang;
+        const custNameMap: Record<string,string> = { kr: '웹 고객', ja: 'ウェブ顧客', us: 'Web Customer' };
+        const custName = custNameMap[_lang] || '웹 고객';
+        let roomId = '';
+
+        try {
+            if (_sid) {
+                const { data: existRoom } = await sb.from('chat_rooms')
+                    .select('id').eq('source', 'chatbot-' + _sid)
+                    .in('status', ['ai_chatting', 'active']).limit(1).maybeSingle();
+                if (existRoom) roomId = existRoom.id;
+            }
+            if (!roomId) {
+                const { data: newRoom } = await sb.from('chat_rooms').insert({
+                    customer_name: custName, status: 'ai_chatting',
+                    source: _sid ? 'chatbot-' + _sid : 'chatbot',
+                    site_lang: _lang, assigned_manager: '',
+                }).select('id').single();
+                if (newRoom) roomId = newRoom.id;
+            }
+        } catch (roomErr: any) { console.error("Room find/create error:", roomErr.message); }
+
+        // ★ 로그 + 메시지 저장 (비동기 — 응답 지연 없음)
         const _trimmedMsg = trimmedMsg;
         const _resultMsg = (result.chat_message || result.summary || '').substring(0, 3000);
         const _products = result.products && result.products.length > 0
-            ? result.products.map((p: any) => ({ code: p.code, name: p.name })) : null;
+            ? result.products.map((p: any) => ({ code: p.code, name: p.name, price: p.price_display || '', img: p.img_url || '' })) : null;
         const _hasImage = !!image;
-        const _sid = session_id || '';
-        const _lang = clientLang;
+        const _roomId = roomId;
 
-        // 비동기 실행 (await 하지 않음 — 응답은 즉시 반환)
         (async () => {
             try {
                 // 1) Q&A 로그
                 await sb.from("advisor_qa_log").insert({
                     lang: _lang, customer_message: _trimmedMsg || '(image)',
-                    ai_response: _resultMsg, products_recommended: _products, has_image: _hasImage,
+                    ai_response: _resultMsg,
+                    products_recommended: _products ? _products.map((p: any) => ({ code: p.code, name: p.name })) : null,
+                    has_image: _hasImage,
                 });
 
-                // 2) chat_rooms + chat_messages
-                const custNameMap: Record<string,string> = { kr: '웹 고객', ja: 'ウェブ顧客', us: 'Web Customer' };
-                const custName = custNameMap[_lang] || '웹 고객';
-                let roomId = '';
-
-                if (_sid) {
-                    const { data: existRoom } = await sb.from('chat_rooms')
-                        .select('id').eq('source', 'chatbot-' + _sid)
-                        .eq('status', 'ai_chatting').limit(1).maybeSingle();
-                    if (existRoom) roomId = existRoom.id;
-                }
-
-                if (!roomId) {
-                    const { data: newRoom } = await sb.from('chat_rooms').insert({
-                        customer_name: custName, status: 'ai_chatting',
-                        source: _sid ? 'chatbot-' + _sid : 'chatbot',
-                        site_lang: _lang, assigned_manager: '',
-                    }).select('id').single();
-                    if (newRoom) roomId = newRoom.id;
-                }
-
-                if (roomId) {
+                // 2) chat_messages (개별 insert — realtime 트리거)
+                if (_roomId) {
                     const now = new Date();
-                    // 고객 메시지 먼저 (1초 전 타임스탬프)
+                    // 고객 메시지
                     await sb.from('chat_messages').insert({
-                        room_id: roomId, sender_type: 'customer', sender_name: custName,
+                        room_id: _roomId, sender_type: 'customer', sender_name: custName,
                         message: _trimmedMsg || '(이미지)', created_at: new Date(now.getTime() - 1000).toISOString(),
                     });
-                    // AI 응답 (현재 시간)
+                    // AI 텍스트 응답
+                    let botMsg = _resultMsg;
+                    // 제품 추천이 있으면 메시지에 포함
+                    if (_products && _products.length > 0) {
+                        botMsg += '\n\n📦 추천 상품:\n' + _products.map((p: any, i: number) =>
+                            `${i+1}. ${p.name} ${p.price ? '(' + p.price + ')' : ''}`
+                        ).join('\n');
+                    }
                     await sb.from('chat_messages').insert({
-                        room_id: roomId, sender_type: 'chatbot', sender_name: 'AI 카푸',
-                        message: _resultMsg, created_at: now.toISOString(),
+                        room_id: _roomId, sender_type: 'chatbot', sender_name: 'AI 카푸',
+                        message: botMsg, created_at: now.toISOString(),
                     });
-                    await sb.from('chat_rooms').update({ updated_at: now.toISOString() }).eq('id', roomId);
+                    await sb.from('chat_rooms').update({ updated_at: now.toISOString() }).eq('id', _roomId);
                 }
             } catch (e: any) { console.error("Async log error:", e.message); }
         })();
