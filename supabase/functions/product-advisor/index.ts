@@ -59,7 +59,7 @@ serve(async (req) => {
     let reqBody: any = {};
     try {
         reqBody = await req.json();
-        const { message, lang, image, image_type, conversation_history, session_id } = reqBody;
+        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId } = reqBody;
         const trimmedMsg = (message || '').trim();
         if (!trimmedMsg && !image) throw new Error("message or image is required");
         if (trimmedMsg.length > 2000) throw new Error("Message too long");
@@ -628,14 +628,20 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         let roomId = '';
 
         try {
-            if (_sid) {
-                // nickname 필드에 session_id 저장하여 검색
+            // 1순위: 클라이언트가 보낸 room_id
+            if (clientRoomId) {
+                const { data: cr } = await sb.from('chat_rooms').select('id').eq('id', clientRoomId).limit(1);
+                if (cr && cr.length > 0) roomId = cr[0].id;
+            }
+            // 2순위: session_id로 검색
+            if (!roomId && _sid) {
                 const { data: rooms } = await sb.from('chat_rooms')
                     .select('id').eq('nickname', 'sid:' + _sid)
                     .in('status', ['ai_chatting', 'active'])
                     .order('created_at', { ascending: false }).limit(1);
                 if (rooms && rooms.length > 0) roomId = rooms[0].id;
             }
+            // 3순위: 새 방 생성
             if (!roomId) {
                 const { data: newRoom } = await sb.from('chat_rooms').insert({
                     customer_name: custName, status: 'ai_chatting',
@@ -688,6 +694,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 }
             } catch (e: any) { console.error("Async log error:", e.message); }
         })();
+
+        // room_id를 응답에 포함
+        if (roomId) result.room_id = roomId;
 
         return new Response(
             JSON.stringify(result),
