@@ -14379,6 +14379,7 @@ window.dsmRenderProducts = async function(keyword) {
                     var firstName = res.data[0].sender_name || '매니저';
                     switchToLiveFromAI(firstName);
                     res.data.forEach(function(m) {
+                        if (m.id) _pollSeenIds[m.id] = true; // 폴링 중복 방지
                         addManagerMsg(m.sender_name || '매니저', m.message);
                     });
                     _custNotifyNewMsg(firstName);
@@ -14407,29 +14408,12 @@ window.dsmRenderProducts = async function(keyword) {
         });
     }
 
-    // 매니저 끼어들기 감지 (realtime 구독)
+    // 매니저 끼어들기 감지 — REST 폴링으로 대체 (Realtime 제거)
+    // _doPoll()이 방 상태 변경 + 매니저 메시지를 3초 간격으로 체크
     function subscribeManagerIntervene() {
-        var _db = getDb();
-        if (!_db || !_aiRoom || _aiSub) return;
-        _aiSub = _db.channel('ai-room-' + _aiRoom.id)
-            .on('postgres_changes', {
-                event: 'INSERT', schema: 'public', table: 'chat_messages',
-                filter: 'room_id=eq.' + _aiRoom.id
-            }, function(payload) {
-                var m = payload.new;
-                if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
-                var msgArea = document.getElementById('chamMessages');
-                if (m.sender_type === 'manager') {
-                    switchToLiveFromAI(m.sender_name || '매니저');
-                    addManagerMsg(m.sender_name || '매니저', m.message);
-                    _custNotifyNewMsg(m.sender_name || '매니저');
-                } else if (m.sender_type === 'system') {
-                    if (msgArea) {
-                        msgArea.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
-                    }
-                    _scrollChatBottom();
-                }
-            }).subscribe();
+        // 하위 호환: 기존 코드에서 호출해도 에러 안 남
+        // 실제 감지는 _doPoll()에서 수행
+        console.log('ℹ️ subscribeManagerIntervene → 폴링으로 대체됨');
     }
 
     // 매니저 끼어들기 시 → AI 모드에서 실시간 상담으로 전환
@@ -14470,103 +14454,135 @@ window.dsmRenderProducts = async function(keyword) {
         fr: "Désolé, une erreur temporaire s'est produite 😥\nVeuillez réessayer ou cliquez sur 'Contacter un agent' ci-dessous !"
     };
 
-    // ── 세션 + 방 관리 (REST API 직접 사용, window.sb 불필요) ──
+    // ── 세션 + 방 관리 (REST 폴링 전용 — Realtime 의존 제거) ──
     var _chatSessionId = sessionStorage.getItem('_cham_sid') || (Date.now().toString(36) + Math.random().toString(36).substr(2, 6));
     var _chatRoomId = sessionStorage.getItem('_cham_room') || '';
     try { sessionStorage.setItem('_cham_sid', _chatSessionId); } catch(e) {}
-    // sessionStorage에 room_id가 있으면 _aiRoom도 동기화 (매니저 끼어들기 realtime 구독용)
-    if (_chatRoomId && !_aiRoom) {
-        _aiRoom = { id: _chatRoomId };
-        _saveAiRoom();
-        // DB 연결 준비되면 realtime 구독 시작
-        setTimeout(function() { subscribeManagerIntervene(); }, 2000);
-    }
 
     var _supaRest = SUPA_URL + '/rest/v1/';
-    var _supaHeaders = { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Prefer': 'return=representation' };
+    var _pollHeaders = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
 
-    // 매니저 메시지 폴링 (5초 간격, Edge Function 경유)
-    var _lastMgrCheck = '';
-    var _mgrPollTimer = null;
-    function _startMgrPoll() {
-        if (_mgrPollTimer || !_chatRoomId) return;
-        _lastMgrCheck = new Date().toISOString();
-        _mgrPollTimer = setInterval(function() {
-            if (!_chatRoomId) return;
-            // admin-qa-update Edge Function에 poll_messages 액션 추가 대신
-            // 직접 REST API 사용 (anon key SELECT 가능 여부에 따라)
-            fetch(_supaRest + 'chat_messages?room_id=eq.' + _chatRoomId + '&or=(sender_type.eq.manager,sender_type.eq.system)&created_at=gt.' + encodeURIComponent(_lastMgrCheck) + '&order=created_at.asc&limit=10', {
-                headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-            }).then(function(r) { return r.json(); }).then(function(msgs) {
-                if (!msgs || !Array.isArray(msgs) || !msgs.length) return;
-                msgs.forEach(function(m) {
-                    if (m.sender_type === 'manager') {
-                        // 매니저 끼어들기 감지 → 라이브 모드 전환
-                        if (!window._chamLiveMode && _aiRoom) {
-                            switchToLiveFromAI(m.sender_name || '매니저');
-                        }
-                        if (typeof addManagerMsg === 'function') {
-                            addManagerMsg(m.sender_name || '매니저', m.message);
-                        } else {
-                            addMsg('👤 ' + (m.sender_name || '매니저') + ': ' + m.message, 'bot');
-                        }
-                        if (typeof _custNotifyNewMsg === 'function') _custNotifyNewMsg(m.sender_name || '매니저');
-                    } else if (m.sender_type === 'system') {
-                        addMsg('📢 ' + m.message, 'bot');
-                    }
-                });
-                _lastMgrCheck = msgs[msgs.length - 1].created_at;
-                var mc = getEl('chamMessages'); if (mc) mc.scrollTop = mc.scrollHeight;
-            }).catch(function(e){ console.warn('폴링 실패:', e); });
-        }, 4000);
-        console.log('📡 매니저 메시지 폴링 시작:', _chatRoomId);
+    // ── 통합 폴링: 방 상태 + 매니저/시스템 메시지 (3초 간격) ──
+    var _pollTimer = null;
+    var _pollSeenIds = {};        // 이미 표시한 메시지 ID (중복 방지)
+    var _pollRoomStatus = '';     // 마지막으로 확인한 방 상태
+    var _pollStartTime = '';      // 폴링 시작 시점 (이전 메시지 무시용)
+
+    function _startUnifiedPoll() {
+        if (_pollTimer || !_chatRoomId) return;
+        _pollStartTime = new Date(Date.now() - 10000).toISOString(); // 10초 전부터 체크 (타이밍 gap 방지)
+        _pollRoomStatus = 'ai_chatting';
+        console.log('📡 통합 폴링 시작:', _chatRoomId);
+
+        // 즉시 1회 실행 후 3초 간격
+        _doPoll();
+        _pollTimer = setInterval(_doPoll, 3000);
     }
-    if (_chatRoomId) _startMgrPoll();
 
-    var _askAiInFlight = false; // 동시 호출 방지 (방 중복 생성 차단)
+    function _stopUnifiedPoll() {
+        if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+    }
+
+    function _doPoll() {
+        if (!_chatRoomId) return;
+
+        // 1) 방 상태 확인 (ai_chatting → active 전환 감지)
+        fetch(_supaRest + 'chat_rooms?id=eq.' + _chatRoomId + '&select=status,assigned_manager', {
+            headers: _pollHeaders
+        }).then(function(r) { return r.json(); }).then(function(rooms) {
+            if (!rooms || !rooms.length) return;
+            var room = rooms[0];
+            // 상태가 ai_chatting에서 active로 변경됨 = 매니저 끼어들기
+            if (_pollRoomStatus === 'ai_chatting' && room.status === 'active' && !window._chamLiveMode) {
+                console.log('🔔 폴링: 매니저 끼어들기 감지! manager:', room.assigned_manager);
+                var mgrName = room.assigned_manager || '매니저';
+                _aiRoom = { id: _chatRoomId };
+                switchToLiveFromAI(mgrName);
+            }
+            if (room.status === 'closed' && window._chamLiveMode) {
+                addMsg('📢 상담이 종료되었습니다.', 'bot');
+            }
+            _pollRoomStatus = room.status;
+        }).catch(function(e) { console.warn('방 상태 폴링 실패:', e); });
+
+        // 2) 매니저/시스템 메시지 확인 (중복 방지용 ID 체크)
+        fetch(_supaRest + 'chat_messages?room_id=eq.' + _chatRoomId + '&or=(sender_type.eq.manager,sender_type.eq.system)&created_at=gt.' + encodeURIComponent(_pollStartTime) + '&order=created_at.asc&limit=20', {
+            headers: _pollHeaders
+        }).then(function(r) { return r.json(); }).then(function(msgs) {
+            if (!msgs || !Array.isArray(msgs) || !msgs.length) return;
+            var hasNew = false;
+            msgs.forEach(function(m) {
+                if (_pollSeenIds[m.id]) return; // 이미 표시한 메시지
+                _pollSeenIds[m.id] = true;
+                hasNew = true;
+
+                if (m.sender_type === 'manager') {
+                    // 라이브 모드 전환 (아직 안 됐으면)
+                    if (!window._chamLiveMode) {
+                        _aiRoom = { id: _chatRoomId };
+                        switchToLiveFromAI(m.sender_name || '매니저');
+                    }
+                    addManagerMsg(m.sender_name || '매니저', m.message);
+                    _custNotifyNewMsg(m.sender_name || '매니저');
+                } else if (m.sender_type === 'system') {
+                    var mc = getEl('chamMessages');
+                    if (mc) mc.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
+                }
+            });
+            if (hasNew) {
+                _pollStartTime = msgs[msgs.length - 1].created_at;
+                _scrollChatBottom();
+            }
+        }).catch(function(e) { console.warn('메시지 폴링 실패:', e); });
+    }
+
+    // 페이지 로드 시 기존 방이 있으면 즉시 폴링 시작
+    if (_chatRoomId) _startUnifiedPoll();
+
+    // ── askAI: 방 중복 방지 (직렬화) ──
+    var _askAiLock = false;
     function askAI(userMessage) {
         var _l = (_chamLang === 'en') ? 'us' : _chamLang;
-        // 이전 호출이 진행 중이면 room_id 확보될 때까지 대기
-        var waitForRoom = _askAiInFlight
-            ? new Promise(function(resolve) {
-                var check = setInterval(function() {
-                    if (!_askAiInFlight) { clearInterval(check); resolve(); }
-                }, 200);
-                setTimeout(function() { clearInterval(check); resolve(); }, 5000); // 최대 5초 대기
-            })
-            : Promise.resolve();
 
-        _askAiInFlight = true;
-        return waitForRoom.then(function() {
+        // 이전 호출 완료 대기 (방 ID 확보 후 전송)
+        function waitThenSend() {
+            if (!_askAiLock) return doSend();
+            return new Promise(function(resolve) {
+                var t = 0;
+                var iv = setInterval(function() {
+                    t += 150;
+                    if (!_askAiLock || t > 8000) { clearInterval(iv); resolve(doSend()); }
+                }, 150);
+            });
+        }
+
+        function doSend() {
+            _askAiLock = true;
             return fetch(_ADVISOR_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY },
                 body: JSON.stringify({ message: userMessage, lang: _chamLang, session_id: _chatSessionId, room_id: _chatRoomId || undefined })
-            });
-        }).then(function(res) {
-            if (!res.ok) throw new Error('API ' + res.status);
-            return res.json();
-        }).then(function(data) {
-            // room_id 캐시
-            console.log('🤖 AI 응답 room_id:', data.room_id, '현재 캐시:', _chatRoomId);
-            if (data.room_id) {
-                _chatRoomId = data.room_id;
-                try { sessionStorage.setItem('_cham_room', _chatRoomId); } catch(e) {}
-                _startMgrPoll();
-                // _aiRoom 동기화 → realtime 구독 활성화 (매니저 끼어들기 감지)
-                if (!_aiRoom || _aiRoom.id !== data.room_id) {
-                    _aiRoom = { id: data.room_id };
-                    _saveAiRoom();
-                    subscribeManagerIntervene();
+            }).then(function(res) {
+                if (!res.ok) throw new Error('API ' + res.status);
+                return res.json();
+            }).then(function(data) {
+                console.log('🤖 AI 응답 room_id:', data.room_id, '캐시:', _chatRoomId);
+                if (data.room_id && data.room_id !== _chatRoomId) {
+                    _chatRoomId = data.room_id;
+                    try { sessionStorage.setItem('_cham_room', _chatRoomId); } catch(e) {}
                 }
-            }
-            _askAiInFlight = false;
-            return data;
-        }).catch(function(e) {
-            console.error('AI 호출 오류:', e);
-            _askAiInFlight = false;
-            return { type: 'chat', chat_message: _errGeneral[_l] || _errGeneral['kr'], products: [] };
-        });
+                // 폴링 시작 (첫 응답 후)
+                if (_chatRoomId) _startUnifiedPoll();
+                _askAiLock = false;
+                return data;
+            }).catch(function(e) {
+                console.error('AI 호출 오류:', e);
+                _askAiLock = false;
+                return { type: 'chat', chat_message: _errGeneral[_l] || _errGeneral['kr'], products: [] };
+            });
+        }
+
+        return waitThenSend();
     }
 
     // 제품 추천 카드 렌더링
@@ -15328,10 +15344,9 @@ window.dsmRenderProducts = async function(keyword) {
     }
     
     // ── 매니저 끼어들기 전환 핸들러 ──
-    // AI 챗봇 모듈에서 매니저가 끼어들면 이 함수가 호출됨
+    // AI 챗봇 모듈(폴링)에서 매니저 끼어들기 감지 시 호출됨
     window._chamOnManagerTakeover = function(aiRoom, managerName) {
-        var sb = getSb();
-        if (!sb || !aiRoom) return;
+        if (!aiRoom) return;
         _room = aiRoom;
         _customerName = _customerName || _ct('webCustomer');
         _live = true;
@@ -15352,38 +15367,8 @@ window.dsmRenderProducts = async function(keyword) {
         var bar = document.getElementById('chamConnectBar');
         if (bar) bar.style.display = 'none';
 
-        // Realtime 구독 (매니저 메시지 수신)
-        _sub = sb.channel('room-' + _room.id)
-            .on('postgres_changes', {
-                event: 'INSERT', schema: 'public', table: 'chat_messages',
-                filter: 'room_id=eq.' + _room.id
-            }, function(payload) {
-                var m = payload.new;
-                if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
-                var ma = document.getElementById('chamMessages');
-                if (m.sender_type === 'manager') {
-                    var mn = m.sender_name || '매니저';
-                    var mh = '<div style="display:flex; flex-direction:column; align-items:flex-start; padding:2px 0;">';
-                    mh += '<span style="font-size:12px; color:#6366f1; font-weight:600; margin-bottom:2px; padding-left:4px;">\uD83D\uDCAC ' + mn + '</span>';
-                    if (m.file_url) {
-                        if (m.file_type && m.file_type.startsWith('image/'))
-                            mh += '<img src="' + m.file_url + '" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)">';
-                        else
-                            mh += '<a href="' + m.file_url + '" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:14px;display:inline-block;">📎 ' + (m.file_name||'파일 다운로드') + '</a>';
-                    }
-                    if (m.message) {
-                        var msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
-                        mh += '<div style="background:#f1f5f9; color:#334155; padding:10px 14px; border-radius:4px 16px 16px 16px; max-width:75%; font-size:15px; line-height:1.5; box-shadow:0 1px 4px rgba(0,0,0,0.06);">' + msgText + '</div>';
-                    }
-                    mh += '</div>';
-                    if (ma) ma.insertAdjacentHTML('beforeend', mh);
-                    if (window._custNotifyNewMsg) window._custNotifyNewMsg(mn);
-                } else if (m.sender_type === 'system') {
-                    if (ma) ma.insertAdjacentHTML('beforeend', '<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">' + m.message + '</div></div>');
-                    if (m.message.indexOf('종료') >= 0) endLive();
-                    if (window._scrollChatBottom) window._scrollChatBottom();
-                }
-            }).subscribe();
+        // 매니저 메시지 수신은 통합 폴링(_doPoll)이 담당 — Realtime 불필요
+        console.log('✅ [라이브챗] 매니저 끼어들기 전환 완료, 폴링으로 메시지 수신');
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', overrideSend);

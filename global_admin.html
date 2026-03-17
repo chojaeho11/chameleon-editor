@@ -4005,22 +4005,73 @@
         showChatToast('상담방 삭제 완료','',false);
     };
     // ── 매니저 끼어들기 (AI 상담 → 매니저 상담으로 전환) ──
+    // 끼어들기 버튼 클릭 → 매니저 선택 모달 표시
     window.lcIntervene = async function(){
         if(!currentRoom || currentRoom.status!=='ai_chatting') return;
-        var mgrName = myManagerName || '';
-        if (!mgrName || mgrName === '__HQ__') {
-            mgrName = prompt('끼어들기 - 매니저 이름을 입력하세요:');
+        // 이미 myManagerName이 설정되어 있고 __HQ__가 아니면 바로 실행
+        if (myManagerName && myManagerName !== '__HQ__') {
+            return _doIntervene(myManagerName);
         }
-        if(!mgrName||!mgrName.trim()) return;
-        mgrName=mgrName.trim();
-        var sb=getSb();
-        // 상태를 active로 변경, 매니저 배정
+        // 매니저 목록 로드 후 선택 모달 표시
+        var sb=getSb(); if(!sb) return;
+        var r = await sb.from('chatbot_knowledge').select('question,answer').eq('category','_managers').eq('is_active',true);
+        var managers = [];
+        if (r.data) r.data.forEach(function(m) {
+            try { var info = JSON.parse(m.answer); managers.push(info.name || m.question); }
+            catch(e) { managers.push(m.question); }
+        });
+        if (!managers.length) managers = ['지숙','은미','성희'];
+
+        // 모달 생성
+        var overlay = document.createElement('div');
+        overlay.id = 'lcInterveneOverlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        var modal = '<div style="background:#fff;border-radius:16px;padding:24px;min-width:300px;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">';
+        modal += '<h3 style="margin:0 0 16px;font-size:18px;text-align:center;">🖐️ 끼어들기 - 매니저 선택</h3>';
+        modal += '<div style="display:flex;flex-direction:column;gap:8px;">';
+        managers.forEach(function(name) {
+            modal += '<button class="lcIntervenePickBtn" data-mgr="'+name+'" style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;cursor:pointer;font-size:15px;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background=\'#6366f1\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'#f8fafc\';this.style.color=\'#000\'">👤 '+name+'</button>';
+        });
+        modal += '</div>';
+        modal += '<button onclick="document.getElementById(\'lcInterveneOverlay\').remove()" style="margin-top:12px;width:100%;padding:10px;border:none;background:#f1f5f9;border-radius:10px;cursor:pointer;font-size:14px;color:#64748b;">취소</button>';
+        modal += '</div>';
+        overlay.innerHTML = modal;
+        document.body.appendChild(overlay);
+
+        // 버튼 이벤트
+        overlay.querySelectorAll('.lcIntervenePickBtn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var mgrName = btn.getAttribute('data-mgr');
+                overlay.remove();
+                _doIntervene(mgrName);
+            });
+        });
+    };
+
+    // 실제 끼어들기 실행
+    async function _doIntervene(mgrName) {
+        if(!currentRoom) return;
+        var sb=getSb(); if(!sb) return;
+        var lang = detectRoomLang(currentRoom);
+
+        // 1) 상태를 active로 변경, 매니저 배정
         await sb.from('chat_rooms').update({status:'active',assigned_manager:mgrName,updated_at:new Date().toISOString()}).eq('id',currentRoom.id);
         currentRoom.status='active';
         currentRoom.assigned_manager=mgrName;
-        // 시스템 메시지 전송 (고객 화면에도 실시간 표시됨)
+
+        // 2) 시스템 메시지 전송
         await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:sysMsg('joined', mgrName)});
-        // UI 업데이트
+
+        // 3) 자동 인사 메시지 (고객이 반드시 볼 수 있는 manager 타입)
+        var greetings = {
+            kr: '안녕하세요! ' + mgrName + ' 매니저입니다. 무엇을 도와드릴까요? 😊',
+            ja: 'こんにちは！' + mgrName + 'マネージャーです。何かお手伝いできますか？😊',
+            en: 'Hello! I\'m ' + mgrName + '. How can I help you? 😊'
+        };
+        var greeting = greetings[lang] || greetings['kr'];
+        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'manager',sender_name:mgrName,message:greeting});
+
+        // 4) UI 업데이트
         document.getElementById('lcChatTitle').textContent='👤 '+(currentRoom.customer_name||'고객')+' 님 상담';
         var mgrBadge=document.getElementById('lcChatManagerBadge');
         if(mgrBadge){mgrBadge.textContent='담당: '+mgrName;mgrBadge.style.background='#6366f1';mgrBadge.style.display='inline-block';}
@@ -4030,9 +4081,18 @@
         if(interveneBtn) interveneBtn.style.display='none';
         var changeMgrBtn=document.getElementById('lcChangeMgrBtn');
         if(changeMgrBtn) changeMgrBtn.style.display='inline-block';
-        // 실시간 구독 시작 (매니저 메시지 수신)
+
+        // 5) 인사 메시지를 관리자 채팅창에도 표시
         var area=document.getElementById('lcChatMessages');
-        subscription=sb.channel('admin-'+currentRoom.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room_id=eq.'+currentRoom.id},async function(p){
+        if (area) {
+            area.insertAdjacentHTML('beforeend', renderMsg({sender_type:'system',message:sysMsg('joined', mgrName),created_at:new Date().toISOString()}));
+            area.insertAdjacentHTML('beforeend', renderMsg({sender_type:'manager',sender_name:mgrName,message:greeting,created_at:new Date().toISOString()}));
+            area.scrollTop = area.scrollHeight;
+        }
+
+        // 6) 실시간 구독 시작 (관리자 측 — 고객 메시지 수신)
+        if(subscription){try{subscription.unsubscribe();}catch(e){} subscription=null;}
+        subscription=sb.channel('admin-'+currentRoom.id+'-'+Date.now()).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room_id=eq.'+currentRoom.id},async function(p){
             var m=p.new;
             if(m.sender_type==='customer'||m.sender_type==='system'){
                 if(m.id){var fresh=await sb.from('chat_messages').select('*').eq('id',m.id).single();if(fresh.data) m=fresh.data;}
@@ -4046,7 +4106,8 @@
             }
         }).subscribe();
         lcLoadRooms();
-    };
+        showChatToast('✅ '+mgrName+' 매니저로 끼어들기 완료!','',false);
+    }
     window.lcSaveToKnowledge = async function(){
         if(!currentRoom) return;var sb=getSb();
         var mr=await sb.from('chat_messages').select('sender_type,message').eq('room_id',currentRoom.id).order('created_at').limit(50);
