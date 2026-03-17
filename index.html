@@ -665,25 +665,25 @@ if ('caches' in window) {
     </div>
 
 <!-- ★ 흘러가는 상품 배너 -->
-<div id="scrollBanner" style="display:none; overflow:hidden; padding:12px 0; background:#f8fafc; position:relative;">
-    <div id="scrollBannerTrack" style="display:flex; gap:12px; transition:transform 0.6s ease;"></div>
+<div id="scrollBanner" style="display:none; overflow:hidden; padding:8px 0; background:#f8fafc; position:relative; z-index:10; clear:both;">
+    <div id="scrollBannerTrack" style="display:flex; gap:8px; transition:transform 0.6s ease;"></div>
 </div>
 <style>
-#scrollBanner { -webkit-user-select:none; user-select:none; }
+#scrollBanner { -webkit-user-select:none; user-select:none; touch-action:pan-y; }
 #scrollBannerTrack .sb-card {
-    flex:0 0 calc(25% - 9px); min-width:0; cursor:pointer; border-radius:12px; overflow:hidden;
-    background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.06); transition:transform 0.2s;
+    flex:0 0 calc(20% - 6.4px); min-width:0; cursor:pointer; border-radius:8px; overflow:hidden;
+    background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.08); transition:transform 0.2s;
 }
-#scrollBannerTrack .sb-card:hover { transform:scale(1.03); }
+#scrollBannerTrack .sb-card:hover { transform:scale(1.04); }
 #scrollBannerTrack .sb-card img {
     width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f1f5f9;
 }
 #scrollBannerTrack .sb-card .sb-name {
-    padding:6px 8px; font-size:12px; font-weight:700; color:#334155; white-space:nowrap;
+    padding:4px 6px; font-size:11px; font-weight:600; color:#334155; white-space:nowrap;
     overflow:hidden; text-overflow:ellipsis; text-align:center;
 }
 @media (max-width:768px) {
-    #scrollBannerTrack .sb-card { flex:0 0 60%; min-width:60%; }
+    #scrollBannerTrack .sb-card { flex:0 0 48%; min-width:48%; }
 }
 </style>
 
@@ -6256,7 +6256,7 @@ async function loadScrollBanner() {
 
         // 자동 스크롤
         const isMobile = window.innerWidth <= 768;
-        const cardW = track.children[0].offsetWidth + 12; // card width + gap
+        const cardW = track.children[0].offsetWidth + 8; // card width + gap
         const totalOriginal = allProducts.length;
         let pos = totalOriginal * cardW; // 가운데 세트에서 시작
         track.style.transition = 'none';
