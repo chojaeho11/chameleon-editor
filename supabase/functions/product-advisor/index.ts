@@ -629,15 +629,17 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
 
         try {
             if (_sid) {
-                const { data: existRoom } = await sb.from('chat_rooms')
-                    .select('id').eq('source', 'chatbot-' + _sid)
-                    .in('status', ['ai_chatting', 'active']).limit(1).maybeSingle();
-                if (existRoom) roomId = existRoom.id;
+                // nickname 필드에 session_id 저장하여 검색
+                const { data: rooms } = await sb.from('chat_rooms')
+                    .select('id').eq('nickname', 'sid:' + _sid)
+                    .in('status', ['ai_chatting', 'active'])
+                    .order('created_at', { ascending: false }).limit(1);
+                if (rooms && rooms.length > 0) roomId = rooms[0].id;
             }
             if (!roomId) {
                 const { data: newRoom } = await sb.from('chat_rooms').insert({
                     customer_name: custName, status: 'ai_chatting',
-                    source: _sid ? 'chatbot-' + _sid : 'chatbot',
+                    source: 'chatbot', nickname: _sid ? 'sid:' + _sid : null,
                     site_lang: _lang, assigned_manager: '',
                 }).select('id').single();
                 if (newRoom) roomId = newRoom.id;
