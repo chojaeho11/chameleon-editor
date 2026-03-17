@@ -2458,8 +2458,8 @@ body {
     /* 핫딜 섹션 스타일 */
 .hotdeal-wrapper {
     max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
+    margin: 50px auto;
+    padding: 0 24px;
     animation: fadeIn 0.5s ease-in-out;
 }
 
@@ -2498,9 +2498,10 @@ body {
 
 .hotdeal-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
     margin-top: 20px;
+    padding: 0 10px;
 }
 
 .hotdeal-grid .hotdeal-card {
@@ -2534,7 +2535,8 @@ body {
 @media (max-width: 768px) {
     .hotdeal-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        gap: 8px;
+        padding: 0 4px;
     }
     .hotdeal-img-box {
         height: auto;
