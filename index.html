@@ -15026,6 +15026,7 @@ window.dsmRenderProducts = async function(keyword) {
     };
 
     // ── 실시간 상담 시작 ──
+    var _startLiveCalled = false; // 중복 호출 방지
     function startLive(managerName, retryCount) {
         retryCount = retryCount || 0;
         var sb = getSb();
@@ -15040,8 +15041,39 @@ window.dsmRenderProducts = async function(keyword) {
             if (msgArea) msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('connectErr') + '</div>');
             return;
         }
+        // 이미 라이브 모드이거나 진행 중이면 중복 생성 방지
+        if (_live || _startLiveCalled) {
+            console.log('⚠️ [라이브챗] 이미 라이브 모드 또는 진행 중, 중복 생성 방지');
+            return;
+        }
+        // 기존 저장된 방이 있으면 복원 시도
+        var savedData = _loadLiveRoomData();
+        if (savedData && savedData.room && savedData.room.id) {
+            console.log('♻️ [라이브챗] 기존 방 발견, DB 상태 확인:', savedData.room.id);
+            _startLiveCalled = true;
+            sb.from('chat_rooms').select('*').eq('id', savedData.room.id).single().then(function(chk) {
+                if (!chk.error && chk.data && chk.data.status !== 'closed') {
+                    console.log('✅ [라이브챗] 기존 방 재사용:', chk.data.id, '상태:', chk.data.status);
+                    _room = chk.data;
+                    _live = true; window._chamLiveMode = true;
+                    _startLiveCalled = false;
+                    _onLiveRoomReady(managerName, msgArea);
+                    return;
+                }
+                // 기존 방이 종료됨 → 새 방 생성
+                console.log('🔚 기존 방 종료됨, 새 방 생성');
+                _clearLiveRoom();
+                _createNewLiveRoom(sb, managerName, msgArea);
+            });
+            return;
+        }
+        _startLiveCalled = true;
+        _createNewLiveRoom(sb, managerName, msgArea);
+    }
+
+    function _createNewLiveRoom(sb, managerName, msgArea) {
         console.log('✅ [라이브챗] startLive 시작 - manager:', managerName);
-        
+
         // AI 대화 요약
         var summary = '';
         try {
@@ -15050,7 +15082,7 @@ window.dsmRenderProducts = async function(keyword) {
                 return (h.role === 'user' ? _lt('custLabel') + ': ' : 'AI: ') + String(h.content).substring(0, 80);
             }).join('\n');
         } catch(e) {}
-        
+
         var _dispCustName = _customerName || _lt('custLabel');
         if (_customerPhone) _dispCustName += ' | ' + _customerPhone;
         sb.from('chat_rooms').insert({
@@ -15062,13 +15094,22 @@ window.dsmRenderProducts = async function(keyword) {
         }).select().single().then(function(res) {
             if (res.error || !res.data) {
                 console.error('chat_rooms INSERT 에러:', res.error);
+                _startLiveCalled = false;
                 msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('connectFail') + '</div>');
                 return;
             }
             console.log('✅ 상담방 생성 성공:', res.data.id);
-            
+
             _room = res.data;
             _live = true; window._chamLiveMode = true;
+            _saveLiveRoom();
+            _startLiveCalled = false;
+            _onLiveRoomReady(managerName, msgArea);
+        });
+    }
+
+    function _onLiveRoomReady(managerName, msgArea) {
+            var sb = getSb();
             _saveLiveRoom();
 
             // 헤더 변경
@@ -15076,7 +15117,7 @@ window.dsmRenderProducts = async function(keyword) {
             var sub = document.querySelector('.cham-subtitle');
             if (title) title.textContent = managerName + _lt('mgrChat');
             if (sub) sub.innerHTML = '<i class="fa-solid fa-circle" style="color:#fbbf24;font-size:7px;margin-right:4px;"></i>' + (_customerName||_lt('custLabel')) + _lt('waiting');
-            
+
             // 안내 메시지
             msgArea.insertAdjacentHTML('beforeend',
                 '<div style="padding:4px 0;">' +
@@ -15140,10 +15181,6 @@ window.dsmRenderProducts = async function(keyword) {
                 }).subscribe();
 
             if (window._scrollChatBottom) window._scrollChatBottom();
-        }).catch(function(err) {
-            console.error('상담 연결 에러:', err);
-            msgArea.insertAdjacentHTML('beforeend', '<div class="cham-msg bot">' + _lt('errPhone') + '</div>');
-        });
     }
     
     // ── 파일 업로드 ──
