@@ -1886,7 +1886,7 @@
   "menu_create": "Menü erstellen",
   "msg_object_locked": "Objekt gesperrt",
   "msg_object_unlocked": "Objekt entsperrt",
-  "min_order_notice": "Chameleon Printing ist ein Großhandel. Mindestbestellwert: 30.000 KRW. Wir versprechen höchste Qualität zum besten Preis.",
+  "min_order_notice": "Chameleon Printing ist ein Großhandel. Mindestbestellwert: 10.000 KRW. Wir versprechen höchste Qualität zum besten Preis.",
   "coupon_first_label": "🎉 Nur Erstkauf",
   "coupon_first_title": "30.000 KRW Gratis-Gutschein",
   "coupon_first_desc": "Bis zu 30.000 KRW gratis bei Erstbestellung!",
