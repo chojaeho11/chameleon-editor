@@ -657,6 +657,40 @@ if ('caches' in window) {
 
 <div id="startScreen">
 
+<!-- ★ 상단 카테고리 메뉴 바 -->
+<div id="topCatMenu" style="align-self:stretch; width:100%; background:#fff; border-bottom:1px solid #eee; padding:0; position:sticky; top:0; z-index:100;">
+    <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;" id="topCatMenuTrack">
+    </div>
+</div>
+<style>
+#topCatMenuTrack::-webkit-scrollbar { display:none; }
+#topCatMenu .tcm-btn {
+    flex-shrink:0; padding:12px 18px; font-size:14px; font-weight:700; color:#555;
+    background:none; border:none; cursor:pointer; white-space:nowrap; position:relative;
+    transition:color 0.2s;
+}
+#topCatMenu .tcm-btn:hover { color:#111; }
+#topCatMenu .tcm-btn.active { color:#6366f1; }
+#topCatMenu .tcm-btn.active::after {
+    content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+    width:60%; height:3px; background:#6366f1; border-radius:2px;
+}
+#topCatDropdown {
+    position:absolute; top:100%; left:0; right:0; background:#fff;
+    box-shadow:0 8px 24px rgba(0,0,0,0.12); border-top:1px solid #eee;
+    padding:20px 24px; display:none; z-index:101; max-width:1200px; margin:0 auto;
+}
+#topCatDropdown .tcd-sub {
+    display:inline-block; padding:8px 14px; margin:4px; font-size:13px; color:#444;
+    background:#f8fafc; border-radius:8px; cursor:pointer; font-weight:600;
+    transition:all 0.15s; border:1px solid transparent;
+}
+#topCatDropdown .tcd-sub:hover { background:#ede9fe; color:#6366f1; border-color:#c4b5fd; }
+@media (max-width:768px) {
+    #topCatMenu .tcm-btn { padding:10px 14px; font-size:13px; }
+}
+</style>
+
     <div class="hero-section">
         <div style="position:relative; display:inline-block;">
             <h1 class="hero-title" data-i18n="hero_title">&nbsp;</h1>
@@ -673,16 +707,13 @@ if ('caches' in window) {
 <style>
 #scrollBanner { -webkit-user-select:none; user-select:none; touch-action:pan-y; }
 #scrollBannerTrack .sb-card {
-    flex-shrink:0; cursor:pointer; border-radius:8px; overflow:hidden;
-    background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.08); transition:transform 0.2s;
+    flex-shrink:0; cursor:pointer; border-radius:16px; overflow:hidden;
+    transition:transform 0.2s;
 }
-#scrollBannerTrack .sb-card:hover { transform:scale(1.04); }
+#scrollBannerTrack .sb-card:hover { transform:scale(1.06); }
 #scrollBannerTrack .sb-card img {
     width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f1f5f9;
-}
-#scrollBannerTrack .sb-card .sb-name {
-    padding:4px 6px; font-size:11px; font-weight:600; color:#334155; white-space:nowrap;
-    overflow:hidden; text-overflow:ellipsis; text-align:center;
+    border-radius:16px;
 }
 </style>
 
@@ -6229,14 +6260,23 @@ async function loadScrollBanner() {
                 .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url')
                 .eq(f, true).order('sort_order', { ascending: true }).limit(12)
         ));
-        let allProducts = [];
+        // 섹션별로 분리 저장
+        const buckets = []; // [hotdeal[], biz[], print[], goods[], popular[]]
         const seen = new Set();
         results.forEach(r => {
+            const arr = [];
             if (r.data) r.data.forEach(p => {
-                if (!seen.has(p.code)) { seen.add(p.code); allProducts.push(p); }
+                if (!seen.has(p.code)) { seen.add(p.code); arr.push(p); }
             });
+            buckets.push(arr);
         });
-        if (allProducts.length < 3) return;
+        // 라운드로빈 섞기: 각 섹션에서 1개씩 번갈아 → 나머지 순서대로
+        const mixed = [];
+        const maxLen = Math.max(...buckets.map(b => b.length));
+        for (let i = 0; i < maxLen; i++) {
+            buckets.forEach(b => { if (b[i]) mixed.push(b[i]); });
+        }
+        if (mixed.length < 3) return;
 
         // 배너 먼저 표시해서 너비 계산 가능하게
         banner.style.display = 'block';
@@ -6247,7 +6287,7 @@ async function loadScrollBanner() {
         const cardPx = Math.floor((bannerW - gap * (visibleCount - 1)) / visibleCount);
 
         // 무한 루프를 위해 3세트 복제
-        const items = [...allProducts, ...allProducts, ...allProducts];
+        const items = [...mixed, ...mixed, ...mixed];
         track.innerHTML = '';
         items.forEach(p => {
             const { name } = (typeof getLocalizedData === 'function') ? getLocalizedData(p) : { name: p.name };
@@ -6256,14 +6296,14 @@ async function loadScrollBanner() {
             const card = document.createElement('div');
             card.className = 'sb-card';
             card.style.width = cardPx + 'px';
-            card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div class="sb-name">'+name+'</div>';
+            card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'">';
             card.onclick = () => { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
             track.appendChild(card);
         });
+        const totalOriginal = mixed.length;
 
         // 자동 스크롤
         const cardW = cardPx + gap;
-        const totalOriginal = allProducts.length;
         let pos = totalOriginal * cardW;
         track.style.transition = 'none';
         track.style.transform = 'translateX(-'+pos+'px)';
@@ -6602,6 +6642,83 @@ async function renderQuickMenu() {
         });
 
         if (tabContainer.firstChild) tabContainer.firstChild.click();
+
+        // ★ 상단 카테고리 메뉴 바 채우기
+        const tcmTrack = document.getElementById('topCatMenuTrack');
+        const tcMenu = document.getElementById('topCatMenu');
+        if (tcmTrack && topCats && subCats) {
+            tcmTrack.innerHTML = '';
+            // 드롭다운 컨테이너
+            let dropdown = document.getElementById('topCatDropdown');
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.id = 'topCatDropdown';
+                tcMenu.appendChild(dropdown);
+            }
+            let activeTop = null;
+
+            topCats.forEach(top => {
+                if (top.code === 'user_artwork') return; // 작품 카테고리 제외
+                const btn = document.createElement('button');
+                btn.className = 'tcm-btn';
+                let tName = top.name;
+                if (CURRENT_LANG === 'ja') tName = top.name_jp || top.name_us || tName;
+                if (CURRENT_LANG === 'en') tName = top.name_us || tName;
+                if (CURRENT_LANG === 'zh') tName = top.name_cn || top.name_us || tName;
+                if (CURRENT_LANG === 'ar') tName = top.name_ar || top.name_us || tName;
+                if (CURRENT_LANG === 'es') tName = top.name_es || top.name_us || tName;
+                if (CURRENT_LANG === 'de') tName = top.name_de || top.name_us || tName;
+                if (CURRENT_LANG === 'fr') tName = top.name_fr || top.name_us || tName;
+                btn.textContent = tName;
+                btn.onclick = () => {
+                    const wasActive = btn.classList.contains('active');
+                    tcmTrack.querySelectorAll('.tcm-btn').forEach(b => b.classList.remove('active'));
+                    if (wasActive) { dropdown.style.display = 'none'; activeTop = null; return; }
+                    btn.classList.add('active');
+                    activeTop = top.code;
+                    // 소분류 표시
+                    const subs = subCats.filter(s => s.top_category_code === top.code);
+                    dropdown.innerHTML = '';
+                    subs.forEach(s => {
+                        let sName = s.name;
+                        if (CURRENT_LANG === 'ja') sName = s.name_jp || s.name_us || sName;
+                        if (CURRENT_LANG === 'en') sName = s.name_us || sName;
+                        if (CURRENT_LANG === 'zh') sName = s.name_cn || s.name_us || sName;
+                        if (CURRENT_LANG === 'ar') sName = s.name_ar || s.name_us || sName;
+                        if (CURRENT_LANG === 'es') sName = s.name_es || s.name_us || sName;
+                        if (CURRENT_LANG === 'de') sName = s.name_de || s.name_us || sName;
+                        if (CURRENT_LANG === 'fr') sName = s.name_fr || s.name_us || sName;
+                        const sub = document.createElement('span');
+                        sub.className = 'tcd-sub';
+                        sub.textContent = sName;
+                        sub.onclick = () => {
+                            dropdown.style.display = 'none';
+                            tcmTrack.querySelectorAll('.tcm-btn').forEach(b => b.classList.remove('active'));
+                            // 해당 카테고리의 상품 목록 열기
+                            if (window._drawQuickItems) {
+                                document.getElementById('productPickerModal').style.display = 'flex';
+                                const catTab = document.querySelector('.cat-tab[data-top-code="'+top.code+'"]');
+                                if (catTab) catTab.click();
+                                setTimeout(() => {
+                                    const subCard = document.querySelector('.quick-card[data-code="'+s.code+'"]');
+                                    if (subCard) subCard.click();
+                                }, 300);
+                            }
+                        };
+                        dropdown.appendChild(sub);
+                    });
+                    dropdown.style.display = 'block';
+                };
+                tcmTrack.appendChild(btn);
+            });
+            // 메뉴 밖 클릭 시 닫기
+            document.addEventListener('click', e => {
+                if (!tcMenu.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                    tcmTrack.querySelectorAll('.tcm-btn').forEach(b => b.classList.remove('active'));
+                }
+            });
+        }
 
     } catch (err) {
         console.error("초기 로딩 실패:", err);
