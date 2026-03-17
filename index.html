@@ -665,13 +665,13 @@ if ('caches' in window) {
     </div>
 
 <!-- ★ 흘러가는 상품 배너 -->
-<div id="scrollBanner" style="display:none; overflow:hidden; padding:8px 0; background:#f8fafc; position:relative; z-index:10; clear:both;">
-    <div id="scrollBannerTrack" style="display:flex; gap:8px; transition:transform 0.6s ease;"></div>
+<div id="scrollBanner" style="display:none; overflow:hidden; padding:8px 0; background:#f8fafc; position:relative; z-index:10; clear:both; margin:0 auto; width:100%;">
+    <div id="scrollBannerTrack" style="display:flex; gap:8px;"></div>
 </div>
 <style>
 #scrollBanner { -webkit-user-select:none; user-select:none; touch-action:pan-y; }
 #scrollBannerTrack .sb-card {
-    flex:0 0 calc(20% - 6.4px); min-width:0; cursor:pointer; border-radius:8px; overflow:hidden;
+    flex-shrink:0; cursor:pointer; border-radius:8px; overflow:hidden;
     background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.08); transition:transform 0.2s;
 }
 #scrollBannerTrack .sb-card:hover { transform:scale(1.04); }
@@ -681,9 +681,6 @@ if ('caches' in window) {
 #scrollBannerTrack .sb-card .sb-name {
     padding:4px 6px; font-size:11px; font-weight:600; color:#334155; white-space:nowrap;
     overflow:hidden; text-overflow:ellipsis; text-align:center;
-}
-@media (max-width:768px) {
-    #scrollBannerTrack .sb-card { flex:0 0 48%; min-width:48%; }
 }
 </style>
 
@@ -6223,7 +6220,6 @@ async function loadScrollBanner() {
     const track = document.getElementById('scrollBannerTrack');
     if (!banner || !track || !sb) return;
     try {
-        // 5개 섹션에서 12개씩 가져오기
         const flags = ['is_hot_deal','is_biz_deal','is_print_service','is_goods','is_popular'];
         const results = await Promise.all(flags.map(f =>
             sb.from('admin_products')
@@ -6239,6 +6235,14 @@ async function loadScrollBanner() {
         });
         if (allProducts.length < 3) return;
 
+        // 배너 먼저 표시해서 너비 계산 가능하게
+        banner.style.display = 'block';
+        const gap = 8;
+        const isMobile = window.innerWidth <= 768;
+        const visibleCount = isMobile ? 2 : 5;
+        const bannerW = banner.offsetWidth;
+        const cardPx = Math.floor((bannerW - gap * (visibleCount - 1)) / visibleCount);
+
         // 무한 루프를 위해 3세트 복제
         const items = [...allProducts, ...allProducts, ...allProducts];
         track.innerHTML = '';
@@ -6248,17 +6252,16 @@ async function loadScrollBanner() {
             const src = window.getTinyThumb ? window.getTinyThumb(img, 300) : img;
             const card = document.createElement('div');
             card.className = 'sb-card';
+            card.style.width = cardPx + 'px';
             card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div class="sb-name">'+name+'</div>';
             card.onclick = () => { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
             track.appendChild(card);
         });
-        banner.style.display = 'block';
 
         // 자동 스크롤
-        const isMobile = window.innerWidth <= 768;
-        const cardW = track.children[0].offsetWidth + 8; // card width + gap
+        const cardW = cardPx + gap;
         const totalOriginal = allProducts.length;
-        let pos = totalOriginal * cardW; // 가운데 세트에서 시작
+        let pos = totalOriginal * cardW;
         track.style.transition = 'none';
         track.style.transform = 'translateX(-'+pos+'px)';
 
@@ -6270,7 +6273,6 @@ async function loadScrollBanner() {
             pos += cardW;
             track.style.transition = 'transform 0.6s ease';
             track.style.transform = 'translateX(-'+pos+'px)';
-            // 끝에 도달하면 조용히 리셋
             if (pos >= totalOriginal * 2 * cardW) {
                 setTimeout(() => {
                     pos = totalOriginal * cardW;
@@ -6309,7 +6311,6 @@ async function loadScrollBanner() {
         });
         banner.addEventListener('pointercancel', () => { dragging = false; isPaused = false; startAuto(); });
 
-        // 화면 밖이면 일시정지
         const obs = new IntersectionObserver(entries => {
             entries.forEach(en => { if (en.isIntersecting) { isPaused = false; startAuto(); } else { isPaused = true; clearInterval(autoTimer); } });
         }, { threshold: 0.3 });
