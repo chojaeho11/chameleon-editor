@@ -700,7 +700,7 @@ if ('caches' in window) {
 
 <!-- ★ 흘러가는 상품 배너 -->
 <div id="scrollBanner" style="display:none; align-self:stretch; width:100%; position:relative;">
-    <div id="scrollBannerClip" style="overflow:hidden; padding:14px 44px; background:#f8fafc;">
+    <div id="scrollBannerClip" style="overflow:hidden; padding:14px 44px 24px; background:#f8fafc;">
         <div id="scrollBannerTrack" style="display:flex; gap:16px;"></div>
     </div>
     <button id="sbArrowL" class="sb-arrow sb-arrow-l" onclick="window._sbScroll(-1)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -931,7 +931,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .kapu-txt [data-i18n="btn_kapu_guide"]{font-size:15px;}
         }
     </style>
-    <div id="chatbotBtnWrap" style="text-align:center; margin: 0 auto 8px auto; max-width:1100px; padding:0 15px;">
+    <div id="chatbotBtnWrap" style="text-align:center; margin: 20px auto 8px auto; max-width:1100px; padding:0 15px;">
         <button id="btnChatbotOpen" onclick="if(window.toggleAdvisorPanel) window.toggleAdvisorPanel();">
             <span class="kapu-txt">
                 <span data-i18n="btn_kapu_guide">도매전문 인쇄 쇼핑몰</span>
@@ -6319,8 +6319,8 @@ async function loadScrollBanner() {
         // 배너 먼저 표시해서 너비 계산 가능하게
         banner.style.display = 'block';
         const isMobile = window.innerWidth <= 768;
-        const gap = isMobile ? 16 : 16;
-        const visibleCount = isMobile ? 1 : 5;
+        const gap = isMobile ? 16 : 14;
+        const visibleCount = isMobile ? 1 : 6;
         // clientWidth = 콘텐츠 영역 (패딩 제외X, 패딩 포함됨) → 직접 계산
         const clipStyle = getComputedStyle(clip);
         const padL = parseInt(clipStyle.paddingLeft) || 0;
