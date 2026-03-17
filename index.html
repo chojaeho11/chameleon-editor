@@ -581,18 +581,7 @@ if ('caches' in window) {
 <div class="topbar">
         <div class="brand" onclick="window.goHome()"><i class="fa-solid fa-palette"></i> Chameleon</div>
         
-        <div class="template-tabs">
-            <button id="btnMobileTemplateOpen" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template');" data-i18n="btn_mobile_template">🎨 템플릿</button>
-            
-            <button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_template', this);" 
-    style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-weight: 800; border: none; margin-right: 5px;">
-    <span data-i18n="tab_all">🎨 템플릿 (배경)</span>
-</button>
-
-<button class="tpl-tab" onclick="document.getElementById('templateOverlay').style.display='flex'; window.filterTpl('group_asset', this);" 
-    style="background: #fff; color: #059669; border: 1px solid #059669; font-weight: 800;">
-    <span data-i18n="tab_graphic">🧩 객체 (요소/벡터)</span>
-</button>
+        <div class="template-tabs" style="display:none;">
         </div>
         
         <div style="flex:1;"></div>
