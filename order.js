@@ -367,11 +367,16 @@ export async function initOrderSystem() {
     radios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             const bankBox = document.getElementById('bankInfoBox');
-            if (e.target.value === 'bank') {
+            const receiptBox = document.getElementById('receiptInfoBox');
+            const isBank = e.target.value === 'bank';
+            const isKR = window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'KR';
+            if (isBank) {
                 if(bankBox) bankBox.style.display = 'block';
+                if(receiptBox && isKR) receiptBox.style.display = 'block';
                 document.getElementById('btnFinalPay').innerText = window.t('btn_complete_order') || "Complete Order";
             } else {
                 if(bankBox) bankBox.style.display = 'none';
+                if(receiptBox) receiptBox.style.display = 'none';
                 document.getElementById('btnFinalPay').innerText = window.t('btn_pay_now') || "Pay Now";
             }
         });
@@ -2726,6 +2731,13 @@ async function processFinalPayment() {
             const depositorName = document.getElementById('inputDepositorName').value;
             if (!depositorName) { btn.disabled = false; showToast(window.t('alert_input_depositor', "Please enter depositor name."), "warn"); return; }
             
+            // ★ 증빙 정보 수집 (KR 무통장입금만)
+            let receiptInfo = null;
+            if (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'KR' && window.collectReceiptInfo) {
+                receiptInfo = window.collectReceiptInfo();
+                if (receiptInfo === null) { btn.disabled = false; return; } // 필수값 누락
+            }
+
             if(confirm(window.t('confirm_bank_payment', "Proceed with Bank Transfer?"))) {
                 if(useMileage > 0) {
                      const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
@@ -2733,9 +2745,9 @@ async function processFinalPayment() {
                      await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용` });
                 }
 
-                await sb.from('orders').update({ 
-                    status: '접수됨', payment_method: '무통장입금', payment_status: '입금대기', depositor_name: depositorName 
-                }).eq('id', orderId);
+                const bankUpdate = { status: '접수됨', payment_method: '무통장입금', payment_status: '입금대기', depositor_name: depositorName };
+                if (receiptInfo) bankUpdate.receipt_info = receiptInfo;
+                await sb.from('orders').update(bankUpdate).eq('id', orderId);
                 
                 showToast(window.t('msg_order_complete_bank'), "success");
                 // ★ [버그수정] 무통장입금 결제 완료 후 장바구니 비우기 (중복 주문 방지)

@@ -858,7 +858,7 @@ window.loadOrders = async () => {
         }
 
         let query = sb.from('orders')
-            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note', { count: 'exact' })
+            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info', { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
@@ -996,6 +996,12 @@ window.loadOrders = async () => {
                 }
             } else if (isPaid && !isCard) {
                 payHtml += `<div style="font-size:10px;color:#15803d;font-weight:bold;">확인됨</div>`;
+            }
+            // ★ 증빙 뱃지
+            if (order.receipt_info && order.receipt_info.type && order.receipt_info.type !== 'none') {
+                const ri = order.receipt_info;
+                const rl = ri.type === 'tax_invoice' ? '📄세금계산서' : '🧾현금영수증';
+                payHtml += `<div style="font-size:9px;color:#7c3aed;cursor:pointer;text-decoration:underline;margin-top:2px;" onclick="event.stopPropagation();window.openReceiptInfo('${order.id}')">${rl}</div>`;
             }
 
             // ═══ [상태 칼럼] 주문 진행상태만 깔끔하게 ═══
@@ -2917,6 +2923,36 @@ window.updateOrderStaff = async (id, role, selectEl) => {
         selectEl.style.borderColor = '#e2e8f0';
         selectEl.style.fontWeight = 'normal';
     }
+};
+
+// ═══ 증빙 정보 모달 ═══
+window.openReceiptInfo = async (orderId) => {
+    const { data: order } = await sb.from('orders').select('receipt_info, manager_name, total_amount').eq('id', orderId).single();
+    const ri = order?.receipt_info;
+    if (!ri || ri.type === 'none') { showToast('증빙 정보 없음', 'warn'); return; }
+    const typeLabel = ri.type === 'tax_invoice' ? '📄 세금계산서' : ri.type === 'cash_receipt_biz' ? '🧾 현금영수증 (지출증빙)' : '🧾 현금영수증 (개인소득공제)';
+    let html = `<div style="padding:24px; max-width:480px; margin:0 auto;">
+        <h3 style="margin:0 0 16px; font-size:18px;">${typeLabel}</h3>
+        <div style="background:#f8fafc; padding:16px; border-radius:10px; font-size:14px; line-height:2;">`;
+    if (ri.type === 'tax_invoice') {
+        html += `<b>사업자번호:</b> ${ri.biz_number||'-'}<br>
+            <b>회사명:</b> ${ri.company_name||'-'}<br>
+            <b>대표자명:</b> ${ri.rep_name||'-'}<br>
+            <b>업태:</b> ${ri.biz_type||'-'}<br>
+            <b>종목:</b> ${ri.biz_category||'-'}<br>
+            <b>사업장주소:</b> ${ri.biz_address||'-'}<br>
+            <b>이메일:</b> ${ri.email||'-'}`;
+    } else {
+        html += `<b>식별번호:</b> ${ri.id_number||'-'}`;
+    }
+    html += `</div><div style="margin-top:8px; font-size:12px; color:#666;">주문자: ${order.manager_name||'-'} / 금액: ${(order.total_amount||0).toLocaleString()}원</div>
+        <button onclick="this.closest('.modal-bg').remove()" style="margin-top:16px; width:100%; padding:12px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer;">닫기</button></div>`;
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">${html}</div>`;
+    modal.onclick = e => { if(e.target === modal) modal.remove(); };
+    document.body.appendChild(modal);
 };
 
 // ═══ 입금/취소 모달 ═══

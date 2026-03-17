@@ -4100,6 +4100,72 @@ async function handleSubReturn() {
             <div style="color:#ef4444; margin-top:5px;" data-i18n="msg_bank_note">* 입금자명이 주문자명과 다르면 확인이 지연됩니다.</div>
         </div>
 
+        <!-- ★ 증빙 서류 선택 (무통장입금 전용, KR only) -->
+        <div id="receiptInfoBox" style="display:none; margin-top:15px; background:#f0f9ff; padding:15px; border-radius:8px; border:1px solid #bae6fd; font-size:13px;">
+            <label style="font-weight:bold; display:block; margin-bottom:10px; color:#1e40af;">📄 증빙 서류 선택 <span style="color:#ef4444; font-size:11px;">(필수)</span></label>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="cursor:pointer;"><input type="radio" name="receiptType" value="none" checked> 발행안함</label>
+                <label style="cursor:pointer;"><input type="radio" name="receiptType" value="tax_invoice"> 세금계산서</label>
+                <label style="cursor:pointer;"><input type="radio" name="receiptType" value="cash_receipt_biz"> 현금영수증 (지출증빙)</label>
+                <label style="cursor:pointer;"><input type="radio" name="receiptType" value="cash_receipt_personal"> 현금영수증 (개인소득공제)</label>
+            </div>
+            <!-- 세금계산서 입력 폼 -->
+            <div id="taxInvoiceFields" style="display:none; margin-top:12px; padding:12px; background:#fff; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="font-weight:bold; margin-bottom:8px; color:#1e40af;">세금계산서 정보</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div><label style="font-size:11px; color:#666;">사업자번호 *</label><input type="text" id="rcptBizNumber" class="ai-input-pretty" placeholder="000-00-00000" style="margin:0; background:white;"></div>
+                    <div><label style="font-size:11px; color:#666;">회사명 *</label><input type="text" id="rcptCompany" class="ai-input-pretty" placeholder="주식회사 예시" style="margin:0; background:white;"></div>
+                    <div><label style="font-size:11px; color:#666;">대표자명 *</label><input type="text" id="rcptRepName" class="ai-input-pretty" placeholder="홍길동" style="margin:0; background:white;"></div>
+                    <div><label style="font-size:11px; color:#666;">업태</label><input type="text" id="rcptBizType" class="ai-input-pretty" placeholder="서비스" style="margin:0; background:white;"></div>
+                    <div><label style="font-size:11px; color:#666;">종목</label><input type="text" id="rcptBizCategory" class="ai-input-pretty" placeholder="인쇄" style="margin:0; background:white;"></div>
+                    <div><label style="font-size:11px; color:#666;">이메일 *</label><input type="email" id="rcptEmail" class="ai-input-pretty" placeholder="tax@company.com" style="margin:0; background:white;"></div>
+                </div>
+                <div style="margin-top:8px;"><label style="font-size:11px; color:#666;">사업장 주소</label><input type="text" id="rcptBizAddress" class="ai-input-pretty" placeholder="서울시 강남구..." style="margin:0; background:white; width:100%;"></div>
+            </div>
+            <!-- 현금영수증 입력 폼 -->
+            <div id="cashReceiptFields" style="display:none; margin-top:12px; padding:12px; background:#fff; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="font-weight:bold; margin-bottom:8px; color:#1e40af;">현금영수증 정보</div>
+                <label style="font-size:11px; color:#666;" id="cashReceiptLabel">식별번호 (사업자번호 또는 핸드폰번호) *</label>
+                <input type="text" id="rcptIdNumber" class="ai-input-pretty" placeholder="000-00-00000 또는 010-0000-0000" style="margin:0; background:white;">
+            </div>
+        </div>
+        <script>
+        // 증빙 타입 토글
+        document.querySelectorAll('input[name="receiptType"]').forEach(r => {
+            r.addEventListener('change', function() {
+                document.getElementById('taxInvoiceFields').style.display = this.value === 'tax_invoice' ? 'block' : 'none';
+                document.getElementById('cashReceiptFields').style.display = (this.value === 'cash_receipt_biz' || this.value === 'cash_receipt_personal') ? 'block' : 'none';
+                if (this.value === 'cash_receipt_biz') {
+                    document.getElementById('cashReceiptLabel').textContent = '사업자번호 *';
+                    document.getElementById('rcptIdNumber').placeholder = '000-00-00000';
+                } else if (this.value === 'cash_receipt_personal') {
+                    document.getElementById('cashReceiptLabel').textContent = '핸드폰번호 *';
+                    document.getElementById('rcptIdNumber').placeholder = '010-0000-0000';
+                }
+            });
+        });
+        // 증빙 정보 수집 함수
+        window.collectReceiptInfo = function() {
+            const type = document.querySelector('input[name="receiptType"]:checked')?.value || 'none';
+            if (type === 'none') return { type: 'none' };
+            if (type === 'tax_invoice') {
+                const biz = document.getElementById('rcptBizNumber').value.trim();
+                const company = document.getElementById('rcptCompany').value.trim();
+                const rep = document.getElementById('rcptRepName').value.trim();
+                const email = document.getElementById('rcptEmail').value.trim();
+                if (!biz || !company || !rep || !email) { alert('세금계산서 필수 항목을 모두 입력해주세요.'); return null; }
+                return { type, biz_number: biz, company_name: company, rep_name: rep,
+                    biz_type: document.getElementById('rcptBizType').value.trim(),
+                    biz_category: document.getElementById('rcptBizCategory').value.trim(),
+                    biz_address: document.getElementById('rcptBizAddress').value.trim(),
+                    email: email };
+            }
+            const idNum = document.getElementById('rcptIdNumber').value.trim();
+            if (!idNum) { alert('현금영수증 식별번호를 입력해주세요.'); return null; }
+            return { type, id_number: idNum };
+        };
+        </script>
+
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button id="btnDownQuotationCheckout" class="btn-round btn-secondary" style="flex:1; justify-content: center;">
                 <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_download_quote">견적서 다운</span>
