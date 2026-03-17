@@ -2743,7 +2743,7 @@
 
 // ═══ 실시간 상담 관리 ═══
 (function() {
-    var currentRoom=null, currentFilter='waiting', currentSiteFilter='all', subscription=null, globalRoomSub=null;
+    var currentRoom=null, currentFilter='all', currentSiteFilter='all', subscription=null, globalRoomSub=null;
     function getSb(){return window.sb;}
 
     // ══════════════════════════════════════════════
@@ -3432,7 +3432,7 @@
         if (filterMgr && filterMgr !== '') {
             if (filterMgr === '__HQ__') {
                 filteredData = filteredData.filter(function(rm) {
-                    return !rm.assigned_manager || rm.assigned_manager === '' || rm.assigned_manager.indexOf('본사') >= 0;
+                    return !rm.assigned_manager || rm.assigned_manager === '' || rm.assigned_manager.indexOf('본사') >= 0 || rm.status === 'ai_chatting';
                 });
             } else {
                 filteredData = filteredData.filter(function(rm) {
