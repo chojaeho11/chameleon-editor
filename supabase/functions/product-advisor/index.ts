@@ -165,7 +165,7 @@ serve(async (req) => {
 
         const categories = catRes.data || [];
         // AI 콜에서 제외할 대분류 (상품 많지만 거의 안 팔림 → 토큰 낭비)
-        const _skipTopCats = new Set(['99999', '23434242', 'Wholesale Board Prices']);
+        const _skipTopCats = new Set(['99999', '23434242']);
         const _skipSubCats = new Set<string>();
         categories.forEach((c: any) => {
             if (_skipTopCats.has(c.top_category_code) || _skipTopCats.has(c.code)) _skipSubCats.add(c.code);
