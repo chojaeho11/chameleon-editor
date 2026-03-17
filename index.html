@@ -5580,6 +5580,89 @@ window.filterFxCards = function(cat, btn) {
     };
 </script>
 
+<!-- ★ 플로팅 상담 위젯 + 채널톡 -->
+<div id="floatingCS" style="position:fixed; bottom:20px; right:20px; z-index:9998; display:flex; flex-direction:column; align-items:center; gap:8px;">
+    <div id="csPanel" style="display:none; background:#fff; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.15); padding:12px; margin-bottom:4px; min-width:140px;">
+        <div style="font-size:12px; font-weight:800; color:#333; margin-bottom:8px; text-align:center;" id="csPanelTitle">상담 문의</div>
+        <div id="csBtns" style="display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
+    <button onclick="document.getElementById('startScreen').scrollTo({top:0,behavior:'smooth'})" style="width:44px; height:44px; border-radius:50%; border:1px solid #e2e8f0; background:#fff; cursor:pointer; font-size:10px; font-weight:800; color:#666; box-shadow:0 2px 8px rgba(0,0,0,0.08);">TOP</button>
+    <button id="csFab" onclick="document.getElementById('csPanel').style.display=document.getElementById('csPanel').style.display==='none'?'block':'none'" style="width:56px; height:56px; border-radius:50%; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; cursor:pointer; font-size:22px; box-shadow:0 4px 16px rgba(99,102,241,0.4); display:flex; align-items:center; justify-content:center; transition:transform 0.2s;">
+        <i class="fa-solid fa-headset"></i>
+    </button>
+</div>
+<style>
+#csFab:hover { transform:scale(1.1); }
+#csPanel .cs-btn {
+    display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px;
+    border:none; background:#f8fafc; cursor:pointer; font-size:13px; font-weight:600;
+    color:#333; transition:background 0.15s; width:100%; text-align:left;
+}
+#csPanel .cs-btn:hover { background:#ede9fe; }
+#csPanel .cs-btn img { width:22px; height:22px; border-radius:4px; }
+@media (max-width:768px) {
+    #floatingCS { bottom:12px; right:12px; }
+    #csFab { width:48px; height:48px; font-size:18px; }
+}
+</style>
+<script>
+(function(){
+    const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const panel = document.getElementById('csBtns');
+    const title = document.getElementById('csPanelTitle');
+    if (!panel) return;
+
+    const channels = {
+        KR: [
+            { name: '채널톡 상담', icon: 'https://static.channel.io/icon/color-2x.png', action: () => { if(window.ChannelIO) ChannelIO('showMessenger'); } },
+            { name: '카카오톡 상담', icon: 'https://developers.kakao.com/static/images/pc/product/icon/kakaoTalk.png', url: 'https://pf.kakao.com/_KxmnZn/chat' },
+            { name: '전화문의', icon: '', fa: 'fa-solid fa-phone', url: 'tel:070-7666-9877' }
+        ],
+        JP: [
+            { name: 'LINEで相談', icon: 'https://scdn.line-apps.com/n/line_add_friends/btn/ja.png', url: 'https://line.me/R/ti/p/@343cfkfr' },
+            { name: 'チャット相談', icon: 'https://static.channel.io/icon/color-2x.png', action: () => { if(window.ChannelIO) ChannelIO('showMessenger'); } },
+        ],
+        US: [
+            { name: 'Live Chat', icon: 'https://static.channel.io/icon/color-2x.png', action: () => { if(window.ChannelIO) ChannelIO('showMessenger'); } },
+            { name: 'Email Us', icon: '', fa: 'fa-solid fa-envelope', url: 'mailto:support@cafe3355.com' },
+        ]
+    };
+
+    const titleMap = { KR: '상담 문의', JP: 'お問い合わせ', US: 'Contact Us' };
+    title.textContent = titleMap[country] || titleMap.US;
+
+    (channels[country] || channels.US).forEach(ch => {
+        const btn = document.createElement('button');
+        btn.className = 'cs-btn';
+        const iconHtml = ch.icon ? '<img src="'+ch.icon+'" alt="">' : ch.fa ? '<i class="'+ch.fa+'" style="font-size:18px;width:22px;text-align:center;color:#6366f1;"></i>' : '';
+        btn.innerHTML = iconHtml + '<span>'+ch.name+'</span>';
+        btn.onclick = () => {
+            if (ch.action) ch.action();
+            else if (ch.url) window.open(ch.url, '_blank');
+            document.getElementById('csPanel').style.display = 'none';
+        };
+        panel.appendChild(btn);
+    });
+
+    // 채널톡 SDK 로드 (기본 위젯 숨기고 API만 사용)
+    (function(){var w=window;if(w.ChannelIO)return;var ch=function(){ch.c(arguments)};ch.q=[];ch.c=function(a){ch.q.push(a)};w.ChannelIO=ch;
+    function l(){if(w.ChannelIOInitialized)return;w.ChannelIOInitialized=true;var s=document.createElement('script');s.type='text/javascript';s.async=true;
+    s.src='https://cdn.channel.io/plugin/ch-plugin-web.js';var x=document.getElementsByTagName('script')[0];if(x.parentNode)x.parentNode.insertBefore(s,x);}
+    if(document.readyState==='complete'){l();}else{w.addEventListener('DOMContentLoaded',l);w.addEventListener('load',l);}})();
+    ChannelIO('boot', {
+        pluginKey: '5e498286-0be8-4450-8771-0ddd44e50015',
+        hideChannelButtonOnBoot: true,
+        language: country === 'JP' ? 'ja' : country === 'KR' ? 'ko' : 'en'
+    });
+
+    // 패널 바깥 클릭 시 닫기
+    document.addEventListener('click', function(e) {
+        const cs = document.getElementById('floatingCS');
+        if (cs && !cs.contains(e.target)) document.getElementById('csPanel').style.display = 'none';
+    });
+})();
+</script>
+
 </body>
 </html>
 
