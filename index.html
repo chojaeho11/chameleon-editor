@@ -699,21 +699,40 @@ if ('caches' in window) {
     </div>
 
 <!-- ★ 흘러가는 상품 배너 -->
-<div id="scrollBanner" style="display:none; align-self:stretch; width:100%;">
-    <div id="scrollBannerClip" style="overflow:hidden; padding:10px 0; background:#f8fafc;">
-        <div id="scrollBannerTrack" style="display:flex; gap:8px;"></div>
+<div id="scrollBanner" style="display:none; align-self:stretch; width:100%; position:relative;">
+    <div id="scrollBannerClip" style="overflow:hidden; padding:14px 40px; background:#f8fafc;">
+        <div id="scrollBannerTrack" style="display:flex; gap:14px;"></div>
     </div>
+    <button id="sbArrowL" class="sb-arrow sb-arrow-l" onclick="window._sbScroll(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+    <button id="sbArrowR" class="sb-arrow sb-arrow-r" onclick="window._sbScroll(1)"><i class="fa-solid fa-chevron-right"></i></button>
 </div>
 <style>
 #scrollBanner { -webkit-user-select:none; user-select:none; touch-action:pan-y; }
+.sb-arrow {
+    position:absolute; top:50%; transform:translateY(-50%); z-index:5;
+    width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,0.9); box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    display:flex; align-items:center; justify-content:center; font-size:14px; color:#333;
+    transition:all 0.2s;
+}
+.sb-arrow:hover { background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+.sb-arrow-l { left:4px; }
+.sb-arrow-r { right:4px; }
 #scrollBannerTrack .sb-card {
     flex-shrink:0; cursor:pointer; border-radius:16px; overflow:hidden;
-    transition:transform 0.2s;
+    transition:transform 0.2s; position:relative;
 }
-#scrollBannerTrack .sb-card:hover { transform:scale(1.06); }
+#scrollBannerTrack .sb-card:hover { transform:scale(1.04); }
 #scrollBannerTrack .sb-card img {
     width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f1f5f9;
     border-radius:16px;
+}
+#scrollBannerTrack .sb-card .sb-label {
+    position:absolute; bottom:0; left:0; right:0; padding:20px 8px 8px;
+    background:linear-gradient(transparent, rgba(0,0,0,0.5));
+    color:#fff; font-size:12px; font-weight:600; text-align:center;
+    border-radius:0 0 16px 16px; pointer-events:none;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 </style>
 
@@ -6280,7 +6299,7 @@ async function loadScrollBanner() {
 
         // 배너 먼저 표시해서 너비 계산 가능하게
         banner.style.display = 'block';
-        const gap = 8;
+        const gap = 14;
         const isMobile = window.innerWidth <= 768;
         const visibleCount = isMobile ? 2 : 5;
         const bannerW = clip.offsetWidth || banner.offsetWidth;
@@ -6296,7 +6315,7 @@ async function loadScrollBanner() {
             const card = document.createElement('div');
             card.className = 'sb-card';
             card.style.width = cardPx + 'px';
-            card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'">';
+            card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div class="sb-label">'+name+'</div>';
             card.onclick = () => { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
             track.appendChild(card);
         });
@@ -6327,6 +6346,17 @@ async function loadScrollBanner() {
 
         function startAuto() { if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(scrollNext, 3000); }
         startAuto();
+
+        // 화살표 스크롤
+        window._sbScroll = function(dir) {
+            isPaused = true;
+            pos += dir * cardW;
+            if (pos < 0) pos = totalOriginal * cardW;
+            if (pos >= totalOriginal * 2 * cardW) pos = totalOriginal * cardW;
+            track.style.transition = 'transform 0.4s ease';
+            track.style.transform = 'translateX(-'+pos+'px)';
+            setTimeout(() => { isPaused = false; startAuto(); }, 2000);
+        };
 
         // 터치/드래그 지원
         let startX = 0, startY = 0, startPos = 0, dragging = false, didDrag = false;
