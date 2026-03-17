@@ -6287,7 +6287,18 @@ async function loadScrollBanner() {
                 .eq(f, true).order('sort_order', { ascending: true }).limit(12)
         ));
         // 섹션별로 분리 저장 + 분류명 태그
-        const badgeNames = ['허니콤보드','천가게','인쇄소','굿즈샵','인기절정'];
+        const _bl = {
+            kr:['허니콤보드','천가게','인쇄소','굿즈샵','인기절정'],
+            ja:['ハニカム','布屋','印刷所','グッズ','人気'],
+            en:['Honeycomb','Fabric','Print','Goods','Best'],
+            zh:['蜂窝板','布行','印刷','好物','爆款'],
+            ar:['عسل','أقمشة','طباعة','هدايا','الأكثر'],
+            es:['Honeycomb','Telas','Imprenta','Regalos','Top'],
+            de:['Honeycomb','Stoff','Druck','Geschenke','Best'],
+            fr:['Honeycomb','Tissus','Imprimerie','Cadeaux','Top']
+        };
+        const _lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) ? {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'}[window.SITE_CONFIG.COUNTRY] || 'kr' : 'kr';
+        const badgeNames = _bl[_lang] || _bl.kr;
         const buckets = [];
         const seen = new Set();
         results.forEach((r, idx) => {
