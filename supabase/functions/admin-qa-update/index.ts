@@ -178,6 +178,138 @@ serve(async (req) => {
                 { headers: { ...cors, "Content-Type": "application/json" } });
         }
 
+        // ── extract_qa: 상담 종료 시 대화에서 Q&A 자동 추출 ──
+        if (action === "extract_qa") {
+            const { room_id } = body;
+            if (!room_id) {
+                return new Response(JSON.stringify({ error: "room_id required" }),
+                    { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            // 1) 채팅 메시지 가져오기
+            const { data: messages, error: msgErr } = await sb.from('chat_messages')
+                .select('sender_type, sender_name, message, created_at')
+                .eq('room_id', room_id)
+                .neq('sender_type', 'admin_memo')
+                .neq('sender_type', 'internal')
+                .order('created_at', { ascending: true })
+                .limit(100);
+
+            if (msgErr || !messages || messages.length < 2) {
+                return new Response(JSON.stringify({ success: true, extracted: 0, reason: 'too_few_messages' }),
+                    { headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            // 2) 채팅방 정보
+            const { data: room } = await sb.from('chat_rooms')
+                .select('customer_name, site_lang, source')
+                .eq('id', room_id).single();
+            const lang = room?.site_lang || 'kr';
+
+            // 3) 대화 텍스트 구성
+            const chatText = messages.map((m: any) => {
+                const role = m.sender_type === 'customer' ? '고객'
+                    : m.sender_type === 'manager' ? '매니저(' + (m.sender_name || '') + ')'
+                    : m.sender_type === 'chatbot' ? 'AI봇' : '시스템';
+                return `[${role}] ${m.message}`;
+            }).join('\n');
+
+            // 4) Claude에게 Q&A 추출 요청
+            const extractRes = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": ANTHROPIC_API_KEY!,
+                    "anthropic-version": "2023-06-01",
+                },
+                body: JSON.stringify({
+                    model: "claude-haiku-4-5-20251001",
+                    max_tokens: 4000,
+                    messages: [{
+                        role: "user",
+                        content: `다음은 인쇄 쇼핑몰 "카멜레온프린팅"의 고객 상담 대화입니다.
+이 대화에서 다른 고객에게도 유용할 Q&A 쌍을 추출하세요.
+
+규칙:
+- 단순 인사, 감사 등은 제외
+- 제품 정보, 가격, 사이즈, 배송, 제작 방법 등 실질적인 내용만 추출
+- 매니저가 답변한 내용을 기준으로 정확한 답변 작성
+- 고객 질문은 일반화하여 다른 고객도 물어볼 수 있는 형태로
+- 카테고리: 상품사례, 가격, 배송, 사이즈, 제작방법, 결제, 일반 중 선택
+- 키워드를 쉼표로 구분하여 포함
+- 최대 5개 Q&A 추출
+- JSON 배열로만 응답, 다른 텍스트 없이
+
+응답 형식:
+[{"question":"고객 질문","answer":"매니저 답변 기반 정확한 답","category":"카테고리","keywords":"키워드1,키워드2"}]
+
+추출할 내용이 없으면 빈 배열 [] 반환.
+
+=== 대화 내용 ===
+${chatText}`
+                    }],
+                }),
+            });
+
+            if (!extractRes.ok) {
+                console.error('Q&A extraction API error:', extractRes.status);
+                return new Response(JSON.stringify({ success: false, error: 'API error' }),
+                    { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            const extractData = await extractRes.json();
+            const rawText = extractData.content?.[0]?.text || '[]';
+
+            // JSON 파싱 (코드블록 제거)
+            let qaList: any[] = [];
+            try {
+                const cleaned = rawText.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
+                qaList = JSON.parse(cleaned);
+            } catch (e) {
+                console.warn('Q&A JSON parse failed:', rawText);
+                return new Response(JSON.stringify({ success: true, extracted: 0, reason: 'parse_error' }),
+                    { headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            if (!Array.isArray(qaList) || qaList.length === 0) {
+                return new Response(JSON.stringify({ success: true, extracted: 0 }),
+                    { headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            // 5) advisor_qa_log에 자동 저장 (is_reviewed=true, 출처 표시)
+            const inserts = qaList.slice(0, 5).map((qa: any) => ({
+                lang: lang,
+                customer_message: qa.question || '',
+                customer_message_ko: lang !== 'kr' ? null : qa.question,
+                ai_response: '[자동추출] 매니저 상담 기반',
+                admin_answer: qa.answer || '',
+                admin_answer_ko: qa.answer || '',
+                is_reviewed: true,
+                reviewed_at: new Date().toISOString(),
+                category: qa.category || 'general',
+                is_active: true,
+                has_image: false,
+            }));
+
+            const { error: insErr } = await sb.from('advisor_qa_log').insert(inserts);
+            if (insErr) console.error('Q&A insert error:', insErr);
+
+            // 6) 채팅방에 추출 결과 메모
+            await sb.from('chat_messages').insert({
+                room_id: room_id,
+                sender_type: 'admin_memo',
+                sender_name: 'AI 학습',
+                message: `📚 대화에서 ${qaList.length}개 Q&A 자동 추출 완료\n` +
+                    qaList.map((q: any, i: number) => `${i+1}. ${q.question}`).join('\n'),
+            });
+
+            return new Response(JSON.stringify({
+                success: true,
+                extracted: qaList.length,
+                qa_list: qaList,
+            }), { headers: { ...cors, "Content-Type": "application/json" } });
+        }
+
         return new Response(JSON.stringify({ error: "Unknown action: " + action }),
             { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
 

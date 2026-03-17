@@ -3936,9 +3936,26 @@
     };
     async function lcUpFile(f){var sb=getSb();_lastSentAt=Date.now();var sType=_lcInternalMode?'internal':'manager';var ext=f.name.split('.').pop().toLowerCase();var safe=Date.now()+'-'+Math.random().toString(36).substr(2,6)+'.'+ext;var p='room-'+currentRoom.id+'/'+safe;var u=await sb.storage.from('chat-files').upload(p,f);if(u.error){showToast('업로드 실패','error');return;}var url=sb.storage.from('chat-files').getPublicUrl(p).data.publicUrl;var m={room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:'',created_at:new Date().toISOString()};var area=document.getElementById('lcChatMessages');area.insertAdjacentHTML('beforeend',renderMsg(m));area.scrollTop=area.scrollHeight;await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:sType,sender_name:currentRoom.assigned_manager||'매니저',file_url:url,file_name:f.name,file_type:f.type,message:''});}
     window.lcCloseRoom = async function(){
-        if(!currentRoom||!confirm('상담 종료?')) return;var sb=getSb();
-        await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',currentRoom.id);
-        await sb.from('chat_messages').insert({room_id:currentRoom.id,sender_type:'system',message:sysMsg('closed')});
+        if(!currentRoom||!confirm('상담 종료?')) return;
+        var sb=getSb();
+        var closingRoomId = currentRoom.id;
+        await sb.from('chat_rooms').update({status:'closed',closed_at:new Date().toISOString()}).eq('id',closingRoomId);
+        await sb.from('chat_messages').insert({room_id:closingRoomId,sender_type:'system',message:sysMsg('closed')});
+
+        // ★ 자동 Q&A 추출 (백그라운드)
+        try {
+            fetch('https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/admin-qa-update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y' },
+                body: JSON.stringify({ action: 'extract_qa', room_id: closingRoomId })
+            }).then(function(r){ return r.json(); }).then(function(data){
+                if(data.extracted > 0) {
+                    showChatToast('📚 Q&A ' + data.extracted + '개 자동 학습 완료!', '', false);
+                    console.log('📚 자동 Q&A 추출:', data);
+                }
+            }).catch(function(e){ console.warn('Q&A 추출 실패:', e); });
+        } catch(e) { console.warn('Q&A 추출 호출 실패:', e); }
+
         currentRoom=null;if(subscription){subscription.unsubscribe();subscription=null;}
         document.getElementById('lcChatTitle').textContent='상담방을 선택하세요';
         var mb=document.getElementById('lcChatManagerBadge');if(mb)mb.style.display='none';
