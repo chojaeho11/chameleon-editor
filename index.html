@@ -14474,6 +14474,13 @@ window.dsmRenderProducts = async function(keyword) {
     var _chatSessionId = sessionStorage.getItem('_cham_sid') || (Date.now().toString(36) + Math.random().toString(36).substr(2, 6));
     var _chatRoomId = sessionStorage.getItem('_cham_room') || '';
     try { sessionStorage.setItem('_cham_sid', _chatSessionId); } catch(e) {}
+    // sessionStorage에 room_id가 있으면 _aiRoom도 동기화 (매니저 끼어들기 realtime 구독용)
+    if (_chatRoomId && !_aiRoom) {
+        _aiRoom = { id: _chatRoomId };
+        _saveAiRoom();
+        // DB 연결 준비되면 realtime 구독 시작
+        setTimeout(function() { subscribeManagerIntervene(); }, 2000);
+    }
 
     var _supaRest = SUPA_URL + '/rest/v1/';
     var _supaHeaders = { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Prefer': 'return=representation' };
@@ -14494,7 +14501,16 @@ window.dsmRenderProducts = async function(keyword) {
                 if (!msgs || !Array.isArray(msgs) || !msgs.length) return;
                 msgs.forEach(function(m) {
                     if (m.sender_type === 'manager') {
-                        addMsg('👤 ' + (m.sender_name || '매니저') + ': ' + m.message, 'bot');
+                        // 매니저 끼어들기 감지 → 라이브 모드 전환
+                        if (!window._chamLiveMode && _aiRoom) {
+                            switchToLiveFromAI(m.sender_name || '매니저');
+                        }
+                        if (typeof addManagerMsg === 'function') {
+                            addManagerMsg(m.sender_name || '매니저', m.message);
+                        } else {
+                            addMsg('👤 ' + (m.sender_name || '매니저') + ': ' + m.message, 'bot');
+                        }
+                        if (typeof _custNotifyNewMsg === 'function') _custNotifyNewMsg(m.sender_name || '매니저');
                     } else if (m.sender_type === 'system') {
                         addMsg('📢 ' + m.message, 'bot');
                     }
@@ -14507,12 +14523,26 @@ window.dsmRenderProducts = async function(keyword) {
     }
     if (_chatRoomId) _startMgrPoll();
 
+    var _askAiInFlight = false; // 동시 호출 방지 (방 중복 생성 차단)
     function askAI(userMessage) {
         var _l = (_chamLang === 'en') ? 'us' : _chamLang;
-        return fetch(_ADVISOR_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY },
-            body: JSON.stringify({ message: userMessage, lang: _chamLang, session_id: _chatSessionId, room_id: _chatRoomId || undefined })
+        // 이전 호출이 진행 중이면 room_id 확보될 때까지 대기
+        var waitForRoom = _askAiInFlight
+            ? new Promise(function(resolve) {
+                var check = setInterval(function() {
+                    if (!_askAiInFlight) { clearInterval(check); resolve(); }
+                }, 200);
+                setTimeout(function() { clearInterval(check); resolve(); }, 5000); // 최대 5초 대기
+            })
+            : Promise.resolve();
+
+        _askAiInFlight = true;
+        return waitForRoom.then(function() {
+            return fetch(_ADVISOR_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY },
+                body: JSON.stringify({ message: userMessage, lang: _chamLang, session_id: _chatSessionId, room_id: _chatRoomId || undefined })
+            });
         }).then(function(res) {
             if (!res.ok) throw new Error('API ' + res.status);
             return res.json();
@@ -14523,10 +14553,18 @@ window.dsmRenderProducts = async function(keyword) {
                 _chatRoomId = data.room_id;
                 try { sessionStorage.setItem('_cham_room', _chatRoomId); } catch(e) {}
                 _startMgrPoll();
+                // _aiRoom 동기화 → realtime 구독 활성화 (매니저 끼어들기 감지)
+                if (!_aiRoom || _aiRoom.id !== data.room_id) {
+                    _aiRoom = { id: data.room_id };
+                    _saveAiRoom();
+                    subscribeManagerIntervene();
+                }
             }
+            _askAiInFlight = false;
             return data;
         }).catch(function(e) {
             console.error('AI 호출 오류:', e);
+            _askAiInFlight = false;
             return { type: 'chat', chat_message: _errGeneral[_l] || _errGeneral['kr'], products: [] };
         });
     }
