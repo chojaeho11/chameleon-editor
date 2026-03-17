@@ -664,6 +664,29 @@ if ('caches' in window) {
         </div>
     </div>
 
+<!-- ★ 흘러가는 상품 배너 -->
+<div id="scrollBanner" style="display:none; overflow:hidden; padding:12px 0; background:#f8fafc; position:relative;">
+    <div id="scrollBannerTrack" style="display:flex; gap:12px; transition:transform 0.6s ease;"></div>
+</div>
+<style>
+#scrollBanner { -webkit-user-select:none; user-select:none; }
+#scrollBannerTrack .sb-card {
+    flex:0 0 calc(25% - 9px); min-width:0; cursor:pointer; border-radius:12px; overflow:hidden;
+    background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.06); transition:transform 0.2s;
+}
+#scrollBannerTrack .sb-card:hover { transform:scale(1.03); }
+#scrollBannerTrack .sb-card img {
+    width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f1f5f9;
+}
+#scrollBannerTrack .sb-card .sb-name {
+    padding:6px 8px; font-size:12px; font-weight:700; color:#334155; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; text-align:center;
+}
+@media (max-width:768px) {
+    #scrollBannerTrack .sb-card { flex:0 0 60%; min-width:60%; }
+}
+</style>
+
 <!-- ★ 홈 섹션 순서 재배치 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -672,12 +695,17 @@ document.addEventListener('DOMContentLoaded', function() {
     var hero = ss.querySelector('.hero-section');
     if (!hero) return;
 
-    // 1) 챗봇 → 히어로 바로 다음, 그 아래 제품검색+회원가입
+    // 0) 흘러가는 배너 → 히어로 바로 다음
+    var scrollBanner = document.getElementById('scrollBanner');
+    var ref = hero.nextElementSibling;
+    if (scrollBanner && ref) { ss.insertBefore(scrollBanner, ref); }
+
+    // 1) 챗봇 → 배너 다음, 그 아래 제품검색+회원가입
     var chatbotWrap = document.getElementById('chatbotBtnWrap');
     var advisorPanel = document.getElementById('advisorPanel');
     var couponBanner = document.getElementById('couponEventBanner');
     var btnWrap = document.getElementById('twoBtnWrap');
-    var ref = hero.nextElementSibling;
+    ref = scrollBanner ? scrollBanner.nextElementSibling : hero.nextElementSibling;
     if (chatbotWrap && ref) { ss.insertBefore(chatbotWrap, ref); }
     if (advisorPanel && chatbotWrap) { chatbotWrap.after(advisorPanel); }
     if (couponBanner && advisorPanel) { advisorPanel.after(couponBanner); }
@@ -5982,6 +6010,8 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 12);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 12);
         }
+        // ★ 흘러가는 배너 로드
+        if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec = document.getElementById('shippingCalcSection');
         if (scSec) scSec.style.display = 'block';
@@ -6185,6 +6215,107 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         console.error(`[${flagColumn}] 로딩 실패:`, e);
         section.style.display = 'none';
     }
+}
+
+// ★ 흘러가는 상품 배너
+async function loadScrollBanner() {
+    const banner = document.getElementById('scrollBanner');
+    const track = document.getElementById('scrollBannerTrack');
+    if (!banner || !track || !sb) return;
+    try {
+        // 5개 섹션에서 12개씩 가져오기
+        const flags = ['is_hot_deal','is_biz_deal','is_print_service','is_goods','is_popular'];
+        const results = await Promise.all(flags.map(f =>
+            sb.from('admin_products')
+                .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url')
+                .eq(f, true).order('sort_order', { ascending: true }).limit(12)
+        ));
+        let allProducts = [];
+        const seen = new Set();
+        results.forEach(r => {
+            if (r.data) r.data.forEach(p => {
+                if (!seen.has(p.code)) { seen.add(p.code); allProducts.push(p); }
+            });
+        });
+        if (allProducts.length < 3) return;
+
+        // 무한 루프를 위해 3세트 복제
+        const items = [...allProducts, ...allProducts, ...allProducts];
+        track.innerHTML = '';
+        items.forEach(p => {
+            const { name } = (typeof getLocalizedData === 'function') ? getLocalizedData(p) : { name: p.name };
+            const img = p.img_url || 'https://placehold.co/300?text=No+Img';
+            const src = window.getTinyThumb ? window.getTinyThumb(img, 300) : img;
+            const card = document.createElement('div');
+            card.className = 'sb-card';
+            card.innerHTML = '<img src="'+src+'" alt="'+name+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div class="sb-name">'+name+'</div>';
+            card.onclick = () => { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(p.code); };
+            track.appendChild(card);
+        });
+        banner.style.display = 'block';
+
+        // 자동 스크롤
+        const isMobile = window.innerWidth <= 768;
+        const cardW = track.children[0].offsetWidth + 12; // card width + gap
+        const totalOriginal = allProducts.length;
+        let pos = totalOriginal * cardW; // 가운데 세트에서 시작
+        track.style.transition = 'none';
+        track.style.transform = 'translateX(-'+pos+'px)';
+
+        let autoTimer = null;
+        let isPaused = false;
+
+        function scrollNext() {
+            if (isPaused) return;
+            pos += cardW;
+            track.style.transition = 'transform 0.6s ease';
+            track.style.transform = 'translateX(-'+pos+'px)';
+            // 끝에 도달하면 조용히 리셋
+            if (pos >= totalOriginal * 2 * cardW) {
+                setTimeout(() => {
+                    pos = totalOriginal * cardW;
+                    track.style.transition = 'none';
+                    track.style.transform = 'translateX(-'+pos+'px)';
+                }, 650);
+            }
+        }
+
+        function startAuto() { if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(scrollNext, 3000); }
+        startAuto();
+
+        // 터치/드래그 지원
+        let startX = 0, startPos = 0, dragging = false;
+        banner.addEventListener('pointerdown', e => {
+            dragging = true; isPaused = true; startX = e.clientX; startPos = pos;
+            track.style.transition = 'none';
+            banner.setPointerCapture(e.pointerId);
+        });
+        banner.addEventListener('pointermove', e => {
+            if (!dragging) return;
+            const dx = startX - e.clientX;
+            track.style.transform = 'translateX(-'+(startPos + dx)+'px)';
+        });
+        banner.addEventListener('pointerup', e => {
+            if (!dragging) return;
+            dragging = false;
+            const dx = startX - e.clientX;
+            const moved = Math.round(dx / cardW);
+            pos = startPos + moved * cardW;
+            if (pos < 0) pos = totalOriginal * cardW;
+            if (pos >= totalOriginal * 2 * cardW) pos = totalOriginal * cardW;
+            track.style.transition = 'transform 0.3s ease';
+            track.style.transform = 'translateX(-'+pos+'px)';
+            setTimeout(() => { isPaused = false; startAuto(); }, 2000);
+        });
+        banner.addEventListener('pointercancel', () => { dragging = false; isPaused = false; startAuto(); });
+
+        // 화면 밖이면 일시정지
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(en => { if (en.isIntersecting) { isPaused = false; startAuto(); } else { isPaused = true; clearInterval(autoTimer); } });
+        }, { threshold: 0.3 });
+        obs.observe(banner);
+
+    } catch(e) { console.warn('[scrollBanner] error:', e); }
 }
 
     window.goBoardWithCategory = function(boardType, subCode, subName) {
@@ -10565,6 +10696,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 12);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 12);
         }
+        if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
         if (scSec2) scSec2.style.display = 'block';
