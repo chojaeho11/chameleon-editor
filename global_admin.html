@@ -4007,7 +4007,10 @@
     // ── 매니저 끼어들기 (AI 상담 → 매니저 상담으로 전환) ──
     window.lcIntervene = async function(){
         if(!currentRoom || currentRoom.status!=='ai_chatting') return;
-        var mgrName=prompt('끼어들기 - 매니저 이름을 입력하세요:');
+        var mgrName = myManagerName || '';
+        if (!mgrName || mgrName === '__HQ__') {
+            mgrName = prompt('끼어들기 - 매니저 이름을 입력하세요:');
+        }
         if(!mgrName||!mgrName.trim()) return;
         mgrName=mgrName.trim();
         var sb=getSb();
