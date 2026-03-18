@@ -9014,6 +9014,10 @@ window.updateModalTotal = function() {
         // 벽면 데이터를 전역에 저장 (장바구니 담기 시 사용)
         window._wallPanelsData = { panels: [...window._wallPanels], totalPanels, totalPrice: finalPrice, discountRate };
 
+        // 수량 입력칸도 칸수 합산으로 동기화
+        const qtyInput = document.getElementById('inputCustQty');
+        if (qtyInput) qtyInput.value = totalPanels;
+
         window.updateModalTotal();
     };
 
