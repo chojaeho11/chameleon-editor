@@ -8843,10 +8843,11 @@ window.updateModalTotal = function() {
         optionTotal += (price * optQty);
     });
 
-    // 3. 수량 할인 적용 (천원단위/만원단위 주문 상품만 제외)
+    // 3. 수량 할인 적용 (천원단위/만원단위, 벽면 제품 제외 — 벽면은 _renderWallPanels에서 자체 할인)
     let discountRate = 0;
     const _productCode = product.code || window.currentProductKey || '';
-    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy';
+    const _isWallProd = product.category === 'hb_display_wall' || (_productCode && _productCode.startsWith('hb_dw'));
+    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy' || _isWallProd;
     if (!_isExcluded) {
         if (prodQty >= 100) discountRate = 0.50;
         else if (prodQty >= 30) discountRate = 0.40;
