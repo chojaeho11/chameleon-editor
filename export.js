@@ -1517,8 +1517,11 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         let pdfOptionLabel = TEXT.opt_default;
 
         // ★ 가벽: 벽면 상세 표시
-        if (item._wallPanels && item._wallPanels.length > 0) {
-            // 벽면 상세는 별도 행으로 표시 (아래에서 처리)
+        const _hasWallPanels = item._wallPanels && item._wallPanels.length > 0;
+        if (_hasWallPanels) {
+            // 벽면 제품: 상품명에서 괄호 상세 제거, 간단하게 표시
+            pdfName = (item.product.name || '').replace(/\s*\(벽면.+\)/, '');
+            if (!pdfName.trim()) pdfName = '허니콤 가벽';
         } else if (item.pageCount && item.pageCount > 1) {
             pdfName += ` (${item.pageCount}면)`;
         }
@@ -1527,8 +1530,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         const _wMm = item.product.w_mm || item.product.width_mm || 0;
         const _hMm = item.product.h_mm || item.product.height_mm || 0;
         const optParts = [];
-        if (item._wallPanels && item._wallPanels.length > 0) {
-            // 벽면 제품은 사이즈 대신 벽면 요약 표시
+        if (_hasWallPanels) {
             optParts.push(`${item._wallPanels.length}벽면 ${item.product._wallTotalPanels || ''}칸`);
             if (item.product._wallDiscountRate > 0) optParts.push(`할인${Math.round(item.product._wallDiscountRate*100)}%`);
         } else if (_wMm && _hMm) {
@@ -1552,52 +1554,89 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
         }
 
-        const pTotal = (pdfPrice || 0) * (item.qty || 1); 
-        totalAmt += pTotal;
+        // ★ 벽면 제품: 첫 행은 상품명만, 하위 행에 각 벽면 상세 + 정확한 금액
+        if (_hasWallPanels) {
+            const sqmPrice = item.product._wallUnitPricePerSqm || 0;
+            const dRate = item.product._wallDiscountRate || 0;
 
-        const nameColWidth = cols[1];
-        const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
-        const lineCount = splitTitle.length;
-        
-        const rowHeight = Math.max(8, 4 + (lineCount * 5));
-
-        curX = 15;
-        drawCell(doc, curX, y, cols[0], rowHeight, no++, 'center'); curX += cols[0];
-        drawCell(doc, curX, y, cols[1], rowHeight, splitTitle, 'left'); curX += cols[1]; 
-        drawCell(doc, curX, y, cols[2], rowHeight, pdfOptionLabel, 'left'); curX += cols[2];
-        drawCell(doc, curX, y, cols[3], rowHeight, String(item.qty), 'center'); curX += cols[3];
-        
-        // [수정] 가격 포맷 적용 (formatCurrencyForPDF 사용)
-        const priceStr = formatCurrencyForPDF(pdfPrice); 
-        const totalStr = formatCurrencyForPDF(pTotal);
-        
-        drawCell(doc, curX, y, cols[4], rowHeight, priceStr, 'right'); curX += cols[4];
-        drawCell(doc, curX, y, cols[5], rowHeight, totalStr, 'right');
-        
-        y += rowHeight;
-        if(y > 260) { doc.addPage(); y = 20; }
-
-        // ★ 벽면 상세 행 출력 (각 벽면을 하위 행으로)
-        if (item._wallPanels && item._wallPanels.length > 0) {
-            item._wallPanels.forEach((wp, wi) => {
+            // 각 벽면의 할인 적용 금액 합산
+            let wallSubtotal = 0;
+            const wallRows = item._wallPanels.map((wp, wi) => {
                 const wArea = (wp.w * wp.h) / 1000000;
-                let wPrice = Math.floor(wArea * (item.product.price || 0) * (wp.side || 1));
-                // 할인 적용
-                if (item.product._wallDiscountRate > 0) {
-                    wPrice = Math.floor(wPrice * (1 - item.product._wallDiscountRate));
-                }
-                const wName = `  └ 벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m ${wp.side===2?'(양면)':'(단면)'}`;
-                const wPriceStr = formatCurrencyForPDF(wPrice);
+                const wRawPrice = Math.floor(wArea * sqmPrice * (wp.side || 1));
+                const wDiscounted = dRate > 0 ? Math.floor(wRawPrice * (1 - dRate)) : wRawPrice;
+                wallSubtotal += wDiscounted;
+                return { wp, wi, wArea, wDiscounted };
+            });
+
+            totalAmt += wallSubtotal;
+
+            // 첫 행: 상품명 + 벽면 요약
+            const nameColWidth = cols[1];
+            const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
+            const lineCount = splitTitle.length;
+            const rowHeight = Math.max(8, 4 + (lineCount * 5));
+
+            curX = 15;
+            drawCell(doc, curX, y, cols[0], rowHeight, no++, 'center'); curX += cols[0];
+            drawCell(doc, curX, y, cols[1], rowHeight, splitTitle, 'left'); curX += cols[1];
+            drawCell(doc, curX, y, cols[2], rowHeight, pdfOptionLabel, 'left'); curX += cols[2];
+            drawCell(doc, curX, y, cols[3], rowHeight, '', 'center'); curX += cols[3];
+            drawCell(doc, curX, y, cols[4], rowHeight, '', 'right'); curX += cols[4];
+            drawCell(doc, curX, y, cols[5], rowHeight, formatCurrencyForPDF(wallSubtotal), 'right');
+
+            y += rowHeight;
+            if(y > 260) { doc.addPage(); y = 20; }
+
+            // 하위 행: 각 벽면 상세
+            wallRows.forEach(({ wp, wi, wArea, wDiscounted }) => {
+                const sideLabel = wp.side === 2 ? '양면' : '단면';
+                const wName = `  └ 벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m (${sideLabel})`;
                 curX = 15;
                 drawCell(doc, curX, y, cols[0], 7, '', 'center'); curX += cols[0];
                 drawCell(doc, curX, y, cols[1], 7, wName, 'left', 8); curX += cols[1];
-                drawCell(doc, curX, y, cols[2], 7, `${wp.w/1000}m×${wp.h/1000}m`, 'left', 8); curX += cols[2];
-                drawCell(doc, curX, y, cols[3], 7, wp.side===2?'양면':'단면', 'center', 8); curX += cols[3];
+                drawCell(doc, curX, y, cols[2], 7, `${wArea.toFixed(1)}㎡`, 'left', 8); curX += cols[2];
+                drawCell(doc, curX, y, cols[3], 7, sideLabel, 'center', 8); curX += cols[3];
                 drawCell(doc, curX, y, cols[4], 7, '', 'right'); curX += cols[4];
-                drawCell(doc, curX, y, cols[5], 7, wPriceStr, 'right', 8);
+                drawCell(doc, curX, y, cols[5], 7, formatCurrencyForPDF(wDiscounted), 'right', 8);
                 y += 7;
                 if(y > 260) { doc.addPage(); y = 20; }
             });
+
+            // 할인 표시 행
+            if (dRate > 0) {
+                curX = 15;
+                drawCell(doc, curX, y, cols[0], 7, '', 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1] + cols[2], 7, `  (${Math.round(dRate*100)}% 수량 할인 적용)`, 'left', 8); curX += cols[1] + cols[2];
+                drawCell(doc, curX, y, cols[3], 7, '', 'center'); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], 7, '', 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], 7, '', 'right');
+                y += 7;
+                if(y > 260) { doc.addPage(); y = 20; }
+            }
+        } else {
+            const pTotal = (pdfPrice || 0) * (item.qty || 1);
+            totalAmt += pTotal;
+
+            const nameColWidth = cols[1];
+            const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
+            const lineCount = splitTitle.length;
+            const rowHeight = Math.max(8, 4 + (lineCount * 5));
+
+            curX = 15;
+            drawCell(doc, curX, y, cols[0], rowHeight, no++, 'center'); curX += cols[0];
+            drawCell(doc, curX, y, cols[1], rowHeight, splitTitle, 'left'); curX += cols[1];
+            drawCell(doc, curX, y, cols[2], rowHeight, pdfOptionLabel, 'left'); curX += cols[2];
+            drawCell(doc, curX, y, cols[3], rowHeight, String(item.qty), 'center'); curX += cols[3];
+
+            const priceStr = formatCurrencyForPDF(pdfPrice);
+            const totalStr = formatCurrencyForPDF(pTotal);
+
+            drawCell(doc, curX, y, cols[4], rowHeight, priceStr, 'right'); curX += cols[4];
+            drawCell(doc, curX, y, cols[5], rowHeight, totalStr, 'right');
+
+            y += rowHeight;
+            if(y > 260) { doc.addPage(); y = 20; }
         }
 
         if (item.selectedAddons) {

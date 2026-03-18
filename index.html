@@ -9013,7 +9013,7 @@ window.updateModalTotal = function() {
         const ih = document.getElementById('inputCustH'); if (ih) ih.value = window._wallPanels[0]?.h || 2200;
 
         // 벽면 데이터를 전역에 저장 (장바구니 담기 시 사용)
-        window._wallPanelsData = { panels: [...window._wallPanels], totalPanels, totalPrice: finalPrice, discountRate };
+        window._wallPanelsData = { panels: [...window._wallPanels], totalPanels, totalPrice: finalPrice, discountRate, unitPricePerSqm: unitPrice };
 
         // 수량 입력칸도 칸수 합산으로 동기화
         const qtyInput = document.getElementById('inputCustQty');
@@ -9851,6 +9851,7 @@ if (w >= 20 && h >= 20) {
                         productToCart._wallPanels = wd.panels;
                         productToCart._wallTotalPanels = wd.totalPanels;
                         productToCart._wallDiscountRate = wd.discountRate;
+                        productToCart._wallUnitPricePerSqm = wd.unitPricePerSqm;
                     } else {
                         productToCart.name += ` (${finalW}x${finalH}mm)`;
                     }
