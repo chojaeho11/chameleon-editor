@@ -1516,10 +1516,10 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         let pdfPrice = item.product.price;
         let pdfOptionLabel = TEXT.opt_default;
 
-        // ★ 가벽: 벽 수 표시 (예: "허니콤 가벽 (2벽)")
-        if (item.wallCount && item.wallCount > 1) {
-            pdfName += ` (${item.wallCount}벽)`;
-        } else if (item.pageCount && item.pageCount > 1 && !item.wallCount) {
+        // ★ 가벽: 벽면 상세 표시
+        if (item._wallPanels && item._wallPanels.length > 0) {
+            // 벽면 상세는 별도 행으로 표시 (아래에서 처리)
+        } else if (item.pageCount && item.pageCount > 1) {
             pdfName += ` (${item.pageCount}면)`;
         }
 
@@ -1527,7 +1527,11 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         const _wMm = item.product.w_mm || item.product.width_mm || 0;
         const _hMm = item.product.h_mm || item.product.height_mm || 0;
         const optParts = [];
-        if (_wMm && _hMm) {
+        if (item._wallPanels && item._wallPanels.length > 0) {
+            // 벽면 제품은 사이즈 대신 벽면 요약 표시
+            optParts.push(`${item._wallPanels.length}벽면 ${item.product._wallTotalPanels || ''}칸`);
+            if (item.product._wallDiscountRate > 0) optParts.push(`할인${Math.round(item.product._wallDiscountRate*100)}%`);
+        } else if (_wMm && _hMm) {
             optParts.push(`${Math.round(_wMm)}x${Math.round(_hMm)}mm`);
         }
         // 스와치/추가 옵션 이름도 규격 컬럼에 표시
@@ -1570,9 +1574,32 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         drawCell(doc, curX, y, cols[4], rowHeight, priceStr, 'right'); curX += cols[4];
         drawCell(doc, curX, y, cols[5], rowHeight, totalStr, 'right');
         
-        y += rowHeight; 
+        y += rowHeight;
         if(y > 260) { doc.addPage(); y = 20; }
-        
+
+        // ★ 벽면 상세 행 출력 (각 벽면을 하위 행으로)
+        if (item._wallPanels && item._wallPanels.length > 0) {
+            item._wallPanels.forEach((wp, wi) => {
+                const wArea = (wp.w * wp.h) / 1000000;
+                let wPrice = Math.floor(wArea * (item.product.price || 0) * (wp.side || 1));
+                // 할인 적용
+                if (item.product._wallDiscountRate > 0) {
+                    wPrice = Math.floor(wPrice * (1 - item.product._wallDiscountRate));
+                }
+                const wName = `  └ 벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m ${wp.side===2?'(양면)':'(단면)'}`;
+                const wPriceStr = formatCurrencyForPDF(wPrice);
+                curX = 15;
+                drawCell(doc, curX, y, cols[0], 7, '', 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1], 7, wName, 'left', 8); curX += cols[1];
+                drawCell(doc, curX, y, cols[2], 7, `${wp.w/1000}m×${wp.h/1000}m`, 'left', 8); curX += cols[2];
+                drawCell(doc, curX, y, cols[3], 7, wp.side===2?'양면':'단면', 'center', 8); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], 7, '', 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], 7, wPriceStr, 'right', 8);
+                y += 7;
+                if(y > 260) { doc.addPage(); y = 20; }
+            });
+        }
+
         if (item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = ADDON_DB[code];
@@ -1843,6 +1870,20 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                 drawText(doc, `${TEXT.ordersheet_size || '사이즈'} : ${Math.round(_wMm2)} x ${Math.round(_hMm2)} mm`, 25, optY, {}, "#555555");
                 optY += 6;
             }
+            // ★ 벽면 상세 (허니콤 가벽)
+            if (item._wallPanels && item._wallPanels.length > 0) {
+                drawText(doc, `벽면 구성 (${item._wallPanels.length}벽면, 총 ${item.product._wallTotalPanels || ''}칸)`, 25, optY, {weight:'bold'}, "#6366f1"); optY += 6;
+                item._wallPanels.forEach((wp, wi) => {
+                    const wArea = ((wp.w * wp.h) / 1000000).toFixed(1);
+                    const sideLabel = wp.side === 2 ? '양면' : '단면';
+                    drawText(doc, `  벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m (${wArea}㎡) - ${sideLabel}`, 30, optY, {}, "#333333"); optY += 5;
+                });
+                if (item.product._wallDiscountRate > 0) {
+                    drawText(doc, `  할인: ${Math.round(item.product._wallDiscountRate*100)}% 적용`, 30, optY, {weight:'bold'}, "#ef4444"); optY += 6;
+                }
+                optY += 2;
+            }
+
             // ★ 제품 타입 (패브릭/캔버스/티셔츠 등)
             const _typeNames = { fabric:'패브릭인쇄', canvas:'캔버스액자', paper:'종이포스터', acrylic:'아크릴액자', blind:'롤블라인드', mug:'머그컵', tshirt:'티셔츠인쇄', sticker:'스티커', cushion:'쿠션', keyring:'키링' };
             const _aType = item.product?._artworkType;

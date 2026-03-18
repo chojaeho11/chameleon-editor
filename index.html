@@ -9842,7 +9842,17 @@ if (w >= 20 && h >= 20) {
                 productToCart.price = finalPricePerItem;
 
                 if (window.isCustomModeCurrent) {
-                    productToCart.name += ` (${finalW}x${finalH}mm)`;
+                    // 벽면 제품: 각 벽면 상세를 상품명에 포함
+                    if (_isWallProduct && window._wallPanelsData) {
+                        const wd = window._wallPanelsData;
+                        const wallLines = wd.panels.map((p, i) => `벽면${i+1}: ${p.w/1000}m×${p.h/1000}m ${p.side===2?'양면':'단면'}`);
+                        productToCart.name += ` (${wallLines.join(' / ')})`;
+                        productToCart._wallPanels = wd.panels;
+                        productToCart._wallTotalPanels = wd.totalPanels;
+                        productToCart._wallDiscountRate = wd.discountRate;
+                    } else {
+                        productToCart.name += ` (${finalW}x${finalH}mm)`;
+                    }
                     productToCart.width_mm = finalW;
                     productToCart.height_mm = finalH;
                     productToCart.is_custom = true;
@@ -9859,6 +9869,12 @@ if (w >= 20 && h >= 20) {
                         uploadedFiles: [...pendingFiles],
                         thumb: pendingFiles[0].thumb
                     };
+                }
+                // 벽면 데이터를 extraFields에 추가
+                if (_isWallProduct && window._wallPanelsData) {
+                    if (!extraFields) extraFields = {};
+                    extraFields._wallPanels = window._wallPanelsData.panels;
+                    extraFields._wallOrderDesc = window._wallOrderDesc;
                 }
                 m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, selectedAddonQtys, extraFields);
                 window._pendingUploadedFiles = [];
