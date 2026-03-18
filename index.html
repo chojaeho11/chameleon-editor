@@ -8454,26 +8454,24 @@ window.showChoiceModal = async function(key) {
                     </div>
                 </div>
                 <div id="promoDiscountBox" style="position:relative; margin-top:12px; border-radius:14px; overflow:visible; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; white-space:nowrap;">
-                        <span style="background:#ef4444; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px; flex-shrink:0;">25%${lang==='ja'?'OFF':lang==='en'?'OFF':lang==='zh'?'OFF':lang==='ar'?'خصم':lang==='es'?'DTO':lang==='de'?'Rabatt':lang==='fr'?'remise':'할인'}</span>
-                        <span style="font-size:10px; color:#92400e; font-weight:600;">${lang==='ja'?'購読10%+マイレージ5%':lang==='zh'?'订阅10%+积分5%':lang==='ar'?'اشتراك10%+نقاط5%':lang==='es'?'Suscr.10%+Puntos5%':lang==='de'?'Abo10%+Punkte5%':lang==='fr'?'Abo10%+Points5%':lang==='en'?'Sub10%+Mileage5%':'구독10%+마일리지5%'}</span>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <span style="background:#ef4444; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px; flex-shrink:0;">${lang==='ja'?'追加10%OFF':lang==='en'?'Extra 10% OFF':lang==='zh'?'额外10%折扣':lang==='es'?'10% extra':lang==='de'?'10% extra':lang==='fr'?'10% en plus':'추가 10% 할인'}</span>
+                        <span style="font-size:11px; color:#92400e; font-weight:700;">${lang==='ja'?'PRO購読割引':lang==='en'?'PRO Subscription':lang==='zh'?'PRO订阅折扣':'PRO 구독 할인'}</span>
                     </div>
-                    <div style="font-size:10px; color:#92400e; font-weight:600; margin-bottom:8px; padding-left:60px;">${lang==='ja'?'+紹介登録5%+紹介者へ5%':lang==='zh'?'+推荐注册5%+推荐人5%':lang==='ar'?'+تسجيل إحالة5%+للمُحيل5%':lang==='es'?'+Registro ref.5%+Referidor5%':lang==='de'?'+Empf.Reg.5%+Empfehler5%':lang==='fr'?'+Inscr.parrain5%+Parrain5%':lang==='en'?'+Referral5%+Referrer5%':'+추천인등록5%+추천인에게5%'}</div>
+                    <div style="font-size:12px; color:#92400e; font-weight:600; margin-bottom:10px;">${lang==='ja'?'業者の方はぜひご購読ください！':lang==='en'?'A must for businesses!':lang==='zh'?'商家必订！':'업자라면 꼭 구독해주세요!'}</div>
                     <div style="display:flex; align-items:baseline; justify-content:flex-end; gap:8px;">
                         <span id="promoDiscountPrice" style="font-size:24px; font-weight:900; color:#d97706;">0</span>
-                        <span class="promoTooltipToggle" style="font-size:11px; color:#92400e; text-decoration:underline;">${lang==='ja'?'詳細を見る →':lang==='zh'?'查看详情 →':lang==='ar'?'عرض التفاصيل →':lang==='es'?'Ver detalles →':lang==='de'?'Details →':lang==='fr'?'Voir détails →':lang==='en'?'View Details →':'구독 알아보기 →'}</span>
+                        <span class="promoTooltipToggle" style="font-size:11px; color:#92400e; text-decoration:underline;">${lang==='ja'?'詳細を見る →':lang==='zh'?'查看详情 →':lang==='en'?'View Details →':'구독 알아보기 →'}</span>
                     </div>
                     <div id="promoTooltip" style="display:none; position:absolute; left:0; right:0; bottom:calc(100% + 10px); background:#1e293b; color:#fff; border-radius:14px; padding:18px 16px; z-index:999; box-shadow:0 8px 30px rgba(0,0,0,0.25); animation:scSlideUp 0.2s ease;">
                         <div style="position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:8px solid #1e293b;"></div>
-                        <div style="font-size:15px; font-weight:800; margin-bottom:12px; color:#fbbf24;">🎁 ${lang==='ja'?'最大25%割引の仕組み':lang==='zh'?'最高25%折扣详情':lang==='ar'?'تفاصيل خصم 25%':lang==='es'?'Cómo obtener 25% DTO':lang==='de'?'So erhalten Sie 25% Rabatt':lang==='fr'?'Comment obtenir 25% de remise':lang==='en'?'How to Get 25% OFF':'최대 25% 할인 혜택'}</div>
+                        <div style="font-size:15px; font-weight:800; margin-bottom:12px; color:#fbbf24;">🎁 ${lang==='ja'?'最大15%追加割引':lang==='zh'?'最高额外15%折扣':lang==='en'?'Up to 15% Extra OFF':'최대 15% 추가 할인 혜택'}</div>
                         <div style="display:flex; flex-direction:column; gap:8px; font-size:12px; line-height:1.5; color:#cbd5e1; margin-bottom:14px;">
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#f59e0b; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">10%</span> ${lang==='ja'?'PRO購読割引':lang==='zh'?'PRO订阅折扣':lang==='ar'?'خصم اشتراك PRO':lang==='es'?'Descuento suscripción PRO':lang==='de'?'PRO-Abo-Rabatt':lang==='fr'?'Réduction abonnement PRO':lang==='en'?'PRO subscription discount':'PRO 구독 할인'}</div>
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#8b5cf6; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">5%</span> ${lang==='ja'?'マイレージ割引':lang==='zh'?'积分折扣':lang==='ar'?'خصم النقاط':lang==='es'?'Descuento puntos':lang==='de'?'Punkte-Rabatt':lang==='fr'?'Réduction points':lang==='en'?'Mileage discount':'마일리지 할인'}</div>
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#3b82f6; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">5%</span> ${lang==='ja'?'紹介者登録割引':lang==='zh'?'推荐注册折扣':lang==='ar'?'خصم تسجيل الإحالة':lang==='es'?'Descuento registro referido':lang==='de'?'Empfehlungs-Registrierungsrabatt':lang==='fr'?'Réduction inscription parrainage':lang==='en'?'Referral signup discount':'추천인 등록 할인'}</div>
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#10b981; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">5%</span> ${lang==='ja'?'紹介者へのリワード':lang==='zh'?'推荐人奖励':lang==='ar'?'مكافأة المُحيل':lang==='es'?'Recompensa al referidor':lang==='de'?'Empfehler-Belohnung':lang==='fr'?'Récompense parrain':lang==='en'?'Referrer reward':'추천인에게 리워드'}</div>
+                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#f59e0b; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">10%</span> ${lang==='ja'?'PRO購読割引':lang==='en'?'PRO subscription discount':'PRO 구독 할인'}</div>
+                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#8b5cf6; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">5%</span> ${lang==='ja'?'マイレージ割引':lang==='en'?'Mileage discount':'마일리지 할인'}</div>
                         </div>
-                        <div style="background:rgba(251,191,36,0.15); border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:11px; color:#fbbf24; font-weight:600; text-align:center;">${lang==='ja'?'✨ 有料機能も無制限で利用可能':lang==='zh'?'✨ 付费功能无限使用':lang==='ar'?'✨ ميزات مدفوعة غير محدودة':lang==='es'?'✨ Funciones premium ilimitadas':lang==='de'?'✨ Premium-Funktionen unbegrenzt':lang==='fr'?'✨ Fonctions premium illimitées':lang==='en'?'✨ Unlimited premium features included':'✨ 유료기능 무제한 사용 포함'}</div>
-                        <button id="promoTooltipBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${lang==='ja'?'定期購読する →':lang==='zh'?'去订阅 →':lang==='ar'?'اشترك الآن →':lang==='es'?'Suscribirse →':lang==='de'?'Jetzt abonnieren →':lang==='fr'?'S\'abonner →':lang==='en'?'Subscribe Now →':'구독하러가기 →'}</button>
+                        <div style="background:rgba(251,191,36,0.15); border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:11px; color:#fbbf24; font-weight:600; text-align:center;">${lang==='ja'?'✨ 有料機能も無制限で利用可能':lang==='en'?'✨ Unlimited premium features included':'✨ 유료기능 무제한 사용 포함'}</div>
+                        <button id="promoTooltipBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${lang==='ja'?'定期購読する →':lang==='en'?'Subscribe Now →':'구독하러가기 →'}</button>
                     </div>
                 </div>
                 ${isArtworkProduct ? `<div style="background:linear-gradient(135deg,#eef2ff,#faf5ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:15px;">
@@ -8897,10 +8895,10 @@ window.updateModalTotal = function() {
 
     const display = document.getElementById('modalRealtimeTotal');
     if(display) display.innerText = fmtLocal(finalTotal);
-    // 25% 할인 프로모션 가격 업데이트 (구독10%+마일리지5%+추천인등록5%+추천인5%)
+    // 구독 10% 추가할인 가격 업데이트
     const promoEl = document.getElementById('promoDiscountPrice');
     if(promoEl) {
-        const discounted = Math.floor(finalTotal * 0.75);
+        const discounted = Math.floor(finalTotal * 0.90);
         promoEl.innerText = fmtLocal(discounted);
     }
 };
