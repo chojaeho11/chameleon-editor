@@ -81,7 +81,7 @@ export const SITE_CONFIG = {
     PG_CONFIG: {
         'KR': {
             provider: 'toss',
-            clientKey: 'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6',
+            clientKey: 'live_gck_DpexMgkW36PiL65R5Y4ErGbR5ozO',
             stripeKeyForSub: 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'
         },
         'JP': {
