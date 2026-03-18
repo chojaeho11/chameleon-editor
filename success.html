@@ -190,74 +190,41 @@
             } catch (e) {
                 console.error("Payment verification error:", e);
 
-                // ★ 핵심 수정: confirm-payment 실패해도 결제 자체는 완료됨
-                // paymentKey가 있으면 DB에 결제완료 + paymentKey 저장 (미결제 방지)
+                // ★ 결제 승인 실패 시: paymentKey는 승인 전에 발급되므로
+                //   paymentKey가 있다고 결제 성공이 아님. DB를 결제완료로 변경하지 않음.
                 if (paymentKey && dbId) {
                     try {
+                        // 승인 실패 상태를 DB에 기록 (결제완료가 아닌 미결제 유지 + 에러 로그)
                         await updateOrder(dbId, {
-                            status: '접수됨',
-                            payment_status: '결제완료',
-                            payment_method: '카드/간편결제',
+                            payment_status: '결제실패',
+                            payment_method: '카드결제실패',
                             toss_payment_key: paymentKey
                         });
-                        console.log("★ confirm-payment 실패했지만 DB 업데이트 성공 (paymentKey 저장됨)");
-
-                        // 추천인 적립도 시도
-                        if (refId) await creditReferralBonus(dbId, refId);
-
-                        // 장바구니 비우기
-                        try {
-                            localStorage.removeItem('chameleon_cart_current');
-                            localStorage.removeItem('chameleon_cart_guest');
-                            Object.keys(localStorage).forEach(key => {
-                                if (key.startsWith('chameleon_cart_')) localStorage.removeItem(key);
-                            });
-                        } catch(e2) {}
-
-                        document.getElementById('loader').style.display = 'none';
-                        document.getElementById('title').innerText = "Payment Successful!";
-                        document.getElementById('desc').innerText = "Redirecting...";
-                        setTimeout(() => window.location.href = "index.html", 1500);
-                        return;
+                        console.error("★ confirm-payment 실패 — 결제 미승인 상태, DB에 결제실패로 기록");
                     } catch (updateErr) {
                         console.error("DB 업데이트도 실패:", updateErr);
                     }
                 }
 
-                // Stripe도 마찬가지
                 if (sessionId && dbId) {
                     try {
                         await updateOrder(dbId, {
-                            status: '접수됨',
-                            payment_status: '결제완료',
-                            payment_method: 'Stripe Card',
+                            payment_status: '결제실패',
+                            payment_method: 'Stripe결제실패',
                             toss_payment_key: sessionId
                         });
-                        console.log("★ verify-stripe 실패했지만 DB 업데이트 성공");
-                        if (refId) await creditReferralBonus(dbId, refId);
-                        try {
-                            localStorage.removeItem('chameleon_cart_current');
-                            localStorage.removeItem('chameleon_cart_guest');
-                            Object.keys(localStorage).forEach(key => {
-                                if (key.startsWith('chameleon_cart_')) localStorage.removeItem(key);
-                            });
-                        } catch(e2) {}
-                        document.getElementById('loader').style.display = 'none';
-                        document.getElementById('title').innerText = "Payment Successful!";
-                        document.getElementById('desc').innerText = "Redirecting...";
-                        setTimeout(() => window.location.href = "index.html", 1500);
-                        return;
+                        console.error("★ verify-stripe 실패 — 결제 미승인 상태");
                     } catch (updateErr) {
                         console.error("DB 업데이트도 실패:", updateErr);
                     }
                 }
 
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('title').innerText = "Payment Error";
-                document.getElementById('desc').innerText = e.message;
+                document.getElementById('title').innerText = "결제 승인 실패";
+                document.getElementById('desc').innerText = e.message || "결제 승인에 실패했습니다. 다시 시도해주세요.";
 
                 setTimeout(() => {
-                    showToast("Payment was processed but verification encountered an issue. Please contact support if your order doesn't appear.", "warn");
+                    showToast("결제 승인에 실패했습니다. 카드 정보를 확인 후 다시 시도해주세요.", "error");
                     window.location.href = "index.html";
                 }, 3000);
             }
