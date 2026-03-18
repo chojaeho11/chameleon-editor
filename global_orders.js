@@ -966,7 +966,8 @@ window.loadOrders = async () => {
             // ═══ [결제 칼럼] 결제수단 + 결제확인 상태만 표시 ═══
             const pmLower = (order.payment_method || '').toLowerCase();
             const isEasyPay = pmLower.includes('카카오') || pmLower.includes('네이버') || pmLower.includes('토스페이') || pmLower.includes('삼성페이') || pmLower.includes('애플페이') || pmLower.includes('페이');
-            const isCard = pmLower.includes('카드') || pmLower.includes('card') || pmLower.includes('stripe') || pmLower.includes('간편결제') || isEasyPay;
+            const isGodo = pmLower.includes('고도몰');
+            const isCard = pmLower.includes('카드') || pmLower.includes('card') || pmLower.includes('stripe') || pmLower.includes('간편결제') || isEasyPay || isGodo;
             const isBank = pmLower.includes('무통장') || pmLower.includes('bank');
             const isDeposit = pmLower.includes('예치금');
             const depositor = order.depositor_name || order.depositor || '';
@@ -981,6 +982,7 @@ window.loadOrders = async () => {
                 else if (pmLower.includes('토스페이')) label = '토스페이';
                 else if (pmLower.includes('삼성페이')) label = '삼성페이';
                 else if (pmLower.includes('애플페이')) label = '애플페이';
+                else if (pmLower.includes('고도몰')) label = '고도몰';
                 payHtml = `<div style="font-size:11px;font-weight:bold;color:#2563eb;">💳 ${label}</div>`;
                 payHtml += isPaid
                     ? `<div style="font-size:10px;color:#15803d;font-weight:bold;">승인완료</div>`
