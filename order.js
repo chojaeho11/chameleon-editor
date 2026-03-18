@@ -3228,7 +3228,12 @@ const cleanProduct = {
     _tshirtColor: productInfo._tshirtColor || '',
     _tshirtColorName: productInfo._tshirtColorName || '',
     _tshirtSize: productInfo._tshirtSize || '',
-    _blindSide: productInfo._blindSide || ''
+    _blindSide: productInfo._blindSide || '',
+    // ★ 벽면 제품 정보
+    _wallPanels: productInfo._wallPanels || null,
+    _wallTotalPanels: productInfo._wallTotalPanels || 0,
+    _wallDiscountRate: productInfo._wallDiscountRate || 0,
+    _wallUnitPricePerSqm: productInfo._wallUnitPricePerSqm || 0
 };
 
 // [2] 장바구니 아이템 생성

@@ -1516,8 +1516,9 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         let pdfPrice = item.product.price;
         let pdfOptionLabel = TEXT.opt_default;
 
-        // ★ 가벽: 벽면 상세 표시
-        const _hasWallPanels = item._wallPanels && item._wallPanels.length > 0;
+        // ★ 가벽: 벽면 상세 표시 (extraFields 또는 product 내부에서 읽기)
+        const _wallPanelsList = item._wallPanels || (item.product && item.product._wallPanels) || null;
+        const _hasWallPanels = _wallPanelsList && _wallPanelsList.length > 0;
         if (_hasWallPanels) {
             // 벽면 제품: 상품명에서 괄호 상세 제거, 간단하게 표시
             pdfName = (item.product.name || '').replace(/\s*\(벽면.+\)/, '');
@@ -1531,7 +1532,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         const _hMm = item.product.h_mm || item.product.height_mm || 0;
         const optParts = [];
         if (_hasWallPanels) {
-            optParts.push(`${item._wallPanels.length}벽면 ${item.product._wallTotalPanels || ''}칸`);
+            optParts.push(`${_wallPanelsList.length}벽면 ${item.product._wallTotalPanels || ''}칸`);
             if (item.product._wallDiscountRate > 0) optParts.push(`할인${Math.round(item.product._wallDiscountRate*100)}%`);
         } else if (_wMm && _hMm) {
             optParts.push(`${Math.round(_wMm)}x${Math.round(_hMm)}mm`);
@@ -1561,7 +1562,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 
             // 각 벽면의 할인 적용 금액 합산
             let wallSubtotal = 0;
-            const wallRows = item._wallPanels.map((wp, wi) => {
+            const wallRows = _wallPanelsList.map((wp, wi) => {
                 const wArea = (wp.w * wp.h) / 1000000;
                 const wRawPrice = Math.floor(wArea * sqmPrice * (wp.side || 1));
                 const wDiscounted = dRate > 0 ? Math.floor(wRawPrice * (1 - dRate)) : wRawPrice;
@@ -1910,9 +1911,10 @@ export async function generateOrderSheetPDF(orderInfo, cartItems) {
                 optY += 6;
             }
             // ★ 벽면 상세 (허니콤 가벽)
-            if (item._wallPanels && item._wallPanels.length > 0) {
-                drawText(doc, `벽면 구성 (${item._wallPanels.length}벽면, 총 ${item.product._wallTotalPanels || ''}칸)`, 25, optY, {weight:'bold'}, "#6366f1"); optY += 6;
-                item._wallPanels.forEach((wp, wi) => {
+            const _wpl2 = item._wallPanels || (item.product && item.product._wallPanels) || null;
+            if (_wpl2 && _wpl2.length > 0) {
+                drawText(doc, `벽면 구성 (${_wpl2.length}벽면, 총 ${item.product._wallTotalPanels || ''}칸)`, 25, optY, {weight:'bold'}, "#6366f1"); optY += 6;
+                _wpl2.forEach((wp, wi) => {
                     const wArea = ((wp.w * wp.h) / 1000000).toFixed(1);
                     const sideLabel = wp.side === 2 ? '양면' : '단면';
                     drawText(doc, `  벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m (${wArea}㎡) - ${sideLabel}`, 30, optY, {}, "#333333"); optY += 5;
