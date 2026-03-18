@@ -1171,7 +1171,7 @@ window.updateActionButtons = () => {
     } else if (s === '취소됨') {
         div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '환불대기') {
-        div.innerHTML = `<button class="btn btn-success" onclick="approveRefundHQ()" style="font-weight:bold;">✅ 본사승인</button><button class="btn" onclick="completeRefundSelected()" style="font-weight:bold;background:#2563eb;color:white;">💰 환불완료</button><button class="btn btn-outline" onclick="rejectRefundSelected()" style="font-weight:bold;">🔙 환불거절</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="approveRefundHQ()" style="font-weight:bold;">✅ 본사승인 (카드=PG환불, 무통장=승인만)</button><button class="btn" onclick="completeRefundSelected()" style="font-weight:bold;background:#2563eb;color:white;">💰 환불완료 (경리팀 송금 후)</button><button class="btn btn-outline" onclick="rejectRefundSelected()" style="font-weight:bold;">🔙 환불거절</button>`;
     } else if (s === '환불실패') {
         div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#dc2626;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else {
@@ -1489,8 +1489,8 @@ window.approveRefundHQ = async () => {
                     failCount++;
                 }
             } else {
-                // 현금/무통장/예치금/기타: 바로 환불완료
-                await sb.from('orders').update({ payment_status: '환불완료', status: '취소됨' }).eq('id', id);
+                // 현금/무통장/예치금/기타: 본사승인 상태로 변경 (경리팀이 환불완료 별도 처리)
+                await sb.from('orders').update({ payment_status: '본사승인' }).eq('id', id);
                 successCount++;
             }
         } catch (e) {
