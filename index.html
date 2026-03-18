@@ -8348,27 +8348,16 @@ window.showChoiceModal = async function(key) {
                 const _isWall = product.category === 'hb_display_wall' || (product.code && product.code.startsWith('hb_dw'));
                 const _isUS2 = window._isUSsite && window._isUSsite();
                 if (_isWall) {
-                    // WALL_WIDTHS: [1000,2000,3000,4000,5000]mm, WALL_HEIGHTS: [2000,2200,2400,3000]mm
-                    const _wOpts = [1000,2000,3000,4000,5000];
-                    const _hOpts = [2000,2200,2400,3000];
-                    const _wLabel = (mm) => _isUS2 ? (mm/304.8).toFixed(1)+' ft' : (mm/1000)+'m';
-                    const _hLabel = (mm) => _isUS2 ? (mm/304.8).toFixed(1)+' ft' : (mm/1000)+'m';
-                    const _wBtns = _wOpts.map((mm,i) => `<button type="button" id="wallW_${mm}" onclick="window._wallPickW(${mm})" style="padding:8px 10px; border:2px solid ${i===1?'#6366f1':'#e2e8f0'}; border-radius:8px; background:${i===1?'#eef2ff':'#fff'}; color:${i===1?'#4f46e5':'#475569'}; font-size:13px; font-weight:${i===1?'800':'600'}; cursor:pointer; transition:all 0.15s;">${_wLabel(mm)}</button>`).join('');
-                    const _hBtns = _hOpts.map((mm,i) => `<button type="button" id="wallH_${mm}" onclick="window._wallPickH(${mm})" style="padding:8px 10px; border:2px solid ${i===1?'#6366f1':'#e2e8f0'}; border-radius:8px; background:${i===1?'#eef2ff':'#fff'}; color:${i===1?'#4f46e5':'#475569'}; font-size:13px; font-weight:${i===1?'800':'600'}; cursor:pointer; transition:all 0.15s;">${_hLabel(mm)}</button>`).join('');
-                    const _sizeTitle = lang==='ja'?'サイズを選択':lang==='en'?'Select Size':'사이즈 선택';
-                    const _wTitle = lang==='ja'?'幅':lang==='en'?'Width':'가로';
-                    const _hTitle = lang==='ja'?'高さ':lang==='en'?'Height':'세로';
+                    const _sideLabel = lang==='ja'?'面':lang==='en'?'Side':'면';
+                    const _singleLabel = lang==='ja'?'片面':lang==='en'?'Single':'단면';
+                    const _doubleLabel = lang==='ja'?'両面':lang==='en'?'Double':'양면';
+                    const _wTitle = lang==='ja'?'幅(間数)':lang==='en'?'Width':'가로(칸수)';
+                    const _hTitle = lang==='ja'?'高さ':lang==='en'?'Height':'높이';
+                    const _addWall = lang==='ja'?'+ 壁面を追加':lang==='en'?'+ Add Wall':'+ 벽면 추가하기';
                     return `<div data-npc="size" style="background:#f8fafc; border-radius:12px; padding:14px; margin-top:10px;">
-                        <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:10px;">📐 ${_sizeTitle}</div>
-                        <div style="margin-bottom:10px;">
-                            <div style="font-size:11px; color:#64748b; font-weight:700; margin-bottom:6px;">${_wTitle}</div>
-                            <div style="display:flex; flex-wrap:wrap; gap:6px;">${_wBtns}</div>
-                        </div>
-                        <div style="margin-bottom:8px;">
-                            <div style="font-size:11px; color:#64748b; font-weight:700; margin-bottom:6px;">${_hTitle}</div>
-                            <div style="display:flex; flex-wrap:wrap; gap:6px;">${_hBtns}</div>
-                        </div>
-                        <div id="wallSizeResult" style="font-size:13px; color:#6366f1; font-weight:700; margin-top:8px; text-align:center;">2m × 2.2m</div>
+                        <div id="wallPanelList"></div>
+                        <button type="button" onclick="window._addWallPanel()" style="width:100%; padding:12px; background:#1e1e2e; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; margin-top:10px;">${_addWall}</button>
+                        <div id="wallTotalSummary" style="margin-top:12px; padding:12px; background:#eef2ff; border-radius:10px; border:1.5px solid #c7d2fe; text-align:center;"></div>
                         <input type="hidden" id="inputCustW" value="2000">
                         <input type="hidden" id="inputCustH" value="2200">
                     </div>`;
@@ -8509,6 +8498,12 @@ window.showChoiceModal = async function(key) {
 
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
+
+    // ★ 벽면 제품: 멀티 벽면 패널 초기화
+    if (document.getElementById('wallPanelList')) {
+        window._wallPanels = [];
+        window._addWallPanel();
+    }
 
     // ★ 에디터에서 선택한 티셔츠 색상 자동 체크
     if (window._selectedTshirtColor) {
@@ -8906,67 +8901,126 @@ window.updateModalTotal = function() {
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
     // [2] 실시간 가격 계산 함수 (국가별 단가 적용 수정판)
     // 허니콤 벽 사이즈 피커 핸들러
-    window._wallPickState = { w: 2000, h: 2200 };
-    window._wallPickW = function(mm) {
-        window._wallPickState.w = mm;
-        window._wallPickRefresh();
+    // ★ 멀티 벽면 시스템
+    window._wallPanels = [];
+    window._wallWOpts = [1000,2000,3000,4000,5000];
+    window._wallHOpts = [2000,2200,2400,3000];
+
+    window._addWallPanel = function() {
+        window._wallPanels.push({ w: 2000, h: 2200, side: 1 }); // side: 1=단면, 2=양면
+        window._renderWallPanels();
     };
-    window._wallPickH = function(mm) {
-        window._wallPickState.h = mm;
-        window._wallPickRefresh();
+
+    window._removeWallPanel = function(idx) {
+        if (window._wallPanels.length <= 1) return;
+        window._wallPanels.splice(idx, 1);
+        window._renderWallPanels();
     };
-    window._wallPickRefresh = function() {
-        const s = window._wallPickState;
+
+    window._setWallProp = function(idx, prop, val) {
+        window._wallPanels[idx][prop] = val;
+        window._renderWallPanels();
+    };
+
+    window._renderWallPanels = function() {
+        const container = document.getElementById('wallPanelList');
+        if (!container) return;
         const _isUS2 = window._isUSsite && window._isUSsite();
-        const fmt = (mm) => _isUS2 ? (mm/304.8).toFixed(1)+' ft' : (mm/1000)+'m';
-        // inputCustW/H에 mm값 직접 설정 (calcCustomPrice는 _getInputMm으로 읽으므로 여기선 mm 직접)
-        const iw = document.getElementById('inputCustW'); if (iw) { iw.value = s.w; iw.type = 'hidden'; }
-        const ih = document.getElementById('inputCustH'); if (ih) { ih.value = s.h; ih.type = 'hidden'; }
-        // 결과 라벨 업데이트
-        const res = document.getElementById('wallSizeResult'); if (res) res.textContent = fmt(s.w)+' × '+fmt(s.h);
-        // 버튼 스타일 업데이트
-        [1000,2000,3000,4000,5000].forEach(mm => {
-            const btn = document.getElementById('wallW_'+mm);
-            if (!btn) return;
-            const sel = mm === s.w;
-            btn.style.borderColor = sel ? '#6366f1' : '#e2e8f0';
-            btn.style.background  = sel ? '#eef2ff' : '#fff';
-            btn.style.color       = sel ? '#4f46e5' : '#475569';
-            btn.style.fontWeight  = sel ? '800' : '600';
+        const fmt = (mm) => _isUS2 ? (mm/304.8).toFixed(1)+'ft' : (mm/1000)+'m';
+        const lang = window.CURRENT_LANG || 'kr';
+        const product = window.selectedProductForChoice;
+        const unitPrice = product ? (product.price || 0) : 0;
+        const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
+        const _r = _rates.US || 0.001;
+        const formatValue = (val) => {
+            if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
+            if (lang === 'en') return '$' + Math.round(val * _r).toLocaleString();
+            return Math.floor(val).toLocaleString() + '원';
+        };
+
+        let html = '';
+        let totalPrice = 0;
+        let totalPanels = 0; // 칸수 합산 (할인 기준)
+
+        window._wallPanels.forEach((p, i) => {
+            const area = (p.w * p.h) / 1000000;
+            const panels = p.w / 1000; // 1m = 1칸
+            totalPanels += panels;
+            const wallPrice = Math.floor(area * unitPrice * p.side);
+            totalPrice += wallPrice;
+
+            const wBtns = window._wallWOpts.map(mm =>
+                `<button type="button" onclick="window._setWallProp(${i},'w',${mm})" style="padding:6px 8px; border:2px solid ${mm===p.w?'#6366f1':'#e2e8f0'}; border-radius:6px; background:${mm===p.w?'#eef2ff':'#fff'}; color:${mm===p.w?'#4f46e5':'#475569'}; font-size:12px; font-weight:${mm===p.w?'800':'600'}; cursor:pointer;">${fmt(mm)}</button>`
+            ).join('');
+            const hBtns = window._wallHOpts.map(mm =>
+                `<button type="button" onclick="window._setWallProp(${i},'h',${mm})" style="padding:6px 8px; border:2px solid ${mm===p.h?'#6366f1':'#e2e8f0'}; border-radius:6px; background:${mm===p.h?'#eef2ff':'#fff'}; color:${mm===p.h?'#4f46e5':'#475569'}; font-size:12px; font-weight:${mm===p.h?'800':'600'}; cursor:pointer;">${fmt(mm)}</button>`
+            ).join('');
+
+            html += `<div style="background:#fff; border:1.5px solid ${i===0?'#6366f1':'#e2e8f0'}; border-radius:10px; padding:12px; margin-bottom:8px; position:relative;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-size:13px; font-weight:800; color:#1e1b4b;">🧱 ${lang==='ja'?'壁面':lang==='en'?'Wall':'벽면'} ${i+1}</span>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:12px; font-weight:700; color:#6366f1;">${formatValue(wallPrice)}</span>
+                        ${window._wallPanels.length > 1 ? `<button onclick="window._removeWallPanel(${i})" style="background:#fee2e2; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; color:#ef4444; font-weight:bold; font-size:14px; display:flex; align-items:center; justify-content:center;">×</button>` : ''}
+                    </div>
+                </div>
+                <div style="display:flex; gap:4px; margin-bottom:8px;">
+                    <button type="button" onclick="window._setWallProp(${i},'side',1)" style="flex:1; padding:7px; border:2px solid ${p.side===1?'#6366f1':'#e2e8f0'}; border-radius:8px; background:${p.side===1?'#6366f1':'#fff'}; color:${p.side===1?'#fff':'#475569'}; font-size:12px; font-weight:700; cursor:pointer;">${lang==='ja'?'片面':lang==='en'?'Single':'단면'}</button>
+                    <button type="button" onclick="window._setWallProp(${i},'side',2)" style="flex:1; padding:7px; border:2px solid ${p.side===2?'#ef4444':'#e2e8f0'}; border-radius:8px; background:${p.side===2?'#ef4444':'#fff'}; color:${p.side===2?'#fff':'#475569'}; font-size:12px; font-weight:700; cursor:pointer;">${lang==='ja'?'両面(×2)':lang==='en'?'Double(×2)':'양면(×2)'}</button>
+                </div>
+                <div style="margin-bottom:6px;">
+                    <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:4px;">${lang==='ja'?'幅':lang==='en'?'Width':'가로'}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${wBtns}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:4px;">${lang==='ja'?'高さ':lang==='en'?'Height':'높이'}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${hBtns}</div>
+                </div>
+            </div>`;
         });
-        [2000,2200,2400,3000].forEach(mm => {
-            const btn = document.getElementById('wallH_'+mm);
-            if (!btn) return;
-            const sel = mm === s.h;
-            btn.style.borderColor = sel ? '#6366f1' : '#e2e8f0';
-            btn.style.background  = sel ? '#eef2ff' : '#fff';
-            btn.style.color       = sel ? '#4f46e5' : '#475569';
-            btn.style.fontWeight  = sel ? '800' : '600';
-        });
-        // 가격 계산: mm값을 직접 사용 (US 변환 없이)
-        if (window.selectedProductForChoice) {
-            const product = window.selectedProductForChoice;
-            const w = s.w, h = s.h;
-            const area = (w * h) / 1000000;
-            let unitPrice = product.price || 0;
-            const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
-            const _r = _rates.US || 0.001;
-            const lang = window.CURRENT_LANG || 'kr';
-            const formatValue = (val) => {
-                if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
-                if (lang === 'en') return '$' + Math.round(val * _r).toLocaleString();
-                return Math.floor(val).toLocaleString() + '원';
-            };
-            if (area > 0 && unitPrice > 0) {
-                const total = Math.floor(area * unitPrice);
-                const pd = document.getElementById('calcResultPrice');
-                if (pd) { pd.innerText = formatValue(total); pd.dataset.rawPrice = total; }
-                const sd = document.getElementById('calcResultSize');
-                if (sd) sd.innerText = _isUS2 ? `${(w/304.8).toFixed(1)} × ${(h/304.8).toFixed(1)} ft (${(area*10.764).toFixed(2)} sq ft)` : `${w/1000}m × ${h/1000}m (${area.toFixed(2)}㎡)`;
-            }
-            window.updateModalTotal();
+
+        container.innerHTML = html;
+
+        // 수량 할인 (칸수 합산 기준)
+        let discountRate = 0;
+        if (totalPanels >= 100) discountRate = 0.50;
+        else if (totalPanels >= 30) discountRate = 0.40;
+        else if (totalPanels >= 10) discountRate = 0.35;
+        else if (totalPanels >= 3) discountRate = 0.30;
+
+        const discountAmount = Math.floor(totalPrice * discountRate);
+        const finalPrice = totalPrice - discountAmount;
+
+        // 요약 표시
+        const summary = document.getElementById('wallTotalSummary');
+        if (summary) {
+            let discountHtml = discountRate > 0
+                ? `<div style="color:#ef4444; font-size:12px; font-weight:700; margin-top:4px;">${Math.round(discountRate*100)}% ${lang==='ja'?'割引':lang==='en'?'OFF':'할인'} (-${formatValue(discountAmount)})</div>`
+                : '';
+            summary.innerHTML = `<div style="font-size:11px; color:#64748b;">${lang==='ja'?'壁面':lang==='en'?'Walls':'벽면'} ${window._wallPanels.length}${lang==='ja'?'面':lang==='en'?'':'개'} · ${lang==='ja'?'合計':lang==='en'?'Total':'총'} ${totalPanels}${lang==='ja'?'パネル':lang==='en'?' panels':'칸'}</div>
+                <div style="font-size:22px; font-weight:900; color:#1e1b4b; margin-top:4px;">${formatValue(finalPrice)}</div>${discountHtml}`;
         }
+
+        // calcResultPrice에도 반영 (updateModalTotal에서 사용)
+        const pd = document.getElementById('calcResultPrice');
+        if (pd) { pd.innerText = formatValue(finalPrice); pd.dataset.rawPrice = finalPrice; }
+        const sd = document.getElementById('calcResultSize');
+        if (sd) sd.innerText = `${window._wallPanels.length}${lang==='ja'?'面':lang==='en'?' walls':'벽면'} · ${totalPanels}${lang==='ja'?'パネル':lang==='en'?' panels':'칸'}`;
+
+        // inputCustW/H에 첫번째 벽 사이즈 (호환성)
+        const iw = document.getElementById('inputCustW'); if (iw) iw.value = window._wallPanels[0]?.w || 2000;
+        const ih = document.getElementById('inputCustH'); if (ih) ih.value = window._wallPanels[0]?.h || 2200;
+
+        // 벽면 데이터를 전역에 저장 (장바구니 담기 시 사용)
+        window._wallPanelsData = { panels: [...window._wallPanels], totalPanels, totalPrice: finalPrice, discountRate };
+
+        window.updateModalTotal();
     };
+
+    // 초기 벽면 1개 추가
+    if (document.getElementById('wallPanelList') && window._wallPanels.length === 0) {
+        window._addWallPanel();
+    }
 
     window.calcCustomPrice = function() {
         const wInput = document.getElementById('inputCustW');
@@ -9521,6 +9575,17 @@ if (w >= 20 && h >= 20) {
             finalQty = parseInt(document.getElementById('fixedProdQty') ? document.getElementById('fixedProdQty').value : 1);
         }
 
+        // 4-1. 벽면 제품: _wallPanelsData에서 가격/수량 오버라이드
+        const _isWallProduct = product.category === 'hb_display_wall' || (targetCode && targetCode.startsWith('hb_dw'));
+        if (_isWallProduct && window._wallPanelsData) {
+            const wd = window._wallPanelsData;
+            finalPricePerItem = wd.totalPrice;
+            finalQty = 1; // 벽면 세트를 1건으로 처리
+            // request_note에 벽면 상세 기록
+            const wallDesc = wd.panels.map((p, i) => `벽면${i+1}: ${p.w/1000}m×${p.h/1000}m ${p.side===2?'양면':'단면'}`).join(', ');
+            window._wallOrderDesc = wallDesc + ` (총 ${wd.totalPanels}칸, 할인${Math.round(wd.discountRate*100)}%)`;
+        }
+
         // 5. 옵션 수집 (코드 + 수량)
         const selectedAddonCodes = [];
         const selectedAddonQtys = {};
@@ -9539,8 +9604,8 @@ if (w >= 20 && h >= 20) {
             selectedAddonQtys[chk.value] = optQty;
         });
 
-        // 5-1. 수량 할인 적용 (천원단위/만원단위 주문 상품만 제외)
-        const _excCode = targetCode === '21355677' || targetCode === '21355677_copy';
+        // 5-1. 수량 할인 적용 (천원단위/만원단위 주문, 벽면 제품 제외 — 벽면은 자체 할인 적용)
+        const _excCode = targetCode === '21355677' || targetCode === '21355677_copy' || _isWallProduct;
         if (!_excCode) {
             let _dRate = 0;
             if (finalQty >= 100) _dRate = 0.50;
