@@ -1555,6 +1555,8 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
         }
 
+        const nameColWidth = cols[1];
+
         // ★ 벽면 제품: 첫 행은 상품명만, 하위 행에 각 벽면 상세 + 정확한 금액
         if (_hasWallPanels) {
             const sqmPrice = item.product._wallUnitPricePerSqm || 0;
@@ -1573,7 +1575,6 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             totalAmt += wallSubtotal;
 
             // 첫 행: 상품명 + 벽면 요약
-            const nameColWidth = cols[1];
             const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
             const lineCount = splitTitle.length;
             const rowHeight = Math.max(8, 4 + (lineCount * 5));
@@ -1619,7 +1620,6 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             const pTotal = (pdfPrice || 0) * (item.qty || 1);
             totalAmt += pTotal;
 
-            const nameColWidth = cols[1];
             const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
             const lineCount = splitTitle.length;
             const rowHeight = Math.max(8, 4 + (lineCount * 5));
