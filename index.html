@@ -8855,7 +8855,7 @@ window.updateModalTotal = function() {
         else if (prodQty >= 3) discountRate = 0.30;
     }
 
-    const discountAmount = Math.floor(productTotal * discountRate);
+    const discountAmount = Math.floor(productTotal * discountRate / 100) * 100;
     const finalTotal = productTotal + optionTotal - discountAmount;
 
     // 할인 가격표 UI 업데이트
@@ -8947,7 +8947,7 @@ window.updateModalTotal = function() {
             const area = (p.w * p.h) / 1000000;
             const panels = p.w / 1000; // 1m = 1칸
             totalPanels += panels;
-            const wallPrice = Math.floor(area * unitPrice * p.side);
+            const wallPrice = Math.floor(area * unitPrice * p.side / 100) * 100;
             totalPrice += wallPrice;
 
             const wBtns = window._wallWOpts.map(mm =>
@@ -8989,7 +8989,7 @@ window.updateModalTotal = function() {
         else if (totalPanels >= 10) discountRate = 0.35;
         else if (totalPanels >= 3) discountRate = 0.30;
 
-        const discountAmount = Math.floor(totalPrice * discountRate);
+        const discountAmount = Math.floor(totalPrice * discountRate / 100) * 100;
         const finalPrice = totalPrice - discountAmount;
 
         // 요약 표시
@@ -9618,7 +9618,7 @@ if (w >= 20 && h >= 20) {
             else if (finalQty >= 10) _dRate = 0.35;
             else if (finalQty >= 3) _dRate = 0.30;
             if (_dRate > 0) {
-                finalPricePerItem = Math.floor(finalPricePerItem * (1 - _dRate));
+                finalPricePerItem = Math.floor(finalPricePerItem * (1 - _dRate) / 100) * 100;
                 if (lang === 'kr') finalPricePerItem = Math.floor(finalPricePerItem / 10) * 10;
             }
         }

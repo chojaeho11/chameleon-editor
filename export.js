@@ -1566,8 +1566,8 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             let wallSubtotal = 0;
             const wallRows = _wallPanelsList.map((wp, wi) => {
                 const wArea = (wp.w * wp.h) / 1000000;
-                const wRawPrice = Math.floor(wArea * sqmPrice * (wp.side || 1));
-                const wDiscounted = dRate > 0 ? Math.floor(wRawPrice * (1 - dRate)) : wRawPrice;
+                const wRawPrice = Math.floor(wArea * sqmPrice * (wp.side || 1) / 100) * 100;
+                const wDiscounted = dRate > 0 ? Math.floor(wRawPrice * (1 - dRate) / 100) * 100 : wRawPrice;
                 wallSubtotal += wDiscounted;
                 return { wp, wi, wArea, wDiscounted };
             });
