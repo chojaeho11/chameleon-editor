@@ -246,6 +246,8 @@
   "confirm_bank_payment": "Place order via wire transfer?\nProduction begins after payment is confirmed.",
   "msg_order_complete_bank": "Order placed. Please transfer payment to the account shown above.",
   "alert_deposit_shortage": "Insufficient credit balance.\n(Short by: {amount})",
+  "confirm_mixed_pay": "Use credit {deposit} + pay {card} by card?",
+  "msg_no_deposit": "No credit balance. Proceeding with card payment.",
   "confirm_deposit_pay": "Pay {amount} from your credit balance?",
   "msg_processing_payment": "Processing payment...",
   "msg_payment_complete": "Payment completed!",

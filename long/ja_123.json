@@ -242,6 +242,8 @@
   "confirm_bank_payment": "銀行振込で注文しますか？\n入金確認後に制作が進行します。",
   "msg_order_complete_bank": "注文が完了しました。\n案内された口座へご入金をお願いいたします。",
   "alert_deposit_shortage": "デポジット残高が不足しています。\n(不足金額: {amount})",
+  "confirm_mixed_pay": "デポジット {deposit} 使用 + カード {card} で決済しますか？",
+  "msg_no_deposit": "デポジットがありません。カード決済に進みます。",
   "confirm_deposit_pay": "デポジット {amount}を使用して決済しますか？",
   "msg_processing_payment": "決済処理中...",
   "msg_payment_complete": "決済が完了しました！",

@@ -220,6 +220,8 @@
   "confirm_bank_payment": "무통장 입금으로 주문하시겠습니까?\n입금 확인 후 제작이 진행됩니다.",
   "msg_order_complete_bank": "주문이 완료되었습니다.\n안내된 계좌로 입금해주세요.",
   "alert_deposit_shortage": "예치금 잔액이 부족합니다.\n(부족금액: {amount}원)",
+  "confirm_mixed_pay": "예치금 {deposit} 사용 + 카드 {card} 결제하시겠습니까?",
+  "msg_no_deposit": "예치금이 없습니다. 카드결제로 진행합니다.",
   "confirm_deposit_pay": "예치금 {amount}원을 사용하여 결제하시겠습니까?",
   "msg_processing_payment": "예치금 결제 중...",
   "msg_payment_complete": "결제가 완료되었습니다!",

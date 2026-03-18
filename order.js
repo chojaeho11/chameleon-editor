@@ -2726,7 +2726,55 @@ async function processFinalPayment() {
         const method = selected ? selected.value : 'card';
 
         if (method === 'deposit') {
-            await processDepositPayment(realFinalPayAmount, useMileage); 
+            const balanceSpan = document.getElementById('myCurrentDepositDisplay');
+            const depositBalance = parseInt(balanceSpan?.dataset?.balance || 0);
+
+            if (depositBalance >= realFinalPayAmount) {
+                // 예치금으로 전액 결제
+                await processDepositPayment(realFinalPayAmount, useMileage);
+            } else if (depositBalance > 0) {
+                // ★ 혼합결제: 예치금 차감 + 나머지 카드결제
+                const cardAmount = realFinalPayAmount - depositBalance;
+                const msg = window.t('confirm_mixed_pay',
+                    `예치금 ${formatCurrency(depositBalance)} 사용 + 카드 ${formatCurrency(cardAmount)} 결제하시겠습니까?`)
+                    .replace('{deposit}', formatCurrency(depositBalance))
+                    .replace('{card}', formatCurrency(cardAmount));
+                if (!confirm(msg)) {
+                    btn.disabled = false;
+                    document.getElementById("loading").style.display = "none";
+                    return;
+                }
+
+                // 1) 예치금 차감
+                const newBalance = depositBalance - depositBalance; // = 0
+                await sb.from('profiles').update({ deposit: newBalance }).eq('id', currentUser.id);
+                await sb.from('wallet_logs').insert({
+                    user_id: currentUser.id,
+                    type: 'payment_order',
+                    amount: -depositBalance,
+                    description: `주문 결제 예치금 사용 (주문번호: ${window.currentDbId})`
+                });
+
+                // 마일리지도 차감
+                if (useMileage > 0) {
+                    const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
+                    await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
+                    await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용` });
+                }
+
+                // 2) 주문에 예치금 사용 금액 기록
+                await sb.from('orders').update({
+                    discount_amount: (useMileage || 0) + depositBalance,
+                    request_note: (window.tempOrderInfo?.request || '') + `\n[예치금 ${depositBalance}원 사용, 카드 ${cardAmount}원 결제]`
+                }).eq('id', window.currentDbId);
+
+                // 3) 나머지 금액 카드결제
+                processCardPayment(cardAmount);
+            } else {
+                // 예치금 0원 → 카드결제로 전환
+                showToast(window.t('msg_no_deposit', '예치금이 없습니다. 카드결제로 진행합니다.'), 'warn');
+                processCardPayment(realFinalPayAmount);
+            }
         } else if (method === 'bank') {
             const depositorName = document.getElementById('inputDepositorName').value;
             if (!depositorName) { btn.disabled = false; showToast(window.t('alert_input_depositor', "Please enter depositor name."), "warn"); return; }
