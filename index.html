@@ -932,7 +932,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 
     <!-- ★ 주문 현황 트래커 -->
-    <div id="orderTrackerSection" style="max-width:1100px; margin:10px auto 15px auto; padding:0 10px;">
+    <div id="orderTrackerSection" style="max-width:1100px; margin:4px auto 10px auto; padding:0 10px;">
         <div style="background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden;">
             <div class="ot-topbar">
                 <i class="fa-solid fa-truck-fast" style="color:#fff; font-size:16px;"></i>
@@ -978,15 +978,18 @@ document.addEventListener('DOMContentLoaded', function() {
     .ot-photo { width:36px; height:36px; border-radius:5px; object-fit:cover; border:1px solid #e2e8f0; cursor:pointer; }
     .ot-status-label { font-size:9px; font-weight:700; padding:3px 8px; border-radius:10px; white-space:nowrap; text-align:center; justify-self:center; }
     @media(max-width:768px) {
+        #orderTrackerSection { margin-top:0 !important; margin-bottom:6px !important; padding:0 6px !important; }
+        #orderTrackerSection > div { border-radius:0 !important; }
         .ot-topbar-title { display:none; }
-        .ot-topbar { padding:8px 10px; }
+        .ot-topbar { padding:6px 10px; }
         .ot-header { display:none; }
         .ot-row {
             display:grid !important;
             grid-template-columns: auto auto auto 1fr auto auto;
             grid-template-rows: auto auto;
-            padding:8px 10px; gap:2px 6px;
+            padding:10px 10px; gap:4px 6px;
             align-items:center;
+            border-bottom:1px solid #e2e8f0;
         }
         /* 1줄: 고객명 주문일 발송일 (빈공간) 문의 답변 상태 */
         .ot-col-name { grid-row:1; grid-column:1; font-size:12px; font-weight:800; }
