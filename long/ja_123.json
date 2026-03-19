@@ -1958,5 +1958,6 @@
   "ot_st_발송완료": "配送中",
   "ot_st_배송완료": "配送完了",
   "ot_label_admin": "カメレオン",
-  "ot_label_customer": "お客様"
+  "ot_label_customer": "お客様",
+  "ot_label_order": "注文"
 }

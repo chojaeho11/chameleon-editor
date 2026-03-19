@@ -1328,7 +1328,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button onclick="this.closest('#otReplyModal').remove()" style="position:absolute;top:10px;right:10px;border:none;background:none;font-size:20px;cursor:pointer;color:#94a3b8;">✕</button>
                 <div style="text-align:center;margin-bottom:16px;">
                     <div style="font-size:16px;font-weight:900;">${window.t&&window.t('ot_popup_reply','💬 답변 · 감사')}</div>
-                    <div style="font-size:12px;color:#64748b;margin-top:4px;">주문 #${orderId} ${order?order.manager_name:''}</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:4px;">${_t('ot_label_order','Order')} #${orderId} ${order?order.manager_name:''}</div>
                 </div>
                 <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">
                     ${allMsgs || '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">'+(window.t&&window.t('ot_no_messages','대화 내역이 없습니다.'))+'</div>'}

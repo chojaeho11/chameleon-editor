@@ -1961,5 +1961,6 @@
   "ot_st_발송완료": "Shipped",
   "ot_st_배송완료": "Delivered",
   "ot_label_admin": "Chameleon",
-  "ot_label_customer": "Customer"
+  "ot_label_customer": "Customer",
+  "ot_label_order": "Order"
 }

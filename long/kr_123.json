@@ -1565,5 +1565,6 @@
   "ot_st_발송완료": "배송중",
   "ot_st_배송완료": "배송완료",
   "ot_label_admin": "카멜레온",
-  "ot_label_customer": "고객"
+  "ot_label_customer": "고객",
+  "ot_label_order": "주문"
 }
