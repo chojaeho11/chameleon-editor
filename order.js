@@ -342,7 +342,7 @@ export async function initOrderSystem() {
                 };
                 const cartMileageInput = document.getElementById('cartUseMileage');
                 const cartUsedMileage = cartMileageInput ? (parseInt(cartMileageInput.value) || 0) : 0;
-                const totalDiscountRate = currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0);
+                const totalDiscountRate = currentUserDiscountRate + 0;
                 const blob = await generateQuotationPDF(info, cartData, totalDiscountRate, cartUsedMileage);
                 if(blob) downloadBlob(blob, "quotation.pdf");
                 else showToast(window.t('err_quote_gen_failed') || "Failed to generate quotation.", "error");
@@ -408,7 +408,7 @@ export async function initOrderSystem() {
 
             try {
                 if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
-                const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0), useMileage);
+                const blob = await generateQuotationPDF(info, cartData, currentUserDiscountRate + 0, useMileage);
                 if(blob) downloadBlob(blob, `quotation_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_pdf_gen_failed', "PDF generation failed"), "error"); }
         };
@@ -431,7 +431,7 @@ export async function initOrderSystem() {
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
-                const blob = await generateReceiptPDF(info, cartData, currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0), useMileage);
+                const blob = await generateReceiptPDF(info, cartData, currentUserDiscountRate + 0, useMileage);
                 if(blob) downloadBlob(blob, `receipt_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_receipt_gen_failed', "Receipt generation failed: ") + e.message, "error"); }
         };
@@ -455,7 +455,7 @@ export async function initOrderSystem() {
             const useMileage = mileageInput ? (parseInt(mileageInput.value) || 0) : 0;
 
             try {
-                const blob = await generateTransactionStatementPDF(info, cartData, currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0), useMileage);
+                const blob = await generateTransactionStatementPDF(info, cartData, currentUserDiscountRate + 0, useMileage);
                 if(blob) downloadBlob(blob, `statement_${info.manager}.pdf`);
             } catch(e) { console.error(e); showToast(window.t('msg_statement_gen_failed', "Statement generation failed: ") + e.message, "error"); }
         };
@@ -1908,8 +1908,7 @@ function updateSummary(prodTotal, addonTotal, total) {
     });
 
     const gradeDiscount = Math.floor(discountableAmount * currentUserDiscountRate);
-    const referralDiscount = window.verifiedReferrerId ? Math.floor(discountableAmount * 0.05) : 0;
-    const discountAmount = gradeDiscount + referralDiscount;
+    const discountAmount = gradeDiscount;
     const finalTotal = total - discountAmount;
 
     window.finalPaymentAmount = finalTotal;
@@ -1956,25 +1955,13 @@ function updateSummary(prodTotal, addonTotal, total) {
         if(gradeDiscount > 0) elDiscount.innerText = `-${formatCurrency(gradeDiscount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
         else elDiscount.innerText = formatCurrency(0) + " (0%)";
     }
-    const elRefDiscount = document.getElementById("summaryReferralDiscount");
-    const elRefRow = document.getElementById("referralDiscountRow");
-    if(elRefRow) {
-        if(referralDiscount > 0) {
-            elRefRow.style.display = 'flex';
-            if(elRefDiscount) elRefDiscount.innerText = `-${formatCurrency(referralDiscount)} (5%)`;
-        } else {
-            elRefRow.style.display = 'none';
-        }
-    }
     const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(finalTotal);
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`;
     const btnCart = document.getElementById("btnViewCart"); if (btnCart) btnCart.style.display = (cartData.length > 0 || (typeof currentUser !== 'undefined' && currentUser)) ? "inline-flex" : "none";
 
-    // 장바구니 추천인/마일리지 섹션: 로그인 시만 표시
-    const _cartRefSec = document.getElementById('cartReferralSection');
+    // 장바구니 마일리지 섹션: 로그인 시만 표시
     const _cartMileSec = document.getElementById('cartMileageSection');
     const _isLoggedIn = typeof currentUser !== 'undefined' && currentUser;
-    if (_cartRefSec) _cartRefSec.style.display = _isLoggedIn ? 'block' : 'none';
     if (_cartMileSec) _cartMileSec.style.display = _isLoggedIn ? 'block' : 'none';
 
     // 장바구니 마일리지 한도 업데이트
@@ -2299,7 +2286,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             else errors.push('order_sheet upload failed');
         } else { errors.push('order_sheet PDF generation timeout/failed'); }
 
-        const _totalDiscRate = currentUserDiscountRate + (window.verifiedReferrerId ? 0.05 : 0);
+        const _totalDiscRate = currentUserDiscountRate + 0;
         const _mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
         const _localMileage = Math.round(useMileage * _mileRate);
         const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, _totalDiscRate, _localMileage), PDF_TIMEOUT);

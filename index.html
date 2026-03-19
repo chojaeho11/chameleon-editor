@@ -3857,31 +3857,11 @@ async function handleSubReturn() {
                         <span id="summaryDiscount">0원 (0%)</span>
                     </div>
 
-                    <div id="referralDiscountRow" style="display:none; justify-content:space-between; color:#7c3aed; font-weight:bold; margin-bottom: 5px;">
-                        <span data-i18n="label_referral_discount">추천인 할인</span>
-                        <span id="summaryReferralDiscount">-0원 (5%)</span>
-                    </div>
-
                     <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-                    
+
                     <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:20px; margin-bottom: 10px;">
                         <span data-i18n="label_total_price">합계</span>
                         <span id="summaryTotal">0원</span>
-                    </div>
-                    <!-- minOrderNotice 제거됨 (v173: 최소금액 자동 패딩으로 대체) -->
-
-                    <!-- 추천인 등록 (장바구니) -->
-                    <div id="cartReferralSection" style="margin-top:15px; background:linear-gradient(135deg,#ede9fe,#e0e7ff); padding:15px; border-radius:10px; border:1px solid #a78bfa;">
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-                            <span style="font-size:18px;">🎁</span>
-                            <b style="color:#6d28d9; font-size:14px;" data-i18n="referral_title">추천인 코드</b>
-                            <span style="font-size:11px; color:#7c3aed;">(5% <span data-i18n="label_grade_discount">할인</span>)</span>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <input id="cartReferrerEmail" class="ai-input-pretty" type="email" placeholder="추천인 이메일 입력" data-i18n-placeholder="referral_placeholder" style="flex:1; margin:0; height:38px; font-size:13px;">
-                            <button class="btn-round" type="button" onclick="window.validateCartReferrer()" style="width:70px; height:38px; background:#7c3aed; color:white; border:none; justify-content:center; font-size:12px;" data-i18n="referral_verify">확인</button>
-                        </div>
-                        <div id="cartReferrerStatus" style="margin-top:6px; font-size:12px;"></div>
                     </div>
 
                     <!-- 마일리지 사용 (장바구니) -->
@@ -4055,16 +4035,6 @@ async function handleSubReturn() {
             </label>
         </div>
 
-        <div id="checkoutReferralInfo" style="display:none; margin-bottom:15px; padding:12px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px;">
-            <span style="font-weight:bold;">🎁 <span data-i18n="referral_applied">추천인 적용됨</span>:</span>
-            <span id="checkoutReferrerEmail" style="color:#7c3aed; font-weight:bold;"></span>
-            <div style="margin-top:6px; font-size:13px; color:#7c3aed; font-weight:bold;">
-                <span data-i18n="label_referral_discount">추천인 할인</span>: <span id="checkoutReferralDiscount"></span>
-            </div>
-            <div style="margin-top:4px; font-size:12px; color:#92400e;">
-                <span data-i18n="referral_refund_notice">추천인이 보상지급 금액을 출금한 경우 그 금액을 제외하고 환불됩니다.</span>
-            </div>
-        </div>
 
         <!-- minOrderCheckoutNotice 제거됨 (v173: 최소금액 자동 패딩으로 대체) -->
 
