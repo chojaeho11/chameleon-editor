@@ -944,29 +944,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; color:#1e3a8a;">검색</button>
                 </div>
             </div>
-            <div id="orderTrackerList" style="max-height:400px; overflow-y:auto; padding:0;">
+            <div class="ot-header">
+                <span>고객명</span><span>주문일</span><span>발송일</span><span>사진</span><span style="text-align:center;">진행상태</span><span style="text-align:center;">상태</span>
+            </div>
+            <div id="orderTrackerList" style="max-height:380px; overflow-y:auto; padding:0;">
                 <div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">주문 현황을 불러오는 중...</div>
             </div>
         </div>
     </div>
 
     <style>
-    .ot-row { display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f1f5f9; cursor:pointer; transition:background 0.15s; gap:12px; }
+    .ot-header, .ot-row { display:grid; grid-template-columns: 90px 55px 55px 120px 1fr 60px; align-items:center; padding:10px 16px; gap:8px; }
+    .ot-header { background:#f8fafc; font-size:11px; font-weight:700; color:#64748b; border-bottom:2px solid #e2e8f0; }
+    .ot-row { border-bottom:1px solid #f1f5f9; cursor:pointer; transition:background 0.15s; }
     .ot-row:hover { background:#f8fafc; }
-    .ot-name { font-weight:700; font-size:14px; color:#1e293b; min-width:70px; }
-    .ot-item { font-size:12px; color:#64748b; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .ot-steps { display:flex; gap:2px; align-items:center; flex-shrink:0; }
-    .ot-step { width:14px; height:14px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:7px; color:#fff; position:relative; }
+    .ot-col-name { font-weight:700; font-size:13px; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ot-col-date { font-size:11px; color:#64748b; }
+    .ot-col-ship { font-size:11px; color:#10b981; font-weight:600; }
+    .ot-col-photo { display:flex; gap:3px; }
+    .ot-col-steps { display:flex; gap:2px; align-items:center; justify-content:center; }
+    .ot-step { width:12px; height:12px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:6px; color:#fff; }
     .ot-step.active { background:#3b82f6; }
     .ot-step.done { background:#10b981; }
-    .ot-step-bar { width:8px; height:2px; background:#e2e8f0; }
+    .ot-step-bar { width:6px; height:2px; background:#e2e8f0; }
     .ot-step-bar.done { background:#10b981; }
-    .ot-photos { display:flex; gap:4px; flex-shrink:0; }
-    .ot-photo { width:36px; height:36px; border-radius:6px; object-fit:cover; border:1px solid #e2e8f0; }
-    .ot-status-label { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+    .ot-photo { width:32px; height:32px; border-radius:5px; object-fit:cover; border:1px solid #e2e8f0; }
+    .ot-status-label { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; text-align:center; }
     @media(max-width:768px) {
-        .ot-row { flex-wrap:wrap; gap:6px; padding:10px 12px; }
-        .ot-steps { width:100%; justify-content:center; margin-top:4px; }
+        .ot-header { display:none; }
+        .ot-row { grid-template-columns: 70px 45px 45px 80px 1fr 50px; padding:8px 10px; gap:4px; font-size:11px; }
+        .ot-col-name { font-size:12px; }
+        .ot-step { width:10px; height:10px; font-size:5px; }
+        .ot-step-bar { width:4px; }
+        .ot-photo { width:26px; height:26px; }
         #orderTrackerSearch { width:120px; }
     }
     </style>
@@ -1013,16 +1023,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const label = STATUS_LABELS[status] || status;
                 const _nm = o.manager_name || '고객'; const name = _nm.length > 1 ? _nm.slice(0, -1) + '*' : _nm;
                 const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
-                const _shipSrc = o.delivery_target_date || o.created_at;
-                const shipDate = (o.status === '발송완료' || o.status === '배송완료') && _shipSrc ? new Date(_shipSrc).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
+                const shipDate = o.delivery_target_date ? new Date(o.delivery_target_date).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
                 return `<div class="ot-row" onclick="window.openOrderDetail(${o.id})">
-                    <span class="ot-name">${name}</span>
-                    <span class="ot-dates" style="font-size:11px;color:#64748b;min-width:100px;">
-                        <span>주문 ${orderDate}</span>
-                        ${shipDate ? `<br><span style="color:#10b981;">발송 ${shipDate}</span>` : ''}
-                    </span>
-                    <div class="ot-photos">${renderPhotos(o)}</div>
-                    <div class="ot-steps">${renderSteps(status)}</div>
+                    <span class="ot-col-name">${name}</span>
+                    <span class="ot-col-date">${orderDate}</span>
+                    <span class="ot-col-ship">${shipDate || '-'}</span>
+                    <div class="ot-col-photo">${renderPhotos(o)}</div>
+                    <div class="ot-col-steps">${renderSteps(status)}</div>
                     <span class="ot-status-label" style="background:${color}15; color:${color};">${label}</span>
                 </div>`;
             }).join('');
