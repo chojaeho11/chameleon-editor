@@ -1543,5 +1543,9 @@
   "ot_h_progress": "진행상태",
   "ot_h_status": "상태",
   "order_tracker_title": "주문 현황",
-  "order_tracker_search_placeholder": "고객명/연락처"
+  "order_tracker_search_placeholder": "고객명/연락처",
+  "ot_popup_inquiry": "📝 문의 · 평가",
+  "ot_popup_reply": "💬 답변 · 감사",
+  "ot_star_rating": "별점 평가",
+  "ot_inquiry_placeholder": "문의사항이나 후기를 남겨주세요"
 }

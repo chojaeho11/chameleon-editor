@@ -1939,5 +1939,9 @@
   "ot_h_progress": "Progress",
   "ot_h_status": "Status",
   "order_tracker_title": "Order Status",
-  "order_tracker_search_placeholder": "Name/Phone"
+  "order_tracker_search_placeholder": "Name/Phone",
+  "ot_popup_inquiry": "📝 Inquiry · Review",
+  "ot_popup_reply": "💬 Reply · Thanks",
+  "ot_star_rating": "Star Rating",
+  "ot_inquiry_placeholder": "Leave your inquiry or review"
 }
