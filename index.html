@@ -1012,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const color = STATUS_COLORS[status] || '#3b82f6';
                 const label = STATUS_LABELS[status] || status;
                 const items = (o.items || []).map(it => it.product_name || it.name || '').filter(Boolean).join(', ');
-                const name = (o.manager_name || '고객').replace(/./g, (c, i) => i === 0 ? c : '*');
+                const _nm = o.manager_name || '고객'; const name = _nm.length > 1 ? _nm.slice(0, -1) + '*' : _nm;
                 return `<div class="ot-row" onclick="window.openOrderDetail(${o.id})">
                     <span class="ot-name">${name}</span>
                     <span class="ot-item">${items || '주문 상품'}</span>
