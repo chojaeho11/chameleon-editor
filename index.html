@@ -944,6 +944,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; color:#1e3a8a;" data-i18n="ot_btn_search">검색</button>
                 </div>
             </div>
+            <div id="otCountryTabs" style="display:flex;gap:4px;padding:6px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;">
+                <button class="ot-tab active" onclick="window.filterOrderCountry('ALL')">🌐 ALL</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('KR')">🇰🇷 KR</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('JP')">🇯🇵 JP</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('US')">🇺🇸 US</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('CN')">🇨🇳 CN</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('OTHER')">🌍 Other</button>
+            </div>
             <div class="ot-header">
                 <span data-i18n="ot_h_name">고객명</span><span data-i18n="ot_h_order">주문일</span><span data-i18n="ot_h_ship">발송일</span><span>🌐</span><span style="text-align:center;" data-i18n="ot_h_photo">사진</span><span style="text-align:center;" data-i18n="ot_h_inquiry">문의</span><span style="text-align:center;" data-i18n="ot_h_reply">답변</span><span style="text-align:center;" data-i18n="ot_h_rating">평점</span><span style="text-align:center;" data-i18n="ot_h_progress">진행상태</span><span style="text-align:center;" data-i18n="ot_h_status">상태</span>
             </div>
@@ -980,6 +988,9 @@ document.addEventListener('DOMContentLoaded', function() {
     .ot-step-bar { display:none; }
     .ot-photo { width:36px; height:36px; border-radius:5px; object-fit:cover; border:1px solid #e2e8f0; cursor:pointer; }
     .ot-status-label { font-size:9px; font-weight:700; padding:3px 8px; border-radius:10px; white-space:nowrap; text-align:center; justify-self:center; }
+    .ot-tab { padding:4px 10px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; font-size:11px; font-weight:700; cursor:pointer; color:#64748b; transition:all 0.15s; }
+    .ot-tab:hover { background:#eff6ff; }
+    .ot-tab.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
     @media(max-width:768px) {
         #orderTrackerSection { margin-top:0 !important; margin-bottom:6px !important; padding:0 6px !important; }
         #orderTrackerSection > div { border-radius:0 !important; }
@@ -1017,6 +1028,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <script>
     (function() {
         const _t = (k, fb) => (window.t && window.t(k, fb)) || fb;
+        let _allTrackerOrders = [];
+        let _currentCountryFilter = 'ALL';
         const STATUS_STEPS = ['접수됨','칼선작업','제작중','완료됨','발송완료','배송완료'];
         const STATUS_LABELS = { '접수됨':'접수완료', '칼선작업':'칼선작업', '제작중':'인쇄중', '완료됨':'제작완료', '발송완료':'배송중', '배송완료':'배송완료' };
         const STATUS_COLORS = { '접수됨':'#3b82f6', '칼선작업':'#8b5cf6', '제작중':'#f59e0b', '완료됨':'#ef4444', '발송완료':'#06b6d4', '배송완료':'#64748b' };
@@ -1060,10 +1073,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 list.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">현재 진행중인 주문이 없습니다.</div>';
                 return;
             }
-            // ★ 사진 있는 주문을 상단에 고정
-            const withPhotos = orders.filter(o => o.production_photos && o.production_photos.length > 0);
-            const withoutPhotos = orders.filter(o => !o.production_photos || o.production_photos.length === 0);
-            const sorted = [...withPhotos, ...withoutPhotos];
+            // ★ JP 3건 + US 3건 상단 고정, 나머지는 사진 있는 것 우선
+            const jpTop = orders.filter(o => o.site_code === 'JP').slice(0, 3);
+            const usTop = orders.filter(o => o.site_code === 'US').slice(0, 3);
+            const pinnedIds = new Set([...jpTop, ...usTop].map(o => o.id));
+            const rest = orders.filter(o => !pinnedIds.has(o.id));
+            const withPhotos = rest.filter(o => o.production_photos && o.production_photos.length > 0);
+            const withoutPhotos = rest.filter(o => !o.production_photos || o.production_photos.length === 0);
+            const sorted = [...jpTop, ...usTop, ...withPhotos, ...withoutPhotos];
             list.innerHTML = sorted.map(o => {
                 const status = o.status || '접수됨';
                 const color = STATUS_COLORS[status] || '#3b82f6';
@@ -1108,16 +1125,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // 배송완료 3일 지난건 제외
                 const now = Date.now();
-                const filtered = (data || []).filter(o => {
+                _allTrackerOrders = (data || []).filter(o => {
                     if (o.status === '배송완료') {
                         const created = new Date(o.created_at).getTime();
-                        return (now - created) < 7 * 24 * 60 * 60 * 1000; // 7일 이내
+                        return (now - created) < 7 * 24 * 60 * 60 * 1000;
                     }
                     return true;
                 });
-                renderOrders(filtered);
+                applyCountryFilter();
             } catch(e) { console.error(e); }
         }
+
+        function applyCountryFilter() {
+            const f = _currentCountryFilter;
+            let filtered;
+            if (f === 'ALL') filtered = _allTrackerOrders;
+            else if (f === 'OTHER') filtered = _allTrackerOrders.filter(o => !['KR','JP','US','CN'].includes(o.site_code));
+            else filtered = _allTrackerOrders.filter(o => o.site_code === f);
+            renderOrders(filtered);
+        }
+
+        window.filterOrderCountry = function(code) {
+            _currentCountryFilter = code;
+            document.querySelectorAll('.ot-tab').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            applyCountryFilter();
+        };
 
         window.searchOrderTracker = function() {
             const q = document.getElementById('orderTrackerSearch').value.trim();

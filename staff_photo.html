@@ -43,6 +43,8 @@ body { font-family:'Pretendard',sans-serif; background:#f1f5f9; min-height:100vh
 .toast.show { display:block; animation:fadeInOut 2s; }
 @keyframes fadeInOut { 0%{opacity:0;transform:translateX(-50%) translateY(10px)} 15%{opacity:1;transform:translateX(-50%) translateY(0)} 85%{opacity:1} 100%{opacity:0} }
 .empty { text-align:center; padding:40px 20px; color:#94a3b8; }
+.ctab { padding:5px 12px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; font-size:13px; font-weight:700; cursor:pointer; color:#64748b; }
+.ctab.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
 .empty i { font-size:48px; margin-bottom:10px; }
 </style>
 </head>
@@ -55,6 +57,14 @@ body { font-family:'Pretendard',sans-serif; background:#f1f5f9; min-height:100vh
 
 <div class="search-bar">
     <input type="text" id="searchInput" placeholder="고객명, 연락처, 주문번호 검색" oninput="searchOrders(this.value)">
+    <div id="countryTabs" style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;">
+        <button class="ctab active" onclick="filterCountry('ALL',this)">🌐 ALL</button>
+        <button class="ctab" onclick="filterCountry('KR',this)">🇰🇷</button>
+        <button class="ctab" onclick="filterCountry('JP',this)">🇯🇵</button>
+        <button class="ctab" onclick="filterCountry('US',this)">🇺🇸</button>
+        <button class="ctab" onclick="filterCountry('CN',this)">🇨🇳</button>
+        <button class="ctab" onclick="filterCountry('OTHER',this)">🌍</button>
+    </div>
 </div>
 
 <div id="orderList" class="order-list">
@@ -101,15 +111,30 @@ async function loadOrders() {
     renderOrders(allOrders);
 }
 
+let currentCountry = 'ALL';
+
 function searchOrders(q) {
-    if (!q.trim()) { renderOrders(allOrders); return; }
-    const kw = q.trim().toLowerCase();
-    const filtered = allOrders.filter(o =>
-        (o.manager_name || '').toLowerCase().includes(kw) ||
-        (o.phone || '').includes(kw) ||
-        String(o.id).includes(kw)
-    );
-    renderOrders(filtered);
+    applyFilters(q);
+}
+
+function filterCountry(code, btn) {
+    currentCountry = code;
+    document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters(document.getElementById('searchInput').value);
+}
+
+function applyFilters(q) {
+    let list = allOrders;
+    if (currentCountry !== 'ALL') {
+        if (currentCountry === 'OTHER') list = list.filter(o => !['KR','JP','US','CN'].includes(o.site_code));
+        else list = list.filter(o => o.site_code === currentCountry);
+    }
+    if (q && q.trim()) {
+        const kw = q.trim().toLowerCase();
+        list = list.filter(o => (o.manager_name||'').toLowerCase().includes(kw) || (o.phone||'').includes(kw) || String(o.id).includes(kw));
+    }
+    renderOrders(list);
 }
 
 function renderOrders(orders) {
