@@ -2797,18 +2797,36 @@ async function processFinalPayment() {
                 if (receiptInfo) bankUpdate.receipt_info = receiptInfo;
                 await sb.from('orders').update(bankUpdate).eq('id', orderId);
                 
-                showToast(window.t('msg_order_complete_bank'), "success");
-                // ★ [버그수정] 무통장입금 결제 완료 후 장바구니 비우기 (중복 주문 방지)
+                // 장바구니 비우기
                 try {
-                    // ★ [수정] removeItem 대신 빈 배열 저장 (구 키 마이그레이션 방지)
                     localStorage.setItem(cartStorageKey(), '[]');
-                    // 구 키도 정리 (좀비 데이터 완전 제거)
                     Object.keys(localStorage).forEach(k => {
                         if (k.startsWith('chameleon_cart_') && k !== cartStorageKey()) localStorage.removeItem(k);
                     });
                     cartData.length = 0;
                 } catch(e) {}
-                location.reload();
+
+                // ★ 계좌번호 안내 팝업 표시
+                const bankPopup = document.createElement('div');
+                bankPopup.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
+                const acctNum = '647701-04-277763';
+                bankPopup.innerHTML = `
+                    <div style="background:#fff;border-radius:16px;padding:30px;max-width:400px;width:90%;text-align:center;">
+                        <div style="font-size:18px;font-weight:800;color:#1e3a8a;margin-bottom:20px;">✅ 주문이 접수되었습니다</div>
+                        <div style="background:#1e3a8a;border-radius:12px;padding:20px;margin-bottom:20px;">
+                            <div style="color:#93c5fd;font-size:13px;margin-bottom:6px;">국민은행</div>
+                            <div style="color:#fff;font-size:26px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px;">${acctNum}</div>
+                            <div style="color:#bfdbfe;font-size:13px;">(예금주: 카멜레온프린팅)</div>
+                        </div>
+                        <div style="color:#64748b;font-size:13px;margin-bottom:20px;">입금 확인 후 제작이 시작됩니다.</div>
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="navigator.clipboard.writeText('${acctNum}').then(()=>this.textContent='✓ 복사됨')" style="flex:1;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📋 계좌번호 복사</button>
+                            <button onclick="window.print()" style="flex:1;padding:12px;border:none;border-radius:8px;background:#e2e8f0;color:#334155;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 인쇄하기</button>
+                        </div>
+                        <button onclick="location.reload()" style="margin-top:12px;width:100%;padding:12px;border:none;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:13px;cursor:pointer;">닫기</button>
+                    </div>
+                `;
+                document.body.appendChild(bankPopup);
             }
         } else {
             processCardPayment(realFinalPayAmount);

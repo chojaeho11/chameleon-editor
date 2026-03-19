@@ -4072,13 +4072,13 @@ async function handleSubReturn() {
             결제하기
         </button>
 
-        <div id="bankInfoBox" style="display:none; margin-top:15px; background:#f8fafc; padding:15px; border-radius:8px; font-size:13px;">
-            <div class="bank-title" style="font-weight:bold; margin-bottom:5px;" data-i18n="msg_bank_info">[계좌이체 안내]</div>
-            
-            <div style="line-height:1.6;">
-                <span data-i18n="msg_bank_name">국민은행</span><br>
-                <span style="font-weight:bold; color:#333;" data-i18n="msg_bank_account">647701-04-277763</span><br>
-                <span data-i18n="msg_bank_owner">(예금주: 카멜레온프린팅)</span>
+        <div id="bankInfoBox" style="display:none; margin-top:15px; background:#1e3a8a; padding:18px; border-radius:10px; font-size:14px; color:#fff;">
+            <div class="bank-title" style="font-weight:bold; margin-bottom:8px; color:#93c5fd; font-size:13px;" data-i18n="msg_bank_info">[계좌이체 안내]</div>
+
+            <div style="line-height:1.8;">
+                <span style="color:#93c5fd;" data-i18n="msg_bank_name">국민은행</span><br>
+                <span style="font-weight:900; color:#fff; font-size:20px; letter-spacing:1px;" data-i18n="msg_bank_account">647701-04-277763</span><br>
+                <span style="color:#bfdbfe;" data-i18n="msg_bank_owner">(예금주: 카멜레온프린팅)</span>
             </div>
             
             <div style="margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;">
@@ -5684,11 +5684,30 @@ window.filterFxCards = function(cat, btn) {
         }
     }
 
+    function showBankAccountPopup() {
+        const acctNum = '647701-04-277763';
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
+        ov.innerHTML = `<div style="background:#fff;border-radius:16px;padding:28px;max-width:360px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+            <div style="font-size:15px;font-weight:800;color:#1e3a8a;margin-bottom:16px;">💳 무통장 입금 계좌 안내</div>
+            <div style="background:#1e3a8a;border-radius:12px;padding:20px;margin-bottom:16px;">
+                <div style="color:#93c5fd;font-size:13px;margin-bottom:4px;">국민은행</div>
+                <div style="color:#fff;font-size:24px;font-weight:900;letter-spacing:1.5px;margin-bottom:4px;">${acctNum}</div>
+                <div style="color:#bfdbfe;font-size:13px;">(예금주: 카멜레온프린팅)</div>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${acctNum}').then(()=>this.textContent='✓ 복사완료!')" style="width:100%;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📋 계좌번호 복사</button>
+            <div onclick="this.closest('div[style*=inset]').remove()" style="margin-top:12px;font-size:13px;color:#999;cursor:pointer;font-weight:600;">닫기</div>
+        </div>`;
+        document.body.appendChild(ov);
+        ov.addEventListener('click', (e) => { if(e.target===ov) ov.remove(); });
+    }
+
     const channels = {
         KR: [
             { name: '채널톡\n상담', fa: 'fa-solid fa-comments', color: '#6366f1', action: openChannelTalk },
             { name: '카톡상담', img: 'https://developers.kakao.com/static/images/pc/product/icon/kakaoTalk.png', action: openChannelTalk },
-            { name: '전화문의', fa: 'fa-solid fa-phone', color: '#10b981', action: showPhonePopup }
+            { name: '전화문의', fa: 'fa-solid fa-phone', color: '#10b981', action: showPhonePopup },
+            { name: '계좌안내', fa: 'fa-solid fa-building-columns', color: '#1e3a8a', action: showBankAccountPopup }
         ],
         JP: [
             { name: 'LINE\n相談', img: 'https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg', url: 'https://line.me/R/ti/p/@343cfkfr' },
