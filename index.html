@@ -934,14 +934,12 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- ★ 주문 현황 트래커 -->
     <div id="orderTrackerSection" style="max-width:1100px; margin:10px auto 15px auto; padding:0 10px;">
         <div style="background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden;">
-            <div style="background:linear-gradient(135deg,#1e3a8a,#3b82f6); padding:14px 20px; display:flex; align-items:center; justify-content:space-between;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <i class="fa-solid fa-truck-fast" style="color:#fff; font-size:18px;"></i>
-                    <span style="color:#fff; font-weight:800; font-size:16px;" data-i18n="order_tracker_title">주문 현황</span>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <input type="text" id="orderTrackerSearch" placeholder="고객명 또는 연락처 검색" data-i18n-placeholder="order_tracker_search_placeholder" style="padding:6px 12px; border:none; border-radius:6px; font-size:12px; width:180px; outline:none;">
-                    <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; color:#1e3a8a;">검색</button>
+            <div class="ot-topbar">
+                <i class="fa-solid fa-truck-fast" style="color:#fff; font-size:16px;"></i>
+                <span class="ot-topbar-title" style="color:#fff; font-weight:800; font-size:15px;">주문 현황</span>
+                <div style="display:flex; gap:6px; align-items:center; flex:1; justify-content:flex-end;">
+                    <input type="text" id="orderTrackerSearch" placeholder="고객명/연락처" style="padding:5px 10px; border:none; border-radius:6px; font-size:11px; width:140px; outline:none;">
+                    <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; color:#1e3a8a;">검색</button>
                 </div>
             </div>
             <div class="ot-header">
@@ -954,17 +952,20 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <style>
-    /* 순서: 고객명 | 주문일 | 발송일 | 사진 | 문의 | 답변 | 평점 | 진행상태 | 상태 */
-    .ot-header, .ot-row { display:grid; grid-template-columns: 80px 48px 48px 80px 58px 58px 80px 1fr 56px; align-items:center; padding:9px 14px; gap:6px; }
+    .ot-topbar { background:linear-gradient(135deg,#1e3a8a,#3b82f6); padding:10px 16px; display:flex; align-items:center; gap:8px; }
+    .ot-mb { display:none; }
+    @media(max-width:768px) { .ot-pc { display:none; } .ot-mb { display:inline; } }
+    /* PC: 고객명 | 주문일 | 발송일 | 사진 | 문의 | 답변 | 평점 | 진행상태 | 상태 */
+    .ot-header, .ot-row { display:grid; grid-template-columns: 80px 48px 48px 80px 52px 52px 80px 1fr 56px; align-items:center; padding:9px 14px; gap:6px; }
     .ot-header { background:#f8fafc; font-size:10px; font-weight:700; color:#64748b; border-bottom:2px solid #e2e8f0; }
     .ot-row { border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
     .ot-row:hover { background:#f8fafc; }
     .ot-col-name { font-weight:700; font-size:12px; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
     .ot-col-date { font-size:10px; color:#64748b; }
     .ot-col-ship { font-size:10px; color:#10b981; font-weight:600; }
-    .ot-col-photo { display:flex; gap:3px; }
+    .ot-col-photo { display:flex; gap:3px; overflow:hidden; }
     .ot-col-star { font-size:14px; color:#f59e0b; white-space:nowrap; letter-spacing:1px; }
-    .ot-btn { padding:4px 8px; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .ot-btn { padding:4px 8px; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; display:block; text-align:center; }
     .ot-btn-ask { background:#dbeafe; color:#1d4ed8; }
     .ot-btn-ask:hover { background:#bfdbfe; }
     .ot-btn-reply { background:#ede9fe; color:#7c3aed; }
@@ -978,15 +979,24 @@ document.addEventListener('DOMContentLoaded', function() {
     .ot-photo { width:28px; height:28px; border-radius:4px; object-fit:cover; border:1px solid #e2e8f0; cursor:pointer; }
     .ot-status-label { font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px; white-space:nowrap; text-align:center; }
     @media(max-width:768px) {
+        .ot-topbar-title { display:none; }
+        .ot-topbar { padding:8px 10px; }
         .ot-header { display:none; }
-        .ot-row { grid-template-columns: 60px 38px 38px 55px 48px 48px 60px 1fr 46px; padding:6px 8px; gap:3px; }
-        .ot-col-name { font-size:11px; }
-        .ot-col-star { font-size:11px; }
-        .ot-btn { font-size:8px; padding:3px 5px; }
+        /* 모바일: 이름 | 날짜 | 사진 | 문의 | 답변 | 상태 (2줄) */
+        .ot-row { grid-template-columns: 1fr; padding:8px 10px; gap:0; display:flex; flex-wrap:wrap; align-items:center; }
+        .ot-col-name { flex:0 0 auto; font-size:12px; margin-right:6px; }
+        .ot-col-date { flex:0 0 auto; font-size:10px; margin-right:4px; }
+        .ot-col-ship { flex:0 0 auto; font-size:10px; margin-right:6px; }
+        .ot-col-photo { flex:0 0 auto; margin-right:6px; }
+        .ot-col-photo .ot-photo { width:20px; height:20px; }
+        .ot-btn { font-size:9px; padding:3px 6px; }
+        .ot-col-star { font-size:11px; margin-left:auto; }
+        .ot-col-steps { flex:1 0 100%; margin-top:4px; justify-content:flex-start; }
         .ot-step { width:8px; height:8px; font-size:4px; }
         .ot-step-bar { width:3px; }
-        .ot-photo { width:22px; height:22px; }
-        #orderTrackerSearch { width:120px; }
+        .ot-status-label { position:absolute; right:10px; top:8px; }
+        .ot-row { position:relative; padding-right:55px; }
+        #orderTrackerSearch { width:auto; flex:1; min-width:80px; }
     }
     </style>
 
@@ -1047,8 +1057,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="ot-col-date">${orderDate}</span>
                     <span class="ot-col-ship">${shipDate || '-'}</span>
                     <div class="ot-col-photo">${renderPhotos(o)}</div>
-                    <div><button class="ot-btn ot-btn-ask" onclick="event.stopPropagation(); window.openCustomerInquiry(${o.id})">문의·평가</button></div>
-                    <div><button class="ot-btn ot-btn-reply" onclick="event.stopPropagation(); window.openAdminReplyPublic(${o.id})">답변·감사</button></div>
+                    <div><button class="ot-btn ot-btn-ask" onclick="event.stopPropagation(); window.openCustomerInquiry(${o.id})"><span class="ot-pc">문의·평가</span><span class="ot-mb">문의</span></button></div>
+                    <div><button class="ot-btn ot-btn-reply" onclick="event.stopPropagation(); window.openAdminReplyPublic(${o.id})"><span class="ot-pc">답변·감사</span><span class="ot-mb">답변</span></button></div>
                     <span class="ot-col-star">${stars}</span>
                     <div class="ot-col-steps">${renderSteps(status)}</div>
                     <span class="ot-status-label" style="background:${color}15; color:${color};">${label}</span>
