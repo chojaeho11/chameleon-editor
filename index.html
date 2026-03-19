@@ -931,6 +931,217 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 
+    <!-- ★ 주문 현황 트래커 -->
+    <div id="orderTrackerSection" style="max-width:1100px; margin:10px auto 15px auto; padding:0 10px;">
+        <div style="background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#1e3a8a,#3b82f6); padding:14px 20px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-truck-fast" style="color:#fff; font-size:18px;"></i>
+                    <span style="color:#fff; font-weight:800; font-size:16px;" data-i18n="order_tracker_title">주문 현황</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" id="orderTrackerSearch" placeholder="고객명 또는 연락처 검색" data-i18n-placeholder="order_tracker_search_placeholder" style="padding:6px 12px; border:none; border-radius:6px; font-size:12px; width:180px; outline:none;">
+                    <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; color:#1e3a8a;">검색</button>
+                </div>
+            </div>
+            <div id="orderTrackerList" style="max-height:400px; overflow-y:auto; padding:0;">
+                <div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">주문 현황을 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .ot-row { display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f1f5f9; cursor:pointer; transition:background 0.15s; gap:12px; }
+    .ot-row:hover { background:#f8fafc; }
+    .ot-name { font-weight:700; font-size:14px; color:#1e293b; min-width:70px; }
+    .ot-item { font-size:12px; color:#64748b; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ot-steps { display:flex; gap:2px; align-items:center; flex-shrink:0; }
+    .ot-step { width:14px; height:14px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:7px; color:#fff; position:relative; }
+    .ot-step.active { background:#3b82f6; }
+    .ot-step.done { background:#10b981; }
+    .ot-step-bar { width:8px; height:2px; background:#e2e8f0; }
+    .ot-step-bar.done { background:#10b981; }
+    .ot-photos { display:flex; gap:4px; flex-shrink:0; }
+    .ot-photo { width:36px; height:36px; border-radius:6px; object-fit:cover; border:1px solid #e2e8f0; }
+    .ot-status-label { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+    @media(max-width:768px) {
+        .ot-row { flex-wrap:wrap; gap:6px; padding:10px 12px; }
+        .ot-steps { width:100%; justify-content:center; margin-top:4px; }
+        #orderTrackerSearch { width:120px; }
+    }
+    </style>
+
+    <script>
+    (function() {
+        const STATUS_STEPS = ['접수됨','칼선작업','제작중','완료됨','발송완료','배송완료'];
+        const STATUS_LABELS = { '접수됨':'접수완료', '칼선작업':'칼선작업', '제작중':'인쇄중', '완료됨':'제작완료', '발송완료':'배송중', '배송완료':'배송완료' };
+        const STATUS_COLORS = { '접수됨':'#3b82f6', '칼선작업':'#8b5cf6', '제작중':'#f59e0b', '완료됨':'#10b981', '발송완료':'#06b6d4', '배송완료':'#64748b' };
+
+        function getStepIndex(status) {
+            const idx = STATUS_STEPS.indexOf(status);
+            return idx >= 0 ? idx : 0;
+        }
+
+        function renderSteps(status) {
+            const ci = getStepIndex(status);
+            let html = '';
+            STATUS_STEPS.forEach((s, i) => {
+                const cls = i < ci ? 'done' : (i === ci ? 'active' : '');
+                html += `<div class="ot-step ${cls}" title="${STATUS_LABELS[s]}">`;
+                if (i <= ci) html += '<i class="fa-solid fa-check"></i>';
+                html += '</div>';
+                if (i < STATUS_STEPS.length - 1) html += `<div class="ot-step-bar ${i < ci ? 'done' : ''}"></div>`;
+            });
+            return html;
+        }
+
+        function renderPhotos(order) {
+            const photos = order.production_photos || [];
+            if (!photos.length) return '';
+            return photos.slice(0, 3).map(url => `<img src="${url}" class="ot-photo" loading="lazy" onclick="event.stopPropagation(); window.open('${url}','_blank')">`).join('');
+        }
+
+        function renderOrders(orders) {
+            const list = document.getElementById('orderTrackerList');
+            if (!orders || !orders.length) {
+                list.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">현재 진행중인 주문이 없습니다.</div>';
+                return;
+            }
+            list.innerHTML = orders.map(o => {
+                const status = o.status || '접수됨';
+                const color = STATUS_COLORS[status] || '#3b82f6';
+                const label = STATUS_LABELS[status] || status;
+                const items = (o.items || []).map(it => it.product_name || it.name || '').filter(Boolean).join(', ');
+                const name = (o.manager_name || '고객').replace(/./g, (c, i) => i === 0 ? c : '*');
+                return `<div class="ot-row" onclick="window.openOrderDetail(${o.id})">
+                    <span class="ot-name">${name}</span>
+                    <span class="ot-item">${items || '주문 상품'}</span>
+                    <div class="ot-photos">${renderPhotos(o)}</div>
+                    <div class="ot-steps">${renderSteps(status)}</div>
+                    <span class="ot-status-label" style="background:${color}15; color:${color};">${label}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadOrders(searchQuery) {
+            try {
+                const _sb = window.sb || window.supabaseClient;
+                if (!_sb) return;
+                let query = _sb.from('orders')
+                    .select('id, manager_name, phone, status, items, production_photos, created_at')
+                    .not('status', 'in', '("임시작성","관리자차단","취소됨")')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (searchQuery) {
+                    query = query.or(`manager_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
+                }
+
+                const { data, error } = await query;
+                if (error) { console.error('orderTracker:', error); return; }
+
+                // 배송완료 3일 지난건 제외
+                const now = Date.now();
+                const filtered = (data || []).filter(o => {
+                    if (o.status === '배송완료') {
+                        const created = new Date(o.created_at).getTime();
+                        return (now - created) < 7 * 24 * 60 * 60 * 1000; // 7일 이내
+                    }
+                    return true;
+                });
+                renderOrders(filtered);
+            } catch(e) { console.error(e); }
+        }
+
+        window.searchOrderTracker = function() {
+            const q = document.getElementById('orderTrackerSearch').value.trim();
+            loadOrders(q || null);
+        };
+
+        // 엔터키로 검색
+        document.getElementById('orderTrackerSearch').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') window.searchOrderTracker();
+        });
+
+        // 주문 상세 페이지 열기
+        window.openOrderDetail = function(orderId) {
+            const modal = document.createElement('div');
+            modal.id = 'orderDetailModal';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;';
+            modal.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;position:relative;"><div style="text-align:center;padding:20px;color:#94a3b8;">불러오는 중...</div></div>';
+            modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
+            document.body.appendChild(modal);
+            loadOrderDetail(orderId, modal);
+        };
+
+        async function loadOrderDetail(orderId, modal) {
+            const _sb = window.sb || window.supabaseClient;
+            const { data: order, error } = await _sb.from('orders').select('*').eq('id', orderId).maybeSingle();
+            if (error || !order) { modal.querySelector('div > div').innerHTML = '<p style="text-align:center;color:#ef4444;">주문을 찾을 수 없습니다.</p>'; return; }
+
+            const status = order.status || '접수됨';
+            const color = STATUS_COLORS[status] || '#3b82f6';
+            const label = STATUS_LABELS[status] || status;
+            const items = (order.items || []).map(it => it.product_name || it.name || '').filter(Boolean);
+            const photos = order.production_photos || [];
+            const name = order.manager_name || '고객';
+
+            // 문의/답변 로드
+            const { data: inquiries } = await _sb.from('order_inquiries')
+                .select('*')
+                .eq('order_id', orderId)
+                .order('created_at', { ascending: true });
+
+            const content = modal.querySelector('div');
+            content.innerHTML = `
+                <button onclick="this.closest('#orderDetailModal').remove()" style="position:absolute;top:12px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#94a3b8;">✕</button>
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div style="font-size:18px;font-weight:900;color:#1e293b;">${name}님의 주문</div>
+                    <span class="ot-status-label" style="background:${color}15;color:${color};font-size:13px;padding:4px 14px;margin-top:6px;display:inline-block;">${label}</span>
+                </div>
+                <div style="display:flex;justify-content:center;margin-bottom:20px;">${renderSteps(status)}</div>
+                <div style="display:flex;justify-content:center;gap:4px;margin-bottom:4px;font-size:9px;color:#94a3b8;">
+                    ${STATUS_STEPS.map(s => `<span style="width:14px;text-align:center;">${STATUS_LABELS[s].charAt(0)}</span><span style="width:8px;"></span>`).join('')}
+                </div>
+                ${items.length ? `<div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:16px;"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px;">주문 상품</div>${items.map(n => `<div style="font-size:13px;color:#334155;">• ${n}</div>`).join('')}</div>` : ''}
+                ${photos.length ? `<div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;">제작 사진</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${photos.map(u => `<img src="${u}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #e2e8f0;" onclick="window.open('${u}','_blank')">`).join('')}</div></div>` : ''}
+                ${order.request_note ? `<div style="background:#fef3c7;border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:#92400e;"><b>요청사항:</b> ${order.request_note}</div>` : ''}
+                <div style="border-top:1px solid #e2e8f0;padding-top:16px;margin-top:8px;">
+                    <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px;">💬 문의 / 답변</div>
+                    <div id="inquiryList" style="max-height:200px;overflow-y:auto;margin-bottom:12px;">
+                        ${(inquiries || []).length === 0 ? '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">문의 내역이 없습니다.</div>' : (inquiries || []).map(inq => `
+                            <div style="margin-bottom:8px;padding:8px 10px;border-radius:8px;background:${inq.is_admin ? '#ede9fe' : '#f0f9ff'};font-size:12px;">
+                                <div style="font-weight:700;color:${inq.is_admin ? '#7c3aed' : '#0369a1'};margin-bottom:2px;">${inq.is_admin ? '관리자' : name}</div>
+                                <div style="color:#334155;">${inq.message}</div>
+                                <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString('ko')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="inquiryInput_${orderId}" placeholder="문의사항을 입력하세요" style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;">
+                        <button onclick="window.submitInquiry(${orderId})" style="padding:8px 16px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">전송</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.submitInquiry = async function(orderId) {
+            const input = document.getElementById('inquiryInput_' + orderId);
+            const msg = input ? input.value.trim() : '';
+            if (!msg) return;
+            const _sb = window.sb || window.supabaseClient;
+            await _sb.from('order_inquiries').insert({ order_id: orderId, message: msg, is_admin: false });
+            input.value = '';
+            // 새로고침
+            const modal = document.getElementById('orderDetailModal');
+            if (modal) loadOrderDetail(orderId, modal);
+        };
+
+        // 초기 로드
+        setTimeout(() => loadOrders(), 1500);
+    })();
+    </script>
+
     <!-- 온라인/디지털 카드 -->
     <div id="dsmInlinePanel" style="max-width:1100px; margin:0 auto 15px auto; padding:0 10px;">
         <div class="dsm-section-box">

@@ -1178,8 +1178,22 @@ window.updateActionButtons = () => {
         // 전체 탭
         div.innerHTML = `<button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">선택 삭제</button>`;
     }
-    // 모든 탭에 수동다운 버튼 추가
+    // 모든 탭에 공통 버튼 추가
     div.innerHTML += `<button class="btn" onclick="manualDownloadSelected()" style="background:#0ea5e9;color:white;margin-left:6px;">📥 수동다운</button>`;
+    div.innerHTML += `<button class="btn" onclick="photoUploadSelected()" style="background:#10b981;color:white;margin-left:4px;">📷 제작사진</button>`;
+    div.innerHTML += `<button class="btn" onclick="inquirySelected()" style="background:#8b5cf6;color:white;margin-left:4px;">💬 문의답변</button>`;
+};
+
+window.photoUploadSelected = () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length !== 1) { showToast("사진 업로드할 주문 1건만 선택하세요.", "warn"); return; }
+    window.openProductionPhotoUpload(parseInt(ids[0]));
+};
+
+window.inquirySelected = () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length !== 1) { showToast("문의 답변할 주문 1건만 선택하세요.", "warn"); return; }
+    window.openAdminInquiryPanel(parseInt(ids[0]));
 };
 
 window.changeStatusSelected = async (status) => {
@@ -3406,4 +3420,110 @@ window.adjustBalance = async function(userId, field, direction) {
         console.error('Balance adjust error:', err);
         alert('처리 실패: ' + err.message);
     }
+};
+
+// ============================================================
+// ★ 제작사진 업로드 & 문의 답변 (주문 현황 트래커용)
+// ============================================================
+
+window.openProductionPhotoUpload = async function(orderId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = async () => {
+        const files = Array.from(input.files).slice(0, 3);
+        if (!files.length) return;
+        showLoading(true);
+        try {
+            const urls = [];
+            for (const f of files) {
+                const ext = f.name.split('.').pop();
+                const path = `production_photos/${orderId}_${Date.now()}_${Math.random().toString(36).substr(2,4)}.${ext}`;
+                const { error: upErr } = await sb.storage.from('order-files').upload(path, f, { upsert: true });
+                if (upErr) { console.error(upErr); continue; }
+                const { data: urlData } = sb.storage.from('order-files').getPublicUrl(path);
+                if (urlData) urls.push(urlData.publicUrl);
+            }
+            if (urls.length) {
+                // 기존 사진에 추가
+                const { data: order } = await sb.from('orders').select('production_photos').eq('id', orderId).maybeSingle();
+                const existing = (order && order.production_photos) || [];
+                const allPhotos = [...existing, ...urls].slice(0, 6); // 최대 6장
+                await sb.from('orders').update({ production_photos: allPhotos }).eq('id', orderId);
+                alert(`✅ ${urls.length}장 업로드 완료`);
+                loadOrders();
+            }
+        } catch(e) { console.error(e); alert('업로드 실패: ' + e.message); }
+        showLoading(false);
+    };
+    input.click();
+};
+
+window.openAdminInquiryPanel = async function(orderId) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;';
+    ov.addEventListener('click', e => { if(e.target === ov) ov.remove(); });
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'background:#fff;border-radius:16px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;padding:24px;position:relative;';
+    ov.appendChild(wrap);
+    document.body.appendChild(ov);
+
+    // 주문 정보 로드
+    const { data: order } = await sb.from('orders').select('id, manager_name, status, production_photos').eq('id', orderId).maybeSingle();
+    const { data: inquiries } = await sb.from('order_inquiries').select('*').eq('order_id', orderId).order('created_at', { ascending: true });
+    const photos = (order && order.production_photos) || [];
+
+    wrap.innerHTML = `
+        <button onclick="this.closest('div[style*=inset]').remove()" style="position:absolute;top:12px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#94a3b8;">✕</button>
+        <div style="font-size:16px;font-weight:900;margin-bottom:16px;">📋 주문 #${orderId} - ${order ? order.manager_name : ''}</div>
+
+        <div style="margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px;">📷 제작사진 (${photos.length}/6)</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                ${photos.map((u,i) => `<div style="position:relative;"><img src="${u}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;">
+                    <button onclick="window.deleteProductionPhoto(${orderId},${i})" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;border:none;font-size:10px;cursor:pointer;line-height:1;">✕</button></div>`).join('')}
+            </div>
+            <button onclick="window.openProductionPhotoUpload(${orderId}); this.closest('div[style*=inset]').remove();" style="padding:6px 14px;background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📷 사진 추가</button>
+        </div>
+
+        <div style="border-top:1px solid #e2e8f0;padding-top:16px;">
+            <div style="font-size:13px;font-weight:800;margin-bottom:10px;">💬 문의 / 답변</div>
+            <div style="max-height:250px;overflow-y:auto;margin-bottom:12px;">
+                ${(!inquiries || !inquiries.length) ? '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">문의 내역 없음</div>' : inquiries.map(inq => `
+                    <div style="margin-bottom:8px;padding:8px 10px;border-radius:8px;background:${inq.is_admin ? '#ede9fe' : '#f0f9ff'};font-size:12px;">
+                        <div style="font-weight:700;color:${inq.is_admin ? '#7c3aed' : '#0369a1'};margin-bottom:2px;">${inq.is_admin ? '👨‍💼 관리자' : '👤 고객'}</div>
+                        <div style="color:#334155;">${inq.message}</div>
+                        <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString('ko')}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="adminReplyInput_${orderId}" placeholder="관리자 답변 입력" style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;" onkeydown="if(event.key==='Enter') window.submitAdminReply(${orderId})">
+                <button onclick="window.submitAdminReply(${orderId})" style="padding:8px 16px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">답변</button>
+            </div>
+        </div>
+    `;
+};
+
+window.submitAdminReply = async function(orderId) {
+    const input = document.getElementById('adminReplyInput_' + orderId);
+    const msg = input ? input.value.trim() : '';
+    if (!msg) return;
+    await sb.from('order_inquiries').insert({ order_id: orderId, message: msg, is_admin: true });
+    input.value = '';
+    // 팝업 새로고침
+    document.querySelector('div[style*="inset:0"]')?.remove();
+    window.openAdminInquiryPanel(orderId);
+};
+
+window.deleteProductionPhoto = async function(orderId, photoIndex) {
+    if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+    const { data: order } = await sb.from('orders').select('production_photos').eq('id', orderId).maybeSingle();
+    const photos = (order && order.production_photos) || [];
+    photos.splice(photoIndex, 1);
+    await sb.from('orders').update({ production_photos: photos }).eq('id', orderId);
+    document.querySelector('div[style*="inset:0"]')?.remove();
+    window.openAdminInquiryPanel(orderId);
 };
