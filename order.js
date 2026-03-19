@@ -1675,16 +1675,11 @@ function renderCart() {
         let baseProductTotal = (item.product.price || 0) * item.qty;
         let optionTotal = 0;
         
-        // ★ 패브릭인쇄(22222): 후가공 수량 = 제품 수량 연동
-        const _isFabricCart = item.product.category && window._getTopCategoryCode && window._getTopCategoryCode(item.product.category) === '22222';
-
         Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) {
                 const isSwatchAddon = addon.category_code === 'opt_8796' || addon.is_swatch;
                 let aq = isSwatchAddon ? item.qty : ((item.addonQuantities && item.addonQuantities[code]) || 1);
-                // 패브릭: 후가공도 제품 수량만큼
-                if (_isFabricCart) aq = item.qty;
                 optionTotal += addon.price * aq;
             }
         });
@@ -1898,14 +1893,12 @@ function updateSummary(prodTotal, addonTotal, total) {
             let itemTotal = unitPrice * qty; 
             
             if (item.selectedAddons) {
-                const _isFabS = item.product.category && window._getTopCategoryCode && window._getTopCategoryCode(item.product.category) === '22222';
                 Object.values(item.selectedAddons).forEach(code => {
                     const db = typeof ADDON_DB !== 'undefined' ? ADDON_DB : (window.ADDON_DB || {});
                     const addon = db[code];
                     if (addon) {
                         const _sw = addon.category_code === 'opt_8796' || addon.is_swatch;
                         let _aq = _sw ? qty : (item.addonQuantities[code] || 1);
-                        if (_isFabS) _aq = qty;
                         itemTotal += addon.price * _aq;
                     }
                 });
@@ -3296,22 +3289,38 @@ const newItem = {
     saveCart();
     renderCart();
 }
+// ★ 패브릭: 제품 수량 변경 시 후가공 수량도 비례 변경
+function _syncFabricAddonQty(item, oldQty, newQty) {
+    const cat = item.product && item.product.category;
+    const isFab = cat && window._getTopCategoryCode && window._getTopCategoryCode(cat) === '22222';
+    if (!isFab || !item.addonQuantities) return;
+    Object.keys(item.addonQuantities).forEach(code => {
+        const oldAq = item.addonQuantities[code] || 1;
+        // 비례 조정: 기존 비율 유지 (올림)
+        item.addonQuantities[code] = Math.max(1, Math.round(oldAq * newQty / oldQty));
+    });
+}
+
 window.updateCartQty = function(idx, delta) {
-    if (cartData[idx]) { 
-        let newQty = (cartData[idx].qty || 1) + delta; 
-        if (newQty < 1) newQty = 1; 
-        cartData[idx].qty = newQty; 
-        saveCart(); 
-        renderCart(); 
+    if (cartData[idx]) {
+        const oldQty = cartData[idx].qty || 1;
+        let newQty = oldQty + delta;
+        if (newQty < 1) newQty = 1;
+        _syncFabricAddonQty(cartData[idx], oldQty, newQty);
+        cartData[idx].qty = newQty;
+        saveCart();
+        renderCart();
     }
 };
 window.updateCartQtyInput = function(idx, val) {
-    let newQty = parseInt(val); 
-    if (!newQty || newQty < 1) newQty = 1; 
-    if (cartData[idx]) { 
-        cartData[idx].qty = newQty; 
-        saveCart(); 
-        renderCart(); 
+    let newQty = parseInt(val);
+    if (!newQty || newQty < 1) newQty = 1;
+    if (cartData[idx]) {
+        const oldQty = cartData[idx].qty || 1;
+        _syncFabricAddonQty(cartData[idx], oldQty, newQty);
+        cartData[idx].qty = newQty;
+        saveCart();
+        renderCart();
     }
 };
 
