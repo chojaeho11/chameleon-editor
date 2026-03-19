@@ -9698,6 +9698,9 @@ if (w >= 20 && h >= 20) {
             window.pendingSelectedAddons = selectedAddonCodes;
             window.pendingSelectedAddonQtys = selectedAddonQtys;
 
+            // ★ 수량을 localStorage에 저장 (에디터 → 장바구니에서 복원)
+            try { localStorage.setItem('pending_product_qty', String(finalQty)); } catch(e) {}
+
             // ★ 업로드된 파일이 있으면 에디터에서 불러올 수 있도록 저장
             if (window._pendingUploadedFiles && window._pendingUploadedFiles.length > 0) {
                 window._pendingEditorFiles = [...window._pendingUploadedFiles];
