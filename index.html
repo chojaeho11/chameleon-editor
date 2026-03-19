@@ -1290,8 +1290,9 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             const autoReplies = _autoMap[_sc] || _autoMap.KR;
             await _sb.from('order_inquiries').insert({ order_id: orderId, message: autoReplies[rating] || 'Thank you!', is_admin: true });
-            document.getElementById('otInquiryModal')?.remove();
-            loadOrders();
+            // 별점 UI만 업데이트 (창 닫지 않음)
+            const picker = document.getElementById('otStarPicker');
+            if (picker) picker.innerHTML = [1,2,3,4,5].map(n => `<span onclick="window.setOrderRating(${orderId},${n})" style="color:${n<=rating?'#f59e0b':'#e2e8f0'};">${n<=rating?'★':'☆'}</span>`).join('');
         };
 
         window.submitCustomerMsg = async function(orderId) {
@@ -1301,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const _sb = window.sb || window.supabaseClient;
             await _sb.from('order_inquiries').insert({ order_id: orderId, message: msg, is_admin: false });
             document.getElementById('otInquiryModal')?.remove();
-            window.openCustomerInquiry(orderId);
+            loadOrders();
         };
 
         // ★ 답변·감사 팝업 (관리자용 공개)
