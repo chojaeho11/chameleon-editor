@@ -1552,5 +1552,16 @@
   "ot_no_messages": "대화 내역이 없습니다.",
   "ot_btn_send": "전송",
   "ot_btn_reply": "답변",
-  "ot_reply_placeholder": "답변을 입력하세요"
+  "ot_reply_placeholder": "답변을 입력하세요",
+  "ot_btn_inquiry_pc": "문의·평가",
+  "ot_btn_inquiry_mb": "문의",
+  "ot_btn_reply_pc": "답변·감사",
+  "ot_btn_reply_mb": "답변",
+  "ot_btn_search": "검색",
+  "ot_st_접수됨": "접수완료",
+  "ot_st_칼선작업": "칼선작업",
+  "ot_st_제작중": "인쇄중",
+  "ot_st_완료됨": "제작완료",
+  "ot_st_발송완료": "배송중",
+  "ot_st_배송완료": "배송완료"
 }

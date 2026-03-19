@@ -1945,5 +1945,16 @@
   "ot_no_messages": "会話履歴がありません。",
   "ot_btn_send": "送信",
   "ot_btn_reply": "返信",
-  "ot_reply_placeholder": "返答を入力してください"
+  "ot_reply_placeholder": "返答を入力してください",
+  "ot_btn_inquiry_pc": "問合せ·評価",
+  "ot_btn_inquiry_mb": "問合せ",
+  "ot_btn_reply_pc": "返答·感謝",
+  "ot_btn_reply_mb": "返答",
+  "ot_btn_search": "検索",
+  "ot_st_접수됨": "受付完了",
+  "ot_st_칼선작업": "カット作業",
+  "ot_st_제작중": "印刷中",
+  "ot_st_완료됨": "製作完了",
+  "ot_st_발송완료": "配送中",
+  "ot_st_배송완료": "配送完了"
 }

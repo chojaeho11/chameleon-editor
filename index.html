@@ -940,8 +940,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <i class="fa-solid fa-truck-fast" style="color:#fff; font-size:16px;"></i>
                 <span class="ot-topbar-title" style="color:#fff; font-weight:800; font-size:15px;" data-i18n="order_tracker_title">주문 현황</span>
                 <div style="display:flex; gap:6px; align-items:center; flex:1; justify-content:flex-end;">
-                    <input type="text" id="orderTrackerSearch" placeholder="고객명/연락처" style="padding:5px 10px; border:none; border-radius:6px; font-size:11px; width:140px; outline:none;">
-                    <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; color:#1e3a8a;">검색</button>
+                    <input type="text" id="orderTrackerSearch" data-i18n-placeholder="order_tracker_search_placeholder" placeholder="고객명/연락처" style="padding:5px 10px; border:none; border-radius:6px; font-size:11px; width:140px; outline:none;">
+                    <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; color:#1e3a8a;" data-i18n="ot_btn_search">검색</button>
                 </div>
             </div>
             <div class="ot-header">
@@ -1016,6 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script>
     (function() {
+        const _t = (k, fb) => (window.t && window.t(k, fb)) || fb;
         const STATUS_STEPS = ['접수됨','칼선작업','제작중','완료됨','발송완료','배송완료'];
         const STATUS_LABELS = { '접수됨':'접수완료', '칼선작업':'칼선작업', '제작중':'인쇄중', '완료됨':'제작완료', '발송완료':'배송중', '배송완료':'배송완료' };
         const STATUS_COLORS = { '접수됨':'#3b82f6', '칼선작업':'#8b5cf6', '제작중':'#f59e0b', '완료됨':'#ef4444', '발송완료':'#06b6d4', '배송완료':'#64748b' };
@@ -1079,11 +1080,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="ot-col-ship">${shipDate || '-'}</span>
                     <span class="ot-col-flag">${flag}</span>
                     <div class="ot-col-photo">${renderPhotos(o)}</div>
-                    <div><button class="ot-btn ot-btn-ask" onclick="event.stopPropagation(); window.openCustomerInquiry(${o.id})"><span class="ot-pc">문의·평가</span><span class="ot-mb">문의</span></button></div>
-                    <div><button class="ot-btn ot-btn-reply" onclick="event.stopPropagation(); window.openAdminReplyPublic(${o.id})"><span class="ot-pc">답변·감사</span><span class="ot-mb">답변</span></button></div>
+                    <div><button class="ot-btn ot-btn-ask" onclick="event.stopPropagation(); window.openCustomerInquiry(${o.id})"><span class="ot-pc">${_t('ot_btn_inquiry_pc','문의·평가')}</span><span class="ot-mb">${_t('ot_btn_inquiry_mb','문의')}</span></button></div>
+                    <div><button class="ot-btn ot-btn-reply" onclick="event.stopPropagation(); window.openAdminReplyPublic(${o.id})"><span class="ot-pc">${_t('ot_btn_reply_pc','답변·감사')}</span><span class="ot-mb">${_t('ot_btn_reply_mb','답변')}</span></button></div>
                     <span class="ot-col-star">${stars}</span>
                     <div class="ot-col-steps">${renderSteps(status)}</div>
-                    <span class="ot-status-label" style="background:${color}15; color:${color};">${label}</span>
+                    <span class="ot-status-label" style="background:${color}15; color:${color};">${_t('ot_st_'+status, label)}</span>
                 </div>`;
             }).join('');
         }
@@ -1178,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div style="margin-bottom:8px;padding:8px 10px;border-radius:8px;background:${inq.is_admin ? '#ede9fe' : '#f0f9ff'};font-size:12px;">
                                 <div style="font-weight:700;color:${inq.is_admin ? '#7c3aed' : '#0369a1'};margin-bottom:2px;">${inq.is_admin ? '관리자' : name}</div>
                                 <div style="color:#334155;">${inq.message}</div>
-                                <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString('ko')}</div>
+                                <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString()}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -1231,7 +1232,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${(inquiries||[]).filter(i=>!i.is_admin).length===0 ? '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:8px;">'+(window.t&&window.t('ot_no_inquiry','아직 문의가 없습니다.'))+'</div>' : (inquiries||[]).filter(i=>!i.is_admin).map(inq => `
                         <div style="margin-bottom:6px;padding:8px;border-radius:8px;background:#f0f9ff;font-size:12px;">
                             <div style="color:#334155;">${inq.message}</div>
-                            <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString('ko')}</div>
+                            <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString()}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -1246,15 +1247,16 @@ document.addEventListener('DOMContentLoaded', function() {
         window.setOrderRating = async function(orderId, rating) {
             const _sb = window.sb || window.supabaseClient;
             await _sb.from('orders').update({ customer_review: rating }).eq('id', orderId);
-            // 별점 자동 답변
-            const autoReplies = {
-                5: '⭐ 최고 평점 감사합니다! 앞으로도 최선을 다하겠습니다. 😊',
-                4: '⭐ 좋은 평가 감사합니다! 더 나은 서비스로 보답하겠습니다.',
-                3: '평가해주셔서 감사합니다. 부족한 점은 개선하겠습니다.',
-                2: '소중한 의견 감사합니다. 불편하셨던 점 개선하겠습니다.',
-                1: '불편을 드려 죄송합니다. 빠르게 확인하여 개선하겠습니다.'
+            // 별점 자동 답변 (주문 국가별)
+            const { data: _ord } = await _sb.from('orders').select('site_code').eq('id', orderId).maybeSingle();
+            const _sc = (_ord && _ord.site_code) || 'KR';
+            const _autoMap = {
+                KR: { 5:'⭐ 최고 평점 감사합니다! 앞으로도 최선을 다하겠습니다. 😊', 4:'⭐ 좋은 평가 감사합니다! 더 나은 서비스로 보답하겠습니다.', 3:'평가해주셔서 감사합니다. 부족한 점은 개선하겠습니다.', 2:'소중한 의견 감사합니다. 불편하셨던 점 개선하겠습니다.', 1:'불편을 드려 죄송합니다. 빠르게 확인하여 개선하겠습니다.' },
+                JP: { 5:'⭐ 最高評価ありがとうございます！今後もベストを尽くします 😊', 4:'⭐ 高評価ありがとうございます！より良いサービスでお返しいたします。', 3:'ご評価ありがとうございます。改善に努めます。', 2:'貴重なご意見ありがとうございます。改善いたします。', 1:'ご不便をおかけし申し訳ございません。早急に改善いたします。' },
+                US: { 5:'⭐ Thank you for the perfect rating! We will continue to do our best 😊', 4:'⭐ Thank you for the great review! We appreciate your support.', 3:'Thank you for your feedback. We will work to improve.', 2:'Thank you for your feedback. We will address your concerns.', 1:'We apologize for the inconvenience. We will improve promptly.' }
             };
-            await _sb.from('order_inquiries').insert({ order_id: orderId, message: autoReplies[rating] || '평가 감사합니다.', is_admin: true });
+            const autoReplies = _autoMap[_sc] || _autoMap.KR;
+            await _sb.from('order_inquiries').insert({ order_id: orderId, message: autoReplies[rating] || 'Thank you!', is_admin: true });
             document.getElementById('otInquiryModal')?.remove();
             loadOrders();
         };
@@ -1284,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div style="margin-bottom:6px;padding:8px;border-radius:8px;background:${inq.is_admin?'#ede9fe':'#f0f9ff'};font-size:12px;">
                     <div style="font-weight:700;color:${inq.is_admin?'#7c3aed':'#0369a1'};font-size:11px;">${inq.is_admin?'💜 카멜레온':'💙 고객'}</div>
                     <div style="color:#334155;margin-top:2px;">${inq.message}</div>
-                    <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString('ko')}</div>
+                    <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString()}</div>
                 </div>
             `).join('');
 

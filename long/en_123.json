@@ -1948,5 +1948,16 @@
   "ot_no_messages": "No messages yet.",
   "ot_btn_send": "Send",
   "ot_btn_reply": "Reply",
-  "ot_reply_placeholder": "Enter your reply"
+  "ot_reply_placeholder": "Enter your reply",
+  "ot_btn_inquiry_pc": "Inquiry·Review",
+  "ot_btn_inquiry_mb": "Ask",
+  "ot_btn_reply_pc": "Reply·Thanks",
+  "ot_btn_reply_mb": "Reply",
+  "ot_btn_search": "Search",
+  "ot_st_접수됨": "Received",
+  "ot_st_칼선작업": "Cutting",
+  "ot_st_제작중": "Printing",
+  "ot_st_완료됨": "Completed",
+  "ot_st_발송완료": "Shipped",
+  "ot_st_배송완료": "Delivered"
 }
