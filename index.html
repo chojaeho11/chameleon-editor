@@ -647,22 +647,22 @@ if ('caches' in window) {
 <div id="startScreen">
 
 <!-- ★ 상단 카테고리 메뉴 바 -->
-<div id="topCatMenu" style="align-self:stretch; width:100%; background:#fff; border-bottom:1px solid #eee; padding:0; position:sticky; top:0; z-index:100;">
+<div id="topCatMenu" style="align-self:stretch; width:100%; background:#1e1b4b; border-bottom:none; padding:0; position:sticky; top:0; z-index:100;">
     <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;" id="topCatMenuTrack">
     </div>
 </div>
 <style>
 #topCatMenuTrack::-webkit-scrollbar { display:none; }
 #topCatMenu .tcm-btn {
-    flex-shrink:0; padding:12px 18px; font-size:14px; font-weight:700; color:#555;
+    flex-shrink:0; padding:14px 18px; font-size:14px; font-weight:700; color:rgba(255,255,255,0.75);
     background:none; border:none; cursor:pointer; white-space:nowrap; position:relative;
     transition:color 0.2s;
 }
-#topCatMenu .tcm-btn:hover { color:#111; }
-#topCatMenu .tcm-btn.active { color:#6366f1; }
+#topCatMenu .tcm-btn:hover { color:#fff; }
+#topCatMenu .tcm-btn.active { color:#fff; }
 #topCatMenu .tcm-btn.active::after {
     content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%);
-    width:60%; height:3px; background:#6366f1; border-radius:2px;
+    width:60%; height:3px; background:#818cf8; border-radius:2px;
 }
 #topCatDropdown {
     position:absolute; top:100%; left:0; right:0; background:#fff;
@@ -918,6 +918,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .kapu-sep{display:none;}
             .kapu-sub{font-size:13px; margin-top:1px;}
             .kapu-txt [data-i18n="btn_kapu_guide"]{font-size:15px;}
+            #chatbotBtnWrap { margin:6px auto 4px auto !important; padding:0 6px !important; }
+            #chatbotBtnWrap button { padding:10px 14px !important; }
         }
     </style>
     <div id="chatbotBtnWrap" style="text-align:center; margin: 20px auto 8px auto; max-width:1100px; padding:0 15px;">
