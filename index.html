@@ -943,7 +943,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="ot-header">
-                <span>고객명</span><span>주문일</span><span>발송일</span><span>사진</span><span>문의</span><span>답변</span><span>평점</span><span style="text-align:center;">진행상태</span><span style="text-align:center;">상태</span>
+                <span>고객명</span><span>주문일</span><span>발송일</span><span style="text-align:center;">사진</span><span style="text-align:center;">문의</span><span style="text-align:center;">답변</span><span style="text-align:center;">평점</span><span style="text-align:center;">진행상태</span><span style="text-align:center;">상태</span>
             </div>
             <div id="orderTrackerList" style="max-height:380px; overflow-y:auto; padding:0;">
                 <div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">주문 현황을 불러오는 중...</div>
@@ -956,16 +956,16 @@ document.addEventListener('DOMContentLoaded', function() {
     .ot-mb { display:none; }
     @media(max-width:768px) { .ot-pc { display:none; } .ot-mb { display:inline; } }
     /* PC: 고객명 | 주문일 | 발송일 | 사진 | 문의 | 답변 | 평점 | 진행상태 | 상태 */
-    .ot-header, .ot-row { display:grid; grid-template-columns: 80px 48px 48px 80px 52px 52px 80px 1fr 56px; align-items:center; padding:9px 14px; gap:6px; }
+    .ot-header, .ot-row { display:grid; grid-template-columns: 90px 50px 50px 90px 64px 64px 90px 1fr 64px; align-items:center; padding:9px 14px; gap:4px; }
     .ot-header { background:#f8fafc; font-size:10px; font-weight:700; color:#64748b; border-bottom:2px solid #e2e8f0; }
     .ot-row { border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
     .ot-row:hover { background:#f8fafc; }
     .ot-col-name { font-weight:700; font-size:12px; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
     .ot-col-date { font-size:10px; color:#64748b; }
     .ot-col-ship { font-size:10px; color:#10b981; font-weight:600; }
-    .ot-col-photo { display:flex; gap:3px; overflow:hidden; }
-    .ot-col-star { font-size:14px; color:#f59e0b; white-space:nowrap; letter-spacing:1px; }
-    .ot-btn { padding:4px 8px; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; display:block; text-align:center; }
+    .ot-col-photo { display:flex; gap:3px; overflow:hidden; justify-content:center; }
+    .ot-col-star { font-size:13px; color:#f59e0b; white-space:nowrap; letter-spacing:0.5px; text-align:center; min-height:18px; }
+    .ot-btn { padding:5px 0; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; display:block; text-align:center; width:100%; }
     .ot-btn-ask { background:#dbeafe; color:#1d4ed8; }
     .ot-btn-ask:hover { background:#bfdbfe; }
     .ot-btn-reply { background:#ede9fe; color:#7c3aed; }
@@ -977,7 +977,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .ot-step-bar { width:5px; height:2px; background:#e2e8f0; }
     .ot-step-bar.done { background:#10b981; }
     .ot-photo { width:28px; height:28px; border-radius:4px; object-fit:cover; border:1px solid #e2e8f0; cursor:pointer; }
-    .ot-status-label { font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px; white-space:nowrap; text-align:center; }
+    .ot-status-label { font-size:9px; font-weight:700; padding:3px 8px; border-radius:10px; white-space:nowrap; text-align:center; justify-self:center; }
     @media(max-width:768px) {
         .ot-topbar-title { display:none; }
         .ot-topbar { padding:8px 10px; }
