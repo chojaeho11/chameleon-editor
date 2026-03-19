@@ -1943,5 +1943,10 @@
   "ot_popup_inquiry": "📝 Inquiry · Review",
   "ot_popup_reply": "💬 Reply · Thanks",
   "ot_star_rating": "Star Rating",
-  "ot_inquiry_placeholder": "Leave your inquiry or review"
+  "ot_inquiry_placeholder": "Leave your inquiry or review",
+  "ot_no_inquiry": "No inquiries yet.",
+  "ot_no_messages": "No messages yet.",
+  "ot_btn_send": "Send",
+  "ot_btn_reply": "Reply",
+  "ot_reply_placeholder": "Enter your reply"
 }

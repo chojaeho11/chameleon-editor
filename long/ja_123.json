@@ -1940,5 +1940,10 @@
   "ot_popup_inquiry": "📝 お問合せ · 評価",
   "ot_popup_reply": "💬 返答 · 感謝",
   "ot_star_rating": "星評価",
-  "ot_inquiry_placeholder": "お問い合わせやレビューを入力してください"
+  "ot_inquiry_placeholder": "お問い合わせやレビューを入力してください",
+  "ot_no_inquiry": "まだお問い合わせはありません。",
+  "ot_no_messages": "会話履歴がありません。",
+  "ot_btn_send": "送信",
+  "ot_btn_reply": "返信",
+  "ot_reply_placeholder": "返答を入力してください"
 }

@@ -938,7 +938,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden;">
             <div class="ot-topbar">
                 <i class="fa-solid fa-truck-fast" style="color:#fff; font-size:16px;"></i>
-                <span class="ot-topbar-title" style="color:#fff; font-weight:800; font-size:15px;">주문 현황</span>
+                <span class="ot-topbar-title" style="color:#fff; font-weight:800; font-size:15px;" data-i18n="order_tracker_title">주문 현황</span>
                 <div style="display:flex; gap:6px; align-items:center; flex:1; justify-content:flex-end;">
                     <input type="text" id="orderTrackerSearch" placeholder="고객명/연락처" style="padding:5px 10px; border:none; border-radius:6px; font-size:11px; width:140px; outline:none;">
                     <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; color:#1e3a8a;">검색</button>
@@ -1228,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 <div style="max-height:180px;overflow-y:auto;margin-bottom:12px;">
-                    ${(inquiries||[]).filter(i=>!i.is_admin).length===0 ? '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:8px;">아직 문의가 없습니다.</div>' : (inquiries||[]).filter(i=>!i.is_admin).map(inq => `
+                    ${(inquiries||[]).filter(i=>!i.is_admin).length===0 ? '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:8px;">'+(window.t&&window.t('ot_no_inquiry','아직 문의가 없습니다.'))+'</div>' : (inquiries||[]).filter(i=>!i.is_admin).map(inq => `
                         <div style="margin-bottom:6px;padding:8px;border-radius:8px;background:#f0f9ff;font-size:12px;">
                             <div style="color:#334155;">${inq.message}</div>
                             <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString('ko')}</div>
@@ -1237,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div style="display:flex;gap:8px;">
                     <input type="text" id="otCustMsg_${orderId}" placeholder="${window.t&&window.t('ot_inquiry_placeholder','문의사항이나 후기를 남겨주세요')}" style="flex:1;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;" onkeydown="if(event.key==='Enter') window.submitCustomerMsg(${orderId})">
-                    <button onclick="window.submitCustomerMsg(${orderId})" style="padding:10px 16px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">전송</button>
+                    <button onclick="window.submitCustomerMsg(${orderId})" style="padding:10px 16px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">${window.t&&window.t('ot_btn_send','전송')}</button>
                 </div>
             </div>`;
             document.body.appendChild(ov);
@@ -1295,11 +1295,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div style="font-size:12px;color:#64748b;margin-top:4px;">주문 #${orderId} ${order?order.manager_name:''}</div>
                 </div>
                 <div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">
-                    ${allMsgs || '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">대화 내역이 없습니다.</div>'}
+                    ${allMsgs || '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">'+(window.t&&window.t('ot_no_messages','대화 내역이 없습니다.'))+'</div>'}
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <input type="text" id="otAdminMsg_${orderId}" placeholder="답변을 입력하세요" style="flex:1;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;" onkeydown="if(event.key==='Enter') window.submitAdminMsgPublic(${orderId})">
-                    <button onclick="window.submitAdminMsgPublic(${orderId})" style="padding:10px 16px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">답변</button>
+                    <input type="text" id="otAdminMsg_${orderId}" placeholder="${window.t&&window.t('ot_reply_placeholder','답변을 입력하세요')}" style="flex:1;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;" onkeydown="if(event.key==='Enter') window.submitAdminMsgPublic(${orderId})">
+                    <button onclick="window.submitAdminMsgPublic(${orderId})" style="padding:10px 16px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">${window.t&&window.t('ot_btn_reply','답변')}</button>
                 </div>
             </div>`;
             document.body.appendChild(ov);

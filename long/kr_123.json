@@ -1547,5 +1547,10 @@
   "ot_popup_inquiry": "📝 문의 · 평가",
   "ot_popup_reply": "💬 답변 · 감사",
   "ot_star_rating": "별점 평가",
-  "ot_inquiry_placeholder": "문의사항이나 후기를 남겨주세요"
+  "ot_inquiry_placeholder": "문의사항이나 후기를 남겨주세요",
+  "ot_no_inquiry": "아직 문의가 없습니다.",
+  "ot_no_messages": "대화 내역이 없습니다.",
+  "ot_btn_send": "전송",
+  "ot_btn_reply": "답변",
+  "ot_reply_placeholder": "답변을 입력하세요"
 }
