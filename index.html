@@ -1137,8 +1137,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modal) loadOrderDetail(orderId, modal);
         };
 
-        // 초기 로드
-        setTimeout(() => loadOrders(), 1500);
+        // 초기 로드 - sb가 준비될 때까지 대기
+        function waitAndLoad() {
+            const _sb = window.sb || window.supabaseClient;
+            if (_sb) { loadOrders(); }
+            else { setTimeout(waitAndLoad, 500); }
+        }
+        setTimeout(waitAndLoad, 1000);
     })();
     </script>
 

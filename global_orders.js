@@ -3440,9 +3440,9 @@ window.openProductionPhotoUpload = async function(orderId) {
             for (const f of files) {
                 const ext = f.name.split('.').pop();
                 const path = `production_photos/${orderId}_${Date.now()}_${Math.random().toString(36).substr(2,4)}.${ext}`;
-                const { error: upErr } = await sb.storage.from('order-files').upload(path, f, { upsert: true });
+                const { error: upErr } = await sb.storage.from('orders').upload(path, f, { upsert: true });
                 if (upErr) { console.error(upErr); continue; }
-                const { data: urlData } = sb.storage.from('order-files').getPublicUrl(path);
+                const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
                 if (urlData) urls.push(urlData.publicUrl);
             }
             if (urls.length) {
