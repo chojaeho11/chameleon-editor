@@ -8837,9 +8837,11 @@ window.updateModalTotal = function() {
         productTotal = unitPrice * prodQty;
     }
 
-    // 2. [옵션] 수량 및 가격 계산 (상품 수량과 무관하게 독립 계산)
+    // 2. [옵션] 수량 및 가격 계산
     let optionTotal = 0;
-    
+    const _topCatForAddon = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
+    const _isFabricProduct = _topCatForAddon === '22222';
+
     document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
         let price = parseFloat(chk.dataset.price || 0);
 
@@ -8856,6 +8858,11 @@ window.updateModalTotal = function() {
 
         // ★ 키링고리(opt_8796): 제품 수량만큼 자동 곱하기
         if (chk.dataset.catCode === 'opt_8796') {
+            optQty = prodQty;
+        }
+
+        // ★ 패브릭인쇄(22222): 후가공 옵션도 제품 수량만큼 곱하기
+        if (_isFabricProduct && optQty === 1) {
             optQty = prodQty;
         }
 
@@ -9613,6 +9620,7 @@ if (w >= 20 && h >= 20) {
         // 5. 옵션 수집 (코드 + 수량)
         const selectedAddonCodes = [];
         const selectedAddonQtys = {};
+        const _confirmFabric = window._getTopCategoryCode && window._getTopCategoryCode(product.category) === '22222';
         document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
             selectedAddonCodes.push(chk.value);
             const row = chk.closest('.addon-item-row') || chk.closest('.color-btn-item');
@@ -9623,6 +9631,10 @@ if (w >= 20 && h >= 20) {
             }
             // ★ 키링고리(opt_8796): 제품 수량만큼 자동 매칭
             if (chk.dataset.catCode === 'opt_8796') {
+                optQty = finalQty;
+            }
+            // ★ 패브릭인쇄(22222): 후가공 옵션도 제품 수량만큼
+            if (_confirmFabric && optQty === 1) {
                 optQty = finalQty;
             }
             selectedAddonQtys[chk.value] = optQty;

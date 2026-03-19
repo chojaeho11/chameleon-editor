@@ -1675,12 +1675,16 @@ function renderCart() {
         let baseProductTotal = (item.product.price || 0) * item.qty;
         let optionTotal = 0;
         
+        // ★ 패브릭인쇄(22222): 후가공 수량 = 제품 수량 연동
+        const _isFabricCart = item.product.category && window._getTopCategoryCode && window._getTopCategoryCode(item.product.category) === '22222';
+
         Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) {
-                // 키링고리(opt_8796) 등 스와치 카테고리: 수량 = 제품 수량 자동
                 const isSwatchAddon = addon.category_code === 'opt_8796' || addon.is_swatch;
-                const aq = isSwatchAddon ? item.qty : ((item.addonQuantities && item.addonQuantities[code]) || 1);
+                let aq = isSwatchAddon ? item.qty : ((item.addonQuantities && item.addonQuantities[code]) || 1);
+                // 패브릭: 후가공도 제품 수량만큼
+                if (_isFabricCart) aq = item.qty;
                 optionTotal += addon.price * aq;
             }
         });
@@ -1894,12 +1898,14 @@ function updateSummary(prodTotal, addonTotal, total) {
             let itemTotal = unitPrice * qty; 
             
             if (item.selectedAddons) {
+                const _isFabS = item.product.category && window._getTopCategoryCode && window._getTopCategoryCode(item.product.category) === '22222';
                 Object.values(item.selectedAddons).forEach(code => {
                     const db = typeof ADDON_DB !== 'undefined' ? ADDON_DB : (window.ADDON_DB || {});
                     const addon = db[code];
                     if (addon) {
                         const _sw = addon.category_code === 'opt_8796' || addon.is_swatch;
-                        const _aq = _sw ? qty : (item.addonQuantities[code] || 1);
+                        let _aq = _sw ? qty : (item.addonQuantities[code] || 1);
+                        if (_isFabS) _aq = qty;
                         itemTotal += addon.price * _aq;
                     }
                 });
