@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>제작사진 업로드 - Chameleon Staff</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard',sans-serif; background:#f1f5f9; min-height:100vh; }
+.top { background:linear-gradient(135deg,#1e3a8a,#3b82f6); padding:16px 20px; color:#fff; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.top h1 { font-size:16px; font-weight:800; }
+.top .staff-badge { font-size:11px; background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:20px; }
+.search-bar { padding:12px 16px; background:#fff; border-bottom:1px solid #e2e8f0; position:sticky; top:52px; z-index:99; }
+.search-bar input { width:100%; padding:10px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; }
+.search-bar input:focus { border-color:#3b82f6; }
+.order-list { padding:8px; }
+.order-card { background:#fff; border-radius:12px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); overflow:hidden; }
+.order-header { padding:12px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.order-header:active { background:#f8fafc; }
+.order-info { display:flex; align-items:center; gap:10px; }
+.order-id { font-size:12px; color:#64748b; font-weight:600; }
+.order-name { font-size:15px; font-weight:800; color:#1e293b; }
+.order-status { font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; }
+.order-detail { display:none; padding:0 14px 14px; }
+.order-detail.open { display:block; }
+.order-items { font-size:12px; color:#64748b; margin-bottom:10px; line-height:1.6; }
+.photo-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:12px; }
+.photo-cell { position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:#f1f5f9; }
+.photo-cell img { width:100%; height:100%; object-fit:cover; }
+.photo-cell .del-btn { position:absolute; top:4px; right:4px; width:24px; height:24px; border-radius:50%; background:rgba(239,68,68,0.9); color:#fff; border:none; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.upload-area { border:2px dashed #cbd5e1; border-radius:10px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; }
+.upload-area:active { border-color:#3b82f6; background:#eff6ff; }
+.upload-area i { font-size:28px; color:#94a3b8; margin-bottom:6px; }
+.upload-area p { font-size:12px; color:#94a3b8; font-weight:600; }
+.upload-area .limit { font-size:10px; color:#cbd5e1; margin-top:4px; }
+.loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; }
+.loading-overlay.show { display:flex; }
+.loading-spinner { background:#fff; border-radius:16px; padding:30px; text-align:center; }
+.loading-spinner i { font-size:36px; color:#3b82f6; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:1000; display:none; }
+.toast.show { display:block; animation:fadeInOut 2s; }
+@keyframes fadeInOut { 0%{opacity:0;transform:translateX(-50%) translateY(10px)} 15%{opacity:1;transform:translateX(-50%) translateY(0)} 85%{opacity:1} 100%{opacity:0} }
+.empty { text-align:center; padding:40px 20px; color:#94a3b8; }
+.empty i { font-size:48px; margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+    <h1><i class="fa-solid fa-camera"></i> 제작사진 업로드</h1>
+    <span class="staff-badge"><i class="fa-solid fa-user-gear"></i> Staff</span>
+</div>
+
+<div class="search-bar">
+    <input type="text" id="searchInput" placeholder="고객명, 연락처, 주문번호 검색" oninput="searchOrders(this.value)">
+</div>
+
+<div id="orderList" class="order-list">
+    <div class="empty"><i class="fa-solid fa-spinner fa-spin"></i><p>주문 목록 불러오는 중...</p></div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <i class="fa-solid fa-circle-notch"></i>
+        <p style="margin-top:10px;font-size:13px;color:#64748b;">업로드 중...</p>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb = supabase.createClient(
+    'https://qinvtnhiidtmrzosyvys.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+);
+
+const STATUS_COLORS = { '접수됨':'#3b82f6', '칼선작업':'#8b5cf6', '제작중':'#f59e0b', '완료됨':'#ef4444', '발송완료':'#06b6d4', '배송완료':'#64748b' };
+const STATUS_LABELS = { '접수됨':'접수완료', '칼선작업':'칼선작업', '제작중':'인쇄중', '완료됨':'제작완료', '발송완료':'배송중', '배송완료':'배송완료' };
+
+let allOrders = [];
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+async function loadOrders() {
+    const { data, error } = await sb.from('orders')
+        .select('id, manager_name, phone, status, items, production_photos, created_at, site_code')
+        .not('status', 'in', '("임시작성","관리자차단","취소됨")')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+    if (error) { console.error(error); return; }
+    allOrders = data || [];
+    renderOrders(allOrders);
+}
+
+function searchOrders(q) {
+    if (!q.trim()) { renderOrders(allOrders); return; }
+    const kw = q.trim().toLowerCase();
+    const filtered = allOrders.filter(o =>
+        (o.manager_name || '').toLowerCase().includes(kw) ||
+        (o.phone || '').includes(kw) ||
+        String(o.id).includes(kw)
+    );
+    renderOrders(filtered);
+}
+
+function renderOrders(orders) {
+    const list = document.getElementById('orderList');
+    if (!orders.length) {
+        list.innerHTML = '<div class="empty"><i class="fa-solid fa-box-open"></i><p>주문이 없습니다</p></div>';
+        return;
+    }
+    list.innerHTML = orders.map(o => {
+        const status = o.status || '접수됨';
+        const color = STATUS_COLORS[status] || '#3b82f6';
+        const label = STATUS_LABELS[status] || status;
+        const photos = o.production_photos || [];
+        const items = (o.items || []).map(it => it.product_name || it.name || '').filter(Boolean);
+        const FLAGS = { KR:'🇰🇷', JP:'🇯🇵', US:'🇺🇸', CN:'🇨🇳', SA:'🇸🇦', ES:'🇪🇸', DE:'🇩🇪', FR:'🇫🇷' };
+        const flag = FLAGS[o.site_code] || '🇰🇷';
+
+        return `<div class="order-card">
+            <div class="order-header" onclick="toggleOrder(this)">
+                <div class="order-info">
+                    <span style="font-size:18px;">${flag}</span>
+                    <div>
+                        <div class="order-id">#${o.id}</div>
+                        <div class="order-name">${o.manager_name || '고객'}</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    ${photos.length ? `<span style="font-size:11px;color:#10b981;font-weight:700;">📷 ${photos.length}</span>` : ''}
+                    <span class="order-status" style="background:${color}15;color:${color};">${label}</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size:12px;color:#94a3b8;transition:transform 0.2s;"></i>
+                </div>
+            </div>
+            <div class="order-detail" data-id="${o.id}">
+                ${items.length ? `<div class="order-items">${items.map(n => '• ' + n).join('<br>')}</div>` : ''}
+                <div class="photo-grid" id="photoGrid_${o.id}">
+                    ${photos.map((url, i) => `
+                        <div class="photo-cell">
+                            <img src="${thumbUrl(url)}" onclick="window.open('${url}','_blank')">
+                            <button class="del-btn" onclick="deletePhoto(${o.id}, ${i})"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="upload-area" onclick="uploadPhotos(${o.id})">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p>사진 촬영 또는 선택</p>
+                    <div class="limit">${photos.length}/6장 (최대 6장)</div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function thumbUrl(url) {
+    if (url && url.includes('/storage/v1/object/public/')) {
+        return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + '?width=200&height=200&resize=cover';
+    }
+    return url;
+}
+
+function toggleOrder(el) {
+    const detail = el.nextElementSibling;
+    const icon = el.querySelector('.fa-chevron-down');
+    detail.classList.toggle('open');
+    if (icon) icon.style.transform = detail.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+function uploadPhotos(orderId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.capture = 'environment'; // 카메라 우선
+    input.onchange = async () => {
+        const files = Array.from(input.files).slice(0, 6);
+        if (!files.length) return;
+
+        document.getElementById('loadingOverlay').classList.add('show');
+        try {
+            const urls = [];
+            for (const f of files) {
+                // 리사이즈 (최대 1200px)
+                const resized = await resizeImage(f, 1200);
+                const ext = f.name.split('.').pop() || 'jpg';
+                const path = `production_photos/${orderId}_${Date.now()}_${Math.random().toString(36).substr(2,4)}.${ext}`;
+                const { error } = await sb.storage.from('orders').upload(path, resized, { upsert: true, contentType: resized.type });
+                if (error) { console.error(error); continue; }
+                const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+                if (urlData) urls.push(urlData.publicUrl);
+            }
+            if (urls.length) {
+                const { data: order } = await sb.from('orders').select('production_photos').eq('id', orderId).maybeSingle();
+                const existing = (order && order.production_photos) || [];
+                const allPhotos = [...existing, ...urls].slice(0, 6);
+                await sb.from('orders').update({ production_photos: allPhotos }).eq('id', orderId);
+                showToast(`✅ ${urls.length}장 업로드 완료`);
+                await loadOrders();
+                // 해당 주문 열기
+                setTimeout(() => {
+                    const detail = document.querySelector(`[data-id="${orderId}"]`);
+                    if (detail && !detail.classList.contains('open')) detail.classList.add('open');
+                }, 100);
+            }
+        } catch(e) { console.error(e); showToast('❌ 업로드 실패'); }
+        document.getElementById('loadingOverlay').classList.remove('show');
+    };
+    input.click();
+}
+
+async function deletePhoto(orderId, idx) {
+    if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+    const { data: order } = await sb.from('orders').select('production_photos').eq('id', orderId).maybeSingle();
+    const photos = (order && order.production_photos) || [];
+    photos.splice(idx, 1);
+    await sb.from('orders').update({ production_photos: photos }).eq('id', orderId);
+    showToast('🗑️ 사진 삭제됨');
+    await loadOrders();
+    setTimeout(() => {
+        const detail = document.querySelector(`[data-id="${orderId}"]`);
+        if (detail && !detail.classList.contains('open')) detail.classList.add('open');
+    }, 100);
+}
+
+// 이미지 리사이즈 (모바일 대용량 사진 최적화)
+function resizeImage(file, maxSize) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxSize || h > maxSize) {
+                if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+                else { w = Math.round(w * maxSize / h); h = maxSize; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.85);
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+// 초기 로드
+loadOrders();
+</script>
+</body>
+</html>
