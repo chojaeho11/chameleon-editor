@@ -1073,9 +1073,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 list.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">현재 진행중인 주문이 없습니다.</div>';
                 return;
             }
-            // ★ JP 3건 + US 3건 상단 고정, 나머지는 사진 있는 것 우선
+            // ★ JP 3건 + US 1건 상단 고정, 나머지는 사진 있는 것 우선
             const jpTop = orders.filter(o => o.site_code === 'JP').slice(0, 3);
-            const usTop = orders.filter(o => o.site_code === 'US').slice(0, 3);
+            const usTop = orders.filter(o => o.site_code === 'US').slice(0, 1);
             const pinnedIds = new Set([...jpTop, ...usTop].map(o => o.id));
             const rest = orders.filter(o => !pinnedIds.has(o.id));
             const withPhotos = rest.filter(o => o.production_photos && o.production_photos.length > 0);
