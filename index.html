@@ -1005,10 +1005,17 @@ document.addEventListener('DOMContentLoaded', function() {
             return html;
         }
 
+        function thumbUrl(url) {
+            // Supabase Storage Transform: 40px 리사이즈
+            if (url && url.includes('/storage/v1/object/public/')) {
+                return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + '?width=40&height=40&resize=cover';
+            }
+            return url;
+        }
         function renderPhotos(order) {
             const photos = order.production_photos || [];
             if (!photos.length) return '';
-            return photos.slice(0, 3).map(url => `<img src="${url}" class="ot-photo" loading="lazy" onclick="event.stopPropagation(); window.open('${url}','_blank')">`).join('');
+            return photos.slice(0, 3).map(url => `<img src="${thumbUrl(url)}" class="ot-photo" loading="lazy" onclick="event.stopPropagation(); window.open('${url}','_blank')">`).join('');
         }
 
         function renderOrders(orders) {
