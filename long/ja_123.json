@@ -1925,5 +1925,16 @@
   "coupon_hc_label": "🏗️ ハニカムボード特別特典",
   "coupon_hc_title": "展示ブース無料制作",
   "coupon_hc_desc": "制作+配送+設置 すべて無料（10万円以内）",
-  "coupon_detail_btn": "詳しく見る →"
+  "coupon_detail_btn": "詳しく見る →",
+  "ot_h_name": "顧客名",
+  "ot_h_order": "注文日",
+  "ot_h_ship": "発送日",
+  "ot_h_photo": "写真",
+  "ot_h_inquiry": "問合せ",
+  "ot_h_reply": "返答",
+  "ot_h_rating": "評価",
+  "ot_h_progress": "進行状態",
+  "ot_h_status": "状態",
+  "order_tracker_title": "注文状況",
+  "order_tracker_search_placeholder": "顧客名/連絡先"
 }

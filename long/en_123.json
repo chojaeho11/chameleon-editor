@@ -1928,5 +1928,16 @@
   "coupon_hc_label": "🏗️ Honeycomb Board Special",
   "coupon_hc_title": "Free Booth Production",
   "coupon_hc_desc": "Production + Shipping + Installation FREE (under $700)",
-  "coupon_detail_btn": "Learn More →"
+  "coupon_detail_btn": "Learn More →",
+  "ot_h_name": "Customer",
+  "ot_h_order": "Ordered",
+  "ot_h_ship": "Ship",
+  "ot_h_photo": "Photo",
+  "ot_h_inquiry": "Inquiry",
+  "ot_h_reply": "Reply",
+  "ot_h_rating": "Rating",
+  "ot_h_progress": "Progress",
+  "ot_h_status": "Status",
+  "order_tracker_title": "Order Status",
+  "order_tracker_search_placeholder": "Name/Phone"
 }

@@ -1532,5 +1532,16 @@
   "coupon_hc_label": "🏗️ 허니콤보드 특별 혜택",
   "coupon_hc_title": "전시부스 무료 제작",
   "coupon_hc_desc": "해외: 제작+배송+설치 무료 | 한국: 100만원 할인",
-  "coupon_detail_btn": "자세히 보기 →"
+  "coupon_detail_btn": "자세히 보기 →",
+  "ot_h_name": "고객명",
+  "ot_h_order": "주문일",
+  "ot_h_ship": "발송일",
+  "ot_h_photo": "사진",
+  "ot_h_inquiry": "문의",
+  "ot_h_reply": "답변",
+  "ot_h_rating": "평점",
+  "ot_h_progress": "진행상태",
+  "ot_h_status": "상태",
+  "order_tracker_title": "주문 현황",
+  "order_tracker_search_placeholder": "고객명/연락처"
 }

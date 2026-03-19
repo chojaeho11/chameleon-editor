@@ -945,7 +945,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="ot-header">
-                <span>고객명</span><span>주문일</span><span>발송일</span><span style="text-align:center;">사진</span><span style="text-align:center;">문의</span><span style="text-align:center;">답변</span><span style="text-align:center;">평점</span><span style="text-align:center;">진행상태</span><span style="text-align:center;">상태</span>
+                <span data-i18n="ot_h_name">고객명</span><span data-i18n="ot_h_order">주문일</span><span data-i18n="ot_h_ship">발송일</span><span style="text-align:center;" data-i18n="ot_h_photo">사진</span><span style="text-align:center;" data-i18n="ot_h_inquiry">문의</span><span style="text-align:center;" data-i18n="ot_h_reply">답변</span><span style="text-align:center;" data-i18n="ot_h_rating">평점</span><span style="text-align:center;" data-i18n="ot_h_progress">진행상태</span><span style="text-align:center;" data-i18n="ot_h_status">상태</span>
             </div>
             <div id="orderTrackerList" style="max-height:380px; overflow-y:auto; padding:0;">
                 <div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">주문 현황을 불러오는 중...</div>
@@ -1036,6 +1036,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return html;
         }
 
+        const COUNTRY_FLAGS = { KR:'🇰🇷', JP:'🇯🇵', US:'🇺🇸', CN:'🇨🇳', SA:'🇸🇦', ES:'🇪🇸', DE:'🇩🇪', FR:'🇫🇷' };
+
         function thumbUrl(url) {
             // Supabase Storage Transform: 40px 리사이즈
             if (url && url.includes('/storage/v1/object/public/')) {
@@ -1064,11 +1066,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const shipDate = o.delivery_target_date ? new Date(o.delivery_target_date).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
                 const rating = o.customer_review || 0;
                 const stars = rating > 0 ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '';
+                const flag = COUNTRY_FLAGS[o.site_code] || '🇰🇷';
                 return `<div class="ot-row">
                     <span class="ot-col-name" onclick="window.openOrderDetail(${o.id})">${name}</span>
                     <span class="ot-col-date">${orderDate}</span>
                     <span class="ot-col-ship">${shipDate || '-'}</span>
-                    <div class="ot-col-photo">${renderPhotos(o)}</div>
+                    <div class="ot-col-photo"><span style="font-size:16px;flex-shrink:0;">${flag}</span>${renderPhotos(o)}</div>
                     <div><button class="ot-btn ot-btn-ask" onclick="event.stopPropagation(); window.openCustomerInquiry(${o.id})"><span class="ot-pc">문의·평가</span><span class="ot-mb">문의</span></button></div>
                     <div><button class="ot-btn ot-btn-reply" onclick="event.stopPropagation(); window.openAdminReplyPublic(${o.id})"><span class="ot-pc">답변·감사</span><span class="ot-mb">답변</span></button></div>
                     <span class="ot-col-star">${stars}</span>
@@ -1083,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const _sb = window.sb || window.supabaseClient;
                 if (!_sb) return;
                 let query = _sb.from('orders')
-                    .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review')
+                    .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review, site_code')
                     .not('status', 'in', '("임시작성","관리자차단","취소됨")')
                     .order('created_at', { ascending: false })
                     .limit(100);
