@@ -1210,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div id="inquiryList" style="max-height:200px;overflow-y:auto;margin-bottom:12px;">
                         ${(inquiries || []).length === 0 ? '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">문의 내역이 없습니다.</div>' : (inquiries || []).map(inq => `
                             <div style="margin-bottom:8px;padding:8px 10px;border-radius:8px;background:${inq.is_admin ? '#ede9fe' : '#f0f9ff'};font-size:12px;">
-                                <div style="font-weight:700;color:${inq.is_admin ? '#7c3aed' : '#0369a1'};margin-bottom:2px;">${inq.is_admin ? '관리자' : name}</div>
+                                <div style="font-weight:700;color:${inq.is_admin ? '#7c3aed' : '#0369a1'};margin-bottom:2px;">${inq.is_admin ? _t('ot_label_admin','Chameleon') : name}</div>
                                 <div style="color:#334155;">${inq.message}</div>
                                 <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString()}</div>
                             </div>
@@ -1318,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const allMsgs = (inquiries||[]).map(inq => `
                 <div style="margin-bottom:6px;padding:8px;border-radius:8px;background:${inq.is_admin?'#ede9fe':'#f0f9ff'};font-size:12px;">
-                    <div style="font-weight:700;color:${inq.is_admin?'#7c3aed':'#0369a1'};font-size:11px;">${inq.is_admin?'💜 카멜레온':'💙 고객'}</div>
+                    <div style="font-weight:700;color:${inq.is_admin?'#7c3aed':'#0369a1'};font-size:11px;">${inq.is_admin? '💜 ' + _t('ot_label_admin','Chameleon') : '💙 ' + _t('ot_label_customer','Customer')}</div>
                     <div style="color:#334155;margin-top:2px;">${inq.message}</div>
                     <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${new Date(inq.created_at).toLocaleString()}</div>
                 </div>

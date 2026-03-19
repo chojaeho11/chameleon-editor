@@ -1959,5 +1959,7 @@
   "ot_st_제작중": "Printing",
   "ot_st_완료됨": "Completed",
   "ot_st_발송완료": "Shipped",
-  "ot_st_배송완료": "Delivered"
+  "ot_st_배송완료": "Delivered",
+  "ot_label_admin": "Chameleon",
+  "ot_label_customer": "Customer"
 }
