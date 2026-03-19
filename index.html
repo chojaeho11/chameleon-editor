@@ -1011,11 +1011,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 const status = o.status || '접수됨';
                 const color = STATUS_COLORS[status] || '#3b82f6';
                 const label = STATUS_LABELS[status] || status;
-                const items = (o.items || []).map(it => it.product_name || it.name || '').filter(Boolean).join(', ');
                 const _nm = o.manager_name || '고객'; const name = _nm.length > 1 ? _nm.slice(0, -1) + '*' : _nm;
+                const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
+                const _shipSrc = o.delivery_target_date || o.created_at;
+                const shipDate = (o.status === '발송완료' || o.status === '배송완료') && _shipSrc ? new Date(_shipSrc).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
                 return `<div class="ot-row" onclick="window.openOrderDetail(${o.id})">
                     <span class="ot-name">${name}</span>
-                    <span class="ot-item">${items || '주문 상품'}</span>
+                    <span class="ot-dates" style="font-size:11px;color:#64748b;min-width:100px;">
+                        <span>주문 ${orderDate}</span>
+                        ${shipDate ? `<br><span style="color:#10b981;">발송 ${shipDate}</span>` : ''}
+                    </span>
                     <div class="ot-photos">${renderPhotos(o)}</div>
                     <div class="ot-steps">${renderSteps(status)}</div>
                     <span class="ot-status-label" style="background:${color}15; color:${color};">${label}</span>
@@ -1028,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const _sb = window.sb || window.supabaseClient;
                 if (!_sb) return;
                 let query = _sb.from('orders')
-                    .select('id, manager_name, phone, status, items, production_photos, created_at')
+                    .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date')
                     .not('status', 'in', '("임시작성","관리자차단","취소됨")')
                     .order('created_at', { ascending: false })
                     .limit(100);
