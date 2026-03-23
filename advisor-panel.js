@@ -228,14 +228,73 @@ function openPanel() {
 // ─── 헤더 전화/이메일 링크 ───
 function _getContactLinks() {
     const lang = getLang();
-    const phones = { kr: { num: '031-366-1984', label: '031-366-1984' }, ja: { num: '047-712-1148', label: '047-712-1148' } };
-    const ph = phones[lang];
-    let html = '';
-    if (ph) {
-        html += `<a href="tel:${ph.num}" class="adv-header-btn" title="${ph.label}" style="text-decoration:none;font-size:11px;color:#fff;display:flex;align-items:center;gap:3px;"><i class="fa-solid fa-phone" style="font-size:12px;"></i></a>`;
-    }
-    html += `<a href="mailto:design@chameleon.design" class="adv-header-btn" title="design@chameleon.design" style="text-decoration:none;color:#fff;"><i class="fa-solid fa-envelope" style="font-size:12px;"></i></a>`;
+    let html = '<div style="display:flex;align-items:center;gap:4px;">';
+    // 전화 버튼 (팝업으로 상세 안내)
+    const phoneLabels = { kr: '전화', ja: 'TEL', en: 'Call' };
+    html += `<button class="adv-header-btn" id="advPhoneBtn" style="font-size:12px;display:flex;align-items:center;gap:3px;padding:4px 8px;">
+        <i class="fa-solid fa-phone"></i> <span style="font-size:11px;font-weight:700;">${phoneLabels[lang] || 'Call'}</span>
+    </button>`;
+    // 이메일 버튼
+    html += `<a href="mailto:design@chameleon.design" class="adv-header-btn" style="text-decoration:none;color:#fff;font-size:12px;display:flex;align-items:center;gap:3px;padding:4px 8px;">
+        <i class="fa-solid fa-envelope"></i> <span style="font-size:11px;font-weight:700;">Email</span>
+    </a>`;
+    html += '</div>';
     return html;
+}
+
+function _showPhonePopup() {
+    const lang = getLang();
+    const popups = {
+        kr: `<div style="text-align:center;margin-bottom:16px;font-size:36px;">📞</div>
+            <div style="font-size:16px;font-weight:800;color:#333;text-align:center;margin-bottom:18px;">전화 문의 안내</div>
+            <div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+                <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">🏭 본사(출고문의)</div>
+                <a href="tel:031-366-1984" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:15px;font-weight:700;">
+                    <i class="fa-solid fa-phone" style="color:#16a34a;"></i> 031-366-1984</a>
+            </div>
+            <div style="background:#ede9fe;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+                <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;">👤 제품문의 담당 매니저</div>
+                <a href="tel:010-3455-1946" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
+                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 지숙 매니저 010-3455-1946</a>
+                <a href="tel:010-7793-5393" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
+                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 은미 매니저 010-7793-5393</a>
+                <a href="tel:010-3490-3328" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">
+                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-3490-3328</a>
+            </div>
+            <div style="background:#eff6ff;border-radius:12px;padding:12px 16px;margin-bottom:6px;">
+                <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:4px;">✉️ 이메일</div>
+                <a href="mailto:design@chameleon.design" style="color:#2563eb;font-size:14px;font-weight:700;text-decoration:none;">design@chameleon.design</a>
+            </div>
+            <div style="text-align:center;font-size:11px;color:#94a3b8;margin-top:8px;">⏰ 상담시간: 평일 09:00~18:00</div>`,
+        ja: `<div style="text-align:center;margin-bottom:16px;font-size:36px;">📞</div>
+            <div style="font-size:16px;font-weight:800;color:#333;text-align:center;margin-bottom:18px;">お問い合わせ</div>
+            <div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+                <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">🇯🇵 日本オフィス</div>
+                <a href="tel:047-712-1148" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:18px;font-weight:700;">
+                    <i class="fa-solid fa-phone" style="color:#16a34a;"></i> 047-712-1148</a>
+            </div>
+            <div style="background:#eff6ff;border-radius:12px;padding:12px 16px;margin-bottom:6px;">
+                <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:4px;">✉️ メール</div>
+                <a href="mailto:design@chameleon.design" style="color:#2563eb;font-size:14px;font-weight:700;text-decoration:none;">design@chameleon.design</a>
+            </div>
+            <div style="text-align:center;font-size:11px;color:#94a3b8;margin-top:8px;">⏰ 営業時間: 平日 09:00〜18:00</div>`,
+        en: `<div style="text-align:center;margin-bottom:16px;font-size:36px;">📞</div>
+            <div style="font-size:16px;font-weight:800;color:#333;text-align:center;margin-bottom:18px;">Contact Us</div>
+            <div style="background:#eff6ff;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+                <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:4px;">✉️ Email</div>
+                <a href="mailto:design@chameleon.design" style="color:#2563eb;font-size:16px;font-weight:700;text-decoration:none;">design@chameleon.design</a>
+            </div>
+            <div style="text-align:center;font-size:11px;color:#94a3b8;margin-top:8px;">⏰ Business hours: Weekdays 09:00-18:00 (KST)</div>`,
+    };
+    const content = popups[lang] || popups['en'];
+    const closeLabel = lang === 'kr' ? '닫기' : lang === 'ja' ? '閉じる' : 'Close';
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 28px 20px;max-width:360px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2);">' +
+        content +
+        '<div onclick="this.closest(\'div[style*=inset]\').remove()" style="text-align:center;margin-top:14px;font-size:13px;color:#999;cursor:pointer;font-weight:600;">' + closeLabel + '</div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', (e) => { if(e.target===ov) ov.remove(); });
 }
 
 // ─── 패널 UI 생성 ───
@@ -291,6 +350,10 @@ function buildPanelUI() {
         clearChat();
         clearLiveState();
     });
+
+    // 전화 안내 팝업
+    const phoneBtn = document.getElementById('advPhoneBtn');
+    if (phoneBtn) phoneBtn.addEventListener('click', _showPhonePopup);
 
     // 상담사 연결
     document.getElementById('advConsultantBtn').addEventListener('click', () => {
