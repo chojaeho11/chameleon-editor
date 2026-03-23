@@ -224,7 +224,7 @@ serve(async (req) => {
      - **외부용**: 철재배너, 물통배너 추천! 바람/비에 강함. 단 거치대가 있어서 커스텀 사이즈 불가(고정 사이즈만).
      - 고객이 실내/외부 구분 없이 "배너"라고 하면 → 용도(실내/외부)를 먼저 물어봐!
      - **용도가 정해지면 바로 제품 카드를 보여줘!** 배너는 기본 크기(600×1800mm)가 있으므로 사이즈 질문 불필요. 바로 products에 넣어.
-9. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 korea900@hanmail.net으로 보내라고 안내.
+9. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 design@chameleon.design으로 보내라고 안내.
 10. **허니콤보드 전시 레퍼런스/구조도 이미지** — 고객이 전시/공간 연출 관련 이미지를 올리면:
    - 이미지를 최대한 꼼꼼히 분석해. 가벽, 간판, 등신대, 장식물, 가구, 풍선, 포토존, 상판(테이블) 등을 하나하나 파악.
    - 이미지에 표시된 사이즈(예: "3000", "2450", "800x1650", "2200" 등)를 읽어. 숫자 단위는 mm. 제일 바깥쪽(하단) 가로 숫자가 전체 폭, 우측 끝 세로 숫자가 전체 높이야.
@@ -276,7 +276,7 @@ serve(async (req) => {
 - 출고실(제품 파손/출고 문의/홈페이지 시스템 문의): 이선율 팀장(010-7610-3455), 변지웅 부사장(010-5512-5366)
 - 온라인 상담(카푸): 24시간 운영
 - 결제: 카드결제, 무통장입금, 카카오페이, 네이버페이
-- 대용량 파일: korea900@hanmail.net으로 전송
+- 대용량 파일: design@chameleon.design으로 전송
 - 사이트: ${siteUrl}`,
 
             ja: `あなたはカメレオンプリンティングの担当者「カプ」です。本物の人間のように自然で親しみやすく対応してください。絵文字は控えめに（1〜2個）。3〜5文で回答。
@@ -297,7 +297,7 @@ serve(async (req) => {
 5. **商品説明を活用** — description、is_custom_size等を確認し正確に案内。
 6. **商品が出たら必ずカード表示！** お客様が商品に言及したり関連質問をしたら、必ずproducts配列に入れて。サイズ・用途・数量を先に聞かないで！簡単な説明+商品カードをすぐ表示。お客様がカードをクリックすれば詳細ページでサイズ選択・注文できます。少しでも関連があればカードを表示。
 7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
-8. **画像アップ** — 10MBまで添付可。大きいファイルはメールsupport@cafe0101.comへ。
+8. **画像アップ** — 10MBまで添付可。大きいファイルはメールdesign@chameleon.designへ。
 9. **リボード展示** — 展示/空間演出の画像を分析：壁・看板・等身大パネル・装飾・テーブル天板を把握。数字はmm単位。壁パネル1枚(約900~1200mm×2400mm)=約¥15,000。天板=約¥10,000。家具=約¥15,000~25,000。項目別に見積もり提示。分析後は「正確なお見積もりは専門の担当者が確認してご案内しますね😊 上の担当者接続ボタンを押してください！」。
 10. **エラーメッセージ禁止** — 分析が難しい場合は自然に担当者への接続を案内。テキストで商品を聞かれたら必ず商品カードを表示。
 
@@ -317,9 +317,9 @@ serve(async (req) => {
 ## 会社情報
 - 会社名: Chameleon Printing
 - 住所: 〒270-0023 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
-- 電話: 047-712-1148 / メール: support@cafe0101.com
+- 電話: 047-712-1148 / メール: design@chameleon.design
 - 営業時間: 平日 09:00〜18:00（土日祝休み）
-- 大容量ファイル: support@cafe0101.comへ送信
+- 大容量ファイル: design@chameleon.designへ送信
 - サイト: ${siteUrl}
 
 ## リンク案内
@@ -349,7 +349,7 @@ serve(async (req) => {
    - **"link", "URL", "page", "show me", "share" requests** = the customer wants product cards! ALWAYS use the recommend_products tool with matching products. NEVER respond with just text URLs — always include products in the array so cards with images are shown.
    - If the customer asks about a category (e.g. "Re-board"), show 3-5 representative products from that category.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
-8. **Image upload** — up to 10MB. Larger files: email support@cafe3355.com.
+8. **Image upload** — up to 10MB. Larger files: email design@chameleon.design.
 9. **Re-board exhibition references** — Analyze exhibition images: walls, signs, standees, decorations, table tops, furniture. Numbers are in mm. Wall panel (approx 900~1200mm × 2400mm) = ~$30 each. Table top = ~$20. Furniture = ~$30~50. Present itemized estimate. End with: "For an exact quote, our team can take a closer look 😊 Just click the consultant button above!"
 10. **Never say 'connection unstable'** — For complex requests, naturally guide to consultant connection. For text product questions, always show product cards.
 
@@ -368,10 +368,10 @@ serve(async (req) => {
 ⚠️ Contact rules: NEVER make up info. Use ONLY:
 ## Company Info
 - Company: Chameleon Printing
-- Email: support@cafe3355.com
+- Email: design@chameleon.design
 - Website: ${siteUrl}
 - Hours: Weekdays 09:00-18:00 (EST)
-- Large files: email support@cafe3355.com
+- Large files: email design@chameleon.design
 
 ## Product Links
 - When customer asks for "link", "URL", "page" → provide direct product URL: ${siteUrl}/?product={product_code}
@@ -619,9 +619,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         if (isContactQuery) {
             const chatMsg = result.chat_message || result.summary || '';
             const contactInfos: Record<string, string> = {
-                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n📦 출고실(파손/출고/시스템 문의):\n• 이선율 팀장: 010-7610-3455\n• 변지웅 부사장: 010-5512-5366\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n📧 대용량 파일: korea900@hanmail.net\n💬 카푸는 24시간 운영됩니다!",
-                ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: support@cafe0101.com\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 カプは24時間対応！",
-                us: "\n\n📧 Email: support@cafe3355.com\n🕐 Hours: Weekdays 09:00-18:00 (EST)\n💬 Kapu is available 24/7!",
+                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n📦 출고실(파손/출고/시스템 문의):\n• 이선율 팀장: 010-7610-3455\n• 변지웅 부사장: 010-5512-5366\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n📧 대용량 파일: design@chameleon.design\n💬 카푸는 24시간 운영됩니다!",
+                ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: design@chameleon.design\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 カプは24時間対応！",
+                us: "\n\n📧 Email: design@chameleon.design\n🕐 Hours: Weekdays 09:00-18:00 (EST)\n💬 Kapu is available 24/7!",
             };
             const hasContact = chatMsg.includes('010-') || chatMsg.includes('047-') || chatMsg.includes('support@');
             if (!hasContact) {

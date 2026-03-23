@@ -931,6 +931,34 @@ document.addEventListener('DOMContentLoaded', function() {
             </span>
         </button>
     </div>
+    <!-- 전화/이메일 안내 바 (카프 채팅 위) -->
+    <div id="contactInfoBar" style="display:none; max-width:900px; width:100%; margin:10px auto 0; padding:0 15px;">
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <a id="contactPhone" href="tel:031-366-1984" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;text-decoration:none;color:#16a34a;font-size:13px;font-weight:700;">
+                <i class="fa-solid fa-phone"></i> <span id="contactPhoneText">031-366-1984</span>
+            </a>
+            <a href="mailto:design@chameleon.design" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;text-decoration:none;color:#2563eb;font-size:13px;font-weight:700;">
+                <i class="fa-solid fa-envelope"></i> design@chameleon.design
+            </a>
+        </div>
+    </div>
+    <script>
+    // 국가별 전화번호 설정 + 안내바 표시
+    (function(){
+        var bar = document.getElementById('contactInfoBar');
+        if (!bar) return;
+        var cc = window.__SITE_CODE || 'KR';
+        var phoneEl = document.getElementById('contactPhone');
+        var phoneText = document.getElementById('contactPhoneText');
+        if (cc === 'JP') {
+            phoneEl.href = 'tel:047-712-1148';
+            phoneText.textContent = '047-712-1148';
+        } else if (cc === 'US' || cc === 'EN') {
+            phoneEl.style.display = 'none'; // US는 전화 없음
+        }
+        bar.style.display = 'block';
+    })();
+    </script>
     <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 
     <!-- ★ 주문 현황 트래커 -->
@@ -2768,7 +2796,7 @@ async function handleSubReturn() {
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">所在地</th><td style="padding:12px 8px;" data-i18n="footer_addr_value">〒270-0023 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">電話番号</th><td style="padding:12px 8px;" data-i18n="footer_cs_phone">047-712-1148</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">営業時間</th><td style="padding:12px 8px;" data-i18n="footer_cs_time">平日 09:00 ~ 18:00</td></tr>
-            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">メールアドレス</th><td style="padding:12px 8px;">support@cafe0101.com</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">メールアドレス</th><td style="padding:12px 8px;">design@chameleon.design</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">販売価格</th><td style="padding:12px 8px;">各商品ページに記載（税込価格）</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">送料</th><td style="padding:12px 8px;">全商品 送料無料（リボード施工配送を除く）。リボードの設置が必要な場合、別途配送料が発生します。</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">お支払い方法</th><td style="padding:12px 8px;">クレジットカード（Visa, Mastercard, JCB, AMEX）、銀行振込</td></tr>
@@ -5980,10 +6008,7 @@ window.filterFxCards = function(cat, btn) {
     };
 </script>
 
-<!-- ★ 플로팅 상담 사이드바 (스와드피아 스타일) + 채널톡 -->
-<div id="floatingCS" style="position:fixed; right:20px; bottom:100px; z-index:10001; display:flex; flex-direction:column; align-items:center;">
-    <div id="csSidebar" style="background:#fff; border-radius:12px 0 0 12px; box-shadow:-2px 2px 12px rgba(0,0,0,0.12); overflow:hidden; display:flex; flex-direction:column;"></div>
-</div>
+<!-- 플로팅 사이드바 제거됨 — 채팅은 카프 패널에 통합 -->
 <style>
 #csSidebar .cs-side-btn {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -6120,67 +6145,7 @@ window.filterFxCards = function(cat, btn) {
         ov.addEventListener('click', (e) => { if(e.target===ov) ov.remove(); });
     }
 
-    const channels = {
-        KR: [
-            { name: '채팅\n상담', fa: 'fa-solid fa-comments', color: '#6366f1', action: openChannelTalk },
-            { name: '전화문의', fa: 'fa-solid fa-phone', color: '#10b981', action: showPhonePopup },
-            { name: '계좌안내', fa: 'fa-solid fa-building-columns', color: '#1e3a8a', action: showBankAccountPopup }
-        ],
-        JP: [
-            { name: 'LINE\n相談', img: 'https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg', url: 'https://line.me/R/ti/p/@343cfkfr' },
-            { name: 'チャット\n相談', fa: 'fa-solid fa-comments', color: '#6366f1', action: openChannelTalk },
-            { name: 'お電話', fa: 'fa-solid fa-phone', color: '#10b981', action: () => {
-                const ov = document.createElement('div');
-                ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
-                ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 28px 20px;max-width:320px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);">' +
-                    '<div style="font-size:36px;margin-bottom:12px;">🇯🇵</div>' +
-                    '<div style="font-size:16px;font-weight:800;color:#333;margin-bottom:16px;">日本オフィス</div>' +
-                    '<a href="tel:047-712-1148" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:#f0fdf4;border-radius:10px;padding:12px 20px;color:#333;font-size:18px;font-weight:700;">' +
-                        '<i class="fa-solid fa-phone" style="color:#16a34a;"></i> 047-712-1148</a>' +
-                    '<div style="margin-top:12px;font-size:12px;color:#888;line-height:1.5;">チャットでもお気軽にお問い合わせください</div>' +
-                    '<div onclick="this.closest(\'div[style*=inset]\').remove()" style="margin-top:14px;font-size:13px;color:#999;cursor:pointer;font-weight:600;">閉じる</div></div>';
-                document.body.appendChild(ov);
-                ov.addEventListener('click', (e) => { if(e.target===ov) ov.remove(); });
-            } }
-        ],
-        US: [
-            { name: 'Live\nChat', fa: 'fa-solid fa-comments', color: '#6366f1', action: openChannelTalk },
-            { name: 'Email', fa: 'fa-solid fa-envelope', color: '#3b82f6', url: 'mailto:support@cafe3355.com' },
-            { name: 'Call', fa: 'fa-solid fa-phone', color: '#10b981', action: () => { showChatOnlyPopup('US'); } }
-        ]
-    };
-
-    const items = channels[country] || channels.US;
-
-    items.forEach(ch => {
-        const btn = document.createElement('button');
-        btn.className = 'cs-side-btn';
-        let iconHtml = '';
-        if (ch.img) {
-            iconHtml = '<img src="'+ch.img+'" alt="">';
-        } else if (ch.fa) {
-            iconHtml = '<span class="cs-side-icon" style="background:'+(ch.color||'#6366f1')+'1a;color:'+(ch.color||'#6366f1')+'"><i class="'+ch.fa+'"></i></span>';
-        }
-        btn.innerHTML = iconHtml + '<span style="white-space:pre-line;">'+ch.name+'</span>';
-        btn.onclick = () => {
-            if (ch.action) ch.action();
-            else if (ch.url) window.open(ch.url, '_blank');
-        };
-        sidebar.appendChild(btn);
-    });
-
-    // TOP 버튼
-    const topBtn = document.createElement('button');
-    topBtn.className = 'cs-side-btn cs-top-btn';
-    topBtn.innerHTML = '<span class="cs-side-icon"><i class="fa-solid fa-arrow-up"></i></span><span>TOP</span>';
-    topBtn.onclick = () => {
-        const ss = document.getElementById('startScreen');
-        if (ss) ss.scrollTo({top:0,behavior:'smooth'});
-        else window.scrollTo({top:0,behavior:'smooth'});
-    };
-    sidebar.appendChild(topBtn);
-
-    // 채널톡 SDK 제거됨 — 자체 챗봇(chameleon-chatbot.html) 사용
+    // 사이드바 제거됨 — 전화/이메일은 카프 패널 위에 표시
 })();
 </script>
 
