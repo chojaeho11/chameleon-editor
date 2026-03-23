@@ -78,7 +78,7 @@ serve(async (req) => {
         const sb = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
         const [prodRes, baseRes, catRes, qaRes, addonRes, addonCatRes] = await Promise.all([
             sb.from("admin_products")
-                .select("code,name,price,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url,addons")
+                .select("code,name,name_jp,name_us,price,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url,addons")
                 .order("sort_order", { ascending: true }).limit(2000),
             sb.from("admin_products")
                 .select("code,name,price,width_mm,height_mm,is_custom_size,category")
@@ -150,8 +150,9 @@ serve(async (req) => {
 
         const products = rawProducts.map((p: any) => {
             const perSqm = calcPricePerSqm(p, allRaw);
+            const displayName = clientLang === 'ja' ? (p.name_jp || p.name) : clientLang === 'us' ? (p.name_us || p.name) : p.name;
             return {
-                code: p.code, name: p.name, category: p.category, description: p.description,
+                code: p.code, name: displayName, _name_kr: p.name, category: p.category, description: p.description,
                 img_url: p.img_url,
                 width_mm: p.width_mm, height_mm: p.height_mm, is_custom_size: p.is_custom_size,
                 is_general_product: p.is_general_product, is_file_upload: p.is_file_upload,
