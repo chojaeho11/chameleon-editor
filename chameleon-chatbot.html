@@ -48,8 +48,8 @@
     .adv-img-preview {
         flex-shrink: 0 !important;
     }
-    /* 닫기 버튼 숨기기 */
-    .adv-panel-close { display: none !important; }
+    /* 닫기 버튼 — iframe에서는 창 닫기로 동작 */
+    .adv-panel-close { display: flex !important; }
     /* Play Here 버튼 숨기기 (standalone에서 불필요) */
     .adv-studio-btn { display: none !important; }
 </style>
@@ -73,6 +73,25 @@
 <script type="module">
 import { initAdvisorPanel } from './advisor-panel.js?v=279';
 initAdvisorPanel();
+
+// 닫기 버튼 → 부모 iframe 숨기기
+setTimeout(() => {
+    const closeBtn = document.querySelector('.adv-panel-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            try {
+                // iframe 안에서 부모의 chatIframeWrap 숨기기
+                if (window.parent && window.parent !== window) {
+                    const wrap = window.parent.document.getElementById('chatIframeWrap');
+                    if (wrap) { wrap.style.display = 'none'; window.parent._chatIframeOpen = false; return; }
+                }
+                // standalone 탭이면 탭 닫기
+                window.close();
+            } catch(err) { window.close(); }
+        });
+    }
+}, 500);
 </script>
 
 </body>
