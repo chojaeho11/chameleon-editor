@@ -396,10 +396,12 @@ function getSb() { return sb; }
     // ═══ 대화 세션 리뷰 시스템 ═══
     var _sessions = [];
     var _activeRoomId = null;
+    var _filterMode = 'all'; // 'all' or 'needs_learning'
     function qaEsc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
 
     window.qaFilterNeedsLearning = async function() {
         var sb = getSb(); if (!sb) return;
+        _filterMode = 'needs_learning';
         var today = new Date().toISOString().split('T')[0];
         var { data: logs } = await sb.from('advisor_qa_log').select('room_id')
             .eq('needs_learning', true).eq('is_active', true)
@@ -417,6 +419,7 @@ function getSb() { return sb; }
 
     window.qaLoadSessions = async function() {
         var sb = getSb(); if (!sb) return;
+        _filterMode = 'all';
         var dateEl = document.getElementById('qaReportDate');
         if (!dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
         var date = dateEl.value;
@@ -460,7 +463,7 @@ function getSb() { return sb; }
         var tCount = todayTotal.count||0, nlCount = todayNL.count||0;
         var yCount = yesterdayTotal.count||0, yNL = yesterdayNL.count||0;
         document.getElementById('qaDailyStats').innerHTML =
-            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:20px;font-weight:900;color:#6366f1;">'+tCount+'</div><div style="font-size:10px;color:#64748b;">오늘 상담</div></div>' +
+            '<div onclick="qaLoadSessions()" style="background:#fff;padding:10px;border-radius:10px;text-align:center;cursor:pointer;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow=\'0 2px 8px rgba(99,102,241,0.3)\'" onmouseleave="this.style.boxShadow=\'none\'"><div style="font-size:20px;font-weight:900;color:#6366f1;">'+tCount+'</div><div style="font-size:10px;color:#64748b;">오늘 상담</div></div>' +
             '<div onclick="qaFilterNeedsLearning()" style="background:#fff;padding:10px;border-radius:10px;text-align:center;cursor:pointer;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow=\'0 2px 8px rgba(239,68,68,0.3)\'" onmouseleave="this.style.boxShadow=\'none\'"><div style="font-size:20px;font-weight:900;color:'+(nlCount>0?'#ef4444':'#10b981')+';">'+nlCount+'</div><div style="font-size:10px;color:#64748b;">🔴 학습 필요</div></div>' +
             '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#3b82f6;">'+(todayKr.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇰🇷 KR</div></div>' +
             '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#ef4444;">'+(todayJa.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇯🇵 JP</div></div>' +
@@ -723,8 +726,20 @@ function getSb() { return sb; }
         try {
             var sb = getSb();
             await sb.functions.invoke('admin-qa-update', { body: { action: 'natural_learn', text: ta.value.trim() } });
+            // 학습 완료 → needs_learning 해제
+            if (_activeRoomId) {
+                await sb.from('advisor_qa_log').update({ needs_learning: false }).eq('room_id', _activeRoomId);
+            }
             showToast('학습 완료! 다음 대화부터 반영됩니다.', 'success');
             btn.closest('div[style*=inset]').remove();
+            // 학습필요 필터 중이면 세션 목록에서 제거
+            if (_filterMode === 'needs_learning' && _activeRoomId) {
+                _sessions = _sessions.filter(function(s) { return s.id !== _activeRoomId; });
+                _activeRoomId = null;
+                _renderSessionList();
+                document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">학습 완료! 다른 대화를 선택하세요</div></div>';
+            }
+            _loadDailyReport();
         } catch(e) {
             showToast('실패: '+(e.message||e), 'error');
             btn.disabled = false; btn.textContent = '🧠 학습시키기';
@@ -738,11 +753,13 @@ function getSb() { return sb; }
         var { error } = await sb.from('advisor_qa_log').update({ needs_learning: false }).eq('room_id', roomId);
         if (error) { showToast('실패: ' + error.message, 'error'); return; }
         showToast('✅ 문제없음 처리 완료', 'success');
-        // 세션 목록에서 제거 (학습필요 필터 중이면)
-        _sessions = _sessions.filter(function(s) { return s.id !== roomId; });
-        _activeRoomId = null;
-        _renderSessionList();
-        document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">처리 완료! 다른 대화를 선택하세요</div></div>';
+        // 학습필요 필터 중이면 세션 목록에서 제거, 전체 조회면 유지
+        if (_filterMode === 'needs_learning') {
+            _sessions = _sessions.filter(function(s) { return s.id !== roomId; });
+            _activeRoomId = null;
+            _renderSessionList();
+            document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">처리 완료! 다른 대화를 선택하세요</div></div>';
+        }
         _loadDailyReport();
     };
 
@@ -753,8 +770,19 @@ function getSb() { return sb; }
         try {
             var sb = getSb();
             await sb.functions.invoke('admin-qa-update', { body: { action: 'natural_learn', text: ta.value.trim() } });
+            // 학습 완료 → needs_learning 해제
+            if (_activeRoomId) {
+                await sb.from('advisor_qa_log').update({ needs_learning: false }).eq('room_id', _activeRoomId);
+            }
             showToast('학습 완료!', 'success');
             ta.value = '';
+            if (_filterMode === 'needs_learning' && _activeRoomId) {
+                _sessions = _sessions.filter(function(s) { return s.id !== _activeRoomId; });
+                _activeRoomId = null;
+                _renderSessionList();
+                document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">학습 완료! 다른 대화를 선택하세요</div></div>';
+            }
+            _loadDailyReport();
         } catch(e) { showToast('실패: '+(e.message||e), 'error'); }
         ta.disabled = false;
     };

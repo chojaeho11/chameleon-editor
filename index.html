@@ -9307,7 +9307,7 @@ window.updateModalTotal = function() {
         const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
         const _r = _rates.US || 0.001;
         const formatValue = (val) => {
-            if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
+            if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
             if (lang === 'en') return '$' + Math.round(val * _r).toLocaleString();
             return Math.floor(val).toLocaleString() + '원';
         };
@@ -9376,8 +9376,11 @@ window.updateModalTotal = function() {
         }
 
         // calcResultPrice에도 반영 (updateModalTotal에서 사용)
+        // rawPrice는 fmtLocal이 기대하는 통화로 저장 (JP: 엔화, 그 외: KRW)
+        const _jpRate = _rates.JP || 0.1;
+        const rawPriceForDisplay = (lang === 'ja') ? Math.floor(finalPrice * _jpRate) : finalPrice;
         const pd = document.getElementById('calcResultPrice');
-        if (pd) { pd.innerText = formatValue(finalPrice); pd.dataset.rawPrice = finalPrice; }
+        if (pd) { pd.innerText = formatValue(finalPrice); pd.dataset.rawPrice = rawPriceForDisplay; }
         const sd = document.getElementById('calcResultSize');
         if (sd) sd.innerText = `${window._wallPanels.length}${lang==='ja'?'面':lang==='en'?' walls':'벽면'} · ${totalPanels}${lang==='ja'?'パネル':lang==='en'?' panels':'칸'}`;
 
