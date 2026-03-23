@@ -2598,7 +2598,32 @@
 
         document.getElementById('qaReportCount').textContent = total + '개 세션';
         _renderSessionList();
+
+        // 실시간 구독 (새 대화/메시지 감지)
+        _startQaRealtimeSub(sb);
     };
+
+    var _qaRoomSub = null;
+    var _qaMsgSub = null;
+    function _startQaRealtimeSub(sb) {
+        // 기존 구독 해제
+        if (_qaRoomSub) { sb.removeChannel(_qaRoomSub); _qaRoomSub = null; }
+        if (_qaMsgSub) { sb.removeChannel(_qaMsgSub); _qaMsgSub = null; }
+
+        // 새 chat_rooms 감지 → 세션 목록 갱신
+        _qaRoomSub = sb.channel('qa-rooms-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_rooms' }, function() {
+                qaLoadSessions();
+            }).subscribe();
+
+        // 현재 보고 있는 세션의 새 메시지 감지
+        _qaMsgSub = sb.channel('qa-msgs-realtime')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, function(payload) {
+                if (_activeRoomId && payload.new && payload.new.room_id === _activeRoomId) {
+                    qaOpenSession(_activeRoomId); // 대화 새로고침
+                }
+            }).subscribe();
+    }
 
     function _renderSessionList() {
         var list = document.getElementById('qaSessionList');
