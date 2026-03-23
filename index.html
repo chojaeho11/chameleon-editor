@@ -6030,7 +6030,7 @@ window.filterFxCards = function(cat, btn) {
         overlay.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 32px;max-width:340px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);">' +
             '<div style="font-size:40px;margin-bottom:12px;">💬</div>' +
             '<div style="font-size:15px;font-weight:700;color:#333;white-space:pre-line;line-height:1.6;">'+msg+'</div>' +
-            '<button onclick="this.closest(\'div[style*=inset]\').remove();if(window.ChannelIO)ChannelIO(\'showMessenger\')" style="margin-top:18px;padding:10px 28px;border:none;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">' +
+            '<button onclick="this.closest(\'div[style*=inset]\').remove();openChannelTalk();" style="margin-top:18px;padding:10px 28px;border:none;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">' +
             (lang==='JP'?'チャットで相談する':'Start Chat') + '</button>' +
             '<div onclick="this.closest(\'div[style*=inset]\').remove()" style="margin-top:10px;font-size:12px;color:#999;cursor:pointer;">' +
             (lang==='JP'?'閉じる':'Close') + '</div></div>';
@@ -6074,15 +6074,13 @@ window.filterFxCards = function(cat, btn) {
         overlay.addEventListener('click', (e) => { if(e.target===overlay) overlay.remove(); });
     }
 
-    // 모바일에서는 채널톡을 새 창으로 열기 (인앱 메신저 렌더링 문제 방지)
-    const isMobile = window.innerWidth <= 768;
+    // 자체 챗봇 열기 (각 국가 언어에 맞게)
     function openChannelTalk() {
-        if (isMobile) {
-            window.open('https://zqpqe.channel.io/home', '_blank');
-        } else {
-            if (window.ChannelIO) ChannelIO('showMessenger');
-        }
+        const langMap = { KR: 'kr', JP: 'ja', US: 'en' };
+        const lang = langMap[country] || 'kr';
+        window.open('chameleon-chatbot.html?lang=' + lang, '_blank', 'width=420,height=700,scrollbars=yes');
     }
+    window.openChannelTalk = openChannelTalk;
 
     function showBankAccountPopup() {
         const acctNum = '647701-04-277763';
@@ -6104,7 +6102,7 @@ window.filterFxCards = function(cat, btn) {
 
     const channels = {
         KR: [
-            { name: '채널톡\n상담', fa: 'fa-solid fa-comments', color: '#6366f1', action: openChannelTalk },
+            { name: 'AI\n상담', fa: 'fa-solid fa-comments', color: '#6366f1', action: openChannelTalk },
             { name: '카톡상담', img: 'https://developers.kakao.com/static/images/pc/product/icon/kakaoTalk.png', action: openChannelTalk },
             { name: '전화문의', fa: 'fa-solid fa-phone', color: '#10b981', action: showPhonePopup },
             { name: '계좌안내', fa: 'fa-solid fa-building-columns', color: '#1e3a8a', action: showBankAccountPopup }
@@ -6163,16 +6161,7 @@ window.filterFxCards = function(cat, btn) {
     };
     sidebar.appendChild(topBtn);
 
-    // 채널톡 SDK 로드 (기본 위젯 숨기고 API만 사용)
-    (function(){var w=window;if(w.ChannelIO)return;var ch=function(){ch.c(arguments)};ch.q=[];ch.c=function(a){ch.q.push(a)};w.ChannelIO=ch;
-    function l(){if(w.ChannelIOInitialized)return;w.ChannelIOInitialized=true;var s=document.createElement('script');s.type='text/javascript';s.async=true;
-    s.src='https://cdn.channel.io/plugin/ch-plugin-web.js';var x=document.getElementsByTagName('script')[0];if(x.parentNode)x.parentNode.insertBefore(s,x);}
-    if(document.readyState==='complete'){l();}else{w.addEventListener('DOMContentLoaded',l);w.addEventListener('load',l);}})();
-    ChannelIO('boot', {
-        pluginKey: '752ba9ff-a447-4e10-9813-715e051995cd',
-        hideChannelButtonOnBoot: true,
-        language: country === 'JP' ? 'ja' : country === 'KR' ? 'ko' : 'en'
-    });
+    // 채널톡 SDK 제거됨 — 자체 챗봇(chameleon-chatbot.html) 사용
 })();
 </script>
 
@@ -11224,7 +11213,7 @@ if (w >= 20 && h >= 20) {
             }, 100);
         }
         
-        // if (window.ChannelIO) ChannelIO('hide'); // 채널톡 비활성화됨
+        // 채널톡 제거됨 — 자체 챗봇 사용
         window.dispatchEvent(new Event('resize'));
 
         if (window.applySize) window.applySize(canvasW, canvasH, key, mode, 'replace');

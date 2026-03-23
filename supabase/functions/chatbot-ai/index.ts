@@ -164,7 +164,9 @@ serve(async (req) => {
         // 상품별 ㎡당 단가 역산 + enriched 데이터 생성
         // 기준 상품(1000x1000) 포함한 전체 목록
         const baseProducts = baseRes.data || [];
-        const rawProducts = prodRes.data || [];
+        // 고객작품판매(user_artwork) 카테고리 제품 제외
+        const artworkCats = (catRes.data || []).filter((c: any) => c.top_category_code === 'user_artwork').map((c: any) => c.code);
+        const rawProducts = (prodRes.data || []).filter((p: any) => !artworkCats.includes(p.category));
         const allRawProducts = [...rawProducts];
         // 기준 상품이 rawProducts에 없으면 추가
         baseProducts.forEach((bp: any) => {
@@ -310,13 +312,14 @@ ${lp.rules}
 - "현수막" → 패브릭 백월, 현수막 카테고리
 - 상품 목록에 있는 상품은 반드시 가격과 함께 안내하세요!
 
-## 상품 상세페이지 링크 (⚠️ 중요! / Product Detail Links)
-- 상품을 안내할 때 반드시 상세페이지 링크를 함께 제공하세요!
-- When recommending a product, ALWAYS include its detail page link!
-- 링크 형식: ${siteUrl}/?product={상품코드}
-- Link format: ${siteUrl}/?product={product_code}
+## 상품 상세페이지 링크 (🚨 최우선 규칙! / #1 PRIORITY RULE!)
+- ⚠️ 상품명, 제품명, 추천, 링크, URL 등의 단어가 나오면 맥락을 파악해서 반드시 해당 제품의 상세페이지 링크를 포함하세요!
+- ⚠️ 상품을 1개라도 언급하면 무조건 링크를 함께 제공! 링크 없이 상품명만 언급하는 것은 금지!
+- ABSOLUTE RULE: Whenever you mention ANY product by name, you MUST include its detail page link. NEVER mention a product without its link!
+- 링크 형식 / Link format: ${siteUrl}/?product={상품코드(code)}
 - 상품 데이터의 "code" 필드를 사용하세요. 예: code가 "honeycomb"이면 → ${siteUrl}/?product=honeycomb
-- ${clientLang === 'ja' ? '例：「こちらの商品の詳細ページをご覧くださいませ → リンク」のように丁寧に案内してください。' : clientLang === 'en' ? 'Example: "Check out the product details here → link"' : '예: "상세 페이지에서 확인해보세요! → 링크"'}
+- 여러 상품을 추천할 때는 각 상품마다 개별 링크를 제공하세요!
+- ${clientLang === 'ja' ? '例：「こちらの商品の詳細ページをご覧くださいませ → ' + siteUrl + '/?product=商品コード」のように丁寧に案内してください。' : clientLang === 'en' ? 'Example: "Check out this product → ' + siteUrl + '/?product=product_code"' : '예: "이 상품을 확인해보세요! → ' + siteUrl + '/?product=상품코드"'}
 
 ## 가격 안내 (⚠️ 매우 중요! / Pricing Rules)
 - "서버 자동 계산 결과"가 있으면 그 금액을 **그대로** 안내하세요! 직접 계산하지 마세요!
