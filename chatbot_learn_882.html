@@ -611,7 +611,10 @@ function getSb() { return sb; }
                     if (isNonKr) h += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:12px;color:#6366f1;font-style:italic;" id="qaTrBot_'+idx+'">[한국어 번역 대기]</div>';
                     h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
                     h += '</div>';
-                    h += '<button class="btn btn-outline btn-sm" onclick="qaFixThis(\''+roomId+'\','+idx+',\''+qaEsc(cleanMsg.substring(0,200).replace(/'/g,"\\'"))+'\')" style="font-size:10px;margin-top:4px;color:#ef4444;border-color:#fca5a5;">❌ 이건 틀렸어</button>';
+                    h += '<div style="display:flex;gap:4px;margin-top:4px;">';
+                    h += '<button class="btn btn-outline btn-sm" onclick="qaFixThis(\''+roomId+'\','+idx+',\''+qaEsc(cleanMsg.substring(0,200).replace(/'/g,"\\'"))+'\')" style="font-size:10px;color:#ef4444;border-color:#fca5a5;">❌ 틀렸어</button>';
+                    h += '<button class="btn btn-outline btn-sm" onclick="qaMarkOk(\''+roomId+'\')" style="font-size:10px;color:#10b981;border-color:#86efac;">✅ 문제없음</button>';
+                    h += '</div>';
                     h += '</div></div>';
                 } else if (m.sender_type === 'manager') {
                     var mgrName = m.sender_name || '매니저';
@@ -697,6 +700,21 @@ function getSb() { return sb; }
             showToast('실패: '+(e.message||e), 'error');
             btn.disabled = false; btn.textContent = '🧠 학습시키기';
         }
+    };
+
+    // "문제없음" → needs_learning 해제
+    window.qaMarkOk = async function(roomId) {
+        var sb = getSb();
+        // 해당 room_id의 모든 needs_learning을 false로
+        var { error } = await sb.from('advisor_qa_log').update({ needs_learning: false }).eq('room_id', roomId);
+        if (error) { showToast('실패: ' + error.message, 'error'); return; }
+        showToast('✅ 문제없음 처리 완료', 'success');
+        // 세션 목록에서 제거 (학습필요 필터 중이면)
+        _sessions = _sessions.filter(function(s) { return s.id !== roomId; });
+        _activeRoomId = null;
+        _renderSessionList();
+        document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">처리 완료! 다른 대화를 선택하세요</div></div>';
+        _loadDailyReport();
     };
 
     window.qaSessionLearnSave = async function() {
