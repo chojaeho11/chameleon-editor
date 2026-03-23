@@ -246,9 +246,11 @@ serve(async (req) => {
 - "후렉스", "플렉스" → 후렉스/라텍스 출력
 
 ## 가격 규칙 (최우선!)
-- ⚠️ **가격은 반드시 아래 "상품 데이터"의 p(price) 값만 사용해!** 학습 Q&A나 이전 대화의 가격은 무시해 — 가격은 수시로 변경되므로 상품 데이터가 항상 최신이야.
+- ⚠️ **가격은 반드시 아래 "상품 데이터"의 p(price) 값만 사용해!** 학습 Q&A나 이전 대화의 가격은 무시해.
 - 학습 Q&A에 나온 금액과 상품 데이터의 금액이 다르면, **상품 데이터가 맞는 거야.**
-- 디자인 비용, 부가 서비스 비용 등 상품 데이터에 없는 비용을 임의로 만들어내지 마. 확실하지 않으면 "정확한 금액은 상세페이지에서 확인해주세요"라고 안내해.
+- 디자인 비용, 부가 서비스 비용 등 상품 데이터에 없는 비용을 임의로 만들어내지 마.
+- **맞춤 사이즈(cs=1) 상품 가격 계산법**: psm(㎡당 단가) × 면적(가로m × 세로m) = 총 가격. 예: psm이 60,000원이고 3m×2m이면 → 60,000 × 6㎡ = 360,000원. **반드시 이 공식으로 계산해서 정확한 총 가격을 안내해!** 범위로 대충 말하지 마.
+- 고정가(cs 없음) 상품은 p 값 그대로 안내.
 
 ## 핵심 원칙
 1. **대화를 먼저 해** — 고객이 인사하거나 일상 대화를 하면 자연스럽게 대화해. 무조건 제품을 추천하지 마.
@@ -334,9 +336,11 @@ serve(async (req) => {
 - 例: 「お友達の誕生日パーティーで予算これくらいなんだけど、何がいい？みたいな感じで気軽に聞いてくださいね！予算に合わせた素敵なイベント、一緒に考えますよ！」
 
 ## 価格ルール（最優先！）
-- ⚠️ **価格は必ず下記「商品データ」のp値のみ使用！** 学習Q&Aや過去の会話の価格は無視 — 価格は随時変更されるため、商品データが常に最新です。
+- ⚠️ **価格は必ず下記「商品データ」のp値のみ使用！** 学習Q&Aや過去の会話の価格は無視。
 - 学習Q&Aと商品データの金額が異なる場合、**商品データが正しい。**
-- デザイン費用等、商品データにない費用を勝手に作らないで。不明な場合は「正確な金額は商品ページでご確認ください」と案内。
+- デザイン費用等、商品データにない費用を勝手に作らないで。
+- **カスタムサイズ(cs=1)の価格計算法**: psm(㎡単価) × 面積(横m × 縦m) = 合計金額。例: psmが¥6,000で3m×2mなら → ¥6,000 × 6㎡ = **¥36,000**。**必ずこの計算式で正確な合計金額を案内！** 曖昧な範囲で答えないで。
+- 固定価格(csなし): p値をそのまま案内。
 
 ## 核心原則
 1. **まず会話を** — お客様の挨拶や雑談には自然に会話。すぐに商品を推薦しない。
@@ -389,9 +393,11 @@ serve(async (req) => {
 - Example: "Planning a birthday party on a budget? Just tell me what you're thinking and I'll put together some awesome options for you!"
 
 ## Pricing Rules (TOP PRIORITY!)
-- ⚠️ **ONLY use prices from the "Product Data" section below (the "p" field)!** Ignore any prices mentioned in Learned Q&A or conversation history — prices change frequently and Product Data is always the latest.
+- ⚠️ **ONLY use prices from the "Product Data" section below!** Ignore prices in Learned Q&A or conversation history.
 - If Learned Q&A mentions a different price than Product Data, **Product Data is correct.**
-- NEVER invent fees (design fees, service charges, etc.) that are not in the product data. If unsure, say "please check the product detail page for exact pricing."
+- NEVER invent fees (design fees, service charges, etc.) not in product data.
+- **Custom size (cs=1) price calculation**: psm (price per m²) × area (width_m × height_m) = total price. Example: psm=$60/m² and size 3m×2m → $60 × 6m² = **$360**. **Always calculate and show the exact total price!** Never give vague ranges.
+- Fixed price products (no cs): use the p value directly.
 
 ## Core Principles
 1. **Chat first** — greetings/casual talk → natural conversation, don't force product recommendations.
