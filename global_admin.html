@@ -1703,29 +1703,32 @@
             <div id="qaReportList" style="max-height:700px; overflow-y:auto;"></div>
         </div>
         <div id="cbPanelKnowledge" style="display:block;">
-            <div style="background:#f0fdf4; border:1px dashed #86efac; border-radius:10px; padding:15px; margin-bottom:15px;">
-                <h4 style="margin:0 0 10px; color:#16a34a;">➕ 새 학습 데이터 추가</h4>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div><label style="font-size:12px; font-weight:700;">카테고리</label>
-                        <select id="cbNewCat" class="input-text"><option>배송</option><option>결제</option><option>가격</option><option>상품</option><option>사업자</option><option>에디터</option><option>취소/환불</option><option>글로벌</option><option>서비스</option><option>기타</option></select></div>
-                    <div><label style="font-size:12px; font-weight:700;">언어</label>
-                        <select id="cbNewLang" class="input-text"><option value="ko">🇰🇷 한국어</option><option value="ja">🇯🇵 日本語</option><option value="en">🇺🇸 English</option></select></div>
-                </div>
-                <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">고객 질문</label>
-                    <input id="cbNewQ" class="input-text" placeholder="예: 배송 며칠 걸려요?" style="width:100%;"></div>
-                <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">답변</label>
-                    <textarea id="cbNewA" class="input-text" rows="3" placeholder="예: 수도권 1~2일, 지방 2~3일" style="width:100%; resize:vertical;"></textarea></div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <div style="flex:1;"><label style="font-size:12px; font-weight:700;">키워드</label><input id="cbNewKw" class="input-text" placeholder="배송,택배" style="width:100%;"></div>
-                    <div style="width:80px;"><label style="font-size:12px; font-weight:700;">우선순위</label><input id="cbNewPri" class="input-text" type="number" value="5" style="width:100%;"></div>
-                </div>
-                <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="cbAddKnowledge()">💾 저장</button>
+            <!-- 자연어 학습 -->
+            <div style="background:linear-gradient(135deg,#ede9fe,#f0fdf4); border:2px solid #a78bfa; border-radius:14px; padding:20px; margin-bottom:18px;">
+                <h4 style="margin:0 0 10px; color:#6d28d9;">🧠 자연어로 학습시키기</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:10px;">한국어로 자유롭게 입력하면 AI가 Q&A로 변환하고 8개국어 키워드를 자동 생성합니다.</p>
+                <textarea id="cbNaturalText" class="input-text" rows="3" style="width:100%; resize:vertical; font-size:14px;" placeholder="예: 도쿄인근 지역은 배송비가 무료야. 허니콤보드 가벽은 1칸에 15만원이야."></textarea>
+                <button class="btn btn-primary" style="width:100%; margin-top:10px; background:linear-gradient(135deg,#6366f1,#7c3aed);" onclick="cbNaturalLearn()">🧠 학습시키기</button>
+                <div id="cbNaturalResult" style="display:none; margin-top:12px; background:#fff; border-radius:10px; padding:14px; border:1px solid #e2e8f0;"></div>
             </div>
+            <!-- 직접 입력 (접이식) -->
+            <details style="margin-bottom:15px;">
+                <summary style="cursor:pointer; font-size:13px; font-weight:700; color:#16a34a; padding:8px 0;">➕ 직접 Q&A 입력하기</summary>
+                <div style="background:#f0fdf4; border:1px dashed #86efac; border-radius:10px; padding:15px; margin-top:8px;">
+                    <div style="margin-top:0;"><label style="font-size:12px; font-weight:700;">고객 질문 (한국어)</label>
+                        <input id="cbNewQ" class="input-text" placeholder="예: 배송 며칠 걸려요?" style="width:100%;"></div>
+                    <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">답변 (한국어)</label>
+                        <textarea id="cbNewA" class="input-text" rows="3" placeholder="예: 수도권 1~2일, 지방 2~3일" style="width:100%; resize:vertical;"></textarea></div>
+                    <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">키워드 (한국어, 자동 번역됨)</label>
+                        <input id="cbNewKw" class="input-text" placeholder="배송,택배" style="width:100%;"></div>
+                    <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="cbAddKnowledge()">💾 저장</button>
+                </div>
+            </details>
+            <!-- 학습 데이터 목록 -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
                 <h4 style="margin:0;">📚 등록된 학습 데이터 <span id="cbKnCount" style="font-size:12px; color:#64748b; font-weight:400;"></span></h4>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <input type="text" id="cbKnSearch" class="input-text" placeholder="🔍 검색 (질문/답변/키워드)" style="width:220px; font-size:12px;" oninput="cbFilterLocal()" onkeydown="if(event.key==='Enter')cbLoadKnowledge()">
-                    <select id="cbKnFilter" class="input-text" style="width:100px;" onchange="cbLoadKnowledge()"><option value="all">전체</option><option value="ko">🇰🇷</option><option value="ja">🇯🇵</option><option value="en">🇺🇸</option></select>
                     <button class="btn btn-outline btn-sm" onclick="cbLoadKnowledge()">새로고침</button>
                 </div>
             </div>
@@ -1738,22 +1741,13 @@
                         <button onclick="cbCloseEdit()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8;">✕</button>
                     </div>
                     <input type="hidden" id="cbEditId">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <div><label style="font-size:12px; font-weight:600; color:#64748b;">카테고리</label>
-                            <select id="cbEditCat" class="input-text" style="width:100%;"><option>배송</option><option>결제</option><option>가격</option><option>상품</option><option>사업자</option><option>에디터</option><option>취소/환불</option><option>글로벌</option><option>서비스</option><option>상담사례</option><option>기타</option></select></div>
-                        <div><label style="font-size:12px; font-weight:600; color:#64748b;">언어</label>
-                            <select id="cbEditLang" class="input-text" style="width:100%;"><option value="ko">🇰🇷 한국어</option><option value="ja">🇯🇵 日本語</option><option value="en">🇺🇸 English</option></select></div>
-                    </div>
-                    <div style="margin-top:10px;"><label style="font-size:12px; font-weight:600; color:#64748b;">질문</label>
+                    <div style="margin-top:0;"><label style="font-size:12px; font-weight:600; color:#64748b;">질문</label>
                         <input id="cbEditQ" class="input-text" style="width:100%;"></div>
                     <div style="margin-top:10px;"><label style="font-size:12px; font-weight:600; color:#64748b;">답변</label>
                         <textarea id="cbEditA" class="input-text" rows="5" style="width:100%; resize:vertical;"></textarea></div>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <div style="flex:1;"><label style="font-size:12px; font-weight:600; color:#64748b;">키워드</label>
-                            <input id="cbEditKw" class="input-text" placeholder="쉼표 구분" style="width:100%;"></div>
-                        <div style="width:80px;"><label style="font-size:12px; font-weight:600; color:#64748b;">우선순위</label>
-                            <input id="cbEditPri" class="input-text" type="number" style="width:100%;"></div>
-                    </div>
+                    <div style="margin-top:10px;"><label style="font-size:12px; font-weight:600; color:#64748b;">키워드 (한국어)</label>
+                        <input id="cbEditKw" class="input-text" placeholder="쉼표 구분" style="width:100%;"></div>
+                    <div id="cbEditKwTranslations" style="margin-top:8px; font-size:11px; color:#64748b;"></div>
                     <div style="display:flex; gap:8px; margin-top:16px;">
                         <button class="btn btn-primary" style="flex:1;" onclick="cbSaveEdit()">💾 저장</button>
                         <button class="btn btn-outline" style="flex:1;" onclick="cbCloseEdit()">취소</button>
@@ -2441,11 +2435,9 @@
     var cbKnAllData = []; // 로컬 캐시 (검색용)
     window.cbLoadKnowledge = async function() {
         var sb = getSb(); if (!sb) return;
-        var lang = document.getElementById('cbKnFilter').value;
         var search = (document.getElementById('cbKnSearch') ? document.getElementById('cbKnSearch').value.trim() : '');
-        var q = sb.from('chatbot_knowledge').select('*').eq('is_active', true).order('priority', {ascending: false}).limit(200);
-        if (lang !== 'all') q = q.eq('language', lang);
-        if (search) q = q.or('question.ilike.%' + search + '%,answer.ilike.%' + search + '%,keywords.ilike.%' + search + '%,category.ilike.%' + search + '%');
+        var q = sb.from('chatbot_knowledge').select('*').eq('is_active', true).neq('category', '_system_prompt').neq('category', '_managers').order('priority', {ascending: false}).limit(200);
+        if (search) q = q.or('question.ilike.%' + search + '%,answer.ilike.%' + search + '%,keywords.ilike.%' + search + '%');
         var res = await q;
         cbKnAllData = res.data || [];
         cbRenderKnowledge(cbKnAllData);
@@ -2466,23 +2458,64 @@
         var countEl = document.getElementById('cbKnCount');
         if (countEl) countEl.textContent = '(' + data.length + '건)';
         if (!data || data.length === 0) { list.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:30px;">데이터 없음</p>'; return; }
-        var html = '<table style="width:100%; font-size:12px; border-collapse:collapse;"><thead><tr style="background:#f8fafc; position:sticky; top:0; z-index:1;"><th style="padding:8px 6px; text-align:left;">카테고리</th><th style="padding:8px 6px; text-align:left;">질문</th><th style="padding:8px 6px; text-align:left;">답변</th><th style="padding:8px 6px; text-align:left;">키워드</th><th style="padding:8px 6px; text-align:center; width:50px;">순위</th><th style="padding:8px 6px; text-align:center; width:100px;">관리</th></tr></thead><tbody>';
+        var html = '<table style="width:100%; font-size:12px; border-collapse:collapse;"><thead><tr style="background:#f8fafc; position:sticky; top:0; z-index:1;"><th style="padding:8px 6px; text-align:left;">질문</th><th style="padding:8px 6px; text-align:left;">답변</th><th style="padding:8px 6px; text-align:left;">키워드</th><th style="padding:8px 6px; text-align:center; width:80px;">관리</th></tr></thead><tbody>';
         data.forEach(function(k) {
             html += '<tr style="border-bottom:1px solid #f1f5f9; transition:background 0.1s;" onmouseenter="this.style.background=\'#f8fafc\'" onmouseleave="this.style.background=\'#fff\'">';
-            html += '<td style="padding:6px;"><span style="background:#e0e7ff; padding:2px 6px; border-radius:6px; font-size:11px;">' + (k.category||'일반') + '</span></td>';
-            html += '<td style="padding:6px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.question||'').replace(/"/g,'&quot;') + '">' + (k.question||'').substring(0,35) + '</td>';
-            html += '<td style="padding:6px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.answer||'').replace(/"/g,'&quot;') + '">' + (k.answer||'').substring(0,45) + '</td>';
-            html += '<td style="padding:6px; font-size:10px; color:#64748b; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (k.keywords||'-') + '</td>';
-            html += '<td style="padding:6px; text-align:center; color:#6366f1; font-weight:600;">' + (k.priority||0) + '</td>';
+            html += '<td style="padding:6px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.question||'').replace(/"/g,'&quot;') + '">' + (k.question||'').substring(0,40) + '</td>';
+            html += '<td style="padding:6px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.answer||'').replace(/"/g,'&quot;') + '">' + (k.answer||'').substring(0,50) + '</td>';
+            html += '<td style="padding:6px; font-size:10px; color:#64748b; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (k.keywords||'-') + '</td>';
             html += '<td style="padding:6px; text-align:center; white-space:nowrap;"><button class="btn btn-outline btn-sm" style="font-size:11px; padding:2px 8px; margin-right:3px;" onclick="cbOpenEdit(' + k.id + ')">✏️</button><button class="btn btn-outline btn-sm" style="color:#ef4444; font-size:11px; padding:2px 8px;" onclick="cbDeleteKn(' + k.id + ')">🗑</button></td></tr>';
         });
         list.innerHTML = html + '</tbody></table>';
     }
+    // 자연어 학습
+    window.cbNaturalLearn = async function() {
+        var sb = getSb(); if (!sb) return;
+        var text = document.getElementById('cbNaturalText').value.trim();
+        if (!text) { showToast('학습시킬 내용을 입력하세요', 'warn'); return; }
+        var resultDiv = document.getElementById('cbNaturalResult');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<div style="text-align:center;padding:12px;"><div style="width:24px;height:24px;border:3px solid #e9d5ff;border-top:3px solid #7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px;"></div><span style="color:#7c3aed;font-size:13px;">AI가 학습 중...</span></div>';
+        try {
+            var res = await sb.functions.invoke('admin-qa-update', {
+                body: { action: 'natural_learn', text: text }
+            });
+            var d = res.data;
+            if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
+            if (d && d.success) {
+                var p = d.parsed;
+                var kwHtml = '';
+                if (p.keywords_translations) {
+                    var flags = {ko:'🇰🇷',ja:'🇯🇵',en:'🇺🇸',zh:'🇨🇳',ar:'🇸🇦',es:'🇪🇸',de:'🇩🇪',fr:'🇫🇷'};
+                    Object.keys(p.keywords_translations).forEach(function(lang) {
+                        kwHtml += '<span style="margin-right:8px;">' + (flags[lang]||lang) + ' ' + p.keywords_translations[lang].join(', ') + '</span>';
+                    });
+                }
+                resultDiv.innerHTML = '<div style="font-weight:700;color:#16a34a;margin-bottom:8px;">✅ 학습 완료!</div>' +
+                    '<div style="margin-bottom:6px;"><strong>Q:</strong> ' + (p.question||'') + '</div>' +
+                    '<div style="margin-bottom:6px;"><strong>A:</strong> ' + (p.answer||'') + '</div>' +
+                    '<div style="font-size:11px;color:#64748b;line-height:1.8;">' + kwHtml + '</div>';
+                document.getElementById('cbNaturalText').value = '';
+                cbLoadKnowledge();
+            } else { throw new Error(d?.error || '학습 실패'); }
+        } catch(e) {
+            resultDiv.innerHTML = '<span style="color:#ef4444;">❌ 실패: ' + (e.message||e) + '</span>';
+        }
+    };
+
     window.cbAddKnowledge = async function() {
         var sb = getSb(); if (!sb) return;
         var q = document.getElementById('cbNewQ').value.trim(), a = document.getElementById('cbNewA').value.trim();
         if (!q || !a) { showToast('질문과 답변을 입력하세요', 'warn'); return; }
-        await sb.from('chatbot_knowledge').insert({ category: document.getElementById('cbNewCat').value, question: q, answer: a, keywords: document.getElementById('cbNewKw').value.trim(), language: document.getElementById('cbNewLang').value, priority: parseInt(document.getElementById('cbNewPri').value) || 5 });
+        var kw = document.getElementById('cbNewKw').value.trim();
+        // 저장 + 키워드 번역
+        var ins = await sb.from('chatbot_knowledge').insert({ category: 'general', question: q, answer: a, keywords: kw, language: 'ko', priority: 50 }).select();
+        // advisor_qa_log에도 저장
+        await sb.from('advisor_qa_log').insert({ lang:'kr', customer_message:q, customer_message_ko:q, ai_response:'[직접입력]', admin_answer:a, admin_answer_ko:a, is_reviewed:true, reviewed_at:new Date().toISOString(), category:'general', is_active:true, has_image:false });
+        // 키워드 번역
+        if (kw && ins.data && ins.data[0]) {
+            try { await sb.functions.invoke('admin-qa-update', { body: { action:'translate_keywords', knowledge_id: ins.data[0].id, keywords: kw } }); } catch(e) {}
+        }
         document.getElementById('cbNewQ').value = ''; document.getElementById('cbNewA').value = ''; document.getElementById('cbNewKw').value = '';
         showToast('저장! AI에 즉시 반영됩니다.', 'success'); cbLoadKnowledge(); if(window.lcLoadQuickReplies) lcLoadQuickReplies();
     };
@@ -2491,12 +2524,19 @@
         var item = cbKnAllData.find(function(k){ return k.id === id; });
         if (!item) { showToast('데이터를 찾을 수 없습니다.', 'warn'); return; }
         document.getElementById('cbEditId').value = id;
-        document.getElementById('cbEditCat').value = item.category || '기타';
-        document.getElementById('cbEditLang').value = item.language || 'ko';
         document.getElementById('cbEditQ').value = item.question || '';
         document.getElementById('cbEditA').value = item.answer || '';
         document.getElementById('cbEditKw').value = item.keywords || '';
-        document.getElementById('cbEditPri').value = item.priority || 5;
+        // 키워드 번역 표시
+        var kwDiv = document.getElementById('cbEditKwTranslations');
+        if (kwDiv && item.keywords_translations) {
+            var flags = {ko:'🇰🇷',ja:'🇯🇵',en:'🇺🇸',zh:'🇨🇳',ar:'🇸🇦',es:'🇪🇸',de:'🇩🇪',fr:'🇫🇷'};
+            var html = '';
+            Object.keys(item.keywords_translations).forEach(function(lang) {
+                if (lang !== 'ko') html += '<span style="margin-right:6px;">' + (flags[lang]||lang) + ' ' + (item.keywords_translations[lang]||[]).join(', ') + '</span>';
+            });
+            kwDiv.innerHTML = html ? '번역: ' + html : '';
+        }
         var modal = document.getElementById('cbEditModal');
         modal.style.display = 'flex';
     };
@@ -2510,14 +2550,8 @@
         var q = document.getElementById('cbEditQ').value.trim();
         var a = document.getElementById('cbEditA').value.trim();
         if (!q || !a) { showToast('질문과 답변을 입력하세요.', 'warn'); return; }
-        var upd = {
-            category: document.getElementById('cbEditCat').value,
-            language: document.getElementById('cbEditLang').value,
-            question: q,
-            answer: a,
-            keywords: document.getElementById('cbEditKw').value.trim(),
-            priority: parseInt(document.getElementById('cbEditPri').value) || 5
-        };
+        var kw = document.getElementById('cbEditKw').value.trim();
+        var upd = { question: q, answer: a, keywords: kw };
         var res = await sb.from('chatbot_knowledge').update(upd).eq('id', id);
         if (res.error) { showToast('저장 실패: ' + res.error.message, 'error'); return; }
         showToast('수정 완료!', 'success');

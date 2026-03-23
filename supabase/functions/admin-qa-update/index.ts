@@ -310,6 +310,195 @@ ${chatText}`
             }), { headers: { ...cors, "Content-Type": "application/json" } });
         }
 
+        // ── natural_learn: 자연어 학습 (한국어 → Q&A 파싱 + 키워드 8개국어 번역) ──
+        if (action === "natural_learn") {
+            const { text } = body;
+            if (!text || !text.trim()) {
+                return new Response(JSON.stringify({ error: "text required" }),
+                    { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            // Claude로 자연어를 Q&A + 키워드로 파싱
+            const parseRes = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": ANTHROPIC_API_KEY!,
+                    "anthropic-version": "2023-06-01",
+                },
+                body: JSON.stringify({
+                    model: "claude-haiku-4-5-20251001",
+                    max_tokens: 1000,
+                    messages: [{
+                        role: "user",
+                        content: `다음 한국어 텍스트를 고객 Q&A 학습 데이터로 변환하세요.
+
+텍스트: "${text.trim()}"
+
+규칙:
+- question: 고객이 물어볼 법한 질문으로 변환
+- answer: 원본 텍스트의 정보를 바탕으로 친절한 답변
+- keywords: 핵심 키워드 2~4개 (한국어, 쉼표 구분)
+- JSON만 응답, 다른 텍스트 없이
+
+응답 형식:
+{"question":"고객 질문","answer":"답변","keywords":"키워드1,키워드2"}`
+                    }],
+                }),
+            });
+
+            if (!parseRes.ok) throw new Error(`Parse API error: ${parseRes.status}`);
+            const parseData = await parseRes.json();
+            const rawText = (parseData.content?.[0]?.text || '{}').replace(/```json?\s*/g, '').replace(/```/g, '').trim();
+
+            let parsed: any;
+            try { parsed = JSON.parse(rawText); } catch(e) { throw new Error('AI 응답 파싱 실패: ' + rawText.substring(0, 200)); }
+
+            // 키워드 8개국어 번역
+            const kwKo = parsed.keywords || '';
+            let kwTranslations: any = { ko: kwKo.split(',').map((k: string) => k.trim()).filter(Boolean) };
+
+            if (kwKo) {
+                const kwRes = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": ANTHROPIC_API_KEY!,
+                        "anthropic-version": "2023-06-01",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-haiku-4-5-20251001",
+                        max_tokens: 500,
+                        messages: [{
+                            role: "user",
+                            content: `Translate these Korean keywords to 7 languages. Return JSON only, no other text.
+Keywords: ${kwKo}
+Format: {"ja":["..."],"en":["..."],"zh":["..."],"ar":["..."],"es":["..."],"de":["..."],"fr":["..."]}`
+                        }],
+                    }),
+                });
+                if (kwRes.ok) {
+                    const kwData = await kwRes.json();
+                    const kwRaw = (kwData.content?.[0]?.text || '{}').replace(/```json?\s*/g, '').replace(/```/g, '').trim();
+                    try {
+                        const kwParsed = JSON.parse(kwRaw);
+                        kwTranslations = { ko: kwTranslations.ko, ...kwParsed };
+                    } catch(e) {}
+                }
+            }
+
+            // chatbot_knowledge에 저장
+            const { data: knData, error: knErr } = await sb.from('chatbot_knowledge').insert({
+                question: parsed.question || text.trim(),
+                answer: parsed.answer || text.trim(),
+                keywords: kwKo,
+                keywords_translations: kwTranslations,
+                language: 'ko',
+                category: 'general',
+                priority: 50,
+                is_active: true,
+            }).select();
+
+            // advisor_qa_log에도 저장 (product-advisor가 읽는 테이블)
+            await sb.from('advisor_qa_log').insert({
+                lang: 'kr',
+                customer_message: parsed.question || text.trim(),
+                customer_message_ko: parsed.question || text.trim(),
+                ai_response: '[자연어학습]',
+                admin_answer: parsed.answer || text.trim(),
+                admin_answer_ko: parsed.answer || text.trim(),
+                is_reviewed: true,
+                reviewed_at: new Date().toISOString(),
+                category: 'general',
+                is_active: true,
+                has_image: false,
+            });
+
+            if (knErr) throw knErr;
+
+            return new Response(JSON.stringify({
+                success: true,
+                parsed: {
+                    question: parsed.question,
+                    answer: parsed.answer,
+                    keywords: kwKo,
+                    keywords_translations: kwTranslations,
+                },
+            }), { headers: { ...cors, "Content-Type": "application/json" } });
+        }
+
+        // ── translate_keywords: 키워드 8개국어 번역 ──
+        if (action === "translate_keywords") {
+            const { knowledge_id, keywords } = body;
+            if (!knowledge_id || !keywords) {
+                return new Response(JSON.stringify({ error: "knowledge_id and keywords required" }),
+                    { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            const kwRes = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": ANTHROPIC_API_KEY!,
+                    "anthropic-version": "2023-06-01",
+                },
+                body: JSON.stringify({
+                    model: "claude-haiku-4-5-20251001",
+                    max_tokens: 500,
+                    messages: [{
+                        role: "user",
+                        content: `Translate these Korean keywords to 7 languages. Return JSON only.
+Keywords: ${keywords}
+Format: {"ja":["..."],"en":["..."],"zh":["..."],"ar":["..."],"es":["..."],"de":["..."],"fr":["..."]}`
+                    }],
+                }),
+            });
+
+            if (!kwRes.ok) throw new Error(`Keyword translation API error: ${kwRes.status}`);
+            const kwData = await kwRes.json();
+            const kwRaw = (kwData.content?.[0]?.text || '{}').replace(/```json?\s*/g, '').replace(/```/g, '').trim();
+
+            let translations: any = {};
+            try { translations = JSON.parse(kwRaw); } catch(e) { throw new Error('Keyword parse error'); }
+
+            const koArr = keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+            const fullTranslations = { ko: koArr, ...translations };
+
+            await sb.from('chatbot_knowledge').update({
+                keywords_translations: fullTranslations
+            }).eq('id', knowledge_id);
+
+            return new Response(JSON.stringify({ success: true, translations: fullTranslations }),
+                { headers: { ...cors, "Content-Type": "application/json" } });
+        }
+
+        // ── load_conversation: 대화 스레드 로드 ──
+        if (action === "load_conversation") {
+            const { room_id } = body;
+            if (!room_id) {
+                return new Response(JSON.stringify({ error: "room_id required" }),
+                    { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            const [msgRes, roomRes] = await Promise.all([
+                sb.from('chat_messages')
+                    .select('sender_type, sender_name, message, created_at, file_url, file_name')
+                    .eq('room_id', room_id)
+                    .neq('sender_type', 'admin_memo')
+                    .neq('sender_type', 'internal')
+                    .order('created_at', { ascending: true })
+                    .limit(100),
+                sb.from('chat_rooms')
+                    .select('customer_name, site_lang, source, created_at')
+                    .eq('id', room_id).single(),
+            ]);
+
+            return new Response(JSON.stringify({
+                messages: msgRes.data || [],
+                room: roomRes.data || null,
+            }), { headers: { ...cors, "Content-Type": "application/json" } });
+        }
+
         return new Response(JSON.stringify({ error: "Unknown action: " + action }),
             { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
 

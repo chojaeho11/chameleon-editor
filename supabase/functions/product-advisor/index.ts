@@ -685,6 +685,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     products_recommended: _products ? _products.map((p: any) => ({ code: p.code, name: p.name })) : null,
                     has_image: _hasImage,
                     needs_learning: _needsLearning,
+                    room_id: _roomId || null,
                 });
 
                 // 2) chat_messages (개별 insert — realtime 트리거)
