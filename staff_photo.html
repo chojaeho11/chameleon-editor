@@ -206,7 +206,7 @@ function uploadPhotos(orderId) {
     input.type = 'file';
     input.accept = 'image/*';
     input.multiple = true;
-    input.capture = 'environment'; // 카메라 우선
+    // capture removed - allow file picker
     input.onchange = async () => {
         const files = Array.from(input.files).slice(0, 6);
         if (!files.length) return;
