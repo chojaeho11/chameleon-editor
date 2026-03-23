@@ -1686,6 +1686,7 @@
                 <input type="date" id="qaReportDate" class="input-text" style="width:150px;">
                 <select id="qaReportFilter" class="input-text" style="width:140px;">
                     <option value="all">전체</option>
+                    <option value="needs_learning">🔴 학습 필요</option>
                     <option value="unreviewed">미검토</option>
                     <option value="reviewed">검토완료</option>
                 </select>
@@ -2542,6 +2543,7 @@
             .eq('is_active', true)
             .order('created_at', { ascending: false })
             .limit(100);
+        if (filter === 'needs_learning') q = q.eq('needs_learning', true).eq('is_reviewed', false);
         if (filter === 'unreviewed') q = q.eq('is_reviewed', false);
         if (filter === 'reviewed') q = q.eq('is_reviewed', true);
         if (lang !== 'all') q = q.eq('lang', lang);
@@ -2592,6 +2594,7 @@
             h += '<div style="display:flex;gap:8px;align-items:center;">';
             h += '<span style="font-size:13px;font-weight:700;color:#334155;">'+time+'</span>';
             h += '<span style="background:'+langColor+';color:#fff;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">'+langBadge+'</span>';
+            if (qa.needs_learning) h += '<span style="background:#ef4444;color:#fff;padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;">🔴 학습 필요</span>';
             if (qa.has_image) h += '<span style="background:#f59e0b;color:#fff;padding:2px 6px;border-radius:6px;font-size:10px;">이미지</span>';
             if (qa.category && qa.category !== 'general') h += '<span style="background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:6px;font-size:10px;">'+qaEsc(qa.category)+'</span>';
             h += '</div>' + statusBadge + '</div>';

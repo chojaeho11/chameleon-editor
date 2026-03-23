@@ -663,6 +663,10 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         const _hasImage = !!image;
         const _roomId = roomId;
 
+        // 상담사 연결 추천 감지 (학습 필요한 질문)
+        const _needsLearning = /상담사|상담원|매니저|담당자|consultant|agent|担当|接続|스태프/.test(_resultMsg)
+            || /확인.*후.*답변|정확.*안내|도와드리|お手伝い|help you/.test(_resultMsg);
+
         (async () => {
             try {
                 // 1) Q&A 로그
@@ -671,6 +675,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     ai_response: _resultMsg,
                     products_recommended: _products ? _products.map((p: any) => ({ code: p.code, name: p.name })) : null,
                     has_image: _hasImage,
+                    needs_learning: _needsLearning,
                 });
 
                 // 2) chat_messages (개별 insert — realtime 트리거)
