@@ -705,7 +705,7 @@ function subscribeLive(roomId) {
                         <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
                 if (m.file_url) {
                     if (m.file_type && m.file_type.startsWith('image/'))
-                        html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:4px;" onclick="window.open(this.src)">`;
+                        html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:4px;" onclick="(window.top||window).open(this.src)">`;
                     else
                         html += `<a href="${m.file_url}" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:4px;">📎 ${esc(m.file_name || 'File')}</a>`;
                 }
@@ -794,7 +794,7 @@ async function uploadLiveFile(file) {
         if (uploadingEl) uploadingEl.remove();
 
         if (file.type && file.type.startsWith('image/')) {
-            if (chatArea) chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${url}" class="adv-chat-img" alt="uploaded" onclick="window.open(this.src)"></div></div>`);
+            if (chatArea) chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${url}" class="adv-chat-img" alt="uploaded" onclick="(window.top||window).open(this.src)"></div></div>`);
         } else {
             addBubble('📎 ' + file.name + ' ✅', 'user');
         }
@@ -870,7 +870,7 @@ function renderRestoredMsg(m) {
     if (m.sender_type === 'customer') {
         if (m.file_url) {
             if (m.file_type && m.file_type.startsWith('image/'))
-                chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${m.file_url}" class="adv-chat-img" onclick="window.open(this.src)"></div></div>`);
+                chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${m.file_url}" class="adv-chat-img" onclick="(window.top||window).open(this.src)"></div></div>`);
             else
                 chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user">📎 ${esc(m.file_name || 'File')}</div></div>`);
         }
@@ -881,7 +881,7 @@ function renderRestoredMsg(m) {
             <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
         if (m.file_url) {
             if (m.file_type && m.file_type.startsWith('image/'))
-                html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;" onclick="window.open(this.src)">`;
+                html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;" onclick="(window.top||window).open(this.src)">`;
             else
                 html += `<a href="${m.file_url}" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;">📎 ${esc(m.file_name || 'File')}</a>`;
         }
@@ -1015,7 +1015,7 @@ function addProductCards(products) {
                 ${rec.price_display ? `<span><i class="fa-solid fa-tag"></i> ${esc(rec.price_display)}</span>` : ''}
             </div>
             <div class="adv-card-btns">
-                <a href="#" onclick="window.open('${detailUrl}','_blank');return false;" class="adv-btn-editor" style="text-decoration:none; text-align:center; flex:1; cursor:pointer;">
+                <a href="#" onclick="(window.top||window).open('${detailUrl}','_blank');return false;" class="adv-btn-editor" style="text-decoration:none; text-align:center; flex:1; cursor:pointer;">
                     <i class="fa-solid fa-bag-shopping"></i> ${detailLabel}
                 </a>
             </div>
@@ -1133,7 +1133,7 @@ function formatMsg(msg) {
     return esc(msg)
         .replace(/\n/g, '<br>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/(https?:\/\/[^\s<&]+)/g, '<a href="#" onclick="window.open(\'$1\',\'_blank\');return false;" style="color:#93c5fd;text-decoration:underline;word-break:break-all;cursor:pointer;">$1</a>');
+        .replace(/(https?:\/\/[^\s<&]+)/g, '<a href="#" onclick="(window.top||window).open(\'$1\',\'_blank\');return false;" style="color:#93c5fd;text-decoration:underline;word-break:break-all;cursor:pointer;">$1</a>');
 }
 function scrollChat() {
     if (chatArea) {
