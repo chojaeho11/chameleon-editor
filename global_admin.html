@@ -2689,6 +2689,7 @@
                     h += '<div style="max-width:75%;">';
                     h += '<div style="background:#f1f5f9;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:13px;color:#334155;">';
                     h += qaEsc(cleanMsg.substring(0, 800));
+                    if (isNonKr) h += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:12px;color:#6366f1;font-style:italic;" id="qaTrBot_'+idx+'">[한국어 번역 대기]</div>';
                     h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
                     h += '</div>';
                     // "이건 틀렸어" 버튼
@@ -2720,12 +2721,19 @@
         var sb = getSb();
         for (var i = 0; i < messages.length; i++) {
             var m = messages[i];
-            if (m.sender_type !== 'customer' || !m.message) continue;
-            var el = document.getElementById('qaTr_' + i);
+            if (!m.message) continue;
+            var isCustomer = m.sender_type === 'customer';
+            var isBot = m.sender_type === 'chatbot';
+            if (!isCustomer && !isBot) continue;
+
+            var elId = isCustomer ? 'qaTr_' + i : 'qaTrBot_' + i;
+            var el = document.getElementById(elId);
             if (!el) continue;
+
+            var cleanMsg = (m.message || '').replace(/<!--PRODUCTS:.*?-->/g, '').trim().substring(0, 500);
             try {
                 var res = await sb.functions.invoke('admin-qa-update', {
-                    body: { action: 'translate_ai_response', qa_id: 'thread', ai_response: m.message, lang: lang }
+                    body: { action: 'translate_ai_response', qa_id: 'thread', ai_response: cleanMsg, lang: lang }
                 });
                 var d = res.data;
                 if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
