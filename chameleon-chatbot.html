@@ -18,7 +18,7 @@
         display: flex;
         flex-direction: column;
     }
-    /* advisor-panel 전체화면 */
+    /* advisor-panel 전체화면 (iframe/standalone 모드) */
     .advisor-panel {
         max-width: 100% !important;
         width: 100% !important;
@@ -27,15 +27,25 @@
         height: 100vh !important;
         display: flex !important;
         flex-direction: column !important;
+        overflow: hidden !important;
+    }
+    .adv-panel-header {
+        flex-shrink: 0 !important;
+        border-radius: 0 !important;
     }
     .adv-chat-area {
-        flex: 1 !important;
+        flex: 1 1 0 !important;
         max-height: none !important;
         height: 0 !important;
         min-height: 0 !important;
         overflow-y: auto !important;
+        border-radius: 0 !important;
     }
     .adv-input-area {
+        flex-shrink: 0 !important;
+        border-radius: 0 !important;
+    }
+    .adv-img-preview {
         flex-shrink: 0 !important;
     }
     /* 닫기 버튼 숨기기 */
