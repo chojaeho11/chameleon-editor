@@ -484,10 +484,8 @@ Format: {"ja":["..."],"en":["..."],"zh":["..."],"ar":["..."],"es":["..."],"de":[
                 sb.from('chat_messages')
                     .select('sender_type, sender_name, message, created_at, file_url, file_name')
                     .eq('room_id', room_id)
-                    .neq('sender_type', 'admin_memo')
-                    .neq('sender_type', 'internal')
                     .order('created_at', { ascending: true })
-                    .limit(100),
+                    .limit(300),
                 sb.from('chat_rooms')
                     .select('customer_name, site_lang, source, created_at')
                     .eq('id', room_id).single(),

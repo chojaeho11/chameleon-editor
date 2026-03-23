@@ -594,20 +594,48 @@ function getSb() { return sb; }
                 var time = new Date(m.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
                 var cleanMsg = (m.message||'').replace(/<!--PRODUCTS:.*?-->/g,'').trim();
 
+                // 이미지/파일 HTML
+                var fileHtml = '';
+                if (m.file_url) {
+                    var isImg = /\.(jpg|jpeg|png|gif|webp|svg)/i.test(m.file_url) || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(m.file_name||'');
+                    if (isImg) {
+                        fileHtml = '<div style="margin:6px 0;"><img src="'+m.file_url+'" style="max-width:240px;max-height:200px;border-radius:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)"></div>';
+                    } else {
+                        fileHtml = '<div style="margin:6px 0;"><a href="'+m.file_url+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:12px;">📎 '+(m.file_name||'파일')+'</a></div>';
+                    }
+                }
+                // 메시지 내 이미지 URL 감지
+                var inlineImgMatch = cleanMsg.match(/(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp))/i);
+
                 if (isCustomer) {
                     h += '<div style="display:flex;justify-content:flex-end;">';
                     h += '<div style="max-width:75%;background:#6366f1;color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:13px;">';
+                    if (fileHtml) h += fileHtml;
                     h += qaEsc(cleanMsg);
-                    if (isNonKr) h += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.3);font-size:11px;opacity:0.8;font-style:italic;" id="qaTr_'+idx+'">[번역 대기]</div>';
+                    if (isNonKr && cleanMsg) h += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.3);font-size:11px;opacity:0.8;font-style:italic;" id="qaTr_'+idx+'">[번역 대기]</div>';
                     h += '<div style="font-size:10px;opacity:0.6;margin-top:4px;">'+time+'</div>';
                     h += '</div></div>';
                 } else if (isBot) {
+                    // PRODUCTS 태그에서 제품 이미지 추출
+                    var prodMatch = (m.message||'').match(/<!--PRODUCTS:(.*?)-->/);
+                    var prodCards = '';
+                    if (prodMatch) {
+                        try {
+                            var prods = JSON.parse(prodMatch[1]);
+                            prods.forEach(function(p) {
+                                if (p.img) prodCards += '<img src="'+p.img+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;" title="'+(p.name||'')+'">';
+                            });
+                            if (prodCards) prodCards = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">'+prodCards+'</div>';
+                        } catch(e) {}
+                    }
                     h += '<div style="display:flex;justify-content:flex-start;gap:6px;">';
                     h += '<div style="width:28px;height:28px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">🦎</div>';
                     h += '<div style="max-width:75%;">';
                     h += '<div style="background:#f1f5f9;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:13px;color:#334155;">';
-                    var botLinked = qaEsc(cleanMsg.substring(0, 800)).replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;text-decoration:underline;word-break:break-all;">$1</a>');
+                    if (fileHtml) h += fileHtml;
+                    var botLinked = qaEsc(cleanMsg.substring(0, 1200)).replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;text-decoration:underline;word-break:break-all;">$1</a>');
                     h += botLinked;
+                    if (prodCards) h += prodCards;
                     if (isNonKr) h += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:12px;color:#6366f1;font-style:italic;" id="qaTrBot_'+idx+'">[한국어 번역 대기]</div>';
                     h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
                     h += '</div>';
@@ -624,6 +652,7 @@ function getSb() { return sb; }
                     h += '<div style="max-width:75%;">';
                     h += '<div style="font-size:11px;color:#059669;font-weight:700;margin-bottom:2px;">'+qaEsc(mgrName)+'</div>';
                     h += '<div style="background:#ecfdf5;border:1px solid #a7f3d0;padding:10px 14px;border-radius:4px 16px 16px 16px;font-size:13px;color:#334155;">';
+                    if (fileHtml) h += fileHtml;
                     h += linkedMsg;
                     h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
                     h += '</div></div></div>';
