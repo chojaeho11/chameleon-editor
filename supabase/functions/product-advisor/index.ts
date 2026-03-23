@@ -206,6 +206,11 @@ serve(async (req) => {
 - "포멕스" → 포맥스
 - "후렉스", "플렉스" → 후렉스/라텍스 출력
 
+## 가격 규칙 (최우선!)
+- ⚠️ **가격은 반드시 아래 "상품 데이터"의 p(price) 값만 사용해!** 학습 Q&A나 이전 대화의 가격은 무시해 — 가격은 수시로 변경되므로 상품 데이터가 항상 최신이야.
+- 학습 Q&A에 나온 금액과 상품 데이터의 금액이 다르면, **상품 데이터가 맞는 거야.**
+- 디자인 비용, 부가 서비스 비용 등 상품 데이터에 없는 비용을 임의로 만들어내지 마. 확실하지 않으면 "정확한 금액은 상세페이지에서 확인해주세요"라고 안내해.
+
 ## 핵심 원칙
 1. **대화를 먼저 해** — 고객이 인사하거나 일상 대화를 하면 자연스럽게 대화해. 무조건 제품을 추천하지 마.
 2. **제품 추천은 필요할 때만** — 고객이 구매 의사를 보이거나 제품을 찾을 때만 추천해. 연락처/인사/잡담에는 products를 비워둬(빈 배열).
@@ -289,6 +294,11 @@ serve(async (req) => {
 - 画像を送っていただければ分析してお見積もりもできますよ、と自然に案内。
 - 例: 「お友達の誕生日パーティーで予算これくらいなんだけど、何がいい？みたいな感じで気軽に聞いてくださいね！予算に合わせた素敵なイベント、一緒に考えますよ！」
 
+## 価格ルール（最優先！）
+- ⚠️ **価格は必ず下記「商品データ」のp値のみ使用！** 学習Q&Aや過去の会話の価格は無視 — 価格は随時変更されるため、商品データが常に最新です。
+- 学習Q&Aと商品データの金額が異なる場合、**商品データが正しい。**
+- デザイン費用等、商品データにない費用を勝手に作らないで。不明な場合は「正確な金額は商品ページでご確認ください」と案内。
+
 ## 核心原則
 1. **まず会話を** — お客様の挨拶や雑談には自然に会話。すぐに商品を推薦しない。
 2. **推薦は必要な時だけ** — 購入意思や商品検索時のみ推薦。挨拶/雑談にはproducts空配列。
@@ -338,6 +348,11 @@ serve(async (req) => {
 - No robotic phrases like "Is there anything else I can help you with?" — instead say "Let me know if you need anything else!"
 - If they send images, you can analyze them and give estimates — mention this naturally.
 - Example: "Planning a birthday party on a budget? Just tell me what you're thinking and I'll put together some awesome options for you!"
+
+## Pricing Rules (TOP PRIORITY!)
+- ⚠️ **ONLY use prices from the "Product Data" section below (the "p" field)!** Ignore any prices mentioned in Learned Q&A or conversation history — prices change frequently and Product Data is always the latest.
+- If Learned Q&A mentions a different price than Product Data, **Product Data is correct.**
+- NEVER invent fees (design fees, service charges, etc.) that are not in the product data. If unsure, say "please check the product detail page for exact pricing."
 
 ## Core Principles
 1. **Chat first** — greetings/casual talk → natural conversation, don't force product recommendations.
@@ -397,7 +412,8 @@ serve(async (req) => {
                 us: { title: 'Learned Q&A', q: 'Q', a: 'A' },
             };
             const ql = qaLabels[clientLang] || qaLabels['kr'];
-            qaSection = `\n\n## ${ql.title}\n` + qaData.map((q: any) =>
+            const priceWarning = clientLang === 'ja' ? '(⚠️ 価格は上記の商品データが最新。Q&Aの金額は古い可能性あり)' : clientLang === 'us' ? '(⚠️ Product Data prices above are current. Q&A prices may be outdated)' : '(⚠️ 가격은 위 상품 데이터가 최신. Q&A의 금액은 오래된 정보일 수 있음)';
+            qaSection = `\n\n## ${ql.title} ${priceWarning}\n` + qaData.map((q: any) =>
                 `- ${ql.q}: ${q.customer_message}\n  ${ql.a}: ${q.admin_answer}` + (q.category !== 'general' ? ` [${q.category}]` : '')
             ).join('\n');
         }
