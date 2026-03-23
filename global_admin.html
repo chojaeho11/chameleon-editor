@@ -2634,7 +2634,7 @@
             var langColors = {kr:'#3b82f6',ja:'#ef4444',us:'#10b981',en:'#10b981'};
             var langLabels = {kr:'KR',ja:'JP',us:'US',en:'US'};
             var isActive = s.id === _activeRoomId;
-            h += '<div onclick="qaOpenSession(\''+s.id+'\')" style="padding:12px 14px;cursor:pointer;border-bottom:1px solid #e2e8f0;background:'+(isActive?'#ede9fe':'#fff')+';transition:background 0.15s;" onmouseenter="if(!'+isActive+')this.style.background=\'#f8fafc\'" onmouseleave="if(!'+isActive+')this.style.background=\'#fff\'">';
+            h += '<div onclick="qaOpenSession(\''+s.id+'\',\''+(s.site_lang||'kr')+'\')" style="padding:12px 14px;cursor:pointer;border-bottom:1px solid #e2e8f0;background:'+(isActive?'#ede9fe':'#fff')+';transition:background 0.15s;" onmouseenter="if(!'+isActive+')this.style.background=\'#f8fafc\'" onmouseleave="if(!'+isActive+')this.style.background=\'#fff\'">';
             h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
             h += '<span style="font-size:13px;font-weight:700;color:#334155;">'+time+'</span>';
             h += '<span style="background:'+(langColors[s.site_lang]||'#64748b')+';color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;">'+(langLabels[s.site_lang]||s.site_lang)+'</span>';
@@ -2645,8 +2645,9 @@
         list.innerHTML = h;
     }
 
-    window.qaOpenSession = async function(roomId) {
+    window.qaOpenSession = async function(roomId, siteLang) {
         _activeRoomId = roomId;
+        var _forceLang = siteLang || 'kr';
         _renderSessionList();
         var detail = document.getElementById('qaSessionDetail');
         detail.innerHTML = '<div style="text-align:center;padding:40px;"><div style="width:30px;height:30px;border:3px solid #e9d5ff;border-top:3px solid #7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;"></div><span style="color:#7c3aed;font-size:13px;">대화 로딩 중...</span></div>';
@@ -2658,7 +2659,7 @@
             if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
             var messages = (d && d.messages) || [];
             var room = (d && d.room) || {};
-            var isNonKr = room.site_lang && room.site_lang !== 'kr';
+            var isNonKr = _forceLang !== 'kr';
 
             if (!messages.length) { detail.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">메시지 없음</div>'; return; }
 
@@ -2711,7 +2712,7 @@
             detail.innerHTML = h;
 
             // 해외 대화면 자동 번역
-            if (isNonKr) _autoTranslateThread(messages, room.site_lang);
+            if (isNonKr) _autoTranslateThread(messages, _forceLang);
         } catch(e) {
             detail.innerHTML = '<div style="color:#ef4444;padding:20px;">로딩 실패: '+(e.message||e)+'</div>';
         }
