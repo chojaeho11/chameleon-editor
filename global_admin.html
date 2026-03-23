@@ -2577,7 +2577,7 @@
 
         // chat_rooms에서 봇 세션 조회
         var q = sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
-            .like('source', 'bot-%')
+            .or('source.like.bot-%,source.like.chatbot%')
             .gte('created_at', date + 'T00:00:00')
             .lte('created_at', date + 'T23:59:59')
             .order('updated_at', { ascending: false })
