@@ -163,14 +163,14 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
         },
         JP: {
             title:'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-            desc:'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
-            keywords:'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,無料エディター,オンライン印刷,UV印刷,Tシャツ印刷',
+            desc:'リボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
+            keywords:'カメレオンプリンティング,リボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,無料エディター,オンライン印刷,UV印刷,Tシャツ印刷',
             lang:'ja', siteName:'カメレオンプリンティング'
         },
         US: {
             title:'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-            desc:'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
-            keywords:'chameleon printing,honeycomb board,honeycomb board printing,exhibition booth,exhibition booth display,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing,UV printing,custom printing,trade show display,convention display',
+            desc:'Re-boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
+            keywords:'chameleon printing,Re-board,Re-board printing,exhibition booth,exhibition booth display,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing,UV printing,custom printing,trade show display,convention display',
             lang:'en', siteName:'Chameleon Printing'
         },
         CN: {
@@ -187,8 +187,8 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
         },
         ES: {
             title:'Chameleon Printing - Impresion Eco Display & Pop-up Store con Editor Gratis',
-            desc:'Paneles honeycomb, impresion en tela, acrilicos, banners, letreros y packaging. Editor de diseno online gratuito.',
-            keywords:'chameleon printing,panel honeycomb,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner,editor gratis',
+            desc:'Paneles Re-board, impresion en tela, acrilicos, banners, letreros y packaging. Editor de diseno online gratuito.',
+            keywords:'chameleon printing,panel Re-board,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner,editor gratis',
             lang:'es', siteName:'Chameleon Printing'
         },
         DE: {
@@ -307,13 +307,13 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
             { q:'最小注文数量はありますか？', a:'いいえ、1個から注文可能です。小ロット注文も歓迎します。' },
             { q:'無料デザインエディターはどう使いますか？', a:'商品選択後「デザインする」ボタンをクリックするとブラウザ上でデザインできます。ソフトインストール不要。' },
             { q:'配送はどのくらいかかりますか？', a:'韓国から日本への配送は通常7-14日かかります。' },
-            { q:'ハニカムボードの特長は？', a:'ハニカムボードはハニカム構造の段ボール素材で、通常のフォームボードより環境に優しく軽量です。リサイクル可能。' }
+            { q:'リボードの特長は？', a:'リボードはリボード構造の段ボール素材で、通常のフォームボードより環境に優しく軽量です。リサイクル可能。' }
         ],
         US: [
             { q:'Is there a minimum order quantity?', a:'No minimum! You can order as little as 1 piece. We welcome small and large orders alike.' },
             { q:'How do I use the free design editor?', a:'Select a product and click "Design Now" — our browser-based editor works like Canva. No software installation needed.' },
             { q:'How long does shipping take?', a:'International shipping from Korea typically takes 7-14 business days. Expedited options available.' },
-            { q:'What is honeycomb board?', a:'Honeycomb board uses an eco-friendly honeycomb cardboard core, making it lighter and more sustainable than foam board. Fully recyclable.' }
+            { q:'What is Re-board?', a:'Re-board uses an eco-friendly honeycomb cardboard core, making it lighter and more sustainable than foam board. Fully recyclable.' }
         ]
     };
     var faqItems = faqData[cc] || faqData.US;
@@ -346,7 +346,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
                 "@type": "OfferCatalog",
                 "name": cc === 'JP' ? '印刷製品カタログ' : cc === 'KR' ? '인쇄 제품 카탈로그' : 'Print Product Catalog',
                 "itemListElement": [
-                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'ハニカムボード印刷' : cc === 'KR' ? '허니콤보드 인쇄' : 'Honeycomb Board Printing' } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'リボード印刷' : cc === 'KR' ? '허니콤보드 인쇄' : 'Re-board Printing' } },
                     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'ファブリック印刷' : cc === 'KR' ? '패브릭 인쇄' : 'Fabric Printing' } },
                     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? '紙什器制作' : cc === 'KR' ? '종이매대 제작' : 'Paper Display Stand' } }
                 ]
@@ -1651,7 +1651,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
     <div class="hotdeal-header">
-        <h2><span data-i18n="home_hotdeal_title">허니콤보드</span> <span class="badge-hot" style="background:#f59e0b;">Honeycomb</span></h2>
+        <h2><span data-i18n="home_hotdeal_title">허니콤보드</span> <span class="badge-hot" style="background:#f59e0b;">Re-board</span></h2>
         <p data-i18n="home_hotdeal_desc">전시부스, 팝업스토어, 인테리어에 최적화된 허니콤보드</p>
     </div>
     <div class="hotdeal-scroll-wrap">
@@ -2770,7 +2770,7 @@ async function handleSubReturn() {
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">営業時間</th><td style="padding:12px 8px;" data-i18n="footer_cs_time">平日 09:00 ~ 18:00</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">メールアドレス</th><td style="padding:12px 8px;">support@cafe0101.com</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">販売価格</th><td style="padding:12px 8px;">各商品ページに記載（税込価格）</td></tr>
-            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">送料</th><td style="padding:12px 8px;">全商品 送料無料（ハニカムボード施工配送を除く）。ハニカムボードの設置が必要な場合、別途配送料が発生します。</td></tr>
+            <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">送料</th><td style="padding:12px 8px;">全商品 送料無料（リボード施工配送を除く）。リボードの設置が必要な場合、別途配送料が発生します。</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">お支払い方法</th><td style="padding:12px 8px;">クレジットカード（Visa, Mastercard, JCB, AMEX）、銀行振込</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">商品の引渡し時期</th><td style="padding:12px 8px;">ご注文確認後、3〜7営業日以内に発送いたします。</td></tr>
             <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:12px 8px; text-align:left; background:#f8fafc; color:#475569; font-weight:600;">返品・交換について</th><td style="padding:12px 8px;">商品到着後7日以内に限り返品・交換を承ります。お客様のご都合による返品の場合、送料はお客様負担となります。不良品の場合は当社が送料を負担いたします。オーダーメイド商品は返品・交換不可。</td></tr>
@@ -6316,8 +6316,8 @@ window.filterFxCards = function(cat, btn) {
         } else {
             const t = {
                 kr: { title:'🏗️ 허니콤보드 특별 할인', subtitle:'500만원 이상 구매 시', amount:'100만원 할인', rules:['허니콤보드 총 주문금액 500만원 이상 시 적용','100만원 할인 쿠폰 자동 적용','전시부스, 팝업스토어, 인테리어 등 모든 용도','디자인 시안 무료 제공','전국 배송 및 설치 가능'] },
-                ja: { title:'🏗️ ハニカムボード 無料制作', subtitle:'東京・大阪・名古屋', amount:'10万円まで無料', rules:['展示ブース・ポップアップストア向け','制作 + 配送 + 設置 すべて無料（10万円以内）','制作イメージはポートフォリオとして使用されます','デザイン案の無料提供','東京・大阪・名古屋 対応可能'] },
-                en: { title:'🏗️ Honeycomb Board Free Setup', subtitle:'Las Vegas, New York, LA', amount:'Free up to $700', rules:['Exhibition booth & pop-up store production','Production + Shipping + Installation ALL FREE (under $700)','Production images will be used as portfolio','Free design mockup included','Available in Las Vegas, New York, LA, and major US cities'] }
+                ja: { title:'🏗️ リボード 無料制作', subtitle:'東京・大阪・名古屋', amount:'10万円まで無料', rules:['展示ブース・ポップアップストア向け','制作 + 配送 + 設置 すべて無料（10万円以内）','制作イメージはポートフォリオとして使用されます','デザイン案の無料提供','東京・大阪・名古屋 対応可能'] },
+                en: { title:'🏗️ Re-board Free Setup', subtitle:'Las Vegas, New York, LA', amount:'Free up to $700', rules:['Exhibition booth & pop-up store production','Production + Shipping + Installation ALL FREE (under $700)','Production images will be used as portfolio','Free design mockup included','Available in Las Vegas, New York, LA, and major US cities'] }
             };
             const d = t[lang] || t['kr'];
             content = `<div style="background:linear-gradient(135deg,#f59e0b,#ef4444);padding:28px 24px 20px;color:#fff;text-align:center;">
@@ -6940,13 +6940,13 @@ async function loadScrollBanner() {
         // 섹션별로 분리 저장 + 분류명 태그
         const _bl = {
             kr:['허니콤보드','천가게','인쇄소','굿즈샵','인기절정'],
-            ja:['ハニカム','布屋','印刷所','グッズ','人気'],
-            en:['Honeycomb','Fabric','Print','Goods','Best'],
-            zh:['蜂窝板','布行','印刷','好物','爆款'],
-            ar:['عسل','أقمشة','طباعة','هدايا','الأكثر'],
-            es:['Honeycomb','Telas','Imprenta','Regalos','Top'],
-            de:['Honeycomb','Stoff','Druck','Geschenke','Best'],
-            fr:['Honeycomb','Tissus','Imprimerie','Cadeaux','Top']
+            ja:['リボード','布屋','印刷所','グッズ','人気'],
+            en:['Re-board','Fabric','Print','Goods','Best'],
+            zh:['Re-board','布行','印刷','好物','爆款'],
+            ar:['Re-board','أقمشة','طباعة','هدايا','الأكثر'],
+            es:['Re-board','Telas','Imprenta','Regalos','Top'],
+            de:['Re-board','Stoff','Druck','Geschenke','Best'],
+            fr:['Re-board','Tissus','Imprimerie','Cadeaux','Top']
         };
         const _lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) ? {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'}[window.SITE_CONFIG.COUNTRY] || 'kr' : 'kr';
         const badgeNames = _bl[_lang] || _bl.kr;
@@ -14369,7 +14369,7 @@ window._dsmPrintCategory = '';
 
 // 도매/소재 카테고리 제외 목록
 var DSM_EXCLUDE_CATS = [
-    'Honeycomb Board','PVC Foam Board','Foam Board','Color Acrylic Sheets',
+    'Re-board','PVC Foam Board','Foam Board','Color Acrylic Sheets',
     'Water-based Inkjet Media','Solvent Inkjet Media','Solvent PVC Banner',
     'Solvent PVC Tent Fabric','Nonwoven Fabric','Coated Paper','low-Den-Banner',
     'miller','664659846','78454512','LX-FILM','Cut Vinyl','Imported Goods',
@@ -16375,11 +16375,11 @@ window.dsmRenderProducts = async function(keyword) {
 <h1>Chameleon Printing - Global Eco-Friendly Printing Platform</h1>
 <p>Chameleon Printing is a global online printing platform with a free built-in design editor. We serve customers in Korea, Japan, and the United States with 560+ manufacturing partners across 20+ countries.</p>
 
-<h2>Honeycomb Board Printing - Exhibition Booth & Pop-up Store Display</h2>
-<img src="/mascot-character.png" alt="Honeycomb board exhibition booth - 3m x 3m backlit booth set for trade shows and exhibitions" width="600" height="400">
-<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="Honeycomb board temporary wall display - eco-friendly paper display for pop-up stores" width="600" height="400">
-<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770042960042_Honeycomb%20Board%20(945).jpg" alt="Honeycomb board life-size standee - custom printed exhibition display board" width="600" height="400">
-<p>Custom eco-friendly honeycomb board printing for exhibition booths, trade show displays, pop-up stores, and retail environments. Our honeycomb boards are lightweight, durable, and 100% recyclable — perfect for sustainable event displays. Available in custom sizes with full-color UV printing. Free online design editor included.</p>
+<h2>Re-board Printing - Exhibition Booth & Pop-up Store Display</h2>
+<img src="/mascot-character.png" alt="Re-board exhibition booth - 3m x 3m backlit booth set for trade shows and exhibitions" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="Re-board temporary wall display - eco-friendly paper display for pop-up stores" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770042960042_Honeycomb%20Board%20(945).jpg" alt="Re-board life-size standee - custom printed exhibition display board" width="600" height="400">
+<p>Custom eco-friendly Re-board printing for exhibition booths, trade show displays, pop-up stores, and retail environments. Our Re-boards are lightweight, durable, and 100% recyclable — perfect for sustainable event displays. Available in custom sizes with full-color UV printing. Free online design editor included.</p>
 
 <h2>Fabric Printing - Backwalls, Photo Zones & Banners</h2>
 <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/bulk_1768728014712_0.png" alt="Fabric printing backwall display stand - custom printed textile for exhibitions and events" width="600" height="400">
@@ -16408,7 +16408,7 @@ window.dsmRenderProducts = async function(keyword) {
 
 <h2>Our Products</h2>
 <ul>
-<li>Honeycomb Board Printing - Eco exhibition booth displays</li>
+<li>Re-board Printing - Eco exhibition booth displays</li>
 <li>Fabric Printing - Backwalls, banners, and textiles</li>
 <li>Paper Display Stands - Eco-friendly retail displays</li>
 <li>Paper Furniture - Sustainable cardboard furniture</li>
@@ -16439,10 +16439,10 @@ window.dsmRenderProducts = async function(keyword) {
 <p>Visit <a href="https://www.cafe3355.com/">Chameleon Printing</a> to start designing your custom prints today. Free shipping on all products.</p>
 
 <h2>カメレオンプリンティング - 商品一覧</h2>
-<h3>ハニカムボード印刷 - 展示ブース・ポップアップストア</h3>
-<img src="/mascot-character.png" alt="ハニカムボード展示ブース - 3m x 3m バックライト付きブースセット 展示会・イベント用" width="600" height="400">
-<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="ハニカムボード仮壁ディスプレイ - エコ紙ディスプレイ ポップアップストア用" width="600" height="400">
-<p>エコハニカムボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。軽量・耐久性・100%リサイクル可能。無料オンラインエディターでデザイン。</p>
+<h3>リボード印刷 - 展示ブース・ポップアップストア</h3>
+<img src="/mascot-character.png" alt="リボード展示ブース - 3m x 3m バックライト付きブースセット 展示会・イベント用" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="リボード仮壁ディスプレイ - エコ紙ディスプレイ ポップアップストア用" width="600" height="400">
+<p>エコリボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。軽量・耐久性・100%リサイクル可能。無料オンラインエディターでデザイン。</p>
 
 <h3>ファブリック印刷 - バックウォール・フォトゾーン・バナー</h3>
 <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/bulk_1768728014712_0.png" alt="ファブリック印刷バックウォール - カスタム布印刷 展示会・イベント用ディスプレイ" width="600" height="400">

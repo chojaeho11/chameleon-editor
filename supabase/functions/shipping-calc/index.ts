@@ -420,7 +420,7 @@ serve(async (req) => {
         const options: any[] = [];
         const cityLower = city.toLowerCase().trim();
         const isJeju = ["제주", "jeju"].some(k => cityLower.includes(k));
-        const honeycombNA = { kr: "허니콤보드는 택배 불가", ja: "ハニカムボードは宅配不可", en: "Honeycomb: courier unavailable", zh: "蜂窝板无法快递" };
+        const honeycombNA = { kr: "허니콤보드는 택배 불가", ja: "リボードは宅配不可", en: "Re-board: courier unavailable", zh: "Re-board无法快递" };
 
         function priceStr(krw: number): string {
             if (krw === 0) return FREE_LABEL[lang] || "FREE";

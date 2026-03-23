@@ -41,8 +41,8 @@ const SEO_CATEGORIES = {
 // Multilingual SEO metadata for category pages (JP/US)
 const CATEGORY_SEO = {
     honeycomb: {
-        JP: { title: 'ハニカムボード印刷 - エコ紙ディスプレイ | カメレオンプリンティング', desc: 'エコハニカムボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。無料オンラインエディターでデザイン可能。', keywords: 'ハニカムボード,ハニカムボード印刷,紙ディスプレイ,ポップアップストア,エコ展示,展示ブース' },
-        US: { title: 'Honeycomb Board Printing - Eco Paper Display | Chameleon Printing', desc: 'Custom eco-friendly honeycomb board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.', keywords: 'honeycomb board,honeycomb board printing,honeycomb board exhibition booth,paper display,pop-up store display,eco display,exhibition booth,trade show display,retail display board' },
+        JP: { title: 'リボード印刷 - エコ紙ディスプレイ | カメレオンプリンティング', desc: 'エコリボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。無料オンラインエディターでデザイン可能。', keywords: 'リボード,リボード印刷,紙ディスプレイ,ポップアップストア,エコ展示,展示ブース' },
+        US: { title: 'Re-board Printing - Eco Paper Display | Chameleon Printing', desc: 'Custom eco-friendly Re-board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.', keywords: 'Re-board,Re-board printing,Re-board exhibition booth,paper display,pop-up store display,eco display,exhibition booth,trade show display,retail display board' },
     },
     'fabric-print': {
         JP: { title: 'ファブリック印刷 - 高画質布印刷 | カメレオンプリンティング', desc: '高画質ファブリック（布）カスタム印刷。バックウォール・フォトゾーン・背景幕に最適。無料デザインエディター付き。', keywords: 'ファブリック印刷,布印刷,バックウォール,フォトゾーン,背景幕,タペストリー印刷' },
@@ -140,24 +140,24 @@ const OG_DATA = {
         lang: 'ja',
         siteName: 'カメレオンプリンティング',
         title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-        description: 'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
-        keywords: 'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,無料エディター,オンライン印刷',
+        description: 'リボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
+        keywords: 'カメレオンプリンティング,リボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,無料エディター,オンライン印刷',
         url: 'https://www.cafe0101.com/',
     },
     'cafe3355.com': {
         lang: 'en',
         siteName: 'Chameleon Printing',
         title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-        description: 'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace.',
-        keywords: 'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing',
+        description: 'Re-boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace.',
+        keywords: 'chameleon printing,Re-board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,free design editor,online printing',
         url: 'https://www.cafe3355.com/',
     },
     'chameleon.design': {
         lang: 'en',
         siteName: 'Chameleon Printing',
         title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-        description: 'Design and print online. Honeycomb boards, fabric printing, acrylic goods, banners, life-size standees & packaging. Free Canva-like design editor. Worldwide shipping.',
-        keywords: 'chameleon printing,free design editor,online printing,global printing,honeycomb board,fabric printing,pop-up store,trade show display,life-size standee,acrylic print,banner stand,eco printing',
+        description: 'Design and print online. Re-boards, fabric printing, acrylic goods, banners, life-size standees & packaging. Free Canva-like design editor. Worldwide shipping.',
+        keywords: 'chameleon printing,free design editor,online printing,global printing,Re-board,fabric printing,pop-up store,trade show display,life-size standee,acrylic print,banner stand,eco printing',
         url: 'https://chameleon.design/',
     },
 };
@@ -455,12 +455,12 @@ export default {
                         const homeData = cc === 'JP' ? {
                             lang: 'ja', siteName: 'カメレオンプリンティング',
                             title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-                            desc: 'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
+                            desc: 'リボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
                             domain: 'https://www.cafe0101.com'
                         } : cc === 'US' ? {
                             lang: 'en', siteName: 'Chameleon Printing',
                             title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-                            desc: 'Honeycomb boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
+                            desc: 'Re-boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
                             domain: 'https://www.cafe3355.com'
                         } : {
                             lang: 'ko', siteName: '카멜레온프린팅',
@@ -524,12 +524,12 @@ ${hreflangTags('/')}
                         const editorSeo = cc === 'JP' ? {
                             lang: 'ja', siteName: 'カメレオンプリンティング', domain: 'https://www.cafe0101.com',
                             title: '無料デザインエディター - Canva代替オンライン編集ツール | カメレオンプリンティング',
-                            desc: 'カメレオンプリンティングの無料デザインエディター。Canvaのように簡単なオンライン編集ツールで、ハニカムボード・バナー・等身大パネルを自分でデザイン。無料テンプレート＆画像素材付き、会員登録不要ですぐ開始。',
+                            desc: 'カメレオンプリンティングの無料デザインエディター。Canvaのように簡単なオンライン編集ツールで、リボード・バナー・等身大パネルを自分でデザイン。無料テンプレート＆画像素材付き、会員登録不要ですぐ開始。',
                             keywords: '無料デザインエディター,無料エディター,Canva代替,オンラインデザイン,無料画像,無料テンプレート,ポスター作成,バナーデザイン,オンライン編集,無料ポスター作成,印刷デザインエディター,無料画像素材',
                             h1: '無料デザインエディター - Canvaのように簡単なオンライン編集ツール',
                             features: [
                                 { icon: '🎨', title: 'ドラッグ＆ドロップ編集', desc: 'Canvaのような直感的インターフェース。数クリックでプロ級デザイン完成。' },
-                                { icon: '📐', title: '実際の印刷サイズ対応', desc: 'ハニカムボード・バナー・ポスターなど実際の印刷規格に自動設定。' },
+                                { icon: '📐', title: '実際の印刷サイズ対応', desc: 'リボード・バナー・ポスターなど実際の印刷規格に自動設定。' },
                                 { icon: '🖼️', title: '無料テンプレート＆画像', desc: '数百の無料テンプレートと画像ライブラリ。商用利用可能。' },
                                 { icon: '🤖', title: 'AIデザインアシスタント', desc: 'AIがテキスト・レイアウト・配色を自動提案。デザイン経験不要。' },
                                 { icon: '📄', title: '複数ページ対応', desc: '表裏・複数ページを一度に編集。両面印刷物も簡単に。' },
@@ -553,12 +553,12 @@ ${hreflangTags('/')}
                         } : {
                             lang: 'en', siteName: 'Chameleon Printing', domain: 'https://www.cafe3355.com',
                             title: 'Free Design Editor - Canva Alternative for Print Design | Chameleon Printing',
-                            desc: 'Chameleon Printing free design editor. Easy online tool like Canva for designing honeycomb boards, banners, standees & more. Free templates & images included, no signup required.',
+                            desc: 'Chameleon Printing free design editor. Easy online tool like Canva for designing Re-boards, banners, standees & more. Free templates & images included, no signup required.',
                             keywords: 'free design editor,free editor,Canva alternative,online design tool,free images,free templates,poster maker,banner design,online editor,free poster maker,print design editor,free stock images,free design tool',
                             h1: 'Free Design Editor - Easy Online Tool Like Canva for Print Design',
                             features: [
                                 { icon: '🎨', title: 'Drag & Drop Editing', desc: 'Intuitive Canva-like interface. Create professional designs in just a few clicks.' },
-                                { icon: '📐', title: 'Real Print Sizes', desc: 'Auto-configured for actual print specs - honeycomb boards, banners, posters & more.' },
+                                { icon: '📐', title: 'Real Print Sizes', desc: 'Auto-configured for actual print specs - Re-boards, banners, posters & more.' },
                                 { icon: '🖼️', title: 'Free Templates & Images', desc: 'Hundreds of free templates and image library. Available for commercial use.' },
                                 { icon: '🤖', title: 'AI Design Assistant', desc: 'AI suggests text, layout & color schemes automatically. No design experience needed.' },
                                 { icon: '📄', title: 'Multi-Page Support', desc: 'Edit front/back and multiple pages at once. Double-sided prints made easy.' },

@@ -129,8 +129,8 @@ SITE_CONFIG.SEO = {
     },
     'JP': {
         title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-        description: 'ハニカムボード、ファブリック印刷、ポップアップストア専門。無料エディターで等身大パネル・バックウォールのデザインから印刷まで一括対応。',
-        keywords: 'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,紙什器',
+        description: 'リボード、ファブリック印刷、ポップアップストア専門。無料エディターで等身大パネル・バックウォールのデザインから印刷まで一括対応。',
+        keywords: 'カメレオンプリンティング,リボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,紙什器',
         lang: 'ja',
         domain: 'https://www.cafe0101.com',
         siteName: 'カメレオンプリンティング',
@@ -139,8 +139,8 @@ SITE_CONFIG.SEO = {
     },
     'US': {
         title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-        description: 'Honeycomb boards, fabric printing, pop-up store displays. Free online editor for life-size cutouts, backwalls, and custom printing solutions.',
-        keywords: 'chameleon printing,honeycomb board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,foam board',
+        description: 'Re-boards, fabric printing, pop-up store displays. Free online editor for life-size cutouts, backwalls, and custom printing solutions.',
+        keywords: 'chameleon printing,Re-board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,foam board',
         lang: 'en',
         domain: 'https://www.cafe3355.com',
         siteName: 'Chameleon Printing',
@@ -169,8 +169,8 @@ SITE_CONFIG.SEO = {
     },
     'ES': {
         title: 'Chameleon Printing - Impresion Eco Display & Pop-up Store con Editor de Diseno Gratis',
-        description: 'Paneles honeycomb, impresion en tela, displays para pop-up stores. Editor de diseno online gratuito.',
-        keywords: 'chameleon printing,panel honeycomb,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner',
+        description: 'Paneles Re-board, impresion en tela, displays para pop-up stores. Editor de diseno online gratuito.',
+        keywords: 'chameleon printing,panel Re-board,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner',
         lang: 'es',
         domain: 'https://www.cafe3355.com',
         siteName: 'Chameleon Printing',

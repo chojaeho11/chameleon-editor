@@ -20,7 +20,7 @@ const langMap: Record<string, string> = {
 
 // 제품별 SEO 설명 (3개국어)
 const productSeoDesc: Record<string, Record<string, string>> = {
-    honeycomb: { KR: "친환경 허니콤보드 맞춤 인쇄", JP: "エコハニカムボードカスタム印刷", US: "Custom eco-friendly honeycomb board printing" },
+    honeycomb: { KR: "친환경 허니콤보드 맞춤 인쇄", JP: "エコリボードカスタム印刷", US: "Custom eco-friendly Re-board printing" },
     "fabric-print": { KR: "고화질 패브릭(천) 맞춤 인쇄", JP: "高画質ファブリック印刷", US: "High-quality custom fabric printing" },
     "paper-stand": { KR: "친환경 종이매대 맞춤 제작", JP: "エコ紙什器カスタム制作", US: "Custom eco paper display stands" },
     "paper-furniture": { KR: "친환경 종이가구 맞춤 제작", JP: "エコ紙家具カスタム制作", US: "Custom eco paper furniture" },

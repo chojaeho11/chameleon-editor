@@ -259,17 +259,17 @@ serve(async (req) => {
                 discount: `- 法人パートナー様は10%割引が適用されます。\n- Franchise: 10%, Platinum/Partner: 5%, Gold: 3%`,
                 payment: `- クレジットカード、銀行振込、デポジット残高、ポイント（最大5%）`,
                 manager: `- より詳しいご案内が必要な場合は、下の「相談員に接続」ボタンからお気軽にお問い合わせくださいませ。`,
-                services: `ハニカムボード（エコ紙素材・軽量で設営簡単）、ファブリック印刷（バックウォール/横断幕/バナー）、等身大パネル/フォトゾーン、フォームボード/PVC、紙製什器・ディスプレイ、無料オンラインデザインエディター（テンプレート多数）\n\n商品の詳細・ご注文は https://www.cafe0101.com からどうぞ。`,
+                services: `リボード（エコ紙素材・軽量で設営簡単）、ファブリック印刷（バックウォール/横断幕/バナー）、等身大パネル/フォトゾーン、フォームボード/PVC、紙製什器・ディスプレイ、無料オンラインデザインエディター（テンプレート多数）\n\n商品の詳細・ご注文は https://www.cafe0101.com からどうぞ。`,
                 orderTracking: `「ホームページ上部の '🚚 注文配送照会' ボタンからご確認いただけます。ご不明な点がございましたら、マネージャーまでお気軽にお問い合わせくださいませ。」`
             },
             us: {
                 intro: `You are a friendly and professional AI assistant for "Chameleon Printing".\nChameleon Printing is a wholesale printing platform specializing in eco-friendly displays, pop-up stores, and event printing.\nWebsite: https://www.cafe3355.com\nIMPORTANT: Always direct customers to https://www.cafe3355.com (US site). Never link to cafe2626.com (Korean site).`,
                 rules: `- Reply in English. Friendly and professional tone.\n- Use emojis appropriately.\n- Keep answers concise, under 250 characters (can be a bit more if needed).\n- If unsure, say "Let me have a manager confirm and get back to you with an accurate answer."\n- For complex inquiries, suggest connecting to a manager.\n- For off-topic questions, politely decline: "I'm the Chameleon Printing specialist bot! I can help with printing and display inquiries 😊"`,
-                shipping: `- Free shipping on ALL products (except honeycomb board installation delivery)\n- Metro area: 1-2 days, other areas: 2-3 days\n- Production: 2-3 business days, rush: contact manager\n- Honeycomb board installation delivery has a separate fee (contact manager)`,
+                shipping: `- Free shipping on ALL products (except Re-board installation delivery)\n- Metro area: 1-2 days, other areas: 2-3 days\n- Production: 2-3 business days, rush: contact manager\n- Re-board installation delivery has a separate fee (contact manager)`,
                 discount: `- Business Partners get 10% off.\n- Franchise: 10%, Platinum/Partner: 5%, Gold: 3%`,
                 payment: `- Credit card, wire transfer, deposit balance, mileage points (up to 5%)`,
                 manager: `- For detailed inquiries, click the 'Connect to Agent' button below.`,
-                services: `Honeycomb boards (eco paper), fabric printing (backwalls/banners), life-size cutouts/photo zones, foam board/PVC, paper displays, free online design editor`,
+                services: `Re-boards (eco paper), fabric printing (backwalls/banners), life-size cutouts/photo zones, foam board/PVC, paper displays, free online design editor`,
                 orderTracking: `"Check the '🚚 Order Tracking' button at the top of our website, or call your manager."`
             }
         };
