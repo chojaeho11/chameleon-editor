@@ -12,11 +12,13 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
         font-family: 'Pretendard', -apple-system, sans-serif;
-        background: #f1f5f9;
+        background: transparent;
         height: 100vh;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
-    /* advisor-panel을 전체화면으로 */
+    /* advisor-panel 전체화면 */
     .advisor-panel {
         max-width: 100% !important;
         width: 100% !important;
@@ -29,10 +31,17 @@
     .adv-chat-area {
         flex: 1 !important;
         max-height: none !important;
-        height: auto !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
     }
-    /* 닫기 버튼 숨기기 (standalone이므로) */
+    .adv-input-area {
+        flex-shrink: 0 !important;
+    }
+    /* 닫기 버튼 숨기기 */
     .adv-panel-close { display: none !important; }
+    /* Play Here 버튼 숨기기 (standalone에서 불필요) */
+    .adv-studio-btn { display: none !important; }
 </style>
 </head>
 <body>
