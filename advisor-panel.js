@@ -227,19 +227,35 @@ function openPanel() {
 
 // ─── 헤더 전화/이메일 링크 ───
 function _getContactLinks() {
-    const lang = getLang();
-    let html = '<div style="display:flex;align-items:center;gap:4px;">';
-    // 전화 버튼 (팝업으로 상세 안내)
-    const phoneLabels = { kr: '전화', ja: 'TEL', en: 'Call' };
-    html += `<button class="adv-header-btn" id="advPhoneBtn" style="font-size:12px;display:flex;align-items:center;gap:3px;padding:4px 8px;">
-        <i class="fa-solid fa-phone"></i> <span style="font-size:11px;font-weight:700;">${phoneLabels[lang] || 'Call'}</span>
-    </button>`;
-    // 이메일 버튼
-    html += `<a href="mailto:design@chameleon.design" class="adv-header-btn" style="text-decoration:none;color:#fff;font-size:12px;display:flex;align-items:center;gap:3px;padding:4px 8px;">
-        <i class="fa-solid fa-envelope"></i> <span style="font-size:11px;font-weight:700;">Email</span>
-    </a>`;
-    html += '</div>';
+    let html = '';
+    html += `<button class="adv-header-btn" id="advPhoneBtn" title=""><i class="fa-solid fa-phone" style="font-size:13px;"></i></button>`;
+    html += `<a href="mailto:design@chameleon.design" class="adv-header-btn" style="text-decoration:none;color:#fff;" title=""><i class="fa-solid fa-envelope" style="font-size:13px;"></i></a>`;
     return html;
+}
+
+function _attachTooltip(el, type) {
+    const lang = getLang();
+    let content = '';
+    if (type === 'phone') {
+        if (lang === 'kr') content = '<div style="font-weight:800;margin-bottom:6px;">📞 전화 문의</div><div>🏭 본사: 031-366-1984</div><div>👤 지숙: 010-3455-1946</div><div>👤 은미: 010-7793-5393</div><div>👤 성희: 010-3490-3328</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 평일 09:00~18:00</div>';
+        else if (lang === 'ja') content = '<div style="font-weight:800;margin-bottom:6px;">📞 お電話</div><div>🇯🇵 047-712-1148</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 平日 09:00〜18:00</div>';
+        else content = '<div style="font-weight:800;margin-bottom:6px;">📞 Contact</div><div>✉️ design@chameleon.design</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ Weekdays 09:00-18:00 KST</div>';
+    } else {
+        content = '<div style="font-weight:800;margin-bottom:4px;">✉️ Email</div><div style="color:#6366f1;font-weight:700;">design@chameleon.design</div>';
+    }
+
+    let tip = null;
+    el.addEventListener('mouseenter', () => {
+        if (tip) return;
+        tip = document.createElement('div');
+        tip.style.cssText = 'position:absolute;top:100%;right:0;margin-top:8px;background:#fff;color:#333;padding:14px 18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.18);font-size:13px;line-height:1.7;z-index:99999;white-space:nowrap;min-width:200px;';
+        tip.innerHTML = content;
+        el.style.position = 'relative';
+        el.appendChild(tip);
+    });
+    el.addEventListener('mouseleave', () => {
+        if (tip) { tip.remove(); tip = null; }
+    });
 }
 
 function _showPhonePopup() {
@@ -351,9 +367,17 @@ function buildPanelUI() {
         clearLiveState();
     });
 
-    // 전화 안내 팝업
+    // 전화 버튼: 클릭 → 팝업, hover → 툴팁
     const phoneBtn = document.getElementById('advPhoneBtn');
-    if (phoneBtn) phoneBtn.addEventListener('click', _showPhonePopup);
+    if (phoneBtn) {
+        phoneBtn.addEventListener('click', _showPhonePopup);
+        _attachTooltip(phoneBtn, 'phone');
+    }
+    // 이메일 버튼: hover → 툴팁
+    const emailBtn = phoneBtn ? phoneBtn.nextElementSibling : null;
+    if (emailBtn && emailBtn.tagName === 'A') {
+        _attachTooltip(emailBtn, 'email');
+    }
 
     // 상담사 연결
     document.getElementById('advConsultantBtn').addEventListener('click', () => {
