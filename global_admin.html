@@ -2689,13 +2689,28 @@
                     h += '<div style="width:28px;height:28px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">🦎</div>';
                     h += '<div style="max-width:75%;">';
                     h += '<div style="background:#f1f5f9;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:13px;color:#334155;">';
-                    h += qaEsc(cleanMsg.substring(0, 800));
+                    var botLinked = qaEsc(cleanMsg.substring(0, 800)).replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;text-decoration:underline;word-break:break-all;">$1</a>');
+                    h += botLinked;
                     if (isNonKr) h += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:12px;color:#6366f1;font-style:italic;" id="qaTrBot_'+idx+'">[한국어 번역 대기]</div>';
                     h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
                     h += '</div>';
                     // "이건 틀렸어" 버튼
                     h += '<button class="btn btn-outline btn-sm" onclick="qaFixThis(\''+roomId+'\','+idx+',\''+qaEsc(cleanMsg.substring(0,200).replace(/'/g,"\\'"))+'\')" style="font-size:10px;margin-top:4px;color:#ef4444;border-color:#fca5a5;">❌ 이건 틀렸어</button>';
                     h += '</div></div>';
+                } else if (m.sender_type === 'manager') {
+                    // 매니저 답변 (초록색 말풍선)
+                    var mgrName = m.sender_name || '매니저';
+                    var linkedMsg = qaEsc(cleanMsg).replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;text-decoration:underline;word-break:break-all;">$1</a>');
+                    h += '<div style="display:flex;justify-content:flex-start;gap:6px;">';
+                    h += '<div style="width:28px;height:28px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">👤</div>';
+                    h += '<div style="max-width:75%;">';
+                    h += '<div style="font-size:11px;color:#059669;font-weight:700;margin-bottom:2px;">'+qaEsc(mgrName)+'</div>';
+                    h += '<div style="background:#ecfdf5;border:1px solid #a7f3d0;padding:10px 14px;border-radius:4px 16px 16px 16px;font-size:13px;color:#334155;">';
+                    h += linkedMsg;
+                    h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
+                    h += '</div></div></div>';
+                } else if (m.sender_type === 'system' || m.sender_type === 'admin_memo') {
+                    h += '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:4px 0;background:#f8fafc;padding:4px 8px;border-radius:8px;">'+qaEsc(cleanMsg.substring(0,150))+'</div>';
                 } else {
                     h += '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:4px 0;">['+(m.sender_name||m.sender_type)+'] '+qaEsc(cleanMsg.substring(0,100))+'</div>';
                 }
