@@ -1015,7 +1015,7 @@ function addProductCards(products) {
                 ${rec.price_display ? `<span><i class="fa-solid fa-tag"></i> ${esc(rec.price_display)}</span>` : ''}
             </div>
             <div class="adv-card-btns">
-                <a href="${detailUrl}" class="adv-btn-editor" style="text-decoration:none; text-align:center; flex:1;">
+                <a href="#" onclick="window.open('${detailUrl}','_blank');return false;" class="adv-btn-editor" style="text-decoration:none; text-align:center; flex:1; cursor:pointer;">
                     <i class="fa-solid fa-bag-shopping"></i> ${detailLabel}
                 </a>
             </div>
@@ -1133,7 +1133,7 @@ function formatMsg(msg) {
     return esc(msg)
         .replace(/\n/g, '<br>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#93c5fd;text-decoration:underline;word-break:break-all;">$1</a>');
+        .replace(/(https?:\/\/[^\s<&]+)/g, '<a href="#" onclick="window.open(\'$1\',\'_blank\');return false;" style="color:#93c5fd;text-decoration:underline;word-break:break-all;cursor:pointer;">$1</a>');
 }
 function scrollChat() {
     if (chatArea) {
