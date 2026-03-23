@@ -225,6 +225,19 @@ function openPanel() {
     buildPanelUI();
 }
 
+// ─── 헤더 전화/이메일 링크 ───
+function _getContactLinks() {
+    const lang = getLang();
+    const phones = { kr: { num: '031-366-1984', label: '031-366-1984' }, ja: { num: '047-712-1148', label: '047-712-1148' } };
+    const ph = phones[lang];
+    let html = '';
+    if (ph) {
+        html += `<a href="tel:${ph.num}" class="adv-header-btn" title="${ph.label}" style="text-decoration:none;font-size:11px;color:#fff;display:flex;align-items:center;gap:3px;"><i class="fa-solid fa-phone" style="font-size:12px;"></i></a>`;
+    }
+    html += `<a href="mailto:design@chameleon.design" class="adv-header-btn" title="design@chameleon.design" style="text-decoration:none;color:#fff;"><i class="fa-solid fa-envelope" style="font-size:12px;"></i></a>`;
+    return html;
+}
+
 // ─── 패널 UI 생성 ───
 function buildPanelUI() {
     panelEl.innerHTML = `
@@ -234,6 +247,7 @@ function buildPanelUI() {
                 <button class="adv-studio-btn" id="advStudioBtn">✨ ${t('studio')}</button>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
+                ${_getContactLinks()}
                 <button class="adv-header-btn" id="advConsultantBtn" title="${t('consultant')}">
                     <i class="fa-solid fa-headset"></i>
                 </button>

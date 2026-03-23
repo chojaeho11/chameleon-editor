@@ -931,34 +931,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </span>
         </button>
     </div>
-    <!-- 전화/이메일 안내 바 (카프 채팅 위) -->
-    <div id="contactInfoBar" style="display:none; max-width:900px; width:100%; margin:10px auto 0; padding:0 15px;">
-        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-            <a id="contactPhone" href="tel:031-366-1984" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;text-decoration:none;color:#16a34a;font-size:13px;font-weight:700;">
-                <i class="fa-solid fa-phone"></i> <span id="contactPhoneText">031-366-1984</span>
-            </a>
-            <a href="mailto:design@chameleon.design" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;text-decoration:none;color:#2563eb;font-size:13px;font-weight:700;">
-                <i class="fa-solid fa-envelope"></i> design@chameleon.design
-            </a>
-        </div>
-    </div>
-    <script>
-    // 국가별 전화번호 설정 + 안내바 표시
-    (function(){
-        var bar = document.getElementById('contactInfoBar');
-        if (!bar) return;
-        var cc = window.__SITE_CODE || 'KR';
-        var phoneEl = document.getElementById('contactPhone');
-        var phoneText = document.getElementById('contactPhoneText');
-        if (cc === 'JP') {
-            phoneEl.href = 'tel:047-712-1148';
-            phoneText.textContent = '047-712-1148';
-        } else if (cc === 'US' || cc === 'EN') {
-            phoneEl.style.display = 'none'; // US는 전화 없음
-        }
-        bar.style.display = 'block';
-    })();
-    </script>
     <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 
     <!-- ★ 주문 현황 트래커 -->
