@@ -1130,7 +1130,10 @@ function esc(str) {
 }
 function formatMsg(msg) {
     if (!msg) return '';
-    return esc(msg).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    return esc(msg)
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#93c5fd;text-decoration:underline;word-break:break-all;">$1</a>');
 }
 function scrollChat() {
     if (chatArea) {
