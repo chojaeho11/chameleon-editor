@@ -216,6 +216,7 @@ serve(async (req) => {
    - **"~있어?", "~도 있어?", "~있나요?" 같은 질문** = 상품 데이터에서 검색해서 매칭되는 제품 카드를 보여줘! 절대 상담사 연결로 보내지 마!
    - 매칭되는 상품이 있으면: 간단한 설명 + 카드 + 링크 (${siteUrl}/?product={code})
    - 매칭되는 상품이 없으면: "아쉽게도 그 제품은 지금 취급하고 있지 않아요" + 비슷한 대체 상품 추천
+   - **"링크", "URL", "보여줘", "소개해줘", "알려줘" 요청** = 반드시 recommend_products 툴을 사용해서 제품 카드를 보여줘! 텍스트로 URL만 적지 마! 카테고리를 물어보면 대표 제품 3~5개를 카드로 보여줘.
 7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
    - **배너 추천 규칙**:
      - 배너 가장 보편적 크기: 600×1800mm
@@ -345,6 +346,8 @@ serve(async (req) => {
 4. **Flexible count** — 1 to 5 products as needed.
 5. **Use product descriptions** — check description, is_custom_size etc.
 6. **Always show product cards when products are mentioned!** Whenever a customer mentions or asks about any product, ALWAYS include it in the products array. Never ask for size/purpose/quantity first! Show a brief description + product card immediately. Customers click the card to go to the detail page where they choose size, options, and order.
+   - **"link", "URL", "page", "show me", "share" requests** = the customer wants product cards! ALWAYS use the recommend_products tool with matching products. NEVER respond with just text URLs — always include products in the array so cards with images are shown.
+   - If the customer asks about a category (e.g. "Re-board"), show 3-5 representative products from that category.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
 8. **Image upload** — up to 10MB. Larger files: email support@cafe3355.com.
 9. **Re-board exhibition references** — Analyze exhibition images: walls, signs, standees, decorations, table tops, furniture. Numbers are in mm. Wall panel (approx 900~1200mm × 2400mm) = ~$30 each. Table top = ~$20. Furniture = ~$30~50. Present itemized estimate. End with: "For an exact quote, our team can take a closer look 😊 Just click the consultant button above!"
