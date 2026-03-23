@@ -78,7 +78,7 @@ serve(async (req) => {
         const sb = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
         const [prodRes, baseRes, catRes, qaRes, addonRes, addonCatRes] = await Promise.all([
             sb.from("admin_products")
-                .select("code,name,name_jp,name_us,price,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url,addons")
+                .select("code,name,name_jp,name_us,price,price_jp,price_us,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url,addons")
                 .order("sort_order", { ascending: true }).limit(2000),
             sb.from("admin_products")
                 .select("code,name,price,width_mm,height_mm,is_custom_size,category")
@@ -148,18 +148,57 @@ serve(async (req) => {
             return defLabels[clientLang] || defLabels['kr'];
         }
 
+        // 국가별 실제 가격 사용 (price_us, price_jp가 있으면 환율 변환 대신 직접 사용)
+        function getLocalPrice(p: any): number {
+            if (clientLang === 'us' && p.price_us) return p.price_us;
+            if (clientLang === 'ja' && p.price_jp) return p.price_jp;
+            return p.price || 0;
+        }
+        function formatLocalPrice(amount: number): string {
+            if (clientLang === 'ja') return '\u00a5' + Math.round(amount).toLocaleString('ja-JP');
+            if (clientLang === 'us') return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            return Math.round(amount).toLocaleString('ko-KR') + '\uc6d0';
+        }
+        function getLocalPerSqm(p: any, perSqmKrw: number | null): number | null {
+            if (!perSqmKrw) return null;
+            if (clientLang === 'us' && p.price_us && p.price) return Math.round(perSqmKrw * (p.price_us / p.price));
+            if (clientLang === 'ja' && p.price_jp && p.price) return Math.round(perSqmKrw * (p.price_jp / p.price));
+            return perSqmKrw;
+        }
+
         const products = rawProducts.map((p: any) => {
-            const perSqm = calcPricePerSqm(p, allRaw);
+            const perSqmKrw = calcPricePerSqm(p, allRaw);
+            const localPrice = getLocalPrice(p);
+            const localPerSqm = getLocalPerSqm(p, perSqmKrw);
             const displayName = clientLang === 'ja' ? (p.name_jp || p.name) : clientLang === 'us' ? (p.name_us || p.name) : p.name;
+
+            let priceDisplay: string;
+            if (p.is_custom_size && localPerSqm) {
+                priceDisplay = examplePriceDisplay(p, perSqmKrw);
+                // 국가별 가격이 있으면 직접 계산으로 덮어쓰기
+                if ((clientLang === 'us' && p.price_us) || (clientLang === 'ja' && p.price_jp)) {
+                    // A4 예시 기준 재계산
+                    const a4Area = 0.21 * 0.297;
+                    const a4Price = Math.round(localPerSqm * a4Area);
+                    const labels: Record<string, string> = {
+                        ja: 'A4 約 ' + formatLocalPrice(Math.max(a4Price, 50)),
+                        us: '~' + formatLocalPrice(Math.max(a4Price, 1)) + ' for A4 size',
+                    };
+                    priceDisplay = labels[clientLang] || priceDisplay;
+                }
+            } else {
+                priceDisplay = (clientLang !== 'kr' && (p.price_us || p.price_jp)) ? formatLocalPrice(localPrice) : convertPrice(p.price || 0);
+            }
+
             return {
                 code: p.code, name: displayName, _name_kr: p.name, category: p.category, description: p.description,
                 img_url: p.img_url,
                 width_mm: p.width_mm, height_mm: p.height_mm, is_custom_size: p.is_custom_size,
                 is_general_product: p.is_general_product, is_file_upload: p.is_file_upload,
                 is_bulk_order: p.is_bulk_order, quantity_options: p.quantity_options,
-                price_display: p.is_custom_size ? examplePriceDisplay(p, perSqm) : convertPrice(p.price || 0),
-                price_per_sqm_display: perSqm ? convertPrice(perSqm) : null,
-                _raw_price: p.price || 0, _raw_per_sqm: perSqm,
+                price_display: priceDisplay,
+                price_per_sqm_display: localPerSqm ? formatLocalPrice(localPerSqm) : (perSqmKrw ? convertPrice(perSqmKrw) : null),
+                _raw_price: p.price || 0, _raw_per_sqm: perSqmKrw,
                 addons: p.addons,
             };
         });
