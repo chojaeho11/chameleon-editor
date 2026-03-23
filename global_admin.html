@@ -1681,6 +1681,27 @@
             </div>
         </div>
         <div id="cbPanelLogs" style="display:none;">
+            <!-- 일일 리포트 -->
+            <div id="qaDailyReport" style="background:linear-gradient(135deg,#ede9fe,#dbeafe); border:2px solid #a78bfa; border-radius:14px; padding:16px; margin-bottom:15px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <h4 style="margin:0;color:#4338ca;">📊 오늘의 챗봇 리포트</h4>
+                    <span id="qaDailyTime" style="font-size:11px;color:#64748b;"></span>
+                </div>
+                <div id="qaDailyStats" style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:10px;"></div>
+                <div id="qaDailyAlerts" style="max-height:120px; overflow-y:auto;"></div>
+            </div>
+            <!-- 실시간 알림 배너 -->
+            <div id="qaRealtimeAlert" style="display:none; background:#fef2f2; border:2px solid #fca5a5; border-radius:10px; padding:12px 16px; margin-bottom:12px; animation:pulse 2s infinite;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:20px;">🔴</span>
+                    <div style="flex:1;">
+                        <div style="font-weight:700;color:#dc2626;font-size:13px;" id="qaAlertTitle">챗봇이 답변에 어려움을 겪고 있습니다</div>
+                        <div style="font-size:12px;color:#7f1d1d;" id="qaAlertDetail"></div>
+                    </div>
+                    <button class="btn btn-sm" onclick="document.getElementById('qaRealtimeAlert').style.display='none'" style="background:#fca5a5;color:#7f1d1d;border:none;font-size:11px;">닫기</button>
+                </div>
+            </div>
+            <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.85}}</style>
             <div id="qaReportStats" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:15px;"></div>
             <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
                 <input type="date" id="qaReportDate" class="input-text" style="width:150px;">
@@ -2599,16 +2620,88 @@
         document.getElementById('qaReportCount').textContent = total + '개 세션';
         _renderSessionList();
 
-        // 실시간 구독 (새 대화/메시지 감지)
+        // 실시간 구독 + 일일 리포트
         _startQaRealtimeSub(sb);
+        _loadDailyReport();
     };
 
+    // ─── 일일 리포트 ───
+    async function _loadDailyReport() {
+        var sb = getSb(); if (!sb) return;
+        var today = new Date().toISOString().split('T')[0];
+        var yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+        var [todayTotal, todayNL, todayKr, todayJa, todayUs, yesterdayTotal, yesterdayNL] = await Promise.all([
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('needs_learning',true).eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('lang','kr').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('lang','ja').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').or('lang.eq.us,lang.eq.en').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00').lte('created_at',yesterday+'T23:59:59').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00').lte('created_at',yesterday+'T23:59:59').eq('needs_learning',true).eq('is_active',true),
+        ]);
+
+        var tCount = todayTotal.count||0, nlCount = todayNL.count||0;
+        var yCount = yesterdayTotal.count||0, yNL = yesterdayNL.count||0;
+
+        document.getElementById('qaDailyStats').innerHTML =
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:20px;font-weight:900;color:#6366f1;">'+tCount+'</div><div style="font-size:10px;color:#64748b;">오늘 상담</div></div>' +
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:20px;font-weight:900;color:'+(nlCount>0?'#ef4444':'#10b981')+';">'+nlCount+'</div><div style="font-size:10px;color:#64748b;">🔴 학습 필요</div></div>' +
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#3b82f6;">'+(todayKr.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇰🇷 KR</div></div>' +
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#ef4444;">'+(todayJa.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇯🇵 JP</div></div>' +
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#10b981;">'+(todayUs.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇺🇸 US</div></div>';
+
+        // 어제 비교 + 학습필요 알림
+        var alerts = '';
+        if (nlCount > 0) {
+            alerts += '<div style="background:#fef2f2;padding:8px 12px;border-radius:8px;margin-bottom:4px;font-size:12px;color:#dc2626;font-weight:600;">⚠️ 오늘 '+nlCount+'건의 답변에서 챗봇이 어려움을 겪었습니다. 검토가 필요합니다!</div>';
+        }
+        var diff = tCount - yCount;
+        alerts += '<div style="font-size:11px;color:#64748b;padding:4px 0;">어제 총 '+yCount+'건'+(yNL>0?' (학습필요 '+yNL+'건)':'')+' | 오늘 '+tCount+'건 ('+(diff>=0?'+':'')+diff+')</div>';
+        document.getElementById('qaDailyAlerts').innerHTML = alerts;
+        document.getElementById('qaDailyTime').textContent = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) + ' 기준';
+    }
+
+    // ─── 실시간 알림 (소리 + 데스크톱 알림 + 배너) ───
+    var _qaAlertSound = null;
+    function _playAlertSound() {
+        try {
+            if (!_qaAlertSound) {
+                _qaAlertSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+Jk5eMfG5xeIKMlo+DeXB1fYiTk4h8cXN7hpCTjYF2dHqCjZKQhXt0eIGLkpCGfHV4gYuRj4Z8dniAipGQh312eICKkJCHfnZ5gImQj4d+d3mAiZCPh353eYCJkI+Hfnd5gImQj4d+d3l/iZCOh392eYCJkI6Hf3Z5gIiPjod/dnmAiI+Oh393eICIj46Hf3d5gIiPjod/d3mAiI+Nh393eYCIj42Hf3d5gIiPjYd/d3mAiI+Nh393eYCIj42Hf3d5gA==');
+            }
+            _qaAlertSound.play().catch(function(){});
+        } catch(e) {}
+    }
+
+    function _showDesktopNotification(title, body) {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body: body, icon: '🦎', tag: 'chatbot-alert' });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+    }
+
+    function _showRealtimeAlert(msg, lang) {
+        var banner = document.getElementById('qaRealtimeAlert');
+        if (banner) {
+            var langLabel = {kr:'🇰🇷',ja:'🇯🇵',us:'🇺🇸',en:'🇺🇸'}[lang] || '';
+            document.getElementById('qaAlertTitle').textContent = '🔴 챗봇이 답변에 어려움을 겪고 있습니다';
+            document.getElementById('qaAlertDetail').textContent = langLabel + ' "' + (msg||'').substring(0,60) + '..."';
+            banner.style.display = 'block';
+        }
+        _playAlertSound();
+        _showDesktopNotification('챗봇 학습 필요', (msg||'').substring(0,80));
+    }
+
+    // ─── 실시간 구독 ───
     var _qaRoomSub = null;
     var _qaMsgSub = null;
+    var _qaLogSub = null;
     function _startQaRealtimeSub(sb) {
-        // 기존 구독 해제
         if (_qaRoomSub) { sb.removeChannel(_qaRoomSub); _qaRoomSub = null; }
         if (_qaMsgSub) { sb.removeChannel(_qaMsgSub); _qaMsgSub = null; }
+        if (_qaLogSub) { sb.removeChannel(_qaLogSub); _qaLogSub = null; }
 
         // 새 chat_rooms 감지 → 세션 목록 갱신
         _qaRoomSub = sb.channel('qa-rooms-realtime')
@@ -2620,9 +2713,24 @@
         _qaMsgSub = sb.channel('qa-msgs-realtime')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, function(payload) {
                 if (_activeRoomId && payload.new && payload.new.room_id === _activeRoomId) {
-                    qaOpenSession(_activeRoomId); // 대화 새로고침
+                    var s = _sessions.find(function(ss){return ss.id===_activeRoomId});
+                    qaOpenSession(_activeRoomId, s ? s.site_lang : 'kr');
                 }
             }).subscribe();
+
+        // needs_learning 감지 → 실시간 알림
+        _qaLogSub = sb.channel('qa-log-realtime')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'advisor_qa_log', filter: 'needs_learning=eq.true' }, function(payload) {
+                if (payload.new) {
+                    _showRealtimeAlert(payload.new.customer_message, payload.new.lang);
+                    _loadDailyReport(); // 통계 갱신
+                }
+            }).subscribe();
+
+        // 데스크톱 알림 권한 요청
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
     }
 
     function _renderSessionList() {
