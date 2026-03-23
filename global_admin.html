@@ -2589,6 +2589,30 @@
     var _activeRoomId = null;
     function qaEsc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
 
+    // 학습 필요 세션만 필터
+    window.qaFilterNeedsLearning = async function() {
+        var sb = getSb(); if (!sb) return;
+        var today = new Date().toISOString().split('T')[0];
+
+        // needs_learning=true인 로그의 room_id 조회
+        var { data: logs } = await sb.from('advisor_qa_log').select('room_id')
+            .eq('needs_learning', true).eq('is_active', true)
+            .gte('created_at', today + 'T00:00:00')
+            .not('room_id', 'is', null);
+
+        var roomIds = [...new Set((logs||[]).map(function(l){return l.room_id}).filter(Boolean))];
+        if (!roomIds.length) { showToast('학습 필요한 대화가 없습니다', 'info'); return; }
+
+        // 해당 room_id의 세션만 조회
+        var { data: rooms } = await sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
+            .in('id', roomIds)
+            .order('updated_at', { ascending: false });
+
+        _sessions = rooms || [];
+        document.getElementById('qaReportCount').textContent = _sessions.length + '개 학습필요 세션';
+        _renderSessionList();
+    };
+
     window.qaLoadSessions = async function() {
         var sb = getSb(); if (!sb) return;
         var dateEl = document.getElementById('qaReportDate');
@@ -2646,7 +2670,7 @@
 
         document.getElementById('qaDailyStats').innerHTML =
             '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:20px;font-weight:900;color:#6366f1;">'+tCount+'</div><div style="font-size:10px;color:#64748b;">오늘 상담</div></div>' +
-            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:20px;font-weight:900;color:'+(nlCount>0?'#ef4444':'#10b981')+';">'+nlCount+'</div><div style="font-size:10px;color:#64748b;">🔴 학습 필요</div></div>' +
+            '<div onclick="qaFilterNeedsLearning()" style="background:#fff;padding:10px;border-radius:10px;text-align:center;cursor:pointer;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow=\'0 2px 8px rgba(239,68,68,0.3)\'" onmouseleave="this.style.boxShadow=\'none\'"><div style="font-size:20px;font-weight:900;color:'+(nlCount>0?'#ef4444':'#10b981')+';">'+nlCount+'</div><div style="font-size:10px;color:#64748b;">🔴 학습 필요</div></div>' +
             '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#3b82f6;">'+(todayKr.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇰🇷 KR</div></div>' +
             '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#ef4444;">'+(todayJa.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇯🇵 JP</div></div>' +
             '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#10b981;">'+(todayUs.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇺🇸 US</div></div>';
