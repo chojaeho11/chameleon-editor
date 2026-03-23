@@ -12,11 +12,9 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
         font-family: 'Pretendard', -apple-system, sans-serif;
-        background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+        background: #374151;
         height: 100%;
         overflow: hidden;
-        display: flex;
-        flex-direction: column;
         margin: 0;
         padding: 0;
     }
@@ -50,15 +48,15 @@
     .adv-img-preview {
         flex-shrink: 0 !important;
     }
-    /* 닫기 버튼 — iframe에서는 창 닫기로 동작 */
-    .adv-panel-close { display: flex !important; }
+    /* 기본 닫기 버튼 숨기고 커스텀 닫기 추가 */
+    .adv-panel-close { display: none !important; }
     /* Play Here 버튼 숨기기 (standalone에서 불필요) */
     .adv-studio-btn { display: none !important; }
 </style>
 </head>
 <body>
 
-<div id="advisorPanel" class="advisor-panel" style="display:block"></div>
+<div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 
 <script>
 // lang 파라미터로 SITE_CONFIG 설정
@@ -76,24 +74,27 @@
 import { initAdvisorPanel } from './advisor-panel.js?v=279';
 initAdvisorPanel();
 
-// 닫기 버튼 → 부모 iframe 숨기기
+// 커스텀 닫기 버튼 삽입
 setTimeout(() => {
-    const closeBtn = document.querySelector('.adv-panel-close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+    const header = document.querySelector('.adv-panel-header');
+    if (header) {
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        closeBtn.style.cssText = 'background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px;';
+        closeBtn.onclick = () => {
             try {
-                // iframe 안에서 부모의 chatIframeWrap 숨기기
                 if (window.parent && window.parent !== window) {
                     const wrap = window.parent.document.getElementById('chatIframeWrap');
                     if (wrap) { wrap.style.display = 'none'; window.parent._chatIframeOpen = false; return; }
                 }
-                // standalone 탭이면 탭 닫기
                 window.close();
             } catch(err) { window.close(); }
-        });
+        };
+        // 버튼 그룹 끝에 추가
+        const btnGroup = header.querySelector('div[style*="display:flex"]') || header;
+        btnGroup.appendChild(closeBtn);
     }
-}, 500);
+}, 800);
 </script>
 
 </body>
