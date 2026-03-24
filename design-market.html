@@ -358,16 +358,8 @@
                 <label>상세 설명 <span class="req">*</span></label>
                 <textarea class="form-input" id="postDescription" rows="6" placeholder="원하는 디자인에 대해 자세히 설명해주세요"></textarea>
             </div>
-            <div class="form-row" style="margin-bottom:20px;">
-                <div class="form-group" style="margin:0;">
-                    <label>예산 최소 (원) <span class="req">*</span></label>
-                    <input type="number" class="form-input" id="postBudgetMin" placeholder="예: 50000">
-                </div>
-                <div class="form-group" style="margin:0;">
-                    <label>예산 최대 (원) <span class="req">*</span></label>
-                    <input type="number" class="form-input" id="postBudgetMax" placeholder="예: 200000">
-                </div>
-            </div>
+            <input type="hidden" id="postBudgetMin" value="0">
+            <input type="hidden" id="postBudgetMax" value="0">
             <div class="form-group">
                 <label>연락처 (전화번호)</label>
                 <input type="text" class="form-input" id="postPhone" placeholder="010-0000-0000">
@@ -933,11 +925,6 @@ function translateStaticHTML() {
     postLabels[2].innerHTML = t('description_label') + ' <span class="req">*</span>';
     document.getElementById('postDescription').placeholder = t('description_placeholder');
     // Budget labels
-    const budgetLabels = postForm.querySelectorAll('.form-row .form-group label');
-    budgetLabels[0].innerHTML = t('budget_min_label') + ' ' + currencyUnit() + ' <span class="req">*</span>';
-    budgetLabels[1].innerHTML = t('budget_max_label') + ' ' + currencyUnit() + ' <span class="req">*</span>';
-    document.getElementById('postBudgetMin').placeholder = t('budget_min_placeholder');
-    document.getElementById('postBudgetMax').placeholder = t('budget_max_placeholder');
     postLabels[3].textContent = t('phone_label');
     document.getElementById('postPhone').placeholder = t('phone_placeholder');
     postLabels[4].textContent = t('attach_files');
@@ -1386,7 +1373,7 @@ async function loadRequests() {
                 <div class="customer-avatar">${initial}</div>
             </div>
             <div class="title">${escHtml(r.title)}</div>
-            <div class="budget">${formatPriceRange(r.budget_min, r.budget_max)}</div>
+            <div class="budget" style="font-size:13px;color:#7c3aed;">${r.budget_min ? formatPriceRange(r.budget_min, r.budget_max) : (LANG==='ja'?'デザイナーが金額を提示':LANG==='en'?'Designer sets the price':'디자이너가 금액을 제시')}</div>
             <div class="meta">
                 <span><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
                 ${fileCount ? `<span><i class="fa-solid fa-paperclip"></i> ${t('files')} ${fileCount}${t('count_個')}</span>` : ''}
@@ -1635,8 +1622,6 @@ async function submitRequest() {
     if (!title) { showToast(t('toast_enter_title'), 'error'); return; }
     if (!category) { showToast(t('toast_enter_category'), 'error'); return; }
     if (!description) { showToast(t('toast_enter_desc'), 'error'); return; }
-    if (!budgetMin || !budgetMax) { showToast(t('toast_enter_budget'), 'error'); return; }
-    if (budgetMin > budgetMax) { showToast(t('toast_budget_invalid'), 'error'); return; }
 
     const btn = document.getElementById('btnSubmitRequest');
     btn.disabled = true;
