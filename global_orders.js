@@ -967,12 +967,28 @@ window.loadVipOrders = async () => {
 
         tbody.innerHTML = '';
         data.forEach(item => {
-            let statusBadge = item.status === '확인됨' ? `<span class="badge" style="background:#dcfce7; color:#15803d;">확인완료</span>` : `<span class="badge" style="background:#fee2e2; color:#ef4444;">대기중</span>`;
             const realFiles = item.files ? item.files.filter(f => f.type !== '_error_log') : [];
             let filesHtml = realFiles.length ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:2px;">💾 ${f.name}</a>`).join('') : '<span style="color:#ccc;">파일 없음</span>';
-            
+
+            // 상태 + 관리 버튼
+            let statusBadge = '';
+            let actionHtml = '';
+            const st = item.status || '';
+            if (st.includes('상담중:')) {
+                const who = st.replace('상담중:', '').trim();
+                statusBadge = `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;">💬 ${who} 상담중</span>`;
+                actionHtml = `<button class="btn btn-sm" style="background:#15803d;color:#fff;border:none;font-size:11px;" onclick="updateVipStatus(${item.id},'확인됨')">✅ 완료</button>
+                              <button class="btn btn-sm" style="background:#94a3b8;color:#fff;border:none;font-size:11px;margin-top:3px;" onclick="updateVipStatus(${item.id},'대기중')">↩ 대기</button>`;
+            } else if (st === '확인됨') {
+                statusBadge = `<span class="badge" style="background:#dcfce7;color:#15803d;">✅ 완료</span>`;
+                actionHtml = `<button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="updateVipStatus(${item.id},'대기중')">↩ 대기로</button>`;
+            } else {
+                statusBadge = `<span class="badge" style="background:#fee2e2;color:#ef4444;">대기중</span>`;
+                actionHtml = `<button class="btn btn-primary btn-sm" style="font-size:11px;" onclick="openVipAssignModal(${item.id})">확인</button>`;
+            }
+
             tbody.innerHTML += `
-                <tr style="${item.status !== '확인됨' ? 'background:#fff7ed;' : ''}">
+                <tr style="${st === '대기중' || st === 'quote' ? 'background:#fff7ed;' : ''}">
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
                     <td><span class="badge">${item.preferred_manager || '미지정'}</span></td>
@@ -981,9 +997,7 @@ window.loadVipOrders = async () => {
                     <td style="font-size:13px; color:#475569;">${item.memo || '-'}</td>
                     <td>${filesHtml}</td>
                     <td style="text-align:center;">${statusBadge}</td>
-                    <td style="text-align:center;">
-                        <button class="btn btn-primary btn-sm" onclick="toggleVipStatus(${item.id}, '${item.status}')">${item.status === '확인됨' ? '취소' : '확인'}</button>
-                    </td>
+                    <td style="text-align:center;">${actionHtml}</td>
                 </tr>`;
         });
     } catch (e) {
@@ -992,10 +1006,43 @@ window.loadVipOrders = async () => {
     }
 };
 
-window.toggleVipStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === '확인됨' ? '대기중' : '확인됨';
+window.updateVipStatus = async (id, newStatus) => {
     const { error } = await sb.from('vip_orders').update({ status: newStatus }).eq('id', id);
     if (!error) loadVipOrders();
+};
+
+window.openVipAssignModal = (id) => {
+    let modal = document.getElementById('vipAssignModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'vipAssignModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:24px;width:360px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:16px;font-weight:800;">📞 상담 담당자 선택</h3>
+                <button onclick="document.getElementById('vipAssignModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">&times;</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <button onclick="assignVipConsultant(${id},'은미')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>은미</b> 매니저</button>
+                <button onclick="assignVipConsultant(${id},'성희')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>성희</b> 매니저</button>
+                <button onclick="assignVipConsultant(${id},'지숙')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>지숙</b> 매니저</button>
+                <button onclick="assignVipConsultant(${id},'본사')" style="padding:12px;border:1.5px solid #0ea5e9;border-radius:10px;background:#f0f9ff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">🏢 <b>본사</b> 직접 처리</button>
+            </div>
+        </div>
+    `;
+};
+
+window.assignVipConsultant = async (id, name) => {
+    const newStatus = '상담중: ' + name;
+    const { error } = await sb.from('vip_orders').update({ status: newStatus }).eq('id', id);
+    document.getElementById('vipAssignModal').style.display = 'none';
+    if (error) { showToast('변경 실패: ' + error.message, 'error'); return; }
+    showToast(`${name} 상담 배정 완료`, 'success');
+    loadVipOrders();
 };
 
 window.deleteSelectedVipOrders = async () => {
