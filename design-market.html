@@ -1740,7 +1740,20 @@ function backToMyRequests() {
 }
 
 async function selectBid(requestId, bidId, designerId) {
-    if (!confirm(t('confirm_select'))) return;
+    // 입찰 정보 조회
+    const { data: bid } = await sb.from('design_bids').select('price, designer_id, message').eq('id', bidId).single();
+    if (!bid) { showToast(t('toast_bid_not_found') || 'Bid not found', 'error'); return; }
+    const { data: req } = await sb.from('design_requests').select('title').eq('id', requestId).single();
+    const { data: designer } = await sb.from('designer_profiles').select('display_name').eq('id', designerId).single();
+
+    const designerName = designer?.display_name || 'Designer';
+    const priceDisplay = formatPrice(bid.price);
+    const confirmMsg = LANG === 'ja'
+        ? `${designerName}さんを選択しますか？\n金額: ${priceDisplay}\n\n決済画面に移動します。`
+        : LANG === 'en'
+        ? `Select ${designerName}?\nPrice: ${priceDisplay}\n\nYou will be redirected to checkout.`
+        : `${designerName} 디자이너를 선택하시겠습니까?\n금액: ${priceDisplay}\n\n결제 페이지로 이동합니다.`;
+    if (!confirm(confirmMsg)) return;
 
     // Update request status
     const { error: e1 } = await sb.from('design_requests').update({
@@ -1749,14 +1762,53 @@ async function selectBid(requestId, bidId, designerId) {
     }).eq('id', requestId);
     if (e1) { showToast(t('toast_process_fail') + e1.message, 'error'); return; }
 
-    // Update selected bid status
+    // Update bid statuses
     await sb.from('design_bids').update({ status: 'selected' }).eq('id', bidId);
-
-    // Reject other bids
     await sb.from('design_bids').update({ status: 'rejected' }).eq('request_id', requestId).neq('id', bidId);
 
+    // 장바구니에 디자인비 추가
+    const cartKey = 'chameleon_cart_current';
+    let cart = [];
+    try { cart = JSON.parse(localStorage.getItem(cartKey) || '[]'); } catch(e) {}
+
+    const designTitle = req?.title || 'Design';
+    cart.push({
+        uid: Date.now(),
+        product: {
+            code: 'design_fee_' + requestId.substring(0, 8),
+            name: '[디자인비] ' + designTitle + ' (' + designerName + ')',
+            name_jp: '[デザイン料] ' + designTitle + ' (' + designerName + ')',
+            name_us: '[Design Fee] ' + designTitle + ' (' + designerName + ')',
+            price: bid.price,
+            price_jp: Math.round(bid.price * 0.1),
+            price_us: Math.round(bid.price * 0.001 * 100) / 100,
+            img: '',
+            category: 'design_fee',
+            addons: [],
+            w: 0, h: 0, w_mm: 0, h_mm: 0
+        },
+        type: 'product_only',
+        fileName: '',
+        thumb: '',
+        json: null,
+        width: 0,
+        height: 0,
+        isOpen: false,
+        qty: 1,
+        selectedAddons: {},
+        addonQuantities: {},
+        _designRequestId: requestId,
+        _designBidId: bidId,
+        _designerId: designerId
+    });
+    localStorage.setItem(cartKey, JSON.stringify(cart));
+
     showToast(t('toast_designer_selected'), 'success');
-    showMyRequestDetail(requestId);
+
+    // 메인 페이지 장바구니로 이동
+    setTimeout(() => {
+        window.location.href = location.origin + '/?open_cart=1';
+    }, 500);
 }
 
 // ===== Rating Modal =====

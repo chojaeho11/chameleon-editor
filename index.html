@@ -8280,6 +8280,15 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
     });
 
     // 3. [초기 접속] URL에 ?product=코드, ?_p=코드, __SPA_SLUG, 또는 /제품코드 경로가 있으면 바로 열기 (sb 대기 포함)
+    // 디자인마켓에서 장바구니로 돌아온 경우 자동 열기
+    if (new URLSearchParams(window.location.search).get('open_cart') === '1') {
+        setTimeout(() => {
+            if (window.renderCart) { window.renderCart(); }
+            const cp = document.getElementById('cartPage');
+            if (cp) cp.style.display = 'block';
+        }, 1500);
+    }
+
     (async () => {
         const urlParams = new URLSearchParams(window.location.search);
         let productCode = urlParams.get('product') || urlParams.get('_p');
