@@ -979,7 +979,8 @@ async function showRequestDetail(requestId) {
         filesHtml += '</div>';
     }
 
-    const canBid = designerProfile && r.customer_id !== userId;
+    const isOwner = r.customer_id === userId;
+    const canBid = designerProfile && !isOwner;
     detailView.innerHTML = `
     <div class="request-detail">
         <button class="btn btn-outline btn-sm" onclick="hideRequestDetail()" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> 목록으로</button>
@@ -1029,13 +1030,20 @@ async function showRequestDetail(requestId) {
             </button>
             <div style="margin-top:10px;font-size:11px;color:#a78bfa;">선정 시 총 금액의 70%가 디자이너에게 지급됩니다</div>
         </div>` : ''}
-        ${!designerProfile && r.customer_id !== userId ? `
+        ${!designerProfile && !isOwner ? `
         <div style="margin-top:24px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:14px;padding:20px;text-align:center;">
             <div style="font-size:24px;margin-bottom:6px;">🙋</div>
             <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:8px;">디자이너로 참여하고 싶으신가요?</div>
             <div style="font-size:12px;color:#a16207;margin-bottom:12px;">디자이너 등록 후 이 프로젝트에 입찰할 수 있습니다.</div>
             <button class="btn btn-primary" onclick="openRegisterDesignerModal()" style="background:#f59e0b;border-color:#f59e0b;">
                 <i class="fa-solid fa-user-plus"></i> 디자이너 등록하기
+            </button>
+        </div>` : ''}
+        ${isOwner ? `
+        <div style="margin-top:24px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:13px;color:#166534;">📌 내가 등록한 의뢰입니다. <b>내 의뢰</b> 탭에서 입찰 현황을 확인하세요.</div>
+            <button class="btn btn-outline btn-sm" onclick="switchTab('my-requests')" style="margin-top:8px;">
+                <i class="fa-solid fa-inbox"></i> 내 의뢰 보기
             </button>
         </div>` : ''}
     </div>`;
