@@ -601,7 +601,12 @@ async function sendMessage(text, imageData) {
         const data = await res.json();
 
         // room_id 저장 (다음 메시지에서 재사용)
-        if (data.room_id) _advRoomId = data.room_id;
+        if (data.room_id && data.room_id !== _advRoomId) {
+            _advRoomId = data.room_id;
+            subscribeAdminMessages(_advRoomId);
+        } else if (data.room_id) {
+            _advRoomId = data.room_id;
+        }
 
         typingEl.remove();
 
@@ -645,6 +650,32 @@ async function sendMessage(text, imageData) {
 
     const inp = document.getElementById('advInput');
     if (inp) inp.focus();
+}
+
+// ═══════════════════════════════════════
+// 관리자 메시지 실시간 수신
+// ═══════════════════════════════════════
+let _adminSub = null;
+function subscribeAdminMessages(roomId) {
+    const sb = getSb();
+    if (!sb || !roomId) return;
+    if (_adminSub) { try { _adminSub.unsubscribe(); } catch(e) {} _adminSub = null; }
+
+    _adminSub = sb.channel('adv-admin-' + roomId)
+        .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'chat_messages',
+            filter: 'room_id=eq.' + roomId
+        }, (payload) => {
+            const m = payload.new;
+            if (!m) return;
+            // 관리자가 보낸 메시지만 표시 (sender_name에 '관리자' 포함)
+            if (m.sender_type === 'chatbot' && m.sender_name && m.sender_name.includes('관리자')) {
+                addBubble(m.message, 'ai');
+                scrollChat();
+                saveChat();
+            }
+        })
+        .subscribe();
 }
 
 // ═══════════════════════════════════════
