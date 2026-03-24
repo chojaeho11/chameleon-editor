@@ -561,6 +561,14 @@
     </div>
 </div>
 
+<!-- ===== 디자이너 프로필 팝업 ===== -->
+<div class="modal-overlay" id="designerProfileModal">
+    <div class="modal-box" style="position:relative;max-width:600px;">
+        <button class="modal-close" onclick="document.getElementById('designerProfileModal').classList.remove('show')">&times;</button>
+        <div id="designerProfileContent"></div>
+    </div>
+</div>
+
 <!-- ===== 이미지 뷰어 ===== -->
 <div class="image-viewer" id="imageViewer" onclick="this.classList.remove('show')">
     <img id="viewerImage" src="">
@@ -1054,6 +1062,69 @@ function showImageViewer(url) {
     document.getElementById('imageViewer').classList.add('show');
 }
 
+async function showDesignerProfile(designerId) {
+    const container = document.getElementById('designerProfileContent');
+    container.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+    document.getElementById('designerProfileModal').classList.add('show');
+
+    const { data: d } = await sb.from('designer_profiles').select('*').eq('id', designerId).single();
+    if (!d) { container.innerHTML = '<p>프로필을 찾을 수 없습니다.</p>'; return; }
+
+    // 리뷰 조회
+    const { data: reviews } = await sb.from('design_reviews').select('rating, comment, created_at, customer_id').eq('designer_id', designerId).order('created_at', { ascending: false }).limit(10);
+
+    const avatarHtml = d.photo_url
+        ? `<img src="${d.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ede9fe;">`
+        : `<div style="width:80px;height:80px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;">${(d.display_name||'D')[0]}</div>`;
+
+    const specs = (d.specialties || []).map(s => `<span class="specialty-tag" style="font-size:12px;padding:4px 10px;">${catName(s)}</span>`).join(' ');
+
+    let portfolioHtml = '';
+    if (d.portfolio_urls && d.portfolio_urls.length > 0) {
+        portfolioHtml = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;">';
+        d.portfolio_urls.forEach(u => {
+            portfolioHtml += `<img src="${u}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer;border:1px solid #e2e8f0;" onclick="showImageViewer('${u}')">`;
+        });
+        portfolioHtml += '</div>';
+    }
+
+    let reviewsHtml = '';
+    if (reviews && reviews.length > 0) {
+        reviewsHtml = `<h4 style="font-size:14px;font-weight:700;margin-top:20px;margin-bottom:10px;"><i class="fa-solid fa-star" style="color:#f59e0b;"></i> ${t('reviews')} (${d.total_reviews || reviews.length})</h4>`;
+        reviews.forEach(rv => {
+            reviewsHtml += `<div style="background:#f8fafc;border-radius:10px;padding:10px 14px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    ${renderStars(rv.rating)}
+                    <span style="font-size:11px;color:#94a3b8;">${timeAgo(rv.created_at)}</span>
+                </div>
+                ${rv.comment ? `<p style="font-size:13px;color:#475569;margin:0;">${escHtml(rv.comment)}</p>` : ''}
+            </div>`;
+        });
+    }
+
+    container.innerHTML = `
+        <div style="text-align:center;margin-bottom:16px;">
+            ${avatarHtml}
+            <div style="font-size:20px;font-weight:800;margin-top:10px;">${escHtml(d.display_name || t('designer'))}</div>
+            <div style="margin-top:4px;">${renderStars(d.avg_rating, 18)} <span style="color:#94a3b8;font-size:13px;">(${d.total_reviews||0}${t('count_件')})</span></div>
+            <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${specs}</div>
+        </div>
+        ${d.bio ? `<div style="background:#f8fafc;border-radius:12px;padding:14px;font-size:14px;color:#475569;line-height:1.7;margin-bottom:12px;">${escHtml(d.bio)}</div>` : ''}
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:12px;">
+            <div style="text-align:center;background:#f5f3ff;padding:10px 20px;border-radius:10px;">
+                <div style="font-size:18px;font-weight:800;color:#7c3aed;">${d.avg_rating?.toFixed(1) || '0.0'}</div>
+                <div style="font-size:11px;color:#94a3b8;">${t('avg_rating')}</div>
+            </div>
+            <div style="text-align:center;background:#f0fdf4;padding:10px 20px;border-radius:10px;">
+                <div style="font-size:18px;font-weight:800;color:#16a34a;">${d.total_reviews || 0}</div>
+                <div style="font-size:11px;color:#94a3b8;">${t('total_reviews')}</div>
+            </div>
+        </div>
+        ${portfolioHtml ? `<h4 style="font-size:14px;font-weight:700;margin-top:16px;margin-bottom:8px;"><i class="fa-solid fa-images" style="color:#7c3aed;"></i> ${t('portfolio')}</h4>${portfolioHtml}` : ''}
+        ${reviewsHtml}
+    `;
+}
+
 function showToast(msg, type) {
     // Simple toast
     const t = document.createElement('div');
@@ -1091,7 +1162,7 @@ async function loadDesignerShowcase() {
             ? `<img class="designer-avatar" src="${d.photo_url}" alt="">`
             : `<div class="designer-avatar-placeholder">${(d.display_name||'D')[0]}</div>`;
         html += `
-        <div class="designer-card">
+        <div class="designer-card" onclick="showDesignerProfile('${d.id}')">
             ${avatarHtml}
             <div class="name">${d.display_name || t('designer')}</div>
             <div class="stars">${renderStars(d.avg_rating)} <span style="color:#94a3b8;font-size:11px;">(${d.total_reviews||0})</span></div>
