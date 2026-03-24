@@ -1893,5 +1893,21 @@
   "coupon_hc_label": "🏗️ Re-board-Platten Sonderangebot",
   "coupon_hc_title": "Kostenlose Standproduktion",
   "coupon_hc_desc": "Produktion + Versand + Montage GRATIS",
-  "coupon_detail_btn": "Mehr erfahren →"
+  "coupon_detail_btn": "Mehr erfahren →",
+  "order_tracker_title": "Bestellstatus",
+  "ot_customer": "Kundenname",
+  "ot_order_date": "Bestelldatum",
+  "ot_ship_date": "Versanddatum",
+  "ot_photo": "Fotos",
+  "ot_inquiry": "Anfrage",
+  "ot_reply": "Antwort",
+  "ot_rating": "Bewertung",
+  "ot_progress": "Fortschritt",
+  "ot_status": "Status",
+  "ot_search_placeholder": "Name / Kontakt",
+  "ot_search_btn": "Suchen",
+  "ot_inquiry_review": "Anfrage · Bewertung",
+  "ot_reply_thanks": "Antwort · Danke",
+  "ot_status_production_done": "Produktion abgeschlossen",
+  "ot_status_received": "Empfangen"
 }

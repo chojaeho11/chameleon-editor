@@ -1893,5 +1893,21 @@
   "coupon_hc_label": "🏗️ Oferta especial Re-board",
   "coupon_hc_title": "Producción de stand gratis",
   "coupon_hc_desc": "Producción + Envío + Instalación GRATIS",
-  "coupon_detail_btn": "Ver más →"
+  "coupon_detail_btn": "Ver más →",
+  "order_tracker_title": "Estado del pedido",
+  "ot_customer": "Cliente",
+  "ot_order_date": "Fecha de pedido",
+  "ot_ship_date": "Fecha de envío",
+  "ot_photo": "Fotos",
+  "ot_inquiry": "Consulta",
+  "ot_reply": "Respuesta",
+  "ot_rating": "Calificación",
+  "ot_progress": "Progreso",
+  "ot_status": "Estado",
+  "ot_search_placeholder": "Nombre / Contacto",
+  "ot_search_btn": "Buscar",
+  "ot_inquiry_review": "Consulta · Reseña",
+  "ot_reply_thanks": "Respuesta · Gracias",
+  "ot_status_production_done": "Producción completada",
+  "ot_status_received": "Recibido"
 }

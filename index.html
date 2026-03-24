@@ -6928,7 +6928,7 @@ async function loadScrollBanner() {
             de:['Re-board','Stoff','Druck','Geschenke','Best'],
             fr:['Re-board','Tissus','Imprimerie','Cadeaux','Top']
         };
-        const _lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) ? {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'}[window.SITE_CONFIG.COUNTRY] || 'kr' : 'kr';
+        const _lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG !== 'kr') ? CURRENT_LANG : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) ? {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'}[window.SITE_CONFIG.COUNTRY] || 'kr' : 'kr');
         const badgeNames = _bl[_lang] || _bl.kr;
         const buckets = [];
         const seen = new Set();

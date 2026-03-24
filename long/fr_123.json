@@ -1893,5 +1893,21 @@
   "coupon_hc_label": "🏗️ Offre spéciale panneau Re-board",
   "coupon_hc_title": "Production de stand gratuite",
   "coupon_hc_desc": "Production + Livraison + Installation GRATUIT",
-  "coupon_detail_btn": "En savoir plus →"
+  "coupon_detail_btn": "En savoir plus →",
+  "order_tracker_title": "Suivi de commande",
+  "ot_customer": "Client",
+  "ot_order_date": "Date de commande",
+  "ot_ship_date": "Date d'expédition",
+  "ot_photo": "Photos",
+  "ot_inquiry": "Demande",
+  "ot_reply": "Réponse",
+  "ot_rating": "Évaluation",
+  "ot_progress": "Progression",
+  "ot_status": "Statut",
+  "ot_search_placeholder": "Nom / Contact",
+  "ot_search_btn": "Rechercher",
+  "ot_inquiry_review": "Demande · Avis",
+  "ot_reply_thanks": "Réponse · Merci",
+  "ot_status_production_done": "Production terminée",
+  "ot_status_received": "Reçu"
 }
