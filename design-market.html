@@ -418,16 +418,20 @@
 <div class="modal-overlay" id="bidModal">
     <div class="modal-box" style="position:relative;">
         <button class="modal-close" onclick="closeBidModal()">&times;</button>
-        <h2><i class="fa-solid fa-gavel"></i> 입찰하기</h2>
+        <h2><i class="fa-solid fa-gavel"></i> 입찰 참여하기</h2>
+        <p style="font-size:13px;color:#64748b;margin-bottom:16px;">금액을 제시하고, 포트폴리오로 나를 어필해보세요!</p>
+
         <div class="form-group">
-            <label>제안 금액 (원) <span class="req">*</span></label>
-            <input type="number" class="form-input" id="bidPrice" placeholder="제안할 금액">
+            <label>💰 제안 금액 (원) <span class="req">*</span></label>
+            <input type="number" class="form-input" id="bidPrice" placeholder="이 작업을 얼마에 하시겠습니까?" style="font-size:16px;font-weight:700;">
+            <div style="font-size:11px;color:#a78bfa;margin-top:4px;">선정 시 제안 금액의 70%가 디자이너에게 지급됩니다</div>
         </div>
+
         <div class="form-group">
-            <label>작업 기간 <span class="req">*</span></label>
+            <label>📅 작업 기간 <span class="req">*</span></label>
             <select class="form-input" id="bidTimeline">
-                <option value="">작업 기간 선택</option>
-                <option value="1">1일</option>
+                <option value="">며칠 안에 완성 가능한가요?</option>
+                <option value="1">1일 (당일 완성)</option>
                 <option value="2">2일</option>
                 <option value="3">3일</option>
                 <option value="5">5일</option>
@@ -437,22 +441,26 @@
                 <option value="30">30일 (1개월)</option>
             </select>
         </div>
+
         <div class="form-group">
-            <label>메시지 <span class="req">*</span></label>
-            <textarea class="form-input" id="bidMessage" rows="4" placeholder="의뢰인에게 전달할 메시지 (작업 방식, 강점 등)"></textarea>
+            <label>✍️ 어필하기 <span class="req">*</span></label>
+            <textarea class="form-input" id="bidMessage" rows="4" placeholder="왜 이 프로젝트에 적합한 디자이너인지 어필해주세요!&#10;&#10;예: 관련 분야 경력, 작업 방식, 강점 등"></textarea>
         </div>
+
         <div class="form-group">
-            <label>포트폴리오 이미지 첨부</label>
-            <div class="file-upload-area" onclick="document.getElementById('bidPortfolioFiles').click()" style="padding:20px;">
-                <i class="fa-solid fa-images" style="font-size:24px;"></i>
-                <p>관련 포트폴리오 이미지 첨부</p>
+            <label>📁 포트폴리오 첨부 (관련 작업물)</label>
+            <div class="file-upload-area" onclick="document.getElementById('bidPortfolioFiles').click()" style="padding:20px;border:2px dashed #c4b5fd;background:#faf5ff;">
+                <i class="fa-solid fa-images" style="font-size:28px;color:#7c3aed;"></i>
+                <p style="color:#7c3aed;font-weight:600;">이 프로젝트와 관련된 포트폴리오를 올려주세요</p>
+                <p style="font-size:11px;color:#a78bfa;">이미지 파일 여러 개 선택 가능</p>
             </div>
             <input type="file" id="bidPortfolioFiles" accept="image/*" multiple style="display:none;" onchange="handleBidPortfolio(this)">
             <div class="file-preview-grid" id="bidPortfolioPreview"></div>
         </div>
+
         <div style="text-align:center;margin-top:20px;">
-            <button class="btn btn-primary btn-lg" onclick="submitBid()" id="btnSubmitBid">
-                <i class="fa-solid fa-paper-plane"></i> 입찰 제출
+            <button class="btn btn-primary btn-lg" onclick="submitBid()" id="btnSubmitBid" style="font-size:16px;padding:14px 40px;">
+                <i class="fa-solid fa-paper-plane"></i> 입찰 제출하기
             </button>
         </div>
     </div>
@@ -944,8 +952,42 @@ async function showRequestDetail(requestId) {
             <span style="font-size:13px;color:#94a3b8;"><i class="fa-solid fa-gavel"></i> 입찰 ${bidCount}건</span>
             ${r.phone ? `<span style="font-size:13px;color:#94a3b8;"><i class="fa-solid fa-phone"></i> ${escHtml(r.phone)}</span>` : ''}
         </div>
-        ${canBid ? `<div style="text-align:center;margin-top:24px;"><button class="btn btn-primary btn-lg" onclick="openBidModal('${r.id}')"><i class="fa-solid fa-gavel"></i> 입찰하기</button></div>` : ''}
-        ${!designerProfile && r.customer_id !== userId ? `<div style="text-align:center;margin-top:24px;color:#94a3b8;font-size:13px;">입찰하려면 먼저 <a href="#" onclick="openRegisterDesignerModal();return false;" style="color:#7c3aed;font-weight:700;">디자이너 등록</a>을 해주세요.</div>` : ''}
+        ${canBid ? `
+        <div style="margin-top:24px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:2px solid #c4b5fd;border-radius:16px;padding:24px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;">🎨</div>
+            <div style="font-size:18px;font-weight:800;color:#5b21b6;margin-bottom:6px;">이 프로젝트에 입찰하세요!</div>
+            <div style="font-size:13px;color:#7c3aed;margin-bottom:16px;line-height:1.6;">
+                금액을 제시하고, 포트폴리오를 올리고, 나를 어필해보세요.<br>
+                의뢰인이 가장 마음에 드는 디자이너를 선택합니다.
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
+                <div style="background:#fff;border-radius:10px;padding:10px 16px;font-size:12px;color:#5b21b6;border:1px solid #ddd6fe;">
+                    <div style="font-size:18px;margin-bottom:2px;">💰</div>
+                    <b>금액 제시</b><br>원하는 금액 입찰
+                </div>
+                <div style="background:#fff;border-radius:10px;padding:10px 16px;font-size:12px;color:#5b21b6;border:1px solid #ddd6fe;">
+                    <div style="font-size:18px;margin-bottom:2px;">📁</div>
+                    <b>포트폴리오</b><br>작업물 첨부
+                </div>
+                <div style="background:#fff;border-radius:10px;padding:10px 16px;font-size:12px;color:#5b21b6;border:1px solid #ddd6fe;">
+                    <div style="font-size:18px;margin-bottom:2px;">✍️</div>
+                    <b>어필하기</b><br>강점/작업방식 소개
+                </div>
+            </div>
+            <button class="btn btn-primary btn-lg" onclick="openBidModal('${r.id}')" style="font-size:16px;padding:14px 40px;border-radius:14px;box-shadow:0 4px 15px rgba(124,58,237,0.3);">
+                <i class="fa-solid fa-gavel"></i> 입찰 참여하기
+            </button>
+            <div style="margin-top:10px;font-size:11px;color:#a78bfa;">선정 시 총 금액의 70%가 디자이너에게 지급됩니다</div>
+        </div>` : ''}
+        ${!designerProfile && r.customer_id !== userId ? `
+        <div style="margin-top:24px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:14px;padding:20px;text-align:center;">
+            <div style="font-size:24px;margin-bottom:6px;">🙋</div>
+            <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:8px;">디자이너로 참여하고 싶으신가요?</div>
+            <div style="font-size:12px;color:#a16207;margin-bottom:12px;">디자이너 등록 후 이 프로젝트에 입찰할 수 있습니다.</div>
+            <button class="btn btn-primary" onclick="openRegisterDesignerModal()" style="background:#f59e0b;border-color:#f59e0b;">
+                <i class="fa-solid fa-user-plus"></i> 디자이너 등록하기
+            </button>
+        </div>` : ''}
     </div>`;
 }
 
