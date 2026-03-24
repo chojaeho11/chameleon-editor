@@ -28,7 +28,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     // 4. 초기 탭 로드
     if(window.showSection) {
-        window.showSection('sec-live-chat');
+        window.showSection('sec-vip');
     }
 });
 
