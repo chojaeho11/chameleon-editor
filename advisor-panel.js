@@ -647,13 +647,12 @@ function startCallbackFlow() {
 
 function startQuoteFlow() {
     if (!chatArea) return;
-    // AI 대화 요약 생성 (description 사전 입력용)
-    let aiSummary = '';
-    try {
-        aiSummary = conversationHistory.slice(-6).map(h =>
-            (h.role === 'user' ? 'Customer: ' : 'AI: ') + String(h.content).substring(0, 120)
-        ).join('\n');
-    } catch(e) {}
+    const lang = getLang();
+    const quoteNotice = lang === 'ja'
+        ? '大型注文は専任マネージャーがお客様にお電話でご案内いたします。ファイルとお名前・電話番号をご入力ください。30分以内にご連絡いたします。'
+        : lang === 'en'
+        ? 'For bulk orders, a dedicated manager will call you directly. Please enter your file, name, and phone number. We will contact you within 30 minutes.'
+        : '대량 주문건은 전담 매니저가 고객님께 전화를 해서 안내해 드립니다. 파일과 성함, 전화번호를 적어주시면 30분 이내에 연락을 드립니다.';
 
     const card = document.createElement('div');
     card.className = 'adv-row adv-row-ai';
@@ -663,17 +662,15 @@ function startQuoteFlow() {
             <div style="text-align:center; margin-bottom:10px;">
                 <div style="font-size:24px;">📋</div>
                 <div style="font-weight:700; color:#0369a1; font-size:14px;">${t('quoteTitle')}</div>
-                <div style="font-size:12px; color:#0369a1; opacity:0.8; margin-top:4px;">${t('quoteDesc')}</div>
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
                 <input id="advQuoteName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
-                <input id="advQuoteEmail" type="email" placeholder="${t('quoteEmailPh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
                 <input id="advQuotePhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
-                <textarea id="advQuoteDetail" rows="3" placeholder="${t('quoteDetailPh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; resize:vertical;">${aiSummary ? aiSummary : ''}</textarea>
-                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#0369a1;">
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#0369a1; background:#fff; border:1.5px dashed #7dd3fc; border-radius:10px; padding:10px 14px;">
                     <input id="advQuoteFiles" type="file" multiple accept="image/*,.pdf" style="font-size:12px; flex:1;">
                     <span>${t('quoteFilePh')}</span>
                 </label>
+                <div style="font-size:12px; color:#334155; line-height:1.6; margin-top:4px; padding:8px 10px; background:#fff; border-radius:8px; border:1px solid #e2e8f0;">${quoteNotice}</div>
                 <div id="advQuoteErr" style="color:#ef4444; font-size:12px; text-align:center; display:none;"></div>
                 <button id="advQuoteSubmit" style="background:#0284c7; color:#fff; border:none; padding:12px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; width:100%;">${t('quoteSubmit')}</button>
             </div>
@@ -681,24 +678,15 @@ function startQuoteFlow() {
     `;
     chatArea.appendChild(card);
     scrollChat();
-    const emailInput = document.getElementById('advQuoteEmail');
-    if (emailInput) emailInput.focus();
+    document.getElementById('advQuoteName').focus();
 
     document.getElementById('advQuoteSubmit').addEventListener('click', async () => {
         const name = (document.getElementById('advQuoteName').value || '').trim();
-        const email = (document.getElementById('advQuoteEmail').value || '').trim();
         const phone = (document.getElementById('advQuotePhone').value || '').trim();
-        const detail = (document.getElementById('advQuoteDetail').value || '').trim();
         const fileInput = document.getElementById('advQuoteFiles');
         const files = fileInput ? fileInput.files : [];
 
-        // Validation: email and phone required
         const errEl = document.getElementById('advQuoteErr');
-        if (!email) {
-            if (errEl) { errEl.textContent = 'Email is required'; errEl.style.display = 'block'; }
-            document.getElementById('advQuoteEmail').style.borderColor = '#ef4444';
-            return;
-        }
         if (!phone) {
             if (errEl) { errEl.textContent = t('callbackPhoneErr'); errEl.style.display = 'block'; }
             document.getElementById('advQuotePhone').style.borderColor = '#ef4444';
@@ -736,11 +724,14 @@ function startQuoteFlow() {
             try {
                 const langCode = getLang();
                 const countryTag = langCode === 'ja' ? 'JP' : langCode === 'en' ? 'US' : 'KR';
+                // AI 대화 요약
+                let chatSummary = '';
+                try { chatSummary = conversationHistory.slice(-6).map(h => (h.role === 'user' ? '고객: ' : 'AI: ') + String(h.content).substring(0, 100)).join('\n'); } catch(e) {}
                 await sb.from('vip_orders').insert({
                     customer_name: name || 'Chat Quote',
-                    customer_phone: phone || email,
+                    customer_phone: phone,
                     preferred_manager: 'Quote-' + countryTag,
-                    memo: `[CHATBOT QUOTE REQUEST from ${window.location.hostname}]\nEmail: ${email}\nPhone: ${phone}\n\n${detail}`,
+                    memo: `[CHATBOT QUOTE REQUEST from ${window.location.hostname}]\nPhone: ${phone}\n\n${chatSummary}`,
                     files: uploadedFiles,
                     status: 'quote'
                 });
