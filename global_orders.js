@@ -1240,9 +1240,13 @@ window.loadOrders = async () => {
             }
             const isHqProcessing = isContactDone && (order.admin_note || '').includes('[본사처리');
             if (isContactReq) {
-                contactHtml += `<button class="btn" style="width:100%;font-size:10px;padding:2px 4px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-weight:bold;cursor:pointer;margin-bottom:2px;" onclick="event.stopPropagation();completeContact('${order.id}')">📞 소통중</button>`;
+                // admin_note에서 매니저 이름 추출
+                const mgrMatch = (order.admin_note || '').match(/\[소통요청[^\]]*\]\s*(아무나|은미|성희|지숙)매니저/);
+                const reqMgr = mgrMatch ? mgrMatch[1] : '';
+                const reqLabel = reqMgr === '아무나' ? '아무나 소통요청' : reqMgr ? reqMgr + '님 소통요청' : '📞 소통중';
+                contactHtml += `<button class="btn" style="width:100%;font-size:9px;padding:2px 4px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-weight:bold;cursor:pointer;margin-bottom:2px;line-height:1.3;" onclick="event.stopPropagation();completeContact('${order.id}')">${reqLabel}</button>`;
             } else if (isContactDone && isHqProcessing) {
-                contactHtml += `<div style="font-size:9px;color:#0369a1;font-weight:bold;background:#e0f2fe;padding:2px 4px;border-radius:4px;margin-bottom:2px;">🏢 본사처리중</div>`;
+                contactHtml += `<div style="font-size:9px;color:#0369a1;font-weight:bold;background:#e0f2fe;padding:2px 4px;border-radius:4px;margin-bottom:2px;line-height:1.3;">🏢 본사처리중</div>`;
             } else if (isContactDone) {
                 contactHtml += `<div style="font-size:9px;color:#15803d;font-weight:bold;">✅ 소통완료</div>`;
             }
