@@ -497,6 +497,30 @@ Format: {"ja":["..."],"en":["..."],"zh":["..."],"ar":["..."],"es":["..."],"de":[
             }), { headers: { ...cors, "Content-Type": "application/json" } });
         }
 
+        // ── force_delete_room: 상담방 강제 삭제 (service role로 RLS 우회) ──
+        if (action === "force_delete_room") {
+            const { room_id } = body;
+            if (!room_id) {
+                return new Response(JSON.stringify({ error: "room_id required" }),
+                    { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            // 관련 advisor_qa_log 삭제
+            await sb.from('advisor_qa_log').delete().eq('room_id', room_id);
+            // 메시지 삭제
+            await sb.from('chat_messages').delete().eq('room_id', room_id);
+            // 방 삭제
+            const { error: delErr } = await sb.from('chat_rooms').delete().eq('id', room_id);
+
+            if (delErr) {
+                return new Response(JSON.stringify({ error: delErr.message }),
+                    { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+
+            return new Response(JSON.stringify({ success: true, deleted: room_id }),
+                { headers: { ...cors, "Content-Type": "application/json" } });
+        }
+
         return new Response(JSON.stringify({ error: "Unknown action: " + action }),
             { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
 

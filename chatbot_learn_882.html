@@ -415,6 +415,7 @@ function getSb() { return sb; }
         _sessions = rooms || [];
         document.getElementById('qaReportCount').textContent = _sessions.length + '개 학습필요 세션';
         _renderSessionList();
+        _loadSessionPreviews(sb);
     };
 
     window.qaLoadSessions = async function() {
@@ -425,7 +426,7 @@ function getSb() { return sb; }
         var date = dateEl.value;
         var lang = document.getElementById('qaReportLang').value;
         var q = sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
-            .or('source.like.bot-%,source.like.chatbot%')
+            .or('source.like.bot-%,source.like.chatbot%,source.like.ai-%,source.like.embed-%')
             .gte('created_at', date + 'T00:00:00')
             .lte('created_at', date + 'T23:59:59')
             .order('updated_at', { ascending: false })
@@ -442,9 +443,28 @@ function getSb() { return sb; }
             '<div style="background:#dbeafe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:18px;font-weight:900;color:#2563eb;">'+krC+' / '+jaC+' / '+usC+'</div><div style="font-size:11px;color:#64748b;">KR / JP / US</div></div>';
         document.getElementById('qaReportCount').textContent = total + '개 세션';
         _renderSessionList();
+        // 각 세션의 최신 고객 메시지 로드 (미리보기용)
+        _loadSessionPreviews(sb);
         _startQaRealtimeSub(sb);
         _loadDailyReport();
     };
+
+    async function _loadSessionPreviews(sb) {
+        if (!_sessions.length) return;
+        var roomIds = _sessions.map(function(s){return s.id});
+        // 각 세션의 최근 고객 메시지 1개씩 조회
+        var { data: msgs } = await sb.from('chat_messages').select('room_id, message')
+            .in('room_id', roomIds).eq('sender_type', 'customer')
+            .order('created_at', { ascending: false }).limit(200);
+        if (!msgs) return;
+        // room_id별 최신 메시지 매핑
+        var previewMap = {};
+        msgs.forEach(function(m) {
+            if (!previewMap[m.room_id]) previewMap[m.room_id] = (m.message || '').substring(0, 50);
+        });
+        _sessions.forEach(function(s) { s._preview = previewMap[s.id] || ''; });
+        _renderSessionList();
+    }
 
     // ─── 일일 리포트 ───
     async function _loadDailyReport() {
@@ -555,12 +575,17 @@ function getSb() { return sb; }
             var langColors = {kr:'#3b82f6',ja:'#ef4444',us:'#10b981',en:'#10b981'};
             var langLabels = {kr:'KR',ja:'JP',us:'US',en:'US'};
             var isActive = s.id === _activeRoomId;
-            h += '<div onclick="qaOpenSession(\''+s.id+'\',\''+(s.site_lang||'kr')+'\')" style="padding:12px 14px;cursor:pointer;border-bottom:1px solid #e2e8f0;background:'+(isActive?'#ede9fe':'#fff')+';transition:background 0.15s;" onmouseenter="if(!'+isActive+')this.style.background=\'#f8fafc\'" onmouseleave="if(!'+isActive+')this.style.background=\'#fff\'">';
-            h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
+            h += '<div onclick="qaOpenSession(\''+s.id+'\',\''+(s.site_lang||'kr')+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #e2e8f0;background:'+(isActive?'#ede9fe':'#fff')+';transition:background 0.15s;" onmouseenter="if(!'+isActive+')this.style.background=\'#f8fafc\'" onmouseleave="if(!'+isActive+')this.style.background=\'#fff\'">';
+            h += '<div style="display:flex;justify-content:space-between;align-items:center;">';
             h += '<span style="font-size:13px;font-weight:700;color:#334155;">'+time+'</span>';
+            h += '<div style="display:flex;align-items:center;gap:6px;">';
+            h += '<span style="font-size:11px;color:#64748b;font-weight:500;">'+(s.customer_name||'고객')+'</span>';
             h += '<span style="background:'+(langColors[s.site_lang]||'#64748b')+';color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;">'+(langLabels[s.site_lang]||s.site_lang)+'</span>';
-            h += '</div>';
-            h += '<div style="font-size:12px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(s.customer_name||'고객')+'</div>';
+            h += '</div></div>';
+            var preview = s._preview || '';
+            if (preview) {
+                h += '<div style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px;">'+qaEsc(preview)+'</div>';
+            }
             h += '</div>';
         });
         list.innerHTML = h;
@@ -611,12 +636,13 @@ function getSb() { return sb; }
                 var inlineImgMatch = cleanMsg.match(/(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp))/i);
 
                 if (isCustomer) {
-                    h += '<div style="display:flex;justify-content:flex-end;">';
-                    h += '<div style="max-width:75%;background:#6366f1;color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:13px;">';
+                    h += '<div style="display:flex;justify-content:flex-start;gap:6px;">';
+                    h += '<div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">👤</div>';
+                    h += '<div style="max-width:75%;background:#f1f5f9;border:1px solid #e2e8f0;color:#334155;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:13px;">';
                     if (fileHtml) h += fileHtml;
                     h += qaEsc(cleanMsg);
-                    if (isNonKr && cleanMsg) h += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.3);font-size:11px;opacity:0.8;font-style:italic;" id="qaTr_'+idx+'">[번역 대기]</div>';
-                    h += '<div style="font-size:10px;opacity:0.6;margin-top:4px;">'+time+'</div>';
+                    if (isNonKr && cleanMsg) h += '<div style="margin-top:4px;padding-top:4px;border-top:1px dashed #cbd5e1;font-size:11px;color:#6366f1;font-style:italic;" id="qaTr_'+idx+'">[번역 대기]</div>';
+                    h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
                     h += '</div></div>';
                 } else if (isBot) {
                     // PRODUCTS 태그에서 제품 이미지 추출
@@ -650,14 +676,13 @@ function getSb() { return sb; }
                 } else if (m.sender_type === 'manager') {
                     var mgrName = m.sender_name || '매니저';
                     var linkedMsg = qaEsc(cleanMsg).replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;text-decoration:underline;word-break:break-all;">$1</a>');
-                    h += '<div style="display:flex;justify-content:flex-start;gap:6px;">';
-                    h += '<div style="width:28px;height:28px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">👤</div>';
+                    h += '<div style="display:flex;justify-content:flex-end;">';
                     h += '<div style="max-width:75%;">';
-                    h += '<div style="font-size:11px;color:#059669;font-weight:700;margin-bottom:2px;">'+qaEsc(mgrName)+'</div>';
-                    h += '<div style="background:#ecfdf5;border:1px solid #a7f3d0;padding:10px 14px;border-radius:4px 16px 16px 16px;font-size:13px;color:#334155;">';
+                    h += '<div style="font-size:11px;color:#059669;font-weight:700;margin-bottom:2px;text-align:right;">💬 '+qaEsc(mgrName)+'</div>';
+                    h += '<div style="background:#6366f1;color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:13px;">';
                     if (fileHtml) h += fileHtml;
                     h += linkedMsg;
-                    h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
+                    h += '<div style="font-size:10px;opacity:0.6;margin-top:4px;">'+time+'</div>';
                     h += '</div></div></div>';
                 } else if (m.sender_type === 'system' || m.sender_type === 'admin_memo') {
                     h += '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:4px 0;background:#f8fafc;padding:4px 8px;border-radius:8px;">'+qaEsc(cleanMsg.substring(0,150))+'</div>';

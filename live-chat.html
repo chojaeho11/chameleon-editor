@@ -369,8 +369,10 @@ function t(key) { return (LANG[site.lang] || LANG.kr)[key] || key; }
 // ===== Init =====
 async function init() {
     sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-    isEmbed = new URLSearchParams(location.search).get('embed') === 'true';
+    var params = new URLSearchParams(location.search);
+    isEmbed = params.get('embed') === '1' || params.get('embed') === 'true';
     if (isEmbed) document.body.classList.add('embed');
+    var embedSource = params.get('source') || '';
     applyLanguage();
 
     var session = loadSession();
@@ -398,6 +400,24 @@ async function init() {
         startSubscriptions();
         // ★ 세션 타임스탬프 갱신 (새로고침할 때마다 연장)
         saveSession();
+    } else if (isEmbed) {
+        // embed 모드: 이름 입력 없이 자동으로 AI 챗봇 시작
+        customerName = embedSource ? embedSource + ' 고객' : '웹 고객';
+        try {
+            var res = await sb.from('chat_rooms').insert({
+                customer_name: customerName, status: 'ai_chatting',
+                source: embedSource ? 'embed-' + embedSource : 'embed-chat',
+                site_lang: site.lang, assigned_manager: ''
+            }).select().single();
+            if (res.data) {
+                roomId = res.data.id;
+                roomStatus = 'ai_chatting';
+                saveSession();
+                showChatView();
+                startSubscriptions();
+                getAIResponse('안녕하세요');
+            } else { showNameView(); }
+        } catch(e) { showNameView(); }
     } else {
         showNameView();
     }
@@ -505,26 +525,26 @@ window.onSendMessage = async function() {
     appendMessage({ sender_type: 'customer', sender_name: customerName, message: txt, created_at: new Date().toISOString(), _optimistic: true });
 
     try {
-        var res = await sb.from('chat_messages').insert({
-            room_id: roomId, sender_type: 'customer', sender_name: customerName, message: txt
-        }).select().single();
-        if (res.error) {
-            // 연결 끊김 시 재연결 후 재시도 (1회)
-            startSubscriptions();
-            var retry = await sb.from('chat_messages').insert({
-                room_id: roomId, sender_type: 'customer', sender_name: customerName, message: txt
-            }).select().single();
-            if (retry.error) throw retry.error;
-            if (retry.data) sentMsgIds.add(retry.data.id);
-        } else {
-            if (res.data) sentMsgIds.add(res.data.id);
-        }
-        sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId);
-
-        // AI auto-response (only in ai_chatting mode)
+        // AI 모드: product-advisor가 고객 메시지 + AI 응답 모두 DB 저장하므로 자체 insert 불필요
         if (roomStatus === 'ai_chatting') {
             conversationHistory.push({ role: 'user', content: txt });
             getAIResponse(txt);
+        } else {
+            // 매니저 상담 모드: 직접 DB에 저장
+            var res = await sb.from('chat_messages').insert({
+                room_id: roomId, sender_type: 'customer', sender_name: customerName, message: txt
+            }).select().single();
+            if (res.error) {
+                startSubscriptions();
+                var retry = await sb.from('chat_messages').insert({
+                    room_id: roomId, sender_type: 'customer', sender_name: customerName, message: txt
+                }).select().single();
+                if (retry.error) throw retry.error;
+                if (retry.data) sentMsgIds.add(retry.data.id);
+            } else {
+                if (res.data) sentMsgIds.add(res.data.id);
+            }
+            sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId);
         }
     } catch(err) {
         console.error('Send failed:', err);
@@ -540,6 +560,10 @@ async function getAIResponse(userMessage) {
 
     try {
         var langParam = site.lang === 'ja' ? 'ja' : site.lang === 'en' ? 'us' : 'kr';
+        var sysHint = {
+            role: 'system',
+            content: '[제품 추천 가이드]\n선물/이벤트 관련 질문 시 다음 제품을 우선 추천:\n- 허니콤보드: 행사장/팝업스토어/포토존용. 등신대, 배너, 포토존 세트 등에 적합.\n- 캔버스액자: 의미있는 사진이나 그림을 캔버스에 인쇄. 인테리어 소품이자 특별한 선물.\n- 패브릭포스터: 의미있는 그림이나 사진을 원단에 인쇄. 감성적인 분위기 연출.\n- 포토북: 추억이 담긴 사진 모음집. 여행/커플/가족 선물로 인기.\n- 머그컵/텀블러: 사진이나 메시지를 넣은 실용적인 선물.\n- 폰케이스: 커플 사진이나 특별한 디자인의 실용적 선물.\n예산별 추천: ~3만원(머그컵/폰케이스), ~5만원(캔버스액자/패브릭포스터), ~10만원(등신대/포토북세트), 10만원+(등신대+캔버스액자 세트)\n[중요] 응답 시 항상 관련 제품 3개를 추천하라. 단순 인사나 잡담이 아닌 이상, 제품 카드 3개를 반드시 포함할 것.'
+        };
         var res = await fetch(SUPA_URL + '/functions/v1/product-advisor', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
@@ -547,7 +571,8 @@ async function getAIResponse(userMessage) {
                 message: userMessage,
                 lang: langParam,
                 image: null,
-                conversation_history: conversationHistory.slice(-20)
+                room_id: roomId || null,
+                conversation_history: [sysHint].concat(conversationHistory.slice(-20))
             })
         });
 
@@ -557,16 +582,7 @@ async function getAIResponse(userMessage) {
         var aiText = data.chat_message || '';
         var products = data.products || [];
 
-        // Build message to save (embed products as JSON comment)
-        var msgToSave = aiText;
-        if (products.length > 0) {
-            msgToSave += '\n<!--PRODUCTS:' + JSON.stringify(products) + '-->';
-        }
-
-        // Save to DB
-        await sb.from('chat_messages').insert({
-            room_id: roomId, sender_type: 'chatbot', sender_name: t('aiName'), message: msgToSave
-        });
+        // product-advisor가 이미 chat_messages에 저장하므로 여기서는 insert하지 않음
 
         // Update conversation history
         conversationHistory.push({ role: 'assistant', content: aiText });
@@ -697,8 +713,10 @@ function startSubscriptions() {
     subscription = sb.channel('lc-msg-' + roomId)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + roomId }, function(payload) {
             var m = payload.new;
+            // AI 모드: 고객 메시지는 로컬 렌더링, AI 응답도 로컬 렌더링 → realtime 스킵
+            if (roomStatus === 'ai_chatting' && (m.sender_type === 'customer' || m.sender_type === 'chatbot')) return;
+            // 매니저 모드: 고객 메시지는 로컬 렌더링 → realtime 스킵
             if (m.sender_type === 'customer') return;
-            if (m.sender_type === 'chatbot') return; // AI messages rendered locally
             if (m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
             // ★ 중복 방지: 이미 로드된 메시지는 스킵
             if (m.id && sentMsgIds.has(m.id)) return;

@@ -39,6 +39,124 @@ let currentPage = 1;
 const itemsPerPage = 10;
 
 // ================================================================
+// [고객소통 요청] admin_note에 ##CONTACT_REQ## / ##CONTACT_DONE## 마커 사용
+// ================================================================
+const CONTACT_REQ_MARKER = '##CONTACT_REQ##';
+const CONTACT_DONE_MARKER = '##CONTACT_DONE##';
+const HIGH_VALUE_THRESHOLD = 1000000; // 100만원 이상 고액주문
+
+function hasContactRequest(adminNote) {
+    return adminNote && adminNote.includes(CONTACT_REQ_MARKER);
+}
+function hasContactDone(adminNote) {
+    return adminNote && adminNote.includes(CONTACT_DONE_MARKER);
+}
+function cleanContactMarkers(note) {
+    return (note || '').replace(CONTACT_REQ_MARKER, '').replace(CONTACT_DONE_MARKER, '').trim();
+}
+
+window.requestContact = async (orderId) => {
+    const reason = prompt('고객소통 요청 사유를 입력하세요:', '');
+    if (reason === null) return;
+    const { data: order } = await sb.from('orders').select('admin_note').eq('id', orderId).single();
+    let note = cleanContactMarkers(order?.admin_note);
+    const timestamp = new Date().toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    note = CONTACT_REQ_MARKER + `[소통요청 ${timestamp}] ${reason}\n` + note;
+    const { error } = await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
+    if (error) { showToast('소통 요청 저장 실패: ' + error.message, 'error'); return; }
+    showToast(`주문 #${orderId} 고객소통 요청 완료`, 'success');
+    loadOrders();
+    // 콜백 섹션이 열려있으면 새로고침
+    const cbSec = document.getElementById('sec-callback');
+    if (cbSec && cbSec.classList.contains('active')) window.loadCallbackList('pending');
+};
+
+window.completeContact = async (orderId) => {
+    if (!confirm('고객소통을 완료 처리하시겠습니까?')) return;
+    const { data: order } = await sb.from('orders').select('admin_note').eq('id', orderId).single();
+    let note = cleanContactMarkers(order?.admin_note);
+    const timestamp = new Date().toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    note = CONTACT_DONE_MARKER + `[소통완료 ${timestamp}]\n` + note;
+    const { error } = await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
+    if (error) { showToast('소통 완료 저장 실패: ' + error.message, 'error'); return; }
+    showToast(`주문 #${orderId} 고객소통 완료 처리됨`, 'success');
+    loadOrders();
+    // 콜백 섹션이 열려있으면 새로고침
+    const cbSec = document.getElementById('sec-callback');
+    if (cbSec && cbSec.classList.contains('active')) window.loadCallbackList('pending');
+};
+
+// [고객소통 요청 리스트] 콜백 섹션용
+window.loadCallbackList = async (filter = 'pending') => {
+    const tbody = document.getElementById('callbackListBody');
+    if (!tbody) return;
+
+    // 필터 버튼 스타일
+    ['cbFilterPending', 'cbFilterDone', 'cbFilterHigh'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) { btn.classList.remove('btn-primary'); btn.classList.add('btn-outline'); }
+    });
+    const activeBtn = document.getElementById(filter === 'pending' ? 'cbFilterPending' : filter === 'done' ? 'cbFilterDone' : 'cbFilterHigh');
+    if (activeBtn) { activeBtn.classList.remove('btn-outline'); activeBtn.classList.add('btn-primary'); }
+
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">로딩 중...</td></tr>';
+
+    try {
+        let query = sb.from('orders')
+            .select('id, manager_name, phone, total_amount, admin_note, status, created_at')
+            .not('status', 'in', '("취소됨","임시작성","관리자차단")')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (filter === 'pending') {
+            query = query.like('admin_note', '%##CONTACT_REQ##%');
+        } else if (filter === 'done') {
+            query = query.like('admin_note', '%##CONTACT_DONE##%');
+        } else if (filter === 'high') {
+            query = query.gte('total_amount', HIGH_VALUE_THRESHOLD);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">해당 항목이 없습니다.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(order => {
+            const isReq = hasContactRequest(order.admin_note);
+            const isDone = hasContactDone(order.admin_note);
+            const isHigh = (order.total_amount || 0) >= HIGH_VALUE_THRESHOLD;
+            const memoText = cleanContactMarkers(order.admin_note).replace(/\n/g, '<br>');
+            const statusLabel = isReq ? '<span style="color:#ef4444;font-weight:bold;">대기중</span>' : isDone ? '<span style="color:#15803d;font-weight:bold;">완료</span>' : '-';
+
+            let actionHtml = '';
+            if (isReq) {
+                actionHtml = `<button class="btn btn-sm" style="background:#15803d;color:#fff;font-size:11px;padding:4px 8px;" onclick="completeContact('${order.id}')">완료처리</button>`;
+            } else if (!isDone) {
+                actionHtml = `<button class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;color:#7c3aed;border-color:#c4b5fd;" onclick="requestContact('${order.id}')">소통요청</button>`;
+            } else {
+                actionHtml = `<span style="font-size:11px;color:#94a3b8;">처리완료</span>`;
+            }
+
+            tbody.innerHTML += `<tr style="${isHigh ? 'background:#fffbeb;' : ''}">
+                <td style="font-weight:bold;color:#4f46e5;">${order.id} ${isHigh ? '<span style="font-size:9px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:1px 4px;border-radius:6px;">💎</span>' : ''}</td>
+                <td>${order.manager_name || '-'}</td>
+                <td>${order.phone || '-'}</td>
+                <td style="text-align:right;font-weight:bold;">${(order.total_amount || 0).toLocaleString()}원</td>
+                <td style="font-size:12px;color:#475569;max-width:300px;overflow:hidden;text-overflow:ellipsis;">${memoText || '-'}</td>
+                <td style="text-align:center;">${statusLabel}</td>
+                <td style="text-align:center;">${actionHtml}</td>
+            </tr>`;
+        });
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">${e.message}</td></tr>`;
+    }
+};
+
+// ================================================================
 // [자동 다운로드] File System Access API — 소재별 폴더 직접 저장
 // ================================================================
 let _autoDownloadActive = false;
@@ -925,7 +1043,7 @@ window.loadOrders = async () => {
 
         tbody.innerHTML = '';
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:30px;">주문이 없습니다.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="14" style="text-align:center; padding:30px;">주문이 없습니다.</td></tr>';
             if(sumRevenue) sumRevenue.innerText = '0원';
             showLoading(false); return;
         }
@@ -1047,6 +1165,24 @@ window.loadOrders = async () => {
                 statusHtml = `<span class="badge">${st}</span>`;
             }
 
+            // [고객소통] 소통 요청/완료 상태 + 고액주문 뱃지
+            let contactHtml = '';
+            const isHighValue = total >= HIGH_VALUE_THRESHOLD;
+            const isContactReq = hasContactRequest(order.admin_note);
+            const isContactDone = hasContactDone(order.admin_note);
+
+            if (isHighValue && !isContactReq && !isContactDone) {
+                contactHtml += `<div style="margin-bottom:3px;"><span style="display:inline-block;font-size:9px;font-weight:bold;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:1px 5px;border-radius:8px;animation:pulse-badge 1.5s infinite;">💎 고액</span></div>`;
+            }
+            if (isContactReq) {
+                contactHtml += `<button class="btn" style="width:100%;font-size:10px;padding:2px 4px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-weight:bold;cursor:pointer;margin-bottom:2px;" onclick="event.stopPropagation();completeContact('${order.id}')">📞 소통중</button>`;
+            } else if (isContactDone) {
+                contactHtml += `<div style="font-size:9px;color:#15803d;font-weight:bold;">✅ 소통완료</div>`;
+            }
+            if (!isContactReq) {
+                contactHtml += `<button class="btn btn-outline" style="width:100%;font-size:9px;padding:1px 3px;border-radius:4px;color:#7c3aed;border-color:#c4b5fd;cursor:pointer;" onclick="event.stopPropagation();requestContact('${order.id}')">📞 소통요청</button>`;
+            }
+
             // [파일 버튼] — 파일 없으면 경고 표시 (_error_log 제외)
             const fCount = order.files ? order.files.filter(f => f.type !== '_error_log').length : 0;
             const fileIcon = fCount === 0 ? '⚠️' : '📂';
@@ -1085,11 +1221,12 @@ window.loadOrders = async () => {
 
                     <td style="text-align:center; line-height:1.3; padding:2px;">${payHtml}</td>
                     <td style="text-align:center; padding:2px;">${statusHtml}</td>
+                    <td style="text-align:center; padding:2px; min-width:60px;">${contactHtml}</td>
                 </tr>`;
         });
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:red;">${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:red;">${e.message}</td></tr>`;
     } finally {
         showLoading(false);
         updateCancelReqBadge();
@@ -1616,6 +1753,21 @@ async function updateCancelReqBadge() {
         if (rwBadge) {
             rwBadge.textContent = refundWaitCount || 0;
             rwBadge.style.display = (refundWaitCount > 0) ? 'inline' : 'none';
+        }
+        // 고객소통 요청 카운트
+        const { count: contactCount } = await sb.from('orders')
+            .select('id', { count: 'exact', head: true })
+            .like('admin_note', '%##CONTACT_REQ##%')
+            .not('status', 'in', '("취소됨","임시작성","관리자차단")');
+        const cBadge = document.getElementById('contactReqCount');
+        if (cBadge) {
+            cBadge.textContent = contactCount || 0;
+            cBadge.style.display = (contactCount > 0) ? 'inline' : 'none';
+        }
+        const cbBadge = document.getElementById('callbackBadge');
+        if (cbBadge) {
+            cbBadge.textContent = contactCount || 0;
+            cbBadge.style.display = (contactCount > 0) ? 'inline' : 'none';
         }
     } catch (e) { /* ignore */ }
 }

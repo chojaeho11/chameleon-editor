@@ -1,6 +1,6 @@
 // ============================================================
-// advisor-panel.js — 카프 AI 쇼핑 안내 + 상담사 연결 통합 패널
-// 검색바 아래 대형 채팅창. AI + 인간 상담 통합
+// advisor-panel.js — 카프 AI 쇼핑 안내 + 연락처 남기기 통합 패널
+// 검색바 아래 대형 채팅창. AI 채팅 + 콜백 요청
 // ============================================================
 
 import { SITE_CONFIG } from './site-config.js?v=279';
@@ -22,14 +22,14 @@ function getLang() {
 }
 
 const T = {
-    kr: { title: '카프', subtitle: '쇼핑을 안내해 드립니다', studio: '여기서 놀자!', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 design@chameleon.design으로 보내주세요.', error: '멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 전문 상담사가 꼼꼼하게 확인하고 상담해 드리는게 좋습니다. 위의 🎧 상담사 연결 버튼을 눌러주세요! 제품 제작은 상담사에게, 출고/제작 상태 확인은 본사 상담사를 선택해 주세요 😊', reset: '대화 초기화', consultant: '상담사 연결', selectMgr: '상담 매니저를 선택해주세요', selectSub: '선택하시면 바로 연결됩니다', mgrSuffix: ' 매니저', enterName: '상담사 연결을 위해 정보를 입력해주세요', namePh: '이름', phonePh: '연락처 (010-0000-0000)', nameBtn: '다음', nameErr: '이름을 입력해주세요', phoneErr: '연락처를 입력해주세요', connecting: '연결 요청!', pleaseWait: '잠시만 기다려주세요 😊', tipFile: '아래 📎 버튼으로 사진/파일도 보낼 수 있어요!', consulting: '상담 중', hqConsultant: '본사 상담사', waiting: '님 연결 대기 중...', connectErr: '연결 중 오류! 잠시 후 다시 시도해주세요.', endChat: '상담 종료', backToAi: '카프 AI로 돌아가기' },
-    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', studio: 'ここで遊ぼう!', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはdesign@chameleon.designへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は、専門の担当者が丁寧に確認・ご案内するのがベストです。上の🎧担当者接続ボタンを押してください！製品制作は担当者へ、出荷・制作状況の確認は本社担当者をお選びください 😊', reset: 'チャットリセット', consultant: '担当者に接続', selectMgr: '相談マネージャーを選択してください', selectSub: '選択するとすぐに接続されます', mgrSuffix: '', enterName: '接続のため情報を入力してください', namePh: 'お名前', phonePh: '電話番号', nameBtn: '次へ', nameErr: '名前を入力', phoneErr: '電話番号を入力', connecting: 'に接続リクエスト！', pleaseWait: '少々お待ちください 😊', tipFile: '下の📎ボタンで写真/ファイルも送れます！', consulting: '相談中', hqConsultant: '本社担当者', waiting: '様 接続待機中...', connectErr: '接続エラー！しばらくしてからお試しください。', endChat: '相談終了', backToAi: 'カプAIに戻る' },
-    en: { title: 'Kapu', subtitle: 'Your shopping guide', studio: 'Play Here!', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email design@chameleon.design.', error: 'What an amazing project you have in mind! ✨ For this kind of product, our expert consultants can help you best. Please tap the 🎧 Connect Agent button above! For product inquiries, choose a consultant. For shipping/production status, choose HQ Consultant 😊', reset: 'Reset chat', consultant: 'Connect agent', selectMgr: 'Please select a consultant', selectSub: "You'll be connected right away", mgrSuffix: '', enterName: 'Please enter your info to connect', namePh: 'Name', phonePh: 'Phone number', nameBtn: 'Next', nameErr: 'Please enter your name', phoneErr: 'Please enter phone', connecting: ' - Connection requested!', pleaseWait: 'Please wait a moment 😊', tipFile: 'You can send photos/files using the 📎 button below!', consulting: 'In consultation', hqConsultant: 'HQ Consultant', waiting: ' connecting...', connectErr: 'Connection error! Please try again.', endChat: 'End chat', backToAi: 'Back to Kapu AI' },
-    zh: { title: '卡普', subtitle: '为您导购', studio: '在这里玩!', placeholder: '请输入消息...', send: '发送', close: '关闭', editor: '在编辑器中设计', cart: '加入购物车', upload: '上传图片', tooBig: '文件太大（最大10MB）。', error: '您构思了一个很棒的项目！✨ 这类产品最好由专业顾问为您详细确认和咨询。请点击上方🎧连接顾问按钮！😊', reset: '重置对话', consultant: '连接顾问', selectMgr: '请选择咨询顾问', selectSub: '选择后立即连接', mgrSuffix: '', enterName: '请输入您的信息以连接', namePh: '姓名', phonePh: '电话号码', nameBtn: '下一步', nameErr: '请输入姓名', phoneErr: '请输入电话', connecting: ' - 连接请求已发送！', pleaseWait: '请稍候 😊', tipFile: '您可以使用下方📎按钮发送照片/文件！', consulting: '咨询中', hqConsultant: '总部顾问', waiting: ' 连接中...', connectErr: '连接错误！请稍后再试。', endChat: '结束咨询', backToAi: '返回卡普AI' },
-    es: { title: 'Kapu', subtitle: 'Tu guía de compras', studio: '¡Juega Aquí!', placeholder: 'Escribe un mensaje...', send: 'Enviar', close: 'Cerrar', editor: 'Diseñar en Editor', cart: 'Añadir al carrito', upload: 'Adjuntar imagen', tooBig: 'Archivo demasiado grande (máx. 10MB).', error: '¡Qué proyecto tan increíble! ✨ Para este tipo de producto, nuestros consultores expertos pueden ayudarte mejor. Por favor, toca el botón 🎧 Conectar Agente arriba. 😊', reset: 'Reiniciar chat', consultant: 'Conectar agente', selectMgr: 'Selecciona un consultor', selectSub: 'Te conectaremos de inmediato', mgrSuffix: '', enterName: 'Ingresa tu información', namePh: 'Nombre', phonePh: 'Teléfono', nameBtn: 'Siguiente', nameErr: 'Ingresa tu nombre', phoneErr: 'Ingresa tu teléfono', connecting: ' - ¡Solicitud enviada!', pleaseWait: 'Un momento por favor 😊', tipFile: 'Puedes enviar fotos usando el botón 📎', consulting: 'En consulta', hqConsultant: 'Consultor HQ', waiting: ' conectando...', connectErr: 'Error de conexión. Intenta de nuevo.', endChat: 'Terminar chat', backToAi: 'Volver a Kapu AI' },
-    de: { title: 'Kapu', subtitle: 'Ihr Einkaufsberater', studio: 'Hier spielen!', placeholder: 'Nachricht eingeben...', send: 'Senden', close: 'Schließen', editor: 'Im Editor gestalten', cart: 'In den Warenkorb', upload: 'Bild anhängen', tooBig: 'Datei zu groß (max. 10MB).', error: 'Was für ein tolles Projekt! ✨ Für dieses Produkt können unsere Experten am besten helfen. Bitte tippen Sie oben auf 🎧 Agent verbinden. 😊', reset: 'Chat zurücksetzen', consultant: 'Agent verbinden', selectMgr: 'Berater auswählen', selectSub: 'Sofortige Verbindung', mgrSuffix: '', enterName: 'Bitte Ihre Daten eingeben', namePh: 'Name', phonePh: 'Telefon', nameBtn: 'Weiter', nameErr: 'Bitte Name eingeben', phoneErr: 'Bitte Telefon eingeben', connecting: ' - Anfrage gesendet!', pleaseWait: 'Bitte warten 😊', tipFile: 'Fotos senden mit dem 📎 Button', consulting: 'In Beratung', hqConsultant: 'HQ-Berater', waiting: ' verbindet...', connectErr: 'Verbindungsfehler. Bitte erneut versuchen.', endChat: 'Chat beenden', backToAi: 'Zurück zu Kapu AI' },
-    fr: { title: 'Kapu', subtitle: 'Votre guide d\'achat', studio: 'Jouez ici!', placeholder: 'Tapez un message...', send: 'Envoyer', close: 'Fermer', editor: 'Designer dans l\'éditeur', cart: 'Ajouter au panier', upload: 'Joindre image', tooBig: 'Fichier trop volumineux (max 10MB).', error: 'Quel projet incroyable ! ✨ Pour ce type de produit, nos consultants experts sont là pour vous. Appuyez sur 🎧 Connecter Agent ci-dessus. 😊', reset: 'Réinitialiser', consultant: 'Connecter agent', selectMgr: 'Choisir un conseiller', selectSub: 'Connexion immédiate', mgrSuffix: '', enterName: 'Entrez vos informations', namePh: 'Nom', phonePh: 'Téléphone', nameBtn: 'Suivant', nameErr: 'Entrez votre nom', phoneErr: 'Entrez votre téléphone', connecting: ' - Demande envoyée !', pleaseWait: 'Veuillez patienter 😊', tipFile: 'Envoyez des photos avec le bouton 📎', consulting: 'En consultation', hqConsultant: 'Conseiller HQ', waiting: ' connexion...', connectErr: 'Erreur de connexion. Réessayez.', endChat: 'Terminer', backToAi: 'Retour à Kapu AI' },
-    ar: { title: 'كابو', subtitle: 'دليل التسوق', studio: '!العب هنا', placeholder: '...اكتب رسالة', send: 'إرسال', close: 'إغلاق', editor: 'التصميم في المحرر', cart: 'أضف للسلة', upload: 'إرفاق صورة', tooBig: 'الملف كبير جداً (الحد 10MB).', error: 'يا لها من فكرة رائعة! ✨ لهذا النوع من المنتجات، يمكن لمستشارينا مساعدتك بشكل أفضل. اضغط على زر 🎧 اتصل بالوكيل أعلاه. 😊', reset: 'إعادة تعيين', consultant: 'اتصل بوكيل', selectMgr: 'اختر مستشاراً', selectSub: 'اتصال فوري', mgrSuffix: '', enterName: 'أدخل معلوماتك', namePh: 'الاسم', phonePh: 'الهاتف', nameBtn: 'التالي', nameErr: 'أدخل اسمك', phoneErr: 'أدخل هاتفك', connecting: ' - تم إرسال الطلب!', pleaseWait: 'يرجى الانتظار 😊', tipFile: 'أرسل صوراً باستخدام زر 📎', consulting: 'في استشارة', hqConsultant: 'مستشار المقر', waiting: ' جاري الاتصال...', connectErr: 'خطأ في الاتصال. حاول مرة أخرى.', endChat: 'إنهاء', backToAi: 'العودة لكابو AI' },
+    kr: { title: '카프', subtitle: '쇼핑을 안내해 드립니다', studio: '여기서 놀자!', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 design@chameleon.design으로 보내주세요.', error: '멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 전문 상담이 필요합니다. 위의 📞 연락처 남기기 버튼을 눌러 연락처를 남겨주시면 담당자가 빠르게 연락드릴게요 😊', reset: '대화 초기화', consultant: '연락처 남기기', namePh: '이름', callbackTitle: '연락처를 남겨주세요', callbackDesc: '담당자가 확인 후 연락드리겠습니다', callbackSuccess: '연락처가 전달되었습니다! 담당자가 빠른 시간 내에 연락드릴게요', callbackPhonePh: '연락처 입력', callbackSubmit: '연락 요청하기', callbackPhoneErr: '연락처를 입력해주세요' },
+    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', studio: 'ここで遊ぼう!', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはdesign@chameleon.designへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は専門的なご案内が必要です。上の📞コールバックリクエストボタンを押して連絡先を残してください。担当者がすぐにご連絡いたします 😊', reset: 'チャットリセット', consultant: 'コールバックリクエスト', namePh: 'お名前', callbackTitle: '連絡先をお残しください', callbackDesc: '担当者が確認後、ご連絡いたします', callbackSuccess: '連絡先が送信されました！担当者がすぐにご連絡いたします', callbackPhonePh: '連絡先を入力', callbackSubmit: 'コールバックを依頼', callbackPhoneErr: '連絡先を入力してください' },
+    en: { title: 'Kapu', subtitle: 'Your shopping guide', studio: 'Play Here!', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email design@chameleon.design.', error: 'What an amazing project you have in mind! ✨ This kind of product needs expert guidance. Please tap the 📞 Request Callback button above and leave your number — our team will contact you shortly 😊', reset: 'Reset chat', consultant: 'Request callback', namePh: 'Name', callbackTitle: 'Please leave your number', callbackDesc: 'Our team will review and contact you', callbackSuccess: 'Your contact info has been submitted! Our team will reach out to you shortly', callbackPhonePh: 'Enter phone number', callbackSubmit: 'Request callback', callbackPhoneErr: 'Please enter your phone number' },
+    zh: { title: '卡普', subtitle: '为您导购', studio: '在这里玩!', placeholder: '请输入消息...', send: '发送', close: '关闭', editor: '在编辑器中设计', cart: '加入购物车', upload: '上传图片', tooBig: '文件太大（最大10MB）。', error: '您构思了一个很棒的项目！✨ 这类产品需要专业指导。请点击上方📞回拨请求按钮并留下联系方式，我们的团队会尽快与您联系 😊', reset: '重置对话', consultant: '回拨请求', namePh: '姓名', callbackTitle: '请留下您的联系方式', callbackDesc: '我们的团队会确认后联系您', callbackSuccess: '联系方式已提交！我们的团队会尽快与您联系', callbackPhonePh: '输入电话号码', callbackSubmit: '请求回拨', callbackPhoneErr: '请输入电话号码' },
+    es: { title: 'Kapu', subtitle: 'Tu guía de compras', studio: '¡Juega Aquí!', placeholder: 'Escribe un mensaje...', send: 'Enviar', close: 'Cerrar', editor: 'Diseñar en Editor', cart: 'Añadir al carrito', upload: 'Adjuntar imagen', tooBig: 'Archivo demasiado grande (máx. 10MB).', error: '¡Qué proyecto tan increíble! ✨ Este tipo de producto necesita orientación experta. Toca el botón 📞 Solicitar devolución de llamada arriba y deja tu número — nuestro equipo te contactará pronto 😊', reset: 'Reiniciar chat', consultant: 'Solicitar devolución', namePh: 'Nombre', callbackTitle: 'Deja tu número', callbackDesc: 'Nuestro equipo revisará y te contactará', callbackSuccess: '¡Tu información de contacto ha sido enviada! Nuestro equipo se pondrá en contacto contigo pronto', callbackPhonePh: 'Ingresa tu teléfono', callbackSubmit: 'Solicitar llamada', callbackPhoneErr: 'Ingresa tu teléfono' },
+    de: { title: 'Kapu', subtitle: 'Ihr Einkaufsberater', studio: 'Hier spielen!', placeholder: 'Nachricht eingeben...', send: 'Senden', close: 'Schließen', editor: 'Im Editor gestalten', cart: 'In den Warenkorb', upload: 'Bild anhängen', tooBig: 'Datei zu groß (max. 10MB).', error: 'Was für ein tolles Projekt! ✨ Dieses Produkt braucht fachkundige Beratung. Bitte tippen Sie oben auf 📞 Rückruf anfordern und hinterlassen Sie Ihre Nummer — unser Team meldet sich bei Ihnen 😊', reset: 'Chat zurücksetzen', consultant: 'Rückruf anfordern', namePh: 'Name', callbackTitle: 'Hinterlassen Sie Ihre Nummer', callbackDesc: 'Unser Team wird Sie kontaktieren', callbackSuccess: 'Ihre Kontaktdaten wurden übermittelt! Unser Team wird sich bald bei Ihnen melden', callbackPhonePh: 'Telefonnummer eingeben', callbackSubmit: 'Rückruf anfordern', callbackPhoneErr: 'Bitte Telefonnummer eingeben' },
+    fr: { title: 'Kapu', subtitle: 'Votre guide d\'achat', studio: 'Jouez ici!', placeholder: 'Tapez un message...', send: 'Envoyer', close: 'Fermer', editor: 'Designer dans l\'éditeur', cart: 'Ajouter au panier', upload: 'Joindre image', tooBig: 'Fichier trop volumineux (max 10MB).', error: 'Quel projet incroyable ! ✨ Ce type de produit nécessite des conseils d\'experts. Appuyez sur 📞 Demander un rappel ci-dessus et laissez votre numéro — notre équipe vous contactera rapidement 😊', reset: 'Réinitialiser', consultant: 'Demander un rappel', namePh: 'Nom', callbackTitle: 'Laissez votre numéro', callbackDesc: 'Notre équipe vous contactera après vérification', callbackSuccess: 'Vos coordonnées ont été envoyées ! Notre équipe vous contactera bientôt', callbackPhonePh: 'Entrez votre téléphone', callbackSubmit: 'Demander un rappel', callbackPhoneErr: 'Entrez votre téléphone' },
+    ar: { title: 'كابو', subtitle: 'دليل التسوق', studio: '!العب هنا', placeholder: '...اكتب رسالة', send: 'إرسال', close: 'إغلاق', editor: 'التصميم في المحرر', cart: 'أضف للسلة', upload: 'إرفاق صورة', tooBig: 'الملف كبير جداً (الحد 10MB).', error: 'يا لها من فكرة رائعة! ✨ هذا النوع من المنتجات يحتاج إلى إرشاد متخصص. اضغط على زر 📞 طلب معاودة الاتصال أعلاه واترك رقمك — سيتواصل فريقنا معك قريباً 😊', reset: 'إعادة تعيين', consultant: 'طلب معاودة الاتصال', namePh: 'الاسم', callbackTitle: 'اترك رقمك', callbackDesc: 'سيتواصل فريقنا معك بعد المراجعة', callbackSuccess: 'تم إرسال معلومات الاتصال! سيتواصل فريقنا معك قريباً', callbackPhonePh: 'أدخل رقم الهاتف', callbackSubmit: 'طلب معاودة الاتصال', callbackPhoneErr: 'أدخل رقم هاتفك' },
 };
 function t(key) { const l = getLang(); return (T[l] && T[l][key]) || T['en'][key] || ''; }
 
@@ -39,13 +39,7 @@ let isProcessing = false;
 let lastProducts = [];
 let pendingImage = null;
 let conversationHistory = [];
-
-// ─── 상담사 연결 상태 ───
-let liveMode = false;
-let liveRoom = null;
-let liveSub = null;
-let customerName = '';
-let customerPhone = '';
+let _advRoomId = null; // product-advisor room_id 유지
 
 // ─── Supabase 클라이언트 ───
 let _ownSb = null;
@@ -61,7 +55,6 @@ function getSb() {
 
 // ─── localStorage 영속성 (로그인 상태 무관하게 단일 키 사용) ───
 function chatKey() { return 'kapu_chat_current'; }
-function liveKey() { return 'kapu_live_current'; }
 
 function saveChat() {
     try {
@@ -69,16 +62,6 @@ function saveChat() {
             html: chatArea ? chatArea.innerHTML : '',
             history: conversationHistory,
             lastProducts
-        }));
-    } catch(e) {}
-}
-
-function saveLiveState() {
-    if (!liveRoom) return;
-    try {
-        localStorage.setItem(liveKey(), JSON.stringify({
-            room: { id: liveRoom.id, assigned_manager: liveRoom.assigned_manager, status: liveRoom.status },
-            customerName, customerPhone
         }));
     } catch(e) {}
 }
@@ -98,17 +81,10 @@ function loadChat() {
     } catch(e) { return false; }
 }
 
-function loadLiveState() {
-    try {
-        const raw = localStorage.getItem(liveKey());
-        if (!raw) return null;
-        return JSON.parse(raw);
-    } catch(e) { return null; }
-}
-
 function clearChat() {
     conversationHistory = [];
     lastProducts = [];
+    _advRoomId = null;
     if (chatArea) chatArea.innerHTML = '';
     try { sessionStorage.removeItem(chatKey()); } catch(e) {}
     // 이전 localStorage 데이터도 정리
@@ -141,15 +117,6 @@ function showWelcomeMessage() {
     scrollChat();
 }
 
-function clearLiveState() {
-    liveMode = false;
-    liveRoom = null;
-    customerName = '';
-    customerPhone = '';
-    if (liveSub) { liveSub.unsubscribe(); liveSub = null; }
-    try { localStorage.removeItem(liveKey()); } catch(e) {}
-    updateHeaderForAI();
-}
 
 // ─── 초기화 ───
 export function initAdvisorPanel() {
@@ -188,12 +155,6 @@ export function initAdvisorPanel() {
         }
     });
 
-    // 실시간 상담 복원 체크
-    const liveData = loadLiveState();
-    if (liveData && liveData.room) {
-        restoreLiveSession(liveData);
-    }
-
     // 홈 진입 시 자동으로 채팅 패널 열기
     setTimeout(() => {
         const isHome = !document.getElementById('editorWrap') || document.getElementById('editorWrap').style.display === 'none' || document.getElementById('editorWrap').style.display === '';
@@ -214,7 +175,7 @@ export function initAdvisorPanel() {
         }
     } catch(e) {}
 
-    console.log('✅ Advisor panel initialized (AI + consultant unified)');
+    console.log('✅ Advisor panel initialized (AI + callback)');
 }
 
 // ─── 패널 열기 ───
@@ -324,7 +285,7 @@ function buildPanelUI() {
             <div style="display:flex; align-items:center; gap:6px;">
                 ${_getContactLinks()}
                 <button class="adv-header-btn" id="advConsultantBtn" title="${t('consultant')}">
-                    <i class="fa-solid fa-headset"></i>
+                    <i class="fa-solid fa-phone-volume"></i>
                 </button>
                 <button class="adv-header-btn" id="advResetBtn" title="${t('reset')}">
                     <i class="fa-solid fa-rotate-right"></i>
@@ -360,11 +321,7 @@ function buildPanelUI() {
 
     // 초기화
     document.getElementById('advResetBtn').addEventListener('click', () => {
-        if (liveMode) {
-            endLiveSession();
-        }
         clearChat();
-        clearLiveState();
     });
 
     // 전화 버튼: 클릭 → 팝업, hover → 툴팁
@@ -379,10 +336,9 @@ function buildPanelUI() {
         _attachTooltip(emailBtn, 'email');
     }
 
-    // 상담사 연결
+    // 연락처 남기기
     document.getElementById('advConsultantBtn').addEventListener('click', () => {
-        if (liveMode) return; // 이미 상담 중
-        startConsultantFlow();
+        startCallbackFlow();
     });
 
     // 전송
@@ -416,11 +372,6 @@ function buildPanelUI() {
         showWelcomeMessage();
     }
 
-    // 실시간 상담 복원 상태 반영
-    if (liveMode && liveRoom) {
-        updateHeaderForLive(liveRoom.assigned_manager || '');
-    }
-
     // 포토스튜디오 버튼
     document.getElementById('advStudioBtn')?.addEventListener('click', () => enterStudioMode());
 }
@@ -433,26 +384,13 @@ function updateHeaderForAI() {
         document.getElementById('advStudioBtn')?.addEventListener('click', () => enterStudioMode());
     }
 }
-function updateHeaderForLive(managerName) {
-    const titleEl = panelEl?.querySelector('.adv-panel-title');
-    if (titleEl) {
-        titleEl.innerHTML = `<i class="fa-solid fa-headset" style="color:#4ade80;"></i> ${managerName}${t('mgrSuffix')} <span class="adv-panel-sub" style="color:#4ade80;">${t('consulting')}</span>`;
-    }
-}
-
 function sendFromInput() {
     const input = document.getElementById('advInput');
     if (!input) return;
     const val = input.value.trim();
     if (!val && !pendingImage) return;
-    if (isProcessing && !liveMode) return;
+    if (isProcessing) return;
     input.value = '';
-
-    // 실시간 상담 모드
-    if (liveMode) {
-        sendLiveMessage(val);
-        return;
-    }
 
     const img = pendingImage;
     clearPendingImage();
@@ -464,12 +402,6 @@ function handleFileSelect(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     e.target.value = '';
-
-    // 실시간 상담 모드: 파일 직접 업로드 (용량 제한 없음)
-    if (liveMode && liveRoom) {
-        uploadLiveFile(file);
-        return;
-    }
 
     // AI 채팅 모드: 10MB 제한
     if (file.size > 10 * 1024 * 1024) {
@@ -523,14 +455,14 @@ function startAdvisor(query) {
 async function sendMessage(text, imageData) {
     if (isProcessing) return;
 
-    // ★ 사용자가 상담사 연결 키워드를 직접 입력하면 AI 호출 없이 바로 상담사 폼
-    if (text && !imageData && !liveMode) {
+    // ★ 사용자가 상담사/연락처 키워드를 직접 입력하면 AI 호출 없이 바로 콜백 폼
+    if (text && !imageData) {
         const _userLower = text.toLowerCase();
-        const _directConsultKeys = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결','상담사','매니저','상담원',
-            '担当者','担当者接続','マネージャー','consultant','connect agent','human agent','talk to human','real person','manager'];
+        const _directConsultKeys = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결','상담사','매니저','상담원','연락처 남기기','연락처남기기','콜백','전화 요청',
+            '担当者','担当者接続','マネージャー','コールバック','consultant','connect agent','human agent','talk to human','real person','manager','callback','call me'];
         if (_directConsultKeys.some(k => _userLower.includes(k))) {
             addBubble(text, 'user');
-            startConsultantFlow();
+            startCallbackFlow();
             return;
         }
     }
@@ -567,6 +499,7 @@ async function sendMessage(text, imageData) {
             lang: getLang(),
             conversation_history: [sysHint, ...conversationHistory.slice(-20)]
         };
+        if (_advRoomId) payload.room_id = _advRoomId;
         if (imageData) {
             payload.image = imageData.base64;
             payload.image_type = imageData.type;
@@ -583,6 +516,9 @@ async function sendMessage(text, imageData) {
 
         if (!res.ok) throw new Error('API ' + res.status);
         const data = await res.json();
+
+        // room_id 저장 (다음 메시지에서 재사용)
+        if (data.room_id) _advRoomId = data.room_id;
 
         typingEl.remove();
 
@@ -601,14 +537,13 @@ async function sendMessage(text, imageData) {
             addProductCards(products);
         }
 
-        // ★ 상담사 연결 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
-        // AI가 "상담사 연결 버튼을 눌러주세요" 등 안내를 자주 하므로 AI 텍스트 포함 시 오작동
+        // ★ 연락처 남기기 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
         const _userText = (text || '').toLowerCase();
-        const _consultantKeywords = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결',
-            '担当者','担当者接続','マネージャー','consultant','connect consultant','human agent','talk to human','real person','manager'];
+        const _consultantKeywords = ['상담사 연결','상담사연결','상담사 요청','상담사요청','매니저 연결','매니저연결','인간 상담','인간상담','사람 연결','사람연결','상담원 연결','상담원연결','연락처 남기기','콜백',
+            '担当者','担当者接続','マネージャー','コールバック','consultant','connect consultant','human agent','talk to human','real person','manager','callback','call me'];
         const _wantsConsultant = _consultantKeywords.some(k => _userText.includes(k));
-        if (_wantsConsultant && !liveMode) {
-            setTimeout(() => startConsultantFlow(), 500);
+        if (_wantsConsultant) {
+            setTimeout(() => startCallbackFlow(), 500);
         }
 
     } catch (err) {
@@ -626,376 +561,75 @@ async function sendMessage(text, imageData) {
 }
 
 // ═══════════════════════════════════════
-// 상담사 연결 기능
+// 연락처 남기기 (콜백 요청) 기능
 // ═══════════════════════════════════════
 
-const DEFAULT_MANAGERS = {
-    kr: [
-        { name: '지숙', phone: '010-3455-1946' },
-        { name: '은미', phone: '010-7793-5393' },
-        { name: '성희', phone: '010-3490-3328' }
-    ],
-    ja: [{ name: '担当者 1' }, { name: '担当者 2' }, { name: '担当者 3' }],
-    en: [{ name: 'Consultant 1' }, { name: 'Consultant 2' }, { name: 'Consultant 3' }]
-};
-
-function startConsultantFlow() {
+function startCallbackFlow() {
     if (!chatArea) return;
-
-    // 이름/연락처 입력 카드
     const card = document.createElement('div');
     card.className = 'adv-row adv-row-ai';
     card.innerHTML = `
-        <div class="adv-avatar"><i class="fa-solid fa-headset"></i></div>
+        <div class="adv-avatar"><i class="fa-solid fa-phone"></i></div>
         <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px; max-width:85%;">
             <div style="text-align:center; margin-bottom:10px;">
-                <div style="font-size:24px;">✨</div>
-                <div style="font-weight:700; color:#0369a1; font-size:14px;">${t('enterName')}</div>
+                <div style="font-size:24px;">📞</div>
+                <div style="font-weight:700; color:#0369a1; font-size:14px;">${t('callbackTitle')}</div>
+                <div style="font-size:12px; color:#0369a1; opacity:0.8; margin-top:4px;">${t('callbackDesc')}</div>
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
-                <input id="advCustName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box;">
-                <input id="advCustPhone" type="tel" placeholder="${t('phonePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box;">
-                <button id="advCustSubmit" style="background:#0284c7; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; width:100%;">${t('nameBtn')}</button>
+                <input id="advCallbackPhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <input id="advCallbackName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <button id="advCallbackSubmit" style="background:#0284c7; color:#fff; border:none; padding:12px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; width:100%;">${t('callbackSubmit')}</button>
             </div>
         </div>
     `;
     chatArea.appendChild(card);
     scrollChat();
+    const phoneInput = document.getElementById('advCallbackPhone');
+    if (phoneInput) phoneInput.focus();
 
-    const nameInput = document.getElementById('advCustName');
-    const phoneInput = document.getElementById('advCustPhone');
-    const submitBtn = document.getElementById('advCustSubmit');
-    if (nameInput) nameInput.focus();
-
-    function onSubmit() {
-        const name = nameInput.value.trim();
-        const phone = phoneInput.value.trim();
-        if (!name) { nameInput.style.borderColor = '#ef4444'; nameInput.placeholder = t('nameErr'); return; }
-        if (!phone) { phoneInput.style.borderColor = '#ef4444'; phoneInput.placeholder = t('phoneErr'); return; }
-        customerName = name;
-        customerPhone = phone;
+    document.getElementById('advCallbackSubmit').addEventListener('click', async () => {
+        const phone = document.getElementById('advCallbackPhone').value.trim();
+        const name = document.getElementById('advCallbackName').value.trim();
+        if (!phone) {
+            document.getElementById('advCallbackPhone').style.borderColor = '#ef4444';
+            document.getElementById('advCallbackPhone').placeholder = t('callbackPhoneErr');
+            return;
+        }
         card.remove();
-        showManagerPicker();
-    }
-    submitBtn.addEventListener('click', onSubmit);
-    nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') onSubmit(); });
-    phoneInput.addEventListener('keydown', e => { if (e.key === 'Enter') onSubmit(); });
-}
 
-function showManagerPicker() {
-    if (!chatArea) return;
-    const lang = getLang();
-    const managers = [...(DEFAULT_MANAGERS[lang] || DEFAULT_MANAGERS['en'])];
-    managers.push({ name: t('hqConsultant') });
+        // Save callback request to DB
+        const sb = getSb();
+        if (sb) {
+            // AI conversation summary
+            let summary = '';
+            try {
+                summary = conversationHistory.slice(-4).map(h =>
+                    (h.role === 'user' ? '고객: ' : 'AI: ') + String(h.content).substring(0, 80)
+                ).join('\n');
+            } catch(e) {}
 
-    const wrap = document.createElement('div');
-    wrap.className = 'adv-row adv-row-ai';
-    let h = `<div class="adv-avatar"><i class="fa-solid fa-headset"></i></div>
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:16px; padding:16px; color:#fff; max-width:85%; box-shadow:0 4px 15px rgba(102,126,234,0.3);">
-        <div style="text-align:center; margin-bottom:12px;">
-            <div style="font-size:28px; margin-bottom:4px;">👋</div>
-            <div style="font-weight:700; font-size:15px;">${t('selectMgr')}</div>
-            <div style="font-size:11px; opacity:0.8; margin-top:2px;">${t('selectSub')}</div>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:8px;">`;
-
-    managers.forEach((mgr) => {
-        h += `<button class="adv-mgr-pick" data-name="${esc(mgr.name)}" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
-            <span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">🧑‍💼</span>
-            <span style="flex:1; text-align:left;">${esc(mgr.name)}${t('mgrSuffix')}</span>
-            <span style="font-size:18px;">→</span>
-        </button>`;
-    });
-    h += `</div></div>`;
-    wrap.innerHTML = h;
-    chatArea.appendChild(wrap);
-    scrollChat();
-
-    wrap.querySelectorAll('.adv-mgr-pick').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const mgrName = btn.getAttribute('data-name');
-            wrap.remove();
-            connectToManager(mgrName);
-        });
-    });
-}
-
-async function connectToManager(managerName) {
-    const sb = getSb();
-    if (!sb) {
-        addBubble(t('connectErr'), 'ai');
-        return;
-    }
-
-    // AI 대화 요약
-    let summary = '';
-    try {
-        summary = conversationHistory.slice(-4).map(h =>
-            (h.role === 'user' ? customerName + ': ' : 'AI: ') + String(h.content).substring(0, 80)
-        ).join('\n');
-    } catch(e) {}
-
-    const dispName = customerName + (customerPhone ? ' | ' + customerPhone : '');
-
-    try {
-        const { data, error } = await sb.from('chat_rooms').insert({
-            customer_name: dispName,
-            assigned_manager: managerName,
-            status: 'waiting',
-            source: 'chatbot',
-            ai_summary: summary,
-            site_lang: getLang()
-        }).select().single();
-
-        if (error || !data) {
-            console.error('chat_rooms INSERT error:', error);
-            addBubble(t('connectErr'), 'ai');
-            return;
+            try {
+                await sb.from('callback_requests').insert({
+                    phone: phone,
+                    name: name || '',
+                    summary: summary,
+                    site_lang: getLang(),
+                    status: 'pending',
+                    source: 'chatbot',
+                    session_id: _advRoomId || null
+                });
+            } catch(e) {
+                console.error('callback_requests insert error:', e);
+            }
         }
 
-        liveRoom = data;
-        liveMode = true;
-        saveLiveState();
-        updateHeaderForLive(managerName);
-
-        // 연결 안내
-        const notice = document.createElement('div');
-        notice.style.padding = '4px 0';
-        notice.innerHTML = `
-            <div style="background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%); border-radius:16px; padding:16px; border:1px solid #6ee7b7;">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                    <span style="background:#10b981; color:#fff; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">🔗</span>
-                    <div><div style="font-weight:700; color:#065f46; font-size:14px;">${esc(managerName)}${t('connecting')}</div>
-                    <div style="font-size:12px; color:#047857;">${t('pleaseWait')}</div></div>
-                </div>
-                <div style="background:rgba(255,255,255,0.6); border-radius:10px; padding:10px; font-size:12px; color:#065f46;">
-                    💡 <b>Tip:</b> ${t('tipFile')}
-                </div>
-            </div>`;
-        chatArea.appendChild(notice);
+        addBubble(t('callbackSuccess'), 'ai');
         scrollChat();
         saveChat();
-
-        // Realtime 구독
-        subscribeLive(liveRoom.id);
-
-    } catch(err) {
-        console.error('Connect error:', err);
-        addBubble(t('connectErr'), 'ai');
-    }
-}
-
-function subscribeLive(roomId) {
-    const sb = getSb();
-    if (!sb) return;
-    if (liveSub) { liveSub.unsubscribe(); liveSub = null; }
-
-    liveSub = sb.channel('kapu-room-' + roomId)
-        .on('postgres_changes', {
-            event: 'INSERT', schema: 'public', table: 'chat_messages',
-            filter: 'room_id=eq.' + roomId
-        }, (payload) => {
-            const m = payload.new;
-            if (!m || m.sender_type === 'internal' || m.sender_type === 'admin_memo') return;
-
-            if (m.sender_type === 'manager') {
-                const mn = m.sender_name || (getLang() === 'ja' ? 'マネージャー' : getLang() === 'en' ? 'Manager' : '매니저');
-                let html = `<div class="adv-row adv-row-ai">
-                    <div class="adv-avatar" style="background:#10b981;"><i class="fa-solid fa-headset" style="color:#fff;"></i></div>
-                    <div style="display:flex; flex-direction:column;">
-                        <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
-                if (m.file_url) {
-                    if (m.file_type && m.file_type.startsWith('image/'))
-                        html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:4px;" onclick="(window.top||window).open(this.src)">`;
-                    else
-                        html += `<a href="${m.file_url}" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:4px;">📎 ${esc(m.file_name || 'File')}</a>`;
-                }
-                if (m.message) {
-                    const msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb; text-decoration:underline;">$1</a>');
-                    html += `<div class="adv-bubble adv-bubble-ai">${msgText}</div>`;
-                }
-                html += `</div></div>`;
-                if (chatArea) chatArea.insertAdjacentHTML('beforeend', html);
-                scrollChat();
-                saveChat();
-            } else if (m.sender_type === 'system') {
-                if (chatArea) chatArea.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">${m.message}</div></div>`);
-                if (m.message && (m.message.includes('종료') || m.message.includes('closed') || m.message.includes('終了'))) {
-                    endLiveSession();
-                }
-                scrollChat();
-                saveChat();
-            }
-        }).subscribe();
-}
-
-function sendLiveMessage(text) {
-    if (!text || !liveRoom) return;
-    const sb = getSb();
-    if (!sb) return;
-
-    // 유저 말풍선
-    addBubble(text, 'user');
-    saveChat();
-
-    sb.from('chat_messages').insert({
-        room_id: liveRoom.id,
-        sender_type: 'customer',
-        sender_name: customerName || 'Customer',
-        message: text
-    }).then(r => {
-        if (r.error) console.error('Live send error:', r.error);
     });
-
-    const inp = document.getElementById('advInput');
-    if (inp) inp.focus();
 }
 
-async function uploadLiveFile(file) {
-    if (!liveRoom) return;
-    const sb = getSb();
-    if (!sb) return;
-
-    // 업로드 중 표시
-    addBubble('📎 ' + file.name + ' 업로드 중...', 'user');
-    const uploadingEl = chatArea ? chatArea.lastElementChild : null;
-
-    try {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const safeName = Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '.' + ext;
-        const path = 'room-' + liveRoom.id + '/' + safeName;
-
-        const up = await sb.storage.from('chat-files').upload(path, file, { upsert: true });
-        if (up.error) {
-            console.error('File upload error:', up.error);
-            if (uploadingEl) uploadingEl.remove();
-            addBubble('⚠️ 파일 업로드 실패: ' + (up.error.message || ''), 'user');
-            return;
-        }
-
-        const url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
-        const ins = await sb.from('chat_messages').insert({
-            room_id: liveRoom.id,
-            sender_type: 'customer',
-            sender_name: customerName || 'Customer',
-            file_url: url,
-            file_name: file.name,
-            file_type: file.type,
-            message: ''
-        });
-
-        if (ins.error) {
-            console.error('Message insert error:', ins.error);
-            if (uploadingEl) uploadingEl.remove();
-            addBubble('⚠️ 메시지 전송 실패', 'user');
-            return;
-        }
-
-        // 업로드 중 메시지 제거 후 결과 표시
-        if (uploadingEl) uploadingEl.remove();
-
-        if (file.type && file.type.startsWith('image/')) {
-            if (chatArea) chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${url}" class="adv-chat-img" alt="uploaded" onclick="(window.top||window).open(this.src)"></div></div>`);
-        } else {
-            addBubble('📎 ' + file.name + ' ✅', 'user');
-        }
-        saveChat();
-        scrollChat();
-        saveChat();
-    } catch(err) {
-        console.error('Upload error:', err);
-        if (uploadingEl) uploadingEl.remove();
-        addBubble('⚠️ 파일 업로드 중 오류 발생', 'user');
-    }
-}
-
-function endLiveSession() {
-    liveMode = false;
-    if (liveSub) { liveSub.unsubscribe(); liveSub = null; }
-    liveRoom = null;
-    try { localStorage.removeItem(liveKey()); } catch(e) {}
-    updateHeaderForAI();
-
-    // "AI로 돌아가기" 안내
-    if (chatArea) {
-        chatArea.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:8px 0;"><div style="display:inline-block; background:#f1f5f9; border-radius:20px; padding:6px 16px; font-size:12px; color:#64748b;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:4px;"></i>${t('backToAi')}</div></div>`);
-    }
-    saveChat();
-    scrollChat();
-}
-
-async function restoreLiveSession(data) {
-    const sb = getSb();
-    if (!sb) {
-        // Supabase 아직 로드 안됨 → 재시도
-        setTimeout(() => restoreLiveSession(data), 2000);
-        return;
-    }
-
-    try {
-        const { data: room, error } = await sb.from('chat_rooms').select('*').eq('id', data.room.id).single();
-        if (error || !room || room.status === 'closed') {
-            clearLiveState();
-            return;
-        }
-
-        liveRoom = room;
-        liveMode = true;
-        customerName = data.customerName || '';
-        customerPhone = data.customerPhone || '';
-
-        // Realtime 구독
-        subscribeLive(liveRoom.id);
-
-        // 메시지 복원 (패널이 열릴 때 DB에서 로드)
-        window._kapuRestoreLiveMessages = async function() {
-            const { data: msgs } = await sb.from('chat_messages').select('*').eq('room_id', liveRoom.id)
-                .neq('sender_type', 'internal').neq('sender_type', 'admin_memo')
-                .order('created_at', { ascending: true }).limit(200);
-            if (msgs && msgs.length > 0 && chatArea) {
-                msgs.forEach(m => renderRestoredMsg(m));
-                scrollChat();
-                saveChat();
-            }
-        };
-
-        console.log('♻️ Live session restored:', liveRoom.id);
-    } catch(err) {
-        console.error('Restore error:', err);
-        clearLiveState();
-    }
-}
-
-function renderRestoredMsg(m) {
-    if (!chatArea) return;
-    if (m.sender_type === 'customer') {
-        if (m.file_url) {
-            if (m.file_type && m.file_type.startsWith('image/'))
-                chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user adv-bubble-img"><img src="${m.file_url}" class="adv-chat-img" onclick="(window.top||window).open(this.src)"></div></div>`);
-            else
-                chatArea.insertAdjacentHTML('beforeend', `<div class="adv-row adv-row-user"><div class="adv-bubble adv-bubble-user">📎 ${esc(m.file_name || 'File')}</div></div>`);
-        }
-        if (m.message) addBubble(m.message, 'user');
-    } else if (m.sender_type === 'manager') {
-        const mn = m.sender_name || 'Manager';
-        let html = `<div class="adv-row adv-row-ai"><div class="adv-avatar" style="background:#10b981;"><i class="fa-solid fa-headset" style="color:#fff;"></i></div><div style="display:flex;flex-direction:column;">
-            <span style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:2px;">💬 ${esc(mn)}</span>`;
-        if (m.file_url) {
-            if (m.file_type && m.file_type.startsWith('image/'))
-                html += `<img src="${m.file_url}" style="max-width:220px;border-radius:12px;cursor:pointer;" onclick="(window.top||window).open(this.src)">`;
-            else
-                html += `<a href="${m.file_url}" target="_blank" style="background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:13px;">📎 ${esc(m.file_name || 'File')}</a>`;
-        }
-        if (m.message) {
-            const msgText = m.message.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;">$1</a>');
-            html += `<div class="adv-bubble adv-bubble-ai">${msgText}</div>`;
-        }
-        html += `</div></div>`;
-        chatArea.insertAdjacentHTML('beforeend', html);
-    } else if (m.sender_type === 'system') {
-        chatArea.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:6px 0;"><div style="display:inline-block; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:20px; padding:6px 16px; font-size:12px; color:#065f46;">${m.message}</div></div>`);
-    }
-}
 
 // ─── 이미지 말풍선 ───
 function addImageBubble(previewUrl, text) {

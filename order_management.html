@@ -193,6 +193,7 @@
             .sidebar .nav-item span { display:none; }
             .sidebar .nav-item { justify-content:center; padding:14px 0; margin:2px 4px; }
         }
+        @keyframes pulse-badge { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
     </style>
 </head>
 <body>
@@ -317,10 +318,11 @@ window.showSection = function(){};
                             <th style="width:70px;text-align:center;">파일</th>
                             <th style="width:75px;text-align:center;">결제</th>
                             <th style="width:95px;text-align:center;">상태</th>
+                            <th style="width:60px;text-align:center;background:#faf5ff;">소통</th>
                         </tr>
                     </thead>
                     <tbody id="orderListBody">
-                        <tr><td colspan="14" style="text-align:center;padding:48px;font-size:14px;"><div class="spinner" style="width:24px;height:24px;border-width:3px;"></div> 로딩 중...</td></tr>
+                        <tr><td colspan="15" style="text-align:center;padding:48px;font-size:14px;"><div class="spinner" style="width:24px;height:24px;border-width:3px;"></div> 로딩 중...</td></tr>
                     </tbody>
                 </table>
             </div>

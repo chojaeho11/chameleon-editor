@@ -291,7 +291,7 @@ serve(async (req) => {
    - 허니콤보드 가벽 관련 제품코드는 hb_display_wall 등 가벽 관련 제품을 추천해. 제품 카드를 반드시 보여줘!
    - **등신대, 간판, 상판 등 부가 요소**도 이미지에서 보이면 별도로 안내하고 해당 제품 카드도 함께 보여줘.
    - 사이즈가 안 보이면 "가벽의 전체 가로 길이를 알려주시면 몇 칸이 필요한지 안내해 드릴게요!" 라고 물어봐.
-11. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 전시/공간 제작 요청이면 에러 메시지 대신 자연스럽게 상담사 연결 안내. 단, **텍스트로 상품을 묻는 질문에는 반드시 상품 카드를 보여줘!**
+11. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 전시/공간 제작 요청이면 에러 메시지 대신 자연스럽게 연락처 남기기 안내. "연락처를 남겨주시면 담당자가 확인 후 연락드릴게요! 아래 📞 연락 요청하기 버튼을 눌러주세요" 라고 안내해. 단, **텍스트로 상품을 묻는 질문에는 반드시 상품 카드를 보여줘!**
 
 ## 가격 계산
 - is_custom_size 상품: price_display에 대표 사이즈 기준 예시 가격이 들어있어. 이 예시가격을 그대로 안내하면 돼.
@@ -377,7 +377,7 @@ serve(async (req) => {
    - 横幅1m基準で何枚必要か算出（例：全幅6m→6枚）
    - **❌ 価格を直接計算しない！** 商品ページリンクを案内し注文方法を説明：①商品リンクで間仕切り壁を選択 ②横1m×希望の高さを選択 ③数量をN個に設定 ④片面or両面を選択 ⑤注文完了後、担当マネージャーがファイルを確認してご連絡します
    - 間仕切り壁の商品カードを必ず表示！等身大パネル・看板等もあれば別途案内。
-10. **エラーメッセージ禁止** — 分析が難しい場合は自然に担当者への接続を案内。テキストで商品を聞かれたら必ず商品カードを表示。
+10. **エラーメッセージ禁止** — 分析が難しい場合は自然に連絡先を残すよう案内。「📞 連絡リクエストボタンを押して連絡先を残してください！担当者が確認後ご連絡いたします」と案内。テキストで商品を聞かれたら必ず商品カードを表示。
 
 ## 出荷・配送案内
 - **リボード＆ファブリック**: 注文後 約8日で出荷
@@ -458,7 +458,7 @@ serve(async (req) => {
    - Calculate panels needed based on 1m width units (e.g., 6m total → 6 panels)
    - **❌ Do NOT calculate prices!** Instead, share the product page link and explain the ordering process: ①Select partition wall product ②Choose 1m width × desired height ③Set quantity to N panels ④Choose single or double-sided ⑤After ordering, a manager will review the files and contact you
    - ALWAYS show partition wall product cards! Also show standee/sign products if visible in the image.
-10. **Never say 'connection unstable'** — For complex requests, naturally guide to consultant connection. For text product questions, always show product cards.
+10. **Never say 'connection unstable'** — For complex requests, naturally guide them to leave their phone number for callback. Say "Click the 📞 Request Callback button to leave your number! Our team will contact you." For text product questions, always show product cards.
 
 ## Shipping & Delivery
 - **Re-board & Fabric**: Ships within ~8 days
@@ -845,9 +845,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
     } catch (error) {
         console.error("Product Advisor Error:", error);
         const errMsgs: Record<string, string> = {
-            kr: "앗, 잠깐 오류가 생겼네요 😅 다시 한번 말씀해 주시겠어요? 아니면 위의 상담사 연결 버튼을 눌러주시면 저희 전문 상담사가 바로 도와드릴게요!",
-            ja: "申し訳ございません、エラーが発生しました😅 もう一度お試しいただけますか？または上の担当者接続ボタンを押していただければ、専門スタッフがすぐに対応いたします！",
-            us: "Oops, something went wrong on my end 😅 Could you try again? Or hit the consultant button above and our team will help you right away!",
+            kr: "앗, 잠깐 오류가 생겼네요 😅 다시 한번 말씀해 주시겠어요? 아니면 아래 📞 연락 요청하기 버튼을 눌러 연락처를 남겨주시면 담당자가 확인 후 연락드릴게요!",
+            ja: "申し訳ございません、エラーが発生しました😅 もう一度お試しいただけますか？または📞 連絡リクエストボタンを押して連絡先を残してください！担当者が確認後ご連絡いたします。",
+            us: "Oops, something went wrong on my end 😅 Could you try again? Or click the 📞 Request Callback button to leave your number — our team will get back to you!",
         };
         let errKey = (reqBody?.lang || 'kr').toLowerCase();
         if (errKey === 'en') errKey = 'us';

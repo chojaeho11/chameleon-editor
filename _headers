@@ -10,6 +10,10 @@
 
 /*.html
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/live-chat.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Content-Security-Policy: frame-ancestors 'self' https://signmini.com https://*.signmini.com
   Pragma: no-cache
 
 /long/*.json
