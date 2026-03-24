@@ -51,7 +51,7 @@ const jp = buildBlog({
         },
         {
             title: 'ポップアップストアから展示ブース、空間演出まで',
-            body: 'カメレオンプリンティングは、ポップアップストア・イベント・展示会に必要なリボード（ハニカムボード）ブースをはじめ、室内空間を演出するファブリック印刷、各種印刷物やグッズまで幅広く生産しています。また、環境にやさしい印刷専門企業として、公害物質を発生させないエコ印刷方式にこだわっています。'
+            body: 'カメレオンプリンティングは、ポップアップストア・イベント・展示会に必要なハニカムボードブースをはじめ、室内空間を演出するファブリック印刷、各種印刷物やグッズまで幅広く生産しています。また、環境にやさしい印刷専門企業として、公害物質を発生させないエコ印刷方式にこだわっています。'
         },
         {
             title: '世界主要都市への直接設置、どこでも送料無料',
@@ -68,7 +68,7 @@ const us = buildBlog({
         },
         {
             title: 'From Pop-up Stores to Exhibition Booths and Interior Displays',
-            body: 'Chameleon Printing produces re-board (honeycomb board) booths for pop-up stores, events, and exhibitions, as well as fabric printing for interior space design, along with a wide range of printed materials and merchandise. As an eco-friendly printing company, we are committed to environmentally responsible printing methods that produce no harmful pollutants.'
+            body: 'Chameleon Printing produces honeycomb board booths for pop-up stores, events, and exhibitions, as well as fabric printing for interior space design, along with a wide range of printed materials and merchandise. As an eco-friendly printing company, we are committed to environmentally responsible printing methods that produce no harmful pollutants.'
         },
         {
             title: 'On-site Installation Worldwide, Free Shipping Everywhere',
@@ -119,7 +119,7 @@ const es = buildBlog({
         },
         {
             title: 'Desde tiendas pop-up hasta stands de exposición y decoración interior',
-            body: 'Chameleon Printing produce stands de re-board (panel de nido de abeja) para tiendas pop-up, eventos y exposiciones, así como impresión en tela para diseño de espacios interiores, junto con una amplia gama de materiales impresos y merchandising. Como empresa de impresión ecológica, estamos comprometidos con métodos de impresión ambientalmente responsables que no producen contaminantes nocivos.'
+            body: 'Chameleon Printing produce stands de honeycomb board (panel de nido de abeja) para tiendas pop-up, eventos y exposiciones, así como impresión en tela para diseño de espacios interiores, junto con una amplia gama de materiales impresos y merchandising. Como empresa de impresión ecológica, estamos comprometidos con métodos de impresión ambientalmente responsables que no producen contaminantes nocivos.'
         },
         {
             title: 'Instalación presencial mundial, envío gratuito a cualquier lugar',
@@ -136,7 +136,7 @@ const de = buildBlog({
         },
         {
             title: 'Von Pop-up-Stores über Messestände bis zur Innenraumgestaltung',
-            body: 'Chameleon Printing produziert Re-Board (Wabenplatten)-Stände für Pop-up-Stores, Veranstaltungen und Messen sowie Stoffdruck für die Innenraumgestaltung, zusammen mit einer breiten Palette an Druckmaterialien und Merchandise. Als umweltfreundliches Druckunternehmen setzen wir konsequent auf umweltverantwortliche Druckverfahren, die keine schädlichen Schadstoffe erzeugen.'
+            body: 'Chameleon Printing produziert Honeycomb Board (Wabenplatten)-Stände für Pop-up-Stores, Veranstaltungen und Messen sowie Stoffdruck für die Innenraumgestaltung, zusammen mit einer breiten Palette an Druckmaterialien und Merchandise. Als umweltfreundliches Druckunternehmen setzen wir konsequent auf umweltverantwortliche Druckverfahren, die keine schädlichen Schadstoffe erzeugen.'
         },
         {
             title: 'Vor-Ort-Installation weltweit, kostenloser Versand überall',
@@ -153,7 +153,7 @@ const fr = buildBlog({
         },
         {
             title: "Des pop-up stores aux stands d'exposition et à la décoration intérieure",
-            body: "Chameleon Printing produit des stands en re-board (panneau nid d'abeille) pour les pop-up stores, événements et expositions, ainsi que l'impression sur tissu pour l'aménagement d'espaces intérieurs, accompagnés d'une large gamme de supports imprimés et de produits dérivés. En tant qu'entreprise d'impression écologique, nous nous engageons dans des méthodes d'impression respectueuses de l'environnement qui ne produisent aucun polluant nocif."
+            body: "Chameleon Printing produit des stands en honeycomb board (panneau nid d'abeille) pour les pop-up stores, événements et expositions, ainsi que l'impression sur tissu pour l'aménagement d'espaces intérieurs, accompagnés d'une large gamme de supports imprimés et de produits dérivés. En tant qu'entreprise d'impression écologique, nous nous engageons dans des méthodes d'impression respectueuses de l'environnement qui ne produisent aucun polluant nocif."
         },
         {
             title: 'Installation sur site dans le monde entier, livraison gratuite partout',

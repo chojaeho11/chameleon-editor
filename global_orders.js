@@ -2853,7 +2853,7 @@ function isHoneycombOrder(order) {
     return items.some(item => {
         const cat = (item.category || item.product?.category || '').toLowerCase();
         const name = (item.productName || item.product?.name || '').toLowerCase();
-        return cat.includes('honeycomb') || cat.includes('hc_') || name.includes('허니콤') || name.includes('honeycomb') || name.includes('リボード') || name.includes('re-board');
+        return cat.includes('honeycomb') || cat.includes('hc_') || name.includes('허니콤') || name.includes('honeycomb') || name.includes('ハニカムボード') || name.includes('ハニカム') || name.includes('リボード') || name.includes('re-board');
     });
 }
 

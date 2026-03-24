@@ -77,10 +77,10 @@ ja: `<div style="${S.wrap} font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP
   <div style="${S.row}">
     <div style="${S.label}">📦 配送について</div>
     <div style="${S.txt}">
-      <b>全商品 送料無料</b>（リボード施工配送を除く）<br>
-      リボードの設置が必要な場合、別途配送料が発生します<br>
+      <b>全商品 送料無料</b>（ハニカムボード施工配送を除く）<br>
+      ハニカムボードの設置が必要な場合、別途配送料が発生します<br>
       小型印刷物 : お支払い確認後 5~7営業日で出荷<br>
-      大型製作物（リボード等） : 別途貨物便で配送
+      大型製作物（ハニカムボード等） : 別途貨物便で配送
     </div>
   </div>
 
@@ -133,10 +133,10 @@ en: `<div style="${S.wrap} font-family:'Inter','Segoe UI',sans-serif;">
   <div style="${S.row}">
     <div style="${S.label}">📦 Shipping</div>
     <div style="${S.txt}">
-      <b>Free shipping on ALL products</b> (except Re-board installation delivery)<br>
-      Re-board installation delivery incurs a separate shipping fee<br>
+      <b>Free shipping on ALL products</b> (except Honeycomb Board installation delivery)<br>
+      Honeycomb Board installation delivery incurs a separate shipping fee<br>
       Small prints : Ships within 7~10 business days after payment<br>
-      Large items (Re-boards, etc.) : Shipped via freight
+      Large items (Honeycomb Boards, etc.) : Shipped via freight
     </div>
   </div>
 
@@ -189,10 +189,10 @@ zh: `<div style="${S.wrap} font-family:'PingFang SC','Microsoft YaHei',sans-seri
   <div style="${S.row}">
     <div style="${S.label}">📦 配送说明</div>
     <div style="${S.txt}">
-      <b>全部商品 免费配送</b>（Re-board施工配送除外）<br>
-      Re-board需要安装时，另收配送费<br>
+      <b>全部商品 免费配送</b>（Honeycomb Board施工配送除外）<br>
+      Honeycomb Board需要安装时，另收配送费<br>
       小型印刷品 : 付款后7~10个工作日内发货<br>
-      大型制品（Re-board等） : 通过货运配送
+      大型制品（Honeycomb Board等） : 通过货运配送
     </div>
   </div>
 
@@ -301,10 +301,10 @@ es: `<div style="${S.wrap} font-family:'Inter','Segoe UI',sans-serif;">
   <div style="${S.row}">
     <div style="${S.label}">📦 Envio</div>
     <div style="${S.txt}">
-      <b>Envio gratuito en TODOS los productos</b> (excepto entrega con instalacion de paneles Re-board)<br>
-      La entrega con instalacion de paneles Re-board tiene un cargo de envio aparte<br>
+      <b>Envio gratuito en TODOS los productos</b> (excepto entrega con instalacion de paneles Honeycomb Board)<br>
+      La entrega con instalacion de paneles Honeycomb Board tiene un cargo de envio aparte<br>
       Impresiones pequenas : Envio en 7~10 dias habiles tras el pago<br>
-      Articulos grandes (paneles Re-board) : Se envian por transporte de carga
+      Articulos grandes (paneles Honeycomb Board) : Se envian por transporte de carga
     </div>
   </div>
 

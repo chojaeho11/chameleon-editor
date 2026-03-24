@@ -11,14 +11,14 @@ window.PRODUCT_SEO = {
             keywords: '허니콤보드,허니콤보드인쇄,종이디스플레이,팝업스토어디스플레이,친환경전시,종이보드인쇄,전시부스,매장디스플레이'
         },
         JP: {
-            title: 'リボード印刷 - エコ紙ディスプレイ | カメレオンプリンティング',
-            desc: 'エコリボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。無料オンラインエディターでデザイン可能。',
-            keywords: 'リボード,リボード印刷,紙ディスプレイ,ポップアップストア,エコ展示,展示ブース'
+            title: 'ハニカムボード印刷 - エコ紙ディスプレイ | カメレオンプリンティング',
+            desc: 'エコハニカムボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。無料オンラインエディターでデザイン可能。',
+            keywords: 'ハニカムボード,ハニカムボード印刷,紙ディスプレイ,ポップアップストア,エコ展示,展示ブース'
         },
         US: {
-            title: 'Re-board Printing - Eco Paper Display | Chameleon Printing',
-            desc: 'Custom eco-friendly Re-board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.',
-            keywords: 'Re-board,Re-board printing,Re-board exhibition booth,paper display,pop-up store display,eco display,exhibition booth,trade show display,retail display board,eco-friendly display board,custom exhibition display,convention booth display'
+            title: 'Honeycomb Board Printing - Eco Paper Display | Chameleon Printing',
+            desc: 'Custom eco-friendly Honeycomb Board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.',
+            keywords: 'Honeycomb Board,Honeycomb Board printing,Honeycomb Board exhibition booth,paper display,pop-up store display,eco display,exhibition booth,trade show display,retail display board,eco-friendly display board,custom exhibition display,convention booth display'
         },
         CN: {
             title: '蜂窝板印刷 - 环保纸质展示板 | 变色龙印刷',

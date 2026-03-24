@@ -73,7 +73,7 @@ JSON 출력 형식:
 
 ## focus_keyword 규칙
 - 해당 언어로 사용자가 가장 많이 검색하는 핵심 키워드 1개 (2-4단어)
-- 예: "허니콤보드 인쇄", "リボード 印刷", "Re-board printing"
+- 예: "허니콤보드 인쇄", "ハニカムボード 印刷", "Honeycomb Board printing"
 
 JSON 출력 형식:
 {

@@ -656,7 +656,7 @@ function isHoneycombProduct(product) {
     }
     // 상품명 폴백
     const name = ((product.name || '') + ' ' + (product.name_jp || '') + ' ' + (product.name_us || '')).toLowerCase();
-    if (name.includes('허니콤') || name.includes('honeycomb') || name.includes('リボード') || name.includes('re-board')) return true;
+    if (name.includes('허니콤') || name.includes('honeycomb') || name.includes('ハニカムボード') || name.includes('ハニカム') || name.includes('リボード') || name.includes('re-board')) return true;
     return false;
 }
 function hasHoneycombInCart() {
@@ -771,12 +771,12 @@ async function openInstallationTimeModal() {
             notice.style.display = 'block';
             const msgs = {
                 'kr': '허니콤보드 100만원 미만 주문은 지정시간 설치 서비스가 불가합니다.\n\n배송팀이 해당 날짜에 순차적으로 무료배송 및 설치해 드립니다.\n\n시간 지정 설치가 꼭 필요한 경우 별도의 비용이 발생하며, 채팅을 통해 담당자에게 문의해주세요.',
-                'ja': 'リボード10万円未満のご注文は、時間指定の設置サービスをご利用いただけません。\n\n配送チームがご指定の日に順次、無料で配送・設置いたします。\n\n時間指定の設置をご希望の場合は別途費用が発生いたします。チャットにて担当者までお問い合わせください。',
-                'en': 'Re-board orders under $1,000 are not eligible for scheduled installation service.\n\nOur delivery team will provide free delivery and installation in order on the selected date.\n\nIf you need a specific time slot, additional fees apply. Please contact us via chat.',
-                'zh': 'Re-board订单金额低于100万日元，无法使用定时安装服务。\n\n配送团队将在所选日期按顺序提供免费配送和安装。\n\n如需指定时间安装，将产生额外费用，请通过聊天联系客服。',
-                'ar': 'طلبات Re-board أقل من 1,000 دولار غير مؤهلة لخدمة التركيب المجدول.\n\nسيقوم فريق التوصيل بالتوصيل والتركيب المجاني بالترتيب في التاريخ المحدد.\n\nإذا كنت بحاجة لتحديد وقت معين، ستطبق رسوم إضافية. يرجى التواصل عبر الدردشة.',
-                'es': 'Los pedidos de paneles Re-board inferiores a $1,000 no son elegibles para el servicio de instalación programada.\n\nNuestro equipo realizará la entrega e instalación gratuita en orden en la fecha seleccionada.\n\nSi necesita una hora específica, se aplicarán cargos adicionales. Contáctenos por chat.',
-                'de': 'Re-board-Bestellungen unter $1.000 sind nicht für den geplanten Installationsservice berechtigt.\n\nUnser Lieferteam liefert und installiert kostenlos in der Reihenfolge am gewählten Datum.\n\nWenn Sie einen bestimmten Zeitpunkt benötigen, fallen zusätzliche Kosten an. Bitte kontaktieren Sie uns per Chat.',
+                'ja': 'ハニカムボード10万円未満のご注文は、時間指定の設置サービスをご利用いただけません。\n\n配送チームがご指定の日に順次、無料で配送・設置いたします。\n\n時間指定の設置をご希望の場合は別途費用が発生いたします。チャットにて担当者までお問い合わせください。',
+                'en': 'Honeycomb Board orders under $1,000 are not eligible for scheduled installation service.\n\nOur delivery team will provide free delivery and installation in order on the selected date.\n\nIf you need a specific time slot, additional fees apply. Please contact us via chat.',
+                'zh': '蜂窝板订单金额低于100万日元，无法使用定时安装服务。\n\n配送团队将在所选日期按顺序提供免费配送和安装。\n\n如需指定时间安装，将产生额外费用，请通过聊天联系客服。',
+                'ar': 'Honeycomb Board orders under $1,000 are not eligible for scheduled installation service.\n\nOur delivery team will provide free delivery and installation in order on the selected date.\n\nIf you need a specific time slot, additional fees apply. Please contact us via chat.',
+                'es': 'Los pedidos de paneles Honeycomb Board inferiores a $1,000 no son elegibles para el servicio de instalación programada.\n\nNuestro equipo realizará la entrega e instalación gratuita en orden en la fecha seleccionada.\n\nSi necesita una hora específica, se aplicarán cargos adicionales. Contáctenos por chat.',
+                'de': 'Honeycomb Board-Bestellungen unter $1.000 sind nicht für den geplanten Installationsservice berechtigt.\n\nUnser Lieferteam liefert und installiert kostenlos in der Reihenfolge am gewählten Datum.\n\nWenn Sie einen bestimmten Zeitpunkt benötigen, fallen zusätzliche Kosten an. Bitte kontaktieren Sie uns per Chat.',
                 'fr': "Les commandes de panneaux nid d'abeille inférieures à 1 000 $ ne sont pas éligibles au service d'installation programmée.\n\nNotre équipe assurera la livraison et l'installation gratuites dans l'ordre à la date choisie.\n\nSi vous avez besoin d'un créneau horaire précis, des frais supplémentaires s'appliquent. Veuillez nous contacter par chat."
             };
             notice.innerHTML = (msgs[CURRENT_LANG] || msgs['en']).replace(/\n/g, '<br>');
@@ -901,7 +901,7 @@ function openDeliveryInfoModal() {
         const country = (typeof SITE_CONFIG !== 'undefined' ? SITE_CONFIG.COUNTRY : 'KR');
 
         if (country === 'JP') {
-            if(descEl) descEl.textContent = window.t('desc_delivery_area_jp', 'リボードは東京23区外の場合、追加送料がかかります。');
+            if(descEl) descEl.textContent = window.t('desc_delivery_area_jp', 'ハニカムボードは東京23区外の場合、追加送料がかかります。');
             if(opts[0]) opts[0].textContent = window.t('opt_metro_area_jp', '東京23区内');
             if(opts[1]) opts[1].textContent = window.t('opt_non_metro_area_jp', 'その他地域');
             if(feeText) feeText.textContent = window.t('msg_non_metro_fee_jp', 'その他地域 追加送料: ¥40,000が適用されます。');
@@ -911,7 +911,7 @@ function openDeliveryInfoModal() {
             if(opts[1]) opts[1].textContent = window.t('opt_non_metro_area', '기타 지역');
             if(feeText) feeText.textContent = window.t('msg_non_metro_fee', '기타 지역 추가 배송비: 200,000원이 적용됩니다.');
         } else {
-            if(descEl) descEl.textContent = window.t('desc_delivery_area_global', 'Re-board products have additional shipping fees for non-metropolitan areas.');
+            if(descEl) descEl.textContent = window.t('desc_delivery_area_global', 'Honeycomb Board products have additional shipping fees for non-metropolitan areas.');
             if(opts[0]) opts[0].textContent = window.t('opt_metro_area_global', 'Major metro area');
             if(opts[1]) opts[1].textContent = window.t('opt_non_metro_area_global', 'Other regions');
             if(feeText) feeText.textContent = window.t('msg_non_metro_fee_global', 'Additional shipping fee for non-metro area: ' + formatCurrency(200000) + ' will be applied.');

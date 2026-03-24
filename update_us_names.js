@@ -34,14 +34,14 @@
         { code: 'hb_ss_4',    name_us: '10-Panel Premium Display',                 name_jp: '10枚パネル プレミアムディスプレイ' },
         { code: '234342423',  name_us: 'Acrylic Dimensional Lettering Display',    name_jp: 'アクリル立体文字ディスプレイ' },
         // Life-size standee
-        { code: 'hb_pi_5',    name_us: 'Life-size Standee (Re-board)',      name_jp: '等身大スタンディ（リボード）' },
-        { code: '45435345',   name_us: 'Re-board Sign Paddle',              name_jp: 'リボード サインパドル' },
-        { code: '35345455',   name_us: 'Blank Re-board Sign 15-27cm',       name_jp: 'リボード 無地サイン 15-27cm' },
+        { code: 'hb_pi_5',    name_us: 'Life-size Standee (Honeycomb Board)',      name_jp: '等身大スタンディ（ハニカムボード）' },
+        { code: '45435345',   name_us: 'Honeycomb Board Sign Paddle',              name_jp: 'ハニカムボード サインパドル' },
+        { code: '35345455',   name_us: 'Blank Honeycomb Board Sign 15-27cm',       name_jp: 'ハニカムボード 無地サイン 15-27cm' },
 
         // ============================================================
         // HONEYCOMB DISPLAY WALL
         // ============================================================
-        { code: 'hb_dw_1',   name_us: 'Re-board Display Wall',                   name_jp: 'リボード 展示用パーティション' },
+        { code: 'hb_dw_1',   name_us: 'Honeycomb Board Display Wall',                   name_jp: 'ハニカムボード 展示用パーティション' },
         { code: 'hb_dw_31',  name_us: 'Folding Screen Display Wall',              name_jp: '屏風型 展示パーティション' },
 
         // ============================================================
@@ -65,7 +65,7 @@
         // HONEYCOMB TABLE
         // ============================================================
         { code: 'hb_tb_4',   name_us: 'Cross-Shaped Display Table',                name_jp: '十字型 展示テーブル' },
-        { code: 'GH100',     name_us: 'Re-board Meeting/Consultation Table', name_jp: 'リボード 会議・相談テーブル' },
+        { code: 'GH100',     name_us: 'Honeycomb Board Meeting/Consultation Table', name_jp: 'ハニカムボード 会議・相談テーブル' },
         { code: 'hb_tb_1',   name_us: 'Single-Shelf Display Table',                name_jp: '1段展示テーブル' },
         { code: 'hb_tb_2',   name_us: '2-Shelf Display Table',                     name_jp: '2段展示テーブル' },
         { code: 'hb_tb_3',   name_us: '3-Shelf Display Table',                     name_jp: '3段展示テーブル' },
@@ -73,8 +73,8 @@
         // ============================================================
         // HONEYCOMB PRINTING
         // ============================================================
-        { code: 'hb_pt_1',   name_us: 'Custom Re-board Print – Single Sided', name_jp: 'リボード カスタムプリント 片面' },
-        { code: 'hb_pt_21',  name_us: 'Custom Re-board Print – Double Sided', name_jp: 'リボード カスタムプリント 両面' },
+        { code: 'hb_pt_1',   name_us: 'Custom Honeycomb Board Print – Single Sided', name_jp: 'ハニカムボード カスタムプリント 片面' },
+        { code: 'hb_pt_21',  name_us: 'Custom Honeycomb Board Print – Double Sided', name_jp: 'ハニカムボード カスタムプリント 両面' },
 
         // ============================================================
         // BANNER / PET BANNER STAND SET — 패트 → PET Banner
