@@ -692,6 +692,16 @@ function getSb() { return sb; }
             });
             h += '</div>';
 
+            // 관리자 답변 입력 영역
+            h += '<div style="margin-top:16px;padding-top:12px;border-top:2px solid #16a34a;">';
+            h += '<div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">💬 고객에게 답변 보내기</div>';
+            h += '<div style="display:flex;gap:6px;">';
+            h += '<input id="adminReplyInput" type="text" style="flex:1;border:1.5px solid #16a34a;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;" placeholder="답변을 입력하세요..." onkeydown="if(event.key===\'Enter\')sendAdminReply()">';
+            h += '<button class="btn" onclick="sendAdminReply()" style="background:#16a34a;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">전송</button>';
+            h += '</div>';
+            h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">고객 채팅창에 관리자 메시지로 전달됩니다.</div>';
+            h += '</div>';
+
             h += '<div style="margin-top:16px;padding-top:12px;border-top:2px solid #e2e8f0;">';
             h += '<div style="font-size:12px;font-weight:700;color:#6366f1;margin-bottom:6px;">💡 이 대화에서 학습시킬 내용 (한국어로 입력)</div>';
             h += '<textarea id="qaSessionLearn" rows="2" style="width:100%;border:1px solid #d4d4d8;border-radius:8px;padding:10px;font-size:13px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="예: 리보드 가벽 1칸은 약 15만원이야. 도쿄 인근은 배송비 무료."></textarea>';
@@ -810,6 +820,54 @@ function getSb() { return sb; }
             _loadDailyReport();
         } catch(e) { showToast('실패: '+(e.message||e), 'error'); }
         ta.disabled = false;
+    };
+
+    // 관리자 답변 전송
+    window.sendAdminReply = async function() {
+        var input = document.getElementById('adminReplyInput');
+        if (!input || !input.value.trim()) { showToast('답변을 입력하세요', 'warn'); return; }
+        if (!_activeRoomId) { showToast('세션을 선택하세요', 'warn'); return; }
+
+        var msg = input.value.trim();
+        input.disabled = true;
+
+        try {
+            var sb = getSb();
+            var { data: session } = await sb.auth.getSession();
+            var adminName = '관리자';
+            if (session?.session?.user) {
+                var { data: prof } = await sb.from('profiles').select('nickname').eq('id', session.session.user.id).single();
+                adminName = prof?.nickname || session.session.user.email?.split('@')[0] || '관리자';
+            }
+
+            // chat_messages에 관리자 메시지 삽입 (chatbot 타입으로 → 고객에게 표시)
+            var { error } = await sb.from('chat_messages').insert({
+                room_id: _activeRoomId,
+                sender_type: 'chatbot',
+                sender_name: '관리자 ' + adminName,
+                message: msg,
+                created_at: new Date().toISOString()
+            });
+            if (error) throw error;
+
+            // 대화 상세 새로고침
+            showToast('✅ 답변 전송 완료', 'success');
+            input.value = '';
+
+            // 대화 UI에 바로 추가
+            var detail = document.getElementById('qaSessionDetail');
+            var replyDiv = document.createElement('div');
+            replyDiv.style.cssText = 'display:flex;gap:8px;margin-top:8px;padding:8px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;';
+            replyDiv.innerHTML = '<div style="width:28px;height:28px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">👤</div>' +
+                '<div><div style="font-size:11px;color:#16a34a;font-weight:700;">관리자 ' + adminName + ' · 방금 전</div><div style="font-size:14px;color:#1e293b;margin-top:4px;line-height:1.5;">' + msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div></div>';
+
+            // 학습 섹션 바로 위에 삽입
+            var learnSection = detail.querySelector('[style*="border-top:2px solid #16a34a"]') || detail.querySelector('[style*="border-top:2px solid #e2e8f0"]');
+            if (learnSection) learnSection.parentNode.insertBefore(replyDiv, learnSection);
+            else detail.appendChild(replyDiv);
+
+        } catch(e) { showToast('전송 실패: '+(e.message||e), 'error'); }
+        input.disabled = false;
     };
 
     window.cbLoadSettings = async function() {
