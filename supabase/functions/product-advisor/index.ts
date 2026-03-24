@@ -817,11 +817,32 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 // 2) chat_messages (개별 insert — realtime 트리거)
                 if (_roomId) {
                     const now = new Date();
+                    // 고객 이미지 → Storage 업로드
+                    let _custFileUrl = '';
+                    let _custFileName = '';
+                    if (_hasImage && image) {
+                        try {
+                            const ext = (image_type || 'image/jpeg').split('/')[1] || 'jpg';
+                            const path = `chat_images/${_roomId}_${Date.now()}.${ext}`;
+                            const imgBuf = Uint8Array.from(atob(image), c => c.charCodeAt(0));
+                            const { error: upErr } = await sb.storage.from('orders').upload(path, imgBuf, { contentType: image_type || 'image/jpeg' });
+                            if (!upErr) {
+                                const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+                                _custFileUrl = urlData?.publicUrl || '';
+                                _custFileName = `image.${ext}`;
+                            }
+                        } catch(ue) { console.error('Image upload error:', ue); }
+                    }
                     // 고객 메시지
-                    await sb.from('chat_messages').insert({
+                    const custMsgData: any = {
                         room_id: _roomId, sender_type: 'customer', sender_name: custName,
                         message: _trimmedMsg || '(이미지)', created_at: new Date(now.getTime() - 1000).toISOString(),
-                    });
+                    };
+                    if (_custFileUrl) {
+                        custMsgData.file_url = _custFileUrl;
+                        custMsgData.file_name = _custFileName;
+                    }
+                    await sb.from('chat_messages').insert(custMsgData);
                     // AI 텍스트 응답 + 제품 카드 데이터
                     let botMsg = _resultMsg;
                     if (_products && _products.length > 0) {
