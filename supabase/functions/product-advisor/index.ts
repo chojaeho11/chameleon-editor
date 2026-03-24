@@ -291,6 +291,7 @@ serve(async (req) => {
    - 허니콤보드 가벽 관련 제품코드는 hb_display_wall 등 가벽 관련 제품을 추천해. 제품 카드를 반드시 보여줘!
    - **등신대, 간판, 상판 등 부가 요소**도 이미지에서 보이면 별도로 안내하고 해당 제품 카드도 함께 보여줘.
    - 사이즈가 안 보이면 "가벽의 전체 가로 길이를 알려주시면 몇 칸이 필요한지 안내해 드릴게요!" 라고 물어봐.
+   - **복잡한 부스/전시 제작 (여러 구조물 조합, 레퍼런스 이미지 기반 기획)**: 단순 가벽 주문이 아닌 복잡한 전시 제작 문의인 경우, 응답 텍스트의 마지막에 반드시 [QUOTE_FORM] 태그를 넣어. 이 태그가 있으면 챗봇이 자동으로 견적 요청 폼을 보여줘. 예: 여러 구조물 조합, 맞춤 설계, 기획 설계 도면이 필요한 경우 등.
 11. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 전시/공간 제작 요청이면 에러 메시지 대신 자연스럽게 연락처 남기기 안내. "연락처를 남겨주시면 담당자가 확인 후 연락드릴게요! 아래 📞 연락 요청하기 버튼을 눌러주세요" 라고 안내해. 단, **텍스트로 상품을 묻는 질문에는 반드시 상품 카드를 보여줘!**
 
 ## 가격 계산
@@ -377,6 +378,7 @@ serve(async (req) => {
    - 横幅1m基準で何枚必要か算出（例：全幅6m→6枚）
    - **❌ 価格を直接計算しない！** 商品ページリンクを案内し注文方法を説明：①商品リンクで間仕切り壁を選択 ②横1m×希望の高さを選択 ③数量をN個に設定 ④片面or両面を選択 ⑤注文完了後、担当マネージャーがファイルを確認してご連絡します
    - 間仕切り壁の商品カードを必ず表示！等身大パネル・看板等もあれば別途案内。
+   - **複雑なブース/展示制作**: 単純な間仕切り壁注文ではなく複雑な展示制作の問い合わせの場合、応答テキストの最後に必ず[QUOTE_FORM]タグを入れて。このタグがあるとチャットボットが自動で見積もりフォームを表示します。
 10. **エラーメッセージ禁止** — 分析が難しい場合は自然に連絡先を残すよう案内。「📞 連絡リクエストボタンを押して連絡先を残してください！担当者が確認後ご連絡いたします」と案内。テキストで商品を聞かれたら必ず商品カードを表示。
 
 ## 出荷・配送案内
@@ -458,6 +460,7 @@ serve(async (req) => {
    - Calculate panels needed based on 1m width units (e.g., 6m total → 6 panels)
    - **❌ Do NOT calculate prices!** Instead, share the product page link and explain the ordering process: ①Select partition wall product ②Choose 1m width × desired height ③Set quantity to N panels ④Choose single or double-sided ⑤After ordering, a manager will review the files and contact you
    - ALWAYS show partition wall product cards! Also show standee/sign products if visible in the image.
+   - **Complex booth/exhibition builds**: For inquiries involving multiple structures, custom designs, or reference-based planning (not just simple wall panels), always add [QUOTE_FORM] tag at the end of your response. This triggers the chatbot to show an inline quote request form.
 10. **Never say 'connection unstable'** — For complex requests, naturally guide them to leave their phone number for callback. Say "Click the 📞 Request Callback button to leave your number! Our team will contact you." For text product questions, always show product cards.
 
 ## Shipping & Delivery

@@ -22,9 +22,9 @@ function getLang() {
 }
 
 const T = {
-    kr: { title: '카프', subtitle: '쇼핑을 안내해 드립니다', studio: '여기서 놀자!', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 design@chameleon.design으로 보내주세요.', error: '멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 전문 상담이 필요합니다. 위의 📞 연락처 남기기 버튼을 눌러 연락처를 남겨주시면 담당자가 빠르게 연락드릴게요 😊', reset: '대화 초기화', consultant: '연락처 남기기', namePh: '이름', callbackTitle: '연락처를 남겨주세요', callbackDesc: '담당자가 확인 후 연락드리겠습니다', callbackSuccess: '연락처가 전달되었습니다! 담당자가 빠른 시간 내에 연락드릴게요', callbackPhonePh: '연락처 입력', callbackSubmit: '연락 요청하기', callbackPhoneErr: '연락처를 입력해주세요' },
-    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', studio: 'ここで遊ぼう!', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはdesign@chameleon.designへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は専門的なご案内が必要です。上の📞コールバックリクエストボタンを押して連絡先を残してください。担当者がすぐにご連絡いたします 😊', reset: 'チャットリセット', consultant: 'コールバックリクエスト', namePh: 'お名前', callbackTitle: '連絡先をお残しください', callbackDesc: '担当者が確認後、ご連絡いたします', callbackSuccess: '連絡先が送信されました！担当者がすぐにご連絡いたします', callbackPhonePh: '連絡先を入力', callbackSubmit: 'コールバックを依頼', callbackPhoneErr: '連絡先を入力してください' },
-    en: { title: 'Kapu', subtitle: 'Your shopping guide', studio: 'Play Here!', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email design@chameleon.design.', error: 'What an amazing project you have in mind! ✨ This kind of product needs expert guidance. Please tap the 📞 Request Callback button above and leave your number — our team will contact you shortly 😊', reset: 'Reset chat', consultant: 'Request callback', namePh: 'Name', callbackTitle: 'Please leave your number', callbackDesc: 'Our team will review and contact you', callbackSuccess: 'Your contact info has been submitted! Our team will reach out to you shortly', callbackPhonePh: 'Enter phone number', callbackSubmit: 'Request callback', callbackPhoneErr: 'Please enter your phone number' },
+    kr: { title: '카프', subtitle: '쇼핑을 안내해 드립니다', studio: '여기서 놀자!', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 design@chameleon.design으로 보내주세요.', error: '멋진 작품을 구상 중이시군요! ✨ 이런 제품의 제작은 전문 상담이 필요합니다. 위의 📞 연락처 남기기 버튼을 눌러 연락처를 남겨주시면 담당자가 빠르게 연락드릴게요 😊', reset: '대화 초기화', consultant: '연락처 남기기', namePh: '이름', callbackTitle: '연락처를 남겨주세요', callbackDesc: '담당자가 확인 후 연락드리겠습니다', callbackSuccess: '연락처가 전달되었습니다! 담당자가 빠른 시간 내에 연락드릴게요', callbackPhonePh: '연락처 입력', callbackSubmit: '연락 요청하기', callbackPhoneErr: '연락처를 입력해주세요', quoteTitle: '전시/부스 견적 요청', quoteDesc: '아래 정보를 입력해주시면 담당자가 맞춤 견적을 보내드립니다', quoteEmailPh: 'email@example.com', quoteDetailPh: '필요한 구조물, 사이즈, 수량 등을 알려주세요', quoteFilePh: '레퍼런스 이미지나 도면을 올려주세요', quoteSubmit: '견적 요청 보내기', quoteSuccess: '견적 요청이 전송되었습니다! 담당자가 빠른 시간 내에 연락드리겠습니다' },
+    ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', studio: 'ここで遊ぼう!', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはdesign@chameleon.designへお送りください。', error: '素敵な作品を構想中ですね！✨ このような製品の制作は専門的なご案内が必要です。上の📞コールバックリクエストボタンを押して連絡先を残してください。担当者がすぐにご連絡いたします 😊', reset: 'チャットリセット', consultant: 'コールバックリクエスト', namePh: 'お名前', callbackTitle: '連絡先をお残しください', callbackDesc: '担当者が確認後、ご連絡いたします', callbackSuccess: '連絡先が送信されました！担当者がすぐにご連絡いたします', callbackPhonePh: '連絡先を入力', callbackSubmit: 'コールバックを依頼', callbackPhoneErr: '連絡先を入力してください', quoteTitle: '展示/ブース見積もり依頼', quoteDesc: '以下の情報をご入力いただければ、担当者がお見積もりをお送りします', quoteEmailPh: 'email@example.com', quoteDetailPh: '必要な構造物、サイズ、数量などをお知らせください', quoteFilePh: '参考画像や図面をアップロードしてください', quoteSubmit: '見積もり依頼を送信', quoteSuccess: '見積もり依頼が送信されました！担当者が早急にご連絡いたします' },
+    en: { title: 'Kapu', subtitle: 'Your shopping guide', studio: 'Play Here!', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email design@chameleon.design.', error: 'What an amazing project you have in mind! ✨ This kind of product needs expert guidance. Please tap the 📞 Request Callback button above and leave your number — our team will contact you shortly 😊', reset: 'Reset chat', consultant: 'Request callback', namePh: 'Name', callbackTitle: 'Please leave your number', callbackDesc: 'Our team will review and contact you', callbackSuccess: 'Your contact info has been submitted! Our team will reach out to you shortly', callbackPhonePh: 'Enter phone number', callbackSubmit: 'Request callback', callbackPhoneErr: 'Please enter your phone number', quoteTitle: 'Exhibition/Booth Quote Request', quoteDesc: 'Fill in the details below and our team will send you a custom quote', quoteEmailPh: 'email@example.com', quoteDetailPh: 'Describe the structures, sizes, quantities you need', quoteFilePh: 'Upload reference images or blueprints', quoteSubmit: 'Submit Quote Request', quoteSuccess: 'Your quote request has been submitted! Our team will contact you shortly' },
     zh: { title: '卡普', subtitle: '为您导购', studio: '在这里玩!', placeholder: '请输入消息...', send: '发送', close: '关闭', editor: '在编辑器中设计', cart: '加入购物车', upload: '上传图片', tooBig: '文件太大（最大10MB）。', error: '您构思了一个很棒的项目！✨ 这类产品需要专业指导。请点击上方📞回拨请求按钮并留下联系方式，我们的团队会尽快与您联系 😊', reset: '重置对话', consultant: '回拨请求', namePh: '姓名', callbackTitle: '请留下您的联系方式', callbackDesc: '我们的团队会确认后联系您', callbackSuccess: '联系方式已提交！我们的团队会尽快与您联系', callbackPhonePh: '输入电话号码', callbackSubmit: '请求回拨', callbackPhoneErr: '请输入电话号码' },
     es: { title: 'Kapu', subtitle: 'Tu guía de compras', studio: '¡Juega Aquí!', placeholder: 'Escribe un mensaje...', send: 'Enviar', close: 'Cerrar', editor: 'Diseñar en Editor', cart: 'Añadir al carrito', upload: 'Adjuntar imagen', tooBig: 'Archivo demasiado grande (máx. 10MB).', error: '¡Qué proyecto tan increíble! ✨ Este tipo de producto necesita orientación experta. Toca el botón 📞 Solicitar devolución de llamada arriba y deja tu número — nuestro equipo te contactará pronto 😊', reset: 'Reiniciar chat', consultant: 'Solicitar devolución', namePh: 'Nombre', callbackTitle: 'Deja tu número', callbackDesc: 'Nuestro equipo revisará y te contactará', callbackSuccess: '¡Tu información de contacto ha sido enviada! Nuestro equipo se pondrá en contacto contigo pronto', callbackPhonePh: 'Ingresa tu teléfono', callbackSubmit: 'Solicitar llamada', callbackPhoneErr: 'Ingresa tu teléfono' },
     de: { title: 'Kapu', subtitle: 'Ihr Einkaufsberater', studio: 'Hier spielen!', placeholder: 'Nachricht eingeben...', send: 'Senden', close: 'Schließen', editor: 'Im Editor gestalten', cart: 'In den Warenkorb', upload: 'Bild anhängen', tooBig: 'Datei zu groß (max. 10MB).', error: 'Was für ein tolles Projekt! ✨ Dieses Produkt braucht fachkundige Beratung. Bitte tippen Sie oben auf 📞 Rückruf anfordern und hinterlassen Sie Ihre Nummer — unser Team meldet sich bei Ihnen 😊', reset: 'Chat zurücksetzen', consultant: 'Rückruf anfordern', namePh: 'Name', callbackTitle: 'Hinterlassen Sie Ihre Nummer', callbackDesc: 'Unser Team wird Sie kontaktieren', callbackSuccess: 'Ihre Kontaktdaten wurden übermittelt! Unser Team wird sich bald bei Ihnen melden', callbackPhonePh: 'Telefonnummer eingeben', callbackSubmit: 'Rückruf anfordern', callbackPhoneErr: 'Bitte Telefonnummer eingeben' },
@@ -465,6 +465,13 @@ async function sendMessage(text, imageData) {
             startCallbackFlow();
             return;
         }
+        // ★ 견적 요청 키워드 감지 → 견적 폼 바로 표시
+        const _quoteKeys = ['견적요청','부스견적','전시견적','대량견적','quote request','booth quote','見積もり依頼','ブース見積もり'];
+        if (_quoteKeys.some(k => _userLower.includes(k))) {
+            addBubble(text, 'user');
+            startQuoteFlow();
+            return;
+        }
     }
 
     isProcessing = true;
@@ -522,8 +529,12 @@ async function sendMessage(text, imageData) {
 
         typingEl.remove();
 
-        const chatMsg = data.chat_message || data.summary || '';
+        let chatMsg = data.chat_message || data.summary || '';
+        // ★ [QUOTE_FORM] 태그 감지 → 태그 제거 후 견적 폼 표시
+        const _hasQuoteForm = chatMsg.includes('[QUOTE_FORM]');
+        if (_hasQuoteForm) chatMsg = chatMsg.replace(/\[QUOTE_FORM\]/g, '').trim();
         if (chatMsg) addBubble(chatMsg, 'ai');
+        if (_hasQuoteForm) setTimeout(() => startQuoteFlow(), 300);
 
         const products = data.products || [];
         conversationHistory.push({
@@ -625,6 +636,121 @@ function startCallbackFlow() {
         }
 
         addBubble(t('callbackSuccess'), 'ai');
+        scrollChat();
+        saveChat();
+    });
+}
+
+// ═══════════════════════════════════════
+// 견적 요청 (Quote Request) 기능
+// ═══════════════════════════════════════
+
+function startQuoteFlow() {
+    if (!chatArea) return;
+    // AI 대화 요약 생성 (description 사전 입력용)
+    let aiSummary = '';
+    try {
+        aiSummary = conversationHistory.slice(-6).map(h =>
+            (h.role === 'user' ? 'Customer: ' : 'AI: ') + String(h.content).substring(0, 120)
+        ).join('\n');
+    } catch(e) {}
+
+    const card = document.createElement('div');
+    card.className = 'adv-row adv-row-ai';
+    card.innerHTML = `
+        <div class="adv-avatar"><i class="fa-solid fa-file-invoice"></i></div>
+        <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px; max-width:85%;">
+            <div style="text-align:center; margin-bottom:10px;">
+                <div style="font-size:24px;">📋</div>
+                <div style="font-weight:700; color:#0369a1; font-size:14px;">${t('quoteTitle')}</div>
+                <div style="font-size:12px; color:#0369a1; opacity:0.8; margin-top:4px;">${t('quoteDesc')}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <input id="advQuoteName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <input id="advQuoteEmail" type="email" placeholder="${t('quoteEmailPh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <input id="advQuotePhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <textarea id="advQuoteDetail" rows="3" placeholder="${t('quoteDetailPh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; resize:vertical;">${aiSummary ? aiSummary : ''}</textarea>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#0369a1;">
+                    <input id="advQuoteFiles" type="file" multiple accept="image/*,.pdf" style="font-size:12px; flex:1;">
+                    <span>${t('quoteFilePh')}</span>
+                </label>
+                <div id="advQuoteErr" style="color:#ef4444; font-size:12px; text-align:center; display:none;"></div>
+                <button id="advQuoteSubmit" style="background:#0284c7; color:#fff; border:none; padding:12px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; width:100%;">${t('quoteSubmit')}</button>
+            </div>
+        </div>
+    `;
+    chatArea.appendChild(card);
+    scrollChat();
+    const emailInput = document.getElementById('advQuoteEmail');
+    if (emailInput) emailInput.focus();
+
+    document.getElementById('advQuoteSubmit').addEventListener('click', async () => {
+        const name = (document.getElementById('advQuoteName').value || '').trim();
+        const email = (document.getElementById('advQuoteEmail').value || '').trim();
+        const phone = (document.getElementById('advQuotePhone').value || '').trim();
+        const detail = (document.getElementById('advQuoteDetail').value || '').trim();
+        const fileInput = document.getElementById('advQuoteFiles');
+        const files = fileInput ? fileInput.files : [];
+
+        // Validation: email and phone required
+        const errEl = document.getElementById('advQuoteErr');
+        if (!email) {
+            if (errEl) { errEl.textContent = 'Email is required'; errEl.style.display = 'block'; }
+            document.getElementById('advQuoteEmail').style.borderColor = '#ef4444';
+            return;
+        }
+        if (!phone) {
+            if (errEl) { errEl.textContent = t('callbackPhoneErr'); errEl.style.display = 'block'; }
+            document.getElementById('advQuotePhone').style.borderColor = '#ef4444';
+            return;
+        }
+
+        // Disable button
+        const btn = document.getElementById('advQuoteSubmit');
+        if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+        const sb = getSb();
+        let uploadedFiles = [];
+
+        // Upload files to Supabase storage
+        if (sb && files.length > 0) {
+            const ts = Date.now();
+            const rand = Math.random().toString(36).substring(2, 8);
+            for (let i = 0; i < files.length; i++) {
+                try {
+                    const file = files[i];
+                    const ext = file.name.split('.').pop() || 'bin';
+                    const path = `vip_uploads/QUOTE_${ts}_${rand}_${i}.${ext}`;
+                    const { data: upData, error: upErr } = await sb.storage.from('orders').upload(path, file);
+                    if (upErr) { console.error('Quote file upload error:', upErr); continue; }
+                    const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+                    uploadedFiles.push({ name: file.name, url: urlData?.publicUrl || path });
+                } catch(e) {
+                    console.error('Quote file upload exception:', e);
+                }
+            }
+        }
+
+        // Insert into vip_orders
+        if (sb) {
+            try {
+                const langCode = getLang();
+                const countryTag = langCode === 'ja' ? 'JP' : langCode === 'en' ? 'US' : 'KR';
+                await sb.from('vip_orders').insert({
+                    customer_name: name || 'Chat Quote',
+                    customer_phone: phone || email,
+                    preferred_manager: 'Quote-' + countryTag,
+                    memo: `[CHATBOT QUOTE REQUEST from ${window.location.hostname}]\nEmail: ${email}\nPhone: ${phone}\n\n${detail}`,
+                    files: uploadedFiles,
+                    status: 'quote'
+                });
+            } catch(e) {
+                console.error('vip_orders insert error:', e);
+            }
+        }
+
+        card.remove();
+        addBubble(t('quoteSuccess'), 'ai');
         scrollChat();
         saveChat();
     });
