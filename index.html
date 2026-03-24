@@ -9420,12 +9420,8 @@ window.updateModalTotal = function() {
 
         container.innerHTML = html;
 
-        // 수량 할인 (칸수 합산 기준)
+        // 가벽 할인 비활성화
         let discountRate = 0;
-        if (totalPanels >= 100) discountRate = 0.50;
-        else if (totalPanels >= 30) discountRate = 0.40;
-        else if (totalPanels >= 10) discountRate = 0.35;
-        else if (totalPanels >= 3) discountRate = 0.30;
 
         const discountAmount = Math.floor(totalPrice * discountRate / 100) * 100;
         const finalPrice = totalPrice - discountAmount;
