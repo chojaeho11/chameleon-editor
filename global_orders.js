@@ -56,19 +56,80 @@ function cleanContactMarkers(note) {
 }
 
 window.requestContact = async (orderId) => {
-    const reason = prompt('고객소통 요청 사유를 입력하세요:', '');
-    if (reason === null) return;
+    // 소통요청 모달 생성
+    let modal = document.getElementById('contactReqModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'contactReqModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:24px;width:400px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:17px;font-weight:800;">📞 소통요청 — 주문 #${orderId}</h3>
+                <button onclick="document.getElementById('contactReqModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">&times;</button>
+            </div>
+            <div style="display:flex;gap:4px;margin-bottom:14px;">
+                <button class="crTab active" data-tab="manager" onclick="switchCRTab('manager')" style="flex:1;padding:8px;border:2px solid #7c3aed;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#7c3aed;color:#fff;">매니저 소통요청</button>
+                <button class="crTab" data-tab="hq" onclick="switchCRTab('hq')" style="flex:1;padding:8px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#475569;">본사 처리</button>
+            </div>
+            <div id="crTabManager">
+                <div style="font-size:13px;color:#475569;margin-bottom:10px;">담당 매니저에게 고객 소통을 요청합니다.</div>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="this.querySelector('input').checked=true">
+                        <input type="radio" name="crManager" value="은미" checked style="accent-color:#7c3aed;"> <b>은미</b> 매니저
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="this.querySelector('input').checked=true">
+                        <input type="radio" name="crManager" value="성희" style="accent-color:#7c3aed;"> <b>성희</b> 매니저
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="this.querySelector('input').checked=true">
+                        <input type="radio" name="crManager" value="지숙" style="accent-color:#7c3aed;"> <b>지숙</b> 매니저
+                    </label>
+                </div>
+                <textarea id="crReason" rows="2" placeholder="소통 요청 사유 (선택)" style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:inherit;resize:vertical;"></textarea>
+                <button onclick="submitContactReq('${orderId}','manager')" style="width:100%;margin-top:10px;padding:10px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">매니저에게 소통 요청</button>
+            </div>
+            <div id="crTabHq" style="display:none;">
+                <div style="font-size:13px;color:#475569;margin-bottom:10px;">본사에서 직접 처리합니다.</div>
+                <textarea id="crHqNote" rows="2" placeholder="처리 내용 메모 (선택)" style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:inherit;resize:vertical;"></textarea>
+                <button onclick="submitContactReq('${orderId}','hq')" style="width:100%;margin-top:10px;padding:10px;background:#0ea5e9;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">본사 직접 처리</button>
+            </div>
+        </div>
+    `;
+};
+
+window.switchCRTab = (tab) => {
+    document.getElementById('crTabManager').style.display = tab === 'manager' ? '' : 'none';
+    document.getElementById('crTabHq').style.display = tab === 'hq' ? '' : 'none';
+    document.querySelectorAll('#contactReqModal .crTab').forEach(b => {
+        const isActive = b.dataset.tab === tab;
+        b.style.background = isActive ? (tab === 'manager' ? '#7c3aed' : '#0ea5e9') : '#fff';
+        b.style.color = isActive ? '#fff' : '#475569';
+        b.style.borderColor = isActive ? (tab === 'manager' ? '#7c3aed' : '#0ea5e9') : '#e2e8f0';
+    });
+};
+
+window.submitContactReq = async (orderId, type) => {
     const { data: order } = await sb.from('orders').select('admin_note').eq('id', orderId).single();
     let note = cleanContactMarkers(order?.admin_note);
     const timestamp = new Date().toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
-    note = CONTACT_REQ_MARKER + `[소통요청 ${timestamp}] ${reason}\n` + note;
+
+    if (type === 'manager') {
+        const mgr = document.querySelector('input[name="crManager"]:checked')?.value || '은미';
+        const reason = document.getElementById('crReason')?.value?.trim() || '';
+        note = CONTACT_REQ_MARKER + `[소통요청 ${timestamp}] ${mgr}매니저 지정${reason ? ' / ' + reason : ''}\n` + note;
+    } else {
+        const hqNote = document.getElementById('crHqNote')?.value?.trim() || '';
+        note = CONTACT_DONE_MARKER + `[본사처리 ${timestamp}]${hqNote ? ' ' + hqNote : ''}\n` + note;
+    }
+
     const { error } = await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
-    if (error) { showToast('소통 요청 저장 실패: ' + error.message, 'error'); return; }
-    showToast(`주문 #${orderId} 고객소통 요청 완료`, 'success');
+    document.getElementById('contactReqModal').style.display = 'none';
+    if (error) { showToast('저장 실패: ' + error.message, 'error'); return; }
+    showToast(type === 'manager' ? `매니저 소통요청 완료` : `본사 직접 처리 완료`, 'success');
     loadOrders();
-    // 콜백 섹션이 열려있으면 새로고침
-    const cbSec = document.getElementById('sec-callback');
-    if (cbSec && cbSec.classList.contains('active')) window.loadCallbackList('pending');
 };
 
 window.completeContact = async (orderId) => {
@@ -3076,7 +3137,21 @@ function getInstallationDisplayInfo(order) {
 window.updateOrderStaff = async (id, role, selectEl) => {
     const val = selectEl.value;
     const field = role === 'manager' ? 'staff_manager_id' : 'staff_driver_id';
-    
+
+    // 매니저 지정 시 소통요청 여부 확인
+    if (role === 'manager' && val) {
+        const { data: order } = await sb.from('orders').select('admin_note').eq('id', id).single();
+        const note = order?.admin_note || '';
+        if (!note.includes(CONTACT_REQ_MARKER) && !note.includes(CONTACT_DONE_MARKER)) {
+            showToast('⚠️ 아직 소통요청이 없습니다. 먼저 소통요청을 해주세요.', 'error');
+            selectEl.value = '';
+            selectEl.style.backgroundColor = '#ffffff';
+            selectEl.style.color = '#334155';
+            selectEl.style.border = '1px solid #e2e8f0';
+            return;
+        }
+    }
+
     // 1. DB 업데이트 (비동기 처리하되 UI는 먼저 반응)
     sb.from('orders').update({ [field]: val || null }).eq('id', id).then(({ error }) => {
         if(error) showToast("담당자 변경 실패: " + error.message, "error");
