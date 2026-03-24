@@ -9280,10 +9280,9 @@ window.updateModalTotal = function() {
     // 3. 수량 할인 적용 (천원단위/만원단위, 벽면 제품 제외 — 벽면은 _renderWallPanels에서 자체 할인)
     let discountRate = 0;
     const _productCode = product.code || window.currentProductKey || '';
-    const _isWallProd = product.category === 'hb_display_wall' || (_productCode && _productCode.startsWith('hb_dw'));
     const _discountTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-    const _isWholesaleOrRealPrint = _discountTopCat === 'Wholesale Board Prices' || _discountTopCat === '44444';
-    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy' || _isWallProd || _isWholesaleOrRealPrint;
+    const _isWholesaleOnly = _discountTopCat === 'Wholesale Board Prices';
+    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy' || _isWholesaleOnly;
     if (!_isExcluded) {
         if (prodQty >= 100) discountRate = 0.50;
         else if (prodQty >= 30) discountRate = 0.40;
@@ -9301,11 +9300,13 @@ window.updateModalTotal = function() {
             discountTableEl.style.display = 'none';
         } else {
             discountTableEl.style.display = 'block';
-            // 현재 수량에 해당하는 구간 하이라이트
+            // 가벽 제품: 칸수 기준 / 일반: 수량 기준
+            const _isWallProd = product.category === 'hb_display_wall' || (_productCode && _productCode.startsWith('hb_dw'));
+            const highlightQty = _isWallProd && window._wallPanelsData ? window._wallPanelsData.totalPanels : prodQty;
             discountTableEl.querySelectorAll('.dsc-tier').forEach(el => {
                 const tierMin = parseInt(el.dataset.min);
                 const tierMax = parseInt(el.dataset.max || 999999);
-                if (prodQty >= tierMin && prodQty < tierMax) {
+                if (highlightQty >= tierMin && highlightQty < tierMax) {
                     el.style.background = '#6366f1'; el.style.color = '#fff';
                 } else {
                     el.style.background = '#f8fafc'; el.style.color = '#334155';
