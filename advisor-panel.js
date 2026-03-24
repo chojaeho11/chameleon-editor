@@ -40,6 +40,8 @@ let lastProducts = [];
 let pendingImage = null;
 let conversationHistory = [];
 let _advRoomId = null; // product-advisor room_id 유지
+let _custName = ''; // 고객 이름
+let _custPhone = ''; // 고객 전화번호
 
 // ─── Supabase 클라이언트 ───
 let _ownSb = null;
@@ -108,15 +110,66 @@ function showWelcomeMessage() {
     const lang = getLang();
     const msg = WELCOME[lang] || WELCOME['en'];
     const formatted = msg.replace(/\n/g, '<br>');
+    const greeting = _custName ? (_custName + (lang === 'ja' ? '様、' : lang === 'en' ? ', ' : '님, ')) : '';
     chatArea.insertAdjacentHTML('beforeend', `
         <div class="adv-row adv-row-ai">
             <div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-            <div class="adv-bubble adv-bubble-ai">${formatted}</div>
+            <div class="adv-bubble adv-bubble-ai">${greeting}${formatted}</div>
         </div>
     `);
     scrollChat();
 }
 
+function showEntryForm() {
+    if (!chatArea) return;
+    const lang = getLang();
+    const labels = {
+        kr: { title: '반갑습니다!', desc: '성함과 연락처를 남겨주시면 더 정확한 안내가 가능합니다.', namePh: '성함', phonePh: '연락처 (010-0000-0000)', btn: '시작하기', skip: '건너뛰기' },
+        ja: { title: 'ようこそ！', desc: 'お名前と連絡先をご入力いただくと、より正確なご案内が可能です。', namePh: 'お名前', phonePh: '電話番号', btn: 'スタート', skip: 'スキップ' },
+        en: { title: 'Welcome!', desc: 'Enter your name and phone for a better experience.', namePh: 'Name', phonePh: 'Phone number', btn: 'Start', skip: 'Skip' },
+    };
+    const L = labels[lang] || labels['en'];
+    const card = document.createElement('div');
+    card.className = 'adv-row adv-row-ai';
+    card.innerHTML = `
+        <div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px; max-width:85%;">
+            <div style="text-align:center; margin-bottom:10px;">
+                <div style="font-size:28px;">👋</div>
+                <div style="font-weight:700; color:#0369a1; font-size:15px;">${L.title}</div>
+                <div style="font-size:12px; color:#0369a1; opacity:0.8; margin-top:4px;">${L.desc}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <input id="advEntryName" type="text" placeholder="${L.namePh}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <input id="advEntryPhone" type="tel" placeholder="${L.phonePh}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <button id="advEntrySubmit" style="background:#0284c7; color:#fff; border:none; padding:11px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; width:100%;">${L.btn}</button>
+                <button id="advEntrySkip" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:12px; padding:4px;">${L.skip}</button>
+            </div>
+        </div>
+    `;
+    chatArea.appendChild(card);
+    scrollChat();
+    document.getElementById('advEntryName').focus();
+
+    function completeEntry(name, phone) {
+        _custName = name;
+        _custPhone = phone;
+        try { sessionStorage.setItem('kapu_customer', JSON.stringify({ name, phone })); } catch(e) {}
+        card.remove();
+        showWelcomeMessage();
+    }
+    document.getElementById('advEntrySubmit').addEventListener('click', () => {
+        const name = document.getElementById('advEntryName').value.trim();
+        const phone = document.getElementById('advEntryPhone').value.trim();
+        if (!name) { document.getElementById('advEntryName').style.borderColor = '#ef4444'; return; }
+        completeEntry(name, phone);
+    });
+    document.getElementById('advEntrySkip').addEventListener('click', () => {
+        completeEntry('', '');
+    });
+    document.getElementById('advEntryName').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('advEntryPhone').focus(); });
+    document.getElementById('advEntryPhone').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('advEntrySubmit').click(); });
+}
 
 // ─── 초기화 ───
 export function initAdvisorPanel() {
@@ -363,13 +416,26 @@ function buildPanelUI() {
     document.getElementById('advFileInput').addEventListener('change', handleFileSelect);
     document.getElementById('advImgRemove').addEventListener('click', clearPendingImage);
 
+    // 저장된 고객 정보 복원
+    try {
+        const saved = sessionStorage.getItem('kapu_customer');
+        if (saved) {
+            const c = JSON.parse(saved);
+            _custName = c.name || '';
+            _custPhone = c.phone || '';
+        }
+    } catch(e) {}
+
     // 저장된 대화 복원
     const restored = loadChat();
     if (restored) {
         scrollChat();
-    } else {
-        // 첫 방문: 기본 안내 메시지 표시
+    } else if (_custName) {
+        // 이름 있으면 바로 웰컴
         showWelcomeMessage();
+    } else {
+        // 첫 방문: 이름/전화 입력 폼
+        showEntryForm();
     }
 
     // 포토스튜디오 버튼
@@ -507,6 +573,8 @@ async function sendMessage(text, imageData) {
             conversation_history: [sysHint, ...conversationHistory.slice(-20)]
         };
         if (_advRoomId) payload.room_id = _advRoomId;
+        if (_custName) payload.customer_name = _custName;
+        if (_custPhone) payload.customer_phone = _custPhone;
         if (imageData) {
             payload.image = imageData.base64;
             payload.image_type = imageData.type;

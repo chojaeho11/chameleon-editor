@@ -59,7 +59,7 @@ serve(async (req) => {
     let reqBody: any = {};
     try {
         reqBody = await req.json();
-        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId } = reqBody;
+        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId, customer_name: clientCustName, customer_phone: clientCustPhone } = reqBody;
         const trimmedMsg = (message || '').trim();
         if (!trimmedMsg && !image) throw new Error("message or image is required");
         if (trimmedMsg.length > 2000) throw new Error("Message too long");
@@ -764,13 +764,20 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         const _sid = session_id || '';
         const _lang = clientLang;
         const custNameMap: Record<string,string> = { kr: '웹 고객', ja: 'ウェブ顧客', us: 'Web Customer' };
-        const custName = custNameMap[_lang] || '웹 고객';
+        const defaultName = custNameMap[_lang] || '웹 고객';
+        const custName = clientCustName
+            ? (clientCustName + (clientCustPhone ? ' | ' + clientCustPhone : ''))
+            : defaultName;
         let roomId = '';
 
         try {
             // 1순위: 클라이언트가 보낸 room_id (확실한 캐시)
             if (clientRoomId) {
                 roomId = clientRoomId;
+                // 고객이 이름을 입력했으면 기존 방 이름 업데이트
+                if (clientCustName) {
+                    await sb.from('chat_rooms').update({ customer_name: custName }).eq('id', roomId);
+                }
                 console.log("[chat] reusing client room_id:", roomId);
             }
             // 2순위: source 필드로 검색
