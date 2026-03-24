@@ -7149,10 +7149,15 @@ let iconUrl = window.getTinyThumb(rawUrl, 150);
                 }
 
                 // 언어별 카테고리 이름
-                const _hn2 = window.location.hostname;
                 let _catName = cat.name || '';
-                if (_hn2.includes('cafe0101') && cat.name_jp) _catName = cat.name_jp;
-                else if (_hn2.includes('cafe3355') && cat.name_us) _catName = cat.name_us;
+                const _cl = (typeof CURRENT_LANG !== 'undefined' ? CURRENT_LANG : 'kr').toLowerCase();
+                if (_cl === 'ja' && cat.name_jp) _catName = cat.name_jp;
+                else if ((_cl === 'en' || _cl === 'us') && cat.name_us) _catName = cat.name_us;
+                else if (_cl === 'zh' && cat.name_cn) _catName = cat.name_cn;
+                else if (_cl === 'ar' && cat.name_ar) _catName = cat.name_ar;
+                else if (_cl === 'es' && cat.name_es) _catName = cat.name_es;
+                else if (_cl === 'de' && cat.name_de) _catName = cat.name_de;
+                else if (_cl === 'fr' && cat.name_fr) _catName = cat.name_fr;
 
                 div.innerHTML = `
                     <div class="quick-icon" style="background:#fff; border:1px solid #f1f5f9; overflow:hidden; display:flex; align-items:center; justify-content:center;">
