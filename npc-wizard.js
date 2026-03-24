@@ -1080,9 +1080,9 @@ window.NpcWizard = {
                         <div class="pd-input-row" style="margin-top:12px;">
                             <label>${_t('pdQty')}</label>
                             <div style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; flex:1;">
-                                <button onclick="const i=document.getElementById('npcPdQty');i.value=Math.max(1,parseInt(i.value)-1);" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">-</button>
-                                <input type="number" id="npcPdQty" value="1" min="1" style="width:50px;text-align:center;border:none;font-weight:bold;font-size:15px;">
-                                <button onclick="const i=document.getElementById('npcPdQty');i.value=parseInt(i.value)+1;" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">+</button>
+                                <button onclick="const i=document.getElementById('npcPdQty');i.value=Math.max(1,parseInt(i.value)-1);const q=document.getElementById('fixedProdQty');if(q)q.value=i.value;if(window.updateModalTotal)window.updateModalTotal();" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">-</button>
+                                <input type="number" id="npcPdQty" value="1" min="1" style="width:50px;text-align:center;border:none;font-weight:bold;font-size:15px;" oninput="const q=document.getElementById('fixedProdQty');if(q)q.value=this.value;if(window.updateModalTotal)window.updateModalTotal();">
+                                <button onclick="const i=document.getElementById('npcPdQty');i.value=parseInt(i.value)+1;const q=document.getElementById('fixedProdQty');if(q)q.value=i.value;if(window.updateModalTotal)window.updateModalTotal();" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">+</button>
                             </div>
                         </div>
                         <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:16px;font-size:16px;" onclick="window.NpcWizard._pdAddToCart()">${_t('pdAddToCart')}</button>
@@ -1402,7 +1402,8 @@ window.NpcWizard = {
     },
 
     _pdAfterCalc() {
-        this._goStep('pdReference');
+        // 레퍼런스 선택 건너뛰고 바로 커스터마이즈로
+        this._goStep('pdCustomize');
     },
 
     _pdSelectRef(code, el) {
