@@ -1673,8 +1673,27 @@ function renderCart() {
         // pendingSelectedAddons는 addCanvasToCart/addFileToCart/addProductToCartDirectly에서 이미 적용 후 초기화됨
         
         let baseProductTotal = (item.product.price || 0) * item.qty;
+
+        // 수량 할인 적용 (허니콤보드, 보드류 도매, 천원단위 주문, 가벽 제외)
+        const _pCode = item.product.code || '';
+        const _pCat = item.product.category || '';
+        const _pTopCat = window._getTopCategoryCode ? window._getTopCategoryCode(_pCat) : '';
+        const _noDiscount = _pCode === '21355677' || _pCode === '21355677_copy'
+            || _pTopCat === 'Wholesale Board Prices'
+            || _pTopCat === 'honeycomb_board'
+            || _pCat === 'hb_display_wall' || _pCode.startsWith('hb_dw');
+        let _qtyDiscountRate = 0;
+        if (!_noDiscount && item.qty >= 3) {
+            if (item.qty >= 100) _qtyDiscountRate = 0.50;
+            else if (item.qty >= 30) _qtyDiscountRate = 0.40;
+            else if (item.qty >= 10) _qtyDiscountRate = 0.35;
+            else _qtyDiscountRate = 0.30;
+        }
+        const _qtyDiscountAmt = Math.floor(baseProductTotal * _qtyDiscountRate / 100) * 100;
+        baseProductTotal -= _qtyDiscountAmt;
+
         let optionTotal = 0;
-        
+
         Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) {
@@ -2094,6 +2113,19 @@ async function processOrderSubmission() {
         if (!item.product) return;
         const unitPrice = item.product.price || 0;
         const qty = item.qty || 1;
+
+        // 수량 할인
+        const _pc2 = item.product.code || '';
+        const _cat2 = item.product.category || '';
+        const _tc2 = window._getTopCategoryCode ? window._getTopCategoryCode(_cat2) : '';
+        const _nd2 = _pc2 === '21355677' || _pc2 === '21355677_copy' || _tc2 === 'Wholesale Board Prices' || _tc2 === 'honeycomb_board' || _cat2 === 'hb_display_wall' || _pc2.startsWith('hb_dw');
+        let _dr2 = 0;
+        if (!_nd2 && qty >= 3) {
+            if (qty >= 100) _dr2 = 0.50;
+            else if (qty >= 30) _dr2 = 0.40;
+            else if (qty >= 10) _dr2 = 0.35;
+            else _dr2 = 0.30;
+        }
         let optionTotal = 0;
         if(item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
@@ -2103,7 +2135,9 @@ async function processOrderSubmission() {
                 if(addon) optionTotal += addon.price * aq;
             });
         }
-        rawTotal += (unitPrice * qty) + optionTotal;
+        const _baseAmt = unitPrice * qty;
+        const _discAmt = Math.floor(_baseAmt * _dr2 / 100) * 100;
+        rawTotal += (_baseAmt - _discAmt) + optionTotal;
     });
 
     const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
