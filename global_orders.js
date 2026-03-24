@@ -78,8 +78,11 @@ window.requestContact = async (orderId) => {
             <div id="crTabManager">
                 <div style="font-size:13px;color:#475569;margin-bottom:10px;">담당 매니저에게 고객 소통을 요청합니다.</div>
                 <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #f59e0b;border-radius:10px;cursor:pointer;background:#fffbeb;" onclick="this.querySelector('input').checked=true">
+                        <input type="radio" name="crManager" value="아무나" checked style="accent-color:#f59e0b;"> <b>아무나</b> <span style="font-size:11px;color:#92400e;">(먼저 받는 매니저가 처리)</span>
+                    </label>
                     <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="this.querySelector('input').checked=true">
-                        <input type="radio" name="crManager" value="은미" checked style="accent-color:#7c3aed;"> <b>은미</b> 매니저
+                        <input type="radio" name="crManager" value="은미" style="accent-color:#7c3aed;"> <b>은미</b> 매니저
                     </label>
                     <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="this.querySelector('input').checked=true">
                         <input type="radio" name="crManager" value="성희" style="accent-color:#7c3aed;"> <b>성희</b> 매니저
