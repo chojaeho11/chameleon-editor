@@ -4457,24 +4457,31 @@ video {
 
 /* 좌측 상세페이지 본문 영역 */
 .choice-left-content {
-    flex: 1;
+    flex: 1 1 0px;
+    min-width: 0;
+    width: calc(100% - 380px);
     background: #fff;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 50px 60px;
     text-align: left;
     border-right: 1px solid #f1f5f9;
+    box-sizing: border-box;
 }
 
 /* 우측 액션/버튼 영역 */
 .choice-right-actions {
+    flex: 0 0 380px;
     width: 380px;
     background: #f8fafc;
-    padding: 40px 30px;
+    padding: 30px;
     display: flex;
     flex-direction: column;
     gap: 15px;
-    flex-shrink: 0;
     overflow-y: auto;
+    max-height: 90vh;
+    border-left: 1px solid #eee;
+    box-sizing: border-box;
 }
 
 /* 상세페이지 내 텍스트/이미지/영상 스타일 (Board 게시판 스타일 계승) */
