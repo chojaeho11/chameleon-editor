@@ -9281,8 +9281,9 @@ window.updateModalTotal = function() {
     let discountRate = 0;
     const _productCode = product.code || window.currentProductKey || '';
     const _discountTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
+    const _isHoneycombTop = _discountTopCat === 'honeycomb_board';
     const _isWholesaleOnly = _discountTopCat === 'Wholesale Board Prices';
-    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy' || _isWholesaleOnly;
+    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy' || _isWholesaleOnly || _isHoneycombTop;
     if (!_isExcluded) {
         if (prodQty >= 100) discountRate = 0.50;
         else if (prodQty >= 30) discountRate = 0.40;
@@ -9571,18 +9572,18 @@ if (w >= 20 && h >= 20) {
 
             // 2. 단가 계산
             let pricePerItem = area * unitPrice;
-            const MIN_PRICE_KRW = 2000;
+            const _custTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
+            const _isHoneycombProduct = _custTopCat === 'honeycomb_board';
+            const MIN_PRICE_KRW = _isHoneycombProduct ? 10000 : 2000;
 
             if (lang === 'kr') {
-                // 한국: 10원 단위 절사, 최소 2000원
                 pricePerItem = Math.floor(pricePerItem / 10) * 10;
                 if (pricePerItem < MIN_PRICE_KRW) pricePerItem = MIN_PRICE_KRW;
             } else if (lang === 'ja') {
-                // 일본: 최소 200엔
+                const minJP = _isHoneycombProduct ? 1000 : 200;
                 pricePerItem = Math.floor(pricePerItem);
-                if (pricePerItem < 200) pricePerItem = 200;
+                if (pricePerItem < minJP) pricePerItem = minJP;
             } else if (lang === 'en') {
-                // 미국: 최소 $3
                 pricePerItem = Math.floor(pricePerItem);
                 if (pricePerItem < MIN_PRICE_KRW) pricePerItem = MIN_PRICE_KRW;
             } else {
