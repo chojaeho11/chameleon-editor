@@ -116,7 +116,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
 <meta property="og:image" content="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1772681692107_1409904-0a2de3f2-b797-472d-bf50-914c6ed0d8a4.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄">
+<meta property="og:image:alt" content="Reboard Honeycomb Board - Chameleon Printing 카멜레온프린팅">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@chameleonprint">
@@ -346,7 +346,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
                 "@type": "OfferCatalog",
                 "name": cc === 'JP' ? '印刷製品カタログ' : cc === 'KR' ? '인쇄 제품 카탈로그' : 'Print Product Catalog',
                 "itemListElement": [
-                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'リボード印刷' : cc === 'KR' ? '허니콤보드 인쇄' : 'Re-board Printing' } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'Reboard リボード印刷' : cc === 'KR' ? 'Reboard 허니콤보드 인쇄' : 'Reboard Honeycomb Board Printing' } },
                     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'ファブリック印刷' : cc === 'KR' ? '패브릭 인쇄' : 'Fabric Printing' } },
                     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? '紙什器制作' : cc === 'KR' ? '종이매대 제작' : 'Paper Display Stand' } }
                 ]
@@ -6176,6 +6176,15 @@ window.filterFxCards = function(cat, btn) {
         if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
         return converted.toLocaleString() + '원';
     }
+    // [SEO] 리보드(허니콤보드) 제품 alt 텍스트 헬퍼
+    function seoAlt(product) {
+        const name = product?.name || product?.name_jp || product?.name_us || '';
+        const code = product?.code || '';
+        const cat = product?.category || '';
+        const isReboard = code.startsWith('hb_') || code.startsWith('hcl_') || code.startsWith('hcb_') || cat.includes('honeycomb') || name.includes('허니콤') || name.includes('리보드');
+        return isReboard ? 'Reboard ' + name : name;
+    }
+    window.seoAlt = seoAlt;
     // 현지 통화 표시 (JP/US는 이미 현지가, CN/AR/ES는 KRW에서 환산)
     function fmtLocal(amt) {
         const cfg = window.SITE_CONFIG || {};
@@ -6872,7 +6881,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
             // HTML 생성 (이제 name과 formattedPrice 변수만 넣으면 끝)
             card.innerHTML = `
                 <div class="hotdeal-img-box">
-                    <img src="${imgSrc}" alt="${name}" loading="lazy" onerror="this.src='https://placehold.co/300?text=No+Img'">
+                    <img src="${imgSrc}" alt="${seoAlt(p) || name}" loading="lazy" onerror="this.src='https://placehold.co/300?text=No+Img'">
                     <div style="position:absolute; top:10px; left:10px; background:${badgeColor}; color:white; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px;">${badgeText}</div>
                 </div>
                 <div class="hotdeal-info">
@@ -7222,7 +7231,7 @@ window._drawQuickItems = (list, isProductMode = false) => {
         div.innerHTML = `
             <div class="quick-icon" onclick="${clickAction}" style="position:relative; overflow:hidden; cursor:pointer;">
                 ${isProduct ? `<span style="position:absolute;top:6px;left:6px;background:#6366f1;color:white;font-size:10px;padding:2px 6px;border-radius:4px;z-index:2;font-weight:bold;">${window.t ? window.t('badge_product','상품') : '상품'}</span>` : ''}
-                <img src="${tinyUrl}" alt="${name}" loading="lazy" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://placehold.co/200?text=No+Img'">
+                <img src="${tinyUrl}" alt="${seoAlt(item) || name}" loading="lazy" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://placehold.co/200?text=No+Img'">
             </div>
             <div class="quick-text" onclick="${clickAction}" style="cursor:pointer;">${name}</div>
         `;
@@ -7944,7 +7953,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             div.className = 'quick-item';
             div.innerHTML = `
                 <div class="quick-icon-img-box">
-                    <img src="${thumbUrl}" alt="${localized.name}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
+                    <img src="${thumbUrl}" alt="${seoAlt(p) || localized.name}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
                 </div>
                 <div class="quick-text" style="display:block !important; font-weight:bold; margin-top:8px;">${localized.name}</div>
                 <div style="font-weight:bold; color:#6366f1; margin-top:5px;">${localized.formattedPrice}</div>
@@ -8652,7 +8661,7 @@ window.showChoiceModal = async function(key) {
 
     let productHeaderHtml = `
         <div class="choice-summary-card" data-npc="header" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:15px; text-align:center; margin-bottom:15px;">
-            <img src="${product.img || product.img_url}" alt="${dName}" loading="lazy" style="width:100%; max-height:300px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
+            <img src="${product.img || product.img_url}" alt="${seoAlt(product) || dName}" loading="lazy" style="width:100%; max-height:300px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
         </div>
     `;
@@ -9028,7 +9037,7 @@ window.showChoiceModal = async function(key) {
                 const img = p.img_url || 'https://placehold.co/150?text=No+Img';
                 cards += `<div onclick="window.loadProductDetailAndOpen('${p.code}')" style="cursor:pointer; background:#fff; border-radius:12px; border:1px solid #e2e8f0; overflow:hidden; transition:box-shadow 0.2s;">
                     <div style="width:100%; aspect-ratio:1; overflow:hidden; background:#f8fafc;">
-                        <img src="${img}" alt="${loc.name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/150?text=No+Img'">
+                        <img src="${img}" alt="${seoAlt(p) || loc.name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/150?text=No+Img'">
                     </div>
                     <div style="padding:8px 10px;">
                         <div style="font-size:12px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${loc.name}</div>
@@ -9059,7 +9068,7 @@ window.showChoiceModal = async function(key) {
                         const img = p.img_url || 'https://placehold.co/150?text=No+Img';
                         return `<div onclick="window.loadProductDetailAndOpen('${p.code}')" style="cursor:pointer; background:#fff; border-radius:10px; border:1px solid #e2e8f0; overflow:hidden; min-width:130px; max-width:130px; flex-shrink:0; transition:box-shadow 0.2s;">
                             <div style="width:130px; height:100px; overflow:hidden; background:#f8fafc;">
-                                <img src="${img}" alt="${loc.name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/150?text=No+Img'">
+                                <img src="${img}" alt="${seoAlt(p) || loc.name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/150?text=No+Img'">
                             </div>
                             <div style="padding:6px 8px;">
                                 <div style="font-size:11px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${loc.name}</div>
@@ -13628,7 +13637,7 @@ window.filterModalItems = function(keyword) {
             const div = document.createElement('div');
             div.className = 'quick-item';
             const iconUrl = window.getTinyThumb ? window.getTinyThumb(p.img_url||'', 150) : (p.img_url||'');
-            const imgTag = iconUrl ? `<img src="${iconUrl}" alt="${_nameR(p)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">` : `<i class="fa-solid fa-cube" style="font-size:24px; color:#cbd5e1;"></i>`;
+            const imgTag = iconUrl ? `<img src="${iconUrl}" alt="${seoAlt(p) || _nameR(p)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fa-solid fa-cube\\'></i>'">` : `<i class="fa-solid fa-cube" style="font-size:24px; color:#cbd5e1;"></i>`;
             const _szR = (p) => (p.width_mm && p.height_mm) ? (window._isUSsite && window._isUSsite() ? `${(p.width_mm/25.4).toFixed(1)} x ${(p.height_mm/25.4).toFixed(1)} in` : `${p.width_mm} x ${p.height_mm} mm`) : '-';
             div.innerHTML = `<div style="position:relative; width:100%; aspect-ratio:1; background:#f8fafc; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">${imgTag}</div><div class="quick-text" style="display:block !important; margin-top:8px; font-weight:bold; color:#1e293b; font-size:14px; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${_nameR(p)}</div><div style="font-size:15px; font-weight:800; color:#6366f1; margin-top:6px;">${_fmtR(p)}</div><div style="font-size:12px; color:#94a3b8; margin-top:2px;">${_szR(p)}</div>`;
             div.onclick = () => {
