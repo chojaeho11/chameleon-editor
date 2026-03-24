@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -567,6 +567,279 @@
 </div>
 
 <script>
+// ===== Language Detection =====
+function detectLang() {
+    const host = location.hostname;
+    if (host.includes('cafe0101')) return 'ja';
+    if (host.includes('cafe3355')) return 'en';
+    const params = new URLSearchParams(location.search);
+    const langParam = (params.get('lang') || '').toLowerCase();
+    if (langParam === 'ja' || langParam === 'jp') return 'ja';
+    if (langParam === 'en' || langParam === 'us') return 'en';
+    return 'ko';
+}
+const LANG = detectLang();
+
+// ===== i18n =====
+const I18N = {
+    // Header
+    design_market: { ko: '디자인 마켓', ja: 'デザインマーケット', en: 'Design Market' },
+    nim: { ko: ' 님', ja: ' 様', en: '' },
+    home: { ko: '홈', ja: 'ホーム', en: 'Home' },
+    logout: { ko: '로그아웃', ja: 'ログアウト', en: 'Logout' },
+
+    // Showcase
+    active_designers: { ko: '활동중인 디자이너', ja: '活動中のデザイナー', en: 'Active Designers' },
+    register_designer: { ko: '디자이너 등록', ja: 'デザイナー登録', en: 'Register as Designer' },
+    no_designers_yet: { ko: '아직 등록된 디자이너가 없습니다.', ja: 'まだ登録されたデザイナーがいません。', en: 'No designers registered yet.' },
+    designer: { ko: '디자이너', ja: 'デザイナー', en: 'Designer' },
+
+    // Tabs
+    tab_browse: { ko: '의뢰 목록', ja: '依頼一覧', en: 'Browse Requests' },
+    tab_post: { ko: '의뢰하기', ja: '依頼する', en: 'Post Request' },
+    tab_my_requests: { ko: '내 의뢰', ja: 'マイ依頼', en: 'My Requests' },
+    tab_my_bids: { ko: '내 입찰', ja: 'マイ入札', en: 'My Bids' },
+    tab_profile: { ko: '디자이너 프로필', ja: 'デザイナープロフィール', en: 'Designer Profile' },
+
+    // Browse tab
+    all_categories: { ko: '전체 카테고리', ja: '全カテゴリ', en: 'All Categories' },
+    refresh: { ko: '새로고침', ja: '更新', en: 'Refresh' },
+    bids: { ko: '입찰', ja: '入札', en: 'Bids' },
+    files: { ko: '파일', ja: 'ファイル', en: 'Files' },
+    count_件: { ko: '건', ja: '件', en: '' },
+    count_個: { ko: '개', ja: '個', en: '' },
+    no_data: { ko: '데이터를 불러올 수 없습니다.', ja: 'データを読み込めません。', en: 'Failed to load data.' },
+    no_requests: { ko: '등록된 의뢰가 없습니다.', ja: '登録された依頼がありません。', en: 'No requests found.' },
+    etc: { ko: '기타', ja: 'その他', en: 'Other' },
+
+    // Post Request form
+    design_request_register: { ko: '디자인 의뢰 등록', ja: 'デザイン依頼登録', en: 'Post Design Request' },
+    title_label: { ko: '제목', ja: 'タイトル', en: 'Title' },
+    title_placeholder: { ko: '의뢰 제목을 입력하세요', ja: '依頼タイトルを入力してください', en: 'Enter request title' },
+    category: { ko: '카테고리', ja: 'カテゴリ', en: 'Category' },
+    category_select: { ko: '카테고리 선택', ja: 'カテゴリ選択', en: 'Select Category' },
+    description_label: { ko: '상세 설명', ja: '詳細説明', en: 'Description' },
+    description_placeholder: { ko: '원하는 디자인에 대해 자세히 설명해주세요', ja: '希望するデザインについて詳しく説明してください', en: 'Describe the design you want in detail' },
+    budget_min_label: { ko: '예산 최소', ja: '予算最低', en: 'Budget Min' },
+    budget_max_label: { ko: '예산 최대', ja: '予算最高', en: 'Budget Max' },
+    budget_min_placeholder: { ko: '예: 50000', ja: '例: 5000', en: 'e.g. 50' },
+    budget_max_placeholder: { ko: '예: 200000', ja: '例: 20000', en: 'e.g. 200' },
+    phone_label: { ko: '연락처 (전화번호)', ja: '連絡先（電話番号）', en: 'Phone' },
+    phone_placeholder: { ko: '010-0000-0000', ja: '090-0000-0000', en: '000-000-0000' },
+    attach_files: { ko: '참고 파일 첨부', ja: '参考ファイル添付', en: 'Attach Reference Files' },
+    click_upload: { ko: '클릭하여 파일 업로드 (이미지, PDF 등)', ja: 'クリックしてファイルアップロード（画像、PDF等）', en: 'Click to upload files (images, PDF, etc.)' },
+    submit_request: { ko: '의뢰 등록', ja: '依頼登録', en: 'Submit Request' },
+
+    // Request Detail
+    back_to_list: { ko: '목록으로', ja: '一覧へ', en: 'Back to List' },
+    client: { ko: '의뢰인', ja: '依頼者', en: 'Client' },
+    bid_on_project: { ko: '이 프로젝트에 입찰하세요!', ja: 'このプロジェクトに入札しよう！', en: 'Bid on this project!' },
+    bid_on_project_desc: { ko: '금액을 제시하고, 포트폴리오를 올리고, 나를 어필해보세요.', ja: '金額を提示し、ポートフォリオをアップし、自分をアピールしましょう。', en: 'Set your price, upload portfolio, and pitch yourself.' },
+    client_selects: { ko: '의뢰인이 가장 마음에 드는 디자이너를 선택합니다.', ja: '依頼者が最も気に入ったデザイナーを選びます。', en: 'The client will choose their favorite designer.' },
+    set_price: { ko: '금액 제시', ja: '金額提示', en: 'Set Price' },
+    bid_your_price: { ko: '원하는 금액 입찰', ja: '希望金額で入札', en: 'Bid your price' },
+    portfolio: { ko: '포트폴리오', ja: 'ポートフォリオ', en: 'Portfolio' },
+    attach_work: { ko: '작업물 첨부', ja: '作品添付', en: 'Attach work' },
+    pitch: { ko: '어필하기', ja: 'アピール', en: 'Pitch' },
+    pitch_desc: { ko: '강점/작업방식 소개', ja: '強み・作業方式紹介', en: 'Introduce strengths' },
+    place_bid: { ko: '입찰 참여하기', ja: '入札に参加する', en: 'Place Bid' },
+    designer_70_total: { ko: '선정 시 총 금액의 70%가 디자이너에게 지급됩니다', ja: '選定時、総額の70%がデザイナーに支払われます', en: 'Designer receives 70% of total when selected' },
+    want_join_designer: { ko: '디자이너로 참여하고 싶으신가요?', ja: 'デザイナーとして参加しませんか？', en: 'Want to join as a designer?' },
+    register_then_bid: { ko: '디자이너 등록 후 이 프로젝트에 입찰할 수 있습니다.', ja: 'デザイナー登録後、この依頼に入札できます。', en: 'Register as a designer to bid on this project.' },
+    register_designer_btn: { ko: '디자이너 등록하기', ja: 'デザイナー登録する', en: 'Register as Designer' },
+    own_request: { ko: '내가 등록한 의뢰입니다.', ja: '自分が登録した依頼です。', en: 'This is your own request.' },
+    check_bids_tab: { ko: '탭에서 입찰 현황을 확인하세요.', ja: 'タブで入札状況を確認してください。', en: 'tab to check bid status.' },
+    view_my_requests: { ko: '내 의뢰 보기', ja: 'マイ依頼を見る', en: 'View My Requests' },
+    request_not_found: { ko: '의뢰를 찾을 수 없습니다.', ja: '依頼が見つかりません。', en: 'Request not found.' },
+
+    // Bid Modal
+    bid_modal_title: { ko: '입찰 참여하기', ja: '入札に参加する', en: 'Place Your Bid' },
+    bid_modal_desc: { ko: '금액을 제시하고, 포트폴리오로 나를 어필해보세요!', ja: '金額を提示し、ポートフォリオで自分をアピール！', en: 'Set your price and showcase your portfolio!' },
+    proposed_price: { ko: '제안 금액', ja: '提案金額', en: 'Proposed Price' },
+    how_much: { ko: '이 작업을 얼마에 하시겠습니까?', ja: 'この作業をいくらで行いますか？', en: 'How much would you charge?' },
+    designer_70_proposed: { ko: '선정 시 제안 금액의 70%가 디자이너에게 지급됩니다', ja: '選定時、提案金額の70%がデザイナーに支払われます', en: 'Designer receives 70% of proposed price when selected' },
+    timeline: { ko: '작업 기간', ja: '作業期間', en: 'Timeline' },
+    how_many_days: { ko: '며칠 안에 완성 가능한가요?', ja: '何日で完成可能ですか？', en: 'How many days to complete?' },
+    day1: { ko: '1일 (당일 완성)', ja: '1日（当日完成）', en: '1 day (same day)' },
+    day_n: { ko: '일', ja: '日', en: ' days' },
+    week1: { ko: '7일 (1주)', ja: '7日（1週間）', en: '7 days (1 week)' },
+    week2: { ko: '14일 (2주)', ja: '14日（2週間）', en: '14 days (2 weeks)' },
+    week3: { ko: '21일 (3주)', ja: '21日（3週間）', en: '21 days (3 weeks)' },
+    month1: { ko: '30일 (1개월)', ja: '30日（1ヶ月）', en: '30 days (1 month)' },
+    pitch_label: { ko: '어필하기', ja: 'アピール', en: 'Pitch' },
+    pitch_placeholder: { ko: '왜 이 프로젝트에 적합한 디자이너인지 어필해주세요!\n\n예: 관련 분야 경력, 작업 방식, 강점 등', ja: 'なぜこのプロジェクトに適したデザイナーか説明してください！\n\n例：関連分野の経験、作業方式、強みなど', en: 'Tell us why you\'re the right designer for this project!\n\ne.g. relevant experience, work style, strengths' },
+    attach_portfolio: { ko: '포트폴리오 첨부 (관련 작업물)', ja: 'ポートフォリオ添付（関連作品）', en: 'Attach Portfolio (relevant work)' },
+    upload_portfolio_desc: { ko: '이 프로젝트와 관련된 포트폴리오를 올려주세요', ja: '関連するポートフォリオをアップロードしてください', en: 'Upload relevant portfolio samples' },
+    multi_select: { ko: '이미지 파일 여러 개 선택 가능', ja: '画像ファイル複数選択可能', en: 'Multiple image files allowed' },
+    submit_bid: { ko: '입찰 제출하기', ja: '入札を送信', en: 'Submit Bid' },
+
+    // Rating Modal
+    rate_designer: { ko: '디자이너 평가', ja: 'デザイナー評価', en: 'Rate Designer' },
+    work_complete_rate: { ko: '작업이 완료되었습니다. 디자이너를 평가해주세요.', ja: '作業が完了しました。デザイナーを評価してください。', en: 'Work is complete. Please rate the designer.' },
+    review: { ko: '후기', ja: 'レビュー', en: 'Review' },
+    review_placeholder: { ko: '디자이너에 대한 후기를 남겨주세요', ja: 'デザイナーへのレビューを残してください', en: 'Leave a review for the designer' },
+    submit_rating: { ko: '평가 제출 및 완료', ja: '評価送信＆完了', en: 'Submit Rating & Complete' },
+
+    // Designer Registration Modal
+    register_designer_modal_title: { ko: '디자이너 등록', ja: 'デザイナー登録', en: 'Register as Designer' },
+    register_designer_modal_desc: { ko: '디자이너로 등록하면 디자인 의뢰에 입찰할 수 있습니다.', ja: 'デザイナーとして登録すると、依頼に入札できます。', en: 'Register as a designer to bid on design requests.' },
+    designer_name: { ko: '디자이너명', ja: 'デザイナー名', en: 'Designer Name' },
+    designer_name_placeholder: { ko: '표시될 디자이너 이름', ja: '表示されるデザイナー名', en: 'Display name for your designer profile' },
+    bio: { ko: '소개', ja: '紹介', en: 'Bio' },
+    bio_placeholder: { ko: '간단한 자기소개', ja: '簡単な自己紹介', en: 'Brief introduction' },
+    bio_long_placeholder: { ko: '자기소개를 입력하세요', ja: '自己紹介を入力してください', en: 'Enter your bio' },
+
+    // My Requests tab
+    status_open: { ko: '모집중', ja: '募集中', en: 'Open' },
+    status_progress: { ko: '진행중', ja: '進行中', en: 'In Progress' },
+    status_complete: { ko: '완료', ja: '完了', en: 'Completed' },
+    status_cancelled: { ko: '취소', ja: 'キャンセル', en: 'Cancelled' },
+    view_bids: { ko: '입찰 확인', ja: '入札確認', en: 'View Bids' },
+    mark_complete: { ko: '완료 처리 및 평가', ja: '完了処理＆評価', en: 'Mark Complete & Rate' },
+    no_my_requests: { ko: '등록한 의뢰가 없습니다.', ja: '登録した依頼がありません。', en: 'No requests posted.' },
+    post_request_btn: { ko: '의뢰하기', ja: '依頼する', en: 'Post Request' },
+    no_bids_yet: { ko: '아직 입찰이 없습니다.', ja: 'まだ入札がありません。', en: 'No bids yet.' },
+    select_designer: { ko: '이 디자이너 선택', ja: 'このデザイナーを選択', en: 'Select This Designer' },
+    confirm_select: { ko: '이 디자이너를 선택하시겠습니까?', ja: 'このデザイナーを選択しますか？', en: 'Select this designer?' },
+    bid_list: { ko: '입찰 목록', ja: '入札一覧', en: 'Bid List' },
+    deleted_request: { ko: '(삭제된 의뢰)', ja: '（削除された依頼）', en: '(Deleted request)' },
+    budget_label: { ko: '의뢰 예산', ja: '依頼予算', en: 'Request Budget' },
+
+    // My Bids tab
+    status_pending: { ko: '대기', ja: '待機', en: 'Pending' },
+    status_selected: { ko: '선정', ja: '選定', en: 'Selected' },
+    status_rejected: { ko: '미선정', ja: '未選定', en: 'Not Selected' },
+    no_my_bids: { ko: '아직 입찰한 의뢰가 없습니다.', ja: 'まだ入札した依頼がありません。', en: 'No bids placed yet.' },
+    browse_requests: { ko: '의뢰 둘러보기', ja: '依頼を見る', en: 'Browse Requests' },
+    not_designer_yet: { ko: '디자이너로 등록해야 입찰 내역을 볼 수 있습니다.', ja: 'デザイナーとして登録すると入札履歴を確認できます。', en: 'Register as a designer to see your bid history.' },
+
+    // Designer Profile tab
+    profile_management: { ko: '디자이너 프로필 관리', ja: 'デザイナープロフィール管理', en: 'Manage Designer Profile' },
+    specialties: { ko: '전문 분야', ja: '専門分野', en: 'Specialties' },
+    profile_photo: { ko: '프로필 사진', ja: 'プロフィール写真', en: 'Profile Photo' },
+    change_photo: { ko: '사진 변경', ja: '写真変更', en: 'Change Photo' },
+    avg_rating: { ko: '평균 평점', ja: '平均評価', en: 'Avg Rating' },
+    total_reviews: { ko: '총 리뷰', ja: 'レビュー数', en: 'Total Reviews' },
+    total_earnings: { ko: '총 수익', ja: '総収益', en: 'Total Earnings' },
+    save_profile: { ko: '프로필 저장', ja: 'プロフィール保存', en: 'Save Profile' },
+    add: { ko: '추가', ja: '追加', en: 'Add' },
+
+    // Category names
+    cat_honeycomb_partition: { ko: '허니콤보드-가벽', ja: 'ハニカムボード-間仕切り', en: 'Honeycomb Board-Partition' },
+    cat_honeycomb_banner: { ko: '허니콤보드-배너', ja: 'ハニカムボード-バナー', en: 'Honeycomb Board-Banner' },
+    cat_honeycomb_letter: { ko: '허니콤보드-글씨스카시', ja: 'ハニカムボード-文字カットアウト', en: 'Honeycomb Board-Letter Cutout' },
+    cat_honeycomb_other: { ko: '허니콤보드-기타', ja: 'ハニカムボード-その他', en: 'Honeycomb Board-Other' },
+    cat_banner: { ko: '현수막', ja: '横断幕', en: 'Banner/Signage' },
+    cat_card: { ko: '명함', ja: '名刺', en: 'Business Card' },
+    cat_leaflet: { ko: '리플릿', ja: 'リーフレット', en: 'Leaflet' },
+    cat_flyer: { ko: '전단지', ja: 'チラシ', en: 'Flyer' },
+    cat_logo: { ko: '로고', ja: 'ロゴ', en: 'Logo' },
+    cat_sign: { ko: '간판', ja: '看板', en: 'Sign' },
+    cat_package: { ko: '패키지', ja: 'パッケージ', en: 'Package' },
+    cat_reboard: { ko: '리보드/전시', ja: 'リボード/展示', en: 'Reboard/Exhibition' },
+    cat_edit_print: { ko: '편집/인쇄', ja: '編集/印刷', en: 'Editing/Printing' },
+
+    // Toast messages
+    toast_request_submitted: { ko: '의뢰가 등록되었습니다!', ja: '依頼が登録されました！', en: 'Request submitted!' },
+    toast_bid_submitted: { ko: '입찰이 제출되었습니다!', ja: '入札が送信されました！', en: 'Bid submitted!' },
+    toast_profile_saved: { ko: '프로필이 저장되었습니다!', ja: 'プロフィールが保存されました！', en: 'Profile saved!' },
+    toast_designer_selected: { ko: '디자이너가 선택되었습니다!', ja: 'デザイナーが選定されました！', en: 'Designer selected!' },
+    toast_rating_complete: { ko: '평가가 완료되었습니다!', ja: '評価が完了しました！', en: 'Rating completed!' },
+    toast_registered: { ko: '디자이너로 등록되었습니다!', ja: 'デザイナーとして登録されました！', en: 'Registered as designer!' },
+    toast_enter_name: { ko: '디자이너명을 입력하세요', ja: 'デザイナー名を入力してください', en: 'Please enter designer name' },
+    toast_enter_title: { ko: '제목을 입력하세요', ja: 'タイトルを入力してください', en: 'Please enter a title' },
+    toast_enter_category: { ko: '카테고리를 선택하세요', ja: 'カテゴリを選択してください', en: 'Please select a category' },
+    toast_enter_desc: { ko: '상세 설명을 입력하세요', ja: '詳細説明を入力してください', en: 'Please enter a description' },
+    toast_enter_budget: { ko: '예산 범위를 입력하세요', ja: '予算範囲を入力してください', en: 'Please enter budget range' },
+    toast_budget_invalid: { ko: '최소 예산이 최대 예산보다 큽니다', ja: '最低予算が最高予算より大きいです', en: 'Min budget exceeds max budget' },
+    toast_enter_price: { ko: '제안 금액을 올바르게 입력하세요', ja: '提案金額を正しく入力してください', en: 'Please enter a valid price' },
+    toast_select_timeline: { ko: '작업 기간을 선택하세요', ja: '作業期間を選択してください', en: 'Please select a timeline' },
+    toast_enter_message: { ko: '메시지를 입력하세요', ja: 'メッセージを入力してください', en: 'Please enter a message' },
+    toast_select_rating: { ko: '별점을 선택하세요', ja: '評価を選択してください', en: 'Please select a rating' },
+    toast_no_designer: { ko: '선택된 디자이너가 없습니다', ja: '選択されたデザイナーがいません', en: 'No designer selected' },
+    toast_bid_not_found: { ko: '입찰 정보를 찾을 수 없습니다', ja: '入札情報が見つかりません', en: 'Bid info not found' },
+    toast_upload_progress: { ko: '포트폴리오 업로드 중...', ja: 'ポートフォリオアップロード中...', en: 'Uploading portfolio...' },
+    toast_upload_done: { ko: '업로드 완료', ja: 'アップロード完了', en: 'Upload complete' },
+    toast_photo_uploading: { ko: '사진 업로드 중...', ja: '写真アップロード中...', en: 'Uploading photo...' },
+    toast_photo_done: { ko: '사진 업로드 완료', ja: '写真アップロード完了', en: 'Photo uploaded' },
+    toast_fail_prefix: { ko: '실패: ', ja: '失敗: ', en: 'Failed: ' },
+    toast_process_fail: { ko: '처리 실패: ', ja: '処理失敗: ', en: 'Processing failed: ' },
+    toast_register_fail: { ko: '등록 실패: ', ja: '登録失敗: ', en: 'Registration failed: ' },
+    toast_save_fail: { ko: '저장 실패: ', ja: '保存失敗: ', en: 'Save failed: ' },
+    toast_upload_fail: { ko: '업로드 실패: ', ja: 'アップロード失敗: ', en: 'Upload failed: ' },
+    toast_bid_fail: { ko: '입찰 실패: ', ja: '入札失敗: ', en: 'Bid failed: ' },
+    toast_register_submit_fail: { ko: '등록 실패: ', ja: '登録失敗: ', en: 'Submit failed: ' },
+    submitting: { ko: '제출 중...', ja: '送信中...', en: 'Submitting...' },
+    registering: { ko: '등록 중...', ja: '登録中...', en: 'Registering...' },
+    processing: { ko: '처리 중...', ja: '処理中...', en: 'Processing...' },
+    proposed: { ko: '제안', ja: '提案', en: 'Proposed' },
+
+    // timeAgo
+    just_now: { ko: '방금 전', ja: 'たった今', en: 'just now' },
+    mins_ago: { ko: '분 전', ja: '分前', en: ' min ago' },
+    hours_ago: { ko: '시간 전', ja: '時間前', en: 'h ago' },
+    days_ago: { ko: '일 전', ja: '日前', en: 'd ago' },
+    months_ago: { ko: '개월 전', ja: 'ヶ月前', en: 'mo ago' },
+
+    // wallet
+    design_earning_desc: { ko: '디자인 마켓 수익 (의뢰: ', ja: 'デザインマーケット収益（依頼: ', en: 'Design Market earning (request: ' },
+    paid_to_designer: { ko: '원이 지급됩니다.', ja: 'が支払われます。', en: ' paid to designer.' },
+};
+
+function t(key) {
+    const entry = I18N[key];
+    if (!entry) return key;
+    return entry[LANG] || entry.ko || key;
+}
+
+// Category display name mapping (DB stores Korean values)
+const CATEGORY_DISPLAY = {
+    '허니콤보드-가벽': { ko: '허니콤보드-가벽', ja: 'ハニカムボード-間仕切り', en: 'Honeycomb Board-Partition' },
+    '허니콤보드-배너': { ko: '허니콤보드-배너', ja: 'ハニカムボード-バナー', en: 'Honeycomb Board-Banner' },
+    '허니콤보드-글씨스카시': { ko: '허니콤보드-글씨스카시', ja: 'ハニカムボード-文字カットアウト', en: 'Honeycomb Board-Letter Cutout' },
+    '허니콤보드-기타': { ko: '허니콤보드-기타', ja: 'ハニカムボード-その他', en: 'Honeycomb Board-Other' },
+    '현수막': { ko: '현수막', ja: '横断幕', en: 'Banner/Signage' },
+    '명함': { ko: '명함', ja: '名刺', en: 'Business Card' },
+    '리플릿': { ko: '리플릿', ja: 'リーフレット', en: 'Leaflet' },
+    '전단지': { ko: '전단지', ja: 'チラシ', en: 'Flyer' },
+    '로고': { ko: '로고', ja: 'ロゴ', en: 'Logo' },
+    '배너': { ko: '배너', ja: 'バナー', en: 'Banner' },
+    '간판': { ko: '간판', ja: '看板', en: 'Sign' },
+    '패키지': { ko: '패키지', ja: 'パッケージ', en: 'Package' },
+    '리보드/전시': { ko: '리보드/전시', ja: 'リボード/展示', en: 'Reboard/Exhibition' },
+    '기타': { ko: '기타', ja: 'その他', en: 'Other' },
+    '편집/인쇄': { ko: '편집/인쇄', ja: '編集/印刷', en: 'Editing/Printing' },
+};
+
+function catName(koreanVal) {
+    const entry = CATEGORY_DISPLAY[koreanVal];
+    if (!entry) return koreanVal || t('etc');
+    return entry[LANG] || entry.ko;
+}
+
+// ===== Currency =====
+const CURRENCY_CONFIG = {
+    ko: { symbol: '', suffix: '원', rate: 1 },
+    ja: { symbol: '', suffix: '円', rate: 0.1 },
+    en: { symbol: '$', suffix: '', rate: 0.001 },
+};
+
+function formatPrice(krw) {
+    const c = CURRENCY_CONFIG[LANG] || CURRENCY_CONFIG.ko;
+    const val = Math.round(krw * c.rate);
+    if (LANG === 'en') return c.symbol + val.toLocaleString();
+    return val.toLocaleString() + c.suffix;
+}
+
+function formatPriceRange(minKrw, maxKrw) {
+    return formatPrice(minKrw || 0) + ' ~ ' + formatPrice(maxKrw || 0);
+}
+
+function currencyUnit() {
+    const c = CURRENCY_CONFIG[LANG] || CURRENCY_CONFIG.ko;
+    return LANG === 'en' ? '($)' : '(' + c.suffix + ')';
+}
+
 // ===== Supabase Init =====
 const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -595,7 +868,10 @@ let portfolioUrls = [];
     // Load user profile
     const { data: prof } = await sb.from('profiles').select('nickname, deposit').eq('id', userId).single();
     userNickname = prof?.nickname || userEmail.split('@')[0];
-    document.getElementById('headerUserInfo').textContent = userNickname + ' 님';
+    document.getElementById('headerUserInfo').textContent = userNickname + t('nim');
+
+    // Translate static HTML
+    translateStaticHTML();
 
     // Check if designer
     await loadDesignerProfile();
@@ -604,6 +880,119 @@ let portfolioUrls = [];
     loadDesignerShowcase();
     loadRequests();
 })();
+
+// ===== Translate static HTML elements =====
+function translateStaticHTML() {
+    // HTML lang attribute
+    document.getElementById('htmlRoot').lang = LANG === 'ko' ? 'ko' : LANG === 'ja' ? 'ja' : 'en';
+    // Title
+    document.title = t('design_market');
+    // Header logo
+    document.querySelector('.site-header .logo span').textContent = t('design_market');
+    // Header buttons
+    const headerBtns = document.querySelectorAll('.header-right .header-btn');
+    headerBtns[0].innerHTML = '<i class="fa-solid fa-house"></i> ' + t('home');
+    headerBtns[1].innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> ' + t('logout');
+    // Showcase heading
+    document.querySelector('.showcase-section h2').innerHTML = '<i class="fa-solid fa-star"></i> ' + t('active_designers');
+    // Tab buttons
+    document.querySelector('.tab-btn[data-tab="browse"]').innerHTML = '<i class="fa-solid fa-list"></i> ' + t('tab_browse');
+    document.querySelector('.tab-btn[data-tab="post"]').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> ' + t('tab_post');
+    document.querySelector('.tab-btn[data-tab="my-requests"]').innerHTML = '<i class="fa-solid fa-inbox"></i> ' + t('tab_my_requests');
+    document.querySelector('.tab-btn[data-tab="my-bids"]').innerHTML = '<i class="fa-solid fa-gavel"></i> ' + t('tab_my_bids');
+    document.querySelector('.tab-btn[data-tab="profile"]').innerHTML = '<i class="fa-solid fa-user-pen"></i> ' + t('tab_profile');
+    // Filter bar
+    const filterCat = document.getElementById('filterCategory');
+    filterCat.options[0].text = t('all_categories');
+    for (let i = 1; i < filterCat.options.length; i++) {
+        const val = filterCat.options[i].value;
+        filterCat.options[i].text = catName(val);
+    }
+    document.querySelector('.filter-bar .btn').innerHTML = '<i class="fa-solid fa-rotate"></i> ' + t('refresh');
+    // Post form
+    document.querySelector('#tab-post h3').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color:#7c3aed;"></i> ' + t('design_request_register');
+    const postForm = document.getElementById('tab-post');
+    const postLabels = postForm.querySelectorAll('.form-group label');
+    postLabels[0].innerHTML = t('title_label') + ' <span class="req">*</span>';
+    document.getElementById('postTitle').placeholder = t('title_placeholder');
+    postLabels[1].innerHTML = t('category') + ' <span class="req">*</span>';
+    const postCat = document.getElementById('postCategory');
+    postCat.options[0].text = t('category_select');
+    for (let i = 1; i < postCat.options.length; i++) {
+        const val = postCat.options[i].value;
+        postCat.options[i].text = catName(val);
+    }
+    postLabels[2].innerHTML = t('description_label') + ' <span class="req">*</span>';
+    document.getElementById('postDescription').placeholder = t('description_placeholder');
+    // Budget labels
+    const budgetLabels = postForm.querySelectorAll('.form-row .form-group label');
+    budgetLabels[0].innerHTML = t('budget_min_label') + ' ' + currencyUnit() + ' <span class="req">*</span>';
+    budgetLabels[1].innerHTML = t('budget_max_label') + ' ' + currencyUnit() + ' <span class="req">*</span>';
+    document.getElementById('postBudgetMin').placeholder = t('budget_min_placeholder');
+    document.getElementById('postBudgetMax').placeholder = t('budget_max_placeholder');
+    postLabels[3].textContent = t('phone_label');
+    document.getElementById('postPhone').placeholder = t('phone_placeholder');
+    postLabels[4].textContent = t('attach_files');
+    postForm.querySelector('.file-upload-area p').textContent = t('click_upload');
+    document.getElementById('btnSubmitRequest').innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + t('submit_request');
+    // Profile tab
+    document.querySelector('#tab-profile h3').innerHTML = '<i class="fa-solid fa-user-pen" style="color:#7c3aed;"></i> ' + t('profile_management');
+    const profLabels = document.getElementById('tab-profile').querySelectorAll('.form-group > label');
+    profLabels[0].innerHTML = t('designer_name') + ' <span class="req">*</span>';
+    document.getElementById('profileName').placeholder = t('designer_name_placeholder');
+    profLabels[1].textContent = t('bio');
+    document.getElementById('profileBio').placeholder = t('bio_long_placeholder');
+    profLabels[2].textContent = t('profile_photo');
+    document.querySelector('#tab-profile .btn-outline').innerHTML = '<i class="fa-solid fa-camera"></i> ' + t('change_photo');
+    profLabels[3].textContent = t('specialties');
+    // Specialty checkboxes
+    document.querySelectorAll('#specialtyCheckboxes .checkbox-item').forEach(el => {
+        const cb = el.querySelector('input');
+        el.childNodes[el.childNodes.length - 1].textContent = ' ' + catName(cb.value);
+    });
+    profLabels[4].textContent = t('portfolio');
+    document.querySelector('.portfolio-add span').textContent = t('add');
+    document.getElementById('btnSaveProfile').innerHTML = '<i class="fa-solid fa-check"></i> ' + t('save_profile');
+    // Bid modal
+    document.querySelector('#bidModal h2').innerHTML = '<i class="fa-solid fa-gavel"></i> ' + t('bid_modal_title');
+    document.querySelector('#bidModal h2 + p').textContent = t('bid_modal_desc');
+    const bidLabels = document.querySelectorAll('#bidModal .form-group label');
+    bidLabels[0].innerHTML = '\uD83D\uDCB0 ' + t('proposed_price') + ' ' + currencyUnit() + ' <span class="req">*</span>';
+    document.getElementById('bidPrice').placeholder = t('how_much');
+    document.querySelector('#bidModal .form-group div[style*="font-size:11px"]').textContent = t('designer_70_proposed');
+    bidLabels[1].innerHTML = '\uD83D\uDCC5 ' + t('timeline') + ' <span class="req">*</span>';
+    const bidTimeline = document.getElementById('bidTimeline');
+    bidTimeline.options[0].text = t('how_many_days');
+    bidTimeline.options[1].text = t('day1');
+    bidTimeline.options[2].text = '2' + t('day_n');
+    bidTimeline.options[3].text = '3' + t('day_n');
+    bidTimeline.options[4].text = '5' + t('day_n');
+    bidTimeline.options[5].text = t('week1');
+    bidTimeline.options[6].text = t('week2');
+    bidTimeline.options[7].text = t('week3');
+    bidTimeline.options[8].text = t('month1');
+    bidLabels[2].innerHTML = '\u270D\uFE0F ' + t('pitch_label') + ' <span class="req">*</span>';
+    document.getElementById('bidMessage').placeholder = t('pitch_placeholder');
+    bidLabels[3].innerHTML = '\uD83D\uDCC1 ' + t('attach_portfolio');
+    document.querySelector('#bidModal .file-upload-area p[style*="font-weight:600"]').textContent = t('upload_portfolio_desc');
+    document.querySelector('#bidModal .file-upload-area p[style*="font-size:11px"]').textContent = t('multi_select');
+    document.getElementById('btnSubmitBid').innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + t('submit_bid');
+    // Rating modal
+    document.querySelector('#ratingModal h2').innerHTML = '<i class="fa-solid fa-star"></i> ' + t('rate_designer');
+    document.querySelector('#ratingModal h2 + p').textContent = t('work_complete_rate');
+    document.querySelector('#ratingModal .form-group label').textContent = t('review');
+    document.getElementById('ratingComment').placeholder = t('review_placeholder');
+    document.getElementById('btnSubmitRating').innerHTML = '<i class="fa-solid fa-check"></i> ' + t('submit_rating');
+    // Register designer modal
+    document.querySelector('#registerDesignerModal h2').innerHTML = '<i class="fa-solid fa-user-plus"></i> ' + t('register_designer_modal_title');
+    document.querySelector('#registerDesignerModal h2 + p').textContent = t('register_designer_modal_desc');
+    const regLabels = document.querySelectorAll('#registerDesignerModal .form-group label');
+    regLabels[0].innerHTML = t('designer_name') + ' <span class="req">*</span>';
+    document.getElementById('regDesignerName').placeholder = t('designer_name_placeholder');
+    regLabels[1].textContent = t('bio');
+    document.getElementById('regDesignerBio').placeholder = t('bio_placeholder');
+    document.querySelector('#registerDesignerModal .btn-primary').innerHTML = '<i class="fa-solid fa-check"></i> ' + t('register_designer');
+}
 
 // ===== Tab Switching =====
 function switchTab(tab) {
@@ -642,13 +1031,13 @@ function isImageFile(url) {
 function timeAgo(dateStr) {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return '방금 전';
-    if (mins < 60) return mins + '분 전';
+    if (mins < 1) return t('just_now');
+    if (mins < 60) return mins + t('mins_ago');
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return hours + '시간 전';
+    if (hours < 24) return hours + t('hours_ago');
     const days = Math.floor(hours / 24);
-    if (days < 30) return days + '일 전';
-    return Math.floor(days / 30) + '개월 전';
+    if (days < 30) return days + t('days_ago');
+    return Math.floor(days / 30) + t('months_ago');
 }
 
 function renderStars(rating, size) {
@@ -686,11 +1075,11 @@ async function loadDesignerShowcase() {
     if (!designers || designers.length === 0) {
         container.innerHTML = `
             <div style="min-width:200px;text-align:center;padding:30px;color:#94a3b8;font-size:14px;">
-                아직 등록된 디자이너가 없습니다.
+                ${t('no_designers_yet')}
             </div>
             <div class="designer-card" onclick="openRegisterDesignerModal()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;border-color:#c4b5fd;">
                 <i class="fa-solid fa-user-plus" style="font-size:28px;color:#7c3aed;margin-bottom:10px;"></i>
-                <div class="name" style="color:#7c3aed;">디자이너 등록</div>
+                <div class="name" style="color:#7c3aed;">${t('register_designer')}</div>
             </div>`;
         return;
     }
@@ -704,7 +1093,7 @@ async function loadDesignerShowcase() {
         html += `
         <div class="designer-card">
             ${avatarHtml}
-            <div class="name">${d.display_name || '디자이너'}</div>
+            <div class="name">${d.display_name || t('designer')}</div>
             <div class="stars">${renderStars(d.avg_rating)} <span style="color:#94a3b8;font-size:11px;">(${d.total_reviews||0})</span></div>
             <div class="specialties">${specs}</div>
         </div>`;
@@ -713,7 +1102,7 @@ async function loadDesignerShowcase() {
     html += `
     <div class="designer-card" onclick="openRegisterDesignerModal()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;border-color:#c4b5fd;">
         <i class="fa-solid fa-user-plus" style="font-size:28px;color:#7c3aed;margin-bottom:10px;"></i>
-        <div class="name" style="color:#7c3aed;">디자이너 등록</div>
+        <div class="name" style="color:#7c3aed;">${t('register_designer')}</div>
     </div>`;
     container.innerHTML = html;
 }
@@ -741,7 +1130,7 @@ function closeRegisterDesignerModal() {
 
 async function registerAsDesigner() {
     const name = document.getElementById('regDesignerName').value.trim();
-    if (!name) { showToast('디자이너명을 입력하세요', 'error'); return; }
+    if (!name) { showToast(t('toast_enter_name'), 'error'); return; }
     const bio = document.getElementById('regDesignerBio').value.trim();
 
     const { error } = await sb.from('designer_profiles').insert({
@@ -755,9 +1144,9 @@ async function registerAsDesigner() {
         portfolio_urls: [],
         specialties: []
     });
-    if (error) { showToast('등록 실패: ' + error.message, 'error'); return; }
+    if (error) { showToast(t('toast_register_fail') + error.message, 'error'); return; }
 
-    showToast('디자이너로 등록되었습니다!', 'success');
+    showToast(t('toast_registered'), 'success');
     closeRegisterDesignerModal();
     await loadDesignerProfile();
     loadDesignerShowcase();
@@ -797,9 +1186,9 @@ async function loadProfileForm() {
     if (designerProfile.total_reviews > 0 || designerProfile.total_earnings > 0) {
         document.getElementById('profileStats').style.display = '';
         document.getElementById('profileStatRow').innerHTML = `
-            <div class="stat-box"><div class="stat-label">평균 평점</div><div class="stat-value">${(designerProfile.avg_rating||0).toFixed(1)}</div></div>
-            <div class="stat-box"><div class="stat-label">총 리뷰</div><div class="stat-value">${designerProfile.total_reviews||0}</div></div>
-            <div class="stat-box"><div class="stat-label">총 수익</div><div class="stat-value">${(designerProfile.total_earnings||0).toLocaleString()}원</div></div>`;
+            <div class="stat-box"><div class="stat-label">${t('avg_rating')}</div><div class="stat-value">${(designerProfile.avg_rating||0).toFixed(1)}</div></div>
+            <div class="stat-box"><div class="stat-label">${t('total_reviews')}</div><div class="stat-value">${designerProfile.total_reviews||0}</div></div>
+            <div class="stat-box"><div class="stat-label">${t('total_earnings')}</div><div class="stat-value">${formatPrice(designerProfile.total_earnings||0)}</div></div>`;
     }
 }
 
@@ -822,7 +1211,7 @@ function renderPortfolioGrid() {
     html += `
     <div class="portfolio-add" onclick="document.getElementById('portfolioFiles').click()">
         <i class="fa-solid fa-plus"></i>
-        <span>추가</span>
+        <span>${t('add')}</span>
     </div>`;
     grid.innerHTML = html;
 }
@@ -835,34 +1224,34 @@ function removePortfolio(idx) {
 async function handlePortfolioUpload(input) {
     const files = Array.from(input.files);
     if (!files.length) return;
-    showToast('포트폴리오 업로드 중...', 'info');
+    showToast(t('toast_upload_progress'), 'info');
     for (const f of files) {
         try {
             const url = await uploadFile(f, 'portfolio/' + userId);
             portfolioUrls.push(url);
-        } catch(e) { showToast('업로드 실패: ' + e.message, 'error'); }
+        } catch(e) { showToast(t('toast_upload_fail') + e.message, 'error'); }
     }
     renderPortfolioGrid();
     input.value = '';
-    showToast('업로드 완료', 'success');
+    showToast(t('toast_upload_done'), 'success');
 }
 
 async function handleProfilePhoto(input) {
     const file = input.files[0];
     if (!file) return;
     try {
-        showToast('사진 업로드 중...', 'info');
+        showToast(t('toast_photo_uploading'), 'info');
         const url = await uploadFile(file, 'profile-photos/' + userId);
         profilePhotoFile = url;
         document.getElementById('profilePhotoPreview').innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
-        showToast('사진 업로드 완료', 'success');
-    } catch(e) { showToast('업로드 실패: ' + e.message, 'error'); }
+        showToast(t('toast_photo_done'), 'success');
+    } catch(e) { showToast(t('toast_upload_fail') + e.message, 'error'); }
     input.value = '';
 }
 
 async function saveProfile() {
     const name = document.getElementById('profileName').value.trim();
-    if (!name) { showToast('디자이너명을 입력하세요', 'error'); return; }
+    if (!name) { showToast(t('toast_enter_name'), 'error'); return; }
 
     const specialties = [];
     document.querySelectorAll('#specialtyCheckboxes .checkbox-item input:checked').forEach(cb => specialties.push(cb.value));
@@ -880,8 +1269,8 @@ async function saveProfile() {
     const { error } = await sb.from('designer_profiles').update(updates).eq('id', userId);
     btn.disabled = false;
 
-    if (error) { showToast('저장 실패: ' + error.message, 'error'); return; }
-    showToast('프로필이 저장되었습니다!', 'success');
+    if (error) { showToast(t('toast_save_fail') + error.message, 'error'); return; }
+    showToast(t('toast_profile_saved'), 'success');
     await loadDesignerProfile();
     loadDesignerShowcase();
 }
@@ -900,10 +1289,10 @@ async function loadRequests() {
     if (cat) query = query.eq('category', cat);
 
     const { data: requests, error } = await query;
-    if (error) { grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p>데이터를 불러올 수 없습니다.</p></div>`; return; }
+    if (error) { grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p>${t('no_data')}</p></div>`; return; }
 
     if (!requests || requests.length === 0) {
-        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-inbox"></i><p>등록된 의뢰가 없습니다.</p></div>`;
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-inbox"></i><p>${t('no_requests')}</p></div>`;
         return;
     }
 
@@ -922,14 +1311,14 @@ async function loadRequests() {
         html += `
         <div class="request-card" onclick="showRequestDetail('${r.id}')">
             <div class="card-top">
-                <span class="category-badge">${r.category || '기타'}</span>
+                <span class="category-badge">${catName(r.category)}</span>
                 <div class="customer-avatar">${initial}</div>
             </div>
             <div class="title">${escHtml(r.title)}</div>
-            <div class="budget">${(r.budget_min||0).toLocaleString()}원 ~ ${(r.budget_max||0).toLocaleString()}원</div>
+            <div class="budget">${formatPriceRange(r.budget_min, r.budget_max)}</div>
             <div class="meta">
-                <span><i class="fa-solid fa-gavel"></i> 입찰 ${bidCount}건</span>
-                ${fileCount ? `<span><i class="fa-solid fa-paperclip"></i> 파일 ${fileCount}개</span>` : ''}
+                <span><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
+                ${fileCount ? `<span><i class="fa-solid fa-paperclip"></i> ${t('files')} ${fileCount}${t('count_個')}</span>` : ''}
                 <span><i class="fa-regular fa-clock"></i> ${timeAgo(r.created_at)}</span>
             </div>
         </div>`;
@@ -955,11 +1344,11 @@ async function showRequestDetail(requestId) {
     detailView.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
 
     const { data: r } = await sb.from('design_requests').select('*').eq('id', requestId).single();
-    if (!r) { detailView.innerHTML = '<p>의뢰를 찾을 수 없습니다.</p>'; return; }
+    if (!r) { detailView.innerHTML = '<p>' + t('request_not_found') + '</p>'; return; }
 
     // Get customer profile
     const { data: cProf } = await sb.from('profiles').select('nickname, email').eq('id', r.customer_id).single();
-    const customerName = cProf?.nickname || cProf?.email?.split('@')[0] || '의뢰인';
+    const customerName = cProf?.nickname || cProf?.email?.split('@')[0] || t('client');
 
     // Get bid count
     const { count: bidCount } = await sb.from('design_bids').select('*', { count: 'exact', head: true }).eq('request_id', requestId);
@@ -983,67 +1372,67 @@ async function showRequestDetail(requestId) {
     const canBid = designerProfile && !isOwner;
     detailView.innerHTML = `
     <div class="request-detail">
-        <button class="btn btn-outline btn-sm" onclick="hideRequestDetail()" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> 목록으로</button>
+        <button class="btn btn-outline btn-sm" onclick="hideRequestDetail()" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> ${t('back_to_list')}</button>
         <div class="detail-header">
             <div>
-                <span class="category-badge" style="margin-bottom:8px;display:inline-block;">${r.category || '기타'}</span>
+                <span class="category-badge" style="margin-bottom:8px;display:inline-block;">${catName(r.category)}</span>
                 <div class="detail-title">${escHtml(r.title)}</div>
             </div>
             <div style="text-align:right;">
-                <div style="font-size:12px;color:#94a3b8;">의뢰인: ${escHtml(customerName)}</div>
+                <div style="font-size:12px;color:#94a3b8;">${t('client')}: ${escHtml(customerName)}</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${timeAgo(r.created_at)}</div>
             </div>
         </div>
         <div style="font-size:20px;font-weight:800;color:#7c3aed;margin-bottom:16px;">
-            ${(r.budget_min||0).toLocaleString()}원 ~ ${(r.budget_max||0).toLocaleString()}원
+            ${formatPriceRange(r.budget_min, r.budget_max)}
         </div>
         <div class="detail-desc">${escHtml(r.description)}</div>
         ${filesHtml}
         <div style="display:flex;align-items:center;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid #f1f5f9;">
-            <span style="font-size:13px;color:#94a3b8;"><i class="fa-solid fa-gavel"></i> 입찰 ${bidCount}건</span>
+            <span style="font-size:13px;color:#94a3b8;"><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
             ${r.phone ? `<span style="font-size:13px;color:#94a3b8;"><i class="fa-solid fa-phone"></i> ${escHtml(r.phone)}</span>` : ''}
         </div>
         ${canBid ? `
         <div style="margin-top:24px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:2px solid #c4b5fd;border-radius:16px;padding:24px;text-align:center;">
             <div style="font-size:28px;margin-bottom:8px;">🎨</div>
-            <div style="font-size:18px;font-weight:800;color:#5b21b6;margin-bottom:6px;">이 프로젝트에 입찰하세요!</div>
+            <div style="font-size:18px;font-weight:800;color:#5b21b6;margin-bottom:6px;">${t('bid_on_project')}</div>
             <div style="font-size:13px;color:#7c3aed;margin-bottom:16px;line-height:1.6;">
-                금액을 제시하고, 포트폴리오를 올리고, 나를 어필해보세요.<br>
-                의뢰인이 가장 마음에 드는 디자이너를 선택합니다.
+                ${t('bid_on_project_desc')}<br>
+                ${t('client_selects')}
             </div>
             <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
                 <div style="background:#fff;border-radius:10px;padding:10px 16px;font-size:12px;color:#5b21b6;border:1px solid #ddd6fe;">
                     <div style="font-size:18px;margin-bottom:2px;">💰</div>
-                    <b>금액 제시</b><br>원하는 금액 입찰
+                    <b>${t('set_price')}</b><br>${t('bid_your_price')}
                 </div>
                 <div style="background:#fff;border-radius:10px;padding:10px 16px;font-size:12px;color:#5b21b6;border:1px solid #ddd6fe;">
                     <div style="font-size:18px;margin-bottom:2px;">📁</div>
-                    <b>포트폴리오</b><br>작업물 첨부
+                    <b>${t('portfolio')}</b><br>${t('attach_work')}
                 </div>
                 <div style="background:#fff;border-radius:10px;padding:10px 16px;font-size:12px;color:#5b21b6;border:1px solid #ddd6fe;">
                     <div style="font-size:18px;margin-bottom:2px;">✍️</div>
-                    <b>어필하기</b><br>강점/작업방식 소개
+                    <b>${t('pitch')}</b><br>${t('pitch_desc')}
                 </div>
             </div>
             <button class="btn btn-primary btn-lg" onclick="openBidModal('${r.id}')" style="font-size:16px;padding:14px 40px;border-radius:14px;box-shadow:0 4px 15px rgba(124,58,237,0.3);">
-                <i class="fa-solid fa-gavel"></i> 입찰 참여하기
+                <i class="fa-solid fa-gavel"></i> ${t('place_bid')}
             </button>
-            <div style="margin-top:10px;font-size:11px;color:#a78bfa;">선정 시 총 금액의 70%가 디자이너에게 지급됩니다</div>
+            <div style="margin-top:10px;font-size:11px;color:#a78bfa;">${t('designer_70_total')}</div>
         </div>` : ''}
         ${!designerProfile && !isOwner ? `
         <div style="margin-top:24px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:14px;padding:20px;text-align:center;">
             <div style="font-size:24px;margin-bottom:6px;">🙋</div>
-            <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:8px;">디자이너로 참여하고 싶으신가요?</div>
-            <div style="font-size:12px;color:#a16207;margin-bottom:12px;">디자이너 등록 후 이 프로젝트에 입찰할 수 있습니다.</div>
+            <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:8px;">${t('want_join_designer')}</div>
+            <div style="font-size:12px;color:#a16207;margin-bottom:12px;">${t('register_then_bid')}</div>
             <button class="btn btn-primary" onclick="openRegisterDesignerModal()" style="background:#f59e0b;border-color:#f59e0b;">
-                <i class="fa-solid fa-user-plus"></i> 디자이너 등록하기
+                <i class="fa-solid fa-user-plus"></i> ${t('register_designer_btn')}
             </button>
         </div>` : ''}
         ${isOwner ? `
         <div style="margin-top:24px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:16px;text-align:center;">
-            <div style="font-size:13px;color:#166534;">📌 내가 등록한 의뢰입니다. <b>내 의뢰</b> 탭에서 입찰 현황을 확인하세요.</div>
+            <div style="font-size:13px;color:#166534;">📌 ${t('own_request')} <b>${t('tab_my_requests')}</b> ${t('check_bids_tab')}</div>
             <button class="btn btn-outline btn-sm" onclick="switchTab('my-requests')" style="margin-top:8px;">
-                <i class="fa-solid fa-inbox"></i> 내 의뢰 보기
+                <i class="fa-solid fa-inbox"></i> ${t('view_my_requests')}
             </button>
         </div>` : ''}
     </div>`;
@@ -1092,13 +1481,13 @@ async function submitBid() {
     const timeline = parseInt(document.getElementById('bidTimeline').value);
     const message = document.getElementById('bidMessage').value.trim();
 
-    if (!price || price < 1000) { showToast('제안 금액을 올바르게 입력하세요', 'error'); return; }
-    if (!timeline) { showToast('작업 기간을 선택하세요', 'error'); return; }
-    if (!message) { showToast('메시지를 입력하세요', 'error'); return; }
+    if (!price || price < 1000) { showToast(t('toast_enter_price'), 'error'); return; }
+    if (!timeline) { showToast(t('toast_select_timeline'), 'error'); return; }
+    if (!message) { showToast(t('toast_enter_message'), 'error'); return; }
 
     const btn = document.getElementById('btnSubmitBid');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 제출 중...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('submitting');
 
     try {
         // Upload portfolio images
@@ -1119,14 +1508,14 @@ async function submitBid() {
         });
 
         if (error) throw error;
-        showToast('입찰이 제출되었습니다!', 'success');
+        showToast(t('toast_bid_submitted'), 'success');
         closeBidModal();
         loadRequests();
     } catch(e) {
-        showToast('입찰 실패: ' + e.message, 'error');
+        showToast(t('toast_bid_fail') + e.message, 'error');
     }
     btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 입찰 제출';
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + t('submit_bid');
 }
 
 // ===== Post Request =====
@@ -1164,15 +1553,15 @@ async function submitRequest() {
     const budgetMax = parseInt(document.getElementById('postBudgetMax').value);
     const phone = document.getElementById('postPhone').value.trim();
 
-    if (!title) { showToast('제목을 입력하세요', 'error'); return; }
-    if (!category) { showToast('카테고리를 선택하세요', 'error'); return; }
-    if (!description) { showToast('상세 설명을 입력하세요', 'error'); return; }
-    if (!budgetMin || !budgetMax) { showToast('예산 범위를 입력하세요', 'error'); return; }
-    if (budgetMin > budgetMax) { showToast('최소 예산이 최대 예산보다 큽니다', 'error'); return; }
+    if (!title) { showToast(t('toast_enter_title'), 'error'); return; }
+    if (!category) { showToast(t('toast_enter_category'), 'error'); return; }
+    if (!description) { showToast(t('toast_enter_desc'), 'error'); return; }
+    if (!budgetMin || !budgetMax) { showToast(t('toast_enter_budget'), 'error'); return; }
+    if (budgetMin > budgetMax) { showToast(t('toast_budget_invalid'), 'error'); return; }
 
     const btn = document.getElementById('btnSubmitRequest');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 등록 중...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('registering');
 
     try {
         // Upload files
@@ -1193,7 +1582,7 @@ async function submitRequest() {
         });
 
         if (error) throw error;
-        showToast('의뢰가 등록되었습니다!', 'success');
+        showToast(t('toast_request_submitted'), 'success');
 
         // Reset form
         document.getElementById('postTitle').value = '';
@@ -1207,10 +1596,10 @@ async function submitRequest() {
 
         switchTab('browse');
     } catch(e) {
-        showToast('등록 실패: ' + e.message, 'error');
+        showToast(t('toast_register_submit_fail') + e.message, 'error');
     }
     btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 의뢰 등록';
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + t('submit_request');
 }
 
 // ===== My Requests =====
@@ -1227,11 +1616,11 @@ async function loadMyRequests() {
         .order('created_at', { ascending: false });
 
     if (!requests || requests.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox"></i><p>등록한 의뢰가 없습니다.</p><button class="btn btn-primary" onclick="switchTab(\'post\')"><i class="fa-solid fa-plus"></i> 의뢰하기</button></div>';
+        container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i><p>${t('no_my_requests')}</p><button class="btn btn-primary" onclick="switchTab('post')"><i class="fa-solid fa-plus"></i> ${t('post_request_btn')}</button></div>`;
         return;
     }
 
-    const statusMap = { open: { label: '모집중', cls: 'badge-open' }, in_progress: { label: '진행중', cls: 'badge-progress' }, completed: { label: '완료', cls: 'badge-complete' }, cancelled: { label: '취소', cls: 'badge-cancelled' } };
+    const statusMap = { open: { label: t('status_open'), cls: 'badge-open' }, in_progress: { label: t('status_progress'), cls: 'badge-progress' }, completed: { label: t('status_complete'), cls: 'badge-complete' }, cancelled: { label: t('status_cancelled'), cls: 'badge-cancelled' } };
 
     let html = '';
     for (const r of requests) {
@@ -1244,9 +1633,9 @@ async function loadMyRequests() {
                 <span class="badge-sm ${st.cls}">${st.label}</span>
             </div>
             <div class="my-request-meta">
-                <span><i class="fa-solid fa-tag"></i> ${r.category || '기타'}</span>
-                <span><i class="fa-solid fa-won-sign"></i> ${(r.budget_min||0).toLocaleString()} ~ ${(r.budget_max||0).toLocaleString()}원</span>
-                <span><i class="fa-solid fa-gavel"></i> 입찰 ${bidCount}건</span>
+                <span><i class="fa-solid fa-tag"></i> ${catName(r.category)}</span>
+                <span><i class="fa-solid fa-won-sign"></i> ${formatPriceRange(r.budget_min, r.budget_max)}</span>
+                <span><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
                 <span><i class="fa-regular fa-clock"></i> ${timeAgo(r.created_at)}</span>
             </div>
         </div>`;
@@ -1262,7 +1651,7 @@ async function showMyRequestDetail(requestId) {
     detail.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
 
     const { data: r } = await sb.from('design_requests').select('*').eq('id', requestId).single();
-    if (!r) { detail.innerHTML = '<p>의뢰를 찾을 수 없습니다.</p>'; return; }
+    if (!r) { detail.innerHTML = '<p>' + t('request_not_found') + '</p>'; return; }
 
     // Load bids with designer profiles
     const { data: bids } = await sb.from('design_bids')
@@ -1278,12 +1667,12 @@ async function showMyRequestDetail(requestId) {
         (designers || []).forEach(d => designerMap[d.id] = d);
     }
 
-    const statusMap = { open: { label: '모집중', cls: 'badge-open' }, in_progress: { label: '진행중', cls: 'badge-progress' }, completed: { label: '완료', cls: 'badge-complete' }, cancelled: { label: '취소', cls: 'badge-cancelled' } };
+    const statusMap = { open: { label: t('status_open'), cls: 'badge-open' }, in_progress: { label: t('status_progress'), cls: 'badge-progress' }, completed: { label: t('status_complete'), cls: 'badge-complete' }, cancelled: { label: t('status_cancelled'), cls: 'badge-cancelled' } };
     const st = statusMap[r.status] || statusMap.open;
 
     let bidsHtml = '';
     if (!bids || bids.length === 0) {
-        bidsHtml = '<div class="empty-state" style="padding:40px;"><i class="fa-solid fa-gavel"></i><p>아직 입찰이 없습니다.</p></div>';
+        bidsHtml = `<div class="empty-state" style="padding:40px;"><i class="fa-solid fa-gavel"></i><p>${t('no_bids_yet')}</p></div>`;
     } else {
         for (const b of bids) {
             const d = designerMap[b.designer_id] || {};
@@ -1298,7 +1687,7 @@ async function showMyRequestDetail(requestId) {
                 portfolioHtml += '</div>';
             }
 
-            const bidStatusMap = { pending: { label: '대기', cls: 'badge-pending' }, selected: { label: '선정', cls: 'badge-selected' }, rejected: { label: '미선정', cls: 'badge-rejected' } };
+            const bidStatusMap = { pending: { label: t('status_pending'), cls: 'badge-pending' }, selected: { label: t('status_selected'), cls: 'badge-selected' }, rejected: { label: t('status_rejected'), cls: 'badge-rejected' } };
             const bst = bidStatusMap[b.status] || bidStatusMap.pending;
 
             const canSelect = r.status === 'open';
@@ -1307,41 +1696,41 @@ async function showMyRequestDetail(requestId) {
                 <div class="bid-header">
                     ${avatarHtml}
                     <div class="bid-info" style="flex:1;">
-                        <div class="bid-name">${escHtml(d.display_name || '디자이너')}</div>
-                        <div class="bid-rating">${renderStars(d.avg_rating)} <span style="color:#94a3b8;font-size:11px;">(${d.total_reviews||0}건)</span></div>
+                        <div class="bid-name">${escHtml(d.display_name || t('designer'))}</div>
+                        <div class="bid-rating">${renderStars(d.avg_rating)} <span style="color:#94a3b8;font-size:11px;">(${d.total_reviews||0}${t('count_件')})</span></div>
                     </div>
                     <span class="badge-sm ${bst.cls}">${bst.label}</span>
                 </div>
                 <div class="bid-details">
-                    <div class="bid-field"><label>제안 금액</label><div class="val" style="color:#7c3aed;">${b.price.toLocaleString()}원</div></div>
-                    <div class="bid-field"><label>작업 기간</label><div class="val">${b.timeline_days}일</div></div>
+                    <div class="bid-field"><label>${t('proposed_price')}</label><div class="val" style="color:#7c3aed;">${formatPrice(b.price)}</div></div>
+                    <div class="bid-field"><label>${t('timeline')}</label><div class="val">${b.timeline_days}${t('day_n')}</div></div>
                 </div>
                 <div class="bid-message">${escHtml(b.message)}</div>
                 ${portfolioHtml}
-                ${canSelect ? `<button class="btn btn-success" onclick="selectBid('${requestId}','${b.id}','${b.designer_id}')"><i class="fa-solid fa-check"></i> 이 디자이너 선택</button>` : ''}
+                ${canSelect ? `<button class="btn btn-success" onclick="selectBid('${requestId}','${b.id}','${b.designer_id}')"><i class="fa-solid fa-check"></i> ${t('select_designer')}</button>` : ''}
             </div>`;
         }
     }
 
     const showCompleteBtn = r.status === 'in_progress';
     detail.innerHTML = `
-    <button class="btn btn-outline btn-sm" onclick="backToMyRequests()" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> 목록으로</button>
+    <button class="btn btn-outline btn-sm" onclick="backToMyRequests()" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> ${t('back_to_list')}</button>
     <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <div>
-                <span class="category-badge" style="margin-right:8px;">${r.category || '기타'}</span>
+                <span class="category-badge" style="margin-right:8px;">${catName(r.category)}</span>
                 <span class="badge-sm ${st.cls}">${st.label}</span>
             </div>
             <span style="font-size:12px;color:#94a3b8;">${timeAgo(r.created_at)}</span>
         </div>
         <h3 style="font-size:18px;font-weight:800;margin-bottom:8px;">${escHtml(r.title)}</h3>
         <div style="font-size:18px;font-weight:800;color:#7c3aed;margin-bottom:12px;">
-            ${(r.budget_min||0).toLocaleString()}원 ~ ${(r.budget_max||0).toLocaleString()}원
+            ${formatPriceRange(r.budget_min, r.budget_max)}
         </div>
         <p style="font-size:14px;color:#475569;line-height:1.7;white-space:pre-wrap;margin-bottom:16px;">${escHtml(r.description)}</p>
-        ${showCompleteBtn ? `<button class="btn btn-success btn-lg" onclick="openRatingModal('${requestId}')"><i class="fa-solid fa-check-double"></i> 완료 처리 및 평가</button>` : ''}
+        ${showCompleteBtn ? `<button class="btn btn-success btn-lg" onclick="openRatingModal('${requestId}')"><i class="fa-solid fa-check-double"></i> ${t('mark_complete')}</button>` : ''}
     </div>
-    <h3 style="font-size:16px;font-weight:800;margin-bottom:16px;"><i class="fa-solid fa-gavel" style="color:#7c3aed;"></i> 입찰 목록 (${bids?.length || 0}건)</h3>
+    <h3 style="font-size:16px;font-weight:800;margin-bottom:16px;"><i class="fa-solid fa-gavel" style="color:#7c3aed;"></i> ${t('bid_list')} (${bids?.length || 0}${t('count_件')})</h3>
     ${bidsHtml}`;
 }
 
@@ -1351,14 +1740,14 @@ function backToMyRequests() {
 }
 
 async function selectBid(requestId, bidId, designerId) {
-    if (!confirm('이 디자이너를 선택하시겠습니까?')) return;
+    if (!confirm(t('confirm_select'))) return;
 
     // Update request status
     const { error: e1 } = await sb.from('design_requests').update({
         status: 'in_progress',
         selected_bid_id: bidId
     }).eq('id', requestId);
-    if (e1) { showToast('처리 실패: ' + e1.message, 'error'); return; }
+    if (e1) { showToast(t('toast_process_fail') + e1.message, 'error'); return; }
 
     // Update selected bid status
     await sb.from('design_bids').update({ status: 'selected' }).eq('id', bidId);
@@ -1366,7 +1755,7 @@ async function selectBid(requestId, bidId, designerId) {
     // Reject other bids
     await sb.from('design_bids').update({ status: 'rejected' }).eq('request_id', requestId).neq('id', bidId);
 
-    showToast('디자이너가 선택되었습니다!', 'success');
+    showToast(t('toast_designer_selected'), 'success');
     showMyRequestDetail(requestId);
 }
 
@@ -1374,9 +1763,9 @@ async function selectBid(requestId, bidId, designerId) {
 async function openRatingModal(requestId) {
     // Get the selected bid's designer
     const { data: r } = await sb.from('design_requests').select('selected_bid_id').eq('id', requestId).single();
-    if (!r?.selected_bid_id) { showToast('선택된 디자이너가 없습니다', 'error'); return; }
+    if (!r?.selected_bid_id) { showToast(t('toast_no_designer'), 'error'); return; }
     const { data: bid } = await sb.from('design_bids').select('designer_id, price').eq('id', r.selected_bid_id).single();
-    if (!bid) { showToast('입찰 정보를 찾을 수 없습니다', 'error'); return; }
+    if (!bid) { showToast(t('toast_bid_not_found'), 'error'); return; }
 
     currentRatingData = { request_id: requestId, designer_id: bid.designer_id, price: bid.price, bid_id: r.selected_bid_id };
     selectedRating = 0;
@@ -1404,12 +1793,12 @@ function updateStarDisplay() {
 
 async function submitRating() {
     if (!currentRatingData) return;
-    if (selectedRating < 1) { showToast('별점을 선택하세요', 'error'); return; }
+    if (selectedRating < 1) { showToast(t('toast_select_rating'), 'error'); return; }
 
     const comment = document.getElementById('ratingComment').value.trim();
     const btn = document.getElementById('btnSubmitRating');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('processing');
 
     try {
         const { request_id, designer_id, price } = currentRatingData;
@@ -1450,7 +1839,7 @@ async function submitRating() {
             user_id: designer_id,
             type: 'design_earning',
             amount: designerShare,
-            description: `디자인 마켓 수익 (의뢰: ${request_id.substring(0,8)})`
+            description: t('design_earning_desc') + request_id.substring(0,8) + ')'
         });
 
         // 7. Update designer profile stats
@@ -1465,22 +1854,22 @@ async function submitRating() {
             total_earnings: (dProfile?.total_earnings || 0) + designerShare
         }).eq('id', designer_id);
 
-        showToast('평가가 완료되었습니다! 디자이너에게 ' + designerShare.toLocaleString() + '원이 지급됩니다.', 'success');
+        showToast(t('toast_rating_complete') + ' ' + formatPrice(designerShare) + t('paid_to_designer'), 'success');
         closeRatingModal();
         loadMyRequests();
         loadDesignerShowcase();
     } catch(e) {
-        showToast('처리 실패: ' + e.message, 'error');
+        showToast(t('toast_process_fail') + e.message, 'error');
     }
     btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> 평가 제출 및 완료';
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + t('submit_rating');
 }
 
 // ===== My Bids =====
 async function loadMyBids() {
     const container = document.getElementById('myBidsList');
     if (!designerProfile) {
-        container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-user-slash"></i><p>디자이너로 등록해야 입찰 내역을 볼 수 있습니다.</p><button class="btn btn-primary" onclick="openRegisterDesignerModal()"><i class="fa-solid fa-user-plus"></i> 디자이너 등록</button></div>';
+        container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-slash"></i><p>${t('not_designer_yet')}</p><button class="btn btn-primary" onclick="openRegisterDesignerModal()"><i class="fa-solid fa-user-plus"></i> ${t('register_designer')}</button></div>`;
         return;
     }
 
@@ -1492,11 +1881,11 @@ async function loadMyBids() {
         .order('created_at', { ascending: false });
 
     if (!bids || bids.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-gavel"></i><p>아직 입찰한 의뢰가 없습니다.</p><button class="btn btn-primary" onclick="switchTab(\'browse\')"><i class="fa-solid fa-list"></i> 의뢰 둘러보기</button></div>';
+        container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-gavel"></i><p>${t('no_my_bids')}</p><button class="btn btn-primary" onclick="switchTab('browse')"><i class="fa-solid fa-list"></i> ${t('browse_requests')}</button></div>`;
         return;
     }
 
-    const bidStatusMap = { pending: { label: '대기', cls: 'badge-pending' }, selected: { label: '선정', cls: 'badge-selected' }, rejected: { label: '미선정', cls: 'badge-rejected' } };
+    const bidStatusMap = { pending: { label: t('status_pending'), cls: 'badge-pending' }, selected: { label: t('status_selected'), cls: 'badge-selected' }, rejected: { label: t('status_rejected'), cls: 'badge-rejected' } };
 
     let html = '';
     for (const b of bids) {
@@ -1506,16 +1895,16 @@ async function loadMyBids() {
         <div class="my-bid-card">
             <div class="my-bid-header">
                 <div>
-                    <span class="category-badge" style="margin-right:8px;">${r.category || '기타'}</span>
-                    <span class="my-bid-title">${escHtml(r.title || '(삭제된 의뢰)')}</span>
+                    <span class="category-badge" style="margin-right:8px;">${catName(r.category)}</span>
+                    <span class="my-bid-title">${escHtml(r.title || t('deleted_request'))}</span>
                 </div>
                 <span class="badge-sm ${bst.cls}">${bst.label}</span>
             </div>
             <div class="my-bid-meta">
-                <span><i class="fa-solid fa-won-sign"></i> 제안: ${b.price.toLocaleString()}원</span>
-                <span><i class="fa-solid fa-calendar"></i> ${b.timeline_days}일</span>
+                <span><i class="fa-solid fa-won-sign"></i> ${t('proposed')}: ${formatPrice(b.price)}</span>
+                <span><i class="fa-solid fa-calendar"></i> ${b.timeline_days}${t('day_n')}</span>
                 <span><i class="fa-regular fa-clock"></i> ${timeAgo(b.created_at)}</span>
-                ${r.budget_min ? `<span>의뢰 예산: ${r.budget_min.toLocaleString()} ~ ${r.budget_max.toLocaleString()}원</span>` : ''}
+                ${r.budget_min ? `<span>${t('budget_label')}: ${formatPriceRange(r.budget_min, r.budget_max)}</span>` : ''}
             </div>
         </div>`;
     }
