@@ -1235,8 +1235,11 @@ window.loadOrders = async () => {
             if (isHighValue && !isContactReq && !isContactDone) {
                 contactHtml += `<div style="margin-bottom:3px;"><span style="display:inline-block;font-size:9px;font-weight:bold;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:1px 5px;border-radius:8px;animation:pulse-badge 1.5s infinite;">💎 고액</span></div>`;
             }
+            const isHqProcessing = isContactDone && (order.admin_note || '').includes('[본사처리');
             if (isContactReq) {
                 contactHtml += `<button class="btn" style="width:100%;font-size:10px;padding:2px 4px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-weight:bold;cursor:pointer;margin-bottom:2px;" onclick="event.stopPropagation();completeContact('${order.id}')">📞 소통중</button>`;
+            } else if (isContactDone && isHqProcessing) {
+                contactHtml += `<div style="font-size:9px;color:#0369a1;font-weight:bold;background:#e0f2fe;padding:2px 4px;border-radius:4px;margin-bottom:2px;">🏢 본사처리중</div>`;
             } else if (isContactDone) {
                 contactHtml += `<div style="font-size:9px;color:#15803d;font-weight:bold;">✅ 소통완료</div>`;
             }
