@@ -294,13 +294,16 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
         }
         
-        .view-content { 
-            font-size: 16px; 
-            line-height: 1.8; 
-            color: #333; 
-            min-height: 200px; 
-            margin-bottom: 50px; 
+        .view-content {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #333;
+            min-height: 200px;
+            margin-bottom: 50px;
         }
+        .view-content h1,.view-content h2,.view-content h3 { font-size: 16px; font-weight: 700; margin: 16px 0 8px; }
+        .view-content p { font-size: 14px; margin: 6px 0; }
+        .view-content strong, .view-content b { font-weight: 600; }
 
         /* =========================================
            별점 (Star Rating) 스타일
@@ -538,8 +541,9 @@
             <button onclick="goToList()" style="position:absolute; top:20px; right:20px; border:none; background:none; font-size:24px; cursor:pointer; color:#999;">&times;</button>
             
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:10px;">
-                <div style="display:flex; gap:10px;">
-                    <button id="btnBackList" onclick="goToList()" class="btn">← 목록</button>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <a href="/" class="btn" style="text-decoration:none;font-size:13px;padding:6px 10px;">🏠</a>
+                    <button id="btnBackList" onclick="goToList()" class="btn" style="font-size:13px;padding:6px 10px;">← List</button>
                     <span id="copyLangButtons"></span>
                 </div>
                 <div id="btnGroupAuth" style="display:none;">
@@ -743,7 +747,7 @@
         let copyHtml = '';
         for (const [code, cfg] of Object.entries(copyTargets)) {
             if (code === currentCountry) continue;
-            copyHtml += `<button onclick="copyPostToLang('${code}')" class="btn" style="background:${colors[code]}; margin-left:6px;">${cfg.flag} ${cfg.label[currentCountry] || cfg.label['US']}</button> `;
+            copyHtml += `<button onclick="copyPostToLang('${code}')" class="btn" style="background:${colors[code]}; margin-left:3px; padding:4px 8px; font-size:16px; min-width:32px;" title="${cfg.label[currentCountry] || cfg.label['US']}">${cfg.flag}</button>`;
         }
         copyContainer.innerHTML = copyHtml;
 
