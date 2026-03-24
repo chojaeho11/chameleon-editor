@@ -1556,6 +1556,14 @@ async function submitBid() {
     if (!timeline) { showToast(t('toast_select_timeline'), 'error'); return; }
     if (!message) { showToast(t('toast_enter_message'), 'error'); return; }
 
+    // 중복 입찰 방지
+    const { count: existingBids } = await sb.from('design_bids').select('*', { count: 'exact', head: true })
+        .eq('request_id', currentBidRequestId).eq('designer_id', userId);
+    if (existingBids > 0) {
+        showToast(LANG === 'ja' ? 'すでに入札済みです' : LANG === 'en' ? 'You already bid on this request' : '이미 입찰한 의뢰입니다', 'error');
+        return;
+    }
+
     const btn = document.getElementById('btnSubmitBid');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('submitting');
