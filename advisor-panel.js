@@ -349,9 +349,12 @@ function buildPanelUI() {
             </div>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
-        <div style="padding:4px 10px;">
-            <a href="/design-market.html" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 12px;border-radius:10px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(124,58,237,0.3);transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-                <i class="fa-solid fa-palette"></i> 디자인 의뢰하기 — 전문 디자이너에게 맡기세요
+        <div style="display:flex;gap:6px;padding:4px 10px;">
+            <a href="/design-market.html" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-palette"></i> 디자인 의뢰
+            </a>
+            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else document.getElementById('quoteModal')&&(document.getElementById('quoteModal').style.display='flex');" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-file-invoice"></i> 대량주문 문의
             </a>
         </div>
         <div class="adv-img-preview" id="advImgPreview" style="display:none">
