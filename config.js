@@ -116,19 +116,23 @@ export function initConfig() {
                         }
                     });
 
-                    // ★ 소셜 로그인 후 결제 재개 (sessionStorage에서 복원)
+                    // ★ 소셜 로그인 후 결제 재개: 장바구니 자동 열기
                     try {
                         const pending = sessionStorage.getItem('_pendingPayment');
                         if (pending) {
                             sessionStorage.removeItem('_pendingPayment');
-                            const pd = JSON.parse(pending);
-                            if (pd.tempOrderInfo) window.tempOrderInfo = pd.tempOrderInfo;
-                            if (pd.originalPayAmount) window.originalPayAmount = pd.originalPayAmount;
-                            if (pd.finalPaymentAmount) window.finalPaymentAmount = pd.finalPaymentAmount;
-                            // 결제 모달 다시 열기 (약간 대기 후)
                             setTimeout(() => {
-                                if (window.processFinalPayment) window.processFinalPayment();
-                            }, 1500);
+                                // 장바구니 열기
+                                const cartPage = document.getElementById('cartPage');
+                                if (cartPage) cartPage.style.display = 'block';
+                                if (window.renderCart) window.renderCart();
+                                // 안내 메시지
+                                const _hn = window.location.hostname;
+                                const msg = _hn.includes('cafe0101') ? 'ログイン完了！下の「チェックアウト」ボタンを押してください。'
+                                    : _hn.includes('cafe3355') ? 'Login complete! Please tap "Checkout" below to continue.'
+                                    : '로그인 완료! 아래 결제 버튼을 눌러주세요.';
+                                if (window.showToast) window.showToast(msg, 'success');
+                            }, 1000);
                         }
                     } catch(e) {}
                 }

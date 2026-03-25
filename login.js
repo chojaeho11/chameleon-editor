@@ -366,8 +366,17 @@ async function handleSocialLogin(provider) {
         return handleLineLogin();
     }
 
-    // ★ 현재 URL의 lang 파라미터를 유지하여 로그인 후 같은 언어 페이지로 복귀
-    const redirectUrl = window.location.href.split('#')[0];
+    // ★ 소셜 로그인 후 홈으로 복귀 (상품 상세/결제 페이지 대신 홈 — lang만 유지)
+    const _hn = window.location.hostname;
+    let redirectUrl = window.location.origin + '/';
+    if (_hn.includes('cafe0101')) redirectUrl += '?lang=ja';
+    else if (_hn.includes('cafe3355')) {
+        const _lp = new URLSearchParams(window.location.search).get('lang');
+        if (_lp && _lp !== 'en') redirectUrl += '?lang=' + _lp;
+    } else {
+        const _lp = new URLSearchParams(window.location.search).get('lang');
+        if (_lp) redirectUrl += '?lang=' + _lp;
+    }
     const { data, error } = await sb.auth.signInWithOAuth({
         provider: provider,
         options: { redirectTo: redirectUrl, queryParams: { access_type: 'offline', prompt: 'consent' } },
