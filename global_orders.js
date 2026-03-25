@@ -243,13 +243,14 @@ const MATERIAL_LABELS = {
 let _addonNameCache = {}; // addon code → display name
 
 async function _loadMaterialCache() {
-    const { data } = await sb.from('admin_products').select('code, material, category').limit(10000);
+    const { data } = await sb.from('admin_products').select('code, name, material, category').limit(10000);
     if (data) {
         _materialCache = {};
-        // code → material 매핑 + category → material 매핑 (폴백)
+        // code → material 매핑 + category → material 매핑 (폴백) + name → material 매핑 (코드 없는 주문용)
         data.forEach(p => {
             if (p.material) {
                 _materialCache[p.code] = p.material;
+                if (p.name) _materialCache['_name_' + p.name] = p.material;
                 if (p.category && !_materialCache['_cat_' + p.category]) {
                     _materialCache['_cat_' + p.category] = p.material;
                 }
@@ -438,8 +439,9 @@ async function _saveOrderToFolder(order) {
     const itemMaterials = items.map(item => {
         const code = item.product?.code || item.productCode || '';
         const cat = item.product?.category || '';
-        let mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || '';
-        console.log(`[자동다운] 소재매칭: code=${code}, cat=${cat}, cache=${_materialCache[code]||'없음'}, product.material=${item.product?.material||'없음'}, catCache=${_materialCache['_cat_'+cat]||'없음'} → mat=${mat||'미분류'}`);
+        const prodName = item.productName || item.product?.name || '';
+        let mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || _materialCache['_name_' + prodName] || '';
+        console.log(`[자동다운] 소재매칭: code=${code}, name=${prodName}, mat=${mat||'미분류'}`);
         const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
         return { item, material: mat, label };
     });
@@ -512,7 +514,8 @@ async function _buildAndDownloadZip(order) {
     const itemMaterials = items.map(item => {
         const code = item.product?.code || item.productCode || '';
         const cat = item.product?.category || '';
-        let mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || '';
+        const prodName = item.productName || item.product?.name || '';
+        let mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || _materialCache['_name_' + prodName] || '';
         const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
         return { item, material: mat, label };
     });
