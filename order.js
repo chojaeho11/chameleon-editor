@@ -264,6 +264,7 @@ export async function initOrderSystem() {
     // addCanvasToCart, renderCart를 외부에서도 접근 가능하게
     window.addCanvasToCart = addCanvasToCart;
     window.renderCart = renderCart;
+    window.fetchUserDiscountRate = fetchUserDiscountRate;
 
     const btnViewCart = document.getElementById("btnViewCart");
     if (btnViewCart) {

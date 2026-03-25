@@ -256,6 +256,10 @@ function updateUserSession(session) {
     const btnLib = document.getElementById("btnMyLibrary");
     if (btnLib) btnLib.style.display = currentUser ? "inline-flex" : "none";
     loadUserCart();
+    // ★ 로그인 시 구독자 할인율 갱신
+    if (currentUser && window.fetchUserDiscountRate) {
+        window.fetchUserDiscountRate();
+    }
     // ★ 읽지 않은 관리자 메시지 팝업
     if (currentUser) {
         setTimeout(() => { window.checkUnreadMessages && window.checkUnreadMessages(); }, 1500);
