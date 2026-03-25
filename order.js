@@ -922,7 +922,7 @@ async function openDeliveryInfoModal() {
 
                 mgrBtns.innerHTML = '';
                 btnConfig.forEach(cfg => {
-                    const matchMgr = cfg.name ? managers.find(m => m.name === cfg.name) : null;
+                    const matchMgr = cfg.name ? managers.find(m => m.name.includes(cfg.name)) : null;
                     const staffId = matchMgr ? String(matchMgr.id) : (cfg.id || '');
                     const bgColor = (matchMgr && matchMgr.color) || cfg.color;
                     const text = cfg.label[lang] || cfg.label['en'];
