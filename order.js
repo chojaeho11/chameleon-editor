@@ -2190,9 +2190,27 @@ async function processOrderSubmission() {
     
     const deliveryDate = selectedDeliveryDate || new Date().toISOString().split('T')[0];
 
-    // ★ 고객이 선택한 담당 매니저
+    // ★ 고객이 선택한 담당 매니저 (필수)
     const staffMgrEl = document.getElementById('inputStaffManager');
     const rawStaffMgrId = staffMgrEl ? staffMgrEl.value : '';
+    if (!rawStaffMgrId) {
+        const lang = CURRENT_LANG || 'kr';
+        const msgs = {
+            kr: '담당 매니저를 선택해주세요.',
+            ja: '担当マネージャーを選択してください。',
+            en: 'Please select a manager.',
+            zh: '请选择负责经理。',
+            es: 'Por favor seleccione un gerente.',
+            de: 'Bitte wählen Sie einen Manager.',
+            fr: 'Veuillez sélectionner un responsable.',
+            ar: 'يرجى اختيار المدير المسؤول.'
+        };
+        showToast(msgs[lang] || msgs['en'], 'warn');
+        // 버튼 영역 강조
+        const wrap = document.getElementById('staffManagerSelectWrap');
+        if (wrap) { wrap.style.outline = '2px solid #ef4444'; wrap.style.borderRadius = '12px'; setTimeout(() => { wrap.style.outline = ''; }, 2000); }
+        return;
+    }
     // '__hq__'는 본사 직접 처리 → staff_manager_id는 null, admin_note에 기록
     const isHqSelected = rawStaffMgrId === '__hq__';
     const selectedStaffManagerId = (rawStaffMgrId && !isHqSelected) ? rawStaffMgrId : null;
