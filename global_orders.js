@@ -439,6 +439,7 @@ async function _saveOrderToFolder(order) {
         const code = item.product?.code || item.productCode || '';
         const cat = item.product?.category || '';
         let mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || '';
+        console.log(`[자동다운] 소재매칭: code=${code}, cat=${cat}, cache=${_materialCache[code]||'없음'}, product.material=${item.product?.material||'없음'}, catCache=${_materialCache['_cat_'+cat]||'없음'} → mat=${mat||'미분류'}`);
         const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
         return { item, material: mat, label };
     });
