@@ -39,6 +39,66 @@ let currentPage = 1;
 const itemsPerPage = 10;
 
 // ================================================================
+// [새 주문 알림] Supabase Realtime 구독 + 알림음
+// ================================================================
+let _lastKnownOrderId = 0;
+let _orderAlertEnabled = true;
+
+function _playNewOrderSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // 딩동~ 2음 알림
+        [0, 0.25].forEach((delay, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = i === 0 ? 830 : 1050; // 딩 → 동
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.4);
+            osc.start(audioCtx.currentTime + delay);
+            osc.stop(audioCtx.currentTime + delay + 0.4);
+        });
+    } catch (e) {
+        console.warn('[알림음] 재생 실패:', e);
+    }
+}
+
+function _initOrderRealtimeAlert() {
+    // 초기 최신 주문 ID 기록
+    sb.from('orders').select('id').order('id', { ascending: false }).limit(1).then(({ data }) => {
+        if (data && data[0]) _lastKnownOrderId = data[0].id;
+    });
+
+    // Realtime 구독: orders 테이블 INSERT 감지
+    sb.channel('new-order-alert')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+            const newOrder = payload.new;
+            if (!newOrder || newOrder.status === '임시작성') return;
+
+            console.log(`[새주문] #${newOrder.id} ${newOrder.manager_name || ''} ${newOrder.total_amount?.toLocaleString() || 0}원`);
+            _playNewOrderSound();
+
+            // 토스트 알림
+            const name = newOrder.manager_name || '고객';
+            const amount = (newOrder.total_amount || 0).toLocaleString();
+            showToast(`🔔 새 주문! #${newOrder.id} ${name} - ${amount}원`, 'success', 5000);
+
+            // 목록 자동 새로고침 (전체 주문 탭일 때)
+            if (window.loadOrders) window.loadOrders();
+        })
+        .subscribe((status) => {
+            console.log('[새주문 알림] Realtime 상태:', status);
+        });
+}
+
+// 페이지 로드 시 알림 초기화
+if (document.getElementById('orderListBody')) {
+    _initOrderRealtimeAlert();
+}
+
+// ================================================================
 // [고객소통 요청] admin_note에 ##CONTACT_REQ## / ##CONTACT_DONE## 마커 사용
 // ================================================================
 const CONTACT_REQ_MARKER = '##CONTACT_REQ##';
