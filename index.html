@@ -10058,21 +10058,8 @@ if (w >= 20 && h >= 20) {
             selectedAddonQtys[chk.value] = optQty;
         });
 
-        // 5-1. 수량 할인 적용 (천원단위/만원단위 주문, 벽면 제품 제외 — 벽면은 자체 할인 적용)
-        const _confirmTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-        const _excWholesaleReal = _confirmTopCat === 'Wholesale Board Prices' || _confirmTopCat === '44444';
-        const _excCode = targetCode === '21355677' || targetCode === '21355677_copy' || _isWallProduct || _excWholesaleReal;
-        if (!_excCode) {
-            let _dRate = 0;
-            if (finalQty >= 100) _dRate = 0.50;
-            else if (finalQty >= 30) _dRate = 0.40;
-            else if (finalQty >= 10) _dRate = 0.35;
-            else if (finalQty >= 3) _dRate = 0.30;
-            if (_dRate > 0) {
-                finalPricePerItem = Math.floor(finalPricePerItem * (1 - _dRate) / 100) * 100;
-                if (lang === 'kr') finalPricePerItem = Math.floor(finalPricePerItem / 10) * 10;
-            }
-        }
+        // 5-1. 수량 할인은 장바구니(renderCart)와 주문(processOrderSubmission)에서 적용
+        // ★ confirmChoice에서는 할인 적용하지 않음 (이중 할인 방지)
 
         // 6. 실행 (에디터 or 장바구니)
 
