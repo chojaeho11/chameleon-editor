@@ -116,25 +116,12 @@ export function initConfig() {
                         }
                     });
 
-                    // ★ 소셜 로그인 후 결제 재개: 장바구니 자동 열기
-                    try {
-                        const pending = sessionStorage.getItem('_pendingPayment');
-                        if (pending) {
-                            sessionStorage.removeItem('_pendingPayment');
-                            setTimeout(() => {
-                                // 장바구니 열기
-                                const cartPage = document.getElementById('cartPage');
-                                if (cartPage) cartPage.style.display = 'block';
-                                if (window.renderCart) window.renderCart();
-                                // 안내 메시지
-                                const _hn = window.location.hostname;
-                                const msg = _hn.includes('cafe0101') ? 'ログイン完了！下の「チェックアウト」ボタンを押してください。'
-                                    : _hn.includes('cafe3355') ? 'Login complete! Please tap "Checkout" below to continue.'
-                                    : '로그인 완료! 아래 결제 버튼을 눌러주세요.';
-                                if (window.showToast) window.showToast(msg, 'success');
-                            }, 1000);
-                        }
-                    } catch(e) {}
+                    // ★ 소셜 로그인 후 결제 재개: 결제 모달 바로 복원
+                    if (sessionStorage.getItem('_pendingPayment')) {
+                        setTimeout(() => {
+                            if (window.restorePendingPayment) window.restorePendingPayment();
+                        }, 2000);
+                    }
                 }
 
                 if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active') && !sessionStorage.getItem('_pendingEditorAction')) {

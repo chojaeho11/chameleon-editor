@@ -386,6 +386,79 @@ export async function initOrderSystem() {
     window.handleFinalPayment = processFinalPayment;
     window.processFinalPayment = processFinalPayment;
 
+    // ★ 소셜 로그인 후 결제 복원
+    window.restorePendingPayment = async function() {
+        try {
+            const raw = sessionStorage.getItem('_pendingPayment');
+            if (!raw) return;
+            sessionStorage.removeItem('_pendingPayment');
+            const pd = JSON.parse(raw);
+            if (!pd.tempOrderInfo) return;
+
+            // 할인율 재로드 (로그인 후이므로)
+            await fetchUserDiscountRate();
+
+            window.tempOrderInfo = pd.tempOrderInfo;
+            window._nonMetroFeeApplied = pd.nonMetroFee || 0;
+
+            // 금액 재계산 (로그인 후 할인율이 달라질 수 있음)
+            let rawTotal = 0;
+            cartData.forEach(item => {
+                if (!item.product) return;
+                const up = item.product.price || 0;
+                const qty = item.qty || 1;
+                let itemBase = up * qty;
+                // 수량 할인
+                const _pc = item.product.code || '';
+                const _cat = item.product.category || '';
+                const _tc = window._getTopCategoryCode ? window._getTopCategoryCode(_cat) : '';
+                const _nd = _pc === '21355677' || _pc === '21355677_copy' || _tc === 'Wholesale Board Prices' || _tc === 'honeycomb_board' || _cat === 'hb_display_wall' || _pc.startsWith('hb_dw') || item.product.is_custom_size;
+                let dr = 0;
+                if (!_nd && qty >= 3) { if (qty >= 100) dr = 0.50; else if (qty >= 30) dr = 0.40; else if (qty >= 10) dr = 0.35; else dr = 0.30; }
+                itemBase -= Math.floor(itemBase * dr / 100) * 100;
+                // 옵션
+                if (item.selectedAddons) {
+                    Object.values(item.selectedAddons).forEach(code => {
+                        const addon = (typeof ADDON_DB !== 'undefined' ? ADDON_DB : window.ADDON_DB || {})[code];
+                        if (addon) {
+                            const _sw = addon.category_code === 'opt_8796' || addon.is_swatch;
+                            const aq = _sw ? qty : ((item.addonQuantities && item.addonQuantities[code]) || 1);
+                            itemBase += addon.price * aq;
+                        }
+                    });
+                }
+                rawTotal += itemBase;
+            });
+            rawTotal += window._nonMetroFeeApplied;
+            const gradeDisc = Math.floor(rawTotal * currentUserDiscountRate);
+            const finalTotal = rawTotal - gradeDisc;
+
+            window.originalPayAmount = finalTotal;
+            window.finalPaymentAmount = finalTotal;
+
+            const info = pd.tempOrderInfo;
+
+            // checkout 모달 채우기
+            const el = (id) => document.getElementById(id);
+            if (el('orderName')) el('orderName').value = info.manager || '';
+            if (el('orderPhone')) el('orderPhone').value = info.phone || '';
+            if (el('orderAddr')) el('orderAddr').value = info.address || '';
+            if (el('orderMemo')) el('orderMemo').value = info.request || '';
+            if (el('finalPayAmountDisplay')) el('finalPayAmountDisplay').innerText = formatCurrency(finalTotal);
+            if (el('btnFinalPay')) el('btnFinalPay').innerText = `${formatCurrency(finalTotal)} ${window.t('btn_pay', 'Pay')}`;
+
+            // 모달 열기
+            const checkoutModal = el('checkoutModal');
+            if (checkoutModal) checkoutModal.style.display = 'flex';
+
+            const _hn = window.location.hostname;
+            const msg = _hn.includes('cafe0101') ? 'ログイン完了！お支払いを続けてください。'
+                : _hn.includes('cafe3355') ? 'Login complete! Please continue with payment.'
+                : '로그인 완료! 결제를 계속 진행해주세요.';
+            showToast(msg, 'success');
+        } catch(e) { console.error('결제 복원 실패:', e); }
+    };
+
     const btnDownSheet = document.getElementById("btnDownOrderSheetCheckout");
     const btnDownQuote = document.getElementById("btnDownQuotationCheckout");
 
@@ -2819,7 +2892,9 @@ async function processFinalPayment() {
             sessionStorage.setItem('_pendingPayment', JSON.stringify({
                 tempOrderInfo: window.tempOrderInfo,
                 originalPayAmount: window.originalPayAmount,
-                finalPaymentAmount: window.finalPaymentAmount
+                finalPaymentAmount: window.finalPaymentAmount,
+                nonMetroFee: window._nonMetroFeeApplied || 0,
+                discountRate: currentUserDiscountRate || 0
             }));
         } catch(e) {}
         if (window.openAuthModal) {
