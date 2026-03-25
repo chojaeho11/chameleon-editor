@@ -1275,7 +1275,10 @@ window.loadOrders = async () => {
             };
             
             // [스태프 선택] 배경색 꽉 차게 변경된 함수 사용
-            const managerOpts = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
+            const isHqOrder = (order.admin_note || '').includes('[고객지정] 본사');
+            const managerOpts = isHqOrder && !order.staff_manager_id
+                ? `<div style="background:#0ea5e9;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;text-align:center;">🏢 본사</div>`
+                : createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
             const driverOpts = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
 
             // 날짜 (월.일 + 배송일)
