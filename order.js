@@ -961,6 +961,41 @@ async function openDeliveryInfoModal() {
                     btn.dataset.color = bgColor;
                     mgrBtns.appendChild(btn);
                 });
+                // ★ 본사 전용 카테고리 자동 배정: 보드류도매가, 종이매대, 굿즈판촉물
+                const HQ_ONLY_TOP_CATS = ['Wholesale Board Prices', 'paper_display', '77777'];
+                const hasHqOnlyItem = cartData.some(item => {
+                    const cat = item.product?.category || '';
+                    const topCat = window._getTopCategoryCode ? window._getTopCategoryCode(cat) : '';
+                    return HQ_ONLY_TOP_CATS.includes(topCat) || HQ_ONLY_TOP_CATS.includes(cat);
+                });
+                if (hasHqOnlyItem) {
+                    // 본사 자동 선택 + 잠금
+                    mgrHidden.value = '__hq__';
+                    mgrBtns.querySelectorAll('button').forEach(b => {
+                        const c = b.dataset.color;
+                        if (b.dataset.staffId === '__hq__') {
+                            b.style.background = c;
+                            b.style.color = '#fff';
+                        } else {
+                            b.style.background = '#f1f5f9';
+                            b.style.color = '#94a3b8';
+                            b.style.borderColor = '#e2e8f0';
+                            b.style.cursor = 'not-allowed';
+                        }
+                        b.disabled = true;
+                    });
+                    const lockMsgs = {
+                        kr: '이 상품은 본사에서 직접 처리합니다.',
+                        ja: 'この商品は本社が直接対応します。',
+                        en: 'This product is handled directly by HQ.',
+                        zh: '此产品由总部直接处理。',
+                        es: 'Este producto es gestionado directamente por la sede.',
+                        de: 'Dieses Produkt wird direkt von der Zentrale bearbeitet.',
+                        fr: 'Ce produit est géré directement par le siège.',
+                        ar: 'هذا المنتج يتم التعامل معه مباشرة من المقر.'
+                    };
+                    if (mgrLabel) mgrLabel.textContent = lockMsgs[lang] || lockMsgs['en'];
+                }
             }
         } catch(e) { console.error('매니저 목록 로드 실패:', e); }
     }
