@@ -384,6 +384,7 @@ export async function initOrderSystem() {
     });
 
     window.handleFinalPayment = processFinalPayment;
+    window.processFinalPayment = processFinalPayment;
 
     const btnDownSheet = document.getElementById("btnDownOrderSheetCheckout");
     const btnDownQuote = document.getElementById("btnDownQuotationCheckout");
@@ -2813,6 +2814,14 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 async function processFinalPayment() {
     // ★ 미로그인 시 가입 유도 (결제 정보 유지)
     if (!currentUser) {
+        // 소셜 로그인 대비: 결제 상태를 sessionStorage에 보존
+        try {
+            sessionStorage.setItem('_pendingPayment', JSON.stringify({
+                tempOrderInfo: window.tempOrderInfo,
+                originalPayAmount: window.originalPayAmount,
+                finalPaymentAmount: window.finalPaymentAmount
+            }));
+        } catch(e) {}
         if (window.openAuthModal) {
             window.openAuthModal('signup', () => processFinalPayment());
         } else {

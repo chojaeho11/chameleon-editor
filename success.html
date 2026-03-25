@@ -107,7 +107,7 @@
 
             if (!dbId) {
                 showToast("Missing order information.", "error");
-                window.location.href = "index.html";
+                window.location.href = "/" + (window.location.hostname.includes('cafe0101') ? '?lang=ja' : window.location.hostname.includes('cafe3355') ? '?lang=en' : '');
                 return;
             }
 
@@ -225,7 +225,7 @@
 
                 setTimeout(() => {
                     showToast("결제 승인에 실패했습니다. 카드 정보를 확인 후 다시 시도해주세요.", "error");
-                    window.location.href = "index.html";
+                    window.location.href = "/" + (window.location.hostname.includes('cafe0101') ? '?lang=ja' : window.location.hostname.includes('cafe3355') ? '?lang=en' : '');
                 }, 3000);
             }
         }

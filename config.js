@@ -115,6 +115,22 @@ export function initConfig() {
                             sb.from('profiles').update({ site: sc }).eq('id', session.user.id);
                         }
                     });
+
+                    // ★ 소셜 로그인 후 결제 재개 (sessionStorage에서 복원)
+                    try {
+                        const pending = sessionStorage.getItem('_pendingPayment');
+                        if (pending) {
+                            sessionStorage.removeItem('_pendingPayment');
+                            const pd = JSON.parse(pending);
+                            if (pd.tempOrderInfo) window.tempOrderInfo = pd.tempOrderInfo;
+                            if (pd.originalPayAmount) window.originalPayAmount = pd.originalPayAmount;
+                            if (pd.finalPaymentAmount) window.finalPaymentAmount = pd.finalPaymentAmount;
+                            // 결제 모달 다시 열기 (약간 대기 후)
+                            setTimeout(() => {
+                                if (window.processFinalPayment) window.processFinalPayment();
+                            }, 1500);
+                        }
+                    } catch(e) {}
                 }
 
                 if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active') && !sessionStorage.getItem('_pendingEditorAction')) {
