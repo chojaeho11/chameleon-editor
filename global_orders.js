@@ -45,10 +45,10 @@ let _lastKnownOrderId = 0;
 let _orderAlertTimer = null;
 const ORDER_POLL_INTERVAL = 30000; // 30초
 
-function _playNewOrderSound() {
+function _playNewOrderSound(customerName) {
+    // 딩동~ 알림음 먼저 재생
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // 딩동~ 2음 알림
         [0, 0.3].forEach((delay, i) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -64,6 +64,22 @@ function _playNewOrderSound() {
     } catch (e) {
         console.warn('[알림음] 재생 실패:', e);
     }
+
+    // 1초 후 TTS 음성 안내
+    setTimeout(() => {
+        try {
+            const msg = new SpeechSynthesisUtterance(
+                `${customerName} 고객님의 새 주문이 도착했습니다. 매니저님들께서는 소통해주시기 바랍니다.`
+            );
+            msg.lang = 'ko-KR';
+            msg.rate = 1.0;
+            msg.pitch = 1.0;
+            msg.volume = 1.0;
+            speechSynthesis.speak(msg);
+        } catch (e) {
+            console.warn('[TTS] 음성 재생 실패:', e);
+        }
+    }, 1000);
 }
 
 async function _pollNewOrders() {
@@ -83,7 +99,7 @@ async function _pollNewOrders() {
             const amount = (order.total_amount || 0).toLocaleString();
 
             console.log(`[새주문] ${newCount}건 감지! 최신: #${order.id} ${name} ${amount}원`);
-            _playNewOrderSound();
+            _playNewOrderSound(name);
             showToast(`🔔 새 주문 ${newCount}건! #${order.id} ${name} - ${amount}원`, 'success', 6000);
 
             // 목록 자동 새로고침
