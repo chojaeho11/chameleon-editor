@@ -232,12 +232,12 @@ let _materialCache = {};
 let _rootDirHandle = null; // File System Access API 루트 폴더 핸들
 
 const MATERIAL_LABELS = {
-    honeycomb_10: '허니콤보드_화크10mm', honeycomb_16: '허니콤보드_화화16mm',
-    fomax_3: '포맥스_3mm', fomax_5: '포맥스_5mm',
-    foam_5: '폼보드_5mm', foam_10: '폼보드_10mm',
+    honeycomb_10: '허니콤보드 화크 10mm', honeycomb_16: '허니콤보드 화화 16mm',
+    fomax_3: '포맥스 3mm', fomax_5: '포맥스 5mm',
+    foam_5: '폼보드 5mm', foam_10: '폼보드 10mm',
     banner: '현수막천', print: '인쇄물',
-    acrylic_3: '투명아크릴_3mm', acrylic_5: '투명아크릴_5mm',
-    pet_fabric: '패트천', ad_other: '기타_광고소재', transparent: '투명용지'
+    acrylic_3: '투명아크릴 3mm', acrylic_5: '투명아크릴 5mm',
+    pet_fabric: '패트천', ad_other: '기타 광고소재', transparent: '투명용지'
 };
 
 let _addonNameCache = {}; // addon code → display name
