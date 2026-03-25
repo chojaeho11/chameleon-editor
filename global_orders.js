@@ -438,20 +438,7 @@ async function _saveOrderToFolder(order) {
     const itemMaterials = items.map(item => {
         const code = item.product?.code || item.productCode || '';
         const cat = item.product?.category || '';
-        const prodName = item.productName || item.product?.name || '';
         let mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || '';
-        if (!mat && prodName) {
-            const n = prodName.toLowerCase();
-            if (n.includes('쉬폰') || n.includes('chiffon')) mat = '쉬폰';
-            else if (n.includes('옥스') || n.includes('oxford')) mat = '옥스포드';
-            else if (n.includes('캔버스') || n.includes('canvas')) mat = '캔버스';
-            else if (n.includes('광목') || n.includes('cotton')) mat = '광목천';
-            else if (n.includes('허니콤') || n.includes('honeycomb')) mat = 'honeycomb_16';
-            else if (n.includes('포맥스') || n.includes('fomax')) mat = 'fomax_3';
-            else if (n.includes('현수막') || n.includes('banner')) mat = 'banner';
-            else if (n.includes('패브릭') || n.includes('fabric')) mat = 'pet_fabric';
-            else if (n.includes('아크릴') || n.includes('acrylic')) mat = 'acrylic_3';
-        }
         const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
         return { item, material: mat, label };
     });
@@ -524,20 +511,7 @@ async function _buildAndDownloadZip(order) {
     const itemMaterials = items.map(item => {
         const code = item.product?.code || item.productCode || '';
         const cat = item.product?.category || '';
-        const prodName = item.productName || item.product?.name || '';
         let mat = _materialCache[code] || item.product?.material || _materialCache['_cat_' + cat] || '';
-        if (!mat && prodName) {
-            const n = prodName.toLowerCase();
-            if (n.includes('쉬폰') || n.includes('chiffon')) mat = '쉬폰';
-            else if (n.includes('옥스') || n.includes('oxford')) mat = '옥스포드';
-            else if (n.includes('캔버스') || n.includes('canvas')) mat = '캔버스';
-            else if (n.includes('광목') || n.includes('cotton')) mat = '광목천';
-            else if (n.includes('허니콤') || n.includes('honeycomb')) mat = 'honeycomb_16';
-            else if (n.includes('포맥스') || n.includes('fomax')) mat = 'fomax_3';
-            else if (n.includes('현수막') || n.includes('banner')) mat = 'banner';
-            else if (n.includes('패브릭') || n.includes('fabric')) mat = 'pet_fabric';
-            else if (n.includes('아크릴') || n.includes('acrylic')) mat = 'acrylic_3';
-        }
         const label = mat ? (MATERIAL_LABELS[mat] || mat.replace(/_/g, ' ')) : '미분류';
         return { item, material: mat, label };
     });
