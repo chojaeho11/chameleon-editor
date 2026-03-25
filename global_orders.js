@@ -1173,7 +1173,8 @@ window.loadOrders = async () => {
             // 매니저 필터 드롭다운 채우기
             const filterMgr = document.getElementById('filterManager');
             if (filterMgr) {
-                const managers = staffList.filter(s => s.role === 'manager');
+                const _FM = ['은미', '성희', '지숙'];
+                const managers = staffList.filter(s => s.role === 'manager' && _FM.some(n => s.name.includes(n)));
                 managers.forEach(m => {
                     const opt = document.createElement('option');
                     opt.value = m.id;
@@ -1427,8 +1428,14 @@ function createStaffSelectHTML(orderId, role, selectedId) {
     // 기본 스타일 (미지정 상태)
     let style = `background-color: #ffffff; color: #334155; border: 1px solid #e2e8f0;`;
 
-    const filteredStaff = staffList.filter(s => s.role === role);
-    
+    // ★ 매니저: 은미/성희/지숙만 표시 (나머지는 본사 소속)
+    const FIELD_MANAGERS = ['은미', '성희', '지숙'];
+    const filteredStaff = staffList.filter(s => {
+        if (s.role !== role) return false;
+        if (role === 'manager') return FIELD_MANAGERS.some(n => s.name.includes(n));
+        return true;
+    });
+
     filteredStaff.forEach(s => {
         const isSelected = String(s.id) === String(selectedId);
         if (isSelected && s.color) {
