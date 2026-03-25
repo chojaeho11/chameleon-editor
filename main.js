@@ -1,30 +1,32 @@
 // main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=279";
-import { initCanvas, canvas } from "./canvas-core.js?v=279";
-import { initSizeControls, applySize } from "./canvas-size.js?v=279";
-import { initGuides } from "./canvas-guides.js?v=279";
-import { initZoomPan } from "./canvas-zoom-pan.js?v=279";
-import { initObjectTools } from "./canvas-objects.js?v=279";
-import { initPageTools } from "./canvas-pages.js?v=279"; // [추가] 페이지 도구
-import { initImageTools } from "./canvas-image.js?v=279";
-import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=279";
-import { initAiTools } from "./canvas-ai.js?v=279";
-import { initExport } from "./export.js?v=279";
-import { initOrderSystem } from "./order.js?v=279";
-import { initAuth } from "./login.js?v=279";
-import { initMyDesign } from "./my-design.js?v=279";
-import { initCanvasUtils } from "./canvas-utils.js?v=279";
-import { initShortcuts } from "./shortcuts.js?v=279";
-import { initContextMenu } from "./context-menu.js?v=279";
-import { createVectorOutline } from "./outlineMaker.js?v=279";
-import { initVideoMaker } from "./video-maker.js?v=279";
-import { initPptMode } from "./ppt-mode.js?v=279";
-import { initGreetingCardMode } from "./greeting-card-mode.js?v=279";
-import { initIconTools } from "./canvas-icons.js?v=279";
-import { initRetouchTools } from "./canvas-retouch.js?v=279";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=280";
+import { initCanvas, canvas } from "./canvas-core.js?v=280";
+import { initSizeControls, applySize } from "./canvas-size.js?v=280";
+import { initGuides } from "./canvas-guides.js?v=280";
+import { initZoomPan } from "./canvas-zoom-pan.js?v=280";
+import { initObjectTools } from "./canvas-objects.js?v=280";
+import { initPageTools } from "./canvas-pages.js?v=280"; // [추가] 페이지 도구
+import { initImageTools } from "./canvas-image.js?v=280";
+import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=280";
+import { initAiTools } from "./canvas-ai.js?v=280";
+import { initExport } from "./export.js?v=280";
+import { initOrderSystem } from "./order.js?v=280";
+import { initAuth } from "./login.js?v=280";
+import { initMyDesign } from "./my-design.js?v=280";
+import { initCanvasUtils } from "./canvas-utils.js?v=280";
+import { initShortcuts } from "./shortcuts.js?v=280";
+import { initContextMenu } from "./context-menu.js?v=280";
+import { createVectorOutline } from "./outlineMaker.js?v=280";
+import { initVideoMaker } from "./video-maker.js?v=280";
+import { initPptMode } from "./ppt-mode.js?v=280";
+import { initGreetingCardMode } from "./greeting-card-mode.js?v=280";
+import { initIconTools } from "./canvas-icons.js?v=280";
+import { initRetouchTools } from "./canvas-retouch.js?v=280";
 
 window.currentUploadedPdfUrl = null;
+
+
 
 // KRW → 현지 통화 표시 헬퍼
 function fmtMoney(krw) {
@@ -256,6 +258,20 @@ function initFileUploadListeners() {
 
 async function handleUniversalUpload(file, isFromStartScreen) {
     if (!file) return;
+
+    // ★ 50MB 초과 파일 차단
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+        const sizeMB = (file.size / 1024 / 1024).toFixed(0);
+        const msg = window.__SITE_CODE === 'jp'
+            ? `${sizeMB}MBのファイルはアップロードできません（最大50MB）。\nファイルサイズを小さくするか、メールでお送りください。\n📧 design@chameleon.design`
+            : window.__SITE_CODE === 'us'
+            ? `This file (${sizeMB}MB) exceeds the 50MB limit.\nPlease reduce the file size or send it via email.\n📧 design@chameleon.design`
+            : `${sizeMB}MB 파일은 접수가 불가능합니다 (최대 50MB).\n파일 용량을 줄이시거나 이메일로 보내주세요.\n📧 design@chameleon.design`;
+        alert(msg);
+        return;
+    }
+
     const loading = document.getElementById("loading");
     if(loading) {
         loading.style.display = "flex";

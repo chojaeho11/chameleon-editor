@@ -883,9 +883,29 @@ function renderTimeSlots(grid, bookedSlots, slotInfo) {
     });
 }
 
-function openDeliveryInfoModal() {
+async function openDeliveryInfoModal() {
     document.getElementById("calendarModal").style.display = "none";
     document.getElementById("deliveryInfoModal").style.display = "flex";
+
+    // ★ 담당 매니저 선택 드롭다운 로드
+    const mgrWrap = document.getElementById('staffManagerSelectWrap');
+    const mgrSelect = document.getElementById('inputStaffManager');
+    if (mgrWrap && mgrSelect && sb) {
+        try {
+            const { data: managers } = await sb.from('admin_staff').select('id, name').eq('role', 'manager');
+            if (managers && managers.length > 0) {
+                mgrWrap.style.display = 'block';
+                // 기존 옵션 초기화 후 다시 채우기 (중복 방지)
+                mgrSelect.innerHTML = '<option value="">선택 안함</option>';
+                managers.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = m.name;
+                    mgrSelect.appendChild(opt);
+                });
+            }
+        } catch(e) { console.error('매니저 목록 로드 실패:', e); }
+    }
 
     // 허니콤보드 포함 여부 체크 → 배송 지역 선택 표시
     const hasHoneycomb = hasHoneycombInCart();
@@ -1544,9 +1564,23 @@ async function addCanvasToCart() {
 }
 
 async function addFileToCart(e) {
-    const file = e.target.files[0]; 
+    const file = e.target.files[0];
     if(!file || !currentTargetProduct) return;
-    
+
+    // ★ 50MB 초과 파일 차단
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+        const sizeMB = (file.size / 1024 / 1024).toFixed(0);
+        const msg = window.__SITE_CODE === 'jp'
+            ? `${sizeMB}MBのファイルはアップロードできません（最大50MB）。\nファイルサイズを小さくするか、メールでお送りください。\n📧 design@chameleon.design`
+            : window.__SITE_CODE === 'us'
+            ? `This file (${sizeMB}MB) exceeds the 50MB limit.\nPlease reduce the file size or send it via email.\n📧 design@chameleon.design`
+            : `${sizeMB}MB 파일은 접수가 불가능합니다 (최대 50MB).\n파일 용량을 줄이시거나 이메일로 보내주세요.\n📧 design@chameleon.design`;
+        alert(msg);
+        e.target.value = '';
+        return;
+    }
+
     const loading = document.getElementById("loading");
     if(loading) { loading.style.display = "flex"; loading.querySelector('p').innerText = window.t('msg_uploading_file') || "Uploading file..."; }
     
@@ -2099,6 +2133,10 @@ async function processOrderSubmission() {
     
     const deliveryDate = selectedDeliveryDate || new Date().toISOString().split('T')[0];
 
+    // ★ 고객이 선택한 담당 매니저
+    const staffMgrEl = document.getElementById('inputStaffManager');
+    const selectedStaffManagerId = staffMgrEl ? staffMgrEl.value : '';
+
     window.tempOrderInfo = {
         manager,
         phone,
@@ -2107,7 +2145,8 @@ async function processOrderSubmission() {
         deliveryDate,
         installationTime: selectedInstallationTime || null,
         referrerId: window.verifiedReferrerId || null,
-        referrerEmail: window.verifiedReferrerEmail || null
+        referrerEmail: window.verifiedReferrerEmail || null,
+        staffManagerId: selectedStaffManagerId || null
     };
 
     let rawTotal = 0;
@@ -2586,7 +2625,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         total_amount: finalPayAmount,
         discount_amount: useMileage,
         items: itemsToSave,
-        site_code: _siteCode
+        site_code: _siteCode,
+        staff_manager_id: window.tempOrderInfo?.staffManagerId || null
     }]).select();
     
     if (orderError) throw orderError; 

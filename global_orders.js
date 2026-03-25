@@ -69,7 +69,7 @@ function _playNewOrderSound(customerName) {
     setTimeout(() => {
         try {
             const msg = new SpeechSynthesisUtterance(
-                `${customerName} 고객님의 새 주문이 도착했습니다. 매니저님들께서는 소통해주시기 바랍니다.`
+                `${customerName} 고객님의 새 주문이 도착했습니다.`
             );
             msg.lang = 'ko-KR';
             msg.rate = 1.0;
@@ -1373,31 +1373,6 @@ window.loadOrders = async () => {
                 statusHtml = `<span class="badge">${st}</span>`;
             }
 
-            // [고객소통] 소통 요청/완료 상태 + 고액주문 뱃지
-            let contactHtml = '';
-            const isHighValue = total >= HIGH_VALUE_THRESHOLD;
-            const isContactReq = hasContactRequest(order.admin_note);
-            const isContactDone = hasContactDone(order.admin_note);
-
-            if (isHighValue && !isContactReq && !isContactDone) {
-                contactHtml += `<div style="margin-bottom:3px;"><span style="display:inline-block;font-size:9px;font-weight:bold;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:1px 5px;border-radius:8px;animation:pulse-badge 1.5s infinite;">💎 고액</span></div>`;
-            }
-            const isHqProcessing = isContactDone && (order.admin_note || '').includes('[본사처리');
-            if (isContactReq) {
-                // admin_note에서 매니저 이름 추출
-                const mgrMatch = (order.admin_note || '').match(/\[소통요청[^\]]*\]\s*(아무나|은미|성희|지숙)매니저/);
-                const reqMgr = mgrMatch ? mgrMatch[1] : '';
-                const reqLabel = reqMgr === '아무나' ? '아무나 소통요청' : reqMgr ? reqMgr + '님 소통요청' : '📞 소통중';
-                contactHtml += `<button class="btn" style="width:100%;font-size:9px;padding:2px 4px;background:#ef4444;color:#fff;border:none;border-radius:4px;font-weight:bold;cursor:pointer;margin-bottom:2px;line-height:1.3;" onclick="event.stopPropagation();completeContact('${order.id}')">${reqLabel}</button>`;
-            } else if (isContactDone && isHqProcessing) {
-                contactHtml += `<div style="font-size:9px;color:#0369a1;font-weight:bold;background:#e0f2fe;padding:2px 4px;border-radius:4px;margin-bottom:2px;line-height:1.3;">🏢 본사처리중</div>`;
-            } else if (isContactDone) {
-                contactHtml += `<div style="font-size:9px;color:#15803d;font-weight:bold;">✅ 소통완료</div>`;
-            }
-            if (!isContactReq) {
-                contactHtml += `<button class="btn btn-outline" style="width:100%;font-size:9px;padding:1px 3px;border-radius:4px;color:#7c3aed;border-color:#c4b5fd;cursor:pointer;" onclick="event.stopPropagation();requestContact('${order.id}')">📞 소통요청</button>`;
-            }
-
             // [파일 버튼] — 파일 없으면 경고 표시 (_error_log 제외)
             const fCount = order.files ? order.files.filter(f => f.type !== '_error_log').length : 0;
             const fileIcon = fCount === 0 ? '⚠️' : '📂';
@@ -1436,7 +1411,6 @@ window.loadOrders = async () => {
 
                     <td style="text-align:center; line-height:1.3; padding:2px;">${payHtml}</td>
                     <td style="text-align:center; padding:2px;">${statusHtml}</td>
-                    <td style="text-align:center; padding:2px; min-width:60px;">${contactHtml}</td>
                 </tr>`;
         });
     } catch (e) {
@@ -1464,8 +1438,12 @@ function createStaffSelectHTML(orderId, role, selectedId) {
         opts += `<option value="${s.id}" ${isSelected ? 'selected' : ''}>${s.name}</option>`;
     });
 
-    // this를 넘겨서 요소 자체를 제어함
-    return `<select class="staff-select" style="${style}" onchange="updateOrderStaff('${orderId}', '${role}', this)">
+    // ★ 매니저가 이미 배정된 경우 변경 불가 (잠금)
+    const isLocked = role === 'manager' && selectedId;
+    const disabledAttr = isLocked ? 'disabled' : '';
+    const lockStyle = isLocked ? 'cursor:not-allowed;opacity:0.85;' : '';
+
+    return `<select class="staff-select" style="${style}${lockStyle}" ${disabledAttr} onchange="updateOrderStaff('${orderId}', '${role}', this)">
                 ${opts}
             </select>`;
 }
@@ -1968,21 +1946,6 @@ async function updateCancelReqBadge() {
         if (rwBadge) {
             rwBadge.textContent = refundWaitCount || 0;
             rwBadge.style.display = (refundWaitCount > 0) ? 'inline' : 'none';
-        }
-        // 고객소통 요청 카운트
-        const { count: contactCount } = await sb.from('orders')
-            .select('id', { count: 'exact', head: true })
-            .like('admin_note', '%##CONTACT_REQ##%')
-            .not('status', 'in', '("취소됨","임시작성","관리자차단")');
-        const cBadge = document.getElementById('contactReqCount');
-        if (cBadge) {
-            cBadge.textContent = contactCount || 0;
-            cBadge.style.display = (contactCount > 0) ? 'inline' : 'none';
-        }
-        const cbBadge = document.getElementById('callbackBadge');
-        if (cbBadge) {
-            cbBadge.textContent = contactCount || 0;
-            cbBadge.style.display = (contactCount > 0) ? 'inline' : 'none';
         }
     } catch (e) { /* ignore */ }
 }
@@ -3292,20 +3255,6 @@ window.updateOrderStaff = async (id, role, selectEl) => {
     const val = selectEl.value;
     const field = role === 'manager' ? 'staff_manager_id' : 'staff_driver_id';
 
-    // 매니저 지정 시 소통요청 여부 확인
-    if (role === 'manager' && val) {
-        const { data: order } = await sb.from('orders').select('admin_note').eq('id', id).single();
-        const note = order?.admin_note || '';
-        if (!note.includes(CONTACT_REQ_MARKER) && !note.includes(CONTACT_DONE_MARKER)) {
-            showToast('⚠️ 아직 소통요청이 없습니다. 먼저 소통요청을 해주세요.', 'error');
-            selectEl.value = '';
-            selectEl.style.backgroundColor = '#ffffff';
-            selectEl.style.color = '#334155';
-            selectEl.style.border = '1px solid #e2e8f0';
-            return;
-        }
-    }
-
     // 1. DB 업데이트 (비동기 처리하되 UI는 먼저 반응)
     sb.from('orders').update({ [field]: val || null }).eq('id', id).then(({ error }) => {
         if(error) showToast("담당자 변경 실패: " + error.message, "error");
@@ -3317,15 +3266,21 @@ window.updateOrderStaff = async (id, role, selectEl) => {
     // 3. UI 전체 색상 즉시 적용
     if (staff && staff.color) {
         selectEl.style.backgroundColor = staff.color;
-        selectEl.style.color = '#ffffff'; // 배경이 진할 것으로 가정하고 글자는 흰색
+        selectEl.style.color = '#ffffff';
         selectEl.style.borderColor = staff.color;
         selectEl.style.fontWeight = 'bold';
     } else {
-        // 미지정 선택 시 기본 흰색 배경으로 복구
         selectEl.style.backgroundColor = '#ffffff';
         selectEl.style.color = '#334155';
         selectEl.style.borderColor = '#e2e8f0';
         selectEl.style.fontWeight = 'normal';
+    }
+
+    // ★ 매니저 배정 후 즉시 잠금 (변경 불가)
+    if (role === 'manager' && val) {
+        selectEl.disabled = true;
+        selectEl.style.cursor = 'not-allowed';
+        selectEl.style.opacity = '0.85';
     }
 };
 
