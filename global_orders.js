@@ -541,47 +541,51 @@ async function _saveOrderToFolder(order) {
         materialGroups[im.label].push(im);
     });
 
-    const matLabels = Object.keys(materialGroups);
-    const targetLabels = matLabels.length > 0 ? matLabels : ['미분류'];
+    // 미분류가 아닌 실제 소재 그룹 우선, 없으면 미분류
+    const realLabels = Object.keys(materialGroups).filter(l => l !== '미분류');
+    const primaryLabel = realLabels.length > 0 ? realLabels[0] : '미분류';
+    const targetLabels = realLabels.length > 0 ? realLabels : ['미분류'];
 
-    for (const matLabel of targetLabels) {
-        const matDir = await _getSubDir(_rootDirHandle, matLabel);
+    // 고객 파일/작업지시서/견적서는 대표 소재 폴더에 1회만 저장
+    const primaryDir = await _getSubDir(_rootDirHandle, primaryLabel);
 
-        // 작업지시서 → 소재폴더/작업지시서/
-        if (sheetFiles.length > 0) {
-            const sheetDir = await _getSubDir(matDir, '작업지시서');
-            for (const f of sheetFiles) {
-                try {
-                    const blob = await _fetchFileBlob(f.url);
-                    if (blob) await _writeFile(sheetDir, `${orderFolderName}_${f.name || 'sheet'}`, blob);
-                } catch (e) { console.error('[자동다운] 작업지시서 저장실패:', f.name, e); }
-            }
-        }
-
-        // 견적서 → 소재폴더/견적서/
-        if (quoteFiles.length > 0) {
-            const quoteDir = await _getSubDir(matDir, '견적서');
-            for (const f of quoteFiles) {
-                try {
-                    const blob = await _fetchFileBlob(f.url);
-                    if (blob) await _writeFile(quoteDir, `${orderFolderName}_${f.name || 'quote'}`, blob);
-                } catch (e) { console.error('[자동다운] 견적서 저장실패:', f.name, e); }
-            }
-        }
-
-        // 고객 파일 → 소재폴더 루트
-        for (const f of customerFiles) {
+    // 작업지시서 → 대표 소재폴더/작업지시서/
+    if (sheetFiles.length > 0) {
+        const sheetDir = await _getSubDir(primaryDir, '작업지시서');
+        for (const f of sheetFiles) {
             try {
                 const blob = await _fetchFileBlob(f.url);
-                if (blob) {
-                    await _writeFile(matDir, `${orderFolderName}_${f.name || 'file'}`, blob);
-                } else {
-                    console.error(`[자동다운] 다운로드 실패 (blob=null): ${f.name}`, f.url);
-                }
-            } catch (e) { console.error('[자동다운] 파일 저장실패:', f.name, e); }
+                if (blob) await _writeFile(sheetDir, `${orderFolderName}_${f.name || 'sheet'}`, blob);
+            } catch (e) { console.error('[자동다운] 작업지시서 저장실패:', f.name, e); }
         }
+    }
 
-        // 작업메모 PNG
+    // 견적서 → 대표 소재폴더/견적서/
+    if (quoteFiles.length > 0) {
+        const quoteDir = await _getSubDir(primaryDir, '견적서');
+        for (const f of quoteFiles) {
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) await _writeFile(quoteDir, `${orderFolderName}_${f.name || 'quote'}`, blob);
+            } catch (e) { console.error('[자동다운] 견적서 저장실패:', f.name, e); }
+        }
+    }
+
+    // 고객 파일 → 대표 소재폴더 루트 (1회만)
+    for (const f of customerFiles) {
+        try {
+            const blob = await _fetchFileBlob(f.url);
+            if (blob) {
+                await _writeFile(primaryDir, `${orderFolderName}_${f.name || 'file'}`, blob);
+            } else {
+                console.error(`[자동다운] 다운로드 실패 (blob=null): ${f.name}`, f.url);
+            }
+        } catch (e) { console.error('[자동다운] 파일 저장실패:', f.name, e); }
+    }
+
+    // 작업메모 PNG → 각 소재폴더별 (소재별 아이템 구분)
+    for (const matLabel of targetLabels) {
+        const matDir = matLabel === primaryLabel ? primaryDir : await _getSubDir(_rootDirHandle, matLabel);
         const matItems = materialGroups[matLabel] || [];
         const memoBlob = await _generateWorkMemo(order, matItems, matLabel);
         if (memoBlob) await _writeFile(matDir, `${orderFolderName}_작업메모.png`, memoBlob);
