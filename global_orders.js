@@ -39,63 +39,76 @@ let currentPage = 1;
 const itemsPerPage = 10;
 
 // ================================================================
-// [새 주문 알림] Supabase Realtime 구독 + 알림음
+// [새 주문 알림] 30초 폴링 + 알림음
 // ================================================================
 let _lastKnownOrderId = 0;
-let _orderAlertEnabled = true;
+let _orderAlertTimer = null;
+const ORDER_POLL_INTERVAL = 30000; // 30초
 
 function _playNewOrderSound() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         // 딩동~ 2음 알림
-        [0, 0.25].forEach((delay, i) => {
+        [0, 0.3].forEach((delay, i) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.type = 'sine';
-            osc.frequency.value = i === 0 ? 830 : 1050; // 딩 → 동
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.4);
+            osc.frequency.value = i === 0 ? 830 : 1050;
+            gain.gain.setValueAtTime(0.35, audioCtx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.5);
             osc.start(audioCtx.currentTime + delay);
-            osc.stop(audioCtx.currentTime + delay + 0.4);
+            osc.stop(audioCtx.currentTime + delay + 0.5);
         });
     } catch (e) {
         console.warn('[알림음] 재생 실패:', e);
     }
 }
 
-function _initOrderRealtimeAlert() {
-    // 초기 최신 주문 ID 기록
-    sb.from('orders').select('id').order('id', { ascending: false }).limit(1).then(({ data }) => {
-        if (data && data[0]) _lastKnownOrderId = data[0].id;
-    });
+async function _pollNewOrders() {
+    try {
+        const { data } = await sb.from('orders')
+            .select('id, manager_name, total_amount, status')
+            .neq('status', '임시작성')
+            .order('id', { ascending: false })
+            .limit(1);
+        if (!data || !data[0]) return;
 
-    // Realtime 구독: orders 테이블 INSERT 감지
-    sb.channel('new-order-alert')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-            const newOrder = payload.new;
-            if (!newOrder || newOrder.status === '임시작성') return;
+        const latestId = data[0].id;
+        if (_lastKnownOrderId > 0 && latestId > _lastKnownOrderId) {
+            const newCount = latestId - _lastKnownOrderId;
+            const order = data[0];
+            const name = order.manager_name || '고객';
+            const amount = (order.total_amount || 0).toLocaleString();
 
-            console.log(`[새주문] #${newOrder.id} ${newOrder.manager_name || ''} ${newOrder.total_amount?.toLocaleString() || 0}원`);
+            console.log(`[새주문] ${newCount}건 감지! 최신: #${order.id} ${name} ${amount}원`);
             _playNewOrderSound();
+            showToast(`🔔 새 주문 ${newCount}건! #${order.id} ${name} - ${amount}원`, 'success', 6000);
 
-            // 토스트 알림
-            const name = newOrder.manager_name || '고객';
-            const amount = (newOrder.total_amount || 0).toLocaleString();
-            showToast(`🔔 새 주문! #${newOrder.id} ${name} - ${amount}원`, 'success', 5000);
-
-            // 목록 자동 새로고침 (전체 주문 탭일 때)
+            // 목록 자동 새로고침
             if (window.loadOrders) window.loadOrders();
-        })
-        .subscribe((status) => {
-            console.log('[새주문 알림] Realtime 상태:', status);
-        });
+        }
+        _lastKnownOrderId = latestId;
+    } catch (e) {
+        console.warn('[새주문 폴링] 오류:', e);
+    }
 }
 
-// 페이지 로드 시 알림 초기화
+function _initOrderPolling() {
+    // 현재 최신 주문 ID 기록
+    sb.from('orders').select('id').neq('status', '임시작성').order('id', { ascending: false }).limit(1).then(({ data }) => {
+        if (data && data[0]) {
+            _lastKnownOrderId = data[0].id;
+            console.log('[새주문 알림] 폴링 시작, 현재 최신 주문:', _lastKnownOrderId);
+        }
+    });
+    _orderAlertTimer = setInterval(_pollNewOrders, ORDER_POLL_INTERVAL);
+}
+
+// 페이지 로드 시 폴링 시작
 if (document.getElementById('orderListBody')) {
-    _initOrderRealtimeAlert();
+    _initOrderPolling();
 }
 
 // ================================================================
