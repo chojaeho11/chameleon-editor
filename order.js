@@ -3358,11 +3358,10 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
 // 가격 역환산: 관리자 설정 현지 가격이 있으면 KRW 등가로 변환 (formatCurrency가 정확한 현지 가격 표시)
 let finalPrice = productInfo.price;
 const _siteRate = SITE_CONFIG.CURRENCY_RATE;
+// ★ JP만 price_jp 역환산, US/기타는 KRW 원가 유지 (formatCurrency에서 환산)
 if (!productInfo.is_custom) {
     if (SITE_CONFIG.COUNTRY === 'JP' && productInfo.price_jp && _siteRate.JP) {
         finalPrice = Math.round(productInfo.price_jp / _siteRate.JP);
-    } else if (SITE_CONFIG.COUNTRY === 'US' && productInfo.price_us && _siteRate.US) {
-        finalPrice = Math.round(productInfo.price_us / _siteRate.US);
     }
 }
 
