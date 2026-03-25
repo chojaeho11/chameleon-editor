@@ -9961,16 +9961,15 @@ if (w >= 20 && h >= 20) {
         }
 
         // 3. 단가 결정 (KRW 기준 - formatCurrency가 표시 시 환산)
+        // ★ 상세페이지 가격 계산과 동일하게: KRW 기본, JP만 price_jp 역환산
+        // EN/CN/AR/ES 등은 KRW 원가 유지 (fmtLocal/formatCurrency에서 환산)
         let unitPrice = product.price || 0;
         const _cRate = window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE;
 
-        // ★ 작품 제품타입 선택 시 해당 타입 단가 사용
         if (product._artworkTypePrice) {
             unitPrice = product._artworkTypePrice;
         } else if (lang === 'ja' && product.price_jp && _cRate && _cRate.JP) {
             unitPrice = product.price_jp / _cRate.JP;
-        } else if (lang === 'en' && product.price_us && _cRate && _cRate.US) {
-            unitPrice = product.price_us / _cRate.US;
         }
 
         // 4. 최종 가격 및 사이즈 계산
