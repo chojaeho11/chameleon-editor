@@ -887,21 +887,78 @@ async function openDeliveryInfoModal() {
     document.getElementById("calendarModal").style.display = "none";
     document.getElementById("deliveryInfoModal").style.display = "flex";
 
-    // ★ 담당 매니저 선택 드롭다운 로드
+    // ★ 담당 매니저 선택 (컬러 버튼)
     const mgrWrap = document.getElementById('staffManagerSelectWrap');
-    const mgrSelect = document.getElementById('inputStaffManager');
-    if (mgrWrap && mgrSelect && sb) {
+    const mgrHidden = document.getElementById('inputStaffManager');
+    const mgrBtns = document.getElementById('staffManagerBtns');
+    const mgrLabel = document.getElementById('staffManagerLabel');
+    if (mgrWrap && mgrHidden && mgrBtns && sb) {
         try {
-            const { data: managers } = await sb.from('admin_staff').select('id, name').eq('role', 'manager');
+            const { data: managers } = await sb.from('admin_staff').select('id, name, color').eq('role', 'manager');
             if (managers && managers.length > 0) {
                 mgrWrap.style.display = 'block';
-                // 기존 옵션 초기화 후 다시 채우기 (중복 방지)
-                mgrSelect.innerHTML = '<option value="">선택 안함</option>';
-                managers.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m.id;
-                    opt.textContent = m.name;
-                    mgrSelect.appendChild(opt);
+                mgrHidden.value = '';
+                // 다국어 라벨
+                const lang = CURRENT_LANG || 'kr';
+                const labels = {
+                    kr: '상담하신 담당 매니저님이 계시다면 선택해주세요.',
+                    ja: 'ご担当のマネージャーがいらっしゃいましたらお選びください。',
+                    en: 'If you have a dedicated manager, please select below.',
+                    zh: '如果您有专属经理，请选择。',
+                    es: 'Si tiene un gerente asignado, selecciónelo.',
+                    de: 'Wenn Sie einen zuständigen Manager haben, wählen Sie bitte aus.',
+                    fr: 'Si vous avez un responsable dédié, veuillez le sélectionner.',
+                    ar: 'إذا كان لديك مدير مختص، يرجى الاختيار.'
+                };
+                if (mgrLabel) mgrLabel.textContent = labels[lang] || labels['en'];
+
+                // 본사 + 매니저 버튼 (고정 4개: 본사, 은미, 성희, 지숙)
+                const btnConfig = [
+                    { label: { kr:'🏢 본사', ja:'🏢 本社', en:'🏢 HQ', zh:'🏢 总部', es:'🏢 Sede', de:'🏢 Zentrale', fr:'🏢 Siège', ar:'🏢 المقر' }, color:'#0ea5e9', id:'__hq__' },
+                    { name:'은미', label:{ kr:'👩 은미', ja:'👩 ウンミ', en:'👩 Eunmi', zh:'👩 恩美', es:'👩 Eunmi', de:'👩 Eunmi', fr:'👩 Eunmi', ar:'👩 أونمي' }, color:'#8b5cf6' },
+                    { name:'성희', label:{ kr:'👩 성희', ja:'👩 ソンヒ', en:'👩 Sunghee', zh:'👩 成熙', es:'👩 Sunghee', de:'👩 Sunghee', fr:'👩 Sunghee', ar:'👩 سونغهي' }, color:'#ec4899' },
+                    { name:'지숙', label:{ kr:'👩 지숙', ja:'👩 ジスク', en:'👩 Jisook', zh:'👩 智淑', es:'👩 Jisook', de:'👩 Jisook', fr:'👩 Jisook', ar:'👩 جيسوك' }, color:'#f59e0b' }
+                ];
+
+                mgrBtns.innerHTML = '';
+                btnConfig.forEach(cfg => {
+                    const matchMgr = cfg.name ? managers.find(m => m.name === cfg.name) : null;
+                    const staffId = matchMgr ? String(matchMgr.id) : (cfg.id || '');
+                    const bgColor = (matchMgr && matchMgr.color) || cfg.color;
+                    const text = cfg.label[lang] || cfg.label['en'];
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = text;
+                    btn.dataset.staffId = staffId;
+                    btn.style.cssText = `padding:12px 8px;border:2.5px solid ${bgColor};border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:${bgColor};transition:all 0.2s;`;
+                    btn.onmouseenter = () => { if (mgrHidden.value !== staffId) { btn.style.background = bgColor + '18'; } };
+                    btn.onmouseleave = () => { if (mgrHidden.value !== staffId) { btn.style.background = '#fff'; } };
+                    btn.onclick = () => {
+                        // 토글: 같은 버튼 재클릭 시 해제
+                        if (mgrHidden.value === staffId) {
+                            mgrHidden.value = '';
+                            mgrBtns.querySelectorAll('button').forEach(b => {
+                                const c = b.dataset.color;
+                                b.style.background = '#fff';
+                                b.style.color = c;
+                            });
+                        } else {
+                            mgrHidden.value = staffId;
+                            mgrBtns.querySelectorAll('button').forEach(b => {
+                                const c = b.dataset.color;
+                                if (b.dataset.staffId === staffId) {
+                                    b.style.background = c;
+                                    b.style.color = '#fff';
+                                } else {
+                                    b.style.background = '#fff';
+                                    b.style.color = c;
+                                }
+                            });
+                        }
+                    };
+                    btn.dataset.color = bgColor;
+                    mgrBtns.appendChild(btn);
                 });
             }
         } catch(e) { console.error('매니저 목록 로드 실패:', e); }
@@ -2135,7 +2192,10 @@ async function processOrderSubmission() {
 
     // ★ 고객이 선택한 담당 매니저
     const staffMgrEl = document.getElementById('inputStaffManager');
-    const selectedStaffManagerId = staffMgrEl ? staffMgrEl.value : '';
+    const rawStaffMgrId = staffMgrEl ? staffMgrEl.value : '';
+    // '__hq__'는 본사 직접 처리 → staff_manager_id는 null, admin_note에 기록
+    const isHqSelected = rawStaffMgrId === '__hq__';
+    const selectedStaffManagerId = (rawStaffMgrId && !isHqSelected) ? rawStaffMgrId : null;
 
     window.tempOrderInfo = {
         manager,
@@ -2146,7 +2206,8 @@ async function processOrderSubmission() {
         installationTime: selectedInstallationTime || null,
         referrerId: window.verifiedReferrerId || null,
         referrerEmail: window.verifiedReferrerEmail || null,
-        staffManagerId: selectedStaffManagerId || null
+        staffManagerId: selectedStaffManagerId,
+        isHqOrder: isHqSelected
     };
 
     let rawTotal = 0;
@@ -2626,7 +2687,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         discount_amount: useMileage,
         items: itemsToSave,
         site_code: _siteCode,
-        staff_manager_id: window.tempOrderInfo?.staffManagerId || null
+        staff_manager_id: window.tempOrderInfo?.staffManagerId || null,
+        admin_note: window.tempOrderInfo?.isHqOrder ? '[고객지정] 본사 직접 처리 요청' : null
     }]).select();
     
     if (orderError) throw orderError; 

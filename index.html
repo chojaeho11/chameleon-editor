@@ -4410,12 +4410,11 @@ async function handleSubReturn() {
             .metro-opt.selected-metro { background:#dbeafe; border-color:#3b82f6; color:#1d4ed8; }
         </style>
 
-        <!-- ★ 담당 매니저 선택 -->
-        <div id="staffManagerSelectWrap" style="margin-top:12px; display:none;">
-            <p style="font-size:13px; color:#475569; margin-bottom:6px;">상담하신 담당 매니저님이 계시다면 선택해주세요.</p>
-            <select id="inputStaffManager" class="ai-input-pretty" style="padding:10px 12px; font-size:14px;">
-                <option value="">선택 안함</option>
-            </select>
+        <!-- ★ 담당 매니저 선택 (버튼형) -->
+        <div id="staffManagerSelectWrap" style="margin-top:14px; display:none;">
+            <p id="staffManagerLabel" style="font-size:13px; color:#475569; margin-bottom:8px; font-weight:600;">상담하신 담당 매니저님이 계시다면 선택해주세요.</p>
+            <input type="hidden" id="inputStaffManager" value="">
+            <div id="staffManagerBtns" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"></div>
         </div>
 
         <p data-i18n="label_request_memo" style="margin-top:10px;">요청사항</p>
