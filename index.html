@@ -9099,9 +9099,12 @@ window.showChoiceModal = async function(key) {
         setTimeout(() => window.NpcWizard.init(product), 100);
     }
 
-    // ★ 추천상품 로드 (대분류 기준 4개, 모바일에서 옵션과 상세설명 사이)
+    // ★ 추천상품 로드 (대분류 기준, 중복 방지)
     (async function loadRelatedProducts() {
         try {
+            // 기존 추천상품 섹션 제거 (중복 방지)
+            modalBox.querySelectorAll('.related-products-section').forEach(el => el.remove());
+
             const dbClient = window.sb || sb;
             if (!dbClient) return;
             // 대분류에 속하는 모든 소분류 코드 수집 (직접 계산)
