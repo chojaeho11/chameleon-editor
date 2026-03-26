@@ -8458,8 +8458,8 @@ window.showChoiceModal = async function(key) {
 
     // ★ AI 생성 HTML의 깨진 태그가 모달 레이아웃을 파괴하지 않도록 sanitize
     if (dDesc) {
-        // <style>, <script> 태그 제거 (공통페이지 숨김 방지)
-        dDesc = dDesc.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<script[\s\S]*?<\/script>/gi, '');
+        // <script> 태그만 제거 (보안), <style>은 유지 (디자인 보존)
+        dDesc = dDesc.replace(/<script[\s\S]*?<\/script>/gi, '');
         // 중복 ID 제거 (commonInfoContainer 등 모달 내부 ID와 충돌 방지)
         dDesc = dDesc.replace(/\sid="[^"]*"/gi, '');
         const _sanitizeDiv = document.createElement('div');
@@ -9224,11 +9224,15 @@ window.showChoiceModal = async function(key) {
         container.querySelectorAll('img').forEach(img => { img.style.maxWidth = '100%'; img.style.height = 'auto'; });
     }
 
-    // 제품 상세설명 + 공통정보 다크테마 정리
+    // 제품 상세설명: 이미지 반응형만 적용 (디자인 CSS 보존)
     const descRender = modalBox.querySelector('.product-detail-render');
-    if (descRender) _sanitizeDarkTheme(descRender);
+    if (descRender) {
+        descRender.querySelectorAll('img').forEach(img => { img.style.maxWidth = '100%'; img.style.height = 'auto'; });
+    }
     const commonInline = modalBox.querySelector('#commonInfoInline');
-    if (commonInline) _sanitizeDarkTheme(commonInline);
+    if (commonInline) {
+        commonInline.querySelectorAll('img').forEach(img => { img.style.maxWidth = '100%'; img.style.height = 'auto'; });
+    }
 
     // 이미지 lazy load
     const detailImgs = modalBox.querySelectorAll('.product-detail-render img, .common-info-area img');
