@@ -130,14 +130,13 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
 <link rel="apple-touch-icon" href="/mascot-character.png">
 <link rel="canonical" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
-    <link rel="alternate" hreflang="en" href="https://www.cafe3355.com/">
-    <link rel="alternate" hreflang="en-gb" href="https://chameleon.design/">
+    <link rel="alternate" hreflang="en" href="https://chameleon.design/">
     <link rel="alternate" hreflang="ja" href="https://www.cafe0101.com/">
-    <link rel="alternate" hreflang="zh" href="https://www.cafe3355.com/?lang=zh">
-    <link rel="alternate" hreflang="ar" href="https://www.cafe3355.com/?lang=ar">
-    <link rel="alternate" hreflang="es" href="https://www.cafe3355.com/?lang=es">
-    <link rel="alternate" hreflang="de" href="https://www.cafe3355.com/?lang=de">
-    <link rel="alternate" hreflang="fr" href="https://www.cafe3355.com/?lang=fr">
+    <link rel="alternate" hreflang="zh" href="https://chameleon.design/?lang=zh">
+    <link rel="alternate" hreflang="ar" href="https://chameleon.design/?lang=ar">
+    <link rel="alternate" hreflang="es" href="https://chameleon.design/?lang=es">
+    <link rel="alternate" hreflang="de" href="https://chameleon.design/?lang=de">
+    <link rel="alternate" hreflang="fr" href="https://chameleon.design/?lang=fr">
     <link rel="alternate" hreflang="x-default" href="https://chameleon.design/">
 
 <script src="product-seo.js"></script>
@@ -151,7 +150,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
     var cc = _lp === 'ZH' || _lp === 'CN' ? 'CN' : _lp === 'AR' ? 'AR' : _lp === 'ES' ? 'ES'
            : _lp === 'DE' ? 'DE' : _lp === 'FR' ? 'FR'
            : h.includes('cafe0101') ? 'JP' : (h.includes('cafe3355') || isChameleonDesign) ? 'US' : 'KR';
-    var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://www.cafe3355.com', EN:'https://chameleon.design', CN:'https://www.cafe3355.com', AR:'https://www.cafe3355.com', ES:'https://www.cafe3355.com', DE:'https://www.cafe3355.com', FR:'https://www.cafe3355.com' };
+    var domains = { KR:'https://www.cafe2626.com', JP:'https://www.cafe0101.com', US:'https://chameleon.design', EN:'https://chameleon.design', CN:'https://chameleon.design', AR:'https://chameleon.design', ES:'https://chameleon.design', DE:'https://chameleon.design', FR:'https://chameleon.design' };
     // chameleon.design uses its own canonical domain
     var selfDomain = isChameleonDesign ? 'https://chameleon.design' : (domains[cc] || domains.KR);
     var seoData = {
@@ -642,12 +641,12 @@ if ('caches' in window) {
         <div id="siteNavBar" style="display:flex; align-items:center; gap:3px; margin-left:4px;">
             <a href="https://cafe2626.com" class="flag-link" title="한국">🇰🇷</a>
             <a href="https://cafe0101.com" class="flag-link" title="日本">🇯🇵</a>
-            <a href="https://cafe3355.com" class="flag-link" title="USA">🇺🇸</a>
-            <a href="https://cafe3355.com/?lang=zh" class="flag-link" title="中文">🇨🇳</a>
-            <a href="https://cafe3355.com/?lang=ar" class="flag-link" title="عربي">🇸🇦</a>
-            <a href="https://cafe3355.com/?lang=es" class="flag-link" title="España">🇪🇸</a>
-            <a href="https://cafe3355.com/?lang=de" class="flag-link" title="Deutschland">🇩🇪</a>
-            <a href="https://cafe3355.com/?lang=fr" class="flag-link" title="France">🇫🇷</a>
+            <a href="https://chameleon.design" class="flag-link" title="USA">🇺🇸</a>
+            <a href="https://chameleon.design/?lang=zh" class="flag-link" title="中文">🇨🇳</a>
+            <a href="https://chameleon.design/?lang=ar" class="flag-link" title="عربي">🇸🇦</a>
+            <a href="https://chameleon.design/?lang=es" class="flag-link" title="España">🇪🇸</a>
+            <a href="https://chameleon.design/?lang=de" class="flag-link" title="Deutschland">🇩🇪</a>
+            <a href="https://chameleon.design/?lang=fr" class="flag-link" title="France">🇫🇷</a>
         </div>
     </div>
 
@@ -8418,12 +8417,8 @@ window.showChoiceModal = async function(key) {
     const modal = document.getElementById('choiceModal');
     const modalBox = modal.querySelector('.modal-box');
     
-    // 2. 언어 설정 — 도메인 고정 사이트는 URL 파라미터 무시 (로그인 상태에서 ?lang=kr 잔류 방지)
-    const _showHost = window.location.hostname;
-    let lang;
-    if (_showHost.includes('cafe0101')) lang = 'ja';         // JP 도메인 → 항상 일본어
-    else if (_showHost.includes('cafe3355')) lang = new URLSearchParams(window.location.search).get('lang') || 'en';
-    else lang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+    // 2. 언어 설정 — CURRENT_LANG 기준 (US버튼 등으로 언어 전환 시에도 정확히 반영)
+    const lang = (typeof window.CURRENT_LANG !== 'undefined' && window.CURRENT_LANG) ? window.CURRENT_LANG : 'kr';
 
     // 3. 상품명 & 설명 (사이즈 수치 제거 헬퍼)
     const _stripSz = (n) => (n||'').replace(/\s*\([\d.,]+\s*[×xX]\s*[\d.,]+\s*(ft|in|mm|cm|m)\)/gi,'').trim();
@@ -16584,7 +16579,7 @@ window.dsmRenderProducts = async function(keyword) {
 <li>Custom Curtains - Printed curtain fabrics</li>
 </ul>
 
-<p>Visit <a href="https://www.cafe3355.com/">Chameleon Printing</a> to start designing your custom prints today. Free shipping on all products.</p>
+<p>Visit <a href="https://chameleon.design/">Chameleon Printing</a> to start designing your custom prints today. Free shipping on all products.</p>
 
 <h2>カメレオンプリンティング - 商品一覧</h2>
 <h3>ハニカムボード印刷 - 展示ブース・ポップアップストア</h3>
