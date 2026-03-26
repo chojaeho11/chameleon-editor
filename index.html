@@ -8972,18 +8972,19 @@ window.showChoiceModal = async function(key) {
         ];
         const _L = lang || 'kr';
         const _reqMsg = lang==='ja'?'規格を選択してください':lang==='en'?'Please select a format':'규격을 선택해주세요';
+        var _isMob = window.innerWidth <= 768;
         var _fmtHtml = '<div id="promoFormatSelector" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">';
-        _fmtHtml += '<div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">\uD83D\uDDA8\uFE0F ' + _pFmtTitle + '</div>';
-        _fmtHtml += '<div style="display:flex; flex-wrap:wrap; gap:6px;">';
+        _fmtHtml += '<div style="font-size:13px; font-weight:bold; color:#6366f1; margin-bottom:10px;">\uD83D\uDDA8\uFE0F ' + _pFmtTitle + '</div>';
+        _fmtHtml += '<div style="display:grid; grid-template-columns:repeat(' + (_isMob ? '2' : '3') + ',1fr); gap:8px;">';
         _pFmts.forEach(function(f) {
             var nm = f.name[_L] || f.name['kr'];
             var ds = f.desc[_L] || f.desc['kr'];
             var pr = (typeof formatCurrency === 'function') ? formatCurrency(f.krw) : f.krw.toLocaleString() + '원';
-            _fmtHtml += '<button type="button" class="promo-fmt-btn" data-fmt="' + f.id + '" data-krw="' + f.krw + '" onclick="window._selectPromoFormat(\'' + f.id + '\',' + f.krw + ')" style="flex:1; min-width:calc(33.3% - 6px); padding:10px 6px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; text-align:center; transition:all 0.15s;">';
-            _fmtHtml += '<div style="font-size:18px;">' + f.icon + '</div>';
-            _fmtHtml += '<div style="font-size:11px; font-weight:700; color:#334155; margin-top:2px;">' + nm + '</div>';
-            _fmtHtml += '<div style="font-size:9px; color:#94a3b8;">' + ds + '</div>';
-            _fmtHtml += '<div style="font-size:11px; font-weight:800; color:#6366f1; margin-top:3px;">' + pr + '</div>';
+            _fmtHtml += '<button type="button" class="promo-fmt-btn" data-fmt="' + f.id + '" data-krw="' + f.krw + '" onclick="window._selectPromoFormat(\'' + f.id + '\',' + f.krw + ')" style="padding:12px 6px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; text-align:center; transition:all 0.15s;">';
+            _fmtHtml += '<div style="font-size:20px;">' + f.icon + '</div>';
+            _fmtHtml += '<div style="font-size:13px; font-weight:700; color:#334155; margin-top:3px;">' + nm + '</div>';
+            _fmtHtml += '<div style="font-size:10px; color:#94a3b8; margin-top:1px;">' + ds + '</div>';
+            _fmtHtml += '<div style="font-size:14px; font-weight:800; color:#6366f1; margin-top:4px;">' + pr + '</div>';
             _fmtHtml += '</button>';
         });
         _fmtHtml += '</div>';
