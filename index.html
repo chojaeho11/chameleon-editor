@@ -3986,11 +3986,16 @@ async function handleSubReturn() {
         // 필수 경고 숨김
         var req = document.getElementById('promoFmtRequired');
         if (req) req.style.display = 'none';
-        // 가격 업데이트
+        // 가격 업데이트 (모든 통화 필드 동기화)
         var prod = window._currentProductRef || window.selectedProductForChoice;
         if (prod) {
             prod.price = krw;
             prod._calculated_price = true;
+            // JP/US 필드도 환산하여 설정 (calcCustomPrice가 덮어쓰지 않도록)
+            var _scfg = window.SITE_CONFIG || {};
+            var _rates = (_scfg.CURRENCY_RATE) || {};
+            prod.price_jp = Math.round(krw * (_rates.JP || 0.1));
+            prod.price_us = 0; // US는 KRW에서 자동 환산
         }
         // 사이즈 표시 업데이트
         var cw = document.getElementById('inputCustW');
@@ -4012,17 +4017,8 @@ async function handleSubReturn() {
                 _sizeEl.innerHTML = _w + '<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>' + _h + '<span style="font-size:13px; color:#64748b; margin-left:4px;">' + _unit + '</span>';
             }
         }
-        // 인쇄비 직접 업데이트
-        var qInput = document.getElementById('inputCustQty');
-        var qty = qInput ? (parseInt(qInput.value) || 1) : 1;
-        var totalKRW = krw * qty;
-        var priceEl = document.getElementById('calcResultPrice');
-        if (priceEl) {
-            priceEl.dataset.rawPrice = totalKRW;
-            priceEl.innerText = (typeof formatCurrency === 'function') ? formatCurrency(totalKRW) : totalKRW.toLocaleString() + '원';
-        }
-        var sizeLabel = document.getElementById('calcResultSize');
-        if (sizeLabel) sizeLabel.innerText = (p.cw - 6) + ' mm x ' + (p.ch - 6) + ' mm';
+        // calcCustomPrice가 올바른 price/price_jp를 읽어 인쇄비+rawPrice 설정
+        if (window.calcCustomPrice) window.calcCustomPrice();
         if (window.updateModalTotal) window.updateModalTotal();
     };
 })();
