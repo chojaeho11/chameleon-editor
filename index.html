@@ -4475,10 +4475,6 @@ async function handleSubReturn() {
 
         <!-- minOrderCheckoutNotice 제거됨 (v173: 최소금액 자동 패딩으로 대체) -->
 
-        <button id="btnFinalPay" class="btn-round primary" style="width:100%; height: 50px; font-size: 16px;" onclick="window.handleFinalPayment()" data-i18n="btn_do_final_pay">
-            결제하기
-        </button>
-
         <div id="bankInfoBox" style="display:none; margin-top:15px; background:#1e3a8a; padding:18px; border-radius:10px; font-size:14px; color:#fff;">
             <div class="bank-title" style="font-weight:bold; margin-bottom:8px; color:#93c5fd; font-size:13px;" data-i18n="msg_bank_info">[계좌이체 안내]</div>
 
@@ -4579,18 +4575,12 @@ async function handleSubReturn() {
     </button>
 </div>
 
+        <button id="btnFinalPay" class="btn-round primary" style="width:100%; height: 50px; font-size: 16px; margin-top:15px;" onclick="window.handleFinalPayment()" data-i18n="btn_do_final_pay">
+            결제하기
+        </button>
+
         <button onclick="document.getElementById('checkoutModal').style.display='none'; if(window.isOrderCompleted) location.reload();" class="btn-round" style="margin-top:10px; border:none; color:#888;" data-i18n="btn_close">닫기</button>
     </div>
-</div>
-        </div>
-
-        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;" data-i18n="btn_close">닫기</button>
-    </div>
-</div>
-
-        <button onclick="document.getElementById('checkoutModal').style.display='none'" class="btn-round" style="margin-top:10px; border:none; color:#888;" data-i18n="btn_close">닫기</button>
-    </div>
-</div>
 </div>
 <div id="successModal" class="modal-bg" style="z-index: 14000;"><div class="modal-box"><h2 data-i18n="msg_order_complete_title">🎉 주문 완료!</h2><button id="btnDownOrderSheet" class="btn-round" data-i18n="btn_download_order_sheet">📄 작업지시서 다운로드</button><button id="btnDownQuotation" class="btn-round" style="margin-top:5px;" data-i18n="btn_download_quotation">📑 견적서 다운로드</button><button onclick="window.closeSuccessModal()" class="btn-round primary" style="margin-top:15px;" data-i18n="btn_confirm">확인</button></div></div>
 <div id="sellModal" class="modal-bg" style="display: none;"> <div class="modal-box">
