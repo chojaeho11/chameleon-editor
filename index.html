@@ -9001,9 +9001,9 @@ window.showChoiceModal = async function(key) {
 
             <div id="choiceRightActions" class="choice-right-actions" style="${window.innerWidth <= 768 ? 'order:1; flex:0 0 100%; width:100%;' : ''}">
                 ${rightSideUI}
-                ${optionsHtml}
-                ${isCustom ? '<div data-npc="estimate" style="background:linear-gradient(135deg,#f8fafc,#f0f4ff); border-radius:12px; padding:14px; margin-top:15px; border:1px solid #c7d2fe;"><div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">\uD83D\uDDA8\uFE0F '+(lang==='ja'?'印刷費':lang==='zh'?'印刷费':lang==='ar'?'تكلفة الطباعة':lang==='es'?'Coste de impresión':lang==='de'?'Druckkosten':lang==='fr'?'Frais d\'impression':lang==='en'?'Printing Cost':'인쇄비')+'</div><div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#1e1b4b;" data-raw-price="0">0</div><div id="calcResultSize" style="font-size:11px; color:#64748b; margin-top:4px;">-</div></div><div data-npc="qtyLabel" style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">'+(lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량')+'</div><div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button><input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button></div>' : ''}
-                <div id="bulkDiscountTable" style="margin-top:15px; border:1.5px solid #e2e8f0; border-radius:12px; overflow:hidden; font-size:12px;">
+                ${_isBooklet ? '' : optionsHtml}
+                ${_isBooklet ? '' : (isCustom ? '<div data-npc="estimate" style="background:linear-gradient(135deg,#f8fafc,#f0f4ff); border-radius:12px; padding:14px; margin-top:15px; border:1px solid #c7d2fe;"><div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">\uD83D\uDDA8\uFE0F '+(lang==='ja'?'印刷費':lang==='zh'?'印刷费':lang==='ar'?'تكلفة الطباعة':lang==='es'?'Coste de impresión':lang==='de'?'Druckkosten':lang==='fr'?'Frais d\'impression':lang==='en'?'Printing Cost':'인쇄비')+'</div><div id="calcResultPrice" style="font-size:20px; font-weight:800; color:#1e1b4b;" data-raw-price="0">0</div><div id="calcResultSize" style="font-size:11px; color:#64748b; margin-top:4px;">-</div></div><div data-npc="qtyLabel" style="margin-top:15px; font-size:12px; color:#64748b; font-weight:bold; text-align:left;">'+(lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량')+'</div><div data-npc="qty" class="qty-wrapper" style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; margin-top:5px;"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=Math.max(1, parseInt(i.value)-1); window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">-</button><input type="number" id="inputCustQty" value="1" min="1" style="width:60px; text-align:center; border:none; font-weight:bold; font-size:15px;" oninput="window.calcCustomPrice(); window.updateModalTotal();"><button onclick="var i=document.getElementById(\'inputCustQty\'); i.value=parseInt(i.value)+1; window.calcCustomPrice(); window.updateModalTotal();" style="flex:1; border:none; background:#f8fafc; cursor:pointer; font-weight:bold;">+</button></div>' : ''}
+                <div id="bulkDiscountTable" style="margin-top:15px; border:1.5px solid #e2e8f0; border-radius:12px; overflow:hidden; font-size:12px; ${_isBooklet?'display:none':''}">
                     <div style="background:#1e1e2e; padding:8px 14px; color:#fff; font-weight:700; font-size:12px;">📊 ${lang==='ja'?'数量割引表':lang==='en'?'Bulk Discount':lang==='zh'?'批量折扣':lang==='es'?'Descuento por cantidad':lang==='de'?'Mengenrabatt':lang==='fr'?'Remise quantité':'수량 할인 가격표'}</div>
                     <div style="display:grid; grid-template-columns:repeat(5,1fr); text-align:center;">
                         <div class="dsc-tier" data-min="1" data-max="3" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">1~2</div><div style="font-size:10px; color:#94a3b8;">${lang==='ja'?'個':lang==='en'?'pcs':'개'}</div><div style="font-weight:700; margin-top:2px;">0%</div></div>
@@ -9014,7 +9014,7 @@ window.showChoiceModal = async function(key) {
                     </div>
                     <div id="bulkDiscountInfo" style="display:none; padding:8px 14px; text-align:center; font-size:13px;"></div>
                 </div>
-                <div data-npc="total" style="border-radius:14px; margin-top:20px; overflow:hidden; border:1.5px solid #1e1e2e;">
+                <div data-npc="total" style="border-radius:14px; margin-top:20px; overflow:hidden; border:1.5px solid #1e1e2e; ${_isBooklet?'display:none':''}">
                     <div style="background:#1e1e2e; padding:10px 16px;">
                         <span style="color:#fff; font-size:12px; font-weight:700; letter-spacing:0.5px;">${lang==='ja'?'オプション込み最終見積':lang==='zh'?'含选项最终报价':lang==='ar'?'السعر النهائي شامل الخيارات':lang==='es'?'Precio final con opciones':lang==='de'?'Endpreis inkl. Optionen':lang==='fr'?'Devis final options incluses':lang==='en'?'Final Quote incl. Options':'옵션을 포함한 최종견적'}</span>
                     </div>
@@ -9022,7 +9022,7 @@ window.showChoiceModal = async function(key) {
                         <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#6366f1;">0</div>
                     </div>
                 </div>
-                <div id="promoDiscountBox" style="position:relative; margin-top:12px; border-radius:14px; overflow:visible; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;">
+                <div id="promoDiscountBox" style="position:relative; margin-top:12px; border-radius:14px; ${_isBooklet?'display:none;':''}; overflow:visible; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                         <span style="background:#ef4444; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px; flex-shrink:0;">${lang==='ja'?'追加10%OFF':lang==='en'?'Extra 10% OFF':lang==='zh'?'额外10%折扣':lang==='es'?'10% extra':lang==='de'?'10% extra':lang==='fr'?'10% en plus':'추가 10% 할인'}</span>
                         <span style="font-size:11px; color:#92400e; font-weight:700;">${lang==='ja'?'PRO購読割引':lang==='en'?'PRO Subscription':lang==='zh'?'PRO订阅折扣':'PRO 구독 할인'}</span>
@@ -9432,7 +9432,16 @@ window._bkCalc = function() {
     document.querySelectorAll('input[name="bk_effect"]:checked').forEach(() => effectCount++);
     const effectTotal = 1000 * effectCount * copies;
 
-    const grandTotal = innerTotal + effectTotal;
+    const subtotal = innerTotal + effectTotal;
+
+    // 부수 할인 적용
+    let discountRate = 0;
+    if (copies >= 501) discountRate = 0.50;
+    else if (copies >= 101) discountRate = 0.40;
+    else if (copies >= 10) discountRate = 0.30;
+    else if (copies >= 3) discountRate = 0.20;
+    const discountAmount = Math.round(subtotal * discountRate);
+    const grandTotal = subtotal - discountAmount;
 
     // 내역 표시
     const fmtLocal = window._bkFmtPrice || ((v) => v.toLocaleString() + '원');
@@ -9442,6 +9451,9 @@ window._bkCalc = function() {
         let html = `내지: ${fmtLocal(innerPricePerPage)}/p × ${pages}p × ${copies}부 = ${fmtLocal(innerTotal)}`;
         if (effectCount > 0) html += `<br>특수효과: ${fmtLocal(1000)}/부 × ${effectCount}종 × ${copies}부 = ${fmtLocal(effectTotal)}`;
         html += `<br>표지용지/코팅: ${fmtLocal(0)}`;
+        if (discountRate > 0) {
+            html += `<br><span style="color:#ef4444; font-weight:700;">할인: -${Math.round(discountRate*100)}% (${copies}부) = -${fmtLocal(discountAmount)}</span>`;
+        }
         breakdownEl.innerHTML = html;
     }
     if (totalEl) {
@@ -10335,12 +10347,19 @@ if (w >= 20 && h >= 20) {
 
             const innerTotal = innerPrice * bkPages * bkCopies;
             const effectTotal = 1000 * bkEffects.length * bkCopies;
-            finalPricePerItem = innerTotal + effectTotal;
+            const bkSubtotal = innerTotal + effectTotal;
+            // 부수 할인 적용
+            let bkDiscount = 0;
+            if (bkCopies >= 501) bkDiscount = 0.50;
+            else if (bkCopies >= 101) bkDiscount = 0.40;
+            else if (bkCopies >= 10) bkDiscount = 0.30;
+            else if (bkCopies >= 3) bkDiscount = 0.20;
+            finalPricePerItem = bkSubtotal - Math.round(bkSubtotal * bkDiscount);
             finalQty = 1; // 세트 1건으로 처리 (내부에 부수 포함)
             finalW = 210; finalH = 297;
 
             // 주문 메모에 상세 기록
-            window._bookletOrderDesc = `표지:${bkCover?.value||'-'}, 내지:${bkInner?.value||'-'}(${innerPrice}원/p), ${bkPages}p×${bkCopies}부, 코팅:${bkCoating?.value||'none'}${bkEffects.length ? ', 특수효과:'+bkEffects.join('+') : ''}`;
+            window._bookletOrderDesc = `표지:${bkCover?.value||'-'}, 내지:${bkInner?.value||'-'}(${innerPrice}원/p), ${bkPages}p×${bkCopies}부, 코팅:${bkCoating?.value||'none'}${bkEffects.length ? ', 특수효과:'+bkEffects.join('+') : ''}${bkDiscount>0 ? ', 할인:'+Math.round(bkDiscount*100)+'%' : ''}`;
         }
 
         // 4-2. 벽면 제품: _wallPanelsData에서 가격/수량 오버라이드
