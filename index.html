@@ -8798,10 +8798,12 @@ window.showChoiceModal = async function(key) {
             {id:'cv_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지'},
             {id:'cv_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지'},
             {id:'cv_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지'},
+            {id:'cv_grace', name:lang==='ja'?'グレイス':lang==='en'?'Grace':'그레이스'},
+            {id:'cv_tintoretto', name:lang==='ja'?'ティントレット':lang==='en'?'Tintoretto':'띤또레또'},
             {id:'cv_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰'},
-            {id:'cv_stardream', name:lang==='ja'?'スタードリーム':lang==='en'?'Stardream':'스타드림'},
+            {id:'cv_marshmallow', name:lang==='ja'?'マシュメロウ':lang==='en'?'Marshmallow':'머쉬멜로우'},
             {id:'cv_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑'},
-            {id:'cv_pearl', name:lang==='ja'?'パール':lang==='en'?'Pearl':'펄진주'},
+            {id:'cv_halvono', name:lang==='ja'?'ハルボノ':lang==='en'?'Halvono':'반누보'},
         ];
         const innerRegular = [
             {id:'in_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지', price:80},
@@ -8809,10 +8811,12 @@ window.showChoiceModal = async function(key) {
             {id:'in_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지', price:80},
         ];
         const innerImported = [
-            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:140},
-            {id:'in_stardream', name:lang==='ja'?'スタードリーム':lang==='en'?'Stardream':'스타드림', price:140},
-            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:140},
-            {id:'in_pearl', name:lang==='ja'?'パール':lang==='en'?'Pearl':'펄진주', price:140},
+            {id:'in_grace', name:lang==='ja'?'グレイス':lang==='en'?'Grace':'그레이스', price:100},
+            {id:'in_tintoretto', name:lang==='ja'?'ティントレット':lang==='en'?'Tintoretto':'띤또레또', price:100},
+            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:100},
+            {id:'in_marshmallow', name:lang==='ja'?'マシュメロウ':lang==='en'?'Marshmallow':'머쉬멜로우', price:100},
+            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:100},
+            {id:'in_halvono', name:lang==='ja'?'ハルボノ':lang==='en'?'Halvono':'반누보', price:100},
         ];
         const effects = [
             {id:'fx_gold_glossy', name:lang==='ja'?'光沢金箔':lang==='en'?'Gold Foil (Glossy)':'유광금박', price:1000},
@@ -8822,11 +8826,12 @@ window.showChoiceModal = async function(key) {
         ];
 
         const _radioBtnStyle = `style="display:none"`;
-        const _labelStyle = (first) => `style="display:inline-block; padding:8px 14px; border:2px solid ${first?'#6366f1':'#e2e8f0'}; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; background:${first?'#eef2ff':'#fff'}; color:${first?'#4f46e5':'#334155'}; transition:all 0.15s; margin:3px;"`;
+        const _bkLabelBase = 'display:flex; align-items:center; justify-content:center; padding:8px 4px; border-radius:8px; cursor:pointer; font-size:11px; font-weight:600; transition:all 0.15s; text-align:center; min-height:36px;';
+        const _labelStyle = (first) => `style="${_bkLabelBase} border:2px solid ${first?'#6366f1':'#e2e8f0'}; background:${first?'#eef2ff':'#fff'}; color:${first?'#4f46e5':'#334155'};"`;
 
         let coverOptsHtml = coverPapers.map((p, i) => `<label ${_labelStyle(i===0)}><input type="radio" name="bk_cover" value="${p.id}" ${i===0?'checked':''} ${_radioBtnStyle} onchange="window._bkCalc()">${p.name}</label>`).join('');
-        let innerRegHtml = innerRegular.map((p, i) => `<label ${_labelStyle(i===0)}><input type="radio" name="bk_inner" value="${p.id}" data-price="${p.price}" ${i===0?'checked':''} ${_radioBtnStyle} onchange="window._bkCalc()">${p.name} <span style="color:#6366f1; font-size:10px;">${_fmtP(p.price)}${bkL.perPage}</span></label>`).join('');
-        let innerImpHtml = innerImported.map(p => `<label ${_labelStyle(false)}><input type="radio" name="bk_inner" value="${p.id}" data-price="${p.price}" ${_radioBtnStyle} onchange="window._bkCalc()">${p.name} <span style="color:#e11d48; font-size:10px;">${_fmtP(p.price)}${bkL.perPage}</span></label>`).join('');
+        let innerRegHtml = innerRegular.map((p, i) => `<label ${_labelStyle(i===0)}><input type="radio" name="bk_inner" value="${p.id}" data-price="${p.price}" ${i===0?'checked':''} ${_radioBtnStyle} onchange="window._bkCalc()"><span>${p.name}</span><span style="color:#6366f1; font-size:9px; margin-left:2px;">${_fmtP(p.price)}${bkL.perPage}</span></label>`).join('');
+        let innerImpHtml = innerImported.map(p => `<label ${_labelStyle(false)}><input type="radio" name="bk_inner" value="${p.id}" data-price="${p.price}" ${_radioBtnStyle} onchange="window._bkCalc()"><span>${p.name}</span><span style="color:#e11d48; font-size:9px; margin-left:2px;">${_fmtP(p.price)}${bkL.perPage}</span></label>`).join('');
         let effectsHtml = effects.map(e => `<label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; margin:3px 0;"><input type="checkbox" name="bk_effect" value="${e.id}" data-price="${e.price}" onchange="window._bkCalc()" style="width:16px; height:16px; accent-color:#6366f1;">${e.name} <span style="color:#6366f1; font-size:11px; margin-left:auto;">${_fmtP(e.price)}${bkL.perCopy}</span></label>`).join('');
 
         rightSideUI = productHeaderHtml + `
@@ -8849,15 +8854,15 @@ window.showChoiceModal = async function(key) {
 
                 <div style="margin-bottom:14px;">
                     <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">📄 ${bkL.cover} <span style="color:#16a34a; font-size:10px;">(${bkL.free})</span></div>
-                    <div style="display:flex; flex-wrap:wrap;">${coverOptsHtml}</div>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:4px;">${coverOptsHtml}</div>
                 </div>
 
                 <div style="margin-bottom:14px;">
                     <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">📃 ${bkL.inner}</div>
                     <div style="font-size:10px; font-weight:600; color:#334155; margin-bottom:4px;">${bkL.regular}</div>
-                    <div style="display:flex; flex-wrap:wrap;">${innerRegHtml}</div>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:4px;">${innerRegHtml}</div>
                     <div style="font-size:10px; font-weight:600; color:#e11d48; margin:6px 0 4px;">${bkL.imported}</div>
-                    <div style="display:flex; flex-wrap:wrap;">${innerImpHtml}</div>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:4px;">${innerImpHtml}</div>
                 </div>
 
                 <div style="margin-bottom:14px;">
