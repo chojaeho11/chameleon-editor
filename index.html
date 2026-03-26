@@ -3878,6 +3878,7 @@ async function handleSubReturn() {
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;" data-i18n="promo_p_flyer1">A4 전단지</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;" data-i18n="promo_p_flyer1_d">단면 · 210×297mm</div>
+                <div class="promo-price" data-krw="500" style="font-size:13px;font-weight:bold;color:#6366f1;margin-top:4px;"></div>
             </div>
             <!-- A4 전단지 (양면) -->
             <div class="promo-preset-card" onclick="window._promoPickPreset('flyer_double')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; padding:14px 10px; text-align:center; transition:all 0.2s;">
@@ -3889,6 +3890,7 @@ async function handleSubReturn() {
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;" data-i18n="promo_p_flyer2">A4 양면 전단지</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;" data-i18n="promo_p_flyer2_d">양면 · 210×297mm</div>
+                <div class="promo-price" data-krw="800" style="font-size:13px;font-weight:bold;color:#6366f1;margin-top:4px;"></div>
             </div>
             <!-- 엽서 -->
             <div class="promo-preset-card" onclick="window._promoPickPreset('postcard')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; padding:14px 10px; text-align:center; transition:all 0.2s;">
@@ -3899,6 +3901,7 @@ async function handleSubReturn() {
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;" data-i18n="promo_p_postcard">엽서</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;" data-i18n="promo_p_postcard_d">양면 · 100×148mm</div>
+                <div class="promo-price" data-krw="600" style="font-size:13px;font-weight:bold;color:#6366f1;margin-top:4px;"></div>
             </div>
             <!-- 초대장 / 청첩장 -->
             <div class="promo-preset-card" onclick="window._promoPickPreset('invitation')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; padding:14px 10px; text-align:center; transition:all 0.2s;">
@@ -3908,6 +3911,7 @@ async function handleSubReturn() {
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;" data-i18n="promo_p_invite">초대장 · 청첩장</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;" data-i18n="promo_p_invite_d">반접지 · 190×130mm</div>
+                <div class="promo-price" data-krw="1200" style="font-size:13px;font-weight:bold;color:#6366f1;margin-top:4px;"></div>
             </div>
             <!-- A4 반접지 -->
             <div class="promo-preset-card" onclick="window._promoPickPreset('a4_half')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; padding:14px 10px; text-align:center; transition:all 0.2s;">
@@ -3918,6 +3922,7 @@ async function handleSubReturn() {
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;" data-i18n="promo_p_half">A4 반접지</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;" data-i18n="promo_p_half_d">4면 · 303×216mm</div>
+                <div class="promo-price" data-krw="1000" style="font-size:13px;font-weight:bold;color:#6366f1;margin-top:4px;"></div>
             </div>
             <!-- 3단 리플릿 -->
             <div class="promo-preset-card" onclick="window._promoPickPreset('tri_leaflet')" style="cursor:pointer; border:2px solid #e2e8f0; border-radius:12px; padding:14px 10px; text-align:center; transition:all 0.2s;">
@@ -3930,30 +3935,32 @@ async function handleSubReturn() {
                 </div>
                 <div style="font-size:14px;font-weight:bold;color:#1e293b;" data-i18n="promo_p_tri">3단 리플릿</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;" data-i18n="promo_p_tri_d">6면 · 303×216mm</div>
+                <div class="promo-price" data-krw="1000" style="font-size:13px;font-weight:bold;color:#6366f1;margin-top:4px;"></div>
             </div>
         </div>
     </div>
 </div>
 <style>
 .promo-preset-card:hover { border-color:#6366f1 !important; transform:translateY(-2px); box-shadow:0 4px 12px rgba(99,102,241,0.15); }
+.promo-price { font-size:13px; font-weight:bold; color:#6366f1; margin-top:4px; }
 </style>
 <script>
 (function(){
     // 프리셋 정의: cw/ch = 전체 캔버스(재단여백 포함), panels = 접지면 수, pages = 물리 페이지
     // A4 접지: 가로 297mm를 접어서 나눔, 세로 210mm + 사방 3mm 재단여백
     var PRESETS = {
-        flyer_single:  { format:'single',    cw:216, ch:303, fold:null,   panels:1, pages:1 },
-        flyer_double:  { format:'double',    cw:216, ch:303, fold:null,   panels:1, pages:2 },
-        postcard:      { format:'double',    cw:154, ch:106, fold:null,   panels:1, pages:2 },
-        invitation:    { format:'half_fold', cw:266, ch:196, fold:'half', panels:2, pages:2 },
-        a4_half:       { format:'half_fold', cw:303, ch:216, fold:'half', panels:2, pages:2 },
-        tri_leaflet:   { format:'tri_fold',  cw:303, ch:216, fold:'tri',  panels:3, pages:2 }
+        flyer_single:  { format:'single',    cw:216, ch:303, fold:null,   panels:1, pages:1, price_krw:500 },
+        flyer_double:  { format:'double',    cw:216, ch:303, fold:null,   panels:1, pages:2, price_krw:800 },
+        postcard:      { format:'double',    cw:154, ch:106, fold:null,   panels:1, pages:2, price_krw:600 },
+        invitation:    { format:'half_fold', cw:266, ch:196, fold:'half', panels:2, pages:2, price_krw:1200 },
+        a4_half:       { format:'half_fold', cw:303, ch:216, fold:'half', panels:2, pages:2, price_krw:1000 },
+        tri_leaflet:   { format:'tri_fold',  cw:303, ch:216, fold:'tri',  panels:3, pages:2, price_krw:1000 }
     };
 
     function calcCanvas(p) {
         return { format:p.format, paperKey:'custom', orientation:'horizontal',
                  canvasWmm:p.cw, canvasHmm:p.ch, panelCount:p.panels, pageCount:p.pages,
-                 foldType:p.fold, paperW:p.cw-6, paperH:p.ch-6 };
+                 foldType:p.fold, paperW:p.cw-6, paperH:p.ch-6, price_krw:p.price_krw };
     }
 
     window._promoPickPreset = function(id) {
@@ -11013,6 +11020,11 @@ if (w >= 20 && h >= 20) {
         if (isPromoProduct) {
             const promoModal = document.getElementById('promoTemplateModal');
             if (promoModal) {
+                // 현지 통화 가격 렌더링
+                promoModal.querySelectorAll('.promo-price').forEach(el => {
+                    const krw = parseInt(el.dataset.krw) || 0;
+                    el.textContent = (typeof formatCurrency === 'function') ? formatCurrency(krw) : krw.toLocaleString() + '원';
+                });
                 promoModal.style.display = 'flex';
                 _promoSelection = await new Promise(resolve => {
                     window._promoTplResolve = resolve;
@@ -11020,6 +11032,11 @@ if (w >= 20 && h >= 20) {
                 // 선택된 규격으로 캔버스 크기 덮어쓰기
                 customW = _promoSelection.canvasWmm;
                 customH = _promoSelection.canvasHmm;
+                // 규격별 가격 반영
+                if (_promoSelection.price_krw && product) {
+                    product.price = _promoSelection.price_krw;
+                    product._calculated_price = true;
+                }
             }
         }
 
