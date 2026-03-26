@@ -414,7 +414,7 @@ export async function initOrderSystem() {
                 const _tc = window._getTopCategoryCode ? window._getTopCategoryCode(_cat) : '';
                 const _nd = _pc === '21355677' || _pc === '21355677_copy' || _tc === 'Wholesale Board Prices' || _tc === 'honeycomb_board' || _cat === 'hb_display_wall' || _pc.startsWith('hb_dw') || item.product.is_custom_size;
                 let dr = 0;
-                if (!_nd && qty >= 3) { if (qty >= 100) dr = 0.50; else if (qty >= 30) dr = 0.40; else if (qty >= 10) dr = 0.35; else dr = 0.30; }
+                if (!_nd && qty >= 3) { if (qty >= 501) dr = 0.50; else if (qty >= 101) dr = 0.40; else if (qty >= 10) dr = 0.30; else dr = 0.20; }
                 itemBase -= Math.floor(itemBase * dr / 100) * 100;
                 // 옵션
                 if (item.selectedAddons) {
@@ -1887,10 +1887,10 @@ function renderCart() {
             || item.product.is_custom_size;
         let _qtyDiscountRate = 0;
         if (!_noDiscount && item.qty >= 3) {
-            if (item.qty >= 100) _qtyDiscountRate = 0.50;
-            else if (item.qty >= 30) _qtyDiscountRate = 0.40;
-            else if (item.qty >= 10) _qtyDiscountRate = 0.35;
-            else _qtyDiscountRate = 0.30;
+            if (item.qty >= 501) _qtyDiscountRate = 0.50;
+            else if (item.qty >= 101) _qtyDiscountRate = 0.40;
+            else if (item.qty >= 10) _qtyDiscountRate = 0.30;
+            else _qtyDiscountRate = 0.20;
         }
         const _qtyDiscountAmt = Math.floor(baseProductTotal * _qtyDiscountRate / 100) * 100;
         baseProductTotal -= _qtyDiscountAmt;
@@ -2351,10 +2351,10 @@ async function processOrderSubmission() {
         const _nd2 = _pc2 === '21355677' || _pc2 === '21355677_copy' || _tc2 === 'Wholesale Board Prices' || _tc2 === 'honeycomb_board' || _cat2 === 'hb_display_wall' || _pc2.startsWith('hb_dw') || item.product.is_custom_size;
         let _dr2 = 0;
         if (!_nd2 && qty >= 3) {
-            if (qty >= 100) _dr2 = 0.50;
-            else if (qty >= 30) _dr2 = 0.40;
-            else if (qty >= 10) _dr2 = 0.35;
-            else _dr2 = 0.30;
+            if (qty >= 501) _dr2 = 0.50;
+            else if (qty >= 101) _dr2 = 0.40;
+            else if (qty >= 10) _dr2 = 0.30;
+            else _dr2 = 0.20;
         }
         let optionTotal = 0;
         if(item.selectedAddons) {
