@@ -729,13 +729,11 @@ ${hreflangTags('/editor')}
 
         // chameleon.design: auto-detect country and set __SITE_CODE + lang
         const isChameleonDesign = url.hostname.includes('chameleon.design');
-        let chameleonCountry = null;
+        let chameleonCountry = 'US'; // chameleon.design은 항상 영어 기본
         if (isChameleonDesign) {
-            chameleonCountry = getCountry(url.hostname, request);
-            const langMap = { KR: 'ko', JP: 'ja', US: 'en', CN: 'zh', AR: 'ar', ES: 'es', DE: 'de', FR: 'fr' };
-            const detectedLang = langMap[chameleonCountry] || 'en';
-            // Override siteData lang for chameleon.design
-            if (siteData) siteData = { ...siteData, lang: detectedLang };
+            // chameleon.design = 글로벌 영어 사이트 (지리 감지 안함)
+            chameleonCountry = 'US';
+            if (siteData) siteData = { ...siteData, lang: 'en' };
         }
 
         if (!siteData) {
