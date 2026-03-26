@@ -128,7 +128,7 @@ export function initConfig() {
                     // ★ 도메인 고정 사이트는 해당 도메인 루트로 이동 (cafe2626.com 이동 방지)
                     const _soh = window.location.hostname;
                     if (_soh.includes('cafe0101')) window.location.replace('/?lang=ja');
-                    else if (_soh.includes('cafe3355')) window.location.replace('/');
+                    else if (_soh.includes('cafe3355') || _soh.includes('chameleon.design')) window.location.replace('/');
                     else location.reload();
                 }
 
@@ -331,7 +331,7 @@ export function getLocalizedData(item) {
         country = 'DE';
     } else if (paramLang === 'fr') {
         country = 'FR';
-    } else if (hostname.includes('cafe3355.com') || paramLang === 'en' || paramLang === 'us') {
+    } else if (hostname.includes('cafe3355.com') || hostname.includes('chameleon.design') || paramLang === 'en' || paramLang === 'us') {
         country = 'US';
     }
 

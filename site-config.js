@@ -142,7 +142,7 @@ SITE_CONFIG.SEO = {
         description: 'Honeycomb Boards, fabric printing, pop-up store displays. Free online editor for life-size cutouts, backwalls, and custom printing solutions.',
         keywords: 'chameleon printing,Honeycomb Board,fabric printing,pop-up store,display printing,life-size cutout,backwall design,eco printing,acrylic print,banner stand,foam board',
         lang: 'en',
-        domain: 'https://www.cafe3355.com',
+        domain: 'https://chameleon.design',
         siteName: 'Chameleon Printing',
         boardTitle: 'Chameleon Community - Blog & Reviews',
         boardDesc: 'Chameleon Printing global community. Check out production reviews, design tips, and printing information.'
@@ -152,7 +152,7 @@ SITE_CONFIG.SEO = {
         description: '蜂窝板、布艺印刷、快闪店展示。免费在线编辑器，从等身大立牌到背景墙设计到印刷一站式解决。',
         keywords: '变色龙印刷,蜂窝板,布艺印刷,快闪店,等身大立牌,展示,环保印刷,背景墙,亚克力印刷,横幅架',
         lang: 'zh',
-        domain: 'https://www.cafe3355.com',
+        domain: 'https://chameleon.design',
         siteName: '变色龙印刷',
         boardTitle: '变色龙社区 - 博客 & 评价',
         boardDesc: '变色龙印刷全球社区。查看制作评价、设计信息和印刷技巧。'
@@ -162,7 +162,7 @@ SITE_CONFIG.SEO = {
         description: 'ألواح خلية النحل، طباعة القماش، عروض المتاجر المؤقتة. محرر تصميم مجاني عبر الإنترنت.',
         keywords: 'طباعة كاميليون,لوح خلية النحل,طباعة قماش,متجر مؤقت,طباعة عروض,طباعة صديقة للبيئة',
         lang: 'ar',
-        domain: 'https://www.cafe3355.com',
+        domain: 'https://chameleon.design',
         siteName: 'طباعة كاميليون',
         boardTitle: 'مجتمع كاميليون - مدونة ومراجعات',
         boardDesc: 'مجتمع طباعة كاميليون العالمي. اطلع على مراجعات الإنتاج ونصائح التصميم ومعلومات الطباعة.'
@@ -172,7 +172,7 @@ SITE_CONFIG.SEO = {
         description: 'Paneles Honeycomb Board, impresion en tela, displays para pop-up stores. Editor de diseno online gratuito.',
         keywords: 'chameleon printing,panel Honeycomb Board,impresion tela,pop-up store,impresion display,impresion ecologica,acrilico,banner',
         lang: 'es',
-        domain: 'https://www.cafe3355.com',
+        domain: 'https://chameleon.design',
         siteName: 'Chameleon Printing',
         boardTitle: 'Comunidad Chameleon - Blog & Resenas',
         boardDesc: 'Comunidad global de Chameleon Printing. Consulta resenas de produccion, consejos de diseno e informacion de impresion.'
@@ -182,7 +182,7 @@ SITE_CONFIG.SEO = {
         description: 'Wabenplatten, Stoffdruck, Pop-up-Store-Displays. Kostenloser Online-Editor fuer lebensgrosse Aufsteller und Druckloesungen.',
         keywords: 'chameleon printing,wabenplatte,stoffdruck,pop-up store,display druck,oeko druck,acryl druck,banner,aufsteller',
         lang: 'de',
-        domain: 'https://www.cafe3355.com',
+        domain: 'https://chameleon.design',
         siteName: 'Chameleon Printing',
         boardTitle: 'Chameleon Community - Blog & Bewertungen',
         boardDesc: 'Globale Chameleon Printing Community. Produktionsbewertungen, Designtipps und Druckinformationen.'
@@ -192,7 +192,7 @@ SITE_CONFIG.SEO = {
         description: 'Panneaux nid d\'abeille, impression textile, displays pop-up store. Editeur de design en ligne gratuit.',
         keywords: 'chameleon printing,panneau nid abeille,impression textile,pop-up store,impression display,impression ecologique,acrylique,banniere',
         lang: 'fr',
-        domain: 'https://www.cafe3355.com',
+        domain: 'https://chameleon.design',
         siteName: 'Chameleon Printing',
         boardTitle: 'Communaute Chameleon - Blog & Avis',
         boardDesc: 'Communaute mondiale Chameleon Printing. Decouvrez les avis, conseils design et informations impression.'

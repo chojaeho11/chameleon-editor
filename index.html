@@ -512,16 +512,16 @@ window.loadEditorLibraries = function() {
     (function() {
         var h = window.location.hostname || '';
 
-        // ★ chameleon.design → 항상 영어(US) 사이트로 리다이렉트
-        if (h === 'chameleon.design' || h === 'www.chameleon.design') {
+        // ★ cafe3355.com → chameleon.design으로 리다이렉트 (글로벌 기본 도메인)
+        if (h.indexOf('cafe3355') !== -1) {
             var path = window.location.pathname + window.location.search;
-            window.location.replace('https://www.cafe3355.com' + path);
+            window.location.replace('https://chameleon.design' + path);
             return;
         }
 
         var code = 'KR';
         if (h.indexOf('cafe0101') !== -1) code = 'JP';
-        else if (h.indexOf('cafe3355') !== -1) code = 'US';
+        else if (h.indexOf('chameleon.design') !== -1) code = 'US';
         window.__SITE_CODE = code;
     })();
 

@@ -68,7 +68,7 @@ export function initAuth() {
                         const _hn = window.location.hostname;
                         let _redirectUrl = '/';
                         if (_hn.includes('cafe0101.com')) _redirectUrl = '/?lang=ja';
-                        else if (_hn.includes('cafe3355.com')) _redirectUrl = '/';
+                        else if (_hn.includes('cafe3355.com') || _hn.includes('chameleon.design')) _redirectUrl = '/';
                         // cafe2626.com은 그냥 '/' (KR)
                         window.location.replace(_redirectUrl);
                     }
@@ -370,7 +370,7 @@ async function handleSocialLogin(provider) {
     const _hn = window.location.hostname;
     let redirectUrl = window.location.origin + '/';
     if (_hn.includes('cafe0101')) redirectUrl += '?lang=ja';
-    else if (_hn.includes('cafe3355')) {
+    else if (_hn.includes('cafe3355') || _hn.includes('chameleon.design')) {
         const _lp = new URLSearchParams(window.location.search).get('lang');
         if (_lp && _lp !== 'en') redirectUrl += '?lang=' + _lp;
     } else {
