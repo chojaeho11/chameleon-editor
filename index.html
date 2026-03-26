@@ -8804,15 +8804,15 @@ window.showChoiceModal = async function(key) {
             {id:'cv_pearl', name:lang==='ja'?'パール':lang==='en'?'Pearl':'펄진주'},
         ];
         const innerRegular = [
-            {id:'in_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지', price:40},
-            {id:'in_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지', price:40},
-            {id:'in_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지', price:40},
+            {id:'in_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지', price:100},
+            {id:'in_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지', price:100},
+            {id:'in_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지', price:100},
         ];
         const innerImported = [
-            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:80},
-            {id:'in_stardream', name:lang==='ja'?'スタードリーム':lang==='en'?'Stardream':'스타드림', price:80},
-            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:80},
-            {id:'in_pearl', name:lang==='ja'?'パール':lang==='en'?'Pearl':'펄진주', price:80},
+            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:160},
+            {id:'in_stardream', name:lang==='ja'?'スタードリーム':lang==='en'?'Stardream':'스타드림', price:160},
+            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:160},
+            {id:'in_pearl', name:lang==='ja'?'パール':lang==='en'?'Pearl':'펄진주', price:160},
         ];
         const effects = [
             {id:'fx_gold_glossy', name:lang==='ja'?'光沢金箔':lang==='en'?'Gold Foil (Glossy)':'유광금박', price:1000},
@@ -9427,12 +9427,15 @@ window._bkCalc = function() {
     // 내지 비용: 페이지당 단가 × 페이지 수 × 부수
     const innerTotal = innerPricePerPage * pages * copies;
 
-    // 특수효과: 부당 1000원 × 선택한 효과 수 × 부수
+    // 제본비: 부당 1,000원
+    const bindingTotal = 1000 * copies;
+
+    // 특수효과: 판형비 20,000원(기본) + 부당 1,000원
     let effectCount = 0;
     document.querySelectorAll('input[name="bk_effect"]:checked').forEach(() => effectCount++);
-    const effectTotal = 1000 * effectCount * copies;
+    const effectTotal = effectCount > 0 ? (20000 + 1000 * copies) * effectCount : 0;
 
-    const subtotal = innerTotal + effectTotal;
+    const subtotal = innerTotal + bindingTotal + effectTotal;
 
     // 부수 할인 적용
     let discountRate = 0;
@@ -9449,7 +9452,8 @@ window._bkCalc = function() {
     const totalEl = document.getElementById('bkTotalPrice');
     if (breakdownEl) {
         let html = `내지: ${fmtLocal(innerPricePerPage)}/p × ${pages}p × ${copies}부 = ${fmtLocal(innerTotal)}`;
-        if (effectCount > 0) html += `<br>특수효과: ${fmtLocal(1000)}/부 × ${effectCount}종 × ${copies}부 = ${fmtLocal(effectTotal)}`;
+        html += `<br>제본: ${fmtLocal(1000)}/부 × ${copies}부 = ${fmtLocal(bindingTotal)}`;
+        if (effectCount > 0) html += `<br>특수효과: (판형비 ${fmtLocal(20000)} + ${fmtLocal(1000)}/부 × ${copies}부) × ${effectCount}종 = ${fmtLocal(effectTotal)}`;
         html += `<br>표지용지/코팅: ${fmtLocal(0)}`;
         if (discountRate > 0) {
             html += `<br><span style="color:#ef4444; font-weight:700;">할인: -${Math.round(discountRate*100)}% (${copies}부) = -${fmtLocal(discountAmount)}</span>`;
@@ -10346,8 +10350,9 @@ if (w >= 20 && h >= 20) {
             document.querySelectorAll('input[name="bk_effect"]:checked').forEach(e => bkEffects.push(e.value));
 
             const innerTotal = innerPrice * bkPages * bkCopies;
-            const effectTotal = 1000 * bkEffects.length * bkCopies;
-            const bkSubtotal = innerTotal + effectTotal;
+            const bindingTotal = 1000 * bkCopies;
+            const effectTotal = bkEffects.length > 0 ? (20000 + 1000 * bkCopies) * bkEffects.length : 0;
+            const bkSubtotal = innerTotal + bindingTotal + effectTotal;
             // 부수 할인 적용
             let bkDiscount = 0;
             if (bkCopies >= 501) bkDiscount = 0.50;
