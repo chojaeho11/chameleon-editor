@@ -8768,8 +8768,137 @@ window.showChoiceModal = async function(key) {
             </div>`;
     }
 
+    // ★ 책자 브로슈어 전용 위자드 (435345435)
+    const _isBooklet = (key === '435345435');
+
     let rightSideUI = "";
-    if (isCustom) {
+    if (_isBooklet) {
+        const bkL = {
+            title: lang==='ja'?'📖 冊子オプション':lang==='en'?'📖 Booklet Options':'📖 책자 옵션',
+            cover: lang==='ja'?'表紙用紙':lang==='en'?'Cover Paper':'표지용지',
+            inner: lang==='ja'?'内紙用紙':lang==='en'?'Inner Paper':'내지용지',
+            regular: lang==='ja'?'一般紙':lang==='en'?'Regular Paper':'일반지',
+            imported: lang==='ja'?'輸入紙':lang==='en'?'Premium Paper':'수입지',
+            pages: lang==='ja'?'ページ数':lang==='en'?'Pages':'페이지 수',
+            copies: lang==='ja'?'部数':lang==='en'?'Copies':'부수',
+            coating: lang==='ja'?'表紙コーティング':lang==='en'?'Cover Coating':'표지코팅',
+            glossy: lang==='ja'?'光沢':lang==='en'?'Glossy':'유광',
+            matte: lang==='ja'?'マット':lang==='en'?'Matte':'무광',
+            none: lang==='ja'?'なし':lang==='en'?'None':'없음',
+            effects: lang==='ja'?'特殊効果':lang==='en'?'Special Effects':'특수효과',
+            perCopy: lang==='ja'?'/部':lang==='en'?'/copy':'/부',
+            perPage: lang==='ja'?'/頁':lang==='en'?'/pg':'/p',
+            free: lang==='ja'?'無料':lang==='en'?'Free':'무료',
+            upload: lang==='ja'?'ファイルアップロード':lang==='en'?'Upload File':'파일올리기',
+            uploadDesc: lang==='ja'?'表紙・内紙のPDFまたは画像をアップロードしてください。':lang==='en'?'Upload cover and inner page files as PDF or image.':'표지와 내지 파일을 PDF 또는 이미지로 올려주세요.',
+            estimate: lang==='ja'?'見積もり':lang==='en'?'Estimate':'견적',
+        };
+        const _fmtP = (v) => formatPriceSimple(v);
+        const coverPapers = [
+            {id:'cv_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지'},
+            {id:'cv_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지'},
+            {id:'cv_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지'},
+            {id:'cv_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰'},
+            {id:'cv_stardream', name:lang==='ja'?'スタードリーム':lang==='en'?'Stardream':'스타드림'},
+            {id:'cv_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑'},
+            {id:'cv_pearl', name:lang==='ja'?'パール':lang==='en'?'Pearl':'펄진주'},
+        ];
+        const innerRegular = [
+            {id:'in_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지', price:40},
+            {id:'in_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지', price:40},
+            {id:'in_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지', price:40},
+        ];
+        const innerImported = [
+            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:80},
+            {id:'in_stardream', name:lang==='ja'?'スタードリーム':lang==='en'?'Stardream':'스타드림', price:80},
+            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:80},
+            {id:'in_pearl', name:lang==='ja'?'パール':lang==='en'?'Pearl':'펄진주', price:80},
+        ];
+        const effects = [
+            {id:'fx_gold_glossy', name:lang==='ja'?'光沢金箔':lang==='en'?'Gold Foil (Glossy)':'유광금박', price:1000},
+            {id:'fx_epoxy', name:lang==='ja'?'エポキシ':lang==='en'?'Epoxy':'에폭시', price:1000},
+            {id:'fx_gold_matte', name:lang==='ja'?'マット金箔':lang==='en'?'Gold Foil (Matte)':'무광금박', price:1000},
+            {id:'fx_hologram', name:lang==='ja'?'ホログラム':lang==='en'?'Hologram':'홀로그램', price:1000},
+        ];
+
+        const _radioBtnStyle = `style="display:none"`;
+        const _labelStyle = (first) => `style="display:inline-block; padding:8px 14px; border:2px solid ${first?'#6366f1':'#e2e8f0'}; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; background:${first?'#eef2ff':'#fff'}; color:${first?'#4f46e5':'#334155'}; transition:all 0.15s; margin:3px;"`;
+
+        let coverOptsHtml = coverPapers.map((p, i) => `<label ${_labelStyle(i===0)}><input type="radio" name="bk_cover" value="${p.id}" ${i===0?'checked':''} ${_radioBtnStyle} onchange="window._bkCalc()">${p.name}</label>`).join('');
+        let innerRegHtml = innerRegular.map((p, i) => `<label ${_labelStyle(i===0)}><input type="radio" name="bk_inner" value="${p.id}" data-price="${p.price}" ${i===0?'checked':''} ${_radioBtnStyle} onchange="window._bkCalc()">${p.name} <span style="color:#6366f1; font-size:10px;">${_fmtP(p.price)}${bkL.perPage}</span></label>`).join('');
+        let innerImpHtml = innerImported.map(p => `<label ${_labelStyle(false)}><input type="radio" name="bk_inner" value="${p.id}" data-price="${p.price}" ${_radioBtnStyle} onchange="window._bkCalc()">${p.name} <span style="color:#e11d48; font-size:10px;">${_fmtP(p.price)}${bkL.perPage}</span></label>`).join('');
+        let effectsHtml = effects.map(e => `<label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; margin:3px 0;"><input type="checkbox" name="bk_effect" value="${e.id}" data-price="${e.price}" onchange="window._bkCalc()" style="width:16px; height:16px; accent-color:#6366f1;">${e.name} <span style="color:#6366f1; font-size:11px; margin-left:auto;">${_fmtP(e.price)}${bkL.perCopy}</span></label>`).join('');
+
+        rightSideUI = productHeaderHtml + `
+            <button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:18px 16px;">
+                <div style="display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700;"><i class="fa-solid fa-cloud-arrow-up"></i> ${bkL.upload}</div>
+                <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">${bkL.uploadDesc}</div>
+            </button>
+            <div id="uploadPreviewArea" data-npc="uploadPreview" style="display:none; margin-top:12px; background:linear-gradient(135deg, #f0f9ff, #ede9fe); border:1px solid #c7d2fe; border-radius:12px; padding:14px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc;">
+                    <div style="flex:1; min-width:0;">
+                        <div id="uploadPreviewName" style="font-size:12px; font-weight:600; color:#1e40af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                        <div style="font-size:11px; color:#16a34a; font-weight:500;">✅ ${lang==='ja'?'アップロード完了':lang==='en'?'Upload complete':'업로드 완료'}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:#f8fafc; border-radius:12px; padding:14px; margin-top:12px; border:1px solid #e2e8f0;">
+                <div style="font-size:14px; font-weight:800; color:#1e1b4b; margin-bottom:12px;">${bkL.title}</div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">📄 ${bkL.cover} <span style="color:#16a34a; font-size:10px;">(${bkL.free})</span></div>
+                    <div style="display:flex; flex-wrap:wrap;">${coverOptsHtml}</div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">📃 ${bkL.inner}</div>
+                    <div style="font-size:10px; font-weight:600; color:#334155; margin-bottom:4px;">${bkL.regular}</div>
+                    <div style="display:flex; flex-wrap:wrap;">${innerRegHtml}</div>
+                    <div style="font-size:10px; font-weight:600; color:#e11d48; margin:6px 0 4px;">${bkL.imported}</div>
+                    <div style="display:flex; flex-wrap:wrap;">${innerImpHtml}</div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">📑 ${bkL.pages}</div>
+                    <input type="number" id="bkPages" value="20" min="4" step="2" style="width:100%; height:40px; border:2px solid #e2e8f0; border-radius:8px; text-align:center; font-size:16px; font-weight:bold;" oninput="window._bkCalc()">
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">📦 ${bkL.copies}</div>
+                    <div class="qty-wrapper" style="display:flex; border:2px solid #6366f1; border-radius:10px; overflow:hidden; height:44px;">
+                        <button onclick="const i=document.getElementById('bkCopies'); i.value=Math.max(1, parseInt(i.value)-1); window._bkCalc();" style="flex:1; border:none; background:#f0f0ff; cursor:pointer; font-weight:bold; font-size:18px;">-</button>
+                        <input type="number" id="bkCopies" value="1" min="1" style="width:70px; text-align:center; border:none; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; font-weight:bold; font-size:16px;" oninput="window._bkCalc()">
+                        <button onclick="const i=document.getElementById('bkCopies'); i.value=parseInt(i.value)+1; window._bkCalc();" style="flex:1; border:none; background:#f0f0ff; cursor:pointer; font-weight:bold; font-size:18px;">+</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">✨ ${bkL.coating}</div>
+                    <div style="display:flex; gap:6px;">
+                        <label style="flex:1; text-align:center; padding:10px 8px; border:2px solid #e2e8f0; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600;"><input type="radio" name="bk_coating" value="none" checked style="display:none" onchange="window._bkCalc()"> ${bkL.none}</label>
+                        <label style="flex:1; text-align:center; padding:10px 8px; border:2px solid #e2e8f0; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600;"><input type="radio" name="bk_coating" value="glossy" style="display:none" onchange="window._bkCalc()"> ${bkL.glossy}</label>
+                        <label style="flex:1; text-align:center; padding:10px 8px; border:2px solid #e2e8f0; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600;"><input type="radio" name="bk_coating" value="matte" style="display:none" onchange="window._bkCalc()"> ${bkL.matte}</label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:6px;">🌟 ${bkL.effects} <span style="color:#94a3b8; font-size:10px;">(${_fmtP(1000)}${bkL.perCopy})</span></div>
+                    ${effectsHtml}
+                </div>
+            </div>
+
+            <div style="background:linear-gradient(135deg,#f8fafc,#f0f4ff); border-radius:12px; padding:14px; margin-top:15px; border:1px solid #c7d2fe;">
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">🖨️ ${bkL.estimate}</div>
+                <div id="bkBreakdown" style="font-size:11px; color:#64748b; line-height:1.8;"></div>
+                <div id="bkTotalPrice" style="font-size:22px; font-weight:900; color:#1e1b4b; margin-top:8px;" data-raw-price="0">0</div>
+            </div>
+            <input type="hidden" id="inputCustW" value="210">
+            <input type="hidden" id="inputCustH" value="297">
+            <input type="hidden" id="inputCustQty" value="1">
+        `;
+    } else if (isCustom) {
         rightSideUI = productHeaderHtml + artworkTypeSelectorHtml + `
             ${isArtworkProduct ? '' : `<button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">
                 <div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700;">
@@ -8936,6 +9065,12 @@ window.showChoiceModal = async function(key) {
 
     modal.style.display = 'flex';
     window._relatedProductsLoading = false; // 추천상품 플래그 리셋
+
+    // ★ 책자 상품: 위자드 초기 계산 + 통화 포맷터 설정
+    if (_isBooklet) {
+        window._bkFmtPrice = formatPriceSimple;
+        window._bkCalc();
+    }
 
     // ★ 프로모 상품: 사이드바에 규격 선택 패널 동적 삽입
     if (_isPromo) {
@@ -9273,6 +9408,56 @@ window.showChoiceModal = async function(key) {
 
     }, 300);
 };
+
+// ★ 책자 브로슈어 계산 함수
+window._bkCalc = function() {
+    // 라디오/체크박스 스타일 토글
+    document.querySelectorAll('input[name="bk_cover"], input[name="bk_inner"], input[name="bk_coating"]').forEach(r => {
+        const lb = r.closest('label');
+        if (!lb) return;
+        if (r.checked) { lb.style.border = '2px solid #6366f1'; lb.style.background = '#eef2ff'; lb.style.color = '#4f46e5'; }
+        else { lb.style.border = '2px solid #e2e8f0'; lb.style.background = '#fff'; lb.style.color = '#334155'; }
+    });
+
+    const pages = Math.max(4, parseInt(document.getElementById('bkPages')?.value) || 20);
+    const copies = Math.max(1, parseInt(document.getElementById('bkCopies')?.value) || 1);
+    const innerRadio = document.querySelector('input[name="bk_inner"]:checked');
+    const innerPricePerPage = innerRadio ? parseInt(innerRadio.dataset.price) || 40 : 40;
+
+    // 내지 비용: 페이지당 단가 × 페이지 수 × 부수
+    const innerTotal = innerPricePerPage * pages * copies;
+
+    // 특수효과: 부당 1000원 × 선택한 효과 수 × 부수
+    let effectCount = 0;
+    document.querySelectorAll('input[name="bk_effect"]:checked').forEach(() => effectCount++);
+    const effectTotal = 1000 * effectCount * copies;
+
+    const grandTotal = innerTotal + effectTotal;
+
+    // 내역 표시
+    const fmtLocal = window._bkFmtPrice || ((v) => v.toLocaleString() + '원');
+    const breakdownEl = document.getElementById('bkBreakdown');
+    const totalEl = document.getElementById('bkTotalPrice');
+    if (breakdownEl) {
+        let html = `내지: ${fmtLocal(innerPricePerPage)}/p × ${pages}p × ${copies}부 = ${fmtLocal(innerTotal)}`;
+        if (effectCount > 0) html += `<br>특수효과: ${fmtLocal(1000)}/부 × ${effectCount}종 × ${copies}부 = ${fmtLocal(effectTotal)}`;
+        html += `<br>표지용지/코팅: ${fmtLocal(0)}`;
+        breakdownEl.innerHTML = html;
+    }
+    if (totalEl) {
+        totalEl.innerText = fmtLocal(grandTotal);
+        totalEl.dataset.rawPrice = grandTotal;
+    }
+
+    // inputCustQty 동기화 (confirmChoice에서 사용)
+    const qtyInput = document.getElementById('inputCustQty');
+    if (qtyInput) qtyInput.value = copies;
+
+    // updateModalTotal의 합계 표시도 갱신
+    const realtimeEl = document.getElementById('modalRealtimeTotal');
+    if (realtimeEl) realtimeEl.innerText = fmtLocal(grandTotal);
+};
+
 // 실시간 합계 업데이트 함수
 // [수정 1] 금액 계산 함수 (단품/옵션 모두 수량 곱하기 적용)
 // [최종 수정] 금액 계산 함수 (상품과 옵션 수량 완전 분리)
@@ -10137,7 +10322,28 @@ if (w >= 20 && h >= 20) {
             finalQty = parseInt(document.getElementById('fixedProdQty') ? document.getElementById('fixedProdQty').value : 1);
         }
 
-        // 4-1. 벽면 제품: _wallPanelsData에서 가격/수량 오버라이드
+        // 4-1. 책자 브로슈어: 위자드 데이터로 가격/수량 오버라이드
+        if (targetCode === '435345435') {
+            const bkPages = parseInt(document.getElementById('bkPages')?.value) || 20;
+            const bkCopies = parseInt(document.getElementById('bkCopies')?.value) || 1;
+            const bkInner = document.querySelector('input[name="bk_inner"]:checked');
+            const bkCover = document.querySelector('input[name="bk_cover"]:checked');
+            const bkCoating = document.querySelector('input[name="bk_coating"]:checked');
+            const innerPrice = bkInner ? parseInt(bkInner.dataset.price) || 40 : 40;
+            let bkEffects = [];
+            document.querySelectorAll('input[name="bk_effect"]:checked').forEach(e => bkEffects.push(e.value));
+
+            const innerTotal = innerPrice * bkPages * bkCopies;
+            const effectTotal = 1000 * bkEffects.length * bkCopies;
+            finalPricePerItem = innerTotal + effectTotal;
+            finalQty = 1; // 세트 1건으로 처리 (내부에 부수 포함)
+            finalW = 210; finalH = 297;
+
+            // 주문 메모에 상세 기록
+            window._bookletOrderDesc = `표지:${bkCover?.value||'-'}, 내지:${bkInner?.value||'-'}(${innerPrice}원/p), ${bkPages}p×${bkCopies}부, 코팅:${bkCoating?.value||'none'}${bkEffects.length ? ', 특수효과:'+bkEffects.join('+') : ''}`;
+        }
+
+        // 4-2. 벽면 제품: _wallPanelsData에서 가격/수량 오버라이드
         const _isWallProduct = product.category === 'hb_display_wall' || (targetCode && targetCode.startsWith('hb_dw'));
         if (_isWallProduct && window._wallPanelsData) {
             const wd = window._wallPanelsData;
@@ -10432,6 +10638,11 @@ if (w >= 20 && h >= 20) {
                     if (!extraFields) extraFields = {};
                     extraFields._wallPanels = window._wallPanelsData.panels;
                     extraFields._wallOrderDesc = window._wallOrderDesc;
+                }
+                // 책자 데이터를 extraFields에 추가
+                if (targetCode === '435345435' && window._bookletOrderDesc) {
+                    if (!extraFields) extraFields = {};
+                    extraFields._bookletDesc = window._bookletOrderDesc;
                 }
                 m.addProductToCartDirectly(productToCart, finalQty, selectedAddonCodes, selectedAddonQtys, extraFields);
                 window._pendingUploadedFiles = [];
