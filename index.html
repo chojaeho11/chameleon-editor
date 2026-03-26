@@ -512,28 +512,10 @@ window.loadEditorLibraries = function() {
     (function() {
         var h = window.location.hostname || '';
 
-        // ★ chameleon.design → 브라우저 언어 기반 자동 리다이렉트
+        // ★ chameleon.design → 항상 영어(US) 사이트로 리다이렉트
         if (h === 'chameleon.design' || h === 'www.chameleon.design') {
-            var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
             var path = window.location.pathname + window.location.search;
-            if (lang.startsWith('ko')) {
-                window.location.replace('https://www.cafe2626.com' + path);
-            } else if (lang.startsWith('ja')) {
-                window.location.replace('https://www.cafe0101.com' + path);
-            } else if (lang.startsWith('zh')) {
-                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=zh');
-            } else if (lang.startsWith('ar')) {
-                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=ar');
-            } else if (lang.startsWith('es')) {
-                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=es');
-            } else if (lang.startsWith('de')) {
-                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=de');
-            } else if (lang.startsWith('fr')) {
-                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=fr');
-            } else {
-                // 기본: 영어 사이트
-                window.location.replace('https://www.cafe3355.com' + path);
-            }
+            window.location.replace('https://www.cafe3355.com' + path);
             return;
         }
 
