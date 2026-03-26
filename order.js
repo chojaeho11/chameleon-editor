@@ -36,7 +36,7 @@ let currentUserDiscountRate = 0;
 let finalPaymentAmount = 0; // 최종 결제 금액 저장용
 
 const urlParams = new URLSearchParams(window.location.search);
-const CURRENT_LANG = (urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : 'kr')).toLowerCase();
+const CURRENT_LANG = (urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : (window.location.hostname.includes('cafe3355') || window.location.hostname.includes('chameleon.design')) ? 'en' : 'kr')).toLowerCase();
 
 // ============================================================
 // [1] 헬퍼 함수 (유틸리티)
@@ -2787,7 +2787,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
     const _hostname = window.location.hostname;
     const _fromHTML = window.__SITE_CODE;
     const _fromConfig = SITE_CONFIG?.COUNTRY;
-    const _fromHostname = _hostname.includes('cafe0101') ? 'JP' : _hostname.includes('cafe3355') ? 'US' : 'KR';
+    const _fromHostname = _hostname.includes('cafe0101') ? 'JP' : (_hostname.includes('cafe3355') || _hostname.includes('chameleon.design')) ? 'US' : 'KR';
     const _siteCode = (_fromHTML && _fromHTML !== 'KR') ? _fromHTML
                     : (_fromConfig && _fromConfig !== 'KR') ? _fromConfig
                     : _fromHostname;

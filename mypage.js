@@ -1236,7 +1236,7 @@ let _pdfLang = _pdfUrlParams.get('lang');
 if (!_pdfLang) {
     const h = window.location.hostname;
     if (h.includes('cafe0101.com')) _pdfLang = 'ja';
-    else if (h.includes('cafe3355.com')) _pdfLang = 'us';
+    else if (h.includes('cafe3355.com') || h.includes('chameleon.design')) _pdfLang = 'us';
     else _pdfLang = 'kr';
 }
 const PDF_LANG = _pdfLang.toLowerCase();

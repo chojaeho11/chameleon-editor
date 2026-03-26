@@ -34,7 +34,7 @@
 
     // Detect language from hostname or config
     var h = location.hostname;
-    var lang = cfg.lang || (h.indexOf('cafe0101') >= 0 ? 'ja' : h.indexOf('cafe3355') >= 0 ? 'en' : 'kr');
+    var lang = cfg.lang || (h.indexOf('cafe0101') >= 0 ? 'ja' : h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0 ? 'en' : 'kr');
     var labels = {
         kr: { btn: 'AI 상담', autoMsg: '무엇이든 물어보세요!' },
         ja: { btn: 'AI相談', autoMsg: '何でもお聞きください！' },

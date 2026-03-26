@@ -948,7 +948,7 @@ function addProductCards(products) {
 
     // 사이트 URL 결정
     const lang = getLang();
-    const siteHost = lang === 'ja' ? 'https://cafe0101.com' : lang === 'en' ? 'https://cafe3355.com' : 'https://cafe2626.com';
+    const siteHost = lang === 'ja' ? 'https://cafe0101.com' : lang === 'en' ? 'https://chameleon.design' : 'https://cafe2626.com';
     const detailLabel = lang === 'ja' ? '購入する' : lang === 'en' ? 'Buy Now' : '구매하러가기';
 
     products.forEach((rec, i) => {

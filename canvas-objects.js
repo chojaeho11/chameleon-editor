@@ -10,7 +10,7 @@ let _detectedLang = urlParams.get('lang');
 if (!_detectedLang) {
     const _h = window.location.hostname;
     if (_h.includes('cafe0101.com')) _detectedLang = 'JP';
-    else if (_h.includes('cafe3355.com')) _detectedLang = 'US';
+    else if (_h.includes('cafe3355.com') || _h.includes('chameleon.design')) _detectedLang = 'US';
     else _detectedLang = 'KR';
 }
 // DB site_fonts.site_code = KR / JA / EN / ZH / AR / ES

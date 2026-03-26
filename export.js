@@ -47,7 +47,7 @@ let _exportLang = urlParams.get('lang');
 if (!_exportLang) {
     const _eh = window.location.hostname;
     if (_eh.includes('cafe0101.com')) _exportLang = 'ja';
-    else if (_eh.includes('cafe3355.com')) _exportLang = 'us';
+    else if (_eh.includes('cafe3355.com') || _eh.includes('chameleon.design')) _exportLang = 'us';
     else _exportLang = 'kr';
 }
 const CURRENT_LANG_CODE = _exportLang.toLowerCase();

@@ -354,7 +354,7 @@ function renderWallConfigUI() {
     const sides = cfg.doubleSided ? 2 : 1;
     // US 여부: SITE_CONFIG.COUNTRY 직접 확인 (window._isUSsite 타이밍 이슈 방지)
     const _isUS = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'US') ||
-                  window.location.hostname.includes('cafe3355');
+                  window.location.hostname.includes('cafe3355') || window.location.hostname.includes('chameleon.design');
 
     cfg.walls.forEach((wall, i) => {
         const isActive = i === cfg.activeIndex;

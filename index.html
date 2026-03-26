@@ -513,7 +513,7 @@ window.loadEditorLibraries = function() {
         var h = window.location.hostname || '';
 
         // ★ cafe3355.com → chameleon.design으로 리다이렉트 (글로벌 기본 도메인)
-        if (h.indexOf('cafe3355') !== -1) {
+        if (h.indexOf('cafe3355') !== -1 || h.indexOf('chameleon.design') !== -1) {
             var path = window.location.pathname + window.location.search;
             window.location.replace('https://chameleon.design' + path);
             return;
@@ -2518,7 +2518,7 @@ async function handleSubReturn() {
         let targetCountry = 'KR'; // 기본값
 
         // 2. 도메인에 따라 국가 코드 결정 (board.html은 KR, US, JP 대문자 사용)
-        if (hostname.includes('cafe3355.com')) {
+        if (hostname.includes('cafe3355.com') || hostname.includes('chameleon.design')) {
             targetCountry = 'US';
         } else if (hostname.includes('cafe0101.com')) {
             targetCountry = 'JP';
@@ -6091,7 +6091,7 @@ window.filterFxCards = function(cat, btn) {
     if (window.__SITE_CODE) { country = window.__SITE_CODE; }
     else if (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) { country = window.SITE_CONFIG.COUNTRY; }
     else if (location.hostname.includes('cafe0101')) { country = 'JP'; }
-    else if (location.hostname.includes('cafe3355')) { country = 'US'; }
+    else if (location.hostname.includes('cafe3355') || location.hostname.includes('chameleon.design') || hostname.includes('chameleon.design')) { country = 'US'; }
 
     const sidebar = document.getElementById('csSidebar');
     if (!sidebar) return;
@@ -6409,7 +6409,7 @@ window.getTinyThumb = function(url, size = 150) {
 
     // 1. 도메인 기본값 설정 (lang 파라미터가 있으면 파라미터 우선)
     const _langHostname = window.location.hostname;
-    if (_langHostname.includes('cafe3355.com')) {
+    if (_langHostname.includes('cafe3355.com') || _langHostname.includes('chameleon.design')) {
         if (!detectedLang) detectedLang = 'en'; // 미국 도메인: lang 파라미터 없으면 영어
     } else if (_langHostname.includes('cafe0101.com')) {
         if (!detectedLang) detectedLang = 'ja'; // 일본 도메인: lang 파라미터 없으면 일본어
@@ -6547,7 +6547,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             // 영어/일본어 파일이 없을 때만 한국어로 자동 전환 (무한루프 방지)
             // 해외 도메인(cafe0101/cafe3355)에서는 절대 한국어로 전환하지 않음
             const _fbHostname = window.location.hostname;
-            const _isOverseas = _fbHostname.includes('cafe0101') || _fbHostname.includes('cafe3355');
+            const _isOverseas = _fbHostname.includes('cafe0101') || _fbHostname.includes('cafe3355') || _fbHostname.includes('chameleon.design');
             if (CURRENT_LANG !== 'kr' && !_isOverseas) {
                 console.warn("⚠️ 한국어로 전환합니다.");
                 CURRENT_LANG = 'kr';
@@ -6815,7 +6815,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                         if (!document.body.classList.contains('editor-active')) {
                             const _lh = window.location.hostname;
                             if (_lh.includes('cafe0101')) window.location.replace('/?lang=ja');
-                            else if (_lh.includes('cafe3355')) window.location.replace('/');
+                            else if (_lh.includes('cafe3355') || _lh.includes('chameleon.design')) window.location.replace('/');
                             else window.location.reload();
                         }
                     }
@@ -7110,7 +7110,7 @@ async function loadScrollBanner() {
     window.goBoardWithCategory = function(boardType, subCode, subName) {
         const hostname = window.location.hostname;
         let targetCountry = 'KR';
-        if (hostname.includes('cafe3355.com')) targetCountry = 'US';
+        if (hostname.includes('cafe3355.com') || hostname.includes('chameleon.design')) targetCountry = 'US';
         else if (hostname.includes('cafe0101.com')) targetCountry = 'JP';
 
         // 해당 소분류 코드(sub_code)와 이름(sub_name)을 달고 새 창 열기
@@ -7759,7 +7759,7 @@ window.goHome = function() {
     window._selectedTshirtColor = null;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : null);
+    const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') || location.hostname.includes('chameleon.design') || hostname.includes('chameleon.design') ? 'en' : null);
     window.location.href = currentLang ? '/?lang=' + currentLang : '/';
 };
 
@@ -7778,7 +7778,7 @@ window.goHome = function() {
             const _hn2 = window.location.hostname;
             let currentLang;
             if (_hn2.includes('cafe0101')) currentLang = 'ja';
-            else if (_hn2.includes('cafe3355')) currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+            else if (_hn2.includes('cafe3355') || _hn2.includes('chameleon.design')) currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
             else currentLang = new URLSearchParams(window.location.search).get('lang') || null;
 
             // ★ [핵심 수정] sb 대신 window.sb 사용 (전역 변수 강제 참조)
@@ -7958,7 +7958,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
     // 설명 박스 처리 (일본어 대응 포함)
     if (descBox) {
         const urlParams = new URLSearchParams(window.location.search);
-        const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') ? 'en' : 'kr');
+        const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') || location.hostname.includes('chameleon.design') || hostname.includes('chameleon.design') ? 'en' : 'kr');
         let displayDesc = catDesc;
         if (window.modalGlobalData?.categories) {
             const catData = window.modalGlobalData.categories.find(c => c.code === catKey);
@@ -9329,7 +9329,7 @@ window.updateModalTotal = function() {
         const urlParams = new URLSearchParams(window.location.search);
         let lang = urlParams.get('lang');
         if (!lang && window.location.hostname.includes('cafe0101.com')) lang = 'ja';
-        else if (!lang && window.location.hostname.includes('cafe3355.com')) lang = 'en';
+        else if (!lang && window.location.hostname.includes('cafe3355.com') || hostname.includes('chameleon.design')) lang = 'en';
 
         let unitPrice = product.price; // KRW 기본
         if (lang === 'ja' && product.price_jp) unitPrice = product.price_jp;
@@ -9579,7 +9579,7 @@ window.updateModalTotal = function() {
         let lang = urlParams.get('lang');
         if (!lang) {
             if (window.location.hostname.includes('cafe0101.com')) lang = 'ja';
-            else if (window.location.hostname.includes('cafe3355.com')) lang = 'en';
+            else if (window.location.hostname.includes('cafe3355.com') || hostname.includes('chameleon.design')) lang = 'en';
             else lang = 'kr';
         }
 
@@ -9884,7 +9884,7 @@ if (w >= 20 && h >= 20) {
         if (!_sb) return;
 
         // 언어 감지
-        const _lang = window.location.hostname.includes('cafe0101.com') ? 'ja' : window.location.hostname.includes('cafe3355.com') ? 'en' : 'kr';
+        const _lang = window.location.hostname.includes('cafe0101.com') ? 'ja' : window.location.hostname.includes('cafe3355.com') || hostname.includes('chameleon.design') ? 'en' : 'kr';
         const _cr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
 
         // 상품의 addon 코드 가져오기
@@ -10061,7 +10061,7 @@ if (w >= 20 && h >= 20) {
                 if (checked.length === 0) {
                     reqCatBox.style.border = '2px solid #ef4444';
                     reqCatBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    const _l = (window.location.hostname.includes('cafe0101.com')) ? 'ja' : (window.location.hostname.includes('cafe3355.com')) ? 'en' : 'kr';
+                    const _l = (window.location.hostname.includes('cafe0101.com')) ? 'ja' : (window.location.hostname.includes('cafe3355.com') || hostname.includes('chameleon.design')) ? 'en' : 'kr';
                     const _m = _l==='ja'?'ファブリックのミシンオプションは1つ必ず選択してください':_l==='en'?'You must select at least one fabric sewing option':'패브릭의 미싱옵션은 1개는 꼭 선택해야 합니다';
                     showToast(_m, 'error');
                     return;
@@ -10074,7 +10074,7 @@ if (w >= 20 && h >= 20) {
         let lang = urlParams.get('lang');
         if (!lang) {
             if (window.location.hostname.includes('cafe0101.com')) lang = 'ja';
-            else if (window.location.hostname.includes('cafe3355.com')) lang = 'en';
+            else if (window.location.hostname.includes('cafe3355.com') || hostname.includes('chameleon.design')) lang = 'en';
             else lang = 'kr';
         }
 
@@ -10529,7 +10529,7 @@ if (w >= 20 && h >= 20) {
                             // 자동 입력 안내
                             const hint = document.getElementById('sizeAutoHint');
                             if (hint) {
-                                const _l = (window.location.hostname.includes('cafe0101.com'))?'ja':(window.location.hostname.includes('cafe3355.com'))?'en':'kr';
+                                const _l = (window.location.hostname.includes('cafe0101.com'))?'ja':(window.location.hostname.includes('cafe3355.com') || hostname.includes('chameleon.design'))?'en':'kr';
                                 hint.innerHTML = '✅ ' + (_l==='ja'?`PDFから自動検出: ${pdfMmW}×${pdfMmH}mm。修正可能です。`:_l==='en'?`Auto-detected from PDF: ${pdfMmW}×${pdfMmH}mm. You can adjust.`:`PDF에서 자동 감지: ${pdfMmW}×${pdfMmH}mm. 수정 가능합니다.`);
                                 hint.style.color = '#16a34a';
                             }
@@ -13297,7 +13297,7 @@ window.loadHomeHcGrid = function(){
             const path = refUrl.pathname.toLowerCase();
 
             // 내부 사이트
-            if (hostname.includes('cafe2626.com') || hostname.includes('cafe0101.com') || hostname.includes('cafe3355.com')) {
+            if (hostname.includes('cafe2626.com') || hostname.includes('cafe0101.com') || hostname.includes('cafe3355.com') || hostname.includes('chameleon.design')) {
                 return '__INTERNAL__';
             }
 

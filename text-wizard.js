@@ -10,7 +10,7 @@
     if (!currentLang) {
         const _h = window.location.hostname;
         if (_h.includes('cafe0101.com')) currentLang = 'jp';
-        else if (_h.includes('cafe3355.com')) currentLang = 'us';
+        else if (_h.includes('cafe3355.com') || _h.includes('chameleon.design')) currentLang = 'us';
         else currentLang = 'kr';
     }
     // KR/JP만 고유, 나머지 모든 국가는 EN(미국)과 동일
