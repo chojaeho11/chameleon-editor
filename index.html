@@ -511,11 +511,36 @@ window.loadEditorLibraries = function() {
     // HTML 문서는 브라우저가 매번 재검증하므로, JS 모듈 캐시 문제를 우회함
     (function() {
         var h = window.location.hostname || '';
+
+        // ★ chameleon.design → 브라우저 언어 기반 자동 리다이렉트
+        if (h === 'chameleon.design' || h === 'www.chameleon.design') {
+            var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+            var path = window.location.pathname + window.location.search;
+            if (lang.startsWith('ko')) {
+                window.location.replace('https://www.cafe2626.com' + path);
+            } else if (lang.startsWith('ja')) {
+                window.location.replace('https://www.cafe0101.com' + path);
+            } else if (lang.startsWith('zh')) {
+                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=zh');
+            } else if (lang.startsWith('ar')) {
+                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=ar');
+            } else if (lang.startsWith('es')) {
+                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=es');
+            } else if (lang.startsWith('de')) {
+                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=de');
+            } else if (lang.startsWith('fr')) {
+                window.location.replace('https://www.cafe3355.com' + path + (path.indexOf('?') !== -1 ? '&' : '?') + 'lang=fr');
+            } else {
+                // 기본: 영어 사이트
+                window.location.replace('https://www.cafe3355.com' + path);
+            }
+            return;
+        }
+
         var code = 'KR';
         if (h.indexOf('cafe0101') !== -1) code = 'JP';
         else if (h.indexOf('cafe3355') !== -1) code = 'US';
         window.__SITE_CODE = code;
-        // Site code set silently
     })();
 
     // 1. 프로젝트 버전
