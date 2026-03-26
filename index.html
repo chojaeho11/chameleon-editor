@@ -3997,7 +3997,32 @@ async function handleSubReturn() {
         var ch = document.getElementById('inputCustH');
         if (cw) cw.value = p.cw - 6;
         if (ch) ch.value = p.ch - 6;
-        if (window.calcCustomPrice) window.calcCustomPrice();
+        // 사이즈 표시 텍스트도 업데이트
+        var sizeDiv = document.querySelector('[data-npc="size"]');
+        if (sizeDiv) {
+            var sizeNums = sizeDiv.querySelectorAll('span, div');
+            // 간단히 전체 사이즈 텍스트 업데이트
+            var _pw = p.cw - 6, _ph = p.ch - 6;
+            var _sizeEl = sizeDiv.querySelector('div[style*="font-size:22px"]');
+            if (_sizeEl) {
+                var _isUS = window._isUSsite && window._isUSsite();
+                var _w = _isUS ? (_pw/25.4).toFixed(2) : _pw;
+                var _h = _isUS ? (_ph/25.4).toFixed(2) : _ph;
+                var _unit = window._dimUnit ? window._dimUnit() : 'mm';
+                _sizeEl.innerHTML = _w + '<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>' + _h + '<span style="font-size:13px; color:#64748b; margin-left:4px;">' + _unit + '</span>';
+            }
+        }
+        // 인쇄비 직접 업데이트
+        var qInput = document.getElementById('inputCustQty');
+        var qty = qInput ? (parseInt(qInput.value) || 1) : 1;
+        var totalKRW = krw * qty;
+        var priceEl = document.getElementById('calcResultPrice');
+        if (priceEl) {
+            priceEl.dataset.rawPrice = totalKRW;
+            priceEl.innerText = (typeof formatCurrency === 'function') ? formatCurrency(totalKRW) : totalKRW.toLocaleString() + '원';
+        }
+        var sizeLabel = document.getElementById('calcResultSize');
+        if (sizeLabel) sizeLabel.innerText = (p.cw - 6) + ' mm x ' + (p.ch - 6) + ' mm';
         if (window.updateModalTotal) window.updateModalTotal();
     };
 })();
