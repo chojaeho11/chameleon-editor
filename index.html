@@ -3986,17 +3986,8 @@ async function handleSubReturn() {
         // 필수 경고 숨김
         var req = document.getElementById('promoFmtRequired');
         if (req) req.style.display = 'none';
-        // 가격 업데이트 (모든 통화 필드 동기화)
-        var prod = window._currentProductRef || window.selectedProductForChoice;
-        if (prod) {
-            prod.price = krw;
-            prod._calculated_price = true;
-            // JP/US 필드도 환산하여 설정 (calcCustomPrice가 덮어쓰지 않도록)
-            var _scfg = window.SITE_CONFIG || {};
-            var _rates = (_scfg.CURRENCY_RATE) || {};
-            prod.price_jp = Math.round(krw * (_rates.JP || 0.1));
-            prod.price_us = 0; // US는 KRW에서 자동 환산
-        }
+        // 가격을 전역 변수에 저장 (calcCustomPrice에서 참조)
+        window.__promoFormatPriceKRW = krw;
         // 사이즈 표시 업데이트
         var cw = document.getElementById('inputCustW');
         var ch = document.getElementById('inputCustH');
@@ -9591,6 +9582,11 @@ window.updateModalTotal = function() {
         // ★ [핵심] 단가(unitPrice)를 언어에 맞게 가져오기
         let unitPrice = product.price || 0; // 기본 한국 가격
 
+        // ★ 프로모 규격 선택 시 해당 가격 우선 사용 (KRW)
+        if (window.__promoFormatPriceKRW) {
+            unitPrice = window.__promoFormatPriceKRW;
+        }
+
         // ★ 작품 제품타입 선택 시 해당 타입 단가 사용 (KRW/m² → 언어별 환산)
         if (product._artworkTypePrice) {
             unitPrice = product._artworkTypePrice;
@@ -9617,8 +9613,8 @@ window.updateModalTotal = function() {
             return;
         }
 
-        // 일본어면 price_jp 사용 (작품 제품타입은 위에서 처리됨)
-        if (!product._artworkTypePrice && lang === 'ja' && product.price_jp && product.price_jp > 0) {
+        // 일본어면 price_jp 사용 (작품 제품타입/프로모 규격 선택 시 제외)
+        if (!product._artworkTypePrice && !window.__promoFormatPriceKRW && lang === 'ja' && product.price_jp && product.price_jp > 0) {
             unitPrice = product.price_jp;
         }
         const formatValue = (val) => {
@@ -9634,10 +9630,28 @@ window.updateModalTotal = function() {
 
         // ★ 사이즈고정상품: 면적 계산 없이 고정 단가 사용
         if (product.is_file_upload) {
-            const fixedPrice = unitPrice * qty;
+            const fixedPrice = unitPrice * qty; // unitPrice는 KRW (프로모) 또는 현지통화 (DB)
             if (priceDisplay) {
-                priceDisplay.innerText = formatValue(fixedPrice);
-                priceDisplay.dataset.rawPrice = fixedPrice;
+                if (window.__promoFormatPriceKRW) {
+                    // 프로모: unitPrice=KRW → 각 국가 통화로 변환
+                    const _jpRate = _rates.JP || 0.1;
+                    const _usRate = _rates.US || 0.001;
+                    if (lang === 'ja') {
+                        const jpyVal = Math.floor(fixedPrice * _jpRate);
+                        priceDisplay.innerText = '¥' + jpyVal.toLocaleString();
+                        priceDisplay.dataset.rawPrice = jpyVal; // JPY for updateModalTotal
+                    } else if (lang === 'en') {
+                        const usdVal = fixedPrice * _usRate;
+                        priceDisplay.innerText = usdVal >= 10 ? '$' + Math.round(usdVal).toLocaleString() : '$' + usdVal.toFixed(2);
+                        priceDisplay.dataset.rawPrice = fixedPrice; // KRW for updateModalTotal (fmtLocal converts)
+                    } else {
+                        priceDisplay.innerText = Math.floor(fixedPrice).toLocaleString() + '원';
+                        priceDisplay.dataset.rawPrice = fixedPrice; // KRW
+                    }
+                } else {
+                    priceDisplay.innerText = formatValue(fixedPrice);
+                    priceDisplay.dataset.rawPrice = fixedPrice;
+                }
             }
             if (sizeDisplay) sizeDisplay.innerText = window._fmtDim ? `${window._fmtDim(product.width_mm||0)} x ${window._fmtDim(product.height_mm||0)}` : `${product.width_mm||0}mm x ${product.height_mm||0}mm`;
             return;
