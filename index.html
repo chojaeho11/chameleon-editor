@@ -8806,17 +8806,17 @@ window.showChoiceModal = async function(key) {
             {id:'cv_halvono', name:lang==='ja'?'ハルボノ':lang==='en'?'Halvono':'반누보'},
         ];
         const innerRegular = [
-            {id:'in_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지', price:80},
-            {id:'in_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지', price:80},
-            {id:'in_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지', price:80},
+            {id:'in_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지', price:60},
+            {id:'in_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지', price:60},
+            {id:'in_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지', price:60},
         ];
         const innerImported = [
-            {id:'in_grace', name:lang==='ja'?'グレイス':lang==='en'?'Grace':'그레이스', price:100},
-            {id:'in_tintoretto', name:lang==='ja'?'ティントレット':lang==='en'?'Tintoretto':'띤또레또', price:100},
-            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:100},
-            {id:'in_marshmallow', name:lang==='ja'?'マシュメロウ':lang==='en'?'Marshmallow':'머쉬멜로우', price:100},
-            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:100},
-            {id:'in_halvono', name:lang==='ja'?'ハルボノ':lang==='en'?'Halvono':'반누보', price:100},
+            {id:'in_grace', name:lang==='ja'?'グレイス':lang==='en'?'Grace':'그레이스', price:80},
+            {id:'in_tintoretto', name:lang==='ja'?'ティントレット':lang==='en'?'Tintoretto':'띤또레또', price:80},
+            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:80},
+            {id:'in_marshmallow', name:lang==='ja'?'マシュメロウ':lang==='en'?'Marshmallow':'머쉬멜로우', price:80},
+            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:80},
+            {id:'in_halvono', name:lang==='ja'?'ハルボノ':lang==='en'?'Halvono':'반누보', price:80},
         ];
         const effects = [
             {id:'fx_gold_glossy', name:lang==='ja'?'光沢金箔':lang==='en'?'Gold Foil (Glossy)':'유광금박', price:1000},
@@ -9427,7 +9427,7 @@ window._bkCalc = function() {
     const pages = Math.max(4, parseInt(document.getElementById('bkPages')?.value) || 20);
     const copies = Math.max(1, parseInt(document.getElementById('bkCopies')?.value) || 1);
     const innerRadio = document.querySelector('input[name="bk_inner"]:checked');
-    const innerPricePerPage = innerRadio ? parseInt(innerRadio.dataset.price) || 80 : 80;
+    const innerPricePerPage = innerRadio ? parseInt(innerRadio.dataset.price) || 60 : 60;
 
     // 기본 인쇄 셋업비
     const setupFee = 50000;
@@ -10342,7 +10342,7 @@ if (w >= 20 && h >= 20) {
             const bkInner = document.querySelector('input[name="bk_inner"]:checked');
             const bkCover = document.querySelector('input[name="bk_cover"]:checked');
             const bkCoating = document.querySelector('input[name="bk_coating"]:checked');
-            const innerPrice = bkInner ? parseInt(bkInner.dataset.price) || 80 : 80;
+            const innerPrice = bkInner ? parseInt(bkInner.dataset.price) || 60 : 60;
             let bkEffects = [];
             document.querySelectorAll('input[name="bk_effect"]:checked').forEach(e => bkEffects.push(e.value));
 
