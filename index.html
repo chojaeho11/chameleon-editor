@@ -8878,7 +8878,7 @@ window.showChoiceModal = async function(key) {
                 <i class="fa-solid fa-xmark" style="font-size:20px; color:#333;"></i>
             </button>
 
-            <div class="choice-left-content" style="${window.innerWidth <= 768 ? 'order:2;' : ''}">
+            <div class="choice-left-content" style="${window.innerWidth <= 768 ? 'order:2; flex:0 0 100%; width:100%;' : ''}">
                 ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='zh'?'市场商品':lang==='ar'?'منتج السوق':lang==='es'?'Producto del Mercado':lang==='de'?'Marktplatz-Produkt':lang==='fr'?'Produit Marketplace':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
                 <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
                 <div class="product-detail-render" style="line-height:1.8; width:100%; overflow:hidden; box-sizing:border-box;"></div>
