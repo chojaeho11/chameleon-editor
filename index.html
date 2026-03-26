@@ -8763,40 +8763,9 @@ window.showChoiceModal = async function(key) {
             </div>`;
     }
 
-    // ★ 프로모 상품: 규격 선택 패널 HTML
-    let promoFormatHtml = '';
-    if (_isPromo) {
-        const _pFmtTitle = lang==='ja'?'印刷規格を選択':lang==='en'?'Select Print Format':lang==='zh'?'选择印刷规格':'인쇄 규격 선택';
-        const _pFmts = [
-            { id:'flyer_single', icon:'📃', name:{kr:'A4 전단지',ja:'A4チラシ(片面)',en:'A4 Flyer',zh:'A4传单'}, desc:{kr:'단면·210×297',ja:'片面·210×297',en:'Single·210×297',zh:'单面·210×297'}, krw:500 },
-            { id:'flyer_double', icon:'📄', name:{kr:'A4 양면',ja:'A4両面',en:'A4 Double',zh:'A4双面'}, desc:{kr:'양면·210×297',ja:'両面·210×297',en:'Double·210×297',zh:'双面·210×297'}, krw:800 },
-            { id:'postcard', icon:'📮', name:{kr:'엽서',ja:'はがき',en:'Postcard',zh:'明信片'}, desc:{kr:'양면·100×148',ja:'両面·100×148',en:'Double·100×148',zh:'双面·100×148'}, krw:600 },
-            { id:'invitation', icon:'💌', name:{kr:'초대장',ja:'招待状',en:'Invitation',zh:'邀请函'}, desc:{kr:'반접지·190×130',ja:'二つ折り·190×130',en:'Half fold·190×130',zh:'对折·190×130'}, krw:1200 },
-            { id:'a4_half', icon:'📋', name:{kr:'A4 반접지',ja:'A4二つ折り',en:'A4 Half Fold',zh:'A4对折'}, desc:{kr:'4면·303×216',ja:'4面·303×216',en:'4 panels·303×216',zh:'4面·303×216'}, krw:1000 },
-            { id:'tri_leaflet', icon:'📰', name:{kr:'3단 리플릿',ja:'三つ折り',en:'Tri-fold',zh:'三折页'}, desc:{kr:'6면·303×216',ja:'6面·303×216',en:'6 panels·303×216',zh:'6面·303×216'}, krw:1000 }
-        ];
-        const _L = lang || 'kr';
-        const _fmtCards = _pFmts.map(f => {
-            const nm = f.name[_L] || f.name['kr'];
-            const ds = f.desc[_L] || f.desc['kr'];
-            const pr = (typeof formatCurrency === 'function') ? formatCurrency(f.krw) : f.krw.toLocaleString()+'원';
-            return `<button type="button" class="promo-fmt-btn" data-fmt="${f.id}" data-krw="${f.krw}" onclick="window._selectPromoFormat('${f.id}',${f.krw})" style="flex:1; min-width:calc(33.3% - 6px); padding:10px 6px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; text-align:center; transition:all 0.15s;">
-                <div style="font-size:18px;">${f.icon}</div>
-                <div style="font-size:11px; font-weight:700; color:#334155; margin-top:2px;">${nm}</div>
-                <div style="font-size:9px; color:#94a3b8;">${ds}</div>
-                <div style="font-size:11px; font-weight:800; color:#6366f1; margin-top:3px;">${pr}</div>
-            </button>`;
-        }).join('');
-        promoFormatHtml = `<div id="promoFormatSelector" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">
-            <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">🖨️ ${_pFmtTitle}</div>
-            <div style="display:flex; flex-wrap:wrap; gap:6px;">${_fmtCards}</div>
-            <div id="promoFmtRequired" style="display:none; color:#ef4444; font-size:11px; font-weight:600; margin-top:6px;">⚠️ ${lang==='ja'?'規格を選択してください':lang==='en'?'Please select a format':'규격을 선택해주세요'}</div>
-        </div>`;
-    }
-
     let rightSideUI = "";
     if (isCustom) {
-        rightSideUI = productHeaderHtml + artworkTypeSelectorHtml + (_isPromo ? promoFormatHtml : '') + `
+        rightSideUI = productHeaderHtml + artworkTypeSelectorHtml + `
             ${isArtworkProduct ? '' : `<button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">`}
                 <div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일올리기'}
@@ -8962,10 +8931,47 @@ window.showChoiceModal = async function(key) {
 
     modal.style.display = 'flex';
 
-    // ★ 프로모 상품: 사이드바 규격 선택용 product 참조 저장
+    // ★ 프로모 상품: 사이드바에 규격 선택 패널 동적 삽입
     if (_isPromo) {
         window._currentProductRef = product;
         window._selectedPromoFormat = null;
+        const _pFmtTitle = lang==='ja'?'印刷規格を選択':lang==='en'?'Select Print Format':'인쇄 규격 선택';
+        const _pFmts = [
+            { id:'flyer_single', icon:'📃', name:{kr:'A4 전단지',ja:'A4チラシ(片面)',en:'A4 Flyer'}, desc:{kr:'단면·210×297',ja:'片面·210×297',en:'Single·210×297'}, krw:500 },
+            { id:'flyer_double', icon:'📄', name:{kr:'A4 양면',ja:'A4両面',en:'A4 Double'}, desc:{kr:'양면·210×297',ja:'両面·210×297',en:'Double·210×297'}, krw:800 },
+            { id:'postcard', icon:'📮', name:{kr:'엽서',ja:'はがき',en:'Postcard'}, desc:{kr:'양면·100×148',ja:'両面·100×148',en:'Double·100×148'}, krw:600 },
+            { id:'invitation', icon:'💌', name:{kr:'초대장',ja:'招待状',en:'Invitation'}, desc:{kr:'반접지·190×130',ja:'二つ折り·190×130',en:'Half fold·190×130'}, krw:1200 },
+            { id:'a4_half', icon:'📋', name:{kr:'A4 반접지',ja:'A4二つ折り',en:'A4 Half Fold'}, desc:{kr:'4면·303×216',ja:'4面·303×216',en:'4 panels·303×216'}, krw:1000 },
+            { id:'tri_leaflet', icon:'📰', name:{kr:'3단 리플릿',ja:'三つ折り',en:'Tri-fold'}, desc:{kr:'6면·303×216',ja:'6面·303×216',en:'6 panels·303×216'}, krw:1000 }
+        ];
+        const _L = lang || 'kr';
+        const _reqMsg = lang==='ja'?'規格を選択してください':lang==='en'?'Please select a format':'규격을 선택해주세요';
+        var _fmtHtml = '<div id="promoFormatSelector" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">';
+        _fmtHtml += '<div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">\uD83D\uDDA8\uFE0F ' + _pFmtTitle + '</div>';
+        _fmtHtml += '<div style="display:flex; flex-wrap:wrap; gap:6px;">';
+        _pFmts.forEach(function(f) {
+            var nm = f.name[_L] || f.name['kr'];
+            var ds = f.desc[_L] || f.desc['kr'];
+            var pr = (typeof formatCurrency === 'function') ? formatCurrency(f.krw) : f.krw.toLocaleString() + '원';
+            _fmtHtml += '<button type="button" class="promo-fmt-btn" data-fmt="' + f.id + '" data-krw="' + f.krw + '" onclick="window._selectPromoFormat(\'' + f.id + '\',' + f.krw + ')" style="flex:1; min-width:calc(33.3% - 6px); padding:10px 6px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; text-align:center; transition:all 0.15s;">';
+            _fmtHtml += '<div style="font-size:18px;">' + f.icon + '</div>';
+            _fmtHtml += '<div style="font-size:11px; font-weight:700; color:#334155; margin-top:2px;">' + nm + '</div>';
+            _fmtHtml += '<div style="font-size:9px; color:#94a3b8;">' + ds + '</div>';
+            _fmtHtml += '<div style="font-size:11px; font-weight:800; color:#6366f1; margin-top:3px;">' + pr + '</div>';
+            _fmtHtml += '</button>';
+        });
+        _fmtHtml += '</div>';
+        _fmtHtml += '<div id="promoFmtRequired" style="display:none; color:#ef4444; font-size:11px; font-weight:600; margin-top:6px;">\u26A0\uFE0F ' + _reqMsg + '</div>';
+        _fmtHtml += '</div>';
+        // 파일올리기 버튼 앞에 삽입
+        var _uploadBtn = modalBox.querySelector('[onclick*="confirmChoice(\'upload\')"]');
+        if (_uploadBtn) {
+            _uploadBtn.insertAdjacentHTML('beforebegin', _fmtHtml);
+        } else {
+            // 업로드 버튼이 없으면 사이즈 입력 앞에
+            var _sizeBox = modalBox.querySelector('[data-npc="size"]');
+            if (_sizeBox) _sizeBox.insertAdjacentHTML('beforebegin', _fmtHtml);
+        }
     }
 
     // ★ 상세설명 + 공통정보를 안전하게 innerHTML로 삽입 (DOM 구조 보호)
