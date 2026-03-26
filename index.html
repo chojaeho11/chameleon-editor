@@ -9337,7 +9337,7 @@ window.updateModalTotal = function() {
     // 2. [옵션] 수량 및 가격 계산
     let optionTotal = 0;
     const _topCatForAddon = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-    const _isFabricProduct = _topCatForAddon === '22222';
+    const _isFabricProduct = _topCatForAddon === '22222' || _topCatForAddon === '77777';
 
     document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
         let price = parseFloat(chk.dataset.price || 0);
@@ -10150,7 +10150,8 @@ if (w >= 20 && h >= 20) {
         // 5. 옵션 수집 (코드 + 수량)
         const selectedAddonCodes = [];
         const selectedAddonQtys = {};
-        const _confirmFabric = window._getTopCategoryCode && window._getTopCategoryCode(product.category) === '22222';
+        const _cfTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
+        const _confirmFabric = _cfTopCat === '22222' || _cfTopCat === '77777';
         document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
             selectedAddonCodes.push(chk.value);
             const row = chk.closest('.addon-item-row') || chk.closest('.color-btn-item');
