@@ -3971,6 +3971,34 @@ async function handleSubReturn() {
             window._promoTplResolve(d);
         }
     };
+
+    // ★ 상세페이지 사이드바에서 규격 선택
+    window._selectedPromoFormat = null;
+    window._selectPromoFormat = function(id, krw) {
+        var p = PRESETS[id]; if(!p) return;
+        window._selectedPromoFormat = calcCanvas(p);
+        // 버튼 활성화 표시
+        document.querySelectorAll('.promo-fmt-btn').forEach(function(btn) {
+            var active = btn.dataset.fmt === id;
+            btn.style.borderColor = active ? '#6366f1' : '#e2e8f0';
+            btn.style.background = active ? '#eef2ff' : '#fff';
+        });
+        // 필수 경고 숨김
+        var req = document.getElementById('promoFmtRequired');
+        if (req) req.style.display = 'none';
+        // 가격 업데이트
+        if (window._currentProductRef) {
+            window._currentProductRef.price = krw;
+            window._currentProductRef._calculated_price = true;
+        }
+        // 사이즈 표시 업데이트
+        var cw = document.getElementById('inputCustW');
+        var ch = document.getElementById('inputCustH');
+        if (cw) cw.value = p.cw - 6;
+        if (ch) ch.value = p.ch - 6;
+        if (window.calcCustomPrice) window.calcCustomPrice();
+        if (window.updateModalTotal) window.updateModalTotal();
+    };
 })();
 </script>
 
@@ -8462,6 +8490,7 @@ window.showChoiceModal = async function(key) {
     const isCustom = product.is_custom_size === true;
     const isFixedSize = !!(product.is_file_upload);
     window.isCustomModeCurrent = isCustom;
+    const _isPromo = typeof key === 'string' && (key.startsWith('pp_lf_') || key.startsWith('pp_pt_') || key.startsWith('pp_cl_'));
 
 // ============================================================
     // [최종 수정] 공통 정보 로드 (순서: 전체공통 -> 카테고리공통)
@@ -8734,10 +8763,41 @@ window.showChoiceModal = async function(key) {
             </div>`;
     }
 
+    // ★ 프로모 상품: 규격 선택 패널 HTML
+    let promoFormatHtml = '';
+    if (_isPromo) {
+        const _pFmtTitle = lang==='ja'?'印刷規格を選択':lang==='en'?'Select Print Format':lang==='zh'?'选择印刷规格':'인쇄 규격 선택';
+        const _pFmts = [
+            { id:'flyer_single', icon:'<div style="width:28px;height:38px;border:2px solid #94a3b8;border-radius:2px;background:#f8fafc;margin:0 auto;"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:5px;color:#94a3b8;font-weight:bold;">A4</div></div>', name:{kr:'A4 전단지',ja:'A4チラシ(片面)',en:'A4 Flyer',zh:'A4传单'}, desc:{kr:'단면·210×297',ja:'片面·210×297',en:'Single·210×297',zh:'单面·210×297'}, krw:500 },
+            { id:'flyer_double', icon:'📄', name:{kr:'A4 양면',ja:'A4両面',en:'A4 Double',zh:'A4双面'}, desc:{kr:'양면·210×297',ja:'両面·210×297',en:'Double·210×297',zh:'双面·210×297'}, krw:800 },
+            { id:'postcard', icon:'📮', name:{kr:'엽서',ja:'はがき',en:'Postcard',zh:'明信片'}, desc:{kr:'양면·100×148',ja:'両面·100×148',en:'Double·100×148',zh:'双面·100×148'}, krw:600 },
+            { id:'invitation', icon:'💌', name:{kr:'초대장',ja:'招待状',en:'Invitation',zh:'邀请函'}, desc:{kr:'반접지·190×130',ja:'二つ折り·190×130',en:'Half fold·190×130',zh:'对折·190×130'}, krw:1200 },
+            { id:'a4_half', icon:'📋', name:{kr:'A4 반접지',ja:'A4二つ折り',en:'A4 Half Fold',zh:'A4对折'}, desc:{kr:'4면·303×216',ja:'4面·303×216',en:'4 panels·303×216',zh:'4面·303×216'}, krw:1000 },
+            { id:'tri_leaflet', icon:'📰', name:{kr:'3단 리플릿',ja:'三つ折り',en:'Tri-fold',zh:'三折页'}, desc:{kr:'6면·303×216',ja:'6面·303×216',en:'6 panels·303×216',zh:'6面·303×216'}, krw:1000 }
+        ];
+        const _L = lang || 'kr';
+        const _fmtCards = _pFmts.map(f => {
+            const nm = f.name[_L] || f.name['kr'];
+            const ds = f.desc[_L] || f.desc['kr'];
+            const pr = (typeof formatCurrency === 'function') ? formatCurrency(f.krw) : f.krw.toLocaleString()+'원';
+            return `<button type="button" class="promo-fmt-btn" data-fmt="${f.id}" data-krw="${f.krw}" onclick="window._selectPromoFormat('${f.id}',${f.krw})" style="flex:1; min-width:calc(33.3% - 6px); padding:10px 6px; border:2px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; text-align:center; transition:all 0.15s;">
+                <div style="font-size:18px;">${f.icon}</div>
+                <div style="font-size:11px; font-weight:700; color:#334155; margin-top:2px;">${nm}</div>
+                <div style="font-size:9px; color:#94a3b8;">${ds}</div>
+                <div style="font-size:11px; font-weight:800; color:#6366f1; margin-top:3px;">${pr}</div>
+            </button>`;
+        }).join('');
+        promoFormatHtml = `<div id="promoFormatSelector" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">
+            <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">🖨️ ${_pFmtTitle}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">${_fmtCards}</div>
+            <div id="promoFmtRequired" style="display:none; color:#ef4444; font-size:11px; font-weight:600; margin-top:6px;">⚠️ ${lang==='ja'?'規格を選択してください':lang==='en'?'Please select a format':'규격을 선택해주세요'}</div>
+        </div>`;
+    }
+
     let rightSideUI = "";
     if (isCustom) {
-        rightSideUI = productHeaderHtml + artworkTypeSelectorHtml + `
-            ${isArtworkProduct ? '' : `<button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">
+        rightSideUI = productHeaderHtml + artworkTypeSelectorHtml + (_isPromo ? promoFormatHtml : '') + `
+            ${isArtworkProduct ? '' : `<button onclick="window.confirmChoice('upload')" class="btn-round" style="height:auto; font-size:16px; background:#1e1e2e; color:white; border:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; border-radius:12px; cursor:pointer; padding:22px 16px; min-height:120px;">`}
                 <div style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:700;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> ${lang==='ja'?'ファイルアップロード':lang==='zh'?'上传文件':lang==='ar'?'رفع الملف':lang==='es'?'Subir Archivo':lang==='de'?'Datei hochladen':lang==='fr'?'Télécharger le fichier':lang==='en'?'Upload File':'파일올리기'}
                 </div>
@@ -8901,6 +8961,12 @@ window.showChoiceModal = async function(key) {
     `;
 
     modal.style.display = 'flex';
+
+    // ★ 프로모 상품: 사이드바 규격 선택용 product 참조 저장
+    if (_isPromo) {
+        window._currentProductRef = product;
+        window._selectedPromoFormat = null;
+    }
 
     // ★ 상세설명 + 공통정보를 안전하게 innerHTML로 삽입 (DOM 구조 보호)
     const _descEl = modalBox.querySelector('.product-detail-render');
@@ -9930,6 +9996,14 @@ if (w >= 20 && h >= 20) {
         // ★ [핵심] 상품 코드 확실하게 가져오기 (변수 의존성 제거)
         const targetCode = product.code || window.currentProductKey;
         if (!targetCode) { showToast(window.t ? window.t('msg_product_code_missing', 'Product code is missing.') : 'Product code is missing.', 'error'); return; }
+
+        // ★ 프로모 상품: 규격 미선택 시 진행 차단
+        const _isPrm = typeof targetCode === 'string' && (targetCode.startsWith('pp_lf_') || targetCode.startsWith('pp_pt_') || targetCode.startsWith('pp_cl_'));
+        if (_isPrm && !window._selectedPromoFormat) {
+            const req = document.getElementById('promoFmtRequired');
+            if (req) { req.style.display = 'block'; req.scrollIntoView({ behavior:'smooth', block:'center' }); }
+            return;
+        }
 
         // ★ 패브릭미싱 필수 선택 검증 (패브릭 타입만, 파일업로드 시에는 건너뜀)
         const _isFabricType = !product._artworkType || product._artworkType === 'fabric';
@@ -11014,28 +11088,36 @@ if (w >= 20 && h >= 20) {
             }
         }
 
-        // ★ 홍보물 상품: 인쇄 규격 선택 모달 표시
+        // ★ 홍보물 상품: 사이드바에서 이미 선택됐으면 바로 적용, 아니면 모달 표시
         let _promoSelection = null;
         const isPromoProduct = typeof key === 'string' && (key.startsWith('pp_lf_') || key.startsWith('pp_pt_') || key.startsWith('pp_cl_'));
         if (isPromoProduct) {
-            const promoModal = document.getElementById('promoTemplateModal');
-            if (promoModal) {
-                // 현지 통화 가격 렌더링
-                promoModal.querySelectorAll('.promo-price').forEach(el => {
-                    const krw = parseInt(el.dataset.krw) || 0;
-                    el.textContent = (typeof formatCurrency === 'function') ? formatCurrency(krw) : krw.toLocaleString() + '원';
-                });
-                promoModal.style.display = 'flex';
-                _promoSelection = await new Promise(resolve => {
-                    window._promoTplResolve = resolve;
-                });
-                // 선택된 규격으로 캔버스 크기 덮어쓰기
+            if (window._selectedPromoFormat) {
+                // 사이드바에서 이미 선택됨 → 모달 건너뛰기
+                _promoSelection = window._selectedPromoFormat;
                 customW = _promoSelection.canvasWmm;
                 customH = _promoSelection.canvasHmm;
-                // 규격별 가격 반영
                 if (_promoSelection.price_krw && product) {
                     product.price = _promoSelection.price_krw;
                     product._calculated_price = true;
+                }
+            } else {
+                const promoModal = document.getElementById('promoTemplateModal');
+                if (promoModal) {
+                    promoModal.querySelectorAll('.promo-price').forEach(el => {
+                        const krw = parseInt(el.dataset.krw) || 0;
+                        el.textContent = (typeof formatCurrency === 'function') ? formatCurrency(krw) : krw.toLocaleString() + '원';
+                    });
+                    promoModal.style.display = 'flex';
+                    _promoSelection = await new Promise(resolve => {
+                        window._promoTplResolve = resolve;
+                    });
+                    customW = _promoSelection.canvasWmm;
+                    customH = _promoSelection.canvasHmm;
+                    if (_promoSelection.price_krw && product) {
+                        product.price = _promoSelection.price_krw;
+                        product._calculated_price = true;
+                    }
                 }
             }
         }
