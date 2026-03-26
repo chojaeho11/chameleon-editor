@@ -9337,7 +9337,8 @@ window.updateModalTotal = function() {
     // 2. [옵션] 수량 및 가격 계산
     let optionTotal = 0;
     const _topCatForAddon = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-    const _isFabricProduct = _topCatForAddon === '22222' || _topCatForAddon === '77777';
+    const _isHoneycombAddon = _topCatForAddon === 'honeycomb_board';
+    const _syncAddonQty = !_isHoneycombAddon;
 
     document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
         let price = parseFloat(chk.dataset.price || 0);
@@ -9358,8 +9359,8 @@ window.updateModalTotal = function() {
             optQty = prodQty;
         }
 
-        // ★ 패브릭인쇄(22222): 후가공 옵션도 제품 수량만큼 곱하기
-        if (_isFabricProduct && optQty === 1) {
+        // ★ 허니콤보드 제외 모든 카테고리: 옵션도 제품 수량만큼 동기화
+        if (_syncAddonQty && optQty === 1) {
             optQty = prodQty;
         }
 
@@ -10151,7 +10152,7 @@ if (w >= 20 && h >= 20) {
         const selectedAddonCodes = [];
         const selectedAddonQtys = {};
         const _cfTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-        const _confirmFabric = _cfTopCat === '22222' || _cfTopCat === '77777';
+        const _confirmSyncQty = _cfTopCat !== 'honeycomb_board';
         document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
             selectedAddonCodes.push(chk.value);
             const row = chk.closest('.addon-item-row') || chk.closest('.color-btn-item');
@@ -10164,8 +10165,8 @@ if (w >= 20 && h >= 20) {
             if (chk.dataset.catCode === 'opt_8796') {
                 optQty = finalQty;
             }
-            // ★ 패브릭인쇄(22222): 후가공 옵션도 제품 수량만큼
-            if (_confirmFabric && optQty === 1) {
+            // ★ 허니콤보드 제외: 옵션도 제품 수량만큼 동기화
+            if (_confirmSyncQty && optQty === 1) {
                 optQty = finalQty;
             }
             selectedAddonQtys[chk.value] = optQty;
