@@ -8950,6 +8950,7 @@ window.showChoiceModal = async function(key) {
     `;
 
     modal.style.display = 'flex';
+    window._relatedProductsLoading = false; // 추천상품 플래그 리셋
 
     // ★ 프로모 상품: 사이드바에 규격 선택 패널 동적 삽입
     if (_isPromo) {
@@ -9100,13 +9101,12 @@ window.showChoiceModal = async function(key) {
     }
 
     // ★ 추천상품 로드 (대분류 기준, 중복 방지)
+    if (window._relatedProductsLoading) return;
+    window._relatedProductsLoading = true;
     (async function loadRelatedProducts() {
         try {
-            // 기존 추천상품 섹션 제거 (중복 방지)
-            modalBox.querySelectorAll('.related-products-section').forEach(el => el.remove());
-
             const dbClient = window.sb || sb;
-            if (!dbClient) return;
+            if (!dbClient) { window._relatedProductsLoading = false; return; }
             // 대분류에 속하는 모든 소분류 코드 수집 (직접 계산)
             const curCat = product.category;
             let topCatCode = curCat;
@@ -9148,6 +9148,8 @@ window.showChoiceModal = async function(key) {
                 </div>`;
             });
 
+            // 삽입 직전 기존 섹션 제거
+            modalBox.querySelectorAll('.related-products-section').forEach(el => el.remove());
             const relatedSection = document.createElement('div');
             relatedSection.className = 'related-products-section';
             const isMobile = window.innerWidth <= 768;
@@ -9184,6 +9186,7 @@ window.showChoiceModal = async function(key) {
                 if (leftContent) leftContent.appendChild(relatedSection);
             }
         } catch(e) { console.warn('추천상품 로드 실패:', e); }
+        window._relatedProductsLoading = false;
     })();
 
     // ★ 상세설명 HTML 정리: 다크테마 시각 스타일 제거, 레이아웃 스타일 유지
