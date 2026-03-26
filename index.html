@@ -6244,7 +6244,7 @@ window.filterFxCards = function(cat, btn) {
         const cfg = window.SITE_CONFIG || {};
         const country = cfg.COUNTRY || 'KR';
         if (country === 'JP') return '¥' + Math.floor(amt).toLocaleString();
-        if (country === 'US') { const r = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE.US) || 0.001; return '$' + Math.round((amt||0) * r).toLocaleString(); }
+        if (country === 'US') { const r = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE.US) || 0.001; const _usd = (amt||0) * r; return _usd >= 10 ? '$' + Math.round(_usd).toLocaleString() : '$' + _usd.toFixed(2); }
         const rates = cfg.CURRENCY_RATE || {};
         if (country === 'CN') return '¥' + Math.round((amt||0) * (rates.CN || 0.01)).toLocaleString();
         if (country === 'AR') return Math.round((amt||0) * (rates.AR || 0.05)).toLocaleString() + ' ﷼';
@@ -9623,7 +9623,7 @@ window.updateModalTotal = function() {
         }
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
-            if (lang === 'en') { const _r = _rates.US || 0.001; return '$' + Math.round(val * _r).toLocaleString(); }
+            if (lang === 'en') { const _r = _rates.US || 0.001; const _usd = val * _r; return _usd >= 10 ? '$' + Math.round(_usd).toLocaleString() : '$' + _usd.toFixed(2); }
             if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.01)).toLocaleString();
             if (lang === 'ar') return Math.round(val * (_rates.AR || 0.05)).toLocaleString() + ' ﷼';
             if (lang === 'es') return '€' + (val * (_rates.ES || 0.001)).toFixed(2);
