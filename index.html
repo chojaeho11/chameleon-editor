@@ -11070,11 +11070,23 @@ if (w >= 20 && h >= 20) {
         const _lang = window.currentReviewLang || 'kr';
         const _nickPh = { kr: '닉네임 (예: 행복한고객)', ja: 'ニックネーム (例: ハッピー顧客)', en: 'Nickname (e.g. HappyCustomer)', zh: '昵称 (例: 快乐客户)', ar: 'الاسم المستعار', es: 'Apodo (ej: ClienteFeliz)', de: 'Spitzname (z.B. GlücklicherKunde)', fr: 'Pseudo (ex: ClientHeureux)' }[_lang] || 'Nickname';
         const _isLoggedIn = !!window.currentUser;
+        let _userDisplayName = '';
+        if (_isLoggedIn) {
+            const _email = window.currentUser.email || '';
+            const _meta = window.currentUser.user_metadata || {};
+            _userDisplayName = _meta.full_name || _meta.name || _meta.display_name || _email.split('@')[0];
+        }
 
         area.innerHTML = `
             <div class="review-write-box">
                 <div style="font-weight:700;font-size:15px;margin-bottom:12px;">${window.t('rv_write','리뷰 작성')}</div>
-                ${!_isLoggedIn ? `<input type="text" id="prvNickname" class="ai-input-pretty" placeholder="${_nickPh}" style="width:100%;margin-bottom:10px;padding:10px 14px;" maxlength="20">` : ''}
+                ${_isLoggedIn
+                    ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:10px 14px;background:#eef2ff;border-radius:10px;border:1px solid #c7d2fe;">
+                        <i class="fa-solid fa-user-circle" style="color:#6366f1;font-size:18px;"></i>
+                        <span style="font-weight:600;color:#4338ca;">${_userDisplayName}</span>
+                       </div>`
+                    : `<input type="text" id="prvNickname" class="ai-input-pretty" placeholder="${_nickPh}" style="width:100%;margin-bottom:10px;padding:10px 14px;" maxlength="20">`
+                }
                 <div class="review-star-selector" style="margin-bottom:12px;">
                     <i class="fa-solid fa-star" id="prvStar1" style="color:#f59e0b;" onclick="window.setProductReviewRating(1)"></i>
                     <i class="fa-solid fa-star" id="prvStar2" style="color:#f59e0b;" onclick="window.setProductReviewRating(2)"></i>
@@ -11132,12 +11144,14 @@ if (w >= 20 && h >= 20) {
         const lang = window.currentReviewLang || 'kr';
         const rating = window.productReviewRating || 5;
 
-        // 닉네임: 로그인 시 이메일 앞 2자+**, 비로그인 시 입력값
+        // 닉네임: 로그인 시 사용자 이름, 비로그인 시 입력값
         let userName;
         let userId = null;
         if (window.currentUser) {
-            const email = window.currentUser.email || '';
-            userName = email.split('@')[0].substring(0, 2) + '**';
+            const _meta = window.currentUser.user_metadata || {};
+            const _fullName = _meta.full_name || _meta.name || _meta.display_name || '';
+            const _email = window.currentUser.email || '';
+            userName = _fullName || _email.split('@')[0];
             userId = window.currentUser.id;
         } else {
             const nickInput = document.getElementById('prvNickname');
