@@ -9420,8 +9420,9 @@ window.showChoiceModal = async function(key) {
                 { code: 'fr', flag: '🇫🇷', label: '' }
             ];
             const _flagBtns = _flags.map(f => {
-                const isActive = f.code === lang || (f.code === lang);
-                return `<button class="rv-flag-btn ${f.code === lang ? 'active' : ''}" data-rv-lang="${f.code}" onclick="window.filterReviewsByCountry('${f.code}')" style="font-size:${f.code==='all'?'13px':'22px'}; padding:${f.code==='all'?'6px 14px':'6px 8px'}; border:2px solid ${f.code === lang ? '#6366f1' : '#e2e8f0'}; border-radius:20px; background:${f.code === lang ? '#eef2ff' : '#fff'}; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:4px;">${f.flag}${f.code==='all' ? '' : ''}</button>`;
+                const isAct = f.code === lang;
+                const size = '42px';
+                return `<button class="rv-flag-btn ${isAct ? 'active' : ''}" data-rv-lang="${f.code}" onclick="window.filterReviewsByCountry('${f.code}')" style="width:${size}; height:${size}; border-radius:50%; border:3px solid ${isAct ? '#6366f1' : '#e2e8f0'}; background:#fff; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; font-size:22px; padding:0; box-shadow:${isAct ? '0 2px 8px rgba(99,102,241,0.3)' : '0 1px 3px rgba(0,0,0,0.08)'};">${f.flag}</button>`;
             }).join('');
 
             reviewDiv.innerHTML = `
@@ -11027,7 +11028,8 @@ if (w >= 20 && h >= 20) {
             bar.querySelectorAll('.rv-flag-btn').forEach(btn => {
                 const isActive = btn.dataset.rvLang === langCode;
                 btn.style.borderColor = isActive ? '#6366f1' : '#e2e8f0';
-                btn.style.background = isActive ? '#eef2ff' : '#fff';
+                btn.style.background = '#fff';
+                btn.style.boxShadow = isActive ? '0 2px 8px rgba(99,102,241,0.3)' : '0 1px 3px rgba(0,0,0,0.08)';
                 btn.classList.toggle('active', isActive);
             });
         }
