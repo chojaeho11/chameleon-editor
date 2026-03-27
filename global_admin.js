@@ -12,6 +12,7 @@ import "./global_products.js?v=286";
 import "./global_users.js?v=286";
 import "./global_assets.js?v=286";
 import "./global_stats.js?v=286";
+import "./global_reviews.js?v=188";
 
 window.addEventListener('DOMContentLoaded', async () => { 
     // 1. 화면 깜빡임 방지
@@ -78,6 +79,7 @@ window.showSection = (secId, navEl) => {
         case 'sec-chatbot': if(window.cbShowTab) window.cbShowTab('knowledge'); break;
         case 'sec-comments': if(window.loadRecentComments) window.loadRecentComments(); break;
         case 'sec-callback': if(window.loadCallbackList) window.loadCallbackList('pending'); break;
+        case 'sec-review-gen': if(window.initReviewGen) window.initReviewGen(); break;
     }
 };
 

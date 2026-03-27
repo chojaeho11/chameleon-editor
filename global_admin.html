@@ -213,6 +213,7 @@
 
             <div class="nav-label">Community</div>
             <li class="nav-item" onclick="showSection('sec-comments', this)"><i class="fa-solid fa-comments"></i> 최근 댓글</li>
+            <li class="nav-item" onclick="showSection('sec-review-gen', this)"><i class="fa-solid fa-star"></i> AI 리뷰 생성</li>
 
             <div class="nav-label">Management</div>
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
@@ -1629,6 +1630,76 @@
     </div>
 </div>
 
+
+<!-- ===== AI 리뷰 생성 섹션 ===== -->
+<div id="sec-review-gen" class="section">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #f59e0b; padding-bottom:15px;">
+            <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-star" style="color:#f59e0b;"></i> AI 리뷰 생성기
+            </h3>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+            <!-- 왼쪽: 선택 영역 -->
+            <div>
+                <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
+                    <i class="fa-solid fa-layer-group"></i> 카테고리 선택
+                </label>
+                <select id="rvGenCategory" class="input-text" style="width:100%; height:40px; margin-bottom:16px;" onchange="window._rvGenCategoryChange()">
+                    <option value="">전체 (카테고리 선택)</option>
+                </select>
+
+                <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
+                    <i class="fa-solid fa-box"></i> 상품 선택
+                </label>
+                <select id="rvGenProduct" class="input-text" style="width:100%; height:40px; margin-bottom:16px;">
+                    <option value="">전체 상품 (카테고리 전체에 생성)</option>
+                </select>
+
+                <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
+                    <i class="fa-solid fa-hashtag"></i> 언어당 리뷰 수
+                </label>
+                <select id="rvGenCount" class="input-text" style="width:100%; height:40px;">
+                    <option value="2">2개 (테스트)</option>
+                    <option value="3" selected>3개</option>
+                    <option value="5">5개</option>
+                    <option value="8">8개</option>
+                    <option value="10">10개</option>
+                </select>
+            </div>
+
+            <!-- 오른쪽: 사진 업로드 -->
+            <div>
+                <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
+                    <i class="fa-solid fa-camera"></i> 상품 사진 (AI가 분석)
+                </label>
+                <div id="rvGenPhotoArea" style="border:2px dashed #cbd5e1; border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:all 0.2s; background:#f8fafc; min-height:200px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px;" onclick="document.getElementById('rvGenPhotoInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:36px; color:#94a3b8;"></i>
+                    <div style="color:#64748b; font-size:14px;">클릭하여 사진 업로드</div>
+                    <div style="color:#94a3b8; font-size:12px;">사진이 있으면 AI가 재질, 색상, 품질을 분석하여 리뷰에 반영합니다</div>
+                </div>
+                <input type="file" id="rvGenPhotoInput" accept="image/*" style="display:none;" onchange="window._rvGenPhotoPreview(this)">
+                <div id="rvGenPhotoPreviewWrap" style="display:none; margin-top:10px; text-align:center;">
+                    <img id="rvGenPhotoPreviewImg" style="max-width:100%; max-height:200px; border-radius:10px; border:1px solid #e2e8f0;">
+                    <button onclick="window._rvGenClearPhoto()" style="display:block; margin:8px auto 0; background:none; border:none; color:#ef4444; cursor:pointer; font-size:13px;"><i class="fa-solid fa-trash"></i> 사진 삭제</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="rvGenBtn" onclick="window.generateAIReviews()" class="btn btn-primary" style="width:100%; padding:14px; font-size:16px; font-weight:700; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI 리뷰 생성 시작
+        </button>
+
+        <div id="rvGenProgress" style="display:none; margin-top:20px;">
+            <div style="background:#f1f5f9; border-radius:10px; overflow:hidden; height:24px; position:relative;">
+                <div id="rvGenProgressBar" style="background:linear-gradient(90deg,#6366f1,#f59e0b); height:100%; width:0%; transition:width 0.5s; border-radius:10px;"></div>
+                <span id="rvGenProgressText" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:12px; font-weight:700; color:#334155;">0%</span>
+            </div>
+            <div id="rvGenLog" style="margin-top:12px; max-height:200px; overflow-y:auto; background:#0f172a; color:#a5f3fc; border-radius:10px; padding:14px; font-family:monospace; font-size:12px; line-height:1.8;"></div>
+        </div>
+    </div>
+</div>
 
 <!-- ===== 최근 댓글 관리 섹션 ===== -->
 <div id="sec-comments" class="section">
