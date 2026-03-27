@@ -279,7 +279,7 @@
 
 <!-- ===== 헤더 ===== -->
 <header class="site-header">
-    <a class="logo" href="index.html">
+    <a class="logo" href="design-market">
         <i class="fa-solid fa-palette"></i>
         <span>디자인 마켓</span>
     </a>
@@ -368,9 +368,9 @@
                 <label>참고 파일 첨부</label>
                 <div class="file-upload-area" onclick="document.getElementById('postFiles').click()">
                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <p>클릭하여 파일 업로드 (이미지, PDF 등)</p>
+                    <p>클릭하여 파일 업로드 (모든 파일 형식 가능)</p>
                 </div>
-                <input type="file" id="postFiles" multiple accept="image/*,.pdf,.ai,.psd" style="display:none;" onchange="handlePostFileSelect(this)">
+                <input type="file" id="postFiles" multiple style="display:none;" onchange="handlePostFileSelect(this)">
                 <div class="file-preview-grid" id="postFilePreview"></div>
             </div>
             <div style="text-align:center;margin-top:28px;">
@@ -703,6 +703,10 @@ const I18N = {
     confirm_select: { ko: '이 디자이너를 선택하시겠습니까?', ja: 'このデザイナーを選択しますか？', en: 'Select this designer?' },
     bid_list: { ko: '입찰 목록', ja: '入札一覧', en: 'Bid List' },
     deleted_request: { ko: '(삭제된 의뢰)', ja: '（削除された依頼）', en: '(Deleted request)' },
+    delete: { ko: '삭제', ja: '削除', en: 'Delete' },
+    confirm_delete_request: { ko: '이 의뢰를 삭제하시겠습니까?\n관련 입찰도 함께 삭제됩니다.', ja: 'この依頼を削除しますか？\n関連する入札も削除されます。', en: 'Delete this request?\nRelated bids will also be deleted.' },
+    delete_success: { ko: '의뢰가 삭제되었습니다.', ja: '依頼が削除されました。', en: 'Request deleted.' },
+    delete_fail: { ko: '삭제 실패', ja: '削除に失敗しました', en: 'Delete failed' },
     budget_label: { ko: '의뢰 예산', ja: '依頼予算', en: 'Request Budget' },
 
     // My Bids tab
@@ -1142,7 +1146,12 @@ async function loadDesignerShowcase() {
         return;
     }
 
-    let html = '';
+    // Register button first
+    let html = `
+    <div class="designer-card" onclick="openRegisterDesignerModal()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;border-color:#c4b5fd;">
+        <i class="fa-solid fa-user-plus" style="font-size:28px;color:#7c3aed;margin-bottom:10px;"></i>
+        <div class="name" style="color:#7c3aed;">${t('register_designer')}</div>
+    </div>`;
     for (const d of designers) {
         const specs = (d.specialties || []).slice(0, 3).map(s => `<span class="specialty-tag">${s}</span>`).join('');
         const avatarHtml = d.photo_url
@@ -1156,12 +1165,6 @@ async function loadDesignerShowcase() {
             <div class="specialties">${specs}</div>
         </div>`;
     }
-    // Add register button at end
-    html += `
-    <div class="designer-card" onclick="openRegisterDesignerModal()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;border-color:#c4b5fd;">
-        <i class="fa-solid fa-user-plus" style="font-size:28px;color:#7c3aed;margin-bottom:10px;"></i>
-        <div class="name" style="color:#7c3aed;">${t('register_designer')}</div>
-    </div>`;
     container.innerHTML = html;
 }
 
@@ -1696,15 +1699,36 @@ async function loadMyRequests() {
                 <span class="my-request-title">${escHtml(r.title)}</span>
                 <span class="badge-sm ${st.cls}">${st.label}</span>
             </div>
-            <div class="my-request-meta">
-                <span><i class="fa-solid fa-tag"></i> ${catName(r.category)}</span>
-                <span><i class="fa-solid fa-won-sign"></i> ${formatPriceRange(r.budget_min, r.budget_max)}</span>
-                <span><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
-                <span><i class="fa-regular fa-clock"></i> ${timeAgo(r.created_at)}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="my-request-meta">
+                    <span><i class="fa-solid fa-tag"></i> ${catName(r.category)}</span>
+                    <span><i class="fa-solid fa-won-sign"></i> ${formatPriceRange(r.budget_min, r.budget_max)}</span>
+                    <span><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
+                    <span><i class="fa-regular fa-clock"></i> ${timeAgo(r.created_at)}</span>
+                </div>
+                <button onclick="event.stopPropagation();deleteMyRequest('${r.id}')" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;" title="${t('delete')}"><i class="fa-solid fa-trash-can"></i> ${t('delete')}</button>
             </div>
         </div>`;
     }
     container.innerHTML = html;
+}
+
+async function deleteMyRequest(requestId) {
+    if (!confirm(t('confirm_delete_request'))) return;
+    try {
+        // 관련 입찰 먼저 삭제
+        await sb.from('design_bids').delete().eq('request_id', requestId);
+        // 의뢰 삭제
+        const { error } = await sb.from('design_requests').delete().eq('id', requestId).eq('customer_id', userId);
+        if (error) {
+            alert(t('delete_fail') + ': ' + error.message);
+            return;
+        }
+        alert(t('delete_success'));
+        loadMyRequests();
+    } catch (e) {
+        alert(t('delete_fail') + ': ' + e.message);
+    }
 }
 
 async function showMyRequestDetail(requestId) {

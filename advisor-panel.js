@@ -353,9 +353,6 @@ function buildPanelUI() {
             <a href="${location.origin}/design-market.html" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
                 <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design'}[getLang()]||'디자인 의뢰'}
             </a>
-            <a href="${location.origin}/design-market.html#register" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録',en:'Register as Designer',zh:'注册设计师',ar:'تسجيل كمصمم',es:'Registrarse como diseñador',de:'Als Designer registrieren',fr:"S'inscrire comme designer"}[getLang()]||'디자이너로 등록하기'}
-            </a>
             <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else document.getElementById('quoteModal')&&(document.getElementById('quoteModal').style.display='flex');" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
                 <i class="fa-solid fa-building-columns"></i> ${{ja:'展示・イベントお問合せ',en:'Exhibition Inquiry',zh:'展会咨询',ar:'استفسار معرض',es:'Consulta de Exposición',de:'Messenanfrage',fr:"Demande d'exposition"}[getLang()]||'행사전시문의'}
             </a>
@@ -375,6 +372,9 @@ function buildPanelUI() {
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
+        <a href="${location.origin}/design-market.html#register" target="_blank" style="display:block;margin:0 10px 6px;padding:10px 14px;background:linear-gradient(135deg,#f59e0b,#eab308);color:#fff;text-decoration:none;border-radius:10px;font-size:11px;line-height:1.5;text-align:center;font-weight:600;">
+            <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録しませんか？カメレオンがお客様とデザイナーをつなぎます。業界最低の仲介手数料で、毎日たくさんの注文が届きます。',en:'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.',zh:'注册成为设计师！变色龙为您连接客户。行业最低中介费，每天大量订单涌入。',ar:'سجل كمصمم! كاميليون يربط العملاء بالمصممين. أقل عمولات وسيط في الصناعة مع طلبات يومية.',es:'Regístrese como diseñador. Chameleon conecta clientes y diseñadores. Las comisiones más bajas del sector.',de:'Registrieren Sie sich als Designer! Chameleon verbindet Kunden mit Designern. Niedrigste Vermittlungsgebühren der Branche.',fr:"Inscrivez-vous comme designer ! Chameleon connecte clients et designers. Les frais les plus bas du secteur."}[getLang()]||'디자이너로 등록하세요! 카멜레온이 고객과 디자이너를 연결합니다. 업계 최저 중계수수료와 매일매일 수많은 고객의 오더가 쏟아집니다.'}
+        </a>
     `;
     chatArea = document.getElementById('advChatArea');
 

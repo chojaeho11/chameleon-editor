@@ -202,10 +202,15 @@ window.generateAIReviews = async function() {
     }
 
     const photoCount = _rvGenPhotos.length;
-    const totalEstimate = products.length * photoCount * 8;
+    const isSingleProduct = !!prodCode;
+    const photosPerProduct = isSingleProduct ? photoCount : 1;
+    const totalEstimate = products.length * photosPerProduct * 8;
     const mode = prodCode ? '단일 상품' : catCode ? '카테고리' : '대분류';
 
-    if (!confirm(`[${mode}] ${products.length}개 상품 × ${photoCount}장 사진 × 8개 언어\n= 총 약 ${totalEstimate}개 리뷰 생성\n\n계속할까요?`)) {
+    const confirmMsg = isSingleProduct
+        ? `[${mode}] 1개 상품 × ${photoCount}장 사진 × 8개 언어\n= 총 약 ${totalEstimate}개 리뷰 생성\n\n계속할까요?`
+        : `[${mode}] ${products.length}개 상품 × 랜덤 1장 사진 × 8개 언어\n= 총 약 ${totalEstimate}개 리뷰 생성\n(${photoCount}장 사진 풀에서 랜덤 배정)\n\n계속할까요?`;
+    if (!confirm(confirmMsg)) {
         return;
     }
 
@@ -237,15 +242,24 @@ window.generateAIReviews = async function() {
         return;
     }
 
-    // 2단계: 각 상품 × 각 사진에 대해 AI 리뷰 생성
-    const totalSteps = products.length * photoUrls.length;
+    // 2단계: 단일 상품 → 모든 사진, 대분류/소분류 → 상품당 랜덤 1장
+    const totalSteps = products.length * photosPerProduct;
     let step = 0;
     let totalReviews = 0;
 
-    _rvLog(`📦 [${mode}] ${products.length}개 상품 × ${photoUrls.length}장 사진 = ${totalSteps}건 처리 시작`);
+    if (isSingleProduct) {
+        _rvLog(`📦 [${mode}] 1개 상품 × ${photoCount}장 사진 = ${totalSteps}건 처리 시작`);
+    } else {
+        _rvLog(`📦 [${mode}] ${products.length}개 상품 × 각 1장 사진 = ${totalSteps}건 처리 시작`);
+    }
 
     for (const product of products) {
-        for (let pi = 0; pi < photoUrls.length; pi++) {
+        // 단일 상품: 모든 사진 순회, 카테고리: 랜덤 1장
+        const photoIndices = isSingleProduct
+            ? photoUrls.map((_, i) => i)
+            : [Math.floor(Math.random() * photoUrls.length)];
+
+        for (const pi of photoIndices) {
             const pct = Math.round((step / totalSteps) * 100);
             _rvProgress(pct, `${step}/${totalSteps}`);
             _rvLog(`🔄 [${step + 1}/${totalSteps}] "${product.name}" 사진${pi + 1} 리뷰 생성 중...`);

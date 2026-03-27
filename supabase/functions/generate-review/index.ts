@@ -75,7 +75,7 @@ CRITICAL RULES:
 5. Some reviews should mention: fast delivery, good quality, gift purpose, repeat purchase, comparison with expectations
 6. Use natural punctuation - some with emoji, some without, some with typos or casual grammar
 7. DO NOT use the word "review" in reviews. Write like real customers sharing experiences.
-8. Vary the created_at dates - spread across the last 90 days randomly
+8. Set days_ago to a value between 0 and 3 (very recent reviews)
 
 Return a JSON object with this exact structure:
 {
@@ -150,7 +150,7 @@ Return ONLY the JSON, no markdown, no explanation.`;
       photo_url: photo_url || null,
       lang: r.lang,
       is_fake: true,
-      created_at: new Date(now.getTime() - (r.days_ago || Math.floor(Math.random() * 90)) * 86400000).toISOString(),
+      created_at: new Date(now.getTime() - (r.days_ago || Math.floor(Math.random() * 3)) * 86400000).toISOString(),
     }));
 
     // Insert into database
