@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
 
     const body = await req.json();
-    const { product_code, product_name, category_name, photo_base64, photo_media_type, count_per_lang } = body;
+    const { product_code, product_name, category_name, photo_base64, photo_media_type, count_per_lang, photo_url } = body;
 
     if (!product_code || !product_name) {
       throw new Error("product_code and product_name are required");
@@ -146,7 +146,7 @@ Return ONLY the JSON, no markdown, no explanation.`;
       user_name: r.user_name,
       rating: Math.min(5, Math.max(1, r.rating || 5)),
       comment: r.comment,
-      photo_url: null,
+      photo_url: photo_url || null,
       lang: r.lang,
       is_fake: true,
       created_at: new Date(now.getTime() - (r.days_ago || Math.floor(Math.random() * 90)) * 86400000).toISOString(),

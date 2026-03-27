@@ -1664,33 +1664,24 @@
                     <option value="">전체 상품</option>
                 </select>
 
-                <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
-                    <i class="fa-solid fa-hashtag"></i> 언어당 리뷰 수
-                </label>
-                <select id="rvGenCount" class="input-text" style="width:100%; height:40px;">
-                    <option value="2">2개 (테스트)</option>
-                    <option value="3" selected>3개</option>
-                    <option value="5">5개</option>
-                    <option value="8">8개</option>
-                    <option value="10">10개</option>
-                </select>
+                <div style="margin-top:8px; padding:12px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; font-size:13px; color:#92400e;">
+                    <i class="fa-solid fa-info-circle"></i> 사진 1장 = 리뷰 1개 × 8개 언어<br>
+                    사진 3장 업로드 → 상품당 24개 리뷰 생성
+                </div>
             </div>
 
             <!-- 오른쪽: 사진 업로드 -->
             <div>
                 <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
-                    <i class="fa-solid fa-camera"></i> 상품 사진 (AI가 분석)
+                    <i class="fa-solid fa-camera"></i> 상품 사진 (여러 장 가능) <span id="rvGenPhotoCount" style="color:#6366f1; font-size:12px;"></span>
                 </label>
                 <div id="rvGenPhotoArea" style="border:2px dashed #cbd5e1; border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:all 0.2s; background:#f8fafc; min-height:200px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px;" onclick="document.getElementById('rvGenPhotoInput').click()">
                     <i class="fa-solid fa-cloud-arrow-up" style="font-size:36px; color:#94a3b8;"></i>
-                    <div style="color:#64748b; font-size:14px;">클릭하여 사진 업로드</div>
-                    <div style="color:#94a3b8; font-size:12px;">사진이 있으면 AI가 재질, 색상, 품질을 분석하여 리뷰에 반영합니다</div>
+                    <div style="color:#64748b; font-size:14px;">클릭하여 사진 업로드 (여러 장 선택 가능)</div>
+                    <div style="color:#94a3b8; font-size:12px;">AI가 각 사진의 재질, 색상, 품질을 분석하여 리뷰에 반영합니다</div>
                 </div>
-                <input type="file" id="rvGenPhotoInput" accept="image/*" style="display:none;" onchange="window._rvGenPhotoPreview(this)">
-                <div id="rvGenPhotoPreviewWrap" style="display:none; margin-top:10px; text-align:center;">
-                    <img id="rvGenPhotoPreviewImg" style="max-width:100%; max-height:200px; border-radius:10px; border:1px solid #e2e8f0;">
-                    <button onclick="window._rvGenClearPhoto()" style="display:block; margin:8px auto 0; background:none; border:none; color:#ef4444; cursor:pointer; font-size:13px;"><i class="fa-solid fa-trash"></i> 사진 삭제</button>
-                </div>
+                <input type="file" id="rvGenPhotoInput" accept="image/*" multiple style="display:none;" onchange="window._rvGenPhotosChanged(this)">
+                <div id="rvGenPhotoGrid" style="display:none;"></div>
             </div>
         </div>
 
