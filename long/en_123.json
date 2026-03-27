@@ -1963,5 +1963,10 @@
   "ot_label_admin": "Chameleon",
   "ot_label_customer": "Customer",
   "ot_label_order": "Order",
-  "ot_search_btn_text": "Search"
+  "ot_search_btn_text": "Search",
+  "rv_worldwide": "See reviews from friends worldwide",
+  "rv_write_review": "Write Review",
+  "rv_show_work": "Show Your Work",
+  "rv_nickname_ph": "Nickname (e.g. HappyCustomer)",
+  "rv_nickname_required": "Please enter a nickname"
 }

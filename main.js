@@ -1335,7 +1335,9 @@ window._openArtworkGallery = async function(genreCode, genreName) {
             } else {
                 query = query.eq('category', genreCode);
             }
-            query = query.eq('partner_status', 'approved');
+            query = query.eq('partner_status', 'approved')
+                .not('img_url', 'is', null)
+                .neq('img_url', '');
 
             if (searchTerm) {
                 query = query.or(`name.ilike.%${searchTerm}%,name_jp.ilike.%${searchTerm}%,name_us.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);

@@ -1567,5 +1567,10 @@
   "ot_label_admin": "카멜레온",
   "ot_label_customer": "고객",
   "ot_label_order": "주문",
-  "ot_search_btn_text": "검색"
+  "ot_search_btn_text": "검색",
+  "rv_worldwide": "전세계 친구들의 리뷰보기",
+  "rv_write_review": "리뷰쓰기",
+  "rv_show_work": "작품자랑",
+  "rv_nickname_ph": "닉네임 (예: 행복한고객)",
+  "rv_nickname_required": "닉네임을 입력해주세요"
 }

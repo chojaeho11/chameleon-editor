@@ -1931,5 +1931,10 @@
   "ot_st_배송완료": "Entregado",
   "order_tracker_search_placeholder": "Nombre/Contacto",
   "ot_search_btn_text": "Buscar",
-  "ot_btn_search": "Buscar"
+  "ot_btn_search": "Buscar",
+  "rv_worldwide": "Ver opiniones de amigos de todo el mundo",
+  "rv_write_review": "Escribir opinión",
+  "rv_show_work": "Mostrar tu obra",
+  "rv_nickname_ph": "Apodo (ej: ClienteFeliz)",
+  "rv_nickname_required": "Ingrese un apodo"
 }

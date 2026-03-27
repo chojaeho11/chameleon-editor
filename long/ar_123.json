@@ -1932,5 +1932,10 @@
   "ot_st_배송완료": "تم التسليم",
   "order_tracker_search_placeholder": "الاسم/الاتصال",
   "ot_search_btn_text": "بحث",
-  "ot_btn_search": "بحث"
+  "ot_btn_search": "بحث",
+  "rv_worldwide": "مشاهدة تقييمات الأصدقاء حول العالم",
+  "rv_write_review": "كتابة تقييم",
+  "rv_show_work": "عرض عملك",
+  "rv_nickname_ph": "الاسم المستعار",
+  "rv_nickname_required": "يرجى إدخال اسم مستعار"
 }

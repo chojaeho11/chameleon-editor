@@ -1960,5 +1960,10 @@
   "ot_label_admin": "カメレオン",
   "ot_label_customer": "お客様",
   "ot_label_order": "注文",
-  "ot_search_btn_text": "検索"
+  "ot_search_btn_text": "検索",
+  "rv_worldwide": "世界中の友達のレビューを見る",
+  "rv_write_review": "レビューを書く",
+  "rv_show_work": "作品を見せる",
+  "rv_nickname_ph": "ニックネーム (例: ハッピー顧客)",
+  "rv_nickname_required": "ニックネームを入力してください"
 }

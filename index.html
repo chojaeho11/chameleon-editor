@@ -9396,17 +9396,58 @@ window.showChoiceModal = async function(key) {
             const reviewDiv = document.createElement('div');
             reviewDiv.id = 'productReviewSection';
             reviewDiv.className = 'product-review-section';
+
+            const _rvT = {
+                kr: { title: '고객 리뷰', worldwide: '전세계 친구들의 리뷰보기', writeReview: '리뷰쓰기', showWork: '작품자랑', more: '더보기' },
+                ja: { title: 'カスタマーレビュー', worldwide: '世界中の友達のレビューを見る', writeReview: 'レビューを書く', showWork: '作品を見せる', more: 'もっと見る' },
+                en: { title: 'Customer Reviews', worldwide: 'See reviews from friends worldwide', writeReview: 'Write Review', showWork: 'Show Your Work', more: 'Load More' },
+                zh: { title: '客户评价', worldwide: '查看全球朋友的评价', writeReview: '写评价', showWork: '展示作品', more: '加载更多' },
+                ar: { title: 'تقييمات العملاء', worldwide: 'مشاهدة تقييمات الأصدقاء حول العالم', writeReview: 'كتابة تقييم', showWork: 'عرض عملك', more: 'عرض المزيد' },
+                es: { title: 'Opiniones de clientes', worldwide: 'Ver opiniones de amigos de todo el mundo', writeReview: 'Escribir opinión', showWork: 'Mostrar tu obra', more: 'Ver más' },
+                de: { title: 'Kundenbewertungen', worldwide: 'Bewertungen von Freunden weltweit ansehen', writeReview: 'Bewertung schreiben', showWork: 'Dein Werk zeigen', more: 'Mehr laden' },
+                fr: { title: 'Avis clients', worldwide: 'Voir les avis d\'amis du monde entier', writeReview: 'Écrire un avis', showWork: 'Montrer votre œuvre', more: 'Voir plus' }
+            };
+            const _rv = _rvT[lang] || _rvT['en'];
+            const _flags = [
+                { code: 'all', flag: '🌍', label: _rv.worldwide },
+                { code: 'kr', flag: '🇰🇷', label: '' },
+                { code: 'ja', flag: '🇯🇵', label: '' },
+                { code: 'en', flag: '🇺🇸', label: '' },
+                { code: 'zh', flag: '🇨🇳', label: '' },
+                { code: 'ar', flag: '🇸🇦', label: '' },
+                { code: 'es', flag: '🇪🇸', label: '' },
+                { code: 'de', flag: '🇩🇪', label: '' },
+                { code: 'fr', flag: '🇫🇷', label: '' }
+            ];
+            const _flagBtns = _flags.map(f => {
+                const isActive = f.code === lang || (f.code === lang);
+                return `<button class="rv-flag-btn ${f.code === lang ? 'active' : ''}" data-rv-lang="${f.code}" onclick="window.filterReviewsByCountry('${f.code}')" style="font-size:${f.code==='all'?'13px':'22px'}; padding:${f.code==='all'?'6px 14px':'6px 8px'}; border:2px solid ${f.code === lang ? '#6366f1' : '#e2e8f0'}; border-radius:20px; background:${f.code === lang ? '#eef2ff' : '#fff'}; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:4px;">${f.flag}${f.code==='all' ? '' : ''}</button>`;
+            }).join('');
+
             reviewDiv.innerHTML = `
-                <h3 class="review-section-title">${window.t('rv_title','고객 리뷰')}</h3>
+                <h3 class="review-section-title">${_rv.title}</h3>
                 <div id="reviewSummary" class="review-summary"></div>
+                <div style="display:flex; gap:8px; margin:16px 0; flex-wrap:wrap;">
+                    <button onclick="window.scrollToReviewWrite()" class="btn-round primary" style="padding:10px 22px; font-size:14px; font-weight:700; border-radius:25px; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-pen"></i> ${_rv.writeReview}
+                    </button>
+                    <button onclick="window.scrollToReviewWrite('photo')" class="btn-round" style="padding:10px 22px; font-size:14px; font-weight:700; border-radius:25px; border:2px solid #f59e0b; color:#f59e0b; background:#fff; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-camera"></i> ${_rv.showWork}
+                    </button>
+                </div>
+                <div style="margin:16px 0;">
+                    <div style="font-size:14px; font-weight:700; color:#64748b; margin-bottom:8px;">🌍 ${_rv.worldwide}</div>
+                    <div id="rvFlagBar" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">${_flagBtns}</div>
+                </div>
                 <div id="reviewWriteArea"></div>
                 <div id="reviewList" class="review-list"></div>
-                <button id="btnLoadMoreReviews" onclick="window.loadMoreReviews()" class="btn-round" style="display:none;width:100%;margin-top:10px;">${window.t('rv_load_more','더보기')}</button>
+                <button id="btnLoadMoreReviews" onclick="window.loadMoreReviews()" class="btn-round" style="display:none;width:100%;margin-top:10px;">${_rv.more}</button>
             `;
             leftContent.appendChild(reviewDiv);
         }
         window.currentReviewProductCode = key;
         window.currentReviewLang = lang;
+        window.currentReviewFilterLang = lang; // 현재 필터 언어
         window.productReviewPage = 0;
         window.renderReviewWriteForm(key);
         window.loadProductReviews(key, 0);
@@ -10864,15 +10905,20 @@ if (w >= 20 && h >= 20) {
             window.renderReviews([], 0, 0);
             return;
         }
-        const lang = window.currentReviewLang || 'kr';
+        const filterLang = window.currentReviewFilterLang || window.currentReviewLang || 'kr';
         const from = page * window.REVIEW_PAGE_SIZE;
         const to = from + window.REVIEW_PAGE_SIZE - 1;
 
         try {
-            const { data, count, error } = await dbClient.from('product_reviews')
+            let query = dbClient.from('product_reviews')
                 .select('*', { count: 'exact' })
-                .eq('product_code', productCode)
-                .eq('lang', lang)
+                .eq('product_code', productCode);
+
+            if (filterLang !== 'all') {
+                query = query.eq('lang', filterLang);
+            }
+
+            const { data, count, error } = await query
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
@@ -10886,10 +10932,13 @@ if (w >= 20 && h >= 20) {
             let avgRating = 0;
             if (page === 0 && (count || 0) > 0) {
                 try {
-                    const { data: allRatings } = await dbClient.from('product_reviews')
+                    let avgQuery = dbClient.from('product_reviews')
                         .select('rating')
-                        .eq('product_code', productCode)
-                        .eq('lang', lang);
+                        .eq('product_code', productCode);
+                    if (filterLang !== 'all') {
+                        avgQuery = avgQuery.eq('lang', filterLang);
+                    }
+                    const { data: allRatings } = await avgQuery;
                     if (allRatings && allRatings.length > 0) {
                         avgRating = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
                     }
@@ -10927,11 +10976,13 @@ if (w >= 20 && h >= 20) {
         }
 
         // 리뷰 카드 렌더링
+        const _langFlags = { kr: '🇰🇷', ja: '🇯🇵', en: '🇺🇸', zh: '🇨🇳', ar: '🇸🇦', es: '🇪🇸', de: '🇩🇪', fr: '🇫🇷' };
         let html = '';
         reviews.forEach(r => {
             const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
             const date = new Date(r.created_at).toLocaleDateString();
             const hasPhoto = r.photo_url && r.photo_url.trim();
+            const countryFlag = _langFlags[r.lang] || '🌍';
             const photoHtml = hasPhoto ? `
                 <div class="review-photo-wrap">
                     <img src="${r.photo_url}" class="review-photo" alt="${r.product_name || 'Customer review photo'}" onclick="window.openReviewPhoto('${r.photo_url}')" loading="lazy">
@@ -10940,7 +10991,7 @@ if (w >= 20 && h >= 20) {
                 <div class="review-card ${hasPhoto ? 'has-photo' : ''}">
                     <div class="review-stars">${stars}</div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-                        <span style="font-weight:700;font-size:14px;color:#333;">${r.user_name}</span>
+                        <span style="font-weight:700;font-size:14px;color:#333;">${countryFlag} ${r.user_name}</span>
                         <span style="font-size:12px;color:#94a3b8;">${date}</span>
                     </div>
                     <p style="margin-top:10px;font-size:14px;line-height:1.6;color:#475569;">${r.comment}</p>
@@ -10966,6 +11017,43 @@ if (w >= 20 && h >= 20) {
         window.loadProductReviews(window.currentReviewProductCode, window.productReviewPage);
     };
 
+    // 국가별 리뷰 필터
+    window.filterReviewsByCountry = function(langCode) {
+        window.currentReviewFilterLang = langCode;
+        window.productReviewPage = 0;
+        // 플래그 버튼 활성화 업데이트
+        const bar = document.getElementById('rvFlagBar');
+        if (bar) {
+            bar.querySelectorAll('.rv-flag-btn').forEach(btn => {
+                const isActive = btn.dataset.rvLang === langCode;
+                btn.style.borderColor = isActive ? '#6366f1' : '#e2e8f0';
+                btn.style.background = isActive ? '#eef2ff' : '#fff';
+                btn.classList.toggle('active', isActive);
+            });
+        }
+        window.loadProductReviews(window.currentReviewProductCode, 0);
+    };
+
+    // 리뷰 작성 영역으로 스크롤
+    window.scrollToReviewWrite = function(mode) {
+        const area = document.getElementById('reviewWriteArea');
+        if (area) {
+            area.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // 사진 모드면 파일 선택 자동 오픈
+            if (mode === 'photo') {
+                setTimeout(() => {
+                    const fileInput = document.getElementById('prvPhoto');
+                    if (fileInput) fileInput.click();
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    const commentEl = document.getElementById('prvComment');
+                    if (commentEl) commentEl.focus();
+                }, 500);
+            }
+        }
+    };
+
     window.setProductReviewRating = function(score) {
         window.productReviewRating = score;
         for (let i = 1; i <= 5; i++) {
@@ -10978,28 +11066,16 @@ if (w >= 20 && h >= 20) {
     window.renderReviewWriteForm = function(productCode) {
         const area = document.getElementById('reviewWriteArea');
         if (!area) return;
-
-        if (!window.currentUser) {
-            // 인증 로딩 대기 (최대 3초, 6회 재시도)
-            if (window._reviewFormRetryCount < 6) {
-                window._reviewFormRetryCount++;
-                area.innerHTML = `<div class="review-write-box" style="text-align:center;color:#94a3b8;font-size:14px;padding:15px;">
-                    <i class="fa-solid fa-spinner fa-spin" style="margin-right:5px;"></i> ${window.t('rv_loading','로딩 중...')}
-                </div>`;
-                setTimeout(() => window.renderReviewWriteForm(productCode), 500);
-                return;
-            }
-            window._reviewFormRetryCount = 0;
-            area.innerHTML = `<div class="review-write-box" style="text-align:center;color:#94a3b8;font-size:14px;padding:15px;">
-                <i class="fa-solid fa-lock" style="margin-right:5px;"></i> ${window.t('rv_login_required','로그인 후 리뷰를 작성할 수 있습니다')}
-            </div>`;
-            return;
-        }
         window._reviewFormRetryCount = 0;
+
+        const _lang = window.currentReviewLang || 'kr';
+        const _nickPh = { kr: '닉네임 (예: 행복한고객)', ja: 'ニックネーム (例: ハッピー顧客)', en: 'Nickname (e.g. HappyCustomer)', zh: '昵称 (例: 快乐客户)', ar: 'الاسم المستعار', es: 'Apodo (ej: ClienteFeliz)', de: 'Spitzname (z.B. GlücklicherKunde)', fr: 'Pseudo (ex: ClientHeureux)' }[_lang] || 'Nickname';
+        const _isLoggedIn = !!window.currentUser;
 
         area.innerHTML = `
             <div class="review-write-box">
                 <div style="font-weight:700;font-size:15px;margin-bottom:12px;">${window.t('rv_write','리뷰 작성')}</div>
+                ${!_isLoggedIn ? `<input type="text" id="prvNickname" class="ai-input-pretty" placeholder="${_nickPh}" style="width:100%;margin-bottom:10px;padding:10px 14px;" maxlength="20">` : ''}
                 <div class="review-star-selector" style="margin-bottom:12px;">
                     <i class="fa-solid fa-star" id="prvStar1" style="color:#f59e0b;" onclick="window.setProductReviewRating(1)"></i>
                     <i class="fa-solid fa-star" id="prvStar2" style="color:#f59e0b;" onclick="window.setProductReviewRating(2)"></i>
@@ -11008,7 +11084,7 @@ if (w >= 20 && h >= 20) {
                     <i class="fa-solid fa-star" id="prvStar5" style="color:#f59e0b;" onclick="window.setProductReviewRating(5)"></i>
                 </div>
                 <textarea id="prvComment" class="ai-input-pretty" placeholder="${window.t('rv_placeholder','상품에 대한 솔직한 리뷰를 남겨주세요')}" style="height:80px;width:100%;resize:vertical;"></textarea>
-                <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
                     <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;color:#6366f1;">
                         <i class="fa-solid fa-camera"></i> ${window.t('rv_photo_add','사진 첨부')}
                         <input type="file" id="prvPhoto" accept="image/*" style="display:none;">
@@ -11049,15 +11125,31 @@ if (w >= 20 && h >= 20) {
 
     window.submitProductReview = async function() {
         const dbClient = window.sb || sb;
-        if (!dbClient || !window.currentUser) { showToast(window.t('rv_login_required', '로그인이 필요합니다'), 'warn'); return; }
+        if (!dbClient) { showToast('DB error', 'error'); return; }
         const comment = document.getElementById('prvComment').value.trim();
         if (!comment) { showToast(window.t('rv_placeholder', '리뷰를 입력해주세요'), 'warn'); return; }
 
         const productCode = window.currentReviewProductCode;
         const lang = window.currentReviewLang || 'kr';
         const rating = window.productReviewRating || 5;
-        const email = window.currentUser.email || '';
-        const userName = email.split('@')[0].substring(0, 2) + '**';
+
+        // 닉네임: 로그인 시 이메일 앞 2자+**, 비로그인 시 입력값
+        let userName;
+        let userId = null;
+        if (window.currentUser) {
+            const email = window.currentUser.email || '';
+            userName = email.split('@')[0].substring(0, 2) + '**';
+            userId = window.currentUser.id;
+        } else {
+            const nickInput = document.getElementById('prvNickname');
+            userName = nickInput ? nickInput.value.trim() : '';
+            if (!userName) {
+                const _nickWarn = { kr: '닉네임을 입력해주세요', ja: 'ニックネームを入力してください', en: 'Please enter a nickname', zh: '请输入昵称', ar: 'يرجى إدخال اسم مستعار', es: 'Ingrese un apodo', de: 'Bitte Spitzname eingeben', fr: 'Veuillez entrer un pseudo' }[lang] || 'Please enter a nickname';
+                showToast(_nickWarn, 'warn');
+                return;
+            }
+            userId = 'guest_' + Date.now();
+        }
 
         let photoUrl = null;
         const fileInput = document.getElementById('prvPhoto');
@@ -11072,7 +11164,6 @@ if (w >= 20 && h >= 20) {
                 });
                 if (error) {
                     console.error('[리뷰 사진 업로드 실패]', error.message);
-                    // Storage 버킷이 없으면 리뷰 자체는 사진 없이 저장
                 } else if (data) {
                     const { data: urlData } = dbClient.storage.from('review-photos').getPublicUrl(data.path);
                     photoUrl = urlData.publicUrl;
@@ -11084,7 +11175,7 @@ if (w >= 20 && h >= 20) {
 
         const { error } = await dbClient.from('product_reviews').insert({
             product_code: productCode,
-            user_id: window.currentUser.id,
+            user_id: userId,
             user_name: userName,
             rating: rating,
             comment: comment,
@@ -11098,8 +11189,12 @@ if (w >= 20 && h >= 20) {
         } else {
             showToast(window.t('rv_submitted', '리뷰가 등록되었습니다!'), 'success');
             document.getElementById('prvComment').value = '';
+            const nickInput = document.getElementById('prvNickname');
+            if (nickInput) nickInput.value = '';
             if (fileInput) fileInput.value = '';
             document.getElementById('prvPhotoName').innerText = '';
+            const previewEl = document.getElementById('prvPhotoPreview');
+            if (previewEl) previewEl.innerHTML = '';
             window.productReviewPage = 0;
             window.loadProductReviews(productCode, 0);
         }

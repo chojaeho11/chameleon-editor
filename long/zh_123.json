@@ -1929,5 +1929,10 @@
   "ot_st_배송완료": "已送达",
   "order_tracker_search_placeholder": "姓名/联系方式",
   "ot_search_btn_text": "搜索",
-  "ot_btn_search": "搜索"
+  "ot_btn_search": "搜索",
+  "rv_worldwide": "查看全球朋友的评价",
+  "rv_write_review": "写评价",
+  "rv_show_work": "展示作品",
+  "rv_nickname_ph": "昵称 (例: 快乐客户)",
+  "rv_nickname_required": "请输入昵称"
 }
