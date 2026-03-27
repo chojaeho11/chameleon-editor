@@ -9408,21 +9408,17 @@ window.showChoiceModal = async function(key) {
                 fr: { title: 'Avis clients', worldwide: 'Voir les avis d\'amis du monde entier', writeReview: 'Écrire un avis', showWork: 'Montrer votre œuvre', more: 'Voir plus' }
             };
             const _rv = _rvT[lang] || _rvT['en'];
+            const _flagImgMap = { kr: 'kr', ja: 'jp', en: 'us', zh: 'cn', ar: 'sa', es: 'es', de: 'de', fr: 'fr' };
             const _flags = [
-                { code: 'all', flag: '🌍', label: _rv.worldwide },
-                { code: 'kr', flag: '🇰🇷', label: '' },
-                { code: 'ja', flag: '🇯🇵', label: '' },
-                { code: 'en', flag: '🇺🇸', label: '' },
-                { code: 'zh', flag: '🇨🇳', label: '' },
-                { code: 'ar', flag: '🇸🇦', label: '' },
-                { code: 'es', flag: '🇪🇸', label: '' },
-                { code: 'de', flag: '🇩🇪', label: '' },
-                { code: 'fr', flag: '🇫🇷', label: '' }
+                { code: 'all', img: '<i class="fa-solid fa-globe" style="font-size:20px;color:#6366f1;"></i>' },
+                { code: 'kr' }, { code: 'ja' }, { code: 'en' }, { code: 'zh' },
+                { code: 'ar' }, { code: 'es' }, { code: 'de' }, { code: 'fr' }
             ];
             const _flagBtns = _flags.map(f => {
                 const isAct = f.code === lang;
-                const size = '42px';
-                return `<button class="rv-flag-btn ${isAct ? 'active' : ''}" data-rv-lang="${f.code}" onclick="window.filterReviewsByCountry('${f.code}')" style="width:${size}; height:${size}; border-radius:50%; border:3px solid ${isAct ? '#6366f1' : '#e2e8f0'}; background:#fff; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; font-size:22px; padding:0; box-shadow:${isAct ? '0 2px 8px rgba(99,102,241,0.3)' : '0 1px 3px rgba(0,0,0,0.08)'};">${f.flag}</button>`;
+                const sz = '44px';
+                const inner = f.img || `<img src="https://flagcdn.com/w40/${_flagImgMap[f.code]}.png" alt="${f.code}" style="width:28px;height:28px;object-fit:cover;border-radius:50%;">`;
+                return `<button class="rv-flag-btn ${isAct ? 'active' : ''}" data-rv-lang="${f.code}" onclick="window.filterReviewsByCountry('${f.code}')" style="width:${sz}; height:${sz}; border-radius:50%; border:3px solid ${isAct ? '#6366f1' : '#e2e8f0'}; background:#fff; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; padding:0; box-shadow:${isAct ? '0 2px 8px rgba(99,102,241,0.3)' : '0 1px 3px rgba(0,0,0,0.08)'}; overflow:hidden;">${inner}</button>`;
             }).join('');
 
             reviewDiv.innerHTML = `
@@ -10977,13 +10973,14 @@ if (w >= 20 && h >= 20) {
         }
 
         // 리뷰 카드 렌더링
-        const _langFlags = { kr: '🇰🇷', ja: '🇯🇵', en: '🇺🇸', zh: '🇨🇳', ar: '🇸🇦', es: '🇪🇸', de: '🇩🇪', fr: '🇫🇷' };
+        const _langFlagImg = { kr: 'kr', ja: 'jp', en: 'us', zh: 'cn', ar: 'sa', es: 'es', de: 'de', fr: 'fr' };
         let html = '';
         reviews.forEach(r => {
             const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
             const date = new Date(r.created_at).toLocaleDateString();
             const hasPhoto = r.photo_url && r.photo_url.trim();
-            const countryFlag = _langFlags[r.lang] || '🌍';
+            const _fc = _langFlagImg[r.lang];
+            const countryFlag = _fc ? `<img src="https://flagcdn.com/w20/${_fc}.png" style="width:16px;height:12px;vertical-align:middle;border-radius:2px;">` : '<i class="fa-solid fa-globe" style="font-size:12px;color:#6366f1;"></i>';
             const photoHtml = hasPhoto ? `
                 <div class="review-photo-wrap">
                     <img src="${r.photo_url}" class="review-photo" alt="${r.product_name || 'Customer review photo'}" onclick="window.openReviewPhoto('${r.photo_url}')" loading="lazy">
