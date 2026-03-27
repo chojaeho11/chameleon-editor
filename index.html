@@ -8938,11 +8938,11 @@ window.showChoiceModal = async function(key) {
                     </div>
                     <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
                     <div style="flex:1; text-align:center;">
-                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'奥行(D)':lang==='en'?'Depth(D)':'깊이(D)'}</div>
+                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'高さ(D)':lang==='en'?'Height(D)':'높이(D)'}</div>
                         <input type="number" id="boxModalD" class="ai-input-pretty" placeholder="D" value="300" min="50" max="1200" style="width:100%; margin:0; text-align:center; font-weight:bold;" oninput="window._calcBoxModalPrice()">
                     </div>
                 </div>
-                <div id="boxModalSizeHint" style="font-size:11px; color:#8b5cf6; margin-top:8px; line-height:1.4;">💡 ${lang==='ja'?'ボックスの幅・高さ・奥行きを入力すると価格が自動計算されます':lang==='en'?'Enter box width, height and depth to auto-calculate the price':'박스의 가로, 세로, 깊이를 입력하면 가격이 자동 계산됩니다'}</div>
+                <div id="boxModalSizeHint" style="font-size:11px; color:#8b5cf6; margin-top:8px; line-height:1.4;">💡 ${lang==='ja'?'ボックスの幅・奥行・高さを入力すると価格が自動計算されます':lang==='en'?'Enter box width, depth and height to auto-calculate the price':'박스의 가로, 세로, 높이를 입력하면 가격이 자동 계산됩니다'}</div>
                 <div id="boxModalPriceResult" style="margin-top:10px; padding:12px; background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:10px; text-align:center;">
                     <div style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:4px;">💰 ${lang==='ja'?'ボックス単価':lang==='en'?'Box Unit Price':'박스 단가'}</div>
                     <div id="boxModalPrice" style="font-size:22px; font-weight:900; color:#1e1b4b;">-</div>
