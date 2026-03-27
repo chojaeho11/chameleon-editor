@@ -354,10 +354,10 @@ function buildPanelUI() {
                 <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design'}[getLang()]||'디자인 의뢰'}
             </a>
             <a href="${location.origin}/design-market.html#register" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録',en:'Register as Designer',zh:'注册设计师',ar:'تسجيل كمصمم',es:'Registrarse como diseñador',de:'Als Designer registrieren',fr:'S\\'inscrire comme designer'}[getLang()]||'디자이너로 등록하기'}
+                <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録',en:'Register as Designer',zh:'注册设计师',ar:'تسجيل كمصمم',es:'Registrarse como diseñador',de:'Als Designer registrieren',fr:"S'inscrire comme designer"}[getLang()]||'디자이너로 등록하기'}
             </a>
             <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else document.getElementById('quoteModal')&&(document.getElementById('quoteModal').style.display='flex');" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                <i class="fa-solid fa-building-columns"></i> ${{ja:'展示・イベントお問合せ',en:'Exhibition Inquiry',zh:'展会咨询',ar:'استفسار معرض',es:'Consulta de Exposición',de:'Messenanfrage',fr:'Demande d\\'exposition'}[getLang()]||'행사전시문의'}
+                <i class="fa-solid fa-building-columns"></i> ${{ja:'展示・イベントお問合せ',en:'Exhibition Inquiry',zh:'展会咨询',ar:'استفسار معرض',es:'Consulta de Exposición',de:'Messenanfrage',fr:"Demande d'exposition"}[getLang()]||'행사전시문의'}
             </a>
         </div>
         <div class="adv-img-preview" id="advImgPreview" style="display:none">
