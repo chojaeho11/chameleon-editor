@@ -1,6 +1,6 @@
 // canvas-icons.js — Iconify icon/logo search + color picker + canvas integration
 
-import { sb } from "./config.js?v=279";
+import { sb } from "./config.js?v=280";
 
 const ICONIFY_SEARCH = 'https://api.iconify.design/search';
 const ICONIFY_SVG = 'https://api.iconify.design';

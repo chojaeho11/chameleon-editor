@@ -1,7 +1,7 @@
 // keyring-mini-editor.js — 키링 미니 에디터 (모달 내 자동 누끼 + 지우개 + 아크릴 미리보기)
 // 순수 Canvas 2D API만 사용 (Fabric.js 의존 없음)
 
-import { sb } from './config.js?v=279';
+import { sb } from './config.js?v=280';
 
 let es = null; // editor state
 
