@@ -8494,6 +8494,7 @@ window.showChoiceModal = async function(key) {
 
     const isCustom = product.is_custom_size === true;
     const isFixedSize = !!(product.is_file_upload);
+    const _isBoxProduct = typeof key === 'string' && key.startsWith('hb_bx');
     window.isCustomModeCurrent = isCustom;
     const _isPromo = typeof key === 'string' && (key.startsWith('pp_lf_') || key.startsWith('pp_pt_') || key.startsWith('pp_cl_'));
 
@@ -8923,7 +8924,33 @@ window.showChoiceModal = async function(key) {
                     </div>
                 </div>
             </div>
-            ${isFixedSize ? `<div data-npc="size" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:10px; text-align:center;">
+            ${_isBoxProduct ? `<div data-npc="size" style="background:#f8fafc; border-radius:12px; padding:14px; margin-top:10px;">
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📦 ${lang==='ja'?'ボックスサイズ入力':lang==='en'?'Box Size Input':'박스 사이즈 입력'} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(mm)</span></div>
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'幅(W)':lang==='en'?'Width(W)':'가로(W)'}</div>
+                        <input type="number" id="boxModalW" class="ai-input-pretty" placeholder="W" value="${product.width_mm || 300}" min="50" max="1200" style="width:100%; margin:0; text-align:center; font-weight:bold;" oninput="window._calcBoxModalPrice()">
+                    </div>
+                    <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'高さ(H)':lang==='en'?'Height(H)':'세로(H)'}</div>
+                        <input type="number" id="boxModalH" class="ai-input-pretty" placeholder="H" value="${product.height_mm || 300}" min="50" max="1200" style="width:100%; margin:0; text-align:center; font-weight:bold;" oninput="window._calcBoxModalPrice()">
+                    </div>
+                    <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'奥行(D)':lang==='en'?'Depth(D)':'깊이(D)'}</div>
+                        <input type="number" id="boxModalD" class="ai-input-pretty" placeholder="D" value="300" min="50" max="1200" style="width:100%; margin:0; text-align:center; font-weight:bold;" oninput="window._calcBoxModalPrice()">
+                    </div>
+                </div>
+                <div id="boxModalSizeHint" style="font-size:11px; color:#8b5cf6; margin-top:8px; line-height:1.4;">💡 ${lang==='ja'?'ボックスの幅・高さ・奥行きを入力すると価格が自動計算されます':lang==='en'?'Enter box width, height and depth to auto-calculate the price':'박스의 가로, 세로, 깊이를 입력하면 가격이 자동 계산됩니다'}</div>
+                <div id="boxModalPriceResult" style="margin-top:10px; padding:12px; background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:10px; text-align:center;">
+                    <div style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:4px;">💰 ${lang==='ja'?'ボックス単価':lang==='en'?'Box Unit Price':'박스 단가'}</div>
+                    <div id="boxModalPrice" style="font-size:22px; font-weight:900; color:#1e1b4b;">-</div>
+                    <div id="boxModalSheetInfo" style="font-size:10px; color:#64748b; margin-top:4px;"></div>
+                </div>
+                <input type="hidden" id="inputCustW" value="${product.width_mm || 300}">
+                <input type="hidden" id="inputCustH" value="${product.height_mm || 300}">
+            </div>` : isFixedSize ? `<div data-npc="size" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:10px; text-align:center;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📐 ${lang==='ja'?'製品サイズ':lang==='zh'?'产品尺寸':lang==='ar'?'حجم المنتج':lang==='es'?'Tamaño':lang==='de'?'Größe':lang==='fr'?'Taille':lang==='en'?'Product Size':'제품사이즈'}</div>
                 <div style="font-size:22px; font-weight:900; color:#1e1b4b;">${window._isUSsite && window._isUSsite() ? ((product.width_mm||0)/25.4).toFixed(2) : (product.width_mm||0)}<span style="font-size:14px; color:#94a3b8; margin:0 4px;">x</span>${window._isUSsite && window._isUSsite() ? ((product.height_mm||0)/25.4).toFixed(2) : (product.height_mm||0)}<span style="font-size:13px; color:#64748b; margin-left:4px;">${window._dimUnit ? window._dimUnit() : 'mm'}</span></div>
                 <input type="hidden" id="inputCustW" value="${product.width_mm || 0}">
@@ -9174,8 +9201,15 @@ window.showChoiceModal = async function(key) {
         artImg.src = product.img_url;
     }
 
+    // ★ 박스상품: 즉시 가격 계산
+    if (_isBoxProduct) {
+        setTimeout(() => {
+            if (window._calcBoxModalPrice) window._calcBoxModalPrice();
+        }, 100);
+    }
+
     // ★ 사이즈고정상품: 즉시 가격 표시 (sqm 계산 없이 고정단가)
-    if (isFixedSize) {
+    if (isFixedSize && !_isBoxProduct) {
         setTimeout(() => {
             if (window.calcCustomPrice) window.calcCustomPrice();
             if (window.updateModalTotal) window.updateModalTotal();
@@ -9994,6 +10028,105 @@ if (w >= 20 && h >= 20) {
         }
     };
 
+    // ★ 박스 상품 모달 가격 계산 (box-nesting.js의 calculateBoxPrice 사용)
+    window._calcBoxModalPrice = function() {
+        const wEl = document.getElementById('boxModalW');
+        const hEl = document.getElementById('boxModalH');
+        const dEl = document.getElementById('boxModalD');
+        const priceEl = document.getElementById('boxModalPrice');
+        const sheetInfoEl = document.getElementById('boxModalSheetInfo');
+        const calcPriceEl = document.getElementById('calcResultPrice');
+        if (!wEl || !hEl || !dEl) return;
+
+        const w = parseInt(wEl.value) || 0;
+        const h = parseInt(hEl.value) || 0;
+        const d = parseInt(dEl.value) || 0;
+
+        // hidden input 동기화 (confirmChoice에서 사용)
+        const hiddenW = document.getElementById('inputCustW');
+        const hiddenH = document.getElementById('inputCustH');
+        if (hiddenW) hiddenW.value = w;
+        if (hiddenH) hiddenH.value = h;
+
+        if (w < 50 || h < 50 || d < 50) {
+            if (priceEl) priceEl.textContent = '-';
+            if (sheetInfoEl) sheetInfoEl.textContent = '';
+            return;
+        }
+
+        const product = window.selectedProductForChoice;
+        if (!product) return;
+
+        const pricePerSheet = product._original_price || product.price || 0;
+
+        // box-nesting.js의 calculateBoxPrice 동적 임포트
+        import('./box-nesting.js?v=280').then(mod => {
+            const result = mod.calculateBoxPrice(w, h, d, pricePerSheet);
+
+            if (result.error) {
+                const urlParams = new URLSearchParams(window.location.search);
+                let lang = urlParams.get('lang');
+                if (!lang && window.location.hostname.includes('cafe0101.com')) lang = 'ja';
+                else if (!lang && (window.location.hostname.includes('cafe3355.com') || window.location.hostname.includes('chameleon.design'))) lang = 'en';
+                const errMsg = lang==='ja' ? '面がシート(2400×1200mm)より大きいです' : lang==='en' ? 'Face exceeds sheet size (2400×1200mm)' : '면이 시트(2400×1200mm)보다 큽니다';
+                if (priceEl) priceEl.textContent = errMsg;
+                if (priceEl) priceEl.style.fontSize = '13px';
+                if (sheetInfoEl) sheetInfoEl.textContent = '';
+                return;
+            }
+
+            // 가격 표시
+            const urlParams = new URLSearchParams(window.location.search);
+            let lang = urlParams.get('lang');
+            if (!lang && window.location.hostname.includes('cafe0101.com')) lang = 'ja';
+            else if (!lang && (window.location.hostname.includes('cafe3355.com') || window.location.hostname.includes('chameleon.design'))) lang = 'en';
+
+            const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
+            const formatVal = (val) => {
+                if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
+                if (lang === 'en') { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+                return Math.floor(val).toLocaleString() + '원';
+            };
+
+            if (priceEl) {
+                priceEl.textContent = formatVal(result.totalPrice);
+                priceEl.style.fontSize = '22px';
+            }
+
+            // 시트 정보 표시
+            if (sheetInfoEl) {
+                const sheetLabel = lang==='ja' ? 'シート' : lang==='en' ? 'Sheet' : '시트';
+                const setLabel = lang==='ja' ? 'セット/シート' : lang==='en' ? 'sets/sheet' : '세트/시트';
+                if (result.setsPerSheet > 1) {
+                    sheetInfoEl.textContent = `${sheetLabel}: ${result.sheetCount} (${result.setsPerSheet} ${setLabel})`;
+                } else {
+                    sheetInfoEl.textContent = `${sheetLabel}: ${result.sheetCount}`;
+                }
+            }
+
+            // calcResultPrice에도 반영 (updateModalTotal에서 사용)
+            if (calcPriceEl) {
+                calcPriceEl.textContent = formatVal(result.totalPrice);
+                calcPriceEl.dataset.rawPrice = result.totalPrice;
+            }
+
+            // 전역 저장 (주문 시 사용)
+            window.__boxModalDims = { w, h, d };
+            window.__boxCalculatedPrice = result.totalPrice;
+            window.__boxNesting = result;
+            window.__boxSheetCount = result.sheetCount;
+
+            // product 가격 오버라이드 (장바구니용)
+            if (!product._original_price) product._original_price = product.price;
+            product.price = result.totalPrice;
+            product._calculated_price = true;
+
+            if (window.updateModalTotal) window.updateModalTotal();
+        }).catch(err => {
+            console.warn('Box price calculation error:', err);
+        });
+    };
+
     // ★ 작품 제품타입 선택 핸들러
     window._selectArtworkType = function(btn) {
         document.querySelectorAll('.ua-type-btn').forEach(b => {
@@ -10335,6 +10468,11 @@ if (w >= 20 && h >= 20) {
             if (product._artworkTypeFixed) {
                 finalW = 0; finalH = 0;
                 finalPricePerItem = unitPrice;
+            // ★ 박스상품: 박스 치수로 가격 결정
+            } else if (typeof targetCode === 'string' && targetCode.startsWith('hb_bx') && window.__boxCalculatedPrice) {
+                finalW = parseInt(document.getElementById('boxModalW')?.value || document.getElementById('inputCustW')?.value || 0);
+                finalH = parseInt(document.getElementById('boxModalH')?.value || document.getElementById('inputCustH')?.value || 0);
+                finalPricePerItem = window.__boxCalculatedPrice;
             // ★ 사이즈고정상품: DB 사이즈 + 고정단가 사용 (회배계산X)
             } else if (product.is_file_upload) {
                 finalW = product.width_mm || parseInt(document.getElementById('inputCustW').value || 0);
@@ -11095,16 +11233,14 @@ if (w >= 20 && h >= 20) {
                     <i class="fa-solid fa-star" id="prvStar5" style="color:#f59e0b;" onclick="window.setProductReviewRating(5)"></i>
                 </div>
                 <textarea id="prvComment" class="ai-input-pretty" placeholder="${window.t('rv_placeholder','상품에 대한 솔직한 리뷰를 남겨주세요')}" style="height:80px;width:100%;resize:vertical;"></textarea>
-                <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;color:#6366f1;">
+                <div id="prvPhotoPreview"></div>
+                <div style="display:flex;gap:10px;margin-top:12px;">
+                    <label style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border:2px solid #6366f1;border-radius:10px;background:#eef2ff;color:#6366f1;font-size:14px;font-weight:700;transition:all 0.2s;">
                         <i class="fa-solid fa-camera"></i> ${window.t('rv_photo_add','사진 첨부')}
                         <input type="file" id="prvPhoto" accept="image/*" style="display:none;">
                     </label>
-                    <span id="prvPhotoName" style="font-size:12px;color:#94a3b8;"></span>
-                    <div style="flex:1;"></div>
-                    <button onclick="window.submitProductReview()" class="btn-round primary" style="padding:8px 20px;font-size:13px;">${window.t('rv_submit','리뷰 등록')}</button>
+                    <button onclick="window.submitProductReview()" class="btn-round primary" style="flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:10px;">${window.t('rv_submit','리뷰 등록')}</button>
                 </div>
-                <div id="prvPhotoPreview"></div>
             </div>`;
 
         document.getElementById('prvPhoto').addEventListener('change', function() {
@@ -11563,7 +11699,16 @@ if (w >= 20 && h >= 20) {
             if (wallFaceTabs) wallFaceTabs.style.display = 'none';
             window.__boxMode = true;
             window.__wallMode = false;
-            // 기본 박스 치수로 6페이지 자동 생성
+            // 모달에서 입력한 박스 치수를 에디터 입력란에 동기화
+            if (window.__boxModalDims) {
+                const _bxW = document.getElementById('boxW');
+                const _bxH = document.getElementById('boxH');
+                const _bxD = document.getElementById('boxD');
+                if (_bxW) _bxW.value = window.__boxModalDims.w;
+                if (_bxH) _bxH.value = window.__boxModalDims.h;
+                if (_bxD) _bxD.value = window.__boxModalDims.d;
+            }
+            // 박스 치수로 6페이지 자동 생성
             setTimeout(() => {
                 if (window.applyBoxDimensions) window.applyBoxDimensions();
             }, 500);
