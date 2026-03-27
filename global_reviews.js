@@ -251,6 +251,7 @@ window.generateAIReviews = async function() {
             _rvLog(`🔄 [${step + 1}/${totalSteps}] "${product.name}" 사진${pi + 1} 리뷰 생성 중...`);
 
             try {
+                const contextText = document.getElementById('rvGenContext')?.value?.trim() || '';
                 const payload = {
                     product_code: product.code,
                     product_name: product.name,
@@ -258,7 +259,8 @@ window.generateAIReviews = async function() {
                     count_per_lang: 1,
                     photo_base64: _rvGenPhotos[pi]?.base64 || null,
                     photo_media_type: _rvGenPhotos[pi]?.type || 'image/jpeg',
-                    photo_url: photoUrls[pi], // 업로드된 URL → 리뷰에 첨부
+                    photo_url: photoUrls[pi],
+                    context: contextText,
                 };
 
                 const { data, error } = await sb.functions.invoke('generate-review', {

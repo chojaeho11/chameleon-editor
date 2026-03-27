@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
 
     const body = await req.json();
-    const { product_code, product_name, category_name, photo_base64, photo_media_type, count_per_lang, photo_url } = body;
+    const { product_code, product_name, category_name, photo_base64, photo_media_type, count_per_lang, photo_url, context } = body;
 
     if (!product_code || !product_name) {
       throw new Error("product_code and product_name are required");
@@ -54,7 +54,8 @@ Deno.serve(async (req) => {
 
 Product: "${product_name}"
 ${category_name ? `Category: "${category_name}"` : ""}
-${photo_base64 ? "A product photo is attached. Analyze the photo carefully - describe the print quality, material texture, colors, finishing, and any details visible. Make reviews reference specific visual details from the photo." : ""}
+${context ? `\nProduct details/context (USE this info in reviews): ${context}` : ""}
+${photo_base64 ? "\nA product photo is attached. Analyze the photo carefully - describe the print quality, material texture, colors, finishing, and any details visible. Combine what you see in the photo with the product context above to write authentic reviews." : ""}
 
 Generate exactly ${reviewCount} reviews for EACH of these 8 languages: Korean, Japanese, English, Chinese (Simplified), Arabic, Spanish, German, French.
 
