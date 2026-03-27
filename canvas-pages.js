@@ -354,6 +354,11 @@ const CUSTOM_PROPS = ['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGui
 const BOX_FACE_NAMES = ['Front', 'Back', 'Left', 'Right', 'Top', 'Bottom'];
 
 export function initBoxPages(wMM, hMM, dMM) {
+    if (!canvas) {
+        console.warn('⚠️ initBoxPages: canvas not ready, retrying in 500ms');
+        setTimeout(() => initBoxPages(wMM, hMM, dMM), 500);
+        return;
+    }
     const PX = 3.7795; // mm → px
     const faces = [
         { name: 'Front',  w: wMM * PX, h: hMM * PX },
@@ -394,6 +399,7 @@ export function initBoxPages(wMM, hMM, dMM) {
 
 // 박스 면 전환
 window.switchBoxFace = function(index) {
+    if (!canvas) { console.warn('⚠️ switchBoxFace: canvas not ready'); return; }
     if (index < 0 || index >= pageDataList.length) return;
     if (index === currentPageIndex) return;
 
