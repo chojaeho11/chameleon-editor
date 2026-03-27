@@ -5326,9 +5326,9 @@ video {
 .review-summary { display:flex; align-items:center; gap:15px; margin-bottom:24px; padding:20px; background:#fffbeb; border-radius:12px; border:1px solid #fde68a; }
 .review-summary .review-avg-score { font-size:42px; font-weight:900; color:#f59e0b; line-height:1; }
 .review-summary .review-avg-stars { color:#f59e0b; font-size:18px; letter-spacing:1px; }
-.review-list { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
-.review-card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; transition:box-shadow 0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
-.review-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.08); border-color:#cbd5e1; }
+.review-list { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; width:100%; box-sizing:border-box; }
+.product-review-section .review-card { width:100%; box-sizing:border-box; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; transition:box-shadow 0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.04); flex-shrink:unset; display:block; }
+.product-review-section .review-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.08); border-color:#cbd5e1; transform:none; }
 .review-card .review-stars { color:#f59e0b; font-size:14px; letter-spacing:2px; }
 .review-photo-wrap { margin-top:12px; border-radius:10px; overflow:hidden; background:#f8fafc; border:1px solid #e2e8f0; }
 .review-card .review-photo { width:100%; max-height:220px; border-radius:0; cursor:pointer; object-fit:cover; display:block; transition:transform 0.2s; }
@@ -5342,9 +5342,12 @@ video {
 .review-lightbox-close { position:absolute; top:20px; right:30px; color:#fff; font-size:36px; font-weight:700; cursor:pointer; line-height:1; }
 @keyframes rvLbFadeIn { from { opacity:0; } to { opacity:1; } }
 @media (max-width:768px) {
-    .review-list { grid-template-columns:1fr; gap:10px; }
+    .product-review-section { padding:0 12px; box-sizing:border-box; width:100%; }
+    .review-list { grid-template-columns:1fr; gap:10px; width:100%; box-sizing:border-box; }
+    .review-card { width:100%; box-sizing:border-box; }
     .review-card .review-photo { max-height:180px; }
     .review-summary { flex-direction:column; text-align:center; }
+    .review-write-box { width:100%; box-sizing:border-box; }
 }
 
 /* =========================================
