@@ -4,28 +4,53 @@
 
 let _rvGenPhotoBase64 = null;
 let _rvGenPhotoType = null;
+let _rvGenAllCategories = []; // 전체 카테고리 캐시
 
-// 초기화: 카테고리 로드
+// 초기화: 대분류 + 카테고리 로드
 window.initReviewGen = async function() {
-    const catSelect = document.getElementById('rvGenCategory');
-    if (!catSelect || catSelect.options.length > 1) return;
+    const topSelect = document.getElementById('rvGenTopCategory');
+    if (!topSelect || topSelect.options.length > 1) return;
 
-    const { data } = await sb.from('admin_categories')
+    // 대분류 로드
+    const { data: topCats } = await sb.from('admin_top_categories')
         .select('code, name')
-        .order('name');
+        .order('sort_order');
 
-    if (data) {
-        data.forEach(c => {
-            catSelect.innerHTML += `<option value="${c.code}">${c.name}</option>`;
+    if (topCats) {
+        topCats.forEach(tc => {
+            topSelect.innerHTML += `<option value="${tc.code}">${tc.name}</option>`;
         });
     }
+
+    // 전체 카테고리 캐시
+    const { data: cats } = await sb.from('admin_categories')
+        .select('code, name, top_category_code')
+        .order('name');
+    _rvGenAllCategories = cats || [];
+};
+
+// 대분류 변경 → 소분류 필터링
+window._rvGenTopCategoryChange = function() {
+    const topCode = document.getElementById('rvGenTopCategory').value;
+    const catSelect = document.getElementById('rvGenCategory');
+    const prodSelect = document.getElementById('rvGenProduct');
+
+    catSelect.innerHTML = '<option value="">선택 안함</option>';
+    prodSelect.innerHTML = '<option value="">전체 상품</option>';
+
+    if (!topCode) return;
+
+    const filtered = _rvGenAllCategories.filter(c => c.top_category_code === topCode);
+    filtered.forEach(c => {
+        catSelect.innerHTML += `<option value="${c.code}">${c.name}</option>`;
+    });
 };
 
 // 카테고리 변경 → 상품 목록 로드
 window._rvGenCategoryChange = async function() {
     const catCode = document.getElementById('rvGenCategory').value;
     const prodSelect = document.getElementById('rvGenProduct');
-    prodSelect.innerHTML = '<option value="">전체 상품 (카테고리 전체에 생성)</option>';
+    prodSelect.innerHTML = '<option value="">전체 상품</option>';
 
     if (!catCode) return;
 
@@ -49,7 +74,7 @@ window._rvGenPhotoPreview = function(input) {
     const reader = new FileReader();
     reader.onload = (e) => {
         const result = e.target.result;
-        _rvGenPhotoBase64 = result.split(',')[1]; // remove data:xxx;base64, prefix
+        _rvGenPhotoBase64 = result.split(',')[1];
         _rvGenPhotoType = file.type || 'image/jpeg';
 
         document.getElementById('rvGenPhotoPreviewImg').src = result;
@@ -86,37 +111,70 @@ function _rvProgress(pct, text) {
     if (txt) txt.textContent = text || (pct + '%');
 }
 
-// AI 리뷰 생성 메인
-window.generateAIReviews = async function() {
+// 상품 목록 결정 (대분류 / 소분류 / 단일상품)
+async function _resolveProducts() {
+    const topCode = document.getElementById('rvGenTopCategory').value;
     const catCode = document.getElementById('rvGenCategory').value;
     const prodCode = document.getElementById('rvGenProduct').value;
-    const countPerLang = parseInt(document.getElementById('rvGenCount').value) || 3;
 
-    if (!catCode && !prodCode) {
-        alert('카테고리 또는 상품을 선택해주세요.');
-        return;
-    }
-
-    // 상품 목록 결정
-    let products = [];
+    // 1) 단일 상품
     if (prodCode) {
-        // 단일 상품
         const { data } = await sb.from('admin_products')
             .select('code, name, name_jp, name_us, category, img_url')
             .eq('code', prodCode)
             .single();
-        if (data) products = [data];
-    } else {
-        // 카테고리 전체
+        return data ? [data] : [];
+    }
+
+    // 2) 소분류(카테고리) 전체
+    if (catCode) {
         const { data } = await sb.from('admin_products')
             .select('code, name, name_jp, name_us, category, img_url')
             .eq('category', catCode);
-        if (data) products = data;
+        return data || [];
     }
+
+    // 3) 대분류 전체 → 해당 대분류의 모든 카테고리 코드 수집 → 상품 조회
+    if (topCode) {
+        const catCodes = _rvGenAllCategories
+            .filter(c => c.top_category_code === topCode)
+            .map(c => c.code);
+
+        if (catCodes.length === 0) return [];
+
+        const { data } = await sb.from('admin_products')
+            .select('code, name, name_jp, name_us, category, img_url')
+            .in('category', catCodes);
+        return data || [];
+    }
+
+    return [];
+}
+
+// AI 리뷰 생성 메인
+window.generateAIReviews = async function() {
+    const topCode = document.getElementById('rvGenTopCategory').value;
+    const catCode = document.getElementById('rvGenCategory').value;
+    const prodCode = document.getElementById('rvGenProduct').value;
+    const countPerLang = parseInt(document.getElementById('rvGenCount').value) || 3;
+
+    if (!topCode && !catCode && !prodCode) {
+        alert('대분류, 카테고리, 또는 상품을 선택해주세요.');
+        return;
+    }
+
+    const products = await _resolveProducts();
 
     if (products.length === 0) {
         alert('선택된 상품이 없습니다.');
         return;
+    }
+
+    const mode = prodCode ? '단일 상품' : catCode ? '카테고리' : '대분류';
+    if (products.length > 5) {
+        if (!confirm(`${mode} 전체: ${products.length}개 상품에 리뷰를 생성합니다.\n(언어당 ${countPerLang}개 × 8개 언어 = 상품당 ${countPerLang * 8}개)\n\n총 약 ${products.length * countPerLang * 8}개 리뷰가 생성됩니다. 계속할까요?`)) {
+            return;
+        }
     }
 
     // UI 상태 변경
@@ -127,7 +185,7 @@ window.generateAIReviews = async function() {
     document.getElementById('rvGenLog').innerHTML = '';
     _rvProgress(0);
 
-    _rvLog(`📦 총 ${products.length}개 상품에 대해 리뷰 생성 시작 (언어당 ${countPerLang}개 × 8개 언어)`);
+    _rvLog(`📦 [${mode}] 총 ${products.length}개 상품에 대해 리뷰 생성 시작 (언어당 ${countPerLang}개 × 8개 언어)`);
 
     let completed = 0;
     let totalReviews = 0;
@@ -141,11 +199,10 @@ window.generateAIReviews = async function() {
             const payload = {
                 product_code: product.code,
                 product_name: product.name,
-                category_name: catCode || product.category,
+                category_name: product.category,
                 count_per_lang: countPerLang,
             };
 
-            // 사진이 업로드되었으면 사용, 없으면 상품 이미지 URL에서 가져오기 시도
             if (_rvGenPhotoBase64) {
                 payload.photo_base64 = _rvGenPhotoBase64;
                 payload.photo_media_type = _rvGenPhotoType;

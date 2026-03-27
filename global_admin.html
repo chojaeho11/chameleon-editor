@@ -1644,17 +1644,24 @@
             <!-- 왼쪽: 선택 영역 -->
             <div>
                 <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
-                    <i class="fa-solid fa-layer-group"></i> 카테고리 선택
+                    <i class="fa-solid fa-folder-tree"></i> 대분류 선택
+                </label>
+                <select id="rvGenTopCategory" class="input-text" style="width:100%; height:40px; margin-bottom:16px;" onchange="window._rvGenTopCategoryChange()">
+                    <option value="">선택 안함</option>
+                </select>
+
+                <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
+                    <i class="fa-solid fa-layer-group"></i> 소분류(카테고리) 선택
                 </label>
                 <select id="rvGenCategory" class="input-text" style="width:100%; height:40px; margin-bottom:16px;" onchange="window._rvGenCategoryChange()">
-                    <option value="">전체 (카테고리 선택)</option>
+                    <option value="">선택 안함</option>
                 </select>
 
                 <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
                     <i class="fa-solid fa-box"></i> 상품 선택
                 </label>
                 <select id="rvGenProduct" class="input-text" style="width:100%; height:40px; margin-bottom:16px;">
-                    <option value="">전체 상품 (카테고리 전체에 생성)</option>
+                    <option value="">전체 상품</option>
                 </select>
 
                 <label style="font-weight:700; font-size:14px; color:#334155; display:block; margin-bottom:8px;">
