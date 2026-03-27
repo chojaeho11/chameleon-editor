@@ -684,6 +684,16 @@ if ('caches' in window) {
 @media (max-width:768px) {
     #topCatMenu .tcm-btn { padding:10px 14px; font-size:13px; }
 }
+/* 상세페이지(풀스크린 모달) 위에 카테고리 메뉴 표시 */
+#topCatMenu.above-modal {
+    z-index: 16000 !important;
+    position: fixed !important;
+    top: 60px !important;
+    left: 0; right: 0;
+}
+.product-full-page .modal-box {
+    padding-top: 48px !important;
+}
 </style>
 
     <div class="hero-section">
@@ -2121,6 +2131,7 @@ window.goToSubscription = function(){
             m.classList.remove('product-full-page');
             m.style.padding = '';
             m.style.background = '';
+            var _tcm2 = document.getElementById('topCatMenu'); if (_tcm2) _tcm2.classList.remove('above-modal');
             var box = m.querySelector('.modal-box');
             if (box) {
                 box.style = '';
@@ -7868,6 +7879,10 @@ window.goHome = function() {
 
                 const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
                 closeBtns.forEach(btn => btn.style.display = 'none');
+
+                // 카테고리 메뉴를 모달 위에 표시
+                const _tcm = document.getElementById('topCatMenu');
+                if (_tcm) _tcm.classList.add('above-modal');
             };
 
             // 다국어 상품명 가져오기
@@ -8233,6 +8248,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
 
                 const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
                 closeBtns.forEach(btn => btn.style.display = 'none');
+
+                // 카테고리 메뉴를 모달 위에 표시
+                const _tcm = document.getElementById('topCatMenu');
+                if (_tcm) _tcm.classList.add('above-modal');
             };
 
             // 다국어 상품명 가져오기
