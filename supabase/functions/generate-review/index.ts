@@ -27,7 +27,8 @@ Deno.serve(async (req) => {
     // Build content array for Claude
     const contentParts: any[] = [];
 
-    // Add photo if provided
+    // Add photo: prefer base64 if provided, otherwise download from URL
+    let hasPhoto = false;
     if (photo_base64) {
       contentParts.push({
         type: "image",
@@ -37,6 +38,28 @@ Deno.serve(async (req) => {
           data: photo_base64,
         },
       });
+      hasPhoto = true;
+    } else if (photo_url) {
+      try {
+        const imgRes = await fetch(photo_url);
+        if (imgRes.ok) {
+          const imgBuf = await imgRes.arrayBuffer();
+          const imgBytes = new Uint8Array(imgBuf);
+          let b64 = '';
+          for (let i = 0; i < imgBytes.length; i++) {
+            b64 += String.fromCharCode(imgBytes[i]);
+          }
+          b64 = btoa(b64);
+          const ct = imgRes.headers.get('content-type') || 'image/jpeg';
+          contentParts.push({
+            type: "image",
+            source: { type: "base64", media_type: ct, data: b64 },
+          });
+          hasPhoto = true;
+        }
+      } catch (e) {
+        console.warn('[generate-review] Failed to download photo from URL, proceeding without photo:', e);
+      }
     }
 
     const langs = [
@@ -55,7 +78,7 @@ Deno.serve(async (req) => {
 Product: "${product_name}"
 ${category_name ? `Category: "${category_name}"` : ""}
 ${context ? `\nProduct details/context (USE this info in reviews): ${context}` : ""}
-${photo_base64 ? "\nA product photo is attached. Analyze the photo carefully - describe the print quality, material texture, colors, finishing, and any details visible. Combine what you see in the photo with the product context above to write authentic reviews." : ""}
+${hasPhoto ? "\nA product photo is attached. Analyze the photo carefully - describe the print quality, material texture, colors, finishing, and any details visible. Combine what you see in the photo with the product context above to write authentic reviews." : ""}
 
 Generate exactly ${reviewCount} reviews for EACH of these 8 languages: Korean, Japanese, English, Chinese (Simplified), Arabic, Spanish, German, French.
 
@@ -94,7 +117,7 @@ Return ONLY the JSON, no markdown, no explanation.`;
 
     contentParts.push({ type: "text", text: prompt });
 
-    console.log(`[generate-review] product=${product_code}, photo=${!!photo_base64}, count=${reviewCount}`);
+    console.log(`[generate-review] product=${product_code}, photo=${hasPhoto}, count=${reviewCount}`);
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",

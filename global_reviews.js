@@ -262,9 +262,7 @@ window.generateAIReviews = async function() {
                     product_name: product.name,
                     category_name: product.category,
                     count_per_lang: 1,
-                    photo_base64: _rvGenPhotos[pi]?.base64 || null,
-                    photo_media_type: _rvGenPhotos[pi]?.type || 'image/jpeg',
-                    photo_url: photoUrls[pi],
+                    photo_url: photoUrls[pi] || null,
                     context: contextText,
                 };
 
