@@ -117,16 +117,16 @@ function _rvRenderPhotoGrid() {
 // ===== 사진 스토리지 업로드 =====
 async function _uploadReviewPhoto(photoObj) {
     const ext = photoObj.file.name.split('.').pop() || 'jpg';
-    const fileName = `review_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const fileName = `reviews/review_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     try {
-        const { data, error } = await sb.storage.from('review-photos').upload(fileName, photoObj.file, {
+        const { data, error } = await sb.storage.from('products').upload(fileName, photoObj.file, {
             cacheControl: '3600', upsert: false
         });
         if (error) {
             console.error('[리뷰 사진 업로드 실패]', error.message);
             return null;
         }
-        const { data: urlData } = sb.storage.from('review-photos').getPublicUrl(data.path);
+        const { data: urlData } = sb.storage.from('products').getPublicUrl(data.path);
         return urlData.publicUrl;
     } catch (e) {
         console.error('[리뷰 사진 업로드 예외]', e);
@@ -202,14 +202,11 @@ window.generateAIReviews = async function() {
     }
 
     const photoCount = _rvGenPhotos.length;
-    const isSingleProduct = !!prodCode;
-    const photosPerProduct = isSingleProduct ? photoCount : 1;
+    const photosPerProduct = photoCount;
     const totalEstimate = products.length * photosPerProduct * 8;
     const mode = prodCode ? '단일 상품' : catCode ? '카테고리' : '대분류';
 
-    const confirmMsg = isSingleProduct
-        ? `[${mode}] 1개 상품 × ${photoCount}장 사진 × 8개 언어\n= 총 약 ${totalEstimate}개 리뷰 생성\n\n계속할까요?`
-        : `[${mode}] ${products.length}개 상품 × 랜덤 1장 사진 × 8개 언어\n= 총 약 ${totalEstimate}개 리뷰 생성\n(${photoCount}장 사진 풀에서 랜덤 배정)\n\n계속할까요?`;
+    const confirmMsg = `[${mode}] ${products.length}개 상품 × ${photoCount}장 사진 × 8개 언어\n= 총 약 ${totalEstimate}개 리뷰 생성\n\n계속할까요?`;
     if (!confirm(confirmMsg)) {
         return;
     }
@@ -247,17 +244,11 @@ window.generateAIReviews = async function() {
     let step = 0;
     let totalReviews = 0;
 
-    if (isSingleProduct) {
-        _rvLog(`📦 [${mode}] 1개 상품 × ${photoCount}장 사진 = ${totalSteps}건 처리 시작`);
-    } else {
-        _rvLog(`📦 [${mode}] ${products.length}개 상품 × 각 1장 사진 = ${totalSteps}건 처리 시작`);
-    }
+    _rvLog(`📦 [${mode}] ${products.length}개 상품 × ${photoCount}장 사진 = ${totalSteps}건 처리 시작`);
 
     for (const product of products) {
-        // 단일 상품: 모든 사진 순회, 카테고리: 랜덤 1장
-        const photoIndices = isSingleProduct
-            ? photoUrls.map((_, i) => i)
-            : [Math.floor(Math.random() * photoUrls.length)];
+        // 모든 상품에 모든 사진 적용
+        const photoIndices = photoUrls.map((_, i) => i);
 
         for (const pi of photoIndices) {
             const pct = Math.round((step / totalSteps) * 100);
