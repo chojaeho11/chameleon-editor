@@ -921,7 +921,8 @@ button, input, textarea, select { font-family: inherit; }
     .topbar::-webkit-scrollbar { display: none; }
     #siteNavBar { gap: 1px !important; margin-left: 0 !important; flex-shrink: 0 !important; order: 4 !important; }
     #siteNavBar .flag-link { width: 22px !important; height: 22px !important; font-size: 13px !important; padding: 0 !important; }
-    #startScreen { top: 50px !important; height: calc(100vh - 50px) !important; }
+    #startScreen { top: 93px !important; height: calc(100vh - 93px) !important; }
+    #topCatMenu { top: 50px !important; }
     .brand { display: none !important; } /* 로고 숨김 */
 
     /* 모바일 헤더 순서: HOME > 로그인 > 구매 > 국기 > 주문조회 > 마이페이지 */
@@ -2379,13 +2380,13 @@ body {
 
 /* 시작 화면 스크롤 처리 */
 #startScreen {
-    position: absolute; inset: 0; top: 60px; /* ★ 탑바(60) 아래부터 시작 (국가바 투명화) */
+    position: absolute; inset: 0; top: 108px; /* ★ 탑바(60) + 카테고리메뉴(48) 아래부터 시작 */
     background: #fff;
     z-index: 9999;
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     overflow-y: auto; /* ★ 내부 스크롤 활성화 */
     padding-bottom: 80px;
-    height: calc(100vh - 60px); /* 높이 계산 */
+    height: calc(100vh - 108px); /* 높이 계산 */
 }
 
 /* 에디터 화면 높이 조정 */
