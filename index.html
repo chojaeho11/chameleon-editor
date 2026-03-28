@@ -8686,7 +8686,47 @@ window.showChoiceModal = async function(key) {
             <img src="${product.img || product.img_url}" alt="${seoAlt(product) || dName}" loading="lazy" style="width:100%; max-height:300px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
         </div>
+        <div id="relatedProductsNav" style="margin-bottom:12px;"></div>
     `;
+
+    // 같은 카테고리 내 다른 상품 네비게이션 로드
+    (async function() {
+        const catCode = product.category;
+        if (!catCode) return;
+        const _sb2 = window.sb || sb;
+        const { data: siblings } = await _sb2.from('admin_products')
+            .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url')
+            .eq('category', catCode)
+            .or('partner_id.is.null,partner_status.eq.approved')
+            .order('sort_order', { ascending: true })
+            .limit(20);
+        if (!siblings || siblings.length <= 1) return;
+        const nav = document.getElementById('relatedProductsNav');
+        if (!nav) return;
+        const _l = (typeof window.CURRENT_LANG !== 'undefined') ? window.CURRENT_LANG : 'kr';
+        let html = '<div style="display:flex; gap:8px; overflow-x:auto; padding:4px 0; scrollbar-width:none; -webkit-overflow-scrolling:touch;">';
+        siblings.forEach(s => {
+            let sName = s.name || '';
+            if (_l === 'ja') sName = s.name_jp || s.name_us || sName;
+            else if (_l === 'en') sName = s.name_us || sName;
+            else if (_l === 'zh') sName = s.name_cn || s.name_us || sName;
+            else if (_l === 'ar') sName = s.name_ar || s.name_us || sName;
+            else if (_l === 'es') sName = s.name_es || s.name_us || sName;
+            else if (_l === 'de') sName = s.name_de || s.name_us || sName;
+            else if (_l === 'fr') sName = s.name_fr || s.name_us || sName;
+            const isCurrent = s.code === key;
+            const img = s.img_url || 'https://placehold.co/60?text=No';
+            const thumb = window.getTinyThumb ? window.getTinyThumb(img, 120) : img;
+            html += `<div onclick="${isCurrent ? '' : "window.loadProductDetailAndOpen('" + s.code + "')"}" style="flex-shrink:0; width:70px; cursor:${isCurrent?'default':'pointer'}; text-align:center; opacity:${isCurrent?'1':'0.7'}; transition:opacity 0.2s;" ${isCurrent?'':'onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7"'}>
+                <div style="width:60px; height:60px; margin:0 auto; border-radius:10px; overflow:hidden; border:2px solid ${isCurrent?'#6366f1':'#e2e8f0'}; background:#f8fafc;">
+                    <img src="${thumb}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/60?text=No'">
+                </div>
+                <div style="font-size:10px; color:${isCurrent?'#6366f1':'#64748b'}; font-weight:${isCurrent?'700':'500'}; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70px;">${sName}</div>
+            </div>`;
+        });
+        html += '</div>';
+        nav.innerHTML = html;
+    })();
 
     // ★ 작품 제품타입 선택 UI
     let artworkTypeSelectorHtml = '';
