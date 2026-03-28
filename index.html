@@ -2588,6 +2588,8 @@ async function handleSubReturn() {
                 .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
                 .eq('lang', siteLang)
                 .gte('rating', 4)
+                .neq('photo_url', '')
+                .not('photo_url', 'is', null)
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
