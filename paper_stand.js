@@ -112,7 +112,7 @@
 
             if (error) throw error;
 
-            const visible = (products || []);
+            const visible = (products || []).sort(function(a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
 
             grid.innerHTML = '';
 
