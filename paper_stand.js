@@ -107,9 +107,8 @@
         try {
             // pd_ 로 시작하는 모든 종이매대 상품 조회
             const { data: products, error } = await sb.from('admin_products')
-                .select('code, name, name_kr, name_jp, name_us, name_cn, price, price_jp, price_us, width_mm, height_mm, img_url, category, sort_order, is_hidden')
-                .like('code', 'pd_%')
-                .order('sort_order', { ascending: true });
+                .select('code, name, name_kr, name_jp, name_us, name_cn, price, price_jp, price_us, width_mm, height_mm, img_url, category, is_hidden')
+                .like('code', 'pd_%');
 
             if (error) throw error;
 
