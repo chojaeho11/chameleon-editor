@@ -7838,6 +7838,17 @@ window.goHome = function() {
 
                 box.insertAdjacentHTML('afterbegin', headerHTML);
 
+                // 종이매대 제품: 최상단에 종이매대 홈 배너 표시
+                if (productCode && productCode.startsWith('pd_')) {
+                    const _pdLabel = currentLang==='ja'?'紙什器ホーム':currentLang==='en'?'Paper Display Home':currentLang==='zh'?'纸展架首页':'종이매대 홈';
+                    const _pdBanner = document.createElement('div');
+                    _pdBanner.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);cursor:pointer;';
+                    _pdBanner.innerHTML = '<i class="fa-solid fa-layer-group" style="color:#fff;font-size:14px;"></i><span style="color:#fff;font-size:14px;font-weight:700;letter-spacing:0.5px;">' + _pdLabel + '</span><i class="fa-solid fa-arrow-right" style="color:rgba(255,255,255,0.7);font-size:12px;margin-left:4px;"></i>';
+                    _pdBanner.onclick = function() { location.href = '/paper-stand'; };
+                    const _header = box.querySelector('.product-full-header');
+                    if (_header) _header.parentNode.insertBefore(_pdBanner, _header);
+                }
+
                 const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
                 closeBtns.forEach(btn => btn.style.display = 'none');
 
@@ -8206,6 +8217,17 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                 `;
 
                 box.insertAdjacentHTML('afterbegin', headerHTML);
+
+                // 종이매대 제품: 최상단에 종이매대 홈 배너 표시
+                if (productCode && productCode.startsWith('pd_')) {
+                    const _pdLabel = currentLang==='ja'?'紙什器ホーム':currentLang==='en'?'Paper Display Home':currentLang==='zh'?'纸展架首页':'종이매대 홈';
+                    const _pdBanner = document.createElement('div');
+                    _pdBanner.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);cursor:pointer;';
+                    _pdBanner.innerHTML = '<i class="fa-solid fa-layer-group" style="color:#fff;font-size:14px;"></i><span style="color:#fff;font-size:14px;font-weight:700;letter-spacing:0.5px;">' + _pdLabel + '</span><i class="fa-solid fa-arrow-right" style="color:rgba(255,255,255,0.7);font-size:12px;margin-left:4px;"></i>';
+                    _pdBanner.onclick = function() { location.href = '/paper-stand'; };
+                    const _header = box.querySelector('.product-full-header');
+                    if (_header) _header.parentNode.insertBefore(_pdBanner, _header);
+                }
 
                 const closeBtns = box.querySelectorAll('button[onclick*="none"], button[onclick*="display=\'none\'"]');
                 closeBtns.forEach(btn => btn.style.display = 'none');
