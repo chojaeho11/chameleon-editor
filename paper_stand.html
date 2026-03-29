@@ -50,20 +50,19 @@ a { text-decoration: none; color: inherit; }
     display: flex; align-items: center; justify-content: space-between;
     height: 60px;
 }
-.logo { font-size: 18px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
-.logo span { color: var(--text); font-weight: 500; }
-.nav-links { display: flex; gap: 20px; align-items: center; }
+.logo { font-size: 17px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; white-space: nowrap; }
+.nav-links { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
 .nav-links a {
-    font-size: 14px; font-weight: 500; color: var(--text-light);
-    transition: color 0.2s;
+    font-size: 13px; font-weight: 600; color: var(--text-light);
+    transition: color 0.2s; white-space: nowrap;
 }
 .nav-links a:hover { color: var(--primary); }
 .btn-home {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border-radius: 8px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 7px 14px; border-radius: 8px;
     background: var(--primary); color: #fff;
-    font-size: 13px; font-weight: 600;
-    transition: all 0.2s;
+    font-size: 12px; font-weight: 700;
+    transition: all 0.2s; white-space: nowrap;
 }
 .btn-home:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
@@ -237,23 +236,33 @@ a { text-decoration: none; color: inherit; }
 
 /* ── 반응형 ── */
 @media (max-width: 768px) {
-    .hero { padding: 60px 20px 40px; }
-    .hero h1 { font-size: 28px; }
-    .hero p { font-size: 15px; }
-    .features { grid-template-columns: 1fr; margin-top: -20px; }
+    .site-header { padding: 0 12px; }
+    .header-inner { height: 48px; }
+    .logo { font-size: 15px; }
+    .nav-links { gap: 8px; }
+    .nav-links a { font-size: 12px; }
+    .btn-home { padding: 6px 10px; font-size: 11px; }
+    .hero { padding: 50px 20px 36px; }
+    .hero h1 { font-size: 26px; }
+    .hero p { font-size: 14px; }
+    .features { grid-template-columns: repeat(2, 1fr); margin-top: -20px; gap: 10px; }
+    .feature-card { padding: 20px 14px; }
+    .feature-icon { width: 44px; height: 44px; font-size: 20px; }
+    .feature-card h3 { font-size: 14px; }
+    .feature-card p { font-size: 12px; }
     .section-title { font-size: 22px; }
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .product-info { padding: 12px 14px 16px; }
     .product-name { font-size: 13px; }
     .product-price { font-size: 15px; }
-    .nav-links { gap: 12px; }
-    .nav-links a { font-size: 13px; }
 }
 @media (max-width: 480px) {
-    .header-inner { height: 52px; }
-    .logo { font-size: 16px; }
-    .hero h1 { font-size: 24px; }
-    .hero-cta { padding: 14px 28px; font-size: 15px; }
+    .hero h1 { font-size: 22px; }
+    .hero-cta { padding: 13px 26px; font-size: 14px; }
+    .features { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .feature-card { padding: 16px 10px; }
+    .feature-card h3 { font-size: 13px; }
+    .feature-card p { font-size: 11px; }
 }
 </style>
 </head>
@@ -262,9 +271,8 @@ a { text-decoration: none; color: inherit; }
 <!-- 헤더 -->
 <header class="site-header">
     <div class="header-inner">
-        <a href="/paper_stand.html" class="logo">
+        <a href="/paper-stand" class="logo">
             <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>종이매대
-            <span>by 카멜레온프린팅</span>
         </a>
         <nav class="nav-links">
             <a href="#products">상품</a>
