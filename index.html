@@ -8723,9 +8723,8 @@ window.showChoiceModal = async function(key) {
         </div>
     `;
 
-    // 같은 카테고리 내 다른 상품 네비게이션 로드 (종이매대는 건너뜀)
+    // 같은 카테고리 내 다른 상품 네비게이션 로드 (상세페이지 최하단에 배치)
     (async function() {
-        if (isPaperDisplayProduct) return;
         const catCode = product.category;
         if (!catCode) return;
         const _sb2 = window.sb || sb;
@@ -8738,9 +8737,9 @@ window.showChoiceModal = async function(key) {
         if (!siblings || siblings.length <= 1) return;
         let nav = document.getElementById('relatedProductsNav');
         if (!nav) {
-            // 추천상품 아래 또는 modalBox 하단에 동적 생성
-            const _rActions = modalBox.querySelector('#choiceRightActions');
-            if (_rActions) { _rActions.insertAdjacentHTML('beforeend', '<div id="relatedProductsNav" style="margin:12px 20px;"></div>'); nav = document.getElementById('relatedProductsNav'); }
+            // modalBox 최하단에 동적 생성
+            modalBox.insertAdjacentHTML('beforeend', '<div id="relatedProductsNav" style="padding:12px 20px;border-top:1px solid #e5e7eb;margin-top:12px;"></div>');
+            nav = document.getElementById('relatedProductsNav');
             if (!nav) return;
         }
         const _l = (typeof window.CURRENT_LANG !== 'undefined') ? window.CURRENT_LANG : 'kr';
@@ -9345,7 +9344,7 @@ window.showChoiceModal = async function(key) {
                 .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, category')
                 .in('category', subCatCodes)
                 .neq('code', product.code)
-                .limit(10);
+                .limit(6);
             if (!relatedRaw || relatedRaw.length === 0) return;
 
             const _lang = window.currentLang || 'kr';

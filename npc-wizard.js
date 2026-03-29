@@ -1128,19 +1128,25 @@ window.NpcWizard = {
                             <span style="font-size:14px;font-weight:600;">${_t('pdBgColor')}</span>
                             <input type="color" value="${c.bgColor}" onchange="window.NpcWizard._pdCustom.bgColor=this.value;" style="width:36px;height:36px;border:none;cursor:pointer;border-radius:6px;">
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                             <span style="font-size:14px;font-weight:600;">${_t('pdQty')}</span>
                             <div style="display:flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;height:38px;flex:1;">
-                                <button onclick="const i=document.getElementById('npcPdQty4');i.value=Math.max(1,parseInt(i.value)-1);" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">-</button>
-                                <input type="number" id="npcPdQty4" value="1" min="1" style="flex:1;text-align:center;border:none;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;font-weight:bold;font-size:15px;">
-                                <button onclick="const i=document.getElementById('npcPdQty4');i.value=parseInt(i.value)+1;" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">+</button>
+                                <button onclick="window.NpcWizard._pdUpdateTotal(-1)" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">-</button>
+                                <input type="number" id="npcPdQty4" value="1" min="1" style="flex:1;text-align:center;border:none;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;font-weight:bold;font-size:15px;" oninput="window.NpcWizard._pdUpdateTotal(0)">
+                                <button onclick="window.NpcWizard._pdUpdateTotal(1)" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">+</button>
                             </div>
+                        </div>
+                        <div id="npcPdTotalPrice" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px;border-radius:10px;text-align:center;margin-bottom:14px;">
+                            <div style="font-size:12px;opacity:0.85;">총 금액</div>
+                            <div style="font-size:22px;font-weight:900;" id="npcPdTotalVal"></div>
                         </div>
                         <div style="display:flex;flex-direction:column;gap:8px;">
                             <button class="npc-choice-btn npc-yes" style="width:100%;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
                             <button class="npc-choice-btn" style="width:100%;padding:12px;font-size:14px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;font-weight:600;" onclick="window.NpcWizard._pdAfterCustomize()">${_t('pdSkipDesign')}</button>
                         </div>
                     `;
+                    // 초기 금액 표시
+                    setTimeout(() => this._pdUpdateTotal(0), 50);
                 }
                 break;
             }
@@ -1610,6 +1616,26 @@ window.NpcWizard = {
         if (q2) q2.value = v;
         if (window.calcCustomPrice) window.calcCustomPrice();
         if (window.updateModalTotal) window.updateModalTotal();
+    },
+
+    _pdUpdateTotal(delta) {
+        const inp = document.getElementById('npcPdQty4');
+        if (!inp) return;
+        if (delta !== 0) inp.value = Math.max(1, parseInt(inp.value || 1) + delta);
+        const qty = parseInt(inp.value) || 1;
+        const price = this.product ? (this.product.price || 0) : 0;
+        const total = price * qty;
+        const el = document.getElementById('npcPdTotalVal');
+        if (el) {
+            const cfg = window.SITE_CONFIG || {};
+            const country = cfg.COUNTRY || 'KR';
+            const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+            const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || '원';
+            const converted = total * rate;
+            if (country === 'JP') el.textContent = '¥' + Math.floor(converted).toLocaleString();
+            else if (country === 'US') el.textContent = '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
+            else el.textContent = Math.round(converted).toLocaleString() + unit;
+        }
     },
 
     _pdAddToCart() {
