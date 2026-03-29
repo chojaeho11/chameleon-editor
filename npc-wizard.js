@@ -860,10 +860,21 @@ window.NpcWizard = {
     _goStep(stepName) {
         this.step = stepName;
         this._hideAll();
-        // 종이매대 위자드 중간 단계에서는 header(파일올리기/가격표 등) 숨김
+        // 종이매대 위자드 중간 단계에서는 header + 부가 UI 전체 숨김
         const _pdMiddleSteps = ['pdSize', 'pdAdHeight', 'pdMaterial'];
-        if (!_pdMiddleSteps.includes(stepName)) {
+        const _isPdMiddle = _pdMiddleSteps.includes(stepName);
+        if (!_isPdMiddle) {
             this._showSection('header');
+        }
+        // 종이매대: 파일올리기/할인표/구독/가격 등 부가 UI 토글
+        if (this.isPaperDisplay) {
+            const _extras = ['bulkDiscountTable', 'bulkDiscountInfo'];
+            const _extraNpc = ['upload', 'uploadPreview', 'price', 'estimate', 'qtyLabel'];
+            _extras.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = _isPdMiddle ? 'none' : ''; });
+            _extraNpc.forEach(k => { const el = this.sections[k]; if (el) el.style.display = _isPdMiddle ? 'none' : ''; });
+            // 프로구독 가격 영역
+            const _proSub = document.querySelector('[data-npc="total"]');
+            if (_proSub && _isPdMiddle) _proSub.style.display = 'none';
         }
 
         switch (stepName) {
@@ -1108,8 +1119,7 @@ window.NpcWizard = {
             }
 
             case 'pdCustomize': {
-                // Step 4: 배경색 + 수량 + 에디터/장바구니
-                this._showSection('header');
+                // Step 4: 배경색 + 수량 + 에디터/장바구니 (header=제품카드 숨김)
                 this._renderBubble(_t('pdCustomize'), null, true);
                 const slot4 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
                 if (slot4) {
