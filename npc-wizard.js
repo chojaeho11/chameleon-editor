@@ -683,7 +683,7 @@ window.NpcWizard = {
     _pdShelfCount: 0,
     _pdRefCode: null,
     _pdRefName: null,
-    _pdCustom: { ad: null, side: null, shelf: null, bgColor: '#ffffff' },
+    _pdCustom: { ad: null, side: null, shelf: null, bgColor: '#f97316' },
     _pdRefs: [],
 
     init(product) {
@@ -713,7 +713,7 @@ window.NpcWizard = {
         this._pdShelfCount = 0;
         this._pdRefCode = null;
         this._pdRefName = null;
-        this._pdCustom = { ad: null, side: null, shelf: null, bgColor: '#ffffff' };
+        this._pdCustom = { ad: null, side: null, shelf: null, bgColor: '#f97316' };
         this._pdRefs = [];
         this.step = 0;
         this.active = true;
@@ -1011,23 +1011,23 @@ window.NpcWizard = {
                     const totalH = this._pdHeight;
                     const remainInit = totalH - (this._pdAdHeight || 0);
                     slot2.innerHTML = `
-                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:10px;text-align:center;">
+                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
                             <span style="font-size:12px;color:#64748b;">총 높이</span>
                             <strong style="font-size:18px;color:#16a34a;margin-left:6px;">${totalH}cm</strong>
                         </div>
-                        <div class="pd-input-row" style="display:flex;align-items:center;gap:8px;">
-                            <label style="white-space:nowrap;min-width:60px;">${_t('pdAdArea')}</label>
-                            <input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" max="${totalH}" placeholder="20" inputmode="numeric" style="flex:1;min-width:0;">
-                            <span style="font-size:13px;color:#64748b;white-space:nowrap;">cm</span>
-                        </div>
-                        <div id="npcPdRemainBar" style="display:none;">
-                            <span id="npcPdRemainVal">${remainInit}cm</span>
-                        </div>
-                        <div class="pd-input-row" style="display:flex;align-items:center;gap:8px;">
-                            <label style="white-space:nowrap;min-width:60px;">${_t('pdShelfHeight')}</label>
-                            <input type="number" id="npcPdShelfH" value="${this._pdShelfHeight}" min="5" placeholder="25" inputmode="numeric" style="flex:1;min-width:0;">
-                            <span style="font-size:13px;color:#64748b;white-space:nowrap;">cm</span>
-                        </div>
+                        <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+                            <tr>
+                                <td style="padding:6px 0;font-size:14px;font-weight:600;color:#334155;white-space:nowrap;width:90px;">${_t('pdAdArea')}</td>
+                                <td style="padding:6px 0;"><input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" max="${totalH}" placeholder="20" inputmode="numeric" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;text-align:center;"></td>
+                                <td style="padding:6px 4px;font-size:13px;color:#64748b;white-space:nowrap;">cm</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:6px 0;font-size:14px;font-weight:600;color:#334155;white-space:nowrap;">${_t('pdShelfHeight')}</td>
+                                <td style="padding:6px 0;"><input type="number" id="npcPdShelfH" value="${this._pdShelfHeight}" min="5" placeholder="25" inputmode="numeric" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;text-align:center;"></td>
+                                <td style="padding:6px 4px;font-size:13px;color:#64748b;white-space:nowrap;">cm</td>
+                            </tr>
+                        </table>
+                        <div id="npcPdRemainBar" style="display:none;"><span id="npcPdRemainVal">${remainInit}cm</span></div>
                         <div id="npcPdCalcPreview"></div>
                     `;
                     // 입력 시 실시간 미리보기 + 남은 영역 자동계산
