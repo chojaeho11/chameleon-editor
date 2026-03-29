@@ -1047,8 +1047,10 @@
         var halfW = w / 2;
         var halfT = thick / 2;
 
-        // 사선 구간: 제일 상단 선반 ~ 광고판 사이 옆면이 앞→뒤로 기울어짐
+        // 사선 구간: 제일 상단 선반 위 약간 여유 후 광고판까지 옆면이 앞→뒤로 기울어짐
+        var sideMargin = 0.05; // 상단 선반 위 5cm 여유
         var topShelfY = Math.max(0, bodyH - shH); // 제일 위 선반 높이
+        var slopeStartY = Math.min(topShelfY + sideMargin, bodyH); // 사선 시작점
 
         // Helper: create textured material from dataURL
         function makeTexMat(dataUrl, mirror) {
@@ -1071,11 +1073,13 @@
             return mat;
         }
 
-        // 1. 뒷판 — 수직, 전체 bodyH 높이 (z=-d/2)
-        var backBodyGeo = new THREE.BoxGeometry(w, bodyH, thick);
-        var backBody = new THREE.Mesh(backBodyGeo, bgMat.clone());
-        backBody.position.set(0, bodyH / 2, -d / 2);
-        wallGroup.add(backBody);
+        // 1. 뒷판 — 수직, 사선 시작점까지만 (z=-d/2)
+        if (slopeStartY > thick) {
+            var backBodyGeo = new THREE.BoxGeometry(w, slopeStartY, thick);
+            var backBody = new THREE.Mesh(backBodyGeo, bgMat.clone());
+            backBody.position.set(0, slopeStartY / 2, -d / 2);
+            wallGroup.add(backBody);
+        }
 
         // 2. 상단 광고판 — 뒤쪽(z=-d/2)에서 기울어진 형태
         console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
@@ -1128,45 +1132,31 @@
         // 3. 옆면 — 하단 수직 + 상단 사선 (앞→뒤 기울어짐)
         var frontZ = d / 2;
         var backZ = -d / 2;
-        // 하단 수직 옆면 (0 ~ topShelfY)
-        if (topShelfY > thick) {
-            var sideLowerGeo = new THREE.BoxGeometry(thick, topShelfY, d);
+        // 하단 수직 옆면 (0 ~ slopeStartY)
+        if (slopeStartY > thick) {
+            var sideLowerGeo = new THREE.BoxGeometry(thick, slopeStartY, d);
             var leftLowerPanel = new THREE.Mesh(sideLowerGeo, [
                 bgMat.clone(), makeTexMat(textures[1], false),
                 bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone()
             ]);
-            leftLowerPanel.position.set(-halfW, topShelfY / 2, 0);
+            leftLowerPanel.position.set(-halfW, slopeStartY / 2, 0);
             wallGroup.add(leftLowerPanel);
 
             var rightLowerPanel = new THREE.Mesh(sideLowerGeo.clone(), [
                 makeTexMat(textures[1], false), bgMat.clone(),
                 bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone()
             ]);
-            rightLowerPanel.position.set(halfW, topShelfY / 2, 0);
+            rightLowerPanel.position.set(halfW, slopeStartY / 2, 0);
             wallGroup.add(rightLowerPanel);
         }
 
-        // 상단 사선 옆면 (topShelfY ~ bodyH): 앞쪽(d/2)에서 뒤쪽(-d/2)으로 기울어짐
-        var slopeH = bodyH - topShelfY;
+        // 상단 사선 옆면 (slopeStartY ~ bodyH): 앞쪽(d/2)에서 뒤쪽(-d/2)으로 기울어짐
+        var slopeH = bodyH - slopeStartY;
         if (slopeH > 0) {
-            // 좌측 사선 옆면 (outer = -X 방향)
-            var leftSlopeVerts = new Float32Array([
-                // outer face (-X)
-                -halfW, topShelfY, frontZ,   -halfW, topShelfY, backZ,   -halfW, bodyH, backZ,
-                -halfW, topShelfY, frontZ,   -halfW, bodyH,    backZ,   -halfW, bodyH, backZ,
-                // inner face (+X)
-                -halfW, topShelfY, backZ,    -halfW, topShelfY, frontZ,  -halfW, bodyH, backZ,
-                -halfW, topShelfY, backZ,    -halfW, bodyH,    backZ,   -halfW, bodyH, backZ,
-                // top face (사선면 — 앞에서 뒤로 기울어진 면)
-                -halfW, topShelfY, frontZ,   -halfW, bodyH,    backZ,   -halfW, bodyH, backZ,
-            ]);
-            // 사선면은 삼각형이므로 별도 처리
-            // 좌측: 외면만 그리면 충분 (BufferGeometry)
+            // 좌측 사선 옆면 (삼각형: 앞하단, 뒤하단, 뒤상단)
             var leftSV = new Float32Array([
-                // outer face (삼각형: 앞하단, 뒤하단, 뒤상단)
-                -halfW, topShelfY, frontZ,   -halfW, topShelfY, backZ,   -halfW, bodyH, backZ,
-                // inner face (반대 방향)
-                -halfW, topShelfY, backZ,    -halfW, topShelfY, frontZ,  -halfW, bodyH, backZ,
+                -halfW, slopeStartY, frontZ,   -halfW, slopeStartY, backZ,   -halfW, bodyH, backZ,
+                -halfW, slopeStartY, backZ,    -halfW, slopeStartY, frontZ,  -halfW, bodyH, backZ,
             ]);
             var leftSlopeGeo = new THREE.BufferGeometry();
             leftSlopeGeo.setAttribute('position', new THREE.BufferAttribute(leftSV, 3));
@@ -1174,18 +1164,16 @@
                 0,0, 1,0, 1,1,   0,0, 1,0, 1,1,
             ]), 2));
             leftSlopeGeo.computeVertexNormals();
-            leftSlopeGeo.addGroup(0, 3, 0); // outer
-            leftSlopeGeo.addGroup(3, 3, 1); // inner
+            leftSlopeGeo.addGroup(0, 3, 0);
+            leftSlopeGeo.addGroup(3, 3, 1);
             wallGroup.add(new THREE.Mesh(leftSlopeGeo, [
                 makeTexMat(textures[1], false), bgMat.clone()
             ]));
 
-            // 우측 사선 옆면 (outer = +X 방향)
+            // 우측 사선 옆면
             var rightSV = new Float32Array([
-                // outer face
-                halfW, topShelfY, backZ,    halfW, topShelfY, frontZ,   halfW, bodyH, backZ,
-                // inner face
-                halfW, topShelfY, frontZ,   halfW, topShelfY, backZ,    halfW, bodyH, backZ,
+                halfW, slopeStartY, backZ,    halfW, slopeStartY, frontZ,   halfW, bodyH, backZ,
+                halfW, slopeStartY, frontZ,   halfW, slopeStartY, backZ,    halfW, bodyH, backZ,
             ]);
             var rightSlopeGeo = new THREE.BufferGeometry();
             rightSlopeGeo.setAttribute('position', new THREE.BufferAttribute(rightSV, 3));
