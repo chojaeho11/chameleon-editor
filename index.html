@@ -8721,6 +8721,7 @@ window.showChoiceModal = async function(key) {
             <img src="${product.img || product.img_url}" alt="${seoAlt(product) || dName}" loading="lazy" style="width:100%; max-height:300px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
         </div>
+        ${isPaperDisplayProduct ? '' : '<div id="relatedProductsNav" style="margin-bottom:12px;"></div>'}
     `;
 
     // 같은 카테고리 내 다른 상품 네비게이션 로드 (상세페이지 최하단에 배치)
@@ -8736,12 +8737,7 @@ window.showChoiceModal = async function(key) {
             .limit(20);
         if (!siblings || siblings.length <= 1) return;
         let nav = document.getElementById('relatedProductsNav');
-        if (!nav) {
-            // modalBox 최하단에 동적 생성
-            modalBox.insertAdjacentHTML('beforeend', '<div id="relatedProductsNav" style="padding:12px 20px;border-top:1px solid #e5e7eb;margin-top:12px;"></div>');
-            nav = document.getElementById('relatedProductsNav');
-            if (!nav) return;
-        }
+        if (!nav) return;
         const _l = (typeof window.CURRENT_LANG !== 'undefined') ? window.CURRENT_LANG : 'kr';
         let html = '<div style="display:flex; gap:8px; overflow-x:auto; padding:4px 0; scrollbar-width:none; -webkit-overflow-scrolling:touch;">';
         siblings.forEach(s => {
