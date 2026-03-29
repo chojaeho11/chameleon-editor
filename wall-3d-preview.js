@@ -1172,7 +1172,7 @@
         wallGroup.add(rightPanel);
 
         // 4. 선반들 — 수평판 (bgColor) + 앞면 립 (텍스처)
-        for (var i = 1; i <= shelfCount; i++) {
+        for (var i = 1; i < shelfCount; i++) {
             var shelfY = bodyH - i * shH;
             if (shelfY < 0) break; // 바닥 아래로 내려가지 않게
 
