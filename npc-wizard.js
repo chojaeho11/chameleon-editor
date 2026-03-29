@@ -1108,25 +1108,37 @@ window.NpcWizard = {
             }
 
             case 'pdCustomize': {
-                // Step 4: 배경색 선택 + 에디터 열기
+                // Step 4: 배경색 + 수량 + 에디터/장바구니
+                this._showSection('header');
                 this._renderBubble(_t('pdCustomize'), null, true);
                 const slot4 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
                 if (slot4) {
                     const c = this._pdCustom;
+                    const calc4 = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
+                    const matNames4 = { corrugated: _t('pdMatCorrugated'), honeycomb: _t('pdMatHoneycomb'), foam: _t('pdMatFoam') };
+                    const matTxt4 = matNames4[this._pdMaterial] || matNames4.corrugated;
                     slot4.innerHTML = `
-                        <div class="pd-custom-cards">
-                            <div class="pd-custom-card open">
-                                <div class="pd-custom-header">
-                                    ${_t('pdBgColor')} <span class="pd-custom-status" id="pdBgColorPreview" style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${c.bgColor};border:1px solid #cbd5e1;vertical-align:middle;"></span>
-                                </div>
-                                <div class="pd-custom-body">
-                                    <input type="color" value="${c.bgColor}" onchange="window.NpcWizard._pdCustom.bgColor=this.value;document.getElementById('pdBgColorPreview').style.background=this.value;" style="width:100%;height:40px;border:none;cursor:pointer;">
-                                </div>
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#475569;">
+                            <div style="display:flex;justify-content:space-between;"><span>${_t('pdTotalSize')}</span><strong>${this._pdWidth} x ${this._pdHeight} x ${this._pdDepth}cm</strong></div>
+                            <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>${_t('pdAdArea')}</span><strong>${this._pdAdHeight}cm</strong></div>
+                            <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>${_t('pdShelfCount')}</span><strong>${calc4.count}칸 (${this._pdShelfHeight}cm)</strong></div>
+                            <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>재질</span><strong>${matTxt4}</strong></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                            <span style="font-size:14px;font-weight:600;">${_t('pdBgColor')}</span>
+                            <input type="color" value="${c.bgColor}" onchange="window.NpcWizard._pdCustom.bgColor=this.value;" style="width:36px;height:36px;border:none;cursor:pointer;border-radius:6px;">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:14px;font-weight:600;">${_t('pdQty')}</span>
+                            <div style="display:flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;height:38px;flex:1;">
+                                <button onclick="const i=document.getElementById('npcPdQty4');i.value=Math.max(1,parseInt(i.value)-1);" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">-</button>
+                                <input type="number" id="npcPdQty4" value="1" min="1" style="flex:1;text-align:center;border:none;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;font-weight:bold;font-size:15px;">
+                                <button onclick="const i=document.getElementById('npcPdQty4');i.value=parseInt(i.value)+1;" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">+</button>
                             </div>
                         </div>
-                        <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+                        <div style="display:flex;flex-direction:column;gap:8px;">
                             <button class="npc-choice-btn npc-yes" style="width:100%;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
-                            <button class="npc-choice-btn" style="width:100%;padding:10px;font-size:13px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;" onclick="window.NpcWizard._pdAfterCustomize()">${_t('pdSkipDesign')}</button>
+                            <button class="npc-choice-btn" style="width:100%;padding:12px;font-size:14px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;font-weight:600;" onclick="window.NpcWizard._pdAfterCustomize()">${_t('pdSkipDesign')}</button>
                         </div>
                     `;
                 }
@@ -1603,7 +1615,7 @@ window.NpcWizard = {
     _pdAddToCart() {
         const product = this.product;
         if (!product) return;
-        const qty = parseInt(document.getElementById('npcPdQty')?.value) || 1;
+        const qty = parseInt((document.getElementById('npcPdQty4') || document.getElementById('npcPdQty'))?.value) || 1;
 
         import('./order.js?v=175').then(m => {
             const productToCart = { ...product };
@@ -1754,7 +1766,7 @@ window.NpcWizard = {
         // 종이매대
         if (step === 'pdAdHeight') { this._goStep('pdSize'); return; }
         if (step === 'pdMaterial') { this._goStep('pdAdHeight'); return; }
-        if (step === 'pdCustomize') { this._goStep('pdReference'); return; }
+        if (step === 'pdCustomize') { this._goStep('pdMaterial'); return; }
         if (step === 'pdSummary' && this.hasOptions) { this._goStep('options'); return; }
         if (step === 'pdSummary') { this._goStep('pdCustomize'); return; }
         // 옵션에서 이전: 종이매대면 커스터마이징으로
