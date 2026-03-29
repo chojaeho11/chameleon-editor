@@ -1049,7 +1049,6 @@
 
         // 옆면: bodyH 전체 높이 (실제 종이매대처럼)
         var sideH = bodyH;
-        var adOffset = 0.07; // 광고판을 7cm 아래로
 
         // Helper: create textured material from dataURL
         function makeTexMat(dataUrl, mirror) {
@@ -1072,20 +1071,19 @@
             return mat;
         }
 
-        // 1. 뒷판 — 수직, 전체 bodyH 높이 (z=-d/2)
-        var backBodyGeo = new THREE.BoxGeometry(w, bodyH, thick);
+        // 1. 뒷판 — 수직, 광고판 포함 전체 높이 (z=-d/2)
+        var backBodyGeo = new THREE.BoxGeometry(w, h, thick);
         var backBody = new THREE.Mesh(backBodyGeo, bgMat.clone());
-        backBody.position.set(0, bodyH / 2, -d / 2);
+        backBody.position.set(0, h / 2, -d / 2);
         wallGroup.add(backBody);
 
         // 2. 상단 광고판 — 뒤쪽(z=-d/2)에서 기울어진 형태
         console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
         var adTiltExtra = adH * 0.25;
-        var adStartY = bodyH - adOffset; // 광고판 시작 위치 (7cm 아래)
-        var adFrontTop = adStartY + adH + adTiltExtra;
-        var adFrontBot = adStartY;
-        var adBackTop = adStartY + adH;
-        var adBackBot = adStartY;
+        var adFrontTop = bodyH + adH + adTiltExtra;
+        var adFrontBot = bodyH;
+        var adBackTop = bodyH + adH;
+        var adBackBot = bodyH;
         var adZ = -d / 2; // 광고판은 뒤쪽에 배치
 
         var adVertices = new Float32Array([
@@ -1121,8 +1119,8 @@
         adGeo.addGroup(24, 6, 4);
         adGeo.addGroup(30, 6, 5);
         var adMats = [
-            makeTexMat(textures[0], false),
-            makeTexMat(textures[0], false),
+            makeTexMat(textures[0], false),  // front (앞면만 텍스처)
+            bgMat.clone(),                   // back (뒷면은 뒷판이 이어짐)
             bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone(),
         ];
         wallGroup.add(new THREE.Mesh(adGeo, adMats));
