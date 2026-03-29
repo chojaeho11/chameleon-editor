@@ -860,7 +860,11 @@ window.NpcWizard = {
     _goStep(stepName) {
         this.step = stepName;
         this._hideAll();
-        this._showSection('header');
+        // 종이매대 위자드 중간 단계에서는 header(파일올리기/가격표 등) 숨김
+        const _pdMiddleSteps = ['pdSize', 'pdAdHeight', 'pdMaterial'];
+        if (!_pdMiddleSteps.includes(stepName)) {
+            this._showSection('header');
+        }
 
         switch (stepName) {
             case 'askFile':

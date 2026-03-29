@@ -8722,11 +8722,10 @@ window.showChoiceModal = async function(key) {
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
         </div>
     `;
-    // relatedProductsNav는 추천상품 아래에 배치 (modalBox 하단에 동적 삽입)
-    const _relNavPlaceholder = '<div id="relatedProductsNav" style="margin-bottom:12px;"></div>';
 
-    // 같은 카테고리 내 다른 상품 네비게이션 로드
+    // 같은 카테고리 내 다른 상품 네비게이션 로드 (종이매대는 건너뜀)
     (async function() {
+        if (isPaperDisplayProduct) return;
         const catCode = product.category;
         if (!catCode) return;
         const _sb2 = window.sb || sb;
@@ -9381,9 +9380,6 @@ window.showChoiceModal = async function(key) {
                 const rightActions = modalBox.querySelector('#choiceRightActions');
                 if (rightActions) {
                     rightActions.appendChild(relatedSection);
-                    // 카테고리 네비게이션을 추천상품 아래로 이동
-                    const _navEl = document.getElementById('relatedProductsNav');
-                    if (!_navEl) { rightActions.insertAdjacentHTML('beforeend', '<div id="relatedProductsNav" style="margin:12px 20px;"></div>'); }
                 }
             } else {
                 // PC: 상세설명 하단에 가로 스크롤로 작게 표시
