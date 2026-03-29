@@ -1044,7 +1044,7 @@
         const bodyH = h - adH; // 선반 영역 높이
         const shelfCount = pd.shelfCount || Math.floor(bodyH / shH);
         const innerW = w - thick * 2;
-        const sideMargin = 0.07; // 옆판이 상단 선반보다 7cm 위로
+        const sideMargin = 0; // 옆판을 선반 영역과 동일하게
 
         // Helper: create textured material from dataURL
         function makeTexMat(dataUrl, mirror) {
