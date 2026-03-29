@@ -1075,17 +1075,74 @@
         backBody.position.set(0, bodyH / 2, -d / 2);
         wallGroup.add(backBody);
 
-        // 2. 상단 광고판 — 사각 BoxGeometry (텍스처 앞뒤 양면)
+        // 2. 상단 광고판 — 앞쪽이 살짝 높게 기울어진 형태
         console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
-        var adGeo = new THREE.BoxGeometry(w, adH, thick);
+        var adTiltExtra = adH * 0.25; // 앞쪽이 광고판 높이의 25%만큼 더 높음
+        var adFrontTop = bodyH + adH + adTiltExtra; // 앞쪽 상단
+        var adFrontBot = bodyH;                      // 앞쪽 하단
+        var adBackTop = bodyH + adH;                 // 뒤쪽 상단 (기존 위치)
+        var adBackBot = bodyH;                       // 뒤쪽 하단
+        var adZ = -d / 2;                            // 뒷판 위치
+        var halfW = w / 2;
+        var halfT = thick / 2;
+
+        // BufferGeometry로 기울어진 판 생성 (앞쪽이 더 높음)
+        var adVertices = new Float32Array([
+            // front face (+Z) — 앞면 (텍스처)
+            -halfW, adFrontBot, adZ + halfT,   halfW, adFrontBot, adZ + halfT,   halfW, adFrontTop, adZ + halfT,
+            -halfW, adFrontBot, adZ + halfT,   halfW, adFrontTop, adZ + halfT,  -halfW, adFrontTop, adZ + halfT,
+            // back face (-Z) — 뒷면 (텍스처)
+            halfW, adBackBot, adZ - halfT,    -halfW, adBackBot, adZ - halfT,   -halfW, adBackTop, adZ - halfT,
+            halfW, adBackBot, adZ - halfT,    -halfW, adBackTop, adZ - halfT,    halfW, adBackTop, adZ - halfT,
+            // top face — 상단 (기울어진 면)
+            -halfW, adFrontTop, adZ + halfT,   halfW, adFrontTop, adZ + halfT,   halfW, adBackTop, adZ - halfT,
+            -halfW, adFrontTop, adZ + halfT,   halfW, adBackTop, adZ - halfT,   -halfW, adBackTop, adZ - halfT,
+            // bottom face — 하단
+            -halfW, adBackBot, adZ - halfT,    halfW, adBackBot, adZ - halfT,    halfW, adFrontBot, adZ + halfT,
+            -halfW, adBackBot, adZ - halfT,    halfW, adFrontBot, adZ + halfT,  -halfW, adFrontBot, adZ + halfT,
+            // right face (+X)
+            halfW, adFrontBot, adZ + halfT,    halfW, adBackBot, adZ - halfT,    halfW, adBackTop, adZ - halfT,
+            halfW, adFrontBot, adZ + halfT,    halfW, adBackTop, adZ - halfT,    halfW, adFrontTop, adZ + halfT,
+            // left face (-X)
+            -halfW, adBackBot, adZ - halfT,   -halfW, adFrontBot, adZ + halfT,  -halfW, adFrontTop, adZ + halfT,
+            -halfW, adBackBot, adZ - halfT,   -halfW, adFrontTop, adZ + halfT,  -halfW, adBackTop, adZ - halfT,
+        ]);
+        var adUvs = new Float32Array([
+            // front (텍스처 매핑)
+            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+            // back (텍스처 매핑)
+            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+            // top
+            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+            // bottom
+            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+            // right
+            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+            // left
+            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
+        ]);
+        var adGeo = new THREE.BufferGeometry();
+        adGeo.setAttribute('position', new THREE.BufferAttribute(adVertices, 3));
+        adGeo.setAttribute('uv', new THREE.BufferAttribute(adUvs, 2));
+        adGeo.computeVertexNormals();
+
+        // 6개 면에 그룹 지정 (각 면 = 6 vertices = 2 triangles)
+        adGeo.addGroup(0, 6, 0);   // front
+        adGeo.addGroup(6, 6, 1);   // back
+        adGeo.addGroup(12, 6, 2);  // top
+        adGeo.addGroup(18, 6, 3);  // bottom
+        adGeo.addGroup(24, 6, 4);  // right
+        adGeo.addGroup(30, 6, 5);  // left
+
         var adMats = [
-            bgMat.clone(), bgMat.clone(),        // +X, -X
-            bgMat.clone(), bgMat.clone(),        // +Y, -Y
-            makeTexMat(textures[0], false),       // +Z front
-            makeTexMat(textures[0], false)        // -Z back (양면 텍스처)
+            makeTexMat(textures[0], false),  // front (텍스처)
+            makeTexMat(textures[0], false),  // back (텍스처)
+            bgMat.clone(),                   // top
+            bgMat.clone(),                   // bottom
+            bgMat.clone(),                   // right
+            bgMat.clone(),                   // left
         ];
         var adPanel = new THREE.Mesh(adGeo, adMats);
-        adPanel.position.set(0, bodyH + adH / 2, -d / 2);
         wallGroup.add(adPanel);
 
         // 3. 옆면 — 상단 선반보다 약간 위까지만 (bodyH + sideMargin)
