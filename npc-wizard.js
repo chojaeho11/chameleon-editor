@@ -866,22 +866,21 @@ window.NpcWizard = {
         if (!_isPdMiddle) {
             this._showSection('header');
         }
-        // 종이매대: 위자드 중간 단계에서 모든 부가 UI 숨김
+        // 종이매대: 위자드가 자체 UI를 사용하므로 기본 UI 항상 숨김
         if (this.isPaperDisplay) {
-            const _hideDisplay = _isPdMiddle ? 'none' : '';
             // sections 기반
-            ['upload', 'uploadPreview', 'price', 'estimate', 'qtyLabel', 'total', 'buttons'].forEach(k => {
-                const el = this.sections[k]; if (el) el.style.display = _hideDisplay;
+            ['upload', 'uploadPreview', 'size', 'price', 'estimate', 'qtyLabel', 'qty', 'total', 'buttons'].forEach(k => {
+                const el = this.sections[k]; if (el) el.style.display = 'none';
             });
             // ID 기반
-            ['bulkDiscountTable', 'bulkDiscountInfo'].forEach(id => {
-                const el = document.getElementById(id); if (el) el.style.display = _hideDisplay;
+            ['bulkDiscountTable', 'bulkDiscountInfo', 'promoDiscountBox'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.style.display = 'none';
             });
             // 파일올리기 버튼/프로구독 등 data-npc 밖의 요소들
             const _rightActions = document.getElementById('choiceRightActions');
             if (_rightActions) {
-                _rightActions.querySelectorAll('button[onclick*="confirmChoice"]').forEach(el => el.style.display = _hideDisplay);
-                _rightActions.querySelectorAll('[data-npc="total"]').forEach(el => el.style.display = _hideDisplay);
+                _rightActions.querySelectorAll('button[onclick*="confirmChoice"]').forEach(el => el.style.display = 'none');
+                _rightActions.querySelectorAll('[data-npc="total"]').forEach(el => el.style.display = 'none');
             }
         }
 
