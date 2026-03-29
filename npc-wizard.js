@@ -950,10 +950,20 @@ window.NpcWizard = {
                     { onclick: "window.NpcWizard._pdCalcAndShow()", label: _t('next') });
                 const slot2 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
                 if (slot2) {
+                    const totalH = this._pdHeight;
+                    const remainInit = totalH - (this._pdAdHeight || 0);
                     slot2.innerHTML = `
+                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:10px;text-align:center;">
+                            <span style="font-size:12px;color:#64748b;">총 높이</span>
+                            <strong style="font-size:18px;color:#16a34a;margin-left:6px;">${totalH}cm</strong>
+                        </div>
                         <div class="pd-input-row">
                             <label>${_t('pdAdArea')}</label>
-                            <input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" placeholder="20" inputmode="numeric"> <span style="font-size:13px;color:#64748b;">cm</span>
+                            <input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" max="${totalH}" placeholder="20" inputmode="numeric"> <span style="font-size:13px;color:#64748b;">cm</span>
+                        </div>
+                        <div style="text-align:center;margin:4px 0;font-size:12px;color:#94a3b8;">▼ 남은 선반 영역 ▼</div>
+                        <div id="npcPdRemainBar" style="background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:8px 14px;text-align:center;margin-bottom:10px;">
+                            <span style="font-size:13px;color:#1e40af;font-weight:700;" id="npcPdRemainVal">${remainInit}cm</span>
                         </div>
                         <div class="pd-input-row">
                             <label>${_t('pdShelfHeight')}</label>
@@ -961,14 +971,27 @@ window.NpcWizard = {
                         </div>
                         <div id="npcPdCalcPreview"></div>
                     `;
-                    // 입력 시 실시간 미리보기
+                    // 입력 시 실시간 미리보기 + 남은 영역 자동계산
                     const adInp = slot2.querySelector('#npcPdAdH');
                     const shInp = slot2.querySelector('#npcPdShelfH');
                     const preview = slot2.querySelector('#npcPdCalcPreview');
+                    const remainEl = slot2.querySelector('#npcPdRemainVal');
+                    const remainBar = slot2.querySelector('#npcPdRemainBar');
                     const self = this;
                     const doPreview = () => {
                         const ad = parseInt(adInp.value) || 0;
                         const sh = parseInt(shInp.value) || 25;
+                        const remain = totalH - ad;
+                        remainEl.textContent = remain + 'cm';
+                        if (remain <= 0) {
+                            remainBar.style.background = '#fee2e2';
+                            remainBar.style.borderColor = '#fca5a5';
+                            remainEl.style.color = '#dc2626';
+                        } else {
+                            remainBar.style.background = '#dbeafe';
+                            remainBar.style.borderColor = '#93c5fd';
+                            remainEl.style.color = '#1e40af';
+                        }
                         const calc = self._pdCalcShelves(self._pdHeight, ad, sh);
                         preview.innerHTML = self._pdRenderDiagram(self._pdWidth, self._pdHeight, ad, sh, calc);
                     };
