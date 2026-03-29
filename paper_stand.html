@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>종이매대 - 카멜레온프린팅 | 친환경 종이 진열대 전문</title>
+<meta name="description" content="친환경 종이매대(종이 진열대) 전문. 무료 에디터로 직접 디자인하고 주문까지 한번에. 맞춤 사이즈, 다양한 디자인 템플릿 제공.">
+<meta name="keywords" content="종이매대,종이진열대,친환경진열대,매대제작,종이디스플레이,팝업스토어진열대,카멜레온프린팅">
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --accent: #10b981;
+    --bg: #fafbfc;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e5e7eb;
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 16px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+
+/* ── 헤더 ── */
+.site-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+}
+.header-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+}
+.logo { font-size: 18px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+.logo span { color: var(--text); font-weight: 500; }
+.nav-links { display: flex; gap: 20px; align-items: center; }
+.nav-links a {
+    font-size: 14px; font-weight: 500; color: var(--text-light);
+    transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--primary); }
+.btn-home {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px;
+    background: var(--primary); color: #fff;
+    font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-home:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+/* ── 히어로 ── */
+.hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 30%, #c7d2fe 60%, #ddd6fe 100%);
+    padding: 80px 24px 60px;
+    text-align: center;
+}
+.hero::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(16,185,129,0.06) 0%, transparent 50%);
+    animation: heroFloat 20s ease-in-out infinite;
+}
+@keyframes heroFloat {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-2%, -1%); }
+}
+.hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+.hero-badge {
+    display: inline-block; padding: 6px 16px; border-radius: 20px;
+    background: rgba(255,255,255,0.8); color: var(--primary);
+    font-size: 13px; font-weight: 700; margin-bottom: 20px;
+    backdrop-filter: blur(4px);
+}
+.hero h1 {
+    font-size: 42px; font-weight: 900; line-height: 1.3;
+    color: var(--text); margin-bottom: 16px;
+}
+.hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero p {
+    font-size: 17px; color: var(--text-light);
+    max-width: 600px; margin: 0 auto 32px;
+}
+.hero-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 16px 36px; border-radius: 50px; border: none;
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: #fff; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+}
+.hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.5); }
+
+/* ── 특장점 ── */
+.features {
+    max-width: 1200px; margin: -40px auto 0; padding: 0 24px;
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;
+}
+.feature-card {
+    background: #fff; border-radius: var(--radius); padding: 28px 24px;
+    box-shadow: var(--card-shadow); text-align: center;
+    transition: transform 0.2s;
+}
+.feature-card:hover { transform: translateY(-4px); }
+.feature-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px; margin-bottom: 16px;
+}
+.feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.feature-card p { font-size: 14px; color: var(--text-light); line-height: 1.5; }
+
+/* ── 섹션 공통 ── */
+.section { max-width: 1200px; margin: 0 auto; padding: 60px 24px; }
+.section-title {
+    font-size: 28px; font-weight: 900; text-align: center; margin-bottom: 8px;
+}
+.section-desc {
+    font-size: 15px; color: var(--text-light); text-align: center; margin-bottom: 40px;
+}
+
+/* ── 상품 그리드 ── */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+}
+.product-card {
+    background: #fff; border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--card-shadow); cursor: pointer;
+    transition: all 0.25s;
+}
+.product-card:hover { transform: translateY(-6px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+.product-img {
+    width: 100%; aspect-ratio: 1/1; object-fit: cover;
+    background: #f1f5f9; display: block;
+}
+.product-info { padding: 16px 18px 20px; }
+.product-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+.product-size { font-size: 13px; color: var(--text-light); margin-bottom: 8px; }
+.product-price { font-size: 17px; font-weight: 800; color: var(--primary); }
+.product-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    background: var(--primary); color: #fff;
+    font-size: 11px; font-weight: 700; margin-bottom: 8px;
+}
+
+/* ── 로딩 ── */
+.loading-spinner {
+    text-align: center; padding: 60px 0;
+}
+.loading-spinner::after {
+    content: ''; display: inline-block;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 프로세스 ── */
+.process-steps {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;
+    counter-reset: step;
+}
+.process-step {
+    text-align: center; padding: 24px 16px;
+    position: relative;
+}
+.process-step::before {
+    counter-increment: step;
+    content: counter(step);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    font-size: 18px; font-weight: 800; margin-bottom: 16px;
+}
+.process-step h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.process-step p { font-size: 13px; color: var(--text-light); }
+
+/* ── CTA 배너 ── */
+.cta-banner {
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    border-radius: var(--radius); padding: 48px 32px;
+    text-align: center; color: #fff;
+    margin: 0 24px;
+    max-width: 1152px; margin-left: auto; margin-right: auto;
+}
+.cta-banner h2 { font-size: 26px; font-weight: 800; margin-bottom: 12px; }
+.cta-banner p { font-size: 15px; opacity: 0.9; margin-bottom: 24px; }
+.cta-banner button {
+    padding: 14px 32px; border-radius: 50px; border: none;
+    background: #fff; color: var(--primary);
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s;
+}
+.cta-banner button:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+
+/* ── 푸터 ── */
+.site-footer {
+    background: #1e293b; color: #94a3b8; padding: 40px 24px;
+    margin-top: 60px; text-align: center; font-size: 13px;
+}
+.site-footer a { color: #cbd5e1; }
+.site-footer a:hover { color: #fff; }
+
+/* ── 빈 상태 ── */
+.empty-state {
+    text-align: center; padding: 60px 24px; color: var(--text-light);
+}
+.empty-state i { font-size: 48px; margin-bottom: 16px; display: block; opacity: 0.3; }
+
+/* ── 반응형 ── */
+@media (max-width: 768px) {
+    .hero { padding: 60px 20px 40px; }
+    .hero h1 { font-size: 28px; }
+    .hero p { font-size: 15px; }
+    .features { grid-template-columns: 1fr; margin-top: -20px; }
+    .section-title { font-size: 22px; }
+    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .product-info { padding: 12px 14px 16px; }
+    .product-name { font-size: 13px; }
+    .product-price { font-size: 15px; }
+    .nav-links { gap: 12px; }
+    .nav-links a { font-size: 13px; }
+}
+@media (max-width: 480px) {
+    .header-inner { height: 52px; }
+    .logo { font-size: 16px; }
+    .hero h1 { font-size: 24px; }
+    .hero-cta { padding: 14px 28px; font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="site-header">
+    <div class="header-inner">
+        <a href="/paper_stand.html" class="logo">
+            <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>종이매대
+            <span>by 카멜레온프린팅</span>
+        </a>
+        <nav class="nav-links">
+            <a href="#products">상품</a>
+            <a href="#process">주문방법</a>
+            <a href="/" class="btn-home"><i class="fa-solid fa-house"></i> 메인</a>
+        </nav>
+    </div>
+</header>
+
+<!-- 히어로 -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge"><i class="fa-solid fa-leaf"></i> 친환경 종이 소재</div>
+        <h1>맞춤형 <em>종이매대</em>를<br>직접 디자인하세요</h1>
+        <p>무료 온라인 에디터로 종이 진열대를 직접 디자인하고,<br>원하는 사이즈로 제작까지 한번에 주문하세요.</p>
+        <button class="hero-cta" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+            <i class="fa-solid fa-palette"></i> 상품 보러가기
+        </button>
+    </div>
+</section>
+
+<!-- 특장점 -->
+<div class="features">
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#eef2ff; color:var(--primary);">
+            <i class="fa-solid fa-ruler-combined"></i>
+        </div>
+        <h3>맞춤 사이즈</h3>
+        <p>원하는 크기로 자유롭게 제작. 폭, 높이, 깊이를 직접 입력하세요.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#ecfdf5; color:var(--accent);">
+            <i class="fa-solid fa-paintbrush"></i>
+        </div>
+        <h3>무료 에디터</h3>
+        <p>전문 디자인 에디터로 직접 디자인. 이미지, 텍스트, 서체 자유롭게 편집.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#fef3c7; color:#d97706;">
+            <i class="fa-solid fa-leaf"></i>
+        </div>
+        <h3>친환경 소재</h3>
+        <p>재활용 가능한 친환경 종이 소재로 제작. 가볍고 튼튼합니다.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#fce7f3; color:#db2777;">
+            <i class="fa-solid fa-truck-fast"></i>
+        </div>
+        <h3>빠른 배송</h3>
+        <p>주문 확인 후 신속하게 제작하여 배송해드립니다.</p>
+    </div>
+</div>
+
+<!-- 상품 목록 -->
+<section class="section" id="products">
+    <h2 class="section-title">종이매대 상품</h2>
+    <p class="section-desc">원하는 상품을 선택하고 무료 에디터로 디자인을 시작하세요</p>
+    <div id="productGrid" class="product-grid">
+        <div class="loading-spinner"></div>
+    </div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+        <i class="fa-solid fa-box-open"></i>
+        <p>종이매대 상품을 준비 중입니다. 곧 만나보실 수 있어요!</p>
+    </div>
+</section>
+
+<!-- 주문 프로세스 -->
+<section class="section" id="process" style="background:#fff;">
+    <h2 class="section-title">간편 주문 프로세스</h2>
+    <p class="section-desc">4단계로 나만의 종이매대를 완성하세요</p>
+    <div class="process-steps">
+        <div class="process-step">
+            <h4>상품 선택</h4>
+            <p>원하는 종이매대 타입을 선택합니다</p>
+        </div>
+        <div class="process-step">
+            <h4>사이즈 입력</h4>
+            <p>폭, 높이, 깊이를 자유롭게 지정합니다</p>
+        </div>
+        <div class="process-step">
+            <h4>디자인 편집</h4>
+            <p>무료 에디터로 이미지와 텍스트를 배치합니다</p>
+        </div>
+        <div class="process-step">
+            <h4>주문 완료</h4>
+            <p>장바구니에 담고 결제하면 끝!</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="section">
+    <div class="cta-banner">
+        <h2>지금 바로 시작하세요</h2>
+        <p>무료 에디터로 종이매대를 디자인하고, 맞춤 제작까지 한번에!</p>
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+            <i class="fa-solid fa-arrow-up"></i> 상품 보기
+        </button>
+    </div>
+</section>
+
+<!-- 푸터 -->
+<footer class="site-footer">
+    <p style="margin-bottom:8px;">
+        <a href="/">카멜레온프린팅 메인</a> &middot;
+        <a href="/board.html">커뮤니티</a> &middot;
+        <a href="/mypage.html">마이페이지</a>
+    </p>
+    <p>&copy; 2026 카멜레온프린팅. All rights reserved.</p>
+</footer>
+
+<!-- 상품 로딩 스크립트 -->
+<script src="paper_stand.js?v=188"></script>
+
+</body>
+</html>

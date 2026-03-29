@@ -8,6 +8,9 @@
 /index.html / 301
 /index / 301
 
+# Paper stand landing page
+/paper-stand  /paper_stand.html  200
+
 # NOTE: HTML page rewrites (/mypage → mypage.html) and SPA fallback
 # are NOT listed here because _worker.js handles all routing.
 # Having them here causes 308 redirect loops with Cloudflare Pretty URLs.

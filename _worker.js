@@ -694,6 +694,20 @@ ${hreflangTags('/editor')}
             return Response.redirect(new URL('/', url.origin).toString(), 301);
         }
 
+        // ========== STANDALONE PAGE REWRITES ==========
+        // 별도 랜딩 페이지: /paper-stand → paper_stand.html (SPA fallback 우회)
+        const STANDALONE_PAGES = {
+            'paper-stand': '/paper_stand.html',
+        };
+        if (STANDALONE_PAGES[path]) {
+            const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);
+            const rewriteReq = new Request(rewriteUrl.toString(), request);
+            let stResp = await env.ASSETS.fetch(rewriteReq);
+            const stHeaders = new Headers(stResp.headers);
+            stHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            return new Response(stResp.body, { status: stResp.status, headers: stHeaders });
+        }
+
         // ========== NORMAL HANDLING ==========
         // Pretty URLs: /mypage → serves mypage.html (200), /mypage.html → 308 to /mypage
         // _redirects HTML rewrites removed to avoid 308 loop with Pretty URLs
