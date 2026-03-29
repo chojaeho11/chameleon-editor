@@ -42,7 +42,7 @@ const NPC_TEXTS = {
         pdHeight: '높이 (cm)',
         pdDepth: '깊이 (cm)',
         pdAdHeightDesc: '상단 광고판 높이를 입력하세요 (기본 20cm) 📢',
-        pdShelfHeight: '선반 높이 (cm)',
+        pdShelfHeight: '제품 높이 (cm)',
         pdCalcResult: '선반 계산 결과',
         pdSelectRef: '레퍼런스를 선택해주세요 🖼️',
         pdSkipRef: '선택 없이 진행',
@@ -126,7 +126,7 @@ const NPC_TEXTS = {
         pdHeight: '高さ (cm)',
         pdDepth: '奥行き (cm)',
         pdAdHeightDesc: '上部広告パネルの高さを入力してください（デフォルト20cm） 📢',
-        pdShelfHeight: '棚の高さ (cm)',
+        pdShelfHeight: '商品の高さ (cm)',
         pdCalcResult: '棚の計算結果',
         pdSelectRef: 'リファレンスを選択してください 🖼️',
         pdSkipRef: '選択せずに進む',
@@ -209,7 +209,7 @@ const NPC_TEXTS = {
         pdHeight: 'Height (cm)',
         pdDepth: 'Depth (cm)',
         pdAdHeightDesc: 'Enter the top ad panel height (default 20cm) 📢',
-        pdShelfHeight: 'Shelf height (cm)',
+        pdShelfHeight: 'Product height (cm)',
         pdCalcResult: 'Shelf Calculation Result',
         pdSelectRef: 'Select a reference design 🖼️',
         pdSkipRef: 'Skip selection',
@@ -292,7 +292,7 @@ const NPC_TEXTS = {
         pdHeight: '高度 (cm)',
         pdDepth: '深度 (cm)',
         pdAdHeightDesc: '请输入顶部广告板高度（默认20cm） 📢',
-        pdShelfHeight: '货架高度 (cm)',
+        pdShelfHeight: '产品高度 (cm)',
         pdCalcResult: '货架计算结果',
         pdSelectRef: '请选择参考设计 🖼️',
         pdSkipRef: '跳过选择',
@@ -357,7 +357,7 @@ const NPC_TEXTS = {
         pdHeight: 'الارتفاع (سم)',
         pdDepth: 'العمق (سم)',
         pdAdHeightDesc: 'أدخل ارتفاع لوحة الإعلان العلوية (افتراضي 20 سم) 📢',
-        pdShelfHeight: 'ارتفاع الرف (سم)',
+        pdShelfHeight: 'ارتفاع المنتج (سم)',
         pdCalcResult: 'نتيجة حساب الأرفف',
         pdSelectRef: 'اختر تصميمًا مرجعيًا 🖼️',
         pdSkipRef: 'تخطي الاختيار',
@@ -422,7 +422,7 @@ const NPC_TEXTS = {
         pdHeight: 'Alto (cm)',
         pdDepth: 'Profundidad (cm)',
         pdAdHeightDesc: 'Ingrese la altura del panel publicitario superior (predeterminado 20cm) 📢',
-        pdShelfHeight: 'Altura del estante (cm)',
+        pdShelfHeight: 'Altura del producto (cm)',
         pdCalcResult: 'Resultado del cálculo de estantes',
         pdSelectRef: 'Seleccione un diseño de referencia 🖼️',
         pdSkipRef: 'Omitir selección',
@@ -487,7 +487,7 @@ const NPC_TEXTS = {
         pdHeight: 'Höhe (cm)',
         pdDepth: 'Tiefe (cm)',
         pdAdHeightDesc: 'Geben Sie die Höhe des oberen Werbeschilds ein (Standard 20cm) 📢',
-        pdShelfHeight: 'Regalhöhe (cm)',
+        pdShelfHeight: 'Produkthöhe (cm)',
         pdCalcResult: 'Regal-Berechnung',
         pdSelectRef: 'Wählen Sie ein Referenzdesign 🖼️',
         pdSkipRef: 'Auswahl überspringen',
@@ -552,7 +552,7 @@ const NPC_TEXTS = {
         pdHeight: 'Hauteur (cm)',
         pdDepth: 'Profondeur (cm)',
         pdAdHeightDesc: 'Entrez la hauteur du panneau publicitaire supérieur (défaut 20cm) 📢',
-        pdShelfHeight: 'Hauteur de l\'étagère (cm)',
+        pdShelfHeight: 'Hauteur du produit (cm)',
         pdCalcResult: 'Résultat du calcul des étagères',
         pdSelectRef: 'Sélectionnez un design de référence 🖼️',
         pdSkipRef: 'Passer la sélection',
@@ -957,17 +957,19 @@ window.NpcWizard = {
                             <span style="font-size:12px;color:#64748b;">총 높이</span>
                             <strong style="font-size:18px;color:#16a34a;margin-left:6px;">${totalH}cm</strong>
                         </div>
-                        <div class="pd-input-row">
-                            <label>${_t('pdAdArea')}</label>
-                            <input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" max="${totalH}" placeholder="20" inputmode="numeric"> <span style="font-size:13px;color:#64748b;">cm</span>
+                        <div class="pd-input-row" style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;min-width:60px;">${_t('pdAdArea')}</label>
+                            <input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" max="${totalH}" placeholder="20" inputmode="numeric" style="flex:1;min-width:0;">
+                            <span style="font-size:13px;color:#64748b;white-space:nowrap;">cm</span>
                         </div>
                         <div style="text-align:center;margin:4px 0;font-size:12px;color:#94a3b8;">▼ 남은 선반 영역 ▼</div>
                         <div id="npcPdRemainBar" style="background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:8px 14px;text-align:center;margin-bottom:10px;">
                             <span style="font-size:13px;color:#1e40af;font-weight:700;" id="npcPdRemainVal">${remainInit}cm</span>
                         </div>
-                        <div class="pd-input-row">
-                            <label>${_t('pdShelfHeight')}</label>
-                            <input type="number" id="npcPdShelfH" value="${this._pdShelfHeight}" min="5" placeholder="25" inputmode="numeric"> <span style="font-size:13px;color:#64748b;">cm</span>
+                        <div class="pd-input-row" style="display:flex;align-items:center;gap:8px;">
+                            <label style="white-space:nowrap;min-width:60px;">${_t('pdShelfHeight')}</label>
+                            <input type="number" id="npcPdShelfH" value="${this._pdShelfHeight}" min="5" placeholder="25" inputmode="numeric" style="flex:1;min-width:0;">
+                            <span style="font-size:13px;color:#64748b;white-space:nowrap;">cm</span>
                         </div>
                         <div id="npcPdCalcPreview"></div>
                     `;
