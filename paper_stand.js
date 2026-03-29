@@ -107,13 +107,12 @@
         try {
             // pd_ 로 시작하는 모든 종이매대 상품 조회
             const { data: products, error } = await sb.from('admin_products')
-                .select('code, name, name_kr, name_jp, name_us, name_cn, price, price_jp, price_us, width_mm, height_mm, img_url, category, is_hidden')
-                .like('code', 'pd_%');
+                .select('*')
+                .like('code', 'pd\\_%');
 
             if (error) throw error;
 
-            // 숨김 상품 제외
-            const visible = (products || []).filter(function(p) { return !p.is_hidden; });
+            const visible = (products || []);
 
             grid.innerHTML = '';
 
