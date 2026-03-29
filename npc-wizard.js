@@ -46,6 +46,13 @@ const NPC_TEXTS = {
         pdCalcResult: '선반 계산 결과',
         pdSelectRef: '레퍼런스를 선택해주세요 🖼️',
         pdSkipRef: '선택 없이 진행',
+        pdMaterial: '매대 재질을 선택해주세요 📦',
+        pdMatCorrugated: '원터치 골판지',
+        pdMatCorrugatedDesc: '가볍고 경제적, 단기 행사용',
+        pdMatHoneycomb: '허니콤보드',
+        pdMatHoneycombDesc: '튼튼하고 친환경, 장기 사용',
+        pdMatFoam: '강화폼보드',
+        pdMatFoamDesc: '고급스럽고 내구성 최고',
         pdCustomize: '디자인을 커스터마이징하세요 🎨',
         pdAdDesign: '📢 상단 광고 디자인',
         pdSideDesign: '📐 옆면 디자인',
@@ -130,6 +137,13 @@ const NPC_TEXTS = {
         pdCalcResult: '棚の計算結果',
         pdSelectRef: 'リファレンスを選択してください 🖼️',
         pdSkipRef: '選択せずに進む',
+        pdMaterial: '什器の素材を選択してください 📦',
+        pdMatCorrugated: 'ワンタッチ段ボール',
+        pdMatCorrugatedDesc: '軽量で経済的、短期イベント向け',
+        pdMatHoneycomb: 'ハニカムボード',
+        pdMatHoneycombDesc: '丈夫でエコ、長期使用向け',
+        pdMatFoam: '強化フォームボード',
+        pdMatFoamDesc: '高級感と耐久性最高',
         pdCustomize: 'デザインをカスタマイズしてください 🎨',
         pdAdDesign: '📢 上部広告デザイン',
         pdSideDesign: '📐 側面デザイン',
@@ -213,6 +227,13 @@ const NPC_TEXTS = {
         pdCalcResult: 'Shelf Calculation Result',
         pdSelectRef: 'Select a reference design 🖼️',
         pdSkipRef: 'Skip selection',
+        pdMaterial: 'Select stand material 📦',
+        pdMatCorrugated: 'Corrugated Cardboard',
+        pdMatCorrugatedDesc: 'Lightweight & economical, for short-term events',
+        pdMatHoneycomb: 'Honeycomb Board',
+        pdMatHoneycombDesc: 'Strong & eco-friendly, for long-term use',
+        pdMatFoam: 'Reinforced Foam Board',
+        pdMatFoamDesc: 'Premium look & maximum durability',
         pdCustomize: 'Customize your design 🎨',
         pdAdDesign: '📢 Top Ad Design',
         pdSideDesign: '📐 Side Panel Design',
@@ -296,6 +317,13 @@ const NPC_TEXTS = {
         pdCalcResult: '货架计算结果',
         pdSelectRef: '请选择参考设计 🖼️',
         pdSkipRef: '跳过选择',
+        pdMaterial: '请选择展架材质 📦',
+        pdMatCorrugated: '瓦楞纸板',
+        pdMatCorrugatedDesc: '轻便经济，适合短期活动',
+        pdMatHoneycomb: '蜂窝板',
+        pdMatHoneycombDesc: '坚固环保，适合长期使用',
+        pdMatFoam: '加强泡沫板',
+        pdMatFoamDesc: '高端外观，耐久性最佳',
         pdCustomize: '自定义您的设计 🎨',
         pdAdDesign: '📢 顶部广告设计',
         pdSideDesign: '📐 侧面设计',
@@ -361,6 +389,13 @@ const NPC_TEXTS = {
         pdCalcResult: 'نتيجة حساب الأرفف',
         pdSelectRef: 'اختر تصميمًا مرجعيًا 🖼️',
         pdSkipRef: 'تخطي الاختيار',
+        pdMaterial: 'اختر مادة الحامل 📦',
+        pdMatCorrugated: 'كرتون مموج',
+        pdMatCorrugatedDesc: 'خفيف واقتصادي، للفعاليات القصيرة',
+        pdMatHoneycomb: 'لوح خلية النحل',
+        pdMatHoneycombDesc: 'متين وصديق للبيئة، للاستخدام طويل',
+        pdMatFoam: 'لوح فوم مقوى',
+        pdMatFoamDesc: 'مظهر فاخر ومتانة قصوى',
         pdCustomize: 'خصص تصميمك 🎨',
         pdAdDesign: '📢 تصميم الإعلان العلوي',
         pdSideDesign: '📐 تصميم الجانب',
@@ -426,6 +461,13 @@ const NPC_TEXTS = {
         pdCalcResult: 'Resultado del cálculo de estantes',
         pdSelectRef: 'Seleccione un diseño de referencia 🖼️',
         pdSkipRef: 'Omitir selección',
+        pdMaterial: 'Seleccione el material del expositor 📦',
+        pdMatCorrugated: 'Cartón corrugado',
+        pdMatCorrugatedDesc: 'Ligero y económico, para eventos cortos',
+        pdMatHoneycomb: 'Panel de nido de abeja',
+        pdMatHoneycombDesc: 'Resistente y ecológico, uso prolongado',
+        pdMatFoam: 'Panel de espuma reforzada',
+        pdMatFoamDesc: 'Aspecto premium, máxima durabilidad',
         pdCustomize: 'Personalice su diseño 🎨',
         pdAdDesign: '📢 Diseño del anuncio superior',
         pdSideDesign: '📐 Diseño lateral',
@@ -491,6 +533,13 @@ const NPC_TEXTS = {
         pdCalcResult: 'Regal-Berechnung',
         pdSelectRef: 'Wählen Sie ein Referenzdesign 🖼️',
         pdSkipRef: 'Auswahl überspringen',
+        pdMaterial: 'Wählen Sie das Material des Displays 📦',
+        pdMatCorrugated: 'Wellpappe',
+        pdMatCorrugatedDesc: 'Leicht & wirtschaftlich, für kurzfristige Events',
+        pdMatHoneycomb: 'Wabenplatte',
+        pdMatHoneycombDesc: 'Stabil & umweltfreundlich, für Langzeitnutzung',
+        pdMatFoam: 'Verstärkte Schaumplatte',
+        pdMatFoamDesc: 'Premium-Optik & maximale Haltbarkeit',
         pdCustomize: 'Passen Sie Ihr Design an 🎨',
         pdAdDesign: '📢 Oberes Werbedesign',
         pdSideDesign: '📐 Seitendesign',
@@ -556,6 +605,13 @@ const NPC_TEXTS = {
         pdCalcResult: 'Résultat du calcul des étagères',
         pdSelectRef: 'Sélectionnez un design de référence 🖼️',
         pdSkipRef: 'Passer la sélection',
+        pdMaterial: 'Sélectionnez le matériau du présentoir 📦',
+        pdMatCorrugated: 'Carton ondulé',
+        pdMatCorrugatedDesc: 'Léger et économique, pour événements courts',
+        pdMatHoneycomb: 'Panneau nid d\'abeille',
+        pdMatHoneycombDesc: 'Solide et écologique, usage longue durée',
+        pdMatFoam: 'Panneau mousse renforcé',
+        pdMatFoamDesc: 'Aspect premium, durabilité maximale',
         pdCustomize: 'Personnalisez votre design 🎨',
         pdAdDesign: '📢 Design pub supérieure',
         pdSideDesign: '📐 Design latéral',
@@ -1020,34 +1076,34 @@ window.NpcWizard = {
                 break;
             }
 
-            case 'pdReference': {
-                // Step 3: 레퍼런스 선택
-                this._renderBubble(_t('pdSelectRef'), null, true, null,
-                    { onclick: "window.NpcWizard._pdAfterRef()", label: _t('next') });
+            case 'pdMaterial': {
+                // Step 3: 재질 선택
+                this._renderBubble(_t('pdMaterial'), null, true, null,
+                    { onclick: "window.NpcWizard._pdAfterMaterial()", label: _t('next') });
                 const slot3 = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
                 if (slot3) {
-                    slot3.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">Loading...</div>';
-                    this._pdLoadReferences().then(refs => {
-                        this._pdRefs = refs;
-                        if (!refs || refs.length === 0) {
-                            slot3.innerHTML = '<div style="text-align:center;padding:12px;color:#94a3b8;font-size:13px;">' + _t('pdNone') + '</div>';
-                            return;
-                        }
-                        const lang = _npcLang();
-                        let html = '<div class="pd-ref-grid">';
-                        refs.forEach(r => {
-                            const name = (lang === 'ja' && r.name_jp) ? r.name_jp : (lang === 'en' && r.name_us) ? r.name_us : r.name;
-                            const img = r.img_url || 'https://placehold.co/150?text=No+Img';
-                            const sel = this._pdRefCode === r.code ? ' selected' : '';
-                            html += `<div class="pd-ref-card${sel}" onclick="window.NpcWizard._pdSelectRef('${r.code}', this)" data-code="${r.code}">
-                                <img src="${img}" alt="${name}" loading="lazy" onerror="this.src='https://placehold.co/150?text=No+Img'">
-                                <div class="pd-ref-name">${name}</div>
-                            </div>`;
-                        });
-                        html += '</div>';
-                        html += `<button class="npc-choice-btn" style="margin-top:8px;font-size:13px;padding:8px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;" onclick="window.NpcWizard._pdRefCode=null;window.NpcWizard._pdRefName=null;document.querySelectorAll('.pd-ref-card').forEach(c=>c.classList.remove('selected'));">${_t('pdSkipRef')}</button>`;
-                        slot3.innerHTML = html;
+                    const cur = this._pdMaterial || 'corrugated';
+                    const materials = [
+                        { id: 'corrugated', icon: '📦', name: _t('pdMatCorrugated'), desc: _t('pdMatCorrugatedDesc'), color: '#fef3c7', border: '#f59e0b' },
+                        { id: 'honeycomb', icon: '🐝', name: _t('pdMatHoneycomb'), desc: _t('pdMatHoneycombDesc'), color: '#dcfce7', border: '#22c55e' },
+                        { id: 'foam', icon: '🛡️', name: _t('pdMatFoam'), desc: _t('pdMatFoamDesc'), color: '#dbeafe', border: '#3b82f6' },
+                    ];
+                    let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+                    materials.forEach(m => {
+                        const sel = cur === m.id;
+                        html += `<div class="pd-mat-card" data-mat="${m.id}" onclick="window.NpcWizard._pdPickMaterial('${m.id}')"
+                            style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;cursor:pointer;
+                            border:2px solid ${sel ? m.border : '#e5e7eb'};background:${sel ? m.color : '#fff'};transition:all 0.2s;">
+                            <span style="font-size:28px;">${m.icon}</span>
+                            <div>
+                                <div style="font-size:15px;font-weight:700;color:#1e293b;">${m.name}</div>
+                                <div style="font-size:12px;color:#64748b;margin-top:2px;">${m.desc}</div>
+                            </div>
+                            ${sel ? '<i class="fa-solid fa-check-circle" style="margin-left:auto;color:' + m.border + ';font-size:20px;"></i>' : ''}
+                        </div>`;
                     });
+                    html += '</div>';
+                    slot3.innerHTML = html;
                 }
                 break;
             }
@@ -1083,6 +1139,8 @@ window.NpcWizard = {
                 this._showSection('total');
                 const calc2 = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
                 const shelfTxt = _t('pdShelfUnit').replace('{count}', calc2.count).replace('{h}', this._pdShelfHeight);
+                const matNames = { corrugated: _t('pdMatCorrugated'), honeycomb: _t('pdMatHoneycomb'), foam: _t('pdMatFoam') };
+                const matTxt = matNames[this._pdMaterial] || matNames.corrugated;
                 const refTxt = this._pdRefName || _t('pdNone');
                 const c2 = this._pdCustom;
                 const customParts = [];
@@ -1099,7 +1157,7 @@ window.NpcWizard = {
                             <div class="pd-summary-row"><span>${_t('pdTotalSize')}</span><strong>${this._pdWidth}cm x ${this._pdHeight}cm</strong></div>
                             <div class="pd-summary-row"><span>${_t('pdAdArea')}</span><strong>${this._pdAdHeight}cm</strong></div>
                             <div class="pd-summary-row"><span>${_t('pdShelfCount')}</span><strong>${shelfTxt}</strong></div>
-                            <div class="pd-summary-row"><span>${_t('pdReference')}</span><strong>${refTxt}</strong></div>
+                            <div class="pd-summary-row"><span>${_t('pdMaterial').replace(' 📦','')}</span><strong>${matTxt}</strong></div>
                             <div class="pd-summary-row"><span>${_t('pdBgColor')}</span><span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:${c2.bgColor};border:1px solid #cbd5e1;vertical-align:middle;"></span></div>
                             <div class="pd-summary-row"><span>${_t('pdCustomize')}</span><strong>${customTxt}</strong></div>
                         </div>
@@ -1429,7 +1487,35 @@ window.NpcWizard = {
     },
 
     _pdAfterCalc() {
-        // 레퍼런스 선택 건너뛰고 바로 커스터마이즈로
+        this._goStep('pdMaterial');
+    },
+
+    _pdMaterial: 'corrugated', // 기본 재질
+
+    _pdPickMaterial(matId) {
+        this._pdMaterial = matId;
+        // UI 업데이트
+        document.querySelectorAll('.pd-mat-card').forEach(card => {
+            const id = card.dataset.mat;
+            const sel = id === matId;
+            const colors = { corrugated: { bg: '#fef3c7', bd: '#f59e0b' }, honeycomb: { bg: '#dcfce7', bd: '#22c55e' }, foam: { bg: '#dbeafe', bd: '#3b82f6' } };
+            const c = colors[id] || colors.corrugated;
+            card.style.borderColor = sel ? c.bd : '#e5e7eb';
+            card.style.background = sel ? c.bg : '#fff';
+            // 체크 아이콘 토글
+            const existCheck = card.querySelector('.fa-check-circle');
+            if (sel && !existCheck) {
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-check-circle';
+                icon.style.cssText = 'margin-left:auto;color:' + c.bd + ';font-size:20px;';
+                card.appendChild(icon);
+            } else if (!sel && existCheck) {
+                existCheck.remove();
+            }
+        });
+    },
+
+    _pdAfterMaterial() {
         this._goStep('pdCustomize');
     },
 
@@ -1485,6 +1571,7 @@ window.NpcWizard = {
             depthMM: this._pdDepth * 10,
             shelfCount: this._pdShelfCount,
             bgColor: this._pdCustom.bgColor,
+            material: this._pdMaterial || 'corrugated',
             refCode: this._pdRefCode,
         };
 
@@ -1548,6 +1635,7 @@ window.NpcWizard = {
                 adHeight: this._pdAdHeight,
                 shelfCount: this._pdShelfCount,
                 shelfHeight: this._pdShelfHeight,
+                material: this._pdMaterial || 'corrugated',
                 referenceCode: this._pdRefCode,
                 referenceName: this._pdRefName,
                 customization: { ...this._pdCustom },
@@ -1682,7 +1770,7 @@ window.NpcWizard = {
         // 종이매대
         if (step === 'pdAdHeight') { this._goStep('pdSize'); return; }
         if (step === 'pdCalcResult') { this._goStep('pdAdHeight'); return; }
-        if (step === 'pdReference') { this._goStep('pdCalcResult'); return; }
+        if (step === 'pdMaterial') { this._goStep('pdCalcResult'); return; }
         if (step === 'pdCustomize') { this._goStep('pdReference'); return; }
         if (step === 'pdSummary' && this.hasOptions) { this._goStep('options'); return; }
         if (step === 'pdSummary') { this._goStep('pdCustomize'); return; }
