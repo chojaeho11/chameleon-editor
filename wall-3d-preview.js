@@ -1084,21 +1084,23 @@
         var adFrontBot = bodyH;
         var adBackTop = bodyH + adH;
         var adBackBot = bodyH;
-        var adZ = -d / 2; // 광고판은 뒤쪽에 배치
+        var adThick = 0.01; // 광고판 두께 10mm (뒷판 앞에 붙임)
+        var adZ = -d / 2 + thick / 2 + adThick / 2; // 뒷판 앞면에 붙이는 위치
 
+        var adHT = adThick / 2; // 광고판 반쪽 두께
         var adVertices = new Float32Array([
-            -halfW, adFrontBot, adZ + halfT,   halfW, adFrontBot, adZ + halfT,   halfW, adFrontTop, adZ + halfT,
-            -halfW, adFrontBot, adZ + halfT,   halfW, adFrontTop, adZ + halfT,  -halfW, adFrontTop, adZ + halfT,
-             halfW, adBackBot, adZ - halfT,   -halfW, adBackBot, adZ - halfT,   -halfW, adBackTop, adZ - halfT,
-             halfW, adBackBot, adZ - halfT,   -halfW, adBackTop, adZ - halfT,    halfW, adBackTop, adZ - halfT,
-            -halfW, adFrontTop, adZ + halfT,   halfW, adFrontTop, adZ + halfT,   halfW, adBackTop, adZ - halfT,
-            -halfW, adFrontTop, adZ + halfT,   halfW, adBackTop, adZ - halfT,   -halfW, adBackTop, adZ - halfT,
-            -halfW, adBackBot, adZ - halfT,    halfW, adBackBot, adZ - halfT,    halfW, adFrontBot, adZ + halfT,
-            -halfW, adBackBot, adZ - halfT,    halfW, adFrontBot, adZ + halfT,  -halfW, adFrontBot, adZ + halfT,
-             halfW, adFrontBot, adZ + halfT,    halfW, adBackBot, adZ - halfT,    halfW, adBackTop, adZ - halfT,
-             halfW, adFrontBot, adZ + halfT,    halfW, adBackTop, adZ - halfT,    halfW, adFrontTop, adZ + halfT,
-            -halfW, adBackBot, adZ - halfT,   -halfW, adFrontBot, adZ + halfT,  -halfW, adFrontTop, adZ + halfT,
-            -halfW, adBackBot, adZ - halfT,   -halfW, adFrontTop, adZ + halfT,  -halfW, adBackTop, adZ - halfT,
+            -halfW, adFrontBot, adZ + adHT,   halfW, adFrontBot, adZ + adHT,   halfW, adFrontTop, adZ + adHT,
+            -halfW, adFrontBot, adZ + adHT,   halfW, adFrontTop, adZ + adHT,  -halfW, adFrontTop, adZ + adHT,
+             halfW, adBackBot, adZ - adHT,   -halfW, adBackBot, adZ - adHT,   -halfW, adBackTop, adZ - adHT,
+             halfW, adBackBot, adZ - adHT,   -halfW, adBackTop, adZ - adHT,    halfW, adBackTop, adZ - adHT,
+            -halfW, adFrontTop, adZ + adHT,   halfW, adFrontTop, adZ + adHT,   halfW, adBackTop, adZ - adHT,
+            -halfW, adFrontTop, adZ + adHT,   halfW, adBackTop, adZ - adHT,   -halfW, adBackTop, adZ - adHT,
+            -halfW, adBackBot, adZ - adHT,    halfW, adBackBot, adZ - adHT,    halfW, adFrontBot, adZ + adHT,
+            -halfW, adBackBot, adZ - adHT,    halfW, adFrontBot, adZ + adHT,  -halfW, adFrontBot, adZ + adHT,
+             halfW, adFrontBot, adZ + adHT,    halfW, adBackBot, adZ - adHT,    halfW, adBackTop, adZ - adHT,
+             halfW, adFrontBot, adZ + adHT,    halfW, adBackTop, adZ - adHT,    halfW, adFrontTop, adZ + adHT,
+            -halfW, adBackBot, adZ - adHT,   -halfW, adFrontBot, adZ + adHT,  -halfW, adFrontTop, adZ + adHT,
+            -halfW, adBackBot, adZ - adHT,   -halfW, adFrontTop, adZ + adHT,  -halfW, adBackTop, adZ - adHT,
         ]);
         var adUvs = new Float32Array([
             0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
