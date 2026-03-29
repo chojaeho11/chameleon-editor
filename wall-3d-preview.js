@@ -1047,18 +1047,9 @@
         var halfW = w / 2;
         var halfT = thick / 2;
 
-        // 뒷판 사선 계산: 하단(z=-d/2)에서 상단(z=backTopZ)까지 기울어짐
-        var backBotZ = -d / 2;
-        var backTopZ = 0; // 상단에서 뒷판이 중앙까지 옴
-
-        // Helper: 높이 y에서의 뒷판 z 위치
-        function backZAtY(y) {
-            return backBotZ + (y / bodyH) * (backTopZ - backBotZ);
-        }
-        // Helper: 높이 y에서의 선반 깊이
-        function depthAtY(y) {
-            return d / 2 - backZAtY(y);
-        }
+        // 사선 구간: 제일 상단 선반 ~ 광고판 사이만 사선
+        var topShelfY = Math.max(0, bodyH - shH); // 제일 위 선반 높이
+        var slopeTopZ = 0; // 사선 상단이 깊이 중앙까지 옴
 
         // Helper: create textured material from dataURL
         function makeTexMat(dataUrl, mirror) {
@@ -1081,30 +1072,39 @@
             return mat;
         }
 
-        // 1. 뒷판 — 사선 (하단 z=-d/2 → 상단 z=backTopZ)
-        var backVerts = new Float32Array([
-            // front face (내부 향함)
-            -halfW, 0,     backBotZ,    halfW, 0,     backBotZ,    halfW, bodyH, backTopZ,
-            -halfW, 0,     backBotZ,    halfW, bodyH, backTopZ,   -halfW, bodyH, backTopZ,
-            // back face (외부 향함)
-             halfW, 0,     backBotZ,   -halfW, 0,     backBotZ,   -halfW, bodyH, backTopZ,
-             halfW, 0,     backBotZ,   -halfW, bodyH, backTopZ,    halfW, bodyH, backTopZ,
-        ]);
-        var backGeo = new THREE.BufferGeometry();
-        backGeo.setAttribute('position', new THREE.BufferAttribute(backVerts, 3));
-        backGeo.computeVertexNormals();
-        var backMat = bgMat.clone();
-        backMat.side = THREE.DoubleSide;
-        wallGroup.add(new THREE.Mesh(backGeo, backMat));
+        // 1. 뒷판 — 수직 (바닥 ~ 상단 선반까지)
+        if (topShelfY > thick) {
+            var backBodyGeo = new THREE.BoxGeometry(w, topShelfY, thick);
+            var backBody = new THREE.Mesh(backBodyGeo, bgMat.clone());
+            backBody.position.set(0, topShelfY / 2, -d / 2);
+            wallGroup.add(backBody);
+        }
 
-        // 2. 상단 광고판 — 뒷판 상단 위치에서 기울어진 형태
+        // 1-1. 사선 뒷판 (상단 선반 ~ bodyH: 뒤에서 앞으로 기울어짐)
+        var slopeH = bodyH - topShelfY;
+        if (slopeH > 0) {
+            var slopeVerts = new Float32Array([
+                -halfW, topShelfY, -d/2,    halfW, topShelfY, -d/2,    halfW, bodyH, slopeTopZ,
+                -halfW, topShelfY, -d/2,    halfW, bodyH, slopeTopZ,  -halfW, bodyH, slopeTopZ,
+                 halfW, topShelfY, -d/2,   -halfW, topShelfY, -d/2,   -halfW, bodyH, slopeTopZ,
+                 halfW, topShelfY, -d/2,   -halfW, bodyH, slopeTopZ,   halfW, bodyH, slopeTopZ,
+            ]);
+            var slopeGeo = new THREE.BufferGeometry();
+            slopeGeo.setAttribute('position', new THREE.BufferAttribute(slopeVerts, 3));
+            slopeGeo.computeVertexNormals();
+            var slopeMat = bgMat.clone();
+            slopeMat.side = THREE.DoubleSide;
+            wallGroup.add(new THREE.Mesh(slopeGeo, slopeMat));
+        }
+
+        // 2. 상단 광고판 — 사선 상단 위치에서 기울어진 형태
         console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
         var adTiltExtra = adH * 0.25;
         var adFrontTop = bodyH + adH + adTiltExtra;
         var adFrontBot = bodyH;
         var adBackTop = bodyH + adH;
         var adBackBot = bodyH;
-        var adZ = backTopZ; // 뒷판 상단 z 위치에 광고판 배치
+        var adZ = slopeTopZ; // 사선 상단 z 위치에 광고판 배치
 
         var adVertices = new Float32Array([
             -halfW, adFrontBot, adZ + halfT,   halfW, adFrontBot, adZ + halfT,   halfW, adFrontTop, adZ + halfT,
@@ -1145,71 +1145,38 @@
         ];
         wallGroup.add(new THREE.Mesh(adGeo, adMats));
 
-        // 3. 옆면 — 사다리꼴 (뒷판 사선에 맞춤)
-        var frontZ = d / 2;
-        function makeSidePanelGeo() {
-            var v = new Float32Array([
-                // outer face (텍스처)
-                0, 0,     frontZ,     0, 0,     backBotZ,    0, bodyH, backTopZ,
-                0, 0,     frontZ,     0, bodyH, backTopZ,    0, bodyH, frontZ,
-                // inner face
-                0, 0,     backBotZ,   0, 0,     frontZ,      0, bodyH, frontZ,
-                0, 0,     backBotZ,   0, bodyH, frontZ,      0, bodyH, backTopZ,
-            ]);
-            var uv = new Float32Array([
-                0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-                0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-            ]);
-            var geo = new THREE.BufferGeometry();
-            geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
-            geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-            geo.computeVertexNormals();
-            geo.addGroup(0, 6, 0); // outer
-            geo.addGroup(6, 6, 1); // inner
-            return geo;
-        }
+        // 3. 옆면 — 수직 사각형 (전체 bodyH 높이)
+        var sideGeo = new THREE.BoxGeometry(thick, bodyH, d);
 
-        // 좌측 옆면
-        var leftGeo = makeSidePanelGeo();
-        // 좌측: x=-w/2, outer는 -X 방향
-        var leftPositions = leftGeo.attributes.position.array;
-        for (var pi = 0; pi < leftPositions.length; pi += 3) leftPositions[pi] = -halfW;
-        leftGeo.attributes.position.needsUpdate = true;
-        leftGeo.computeVertexNormals();
-        var leftPanel = new THREE.Mesh(leftGeo, [
-            makeTexMat(textures[1], false), // outer
-            bgMat.clone(),                  // inner
-        ]);
+        var leftMats = [
+            bgMat.clone(),
+            makeTexMat(textures[1], false),
+            bgMat.clone(), bgMat.clone(),
+            bgMat.clone(), bgMat.clone()
+        ];
+        var leftPanel = new THREE.Mesh(sideGeo, leftMats);
+        leftPanel.position.set(-w / 2, bodyH / 2, 0);
         wallGroup.add(leftPanel);
 
-        // 우측 옆면
-        var rightGeo = makeSidePanelGeo();
-        var rightPositions = rightGeo.attributes.position.array;
-        for (var pi = 0; pi < rightPositions.length; pi += 3) rightPositions[pi] = halfW;
-        // 우측은 outer/inner가 반대
-        var rp = rightGeo.attributes.position.array;
-        // inner/outer face 방향 반전 (z좌표 swap으로 노멀 반전)
-        rightGeo.attributes.position.needsUpdate = true;
-        rightGeo.computeVertexNormals();
-        var rightPanel = new THREE.Mesh(rightGeo, [
-            makeTexMat(textures[1], false), // outer
-            bgMat.clone(),                  // inner
-        ]);
+        var rightMats = [
+            makeTexMat(textures[1], false),
+            bgMat.clone(),
+            bgMat.clone(), bgMat.clone(),
+            bgMat.clone(), bgMat.clone()
+        ];
+        var rightPanel = new THREE.Mesh(sideGeo.clone(), rightMats);
+        rightPanel.position.set(w / 2, bodyH / 2, 0);
         wallGroup.add(rightPanel);
 
-        // 4. 선반들 — 수평판 (깊이 사선에 맞춤) + 앞면 립 (텍스처)
+        // 4. 선반들 — 수평판 + 앞면 립
         for (var i = 1; i < shelfCount; i++) {
             var shelfY = bodyH - i * shH;
             if (shelfY < 0) break;
 
-            var sDepth = depthAtY(shelfY);
-            var sBackZ = backZAtY(shelfY);
-            var sCenterZ = (sBackZ + d / 2) / 2;
-
             // 수평 선반판
-            var platGeo = new THREE.BoxGeometry(innerW, thick, sDepth);
+            var platGeo = new THREE.BoxGeometry(innerW, thick, d);
             var plat = new THREE.Mesh(platGeo, bgMat.clone());
-            plat.position.set(0, shelfY, sCenterZ);
+            plat.position.set(0, shelfY, 0);
             wallGroup.add(plat);
 
             // 앞면 립
