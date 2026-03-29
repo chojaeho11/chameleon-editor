@@ -1047,10 +1047,9 @@
         var halfW = w / 2;
         var halfT = thick / 2;
 
-        // 옆면: 상단 선반보다 약간 위까지 올라감 (실제 종이매대처럼)
-        var sideMargin = 0.07; // 상단 선반 위 7cm 여유
-        var topShelfY = Math.max(0, bodyH - shH); // 제일 위 선반 높이
-        var sideH = Math.min(topShelfY + sideMargin, bodyH); // 옆면 높이
+        // 옆면: bodyH 전체 높이 (실제 종이매대처럼)
+        var sideH = bodyH;
+        var adOffset = 0.07; // 광고판을 7cm 아래로
 
         // Helper: create textured material from dataURL
         function makeTexMat(dataUrl, mirror) {
@@ -1082,10 +1081,11 @@
         // 2. 상단 광고판 — 뒤쪽(z=-d/2)에서 기울어진 형태
         console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
         var adTiltExtra = adH * 0.25;
-        var adFrontTop = bodyH + adH + adTiltExtra;
-        var adFrontBot = bodyH;
-        var adBackTop = bodyH + adH;
-        var adBackBot = bodyH;
+        var adStartY = bodyH - adOffset; // 광고판 시작 위치 (7cm 아래)
+        var adFrontTop = adStartY + adH + adTiltExtra;
+        var adFrontBot = adStartY;
+        var adBackTop = adStartY + adH;
+        var adBackBot = adStartY;
         var adZ = -d / 2; // 광고판은 뒤쪽에 배치
 
         var adVertices = new Float32Array([
