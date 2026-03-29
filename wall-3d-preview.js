@@ -1077,55 +1077,19 @@
         backBody.position.set(0, h / 2, -d / 2);
         wallGroup.add(backBody);
 
-        // 2. 상단 광고판 — 뒤쪽(z=-d/2)에서 기울어진 형태
-        console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
-        var adTiltExtra = adH * 0.25;
-        var adFrontTop = bodyH + adH + adTiltExtra;
-        var adFrontBot = bodyH;
-        var adBackTop = bodyH + adH;
-        var adBackBot = bodyH;
-        var adThick = 0.01; // 광고판 두께 10mm (뒷판 앞에 붙임)
-        var adZ = -d / 2 + thick / 2 + adThick / 2; // 뒷판 앞면에 붙이는 위치
-
-        var adHT = adThick / 2; // 광고판 반쪽 두께
-        var adVertices = new Float32Array([
-            -halfW, adFrontBot, adZ + adHT,   halfW, adFrontBot, adZ + adHT,   halfW, adFrontTop, adZ + adHT,
-            -halfW, adFrontBot, adZ + adHT,   halfW, adFrontTop, adZ + adHT,  -halfW, adFrontTop, adZ + adHT,
-             halfW, adBackBot, adZ - adHT,   -halfW, adBackBot, adZ - adHT,   -halfW, adBackTop, adZ - adHT,
-             halfW, adBackBot, adZ - adHT,   -halfW, adBackTop, adZ - adHT,    halfW, adBackTop, adZ - adHT,
-            -halfW, adFrontTop, adZ + adHT,   halfW, adFrontTop, adZ + adHT,   halfW, adBackTop, adZ - adHT,
-            -halfW, adFrontTop, adZ + adHT,   halfW, adBackTop, adZ - adHT,   -halfW, adBackTop, adZ - adHT,
-            -halfW, adBackBot, adZ - adHT,    halfW, adBackBot, adZ - adHT,    halfW, adFrontBot, adZ + adHT,
-            -halfW, adBackBot, adZ - adHT,    halfW, adFrontBot, adZ + adHT,  -halfW, adFrontBot, adZ + adHT,
-             halfW, adFrontBot, adZ + adHT,    halfW, adBackBot, adZ - adHT,    halfW, adBackTop, adZ - adHT,
-             halfW, adFrontBot, adZ + adHT,    halfW, adBackTop, adZ - adHT,    halfW, adFrontTop, adZ + adHT,
-            -halfW, adBackBot, adZ - adHT,   -halfW, adFrontBot, adZ + adHT,  -halfW, adFrontTop, adZ + adHT,
-            -halfW, adBackBot, adZ - adHT,   -halfW, adFrontTop, adZ + adHT,  -halfW, adBackTop, adZ - adHT,
-        ]);
-        var adUvs = new Float32Array([
-            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-            0,0, 1,0, 1,1,  0,0, 1,1, 0,1,
-        ]);
-        var adGeo = new THREE.BufferGeometry();
-        adGeo.setAttribute('position', new THREE.BufferAttribute(adVertices, 3));
-        adGeo.setAttribute('uv', new THREE.BufferAttribute(adUvs, 2));
-        adGeo.computeVertexNormals();
-        adGeo.addGroup(0, 6, 0);
-        adGeo.addGroup(6, 6, 1);
-        adGeo.addGroup(12, 6, 2);
-        adGeo.addGroup(18, 6, 3);
-        adGeo.addGroup(24, 6, 4);
-        adGeo.addGroup(30, 6, 5);
+        // 2. 상단 광고판 — 단순 BoxGeometry, 뒷판 앞에 붙임
+        var adThick = 0.01; // 10mm 두께
+        var adPanelZ = -d / 2 + thick / 2 + adThick / 2; // 뒷판 앞면에 밀착
+        var adGeo = new THREE.BoxGeometry(w, adH, adThick);
         var adMats = [
-            makeTexMat(textures[0], false),  // front (앞면만 텍스처)
-            bgMat.clone(),                   // back (뒷면은 뒷판이 이어짐)
-            bgMat.clone(), bgMat.clone(), bgMat.clone(), bgMat.clone(),
+            bgMat.clone(), bgMat.clone(),         // +X, -X (옆면)
+            bgMat.clone(), bgMat.clone(),         // +Y, -Y (상하)
+            makeTexMat(textures[0], false),        // +Z (앞면 = 텍스처)
+            bgMat.clone(),                         // -Z (뒷면 = 뒷판과 겹침)
         ];
-        wallGroup.add(new THREE.Mesh(adGeo, adMats));
+        var adPanel = new THREE.Mesh(adGeo, adMats);
+        adPanel.position.set(0, bodyH + adH / 2, adPanelZ);
+        wallGroup.add(adPanel);
 
         // 3. 옆면 — 직선 (상단 선반보다 살짝 위까지)
         var sideGeo = new THREE.BoxGeometry(thick, sideH, d);
