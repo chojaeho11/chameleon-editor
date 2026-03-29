@@ -2551,10 +2551,11 @@ async function handleSubReturn() {
 </div>
 
     <div class="home-review-grid" id="homeReviewGrid">
-        <div style="text-align:center;padding:30px;color:#94a3b8;">로딩중...</div>
+        <div style="text-align:center;padding:30px;color:#94a3b8;" data-i18n="loading">Loading...</div>
     </div>
     <div style="text-align:center;margin-top:20px;">
         <button id="homeReviewMoreBtn" onclick="window.loadHomeReviews()" style="display:none;padding:10px 30px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">더보기</button>
+        <script>document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('homeReviewMoreBtn');if(b){var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'KR';var t={KR:'더보기',JP:'もっと見る',US:'Load More',CN:'加载更多',AR:'عرض المزيد',ES:'Ver más',DE:'Mehr laden',FR:'Voir plus'};b.textContent=t[c]||t.US;}});</script>
     </div>
 </div>
 <script>
