@@ -9224,6 +9224,9 @@ window.showChoiceModal = async function(key) {
 
     window._pendingUploadedFiles = []; // 업로드 파일 초기화
     window._uploadedFileDimensions = null; // 사이즈 자동감지 초기화
+    // 업로드 미리보기 영역 초기화
+    const _upArea = document.getElementById('uploadPreviewArea');
+    if (_upArea) _upArea.style.display = 'none';
 
     // ★ 벽면 제품: 멀티 벽면 패널 초기화
     if (document.getElementById('wallPanelList')) {

@@ -75,9 +75,9 @@
                 '<div class="product-price">' + LANG.fromPrice + ' ' + price + '</div>' +
             '</div>';
 
-        // 클릭 시 메인 에디터로 이동 (에디터/폰트/이미지 공유)
+        // 클릭 시 메인 에디터로 이동 (캐시 우회)
         card.onclick = function() {
-            window.location.href = '/?product=' + encodeURIComponent(product.code);
+            window.location.href = '/?product=' + encodeURIComponent(product.code) + '&_t=' + Date.now();
         };
 
         return card;
