@@ -9308,8 +9308,8 @@ window.showChoiceModal = async function(key) {
         a.setAttribute('rel', 'noopener');
     });
 
-    // ★ NPC 가이드 위자드: 종이매대(pd_)는 전용 위자드 필요
-    const _isPd = product.code && product.code.startsWith('pd_');
+    // ★ NPC 가이드 위자드: 종이매대(pd_b_, pd_sm_)는 전용 위자드, pd_tr_/pd_ac_는 제외
+    const _isPd = product.code && product.code.startsWith('pd_') && !product.code.startsWith('pd_tr') && !product.code.startsWith('pd_ac');
     if (_isPd && window.NpcWizard && !window.pendingTemplate) {
         setTimeout(() => window.NpcWizard.init(product), 100);
     }

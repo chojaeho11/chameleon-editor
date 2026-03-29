@@ -693,7 +693,7 @@ window.NpcWizard = {
         const key = product.code || window.currentProductKey || '';
         this.isLetterSign = (product.category === 'honeycomb_letter' || product.category === 'hb_skashi') || (typeof key === 'string' && key.startsWith('hcl_'));
         this.isHoneycomb = !this.isLetterSign && ((product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb')));
-        this.isPaperDisplay = (typeof key === 'string' && key.startsWith('pd_'));
+        this.isPaperDisplay = (typeof key === 'string' && key.startsWith('pd_') && !key.startsWith('pd_tr') && !key.startsWith('pd_ac'));
         this._isSmallStand = (typeof key === 'string' && key.startsWith('pd_sm'));
         this.hasFile = null;
         this.designChoice = null;
