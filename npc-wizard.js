@@ -48,11 +48,11 @@ const NPC_TEXTS = {
         pdSkipRef: '선택 없이 진행',
         pdMaterial: '매대 재질을 선택해주세요 📦',
         pdMatCorrugated: '원터치 골판지',
-        pdMatCorrugatedDesc: '가볍고 경제적, 단기 행사용',
+        pdMatCorrugatedDesc: '1분 조립 완성, 60kg 무게 내구도',
         pdMatHoneycomb: '허니콤보드',
-        pdMatHoneycombDesc: '튼튼하고 친환경, 장기 사용',
+        pdMatHoneycombDesc: '친환경 느낌 물씬, 이벤트성 행사매대',
         pdMatFoam: '강화폼보드',
-        pdMatFoamDesc: '고급스럽고 내구성 최고',
+        pdMatFoamDesc: '5mm 보드로 장기간 사용 적합',
         pdCustomize: '디자인을 커스터마이징하세요 🎨',
         pdAdDesign: '📢 상단 광고 디자인',
         pdSideDesign: '📐 옆면 디자인',
@@ -1020,9 +1020,8 @@ window.NpcWizard = {
                             <input type="number" id="npcPdAdH" value="${this._pdAdHeight}" min="0" max="${totalH}" placeholder="20" inputmode="numeric" style="flex:1;min-width:0;">
                             <span style="font-size:13px;color:#64748b;white-space:nowrap;">cm</span>
                         </div>
-                        <div style="text-align:center;margin:4px 0;font-size:12px;color:#94a3b8;">▼ 남은 선반 영역 ▼</div>
-                        <div id="npcPdRemainBar" style="background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:8px 14px;text-align:center;margin-bottom:10px;">
-                            <span style="font-size:13px;color:#1e40af;font-weight:700;" id="npcPdRemainVal">${remainInit}cm</span>
+                        <div id="npcPdRemainBar" style="display:none;">
+                            <span id="npcPdRemainVal">${remainInit}cm</span>
                         </div>
                         <div class="pd-input-row" style="display:flex;align-items:center;gap:8px;">
                             <label style="white-space:nowrap;min-width:60px;">${_t('pdShelfHeight')}</label>
@@ -1084,22 +1083,18 @@ window.NpcWizard = {
                 if (slot3) {
                     const cur = this._pdMaterial || 'corrugated';
                     const materials = [
-                        { id: 'corrugated', icon: '📦', name: _t('pdMatCorrugated'), desc: _t('pdMatCorrugatedDesc'), color: '#fef3c7', border: '#f59e0b' },
-                        { id: 'honeycomb', icon: '🐝', name: _t('pdMatHoneycomb'), desc: _t('pdMatHoneycombDesc'), color: '#dcfce7', border: '#22c55e' },
-                        { id: 'foam', icon: '🛡️', name: _t('pdMatFoam'), desc: _t('pdMatFoamDesc'), color: '#dbeafe', border: '#3b82f6' },
+                        { id: 'corrugated', name: _t('pdMatCorrugated'), desc: _t('pdMatCorrugatedDesc'), color: '#fef3c7', border: '#f59e0b' },
+                        { id: 'honeycomb', name: _t('pdMatHoneycomb'), desc: _t('pdMatHoneycombDesc'), color: '#dcfce7', border: '#22c55e' },
+                        { id: 'foam', name: _t('pdMatFoam'), desc: _t('pdMatFoamDesc'), color: '#dbeafe', border: '#3b82f6' },
                     ];
                     let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
                     materials.forEach(m => {
                         const sel = cur === m.id;
                         html += `<div class="pd-mat-card" data-mat="${m.id}" onclick="window.NpcWizard._pdPickMaterial('${m.id}')"
-                            style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;cursor:pointer;
+                            style="text-align:center;padding:16px;border-radius:12px;cursor:pointer;
                             border:2px solid ${sel ? m.border : '#e5e7eb'};background:${sel ? m.color : '#fff'};transition:all 0.2s;">
-                            <span style="font-size:28px;">${m.icon}</span>
-                            <div>
-                                <div style="font-size:15px;font-weight:700;color:#1e293b;">${m.name}</div>
-                                <div style="font-size:12px;color:#64748b;margin-top:2px;">${m.desc}</div>
-                            </div>
-                            ${sel ? '<i class="fa-solid fa-check-circle" style="margin-left:auto;color:' + m.border + ';font-size:20px;"></i>' : ''}
+                            <div style="font-size:16px;font-weight:800;color:#1e293b;">${m.name}</div>
+                            <div style="font-size:13px;color:#64748b;margin-top:4px;">${m.desc}</div>
                         </div>`;
                     });
                     html += '</div>';
@@ -1483,10 +1478,6 @@ window.NpcWizard = {
         }
         const calc = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
         this._pdShelfCount = calc.count;
-        this._goStep('pdCalcResult');
-    },
-
-    _pdAfterCalc() {
         this._goStep('pdMaterial');
     },
 
@@ -1494,24 +1485,13 @@ window.NpcWizard = {
 
     _pdPickMaterial(matId) {
         this._pdMaterial = matId;
-        // UI 업데이트
+        const colors = { corrugated: { bg: '#fef3c7', bd: '#f59e0b' }, honeycomb: { bg: '#dcfce7', bd: '#22c55e' }, foam: { bg: '#dbeafe', bd: '#3b82f6' } };
         document.querySelectorAll('.pd-mat-card').forEach(card => {
             const id = card.dataset.mat;
             const sel = id === matId;
-            const colors = { corrugated: { bg: '#fef3c7', bd: '#f59e0b' }, honeycomb: { bg: '#dcfce7', bd: '#22c55e' }, foam: { bg: '#dbeafe', bd: '#3b82f6' } };
             const c = colors[id] || colors.corrugated;
             card.style.borderColor = sel ? c.bd : '#e5e7eb';
             card.style.background = sel ? c.bg : '#fff';
-            // 체크 아이콘 토글
-            const existCheck = card.querySelector('.fa-check-circle');
-            if (sel && !existCheck) {
-                const icon = document.createElement('i');
-                icon.className = 'fa-solid fa-check-circle';
-                icon.style.cssText = 'margin-left:auto;color:' + c.bd + ';font-size:20px;';
-                card.appendChild(icon);
-            } else if (!sel && existCheck) {
-                existCheck.remove();
-            }
         });
     },
 
@@ -1769,8 +1749,7 @@ window.NpcWizard = {
         if (step === 'lsSummary') { this._goStep('lsStyleSelect'); return; }
         // 종이매대
         if (step === 'pdAdHeight') { this._goStep('pdSize'); return; }
-        if (step === 'pdCalcResult') { this._goStep('pdAdHeight'); return; }
-        if (step === 'pdMaterial') { this._goStep('pdCalcResult'); return; }
+        if (step === 'pdMaterial') { this._goStep('pdAdHeight'); return; }
         if (step === 'pdCustomize') { this._goStep('pdReference'); return; }
         if (step === 'pdSummary' && this.hasOptions) { this._goStep('options'); return; }
         if (step === 'pdSummary') { this._goStep('pdCustomize'); return; }
