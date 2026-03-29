@@ -8721,11 +8721,10 @@ window.showChoiceModal = async function(key) {
             <img src="${product.img || product.img_url}" alt="${seoAlt(product) || dName}" loading="lazy" style="width:100%; max-height:300px; object-fit:contain; margin-bottom:10px; border-radius:8px;">
             <div style="font-size:16px; font-weight:bold; color:#1e1b4b; margin-bottom:5px;">${dName}</div>
         </div>
-        ${isPaperDisplayProduct ? '' : '<div id="relatedProductsNav" style="margin-bottom:12px;"></div>'}
     `;
 
-    // 같은 카테고리 내 다른 상품 네비게이션 로드 (상세페이지 최하단에 배치)
-    (async function() {
+    // 카테고리 썸네일 네비게이션 비활성화 (불필요)
+    if (false) (async function() {
         const catCode = product.category;
         if (!catCode) return;
         const _sb2 = window.sb || sb;

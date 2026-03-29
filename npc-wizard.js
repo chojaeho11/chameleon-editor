@@ -1624,17 +1624,36 @@ window.NpcWizard = {
         if (delta !== 0) inp.value = Math.max(1, parseInt(inp.value || 1) + delta);
         const qty = parseInt(inp.value) || 1;
         const price = this.product ? (this.product.price || 0) : 0;
-        const total = price * qty;
+        const subtotal = price * qty;
+
+        // 수량 할인 적용
+        let discountRate = 0;
+        if (qty >= 501) discountRate = 0.50;
+        else if (qty >= 101) discountRate = 0.40;
+        else if (qty >= 10) discountRate = 0.30;
+        else if (qty >= 3) discountRate = 0.20;
+
+        const discountAmount = Math.floor(subtotal * discountRate / 100) * 100;
+        const total = subtotal - discountAmount;
+
         const el = document.getElementById('npcPdTotalVal');
+        const wrapEl = document.getElementById('npcPdTotalPrice');
         if (el) {
             const cfg = window.SITE_CONFIG || {};
             const country = cfg.COUNTRY || 'KR';
             const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
             const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || '원';
-            const converted = total * rate;
-            if (country === 'JP') el.textContent = '¥' + Math.floor(converted).toLocaleString();
-            else if (country === 'US') el.textContent = '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
-            else el.textContent = Math.round(converted).toLocaleString() + unit;
+            const fmt = (v) => {
+                const c = v * rate;
+                if (country === 'JP') return '¥' + Math.floor(c).toLocaleString();
+                if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString());
+                return Math.round(c).toLocaleString() + unit;
+            };
+            if (discountRate > 0) {
+                el.innerHTML = `<span style="text-decoration:line-through;opacity:0.6;font-size:14px;">${fmt(subtotal)}</span> <span style="font-size:22px;">${fmt(total)}</span><div style="font-size:12px;margin-top:2px;color:#fbbf24;">${Math.round(discountRate*100)}% 할인 (-${fmt(discountAmount)})</div>`;
+            } else {
+                el.textContent = fmt(total);
+            }
         }
     },
 
