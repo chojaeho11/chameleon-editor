@@ -1073,13 +1073,11 @@
             return mat;
         }
 
-        // 1. 뒷판 — 수직, 사선 시작점까지만 (z=-d/2)
-        if (slopeStartY > thick) {
-            var backBodyGeo = new THREE.BoxGeometry(w, slopeStartY, thick);
-            var backBody = new THREE.Mesh(backBodyGeo, bgMat.clone());
-            backBody.position.set(0, slopeStartY / 2, -d / 2);
-            wallGroup.add(backBody);
-        }
+        // 1. 뒷판 — 수직, 전체 bodyH 높이 (z=-d/2)
+        var backBodyGeo = new THREE.BoxGeometry(w, bodyH, thick);
+        var backBody = new THREE.Mesh(backBodyGeo, bgMat.clone());
+        backBody.position.set(0, bodyH / 2, -d / 2);
+        wallGroup.add(backBody);
 
         // 2. 상단 광고판 — 뒤쪽(z=-d/2)에서 기울어진 형태
         console.log('[PD 3D] ad texture[0]:', textures[0] ? textures[0].substring(0, 60) + '...' : 'NULL');
