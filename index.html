@@ -2620,6 +2620,10 @@ async function handleSubReturn() {
                 }
                 var card = document.createElement('div');
                 card.className = 'home-rv-card';
+                if (r.product_code) {
+                    card.style.cursor = 'pointer';
+                    card.onclick = (function(code) { return function() { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(code); }; })(r.product_code);
+                }
                 card.innerHTML = photoHtml +
                     '<div class="home-rv-body">' +
                         '<div class="home-rv-stars">' + stars + '</div>' +
