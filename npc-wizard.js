@@ -638,6 +638,7 @@ window.NpcWizard = {
         this.isLetterSign = (product.category === 'honeycomb_letter' || product.category === 'hb_skashi') || (typeof key === 'string' && key.startsWith('hcl_'));
         this.isHoneycomb = !this.isLetterSign && ((product.category === 'honeycomb') || (product.category === 'honeycomb_box') || (typeof key === 'string' && key.startsWith('hb')));
         this.isPaperDisplay = (typeof key === 'string' && key.startsWith('pd_'));
+        this._isSmallStand = (typeof key === 'string' && key.startsWith('pd_sm'));
         this.hasFile = null;
         this.designChoice = null;
         this._fromHoneycombDirect = false;
@@ -647,11 +648,12 @@ window.NpcWizard = {
         this._lsWidthCm = 60;
         this._lsHeightCm = 48;
         this._lsStyle = 'forest';
-        this._pdWidth = 40;
-        this._pdHeight = 120;
-        this._pdDepth = 30;
-        this._pdAdHeight = 20;
-        this._pdShelfHeight = 25;
+        // 소형매대: 30x30x30 기본, 대형매대: 40x120x30 기본
+        this._pdWidth = this._isSmallStand ? 30 : 40;
+        this._pdHeight = this._isSmallStand ? 30 : 120;
+        this._pdDepth = this._isSmallStand ? 30 : 30;
+        this._pdAdHeight = this._isSmallStand ? 5 : 20;
+        this._pdShelfHeight = this._isSmallStand ? 25 : 25;
         this._pdShelfCount = 0;
         this._pdRefCode = null;
         this._pdRefName = null;

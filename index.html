@@ -8445,11 +8445,22 @@ window.showChoiceModal = async function(key) {
         product.is_general_product = true;
     }
 
-    // 종이매대: 에디터 진입 필수 (NPC 위자드에서 전용 플로우로 처리)
+    // 종이매대 계열: 코드별 주문 방식 분기
     const isPaperDisplayProduct = product.code && product.code.startsWith('pd_');
     if (isPaperDisplayProduct) {
-        product.is_custom_size = true;
-        product.is_general_product = false;
+        if (product.code.startsWith('pd_ac')) {
+            // 매대용 부착물: 일반 구매 (수량 선택)
+            product.is_custom_size = false;
+            product.is_general_product = true;
+        } else if (product.code.startsWith('pd_tr')) {
+            // 고정 칸막이: 면적계산기 (사이즈 입력 → 구매)
+            product.is_custom_size = true;
+            product.is_general_product = true;
+        } else {
+            // 종이매대 기본형/소형: NPC 위자드 (에디터 진입)
+            product.is_custom_size = true;
+            product.is_general_product = false;
+        }
     }
 
     // ★ 최종 판정: 관리자가 "사이즈 입력 허용"을 체크하지 않은 상품은 무조건 일반상품
