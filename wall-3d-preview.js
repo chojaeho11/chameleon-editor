@@ -1196,6 +1196,19 @@
             wallGroup.add(lip);
         }
 
+        // 4-1. 맨 하단 앞면 립 (바닥판 위, 항상 표시)
+        var bottomLipH = Math.min(lipH, shH - thick);
+        var bottomLipGeo = new THREE.BoxGeometry(innerW, bottomLipH, thick);
+        var bottomLipMats = [
+            bgMat.clone(), bgMat.clone(),
+            bgMat.clone(), bgMat.clone(),
+            makeTexMat(textures[2], false),  // +Z front
+            bgMat.clone()
+        ];
+        var bottomLip = new THREE.Mesh(bottomLipGeo, bottomLipMats);
+        bottomLip.position.set(0, thick + bottomLipH / 2, d / 2 - thick / 2);
+        wallGroup.add(bottomLip);
+
         // 5. 바닥판 (땅 위에 놓임, Y=0 바로 위)
         var bottomGeo = new THREE.BoxGeometry(w, thick, d);
         var bottom = new THREE.Mesh(bottomGeo, bgMat.clone());
