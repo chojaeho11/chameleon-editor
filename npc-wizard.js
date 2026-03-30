@@ -254,7 +254,7 @@ const NPC_TEXTS = {
         pdQty: 'Quantity',
         pdDepthLabel: 'Depth',
         pdOpenEditor: 'Design in Editor',
-        pdSkipDesign: 'I\\'ll upload files in cart',
+        pdSkipDesign: "I'll upload files in cart",
         lsSelectType: 'Select your letter sign type ✨',
         lsType1: 'Simple Standee (1 sheet)',
         lsType2: 'Bottom Box + 1 Sheet + 3D Letters',
