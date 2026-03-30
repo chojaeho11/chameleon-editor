@@ -865,7 +865,28 @@ let portfolioUrls = [];
 // ===== Init =====
 (async function init() {
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) { location.href = 'index.html'; return; }
+    if (!session) {
+        const _loginMsgs = {
+            ko: '로그인이 필요한 서비스입니다.\n로그인 후 이용해 주세요.',
+            ja: 'ログインが必要です。\nログイン後にご利用ください。',
+            en: 'Please log in to use this service.',
+            zh: '需要登录才能使用此服务。\n请登录后再使用。',
+            ar: 'يرجى تسجيل الدخول لاستخدام هذه الخدمة.',
+            es: 'Inicie sesión para usar este servicio.',
+            de: 'Bitte melden Sie sich an, um diesen Dienst zu nutzen.',
+            fr: 'Veuillez vous connecter pour utiliser ce service.'
+        };
+        const _h = location.hostname;
+        let _lang = 'ko';
+        if (_h.includes('cafe0101')) _lang = 'ja';
+        else if (_h.includes('chameleon.design') || _h.includes('cafe3355')) {
+            const _lp = new URLSearchParams(location.search).get('lang');
+            _lang = _lp || 'en';
+        }
+        alert(_loginMsgs[_lang] || _loginMsgs.en);
+        location.href = 'index.html';
+        return;
+    }
     userId = session.user.id;
     userEmail = session.user.email;
 
