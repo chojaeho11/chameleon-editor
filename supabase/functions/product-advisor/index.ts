@@ -815,8 +815,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         const _roomId = roomId;
 
         // 상담사 연결 추천 감지 (학습 필요한 질문)
-        const _needsLearning = /상담사|상담원|매니저|담당자|consultant|agent|担当|接続|스태프/.test(_resultMsg)
-            || /확인.*후.*답변|정확.*안내|도와드리|お手伝い|help you/.test(_resultMsg);
+        const _needsLearning = /상담사|상담원|매니저|담당자|consultant|agent|担当|接続|스태프|contact you|team will|our team|callback|コールバック|请联系|contactar|kontaktieren|contacter/.test(_resultMsg)
+            || /확인.*후.*답변|정확.*안내|도와드리|お手伝い|help you|get back to you|will assist|연락.*드리/.test(_resultMsg);
 
         (async () => {
             try {
