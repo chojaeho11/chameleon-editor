@@ -8,6 +8,7 @@
 <meta name="keywords" content="종이매대,종이진열대,친환경진열대,매대제작,종이디스플레이,팝업스토어진열대,카멜레온프린팅">
 <link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
@@ -371,6 +372,44 @@ a { text-decoration: none; color: inherit; }
     </div>
 </section>
 
+<!-- 카프 AI 챗봇 (플로팅) -->
+<div id="kapuChatWrap" style="display:none; position:fixed; bottom:80px; right:16px; width:380px; height:600px; z-index:9999; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.25);">
+    <iframe id="kapuChatFrame" src="" style="width:100%;height:100%;border:none;border-radius:16px;"></iframe>
+</div>
+<button id="kapuFab" onclick="toggleKapuChat()" style="
+    position:fixed; bottom:16px; right:16px; z-index:9999;
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:linear-gradient(135deg, var(--primary), #8b5cf6);
+    color:#fff; font-size:22px; cursor:pointer;
+    box-shadow:0 4px 20px rgba(99,102,241,0.4);
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.3s;
+" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+</button>
+<script>
+function toggleKapuChat() {
+    var wrap = document.getElementById('kapuChatWrap');
+    var frame = document.getElementById('kapuChatFrame');
+    var fab = document.getElementById('kapuFab');
+    if (wrap.style.display === 'none') {
+        if (!frame.src || frame.src === '' || frame.src === location.href) {
+            frame.src = '/chameleon-chatbot.html';
+        }
+        wrap.style.display = 'block';
+        fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    } else {
+        wrap.style.display = 'none';
+        fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+    }
+}
+</script>
+<style>
+@media (max-width: 480px) {
+    #kapuChatWrap { width: calc(100vw - 16px) !important; height: calc(100vh - 100px) !important; right: 8px !important; bottom: 76px !important; }
+}
+</style>
+
 <!-- 푸터 -->
 <footer class="site-footer">
     <p style="margin-bottom:8px;">
@@ -383,6 +422,7 @@ a { text-decoration: none; color: inherit; }
 
 <!-- 상품 로딩 스크립트 -->
 <script src="paper_stand.js?v=188"></script>
+
 
 </body>
 </html>
