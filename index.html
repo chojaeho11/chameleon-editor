@@ -9111,12 +9111,12 @@ window.showChoiceModal = async function(key) {
                 const _isWall = product.category === 'hb_display_wall' || (product.code && product.code.startsWith('hb_dw'));
                 const _isUS2 = window._isUSsite && window._isUSsite();
                 if (_isWall) {
-                    const _sideLabel = lang==='ja'?'面':lang==='en'?'Side':'면';
-                    const _singleLabel = lang==='ja'?'片面':lang==='en'?'Single':'단면';
-                    const _doubleLabel = lang==='ja'?'両面':lang==='en'?'Double':'양면';
-                    const _wTitle = lang==='ja'?'幅(間数)':lang==='en'?'Width':'가로(칸수)';
-                    const _hTitle = lang==='ja'?'高さ':lang==='en'?'Height':'높이';
-                    const _addWall = lang==='ja'?'+ 壁面を追加':lang==='en'?'+ Add Wall':'+ 벽면 추가하기';
+                    const _sideLabel = {ja:'面',en:'Side',zh:'面',ar:'وجه',es:'Lado',de:'Seite',fr:'Face',kr:'면'}[lang]||'Side';
+                    const _singleLabel = {ja:'片面',en:'Single',zh:'单面',ar:'وجه واحد',es:'Simple',de:'Einseitig',fr:'Simple',kr:'단면'}[lang]||'Single';
+                    const _doubleLabel = {ja:'両面',en:'Double',zh:'双面',ar:'وجهين',es:'Doble',de:'Doppel',fr:'Double',kr:'양면'}[lang]||'Double';
+                    const _wTitle = {ja:'幅(間数)',en:'Width',zh:'宽度',ar:'العرض',es:'Ancho',de:'Breite',fr:'Largeur',kr:'가로(칸수)'}[lang]||'Width';
+                    const _hTitle = {ja:'高さ',en:'Height',zh:'高度',ar:'الارتفاع',es:'Alto',de:'Höhe',fr:'Hauteur',kr:'높이'}[lang]||'Height';
+                    const _addWall = {ja:'+ 壁面を追加',en:'+ Add Wall',zh:'+ 添加墙面',ar:'+ إضافة جدار',es:'+ Añadir pared',de:'+ Wand hinzufügen',fr:'+ Ajouter un mur',kr:'+ 벽면 추가하기'}[lang]||'+ Add Wall';
                     return `<div data-npc="size" style="background:#f8fafc; border-radius:12px; padding:14px; margin-top:10px;">
                         <div id="wallPanelList"></div>
                         <button type="button" onclick="window._addWallPanel()" style="width:100%; padding:12px; background:#1e1e2e; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; margin-top:10px;">${_addWall}</button>
@@ -9189,11 +9189,11 @@ window.showChoiceModal = async function(key) {
                 <div id="bulkDiscountTable" style="margin-top:15px; border:1.5px solid #e2e8f0; border-radius:12px; overflow:hidden; font-size:12px; ${_isBooklet?'display:none':''}">
                     <div style="background:#1e1e2e; padding:8px 14px; color:#fff; font-weight:700; font-size:12px;">📊 ${lang==='ja'?'数量割引表':lang==='en'?'Bulk Discount':lang==='zh'?'批量折扣':lang==='es'?'Descuento por cantidad':lang==='de'?'Mengenrabatt':lang==='fr'?'Remise quantité':'수량 할인 가격표'}</div>
                     <div style="display:grid; grid-template-columns:repeat(5,1fr); text-align:center;">
-                        <div class="dsc-tier" data-min="1" data-max="3" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">1~2</div><div style="font-size:10px; color:#94a3b8;">${lang==='ja'?'個':lang==='en'?'pcs':'개'}</div><div style="font-weight:700; margin-top:2px;">0%</div></div>
-                        <div class="dsc-tier" data-min="3" data-max="10" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">3~9</div><div style="font-size:10px; color:#94a3b8;">${lang==='ja'?'個':lang==='en'?'pcs':'개'}</div><div style="font-weight:700; margin-top:2px; color:#f59e0b;">20%</div></div>
-                        <div class="dsc-tier" data-min="10" data-max="101" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">10~100</div><div style="font-size:10px; color:#94a3b8;">${lang==='ja'?'個':lang==='en'?'pcs':'개'}</div><div style="font-weight:700; margin-top:2px; color:#f59e0b;">30%</div></div>
-                        <div class="dsc-tier" data-min="101" data-max="501" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">101~500</div><div style="font-size:10px; color:#94a3b8;">${lang==='ja'?'個':lang==='en'?'pcs':'개'}</div><div style="font-weight:700; margin-top:2px; color:#ef4444;">40%</div></div>
-                        <div class="dsc-tier" data-min="501" data-max="999999" style="padding:8px 4px; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">501+</div><div style="font-size:10px; color:#94a3b8;">${lang==='ja'?'個':lang==='en'?'pcs':'개'}</div><div style="font-weight:700; margin-top:2px; color:#ef4444;">50%</div></div>
+                        <div class="dsc-tier" data-min="1" data-max="3" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">1~2</div><div style="font-size:10px; color:#94a3b8;">${{ja:'個',en:'pcs',zh:'个',ar:'قطعة',es:'uds',de:'Stk',fr:'pcs',kr:'개'}[lang]||'pcs'}</div><div style="font-weight:700; margin-top:2px;">0%</div></div>
+                        <div class="dsc-tier" data-min="3" data-max="10" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">3~9</div><div style="font-size:10px; color:#94a3b8;">${{ja:'個',en:'pcs',zh:'个',ar:'قطعة',es:'uds',de:'Stk',fr:'pcs',kr:'개'}[lang]||'pcs'}</div><div style="font-weight:700; margin-top:2px; color:#f59e0b;">20%</div></div>
+                        <div class="dsc-tier" data-min="10" data-max="101" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">10~100</div><div style="font-size:10px; color:#94a3b8;">${{ja:'個',en:'pcs',zh:'个',ar:'قطعة',es:'uds',de:'Stk',fr:'pcs',kr:'개'}[lang]||'pcs'}</div><div style="font-weight:700; margin-top:2px; color:#f59e0b;">30%</div></div>
+                        <div class="dsc-tier" data-min="101" data-max="501" style="padding:8px 4px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">101~500</div><div style="font-size:10px; color:#94a3b8;">${{ja:'個',en:'pcs',zh:'个',ar:'قطعة',es:'uds',de:'Stk',fr:'pcs',kr:'개'}[lang]||'pcs'}</div><div style="font-weight:700; margin-top:2px; color:#ef4444;">40%</div></div>
+                        <div class="dsc-tier" data-min="501" data-max="999999" style="padding:8px 4px; border-bottom:1px solid #e2e8f0; background:#f8fafc; color:#334155;"><div style="font-weight:800;">501+</div><div style="font-size:10px; color:#94a3b8;">${{ja:'個',en:'pcs',zh:'个',ar:'قطعة',es:'uds',de:'Stk',fr:'pcs',kr:'개'}[lang]||'pcs'}</div><div style="font-weight:700; margin-top:2px; color:#ef4444;">50%</div></div>
                     </div>
                     <div id="bulkDiscountInfo" style="display:none; padding:8px 14px; text-align:center; font-size:13px;"></div>
                 </div>
@@ -9208,22 +9208,22 @@ window.showChoiceModal = async function(key) {
                 <div id="promoDiscountBox" style="position:relative; margin-top:12px; border-radius:14px; ${_isBooklet?'display:none;':''}; overflow:visible; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                         <span style="background:#ef4444; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px; flex-shrink:0;">${lang==='ja'?'追加10%OFF':lang==='en'?'Extra 10% OFF':lang==='zh'?'额外10%折扣':lang==='es'?'10% extra':lang==='de'?'10% extra':lang==='fr'?'10% en plus':'추가 10% 할인'}</span>
-                        <span style="font-size:11px; color:#92400e; font-weight:700;">${lang==='ja'?'PRO購読割引':lang==='en'?'PRO Subscription':lang==='zh'?'PRO订阅折扣':'PRO 구독 할인'}</span>
+                        <span style="font-size:11px; color:#92400e; font-weight:700;">${{ja:'PRO購読割引',en:'PRO Subscription',zh:'PRO订阅折扣',ar:'خصم PRO',es:'Suscripción PRO',de:'PRO-Abo',fr:'Abonnement PRO',kr:'PRO 구독 할인'}[lang]||'PRO Subscription'}</span>
                     </div>
-                    <div style="font-size:12px; color:#92400e; font-weight:600; margin-bottom:10px;">${lang==='ja'?'業者の方はぜひご購読ください！':lang==='en'?'A must for businesses!':lang==='zh'?'商家必订！':'업자라면 꼭 구독해주세요!'}</div>
+                    <div style="font-size:12px; color:#92400e; font-weight:600; margin-bottom:10px;">${{ja:'業者の方はぜひご購読ください！',en:'A must for businesses!',zh:'商家必订！',ar:'ضروري للشركات!',es:'¡Imprescindible para empresas!',de:'Ein Muss für Unternehmen!',fr:'Indispensable pour les entreprises !',kr:'업자라면 꼭 구독해주세요!'}[lang]||'A must for businesses!'}</div>
                     <div style="display:flex; align-items:baseline; justify-content:flex-end; gap:8px;">
                         <span id="promoDiscountPrice" style="font-size:24px; font-weight:900; color:#d97706;">0</span>
-                        <span class="promoTooltipToggle" style="font-size:11px; color:#92400e; text-decoration:underline;">${lang==='ja'?'詳細を見る →':lang==='zh'?'查看详情 →':lang==='en'?'View Details →':'구독 알아보기 →'}</span>
+                        <span class="promoTooltipToggle" style="font-size:11px; color:#92400e; text-decoration:underline;">${{ja:'詳細を見る →',en:'View Details →',zh:'查看详情 →',ar:'عرض التفاصيل →',es:'Ver detalles →',de:'Details ansehen →',fr:'Voir les détails →',kr:'구독 알아보기 →'}[lang]||'View Details →'}</span>
                     </div>
                     <div id="promoTooltip" style="display:none; position:absolute; left:0; right:0; bottom:calc(100% + 10px); background:#1e293b; color:#fff; border-radius:14px; padding:18px 16px; z-index:999; box-shadow:0 8px 30px rgba(0,0,0,0.25); animation:scSlideUp 0.2s ease;">
                         <div style="position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:8px solid #1e293b;"></div>
-                        <div style="font-size:15px; font-weight:800; margin-bottom:12px; color:#fbbf24;">🎁 ${lang==='ja'?'最大15%追加割引':lang==='zh'?'最高额外15%折扣':lang==='en'?'Up to 15% Extra OFF':'최대 15% 추가 할인 혜택'}</div>
+                        <div style="font-size:15px; font-weight:800; margin-bottom:12px; color:#fbbf24;">🎁 ${{ja:'最大15%追加割引',en:'Up to 15% Extra OFF',zh:'最高额外15%折扣',ar:'خصم إضافي حتى 15%',es:'Hasta 15% descuento extra',de:'Bis zu 15% Extrarabatt',fr:'Jusqu\'à 15% de remise en plus',kr:'최대 15% 추가 할인 혜택'}[lang]||'Up to 15% Extra OFF'}</div>
                         <div style="display:flex; flex-direction:column; gap:8px; font-size:12px; line-height:1.5; color:#cbd5e1; margin-bottom:14px;">
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#f59e0b; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">10%</span> ${lang==='ja'?'PRO購読割引':lang==='en'?'PRO subscription discount':'PRO 구독 할인'}</div>
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#8b5cf6; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">5%</span> ${lang==='ja'?'マイレージ割引':lang==='en'?'Mileage discount':'마일리지 할인'}</div>
+                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#f59e0b; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">10%</span> ${{ja:'PRO購読割引',en:'PRO subscription discount',zh:'PRO订阅折扣',ar:'خصم اشتراك PRO',es:'Descuento suscripción PRO',de:'PRO-Abo-Rabatt',fr:'Remise abonnement PRO',kr:'PRO 구독 할인'}[lang]||'PRO subscription discount'}</div>
+                            <div style="display:flex; align-items:center; gap:8px;"><span style="background:#8b5cf6; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; min-width:32px; text-align:center;">5%</span> ${{ja:'マイレージ割引',en:'Mileage discount',zh:'积分折扣',ar:'خصم الأميال',es:'Descuento por puntos',de:'Meilenguthaben',fr:'Remise fidélité',kr:'마일리지 할인'}[lang]||'Mileage discount'}</div>
                         </div>
-                        <div style="background:rgba(251,191,36,0.15); border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:11px; color:#fbbf24; font-weight:600; text-align:center;">${lang==='ja'?'✨ 有料機能も無制限で利用可能':lang==='en'?'✨ Unlimited premium features included':'✨ 유료기능 무제한 사용 포함'}</div>
-                        <button id="promoTooltipBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${lang==='ja'?'定期購読する →':lang==='en'?'Subscribe Now →':'구독하러가기 →'}</button>
+                        <div style="background:rgba(251,191,36,0.15); border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:11px; color:#fbbf24; font-weight:600; text-align:center;">${{ja:'✨ 有料機能も無制限で利用可能',en:'✨ Unlimited premium features included',zh:'✨ 无限使用付费功能',ar:'✨ ميزات مميزة غير محدودة',es:'✨ Funciones premium ilimitadas',de:'✨ Unbegrenzte Premium-Funktionen',fr:'✨ Fonctionnalités premium illimitées',kr:'✨ 유료기능 무제한 사용 포함'}[lang]||'✨ Unlimited premium features included'}</div>
+                        <button id="promoTooltipBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${{ja:'定期購読する →',en:'Subscribe Now →',zh:'立即订阅 →',ar:'اشترك الآن →',es:'Suscríbete →',de:'Jetzt abonnieren →',fr:'S\'abonner →',kr:'구독하러가기 →'}[lang]||'Subscribe Now →'}</button>
                     </div>
                 </div>
                 ${isArtworkProduct ? `<div style="background:linear-gradient(135deg,#eef2ff,#faf5ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:15px;">
@@ -9259,17 +9259,17 @@ window.showChoiceModal = async function(key) {
     if (_isPromo) {
         window._currentProductRef = product;
         window._selectedPromoFormat = null;
-        const _pFmtTitle = lang==='ja'?'印刷規格を選択':lang==='en'?'Select Print Format':'인쇄 규격 선택';
+        const _pFmtTitle = {ja:'印刷規格を選択',en:'Select Print Format',zh:'选择印刷规格',ar:'اختر حجم الطباعة',es:'Seleccionar formato',de:'Druckformat wählen',fr:'Choisir le format',kr:'인쇄 규격 선택'}[lang]||'Select Print Format';
         const _pFmts = [
-            { id:'flyer_single', icon:'📃', name:{kr:'A4 전단지',ja:'A4チラシ(片面)',en:'A4 Flyer'}, desc:{kr:'단면·210×297',ja:'片面·210×297',en:'Single·210×297'}, krw:500 },
-            { id:'flyer_double', icon:'📄', name:{kr:'A4 양면',ja:'A4両面',en:'A4 Double'}, desc:{kr:'양면·210×297',ja:'両面·210×297',en:'Double·210×297'}, krw:800 },
-            { id:'postcard', icon:'📮', name:{kr:'엽서',ja:'はがき',en:'Postcard'}, desc:{kr:'양면·100×148',ja:'両面·100×148',en:'Double·100×148'}, krw:600 },
-            { id:'invitation', icon:'💌', name:{kr:'초대장',ja:'招待状',en:'Invitation'}, desc:{kr:'반접지·190×130',ja:'二つ折り·190×130',en:'Half fold·190×130'}, krw:1200 },
-            { id:'a4_half', icon:'📋', name:{kr:'A4 반접지',ja:'A4二つ折り',en:'A4 Half Fold'}, desc:{kr:'4면·303×216',ja:'4面·303×216',en:'4 panels·303×216'}, krw:1000 },
-            { id:'tri_leaflet', icon:'📰', name:{kr:'3단 리플릿',ja:'三つ折り',en:'Tri-fold'}, desc:{kr:'6면·303×216',ja:'6面·303×216',en:'6 panels·303×216'}, krw:1000 }
+            { id:'flyer_single', icon:'📃', name:{kr:'A4 전단지',ja:'A4チラシ(片面)',en:'A4 Flyer',zh:'A4传单',ar:'نشرة A4',es:'Folleto A4',de:'A4 Flyer',fr:'Flyer A4'}, desc:{kr:'단면·210×297',ja:'片面·210×297',en:'Single·210×297',zh:'单面·210×297',ar:'وجه واحد·210×297',es:'Simple·210×297',de:'Einseitig·210×297',fr:'Simple·210×297'}, krw:500 },
+            { id:'flyer_double', icon:'📄', name:{kr:'A4 양면',ja:'A4両面',en:'A4 Double',zh:'A4双面',ar:'A4 وجهين',es:'A4 Doble',de:'A4 Doppel',fr:'A4 Double'}, desc:{kr:'양면·210×297',ja:'両面·210×297',en:'Double·210×297',zh:'双面·210×297',ar:'وجهين·210×297',es:'Doble·210×297',de:'Doppel·210×297',fr:'Double·210×297'}, krw:800 },
+            { id:'postcard', icon:'📮', name:{kr:'엽서',ja:'はがき',en:'Postcard',zh:'明信片',ar:'بطاقة بريدية',es:'Postal',de:'Postkarte',fr:'Carte postale'}, desc:{kr:'양면·100×148',ja:'両面·100×148',en:'Double·100×148',zh:'双面·100×148',ar:'وجهين·100×148',es:'Doble·100×148',de:'Doppel·100×148',fr:'Double·100×148'}, krw:600 },
+            { id:'invitation', icon:'💌', name:{kr:'초대장',ja:'招待状',en:'Invitation',zh:'邀请函',ar:'دعوة',es:'Invitación',de:'Einladung',fr:'Invitation'}, desc:{kr:'반접지·190×130',ja:'二つ折り·190×130',en:'Half fold·190×130',zh:'对折·190×130',ar:'نصف طية·190×130',es:'Plegado·190×130',de:'Falz·190×130',fr:'Pli·190×130'}, krw:1200 },
+            { id:'a4_half', icon:'📋', name:{kr:'A4 반접지',ja:'A4二つ折り',en:'A4 Half Fold',zh:'A4对折',ar:'A4 نصف طية',es:'A4 Plegado',de:'A4 Falz',fr:'A4 Pli'}, desc:{kr:'4면·303×216',ja:'4面·303×216',en:'4 panels·303×216',zh:'4面·303×216',ar:'4 أوجه·303×216',es:'4 caras·303×216',de:'4 Seiten·303×216',fr:'4 faces·303×216'}, krw:1000 },
+            { id:'tri_leaflet', icon:'📰', name:{kr:'3단 리플릿',ja:'三つ折り',en:'Tri-fold',zh:'三折页',ar:'مطوية ثلاثية',es:'Tríptico',de:'Dreifachfalz',fr:'Triptyque'}, desc:{kr:'6면·303×216',ja:'6面·303×216',en:'6 panels·303×216',zh:'6面·303×216',ar:'6 أوجه·303×216',es:'6 caras·303×216',de:'6 Seiten·303×216',fr:'6 faces·303×216'}, krw:1000 }
         ];
         const _L = lang || 'kr';
-        const _reqMsg = lang==='ja'?'規格を選択してください':lang==='en'?'Please select a format':'규격을 선택해주세요';
+        const _reqMsg = {ja:'規格を選択してください',en:'Please select a format',zh:'请选择规格',ar:'يرجى اختيار الحجم',es:'Seleccione un formato',de:'Bitte Format wählen',fr:'Veuillez choisir un format',kr:'규격을 선택해주세요'}[lang]||'Please select a format';
         var _fmtHtml = '<div id="promoFormatSelector" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">';
         _fmtHtml += '<div style="font-size:13px; font-weight:bold; color:#6366f1; margin-bottom:10px;">\uD83D\uDDA8\uFE0F ' + _pFmtTitle + '</div>';
         _fmtHtml += '<div style="display:flex; flex-direction:column; gap:6px;">';
@@ -9905,22 +9905,22 @@ window.updateModalTotal = function() {
 
             html += `<div style="background:#fff; border:1.5px solid ${i===0?'#6366f1':'#e2e8f0'}; border-radius:10px; padding:12px; margin-bottom:8px; position:relative;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span style="font-size:13px; font-weight:800; color:#1e1b4b;">🧱 ${lang==='ja'?'壁面':lang==='en'?'Wall':'벽면'} ${i+1}</span>
+                    <span style="font-size:13px; font-weight:800; color:#1e1b4b;">🧱 ${{ja:'壁面',en:'Wall',zh:'墙面',ar:'جدار',es:'Pared',de:'Wand',fr:'Mur',kr:'벽면'}[lang]||'Wall'} ${i+1}</span>
                     <div style="display:flex; align-items:center; gap:6px;">
                         <span style="font-size:12px; font-weight:700; color:#6366f1;">${formatValue(wallPrice)}</span>
                         ${window._wallPanels.length > 1 ? `<button onclick="window._removeWallPanel(${i})" style="background:#fee2e2; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; color:#ef4444; font-weight:bold; font-size:14px; display:flex; align-items:center; justify-content:center;">×</button>` : ''}
                     </div>
                 </div>
                 <div style="display:flex; gap:4px; margin-bottom:8px;">
-                    <button type="button" onclick="window._setWallProp(${i},'side',1)" style="flex:1; padding:7px; border:2px solid ${p.side===1?'#6366f1':'#e2e8f0'}; border-radius:8px; background:${p.side===1?'#6366f1':'#fff'}; color:${p.side===1?'#fff':'#475569'}; font-size:12px; font-weight:700; cursor:pointer;">${lang==='ja'?'片面':lang==='en'?'Single':'단면'}</button>
-                    <button type="button" onclick="window._setWallProp(${i},'side',2)" style="flex:1; padding:7px; border:2px solid ${p.side===2?'#ef4444':'#e2e8f0'}; border-radius:8px; background:${p.side===2?'#ef4444':'#fff'}; color:${p.side===2?'#fff':'#475569'}; font-size:12px; font-weight:700; cursor:pointer;">${lang==='ja'?'両面(×2)':lang==='en'?'Double(×2)':'양면(×2)'}</button>
+                    <button type="button" onclick="window._setWallProp(${i},'side',1)" style="flex:1; padding:7px; border:2px solid ${p.side===1?'#6366f1':'#e2e8f0'}; border-radius:8px; background:${p.side===1?'#6366f1':'#fff'}; color:${p.side===1?'#fff':'#475569'}; font-size:12px; font-weight:700; cursor:pointer;">${{ja:'片面',en:'Single',zh:'单面',ar:'وجه واحد',es:'Simple',de:'Einseitig',fr:'Simple',kr:'단면'}[lang]||'Single'}</button>
+                    <button type="button" onclick="window._setWallProp(${i},'side',2)" style="flex:1; padding:7px; border:2px solid ${p.side===2?'#ef4444':'#e2e8f0'}; border-radius:8px; background:${p.side===2?'#ef4444':'#fff'}; color:${p.side===2?'#fff':'#475569'}; font-size:12px; font-weight:700; cursor:pointer;">${{ja:'両面(×2)',en:'Double(×2)',zh:'双面(×2)',ar:'وجهين(×2)',es:'Doble(×2)',de:'Doppel(×2)',fr:'Double(×2)',kr:'양면(×2)'}[lang]||'Double(×2)'}</button>
                 </div>
                 <div style="margin-bottom:6px;">
-                    <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:4px;">${lang==='ja'?'幅':lang==='en'?'Width':'가로'}</div>
+                    <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:4px;">${{ja:'幅',en:'Width',zh:'宽度',ar:'العرض',es:'Ancho',de:'Breite',fr:'Largeur',kr:'가로'}[lang]||'Width'}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:4px;">${wBtns}</div>
                 </div>
                 <div>
-                    <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:4px;">${lang==='ja'?'高さ':lang==='en'?'Height':'높이'}</div>
+                    <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:4px;">${{ja:'高さ',en:'Height',zh:'高度',ar:'الارتفاع',es:'Alto',de:'Höhe',fr:'Hauteur',kr:'높이'}[lang]||'Height'}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:4px;">${hBtns}</div>
                 </div>
             </div>`;
@@ -9938,9 +9938,9 @@ window.updateModalTotal = function() {
         const summary = document.getElementById('wallTotalSummary');
         if (summary) {
             let discountHtml = discountRate > 0
-                ? `<div style="color:#ef4444; font-size:12px; font-weight:700; margin-top:4px;">${Math.round(discountRate*100)}% ${lang==='ja'?'割引':lang==='en'?'OFF':'할인'} (-${formatValue(discountAmount)})</div>`
+                ? `<div style="color:#ef4444; font-size:12px; font-weight:700; margin-top:4px;">${Math.round(discountRate*100)}% ${{ja:'割引',en:'OFF',zh:'折扣',ar:'خصم',es:'Dto.',de:'Rabatt',fr:'Remise',kr:'할인'}[lang]||'OFF'} (-${formatValue(discountAmount)})</div>`
                 : '';
-            summary.innerHTML = `<div style="font-size:11px; color:#64748b;">${lang==='ja'?'壁面':lang==='en'?'Walls':'벽면'} ${window._wallPanels.length}${lang==='ja'?'面':lang==='en'?'':'개'} · ${lang==='ja'?'合計':lang==='en'?'Total':'총'} ${totalPanels}${lang==='ja'?'パネル':lang==='en'?' panels':'칸'}</div>
+            summary.innerHTML = `<div style="font-size:11px; color:#64748b;">${{ja:'壁面',en:'Walls',zh:'墙面',ar:'جدار',es:'Paredes',de:'Wände',fr:'Murs',kr:'벽면'}[lang]||'Walls'} ${window._wallPanels.length}${{ja:'面',en:'',zh:'面',ar:'',es:'',de:'',fr:'',kr:'개'}[lang]||''} · ${{ja:'合計',en:'Total',zh:'合计',ar:'المجموع',es:'Total',de:'Gesamt',fr:'Total',kr:'총'}[lang]||'Total'} ${totalPanels}${{ja:'パネル',en:' panels',zh:'块',ar:' لوحة',es:' paneles',de:' Paneele',fr:' panneaux',kr:'칸'}[lang]||' panels'}</div>
                 <div style="font-size:22px; font-weight:900; color:#1e1b4b; margin-top:4px;">${formatValue(finalPrice)}</div>${discountHtml}`;
         }
 
@@ -9951,7 +9951,7 @@ window.updateModalTotal = function() {
         const pd = document.getElementById('calcResultPrice');
         if (pd) { pd.innerText = formatValue(finalPrice); pd.dataset.rawPrice = rawPriceForDisplay; }
         const sd = document.getElementById('calcResultSize');
-        if (sd) sd.innerText = `${window._wallPanels.length}${lang==='ja'?'面':lang==='en'?' walls':'벽면'} · ${totalPanels}${lang==='ja'?'パネル':lang==='en'?' panels':'칸'}`;
+        if (sd) sd.innerText = `${window._wallPanels.length}${{ja:'面',en:' walls',zh:'面',ar:' جدار',es:' paredes',de:' Wände',fr:' murs',kr:'벽면'}[lang]||' walls'} · ${totalPanels}${{ja:'パネル',en:' panels',zh:'块',ar:' لوحة',es:' paneles',de:' Paneele',fr:' panneaux',kr:'칸'}[lang]||' panels'}`;
 
         // inputCustW/H에 첫번째 벽 사이즈 (호환성)
         const iw = document.getElementById('inputCustW'); if (iw) iw.value = window._wallPanels[0]?.w || 2000;
