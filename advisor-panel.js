@@ -48,7 +48,7 @@ let _custPhone = ''; // 고객 전화번호
 function getSb() { return window.sb || null; }
 
 // ─── localStorage 영속성 (로그인 상태 무관하게 단일 키 사용) ───
-function chatKey() { return 'kapu_chat_current'; }
+function chatKey() { return 'kapu_chat_' + getLang(); }
 
 function saveChat() {
     try {

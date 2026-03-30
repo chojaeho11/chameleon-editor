@@ -541,7 +541,13 @@ serve(async (req) => {
             ).join('\n');
         }
 
-        const systemPrompt = `${langPrompts[clientLang] || langPrompts['kr']}
+        // 누락 언어는 영어 프롬프트 + 해당 언어로 응답 지시
+        const langNames: Record<string,string> = { zh:'Chinese', ar:'Arabic', es:'Spanish', de:'German', fr:'French' };
+        let selectedPrompt = langPrompts[clientLang];
+        if (!selectedPrompt && langNames[clientLang]) {
+            selectedPrompt = langPrompts['us'] + `\n\n**CRITICAL: You MUST respond entirely in ${langNames[clientLang]}. All text, product descriptions, and chat messages must be in ${langNames[clientLang]}.**`;
+        }
+        const systemPrompt = `${selectedPrompt || langPrompts['kr']}
 ${labels.note}
 ## ${labels.products}
 (c=code,n=name,cat=category,p=price,cs=custom_size,bo=bulk_order,psm=price/m²)
