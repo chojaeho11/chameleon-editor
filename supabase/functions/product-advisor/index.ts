@@ -210,12 +210,13 @@ serve(async (req) => {
 
         const categories = catRes.data || [];
         // AI 콜에서 제외할 대분류 (상품 많지만 거의 안 팔림 → 토큰 낭비)
-        const _skipTopCats = new Set(['99999', '23434242', 'user_artwork']);
+        const _skipTopCats = new Set(['99999', '23434242', 'user_artwork', '88888']);
         const _skipSubCats = new Set<string>();
+        const _skipProductCodes = new Set(['21355677']); // 천원단위 주문 등 추천 제외
         categories.forEach((c: any) => {
             if (_skipTopCats.has(c.top_category_code) || _skipTopCats.has(c.code)) _skipSubCats.add(c.code);
         });
-        const aiProducts = products.filter((p: any) => !_skipSubCats.has(p.category));
+        const aiProducts = products.filter((p: any) => !_skipSubCats.has(p.category) && !_skipProductCodes.has(p.code));
         const siteUrlMap: Record<string, string> = { ja: 'https://www.cafe0101.com', us: 'https://www.cafe3355.com', kr: 'https://www.cafe2626.com' };
         const siteUrl = siteUrlMap[clientLang] || 'https://www.chameleon.design';
         const langSuffix = siteUrlMap[clientLang] ? '' : '&lang=' + clientLang;
@@ -709,6 +710,14 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             if (toolBlock) {
                 const result = toolBlock.input;
                 if (!result.chat_message) result.chat_message = result.summary || '';
+                // AI가 반환한 제품 중 skip 대상 제거
+                if (result.products && result.products.length > 0) {
+                    result.products = result.products.filter((rec: any) => {
+                        const dbP = products.find((p: any) => p.code === rec.code);
+                        if (!dbP) return true; // DB에 없는 코드는 일단 유지
+                        return !_skipSubCats.has(dbP.category) && !_skipProductCodes.has(rec.code);
+                    });
+                }
                 let hasProducts = result.products && result.products.length > 0;
                 // fallback: AI가 products 비워놓고 summary에 제품 설명만 한 경우 → 텍스트 매칭으로 카드 주입
                 if (!hasProducts) {
