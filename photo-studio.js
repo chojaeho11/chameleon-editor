@@ -18,7 +18,7 @@ const T = {
 const t = (k) => (T[_L] && T[_L][k]) || T.en[k] || k;
 
 // ── 통화 ──
-const _cur = (_cc==='JP'||_cc==='JA') ? {r:0.1,s:'¥',pre:true} : (_cc==='US'||_cc==='EN') ? {r:0.001,s:'$',pre:true} : (_cc==='CN'||_cc==='ZH') ? {r:0.005,s:'¥',pre:true} : (_cc==='ES'||_cc==='DE'||_cc==='FR') ? {r:0.00065,s:'€',pre:true} : (_cc==='AR') ? {r:0.003,s:' ﷼',pre:false} : (_cc==='KR'||_cc==='KO') ? {r:1,s:'원',pre:false} : {r:0.001,s:'$',pre:true};
+const _cur = (_cc==='JP'||_cc==='JA') ? {r:0.1,s:'¥',pre:true} : (_cc==='US'||_cc==='EN') ? {r:0.001,s:'$',pre:true} : (_cc==='CN'||_cc==='ZH') ? {r:0.005,s:'¥',pre:true} : (_cc==='ES'||_cc==='DE'||_cc==='FR') ? {r:0.001,s:'€',pre:true} : (_cc==='AR') ? {r:0.001,s:'$',pre:true} : (_cc==='KR'||_cc==='KO') ? {r:1,s:'원',pre:false} : {r:0.001,s:'$',pre:true};
 function fmtPrice(krw) {
     const v = Math.round(krw * _cur.r);
     return _cur.pre ? _cur.s + v.toLocaleString() : v.toLocaleString() + _cur.s;

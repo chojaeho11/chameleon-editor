@@ -9914,7 +9914,8 @@ window.updateModalTotal = function() {
         const _r = _rates.US || 0.001;
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
-            if (['en','ar','es','de','fr'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+            if (['en','ar'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+            if (['es','de','fr'].includes(lang)) { const eur = val * (_rates.ES || 0.001); return eur >= 10 ? '€' + Math.round(eur).toLocaleString() : '€' + eur.toFixed(2); }
             if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.05)).toLocaleString();
             return Math.floor(val).toLocaleString() + '원';
         };
@@ -10057,7 +10058,8 @@ window.updateModalTotal = function() {
             const fixedPrice = fixedKRW * qty;
             const formatValue = (val) => {
                 if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
-                if (['en','ar','es','de','fr'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+                if (['en','ar'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+            if (['es','de','fr'].includes(lang)) { const eur = val * (_rates.ES || 0.001); return eur >= 10 ? '€' + Math.round(eur).toLocaleString() : '€' + eur.toFixed(2); }
                 if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.05)).toLocaleString();
                 return Math.floor(val).toLocaleString() + '원';
             };
@@ -10267,7 +10269,8 @@ if (w >= 20 && h >= 20) {
             const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
             const formatVal = (val) => {
                 if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
-                if (['en','ar','es','de','fr'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+                if (['en','ar'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+            if (['es','de','fr'].includes(lang)) { const eur = val * (_rates.ES || 0.001); return eur >= 10 ? '€' + Math.round(eur).toLocaleString() : '€' + eur.toFixed(2); }
                 if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.05)).toLocaleString();
                 return Math.floor(val).toLocaleString() + '원';
             };

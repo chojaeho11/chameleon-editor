@@ -15,7 +15,7 @@ export const formatCurrency = (amount, siteCode) => {
     if (siteCode === 'JP') return '¥' + Math.floor(converted).toLocaleString();
     if (siteCode === 'US') return converted >= 10 ? '$' + Math.round(converted).toLocaleString() : '$' + converted.toFixed(2);
     if (siteCode === 'CN') return '¥' + Math.round(converted).toLocaleString();
-    if (siteCode === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+    if (siteCode === 'AR') return '$' + (converted >= 10 ? Math.round(converted).toLocaleString() : converted.toFixed(2));
     if (siteCode === 'ES' || siteCode === 'DE' || siteCode === 'FR') return '€' + converted.toFixed(2);
     if (siteCode === 'KR' || !siteCode) return converted.toLocaleString() + '원';
     return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());

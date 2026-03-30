@@ -361,7 +361,7 @@ export function getLocalizedData(item) {
         name = item.name_ar || item.name_us || item.name;
         const arRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.001;
         const arPrice = price * arRate;
-        formattedPrice = Math.round(arPrice).toLocaleString() + ' ﷼';
+        formattedPrice = '$' + Math.round(arPrice).toLocaleString();
     } else if (country === 'ES') {
         name = item.name_es || item.name_us || item.name;
         const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001;

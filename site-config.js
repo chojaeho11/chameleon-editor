@@ -56,7 +56,7 @@ export const SITE_CONFIG = {
         'JP': '¥',
         'US': '$',
         'CN': '¥',
-        'AR': '﷼',
+        'AR': '$',
         'ES': '€',
         'DE': '€',
         'FR': '€'

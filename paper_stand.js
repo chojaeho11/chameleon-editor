@@ -9,7 +9,7 @@
     // 언어별 설정 (향후 언어별 페이지 확장용)
     const LANG = {
         code: 'kr',
-        currency: ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'JP' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'CN') ? '¥' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'US') ? '$' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'ES' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'DE' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'FR') ? '€' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'AR') ? '﷼' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR' || !(window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY)) ? '원' : '$',
+        currency: ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'JP' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'CN') ? '¥' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'US') ? '$' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'ES' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'DE' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'FR') ? '€' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'AR') ? '$' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR' || !(window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY)) ? '원' : '$',
         currencyRate: (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE[window.SITE_CONFIG.COUNTRY]) || 1,
         noProducts: '종이매대 상품을 준비 중입니다.',
         loading: '상품 불러오는 중...',

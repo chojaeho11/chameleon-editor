@@ -37,7 +37,7 @@ function fmtMoney(krw) {
     if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
     if (country === 'US') return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
-    if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+    if (country === 'AR') return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
     if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
     if (country === 'KR') return converted.toLocaleString() + '원';
     return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
@@ -977,7 +977,7 @@ function _artFmtPrice(krw) {
     if (country === 'US') return '$' + (v < 1 ? v.toFixed(2) : v.toFixed(0));
     if (country === 'CN') return '¥' + Math.round(v).toLocaleString();
     if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + v.toFixed(2);
-    if (country === 'AR') return Math.round(v).toLocaleString() + ' ﷼';
+    if (country === 'AR') return '$' + (v < 1 ? v.toFixed(2) : v.toFixed(0));
     if (country === 'KR') return v.toLocaleString() + '원';
     return '$' + (v < 1 ? v.toFixed(2) : Math.round(v).toLocaleString());
 }

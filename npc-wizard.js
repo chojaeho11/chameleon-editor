@@ -1668,7 +1668,7 @@ window.NpcWizard = {
                 if (country === 'JP') return '¥' + Math.floor(c).toLocaleString();
                 if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString());
                 if (country === 'CN') return '¥' + Math.round(c).toLocaleString();
-                if (country === 'AR') return Math.round(c).toLocaleString() + ' ﷼';
+                if (country === 'AR') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString());
                 if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + c.toFixed(2);
                 if (country === 'KR') return Math.round(c).toLocaleString() + '원';
                 return '$' + Math.round(c).toLocaleString();
@@ -1699,7 +1699,7 @@ window.NpcWizard = {
         const country = cfg.COUNTRY || 'KR';
         const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
         const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || (country === 'KR' ? '원' : '$');
-        const fmt = (v) => { const c = v * rate; if (country === 'JP') return '¥' + Math.floor(c).toLocaleString(); if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString()); if (country === 'CN') return '¥' + Math.round(c).toLocaleString(); if (country === 'AR') return Math.round(c).toLocaleString() + ' ﷼'; if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + c.toFixed(2); if (country === 'KR') return Math.round(c).toLocaleString() + '원'; return '$' + Math.round(c).toLocaleString(); };
+        const fmt = (v) => { const c = v * rate; if (country === 'JP') return '¥' + Math.floor(c).toLocaleString(); if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString()); if (country === 'CN') return '¥' + Math.round(c).toLocaleString(); if (country === 'AR') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString()); if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + c.toFixed(2); if (country === 'KR') return Math.round(c).toLocaleString() + '원'; return '$' + Math.round(c).toLocaleString(); };
         const el = document.getElementById('npcPdTotalVal2');
         if (el) {
             if (discountRate > 0) {

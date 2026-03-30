@@ -3273,7 +3273,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
 
     // Stripe 최소 결제금액 체크
     const minAmount = zeroDec.includes(currency) ? 100 : 0.50;
-    const currSymbol = { jpy: '¥', usd: '$', cny: '¥', sar: '﷼', eur: '€' };
+    const currSymbol = { jpy: '¥', usd: '$', cny: '¥', sar: '$', eur: '€' };
     const minLabel = (currSymbol[currency] || '') + minAmount;
     if (localAmount < minAmount) {
         btn.innerText = originalText;
