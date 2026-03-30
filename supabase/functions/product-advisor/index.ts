@@ -549,7 +549,8 @@ serve(async (req) => {
         const langNames: Record<string,string> = { zh:'Chinese', ar:'Arabic', es:'Spanish', de:'German', fr:'French' };
         let selectedPrompt = langPrompts[clientLang];
         if (!selectedPrompt && langNames[clientLang]) {
-            selectedPrompt = langPrompts['us'] + `\n\n**CRITICAL: You MUST respond entirely in ${langNames[clientLang]}. All text, product descriptions, and chat messages must be in ${langNames[clientLang]}.**`;
+            selectedPrompt = langPrompts['us'] + `\n\n**CRITICAL: You MUST respond entirely in ${langNames[clientLang]}. All text, product descriptions, and chat messages must be in ${langNames[clientLang]}.**
+**CRITICAL: When mentioning ANY products, you MUST include them in the products array with code, name, img_url, etc. NEVER just describe products in text without putting them in the products array. The products array is what generates clickable image cards for the customer. Text-only product descriptions without cards is a BAD experience. Product links should use: ${siteUrl}/?product={code}${langSuffix}**`;
         }
         const systemPrompt = `${selectedPrompt || langPrompts['kr']}
 ${labels.note}
