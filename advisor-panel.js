@@ -44,16 +44,8 @@ let _custName = ''; // 고객 이름
 let _custPhone = ''; // 고객 전화번호
 
 // ─── Supabase 클라이언트 ───
-let _ownSb = null;
-function getSb() {
-    if (window.sb) return window.sb;
-    if (!_ownSb && typeof window.supabase !== 'undefined') {
-        try {
-            _ownSb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-        } catch(e) {}
-    }
-    return _ownSb || null;
-}
+// window.sb (config.js)를 재사용 — 새 클라이언트 생성 금지
+function getSb() { return window.sb || null; }
 
 // ─── localStorage 영속성 (로그인 상태 무관하게 단일 키 사용) ───
 function chatKey() { return 'kapu_chat_current'; }
