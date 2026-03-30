@@ -1625,7 +1625,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 || _pTopCat2 === 'Wholesale Board Prices'
                 || _pTopCat2 === 'honeycomb_board'
                 || _pCat2 === 'hb_display_wall' || _pCode2.startsWith('hb_dw')
-                || (item.product.is_custom_size && !item.product.is_file_upload);
+                || item.product._calculated_price;
             let _qtyDiscRate2 = 0;
             if (!_noDiscount2 && item.qty >= 3) {
                 if (item.qty >= 501) _qtyDiscRate2 = 0.50;

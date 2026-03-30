@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=282";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=282";
-import { SITE_CONFIG } from "./site-config.js?v=282";
-import { applySize } from "./canvas-size.js?v=282";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=282";
+import { canvas } from "./canvas-core.js?v=283";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=283";
+import { SITE_CONFIG } from "./site-config.js?v=283";
+import { applySize } from "./canvas-size.js?v=283";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=283";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -412,7 +412,7 @@ export async function initOrderSystem() {
                 const _pc = item.product.code || '';
                 const _cat = item.product.category || '';
                 const _tc = window._getTopCategoryCode ? window._getTopCategoryCode(_cat) : '';
-                const _nd = _pc === '21355677' || _pc === '21355677_copy' || _tc === 'Wholesale Board Prices' || _tc === 'honeycomb_board' || _cat === 'hb_display_wall' || _pc.startsWith('hb_dw') || (item.product.is_custom_size && !item.product.is_file_upload);
+                const _nd = _pc === '21355677' || _pc === '21355677_copy' || _tc === 'Wholesale Board Prices' || _tc === 'honeycomb_board' || _cat === 'hb_display_wall' || _pc.startsWith('hb_dw') || item.product._calculated_price;
                 let dr = 0;
                 if (!_nd && qty >= 3) { if (qty >= 501) dr = 0.50; else if (qty >= 101) dr = 0.40; else if (qty >= 10) dr = 0.30; else dr = 0.20; }
                 itemBase -= Math.floor(itemBase * dr / 100) * 100;
@@ -1894,12 +1894,11 @@ function renderCart() {
         const _pCode = item.product.code || '';
         const _pCat = item.product.category || '';
         const _pTopCat = window._getTopCategoryCode ? window._getTopCategoryCode(_pCat) : '';
-        const _isRealCustom = item.product.is_custom_size && !item.product.is_file_upload;
         const _noDiscount = _pCode === '21355677' || _pCode === '21355677_copy'
             || _pTopCat === 'Wholesale Board Prices'
             || _pTopCat === 'honeycomb_board'
             || _pCat === 'hb_display_wall' || _pCode.startsWith('hb_dw')
-            || _isRealCustom;
+            || item.product._calculated_price;
         let _qtyDiscountRate = 0;
         if (!_noDiscount && item.qty >= 3) {
             if (item.qty >= 501) _qtyDiscountRate = 0.50;
@@ -2137,7 +2136,7 @@ function updateSummary(prodTotal, addonTotal, total) {
                 || _pTopCat3 === 'Wholesale Board Prices'
                 || _pTopCat3 === 'honeycomb_board'
                 || _pCat3 === 'hb_display_wall' || _pCode3.startsWith('hb_dw')
-                || (item.product.is_custom_size && !item.product.is_file_upload);
+                || item.product._calculated_price;
             if (!_noDisc3 && qty >= 3) {
                 let _qdr = 0;
                 if (qty >= 501) _qdr = 0.50;
@@ -2383,7 +2382,7 @@ async function processOrderSubmission() {
         const _pc2 = item.product.code || '';
         const _cat2 = item.product.category || '';
         const _tc2 = window._getTopCategoryCode ? window._getTopCategoryCode(_cat2) : '';
-        const _nd2 = _pc2 === '21355677' || _pc2 === '21355677_copy' || _tc2 === 'Wholesale Board Prices' || _tc2 === 'honeycomb_board' || _cat2 === 'hb_display_wall' || _pc2.startsWith('hb_dw') || (item.product.is_custom_size && !item.product.is_file_upload);
+        const _nd2 = _pc2 === '21355677' || _pc2 === '21355677_copy' || _tc2 === 'Wholesale Board Prices' || _tc2 === 'honeycomb_board' || _cat2 === 'hb_display_wall' || _pc2.startsWith('hb_dw') || item.product._calculated_price;
         let _dr2 = 0;
         if (!_nd2 && qty >= 3) {
             if (qty >= 501) _dr2 = 0.50;
