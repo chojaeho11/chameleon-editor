@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=283";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=283";
-import { SITE_CONFIG } from "./site-config.js?v=283";
-import { applySize } from "./canvas-size.js?v=283";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=283";
+import { canvas } from "./canvas-core.js?v=284";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=284";
+import { SITE_CONFIG } from "./site-config.js?v=284";
+import { applySize } from "./canvas-size.js?v=284";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=284";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -1519,13 +1519,14 @@ async function addCanvasToCart() {
     } else if (window.__paperDisplayData) {
         calcProduct.is_custom = true;
         calcProduct._calculated_price = true;
-    // ★ 사이즈고정상품: 고정단가 유지 (면적 재계산 안함)
+    // ★ 사이즈고정상품: 고정단가 유지 (면적 재계산 안함, 수량할인 적용 가능)
     } else if (product.is_file_upload) {
-        calcProduct._calculated_price = true;
+        calcProduct._calculated_price = false;
         calcProduct.is_custom_size = true;
     } else if (product.is_custom_size) {
-        // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지
+        // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지 (수량할인 가능하도록 _calculated_price = false)
         if (product._calculated_price && product.price > 0 && Math.abs((product.w_mm || product.width_mm || 0) - currentMmW) < 5) {
+            calcProduct._calculated_price = false; // 고정단가 유지 → 수량할인 적용 가능
         } else {
             // 제품 실제 회배 단가(price)로 면적 계산
             const sqmPrice = product._base_sqm_price || product.price || 50000;
@@ -1533,6 +1534,7 @@ async function addCanvasToCart() {
             let calcPrice = Math.round((area_m2 * sqmPrice) / 10) * 10;
             if (calcPrice < 100) calcPrice = sqmPrice; // 최소 단가 = 기본 단가
             calcProduct.price = calcPrice;
+            calcProduct._calculated_price = true; // 면적 기반 재계산 → 수량할인 제외
         }
     }
     
