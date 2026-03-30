@@ -3261,7 +3261,7 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
     btn.disabled = true;
 
     // 국가별 Stripe 통화 매핑
-    const currencyMap = { JP: 'jpy', US: 'usd', CN: 'cny', AR: 'sar', ES: 'eur' };
+    const currencyMap = { JP: 'jpy', US: 'usd', CN: 'cny', AR: 'usd', ES: 'eur', DE: 'eur', FR: 'eur' };
     const currency = currencyMap[currencyCountry] || 'usd';
     const zeroDec = ['jpy']; // 소수점 없는 통화
 

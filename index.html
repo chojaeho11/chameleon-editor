@@ -4600,10 +4600,11 @@ async function handleSubReturn() {
                 <span data-i18n="label_card_pay">💳 카드 / 간편결제 (즉시 완료)</span>
             </label>
 
-            <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
+            <label class="pay-method-item" id="payMethodBank" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
                 <input type="radio" name="paymentMethod" value="bank" style="margin-right:10px; accent-color:#6366f1;">
                 <span data-i18n="label_bank_transfer">🏦 무통장 입금 (확인 후 제작)</span>
             </label>
+            <script>if(window.SITE_CONFIG && SITE_CONFIG.COUNTRY !== 'KR'){var _bk=document.getElementById('payMethodBank');if(_bk)_bk.style.display='none';}</script>
 
             <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
                 <input type="radio" name="paymentMethod" value="deposit" style="margin-right:10px; accent-color:#6366f1;">
