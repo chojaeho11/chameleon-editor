@@ -2257,7 +2257,7 @@ const SUB_PRICING = {
     'JP': { monthly: '¥3,000', annual: '¥16,500', lifetime: '¥33,000', monthlyPer: '/月', annualPer: '/年', lifetimePer: '', currency: 'jpy' },
     'US': { monthly: '$30', annual: '$165', lifetime: '$330', monthlyPer: '/mo', annualPer: '/yr', lifetimePer: '', currency: 'usd' },
     'CN': { monthly: '¥200', annual: '¥1,100', lifetime: '¥2,200', monthlyPer: '/月', annualPer: '/年', lifetimePer: '', currency: 'cny' },
-    'AR': { monthly: '﷼115', annual: '﷼620', lifetime: '﷼1,240', monthlyPer: '/شهر', annualPer: '/سنة', lifetimePer: '', currency: 'sar' },
+    'AR': { monthly: '$30', annual: '$165', lifetime: '$330', monthlyPer: '/شهر', annualPer: '/سنة', lifetimePer: '', currency: 'usd' },
     'ES': { monthly: '€28', annual: '€154', lifetime: '€310', monthlyPer: '/mes', annualPer: '/año', lifetimePer: '', currency: 'eur' },
     'DE': { monthly: '€28', annual: '€154', lifetime: '€310', monthlyPer: '/Mo', annualPer: '/Jahr', lifetimePer: '', currency: 'eur' },
     'FR': { monthly: '28€', annual: '154€', lifetime: '310€', monthlyPer: '/mois', annualPer: '/an', lifetimePer: '', currency: 'eur' },
@@ -6294,7 +6294,7 @@ window.filterFxCards = function(cat, btn) {
         if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
         if (country === 'US') return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
         if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
-        if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+        if (country === 'AR') return '$' + Math.round(converted).toLocaleString();
         if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
         return converted.toLocaleString() + '원';
     }
@@ -6315,7 +6315,7 @@ window.filterFxCards = function(cat, btn) {
         if (country === 'US') { const r = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE.US) || 0.001; const _usd = (amt||0) * r; return _usd >= 10 ? '$' + Math.round(_usd).toLocaleString() : '$' + _usd.toFixed(2); }
         const rates = cfg.CURRENCY_RATE || {};
         if (country === 'CN') return '¥' + Math.round((amt||0) * (rates.CN || 0.01)).toLocaleString();
-        if (country === 'AR') return Math.round((amt||0) * (rates.AR || 0.05)).toLocaleString() + ' ﷼';
+        if (country === 'AR') return '$' + Math.round((amt||0) * (rates.AR || 0.001)).toLocaleString();
         if (country === 'ES') return '€' + ((amt||0) * (rates.ES || 0.001)).toFixed(2);
         if (country === 'DE') return '€' + ((amt||0) * (rates.DE || 0.001)).toFixed(2);
         if (country === 'FR') return '€' + ((amt||0) * (rates.FR || 0.001)).toFixed(2);
@@ -7660,14 +7660,14 @@ window.startCanvasCrop = function() {
     const confirmBtn = document.createElement('button');
     confirmBtn.style.cssText = 'width:44px; height:44px; background:#6366f1; color:#fff; border:none; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;';
     confirmBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
-    confirmBtn.title = lang==='ja'?'切り抜き適用':lang==='en'?'Apply Crop':'자르기 적용';
+    confirmBtn.title = {ja:'切り抜き適用',en:'Apply Crop',zh:'应用裁剪',ar:'تطبيق القص',es:'Aplicar recorte',de:'Zuschnitt anwenden',fr:'Appliquer le recadrage',kr:'자르기 적용'}[lang]||'Apply Crop';
     confirmBtn.onclick = () => window.applyCanvasCrop();
     bar.appendChild(confirmBtn);
 
     const cancelBtn = document.createElement('button');
     cancelBtn.style.cssText = 'width:44px; height:44px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;';
     cancelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-    cancelBtn.title = lang==='ja'?'キャンセル':lang==='en'?'Cancel':'취소';
+    cancelBtn.title = {ja:'キャンセル',en:'Cancel',zh:'取消',ar:'إلغاء',es:'Cancelar',de:'Abbrechen',fr:'Annuler',kr:'취소'}[lang]||'Cancel';
     cancelBtn.onclick = () => window.cancelCanvasCrop();
     bar.appendChild(cancelBtn);
 
@@ -8742,7 +8742,7 @@ window.showChoiceModal = async function(key) {
                                 if (lang === 'ja') colorPriceLabel = `+¥${basePrice.toLocaleString()}`;
                                 else if (lang === 'en') colorPriceLabel = `+$${Math.round(basePrice * _usR).toLocaleString()}`;
                                 else if (lang === 'zh') colorPriceLabel = `+¥${Math.round(basePrice * (_cr.CN || 0.01)).toLocaleString()}`;
-                                else if (lang === 'ar') colorPriceLabel = `+${Math.round(basePrice * (_cr.AR || 0.05)).toLocaleString()} ﷼`;
+                                else if (lang === 'ar') colorPriceLabel = `+$${Math.round(basePrice * (_cr.AR || 0.001)).toLocaleString()}`;
                                 else if (lang === 'es') colorPriceLabel = `+€${(basePrice * (_cr.ES || 0.001)).toFixed(2)}`;
                                 else if (lang === 'de') colorPriceLabel = `+€${(basePrice * (_cr.DE || 0.001)).toFixed(2)}`;
                                 else if (lang === 'fr') colorPriceLabel = `+€${(basePrice * (_cr.FR || 0.001)).toFixed(2)}`;
@@ -8771,7 +8771,7 @@ window.showChoiceModal = async function(key) {
                             if (lang === 'ja') { if (a.name_jp) optName = a.name_jp; if (a.price_jp) { basePrice = a.price_jp; priceStr = `+¥${basePrice.toLocaleString()}`; } }
                             else if (lang === 'en') { if (a.name_us) optName = a.name_us; const _usR2 = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001; priceStr = `+$${Math.round(basePrice * _usR2).toLocaleString()}`; }
                             else if (lang === 'zh') { optName = a.name_cn || a.name_us || optName; const _r = (_cr && _cr.CN) || 0.01; priceStr = `+¥${Math.round(basePrice * _r).toLocaleString()}`; }
-                            else if (lang === 'ar') { optName = a.name_ar || a.name_us || optName; const _r = (_cr && _cr.AR) || 0.05; priceStr = `+${Math.round(basePrice * _r).toLocaleString()} ﷼`; }
+                            else if (lang === 'ar') { optName = a.name_ar || a.name_us || optName; const _r = (_cr && _cr.AR) || 0.001; priceStr = `+$${Math.round(basePrice * _r).toLocaleString()}`; }
                             else if (lang === 'es') { optName = a.name_es || a.name_us || optName; const _r = (_cr && _cr.ES) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
                             else if (lang === 'de') { optName = a.name_de || a.name_us || optName; const _r = (_cr && _cr.DE) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
                             else if (lang === 'fr') { optName = a.name_fr || a.name_us || optName; const _r = (_cr && _cr.FR) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
@@ -8808,7 +8808,7 @@ window.showChoiceModal = async function(key) {
         if(lang === 'ja') return `¥${p.toLocaleString()}`;
         if(lang === 'en') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001; return `$${Math.round(p * r).toLocaleString()}`; }
         if(lang === 'zh') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.CN) || 0.05; return `¥${Math.round(p * r).toLocaleString()}`; }
-        if(lang === 'ar') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.001; return `${Math.round(p * r).toLocaleString()} ﷼`; }
+        if(lang === 'ar') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.AR) || 0.001; return `$${Math.round(p * r).toLocaleString()}`; }
         if(lang === 'es') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001; return `€${(p * r).toFixed(2)}`; }
         if(lang === 'de') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.001; return `€${(p * r).toFixed(2)}`; }
         if(lang === 'fr') { const r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001; return `€${(p * r).toFixed(2)}`; }
@@ -8865,21 +8865,19 @@ window.showChoiceModal = async function(key) {
     let artworkTypeSelectorHtml = '';
     if (isArtworkProduct && window.UA_PRODUCT_TYPES) {
         const types = window.UA_PRODUCT_TYPES;
-        const _ptLabel = lang==='ja'?'製品タイプを選択':lang==='en'?'Select Product Type':'제품 종류 선택';
+        const _ptLabel = {ja:'製品タイプを選択',en:'Select Product Type',zh:'选择产品类型',ar:'اختر نوع المنتج',es:'Seleccionar tipo',de:'Produkttyp wählen',fr:'Choisir le type',kr:'제품 종류 선택'}[lang]||'Select Product Type';
         let btns = '';
         Object.keys(types).forEach((k, i) => {
             const t = types[k];
-            const tName = lang==='ja' ? t.name_jp : lang==='en' ? t.name_us : t.name;
+            const tName = {ja:t.name_jp,en:t.name_us,zh:t.name_cn||t.name_us,ar:t.name_ar||t.name_us,es:t.name_es||t.name_us,de:t.name_de||t.name_us,fr:t.name_fr||t.name_us,kr:t.name}[lang]||t.name_us||t.name;
             const isFirst = i === 0;
             let priceLabel = '';
             if (t.fixed) {
                 // 고정가 상품: 통화별 환산
                 const _r = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
-                if (lang==='ja') priceLabel = '¥' + Math.floor(t.price_krw * (_r.JP || 0.1)).toLocaleString();
-                else if (lang==='en') priceLabel = '$' + Math.round(t.price_krw * (_r.US || 0.001)).toLocaleString();
-                else priceLabel = t.price_krw.toLocaleString() + '원';
+                priceLabel = formatPriceSimple(t.price_krw);
                 if (t.desc) {
-                    const descTxt = lang==='ja' ? (t.desc_jp||t.desc) : lang==='en' ? (t.desc_us||t.desc) : t.desc;
+                    const descTxt = {ja:t.desc_jp||t.desc,en:t.desc_us||t.desc,zh:t.desc_cn||t.desc_us||t.desc,ar:t.desc_ar||t.desc_us||t.desc,es:t.desc_es||t.desc_us||t.desc,de:t.desc_de||t.desc_us||t.desc,fr:t.desc_fr||t.desc_us||t.desc,kr:t.desc}[lang]||t.desc_us||t.desc;
                     priceLabel += ` (${descTxt})`;
                 }
             } else {
@@ -8891,9 +8889,9 @@ window.showChoiceModal = async function(key) {
                 <div style="font-size:11px; font-weight:700; color:${isFirst?'#4f46e5':'#334155'}; margin-top:2px;">${tName}</div>
             </button>`;
         });
-        const _blindLabel = lang==='ja'?'操作位置':lang==='en'?'Pull Side':'내림손잡이 위치';
-        const _blindL = lang==='ja'?'左':lang==='en'?'Left':'좌측';
-        const _blindR = lang==='ja'?'右':lang==='en'?'Right':'우측';
+        const _blindLabel = {ja:'操作位置',en:'Pull Side',zh:'拉绳位置',ar:'موضع السحب',es:'Lado de la cadena',de:'Zugseite',fr:'Côté de tirage',kr:'내림손잡이 위치'}[lang]||'Pull Side';
+        const _blindL = {ja:'左',en:'Left',zh:'左',ar:'يسار',es:'Izquierda',de:'Links',fr:'Gauche',kr:'좌측'}[lang]||'Left';
+        const _blindR = {ja:'右',en:'Right',zh:'右',ar:'يمين',es:'Derecha',de:'Rechts',fr:'Droite',kr:'우측'}[lang]||'Right';
         artworkTypeSelectorHtml = `
             <div data-npc="artworkType" style="background:#f8fafc; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e2e8f0;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">🏷️ ${_ptLabel}</div>
@@ -8907,14 +8905,14 @@ window.showChoiceModal = async function(key) {
                 </div>
             </div>
             <div id="tshirtOptionBox" style="display:none; background:#fdf4ff; border-radius:12px; padding:12px; margin-top:10px; border:1px solid #e9d5ff;">
-                <div style="font-size:12px; font-weight:bold; color:#7c3aed; margin-bottom:10px;">👕 ${lang==='ja'?'Tシャツオプション':lang==='en'?'T-shirt Options':'티셔츠 옵션'}</div>
+                <div style="font-size:12px; font-weight:bold; color:#7c3aed; margin-bottom:10px;">👕 ${{ja:'Tシャツオプション',en:'T-shirt Options',zh:'T恤选项',ar:'خيارات التيشيرت',es:'Opciones camiseta',de:'T-Shirt-Optionen',fr:'Options T-shirt',kr:'티셔츠 옵션'}[lang]||'T-shirt Options'}</div>
                 <div style="margin-bottom:10px;">
-                    <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:6px;">${lang==='ja'?'カラー':lang==='en'?'Color':'컬러'}</div>
+                    <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:6px;">${{ja:'カラー',en:'Color',zh:'颜色',ar:'اللون',es:'Color',de:'Farbe',fr:'Couleur',kr:'컬러'}[lang]||'Color'}</div>
                     <div id="tshirtColorBtns" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
-                    <div id="tshirtColorLabel" style="font-size:10px; color:#7c3aed; font-weight:600; margin-top:4px;">${lang==='ja'?'ホワイト':lang==='en'?'White':'화이트'}</div>
+                    <div id="tshirtColorLabel" style="font-size:10px; color:#7c3aed; font-weight:600; margin-top:4px;">${{ja:'ホワイト',en:'White',zh:'白色',ar:'أبيض',es:'Blanco',de:'Weiß',fr:'Blanc',kr:'화이트'}[lang]||'White'}</div>
                 </div>
                 <div>
-                    <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:6px;">${lang==='ja'?'サイズ':lang==='en'?'Size':'사이즈'}</div>
+                    <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:6px;">${{ja:'サイズ',en:'Size',zh:'尺码',ar:'المقاس',es:'Talla',de:'Größe',fr:'Taille',kr:'사이즈'}[lang]||'Size'}</div>
                     <div id="tshirtSizeBtns" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
                 </div>
             </div>`;
@@ -8926,55 +8924,55 @@ window.showChoiceModal = async function(key) {
     let rightSideUI = "";
     if (_isBooklet) {
         const bkL = {
-            title: lang==='ja'?'📖 冊子オプション':lang==='en'?'📖 Booklet Options':'📖 책자 옵션',
-            cover: lang==='ja'?'表紙用紙':lang==='en'?'Cover Paper':'표지용지',
-            inner: lang==='ja'?'内紙用紙':lang==='en'?'Inner Paper':'내지용지',
-            regular: lang==='ja'?'一般紙':lang==='en'?'Regular Paper':'일반지',
-            imported: lang==='ja'?'輸入紙':lang==='en'?'Premium Paper':'수입지',
-            pages: lang==='ja'?'ページ数':lang==='en'?'Pages':'페이지 수',
-            copies: lang==='ja'?'部数':lang==='en'?'Copies':'부수',
-            coating: lang==='ja'?'表紙コーティング':lang==='en'?'Cover Coating':'표지코팅',
-            glossy: lang==='ja'?'光沢':lang==='en'?'Glossy':'유광',
-            matte: lang==='ja'?'マット':lang==='en'?'Matte':'무광',
-            none: lang==='ja'?'なし':lang==='en'?'None':'없음',
-            effects: lang==='ja'?'特殊効果':lang==='en'?'Special Effects':'특수효과',
-            perCopy: lang==='ja'?'/部':lang==='en'?'/copy':'/부',
-            perPage: lang==='ja'?'/頁':lang==='en'?'/pg':'/p',
-            free: lang==='ja'?'無料':lang==='en'?'Free':'무료',
-            upload: lang==='ja'?'ファイルアップロード':lang==='en'?'Upload File':'파일올리기',
-            uploadDesc: lang==='ja'?'表紙・内紙のPDFまたは画像をアップロードしてください。':lang==='en'?'Upload cover and inner page files as PDF or image.':'표지와 내지 파일을 PDF 또는 이미지로 올려주세요.',
-            estimate: lang==='ja'?'見積もり':lang==='en'?'Estimate':'견적',
+            title: {ja:'📖 冊子オプション',en:'📖 Booklet Options',zh:'📖 小册子选项',ar:'📖 خيارات الكتيب',es:'📖 Opciones de folleto',de:'📖 Broschürenoptionen',fr:'📖 Options brochure',kr:'📖 책자 옵션'}[lang]||'📖 Booklet Options',
+            cover: {ja:'表紙用紙',en:'Cover Paper',zh:'封面纸',ar:'ورق الغلاف',es:'Papel de portada',de:'Umschlagpapier',fr:'Papier de couverture',kr:'표지용지'}[lang]||'Cover Paper',
+            inner: {ja:'内紙用紙',en:'Inner Paper',zh:'内页纸',ar:'ورق داخلي',es:'Papel interior',de:'Innenpapier',fr:'Papier intérieur',kr:'내지용지'}[lang]||'Inner Paper',
+            regular: {ja:'一般紙',en:'Regular Paper',zh:'普通纸',ar:'ورق عادي',es:'Papel normal',de:'Normalpapier',fr:'Papier ordinaire',kr:'일반지'}[lang]||'Regular Paper',
+            imported: {ja:'輸入紙',en:'Premium Paper',zh:'进口纸',ar:'ورق فاخر',es:'Papel premium',de:'Premiumpapier',fr:'Papier premium',kr:'수입지'}[lang]||'Premium Paper',
+            pages: {ja:'ページ数',en:'Pages',zh:'页数',ar:'عدد الصفحات',es:'Páginas',de:'Seiten',fr:'Pages',kr:'페이지 수'}[lang]||'Pages',
+            copies: {ja:'部数',en:'Copies',zh:'份数',ar:'عدد النسخ',es:'Copias',de:'Exemplare',fr:'Exemplaires',kr:'부수'}[lang]||'Copies',
+            coating: {ja:'表紙コーティング',en:'Cover Coating',zh:'封面覆膜',ar:'طلاء الغلاف',es:'Acabado de portada',de:'Umschlagbeschichtung',fr:'Pelliculage couverture',kr:'표지코팅'}[lang]||'Cover Coating',
+            glossy: {ja:'光沢',en:'Glossy',zh:'光面',ar:'لامع',es:'Brillante',de:'Glänzend',fr:'Brillant',kr:'유광'}[lang]||'Glossy',
+            matte: {ja:'マット',en:'Matte',zh:'哑光',ar:'مطفي',es:'Mate',de:'Matt',fr:'Mat',kr:'무광'}[lang]||'Matte',
+            none: {ja:'なし',en:'None',zh:'无',ar:'بدون',es:'Ninguno',de:'Keine',fr:'Aucun',kr:'없음'}[lang]||'None',
+            effects: {ja:'特殊効果',en:'Special Effects',zh:'特殊效果',ar:'تأثيرات خاصة',es:'Efectos especiales',de:'Spezialeffekte',fr:'Effets spéciaux',kr:'특수효과'}[lang]||'Special Effects',
+            perCopy: {ja:'/部',en:'/copy',zh:'/份',ar:'/نسخة',es:'/copia',de:'/Stk',fr:'/ex',kr:'/부'}[lang]||'/copy',
+            perPage: {ja:'/頁',en:'/pg',zh:'/页',ar:'/ص',es:'/pág',de:'/S',fr:'/p',kr:'/p'}[lang]||'/pg',
+            free: {ja:'無料',en:'Free',zh:'免费',ar:'مجاني',es:'Gratis',de:'Kostenlos',fr:'Gratuit',kr:'무료'}[lang]||'Free',
+            upload: {ja:'ファイルアップロード',en:'Upload File',zh:'上传文件',ar:'رفع الملف',es:'Subir archivo',de:'Datei hochladen',fr:'Télécharger le fichier',kr:'파일올리기'}[lang]||'Upload File',
+            uploadDesc: {ja:'表紙・内紙のPDFまたは画像をアップロードしてください。',en:'Upload cover and inner page files as PDF or image.',zh:'请上传封面和内页的PDF或图片文件。',ar:'قم برفع ملفات الغلاف والصفحات الداخلية بصيغة PDF أو صورة.',es:'Suba los archivos de portada e interior en PDF o imagen.',de:'Laden Sie Umschlag- und Innenseiten als PDF oder Bild hoch.',fr:'Téléchargez les fichiers de couverture et pages intérieures en PDF ou image.',kr:'표지와 내지 파일을 PDF 또는 이미지로 올려주세요.'}[lang]||'Upload cover and inner page files as PDF or image.',
+            estimate: {ja:'見積もり',en:'Estimate',zh:'报价',ar:'تقدير',es:'Presupuesto',de:'Kostenvoranschlag',fr:'Devis',kr:'견적'}[lang]||'Estimate',
         };
         const _fmtP = (v) => formatPriceSimple(v);
         const coverPapers = [
-            {id:'cv_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지'},
-            {id:'cv_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지'},
-            {id:'cv_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지'},
-            {id:'cv_grace', name:lang==='ja'?'グレイス':lang==='en'?'Grace':'그레이스'},
-            {id:'cv_tintoretto', name:lang==='ja'?'ティントレット':lang==='en'?'Tintoretto':'띤또레또'},
-            {id:'cv_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰'},
-            {id:'cv_marshmallow', name:lang==='ja'?'マシュメロウ':lang==='en'?'Marshmallow':'머쉬멜로우'},
-            {id:'cv_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑'},
-            {id:'cv_halvono', name:lang==='ja'?'ハルボノ':lang==='en'?'Halvono':'반누보'},
+            {id:'cv_mojo', name:{ja:'モジョ紙',en:'Uncoated',zh:'无涂布纸',ar:'ورق غير مطلي',es:'Sin estucar',de:'Ungestrichen',fr:'Non couché',kr:'모조지'}[lang]||'Uncoated'},
+            {id:'cv_art', name:{ja:'アート紙',en:'Art Paper',zh:'铜版纸',ar:'ورق فني',es:'Papel estucado',de:'Kunstdruckpapier',fr:'Papier couché',kr:'아트지'}[lang]||'Art Paper'},
+            {id:'cv_snow', name:{ja:'スノー紙',en:'Snow Paper',zh:'雪面纸',ar:'ورق ثلجي',es:'Papel Snow',de:'Snow-Papier',fr:'Papier Snow',kr:'스노우지'}[lang]||'Snow Paper'},
+            {id:'cv_grace', name:{ja:'グレイス',en:'Grace',kr:'그레이스'}[lang]||'Grace'},
+            {id:'cv_tintoretto', name:{ja:'ティントレット',en:'Tintoretto',kr:'띤또레또'}[lang]||'Tintoretto'},
+            {id:'cv_randevu', name:{ja:'ランデブー',en:'Rendezvous',kr:'랑데뷰'}[lang]||'Rendezvous'},
+            {id:'cv_marshmallow', name:{ja:'マシュメロウ',en:'Marshmallow',kr:'머쉬멜로우'}[lang]||'Marshmallow'},
+            {id:'cv_montblanc', name:{ja:'モンブラン',en:'Montblanc',kr:'몽블랑'}[lang]||'Montblanc'},
+            {id:'cv_halvono', name:{ja:'ハルボノ',en:'Halvono',kr:'반누보'}[lang]||'Halvono'},
         ];
         const innerRegular = [
-            {id:'in_mojo', name:lang==='ja'?'モジョ紙':lang==='en'?'Uncoated':'모조지', price:60},
-            {id:'in_art', name:lang==='ja'?'アート紙':lang==='en'?'Art Paper':'아트지', price:60},
-            {id:'in_snow', name:lang==='ja'?'スノー紙':lang==='en'?'Snow Paper':'스노우지', price:60},
+            {id:'in_mojo', name:{ja:'モジョ紙',en:'Uncoated',zh:'无涂布纸',ar:'ورق غير مطلي',es:'Sin estucar',de:'Ungestrichen',fr:'Non couché',kr:'모조지'}[lang]||'Uncoated', price:60},
+            {id:'in_art', name:{ja:'アート紙',en:'Art Paper',zh:'铜版纸',ar:'ورق فني',es:'Papel estucado',de:'Kunstdruckpapier',fr:'Papier couché',kr:'아트지'}[lang]||'Art Paper', price:60},
+            {id:'in_snow', name:{ja:'スノー紙',en:'Snow Paper',zh:'雪面纸',ar:'ورق ثلجي',es:'Papel Snow',de:'Snow-Papier',fr:'Papier Snow',kr:'스노우지'}[lang]||'Snow Paper', price:60},
         ];
         const innerImported = [
-            {id:'in_grace', name:lang==='ja'?'グレイス':lang==='en'?'Grace':'그레이스', price:80},
-            {id:'in_tintoretto', name:lang==='ja'?'ティントレット':lang==='en'?'Tintoretto':'띤또레또', price:80},
-            {id:'in_randevu', name:lang==='ja'?'ランデブー':lang==='en'?'Rendezvous':'랑데뷰', price:80},
-            {id:'in_marshmallow', name:lang==='ja'?'マシュメロウ':lang==='en'?'Marshmallow':'머쉬멜로우', price:80},
-            {id:'in_montblanc', name:lang==='ja'?'モンブラン':lang==='en'?'Montblanc':'몽블랑', price:80},
-            {id:'in_halvono', name:lang==='ja'?'ハルボノ':lang==='en'?'Halvono':'반누보', price:80},
+            {id:'in_grace', name:{ja:'グレイス',en:'Grace',kr:'그레이스'}[lang]||'Grace', price:80},
+            {id:'in_tintoretto', name:{ja:'ティントレット',en:'Tintoretto',kr:'띤또레또'}[lang]||'Tintoretto', price:80},
+            {id:'in_randevu', name:{ja:'ランデブー',en:'Rendezvous',kr:'랑데뷰'}[lang]||'Rendezvous', price:80},
+            {id:'in_marshmallow', name:{ja:'マシュメロウ',en:'Marshmallow',kr:'머쉬멜로우'}[lang]||'Marshmallow', price:80},
+            {id:'in_montblanc', name:{ja:'モンブラン',en:'Montblanc',kr:'몽블랑'}[lang]||'Montblanc', price:80},
+            {id:'in_halvono', name:{ja:'ハルボノ',en:'Halvono',kr:'반누보'}[lang]||'Halvono', price:80},
         ];
         const effects = [
-            {id:'fx_gold_glossy', name:lang==='ja'?'光沢金箔':lang==='en'?'Gold Foil (Glossy)':'유광금박', price:1000},
-            {id:'fx_epoxy', name:lang==='ja'?'エポキシ':lang==='en'?'Epoxy':'에폭시', price:1000},
-            {id:'fx_gold_matte', name:lang==='ja'?'マット金箔':lang==='en'?'Gold Foil (Matte)':'무광금박', price:1000},
-            {id:'fx_hologram', name:lang==='ja'?'ホログラム':lang==='en'?'Hologram':'홀로그램', price:1000},
+            {id:'fx_gold_glossy', name:{ja:'光沢金箔',en:'Gold Foil (Glossy)',zh:'亮面金箔',ar:'رقائق ذهبية لامعة',es:'Pan de oro (brillo)',de:'Goldfolie (glänzend)',fr:'Dorure (brillant)',kr:'유광금박'}[lang]||'Gold Foil (Glossy)', price:1000},
+            {id:'fx_epoxy', name:{ja:'エポキシ',en:'Epoxy',zh:'环氧树脂',ar:'إيبوكسي',es:'Epoxi',de:'Epoxid',fr:'Époxy',kr:'에폭시'}[lang]||'Epoxy', price:1000},
+            {id:'fx_gold_matte', name:{ja:'マット金箔',en:'Gold Foil (Matte)',zh:'哑光金箔',ar:'رقائق ذهبية مطفية',es:'Pan de oro (mate)',de:'Goldfolie (matt)',fr:'Dorure (mat)',kr:'무광금박'}[lang]||'Gold Foil (Matte)', price:1000},
+            {id:'fx_hologram', name:{ja:'ホログラム',en:'Hologram',zh:'全息',ar:'هولوغرام',es:'Holograma',de:'Hologramm',fr:'Hologramme',kr:'홀로그램'}[lang]||'Hologram', price:1000},
         ];
 
         const _radioBtnStyle = `style="display:none"`;
@@ -8996,7 +8994,7 @@ window.showChoiceModal = async function(key) {
                     <img id="uploadPreviewThumb" src="" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:2px solid #a5b4fc;">
                     <div style="flex:1; min-width:0;">
                         <div id="uploadPreviewName" style="font-size:12px; font-weight:600; color:#1e40af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
-                        <div style="font-size:11px; color:#16a34a; font-weight:500;">✅ ${lang==='ja'?'アップロード完了':lang==='en'?'Upload complete':'업로드 완료'}</div>
+                        <div style="font-size:11px; color:#16a34a; font-weight:500;">✅ ${{ja:'アップロード完了',en:'Upload complete',zh:'上传完成',ar:'تم الرفع',es:'Subido',de:'Hochgeladen',fr:'Envoi terminé',kr:'업로드 완료'}[lang]||'Upload complete'}</div>
                     </div>
                 </div>
             </div>
@@ -9076,26 +9074,26 @@ window.showChoiceModal = async function(key) {
                 </div>
             </div>
             ${_isBoxProduct ? `<div data-npc="size" style="background:#f8fafc; border-radius:12px; padding:14px; margin-top:10px;">
-                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📦 ${lang==='ja'?'ボックスサイズ入力':lang==='en'?'Box Size Input':'박스 사이즈 입력'} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(mm)</span></div>
+                <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📦 ${{ja:'ボックスサイズ入力',en:'Box Size Input',zh:'输入箱体尺寸',ar:'إدخال حجم الصندوق',es:'Tamaño de caja',de:'Boxgröße eingeben',fr:'Taille de boîte',kr:'박스 사이즈 입력'}[lang]||'Box Size Input'} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(mm)</span></div>
                 <div style="display:flex; gap:5px; align-items:center;">
                     <div style="flex:1; text-align:center;">
-                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'幅(W)':lang==='en'?'Width(W)':'가로(W)'}</div>
+                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${{ja:'幅(W)',en:'Width(W)',zh:'宽(W)',ar:'العرض(W)',es:'Ancho(W)',de:'Breite(W)',fr:'Largeur(W)',kr:'가로(W)'}[lang]||'Width(W)'}</div>
                         <input type="number" id="boxModalW" class="ai-input-pretty" placeholder="W" value="${product.width_mm || 300}" min="50" max="1200" style="width:100%; margin:0; text-align:center; font-weight:bold;" oninput="window._calcBoxModalPrice()">
                     </div>
                     <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
                     <div style="flex:1; text-align:center;">
-                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'高さ(H)':lang==='en'?'Height(H)':'높이(H)'}</div>
+                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${{ja:'高さ(H)',en:'Height(H)',zh:'高(H)',ar:'الارتفاع(H)',es:'Alto(H)',de:'Höhe(H)',fr:'Hauteur(H)',kr:'높이(H)'}[lang]||'Height(H)'}</div>
                         <input type="number" id="boxModalH" class="ai-input-pretty" placeholder="H" value="${product.height_mm || 300}" min="50" max="1200" style="width:100%; margin:0; text-align:center; font-weight:bold;" oninput="window._calcBoxModalPrice()">
                     </div>
                     <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
                     <div style="flex:1; text-align:center;">
-                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${lang==='ja'?'奥行(D)':lang==='en'?'Depth(D)':'좌우깊이(D)'}</div>
+                        <div style="font-size:10px; color:#64748b; font-weight:600; margin-bottom:3px;">${{ja:'奥行(D)',en:'Depth(D)',zh:'深度(D)',ar:'العمق(D)',es:'Profundidad(D)',de:'Tiefe(D)',fr:'Profondeur(D)',kr:'좌우깊이(D)'}[lang]||'Depth(D)'}</div>
                         <input type="number" id="boxModalD" class="ai-input-pretty" placeholder="D" value="300" min="50" max="1200" style="width:100%; margin:0; text-align:center; font-weight:bold;" oninput="window._calcBoxModalPrice()">
                     </div>
                 </div>
-                <div id="boxModalSizeHint" style="font-size:11px; color:#8b5cf6; margin-top:8px; line-height:1.4;">💡 ${lang==='ja'?'ボックスの幅・高さ・奥行を入力すると価格が自動計算されます':lang==='en'?'Enter box width, height and depth to auto-calculate the price':'박스의 가로, 높이, 좌우깊이를 입력하면 가격이 자동 계산됩니다'}</div>
+                <div id="boxModalSizeHint" style="font-size:11px; color:#8b5cf6; margin-top:8px; line-height:1.4;">💡 ${{ja:'ボックスの幅・高さ・奥行を入力すると価格が自動計算されます',en:'Enter box width, height and depth to auto-calculate the price',zh:'输入箱体的宽、高、深度后价格将自动计算',ar:'أدخل عرض وارتفاع وعمق الصندوق لحساب السعر تلقائيًا',es:'Ingrese ancho, alto y profundidad para calcular el precio automáticamente',de:'Geben Sie Breite, Höhe und Tiefe ein — der Preis wird automatisch berechnet',fr:'Entrez la largeur, la hauteur et la profondeur pour calculer le prix automatiquement',kr:'박스의 가로, 높이, 좌우깊이를 입력하면 가격이 자동 계산됩니다'}[lang]||'Enter box width, height and depth to auto-calculate the price'}</div>
                 <div id="boxModalPriceResult" style="margin-top:10px; padding:12px; background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:10px; text-align:center;">
-                    <div style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:4px;">💰 ${lang==='ja'?'ボックス単価':lang==='en'?'Box Unit Price':'박스 단가'}</div>
+                    <div style="font-size:11px; color:#6366f1; font-weight:600; margin-bottom:4px;">💰 ${{ja:'ボックス単価',en:'Box Unit Price',zh:'单价',ar:'سعر الوحدة',es:'Precio unitario',de:'Stückpreis',fr:'Prix unitaire',kr:'박스 단가'}[lang]||'Box Unit Price'}</div>
                     <div id="boxModalPrice" style="font-size:22px; font-weight:900; color:#1e1b4b;">-</div>
                     <div id="boxModalSheetInfo" style="font-size:10px; color:#64748b; margin-top:4px;"></div>
                 </div>
@@ -9140,13 +9138,13 @@ window.showChoiceModal = async function(key) {
         // 대량 주문제작상품: 수량 드롭다운 / 일반: +/- 수량 버튼
         const isBulk = product.is_bulk_order && product.quantity_options && product.quantity_options.length > 0;
         const qtyLabel = lang==='ja'?'数量':lang==='zh'?'数量':lang==='ar'?'الكمية':lang==='es'?'Cantidad':lang==='de'?'Menge':lang==='fr'?'Quantité':lang==='en'?'Quantity':'수량';
-        const unitLabel = lang==='ja'?'個':lang==='en'?'pcs':lang==='zh'?'个':lang==='es'?'uds':lang==='de'?'Stk':lang==='fr'?'pcs':'개';
+        const unitLabel = {ja:'個',en:'pcs',zh:'个',ar:'قطعة',es:'uds',de:'Stk',fr:'pcs',kr:'개'}[lang]||'pcs';
         let qtyHtml = '';
         if (isBulk) {
             const opts = product.quantity_options.map(q => `<option value="${q}">${q.toLocaleString()}${unitLabel}</option>`).join('');
             qtyHtml = `
             <div data-npc="qty" style="margin-top:10px;">
-                <div style="font-size:12px; color:#6d28d9; font-weight:bold; margin-bottom:6px;">📦 ${qtyLabel} (${lang==='ja'?'ロット単位':lang==='en'?'Lot unit':'단위 선택'})</div>
+                <div style="font-size:12px; color:#6d28d9; font-weight:bold; margin-bottom:6px;">📦 ${qtyLabel} (${{ja:'ロット単位',en:'Lot unit',zh:'选择单位',ar:'اختر الوحدة',es:'Seleccionar unidad',de:'Einheit wählen',fr:'Choisir l\'unité',kr:'단위 선택'}[lang]||'Lot unit'})</div>
                 <select id="fixedProdQty" onchange="window.updateModalTotal();" style="width:100%; height:44px; border:2px solid #7c3aed; border-radius:10px; font-size:16px; font-weight:bold; text-align:center; color:#4c1d95; background:#f5f3ff; cursor:pointer;">
                     ${opts}
                 </select>
@@ -9162,7 +9160,7 @@ window.showChoiceModal = async function(key) {
         }
         rightSideUI = productHeaderHtml + `
             <div data-npc="price" style="background:linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color:white; padding:15px; border-radius:12px; text-align:center; margin:10px 0 15px; box-shadow:0 4px 15px rgba(99,102,241,0.3);">
-                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 販売価格':lang==='zh'?'💰 售价':lang==='ar'?'💰 السعر':lang==='es'?'💰 Precio':lang==='de'?'💰 Preis':lang==='fr'?'💰 Prix':lang==='en'?'💰 Price':'💰 판매가'}${isBulk ? ` (${lang==='ja'?'1個あたり':lang==='en'?'per unit':'개당'})` : ''}</div>
+                <div style="font-size:11px; opacity:0.9; margin-bottom:5px; font-weight:600;">${lang==='ja'?'💰 販売価格':lang==='zh'?'💰 售价':lang==='ar'?'💰 السعر':lang==='es'?'💰 Precio':lang==='de'?'💰 Preis':lang==='fr'?'💰 Prix':lang==='en'?'💰 Price':'💰 판매가'}${isBulk ? ` (${{ja:'1個あたり',en:'per unit',zh:'每个',ar:'للقطعة',es:'por unidad',de:'pro Stück',fr:'par pièce',kr:'개당'}[lang]||'per unit'})` : ''}</div>
                 <div style="font-size:22px; font-weight:800; color:#fbbf24; text-shadow:0 1px 3px rgba(0,0,0,0.2);">${formatPriceSimple(dPrice)}</div>
             </div>
             ${qtyHtml}`;
@@ -9227,8 +9225,8 @@ window.showChoiceModal = async function(key) {
                     </div>
                 </div>
                 ${isArtworkProduct ? `<div style="background:linear-gradient(135deg,#eef2ff,#faf5ff); border:1.5px solid #c7d2fe; border-radius:12px; padding:14px; margin-top:15px;">
-                    <div style="font-size:13px; font-weight:700; color:#4f46e5; margin-bottom:6px;"><i class="fa-solid fa-crop-simple"></i> ${lang==='ja'?'エディタで自由にトリミングできます':lang==='en'?'Crop freely in the Editor':'에디터에서 원하는 비율로 자를 수 있습니다'}</div>
-                    <div style="font-size:11px; color:#64748b; line-height:1.6;">${lang==='ja'?'エディタに入ると、画像を好きな比率でトリミング・配置できます。サイズを入力してエディタボタンを押してください。':lang==='en'?'In the editor, you can crop and arrange the image to any ratio. Enter your size and click the Editor button.':'에디터에 들어가면 이미지를 원하는 비율로 자르고 배치할 수 있습니다. 사이즈를 입력하고 에디터 버튼을 눌러주세요.'}</div>
+                    <div style="font-size:13px; font-weight:700; color:#4f46e5; margin-bottom:6px;"><i class="fa-solid fa-crop-simple"></i> ${{ja:'エディタで自由にトリミングできます',en:'Crop freely in the Editor',zh:'在编辑器中自由裁剪',ar:'قص بحرية في المحرر',es:'Recorta libremente en el Editor',de:'Frei im Editor zuschneiden',fr:'Recadrez librement dans l\'éditeur',kr:'에디터에서 원하는 비율로 자를 수 있습니다'}[lang]||'Crop freely in the Editor'}</div>
+                    <div style="font-size:11px; color:#64748b; line-height:1.6;">${{ja:'エディタに入ると、画像を好きな比率でトリミング・配置できます。サイズを入力してエディタボタンを押してください。',en:'In the editor, you can crop and arrange the image to any ratio. Enter your size and click the Editor button.',zh:'在编辑器中，您可以按任意比例裁剪和排列图像。输入尺寸后点击编辑器按钮。',ar:'في المحرر، يمكنك قص وترتيب الصورة بأي نسبة. أدخل الحجم واضغط زر المحرر.',es:'En el editor, puede recortar y organizar la imagen a cualquier proporción. Ingrese el tamaño y haga clic en el botón Editor.',de:'Im Editor können Sie das Bild in jedem Verhältnis zuschneiden und anordnen. Geben Sie die Größe ein und klicken Sie auf den Editor-Button.',fr:'Dans l\'éditeur, vous pouvez recadrer et disposer l\'image dans n\'importe quel ratio. Entrez la taille et cliquez sur le bouton Éditeur.',kr:'에디터에 들어가면 이미지를 원하는 비율로 자르고 배치할 수 있습니다. 사이즈를 입력하고 에디터 버튼을 눌러주세요.'}[lang]||'In the editor, you can crop and arrange the image to any ratio. Enter your size and click the Editor button.'}</div>
                 </div>` : ''}
                 <div data-npc="buttons" style="display:flex; flex-direction:column; gap:12px; margin-top:20px; padding-bottom:50px;">
                     ${product.cutline_url ? '<a href="'+product.cutline_url+'" target="_blank" download class="btn-round" style="height:44px; font-size:13px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; text-decoration:none;">✂️ '+(lang==='ja'?'カットライン ダウンロード':lang==='zh'?'刀线下载':lang==='ar'?'تحميل خط القطع':lang==='es'?'Descargar línea de corte':lang==='de'?'Stanzlinie herunterladen':lang==='fr'?'Télécharger la ligne de coupe':lang==='en'?'Download Die-cut Line':'칼선 다운받기')+'</a>' : ''}
@@ -9375,16 +9373,16 @@ window.showChoiceModal = async function(key) {
     const _tSizeBox = document.getElementById('tshirtSizeBtns');
     if (_tColorBox) {
         const _tColors = [
-            {code:'white', name:lang==='ja'?'ホワイト':lang==='en'?'White':'화이트', hex:'#FFFFFF', border:true},
-            {code:'black', name:lang==='ja'?'ブラック':lang==='en'?'Black':'블랙', hex:'#1a1a1a'},
-            {code:'navy', name:lang==='ja'?'ネイビー':lang==='en'?'Navy':'네이비', hex:'#1e3a5f'},
-            {code:'gray', name:lang==='ja'?'グレー':lang==='en'?'Gray':'그레이', hex:'#9ca3af'},
-            {code:'red', name:lang==='ja'?'レッド':lang==='en'?'Red':'레드', hex:'#dc2626'},
-            {code:'blue', name:lang==='ja'?'ブルー':lang==='en'?'Blue':'블루', hex:'#2563eb'},
-            {code:'pink', name:lang==='ja'?'ピンク':lang==='en'?'Pink':'핑크', hex:'#ec4899'},
-            {code:'yellow', name:lang==='ja'?'イエロー':lang==='en'?'Yellow':'옐로우', hex:'#eab308'},
-            {code:'green', name:lang==='ja'?'グリーン':lang==='en'?'Green':'그린', hex:'#16a34a'},
-            {code:'orange', name:lang==='ja'?'オレンジ':lang==='en'?'Orange':'오렌지', hex:'#ea580c'}
+            {code:'white', name:{ja:'ホワイト',en:'White',zh:'白色',ar:'أبيض',es:'Blanco',de:'Weiß',fr:'Blanc',kr:'화이트'}[lang]||'White', hex:'#FFFFFF', border:true},
+            {code:'black', name:{ja:'ブラック',en:'Black',zh:'黑色',ar:'أسود',es:'Negro',de:'Schwarz',fr:'Noir',kr:'블랙'}[lang]||'Black', hex:'#1a1a1a'},
+            {code:'navy', name:{ja:'ネイビー',en:'Navy',zh:'藏青',ar:'كحلي',es:'Azul marino',de:'Marine',fr:'Marine',kr:'네이비'}[lang]||'Navy', hex:'#1e3a5f'},
+            {code:'gray', name:{ja:'グレー',en:'Gray',zh:'灰色',ar:'رمادي',es:'Gris',de:'Grau',fr:'Gris',kr:'그레이'}[lang]||'Gray', hex:'#9ca3af'},
+            {code:'red', name:{ja:'レッド',en:'Red',zh:'红色',ar:'أحمر',es:'Rojo',de:'Rot',fr:'Rouge',kr:'레드'}[lang]||'Red', hex:'#dc2626'},
+            {code:'blue', name:{ja:'ブルー',en:'Blue',zh:'蓝色',ar:'أزرق',es:'Azul',de:'Blau',fr:'Bleu',kr:'블루'}[lang]||'Blue', hex:'#2563eb'},
+            {code:'pink', name:{ja:'ピンク',en:'Pink',zh:'粉色',ar:'وردي',es:'Rosa',de:'Rosa',fr:'Rose',kr:'핑크'}[lang]||'Pink', hex:'#ec4899'},
+            {code:'yellow', name:{ja:'イエロー',en:'Yellow',zh:'黄色',ar:'أصفر',es:'Amarillo',de:'Gelb',fr:'Jaune',kr:'옐로우'}[lang]||'Yellow', hex:'#eab308'},
+            {code:'green', name:{ja:'グリーン',en:'Green',zh:'绿色',ar:'أخضر',es:'Verde',de:'Grün',fr:'Vert',kr:'그린'}[lang]||'Green', hex:'#16a34a'},
+            {code:'orange', name:{ja:'オレンジ',en:'Orange',zh:'橙色',ar:'برتقالي',es:'Naranja',de:'Orange',fr:'Orange',kr:'오렌지'}[lang]||'Orange', hex:'#ea580c'}
         ];
         _tColorBox.innerHTML = _tColors.map((c, i) => {
             const sel = i === 0;
@@ -9829,7 +9827,7 @@ window.updateModalTotal = function() {
     if (discountInfoEl) {
         if (discountRate > 0) {
             discountInfoEl.style.display = 'block';
-            discountInfoEl.innerHTML = `<span style="color:#ef4444; font-weight:800;">${Math.round(discountRate*100)}% 할인 적용!</span> <span style="color:#64748b; font-size:12px;">(-${fmtLocal(discountAmount)})</span>`;
+            discountInfoEl.innerHTML = `<span style="color:#ef4444; font-weight:800;">${Math.round(discountRate*100)}% ${{ja:'割引適用!',en:'discount applied!',zh:'折扣已应用!',ar:'تم تطبيق الخصم!',es:'descuento aplicado!',de:'Rabatt angewendet!',fr:'remise appliquée!',kr:'할인 적용!'}[lang]||'discount applied!'}</span> <span style="color:#64748b; font-size:12px;">(-${fmtLocal(discountAmount)})</span>`;
         } else {
             discountInfoEl.style.display = 'none';
         }
@@ -9881,7 +9879,8 @@ window.updateModalTotal = function() {
         const _r = _rates.US || 0.001;
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
-            if (lang === 'en') return '$' + Math.round(val * _r).toLocaleString();
+            if (['en','ar','es','de','fr'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+            if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.05)).toLocaleString();
             return Math.floor(val).toLocaleString() + '원';
         };
 
@@ -10023,7 +10022,8 @@ window.updateModalTotal = function() {
             const fixedPrice = fixedKRW * qty;
             const formatValue = (val) => {
                 if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
-                if (lang === 'en') return '$' + Math.round(val * (_rates.US || 0.001)).toLocaleString();
+                if (['en','ar','es','de','fr'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+                if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.05)).toLocaleString();
                 return Math.floor(val).toLocaleString() + '원';
             };
             if (priceDisplay) {
@@ -10042,7 +10042,7 @@ window.updateModalTotal = function() {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
             if (lang === 'en') { const _r = _rates.US || 0.001; const _usd = val * _r; return _usd >= 10 ? '$' + Math.round(_usd).toLocaleString() : '$' + _usd.toFixed(2); }
             if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.01)).toLocaleString();
-            if (lang === 'ar') return Math.round(val * (_rates.AR || 0.05)).toLocaleString() + ' ﷼';
+            if (lang === 'ar') { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
             if (lang === 'es') return '€' + (val * (_rates.ES || 0.001)).toFixed(2);
             if (lang === 'de') return '€' + (val * (_rates.DE || 0.001)).toFixed(2);
             if (lang === 'fr') return '€' + (val * (_rates.FR || 0.001)).toFixed(2);
@@ -10084,7 +10084,7 @@ window.updateModalTotal = function() {
             const wInput2 = document.getElementById('inputCustW');
             const hInput2 = document.getElementById('inputCustH');
             if (w > mH || h > mH) {  // 긴쪽 기준 mH(420), 짧은쪽 mW(297)
-                const _maxMsg = (lang==='ja') ? `最大サイズは${mW}×${mH}mmです` : (lang==='en') ? `Max size is ${mW}×${mH}mm` : `최대 사이즈는 ${mW}×${mH}mm입니다`;
+                const _maxMsg = {ja:`最大サイズは${mW}×${mH}mmです`,en:`Max size is ${mW}×${mH}mm`,zh:`最大尺寸为${mW}×${mH}mm`,ar:`الحجم الأقصى ${mW}×${mH}mm`,es:`Tamaño máximo ${mW}×${mH}mm`,de:`Maximalgröße ${mW}×${mH}mm`,fr:`Taille maximale ${mW}×${mH}mm`,kr:`최대 사이즈는 ${mW}×${mH}mm입니다`}[lang]||`Max size is ${mW}×${mH}mm`;
                 if (w > mH && wInput2) wInput2.value = mH;
                 if (h > mH && hInput2) hInput2.value = mH;
                 showToast(_maxMsg, 'warn');
@@ -10139,7 +10139,7 @@ if (w >= 20 && h >= 20) {
                 priceDisplay.innerText = formatValue(0);
                 priceDisplay.dataset.rawPrice = 0;
             }
-            if (sizeDisplay) sizeDisplay.innerText = lang === 'ja' ? '最低100mm以上入力' : lang === 'en' ? 'Min 100mm required' : '최소 100mm 이상 입력';
+            if (sizeDisplay) sizeDisplay.innerText = {ja:'最低100mm以上入力',en:'Min 100mm required',zh:'最小100mm以上',ar:'الحد الأدنى 100mm',es:'Mínimo 100mm',de:'Mindestens 100mm',fr:'Minimum 100mm',kr:'최소 100mm 이상 입력'}[lang]||'Min 100mm required';
         }
 
         // ★ 패브릭 1400mm 체크 (원단은 롤이므로 가로/세로 둘 다 1400 이상일 때만 이어박기 필요)
@@ -10232,7 +10232,8 @@ if (w >= 20 && h >= 20) {
             const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
             const formatVal = (val) => {
                 if (lang === 'ja') return '¥' + Math.floor(val * (_rates.JP || 0.1)).toLocaleString();
-                if (lang === 'en') { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+                if (['en','ar','es','de','fr'].includes(lang)) { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
+                if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.05)).toLocaleString();
                 return Math.floor(val).toLocaleString() + '원';
             };
 
@@ -10243,8 +10244,8 @@ if (w >= 20 && h >= 20) {
 
             // 시트 정보 표시
             if (sheetInfoEl) {
-                const sheetLabel = lang==='ja' ? 'シート' : lang==='en' ? 'Sheet' : '시트';
-                const setLabel = lang==='ja' ? 'セット/シート' : lang==='en' ? 'sets/sheet' : '세트/시트';
+                const sheetLabel = {ja:'シート',en:'Sheet',zh:'张',ar:'ورقة',es:'Hoja',de:'Blatt',fr:'Feuille',kr:'시트'}[lang]||'Sheet';
+                const setLabel = {ja:'セット/シート',en:'sets/sheet',zh:'套/张',ar:'مجموعة/ورقة',es:'juegos/hoja',de:'Sets/Blatt',fr:'jeux/feuille',kr:'세트/시트'}[lang]||'sets/sheet';
                 if (result.setsPerSheet > 1) {
                     sheetInfoEl.textContent = `${sheetLabel}: ${result.sheetCount} (${result.setsPerSheet} ${setLabel})`;
                 } else {
@@ -14373,7 +14374,7 @@ window.filterModalItems = function(keyword) {
             if (_c==='US') { const us = Number(p.price_us) || price; return '$' + Math.round(us).toLocaleString(); }
             const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
             if (_c==='CN') { const r = rates.CN||0.01; return '¥' + Math.round(price*r).toLocaleString(); }
-            if (_c==='AR') { const r = rates.AR||0.005; return Math.round(price*r).toLocaleString() + ' ﷼'; }
+            if (_c==='AR') { const r = rates.AR||0.001; return '$' + Math.round(price*r).toLocaleString(); }
             if (_c==='ES'||_c==='DE'||_c==='FR') { const r = rates[_c]||0.001; return '€' + (price*r).toFixed(2); }
             return price.toLocaleString() + '원';
         };
@@ -14534,7 +14535,7 @@ window.filterModalItems = function(keyword) {
         if (_cc==='US') { return '$' + Math.round(Number(it.price_us)||price).toLocaleString(); }
         const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
         if (_cc==='CN') return '¥' + Math.round(price*(rates.CN||0.01)).toLocaleString();
-        if (_cc==='AR') return Math.round(price*(rates.AR||0.005)).toLocaleString() + ' ﷼';
+        if (_cc==='AR') return '$' + Math.round(price*(rates.AR||0.001)).toLocaleString();
         if (_cc==='ES'||_cc==='DE'||_cc==='FR') return '€' + (price*(rates[_cc]||0.001)).toFixed(2);
         return price.toLocaleString() + '원';
     };
