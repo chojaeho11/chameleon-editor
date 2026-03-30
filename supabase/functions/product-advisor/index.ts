@@ -215,7 +215,9 @@ serve(async (req) => {
             if (_skipTopCats.has(c.top_category_code) || _skipTopCats.has(c.code)) _skipSubCats.add(c.code);
         });
         const aiProducts = products.filter((p: any) => !_skipSubCats.has(p.category));
-        const siteUrl = clientLang === 'ja' ? 'https://www.cafe0101.com' : clientLang === 'us' ? 'https://www.cafe3355.com' : 'https://www.cafe2626.com';
+        const siteUrlMap: Record<string, string> = { ja: 'https://www.cafe0101.com', us: 'https://www.cafe3355.com', kr: 'https://www.cafe2626.com' };
+        const siteUrl = siteUrlMap[clientLang] || 'https://www.chameleon.design';
+        const langSuffix = siteUrlMap[clientLang] ? '' : '&lang=' + clientLang;
 
         // Addon 데이터 정리
         const allAddons = addonRes.data || [];
@@ -265,7 +267,7 @@ serve(async (req) => {
 5. **제품 설명과 옵션을 활용해** — 각 제품의 description과 특성(is_custom_size, is_file_upload 등)을 확인하고 정확히 안내해.
 6. **제품이 나오면 무조건 카드를 보여줘!** 고객이 제품을 언급하거나 관련 질문을 하면 반드시 products 배열에 해당 제품을 넣어. 사이즈/용도/수량을 절대 먼저 물어보지 마! 간단한 설명 + 제품 카드를 바로 보여주면 돼. 고객이 카드를 클릭하면 상세 페이지에서 사이즈 선택, 옵션 선택, 주문까지 다 할 수 있어.
    - **"~있어?", "~도 있어?", "~있나요?" 같은 질문** = 상품 데이터에서 검색해서 매칭되는 제품 카드를 보여줘! 절대 상담사 연결로 보내지 마!
-   - 매칭되는 상품이 있으면: 간단한 설명 + 카드 + 링크 (${siteUrl}/?product={code})
+   - 매칭되는 상품이 있으면: 간단한 설명 + 카드 + 링크 (${siteUrl}/?product={code}${langSuffix})
    - 매칭되는 상품이 없으면: "아쉽게도 그 제품은 지금 취급하고 있지 않아요" + 비슷한 대체 상품 추천
    - **"링크", "URL", "보여줘", "소개해줘", "알려줘" 요청** = 반드시 recommend_products 툴을 사용해서 제품 카드를 보여줘! 텍스트로 URL만 적지 마! 카테고리를 물어보면 대표 제품 3~5개를 카드로 보여줘.
 7. **현수막/배너/실사출력 등 인쇄물 질문** — 고객이 "현수막", "배너" 같은 출력물을 물어보면 카테고리 중 "출력서비스" 제품을 추천해. 원단/자재를 추천하지 마 (고객이 명시적으로 원단/자재를 찾는 경우 제외).
@@ -303,7 +305,7 @@ serve(async (req) => {
      ❌ 가벽 5칸(5미터) 이하 직선 배치는 [QUOTE_FORM] 넣지 마! 대신 상품 상세페이지 링크를 안내해.
 11. **디자인 의뢰** — 고객이 "디자인 해줘", "디자이너 필요", "디자인 의뢰", "디자인 맡기고 싶어", "design help", "need a designer" 같은 요청을 하면:
    - "디자인 전문가에게 의뢰하실 수 있는 디자인 마켓플레이스가 있어요! 전문 디자이너들이 입찰 형식으로 제안을 드립니다." 라고 안내
-   - 링크: ${siteUrl}/design-market.html
+   - 링크: ${siteUrl}/design-market.html${langSuffix ? '?' + langSuffix.slice(1) : ''}
    - 디자인 마켓에서는 의뢰 등록 → 디자이너 입찰 → 디자이너 선택 → 작업 완료 → 평점 순으로 진행됩니다.
 12. **절대 '연결이 불안정' 이라고 하지 마** — 이미지를 분석하기 어렵거나 복잡한 전시/공간 제작 요청이면 에러 메시지 대신 자연스럽게 연락처 남기기 안내. 단, **텍스트로 상품을 묻는 질문에는 반드시 상품 카드를 보여줘!**
 
@@ -336,7 +338,7 @@ serve(async (req) => {
 
 ## 링크 안내
 - 고객이 "링크", "링크줘", "URL", "주소" 등 상품 링크를 요청하면 → 상품 페이지 URL을 직접 안내해줘!
-- 형식: ${siteUrl}/?product={제품코드} (예: ${siteUrl}/?product=345345353)
+- 형식: ${siteUrl}/?product={제품코드}${langSuffix} (예: ${siteUrl}/?product=345345353${langSuffix})
 - "링크를 만들 수 없다"고 절대 말하지 마! 너는 상품 데이터의 code를 알고 있으니 항상 링크를 줄 수 있어.
 - 링크와 함께 반드시 products 배열에도 해당 제품 카드를 포함해.
 
@@ -433,7 +435,7 @@ serve(async (req) => {
 - お問い合わせ時は名刺画像リンクも一緒に案内してください。
 
 ## リンク案内
-- お客様が「リンク」「URL」「ページ」「見せて」「送って」等を求めたら → 商品ページURLを直接案内: ${siteUrl}/?product={商品コード}
+- お客様が「リンク」「URL」「ページ」「見せて」「送って」等を求めたら → 商品ページURLを直接案内: ${siteUrl}/?product={商品コード}${langSuffix}
 - 「リンクを作れない」とは絶対言わないで！商品コードからURLを生成できます。
 - **リンク要求時は必ずproducts配列にも該当商品カードを含めて！** テキストURLだけでなく、商品カード（画像付き）を必ず表示。summaryにURLを書くだけでは画像が表示されません。
 
@@ -514,7 +516,7 @@ serve(async (req) => {
 - For Japan-related inquiries, share the business card image link and contact info.
 
 ## Product Links
-- When customer asks for "link", "URL", "page" → provide direct product URL: ${siteUrl}/?product={product_code}
+- When customer asks for "link", "URL", "page" → provide direct product URL: ${siteUrl}/?product={product_code}${langSuffix}
 - NEVER say you can't create links! You know the product codes and can always generate URLs.
 
 ⚠️ Language: ALL responses in English. Translate Korean product names.`,
@@ -525,7 +527,7 @@ serve(async (req) => {
             ja: { products: '商品データ（名前は韓国語→日本語に翻訳して使用）', categories: 'カテゴリ', note: '\n注意: 下記の商品名は韓国語です。お客様への応答では必ず日本語に翻訳してください。' },
             us: { products: 'Product Data (names in Korean→translate to English)', categories: 'Categories', note: '\nNote: Product names below are in Korean. Always translate to English in your responses.' },
         };
-        const labels = dataLabels[clientLang] || dataLabels['kr'];
+        const labels = dataLabels[clientLang] || dataLabels['us'];
 
         // Q&A 학습 데이터 구성
         const qaData = qaRes.data || [];
