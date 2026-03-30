@@ -214,6 +214,7 @@
             <div class="nav-label">Community</div>
             <li class="nav-item" onclick="showSection('sec-comments', this)"><i class="fa-solid fa-comments"></i> 최근 댓글</li>
             <li class="nav-item" onclick="showSection('sec-review-gen', this)"><i class="fa-solid fa-star"></i> AI 리뷰 생성</li>
+            <li class="nav-item" onclick="showSection('sec-shorts', this)"><i class="fa-brands fa-youtube"></i> 쇼츠 영상 관리</li>
 
             <div class="nav-label">Management</div>
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
@@ -1630,6 +1631,66 @@
     </div>
 </div>
 
+
+<!-- ===== 쇼츠 영상 관리 섹션 ===== -->
+<div id="sec-shorts" class="section">
+    <div class="card">
+        <div style="border-bottom:2px solid #ef4444; padding-bottom:15px; margin-bottom:20px;">
+            <h2 style="font-size:18px; font-weight:800;"><i class="fa-brands fa-youtube" style="color:#ef4444;"></i> 쇼츠 영상 관리</h2>
+            <p style="font-size:13px; color:#64748b; margin-top:4px;">홈페이지 후기 섹션 위에 표시되는 유튜브 쇼츠 영상을 관리합니다.</p>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="shortsUrlInput" placeholder="유튜브 쇼츠 URL (예: https://youtube.com/shorts/VIDEO_ID)" style="flex:1; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px;">
+            <input type="text" id="shortsTitleInput" placeholder="제목 (선택)" style="width:200px; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px;">
+            <button onclick="window._addShorts()" style="padding:12px 24px; background:#ef4444; color:#fff; border:none; border-radius:10px; font-weight:700; cursor:pointer; white-space:nowrap;"><i class="fa-solid fa-plus"></i> 추가</button>
+        </div>
+        <div id="shortsList" style="display:flex; flex-wrap:wrap; gap:12px;"></div>
+    </div>
+</div>
+<script>
+window._loadShortsList = async function() {
+    const { data } = await sb.from('library').select('id, data_url, tags, created_at').eq('category','youtube-shorts').order('created_at',{ascending:false});
+    const el = document.getElementById('shortsList');
+    if (!el) return;
+    if (!data || data.length === 0) { el.innerHTML = '<p style="color:#94a3b8;">등록된 쇼츠가 없습니다.</p>'; return; }
+    el.innerHTML = data.map(s => {
+        const m = (s.data_url||'').match(/shorts\/([a-zA-Z0-9_-]+)/);
+        const vid = m ? m[1] : '';
+        return `<div style="width:180px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; position:relative;">
+            ${vid ? `<img src="https://img.youtube.com/vi/${vid}/0.jpg" style="width:100%;height:120px;object-fit:cover;">` : ''}
+            <div style="padding:8px;">
+                <div style="font-size:11px; font-weight:600; color:#334155; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.tags || 'No Title'}</div>
+                <div style="font-size:10px; color:#94a3b8;">${new Date(s.created_at).toLocaleDateString()}</div>
+            </div>
+            <button onclick="window._deleteShorts(${s.id})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;">✕</button>
+        </div>`;
+    }).join('');
+};
+window._addShorts = async function() {
+    const url = document.getElementById('shortsUrlInput').value.trim();
+    const title = document.getElementById('shortsTitleInput').value.trim();
+    if (!url) { showToast('URL을 입력하세요', 'error'); return; }
+    if (!url.includes('youtube') && !url.includes('youtu.be')) { showToast('유튜브 URL만 가능합니다', 'error'); return; }
+    const { error } = await sb.from('library').insert({ category: 'youtube-shorts', data_url: url, tags: title || 'Shorts', thumb_url: '' });
+    if (error) { showToast('추가 실패: ' + error.message, 'error'); return; }
+    showToast('쇼츠 추가 완료', 'success');
+    document.getElementById('shortsUrlInput').value = '';
+    document.getElementById('shortsTitleInput').value = '';
+    window._loadShortsList();
+};
+window._deleteShorts = async function(id) {
+    if (!confirm('이 쇼츠를 삭제하시겠습니까?')) return;
+    await sb.from('library').delete().eq('id', id);
+    showToast('삭제 완료', 'success');
+    window._loadShortsList();
+};
+// 섹션 열릴 때 자동 로드
+var _origShowSection = window.showSection;
+window.showSection = function(id, el) {
+    if (_origShowSection) _origShowSection(id, el);
+    if (id === 'sec-shorts') window._loadShortsList();
+};
+</script>
 
 <!-- ===== AI 리뷰 생성 섹션 ===== -->
 <div id="sec-review-gen" class="section">
