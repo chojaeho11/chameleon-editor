@@ -15285,8 +15285,8 @@ window.dsmRenderProducts = async function(keyword) {
     function getDb() {
         if (!db && window.sb) db = window.sb;
         if (!db && window.supabase && window.supabase.createClient) {
-            db = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-            console.log('🔧 카프 챗봇: Supabase 클라이언트 직접 생성');
+            db = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+            console.log('🔧 카프 챗봇: Supabase 클라이언트 직접 생성 (세션 미관리)');
         }
         return db;
     }
@@ -16161,9 +16161,9 @@ window.dsmRenderProducts = async function(keyword) {
                 _ownSb = window.supabase.createClient(
                     'https://qinvtnhiidtmrzosyvys.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
-                    { auth: { persistSession: true, autoRefreshToken: true } }
+                    { auth: { persistSession: false, autoRefreshToken: false } }
                 );
-                console.log('🔧 [라이브챗] 자체 Supabase 클라이언트 생성');
+                console.log('🔧 [라이브챗] 자체 Supabase 클라이언트 생성 (세션 미관리)');
             } catch(e) { console.error('🔧 [라이브챗] Supabase 생성 실패:', e); }
         }
         return _ownSb || null;

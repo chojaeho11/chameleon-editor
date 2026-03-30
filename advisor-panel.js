@@ -49,7 +49,7 @@ function getSb() {
     if (window.sb) return window.sb;
     if (!_ownSb && typeof window.supabase !== 'undefined') {
         try {
-            _ownSb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+            _ownSb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
         } catch(e) {}
     }
     return _ownSb || null;
@@ -372,7 +372,7 @@ function buildPanelUI() {
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
-        <a href="${location.origin}/design-market.html#register" target="_blank" style="display:block;margin:0 10px 6px;padding:10px 14px;background:linear-gradient(135deg,#f59e0b,#eab308);color:#fff;text-decoration:none;border-radius:10px;font-size:11px;line-height:1.5;text-align:center;font-weight:600;">
+        <a href="${location.origin}/design-market.html#register" target="_blank" style="display:block;margin:10px 10px 6px;padding:16px 14px;background:linear-gradient(135deg,#f59e0b,#eab308);color:#fff;text-decoration:none;border-radius:10px;font-size:12px;line-height:1.6;text-align:center;font-weight:600;">
             <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録しませんか？カメレオンがお客様とデザイナーをつなぎます。業界最低の仲介手数料で、毎日たくさんの注文が届きます。',en:'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.',zh:'注册成为设计师！变色龙为您连接客户。行业最低中介费，每天大量订单涌入。',ar:'سجل كمصمم! كاميليون يربط العملاء بالمصممين. أقل عمولات وسيط في الصناعة مع طلبات يومية.',es:'Regístrese como diseñador. Chameleon conecta clientes y diseñadores. Las comisiones más bajas del sector.',de:'Registrieren Sie sich als Designer! Chameleon verbindet Kunden mit Designern. Niedrigste Vermittlungsgebühren der Branche.',fr:"Inscrivez-vous comme designer ! Chameleon connecte clients et designers. Les frais les plus bas du secteur."}[getLang()]||'디자이너로 등록하세요! 카멜레온이 고객과 디자이너를 연결합니다. 업계 최저 중계수수료와 매일매일 수많은 고객의 오더가 쏟아집니다.'}
         </a>
     `;
