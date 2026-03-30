@@ -527,6 +527,26 @@ window.loadEditorLibraries = function() {
     // 1. 프로젝트 버전
     const PROJECT_VERSION = '123';
     const DATA_PATH = './long/';
+
+    // ★ Library data_url 헬퍼: URL이면 fetch, JSON이면 그대로 반환
+    window.resolveDataUrl = async function(raw) {
+        if (!raw) return null;
+        // 이미 객체(JSONB)면 그대로
+        if (typeof raw === 'object') return raw;
+        // Storage URL (.json 파일)이면 fetch
+        if (typeof raw === 'string' && raw.startsWith('http') && raw.includes('.json')) {
+            try {
+                const res = await fetch(raw);
+                if (res.ok) return await res.json();
+            } catch(e) {}
+        }
+        // JSON 문자열이면 파싱
+        if (typeof raw === 'string' && raw.startsWith('{')) {
+            try { return JSON.parse(raw); } catch(e) {}
+        }
+        // 그 외(이미지 URL, data: URL 등) 그대로
+        return raw;
+    };
 </script>
 <script>
     // 해외 사이트: 번역 적용 전 한글 깜빡임 방지 (CSS를 head에 즉시 삽입)

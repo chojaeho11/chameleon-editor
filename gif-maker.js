@@ -543,7 +543,7 @@ window.gifDeleteObject = function(idx, type) {
 function gifBestUrl(item) {
     if (!item) return '';
     if (item.thumb_url) return item.thumb_url;
-    if (item.data_url && /^https?:\/\//.test(item.data_url)) return item.data_url;
+    if (item.data_url && /^https?:\/\//.test(item.data_url) && !item.data_url.endsWith('.json')) return item.data_url;
     if (item.data_url && typeof item.data_url === 'string') {
         try {
             var parsed = JSON.parse(item.data_url);

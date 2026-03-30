@@ -650,11 +650,13 @@ async function processLoad(mode) {
         let imageUrl = "";
 
         try {
-            if (typeof rawData === 'object') finalJson = rawData; 
-            else finalJson = JSON.parse(rawData);
-            
+            const resolved = window.resolveDataUrl ? await window.resolveDataUrl(rawData) : rawData;
+            if (typeof resolved === 'object') finalJson = resolved;
+            else if (typeof resolved === 'string' && resolved.startsWith('{')) finalJson = JSON.parse(resolved);
+            else { isImage = true; imageUrl = resolved; }
+
             if (typeof finalJson === 'string') { isImage = true; imageUrl = finalJson; }
-            else isImage = false;
+            else if (finalJson) isImage = false;
         } catch (e) {
             isImage = true; imageUrl = rawData;
         }
@@ -962,19 +964,29 @@ async function registerUserTemplate() {
         if (uploadError) throw uploadError;
         const { data: publicUrlData } = _getSb().storage.from('templates').getPublicUrl(fileName);
 
+        // ★ JSON을 Storage에 저장, DB에는 URL만
+        const jsonStr = JSON.stringify(json);
+        const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
+        const jsonPath = `library/${freshUser.id}_${Date.now()}.json`;
+        const { error: jsonUpErr } = await _getSb().storage.from('design').upload(jsonPath, jsonBlob);
+        let dataUrlValue = json; // fallback: 업로드 실패 시 기존 방식
+        if (!jsonUpErr) {
+            const { data: jsonUrlData } = _getSb().storage.from('design').getPublicUrl(jsonPath);
+            dataUrlValue = jsonUrlData.publicUrl;
+        }
+
         // DB 저장
         const payload = {
             title: title,
             category: category,
             tags: tags,
             thumb_url: publicUrlData.publicUrl,
-            data_url: json,
+            data_url: dataUrlValue,
             created_at: new Date(),
             user_id: freshUser.id,
             user_email: freshUser.email,
             status: 'approved',
             is_official: false,
-            // ★ [수정] 현재 편집 중인 상품 코드를 저장 (없으면 custom)
             product_key: window.currentProductKey || 'custom'
         };
 
@@ -1316,7 +1328,7 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         data.forEach((tpl) => {
             const div = document.createElement("div");
             div.className = "side-tpl-card";
-            const _dataOk = tpl.data_url && tpl.data_url.includes('supabase.co');
+            const _dataOk = tpl.data_url && tpl.data_url.includes('supabase.co') && !tpl.data_url.endsWith('.json');
             const _rawUrl = _dataOk ? tpl.data_url : tpl.thumb_url;
             const imgUrl = window.getTinyThumb ? window.getTinyThumb(_rawUrl, 400) : _rawUrl;
 
@@ -1593,7 +1605,7 @@ window._teRenderPage = function() {
     var html = '';
     pageItems.forEach(function(t) {
         var thumbUrl = t.thumb_url;
-        var fullUrl = t.data_url || t.thumb_url;
+        var fullUrl = (t.data_url && !t.data_url.endsWith('.json')) ? t.data_url : t.thumb_url;
         html += '<div style="cursor:pointer; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#fff; transition:all 0.15s;" onclick="window.addTextEffectToCanvas(\'' + fullUrl.replace(/'/g, "\\'") + '\')" onmouseenter="this.style.borderColor=\'#6366f1\';this.style.transform=\'scale(1.03)\'" onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.transform=\'none\'">' +
             '<img src="' + thumbUrl + '" style="width:100%; display:block; object-fit:contain; background:#f8fafc;" loading="lazy">' +
             '</div>';
@@ -1733,6 +1745,7 @@ function _extractAssetPng(item) {
     var raw = item.data_url;
     if (!raw) return null;
     if (typeof raw === 'string') {
+        if (raw.startsWith('http') && raw.endsWith('.json')) return item.thumb_url || null;
         if (raw.startsWith('http') && raw.toLowerCase().includes('.png')) return raw;
         if (raw.startsWith('data:image/png')) return raw;
         try {
@@ -1919,8 +1932,10 @@ window.processLoad = async function(mode) {
         let isImage = false;
 
         try {
-            if (typeof data.data_url === 'object') jsonData = data.data_url;
-            else jsonData = JSON.parse(data.data_url);
+            const resolved = window.resolveDataUrl ? await window.resolveDataUrl(data.data_url) : data.data_url;
+            if (typeof resolved === 'object') jsonData = resolved;
+            else if (typeof resolved === 'string' && resolved.startsWith('{')) jsonData = JSON.parse(resolved);
+            else { isImage = true; imageUrl = resolved; }
 
             if (typeof jsonData === 'string') { isImage = true; imageUrl = jsonData; }
         } catch (e) {

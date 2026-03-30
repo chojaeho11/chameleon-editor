@@ -371,6 +371,7 @@ function _extractLogoPng(item) {
     var raw = item.data_url;
     if (!raw) return null;
     if (typeof raw === 'string') {
+        if (raw.startsWith('http') && raw.endsWith('.json')) return item.thumb_url || null;
         if (raw.startsWith('http') && raw.toLowerCase().includes('.png')) return raw;
         if (raw.startsWith('data:image/png')) return raw;
         try {

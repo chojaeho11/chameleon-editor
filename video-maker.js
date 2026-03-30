@@ -791,8 +791,8 @@ window._vePreviewBgm=function(idx){
 function _isUrl(s){return s&&typeof s==='string'&&(s.startsWith('http')||s.startsWith('//')||s.startsWith('data:')||s.startsWith('blob:'));}
 function getAudioUrl(item){
     if(!item) return '';
-    // 1. data_url is a direct URL
-    if(_isUrl(item.data_url)) return item.data_url;
+    // 1. data_url is a direct URL (skip .json Storage URLs)
+    if(_isUrl(item.data_url) && !(item.data_url.endsWith && item.data_url.endsWith('.json'))) return item.data_url;
     // 2. data_url is fabric.js JSON with embedded audio src (base64)
     if(item.data_url&&typeof item.data_url==='string'&&item.data_url.startsWith('{')){
         try{
@@ -2114,8 +2114,8 @@ function isImageUrl(s){if(!s||typeof s!=='string')return false;const t=s.trim();
 // Extract best image URL from a library item (handles fabric.js JSON in data_url)
 function bestImageUrl(item){
     if(!item) return '';
-    // 1. data_url is a direct image URL → use it
-    if(isImageUrl(item.data_url)) return item.data_url;
+    // 1. data_url is a direct image URL → use it (skip .json Storage URLs)
+    if(isImageUrl(item.data_url) && !(item.data_url.endsWith && item.data_url.endsWith('.json'))) return item.data_url;
     // 2. data_url is fabric.js JSON → try to extract embedded image src
     if(item.data_url && typeof item.data_url==='string'){
         try {

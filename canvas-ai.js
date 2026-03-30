@@ -1431,6 +1431,8 @@ function _wzExtractBgUrl(item) {
     if (!item) return null;
     const raw = item.data_url;
     if (!raw) return item.thumb_url;
+    // Storage JSON URL이면 thumb_url로 fallback (이미지가 아닌 JSON 파일)
+    if (typeof raw === 'string' && raw.startsWith('http') && raw.endsWith('.json')) return item.thumb_url || raw;
     if (typeof raw === 'string' && (raw.startsWith('http') || raw.startsWith('data:'))) return raw;
     try {
         const json = typeof raw === 'object' ? raw : JSON.parse(raw);
@@ -1662,6 +1664,7 @@ async function _wzElem(keywords, bW, bH, bL, bT) {
     function _extractImageUrl(item) {
         const raw = item.data_url;
         if (!raw) return item.thumb_url;
+        if (typeof raw === 'string' && raw.startsWith('http') && raw.endsWith('.json')) return item.thumb_url || raw;
         if (typeof raw === 'string' && (raw.startsWith('http') || raw.startsWith('data:image/png'))) return raw;
         try {
             const json = typeof raw === 'object' ? raw : JSON.parse(raw);

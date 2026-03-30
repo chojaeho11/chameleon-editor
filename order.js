@@ -1246,8 +1246,22 @@ export async function startDesignFromProduct() {
             .limit(1);
             
         if (data && data.length > 0) {
-            setTimeout(() => { 
-                if (window.loadProductFixedTemplate) window.loadProductFixedTemplate(data[0].data_url); 
+            setTimeout(async () => {
+                if (!window.loadProductFixedTemplate) return;
+                let tplData = data[0].data_url;
+                // Storage JSON URL이면 fetch 후 이미지 URL 추출
+                if (tplData && typeof tplData === 'string' && tplData.endsWith('.json')) {
+                    try {
+                        const res = await fetch(tplData);
+                        const json = await res.json();
+                        if (json.objects) {
+                            for (const obj of json.objects) {
+                                if (obj.src && (obj.src.startsWith('http') || obj.src.startsWith('data:'))) { tplData = obj.src; break; }
+                            }
+                        }
+                    } catch(e) {}
+                }
+                window.loadProductFixedTemplate(tplData);
             }, 500);
         }
     } catch (e) { console.error("템플릿 로드 오류:", e); }
