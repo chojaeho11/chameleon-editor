@@ -714,9 +714,32 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     const _comb = (trimmedMsg + ' ' + (result.summary || '') + ' ' + (result.chat_message || '')).toLowerCase();
                     const _isContact = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _comb.includes(k));
                     if (!_isContact) {
-                        const _m = aiProducts.filter((p: any) => {
-                            return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _comb.includes(kw.toLowerCase()));
+                        // 1차: 제품명(한/영/일) + 카테고리 매칭
+                        let _m = aiProducts.filter((p: any) => {
+                            const rp = rawProducts.find((r: any) => r.code === p.code);
+                            const names = [p.name || '', rp?.name_us || '', rp?.name_jp || '', p.category || ''];
+                            return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _comb.includes(kw.toLowerCase())));
                         }).slice(0, 5);
+                        // 2차: 다국어 키워드 → 카테고리 매칭 (아랍어/중국어 등 비라틴 언어 대응)
+                        if (_m.length === 0) {
+                            const _catKeywords: Record<string, string[]> = {
+                                'honeycomb_board': ['honeycomb','ハニカム','هاني','معرض','展示','booth','exhibition','exposición','exposition','ausstellung','展位','كشك','جناح','بوابة','gate','パーティション','partition','wall','جدار','قاطع','طاولة','table','テーブル','mesa','tisch','桌','看板','sign','لافتة','등신대','standee','لوحة'],
+                                'paper_display': ['paper display','紙매대','عرض ورقي','展示架','présentoir','exhibidor'],
+                                '44444': ['banner','バナー','لافتة','横幕','pancarta','bannière','Banner','横断幕','포맥스','acrylic','アクリル','أكريليك','亚克力'],
+                                '77777': ['keyring','キーリング','ميدالية','钥匙扣','goods','グッズ','بضائع','商品','t-shirt','Tシャツ','تيشيرت','T恤'],
+                                '22222': ['fabric','ファブリック','قماش','布料','tissu','tela','Stoff','canvas','キャンバス','قماش كانفاس','帆布'],
+                                'printe_product': ['print','印刷','طباعة','printing','sticker','ステッカー','ملصق','贴纸','business card','名刺','بطاقة','名片','calendar','カレンダー','تقويم','日历','poster','ポスター','ملصق','海报'],
+                            };
+                            for (const [topCat, keywords] of Object.entries(_catKeywords)) {
+                                if (keywords.some(k => _comb.includes(k.toLowerCase()))) {
+                                    _m = aiProducts.filter((p: any) => {
+                                        const cat = categories.find((c: any) => c.code === p.category);
+                                        return cat && (cat.top_category_code === topCat || cat.code === topCat || p.category === topCat);
+                                    }).slice(0, 5);
+                                    if (_m.length > 0) break;
+                                }
+                            }
+                        }
                         if (_m.length > 0) {
                             result.products = _m.map((p: any) => {
                                 const rp = rawProducts.find((r: any) => r.code === p.code);
@@ -759,7 +782,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             const _isContactMsg = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _combined.includes(k));
             if (!_isContactMsg) {
                 const _matched = aiProducts.filter((p: any) => {
-                    return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _combined.includes(kw.toLowerCase()));
+                    const rp = rawProducts.find((r: any) => r.code === p.code);
+                    const names = [p.name || '', rp?.name_us || '', rp?.name_jp || '', p.category || ''];
+                    return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _combined.includes(kw.toLowerCase())));
                 }).slice(0, 3);
                 if (_matched.length > 0) {
                     textResult.products = _matched.map((p: any) => {
