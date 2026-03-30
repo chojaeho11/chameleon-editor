@@ -209,7 +209,7 @@ serve(async (req) => {
 
         const categories = catRes.data || [];
         // AI 콜에서 제외할 대분류 (상품 많지만 거의 안 팔림 → 토큰 낭비)
-        const _skipTopCats = new Set(['99999', '23434242']);
+        const _skipTopCats = new Set(['99999', '23434242', 'user_artwork']);
         const _skipSubCats = new Set<string>();
         categories.forEach((c: any) => {
             if (_skipTopCats.has(c.top_category_code) || _skipTopCats.has(c.code)) _skipSubCats.add(c.code);
@@ -714,7 +714,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     const _comb = (trimmedMsg + ' ' + (result.summary || '') + ' ' + (result.chat_message || '')).toLowerCase();
                     const _isContact = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _comb.includes(k));
                     if (!_isContact) {
-                        const _m = products.filter((p: any) => {
+                        const _m = aiProducts.filter((p: any) => {
                             return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _comb.includes(kw.toLowerCase()));
                         }).slice(0, 5);
                         if (_m.length > 0) {
@@ -758,7 +758,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             const _combined = (trimmedMsg + ' ' + textResult.chat_message).toLowerCase();
             const _isContactMsg = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _combined.includes(k));
             if (!_isContactMsg) {
-                const _matched = products.filter((p: any) => {
+                const _matched = aiProducts.filter((p: any) => {
                     return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _combined.includes(kw.toLowerCase()));
                 }).slice(0, 3);
                 if (_matched.length > 0) {
