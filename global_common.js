@@ -16,8 +16,9 @@ export const formatCurrency = (amount, siteCode) => {
     if (siteCode === 'US') return converted >= 10 ? '$' + Math.round(converted).toLocaleString() : '$' + converted.toFixed(2);
     if (siteCode === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (siteCode === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
-    if (siteCode === 'ES') return '€' + converted.toFixed(2);
-    return converted.toLocaleString() + '원';
+    if (siteCode === 'ES' || siteCode === 'DE' || siteCode === 'FR') return '€' + converted.toFixed(2);
+    if (siteCode === 'KR' || !siteCode) return converted.toLocaleString() + '원';
+    return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
 }
 
 // [보안] 관리자 권한 체크

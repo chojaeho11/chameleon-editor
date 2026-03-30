@@ -1314,7 +1314,7 @@ window.NpcWizard = {
                 const lsProd = this.product;
                 const lsSqm = lsProd._base_sqm_price || lsProd.price || 50000;
                 const lsCalcPrice = Math.round(lsArea * lsSqm / 10) * 10;
-                const lsFmt = window.formatCurrency ? window.formatCurrency(lsCalcPrice) : lsCalcPrice.toLocaleString() + '원';
+                const lsFmt = window.formatCurrency ? window.formatCurrency(lsCalcPrice) : (((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR' || !(window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY)) ? lsCalcPrice.toLocaleString() + '원' : '$' + lsCalcPrice.toLocaleString());
                 const lsTypeLabels = { hcl_simple: _t('lsType1'), hcl_box1: _t('lsType2'), hcl_box3: _t('lsType3'), hcl_heavy: _t('lsType4'), hcl_acrylic: _t('lsType5') };
 
                 this._renderBubble(_t('lsSummary'), null, true);
@@ -1662,12 +1662,16 @@ window.NpcWizard = {
             const cfg = window.SITE_CONFIG || {};
             const country = cfg.COUNTRY || 'KR';
             const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
-            const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || '원';
+            const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || (country === 'KR' ? '원' : '$');
             const fmt = (v) => {
                 const c = v * rate;
                 if (country === 'JP') return '¥' + Math.floor(c).toLocaleString();
                 if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString());
-                return Math.round(c).toLocaleString() + unit;
+                if (country === 'CN') return '¥' + Math.round(c).toLocaleString();
+                if (country === 'AR') return Math.round(c).toLocaleString() + ' ﷼';
+                if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + c.toFixed(2);
+                if (country === 'KR') return Math.round(c).toLocaleString() + '원';
+                return '$' + Math.round(c).toLocaleString();
             };
             if (discountRate > 0) {
                 el.innerHTML = `<span style="text-decoration:line-through;opacity:0.6;font-size:14px;">${fmt(subtotal)}</span> <span style="font-size:22px;">${fmt(total)}</span><div style="font-size:12px;margin-top:2px;color:#fbbf24;">${Math.round(discountRate*100)}% 할인 (-${fmt(discountAmount)})</div>`;
@@ -1694,8 +1698,8 @@ window.NpcWizard = {
         const cfg = window.SITE_CONFIG || {};
         const country = cfg.COUNTRY || 'KR';
         const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
-        const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || '원';
-        const fmt = (v) => { const c = v * rate; if (country === 'JP') return '¥' + Math.floor(c).toLocaleString(); if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString()); return Math.round(c).toLocaleString() + unit; };
+        const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || (country === 'KR' ? '원' : '$');
+        const fmt = (v) => { const c = v * rate; if (country === 'JP') return '¥' + Math.floor(c).toLocaleString(); if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString()); if (country === 'CN') return '¥' + Math.round(c).toLocaleString(); if (country === 'AR') return Math.round(c).toLocaleString() + ' ﷼'; if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + c.toFixed(2); if (country === 'KR') return Math.round(c).toLocaleString() + '원'; return '$' + Math.round(c).toLocaleString(); };
         const el = document.getElementById('npcPdTotalVal2');
         if (el) {
             if (discountRate > 0) {
@@ -1779,7 +1783,7 @@ window.NpcWizard = {
         const basePrice = this.product._base_sqm_price || this.product.price || 50000;
         const multiplier = w / 120; // 120cm 기준
         const price = Math.round(basePrice * multiplier / 10) * 10;
-        const fmt = window.formatCurrency ? window.formatCurrency(price) : price.toLocaleString() + '원';
+        const fmt = window.formatCurrency ? window.formatCurrency(price) : (((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR' || !(window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY)) ? price.toLocaleString() + '원' : '$' + price.toLocaleString());
         const el = document.getElementById('npcLsPricePreview');
         if (el) {
             el.innerHTML = `<div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:14px;border-radius:10px;text-align:center;">

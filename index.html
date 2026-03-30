@@ -1064,7 +1064,23 @@ document.addEventListener('DOMContentLoaded', function() {
         let _allTrackerOrders = [];
         let _currentCountryFilter = 'ALL';
         const STATUS_STEPS = ['접수됨','칼선작업','제작중','완료됨','발송완료','배송완료'];
-        const STATUS_LABELS = { '접수됨':'접수완료', '칼선작업':'칼선작업', '제작중':'인쇄중', '완료됨':'제작완료', '발송완료':'배송중', '배송완료':'배송완료' };
+        function _getStatusLabels() {
+            const c = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+            const m = {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'};
+            const l = m[c] || 'kr';
+            const T = {
+                '접수됨':   {kr:'접수완료',ja:'受付完了',en:'Received',zh:'已接收',ar:'تم الاستلام',es:'Recibido',de:'Empfangen',fr:'Reçu'},
+                '칼선작업': {kr:'칼선작업',ja:'型抜き作業',en:'Die-cutting',zh:'刀模作业',ar:'قص القوالب',es:'Troquelado',de:'Stanzarbeit',fr:'Découpe'},
+                '제작중':   {kr:'인쇄중',ja:'印刷中',en:'Printing',zh:'印刷中',ar:'قيد الطباعة',es:'Imprimiendo',de:'Drucken',fr:'Impression'},
+                '완료됨':   {kr:'제작완료',ja:'製作完了',en:'Completed',zh:'已完成',ar:'مكتمل',es:'Completado',de:'Fertig',fr:'Terminé'},
+                '발송완료': {kr:'배송중',ja:'配送中',en:'Shipping',zh:'运送中',ar:'قيد الشحن',es:'Enviando',de:'Versand',fr:'Expédition'},
+                '배송완료': {kr:'배송완료',ja:'配送完了',en:'Delivered',zh:'已送达',ar:'تم التسليم',es:'Entregado',de:'Zugestellt',fr:'Livré'}
+            };
+            const result = {};
+            for (const k of Object.keys(T)) result[k] = (T[k][l] || T[k].en);
+            return result;
+        }
+        const STATUS_LABELS = _getStatusLabels();
         const STATUS_COLORS = { '접수됨':'#3b82f6', '칼선작업':'#8b5cf6', '제작중':'#f59e0b', '완료됨':'#ef4444', '발송완료':'#06b6d4', '배송완료':'#64748b' };
 
         function getStepIndex(status) {
@@ -1118,9 +1134,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const status = o.status || '접수됨';
                 const color = STATUS_COLORS[status] || '#3b82f6';
                 const label = STATUS_LABELS[status] || status;
-                const _nm = o.manager_name || '고객'; const name = _nm.length > 1 ? _nm.slice(0, -1) + '*' : _nm;
-                const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
-                const shipDate = o.delivery_target_date ? new Date(o.delivery_target_date).toLocaleDateString('ko', {month:'numeric',day:'numeric'}) : '';
+                const _nm = o.manager_name || _t('default_customer', 'Customer'); const name = _nm.length > 1 ? _nm.slice(0, -1) + '*' : _nm;
+                const _loc = ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'JP') ? 'ja' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR') ? 'ko' : 'en';
+                const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString(_loc, {month:'numeric',day:'numeric'}) : '';
+                const shipDate = o.delivery_target_date ? new Date(o.delivery_target_date).toLocaleDateString(_loc, {month:'numeric',day:'numeric'}) : '';
                 const rating = o.customer_review || 0;
                 const stars = rating > 0 ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '';
                 const flag = COUNTRY_FLAGS[o.site_code] || '🇰🇷';
@@ -1209,14 +1226,14 @@ document.addEventListener('DOMContentLoaded', function() {
         async function loadOrderDetail(orderId, modal) {
             const _sb = window.sb || window.supabaseClient;
             const { data: order, error } = await _sb.from('orders').select('*').eq('id', orderId).maybeSingle();
-            if (error || !order) { modal.querySelector('div > div').innerHTML = '<p style="text-align:center;color:#ef4444;">주문을 찾을 수 없습니다.</p>'; return; }
+            if (error || !order) { modal.querySelector('div > div').innerHTML = '<p style="text-align:center;color:#ef4444;">' + _t('msg_order_not_found', 'Order not found.') + '</p>'; return; }
 
             const status = order.status || '접수됨';
             const color = STATUS_COLORS[status] || '#3b82f6';
             const label = STATUS_LABELS[status] || status;
             const items = (order.items || []).map(it => it.product_name || it.name || '').filter(Boolean);
             const photos = order.production_photos || [];
-            const name = order.manager_name || '고객';
+            const name = order.manager_name || _t('default_customer', 'Customer');
 
             // 문의/답변 로드
             const { data: inquiries } = await _sb.from('order_inquiries')
@@ -6042,7 +6059,7 @@ window.filterFxCards = function(cat, btn) {
             listHtml += `
                 <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:10px; ${bgClass}">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-weight:bold; font-size:15px;">${bid.company_name || '파트너사'}</span>
+                        <span style="font-weight:bold; font-size:15px;">${bid.company_name || (window.t ? window.t('partner','Partner') : 'Partner')}</span>
                         <span style="font-weight:bold; color:#6366f1; font-size:16px;">${fmtMoney(bid.price)}</span>
                     </div>
                     <p style="font-size:13px; color:#475569; margin:10px 0; line-height:1.4;">"${bid.message}"</p>
@@ -9664,15 +9681,33 @@ window._bkCalc = function() {
     const grandTotal = setupFee + innerTotal + bindingTotal + effectTotal;
 
     // 내역 표시
-    const fmtLocal = window._bkFmtPrice || ((v) => v.toLocaleString() + '원');
+    const _bkC = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const _bkLM = {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'};
+    const _bkL = _bkLM[_bkC] || 'kr';
+    const fmtLocal = window._bkFmtPrice || ((v) => {
+        if(_bkL==='ja') return '¥'+v.toLocaleString();
+        if(_bkL==='en') return '$'+v.toLocaleString();
+        if(_bkL==='zh') return '¥'+v.toLocaleString();
+        if(_bkL==='ar') return '$'+v.toLocaleString();
+        if(_bkL==='es'||_bkL==='de'||_bkL==='fr') return '€'+v.toLocaleString();
+        return v.toLocaleString()+'원';
+    });
+    const _bkTr = (map) => map[_bkL] || map.en;
     const breakdownEl = document.getElementById('bkBreakdown');
     const totalEl = document.getElementById('bkTotalPrice');
     if (breakdownEl) {
-        let html = `인쇄 셋업비: ${fmtLocal(setupFee)}`;
-        html += `<br>내지: ${fmtLocal(innerPricePerPage)}/p × ${pages}p × ${copies}부 = ${fmtLocal(innerTotal)}`;
-        html += `<br>제본: ${fmtLocal(1000)}/부 × ${copies}부 = ${fmtLocal(bindingTotal)}`;
-        if (effectCount > 0) html += `<br>특수효과: (판형비 ${fmtLocal(20000)} + ${fmtLocal(1000)}/부 × ${copies}부) × ${effectCount}종 = ${fmtLocal(effectTotal)}`;
-        html += `<br>표지용지/코팅: ${fmtLocal(0)}`;
+        const lSetup = _bkTr({ja:'印刷セットアップ費',en:'Print Setup Fee',zh:'印刷设置费',ar:'رسوم الإعداد',es:'Coste de preparación',de:'Einrichtungskosten',fr:'Frais de préparation',kr:'인쇄 셋업비'});
+        const lInner = _bkTr({ja:'本文',en:'Inner pages',zh:'内页',ar:'الصفحات الداخلية',es:'Páginas interiores',de:'Innenseiten',fr:'Pages intérieures',kr:'내지'});
+        const lCopies = _bkTr({ja:'部',en:'copies',zh:'册',ar:'نسخة',es:'copias',de:'Stk',fr:'exemplaires',kr:'부'});
+        const lBinding = _bkTr({ja:'製本',en:'Binding',zh:'装订',ar:'تجليد',es:'Encuadernación',de:'Bindung',fr:'Reliure',kr:'제본'});
+        const lEffect = _bkTr({ja:'特殊効果',en:'Special Effects',zh:'特殊效果',ar:'تأثيرات خاصة',es:'Efectos especiales',de:'Spezialeffekte',fr:'Effets spéciaux',kr:'특수효과'});
+        const lPlate = _bkTr({ja:'版型費',en:'Plate fee',zh:'版费',ar:'رسوم القالب',es:'Coste de plancha',de:'Plattenkosten',fr:'Frais de plaque',kr:'판형비'});
+        const lCover = _bkTr({ja:'表紙用紙/コーティング',en:'Cover/Coating',zh:'封面/覆膜',ar:'الغلاف/التغليف',es:'Portada/Laminado',de:'Umschlag/Beschichtung',fr:'Couverture/Pelliculage',kr:'표지용지/코팅'});
+        let html = `${lSetup}: ${fmtLocal(setupFee)}`;
+        html += `<br>${lInner}: ${fmtLocal(innerPricePerPage)}/p × ${pages}p × ${copies}${lCopies} = ${fmtLocal(innerTotal)}`;
+        html += `<br>${lBinding}: ${fmtLocal(1000)}/${lCopies} × ${copies}${lCopies} = ${fmtLocal(bindingTotal)}`;
+        if (effectCount > 0) html += `<br>${lEffect}: (${lPlate} ${fmtLocal(20000)} + ${fmtLocal(1000)}/${lCopies} × ${copies}${lCopies}) × ${effectCount}${_bkTr({ja:'種',en:' type(s)',zh:'种',ar:' نوع',es:' tipo(s)',de:' Typ(en)',fr:' type(s)',kr:'종'})} = ${fmtLocal(effectTotal)}`;
+        html += `<br>${lCover}: ${fmtLocal(0)}`;
         breakdownEl.innerHTML = html;
     }
     if (totalEl) {
@@ -10639,7 +10674,7 @@ if (w >= 20 && h >= 20) {
                 if (product._artworkMaxW > 0 && product._artworkMaxH > 0) {
                     const mH = product._artworkMaxH;
                     if (finalW > mH || finalH > mH) {
-                        showToast(lang==='ja'?`最大サイズは${product._artworkMaxW}×${mH}mmです`:lang==='en'?`Max size is ${product._artworkMaxW}×${mH}mm`:`최대 사이즈는 ${product._artworkMaxW}×${mH}mm입니다`, 'warn');
+                        showToast(lang==='ja'?`最大サイズは${product._artworkMaxW}×${mH}mmです`:lang==='zh'?`最大尺寸为${product._artworkMaxW}×${mH}mm`:lang==='ar'?`الحجم الأقصى ${product._artworkMaxW}×${mH}mm`:lang==='es'?`Tamaño máximo: ${product._artworkMaxW}×${mH}mm`:lang==='de'?`Maximalgröße: ${product._artworkMaxW}×${mH}mm`:lang==='fr'?`Taille maximale : ${product._artworkMaxW}×${mH}mm`:lang==='en'?`Max size is ${product._artworkMaxW}×${mH}mm`:`최대 사이즈는 ${product._artworkMaxW}×${mH}mm입니다`, 'warn');
                         return;
                     }
                 }
@@ -14274,7 +14309,7 @@ window.showCategorySelectionModal = async function() {
     }
 
     modal.style.display = 'flex';
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#6366f1;"></i><br><br>데이터 로딩 중...</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:30px; color:#6366f1;"></i><br><br>' + ({ja:'データ読み込み中...',en:'Loading data...',zh:'加载数据中...',ar:'جاري تحميل البيانات...',es:'Cargando datos...',de:'Daten werden geladen...',fr:'Chargement des données...',kr:'데이터 로딩 중...'}[((window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)?{KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'}[window.SITE_CONFIG.COUNTRY]:'kr')||'kr']||'Loading data...') + '</div>';
     
     try {
         if (typeof sb === 'undefined') throw new Error("DB 연결이 없습니다.");

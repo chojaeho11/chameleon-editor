@@ -54,7 +54,8 @@ function formatCurrency(amount) {
     if (country === 'ES') return '€' + converted.toFixed(2);
     if (country === 'DE') return '€' + converted.toFixed(2);
     if (country === 'FR') return '€' + converted.toFixed(2);
-    return converted.toLocaleString() + '원';
+    if (country === 'KR' || !country) return converted.toLocaleString() + '원';
+    return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
 }
 window.formatCurrency = formatCurrency;
 
@@ -451,10 +452,7 @@ export async function initOrderSystem() {
             const checkoutModal = el('checkoutModal');
             if (checkoutModal) checkoutModal.style.display = 'flex';
 
-            const _hn = window.location.hostname;
-            const msg = _hn.includes('cafe0101') ? 'ログイン完了！お支払いを続けてください。'
-                : _hn.includes('cafe3355') ? 'Login complete! Please continue with payment.'
-                : '로그인 완료! 결제를 계속 진행해주세요.';
+            const msg = window.t ? window.t('msg_login_complete_pay', 'Login complete! Please continue with payment.') : 'Login complete! Please continue with payment.';
             showToast(msg, 'success');
         } catch(e) { console.error('결제 복원 실패:', e); }
     };
@@ -1754,11 +1752,18 @@ async function addFileToCart(e) {
     const MAX_FILE_SIZE = 50 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
         const sizeMB = (file.size / 1024 / 1024).toFixed(0);
-        const msg = window.__SITE_CODE === 'jp'
-            ? `${sizeMB}MBのファイルはアップロードできません（最大50MB）。\nファイルサイズを小さくするか、メールでお送りください。\n📧 design@chameleon.design`
-            : window.__SITE_CODE === 'us'
-            ? `This file (${sizeMB}MB) exceeds the 50MB limit.\nPlease reduce the file size or send it via email.\n📧 design@chameleon.design`
-            : `${sizeMB}MB 파일은 접수가 불가능합니다 (최대 50MB).\n파일 용량을 줄이시거나 이메일로 보내주세요.\n📧 design@chameleon.design`;
+        const _fileMsgs = {
+            kr: `${sizeMB}MB 파일은 접수가 불가능합니다 (최대 50MB).\n파일 용량을 줄이시거나 이메일로 보내주세요.`,
+            ja: `${sizeMB}MBのファイルはアップロードできません（最大50MB）。\nファイルサイズを小さくするか、メールでお送りください。`,
+            en: `This file (${sizeMB}MB) exceeds the 50MB limit.\nPlease reduce the file size or send it via email.`,
+            zh: `文件(${sizeMB}MB)超过50MB限制。\n请缩小文件或通过邮件发送。`,
+            ar: `هذا الملف (${sizeMB}MB) يتجاوز الحد الأقصى 50MB.\nيرجى تقليل حجم الملف أو إرساله عبر البريد الإلكتروني.`,
+            es: `Este archivo (${sizeMB}MB) excede el límite de 50MB.\nPor favor, reduce el tamaño o envíalo por correo.`,
+            de: `Diese Datei (${sizeMB}MB) überschreitet das 50MB-Limit.\nBitte verkleinern Sie die Datei oder senden Sie sie per E-Mail.`,
+            fr: `Ce fichier (${sizeMB}MB) dépasse la limite de 50MB.\nVeuillez réduire sa taille ou l'envoyer par e-mail.`
+        };
+        const _lang = CURRENT_LANG || 'en';
+        const msg = (_fileMsgs[_lang] || _fileMsgs.en) + '\n📧 design@chameleon.design';
         alert(msg);
         e.target.value = '';
         return;
@@ -2582,7 +2587,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
         const orderSheetBlob = await withTimeout(generateOrderSheetPDF(orderInfoForPDF, cartData), PDF_TIMEOUT);
         if(orderSheetBlob) {
             const url = await withTimeout(uploadFileToSupabase(orderSheetBlob, `orders/${orderId}/order_sheet.pdf`), UPLOAD_TIMEOUT);
-            if(url) uploadedFiles.push({ name: `작업지시서.pdf`, url: url, type: 'order_sheet' });
+            if(url) uploadedFiles.push({ name: ({ja:'作業指示書',en:'order_sheet',kr:'작업지시서'}[CURRENT_LANG]||'order_sheet') + '.pdf', url: url, type: 'order_sheet' });
             else errors.push('order_sheet upload failed');
         } else { errors.push('order_sheet PDF generation timeout/failed'); }
 
@@ -2592,7 +2597,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
         const quoteBlob = await withTimeout(generateQuotationPDF(orderInfoForPDF, cartData, _totalDiscRate, _localMileage), PDF_TIMEOUT);
         if(quoteBlob) {
             const url = await withTimeout(uploadFileToSupabase(quoteBlob, `orders/${orderId}/quotation.pdf`), UPLOAD_TIMEOUT);
-            if(url) uploadedFiles.push({ name: `견적서.pdf`, url: url, type: 'quotation' });
+            if(url) uploadedFiles.push({ name: ({ja:'見積書',en:'quotation',kr:'견적서'}[CURRENT_LANG]||'quotation') + '.pdf', url: url, type: 'quotation' });
             else errors.push('quotation upload failed');
         } else { errors.push('quotation PDF generation timeout/failed'); }
     } catch(pdfErr) {

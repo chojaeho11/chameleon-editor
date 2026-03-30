@@ -350,7 +350,13 @@ function renderWallConfigUI() {
     calcWallTotalPrice();
 
     container.innerHTML = '';
-    const fmt = window.formatCurrency || (v => v.toLocaleString() + '원');
+    const fmt = window.formatCurrency || (v => {
+        const c = window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY;
+        if (c === 'KR' || !c) return v.toLocaleString() + '원';
+        if (c === 'JP' || c === 'CN') return '¥' + Math.round(v).toLocaleString();
+        if (c === 'ES' || c === 'DE' || c === 'FR') return '€' + v.toFixed(2);
+        return '$' + v.toLocaleString();
+    });
     const sides = cfg.doubleSided ? 2 : 1;
     // US 여부: SITE_CONFIG.COUNTRY 직접 확인 (window._isUSsite 타이밍 이슈 방지)
     const _isUS = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'US') ||

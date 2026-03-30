@@ -102,7 +102,7 @@ function showWelcomeMessage() {
     const lang = getLang();
     const msg = WELCOME[lang] || WELCOME['en'];
     const formatted = msg.replace(/\n/g, '<br>');
-    const greeting = _custName ? (_custName + (lang === 'ja' ? '様、' : lang === 'en' ? ', ' : '님, ')) : '';
+    const greeting = _custName ? (_custName + ({ja:'様、',en:', ',zh:', ',ar:'، ',es:', ',de:', ',fr:', ',kr:'님, '}[lang]||', ')) : '';
     chatArea.insertAdjacentHTML('beforeend', `
         <div class="adv-row adv-row-ai">
             <div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
@@ -343,10 +343,10 @@ function buildPanelUI() {
         <div class="adv-chat-area" id="advChatArea"></div>
         <div style="display:flex;gap:6px;padding:4px 10px;">
             <a href="${location.origin}/design-market.html" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design'}[getLang()]||'디자인 의뢰'}
+                <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design',kr:'디자인 의뢰'}[getLang()]||'Design Request'}
             </a>
             <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else document.getElementById('quoteModal')&&(document.getElementById('quoteModal').style.display='flex');" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                <i class="fa-solid fa-building-columns"></i> ${{ja:'展示・イベントお問合せ',en:'Exhibition Inquiry',zh:'展会咨询',ar:'استفسار معرض',es:'Consulta de Exposición',de:'Messenanfrage',fr:"Demande d'exposition"}[getLang()]||'행사전시문의'}
+                <i class="fa-solid fa-building-columns"></i> ${{ja:'展示・イベントお問合せ',en:'Exhibition Inquiry',zh:'展会咨询',ar:'استفسار معرض',es:'Consulta de Exposición',de:'Messenanfrage',fr:"Demande d'exposition",kr:'행사전시문의'}[getLang()]||'Exhibition Inquiry'}
             </a>
         </div>
         <div class="adv-img-preview" id="advImgPreview" style="display:none">
@@ -365,7 +365,7 @@ function buildPanelUI() {
             </button>
         </div>
         <a href="${location.origin}/design-market.html#register" target="_blank" style="display:block;margin:10px 10px 6px;padding:16px 14px;background:linear-gradient(135deg,#f59e0b,#eab308);color:#fff;text-decoration:none;border-radius:10px;font-size:12px;line-height:1.6;text-align:center;font-weight:600;">
-            <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録しませんか？カメレオンがお客様とデザイナーをつなぎます。業界最低の仲介手数料で、毎日たくさんの注文が届きます。',en:'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.',zh:'注册成为设计师！变色龙为您连接客户。行业最低中介费，每天大量订单涌入。',ar:'سجل كمصمم! كاميليون يربط العملاء بالمصممين. أقل عمولات وسيط في الصناعة مع طلبات يومية.',es:'Regístrese como diseñador. Chameleon conecta clientes y diseñadores. Las comisiones más bajas del sector.',de:'Registrieren Sie sich als Designer! Chameleon verbindet Kunden mit Designern. Niedrigste Vermittlungsgebühren der Branche.',fr:"Inscrivez-vous comme designer ! Chameleon connecte clients et designers. Les frais les plus bas du secteur."}[getLang()]||'디자이너로 등록하세요! 카멜레온이 고객과 디자이너를 연결합니다. 업계 최저 중계수수료와 매일매일 수많은 고객의 오더가 쏟아집니다.'}
+            <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録しませんか？カメレオンがお客様とデザイナーをつなぎます。業界最低の仲介手数料で、毎日たくさんの注文が届きます。',en:'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.',zh:'注册成为设计师！变色龙为您连接客户。行业最低中介费，每天大量订单涌入。',ar:'سجل كمصمم! كاميليون يربط العملاء بالمصممين. أقل عمولات وسيط في الصناعة مع طلبات يومية.',es:'Regístrese como diseñador. Chameleon conecta clientes y diseñadores. Las comisiones más bajas del sector.',de:'Registrieren Sie sich als Designer! Chameleon verbindet Kunden mit Designern. Niedrigste Vermittlungsgebühren der Branche.',fr:"Inscrivez-vous comme designer ! Chameleon connecte clients et designers. Les frais les plus bas du secteur.",kr:'디자이너로 등록하세요! 카멜레온이 고객과 디자이너를 연결합니다. 업계 최저 중계수수료와 매일매일 수많은 고객의 오더가 쏟아집니다.'}[getLang()]||'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.'}
         </a>
     `;
     chatArea = document.getElementById('advChatArea');
@@ -1137,6 +1137,8 @@ function _psFmtPrice(krw) {
     if (cc === 'US' || cc === 'EN') return '$' + Math.round(krw * 0.001).toLocaleString();
     if (cc === 'CN') return '¥' + Math.round(krw * 0.005).toLocaleString();
     if (cc === 'ES' || cc === 'DE' || cc === 'FR') return '€' + (krw * 0.00065).toFixed(0);
+    if (cc === 'AR') return Math.round(krw * 0.003).toLocaleString() + ' ﷼';
+    if (cc !== 'KR') return '$' + Math.round(krw * 0.001).toLocaleString();
     return krw.toLocaleString() + '원';
 }
 
@@ -1483,7 +1485,7 @@ function _psShowRetouchMenu() {
     let html = '<div id="psRetouchPanel" class="ps-retouch-panel">';
 
     // AI 뷰티 6종 (맨 위)
-    const beautyLabel = lang==='ja'?'AI ビューティー':lang==='en'?'AI Beauty':'AI 뷰티';
+    const beautyLabel = {ja:'AI ビューティー',en:'AI Beauty',zh:'AI美颜',ar:'تجميل AI',es:'AI Belleza',de:'AI Beauty',fr:'AI Beauté',kr:'AI 뷰티'}[lang]||'AI Beauty';
     html += `<div class="ps-rt-cat">
         <div class="ps-rt-cat-title">💎 ${beautyLabel}</div>
         <div class="ps-rt-grid">`;
@@ -1647,7 +1649,7 @@ async function _psAutoRemoveBg() {
     const loadingMsg = document.createElement('div');
     loadingMsg.id = 'psAutoRemoveLoading';
     loadingMsg.style.cssText = 'text-align:center;padding:12px;font-size:12px;color:#6366f1;';
-    loadingMsg.innerHTML = '⏳ ' + (getLang()==='ja'?'背景除去中...':getLang()==='en'?'Removing background...':'배경 제거 중...');
+    loadingMsg.innerHTML = '⏳ ' + ({ja:'背景除去中...',en:'Removing background...',zh:'正在去除背景...',ar:'جارٍ إزالة الخلفية...',es:'Eliminando fondo...',de:'Hintergrund wird entfernt...',fr:'Suppression du fond...',kr:'배경 제거 중...'}[getLang()]||'Removing background...');
     document.getElementById('psSizingArea')?.before(loadingMsg);
     try {
         const img = new Image();
@@ -1833,17 +1835,17 @@ function _psShowSizing(key) {
         optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
             <div class="ps-tool-label">📋 ${ps('paperOpt')}</div>
             <div class="ps-opt-row">
-                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="matte" checked> ${getLang()==='ja'?'マット紙':getLang()==='en'?'Matte':'무광지'}</label>
-                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="glossy"> ${getLang()==='ja'?'光沢紙':getLang()==='en'?'Glossy':'유광지'}</label>
-                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="semi"> ${getLang()==='ja'?'半光沢':getLang()==='en'?'Semi-Glossy':'반광지'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="matte" checked> ${{ja:'マット紙',en:'Matte',zh:'哑光纸',ar:'ورق مطفي',es:'Mate',de:'Matt',fr:'Mat',kr:'무광지'}[getLang()]||'Matte'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="glossy"> ${{ja:'光沢紙',en:'Glossy',zh:'光面纸',ar:'ورق لامع',es:'Brillante',de:'Glanz',fr:'Brillant',kr:'유광지'}[getLang()]||'Glossy'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psPaperOpt" value="semi"> ${{ja:'半光沢',en:'Semi-Glossy',zh:'半光泽',ar:'شبه لامع',es:'Semi-Brillo',de:'Seidenmatt',fr:'Semi-Brillant',kr:'반광지'}[getLang()]||'Semi-Glossy'}</label>
             </div>
         </div>`;
     } else if (isHoneycomb) {
         optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
             <div class="ps-tool-label">🧱 ${ps('standOpt')}</div>
             <div class="ps-opt-row">
-                <label class="ps-opt-item"><input type="radio" name="psStandOpt" value="none" checked> ${getLang()==='ja'?'なし':getLang()==='en'?'None':'없음'}</label>
-                <label class="ps-opt-item"><input type="radio" name="psStandOpt" value="stand"> ${getLang()==='ja'?'スタンド付き':getLang()==='en'?'With Stand':'받침대 포함'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psStandOpt" value="none" checked> ${{ja:'なし',en:'None',zh:'无',ar:'بدون',es:'Ninguno',de:'Ohne',fr:'Aucun',kr:'없음'}[getLang()]||'None'}</label>
+                <label class="ps-opt-item"><input type="radio" name="psStandOpt" value="stand"> ${{ja:'スタンド付き',en:'With Stand',zh:'含底座',ar:'مع حامل',es:'Con soporte',de:'Mit Ständer',fr:'Avec support',kr:'받침대 포함'}[getLang()]||'With Stand'}</label>
             </div>
         </div>`;
     } else if (isBlind) {
@@ -1857,19 +1859,19 @@ function _psShowSizing(key) {
     } else if (isKeyring) {
         const lang = getLang();
         const holeLabels = {
-            top: lang==='ja'?'上':lang==='en'?'Top':'상',
-            left: lang==='ja'?'左':lang==='en'?'Left':'좌',
-            right: lang==='ja'?'右':lang==='en'?'Right':'우',
-            bottom: lang==='ja'?'下':lang==='en'?'Bottom':'하',
+            top: {ja:'上',en:'Top',zh:'上',ar:'أعلى',es:'Arriba',de:'Oben',fr:'Haut',kr:'상'}[lang]||'Top',
+            left: {ja:'左',en:'Left',zh:'左',ar:'يسار',es:'Izquierda',de:'Links',fr:'Gauche',kr:'좌'}[lang]||'Left',
+            right: {ja:'右',en:'Right',zh:'右',ar:'يمين',es:'Derecha',de:'Rechts',fr:'Droite',kr:'우'}[lang]||'Right',
+            bottom: {ja:'下',en:'Bottom',zh:'下',ar:'أسفل',es:'Abajo',de:'Unten',fr:'Bas',kr:'하'}[lang]||'Bottom',
         };
         optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
-            <div class="ps-tool-label">🔑 ${lang==='ja'?'3mmアクリルキーリング':lang==='en'?'3mm Acrylic Keyring':'3mm 아크릴키링'}</div>
+            <div class="ps-tool-label">🔑 ${{ja:'3mmアクリルキーリング',en:'3mm Acrylic Keyring',zh:'3mm亚克力钥匙扣',ar:'ميدالية أكريليك 3مم',es:'Llavero acrílico 3mm',de:'3mm Acryl-Schlüsselanhänger',fr:'Porte-clés acrylique 3mm',kr:'3mm 아크릴키링'}[lang]||'3mm Acrylic Keyring'}</div>
             <div id="psKeyringPreview" style="margin:8px auto;text-align:center;background:#f1f5f9;border-radius:10px;padding:8px;"></div>
-            <div class="ps-tool-label" style="margin-top:8px;">📍 ${lang==='ja'?'穴の位置':lang==='en'?'Hole Position':'고리 위치'}</div>
+            <div class="ps-tool-label" style="margin-top:8px;">📍 ${{ja:'穴の位置',en:'Hole Position',zh:'孔位置',ar:'موقع الثقب',es:'Posición del agujero',de:'Lochposition',fr:'Position du trou',kr:'고리 위치'}[lang]||'Hole Position'}</div>
             <div style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;">
                 ${['top','left','right','bottom'].map((pos,i) => `<label class="ps-opt-item" style="min-width:40px;text-align:center;"><input type="radio" name="psHolePos" value="${pos}"${i===0?' checked':''}> ${holeLabels[pos]}</label>`).join('')}
             </div>
-            <div class="ps-tool-label" style="margin-top:8px;">🪝 ${lang==='ja'?'リング選択':lang==='en'?'Ring Type':'고리 선택'}</div>
+            <div class="ps-tool-label" style="margin-top:8px;">🪝 ${{ja:'リング選択',en:'Ring Type',zh:'选择挂环',ar:'اختيار الحلقة',es:'Tipo de anilla',de:'Ringauswahl',fr:'Type d\'anneau',kr:'고리 선택'}[lang]||'Ring Type'}</div>
             <div id="psKeyringRings" style="margin:6px 0;"><span style="font-size:10px;color:#94a3b8;">Loading...</span></div>
         </div>`;
     } else if (isTshirt) {
@@ -1882,11 +1884,11 @@ function _psShowSizing(key) {
         ];
         const sizes = ['S','M','L','XL','2XL'];
         optionsHtml = `<div class="ps-option-section" style="margin-top:8px;">
-            <div class="ps-tool-label">🎨 ${lang==='ja'?'カラー':lang==='en'?'Color':'컬러'}</div>
+            <div class="ps-tool-label">🎨 ${{ja:'カラー',en:'Color',zh:'颜色',ar:'اللون',es:'Color',de:'Farbe',fr:'Couleur',kr:'컬러'}[lang]||'Color'}</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;">
                 ${tColors.map((c,i) => `<div class="ps-tshirt-color${i===0?' active':''}" data-color="${c.hex}" style="width:28px;height:28px;border-radius:50%;background:${c.hex};border:2px solid ${i===0?'#7c3aed':'#e2e8f0'};cursor:pointer;" title="${c.name}"></div>`).join('')}
             </div>
-            <div class="ps-tool-label" style="margin-top:6px;">📏 ${lang==='ja'?'サイズ':lang==='en'?'Size':'사이즈'}</div>
+            <div class="ps-tool-label" style="margin-top:6px;">📏 ${{ja:'サイズ',en:'Size',zh:'尺寸',ar:'المقاس',es:'Talla',de:'Größe',fr:'Taille',kr:'사이즈'}[lang]||'Size'}</div>
             <div style="display:flex;gap:6px;margin:6px 0;">
                 ${sizes.map((s,i) => `<label class="ps-opt-item" style="min-width:36px;text-align:center;"><input type="radio" name="psTshirtSize" value="${s}"${i===2?' checked':''}> ${s}</label>`).join('')}
             </div>
@@ -2184,7 +2186,7 @@ async function _psLoadKeyringRings() {
 
         if (error) throw error;
         if (!addons || addons.length === 0) {
-            container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${lang==='ja'?'リングオプションなし':lang==='en'?'No ring options':'고리 옵션 없음'}</span>`;
+            container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${{ja:'リングオプションなし',en:'No ring options',zh:'无挂环选项',ar:'لا توجد خيارات حلقة',es:'Sin opciones de anilla',de:'Keine Ringoptionen',fr:'Pas d\'options d\'anneau',kr:'고리 옵션 없음'}[lang]||'No ring options'}</span>`;
             return;
         }
 
@@ -2216,7 +2218,7 @@ async function _psLoadKeyringRings() {
         });
     } catch (e) {
         console.warn('[PS] Ring load failed:', e);
-        container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${lang==='ja'?'基本キーリングで出荷されます':lang==='en'?'Ships with default keyring hook':'기본 키링고리로 출고됩니다'}</span>`;
+        container.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${{ja:'基本キーリングで出荷されます',en:'Ships with default keyring hook',zh:'使用默认钥匙扣挂钩发货',ar:'يتم الشحن بحلقة مفاتيح افتراضية',es:'Se envía con gancho predeterminado',de:'Wird mit Standard-Schlüsselring geliefert',fr:'Expédié avec anneau par défaut',kr:'기본 키링고리로 출고됩니다'}[lang]||'Ships with default keyring hook'}</span>`;
     }
 }
 
@@ -2326,7 +2328,7 @@ function _psRenderTshirtMockup() {
         ctrl.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:6px;justify-content:center;';
         ctrl.innerHTML = `<span style="font-size:10px;color:#64748b;">🔍</span>
             <input type="range" id="psTsScale" min="20" max="200" value="100" style="width:140px;accent-color:#7c3aed;">
-            <span style="font-size:9px;color:#94a3b8;">${lang==='ja'?'ドラッグで移動':lang==='en'?'Drag to move':'드래그로 이동'}</span>`;
+            <span style="font-size:9px;color:#94a3b8;">${{ja:'ドラッグで移動',en:'Drag to move',zh:'拖动移动',ar:'اسحب للتحريك',es:'Arrastra para mover',de:'Ziehen zum Verschieben',fr:'Glisser pour déplacer',kr:'드래그로 이동'}[lang]||'Drag to move'}</span>`;
         container.appendChild(ctrl);
         document.getElementById('psTsScale')?.addEventListener('input', (e) => {
             _tsImgScale = parseInt(e.target.value) / 100;
@@ -2423,11 +2425,9 @@ async function _psLoadFabricSewing() {
         }
 
         const lang = getLang();
-        const reqMsg = lang === 'ja' ? 'ミシンオプションを1つ選択してください (必須)' :
-                       lang === 'en' ? 'Select at least one sewing option (required)' :
-                       '미싱옵션을 1개 선택해주세요 (필수)';
+        const reqMsg = {ja:'ミシンオプションを1つ選択してください (必須)',en:'Select at least one sewing option (required)',zh:'请选择一个缝纫选项（必选）',ar:'يرجى اختيار خيار خياطة واحد (مطلوب)',es:'Seleccione una opción de costura (obligatorio)',de:'Bitte wählen Sie eine Nähoption (Pflicht)',fr:'Veuillez sélectionner une option de couture (obligatoire)',kr:'미싱옵션을 1개 선택해주세요 (필수)'}[lang]||'Select at least one sewing option (required)';
 
-        let html = `<div class="ps-tool-label">🧵 ${lang === 'ja' ? 'ミシンオプション' : lang === 'en' ? 'Sewing Option' : '패브릭 미싱'} <span style="color:#ef4444; font-size:10px;">(*)</span></div>`;
+        let html = `<div class="ps-tool-label">🧵 ${{ja:'ミシンオプション',en:'Sewing Option',zh:'缝纫选项',ar:'خيار الخياطة',es:'Opción de costura',de:'Nähoption',fr:'Option de couture',kr:'패브릭 미싱'}[lang]||'Sewing Option'} <span style="color:#ef4444; font-size:10px;">(*)</span></div>`;
         html += `<div style="background:#fef3c7; border-radius:6px; padding:4px 8px; font-size:10px; color:#92400e; margin-bottom:6px;">${reqMsg}</div>`;
         html += `<div class="ps-sewing-options">`;
         data.forEach(addon => {
@@ -2465,9 +2465,7 @@ function _psCheckFabricWidth() {
     let warn = document.getElementById('psFabricWidthWarn');
     if (exceeds && !warn) {
         const lang = getLang();
-        const msg = lang==='ja' ? '⚠️ パブリックの最大幅は1300mmです。これを超える場合は「つなぎ縫い」オプションが必要です。' :
-                    lang==='en' ? '⚠️ Max fabric width is 1300mm. Seam-joining option is required for wider prints.' :
-                    '⚠️ 패브릭 최대폭은 1300mm입니다. 초과 시 이어박기 옵션이 필요합니다.';
+        const msg = {ja:'⚠️ パブリックの最大幅は1300mmです。これを超える場合は「つなぎ縫い」オプションが必要です。',en:'⚠️ Max fabric width is 1300mm. Seam-joining option is required for wider prints.',zh:'⚠️ 面料最大宽度为1300mm。超出时需要拼接缝纫选项。',ar:'⚠️ أقصى عرض للقماش 1300مم. خيار الخياطة المتصلة مطلوب للطباعة الأعرض.',es:'⚠️ Ancho máximo de tela: 1300mm. Se requiere opción de costura para impresiones más anchas.',de:'⚠️ Maximale Stoffbreite: 1300mm. Nahtoption erforderlich für breitere Drucke.',fr:'⚠️ Largeur max du tissu : 1300mm. Option de couture requise pour les impressions plus larges.',kr:'⚠️ 패브릭 최대폭은 1300mm입니다. 초과 시 이어박기 옵션이 필요합니다.'}[lang]||'⚠️ Max fabric width is 1300mm. Seam-joining option is required for wider prints.';
         warn = document.createElement('div');
         warn.id = 'psFabricWidthWarn';
         warn.style.cssText = 'background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:6px 8px;font-size:10px;color:#92400e;margin-top:6px;';
@@ -2520,7 +2518,7 @@ function _psCalcPrice(w, h) {
     const totalPrice = price + sewingPrice;
 
     const isFabric = (_psSelectedProduct === 'fabric');
-    const cartLabel = getLang() === 'ja' ? 'カートに入れる' : getLang() === 'en' ? 'Add to Cart' : '장바구니 담기';
+    const cartLabel = {ja:'カートに入れる',en:'Add to Cart',zh:'加入购物车',ar:'أضف إلى السلة',es:'Añadir al carrito',de:'In den Warenkorb',fr:'Ajouter au panier',kr:'장바구니 담기'}[getLang()]||'Add to Cart';
 
     const isFixed = PS_PRODUCTS[_psSelectedProduct]?.fixed;
     const sizeLabel = isFixed ? PS_PRODUCTS[_psSelectedProduct].icon : `${w}×${h}mm`;
@@ -2536,9 +2534,7 @@ function _psCalcPrice(w, h) {
         if (isFabric) {
             const checked = document.querySelector('input[name="psSewing"]:checked');
             if (!checked) {
-                const msg = getLang() === 'ja' ? 'ミシンオプションを選択してください' :
-                            getLang() === 'en' ? 'Please select a sewing option' :
-                            '미싱옵션을 선택해주세요';
+                const msg = {ja:'ミシンオプションを選択してください',en:'Please select a sewing option',zh:'请选择缝纫选项',ar:'يرجى اختيار خيار الخياطة',es:'Seleccione una opción de costura',de:'Bitte wählen Sie eine Nähoption',fr:'Veuillez sélectionner une option de couture',kr:'미싱옵션을 선택해주세요'}[getLang()]||'Please select a sewing option';
                 alert(msg);
                 return;
             }
@@ -2771,7 +2767,7 @@ function _psShowSell() {
             btn.style.background = '#10b981';
         } catch(e) {
             console.error('Sell register error:', e);
-            const errMsg = !window.currentUser ? (getLang()==='ja'?'ログインが必要です':getLang()==='en'?'Login required':'로그인이 필요합니다') : e.message;
+            const errMsg = !window.currentUser ? ({ja:'ログインが必要です',en:'Login required',zh:'需要登录',ar:'يجب تسجيل الدخول',es:'Inicio de sesión requerido',de:'Anmeldung erforderlich',fr:'Connexion requise',kr:'로그인이 필요합니다'}[getLang()]||'Login required') : e.message;
             btn.textContent = '❌ ' + errMsg;
             btn.style.background = '#ef4444';
             setTimeout(() => { btn.textContent = '🎨 ' + ps('sell'); btn.style.background = ''; btn.disabled = false; }, 3000);

@@ -1000,7 +1000,7 @@ async function registerUserTemplate() {
         const cfg = window.SITE_CONFIG || {};
         const tplRate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cfg.COUNTRY]) || 1;
         const reward500 = 500 * tplRate;
-        const rewardDisplay = cfg.COUNTRY === 'JP' ? '¥' + Math.floor(reward500) : cfg.COUNTRY === 'US' ? '$' + Math.round(reward500) : reward500.toLocaleString() + '원';
+        const rewardDisplay = cfg.COUNTRY === 'JP' ? '¥' + Math.floor(reward500) : cfg.COUNTRY === 'US' ? '$' + Math.round(reward500) : (cfg.COUNTRY === 'CN') ? '¥' + Math.round(reward500) : (cfg.COUNTRY === 'AR') ? Math.round(reward500).toLocaleString() + ' ﷼' : (cfg.COUNTRY === 'ES' || cfg.COUNTRY === 'DE' || cfg.COUNTRY === 'FR') ? '€' + reward500.toFixed(2) : (cfg.COUNTRY === 'KR' || !cfg.COUNTRY) ? reward500.toLocaleString() + '원' : '$' + Math.round(reward500);
 
         showToast(window.t('msg_design_registered', "Design Registered!"), "success");
         document.getElementById("sellModal").style.display = "none";
@@ -1010,7 +1010,7 @@ async function registerUserTemplate() {
         if(balanceEl) {
             let current = parseFloat(balanceEl.innerText.replace(/[^0-9.]/g, '')) || 0;
             const newVal = current + reward500;
-            balanceEl.innerText = cfg.COUNTRY === 'JP' ? '¥' + Math.floor(newVal).toLocaleString() : cfg.COUNTRY === 'US' ? '$' + Math.round(newVal).toLocaleString() : newVal.toLocaleString() + '원';
+            balanceEl.innerText = cfg.COUNTRY === 'JP' ? '¥' + Math.floor(newVal).toLocaleString() : cfg.COUNTRY === 'US' ? '$' + Math.round(newVal).toLocaleString() : (cfg.COUNTRY === 'CN') ? '¥' + Math.round(newVal).toLocaleString() : (cfg.COUNTRY === 'AR') ? Math.round(newVal).toLocaleString() + ' ﷼' : (cfg.COUNTRY === 'ES' || cfg.COUNTRY === 'DE' || cfg.COUNTRY === 'FR') ? '€' + newVal.toFixed(2) : (cfg.COUNTRY === 'KR' || !cfg.COUNTRY) ? newVal.toLocaleString() + '원' : '$' + Math.round(newVal).toLocaleString();
         }
 
         if(titleEl) titleEl.value = "";

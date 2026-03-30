@@ -377,8 +377,12 @@ export function getLocalizedData(item) {
         const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001;
         const frPrice = price * frRate;
         formattedPrice = '€' + frPrice.toFixed(2);
-    } else {
+    } else if (country === 'KR' || !country) {
         formattedPrice = price.toLocaleString() + '원';
+    } else {
+        const fallbackRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE[country]) || 0.001;
+        const fallbackPrice = price * fallbackRate;
+        formattedPrice = '$' + (fallbackPrice < 1 ? fallbackPrice.toFixed(2) : Math.round(fallbackPrice).toLocaleString());
     }
 
     return {

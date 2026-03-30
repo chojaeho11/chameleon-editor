@@ -652,7 +652,7 @@ function updateBoxPrice(w, h, d) {
     if (priceEl) {
         priceEl.textContent = window.formatCurrency
             ? window.formatCurrency(result.totalPrice)
-            : result.totalPrice.toLocaleString() + '원';
+            : (((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR' || !(window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY)) ? result.totalPrice.toLocaleString() + '원' : '$' + result.totalPrice.toLocaleString());
     }
     if (displayEl) displayEl.style.display = 'inline-flex';
     if (layoutBtn) layoutBtn.style.display = 'inline-block';

@@ -38,8 +38,9 @@ function fmtMoney(krw) {
     if (country === 'US') return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
-    if (country === 'ES') return '€' + converted.toFixed(2);
-    return converted.toLocaleString() + '원';
+    if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
+    if (country === 'KR') return converted.toLocaleString() + '원';
+    return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
 }
 
 // ==========================================================
@@ -263,11 +264,18 @@ async function handleUniversalUpload(file, isFromStartScreen) {
     const MAX_FILE_SIZE = 50 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
         const sizeMB = (file.size / 1024 / 1024).toFixed(0);
-        const msg = window.__SITE_CODE === 'jp'
-            ? `${sizeMB}MBのファイルはアップロードできません（最大50MB）。\nファイルサイズを小さくするか、メールでお送りください。\n📧 design@chameleon.design`
-            : window.__SITE_CODE === 'us'
-            ? `This file (${sizeMB}MB) exceeds the 50MB limit.\nPlease reduce the file size or send it via email.\n📧 design@chameleon.design`
-            : `${sizeMB}MB 파일은 접수가 불가능합니다 (최대 50MB).\n파일 용량을 줄이시거나 이메일로 보내주세요.\n📧 design@chameleon.design`;
+        const _lang = (window.CURRENT_LANG || 'en').toLowerCase();
+        const _fileMsgs = {
+            kr: `${sizeMB}MB 파일은 접수가 불가능합니다 (최대 50MB).\n파일 용량을 줄이시거나 이메일로 보내주세요.`,
+            ja: `${sizeMB}MBのファイルはアップロードできません（最大50MB）。\nファイルサイズを小さくするか、メールでお送りください。`,
+            en: `This file (${sizeMB}MB) exceeds the 50MB limit.\nPlease reduce the file size or send it via email.`,
+            zh: `文件(${sizeMB}MB)超过50MB限制。\n请缩小文件或通过邮件发送。`,
+            ar: `هذا الملف (${sizeMB}MB) يتجاوز الحد الأقصى 50MB.\nيرجى تقليل حجم الملف أو إرساله عبر البريد الإلكتروني.`,
+            es: `Este archivo (${sizeMB}MB) excede el límite de 50MB.\nPor favor, reduce el tamaño o envíalo por correo.`,
+            de: `Diese Datei (${sizeMB}MB) überschreitet das 50MB-Limit.\nBitte verkleinern Sie die Datei oder senden Sie sie per E-Mail.`,
+            fr: `Ce fichier (${sizeMB}MB) dépasse la limite de 50MB.\nVeuillez réduire sa taille ou l'envoyer par e-mail.`
+        };
+        const msg = (_fileMsgs[_lang] || _fileMsgs.en) + '\n📧 design@chameleon.design';
         alert(msg);
         return;
     }
@@ -969,7 +977,9 @@ function _artFmtPrice(krw) {
     if (country === 'US') return '$' + (v < 1 ? v.toFixed(2) : v.toFixed(0));
     if (country === 'CN') return '¥' + Math.round(v).toLocaleString();
     if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + v.toFixed(2);
-    return v.toLocaleString() + '원';
+    if (country === 'AR') return Math.round(v).toLocaleString() + ' ﷼';
+    if (country === 'KR') return v.toLocaleString() + '원';
+    return '$' + (v < 1 ? v.toFixed(2) : Math.round(v).toLocaleString());
 }
 
 window.openArtworkUpload = function() {
@@ -1035,11 +1045,11 @@ window.submitArtworkUpload = async function() {
     const title = document.getElementById('artworkTitle').value.trim();
     const genre = document.getElementById('artworkGenre').value;
     if (!file) { showToast(window.t?.('artwork_no_file', '이미지를 선택하세요') || '이미지를 선택하세요', 'warn'); return; }
-    if (!genre) { showToast('카테고리를 선택해주세요', 'warn'); return; }
+    if (!genre) { showToast(window.t ? window.t('msg_select_category', 'Please select a category') : 'Please select a category', 'warn'); return; }
     if (!title) { showToast(window.t?.('artwork_no_title', '작품명을 입력하세요') || '작품명을 입력하세요', 'warn'); return; }
 
     const loading = document.getElementById('loading');
-    if (loading) { loading.style.display = 'flex'; const p = loading.querySelector('p'); if (p) p.innerText = '작품 등록 중...'; }
+    if (loading) { loading.style.display = 'flex'; const p = loading.querySelector('p'); if (p) p.innerText = window.t ? window.t('msg_registering_artwork', 'Registering artwork...') : 'Registering artwork...'; }
 
     try {
         let tags = title;

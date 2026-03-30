@@ -11,7 +11,8 @@ function fmtMoney(krw) {
     if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
     if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
     if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
-    return converted.toLocaleString() + '원';
+    if (country === 'KR') return converted.toLocaleString() + '원';
+    return '$' + (converted < 1 ? converted.toFixed(2) : Math.round(converted).toLocaleString());
 }
 
 // [긴급 수정] 번역 사전 (한글 데이터)
@@ -200,7 +201,7 @@ function applyTranslations() {
     // 국가별 통화 단위 설정
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', DE: '€', FR: '€' }[country] || '원';
+    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', DE: '€', FR: '€' }[country] || '$';
     const depositUnit = document.getElementById('depositCurrencyUnit');
     if (depositUnit) depositUnit.innerText = currUnit;
     const wdCurrLabel = document.getElementById('wdCurrencyLabel');
@@ -634,7 +635,7 @@ async function loadMySales() {
     const lang = window.CURRENT_LANG || 'kr';
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const currUnit = { KR: '원', JP: '¥', US: '$' }[country] || '원';
+    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', DE: '€', FR: '€' }[country] || '$';
     const rateMap = cfg.CURRENCY_RATE || { KR:1, JP:0.1, US:0.001 };
     const rate = (typeof rateMap === 'object') ? (rateMap[country] || 1) : (rateMap || 1);
 
@@ -766,7 +767,7 @@ function _updateSalesStats(productCount, soldCount, revenueKRW, currUnit, rate) 
 function openWithdrawModal() {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
-    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', DE: '€', FR: '€' }[country] || '원';
+    const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '﷼', ES: '€', DE: '€', FR: '€' }[country] || '$';
 
     sb.from('profiles').select('deposit').eq('id', currentUser.id).single().then(({data}) => {
         const currentDeposit = data?.deposit || 0;
