@@ -1617,7 +1617,26 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 if(y > 260) { doc.addPage(); y = 20; }
             }
         } else {
-            const pTotal = (pdfPrice || 0) * (item.qty || 1);
+            // ★ 수량 할인 적용 (order.js renderCartUI와 동일 로직)
+            const _pCode2 = item.product.code || '';
+            const _pCat2 = item.product.category || '';
+            const _pTopCat2 = window._getTopCategoryCode ? window._getTopCategoryCode(_pCat2) : '';
+            const _noDiscount2 = _pCode2 === '21355677' || _pCode2 === '21355677_copy'
+                || _pTopCat2 === 'Wholesale Board Prices'
+                || _pTopCat2 === 'honeycomb_board'
+                || _pCat2 === 'hb_display_wall' || _pCode2.startsWith('hb_dw')
+                || item.product.is_custom_size;
+            let _qtyDiscRate2 = 0;
+            if (!_noDiscount2 && item.qty >= 3) {
+                if (item.qty >= 501) _qtyDiscRate2 = 0.50;
+                else if (item.qty >= 101) _qtyDiscRate2 = 0.40;
+                else if (item.qty >= 10) _qtyDiscRate2 = 0.30;
+                else _qtyDiscRate2 = 0.20;
+            }
+
+            const rawTotal = (pdfPrice || 0) * (item.qty || 1);
+            const _qtyDiscAmt2 = Math.floor(rawTotal * _qtyDiscRate2 / 100) * 100;
+            const pTotal = rawTotal - _qtyDiscAmt2;
             totalAmt += pTotal;
 
             const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
@@ -1638,6 +1657,18 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 
             y += rowHeight;
             if(y > 260) { doc.addPage(); y = 20; }
+
+            // 수량 할인 표시 행
+            if (_qtyDiscRate2 > 0) {
+                curX = 15;
+                drawCell(doc, curX, y, cols[0], 7, '', 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1] + cols[2], 7, `  (${Math.round(_qtyDiscRate2*100)}% ${TEXT.discount || '할인'})`, 'left', 8); curX += cols[1] + cols[2];
+                drawCell(doc, curX, y, cols[3], 7, '', 'center'); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], 7, '', 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], 7, '-' + formatCurrencyForPDF(_qtyDiscAmt2), 'right', 8);
+                y += 7;
+                if(y > 260) { doc.addPage(); y = 20; }
+            }
         }
 
         if (item.selectedAddons) {
