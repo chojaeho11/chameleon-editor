@@ -708,7 +708,25 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             if (toolBlock) {
                 const result = toolBlock.input;
                 if (!result.chat_message) result.chat_message = result.summary || '';
-                const hasProducts = result.products && result.products.length > 0;
+                let hasProducts = result.products && result.products.length > 0;
+                // fallback: AI가 products 비워놓고 summary에 제품 설명만 한 경우 → 텍스트 매칭으로 카드 주입
+                if (!hasProducts) {
+                    const _comb = (trimmedMsg + ' ' + (result.summary || '') + ' ' + (result.chat_message || '')).toLowerCase();
+                    const _isContact = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _comb.includes(k));
+                    if (!_isContact) {
+                        const _m = products.filter((p: any) => {
+                            return (p.name || '').split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _comb.includes(kw.toLowerCase()));
+                        }).slice(0, 5);
+                        if (_m.length > 0) {
+                            result.products = _m.map((p: any) => {
+                                const rp = rawProducts.find((r: any) => r.code === p.code);
+                                const ac = rp?.addons ? rp.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
+                                return { code: p.code, name: p.name, img_url: p.img_url || '', _raw_price_krw: p._raw_price, _raw_per_sqm_krw: p._raw_per_sqm, is_custom_size: p.is_custom_size, addons: ac.map((c: string) => addonMap[c]).filter(Boolean) };
+                            });
+                            hasProducts = true;
+                        }
+                    }
+                }
                 result.type = hasProducts ? "recommendation" : "chat";
                 if (!hasProducts) result.products = [];
                 result._model = model;
