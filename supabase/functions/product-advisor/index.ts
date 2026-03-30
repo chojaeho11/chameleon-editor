@@ -15,6 +15,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const ALLOWED_ORIGINS = [
     'https://www.cafe2626.com', 'https://www.cafe0101.com', 'https://www.cafe3355.com',
     'https://cafe2626.com', 'https://cafe0101.com', 'https://cafe3355.com',
+    'https://chameleon.design', 'https://www.chameleon.design',
 ];
 
 function getCorsHeaders(req: Request) {
