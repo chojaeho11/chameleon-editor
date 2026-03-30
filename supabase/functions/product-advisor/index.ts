@@ -552,7 +552,28 @@ serve(async (req) => {
         let selectedPrompt = langPrompts[clientLang];
         if (!selectedPrompt && langNames[clientLang]) {
             selectedPrompt = langPrompts['us'] + `\n\n**CRITICAL: You MUST respond entirely in ${langNames[clientLang]}. All text, product descriptions, and chat messages must be in ${langNames[clientLang]}.**
-**CRITICAL: When mentioning ANY products, you MUST include them in the products array with code, name, img_url, etc. NEVER just describe products in text without putting them in the products array. The products array is what generates clickable image cards for the customer. Text-only product descriptions without cards is a BAD experience. Product links should use: ${siteUrl}/?product={code}${langSuffix}**`;
+**CRITICAL: When mentioning ANY products, you MUST include them in the products array with code, name, img_url, etc. NEVER just describe products in text without putting them in the products array. The products array is what generates clickable image cards for the customer. Text-only product descriptions without cards is a BAD experience. Product links should use: ${siteUrl}/?product={code}${langSuffix}**
+
+## International Product Terminology Guide
+When customers ask about products, match their local terminology to our product categories:
+- **Flyer/Leaflet/Brochure/Pamphlet/نشرة/نشرات/منشور/منشورات/传单/宣传单/Flugblatt/Prospekt/Dépliant/Folleto/Volante** → category: pp_leaflet (Flyer/Leaflet products)
+- **Poster/ملصق/بوستر/海报/Plakat/Affiche/Cartel** → category: pp_poster
+- **Business Card/بطاقة عمل/名片/Visitenkarte/Carte de visite/Tarjeta** → category: pp_business_card
+- **Sticker/Label/ملصق/贴纸/标签/Aufkleber/Étiquette/Pegatina** → category: pp_sticker
+- **Banner/Signage/لافتة/横幅/Banner/Bannière/Pancarta** → categories: banner, hb_banner
+- **Exhibition Booth/Partition Wall/Trade Show/معرض/جناح/قاطع/جدار عرض/展台/展位/隔断/Messestand/Trennwand/Stand d'exposition/Cloison** → category: hb_display_wall
+- **Gate/Arch/Entry/بوابة/قوس/门/拱门/Tor/Bogen/Portail/Arc/Puerta** → category: hb_tree
+- **Table/Display Table/طاولة/桌子/展示桌/Tisch/Table/Mesa** → category: hb_table
+- **Standee/Life-size Panel/POP Display/لوحة/等身大/Aufsteller/Présentoir/Expositor** → category: hb_point
+- **Fabric Print/Canvas/قماش/布料/帆布/Stoff/Tissu/Tela** → categories: ch10s, cn16s, obo10s
+- **T-shirt/تيشيرت/T恤/T-Shirt/Camiseta** → category: 3244432
+- **Keyring/Keychain/ميدالية/钥匙扣/Schlüsselanhänger/Porte-clés/Llavero** → category: acr_key_ring
+- **Shopping Bag/حقيبة تسوق/购物袋/Einkaufstasche/Sac/Bolsa** → category: pp_shopping_bag
+- **Catalog/Booklet/كتالوج/كتيب/目录/小册子/Katalog/Catalogue/Catálogo** → category: pp_catalog
+- **Acrylic Sign/Display/أكريليك/亚克力/Acryl/Acrylique/Acrílico** → category: acrylic
+- **Foam Board/فوم بورد/泡沫板/Schaumstoffplatte/Panneau mousse/Panel de espuma** → category: pomboard
+- **Roller Blind/ستارة/卷帘/Rollo/Store enrouleur/Estor** → category: rr29948
+ALWAYS match customer's terminology to the correct product category and show relevant product cards.`;
         }
         const systemPrompt = `${selectedPrompt || langPrompts['kr']}
 ${labels.note}
@@ -567,7 +588,32 @@ ${JSON.stringify(aiProducts.map(p => {
 }))}
 
 ## ${labels.categories}
-${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_skipTopCats.has(c.code)).map((c: any) => ({ c: c.code, n: c.name, t: c.top_category_code || '' })))}${qaSection}`;
+${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_skipTopCats.has(c.code)).map((c: any) => {
+    const catNameMap: Record<string, string> = {
+        'hb_display_wall':'Honeycomb Partition Wall','hb_tree':'Honeycomb Gate/Arch','hb_table':'Honeycomb Table',
+        'hb_point':'Standee/POP Display','hb_insta':'Instagram Panel','hb_banner':'Honeycomb Banner',
+        'hb_box':'Honeycomb Box','hb_skashi':'Honeycomb Letter Sign','hb_printing':'Honeycomb Board Printing',
+        '34535354':'Honeycomb Photo Zone','Honeycomb Board':'Wholesale Honeycomb Board',
+        'banner':'Banner/Flag','75001':'Banner Stand/Display Stand',
+        'pp_leaflet':'Flyer/Leaflet/Brochure','pp_poster':'Poster/Promotional Print',
+        'pp_business_card':'Business Card','pp_sticker':'Sticker/Label','pp_calendar':'Calendar',
+        'pp_catalog':'Catalog/Booklet','pp_envelope':'Envelope','pp_shopping_bag':'Shopping Bag',
+        'acrylic':'Acrylic Sign/Display','acr_key_ring':'Acrylic Keyring','acr_crtt':'Acrylic Coaster',
+        'acr_smt_tck':'Acrylic Smart Tok','acr_etc':'Acrylic Magnet/Badge',
+        '2342424':'Large Format Printing','pomboard':'Foam Board','pomax':'Foamex/PVC Board',
+        '345345234':'Sign/Signboard','1232313113':'Clear Vinyl Sheet','s0101':'Vinyl Wrap/Sheet',
+        'ch10s':'Canvas 10s','cn16s':'Cotton 16s','cn20s':'Cotton 20s','obo10s':'Oxford 10s',
+        'lin20s':'Linen','ch20s':'Cotton 20s White','ch40s':'Chiffon',
+        '3244432':'T-shirt Printing','546465463':'Goods/Merchandise',
+        'pp_fan':'Promotional Fan/Goods','234345356':'Cushion','rr29948':'Roller Blind',
+        'sy00002':'Paper Table Mat','kitchen':'Cafe/Restaurant Supplies',
+        'interior_props':'Interior Props','box001':'Rigid Box/Gift Box',
+        'pd_basic':'Paper Display Stand','pd_sm':'Small Paper Display','pd_tr':'Paper Partition',
+        'pd_ac':'Display Attachment','trimmings':'Trimmings/Accessories',
+        'fp_fd_twp':'Food Pouch/Packaging','daily_goods':'Fashion Accessories',
+    };
+    return { c: c.code, n: (clientLang !== 'kr' ? (catNameMap[c.code] || c.name) : c.name), t: c.top_category_code || '' };
+}))}${qaSection}`;
 
         // Claude API — tool_choice: auto (대화 or 추천 자유)
         const tools = [{
