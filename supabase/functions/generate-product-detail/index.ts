@@ -35,10 +35,10 @@ serve(async (req) => {
 
     const langMap: Record<string, { name: string, instruction: string, currency: string }> = {
       kr: { name: "Korean", instruction: "한국어로 작성하세요.", currency: `${price.toLocaleString()}원` },
-      jp: { name: "Japanese", instruction: "日本語で書いてください。", currency: `¥${Math.round(price * 0.2).toLocaleString()}` },
-      us: { name: "English", instruction: "Write in English.", currency: `$${(price * 0.002).toFixed(2)}` },
-      cn: { name: "Chinese Simplified", instruction: "请用简体中文写作。", currency: `¥${Math.round(price * 0.01).toLocaleString()}` },
-      ar: { name: "Arabic", instruction: "اكتب بالعربية.", currency: `${Math.round(price * 0.005).toLocaleString()} ﷼` },
+      jp: { name: "Japanese", instruction: "日本語で書いてください。", currency: `¥${Math.round(price * 0.1).toLocaleString()}` },
+      us: { name: "English", instruction: "Write in English.", currency: `$${(price * 0.001).toFixed(2)}` },
+      cn: { name: "Chinese Simplified", instruction: "请用简体中文写作。", currency: `¥${Math.round(price * 0.05).toLocaleString()}` },
+      ar: { name: "Arabic", instruction: "اكتب بالعربية.", currency: `$${(price * 0.001).toFixed(2)}` },
       es: { name: "Spanish", instruction: "Escribe en español.", currency: `€${(price * 0.001).toFixed(2)}` },
       de: { name: "German", instruction: "Schreiben Sie auf Deutsch.", currency: `€${(price * 0.001).toFixed(2)}` },
       fr: { name: "French", instruction: "Écrivez en français.", currency: `€${(price * 0.001).toFixed(2)}` },

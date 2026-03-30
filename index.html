@@ -6331,7 +6331,7 @@ window.filterFxCards = function(cat, btn) {
         if (country === 'JP') return '¥' + Math.floor(amt).toLocaleString();
         if (country === 'US') { const r = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE.US) || 0.001; const _usd = (amt||0) * r; return _usd >= 10 ? '$' + Math.round(_usd).toLocaleString() : '$' + _usd.toFixed(2); }
         const rates = cfg.CURRENCY_RATE || {};
-        if (country === 'CN') return '¥' + Math.round((amt||0) * (rates.CN || 0.01)).toLocaleString();
+        if (country === 'CN') return '¥' + Math.round((amt||0) * (rates.CN || 0.05)).toLocaleString();
         if (country === 'AR') return '$' + Math.round((amt||0) * (rates.AR || 0.001)).toLocaleString();
         if (country === 'ES') return '€' + ((amt||0) * (rates.ES || 0.001)).toFixed(2);
         if (country === 'DE') return '€' + ((amt||0) * (rates.DE || 0.001)).toFixed(2);
@@ -8223,8 +8223,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                 if (cc === 'JP') { pName = product.name_jp || pName; pPrice = product.price_jp || pPrice; currency = 'JPY'; }
                 if (cc === 'US') { pName = product.name_us || pName; pPrice = product.price_us || pPrice; currency = 'USD'; }
                 var _scr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
-                if (cc === 'CN') { pName = product.name_cn || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.CN || 0.01)); currency = 'CNY'; }
-                if (cc === 'AR') { pName = product.name_ar || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.AR || 0.05)); currency = 'SAR'; }
+                if (cc === 'CN') { pName = product.name_cn || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.CN || 0.05)); currency = 'CNY'; }
+                if (cc === 'AR') { pName = product.name_ar || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.AR || 0.001)); currency = 'SAR'; }
                 if (cc === 'ES') { pName = product.name_es || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.ES || 0.001) * 100) / 100; currency = 'EUR'; }
                 if (cc === 'DE') { pName = product.name_de || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.DE || 0.001) * 100) / 100; currency = 'EUR'; }
                 if (cc === 'FR') { pName = product.name_fr || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.FR || 0.001) * 100) / 100; currency = 'EUR'; }
@@ -8758,7 +8758,7 @@ window.showChoiceModal = async function(key) {
                                 const _usR = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001;
                                 if (lang === 'ja') colorPriceLabel = `+¥${basePrice.toLocaleString()}`;
                                 else if (lang === 'en') colorPriceLabel = `+$${Math.round(basePrice * _usR).toLocaleString()}`;
-                                else if (lang === 'zh') colorPriceLabel = `+¥${Math.round(basePrice * (_cr.CN || 0.01)).toLocaleString()}`;
+                                else if (lang === 'zh') colorPriceLabel = `+¥${Math.round(basePrice * (_cr.CN || 0.05)).toLocaleString()}`;
                                 else if (lang === 'ar') colorPriceLabel = `+$${Math.round(basePrice * (_cr.AR || 0.001)).toLocaleString()}`;
                                 else if (lang === 'es') colorPriceLabel = `+€${(basePrice * (_cr.ES || 0.001)).toFixed(2)}`;
                                 else if (lang === 'de') colorPriceLabel = `+€${(basePrice * (_cr.DE || 0.001)).toFixed(2)}`;
@@ -8787,7 +8787,7 @@ window.showChoiceModal = async function(key) {
                             let priceStr = `+${basePrice.toLocaleString()}원`;
                             if (lang === 'ja') { if (a.name_jp) optName = a.name_jp; if (a.price_jp) { basePrice = a.price_jp; priceStr = `+¥${basePrice.toLocaleString()}`; } }
                             else if (lang === 'en') { if (a.name_us) optName = a.name_us; const _usR2 = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001; priceStr = `+$${Math.round(basePrice * _usR2).toLocaleString()}`; }
-                            else if (lang === 'zh') { optName = a.name_cn || a.name_us || optName; const _r = (_cr && _cr.CN) || 0.01; priceStr = `+¥${Math.round(basePrice * _r).toLocaleString()}`; }
+                            else if (lang === 'zh') { optName = a.name_cn || a.name_us || optName; const _r = (_cr && _cr.CN) || 0.05; priceStr = `+¥${Math.round(basePrice * _r).toLocaleString()}`; }
                             else if (lang === 'ar') { optName = a.name_ar || a.name_us || optName; const _r = (_cr && _cr.AR) || 0.001; priceStr = `+$${Math.round(basePrice * _r).toLocaleString()}`; }
                             else if (lang === 'es') { optName = a.name_es || a.name_us || optName; const _r = (_cr && _cr.ES) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
                             else if (lang === 'de') { optName = a.name_de || a.name_us || optName; const _r = (_cr && _cr.DE) || 0.001; priceStr = `+€${(basePrice * _r).toFixed(2)}`; }
@@ -10078,7 +10078,7 @@ window.updateModalTotal = function() {
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
             if (lang === 'en') { const _r = _rates.US || 0.001; const _usd = val * _r; return _usd >= 10 ? '$' + Math.round(_usd).toLocaleString() : '$' + _usd.toFixed(2); }
-            if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.01)).toLocaleString();
+            if (lang === 'zh') return '¥' + Math.round(val * (_rates.CN || 0.05)).toLocaleString();
             if (lang === 'ar') { const usd = val * (_rates.US || 0.001); return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2); }
             if (lang === 'es') return '€' + (val * (_rates.ES || 0.001)).toFixed(2);
             if (lang === 'de') return '€' + (val * (_rates.DE || 0.001)).toFixed(2);
@@ -10102,6 +10102,21 @@ window.updateModalTotal = function() {
                         const usdVal = fixedPrice * _usRate;
                         priceDisplay.innerText = usdVal >= 10 ? '$' + Math.round(usdVal).toLocaleString() : '$' + usdVal.toFixed(2);
                         priceDisplay.dataset.rawPrice = fixedPrice; // KRW for updateModalTotal (fmtLocal converts)
+                    } else if (lang === 'zh') {
+                        const _cnRate = _rates.CN || 0.05;
+                        const cnyVal = Math.round(fixedPrice * _cnRate);
+                        priceDisplay.innerText = '¥' + cnyVal.toLocaleString();
+                        priceDisplay.dataset.rawPrice = fixedPrice; // KRW
+                    } else if (lang === 'ar') {
+                        const _arRate = _rates.US || 0.001;
+                        const arVal = fixedPrice * _arRate;
+                        priceDisplay.innerText = arVal >= 10 ? '$' + Math.round(arVal).toLocaleString() : '$' + arVal.toFixed(2);
+                        priceDisplay.dataset.rawPrice = fixedPrice; // KRW
+                    } else if (lang === 'es' || lang === 'de' || lang === 'fr') {
+                        const _euRate = _rates[lang === 'es' ? 'ES' : lang === 'de' ? 'DE' : 'FR'] || 0.001;
+                        const eurVal = fixedPrice * _euRate;
+                        priceDisplay.innerText = '€' + eurVal.toFixed(2);
+                        priceDisplay.dataset.rawPrice = fixedPrice; // KRW
                     } else {
                         priceDisplay.innerText = Math.floor(fixedPrice).toLocaleString() + '원';
                         priceDisplay.dataset.rawPrice = fixedPrice; // KRW
@@ -14411,7 +14426,7 @@ window.filterModalItems = function(keyword) {
             if (_c==='JP') { const jp = Number(p.price_jp) || price; return '¥' + Math.floor(jp).toLocaleString(); }
             if (_c==='US') { const us = Number(p.price_us) || price; return '$' + Math.round(us).toLocaleString(); }
             const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
-            if (_c==='CN') { const r = rates.CN||0.01; return '¥' + Math.round(price*r).toLocaleString(); }
+            if (_c==='CN') { const r = rates.CN||0.05; return '¥' + Math.round(price*r).toLocaleString(); }
             if (_c==='AR') { const r = rates.AR||0.001; return '$' + Math.round(price*r).toLocaleString(); }
             if (_c==='ES'||_c==='DE'||_c==='FR') { const r = rates[_c]||0.001; return '€' + (price*r).toFixed(2); }
             return price.toLocaleString() + '원';

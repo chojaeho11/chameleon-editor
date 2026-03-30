@@ -73,7 +73,8 @@ serve(async (req) => {
         function convertPrice(krw: number): string {
             const rate = CURRENCY_RATES[clientLang] || 1;
             if (clientLang === 'ja') return '\u00a5' + Math.round(krw * rate).toLocaleString('ja-JP');
-            if (['us','ar','es','de','fr'].includes(clientLang)) return '$' + (krw * rate).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (['us','ar'].includes(clientLang)) return '$' + (krw * rate).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (['es','de','fr'].includes(clientLang)) return '\u20ac' + (krw * rate).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
             if (clientLang === 'zh') return '\u00a5' + Math.round(krw * rate).toLocaleString('zh-CN');
             return krw.toLocaleString('ko-KR') + '\uc6d0';
         }
@@ -160,7 +161,8 @@ serve(async (req) => {
         }
         function formatLocalPrice(amount: number): string {
             if (clientLang === 'ja') return '\u00a5' + Math.round(amount).toLocaleString('ja-JP');
-            if (['us','ar','es','de','fr'].includes(clientLang)) return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (['us','ar'].includes(clientLang)) return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (['es','de','fr'].includes(clientLang)) return '\u20ac' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
             if (clientLang === 'zh') return '\u00a5' + Math.round(amount).toLocaleString('zh-CN');
             return Math.round(amount).toLocaleString('ko-KR') + '\uc6d0';
         }
@@ -231,7 +233,7 @@ serve(async (req) => {
         const addonMap: Record<string, any> = {};
         allAddons.forEach((a: any) => {
             const name = clientLang === 'ja' ? (a.name_jp || a.name) : clientLang === 'us' ? (a.name_us || a.name) : a.name;
-            const price = clientLang === 'ja' ? (a.price_jp || Math.round(a.price * 0.1)) : clientLang === 'us' ? (a.price_us || Math.round(a.price * 0.002)) : a.price;
+            const price = clientLang === 'ja' ? (a.price_jp || Math.round(a.price * 0.1)) : clientLang === 'us' ? (a.price_us || Math.round(a.price * 0.001)) : a.price;
             addonMap[a.code] = { code: a.code, name, category: addonCatMap[a.category_code] || '', price: convertPrice(price) };
         });
 
@@ -877,7 +879,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             };
             const hasContact = chatMsg.includes('010-') || chatMsg.includes('047-') || chatMsg.includes('support@');
             if (!hasContact) {
-                result.chat_message = chatMsg + (contactInfos[clientLang] || contactInfos['kr']);
+                result.chat_message = chatMsg + (contactInfos[clientLang] || contactInfos['us']);
             }
         }
 

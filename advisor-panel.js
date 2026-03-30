@@ -1135,8 +1135,8 @@ function _psFmtPrice(krw) {
     const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
     if (cc === 'JP') return '¥' + Math.floor(krw * 0.1).toLocaleString();
     if (cc === 'US' || cc === 'EN') return '$' + Math.round(krw * 0.001).toLocaleString();
-    if (cc === 'CN') return '¥' + Math.round(krw * 0.005).toLocaleString();
-    if (cc === 'ES' || cc === 'DE' || cc === 'FR') return '€' + (krw * 0.00065).toFixed(0);
+    if (cc === 'CN') return '¥' + Math.round(krw * 0.05).toLocaleString();
+    if (cc === 'ES' || cc === 'DE' || cc === 'FR') return '€' + (krw * 0.001).toFixed(0);
     if (cc === 'AR') return '$' + Math.round(krw * 0.001).toLocaleString();
     if (cc !== 'KR') return '$' + Math.round(krw * 0.001).toLocaleString();
     return krw.toLocaleString() + '원';

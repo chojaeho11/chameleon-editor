@@ -180,7 +180,7 @@ const LABELS: Record<string, Record<string, string>> = {
 };
 const DAYS_LABEL: Record<string, string> = { kr: "일", ja: "日", en: " days", zh: "天", ar: " أيام", es: " días", de: " Tage", fr: " jours" };
 
-const CURRENCY_RATES: Record<string, number> = { KR: 1, JP: 0.2, US: 0.002, CN: 0.01, AR: 0.005, ES: 0.001, DE: 0.001, FR: 0.001 };
+const CURRENCY_RATES: Record<string, number> = { KR: 1, JP: 0.1, US: 0.001, CN: 0.05, AR: 0.001, ES: 0.001, DE: 0.001, FR: 0.001 };
 
 function formatPrice(krw: number, country: string): string {
     const rate = CURRENCY_RATES[country] || 1;
@@ -188,7 +188,7 @@ function formatPrice(krw: number, country: string): string {
     if (["US"].includes(country)) return "$" + val.toLocaleString("en");
     if (["ES", "DE", "FR"].includes(country)) return "€" + val.toLocaleString("en");
     if (["JP", "CN"].includes(country)) return "¥" + val.toLocaleString("en");
-    if (country === "AR") return val.toLocaleString("en") + "﷼";
+    if (country === "AR") return "$" + val.toLocaleString("en");
     return val.toLocaleString("ko") + "원";
 }
 

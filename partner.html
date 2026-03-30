@@ -423,7 +423,7 @@
         if (country === 'JP') return '¥' + Math.floor(converted).toLocaleString();
         if (country === 'US') return '$' + Math.round(converted).toLocaleString();
         if (country === 'CN') return '¥' + Math.round(converted).toLocaleString();
-        if (country === 'AR') return Math.round(converted).toLocaleString() + ' ﷼';
+        if (country === 'AR') return '$' + Math.round(converted).toLocaleString();
         if (country === 'ES' || country === 'DE' || country === 'FR') return '€' + converted.toFixed(2);
         return converted.toLocaleString() + '원';
     }

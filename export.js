@@ -1821,6 +1821,9 @@ function formatCurrencyForPDF(val) {
     const num = Number(val) || 0;
     if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') return '¥' + Math.floor(num).toLocaleString();
     if (CURRENT_LANG_CODE === 'us') return '$' + Math.round(num).toLocaleString();
+    if (CURRENT_LANG_CODE === 'zh' || CURRENT_LANG_CODE === 'cn') return '¥' + Math.round(num).toLocaleString();
+    if (CURRENT_LANG_CODE === 'ar') return '$' + Math.round(num).toLocaleString();
+    if (CURRENT_LANG_CODE === 'es' || CURRENT_LANG_CODE === 'de' || CURRENT_LANG_CODE === 'fr') return '€' + num.toFixed(2);
     return num.toLocaleString();
 }
 
