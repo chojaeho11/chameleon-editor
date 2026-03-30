@@ -69,9 +69,12 @@ serve(async (req) => {
         let clientLang = (lang || 'kr').toLowerCase();
         if (clientLang === 'en') clientLang = 'us';
 
+        const CURRENCY_RATES: Record<string, number> = { kr: 1, ja: 0.1, us: 0.001, zh: 0.05, ar: 0.001, es: 0.001, de: 0.001, fr: 0.001 };
         function convertPrice(krw: number): string {
-            if (clientLang === 'ja') return '\u00a5' + Math.round(krw * 0.1).toLocaleString('ja-JP');
-            if (clientLang === 'us') return '$' + (krw * 0.002).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            const rate = CURRENCY_RATES[clientLang] || 1;
+            if (clientLang === 'ja') return '\u00a5' + Math.round(krw * rate).toLocaleString('ja-JP');
+            if (['us','ar','es','de','fr'].includes(clientLang)) return '$' + (krw * rate).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (clientLang === 'zh') return '\u00a5' + Math.round(krw * rate).toLocaleString('zh-CN');
             return krw.toLocaleString('ko-KR') + '\uc6d0';
         }
 
