@@ -571,7 +571,17 @@
 function detectLang() {
     const host = location.hostname;
     if (host.includes('cafe0101')) return 'ja';
-    if (host.includes('cafe3355')) return 'en';
+    if (host.includes('cafe3355') || host.includes('chameleon.design')) {
+        const params = new URLSearchParams(location.search);
+        const lp = (params.get('lang') || '').toLowerCase();
+        if (lp === 'ja' || lp === 'jp') return 'ja';
+        if (lp === 'zh' || lp === 'cn') return 'zh';
+        if (lp === 'ar') return 'ar';
+        if (lp === 'es') return 'es';
+        if (lp === 'de') return 'de';
+        if (lp === 'fr') return 'fr';
+        return 'en';
+    }
     const params = new URLSearchParams(location.search);
     const langParam = (params.get('lang') || '').toLowerCase();
     if (langParam === 'ja' || langParam === 'jp') return 'ja';
@@ -793,7 +803,7 @@ const I18N = {
 function t(key) {
     const entry = I18N[key];
     if (!entry) return key;
-    return entry[LANG] || entry.ko || key;
+    return entry[LANG] || entry.en || entry.ko || key;
 }
 
 // Category display name mapping (DB stores Korean values)
