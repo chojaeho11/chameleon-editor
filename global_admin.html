@@ -1640,7 +1640,7 @@
             <p style="font-size:13px; color:#64748b; margin-top:4px;">홈페이지 후기 섹션 위에 표시되는 유튜브 쇼츠 영상을 관리합니다.</p>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <input type="text" id="shortsUrlInput" placeholder="유튜브 쇼츠 URL (예: https://youtube.com/shorts/VIDEO_ID)" style="flex:1; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px;">
+            <input type="text" id="shortsUrlInput" placeholder="유튜브 또는 틱톡 URL (예: youtube.com/shorts/ID 또는 tiktok.com/@user/video/ID)" style="flex:1; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px;">
             <input type="text" id="shortsTitleInput" placeholder="제목 (선택)" style="width:200px; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px;">
             <button onclick="window._addShorts()" style="padding:12px 24px; background:#ef4444; color:#fff; border:none; border-radius:10px; font-weight:700; cursor:pointer; white-space:nowrap;"><i class="fa-solid fa-plus"></i> 추가</button>
         </div>
@@ -1670,7 +1670,7 @@ window._addShorts = async function() {
     const url = document.getElementById('shortsUrlInput').value.trim();
     const title = document.getElementById('shortsTitleInput').value.trim();
     if (!url) { showToast('URL을 입력하세요', 'error'); return; }
-    if (!url.includes('youtube') && !url.includes('youtu.be')) { showToast('유튜브 URL만 가능합니다', 'error'); return; }
+    if (!url.includes('youtube') && !url.includes('youtu.be') && !url.includes('tiktok.com')) { showToast('유튜브 또는 틱톡 URL만 가능합니다', 'error'); return; }
     const { error } = await sb.from('library').insert({ category: 'youtube-shorts', data_url: url, tags: title || 'Shorts', thumb_url: '' });
     if (error) { showToast('추가 실패: ' + error.message, 'error'); return; }
     showToast('쇼츠 추가 완료', 'success');
