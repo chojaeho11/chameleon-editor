@@ -946,7 +946,8 @@ function addProductCards(products) {
     const siteHostMap = { ja: 'https://cafe0101.com', en: 'https://chameleon.design', kr: 'https://cafe2626.com' };
     const siteHost = siteHostMap[lang] || 'https://chameleon.design';
     const langSuffix = siteHostMap[lang] ? '' : '&lang=' + lang;
-    const detailLabel = lang === 'ja' ? '購入する' : lang === 'en' ? 'Buy Now' : '구매하러가기';
+    const detailLabels = { kr: '구매하러가기', ja: '購入する', en: 'Buy Now', zh: '立即购买', ar: 'اشتري الآن', es: 'Comprar', de: 'Kaufen', fr: 'Acheter' };
+    const detailLabel = detailLabels[lang] || 'Buy Now';
 
     products.forEach((rec, i) => {
         const card = document.createElement('div');
@@ -957,7 +958,7 @@ function addProductCards(products) {
         const h = rec.recommended_height_mm || 0;
         const sizeText = (w > 0 && h > 0)
             ? `${w}\u00d7${h}mm`
-            : (lang === 'ja' ? 'サイズ自由' : lang === 'en' ? 'Custom size' : '사이즈 자유');
+            : ({ kr: '사이즈 자유', ja: 'サイズ自由', en: 'Custom size', zh: '自由尺寸', ar: 'حجم مخصص', es: 'Tamaño libre', de: 'Freie Größe', fr: 'Taille libre' }[lang] || 'Custom size');
         const detailUrl = siteHost + '/?product=' + encodeURIComponent(rec.code) + langSuffix;
         card.innerHTML = `
             ${thumbHtml}

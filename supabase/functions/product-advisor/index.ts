@@ -149,24 +149,25 @@ serve(async (req) => {
                 ja: 'A4 約 ' + convertPrice(Math.max(a4Ex, 500)),
                 us: '~' + convertPrice(Math.max(a4Ex, 500)) + ' for A4 size',
             };
-            return defLabels[clientLang] || defLabels['kr'];
+            return defLabels[clientLang] || defLabels['us'];
         }
 
         // 국가별 실제 가격 사용 (price_us, price_jp가 있으면 환율 변환 대신 직접 사용)
         function getLocalPrice(p: any): number {
-            if (clientLang === 'us' && p.price_us) return p.price_us;
             if (clientLang === 'ja' && p.price_jp) return p.price_jp;
+            if (clientLang !== 'kr' && p.price_us) return p.price_us;
             return p.price || 0;
         }
         function formatLocalPrice(amount: number): string {
             if (clientLang === 'ja') return '\u00a5' + Math.round(amount).toLocaleString('ja-JP');
-            if (clientLang === 'us') return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (['us','ar','es','de','fr'].includes(clientLang)) return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (clientLang === 'zh') return '\u00a5' + Math.round(amount).toLocaleString('zh-CN');
             return Math.round(amount).toLocaleString('ko-KR') + '\uc6d0';
         }
         function getLocalPerSqm(p: any, perSqmKrw: number | null): number | null {
             if (!perSqmKrw) return null;
-            if (clientLang === 'us' && p.price_us && p.price) return Math.round(perSqmKrw * (p.price_us / p.price));
             if (clientLang === 'ja' && p.price_jp && p.price) return Math.round(perSqmKrw * (p.price_jp / p.price));
+            if (clientLang !== 'kr' && p.price_us && p.price) return Math.round(perSqmKrw * (p.price_us / p.price));
             return perSqmKrw;
         }
 
@@ -174,7 +175,7 @@ serve(async (req) => {
             const perSqmKrw = calcPricePerSqm(p, allRaw);
             const localPrice = getLocalPrice(p);
             const localPerSqm = getLocalPerSqm(p, perSqmKrw);
-            const displayName = clientLang === 'ja' ? (p.name_jp || p.name) : clientLang === 'us' ? (p.name_us || p.name) : p.name;
+            const displayName = clientLang === 'ja' ? (p.name_jp || p.name_us || p.name) : clientLang === 'kr' ? p.name : (p.name_us || p.name);
 
             let priceDisplay: string;
             if (p.is_custom_size && localPerSqm) {
@@ -722,20 +723,23 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         }).slice(0, 5);
                         // 2차: 다국어 키워드 → 카테고리 매칭 (아랍어/중국어 등 비라틴 언어 대응)
                         if (_m.length === 0) {
-                            const _catKeywords: Record<string, string[]> = {
-                                'honeycomb_board': ['honeycomb','ハニカム','هاني','معرض','展示','booth','exhibition','exposición','exposition','ausstellung','展位','كشك','جناح','بوابة','gate','パーティション','partition','wall','جدار','قاطع','طاولة','table','テーブル','mesa','tisch','桌','看板','sign','لافتة','등신대','standee','لوحة'],
-                                'paper_display': ['paper display','紙매대','عرض ورقي','展示架','présentoir','exhibidor'],
-                                '44444': ['banner','バナー','لافتة','横幕','pancarta','bannière','Banner','横断幕','포맥스','acrylic','アクリル','أكريليك','亚克力'],
-                                '77777': ['keyring','キーリング','ميدالية','钥匙扣','goods','グッズ','بضائع','商品','t-shirt','Tシャツ','تيشيرت','T恤'],
-                                '22222': ['fabric','ファブリック','قماش','布料','tissu','tela','Stoff','canvas','キャンバス','قماش كانفاس','帆布'],
-                                'printe_product': ['print','印刷','طباعة','printing','sticker','ステッカー','ملصق','贴纸','business card','名刺','بطاقة','名片','calendar','カレンダー','تقويم','日历','poster','ポスター','ملصق','海报'],
-                            };
-                            for (const [topCat, keywords] of Object.entries(_catKeywords)) {
+                            // 키워드 → 서브카테고리 직접 매칭 (대표 제품만 추천)
+                            const _subCatKeywords: [string[], string[]][] = [
+                                // [keywords, subcategory codes]
+                                [['معرض','展示','booth','exhibition','exposición','exposition','ausstellung','展位','كشك','جناح','honeycomb','ハニカム','هاني'], ['hb_display_wall','hb_tree','hb_table','hb_point','hb_insta','34535354']],
+                                [['بوابة','gate','ゲート'], ['hb_tree']],
+                                [['جدار','قاطع','partition','wall','パーティション','가벽'], ['hb_display_wall']],
+                                [['طاولة','table','テーブル','mesa','tisch','桌'], ['hb_table']],
+                                [['banner','バナー','横幕','pancarta','bannière','横断幕','لافتة'], ['hb_banner','banner','75001']],
+                                [['fabric','ファブリック','قماش','布料','tissu','tela','Stoff','canvas','キャンバス','帆布'], ['ch10s','cn16s','obo10s','lin20s']],
+                                [['keyring','キーリング','ميدالية','钥匙扣'], ['acr_key_ring']],
+                                [['sticker','ステッカー','ملصق','贴纸'], ['pp_sticker']],
+                                [['print','印刷','طباعة','printing'], ['pp_leaflet','pp_poster','pp_business_card']],
+                                [['acrylic','アクリル','أكريليك','亚克力'], ['acrylic']],
+                            ];
+                            for (const [keywords, subCats] of _subCatKeywords) {
                                 if (keywords.some(k => _comb.includes(k.toLowerCase()))) {
-                                    _m = aiProducts.filter((p: any) => {
-                                        const cat = categories.find((c: any) => c.code === p.category);
-                                        return cat && (cat.top_category_code === topCat || cat.code === topCat || p.category === topCat);
-                                    }).slice(0, 5);
+                                    _m = aiProducts.filter((p: any) => subCats.includes(p.category)).slice(0, 5);
                                     if (_m.length > 0) break;
                                 }
                             }
