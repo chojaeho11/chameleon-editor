@@ -9226,7 +9226,7 @@ window.showChoiceModal = async function(key) {
                 </div>
                 <div data-npc="total" style="border-radius:14px; margin-top:20px; overflow:hidden; border:1.5px solid #1e1e2e; ${_isBooklet?'display:none':''}">
                     <div style="background:#1e1e2e; padding:10px 16px;">
-                        <span style="color:#fff; font-size:12px; font-weight:700; letter-spacing:0.5px;">${lang==='ja'?'オプション込み最終見積':lang==='zh'?'含选项最终报价':lang==='ar'?'السعر النهائي شامل الخيارات':lang==='es'?'Precio final con opciones':lang==='de'?'Endpreis inkl. Optionen':lang==='fr'?'Devis final options incluses':lang==='en'?'Final Quote incl. Options':'옵션을 포함한 최종견적'}</span>
+                        <span style="color:#fff; font-size:12px; font-weight:700; letter-spacing:0.5px;">${lang==='ja'?'割引適用 最終見積':lang==='zh'?'折扣后最终报价':lang==='ar'?'السعر النهائي بعد الخصم':lang==='es'?'Precio final con descuento':lang==='de'?'Endpreis mit Rabatt':lang==='fr'?'Devis final avec remise':lang==='en'?'Final Quote with Discount':'할인 적용 최종견적'}</span>
                     </div>
                     <div style="background:#fff; padding:16px 16px; text-align:right;">
                         <div id="modalRealtimeTotal" style="font-size:28px; font-weight:900; color:#6366f1;">0</div>
@@ -9776,23 +9776,32 @@ window.updateModalTotal = function() {
         }
     });
     
+    // ★ lang을 함수 최상단에서 선언 (커스텀/일반 모두에서 사용)
+    const urlParams = new URLSearchParams(window.location.search);
+    let lang = urlParams.get('lang');
+    if (!lang && window.location.hostname.includes('cafe0101.com')) lang = 'ja';
+    else if (!lang && (window.location.hostname.includes('cafe3355.com') || window.location.hostname.includes('chameleon.design'))) lang = 'en';
+    else if (!lang) lang = 'kr';
+
     let productTotal = 0;
 
     if (window.isCustomModeCurrent) {
-        // 커스텀: data-raw-price에서 원본 숫자 직접 읽기 (텍스트 파싱 안 함)
+        // ★ 커스텀: 개당 단가 × 수량으로 안전하게 계산 (rawPrice 동기화 문제 방지)
         const calcPriceEl = document.getElementById('calcResultPrice');
-        productTotal = calcPriceEl ? (parseFloat(calcPriceEl.dataset.rawPrice) || 0) : 0;
+        if (calcPriceEl) {
+            const rawUnitPrice = parseFloat(calcPriceEl.dataset.rawUnitPrice);
+            if (rawUnitPrice > 0) {
+                // 개당 단가가 있으면 그것을 사용 (가장 정확)
+                productTotal = rawUnitPrice * prodQty;
+            } else {
+                // fallback: rawPrice 사용 (하위 호환)
+                productTotal = parseFloat(calcPriceEl.dataset.rawPrice) || 0;
+            }
+        }
     } else {
         // 일반: (국가별 단가) * (상품 수량)
-        const urlParams = new URLSearchParams(window.location.search);
-        let lang = urlParams.get('lang');
-        if (!lang && window.location.hostname.includes('cafe0101.com')) lang = 'ja';
-        else if (!lang && window.location.hostname.includes('cafe3355.com') || window.location.hostname.includes('chameleon.design')) lang = 'en';
-
         let unitPrice = product.price; // KRW 기본
         if (lang === 'ja' && product.price_jp) unitPrice = product.price_jp;
-        // EN: price_us(구버전 환율)는 사용 안 함 → KRW 유지 (fmtLocal에서 환산)
-        // CN/AR/ES: KRW 원가 유지 (fmtLocal에서 환산)
 
         productTotal = unitPrice * prodQty;
     }
@@ -9996,7 +10005,7 @@ window.updateModalTotal = function() {
         const _jpRate = _rates.JP || 0.1;
         const rawPriceForDisplay = (lang === 'ja') ? Math.floor(finalPrice * _jpRate) : finalPrice;
         const pd = document.getElementById('calcResultPrice');
-        if (pd) { pd.innerText = formatValue(finalPrice); pd.dataset.rawPrice = rawPriceForDisplay; }
+        if (pd) { pd.innerText = formatValue(finalPrice); pd.dataset.rawPrice = rawPriceForDisplay; pd.dataset.rawUnitPrice = 0; }
         const sd = document.getElementById('calcResultSize');
         if (sd) sd.innerText = `${window._wallPanels.length}${{ja:'面',en:' walls',zh:'面',ar:' جدار',es:' paredes',de:' Wände',fr:' murs',kr:'벽면'}[lang]||' walls'} · ${totalPanels}${{ja:'パネル',en:' panels',zh:'块',ar:' لوحة',es:' paneles',de:' Paneele',fr:' panneaux',kr:'칸'}[lang]||' panels'}`;
 
@@ -10078,6 +10087,7 @@ window.updateModalTotal = function() {
             if (priceDisplay) {
                 priceDisplay.innerText = formatValue(fixedPrice);
                 priceDisplay.dataset.rawPrice = fixedPrice;
+                priceDisplay.dataset.rawUnitPrice = fixedKRW;
             }
             if (sizeDisplay) sizeDisplay.innerText = '';
             return;
@@ -10102,6 +10112,7 @@ window.updateModalTotal = function() {
         if (product.is_file_upload) {
             const fixedPrice = unitPrice * qty; // unitPrice는 KRW (프로모) 또는 현지통화 (DB)
             if (priceDisplay) {
+                priceDisplay.dataset.rawUnitPrice = unitPrice; // ★ 개당 단가 저장 (updateModalTotal용)
                 if (window.__promoFormatPriceKRW) {
                     // 프로모: unitPrice=KRW → 각 국가 통화로 변환
                     const _jpRate = _rates.JP || 0.1;
@@ -10188,6 +10199,7 @@ if (w >= 20 && h >= 20) {
             if (priceDisplay) {
                 priceDisplay.innerText = formatValue(totalPrice);
                 priceDisplay.dataset.rawPrice = totalPrice; // ★ 원본 숫자 저장
+                priceDisplay.dataset.rawUnitPrice = pricePerItem; // ★ 개당 단가 저장
             }
             if (sizeDisplay) {
                 if (window._isUSsite && window._isUSsite()) {
@@ -10322,6 +10334,7 @@ if (w >= 20 && h >= 20) {
             if (calcPriceEl) {
                 calcPriceEl.textContent = formatVal(result.totalPrice);
                 calcPriceEl.dataset.rawPrice = result.totalPrice;
+                calcPriceEl.dataset.rawUnitPrice = 0; // 박스: rawPrice fallback 사용
             }
 
             // 전역 저장 (주문 시 사용)
