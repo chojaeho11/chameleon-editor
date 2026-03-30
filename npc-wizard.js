@@ -1145,18 +1145,6 @@ window.NpcWizard = {
                             <span style="font-size:14px;font-weight:600;">${_t('pdBgColor')}</span>
                             <input type="color" value="${c.bgColor}" onchange="window.NpcWizard._pdCustom.bgColor=this.value;" style="width:36px;height:36px;border:none;cursor:pointer;border-radius:6px;">
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                            <span style="font-size:14px;font-weight:600;">${_t('pdQty')}</span>
-                            <div style="display:flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;height:38px;flex:1;">
-                                <button onclick="window.NpcWizard._pdUpdateTotal(-1)" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">-</button>
-                                <input type="number" id="npcPdQty4" value="1" min="1" style="flex:1;text-align:center;border:none;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;font-weight:bold;font-size:15px;" oninput="window.NpcWizard._pdUpdateTotal(0)">
-                                <button onclick="window.NpcWizard._pdUpdateTotal(1)" style="width:38px;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;font-size:16px;">+</button>
-                            </div>
-                        </div>
-                        <div id="npcPdTotalPrice" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px;border-radius:10px;text-align:center;margin-bottom:14px;">
-                            <div style="font-size:12px;opacity:0.85;">총 금액</div>
-                            <div style="font-size:22px;font-weight:900;" id="npcPdTotalVal"></div>
-                        </div>
                         <div style="display:flex;flex-direction:column;gap:8px;">
                             <button class="npc-choice-btn npc-yes" style="width:100%;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
                             <button class="npc-choice-btn" style="width:100%;padding:12px;font-size:14px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;font-weight:600;" onclick="window.NpcWizard._pdAfterCustomize()">${_t('pdSkipDesign')}</button>
@@ -1199,15 +1187,30 @@ window.NpcWizard = {
                         <div class="pd-input-row" style="margin-top:12px;">
                             <label>${_t('pdQty')}</label>
                             <div style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; flex:1;">
-                                <button onclick="const i=document.getElementById('npcPdQty');i.value=Math.max(1,parseInt(i.value)-1);window.NpcWizard._pdSyncQty(i.value);" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">-</button>
-                                <input type="number" id="npcPdQty" value="1" min="1" style="width:50px;text-align:center;border:none;font-weight:bold;font-size:15px;" oninput="window.NpcWizard._pdSyncQty(this.value);">
-                                <button onclick="const i=document.getElementById('npcPdQty');i.value=parseInt(i.value)+1;window.NpcWizard._pdSyncQty(i.value);" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">+</button>
+                                <button onclick="const i=document.getElementById('npcPdQty');i.value=Math.max(1,parseInt(i.value)-1);window.NpcWizard._pdUpdateTotal2();" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">-</button>
+                                <input type="number" id="npcPdQty" value="1" min="1" style="width:50px;text-align:center;border:none;font-weight:bold;font-size:15px;" oninput="window.NpcWizard._pdUpdateTotal2();">
+                                <button onclick="const i=document.getElementById('npcPdQty');i.value=parseInt(i.value)+1;window.NpcWizard._pdUpdateTotal2();" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">+</button>
                             </div>
+                        </div>
+                        <div id="npcPdDiscountTable" style="margin-top:10px;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;font-size:11px;">
+                            <div style="background:#1e1e2e;padding:6px 10px;color:#fff;font-weight:700;font-size:11px;">📊 수량 할인 가격표</div>
+                            <div style="display:grid;grid-template-columns:repeat(5,1fr);text-align:center;">
+                                <div class="pd-dsc-tier" data-min="1" data-max="3" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">1~2</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;">0%</div></div>
+                                <div class="pd-dsc-tier" data-min="3" data-max="10" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">3~9</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#f59e0b;">20%</div></div>
+                                <div class="pd-dsc-tier" data-min="10" data-max="101" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">10~100</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#f59e0b;">30%</div></div>
+                                <div class="pd-dsc-tier" data-min="101" data-max="501" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">101~500</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#ef4444;">40%</div></div>
+                                <div class="pd-dsc-tier" data-min="501" data-max="999999" style="padding:6px 2px;background:#f8fafc;color:#334155;"><div style="font-weight:800;">501+</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#ef4444;">50%</div></div>
+                            </div>
+                        </div>
+                        <div id="npcPdTotalPrice2" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px;border-radius:10px;text-align:center;margin-top:10px;">
+                            <div style="font-size:12px;opacity:0.85;">총 금액</div>
+                            <div style="font-size:22px;font-weight:900;" id="npcPdTotalVal2"></div>
                         </div>
                         <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:16px;font-size:16px;" onclick="window.NpcWizard._pdAddToCart()">${_t('pdAddToCart')}</button>
                     `;
                 }
                 this._insertToSlot('total');
+                setTimeout(() => this._pdUpdateTotal2(), 50);
                 break;
             }
 
@@ -1674,10 +1677,45 @@ window.NpcWizard = {
         }
     },
 
+    _pdUpdateTotal2() {
+        const inp = document.getElementById('npcPdQty');
+        if (!inp) return;
+        const qty = Math.max(1, parseInt(inp.value) || 1);
+        inp.value = qty;
+        const price = this.product ? (this.product.price || 0) : 0;
+        const subtotal = price * qty;
+        let discountRate = 0;
+        if (qty >= 501) discountRate = 0.50;
+        else if (qty >= 101) discountRate = 0.40;
+        else if (qty >= 10) discountRate = 0.30;
+        else if (qty >= 3) discountRate = 0.20;
+        const discountAmount = Math.floor(subtotal * discountRate / 100) * 100;
+        const total = subtotal - discountAmount;
+        const cfg = window.SITE_CONFIG || {};
+        const country = cfg.COUNTRY || 'KR';
+        const rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[country]) || 1;
+        const unit = (cfg.CURRENCY_UNIT && cfg.CURRENCY_UNIT[country]) || '원';
+        const fmt = (v) => { const c = v * rate; if (country === 'JP') return '¥' + Math.floor(c).toLocaleString(); if (country === 'US') return '$' + (c < 1 ? c.toFixed(2) : Math.round(c).toLocaleString()); return Math.round(c).toLocaleString() + unit; };
+        const el = document.getElementById('npcPdTotalVal2');
+        if (el) {
+            if (discountRate > 0) {
+                el.innerHTML = `<span style="text-decoration:line-through;opacity:0.6;font-size:14px;">${fmt(subtotal)}</span> <span style="font-size:22px;">${fmt(total)}</span><div style="font-size:12px;margin-top:2px;color:#fbbf24;">${Math.round(discountRate*100)}% 할인 (-${fmt(discountAmount)})</div>`;
+            } else { el.textContent = fmt(total); }
+        }
+        // 할인 가격표 하이라이트
+        document.querySelectorAll('.pd-dsc-tier').forEach(t => {
+            const min = parseInt(t.dataset.min), max = parseInt(t.dataset.max || 999999);
+            if (qty >= min && qty < max) { t.style.background = '#6366f1'; t.style.color = '#fff'; }
+            else { t.style.background = '#f8fafc'; t.style.color = '#334155'; }
+        });
+        // 상세페이지 수량도 동기화
+        this._pdSyncQty(qty);
+    },
+
     _pdAddToCart() {
         const product = this.product;
         if (!product) return;
-        const qty = parseInt((document.getElementById('npcPdQty4') || document.getElementById('npcPdQty'))?.value) || 1;
+        const qty = parseInt(document.getElementById('npcPdQty')?.value) || 1;
 
         import('./order.js?v=175').then(m => {
             const productToCart = { ...product };
