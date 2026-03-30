@@ -9436,8 +9436,19 @@ window.showChoiceModal = async function(key) {
 
     // ★ NPC 가이드 위자드: 종이매대(pd_b_, pd_sm_)는 전용 위자드, pd_tr_/pd_ac_는 제외
     const _isPd = product.code && product.code.startsWith('pd_') && !product.code.startsWith('pd_tr') && !product.code.startsWith('pd_ac');
-    if (_isPd && window.NpcWizard && !window.pendingTemplate) {
-        setTimeout(() => window.NpcWizard.init(product), 100);
+    console.log('🧙 NPC위자드 조건:', { _isPd, hasWizard: !!window.NpcWizard, pendingTemplate: !!window.pendingTemplate, code: product.code });
+    if (_isPd && !window.pendingTemplate) {
+        // NpcWizard가 아직 로드 안 됐을 수 있으므로 대기
+        const _waitAndInitWizard = () => {
+            if (window.NpcWizard) {
+                console.log('🧙 NPC위자드 시작!');
+                window.NpcWizard.init(product);
+            } else {
+                console.warn('🧙 NPC위자드 미로드, 500ms 후 재시도...');
+                setTimeout(_waitAndInitWizard, 500);
+            }
+        };
+        setTimeout(_waitAndInitWizard, 100);
     }
 
     // ★ 추천상품 로드 (대분류 기준, 중복 방지)
