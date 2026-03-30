@@ -6318,10 +6318,13 @@ window.filterFxCards = function(cat, btn) {
     }
     // [SEO] 리보드(허니콤보드) 제품 alt 텍스트 헬퍼
     function seoAlt(product) {
-        const name = product?.name || product?.name_jp || product?.name_us || '';
+        const _lang = (typeof window.CURRENT_LANG !== 'undefined') ? window.CURRENT_LANG : 'kr';
+        const name = _lang === 'ja' ? (product?.name_jp || product?.name_us || product?.name || '')
+            : _lang === 'kr' ? (product?.name || '')
+            : (product?.name_us || product?.name || '');
         const code = product?.code || '';
         const cat = product?.category || '';
-        const isReboard = code.startsWith('hb_') || code.startsWith('hcl_') || code.startsWith('hcb_') || cat.includes('honeycomb') || name.includes('허니콤') || name.includes('리보드');
+        const isReboard = code.startsWith('hb_') || code.startsWith('hcl_') || code.startsWith('hcb_') || cat.includes('honeycomb') || name.includes('허니콤') || name.includes('리보드') || name.toLowerCase().includes('honeycomb');
         return isReboard ? 'Honeycomb Board ' + name : name;
     }
     window.seoAlt = seoAlt;
@@ -8531,8 +8534,13 @@ window.showChoiceModal = async function(key) {
 
     // 3. 상품명 & 설명 (사이즈 수치 제거 헬퍼)
     const _stripSz = (n) => (n||'').replace(/\s*\([\d.,]+\s*[×xX]\s*[\d.,]+\s*(ft|in|mm|cm|m)\)/gi,'').trim();
-    let dName = _stripSz(product.name_kr || product.name || "상품명 없음");
+    let dName = _stripSz(product.name_kr || product.name || (lang !== 'kr' ? "Product" : "상품명 없음"));
     let dDesc = product.description_kr || product.description || "";
+    // 비한국어: description 한국어 fallback 방지 → 영어 우선
+    if (lang !== 'kr' && lang !== 'ja') {
+        dDesc = product.description_us || product.description || "";
+        dName = _stripSz(product.name_us || product.name || "Product");
+    }
     let dPrice = product.price;
     if (lang === 'ja') {
         if (product.name_jp) dName = _stripSz(product.name_jp);
@@ -8682,6 +8690,8 @@ window.showChoiceModal = async function(key) {
                 if (lang === 'de' && data.content_de) return data.content_de;
                 if (lang === 'fr' && data.content_fr) return data.content_fr;
                 if (lang === 'en' && data.content_us) return data.content_us;
+                // 비한국어 fallback: 영어 → 한국어
+                if (lang !== 'kr' && data.content_us) return data.content_us;
                 return data.content || "";
             };
 
@@ -8767,8 +8777,9 @@ window.showChoiceModal = async function(key) {
                                 else colorPriceLabel = `+${basePrice.toLocaleString()}원`;
                             }
 
+                            const _addonDisplayName = (lang === 'ja' ? (a.name_jp || a.name_us || a.name) : lang === 'kr' ? a.name : (a.name_us || a.name));
                             optionsHtml += `
-                                <label class="color-btn-item" style="cursor:pointer; position:relative; width:calc(20% - 4px); flex-shrink:0;" title="${a.name}">
+                                <label class="color-btn-item" style="cursor:pointer; position:relative; width:calc(20% - 4px); flex-shrink:0;" title="${_addonDisplayName}">
                                     <input type="checkbox" name="userOption" value="${a.code}" data-price="${basePrice}" data-cat-code="${cat.code}"
                                            style="position:absolute; opacity:0; width:0; height:0;"
                                            onchange="window.updateModalTotal(); this.parentElement.classList.toggle('selected', this.checked);">

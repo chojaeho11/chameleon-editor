@@ -62,9 +62,13 @@ window.formatCurrency = formatCurrency;
 // 국가별 상품명 표시
 function localName(product) {
     const c = SITE_CONFIG.COUNTRY;
-    if (c === 'JP') return product.name_jp || product.name || '';
+    if (c === 'JP') return product.name_jp || product.name_us || product.name || '';
     if (c === 'US') return product.name_us || product.name || '';
-    if (c === 'CN' || c === 'AR' || c === 'ES' || c === 'DE' || c === 'FR') return product.name_us || product.name || '';
+    if (c === 'CN') return product.name_cn || product.name_us || product.name || '';
+    if (c === 'AR') return product.name_ar || product.name_us || product.name || '';
+    if (c === 'ES') return product.name_es || product.name_us || product.name || '';
+    if (c === 'DE') return product.name_de || product.name_us || product.name || '';
+    if (c === 'FR') return product.name_fr || product.name_us || product.name || '';
     return product.name || '';
 }
 
