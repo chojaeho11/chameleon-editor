@@ -2604,7 +2604,7 @@ async function handleSubReturn() {
                     var title = item.tags || '';
                     html += '<div style="flex:0 0 220px; scroll-snap-align:start; border-radius:14px; overflow:hidden; background:#000; position:relative; cursor:pointer;" onclick="this.querySelector(\'iframe\').src=this.querySelector(\'iframe\').dataset.src">' +
                         '<div style="position:relative; width:220px; height:391px;">' +
-                        '<iframe data-src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&loop=1&playlist=' + videoId + '" style="width:100%;height:100%;border:none;border-radius:14px;" allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe>' +
+                        '<iframe data-src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=1&loop=1&playlist=' + videoId + '" style="width:100%;height:100%;border:none;border-radius:14px;" allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe>' +
                         '</div>' +
                         (title ? '<div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.8));color:#fff;font-size:12px;font-weight:600;line-height:1.3;">' + title + '</div>' : '') +
                         '</div>';
