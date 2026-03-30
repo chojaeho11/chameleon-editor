@@ -2120,14 +2120,34 @@ function updateSummary(prodTotal, addonTotal, total) {
 
     cartData.forEach(item => {
         const prodCat = item.product ? item.product.category : '';
-        
+
         if (excludedSet.has(prodCat)) {
             hasExcludedItem = true;
         } else {
             const unitPrice = item.product.price || 0;
             const qty = item.qty || 1;
-            let itemTotal = unitPrice * qty; 
-            
+            let baseTotal = unitPrice * qty;
+
+            // ★ 수량 할인 적용 (renderCartUI와 동일 로직)
+            const _pCode3 = item.product.code || '';
+            const _pCat3 = item.product.category || '';
+            const _pTopCat3 = window._getTopCategoryCode ? window._getTopCategoryCode(_pCat3) : '';
+            const _noDisc3 = _pCode3 === '21355677' || _pCode3 === '21355677_copy'
+                || _pTopCat3 === 'Wholesale Board Prices'
+                || _pTopCat3 === 'honeycomb_board'
+                || _pCat3 === 'hb_display_wall' || _pCode3.startsWith('hb_dw')
+                || item.product.is_custom_size;
+            if (!_noDisc3 && qty >= 3) {
+                let _qdr = 0;
+                if (qty >= 501) _qdr = 0.50;
+                else if (qty >= 101) _qdr = 0.40;
+                else if (qty >= 10) _qdr = 0.30;
+                else _qdr = 0.20;
+                baseTotal -= Math.floor(baseTotal * _qdr / 100) * 100;
+            }
+
+            let itemTotal = baseTotal;
+
             if (item.selectedAddons) {
                 Object.values(item.selectedAddons).forEach(code => {
                     const db = typeof ADDON_DB !== 'undefined' ? ADDON_DB : (window.ADDON_DB || {});
