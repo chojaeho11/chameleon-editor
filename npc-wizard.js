@@ -1538,7 +1538,12 @@ window.NpcWizard = {
     },
 
     _pdAfterMaterial() {
-        this._goStep('pdCustomize');
+        // pdCustomize 건너뛰기 → 바로 요약/수량 페이지
+        if (this.hasOptions) {
+            this._goStep('options');
+        } else {
+            this._goStep('pdSummary');
+        }
     },
 
     _pdSelectRef(code, el) {
@@ -1872,9 +1877,9 @@ window.NpcWizard = {
         if (step === 'pdMaterial') { this._goStep('pdAdHeight'); return; }
         if (step === 'pdCustomize') { this._goStep('pdMaterial'); return; }
         if (step === 'pdSummary' && this.hasOptions) { this._goStep('options'); return; }
-        if (step === 'pdSummary') { this._goStep('pdCustomize'); return; }
-        // 옵션에서 이전: 종이매대면 커스터마이징으로
-        if (step === 'options' && this.isPaperDisplay) { this._goStep('pdCustomize'); return; }
+        if (step === 'pdSummary') { this._goStep('pdMaterial'); return; }
+        // 옵션에서 이전: 종이매대면 재질 선택으로
+        if (step === 'options' && this.isPaperDisplay) { this._goStep('pdMaterial'); return; }
         // 허니콤보드
         if (step === 'honeycombInput') { this._goStep('honeycombAsk'); return; }
         if (step === 'honeycombChoice') { this._goStep('honeycombAsk'); return; }
