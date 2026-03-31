@@ -732,15 +732,24 @@ async function sendMessage(text, imageData) {
         if (_hasQuoteForm) setTimeout(() => startQuoteFlow(), 300);
 
         const products = data.products || [];
-        // 첫 대화(인사)에서는 제품 추천 무시
-        const isFirstReply = conversationHistory.length <= 1;
+        // 사용자 메시지가 제품/구매 관련일 때만 제품 카드 표시
+        const _userMsg = (text || '').toLowerCase();
+        const _productKeywords = [
+            '제품','상품','구매','주문','가격','얼마','사고싶','살수','어디서','링크','추천','인쇄','프린트','프린팅',
+            '배너','현수막','명함','포스터','스티커','키링','등신대','캔버스','액자','패브릭','가벽','보드','매대',
+            '쉬폰','아크릴','포토존','판넬','굿즈','머그','텀블러','티셔츠','폰케이스','블라인드',
+            '商品','購入','注文','価格','印刷','おすすめ','product','buy','order','price','print','recommend','how much','where'
+        ];
+        const _isProductQuery = _productKeywords.some(k => _userMsg.includes(k));
+        const showProducts = products.length > 0 && _isProductQuery;
+
         conversationHistory.push({
             role: 'assistant',
             content: chatMsg,
-            products: (!isFirstReply && products.length > 0) ? products.map(p => ({ code: p.code, name: p.name })) : undefined
+            products: showProducts ? products.map(p => ({ code: p.code, name: p.name })) : undefined
         });
 
-        if (products.length > 0 && !isFirstReply) {
+        if (showProducts) {
             lastProducts = products;
             addProductCards(products);
         }
