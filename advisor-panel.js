@@ -444,8 +444,8 @@ function buildPanelUI() {
             <div class="adv-panel-title" style="gap:4px;">
                 <button class="adv-studio-btn" id="advStudioBtn" style="padding:4px 8px;font-size:13px;min-width:auto;">✨</button>
                 <div style="position:relative;flex:1;">
-                    <input type="text" id="advProductSearch" placeholder="${{kr:'제품 검색',ja:'商品検索',en:'Search',zh:'搜索',es:'Buscar',de:'Suche',fr:'Recherche',ar:'بحث'}[getLang()]||'Search'}" style="width:100%;padding:6px 28px 6px 10px;border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;font-size:12px;background:rgba(255,255,255,0.15);color:#fff;outline:none;font-family:inherit;box-sizing:border-box;" autocomplete="off">
-                    <i class="fa-solid fa-magnifying-glass" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;"></i>
+                    <input type="text" id="advProductSearch" placeholder="${{kr:'제품 검색',ja:'商品検索',en:'Search',zh:'搜索',es:'Buscar',de:'Suche',fr:'Recherche',ar:'بحث'}[getLang()]||'Search'}" style="width:100%;padding:6px 28px 6px 10px;border:none;border-radius:8px;font-size:12px;background:#fff;color:#333;outline:none;font-family:inherit;box-sizing:border-box;" autocomplete="off">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:#94a3b8;pointer-events:none;"></i>
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
