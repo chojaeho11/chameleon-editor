@@ -233,10 +233,15 @@ window.addEventListener("DOMContentLoaded", async () => {
             sessionStorage.removeItem('_pendingEditorAction');
             if(loading) loading.style.display = 'none';
             const _prodUrl = '/?product=' + encodeURIComponent(_act.key);
-            const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
-            const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
-            const _sl = _lm[_cc] || '';
-            window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
+            const _hn2 = window.location.hostname;
+            if (_hn2.includes('cafe0101') || _hn2.includes('cafe2626')) {
+                window.location.href = _prodUrl;
+            } else {
+                const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+                const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
+                const _sl = _lm[_cc] || '';
+                window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
+            }
         } else {
             if(loading) loading.style.display = 'none';
         }

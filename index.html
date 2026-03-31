@@ -6500,12 +6500,14 @@ window.getTinyThumb = function(url, size = 150) {
     const urlParams = new URLSearchParams(window.location.search);
     let detectedLang = urlParams.get('lang');
 
-    // 1. 도메인 기본값 설정 (lang 파라미터가 있으면 파라미터 우선)
+    // 1. 도메인 기본값 설정 (고정 도메인은 lang 파라미터 무시)
     const _langHostname = window.location.hostname;
-    if (_langHostname.includes('cafe3355.com') || _langHostname.includes('chameleon.design')) {
+    if (_langHostname.includes('cafe0101.com') || _langHostname.includes('cafe0101')) {
+        detectedLang = 'ja'; // 일본 도메인: 항상 일본어
+    } else if (_langHostname.includes('cafe2626.com') || _langHostname.includes('cafe2626')) {
+        detectedLang = 'kr'; // 한국 도메인: 항상 한국어
+    } else if (_langHostname.includes('cafe3355.com') || _langHostname.includes('chameleon.design')) {
         if (!detectedLang) detectedLang = 'en'; // 미국 도메인: lang 파라미터 없으면 영어
-    } else if (_langHostname.includes('cafe0101.com')) {
-        if (!detectedLang) detectedLang = 'ja'; // 일본 도메인: lang 파라미터 없으면 일본어
     } else if (!detectedLang) {
         detectedLang = 'kr'; // 그 외 파라미터 없으면 한국어
     }
@@ -11808,11 +11810,18 @@ if (w >= 20 && h >= 20) {
             window.openAuthModal('login', function() {
                 window._restoreChoiceModal = false;
                 // 로그인 성공 → 상품 페이지로 새로고침 (에디터 직접 진입 시 UI 깨짐 방지)
+                // 고정 도메인(cafe0101/cafe2626)은 lang 파라미터 불필요
                 const _prodUrl = '/?product=' + encodeURIComponent(key);
-                const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
-                const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
-                const _sl = _lm[_cc] || '';
-                window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
+                const _hn = window.location.hostname;
+                const _isFixed = _hn.includes('cafe0101') || _hn.includes('cafe2626');
+                if (_isFixed) {
+                    window.location.href = _prodUrl;
+                } else {
+                    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+                    const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
+                    const _sl = _lm[_cc] || '';
+                    window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
+                }
             });
             return;
         }

@@ -129,10 +129,15 @@ export function initConfig() {
                         window._pendingEditorRestore = null;
                         sessionStorage.removeItem('_pendingEditorAction');
                         const _prodUrl = '/?product=' + encodeURIComponent(_act.key);
-                        const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
-                        const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
-                        const _sl = _lm[_cc] || '';
-                        window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
+                        const _hn2 = window.location.hostname;
+                        if (_hn2.includes('cafe0101') || _hn2.includes('cafe2626')) {
+                            window.location.href = _prodUrl;
+                        } else {
+                            const _cc2 = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+                            const _lm2 = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
+                            const _sl2 = _lm2[_cc2] || '';
+                            window.location.href = _sl2 ? _prodUrl + '&lang=' + _sl2 : _prodUrl;
+                        }
                     }
                 }
 
