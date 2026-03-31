@@ -9332,6 +9332,13 @@ window.showChoiceModal = async function(key) {
     console.log('[상세페이지] 공통정보 렌더링:', { hasContainer: !!_ciEl, commonHtmlLen: commonInfoHtml.length, hasDesc: !!dDesc, descLen: (dDesc||'').length });
     if (_ciEl && commonInfoHtml) {
         _ciEl.innerHTML = commonInfoHtml;
+        // 공통정보 내 중복 수량 할인 가격표 제거 (우측 패널에 이미 존재)
+        _ciEl.querySelectorAll('div').forEach(el => {
+            const txt = el.textContent || '';
+            if ((txt.includes('수량 할인 가격표') || txt.includes('Bulk Discount') || txt.includes('数量割引')) && el.querySelector('div[style*="grid"]')) {
+                el.remove();
+            }
+        });
     } else if (_ciEl && !commonInfoHtml) {
         console.warn('[상세페이지] ⚠️ 공통정보 HTML이 비어있음! codesToQuery 확인 필요');
     }
