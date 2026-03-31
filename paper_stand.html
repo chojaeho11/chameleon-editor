@@ -372,43 +372,33 @@ a { text-decoration: none; color: inherit; }
     </div>
 </section>
 
-<!-- 카프 AI 챗봇 (플로팅) -->
-<div id="kapuChatWrap" style="display:none; position:fixed; bottom:80px; right:16px; width:380px; height:600px; z-index:9999; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.25);">
-    <iframe id="kapuChatFrame" src="" style="width:100%;height:100%;border:none;border-radius:16px;"></iframe>
-</div>
-<button id="kapuFab" onclick="toggleKapuChat()" style="
-    position:fixed; bottom:16px; right:16px; z-index:9999;
-    width:56px; height:56px; border-radius:50%; border:none;
-    background:linear-gradient(135deg, var(--primary), #8b5cf6);
-    color:#fff; font-size:22px; cursor:pointer;
-    box-shadow:0 4px 20px rgba(99,102,241,0.4);
-    display:flex; align-items:center; justify-content:center;
-    transition:all 0.3s;
-" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-    <i class="fa-solid fa-wand-magic-sparkles"></i>
-</button>
+<!-- 카푸 AI 챗봇 (인라인) -->
+<section class="section" style="background:#f8fafc; padding:30px 0 40px;">
+    <div style="max-width:900px; margin:0 auto; padding:0 16px;">
+        <div style="background:#fff; border-radius:20px; box-shadow:0 4px 24px rgba(99,102,241,0.12); overflow:hidden; border:1px solid #e2e8f0;">
+            <iframe id="kapuChatInline" src="" style="width:100%; height:650px; border:none;" loading="lazy"></iframe>
+        </div>
+    </div>
+</section>
 <script>
-function toggleKapuChat() {
-    var wrap = document.getElementById('kapuChatWrap');
-    var frame = document.getElementById('kapuChatFrame');
-    var fab = document.getElementById('kapuFab');
-    if (wrap.style.display === 'none') {
-        if (!frame.src || frame.src === '' || frame.src === location.href) {
-            frame.src = '/chameleon-chatbot.html';
-        }
-        wrap.style.display = 'block';
-        fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+(function(){
+    var h = location.hostname;
+    var lang = h.indexOf('cafe0101') >= 0 ? 'ja' : (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) ? 'en' : 'kr';
+    var frame = document.getElementById('kapuChatInline');
+    // IntersectionObserver로 뷰포트에 들어올 때 로드 (성능)
+    if ('IntersectionObserver' in window) {
+        var obs = new IntersectionObserver(function(entries) {
+            if (entries[0].isIntersecting && !frame.src.includes('chatbot')) {
+                frame.src = '/chameleon-chatbot.html?lang=' + lang;
+                obs.disconnect();
+            }
+        }, { rootMargin: '200px' });
+        obs.observe(frame);
     } else {
-        wrap.style.display = 'none';
-        fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+        frame.src = '/chameleon-chatbot.html?lang=' + lang;
     }
-}
+})();
 </script>
-<style>
-@media (max-width: 480px) {
-    #kapuChatWrap { width: calc(100vw - 16px) !important; height: calc(100vh - 100px) !important; right: 8px !important; bottom: 76px !important; }
-}
-</style>
 
 <!-- 푸터 -->
 <footer class="site-footer">
