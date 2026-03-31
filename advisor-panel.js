@@ -110,6 +110,90 @@ function showWelcomeMessage() {
         </div>
     `);
     scrollChat();
+    // 추천 상품 카드 표시
+    _loadWelcomeProducts(lang);
+}
+
+// ─── 첫 인사 추천 상품 ───
+const WELCOME_PRODUCT_KEYWORDS = {
+    kr: ['허니콤보드가벽', '종이매대', '쉬폰인쇄', '홀로그램자개키링양면', '허니콤보드', '인스타판넬포토존대형'],
+    ja: ['ハニカムボード間仕切り', 'ファブリック', 'ハニカムボード', 'アクリルキーリング', 'キャンバス額', 'ポスター'],
+    en: ['Honeycomb Partition', 'Fabric Print', 'Honeycomb Board', 'Acrylic Keyring', 'Canvas Frame', 'Poster'],
+    zh: ['蜂窝板隔断', '布料印刷', '蜂窝板', '亚克力钥匙扣', '帆布画框', '海报'],
+    es: ['Panel Honeycomb', 'Impresión Tela', 'Honeycomb Board', 'Llavero Acrílico', 'Marco Canvas', 'Póster'],
+    de: ['Honeycomb Trennwand', 'Stoffdruck', 'Honeycomb Board', 'Acryl-Schlüsselanhänger', 'Leinwandrahmen', 'Poster'],
+    fr: ['Cloison Honeycomb', 'Impression Tissu', 'Honeycomb Board', 'Porte-clés Acrylique', 'Cadre Canvas', 'Affiche'],
+    ar: ['حاجز Honeycomb', 'طباعة قماش', 'لوح Honeycomb', 'ميدالية أكريليك', 'إطار كانفاس', 'ملصق'],
+};
+
+async function _loadWelcomeProducts(lang) {
+    const sb = getSb();
+    if (!sb) return;
+    try {
+        const keywords = WELCOME_PRODUCT_KEYWORDS[lang] || WELCOME_PRODUCT_KEYWORDS['en'];
+        const nameField = lang === 'ja' ? 'name_jp' : (lang === 'en' || lang === 'es' || lang === 'de' || lang === 'fr' || lang === 'ar' || lang === 'zh') ? 'name_us' : 'name';
+        // 한국어는 name에서 검색, 해외는 name_jp/name_us
+        const searchField = lang === 'ja' ? 'name_jp' : (lang === 'kr' ? 'name' : 'name_us');
+        const orFilter = keywords.map(k => searchField + '.ilike.%' + k + '%').join(',');
+        const { data: rows } = await sb.from('admin_products')
+            .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, category')
+            .or(orFilter)
+            .eq('is_active', true)
+            .limit(20);
+        if (!rows || rows.length === 0) return;
+
+        // 키워드 순서에 맞춰 1개씩 매칭
+        const matched = [];
+        const used = new Set();
+        for (const kw of keywords) {
+            const found = rows.find(r => {
+                if (used.has(r.code)) return false;
+                const n = (r[searchField] || r.name || '').toLowerCase();
+                return n.includes(kw.toLowerCase());
+            });
+            if (found) { matched.push(found); used.add(found.code); }
+        }
+        if (matched.length === 0) return;
+
+        const country = (window.SITE_CONFIG && SITE_CONFIG.COUNTRY) || 'KR';
+        const products = matched.map(r => {
+            let displayName = r.name;
+            if (lang === 'ja') displayName = r.name_jp || r.name;
+            else if (lang !== 'kr') displayName = r.name_us || r.name;
+            let price = r.price;
+            let priceSuffix = '원';
+            if (country === 'JP') { price = r.price_jp || Math.round(r.price * 0.1); priceSuffix = '円'; }
+            else if (country !== 'KR') { price = r.price_us || Math.round(r.price * 0.001); priceSuffix = '$'; }
+            return {
+                code: r.code,
+                name: displayName,
+                img_url: r.img_url || '',
+                reason: '',
+                price_display: (country === 'US' || country === 'EN') ? '$' + price.toLocaleString() : price.toLocaleString() + priceSuffix,
+                recommended_width_mm: r.width_mm || 0,
+                recommended_height_mm: r.height_mm || 0,
+            };
+        });
+
+        // 추천 라벨
+        const recLabels = {
+            kr: '🔥 인기 추천 상품', ja: '🔥 おすすめ商品', en: '🔥 Popular Products',
+            zh: '🔥 热门推荐', es: '🔥 Productos Populares', de: '🔥 Beliebte Produkte',
+            fr: '🔥 Produits Populaires', ar: '🔥 منتجات شائعة'
+        };
+        if (chatArea) {
+            chatArea.insertAdjacentHTML('beforeend', `
+                <div class="adv-row adv-row-ai">
+                    <div class="adv-avatar"><i class="fa-solid fa-fire"></i></div>
+                    <div class="adv-bubble adv-bubble-ai" style="font-weight:700;font-size:14px;">${recLabels[lang] || recLabels['en']}</div>
+                </div>
+            `);
+        }
+        addProductCards(products);
+        scrollChat();
+    } catch(e) {
+        console.warn('Welcome products load failed:', e);
+    }
 }
 
 function showEntryForm() {
