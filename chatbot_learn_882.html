@@ -402,10 +402,10 @@ function getSb() { return sb; }
     window.qaFilterNeedsLearning = async function() {
         var sb = getSb(); if (!sb) return;
         _filterMode = 'needs_learning';
-        var today = new Date().toISOString().split('T')[0];
+        var today = _kstDate();
         var { data: logs } = await sb.from('advisor_qa_log').select('room_id')
             .eq('needs_learning', true).eq('is_active', true)
-            .gte('created_at', today + 'T00:00:00')
+            .gte('created_at', today + 'T00:00:00+09:00')
             .not('room_id', 'is', null);
         var roomIds = [...new Set((logs||[]).map(function(l){return l.room_id}).filter(Boolean))];
         if (!roomIds.length) { showToast('학습 필요한 대화가 없습니다', 'info'); return; }
@@ -422,13 +422,13 @@ function getSb() { return sb; }
         var sb = getSb(); if (!sb) return;
         _filterMode = 'all';
         var dateEl = document.getElementById('qaReportDate');
-        if (!dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+        if (!dateEl.value) dateEl.value = _kstDate();
         var date = dateEl.value;
         var lang = document.getElementById('qaReportLang').value;
         var q = sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
             .or('source.like.bot-%,source.like.chatbot%,source.like.ai-%,source.like.embed-%')
-            .gte('created_at', date + 'T00:00:00')
-            .lte('created_at', date + 'T23:59:59')
+            .gte('created_at', date + 'T00:00:00+09:00')
+            .lte('created_at', date + 'T23:59:59+09:00')
             .order('updated_at', { ascending: false })
             .limit(50);
         if (lang !== 'all') q = q.eq('site_lang', lang);
@@ -467,18 +467,24 @@ function getSb() { return sb; }
     }
 
     // ─── 일일 리포트 ───
+    // KST 날짜 헬퍼 (UTC+9)
+    function _kstDate(offset) {
+        var d = new Date(Date.now() + (offset||0) + 9*3600000);
+        return d.toISOString().split('T')[0];
+    }
+
     async function _loadDailyReport() {
         var sb = getSb(); if (!sb) return;
-        var today = new Date().toISOString().split('T')[0];
-        var yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        var today = _kstDate();
+        var yesterday = _kstDate(-86400000);
         var [todayTotal, todayNL, todayKr, todayJa, todayUs, yesterdayTotal, yesterdayNL] = await Promise.all([
-            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('is_active',true),
-            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('needs_learning',true).eq('is_active',true),
-            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('lang','kr').eq('is_active',true),
-            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').eq('lang','ja').eq('is_active',true),
-            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00').or('lang.eq.us,lang.eq.en').eq('is_active',true),
-            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00').lte('created_at',yesterday+'T23:59:59').eq('is_active',true),
-            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00').lte('created_at',yesterday+'T23:59:59').eq('needs_learning',true).eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('needs_learning',true).eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('lang','kr').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('lang','ja').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').or('lang.eq.us,lang.eq.en').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00+09:00').lte('created_at',yesterday+'T23:59:59+09:00').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00+09:00').lte('created_at',yesterday+'T23:59:59+09:00').eq('needs_learning',true).eq('is_active',true),
         ]);
         var tCount = todayTotal.count||0, nlCount = todayNL.count||0;
         var yCount = yesterdayTotal.count||0, yNL = yesterdayNL.count||0;
