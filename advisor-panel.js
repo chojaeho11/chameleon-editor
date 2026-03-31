@@ -182,14 +182,14 @@ async function _doProductSearch(query) {
         const { data: rows } = await sb.from('admin_products')
             .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, category')
             .ilike(searchField, '%' + query + '%')
-            .limit(6);
+            .limit(4);
         if (!rows || rows.length === 0) {
             // name 필드로 재시도 (해외에서 한국어 검색 시)
             if (searchField !== 'name') {
                 const { data: rows2 } = await sb.from('admin_products')
                     .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, category')
                     .ilike('name', '%' + query + '%')
-                    .limit(6);
+                    .limit(4);
                 if (rows2 && rows2.length > 0) { _renderSearchResults(rows2, query, lang); return; }
             }
             const noResultMsg = {kr:'검색 결과가 없습니다.',ja:'検索結果がありません。',en:'No results found.',zh:'没有搜索结果。'}[lang]||'No results found.';
@@ -687,7 +687,7 @@ async function sendMessage(text, imageData) {
 - 폰케이스: 커플 사진이나 특별한 디자인의 실용적 선물.
 예산별 추천: ~3만원(머그컵/폰케이스), ~5만원(캔버스액자/패브릭포스터), ~10만원(등신대/포토북세트), 10만원+(등신대+캔버스액자 세트)
 결혼식 이벤트면 "허니콤보드 등신대를 포토존으로 세워두면 하객들이 재미있어하는 이벤트가 됩니다"라고 적극 추천. 집에 두는 선물이면 캔버스액자나 패브릭포스터를 추천.
-[중요] 응답 시 항상 관련 제품 3개를 추천하라. 단순 인사나 잡담이 아닌 이상, 제품 카드 3개를 반드시 포함할 것. 사용자가 구체적 제품을 물어도 해당 제품 + 관련 제품 2개를 함께 추천.`
+[중요] 인사나 잡담에는 제품을 추천하지 말고 짧고 재치있게 인사만 해라 (예: "안녕하세요! 무엇을 도와드릴까요?"). 구체적 질문이 있을 때만 관련 제품 3개를 추천할 것. 사용자가 구체적 제품을 물어도 해당 제품 + 관련 제품 2개를 함께 추천.`
         };
         const payload = {
             message: text,
@@ -741,9 +741,6 @@ async function sendMessage(text, imageData) {
         if (products.length > 0) {
             lastProducts = products;
             addProductCards(products);
-        } else if (conversationHistory.length <= 2) {
-            // 첫 대화(인사)에서 AI가 제품을 추천하지 않았으면 추천 상품 4개 표시
-            _loadWelcomeProducts(getLang());
         }
 
         // ★ 연락처 남기기 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
