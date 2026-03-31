@@ -79,11 +79,13 @@ function clearChat() {
     conversationHistory = [];
     lastProducts = [];
     _advRoomId = null;
+    _custName = '';
+    _custPhone = '';
     if (chatArea) chatArea.innerHTML = '';
     try { sessionStorage.removeItem(chatKey()); } catch(e) {}
-    // 이전 localStorage 데이터도 정리
+    try { sessionStorage.removeItem('kapu_customer'); } catch(e) {}
     try { localStorage.removeItem(chatKey()); localStorage.removeItem('kapu_chat_guest'); } catch(e) {}
-    showWelcomeMessage();
+    showEntryForm();
 }
 
 const WELCOME = {
