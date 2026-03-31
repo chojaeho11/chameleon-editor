@@ -22,9 +22,10 @@ if (country === 'KR') {
     }
 }
 
-// URL 파라미터가 있다면 도메인 설정보다 우선순위
+// URL 파라미터 — 단, 고정 도메인(cafe0101=JP, cafe2626=KR)은 무시
 const paramLang = urlParams.get('lang');
-if (paramLang) {
+const _isFixedDomain = hostname.includes('cafe0101') || hostname.includes('cafe2626');
+if (paramLang && !_isFixedDomain) {
     const code = paramLang.toUpperCase();
 
     // 언어 코드를 국가 코드로 변환
