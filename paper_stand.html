@@ -293,11 +293,33 @@ a { text-decoration: none; color: inherit; }
 </section>
 
 <!-- 영상 소개 -->
-<section style="max-width:900px; margin:0 auto; padding:20px 16px 0;">
-    <video autoplay muted loop playsinline style="width:100%; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.1);">
-        <source src="/arco5.mp4" type="video/mp4">
-    </video>
+<section style="max-width:1200px; margin:0 auto; padding:60px 24px 40px; display:flex; align-items:center; gap:48px;">
+    <div style="flex:1; min-width:280px;">
+        <h2 style="font-size:42px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:24px;">
+            <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">원터치</em>형으로<br>조립시간 1분
+        </h2>
+        <p style="font-size:20px; color:#64748b; line-height:1.7; margin-bottom:32px;">
+            <strong style="color:#1e293b;">60KG</strong>을 견디는 내구도.<br>
+            가볍고 친환경적인 종이 소재로<br>
+            어디서든 빠르게 설치하세요.
+        </p>
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.3); transition:all 0.3s;">
+            상품 보기 <i class="fa-solid fa-arrow-down"></i>
+        </button>
+    </div>
+    <div style="flex:1; min-width:300px;">
+        <video autoplay muted loop playsinline style="width:100%; display:block;">
+            <source src="/arco5.mp4" type="video/mp4">
+        </video>
+    </div>
 </section>
+<style>
+@media (max-width: 768px) {
+    section[style*="gap:48px"] { flex-direction:column !important; gap:24px !important; padding:32px 16px 24px !important; text-align:center; }
+    section[style*="gap:48px"] h2 { font-size:28px !important; }
+    section[style*="gap:48px"] p { font-size:16px !important; }
+}
+</style>
 
 <!-- 상품 목록 (최상단) -->
 <section class="section" id="products" style="padding-top:32px;">
