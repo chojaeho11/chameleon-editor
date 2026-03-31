@@ -492,12 +492,9 @@ function buildPanelUI() {
     const restored = loadChat();
     if (restored) {
         scrollChat();
-    } else if (_custName) {
-        // 이름 있으면 바로 웰컴
-        showWelcomeMessage();
     } else {
-        // 첫 방문: 이름/전화 입력 폼
-        showEntryForm();
+        // 첫 방문이든 재방문이든 바로 웰컴 메시지 + 추천 상품 표시
+        showWelcomeMessage();
     }
 
     // 포토스튜디오 버튼
