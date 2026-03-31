@@ -978,7 +978,7 @@ async function openDeliveryInfoModal() {
                 // 다국어 라벨
                 const lang = CURRENT_LANG || 'kr';
                 const labels = {
-                    kr: '상담하신 담당 매니저님이 계시다면 선택해주세요.',
+                    kr: '담당 매니저 선택',
                     ja: 'ご担当のマネージャーがいらっしゃいましたらお選びください。',
                     en: 'If you have a dedicated manager, please select below.',
                     zh: '如果您有专属经理，请选择。',
@@ -997,46 +997,72 @@ async function openDeliveryInfoModal() {
                     { name:'지숙', label:{ kr:'👩 지숙', ja:'👩 ジスク', en:'👩 Jisook', zh:'👩 智淑', es:'👩 Jisook', de:'👩 Jisook', fr:'👩 Jisook', ar:'👩 جيسوك' }, color:'#f59e0b' }
                 ];
 
+                const hqWrap = document.getElementById('staffManagerHqBtn');
+                const guideEl = document.getElementById('staffManagerGuide');
                 mgrBtns.innerHTML = '';
-                btnConfig.forEach(cfg => {
+                if (hqWrap) hqWrap.innerHTML = '';
+
+                // 모든 매니저 버튼 선택 상태 동기화 함수
+                const _syncAllMgrBtns = () => {
+                    const allBtns = [...(hqWrap ? hqWrap.querySelectorAll('button') : []), ...mgrBtns.querySelectorAll('button')];
+                    allBtns.forEach(b => {
+                        const c = b.dataset.color;
+                        if (b.dataset.staffId === mgrHidden.value) {
+                            b.style.background = c; b.style.color = '#fff';
+                        } else {
+                            b.style.background = '#fff'; b.style.color = c;
+                        }
+                    });
+                };
+
+                btnConfig.forEach((cfg, idx) => {
                     const matchMgr = cfg.name ? managers.find(m => m.name.includes(cfg.name)) : null;
                     const staffId = matchMgr ? String(matchMgr.id) : (cfg.id || '');
                     const bgColor = (matchMgr && matchMgr.color) || cfg.color;
                     const text = cfg.label[lang] || cfg.label['en'];
+                    const isHq = idx === 0;
 
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.textContent = text;
                     btn.dataset.staffId = staffId;
-                    btn.style.cssText = `padding:12px 8px;border:2.5px solid ${bgColor};border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:${bgColor};transition:all 0.2s;`;
+                    btn.dataset.color = bgColor;
+                    btn.style.cssText = isHq
+                        ? `width:100%;padding:16px 8px;border:2.5px solid ${bgColor};border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;background:${bgColor};color:#fff;transition:all 0.2s;`
+                        : `padding:12px 8px;border:2.5px solid ${bgColor};border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:${bgColor};transition:all 0.2s;`;
                     btn.onmouseenter = () => { if (mgrHidden.value !== staffId) { btn.style.background = bgColor + '18'; } };
                     btn.onmouseleave = () => { if (mgrHidden.value !== staffId) { btn.style.background = '#fff'; } };
                     btn.onclick = () => {
-                        // 토글: 같은 버튼 재클릭 시 해제
                         if (mgrHidden.value === staffId) {
                             mgrHidden.value = '';
-                            mgrBtns.querySelectorAll('button').forEach(b => {
-                                const c = b.dataset.color;
-                                b.style.background = '#fff';
-                                b.style.color = c;
-                            });
                         } else {
                             mgrHidden.value = staffId;
-                            mgrBtns.querySelectorAll('button').forEach(b => {
-                                const c = b.dataset.color;
-                                if (b.dataset.staffId === staffId) {
-                                    b.style.background = c;
-                                    b.style.color = '#fff';
-                                } else {
-                                    b.style.background = '#fff';
-                                    b.style.color = c;
-                                }
-                            });
                         }
+                        _syncAllMgrBtns();
                     };
-                    btn.dataset.color = bgColor;
-                    mgrBtns.appendChild(btn);
+
+                    if (isHq) {
+                        (hqWrap || mgrBtns).appendChild(btn);
+                    } else {
+                        mgrBtns.appendChild(btn);
+                    }
                 });
+
+                // ★ 본사 기본 선택
+                const hqBtn = btnConfig[0];
+                const hqStaffId = hqBtn.id || '__hq__';
+                mgrHidden.value = hqStaffId;
+                _syncAllMgrBtns();
+
+                // ★ 안내 문구 (한국어 전용)
+                if (guideEl) {
+                    if (lang === 'kr') {
+                        guideEl.textContent = '상담하신 매니저가 없다면 본사에서 연락드릴게요 😊';
+                        guideEl.style.display = 'block';
+                    } else {
+                        guideEl.style.display = 'none';
+                    }
+                }
                 // ★ 본사 전용 카테고리 자동 배정: 보드류도매가, 종이매대, 굿즈판촉물
                 const HQ_ONLY_TOP_CATS = ['Wholesale Board Prices', 'paper_display', '77777'];
                 const hasHqOnlyItem = cartData.some(item => {
@@ -1047,7 +1073,8 @@ async function openDeliveryInfoModal() {
                 if (hasHqOnlyItem) {
                     // 본사 자동 선택 + 잠금
                     mgrHidden.value = '__hq__';
-                    mgrBtns.querySelectorAll('button').forEach(b => {
+                    const allLockBtns = [...(hqWrap ? hqWrap.querySelectorAll('button') : []), ...mgrBtns.querySelectorAll('button')];
+                    allLockBtns.forEach(b => {
                         const c = b.dataset.color;
                         if (b.dataset.staffId === '__hq__') {
                             b.style.background = c;
