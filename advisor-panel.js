@@ -110,8 +110,6 @@ function showWelcomeMessage() {
         </div>
     `);
     scrollChat();
-    // 추천 상품 카드 표시
-    _loadWelcomeProducts(lang);
 }
 
 // ─── 첫 인사 추천 상품 (제품 코드 직접 지정) ───
@@ -492,9 +490,10 @@ function buildPanelUI() {
     const restored = loadChat();
     if (restored) {
         scrollChat();
-    } else {
-        // 첫 방문이든 재방문이든 바로 웰컴 메시지 + 추천 상품 표시
+    } else if (_custName) {
         showWelcomeMessage();
+    } else {
+        showEntryForm();
     }
 
     // 포토스튜디오 버튼
@@ -678,6 +677,9 @@ async function sendMessage(text, imageData) {
         if (products.length > 0) {
             lastProducts = products;
             addProductCards(products);
+        } else if (conversationHistory.length <= 2) {
+            // 첫 대화(인사)에서 AI가 제품을 추천하지 않았으면 추천 상품 4개 표시
+            _loadWelcomeProducts(getLang());
         }
 
         // ★ 연락처 남기기 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
