@@ -1459,23 +1459,19 @@ button, input, textarea, select { font-family: inherit; }
     margin-left: 4px;
 }
 .adv-studio-btn {
-    background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
-    background-size: 200% 200%;
-    border: 2px solid rgba(255,255,255,0.6);
+    background: none;
+    border: none;
     color: #fff;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 800;
+    padding: 2px 4px;
+    border-radius: 6px;
+    font-size: 18px;
     cursor: pointer;
-    margin-left: 6px;
-    transition: all 0.2s;
-    animation: studioPulse 2s ease-in-out infinite, studioGlow 3s ease-in-out infinite;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    box-shadow: 0 0 8px rgba(245,158,11,0.5);
+    margin-left: 0;
+    transition: opacity 0.2s;
     white-space: nowrap;
+    line-height: 1;
 }
-.adv-studio-btn:hover { transform: scale(1.08); box-shadow: 0 0 16px rgba(245,158,11,0.7); }
+.adv-studio-btn:hover { opacity: 0.8; }
 @keyframes studioPulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.06); }
