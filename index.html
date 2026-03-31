@@ -10258,18 +10258,25 @@ if (w >= 20 && h >= 20) {
                 _fb1400Warn.textContent = _w1400Msg;
                 (sizeDisplay || priceDisplay)?.parentElement?.appendChild(_fb1400Warn);
                 showToast(_w1400Msg, 'warn');
-                // 이어박기 + 오버록 자동 선택
+                // 이어박기(txl0005) + 오버록(txl0002) 자동 선택 — addon 코드 기반
+                const _seamCodes = ['txl0005', 'txl0002'];
+                // 1) PDP 옵션 체크박스
                 const _sewBox1400 = document.querySelector('[data-required-cat="2342434"]');
                 if (_sewBox1400) {
                     _sewBox1400.querySelectorAll('input[name="userOption"]').forEach(chk => {
-                        const lbl = chk.closest('label')?.textContent || chk.closest('.addon-item-row')?.textContent || '';
-                        if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.includes('接続') || lbl.toLowerCase().includes('seam') || lbl.toLowerCase().includes('join') || lbl.toLowerCase().includes('connect') ||
-                            lbl.includes('오버록') || lbl.includes('オーバーロック') || lbl.toLowerCase().includes('overlock')) {
+                        if (_seamCodes.includes(chk.value)) {
                             chk.checked = true;
                             chk.dispatchEvent(new Event('change', {bubbles:true}));
                         }
                     });
                 }
+                // 2) 에디터 fabricAddonPanel 체크박스
+                document.querySelectorAll('#fabricAddonPanel input[name="fabricAddon"]').forEach(chk => {
+                    if (_seamCodes.includes(chk.value)) {
+                        chk.checked = true;
+                        chk.dispatchEvent(new Event('change', {bubbles:true}));
+                    }
+                });
             } else if (!_bothOver1400 && _fb1400Warn) {
                 _fb1400Warn.remove();
             }
@@ -10578,23 +10585,17 @@ if (w >= 20 && h >= 20) {
     window._onFabricAddonChange = function() {
         const checkboxes = document.querySelectorAll('#fabricAddonPanel input[name="fabricAddon"]');
 
-        // ★ 이어박기 체크 시 오버록 자동 체크
+        // ★ 이어박기(txl0005) 체크 시 오버록(txl0002) 자동 체크 — 코드 기반
         let hasSeamJoin = false;
         checkboxes.forEach(chk => {
-            const nm = chk.dataset.name || '';
-            if (chk.checked && (nm.includes('이어') || nm.includes('つなぎ') || nm.includes('接続') || nm.toLowerCase().includes('seam') || nm.toLowerCase().includes('join') || nm.toLowerCase().includes('connect'))) {
-                hasSeamJoin = true;
-            }
+            if (chk.checked && chk.value === 'txl0005') hasSeamJoin = true;
         });
         if (hasSeamJoin) {
             checkboxes.forEach(chk => {
-                const nm = chk.dataset.name || '';
-                if (nm.includes('오버록') || nm.includes('オーバーロック') || nm.toLowerCase().includes('overlock')) {
-                    if (!chk.checked) {
-                        chk.checked = true;
-                        const lbl = chk.closest('label');
-                        if (lbl) { lbl.style.borderColor = '#6366f1'; lbl.style.background = 'rgba(99,102,241,0.15)'; }
-                    }
+                if (chk.value === 'txl0002' && !chk.checked) {
+                    chk.checked = true;
+                    const lbl = chk.closest('label');
+                    if (lbl) { lbl.style.borderColor = '#6366f1'; lbl.style.background = 'rgba(99,102,241,0.15)'; }
                 }
             });
         }
@@ -10624,17 +10625,24 @@ if (w >= 20 && h >= 20) {
                 selectedCodes.push(chk.value);
                 selectedQtys[chk.value] = 1;
                 const name = chk.dataset.name || '';
+                const code = chk.value;
+                config.addonNames[code] = name;
+                // addon 코드 기반 매칭 (언어 무관)
+                if (code === 'txl0005') config.seamJoin = true;
+                if (code === 'txl0002') config.overlock = true;
+                if (code === 'txl0003') config.interlock = true;
+                if (code === 'MS023') config.centerSlit = true;
+                // 이름 기반 fallback (코드가 다를 수 있는 addon)
                 const nl = name.toLowerCase();
-                config.addonNames[chk.value] = name;
-                if (name.includes('이어') || name.includes('つなぎ') || name.includes('繋ぎ') || name.includes('接続') || nl.includes('seam') || nl.includes('join') || nl.includes('connect')) config.seamJoin = true;
-                if (name.includes('오버록') || name.includes('オーバー') || nl.includes('overlock') || nl.includes('over lock')) config.overlock = true;
-                if (name.includes('인터록') || name.includes('インター') || nl.includes('interlock') || nl.includes('inter lock')) config.interlock = true;
-                if (name.includes('트임') || name.includes('スリット') || name.includes('真ん中') || nl.includes('slit') || nl.includes('center')) config.centerSlit = true;
-                if (name.includes('끈고리') || (name.includes('끈') && name.includes('고리')) || name.includes('ひも') || name.includes('ループ') || nl.includes('string loop') || nl.includes('loop')) config.topLoop = true;
-                if (name.includes('상하단봉') || name.includes('上下') || nl.includes('top bottom pole') || nl.includes('top & bottom')) config.topBottomPole = true;
-                else if (name.includes('상단봉') || name.includes('トップ') || nl.includes('top pole') || nl.includes('top bar')) config.topPole = true;
-                if (name.includes('멜빵') || name.includes('サスペン') || nl.includes('strap') || nl.includes('suspender')) config.strapLoop = true;
-                if (name.includes('타공') || name.includes('아일렛') || name.includes('アイレット') || name.includes('穴') || nl.includes('grommet') || nl.includes('eyelet') || nl.includes('hole')) config.cornerGrommet = true;
+                if (!config.seamJoin && (name.includes('이어') || nl.includes('seam') || nl.includes('join'))) config.seamJoin = true;
+                if (!config.overlock && (name.includes('오버록') || nl.includes('overlock'))) config.overlock = true;
+                if (!config.interlock && (name.includes('인터록') || nl.includes('interlock'))) config.interlock = true;
+                if (!config.centerSlit && (name.includes('트임') || nl.includes('slit'))) config.centerSlit = true;
+                if (name.includes('끈고리') || nl.includes('loop') || name.includes('ループ')) config.topLoop = true;
+                if (name.includes('상하단봉') || nl.includes('top bottom') || nl.includes('top & bottom')) config.topBottomPole = true;
+                else if (name.includes('상단봉') || nl.includes('top pole') || nl.includes('top bar')) config.topPole = true;
+                if (name.includes('멜빵') || nl.includes('strap') || nl.includes('suspender')) config.strapLoop = true;
+                if (name.includes('타공') || name.includes('아일렛') || nl.includes('grommet') || nl.includes('eyelet')) config.cornerGrommet = true;
             }
         });
 
@@ -10841,19 +10849,27 @@ if (w >= 20 && h >= 20) {
         // ★ 패브릭 가이드 정보 저장 (에디터에서 사용)
         if (_fabricTopCat === '22222') {
             const _fabricGuides = { seamJoin:false, overlock:false, interlock:false, centerSlit:false, topLoop:false, topPole:false, topBottomPole:false, strapLoop:false, cornerGrommet:false, addonNames:{} };
-            document.querySelectorAll('input[name="userOption"]:checked').forEach(chk => {
-                const lbl = chk.closest('label')?.textContent || chk.closest('.addon-item-row')?.textContent || '';
+            // PDP + fabricAddonPanel 양쪽 체크박스 모두 수집
+            const _allChecked = [...document.querySelectorAll('input[name="userOption"]:checked'), ...document.querySelectorAll('#fabricAddonPanel input[name="fabricAddon"]:checked')];
+            _allChecked.forEach(chk => {
+                const lbl = chk.dataset.name || chk.closest('label')?.textContent || chk.closest('.addon-item-row')?.textContent || '';
                 const ll = lbl.toLowerCase();
                 const code = chk.value;
                 _fabricGuides.addonNames[code] = lbl.trim();
-                if (lbl.includes('이어') || lbl.includes('つなぎ') || lbl.includes('繋ぎ') || lbl.includes('接続') || ll.includes('seam') || ll.includes('join') || ll.includes('connect')) _fabricGuides.seamJoin = true;
-                if (lbl.includes('오버록') || lbl.includes('オーバー') || ll.includes('overlock') || ll.includes('over lock')) _fabricGuides.overlock = true;
-                if (lbl.includes('인터록') || lbl.includes('インター') || ll.includes('interlock') || ll.includes('inter lock')) _fabricGuides.interlock = true;
-                if (lbl.includes('트임') || lbl.includes('スリット') || lbl.includes('真ん中') || ll.includes('slit') || ll.includes('center')) _fabricGuides.centerSlit = true;
-                if (lbl.includes('끈고리') || (lbl.includes('끈') && lbl.includes('고리')) || lbl.includes('ひも') || lbl.includes('ループ') || ll.includes('loop')) _fabricGuides.topLoop = true;
-                if (lbl.includes('상하단봉') || lbl.includes('上下') || ll.includes('top bottom') || ll.includes('top & bottom')) _fabricGuides.topBottomPole = true;
-                else if (lbl.includes('상단봉') || lbl.includes('トップ') || ll.includes('top pole') || ll.includes('top bar')) _fabricGuides.topPole = true;
-                if (lbl.includes('멜빵') || lbl.includes('サスペン') || ll.includes('strap') || ll.includes('suspender')) _fabricGuides.strapLoop = true;
+                // 코드 기반 매칭
+                if (code === 'txl0005') _fabricGuides.seamJoin = true;
+                if (code === 'txl0002') _fabricGuides.overlock = true;
+                if (code === 'txl0003') _fabricGuides.interlock = true;
+                if (code === 'MS023') _fabricGuides.centerSlit = true;
+                // 이름 기반 fallback
+                if (!_fabricGuides.seamJoin && (lbl.includes('이어') || ll.includes('seam') || ll.includes('join'))) _fabricGuides.seamJoin = true;
+                if (!_fabricGuides.overlock && (lbl.includes('오버록') || ll.includes('overlock'))) _fabricGuides.overlock = true;
+                if (!_fabricGuides.interlock && (lbl.includes('인터록') || ll.includes('interlock'))) _fabricGuides.interlock = true;
+                if (!_fabricGuides.centerSlit && (lbl.includes('트임') || ll.includes('slit'))) _fabricGuides.centerSlit = true;
+                if (lbl.includes('끈고리') || ll.includes('loop') || lbl.includes('ループ')) _fabricGuides.topLoop = true;
+                if (lbl.includes('상하단봉') || ll.includes('top bottom') || ll.includes('top & bottom')) _fabricGuides.topBottomPole = true;
+                else if (lbl.includes('상단봉') || ll.includes('top pole') || ll.includes('top bar')) _fabricGuides.topPole = true;
+                if (lbl.includes('멜빵') || ll.includes('strap') || ll.includes('suspender')) _fabricGuides.strapLoop = true;
                 if (lbl.includes('타공') || lbl.includes('아일렛') || lbl.includes('アイレット') || lbl.includes('穴') || ll.includes('grommet') || ll.includes('eyelet') || ll.includes('hole')) _fabricGuides.cornerGrommet = true;
             });
             _fabricGuides.widthMm = finalW;
