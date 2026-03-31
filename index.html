@@ -7851,9 +7851,10 @@ window.goHome = function() {
     if (_tcp) _tcp.remove();
     window._selectedTshirtColor = null;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentLang = urlParams.get('lang') || (window.location.hostname.includes('cafe0101') ? 'ja' : window.location.hostname.includes('cafe3355') || location.hostname.includes('chameleon.design') || window.location.hostname.includes('chameleon.design') ? 'en' : null);
-    window.location.href = currentLang ? '/?lang=' + currentLang : '/';
+    // SITE_CONFIG 기반 언어 감지 (연산자 우선순위 버그 방지)
+    const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+    const _homeLang = _cc === 'JP' ? 'ja' : _cc === 'CN' ? 'zh' : _cc === 'ES' ? 'es' : _cc === 'DE' ? 'de' : _cc === 'FR' ? 'fr' : _cc === 'AR' ? 'ar' : (_cc === 'US' || _cc === 'EN') ? 'en' : '';
+    window.location.href = _homeLang ? '/?lang=' + _homeLang : '/';
 };
 
 // [최종 수정] 상품 클릭 시 URL 변경 (언어 설정 유지 기능 추가)

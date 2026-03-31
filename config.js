@@ -122,6 +122,17 @@ export function initConfig() {
                             if (window.restorePendingPayment) window.restorePendingPayment();
                         }, 2000);
                     }
+
+                    // ★ 소셜 로그인 후 에디터 자동 복원 (main.js가 이미 실행된 경우 대비)
+                    if (window._pendingEditorRestore && !document.body.classList.contains('editor-active')) {
+                        const _act = window._pendingEditorRestore;
+                        window._pendingEditorRestore = null;
+                        setTimeout(() => {
+                            if (window.startEditorDirect) {
+                                window.startEditorDirect(_act.key, _act.customW, _act.customH, _act.customPrice);
+                            }
+                        }, 1500);
+                    }
                 }
 
                 if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active') && !sessionStorage.getItem('_pendingEditorAction')) {

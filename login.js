@@ -366,16 +366,15 @@ async function handleSocialLogin(provider) {
         return handleLineLogin();
     }
 
-    // ★ 소셜 로그인 후 홈으로 복귀 (상품 상세/결제 페이지 대신 홈 — lang만 유지)
+    // ★ 소셜 로그인 후 현재 도메인 홈으로 복귀 (SITE_CONFIG 기반 언어 유지)
     const _hn = window.location.hostname;
     let redirectUrl = window.location.origin + '/';
-    if (_hn.includes('cafe0101')) redirectUrl += '?lang=ja';
-    else if (_hn.includes('cafe3355') || _hn.includes('chameleon.design')) {
-        const _lp = new URLSearchParams(window.location.search).get('lang');
-        if (_lp && _lp !== 'en') redirectUrl += '?lang=' + _lp;
-    } else {
-        const _lp = new URLSearchParams(window.location.search).get('lang');
-        if (_lp) redirectUrl += '?lang=' + _lp;
+    // 고정 도메인은 lang 파라미터 불필요 (site-config.js가 도메인으로 감지)
+    if (!_hn.includes('cafe0101') && !_hn.includes('cafe2626')) {
+        const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+        const _langMap = { JP:'ja', CN:'zh', ES:'es', DE:'de', FR:'fr', AR:'ar', US:'en', EN:'en' };
+        const _sl = _langMap[_cc] || '';
+        if (_sl) redirectUrl += '?lang=' + _sl;
     }
     const { data, error } = await sb.auth.signInWithOAuth({
         provider: provider,
