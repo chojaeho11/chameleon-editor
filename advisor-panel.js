@@ -115,7 +115,7 @@ function showWelcomeMessage() {
 }
 
 // ─── 첫 인사 추천 상품 (제품 코드 직접 지정) ───
-const WELCOME_PRODUCT_CODES = ['hb_dw_1', 'pd_b_1', 'ch20001', '345345353', 'hb_pi_5', '0ll'];
+const WELCOME_PRODUCT_CODES = ['hb_dw_1', 'pd_b_1', 'ch20001', '345345353'];
 
 async function _loadWelcomeProducts(lang) {
     const sb = getSb();
