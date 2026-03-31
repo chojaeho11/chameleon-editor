@@ -171,6 +171,65 @@ async function _loadWelcomeProducts(lang) {
     }
 }
 
+// ─── 제품 검색 ───
+async function _doProductSearch(query) {
+    if (!query || query.length < 1) return;
+    const sb = getSb();
+    if (!sb || !chatArea) return;
+    const lang = getLang();
+    const searchField = lang === 'ja' ? 'name_jp' : (lang === 'kr' ? 'name' : 'name_us');
+    try {
+        const { data: rows } = await sb.from('admin_products')
+            .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, category')
+            .ilike(searchField, '%' + query + '%')
+            .limit(6);
+        if (!rows || rows.length === 0) {
+            // name 필드로 재시도 (해외에서 한국어 검색 시)
+            if (searchField !== 'name') {
+                const { data: rows2 } = await sb.from('admin_products')
+                    .select('code, name, name_jp, name_us, price, price_jp, price_us, img_url, width_mm, height_mm, category')
+                    .ilike('name', '%' + query + '%')
+                    .limit(6);
+                if (rows2 && rows2.length > 0) { _renderSearchResults(rows2, query, lang); return; }
+            }
+            const noResultMsg = {kr:'검색 결과가 없습니다.',ja:'検索結果がありません。',en:'No results found.',zh:'没有搜索结果。'}[lang]||'No results found.';
+            addBubble(noResultMsg, 'ai');
+            scrollChat();
+            return;
+        }
+        _renderSearchResults(rows, query, lang);
+    } catch(e) { console.warn('Product search failed:', e); }
+}
+
+function _renderSearchResults(rows, query, lang) {
+    const country = (window.SITE_CONFIG && SITE_CONFIG.COUNTRY) || 'KR';
+    const products = rows.map(r => {
+        let displayName = r.name;
+        if (lang === 'ja') displayName = r.name_jp || r.name;
+        else if (lang !== 'kr') displayName = r.name_us || r.name;
+        let price = r.price; let priceSuffix = '원';
+        if (country === 'JP') { price = r.price_jp || Math.round(r.price * 0.1); priceSuffix = '円'; }
+        else if (country !== 'KR') { price = r.price_us || Math.round(r.price * 0.001); priceSuffix = '$'; }
+        return {
+            code: r.code, name: displayName, img_url: r.img_url || '', reason: '',
+            price_display: (country === 'US' || country === 'EN') ? '$' + price.toLocaleString() : price.toLocaleString() + priceSuffix,
+            recommended_width_mm: r.width_mm || 0, recommended_height_mm: r.height_mm || 0,
+        };
+    });
+    const searchLabel = {kr:`🔍 "${query}" 검색 결과`,ja:`🔍 "${query}" 検索結果`,en:`🔍 Results for "${query}"`,zh:`🔍 "${query}" 搜索结果`}[lang]||`🔍 "${query}"`;
+    chatArea.insertAdjacentHTML('beforeend', `
+        <div class="adv-row adv-row-ai">
+            <div class="adv-avatar"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="adv-bubble adv-bubble-ai" style="font-weight:700;font-size:14px;">${searchLabel}</div>
+        </div>
+    `);
+    addProductCards(products);
+    scrollChat();
+    // 검색창 클리어
+    const si = document.getElementById('advProductSearch');
+    if (si) si.value = '';
+}
+
 function showEntryForm() {
     if (!chatArea) return;
     const lang = getLang();
@@ -385,6 +444,10 @@ function buildPanelUI() {
             <div class="adv-panel-title">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> ${t('title')}
                 <button class="adv-studio-btn" id="advStudioBtn">✨ ${t('studio')}</button>
+                <div style="position:relative;flex:1;margin-left:6px;">
+                    <input type="text" id="advProductSearch" placeholder="${{kr:'제품 검색',ja:'商品検索',en:'Search',zh:'搜索',es:'Buscar',de:'Suche',fr:'Recherche',ar:'بحث'}[getLang()]||'Search'}" style="width:100%;padding:5px 28px 5px 10px;border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;font-size:12px;background:rgba(255,255,255,0.15);color:#fff;outline:none;font-family:inherit;box-sizing:border-box;" autocomplete="off">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:rgba(255,255,255,0.6);pointer-events:none;"></i>
+                </div>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
                 ${_getContactLinks()}
@@ -393,9 +456,6 @@ function buildPanelUI() {
                 </button>
                 <button class="adv-header-btn" id="advResetBtn" title="${t('reset')}">
                     <i class="fa-solid fa-rotate-right"></i>
-                </button>
-                <button class="adv-panel-close" id="advCloseBtn">
-                    <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
         </div>
@@ -429,10 +489,13 @@ function buildPanelUI() {
     `;
     chatArea = document.getElementById('advChatArea');
 
-    // 닫기
-    document.getElementById('advCloseBtn').addEventListener('click', () => {
-        panelEl.style.display = 'none';
-    });
+    // 제품 검색
+    const searchInput = document.getElementById('advProductSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); _doProductSearch(searchInput.value.trim()); }
+        });
+    }
 
     // 초기화
     document.getElementById('advResetBtn').addEventListener('click', () => {
