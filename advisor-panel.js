@@ -286,6 +286,14 @@ export function initAdvisorPanel() {
     panelEl = document.getElementById('advisorPanel');
     if (!panelEl) return;
 
+    // 모바일에서 바로가기 버튼/디자이너 등록 숨김
+    if (!document.getElementById('advMobileHideStyle')) {
+        const _s = document.createElement('style');
+        _s.id = 'advMobileHideStyle';
+        _s.textContent = '@media(max-width:768px){.adv-shortcut-btns,.adv-designer-register{display:none!important;}}';
+        document.head.appendChild(_s);
+    }
+
     window._startAdvisor = startAdvisor;
 
     // 전역 함수: 어디서든 카프 패널 열기
@@ -459,7 +467,7 @@ function buildPanelUI() {
             </div>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
-        <div style="display:flex;gap:6px;padding:4px 10px;">
+        <div class="adv-shortcut-btns" style="display:flex;gap:6px;padding:4px 10px;">
             <a href="${location.origin}/design-market.html" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
                 <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design',kr:'디자인 의뢰'}[getLang()]||'Design Request'}
             </a>
@@ -482,7 +490,7 @@ function buildPanelUI() {
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
-        <a href="${location.origin}/design-market.html#register" target="_blank" style="display:block;margin:10px 10px 6px;padding:16px 14px;background:linear-gradient(135deg,#f59e0b,#eab308);color:#fff;text-decoration:none;border-radius:10px;font-size:12px;line-height:1.6;text-align:center;font-weight:600;">
+        <a href="${location.origin}/design-market.html#register" target="_blank" class="adv-designer-register" style="display:block;margin:10px 10px 6px;padding:16px 14px;background:linear-gradient(135deg,#f59e0b,#eab308);color:#fff;text-decoration:none;border-radius:10px;font-size:12px;line-height:1.6;text-align:center;font-weight:600;">
             <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録しませんか？カメレオンがお客様とデザイナーをつなぎます。業界最低の仲介手数料で、毎日たくさんの注文が届きます。',en:'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.',zh:'注册成为设计师！变色龙为您连接客户。行业最低中介费，每天大量订单涌入。',ar:'سجل كمصمم! كاميليون يربط العملاء بالمصممين. أقل عمولات وسيط في الصناعة مع طلبات يومية.',es:'Regístrese como diseñador. Chameleon conecta clientes y diseñadores. Las comisiones más bajas del sector.',de:'Registrieren Sie sich als Designer! Chameleon verbindet Kunden mit Designern. Niedrigste Vermittlungsgebühren der Branche.',fr:"Inscrivez-vous comme designer ! Chameleon connecte clients et designers. Les frais les plus bas du secteur.",kr:'디자이너로 등록하세요! 카멜레온이 고객과 디자이너를 연결합니다. 업계 최저 중계수수료와 매일매일 수많은 고객의 오더가 쏟아집니다.'}[getLang()]||'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.'}
         </a>
     `;
