@@ -315,12 +315,13 @@ a { text-decoration: none; color: inherit; }
 </section>
 <style>
 @media (max-width: 768px) {
-    .video-section { flex-direction:column !important; gap:20px !important; padding:32px 16px 24px !important; }
+    .video-section { flex-direction:column !important; gap:20px !important; padding:32px 0 24px !important; }
     .video-section .video-text { flex:unset !important; width:100% !important; padding-left:0 !important; text-align:center; }
     .video-section .video-text h2 { font-size:28px !important; }
     .video-section .video-text p { font-size:16px !important; }
     .video-section .video-text button { margin:0 auto; }
-    .video-section .video-wrap { flex:unset !important; width:100% !important; }
+    .video-section .video-text { padding:0 16px !important; }
+    .video-section .video-wrap { flex:unset !important; width:100vw !important; margin-left:-16px; }
 }
 </style>
 
