@@ -732,13 +732,15 @@ async function sendMessage(text, imageData) {
         if (_hasQuoteForm) setTimeout(() => startQuoteFlow(), 300);
 
         const products = data.products || [];
+        // 첫 대화(인사)에서는 제품 추천 무시
+        const isFirstReply = conversationHistory.length <= 1;
         conversationHistory.push({
             role: 'assistant',
             content: chatMsg,
-            products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
+            products: (!isFirstReply && products.length > 0) ? products.map(p => ({ code: p.code, name: p.name })) : undefined
         });
 
-        if (products.length > 0) {
+        if (products.length > 0 && !isFirstReply) {
             lastProducts = products;
             addProductCards(products);
         }
