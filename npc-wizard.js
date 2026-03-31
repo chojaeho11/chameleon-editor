@@ -71,6 +71,10 @@ const NPC_TEXTS = {
         pdNone: '없음',
         pdAddToCart: '🛒 장바구니 담기',
         pdQty: '수량',
+        pdBulkDiscount: '📊 수량 할인 가격표',
+        pdTotalAmount: '총 금액',
+        pdUnit: '개',
+        pdDiscountApplied: '{rate}% 할인 (-{amount})',
         pdDepthLabel: '깊이',
         pdOpenEditor: '에디터로 디자인하기',
         pdSkipDesign: '장바구니에서 파일 올릴게요',
@@ -162,6 +166,10 @@ const NPC_TEXTS = {
         pdNone: 'なし',
         pdAddToCart: '🛒 カートに入れる',
         pdQty: '数量',
+        pdBulkDiscount: '📊 数量割引表',
+        pdTotalAmount: '合計金額',
+        pdUnit: '個',
+        pdDiscountApplied: '{rate}%割引 (-{amount})',
         pdDepthLabel: '奥行き',
         pdOpenEditor: 'エディタでデザイン',
         pdSkipDesign: 'カートでファイルをアップロード',
@@ -252,6 +260,10 @@ const NPC_TEXTS = {
         pdNone: 'None',
         pdAddToCart: '🛒 Add to Cart',
         pdQty: 'Quantity',
+        pdBulkDiscount: '📊 Bulk Discount',
+        pdTotalAmount: 'Total Amount',
+        pdUnit: 'pcs',
+        pdDiscountApplied: '{rate}% discount (-{amount})',
         pdDepthLabel: 'Depth',
         pdOpenEditor: 'Design in Editor',
         pdSkipDesign: "I'll upload files in cart",
@@ -342,6 +354,10 @@ const NPC_TEXTS = {
         pdNone: '无',
         pdAddToCart: '🛒 加入购物车',
         pdQty: '数量',
+        pdBulkDiscount: '📊 批量折扣',
+        pdTotalAmount: '总金额',
+        pdUnit: '个',
+        pdDiscountApplied: '{rate}%折扣 (-{amount})',
         pdDepthLabel: '深度',
         pdOpenEditor: '在编辑器中设计',
         pdSkipDesign: '在购物车上传文件',
@@ -414,6 +430,10 @@ const NPC_TEXTS = {
         pdNone: 'لا شيء',
         pdAddToCart: '🛒 أضف للسلة',
         pdQty: 'الكمية',
+        pdBulkDiscount: '📊 خصم الكمية',
+        pdTotalAmount: 'المبلغ الإجمالي',
+        pdUnit: 'قطعة',
+        pdDiscountApplied: '{rate}% خصم (-{amount})',
         pdDepthLabel: 'العمق',
         pdOpenEditor: 'التصميم في المحرر',
         pdSkipDesign: 'سأرفع الملفات في السلة',
@@ -486,6 +506,10 @@ const NPC_TEXTS = {
         pdNone: 'Ninguno',
         pdAddToCart: '🛒 Agregar al carrito',
         pdQty: 'Cantidad',
+        pdBulkDiscount: '📊 Descuento por cantidad',
+        pdTotalAmount: 'Monto total',
+        pdUnit: 'uds',
+        pdDiscountApplied: '{rate}% descuento (-{amount})',
         pdDepthLabel: 'Profundidad',
         pdOpenEditor: 'Diseñar en el Editor',
         pdSkipDesign: 'Subir archivos en el carrito',
@@ -558,6 +582,10 @@ const NPC_TEXTS = {
         pdNone: 'Keine',
         pdAddToCart: '🛒 In den Warenkorb',
         pdQty: 'Menge',
+        pdBulkDiscount: '📊 Mengenrabatt',
+        pdTotalAmount: 'Gesamtbetrag',
+        pdUnit: 'Stk',
+        pdDiscountApplied: '{rate}% Rabatt (-{amount})',
         pdDepthLabel: 'Tiefe',
         pdOpenEditor: 'Im Editor gestalten',
         pdSkipDesign: 'Dateien im Warenkorb hochladen',
@@ -630,6 +658,10 @@ const NPC_TEXTS = {
         pdNone: 'Aucun',
         pdAddToCart: '🛒 Ajouter au panier',
         pdQty: 'Quantité',
+        pdBulkDiscount: '📊 Remise quantité',
+        pdTotalAmount: 'Montant total',
+        pdUnit: 'pcs',
+        pdDiscountApplied: '{rate}% remise (-{amount})',
         pdDepthLabel: 'Profondeur',
         pdOpenEditor: 'Designer dans l\'éditeur',
         pdSkipDesign: 'Envoyer les fichiers dans le panier',
@@ -1193,17 +1225,17 @@ window.NpcWizard = {
                             </div>
                         </div>
                         <div id="npcPdDiscountTable" style="margin-top:10px;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;font-size:11px;">
-                            <div style="background:#1e1e2e;padding:6px 10px;color:#fff;font-weight:700;font-size:11px;">📊 수량 할인 가격표</div>
+                            <div style="background:#1e1e2e;padding:6px 10px;color:#fff;font-weight:700;font-size:11px;">${_t('pdBulkDiscount')}</div>
                             <div style="display:grid;grid-template-columns:repeat(5,1fr);text-align:center;">
-                                <div class="pd-dsc-tier" data-min="1" data-max="3" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">1~2</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;">0%</div></div>
-                                <div class="pd-dsc-tier" data-min="3" data-max="10" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">3~9</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#f59e0b;">20%</div></div>
-                                <div class="pd-dsc-tier" data-min="10" data-max="101" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">10~100</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#f59e0b;">30%</div></div>
-                                <div class="pd-dsc-tier" data-min="101" data-max="501" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">101~500</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#ef4444;">40%</div></div>
-                                <div class="pd-dsc-tier" data-min="501" data-max="999999" style="padding:6px 2px;background:#f8fafc;color:#334155;"><div style="font-weight:800;">501+</div><div style="font-size:9px;color:#94a3b8;">개</div><div style="font-weight:700;color:#ef4444;">50%</div></div>
+                                <div class="pd-dsc-tier" data-min="1" data-max="3" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">1~2</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;">0%</div></div>
+                                <div class="pd-dsc-tier" data-min="3" data-max="10" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">3~9</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#f59e0b;">20%</div></div>
+                                <div class="pd-dsc-tier" data-min="10" data-max="101" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">10~100</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#f59e0b;">30%</div></div>
+                                <div class="pd-dsc-tier" data-min="101" data-max="501" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">101~500</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#ef4444;">40%</div></div>
+                                <div class="pd-dsc-tier" data-min="501" data-max="999999" style="padding:6px 2px;background:#f8fafc;color:#334155;"><div style="font-weight:800;">501+</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#ef4444;">50%</div></div>
                             </div>
                         </div>
                         <div id="npcPdTotalPrice2" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px;border-radius:10px;text-align:center;margin-top:10px;">
-                            <div style="font-size:12px;opacity:0.85;">총 금액</div>
+                            <div style="font-size:12px;opacity:0.85;">${_t('pdTotalAmount')}</div>
                             <div style="font-size:22px;font-weight:900;" id="npcPdTotalVal2"></div>
                         </div>
                         <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:16px;font-size:16px;" onclick="window.NpcWizard._pdAddToCart()">${_t('pdAddToCart')}</button>
@@ -1679,7 +1711,8 @@ window.NpcWizard = {
                 return '$' + Math.round(c).toLocaleString();
             };
             if (discountRate > 0) {
-                el.innerHTML = `<span style="text-decoration:line-through;opacity:0.6;font-size:14px;">${fmt(subtotal)}</span> <span style="font-size:22px;">${fmt(total)}</span><div style="font-size:12px;margin-top:2px;color:#fbbf24;">${Math.round(discountRate*100)}% 할인 (-${fmt(discountAmount)})</div>`;
+                const _dt = this._t('pdDiscountApplied').replace('{rate}', Math.round(discountRate*100)).replace('{amount}', fmt(discountAmount));
+                el.innerHTML = `<span style="text-decoration:line-through;opacity:0.6;font-size:14px;">${fmt(subtotal)}</span> <span style="font-size:22px;">${fmt(total)}</span><div style="font-size:12px;margin-top:2px;color:#fbbf24;">${_dt}</div>`;
             } else {
                 el.textContent = fmt(total);
             }
@@ -1708,7 +1741,8 @@ window.NpcWizard = {
         const el = document.getElementById('npcPdTotalVal2');
         if (el) {
             if (discountRate > 0) {
-                el.innerHTML = `<span style="text-decoration:line-through;opacity:0.6;font-size:14px;">${fmt(subtotal)}</span> <span style="font-size:22px;">${fmt(total)}</span><div style="font-size:12px;margin-top:2px;color:#fbbf24;">${Math.round(discountRate*100)}% 할인 (-${fmt(discountAmount)})</div>`;
+                const _dt2 = this._t('pdDiscountApplied').replace('{rate}', Math.round(discountRate*100)).replace('{amount}', fmt(discountAmount));
+                el.innerHTML = `<span style="text-decoration:line-through;opacity:0.6;font-size:14px;">${fmt(subtotal)}</span> <span style="font-size:22px;">${fmt(total)}</span><div style="font-size:12px;margin-top:2px;color:#fbbf24;">${_dt2}</div>`;
             } else { el.textContent = fmt(total); }
         }
         // 할인 가격표 하이라이트
@@ -1717,6 +1751,11 @@ window.NpcWizard = {
             if (qty >= min && qty < max) { t.style.background = '#6366f1'; t.style.color = '#fff'; }
             else { t.style.background = '#f8fafc'; t.style.color = '#334155'; }
         });
+        // NPC 위저드에 자체 할인표가 있으므로 공통 할인표 숨김 (중복 방지)
+        const _commonDiscTable = document.getElementById('bulkDiscountTable');
+        if (_commonDiscTable) _commonDiscTable.style.display = 'none';
+        const _commonTotalBox = document.querySelector('[data-npc="total"]');
+        if (_commonTotalBox) _commonTotalBox.style.display = 'none';
         // 상세페이지 수량도 동기화
         this._pdSyncQty(qty);
     },
