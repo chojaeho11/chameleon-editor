@@ -1625,16 +1625,7 @@ button, input, textarea, select { font-family: inherit; }
 
 /* 아바타 */
 .adv-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 14px;
-    flex-shrink: 0;
+    display: none;
 }
 
 /* 말풍선 */
