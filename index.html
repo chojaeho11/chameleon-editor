@@ -11807,9 +11807,12 @@ if (w >= 20 && h >= 20) {
             }
             window.openAuthModal('login', function() {
                 window._restoreChoiceModal = false;
-                sessionStorage.removeItem('_pendingEditorAction');
-                // 로그인 성공 후 에디터 재진입
-                window.startEditorDirect(key, customW, customH, customPrice);
+                // 로그인 성공 → 상품 페이지로 새로고침 (에디터 직접 진입 시 UI 깨짐 방지)
+                const _prodUrl = '/?product=' + encodeURIComponent(key);
+                const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+                const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
+                const _sl = _lm[_cc] || '';
+                window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
             });
             return;
         }

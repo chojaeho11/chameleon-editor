@@ -227,15 +227,16 @@ window.addEventListener("DOMContentLoaded", async () => {
                 if(window.renderCart) window.renderCart();
             }, 300);
         } else if (window._pendingEditorRestore) {
-            // ★ 소셜 로그인 리다이렉트 후 에디터 자동 진입
+            // ★ 소셜 로그인 리다이렉트 후 상품 페이지로 이동 (에디터 직접 진입 시 UI 깨짐 방지)
             const _act = window._pendingEditorRestore;
             window._pendingEditorRestore = null;
+            sessionStorage.removeItem('_pendingEditorAction');
             if(loading) loading.style.display = 'none';
-            setTimeout(() => {
-                if (window.startEditorDirect) {
-                    window.startEditorDirect(_act.key, _act.customW, _act.customH, _act.customPrice);
-                }
-            }, 500);
+            const _prodUrl = '/?product=' + encodeURIComponent(_act.key);
+            const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+            const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
+            const _sl = _lm[_cc] || '';
+            window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
         } else {
             if(loading) loading.style.display = 'none';
         }

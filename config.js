@@ -123,15 +123,16 @@ export function initConfig() {
                         }, 2000);
                     }
 
-                    // ★ 소셜 로그인 후 에디터 자동 복원 (main.js가 이미 실행된 경우 대비)
+                    // ★ 소셜 로그인 후 상품 페이지로 리다이렉트 (에디터 직접 진입 시 UI 깨짐 방지)
                     if (window._pendingEditorRestore && !document.body.classList.contains('editor-active')) {
                         const _act = window._pendingEditorRestore;
                         window._pendingEditorRestore = null;
-                        setTimeout(() => {
-                            if (window.startEditorDirect) {
-                                window.startEditorDirect(_act.key, _act.customW, _act.customH, _act.customPrice);
-                            }
-                        }, 1500);
+                        sessionStorage.removeItem('_pendingEditorAction');
+                        const _prodUrl = '/?product=' + encodeURIComponent(_act.key);
+                        const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+                        const _lm = {JP:'ja',CN:'zh',ES:'es',DE:'de',FR:'fr',AR:'ar',US:'en',EN:'en'};
+                        const _sl = _lm[_cc] || '';
+                        window.location.href = _sl ? _prodUrl + '&lang=' + _sl : _prodUrl;
                     }
                 }
 
