@@ -1151,6 +1151,22 @@ window.deleteSelectedVipOrders = async () => {
     if (!error) loadVipOrders();
 };
 
+// [환불완료 메모 편집]
+window._editRefundMemo = async (orderId) => {
+    const { data: order } = await sb.from('orders').select('admin_note').eq('id', orderId).single();
+    const note = order?.admin_note || '';
+    const lines = note.split('\n').filter(l => !l.startsWith('[환불완료]') && !l.includes('##CONTACT')).join('\n').trim();
+    const newMemo = prompt('환불 메모 (주문 #' + orderId + '):', lines);
+    if (newMemo === null) return; // 취소
+    // 기존 환불완료 타임스탬프 보존
+    const refLine = note.split('\n').find(l => l.startsWith('[환불완료]')) || '';
+    const markers = note.split('\n').filter(l => l.includes('##CONTACT')).join('\n');
+    const finalNote = [refLine, newMemo, markers].filter(Boolean).join('\n');
+    await sb.from('orders').update({ admin_note: finalNote }).eq('id', orderId);
+    showToast('메모 저장 완료', 'success');
+    window.loadOrders();
+};
+
 // [통합 주문 로드]
 window.loadOrders = async () => {
     const tbody = document.getElementById('orderListBody');
@@ -1361,7 +1377,14 @@ window.loadOrders = async () => {
             } else if (st === '취소됨') {
                 const refSt = order.payment_status;
                 if (refSt === '환불완료') {
-                    statusHtml = `<span class="badge" style="background:#f0fdf4;color:#15803d;font-weight:bold;border:1px solid #bbf7d0;">✅ 환불완료</span>`;
+                    const _note = order.admin_note || '';
+                    const _refMatch = _note.match(/\[환불완료\]\s*(.+)/);
+                    const _refTime = _refMatch ? _refMatch[1].trim() : '';
+                    const _memoLines = _note.split('\n').filter(l => !l.startsWith('[환불완료]') && !l.includes('##CONTACT')).join('\n').trim();
+                    statusHtml = `<span class="badge" style="background:#f0fdf4;color:#15803d;font-weight:bold;border:1px solid #bbf7d0;">✅ 환불완료</span>`
+                        + (_refTime ? `<div style="font-size:10px;color:#64748b;margin-top:2px;">${_refTime}</div>` : '')
+                        + `<div style="margin-top:3px;"><button onclick="window._editRefundMemo(${order.id})" style="font-size:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:1px 6px;cursor:pointer;color:#15803d;">📝메모</button></div>`
+                        + (_memoLines ? `<div style="font-size:10px;color:#475569;margin-top:2px;max-width:100px;word-break:break-all;">${_memoLines.substring(0,50)}</div>` : '');
                 } else if (refSt === '환불대기') {
                     statusHtml = `<span class="badge" style="background:#fffbeb;color:#d97706;font-weight:bold;border:1px solid #fde68a;">⏳ 환불대기</span>`;
                 } else if (refSt === '본사승인') {
@@ -1752,7 +1775,8 @@ window.completeCashRefundSelected = async () => {
                     });
                 }
             }
-            await sb.from('orders').update({ status: '취소됨', payment_status: '환불완료' }).eq('id', id);
+            const _refundTime1 = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+            await sb.from('orders').update({ status: '취소됨', payment_status: '환불완료', admin_note: (order.admin_note ? order.admin_note + '\n' : '') + '[환불완료] ' + _refundTime1 }).eq('id', id);
             successCount++;
         } catch (e) {
             console.error(`Order ${id} cash refund error:`, e);
@@ -1835,7 +1859,8 @@ window.approveRefundHQ = async () => {
                             }
                         } catch(me) { console.error('마일리지 복원 오류:', me); }
                     }
-                    await sb.from('orders').update({ payment_status: '환불완료', status: '취소됨' }).eq('id', id);
+                    const _refundTime2 = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+                    await sb.from('orders').update({ payment_status: '환불완료', status: '취소됨', admin_note: (order.admin_note ? order.admin_note + '\n' : '') + '[환불완료] ' + _refundTime2 }).eq('id', id);
                     successCount++;
                 } catch (pgErr) {
                     console.error(`Order ${id} PG refund error:`, pgErr);
@@ -1889,7 +1914,8 @@ window.completeRefundSelected = async () => {
                 }
             }
 
-            await sb.from('orders').update({ payment_status: '환불완료' }).eq('id', id);
+            const _refundTime3 = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+            await sb.from('orders').update({ payment_status: '환불완료', admin_note: (order.admin_note ? order.admin_note + '\n' : '') + '[환불완료] ' + _refundTime3 }).eq('id', id);
             successCount++;
         } catch (e) {
             console.error(`Order ${id} complete refund error:`, e);
