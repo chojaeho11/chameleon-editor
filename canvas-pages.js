@@ -1,7 +1,7 @@
 /* canvas-pages.js */
-import { canvas } from "./canvas-core.js?v=280";
-import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=280";
-import { calculateBoxPrice } from "./box-nesting.js?v=280";
+import { canvas } from "./canvas-core.js?v=287";
+import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=287";
+import { calculateBoxPrice } from "./box-nesting.js?v=287";
 
 // 페이지 데이터를 저장할 배열
 export let pageDataList = [];
@@ -816,7 +816,7 @@ window.downloadBoxLayoutPDF = async function() {
     if (btn) { btn.innerText = '...'; btn.disabled = true; }
 
     try {
-        const { generateBoxLayoutPDF } = await import('./export.js?v=280');
+        const { generateBoxLayoutPDF } = await import('./export.js?v=287');
         const blob = await generateBoxLayoutPDF(
             window.__boxNesting.sheets,
             window.__boxDims,

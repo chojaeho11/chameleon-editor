@@ -92,9 +92,9 @@ serve(async (req) => {
                 .select("code,name,top_category_code,description")
                 .order("sort_order", { ascending: true }),
             sb.from("advisor_qa_log")
-                .select("customer_message,admin_answer,category")
+                .select("customer_message,admin_answer,category,lang")
                 .eq("is_reviewed", true).eq("is_active", true)
-                .order("reviewed_at", { ascending: false }).limit(30),
+                .order("reviewed_at", { ascending: false }).limit(100),
             sb.from("admin_addons")
                 .select("code,name,name_jp,name_us,category_code,price,price_jp,price_us"),
             sb.from("addon_categories")
@@ -400,6 +400,12 @@ serve(async (req) => {
    - 間仕切り壁の商品カードを必ず表示！等身大パネル・看板等もあれば別途案内。
    - **[QUOTE_FORM]タグ規則**: 以下の条件に該当する場合のみ応答の最後に[QUOTE_FORM]タグを入れて：間仕切り壁6枚(6m)以上、L字/U字等の曲がり構造、複数構造物の組み合わせ、カスタム設計が必要な場合。❌ 5枚以下の直線配置は商品ページリンクを案内。
 10. **エラーメッセージ禁止** — 分析が難しい場合は自然に連絡先を残すよう案内。「📞 連絡リクエストボタンを押して連絡先を残してください！担当者が確認後ご連絡いたします」と案内。テキストで商品を聞かれたら必ず商品カードを表示。
+11. **デザイン依頼（重要！）** — お客様が「デザインしてほしい」「デザイナーが必要」「デザイン依頼」「デザイン費用」「デザインの値段」等を聞いたら：
+   - ❌ デザイン費用を絶対に作り上げないで！固定デザイン料金は存在しません。
+   - ✅ デザインマーケットプレイスを案内：「プロのデザイナーに依頼できるデザインマーケットプレイスがありますよ！デザイナーが入札形式で提案してくれます」
+   - リンク: ${siteUrl}/design-market.html${langSuffix ? '?' + langSuffix.slice(1) : ''}
+   - 流れ: 依頼登録 → デザイナー入札 → デザイナー選択 → 作業完了 → 評価
+   - 関連商品カード（バナー等）も一緒に表示して、デザイン完成後に注文できることを案内。
 
 ## 出荷・配送案内
 - **ハニカムボード＆ファブリック**: 注文後 約8日で出荷
@@ -483,6 +489,13 @@ serve(async (req) => {
    - ALWAYS show partition wall product cards! Also show standee/sign products if visible in the image.
    - **[QUOTE_FORM] tag rules**: Add [QUOTE_FORM] at end of response ONLY when: 6+ panels (6m+), L-shaped/U-shaped/angled layouts, multiple structure combinations, or custom design needed. ❌ Do NOT add for 5 or fewer straight-line panels — just show product page links.
 10. **Never say 'connection unstable'** — For complex requests, naturally guide them to leave their phone number for callback. Say "Click the 📞 Request Callback button to leave your number! Our team will contact you." For text product questions, always show product cards.
+11. **Design requests (CRITICAL!)** — When customer asks "design help", "need a designer", "design cost", "how much to design", "design a banner", "custom design" or similar:
+   - ❌ NEVER make up design fees or prices! There is NO "$30 design fee" or any fixed design cost.
+   - ✅ Guide them to the Design Marketplace: "We have a Design Marketplace where professional designers bid on your project!"
+   - Link: ${siteUrl}/design-market.html${langSuffix ? '?' + langSuffix.slice(1) : ''}
+   - Explain the process: Post your request → Designers bid → Choose a designer → Get your design completed → Rate the designer
+   - Also show relevant product cards (e.g., banner products) so they can see what they'll be ordering after the design is done.
+   - Two ways to get a design: ① Use the Design Marketplace for custom designs ② Order the product first, then a manager will help coordinate design files.
 
 ## Shipping & Delivery
 - **Honeycomb Board & Fabric**: Ships within ~8 days
@@ -533,20 +546,27 @@ serve(async (req) => {
         };
         const labels = dataLabels[clientLang] || dataLabels['us'];
 
-        // Q&A 학습 데이터 구성
-        const qaData = qaRes.data || [];
+        // Q&A 학습 데이터 구성 — 언어별 필터링 + kr 공통 포함
+        const allQaData = qaRes.data || [];
+        // 해당 언어 QA 우선 + kr QA도 참고용 포함 (해외몰에서도 kr 학습 활용)
+        const langQa = allQaData.filter((q: any) => !q.lang || q.lang === clientLang || q.lang === 'kr');
+        const sortedQa = langQa.sort((a: any, b: any) => {
+            const aScore = a.lang === clientLang ? 0 : (!a.lang ? 1 : 2);
+            const bScore = b.lang === clientLang ? 0 : (!b.lang ? 1 : 2);
+            return aScore - bScore;
+        }).slice(0, 40);
         let qaSection = '';
-        if (qaData.length > 0) {
-            const qaLabels: Record<string, { title: string; q: string; a: string }> = {
-                kr: { title: '학습된 Q&A (이전 고객 질문과 관리자 답변)', q: '질문', a: '답변' },
-                ja: { title: '学習済みQ&A', q: '質問', a: '回答' },
-                us: { title: 'Learned Q&A', q: 'Q', a: 'A' },
+        if (sortedQa.length > 0) {
+            const qaLabels: Record<string, { title: string; q: string; a: string; instruction: string }> = {
+                kr: { title: '⚠️ 관리자가 학습시킨 Q&A — 반드시 이 답변을 우선 참고!', q: '고객 질문', a: '✅ 정답', instruction: '위 Q&A에 매칭되는 질문이 오면 반드시 해당 정답을 기반으로 답변해. 임의로 다른 답변을 만들지 마.' },
+                ja: { title: '⚠️ 管理者が学習させたQ&A — 必ずこの回答を優先！', q: '質問', a: '✅ 正解', instruction: '上記Q&Aに該当する質問には必ずこの回答に基づいて答えてください。' },
+                us: { title: '⚠️ Admin-trained Q&A — MUST follow these answers!', q: 'Q', a: '✅ Answer', instruction: 'When a customer asks something matching the Q&A above, you MUST base your answer on the trained response. Do NOT make up different answers.' },
             };
             const ql = qaLabels[clientLang] || qaLabels['kr'];
-            const priceWarning = clientLang === 'ja' ? '(⚠️ 価格は上記の商品データが最新。Q&Aの金額は古い可能性あり)' : clientLang === 'us' ? '(⚠️ Product Data prices above are current. Q&A prices may be outdated)' : '(⚠️ 가격은 위 상품 데이터가 최신. Q&A의 금액은 오래된 정보일 수 있음)';
-            qaSection = `\n\n## ${ql.title} ${priceWarning}\n` + qaData.map((q: any) =>
+            const priceWarning = clientLang === 'ja' ? '(価格は商品データが最新)' : clientLang === 'us' ? '(Product Data prices are current)' : '(가격은 상품 데이터가 최신)';
+            qaSection = `\n\n## ${ql.title} ${priceWarning}\n` + sortedQa.map((q: any) =>
                 `- ${ql.q}: ${q.customer_message}\n  ${ql.a}: ${q.admin_answer}` + (q.category !== 'general' ? ` [${q.category}]` : '')
-            ).join('\n');
+            ).join('\n') + `\n\n⚠️ ${ql.instruction}`;
         }
 
         // 누락 언어는 영어 프롬프트 + 해당 언어로 응답 지시
@@ -578,6 +598,7 @@ When customers ask about products, match their local terminology to our product 
 ALWAYS match customer's terminology to the correct product category and show relevant product cards.`;
         }
         const systemPrompt = `${selectedPrompt || langPrompts['kr']}
+${qaSection}
 ${labels.note}
 ## ${labels.products}
 (c=code,n=name,cat=category,p=price,cs=custom_size,bo=bulk_order,psm=price/m²)
@@ -615,7 +636,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         'fp_fd_twp':'Food Pouch/Packaging','daily_goods':'Fashion Accessories',
     };
     return { c: c.code, n: (clientLang !== 'kr' ? (catNameMap[c.code] || c.name) : c.name), t: c.top_category_code || '' };
-}))}${qaSection}`;
+}))}`;
 
         // Claude API — tool_choice: auto (대화 or 추천 자유)
         const tools = [{
@@ -771,12 +792,15 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 if (!hasProducts) {
                     const _comb = (trimmedMsg + ' ' + (result.summary || '') + ' ' + (result.chat_message || '')).toLowerCase();
                     const _isContact = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _comb.includes(k));
-                    if (!_isContact) {
-                        // 1차: 제품명(한/영/일) + 카테고리 매칭
+                    // 디자인 의뢰/마켓 관련 → fallback 상품 주입 스킵 (AI의 디자인마켓 안내를 보존)
+                    const _isDesignRequest = ['디자인 의뢰','디자인 맡기','디자인 해줘','디자이너','design help','need a designer','design market','デザイン依頼','デザイナー','design-market'].some(k => _comb.includes(k));
+                    if (!_isContact && !_isDesignRequest) {
+                        // 1차: 제품명(한/영/일) + 카테고리 매칭 (3글자 이상만, 일반 단어 제외)
+                        const _commonWords = new Set(['인쇄','출력','제품','상품','가격','사이즈','주문','배송','디자인','printing','product','price','order','size','design','印刷','商品','価格','サイズ','注文','配送','デザイン','원판','도매','wholesale','大判']);
                         let _m = aiProducts.filter((p: any) => {
                             const rp = rawProducts.find((r: any) => r.code === p.code);
                             const names = [p.name || '', rp?.name_us || '', rp?.name_jp || '', p.category || ''];
-                            return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _comb.includes(kw.toLowerCase())));
+                            return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 3 && !_commonWords.has(w.toLowerCase())).some((kw: string) => _comb.includes(kw.toLowerCase())));
                         }).slice(0, 5);
                         // 2차: 다국어 키워드 → 카테고리 매칭 (아랍어/중국어 등 비라틴 언어 대응)
                         if (_m.length === 0) {
@@ -838,14 +862,16 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
 
             const textParts = blocks.filter((b: any) => b.type === "text").map((b: any) => b.text);
             const textResult: any = { type: "chat", chat_message: textParts.join("\n") || "...", products: [], _model: model };
-            // 텍스트 응답에서 제품명 매칭 시 카드 주입 (사이즈/가격 조건 없이)
+            // 텍스트 응답에서 제품명 매칭 시 카드 주입 (디자인 의뢰/일반 단어 제외)
             const _combined = (trimmedMsg + ' ' + textResult.chat_message).toLowerCase();
             const _isContactMsg = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _combined.includes(k));
-            if (!_isContactMsg) {
+            const _isDesignMsg = ['디자인 의뢰','디자인 맡기','디자인 해줘','디자이너','design help','need a designer','design market','デザイン依頼','デザイナー','design-market'].some(k => _combined.includes(k));
+            if (!_isContactMsg && !_isDesignMsg) {
+                const _commonWords2 = new Set(['인쇄','출력','제품','상품','가격','사이즈','주문','배송','디자인','printing','product','price','order','size','design','印刷','商品','価格','サイズ','注文','配送','デザイン','원판','도매','wholesale','大判']);
                 const _matched = aiProducts.filter((p: any) => {
                     const rp = rawProducts.find((r: any) => r.code === p.code);
                     const names = [p.name || '', rp?.name_us || '', rp?.name_jp || '', p.category || ''];
-                    return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 2).some((kw: string) => _combined.includes(kw.toLowerCase())));
+                    return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 3 && !_commonWords2.has(w.toLowerCase())).some((kw: string) => _combined.includes(kw.toLowerCase())));
                 }).slice(0, 3);
                 if (_matched.length > 0) {
                     textResult.products = _matched.map((p: any) => {
