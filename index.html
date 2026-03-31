@@ -10241,9 +10241,17 @@ if (w >= 20 && h >= 20) {
             let _fb1400Warn = document.getElementById('fabric1400Warn');
             const _bothOver1400 = (w >= 1400 && h >= 1400);
             if (_bothOver1400 && !_fb1400Warn) {
-                const _w1400Msg = lang==='ja' ? '⚠️ 縦横ともに1400mm以上です。つなぎ縫いオプションを自動選択します。' :
-                                  lang==='en' ? '⚠️ Both dimensions are 1400mm+. Seam-joining option will be auto-selected.' :
-                                  '⚠️ 가로/세로 모두 1400mm 이상입니다. 이어박기 옵션을 자동으로 체크해드립니다.';
+                const _w1400Msgs = {
+                    ja: '⚠️ 縦横ともに1400mm以上です。つなぎ縫いオプションを自動選択します。',
+                    en: '⚠️ Both dimensions are 1400mm+. Seam-joining option will be auto-selected.',
+                    zh: '⚠️ 宽高均超过1400mm。拼接选项将自动选择。',
+                    es: '⚠️ Ambas dimensiones son 1400mm+. La opción de unión se seleccionará automáticamente.',
+                    de: '⚠️ Beide Maße sind 1400mm+. Die Nahtverbindung wird automatisch ausgewählt.',
+                    fr: '⚠️ Les deux dimensions dépassent 1400mm. L\'option de couture sera sélectionnée automatiquement.',
+                    ar: '⚠️ كلا البعدين أكبر من 1400 مم. سيتم تحديد خيار الخياطة تلقائيًا.',
+                    kr: '⚠️ 가로/세로 모두 1400mm 이상입니다. 이어박기 옵션을 자동으로 체크해드립니다.'
+                };
+                const _w1400Msg = _w1400Msgs[lang] || _w1400Msgs['en'];
                 _fb1400Warn = document.createElement('div');
                 _fb1400Warn.id = 'fabric1400Warn';
                 _fb1400Warn.style.cssText = 'background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:13px;color:#92400e;font-weight:700;margin-top:8px;';
@@ -10491,8 +10499,9 @@ if (w >= 20 && h >= 20) {
         const _sb = window.sb || (window.supabaseClient);
         if (!_sb) return;
 
-        // 언어 감지
-        const _lang = window.location.hostname.includes('cafe0101.com') ? 'ja' : window.location.hostname.includes('cafe3355.com') || window.location.hostname.includes('chameleon.design') ? 'en' : 'kr';
+        // 언어 감지 (SITE_CONFIG 기반)
+        const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+        const _lang = _cc==='JP'?'ja' : _cc==='CN'||_cc==='ZH'?'zh' : _cc==='ES'?'es' : _cc==='DE'?'de' : _cc==='FR'?'fr' : _cc==='AR'?'ar' : (_cc==='US'||_cc==='EN')?'en' : (window.CURRENT_LANG||'kr');
         const _cr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
 
         // 상품의 addon 코드 가져오기
@@ -10526,17 +10535,17 @@ if (w >= 20 && h >= 20) {
         const sewTitle = document.getElementById('fabricSewingTitle');
         const loopTitle = document.getElementById('fabricLoopTitle');
         if (sewCat && sewTitle) {
-            const n = _lang==='ja' ? (sewCat.name_jp||sewCat.name_kr||sewCat.name) : _lang==='en' ? (sewCat.name_us||sewCat.name_kr||sewCat.name) : (sewCat.name_kr||sewCat.name);
+            const n = _lang==='ja' ? (sewCat.name_jp||sewCat.name_us||sewCat.name_kr||sewCat.name) : _lang==='kr' ? (sewCat.name_kr||sewCat.name) : (sewCat.name_us||sewCat.name_kr||sewCat.name);
             sewTitle.innerHTML = n.replace(/패브릭/,'').trim() + ' <span style="color:#ef4444;">*</span>';
         }
         if (loopCat && loopTitle) {
-            const n = _lang==='ja' ? (loopCat.name_jp||loopCat.name_kr||loopCat.name) : _lang==='en' ? (loopCat.name_us||loopCat.name_kr||loopCat.name) : (loopCat.name_kr||loopCat.name);
+            const n = _lang==='ja' ? (loopCat.name_jp||loopCat.name_us||loopCat.name_kr||loopCat.name) : _lang==='kr' ? (loopCat.name_kr||loopCat.name) : (loopCat.name_us||loopCat.name_kr||loopCat.name);
             loopTitle.textContent = n.replace(/패브릭/,'').trim();
         }
 
         // 아이콘 버튼 렌더 헬퍼
         const renderItem = (a) => {
-            let optName = _lang==='ja' ? (a.name_jp||a.name_kr||a.name) : _lang==='en' ? (a.name_us||a.name_kr||a.name) : (a.name_kr||a.name);
+            let optName = _lang==='ja' ? (a.name_jp||a.name_us||a.name_kr||a.name) : _lang==='kr' ? (a.name_kr||a.name) : (a.name_us||a.name_kr||a.name);
             let basePrice = a.price_kr || a.price || 0;
             if (_lang==='ja' && a.price_jp) basePrice = a.price_jp;
             const isPreSelected = window.pendingSelectedAddons && window.pendingSelectedAddons.includes(a.code);

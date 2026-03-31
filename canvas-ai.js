@@ -2284,6 +2284,9 @@ export function applyFabricGuides(config) {
     const mm = bW / config.widthMm;
     console.log('[Fabric] mm ratio:', mm, 'widthMm:', config.widthMm, 'bW:', bW);
     const _gp = { _fabricGuide: true, excludeFromExport: true, selectable: false, evented: false };
+    // 다국어 라벨
+    const _fcc = window.SITE_CONFIG?.COUNTRY || 'KR';
+    const _fL = (kr, ja, en) => _fcc==='KR'?kr : _fcc==='JP'?ja : en;
 
     // 기존 패브릭 가이드 제거
     canvas.getObjects().filter(o => o._fabricGuide).forEach(o => canvas.remove(o));
@@ -2313,7 +2316,7 @@ export function applyFabricGuides(config) {
             const seamLine = new fabric.Line([seamX, bT, seamX, bT + bH], {
                 stroke: '#ff0000', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
             });
-            const seamLabel = new fabric.Text('← 이어박기 →', {
+            const seamLabel = new fabric.Text(_fL('← 이어박기 →','← つなぎ縫い →','← Seam Join →'), {
                 left: seamX, top: bT + 14, fontSize: 13, fill: '#fff', fontWeight: 'bold',
                 fontFamily: 'Pretendard, sans-serif', originX: 'center',
                 backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
@@ -2348,7 +2351,7 @@ export function applyFabricGuides(config) {
             const seamLine = new fabric.Line([bL, seamY, bL + bW, seamY], {
                 stroke: '#ff0000', strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
             });
-            const seamLabel = new fabric.Text('↑ 이어박기 ↓', {
+            const seamLabel = new fabric.Text(_fL('↑ 이어박기 ↓','↑ つなぎ縫い ↓','↑ Seam Join ↓'), {
                 left: bL + 12, top: seamY - 8, fontSize: 13, fill: '#fff', fontWeight: 'bold',
                 fontFamily: 'Pretendard, sans-serif',
                 backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
@@ -2375,7 +2378,9 @@ export function applyFabricGuides(config) {
     // ─── 2. 오버록/인터록 (5mm 여백 점선) ───
     if (config.overlock || config.interlock) {
         const marginPx = 5 * mm;
-        const label = config.interlock ? '인터록 5mm' : '오버록 5mm';
+        const _cc2 = window.SITE_CONFIG?.COUNTRY || 'KR';
+        const _ilLabels = { KR: config.interlock ? '인터록 5mm' : '오버록 5mm', JP: config.interlock ? 'インターロック 5mm' : 'オーバーロック 5mm' };
+        const label = _ilLabels[_cc2] || (config.interlock ? 'Interlock 5mm' : 'Overlock 5mm');
         const marginRect = new fabric.Rect({
             left: bL + marginPx, top: bT + marginPx,
             width: bW - marginPx * 2, height: bH - marginPx * 2,
@@ -2417,13 +2422,13 @@ export function applyFabricGuides(config) {
             _fabricGuide: true, _fabricGuideType: 'slit_handle', excludeFromExport: true,
             hoverCursor: 'ns-resize', moveCursor: 'ns-resize'
         });
-        const handleLabel = new fabric.Text('▲ 이어짐 | 트임 ▼  ↕드래그', {
+        const handleLabel = new fabric.Text(_fL('▲ 이어짐 | 트임 ▼  ↕드래그','▲ 繋がり | スリット ▼  ↕ドラッグ','▲ Joined | Slit ▼  ↕Drag'), {
             left: cx, top: defaultSplitY - 8, fontSize: 11, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
         });
         // 하단 벌어지는 표시
-        const splitLabel = new fabric.Text('◁ 트임 ▷', {
+        const splitLabel = new fabric.Text(_fL('◁ 트임 ▷','◁ スリット ▷','◁ Slit ▷'), {
             left: cx, top: bT + bH - 26, fontSize: 13, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
@@ -2500,7 +2505,7 @@ export function applyFabricGuides(config) {
             });
             G.push(tri, ring, hole);
         });
-        const gLabel = new fabric.Text('사방타공 (아일렛)', {
+        const gLabel = new fabric.Text(_fL('사방타공 (아일렛)','四方穴あけ (アイレット)','Corner Grommets (Eyelets)'), {
             left: bL + bW / 2, top: bT - 22, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
@@ -2516,7 +2521,7 @@ export function applyFabricGuides(config) {
         const poleLine = new fabric.Line([bL - 10*mm, poleY, bL + bW + 10*mm, poleY], {
             stroke: PC, strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
         });
-        const poleLabel = new fabric.Text('── 봉마감 위치 (상단 8cm) ──', {
+        const poleLabel = new fabric.Text(_fL('── 봉마감 위치 (상단 8cm) ──','── ポール位置 (上部 8cm) ──','── Pole Position (Top 8cm) ──'), {
             left: bL + bW/2, top: poleY - 20, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
@@ -2535,7 +2540,7 @@ export function applyFabricGuides(config) {
         const poleLine = new fabric.Line([bL - 10*mm, poleY, bL + bW + 10*mm, poleY], {
             stroke: PC, strokeWidth: 3, strokeDashArray: [10, 5], ..._gp
         });
-        const poleLabel = new fabric.Text('── 봉마감 위치 (하단 8cm) ──', {
+        const poleLabel = new fabric.Text(_fL('── 봉마감 위치 (하단 8cm) ──','── ポール位置 (下部 8cm) ──','── Pole Position (Bottom 8cm) ──'), {
             left: bL + bW/2, top: poleY + 6, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 3, ..._gp
@@ -2571,7 +2576,7 @@ export function applyFabricGuides(config) {
             });
             G.push(loopBody, loopHole);
         });
-        const loopLabel = new fabric.Text('끈고리 (좌/우)', {
+        const loopLabel = new fabric.Text(_fL('끈고리 (좌/우)','紐ループ (左/右)','Strap Loop (L/R)'), {
             left: bL + bW/2, top: bT - loopH - 22, fontSize: 12, fill: '#fff', originX: 'center',
             fontFamily: 'Pretendard, sans-serif', fontWeight: 'bold',
             backgroundColor: 'rgba(255,0,0,0.85)', padding: 4, ..._gp
