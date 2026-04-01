@@ -871,6 +871,10 @@ const I18N = {
     edit_bid: { ko: '입찰 수정', ja: '入札編集', en: 'Edit Bid' },
     toast_bid_edit_success: { ko: '입찰이 수정되었습니다!', ja: '入札が編集されました！', en: 'Bid updated!' },
     toast_bid_edit_fail: { ko: '입찰 수정 실패: ', ja: '入札編集失敗: ', en: 'Bid update failed: ' },
+    cancel_bid: { ko: '입찰취소', ja: '入札取消', en: 'Cancel Bid' },
+    confirm_cancel_bid: { ko: '이 입찰을 취소하시겠습니까?', ja: 'この入札を取り消しますか？', en: 'Cancel this bid?' },
+    toast_bid_cancelled: { ko: '입찰이 취소되었습니다.', ja: '入札が取り消されました。', en: 'Bid cancelled.' },
+    toast_bid_cancel_fail: { ko: '입찰 취소 실패: ', ja: '入札取消失敗: ', en: 'Bid cancel failed: ' },
 
     // timeAgo
     just_now: { ko: '방금 전', ja: 'たった今', en: 'just now' },
@@ -2241,6 +2245,18 @@ async function saveEditBid() {
     btn.disabled = false;
 }
 
+async function cancelMyBid(bidId) {
+    if (!confirm(t('confirm_cancel_bid'))) return;
+    try {
+        const { error } = await sb.from('design_bids').delete().eq('id', bidId).eq('designer_id', userId);
+        if (error) throw error;
+        showToast(t('toast_bid_cancelled'), 'success');
+        loadMyBids();
+    } catch(e) {
+        showToast(t('toast_bid_cancel_fail') + e.message, 'error');
+    }
+}
+
 async function loadMyBids() {
     const container = document.getElementById('myBidsList');
     if (!designerProfile) {
@@ -2280,7 +2296,10 @@ async function loadMyBids() {
                 <span><i class="fa-solid fa-calendar"></i> ${b.timeline_days}${t('day_n')}</span>
                 <span><i class="fa-regular fa-clock"></i> ${timeAgo(b.created_at)}</span>
                 ${r.budget_min ? `<span>${t('budget_label')}: ${formatPriceRange(r.budget_min, r.budget_max)}</span>` : ''}
-                ${b.status === 'pending' ? `<button onclick="event.stopPropagation();openEditBidModalById('${b.id}')" style="background:#f5f3ff;border:1px solid #c4b5fd;color:#7c3aed;cursor:pointer;font-size:12px;padding:4px 10px;border-radius:6px;white-space:nowrap;font-weight:600;"><i class="fa-solid fa-pen-to-square"></i> ${t('edit')}</button>` : ''}
+                ${b.status === 'pending' ? `
+                    <button onclick="event.stopPropagation();openEditBidModalById('${b.id}')" style="background:#f5f3ff;border:1px solid #c4b5fd;color:#7c3aed;cursor:pointer;font-size:12px;padding:4px 10px;border-radius:6px;white-space:nowrap;font-weight:600;"><i class="fa-solid fa-pen-to-square"></i> ${t('edit')}</button>
+                    <button onclick="event.stopPropagation();cancelMyBid('${b.id}')" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;cursor:pointer;font-size:12px;padding:4px 10px;border-radius:6px;white-space:nowrap;font-weight:600;"><i class="fa-solid fa-xmark"></i> ${t('cancel_bid')}</button>
+                ` : ''}
             </div>
         </div>`;
     }
