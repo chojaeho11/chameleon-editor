@@ -11,7 +11,7 @@
     var params = new URLSearchParams(location.search);
     var langParam = params.get('lang');
     var h = location.hostname;
-    var hostLang = h.indexOf('cafe0101')>=0?'ja':h.indexOf('cafe3355')>=0?'en':'ko';
+    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
     var lang = langParam || hostLang;
     var supported = ['ko','ja','en','zh','ar','es','de','fr'];
     if(supported.indexOf(lang)<0) lang='ko';
