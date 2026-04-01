@@ -799,6 +799,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (printService && quickMenuWrap) { ss.insertBefore(printService, quickMenuWrap); }
     var goods = document.getElementById('goodsSection');
     if (goods && quickMenuWrap) { ss.insertBefore(goods, quickMenuWrap); }
+    var paperDisplay = document.getElementById('paperDisplaySection');
+    if (paperDisplay && quickMenuWrap) { ss.insertBefore(paperDisplay, quickMenuWrap); }
     var popular = document.getElementById('popularSection');
     if (popular && quickMenuWrap) { ss.insertBefore(popular, quickMenuWrap); }
 
@@ -1744,6 +1746,18 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('goodsGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
         <div id="goodsGrid" class="hotdeal-grid"></div>
         <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('goodsGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<div id="paperDisplaySection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #ecfdf5; padding: 20px; border-radius: 12px;">
+    <div class="hotdeal-header">
+        <h2 style="color: #16a34a;"><span data-i18n="home_paper_display_title">종이매대</span> <span class="badge-hot" style="background:#16a34a;">Paper Stand</span></h2>
+        <p data-i18n="home_paper_display_desc">마트, 편의점, 매장 진열에 최적화된 친환경 종이매대</p>
+    </div>
+    <div class="hotdeal-scroll-wrap">
+        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('paperDisplayGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="paperDisplayGrid" class="hotdeal-grid"></div>
+        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('paperDisplayGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 
@@ -6842,6 +6856,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 15);
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 15);
+            loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
         // ★ 흘러가는 배너 로드
@@ -7022,8 +7037,8 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                 : 'Option';
             
             // 뱃지 색상
-            const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : flagColumn === 'is_print_service' ? '#059669' : flagColumn === 'is_goods' ? '#db2777' : flagColumn === 'is_popular' ? '#dc2626' : '#4f46e5';
-            const badgeText = flagColumn === 'is_hot_deal' ? 'HOT' : flagColumn === 'is_print_service' ? 'PRINT' : flagColumn === 'is_goods' ? 'GOODS' : flagColumn === 'is_popular' ? 'BEST' : 'BIZ';
+            const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : flagColumn === 'is_print_service' ? '#059669' : flagColumn === 'is_goods' ? '#db2777' : flagColumn === 'is_popular' ? '#dc2626' : flagColumn === 'is_paper_display' ? '#16a34a' : '#4f46e5';
+            const badgeText = flagColumn === 'is_hot_deal' ? 'HOT' : flagColumn === 'is_print_service' ? 'PRINT' : flagColumn === 'is_goods' ? 'GOODS' : flagColumn === 'is_popular' ? 'BEST' : flagColumn === 'is_paper_display' ? 'PD' : 'BIZ';
 
             // HTML 생성 (이제 name과 formattedPrice 변수만 넣으면 끝)
             card.innerHTML = `
@@ -7058,7 +7073,7 @@ async function loadScrollBanner() {
     const track = document.getElementById('scrollBannerTrack');
     if (!banner || !clip || !track || !sb) return;
     try {
-        const flags = ['is_hot_deal','is_biz_deal','is_print_service','is_goods','is_popular'];
+        const flags = ['is_hot_deal','is_biz_deal','is_print_service','is_goods','is_paper_display','is_popular'];
         const results = await Promise.all(flags.map(f =>
             sb.from('admin_products')
                 .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, img_url')
@@ -12612,6 +12627,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 15);
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 15);
+            loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
