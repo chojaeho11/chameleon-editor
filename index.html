@@ -7478,6 +7478,13 @@ async function renderQuickMenu() {
             btn.innerText = tName;
 
             btn.onclick = () => {
+                // ★ 종이매대 → paper-stand 페이지로 이동 (언어별)
+                if (top.code === 'paper_display') {
+                    const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
+                    const psLang = langMap[CURRENT_LANG];
+                    location.href = '/paper-stand' + (psLang ? '?lang=' + psLang : '');
+                    return;
+                }
                 // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
                 if (top.code === 'user_artwork') {
                     document.getElementById('productPickerModal').style.display = 'none';
@@ -7540,6 +7547,13 @@ async function renderQuickMenu() {
                 if (CURRENT_LANG === 'fr') tName = top.name_fr || top.name_us || tName;
                 btn.textContent = tName;
                 btn.onclick = () => {
+                    // ★ 종이매대 → paper-stand 페이지로 이동
+                    if (top.code === 'paper_display') {
+                        const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
+                        const psLang = langMap[CURRENT_LANG];
+                        location.href = '/paper-stand' + (psLang ? '?lang=' + psLang : '');
+                        return;
+                    }
                     const wasActive = btn.classList.contains('active');
                     tcmTrack.querySelectorAll('.tcm-btn').forEach(b => b.classList.remove('active'));
                     if (wasActive) { dropdown.style.display = 'none'; activeTop = null; return; }
