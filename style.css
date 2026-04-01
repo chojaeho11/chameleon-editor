@@ -2450,7 +2450,7 @@ body {
     /* 핫딜 섹션 스타일 */
 .hotdeal-wrapper {
     max-width: 1200px;
-    margin: 50px auto;
+    margin: 24px auto;
     padding: 0 24px;
     animation: fadeIn 0.5s ease-in-out;
 }
@@ -2966,24 +2966,20 @@ body {
 }
 
 .quick-menu-wrapper {
-    /* 모바일에서도 보라 그라데이션 유지 */
-    background: linear-gradient(160deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%) !important;
-
-    /* 여백 및 크기 초기화 */
+    background: rgba(255,255,255,0.9) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 15px 12px 20px;
     margin: 12px auto;
-    width: calc(100% - 24px); /* 양쪽 12px 여백 — 다른 섹션과 통일 */
+    width: calc(100% - 24px);
     border-radius: 16px;
-
-    /* 위치 강제 초기화 (PC 설정 무시) */
     position: static;
     left: auto;
     transform: none;
     margin-left: auto !important;
     margin-right: auto !important;
-
-    box-shadow: none;
-    border-radius: 0;
+    box-shadow: 0 2px 16px rgba(99,102,241,0.06);
+    border: 1px solid rgba(99,102,241,0.1);
 }
 
 /* 기본: 캐릭터 숨김 */
@@ -3020,13 +3016,13 @@ body {
 .qt-badge {
     font-size: 11px !important;
     padding: 4px 10px !important;
-    background: transparent !important;
-    border: none !important;
-    color: rgba(255,255,255,0.85) !important;
+    background: rgba(99,102,241,0.08) !important;
+    border: 1px solid rgba(99,102,241,0.12) !important;
+    color: #6366f1 !important;
 }
 .qt-text {
     font-size: 20px !important;
-    color: #fff !important;
+    color: #1e293b !important;
 }
 /* 모바일 시작 버튼 풀와이드 */
 #btnDesignStart {
@@ -3045,11 +3041,12 @@ body {
     background: rgba(255,255,255,0.1) !important;
 }
 .quick-menu-wrapper .quick-text {
-    color: #fff !important;
+    color: #374151 !important;
 }
 .quick-menu-wrapper .quick-icon {
-    background: rgba(255,255,255,0.15) !important;
-    border: none !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #6366f1 !important;
 }
 
 /* 모바일 내부 여백 미세 조정 */
@@ -3066,38 +3063,33 @@ body {
 @media screen and (min-width: 1000px) {
 
     .quick-menu-wrapper {
-        /* 1. 배경 디자인: 세련된 보라 그라데이션 */
-        background: linear-gradient(160deg, #4c1d95 0%, #6d28d9 35%, #7c3aed 60%, #a78bfa 100%) !important;
-        
-        /* 2. 크기 및 위치: 화면 꽉 참 방지 & 중앙 정렬 */
+        /* 1. 배경: 밝은 반투명 글래스모피즘 */
+        background: rgba(255,255,255,0.85) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+
+        /* 2. 크기 및 위치 */
         width: 100% !important;
-        max-width: 1200px !important; /* 최대 너비 제한 */
-        margin: 40px auto !important; /* 위아래 여백 & 중앙 정렬 */
-        padding: 50px 40px !important;
-        
-        /* 3. 테두리 및 그림자: 둥글고 세련되게 */
-        border-radius: 30px !important; /* 둥근 모서리 */
-        box-shadow: 0 20px 50px rgba(89, 103, 138, 0.2), 
-                    0 0 0 1px rgba(139, 112, 112, 0.1) !important; /* 은은한 테두리 */
-        
-        /* 위치 초기화 */
+        max-width: 1200px !important;
+        margin: 30px auto !important;
+        padding: 36px 32px !important;
+
+        /* 3. 얇은 보라색 테두리 + 은은한 그림자 */
+        border-radius: 20px !important;
+        border: 1px solid rgba(99,102,241,0.15) !important;
+        box-shadow: 0 4px 24px rgba(99,102,241,0.08) !important;
+
         position: relative !important;
         left: 0 !important;
         transform: none !important;
         margin-left: auto !important;
         margin-right: auto !important;
-        overflow: visible !important; /* 캐릭터가 튀어나올 수 있게 */
+        overflow: visible !important;
     }
 
-    /* 배경 장식 (은은한 빛 효과) */
+    /* 배경 장식 제거 (글래스모피즘에선 불필요) */
     .quick-menu-wrapper::before {
-        content: '';
-        position: absolute;
-        top: -100px; right: -100px;
-        width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(196, 181, 253, 0.2) 0%, transparent 70%);
-        border-radius: 50%;
-        pointer-events: none;
+        display: none;
     }
 
     /* 타이틀 박스 */
@@ -3111,26 +3103,25 @@ body {
     
     /* 뱃지 스타일 */
     .qt-badge {
-        background-color: rgba(255,255,255,0.15) !important;
-        color: #fff !important;
+        background-color: rgba(99,102,241,0.08) !important;
+        color: #6366f1 !important;
         padding: 6px 15px;
         border-radius: 50px;
         font-size: 13px;
         font-weight: 600;
         display: inline-block;
-        margin-bottom: 15px;
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(255,255,255,0.15);
+        margin-bottom: 12px;
+        border: 1px solid rgba(99,102,241,0.15);
     }
 
-    /* 텍스트 색상 변경 (검정 -> 흰색) */
+    /* 텍스트 색상 */
     .qt-text {
-        font-size: 36px;
-        font-weight: 700;
+        font-size: 32px;
+        font-weight: 800;
         margin: 0;
-        color: #ffffff !important; /* 흰색 텍스트 */
+        color: #1e293b !important;
         letter-spacing: -1px;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        text-shadow: none;
     }
 
     /* 내부 아이템들 배치 */
