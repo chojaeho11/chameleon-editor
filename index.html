@@ -885,10 +885,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 인기 상품
     if (popular) { moveAfter(popular, cursor); cursor = popular; }
 
-    // 흘러가는 배너, 주문현황 숨김
+    // 흘러가는 배너 숨김
     if (scrollBanner) { scrollBanner.style.display = 'none'; }
-    var orderTracker = document.getElementById('orderTrackerSection');
-    if (orderTracker) { orderTracker.style.display = 'none'; }
 
     // 구독 → 리뷰 위
     var subSec = document.getElementById('subscriptionSection');
