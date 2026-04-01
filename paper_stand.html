@@ -488,14 +488,58 @@ function toggleKapuChat() {
 }
 </style>
 
+<!-- 고객 리뷰 섹션 -->
+<section class="section" id="reviewSection" style="background:#f8fafc;">
+    <h2 class="section-title" data-i18n="review_title">고객 후기</h2>
+    <p class="section-desc" data-i18n="review_desc">종이매대를 사용한 고객님들의 생생한 후기</p>
+    <div id="pdReviewGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
+    <div id="pdReviewEmpty" style="display:none; text-align:center; padding:40px; color:#94a3b8;">
+        <i class="fa-solid fa-comment-dots" style="font-size:36px; margin-bottom:12px; display:block; opacity:0.3;"></i>
+        <p data-i18n="review_empty">아직 등록된 후기가 없습니다.</p>
+    </div>
+</section>
+<style>
+.rv-card { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.06); transition:transform 0.2s; }
+.rv-card:hover { transform:translateY(-3px); }
+.rv-photo { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:#f1f5f9; }
+.rv-body { padding:16px; }
+.rv-stars { color:#f59e0b; font-size:14px; margin-bottom:6px; }
+.rv-text { font-size:13px; color:#475569; line-height:1.6; margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.rv-user { display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; }
+</style>
+
 <!-- 푸터 -->
-<footer class="site-footer">
-    <p style="margin-bottom:8px;">
-        <a href="/" data-i18n="footer_main">카멜레온프린팅 메인</a> &middot;
-        <a href="/board.html" data-i18n="footer_community">커뮤니티</a> &middot;
-        <a href="/mypage.html" data-i18n="footer_mypage">마이페이지</a>
-    </p>
-    <p>&copy; 2026 카멜레온프린팅. All rights reserved.</p>
+<footer class="site-footer" style="background:#1e293b; color:#94a3b8; padding:48px 24px 32px; margin-top:0;">
+    <div style="max-width:1000px; margin:0 auto;">
+        <div style="display:flex; gap:40px; flex-wrap:wrap; justify-content:space-between; margin-bottom:32px;">
+            <!-- 브랜드 -->
+            <div style="min-width:200px;">
+                <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:10px;">
+                    <i class="fa-solid fa-layer-group" style="color:#818cf8; margin-right:6px;"></i>Chameleon Printing
+                </div>
+                <p style="font-size:12px; line-height:1.7;" data-i18n="footer_brand_desc">전 세계 인쇄 파트너. 무료 에디터로 디자인하고 맞춤 제작까지.</p>
+            </div>
+            <!-- 링크 -->
+            <div style="min-width:120px;">
+                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_links_title">바로가기</div>
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+                    <a href="/" id="footerHomeLink" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_main">카멜레온프린팅 메인</a>
+                    <a href="/board.html" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_community">커뮤니티</a>
+                    <a href="/mypage.html" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_mypage">마이페이지</a>
+                </div>
+            </div>
+            <!-- 연락처 -->
+            <div style="min-width:180px;">
+                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_contact_title">문의</div>
+                <div style="font-size:12px; line-height:2;" data-i18n-html="footer_contact_info">
+                    📞 02-000-0000<br>📧 info@chameleonprinting.com<br>🕐 평일 09:00~18:00
+                </div>
+            </div>
+        </div>
+        <div style="border-top:1px solid #334155; padding-top:16px; text-align:center; font-size:11px; color:#64748b;">
+            &copy; 2026 Chameleon Printing. All rights reserved.
+        </div>
+    </div>
 </footer>
 
 <!-- JSON-LD 구조화 데이터 (SEO) -->
@@ -892,6 +936,58 @@ footer_community: {
 footer_mypage: {
     ko:'마이페이지', ja:'マイページ', en:'My Page', zh:'我的页面',
     ar:'صفحتي', es:'Mi Pagina', de:'Meine Seite', fr:'Ma Page'
+},
+footer_brand_desc: {
+    ko:'전 세계 인쇄 파트너. 무료 에디터로 디자인하고 맞춤 제작까지.',
+    ja:'世界中の印刷パートナー。無料エディタでデザインからカスタム製作まで。',
+    en:'Your global printing partner. Design with our free editor and get custom production.',
+    zh:'您的全球印刷伙伴。使用免费编辑器设计，定制生产一站式服务。',
+    ar:'شريككم العالمي في الطباعة. صمم بالمحرر المجاني واحصل على إنتاج مخصص.',
+    es:'Tu socio global de impresion. Disena con nuestro editor gratuito y produccion a medida.',
+    de:'Ihr globaler Druckpartner. Gestalten Sie mit unserem Editor und erhalten Sie Massanfertigung.',
+    fr:'Votre partenaire mondial d\'impression. Concevez avec notre editeur et obtenez une production sur mesure.'
+},
+footer_links_title: {
+    ko:'바로가기', ja:'リンク', en:'Quick Links', zh:'快速链接',
+    ar:'روابط سريعة', es:'Enlaces', de:'Links', fr:'Liens rapides'
+},
+footer_contact_title: {
+    ko:'문의', ja:'お問い合わせ', en:'Contact', zh:'联系我们',
+    ar:'اتصل بنا', es:'Contacto', de:'Kontakt', fr:'Contact'
+},
+footer_contact_info: {
+    ko:'📞 02-000-0000<br>📧 info@chameleonprinting.com<br>🕐 평일 09:00~18:00',
+    ja:'📞 03-0000-0000<br>📧 info@chameleonprinting.com<br>🕐 平日 09:00~18:00 (JST)',
+    en:'📞 +82-2-000-0000<br>📧 info@chameleonprinting.com<br>🕐 Mon-Fri 09:00~18:00 (KST)',
+    zh:'📞 +82-2-000-0000<br>📧 info@chameleonprinting.com<br>🕐 周一至周五 09:00~18:00 (KST)',
+    ar:'📞 0000-000-82+<br>📧 info@chameleonprinting.com<br>🕐 الاثنين-الجمعة 09:00~18:00',
+    es:'📞 +82-2-000-0000<br>📧 info@chameleonprinting.com<br>🕐 Lun-Vie 09:00~18:00 (KST)',
+    de:'📞 +82-2-000-0000<br>📧 info@chameleonprinting.com<br>🕐 Mo-Fr 09:00~18:00 (KST)',
+    fr:'📞 +82-2-000-0000<br>📧 info@chameleonprinting.com<br>🕐 Lun-Ven 09:00~18:00 (KST)'
+},
+review_title: {
+    ko:'고객 후기', ja:'お客様レビュー', en:'Customer Reviews', zh:'客户评价',
+    ar:'آراء العملاء', es:'Opiniones de Clientes', de:'Kundenbewertungen', fr:'Avis Clients'
+},
+review_desc: {
+    ko:'종이매대를 사용한 고객님들의 생생한 후기',
+    ja:'紙什器をご利用のお客様からの声',
+    en:'Real reviews from customers who used our paper display stands',
+    zh:'使用纸展架的客户真实评价',
+    ar:'تقييمات حقيقية من عملائنا',
+    es:'Opiniones reales de clientes que usaron nuestros expositores',
+    de:'Echte Bewertungen von Kunden, die unsere Papieraufsteller genutzt haben',
+    fr:'Avis reels de clients ayant utilise nos presentoirs papier'
+},
+review_empty: {
+    ko:'아직 등록된 후기가 없습니다.',
+    ja:'まだレビューがありません。',
+    en:'No reviews yet.',
+    zh:'暂无评价。',
+    ar:'لا توجد تقييمات بعد.',
+    es:'Aun no hay opiniones.',
+    de:'Noch keine Bewertungen.',
+    fr:'Pas encore d\'avis.'
 }
 };
 
@@ -965,24 +1061,76 @@ function addHreflangTags() {
     document.head.appendChild(def);
 }
 
+// 종이매대 리뷰 로드
+async function loadPdReviews() {
+    var grid = document.getElementById('pdReviewGrid');
+    var empty = document.getElementById('pdReviewEmpty');
+    if (!grid) return;
+    try {
+        var supa = window.supabase ? window.supabase.createClient(
+            'https://qinvtnhiidtmrzosyvys.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+        ) : null;
+        if (!supa) { if(empty) empty.style.display='block'; return; }
+        var siteLang = LANG==='ko'?'kr':LANG==='ja'?'ja':LANG==='zh'?'cn':(LANG==='en'?'us':LANG);
+        var { data } = await supa.from('product_reviews')
+            .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+            .like('product_code', 'pd\\_%')
+            .gte('rating', 4)
+            .order('created_at', { ascending: false })
+            .limit(6);
+        // 만약 pd_ 리뷰가 없으면 전체 리뷰에서 해당 언어 가져오기
+        if (!data || data.length === 0) {
+            var { data: fallback } = await supa.from('product_reviews')
+                .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                .eq('lang', siteLang)
+                .gte('rating', 4)
+                .order('created_at', { ascending: false })
+                .limit(6);
+            data = fallback;
+        }
+        if (!data || data.length === 0) {
+            if(empty) empty.style.display='block';
+            return;
+        }
+        grid.innerHTML = '';
+        data.forEach(function(r) {
+            var stars = '';
+            for (var i = 0; i < 5; i++) stars += i < r.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+            var d = new Date(r.created_at);
+            var ds = d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+            var photoHtml = (r.photo_url && r.photo_url.trim()) ? '<img class="rv-photo" src="'+r.photo_url+'" alt="review" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+            var card = document.createElement('div');
+            card.className = 'rv-card';
+            card.innerHTML = photoHtml +
+                '<div class="rv-body">' +
+                    '<div class="rv-stars">'+stars+'</div>' +
+                    '<p class="rv-text">"'+(r.comment||'').replace(/</g,'&lt;')+'"</p>' +
+                    '<div class="rv-user"><span>'+(r.user_name||'').replace(/</g,'&lt;')+'</span><span>'+ds+'</span></div>' +
+                '</div>';
+            grid.appendChild(card);
+        });
+    } catch(e) {
+        console.error('[pdReviews]', e);
+        if(empty) empty.style.display='block';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     buildLangSelector();
     applyI18n();
     addHreflangTags();
-    // 로고 링크: 현재 언어로 메인 사이트 이동
-    var logoEl = document.getElementById('logoLink');
-    if (logoEl) {
-        var h = location.hostname;
-        var isIntl = h.indexOf('chameleon.design')>=0 || h.indexOf('cafe3355')>=0;
-        var isJp = h.indexOf('cafe0101')>=0;
-        if (isIntl && LANG !== 'en') {
-            logoEl.href = '/?lang=' + LANG;
-        } else if (isJp) {
-            logoEl.href = '/';
-        } else {
-            logoEl.href = '/';
-        }
-    }
+    // 로고 & 푸터 링크: 현재 언어로 메인 사이트 이동
+    var h = location.hostname;
+    var isIntl = h.indexOf('chameleon.design')>=0 || h.indexOf('cafe3355')>=0;
+    var homeHref = (isIntl && LANG !== 'en') ? '/?lang=' + LANG : '/';
+    ['logoLink','footerHomeLink'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.href = homeHref;
+    });
+
+    // 리뷰 로드
+    loadPdReviews();
 });
 })();
 </script>
