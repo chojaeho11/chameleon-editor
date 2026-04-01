@@ -5894,3 +5894,13 @@ html[lang="ja"] .product-detail-render div {
     font-weight: 700;
 }
 
+/* ── 에디터 모드에서 카테고리 메뉴 숨기기 (PC+모바일) ── */
+body.editor-active #topCatMenu {
+    display: none !important;
+}
+
+/* ── 장바구니: 카테고리 메뉴 아래 콘텐츠 밀림 방지 ── */
+#cartPage {
+    padding-top: 48px;
+}
+
