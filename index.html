@@ -716,9 +716,8 @@ if ('caches' in window) {
         </div>
     </div>
 
-<!-- ★ 종이매대 영상 소개 2종 -->
-<div id="psVideoSections">
-    <!-- 영상1: expositor4 (텍스트 왼쪽, 영상 오른쪽) -->
+<!-- ★ 종이매대 영상1: expositor4 (텍스트 왼쪽, 영상 오른쪽) -->
+<div id="psVideo1">
     <section class="ps-vid" style="max-width:1300px; margin:0 auto; padding:60px 24px 20px; display:flex; align-items:center; gap:24px;">
         <div class="ps-vid-txt" style="flex:0 0 340px; padding-left:40px;">
             <h2 style="font-size:42px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:24px;" id="psV1H2">
@@ -737,7 +736,9 @@ if ('caches' in window) {
             </video>
         </div>
     </section>
-    <!-- 영상2: arco5 (영상 왼쪽, 텍스트 오른쪽) -->
+</div>
+<!-- ★ 종이매대 영상2: arco5 (영상 왼쪽, 텍스트 오른쪽) -->
+<div id="psVideo2">
     <section class="ps-vid ps-vid-reverse" style="max-width:1300px; margin:0 auto; padding:20px 24px 40px; display:flex; align-items:center; gap:24px;">
         <div class="ps-vid-media" style="flex:1; min-width:0;">
             <video autoplay muted loop playsinline style="width:100%; display:block;">
@@ -844,7 +845,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var advisorPanel = document.getElementById('advisorPanel');
     var couponBanner = document.getElementById('couponEventBanner');
     var btnWrap = document.getElementById('twoBtnWrap');
-    var psVidSec = document.getElementById('psVideoSections');
+    var psVideo1 = document.getElementById('psVideo1');
+    var psVideo2 = document.getElementById('psVideo2');
     var scrollBanner = document.getElementById('scrollBanner');
     var ref = hero.nextElementSibling;
 
@@ -854,23 +856,26 @@ document.addEventListener('DOMContentLoaded', function() {
     if (couponBanner && advisorPanel) { advisorPanel.after(couponBanner); }
     if (btnWrap && couponBanner) { couponBanner.after(btnWrap); }
 
-    // 종이매대 영상 → 챗봇 다음
+    // 영상2 (arco5) → 챗봇 다음
     var lastChat = btnWrap || couponBanner || advisorPanel || chatbotWrap || hero;
-    if (psVidSec && lastChat.nextElementSibling) { ss.insertBefore(psVidSec, lastChat.nextElementSibling); }
+    if (psVideo2 && lastChat.nextElementSibling) { ss.insertBefore(psVideo2, lastChat.nextElementSibling); }
 
-    // 2) 상품 섹션들 → 종이매대 영상 바로 다음
+    // 2) 상품 섹션들 → 영상2 바로 다음
     var hotDeal = document.getElementById('hotDealSection');
     var bizDeal = document.getElementById('bizDealSection');
     var printService = document.getElementById('printServiceSection');
     var goods = document.getElementById('goodsSection');
     var paperDisplay = document.getElementById('paperDisplaySection');
     var popular = document.getElementById('popularSection');
-    var afterVid = psVidSec || lastChat;
+    var afterVid2 = psVideo2 || lastChat;
     var productSections = [hotDeal, bizDeal, printService, goods, paperDisplay, popular];
-    var lastInserted = afterVid;
+    var lastInserted = afterVid2;
     productSections.forEach(function(sec) {
         if (sec && lastInserted) { lastInserted.after(sec); lastInserted = sec; }
     });
+
+    // 영상1 (expositor4) → 상품 섹션들 바로 다음
+    if (psVideo1 && lastInserted) { lastInserted.after(psVideo1); }
 
     // 5) 구독 → 리뷰 위, 흘러가는 배너 + 주문현황 → 구독 아래(리뷰 위)
     var subSec = document.getElementById('subscriptionSection');
