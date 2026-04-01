@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot Learning Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; background: #f1f5f9; color: #334155; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e1b4b, #312e81); color: #fff; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+        .header h1 { font-size: 20px; font-weight: 800; }
+        .header .user-info { font-size: 13px; color: #c7d2fe; display: flex; align-items: center; gap: 12px; }
+        .header .user-info button { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-family: inherit; }
+        .header .user-info button:hover { background: rgba(255,255,255,0.25); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+        .btn-primary { background: #6366f1; color: #fff; }
+        .btn-primary:hover { background: #4f46e5; }
+        .btn-outline { background: #fff; color: #334155; border: 1px solid #d4d4d8; }
+        .btn-outline:hover { background: #f8fafc; border-color: #a1a1aa; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+        .input-text { border: 1px solid #d4d4d8; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+        .input-text:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.85; } }
+        #loginBox { max-width: 400px; margin: 120px auto; background: #fff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
+        #loginBox h2 { margin-bottom: 8px; color: #1e1b4b; }
+        #loginBox p { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+        #loginBox input { width: 100%; padding: 10px 14px; border: 1px solid #d4d4d8; border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 10px; }
+        #loginBox button { width: 100%; padding: 12px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        #loginBox button:hover { background: #4f46e5; }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 100000; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 12px 20px; border-radius: 10px; color: #fff; font-size: 13px; font-weight: 600; animation: toastIn 0.3s ease; min-width: 200px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .toast-success { background: #10b981; }
+        .toast-error { background: #ef4444; }
+        .toast-warn { background: #f59e0b; }
+        .toast-info { background: #3b82f6; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- Login Box -->
+<div id="loginBox">
+    <h2>🦎 AI Chatbot Learning Management</h2>
+    <p>Login with admin account</p>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="doLogin()">Login</button>
+    <div id="loginError" style="color:#ef4444; font-size:12px; margin-top:10px;"></div>
+</div>
+
+<!-- Main Content (hidden until auth) -->
+<div id="mainApp" style="display:none;">
+    <div class="header">
+        <h1>🦎 AI Chatbot Learning Management</h1>
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #6366f1; padding-bottom:15px;">
+                <h3 style="margin:0; color:#4338ca;">🦎 AI Chatbot Learning Management</h3>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-outline btn-sm" onclick="cbShowTab('logs')" id="cbTabLogs">📋 Chat Logs</button>
+                    <button class="btn btn-primary btn-sm" onclick="cbShowTab('knowledge')" id="cbTabKnowledge">📚 Training Data</button>
+                    <button class="btn btn-outline btn-sm" onclick="cbShowTab('settings')" id="cbTabSettings">⚙️ Settings</button>
+                </div>
+            </div>
+
+            <!-- Logs Panel -->
+            <div id="cbPanelLogs" style="display:none;">
+                <!-- Daily Report -->
+                <div id="qaDailyReport" style="background:linear-gradient(135deg,#ede9fe,#dbeafe); border:2px solid #a78bfa; border-radius:14px; padding:16px; margin-bottom:15px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <h4 style="margin:0;color:#4338ca;">📊 Today's Chatbot Report</h4>
+                        <span id="qaDailyTime" style="font-size:11px;color:#64748b;"></span>
+                    </div>
+                    <div id="qaDailyStats" style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:10px;"></div>
+                    <div id="qaDailyAlerts" style="max-height:120px; overflow-y:auto;"></div>
+                </div>
+                <!-- Real-time alert banner -->
+                <div id="qaRealtimeAlert" style="display:none; background:#fef2f2; border:2px solid #fca5a5; border-radius:10px; padding:12px 16px; margin-bottom:12px; animation:pulse 2s infinite;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:20px;">🔴</span>
+                        <div style="flex:1;">
+                            <div style="font-weight:700;color:#dc2626;font-size:13px;" id="qaAlertTitle">Chatbot is struggling to answer</div>
+                            <div style="font-size:12px;color:#7f1d1d;" id="qaAlertDetail"></div>
+                        </div>
+                        <button class="btn btn-sm" onclick="document.getElementById('qaRealtimeAlert').style.display='none'" style="background:#fca5a5;color:#7f1d1d;border:none;font-size:11px;">Close</button>
+                    </div>
+                </div>
+                <div id="qaReportStats" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:15px;"></div>
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
+                    <input type="date" id="qaReportDate" class="input-text" style="width:150px;">
+                    <select id="qaReportLang" class="input-text" style="width:120px;">
+                        <option value="all">All Languages</option>
+                        <option value="kr">🇰🇷 Korean</option>
+                        <option value="ja">🇯🇵 Japanese</option>
+                        <option value="us">🇺🇸 English</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="qaLoadSessions()">Search</button>
+                    <span id="qaReportCount" style="font-size:12px; color:#64748b; align-self:center;"></span>
+                </div>
+                <!-- Session list + Session detail (side by side) -->
+                <div style="display:flex; gap:12px; height:650px;">
+                    <div id="qaSessionList" style="width:320px; min-width:280px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc;"></div>
+                    <div id="qaSessionDetail" style="flex:1; overflow-y:auto; border:1px solid #e2e8f0; border-radius:12px; background:#fff; padding:16px;">
+                        <div style="text-align:center; padding:80px 20px; color:#94a3b8;">
+                            <div style="font-size:40px; margin-bottom:12px;">💬</div>
+                            <div style="font-size:14px;">Select a conversation from the left</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge Panel -->
+            <div id="cbPanelKnowledge" style="display:block;">
+                <!-- Natural language training -->
+                <div style="background:linear-gradient(135deg,#ede9fe,#f0fdf4); border:2px solid #a78bfa; border-radius:14px; padding:20px; margin-bottom:18px;">
+                    <h4 style="margin:0 0 10px; color:#6d28d9;">🧠 Train with Natural Language</h4>
+                    <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Enter freely in Korean and AI converts to Q&A and auto-generates keywords in 8 languages.</p>
+                    <textarea id="cbNaturalText" class="input-text" rows="3" style="width:100%; resize:vertical; font-size:14px;" placeholder="e.g.: Delivery is free for areas near Tokyo. Honeycomb board partition is 150,000 won per section."></textarea>
+                    <button class="btn btn-primary" style="width:100%; margin-top:10px; background:linear-gradient(135deg,#6366f1,#7c3aed);" onclick="cbNaturalLearn()">🧠 Train</button>
+                    <div id="cbNaturalResult" style="display:none; margin-top:12px; background:#fff; border-radius:10px; padding:14px; border:1px solid #e2e8f0;"></div>
+                </div>
+                <!-- Direct input (collapsible) -->
+                <details style="margin-bottom:15px;">
+                    <summary style="cursor:pointer; font-size:13px; font-weight:700; color:#16a34a; padding:8px 0;">➕ Add Q&A Directly</summary>
+                    <div style="background:#f0fdf4; border:1px dashed #86efac; border-radius:10px; padding:15px; margin-top:8px;">
+                        <div style="margin-top:0;"><label style="font-size:12px; font-weight:700;">Customer Question</label>
+                            <input id="cbNewQ" class="input-text" placeholder="e.g.: How long does delivery take?" style="width:100%;"></div>
+                        <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">Answer</label>
+                            <textarea id="cbNewA" class="input-text" rows="3" placeholder="e.g.: Metro area 1-2 days, rural 2-3 days" style="width:100%; resize:vertical;"></textarea></div>
+                        <div style="margin-top:10px;"><label style="font-size:12px; font-weight:700;">Keywords (Korean, auto-translated)</label>
+                            <input id="cbNewKw" class="input-text" placeholder="delivery, shipping" style="width:100%;"></div>
+                        <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="cbAddKnowledge()">💾 Save</button>
+                    </div>
+                </details>
+                <!-- Training data list -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                    <h4 style="margin:0;">📚 Registered Training Data <span id="cbKnCount" style="font-size:12px; color:#64748b; font-weight:400;"></span></h4>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="cbKnSearch" class="input-text" placeholder="🔍 Search (question/answer/keyword)" style="width:220px; font-size:12px;" oninput="cbFilterLocal()" onkeydown="if(event.key==='Enter')cbLoadKnowledge()">
+                        <button class="btn btn-outline btn-sm" onclick="cbLoadKnowledge()">Refresh</button>
+                    </div>
+                </div>
+                <div id="cbKnList" style="max-height:600px; overflow-y:auto;"></div>
+                <!-- Edit modal -->
+                <div id="cbEditModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+                    <div style="background:#fff; border-radius:12px; padding:24px; width:560px; max-width:90vw; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3 style="margin:0; color:#334155;">✏️ Edit Training Data</h3>
+                            <button onclick="cbCloseEdit()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8;">✕</button>
+                        </div>
+                        <input type="hidden" id="cbEditId">
+                        <div style="margin-top:0;"><label style="font-size:12px; font-weight:600; color:#64748b;">Question</label>
+                            <input id="cbEditQ" class="input-text" style="width:100%;"></div>
+                        <div style="margin-top:10px;"><label style="font-size:12px; font-weight:600; color:#64748b;">Answer</label>
+                            <textarea id="cbEditA" class="input-text" rows="5" style="width:100%; resize:vertical;"></textarea></div>
+                        <div style="margin-top:10px;"><label style="font-size:12px; font-weight:600; color:#64748b;">Keywords (Korean)</label>
+                            <input id="cbEditKw" class="input-text" placeholder="comma separated" style="width:100%;"></div>
+                        <div id="cbEditKwTranslations" style="margin-top:8px; font-size:11px; color:#64748b;"></div>
+                        <div style="display:flex; gap:8px; margin-top:16px;">
+                            <button class="btn btn-primary" style="flex:1;" onclick="cbSaveEdit()">💾 Save</button>
+                            <button class="btn btn-outline" style="flex:1;" onclick="cbCloseEdit()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div id="cbPanelSettings" style="display:none;">
+                <div style="background:#fefce8; border:1px solid #fde047; border-radius:10px; padding:15px;">
+                    <h4 style="margin:0 0 15px; color:#a16207;">⚙️ Chatbot Settings</h4>
+                    <label style="font-size:12px; font-weight:700;">Additional Instructions</label>
+                    <textarea id="cbCustomPrompt" class="input-text" rows="6" style="width:100%; resize:vertical;" placeholder="e.g.: Currently running New Year event 10% discount"></textarea>
+                    <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="cbSaveSettings()">💾 Save Settings</button>
+                </div>
+                <div class="card" style="margin-top:15px;"><h4 style="margin:0 0 10px;">📊 Statistics</h4><div id="cbStats" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══ Supabase Init ═══
+var SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+var ALLOWED_EMAILS = ['korea900as@gmail.com', 'ceo@test.com', 'thrma194@naver.com', 'nadiaseo@kakao.com'];
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ═══ Toast Utility ═══
+function showToast(msg, type) {
+    type = type || 'info';
+    var container = document.getElementById('toast-container');
+    var el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(function() { el.remove(); }, 300); }, 3000);
+}
+
+// ═══ Auth ═══
+async function doLogin() {
+    var email = document.getElementById('loginEmail').value.trim();
+    var pw = document.getElementById('loginPassword').value;
+    var errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+    if (!email || !pw) { errEl.textContent = 'Enter email and password.'; return; }
+    if (ALLOWED_EMAILS.indexOf(email) < 0) { errEl.textContent = 'Unauthorized account.'; return; }
+    var { data, error } = await sb.auth.signInWithPassword({ email: email, password: pw });
+    if (error) { errEl.textContent = 'Login failed: ' + error.message; return; }
+    initApp(data.user);
+}
+
+async function doLogout() {
+    await sb.auth.signOut();
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+}
+
+async function checkSession() {
+    var { data: { session } } = await sb.auth.getSession();
+    if (session && session.user && ALLOWED_EMAILS.indexOf(session.user.email) >= 0) {
+        initApp(session.user);
+    }
+}
+
+function initApp(user) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('userEmail').textContent = user.email;
+    cbLoadKnowledge();
+}
+
+checkSession();
+
+// ═══ Supabase Helper ═══
+function getSb() { return sb; }
+
+// ═══ AI Chatbot Learning Management ═══
+(function() {
+    window.cbShowTab = function(tab) {
+        document.getElementById('cbPanelLogs').style.display = (tab === 'logs') ? 'block' : 'none';
+        document.getElementById('cbPanelKnowledge').style.display = (tab === 'knowledge') ? 'block' : 'none';
+        document.getElementById('cbPanelSettings').style.display = (tab === 'settings') ? 'block' : 'none';
+        document.getElementById('cbTabLogs').className = 'btn btn-' + (tab === 'logs' ? 'primary' : 'outline') + ' btn-sm';
+        document.getElementById('cbTabKnowledge').className = 'btn btn-' + (tab === 'knowledge' ? 'primary' : 'outline') + ' btn-sm';
+        document.getElementById('cbTabSettings').className = 'btn btn-' + (tab === 'settings' ? 'primary' : 'outline') + ' btn-sm';
+        if (tab === 'logs') qaLoadSessions();
+        if (tab === 'knowledge') cbLoadKnowledge();
+        if (tab === 'settings') cbLoadSettings();
+    };
+
+    var cbKnAllData = [];
+
+    window.cbLoadKnowledge = async function() {
+        var sb = getSb(); if (!sb) return;
+        var search = (document.getElementById('cbKnSearch') ? document.getElementById('cbKnSearch').value.trim() : '');
+        var q = sb.from('chatbot_knowledge').select('*').eq('is_active', true).neq('category', '_system_prompt').neq('category', '_managers').order('priority', {ascending: false}).limit(200);
+        if (search) q = q.or('question.ilike.%' + search + '%,answer.ilike.%' + search + '%,keywords.ilike.%' + search + '%');
+        var res = await q;
+        cbKnAllData = res.data || [];
+        cbRenderKnowledge(cbKnAllData);
+    };
+
+    window.cbFilterLocal = function() {
+        var search = (document.getElementById('cbKnSearch') ? document.getElementById('cbKnSearch').value.trim().toLowerCase() : '');
+        if (!search) { cbRenderKnowledge(cbKnAllData); return; }
+        var filtered = cbKnAllData.filter(function(k) {
+            return (k.question||'').toLowerCase().indexOf(search) >= 0
+                || (k.answer||'').toLowerCase().indexOf(search) >= 0
+                || (k.keywords||'').toLowerCase().indexOf(search) >= 0
+                || (k.category||'').toLowerCase().indexOf(search) >= 0;
+        });
+        cbRenderKnowledge(filtered);
+    };
+
+    function cbRenderKnowledge(data) {
+        var list = document.getElementById('cbKnList');
+        var countEl = document.getElementById('cbKnCount');
+        if (countEl) countEl.textContent = '(' + data.length + ' items)';
+        if (!data || data.length === 0) { list.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:30px;">No data</p>'; return; }
+        var html = '<table style="width:100%; font-size:12px; border-collapse:collapse;"><thead><tr style="background:#f8fafc; position:sticky; top:0; z-index:1;"><th style="padding:8px 6px; text-align:left;">Question</th><th style="padding:8px 6px; text-align:left;">Answer</th><th style="padding:8px 6px; text-align:left;">Keywords</th><th style="padding:8px 6px; text-align:center; width:80px;">Manage</th></tr></thead><tbody>';
+        data.forEach(function(k) {
+            html += '<tr style="border-bottom:1px solid #f1f5f9; transition:background 0.1s;" onmouseenter="this.style.background=\'#f8fafc\'" onmouseleave="this.style.background=\'#fff\'">';
+            html += '<td style="padding:6px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.question||'').replace(/"/g,'&quot;') + '">' + (k.question||'').substring(0,40) + '</td>';
+            html += '<td style="padding:6px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (k.answer||'').replace(/"/g,'&quot;') + '">' + (k.answer||'').substring(0,50) + '</td>';
+            html += '<td style="padding:6px; font-size:10px; color:#64748b; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (k.keywords||'-') + '</td>';
+            html += '<td style="padding:6px; text-align:center; white-space:nowrap;"><button class="btn btn-outline btn-sm" style="font-size:11px; padding:2px 8px; margin-right:3px;" onclick="cbOpenEdit(' + k.id + ')">✏️</button><button class="btn btn-outline btn-sm" style="color:#ef4444; font-size:11px; padding:2px 8px;" onclick="cbDeleteKn(' + k.id + ')">🗑</button></td></tr>';
+        });
+        list.innerHTML = html + '</tbody></table>';
+    }
+
+    // Natural language training
+    window.cbNaturalLearn = async function() {
+        var sb = getSb(); if (!sb) return;
+        var text = document.getElementById('cbNaturalText').value.trim();
+        if (!text) { showToast('Enter content to train', 'warn'); return; }
+        var resultDiv = document.getElementById('cbNaturalResult');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<div style="text-align:center;padding:12px;"><div style="width:24px;height:24px;border:3px solid #e9d5ff;border-top:3px solid #7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px;"></div><span style="color:#7c3aed;font-size:13px;">AI is learning...</span></div>';
+        try {
+            var res = await sb.functions.invoke('admin-qa-update', {
+                body: { action: 'natural_learn', text: text }
+            });
+            var d = res.data;
+            if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
+            if (d && d.success) {
+                var p = d.parsed;
+                var kwHtml = '';
+                if (p.keywords_translations) {
+                    var flags = {ko:'🇰🇷',ja:'🇯🇵',en:'🇺🇸',zh:'🇨🇳',ar:'🇸🇦',es:'🇪🇸',de:'🇩🇪',fr:'🇫🇷'};
+                    Object.keys(p.keywords_translations).forEach(function(lang) {
+                        kwHtml += '<span style="margin-right:8px;">' + (flags[lang]||lang) + ' ' + p.keywords_translations[lang].join(', ') + '</span>';
+                    });
+                }
+                resultDiv.innerHTML = '<div style="font-weight:700;color:#16a34a;margin-bottom:8px;">✅ Training complete!</div>' +
+                    '<div style="margin-bottom:6px;"><strong>Q:</strong> ' + (p.question||'') + '</div>' +
+                    '<div style="margin-bottom:6px;"><strong>A:</strong> ' + (p.answer||'') + '</div>' +
+                    '<div style="font-size:11px;color:#64748b;line-height:1.8;">' + kwHtml + '</div>';
+                document.getElementById('cbNaturalText').value = '';
+                cbLoadKnowledge();
+            } else { throw new Error(d?.error || 'Training failed'); }
+        } catch(e) {
+            resultDiv.innerHTML = '<span style="color:#ef4444;">❌ Failed: ' + (e.message||e) + '</span>';
+        }
+    };
+
+    window.cbAddKnowledge = async function() {
+        var sb = getSb(); if (!sb) return;
+        var q = document.getElementById('cbNewQ').value.trim(), a = document.getElementById('cbNewA').value.trim();
+        if (!q || !a) { showToast('Enter question and answer', 'warn'); return; }
+        var kw = document.getElementById('cbNewKw').value.trim();
+        var ins = await sb.from('chatbot_knowledge').insert({ category: 'general', question: q, answer: a, keywords: kw, language: 'ko', priority: 50 }).select();
+        await sb.from('advisor_qa_log').insert({ lang:'kr', customer_message:q, customer_message_ko:q, ai_response:'[Direct Input]', admin_answer:a, admin_answer_ko:a, is_reviewed:true, reviewed_at:new Date().toISOString(), category:'general', is_active:true, has_image:false });
+        if (kw && ins.data && ins.data[0]) {
+            try { await sb.functions.invoke('admin-qa-update', { body: { action:'translate_keywords', knowledge_id: ins.data[0].id, keywords: kw } }); } catch(e) {}
+        }
+        document.getElementById('cbNewQ').value = ''; document.getElementById('cbNewA').value = ''; document.getElementById('cbNewKw').value = '';
+        showToast('Saved! Will be reflected in AI immediately.', 'success'); cbLoadKnowledge();
+    };
+
+    window.cbDeleteKn = async function(id) { if (!confirm('Delete?')) return; await getSb().from('chatbot_knowledge').update({is_active:false}).eq('id',id); cbLoadKnowledge(); };
+
+    window.cbOpenEdit = function(id) {
+        var item = cbKnAllData.find(function(k){ return k.id === id; });
+        if (!item) { showToast('Data not found.', 'warn'); return; }
+        document.getElementById('cbEditId').value = id;
+        document.getElementById('cbEditQ').value = item.question || '';
+        document.getElementById('cbEditA').value = item.answer || '';
+        document.getElementById('cbEditKw').value = item.keywords || '';
+        var kwDiv = document.getElementById('cbEditKwTranslations');
+        if (kwDiv && item.keywords_translations) {
+            var flags = {ko:'🇰🇷',ja:'🇯🇵',en:'🇺🇸',zh:'🇨🇳',ar:'🇸🇦',es:'🇪🇸',de:'🇩🇪',fr:'🇫🇷'};
+            var html = '';
+            Object.keys(item.keywords_translations).forEach(function(lang) {
+                if (lang !== 'ko') html += '<span style="margin-right:6px;">' + (flags[lang]||lang) + ' ' + (item.keywords_translations[lang]||[]).join(', ') + '</span>';
+            });
+            kwDiv.innerHTML = html ? 'Translations: ' + html : '';
+        }
+        var modal = document.getElementById('cbEditModal');
+        modal.style.display = 'flex';
+    };
+
+    window.cbCloseEdit = function() {
+        document.getElementById('cbEditModal').style.display = 'none';
+    };
+
+    window.cbSaveEdit = async function() {
+        var sb = getSb(); if (!sb) return;
+        var id = parseInt(document.getElementById('cbEditId').value);
+        if (!id) return;
+        var q = document.getElementById('cbEditQ').value.trim();
+        var a = document.getElementById('cbEditA').value.trim();
+        if (!q || !a) { showToast('Enter question and answer.', 'warn'); return; }
+        var kw = document.getElementById('cbEditKw').value.trim();
+        var upd = { question: q, answer: a, keywords: kw };
+        var res = await sb.from('chatbot_knowledge').update(upd).eq('id', id);
+        if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return; }
+        showToast('Updated!', 'success');
+        cbCloseEdit();
+        cbLoadKnowledge();
+    };
+
+    // ═══ Conversation Session Review System ═══
+    var _sessions = [];
+    var _activeRoomId = null;
+    var _filterMode = 'all'; // 'all' or 'needs_learning'
+    function qaEsc(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
+
+    window.qaFilterNeedsLearning = async function() {
+        var sb = getSb(); if (!sb) return;
+        _filterMode = 'needs_learning';
+        var today = _kstDate();
+        var { data: logs } = await sb.from('advisor_qa_log').select('room_id')
+            .eq('needs_learning', true).eq('is_active', true)
+            .gte('created_at', today + 'T00:00:00+09:00')
+            .not('room_id', 'is', null);
+        var roomIds = [...new Set((logs||[]).map(function(l){return l.room_id}).filter(Boolean))];
+        if (!roomIds.length) { showToast('No conversations need training', 'info'); return; }
+        var { data: rooms } = await sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
+            .in('id', roomIds)
+            .order('updated_at', { ascending: false });
+        _sessions = rooms || [];
+        document.getElementById('qaReportCount').textContent = _sessions.length + ' sessions need training';
+        _renderSessionList();
+        _loadSessionPreviews(sb);
+    };
+
+    window.qaLoadSessions = async function() {
+        var sb = getSb(); if (!sb) return;
+        _filterMode = 'all';
+        var dateEl = document.getElementById('qaReportDate');
+        if (!dateEl.value) dateEl.value = _kstDate();
+        var date = dateEl.value;
+        var lang = document.getElementById('qaReportLang').value;
+        var q = sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
+            .or('source.like.bot-%,source.like.chatbot%,source.like.ai-%,source.like.embed-%')
+            .gte('created_at', date + 'T00:00:00+09:00')
+            .lte('created_at', date + 'T23:59:59+09:00')
+            .order('updated_at', { ascending: false })
+            .limit(50);
+        if (lang !== 'all') q = q.eq('site_lang', lang);
+        var res = await q;
+        _sessions = res.data || [];
+        var stats = document.getElementById('qaReportStats');
+        var total = _sessions.length;
+        var krC = _sessions.filter(function(s){return s.site_lang==='kr'}).length;
+        var jaC = _sessions.filter(function(s){return s.site_lang==='ja'}).length;
+        var usC = _sessions.filter(function(s){return (s.site_lang==='us'||s.site_lang==='en')}).length;
+        stats.innerHTML = '<div style="background:#ede9fe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#6366f1;">'+total+'</div><div style="font-size:11px;color:#64748b;">Total Conversations</div></div>' +
+            '<div style="background:#dbeafe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:18px;font-weight:900;color:#2563eb;">'+krC+' / '+jaC+' / '+usC+'</div><div style="font-size:11px;color:#64748b;">KR / JP / US</div></div>';
+        document.getElementById('qaReportCount').textContent = total + ' sessions';
+        _renderSessionList();
+        // Load latest customer message for each session (preview)
+        _loadSessionPreviews(sb);
+        _startQaRealtimeSub(sb);
+        _loadDailyReport();
+    };
+
+    async function _loadSessionPreviews(sb) {
+        if (!_sessions.length) return;
+        var roomIds = _sessions.map(function(s){return s.id});
+        // Query 1 recent customer message per session
+        var { data: msgs } = await sb.from('chat_messages').select('room_id, message')
+            .in('room_id', roomIds).eq('sender_type', 'customer')
+            .order('created_at', { ascending: false }).limit(200);
+        if (!msgs) return;
+        // Map latest message per room_id
+        var previewMap = {};
+        msgs.forEach(function(m) {
+            if (!previewMap[m.room_id]) previewMap[m.room_id] = (m.message || '').substring(0, 50);
+        });
+        _sessions.forEach(function(s) { s._preview = previewMap[s.id] || ''; });
+        _renderSessionList();
+    }
+
+    // ─── Daily Report ───
+    // KST date helper (UTC+9)
+    function _kstDate(offset) {
+        var d = new Date(Date.now() + (offset||0) + 9*3600000);
+        return d.toISOString().split('T')[0];
+    }
+
+    async function _loadDailyReport() {
+        var sb = getSb(); if (!sb) return;
+        var today = _kstDate();
+        var yesterday = _kstDate(-86400000);
+        var [todayTotal, todayNL, todayKr, todayJa, todayUs, yesterdayTotal, yesterdayNL] = await Promise.all([
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('needs_learning',true).eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('lang','kr').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').eq('lang','ja').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',today+'T00:00:00+09:00').or('lang.eq.us,lang.eq.en').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00+09:00').lte('created_at',yesterday+'T23:59:59+09:00').eq('is_active',true),
+            sb.from('advisor_qa_log').select('id',{count:'exact',head:true}).gte('created_at',yesterday+'T00:00:00+09:00').lte('created_at',yesterday+'T23:59:59+09:00').eq('needs_learning',true).eq('is_active',true),
+        ]);
+        var tCount = todayTotal.count||0, nlCount = todayNL.count||0;
+        var yCount = yesterdayTotal.count||0, yNL = yesterdayNL.count||0;
+        document.getElementById('qaDailyStats').innerHTML =
+            '<div onclick="qaLoadSessions()" style="background:#fff;padding:10px;border-radius:10px;text-align:center;cursor:pointer;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow=\'0 2px 8px rgba(99,102,241,0.3)\'" onmouseleave="this.style.boxShadow=\'none\'"><div style="font-size:20px;font-weight:900;color:#6366f1;">'+tCount+'</div><div style="font-size:10px;color:#64748b;">Today\'s Chats</div></div>' +
+            '<div onclick="qaFilterNeedsLearning()" style="background:#fff;padding:10px;border-radius:10px;text-align:center;cursor:pointer;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow=\'0 2px 8px rgba(239,68,68,0.3)\'" onmouseleave="this.style.boxShadow=\'none\'"><div style="font-size:20px;font-weight:900;color:'+(nlCount>0?'#ef4444':'#10b981')+';">'+nlCount+'</div><div style="font-size:10px;color:#64748b;">🔴 Needs Training</div></div>' +
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#3b82f6;">'+(todayKr.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇰🇷 KR</div></div>' +
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#ef4444;">'+(todayJa.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇯🇵 JP</div></div>' +
+            '<div style="background:#fff;padding:10px;border-radius:10px;text-align:center;"><div style="font-size:16px;font-weight:900;color:#10b981;">'+(todayUs.count||0)+'</div><div style="font-size:10px;color:#64748b;">🇺🇸 US</div></div>';
+        var alerts = '';
+        if (nlCount > 0) {
+            alerts += '<div style="background:#fef2f2;padding:8px 12px;border-radius:8px;margin-bottom:4px;font-size:12px;color:#dc2626;font-weight:600;">⚠️ The chatbot struggled with '+nlCount+' responses today. Review needed!</div>';
+        }
+        var diff = tCount - yCount;
+        alerts += '<div style="font-size:11px;color:#64748b;padding:4px 0;">Yesterday: '+yCount+' total'+(yNL>0?' ('+yNL+' need training)':'')+' | Today: '+tCount+' ('+(diff>=0?'+':'')+diff+')</div>';
+        document.getElementById('qaDailyAlerts').innerHTML = alerts;
+        document.getElementById('qaDailyTime').textContent = 'As of ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    }
+
+    // ─── Real-time alerts (sound + desktop notification + banner) ───
+    var _qaAlertSound = null;
+    function _playAlertSound() {
+        try {
+            if (!_qaAlertSound) {
+                _qaAlertSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+Jk5eMfG5xeIKMlo+DeXB1fYiTk4h8cXN7hpCTjYF2dHqCjZKQhXt0eIGLkpCGfHV4gYuRj4Z8dniAipGQh312eICKkJCHfnZ5gImQj4d+d3mAiZCPh353eYCJkI+Hfnd5gImQj4d+d3l/iZCOh392eYCJkI6Hf3Z5gIiPjod/dnmAiI+Oh393eICIj46Hf3d5gIiPjod/d3mAiI+Nh393eYCIj42Hf3d5gIiPjYd/d3mAiI+Nh393eYCIj42Hf3d5gA==');
+            }
+            _qaAlertSound.play().catch(function(){});
+        } catch(e) {}
+    }
+
+    function _showDesktopNotification(title, body) {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body: body, icon: '🦎', tag: 'chatbot-alert' });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+    }
+
+    function _showRealtimeAlert(msg, lang) {
+        var banner = document.getElementById('qaRealtimeAlert');
+        if (banner) {
+            var langLabel = {kr:'🇰🇷',ja:'🇯🇵',us:'🇺🇸',en:'🇺🇸'}[lang] || '';
+            document.getElementById('qaAlertTitle').textContent = '🔴 Chatbot is struggling to answer';
+            document.getElementById('qaAlertDetail').textContent = langLabel + ' "' + (msg||'').substring(0,60) + '..."';
+            banner.style.display = 'block';
+        }
+        _playAlertSound();
+        _showDesktopNotification('Chatbot Training Needed', (msg||'').substring(0,80));
+    }
+
+    // ─── Real-time subscription ───
+    var _qaRoomSub = null;
+    var _qaMsgSub = null;
+    var _qaLogSub = null;
+    function _startQaRealtimeSub(sb) {
+        if (_qaRoomSub) { sb.removeChannel(_qaRoomSub); _qaRoomSub = null; }
+        if (_qaMsgSub) { sb.removeChannel(_qaMsgSub); _qaMsgSub = null; }
+        if (_qaLogSub) { sb.removeChannel(_qaLogSub); _qaLogSub = null; }
+
+        _qaRoomSub = sb.channel('qa-rooms-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_rooms' }, function() {
+                qaLoadSessions();
+            }).subscribe();
+
+        _qaMsgSub = sb.channel('qa-msgs-realtime')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, function(payload) {
+                if (_activeRoomId && payload.new && payload.new.room_id === _activeRoomId) {
+                    var s = _sessions.find(function(ss){return ss.id===_activeRoomId});
+                    qaOpenSession(_activeRoomId, s ? s.site_lang : 'kr');
+                }
+            }).subscribe();
+
+        // needs_learning detection → subscribe to ALL inserts, check in callback
+        _qaLogSub = sb.channel('qa-log-realtime')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'advisor_qa_log' }, function(payload) {
+                if (payload.new && payload.new.needs_learning) {
+                    _showRealtimeAlert(payload.new.customer_message, payload.new.lang);
+                    _loadDailyReport();
+                }
+            }).subscribe();
+
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+
+    function _renderSessionList() {
+        var list = document.getElementById('qaSessionList');
+        if (!_sessions.length) { list.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No conversations</div>'; return; }
+        var h = '';
+        _sessions.forEach(function(s) {
+            var time = new Date(s.created_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+            var langColors = {kr:'#3b82f6',ja:'#ef4444',us:'#10b981',en:'#10b981'};
+            var langLabels = {kr:'KR',ja:'JP',us:'US',en:'US'};
+            var isActive = s.id === _activeRoomId;
+            h += '<div onclick="qaOpenSession(\''+s.id+'\',\''+(s.site_lang||'kr')+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #e2e8f0;background:'+(isActive?'#ede9fe':'#fff')+';transition:background 0.15s;" onmouseenter="if(!'+isActive+')this.style.background=\'#f8fafc\'" onmouseleave="if(!'+isActive+')this.style.background=\'#fff\'">';
+            h += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+            h += '<span style="font-size:13px;font-weight:700;color:#334155;">'+time+'</span>';
+            h += '<div style="display:flex;align-items:center;gap:6px;">';
+            h += '<span style="font-size:11px;color:#64748b;font-weight:500;">'+(s.customer_name||'Customer')+'</span>';
+            h += '<span style="background:'+(langColors[s.site_lang]||'#64748b')+';color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;">'+(langLabels[s.site_lang]||s.site_lang)+'</span>';
+            h += '</div></div>';
+            var preview = s._preview || '';
+            if (preview) {
+                h += '<div style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px;">'+qaEsc(preview)+'</div>';
+            }
+            h += '</div>';
+        });
+        list.innerHTML = h;
+    }
+
+    window.qaOpenSession = async function(roomId, siteLang) {
+        _activeRoomId = roomId;
+        var _forceLang = siteLang || 'kr';
+        _renderSessionList();
+        var detail = document.getElementById('qaSessionDetail');
+        detail.innerHTML = '<div style="text-align:center;padding:40px;"><div style="width:30px;height:30px;border:3px solid #e9d5ff;border-top:3px solid #7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;"></div><span style="color:#7c3aed;font-size:13px;">Loading...</span></div>';
+
+        try {
+            var sb = getSb();
+            var res = await sb.functions.invoke('admin-qa-update', { body: { action: 'load_conversation', room_id: roomId } });
+            var d = res.data;
+            if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
+            var messages = (d && d.messages) || [];
+            var room = (d && d.room) || {};
+            var isNonKr = _forceLang !== 'kr';
+
+            if (!messages.length) { detail.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No messages</div>'; return; }
+
+            var h = '<div style="margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">';
+            h += '<div><span style="font-weight:800;color:#334155;">'+(room.customer_name||'Customer')+'</span>';
+            h += ' <span style="font-size:11px;color:#64748b;">'+new Date(room.created_at).toLocaleString('en-US')+'</span></div>';
+            if (isNonKr) h += '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;">Overseas ('+room.site_lang+')</span>';
+            h += '</div>';
+
+            h += '<div style="display:flex;flex-direction:column;gap:8px;">';
+            messages.forEach(function(m, idx) {
+                var isCustomer = m.sender_type === 'customer';
+                var isBot = m.sender_type === 'chatbot';
+                var time = new Date(m.created_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+                var cleanMsg = (m.message||'').replace(/<!--PRODUCTS:.*?-->/g,'').trim();
+
+                // Image/file HTML
+                var fileHtml = '';
+                if (m.file_url) {
+                    var isImg = /\.(jpg|jpeg|png|gif|webp|svg)/i.test(m.file_url) || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(m.file_name||'');
+                    if (isImg) {
+                        fileHtml = '<div style="margin:6px 0;"><img src="'+m.file_url+'" style="max-width:240px;max-height:200px;border-radius:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);" onclick="window.open(this.src)"></div>';
+                    } else {
+                        fileHtml = '<div style="margin:6px 0;"><a href="'+m.file_url+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#f0f9ff;border:1px solid #7dd3fc;padding:8px 14px;border-radius:10px;color:#0284c7;text-decoration:none;font-size:12px;">📎 '+(m.file_name||'File')+'</a></div>';
+                    }
+                }
+                // Detect image URLs in message
+                var inlineImgMatch = cleanMsg.match(/(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp))/i);
+
+                if (isCustomer) {
+                    h += '<div style="display:flex;justify-content:flex-start;gap:6px;">';
+                    h += '<div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;">👤</div>';
+                    h += '<div style="max-width:75%;background:#f1f5f9;border:1px solid #e2e8f0;color:#334155;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:13px;">';
+                    if (fileHtml) h += fileHtml;
+                    h += qaEsc(cleanMsg);
+                    if (isNonKr && cleanMsg) h += '<div style="margin-top:4px;padding-top:4px;border-top:1px dashed #cbd5e1;font-size:11px;color:#6366f1;font-style:italic;" id="qaTr_'+idx+'">[Translation pending]</div>';
+                    h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
+                    h += '</div></div>';
+                } else if (isBot) {
+                    // Extract product images from PRODUCTS tag
+                    var prodMatch = (m.message||'').match(/<!--PRODUCTS:(.*?)-->/);
+                    var prodCards = '';
+                    if (prodMatch) {
+                        try {
+                            var prods = JSON.parse(prodMatch[1]);
+                            prods.forEach(function(p) {
+                                if (p.img) prodCards += '<img src="'+p.img+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;" title="'+(p.name||'')+'">';
+                            });
+                            if (prodCards) prodCards = '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">'+prodCards+'</div>';
+                        } catch(e) {}
+                    }
+                    h += '<div style="display:flex;justify-content:flex-start;gap:6px;">';
+                    h += '<div style="width:28px;height:28px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">🦎</div>';
+                    h += '<div style="max-width:75%;">';
+                    h += '<div style="background:#f1f5f9;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:13px;color:#334155;">';
+                    if (fileHtml) h += fileHtml;
+                    var botLinked = qaEsc(cleanMsg.substring(0, 1200)).replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;text-decoration:underline;word-break:break-all;">$1</a>');
+                    h += botLinked;
+                    if (prodCards) h += prodCards;
+                    if (isNonKr) h += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:12px;color:#6366f1;font-style:italic;" id="qaTrBot_'+idx+'">[Korean translation pending]</div>';
+                    h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">'+time+'</div>';
+                    h += '</div>';
+                    h += '<div style="display:flex;gap:4px;margin-top:4px;">';
+                    h += '<button class="btn btn-outline btn-sm" onclick="qaFixThis(\''+roomId+'\','+idx+',\''+qaEsc(cleanMsg.substring(0,200).replace(/'/g,"\\'"))+'\')" style="font-size:10px;color:#ef4444;border-color:#fca5a5;">❌ Wrong</button>';
+                    h += '<button class="btn btn-outline btn-sm" onclick="qaMarkOk(\''+roomId+'\')" style="font-size:10px;color:#10b981;border-color:#86efac;">✅ No Issue</button>';
+                    h += '</div>';
+                    h += '</div></div>';
+                } else if (m.sender_type === 'manager') {
+                    var mgrName = m.sender_name || 'Manager';
+                    var linkedMsg = qaEsc(cleanMsg).replace(/(https?:\/\/[^\s<&]+)/g, '<a href="$1" target="_blank" style="color:#2563eb;text-decoration:underline;word-break:break-all;">$1</a>');
+                    h += '<div style="display:flex;justify-content:flex-end;">';
+                    h += '<div style="max-width:75%;">';
+                    h += '<div style="font-size:11px;color:#059669;font-weight:700;margin-bottom:2px;text-align:right;">💬 '+qaEsc(mgrName)+'</div>';
+                    h += '<div style="background:#6366f1;color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:13px;">';
+                    if (fileHtml) h += fileHtml;
+                    h += linkedMsg;
+                    h += '<div style="font-size:10px;opacity:0.6;margin-top:4px;">'+time+'</div>';
+                    h += '</div></div></div>';
+                } else if (m.sender_type === 'system' || m.sender_type === 'admin_memo') {
+                    h += '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:4px 0;background:#f8fafc;padding:4px 8px;border-radius:8px;">'+qaEsc(cleanMsg.substring(0,150))+'</div>';
+                } else {
+                    h += '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:4px 0;">['+(m.sender_name||m.sender_type)+'] '+qaEsc(cleanMsg.substring(0,100))+'</div>';
+                }
+            });
+            h += '</div>';
+
+            // Admin reply input area
+            h += '<div style="margin-top:16px;padding-top:12px;border-top:2px solid #16a34a;">';
+            h += '<div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">💬 Send Reply to Customer</div>';
+            h += '<div style="display:flex;gap:6px;">';
+            h += '<input id="adminReplyInput" type="text" style="flex:1;border:1.5px solid #16a34a;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;" placeholder="Enter your reply..." onkeydown="if(event.key===\'Enter\')sendAdminReply()">';
+            h += '<button class="btn" onclick="sendAdminReply()" style="background:#16a34a;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">Send</button>';
+            h += '</div>';
+            h += '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">Will be sent as admin message to customer\'s chat.</div>';
+            h += '</div>';
+
+            h += '<div style="margin-top:16px;padding-top:12px;border-top:2px solid #e2e8f0;">';
+            h += '<div style="font-size:12px;font-weight:700;color:#6366f1;margin-bottom:6px;">💡 Learn from this conversation (enter in Korean)</div>';
+            h += '<textarea id="qaSessionLearn" rows="2" style="width:100%;border:1px solid #d4d4d8;border-radius:8px;padding:10px;font-size:13px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="e.g.: Reboard partition is about 150,000 won per section. Delivery is free near Tokyo."></textarea>';
+            h += '<button class="btn btn-primary" onclick="qaSessionLearnSave()" style="width:100%;margin-top:8px;">🧠 Train</button>';
+            h += '</div>';
+
+            detail.innerHTML = h;
+            if (isNonKr) _autoTranslateThread(messages, _forceLang);
+        } catch(e) {
+            detail.innerHTML = '<div style="color:#ef4444;padding:20px;">Loading failed: '+(e.message||e)+'</div>';
+        }
+    };
+
+    async function _autoTranslateThread(messages, lang) {
+        var sb = getSb();
+        for (var i = 0; i < messages.length; i++) {
+            var m = messages[i];
+            if (!m.message) continue;
+            var isCustomer = m.sender_type === 'customer';
+            var isBot = m.sender_type === 'chatbot';
+            if (!isCustomer && !isBot) continue;
+            var elId = isCustomer ? 'qaTr_' + i : 'qaTrBot_' + i;
+            var el = document.getElementById(elId);
+            if (!el) continue;
+            var cleanMsg = (m.message || '').replace(/<!--PRODUCTS:.*?-->/g, '').trim().substring(0, 500);
+            try {
+                var res = await sb.functions.invoke('admin-qa-update', {
+                    body: { action: 'translate_ai_response', qa_id: 'thread', ai_response: cleanMsg, lang: lang }
+                });
+                var d = res.data;
+                if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
+                if (d && d.translated) el.textContent = '🇰🇷 ' + d.translated;
+            } catch(e) { el.textContent = '[Translation failed]'; }
+        }
+    }
+
+    window.qaFixThis = function(roomId, msgIdx, wrongAnswer) {
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
+        ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">' +
+            '<h3 style="margin:0 0 12px;color:#ef4444;">❌ Fix Wrong AI Response</h3>' +
+            '<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#7f1d1d;max-height:80px;overflow:auto;">'+wrongAnswer+'</div>' +
+            '<div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">✅ Correct Answer (in Korean)</div>' +
+            '<textarea id="qaFixAnswer" rows="3" style="width:100%;border:1px solid #d4d4d8;border-radius:8px;padding:10px;font-size:13px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="Enter correct answer in Korean..."></textarea>' +
+            '<div style="display:flex;gap:8px;margin-top:12px;">' +
+            '<button class="btn btn-primary" style="flex:1;" onclick="qaFixSave(this)">🧠 Train</button>' +
+            '<button class="btn btn-outline" style="flex:1;" onclick="this.closest(\'div[style*=inset]\').remove()">Cancel</button>' +
+            '</div></div>';
+        document.body.appendChild(ov);
+        ov.addEventListener('click', function(e) { if(e.target===ov) ov.remove(); });
+    };
+
+    window.qaFixSave = async function(btn) {
+        var ta = document.getElementById('qaFixAnswer');
+        if (!ta || !ta.value.trim()) { showToast('Enter an answer', 'warn'); return; }
+        btn.disabled = true; btn.textContent = 'Saving...';
+        try {
+            var sb = getSb();
+            await sb.functions.invoke('admin-qa-update', { body: { action: 'natural_learn', text: ta.value.trim() } });
+            // Training complete → clear needs_learning
+            if (_activeRoomId) {
+                await sb.from('advisor_qa_log').update({ needs_learning: false }).eq('room_id', _activeRoomId);
+            }
+            showToast('Learning complete! Will be reflected from next conversation.', 'success');
+            btn.closest('div[style*=inset]').remove();
+            // If filtering by needs_learning, remove session from list
+            if (_filterMode === 'needs_learning' && _activeRoomId) {
+                _sessions = _sessions.filter(function(s) { return s.id !== _activeRoomId; });
+                _activeRoomId = null;
+                _renderSessionList();
+                document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">Training complete! Select another conversation</div></div>';
+            }
+            _loadDailyReport();
+        } catch(e) {
+            showToast('Failed: '+(e.message||e), 'error');
+            btn.disabled = false; btn.textContent = '🧠 Train';
+        }
+    };
+
+    // "No Issue" → clear needs_learning
+    window.qaMarkOk = async function(roomId) {
+        var sb = getSb();
+        // Set all needs_learning to false for this room_id
+        var { error } = await sb.from('advisor_qa_log').update({ needs_learning: false }).eq('room_id', roomId);
+        if (error) { showToast('Failed: ' + error.message, 'error'); return; }
+        showToast('✅ Marked as no issue', 'success');
+        // If filtering by needs_learning, remove session from list; if viewing all, keep it
+        if (_filterMode === 'needs_learning') {
+            _sessions = _sessions.filter(function(s) { return s.id !== roomId; });
+            _activeRoomId = null;
+            _renderSessionList();
+            document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">Done! Select another conversation</div></div>';
+        }
+        _loadDailyReport();
+    };
+
+    window.qaSessionLearnSave = async function() {
+        var ta = document.getElementById('qaSessionLearn');
+        if (!ta || !ta.value.trim()) { showToast('Enter content to train', 'warn'); return; }
+        ta.disabled = true;
+        try {
+            var sb = getSb();
+            await sb.functions.invoke('admin-qa-update', { body: { action: 'natural_learn', text: ta.value.trim() } });
+            // Training complete → clear needs_learning
+            if (_activeRoomId) {
+                await sb.from('advisor_qa_log').update({ needs_learning: false }).eq('room_id', _activeRoomId);
+            }
+            showToast('Training complete!', 'success');
+            ta.value = '';
+            if (_filterMode === 'needs_learning' && _activeRoomId) {
+                _sessions = _sessions.filter(function(s) { return s.id !== _activeRoomId; });
+                _activeRoomId = null;
+                _renderSessionList();
+                document.getElementById('qaSessionDetail').innerHTML = '<div style="text-align:center;padding:80px 20px;color:#94a3b8;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">Training complete! Select another conversation</div></div>';
+            }
+            _loadDailyReport();
+        } catch(e) { showToast('Failed: '+(e.message||e), 'error'); }
+        ta.disabled = false;
+    };
+
+    // Admin reply send
+    window.sendAdminReply = async function() {
+        var input = document.getElementById('adminReplyInput');
+        if (!input || !input.value.trim()) { showToast('Enter a reply', 'warn'); return; }
+        if (!_activeRoomId) { showToast('Select a session', 'warn'); return; }
+
+        var msg = input.value.trim();
+        input.disabled = true;
+
+        try {
+            var sb = getSb();
+            var { data: session } = await sb.auth.getSession();
+            var adminName = 'Admin';
+            if (session?.session?.user) {
+                var { data: prof } = await sb.from('profiles').select('username').eq('id', session.session.user.id).single();
+                adminName = prof?.username || session.session.user.email?.split('@')[0] || 'Admin';
+            }
+
+            // Insert admin message into chat_messages (as chatbot type → displayed to customer)
+            var { error } = await sb.from('chat_messages').insert({
+                room_id: _activeRoomId,
+                sender_type: 'chatbot',
+                sender_name: 'Admin ' + adminName,
+                message: msg,
+                created_at: new Date().toISOString()
+            });
+            if (error) throw error;
+
+            // Refresh conversation detail
+            showToast('✅ Reply sent', 'success');
+            input.value = '';
+
+            // Immediately add to conversation UI
+            var detail = document.getElementById('qaSessionDetail');
+            var replyDiv = document.createElement('div');
+            replyDiv.style.cssText = 'display:flex;gap:8px;margin-top:8px;padding:8px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;';
+            replyDiv.innerHTML = '<div style="width:28px;height:28px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">👤</div>' +
+                '<div><div style="font-size:11px;color:#16a34a;font-weight:700;">Admin ' + adminName + ' · just now</div><div style="font-size:14px;color:#1e293b;margin-top:4px;line-height:1.5;">' + msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div></div>';
+
+            // Insert before the training section
+            var learnSection = detail.querySelector('[style*="border-top:2px solid #16a34a"]') || detail.querySelector('[style*="border-top:2px solid #e2e8f0"]');
+            if (learnSection) learnSection.parentNode.insertBefore(replyDiv, learnSection);
+            else detail.appendChild(replyDiv);
+
+        } catch(e) { showToast('Send failed: '+(e.message||e), 'error'); }
+        input.disabled = false;
+    };
+
+    window.cbLoadSettings = async function() {
+        var sb = getSb(); var r = await sb.from('chatbot_knowledge').select('answer').eq('category','_system_prompt').eq('is_active',true).maybeSingle();
+        if(r.data) document.getElementById('cbCustomPrompt').value=r.data.answer;
+        var [ta, tk] = await Promise.all([sb.from('chatbot_logs').select('id',{count:'exact',head:true}), sb.from('chatbot_knowledge').select('id',{count:'exact',head:true}).eq('is_active',true)]);
+        document.getElementById('cbStats').innerHTML='<div style="background:#ede9fe;padding:15px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:900;color:#6366f1;">'+(ta.count||0)+'</div><div style="font-size:11px;">Total Chats</div></div><div style="background:#d1fae5;padding:15px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:900;color:#059669;">'+(tk.count||0)+'</div><div style="font-size:11px;">Training Data</div></div>';
+    };
+
+    window.cbSaveSettings = async function() {
+        var sb=getSb(); await sb.from('chatbot_knowledge').update({is_active:false}).eq('category','_system_prompt');
+        var p=document.getElementById('cbCustomPrompt').value.trim();
+        if(p) await sb.from('chatbot_knowledge').insert({category:'_system_prompt',question:'시스템설정',answer:p,language:'ko',priority:100});
+        showToast('Settings saved!', 'success');
+    };
+})();
+</script>
+</body>
+</html>
