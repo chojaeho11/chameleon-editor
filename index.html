@@ -7154,6 +7154,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
 
 // ★ 흘러가는 상품 배너
 async function loadScrollBanner() {
+    return; // 흘러가는 배너 비활성화
     const banner = document.getElementById('scrollBanner');
     const clip = document.getElementById('scrollBannerClip');
     const track = document.getElementById('scrollBannerTrack');
