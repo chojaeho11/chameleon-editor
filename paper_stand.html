@@ -293,9 +293,23 @@ a { text-decoration: none; color: inherit; }
 <!-- 헤더 -->
 <header class="site-header">
     <div class="header-inner">
-        <a href="/" class="logo">
+        <a id="logoLink" href="/" class="logo">
             <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>Chameleon Printing
         </a>
+        <script>
+        (function(){
+            var lang = window.__PS_LANG || 'ko';
+            var h = location.hostname;
+            var base = '/';
+            if (h.indexOf('chameleon.design')>=0 || h.indexOf('cafe3355')>=0) {
+                if (lang !== 'en' && lang !== 'ko') base = '/?lang=' + lang;
+            } else if (h.indexOf('cafe0101')>=0) {
+                base = '/';
+            }
+            var el = document.getElementById('logoLink');
+            if (el) el.href = base;
+        })();
+        </script>
         <nav class="nav-links">
             <div class="lang-selector" id="langSelector"></div>
         </nav>
