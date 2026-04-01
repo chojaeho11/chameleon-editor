@@ -296,20 +296,6 @@ a { text-decoration: none; color: inherit; }
         <a id="logoLink" href="/" class="logo">
             <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>Chameleon Printing
         </a>
-        <script>
-        (function(){
-            var lang = window.__PS_LANG || 'ko';
-            var h = location.hostname;
-            var base = '/';
-            if (h.indexOf('chameleon.design')>=0 || h.indexOf('cafe3355')>=0) {
-                if (lang !== 'en' && lang !== 'ko') base = '/?lang=' + lang;
-            } else if (h.indexOf('cafe0101')>=0) {
-                base = '/';
-            }
-            var el = document.getElementById('logoLink');
-            if (el) el.href = base;
-        })();
-        </script>
         <nav class="nav-links">
             <div class="lang-selector" id="langSelector"></div>
         </nav>
@@ -931,6 +917,20 @@ document.addEventListener('DOMContentLoaded', function() {
     buildLangSelector();
     applyI18n();
     addHreflangTags();
+    // 로고 링크: 현재 언어로 메인 사이트 이동
+    var logoEl = document.getElementById('logoLink');
+    if (logoEl) {
+        var h = location.hostname;
+        var isIntl = h.indexOf('chameleon.design')>=0 || h.indexOf('cafe3355')>=0;
+        var isJp = h.indexOf('cafe0101')>=0;
+        if (isIntl && LANG !== 'en') {
+            logoEl.href = '/?lang=' + LANG;
+        } else if (isJp) {
+            logoEl.href = '/';
+        } else {
+            logoEl.href = '/';
+        }
+    }
 });
 })();
 </script>
