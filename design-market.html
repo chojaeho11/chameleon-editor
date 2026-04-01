@@ -989,8 +989,8 @@ let portfolioUrls = [];
     userEmail = session.user.email;
 
     // Load user profile
-    const { data: prof } = await sb.from('profiles').select('nickname, deposit').eq('id', userId).single();
-    userNickname = prof?.nickname || userEmail.split('@')[0];
+    const { data: prof } = await sb.from('profiles').select('username, deposit').eq('id', userId).single();
+    userNickname = prof?.username || userEmail.split('@')[0];
     document.getElementById('headerUserInfo').textContent = userNickname + t('nim');
 
     // Translate static HTML
@@ -1478,14 +1478,14 @@ async function loadRequests() {
 
     // Get customer profiles
     const customerIds = [...new Set(requests.map(r => r.customer_id))];
-    const { data: profiles } = await sb.from('profiles').select('id, nickname, email').in('id', customerIds);
+    const { data: profiles } = await sb.from('profiles').select('id, username, email').in('id', customerIds);
     const profileMap = {};
     (profiles || []).forEach(p => profileMap[p.id] = p);
 
     let html = '';
     for (const r of requests) {
         const prof = profileMap[r.customer_id] || {};
-        const initial = (prof.nickname || prof.email || '?')[0].toUpperCase();
+        const initial = (prof.username || prof.email || '?')[0].toUpperCase();
         const bidCount = r.design_bids?.[0]?.count || 0;
         const fileCount = (r.files || []).length;
         html += `
@@ -1527,8 +1527,8 @@ async function showRequestDetail(requestId) {
     if (!r) { detailView.innerHTML = '<p>' + t('request_not_found') + '</p>'; return; }
 
     // Get customer profile
-    const { data: cProf } = await sb.from('profiles').select('nickname, email').eq('id', r.customer_id).single();
-    const customerName = cProf?.nickname || cProf?.email?.split('@')[0] || t('client');
+    const { data: cProf } = await sb.from('profiles').select('username, email').eq('id', r.customer_id).single();
+    const customerName = cProf?.username || cProf?.email?.split('@')[0] || t('client');
 
     // Get bid count
     const { count: bidCount } = await sb.from('design_bids').select('*', { count: 'exact', head: true }).eq('request_id', requestId);
