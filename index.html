@@ -839,23 +839,24 @@ document.addEventListener('DOMContentLoaded', function() {
     var hero = ss.querySelector('.hero-section');
     if (!hero) return;
 
-    // 0) 종이매대 영상 → 히어로 바로 다음, 흘러가는 배너 → 그 다음
-    var psVidSec = document.getElementById('psVideoSections');
-    var scrollBanner = document.getElementById('scrollBanner');
-    var ref = hero.nextElementSibling;
-    if (psVidSec && ref) { ss.insertBefore(psVidSec, ref); ref = psVidSec.nextElementSibling; }
-    if (scrollBanner && ref) { ss.insertBefore(scrollBanner, ref); }
-
-    // 1) 챗봇 → 배너 다음, 그 아래 제품검색+회원가입
+    // 0) 히어로 바로 다음: 챗봇 → 종이매대 영상
     var chatbotWrap = document.getElementById('chatbotBtnWrap');
     var advisorPanel = document.getElementById('advisorPanel');
     var couponBanner = document.getElementById('couponEventBanner');
     var btnWrap = document.getElementById('twoBtnWrap');
-    ref = scrollBanner ? scrollBanner.nextElementSibling : hero.nextElementSibling;
+    var psVidSec = document.getElementById('psVideoSections');
+    var scrollBanner = document.getElementById('scrollBanner');
+    var ref = hero.nextElementSibling;
+
+    // 챗봇 → 히어로 바로 다음
     if (chatbotWrap && ref) { ss.insertBefore(chatbotWrap, ref); }
     if (advisorPanel && chatbotWrap) { chatbotWrap.after(advisorPanel); }
     if (couponBanner && advisorPanel) { advisorPanel.after(couponBanner); }
     if (btnWrap && couponBanner) { couponBanner.after(btnWrap); }
+
+    // 종이매대 영상 → 챗봇 다음
+    var lastChat = btnWrap || couponBanner || advisorPanel || chatbotWrap || hero;
+    if (psVidSec && lastChat.nextElementSibling) { ss.insertBefore(psVidSec, lastChat.nextElementSibling); }
 
     // 2) 핫딜 + 업자할인 → 챗봇 다음
     var hotDeal = document.getElementById('hotDealSection');
@@ -872,12 +873,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var popular = document.getElementById('popularSection');
     if (popular && quickMenuWrap) { ss.insertBefore(popular, quickMenuWrap); }
 
-    // 5) 구독 섹션 → 리뷰 바로 위로 이동
+    // 5) 구독 섹션 → 리뷰 바로 위로, 흘러가는 배너 → 구독 아래(리뷰 위)
     var subSec = document.getElementById('subscriptionSection');
     var reviewSec = ss.querySelector('.review-section');
     if (subSec && reviewSec) { reviewSec.parentNode.insertBefore(subSec, reviewSec); }
+    if (scrollBanner && reviewSec) { reviewSec.parentNode.insertBefore(scrollBanner, reviewSec); }
 
-    // 최종 순서: 히어로 → 챗봇+제품찾기 → 핫딜+업자+인기 → AI검색+템플릿 → 보라색(온라인디지털) → 커뮤니티 → 구독 → 리뷰 → 푸터
+    // 최종 순서: 히어로 → 챗봇+제품찾기 → 종이매대영상 → 핫딜+업자+인기 → AI검색+템플릿 → 보라색 → 커뮤니티 → 구독 → 흘러가는배너 → 리뷰 → 푸터
 });
 </script>
 
