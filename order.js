@@ -726,9 +726,8 @@ function isHoneycombProduct(product) {
         const sub = window.globalSubCats.find(s => s.code === product.category);
         if (sub && sub.top_category_code) {
             if (sub.top_category_code.toLowerCase().includes('honeycomb')) return true;
-            // 같은 대분류의 소분류 이름에 허니콤 포함 여부
-            const siblings = window.globalSubCats.filter(s => s.top_category_code === sub.top_category_code);
-            if (siblings.some(s => s.name && (s.name.includes('허니콤') || s.name.toLowerCase().includes('honeycomb')))) return true;
+            // 자기 자신의 소분류 이름에 허니콤 포함 여부
+            if (sub.name && (sub.name.includes('허니콤') || sub.name.toLowerCase().includes('honeycomb'))) return true;
         }
     }
     // 상품명 폴백
@@ -927,6 +926,10 @@ function renderTimeSlots(grid, bookedSlots, slotInfo) {
                 selectedInstallationTime = '08:00';
                 document.getElementById("btnConfirmInstallTime").disabled = false;
             };
+            // 종일은 옵션이 하나뿐이므로 자동 선택
+            div.classList.add('slot-selected');
+            selectedInstallationTime = '08:00';
+            document.getElementById("btnConfirmInstallTime").disabled = false;
         }
         grid.appendChild(div);
         return;

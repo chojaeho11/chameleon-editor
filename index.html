@@ -716,6 +716,76 @@ if ('caches' in window) {
         </div>
     </div>
 
+<!-- ★ 종이매대 영상 소개 2종 -->
+<div id="psVideoSections">
+    <!-- 영상1: expositor4 (텍스트 왼쪽, 영상 오른쪽) -->
+    <section class="ps-vid" style="max-width:1300px; margin:0 auto; padding:60px 24px 20px; display:flex; align-items:center; gap:24px;">
+        <div class="ps-vid-txt" style="flex:0 0 340px; padding-left:40px;">
+            <h2 style="font-size:42px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:24px;" id="psV1H2">
+                <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>순식간에<br>조립되는<br>원터치형
+            </h2>
+            <p style="font-size:20px; color:#64748b; line-height:1.7; margin-bottom:32px;" id="psV1P">
+                펼치기만 하면 완성.<br>도구 없이 누구나 1분 만에<br>설치할 수 있습니다.
+            </p>
+            <a href="/paper_stand" id="psV1Btn" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.3); text-decoration:none;">
+                상품 보기 <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="ps-vid-media" style="flex:1; min-width:0;">
+            <video autoplay muted loop playsinline style="width:100%; display:block;">
+                <source src="/expositor4.mp4" type="video/mp4">
+            </video>
+        </div>
+    </section>
+    <!-- 영상2: arco5 (영상 왼쪽, 텍스트 오른쪽) -->
+    <section class="ps-vid ps-vid-reverse" style="max-width:1300px; margin:0 auto; padding:20px 24px 40px; display:flex; align-items:center; gap:24px;">
+        <div class="ps-vid-media" style="flex:1; min-width:0;">
+            <video autoplay muted loop playsinline style="width:100%; display:block;">
+                <source src="/arco5.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="ps-vid-txt" style="flex:0 0 320px; padding-right:40px;">
+            <h2 style="font-size:42px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:24px;" id="psV2H2">
+                멋진 이벤트<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3분</em> 완성
+            </h2>
+            <p style="font-size:20px; color:#64748b; line-height:1.7; margin-bottom:32px;" id="psV2P">
+                게이트를 통과해서<br>멋진 제품을<br>체험하게 하세요.
+            </p>
+            <a href="/paper_stand" id="psV2Btn" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.3); text-decoration:none;">
+                상품 보기 <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+</div>
+<style>
+@media (max-width: 768px) {
+    .ps-vid { flex-direction:column !important; gap:20px !important; padding:32px 0 12px !important; }
+    .ps-vid-reverse { flex-direction:column-reverse !important; }
+    .ps-vid .ps-vid-txt { flex:unset !important; width:100% !important; padding:0 16px !important; text-align:center; }
+    .ps-vid .ps-vid-txt h2 { font-size:28px !important; }
+    .ps-vid .ps-vid-txt p { font-size:16px !important; }
+    .ps-vid .ps-vid-txt a { margin:0 auto; }
+    .ps-vid .ps-vid-media { flex:unset !important; width:100vw !important; margin-left:-16px; }
+}
+</style>
+<script>
+(function(){
+    var _sc = window.__SITE_CODE || 'KR';
+    var v1h2 = {KR:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>순식간에<br>조립되는<br>원터치형',JP:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>一瞬で<br>組み立て<br>ワンタッチ式',US:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Instant<br>Assembly<br>One-Touch',CN:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>瞬间<br>组装<br>一触即成',SA:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>تجميع<br>فوري<br>بلمسة واحدة',ES:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Montaje<br>Instantaneo<br>Un Solo Toque',DE:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Sofortige<br>Montage<br>Ein Handgriff',FR:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Montage<br>Instantane<br>En Un Geste'};
+    var v1p = {KR:'펼치기만 하면 완성.<br>도구 없이 누구나 1분 만에<br>설치할 수 있습니다.',JP:'広げるだけで完成。<br>道具なしで誰でも1分で<br>設置できます。',US:'Just unfold and it\'s done.<br>Anyone can set it up<br>in 1 minute, no tools needed.',CN:'展开即完成。<br>无需工具，任何人<br>1分钟即可安装。',SA:'افتحها فقط وستكتمل.<br>يمكن لأي شخص تركيبها<br>في دقيقة واحدة بدون أدوات.',ES:'Solo despliega y listo.<br>Cualquiera puede instalarlo<br>en 1 minuto, sin herramientas.',DE:'Einfach aufklappen und fertig.<br>Jeder kann es in 1 Minute<br>ohne Werkzeug aufstellen.',FR:'Dépliez et c\'est prêt.<br>N\'importe qui peut l\'installer<br>en 1 minute, sans outils.'};
+    var v2h2 = {KR:'멋진 이벤트<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3분</em> 완성',JP:'素敵なイベント<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3分</em>で完成',US:'Amazing Events<br>Ready in <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',CN:'精彩活动<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3分钟</em>完成',SA:'فعاليات رائعة<br>جاهزة في <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 دقائق</em>',ES:'Eventos Increibles<br>Listos en <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',DE:'Tolle Events<br>Fertig in <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',FR:'Evenements Incroyables<br>Prets en <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>'};
+    var v2p = {KR:'게이트를 통과해서<br>멋진 제품을<br>체험하게 하세요.',JP:'ゲートを通過して<br>素敵な製品を<br>体験させましょう。',US:'Walk through the gate<br>and experience<br>amazing products.',CN:'通过门廊<br>体验<br>精彩产品。',SA:'امر عبر البوابة<br>وجرب<br>منتجات رائعة.',ES:'Pasa por la puerta<br>y experimenta<br>productos increibles.',DE:'Gehen Sie durch das Tor<br>und erleben Sie<br>tolle Produkte.',FR:'Passez la porte<br>et decouvrez<br>des produits incroyables.'};
+    var btn = {KR:'상품 보기 <i class="fa-solid fa-arrow-right"></i>',JP:'商品を見る <i class="fa-solid fa-arrow-right"></i>',US:'View Products <i class="fa-solid fa-arrow-right"></i>',CN:'查看商品 <i class="fa-solid fa-arrow-right"></i>',SA:'عرض المنتجات <i class="fa-solid fa-arrow-right"></i>',ES:'Ver productos <i class="fa-solid fa-arrow-right"></i>',DE:'Produkte ansehen <i class="fa-solid fa-arrow-right"></i>',FR:'Voir les produits <i class="fa-solid fa-arrow-right"></i>'};
+    var e;
+    e=document.getElementById('psV1H2'); if(e) e.innerHTML=v1h2[_sc]||v1h2.US;
+    e=document.getElementById('psV1P'); if(e) e.innerHTML=v1p[_sc]||v1p.US;
+    e=document.getElementById('psV1Btn'); if(e) e.innerHTML=btn[_sc]||btn.US;
+    e=document.getElementById('psV2H2'); if(e) e.innerHTML=v2h2[_sc]||v2h2.US;
+    e=document.getElementById('psV2P'); if(e) e.innerHTML=v2p[_sc]||v2p.US;
+    e=document.getElementById('psV2Btn'); if(e) e.innerHTML=btn[_sc]||btn.US;
+})();
+</script>
+
 <!-- ★ 흘러가는 상품 배너 -->
 <div id="scrollBanner" style="display:none; align-self:stretch; width:100%; position:relative;">
     <div id="scrollBannerClip" style="overflow:hidden; padding:14px 44px 24px; background:#f8fafc;">
@@ -769,9 +839,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var hero = ss.querySelector('.hero-section');
     if (!hero) return;
 
-    // 0) 흘러가는 배너 → 히어로 바로 다음
+    // 0) 종이매대 영상 → 히어로 바로 다음, 흘러가는 배너 → 그 다음
+    var psVidSec = document.getElementById('psVideoSections');
     var scrollBanner = document.getElementById('scrollBanner');
     var ref = hero.nextElementSibling;
+    if (psVidSec && ref) { ss.insertBefore(psVidSec, ref); ref = psVidSec.nextElementSibling; }
     if (scrollBanner && ref) { ss.insertBefore(scrollBanner, ref); }
 
     // 1) 챗봇 → 배너 다음, 그 아래 제품검색+회원가입
