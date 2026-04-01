@@ -350,9 +350,18 @@ function openPdSampleRequest() {
                 <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_email">이메일</label>
                 <input id="pdSampleEmail" type="email" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
             </div>
-            <div style="margin-bottom:16px;">
+            <div style="margin-bottom:12px;">
                 <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_memo">요청 내용</label>
-                <textarea id="pdSampleMemo" rows="4" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요."></textarea>
+                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요."></textarea>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_file">참고 파일</label>
+                <div onclick="document.getElementById('pdSampleFileInput').click()" style="border:2px dashed #c7d2fe; background:#faf5ff; padding:16px; text-align:center; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#faf5ff'">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:20px; color:#6366f1; margin-bottom:4px;"></i>
+                    <div style="color:#6366f1; font-size:12px; font-weight:600;" data-i18n="pd_sample_file_click">클릭하여 파일 선택 (이미지, PDF, AI 등)</div>
+                </div>
+                <input type="file" id="pdSampleFileInput" multiple style="display:none;" onchange="updatePdSampleFiles(this)">
+                <div id="pdSampleFileList" style="margin-top:6px; font-size:11px; color:#6366f1;"></div>
             </div>
             <button onclick="submitPdSample()" style="width:100%; padding:14px; border:none; border-radius:10px; background:linear-gradient(135deg,#4338ca,#6366f1); color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">
                 <i class="fa-solid fa-paper-plane"></i> <span data-i18n="pd_sample_submit">샘플 요청하기</span>
@@ -362,6 +371,12 @@ function openPdSampleRequest() {
     </div>
 </div>
 <script>
+var _pdSampleFiles = [];
+function updatePdSampleFiles(input) {
+    _pdSampleFiles = Array.from(input.files);
+    var list = document.getElementById('pdSampleFileList');
+    list.innerHTML = _pdSampleFiles.map(function(f) { return '📎 ' + f.name; }).join('<br>');
+}
 async function submitPdSample() {
     var name = document.getElementById('pdSampleName').value.trim();
     var phone = document.getElementById('pdSamplePhone').value.trim();
@@ -370,16 +385,28 @@ async function submitPdSample() {
     if (!name || (!phone && !email)) { alert(window.__PS_LANG==='ko'?'성함과 연락처를 입력해주세요.':'Please enter your name and contact info.'); return; }
     try {
         var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
-        if (sb) {
-            await sb.from('vip_orders').insert({
-                customer_name: name,
-                customer_phone: phone || email,
-                preferred_manager: '본사담당자',
-                memo: '[종이매대 샘플 요청] Email: ' + email + ' | ' + memo,
-                status: 'pending'
-            });
+        if (!sb) throw new Error('Connection failed');
+        // 파일 업로드
+        var uploadedFiles = [];
+        for (var i = 0; i < _pdSampleFiles.length; i++) {
+            var f = _pdSampleFiles[i];
+            var path = 'vip/' + Date.now() + '_' + f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            var { data: upData, error: upErr } = await sb.storage.from('design').upload(path, f);
+            if (!upErr && upData) {
+                var { data: urlData } = sb.storage.from('design').getPublicUrl(path);
+                uploadedFiles.push({ name: f.name, url: urlData.publicUrl, type: f.type });
+            }
         }
+        await sb.from('vip_orders').insert({
+            customer_name: name,
+            customer_phone: phone || email,
+            preferred_manager: '본사담당자',
+            memo: '[종이매대 샘플 요청] Email: ' + email + ' | ' + memo,
+            files: uploadedFiles.length > 0 ? uploadedFiles : null,
+            status: 'pending'
+        });
         document.getElementById('pdSampleModal').style.display = 'none';
+        _pdSampleFiles = [];
         alert(window.__PS_LANG==='ko'?'샘플 요청이 접수되었습니다! 담당자가 곧 연락드리겠습니다.':window.__PS_LANG==='ja'?'サンプルリクエストが送信されました！担当者がすぐにご連絡いたします。':'Sample request submitted! Our team will contact you shortly.');
     } catch(e) {
         alert('Error: ' + e.message);
@@ -1113,6 +1140,14 @@ pd_sample_memo_ph: {
 pd_sample_submit: {
     ko:'샘플 요청하기', ja:'サンプルを申請する', en:'Submit Sample Request', zh:'提交样品申请',
     ar:'تقديم طلب العينة', es:'Enviar solicitud', de:'Musteranfrage senden', fr:'Envoyer la demande'
+},
+pd_sample_file: {
+    ko:'참고 파일', ja:'参考ファイル', en:'Reference Files', zh:'参考文件',
+    ar:'ملفات مرجعية', es:'Archivos de referencia', de:'Referenzdateien', fr:'Fichiers de reference'
+},
+pd_sample_file_click: {
+    ko:'클릭하여 파일 선택 (이미지, PDF, AI 등)', ja:'クリックしてファイル選択（画像、PDF、AIなど）', en:'Click to select files (images, PDF, AI, etc.)', zh:'点击选择文件（图片、PDF、AI等）',
+    ar:'انقر لاختيار الملفات (صور، PDF، AI)', es:'Haga clic para seleccionar archivos (imagenes, PDF, AI)', de:'Klicken Sie, um Dateien auszuwahlen (Bilder, PDF, AI)', fr:'Cliquez pour choisir des fichiers (images, PDF, AI)'
 },
 pd_sample_close: {
     ko:'닫기', ja:'閉じる', en:'Close', zh:'关闭',
