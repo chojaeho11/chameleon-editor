@@ -1504,12 +1504,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="dsm-section-box">
         <h4 class="dsm-section-title"><i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span></h4>
         <div class="dsm-grid-home" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;">
-            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')" style="border:2px solid #c4b5fd;">
+            <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')" style="">
                 <div class="dsm-icon" style="color:#ff0000;"><i class="fa-brands fa-youtube"></i></div>
                 <div class="dsm-name" data-i18n="dsm_video">영상제작</div>
                 <div class="dsm-size">1920 × 1080 px</div>
             </div>
-            <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="border:2px solid #a78bfa;">
+            <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="">
                 <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                 <div class="dsm-name" data-i18n="dsm_retouch">사진보정</div>
                 <div class="dsm-size">AI Retouch</div>
@@ -1520,12 +1520,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="dsm-name" data-i18n="dsm_ppt">파워포인트</div>
                 <div class="dsm-size">1280 × 720 px</div>
             </div>
-            <div class="dsm-card" onclick="window.openGifMaker()" style="border:2px solid #f472b6;">
+            <div class="dsm-card" onclick="window.openGifMaker()" style="">
                 <div class="dsm-icon" style="color:#ec4899;"><i class="fa-solid fa-film"></i></div>
                 <div class="dsm-name" data-i18n="dsm_gifmaker">움짤만들기</div>
                 <div class="dsm-size">GIF Animator</div>
             </div>
-            <div class="dsm-card" onclick="if(window.openGreetingCardWizard) window.openGreetingCardWizard(); else window.dsmOpenEditor(286, 508, '인사말카드');" style="border:2px solid #5eead4;">
+            <div class="dsm-card" onclick="if(window.openGreetingCardWizard) window.openGreetingCardWizard(); else window.dsmOpenEditor(286, 508, '인사말카드');" style="">
                 <div class="dsm-icon" style="color:#14b8a6;"><i class="fa-solid fa-envelope-open-text"></i></div>
                 <div class="dsm-name" data-i18n="dsm_greeting_card">인사말카드</div>
                 <div class="dsm-size">1080 × 1920 px</div>
@@ -1542,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="dsm-section-box">
         <h4 class="dsm-section-title" style="color:#fbbf24;"><i class="fa-solid fa-ruler-combined"></i> <span data-i18n="dsm_design_size">디자인 사이즈</span></h4>
         <div class="dsm-grid-home" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;">
-            <div class="dsm-card" onclick="window.dsmOpenCustomSize()" style="border:2px solid #f59e0b;">
+            <div class="dsm-card" onclick="window.dsmOpenCustomSize()" style="">
                 <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-crop-simple"></i></div>
                 <div class="dsm-name" data-i18n="dsm_custom">커스텀</div>
                 <div class="dsm-size" data-i18n="dsm_custom_desc">직접 입력</div>
@@ -14868,7 +14868,7 @@ window.filterModalItems = function(keyword) {
                     <i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span>
                 </h4>
                 <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
-                    <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="border:2px solid #a78bfa;">
+                    <div class="dsm-card" onclick="window.dsmOpenRetouch()" style="">
                         <div class="dsm-icon" style="color:#8b5cf6;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                         <div class="dsm-name" data-i18n="dsm_retouch">사진보정</div>
                         <div class="dsm-size">AI Retouch</div>
@@ -14883,7 +14883,7 @@ window.filterModalItems = function(keyword) {
                         <div class="dsm-name" data-i18n="dsm_webposter">웹포스터</div>
                         <div class="dsm-size">891 × 1260 px</div>
                     </div>
-                    <div class="dsm-card" onclick="if(window.openGreetingCardWizard) window.openGreetingCardWizard(); else window.dsmOpenEditor(286, 508, '인사말카드');" style="border:2px solid #5eead4;">
+                    <div class="dsm-card" onclick="if(window.openGreetingCardWizard) window.openGreetingCardWizard(); else window.dsmOpenEditor(286, 508, '인사말카드');" style="">
                         <div class="dsm-icon" style="color:#14b8a6;"><i class="fa-solid fa-envelope-open-text"></i></div>
                         <div class="dsm-name" data-i18n="dsm_greeting_card">인사말카드</div>
                         <div class="dsm-size">1080 × 1920 px</div>
@@ -14912,7 +14912,7 @@ window.filterModalItems = function(keyword) {
                     <i class="fa-solid fa-ruler-combined"></i> <span data-i18n="dsm_design_size">디자인 사이즈</span>
                 </h4>
                 <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
-                    <div class="dsm-card" onclick="window.dsmOpenCustomSize()" style="border:2px solid #f59e0b;">
+                    <div class="dsm-card" onclick="window.dsmOpenCustomSize()" style="">
                         <div class="dsm-icon" style="color:#f59e0b;"><i class="fa-solid fa-crop-simple"></i></div>
                         <div class="dsm-name" data-i18n="dsm_custom">커스텀</div>
                         <div class="dsm-size" data-i18n="dsm_custom_desc">직접 입력</div>
@@ -15015,8 +15015,8 @@ window.filterModalItems = function(keyword) {
 
 /* === 카드 스타일 === */
 .dsm-card {
-    background: rgba(255,255,255,0.97);
-    border: 1px solid rgba(255,255,255,0.4);
+    background: #fff;
+    border: 1px solid #e5e7eb;
     border-radius: 20px;
     padding: 18px 8px;
     text-align: center;
