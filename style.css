@@ -5251,6 +5251,7 @@ video {
     z-index: 20000 !important;
     overflow-y: auto !important;
     display: flex; flex-direction: column;
+    padding-top: 104px !important;
 }
 
 /* 상단 헤더바 고정 */
@@ -5899,8 +5900,8 @@ body.editor-active #topCatMenu {
     display: none !important;
 }
 
-/* ── 장바구니: 카테고리 메뉴 아래 콘텐츠 밀림 방지 ── */
+/* ── 장바구니/상세: 카테고리 메뉴 아래 콘텐츠 밀림 방지 ── */
 #cartPage {
-    padding-top: 48px;
+    padding-top: 100px !important;
 }
 
