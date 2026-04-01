@@ -367,10 +367,11 @@ async function submitPdSample() {
         var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
         if (sb) {
             await sb.from('vip_orders').insert({
-                customer_name: name, phone: phone, email: email,
-                memo: '[종이매대 샘플 요청] ' + memo,
-                manager: '본사담당자', lang: window.__PS_LANG || 'ko',
-                source: 'paper-stand-sample'
+                customer_name: name,
+                customer_phone: phone || email,
+                preferred_manager: '본사담당자',
+                memo: '[종이매대 샘플 요청] Email: ' + email + ' | ' + memo,
+                status: 'pending'
             });
         }
         document.getElementById('pdSampleModal').style.display = 'none';
