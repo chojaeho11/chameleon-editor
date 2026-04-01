@@ -669,14 +669,14 @@ if ('caches' in window) {
     </div>
 
 <!-- ★ 상단 카테고리 메뉴 바 (startScreen 밖에 배치하여 모달 위에 표시 가능) -->
-<div id="topCatMenu" style="width:100%; background:#1e1b4b; border-bottom:none; padding:0; position:fixed; top:60px; left:0; right:0; z-index:10000;">
-    <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;" id="topCatMenuTrack">
+<div id="topCatMenu" style="width:100%; background:#4338ca; border-bottom:none; padding:0; position:fixed; top:60px; left:0; right:0; z-index:10000;">
+    <div style="width:100%; margin:0 auto; display:flex; align-items:center; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:0 16px;" id="topCatMenuTrack">
     </div>
 </div>
 <style>
 #topCatMenuTrack::-webkit-scrollbar { display:none; }
 #topCatMenu .tcm-btn {
-    flex-shrink:0; padding:14px 18px; font-size:14px; font-weight:700; color:rgba(255,255,255,0.75);
+    flex-shrink:0; padding:12px 14px; font-size:13px; font-weight:700; color:rgba(255,255,255,0.8);
     background:none; border:none; cursor:pointer; white-space:nowrap; position:relative;
     transition:color 0.2s;
 }
@@ -7478,9 +7478,9 @@ async function renderQuickMenu() {
             btn.onclick = () => {
                 // ★ 종이매대 → paper-stand 페이지로 이동 (언어별)
                 if (top.code === 'paper_display') {
-                    const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
-                    const psLang = langMap[CURRENT_LANG];
-                    location.href = '/paper-stand' + (psLang ? '?lang=' + psLang : '');
+                    const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko'};
+                    const psLang = langMap[CURRENT_LANG] || '';
+                    location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '');
                     return;
                 }
                 // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
