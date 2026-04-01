@@ -508,6 +508,79 @@
     </div>
 </div>
 
+<!-- ===== 의뢰 수정 모달 ===== -->
+<div class="modal-overlay" id="editRequestModal">
+    <div class="modal-box" style="position:relative;">
+        <button class="modal-close" onclick="closeEditRequestModal()">&times;</button>
+        <h2><i class="fa-solid fa-pen-to-square"></i> <span id="editRequestModalTitle">의뢰 수정</span></h2>
+        <div class="form-group">
+            <label id="editReqLabelTitle">제목 <span class="req">*</span></label>
+            <input type="text" class="form-input" id="editReqTitle">
+        </div>
+        <div class="form-group">
+            <label id="editReqLabelCategory">카테고리 <span class="req">*</span></label>
+            <select class="form-input" id="editReqCategory">
+                <option value="">카테고리 선택</option>
+                <option value="로고">로고</option>
+                <option value="배너">배너</option>
+                <option value="간판">간판</option>
+                <option value="패키지">패키지</option>
+                <option value="리보드/전시">리보드/전시</option>
+                <option value="기타">기타</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label id="editReqLabelDesc">상세 설명 <span class="req">*</span></label>
+            <textarea class="form-input" id="editReqDescription" rows="6"></textarea>
+        </div>
+        <div class="form-group">
+            <label id="editReqLabelPhone">연락처</label>
+            <input type="text" class="form-input" id="editReqPhone" placeholder="010-0000-0000">
+        </div>
+        <input type="hidden" id="editReqId">
+        <div style="text-align:center;margin-top:20px;">
+            <button class="btn btn-primary btn-lg" onclick="saveEditRequest()" id="btnSaveEditRequest">
+                <i class="fa-solid fa-check"></i> <span id="editReqBtnText">수정 완료</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 입찰 수정 모달 ===== -->
+<div class="modal-overlay" id="editBidModal">
+    <div class="modal-box" style="position:relative;">
+        <button class="modal-close" onclick="closeEditBidModal()">&times;</button>
+        <h2><i class="fa-solid fa-gavel"></i> <span id="editBidModalTitle">입찰 수정</span></h2>
+        <div class="form-group">
+            <label>💰 <span id="editBidLabelPrice">제안 금액</span> <span class="req">*</span></label>
+            <input type="number" class="form-input" id="editBidPrice" style="font-size:16px;font-weight:700;">
+        </div>
+        <div class="form-group">
+            <label>📅 <span id="editBidLabelTimeline">작업 기간</span> <span class="req">*</span></label>
+            <select class="form-input" id="editBidTimeline">
+                <option value="1">1일 (당일 완성)</option>
+                <option value="2">2일</option>
+                <option value="3">3일</option>
+                <option value="5">5일</option>
+                <option value="7">7일 (1주)</option>
+                <option value="14">14일 (2주)</option>
+                <option value="21">21일 (3주)</option>
+                <option value="30">30일 (1개월)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>✍️ <span id="editBidLabelMsg">어필 메시지</span></label>
+            <textarea class="form-input" id="editBidMessage" rows="4"></textarea>
+        </div>
+        <input type="hidden" id="editBidId">
+        <div style="text-align:center;margin-top:20px;">
+            <button class="btn btn-primary btn-lg" onclick="saveEditBid()" id="btnSaveEditBid">
+                <i class="fa-solid fa-check"></i> <span id="editBidBtnText">수정 완료</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== 평가 모달 ===== -->
 <div class="modal-overlay" id="ratingModal">
     <div class="modal-box" style="position:relative;text-align:center;">
@@ -787,6 +860,17 @@ const I18N = {
     registering: { ko: '등록 중...', ja: '登録中...', en: 'Registering...' },
     processing: { ko: '처리 중...', ja: '処理中...', en: 'Processing...' },
     proposed: { ko: '제안', ja: '提案', en: 'Proposed' },
+
+    // Edit request
+    edit: { ko: '수정', ja: '編集', en: 'Edit' },
+    edit_request: { ko: '의뢰 수정', ja: '依頼編集', en: 'Edit Request' },
+    save_changes: { ko: '수정 완료', ja: '変更を保存', en: 'Save Changes' },
+    toast_edit_success: { ko: '수정되었습니다!', ja: '編集されました！', en: 'Updated successfully!' },
+    toast_edit_fail: { ko: '수정 실패: ', ja: '編集失敗: ', en: 'Update failed: ' },
+    // Edit bid
+    edit_bid: { ko: '입찰 수정', ja: '入札編集', en: 'Edit Bid' },
+    toast_bid_edit_success: { ko: '입찰이 수정되었습니다!', ja: '入札が編集されました！', en: 'Bid updated!' },
+    toast_bid_edit_fail: { ko: '입찰 수정 실패: ', ja: '入札編集失敗: ', en: 'Bid update failed: ' },
 
     // timeAgo
     just_now: { ko: '방금 전', ja: 'たった今', en: 'just now' },
@@ -1523,9 +1607,18 @@ async function showRequestDetail(requestId) {
         ${isOwner ? `
         <div style="margin-top:24px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:16px;text-align:center;">
             <div style="font-size:13px;color:#166534;">📌 ${t('own_request')} <b>${t('tab_my_requests')}</b> ${t('check_bids_tab')}</div>
-            <button class="btn btn-outline btn-sm" onclick="switchTab('my-requests')" style="margin-top:8px;">
-                <i class="fa-solid fa-inbox"></i> ${t('view_my_requests')}
-            </button>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+                <button class="btn btn-outline btn-sm" onclick="switchTab('my-requests')">
+                    <i class="fa-solid fa-inbox"></i> ${t('view_my_requests')}
+                </button>
+                ${r.status === 'open' ? `
+                <button class="btn btn-primary btn-sm" onclick="openEditRequestModal('${r.id}')">
+                    <i class="fa-solid fa-pen-to-square"></i> ${t('edit')}
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteMyRequest('${r.id}').then(()=>hideRequestDetail())">
+                    <i class="fa-solid fa-trash-can"></i> ${t('delete')}
+                </button>` : ''}
+            </div>
         </div>` : ''}
     </div>`;
 }
@@ -1737,7 +1830,10 @@ async function loadMyRequests() {
                     <span><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
                     <span><i class="fa-regular fa-clock"></i> ${timeAgo(r.created_at)}</span>
                 </div>
-                <button onclick="event.stopPropagation();deleteMyRequest('${r.id}')" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;" title="${t('delete')}"><i class="fa-solid fa-trash-can"></i> ${t('delete')}</button>
+                <div style="display:flex;gap:6px;">
+                    ${r.status === 'open' ? `<button onclick="event.stopPropagation();openEditRequestModal('${r.id}')" style="background:#f5f3ff;border:1px solid #c4b5fd;color:#7c3aed;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;" title="${t('edit')}"><i class="fa-solid fa-pen-to-square"></i> ${t('edit')}</button>` : ''}
+                    <button onclick="event.stopPropagation();deleteMyRequest('${r.id}')" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;" title="${t('delete')}"><i class="fa-solid fa-trash-can"></i> ${t('delete')}</button>
+                </div>
             </div>
         </div>`;
     }
@@ -1752,13 +1848,13 @@ async function deleteMyRequest(requestId) {
         // 의뢰 삭제
         const { error } = await sb.from('design_requests').delete().eq('id', requestId).eq('customer_id', userId);
         if (error) {
-            alert(t('delete_fail') + ': ' + error.message);
+            showToast(t('delete_fail') + ': ' + error.message, 'error');
             return;
         }
-        alert(t('delete_success'));
+        showToast(t('delete_success'), 'success');
         loadMyRequests();
     } catch (e) {
-        alert(t('delete_fail') + ': ' + e.message);
+        showToast(t('delete_fail') + ': ' + e.message, 'error');
     }
 }
 
@@ -1847,7 +1943,12 @@ async function showMyRequestDetail(requestId) {
             ${formatPriceRange(r.budget_min, r.budget_max)}
         </div>
         <p style="font-size:14px;color:#475569;line-height:1.7;white-space:pre-wrap;margin-bottom:16px;">${escHtml(r.description)}</p>
-        ${showCompleteBtn ? `<button class="btn btn-success btn-lg" onclick="openRatingModal('${requestId}')"><i class="fa-solid fa-check-double"></i> ${t('mark_complete')}</button>` : ''}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${showCompleteBtn ? `<button class="btn btn-success btn-lg" onclick="openRatingModal('${requestId}')"><i class="fa-solid fa-check-double"></i> ${t('mark_complete')}</button>` : ''}
+            ${r.status === 'open' ? `
+            <button class="btn btn-primary btn-sm" onclick="openEditRequestModal('${r.id}')"><i class="fa-solid fa-pen-to-square"></i> ${t('edit')}</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMyRequest('${r.id}').then(()=>backToMyRequests())"><i class="fa-solid fa-trash-can"></i> ${t('delete')}</button>` : ''}
+        </div>
     </div>
     <h3 style="font-size:16px;font-weight:800;margin-bottom:16px;"><i class="fa-solid fa-gavel" style="color:#7c3aed;"></i> ${t('bid_list')} (${bids?.length || 0}${t('count_件')})</h3>
     ${bidsHtml}`;
@@ -2037,6 +2138,109 @@ async function submitRating() {
 }
 
 // ===== My Bids =====
+// ===== Edit Request =====
+function openEditRequestModal(requestId) {
+    document.getElementById('editReqId').value = requestId;
+    document.getElementById('editRequestModal').classList.add('show');
+    // Load existing data
+    sb.from('design_requests').select('*').eq('id', requestId).single().then(({ data: r }) => {
+        if (!r) return;
+        document.getElementById('editReqTitle').value = r.title || '';
+        document.getElementById('editReqCategory').value = r.category || '';
+        document.getElementById('editReqDescription').value = r.description || '';
+        document.getElementById('editReqPhone').value = r.phone || '';
+    });
+    // i18n
+    document.getElementById('editRequestModalTitle').textContent = t('edit_request');
+    document.getElementById('editReqBtnText').textContent = t('save_changes');
+    document.getElementById('editReqLabelTitle').innerHTML = t('title_label') + ' <span class="req">*</span>';
+    document.getElementById('editReqLabelCategory').innerHTML = t('category') + ' <span class="req">*</span>';
+    document.getElementById('editReqLabelDesc').innerHTML = t('description_label') + ' <span class="req">*</span>';
+    document.getElementById('editReqLabelPhone').textContent = t('phone_label');
+}
+function closeEditRequestModal() {
+    document.getElementById('editRequestModal').classList.remove('show');
+}
+async function saveEditRequest() {
+    const id = document.getElementById('editReqId').value;
+    const title = document.getElementById('editReqTitle').value.trim();
+    const category = document.getElementById('editReqCategory').value;
+    const description = document.getElementById('editReqDescription').value.trim();
+    const phone = document.getElementById('editReqPhone').value.trim();
+
+    if (!title) { showToast(t('toast_enter_title'), 'error'); return; }
+    if (!category) { showToast(t('toast_enter_category'), 'error'); return; }
+    if (!description) { showToast(t('toast_enter_desc'), 'error'); return; }
+
+    const btn = document.getElementById('btnSaveEditRequest');
+    btn.disabled = true;
+
+    try {
+        const { error } = await sb.from('design_requests').update({
+            title, category, description, phone: phone || null
+        }).eq('id', id).eq('customer_id', userId);
+
+        if (error) throw error;
+        showToast(t('toast_edit_success'), 'success');
+        closeEditRequestModal();
+        // Refresh whichever view is active
+        loadRequests();
+        loadMyRequests();
+    } catch(e) {
+        showToast(t('toast_edit_fail') + e.message, 'error');
+    }
+    btn.disabled = false;
+}
+
+// ===== Edit Bid =====
+async function openEditBidModalById(bidId) {
+    const { data: b } = await sb.from('design_bids').select('price, timeline_days, message').eq('id', bidId).single();
+    if (!b) { showToast(t('toast_bid_not_found'), 'error'); return; }
+    openEditBidModal(bidId, b.price, b.timeline_days, b.message || '');
+}
+function openEditBidModal(bidId, price, timeline, message) {
+    document.getElementById('editBidId').value = bidId;
+    document.getElementById('editBidPrice').value = price || '';
+    document.getElementById('editBidTimeline').value = timeline || '';
+    document.getElementById('editBidMessage').value = message || '';
+    document.getElementById('editBidModal').classList.add('show');
+    // i18n
+    document.getElementById('editBidModalTitle').textContent = t('edit_bid');
+    document.getElementById('editBidLabelPrice').textContent = t('proposed_price');
+    document.getElementById('editBidLabelTimeline').textContent = t('timeline');
+    document.getElementById('editBidLabelMsg').textContent = t('pitch_label') || t('pitch');
+    document.getElementById('editBidBtnText').textContent = t('save_changes');
+}
+function closeEditBidModal() {
+    document.getElementById('editBidModal').classList.remove('show');
+}
+async function saveEditBid() {
+    const id = document.getElementById('editBidId').value;
+    const price = parseInt(document.getElementById('editBidPrice').value);
+    const timeline = parseInt(document.getElementById('editBidTimeline').value);
+    const message = document.getElementById('editBidMessage').value.trim();
+
+    if (!price || price < 1000) { showToast(t('toast_enter_price'), 'error'); return; }
+    if (!timeline) { showToast(t('toast_select_timeline'), 'error'); return; }
+
+    const btn = document.getElementById('btnSaveEditBid');
+    btn.disabled = true;
+
+    try {
+        const { error } = await sb.from('design_bids').update({
+            price, timeline_days: timeline, message: message || null
+        }).eq('id', id).eq('designer_id', userId);
+
+        if (error) throw error;
+        showToast(t('toast_bid_edit_success'), 'success');
+        closeEditBidModal();
+        loadMyBids();
+    } catch(e) {
+        showToast(t('toast_bid_edit_fail') + e.message, 'error');
+    }
+    btn.disabled = false;
+}
+
 async function loadMyBids() {
     const container = document.getElementById('myBidsList');
     if (!designerProfile) {
@@ -2076,6 +2280,7 @@ async function loadMyBids() {
                 <span><i class="fa-solid fa-calendar"></i> ${b.timeline_days}${t('day_n')}</span>
                 <span><i class="fa-regular fa-clock"></i> ${timeAgo(b.created_at)}</span>
                 ${r.budget_min ? `<span>${t('budget_label')}: ${formatPriceRange(r.budget_min, r.budget_max)}</span>` : ''}
+                ${b.status === 'pending' ? `<button onclick="event.stopPropagation();openEditBidModalById('${b.id}')" style="background:#f5f3ff;border:1px solid #c4b5fd;color:#7c3aed;cursor:pointer;font-size:12px;padding:4px 10px;border-radius:6px;white-space:nowrap;font-weight:600;"><i class="fa-solid fa-pen-to-square"></i> ${t('edit')}</button>` : ''}
             </div>
         </div>`;
     }
