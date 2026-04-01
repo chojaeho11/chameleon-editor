@@ -533,7 +533,9 @@ async function submitPdSample() {
 <script>
 (function(){
     var h = location.hostname;
-    window._kapuLang = h.indexOf('cafe0101') >= 0 ? 'ja' : (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) ? 'en' : 'kr';
+    var psL = window.__PS_LANG || 'ko';
+    var kapuMap = {ko:'kr',ja:'ja',en:'en',zh:'cn',ar:'ar',es:'es',de:'de',fr:'fr'};
+    window._kapuLang = kapuMap[psL] || 'kr';
 })();
 function toggleKapuChat() {
     var wrap = document.getElementById('kapuChatWrap');
@@ -1069,6 +1071,46 @@ review_empty: {
 review_more: {
     ko:'더보기', ja:'もっと見る', en:'Load More', zh:'加载更多',
     ar:'المزيد', es:'Ver mas', de:'Mehr laden', fr:'Voir plus'
+},
+pd_sample_title: {
+    ko:'무료 샘플 요청', ja:'無料サンプル申請', en:'Free Sample Request', zh:'免费样品申请',
+    ar:'طلب عينة مجانية', es:'Solicitud de Muestra Gratis', de:'Kostenloses Muster anfordern', fr:'Demande d\'Echantillon Gratuit'
+},
+pd_sample_desc: {
+    ko:'담당자가 확인 후 연락드립니다.', ja:'担当者が確認後ご連絡いたします。', en:'Our team will review and contact you.', zh:'负责人确认后会联系您。',
+    ar:'سيتواصل معكم فريقنا بعد المراجعة.', es:'Nuestro equipo revisara y le contactara.', de:'Unser Team wird Sie kontaktieren.', fr:'Notre equipe vous contactera.'
+},
+pd_sample_name: {
+    ko:'성함 / 회사명', ja:'お名前 / 会社名', en:'Name / Company', zh:'姓名 / 公司',
+    ar:'الاسم / الشركة', es:'Nombre / Empresa', de:'Name / Firma', fr:'Nom / Entreprise'
+},
+pd_sample_name_ph: {
+    ko:'예: 홍길동 / (주)ABC', ja:'例: 田中太郎 / ABC株式会社', en:'e.g. John / ABC Inc.', zh:'例: 张三 / ABC公司',
+    ar:'مثال: أحمد / شركة ABC', es:'Ej: Juan / ABC S.L.', de:'z.B. Max / ABC GmbH', fr:'Ex: Jean / ABC SARL'
+},
+pd_sample_phone: {
+    ko:'연락처', ja:'電話番号', en:'Phone', zh:'电话',
+    ar:'الهاتف', es:'Telefono', de:'Telefon', fr:'Telephone'
+},
+pd_sample_email: {
+    ko:'이메일', ja:'メールアドレス', en:'Email', zh:'邮箱',
+    ar:'البريد الإلكتروني', es:'Correo electronico', de:'E-Mail', fr:'Email'
+},
+pd_sample_memo: {
+    ko:'요청 내용', ja:'ご要望', en:'Request Details', zh:'需求说明',
+    ar:'تفاصيل الطلب', es:'Detalles de la solicitud', de:'Anfrage-Details', fr:'Details de la demande'
+},
+pd_sample_memo_ph: {
+    ko:'원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요.', ja:'ご希望の製品種類、サイズ、数量、用途などをご記入ください。', en:'Describe the product type, size, quantity, and purpose you need.', zh:'请填写您需要的产品类型、尺寸、数量、用途等。',
+    ar:'اكتب نوع المنتج والمقاس والكمية والاستخدام.', es:'Describa el tipo de producto, tamano, cantidad y uso.', de:'Beschreiben Sie Produkttyp, Grosse, Menge und Verwendung.', fr:'Decrivez le type de produit, taille, quantite et usage.'
+},
+pd_sample_submit: {
+    ko:'샘플 요청하기', ja:'サンプルを申請する', en:'Submit Sample Request', zh:'提交样品申请',
+    ar:'تقديم طلب العينة', es:'Enviar solicitud', de:'Musteranfrage senden', fr:'Envoyer la demande'
+},
+pd_sample_close: {
+    ko:'닫기', ja:'閉じる', en:'Close', zh:'关闭',
+    ar:'إغلاق', es:'Cerrar', de:'Schliessen', fr:'Fermer'
 }
 };
 
@@ -1093,6 +1135,12 @@ function applyI18n() {
         var key = el.getAttribute('data-i18n-html');
         var val = t(key);
         if (val) el.innerHTML = val;
+    });
+    // Placeholder
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n-placeholder');
+        var val = t(key);
+        if (val) el.placeholder = val;
     });
     // Title & meta
     document.title = t('meta_title');
