@@ -6,15 +6,94 @@
     const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
-    // 언어별 설정 (향후 언어별 페이지 확장용)
+    // 언어 감지 (URL param > hostname > default)
+    var psLang = window.__PS_LANG || 'ko';
+
+    // 언어별 통화 설정
+    var CURRENCY_MAP = {
+        ko: { symbol: '원', rate: 1 },
+        ja: { symbol: '¥', rate: 0.1 },
+        en: { symbol: '$', rate: 0.001 },
+        zh: { symbol: '¥', rate: 0.1 },
+        ar: { symbol: '$', rate: 0.001 },
+        es: { symbol: '€', rate: 0.001 },
+        de: { symbol: '€', rate: 0.001 },
+        fr: { symbol: '€', rate: 0.001 }
+    };
+
+    var langCurrency = CURRENCY_MAP[psLang] || CURRENCY_MAP['ko'];
+
+    // SITE_CONFIG이 있으면 그쪽 우선
+    var siteRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE[window.SITE_CONFIG.COUNTRY]);
+
+    // 언어별 설정
+    var LANG_STRINGS = {
+        noProducts: {
+            ko:'종이매대 상품을 준비 중입니다.',
+            ja:'紙什器商品を準備中です。',
+            en:'Paper display products are coming soon.',
+            zh:'纸展架产品正在准备中。',
+            ar:'منتجات الحوامل الورقية قادمة قريبا.',
+            es:'Los productos expositores estaran disponibles pronto.',
+            de:'Papieraufsteller-Produkte kommen bald.',
+            fr:'Les produits presentoirs arrivent bientot.'
+        },
+        loading: {
+            ko:'상품 불러오는 중...', ja:'商品読み込み中...', en:'Loading products...',
+            zh:'加载产品中...', ar:'جاري تحميل المنتجات...', es:'Cargando productos...',
+            de:'Produkte laden...', fr:'Chargement des produits...'
+        },
+        customSize: {
+            ko:'맞춤 사이즈', ja:'カスタムサイズ', en:'Custom Size',
+            zh:'定制尺寸', ar:'مقاس مخصص', es:'Tamano Personalizado',
+            de:'Individuelle Grosse', fr:'Taille Sur Mesure'
+        },
+        badge: {
+            ko:'종이매대', ja:'紙什器', en:'Paper Stand',
+            zh:'纸展架', ar:'حامل ورقي', es:'Expositor',
+            de:'Papierstand', fr:'Presentoir'
+        },
+        errorConnect: {
+            ko:'연결 중 오류가 발생했습니다. 새로고침해주세요.',
+            ja:'接続エラーが発生しました。ページを更新してください。',
+            en:'Connection error. Please refresh the page.',
+            zh:'连接错误，请刷新页面。',
+            ar:'خطا في الاتصال. يرجى تحديث الصفحة.',
+            es:'Error de conexion. Por favor, recarga la pagina.',
+            de:'Verbindungsfehler. Bitte aktualisieren Sie die Seite.',
+            fr:'Erreur de connexion. Veuillez rafraichir la page.'
+        },
+        errorLoad: {
+            ko:'상품을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+            ja:'商品を読み込めませんでした。しばらくしてからもう一度お試しください。',
+            en:'Failed to load products. Please try again later.',
+            zh:'无法加载产品，请稍后重试。',
+            ar:'فشل تحميل المنتجات. يرجى المحاولة لاحقا.',
+            es:'No se pudieron cargar los productos. Intentelo de nuevo mas tarde.',
+            de:'Produkte konnten nicht geladen werden. Bitte versuchen Sie es spater erneut.',
+            fr:'Impossible de charger les produits. Veuillez reessayer plus tard.'
+        },
+        noName: {
+            ko:'상품명 없음', ja:'商品名なし', en:'No Name',
+            zh:'无名称', ar:'بدون اسم', es:'Sin Nombre',
+            de:'Kein Name', fr:'Sans Nom'
+        }
+    };
+
+    function ls(key) {
+        var entry = LANG_STRINGS[key];
+        if (!entry) return '';
+        return entry[psLang] || entry['ko'] || '';
+    }
+
     const LANG = {
-        code: 'kr',
-        currency: ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'JP' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'CN') ? '¥' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'US') ? '$' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'ES' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'DE' || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'FR') ? '€' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'AR') ? '$' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR' || !(window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY)) ? '원' : '$',
-        currencyRate: (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE[window.SITE_CONFIG.COUNTRY]) || 1,
-        noProducts: '종이매대 상품을 준비 중입니다.',
-        loading: '상품 불러오는 중...',
+        code: psLang,
+        currency: langCurrency.symbol,
+        currencyRate: siteRate || langCurrency.rate,
+        noProducts: ls('noProducts'),
+        loading: ls('loading'),
         sizeUnit: 'mm',
-        customSize: '맞춤 사이즈',
+        customSize: ls('customSize'),
         fromPrice: '~'
     };
 
@@ -26,10 +105,13 @@
         return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
 
-    // 가격 포맷
+    // 가격 포맷 (언어별 통화 위치)
     function formatPrice(krwPrice) {
-        const converted = (krwPrice || 0) * LANG.currencyRate;
-        return Math.round(converted).toLocaleString() + LANG.currency;
+        var converted = (krwPrice || 0) * LANG.currencyRate;
+        var amount = Math.round(converted).toLocaleString();
+        // 원화는 숫자 뒤, 나머지는 숫자 앞
+        if (psLang === 'ko') return amount + LANG.currency;
+        return LANG.currency + amount;
     }
 
     // 이미지 최적화 (Supabase transform)
@@ -42,9 +124,19 @@
         return url;
     }
 
-    // 상품명 (한국어 우선)
+    // 상품명 (언어별)
     function getProductName(p) {
-        return p.name_kr || p.name || '상품명 없음';
+        var nameMap = {
+            ko: p.name_kr || p.name,
+            ja: p.name_jp || p.name_kr || p.name,
+            en: p.name_us || p.name_en || p.name_kr || p.name,
+            zh: p.name_cn || p.name_kr || p.name,
+            ar: p.name_us || p.name_en || p.name_kr || p.name,
+            es: p.name_us || p.name_en || p.name_kr || p.name,
+            de: p.name_us || p.name_en || p.name_kr || p.name,
+            fr: p.name_us || p.name_en || p.name_kr || p.name
+        };
+        return nameMap[psLang] || p.name_kr || p.name || ls('noName');
     }
 
     // 사이즈 텍스트
@@ -69,7 +161,7 @@
             '<img class="product-img" src="' + imgSrc + '" alt="' + name + '" loading="lazy" ' +
                 'onerror="this.src=\'https://placehold.co/400?text=No+Image\'">' +
             '<div class="product-info">' +
-                '<div class="product-badge">종이매대</div>' +
+                '<div class="product-badge">' + ls('badge') + '</div>' +
                 '<div class="product-name">' + name + '</div>' +
                 '<div class="product-size"><i class="fa-solid fa-ruler" style="margin-right:4px;"></i>' + sizeText + '</div>' +
                 '<div class="product-price">' + LANG.fromPrice + ' ' + price + '</div>' +
@@ -100,7 +192,7 @@
         }
 
         if (!sb) {
-            grid.innerHTML = '<div class="empty-state"><p>연결 중 오류가 발생했습니다. 새로고침해주세요.</p></div>';
+            grid.innerHTML = '<div class="empty-state"><p>' + ls('errorConnect') + '</p></div>';
             return;
         }
 
@@ -128,7 +220,7 @@
 
         } catch (e) {
             console.error('[paper_stand] 상품 로딩 실패:', e);
-            grid.innerHTML = '<div class="empty-state"><p>상품을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p></div>';
+            grid.innerHTML = '<div class="empty-state"><p>' + ls('errorLoad') + '</p></div>';
         }
     }
 
