@@ -835,12 +835,22 @@ if ('caches' in window) {
 <!-- ★ 홈 섹션 순서 재배치 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    try {
     var ss = document.getElementById('startScreen');
     if (!ss) return;
     var hero = ss.querySelector('.hero-section');
     if (!hero) return;
 
-    // 0) 히어로 바로 다음: 챗봇 → 종이매대 영상
+    // 유틸: ss의 직계 자식으로 안전하게 삽입
+    function moveAfter(target, after) {
+        if (!target || !after) return;
+        // after가 ss의 직계 자식이 아니면 ss 직계 부모까지 올라감
+        var ref = after;
+        while (ref && ref.parentNode !== ss) ref = ref.parentNode;
+        if (ref && ref.nextElementSibling) { ss.insertBefore(target, ref.nextElementSibling); }
+        else if (ref) { ss.appendChild(target); }
+    }
+
     var chatbotWrap = document.getElementById('chatbotBtnWrap');
     var advisorPanel = document.getElementById('advisorPanel');
     var couponBanner = document.getElementById('couponEventBanner');
@@ -848,44 +858,42 @@ document.addEventListener('DOMContentLoaded', function() {
     var psVideo1 = document.getElementById('psVideo1');
     var psVideo2 = document.getElementById('psVideo2');
     var scrollBanner = document.getElementById('scrollBanner');
-    var ref = hero.nextElementSibling;
 
-    // 챗봇 → 히어로 바로 다음
-    if (chatbotWrap && ref) { ss.insertBefore(chatbotWrap, ref); }
-    if (advisorPanel && chatbotWrap) { chatbotWrap.after(advisorPanel); }
-    if (couponBanner && advisorPanel) { advisorPanel.after(couponBanner); }
-    if (btnWrap && couponBanner) { couponBanner.after(btnWrap); }
+    // 히어로 바로 다음: 챗봇
+    var cursor = hero;
+    [chatbotWrap, advisorPanel, couponBanner, btnWrap].forEach(function(el) {
+        if (el) { moveAfter(el, cursor); cursor = el; }
+    });
 
     // 영상2 (arco5) → 챗봇 다음
-    var lastChat = btnWrap || couponBanner || advisorPanel || chatbotWrap || hero;
-    if (psVideo2 && lastChat.nextElementSibling) { ss.insertBefore(psVideo2, lastChat.nextElementSibling); }
+    if (psVideo2) { moveAfter(psVideo2, cursor); cursor = psVideo2; }
 
-    // 2) 상품 섹션들 → 영상2 바로 다음
+    // 상품 섹션들 → 영상2 다음
     var hotDeal = document.getElementById('hotDealSection');
     var bizDeal = document.getElementById('bizDealSection');
     var printService = document.getElementById('printServiceSection');
     var goods = document.getElementById('goodsSection');
     var paperDisplay = document.getElementById('paperDisplaySection');
     var popular = document.getElementById('popularSection');
-    var afterVid2 = psVideo2 || lastChat;
-    var productSections = [hotDeal, bizDeal, printService, goods, paperDisplay, popular];
-    var lastInserted = afterVid2;
-    productSections.forEach(function(sec) {
-        if (sec && lastInserted) { lastInserted.after(sec); lastInserted = sec; }
+    [hotDeal, bizDeal, printService, goods, paperDisplay, popular].forEach(function(sec) {
+        if (sec) { moveAfter(sec, cursor); cursor = sec; }
     });
 
-    // 영상1 (expositor4) → 상품 섹션들 바로 다음
-    if (psVideo1 && lastInserted) { lastInserted.after(psVideo1); }
+    // 영상1 (expositor4) → 상품 섹션들 다음
+    if (psVideo1) { moveAfter(psVideo1, cursor); }
 
-    // 5) 구독 → 리뷰 위, 흘러가는 배너 + 주문현황 → 구독 아래(리뷰 위)
+    // 구독 → 리뷰 위, 흘러가는 배너 + 주문현황 → 구독 아래(리뷰 위)
     var subSec = document.getElementById('subscriptionSection');
     var reviewSec = ss.querySelector('.review-section');
+    // reviewSec의 ss 직계 부모 찾기
+    var reviewRef = reviewSec;
+    while (reviewRef && reviewRef.parentNode !== ss) reviewRef = reviewRef.parentNode;
     var orderTracker = document.getElementById('orderTrackerSection');
-    if (subSec && reviewSec) { reviewSec.parentNode.insertBefore(subSec, reviewSec); }
-    if (scrollBanner && reviewSec) { reviewSec.parentNode.insertBefore(scrollBanner, reviewSec); }
-    if (orderTracker && reviewSec) { reviewSec.parentNode.insertBefore(orderTracker, reviewSec); }
+    if (subSec && reviewRef) { ss.insertBefore(subSec, reviewRef); }
+    if (scrollBanner && reviewRef) { ss.insertBefore(scrollBanner, reviewRef); }
+    if (orderTracker && reviewRef) { ss.insertBefore(orderTracker, reviewRef); }
 
-    // 최종 순서: 히어로 → 챗봇 → 종이매대영상 → 상품섹션(핫딜+업자+인쇄+굿즈+종이매대+인기) → ... → 구독 → 흘러가는배너 → 주문현황 → 리뷰 → 푸터
+    } catch(e) { console.error('섹션 재배치 오류:', e); }
 });
 </script>
 
