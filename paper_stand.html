@@ -1335,8 +1335,15 @@ document.addEventListener('DOMContentLoaded', function() {
     addHreflangTags();
     // 로고 & 푸터 링크: 현재 언어로 메인 사이트 이동
     var h = location.hostname;
-    var isIntl = h.indexOf('chameleon.design')>=0 || h.indexOf('cafe3355')>=0;
-    var homeHref = (isIntl && LANG !== 'en') ? '/?lang=' + LANG : '/';
+    var isJp = h.indexOf('cafe0101')>=0;
+    var isKr = h.indexOf('cafe2626')>=0;
+    var homeHref;
+    if (isKr && LANG === 'ko') homeHref = '/';
+    else if (isJp && LANG === 'ja') homeHref = '/';
+    else if (LANG === 'ko') homeHref = 'https://www.cafe2626.com/';
+    else if (LANG === 'ja') homeHref = 'https://www.cafe0101.com/';
+    else if (LANG === 'en') homeHref = 'https://chameleon.design/';
+    else homeHref = 'https://chameleon.design/?lang=' + LANG;
     ['logoLink','footerHomeLink'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.href = homeHref;
