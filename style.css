@@ -5300,17 +5300,9 @@ video {
     padding-top: 0 !important;
 }
 
-/* 상세페이지 커스텀 헤더 */
+/* 상세페이지 커스텀 헤더 - 카테고리 메뉴로 대체됨 */
 .product-full-header {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    display: none !important;
 }
 /* 상세페이지 유튜브 영상 예쁘게 만들기 */
 .product-detail-render iframe,
