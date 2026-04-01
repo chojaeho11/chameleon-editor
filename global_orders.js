@@ -1045,6 +1045,25 @@ let currentMgrFiles = [];
 let staffList = [];
 
 // [VIP 주문]
+// VIP 메모 정리 (시스템 프리픽스 제거, 고객 내용만 표시)
+function formatVipMemo(memo) {
+    if (!memo) return '-';
+    let m = memo;
+    // [QUOTE REQUEST from xxx] 제거
+    m = m.replace(/\[QUOTE REQUEST from [^\]]*\]\s*/gi, '');
+    // Email: xxx 제거
+    m = m.replace(/Email:\s*\S+\s*/gi, '');
+    // Phone: xxx 제거
+    m = m.replace(/Phone:\s*\S+\s*/gi, '');
+    m = m.trim();
+    if (!m || m === '|') return '-';
+    // | 구분자 정리
+    m = m.replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').trim();
+    // HTML 이스케이프
+    m = m.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return m || '-';
+}
+
 window.loadVipOrders = async () => {
     const tbody = document.getElementById('vipOrderListBody');
     if (!tbody) return;
@@ -1091,7 +1110,7 @@ window.loadVipOrders = async () => {
                     <td><span class="badge">${item.preferred_manager || '미지정'}</span></td>
                     <td style="font-weight:bold;">${item.customer_name}</td>
                     <td>${item.customer_phone}</td>
-                    <td style="font-size:13px; color:#475569;">${item.memo || '-'}</td>
+                    <td style="font-size:13px; color:#475569; max-width:300px; word-break:break-all;">${formatVipMemo(item.memo)}</td>
                     <td>${filesHtml}</td>
                     <td style="text-align:center;">${statusBadge}</td>
                     <td style="text-align:center;">${actionHtml}</td>
