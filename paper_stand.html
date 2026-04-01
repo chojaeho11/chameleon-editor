@@ -1309,7 +1309,12 @@ async function loadPdReviews() {
             var card = document.createElement('div');
             card.className = 'rv-card';
             if (r.product_code) {
-                card.onclick = function() { window.location.href = '/?product=' + encodeURIComponent(r.product_code); };
+                card.onclick = (function(code) { return function() {
+                    var base = LANG==='ko'?'https://www.cafe2626.com':LANG==='ja'?'https://www.cafe0101.com':'https://chameleon.design';
+                    var p = '?product='+encodeURIComponent(code);
+                    if (LANG!=='ko'&&LANG!=='ja'&&LANG!=='en') p+='&lang='+LANG;
+                    window.location.href = base+'/'+p;
+                }; })(r.product_code);
             }
             card.innerHTML = photoHtml +
                 '<div class="rv-body">' +

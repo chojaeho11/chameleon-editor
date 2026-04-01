@@ -167,9 +167,17 @@
                 '<div class="product-price">' + LANG.fromPrice + ' ' + price + '</div>' +
             '</div>';
 
-        // 클릭 시 메인 에디터로 이동 (캐시 우회)
+        // 클릭 시 메인 에디터로 이동 (언어별 도메인)
         card.onclick = function() {
-            window.location.href = '/?product=' + encodeURIComponent(product.code) + '&_t=' + Date.now();
+            var lang = window.__PS_LANG || 'ko';
+            var base;
+            if (lang === 'ko') base = 'https://www.cafe2626.com';
+            else if (lang === 'ja') base = 'https://www.cafe0101.com';
+            else if (lang === 'en') base = 'https://chameleon.design';
+            else base = 'https://chameleon.design';
+            var params = '?product=' + encodeURIComponent(product.code);
+            if (lang !== 'ko' && lang !== 'ja' && lang !== 'en') params += '&lang=' + lang;
+            window.location.href = base + '/' + params;
         };
 
         return card;
