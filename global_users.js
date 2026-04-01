@@ -603,7 +603,7 @@ window.loadWithdrawals = async () => {
     try {
         // 1. 출금 요청 목록 조회
         const { data: requests, error } = await sb.from('withdrawal_requests')
-            .select('id, user_id, amount, bank_name, account_holder, status, created_at, processed_at, tax_invoice_url')
+            .select('id, user_id, amount, bank_name, account_number, account_holder, contact_phone, rrn, status, created_at, processed_at, tax_invoice_url')
             .order('created_at', { ascending: false })
             .limit(50);
 
@@ -618,7 +618,7 @@ window.loadWithdrawals = async () => {
 
         // 2. 유저 정보 조회
         const { data: users, error: userError } = await sb.from('profiles')
-            .select('id, email, full_name, role, contributor_tier, penalty_reason, deposit')
+            .select('id, email, username, role, contributor_tier, penalty_reason, deposit')
             .in('id', userIds);
             
         if(userError) console.error("프로필 조회 에러:", userError);
@@ -644,7 +644,7 @@ window.loadWithdrawals = async () => {
             let userEmail = '이메일 없음';
             
             if (user) {
-                userName = user.full_name || user.user_name || user.name || '이름미상';
+                userName = user.username || user.full_name || user.name || '이름미상';
                 userEmail = user.email || '';
             }
 
@@ -709,7 +709,9 @@ window.loadWithdrawals = async () => {
                     <td style="padding:5px 10px;">${tierControl}</td>
                     <td style="font-size:12px;">
                         <div><b>${r.bank_name}</b> (${r.account_holder})</div>
-                        <div style="color:#666;">${r.account_number}</div>
+                        <div style="color:#666;">${r.account_number || '-'}</div>
+                        ${r.rrn ? `<div style="color:#e65100; font-size:10px;">주민: ${r.rrn}</div>` : ''}
+                        ${r.contact_phone ? `<div style="color:#888; font-size:10px;">연락처: ${r.contact_phone}</div>` : ''}
                     </td>
                     <td style="text-align:center;">${statusHtml}</td>
                     <td style="text-align:center;">${actionBtn}</td>
