@@ -4398,7 +4398,7 @@ async function handleSubReturn() {
 <div id="loginModal" class="modal-bg" style="z-index: 20000;">
     <div class="modal-box" style="width: 400px; position:relative;">
         <!-- ★ 닫기 버튼 -->
-        <button onclick="document.getElementById('loginModal').style.display='none'; window._authCallback=null; window.__authInProgress=false; if(window._restoreChoiceModal){window._restoreChoiceModal=false; var cm=document.getElementById('choiceModal'); if(cm) cm.style.display='flex';}"
+        <button onclick="document.getElementById('loginModal').style.display='none'; window._authCallback=null; window.__authInProgress=false; window._restoreChoiceModal=false;"
                 style="position:absolute; top:12px; right:14px; background:none; border:none; font-size:22px; cursor:pointer; color:#94a3b8; line-height:1; padding:4px 8px; z-index:1;"
                 title="닫기">&times;</button>
 

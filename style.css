@@ -157,22 +157,22 @@ button, input, textarea, select { font-family: inherit; }
 }
 
 .quick-item {
-    display: flex; 
-    flex-direction: column; 
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    width: 110px;              /* 아이템 너비를 고정하여 균일하게 배치 */
+    width: 110px;
     cursor: pointer;
-    transition: transform 0.2s;
-    margin-bottom: 5px; 
-    background: #f9fafb;
-    border-radius: 16px; 
-    padding: 12px 5px; 
-    border: 1px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 5px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 12px 5px;
+    border: 1px solid #e5e7eb;
 }
-.quick-item:hover { 
-    transform: translateY(-5px); background: #fff; 
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+.quick-item:hover {
+    transform: translateY(-3px); background: #fff;
+    border-color: #c7d2fe;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
 }
 .quick-icon {
     width: 60px; height: 60px; 
