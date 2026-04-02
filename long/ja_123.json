@@ -1967,5 +1967,7 @@
   "rv_write_review": "レビューを書く",
   "rv_show_work": "作品を見せる",
   "rv_nickname_ph": "ニックネーム (例: ハッピー顧客)",
-  "rv_nickname_required": "ニックネームを入力してください"
+  "rv_nickname_required": "ニックネームを入力してください",
+  "home_wholesale_board_title": "ハニカムボード原板",
+  "home_wholesale_board_desc": "加工前のハニカムボード原板を卸売価格で提供します"
 }

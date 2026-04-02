@@ -1574,5 +1574,7 @@
   "rv_write_review": "리뷰쓰기",
   "rv_show_work": "작품자랑",
   "rv_nickname_ph": "닉네임 (예: 행복한고객)",
-  "rv_nickname_required": "닉네임을 입력해주세요"
+  "rv_nickname_required": "닉네임을 입력해주세요",
+  "home_wholesale_board_title": "허니콤보드 원판",
+  "home_wholesale_board_desc": "가공 전 허니콤보드 원판을 도매가로 제공합니다"
 }

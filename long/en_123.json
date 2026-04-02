@@ -1970,5 +1970,7 @@
   "rv_write_review": "Write Review",
   "rv_show_work": "Show Your Work",
   "rv_nickname_ph": "Nickname (e.g. HappyCustomer)",
-  "rv_nickname_required": "Please enter a nickname"
+  "rv_nickname_required": "Please enter a nickname",
+  "home_wholesale_board_title": "Raw Honeycomb Board",
+  "home_wholesale_board_desc": "We supply raw honeycomb boards at wholesale prices"
 }

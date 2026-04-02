@@ -1938,5 +1938,7 @@
   "rv_write_review": "Bewertung schreiben",
   "rv_show_work": "Dein Werk zeigen",
   "rv_nickname_ph": "Spitzname (z.B. GlücklicherKunde)",
-  "rv_nickname_required": "Bitte Spitzname eingeben"
+  "rv_nickname_required": "Bitte Spitzname eingeben",
+  "home_wholesale_board_title": "Wabenplatte Rohware",
+  "home_wholesale_board_desc": "Wir liefern rohe Wabenplatten zu Großhandelspreisen"
 }

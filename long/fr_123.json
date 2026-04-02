@@ -1938,5 +1938,7 @@
   "rv_write_review": "Écrire un avis",
   "rv_show_work": "Montrer votre œuvre",
   "rv_nickname_ph": "Pseudo (ex: ClientHeureux)",
-  "rv_nickname_required": "Veuillez entrer un pseudo"
+  "rv_nickname_required": "Veuillez entrer un pseudo",
+  "home_wholesale_board_title": "Panneau Nid d'Abeille Brut",
+  "home_wholesale_board_desc": "Nous fournissons des panneaux nid d'abeille bruts à prix de gros"
 }

@@ -1938,5 +1938,7 @@
   "rv_write_review": "Escribir opinión",
   "rv_show_work": "Mostrar tu obra",
   "rv_nickname_ph": "Apodo (ej: ClienteFeliz)",
-  "rv_nickname_required": "Ingrese un apodo"
+  "rv_nickname_required": "Ingrese un apodo",
+  "home_wholesale_board_title": "Tablero de Panal en Bruto",
+  "home_wholesale_board_desc": "Suministramos tableros de panal en bruto a precios mayoristas"
 }

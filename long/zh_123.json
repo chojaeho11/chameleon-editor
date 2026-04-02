@@ -1936,5 +1936,7 @@
   "rv_write_review": "写评价",
   "rv_show_work": "展示作品",
   "rv_nickname_ph": "昵称 (例: 快乐客户)",
-  "rv_nickname_required": "请输入昵称"
+  "rv_nickname_required": "请输入昵称",
+  "home_wholesale_board_title": "蜂窝板原板",
+  "home_wholesale_board_desc": "以批发价提供加工前的蜂窝板原板"
 }
