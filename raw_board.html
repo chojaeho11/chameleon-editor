@@ -465,41 +465,27 @@ async function submitPdSample() {
         </h2>
         <p style="font-size:15px; color:#64748b; margin-bottom:12px;">3PL 배송으로 전세계 주요 도시에 무료로 배송됩니다.</p>
         <p style="font-size:13px; color:#94a3b8; margin-bottom:32px;">기성품 원판은 10매씩 묶음포장 | 기본 보드 크기: 1,300 x 2,200mm</p>
-        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; max-width:800px; margin:0 auto;">
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1FA;&#x1F1F8;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Miami</div><div style="font-size:10px; color:#94a3b8;">Florida, USA</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1FA;&#x1F1F8;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Las Vegas</div><div style="font-size:10px; color:#94a3b8;">Nevada, USA</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1EF;&#x1F1F5;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Tokyo</div><div style="font-size:10px; color:#94a3b8;">Japan</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1F0;&#x1F1F7;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Seoul / Gyeonggi</div><div style="font-size:10px; color:#94a3b8;">South Korea</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1EB;&#x1F1F7;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Paris</div><div style="font-size:10px; color:#94a3b8;">France</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1EC;&#x1F1E7;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">London</div><div style="font-size:10px; color:#94a3b8;">United Kingdom</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1E9;&#x1F1EA;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Berlin</div><div style="font-size:10px; color:#94a3b8;">Germany</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1EA;&#x1F1F8;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Barcelona</div><div style="font-size:10px; color:#94a3b8;">Spain</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1E8;&#x1F1ED;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Zurich</div><div style="font-size:10px; color:#94a3b8;">Switzerland</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1F2;&#x1F1FE;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Kuala Lumpur</div><div style="font-size:10px; color:#94a3b8;">Malaysia</div></div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:10px 18px;">
-                <span style="font-size:24px;">&#x1F1F2;&#x1F1E6;</span><div><div style="font-size:13px; font-weight:700; color:#1e293b;">Casablanca</div><div style="font-size:10px; color:#94a3b8;">Morocco</div></div>
-            </div>
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:900px; margin:0 auto;">
+            <div class="ship-city"><span class="ship-flag">&#x1F1FA;&#x1F1F8;</span><div class="ship-name">Miami</div><div class="ship-sub">Florida, USA</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1FA;&#x1F1F8;</span><div class="ship-name">Las Vegas</div><div class="ship-sub">Nevada, USA</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1EF;&#x1F1F5;</span><div class="ship-name">Tokyo</div><div class="ship-sub">Japan</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1F0;&#x1F1F7;</span><div class="ship-name">Seoul</div><div class="ship-sub">South Korea</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1EB;&#x1F1F7;</span><div class="ship-name">Paris</div><div class="ship-sub">France</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1EC;&#x1F1E7;</span><div class="ship-name">London</div><div class="ship-sub">United Kingdom</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1E9;&#x1F1EA;</span><div class="ship-name">Berlin</div><div class="ship-sub">Germany</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1EA;&#x1F1F8;</span><div class="ship-name">Barcelona</div><div class="ship-sub">Spain</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1F2;&#x1F1FE;</span><div class="ship-name">Kuala Lumpur</div><div class="ship-sub">Malaysia</div></div>
+            <div class="ship-city"><span class="ship-flag">&#x1F1F2;&#x1F1E6;</span><div class="ship-name">Casablanca</div><div class="ship-sub">Morocco</div></div>
         </div>
+        <style>
+        .ship-city { background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 8px; text-align:center; transition:all 0.2s; }
+        .ship-city:hover { background:#fef3c7; transform:translateY(-2px); box-shadow:0 4px 12px rgba(180,83,9,0.1); }
+        .ship-flag { font-size:28px; display:block; margin-bottom:6px; }
+        .ship-name { font-size:13px; font-weight:800; color:#1e293b; }
+        .ship-sub { font-size:10px; color:#94a3b8; margin-top:2px; }
+        @media(max-width:768px) { .ship-city { padding:10px 6px; } .ship-flag { font-size:22px; } .ship-name { font-size:11px; } }
+        @media(max-width:480px) { #shipping .ship-city { padding:8px 4px; } .ship-flag { font-size:20px; } }
+        </style>
     </div>
 </section>
 
