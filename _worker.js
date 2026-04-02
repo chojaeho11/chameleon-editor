@@ -698,6 +698,9 @@ ${hreflangTags('/editor')}
         // 별도 랜딩 페이지: /paper-stand → paper_stand.html (SPA fallback 우회)
         const STANDALONE_PAGES = {
             'paper-stand': '/paper_stand.html',
+            'paper_stand': '/paper_stand.html',
+            'raw-board': '/raw_board.html',
+            'raw_board': '/raw_board.html',
         };
         if (STANDALONE_PAGES[path]) {
             const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);
