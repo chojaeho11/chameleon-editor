@@ -6901,9 +6901,9 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     };
 
     // -----------------------------------------------------------
-    // [5] 초기화 (DOMContentLoaded — load보다 훨씬 빠름, 이미지 대기 불필요)
+    // [5] 초기화 (Load Event — ES 모듈 실행 후 확실하게)
     // -----------------------------------------------------------
-    document.addEventListener('DOMContentLoaded', async () => {
+    window.addEventListener('load', async () => {
         if (window.initConfig) await window.initConfig();
         else if (typeof initConfig === 'function') await initConfig();
         // initConfig 완료 후 window.sb 갱신 (챗봇 등 비모듈 스크립트용)
@@ -12765,7 +12765,7 @@ if (w >= 20 && h >= 20) {
     // ============================================================
     // [1] 초기화 및 데이터 로드 (안정화 최종 버전)
     // ============================================================
-    document.addEventListener('DOMContentLoaded', async () => {
+    window.addEventListener('load', async () => {
         // 1. 설정 로딩 대기 (config.js의 작업이 끝날 때까지 기다림)
         if (window.initConfig) await window.initConfig(); 
         else if (typeof initConfig === 'function') await initConfig();
