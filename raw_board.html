@@ -466,25 +466,24 @@ async function submitPdSample() {
         <p style="font-size:15px; color:#64748b; margin-bottom:12px;">3PL 배송으로 전세계 주요 도시에 무료로 배송됩니다.</p>
         <p style="font-size:13px; color:#94a3b8; margin-bottom:32px;">기성품 원판은 10매씩 묶음포장 | 기본 보드 크기: 1,300 x 2,200mm</p>
         <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:900px; margin:0 auto;">
-            <div class="ship-city"><span class="ship-flag">&#x1F1FA;&#x1F1F8;</span><div class="ship-name">Miami</div><div class="ship-sub">Florida, USA</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1FA;&#x1F1F8;</span><div class="ship-name">Las Vegas</div><div class="ship-sub">Nevada, USA</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1EF;&#x1F1F5;</span><div class="ship-name">Tokyo</div><div class="ship-sub">Japan</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1F0;&#x1F1F7;</span><div class="ship-name">Seoul</div><div class="ship-sub">South Korea</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1EB;&#x1F1F7;</span><div class="ship-name">Paris</div><div class="ship-sub">France</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1EC;&#x1F1E7;</span><div class="ship-name">London</div><div class="ship-sub">United Kingdom</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1E9;&#x1F1EA;</span><div class="ship-name">Berlin</div><div class="ship-sub">Germany</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1EA;&#x1F1F8;</span><div class="ship-name">Barcelona</div><div class="ship-sub">Spain</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1F2;&#x1F1FE;</span><div class="ship-name">Kuala Lumpur</div><div class="ship-sub">Malaysia</div></div>
-            <div class="ship-city"><span class="ship-flag">&#x1F1F2;&#x1F1E6;</span><div class="ship-name">Casablanca</div><div class="ship-sub">Morocco</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/us.png" alt="US"><div class="ship-name">Miami</div><div class="ship-sub">Florida, USA</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/us.png" alt="US"><div class="ship-name">Las Vegas</div><div class="ship-sub">Nevada, USA</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/jp.png" alt="JP"><div class="ship-name">Tokyo</div><div class="ship-sub">Japan</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/kr.png" alt="KR"><div class="ship-name">Seoul</div><div class="ship-sub">South Korea</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/fr.png" alt="FR"><div class="ship-name">Paris</div><div class="ship-sub">France</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/gb.png" alt="GB"><div class="ship-name">London</div><div class="ship-sub">United Kingdom</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/de.png" alt="DE"><div class="ship-name">Berlin</div><div class="ship-sub">Germany</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/es.png" alt="ES"><div class="ship-name">Barcelona</div><div class="ship-sub">Spain</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/my.png" alt="MY"><div class="ship-name">Kuala Lumpur</div><div class="ship-sub">Malaysia</div></div>
+            <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/ma.png" alt="MA"><div class="ship-name">Casablanca</div><div class="ship-sub">Morocco</div></div>
         </div>
         <style>
-        .ship-city { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:14px 8px; text-align:center; transition:all 0.2s; }
+        .ship-city { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px 8px; text-align:center; transition:all 0.2s; }
         .ship-city:hover { border-color:#d97706; transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.06); }
-        .ship-flag { font-size:32px; display:block; margin-bottom:8px; }
+        .ship-flag { width:40px; height:40px; border-radius:50%; object-fit:cover; display:block; margin:0 auto 8px; border:2px solid #f1f5f9; }
         .ship-name { font-size:13px; font-weight:800; color:#1e293b; }
         .ship-sub { font-size:10px; color:#94a3b8; margin-top:2px; }
-        @media(max-width:768px) { .ship-city { padding:10px 6px; } .ship-flag { font-size:22px; } .ship-name { font-size:11px; } }
-        @media(max-width:480px) { #shipping .ship-city { padding:8px 4px; } .ship-flag { font-size:20px; } }
+        @media(max-width:768px) { .ship-city { padding:10px 6px; } .ship-flag { width:32px; height:32px; } .ship-name { font-size:11px; } }
         </style>
     </div>
 </section>
