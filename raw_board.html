@@ -1238,10 +1238,10 @@ async function loadPdReviews() {
             var prodRes = await _rvSupa.from('admin_products').select('code').in('category', catCodes);
             window._rbProductCodes = (prodRes.data || []).map(function(p){return p.code;});
         }
-        var rbCodes = window._rbProductCodes;
+        var rbCodes = window._rbProductCodes || [];
 
         var data = null;
-        if (!_rvFallback) {
+        if (!_rvFallback && rbCodes.length > 0) {
             // 1차: 해당 언어의 원판 리뷰
             var res = await _rvSupa.from('product_reviews')
                 .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
@@ -1266,13 +1266,15 @@ async function loadPdReviews() {
                 _rvFallback = true;
             }
         }
-        if (_rvFallback) {
-            var res3 = await _rvSupa.from('product_reviews')
+        if (_rvFallback || (!data || data.length === 0)) {
+            var q3 = _rvSupa.from('product_reviews')
                 .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                .eq('lang', siteLang)
                 .gte('rating', 4)
                 .order('created_at', { ascending: false })
                 .range(from, to);
+            if (rbCodes.length > 0) q3 = q3.in('product_code', rbCodes);
+            else q3 = q3.eq('lang', siteLang);
+            var res3 = await q3;
             data = res3.data;
         }
 
