@@ -10,6 +10,8 @@
 
 # Paper stand landing page
 /paper-stand  /paper_stand.html  200
+/raw-board  /raw_board.html  200
+/raw_board  /raw_board.html  200
 
 # NOTE: HTML page rewrites (/mypage → mypage.html) and SPA fallback
 # are NOT listed here because _worker.js handles all routing.
