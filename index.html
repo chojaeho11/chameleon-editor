@@ -2776,7 +2776,8 @@ async function handleSubReturn() {
         }
 
         var _cl = window.CURRENT_LANG || 'kr';
-        var siteLang = (_cl === 'ja') ? 'ja' : (_cl === 'kr' || _cl === 'ko') ? 'kr' : 'en';
+        var _langDb = {ko:'kr', ja:'ja', en:'en', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'kr'};
+        var siteLang = _langDb[_cl] || _cl;
 
         var from = _homePage * _homePageSize;
         var to = from + _homePageSize - 1;
