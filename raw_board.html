@@ -299,7 +299,7 @@ a { text-decoration: none; color: inherit; }
 <header class="site-header">
     <div class="header-inner">
         <a id="logoLink" href="/" class="logo">
-            <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>Chameleon Printing
+            <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>Hexalite
         </a>
         <nav class="nav-links">
             <div class="lang-selector" id="langSelector"></div>
@@ -413,20 +413,20 @@ async function submitPdSample() {
     }
 }</script>
 
-<!-- 영상 소개 1: 고강도 인쇄용 허니콤보드 -->
-<section class="video-section" style="max-width:1300px; margin:0 auto; padding:60px 24px 40px; display:flex; align-items:center; gap:24px;">
-    <div class="video-text" style="flex:0 0 380px; padding-left:40px;">
-        <h2 style="font-size:38px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:24px;" data-i18n-html="video1_h2">
-            고강도<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">인쇄용</em><br>허니콤보드
+<!-- 영상 소개 1: 인쇄용 허니콤보드 -->
+<section class="video-section" style="max-width:1000px; margin:0 auto; padding:48px 24px 32px; display:flex; align-items:center; gap:24px;">
+    <div class="video-text" style="flex:0 0 360px; padding-left:40px;">
+        <h2 style="font-size:32px; font-weight:900; line-height:1.3; color:#1e293b; margin-bottom:20px;" data-i18n-html="video1_h2">
+            <em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">인쇄용</em><br>허니콤보드
         </h2>
-        <p style="font-size:18px; color:#64748b; line-height:1.8; margin-bottom:32px;" data-i18n-html="video1_p">
-            인쇄시 발색이 우수하고<br>평활도가 좋습니다.
+        <p style="font-size:16px; color:#64748b; line-height:1.8; margin-bottom:28px;" data-i18n-html="video1_p">
+            우수한 발색력, 휘어지지 않는 견고함.<br>V컷에 문제없게 보드를<br>광고용으로 개발했습니다.
         </p>
-        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#b45309,#d97706); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(180,83,9,0.3); transition:all 0.3s;" data-i18n-html="btn_view_products_down">
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:50px; border:none; background:linear-gradient(135deg,#b45309,#d97706); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(180,83,9,0.3); transition:all 0.3s;" data-i18n-html="btn_view_products_down">
             상품 보기 <i class="fa-solid fa-arrow-down"></i>
         </button>
     </div>
-    <div class="video-wrap" style="flex:1; min-width:0;">
+    <div class="video-wrap" style="flex:1; min-width:0; max-width:480px;">
         <video autoplay muted loop playsinline style="width:100%; display:block; border-radius:12px;">
             <source src="/honeycomb_board.mp4" type="video/mp4">
         </video>
@@ -513,26 +513,24 @@ async function submitPdSample() {
     </div>
 </section>
 
-<!-- 영상 소개 2: 커스텀 사이즈 제작 -->
-<section class="video-section" style="max-width:1300px; margin:0 auto; padding:60px 24px 40px; display:flex; align-items:center; gap:24px;">
-    <div class="video-wrap" style="flex:1; min-width:0;">
+<!-- 영상 소개 2: 커스텀 제작 -->
+<section class="video-section" style="max-width:1000px; margin:0 auto; padding:48px 24px 32px; display:flex; align-items:center; gap:24px;">
+    <div class="video-wrap" style="flex:1; min-width:0; max-width:480px;">
         <video autoplay muted loop playsinline style="width:100%; display:block; border-radius:12px;">
             <source src="/honeycomb_board2.mp4" type="video/mp4">
         </video>
     </div>
-    <div class="video-text" style="flex:0 0 380px; padding-right:40px;">
-        <h2 style="font-size:38px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:24px;" data-i18n-html="video2_h2">
-            <em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">커스텀 사이즈</em><br>제작 가능
+    <div class="video-text" style="flex:0 0 360px; padding-right:40px;">
+        <h2 style="font-size:32px; font-weight:900; line-height:1.3; color:#1e293b; margin-bottom:20px;" data-i18n-html="video2_h2">
+            원하는 용지와 크기로<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">자유롭게</em>
         </h2>
-        <p style="font-size:18px; color:#64748b; line-height:1.8; margin-bottom:16px;" data-i18n-html="video2_p">
-            높이 8mm~100mm<br>
-            원하는 두께와 크기로 제작됩니다.<br>
-            용지의 평량에 따라 가격이 달라집니다.
+        <p style="font-size:16px; color:#64748b; line-height:1.8; margin-bottom:16px;" data-i18n-html="video2_p">
+            커스텀 제작 수량은 기본<br>40피트 컨테이너 1개 분량입니다.
         </p>
-        <p style="font-size:15px; color:#b45309; font-weight:700; margin-bottom:32px;">
-            <i class="fa-solid fa-box-open"></i> 맞춤제작 300매 이상 가능
+        <p style="font-size:14px; color:#b45309; font-weight:700; margin-bottom:28px;">
+            <i class="fa-solid fa-truck-fast"></i> 기존 제품은 전세계 주요 도시에 무료 배송
         </p>
-        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#b45309,#d97706); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(180,83,9,0.3); transition:all 0.3s;" data-i18n-html="btn_view_products_up">
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:50px; border:none; background:linear-gradient(135deg,#b45309,#d97706); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(180,83,9,0.3); transition:all 0.3s;" data-i18n-html="btn_view_products_up">
             상품 보기 <i class="fa-solid fa-arrow-up"></i>
         </button>
     </div>
@@ -793,24 +791,24 @@ hero_p: {
 },
 // ── Video 1 ──
 video1_h2: {
-    ko:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>순식간에<br>조립되는<br>원터치형',
-    ja:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>一瞬で<br>組み立て<br>ワンタッチ式',
-    en:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Instant<br>Assembly<br>One-Touch',
-    zh:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>瞬间<br>组装<br>一触即成',
-    ar:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>تجميع<br>فوري<br>بلمسة واحدة',
-    es:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Montaje<br>Instantaneo<br>Un Solo Toque',
-    de:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Sofortige<br>Montage<br>Ein Handgriff',
-    fr:'<em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Montage<br>Instantane<br>En Un Geste'
+    ko:'<em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">인쇄용</em><br>허니콤보드',
+    ja:'<em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">印刷用</em><br>ハニカムボード',
+    en:'<em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Print-Ready</em><br>Honeycomb Board',
+    zh:'<em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">印刷用</em><br>蜂窝板',
+    ar:'لوح خلية النحل<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">للطباعة</em>',
+    es:'Tablero Panal<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">para Impresion</em>',
+    de:'Wabenplatte<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">fur den Druck</em>',
+    fr:'Panneau Nid d\'Abeille<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">pour l\'Impression</em>'
 },
 video1_p: {
-    ko:'펼치기만 하면 완성.<br>도구 없이 누구나 1분 만에<br>설치할 수 있습니다.',
-    ja:'広げるだけで完成。<br>道具不要、誰でも1分で<br>設置できます。',
-    en:'Just unfold and it is done.<br>No tools needed — anyone can<br>set it up in 1 minute.',
-    zh:'展开即完成。<br>无需工具，任何人<br>1分钟内即可安装。',
-    ar:'افتحه فقط وسيكون جاهزا.<br>بدون ادوات — يمكن لاي شخص<br>تركيبه في دقيقة واحدة.',
-    es:'Solo despliega y listo.<br>Sin herramientas — cualquiera<br>lo monta en 1 minuto.',
-    de:'Einfach aufklappen — fertig.<br>Ohne Werkzeug — jeder kann es<br>in 1 Minute aufbauen.',
-    fr:'Depliez et c\'est pret.<br>Sans outils — tout le monde peut<br>l\'installer en 1 minute.'
+    ko:'우수한 발색력, 휘어지지 않는 견고함.<br>V컷에 문제없게 보드를<br>광고용으로 개발했습니다.',
+    ja:'優れた発色、曲がらない堅牢さ。<br>Vカットに問題のないボードを<br>広告用に開発しました。',
+    en:'Excellent color reproduction, rigid and warp-free.<br>Engineered for V-cut compatibility<br>and advertising displays.',
+    zh:'出色的色彩还原，坚固不弯曲。<br>专为V切割兼容性<br>和广告展示开发。',
+    ar:'إعادة إنتاج ألوان ممتازة، صلب ولا ينحني.<br>مصمم للتوافق مع القطع V<br>وعروض الإعلانات.',
+    es:'Excelente reproduccion de color, rigido y sin deformacion.<br>Disenado para corte en V<br>y displays publicitarios.',
+    de:'Hervorragende Farbwiedergabe, stabil und verzugsfrei.<br>Entwickelt fur V-Schnitt-Kompatibilitat<br>und Werbedisplays.',
+    fr:'Excellente reproduction des couleurs, rigide et sans deformation.<br>Concu pour la compatibilite V-cut<br>et les displays publicitaires.'
 },
 btn_view_products_down: {
     ko:'상품 보기 <i class="fa-solid fa-arrow-down"></i>',
@@ -977,24 +975,24 @@ step4_desc: {
 },
 // ── Video 2 ──
 video2_h2: {
-    ko:'멋진 이벤트<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3분</em> 완성',
-    ja:'素敵なイベント<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3分</em>で完成',
-    en:'Amazing Events<br>Ready in <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',
-    zh:'精彩活动<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3分钟</em>完成',
-    ar:'فعاليات رائعة<br>جاهزة في <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 دقائق</em>',
-    es:'Eventos Increibles<br>Listos en <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',
-    de:'Tolle Events<br>Fertig in <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',
-    fr:'Evenements Incroyables<br>Prets en <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>'
+    ko:'원하는 용지와 크기로<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">자유롭게</em>',
+    ja:'お好みの用紙とサイズで<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">自由に</em>',
+    en:'Any Paper, Any Size<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Your Choice</em>',
+    zh:'任意纸张和尺寸<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">自由定制</em>',
+    ar:'أي ورق، أي حجم<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">اختيارك</em>',
+    es:'Cualquier papel y tamano<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">a tu eleccion</em>',
+    de:'Jedes Papier, jede Grosse<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Ihre Wahl</em>',
+    fr:'Tout papier, toute taille<br><em style="font-style:normal; background:linear-gradient(135deg,#b45309,#d97706); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">a votre choix</em>'
 },
 video2_p: {
-    ko:'게이트를 통과해서<br>멋진 제품을<br>체험하게 하세요.',
-    ja:'ゲートを通過して<br>素敵な製品を<br>体験させましょう。',
-    en:'Walk through the gate<br>and experience<br>amazing products.',
-    zh:'通过门廊<br>体验<br>精彩产品。',
-    ar:'امر عبر البوابة<br>وجرب<br>منتجات رائعة.',
-    es:'Pasa por la puerta<br>y experimenta<br>productos increibles.',
-    de:'Gehen Sie durch das Tor<br>und erleben Sie<br>tolle Produkte.',
-    fr:'Passez la porte<br>et decouvrez<br>des produits incroyables.'
+    ko:'커스텀 제작 수량은 기본<br>40피트 컨테이너 1개 분량입니다.',
+    ja:'カスタム製作の最小数量は<br>40フィートコンテナ1本分です。',
+    en:'Custom production minimum is<br>one 40-foot container load.',
+    zh:'定制生产最低数量为<br>一个40英尺集装箱。',
+    ar:'الحد الأدنى للإنتاج المخصص<br>حاوية 40 قدم واحدة.',
+    es:'La produccion personalizada minima es<br>un contenedor de 40 pies.',
+    de:'Die Mindestmenge fur Sonderanfertigungen<br>ist ein 40-Fuss-Container.',
+    fr:'La production sur mesure minimum est<br>un conteneur de 40 pieds.'
 },
 btn_view_products_up: {
     ko:'상품 보기 <i class="fa-solid fa-arrow-up"></i>',
