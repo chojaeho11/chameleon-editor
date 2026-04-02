@@ -1410,7 +1410,7 @@ function _imgToDataUrl(url) {
 }
 
 // ============ 공통 문서 생성 (견적서/영수증/거래명세서) ============
-async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, usedMileage) {
+async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, usedMileage, paidTotalAmount = 0) {
     doc.setFontSize(26);
     _dt(doc, title, 105, 22, { align: 'center', weight: 'bold' });
     _dl(doc, 15, 28, 195, 28, "#000000", 0.5);
@@ -1478,11 +1478,12 @@ async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, used
         // 옵션
         if (item.selectedAddons) {
             Object.values(item.selectedAddons).forEach(code => {
-                const add = ADDON[code]; if (!add) return;
+                const add = ADDON[code];
                 const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                let addPrice = add.price || 0, addName = add.display_name || add.name || code;
-                if (PDF_LANG === 'ja' || PDF_LANG === 'jp') { if (_cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP); if (add.name_jp) addName = add.name_jp; }
-                else if (PDF_LANG === 'us' || PDF_LANG === 'en') { if (_cr && _cr.US) addPrice = Math.round(addPrice * _cr.US * 100) / 100; if (add.name_us) addName = add.name_us; }
+                let addPrice = add ? (add.price || 0) : 0;
+                let addName = add ? (add.display_name || add.name || code) : code.replace(/_/g, ' ');
+                if (PDF_LANG === 'ja' || PDF_LANG === 'jp') { if (add && _cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP); if (add && add.name_jp) addName = add.name_jp; }
+                else if (PDF_LANG === 'us' || PDF_LANG === 'en') { if (add && _cr && _cr.US) addPrice = Math.round(addPrice * _cr.US * 100) / 100; if (add && add.name_us) addName = add.name_us; }
                 const aTotal = addPrice * uQty; totalAmt += aTotal;
                 const splitAddon = doc.splitTextToSize("└ " + addName, cols[1] - 4);
                 const addonH = Math.max(8, 4 + (splitAddon.length * 5));
@@ -1500,8 +1501,9 @@ async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, used
     });
 
     y += 5;
-    const afterDiscount = totalAmt - (discountAmt || 0);
-    const finalAmt = afterDiscount - (usedMileage || 0);
+    // ★ 실제 결제 금액(DB)이 있으면 그것을 최종 금액으로 사용 (재계산 오차 방지)
+    const recalcFinal = totalAmt - (discountAmt || 0) - (usedMileage || 0);
+    const finalAmt = (paidTotalAmount > 0) ? paidTotalAmount : recalcFinal;
     const vat = Math.floor(finalAmt / 11);
     const supply = finalAmt - vat;
 
@@ -1689,7 +1691,7 @@ window.downloadOrderDoc = async function (orderId, docType) {
         blob = await _genOrderSheet(doc, orderInfo, items);
     } else {
         const title = titleMap[docType] || PTXT.quote_title;
-        blob = await _genCommonDoc(doc, title, orderInfo, items, order.discount_amount || 0, 0);
+        blob = await _genCommonDoc(doc, title, orderInfo, items, order.discount_amount || 0, 0, order.total_amount || 0);
     }
 
     if (!blob) { showToast('PDF generation failed', 'error'); return; }
