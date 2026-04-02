@@ -1257,39 +1257,54 @@ async function loadPdReviews() {
 
     try {
         var data = null;
-        if (!_rvFallback) {
-            // 1차: 해당 언어의 pd_ 리뷰
+        // 첫 로드: 전략 결정 (pd_ 언어별 → pd_ 전체 → 언어별 전체)
+        if (_rvPage === 0 && !_rvFallback) {
             var res = await _rvSupa.from('product_reviews')
                 .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                .like('product_code', 'pd\\_%')
+                .like('product_code', 'pd_%')
                 .eq('lang', siteLang)
                 .gte('rating', 4)
                 .order('created_at', { ascending: false })
                 .range(from, to);
             data = res.data;
-            // 없으면 언어 무관 pd_ 리뷰
-            if ((!data || data.length === 0) && _rvPage === 0) {
+            if (data && data.length > 0) {
+                _rvFallback = 'pd_lang'; // pd_ + 해당언어
+            } else {
                 var res2 = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .like('product_code', 'pd\\_%')
+                    .like('product_code', 'pd_%')
                     .gte('rating', 4)
                     .order('created_at', { ascending: false })
                     .range(from, to);
                 data = res2.data;
-            }
-            // 그래도 없으면 해당 언어 전체 리뷰로 fallback
-            if ((!data || data.length === 0) && _rvPage === 0) {
-                _rvFallback = true;
+                if (data && data.length > 0) {
+                    _rvFallback = 'pd_all'; // pd_ 전체
+                } else {
+                    _rvFallback = 'lang_all'; // 해당언어 전체
+                }
             }
         }
-        if (_rvFallback) {
-            var res3 = await _rvSupa.from('product_reviews')
-                .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                .eq('lang', siteLang)
-                .gte('rating', 4)
-                .order('created_at', { ascending: false })
-                .range(from, to);
-            data = res3.data;
+        // 결정된 전략으로 쿼리
+        if (_rvPage > 0 || _rvFallback === 'lang_all') {
+            if (_rvFallback === 'pd_lang') {
+                var r = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .like('product_code', 'pd_%').eq('lang', siteLang).gte('rating', 4)
+                    .order('created_at', { ascending: false }).range(from, to);
+                data = r.data;
+            } else if (_rvFallback === 'pd_all') {
+                var r = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .like('product_code', 'pd_%').gte('rating', 4)
+                    .order('created_at', { ascending: false }).range(from, to);
+                data = r.data;
+            } else {
+                var r = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .eq('lang', siteLang).gte('rating', 4)
+                    .order('created_at', { ascending: false }).range(from, to);
+                data = r.data;
+            }
         }
 
         if (!data || data.length === 0) {
