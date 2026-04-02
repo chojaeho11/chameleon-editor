@@ -205,33 +205,67 @@
         }
 
         try {
-            // 1단계: Wholesale Board Prices 대분류의 모든 소분류 코드 조회
+            // 1단계: 소분류 목록 (정렬순서 포함)
             const { data: subCats } = await sb.from('admin_categories')
-                .select('code')
-                .eq('top_category_code', 'Wholesale Board Prices');
-            const catCodes = (subCats || []).map(function(c) { return c.code; });
-            if (catCodes.length === 0) catCodes.push('Honeycomb Board');
-
-            // 2단계: 모든 소분류의 상품 조회
-            const { data: products, error } = await sb.from('admin_products')
-                .select('*')
-                .in('category', catCodes);
-
-            if (error) throw error;
-
-            const visible = (products || []).sort(function(a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
-
-            grid.innerHTML = '';
-
-            if (visible.length === 0) {
+                .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, sort_order')
+                .eq('top_category_code', 'Wholesale Board Prices')
+                .order('sort_order', { ascending: true });
+            if (!subCats || subCats.length === 0) {
                 grid.style.display = 'none';
                 if (emptyState) emptyState.style.display = 'block';
                 return;
             }
+            const catCodes = subCats.map(function(c) { return c.code; });
 
-            visible.forEach(function(product) {
-                grid.appendChild(createProductCard(product));
+            // 2단계: 모든 상품 조회
+            const { data: products, error } = await sb.from('admin_products')
+                .select('*')
+                .in('category', catCodes);
+            if (error) throw error;
+
+            // 3단계: 소분류별 그룹핑 + 렌더링
+            grid.innerHTML = '';
+            grid.style.display = 'block';
+            grid.className = '';
+
+            var hasAny = false;
+            subCats.forEach(function(cat) {
+                var catProducts = (products || [])
+                    .filter(function(p) { return p.category === cat.code; })
+                    .sort(function(a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+                if (catProducts.length === 0) return;
+                hasAny = true;
+
+                // 소분류명 (다국어)
+                var catName = cat.name;
+                if (psLang === 'ja' && cat.name_jp) catName = cat.name_jp;
+                else if ((psLang === 'en') && cat.name_us) catName = cat.name_us;
+                else if (psLang === 'zh' && cat.name_cn) catName = cat.name_cn;
+                else if (psLang === 'ar' && cat.name_ar) catName = cat.name_ar;
+                else if (psLang === 'es' && cat.name_es) catName = cat.name_es;
+                else if (psLang === 'de' && cat.name_de) catName = cat.name_de;
+                else if (psLang === 'fr' && cat.name_fr) catName = cat.name_fr;
+
+                // 섹션 헤더
+                var header = document.createElement('div');
+                header.style.cssText = 'margin:32px 0 12px; padding:10px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:10px; border-left:4px solid #b45309;';
+                header.innerHTML = '<span style="font-size:16px; font-weight:800; color:#92400e;">' + catName + '</span>' +
+                    '<span style="font-size:12px; color:#b45309; margin-left:8px;">(' + catProducts.length + ')</span>';
+                grid.appendChild(header);
+
+                // 상품 그리드
+                var subGrid = document.createElement('div');
+                subGrid.className = 'product-grid';
+                catProducts.forEach(function(product) {
+                    subGrid.appendChild(createProductCard(product));
+                });
+                grid.appendChild(subGrid);
             });
+
+            if (!hasAny) {
+                grid.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'block';
+            }
 
         } catch (e) {
             console.error('[raw_board] 상품 로딩 실패:', e);
