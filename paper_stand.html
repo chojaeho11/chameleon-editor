@@ -1250,7 +1250,8 @@ async function loadPdReviews() {
     }
     if (!_rvSupa) { if(empty) empty.style.display='block'; return; }
 
-    var siteLang = LANG==='ko'?'kr':LANG==='ja'?'ja':LANG==='zh'?'cn':(LANG==='en'?'us':LANG);
+    var _langDb = {ko:'kr', ja:'ja', en:'en', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'kr'};
+    var siteLang = _langDb[LANG] || LANG;
     var from = _rvPage * _rvPageSize;
     var to = from + _rvPageSize - 1;
 
