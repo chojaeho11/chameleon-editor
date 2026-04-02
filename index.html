@@ -1083,25 +1083,35 @@ document.addEventListener('DOMContentLoaded', function() {
     .ot-tab { padding:3px 8px; border:1px solid #e2e8f0; border-radius:5px; background:#fff; font-size:10px; font-weight:700; cursor:pointer; color:#64748b; transition:all 0.15s; }
     .ot-tab:hover { background:#eff6ff; }
     .ot-tab.active { background:#6366f1; color:#fff; border-color:#6366f1; }
-    .ot-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .ot-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .ot-card {
-        background:#fafbfc; border:1px solid #eef0f4; border-radius:10px; padding:8px;
-        transition:all 0.2s; cursor:pointer; display:flex; flex-direction:column; gap:5px;
+        background:#fff; border:1px solid #eef0f4; border-radius:12px;
+        transition:all 0.2s; cursor:pointer; overflow:hidden;
     }
-    .ot-card:hover { border-color:#a5b4fc; box-shadow:0 3px 12px rgba(99,102,241,0.1); }
-    .ot-card-info { display:flex; align-items:center; justify-content:space-between; gap:4px; }
-    .ot-card-name { font-weight:800; font-size:12px; color:#1e293b; }
-    .ot-card-sub { display:flex; align-items:center; gap:6px; font-size:9px; color:#94a3b8; }
-    .ot-card-photos { display:flex; gap:3px; flex-wrap:wrap; }
-    .ot-photo { width:54px; height:54px; border-radius:6px; object-fit:cover; border:1px solid #e2e8f0; cursor:pointer; }
+    .ot-card:hover { border-color:#a5b4fc; box-shadow:0 4px 16px rgba(99,102,241,0.12); }
+    /* 상단: 이름 + 날짜 + 상태 한 줄 */
+    .ot-card-header {
+        display:flex; align-items:center; padding:7px 10px; gap:6px;
+        background:linear-gradient(135deg,#f8faff,#f1f5f9); border-bottom:1px solid #f0f0f5;
+    }
+    .ot-card-name { font-weight:800; font-size:11px; color:#334155; white-space:nowrap; }
+    .ot-card-date { font-size:9px; color:#94a3b8; margin-left:auto; white-space:nowrap; }
+    .ot-status-label { font-size:8px; font-weight:700; padding:2px 7px; border-radius:10px; white-space:nowrap; flex-shrink:0; }
+    /* 사진 영역 */
+    .ot-card-photos { display:flex; gap:2px; padding:4px; flex-wrap:wrap; }
+    .ot-photo { width:60px; height:60px; border-radius:5px; object-fit:cover; cursor:pointer; }
     .ot-photo:hover { opacity:0.85; }
-    .ot-status-label { font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+    /* 사진 없는 카드 */
+    .ot-card-empty { padding:16px 10px; text-align:center; color:#cbd5e1; font-size:11px; }
     @media(max-width:768px) {
         #orderTrackerSection { margin-top:0 !important; margin-bottom:6px !important; padding:0 6px !important; }
         #orderTrackerSection > div { border-radius:0 !important; }
         .ot-topbar { padding:8px 12px; }
         .ot-grid { grid-template-columns:1fr 1fr; gap:5px; }
-        .ot-photo { width:44px; height:44px; }
+        .ot-card-header { padding:5px 8px; }
+        .ot-card-name { font-size:10px; }
+        .ot-photo { width:42px; height:42px; }
+        .ot-card-photos { padding:3px; gap:2px; }
         #orderTrackerSearch { width:70px; }
     }
     </style>
@@ -1193,12 +1203,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const shipDate = o.delivery_target_date ? new Date(o.delivery_target_date).toLocaleDateString(_loc, {month:'numeric',day:'numeric'}) : '';
                 const flag = COUNTRY_FLAGS[o.site_code] || '🇰🇷';
                 const photos = renderPhotos(o);
+                const dateStr = orderDate + (shipDate ? ' → '+shipDate : '');
                 return `<div class="ot-card" onclick="window.openOrderDetail(${o.id})">
-                    ${photos ? `<div class="ot-card-photos">${photos}</div>` : ''}
-                    <div class="ot-card-info">
+                    <div class="ot-card-header">
                         <span class="ot-card-name">${flag} ${name}</span>
-                        <span class="ot-card-sub"><span>${orderDate}${shipDate ? ' → '+shipDate : ''}</span><span class="ot-status-label" style="background:${color}15; color:${color};">${_t('ot_st_'+status, label)}</span></span>
+                        <span class="ot-card-date">${dateStr}</span>
+                        <span class="ot-status-label" style="background:${color}18; color:${color};">${_t('ot_st_'+status, label)}</span>
                     </div>
+                    ${photos ? `<div class="ot-card-photos">${photos}</div>` : '<div class="ot-card-empty">No photos yet</div>'}
                 </div>`;
             }).join('') + '</div>';
         }
