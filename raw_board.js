@@ -114,12 +114,11 @@
         return LANG.currency + amount;
     }
 
-    // 이미지 최적화 (Supabase transform)
+    // 이미지 최적화 (Supabase Storage Image Transform)
     function getThumb(url, size) {
         if (!url || typeof url !== 'string') return 'https://placehold.co/400?text=No+Image';
-        if (url.includes('supabase.co') && url.includes('/storage/')) {
-            const sep = url.includes('?') ? '&' : '?';
-            return url + sep + 'width=' + size + '&resize=contain';
+        if (url.includes('supabase.co') && url.includes('/storage/v1/object/public/')) {
+            return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + '?width=' + size + '&height=' + size + '&resize=contain&quality=80';
         }
         return url;
     }
