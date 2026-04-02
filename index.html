@@ -2775,8 +2775,8 @@ async function handleSubReturn() {
             return;
         }
 
-        var siteLang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'JP') ? 'ja'
-                     : (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'US') ? 'en' : 'kr';
+        var _cl = window.CURRENT_LANG || 'kr';
+        var siteLang = (_cl === 'ja') ? 'ja' : (_cl === 'kr' || _cl === 'ko') ? 'kr' : 'en';
 
         var from = _homePage * _homePageSize;
         var to = from + _homePageSize - 1;
