@@ -8812,20 +8812,25 @@ window.showChoiceModal = async function(key) {
         if (!dbClient) throw new Error("DB 연결이 초기화되지 않았습니다.");
 
         // [핵심] 상품의 소분류 코드로 '대분류(Top Category) 코드' 찾기
-        // 관리자에서 대분류 기준으로 저장했기 때문에, 여기서 변환이 필요합니다.
         const subCatCode = product.category;
 
-        // ua_ 작품 카테고리는 직접 매핑 (globalSubCats 로드 전에도 동작)
         if (subCatCode && subCatCode.startsWith('ua_')) {
             targetCat = 'user_artwork';
-            console.log(`🔗 작품 카테고리 매칭: ${subCatCode} -> user_artwork`);
-        } else if (window.globalSubCats) {
-            // 미리 로드된 카테고리 목록에서 현재 상품의 소분류를 찾고, 그 부모(대분류) 코드를 가져옵니다.
+        } else if (window.globalSubCats && window.globalSubCats.length > 0) {
             const match = window.globalSubCats.find(c => c.code === subCatCode);
             if (match && match.top_category_code) {
                 targetCat = match.top_category_code;
-                console.log(`🔗 카테고리 매칭: ${subCatCode} (소분류) -> ${targetCat} (대분류)`);
             }
+        }
+        // ★ globalSubCats에서 못 찾으면 DB에서 직접 조회 (fallback)
+        if (targetCat === subCatCode || targetCat === 'NO_CAT') {
+            try {
+                const { data: catMatch } = await dbClient.from('admin_categories').select('top_category_code').eq('code', subCatCode).maybeSingle();
+                if (catMatch && catMatch.top_category_code) {
+                    targetCat = catMatch.top_category_code;
+                    console.log(`🔗 DB fallback 매칭: ${subCatCode} -> ${targetCat}`);
+                }
+            } catch(e) {}
         }
         
         // 3. 데이터 조회 ('전체', '대분류', '소분류' 3가지)
