@@ -7591,6 +7591,13 @@ async function renderQuickMenu() {
                     location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '');
                     return;
                 }
+                // ★ 허니콤보드 원판 → raw-board 페이지로 이동
+                if (top.code === 'Wholesale Board Prices') {
+                    const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko'};
+                    const rbLang = langMap[CURRENT_LANG] || '';
+                    location.href = '/raw-board' + (rbLang && rbLang !== 'ko' ? '?lang=' + rbLang : '');
+                    return;
+                }
                 // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
                 if (top.code === 'user_artwork') {
                     document.getElementById('productPickerModal').style.display = 'none';
@@ -7658,6 +7665,13 @@ async function renderQuickMenu() {
                         const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
                         const psLang = langMap[CURRENT_LANG];
                         location.href = '/paper-stand' + (psLang ? '?lang=' + psLang : '');
+                        return;
+                    }
+                    // ★ 허니콤보드 원판 → raw-board 페이지로 이동
+                    if (top.code === 'Wholesale Board Prices') {
+                        const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
+                        const rbLang = langMap[CURRENT_LANG];
+                        location.href = '/raw-board' + (rbLang ? '?lang=' + rbLang : '');
                         return;
                     }
                     const wasActive = btn.classList.contains('active');
