@@ -340,6 +340,18 @@ serve(async (req) => {
 - 출장 설치 비용: 항공+숙박 실비 + 시공 당일 1인 $300
 - 전화/채팅/Zoom으로 설치방법 안내도 가능
 
+## 허니콤보드 원판/원장 안내 (중요!)
+- 고객이 "원판", "원장", "허니콤보드 원판", "허니콤보드 원장", "raw board", "원자재", "가공 전 보드" 등 가공 전 허니콤보드 원판을 구매하고 싶어 하면:
+  - "허니콤보드 원판 전문 페이지에서 다양한 두께와 사이즈의 원판을 확인하실 수 있어요!" 라고 안내
+  - 링크: ${siteUrl}/raw-board${langSuffix ? '?' + langSuffix.slice(1) : ''}
+  - 반드시 products 배열에 허니콤보드 원판 관련 제품 4개를 포함해서 카드로 보여줘! (상품 데이터에서 카테고리가 원판/wholesale board 관련인 제품 검색)
+
+## 종이매대/종이진열대 안내 (중요!)
+- 고객이 "종이매대", "종이진열대", "종이 진열대", "paper stand", "paper display stand", "紙スタンド", "紙什器", "매대" 등 종이매대를 물어보면:
+  - "종이매대 전문 페이지에서 다양한 매대 제품을 확인하실 수 있어요!" 라고 안내
+  - 링크: ${siteUrl}/paper-stand${langSuffix ? '?' + langSuffix.slice(1) : ''}
+  - 반드시 products 배열에 종이매대/종이진열대 관련 제품 4개를 포함해서 카드로 보여줘! (상품 데이터에서 카테고리가 종이매대/paper stand 관련인 제품 검색)
+
 ## 링크 안내
 - 고객이 "링크", "링크줘", "URL", "주소" 등 상품 링크를 요청하면 → 상품 페이지 URL을 직접 안내해줘!
 - 형식: ${siteUrl}/?product={제품코드}${langSuffix} (예: ${siteUrl}/?product=345345353${langSuffix})
@@ -444,6 +456,18 @@ serve(async (req) => {
   · 名刺画像: https://www.cafe0101.com/japan_card.png
 - お問い合わせ時は名刺画像リンクも一緒に案内してください。
 
+## ハニカムボード原板/原紙 案内（重要！）
+- お客様が「原板」「原紙」「ハニカムボード原板」「raw board」「加工前ボード」等、加工前のハニカムボード原板を購入したい場合：
+  - 「ハニカムボード原板の専門ページで、さまざまな厚さとサイズの原板をご確認いただけますよ！」と案内
+  - リンク: ${siteUrl}/raw-board${langSuffix ? '?' + langSuffix.slice(1) : ''}
+  - 必ずproducts配列にハニカムボード原板関連の商品を4つ含めてカードで表示！
+
+## 紙什器/紙スタンド 案内（重要！）
+- お客様が「紙什器」「紙スタンド」「ペーパースタンド」「paper stand」「什器」「陳列台」等、紙什器を問い合わせた場合：
+  - 「紙什器の専門ページで、さまざまな什器商品をご確認いただけますよ！」と案内
+  - リンク: ${siteUrl}/paper-stand${langSuffix ? '?' + langSuffix.slice(1) : ''}
+  - 必ずproducts配列に紙什器/紙スタンド関連の商品を4つ含めてカードで表示！
+
 ## リンク案内
 - お客様が「リンク」「URL」「ページ」「見せて」「送って」等を求めたら → 商品ページURLを直接案内: ${siteUrl}/?product={商品コード}${langSuffix}
 - 「リンクを作れない」とは絶対言わないで！商品コードからURLを生成できます。
@@ -531,6 +555,18 @@ serve(async (req) => {
 - Japan office: 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画 / 047-712-1148
 - Japan business card: https://www.cafe0101.com/japan_card.png
 - For Japan-related inquiries, share the business card image link and contact info.
+
+## Raw Honeycomb Board (IMPORTANT!)
+- When customer asks about "raw board", "raw honeycomb board", "unprocessed board", "board sheets", "wholesale board" — they want to buy raw/unprocessed honeycomb boards:
+  - Guide them: "You can browse all our raw honeycomb board options on our dedicated page!"
+  - Link: ${siteUrl}/raw-board${langSuffix ? '?' + langSuffix.slice(1) : ''}
+  - MUST include 4 raw honeycomb board products in the products array!
+
+## Paper Display Stand (IMPORTANT!)
+- When customer asks about "paper stand", "paper display stand", "cardboard display", "POP display", "retail display stand":
+  - Guide them: "Check out our dedicated paper display stand page for all available options!"
+  - Link: ${siteUrl}/paper-stand${langSuffix ? '?' + langSuffix.slice(1) : ''}
+  - MUST include 4 paper display stand products in the products array!
 
 ## Product Links
 - When customer asks for "link", "URL", "page" → provide direct product URL: ${siteUrl}/?product={product_code}${langSuffix}
