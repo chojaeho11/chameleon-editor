@@ -707,11 +707,15 @@ ${hreflangTags('/editor')}
         };
         if (STANDALONE_PAGES[path]) {
             const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);
-            const rewriteReq = new Request(rewriteUrl.toString(), request);
-            let stResp = await env.ASSETS.fetch(rewriteReq);
+            let stResp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
+            // Pretty URLs가 308을 반환하면 Location을 따라가서 실제 콘텐츠를 가져옴
+            if ((stResp.status === 308 || stResp.status === 301) && stResp.headers.get('Location')) {
+                const loc = new URL(stResp.headers.get('Location'), url.origin);
+                stResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+            }
             const stHeaders = new Headers(stResp.headers);
             stHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-            return new Response(stResp.body, { status: stResp.status, headers: stHeaders });
+            return new Response(stResp.body, { status: 200, headers: stHeaders });
         }
 
         // ========== NORMAL HANDLING ==========
