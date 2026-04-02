@@ -2758,13 +2758,22 @@ async function handleSubReturn() {
 <script>
 // 홈페이지 실제 후기 로딩 (product_reviews 테이블, 최신순)
 (function(){
-    var _homePage = 0;
     var _homePageSize = 12;
+    var _homeShuffled = null; // 셔플된 전체 리뷰 캐시
+    var _homeShownCount = 0;
+
+    // Fisher-Yates 셔플
+    function _shuffleArr(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        }
+        return arr;
+    }
 
     window.loadHomeReviews = async function() {
         var dbClient = window.sb;
         if (!dbClient || typeof dbClient.from !== 'function') {
-            // sb가 아직 안 로드됐으면 잠시 대기 후 재시도
             if (!window._homeReviewRetry) { window._homeReviewRetry = 0; }
             if (window._homeReviewRetry < 10) {
                 window._homeReviewRetry++;
@@ -2775,70 +2784,78 @@ async function handleSubReturn() {
             return;
         }
 
-        var _cl = window.CURRENT_LANG || 'kr';
-        var _langDb = {ko:'kr', ja:'ja', en:'en', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'kr'};
-        var siteLang = _langDb[_cl] || _cl;
+        var grid = document.getElementById('homeReviewGrid');
+        var btn = document.getElementById('homeReviewMoreBtn');
 
-        var from = _homePage * _homePageSize;
-        var to = from + _homePageSize - 1;
+        // 첫 로드: 최근 1달 리뷰를 모두 가져와서 셔플
+        if (!_homeShuffled) {
+            var _cl = window.CURRENT_LANG || 'kr';
+            var _langDb = {ko:'kr', ja:'ja', en:'en', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'kr'};
+            var siteLang = _langDb[_cl] || _cl;
 
-        try {
-            var query = dbClient.from('product_reviews')
-                .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                .eq('lang', siteLang)
-                .gte('rating', 4)
-                .neq('photo_url', '')
-                .not('photo_url', 'is', null)
-                .order('created_at', { ascending: false })
-                .range(from, to);
+            var oneMonthAgo = new Date();
+            oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+            var dateFilter = oneMonthAgo.toISOString();
 
-            var result = await query;
-            var data = result.data || [];
-            var grid = document.getElementById('homeReviewGrid');
-            var btn = document.getElementById('homeReviewMoreBtn');
+            try {
+                var result = await dbClient.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .eq('lang', siteLang)
+                    .gte('rating', 4)
+                    .gte('created_at', dateFilter)
+                    .neq('photo_url', '')
+                    .not('photo_url', 'is', null)
+                    .order('created_at', { ascending: false })
+                    .limit(200);
 
-            if (_homePage === 0) grid.innerHTML = '';
-
-            if (data.length === 0 && _homePage === 0) {
-                grid.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;">아직 등록된 후기가 없습니다.</div>';
-                if (btn) btn.style.display = 'none';
+                _homeShuffled = _shuffleArr(result.data || []);
+                _homeShownCount = 0;
+                grid.innerHTML = '';
+            } catch(e) {
+                console.warn('[홈 후기] 로드 실패:', e);
                 return;
             }
-
-            data.forEach(function(r) {
-                var stars = '';
-                for (var i = 0; i < 5; i++) {
-                    stars += i < r.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-                }
-                var date = new Date(r.created_at);
-                var dateStr = date.getFullYear() + '.' + String(date.getMonth()+1).padStart(2,'0') + '.' + String(date.getDate()).padStart(2,'0');
-                var photoHtml = '';
-                if (r.photo_url && r.photo_url.trim()) {
-                    photoHtml = '<div class="home-rv-photo"><img src="' + r.photo_url + '" alt="review" loading="lazy"></div>';
-                }
-                var card = document.createElement('div');
-                card.className = 'home-rv-card';
-                if (r.product_code) {
-                    card.style.cursor = 'pointer';
-                    card.onclick = (function(code) { return function() { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(code); }; })(r.product_code);
-                }
-                card.innerHTML = photoHtml +
-                    '<div class="home-rv-body">' +
-                        '<div class="home-rv-stars">' + stars + '</div>' +
-                        '<p class="home-rv-text">"' + (r.comment || '').replace(/</g,'&lt;') + '"</p>' +
-                        '<div class="home-rv-user">' +
-                            '<span class="u-name">' + (r.user_name || '').replace(/</g,'&lt;') + '</span>' +
-                            '<span class="u-date">' + dateStr + '</span>' +
-                        '</div>' +
-                    '</div>';
-                grid.appendChild(card);
-            });
-
-            _homePage++;
-            if (btn) btn.style.display = data.length >= _homePageSize ? 'inline-block' : 'none';
-        } catch(e) {
-            console.warn('[홈 후기] 로드 실패:', e);
         }
+
+        if (_homeShuffled.length === 0 && _homeShownCount === 0) {
+            grid.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;">아직 등록된 후기가 없습니다.</div>';
+            if (btn) btn.style.display = 'none';
+            return;
+        }
+
+        var slice = _homeShuffled.slice(_homeShownCount, _homeShownCount + _homePageSize);
+
+        slice.forEach(function(r) {
+            var stars = '';
+            for (var i = 0; i < 5; i++) {
+                stars += i < r.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+            }
+            var date = new Date(r.created_at);
+            var dateStr = date.getFullYear() + '.' + String(date.getMonth()+1).padStart(2,'0') + '.' + String(date.getDate()).padStart(2,'0');
+            var photoHtml = '';
+            if (r.photo_url && r.photo_url.trim()) {
+                photoHtml = '<div class="home-rv-photo"><img src="' + r.photo_url + '" alt="review" loading="lazy"></div>';
+            }
+            var card = document.createElement('div');
+            card.className = 'home-rv-card';
+            if (r.product_code) {
+                card.style.cursor = 'pointer';
+                card.onclick = (function(code) { return function() { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(code); }; })(r.product_code);
+            }
+            card.innerHTML = photoHtml +
+                '<div class="home-rv-body">' +
+                    '<div class="home-rv-stars">' + stars + '</div>' +
+                    '<p class="home-rv-text">"' + (r.comment || '').replace(/</g,'&lt;') + '"</p>' +
+                    '<div class="home-rv-user">' +
+                        '<span class="u-name">' + (r.user_name || '').replace(/</g,'&lt;') + '</span>' +
+                        '<span class="u-date">' + dateStr + '</span>' +
+                    '</div>' +
+                '</div>';
+            grid.appendChild(card);
+        });
+
+        _homeShownCount += slice.length;
+        if (btn) btn.style.display = (_homeShownCount < _homeShuffled.length) ? 'inline-block' : 'none';
     };
 
     // 페이지 로드 후 자동 실행
