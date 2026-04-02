@@ -695,10 +695,14 @@ ${hreflangTags('/editor')}
         }
 
         // ========== STANDALONE PAGE REWRITES ==========
-        // 별도 랜딩 페이지: /paper-stand → paper_stand.html (SPA fallback 우회)
+        // 별도 랜딩 페이지: 하이픈 경로만 사용 (언더스코어는 Pretty URLs 308 루프 발생)
+        // 언더스코어 → 하이픈 301 리다이렉트
+        const UNDERSCORE_REDIRECTS = { 'paper_stand': '/paper-stand', 'raw_board': '/raw-board' };
+        if (UNDERSCORE_REDIRECTS[path]) {
+            return new Response(null, { status: 301, headers: { 'Location': UNDERSCORE_REDIRECTS[path] } });
+        }
         const STANDALONE_PAGES = {
             'paper-stand': '/paper_stand.html',
-            'paper_stand': '/paper_stand.html',
             'raw-board': '/raw_board.html',
         };
         if (STANDALONE_PAGES[path]) {
