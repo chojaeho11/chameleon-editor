@@ -571,8 +571,8 @@ window.loadEditorLibraries = function() {
     <div style="margin-top:24px;width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);border-top:3px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
 </div>
 <script>
-// 스플래시 안전장치: 4초 후 강제 제거
-setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},4000);
+// 스플래시 안전장치: 2초 후 강제 제거
+setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},2000);
 </script>
 <script src="toast.js?v=288"></script>
 <script>
@@ -6915,9 +6915,9 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     };
 
     // -----------------------------------------------------------
-    // [5] 초기화 (Load Event)
+    // [5] 초기화 (DOMContentLoaded — load보다 훨씬 빠름, 이미지 대기 불필요)
     // -----------------------------------------------------------
-    window.addEventListener('load', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         if (window.initConfig) await window.initConfig();
         else if (typeof initConfig === 'function') await initConfig();
         // initConfig 완료 후 window.sb 갱신 (챗봇 등 비모듈 스크립트용)
@@ -12716,7 +12716,7 @@ if (w >= 20 && h >= 20) {
     // ============================================================
     // [1] 초기화 및 데이터 로드 (안정화 최종 버전)
     // ============================================================
-    window.addEventListener('load', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         // 1. 설정 로딩 대기 (config.js의 작업이 끝날 때까지 기다림)
         if (window.initConfig) await window.initConfig(); 
         else if (typeof initConfig === 'function') await initConfig();
