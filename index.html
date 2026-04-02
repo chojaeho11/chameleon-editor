@@ -6932,7 +6932,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 15);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
         // ★ 흘러가는 배너 로드
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
@@ -12779,7 +12779,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 15);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
