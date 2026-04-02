@@ -1054,60 +1054,57 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <div id="advisorPanel" class="advisor-panel" style="display:none"></div>
 
-    <!-- ★ 주문 현황 트래커 (카드형 2열 레이아웃) -->
+    <!-- ★ 주문 현황 트래커 (카드형 2열 슬림 레이아웃) -->
     <div id="orderTrackerSection" style="max-width:1100px; margin:4px auto 10px auto; padding:0 10px;">
         <div style="background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); overflow:hidden;">
             <div class="ot-topbar">
-                <i class="fa-solid fa-truck-fast" style="color:#fff; font-size:16px;"></i>
-                <span class="ot-topbar-title" style="color:#fff; font-weight:800; font-size:15px;" data-i18n="order_tracker_title">주문 현황</span>
-                <div style="display:flex; gap:6px; align-items:center; flex:1; justify-content:flex-end;">
-                    <input type="text" id="orderTrackerSearch" data-i18n-placeholder="order_tracker_search_placeholder" placeholder="고객명/연락처" style="padding:5px 10px; border:none; border-radius:6px; font-size:11px; width:140px; outline:none;">
-                    <button onclick="window.searchOrderTracker()" style="background:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; color:#1e3a8a;" data-i18n="ot_btn_search">검색</button>
+                <span data-i18n="order_tracker_title" style="color:#fff; font-weight:800; font-size:14px; letter-spacing:1px;">오더 확인하기</span>
+            </div>
+            <div id="otCountryTabs" style="display:flex;gap:4px;padding:6px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;align-items:center;">
+                <button class="ot-tab active" onclick="window.filterOrderCountry('ALL')">ALL</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('KR')">KR</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('JP')">JP</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('US')">US</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('CN')">CN</button>
+                <button class="ot-tab" onclick="window.filterOrderCountry('OTHER')">Other</button>
+                <div style="margin-left:auto; display:flex; gap:4px; align-items:center;">
+                    <input type="text" id="orderTrackerSearch" placeholder="검색" style="padding:4px 8px; border:1px solid #e2e8f0; border-radius:6px; font-size:10px; width:90px; outline:none;">
+                    <button onclick="window.searchOrderTracker()" style="background:#6366f1; border:none; border-radius:6px; padding:4px 8px; font-size:10px; font-weight:700; cursor:pointer; color:#fff;">검색</button>
                 </div>
             </div>
-            <div id="otCountryTabs" style="display:flex;gap:4px;padding:6px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;">
-                <button class="ot-tab active" onclick="window.filterOrderCountry('ALL')">🌐 ALL</button>
-                <button class="ot-tab" onclick="window.filterOrderCountry('KR')">🇰🇷 KR</button>
-                <button class="ot-tab" onclick="window.filterOrderCountry('JP')">🇯🇵 JP</button>
-                <button class="ot-tab" onclick="window.filterOrderCountry('US')">🇺🇸 US</button>
-                <button class="ot-tab" onclick="window.filterOrderCountry('CN')">🇨🇳 CN</button>
-                <button class="ot-tab" onclick="window.filterOrderCountry('OTHER')">🌍 Other</button>
-            </div>
-            <div id="orderTrackerList" style="max-height:420px; overflow-y:auto; padding:10px;">
-                <div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">주문 현황을 불러오는 중...</div>
+            <div id="orderTrackerList" style="max-height:420px; overflow-y:auto; padding:8px;">
+                <div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">불러오는 중...</div>
             </div>
         </div>
     </div>
 
     <style>
-    .ot-topbar { background:linear-gradient(135deg,#1e3a8a,#3b82f6); padding:10px 16px; display:flex; align-items:center; gap:8px; }
-    .ot-tab { padding:4px 10px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; font-size:11px; font-weight:700; cursor:pointer; color:#64748b; transition:all 0.15s; }
+    .ot-topbar { background:linear-gradient(135deg,#7c3aed,#6366f1,#818cf8); padding:10px 16px; display:flex; align-items:center; justify-content:center; }
+    .ot-tab { padding:3px 8px; border:1px solid #e2e8f0; border-radius:5px; background:#fff; font-size:10px; font-weight:700; cursor:pointer; color:#64748b; transition:all 0.15s; }
     .ot-tab:hover { background:#eff6ff; }
-    .ot-tab.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
-    /* ★ 카드형 2열 그리드 */
-    .ot-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ot-tab.active { background:#6366f1; color:#fff; border-color:#6366f1; }
+    .ot-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
     .ot-card {
-        background:#fff; border:1px solid #e8ecf1; border-radius:12px; padding:12px;
-        transition:all 0.2s; cursor:pointer; display:flex; flex-direction:column; gap:8px;
+        background:#fafbfc; border:1px solid #eef0f4; border-radius:10px; padding:6px 8px;
+        transition:all 0.2s; cursor:pointer; display:flex; flex-direction:column; gap:4px;
     }
-    .ot-card:hover { border-color:#93c5fd; box-shadow:0 4px 16px rgba(59,130,246,0.1); transform:translateY(-1px); }
-    .ot-card-top { display:flex; align-items:center; justify-content:space-between; }
-    .ot-card-name { font-weight:800; font-size:13px; color:#1e293b; }
-    .ot-card-meta { font-size:10px; color:#94a3b8; display:flex; gap:6px; align-items:center; }
-    .ot-card-photos { display:flex; gap:5px; flex-wrap:wrap; }
-    .ot-photo { width:72px; height:72px; border-radius:8px; object-fit:cover; border:1px solid #e2e8f0; cursor:pointer; transition:transform 0.15s; }
-    .ot-photo:hover { transform:scale(1.05); }
-    .ot-card-bottom { display:flex; align-items:center; justify-content:space-between; }
-    .ot-card-star { font-size:12px; color:#f59e0b; letter-spacing:1px; }
-    .ot-status-label { font-size:10px; font-weight:700; padding:4px 12px; border-radius:20px; white-space:nowrap; }
+    .ot-card:hover { border-color:#a5b4fc; box-shadow:0 3px 12px rgba(99,102,241,0.1); }
+    .ot-card-info { display:flex; align-items:center; justify-content:space-between; gap:4px; }
+    .ot-card-name { font-weight:800; font-size:12px; color:#1e293b; }
+    .ot-card-sub { display:flex; align-items:center; gap:6px; font-size:9px; color:#94a3b8; }
+    .ot-card-photos { display:flex; gap:3px; }
+    .ot-photo { flex:1; min-width:0; aspect-ratio:1; border-radius:6px; object-fit:cover; border:1px solid #e2e8f0; cursor:pointer; transition:transform 0.15s; }
+    .ot-photo:hover { transform:scale(1.03); }
+    .ot-status-label { font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
     @media(max-width:768px) {
         #orderTrackerSection { margin-top:0 !important; margin-bottom:6px !important; padding:0 6px !important; }
         #orderTrackerSection > div { border-radius:0 !important; }
-        .ot-topbar-title { display:none; }
-        .ot-topbar { padding:6px 10px; }
-        .ot-grid { grid-template-columns:1fr; gap:8px; }
-        .ot-photo { width:56px; height:56px; }
-        #orderTrackerSearch { width:auto; flex:1; min-width:80px; }
+        .ot-topbar { padding:8px 12px; }
+        .ot-grid { grid-template-columns:1fr 1fr; gap:5px; }
+        #orderTrackerSearch { width:70px; }
+    }
+    @media(max-width:480px) {
+        .ot-grid { grid-template-columns:1fr; }
     }
     </style>
 
@@ -1165,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function renderPhotos(order) {
             const photos = order.production_photos || [];
             if (!photos.length) return '';
-            return photos.slice(0, 4).map(url => `<img src="${thumbUrl(url, 80)}" class="ot-photo" loading="lazy" onclick="event.stopPropagation(); window.open('${url}','_blank')">`).join('');
+            return photos.slice(0, 6).map(url => `<img src="${thumbUrl(url, 120)}" class="ot-photo" loading="lazy" onclick="event.stopPropagation(); window.open('${url}','_blank')">`).join('');
         }
 
         // ★ 고객명: 첫 글자만 + 나머지 마스킹
@@ -1196,19 +1193,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const _loc = ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'JP') ? 'ja' : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) === 'KR') ? 'ko' : 'en';
                 const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString(_loc, {month:'numeric',day:'numeric'}) : '';
                 const shipDate = o.delivery_target_date ? new Date(o.delivery_target_date).toLocaleDateString(_loc, {month:'numeric',day:'numeric'}) : '';
-                const rating = o.customer_review || 0;
-                const stars = rating > 0 ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '';
                 const flag = COUNTRY_FLAGS[o.site_code] || '🇰🇷';
                 const photos = renderPhotos(o);
                 return `<div class="ot-card" onclick="window.openOrderDetail(${o.id})">
-                    <div class="ot-card-top">
-                        <span class="ot-card-name">${flag} ${name}</span>
-                        <span class="ot-card-meta"><span>${orderDate}</span>${shipDate ? `<span style="color:#10b981;font-weight:600;">→ ${shipDate}</span>` : ''}</span>
-                    </div>
                     ${photos ? `<div class="ot-card-photos">${photos}</div>` : ''}
-                    <div class="ot-card-bottom">
-                        <span class="ot-card-star">${stars}</span>
-                        <span class="ot-status-label" style="background:${color}15; color:${color};">${_t('ot_st_'+status, label)}</span>
+                    <div class="ot-card-info">
+                        <span class="ot-card-name">${flag} ${name}</span>
+                        <span class="ot-card-sub"><span>${orderDate}${shipDate ? ' → '+shipDate : ''}</span><span class="ot-status-label" style="background:${color}15; color:${color};">${_t('ot_st_'+status, label)}</span></span>
                     </div>
                 </div>`;
             }).join('') + '</div>';
