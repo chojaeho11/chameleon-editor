@@ -1195,20 +1195,19 @@ function buildLangSelector() {
     var sel = document.getElementById('langSelector');
     if (!sel) return;
     var langs = [
-        {code:'ko',flag:'\uD83C\uDDF0\uD83C\uDDF7'},
-        {code:'ja',flag:'\uD83C\uDDEF\uD83C\uDDF5'},
-        {code:'en',flag:'\uD83C\uDDFA\uD83C\uDDF8'},
-        {code:'zh',flag:'\uD83C\uDDE8\uD83C\uDDF3'},
-        {code:'ar',flag:'\uD83C\uDDF8\uD83C\uDDE6'},
-        {code:'es',flag:'\uD83C\uDDEA\uD83C\uDDF8'},
-        {code:'de',flag:'\uD83C\uDDE9\uD83C\uDDEA'},
-        {code:'fr',flag:'\uD83C\uDDEB\uD83C\uDDF7'}
+        {code:'ko', label:'KR',  url:'https://cafe2626.com/paper-stand'},
+        {code:'ja', label:'JP',  url:'https://cafe0101.com/paper-stand'},
+        {code:'en', label:'US',  url:'https://chameleon.design/paper-stand'},
+        {code:'zh', label:'CN',  url:'https://chameleon.design/paper-stand?lang=zh'},
+        {code:'ar', label:'SA',  url:'https://chameleon.design/paper-stand?lang=ar'},
+        {code:'es', label:'ES',  url:'https://chameleon.design/paper-stand?lang=es'},
+        {code:'de', label:'DE',  url:'https://chameleon.design/paper-stand?lang=de'},
+        {code:'fr', label:'FR',  url:'https://chameleon.design/paper-stand?lang=fr'}
     ];
     var html = '';
     langs.forEach(function(l) {
-        var url = location.pathname + '?lang=' + l.code;
         var cls = (l.code === LANG) ? ' class="active"' : '';
-        html += '<a href="' + url + '"' + cls + ' title="' + l.code.toUpperCase() + '">' + l.flag + '</a>';
+        html += '<a href="' + l.url + '"' + cls + ' title="' + l.label + '">' + l.label + '</a>';
     });
     sel.innerHTML = html;
 }
