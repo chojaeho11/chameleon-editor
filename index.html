@@ -10023,7 +10023,8 @@ window.updateModalTotal = function() {
     const _discountTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
     const _isHoneycombTop = _discountTopCat === 'honeycomb_board';
     const _isWholesaleOnly = _discountTopCat === 'Wholesale Board Prices';
-    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy' || _isWholesaleOnly || _isHoneycombTop;
+    const _isCategoryExcluded = product.category === 'Honeycomb Board';
+    const _isExcluded = _productCode === '21355677' || _productCode === '21355677_copy' || _isWholesaleOnly || _isHoneycombTop || _isCategoryExcluded;
     if (!_isExcluded) {
         if (prodQty >= 501) discountRate = 0.50;
         else if (prodQty >= 101) discountRate = 0.40;
