@@ -205,10 +205,17 @@
         }
 
         try {
-            // Honeycomb Board 카테고리 상품 조회
+            // 1단계: Wholesale Board Prices 대분류의 모든 소분류 코드 조회
+            const { data: subCats } = await sb.from('admin_categories')
+                .select('code')
+                .eq('top_category_code', 'Wholesale Board Prices');
+            const catCodes = (subCats || []).map(function(c) { return c.code; });
+            if (catCodes.length === 0) catCodes.push('Honeycomb Board');
+
+            // 2단계: 모든 소분류의 상품 조회
             const { data: products, error } = await sb.from('admin_products')
                 .select('*')
-                .eq('category', 'Honeycomb Board');
+                .in('category', catCodes);
 
             if (error) throw error;
 

@@ -1257,22 +1257,32 @@ async function loadPdReviews() {
     var to = from + _rvPageSize - 1;
 
     try {
+        // 허니콤보드 원판 소분류 상품코드 목록 조회
+        if (!window._rbProductCodes) {
+            var catRes = await _rvSupa.from('admin_categories').select('code').eq('top_category_code', 'Wholesale Board Prices');
+            var catCodes = (catRes.data || []).map(function(c){return c.code;});
+            if (catCodes.length === 0) catCodes = ['Honeycomb Board'];
+            var prodRes = await _rvSupa.from('admin_products').select('code').in('category', catCodes);
+            window._rbProductCodes = (prodRes.data || []).map(function(p){return p.code;});
+        }
+        var rbCodes = window._rbProductCodes;
+
         var data = null;
         if (!_rvFallback) {
-            // 1차: 해당 언어의 pd_ 리뷰
+            // 1차: 해당 언어의 원판 리뷰
             var res = await _rvSupa.from('product_reviews')
                 .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                .like('product_code', 'pd\\_%')
+                .in('product_code', rbCodes)
                 .eq('lang', siteLang)
                 .gte('rating', 4)
                 .order('created_at', { ascending: false })
                 .range(from, to);
             data = res.data;
-            // 없으면 언어 무관 pd_ 리뷰
+            // 없으면 언어 무관 원판 리뷰
             if ((!data || data.length === 0) && _rvPage === 0) {
                 var res2 = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .like('product_code', 'pd\\_%')
+                    .in('product_code', rbCodes)
                     .gte('rating', 4)
                     .order('created_at', { ascending: false })
                     .range(from, to);

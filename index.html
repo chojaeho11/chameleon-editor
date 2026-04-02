@@ -6932,7 +6932,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Honeycomb Board', 15);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 15);
         // ★ 흘러가는 배너 로드
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
@@ -7140,15 +7140,19 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
     }
 }
 
-// ★ 카테고리 기반 상품 로드 (허니콤보드 원판 등)
-async function loadProductsByCategory(sectionId, gridId, categoryCode, limitCount) {
+// ★ 대분류 기반 상품 로드 (허니콤보드 원판 등 — 대분류 아래 모든 소분류 상품)
+async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitCount) {
     const section = document.getElementById(sectionId);
     const grid = document.getElementById(gridId);
     if (!grid || !sb) return;
     try {
+        // 대분류의 모든 소분류 코드 조회
+        const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', topCategoryCode);
+        const catCodes = (subCats || []).map(c => c.code);
+        if (catCodes.length === 0) catCodes.push(topCategoryCode);
         const { data: products, error } = await sb.from('admin_products')
             .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order')
-            .eq('category', categoryCode)
+            .in('category', catCodes)
             .order('sort_order', { ascending: true })
             .limit(limitCount || 15);
         if (error) throw error;
@@ -12775,7 +12779,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Honeycomb Board', 15);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 15);
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
