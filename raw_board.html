@@ -460,11 +460,11 @@ async function submitPdSample() {
 <!-- 무료배송 도시 섹션 -->
 <section class="section" id="shipping" style="background:#fff; padding:60px 24px;">
     <div style="max-width:1000px; margin:0 auto; text-align:center;">
-        <h2 style="font-size:28px; font-weight:900; color:#1e293b; margin-bottom:8px;">
-            <i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL Free Shipping
+        <h2 style="font-size:28px; font-weight:900; color:#1e293b; margin-bottom:8px;" data-i18n-html="shipping_title">
+            <i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL 전세계 무료 배송
         </h2>
-        <p style="font-size:15px; color:#64748b; margin-bottom:12px;">3PL 배송으로 전세계 주요 도시에 무료로 배송됩니다.</p>
-        <p style="font-size:13px; color:#94a3b8; margin-bottom:32px;">기성품 원판은 10매씩 묶음포장 | 기본 보드 크기: 1,300 x 2,200mm</p>
+        <p style="font-size:15px; color:#64748b; margin-bottom:12px;" data-i18n="shipping_desc">3PL 배송으로 전세계 주요 도시에 무료로 배송됩니다.</p>
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:32px;" data-i18n="shipping_sub">기성품 원판은 10매씩 묶음포장 | 기본 보드 크기: 1,300 x 2,200mm</p>
         <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:900px; margin:0 auto;">
             <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/us.png" alt="US"><div class="ship-name">Miami</div><div class="ship-sub">Florida, USA</div></div>
             <div class="ship-city"><img class="ship-flag" src="https://flagcdn.com/w80/us.png" alt="US"><div class="ship-name">Las Vegas</div><div class="ship-sub">Nevada, USA</div></div>
@@ -947,6 +947,37 @@ step4_desc: {
     es:'Anade al carrito, paga y listo!',
     de:'In den Warenkorb, bezahlen — fertig!',
     fr:'Ajoutez au panier, payez, c\'est fait !'
+},
+// ── Shipping Section ──
+shipping_title: {
+    ko:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL 전세계 무료 배송',
+    ja:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL 世界無料配送',
+    en:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL Free Shipping',
+    zh:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL 全球免费配送',
+    ar:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL شحن مجاني عالمي',
+    es:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL Envío Gratuito Mundial',
+    de:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL Kostenloser Weltversand',
+    fr:'<i class="fa-solid fa-truck-fast" style="color:#b45309;"></i> 3PL Livraison Mondiale Gratuite'
+},
+shipping_desc: {
+    ko:'3PL 배송으로 전세계 주요 도시에 무료로 배송됩니다.',
+    ja:'3PL配送で世界の主要都市に無料配送されます。',
+    en:'Free delivery to major cities worldwide via 3PL shipping.',
+    zh:'通过3PL物流免费配送至全球主要城市。',
+    ar:'توصيل مجاني إلى المدن الرئيسية حول العالم عبر شحن 3PL.',
+    es:'Entrega gratuita a las principales ciudades del mundo mediante envío 3PL.',
+    de:'Kostenlose Lieferung in die wichtigsten Städte weltweit per 3PL-Versand.',
+    fr:'Livraison gratuite dans les grandes villes du monde via expédition 3PL.'
+},
+shipping_sub: {
+    ko:'기성품 원판은 10매씩 묶음포장 | 기본 보드 크기: 1,300 x 2,200mm',
+    ja:'既製品原板は10枚ずつ梱包 | 基本ボードサイズ: 1,300 x 2,200mm',
+    en:'Stock boards packed in sets of 10 | Standard board size: 1,300 x 2,200mm',
+    zh:'现货原板每10张打包 | 标准板材尺寸: 1,300 x 2,200mm',
+    ar:'الألواح الجاهزة معبأة في مجموعات من 10 | حجم اللوح القياسي: 1,300 × 2,200 مم',
+    es:'Tableros en stock empaquetados en sets de 10 | Tamaño estándar: 1.300 x 2.200mm',
+    de:'Lagerplatten in 10er-Paketen | Standard-Plattengröße: 1.300 x 2.200mm',
+    fr:'Panneaux en stock par lots de 10 | Taille standard: 1 300 x 2 200mm'
 },
 // ── Video 2 ──
 video2_h2: {
