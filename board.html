@@ -500,7 +500,7 @@
     </style>
 </head>
 <body>
-<script src="toast.js?v=287"></script>
+<script src="toast.js?v=289"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -1644,7 +1644,7 @@
 </script>
 <script type="module">
     // 1. config.js에서 sb와 initConfig를 가져옵니다.
-    import { sb, initConfig } from './config.js?v=287';
+    import { sb, initConfig } from './config.js?v=289';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
@@ -1769,12 +1769,23 @@
                 } catch(e) { return 'KR'; }
             }
 
+            // IP 기반 국가 감지 (Cloudflare cdn-cgi/trace)
+            let detectedSite;
+            try {
+                const resp = await fetch('/cdn-cgi/trace');
+                const text = await resp.text();
+                const locMatch = text.match(/loc=(\w+)/);
+                detectedSite = locMatch ? locMatch[1] : _detectCountry();
+            } catch(e) {
+                detectedSite = _detectCountry();
+            }
+
             const { data, error } = await sb
                 .from('page_views')
                 .insert([{
                     referrer: finalReferrer,
                     duration: 0,
-                    site: _detectCountry()
+                    site: detectedSite
                 }])
                 .select()
                 .single();

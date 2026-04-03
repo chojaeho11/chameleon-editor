@@ -292,7 +292,14 @@ async function handleAuthAction() {
             const pwConfirm = pwConfirmInput?.value.trim();
             if (password !== pwConfirm) throw new Error(window.t('err_pw_mismatch', "비밀번호가 일치하지 않습니다."));
 
-            const siteCode = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+            // IP 기반 국가 감지 (Cloudflare cdn-cgi/trace), 실패 시 도메인 기반 fallback
+            let siteCode = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+            try {
+                const resp = await fetch('/cdn-cgi/trace');
+                const text = await resp.text();
+                const locMatch = text.match(/loc=(\w+)/);
+                if (locMatch) siteCode = locMatch[1];
+            } catch(e) { /* fallback to SITE_CONFIG */ }
             const { data, error } = await sb.auth.signUp({ email, password: paddedPassword });
             if (error) throw error;
 
