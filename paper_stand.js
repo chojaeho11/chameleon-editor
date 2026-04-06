@@ -155,7 +155,11 @@
         const name = getProductName(product);
         const imgSrc = getThumb(product.img_url, 400);
         const sizeText = getSizeText(product);
-        const price = formatPrice(product.price);
+        // 1000개 이상 대량 할인가 (50% 할인) 표시
+        var bulkPrice = Math.round(product.price * 0.5);
+        var price = formatPrice(bulkPrice);
+        var originalPrice = formatPrice(product.price);
+        var bulkLabel = psLang === 'ko' ? '1,000개~' : psLang === 'ja' ? '1,000個~' : '1,000+';
 
         card.innerHTML =
             '<img class="product-img" src="' + imgSrc + '" alt="' + name + '" loading="lazy" ' +
@@ -164,7 +168,10 @@
                 '<div class="product-badge">' + ls('badge') + '</div>' +
                 '<div class="product-name">' + name + '</div>' +
                 '<div class="product-size"><i class="fa-solid fa-ruler" style="margin-right:4px;"></i>' + sizeText + '</div>' +
-                '<div class="product-price">' + LANG.fromPrice + ' ' + price + '</div>' +
+                '<div class="product-price">' + price +
+                    ' <span style="font-size:11px; color:#94a3b8; text-decoration:line-through; font-weight:400;">' + originalPrice + '</span>' +
+                    ' <span style="font-size:10px; color:#16a34a; font-weight:600;">' + bulkLabel + '</span>' +
+                '</div>' +
             '</div>';
 
         // 클릭 시 메인 에디터로 이동 (언어별 도메인)
