@@ -46,12 +46,18 @@ export function initConfig() {
             } else {
             }
             
-            // 2. 세션 상태 확인 + 데이터 로드 병렬 실행
-            const [sessionResult] = await Promise.all([
-                sb.auth.getSession(),
-                loadSystemData()
-            ]);
-            const { data: { session } } = sessionResult;
+            // 2. 세션 상태 확인 + 데이터 로드 병렬 실행 (10초 타임아웃)
+            const _timeout = (ms) => new Promise((_, rej) => setTimeout(() => rej(new Error('DB timeout')), ms));
+            let sessionResult, session = null;
+            try {
+                [sessionResult] = await Promise.race([
+                    Promise.all([ sb.auth.getSession(), loadSystemData() ]),
+                    _timeout(10000).then(() => { throw new Error('DB timeout'); })
+                ]);
+                session = sessionResult?.data?.session || null;
+            } catch(e) {
+                console.warn('⚠️ DB 초기화 타임아웃 — 오프라인 모드로 진행:', e.message);
+            }
             updateUserSession(session);
 
             // 2-1. ★ 소셜 로그인 리다이렉트 후 복원 (getSession으로 세션 확인된 경우)
