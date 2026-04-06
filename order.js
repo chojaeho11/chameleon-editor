@@ -255,9 +255,14 @@ export async function initOrderSystem() {
         const startScreen = document.getElementById('startScreen');
         const isEditorOpen = startScreen && window.getComputedStyle(startScreen).display === 'none';
 
-        if (isEditorOpen) {
-            // 에디터에서 작업 중 → 바로 장바구니에 담기
+        if (isEditorOpen && window.canvas) {
+            // 에디터에서 작업 중 + 캔버스 준비됨 → 장바구니에 담기
             addCanvasToCart();
+        } else if (isEditorOpen && !window.canvas) {
+            // 에디터 열려있지만 캔버스 미초기화 → 장바구니 페이지로 이동
+            loadCartFromStorage();
+            renderCart();
+            document.getElementById('cartPage').style.display = 'block';
         } else {
             // 시작 화면 → 장바구니 바로가기
             loadCartFromStorage();
@@ -1302,8 +1307,22 @@ export async function startDesignFromProduct() {
 // [수정됨] 장바구니 담기 (용량 초과 방지: JSON 클라우드 업로드)
 async function addCanvasToCart() {
     if (window.isDirectCartAddInProgress) { console.warn('[장바구니] isDirectCartAddInProgress 중복 방지'); return; }
-    const canvas = window.canvas;
-    if (!canvas) { console.warn('[장바구니] canvas 없음'); showToast('Canvas not ready', 'error'); return; }
+    let canvas = window.canvas;
+    if (!canvas) {
+        // 에디터 라이브러리 미로드 시 동적 로드 후 캔버스 초기화
+        console.warn('[장바구니] canvas 없음 — 에디터 초기화 시도');
+        try {
+            if (!window._editorLibsLoaded && window.loadEditorLibraries) {
+                const _ld = document.getElementById('loading');
+                if (_ld) _ld.style.display = 'flex';
+                await window.loadEditorLibraries();
+                if (window._pendingEditorInits) { window._pendingEditorInits(); delete window._pendingEditorInits; }
+                if (_ld) _ld.style.display = 'none';
+            }
+            canvas = window.canvas;
+        } catch(e) { console.error('에디터 초기화 실패:', e); }
+        if (!canvas) { showToast('Canvas not ready. Please try again.', 'error'); return; }
+    }
     console.log('[장바구니] addCanvasToCart 시작');
     
     const loading = document.getElementById("loading");

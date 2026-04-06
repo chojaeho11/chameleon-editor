@@ -1,5 +1,5 @@
 // canvas-core.js
-import { updateLockUI } from "./canvas-utils.js?v=288";
+import { updateLockUI } from "./canvas-utils.js?v=290";
 
 export let canvas;
 export let baseW = 1000;
@@ -13,8 +13,8 @@ export function initCanvas() {
     const stageElem = document.querySelector(".stage");
     const canvasElem = document.getElementById("designCanvas");
 
-    if (!canvasElem || !stageElem) return;
-    if (typeof fabric === 'undefined') return;
+    if (!canvasElem || !stageElem) { console.warn('⚠️ initCanvas: designCanvas or .stage not found', { canvasElem: !!canvasElem, stageElem: !!stageElem }); return; }
+    if (typeof fabric === 'undefined') { console.warn('⚠️ initCanvas: fabric.js not loaded'); return; }
 
     // Fabric.js 전역 객체 설정
     fabric.Object.prototype.set({
