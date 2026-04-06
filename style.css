@@ -4878,9 +4878,22 @@ video {
         overflow: hidden !important;
         height: 100% !important;
     }
-    body.editor-active .topbar,
     body.editor-active #topCatMenu {
         display: none !important;
+    }
+    body.editor-active .topbar {
+        display: flex !important;
+        height: 44px !important;
+        padding: 0 8px !important;
+        position: fixed !important;
+        top: 0; left: 0; right: 0;
+        z-index: 99999 !important;
+        background: #fff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+    }
+    body.editor-active #mainEditor {
+        padding-top: 44px !important;
     }
     
     /* 시작 화면 스크롤 확보 */
