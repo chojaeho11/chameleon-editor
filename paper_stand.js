@@ -49,7 +49,7 @@
             de:'Individuelle Grosse', fr:'Taille Sur Mesure'
         },
         badge: {
-            ko:'종이매대', ja:'紙什器', en:'Paper Stand',
+            ko:'종이매대', ja:'紙什器', en:'Cardboard Display',
             zh:'纸展架', ar:'حامل ورقي', es:'Expositor',
             de:'Papierstand', fr:'Presentoir'
         },

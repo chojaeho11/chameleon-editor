@@ -16,9 +16,9 @@ window.PRODUCT_SEO = {
             keywords: 'ハニカムボード,ハニカムボード印刷,紙ディスプレイ,ポップアップストア,エコ展示,展示ブース'
         },
         US: {
-            title: 'Honeycomb Board Printing - Eco Paper Display | Chameleon Printing',
+            title: 'Honeycomb Board Printing - Eco Cardboard Display | Chameleon Printing',
             desc: 'Custom eco-friendly Honeycomb Board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.',
-            keywords: 'Honeycomb Board,Honeycomb Board printing,Honeycomb Board exhibition booth,paper display,pop-up store display,eco display,exhibition booth,trade show display,retail display board,eco-friendly display board,custom exhibition display,convention booth display'
+            keywords: 'Honeycomb Board,Honeycomb Board printing,Honeycomb Board exhibition booth,cardboard display,pop-up store display,eco display,exhibition booth,trade show display,retail display board,eco-friendly display board,custom exhibition display,convention booth display'
         },
         CN: {
             title: '蜂窝板印刷 - 环保纸质展示板 | 变色龙印刷',
@@ -81,9 +81,9 @@ window.PRODUCT_SEO = {
             keywords: '紙什器,紙ディスプレイ,POP什器,店舗什器,エコ什器,段ボールディスプレイ'
         },
         US: {
-            title: 'Paper Display Stand - Eco Cardboard POP Display | Chameleon Printing',
-            desc: 'Custom eco-friendly paper display stands. Perfect for retail POP displays, stores & supermarkets. Free design editor, nationwide delivery.',
-            keywords: 'paper display stand,cardboard display,POP display,retail display,eco display stand,point of purchase'
+            title: 'Cardboard Display Stand - Eco Cardboard POP Display | Chameleon Printing',
+            desc: 'Custom eco-friendly cardboard display stands. Perfect for retail POP displays, stores & supermarkets. Free design editor, nationwide delivery.',
+            keywords: 'cardboard display stand,cardboard display,POP display,retail display,eco display stand,point of purchase'
         },
         CN: {
             title: '纸质展示架印刷 - 环保纸板POP展示 | 变色龙印刷',

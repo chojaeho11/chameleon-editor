@@ -343,7 +343,7 @@
   "prod_award_board": "Award Board",
   "prod_photo_zone": "Text Photo Zone",
   "prod_fabric_wide": "Wide Fabric",
-  "prod_paper_stand": "Paper Stand",
+  "prod_paper_stand": "Cardboard Display",
 
   "msg_invalid_number": "Please enter a valid number.",
   "msg_max_size_exceeded": "Cannot exceed maximum size ({w}x{h}mm).",

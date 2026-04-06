@@ -42,7 +42,7 @@ const SEO_CATEGORIES = {
 const CATEGORY_SEO = {
     honeycomb: {
         JP: { title: 'ハニカムボード印刷 - エコ紙ディスプレイ | カメレオンプリンティング', desc: 'エコハニカムボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。無料オンラインエディターでデザイン可能。', keywords: 'ハニカムボード,ハニカムボード印刷,紙ディスプレイ,ポップアップストア,エコ展示,展示ブース' },
-        US: { title: 'Honeycomb Board Printing - Eco Paper Display | Chameleon Printing', desc: 'Custom eco-friendly Honeycomb Board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.', keywords: 'Honeycomb Board,Honeycomb Board printing,Honeycomb Board exhibition booth,paper display,pop-up store display,eco display,exhibition booth,trade show display,retail display board' },
+        US: { title: 'Honeycomb Board Printing - Eco Cardboard Display | Chameleon Printing', desc: 'Custom eco-friendly Honeycomb Board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.', keywords: 'Honeycomb Board,Honeycomb Board printing,Honeycomb Board exhibition booth,cardboard display,pop-up store display,eco display,exhibition booth,trade show display,retail display board' },
     },
     'fabric-print': {
         JP: { title: 'ファブリック印刷 - 高画質布印刷 | カメレオンプリンティング', desc: '高画質ファブリック（布）カスタム印刷。バックウォール・フォトゾーン・背景幕に最適。無料デザインエディター付き。', keywords: 'ファブリック印刷,布印刷,バックウォール,フォトゾーン,背景幕,タペストリー印刷' },
@@ -50,7 +50,7 @@ const CATEGORY_SEO = {
     },
     'paper-stand': {
         JP: { title: '紙什器 制作 - エコPOPディスプレイ | カメレオンプリンティング', desc: 'エコ紙什器のカスタム制作。スーパー・コンビニ・店舗の陳列台に最適。無料エディターでデザイン、全国配送対応。', keywords: '紙什器,紙ディスプレイ,POP什器,店舗什器,エコ什器,段ボールディスプレイ' },
-        US: { title: 'Paper Display Stand - Eco Cardboard POP Display | Chameleon Printing', desc: 'Custom eco-friendly paper display stands. Perfect for retail POP displays, stores & supermarkets. Free design editor, nationwide delivery.', keywords: 'paper display stand,cardboard display,POP display,retail display,eco display stand,point of purchase' },
+        US: { title: 'Cardboard Display Stand - Eco Cardboard POP Display | Chameleon Printing', desc: 'Custom eco-friendly cardboard display stands. Perfect for retail POP displays, stores & supermarkets. Free design editor, nationwide delivery.', keywords: 'cardboard display stand,cardboard display,POP display,retail display,eco display stand,point of purchase' },
     },
     goods: {
         JP: { title: 'アクリルグッズ制作 - キーホルダー・フォトカード | カメレオンプリンティング', desc: 'アクリルグッズのカスタム制作。キーホルダー・フォトカード・アクリルスタンド・バッジ。無料エディターでデザイン可能。', keywords: 'アクリルグッズ,アクリルキーホルダー,フォトカード,アクリルスタンド,バッジ制作,グッズ制作' },

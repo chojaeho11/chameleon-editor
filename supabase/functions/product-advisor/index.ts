@@ -347,7 +347,7 @@ serve(async (req) => {
   - 반드시 products 배열에 허니콤보드 원판 관련 제품 4개를 포함해서 카드로 보여줘! (상품 데이터에서 카테고리가 원판/wholesale board 관련인 제품 검색)
 
 ## 종이매대/종이진열대 안내 (중요!)
-- 고객이 "종이매대", "종이진열대", "종이 진열대", "paper stand", "paper display stand", "紙スタンド", "紙什器", "매대" 등 종이매대를 물어보면:
+- 고객이 "종이매대", "종이진열대", "종이 진열대", "paper stand", "cardboard display stand", "紙スタンド", "紙什器", "매대" 등 종이매대를 물어보면:
   - "종이매대 전문 페이지에서 다양한 매대 제품을 확인하실 수 있어요!" 라고 안내
   - 링크: ${siteUrl}/paper-stand${langSuffix ? '?' + langSuffix.slice(1) : ''}
   - 반드시 products 배열에 종이매대/종이진열대 관련 제품 4개를 포함해서 카드로 보여줘! (상품 데이터에서 카테고리가 종이매대/paper stand 관련인 제품 검색)
@@ -562,11 +562,11 @@ serve(async (req) => {
   - Link: ${siteUrl}/raw-board${langSuffix ? '?' + langSuffix.slice(1) : ''}
   - MUST include 4 raw honeycomb board products in the products array!
 
-## Paper Display Stand (IMPORTANT!)
-- When customer asks about "paper stand", "paper display stand", "cardboard display", "POP display", "retail display stand":
-  - Guide them: "Check out our dedicated paper display stand page for all available options!"
+## Cardboard Display Stand (IMPORTANT!)
+- When customer asks about "paper stand", "cardboard display stand", "cardboard display", "POP display", "retail display stand":
+  - Guide them: "Check out our dedicated cardboard display stand page for all available options!"
   - Link: ${siteUrl}/paper-stand${langSuffix ? '?' + langSuffix.slice(1) : ''}
-  - MUST include 4 paper display stand products in the products array!
+  - MUST include 4 cardboard display stand products in the products array!
 
 ## Product Links
 - When customer asks for "link", "URL", "page" → provide direct product URL: ${siteUrl}/?product={product_code}${langSuffix}
@@ -667,7 +667,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         'pp_fan':'Promotional Fan/Goods','234345356':'Cushion','rr29948':'Roller Blind',
         'sy00002':'Paper Table Mat','kitchen':'Cafe/Restaurant Supplies',
         'interior_props':'Interior Props','box001':'Rigid Box/Gift Box',
-        'pd_basic':'Paper Display Stand','pd_sm':'Small Paper Display','pd_tr':'Paper Partition',
+        'pd_basic':'Cardboard Display Stand','pd_sm':'Small Cardboard Display','pd_tr':'Cardboard Partition',
         'pd_ac':'Display Attachment','trimmings':'Trimmings/Accessories',
         'fp_fd_twp':'Food Pouch/Packaging','daily_goods':'Fashion Accessories',
     };

@@ -347,7 +347,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
                 "itemListElement": [
                     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'ハニカムボード印刷' : cc === 'KR' ? '허니콤보드 인쇄' : 'Honeycomb Board Printing' } },
                     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'ファブリック印刷' : cc === 'KR' ? '패브릭 인쇄' : 'Fabric Printing' } },
-                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? '紙什器制作' : cc === 'KR' ? '종이매대 제작' : 'Paper Display Stand' } }
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? '紙什器制作' : cc === 'KR' ? '종이매대 제작' : 'Cardboard Display Stand' } }
                 ]
             }
         },
@@ -1811,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div id="paperDisplaySection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #ecfdf5; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
-        <h2 style="color: #16a34a;"><span data-i18n="home_paper_display_title">종이매대</span> <span class="badge-hot" style="background:#16a34a;">Paper Stand</span></h2>
+        <h2 style="color: #16a34a;"><span data-i18n="home_paper_display_title">종이매대</span> <span class="badge-hot" style="background:#16a34a;">Cardboard Display</span></h2>
         <p data-i18n="home_paper_display_desc">마트, 편의점, 매장 진열에 최적화된 친환경 종이매대</p>
     </div>
     <div class="hotdeal-scroll-wrap">
@@ -8150,7 +8150,7 @@ window.goHome = function() {
                         var langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
                         var psLang = langMap[CURRENT_LANG] || '';
                         var psHref = '/paper-stand' + (psLang && psLang !== 'en' ? '?lang=' + psLang : '');
-                        var pdLabel = CURRENT_LANG==='ja'?'紙什器 Home':CURRENT_LANG==='zh'?'纸展架 Home':CURRENT_LANG==='ar'?'حوامل ورقية':'Paper Stand Home';
+                        var pdLabel = CURRENT_LANG==='ja'?'紙什器 Home':CURRENT_LANG==='zh'?'纸展架 Home':CURRENT_LANG==='ar'?'حوامل ورقية':'Cardboard Display Home';
                         if (CURRENT_LANG==='kr'||!CURRENT_LANG) pdLabel = '종이매대 홈';
                         rightMenu.insertAdjacentHTML('afterbegin',
                             '<a href="'+psHref+'" class="btn-round" style="padding:6px 12px;font-size:12px;height:auto;text-decoration:none;background:#eef2ff;color:#6366f1;border:1px solid #c7d2fe;margin-right:6px;">' +
@@ -8532,7 +8532,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                         var langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
                         var psLang = langMap[CURRENT_LANG] || '';
                         var psHref = '/paper-stand' + (psLang && psLang !== 'en' ? '?lang=' + psLang : '');
-                        var pdLabel = CURRENT_LANG==='ja'?'紙什器 Home':CURRENT_LANG==='zh'?'纸展架 Home':CURRENT_LANG==='ar'?'حوامل ورقية':'Paper Stand Home';
+                        var pdLabel = CURRENT_LANG==='ja'?'紙什器 Home':CURRENT_LANG==='zh'?'纸展架 Home':CURRENT_LANG==='ar'?'حوامل ورقية':'Cardboard Display Home';
                         if (CURRENT_LANG==='kr'||!CURRENT_LANG) pdLabel = '종이매대 홈';
                         rightMenu.insertAdjacentHTML('afterbegin',
                             '<a href="'+psHref+'" class="btn-round" style="padding:6px 12px;font-size:12px;height:auto;text-decoration:none;background:#eef2ff;color:#6366f1;border:1px solid #c7d2fe;margin-right:6px;">' +
@@ -17456,7 +17456,7 @@ window.dsmRenderProducts = async function(keyword) {
 
 <h2>Honeycomb Board Printing - Exhibition Booth & Pop-up Store Display</h2>
 <img src="/mascot-character.png" alt="Honeycomb Board exhibition booth - 3m x 3m backlit booth set for trade shows and exhibitions" width="600" height="400">
-<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="Honeycomb Board temporary wall display - eco-friendly paper display for pop-up stores" width="600" height="400">
+<img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="Honeycomb Board temporary wall display - eco-friendly cardboard display for pop-up stores" width="600" height="400">
 <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770042960042_Honeycomb%20Board%20(945).jpg" alt="Honeycomb Board life-size standee - custom printed exhibition display board" width="600" height="400">
 <p>Custom eco-friendly Honeycomb Board printing for exhibition booths, trade show displays, pop-up stores, and retail environments. Our Honeycomb Boards are lightweight, durable, and 100% recyclable — perfect for sustainable event displays. Available in custom sizes with full-color UV printing. Free online design editor included.</p>
 
@@ -17489,7 +17489,7 @@ window.dsmRenderProducts = async function(keyword) {
 <ul>
 <li>Honeycomb Board Printing - Eco exhibition booth displays</li>
 <li>Fabric Printing - Backwalls, banners, and textiles</li>
-<li>Paper Display Stands - Eco-friendly retail displays</li>
+<li>Cardboard Display Stands - Eco-friendly retail displays</li>
 <li>Paper Furniture - Sustainable cardboard furniture</li>
 <li>Foamex PVC Board Printing - Durable signage</li>
 <li>Foam Board Printing - Lightweight display boards</li>

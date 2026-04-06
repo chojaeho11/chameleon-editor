@@ -271,7 +271,7 @@ serve(async (req) => {
                 discount: `- Business Partners get 10% off.\n- Franchise: 10%, Platinum/Partner: 5%, Gold: 3%`,
                 payment: `- Credit card, wire transfer, deposit balance, mileage points (up to 5%)`,
                 manager: `- For detailed inquiries, click the 'Connect to Agent' button below.\n- International consultation line (English/Japanese): +82-10-3491-3535\n- Our team can assist via chat or Zoom to explain installation methods in detail.\n- Japan office: Hong Jimun 070-3202-9352 / design@chameleon.design\n- Japan office address: 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画 / 047-712-1148\n- Japan business card: https://www.cafe0101.com/japan_card.png`,
-                services: `Honeycomb Boards (eco paper), fabric printing (backwalls/banners), life-size cutouts/photo zones, foam board/PVC, paper displays, free online design editor`,
+                services: `Honeycomb Boards (eco paper), fabric printing (backwalls/banners), life-size cutouts/photo zones, foam board/PVC, cardboard displays, free online design editor`,
                 orderTracking: `"Check the '🚚 Order Tracking' button at the top of our website, or call your manager."`
             }
         };

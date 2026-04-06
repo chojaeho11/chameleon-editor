@@ -28,7 +28,7 @@ export function initSizeControls() {
         { name: 'Award Board', w: 800, h: 570, key: 'Award_Board' },
         { name: 'Text Photo Zone', w: 2400, h: 1200, key: 'PhotoZone_Text' },
         { name: 'Wide Fabric', w: 1350, h: 900, key: 'Fabric_Wide' },
-        { name: 'Paper Stand', w: 585, h: 1130, key: 'Paper_Disp_4' }
+        { name: 'Cardboard Display', w: 585, h: 1130, key: 'Paper_Disp_4' }
     ];
 
     // [사용자 지정 사이즈 적용 버튼 이벤트]

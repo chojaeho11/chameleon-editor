@@ -36,7 +36,7 @@ const NPC_TEXTS = {
         prev: '← 이전',
         skipOption: '옵션 없이 진행 →',
         uploaded: '업로드 완료! 다음으로 넘어갈게요 👍',
-        // 종이매대 (Paper Display Stand)
+        // 종이매대 (Cardboard Display Stand)
         pdEnterSize: '매대의 전체 크기를 입력해주세요 📐',
         pdWidth: '가로 (cm)',
         pdHeight: '높이 (cm)',
@@ -1030,7 +1030,7 @@ window.NpcWizard = {
                 break;
             }
 
-            // ═══ 종이매대 (Paper Display Stand) 전용 스텝 ═══
+            // ═══ 종이매대 (Cardboard Display Stand) 전용 스텝 ═══
 
             case 'pdSize': {
                 // Step 1: 전체 가로/높이 입력
