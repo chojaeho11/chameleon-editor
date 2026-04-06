@@ -115,7 +115,7 @@
   "btn_card_payment": "💳 Tarjeta de Crédito / Pago Rápido",
   "msg_bank_info": "[Datos para Transferencia Bancaria]",
   "msg_bank_name": "Community Federal Savings Bank",
-  "msg_bank_account": "Cuenta: 8487335989 | Código ACH: 026073150",
+  "msg_bank_account": "Cuenta: 8487335989 | ACH Routing: 026073150 | SWIFT: CMFGUS33",
   "msg_bank_owner": "(Titular de la Cuenta: CHAMELEON PRINTING INC)",
   "msg_bank_note": "* Por favor incluya su número de pedido como referencia de pago. Los pedidos se confirman una vez recibido el pago.",
   "btn_bank_confirm": "✅ He realizado la transferencia (Solicitar Confirmación)",

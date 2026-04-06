@@ -6372,18 +6372,27 @@ window.filterFxCards = function(cat, btn) {
     window.openChannelTalk = openChannelTalk;
 
     function showBankAccountPopup() {
-        const acctNum = '647701-04-277763';
+        const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+        const isKR = country === 'KR';
+        const bankName = isKR ? '국민은행' : 'Community Federal Savings Bank';
+        const acctNum = isKR ? '647701-04-277763' : '8487335989';
+        const holder = isKR ? '(예금주: 카멜레온프린팅)' : '(CHAMELEON PRINTING INC)';
+        const title = isKR ? '💳 무통장 입금 계좌 안내' : '💳 Wire Transfer Info';
+        const copyText = isKR ? '📋 계좌번호 복사' : '📋 Copy Account Number';
+        const closeText = isKR ? '닫기' : 'Close';
+        const extraInfo = isKR ? '' : '<div style="color:#93c5fd;font-size:11px;margin-top:8px;line-height:1.6;">ACH Routing: 026073150<br>Fedwire: 026073008<br>SWIFT: CMFGUS33<br>89-16 Jamaica Ave, Woodhaven, NY 11421</div>';
         const ov = document.createElement('div');
         ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
         ov.innerHTML = `<div style="background:#fff;border-radius:16px;padding:28px;max-width:360px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
-            <div style="font-size:15px;font-weight:800;color:#1e3a8a;margin-bottom:16px;">💳 무통장 입금 계좌 안내</div>
+            <div style="font-size:15px;font-weight:800;color:#1e3a8a;margin-bottom:16px;">${title}</div>
             <div style="background:#1e3a8a;border-radius:12px;padding:20px;margin-bottom:16px;">
-                <div style="color:#93c5fd;font-size:13px;margin-bottom:4px;">국민은행</div>
-                <div style="color:#fff;font-size:24px;font-weight:900;letter-spacing:1.5px;margin-bottom:4px;">${acctNum}</div>
-                <div style="color:#bfdbfe;font-size:13px;">(예금주: 카멜레온프린팅)</div>
+                <div style="color:#93c5fd;font-size:13px;margin-bottom:4px;">${bankName}</div>
+                <div style="color:#fff;font-size:${isKR ? '24' : '20'}px;font-weight:900;letter-spacing:1.5px;margin-bottom:4px;">${acctNum}</div>
+                <div style="color:#bfdbfe;font-size:13px;">${holder}</div>
+                ${extraInfo}
             </div>
-            <button onclick="navigator.clipboard.writeText('${acctNum}').then(()=>this.textContent='✓ 복사완료!')" style="width:100%;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📋 계좌번호 복사</button>
-            <div onclick="this.closest('div[style*=inset]').remove()" style="margin-top:12px;font-size:13px;color:#999;cursor:pointer;font-weight:600;">닫기</div>
+            <button onclick="navigator.clipboard.writeText('${acctNum}').then(()=>this.textContent='✓ Copied!')" style="width:100%;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">${copyText}</button>
+            <div onclick="this.closest('div[style*=inset]').remove()" style="margin-top:12px;font-size:13px;color:#999;cursor:pointer;font-weight:600;">${closeText}</div>
         </div>`;
         document.body.appendChild(ov);
         ov.addEventListener('click', (e) => { if(e.target===ov) ov.remove(); });

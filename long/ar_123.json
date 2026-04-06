@@ -119,7 +119,7 @@
   "btn_card_payment": "💳 بطاقة ائتمان / دفع سريع",
   "msg_bank_info": "[معلومات التحويل البنكي]",
   "msg_bank_name": "Community Federal Savings Bank",
-  "msg_bank_account": "رقم الحساب: 8487335989 | رقم التوجيه (ACH): 026073150",
+  "msg_bank_account": "رقم الحساب: 8487335989 | ACH: 026073150 | SWIFT: CMFGUS33",
   "msg_bank_owner": "(صاحب الحساب: CHAMELEON PRINTING INC)",
   "msg_bank_note": "* يرجى تضمين رقم طلبك كمرجع للدفع. يتم تأكيد الطلبات عند استلام الدفع.",
   "btn_bank_confirm": "✅ لقد قمت بالتحويل (طلب التأكيد)",

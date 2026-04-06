@@ -119,7 +119,7 @@
   "btn_card_payment": "💳 Credit Card / Express Pay",
   "msg_bank_info": "[Wire Transfer Info]",
   "msg_bank_name": "Community Federal Savings Bank",
-  "msg_bank_account": "Acct: 8487335989 | Routing (ACH): 026073150",
+  "msg_bank_account": "Acct: 8487335989 | ACH Routing: 026073150 | SWIFT: CMFGUS33",
   "msg_bank_owner": "(Account Holder: CHAMELEON PRINTING INC)",
   "msg_bank_note": "* Please include your order number as a payment reference. Orders are confirmed once payment is received.",
   "btn_bank_confirm": "✅ I have transferred (Request Confirm)",

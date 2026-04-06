@@ -115,7 +115,7 @@
   "btn_card_payment": "💳 信用卡 / 快捷支付",
   "msg_bank_info": "[银行转账信息]",
   "msg_bank_name": "Community Federal Savings Bank",
-  "msg_bank_account": "账号: 8487335989 | 路由号 (ACH): 026073150",
+  "msg_bank_account": "账号: 8487335989 | ACH Routing: 026073150 | SWIFT: CMFGUS33",
   "msg_bank_owner": "(账户持有人: CHAMELEON PRINTING INC)",
   "msg_bank_note": "* 转账时请备注订单号。确认收款后订单生效。",
   "btn_bank_confirm": "✅ 已转账（请求确认）",
