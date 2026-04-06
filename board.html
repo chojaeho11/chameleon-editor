@@ -500,7 +500,7 @@
     </style>
 </head>
 <body>
-<script src="toast.js?v=289"></script>
+<script src="toast.js?v=290"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -1644,7 +1644,7 @@
 </script>
 <script type="module">
     // 1. config.js에서 sb와 initConfig를 가져옵니다.
-    import { sb, initConfig } from './config.js?v=289';
+    import { sb, initConfig } from './config.js?v=290';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
@@ -1794,17 +1794,28 @@
 
             console.log("✅ 블로그 방문 기록 성공:", finalReferrer);
 
-            // 체류시간 업데이트 (5초 간격)
+            // 체류시간 업데이트 (60초 간격, 탭 비활성 시 중단, 30분 후 종료)
             const visitId = data.id;
             const startTime = Date.now();
-            
-            setInterval(() => {
-                const durationSec = Math.floor((Date.now() - startTime) / 1000);
-                sb.from('page_views')
-                  .update({ duration: durationSec })
-                  .eq('id', visitId)
-                  .then(() => {});
-            }, 5000);
+            const MAX_TRACK_MS = 30 * 60 * 1000;
+
+            function _updateDuration() {
+                const elapsed = Date.now() - startTime;
+                if (elapsed > MAX_TRACK_MS) { clearInterval(_trackTimer); return; }
+                if (document.hidden) return;
+                sb.from('page_views').update({ duration: Math.floor(elapsed / 1000) }).eq('id', visitId).then(() => {});
+            }
+            const _trackTimer = setInterval(_updateDuration, 60000);
+
+            window.addEventListener('beforeunload', () => {
+                const sec = Math.floor((Date.now() - startTime) / 1000);
+                const _k = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+                fetch('https://qinvtnhiidtmrzosyvys.supabase.co/rest/v1/page_views?id=eq.' + visitId, {
+                    method: 'PATCH', keepalive: true,
+                    headers: { 'Content-Type':'application/json', 'apikey': _k, 'Authorization': 'Bearer ' + _k, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ duration: sec })
+                }).catch(() => {});
+            });
 
         } catch (e) {
             console.warn("Tracking skipped:", e.message);

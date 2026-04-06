@@ -43,7 +43,7 @@ const itemsPerPage = 10;
 // ================================================================
 let _lastKnownOrderId = 0;
 let _orderAlertTimer = null;
-const ORDER_POLL_INTERVAL = 30000; // 30초
+const ORDER_POLL_INTERVAL = 60000; // 60초
 
 function _playNewOrderSound(customerName) {
     // 딩동~ 알림음 먼저 재생
