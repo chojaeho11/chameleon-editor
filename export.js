@@ -1574,34 +1574,20 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 
             totalAmt += wallSubtotal;
 
-            // 첫 행: 상품명 + 벽면 요약
-            const splitTitle = doc.splitTextToSize(pdfName, nameColWidth - 4);
-            const lineCount = splitTitle.length;
-            const rowHeight = Math.max(8, 4 + (lineCount * 5));
-
-            curX = 15;
-            drawCell(doc, curX, y, cols[0], rowHeight, no++, 'center'); curX += cols[0];
-            drawCell(doc, curX, y, cols[1], rowHeight, splitTitle, 'left'); curX += cols[1];
-            drawCell(doc, curX, y, cols[2], rowHeight, pdfOptionLabel, 'left'); curX += cols[2];
-            drawCell(doc, curX, y, cols[3], rowHeight, '', 'center'); curX += cols[3];
-            drawCell(doc, curX, y, cols[4], rowHeight, '', 'right'); curX += cols[4];
-            drawCell(doc, curX, y, cols[5], rowHeight, formatCurrencyForPDF(wallSubtotal), 'right');
-
-            y += rowHeight;
-            if(y > 260) { doc.addPage(); y = 20; }
-
-            // 하위 행: 각 벽면 상세
+            // 각 벽면을 개별 행으로 표시 (요약 행 없이 바로 상세)
             wallRows.forEach(({ wp, wi, wArea, wDiscounted }) => {
                 const sideLabel = wp.side === 2 ? '양면' : '단면';
-                const wName = `  └ 벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m (${sideLabel})`;
+                const wName = `${pdfName}\n벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m`;
+                const splitW = doc.splitTextToSize(wName, nameColWidth - 4);
+                const rh = Math.max(8, 4 + (splitW.length * 5));
                 curX = 15;
-                drawCell(doc, curX, y, cols[0], 7, '', 'center'); curX += cols[0];
-                drawCell(doc, curX, y, cols[1], 7, wName, 'left', 8); curX += cols[1];
-                drawCell(doc, curX, y, cols[2], 7, `${wArea.toFixed(1)}㎡`, 'left', 8); curX += cols[2];
-                drawCell(doc, curX, y, cols[3], 7, sideLabel, 'center', 8); curX += cols[3];
-                drawCell(doc, curX, y, cols[4], 7, '', 'right'); curX += cols[4];
-                drawCell(doc, curX, y, cols[5], 7, formatCurrencyForPDF(wDiscounted), 'right', 8);
-                y += 7;
+                drawCell(doc, curX, y, cols[0], rh, no++, 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1], rh, splitW, 'left', 8); curX += cols[1];
+                drawCell(doc, curX, y, cols[2], rh, `${wArea.toFixed(1)}㎡`, 'left', 8); curX += cols[2];
+                drawCell(doc, curX, y, cols[3], rh, sideLabel, 'center', 8); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], rh, '', 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], rh, formatCurrencyForPDF(wDiscounted), 'right', 8);
+                y += rh;
                 if(y > 260) { doc.addPage(); y = 20; }
             });
 
