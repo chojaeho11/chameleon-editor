@@ -2374,7 +2374,7 @@ async function generateRecoveryQuotation(order, addonDB) {
     } catch(e){}
 
     let y = 85;
-    const cols = [10,50,40,20,30,30];
+    const cols = [8,45,47,16,28,36];
     ['No','품목명','규격/옵션','수량','단가','금액'].forEach((h,i) => {
         let cx = 15; for(let j=0;j<i;j++) cx+=cols[j];
         _dc(doc, cx, y, cols[i], 8, h, 'center', 10, true);
@@ -2435,7 +2435,9 @@ async function generateRecoveryQuotation(order, addonDB) {
 
     y += 5;
     const discount = order.discount_amount || 0;
-    const finalAmt = totalAmt - discount;
+    // ★ DB의 total_amount를 사용 (배송비 포함된 정확한 금액)
+    const finalAmt = order.total_amount || (totalAmt - discount);
+    const shippingFee = Math.max(0, finalAmt - totalAmt + discount);
     const vat = Math.floor(finalAmt / 11);
     const supply = finalAmt - vat;
 
@@ -2444,6 +2446,10 @@ async function generateRecoveryQuotation(order, addonDB) {
     if (discount > 0) {
         _dt(doc, '할인/마일리지 :', 105, y+5, {align:'right'}, '#ff0000');
         _dt(doc, '-'+discount.toLocaleString()+'원', 195, y+5, {align:'right'}, '#ff0000'); y+=6;
+    }
+    if (shippingFee > 0) {
+        _dt(doc, '비수도권 추가 배송비 :', 105, y+5, {align:'right'});
+        _dt(doc, '+'+shippingFee.toLocaleString()+'원', 195, y+5, {align:'right'}); y+=6;
     }
     y+=2; doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(85,y,195,y); y+=8;
     _dt(doc, '합계금액 (VAT포함)', 105, y, {align:'right', weight:'bold'});

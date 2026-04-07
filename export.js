@@ -1498,7 +1498,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     }
 
     let y = 85;
-    const cols = [10, 50, 40, 20, 30, 30]; 
+    const cols = [8, 45, 47, 16, 28, 36];
     // [수정] 테이블 헤더 다국어 적용
     const headers = TEXT.headers;
     let curX = 15;
