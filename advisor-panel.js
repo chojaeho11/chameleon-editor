@@ -307,6 +307,7 @@ window._quoteToCart = async function(quoteId) {
                 height_mm: item._height_mm || 0,
                 is_custom_size: true,
                 _calculated_price: true,
+                _quote_item: true,
                 img: rec.img_url || null,
             }, item.qty || 1, [], {});
         }
