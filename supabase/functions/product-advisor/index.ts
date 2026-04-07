@@ -911,10 +911,12 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             // ★ generate_quote 도구 처리
             if (toolBlock && toolBlock.name === "generate_quote") {
                 const qResult = toolBlock.input;
+                console.log("[quote] AI items:", JSON.stringify(qResult.items));
                 // 서버에서 가격 계산 (AI 가격 신뢰하지 않음)
                 const quoteItems: any[] = [];
                 for (const qi of (qResult.items || [])) {
                     const dbP = products.find((p: any) => p.code === qi.code);
+                    console.log("[quote] matching", qi.code, "→", dbP ? dbP.name : "NOT FOUND");
                     if (!dbP) continue;
                     const wMm = qi.width_mm || dbP.width_mm || 0;
                     const hMm = qi.height_mm || dbP.height_mm || 0;

@@ -740,6 +740,7 @@ async function sendMessage(text, imageData) {
         if (_hasQuoteForm) setTimeout(() => startQuoteFlow(), 300);
 
         // ★ 견적서 PDF 생성 처리
+        console.log('[견적서] data.type:', data.type, 'quote_data:', data.quote_data);
         if (data.type === 'quote' && data.quote_data && data.quote_data.items && data.quote_data.items.length > 0) {
             try {
                 const _qRes = await fetch(SUPA_URL + '/functions/v1/generate-quote-pdf', {
