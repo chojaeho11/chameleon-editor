@@ -862,10 +862,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         // 현재 메시지 추가
         messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type) });
 
-        // 견적서 요청 시 auto tool choice (generate_quote 사용 가능하도록)
-        const _quoteKw = /견적서|견적|見積|quotation|quote|估价/i;
-        const toolChoice = _quoteKw.test(trimmedMsg)
-            ? { type: "auto" as const }
+        // 견적서 요청 시 generate_quote 도구 강제 사용
+        const _quoteKw = /견적서|견적\s*줘|견적\s*만들|見積|quotation|quote.*pdf|견적.*pdf/i;
+        const _isQuoteReq = _quoteKw.test(trimmedMsg);
+        const toolChoice = _isQuoteReq
+            ? { type: "tool" as const, name: "generate_quote" }
             : { type: "tool" as const, name: "recommend_products" };
         console.log(`[kapu] msg="${trimmedMsg.substring(0,40)}", history=${conversation_history?.length || 0}`);
 
