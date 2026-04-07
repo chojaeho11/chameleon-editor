@@ -761,8 +761,7 @@ async function sendMessage(text, imageData) {
                     _pdfCard.innerHTML = '<div style="font-size:14px;font-weight:800;margin-bottom:8px;">📄 견적서가 준비되었습니다</div>'
                         + '<div style="font-size:12px;opacity:0.9;margin-bottom:12px;">합계: ' + _total + '원 (VAT포함)</div>'
                         + '<a href="' + _qData.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4338ca;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">📥 견적서 다운로드</a>';
-                    const _chatBody = document.querySelector('.adv-chat-body') || document.getElementById('advChatBody');
-                    if (_chatBody) { _chatBody.appendChild(_pdfCard); _chatBody.scrollTop = _chatBody.scrollHeight; }
+                    if (chatArea) { chatArea.appendChild(_pdfCard); scrollChat(); }
                 } else {
                     console.error('[견적서] PDF URL 없음:', _qData);
                 }
