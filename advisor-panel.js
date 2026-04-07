@@ -285,6 +285,43 @@ function showEntryForm() {
     document.getElementById('advEntryPhone').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('advEntrySubmit').click(); });
 }
 
+// ─── 견적서 → 장바구니 결제 ───
+window._quoteToCart = async function(quoteId) {
+    const qData = window['_pendingQuote_' + quoteId];
+    if (!qData || !qData.items || qData.items.length === 0) {
+        alert('견적 데이터를 찾을 수 없습니다. 다시 시도해주세요.');
+        return;
+    }
+    try {
+        const { addProductToCartDirectly } = await import('./order.js?v=291');
+        for (const item of qData.items) {
+            // products 배열에서 매칭되는 제품 정보 찾기
+            const rec = (qData.products || []).find(p => p.code === item._code) || {};
+            addProductToCartDirectly({
+                code: item._code || rec.code || '',
+                name: item.name,
+                price: item.unit_price,
+                w_mm: item._width_mm || 0,
+                h_mm: item._height_mm || 0,
+                width_mm: item._width_mm || 0,
+                height_mm: item._height_mm || 0,
+                is_custom_size: true,
+                img: rec.img_url || null,
+            }, item.qty || 1, [], {});
+        }
+        if (window.updateCartBadge) window.updateCartBadge();
+        // 장바구니 페이지 열기
+        const cartPage = document.getElementById('cartPage');
+        if (cartPage) {
+            cartPage.style.display = 'block';
+            if (window.renderCart) window.renderCart();
+        }
+    } catch (err) {
+        console.error('견적 장바구니 추가 실패:', err);
+        alert('장바구니 추가 중 오류가 발생했습니다.');
+    }
+};
+
 // ─── 초기화 ───
 export function initAdvisorPanel() {
     panelEl = document.getElementById('advisorPanel');
@@ -766,12 +803,22 @@ async function sendMessage(text, imageData) {
                 try { _qData = JSON.parse(_qText); } catch(pe) { console.error('[견적서] JSON 파싱 실패:', pe); _qData = {}; }
                 if (_qData.url) {
                     const _total = (_qData.total || 0).toLocaleString();
+                    const _quoteItems = data.quote_data.items;
+                    const _quoteId = 'quote_' + Date.now();
+                    // 견적 아이템을 전역에 저장 (결제 버튼에서 사용)
+                    window['_pendingQuote_' + _quoteId] = { items: _quoteItems, products: data.products || [] };
+
                     const _pdfCard = document.createElement('div');
                     _pdfCard.style.cssText = 'background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;padding:16px;margin:8px 0;color:#fff;';
                     _pdfCard.innerHTML = '<div style="font-size:14px;font-weight:800;margin-bottom:8px;">📄 견적서가 준비되었습니다</div>'
                         + '<div style="font-size:12px;opacity:0.9;margin-bottom:12px;">합계: ' + _total + '원 (VAT포함)</div>'
-                        + '<a href="' + _qData.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4338ca;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">📥 견적서 다운로드</a>';
+                        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+                        + '<a href="' + _qData.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4338ca;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">📥 견적서 다운로드</a>'
+                        + '<button onclick="window._quoteToCart(\'' + _quoteId + '\')" style="display:inline-flex;align-items:center;gap:6px;background:#22c55e;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;">🛒 견적금액 결제하기</button>'
+                        + '</div>';
                     if (chatArea) { chatArea.appendChild(_pdfCard); scrollChat(); }
+                    // 견적서가 나왔으면 제품 카드는 표시하지 않음
+                    data._skipProducts = true;
                 } else {
                     console.error('[견적서] PDF URL 없음:', _qData);
                 }
@@ -779,6 +826,16 @@ async function sendMessage(text, imageData) {
         }
 
         const products = data.products || [];
+        conversationHistory.push({
+            role: 'assistant',
+            content: chatMsg,
+            products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
+        });
+
+        // 견적서가 나왔으면 제품 카드 숨김
+        if (data._skipProducts) {
+            // 견적서 + 결제 버튼이 있으므로 제품 카드 불필요
+        } else {
         // 사용자 메시지가 제품/구매 관련일 때만 제품 카드 표시
         const _userMsg = (text || '').toLowerCase();
         const _productKeywords = [
@@ -790,16 +847,11 @@ async function sendMessage(text, imageData) {
         const _isProductQuery = _productKeywords.some(k => _userMsg.includes(k));
         const showProducts = products.length > 0 && _isProductQuery;
 
-        conversationHistory.push({
-            role: 'assistant',
-            content: chatMsg,
-            products: showProducts ? products.map(p => ({ code: p.code, name: p.name })) : undefined
-        });
-
         if (showProducts) {
             lastProducts = products;
             addProductCards(products);
         }
+        } // end of _skipProducts else block
 
         // ★ 연락처 남기기 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
         const _userText = (text || '').toLowerCase();

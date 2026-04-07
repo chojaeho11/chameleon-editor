@@ -957,7 +957,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     quoteItems.push({
                         name: qi.name || dbP.name,
                         spec: `${wMm}x${hMm}mm` + (side === 2 ? ' 양면' : ''),
-                        qty, unit_price: unitPrice, total: unitPrice * qty
+                        qty, unit_price: unitPrice, total: unitPrice * qty,
+                        _code: qi.code, _width_mm: wMm, _height_mm: hMm
                     });
                 }
                 return {
