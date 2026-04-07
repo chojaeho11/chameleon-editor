@@ -742,13 +742,18 @@ async function sendMessage(text, imageData) {
         // ★ 견적서 PDF 생성 처리
         console.log('[견적서] data.type:', data.type, 'quote_data:', data.quote_data);
         if (data.type === 'quote' && data.quote_data && data.quote_data.items && data.quote_data.items.length > 0) {
+            console.log('[견적서] PDF 생성 요청 시작...', JSON.stringify(data.quote_data));
             try {
                 const _qRes = await fetch(SUPA_URL + '/functions/v1/generate-quote-pdf', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
                     body: JSON.stringify(data.quote_data)
                 });
-                const _qData = await _qRes.json();
+                console.log('[견적서] PDF API 응답 status:', _qRes.status);
+                const _qText = await _qRes.text();
+                console.log('[견적서] PDF API 응답 body:', _qText.substring(0, 500));
+                let _qData;
+                try { _qData = JSON.parse(_qText); } catch(pe) { console.error('[견적서] JSON 파싱 실패:', pe); _qData = {}; }
                 if (_qData.url) {
                     const _total = (_qData.total || 0).toLocaleString();
                     const _pdfCard = document.createElement('div');
@@ -758,8 +763,10 @@ async function sendMessage(text, imageData) {
                         + '<a href="' + _qData.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4338ca;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">📥 견적서 다운로드</a>';
                     const _chatBody = document.querySelector('.adv-chat-body') || document.getElementById('advChatBody');
                     if (_chatBody) { _chatBody.appendChild(_pdfCard); _chatBody.scrollTop = _chatBody.scrollHeight; }
+                } else {
+                    console.error('[견적서] PDF URL 없음:', _qData);
                 }
-            } catch (e) { console.warn('견적서 PDF 생성 실패:', e); }
+            } catch (e) { console.error('견적서 PDF 생성 실패:', e); }
         }
 
         const products = data.products || [];
