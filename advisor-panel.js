@@ -560,13 +560,17 @@ function buildPanelUI() {
 
     // 저장된 대화 복원
     const restored = loadChat();
-    if (restored) {
+    console.log('[카푸] 대화 복원:', restored ? '성공 (history:' + conversationHistory.length + ')' : '없음', '고객:', _custName || '(없음)');
+    if (restored && conversationHistory.length > 0) {
         scrollChat();
     } else if (_custName) {
         showWelcomeMessage();
     } else {
         showEntryForm();
     }
+
+    // 페이지 이동/새로고침 시 대화 저장
+    window.addEventListener('beforeunload', () => { saveChat(); });
 
     // 포토스튜디오 버튼
     document.getElementById('advStudioBtn')?.addEventListener('click', () => enterStudioMode());
@@ -1156,10 +1160,10 @@ function addProductCards(products) {
 
 function bindCardEvents(wrap, products) {
     wrap.querySelectorAll('.adv-btn-editor').forEach(btn => {
-        btn.addEventListener('click', () => openEditor(products[+btn.dataset.i]));
+        btn.addEventListener('click', () => { saveChat(); openEditor(products[+btn.dataset.i]); });
     });
     wrap.querySelectorAll('.adv-btn-cart').forEach(btn => {
-        btn.addEventListener('click', () => addToCart(products[+btn.dataset.i], btn));
+        btn.addEventListener('click', () => { saveChat(); addToCart(products[+btn.dataset.i], btn); });
     });
 }
 
