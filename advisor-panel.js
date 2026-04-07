@@ -306,6 +306,7 @@ window._quoteToCart = async function(quoteId) {
                 width_mm: item._width_mm || 0,
                 height_mm: item._height_mm || 0,
                 is_custom_size: true,
+                _calculated_price: true,
                 img: rec.img_url || null,
             }, item.qty || 1, [], {});
         }
