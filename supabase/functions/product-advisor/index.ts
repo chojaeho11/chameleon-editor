@@ -279,6 +279,7 @@ serve(async (req) => {
      - 배너 가장 보편적 크기: 600×1800mm
      - **실내용**: 허니콤보드 배너 강력추천! 종이 소재라 친환경적이고 가벼움. 커스텀 사이즈 가능. 단, 바람/비에 약해서 외부 사용은 비추천.
        · 제품코드: hb_bn_1(허니콤배너), hb_bn_2(연결형), hb_bn_3(양면)
+       · ★ 허니콤보드 제품 중 유일하게 택배 배송 가능! 주문 시 옵션에서 배송비 추가 옵션을 선택하면 택배로 받을 수 있다고 안내해줘.
      - **외부/야외용**: 패트배너+거치대 세트 추천! 바람/비에 강함.
        · 제품코드: 752002(패트&야외거치대 세트), 752004(실외철재거치대 세트), 752005(현수막 배너 거치대 미포함), 752006(페트배너 거치대 미포함), 752007(매쉬배너 거치대 미포함)
      - 고객이 실내/외부 구분 없이 "배너"라고 하면 → 용도(실내/외부)를 먼저 물어봐!
@@ -421,6 +422,7 @@ serve(async (req) => {
    - **「リンク」「URL」「ページ」「見せて」「送って」等のリクエスト** = お客様は商品カードを求めています！必ずrecommend_productsツールで該当商品を含めて。テキストURLだけの回答は絶対NG — 必ずproducts配列に商品を入れて画像付きカードを表示。
 7. **横断幕/バナー等** — 出力サービス商品を推薦（素材でなく）。
    - **室内用**: ハニカムボードバナー推薦（軽い・エコ・カスタムサイズ可）。コード: hb_bn_1, hb_bn_2, hb_bn_3
+     · ★ ハニカムボード製品の中で唯一宅配可能！注文時にオプションで送料追加を選択すれば宅配で届きます。
    - **屋外用**: PETバナー+スタンドセット推薦（風雨に強い）。コード: 752002(屋外スタンドセット), 752004(鉄製スタンドセット), 44578(横断幕), 34453453(防炎横断幕), 752007(メッシュバナー), 5646456(旗バナー)
    - ❌ 屋外にハニカムボードを推薦しない（紙なので風雨に弱い）
    - 「屋外」「外」「outdoor」「カラバン」等 → 屋外用商品のみ推薦！
@@ -531,6 +533,7 @@ serve(async (req) => {
    - If the customer asks about a category (e.g. "Honeycomb Board"), show 3-5 representative products from that category.
 7. **Banner/signage queries** — recommend printing services, not raw materials.
    - **Indoor**: Honeycomb board banners (lightweight, eco, custom size). Codes: hb_bn_1, hb_bn_2, hb_bn_3
+     · ★ Only honeycomb product that can be shipped via courier! Tell customers to select the shipping fee add-on option when ordering.
    - **Outdoor**: PET banners + stands (wind/rain resistant). Codes: 752002(outdoor stand set), 752004(steel stand set), 44578(budget banner), 34453453(flame-retardant), 752007(mesh banner), 5646456(flag banner)
    - ❌ NEVER recommend honeycomb board for outdoor use (paper = weak to wind/rain)
    - "outdoor", "outside", "caravan", "weather-proof", "wind" → outdoor products ONLY!
