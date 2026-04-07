@@ -3621,7 +3621,11 @@ const cleanProduct = {
     _wallPanels: productInfo._wallPanels || null,
     _wallTotalPanels: productInfo._wallTotalPanels || 0,
     _wallDiscountRate: productInfo._wallDiscountRate || 0,
-    _wallUnitPricePerSqm: productInfo._wallUnitPricePerSqm || 0
+    _wallUnitPricePerSqm: productInfo._wallUnitPricePerSqm || 0,
+    // ★ 견적서/커스텀 가격 플래그
+    is_custom_size: productInfo.is_custom_size || false,
+    _calculated_price: productInfo._calculated_price || false,
+    _quote_item: productInfo._quote_item || false
 };
 
 // [2] 장바구니 아이템 생성
