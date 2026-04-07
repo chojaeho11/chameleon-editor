@@ -275,7 +275,7 @@ function showEntryForm() {
         completeEntry(name, phone);
     });
     document.getElementById('advEntrySkip').addEventListener('click', () => {
-        completeEntry('', '');
+        completeEntry('Guest', '');
     });
     document.getElementById('advEntryName').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('advEntryPhone').focus(); });
     document.getElementById('advEntryPhone').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('advEntrySubmit').click(); });
@@ -560,8 +560,10 @@ function buildPanelUI() {
 
     // 저장된 대화 복원
     const restored = loadChat();
-    console.log('[카푸] 대화 복원:', restored ? '성공 (history:' + conversationHistory.length + ')' : '없음', '고객:', _custName || '(없음)');
-    if (restored && conversationHistory.length > 0) {
+    const _hasContent = restored && chatArea && chatArea.innerHTML.trim().length > 50;
+    console.log('[카푸] 대화 복원:', _hasContent ? '성공' : '없음', 'history:' + conversationHistory.length, '고객:', _custName || '(없음)');
+    if (_hasContent) {
+        // 대화 내용이 있으면 그대로 유지 (폼 재표시 안 함)
         scrollChat();
     } else if (_custName) {
         showWelcomeMessage();
