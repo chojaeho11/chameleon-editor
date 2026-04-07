@@ -342,9 +342,13 @@ serve(async (req) => {
 - **기타 일반 제품**: 주문 후 3~5일 이내 출고
 - **대량 주문제작 상품** (is_bulk_order) / 쇼핑백 / 연포장 / 패키지 박스 등: 15~20일 소요
 - ⭐ **허니콤보드(리보드) 외 전 제품 무료배송!**
-- 허니콤보드(리보드) 배송비:
+- 허니콤보드(리보드) 배송/설치:
   · 서울/경기(수도권): **무료배송 + 무료설치**
-  · 그 외 지방: **배송비 20만원** (설치 포함)
+  · 그 외 지방: **배송비 20만원** (용차배송, 설치비 별도!)
+  · 지방 설치비: **설치인원 1명당 50만원** (별도 청구, 배송비와 다름!)
+  · ⚠️ 배송비 20만원 ≠ 설치비! 배송만 하면 20만원, 설치도 원하면 +50만원/1인
+  · ★ 허니콤보드 배너(hb_bn_1, hb_bn_2, hb_bn_3)만 유일하게 택배 가능! (옵션에서 배송비 선택)
+  · 그 외 허니콤보드 제품은 택배 불가 (용차배송만 가능)
 
 ## 허니콤보드 시공 안내
 - 모든 허니콤보드 주문은 **완제품** 상태로 배송 및 설치
@@ -452,9 +456,13 @@ serve(async (req) => {
 - **その他一般商品**: 注文後 約8〜10日で出荷
 - **大量注文制作品**(is_bulk_order) / ショッピングバッグ / パッケージ等: 20〜25日
 - ⭐ **ハニカムボード以外の全商品：送料完全無料！**
-- ハニカムボード（ハニカムボード）配送料：
+- ハニカムボード配送・設置：
   · 東京近郊（関東エリア）：**送料無料＋設置無料**
-  · その他の地域：韓国から海上輸送＋陸上輸送（4cbm基準 約¥600,000〜¥800,000）。正確なお見積もりはマネージャーにお問い合わせください。
+  · その他の地域：**配送料 約¥200,000**（チャーター便、設置費別途！）
+  · 地方設置費：**設置スタッフ1名あたり約¥500,000**（配送料とは別途！）
+  · ⚠️ 配送料¥200,000 ≠ 設置費！配送のみなら¥200,000、設置も希望なら+¥500,000/1名
+  · ★ ハニカムバナー(hb_bn_1, hb_bn_2, hb_bn_3)のみ宅配可能！（オプションで送料選択）
+  · その他のハニカム製品は宅配不可（チャーター便のみ）
 
 ## ハニカムボード施工案内
 - 全注文**完成品**の状態で配送・設置
@@ -564,10 +572,14 @@ serve(async (req) => {
 - **Other products**: Ships within ~8-10 days
 - **Bulk/custom orders** (is_bulk_order) / shopping bags / packaging: 20-25 days
 - ⭐ **ALL products EXCEPT Honeycomb Board: completely FREE shipping!**
-- Honeycomb Board (honeycomb board) shipping (shipped from Korea, 4cbm basis):
-  · Includes ocean freight + inland trucking
-  · US East Coast: approx **$3,000~$4,000**
-  · US West Coast: approx **$2,500~$3,500**
+- Honeycomb Board shipping & installation (shipped from Korea):
+  · Includes ocean freight + inland trucking (4cbm basis)
+  · US East Coast: approx **$3,000~$4,000** (shipping only, installation separate!)
+  · US West Coast: approx **$2,500~$3,500** (shipping only, installation separate!)
+  · Installation fee: **$300 per installer per day** (separate from shipping!)
+  · ⚠️ Shipping fee ≠ Installation fee! Shipping delivers to site, installation is extra.
+  · ★ Only Honeycomb BANNERS (hb_bn_1, hb_bn_2, hb_bn_3) can be shipped via courier! (select shipping add-on option)
+  · All other Honeycomb Board products: charter/freight shipping only (no courier)
   · For exact quotes, please contact a manager.
 - Delivery time: 2-4 weeks (international from Korea)
 
