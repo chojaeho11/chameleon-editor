@@ -267,6 +267,10 @@ serve(async (req) => {
 - 고객이 제품명 + 사이즈 + 수량을 언급한 상태에서 견적서를 요청하면, items 배열에 해당 정보를 정리해서 넣어.
 - 가격은 넣지 마 (서버에서 자동 계산함). code, name, width_mm, height_mm, quantity만 정확히 넣어.
 - 가벽은 side: 1(단면) 또는 2(양면) 구분해서 넣어.
+- ⚠️ items 배열을 절대 비우지 마! 대화에서 언급된 제품 정보를 반드시 items에 넣어!
+  · 가벽: code="hb_dw_1", width_mm/height_mm은 mm 단위 (3m = 3000mm)
+  · 허니콤배너: code="hb_bn_1" (연결형: hb_bn_2, 양면: hb_bn_3)
+  · 사이즈가 없으면 기본값 사용 (가벽: 1000x2200, 배너: 600x1800)
 - 견적서와 함께 해당 제품 카드도 products 배열에 넣어서 보여줘.
 - 디자인 비용, 부가 서비스 비용 등 상품 데이터에 없는 비용을 임의로 만들어내지 마.
 
@@ -862,9 +866,10 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         // 현재 메시지 추가
         messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type) });
 
-        // 견적서 요청 시 generate_quote 도구 강제 사용
-        const _quoteKw = /견적서|견적\s*줘|견적\s*만들|見積|quotation|quote.*pdf|견적.*pdf/i;
-        const _isQuoteReq = _quoteKw.test(trimmedMsg);
+        // 견적서 요청 시 generate_quote 도구 강제 사용 (현재 메시지 + 최근 대화에서 감지)
+        const _quoteKw = /견적서|견적\s*줘|견적\s*만들|見積|quotation|quote.*pdf|견적.*pdf|견적.*줘/i;
+        const _recentMsgs = (conversation_history || []).slice(-3).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ');
+        const _isQuoteReq = _quoteKw.test(trimmedMsg) || (_quoteKw.test(_recentMsgs) && /배너|가벽|사이즈|수량|단면|양면|개|mm|미터/i.test(trimmedMsg));
         const toolChoice = _isQuoteReq
             ? { type: "tool" as const, name: "generate_quote" }
             : { type: "tool" as const, name: "recommend_products" };
@@ -912,9 +917,31 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             if (toolBlock && toolBlock.name === "generate_quote") {
                 const qResult = toolBlock.input;
                 console.log("[quote] AI items:", JSON.stringify(qResult.items));
+                // AI가 items를 비워놓은 경우, 메시지에서 직접 추출 시도
+                let qItems = qResult.items || [];
+                if (qItems.length === 0) {
+                    // 대화 전체에서 상품 정보 추출
+                    const _allText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
+                    // 가벽 감지
+                    const _wallMatch = _allText.match(/가벽.*?(\d+)\s*[mM미터]*\s*[xX×]\s*(\d+\.?\d*)\s*[mM미터]*/i) || _allText.match(/(\d+)\s*[mM미터]*\s*[xX×]\s*(\d+\.?\d*)\s*[mM미터]*.*가벽/i);
+                    if (_wallMatch) {
+                        const wM = parseFloat(_wallMatch[1]); const hM = parseFloat(_wallMatch[2]);
+                        const side = /양면/.test(_allText) ? 2 : 1;
+                        const qty = parseInt((_allText.match(/가벽.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*가벽/) || ['','1'])[1]) || 1;
+                        qItems.push({ code: 'hb_dw_1', name: '허니콤 가벽', width_mm: wM * 1000, height_mm: hM * 1000, quantity: qty, side });
+                    }
+                    // 배너 감지
+                    const _bannerMatch = _allText.match(/배너.*?(\d+)\s*[xX×]\s*(\d+)/i) || _allText.match(/(\d+)\s*[xX×]\s*(\d+).*배너/i);
+                    if (_bannerMatch) {
+                        const bW = parseInt(_bannerMatch[1]); const bH = parseInt(_bannerMatch[2]);
+                        const bQty = parseInt((_allText.match(/배너.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*배너/) || ['','1'])[1]) || 1;
+                        qItems.push({ code: 'hb_bn_1', name: '허니콤배너', width_mm: bW, height_mm: bH, quantity: bQty, side: 1 });
+                    }
+                    console.log("[quote] fallback extracted items:", JSON.stringify(qItems));
+                }
                 // 서버에서 가격 계산 (AI 가격 신뢰하지 않음)
                 const quoteItems: any[] = [];
-                for (const qi of (qResult.items || [])) {
+                for (const qi of qItems) {
                     const dbP = products.find((p: any) => p.code === qi.code);
                     console.log("[quote] matching", qi.code, "→", dbP ? dbP.name : "NOT FOUND");
                     if (!dbP) continue;
