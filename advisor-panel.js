@@ -739,6 +739,28 @@ async function sendMessage(text, imageData) {
         if (chatMsg) addBubble(chatMsg, 'ai');
         if (_hasQuoteForm) setTimeout(() => startQuoteFlow(), 300);
 
+        // ★ 견적서 PDF 생성 처리
+        if (data.type === 'quote' && data.quote_data && data.quote_data.items && data.quote_data.items.length > 0) {
+            try {
+                const _qRes = await fetch(SUPA_URL + '/functions/v1/generate-quote-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
+                    body: JSON.stringify(data.quote_data)
+                });
+                const _qData = await _qRes.json();
+                if (_qData.url) {
+                    const _total = (_qData.total || 0).toLocaleString();
+                    const _pdfCard = document.createElement('div');
+                    _pdfCard.style.cssText = 'background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;padding:16px;margin:8px 0;color:#fff;';
+                    _pdfCard.innerHTML = '<div style="font-size:14px;font-weight:800;margin-bottom:8px;">📄 견적서가 준비되었습니다</div>'
+                        + '<div style="font-size:12px;opacity:0.9;margin-bottom:12px;">합계: ' + _total + '원 (VAT포함)</div>'
+                        + '<a href="' + _qData.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4338ca;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">📥 견적서 다운로드</a>';
+                    const _chatBody = document.querySelector('.adv-chat-body') || document.getElementById('advChatBody');
+                    if (_chatBody) { _chatBody.appendChild(_pdfCard); _chatBody.scrollTop = _chatBody.scrollHeight; }
+                }
+            } catch (e) { console.warn('견적서 PDF 생성 실패:', e); }
+        }
+
         const products = data.products || [];
         // 사용자 메시지가 제품/구매 관련일 때만 제품 카드 표시
         const _userMsg = (text || '').toLowerCase();

@@ -256,11 +256,18 @@ serve(async (req) => {
 - "후렉스", "플렉스" → 후렉스/라텍스 출력
 
 ## 가격/견적 규칙 (최우선!)
-- ⚠️ 가격, 견적, 얼마, 비용 등을 물어보면 **직접 계산하지 말고 제품 상세페이지 링크를 안내해!**
+- ⚠️ 가격, 얼마, 비용 등을 물어보면 **직접 계산하지 말고 제품 상세페이지 링크를 안내해!**
 - "아래 제품 링크에서 원하시는 사이즈와 수량만 입력하시면 할인이 적용된 정확한 견적이 바로 나와요!" 라고 안내해.
 - 수량 할인 안내: "1개보다 3개, 더 많이 주문할수록 최대 50%까지 할인돼요! PRO 구독까지 하시면 거기서 10% 추가 할인까지!"
 - 제품 카드(products 배열)를 반드시 함께 보여줘서 고객이 바로 클릭할 수 있게 해.
 - ❌ 절대 계산 과정(공식, ㎡당 단가, 곱셈식)을 보여주지 마.
+
+## 견적서 PDF 생성 (중요!)
+- 고객이 명시적으로 "견적서", "견적서 줘", "견적서 만들어줘" 등을 요청하면 → generate_quote 도구 사용!
+- 고객이 제품명 + 사이즈 + 수량을 언급한 상태에서 견적서를 요청하면, items 배열에 해당 정보를 정리해서 넣어.
+- 가격은 넣지 마 (서버에서 자동 계산함). code, name, width_mm, height_mm, quantity만 정확히 넣어.
+- 가벽은 side: 1(단면) 또는 2(양면) 구분해서 넣어.
+- 견적서와 함께 해당 제품 카드도 products 배열에 넣어서 보여줘.
 - 디자인 비용, 부가 서비스 비용 등 상품 데이터에 없는 비용을 임의로 만들어내지 마.
 
 ## 핵심 원칙
@@ -756,6 +763,37 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 },
                 required: ["summary", "products"]
             }
+        },
+        {
+            name: "generate_quote",
+            description: "Generate a formal PDF quotation (견적서) when customer EXPLICITLY asks for a quote/견적서/見積書/quotation with specific products, sizes, and quantities. Use this ONLY when they say '견적서', '견적', 'quote', '見積', NOT for general price inquiries.",
+            input_schema: {
+                type: "object" as const,
+                properties: {
+                    summary: { type: "string" as const, description: "Response message to customer about the quote" },
+                    customer_name: { type: "string" as const, description: "Customer name if known from conversation" },
+                    items: {
+                        type: "array" as const,
+                        items: {
+                            type: "object" as const,
+                            properties: {
+                                code: { type: "string" as const, description: "Product code from database" },
+                                name: { type: "string" as const, description: "Product name" },
+                                width_mm: { type: "number" as const, description: "Width in mm" },
+                                height_mm: { type: "number" as const, description: "Height in mm" },
+                                quantity: { type: "number" as const, description: "Number of units" },
+                                side: { type: "number" as const, description: "1 for single-sided, 2 for double-sided (wall panels)" }
+                            },
+                            required: ["code", "name", "width_mm", "height_mm", "quantity"]
+                        }
+                    },
+                    products: {
+                        type: "array" as const,
+                        items: { type: "object" as const, properties: { code: { type: "string" as const }, name: { type: "string" as const }, reason: { type: "string" as const }, recommended_width_mm: { type: "number" as const }, recommended_height_mm: { type: "number" as const }, price_display: { type: "string" as const }, img_url: { type: "string" as const }, design_title: { type: "string" as const } }, required: ["code","name","reason","recommended_width_mm","recommended_height_mm","price_display","design_title"] }
+                    }
+                },
+                required: ["summary", "items"]
+            }
         }];
 
         // 이미지 포함 시 multimodal content 구성
@@ -824,7 +862,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         // 현재 메시지 추가
         messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type) });
 
-        const toolChoice = { type: "tool" as const, name: "recommend_products" };
+        // 견적서 요청 시 auto tool choice (generate_quote 사용 가능하도록)
+        const _quoteKw = /견적서|견적|見積|quotation|quote|估价/i;
+        const toolChoice = _quoteKw.test(trimmedMsg)
+            ? { type: "auto" as const }
+            : { type: "tool" as const, name: "recommend_products" };
         console.log(`[kapu] msg="${trimmedMsg.substring(0,40)}", history=${conversation_history?.length || 0}`);
 
         async function callClaude(model: string, retries = 0): Promise<any> {
@@ -864,6 +906,35 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             const data = await res.json();
             const blocks = data.content || [];
             const toolBlock = blocks.find((b: any) => b.type === "tool_use");
+
+            // ★ generate_quote 도구 처리
+            if (toolBlock && toolBlock.name === "generate_quote") {
+                const qResult = toolBlock.input;
+                // 서버에서 가격 계산 (AI 가격 신뢰하지 않음)
+                const quoteItems: any[] = [];
+                for (const qi of (qResult.items || [])) {
+                    const dbP = products.find((p: any) => p.code === qi.code);
+                    if (!dbP) continue;
+                    const wMm = qi.width_mm || dbP.width_mm || 0;
+                    const hMm = qi.height_mm || dbP.height_mm || 0;
+                    const area = (wMm * hMm) / 1000000;
+                    const side = qi.side || 1;
+                    let unitPrice = dbP.is_custom_size ? Math.floor(area * dbP._raw_per_sqm * side / 100) * 100 : (dbP._raw_price || 0);
+                    const qty = qi.quantity || 1;
+                    quoteItems.push({
+                        name: qi.name || dbP.name,
+                        spec: `${wMm}x${hMm}mm` + (side === 2 ? ' 양면' : ''),
+                        qty, unit_price: unitPrice, total: unitPrice * qty
+                    });
+                }
+                return {
+                    type: "quote",
+                    chat_message: qResult.summary || "견적서를 생성합니다.",
+                    quote_data: { customer_name: qResult.customer_name || '', items: quoteItems },
+                    products: qResult.products || []
+                };
+            }
+
             if (toolBlock) {
                 const result = toolBlock.input;
                 if (!result.chat_message) result.chat_message = result.summary || '';
