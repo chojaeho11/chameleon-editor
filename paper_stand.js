@@ -215,7 +215,7 @@
             // pd_ 로 시작하는 모든 종이매대 상품 조회
             const { data: products, error } = await sb.from('admin_products')
                 .select('*')
-                .like('code', 'pd\\_%');
+                .or('code.like.pd\\_%,is_paper_display.eq.true');
 
             if (error) throw error;
 
