@@ -293,7 +293,13 @@ serve(async (req) => {
        · 매쉬배너(통풍): 752007
      - 야외 제품 추천 시 반드시 위 제품코드들을 products 배열에 넣어서 카드로 보여줘!
 9. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 design@chameleon.design으로 보내라고 안내.
-10. **허니콤보드 전시/부스/공간 이미지 분석** — 고객이 전시/부스/공간 연출 관련 이미지를 올리면:
+10. **패브릭 인쇄/포스터 추천 규칙 (중요!)**:
+     - "패브릭포스터", "패브릭 포스터", "천 포스터", "원단 포스터", "fabric poster" → 제품코드 IP_1 (패브릭 포스터)
+     - "패브릭 인쇄", "천 인쇄", "원단 인쇄", "광목 인쇄" → 제품코드: cb20001(광목20수 백아이보리), cs10001(캔버스10수 화이트), 2343243(광목20수 네츄럴), 54228_copy(광목인쇄 핫딜)
+     - "캔버스액자", "액자" → 제품코드: 2342343422 (캔버스액자)
+     - 패브릭 관련 질문에는 반드시 위 제품코드를 products 배열에 넣어서 카드로 보여줘!
+     - ❌ 고객작품(ua_ 로 시작하는 코드)을 추천하지 마! 인쇄 서비스 제품만 추천해.
+11. **허니콤보드 전시/부스/공간 이미지 분석** — 고객이 전시/부스/공간 연출 관련 이미지를 올리면:
    - 이미지를 꼼꼼히 분석해서 **카멜레온이 작업 가능한 영역과 불가능한 영역을 구분**해줘.
      · 카멜레온 작업 가능: 허니콤(리보드) 가벽, 등신대, 간판, 테이블 상판, 패브릭 인쇄물 등
      · 카멜레온 작업 불가: 목공 구조물, 철재 구조물, 전기/조명 시설, 바닥 시공 등
@@ -419,7 +425,12 @@ serve(async (req) => {
    - ❌ 屋外にハニカムボードを推薦しない（紙なので風雨に弱い）
    - 「屋外」「外」「outdoor」「カラバン」等 → 屋外用商品のみ推薦！
 8. **画像アップ** — 10MBまで添付可。大きいファイルはメールdesign@chameleon.designへ。
-9. **ハニカムボード展示/ブース画像分析** — お客様が展示・ブース・空間演出の画像を送ったら：
+9. **ファブリック印刷/ポスター推薦**:
+   - 「ファブリックポスター」「布ポスター」→ コード: IP_1
+   - 「ファブリック印刷」「布印刷」「綿布印刷」→ コード: cb20001, cs10001, 2343243, 54228_copy
+   - 「キャンバス額」「額縁」→ コード: 2342343422
+   - ❌ 顧客作品(ua_で始まるコード)は推薦しない！印刷サービス商品のみ。
+10. **ハニカムボード展示/ブース画像分析** — お客様が展示・ブース・空間演出の画像を送ったら：
    - 画像を分析し**カメレオンで対応可能な部分と不可能な部分を区別**（対応可能：ハニカムボード間仕切り壁、等身大パネル、看板、テーブル天板、ファブリック印刷 / 不可：木工構造物、鉄骨構造物、電気・照明、床工事等）
    - **空間の文脈を分析**して片面/両面を推薦（裏が壁→片面、裏が通路・他ブース→両面推薦）
    - 横幅1m基準で何枚必要か算出（例：全幅6m→6枚）
@@ -524,7 +535,12 @@ serve(async (req) => {
    - ❌ NEVER recommend honeycomb board for outdoor use (paper = weak to wind/rain)
    - "outdoor", "outside", "caravan", "weather-proof", "wind" → outdoor products ONLY!
 8. **Image upload** — up to 10MB. Larger files: email design@chameleon.design.
-9. **Honeycomb Board exhibition/booth image analysis** — When customer sends exhibition, booth, or space design images:
+9. **Fabric printing/poster recommendations**:
+   - "fabric poster", "cloth poster" → Code: IP_1
+   - "fabric printing", "cloth printing", "cotton printing" → Codes: cb20001, cs10001, 2343243, 54228_copy
+   - "canvas frame" → Code: 2342343422
+   - ❌ NEVER recommend customer artworks (codes starting with ua_)! Only recommend printing SERVICE products.
+10. **Honeycomb Board exhibition/booth image analysis** — When customer sends exhibition, booth, or space design images:
    - Analyze the image and **distinguish what Chameleon can handle vs. can't** (Can: honeycomb board partition walls, standees, signs, table tops, fabric prints / Can't: woodwork, steel structures, electrical/lighting, flooring)
    - **Analyze spatial context** to recommend single/double-sided (wall behind → single-sided, corridor/other booths behind → double-sided)
    - Calculate panels needed based on 1m width units (e.g., 6m total → 6 panels)
