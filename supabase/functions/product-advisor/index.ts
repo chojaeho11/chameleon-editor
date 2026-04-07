@@ -279,7 +279,7 @@ serve(async (req) => {
      - 배너 가장 보편적 크기: 600×1800mm
      - **실내용**: 허니콤보드 배너 강력추천! 종이 소재라 친환경적이고 가벼움. 커스텀 사이즈 가능. 단, 바람/비에 약해서 외부 사용은 비추천.
        · 제품코드: hb_bn_1(허니콤배너), hb_bn_2(연결형), hb_bn_3(양면)
-       · ★ 허니콤보드 제품 중 유일하게 택배 배송 가능! 주문 시 옵션에서 배송비 추가 옵션을 선택하면 택배로 받을 수 있다고 안내해줘.
+       · ★ 허니콤보드 제품 중 유일하게 택배 배송 가능! 서울/경기 무료배송, 지방 3만원(묶음배송). 주문 시 옵션에서 배송비 선택.
      - **외부/야외용**: 패트배너+거치대 세트 추천! 바람/비에 강함.
        · 제품코드: 752002(패트&야외거치대 세트), 752004(실외철재거치대 세트), 752005(현수막 배너 거치대 미포함), 752006(페트배너 거치대 미포함), 752007(매쉬배너 거치대 미포함)
      - 고객이 실내/외부 구분 없이 "배너"라고 하면 → 용도(실내/외부)를 먼저 물어봐!
@@ -465,7 +465,7 @@ serve(async (req) => {
   · 東京近郊：**送料無料＋設置無料**
   · 東京以外の地域：**配送料 ¥50,000** + **設置費 ¥100,000**（別途！）
   · ⚠️ 配送料¥50,000 ≠ 設置費！配送のみなら¥50,000、設置も希望なら+¥100,000
-  · ★ ハニカムバナー(hb_bn_1, hb_bn_2, hb_bn_3)のみ宅配可能！（オプションで送料選択）
+  · ★ ハニカムバナー(hb_bn_1, hb_bn_2, hb_bn_3)のみ宅配可能！東京近郊は送料無料、その他¥3,000（まとめ配送）。オプションで送料選択。
   · その他のハニカム製品は宅配不可（チャーター便のみ）
   · 海外お問い合わせ: **+82-10-3491-3535**
 
@@ -581,7 +581,7 @@ serve(async (req) => {
   · **Air freight: ~$1,000** (delivery in ~4 days)
   · **Ocean freight: ~$500** (delivery in ~45 days)
   · Delivery only — on-site installation NOT available overseas
-  · ★ Only Honeycomb BANNERS (hb_bn_1, hb_bn_2, hb_bn_3) can be shipped via courier! (select shipping add-on option)
+  · ★ Only Honeycomb BANNERS (hb_bn_1, hb_bn_2, hb_bn_3) can be shipped via courier! Seoul/Gyeonggi free, other regions ~$25 (bundle shipping). Select shipping add-on option.
   · All other Honeycomb Board products: freight shipping only (no courier)
   · For shipping quotes or questions: **+82-10-3491-3535** (international consultation line)
 
