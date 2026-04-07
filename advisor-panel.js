@@ -52,8 +52,12 @@ function chatKey() { return 'kapu_chat_' + getLang(); }
 
 function saveChat() {
     try {
-        sessionStorage.setItem(chatKey(), JSON.stringify({
-            html: chatArea ? chatArea.innerHTML : '',
+        if (!chatArea) return;
+        // 엔트리 폼/웰컴 메시지만 있는 경우 저장하지 않음
+        const bubbles = chatArea.querySelectorAll('.adv-bubble-user, .adv-bubble-ai');
+        if (bubbles.length === 0 && conversationHistory.length === 0) return;
+        localStorage.setItem(chatKey(), JSON.stringify({
+            html: chatArea.innerHTML,
             history: conversationHistory,
             lastProducts
         }));
@@ -62,7 +66,7 @@ function saveChat() {
 
 function loadChat() {
     try {
-        const raw = sessionStorage.getItem(chatKey());
+        const raw = localStorage.getItem(chatKey());
         if (!raw) return false;
         const data = JSON.parse(raw);
         if (chatArea && data.html) {
@@ -71,7 +75,7 @@ function loadChat() {
         }
         conversationHistory = data.history || [];
         lastProducts = data.lastProducts || [];
-        return true;
+        return !!(data.html && data.html.length > 50);
     } catch(e) { return false; }
 }
 
@@ -82,8 +86,8 @@ function clearChat() {
     _custName = '';
     _custPhone = '';
     if (chatArea) chatArea.innerHTML = '';
-    try { sessionStorage.removeItem(chatKey()); } catch(e) {}
-    try { sessionStorage.removeItem('kapu_customer'); } catch(e) {}
+    try { localStorage.removeItem(chatKey()); } catch(e) {}
+    try { localStorage.removeItem('kapu_customer'); sessionStorage.removeItem('kapu_customer'); } catch(e) {}
     try { localStorage.removeItem(chatKey()); localStorage.removeItem('kapu_chat_guest'); } catch(e) {}
     showEntryForm();
 }
@@ -264,7 +268,7 @@ function showEntryForm() {
     function completeEntry(name, phone) {
         _custName = name;
         _custPhone = phone;
-        try { sessionStorage.setItem('kapu_customer', JSON.stringify({ name, phone })); } catch(e) {}
+        try { localStorage.setItem('kapu_customer', JSON.stringify({ name, phone })); } catch(e) {}
         card.remove();
         showWelcomeMessage();
     }
@@ -550,7 +554,7 @@ function buildPanelUI() {
 
     // 저장된 고객 정보 복원
     try {
-        const saved = sessionStorage.getItem('kapu_customer');
+        const saved = localStorage.getItem('kapu_customer');
         if (saved) {
             const c = JSON.parse(saved);
             _custName = c.name || '';
