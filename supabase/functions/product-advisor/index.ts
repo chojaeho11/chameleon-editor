@@ -949,9 +949,10 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     const hMm = qi.height_mm || dbP.height_mm || 0;
                     const area = (wMm * hMm) / 1000000;
                     const side = qi.side || 1;
-                    // 면적 기반 가격 계산: _raw_per_sqm 또는 DB price (둘 다 m²당 단가)
-                    const perSqm = dbP._raw_per_sqm || dbP._raw_price || 0;
+                    // 면적 기반 가격 계산: DB price가 m²당 단가
+                    const perSqm = dbP._raw_price || 0;
                     let unitPrice = dbP.is_custom_size ? Math.floor(area * perSqm * side / 100) * 100 : (dbP._raw_price || 0);
+                    console.log("[quote] price calc:", qi.code, "area:", area, "perSqm:", perSqm, "_raw_per_sqm:", dbP._raw_per_sqm, "_raw_price:", dbP._raw_price, "→ unitPrice:", unitPrice);
                     const qty = qi.quantity || 1;
                     quoteItems.push({
                         name: qi.name || dbP.name,
