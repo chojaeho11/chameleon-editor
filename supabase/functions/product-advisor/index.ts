@@ -1127,13 +1127,12 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     if (discountRate > 0) {
                         quoteItems[quoteItems.length - 1].spec += ` (${Math.round(discountRate * 100)}% 할인 적용)`;
                     }
-                    // ★ 커팅 옵션: 자유인쇄커팅(hb_pt_), 등신대(hb_pi_) 등에만 추가
-                    // 가벽(hb_dw_), 배너(hb_bn_)에는 커팅 없음!
-                    const _needsCutting = _isHoneycomb && !(qi.code || '').startsWith('hb_bn') && !(qi.code || '').startsWith('hb_dw');
+                    // ★ 커팅 옵션: 자유인쇄커팅(hb_pt_)과 등신대(hb_pi_)에만 추가
+                    const _pCode2 = qi.code || '';
+                    const _needsCutting = _pCode2.startsWith('hb_pt') || _pCode2.startsWith('hb_pi');
                     if (_needsCutting) {
-                        // ★ 등신대(hb_pi_)는 기본 모양커팅, 나머지는 사각커팅
-                        const _isStandee = (qi.code || '').startsWith('hb_pi');
-                        const cutType = _isStandee || (qi.note || '').includes('모양') ? '모양커팅' : '사각 커팅';
+                        const _isStandee = _pCode2.startsWith('hb_pi');
+                        const cutType = _isStandee ? '모양커팅' : '사각 커팅';
                         const cutCode = cutType === '모양커팅' ? '23we324' : '3244234';
                         const cutPrice = cutType === '모양커팅' ? 3000 : 1000;
                         quoteItems.push({
@@ -1142,6 +1141,17 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                             qty, unit_price: cutPrice, total: cutPrice * qty,
                             _code: cutCode, _width_mm: 0, _height_mm: 0, is_addon: true
                         });
+                    }
+                    // ★ 글씨포토존(hb_ss_): 가로>2400 또는 높이>1200이면 2배 가격
+                    if (_pCode2.startsWith('hb_ss') && unitPrice > 0) {
+                        if (wMm > 2400 || hMm > 1200) {
+                            const prevItem = quoteItems[quoteItems.length - (_needsCutting ? 2 : 1)];
+                            if (prevItem && prevItem._code === _pCode2) {
+                                prevItem.unit_price = unitPrice * 2;
+                                prevItem.total = prevItem.unit_price * qty;
+                                prevItem.spec += ' (대형 2배)';
+                            }
+                        }
                     }
                 }
                 // ★ 최소 주문금액 10,000원 — 전체 합계 기준
