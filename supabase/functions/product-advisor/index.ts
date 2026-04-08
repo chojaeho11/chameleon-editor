@@ -84,7 +84,8 @@ serve(async (req) => {
         const [prodRes, baseRes, catRes, qaRes, addonRes, addonCatRes] = await Promise.all([
             sb.from("admin_products")
                 .select("code,name,name_jp,name_us,price,price_jp,price_us,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url,addons")
-                .order("sort_order", { ascending: true }).limit(2000),
+                .not("code", "like", "ua_%")
+                .order("sort_order", { ascending: true }).limit(500),
             sb.from("admin_products")
                 .select("code,name,price,width_mm,height_mm,is_custom_size,category")
                 .eq("width_mm", 1000).eq("height_mm", 1000).eq("is_custom_size", true),

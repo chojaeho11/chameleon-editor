@@ -7580,7 +7580,7 @@ async function renderQuickMenu() {
         const [{ data: topCats }, { data: subCats }, { data: allProds }] = await Promise.all([
             sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true }),
             sb.from('admin_categories').select('*').order('sort_order', { ascending: true }),
-            sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').order('sort_order', { ascending: true })
+            sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true })
         ]);
 
         // 전역 변수 초기화 (검색 오류 방지 핵심)
