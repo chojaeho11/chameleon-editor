@@ -1982,5 +1982,6 @@
   "cart_manager": "担当マネージャー",
   "cart_hq_handle": "🏢 本社対応",
   "cart_request_note": "要望事項",
-  "cart_request_ph": "ご要望を入力してください（任意）"
+  "cart_request_ph": "ご要望を入力してください（任意）",
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> ファイルは各商品の <b style=\"color:#dc2626;\">📎 ファイル添付</b> ボタンからPDFまたは画像を添付してください。"
 }

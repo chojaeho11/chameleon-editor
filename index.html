@@ -4504,7 +4504,7 @@ async function handleSubReturn() {
         <div style="display: flex; flex-direction: column; gap: 20px; padding: 0 20px;">
             
             <div style="background:#fff7ed; padding:12px 16px; border-radius:12px; border:1px solid #fed7aa; text-align:center;">
-                <span style="font-size:13px; color:#9a3412;"><i class="fa-solid fa-circle-info"></i> 파일은 각 상품의 <b style="color:#dc2626;">📎 파일 첨부</b> 버튼으로 PDF 또는 이미지를 첨부해 주세요.</span>
+                <span style="font-size:13px; color:#9a3412;" data-i18n="cart_file_notice"><i class="fa-solid fa-circle-info"></i> 파일은 각 상품의 <b style="color:#dc2626;">📎 파일 첨부</b> 버튼으로 PDF 또는 이미지를 첨부해 주세요.</span>
             </div>
 
             <div id="cartListArea" style="width: 100%;"></div>
@@ -4556,12 +4556,13 @@ async function handleSubReturn() {
                         </div>
                     </div>
 
-                    <div style="margin-bottom:12px;">
+                    <div id="cartManagerRow" style="margin-bottom:12px;">
                         <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_manager">담당 매니저</label>
                         <select id="cartStaffManager" class="ai-input-pretty" style="margin:0; height:40px; font-size:13px;">
                             <option value="__hq__" selected data-i18n="cart_hq_handle">🏢 본사에서 처리</option>
                         </select>
                     </div>
+                    <script>(function(){ var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||''; if(c&&c!=='KR'){ var r=document.getElementById('cartManagerRow'); if(r)r.style.display='none'; } })();</script>
 
                     <div>
                         <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_request_note">요청사항</label>
@@ -4668,7 +4669,7 @@ async function handleSubReturn() {
                     <!-- 마일리지 적용 후 합계 -->
                     <div id="cartFinalRow" style="display:none; margin-top:10px; display:flex; justify-content:space-between; font-weight:bold; font-size:18px; color:#6366f1; padding:0 5px;">
                         <span data-i18n="label_final_pay_amount">최종 결제 금액</span>
-                        <span id="cartFinalTotal">0원</span>
+                        <span id="cartFinalTotal">-</span>
                     </div>
 
                     <div id="minOrderNotice" style="margin-top:14px; background:linear-gradient(135deg,#fffbeb,#fef3c7); border:1.5px solid #f59e0b; border-radius:10px; padding:10px 14px; text-align:center;">

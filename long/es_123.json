@@ -1953,5 +1953,6 @@
   "cart_manager": "Gerente asignado",
   "cart_hq_handle": "🏢 Sede central",
   "cart_request_note": "Solicitudes",
-  "cart_request_ph": "Ingrese solicitudes (opcional)"
+  "cart_request_ph": "Ingrese solicitudes (opcional)",
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Adjunte archivos con el boton <b style=\"color:#dc2626;\">📎 Adjuntar</b> de cada producto como PDF o imagen."
 }

@@ -1954,5 +1954,6 @@
   "cart_manager": "المدير المسؤول",
   "cart_hq_handle": "🏢 المقر الرئيسي",
   "cart_request_note": "ملاحظات",
-  "cart_request_ph": "أدخل ملاحظاتك (اختياري)"
+  "cart_request_ph": "أدخل ملاحظاتك (اختياري)",
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> قم بإرفاق الملفات عبر زر <b style=\"color:#dc2626;\">📎 إرفاق ملف</b> في كل منتج بصيغة PDF أو صورة."
 }

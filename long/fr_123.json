@@ -1953,5 +1953,6 @@
   "cart_manager": "Responsable",
   "cart_hq_handle": "🏢 Siege social",
   "cart_request_note": "Remarques",
-  "cart_request_ph": "Entrez vos remarques (optionnel)"
+  "cart_request_ph": "Entrez vos remarques (optionnel)",
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Joignez les fichiers via le bouton <b style=\"color:#dc2626;\">📎 Joindre</b> de chaque produit en PDF ou image."
 }

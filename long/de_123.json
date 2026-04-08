@@ -1953,5 +1953,6 @@
   "cart_manager": "Zustaendiger Manager",
   "cart_hq_handle": "🏢 Zentrale",
   "cart_request_note": "Anmerkungen",
-  "cart_request_ph": "Anmerkungen eingeben (optional)"
+  "cart_request_ph": "Anmerkungen eingeben (optional)",
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Dateien bitte uber den <b style=\"color:#dc2626;\">📎 Datei anhangen</b> Button als PDF oder Bild hochladen."
 }

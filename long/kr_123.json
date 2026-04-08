@@ -1589,5 +1589,6 @@
   "cart_manager": "담당 매니저",
   "cart_hq_handle": "🏢 본사에서 처리",
   "cart_request_note": "요청사항",
-  "cart_request_ph": "요청사항을 입력해주세요 (선택)"
+  "cart_request_ph": "요청사항을 입력해주세요 (선택)",
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> 파일은 각 상품의 <b style=\"color:#dc2626;\">📎 파일 첨부</b> 버튼으로 PDF 또는 이미지를 첨부해 주세요."
 }
