@@ -4557,12 +4557,39 @@ async function handleSubReturn() {
                     </div>
 
                     <div id="cartManagerRow" style="margin-bottom:12px;">
-                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_manager">담당 매니저</label>
-                        <select id="cartStaffManager" class="ai-input-pretty" style="margin:0; height:40px; font-size:13px;">
-                            <option value="__hq__" selected data-i18n="cart_hq_handle">🏢 본사에서 처리</option>
-                        </select>
+                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:6px;" data-i18n="cart_manager">담당 매니저</label>
+                        <input type="hidden" id="cartStaffManager" value="__hq__">
+                        <div id="cartManagerBtns" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
                     </div>
-                    <script>(function(){ var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||''; if(c&&c!=='KR'){ var r=document.getElementById('cartManagerRow'); if(r)r.style.display='none'; } })();</script>
+                    <script>(function(){
+                        var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'';
+                        if(c&&c!=='KR'){ var r=document.getElementById('cartManagerRow'); if(r)r.style.display='none'; return; }
+                        var mgrs=[
+                            {value:'__hq__', label:'🏢 본사진행'},
+                            {value:'eunmi', label:'은미 매니저'},
+                            {value:'sunghee', label:'성희 매니저'},
+                            {value:'jisook', label:'지숙 매니저'}
+                        ];
+                        var box=document.getElementById('cartManagerBtns');
+                        var hidden=document.getElementById('cartStaffManager');
+                        if(!box||!hidden)return;
+                        mgrs.forEach(function(m){
+                            var btn=document.createElement('button');
+                            btn.type='button';
+                            btn.textContent=m.label;
+                            btn.dataset.val=m.value;
+                            btn.style.cssText='padding:8px 16px;border:2px solid #e2e8f0;background:#fff;color:#475569;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;';
+                            btn.onclick=function(){
+                                hidden.value=m.value;
+                                box.querySelectorAll('button').forEach(function(b){
+                                    b.style.border='2px solid #e2e8f0'; b.style.background='#fff'; b.style.color='#475569';
+                                });
+                                btn.style.border='2px solid #6366f1'; btn.style.background='#eef2ff'; btn.style.color='#4338ca';
+                            };
+                            if(m.value==='__hq__'){ btn.style.border='2px solid #6366f1'; btn.style.background='#eef2ff'; btn.style.color='#4338ca'; }
+                            box.appendChild(btn);
+                        });
+                    })();</script>
 
                     <div>
                         <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_request_note">요청사항</label>
