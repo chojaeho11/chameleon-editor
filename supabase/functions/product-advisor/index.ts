@@ -841,8 +841,14 @@ generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예
 
         // Q&A 학습 데이터 구성 — 언어별 필터링 + kr 공통 포함
         const allQaData = qaRes.data || [];
+        // ★ "디자인 무료" 관련 QA 필터링 (모든 디자인 의뢰는 유료 → 디자인마켓)
+        const _filteredQa = allQaData.filter((q: any) => {
+            const a = (q.admin_answer || '');
+            const hasFreeDesign = (a.includes('무료') && a.includes('디자인')) || (a.toLowerCase().includes('free') && a.toLowerCase().includes('design'));
+            return !hasFreeDesign;
+        });
         // 해당 언어 QA 우선 + kr QA도 참고용 포함 (해외몰에서도 kr 학습 활용)
-        const langQa = allQaData.filter((q: any) => !q.lang || q.lang === clientLang || q.lang === 'kr');
+        const langQa = _filteredQa.filter((q: any) => !q.lang || q.lang === clientLang || q.lang === 'kr');
         const sortedQa = langQa.sort((a: any, b: any) => {
             const aScore = a.lang === clientLang ? 0 : (!a.lang ? 1 : 2);
             const bScore = b.lang === clientLang ? 0 : (!b.lang ? 1 : 2);
