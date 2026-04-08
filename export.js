@@ -1540,14 +1540,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         } else if (_wMm && _hMm) {
             optParts.push(`${Math.round(_wMm)}x${Math.round(_hMm)}mm`);
         }
-        // 스와치/추가 옵션 이름도 규격 컬럼에 표시
-        if (item.selectedAddons) {
-            Object.values(item.selectedAddons).forEach(code => {
-                const add = ADDON_DB[code];
-                if (add) optParts.push(add.display_name || add.name);
-                else optParts.push(code.replace(/_/g, ' '));
-            });
-        }
+        // ★ addon 이름은 별도 └ 행으로 표시하므로 규격 컬럼에 넣지 않음 (챗봇 견적서와 동일)
         if (optParts.length > 0) pdfOptionLabel = optParts.join('\n');
 
         if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
