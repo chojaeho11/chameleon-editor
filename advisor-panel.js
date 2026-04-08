@@ -288,9 +288,14 @@ window._quoteToCart = async function(quoteId) {
     }
     try {
         const { addProductToCartDirectly } = await import('./order.js?v=291');
-        for (const item of qData.items) {
+        // addon 아이템과 메인 제품을 분리
+        const mainItems = qData.items.filter(i => !i.is_addon);
+        const addonItems = qData.items.filter(i => i.is_addon);
+        for (const item of mainItems) {
             // products 배열에서 매칭되는 제품 정보 찾기
             const rec = (qData.products || []).find(p => p.code === item._code) || {};
+            // ★ 해당 제품 다음에 나오는 addon 코드 수집
+            const addonCodes = addonItems.map(a => a._code).filter(Boolean);
             addProductToCartDirectly({
                 code: item._code || rec.code || '',
                 name: item.name,
@@ -303,7 +308,7 @@ window._quoteToCart = async function(quoteId) {
                 _calculated_price: true,
                 _quote_item: true,
                 img: rec.img_url || null,
-            }, item.qty || 1, [], {});
+            }, item.qty || 1, addonCodes, {});
         }
         if (window.updateCartBadge) window.updateCartBadge();
         // 장바구니 페이지 열기
