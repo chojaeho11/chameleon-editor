@@ -336,21 +336,21 @@ export async function initOrderSystem() {
             const _cartName = document.getElementById('cartReceiverName');
             const _hasCartForm = _cartDate && _cartDate.value;
             if (_hasCartForm) {
-                // 장바구니 폼 값으로 tempOrderInfo 구성
                 const info = getOrderInfo();
                 selectedDeliveryDate = info.date;
-                window.tempOrderInfo = {
-                    manager: info.manager,
-                    phone: info.phone,
-                    address: info.address,
-                    request: info.note,
-                    deliveryDate: info.date,
-                    installationTime: info.installationTime,
-                    staffManagerId: info.staffManager,
-                    shippingFee: info.shippingFee,
-                    nonMetroFee: info.shippingFee
-                };
-                // 바로 결제 모달 열기
+
+                // ★ 기존 모달 필드에 값 채우기 (processOrderSubmission이 읽음)
+                const _setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+                _setVal('inputManagerName', info.manager);
+                _setVal('inputManagerPhone', info.phone);
+                _setVal('inputRequest', info.note);
+                if (CURRENT_LANG === 'kr') _setVal('inputAddressKR', info.address);
+                // 담당 매니저: 장바구니에서 선택한 값 → 기존 모달 필드에 매핑
+                const _staffEl = document.getElementById('inputStaffManager');
+                if (_staffEl) _staffEl.value = info.staffManager || 'hq';
+                // 비수도권 배송비
+                window._nonMetroFeeApplied = info.shippingFee || 0;
+
                 processOrderSubmission();
                 return;
             }
