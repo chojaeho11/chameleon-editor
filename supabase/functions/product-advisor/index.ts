@@ -845,6 +845,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                             required: ["code", "name", "width_mm", "height_mm", "quantity"]
                         }
                     },
+                    shipping_region: { type: "string" as const, enum: ["seoul_gyeonggi", "province", "unknown"], description: "Customer's shipping region. 'seoul_gyeonggi' for 서울/경기/인천 (free shipping), 'province' for 지방/other regions (extra fee), 'unknown' if not mentioned" },
+                    wants_install: { type: "boolean" as const, description: "true if customer wants installation/시공/설치 service. false if they explicitly declined or only want delivery. null/omit if not discussed." },
                     products: {
                         type: "array" as const,
                         items: { type: "object" as const, properties: { code: { type: "string" as const }, name: { type: "string" as const }, reason: { type: "string" as const }, recommended_width_mm: { type: "number" as const }, recommended_height_mm: { type: "number" as const }, price_display: { type: "string" as const }, img_url: { type: "string" as const }, design_title: { type: "string" as const } }, required: ["code","name","reason","recommended_width_mm","recommended_height_mm","price_display","design_title"] }
@@ -1155,19 +1157,17 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     });
                 }
 
-                // ★ 배송비/시공비: 대화에서 지방 배송 감지
-                const _userTexts = (conversation_history || []).filter((h: any) => h.role === 'user').map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
-                const _allTexts = _allText;
-                const _seoulGyeonggi = /서울|경기|수도권|인천/.test(_userTexts);
-                const _isProvince = /지방|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주|비수도권|충주|춘천|전주|포항|창원|김해|진주|거제|통영|여수|순천|목포|군산|익산|경주|안동|구미/.test(_allTexts);
+                // ★ 배송비/시공비: AI가 대화 맥락에서 판단
                 const _hasHoneycomb = qItems.some((qi: any) => (qi.code || '').startsWith('hb_'));
                 let shippingFee = 0;
-                if (_hasHoneycomb && _isProvince && !_seoulGyeonggi) {
-                    // ★ 시공 거부 표현 감지: "설치 안해", "시공 없이", "배송만" 등
-                    const _noInstall = /설치.*않|설치.*안\s|설치.*없|시공.*않|시공.*안\s|시공.*없|배송만|배송\s*만|설치\s*안함|시공\s*안함|설치\s*불필요|시공\s*불필요/.test(_userTexts);
-                    const _wantsInstall = !_noInstall && /시공|설치|install/.test(_allTexts);
-                    shippingFee = _wantsInstall ? 700000 : 200000;
-                    console.log("[quote] shipping:", _isProvince ? 'province' : 'seoul', '_noInstall:', _noInstall, '_wantsInstall:', _wantsInstall, 'fee:', shippingFee);
+                if (_hasHoneycomb) {
+                    const _region = qResult.shipping_region || 'unknown';
+                    const _install = qResult.wants_install;
+                    if (_region === 'province') {
+                        shippingFee = _install ? 700000 : 200000;
+                    }
+                    // 'seoul_gyeonggi' → 0, 'unknown' → 0 (AI가 지역을 모르면 배송비 미포함)
+                    console.log("[quote] AI shipping:", _region, 'install:', _install, 'fee:', shippingFee);
                 }
 
                 return {
