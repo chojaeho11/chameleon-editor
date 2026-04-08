@@ -4589,9 +4589,19 @@ async function handleSubReturn() {
                         <span id="summaryDiscount">0원 (0%)</span>
                     </div>
 
-                    <div id="cartShippingFeeRow" style="display:none; justify-content:space-between; margin-bottom: 5px; color:#0369a1; font-weight:bold;">
+                    <div id="cartShippingFeeRow" style="display:none; justify-content:space-between; align-items:center; margin-bottom: 5px; color:#0369a1; font-weight:bold;">
                         <span id="cartShippingLabel">🚚 비수도권 추가 배송비</span>
-                        <span id="cartShippingAmount">0원</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span id="cartShippingAmount">0원</span>
+                            <button id="cartShippingRemoveBtn" onclick="window._removeCartShipping()" title="배송비 삭제" style="background:#ef4444; color:#fff; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">×</button>
+                        </div>
+                    </div>
+                    <div id="cartShippingAddRow" style="display:none; margin-bottom:8px;">
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button onclick="window._addCartShipping(200000,'지방 용차배송비')" style="padding:6px 12px; border:1px solid #0369a1; background:#f0f9ff; color:#0369a1; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">🚚 +용차배송 20만원</button>
+                            <button onclick="window._addCartShipping(700000,'지방 배송+시공비')" style="padding:6px 12px; border:1px solid #0369a1; background:#f0f9ff; color:#0369a1; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">🔧 +배송+시공 70만원</button>
+                            <button onclick="window._addCartShipping(30000,'지방 택배비')" style="padding:6px 12px; border:1px solid #0369a1; background:#f0f9ff; color:#0369a1; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">📦 +택배 3만원</button>
+                        </div>
                     </div>
 
                     <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">

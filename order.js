@@ -2383,6 +2383,10 @@ function updateSummary(prodTotal, addonTotal, total) {
     window.finalPaymentAmount = displayTotal;
     finalPaymentAmount = displayTotal;
 
+    // ★ 배송비 추가/삭제 행 표시
+    const shAddRow = document.getElementById('cartShippingAddRow');
+    if (shAddRow) shAddRow.style.display = (quoteShipping > 0 || cartData.length === 0) ? 'none' : 'block';
+
     const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(displayTotal);
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`;
     const btnCart = document.getElementById("btnViewCart"); if (btnCart) btnCart.style.display = (cartData.length > 0 || (typeof currentUser !== 'undefined' && currentUser)) ? "inline-flex" : "none";
@@ -4166,6 +4170,19 @@ window.updateCartFinalTotal = function() {
             finalRow.style.display = 'none';
         }
     }
+};
+
+// ★ 장바구니 배송비 추가/삭제
+window._addCartShipping = function(fee, label) {
+    const shData = { fee, label, ts: Date.now(), shipping_region: 'province', wants_install: fee >= 700000 };
+    localStorage.setItem('chameleon_quote_shipping', JSON.stringify(shData));
+    window._nonMetroFeeApplied = fee;
+    if (window.renderCart) window.renderCart();
+};
+window._removeCartShipping = function() {
+    localStorage.removeItem('chameleon_quote_shipping');
+    window._nonMetroFeeApplied = 0;
+    if (window.renderCart) window.renderCart();
 };
 
 // 장바구니 마일리지 값을 KRW로 반환하는 헬퍼
