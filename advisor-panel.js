@@ -318,15 +318,17 @@ window._quoteToCart = async function(quoteId) {
                 img: rec.img_url || null,
             }, item.qty || 1, addonCodes, {});
         }
-        // ★ 견적서 배송/시공비 저장
-        if (qData.shipping_fee && qData.shipping_fee > 0) {
-            localStorage.setItem('chameleon_quote_shipping', JSON.stringify({
-                fee: qData.shipping_fee,
-                label: qData.shipping_fee >= 700000 ? '지방 배송+시공비' : '비수도권 추가 배송비',
-                ts: Date.now()
-            }));
-            window._nonMetroFeeApplied = qData.shipping_fee;
-        }
+        // ★ 견적서 배송/시공비 + 주문 메모 저장
+        const _quoteInfo = {
+            fee: qData.shipping_fee || 0,
+            label: (qData.shipping_fee || 0) >= 700000 ? '지방 배송+시공비' : (qData.shipping_fee > 0 ? '비수도권 추가 배송비' : ''),
+            delivery_note: qData.delivery_note || '',
+            shipping_region: qData.shipping_region || '',
+            wants_install: qData.wants_install || false,
+            ts: Date.now()
+        };
+        localStorage.setItem('chameleon_quote_shipping', JSON.stringify(_quoteInfo));
+        if (_quoteInfo.fee > 0) window._nonMetroFeeApplied = _quoteInfo.fee;
         if (window.updateCartBadge) window.updateCartBadge();
         // 장바구니 페이지 열기
         const cartPage = document.getElementById('cartPage');

@@ -300,6 +300,30 @@ serve(async (req) => {
 3. **이전 대화를 기억해** — conversation_history가 있으면 맥락을 이해하고 이전 대화를 바탕으로 답변해.
 4. **추천 개수는 자유** — 1개면 1개, 3개면 3개, 5개면 5개. 상황에 맞게. 최대 5개까지.
 5. **제품 설명과 옵션을 활용해** — 각 제품의 description과 특성(is_custom_size, is_file_upload 등)을 확인하고 정확히 안내해.
+
+## ★ 견적서 생성 전 필수 확인 흐름 (자연스럽게!)
+견적서를 만들기 전에 아래 정보를 **자연스럽게 대화하면서** 수집해. 한 번에 다 물어보지 말고 맥락에 맞게 하나씩 확인해.
+질문이 자연스러운 순서: 제품→사이즈→수량→옵션→지역→일정
+
+**허니콤보드 주문 시 확인사항:**
+- 제품 종류 (가벽/배너/등신대/인쇄커팅 등)
+- 사이즈 (가로×높이mm)
+- 수량
+- 단면/양면
+- **지역** → "서울/경기시면 무료배송+설치입니다! 혹시 어느 지역이세요?"
+- **시공 필요 여부** (지방일 때만) → "설치도 필요하시면 별도 비용이 있어요. 배송만 하실까요, 설치까지 필요하세요?"
+- **추가 옵션** → "보조받침대나 코너기둥 같은 추가 옵션이 필요하시면 말씀해주세요!"
+- **납기** → "언제까지 필요하세요? 기본 3영업일 제작이에요"
+
+**패브릭 인쇄 주문 시 확인사항:**
+- 원단 종류 (광목/캔버스/쉬폰 등)
+- 사이즈
+- 수량
+- **마감 방식** → "가장자리 마감은 어떻게 할까요? 오버록(+3,000원)이 가장 인기 있어요"
+- **고리/걸이** → "벽에 거실 건가요? 끈고리나 봉마감이 필요할 수 있어요"
+
+모든 정보가 모이면 → generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예: "부산 / 3월 20일까지 / 설치 불필요 / 보조받침대 2개")
+정보가 부족하면 견적서를 만들지 말고 부족한 부분만 자연스럽게 물어봐.
 6. **⚠️ 제품 링크(카드)는 오직 2가지 경우에만! products 배열을 채워:**
    ① 견적서를 생성할 때 (generate_quote 도구 사용 시)
    ② 고객이 링크를 원할 때: "링크 줘", "URL", "보여줘", "어디서 사?", "어디서 살 수 있어?", "사는곳", "구매하는곳", "주문하는곳", "살수있는곳", "파는곳", "구매링크", "주문링크", "where to buy", "how to order", "どこで買える", "購入ページ"
@@ -847,6 +871,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     },
                     shipping_region: { type: "string" as const, enum: ["seoul_gyeonggi", "province", "unknown"], description: "Customer's shipping region. 'seoul_gyeonggi' for 서울/경기/인천 (free shipping), 'province' for 지방/other regions (extra fee), 'unknown' if not mentioned" },
                     wants_install: { type: "boolean" as const, description: "true if customer wants installation/시공/설치 service. false if they explicitly declined or only want delivery. null/omit if not discussed." },
+                    delivery_note: { type: "string" as const, description: "Delivery/order notes collected from conversation: region, date needed, special requests, etc. e.g. '부산 / 3월 15일까지 / 설치 필요 / 보조받침대 2개'" },
                     products: {
                         type: "array" as const,
                         items: { type: "object" as const, properties: { code: { type: "string" as const }, name: { type: "string" as const }, reason: { type: "string" as const }, recommended_width_mm: { type: "number" as const }, recommended_height_mm: { type: "number" as const }, price_display: { type: "string" as const }, img_url: { type: "string" as const }, design_title: { type: "string" as const } }, required: ["code","name","reason","recommended_width_mm","recommended_height_mm","price_display","design_title"] }
@@ -1183,7 +1208,14 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 return {
                     type: "quote",
                     chat_message: qResult.summary || "견적서를 생성합니다.",
-                    quote_data: { customer_name: qResult.customer_name || '', items: quoteItems, shipping_fee: shippingFee },
+                    quote_data: {
+                        customer_name: qResult.customer_name || '',
+                        items: quoteItems,
+                        shipping_fee: shippingFee,
+                        delivery_note: qResult.delivery_note || '',
+                        shipping_region: qResult.shipping_region || 'unknown',
+                        wants_install: qResult.wants_install || false,
+                    },
                     products: qResult.products || []
                 };
             }

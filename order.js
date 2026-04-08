@@ -2280,18 +2280,34 @@ function updateSummary(prodTotal, addonTotal, total) {
         if(gradeDiscount > 0) elDiscount.innerText = `-${formatCurrency(gradeDiscount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
         else elDiscount.innerText = formatCurrency(0) + " (0%)";
     }
-    // ★ 견적서 배송/시공비 표시
+    // ★ 견적서 배송/시공비 + 주문 정보 표시
     let quoteShipping = 0;
     try {
         const shData = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
-        if (shData.fee && shData.ts && (Date.now() - shData.ts < 86400000)) { // 24시간 유효
-            quoteShipping = shData.fee;
-            const shRow = document.getElementById('cartShippingFeeRow');
-            const shLabel = document.getElementById('cartShippingLabel');
-            const shAmt = document.getElementById('cartShippingAmount');
-            if (shRow) { shRow.style.display = 'flex'; }
-            if (shLabel) shLabel.textContent = '🚚 ' + (shData.label || '배송비');
-            if (shAmt) shAmt.textContent = '+' + formatCurrency(quoteShipping);
+        if (shData.ts && (Date.now() - shData.ts < 86400000)) { // 24시간 유효
+            // 배송비
+            if (shData.fee > 0) {
+                quoteShipping = shData.fee;
+                const shRow = document.getElementById('cartShippingFeeRow');
+                const shLabel = document.getElementById('cartShippingLabel');
+                const shAmt = document.getElementById('cartShippingAmount');
+                if (shRow) shRow.style.display = 'flex';
+                if (shLabel) shLabel.textContent = '🚚 ' + (shData.label || '배송비');
+                if (shAmt) shAmt.textContent = '+' + formatCurrency(quoteShipping);
+            }
+            // 주문 정보 섹션
+            const infoSection = document.getElementById('cartQuoteInfoSection');
+            const infoContent = document.getElementById('cartQuoteInfoContent');
+            if (infoSection && infoContent && (shData.delivery_note || shData.shipping_region)) {
+                let infoHtml = '';
+                if (shData.shipping_region === 'seoul_gyeonggi') infoHtml += '<div>📍 <b>지역:</b> 서울/경기 (무료배송+설치)</div>';
+                else if (shData.shipping_region === 'province') infoHtml += '<div>📍 <b>지역:</b> 지방 (' + (shData.wants_install ? '배송+시공' : '배송만') + ')</div>';
+                if (shData.delivery_note) infoHtml += '<div>📋 <b>메모:</b> ' + shData.delivery_note.replace(/\//g, ' / ') + '</div>';
+                if (infoHtml) {
+                    infoContent.innerHTML = infoHtml;
+                    infoSection.style.display = 'block';
+                }
+            }
         }
     } catch(e) {}
     const displayTotal = finalTotal + quoteShipping;
