@@ -1131,7 +1131,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     // 가벽(hb_dw_), 배너(hb_bn_)에는 커팅 없음!
                     const _needsCutting = _isHoneycomb && !(qi.code || '').startsWith('hb_bn') && !(qi.code || '').startsWith('hb_dw');
                     if (_needsCutting) {
-                        const cutType = (qi.note || '').includes('모양') ? '모양커팅' : '사각 커팅';
+                        // ★ 등신대(hb_pi_)는 기본 모양커팅, 나머지는 사각커팅
+                        const _isStandee = (qi.code || '').startsWith('hb_pi');
+                        const cutType = _isStandee || (qi.note || '').includes('모양') ? '모양커팅' : '사각 커팅';
                         const cutCode = cutType === '모양커팅' ? '23we324' : '3244234';
                         const cutPrice = cutType === '모양커팅' ? 3000 : 1000;
                         quoteItems.push({
@@ -1154,10 +1156,24 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         _code: '', _width_mm: 0, _height_mm: 0, is_addon: true
                     });
                 }
+
+                // ★ 배송비/시공비: 대화에서 지방 배송 감지
+                const _userTexts = (conversation_history || []).filter((h: any) => h.role === 'user').map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
+                const _allTexts = _allText; // 이미 위에서 정의됨
+                const _seoulGyeonggi = /서울|경기|수도권|인천/.test(_userTexts);
+                const _isProvince = /지방|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주|비수도권/.test(_allTexts);
+                const _hasHoneycomb = qItems.some((qi: any) => (qi.code || '').startsWith('hb_'));
+                let shippingFee = 0;
+                if (_hasHoneycomb && _isProvince && !_seoulGyeonggi) {
+                    // 시공 포함 여부
+                    const _wantsInstall = /시공|설치|install/.test(_allTexts);
+                    shippingFee = _wantsInstall ? 700000 : 200000;
+                }
+
                 return {
                     type: "quote",
                     chat_message: qResult.summary || "견적서를 생성합니다.",
-                    quote_data: { customer_name: qResult.customer_name || '', items: quoteItems },
+                    quote_data: { customer_name: qResult.customer_name || '', items: quoteItems, shipping_fee: shippingFee },
                     products: qResult.products || []
                 };
             }
