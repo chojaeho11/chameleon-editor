@@ -795,7 +795,7 @@ async function sendMessage(text, imageData) {
         const payload = {
             message: text,
             lang: getLang(),
-            conversation_history: [sysHint, ...conversationHistory.slice(-20)]
+            conversation_history: [sysHint, ...conversationHistory.slice(-40)]
         };
         if (_advRoomId) payload.room_id = _advRoomId;
         if (_custName) payload.customer_name = _custName;
@@ -877,9 +877,17 @@ async function sendMessage(text, imageData) {
         }
 
         const products = data.products || [];
+        // ★ 견적 데이터도 대화 기록에 포함 (재견적 시 이전 내용 참조용)
+        let historyContent = chatMsg;
+        if (data.type === 'quote' && data.quote_data && data.quote_data.items) {
+            const qItems = data.quote_data.items;
+            const qSummary = qItems.map(i => `${i.name} ${i.spec||''} x${i.qty} = ${i.total?.toLocaleString()}원${i.is_addon?' (옵션)':''}`).join('\n');
+            historyContent += '\n[견적내역]\n' + qSummary + '\n합계: ' + (data.quote_data.items.reduce((s,i) => s + (i.total||0), 0)).toLocaleString() + '원';
+            if (data.quote_data.shipping_fee) historyContent += ' + 배송비 ' + data.quote_data.shipping_fee.toLocaleString() + '원';
+        }
         conversationHistory.push({
             role: 'assistant',
-            content: chatMsg,
+            content: historyContent,
             products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
         });
 
