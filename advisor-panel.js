@@ -520,19 +520,6 @@ function buildPanelUI() {
             </div>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
-        <div class="adv-shortcut-btns" style="display:flex;flex-direction:column;gap:4px;padding:4px 10px;">
-            <div style="display:flex;gap:6px;">
-                <a href="${location.origin}/design-market.html" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                    <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design',kr:'디자인 의뢰'}[getLang()]||'Design Request'}
-                </a>
-                <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                    <i class="fa-solid fa-pen-ruler"></i> ${{ja:'エディタでデザイン',en:'Design with Editor',zh:'编辑器设计',ar:'تصميم بالمحرر',es:'Diseñar con Editor',de:'Im Editor gestalten',fr:'Designer avec éditeur',kr:'에디터로 디자인하기'}[getLang()]||'Design with Editor'}
-                </a>
-            </div>
-            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else document.getElementById('quoteModal')&&(document.getElementById('quoteModal').style.display='flex');" style="display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;text-decoration:none;padding:6px 6px;border-radius:10px;font-size:10px;font-weight:700;">
-                <i class="fa-solid fa-building-columns"></i> ${{ja:'展示・イベントお問合せ',en:'Exhibition Inquiry',zh:'展会咨询',ar:'استفسار معرض',es:'Consulta de Exposición',de:'Messenanfrage',fr:"Demande d'exposition",kr:'행사전시문의'}[getLang()]||'Exhibition Inquiry'}
-            </a>
-        </div>
         <div class="adv-img-preview" id="advImgPreview" style="display:none">
             <img id="advImgThumb" src="" alt="">
             <span id="advImgName"></span>
@@ -548,9 +535,26 @@ function buildPanelUI() {
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
-        <a href="${location.origin}/design-market.html#register" target="_blank" class="adv-designer-register" style="display:block;margin:10px 10px 6px;padding:16px 14px;background:linear-gradient(135deg,#f59e0b,#eab308);color:#fff;text-decoration:none;border-radius:10px;font-size:12px;line-height:1.6;text-align:center;font-weight:600;">
-            <i class="fa-solid fa-pen-nib"></i> ${{ja:'デザイナー登録しませんか？カメレオンがお客様とデザイナーをつなぎます。業界最低の仲介手数料で、毎日たくさんの注文が届きます。',en:'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.',zh:'注册成为设计师！变色龙为您连接客户。行业最低中介费，每天大量订单涌入。',ar:'سجل كمصمم! كاميليون يربط العملاء بالمصممين. أقل عمولات وسيط في الصناعة مع طلبات يومية.',es:'Regístrese como diseñador. Chameleon conecta clientes y diseñadores. Las comisiones más bajas del sector.',de:'Registrieren Sie sich als Designer! Chameleon verbindet Kunden mit Designern. Niedrigste Vermittlungsgebühren der Branche.',fr:"Inscrivez-vous comme designer ! Chameleon connecte clients et designers. Les frais les plus bas du secteur.",kr:'디자이너로 등록하세요! 카멜레온이 고객과 디자이너를 연결합니다. 업계 최저 중계수수료와 매일매일 수많은 고객의 오더가 쏟아집니다.'}[getLang()]||'Register as a designer! Chameleon connects customers with designers. Lowest brokerage fees in the industry with daily orders pouring in.'}
-        </a>
+        <div class="adv-shortcut-btns" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px 10px;">
+            <a href="${location.origin}/design-market.html" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#6366f1;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-palette"></i> ${{kr:'디자인의뢰',ja:'デザイン依頼',en:'Design Request'}[getLang()]||'Design Request'}
+            </a>
+            <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#059669;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-pen-ruler"></i> ${{kr:'셀프디자인',ja:'セルフデザイン',en:'Self Design'}[getLang()]||'Self Design'}
+            </a>
+            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#0ea5e9;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-comment-dots"></i> ${{kr:'문의남기기',ja:'お問合せ',en:'Contact Us'}[getLang()]||'Contact Us'}
+            </a>
+            <a href="javascript:void(0)" onclick="document.getElementById('advProductSearch').focus()" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#f59e0b;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-magnifying-glass"></i> ${{kr:'제품검색',ja:'商品検索',en:'Search'}[getLang()]||'Search'}
+            </a>
+            <a href="javascript:void(0)" onclick="if(window.openAuthModal)window.openAuthModal('signup')" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#ec4899;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-user-plus"></i> ${{kr:'회원가입',ja:'新規登録',en:'Sign Up'}[getLang()]||'Sign Up'}
+            </a>
+            <a href="${location.origin}/design-market.html#register" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#78716c;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-pen-nib"></i> ${{kr:'디자이너등록',ja:'デザイナー登録',en:'Be a Designer'}[getLang()]||'Be a Designer'}
+            </a>
+        </div>
     `;
     chatArea = document.getElementById('advChatArea');
 
