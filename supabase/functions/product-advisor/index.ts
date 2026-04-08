@@ -1415,54 +1415,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         return !_skipSubCats.has(dbP.category) && !_skipProductCodes.has(rec.code);
                     });
                 }
-                let hasProducts = result.products && result.products.length > 0;
-                // fallback: AI가 products 비워놓고 summary에 제품 설명만 한 경우 → 텍스트 매칭으로 카드 주입
-                if (!hasProducts) {
-                    const _comb = (trimmedMsg + ' ' + (result.summary || '') + ' ' + (result.chat_message || '')).toLowerCase();
-                    const _isContact = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _comb.includes(k));
-                    // 디자인 의뢰/마켓 관련 → fallback 상품 주입 스킵 (AI의 디자인마켓 안내를 보존)
-                    const _isDesignRequest = ['디자인 의뢰','디자인 맡기','디자인 해줘','디자이너','design help','need a designer','design market','デザイン依頼','デザイナー','design-market'].some(k => _comb.includes(k));
-                    if (!_isContact && !_isDesignRequest) {
-                        // 1차: 제품명(한/영/일) + 카테고리 매칭 (3글자 이상만, 일반 단어 제외)
-                        const _commonWords = new Set(['인쇄','출력','제품','상품','가격','사이즈','주문','배송','디자인','printing','product','price','order','size','design','印刷','商品','価格','サイズ','注文','配送','デザイン','원판','도매','wholesale','大判']);
-                        let _m = aiProducts.filter((p: any) => {
-                            const rp = rawProducts.find((r: any) => r.code === p.code);
-                            const names = [p.name || '', rp?.name_us || '', rp?.name_jp || '', p.category || ''];
-                            return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 3 && !_commonWords.has(w.toLowerCase())).some((kw: string) => _comb.includes(kw.toLowerCase())));
-                        }).slice(0, 5);
-                        // 2차: 다국어 키워드 → 카테고리 매칭 (아랍어/중국어 등 비라틴 언어 대응)
-                        if (_m.length === 0) {
-                            // 키워드 → 서브카테고리 직접 매칭 (대표 제품만 추천)
-                            const _subCatKeywords: [string[], string[]][] = [
-                                // [keywords, subcategory codes]
-                                [['معرض','展示','booth','exhibition','exposición','exposition','ausstellung','展位','كشك','جناح','honeycomb','ハニカム','هاني'], ['hb_display_wall','hb_tree','hb_table','hb_point','hb_insta','34535354']],
-                                [['بوابة','gate','ゲート'], ['hb_tree']],
-                                [['جدار','قاطع','partition','wall','パーティション','가벽'], ['hb_display_wall']],
-                                [['طاولة','table','テーブル','mesa','tisch','桌'], ['hb_table']],
-                                [['banner','バナー','横幕','pancarta','bannière','横断幕','لافتة'], ['hb_banner','banner','75001']],
-                                [['fabric','ファブリック','قماش','布料','tissu','tela','Stoff','canvas','キャンバス','帆布'], ['ch10s','cn16s','obo10s','lin20s']],
-                                [['keyring','キーリング','ميدالية','钥匙扣'], ['acr_key_ring']],
-                                [['sticker','ステッカー','ملصق','贴纸'], ['pp_sticker']],
-                                [['print','印刷','طباعة','printing'], ['pp_leaflet','pp_poster','pp_business_card']],
-                                [['acrylic','アクリル','أكريليك','亚克力'], ['acrylic']],
-                            ];
-                            for (const [keywords, subCats] of _subCatKeywords) {
-                                if (keywords.some(k => _comb.includes(k.toLowerCase()))) {
-                                    _m = aiProducts.filter((p: any) => subCats.includes(p.category)).slice(0, 5);
-                                    if (_m.length > 0) break;
-                                }
-                            }
-                        }
-                        if (_m.length > 0) {
-                            result.products = _m.map((p: any) => {
-                                const rp = rawProducts.find((r: any) => r.code === p.code);
-                                const ac = rp?.addons ? rp.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
-                                return { code: p.code, name: p.name, img_url: p.img_url || '', _raw_price_krw: p._raw_price, _raw_per_sqm_krw: p._raw_per_sqm, is_custom_size: p.is_custom_size, addons: ac.map((c: string) => addonMap[c]).filter(Boolean) };
-                            });
-                            hasProducts = true;
-                        }
-                    }
-                }
+                const hasProducts = result.products && result.products.length > 0;
+                // ★ fallback 제품 주입 제거 — AI가 recommend_products로 보낸 것만 사용
+                // 프론트엔드에서 링크 요청 시에만 카드 표시하므로 서버에서 강제 주입하면 DB 낭비
                 result.type = hasProducts ? "recommendation" : "chat";
                 if (!hasProducts) result.products = [];
                 result._model = model;
@@ -1490,26 +1445,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
 
             const textParts = blocks.filter((b: any) => b.type === "text").map((b: any) => b.text);
             const textResult: any = { type: "chat", chat_message: textParts.join("\n") || "...", products: [], _model: model };
-            // 텍스트 응답에서 제품명 매칭 시 카드 주입 (디자인 의뢰/일반 단어 제외)
-            const _combined = (trimmedMsg + ' ' + textResult.chat_message).toLowerCase();
-            const _isContactMsg = ['전화','연락처','번호','phone','call','contact','메일','email'].some(k => _combined.includes(k));
-            const _isDesignMsg = ['디자인 의뢰','디자인 맡기','디자인 해줘','디자이너','design help','need a designer','design market','デザイン依頼','デザイナー','design-market'].some(k => _combined.includes(k));
-            if (!_isContactMsg && !_isDesignMsg) {
-                const _commonWords2 = new Set(['인쇄','출력','제품','상품','가격','사이즈','주문','배송','디자인','printing','product','price','order','size','design','印刷','商品','価格','サイズ','注文','配送','デザイン','원판','도매','wholesale','大判']);
-                const _matched = aiProducts.filter((p: any) => {
-                    const rp = rawProducts.find((r: any) => r.code === p.code);
-                    const names = [p.name || '', rp?.name_us || '', rp?.name_jp || '', p.category || ''];
-                    return names.some((n: string) => n.split(/\s+/).filter((w: string) => w.length >= 3 && !_commonWords2.has(w.toLowerCase())).some((kw: string) => _combined.includes(kw.toLowerCase())));
-                }).slice(0, 3);
-                if (_matched.length > 0) {
-                    textResult.products = _matched.map((p: any) => {
-                        const rp = rawProducts.find((r: any) => r.code === p.code);
-                        const ac = rp?.addons ? rp.addons.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
-                        return { code: p.code, name: p.name, img_url: p.img_url || '', _raw_price_krw: p._raw_price, _raw_per_sqm_krw: p._raw_per_sqm, is_custom_size: p.is_custom_size, addons: ac.map((c: string) => addonMap[c]).filter(Boolean) };
-                    });
-                    textResult.type = "recommendation";
-                }
-            }
+            // ★ 텍스트 응답에서 fallback 제품 주입 제거 — DB 리소스 절약
             return textResult;
         }
 
