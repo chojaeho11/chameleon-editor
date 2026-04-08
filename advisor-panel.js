@@ -93,10 +93,10 @@ function clearChat() {
 }
 
 const WELCOME = {
-    kr: `위의 <b>여기서 놀자!</b>를 누르면 내 사진으로 재미있는 변형과 빠른 주문이 가능해요.\n\n채팅창에 어떤 제품이 필요한지 말씀해 주시거나 참고할만한 사진을 올려주시면 쉽게 주문하실 수 있도록 친절하게 안내해 드릴게요.`,
-    ja: `上の<b>ここで遊ぼう!</b>を押すと、自分の写真で面白い変形と簡単注文ができます。\n\nチャットでどんな商品が必要か教えていただくか、参考になる写真をアップロードしていただければ、簡単にご注文いただけるよう丁寧にご案内いたします。`,
-    en: `Tap <b>Play Here!</b> above to have fun transforming your photos and place quick orders.\n\nTell us what product you need in the chat, or upload a reference photo — we'll guide you through an easy ordering experience.`,
-    zh: `点击上方<b>在这里玩!</b>，可以用自己的照片进行有趣的变形和快速下单。\n\n在聊天中告诉我们您需要什么产品，或者上传参考图片，我们会贴心地引导您轻松完成订购。`,
+    kr: `안녕하세요! 무엇을 도와드릴까요? 😊`,
+    ja: `こんにちは！何かお手伝いできることはありますか？`,
+    en: `Hello! How can I help you?`,
+    zh: `您好！有什么可以帮您的吗？`,
     es: `Toca <b>¡Juega Aquí!</b> arriba para transformar tus fotos y hacer pedidos rápidos.\n\nDinos qué producto necesitas en el chat o sube una foto de referencia — te guiaremos para que tu pedido sea fácil.`,
     de: `Tippen Sie oben auf <b>Hier spielen!</b>, um Ihre Fotos kreativ zu verändern und schnell zu bestellen.\n\nSagen Sie uns im Chat, welches Produkt Sie brauchen, oder laden Sie ein Referenzfoto hoch — wir begleiten Sie durch den Bestellprozess.`,
     fr: `Appuyez sur <b>Jouez ici!</b> ci-dessus pour transformer vos photos et passer des commandes rapides.\n\nDites-nous quel produit vous cherchez dans le chat ou téléchargez une photo de référence — nous vous guiderons facilement.`,
@@ -240,9 +240,9 @@ function showEntryForm() {
     try { localStorage.setItem('kapu_customer', JSON.stringify({ name: 'Guest', phone: '' })); } catch(e) {}
     const lang = getLang();
     const msgs = {
-        kr: '어떤 제품이 필요하신가요?\n\n**"허니콤보드 A4사이즈 2개 인쇄할거야. 얼마야?"** 이렇게 물어보시면 제가 제품 안내링크, 견적서와 구매링크를 드릴게요.\n\n디자인 파일이 있으시면 장바구니에서 한번에 첨부하실 수 있습니다.\n디자인파일이 없다면 아래 **디자인의뢰** 또는 **셀프디자인**을 이용해주세요.',
-        ja: 'どんな製品をお探しですか？\n\n**「ハニカムボード A4サイズ 2枚印刷したい。いくら？」**のようにお聞きいただければ、商品リンク・見積書・購入リンクをお送りします。\n\nデザインファイルがあれば、カートでまとめて添付できます。\nデザインファイルがない場合は、下の**デザイン依頼**または**セルフデザイン**をご利用ください。',
-        en: 'What product do you need?\n\nJust ask like **"I need 2 honeycomb board prints in A4 size. How much?"** and I\'ll send you product links, a quote, and a purchase link.\n\nIf you have a design file, you can attach it in the cart.\nNo design file? Use **Design Request** or **Self Design** below.'
+        kr: '안녕하세요! 무엇을 도와드릴까요? 😊',
+        ja: 'こんにちは！何かお手伝いできることはありますか？',
+        en: 'Hello! How can I help you?'
     };
     addBubble(msgs[lang] || msgs['en'], 'ai');
 }
