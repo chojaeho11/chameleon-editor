@@ -1969,5 +1969,18 @@
   "rv_nickname_ph": "ニックネーム (例: ハッピー顧客)",
   "rv_nickname_required": "ニックネームを入力してください",
   "home_wholesale_board_title": "ハニカムボード原板",
-  "home_wholesale_board_desc": "加工前のハニカムボード原板を卸売価格で提供します"
+  "home_wholesale_board_desc": "加工前のハニカムボード原板を卸売価格で提供します",
+  "cart_delivery_title": "配送情報",
+  "cart_receiver_name": "受取人",
+  "cart_receiver_phone": "連絡先",
+  "cart_address": "配送先住所",
+  "cart_name_ph": "お名前",
+  "cart_address_ph": "配送先住所を入力",
+  "cart_delivery_date": "希望配送日",
+  "cart_delivery_time": "希望時間帯",
+  "cart_time_any": "時間指定なし",
+  "cart_manager": "担当マネージャー",
+  "cart_hq_handle": "🏢 本社対応",
+  "cart_request_note": "要望事項",
+  "cart_request_ph": "ご要望を入力してください（任意）"
 }

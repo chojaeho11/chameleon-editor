@@ -1940,5 +1940,18 @@
   "rv_nickname_ph": "Spitzname (z.B. GlücklicherKunde)",
   "rv_nickname_required": "Bitte Spitzname eingeben",
   "home_wholesale_board_title": "Wabenplatte Rohware",
-  "home_wholesale_board_desc": "Wir liefern rohe Wabenplatten zu Großhandelspreisen"
+  "home_wholesale_board_desc": "Wir liefern rohe Wabenplatten zu Großhandelspreisen",
+  "cart_delivery_title": "Lieferinfo",
+  "cart_receiver_name": "Empfaenger",
+  "cart_receiver_phone": "Telefon",
+  "cart_address": "Lieferadresse",
+  "cart_name_ph": "Name",
+  "cart_address_ph": "Lieferadresse eingeben",
+  "cart_delivery_date": "Wunschtermin",
+  "cart_delivery_time": "Wunschzeit",
+  "cart_time_any": "Egal",
+  "cart_manager": "Zustaendiger Manager",
+  "cart_hq_handle": "🏢 Zentrale",
+  "cart_request_note": "Anmerkungen",
+  "cart_request_ph": "Anmerkungen eingeben (optional)"
 }

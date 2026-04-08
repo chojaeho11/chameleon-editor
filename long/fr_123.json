@@ -1940,5 +1940,18 @@
   "rv_nickname_ph": "Pseudo (ex: ClientHeureux)",
   "rv_nickname_required": "Veuillez entrer un pseudo",
   "home_wholesale_board_title": "Panneau Nid d'Abeille Brut",
-  "home_wholesale_board_desc": "Nous fournissons des panneaux nid d'abeille bruts à prix de gros"
+  "home_wholesale_board_desc": "Nous fournissons des panneaux nid d'abeille bruts à prix de gros",
+  "cart_delivery_title": "Info livraison",
+  "cart_receiver_name": "Destinataire",
+  "cart_receiver_phone": "Telephone",
+  "cart_address": "Adresse de livraison",
+  "cart_name_ph": "Nom",
+  "cart_address_ph": "Entrez adresse de livraison",
+  "cart_delivery_date": "Date souhaitee",
+  "cart_delivery_time": "Heure souhaitee",
+  "cart_time_any": "Peu importe",
+  "cart_manager": "Responsable",
+  "cart_hq_handle": "🏢 Siege social",
+  "cart_request_note": "Remarques",
+  "cart_request_ph": "Entrez vos remarques (optionnel)"
 }

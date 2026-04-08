@@ -1938,5 +1938,18 @@
   "rv_nickname_ph": "昵称 (例: 快乐客户)",
   "rv_nickname_required": "请输入昵称",
   "home_wholesale_board_title": "蜂窝板原板",
-  "home_wholesale_board_desc": "以批发价提供加工前的蜂窝板原板"
+  "home_wholesale_board_desc": "以批发价提供加工前的蜂窝板原板",
+  "cart_delivery_title": "配送信息",
+  "cart_receiver_name": "收件人",
+  "cart_receiver_phone": "联系方式",
+  "cart_address": "配送地址",
+  "cart_name_ph": "姓名",
+  "cart_address_ph": "请输入配送地址",
+  "cart_delivery_date": "期望配送日",
+  "cart_delivery_time": "期望时间段",
+  "cart_time_any": "不限时间",
+  "cart_manager": "负责经理",
+  "cart_hq_handle": "🏢 总部处理",
+  "cart_request_note": "备注",
+  "cart_request_ph": "请输入备注（可选）"
 }

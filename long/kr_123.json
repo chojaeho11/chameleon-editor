@@ -1576,5 +1576,18 @@
   "rv_nickname_ph": "닉네임 (예: 행복한고객)",
   "rv_nickname_required": "닉네임을 입력해주세요",
   "home_wholesale_board_title": "허니콤보드 원판",
-  "home_wholesale_board_desc": "가공 전 허니콤보드 원판을 도매가로 제공합니다"
+  "home_wholesale_board_desc": "가공 전 허니콤보드 원판을 도매가로 제공합니다",
+  "cart_delivery_title": "배송 정보",
+  "cart_receiver_name": "수령인",
+  "cart_receiver_phone": "연락처",
+  "cart_address": "배송 주소",
+  "cart_name_ph": "이름",
+  "cart_address_ph": "배송 받으실 주소",
+  "cart_delivery_date": "희망 배송일",
+  "cart_delivery_time": "희망 시간대",
+  "cart_time_any": "시간 무관",
+  "cart_manager": "담당 매니저",
+  "cart_hq_handle": "🏢 본사에서 처리",
+  "cart_request_note": "요청사항",
+  "cart_request_ph": "요청사항을 입력해주세요 (선택)"
 }

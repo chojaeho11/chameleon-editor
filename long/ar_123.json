@@ -1941,5 +1941,18 @@
   "rv_nickname_ph": "الاسم المستعار",
   "rv_nickname_required": "يرجى إدخال اسم مستعار",
   "home_wholesale_board_title": "ألواح قرص العسل الخام",
-  "home_wholesale_board_desc": "نوفر ألواح قرص العسل الخام بأسعار الجملة"
+  "home_wholesale_board_desc": "نوفر ألواح قرص العسل الخام بأسعار الجملة",
+  "cart_delivery_title": "معلومات التوصيل",
+  "cart_receiver_name": "المستلم",
+  "cart_receiver_phone": "رقم الهاتف",
+  "cart_address": "عنوان التوصيل",
+  "cart_name_ph": "الاسم",
+  "cart_address_ph": "أدخل عنوان التوصيل",
+  "cart_delivery_date": "تاريخ التوصيل المفضل",
+  "cart_delivery_time": "الوقت المفضل",
+  "cart_time_any": "أي وقت",
+  "cart_manager": "المدير المسؤول",
+  "cart_hq_handle": "🏢 المقر الرئيسي",
+  "cart_request_note": "ملاحظات",
+  "cart_request_ph": "أدخل ملاحظاتك (اختياري)"
 }

@@ -1940,5 +1940,18 @@
   "rv_nickname_ph": "Apodo (ej: ClienteFeliz)",
   "rv_nickname_required": "Ingrese un apodo",
   "home_wholesale_board_title": "Tablero de Panal en Bruto",
-  "home_wholesale_board_desc": "Suministramos tableros de panal en bruto a precios mayoristas"
+  "home_wholesale_board_desc": "Suministramos tableros de panal en bruto a precios mayoristas",
+  "cart_delivery_title": "Info de Envio",
+  "cart_receiver_name": "Destinatario",
+  "cart_receiver_phone": "Telefono",
+  "cart_address": "Direccion de Envio",
+  "cart_name_ph": "Nombre",
+  "cart_address_ph": "Ingrese direccion de envio",
+  "cart_delivery_date": "Fecha preferida",
+  "cart_delivery_time": "Hora preferida",
+  "cart_time_any": "Cualquier hora",
+  "cart_manager": "Gerente asignado",
+  "cart_hq_handle": "🏢 Sede central",
+  "cart_request_note": "Solicitudes",
+  "cart_request_ph": "Ingrese solicitudes (opcional)"
 }

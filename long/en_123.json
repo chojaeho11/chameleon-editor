@@ -1972,5 +1972,18 @@
   "rv_nickname_ph": "Nickname (e.g. HappyCustomer)",
   "rv_nickname_required": "Please enter a nickname",
   "home_wholesale_board_title": "Raw Honeycomb Board",
-  "home_wholesale_board_desc": "We supply raw honeycomb boards at wholesale prices"
+  "home_wholesale_board_desc": "We supply raw honeycomb boards at wholesale prices",
+  "cart_delivery_title": "Delivery Info",
+  "cart_receiver_name": "Recipient",
+  "cart_receiver_phone": "Phone",
+  "cart_address": "Delivery Address",
+  "cart_name_ph": "Name",
+  "cart_address_ph": "Enter delivery address",
+  "cart_delivery_date": "Preferred Date",
+  "cart_delivery_time": "Preferred Time",
+  "cart_time_any": "Any time",
+  "cart_manager": "Assigned Manager",
+  "cart_hq_handle": "🏢 HQ handles",
+  "cart_request_note": "Special Requests",
+  "cart_request_ph": "Enter special requests (optional)"
 }

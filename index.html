@@ -4519,53 +4519,53 @@ async function handleSubReturn() {
             <!-- ★ 배송/연락처 정보 입력 -->
             <div style="width:100%;">
                 <div style="background:white; padding:20px; border-radius:12px;">
-                    <h3 style="margin-top:0;"><i class="fa-solid fa-truck"></i> 배송 정보</h3>
+                    <h3 style="margin-top:0;"><i class="fa-solid fa-truck"></i> <span data-i18n="cart_delivery_title">배송 정보</span></h3>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                         <div>
-                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">수령인</label>
-                            <input type="text" id="cartReceiverName" class="ai-input-pretty" placeholder="이름" style="margin:0; height:40px; font-size:13px;">
+                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_receiver_name">수령인</label>
+                            <input type="text" id="cartReceiverName" class="ai-input-pretty" data-i18n-placeholder="cart_name_ph" placeholder="이름" style="margin:0; height:40px; font-size:13px;">
                         </div>
                         <div>
-                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">연락처</label>
+                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_receiver_phone">연락처</label>
                             <input type="tel" id="cartReceiverPhone" class="ai-input-pretty" placeholder="010-0000-0000" style="margin:0; height:40px; font-size:13px;">
                         </div>
                     </div>
 
                     <div style="margin-bottom:12px;">
-                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">배송 주소</label>
-                        <input type="text" id="cartReceiverAddr" class="ai-input-pretty" placeholder="배송 받으실 주소" style="margin:0; height:40px; font-size:13px;">
+                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_address">배송 주소</label>
+                        <input type="text" id="cartReceiverAddr" class="ai-input-pretty" data-i18n-placeholder="cart_address_ph" placeholder="배송 받으실 주소" style="margin:0; height:40px; font-size:13px;">
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                         <div>
-                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">희망 배송일</label>
+                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_delivery_date">희망 배송일</label>
                             <input type="date" id="cartDeliveryDate" class="ai-input-pretty" style="margin:0; height:40px; font-size:13px;">
                         </div>
                         <div>
-                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">희망 시간대</label>
+                            <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_delivery_time">희망 시간대</label>
                             <select id="cartDeliveryTime" class="ai-input-pretty" style="margin:0; height:40px; font-size:13px;">
-                                <option value="">시간 무관</option>
-                                <option value="08:00">오전 8시</option>
-                                <option value="10:00">오전 10시</option>
-                                <option value="12:00">낮 12시</option>
-                                <option value="14:00">오후 2시</option>
-                                <option value="16:00">오후 4시</option>
-                                <option value="18:00">오후 6시</option>
+                                <option value="" data-i18n="cart_time_any">시간 무관</option>
+                                <option value="08:00">08:00</option>
+                                <option value="10:00">10:00</option>
+                                <option value="12:00">12:00</option>
+                                <option value="14:00">14:00</option>
+                                <option value="16:00">16:00</option>
+                                <option value="18:00">18:00</option>
                             </select>
                         </div>
                     </div>
 
                     <div style="margin-bottom:12px;">
-                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">담당 매니저</label>
+                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_manager">담당 매니저</label>
                         <select id="cartStaffManager" class="ai-input-pretty" style="margin:0; height:40px; font-size:13px;">
-                            <option value="__hq__" selected>🏢 본사에서 처리</option>
+                            <option value="__hq__" selected data-i18n="cart_hq_handle">🏢 본사에서 처리</option>
                         </select>
                     </div>
 
                     <div>
-                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">요청사항</label>
-                        <textarea id="cartRequestNote" class="ai-input-pretty" placeholder="요청사항을 입력해주세요 (선택)" rows="2" style="margin:0; font-size:13px; resize:vertical;"></textarea>
+                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_request_note">요청사항</label>
+                        <textarea id="cartRequestNote" class="ai-input-pretty" data-i18n-placeholder="cart_request_ph" placeholder="요청사항을 입력해주세요 (선택)" rows="2" style="margin:0; font-size:13px; resize:vertical;"></textarea>
                     </div>
                 </div>
             </div>
