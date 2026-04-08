@@ -994,44 +994,42 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 const qResult = toolBlock.input;
                 console.log("[quote] AI items:", JSON.stringify(qResult.items));
                 let qItems = qResult.items || [];
-
-                // ★ AI가 items를 비워놓거나 부족할 때 → 대화에서 추출하여 보강
                 const _allText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg + ' ' + (qResult.summary || '');
-                const _existCodes = new Set(qItems.map((qi: any) => qi.code));
 
-                // 가벽 감지
-                if (/가벽/.test(_allText) && !Array.from(_existCodes).some((c: any) => String(c).startsWith('hb_dw'))) {
-                    const _wallSizeMatch = _allText.match(/가벽.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*가벽/i);
-                    const wMm = _wallSizeMatch ? parseInt(_wallSizeMatch[1]) : 1000;
-                    const hMm = _wallSizeMatch ? parseInt(_wallSizeMatch[2]) : 2400;
-                    const side = /가벽.*양면|양면.*가벽/.test(_allText) ? 2 : 1;
-                    const qtyMatch = _allText.match(/가벽.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*가벽/);
-                    const qty = qtyMatch ? parseInt(qtyMatch[1]) || 1 : 1;
-                    qItems.push({ code: 'hb_dw_1', name: '허니콤 가벽', width_mm: wMm, height_mm: hMm, quantity: qty, side });
-                    console.log("[quote] fallback 가벽:", wMm, 'x', hMm, 'side:', side, 'qty:', qty);
-                }
-                // 배너 감지
-                if (/배너/.test(_allText) && !Array.from(_existCodes).some((c: any) => String(c).startsWith('hb_bn'))) {
-                    const _bannerSizeMatch = _allText.match(/배너.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*배너/i);
-                    const bW = _bannerSizeMatch ? parseInt(_bannerSizeMatch[1]) : 600;
-                    const bH = _bannerSizeMatch ? parseInt(_bannerSizeMatch[2]) : 1800;
-                    const bSide = /배너.*양면|양면.*배너/.test(_allText) ? 2 : 1;
-                    const bCode = bSide === 2 ? 'hb_bn_3' : 'hb_bn_1';
-                    const bQtyMatch = _allText.match(/배너.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*배너/);
-                    const bQty = bQtyMatch ? parseInt(bQtyMatch[1]) || 1 : 1;
-                    qItems.push({ code: bCode, name: bSide === 2 ? '허니콤배너(양면)' : '허니콤배너', width_mm: bW, height_mm: bH, quantity: bQty, side: bSide });
-                    console.log("[quote] fallback 배너:", bW, 'x', bH, 'qty:', bQty);
-                }
-                // 등신대 감지
-                if (/등신대/.test(_allText) && !Array.from(_existCodes).some((c: any) => String(c) === 'hb_pi_5')) {
-                    const _standSizeMatch = _allText.match(/등신대.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*등신대/i);
-                    const sW = _standSizeMatch ? parseInt(_standSizeMatch[1]) : 500;
-                    const sH = _standSizeMatch ? parseInt(_standSizeMatch[2]) : 1700;
-                    const sSide = /등신대.*양면|양면.*등신대/.test(_allText) ? 2 : 1;
-                    const sQtyMatch = _allText.match(/등신대.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*등신대/);
-                    const sQty = sQtyMatch ? parseInt(sQtyMatch[1]) || 1 : 1;
-                    qItems.push({ code: 'hb_pi_5', name: '등신대', width_mm: sW, height_mm: sH, quantity: sQty, side: sSide });
-                    console.log("[quote] fallback 등신대:", sW, 'x', sH, 'qty:', sQty);
+                // ★ AI가 items를 비워놓은 경우에만 대화에서 추출 (AI가 보낸 아이템이 있으면 그대로 신뢰)
+                if (qItems.length === 0) {
+                    // 가벽 감지
+                    if (/가벽/.test(_allText)) {
+                        const _wallSizeMatch = _allText.match(/가벽.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*가벽/i);
+                        const wMm = _wallSizeMatch ? parseInt(_wallSizeMatch[1]) : 1000;
+                        const hMm = _wallSizeMatch ? parseInt(_wallSizeMatch[2]) : 2400;
+                        const side = /가벽.*양면|양면.*가벽/.test(_allText) ? 2 : 1;
+                        const qtyMatch = _allText.match(/가벽.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*가벽/);
+                        const qty = qtyMatch ? parseInt(qtyMatch[1]) || 1 : 1;
+                        qItems.push({ code: 'hb_dw_1', name: '허니콤 가벽', width_mm: wMm, height_mm: hMm, quantity: qty, side });
+                    }
+                    // 배너 감지
+                    if (/배너/.test(_allText)) {
+                        const _bannerSizeMatch = _allText.match(/배너.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*배너/i);
+                        const bW = _bannerSizeMatch ? parseInt(_bannerSizeMatch[1]) : 600;
+                        const bH = _bannerSizeMatch ? parseInt(_bannerSizeMatch[2]) : 1800;
+                        const bSide = /배너.*양면|양면.*배너/.test(_allText) ? 2 : 1;
+                        const bCode = bSide === 2 ? 'hb_bn_3' : 'hb_bn_1';
+                        const bQtyMatch = _allText.match(/배너.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*배너/);
+                        const bQty = bQtyMatch ? parseInt(bQtyMatch[1]) || 1 : 1;
+                        qItems.push({ code: bCode, name: bSide === 2 ? '허니콤배너(양면)' : '허니콤배너', width_mm: bW, height_mm: bH, quantity: bQty, side: bSide });
+                    }
+                    // 등신대 감지
+                    if (/등신대/.test(_allText)) {
+                        const _standSizeMatch = _allText.match(/등신대.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*등신대/i);
+                        const sW = _standSizeMatch ? parseInt(_standSizeMatch[1]) : 500;
+                        const sH = _standSizeMatch ? parseInt(_standSizeMatch[2]) : 1700;
+                        const sSide = /등신대.*양면|양면.*등신대/.test(_allText) ? 2 : 1;
+                        const sQtyMatch = _allText.match(/등신대.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*등신대/);
+                        const sQty = sQtyMatch ? parseInt(sQtyMatch[1]) || 1 : 1;
+                        qItems.push({ code: 'hb_pi_5', name: '등신대', width_mm: sW, height_mm: sH, quantity: sQty, side: sSide });
+                    }
+                    console.log("[quote] fallback extracted:", JSON.stringify(qItems));
                 }
                 console.log("[quote] final qItems:", JSON.stringify(qItems));
 
@@ -1159,15 +1157,17 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
 
                 // ★ 배송비/시공비: 대화에서 지방 배송 감지
                 const _userTexts = (conversation_history || []).filter((h: any) => h.role === 'user').map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
-                const _allTexts = _allText; // 이미 위에서 정의됨
+                const _allTexts = _allText;
                 const _seoulGyeonggi = /서울|경기|수도권|인천/.test(_userTexts);
-                const _isProvince = /지방|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주|비수도권/.test(_allTexts);
+                const _isProvince = /지방|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주|비수도권|충주|춘천|전주|포항|창원|김해|진주|거제|통영|여수|순천|목포|군산|익산|경주|안동|구미/.test(_allTexts);
                 const _hasHoneycomb = qItems.some((qi: any) => (qi.code || '').startsWith('hb_'));
                 let shippingFee = 0;
                 if (_hasHoneycomb && _isProvince && !_seoulGyeonggi) {
-                    // 시공 포함 여부
-                    const _wantsInstall = /시공|설치|install/.test(_allTexts);
+                    // ★ 시공 거부 표현 감지: "설치 안해", "시공 없이", "배송만" 등
+                    const _noInstall = /설치.*않|설치.*안\s|설치.*없|시공.*않|시공.*안\s|시공.*없|배송만|배송\s*만|설치\s*안함|시공\s*안함|설치\s*불필요|시공\s*불필요/.test(_userTexts);
+                    const _wantsInstall = !_noInstall && /시공|설치|install/.test(_allTexts);
                     shippingFee = _wantsInstall ? 700000 : 200000;
+                    console.log("[quote] shipping:", _isProvince ? 'province' : 'seoul', '_noInstall:', _noInstall, '_wantsInstall:', _wantsInstall, 'fee:', shippingFee);
                 }
 
                 return {
