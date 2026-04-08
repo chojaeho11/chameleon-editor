@@ -1018,6 +1018,7 @@ function startQuoteFlow() {
             <div style="display:flex; flex-direction:column; gap:6px;">
                 <input id="advQuoteName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
                 <input id="advQuotePhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <textarea id="advQuoteMemo" placeholder="${{kr:'요청사항을 적어주세요 (사이즈, 수량, 용도 등)',ja:'ご要望をお書きください（サイズ、数量、用途など）',en:'Describe your request (size, qty, purpose etc.)'}[lang]||'Describe your request'}" rows="3" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
                 <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#0369a1; background:#fff; border:1.5px dashed #7dd3fc; border-radius:10px; padding:10px 14px;">
                     <input id="advQuoteFiles" type="file" multiple accept="image/*,.pdf" style="font-size:12px; flex:1;">
                     <span>${t('quoteFilePh')}</span>
@@ -1035,6 +1036,7 @@ function startQuoteFlow() {
     document.getElementById('advQuoteSubmit').addEventListener('click', async () => {
         const name = (document.getElementById('advQuoteName').value || '').trim();
         const phone = (document.getElementById('advQuotePhone').value || '').trim();
+        const memo = (document.getElementById('advQuoteMemo').value || '').trim();
         const fileInput = document.getElementById('advQuoteFiles');
         const files = fileInput ? fileInput.files : [];
 
@@ -1083,7 +1085,7 @@ function startQuoteFlow() {
                     customer_name: name || 'Chat Quote',
                     customer_phone: phone,
                     preferred_manager: 'Quote-' + countryTag,
-                    memo: `[CHATBOT QUOTE REQUEST from ${window.location.hostname}]\nPhone: ${phone}\n\n${chatSummary}`,
+                    memo: `[CHATBOT QUOTE REQUEST from ${window.location.hostname}]\n고객: ${name}\nPhone: ${phone}\n\n${memo ? '요청사항: ' + memo + '\n\n' : ''}${chatSummary}`,
                     files: uploadedFiles,
                     status: 'quote'
                 });
