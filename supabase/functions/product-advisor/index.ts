@@ -393,11 +393,13 @@ generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예
    - ★ **배너**: 단면 기준. 사이즈와 수량만 확인. 커팅 옵션 없음.
    - ★ **사각/모양커팅이 필요한 제품**: 자유인쇄커팅(hb_pt_1/hb_pt_2), 등신대, 포맥스인쇄, 폼보드 등만! 가벽/배너에는 커팅 묻지 마!
    - ★ **지방 배송 질문 (중요!)**: 허니콤보드 주문 시 반드시 물어봐:
-     "서울/경기 지역이시면 무료배송+무료설치입니다. 지방이시면 배송비 20만원이 추가되고, 설치도 필요하시면 설치비 50만원(1인)이 별도입니다. 어느 지역이세요?"
+     "서울/경기 지역이시면 무료배송입니다. 어느 지역이세요?"
      · 서울/경기 → 무료 (견적에 배송비 없음)
-     · 지방 배송만 → +200,000원
-     · 지방 배송+설치 → +200,000원(배송) + 500,000원(설치) = +700,000원
+     · 지방 — **배너, 소형(600×1800mm 이하) 인쇄커팅/등신대** → **택배 가능! 택배비 3만원**
+     · 지방 — **가벽, 글씨포토존, 테이블, 대형 제품** → **용차배송 20만원** (택배 불가)
+     · 지방 + 설치 필요 → 용차 20만원 + 설치 50만원 = **70만원**
      · 배송비가 있으면 견적서에 shipping_fee로 포함!
+     · 배너만 주문인데 지방이면 "택배로 보내드릴 수 있어요! 택배비 3만원입니다" 라고 안내
    - ★ 사이즈 + 수량 + 지역이 나오면 **바로 견적서 생성**!
 9. **이미지/PDF 업로드** — 10MB까지 첨부 가능. 그보다 큰 파일은 제품 주문 시 업로드하거나 이메일 design@chameleon.design으로 보내라고 안내.
 10. **패브릭 인쇄/포스터 추천 규칙 (중요!)**:
@@ -1204,17 +1206,37 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     });
                 }
 
-                // ★ 배송비/시공비: AI가 대화 맥락에서 판단
-                const _hasHoneycomb = qItems.some((qi: any) => (qi.code || '').startsWith('hb_'));
+                // ★ 배송비: 제품 크기와 지역에 따라 결정
+                const _region = qResult.shipping_region || 'unknown';
+                const _install = qResult.wants_install;
                 let shippingFee = 0;
-                if (_hasHoneycomb) {
-                    const _region = qResult.shipping_region || 'unknown';
-                    const _install = qResult.wants_install;
-                    if (_region === 'province') {
-                        shippingFee = _install ? 700000 : 200000;
+                if (_region === 'province') {
+                    // 택배 가능 여부 판단: 배너(hb_bn_) 또는 소형(600x1800 이하) 제품만 있으면 택배
+                    const _allItems = qItems.filter((qi: any) => !qi.is_addon);
+                    const _needsTruck = _allItems.some((qi: any) => {
+                        const code = qi.code || '';
+                        // 가벽(hb_dw_), 글씨포토존(hb_ss_), 테이블(hb_tb_), 게이트(hb_tr_) → 용차 필수
+                        if (code.startsWith('hb_dw') || code.startsWith('hb_ss') || code.startsWith('hb_tb') || code.startsWith('hb_tr')) return true;
+                        // 배너는 항상 택배 가능
+                        if (code.startsWith('hb_bn')) return false;
+                        // 자유인쇄커팅/등신대 → 600x1800 이하면 택배 가능
+                        const w = qi.width_mm || 0;
+                        const h = qi.height_mm || 0;
+                        if ((code.startsWith('hb_pt') || code.startsWith('hb_pi')) && w <= 600 && h <= 1800) return false;
+                        if ((code.startsWith('hb_pt') || code.startsWith('hb_pi')) && (w > 600 || h > 1800)) return true;
+                        // 허니콤 기타 대형 → 용차
+                        if (code.startsWith('hb_')) return true;
+                        return false;
+                    });
+
+                    if (_install) {
+                        shippingFee = 700000; // 용차배송 20만 + 시공 50만
+                    } else if (_needsTruck) {
+                        shippingFee = 200000; // 용차배송
+                    } else {
+                        shippingFee = 30000; // 택배 (배너, 소형 제품)
                     }
-                    // 'seoul_gyeonggi' → 0, 'unknown' → 0 (AI가 지역을 모르면 배송비 미포함)
-                    console.log("[quote] AI shipping:", _region, 'install:', _install, 'fee:', shippingFee);
+                    console.log("[quote] shipping:", _region, 'needsTruck:', _needsTruck, 'install:', _install, 'fee:', shippingFee);
                 }
 
                 return {

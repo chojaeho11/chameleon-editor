@@ -220,7 +220,7 @@ serve(async (req: Request) => {
         drawSummaryLine("공급가액 :", supply.toLocaleString() + "원");
         drawSummaryLine("부 가 세 :", vat.toLocaleString() + "원");
         if (shFee > 0) {
-            const shLabel = shFee >= 700000 ? "지방 배송+시공비 :" : "비수도권 추가 배송비 :";
+            const shLabel = shFee >= 700000 ? "지방 배송+시공비 :" : shFee >= 200000 ? "지방 용차배송비 :" : "지방 택배비 :";
             drawSummaryLine(shLabel, "+" + shFee.toLocaleString() + "원");
         }
 

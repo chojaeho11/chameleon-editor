@@ -321,7 +321,7 @@ window._quoteToCart = async function(quoteId) {
         // ★ 견적서 배송/시공비 + 주문 메모 저장
         const _quoteInfo = {
             fee: qData.shipping_fee || 0,
-            label: (qData.shipping_fee || 0) >= 700000 ? '지방 배송+시공비' : (qData.shipping_fee > 0 ? '비수도권 추가 배송비' : ''),
+            label: (qData.shipping_fee || 0) >= 700000 ? '지방 배송+시공비' : (qData.shipping_fee || 0) >= 200000 ? '지방 용차배송비' : (qData.shipping_fee > 0 ? '지방 택배비' : ''),
             delivery_note: qData.delivery_note || '',
             shipping_region: qData.shipping_region || '',
             wants_install: qData.wants_install || false,
