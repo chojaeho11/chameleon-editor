@@ -301,7 +301,7 @@ serve(async (req) => {
 - ⚠️ items 배열을 절대 비우지 마! 대화에서 언급된 제품 정보를 반드시 items에 넣어!
 - ★ 허니콤보드 제품은 최소 금액 10,000원이 적용됨 (서버에서 자동 처리)
 - ★ 최소 주문금액은 10,000원. 제품 금액이 10,000원 미만이면 자동으로 10,000원이 적용돼 (서버에서 처리). 차단하지 말고 그냥 견적서를 만들어줘.
-- ★ 허니콤보드 제품은 모양커팅(+3,000원) 또는 사각커팅(+1,000원)이 필수! 고객에게 반드시 물어봐! note에 "모양" 또는 "사각"을 적어줘.
+- ★ 모양커팅(+3,000원) 또는 사각커팅(+1,000원)은 **자유인쇄커팅(hb_pt_)과 등신대(hb_pi_)에만** 해당! 고객에게 물어봐! note에 "모양" 또는 "사각"을 적어줘. ❌ 가벽/배너/박스에는 커팅 옵션 없음! 묻지 마!
 - 제품 코드:
   · 허니콤 인쇄커팅 단면: code="hb_pt_1", 양면: code="hb_pt_2"
   · 가벽: code="hb_dw_1", width_mm/height_mm은 mm 단위 (3m = 3000mm)
@@ -419,13 +419,13 @@ generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예
      (코너기둥으로 연결된 1+2번은 보조받침대 1개, 별도 3번은 보조받침대 1개)
    - ★ **기본은 단면**. 고객이 "양면"이라고 말하기 전까지 단면. 양면인지 물어보지 마!
    - ★ 커팅 옵션 없음 (가벽은 원래 사각형)
-   - ★ 견적 확인 전에 옵션을 자연스럽게 안내해:
+   - ★★★ **가벽 견적 시 옵션 안내는 필수!** 견적 확인 전에 반드시 옵션을 안내해. 생략하지 마!:
      "참고로 추가 옵션도 있어요!
      🛡️ **보조받침대** — 야외나 아이들이 많은 곳에서는 안전을 위해 추천드려요
      💡 **조명** — 가벽에 포인트 조명을 달아 분위기를 살릴 수 있어요
      🔲 **코너기둥** — L자나 ㄱ자로 꺾이는 공간 연출이라면 필요해요
      필요한 게 있으시면 말씀해주시면 견적에 추가해 드릴게요!"
-   - ★ **금액별 할인도 안내**: "200만원 이상이면 10%부터 최대 30%까지 할인! PRO 구독 시 추가 10%!"
+   - ★★★ **금액별 할인 안내도 필수!** 가벽 합계가 200만원 이상이면 반드시 알려줘: "200만원 이상이면 10%부터 최대 30%까지 할인이 자동 적용돼요! PRO 구독 시 추가 10%!"
    - **코너기둥**: ㄱ자, ㄷ자 형태로 가벽을 연결. 수량 = 꺾이는 지점 수
    - **보조받침대**: ★ **독립된 덩어리당 1개!**
      · 코너기둥으로 연결된 가벽들은 하나의 덩어리 → 보조받침대 1개
@@ -1227,6 +1227,38 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     // 면적 기반 가격 계산: DB price가 m²당 단가
                     const perSqm = dbP._raw_price || 0;
                     let unitPrice = dbP.is_custom_size ? Math.floor(area * perSqm * side / 100) * 100 : (dbP._raw_price || 0);
+
+                    // ★ 허니콤 박스(hb_bx): 시트 기반 네스팅 가격 계산
+                    if ((qi.code || '').startsWith('hb_bx') && perSqm > 0) {
+                        const boxW = wMm, boxH = hMm;
+                        const boxD = qi.depth_mm || Math.min(boxW, boxH);
+                        const SHEET_W = 2400, SHEET_H = 1200, GAP = 10;
+                        // 박스 6면
+                        const faces = [
+                            { w: boxW, h: boxH }, { w: boxW, h: boxH },
+                            { w: boxD, h: boxH }, { w: boxD, h: boxH },
+                            { w: boxW, h: boxD }, { w: boxW, h: boxD },
+                        ];
+                        // 시트에 몇 세트 들어가는지 계산 (shelf-based nesting)
+                        let maxSets = 1;
+                        for (let n = 1; n <= 20; n++) {
+                            const allPcs: { w: number; h: number }[] = [];
+                            for (let s = 0; s < n; s++) faces.forEach(f => allPcs.push({ w: f.w + GAP, h: f.h + GAP }));
+                            allPcs.sort((a, b) => b.h - a.h);
+                            let cx = 0, cy = 0, rh = 0, ok = true;
+                            for (const p of allPcs) {
+                                if (cx + p.w > SHEET_W) { cy += rh; cx = 0; rh = 0; }
+                                if (cy + p.h > SHEET_H) { ok = false; break; }
+                                cx += p.w; rh = Math.max(rh, p.h);
+                            }
+                            if (!ok) break;
+                            maxSets = n;
+                        }
+                        // _raw_price = DB price = 시트 1장 가격 (프론트엔드와 동일)
+                        unitPrice = Math.round(perSqm / maxSets / 100) * 100;
+                        console.log("[quote] box nesting:", boxW, "x", boxH, "x", boxD, "→", maxSets, "sets/sheet, unitPrice:", unitPrice);
+                    }
+
                     // ★ 단가 최소 보정하지 않음 — 최소금액은 전체 합계에서 체크
                     console.log("[quote] price calc:", qi.code, "area:", area, "→ unitPrice:", unitPrice);
                     const qty = qi.quantity || 1;
@@ -1307,9 +1339,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     else if (hbTotal >= 3000000) hbDiscRate = 0.15;
                     else hbDiscRate = 0.10;
                     const hbDiscAmt = Math.floor(hbTotal * hbDiscRate / 100) * 100;
+                    // 할인 기준 금액 (실제 금액이 아닌 적용 기준)
+                    const thresholdLabel = hbDiscRate >= 0.30 ? '1000만원' : hbDiscRate >= 0.25 ? '700만원' : hbDiscRate >= 0.20 ? '500만원' : hbDiscRate >= 0.15 ? '300만원' : '200만원';
                     quoteItems.push({
                         name: `허니콤보드 ${Math.round(hbDiscRate * 100)}% 할인`,
-                        spec: `${(hbTotal/10000).toFixed(0)}만원 이상`,
+                        spec: `${thresholdLabel} 이상`,
                         qty: 1, unit_price: -hbDiscAmt, total: -hbDiscAmt,
                         _code: '', _width_mm: 0, _height_mm: 0, is_addon: true
                     });

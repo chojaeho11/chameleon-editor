@@ -2644,10 +2644,19 @@ async function processOrderSubmission() {
         window._nonMetroFeeApplied = 0;
     }
 
-    const gradeDisc = Math.floor(rawTotal * currentUserDiscountRate);
-    const refDisc = window.verifiedReferrerId ? Math.floor(rawTotal * 0.05) : 0;
+    // ★ 등급 할인은 상품+옵션에만 적용 (배송비 제외)
+    const _rawWithoutShip = rawTotal - (_existingShipFee > 0 ? _existingShipFee : (isNonMetroModal ? NON_METRO_FEE_KRW : 0));
+    const gradeDisc = Math.floor(_rawWithoutShip * currentUserDiscountRate);
+    const refDisc = window.verifiedReferrerId ? Math.floor(_rawWithoutShip * 0.05) : 0;
     const discountAmt = gradeDisc + refDisc;
     let finalTotal = rawTotal - discountAmt;
+
+    // ★ 장바구니 displayTotal이 있으면 그것을 기준으로 (재계산 오차 방지)
+    // 챗봇 견적서 아이템이 있으면 장바구니 합계를 신뢰
+    const _hasQuoteItems = cartData.some(i => i.product && i.product._quote_item);
+    if (_hasQuoteItems && window.finalPaymentAmount > 0) {
+        finalTotal = window.finalPaymentAmount;
+    }
 
     window.originalPayAmount = finalTotal;
     window.finalPaymentAmount = finalTotal;
@@ -4126,12 +4135,21 @@ window.updateCartFinalTotal = function() {
     const referralDiscount = window.verifiedReferrerId ? Math.floor(cartTotalKRW * 0.05) : 0;
     const afterDiscountKRW = cartTotalKRW - gradeDiscount - referralDiscount;
 
+    // 배송비 포함 (견적서 배송비 또는 비수도권 배송비)
+    let shippingKRW = window._nonMetroFeeApplied || 0;
+    if (!shippingKRW) {
+        try {
+            const shData = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+            if (shData.ts && (Date.now() - shData.ts < 86400000) && shData.fee > 0) shippingKRW = shData.fee;
+        } catch(e) {}
+    }
+
     // 입력값(현지 통화)을 KRW로 역환산
     const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
     const mileInput = document.getElementById('cartUseMileage');
     const localMileageVal = mileInput ? (parseFloat(mileInput.value) || 0) : 0;
     const usedMileageKRW = mileRate > 0 ? Math.round(localMileageVal / mileRate) : 0;
-    const finalTotalKRW = afterDiscountKRW - usedMileageKRW;
+    const finalTotalKRW = afterDiscountKRW + shippingKRW - usedMileageKRW;
 
     const finalRow = document.getElementById('cartFinalRow');
     const finalEl = document.getElementById('cartFinalTotal');
