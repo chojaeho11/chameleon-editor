@@ -1035,15 +1035,18 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 }
                 console.log("[quote] final qItems:", JSON.stringify(qItems));
 
-                // ★ 패브릭 addon 자동 추출: AI가 addon을 items에 안 넣었을 때 대화에서 감지
+                // ★ 패브릭 addon 자동 추출: 유저 메시지에서만 감지 (AI 설명 제외)
                 const _fabricCodes = ['cb20001','2343243','cb30001','ns16001','cs10001'];
                 const _hasFabric = qItems.some((qi: any) => _fabricCodes.includes(qi.code) || (qi.code || '').match(/^(cb|ns|cs|tx)/));
                 const _existingAddonCodes = new Set(qItems.filter((qi: any) => qi.is_addon).map((qi: any) => qi.code));
                 if (_hasFabric && _existingAddonCodes.size === 0) {
-                    const _allConvText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg + ' ' + (qResult.summary || '');
-                    // 마감 옵션 감지
+                    // ★ 유저 메시지만 추출 (AI 응답 제외) — AI가 옵션 설명한 것을 감지하지 않도록
+                    const _userMsgsOnly = (conversation_history || []).filter((h: any) => h.role === 'user').map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
+                    // 패브릭 메인 제품의 수량 (addon 수량 = 제품 수량)
+                    const _fabricMain = qItems.find((qi: any) => !qi.is_addon && (_fabricCodes.includes(qi.code) || (qi.code || '').match(/^(cb|ns|cs)/)));
+                    const _fabricQty = _fabricMain ? (_fabricMain.quantity || 1) : 1;
                     const _fabricAddons: Array<{code: string, name: string, pattern: RegExp}> = [
-                        { code: 'txl0001', name: '가재단', pattern: /가재단/ },
+                        { code: 'txl0001', name: '가재단', pattern: /가재단|재단만|재단\s*마감/ },
                         { code: 'txl0002', name: '오버록', pattern: /오버록|오버로크/ },
                         { code: 'txl0003', name: '인터록', pattern: /인터록|인터로크/ },
                         { code: 'txl0004', name: '말아박기', pattern: /말아박기/ },
@@ -1057,21 +1060,23 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         { code: '355353', name: '텐션봉', pattern: /텐션봉/ },
                     ];
                     for (const fa of _fabricAddons) {
-                        if (fa.pattern.test(_allConvText)) {
-                            qItems.push({ code: fa.code, name: fa.name, width_mm: 0, height_mm: 0, quantity: 1, is_addon: true });
-                            console.log("[quote] fabric addon auto-detected:", fa.code, fa.name);
+                        if (fa.pattern.test(_userMsgsOnly)) {
+                            qItems.push({ code: fa.code, name: fa.name, width_mm: 0, height_mm: 0, quantity: _fabricQty, is_addon: true });
+                            console.log("[quote] fabric addon auto-detected:", fa.code, fa.name, "qty:", _fabricQty);
                         }
                     }
                 }
                 // 서버에서 가격 계산 (AI 가격 신뢰하지 않음)
                 const quoteItems: any[] = [];
+                let _lastMainQty = 1; // addon 수량 추적용
                 for (const qi of qItems) {
                     // ★ addon 아이템은 admin_addons에서 찾기
                     if (qi.is_addon) {
                         const addonInfo = allAddons.find((a: any) => a.code === qi.code);
                         const addonPrice = addonInfo ? addonInfo.price : 0;
-                        const qty = qi.quantity || 1;
-                        console.log("[quote] addon:", qi.code, "→", addonInfo ? addonInfo.name : "NOT FOUND", "price:", addonPrice);
+                        // addon 수량: AI가 지정한 값 또는 직전 메인 제품 수량
+                        const qty = qi.quantity || _lastMainQty;
+                        console.log("[quote] addon:", qi.code, "→", addonInfo ? addonInfo.name : "NOT FOUND", "price:", addonPrice, "qty:", qty);
                         if (addonPrice > 0 || addonInfo) {
                             quoteItems.push({
                                 name: qi.name || (addonInfo ? addonInfo.name : qi.code),
@@ -1092,19 +1097,38 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     // 면적 기반 가격 계산: DB price가 m²당 단가
                     const perSqm = dbP._raw_price || 0;
                     let unitPrice = dbP.is_custom_size ? Math.floor(area * perSqm * side / 100) * 100 : (dbP._raw_price || 0);
-                    // ★ 최소금액 10,000원 (모든 제품 공통, 21355677 제외)
-                    if (qi.code !== '21355677' && unitPrice < 10000) unitPrice = 10000;
+                    // ★ 단가 최소 보정하지 않음 — 최소금액은 전체 합계에서 체크
                     console.log("[quote] price calc:", qi.code, "area:", area, "→ unitPrice:", unitPrice);
                     const qty = qi.quantity || 1;
+                    _lastMainQty = qty; // addon 수량 추적
+
+                    // ★ 수량 할인 적용 (프론트엔드와 동일 로직)
+                    const _pCode = qi.code || '';
+                    const _isHoneycomb = _pCode.startsWith('hb_');
+                    const _noDiscount = _pCode === '21355677' || _isHoneycomb || dbP._calculated_price;
+                    let discountRate = 0;
+                    if (!_noDiscount && qty >= 3) {
+                        if (qty >= 501) discountRate = 0.50;
+                        else if (qty >= 101) discountRate = 0.40;
+                        else if (qty >= 10) discountRate = 0.30;
+                        else discountRate = 0.20;
+                    }
+                    const rawTotal = unitPrice * qty;
+                    const discountAmt = Math.floor(rawTotal * discountRate / 100) * 100;
+                    const finalTotal = rawTotal - discountAmt;
+
                     quoteItems.push({
                         name: qi.name || dbP.name,
                         spec: `${wMm}x${hMm}mm` + (side === 2 ? ' 양면' : ''),
-                        qty, unit_price: unitPrice, total: unitPrice * qty,
+                        qty, unit_price: unitPrice, total: finalTotal,
                         _code: qi.code, _width_mm: wMm, _height_mm: hMm
                     });
+                    // 수량 할인이 있으면 spec에 표시
+                    if (discountRate > 0) {
+                        quoteItems[quoteItems.length - 1].spec += ` (${Math.round(discountRate * 100)}% 할인 적용)`;
+                    }
                     // ★ 커팅 옵션: 자유인쇄커팅(hb_pt_), 등신대(hb_pi_) 등에만 추가
                     // 가벽(hb_dw_), 배너(hb_bn_)에는 커팅 없음!
-                    const _isHoneycomb = (qi.code || '').startsWith('hb_');
                     const _needsCutting = _isHoneycomb && !(qi.code || '').startsWith('hb_bn') && !(qi.code || '').startsWith('hb_dw');
                     if (_needsCutting) {
                         const cutType = (qi.note || '').includes('모양') ? '모양커팅' : '사각 커팅';
@@ -1118,16 +1142,17 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         });
                     }
                 }
-                // ★ 최소 주문금액 10,000원 전체 합계 체크 (addon 포함)
-                let quoteTotal = quoteItems.reduce((s: number, i: any) => s + i.total, 0);
-                if (quoteTotal < 10000 && !qItems.some((qi: any) => qi.code === '21355677')) {
-                    // 메인 제품(addon 아닌 첫 번째)의 unit_price를 10,000원으로 올림
-                    const mainItem = quoteItems.find((i: any) => !i.is_addon);
-                    if (mainItem) {
-                        const deficit = 10000 - quoteTotal + mainItem.total;
-                        mainItem.unit_price = Math.ceil(deficit / (mainItem.qty || 1) / 100) * 100;
-                        mainItem.total = mainItem.unit_price * mainItem.qty;
-                    }
+                // ★ 최소 주문금액 10,000원 — 전체 합계 기준
+                const quoteTotal = quoteItems.reduce((s: number, i: any) => s + i.total, 0);
+                const _isExempt = qItems.some((qi: any) => qi.code === '21355677');
+                if (!_isExempt && quoteTotal < 10000) {
+                    const deficit = 10000 - quoteTotal;
+                    quoteItems.push({
+                        name: '최소주문 보정',
+                        spec: '최소 10,000원',
+                        qty: 1, unit_price: deficit, total: deficit,
+                        _code: '', _width_mm: 0, _height_mm: 0, is_addon: true
+                    });
                 }
                 return {
                     type: "quote",
