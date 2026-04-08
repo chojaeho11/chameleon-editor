@@ -3514,13 +3514,34 @@ window._uploadCartItemFile = async function(idx, input) {
     try {
         const url = await uploadFileToSupabase(file, 'customer_uploads');
         if (!url) throw new Error('업로드 실패');
+        // ★ 기존 파일 완전 교체
         items[idx].originalUrl = url;
         items[idx].fileName = file.name;
-        items[idx].type = items[idx].type === 'product_only' ? 'file_upload' : items[idx].type;
-        // ★ 이미지면 썸네일로 사용
+        items[idx].type = 'file_upload';
+        // ★ 썸네일 갱신
         if (file.type.startsWith('image/')) {
-            items[idx].thumb = url;
+            items[idx].thumb = url + '?t=' + Date.now(); // 캐시 방지
+        } else if (file.type === 'application/pdf') {
+            // PDF 첫 페이지 썸네일 생성
+            try {
+                if (window.pdfjsLib) {
+                    if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    const ab = await file.arrayBuffer();
+                    const pdf = await window.pdfjsLib.getDocument({ data: ab }).promise;
+                    const pg = await pdf.getPage(1);
+                    const vp = pg.getViewport({ scale: 150 / pg.getViewport({ scale: 1 }).width });
+                    const cvs = document.createElement('canvas');
+                    cvs.width = vp.width; cvs.height = vp.height;
+                    await pg.render({ canvasContext: cvs.getContext('2d'), viewport: vp }).promise;
+                    items[idx].thumb = cvs.toDataURL('image/jpeg', 0.7);
+                }
+            } catch(pe) { console.warn('PDF thumb failed:', pe); items[idx].thumb = null; }
+        } else {
+            items[idx].thumb = null;
         }
+        // ★ 기존 json/jsonUrl 제거 (재첨부이므로 이전 디자인 데이터 무효화)
+        items[idx].json = null;
+        items[idx].jsonUrl = null;
         localStorage.setItem(CART_KEY, JSON.stringify(items));
         cartData.length = 0; items.forEach(i => cartData.push(i));
         renderCart();
