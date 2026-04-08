@@ -328,7 +328,7 @@ window._quoteToCart = async function(quoteId) {
             ts: Date.now()
         };
         localStorage.setItem('chameleon_quote_shipping', JSON.stringify(_quoteInfo));
-        if (_quoteInfo.fee > 0) window._nonMetroFeeApplied = _quoteInfo.fee;
+        window._nonMetroFeeApplied = _quoteInfo.fee || 0;
         if (window.updateCartBadge) window.updateCartBadge();
         // 장바구니 페이지 열기
         const cartPage = document.getElementById('cartPage');

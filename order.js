@@ -2317,13 +2317,14 @@ function updateSummary(prodTotal, addonTotal, total) {
     }
     // ★ 견적서 배송/시공비 + 주문 정보 표시
     let quoteShipping = 0;
+    const shRow = document.getElementById('cartShippingFeeRow');
+    if (shRow) shRow.style.display = 'none'; // 기본 숨김
     try {
         const shData = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
         if (shData.ts && (Date.now() - shData.ts < 86400000)) { // 24시간 유효
-            // 배송비
+            // 배송비: fee > 0일 때만 표시
             if (shData.fee > 0) {
                 quoteShipping = shData.fee;
-                const shRow = document.getElementById('cartShippingFeeRow');
                 const shLabel = document.getElementById('cartShippingLabel');
                 const shAmt = document.getElementById('cartShippingAmount');
                 if (shRow) shRow.style.display = 'flex';
