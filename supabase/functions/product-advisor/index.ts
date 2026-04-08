@@ -569,6 +569,7 @@ generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예
   - "허니콤보드 원판 전문 페이지에서 다양한 두께와 사이즈의 원판을 확인하실 수 있어요!" 라고 안내
   - 링크: ${siteUrl}/raw-board${langSuffix ? '?' + langSuffix.slice(1) : ''}
   - 반드시 products 배열에 허니콤보드 원판 관련 제품 4개를 포함해서 카드로 보여줘! (상품 데이터에서 카테고리가 원판/wholesale board 관련인 제품 검색)
+  - ★ **원판은 구독(PRO) 할인 외에 수량 할인, 금액별 할인 등 다른 할인이 전혀 없음!** 할인 안내를 하지 마!
 
 ## 종이매대/종이진열대 안내 (중요!)
 - 고객이 "종이매대", "종이진열대", "종이 진열대", "paper stand", "cardboard display stand", "紙スタンド", "紙什器", "매대" 등 종이매대를 물어보면:
@@ -1267,7 +1268,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     // ★ 수량 할인 적용 (프론트엔드와 동일 로직)
                     const _pCode = qi.code || '';
                     const _isHoneycomb = _pCode.startsWith('hb_');
-                    const _noDiscount = _pCode === '21355677' || _isHoneycomb || dbP._calculated_price;
+                    const _dbCat = dbP.category || '';
+                    const _isRawBoard = _dbCat === 'honeycomb_board' || _dbCat === 'Honeycomb Board' || _dbCat === 'Wholesale Board Prices';
+                    const _noDiscount = _pCode === '21355677' || _isHoneycomb || _isRawBoard || dbP._calculated_price;
                     let discountRate = 0;
                     if (!_noDiscount && qty >= 3) {
                         if (qty >= 501) discountRate = 0.50;
