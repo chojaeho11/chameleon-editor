@@ -240,27 +240,11 @@ function showEntryForm() {
     try { localStorage.setItem('kapu_customer', JSON.stringify({ name: 'Guest', phone: '' })); } catch(e) {}
     const lang = getLang();
     const msgs = {
-        kr: {
-            greeting: '어떤 제품이 필요하신가요?',
-            example: '<b>"허니콤보드 A4사이즈 2개 인쇄할거야. 얼마야?"</b> 이렇게 물어보시면 제가 제품 안내링크, 견적서와 구매링크를 드릴게요.',
-            file: '디자인 파일이 있으시면 장바구니에서 한번에 첨부하실 수 있습니다.',
-            noFile: '디자인파일이 없다면 아래 <b>디자인의뢰</b> 또는 <b>에디터로 디자인하기</b>를 이용해주세요.'
-        },
-        ja: {
-            greeting: 'どんな製品をお探しですか？',
-            example: '<b>「ハニカムボード A4サイズ 2枚印刷したい。いくら？」</b>のようにお聞きいただければ、商品リンク・見積書・購入リンクをお送りします。',
-            file: 'デザインファイルがあれば、カートでまとめて添付できます。',
-            noFile: 'デザインファイルがない場合は、下の<b>デザイン依頼</b>または<b>エディタでデザイン</b>をご利用ください。'
-        },
-        en: {
-            greeting: 'What product do you need?',
-            example: 'Just ask like <b>"I need 2 honeycomb board prints in A4 size. How much?"</b> and I\'ll send you product links, a quote, and a purchase link.',
-            file: 'If you have a design file, you can attach it in the cart.',
-            noFile: 'No design file? Use <b>Design Request</b> or <b>Design with Editor</b> below.'
-        }
+        kr: '어떤 제품이 필요하신가요?\n\n**"허니콤보드 A4사이즈 2개 인쇄할거야. 얼마야?"** 이렇게 물어보시면 제가 제품 안내링크, 견적서와 구매링크를 드릴게요.\n\n디자인 파일이 있으시면 장바구니에서 한번에 첨부하실 수 있습니다.\n디자인파일이 없다면 아래 **디자인의뢰** 또는 **셀프디자인**을 이용해주세요.',
+        ja: 'どんな製品をお探しですか？\n\n**「ハニカムボード A4サイズ 2枚印刷したい。いくら？」**のようにお聞きいただければ、商品リンク・見積書・購入リンクをお送りします。\n\nデザインファイルがあれば、カートでまとめて添付できます。\nデザインファイルがない場合は、下の**デザイン依頼**または**セルフデザイン**をご利用ください。',
+        en: 'What product do you need?\n\nJust ask like **"I need 2 honeycomb board prints in A4 size. How much?"** and I\'ll send you product links, a quote, and a purchase link.\n\nIf you have a design file, you can attach it in the cart.\nNo design file? Use **Design Request** or **Self Design** below.'
     };
-    const M = msgs[lang] || msgs['en'];
-    addBubble(`${M.greeting}\n\n${M.example}\n\n${M.file}\n${M.noFile}`, 'ai');
+    addBubble(msgs[lang] || msgs['en'], 'ai');
 }
 
 // ─── 에디터로 디자인하기 (사이즈 입력 후 에디터 열기) ───
@@ -535,23 +519,24 @@ function buildPanelUI() {
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
+        <style>.adv-grid-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 6px;border-radius:16px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;}.adv-grid-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}</style>
         <div class="adv-shortcut-btns" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px 10px;">
-            <a href="${location.origin}/design-market.html" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#6366f1;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+            <a href="${location.origin}/design-market.html" target="_blank" class="adv-grid-btn">
                 <i class="fa-solid fa-palette"></i> ${{kr:'디자인의뢰',ja:'デザイン依頼',en:'Design Request'}[getLang()]||'Design Request'}
             </a>
-            <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#059669;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+            <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-grid-btn">
                 <i class="fa-solid fa-pen-ruler"></i> ${{kr:'셀프디자인',ja:'セルフデザイン',en:'Self Design'}[getLang()]||'Self Design'}
             </a>
-            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#0ea5e9;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" class="adv-grid-btn">
                 <i class="fa-solid fa-comment-dots"></i> ${{kr:'문의남기기',ja:'お問合せ',en:'Contact Us'}[getLang()]||'Contact Us'}
             </a>
-            <a href="javascript:void(0)" onclick="document.getElementById('advProductSearch').focus()" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#f59e0b;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+            <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-grid-btn">
                 <i class="fa-solid fa-magnifying-glass"></i> ${{kr:'제품검색',ja:'商品検索',en:'Search'}[getLang()]||'Search'}
             </a>
-            <a href="javascript:void(0)" onclick="if(window.openAuthModal)window.openAuthModal('signup')" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#ec4899;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+            <a href="javascript:void(0)" onclick="if(window.openAuthModal)window.openAuthModal('signup')" class="adv-grid-btn">
                 <i class="fa-solid fa-user-plus"></i> ${{kr:'회원가입',ja:'新規登録',en:'Sign Up'}[getLang()]||'Sign Up'}
             </a>
-            <a href="${location.origin}/design-market.html#register" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:4px;background:#78716c;color:#fff;text-decoration:none;padding:10px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+            <a href="${location.origin}/design-market.html#register" target="_blank" class="adv-grid-btn">
                 <i class="fa-solid fa-pen-nib"></i> ${{kr:'디자이너등록',ja:'デザイナー登録',en:'Be a Designer'}[getLang()]||'Be a Designer'}
             </a>
         </div>
