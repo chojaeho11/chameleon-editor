@@ -841,7 +841,7 @@ async function sendMessage(text, imageData) {
         const _userMsg = (text || '').toLowerCase();
         const _linkKeywords = ['링크','url','보여줘','어디서 사','어디서사','사는곳','구매하는곳','파는곳','주문하는곳','살수있는','구매링크','주문링크','where to buy','how to order','どこで買','購入ページ','link'];
         const _wantsLink = _linkKeywords.some(k => _userMsg.includes(k));
-        const showProducts = products.length > 0 && (data.type === 'quote' || _wantsLink);
+        const showProducts = products.length > 0 && _wantsLink;
 
         if (showProducts) {
             lastProducts = products;
