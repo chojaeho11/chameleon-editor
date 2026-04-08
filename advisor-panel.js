@@ -356,6 +356,7 @@ export function initAdvisorPanel() {
     }
 
     window._startAdvisor = startAdvisor;
+    window.startQuoteFlow = startQuoteFlow;
 
     // 전역 함수: 어디서든 카프 패널 열기
     window.openAdvisorPanel = function() {
@@ -551,8 +552,8 @@ function buildPanelUI() {
             <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-grid-btn">
                 <i class="fa-solid fa-pen-ruler"></i> ${{kr:'셀프디자인',ja:'セルフデザイン',en:'Self Design'}[getLang()]||'Self Design'}
             </a>
-            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" class="adv-grid-btn">
-                <i class="fa-solid fa-comment-dots"></i> ${{kr:'문의남기기',ja:'お問合せ',en:'Contact Us'}[getLang()]||'Contact Us'}
+            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" class="adv-grid-btn">
+                <i class="fa-solid fa-building-columns"></i> ${{kr:'행사전시문의',ja:'イベント相談',en:'Event Inquiry'}[getLang()]||'Event Inquiry'}
             </a>
             <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-grid-btn">
                 <i class="fa-solid fa-magnifying-glass"></i> ${{kr:'제품검색',ja:'商品検索',en:'Search'}[getLang()]||'Search'}
