@@ -297,41 +297,7 @@ export async function initOrderSystem() {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
 
-            // 배송 옵션 필수 체크 (묶음배송: 전체 상품 중 1개라도 배송옵션 선택되면 OK)
-            const shippingKeywords = ['배송', 'shipping', 'delivery', '配送', '発送', '운송'];
-            let hasShippingCategory = false;
-            let hasAnyShippingSelected = false;
-            for (let i = 0; i < cartData.length; i++) {
-                const item = cartData[i];
-                if (!item.product || !item.product.addons) continue;
-                const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
-                const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name)
-                    .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
-                const categories = [...new Set(allAddons.map(a => a.category_code).filter(Boolean))]
-                    .sort((a, b) => ((ADDON_CAT_DB[a]||{}).sort_order||999) - ((ADDON_CAT_DB[b]||{}).sort_order||999));
-
-                for (const cat of categories) {
-                    const catInfo = ADDON_CAT_DB[cat];
-                    if (!catInfo) continue;
-                    // 모든 언어 이름을 합쳐서 검사 (어느 사이트든 동일하게 감지)
-                    const allNames = [catInfo.name_kr, catInfo.name_jp, catInfo.name_us, catInfo.name_cn, catInfo.name_ar, catInfo.name_es, catInfo.display_name, catInfo.code].filter(Boolean).join(' ').toLowerCase();
-                    const isShipping = shippingKeywords.some(kw => allNames.includes(kw.toLowerCase()));
-                    if (!isShipping) continue;
-
-                    hasShippingCategory = true;
-                    const catAddonCodes = allAddons.filter(a => a.category_code === cat).map(a => a.code);
-                    const selectedCodes = Object.values(item.selectedAddons || {});
-                    if (catAddonCodes.some(c => selectedCodes.includes(c))) {
-                        hasAnyShippingSelected = true;
-                    }
-                }
-            }
-            if (hasShippingCategory && !hasAnyShippingSelected) {
-                showToast(window.t('msg_shipping_required', '배송옵션은 필수입니다.'), "warn");
-                return;
-            }
-
-            // ★ 장바구니 내 배송 폼이 채워져 있으면 → 날짜/배송 모달 건너뛰고 바로 결제
+            // ★ 장바구니 내 배송 폼이 채워져 있으면 → 배송옵션 체크 건너뛰고 바로 결제
             const _cartDate = document.getElementById('cartDeliveryDate');
             const _cartName = document.getElementById('cartReceiverName');
             const _hasCartForm = _cartDate && _cartDate.value;
@@ -352,6 +318,31 @@ export async function initOrderSystem() {
                 window._nonMetroFeeApplied = info.shippingFee || 0;
 
                 processOrderSubmission();
+                return;
+            }
+
+            // 배송 옵션 필수 체크 (기존 모달 경로에서만)
+            const shippingKeywords = ['배송', 'shipping', 'delivery', '配送', '発送', '운송'];
+            let hasShippingCategory = false;
+            let hasAnyShippingSelected = false;
+            for (let i = 0; i < cartData.length; i++) {
+                const item = cartData[i];
+                if (!item.product || !item.product.addons) continue;
+                const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
+                const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name);
+                const categories = [...new Set(allAddons.map(a => a.category_code).filter(Boolean))];
+                for (const cat of categories) {
+                    const catInfo = ADDON_CAT_DB[cat];
+                    if (!catInfo) continue;
+                    const allNames = [catInfo.name_kr, catInfo.name_jp, catInfo.name_us, catInfo.display_name, catInfo.code].filter(Boolean).join(' ').toLowerCase();
+                    if (!shippingKeywords.some(kw => allNames.includes(kw.toLowerCase()))) continue;
+                    hasShippingCategory = true;
+                    const catAddonCodes = allAddons.filter(a => a.category_code === cat).map(a => a.code);
+                    if (catAddonCodes.some(c => Object.values(item.selectedAddons || {}).includes(c))) hasAnyShippingSelected = true;
+                }
+            }
+            if (hasShippingCategory && !hasAnyShippingSelected) {
+                showToast(window.t('msg_shipping_required', '배송옵션은 필수입니다.'), "warn");
                 return;
             }
 
