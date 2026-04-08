@@ -2609,14 +2609,19 @@ async function processOrderSubmission() {
         return;
     }
 
-    // 허니콤보드 용차 배송비 (KR: 200,000 KRW, JP: 310,000 KRW ≈ ¥40,000)
+    // 허니콤보드 배송비: 챗봇 견적에서 이미 설정된 값 또는 모달의 라디오 버튼
+    const _existingShipFee = window._nonMetroFeeApplied || 0;
     const NON_METRO_FEE_KRW = _cc === 'JP' ? 310000 : 200000;
     const metroRadio = document.querySelector('input[name="metroArea"]:checked');
     const metroSection = document.getElementById('metroAreaSection');
-    const isNonMetro = metroSection && metroSection.style.display !== 'none' && metroRadio && metroRadio.value === 'non-metro';
-    if (isNonMetro) {
+    const isNonMetroModal = metroSection && metroSection.style.display !== 'none' && metroRadio && metroRadio.value === 'non-metro';
+    const isNonMetro = isNonMetroModal || _existingShipFee > 0;
+    if (isNonMetroModal) {
         rawTotal += NON_METRO_FEE_KRW;
         window._nonMetroFeeApplied = NON_METRO_FEE_KRW;
+    } else if (_existingShipFee > 0) {
+        // ★ 챗봇 견적서에서 설정된 배송비 사용
+        rawTotal += _existingShipFee;
     } else {
         window._nonMetroFeeApplied = 0;
     }
@@ -2637,9 +2642,10 @@ async function processOrderSubmission() {
     const nmFeeCheckout = document.getElementById('nonMetroFeeCheckout');
     const nmFeeAmountEl = document.getElementById('nonMetroFeeAmount');
     if (nmFeeCheckout) {
-        if (isNonMetro) {
+        const _showFee = isNonMetroModal ? NON_METRO_FEE_KRW : _existingShipFee;
+        if (_showFee > 0) {
             nmFeeCheckout.style.display = 'block';
-            if (nmFeeAmountEl) nmFeeAmountEl.textContent = formatCurrency(NON_METRO_FEE_KRW);
+            if (nmFeeAmountEl) nmFeeAmountEl.textContent = formatCurrency(_showFee);
         } else {
             nmFeeCheckout.style.display = 'none';
         }
