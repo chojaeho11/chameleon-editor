@@ -462,13 +462,14 @@ export function initExport() {
                     });
                 });
 
-                // 입력 크기(mm) 기준 300DPI PNG 생성
-                // board px = mm × 3.7795, 300DPI 목표 = mm × 11.811
-                // multiplier = 11.811 / 3.7795 ≈ 3.125
+                // 입력 크기(mm)와 동일한 물리 크기로 PNG 생성
+                // 일러스트레이터/포토샵은 DPI 메타데이터 없는 PNG를 72DPI로 해석
+                // board px = mm × 3.7795 (96DPI), 72DPI 기준 px = mm × 2.8346
+                // multiplier = 72/96 = 0.75 → 일러스트에서 열면 정확한 mm 크기
                 const _maxPx = 150000000;
-                let _pngMult = 3.125; // 300DPI
+                let _pngMult = 72 / 96; // 0.75 (72DPI 기준 정확한 mm)
                 const _basePx = finalW * finalH;
-                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(1, Math.floor(Math.sqrt(_maxPx / _basePx) * 10) / 10);
+                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(0.5, Math.floor(Math.sqrt(_maxPx / _basePx) * 10) / 10);
                 const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: _pngMult });
                 
                 const link = document.createElement('a');
