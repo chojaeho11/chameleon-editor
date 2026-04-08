@@ -1006,6 +1006,18 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             }
         }];
 
+        // ★ 상품 카탈로그 썸네일 — 고객 이미지와 매칭용 (카테고리별 대표 1개씩)
+        const _catalogThumbs: { url: string; label: string }[] = [];
+        {
+            const _seenCats = new Set<string>();
+            for (const p of rawProducts) {
+                const cat = p.category || '';
+                if (_seenCats.has(cat) || !p.img_url || !p.img_url.startsWith('http')) continue;
+                _seenCats.add(cat);
+                _catalogThumbs.push({ url: p.img_url, label: `${p.name} (${p.code}) [${cat}]` });
+            }
+        }
+
         // 이미지 포함 시 multimodal content 구성
         function buildUserContent(text: string, img?: string, imgType?: string): any {
             if (!img) {
@@ -1016,23 +1028,40 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 };
                 return text || fallback[clientLang] || fallback['kr'];
             }
-            const content: any[] = [
-                {
-                    type: "image",
-                    source: {
-                        type: "base64",
-                        media_type: imgType || "image/jpeg",
-                        data: img,
-                    },
+
+            const content: any[] = [];
+
+            // ★ 상품 카탈로그 썸네일 포함 (고객 이미지와 시각적 매칭)
+            if (_catalogThumbs.length > 0) {
+                const catalogText: Record<string, string> = {
+                    kr: '아래는 우리 상품 카탈로그 썸네일입니다. 고객이 보낸 이미지와 비교하여 어떤 상품인지 식별해주세요:',
+                    ja: '以下は商品カタログのサムネイルです。お客様の画像と比較して商品を特定してください:',
+                    us: 'Below are our product catalog thumbnails. Compare the customer image against these to identify the product:',
+                };
+                content.push({ type: "text", text: (catalogText[clientLang] || catalogText['kr']) + '\n' + _catalogThumbs.map(t => t.label).join(' / ') });
+                // 카탈로그 이미지 추가 (최대 15개 — 토큰 절약)
+                for (const thumb of _catalogThumbs.slice(0, 15)) {
+                    content.push({ type: "image", source: { type: "url", url: thumb.url } });
+                }
+                content.push({ type: "text", text: "---\n고객이 보낸 이미지 ↓" });
+            }
+
+            // 고객 이미지
+            content.push({
+                type: "image",
+                source: {
+                    type: "base64",
+                    media_type: imgType || "image/jpeg",
+                    data: img,
                 },
-            ];
+            });
             if (text) {
                 content.push({ type: "text", text });
             } else {
                 const defaultTexts: Record<string, string> = {
-                    kr: "이 이미지를 분석해주세요. 관련 인쇄 제품이 있으면 추천해주세요.",
-                    ja: "この画像を分析してください。関連する印刷製品があれば推薦してください。",
-                    us: "Please analyze this image. If there are related printing products, please recommend them.",
+                    kr: "이 이미지를 분석해주세요. 위 카탈로그와 비교하여 매칭되는 상품이 있으면 알려주세요.",
+                    ja: "この画像を分析してください。上のカタログと比較して該当商品があれば教えてください。",
+                    us: "Please analyze this image. Compare it against the catalog above and identify matching products.",
                 };
                 content.push({ type: "text", text: defaultTexts[clientLang] || defaultTexts['kr'] });
             }
