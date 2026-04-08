@@ -836,18 +836,12 @@ async function sendMessage(text, imageData) {
             products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
         });
 
-        // 제품 카드 표시 (견적서 유무와 관계없이 항상)
+        // 제품 카드: 견적서 또는 링크 요청 시에만 표시
         {
         const _userMsg = (text || '').toLowerCase();
-        const _productKeywords = [
-            '제품','상품','구매','주문','가격','얼마','사고싶','살수','어디서','링크','추천','인쇄','프린트','프린팅',
-            '배너','현수막','명함','포스터','스티커','키링','등신대','캔버스','액자','패브릭','가벽','보드','매대',
-            '쉬폰','아크릴','포토존','판넬','굿즈','머그','텀블러','티셔츠','폰케이스','블라인드',
-            '단면','양면','사각','모양','커팅','견적',
-            '商品','購入','注文','価格','印刷','おすすめ','product','buy','order','price','print','recommend','how much','where'
-        ];
-        const _isProductQuery = _productKeywords.some(k => _userMsg.includes(k));
-        const showProducts = products.length > 0 && (_isProductQuery || data.type === 'quote');
+        const _linkKeywords = ['링크','url','보여줘','어디서 사','어디서사','사는곳','구매하는곳','파는곳','주문하는곳','살수있는','구매링크','주문링크','where to buy','how to order','どこで買','購入ページ','link'];
+        const _wantsLink = _linkKeywords.some(k => _userMsg.includes(k));
+        const showProducts = products.length > 0 && (data.type === 'quote' || _wantsLink);
 
         if (showProducts) {
             lastProducts = products;
