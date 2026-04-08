@@ -331,6 +331,30 @@ export async function initOrderSystem() {
                 return;
             }
 
+            // ★ 장바구니 내 배송 폼이 채워져 있으면 → 날짜/배송 모달 건너뛰고 바로 결제
+            const _cartDate = document.getElementById('cartDeliveryDate');
+            const _cartName = document.getElementById('cartReceiverName');
+            const _hasCartForm = _cartDate && _cartDate.value;
+            if (_hasCartForm) {
+                // 장바구니 폼 값으로 tempOrderInfo 구성
+                const info = getOrderInfo();
+                selectedDeliveryDate = info.date;
+                window.tempOrderInfo = {
+                    manager: info.manager,
+                    phone: info.phone,
+                    address: info.address,
+                    request: info.note,
+                    deliveryDate: info.date,
+                    installationTime: info.installationTime,
+                    staffManagerId: info.staffManager,
+                    shippingFee: info.shippingFee,
+                    nonMetroFee: info.shippingFee
+                };
+                // 바로 결제 모달 열기
+                processOrderSubmission();
+                return;
+            }
+
             openCalendarModal();
         };
     }
