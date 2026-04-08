@@ -3860,9 +3860,14 @@ const newItem = {
 }
 // ★ 패브릭: 제품 수량 변경 시 후가공 수량도 비례 변경
 function _syncFabricAddonQty(item, oldQty, newQty) {
+    if (!item.addonQuantities) return;
+    // 패브릭 카테고리 체크 (category가 있으면 확인, 없으면 addon 코드로 판별)
     const cat = item.product && item.product.category;
-    const isFab = cat && window._getTopCategoryCode && window._getTopCategoryCode(cat) === '22222';
-    if (!isFab || !item.addonQuantities) return;
+    const isFab = (cat && window._getTopCategoryCode && window._getTopCategoryCode(cat) === '22222');
+    // 패브릭 후가공 addon 코드 (카테고리 매칭 실패 시에도 동작)
+    const _fabricAddonCodes = new Set(['txl0001','txl0002','txl0003','txl0004','txl0005','3254352','45783','45722','45787','45646456','3453453','355353']);
+    const hasFabricAddon = Object.keys(item.addonQuantities).some(c => _fabricAddonCodes.has(c));
+    if (!isFab && !hasFabricAddon) return;
     Object.keys(item.addonQuantities).forEach(code => {
         const oldAq = item.addonQuantities[code] || 1;
         // 비례 조정: 기존 비율 유지 (올림)
