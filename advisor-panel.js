@@ -236,54 +236,64 @@ function _renderSearchResults(rows, query, lang) {
 
 function showEntryForm() {
     if (!chatArea) return;
+    _custName = 'Guest';
+    try { localStorage.setItem('kapu_customer', JSON.stringify({ name: 'Guest', phone: '' })); } catch(e) {}
+    const lang = getLang();
+    const msgs = {
+        kr: {
+            greeting: '어떤 제품이 필요하신가요?',
+            example: '<b>"허니콤보드 A4사이즈 2개 인쇄할거야. 얼마야?"</b> 이렇게 물어보시면 제가 제품 안내링크, 견적서와 구매링크를 드릴게요.',
+            file: '디자인 파일이 있으시면 장바구니에서 한번에 첨부하실 수 있습니다.',
+            noFile: '디자인파일이 없다면 아래 <b>디자인의뢰</b> 또는 <b>에디터로 디자인하기</b>를 이용해주세요.'
+        },
+        ja: {
+            greeting: 'どんな製品をお探しですか？',
+            example: '<b>「ハニカムボード A4サイズ 2枚印刷したい。いくら？」</b>のようにお聞きいただければ、商品リンク・見積書・購入リンクをお送りします。',
+            file: 'デザインファイルがあれば、カートでまとめて添付できます。',
+            noFile: 'デザインファイルがない場合は、下の<b>デザイン依頼</b>または<b>エディタでデザイン</b>をご利用ください。'
+        },
+        en: {
+            greeting: 'What product do you need?',
+            example: 'Just ask like <b>"I need 2 honeycomb board prints in A4 size. How much?"</b> and I\'ll send you product links, a quote, and a purchase link.',
+            file: 'If you have a design file, you can attach it in the cart.',
+            noFile: 'No design file? Use <b>Design Request</b> or <b>Design with Editor</b> below.'
+        }
+    };
+    const M = msgs[lang] || msgs['en'];
+    addBubble(`${M.greeting}\n\n${M.example}\n\n${M.file}\n${M.noFile}`, 'ai');
+}
+
+// ─── 에디터로 디자인하기 (사이즈 입력 후 에디터 열기) ───
+window._advOpenEditor = function() {
     const lang = getLang();
     const labels = {
-        kr: { title: '반갑습니다!', desc: '성함과 연락처를 남겨주시면 더 정확한 안내가 가능합니다.', namePh: '성함', phonePh: '연락처 (010-0000-0000)', btn: '시작하기', skip: '건너뛰기' },
-        ja: { title: 'ようこそ！', desc: 'お名前と連絡先をご入力いただくと、より正確なご案内が可能です。', namePh: 'お名前', phonePh: '電話番号', btn: 'スタート', skip: 'スキップ' },
-        en: { title: 'Welcome!', desc: 'Enter your name and phone for a better experience.', namePh: 'Name', phonePh: 'Phone number', btn: 'Start', skip: 'Skip' },
+        kr: { title: '에디터로 디자인하기', wPh: '가로 (mm)', hPh: '세로 (mm)', btn: '에디터 열기', cancel: '취소' },
+        ja: { title: 'エディタでデザイン', wPh: '幅 (mm)', hPh: '高さ (mm)', btn: 'エディタを開く', cancel: 'キャンセル' },
+        en: { title: 'Design with Editor', wPh: 'Width (mm)', hPh: 'Height (mm)', btn: 'Open Editor', cancel: 'Cancel' }
     };
     const L = labels[lang] || labels['en'];
-    const card = document.createElement('div');
-    card.className = 'adv-row adv-row-ai';
-    card.innerHTML = `
-        <div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-        <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px; max-width:85%;">
-            <div style="text-align:center; margin-bottom:10px;">
-                <div style="font-size:28px;">👋</div>
-                <div style="font-weight:700; color:#0369a1; font-size:15px;">${L.title}</div>
-                <div style="font-size:12px; color:#0369a1; opacity:0.8; margin-top:4px;">${L.desc}</div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <input id="advEntryName" type="text" placeholder="${L.namePh}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
-                <input id="advEntryPhone" type="tel" placeholder="${L.phonePh}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
-                <button id="advEntrySubmit" style="background:#0284c7; color:#fff; border:none; padding:11px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; width:100%;">${L.btn}</button>
-                <button id="advEntrySkip" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:12px; padding:4px;">${L.skip}</button>
-            </div>
-        </div>
-    `;
-    chatArea.appendChild(card);
-    scrollChat();
-    document.getElementById('advEntryName').focus();
-
-    function completeEntry(name, phone) {
-        _custName = name;
-        _custPhone = phone;
-        try { localStorage.setItem('kapu_customer', JSON.stringify({ name, phone })); } catch(e) {}
-        card.remove();
-        showWelcomeMessage();
-    }
-    document.getElementById('advEntrySubmit').addEventListener('click', () => {
-        const name = document.getElementById('advEntryName').value.trim();
-        const phone = document.getElementById('advEntryPhone').value.trim();
-        if (!name) { document.getElementById('advEntryName').style.borderColor = '#ef4444'; return; }
-        completeEntry(name, phone);
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;max-width:320px;width:90%;text-align:center;">'
+        + '<div style="font-size:16px;font-weight:800;margin-bottom:16px;">' + L.title + '</div>'
+        + '<div style="display:flex;gap:8px;margin-bottom:12px;">'
+        + '<input id="_advEdW" type="number" placeholder="' + L.wPh + '" style="flex:1;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:center;">'
+        + '<input id="_advEdH" type="number" placeholder="' + L.hPh + '" style="flex:1;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:center;">'
+        + '</div>'
+        + '<button id="_advEdOpen" style="width:100%;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">' + L.btn + '</button>'
+        + '<button onclick="this.closest(\'div[style*=inset]\').remove()" style="width:100%;padding:8px;background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;">' + L.cancel + '</button>'
+        + '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function(e) { if (e.target === ov) ov.remove(); });
+    document.getElementById('_advEdW').focus();
+    document.getElementById('_advEdOpen').addEventListener('click', function() {
+        var w = parseInt(document.getElementById('_advEdW').value) || 0;
+        var h = parseInt(document.getElementById('_advEdH').value) || 0;
+        if (w < 10 || h < 10) { document.getElementById('_advEdW').style.borderColor = '#ef4444'; return; }
+        ov.remove();
+        if (window.startEditorDirect) window.startEditorDirect('custom', w, h);
     });
-    document.getElementById('advEntrySkip').addEventListener('click', () => {
-        completeEntry('Guest', '');
-    });
-    document.getElementById('advEntryName').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('advEntryPhone').focus(); });
-    document.getElementById('advEntryPhone').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('advEntrySubmit').click(); });
-}
+};
 
 // ─── 견적서 → 장바구니 결제 ───
 window._quoteToCart = async function(quoteId) {
@@ -510,11 +520,16 @@ function buildPanelUI() {
             </div>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
-        <div class="adv-shortcut-btns" style="display:flex;gap:6px;padding:4px 10px;">
-            <a href="${location.origin}/design-market.html" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
-                <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design',kr:'디자인 의뢰'}[getLang()]||'Design Request'}
-            </a>
-            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else document.getElementById('quoteModal')&&(document.getElementById('quoteModal').style.display='flex');" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+        <div class="adv-shortcut-btns" style="display:flex;flex-direction:column;gap:4px;padding:4px 10px;">
+            <div style="display:flex;gap:6px;">
+                <a href="${location.origin}/design-market.html" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                    <i class="fa-solid fa-palette"></i> ${{ja:'デザイン依頼',en:'Design Request',zh:'设计委托',ar:'طلب تصميم',es:'Solicitar Diseño',de:'Design anfragen',fr:'Demande de design',kr:'디자인 의뢰'}[getLang()]||'Design Request'}
+                </a>
+                <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;text-decoration:none;padding:8px 6px;border-radius:10px;font-size:11px;font-weight:700;">
+                    <i class="fa-solid fa-pen-ruler"></i> ${{ja:'エディタでデザイン',en:'Design with Editor',zh:'编辑器设计',ar:'تصميم بالمحرر',es:'Diseñar con Editor',de:'Im Editor gestalten',fr:'Designer avec éditeur',kr:'에디터로 디자인하기'}[getLang()]||'Design with Editor'}
+                </a>
+            </div>
+            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)startQuoteFlow();else document.getElementById('quoteModal')&&(document.getElementById('quoteModal').style.display='flex');" style="display:flex;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;text-decoration:none;padding:6px 6px;border-radius:10px;font-size:10px;font-weight:700;">
                 <i class="fa-solid fa-building-columns"></i> ${{ja:'展示・イベントお問合せ',en:'Exhibition Inquiry',zh:'展会咨询',ar:'استفسار معرض',es:'Consulta de Exposición',de:'Messenanfrage',fr:"Demande d'exposition",kr:'행사전시문의'}[getLang()]||'Exhibition Inquiry'}
             </a>
         </div>
@@ -606,11 +621,9 @@ function buildPanelUI() {
     const _hasContent = restored && chatArea && chatArea.innerHTML.trim().length > 50;
     console.log('[카푸] 대화 복원:', _hasContent ? '성공' : '없음', 'history:' + conversationHistory.length, '고객:', _custName || '(없음)');
     if (_hasContent) {
-        // 대화 내용이 있으면 그대로 유지 (폼 재표시 안 함)
         scrollChat();
-    } else if (_custName) {
-        showWelcomeMessage();
     } else {
+        // 이름 입력 없이 바로 인사문구 표시
         showEntryForm();
     }
 
