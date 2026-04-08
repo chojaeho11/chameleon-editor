@@ -263,18 +263,26 @@ serve(async (req) => {
 - 제품 카드(products 배열)를 반드시 함께 보여줘서 고객이 바로 클릭할 수 있게 해.
 - ❌ 절대 계산 과정(공식, ㎡당 단가, 곱셈식)을 보여주지 마.
 
-## 견적서 PDF 생성 (중요!)
-- 고객이 명시적으로 "견적서", "견적서 줘", "견적서 만들어줘" 등을 요청하면 → generate_quote 도구 사용!
-- 고객이 제품명 + 사이즈 + 수량을 언급한 상태에서 견적서를 요청하면, items 배열에 해당 정보를 정리해서 넣어.
-- 가격은 넣지 마 (서버에서 자동 계산함). code, name, width_mm, height_mm, quantity만 정확히 넣어.
+## 견적서 자동 생성 흐름 (매우 중요!)
+- 고객이 제품에 대해 질문하면 이 흐름을 따라:
+  1단계: 간단한 제품 설명 + 옵션 안내 (단면/양면, 사각커팅/모양커팅 등)
+  2단계: "단면인가요? 양면인가요?", "사각재단인가요? 모양재단인가요?" 등 필요한 옵션을 물어봐
+  3단계: 고객이 옵션과 사이즈/수량을 알려주면 → **"견적서"라는 말이 없어도** 바로 generate_quote 도구로 견적서를 생성해!
+  4단계: 견적서 + 결제 버튼 아래에 이 안내 문구를 넣어:
+    "견적서와 결제 링크를 드렸습니다. 견적 확인하시고 구매링크 들어가시면 장바구니에 제품이 담겨있어요. 파일은 장바구니에서 올리실 수 있습니다. 에디터로 직접 디자인하시려면 아래 제품 링크를 클릭해서 수동으로 주문해 주세요."
+  5단계: 견적서와 함께 해당 제품 카드(products 배열)도 반드시 보여줘!
+
+- ★ 즉, 고객이 제품+사이즈+수량+옵션을 다 말하면 → 견적서 자동 생성! "견적서 줘"라는 말 불필요!
+- 가격은 넣지 마 (서버에서 자동 계산함). code, name, width_mm, height_mm, quantity, note만 넣어.
 - 가벽은 side: 1(단면) 또는 2(양면) 구분해서 넣어.
 - ⚠️ items 배열을 절대 비우지 마! 대화에서 언급된 제품 정보를 반드시 items에 넣어!
 - ★ 허니콤보드 제품은 최소 금액 10,000원이 적용됨 (서버에서 자동 처리)
-- ★ 허니콤보드 제품은 모양커팅(+3,000원) 또는 사각커팅(+1,000원)이 필수! 고객에게 모양커팅/사각커팅 중 어떤 걸 원하는지 물어보고 note에 "모양" 또는 "사각"을 적어줘. 기본값은 사각커팅.
+- ★ 허니콤보드 제품은 모양커팅(+3,000원) 또는 사각커팅(+1,000원)이 필수! 고객에게 반드시 물어봐! note에 "모양" 또는 "사각"을 적어줘.
+- 제품 코드:
+  · 허니콤 인쇄커팅 단면: code="hb_pt_1", 양면: code="hb_pt_2"
   · 가벽: code="hb_dw_1", width_mm/height_mm은 mm 단위 (3m = 3000mm)
   · 허니콤배너: code="hb_bn_1" (연결형: hb_bn_2, 양면: hb_bn_3)
   · 사이즈가 없으면 기본값 사용 (가벽: 1000x2200, 배너: 600x1800)
-- 견적서와 함께 해당 제품 카드도 products 배열에 넣어서 보여줘.
 - 디자인 비용, 부가 서비스 비용 등 상품 데이터에 없는 비용을 임의로 만들어내지 마.
 
 ## 핵심 원칙
@@ -869,10 +877,17 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         // 현재 메시지 추가
         messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type) });
 
-        // 견적서 요청 시 generate_quote 도구 강제 사용 (현재 메시지 + 최근 대화에서 감지)
+        // 견적서 생성 감지: 명시적 요청 OR 제품+사이즈+수량+옵션이 모두 갖춰진 경우
         const _quoteKw = /견적서|견적\s*줘|견적\s*만들|見積|quotation|quote.*pdf|견적.*pdf|견적.*줘/i;
-        const _recentMsgs = (conversation_history || []).slice(-3).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ');
-        const _isQuoteReq = _quoteKw.test(trimmedMsg) || (_quoteKw.test(_recentMsgs) && /배너|가벽|사이즈|수량|단면|양면|개|mm|미터/i.test(trimmedMsg));
+        const _allConv = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
+        const _hasProduct = /허니콤|가벽|배너|인쇄.*커팅|honeycomb|banner|wall|포스터|등신대/i.test(_allConv);
+        const _hasSize = /\d+\s*[xX×]\s*\d+|\d+\s*(mm|미터|m)\b|A[0-9]|B[0-9]/i.test(_allConv);
+        const _hasQty = /\d+\s*(개|장|ea|매|세트|칸)/i.test(_allConv);
+        const _hasOption = /단면|양면|사각|모양|single|double/i.test(trimmedMsg);
+        // 옵션 답변(단면/양면/사각/모양)이 오면 + 이전 대화에서 상품+사이즈+수량이 있으면 → 견적서 자동 생성
+        const _isQuoteReq = _quoteKw.test(trimmedMsg)
+            || (_hasOption && _hasProduct && (_hasSize || _hasQty))
+            || (_quoteKw.test(_allConv) && /배너|가벽|사이즈|수량|단면|양면|개|mm|미터/i.test(trimmedMsg));
         const toolChoice = _isQuoteReq
             ? { type: "tool" as const, name: "generate_quote" }
             : { type: "tool" as const, name: "recommend_products" };

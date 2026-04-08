@@ -814,13 +814,13 @@ async function sendMessage(text, imageData) {
                     _pdfCard.style.cssText = 'background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;padding:16px;margin:8px 0;color:#fff;';
                     _pdfCard.innerHTML = '<div style="font-size:14px;font-weight:800;margin-bottom:8px;">📄 견적서가 준비되었습니다</div>'
                         + '<div style="font-size:12px;opacity:0.9;margin-bottom:12px;">합계: ' + _total + '원 (VAT포함)</div>'
-                        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+                        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
                         + '<a href="' + _qData.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4338ca;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">📥 견적서 다운로드</a>'
                         + '<button onclick="window._quoteToCart(\'' + _quoteId + '\')" style="display:inline-flex;align-items:center;gap:6px;background:#22c55e;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;">🛒 견적금액 결제하기</button>'
-                        + '</div>';
+                        + '</div>'
+                        + '<div style="font-size:11px;opacity:0.85;line-height:1.6;">견적 확인하시고 결제하기를 누르시면 장바구니에 제품이 담겨있어요. 파일은 장바구니에서 올리실 수 있습니다.<br>에디터로 직접 디자인하시려면 아래 제품 링크를 클릭해서 수동으로 주문해 주세요.</div>';
                     if (chatArea) { chatArea.appendChild(_pdfCard); scrollChat(); }
-                    // 견적서가 나왔으면 제품 카드는 표시하지 않음
-                    data._skipProducts = true;
+                    // 견적서 아래에 제품 카드도 표시 (수동 주문용)
                 } else {
                     console.error('[견적서] PDF URL 없음:', _qData);
                 }
@@ -834,26 +834,24 @@ async function sendMessage(text, imageData) {
             products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
         });
 
-        // 견적서가 나왔으면 제품 카드 숨김
-        if (data._skipProducts) {
-            // 견적서 + 결제 버튼이 있으므로 제품 카드 불필요
-        } else {
-        // 사용자 메시지가 제품/구매 관련일 때만 제품 카드 표시
+        // 제품 카드 표시 (견적서 유무와 관계없이 항상)
+        {
         const _userMsg = (text || '').toLowerCase();
         const _productKeywords = [
             '제품','상품','구매','주문','가격','얼마','사고싶','살수','어디서','링크','추천','인쇄','프린트','프린팅',
             '배너','현수막','명함','포스터','스티커','키링','등신대','캔버스','액자','패브릭','가벽','보드','매대',
             '쉬폰','아크릴','포토존','판넬','굿즈','머그','텀블러','티셔츠','폰케이스','블라인드',
+            '단면','양면','사각','모양','커팅','견적',
             '商品','購入','注文','価格','印刷','おすすめ','product','buy','order','price','print','recommend','how much','where'
         ];
         const _isProductQuery = _productKeywords.some(k => _userMsg.includes(k));
-        const showProducts = products.length > 0 && _isProductQuery;
+        const showProducts = products.length > 0 && (_isProductQuery || data.type === 'quote');
 
         if (showProducts) {
             lastProducts = products;
             addProductCards(products);
         }
-        } // end of _skipProducts else block
+        }
 
         // ★ 연락처 남기기 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
         const _userText = (text || '').toLowerCase();
