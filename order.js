@@ -3721,7 +3721,8 @@ export function addProductToCartDirectly(productInfo, targetQty = 1, addonCodes 
     const productCode = productInfo.code || productInfo.key || '';
 
     // ★ 중복 추가 방지: 같은 상품이 3초 이내에 다시 추가되면 차단
-    if (window._lastCartAdd && productCode) {
+    // _quote_item이면 건너뛰기 (견적서에서 같은 코드 여러 개 의도적 추가)
+    if (!productInfo._quote_item && window._lastCartAdd && productCode) {
         const elapsed = now - window._lastCartAdd.time;
         if (elapsed < 3000 && window._lastCartAdd.code === productCode) {
             console.warn('[addProductToCartDirectly] BLOCKED duplicate add:', productCode, 'elapsed:', elapsed, 'ms');
