@@ -4633,9 +4633,11 @@ async function handleSubReturn() {
                         💳 <span data-i18n="btn_do_checkout">결제하기</span>
                     </button>
 
-                    <button id="btnPrintQuote" class="btn-round btn-secondary" style="margin-top:10px; width:100%;">
-                        <i class="fa-solid fa-file-invoice"></i> <span data-i18n="btn_print_quote">견적서 출력</span>
-                    </button>
+                    <div id="cartQuotePdfLink" style="display:none; margin-top:10px;">
+                        <a id="cartQuotePdfBtn" href="#" target="_blank" class="btn-round btn-secondary" style="width:100%; text-decoration:none; justify-content:center;">
+                            <i class="fa-solid fa-file-invoice"></i> 견적서 다운로드
+                        </a>
+                    </div>
                 </div>
             </div>
             </div>

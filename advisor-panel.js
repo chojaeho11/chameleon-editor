@@ -308,10 +308,12 @@ window._quoteToCart = async function(quoteId) {
             // ★ addon 수량 = 각 addon의 qty (견적서에서 이미 메인 수량과 맞춰짐)
             const addonQtyMap = {};
             group.addons.forEach(a => { if (a._code) addonQtyMap[a._code] = a.qty || mainQty; });
+            // ★ 할인 적용된 실효 단가 사용 (total/qty) — 견적서 금액 그대로 장바구니에
+            const effectivePrice = (item.total && mainQty > 0) ? Math.round(item.total / mainQty) : item.unit_price;
             addProductToCartDirectly({
                 code: item._code || rec.code || '',
                 name: item.name,
-                price: item.unit_price,
+                price: effectivePrice,
                 w_mm: item._width_mm || 0,
                 h_mm: item._height_mm || 0,
                 width_mm: item._width_mm || 0,
@@ -841,15 +843,18 @@ async function sendMessage(text, imageData) {
                     // 견적 아이템을 전역에 저장 (결제 버튼에서 사용)
                     window['_pendingQuote_' + _quoteId] = { items: _quoteItems, products: data.products || [], shipping_fee: data.quote_data.shipping_fee || 0 };
 
+                    // ★ 챗봇 견적서 PDF URL 저장 (장바구니에서 재사용)
+                    localStorage.setItem('chameleon_quote_pdf_url', _qData.url);
+
                     const _pdfCard = document.createElement('div');
                     _pdfCard.style.cssText = 'background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;padding:16px;margin:8px 0;color:#fff;';
                     _pdfCard.innerHTML = '<div style="font-size:14px;font-weight:800;margin-bottom:8px;">📄 견적서가 준비되었습니다</div>'
                         + '<div style="font-size:12px;opacity:0.9;margin-bottom:12px;">합계: ' + _total + '원 (VAT포함)</div>'
-                        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+                        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
                         + '<a href="' + _qData.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#4338ca;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">📥 견적서 다운로드</a>'
                         + '<button onclick="window._quoteToCart(\'' + _quoteId + '\')" style="display:inline-flex;align-items:center;gap:6px;background:#22c55e;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;">🛒 견적금액 결제하기</button>'
                         + '</div>'
-                        + '<div style="font-size:11px;opacity:0.85;line-height:1.6;">견적 확인하시고 결제하기를 누르시면 장바구니에 제품이 담겨있어요. 파일은 장바구니에서 올리실 수 있습니다.<br>에디터로 직접 디자인하시려면 아래 제품 링크를 클릭해서 수동으로 주문해 주세요.</div>';
+                        + '<div style="font-size:11px;opacity:0.85;line-height:1.6;margin-bottom:10px;">견적 확인하시고 결제하기를 누르시면 장바구니에 제품이 담겨있어요. 파일은 장바구니에서 올리실 수 있습니다.</div>';
                     if (chatArea) { chatArea.appendChild(_pdfCard); scrollChat(); }
                     // 견적서 아래에 제품 카드도 표시 (수동 주문용)
                 } else {

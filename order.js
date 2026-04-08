@@ -2366,6 +2366,15 @@ function updateSummary(prodTotal, addonTotal, total) {
         dateInput.min = d.toISOString().split('T')[0];
         if (!dateInput.value) dateInput.value = d.toISOString().split('T')[0];
     }
+    // ★ 챗봇 견적서 PDF 링크 표시
+    const _quotePdfUrl = localStorage.getItem('chameleon_quote_pdf_url');
+    const _quotePdfLink = document.getElementById('cartQuotePdfLink');
+    const _quotePdfBtn = document.getElementById('cartQuotePdfBtn');
+    if (_quotePdfLink && _quotePdfBtn && _quotePdfUrl) {
+        _quotePdfBtn.href = _quotePdfUrl;
+        _quotePdfLink.style.display = 'block';
+    }
+
     const displayTotal = finalTotal + quoteShipping;
     window.finalPaymentAmount = displayTotal;
     finalPaymentAmount = displayTotal;
