@@ -268,6 +268,8 @@ serve(async (req) => {
 - 가격은 넣지 마 (서버에서 자동 계산함). code, name, width_mm, height_mm, quantity만 정확히 넣어.
 - 가벽은 side: 1(단면) 또는 2(양면) 구분해서 넣어.
 - ⚠️ items 배열을 절대 비우지 마! 대화에서 언급된 제품 정보를 반드시 items에 넣어!
+- ★ 허니콤보드 제품은 최소 금액 10,000원이 적용됨 (서버에서 자동 처리)
+- ★ 허니콤보드 제품은 모양커팅(+3,000원) 또는 사각커팅(+1,000원)이 필수! 고객에게 모양커팅/사각커팅 중 어떤 걸 원하는지 물어보고 note에 "모양" 또는 "사각"을 적어줘. 기본값은 사각커팅.
   · 가벽: code="hb_dw_1", width_mm/height_mm은 mm 단위 (3m = 3000mm)
   · 허니콤배너: code="hb_bn_1" (연결형: hb_bn_2, 양면: hb_bn_3)
   · 사이즈가 없으면 기본값 사용 (가벽: 1000x2200, 배너: 600x1800)
@@ -952,7 +954,10 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     // 면적 기반 가격 계산: DB price가 m²당 단가
                     const perSqm = dbP._raw_price || 0;
                     let unitPrice = dbP.is_custom_size ? Math.floor(area * perSqm * side / 100) * 100 : (dbP._raw_price || 0);
-                    console.log("[quote] price calc:", qi.code, "area:", area, "perSqm:", perSqm, "_raw_per_sqm:", dbP._raw_per_sqm, "_raw_price:", dbP._raw_price, "→ unitPrice:", unitPrice);
+                    // ★ 허니콤보드 최소금액 10,000원
+                    const _isHoneycomb = (qi.code || '').startsWith('hb_');
+                    if (_isHoneycomb && unitPrice < 10000) unitPrice = 10000;
+                    console.log("[quote] price calc:", qi.code, "area:", area, "→ unitPrice:", unitPrice);
                     const qty = qi.quantity || 1;
                     quoteItems.push({
                         name: qi.name || dbP.name,
@@ -960,6 +965,18 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         qty, unit_price: unitPrice, total: unitPrice * qty,
                         _code: qi.code, _width_mm: wMm, _height_mm: hMm
                     });
+                    // ★ 허니콤보드: 커팅 옵션 자동 추가 (모양커팅 or 사각커팅)
+                    if (_isHoneycomb) {
+                        const cutType = (qi.note || '').includes('모양') ? '모양커팅' : '사각 커팅';
+                        const cutCode = cutType === '모양커팅' ? '23we324' : '3244234';
+                        const cutPrice = cutType === '모양커팅' ? 3000 : 1000;
+                        quoteItems.push({
+                            name: cutType,
+                            spec: '추가 옵션',
+                            qty, unit_price: cutPrice, total: cutPrice * qty,
+                            _code: cutCode, _width_mm: 0, _height_mm: 0, is_addon: true
+                        });
+                    }
                 }
                 return {
                     type: "quote",
