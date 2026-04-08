@@ -4563,12 +4563,13 @@ async function handleSubReturn() {
                     </div>
                     <script>(function(){
                         var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'';
-                        if(c&&c!=='KR'){ var r=document.getElementById('cartManagerRow'); if(r)r.style.display='none'; return; }
+                        var l=c==='JP'?'ja':c==='CN'?'zh':c==='US'||c==='EN'?'en':c==='AR'?'ar':c==='ES'?'es':c==='DE'?'de':c==='FR'?'fr':'kr';
+                        var hq={kr:'🏢 본사진행',ja:'🏢 本社対応',en:'🏢 HQ handles',zh:'🏢 总部处理',ar:'🏢 المقر',es:'🏢 Sede central',de:'🏢 Zentrale',fr:'🏢 Siege'};
                         var mgrs=[
-                            {value:'__hq__', label:'🏢 본사진행'},
-                            {value:'eunmi', label:'은미 매니저'},
-                            {value:'sunghee', label:'성희 매니저'},
-                            {value:'jisook', label:'지숙 매니저'}
+                            {value:'__hq__', label:hq[l]||hq['en']},
+                            {value:'eunmi', label:{kr:'은미 매니저',ja:'ウンミ',en:'Eunmi',zh:'恩美',ar:'Eunmi',es:'Eunmi',de:'Eunmi',fr:'Eunmi'}[l]||'Eunmi'},
+                            {value:'sunghee', label:{kr:'성희 매니저',ja:'ソンヒ',en:'Sunghee',zh:'成熙',ar:'Sunghee',es:'Sunghee',de:'Sunghee',fr:'Sunghee'}[l]||'Sunghee'},
+                            {value:'jisook', label:{kr:'지숙 매니저',ja:'ジスク',en:'Jisook',zh:'智淑',ar:'Jisook',es:'Jisook',de:'Jisook',fr:'Jisook'}[l]||'Jisook'}
                         ];
                         var box=document.getElementById('cartManagerBtns');
                         var hidden=document.getElementById('cartStaffManager');
