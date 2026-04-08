@@ -976,7 +976,7 @@
   "label_layer_order": "Layer Order",
   "label_object_rotate": "Object Rotation",
   "btn_text_effect": "✨ Text Effect",
-  "btn_png": "PNG Download",
+  "btn_file_download": "Download File",
   "btn_pdf": "PDF Download",
   "btn_add_page": "Add Page",
   "btn_del_page": "Delete Current Page",

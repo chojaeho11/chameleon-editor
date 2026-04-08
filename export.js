@@ -462,11 +462,13 @@ export function initExport() {
                     });
                 });
 
-                // 고해상도 PNG: 300 DPI 인쇄용 (150M pixels 안전장치)
-                const _maxPx = 150000000; // 150M pixels
+                // 입력 크기(mm) 기준 300DPI PNG 생성
+                // board px = mm × 3.7795, 300DPI 목표 = mm × 11.811
+                // multiplier = 11.811 / 3.7795 ≈ 3.125
+                const _maxPx = 150000000;
+                let _pngMult = 3.125; // 300DPI
                 const _basePx = finalW * finalH;
-                let _pngMult = 6;
-                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(1, Math.floor(Math.sqrt(_maxPx / _basePx) * 10) / 10);
                 const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: _pngMult });
                 
                 const link = document.createElement('a');

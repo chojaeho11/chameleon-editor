@@ -973,7 +973,7 @@
   "label_layer_order": "レイヤー順序",
   "label_object_rotate": "オブジェクト回転",
   "btn_text_effect": "✨ テキスト効果",
-  "btn_png": "PNG ダウンロード",
+  "btn_file_download": "ファイルダウンロード",
   "btn_pdf": "PDF ダウンロード",
   "btn_add_page": "ページ追加",
   "btn_del_page": "現在のページを削除",
