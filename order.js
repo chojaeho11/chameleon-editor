@@ -2053,8 +2053,21 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
         const displayMmH = (item.height && item.type === 'design') ? Math.round(item.height / _mmToPxR) : (item.height || 0);
 
         let addonHtml = '';
-        // ★ [디버그] 장바구니 addon 렌더링 진단
-        // debug log removed
+        // ★ 견적서 아이템: selectedAddons에 있는 옵션을 직접 표시
+        if (item.product._quote_item && item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
+            addonHtml += '<div style="margin-bottom:8px;"><div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px;"># 추가 옵션</div>';
+            Object.values(item.selectedAddons).forEach(code => {
+                const add = ADDON_DB[code];
+                const aQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                const addName = add ? (add.display_name || add.name) : code;
+                const addPrice = add ? add.price : 0;
+                addonHtml += `<div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-size:12px;">
+                    <span style="color:#334155;">✅ ${addName} × ${aQty}</span>
+                    <span style="font-weight:700; color:#1e293b;">${formatCurrency(addPrice * aQty)}</span>
+                </div>`;
+            });
+            addonHtml += '</div>';
+        }
         if (item.product.addons) {
             const addonCodes = Array.isArray(item.product.addons) ? item.product.addons : (item.product.addons.split(',') || []);
             const allAddons = addonCodes.map(c => ({ code: c.trim(), ...ADDON_DB[c.trim()] })).filter(a => a.name)
