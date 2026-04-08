@@ -9667,6 +9667,23 @@ window.showChoiceModal = async function(key) {
         }, 50);
     }
 
+    // ★ 글씨스카시/인스타판넬: 무료 에디터 제거 → 디자인마켓 의뢰 유도
+    const _pCatForDesign = product.category || '';
+    const _isDesignMarketOnly = _pCatForDesign === 'hb_skashi' || _pCatForDesign === 'hb_insta';
+    if (_isDesignMarketOnly) {
+        const _actionBtns = modal.querySelector('.action-buttons') || modal.querySelectorAll('button[onclick*="confirmChoice"]')[0]?.parentElement;
+        if (_actionBtns) {
+            const _dmUrl = window.location.origin + '/design-market.html';
+            const _dmLabel = {ja:'🎨 デザインマーケットに依頼',en:'🎨 Request Design',zh:'🎨 设计市场委托',ar:'🎨 طلب تصميم',es:'🎨 Solicitar Diseño',de:'🎨 Design anfragen',fr:'🎨 Demander un design',kr:'🎨 디자인마켓에 의뢰'}[lang]||'🎨 Request Design';
+            const _uploadLabel = {ja:'📁 ファイルアップロード',en:'📁 Upload File',zh:'📁 上传文件',ar:'📁 رفع الملف',es:'📁 Subir Archivo',de:'📁 Datei hochladen',fr:'📁 Télécharger',kr:'📁 파일올리기'}[lang]||'📁 Upload File';
+            const _cartLabel = {ja:'🛒 購入する',en:'🛒 Purchase',zh:'🛒 购买',ar:'🛒 شراء',es:'🛒 Comprar',de:'🛒 Kaufen',fr:'🛒 Acheter',kr:'🛒 구매하기'}[lang]||'🛒 Purchase';
+            _actionBtns.innerHTML = `
+                <button onclick="window.open('${_dmUrl}','_blank')" class="btn-round primary" style="height:56px; font-size:16px; display:flex; align-items:center; justify-content:center; gap:8px;">${_dmLabel}</button>
+                <button onclick="window.confirmChoice('upload')" class="btn-round" style="height:56px; font-size:16px; background:#f59e0b; color:white; border:none; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fa-solid fa-cloud-arrow-up"></i> ${_uploadLabel}</button>
+                <button onclick="window.confirmChoice('cart')" class="btn-round" style="height:56px; font-size:16px; background:#4ccc02; color:white; border:none; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fa-solid fa-cart-shopping"></i> ${_cartLabel}</button>`;
+        }
+    }
+
     // ★ 티셔츠 컬러/사이즈 버튼 동적 생성
     const _tColorBox = document.getElementById('tshirtColorBtns');
     const _tSizeBox = document.getElementById('tshirtSizeBtns');
