@@ -285,7 +285,7 @@ serve(async (req) => {
 - 가벽은 side: 1(단면) 또는 2(양면) 구분해서 넣어.
 - ⚠️ items 배열을 절대 비우지 마! 대화에서 언급된 제품 정보를 반드시 items에 넣어!
 - ★ 허니콤보드 제품은 최소 금액 10,000원이 적용됨 (서버에서 자동 처리)
-- ★ 최소 주문금액은 10,000원! 견적 합계가 10,000원 미만이면 견적서를 만들지 말고, "최소 주문금액이 10,000원이에요. 수량을 더 추가하시거나 다른 제품을 함께 담아서 10,000원을 채워주세요!" 라고 안내해.
+- ★ 최소 주문금액은 10,000원. 제품 금액이 10,000원 미만이면 자동으로 10,000원이 적용돼 (서버에서 처리). 차단하지 말고 그냥 견적서를 만들어줘.
 - ★ 허니콤보드 제품은 모양커팅(+3,000원) 또는 사각커팅(+1,000원)이 필수! 고객에게 반드시 물어봐! note에 "모양" 또는 "사각"을 적어줘.
 - 제품 코드:
   · 허니콤 인쇄커팅 단면: code="hb_pt_1", 양면: code="hb_pt_2"
@@ -1036,18 +1036,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         });
                     }
                 }
-                // ★ 최소 주문금액 10,000원 체크
-                const _quoteTotal = quoteItems.reduce((s: number, i: any) => s + (i.total || 0), 0);
-                if (_quoteTotal < 10000) {
-                    const _minMsg = clientLang === 'ja' ? '最低注文金額は¥1,000です。数量を追加するか、他の商品も一緒にご注文ください！'
-                        : clientLang === 'us' || clientLang === 'en' ? 'Minimum order is $10. Please add more items to reach the minimum!'
-                        : '최소 주문금액이 10,000원이에요. 수량을 더 추가하시거나 다른 제품을 함께 담아서 10,000원을 채워주세요!';
-                    return {
-                        type: "chat",
-                        chat_message: _minMsg,
-                        products: qResult.products || []
-                    };
-                }
+                // 최소 주문금액: unitPrice에서 이미 min 10,000원 자동 적용됨
                 return {
                     type: "quote",
                     chat_message: qResult.summary || "견적서를 생성합니다.",
