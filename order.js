@@ -347,7 +347,7 @@ export async function initOrderSystem() {
                 if (CURRENT_LANG === 'kr') _setVal('inputAddressKR', info.address);
                 // 담당 매니저: 장바구니에서 선택한 값 → 기존 모달 필드에 매핑
                 const _staffEl = document.getElementById('inputStaffManager');
-                if (_staffEl) _staffEl.value = info.staffManager || 'hq';
+                if (_staffEl) _staffEl.value = info.staffManager || '__hq__';
                 // 비수도권 배송비
                 window._nonMetroFeeApplied = info.shippingFee || 0;
 
