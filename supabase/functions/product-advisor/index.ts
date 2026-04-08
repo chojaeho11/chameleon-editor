@@ -1006,15 +1006,23 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             }
         }];
 
-        // ★ 상품 카탈로그 썸네일 — 고객 이미지와 매칭용 (카테고리별 대표 1개씩)
+        // ★ 상품 카탈로그 썸네일 — 고객 이미지와 매칭용
+        // 허니콤보드 제품은 모두 포함 (카테고리 hb_ 시작), 나머지는 카테고리별 1개
         const _catalogThumbs: { url: string; label: string }[] = [];
         {
-            const _seenCats = new Set<string>();
+            const _seenGenCats = new Set<string>();
             for (const p of rawProducts) {
                 const cat = p.category || '';
-                if (_seenCats.has(cat) || !p.img_url || !p.img_url.startsWith('http')) continue;
-                _seenCats.add(cat);
-                _catalogThumbs.push({ url: p.img_url, label: `${p.name} (${p.code}) [${cat}]` });
+                if (!p.img_url || !p.img_url.startsWith('http')) continue;
+                const isHb = cat.startsWith('hb_') || cat === 'honeycomb_board' || cat === '34535354';
+                if (isHb) {
+                    // 허니콤보드 제품: 모두 포함
+                    _catalogThumbs.push({ url: p.img_url, label: `${p.name} (${p.code}) [${cat}]` });
+                } else if (!_seenGenCats.has(cat)) {
+                    // 기타: 카테고리별 1개
+                    _seenGenCats.add(cat);
+                    _catalogThumbs.push({ url: p.img_url, label: `${p.name} (${p.code}) [${cat}]` });
+                }
             }
         }
 
@@ -1039,8 +1047,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     us: 'Below are our product catalog thumbnails. Compare the customer image against these to identify the product:',
                 };
                 content.push({ type: "text", text: (catalogText[clientLang] || catalogText['kr']) + '\n' + _catalogThumbs.map(t => t.label).join(' / ') });
-                // 카탈로그 이미지 추가 (최대 15개 — 토큰 절약)
-                for (const thumb of _catalogThumbs.slice(0, 15)) {
+                // 카탈로그 이미지 추가 (최대 20개 — 허니콤 제품 + 주요 카테고리)
+                for (const thumb of _catalogThumbs.slice(0, 20)) {
                     content.push({ type: "image", source: { type: "url", url: thumb.url } });
                 }
                 content.push({ type: "text", text: "---\n고객이 보낸 이미지 ↓" });
