@@ -582,12 +582,23 @@ async function fetchUserDiscountRate() {
 }
 
 function getOrderInfo() {
+    // ★ 장바구니 내 배송 폼 우선, 없으면 기존 모달 필드 사용
+    const cartName = document.getElementById("cartReceiverName");
+    const cartPhone = document.getElementById("cartReceiverPhone");
+    const cartAddr = document.getElementById("cartReceiverAddr");
+    const cartDate = document.getElementById("cartDeliveryDate");
+    const cartTime = document.getElementById("cartDeliveryTime");
+    const cartNote = document.getElementById("cartRequestNote");
+    const cartManager = document.getElementById("cartStaffManager");
+
     return {
-        manager: document.getElementById("orderName").value || window.t('default_customer', "Customer"),
-        phone: document.getElementById("orderPhone").value || "",
-        address: document.getElementById("orderAddr").value || "",
-        note: document.getElementById("orderMemo").value || "",
-        date: selectedDeliveryDate || new Date().toISOString().split('T')[0],
+        manager: (cartName && cartName.value) || document.getElementById("orderName")?.value || window.t('default_customer', "Customer"),
+        phone: (cartPhone && cartPhone.value) || document.getElementById("orderPhone")?.value || "",
+        address: (cartAddr && cartAddr.value) || document.getElementById("orderAddr")?.value || "",
+        note: (cartNote && cartNote.value) || document.getElementById("orderMemo")?.value || "",
+        date: (cartDate && cartDate.value) || selectedDeliveryDate || new Date().toISOString().split('T')[0],
+        installationTime: (cartTime && cartTime.value) || null,
+        staffManager: (cartManager && cartManager.value) || null,
         shippingFee: (window._nonMetroFeeApplied || 0)
     };
 }
@@ -2308,8 +2319,24 @@ function updateSummary(prodTotal, addonTotal, total) {
                     infoSection.style.display = 'block';
                 }
             }
+            // ★ 챗봇에서 수집한 정보를 배송 폼에 자동 채우기
+            if (shData.delivery_note) {
+                const note = shData.delivery_note;
+                const noteEl = document.getElementById('cartRequestNote');
+                if (noteEl && !noteEl.value) noteEl.value = note;
+            }
         }
     } catch(e) {}
+
+    // ★ 배송일 최소값 설정 (오늘 + 3영업일)
+    const dateInput = document.getElementById('cartDeliveryDate');
+    if (dateInput && !dateInput.min) {
+        const d = new Date();
+        let biz = 0;
+        while (biz < 3) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) biz++; }
+        dateInput.min = d.toISOString().split('T')[0];
+        if (!dateInput.value) dateInput.value = d.toISOString().split('T')[0];
+    }
     const displayTotal = finalTotal + quoteShipping;
     window.finalPaymentAmount = displayTotal;
     finalPaymentAmount = displayTotal;
