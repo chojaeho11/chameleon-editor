@@ -4598,27 +4598,46 @@ async function handleSubReturn() {
                     </div>
                     <div id="cartShippingAddRow" style="display:none; margin-bottom:10px;">
                         <div id="cartShippingGuide" style="font-size:13px; color:#dc2626; font-weight:600; margin-bottom:8px; line-height:1.5;"></div>
-                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                            <button onclick="window._addCartShipping(200000,'지방 용차배송비')" style="padding:8px 14px; border:1px solid #0369a1; background:#f0f9ff; color:#0369a1; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">🚚 +용차배송 20만원</button>
-                            <button onclick="window._addCartShipping(700000,'지방 배송+시공비')" style="padding:8px 14px; border:1px solid #0369a1; background:#f0f9ff; color:#0369a1; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">🔧 +배송+시공 70만원</button>
-                            <button onclick="window._addCartShipping(30000,'지방 택배비')" style="padding:8px 14px; border:1px solid #0369a1; background:#f0f9ff; color:#0369a1; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">📦 +택배 3만원</button>
-                        </div>
+                        <div id="cartShippingBtns" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
                         <script>
                         (function(){
-                            var g=document.getElementById('cartShippingGuide');if(!g)return;
-                            var t={
-                                kr:'서울/경기는 무료배송+시공. 지방만 추가해주세요. 택배 최대사이즈: 600×1800mm',
-                                ja:'東京近郊は送料無料+設置無料。地方のみ追加してください。宅配最大サイズ: 600×1800mm',
-                                en:'Seoul/Gyeonggi: Free shipping+installation. Add only for other regions. Max courier size: 600×1800mm',
-                                zh:'首尔/京畿免费配送+安装。仅地方需追加。快递最大尺寸: 600×1800mm',
-                                ar:'سيول/كيونغكي: شحن مجاني+تركيب. أضف فقط للمناطق الأخرى. أقصى حجم للشحن: 600×1800mm',
-                                es:'Seul/Gyeonggi: Envio gratis+instalacion. Solo agregar para otras regiones. Tamano max courier: 600×1800mm',
-                                de:'Seoul/Gyeonggi: Kostenloser Versand+Montage. Nur fuer andere Regionen hinzufuegen. Max Paketgroesse: 600×1800mm',
-                                fr:'Seoul/Gyeonggi: Livraison+installation gratuites. Ajouter uniquement pour les autres regions. Taille max colis: 600×1800mm'
-                            };
                             var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'';
                             var l=c==='JP'?'ja':c==='CN'?'zh':c==='US'||c==='EN'?'en':c==='AR'?'ar':c==='ES'?'es':c==='DE'?'de':c==='FR'?'fr':'kr';
-                            g.textContent=t[l]||t['kr'];
+                            var guide={
+                                kr:'서울/경기는 무료배송+시공. 지방만 추가해주세요. 택배 최대: 600×1800mm',
+                                ja:'東京近郊は送料+設置無料。地方のみ追加。宅配最大: 600×1800mm',
+                                en:'Seoul/Gyeonggi: Free shipping+install. Add only for other regions. Max courier: 600×1800mm',
+                                zh:'首尔/京畿免费配送+安装。仅地方需追加。快递最大: 600×1800mm',
+                                ar:'سيول/كيونغكي: شحن+تركيب مجاني. أضف للمناطق الأخرى فقط. أقصى حجم: 600×1800mm',
+                                es:'Seul/Gyeonggi: Envio+instalacion gratis. Solo otras regiones. Max courier: 600×1800mm',
+                                de:'Seoul/Gyeonggi: Versand+Montage kostenlos. Nur andere Regionen. Max Paket: 600×1800mm',
+                                fr:'Seoul/Gyeonggi: Livraison+pose gratuites. Autres regions uniquement. Max colis: 600×1800mm'
+                            };
+                            var g=document.getElementById('cartShippingGuide');
+                            if(g) g.textContent=guide[l]||guide['kr'];
+                            var _r=(window.SITE_CONFIG&&window.SITE_CONFIG.CURRENCY_RATE)||{};
+                            var _fmt=function(krw){
+                                if(l==='ja') return '¥'+Math.round(krw*(_r.JP||0.1)).toLocaleString();
+                                if(l==='en'||l==='ar') return '$'+Math.round(krw*(_r.US||0.001));
+                                if(l==='zh') return '¥'+Math.round(krw*(_r.CN||0.05));
+                                if(l==='es'||l==='de'||l==='fr') return '€'+Math.round(krw*(_r.ES||0.001));
+                                return Math.round(krw/10000)+'만원';
+                            };
+                            var btns=[
+                                {fee:200000, icon:'🚚', kr:'용차배송',ja:'車両配送',en:'Truck delivery',zh:'车辆配送',ar:'توصيل شاحنة',es:'Entrega camion',de:'LKW-Lieferung',fr:'Livraison camion'},
+                                {fee:700000, icon:'🔧', kr:'배송+시공',ja:'配送+設置',en:'Delivery+Install',zh:'配送+安装',ar:'توصيل+تركيب',es:'Entrega+Instalacion',de:'Lieferung+Montage',fr:'Livraison+Pose'},
+                                {fee:30000,  icon:'📦', kr:'택배',ja:'宅配',en:'Courier',zh:'快递',ar:'بريد سريع',es:'Courier',de:'Paket',fr:'Colis'}
+                            ];
+                            var lbl={kr:'지방 ',ja:'地方 ',en:'Regional ',zh:'地方 ',ar:'إقليمي ',es:'Regional ',de:'Regional ',fr:'Regional '};
+                            var box=document.getElementById('cartShippingBtns');
+                            if(!box)return;
+                            btns.forEach(function(b){
+                                var btn=document.createElement('button');
+                                btn.onclick=function(){window._addCartShipping(b.fee,(lbl[l]||lbl['en'])+(b[l]||b['en']))};
+                                btn.textContent=b.icon+' +'+(b[l]||b['en'])+' '+_fmt(b.fee);
+                                btn.style.cssText='padding:8px 14px;border:1px solid #0369a1;background:#f0f9ff;color:#0369a1;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;';
+                                box.appendChild(btn);
+                            });
                         })();
                         </script>
                     </div>
