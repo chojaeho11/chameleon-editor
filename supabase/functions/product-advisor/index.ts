@@ -1039,19 +1039,14 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
 
             const content: any[] = [];
 
-            // ★ 상품 카탈로그 썸네일 포함 (고객 이미지와 시각적 매칭)
+            // ★ 상품 카탈로그 텍스트 매칭 가이드 (이미지 대신 텍스트 설명 — API 타임아웃 방지)
             if (_catalogThumbs.length > 0) {
-                const catalogText: Record<string, string> = {
-                    kr: '아래는 우리 상품 카탈로그 썸네일입니다. 고객이 보낸 이미지와 비교하여 어떤 상품인지 식별해주세요:',
-                    ja: '以下は商品カタログのサムネイルです。お客様の画像と比較して商品を特定してください:',
-                    us: 'Below are our product catalog thumbnails. Compare the customer image against these to identify the product:',
+                const catalogGuide: Record<string, string> = {
+                    kr: '우리 상품 카탈로그입니다. 고객 이미지와 매칭하여 어떤 상품인지 식별해주세요:\n',
+                    ja: '商品カタログです。お客様の画像と照合して商品を特定してください:\n',
+                    us: 'Our product catalog. Match the customer image to identify the product:\n',
                 };
-                content.push({ type: "text", text: (catalogText[clientLang] || catalogText['kr']) + '\n' + _catalogThumbs.map(t => t.label).join(' / ') });
-                // 카탈로그 이미지 추가 (최대 20개 — 허니콤 제품 + 주요 카테고리)
-                for (const thumb of _catalogThumbs.slice(0, 20)) {
-                    content.push({ type: "image", source: { type: "url", url: thumb.url } });
-                }
-                content.push({ type: "text", text: "---\n고객이 보낸 이미지 ↓" });
+                content.push({ type: "text", text: (catalogGuide[clientLang] || catalogGuide['kr']) + _catalogThumbs.map(t => '• ' + t.label).join('\n') });
             }
 
             // 고객 이미지
