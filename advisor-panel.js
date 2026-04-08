@@ -318,6 +318,15 @@ window._quoteToCart = async function(quoteId) {
                 img: rec.img_url || null,
             }, item.qty || 1, addonCodes, {});
         }
+        // ★ 견적서 배송/시공비 저장
+        if (qData.shipping_fee && qData.shipping_fee > 0) {
+            localStorage.setItem('chameleon_quote_shipping', JSON.stringify({
+                fee: qData.shipping_fee,
+                label: qData.shipping_fee >= 700000 ? '지방 배송+시공비' : '비수도권 추가 배송비',
+                ts: Date.now()
+            }));
+            window._nonMetroFeeApplied = qData.shipping_fee;
+        }
         if (window.updateCartBadge) window.updateCartBadge();
         // 장바구니 페이지 열기
         const cartPage = document.getElementById('cartPage');
@@ -823,7 +832,7 @@ async function sendMessage(text, imageData) {
                     const _quoteItems = data.quote_data.items;
                     const _quoteId = 'quote_' + Date.now();
                     // 견적 아이템을 전역에 저장 (결제 버튼에서 사용)
-                    window['_pendingQuote_' + _quoteId] = { items: _quoteItems, products: data.products || [] };
+                    window['_pendingQuote_' + _quoteId] = { items: _quoteItems, products: data.products || [], shipping_fee: data.quote_data.shipping_fee || 0 };
 
                     const _pdfCard = document.createElement('div');
                     _pdfCard.style.cssText = 'background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;padding:16px;margin:8px 0;color:#fff;';

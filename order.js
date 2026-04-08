@@ -2106,6 +2106,9 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                         <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.type === 'file_upload' ? item.fileName : (item.fileName || window.t('msg_file_attached_separately', '(File attached separately)'))}</div>
                         <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
                         ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:8px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
+                        <div style="margin-top:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            ${item.originalUrl ? `<a href="${item.originalUrl}" target="_blank" style="font-size:11px; color:#059669; text-decoration:none; background:#ecfdf5; padding:3px 10px; border-radius:5px; border:1px solid #a7f3d0;"><i class="fa-solid fa-check-circle"></i> ${item.fileName || '파일 첨부됨'}</a>` : `<label style="cursor:pointer; font-size:11px; color:#6366f1; background:#f5f3ff; padding:4px 12px; border-radius:6px; border:1px solid #c7d2fe; font-weight:600;"><i class="fa-solid fa-paperclip"></i> ${window.t('btn_attach_file', '파일 첨부')}<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`}
+                        </div>
                         <div style="display:flex; align-items:center; gap:12px; margin-top:15px;">
                             <div class="qty-wrapper" style="display:flex; border:1px solid #e2e8f0; border-radius:6px; background:#fff; overflow:hidden;">
                                 <button onclick="event.stopPropagation(); window.updateCartQty(${idx}, -1)" style="border:none; background:none; padding:4px 10px; cursor:pointer;">-</button>
@@ -2141,6 +2144,9 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                             ${(displayMmW && displayMmH) ? `<div style="font-size:11px; color:#6366f1; margin-top:2px; font-weight:bold;">📐 ${window._isUSsite && window._isUSsite() ? (displayMmW/25.4).toFixed(2)+'x'+(displayMmH/25.4).toFixed(2)+' in' : displayMmW+'x'+displayMmH+'mm'}</div>` : ''}
                             <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
                             ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:6px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
+                            <div style="margin-top:6px;">
+                                ${item.originalUrl ? `<a href="${item.originalUrl}" target="_blank" style="font-size:10px; color:#059669; text-decoration:none; background:#ecfdf5; padding:2px 8px; border-radius:5px; border:1px solid #a7f3d0;"><i class="fa-solid fa-check-circle"></i> ${item.fileName || '파일'}</a>` : `<label style="cursor:pointer; font-size:10px; color:#6366f1; background:#f5f3ff; padding:3px 10px; border-radius:6px; border:1px solid #c7d2fe; font-weight:600;"><i class="fa-solid fa-paperclip"></i> ${window.t('btn_attach_file', '파일 첨부')}<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`}
+                            </div>
                         </div>
                         <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
@@ -2231,8 +2237,7 @@ function updateSummary(prodTotal, addonTotal, total) {
     const discountAmount = gradeDiscount;
     const finalTotal = total - discountAmount;
 
-    window.finalPaymentAmount = finalTotal;
-    finalPaymentAmount = finalTotal;
+    // finalPaymentAmount는 배송비 반영 후 아래에서 설정
 
     if (typeof currentUser !== 'undefined' && currentUser) {
         const elOwn = document.getElementById('cartOwnMileage');
@@ -2275,7 +2280,25 @@ function updateSummary(prodTotal, addonTotal, total) {
         if(gradeDiscount > 0) elDiscount.innerText = `-${formatCurrency(gradeDiscount)} (${(currentUserDiscountRate*100).toFixed(0)}%)`;
         else elDiscount.innerText = formatCurrency(0) + " (0%)";
     }
-    const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(finalTotal);
+    // ★ 견적서 배송/시공비 표시
+    let quoteShipping = 0;
+    try {
+        const shData = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+        if (shData.fee && shData.ts && (Date.now() - shData.ts < 86400000)) { // 24시간 유효
+            quoteShipping = shData.fee;
+            const shRow = document.getElementById('cartShippingFeeRow');
+            const shLabel = document.getElementById('cartShippingLabel');
+            const shAmt = document.getElementById('cartShippingAmount');
+            if (shRow) { shRow.style.display = 'flex'; }
+            if (shLabel) shLabel.textContent = '🚚 ' + (shData.label || '배송비');
+            if (shAmt) shAmt.textContent = '+' + formatCurrency(quoteShipping);
+        }
+    } catch(e) {}
+    const displayTotal = finalTotal + quoteShipping;
+    window.finalPaymentAmount = displayTotal;
+    finalPaymentAmount = displayTotal;
+
+    const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(displayTotal);
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`;
     const btnCart = document.getElementById("btnViewCart"); if (btnCart) btnCart.style.display = (cartData.length > 0 || (typeof currentUser !== 'undefined' && currentUser)) ? "inline-flex" : "none";
 
@@ -3387,6 +3410,37 @@ window.toggleCartAccordion = function(idx) {
         renderCart(); 
     } 
 };
+// ★ 장바구니 상품별 파일 업로드
+window._uploadCartItemFile = async function(idx, input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { alert('50MB 이하 파일만 업로드 가능합니다.'); return; }
+    const CART_KEY = 'chameleon_cart_current';
+    let items = [];
+    try { items = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return; }
+    if (idx < 0 || idx >= items.length) return;
+
+    const btn = input.parentElement;
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드중...';
+    btn.style.pointerEvents = 'none';
+    try {
+        const url = await uploadFileToSupabase(file, 'customer_uploads');
+        if (!url) throw new Error('업로드 실패');
+        items[idx].originalUrl = url;
+        items[idx].fileName = file.name;
+        items[idx].type = items[idx].type === 'product_only' ? 'file_upload' : items[idx].type;
+        localStorage.setItem(CART_KEY, JSON.stringify(items));
+        cartData.length = 0; items.forEach(i => cartData.push(i));
+        renderCart();
+    } catch(e) {
+        console.error('파일 업로드 실패:', e);
+        btn.innerHTML = origHtml;
+        btn.style.pointerEvents = '';
+        alert('파일 업로드에 실패했습니다. 다시 시도해주세요.');
+    }
+};
+
 window.removeCartItem = function(idx) {
     // ★★★ v133 완전 재구성: localStorage를 유일한 진실의 원천으로 사용 ★★★
     // cartData 모듈 바인딩에 의존하지 않음 (버전 불일치 시에도 안전)

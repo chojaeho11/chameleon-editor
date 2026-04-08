@@ -198,12 +198,12 @@ serve(async (req: Request) => {
             }
         }
 
-        // Totals
+        // Totals — VAT는 상품금액에만 적용, 배송비는 별도
         y -= mm(5);
         const shFee = shipping_fee || 0;
+        const vat = Math.floor(totalAmt / 11);
+        const supply = totalAmt - vat;
         const finalAmt = totalAmt + shFee;
-        const vat = Math.floor(finalAmt / 11);
-        const supply = finalAmt - vat;
         const sumX = mm(105);
         const valRightX = W - LEFT;
 
