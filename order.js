@@ -3865,7 +3865,7 @@ function _syncFabricAddonQty(item, oldQty, newQty) {
     const cat = item.product && item.product.category;
     const isFab = (cat && window._getTopCategoryCode && window._getTopCategoryCode(cat) === '22222');
     // 패브릭 후가공 addon 코드 (카테고리 매칭 실패 시에도 동작)
-    const _fabricAddonCodes = new Set(['txl0001','txl0002','txl0003','txl0004','txl0005','3254352','45783','45722','45787','45646456','3453453','355353']);
+    const _fabricAddonCodes = new Set(['txl0001','txl0002','txl0003','txl0004','txl0005','MS023','3254352','45783','45722','45787','45646456','3453453','355353']);
     const hasFabricAddon = Object.keys(item.addonQuantities).some(c => _fabricAddonCodes.has(c));
     if (!isFab && !hasFabricAddon) return;
     Object.keys(item.addonQuantities).forEach(code => {
