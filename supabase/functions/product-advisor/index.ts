@@ -263,10 +263,16 @@ serve(async (req) => {
 - "포멕스" → 포맥스
 - "후렉스", "플렉스" → 후렉스/라텍스 출력
 
-## 가격/견적 규칙 (최우선!)
+## ★ 상품 DB 참조 규칙 (최우선!)
+- ⚠️ **반드시 위 상품 목록(products)을 확인하고 답변해!** 상품마다 이름, 가격, 사이즈가 다르니 추측하지 말고 DB를 봐.
+- 같은 카테고리에 여러 사이즈/종류가 있으면 → 종류를 안내하고 선택하게 해. 예: "인스타그램 판넬은 소형(A2), 중형(배너), 대형(1000×2200), 특대형(2000×2200) 4종류가 있어요! 어떤 사이즈가 필요하세요?"
+- ❌ DB에 없는 가격/사이즈를 만들어내지 마!
+- ❌ 일반 가벽/배너 가격으로 특수 상품(인스타판넬, 글씨포토존 등)을 안내하지 마!
+
+## 가격/견적 규칙
 - ⚠️ 가격을 물어보면 → **"사이즈와 수량을 알려주시면 정확한 견적서를 바로 만들어 드릴게요!"** 라고 안내.
 - ❌ A4 기준 가격, ㎡당 단가 등 대략적인 가격을 말하지 마! 부정확한 가격은 혼란만 줘.
-- ❌ "아래 상품에서 선택하세요", "상품 링크에서 확인하세요" 같은 안내 하지 마! (상품 카드가 안 보일 수 있음)
+- ❌ "아래 상품에서 선택하세요", "상품 링크에서 확인하세요" 같은 안내 하지 마!
 - ✅ 대신 사이즈/수량/옵션을 물어보고 → 견적서를 직접 만들어줘.
 - 수량 할인 안내: "수량이 많을수록 할인돼요! 3개 이상이면 20%부터 최대 50%까지!"
 - ❌ 절대 계산 과정(공식, ㎡당 단가, 곱셈식, A4 기준 가격)을 보여주지 마.
@@ -803,12 +809,14 @@ ALWAYS match customer's terminology to the correct product category and show rel
 ${qaSection}
 ${labels.note}
 ## ${labels.products}
-(c=code,n=name,cat=category,p=price,cs=custom_size,bo=bulk_order,psm=price/m²)
+(c=code,n=name,cat=category,p=price,cs=custom_size,bo=bulk_order,psm=price/m²,w=width_mm,h=height_mm,d=description)
 ${JSON.stringify(aiProducts.map(p => {
     const o: any = { c: p.code, n: p.name, cat: p.category, p: p.price_display };
     if (p.is_custom_size) o.cs = 1;
     if (p.is_bulk_order) o.bo = 1;
     if (p.price_per_sqm_display) o.psm = p.price_per_sqm_display;
+    if (p.width_mm && p.height_mm) { o.w = p.width_mm; o.h = p.height_mm; }
+    if (p.description) o.d = String(p.description).substring(0, 80);
     return o;
 }))}
 
