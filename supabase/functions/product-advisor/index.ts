@@ -941,22 +941,33 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         console.log(`[kapu] msg="${trimmedMsg.substring(0,40)}", history=${conversation_history?.length || 0}`);
 
         async function callClaude(model: string, retries = 0): Promise<any> {
-            const res = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-api-key": ANTHROPIC_API_KEY!,
-                    "anthropic-version": "2023-06-01",
-                },
-                body: JSON.stringify({
-                    model,
-                    max_tokens: 1024,
-                    system: systemPrompt,
-                    tools,
-                    tool_choice: toolChoice,
-                    messages,
-                }),
-            });
+            const _ctrl = new AbortController();
+            const _timer = setTimeout(() => _ctrl.abort(), 25000); // 25초 타임아웃
+            let res: Response;
+            try {
+                res = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": ANTHROPIC_API_KEY!,
+                        "anthropic-version": "2023-06-01",
+                    },
+                    body: JSON.stringify({
+                        model,
+                        max_tokens: 1024,
+                        system: systemPrompt,
+                        tools,
+                        tool_choice: toolChoice,
+                        messages,
+                    }),
+                    signal: _ctrl.signal,
+                });
+            } catch (fetchErr: any) {
+                clearTimeout(_timer);
+                console.error("Claude fetch error:", fetchErr.message);
+                throw new Error("Claude API fetch failed: " + fetchErr.message);
+            }
+            clearTimeout(_timer);
 
             if (res.status === 429) {
                 if (retries < 2) {
@@ -982,28 +993,47 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             if (toolBlock && toolBlock.name === "generate_quote") {
                 const qResult = toolBlock.input;
                 console.log("[quote] AI items:", JSON.stringify(qResult.items));
-                // AI가 items를 비워놓은 경우, 메시지에서 직접 추출 시도
                 let qItems = qResult.items || [];
-                if (qItems.length === 0) {
-                    // 대화 전체에서 상품 정보 추출
-                    const _allText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
-                    // 가벽 감지
-                    const _wallMatch = _allText.match(/가벽.*?(\d+)\s*[mM미터]*\s*[xX×]\s*(\d+\.?\d*)\s*[mM미터]*/i) || _allText.match(/(\d+)\s*[mM미터]*\s*[xX×]\s*(\d+\.?\d*)\s*[mM미터]*.*가벽/i);
-                    if (_wallMatch) {
-                        const wM = parseFloat(_wallMatch[1]); const hM = parseFloat(_wallMatch[2]);
-                        const side = /양면/.test(_allText) ? 2 : 1;
-                        const qty = parseInt((_allText.match(/가벽.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*가벽/) || ['','1'])[1]) || 1;
-                        qItems.push({ code: 'hb_dw_1', name: '허니콤 가벽', width_mm: wM * 1000, height_mm: hM * 1000, quantity: qty, side });
-                    }
-                    // 배너 감지
-                    const _bannerMatch = _allText.match(/배너.*?(\d+)\s*[xX×]\s*(\d+)/i) || _allText.match(/(\d+)\s*[xX×]\s*(\d+).*배너/i);
-                    if (_bannerMatch) {
-                        const bW = parseInt(_bannerMatch[1]); const bH = parseInt(_bannerMatch[2]);
-                        const bQty = parseInt((_allText.match(/배너.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*배너/) || ['','1'])[1]) || 1;
-                        qItems.push({ code: 'hb_bn_1', name: '허니콤배너', width_mm: bW, height_mm: bH, quantity: bQty, side: 1 });
-                    }
-                    console.log("[quote] fallback extracted items:", JSON.stringify(qItems));
+
+                // ★ AI가 items를 비워놓거나 부족할 때 → 대화에서 추출하여 보강
+                const _allText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg + ' ' + (qResult.summary || '');
+                const _existCodes = new Set(qItems.map((qi: any) => qi.code));
+
+                // 가벽 감지
+                if (/가벽/.test(_allText) && !Array.from(_existCodes).some((c: any) => String(c).startsWith('hb_dw'))) {
+                    const _wallSizeMatch = _allText.match(/가벽.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*가벽/i);
+                    const wMm = _wallSizeMatch ? parseInt(_wallSizeMatch[1]) : 1000;
+                    const hMm = _wallSizeMatch ? parseInt(_wallSizeMatch[2]) : 2400;
+                    const side = /가벽.*양면|양면.*가벽/.test(_allText) ? 2 : 1;
+                    const qtyMatch = _allText.match(/가벽.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*가벽/);
+                    const qty = qtyMatch ? parseInt(qtyMatch[1]) || 1 : 1;
+                    qItems.push({ code: 'hb_dw_1', name: '허니콤 가벽', width_mm: wMm, height_mm: hMm, quantity: qty, side });
+                    console.log("[quote] fallback 가벽:", wMm, 'x', hMm, 'side:', side, 'qty:', qty);
                 }
+                // 배너 감지
+                if (/배너/.test(_allText) && !Array.from(_existCodes).some((c: any) => String(c).startsWith('hb_bn'))) {
+                    const _bannerSizeMatch = _allText.match(/배너.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*배너/i);
+                    const bW = _bannerSizeMatch ? parseInt(_bannerSizeMatch[1]) : 600;
+                    const bH = _bannerSizeMatch ? parseInt(_bannerSizeMatch[2]) : 1800;
+                    const bSide = /배너.*양면|양면.*배너/.test(_allText) ? 2 : 1;
+                    const bCode = bSide === 2 ? 'hb_bn_3' : 'hb_bn_1';
+                    const bQtyMatch = _allText.match(/배너.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*배너/);
+                    const bQty = bQtyMatch ? parseInt(bQtyMatch[1]) || 1 : 1;
+                    qItems.push({ code: bCode, name: bSide === 2 ? '허니콤배너(양면)' : '허니콤배너', width_mm: bW, height_mm: bH, quantity: bQty, side: bSide });
+                    console.log("[quote] fallback 배너:", bW, 'x', bH, 'qty:', bQty);
+                }
+                // 등신대 감지
+                if (/등신대/.test(_allText) && !Array.from(_existCodes).some((c: any) => String(c) === 'hb_pi_5')) {
+                    const _standSizeMatch = _allText.match(/등신대.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*등신대/i);
+                    const sW = _standSizeMatch ? parseInt(_standSizeMatch[1]) : 500;
+                    const sH = _standSizeMatch ? parseInt(_standSizeMatch[2]) : 1700;
+                    const sSide = /등신대.*양면|양면.*등신대/.test(_allText) ? 2 : 1;
+                    const sQtyMatch = _allText.match(/등신대.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*등신대/);
+                    const sQty = sQtyMatch ? parseInt(sQtyMatch[1]) || 1 : 1;
+                    qItems.push({ code: 'hb_pi_5', name: '등신대', width_mm: sW, height_mm: sH, quantity: sQty, side: sSide });
+                    console.log("[quote] fallback 등신대:", sW, 'x', sH, 'qty:', sQty);
+                }
+                console.log("[quote] final qItems:", JSON.stringify(qItems));
 
                 // ★ 패브릭 addon 자동 추출: AI가 addon을 items에 안 넣었을 때 대화에서 감지
                 const _fabricCodes = ['cb20001','2343243','cb30001','ns16001','cs10001'];
@@ -1216,8 +1246,57 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             return textResult;
         }
 
-        const result = await callClaude("claude-haiku-4-5-20251001");
-        result._v = "2026-03-03-v10-kapu-smart";
+        let result: any;
+        try {
+            result = await callClaude("claude-haiku-4-5-20251001");
+        } catch (claudeErr: any) {
+            console.error("[kapu] callClaude failed:", claudeErr.message);
+            // ★ generate_quote 모드에서 실패하면 대화 기반 fallback 견적서 생성
+            if (_isQuoteReq) {
+                console.log("[kapu] fallback quote generation from conversation");
+                const _fbText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
+                const fbItems: any[] = [];
+                // 가벽
+                if (/가벽/.test(_fbText)) {
+                    const wm = _fbText.match(/가벽.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _fbText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*가벽/i);
+                    fbItems.push({ code: 'hb_dw_1', name: '허니콤 가벽', width_mm: wm ? parseInt(wm[1]) : 1000, height_mm: wm ? parseInt(wm[2]) : 2400, quantity: 1, side: /가벽.*양면|양면.*가벽/.test(_fbText) ? 2 : 1 });
+                }
+                // 배너
+                if (/배너/.test(_fbText)) {
+                    const bm = _fbText.match(/배너.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _fbText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*배너/i);
+                    fbItems.push({ code: 'hb_bn_1', name: '허니콤배너', width_mm: bm ? parseInt(bm[1]) : 600, height_mm: bm ? parseInt(bm[2]) : 1800, quantity: 1, side: 1 });
+                }
+                // 등신대
+                if (/등신대/.test(_fbText)) {
+                    const sm = _fbText.match(/등신대.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _fbText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*등신대/i);
+                    fbItems.push({ code: 'hb_pi_5', name: '등신대', width_mm: sm ? parseInt(sm[1]) : 500, height_mm: sm ? parseInt(sm[2]) : 1700, quantity: 1, side: 1 });
+                }
+                if (fbItems.length > 0) {
+                    // 가격 계산
+                    const fbQuoteItems: any[] = [];
+                    for (const qi of fbItems) {
+                        const dbP = products.find((p: any) => p.code === qi.code);
+                        if (!dbP) continue;
+                        const wMm = qi.width_mm; const hMm = qi.height_mm;
+                        const area = (wMm * hMm) / 1000000;
+                        const perSqm = dbP._raw_price || 0;
+                        let unitPrice = dbP.is_custom_size ? Math.floor(area * perSqm * qi.side / 100) * 100 : perSqm;
+                        if (unitPrice < 10000) unitPrice = 10000;
+                        fbQuoteItems.push({ name: qi.name, spec: `${wMm}x${hMm}mm` + (qi.side === 2 ? ' 양면' : ''), qty: qi.quantity, unit_price: unitPrice, total: unitPrice * qi.quantity, _code: qi.code, _width_mm: wMm, _height_mm: hMm });
+                        // 커팅 (등신대만)
+                        if (qi.code === 'hb_pi_5') {
+                            fbQuoteItems.push({ name: '사각 커팅', spec: '추가 옵션', qty: qi.quantity, unit_price: 1000, total: 1000 * qi.quantity, _code: '3244234', is_addon: true });
+                        }
+                    }
+                    result = { type: "quote", chat_message: "견적서를 만들어드렸습니다! 아래에서 확인해주세요.", quote_data: { customer_name: '', items: fbQuoteItems }, products: [] };
+                } else {
+                    result = { type: "chat", chat_message: "죄송합니다, 잠시 오류가 발생했어요. 다시 한번 말씀해주세요!", products: [] };
+                }
+            } else {
+                result = { type: "chat", chat_message: "죄송합니다, 잠시 오류가 발생했어요. 다시 한번 말씀해주세요!", products: [] };
+            }
+        }
+        result._v = "2026-04-08-v11-quote-fix";
 
         // 연락처 관련 질문 감지 → 프로그래밍적 보장
         const msgLower = trimmedMsg.toLowerCase();

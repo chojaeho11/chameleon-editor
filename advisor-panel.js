@@ -288,14 +288,22 @@ window._quoteToCart = async function(quoteId) {
     }
     try {
         const { addProductToCartDirectly } = await import('./order.js?v=291');
-        // addon 아이템과 메인 제품을 분리
-        const mainItems = qData.items.filter(i => !i.is_addon);
-        const addonItems = qData.items.filter(i => i.is_addon);
-        for (const item of mainItems) {
-            // products 배열에서 매칭되는 제품 정보 찾기
+        // ★ 각 메인 제품과 그 뒤에 오는 addon을 그룹핑
+        const allItems = qData.items;
+        let currentMain = null;
+        const groups = []; // [{main, addons:[]}]
+        for (const item of allItems) {
+            if (!item.is_addon) {
+                currentMain = { main: item, addons: [] };
+                groups.push(currentMain);
+            } else if (currentMain) {
+                currentMain.addons.push(item);
+            }
+        }
+        for (const group of groups) {
+            const item = group.main;
             const rec = (qData.products || []).find(p => p.code === item._code) || {};
-            // ★ 해당 제품 다음에 나오는 addon 코드 수집
-            const addonCodes = addonItems.map(a => a._code).filter(Boolean);
+            const addonCodes = group.addons.map(a => a._code).filter(Boolean);
             addProductToCartDirectly({
                 code: item._code || rec.code || '',
                 name: item.name,
