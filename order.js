@@ -2383,6 +2383,20 @@ function updateSummary(prodTotal, addonTotal, total) {
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`;
     const btnCart = document.getElementById("btnViewCart"); if (btnCart) btnCart.style.display = (cartData.length > 0 || (typeof currentUser !== 'undefined' && currentUser)) ? "inline-flex" : "none";
 
+    // ★ 장바구니 매니저 드롭다운에 DB 매니저 추가 (1회만)
+    const _cartMgrSel = document.getElementById('cartStaffManager');
+    if (_cartMgrSel && !_cartMgrSel.dataset.loaded && sb) {
+        _cartMgrSel.dataset.loaded = '1';
+        sb.from('admin_staff').select('id,name').eq('role','manager').then(({ data }) => {
+            if (data) data.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = String(m.id);
+                opt.textContent = m.name;
+                _cartMgrSel.appendChild(opt);
+            });
+        });
+    }
+
     // 장바구니 마일리지 섹션: 로그인 시만 표시
     const _cartMileSec = document.getElementById('cartMileageSection');
     const _isLoggedIn = typeof currentUser !== 'undefined' && currentUser;
