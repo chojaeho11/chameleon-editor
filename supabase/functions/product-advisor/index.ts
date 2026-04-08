@@ -1302,6 +1302,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         delivery_note: qResult.delivery_note || '',
                         shipping_region: qResult.shipping_region || 'unknown',
                         wants_install: qResult.wants_install || false,
+                        lang: clientLang,
                     },
                     products: qResult.products || []
                 };
