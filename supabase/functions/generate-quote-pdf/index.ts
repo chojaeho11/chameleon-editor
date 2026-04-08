@@ -155,17 +155,19 @@ serve(async (req: Request) => {
             const qs = String(item.qty); const qw = font.widthOfTextAtSize(qs, 9);
             page.drawText(qs, { x: curX + (cols[3] - qw) / 2, y: y - mm(6), size: 9, font });
             curX += cols[3];
-            // Unit price (현지 통화)
+            // Unit price (현지 통화) — 음수(할인)는 빨간색
+            const _isDiscount = item.total < 0;
+            const _textColor = _isDiscount ? rgb(0.86, 0.15, 0.15) : rgb(0, 0, 0);
             page.drawRectangle({ x: curX, y: y - rowH, width: cols[4], height: rowH, borderColor: rgb(0, 0, 0), borderWidth: 0.2 });
-            const upStr = item.unit_price > 0 ? formatPrice(item.unit_price, l) : "";
+            const upStr = item.unit_price !== 0 ? formatPrice(Math.abs(item.unit_price), l) : "";
             const upw = font.widthOfTextAtSize(upStr, 9);
-            page.drawText(upStr, { x: curX + cols[4] - upw - mm(2), y: y - mm(6), size: 9, font });
+            if (upStr) page.drawText((_isDiscount ? '-' : '') + upStr, { x: curX + cols[4] - upw - mm(_isDiscount ? 4 : 2), y: y - mm(6), size: 9, font, color: _textColor });
             curX += cols[4];
             // Total (현지 통화)
             page.drawRectangle({ x: curX, y: y - rowH, width: cols[5], height: rowH, borderColor: rgb(0, 0, 0), borderWidth: 0.2 });
-            const tStr = formatPrice(item.total, l);
+            const tStr = (_isDiscount ? '-' : '') + formatPrice(Math.abs(item.total), l);
             const tw = font.widthOfTextAtSize(tStr, 9);
-            page.drawText(tStr, { x: curX + cols[5] - tw - mm(2), y: y - mm(6), size: 9, font });
+            page.drawText(tStr, { x: curX + cols[5] - tw - mm(2), y: y - mm(6), size: 9, font, color: _textColor });
 
             totalAmt += item.total; // KRW 기준 합산
             y -= rowH;

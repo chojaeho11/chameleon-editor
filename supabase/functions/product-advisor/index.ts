@@ -274,7 +274,8 @@ serve(async (req) => {
 - ❌ A4 기준 가격, ㎡당 단가 등 대략적인 가격을 말하지 마! 부정확한 가격은 혼란만 줘.
 - ❌ "아래 상품에서 선택하세요", "상품 링크에서 확인하세요" 같은 안내 하지 마!
 - ✅ 대신 사이즈/수량/옵션을 물어보고 → 견적서를 직접 만들어줘.
-- 수량 할인 안내: "수량이 많을수록 할인돼요! 3개 이상이면 20%부터 최대 50%까지!"
+- 수량 할인 안내 (패브릭 등 일반 제품): "수량이 많을수록 할인돼요! 3개 이상이면 20%부터 최대 50%까지!"
+- ★ **허니콤보드 금액별 할인 (자동 적용!)**: 200만원↑ 10% / 300만원↑ 15% / 500만원↑ 20% / 700만원↑ 25% / 1000만원↑ 30%. PRO 구독 10% 추가 → 최대 40% 할인! 견적서에 자동 반영되니 고객에게 "금액이 클수록 할인이 커져요!"라고 안내해.
 - ❌ 절대 계산 과정(공식, ㎡당 단가, 곱셈식, A4 기준 가격)을 보여주지 마.
 
 ## 견적서 자동 생성 흐름 (매우 중요!)
@@ -1253,6 +1254,25 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         qty: 1, unit_price: deficit, total: deficit,
                         _code: '', _width_mm: 0, _height_mm: 0, is_addon: true
                     });
+                }
+
+                // ★ 허니콤보드 금액별 할인
+                const hbTotal = quoteItems.filter((i: any) => (i._code || '').startsWith('hb_')).reduce((s: number, i: any) => s + i.total, 0);
+                if (hbTotal >= 2000000) {
+                    let hbDiscRate = 0;
+                    if (hbTotal >= 10000000) hbDiscRate = 0.30;
+                    else if (hbTotal >= 7000000) hbDiscRate = 0.25;
+                    else if (hbTotal >= 5000000) hbDiscRate = 0.20;
+                    else if (hbTotal >= 3000000) hbDiscRate = 0.15;
+                    else hbDiscRate = 0.10;
+                    const hbDiscAmt = Math.floor(hbTotal * hbDiscRate / 100) * 100;
+                    quoteItems.push({
+                        name: `허니콤보드 ${Math.round(hbDiscRate * 100)}% 할인`,
+                        spec: `${(hbTotal/10000).toFixed(0)}만원 이상`,
+                        qty: 1, unit_price: -hbDiscAmt, total: -hbDiscAmt,
+                        _code: '', _width_mm: 0, _height_mm: 0, is_addon: true
+                    });
+                    console.log("[quote] honeycomb discount:", hbDiscRate * 100 + '%', 'on', hbTotal, '→ -' + hbDiscAmt);
                 }
 
                 // ★ 배송비: 제품 크기와 지역에 따라 결정

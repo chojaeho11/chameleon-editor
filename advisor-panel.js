@@ -288,16 +288,29 @@ window._quoteToCart = async function(quoteId) {
     }
     try {
         const { addProductToCartDirectly } = await import('./order.js?v=291');
-        // ★ 각 메인 제품과 그 뒤에 오는 addon을 그룹핑
-        const allItems = qData.items;
+        // ★ 할인 아이템 분리, 메인/addon 그룹핑
+        const allItems = qData.items.filter(i => (i.total || 0) >= 0); // 할인 행 제외
+        const discountItems = qData.items.filter(i => (i.total || 0) < 0);
+        const totalDiscount = discountItems.reduce((s, i) => s + Math.abs(i.total), 0);
         let currentMain = null;
-        const groups = []; // [{main, addons:[]}]
+        const groups = [];
         for (const item of allItems) {
             if (!item.is_addon) {
                 currentMain = { main: item, addons: [] };
                 groups.push(currentMain);
             } else if (currentMain) {
                 currentMain.addons.push(item);
+            }
+        }
+        // ★ 할인 금액을 메인 제품에 비례 분배
+        if (totalDiscount > 0 && groups.length > 0) {
+            const mainTotal = groups.reduce((s, g) => s + (g.main.total || 0), 0);
+            for (const g of groups) {
+                if (mainTotal > 0 && g.main.total > 0) {
+                    const ratio = g.main.total / mainTotal;
+                    const disc = Math.round(totalDiscount * ratio);
+                    g.main.total = g.main.total - disc;
+                }
             }
         }
         for (const group of groups) {
