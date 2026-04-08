@@ -322,7 +322,18 @@ serve(async (req) => {
 - **마감 방식** → "가장자리 마감은 어떻게 할까요? 오버록(+3,000원)이 가장 인기 있어요"
 - **고리/걸이** → "벽에 거실 건가요? 끈고리나 봉마감이 필요할 수 있어요"
 
-모든 정보가 모이면 → generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예: "부산 / 3월 20일까지 / 설치 불필요 / 보조받침대 2개")
+모든 정보가 모이면 → **바로 견적서를 만들지 말고**, 먼저 주문 내용을 정리해서 보여주고 물어봐:
+"주문 내용을 정리해볼게요:
+- 허니콤 가벽 단면 3000×2200mm × 2개
+- 배송: 울산 (배송비 20만원)
+- 보조받침대: 2개
+
+이대로 견적서를 만들어 드릴까요? 추가하거나 빼실 것이 있으면 말씀해주세요!"
+
+고객이 "네", "맞아", "이대로 해줘" 등 **최종 확인**을 하면 그때 generate_quote를 호출해.
+❌ 정보가 모였더라도 고객 확인 없이 바로 견적서를 만들지 마!
+❌ 질문을 던져놓고 답을 안 받았는데 견적서를 만들지 마!
+generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예: "울산 / 10월 셋째주 / 배송만 / 보조받침대 2개")
 정보가 부족하면 견적서를 만들지 말고 부족한 부분만 자연스럽게 물어봐.
 6. **⚠️ 제품 링크(카드)는 오직 2가지 경우에만! products 배열을 채워:**
    ① 견적서를 생성할 때 (generate_quote 도구 사용 시)
@@ -947,24 +958,18 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         // 현재 메시지 추가
         messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type) });
 
-        // 견적서 생성 감지: 명시적 요청 OR 제품+사이즈+수량+옵션이 모두 갖춰진 경우
+        // ★ AI가 직접 도구 선택 — 견적서 생성 타이밍은 AI가 판단
+        // 명시적 견적서 요청("견적서 줘")일 때만 강제, 그 외에는 AI auto
         const _quoteKw = /견적서|견적\s*줘|견적\s*만들|見積|quotation|quote.*pdf|견적.*pdf|견적.*줘/i;
-        const _allConv = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
-        const _hasProduct = /허니콤|가벽|배너|인쇄.*커팅|honeycomb|banner|wall|포스터|등신대/i.test(_allConv);
-        const _hasSize = /\d+\s*[xX×]\s*\d+|\d+\s*(mm|미터|m)\b|A[0-9]|B[0-9]/i.test(_allConv);
-        const _hasQty = /\d+\s*(개|장|ea|매|세트|칸)/i.test(_allConv);
-        const _hasOption = /단면|양면|사각|모양|single|double/i.test(trimmedMsg);
-        // 확인 응답 감지 (이전 대화에서 "정리해볼게요" 등이 있고 긍정 답변)
-        const _isConfirm = /^(맞|네|ㅇㅇ|좋아|ok|yes|はい|그래|응|넵|맞아|확인|진행|만들어)/i.test(trimmedMsg.trim());
-        const _prevHasSummary = /정리|확인.*내용|주문.*내용|견적.*만들/i.test(_allConv);
-        // 옵션 답변이 오면 + 이전 대화에서 상품+사이즈+수량이 있으면 → 견적서 자동 생성
-        const _isQuoteReq = _quoteKw.test(trimmedMsg)
-            || (_hasOption && _hasProduct && (_hasSize || _hasQty))
-            || (_isConfirm && _prevHasSummary && _hasProduct)
-            || (_quoteKw.test(_allConv) && /배너|가벽|사이즈|수량|단면|양면|개|mm|미터/i.test(trimmedMsg));
+        const _explicitQuote = _quoteKw.test(trimmedMsg);
+        // 확인 응답 + 이전 정리가 있으면 견적서 강제
+        const _isConfirm = /^(맞|맞아|네|ㅇㅇ|좋아|ok|yes|はい|그래|응|넵|확인|진행|만들어|이대로|주세요)/i.test(trimmedMsg.trim());
+        const _allConv = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ');
+        const _prevAskedConfirm = /이대로.*진행|견적서.*드릴까|내용.*맞으시|확인.*부탁|추가.*뺄.*것|빠진.*것|변경.*사항/.test(_allConv);
+        const _isQuoteReq = _explicitQuote || (_isConfirm && _prevAskedConfirm);
         const toolChoice = _isQuoteReq
             ? { type: "tool" as const, name: "generate_quote" }
-            : { type: "tool" as const, name: "recommend_products" };
+            : { type: "auto" as const };
         console.log(`[kapu] msg="${trimmedMsg.substring(0,40)}", history=${conversation_history?.length || 0}`);
 
         async function callClaude(model: string, retries = 0): Promise<any> {
