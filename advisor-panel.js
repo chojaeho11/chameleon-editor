@@ -302,8 +302,12 @@ window._quoteToCart = async function(quoteId) {
         }
         for (const group of groups) {
             const item = group.main;
+            const mainQty = item.qty || 1;
             const rec = (qData.products || []).find(p => p.code === item._code) || {};
             const addonCodes = group.addons.map(a => a._code).filter(Boolean);
+            // ★ addon 수량 = 각 addon의 qty (견적서에서 이미 메인 수량과 맞춰짐)
+            const addonQtyMap = {};
+            group.addons.forEach(a => { if (a._code) addonQtyMap[a._code] = a.qty || mainQty; });
             addProductToCartDirectly({
                 code: item._code || rec.code || '',
                 name: item.name,
@@ -316,7 +320,7 @@ window._quoteToCart = async function(quoteId) {
                 _calculated_price: true,
                 _quote_item: true,
                 img: rec.img_url || null,
-            }, item.qty || 1, addonCodes, {});
+            }, mainQty, addonCodes, addonQtyMap);
         }
         // ★ 견적서 배송/시공비 + 주문 메모 저장
         const _quoteInfo = {
