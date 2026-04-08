@@ -547,19 +547,14 @@ generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예
 ⚠️ 연락처 규칙 (절대): 전화번호/이메일/주소를 절대 임의로 만들지 마. 아래 정보만 사용.
 ## 회사 정보
 - 상호: (주)카멜레온프린팅
-- 본사 전화: 031-366-1984
-- 주소: 경기도 화성시 우정읍 한말길 72-2
 - 영업시간: 평일 09:00~18:00 (점심 12:00~13:00, 주말/공휴일 휴무)
-- 매니저: 지숙(010-3455-1946), 은미(010-7793-5393), 성희(010-3490-3328) — 일반 제품/견적/주문 상담
-- 출고실(제품 파손/출고 문의/홈페이지 시스템 문의): 이선율 팀장(010-7610-3455), 변지웅 부사장(010-5512-5366)
-- 해외(영어/일본어) 상담 전용: +82-10-3491-3535
-- 일본 지사 담당: 洪志汶(ホンジウン/홍지문) 070-3202-9352 / design@chameleon.design
-- 일본 지사 Office: 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画 / Tel: 047-712-1148
-- 일본 지사 명함: https://www.cafe0101.com/japan_card.png
-- 일본 관련 문의 시 위 명함 이미지 링크와 담당자 정보를 함께 안내해줘!
+- 이메일: design@chameleon.design
 - 온라인 상담(카푸): 24시간 운영
 - 결제: 카드결제, 무통장입금, 카카오페이, 네이버페이
-- 대용량 파일: design@chameleon.design으로 전송
+- ★ **계좌번호 문의 시**: "국민은행 647701-04-277763 (예금주: 카멜레온프린팅)" 안내
+- ★ **해외 계좌 문의 시**: "Community Federal Savings Bank, Acct: 8487335989, Routing: 026073150, SWIFT: CMFGUS33 (CHAMELEON PRINTING INC.)" 안내
+- ❌ 매니저 개인 전화번호, 본사 전화번호는 안내하지 마! 챗봇에서 모든 상담이 가능하므로 전화 안내 불필요.
+- 일본 지사: 洪志汶(ホンジウン) / design@chameleon.design / 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
 - 사이트: ${siteUrl}`,
 
             ja: `あなたはカメレオンプリンティングの担当者「カプ」です。本物の人間のように自然で親しみやすく対応してください。絵文字は控えめに（1〜2個）。3〜5文で回答。
@@ -1480,9 +1475,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         if (isContactQuery) {
             const chatMsg = result.chat_message || result.summary || '';
             const contactInfos: Record<string, string> = {
-                kr: "\n\n📞 매니저 직통번호:\n• 지숙: 010-3455-1946\n• 은미: 010-7793-5393\n• 성희: 010-3490-3328\n📦 출고실(파손/출고/시스템 문의):\n• 이선율 팀장: 010-7610-3455\n• 변지웅 부사장: 010-5512-5366\n🕐 영업시간: 평일 09:00~18:00 (점심 12:00~13:00)\n📧 대용량 파일: design@chameleon.design\n💬 카푸는 24시간 운영됩니다!",
-                ja: "\n\n📞 お電話: 047-712-1148\n📧 メール: design@chameleon.design\n🕐 営業時間: 平日 09:00〜18:00（土日祝休み）\n💬 カプは24時間対応！",
-                us: "\n\n📧 Email: design@chameleon.design\n🕐 Hours: Weekdays 09:00-18:00 (EST)\n💬 Kapu is available 24/7!",
+                kr: "\n\n🏦 무통장입금 계좌:\n국민은행 647701-04-277763 (카멜레온프린팅)\n\n📧 이메일: design@chameleon.design\n🕐 영업시간: 평일 09:00~18:00\n💬 카푸는 24시간 운영됩니다!",
+                ja: "\n\n📧 メール: design@chameleon.design\n🕐 営業時間: 平日 09:00〜18:00\n💬 カプは24時間対応！",
+                us: "\n\n📧 Email: design@chameleon.design\n🕐 Hours: Weekdays 09:00-18:00 KST\n💬 Kapu is available 24/7!",
             };
             const hasContact = chatMsg.includes('010-') || chatMsg.includes('047-') || chatMsg.includes('support@');
             if (!hasContact) {
