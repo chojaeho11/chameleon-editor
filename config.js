@@ -185,11 +185,26 @@ async function loadSystemData() {
     try {
         const country = SITE_CONFIG.COUNTRY; 
 
-        // 옵션 카테고리 + 옵션 병렬 로드
-        const [catResult, addonResult] = await Promise.all([
-            sb.from('addon_categories').select('*').order('sort_order', {ascending: true}),
-            sb.from('admin_addons').select('*').order('sort_order', {ascending: true})
-        ]);
+        // 옵션 카테고리 + 옵션 병렬 로드 (1시간 localStorage 캐시)
+        let catResult, addonResult;
+        const _cacheKey = 'chameleon_addons_cache';
+        const _cacheExpiry = 60 * 60 * 1000; // 1시간
+        try {
+            const _cached = localStorage.getItem(_cacheKey);
+            if (_cached) {
+                const _c = JSON.parse(_cached);
+                if (_c.ts && Date.now() - _c.ts < _cacheExpiry) {
+                    catResult = { data: _c.cats }; addonResult = { data: _c.addons };
+                }
+            }
+        } catch(e) {}
+        if (!catResult || !addonResult) {
+            [catResult, addonResult] = await Promise.all([
+                sb.from('addon_categories').select('*').order('sort_order', {ascending: true}),
+                sb.from('admin_addons').select('*').order('sort_order', {ascending: true})
+            ]);
+            try { localStorage.setItem(_cacheKey, JSON.stringify({ ts: Date.now(), cats: catResult.data, addons: addonResult.data })); } catch(e) {}
+        }
         const addonCats = catResult.data;
         if (addonCats) {
             ADDON_CAT_DB = {};

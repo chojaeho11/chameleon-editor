@@ -14468,7 +14468,7 @@ window.loadHomeHcGrid = function(){
                 if (document.hidden) return; // 탭 비활성 시 스킵
                 sb.from('page_views').update({ duration: Math.floor(elapsed / 1000) }).eq('id', visitId).then(() => {});
             }
-            const _trackTimer = setInterval(_updateDuration, 60000);
+            const _trackTimer = setInterval(_updateDuration, 300000);
 
             // 페이지 이탈 시 최종 업데이트
             window.addEventListener('beforeunload', () => {

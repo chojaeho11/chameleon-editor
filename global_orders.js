@@ -332,7 +332,7 @@ const MATERIAL_LABELS = {
 let _addonNameCache = {}; // addon code → display name
 
 async function _loadMaterialCache() {
-    const { data } = await sb.from('admin_products').select('code, name, material, category').limit(10000);
+    const { data } = await sb.from('admin_products').select('code, name, material, category').not('code','like','ua_%').limit(500);
     if (data) {
         _materialCache = {};
         // code → material 매핑 + category → material 매핑 (폴백) + name → material 매핑 (코드 없는 주문용)
