@@ -1651,14 +1651,27 @@ window.downloadOrderDoc = async function (orderId, docType) {
     if (docType === 'quotation' || docType === 'order_sheet') {
         const files = order.files || [];
         const found = files.find(f => f.type === docType || f.name === (docType === 'quotation' ? 'quotation.pdf' : 'order_sheet.pdf') || f.name === (docType === 'quotation' ? '견적서.pdf' : '작업지시서.pdf'));
-        if (found && found.url) {
-            window.open(found.url, '_blank');
-            return;
+        if (found && found.url) { window.open(found.url, '_blank'); return; }
+        // ★ 챗봇 견적서 URL이 admin_note에 저장되어 있으면 사용
+        if (docType === 'quotation' && order.admin_note) {
+            const _m = order.admin_note.match(/\[견적서\]\s*(https?:\/\/[^\s]+)/);
+            if (_m && _m[1]) { window.open(_m[1], '_blank'); return; }
         }
     }
 
     // 2. jsPDF 확인
     if (!window.jspdf) { showToast('PDF library not loaded. Please refresh and try again.', 'error'); return; }
+
+    // ★ ADDON_DB가 비어있으면 DB에서 로드
+    if (!window.ADDON_DB || Object.keys(window.ADDON_DB).length === 0) {
+        try {
+            const _sb = window.sb || (window.supabase && window.supabase.createClient ? null : null);
+            if (_sb) {
+                const { data: _addons } = await _sb.from('admin_addons').select('code,name,name_jp,name_us,price,price_jp,price_us,category_code');
+                if (_addons) { window.ADDON_DB = {}; _addons.forEach(a => { window.ADDON_DB[a.code] = { ...a, display_name: a.name }; }); }
+            }
+        } catch(e) { console.warn('ADDON_DB load failed:', e); }
+    }
 
     // 3. 주문 데이터 변환
     let items = [];

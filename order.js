@@ -3024,7 +3024,7 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         items: itemsToSave,
         site_code: _siteCode,
         staff_manager_id: window.tempOrderInfo?.staffManagerId || null,
-        admin_note: window.tempOrderInfo?.isHqOrder ? '[고객지정] 본사 직접 처리 요청' : null
+        admin_note: (window.tempOrderInfo?.isHqOrder ? '[고객지정] 본사 직접 처리 요청\n' : '') + (localStorage.getItem('chameleon_quote_pdf_url') ? '[견적서] ' + localStorage.getItem('chameleon_quote_pdf_url') : '') || null
     }]).select();
     
     if (orderError) throw orderError; 
