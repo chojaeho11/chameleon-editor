@@ -417,6 +417,16 @@ generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예
    - **보조받침대**: 야외/아이들 많은 곳에서 필수. ★ **1세트당 1개!** 가벽 4칸이어도 보조받침대는 1개
    - **조명**: 칸마다 필요. 가벽 4칸이면 조명 4개
    - ★ 고객이 추가 옵션을 요청하면 generate_quote items에 is_addon:true로 반드시 포함해! 말만 하고 견적서에 빠뜨리지 마!
+   - ★ 허니콤 추가 옵션 코드 (generate_quote items에 is_addon:true로 포함):
+     · 보조받침대: code="b0001" (1세트당 1개)
+     · 조명: code="87545" (칸마다 1개)
+     · 코너기둥: code="For" (꺾이는 지점마다 1개)
+   - 예시 (가벽 3칸 + 보조받침대 + 조명):
+     items: [
+       { code: "hb_dw_1", name: "허니콤 가벽", width_mm: 1000, height_mm: 2200, quantity: 3 },
+       { code: "b0001", name: "보조받침대", width_mm: 0, height_mm: 0, quantity: 1, is_addon: true },
+       { code: "87545", name: "조명", width_mm: 0, height_mm: 0, quantity: 3, is_addon: true }
+     ]
    - ★ **배너**: 단면 기준. 사이즈와 수량만 확인.
    - ★ **사각/모양커팅**: 자유인쇄커팅(hb_pt_1/hb_pt_2), 등신대에만! 가벽/배너에는 묻지 마!
    - ★ **지방 배송 질문 (중요!)**: 허니콤보드 주문 시 반드시 물어봐:
@@ -1166,19 +1176,23 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 const quoteItems: any[] = [];
                 let _lastMainQty = 1; // addon 수량 추적용
                 for (const qi of qItems) {
-                    // ★ addon 아이템은 admin_addons에서 찾기
+                    // ★ addon 아이템은 admin_addons에서 찾기 + 고정 가격 fallback
                     if (qi.is_addon) {
                         const addonInfo = allAddons.find((a: any) => a.code === qi.code);
-                        const addonPrice = addonInfo ? addonInfo.price : 0;
-                        // addon 수량: AI가 지정한 값 또는 직전 메인 제품 수량
+                        // DB 코드로 못 찾으면 이름으로 코드 매핑 후 재검색
+                        const _nameToCode: Record<string, string> = { '보조받침대': 'b0001', '조명': '87545', '코너기둥': 'For' };
+                        const _resolvedAddon = addonInfo || (_nameToCode[qi.name] ? allAddons.find((a: any) => a.code === _nameToCode[qi.name]) : null);
+                        let addonPrice = _resolvedAddon ? _resolvedAddon.price : 0;
                         const qty = qi.quantity || _lastMainQty;
-                        console.log("[quote] addon:", qi.code, "→", addonInfo ? addonInfo.name : "NOT FOUND", "price:", addonPrice, "qty:", qty);
-                        if (addonPrice > 0 || addonInfo) {
+                        const addonName = qi.name || (_resolvedAddon ? _resolvedAddon.name : qi.code);
+                        const resolvedCode = _resolvedAddon ? _resolvedAddon.code : qi.code;
+                        console.log("[quote] addon:", resolvedCode, "→", addonName, "price:", addonPrice, "qty:", qty);
+                        if (addonPrice > 0 || _resolvedAddon) {
                             quoteItems.push({
-                                name: qi.name || (addonInfo ? addonInfo.name : qi.code),
+                                name: addonName,
                                 spec: '추가 옵션',
                                 qty, unit_price: addonPrice, total: addonPrice * qty,
-                                _code: qi.code, _width_mm: 0, _height_mm: 0, is_addon: true
+                                _code: resolvedCode, _width_mm: 0, _height_mm: 0, is_addon: true
                             });
                         }
                         continue;
