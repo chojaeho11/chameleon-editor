@@ -1004,6 +1004,35 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     }
                     console.log("[quote] fallback extracted items:", JSON.stringify(qItems));
                 }
+
+                // ★ 패브릭 addon 자동 추출: AI가 addon을 items에 안 넣었을 때 대화에서 감지
+                const _fabricCodes = ['cb20001','2343243','cb30001','ns16001','cs10001'];
+                const _hasFabric = qItems.some((qi: any) => _fabricCodes.includes(qi.code) || (qi.code || '').match(/^(cb|ns|cs|tx)/));
+                const _existingAddonCodes = new Set(qItems.filter((qi: any) => qi.is_addon).map((qi: any) => qi.code));
+                if (_hasFabric && _existingAddonCodes.size === 0) {
+                    const _allConvText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg + ' ' + (qResult.summary || '');
+                    // 마감 옵션 감지
+                    const _fabricAddons: Array<{code: string, name: string, pattern: RegExp}> = [
+                        { code: 'txl0001', name: '가재단', pattern: /가재단/ },
+                        { code: 'txl0002', name: '오버록', pattern: /오버록|오버로크/ },
+                        { code: 'txl0003', name: '인터록', pattern: /인터록|인터로크/ },
+                        { code: 'txl0004', name: '말아박기', pattern: /말아박기/ },
+                        { code: 'txl0005', name: '이어박기', pattern: /이어박기/ },
+                        { code: '3254352', name: '봉커튼마감', pattern: /봉커튼|봉 커튼/ },
+                        { code: '45783', name: '상단끈고리', pattern: /상단끈고리|끈고리|끈 고리/ },
+                        { code: '45722', name: '멜빵고리', pattern: /멜빵고리|멜빵 고리/ },
+                        { code: '45787', name: '상단봉마감', pattern: /상단봉마감|상단봉|봉마감/ },
+                        { code: '45646456', name: '집게링', pattern: /집게링/ },
+                        { code: '3453453', name: '목봉', pattern: /목봉/ },
+                        { code: '355353', name: '텐션봉', pattern: /텐션봉/ },
+                    ];
+                    for (const fa of _fabricAddons) {
+                        if (fa.pattern.test(_allConvText)) {
+                            qItems.push({ code: fa.code, name: fa.name, width_mm: 0, height_mm: 0, quantity: 1, is_addon: true });
+                            console.log("[quote] fabric addon auto-detected:", fa.code, fa.name);
+                        }
+                    }
+                }
                 // 서버에서 가격 계산 (AI 가격 신뢰하지 않음)
                 const quoteItems: any[] = [];
                 for (const qi of qItems) {
