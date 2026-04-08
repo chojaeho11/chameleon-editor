@@ -4562,8 +4562,13 @@ async function handleSubReturn() {
                         <div id="cartManagerBtns" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
                     </div>
                     <script>(function(){
-                        var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'';
-                        var l=c==='JP'?'ja':c==='CN'?'zh':c==='US'||c==='EN'?'en':c==='AR'?'ar':c==='ES'?'es':c==='DE'?'de':c==='FR'?'fr':'kr';
+                        var h=window.location.hostname||'';
+                        var p=new URLSearchParams(window.location.search);
+                        var lg=p.get('lang')||'';
+                        var l='kr';
+                        if(h.includes('cafe0101')||lg==='ja') l='ja';
+                        else if(h.includes('cafe3355')||h.includes('chameleon.design')||lg==='en') l='en';
+                        else if(lg==='zh') l='zh'; else if(lg==='ar') l='ar'; else if(lg==='es') l='es'; else if(lg==='de') l='de'; else if(lg==='fr') l='fr';
                         var hq={kr:'🏢 본사진행',ja:'🏢 本社対応',en:'🏢 HQ handles',zh:'🏢 总部处理',ar:'🏢 المقر',es:'🏢 Sede central',de:'🏢 Zentrale',fr:'🏢 Siege'};
                         var mgrs=[
                             {value:'__hq__', label:hq[l]||hq['en']},
@@ -4630,8 +4635,8 @@ async function handleSubReturn() {
                         <div id="cartShippingBtns" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
                         <script>
                         (function(){
-                            var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'';
-                            var l=c==='JP'?'ja':c==='CN'?'zh':c==='US'||c==='EN'?'en':c==='AR'?'ar':c==='ES'?'es':c==='DE'?'de':c==='FR'?'fr':'kr';
+                            var h=window.location.hostname||'';var p=new URLSearchParams(window.location.search);var lg=p.get('lang')||'';
+                            var l='kr';if(h.includes('cafe0101')||lg==='ja')l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design')||lg==='en')l='en';else if(lg==='zh')l='zh';else if(lg==='ar')l='ar';else if(lg==='es')l='es';else if(lg==='de')l='de';else if(lg==='fr')l='fr';
                             var guide={
                                 kr:'서울/경기는 무료배송+시공. 지방만 추가해주세요. 택배 최대: 600×1800mm',
                                 ja:'東京近郊は送料+設置無料。地方のみ追加。宅配最大: 600×1800mm',
