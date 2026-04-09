@@ -9753,7 +9753,7 @@ window.showChoiceModal = async function(key) {
     const _pCatForDesign = product.category || '';
     const _isDesignMarketOnly = _pCatForDesign === 'hb_skashi' || _pCatForDesign === 'hb_insta';
     if (_isDesignMarketOnly) {
-        const _actionBtns = modal.querySelector('.action-buttons') || modal.querySelectorAll('button[onclick*="confirmChoice"]')[0]?.parentElement;
+        const _actionBtns = modal.querySelector('[data-npc="buttons"]');
         if (_actionBtns) {
             const _dmUrl = window.location.origin + '/design-market.html';
             const _dmLabel = {ja:'🎨 デザインマーケットに依頼',en:'🎨 Request Design',zh:'🎨 设计市场委托',ar:'🎨 طلب تصميم',es:'🎨 Solicitar Diseño',de:'🎨 Design anfragen',fr:'🎨 Demander un design',kr:'🎨 디자인마켓에 의뢰'}[lang]||'🎨 Request Design';

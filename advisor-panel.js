@@ -93,10 +93,10 @@ function clearChat() {
 }
 
 const WELCOME = {
-    kr: `안녕하세요! 무엇을 도와드릴까요? 😊`,
-    ja: `こんにちは！何かお手伝いできることはありますか？`,
-    en: `Hello! How can I help you?`,
-    zh: `您好！有什么可以帮您的吗？`,
+    kr: `안녕하세요! 무엇을 도와드릴까요? 😊\n원하시는 제품의 설명과 링크, 견적서까지 완벽하게 정리해서 드릴 수 있습니다. 제작하고 싶은 제품을 말씀만 해주세요. 제가 편안하게 안내할게요. 클릭하고 파일만 올리면 끝나도록!`,
+    ja: `こんにちは！何かお手伝いできることはありますか？\nご希望の商品の説明・リンク・見積書まで完璧にまとめてお渡しできます。作りたい商品をおっしゃってください。クリックしてファイルをアップロードするだけで完了！`,
+    en: `Hello! How can I help you?\nI can provide product descriptions, links, and quotes all perfectly organized. Just tell me what you'd like to make — I'll guide you comfortably. Click and upload your file, that's it!`,
+    zh: `您好！有什么可以帮您的吗？\n我可以为您完美整理产品说明、链接和报价。告诉我您想制作什么产品，我来轻松引导您。点击上传文件就搞定！`,
     es: `Toca <b>¡Juega Aquí!</b> arriba para transformar tus fotos y hacer pedidos rápidos.\n\nDinos qué producto necesitas en el chat o sube una foto de referencia — te guiaremos para que tu pedido sea fácil.`,
     de: `Tippen Sie oben auf <b>Hier spielen!</b>, um Ihre Fotos kreativ zu verändern und schnell zu bestellen.\n\nSagen Sie uns im Chat, welches Produkt Sie brauchen, oder laden Sie ein Referenzfoto hoch — wir begleiten Sie durch den Bestellprozess.`,
     fr: `Appuyez sur <b>Jouez ici!</b> ci-dessus pour transformer vos photos et passer des commandes rapides.\n\nDites-nous quel produit vous cherchez dans le chat ou téléchargez une photo de référence — nous vous guiderons facilement.`,
@@ -240,9 +240,9 @@ function showEntryForm() {
     try { localStorage.setItem('kapu_customer', JSON.stringify({ name: 'Guest', phone: '' })); } catch(e) {}
     const lang = getLang();
     const msgs = {
-        kr: '안녕하세요! 무엇을 도와드릴까요? 😊',
-        ja: 'こんにちは！何かお手伝いできることはありますか？',
-        en: 'Hello! How can I help you?'
+        kr: '안녕하세요! 무엇을 도와드릴까요? 😊\n원하시는 제품의 설명과 링크, 견적서까지 완벽하게 정리해서 드릴 수 있습니다. 제작하고 싶은 제품을 말씀만 해주세요. 제가 편안하게 안내할게요. 클릭하고 파일만 올리면 끝나도록!',
+        ja: 'こんにちは！何かお手伝いできることはありますか？\nご希望の商品の説明・リンク・見積書まで完璧にまとめてお渡しできます。作りたい商品をおっしゃってください。クリックしてファイルをアップロードするだけで完了！',
+        en: 'Hello! How can I help you?\nI can provide product descriptions, links, and quotes all perfectly organized. Just tell me what you\'d like to make — I\'ll guide you comfortably. Click and upload your file, that\'s it!'
     };
     addBubble(msgs[lang] || msgs['en'], 'ai');
 }
