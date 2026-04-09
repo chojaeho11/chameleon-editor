@@ -14406,8 +14406,19 @@ window.loadHomeHcGrid = function(){
             }
         } catch(e) {}
 
+        // ━━━━━ [1-6] QR코드 접속 감지 ━━━━━
+        const _qrSrc = (params.get('utm_source')||'').toLowerCase();
+        const _qrMed = (params.get('utm_medium')||'').toLowerCase();
+        if (_qrSrc === 'qr' || _qrMed === 'qr' || params.has('qr')) {
+            const _qrCamp = params.get('utm_campaign') || '';
+            return 'QR코드 접속' + (_qrCamp ? '|캠페인:' + _qrCamp : '');
+        }
+
         // ━━━━━ [2] 직접 접속 (리퍼러 없음) ━━━━━
         if (!referrer || referrer.trim() === '') {
+            // ★ 모바일 기기는 QR/링크 접속 가능성 높음 → 별도 태그
+            const _isMobile = /android|iphone|ipad|ipod|mobile/i.test(ua);
+            if (_isMobile) return '직접 접속 (즐겨찾기)';
             return 'Direct (즐겨찾기/주소입력)';
         }
 
