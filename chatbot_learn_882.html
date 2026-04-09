@@ -690,6 +690,20 @@ function getSb() { return sb; }
                     h += linkedMsg;
                     h += '<div style="font-size:10px;opacity:0.6;margin-top:4px;">'+time+'</div>';
                     h += '</div></div></div>';
+                } else if ((m.sender_type === 'system' || m.sender_type === 'admin_memo') && (m.message||'').indexOf('[QUOTE_PDF:') !== -1) {
+                    // ★ 견적서 전달 카드
+                    var qPdfMatch = (m.message||'').match(/\[QUOTE_PDF:(.*?)\]/);
+                    var qPdfUrl = qPdfMatch ? qPdfMatch[1] : '';
+                    var qLines = cleanMsg.replace(/\[QUOTE_PDF:.*?\]\s*/,'').split('\n').filter(function(l){return l.trim();});
+                    h += '<div style="margin:8px 0;background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;padding:14px 16px;color:#fff;max-width:80%;">';
+                    h += '<div style="font-size:13px;font-weight:800;margin-bottom:6px;">📄 견적서 전달됨</div>';
+                    qLines.forEach(function(line) {
+                        if (line.indexOf('[견적내역]') !== -1) return;
+                        h += '<div style="font-size:12px;opacity:0.95;line-height:1.6;">'+qaEsc(line)+'</div>';
+                    });
+                    if (qPdfUrl) h += '<div style="margin-top:8px;"><a href="'+qPdfUrl+'" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:#fff;color:#4338ca;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;">📥 견적서 PDF 보기</a></div>';
+                    h += '<div style="font-size:10px;opacity:0.6;margin-top:6px;">'+time+'</div>';
+                    h += '</div>';
                 } else if (m.sender_type === 'system' || m.sender_type === 'admin_memo') {
                     h += '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:4px 0;background:#f8fafc;padding:4px 8px;border-radius:8px;">'+qaEsc(cleanMsg.substring(0,150))+'</div>';
                 } else {

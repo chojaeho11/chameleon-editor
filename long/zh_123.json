@@ -1952,5 +1952,7 @@
   "cart_hq_handle": "🏢 总部处理",
   "cart_request_note": "备注",
   "cart_request_ph": "请输入备注（可选）",
-  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> 请通过各商品的 <b style=\"color:#dc2626;\">📎 附件上传</b> 按钮上传PDF或图片。"
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> 请通过各商品的 <b style=\"color:#dc2626;\">📎 附件上传</b> 按钮上传PDF或图片。",
+  "cart_bulk_upload": "批量上传文件",
+  "cart_design_request": "没有设计？请委托设计"
 }

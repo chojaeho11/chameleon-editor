@@ -859,6 +859,23 @@ async function sendMessage(text, imageData) {
                     // ★ 챗봇 견적서 PDF URL 저장 (장바구니에서 재사용)
                     localStorage.setItem('chameleon_quote_pdf_url', _qData.url);
 
+                    // ★ 견적서 전달 내역을 chat_messages에 저장 (관리자 페이지에서 확인용)
+                    try {
+                        const _qItemsSummary = data.quote_data.items.map(i => `${i.name} ${i.spec||''} x${i.qty} = ${(i.total||0).toLocaleString()}원${i.is_addon?' (옵션)':''}`).join('\n');
+                        const _qTotal = data.quote_data.items.reduce((s,i) => s + (i.total||0), 0);
+                        const _qShipping = data.quote_data.shipping_fee || 0;
+                        const _quoteMsgText = '[QUOTE_PDF:' + _qData.url + ']\n[견적내역]\n' + _qItemsSummary + '\n합계: ' + _qTotal.toLocaleString() + '원' + (_qShipping ? ' + 배송비 ' + _qShipping.toLocaleString() + '원' : '');
+                        const _sbQ = getSb();
+                        if (_sbQ && _advRoomId) {
+                            _sbQ.from('chat_messages').insert({
+                                room_id: _advRoomId,
+                                sender_type: 'system',
+                                message: _quoteMsgText,
+                                created_at: new Date().toISOString()
+                            }).then(r => { if (r.error) console.error('[견적서] DB 저장 실패:', r.error); else console.log('[견적서] DB 저장 완료'); });
+                        }
+                    } catch(_qe) { console.error('[견적서] DB 저장 오류:', _qe); }
+
                     const _pdfCard = document.createElement('div');
                     _pdfCard.style.cssText = 'background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;padding:16px;margin:8px 0;color:#fff;';
                     _pdfCard.innerHTML = '<div style="font-size:14px;font-weight:800;margin-bottom:8px;">📄 견적서가 준비되었습니다</div>'

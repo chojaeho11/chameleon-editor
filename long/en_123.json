@@ -1986,5 +1986,7 @@
   "cart_hq_handle": "🏢 HQ handles",
   "cart_request_note": "Special Requests",
   "cart_request_ph": "Enter special requests (optional)",
-  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Attach files via the <b style=\"color:#dc2626;\">📎 Attach File</b> button on each product as PDF or image."
+  "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Attach files via the <b style=\"color:#dc2626;\">📎 Attach File</b> button on each product as PDF or image.",
+  "cart_bulk_upload": "Bulk File Upload",
+  "cart_design_request": "Need a design? Request one here"
 }
