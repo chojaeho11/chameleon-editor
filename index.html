@@ -1222,51 +1222,28 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const _sb = window.sb || window.supabaseClient;
                 if (!_sb) return;
-
-                // 1) 진행중 주문 (최근 30일, 빠르게)
-                const _30dAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString();
-                let q1 = _sb.from('orders')
+                let query = _sb.from('orders')
                     .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review, site_code')
-                    .not('status', 'in', '("임시작성","관리자차단","취소됨","배송완료")')
+                    .not('status', 'in', '("임시작성","관리자차단","취소됨")')
                     .order('created_at', { ascending: false })
-                    .limit(50);
-
-                // 2) 배송완료 주문 (3개월, 사진 유무는 클라이언트에서 필터)
-                const _90dAgo = new Date(Date.now() - 90*24*60*60*1000).toISOString();
-                let q2 = _sb.from('orders')
-                    .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review, site_code')
-                    .eq('status', '배송완료')
-                    .gte('created_at', _90dAgo)
-                    .order('created_at', { ascending: false })
-                    .limit(80);
+                    .limit(100);
 
                 if (searchQuery) {
-                    q1 = q1.or(`manager_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
-                    q2 = q2.or(`manager_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
+                    query = query.or(`manager_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
                 }
 
-                const [r1, r2] = await Promise.all([q1, q2]);
-                if (r1.error) console.error('orderTracker q1:', r1.error);
-                if (r2.error) console.error('orderTracker q2:', r2.error);
+                const { data, error } = await query;
+                if (error) { console.error('orderTracker:', error); return; }
 
-                // 배송완료: 사진 있으면 3개월, 없으면 7일만 유지
-                const _now = Date.now();
-                const _7d = 7*24*60*60*1000;
-                const completedFiltered = (r2.data || []).filter(o => {
-                    const hasPhotos = Array.isArray(o.production_photos) && o.production_photos.length > 0;
-                    if (hasPhotos) return true;
-                    return (_now - new Date(o.created_at).getTime()) < _7d;
-                });
-
-                // 병합 후 중복 제거, 최신순 정렬
-                const merged = [...(r1.data || []), ...completedFiltered];
-                const seen = new Set();
-                _allTrackerOrders = merged.filter(o => {
-                    if (seen.has(o.id)) return false;
-                    seen.add(o.id);
+                // 배송완료 7일 지난건 제외
+                const now = Date.now();
+                _allTrackerOrders = (data || []).filter(o => {
+                    if (o.status === '배송완료') {
+                        const created = new Date(o.created_at).getTime();
+                        return (now - created) < 7 * 24 * 60 * 60 * 1000;
+                    }
                     return true;
-                }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
+                });
                 applyCountryFilter();
             } catch(e) { console.error(e); }
         }
