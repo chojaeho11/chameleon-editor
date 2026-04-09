@@ -2547,7 +2547,16 @@ async function processOrderSubmission() {
     }
     // '__hq__'는 본사 직접 처리 → staff_manager_id는 null, admin_note에 기록
     const isHqSelected = rawStaffMgrId === '__hq__';
-    const selectedStaffManagerId = (rawStaffMgrId && !isHqSelected) ? rawStaffMgrId : null;
+    let selectedStaffManagerId = (rawStaffMgrId && !isHqSelected) ? rawStaffMgrId : null;
+    // ★ 장바구니 매니저 버튼이 문자열 이름(eunmi, sunghee 등)인 경우 DB ID로 변환
+    if (selectedStaffManagerId && isNaN(Number(selectedStaffManagerId))) {
+        const _nameMap = { eunmi:'은미', sunghee:'성희', jisook:'지숙' };
+        const _lookupName = _nameMap[selectedStaffManagerId.toLowerCase()] || selectedStaffManagerId;
+        try {
+            const { data: _mgrRow } = await sb.from('admin_staff').select('id').eq('role','manager').ilike('name', '%' + _lookupName + '%').single();
+            selectedStaffManagerId = _mgrRow ? String(_mgrRow.id) : null;
+        } catch(e) { selectedStaffManagerId = null; }
+    }
 
     window.tempOrderInfo = {
         manager,
