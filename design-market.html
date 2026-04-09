@@ -1462,7 +1462,7 @@ async function loadRequests() {
 
     let query = sb.from('design_requests')
         .select('*, design_bids(count)')
-        .eq('status', 'open')
+        .in('status', ['open', 'in_progress', 'completed'])
         .order('created_at', { ascending: false });
 
     const cat = document.getElementById('filterCategory').value;
@@ -1482,16 +1482,27 @@ async function loadRequests() {
     const profileMap = {};
     (profiles || []).forEach(p => profileMap[p.id] = p);
 
+    const _browseStatusMap = {
+        open: { label: LANG==='ja'?'募集中':LANG==='en'?'Open':'모집중', bg:'#dcfce7', color:'#166534' },
+        in_progress: { label: LANG==='ja'?'進行中':LANG==='en'?'In Progress':'진행중', bg:'#fef3c7', color:'#92400e' },
+        completed: { label: LANG==='ja'?'取引完了':LANG==='en'?'Completed':'거래완료', bg:'#ede9fe', color:'#6d28d9' }
+    };
+
     let html = '';
     for (const r of requests) {
         const prof = profileMap[r.customer_id] || {};
         const initial = (prof.username || prof.email || '?')[0].toUpperCase();
         const bidCount = r.design_bids?.[0]?.count || 0;
         const fileCount = (r.files || []).length;
+        const _bst = _browseStatusMap[r.status] || _browseStatusMap.open;
+        const _isCompleted = r.status === 'completed';
         html += `
-        <div class="request-card" onclick="showRequestDetail('${r.id}')">
+        <div class="request-card" onclick="showRequestDetail('${r.id}')" style="${_isCompleted ? 'opacity:0.75;' : ''}">
             <div class="card-top">
-                <span class="category-badge">${catName(r.category)}</span>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <span class="category-badge">${catName(r.category)}</span>
+                    <span style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:${_bst.bg};color:${_bst.color};">${_bst.label}</span>
+                </div>
                 <div class="customer-avatar">${initial}</div>
             </div>
             <div class="title">${escHtml(r.title)}</div>
@@ -1549,13 +1560,82 @@ async function showRequestDetail(requestId) {
     }
 
     const isOwner = r.customer_id === userId;
-    const canBid = designerProfile && !isOwner;
+    const canBid = designerProfile && !isOwner && r.status === 'open';
+    const _isCompletedDetail = r.status === 'completed' || r.status === 'in_progress';
+
+    // Load selected bid & designer info for completed/in_progress
+    let _completedHtml = '';
+    if (_isCompletedDetail && r.selected_bid_id) {
+        const { data: _selBid } = await sb.from('design_bids').select('*, designer_profiles:designer_id(display_name, photo_url, avg_rating, total_reviews)').eq('id', r.selected_bid_id).single();
+        if (_selBid) {
+            const _dProf = _selBid.designer_profiles || {};
+            const _dAvatar = _dProf.photo_url
+                ? `<img src="${_dProf.photo_url}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #ede9fe;">`
+                : `<div style="width:48px;height:48px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;">${(_dProf.display_name||'D')[0]}</div>`;
+            _completedHtml += `
+            <div style="margin-top:20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:14px;padding:20px;">
+                <div style="font-size:14px;font-weight:800;color:#166534;margin-bottom:12px;"><i class="fa-solid fa-user-check"></i> ${r.status==='completed'?(LANG==='ja'?'選定デザイナー':LANG==='en'?'Selected Designer':'선정된 디자이너'):(LANG==='ja'?'作業中デザイナー':LANG==='en'?'Working Designer':'작업중인 디자이너')}</div>
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+                    ${_dAvatar}
+                    <div>
+                        <div style="font-size:15px;font-weight:700;">${escHtml(_dProf.display_name||'Designer')}</div>
+                        <div style="font-size:13px;color:#f59e0b;">${renderStars(_dProf.avg_rating)} <span style="color:#94a3b8;font-size:11px;">(${_dProf.total_reviews||0})</span></div>
+                    </div>
+                    <div style="margin-left:auto;text-align:right;">
+                        <div style="font-size:11px;color:#64748b;">${LANG==='ja'?'確定金額':LANG==='en'?'Final Price':'확정 금액'}</div>
+                        <div style="font-size:20px;font-weight:800;color:#7c3aed;">${formatPrice(_selBid.price)}</div>
+                    </div>
+                </div>`;
+            // Show final design files
+            const _finalFiles = _selBid.final_design_urls || [];
+            if (_finalFiles.length > 0) {
+                _completedHtml += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #bbf7d0;">
+                    <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px;"><i class="fa-solid fa-palette"></i> ${LANG==='ja'?'最終デザイン':LANG==='en'?'Final Design':'최종 디자인'}</div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">`;
+                for (const fUrl of _finalFiles) {
+                    if (isImageFile(fUrl)) {
+                        _completedHtml += `<img src="${fUrl}" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;cursor:pointer;" onclick="showImageViewer('${fUrl}')">`;
+                    } else {
+                        const _fname = fUrl.split('/').pop().split('?')[0];
+                        _completedHtml += `<a href="${fUrl}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:#fff;border-radius:10px;border:1px solid #e2e8f0;font-size:13px;color:#475569;text-decoration:none;"><i class="fa-solid fa-file"></i> ${_fname}</a>`;
+                    }
+                }
+                _completedHtml += '</div></div>';
+            } else if (r.status === 'in_progress') {
+                _completedHtml += `<div style="margin-top:12px;padding:10px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e;text-align:center;"><i class="fa-solid fa-hourglass-half"></i> ${LANG==='ja'?'デザイナーが最終デザインを準備中です':LANG==='en'?'Designer is preparing the final design':'디자이너가 최종 디자인을 준비중입니다'}</div>`;
+            }
+            _completedHtml += '</div>';
+        }
+        // Show review if completed
+        if (r.status === 'completed') {
+            const { data: _review } = await sb.from('design_reviews').select('rating, comment, created_at').eq('request_id', r.id).single();
+            if (_review) {
+                _completedHtml += `
+                <div style="margin-top:12px;background:#faf5ff;border:1px solid #ddd6fe;border-radius:12px;padding:16px;">
+                    <div style="font-size:13px;font-weight:700;color:#6d28d9;margin-bottom:8px;"><i class="fa-solid fa-star"></i> ${LANG==='ja'?'レビュー':LANG==='en'?'Review':'리뷰'}</div>
+                    <div style="font-size:16px;color:#f59e0b;margin-bottom:4px;">${'★'.repeat(_review.rating)}${'☆'.repeat(5-_review.rating)}</div>
+                    ${_review.comment ? `<div style="font-size:13px;color:#475569;line-height:1.6;">${escHtml(_review.comment)}</div>` : ''}
+                </div>`;
+            }
+        }
+    }
+
+    const _detailStatusMap = {
+        open: { label: LANG==='ja'?'募集中':LANG==='en'?'Open':'모집중', bg:'#dcfce7', color:'#166534' },
+        in_progress: { label: LANG==='ja'?'進行中':LANG==='en'?'In Progress':'진행중', bg:'#fef3c7', color:'#92400e' },
+        completed: { label: LANG==='ja'?'取引完了':LANG==='en'?'Completed':'거래완료', bg:'#ede9fe', color:'#6d28d9' }
+    };
+    const _dSt = _detailStatusMap[r.status] || _detailStatusMap.open;
+
     detailView.innerHTML = `
     <div class="request-detail">
         <button class="btn btn-outline btn-sm" onclick="hideRequestDetail()" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> ${t('back_to_list')}</button>
         <div class="detail-header">
             <div>
-                <span class="category-badge" style="margin-bottom:8px;display:inline-block;">${catName(r.category)}</span>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
+                    <span class="category-badge">${catName(r.category)}</span>
+                    <span style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;background:${_dSt.bg};color:${_dSt.color};">${_dSt.label}</span>
+                </div>
                 <div class="detail-title">${escHtml(r.title)}</div>
             </div>
             <div style="text-align:right;">
@@ -1568,6 +1648,7 @@ async function showRequestDetail(requestId) {
         </div>
         <div class="detail-desc">${escHtml(r.description)}</div>
         ${filesHtml}
+        ${_completedHtml}
         <div style="display:flex;align-items:center;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid #f1f5f9;">
             <span style="font-size:13px;color:#94a3b8;"><i class="fa-solid fa-gavel"></i> ${t('bids')} ${bidCount}${t('count_件')}</span>
             ${r.phone ? `<span style="font-size:13px;color:#94a3b8;"><i class="fa-solid fa-phone"></i> ${escHtml(r.phone)}</span>` : ''}
@@ -1836,7 +1917,7 @@ async function loadMyRequests() {
                 </div>
                 <div style="display:flex;gap:6px;">
                     ${r.status === 'open' ? `<button onclick="event.stopPropagation();openEditRequestModal('${r.id}')" style="background:#f5f3ff;border:1px solid #c4b5fd;color:#7c3aed;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;" title="${t('edit')}"><i class="fa-solid fa-pen-to-square"></i> ${t('edit')}</button>` : ''}
-                    <button onclick="event.stopPropagation();deleteMyRequest('${r.id}')" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;" title="${t('delete')}"><i class="fa-solid fa-trash-can"></i> ${t('delete')}</button>
+                    ${r.status === 'open' || r.status === 'cancelled' ? `<button onclick="event.stopPropagation();deleteMyRequest('${r.id}')" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:6px;white-space:nowrap;" title="${t('delete')}"><i class="fa-solid fa-trash-can"></i> ${t('delete')}</button>` : ''}
                 </div>
             </div>
         </div>`;
@@ -1931,7 +2012,66 @@ async function showMyRequestDetail(requestId) {
         }
     }
 
-    const showCompleteBtn = r.status === 'in_progress';
+    // Check if selected bid has final design uploaded
+    let _myDetailFinalHtml = '';
+    let _hasFinalDesign = false;
+    if ((r.status === 'in_progress' || r.status === 'completed') && r.selected_bid_id) {
+        const { data: _selBid2 } = await sb.from('design_bids').select('*, designer_profiles:designer_id(display_name, photo_url, avg_rating, total_reviews)').eq('id', r.selected_bid_id).single();
+        if (_selBid2) {
+            const _dp = _selBid2.designer_profiles || {};
+            const _dpAvatar = _dp.photo_url
+                ? `<img src="${_dp.photo_url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #ede9fe;">`
+                : `<div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;">${(_dp.display_name||'D')[0]}</div>`;
+            const _finalUrls = _selBid2.final_design_urls || [];
+            _hasFinalDesign = _finalUrls.length > 0;
+
+            _myDetailFinalHtml = `
+            <div style="margin-top:20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:14px;padding:20px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                    ${_dpAvatar}
+                    <div style="flex:1;">
+                        <div style="font-size:15px;font-weight:700;">${escHtml(_dp.display_name||'Designer')}</div>
+                        <div style="font-size:12px;color:#64748b;">${renderStars(_dp.avg_rating)} (${_dp.total_reviews||0})</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px;color:#64748b;">확정 금액</div>
+                        <div style="font-size:18px;font-weight:800;color:#7c3aed;">${formatPrice(_selBid2.price)}</div>
+                    </div>
+                </div>`;
+
+            if (_hasFinalDesign) {
+                _myDetailFinalHtml += `<div style="padding-top:12px;border-top:1px solid #bbf7d0;">
+                    <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px;"><i class="fa-solid fa-palette"></i> 최종 디자인</div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">`;
+                for (const _fUrl of _finalUrls) {
+                    if (isImageFile(_fUrl)) {
+                        _myDetailFinalHtml += `<img src="${_fUrl}" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;cursor:pointer;" onclick="showImageViewer('${_fUrl}')">`;
+                    } else {
+                        const _fn = _fUrl.split('/').pop().split('?')[0];
+                        _myDetailFinalHtml += `<a href="${_fUrl}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:#fff;border-radius:10px;border:1px solid #e2e8f0;font-size:13px;color:#475569;text-decoration:none;"><i class="fa-solid fa-file-arrow-down"></i> ${_fn}</a>`;
+                    }
+                }
+                _myDetailFinalHtml += '</div></div>';
+            } else {
+                _myDetailFinalHtml += `<div style="padding:12px;background:#fef3c7;border-radius:8px;font-size:13px;color:#92400e;text-align:center;"><i class="fa-solid fa-hourglass-half"></i> 디자이너가 최종 디자인을 아직 올리지 않았습니다</div>`;
+            }
+            _myDetailFinalHtml += '</div>';
+
+            // Show review for completed
+            if (r.status === 'completed') {
+                const { data: _rev } = await sb.from('design_reviews').select('rating, comment').eq('request_id', r.id).single();
+                if (_rev) {
+                    _myDetailFinalHtml += `<div style="margin-top:12px;background:#faf5ff;border:1px solid #ddd6fe;border-radius:12px;padding:16px;">
+                        <div style="font-size:13px;font-weight:700;color:#6d28d9;margin-bottom:6px;"><i class="fa-solid fa-star"></i> 내 리뷰</div>
+                        <div style="font-size:16px;color:#f59e0b;margin-bottom:4px;">${'★'.repeat(_rev.rating)}${'☆'.repeat(5-_rev.rating)}</div>
+                        ${_rev.comment ? `<div style="font-size:13px;color:#475569;">${escHtml(_rev.comment)}</div>` : ''}
+                    </div>`;
+                }
+            }
+        }
+    }
+
+    const showCompleteBtn = r.status === 'in_progress' && _hasFinalDesign;
     detail.innerHTML = `
     <button class="btn btn-outline btn-sm" onclick="backToMyRequests()" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-left"></i> ${t('back_to_list')}</button>
     <div class="card">
@@ -1947,7 +2087,8 @@ async function showMyRequestDetail(requestId) {
             ${formatPriceRange(r.budget_min, r.budget_max)}
         </div>
         <p style="font-size:14px;color:#475569;line-height:1.7;white-space:pre-wrap;margin-bottom:16px;">${escHtml(r.description)}</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${_myDetailFinalHtml}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
             ${showCompleteBtn ? `<button class="btn btn-success btn-lg" onclick="openRatingModal('${requestId}')"><i class="fa-solid fa-check-double"></i> ${t('mark_complete')}</button>` : ''}
             ${r.status === 'open' ? `
             <button class="btn btn-primary btn-sm" onclick="openEditRequestModal('${r.id}')"><i class="fa-solid fa-pen-to-square"></i> ${t('edit')}</button>
@@ -2282,6 +2423,45 @@ async function loadMyBids() {
     for (const b of bids) {
         const r = b.design_requests || {};
         const bst = bidStatusMap[b.status] || bidStatusMap.pending;
+        const _finalDesigns = b.final_design_urls || [];
+        const _isSelected = b.status === 'selected';
+        const _reqCompleted = r.status === 'completed';
+
+        // Final design section for selected bids
+        let _finalDesignSection = '';
+        if (_isSelected || _reqCompleted) {
+            if (_finalDesigns.length > 0) {
+                let _filesHtml = '';
+                for (const _u of _finalDesigns) {
+                    if (isImageFile(_u)) {
+                        _filesHtml += `<img src="${_u}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer;" onclick="showImageViewer('${_u}')">`;
+                    } else {
+                        const _fn = _u.split('/').pop().split('?')[0];
+                        _filesHtml += `<a href="${_u}" target="_blank" style="display:flex;align-items:center;gap:4px;padding:6px 10px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;color:#475569;text-decoration:none;"><i class="fa-solid fa-file"></i> ${_fn}</a>`;
+                    }
+                }
+                _finalDesignSection = `
+                <div style="margin-top:10px;padding:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+                    <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:8px;"><i class="fa-solid fa-check-circle"></i> ${LANG==='ja'?'最終デザイン提出済み':LANG==='en'?'Final design submitted':'최종 디자인 제출완료'}</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">${_filesHtml}</div>
+                    ${_isSelected && !_reqCompleted ? `<div style="margin-top:8px;font-size:11px;color:#64748b;"><i class="fa-solid fa-hourglass-half"></i> ${LANG==='ja'?'依頼者の確認を待っています':LANG==='en'?'Waiting for client confirmation':'의뢰인의 확인을 기다리고 있습니다'}</div>` : ''}
+                    ${_reqCompleted ? `<div style="margin-top:8px;font-size:12px;color:#166534;font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${LANG==='ja'?'取引完了':LANG==='en'?'Transaction completed':'거래완료'} — ${formatPrice(b.price)} (${LANG==='ja'?'受取額':LANG==='en'?'Your share':'수령액'}: ${formatPrice(Math.floor(b.price*0.7))})</div>` : ''}
+                </div>`;
+            } else if (_isSelected && !_reqCompleted) {
+                _finalDesignSection = `
+                <div style="margin-top:10px;padding:14px;background:linear-gradient(135deg,#fef3c7,#fff7ed);border:1.5px solid #f59e0b;border-radius:10px;">
+                    <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px;"><i class="fa-solid fa-cloud-arrow-up"></i> ${LANG==='ja'?'最終デザインをアップロードしてください':LANG==='en'?'Please upload the final design':'최종 디자인을 업로드해주세요'}</div>
+                    <div style="font-size:11px;color:#a16207;margin-bottom:10px;">${LANG==='ja'?'最終デザインを提出すると、依頼者が確認後に費用が支払われます':LANG==='en'?'After you submit the final design, the client will confirm and payment will be released':'최종 디자인을 올리면 의뢰인이 확인 후 비용이 지급됩니다'}</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <label style="display:inline-flex;align-items:center;gap:6px;background:#7c3aed;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
+                            <i class="fa-solid fa-upload"></i> ${LANG==='ja'?'ファイル選択':LANG==='en'?'Select Files':'파일 선택'}
+                            <input type="file" multiple accept="image/*,.pdf,.ai,.psd,.eps,.svg,.cdr,.zip" style="display:none;" onchange="uploadFinalDesign('${b.id}',this.files)">
+                        </label>
+                    </div>
+                </div>`;
+            }
+        }
+
         html += `
         <div class="my-bid-card">
             <div class="my-bid-header">
@@ -2289,7 +2469,9 @@ async function loadMyBids() {
                     <span class="category-badge" style="margin-right:8px;">${catName(r.category)}</span>
                     <span class="my-bid-title">${escHtml(r.title || t('deleted_request'))}</span>
                 </div>
-                <span class="badge-sm ${bst.cls}">${bst.label}</span>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    ${_reqCompleted ? `<span class="badge-sm badge-complete">${LANG==='ja'?'取引完了':LANG==='en'?'Completed':'거래완료'}</span>` : `<span class="badge-sm ${bst.cls}">${bst.label}</span>`}
+                </div>
             </div>
             <div class="my-bid-meta">
                 <span><i class="fa-solid fa-won-sign"></i> ${t('proposed')}: ${formatPrice(b.price)}</span>
@@ -2301,9 +2483,46 @@ async function loadMyBids() {
                     <button onclick="event.stopPropagation();cancelMyBid('${b.id}')" style="background:#fef2f2;border:1px solid #fecaca;color:#ef4444;cursor:pointer;font-size:12px;padding:4px 10px;border-radius:6px;white-space:nowrap;font-weight:600;"><i class="fa-solid fa-xmark"></i> ${t('cancel_bid')}</button>
                 ` : ''}
             </div>
+            ${_finalDesignSection}
         </div>`;
     }
     container.innerHTML = html;
+}
+
+// ===== Final Design Upload (Designer) =====
+async function uploadFinalDesign(bidId, files) {
+    if (!files || files.length === 0) return;
+    const fileList = Array.from(files);
+    const _msgUploading = LANG==='ja'?'アップロード中...':LANG==='en'?'Uploading...':'업로드 중...';
+    const _msgSuccess = LANG==='ja'?'最終デザインが提出されました':LANG==='en'?'Final design submitted':'최종 디자인이 제출되었습니다';
+    const _msgFail = LANG==='ja'?'アップロード失敗':LANG==='en'?'Upload failed':'업로드 실패';
+
+    showToast(_msgUploading, 'info');
+
+    try {
+        const uploadedUrls = [];
+        for (const file of fileList) {
+            const ext = file.name.split('.').pop();
+            const path = `final-designs/${userId}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+            const { error: upErr } = await sb.storage.from('orders').upload(path, file, { upsert: true });
+            if (upErr) throw upErr;
+            const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
+            uploadedUrls.push(urlData.publicUrl);
+        }
+
+        // Get existing final_design_urls and append
+        const { data: existingBid } = await sb.from('design_bids').select('final_design_urls').eq('id', bidId).single();
+        const existing = existingBid?.final_design_urls || [];
+        const merged = [...existing, ...uploadedUrls];
+
+        const { error: updateErr } = await sb.from('design_bids').update({ final_design_urls: merged }).eq('id', bidId);
+        if (updateErr) throw updateErr;
+
+        showToast(_msgSuccess, 'success');
+        loadMyBids(); // Refresh
+    } catch (e) {
+        showToast(_msgFail + ': ' + e.message, 'error');
+    }
 }
 </script>
 </body>
