@@ -253,16 +253,21 @@ window._advOpenEditor = function() {
     const labels = {
         kr: { title: '에디터로 디자인하기', wPh: '가로 (mm)', hPh: '세로 (mm)', btn: '에디터 열기', cancel: '취소' },
         ja: { title: 'エディタでデザイン', wPh: '幅 (mm)', hPh: '高さ (mm)', btn: 'エディタを開く', cancel: 'キャンセル' },
-        en: { title: 'Design with Editor', wPh: 'Width (mm)', hPh: 'Height (mm)', btn: 'Open Editor', cancel: 'Cancel' }
+        en: { title: 'Design with Editor', wPh: 'Width (mm)', hPh: 'Height (mm)', btn: 'Open Editor', cancel: 'Cancel' },
+        zh: { title: '用编辑器设计', wPh: '宽 (mm)', hPh: '高 (mm)', btn: '打开编辑器', cancel: '取消' },
+        ar: { title: 'التصميم بالمحرر', wPh: '(mm) العرض', hPh: '(mm) الارتفاع', btn: 'فتح المحرر', cancel: 'إلغاء' },
+        es: { title: 'Diseñar con Editor', wPh: 'Ancho (mm)', hPh: 'Alto (mm)', btn: 'Abrir Editor', cancel: 'Cancelar' },
+        de: { title: 'Mit Editor gestalten', wPh: 'Breite (mm)', hPh: 'Höhe (mm)', btn: 'Editor öffnen', cancel: 'Abbrechen' },
+        fr: { title: 'Designer avec l\'éditeur', wPh: 'Largeur (mm)', hPh: 'Hauteur (mm)', btn: 'Ouvrir l\'éditeur', cancel: 'Annuler' }
     };
     const L = labels[lang] || labels['en'];
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
-    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;max-width:320px;width:90%;text-align:center;">'
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;max-width:320px;width:90%;text-align:center;box-sizing:border-box;">'
         + '<div style="font-size:16px;font-weight:800;margin-bottom:16px;">' + L.title + '</div>'
         + '<div style="display:flex;gap:8px;margin-bottom:12px;">'
-        + '<input id="_advEdW" type="number" placeholder="' + L.wPh + '" style="flex:1;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:center;">'
-        + '<input id="_advEdH" type="number" placeholder="' + L.hPh + '" style="flex:1;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:center;">'
+        + '<input id="_advEdW" type="number" placeholder="' + L.wPh + '" style="width:0;flex:1;min-width:0;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:center;box-sizing:border-box;">'
+        + '<input id="_advEdH" type="number" placeholder="' + L.hPh + '" style="width:0;flex:1;min-width:0;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:center;box-sizing:border-box;">'
         + '</div>'
         + '<button id="_advEdOpen" style="width:100%;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">' + L.btn + '</button>'
         + '<button onclick="this.closest(\'div[style*=inset]\').remove()" style="width:100%;padding:8px;background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;">' + L.cancel + '</button>'
