@@ -1231,16 +1231,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     .order('created_at', { ascending: false })
                     .limit(50);
 
-                // 2) 배송완료 + 사진 있는 주문 (3개월)
+                // 2) 배송완료 주문 (3개월, 사진 유무는 클라이언트에서 필터)
                 const _90dAgo = new Date(Date.now() - 90*24*60*60*1000).toISOString();
                 let q2 = _sb.from('orders')
                     .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review, site_code')
                     .eq('status', '배송완료')
                     .gte('created_at', _90dAgo)
-                    .not('production_photos', 'eq', '[]')
-                    .not('production_photos', 'is', null)
                     .order('created_at', { ascending: false })
-                    .limit(50);
+                    .limit(80);
 
                 if (searchQuery) {
                     q1 = q1.or(`manager_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
@@ -1251,8 +1249,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (r1.error) console.error('orderTracker q1:', r1.error);
                 if (r2.error) console.error('orderTracker q2:', r2.error);
 
+                // 배송완료: 사진 있으면 3개월, 없으면 7일만 유지
+                const _now = Date.now();
+                const _7d = 7*24*60*60*1000;
+                const completedFiltered = (r2.data || []).filter(o => {
+                    const hasPhotos = Array.isArray(o.production_photos) && o.production_photos.length > 0;
+                    if (hasPhotos) return true;
+                    return (_now - new Date(o.created_at).getTime()) < _7d;
+                });
+
                 // 병합 후 중복 제거, 최신순 정렬
-                const merged = [...(r1.data || []), ...(r2.data || [])];
+                const merged = [...(r1.data || []), ...completedFiltered];
                 const seen = new Set();
                 _allTrackerOrders = merged.filter(o => {
                     if (seen.has(o.id)) return false;
