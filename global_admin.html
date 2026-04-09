@@ -1640,7 +1640,13 @@
     <div class="card">
         <div style="border-bottom:2px solid #ef4444; padding-bottom:15px; margin-bottom:20px;">
             <h2 style="font-size:18px; font-weight:800;"><i class="fa-brands fa-youtube" style="color:#ef4444;"></i> 쇼츠 영상 관리</h2>
-            <p style="font-size:13px; color:#64748b; margin-top:4px;">홈페이지 후기 섹션 위에 표시되는 유튜브 쇼츠 영상을 관리합니다.</p>
+            <p style="font-size:13px; color:#64748b; margin-top:4px;">각 페이지에 표시되는 유튜브 쇼츠 영상을 관리합니다.</p>
+        </div>
+        <!-- 페이지 탭 -->
+        <div style="display:flex; gap:6px; margin-bottom:16px;">
+            <button onclick="window._switchShortsTab('youtube-shorts')" id="shortsTab_main" style="padding:8px 16px; border:2px solid #ef4444; background:#ef4444; color:#fff; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">🏠 메인 홈</button>
+            <button onclick="window._switchShortsTab('shorts-paper-stand')" id="shortsTab_ps" style="padding:8px 16px; border:2px solid #e2e8f0; background:#fff; color:#475569; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">📦 종이매대</button>
+            <button onclick="window._switchShortsTab('shorts-raw-board')" id="shortsTab_rb" style="padding:8px 16px; border:2px solid #e2e8f0; background:#fff; color:#475569; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">🧱 허니콤보드</button>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <input type="text" id="shortsUrlInput" placeholder="유튜브 또는 틱톡 URL (예: youtube.com/shorts/ID 또는 tiktok.com/@user/video/ID)" style="flex:1; padding:12px; border:2px solid #e2e8f0; border-radius:10px; font-size:14px;">
@@ -1651,16 +1657,30 @@
     </div>
 </div>
 <script>
+var _currentShortsCategory = 'youtube-shorts';
+window._switchShortsTab = function(cat) {
+    _currentShortsCategory = cat;
+    ['shortsTab_main','shortsTab_ps','shortsTab_rb'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const isActive = (id === 'shortsTab_main' && cat === 'youtube-shorts') || (id === 'shortsTab_ps' && cat === 'shorts-paper-stand') || (id === 'shortsTab_rb' && cat === 'shorts-raw-board');
+        btn.style.background = isActive ? '#ef4444' : '#fff';
+        btn.style.color = isActive ? '#fff' : '#475569';
+        btn.style.borderColor = isActive ? '#ef4444' : '#e2e8f0';
+    });
+    window._loadShortsList();
+};
 window._loadShortsList = async function() {
-    const { data } = await sb.from('library').select('id, data_url, tags, created_at').eq('category','youtube-shorts').order('created_at',{ascending:false});
+    const { data } = await sb.from('library').select('id, data_url, tags, created_at').eq('category', _currentShortsCategory).order('created_at',{ascending:false});
     const el = document.getElementById('shortsList');
     if (!el) return;
-    if (!data || data.length === 0) { el.innerHTML = '<p style="color:#94a3b8;">등록된 쇼츠가 없습니다.</p>'; return; }
+    const labels = {'youtube-shorts':'메인 홈','shorts-paper-stand':'종이매대','shorts-raw-board':'허니콤보드'};
+    if (!data || data.length === 0) { el.innerHTML = `<p style="color:#94a3b8;">${labels[_currentShortsCategory] || ''} - 등록된 쇼츠가 없습니다.</p>`; return; }
     el.innerHTML = data.map(s => {
-        const m = (s.data_url||'').match(/shorts\/([a-zA-Z0-9_-]+)/);
+        const m = (s.data_url||'').match(/shorts\/([a-zA-Z0-9_-]+)/) || (s.data_url||'').match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]+)/);
         const vid = m ? m[1] : '';
         return `<div style="width:180px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; position:relative;">
-            ${vid ? `<img src="https://img.youtube.com/vi/${vid}/0.jpg" style="width:100%;height:120px;object-fit:cover;">` : ''}
+            ${vid ? `<img src="https://img.youtube.com/vi/${vid}/0.jpg" style="width:100%;height:120px;object-fit:cover;">` : '<div style="width:100%;height:120px;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">TikTok</div>'}
             <div style="padding:8px;">
                 <div style="font-size:11px; font-weight:600; color:#334155; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.tags || 'No Title'}</div>
                 <div style="font-size:10px; color:#94a3b8;">${new Date(s.created_at).toLocaleDateString()}</div>
@@ -1674,7 +1694,7 @@ window._addShorts = async function() {
     const title = document.getElementById('shortsTitleInput').value.trim();
     if (!url) { showToast('URL을 입력하세요', 'error'); return; }
     if (!url.includes('youtube') && !url.includes('youtu.be') && !url.includes('tiktok.com')) { showToast('유튜브 또는 틱톡 URL만 가능합니다', 'error'); return; }
-    const { error } = await sb.from('library').insert({ category: 'youtube-shorts', data_url: url, tags: title || 'Shorts', thumb_url: '' });
+    const { error } = await sb.from('library').insert({ category: _currentShortsCategory, data_url: url, tags: title || 'Shorts', thumb_url: '' });
     if (error) { showToast('추가 실패: ' + error.message, 'error'); return; }
     showToast('쇼츠 추가 완료', 'success');
     document.getElementById('shortsUrlInput').value = '';

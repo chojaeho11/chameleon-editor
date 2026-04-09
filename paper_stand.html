@@ -592,6 +592,51 @@ function toggleKapuChat() {
 }
 </style>
 
+<!-- 쇼츠 영상 섹션 -->
+<section class="section" id="psShortsSection" style="display:none; background:#fff;">
+    <div style="text-align:center; margin-bottom:20px;">
+        <h2 class="section-title" id="psShortsTitle">🎬 영상으로 만나보세요</h2>
+        <p class="section-desc" id="psShortsDesc">종이매대 제작 과정과 활용 사례를 확인하세요</p>
+    </div>
+    <div id="psShortsGrid" style="display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:10px; scrollbar-width:thin; max-width:1100px; margin:0 auto;"></div>
+</section>
+<script>
+(function(){
+    var _psL = window.__PS_LANG || 'ko';
+    var _sTitles = {ko:'🎬 영상으로 만나보세요',ja:'🎬 動画でチェック',en:'🎬 Watch Our Videos',zh:'🎬 视频展示',ar:'🎬 شاهد الفيديو',es:'🎬 Mira nuestros videos',de:'🎬 Unsere Videos',fr:'🎬 Nos vidéos'};
+    var _sDescs = {ko:'종이매대 제작 과정과 활용 사례를 확인하세요',ja:'紙什器の制作過程と活用事例をご覧ください',en:'See our paper display production and use cases',zh:'查看纸质展示架的制作过程和使用案例',ar:'شاهد عملية إنتاج حوامل العرض الورقية',es:'Vea nuestros expositores de papel',de:'Entdecken Sie unsere Papier-Displays',fr:'Découvrez nos présentoirs en papier'};
+    var _sT = document.getElementById('psShortsTitle'); if (_sT) _sT.textContent = _sTitles[_psL] || _sTitles.en;
+    var _sD = document.getElementById('psShortsDesc'); if (_sD) _sD.textContent = _sDescs[_psL] || _sDescs.en;
+    function _loadPsShorts() {
+        var _sb = window.sb || (typeof supabase !== 'undefined' ? supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null);
+        if (!_sb) { setTimeout(_loadPsShorts, 1000); return; }
+        _sb.from('library').select('id, data_url, tags').eq('category','shorts-paper-stand').order('created_at',{ascending:false}).limit(10).then(function(res) {
+            if (!res.data || res.data.length === 0) return;
+            var section = document.getElementById('psShortsSection');
+            var grid = document.getElementById('psShortsGrid');
+            if (!section || !grid) return;
+            section.style.display = '';
+            var html = '';
+            res.data.forEach(function(item) {
+                var url = item.data_url || '';
+                var title = item.tags || '';
+                var isTiktok = url.includes('tiktok.com');
+                if (isTiktok) {
+                    var tm = url.match(/video\/(\d+)/); if (!tm) return;
+                    html += '<div style="flex:0 0 220px;scroll-snap-align:start;border-radius:14px;overflow:hidden;background:#000;width:220px;height:391px;"><iframe src="https://www.tiktok.com/embed/v2/'+tm[1]+'?autoplay=1&mute=1" style="width:100%;height:100%;border:none;" allow="autoplay;encrypted-media" allowfullscreen></iframe>'+(title?'<div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.8));color:#fff;font-size:12px;font-weight:600;">'+title+'</div>':'')+'</div>';
+                } else {
+                    var m = url.match(/shorts\/([a-zA-Z0-9_-]+)/) || url.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]+)/); if (!m) return;
+                    var vid = m[1];
+                    html += '<div style="flex:0 0 220px;scroll-snap-align:start;border-radius:14px;overflow:hidden;background:#000;position:relative;cursor:pointer;width:220px;height:391px;" onclick="this.innerHTML=\'<iframe src=\x22https://www.youtube.com/embed/'+vid+'?autoplay=1&mute=1&loop=1&playlist='+vid+'\x22 style=\x22width:100%;height:100%;border:none;\x22 allow=\x22autoplay;encrypted-media\x22 allowfullscreen></iframe>\';this.style.cursor=\x22default\x22;this.onclick=null;"><img src="https://img.youtube.com/vi/'+vid+'/0.jpg" style="width:100%;height:100%;object-fit:cover;"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;background:rgba(255,0,0,0.85);border-radius:50%;display:flex;align-items:center;justify-content:center;"><div style="width:0;height:0;border-style:solid;border-width:10px 0 10px 18px;border-color:transparent transparent transparent #fff;margin-left:3px;"></div></div>'+(title?'<div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.8));color:#fff;font-size:12px;font-weight:600;">'+title+'</div>':'')+'</div>';
+                }
+            });
+            grid.innerHTML = html;
+        });
+    }
+    setTimeout(_loadPsShorts, 1500);
+})();
+</script>
+
 <!-- 고객 리뷰 섹션 -->
 <section class="section" id="reviewSection" style="background:#f8fafc;">
     <h2 class="section-title" data-i18n="review_title">고객 후기</h2>
