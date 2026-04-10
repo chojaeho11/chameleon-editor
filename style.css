@@ -3934,9 +3934,11 @@ body {
 .icon-tab:hover:not(.active) { background:#e2e8f0; color:#333; }
 .sub-content .section-title { margin-top: 15px; margin-bottom: 8px; }
 .sub-content .section-title:first-child { margin-top: 0; }
-/* 템플릿 패널: 리스트가 패널 내에서 스크롤 */
-#sub-template { flex-direction: column; height: 100%; padding: 15px 12px; overflow: hidden; }
-#sub-template .drawer-content { flex: 1; overflow-y: auto; min-height: 0; }
+/* 템플릿 패널: PC에서만 height:100% (모바일은 flex item) */
+@media (min-width: 769px) {
+    #sub-template { flex-direction: column; height: 100%; padding: 15px 12px; overflow: hidden; }
+    #sub-template .drawer-content { flex: 1; overflow-y: auto; min-height: 0; }
+}
 #subPanelDragHandle { display: none; } /* PC에서 숨김, 모바일에서만 표시 */
 .sub-panel-header {
     font-size: 14px; font-weight: 800; color: #334155;
@@ -4222,15 +4224,21 @@ body {
    2. 템플릿 목록 (1열 수직 배치)
    ========================================= */
 #sideTemplateList {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 15px !important;
-    padding: 15px !important;
-    /* [수정] 높이 계산을 명확히 하고 스크롤 강제 */
-    height: calc(100vh - 120px) !important;
-    overflow-y: auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    padding: 10px !important;
+    height: auto !important;
+    overflow-y: visible !important;
     overflow-x: hidden;
-    min-height: 0; /* 플렉스 박스 스크롤 버그 방지 */
+    min-height: 0;
+}
+@media (max-width: 768px) {
+    #sideTemplateList {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        padding: 8px !important;
+    }
 }
 
 /* 개별 카드 스타일 */

@@ -1258,7 +1258,8 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
     if (drawer.style.display === 'none' || drawer.style.display === '') {
         drawer.style.display = 'flex';
         const sp = document.getElementById('subPanel');
-        if (sp) sp.style.display = 'block';
+        // 모바일은 flex column, PC는 block
+        if (sp) sp.style.display = (window.innerWidth <= 768) ? 'flex' : 'block';
         // 아이콘 active 처리
         document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));
         const icon = document.querySelector('.icon-item[data-panel="sub-template"]');
