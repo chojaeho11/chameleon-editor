@@ -501,7 +501,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=323">
+<link rel="stylesheet" href="./style.css?v=324">
 
 <meta name="naver-site-verification" content="141eed82fa50fd6f98fa7bfe8dc481a202beb8cf" />
 
@@ -574,7 +574,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 2초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},2000);
 </script>
-<script src="toast.js?v=323"></script>
+<script src="toast.js?v=324"></script>
 <script>
 // v175: 서비스 워커 + 모든 캐시 강제 삭제
 if ('serviceWorker' in navigator) {
@@ -4231,6 +4231,8 @@ async function handleSubReturn() {
     <span onclick="window.pcTextColor('#3B82F6')" class="pc-tq-color" data-color="#3B82F6" style="width:22px; height:22px; border-radius:50%; background:#3B82F6; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
     <span onclick="window.pcTextColor('#FACC15')" class="pc-tq-color" data-color="#FACC15" style="width:22px; height:22px; border-radius:50%; background:#FACC15; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
     <span onclick="window.pcTextColor('#22C55E')" class="pc-tq-color" data-color="#22C55E" style="width:22px; height:22px; border-radius:50%; background:#22C55E; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
+    <span style="width:1px; height:20px; background:#e2e8f0; margin:0 2px;"></span>
+    <button onclick="window._toggleTextOutline && window._toggleTextOutline()" id="pcTextOutlineBtn" title="테두리 토글" style="border:1.5px solid #cbd5e1; background:#fff; color:#64748b; height:30px; padding:0 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;">⬜ 테두리</button>
 </div>
 <div id="mobileTextEditor" style="display:none;">
     <div class="m-text-header">
@@ -4262,6 +4264,7 @@ async function handleSubReturn() {
         <span onclick="window.setMobileTextColor('#3B82F6')" class="m-color-dot" style="background:#3B82F6;" data-color="#3B82F6"></span>
         <span onclick="window.setMobileTextColor('#FACC15')" class="m-color-dot" style="background:#FACC15;" data-color="#FACC15"></span>
         <span onclick="window.setMobileTextColor('#22C55E')" class="m-color-dot" style="background:#22C55E;" data-color="#22C55E"></span>
+        <button onclick="window._toggleTextOutline && window._toggleTextOutline()" id="mobileTextOutlineBtn" style="margin-left:auto; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">⬜ 테두리</button>
     </div>
 </div>
 <div id="templateActionModal" class="modal-bg" style="z-index: 20000;">
@@ -5500,30 +5503,30 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=323"></script>
-<script type="module" src="./canvas-core.js?v=323"></script>
-<script src="./wall-3d-preview.js?v=323" defer></script>
-<script src="./wall-3d-walls.js?v=323" defer></script>
-<script type="module" src="./canvas-size.js?v=323"></script>
-<script type="module" src="./canvas-guides.js?v=323"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=323"></script>
-<script type="module" src="./canvas-objects.js?v=323"></script>
-<script type="module" src="./canvas-image.js?v=323"></script>
-<script type="module" src="./canvas-template.js?v=323"></script>
-<script type="module" src="./canvas-ai.js?v=323"></script>
-<script type="module" src="./canvas-retouch.js?v=323"></script>
-<script type="module" src="./canvas-utils.js?v=323"></script>
-<script type="module" src="./shortcuts.js?v=323"></script>
-<script type="module" src="./context-menu.js?v=323"></script>
-<script type="module" src="./export.js?v=323"></script>
-<script type="module" src="./order.js?v=323"></script>
-<script type="module" src="./login.js?v=323"></script>
-<script type="module" src="./my-design.js?v=323"></script>
-<script type="module" src="./ppt-mode.js?v=323"></script>
-<script type="module" src="./main.js?v=323"></script>
+<script type="module" src="./config.js?v=324"></script>
+<script type="module" src="./canvas-core.js?v=324"></script>
+<script src="./wall-3d-preview.js?v=324" defer></script>
+<script src="./wall-3d-walls.js?v=324" defer></script>
+<script type="module" src="./canvas-size.js?v=324"></script>
+<script type="module" src="./canvas-guides.js?v=324"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=324"></script>
+<script type="module" src="./canvas-objects.js?v=324"></script>
+<script type="module" src="./canvas-image.js?v=324"></script>
+<script type="module" src="./canvas-template.js?v=324"></script>
+<script type="module" src="./canvas-ai.js?v=324"></script>
+<script type="module" src="./canvas-retouch.js?v=324"></script>
+<script type="module" src="./canvas-utils.js?v=324"></script>
+<script type="module" src="./shortcuts.js?v=324"></script>
+<script type="module" src="./context-menu.js?v=324"></script>
+<script type="module" src="./export.js?v=324"></script>
+<script type="module" src="./order.js?v=324"></script>
+<script type="module" src="./login.js?v=324"></script>
+<script type="module" src="./my-design.js?v=324"></script>
+<script type="module" src="./ppt-mode.js?v=324"></script>
+<script type="module" src="./main.js?v=324"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=323";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=324";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -5859,19 +5862,26 @@ window.filterFxCards = function(cat, btn) {
             }
         }
         function _updateBtn(on) {
-            const btn = document.getElementById('textPanelOutlineBtn');
-            if (!btn) return;
-            if (on) {
-                btn.textContent = '테두리 끄기';
-                btn.style.background = '#6366f1';
-                btn.style.color = '#fff';
-                btn.style.borderColor = '#6366f1';
-            } else {
-                btn.textContent = '테두리 켜기';
-                btn.style.background = '#fff';
-                btn.style.color = '#64748b';
-                btn.style.borderColor = '#cbd5e1';
-            }
+            // 모든 테두리 버튼 동기화 (서브패널 + PC퀵툴바 + 모바일에디터)
+            const btns = [
+                document.getElementById('textPanelOutlineBtn'),
+                document.getElementById('pcTextOutlineBtn'),
+                document.getElementById('mobileTextOutlineBtn')
+            ].filter(Boolean);
+            btns.forEach(btn => {
+                const isPanelBtn = btn.id === 'textPanelOutlineBtn';
+                if (on) {
+                    btn.textContent = isPanelBtn ? '테두리 끄기' : '⬛ 테두리';
+                    btn.style.background = '#6366f1';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#6366f1';
+                } else {
+                    btn.textContent = isPanelBtn ? '테두리 켜기' : '⬜ 테두리';
+                    btn.style.background = '#fff';
+                    btn.style.color = '#64748b';
+                    btn.style.borderColor = '#cbd5e1';
+                }
+            });
         }
         window._toggleTextOutline = function() {
             const c = window.canvas; if (!c) return;
@@ -6455,7 +6465,7 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
-<script src="./text-wizard.js?v=323"></script> 
+<script src="./text-wizard.js?v=324"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -6749,11 +6759,11 @@ window.filterFxCards = function(cat, btn) {
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=323 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=323';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=323'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=323';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=323';
+    // ★ 여기 파일명 뒤에 ?v=324 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=324';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=324'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=324';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=324';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -7310,7 +7320,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=323').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=324').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -8275,7 +8285,7 @@ window.applyCanvasCrop = function() {
     });
 
     // 새 대지 크기 적용
-    import('./canvas-size.js?v=323').then(mod => {
+    import('./canvas-size.js?v=324').then(mod => {
         if (mod.applySize) {
             mod.applySize(Math.round(cropW), Math.round(cropH), 'CroppedCustom', 'standard', 'resize');
             // 오브젝트 다시 추가 (applySize가 resize 모드에서 보존)
@@ -10864,7 +10874,7 @@ if (w >= 20 && h >= 20) {
         const pricePerSheet = product._original_price || product.price || 0;
 
         // box-nesting.js의 calculateBoxPrice 동적 임포트
-        import('./box-nesting.js?v=323').then(mod => {
+        import('./box-nesting.js?v=324').then(mod => {
             const result = mod.calculateBoxPrice(w, h, d, pricePerSheet);
 
             if (result.error) {
@@ -11201,7 +11211,7 @@ if (w >= 20 && h >= 20) {
         window.__fabricGuideConfig = config;
 
         // 캔버스 가이드 재적용
-        import('./canvas-ai.js?v=323').then(mod => {
+        import('./canvas-ai.js?v=324').then(mod => {
             if (mod.applyFabricGuides) mod.applyFabricGuides(config);
         }).catch(e => console.error('Fabric guide update error:', e));
     };
@@ -11470,14 +11480,14 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=323');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=324');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=323')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=324')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -11529,7 +11539,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=323')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=324')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -11537,7 +11547,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=323');
+                    const m = await import('./order.js?v=324');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -11607,7 +11617,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=323').then(m => {
+            import('./order.js?v=324').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -12202,7 +12212,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=323').then(m => {
+        import('./order.js?v=324').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -12577,7 +12587,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=323');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=324');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -12595,7 +12605,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=323');
+                    const mod = await import('./canvas-ai.js?v=324');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -12611,7 +12621,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=323');
+                    const mod = await import('./canvas-ai.js?v=324');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -12694,7 +12704,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=323');
+                    const mod = await import('./canvas-ai.js?v=324');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -12705,7 +12715,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=323');
+                    const mod = await import('./canvas-ai.js?v=324');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -12785,7 +12795,7 @@ if (w >= 20 && h >= 20) {
         if (window.__fabricGuideConfig) {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=323');
+                    const mod = await import('./canvas-ai.js?v=324');
                     if (mod.applyFabricGuides) mod.applyFabricGuides(window.__fabricGuideConfig);
                 } catch(e) { console.error('Fabric guide error:', e); }
             }, 800);
@@ -12954,7 +12964,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=323');
+                await import('./canvas-objects.js?v=324');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -14521,7 +14531,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=323';
+    import { sb, initConfig } from './config.js?v=324';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {
@@ -16704,7 +16714,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=323').then(function(mod) {
+            import('./order.js?v=324').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -17681,8 +17691,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=323"></script>
-<script src="./npc-wizard.js?v=323"></script>
+<script src="./gif-maker.js?v=324"></script>
+<script src="./npc-wizard.js?v=324"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">
