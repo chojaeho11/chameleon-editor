@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=306";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=306";
-import { SITE_CONFIG } from "./site-config.js?v=306";
-import { applySize } from "./canvas-size.js?v=306";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=306";
+import { canvas } from "./canvas-core.js?v=307";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=307";
+import { SITE_CONFIG } from "./site-config.js?v=307";
+import { applySize } from "./canvas-size.js?v=307";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=307";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=306";
+} from "./export.js?v=307";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1500,21 +1500,57 @@ async function addCanvasToCart() {
             });
         });
 
-        // 300 DPI 인쇄 기준: 캔버스 px ÷ 3.7795 = mm, mm ÷ 25.4 × 300 = 필요 px
-        // mult = 필요 px ÷ 캔버스 px ≈ 300 / 96 ≈ 3.125 → 최소 4, 목표 6
-        const _maxPx = 150000000; // 150M pixels
+        // 300 DPI 목표지만 Supabase Storage 5MB 제한을 고려해 동적 조정
+        // 큰 캔버스(가벽 등)는 mult 낮추고, JPEG로 압축
+        const _maxPx = 50000000; // 50M pixels (이전 150M에서 축소 — Storage 제한 대응)
         const _basePx = finalW * finalH;
-        let _mult = 6;
-        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+        let _mult = 4;
+        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(1.5, Math.sqrt(_maxPx / _basePx));
 
-        const _dataUrl = _tempCvs.toDataURL({ format: 'png', multiplier: _mult });
+        // ★ Storage 5MB 제한 대응: JPEG 사용 + 사이즈 따라 품질 조정
+        const _outFormat = 'jpeg';
+        const _quality = _basePx > 4000000 ? 0.75 : 0.85;
+        const _dataUrl = _tempCvs.toDataURL({ format: _outFormat, multiplier: _mult, quality: _quality });
         _tempCvs.dispose();
 
         // DataURL → Blob → 업로드
         const _resp = await fetch(_dataUrl);
-        const _blob = await _resp.blob();
-        if (_blob && _blob.size > 500) {
+        let _blob = await _resp.blob();
+        console.log('[장바구니] 디자인 PNG 1차 시도 size:', Math.round(_blob.size/1024), 'KB, mult:', _mult.toFixed(2));
+
+        // ★ 5MB 초과 시 자동 다운스케일 재시도 (최대 2회)
+        const _MAX_BYTES = 4500000; // 4.5MB 안전 마진
+        let _retryMult = _mult;
+        let _retryQuality = _quality;
+        for (let _retry = 0; _retry < 2 && _blob.size > _MAX_BYTES; _retry++) {
+            _retryMult = _retryMult * 0.7;
+            _retryQuality = Math.max(0.6, _retryQuality - 0.1);
+            console.log(`[장바구니] PNG 너무 큼 (${Math.round(_blob.size/1024)}KB) → 재시도 mult=${_retryMult.toFixed(2)} q=${_retryQuality}`);
+            // 임시 캔버스 재생성
+            const _tempEl2 = document.createElement('canvas');
+            const _tempCvs2 = new fabric.StaticCanvas(_tempEl2);
+            _tempCvs2.setWidth(finalW);
+            _tempCvs2.setHeight(finalH);
+            _tempCvs2.setBackgroundColor('#ffffff');
+            await new Promise(resolve => {
+                _tempCvs2.loadFromJSON(_filteredJson, () => {
+                    _tempCvs2.setViewportTransform([1, 0, 0, 1, -boardX, -boardY]);
+                    _tempCvs2.setBackgroundColor('#ffffff');
+                    _tempCvs2.renderAll();
+                    setTimeout(resolve, 300);
+                });
+            });
+            const _dataUrl2 = _tempCvs2.toDataURL({ format: 'jpeg', multiplier: _retryMult, quality: _retryQuality });
+            _tempCvs2.dispose();
+            const _resp2 = await fetch(_dataUrl2);
+            _blob = await _resp2.blob();
+            console.log('[장바구니] 재시도 결과 size:', Math.round(_blob.size/1024), 'KB');
+        }
+
+        if (_blob && _blob.size > 500 && _blob.size <= _MAX_BYTES) {
             designPdfUrl = await uploadFileToSupabase(_blob, 'cart_designs');
+        } else if (_blob && _blob.size > _MAX_BYTES) {
+            console.warn('[장바구니] PNG 업로드 포기 — 여전히 너무 큼:', Math.round(_blob.size/1024), 'KB');
         }
     } catch(e) {
         console.warn("디자인 PNG 캡처 실패:", e);
@@ -1524,7 +1560,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=306');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=307');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2890,7 +2926,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=306');
+                const { generateDesignPNG } = await import('./export.js?v=307');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
@@ -3652,24 +3688,38 @@ window.reEditCartItem = async function(idx) {
         document.getElementById('cartPage').style.display = 'none';
         await window.startEditorDirect(productCode);
 
-        // 5. 캔버스에 JSON 로드 (에디터 초기화 대기)
-        setTimeout(async () => {
-            try {
-                // 페이지 데이터 복원
-                if (pages.length > 0 && typeof pageDataList !== 'undefined') {
-                    pageDataList.length = 0;
-                    pages.forEach(p => pageDataList.push(p));
+        // 5. 캔버스 초기화 폴링 후 JSON 로드 (최대 10초 대기)
+        const _waitForCanvas = async () => {
+            for (let i = 0; i < 100; i++) {
+                if (window.canvas && typeof window.canvas.loadFromJSON === 'function') {
+                    return window.canvas;
                 }
-                // 메인 캔버스에 JSON 로드
-                canvas.loadFromJSON(mainJson, () => {
-                    canvas.renderAll();
-                    if (loading) loading.style.display = "none";
-                });
-            } catch(e) {
-                console.error("캔버스 로드 실패:", e);
-                if (loading) loading.style.display = "none";
+                await new Promise(r => setTimeout(r, 100));
             }
-        }, 1500); // 에디터 초기화 대기
+            return null;
+        };
+        const _cvs = await _waitForCanvas();
+        if (!_cvs) {
+            console.error("캔버스 로드 실패: canvas 초기화 타임아웃");
+            if (loading) loading.style.display = "none";
+            showToast((window.t ? window.t('err_load_edit_data', 'Cannot load edit data: ') : 'Cannot load edit data: ') + 'canvas not ready', "error");
+            return;
+        }
+        try {
+            // 페이지 데이터 복원
+            if (pages.length > 0 && typeof pageDataList !== 'undefined') {
+                pageDataList.length = 0;
+                pages.forEach(p => pageDataList.push(p));
+            }
+            // 메인 캔버스에 JSON 로드
+            _cvs.loadFromJSON(mainJson, () => {
+                _cvs.renderAll();
+                if (loading) loading.style.display = "none";
+            });
+        } catch(e) {
+            console.error("캔버스 로드 실패:", e);
+            if (loading) loading.style.display = "none";
+        }
     } catch(e) {
         console.error("다시 편집 실패:", e);
         if (loading) loading.style.display = "none";
