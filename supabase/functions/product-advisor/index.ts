@@ -93,9 +93,9 @@ serve(async (req) => {
                 .select("code,name,top_category_code,description")
                 .order("sort_order", { ascending: true }),
             sb.from("advisor_qa_log")
-                .select("customer_message,admin_answer,category,lang")
+                .select("customer_message,admin_answer,category,lang,reviewed_at,created_at")
                 .eq("is_reviewed", true).eq("is_active", true)
-                .order("reviewed_at", { ascending: false }).limit(100),
+                .order("reviewed_at", { ascending: false, nullsFirst: false }).limit(200),
             sb.from("admin_addons")
                 .select("code,name,name_jp,name_us,category_code,price,price_jp,price_us"),
             sb.from("addon_categories")
@@ -281,33 +281,39 @@ serve(async (req) => {
 - ❌ DB에 없는 가격/사이즈를 만들어내지 마!
 - ❌ 일반 가벽/배너 가격으로 특수 상품(인스타판넬, 글씨포토존 등)을 안내하지 마!
 
-## 가격/견적 규칙 (★★★ 매우 중요 — 견적서 PDF 생성 절대 금지!)
-- ⚠️ **절대 generate_quote 도구를 호출하지 마!** 견적서 PDF 생성은 비활성화됨.
-- ✅ 고객이 가격을 물어보면 → **직접 간단히 계산해서 알려주고, 제품 링크를 함께 안내**해.
+## 가격/견적 규칙 (★★★ 절대 규칙 — 가격 안내 금지!)
+- ⚠️ **절대 generate_quote 도구를 호출하지 마!** 견적서 PDF 생성 비활성화됨.
+- 🚫 **절대 가격을 계산하거나 안내하지 마!** "약 OO원", "OO원 정도", 숫자 가격 모두 금지!
+- 🚫 "1m²당 OO원", "할인 적용 시 OO원" 등 어떤 형태의 가격도 말하지 마!
+- ✅ **고객이 가격을 물어보면 → 제품 링크만 안내**해.
 - ✅ 안내 형식 (반드시 이 흐름을 따라):
-  1. 사이즈/수량/옵션을 확인 (필요하면 한번에 물어봐)
-  2. **간단히 계산해서 가격 안내**: "제가 계산해보니 약 OO원 정도예요"
-  3. **할인 가능성 안내**: "할인 적용이나 옵션에 따라 가격이 달라질 수 있어요"
-  4. **링크 안내**: "정확한 견적은 아래 제품 링크를 클릭해서 장바구니에 담으시면 장바구니에서 확인 가능해요!"
-  5. products 배열에 해당 제품을 넣어서 카드로 보여줘 (반드시!)
-- 가격 계산 기준 (개략):
-  · 패브릭(쉬폰/광목/캔버스 등): 1m²당 약 15,000원 → (가로m × 세로m × 15000) × 수량
-  · 허니콤 가벽: 1칸(1m×2.4m) = 약 180,000원 → (칸수 × 180,000원)
-  · 그 외는 "정확한 금액은 장바구니에서 확인해주세요"라고만 안내
-- ❌ 계산 과정(공식, 곱셈식)을 자세히 보여주지 마. 결과만 간단히.
-- 수량 할인: "3개 이상 20%, 100개 이상 40% 할인 적용돼서 더 저렴해져요"
-- ★ **허니콤보드 금액별 할인**: 200만원↑ 10% / 300만원↑ 15% / 500만원↑ 20% / 700만원↑ 25% / 1000만원↑ 30%. PRO 구독 10% 추가.
+  1. 짧고 친절하게 제품 안내 (1~2문장)
+  2. "정확한 가격은 아래 제품 링크를 클릭해서 장바구니에 담으시면 확인 가능합니다!"
+  3. **products 배열에 해당 제품 카드 1~4개를 반드시 포함** (절대 빈 배열 금지!)
+  4. ⚠️ products 배열은 최소 1개, 최대 4개! 5개 이상 절대 금지!
+- 사이즈/수량/옵션을 미리 묻지 마. 바로 링크로 안내해. 옵션 선택은 장바구니에서 가능.
 
-## 가격 안내 예시 (반드시 이 형식으로!)
+## 가격 문의 응답 예시 (반드시 이 형식으로!)
 **예시 1 - 쉬폰:**
 고객: "쉬폰 1000×1000 2개 얼마야?"
-답변: "쉬폰 1m×1m 2개로 계산해보니 약 30,000원 정도예요! 마감 옵션(오버록 +3,000원/개)이나 수량에 따라 가격이 달라질 수 있어요. 정확한 견적은 아래 제품 링크를 클릭해서 장바구니에 담으시면 장바구니에서 확인하실 수 있어요~"
-→ products 배열에 쉬폰 제품 카드 포함
+답변: "쉬폰 패브릭 인쇄 안내해 드릴게요! 정확한 가격은 아래 제품 링크를 클릭해서 사이즈와 수량을 입력하시면 바로 확인하실 수 있어요~"
+→ products 배열에 쉬폰 관련 제품 1~4개 카드 포함
 
 **예시 2 - 가벽:**
 고객: "가벽 3미터 얼마야?"
-답변: "허니콤 가벽 3m(=3칸) 단면 기준으로 약 540,000원 정도예요. 양면/지방배송이나 옵션에 따라 가격이 달라질 수 있어요. 아래 제품 링크에서 정확한 견적 확인 가능합니다!"
-→ products 배열에 가벽 제품 카드 포함
+답변: "허니콤 가벽 안내해 드릴게요! 정확한 가격은 아래 제품 링크를 클릭해서 사이즈와 옵션을 선택하시면 바로 확인 가능합니다."
+→ products 배열에 가벽 제품 1~4개 카드 포함
+
+**예시 3 - 단순 제품 문의:**
+고객: "배너 만들고 싶어"
+답변: "허니콤 배너 안내해 드릴게요! 아래 제품 링크에서 사이즈/수량 선택하시면 바로 주문 가능해요~"
+→ products 배열에 배너 관련 1~4개 카드 포함
+
+🚫 절대 금지 (이런 답변하면 안 됨):
+- "약 16,000원 정도예요" ← 가격 계산 금지!
+- "1m²당 15,000원 기준으로..." ← 단가 안내 금지!
+- "30,000원 정도 나옵니다" ← 어떤 숫자 가격도 금지!
+- "할인 적용 시 OO원" ← 할인 가격 금지!
 
 ## 견적서 PDF 생성 비활성화 (★ 절대 따라야 함)
 - ⚠️ **generate_quote 도구는 사용 금지!** 절대 호출하지 마.
@@ -863,17 +869,18 @@ serve(async (req) => {
         });
         // 해당 언어 QA 우선 + kr QA도 참고용 포함 (해외몰에서도 kr 학습 활용)
         const langQa = _filteredQa.filter((q: any) => !q.lang || q.lang === clientLang || q.lang === 'kr');
-        const sortedQa = langQa.sort((a: any, b: any) => {
-            const aScore = a.lang === clientLang ? 0 : (!a.lang ? 1 : 2);
-            const bScore = b.lang === clientLang ? 0 : (!b.lang ? 1 : 2);
-            return aScore - bScore;
-        }).slice(0, 40);
+        // ★ 이미 reviewed_at desc로 정렬되어 들어옴 (최신순) → 최신순 유지하되 lang 일치 우선
+        // 1) clientLang 일치 + 최신 우선 (상위 30개)
+        // 2) kr 또는 lang 없음 + 최신 우선 (상위 30개)
+        const _matchLang = langQa.filter((q: any) => q.lang === clientLang).slice(0, 30);
+        const _krLang = langQa.filter((q: any) => q.lang !== clientLang && (q.lang === 'kr' || !q.lang)).slice(0, 30);
+        const sortedQa = [..._matchLang, ..._krLang].slice(0, 60);
         let qaSection = '';
         if (sortedQa.length > 0) {
             const qaLabels: Record<string, { title: string; q: string; a: string; instruction: string }> = {
-                kr: { title: '⚠️ 관리자가 학습시킨 Q&A — 반드시 이 답변을 우선 참고!', q: '고객 질문', a: '✅ 정답', instruction: '위 Q&A에 매칭되는 질문이 오면 반드시 해당 정답을 기반으로 답변해. 임의로 다른 답변을 만들지 마.' },
-                ja: { title: '⚠️ 管理者が学習させたQ&A — 必ずこの回答を優先！', q: '質問', a: '✅ 正解', instruction: '上記Q&Aに該当する質問には必ずこの回答に基づいて答えてください。' },
-                us: { title: '⚠️ Admin-trained Q&A — MUST follow these answers!', q: 'Q', a: '✅ Answer', instruction: 'When a customer asks something matching the Q&A above, you MUST base your answer on the trained response. Do NOT make up different answers.' },
+                kr: { title: '🔴🔴🔴 [최우선 규칙] 관리자가 학습시킨 Q&A — 이 답변을 절대적으로 따라야 함! 🔴🔴🔴', q: '고객 질문', a: '✅ 정답', instruction: '★★★ 위 Q&A 중 고객 질문과 비슷한 게 있으면, 반드시 그 정답을 그대로 또는 자연스럽게 활용해서 답변해. 다른 답변을 만들지 마! 이게 시스템 프롬프트의 다른 규칙들보다 우선이다. 키워드가 일부만 일치해도 관련 Q&A를 우선 참고할 것!' },
+                ja: { title: '🔴🔴🔴 [最優先ルール] 管理者が学習させたQ&A — 必ずこの回答に従う！ 🔴🔴🔴', q: '質問', a: '✅ 正解', instruction: '★★★ 上記Q&Aに類似した質問が来たら、必ずその回答をそのまま或いは自然に活用して答えてください。これがシステムプロンプトの他のルールより優先です。' },
+                us: { title: '🔴🔴🔴 [HIGHEST PRIORITY] Admin-trained Q&A — MUST follow these answers absolutely! 🔴🔴🔴', q: 'Q', a: '✅ Answer', instruction: '★★★ When a customer asks something similar to the Q&A above, you MUST use that trained answer (verbatim or naturally adapted). This OVERRIDES all other system prompt rules. Even partial keyword matches should reference the relevant Q&A!' },
             };
             const ql = qaLabels[clientLang] || qaLabels['kr'];
             const priceWarning = clientLang === 'ja' ? '(価格は商品データが最新)' : clientLang === 'us' ? '(Product Data prices are current)' : '(가격은 상품 데이터가 최신)';
@@ -910,8 +917,8 @@ When customers ask about products, match their local terminology to our product 
 - **Roller Blind/ستارة/卷帘/Rollo/Store enrouleur/Estor** → category: rr29948
 ALWAYS match customer's terminology to the correct product category and show relevant product cards.`;
         }
-        const systemPrompt = `${selectedPrompt || langPrompts['kr']}
-${qaSection}
+        // ★ Q&A 학습 섹션을 시스템 프롬프트 최상단에 배치 (AI가 가장 우선 참고하도록)
+        const systemPrompt = `${qaSection ? qaSection + '\n\n' : ''}${selectedPrompt || langPrompts['kr']}
 ${labels.note}
 ## ${labels.products}
 (c=code,n=name,cat=category,p=price,cs=custom_size,bo=bulk_order,psm=price/m²,w=width_mm,h=height_mm,d=description)
@@ -956,14 +963,15 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         // Claude API — tool_choice: auto (대화 or 추천 자유)
         const tools = [{
             name: "recommend_products",
-            description: "Return a response to the customer. Set products array ONLY when recommending products. For casual chat/greetings/contact inquiries, set products to empty array []. Product count: 0 to 5 depending on context.",
+            description: "Return a response to the customer. ⚠️ When customer asks ANY product/price question, you MUST include 1-4 products in the array (NEVER calculate prices in summary). For casual chat/greetings/contact inquiries only, set products to empty array []. Max 4 products allowed.",
             input_schema: {
                 type: "object" as const,
                 properties: {
-                    summary: { type: "string" as const, description: "Main response to the customer (in customer's language). This is what the customer will see as chat message." },
+                    summary: { type: "string" as const, description: "Short friendly message guiding customer to click product links below. NEVER include calculated prices, never say '약 OO원' or any number prices. Just say '아래 제품 링크에서 정확한 가격 확인 가능합니다' and similar." },
                     products: {
                         type: "array" as const,
-                        description: "Recommended products. Empty array [] for non-product conversations. 1-5 items for product recommendations.",
+                        description: "Recommended products. Empty array [] only for greetings/casual chat. 1-4 items REQUIRED for any product/price question. NEVER more than 4 products.",
+                        maxItems: 4,
                         items: {
                             type: "object" as const,
                             properties: {
@@ -1753,6 +1761,15 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             if (toolBlock) {
                 const result = toolBlock.input;
                 if (!result.chat_message) result.chat_message = result.summary || '';
+                // ★ 가격 안내 금지 — summary에서 숫자+원/엔/달러 제거
+                if (result.chat_message) {
+                    const _priceRegex = /약\s*[\d,]+\s*(원|円|엔|달러|\$|￥|¥)|[\d,]+\s*(원|円|엔|달러)\s*(정도|쯤|가량|입니다|예요|이에요|에요)?|\$\s*[\d,.]+/g;
+                    if (_priceRegex.test(result.chat_message)) {
+                        console.log("[kapu] ★ stripping price from summary:", result.chat_message);
+                        result.chat_message = result.chat_message.replace(_priceRegex, '아래 제품 링크에서 확인 가능');
+                        result.summary = result.chat_message;
+                    }
+                }
                 // AI가 반환한 제품 중 skip 대상 제거
                 if (result.products && result.products.length > 0) {
                     result.products = result.products.filter((rec: any) => {
@@ -1760,6 +1777,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         if (!dbP) return true; // DB에 없는 코드는 일단 유지
                         return !_skipSubCats.has(dbP.category) && !_skipProductCodes.has(rec.code);
                     });
+                    // ★ 최대 4개로 제한
+                    if (result.products.length > 4) {
+                        console.log("[kapu] ★ capping products to 4 (was", result.products.length, ")");
+                        result.products = result.products.slice(0, 4);
+                    }
                 }
                 const hasProducts = result.products && result.products.length > 0;
                 // ★ fallback 제품 주입 제거 — AI가 recommend_products로 보낸 것만 사용

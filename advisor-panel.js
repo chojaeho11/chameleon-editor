@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI 채팅 + 콜백 요청
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=300';
+import { SITE_CONFIG } from './site-config.js?v=301';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -292,7 +292,7 @@ window._quoteToCart = async function(quoteId) {
         return;
     }
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=300');
+        const { addProductToCartDirectly } = await import('./order.js?v=301');
         // ★ 할인 아이템 분리, 메인/addon 그룹핑
         const allItems = qData.items.filter(i => (i.total || 0) >= 0); // 할인 행 제외
         const discountItems = qData.items.filter(i => (i.total || 0) < 0);
@@ -943,17 +943,10 @@ async function sendMessage(text, imageData) {
             products: products.length > 0 ? products.map(p => ({ code: p.code, name: p.name })) : undefined
         });
 
-        // 제품 카드: 견적서 또는 링크 요청 시에만 표시
-        {
-        const _userMsg = (text || '').toLowerCase();
-        const _linkKeywords = ['링크','url','보여줘','어디서 사','어디서사','사는곳','구매하는곳','파는곳','주문하는곳','살수있는','구매링크','주문링크','where to buy','how to order','どこで買','購入ページ','link'];
-        const _wantsLink = _linkKeywords.some(k => _userMsg.includes(k));
-        const showProducts = products.length > 0 && _wantsLink;
-
-        if (showProducts) {
+        // 제품 카드: AI가 보낸 모든 제품을 항상 표시 (가격 안내 금지 → 링크로 유도)
+        if (products.length > 0) {
             lastProducts = products;
             addProductCards(products);
-        }
         }
 
         // ★ 연락처 남기기 키워드 감지 — 사용자 메시지에서만 (AI 응답은 무시)
@@ -1386,7 +1379,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=300');
+        const { addProductToCartDirectly } = await import('./order.js?v=301');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
