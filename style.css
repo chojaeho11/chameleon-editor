@@ -959,7 +959,8 @@ button, input, textarea, select { font-family: inherit; }
     .stage {
         order: 1 !important; width: 100% !important; height: 100% !important;
         position: absolute !important; top: 0; left: 0; z-index: 1;
-        background: #e5e5e5; border-bottom: 2px solid #ddd;
+        background: #6b7280 !important; /* 진한 회색 - 보드 경계 명확히 보이게 */
+        border-bottom: none !important;
     }
 
     /* 사이드바 & 우측 스택 -> 모바일 슬라이드 패널로 변환 */
