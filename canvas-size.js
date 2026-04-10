@@ -261,12 +261,13 @@ export function resizeCanvasToFit() {
     const board = c.getObjects().find(o => o.isBoard);
     if(!board) return;
 
-    // 모바일: 하단 도구바(iconBar+컨트롤바 ~120px) 영역 제외, 상단은 최소 여백
+    // 모바일: 하단 도구바 영역 제외 + 충분한 여백으로 stage 배경(회색)이 보이게
     const _isMobile = window.innerWidth <= 768;
-    const _bottomReserve = _isMobile ? 130 : 0;  // 하단 컨트롤바 + iconBar 영역
-    const _topReserve = _isMobile ? 0 : 0;       // 상단 여백 0 (보드 최대한 위로)
+    const _bottomReserve = _isMobile ? 130 : 0;  // 하단 컨트롤바 + iconBar
+    const _topReserve = _isMobile ? 20 : 0;      // 상단 여백 20px (회색 배경 보이게)
 
-    const padding = _isMobile ? 30 : 160;        // 모바일은 padding 더 줄여서 보드 더 크게
+    // padding 크게 → 보드가 화면을 꽉 채우지 않고 회색 stage 여백이 보임
+    const padding = _isMobile ? 100 : 160;
     const visibleH = stage.clientHeight - _topReserve - _bottomReserve;
     const availW = stage.clientWidth - padding;
     const availH = visibleH - padding;
@@ -274,7 +275,6 @@ export function resizeCanvasToFit() {
     const zoom = Math.min(availW / board.width, availH / board.height);
 
     const panX = (stage.clientWidth - board.width * zoom) / 2;
-    // 시각적 중심은 _topReserve 부터 visibleH 까지의 영역
     const panY = _topReserve + (visibleH - board.height * zoom) / 2;
 
     c.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);

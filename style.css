@@ -959,7 +959,7 @@ button, input, textarea, select { font-family: inherit; }
     .stage {
         order: 1 !important; width: 100% !important; height: 100% !important;
         position: absolute !important; top: 0; left: 0; z-index: 1;
-        background: #6b7280 !important; /* 진한 회색 - 보드 경계 명확히 보이게 */
+        background: #ff0000 !important; /* 빨강 - v330+ 로드 확인용 */
         border-bottom: none !important;
     }
 
