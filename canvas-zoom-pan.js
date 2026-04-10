@@ -148,14 +148,19 @@ export function initZoomPan() {
     });
 
     // =========================================================
-    // ★ 모바일 핀치 줌 & 2손가락 패닝
+    // ★ 모바일 핀치 줌 & 2손가락 패닝 (의도 감지: 데드존)
     // =========================================================
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
         let pinchActive = false;
+        let initialDist = 0;        // 처음 두 손가락 거리 (의도 판단용)
+        let initialMidX = 0;
+        let initialMidY = 0;
         let lastDist = 0;
         let lastMidX = 0;
         let lastMidY = 0;
         let lastZoom = 1;
+        let zoomIntent = false;     // 줌 의도 감지 플래그
+        let panIntent = false;      // 팬 의도 감지 플래그
 
         function getTouchDist(t1, t2) {
             const dx = t1.clientX - t2.clientX;
@@ -170,20 +175,21 @@ export function initZoomPan() {
             };
         }
 
-        // 캔버스 upper-canvas (fabric.js가 이벤트를 받는 레이어)
         const upperEl = canvas.upperCanvasEl || canvas.getElement();
 
         upperEl.addEventListener('touchstart', function(e) {
             if (e.touches.length === 2) {
                 pinchActive = true;
+                zoomIntent = false;
+                panIntent = false;
                 canvas.selection = false;
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
 
-                lastDist = getTouchDist(e.touches[0], e.touches[1]);
+                initialDist = lastDist = getTouchDist(e.touches[0], e.touches[1]);
                 const mid = getTouchMid(e.touches[0], e.touches[1]);
-                lastMidX = mid.x;
-                lastMidY = mid.y;
+                initialMidX = lastMidX = mid.x;
+                initialMidY = lastMidY = mid.y;
                 lastZoom = canvas.getZoom();
 
                 e.preventDefault();
@@ -197,25 +203,47 @@ export function initZoomPan() {
             const dist = getTouchDist(e.touches[0], e.touches[1]);
             const mid = getTouchMid(e.touches[0], e.touches[1]);
 
-            // 줌 계산
-            const scale = dist / lastDist;
-            let newZoom = lastZoom * scale;
-            if (newZoom > 20) newZoom = 20;
-            if (newZoom < 0.05) newZoom = 0.05;
+            // ★ 의도 감지: 처음 시작점으로부터 거리/중심점 변화량 비교
+            const distDelta = Math.abs(dist - initialDist);
+            const midDelta = Math.sqrt(
+                Math.pow(mid.x - initialMidX, 2) + Math.pow(mid.y - initialMidY, 2)
+            );
 
-            // 캔버스 내 좌표로 변환
-            const rect = upperEl.getBoundingClientRect();
-            const cx = mid.x - rect.left;
-            const cy = mid.y - rect.top;
+            // 데드존 임계값 (픽셀)
+            const DEADZONE = 15;
 
-            canvas.zoomToPoint({ x: cx, y: cy }, newZoom);
+            if (!zoomIntent && !panIntent) {
+                // 아직 의도가 결정되지 않은 상태 → 큰 변화가 일어난 쪽으로 결정
+                if (distDelta > DEADZONE && distDelta > midDelta * 1.2) {
+                    zoomIntent = true;  // 거리 변화가 크면 줌
+                } else if (midDelta > DEADZONE) {
+                    panIntent = true;   // 중심점 이동이 크면 팬
+                } else {
+                    // 아직 임계값 미달 → 아무것도 안 함 (대지 안 흔들림)
+                    return;
+                }
+            }
 
-            // 2손가락 패닝
+            // 팬 (2손가락 이동)
             const vpt = canvas.viewportTransform;
             vpt[4] += mid.x - lastMidX;
             vpt[5] += mid.y - lastMidY;
-            canvas.requestRenderAll();
 
+            // 줌 (의도가 줌일 때만)
+            if (zoomIntent) {
+                const scale = dist / lastDist;
+                let newZoom = canvas.getZoom() * scale;
+                if (newZoom > 20) newZoom = 20;
+                if (newZoom < 0.05) newZoom = 0.05;
+
+                const rect = upperEl.getBoundingClientRect();
+                const cx = mid.x - rect.left;
+                const cy = mid.y - rect.top;
+                canvas.zoomToPoint({ x: cx, y: cy }, newZoom);
+            }
+
+            canvas.requestRenderAll();
+            lastDist = dist;
             lastMidX = mid.x;
             lastMidY = mid.y;
         }, { passive: false });
@@ -223,6 +251,8 @@ export function initZoomPan() {
         upperEl.addEventListener('touchend', function(e) {
             if (pinchActive && e.touches.length < 2) {
                 pinchActive = false;
+                zoomIntent = false;
+                panIntent = false;
                 canvas.selection = true;
                 canvas.setViewportTransform(canvas.viewportTransform);
             }
