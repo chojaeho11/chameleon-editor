@@ -261,14 +261,21 @@ export function resizeCanvasToFit() {
     const board = c.getObjects().find(o => o.isBoard);
     if(!board) return;
 
-    const padding = 160;
+    // 모바일: 하단 도구바(iconBar ~70px)가 캔버스 위에 떠있으므로 시각적 안전 영역 사용
+    const _isMobile = window.innerWidth <= 768;
+    const _bottomReserve = _isMobile ? 80 : 0;  // 하단 도구바 높이
+    const _topReserve = _isMobile ? 10 : 0;     // 상단 여백 최소화
+
+    const padding = _isMobile ? 60 : 160;       // 모바일은 padding 줄여서 더 크게
+    const visibleH = stage.clientHeight - _topReserve - _bottomReserve;
     const availW = stage.clientWidth - padding;
-    const availH = stage.clientHeight - padding;
+    const availH = visibleH - padding;
 
     const zoom = Math.min(availW / board.width, availH / board.height);
 
     const panX = (stage.clientWidth - board.width * zoom) / 2;
-    const panY = (stage.clientHeight - board.height * zoom) / 2;
+    // 시각적 중심은 _topReserve 부터 visibleH 까지의 영역
+    const panY = _topReserve + (visibleH - board.height * zoom) / 2;
 
     c.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);
     c.requestRenderAll();
