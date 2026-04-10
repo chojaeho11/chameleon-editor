@@ -1286,7 +1286,54 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     }
                 });
 
-                // [보정2] 고객이 안 시킨 제품 제거 (고객 메시지에 없는 키워드)
+                // [보정2] AI 사이즈 파싱 오류 교정: 고객 메시지에서 실제 숫자 재추출
+                qItems.forEach((qi: any) => {
+                    if (qi.is_addon) return;
+                    const w = qi.width_mm || 0;
+                    const h = qi.height_mm || 0;
+                    // 비정상적으로 큰 사이즈 감지 (10m × 10m 이상이면 의심)
+                    if (w > 10000 || h > 10000) {
+                        // 고객 메시지에서 사이즈 재추출
+                        const _sizePatterns = [
+                            /(\d{2,5})\s*[-~xX×*]\s*(\d{2,5})/,  // 3000-1200, 3000x1200
+                            /(\d+(?:\.\d+)?)\s*(?:미터|m)\s*[-~xX×에]\s*(\d+(?:\.\d+)?)\s*(?:미터|m)?/i,  // 3미터 x 1.2미터
+                            /가로\s*(\d+(?:\.\d+)?)\s*(?:mm|미터|m)?\s*.*?(?:세로|높이|x)\s*(\d+(?:\.\d+)?)/i,
+                        ];
+                        for (const pat of _sizePatterns) {
+                            const m = _customerMsgsOnly.match(pat);
+                            if (m) {
+                                let nw = parseFloat(m[1]);
+                                let nh = parseFloat(m[2]);
+                                // 미터 → mm 변환
+                                if (nw < 100) nw = Math.round(nw * 1000);
+                                if (nh < 100) nh = Math.round(nh * 1000);
+                                if (nw > 0 && nh > 0 && nw <= 10000 && nh <= 10000) {
+                                    _corrections.push(`사이즈 교정: ${w}×${h}mm → ${nw}×${nh}mm (고객 요청 기준)`);
+                                    qi.width_mm = nw;
+                                    qi.height_mm = nh;
+                                    console.log("[quote] ★ SIZE FIX:", w + "x" + h, "→", nw + "x" + nh);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // [보정2-2] 수량도 고객 메시지에서 재확인
+                const _qtyMatch = _customerMsgsOnly.match(/(\d+)\s*(?:장|개|매|부|세트|개씩|枚|pcs|ea|개를)/i);
+                if (_qtyMatch) {
+                    const customerQty = parseInt(_qtyMatch[1]);
+                    if (customerQty > 0 && customerQty <= 10000) {
+                        qItems.forEach((qi: any) => {
+                            if (!qi.is_addon && qi.quantity !== customerQty) {
+                                console.log("[quote] ★ QTY FIX:", qi.name, qi.quantity, "→", customerQty);
+                                qi.quantity = customerQty;
+                            }
+                        });
+                    }
+                }
+
+                // [보정3] 고객이 안 시킨 제품 제거 (고객 메시지에 없는 키워드)
                 const _productKeywordMap: Record<string, RegExp> = {
                     'hb_dw': /가벽|파티션|전시벽|전시월|partition|wall/i,
                     'hb_bn': /배너|banner|현수막/i,
