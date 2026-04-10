@@ -1248,9 +1248,34 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 }
                 console.log("[quote] final qItems:", JSON.stringify(qItems));
 
+                // ★ 패브릭 메인 제품 누락 방어: addon만 있고 메인 원단이 없으면 자동 추가
+                const _allFabricCats = ['ch10s','ch20s','ch40s','cn16s','cn20s','obo10s','lin20s'];
+                const _fabricProductCodes = products.filter((p: any) => _allFabricCats.includes(p.category)).map((p: any) => p.code);
+                const _hasMainFabric = qItems.some((qi: any) => !qi.is_addon && (_fabricProductCodes.includes(qi.code) || _allFabricCats.some(c => (qi.code||'').startsWith(c))));
+                const _hasOnlyAddons = qItems.length > 0 && qItems.every((qi: any) => qi.is_addon);
+                const _fabricKeywords = /쉬폰|광목|캔버스|옥스포드|리넨|패브릭|원단|chiffon|canvas|cotton|oxford|linen|fabric/i;
+                if (!_hasMainFabric && (_hasOnlyAddons || qItems.length === 0) && _fabricKeywords.test(_allText)) {
+                    // 대화에서 원단 종류+사이즈 추출
+                    const _fabricMap: Record<string, string> = { '쉬폰': 'ch20001', 'chiffon': 'ch20001', '광목': 'cb20001', 'cotton': 'cb20001', '캔버스': 'cs10001', 'canvas': 'cs10001', '옥스포드': 'ns16001', 'oxford': 'ns16001', '리넨': '2343243', 'linen': '2343243' };
+                    let _detectedFabricCode = '';
+                    let _detectedFabricName = '';
+                    for (const [kw, code] of Object.entries(_fabricMap)) {
+                        if (_allText.toLowerCase().includes(kw.toLowerCase())) { _detectedFabricCode = code; _detectedFabricName = kw; break; }
+                    }
+                    if (_detectedFabricCode) {
+                        const _sizeMatch = _allText.match(/(\d{2,5})\s*[x×*]\s*(\d{2,5})/i) || _allText.match(/(\d+(?:\.\d+)?)\s*m\s*[x×]\s*(\d+(?:\.\d+)?)\s*m/i);
+                        const _qtyMatch = _allText.match(/(\d+)\s*(?:장|개|매|枚|pcs|ea)/i);
+                        const wMm = _sizeMatch ? (parseFloat(_sizeMatch[1]) < 100 ? Math.round(parseFloat(_sizeMatch[1]) * 1000) : parseInt(_sizeMatch[1])) : 700;
+                        const hMm = _sizeMatch ? (parseFloat(_sizeMatch[2]) < 100 ? Math.round(parseFloat(_sizeMatch[2]) * 1000) : parseInt(_sizeMatch[2])) : 1300;
+                        const qty = _qtyMatch ? parseInt(_qtyMatch[1]) || 1 : 1;
+                        qItems.unshift({ code: _detectedFabricCode, name: _detectedFabricName, width_mm: wMm, height_mm: hMm, quantity: qty });
+                        console.log("[quote] ★ auto-inserted missing fabric main product:", _detectedFabricCode, wMm + 'x' + hMm, 'qty:', qty);
+                    }
+                }
+
                 // ★ 패브릭 addon 자동 추출: 유저 메시지에서만 감지 (AI 설명 제외)
-                const _fabricCodes = ['cb20001','2343243','cb30001','ns16001','cs10001'];
-                const _hasFabric = qItems.some((qi: any) => _fabricCodes.includes(qi.code) || (qi.code || '').match(/^(cb|ns|cs|tx)/));
+                const _fabricCodes = ['cb20001','2343243','cb30001','ns16001','cs10001','ch20001','cs20001','345353543','5464646456','456656464','43535435345'];
+                const _hasFabric = qItems.some((qi: any) => _fabricCodes.includes(qi.code) || (qi.code || '').match(/^(cb|ns|cs|ch|tx)/));
                 const _existingAddonCodes = new Set(qItems.filter((qi: any) => qi.is_addon).map((qi: any) => qi.code));
                 if (_hasFabric && _existingAddonCodes.size === 0) {
                     // ★ 유저 메시지만 추출 (AI 응답 제외) — AI가 옵션 설명한 것을 감지하지 않도록
