@@ -1516,6 +1516,31 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                             }
                         }
                     }
+                    // ★ AI 대화 텍스트에서 제품별 수량 추출 → items 수량 교정
+                    // AI는 대화에서 "3000×2400mm × 2개"처럼 정확하게 안내하지만 tool에는 틀린 수량을 보냄
+                    const _lastAssistantMsgs = (conversation_history || []).filter((h: any) => h.role === 'assistant').map((h: any) => typeof h.content === 'string' ? h.content : '');
+                    const _lastAiSummary = _lastAssistantMsgs.length > 0 ? _lastAssistantMsgs[_lastAssistantMsgs.length - 1] : '';
+                    if (_lastAiSummary) {
+                        // "3000×2400mm × 2개" 패턴 추출
+                        const _sizeQtyPairs = [..._lastAiSummary.matchAll(/(\d{3,5})\s*[x×]\s*(\d{3,5})\s*(?:mm)?\s*[×x*]\s*(\d+)\s*(?:개|장|세트)/gi)];
+                        for (const m of _sizeQtyPairs) {
+                            const sw = parseInt(m[1]);
+                            const sh = parseInt(m[2]);
+                            const sq = parseInt(m[3]);
+                            // items에서 같은 사이즈 제품 찾아서 수량 교정
+                            for (const qi of qItems) {
+                                if (qi.is_addon) continue;
+                                if (qi.width_mm === sw && qi.height_mm === sh && qi.quantity !== sq) {
+                                    console.log(`[quote] ★ QTY FROM AI SUMMARY: ${qi.name} ${sw}x${sh} qty ${qi.quantity} → ${sq}`);
+                                    qi.quantity = sq;
+                                }
+                            }
+                        }
+                        // "배너 × 5개" 같은 단순 패턴도 추출
+                        const _simpleQtyPairs = [..._lastAiSummary.matchAll(/(가벽|배너|등신대|인쇄커팅|글씨포토존|박스|테이블|게이트)\s*.*?(\d+)\s*(?:개|장|세트)/gi)];
+                        // (이미 사이즈+수량으로 교정한 것은 건드리지 않음)
+                    }
+
                     console.log("[quote] ★ FINAL after force-fix:", JSON.stringify(qItems));
                 }
 
