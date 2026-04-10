@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI 채팅 + 콜백 요청
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=291';
+import { SITE_CONFIG } from './site-config.js?v=294';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -292,7 +292,7 @@ window._quoteToCart = async function(quoteId) {
         return;
     }
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=291');
+        const { addProductToCartDirectly } = await import('./order.js?v=294');
         // ★ 할인 아이템 분리, 메인/addon 그룹핑
         const allItems = qData.items.filter(i => (i.total || 0) >= 0); // 할인 행 제외
         const discountItems = qData.items.filter(i => (i.total || 0) < 0);
@@ -367,17 +367,47 @@ window._quoteToCart = async function(quoteId) {
 };
 
 // ─── 초기화 ───
+// ─── 6개 바로가기 버튼을 외부 컨테이너에 렌더링 ───
+export function renderShortcutButtons(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const lang = getLang();
+    container.innerHTML = `
+        <style>
+        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:1100px;margin:0 auto;padding:0 15px;}
+        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 8px;border-radius:16px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;}
+        .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
+        @media(max-width:768px){.adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:6px;padding:0 10px;}.adv-ext-btn{padding:11px 4px;font-size:11px;gap:5px;}}
+        </style>
+        <div class="adv-ext-grid">
+            <a href="${location.origin}/design-market.html" target="_blank" class="adv-ext-btn">
+                <i class="fa-solid fa-palette"></i> ${{kr:'디자인의뢰',ja:'デザイン依頼',en:'Design Request'}[lang]||'Design Request'}
+            </a>
+            <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn">
+                <i class="fa-solid fa-pen-ruler"></i> ${{kr:'셀프디자인',ja:'セルフデザイン',en:'Self Design'}[lang]||'Self Design'}
+            </a>
+            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" class="adv-ext-btn">
+                <i class="fa-solid fa-building-columns"></i> ${{kr:'행사전시문의',ja:'イベント相談',en:'Event Inquiry'}[lang]||'Event Inquiry'}
+            </a>
+            <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn">
+                <i class="fa-solid fa-magnifying-glass"></i> ${{kr:'제품검색',ja:'商品検索',en:'Search'}[lang]||'Search'}
+            </a>
+            <a href="javascript:void(0)" onclick="if(window.openAuthModal)window.openAuthModal('signup')" class="adv-ext-btn">
+                <i class="fa-solid fa-user-plus"></i> ${{kr:'회원가입',ja:'新規登録',en:'Sign Up'}[lang]||'Sign Up'}
+            </a>
+            <a href="${location.origin}/design-market.html#register" target="_blank" class="adv-ext-btn">
+                <i class="fa-solid fa-pen-nib"></i> ${{kr:'디자이너등록',ja:'デザイナー登録',en:'Be a Designer'}[lang]||'Be a Designer'}
+            </a>
+        </div>
+    `;
+}
+
 export function initAdvisorPanel() {
     panelEl = document.getElementById('advisorPanel');
     if (!panelEl) return;
 
-    // 모바일에서 바로가기 버튼/디자이너 등록 숨김
-    if (!document.getElementById('advMobileHideStyle')) {
-        const _s = document.createElement('style');
-        _s.id = 'advMobileHideStyle';
-        _s.textContent = '@media(max-width:768px){.adv-shortcut-btns{grid-template-columns:1fr 1fr!important;font-size:11px!important;}.adv-shortcut-btns .adv-grid-btn{padding:10px 4px!important;font-size:11px!important;}}';
-        document.head.appendChild(_s);
-    }
+    // 바로가기 버튼을 메인 타이틀 아래에 렌더링
+    renderShortcutButtons('advShortcutBtns');
 
     window._startAdvisor = startAdvisor;
     window.startQuoteFlow = startQuoteFlow;
@@ -393,7 +423,7 @@ export function initAdvisorPanel() {
     window.toggleAdvisorPanel = function() {
         if (!panelEl) return;
         const fab = document.getElementById('floatingChatBtn');
-        if (panelEl.style.display === 'block') {
+        if (panelEl.style.display === 'flex') {
             panelEl.style.display = 'none';
             if (fab) fab.innerHTML = '<i class="fa-solid fa-comments"></i>';
         } else {
@@ -437,8 +467,8 @@ export function initAdvisorPanel() {
 // ─── 패널 열기 ───
 function openPanel() {
     if (!panelEl) return;
-    if (panelEl.style.display === 'block') return;
-    panelEl.style.display = 'block';
+    if (panelEl.style.display === 'flex') return;
+    panelEl.style.display = 'flex';
     buildPanelUI();
 }
 
@@ -567,27 +597,6 @@ function buildPanelUI() {
             <button class="adv-send-btn" id="advSendBtn">
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
-        </div>
-        <style>.adv-grid-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 6px;border-radius:16px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;}.adv-grid-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}</style>
-        <div class="adv-shortcut-btns" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px 10px;">
-            <a href="${location.origin}/design-market.html" target="_blank" class="adv-grid-btn">
-                <i class="fa-solid fa-palette"></i> ${{kr:'디자인의뢰',ja:'デザイン依頼',en:'Design Request'}[getLang()]||'Design Request'}
-            </a>
-            <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-grid-btn">
-                <i class="fa-solid fa-pen-ruler"></i> ${{kr:'셀프디자인',ja:'セルフデザイン',en:'Self Design'}[getLang()]||'Self Design'}
-            </a>
-            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" class="adv-grid-btn">
-                <i class="fa-solid fa-building-columns"></i> ${{kr:'행사전시문의',ja:'イベント相談',en:'Event Inquiry'}[getLang()]||'Event Inquiry'}
-            </a>
-            <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-grid-btn">
-                <i class="fa-solid fa-magnifying-glass"></i> ${{kr:'제품검색',ja:'商品検索',en:'Search'}[getLang()]||'Search'}
-            </a>
-            <a href="javascript:void(0)" onclick="if(window.openAuthModal)window.openAuthModal('signup')" class="adv-grid-btn">
-                <i class="fa-solid fa-user-plus"></i> ${{kr:'회원가입',ja:'新規登録',en:'Sign Up'}[getLang()]||'Sign Up'}
-            </a>
-            <a href="${location.origin}/design-market.html#register" target="_blank" class="adv-grid-btn">
-                <i class="fa-solid fa-pen-nib"></i> ${{kr:'디자이너등록',ja:'デザイナー登録',en:'Be a Designer'}[getLang()]||'Be a Designer'}
-            </a>
         </div>
     `;
     chatArea = document.getElementById('advChatArea');
@@ -741,7 +750,7 @@ function startAdvisor(query) {
         panelEl = document.getElementById('advisorPanel');
         if (!panelEl) return;
     }
-    panelEl.style.display = 'block';
+    panelEl.style.display = 'flex';
     if (!chatArea) buildPanelUI();
     sendMessage(query.trim());
     panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1385,7 +1394,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=291');
+        const { addProductToCartDirectly } = await import('./order.js?v=294');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
