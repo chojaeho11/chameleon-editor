@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI 채팅 + 콜백 요청
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=303';
+import { SITE_CONFIG } from './site-config.js?v=304';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -292,7 +292,7 @@ window._quoteToCart = async function(quoteId) {
         return;
     }
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=303');
+        const { addProductToCartDirectly } = await import('./order.js?v=304');
         // ★ 할인 아이템 분리, 메인/addon 그룹핑
         const allItems = qData.items.filter(i => (i.total || 0) >= 0); // 할인 행 제외
         const discountItems = qData.items.filter(i => (i.total || 0) < 0);
@@ -1379,7 +1379,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=303');
+        const { addProductToCartDirectly } = await import('./order.js?v=304');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
