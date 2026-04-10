@@ -980,11 +980,33 @@ window.NpcWizard = {
                 break;
 
             case 'chooseDesign':
-                // 파일 없음 → 직접/의뢰 먼저 선택 (사이즈 입력 전)
+                // 파일 없음 → 직접/의뢰/문의 + 해외 전화번호 안내
                 this._renderBubble(_t('chooseDesign'), [
                     { label: _t('selfDesign'), cls: 'npc-yes', onclick: "window.NpcWizard._chooseSelfDesign()" },
                     { label: _t('expertDesign'), cls: 'npc-expert', onclick: "window.NpcWizard._chooseExpert()" },
+                    { label: '📨 자료 보내고 문의하기', cls: 'npc-inquiry', onclick: "window.NpcWizard._chooseInquiry()" },
                 ], true);
+                // 해외 문의 전화번호 박스 추가
+                setTimeout(() => {
+                    const slot = document.querySelector('.npc-slot, [data-npc="buttons"]');
+                    if (slot && !document.getElementById('npcIntlPhoneBox')) {
+                        const phoneBox = document.createElement('div');
+                        phoneBox.id = 'npcIntlPhoneBox';
+                        phoneBox.style.cssText = 'margin-top:14px;padding:16px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:14px;text-align:center;';
+                        phoneBox.innerHTML = `
+                            <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:10px;">📞 해외 문의 (International)</div>
+                            <a href="tel:+821034913535" style="display:block;padding:10px 12px;background:#fff;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#1e1b4b;font-weight:700;font-size:14px;border:1.5px solid #fbbf24;">
+                                <div style="font-size:11px;color:#92400e;margin-bottom:2px;">🇰🇷 EN / 日本語</div>
+                                <div style="font-size:18px;font-weight:900;letter-spacing:0.5px;">+82 10 3491-3535</div>
+                            </a>
+                            <a href="tel:+212617901092" style="display:block;padding:10px 12px;background:#fff;border-radius:10px;text-decoration:none;color:#1e1b4b;font-weight:700;font-size:14px;border:1.5px solid #fbbf24;">
+                                <div style="font-size:11px;color:#92400e;margin-bottom:2px;">🇲🇦 FR / العربية / EN</div>
+                                <div style="font-size:18px;font-weight:900;letter-spacing:0.5px;">+212 617901092</div>
+                            </a>
+                        `;
+                        slot.appendChild(phoneBox);
+                    }
+                }, 50);
                 break;
 
             case 'expertChat':
@@ -1400,6 +1422,23 @@ window.NpcWizard = {
     // 전문가 의뢰 선택 → 채팅 열기
     _chooseExpert() {
         this._goStep('expertChat');
+    },
+
+    // 자료 보내고 문의하기 → VIP 대량 주문 폼 열기
+    _chooseInquiry() {
+        // 챗봇의 견적/콜백 폼 열기 (advisor-panel.js의 startQuoteFlow)
+        if (window.startQuoteFlow) {
+            // 챗봇 패널 먼저 열기
+            if (window.openAdvisorPanel) window.openAdvisorPanel();
+            setTimeout(() => { window.startQuoteFlow(); }, 300);
+            return;
+        }
+        // 폴백: vipOrderForm 모달 또는 VIP 주문 페이지로 이동
+        const vipModal = document.getElementById('vipOrderModal');
+        if (vipModal) { vipModal.style.display = 'flex'; return; }
+        // 최후 폴백: 챗봇만 열기
+        if (window.ChamBot && window.ChamBot.toggle) window.ChamBot.toggle();
+        else if (window.openAdvisorPanel) window.openAdvisorPanel();
     },
 
     _afterSize() {
