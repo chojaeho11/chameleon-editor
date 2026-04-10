@@ -1058,19 +1058,7 @@ document.addEventListener('DOMContentLoaded', function() {
     " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
         <i class="fa-solid fa-comments"></i>
     </button>
-    <div id="advisorPanel" class="advisor-panel" style="
-        display:none;
-        position:fixed !important; bottom:90px; right:20px; z-index:9991;
-        width:420px; max-height:calc(100vh - 120px);
-        border-radius:16px; overflow:hidden;
-        box-shadow:0 8px 40px rgba(0,0,0,0.25);
-    "></div>
-    <style>
-        @media (max-width:480px) {
-            #advisorPanel { width:calc(100vw - 16px) !important; right:8px !important; bottom:84px !important; max-height:calc(100vh - 100px) !important; }
-            #floatingChatBtn { bottom:14px; right:14px; width:54px; height:54px; font-size:22px; }
-        }
-    </style>
+    <div id="advisorPanel" class="advisor-panel" style="display:none;"></div>
 
     <!-- ★ 주문 현황 트래커 (카드형 2열 슬림 레이아웃) -->
     <div id="orderTrackerSection" style="max-width:1100px; margin:4px auto 10px auto; padding:0 10px;">

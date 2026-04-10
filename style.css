@@ -1421,11 +1421,18 @@ button, input, textarea, select { font-family: inherit; }
 
 /* ══════ AI 어드바이저 인라인 채팅 패널 ══════ */
 .advisor-panel {
-    max-width: 1200px;
-    width: 100%;
-    margin: 20px auto 18px;
-    padding: 0 15px;
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 420px;
+    max-height: calc(100vh - 120px);
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    z-index: 9991;
     animation: advSlideIn 0.35s ease-out;
 }
 .advisor-panel * { box-sizing: border-box; }
@@ -1853,7 +1860,7 @@ button, input, textarea, select { font-family: inherit; }
 
 /* ── 모바일 advisor ── */
 @media (max-width: 768px) {
-    .advisor-panel { padding: 0 8px; }
+    .advisor-panel { width: calc(100vw - 16px) !important; right: 8px !important; bottom: 80px !important; max-height: calc(100vh - 100px) !important; padding: 0; }
     .adv-chat-area { min-height: 300px; max-height: 70vh; padding: 14px; }
     .adv-cards-wrap { grid-template-columns: 1fr; }
     .adv-bubble-user, .adv-bubble-ai { max-width: 88%; }
