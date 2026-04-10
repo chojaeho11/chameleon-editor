@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=308";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=308";
-import { SITE_CONFIG } from "./site-config.js?v=308";
-import { applySize } from "./canvas-size.js?v=308";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=308";
+import { canvas } from "./canvas-core.js?v=309";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=309";
+import { SITE_CONFIG } from "./site-config.js?v=309";
+import { applySize } from "./canvas-size.js?v=309";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=309";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=308";
+} from "./export.js?v=309";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1560,7 +1560,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=308');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=309');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2113,6 +2113,15 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                 .sort((a, b) => ((ADDON_CAT_DB[a]||{}).sort_order||999) - ((ADDON_CAT_DB[b]||{}).sort_order||999));
 
             if(categories.length > 0 && allAddons.length > 0) {
+                // ★ 2개 이상의 카테고리는 좌우 2단 그리드로 표시
+                const _visibleCats = categories.filter(cat => {
+                    const catInfo = ADDON_CAT_DB[cat];
+                    const isSwatch = cat === 'opt_8796' || (catInfo && catInfo.is_swatch);
+                    return !isSwatch;
+                });
+                if (_visibleCats.length >= 2) {
+                    addonHtml += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">';
+                }
                 categories.forEach(cat => {
                     const catAddons = allAddons.filter(a => (a.category_code || '_default') === cat);
                     const catInfo = ADDON_CAT_DB[cat];
@@ -2123,7 +2132,7 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                     if (isSwatchCat) return;
 
                     addonHtml += `
-                        <div style="margin-bottom:12px;">
+                        <div style="margin-bottom:12px; min-width:0;">
                             <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px; opacity:0.8;"># ${catDisplayName}</div>`;
 
                     {
@@ -2165,6 +2174,9 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                     }
                     addonHtml += `</div>`;
                 });
+                if (_visibleCats.length >= 2) {
+                    addonHtml += '</div>';
+                }
             }
         }
 
@@ -2926,7 +2938,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=308');
+                const { generateDesignPNG } = await import('./export.js?v=309');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
