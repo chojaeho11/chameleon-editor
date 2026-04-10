@@ -1422,17 +1422,19 @@ button, input, textarea, select { font-family: inherit; }
 /* ══════ AI 어드바이저 인라인 채팅 패널 ══════ */
 .advisor-panel {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    width: 100%;
-    height: 100%;
-    max-height: 100vh;
+    bottom: 90px;
+    right: 20px;
+    width: 420px;
+    height: 600px;
+    max-height: calc(100vh - 120px);
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    border-radius: 0;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: none;
-    z-index: 9999;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    z-index: 9998;
+    background: #1e1e2e;
     animation: advSlideIn 0.25s ease-out;
 }
 .advisor-panel * { box-sizing: border-box; }
@@ -1860,7 +1862,7 @@ button, input, textarea, select { font-family: inherit; }
 
 /* ── 모바일 advisor ── */
 @media (max-width: 768px) {
-    .advisor-panel { /* 이미 전체화면 */ }
+    .advisor-panel { top:0; left:0; right:0; bottom:0; width:100%; height:100%; max-height:100vh; border-radius:0; }
     .adv-chat-area { min-height: 300px; max-height: 70vh; padding: 14px; }
     .adv-cards-wrap { grid-template-columns: 1fr; }
     .adv-bubble-user, .adv-bubble-ai { max-width: 88%; }
