@@ -261,12 +261,12 @@ export function resizeCanvasToFit() {
     const board = c.getObjects().find(o => o.isBoard);
     if(!board) return;
 
-    // 모바일: 하단 도구바(iconBar ~70px)가 캔버스 위에 떠있으므로 시각적 안전 영역 사용
+    // 모바일: 하단 도구바(iconBar+컨트롤바 ~120px) 영역 제외, 상단은 최소 여백
     const _isMobile = window.innerWidth <= 768;
-    const _bottomReserve = _isMobile ? 80 : 0;  // 하단 도구바 높이
-    const _topReserve = _isMobile ? 10 : 0;     // 상단 여백 최소화
+    const _bottomReserve = _isMobile ? 130 : 0;  // 하단 컨트롤바 + iconBar 영역
+    const _topReserve = _isMobile ? 0 : 0;       // 상단 여백 0 (보드 최대한 위로)
 
-    const padding = _isMobile ? 60 : 160;       // 모바일은 padding 줄여서 더 크게
+    const padding = _isMobile ? 30 : 160;        // 모바일은 padding 더 줄여서 보드 더 크게
     const visibleH = stage.clientHeight - _topReserve - _bottomReserve;
     const availW = stage.clientWidth - padding;
     const availH = visibleH - padding;

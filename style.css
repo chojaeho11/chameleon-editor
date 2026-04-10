@@ -1120,11 +1120,11 @@ button, input, textarea, select { font-family: inherit; }
 
     #startScreen { padding-top: 20px !important; }
     
-    /* [강력 수정] 하단 독바: 화면 기준 고정 및 최상위 노출 */
-    .bottom-dock { 
+    /* [강력 수정] 하단 독바: iconBar 바로 위로 이동 (화면 가림 최소화) */
+    .bottom-dock {
         display: flex !important;
-        position: fixed !important;   /* absolute -> fixed로 변경하여 스크롤 무시하고 고정 */
-        bottom: 30px !important;     /* 하단 FAB 버튼(60px)보다 더 위에 배치 */
+        position: fixed !important;
+        bottom: 70px !important;     /* iconBar(약 56px) 바로 위 */
         left: 50% !important;
         transform: translateX(-50%) !important;
         
