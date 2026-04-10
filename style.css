@@ -4030,9 +4030,37 @@ body {
         touch-action: pan-y;
         transition: transform 0.3s ease;
     }
-    /* 드래그 핸들 + 닫기 버튼 표시 */
-    #subPanelDragHandle { display: block; }
-    #subPanelCloseBtn { display: block !important; }
+    /* 드래그 핸들 + 닫기 버튼 표시 (항상 상단 고정) */
+    #subPanelDragHandle {
+        display: block;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 5;
+        padding: 14px 0 10px 0 !important;
+        border-bottom: 1px solid #f1f5f9;
+        margin: 0 -12px 8px -12px;
+    }
+    #subPanelDragHandle > div:first-child {
+        width: 50px !important;
+        height: 5px !important;
+        background: #cbd5e1 !important;
+    }
+    #subPanelCloseBtn {
+        display: flex !important;
+        position: absolute !important;
+        top: 8px !important;
+        right: 12px !important;
+        width: 32px !important;
+        height: 32px !important;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9 !important;
+        border-radius: 50% !important;
+        font-size: 20px !important;
+        color: #475569 !important;
+        padding: 0 !important;
+    }
     #subPanel .sub-panel-header { font-size: 13px; padding-bottom: 8px; margin-bottom: 8px; }
 
     /* 모바일 FAB 숨김 (아이콘바로 대체) */
