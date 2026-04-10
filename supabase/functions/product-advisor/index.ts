@@ -1457,6 +1457,57 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         }
                     }
                 }
+                // ═══════════════════════════════════════════════════════════
+                // ★★★ 최종 사이즈/수량 강제 교정 (가격 계산 직전) ★★★
+                // 고객 메시지에서 숫자를 추출해서 AI가 넣은 값을 덮어쓴다
+                // ═══════════════════════════════════════════════════════════
+                {
+                    // 최신 고객 메시지(현재 턴)에서 사이즈/수량 추출
+                    const _latestMsg = trimmedMsg;
+                    const _prevUserMsgs = (conversation_history || []).filter((h: any) => h.role === 'user').map((h: any) => typeof h.content === 'string' ? h.content : '');
+                    const _latestUserMsg = _latestMsg || (_prevUserMsgs.length > 0 ? _prevUserMsgs[_prevUserMsgs.length - 1] : '');
+
+                    // 사이즈 추출 (3000-1200, 3000x1200, 3미터x1.2미터 등)
+                    const _szMatch = _latestUserMsg.match(/(\d{2,5})\s*[-~xX×*]\s*(\d{2,5})/) ||
+                                     _latestUserMsg.match(/(\d+(?:\.\d+)?)\s*(?:미터|m)\s*[-~xX×에*]\s*(\d+(?:\.\d+)?)\s*(?:미터|m)?/i);
+                    // 수량 추출
+                    const _qtMatch = _latestUserMsg.match(/(\d+)\s*(?:장|개|매|부|세트|枚|pcs|ea)/i);
+                    const _custQty = _qtMatch ? parseInt(_qtMatch[1]) : 0;
+
+                    if (_szMatch) {
+                        let _custW = parseFloat(_szMatch[1]);
+                        let _custH = parseFloat(_szMatch[2]);
+                        if (_custW < 100) _custW = Math.round(_custW * 1000); // 미터→mm
+                        if (_custH < 100) _custH = Math.round(_custH * 1000);
+
+                        // 메인 제품(non-addon)의 사이즈를 고객 값으로 강제 덮어쓰기
+                        for (const qi of qItems) {
+                            if (qi.is_addon) continue;
+                            const aiW = qi.width_mm || 0;
+                            const aiH = qi.height_mm || 0;
+                            // AI 사이즈와 고객 사이즈가 다르면 교정
+                            if (aiW !== _custW || aiH !== _custH) {
+                                console.log(`[quote] ★ FORCE SIZE: ${aiW}x${aiH} → ${_custW}x${_custH} (from customer msg)`);
+                                qi.width_mm = _custW;
+                                qi.height_mm = _custH;
+                                _corrections.push(`사이즈: ${aiW}×${aiH}mm → ${_custW}×${_custH}mm`);
+                            }
+                            // 수량도 교정
+                            if (_custQty > 0 && qi.quantity !== _custQty) {
+                                console.log(`[quote] ★ FORCE QTY: ${qi.quantity} → ${_custQty}`);
+                                qi.quantity = _custQty;
+                            }
+                        }
+                        // addon 수량도 맞추기
+                        if (_custQty > 0) {
+                            for (const qi of qItems) {
+                                if (qi.is_addon && qi.quantity !== _custQty) qi.quantity = _custQty;
+                            }
+                        }
+                    }
+                    console.log("[quote] ★ FINAL after force-fix:", JSON.stringify(qItems));
+                }
+
                 // 서버에서 가격 계산 (AI 가격 신뢰하지 않음)
                 const quoteItems: any[] = [];
                 let _lastMainQty = 1; // addon 수량 추적용
