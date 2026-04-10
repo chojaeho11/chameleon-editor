@@ -770,14 +770,14 @@ window.NpcWizard = {
             // 허니콤보드 → 매니저 상담 여부 확인
             this._goStep('honeycombAsk');
         } else if (this.isCustom && this.isGeneral) {
-            // 면적 기반 시공 상품 (인쇄 없음) → 사이즈만 입력 → 장바구니
-            this._goStep('size');
+            // 면적 기반 시공 상품 (종이매대 등) → 디자인 방법 선택 화면 먼저
+            this._goStep('chooseDesign');
         } else if (this.isCustom) {
             // 커스텀 인쇄 상품 → 파일/디자인 위자드 진행
             this._goStep('askFile');
         } else {
-            // 일반 상품 + 고정 사이즈 상품 → 수량 선택 → 구매
-            this._goStep('qty');
+            // 일반 상품 + 고정 사이즈 상품 → 디자인 방법 선택 화면 먼저
+            this._goStep('chooseDesign');
         }
         this._watchFileUpload();
     },
