@@ -1291,8 +1291,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     if (qi.is_addon) return;
                     const w = qi.width_mm || 0;
                     const h = qi.height_mm || 0;
-                    // 비정상적으로 큰 사이즈 감지 (10m × 10m 이상이면 의심)
-                    if (w > 10000 || h > 10000) {
+                    // 비정상적으로 큰 사이즈 감지 (10m 이상이면 의심)
+                    if (w >= 10000 || h >= 10000) {
                         // 고객 메시지에서 사이즈 재추출
                         const _sizePatterns = [
                             /(\d{2,5})\s*[-~xX×*]\s*(\d{2,5})/,  // 3000-1200, 3000x1200
@@ -1576,8 +1576,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     const hMm = qi.height_mm || dbP.height_mm || 0;
                     const area = (wMm * hMm) / 1000000;
                     const side = qi.side || 1;
-                    // 면적 기반 가격 계산: DB price가 m²당 단가
-                    const perSqm = dbP._raw_price || 0;
+                    // 면적 기반 가격 계산: _raw_per_sqm이 1m²당 단가 (calcPricePerSqm에서 계산)
+                    const perSqm = dbP._raw_per_sqm || dbP._raw_price || 0;
                     let unitPrice = dbP.is_custom_size ? Math.floor(area * perSqm * side / 100) * 100 : (dbP._raw_price || 0);
 
                     // ★ 허니콤 박스(hb_bx): 시트 기반 네스팅 가격 계산
