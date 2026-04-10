@@ -1333,7 +1333,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     }
                 }
 
-                // [보정3] 고객이 안 시킨 제품 제거 (고객 메시지에 없는 키워드)
+                // [보정3] 고객이 안 시킨 제품 제거 (AI가 기본 사이즈로 넣은 것만 의심)
+                const _productDefaults: Record<string, {w:number,h:number}> = {
+                    'hb_dw': {w:1000,h:2200}, 'hb_bn': {w:600,h:1800}, 'hb_pi': {w:500,h:1700},
+                    'hb_pt': {w:300,h:300}, 'hb_ss': {w:1000,h:1000}, 'hb_bx': {w:300,h:300},
+                };
                 const _productKeywordMap: Record<string, RegExp> = {
                     'hb_dw': /가벽|파티션|전시벽|전시월|partition|wall/i,
                     'hb_bn': /배너|banner|현수막/i,
@@ -1345,22 +1349,31 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     'hb_tr': /게이트|아치|gate|arch|입구/i,
                     'hb_insta': /인스타|instagram/i,
                 };
+                // 전체 대화 텍스트 (AI 포함)에서도 검색 (고객이 여러 턴에 걸쳐 요청한 경우)
+                const _fullConvText = _allText;
                 const _beforeCount = qItems.length;
                 qItems = qItems.filter((qi: any) => {
-                    if (qi.is_addon) return true; // addon은 유지
+                    if (qi.is_addon) return true;
                     const code = qi.code || '';
-                    // 허니콤 제품만 필터 (패브릭/기타는 통과)
                     const prefix = Object.keys(_productKeywordMap).find(p => code.startsWith(p));
                     if (!prefix) return true; // 허니콤이 아닌 제품은 통과
+
+                    // AI가 구체적인 사이즈(기본값이 아닌)로 넣었으면 → 신뢰 (대화에서 논의된 제품)
+                    const defaults = _productDefaults[prefix];
+                    if (defaults) {
+                        const w = qi.width_mm || 0;
+                        const h = qi.height_mm || 0;
+                        if (w > 0 && h > 0 && (w !== defaults.w || h !== defaults.h)) return true;
+                    }
+
+                    // 전체 대화에서 키워드 검색 (고객+AI 모두)
                     const pattern = _productKeywordMap[prefix];
-                    if (pattern.test(_customerMsgsOnly)) return true; // 고객이 요청한 제품
+                    if (pattern.test(_fullConvText)) return true;
+
                     console.log("[quote] ★ REMOVED unrequested product:", code, qi.name);
                     _corrections.push(`${qi.name || code}: 요청하지 않은 제품 제거됨`);
                     return false;
                 });
-                if (_beforeCount > qItems.length) {
-                    console.log("[quote] removed", _beforeCount - qItems.length, "unrequested items");
-                }
 
                 // [보정3] addon이 남았는데 메인 제품이 없으면 addon도 제거
                 const _hasMainItem = qItems.some((qi: any) => !qi.is_addon);
