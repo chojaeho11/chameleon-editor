@@ -1211,41 +1211,59 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 let qItems = qResult.items || [];
                 const _allText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg + ' ' + (qResult.summary || '');
 
-                // ★ AI가 items를 비워놓은 경우에만 대화에서 추출 (AI가 보낸 아이템이 있으면 그대로 신뢰)
+                // ★ AI가 items를 비워놓은 경우에만 고객 메시지에서 추출 (AI 응답은 무시!)
+                const _customerMsgsOnly = (conversation_history || []).filter((h: any) => h.role === 'user').map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
                 if (qItems.length === 0) {
-                    // 가벽 감지
-                    if (/가벽/.test(_allText)) {
-                        const _wallSizeMatch = _allText.match(/가벽.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*가벽/i);
-                        const wMm = _wallSizeMatch ? parseInt(_wallSizeMatch[1]) : 1000;
-                        const hMm = _wallSizeMatch ? parseInt(_wallSizeMatch[2]) : 2400;
-                        const side = /가벽.*양면|양면.*가벽/.test(_allText) ? 2 : 1;
-                        const qtyMatch = _allText.match(/가벽.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*가벽/);
+                    // 가벽 감지 (고객 메시지에서만)
+                    if (/가벽/.test(_customerMsgsOnly)) {
+                        const _wallSizeMatch = _customerMsgsOnly.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _customerMsgsOnly.match(/(\d+(?:\.\d+)?)\s*(?:미터|m)\s*.*?(\d+(?:\.\d+)?)\s*(?:미터|m)/i);
+                        let wMm = _wallSizeMatch ? (parseFloat(_wallSizeMatch[1]) < 100 ? Math.round(parseFloat(_wallSizeMatch[1]) * 1000) : parseInt(_wallSizeMatch[1])) : 1000;
+                        let hMm = _wallSizeMatch ? (parseFloat(_wallSizeMatch[2]) < 100 ? Math.round(parseFloat(_wallSizeMatch[2]) * 1000) : parseInt(_wallSizeMatch[2])) : 2400;
+                        // ★ 가벽 규격 검증: 규격 외면 견적 생성 차단!
+                        if (wMm % 1000 !== 0 || ![2000,2200,2400,3000].includes(hMm)) {
+                            console.log("[quote] ★ BLOCKED: invalid wall size", wMm, hMm);
+                            return { type: "chat", chat_message: `죄송합니다. 가벽은 가로 1미터 단위(${wMm}mm→불가), 높이 2m/2.2m/2.4m/3m만 제작 가능합니다. 사이즈를 다시 정해주세요!`, products: [] };
+                        }
+                        const side = /양면/.test(_customerMsgsOnly) ? 2 : 1;
+                        const qtyMatch = _customerMsgsOnly.match(/(\d+)\s*개/);
                         const qty = qtyMatch ? parseInt(qtyMatch[1]) || 1 : 1;
                         qItems.push({ code: 'hb_dw_1', name: '허니콤 가벽', width_mm: wMm, height_mm: hMm, quantity: qty, side });
                     }
-                    // 배너 감지
-                    if (/배너/.test(_allText)) {
-                        const _bannerSizeMatch = _allText.match(/배너.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*배너/i);
+                    // 배너 감지 (고객 메시지에서 명시적으로 요청한 경우만)
+                    if (/배너\s*\d|배너.*주문|배너.*견적|배너.*\d+\s*개/.test(_customerMsgsOnly)) {
+                        const _bannerSizeMatch = _customerMsgsOnly.match(/배너.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i);
                         const bW = _bannerSizeMatch ? parseInt(_bannerSizeMatch[1]) : 600;
                         const bH = _bannerSizeMatch ? parseInt(_bannerSizeMatch[2]) : 1800;
-                        const bSide = /배너.*양면|양면.*배너/.test(_allText) ? 2 : 1;
+                        const bSide = /배너.*양면|양면.*배너/.test(_customerMsgsOnly) ? 2 : 1;
                         const bCode = bSide === 2 ? 'hb_bn_3' : 'hb_bn_1';
-                        const bQtyMatch = _allText.match(/배너.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*배너/);
+                        const bQtyMatch = _customerMsgsOnly.match(/배너.*?(\d+)\s*개/) || _customerMsgsOnly.match(/(\d+)\s*개.*배너/);
                         const bQty = bQtyMatch ? parseInt(bQtyMatch[1]) || 1 : 1;
                         qItems.push({ code: bCode, name: bSide === 2 ? '허니콤배너(양면)' : '허니콤배너', width_mm: bW, height_mm: bH, quantity: bQty, side: bSide });
                     }
-                    // 등신대 감지
-                    if (/등신대/.test(_allText)) {
-                        const _standSizeMatch = _allText.match(/등신대.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i) || _allText.match(/(\d{3,4})\s*[-~xX×]\s*(\d{3,4}).*등신대/i);
+                    // 등신대 감지 (고객 메시지에서 명시적으로 요청한 경우만)
+                    if (/등신대\s*\d|등신대.*주문|등신대.*견적|등신대.*\d+\s*개/.test(_customerMsgsOnly)) {
+                        const _standSizeMatch = _customerMsgsOnly.match(/등신대.*?(\d{3,4})\s*[-~xX×]\s*(\d{3,4})/i);
                         const sW = _standSizeMatch ? parseInt(_standSizeMatch[1]) : 500;
                         const sH = _standSizeMatch ? parseInt(_standSizeMatch[2]) : 1700;
-                        const sSide = /등신대.*양면|양면.*등신대/.test(_allText) ? 2 : 1;
-                        const sQtyMatch = _allText.match(/등신대.*?(\d+)\s*개/) || _allText.match(/(\d+)\s*개.*등신대/);
+                        const sSide = /등신대.*양면|양면.*등신대/.test(_customerMsgsOnly) ? 2 : 1;
+                        const sQtyMatch = _customerMsgsOnly.match(/등신대.*?(\d+)\s*개/) || _customerMsgsOnly.match(/(\d+)\s*개.*등신대/);
                         const sQty = sQtyMatch ? parseInt(sQtyMatch[1]) || 1 : 1;
                         qItems.push({ code: 'hb_pi_5', name: '등신대', width_mm: sW, height_mm: sH, quantity: sQty, side: sSide });
                     }
-                    console.log("[quote] fallback extracted:", JSON.stringify(qItems));
+                    console.log("[quote] fallback extracted (customer msgs only):", JSON.stringify(qItems));
                 }
+
+                // ★ AI가 제공한 items에서도 가벽 규격 검증 (서버 최종 방어)
+                const _wallItem = qItems.find((qi: any) => (qi.code || '').startsWith('hb_dw'));
+                if (_wallItem) {
+                    const _ww = _wallItem.width_mm || 0;
+                    const _wh = _wallItem.height_mm || 0;
+                    if (_ww % 1000 !== 0 || (_wh > 0 && ![2000,2200,2400,3000].includes(_wh))) {
+                        console.log("[quote] ★ BLOCKED AI wall item: invalid size", _ww, _wh);
+                        return { type: "chat", chat_message: `죄송합니다. 가벽 사이즈가 규격에 맞지 않습니다.\n- 가로: 1미터 단위만 가능 (${_ww}mm → 불가)\n- 높이: 2m, 2.2m, 2.4m, 3m 중 선택\n사이즈를 다시 정해주세요!`, products: [] };
+                    }
+                }
+
                 console.log("[quote] final qItems:", JSON.stringify(qItems));
 
                 // ★ 패브릭 메인 제품 누락 방어: addon만 있고 메인 원단이 없으면 자동 추가
