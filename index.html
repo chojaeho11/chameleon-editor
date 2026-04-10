@@ -1046,17 +1046,6 @@ document.addEventListener('DOMContentLoaded', function() {
             #chatbotBtnWrap button { padding:10px 14px !important; }
         }
     </style>
-    <!-- 플로팅 챗봇 버튼 (우측 하단) -->
-    <div id="floatingChatBtn" onclick="if(window.toggleAdvisorPanel) window.toggleAdvisorPanel();" style="
-        position:fixed !important; bottom:20px !important; right:20px !important; z-index:99999 !important;
-        width:60px !important; height:60px !important; border-radius:50% !important; border:none !important;
-        background:linear-gradient(135deg,#6366f1,#8b5cf6) !important;
-        color:#fff !important; font-size:24px !important; cursor:pointer !important;
-        box-shadow:0 4px 24px rgba(99,102,241,0.45) !important;
-        display:flex !important; align-items:center !important; justify-content:center !important;
-    ">
-        <i class="fa-solid fa-comments"></i>
-    </div>
     <div id="advisorPanel" class="advisor-panel" style="display:none;"></div>
 
     <!-- ★ 주문 현황 트래커 (카드형 2열 슬림 레이아웃) -->
@@ -17729,6 +17718,11 @@ document.addEventListener('click', function(e) {
     }
 });
 </script>
+
+<!-- 플로팅 챗봇 버튼 (body 직속 — fixed 보장) -->
+<div id="floatingChatBtn" onclick="if(window.toggleAdvisorPanel)window.toggleAdvisorPanel();" style="position:fixed;bottom:20px;right:20px;z-index:99999;width:60px;height:60px;border-radius:50%;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:24px;cursor:pointer;box-shadow:0 4px 24px rgba(99,102,241,0.45);display:flex;align-items:center;justify-content:center;">
+    <i class="fa-solid fa-comments"></i>
+</div>
 
 </body>
 </html>
