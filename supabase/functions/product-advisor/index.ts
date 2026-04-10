@@ -336,7 +336,7 @@ serve(async (req) => {
 **허니콤보드 가벽(hb_dw_1) 주문 시 — 절대 규칙!:**
 [STEP1 사이즈 검증] 고객이 말한 사이즈가 규격에 맞는지 먼저 확인!
   - 가로: 1미터 단위만 가능 (1000, 2000, 3000, 4000...). 규격 외(예:3200mm)면 → "죄송합니다. 가벽은 가로 1미터 단위로 규격화되어 있어서 3.2미터는 불가합니다. 3미터 또는 4미터로 다시 정해주세요." ★ 규격 외 사이즈로 절대 견적 만들지 마라!
-  - 높이: 2000, 2200, 2400, 3000mm만 가능. 규격 외(예:2700mm)면 → "높이는 2m, 2.2m, 2.4m, 3m 중에서 선택해주세요." ★ 규격 외 높이로 절대 견적 만들지 마라! 2m 미만은 2m로 주문 후 커팅 가능(가격 동일).
+  - 높이: 2000, 2200, 2400, 3000mm 4가지만 제작 가능! 이 외의 높이는 제작 불가! 규격 외(예:2700mm)면 → "높이 2.7미터는 제작이 불가합니다. 2.4미터 또는 3미터 중 선택해주세요." ★ "커팅 가능"이라고 안내하지 마라! 높이는 반드시 4가지 중 하나를 고객이 직접 선택해야 한다! 2m 미만(예:1.5m)만 예외로 2m로 주문 후 커팅 가능(가격 동일).
 [STEP2 추가옵션 확인] 사이즈가 규격에 맞으면 → 추가옵션을 물어봐:
   "추가 옵션도 확인할게요! 🛡️보조받침대(야외/안전용) 💡조명(분위기 연출) 🔲코너기둥(ㄴ자/ㄱ자 연결) 필요한 게 있으시면 말씀해주세요! 없으시면 '없음'이라고 해주세요."
 [STEP3 견적 생성] 사이즈+옵션 확정 후 → 단면(side:1) 기본으로 견적 생성. 견적 후 반드시 이 문구 추가:
@@ -1270,13 +1270,19 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                         _corrections.push(`가벽 가로 ${w}mm → ${snapped}mm (1m 단위 조정)`);
                         qi.width_mm = snapped;
                     }
-                    // 높이: 가장 가까운 규격으로 스냅
+                    // 높이: 규격 외면 차단 (고객이 직접 선택해야 함)
                     const validH = [2000, 2200, 2400, 3000];
                     if (h > 0 && !validH.includes(h)) {
-                        let closest = validH.reduce((a, b) => Math.abs(b - h) < Math.abs(a - h) ? b : a);
-                        if (h < 2000) closest = 2000; // 2m 미만은 2m (가격 동일)
-                        _corrections.push(`가벽 높이 ${h}mm → ${closest}mm (규격 조정, 실제 높이는 파일 기준 커팅 가능)`);
-                        qi.height_mm = closest;
+                        if (h < 2000) {
+                            qi.height_mm = 2000; // 2m 미만은 2m (가격 동일, 커팅 가능)
+                            _corrections.push(`가벽 높이 ${h}mm → 2000mm (2m 미만은 2m 가격 동일, 커팅 가능)`);
+                        } else {
+                            // 위아래 규격 찾기
+                            const lower = validH.filter(v => v <= h).pop() || 2000;
+                            const upper = validH.find(v => v >= h) || 3000;
+                            console.log("[quote] ★ BLOCKED: invalid wall height", h, "→ choose", lower, "or", upper);
+                            return { type: "chat", chat_message: `가벽 높이 ${h}mm는 제작이 불가합니다. ${lower/1000}미터 또는 ${upper/1000}미터 중 선택해주세요!\n\n선택 가능한 높이: 2m, 2.2m, 2.4m, 3m`, products: [] };
+                        }
                     }
                 });
 
