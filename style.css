@@ -4010,7 +4010,7 @@ body {
     .icon-item.active { background: transparent; color: #6366f1; }
     .icon-item.active::before { display: none; }
 
-    /* 서브패널 바텀시트 — 핸들 영역을 위한 충분한 padding-top */
+    /* 서브패널 바텀시트 — flex column 구조 (헤더 + 스크롤 본문) */
     #subPanel {
         position: fixed !important;
         bottom: 56px !important;
@@ -4018,35 +4018,33 @@ body {
         top: auto !important;
         width: 100% !important;
         max-width: 100% !important;
-        max-height: calc(100vh - 120px);
+        max-height: calc(100vh - 120px) !important;
         z-index: 10000 !important;
         border-radius: 16px 16px 0 0;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
-        padding: 70px 12px 12px 12px !important; /* top:70px = 핸들 영역 확보 */
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-        touch-action: pan-y;
+        padding: 0 !important;
+        overflow: hidden !important; /* 외부는 잘림, 본문에서만 스크롤 */
+        display: flex !important;
+        flex-direction: column !important;
         transition: transform 0.3s ease;
     }
-    /* 드래그 핸들 영역 — 패널 최상단에 절대 고정 */
+    /* 드래그 핸들 — 정상 흐름의 첫 자식 (flex item) */
     #subPanelDragHandle {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        height: 60px !important;
+        position: relative !important;
+        flex-shrink: 0 !important;
+        width: 100% !important;
+        height: 56px !important;
+        min-height: 56px !important;
         padding: 0 !important;
         margin: 0 !important;
         background: #fff !important;
-        border-radius: 16px 16px 0 0;
         border-bottom: 1px solid #e2e8f0;
-        z-index: 100;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         box-sizing: border-box !important;
+        cursor: grab;
+        touch-action: none;
     }
     #subPanelDragHandle > div:first-child {
         width: 60px !important;
@@ -4075,6 +4073,21 @@ body {
         cursor: pointer !important;
         line-height: 1 !important;
         box-shadow: 0 2px 6px rgba(239,68,68,0.4) !important;
+        z-index: 2;
+    }
+    /* 본문(.sub-content)이 스크롤 영역을 차지 */
+    #subPanel .sub-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        padding: 15px 12px !important;
+        min-height: 0 !important;
+    }
+    #subPanel .sub-content[id="sub-template"] {
+        display: flex;
+        flex-direction: column;
     }
     #subPanel .sub-panel-header { font-size: 13px; padding-bottom: 8px; margin-bottom: 8px; }
 
