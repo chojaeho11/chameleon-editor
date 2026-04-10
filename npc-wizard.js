@@ -1591,7 +1591,9 @@ window.NpcWizard = {
         }
         const calc = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
         this._pdShelfCount = calc.count;
-        this._goStep('pdMaterial');
+        // pdMaterial 단계 건너뛰고 바로 다음으로
+        this._pdMaterial = this._pdMaterial || 'corrugated';
+        this._pdAfterMaterial();
     },
 
     _pdMaterial: 'corrugated', // 기본 재질
@@ -1953,9 +1955,9 @@ window.NpcWizard = {
         // 종이매대
         if (step === 'pdAdHeight') { this._goStep('pdSize'); return; }
         if (step === 'pdMaterial') { this._goStep('pdAdHeight'); return; }
-        if (step === 'pdCustomize') { this._goStep('pdMaterial'); return; }
+        if (step === 'pdCustomize') { this._goStep('pdAdHeight'); return; }
         if (step === 'pdSummary' && this.hasOptions) { this._goStep('options'); return; }
-        if (step === 'pdSummary') { this._goStep('pdMaterial'); return; }
+        if (step === 'pdSummary') { this._goStep('pdAdHeight'); return; }
         // 옵션에서 이전: 종이매대면 재질 선택으로
         if (step === 'options' && this.isPaperDisplay) { this._goStep('pdMaterial'); return; }
         // 허니콤보드
