@@ -1433,7 +1433,7 @@ button, input, textarea, select { font-family: inherit; }
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 8px 40px rgba(0,0,0,0.25);
-    z-index: 9998;
+    z-index: 999999;
     background: #1e1e2e;
     animation: advSlideIn 0.25s ease-out;
     flex-direction: column;
