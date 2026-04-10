@@ -959,7 +959,7 @@ button, input, textarea, select { font-family: inherit; }
     .stage {
         order: 1 !important; width: 100% !important; height: 100% !important;
         position: absolute !important; top: 0; left: 0; z-index: 1;
-        background: #ff0000 !important; /* 빨강 - v330+ 로드 확인용 */
+        background: #e5e5e5 !important;
         border-bottom: none !important;
     }
 
