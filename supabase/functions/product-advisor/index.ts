@@ -353,11 +353,13 @@ serve(async (req) => {
 - 수량
 - **마감 방식** → "가장자리 마감은 어떻게 할까요? 오버록(+3,000원)이 가장 인기 있어요"
 - **고리/걸이** → "벽에 거실 건가요? 끈고리나 봉마감이 필요할 수 있어요"
-- ❌ **배송 지역은 묻지 마!** 패브릭은 전국 무료배송 (택배)
-- ★ **generate_quote items에 반드시 메인 패브릭 원단 제품을 첫 번째로 넣어!** 그 뒤에 마감/고리 addon(is_addon:true)을 넣어!
-  ❌ 마감 옵션만 넣고 메인 원단 제품을 빠뜨리면 안 돼! 반드시 원단 인쇄 제품이 첫 번째!
-  예: items: [{ code:"쉬폰코드", name:"쉬폰", width_mm:300, height_mm:400, quantity:100 }, { code:"txl0002", name:"오버록", quantity:100, is_addon:true }]
-- ★ **addon 수량 = 메인 제품 수량과 동일!** 1000개 주문이면 오버록도 1000개, 끈고리도 1000개. quantity를 메인 제품과 맞춰!
+- ❌ **배송 지역은 묻지 마!** 패브릭은 전국 무료배송 (택배). shipping_region은 반드시 "unknown"으로!
+- ★★★ **[치명적 오류 방지] generate_quote items 첫 번째에 반드시 메인 원단 인쇄 제품을 넣어라!** 이것이 인쇄 비용이다! 이걸 빼면 인쇄비가 0원이 되어 완전히 잘못된 견적이 나온다!
+  items[0] = 메인 원단 제품 (code, name, width_mm, height_mm, quantity) ← 이게 인쇄 비용!
+  items[1~] = 마감/고리 addon (is_addon:true) ← 이건 후가공 비용!
+  ❌ 절대로 addon만 넣고 메인 원단을 빼지 마라! 인쇄비 없는 견적은 완전히 잘못된 것이다!
+  예: items: [{ code:"ch10s_1", name:"광목인쇄", width_mm:700, height_mm:1300, quantity:3 }, { code:"txl0002", name:"오버록", quantity:3, is_addon:true }]
+- ★ **addon 수량 = 메인 제품 수량과 동일!** 3개 주문이면 오버록도 3개. quantity를 메인 제품과 맞춰!
 
 모든 정보가 모이면 → **바로 견적서를 만들지 말고**, 먼저 주문 내용을 정리해서 보여주고 물어봐:
 
@@ -1426,32 +1428,38 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 const _install = qResult.wants_install;
                 let shippingFee = 0;
                 if (_region === 'province') {
-                    // 택배 가능 여부 판단: 배너(hb_bn_) 또는 소형(600x1800 이하) 제품만 있으면 택배
+                    // 허니콤보드 제품이 포함되어 있는지 확인
                     const _allItems = qItems.filter((qi: any) => !qi.is_addon);
-                    const _needsTruck = _allItems.some((qi: any) => {
-                        const code = qi.code || '';
-                        // 가벽(hb_dw_), 글씨포토존(hb_ss_), 테이블(hb_tb_), 게이트(hb_tr_) → 용차 필수
-                        if (code.startsWith('hb_dw') || code.startsWith('hb_ss') || code.startsWith('hb_tb') || code.startsWith('hb_tr')) return true;
-                        // 배너는 항상 택배 가능
-                        if (code.startsWith('hb_bn')) return false;
-                        // 자유인쇄커팅/등신대 → 600x1800 이하면 택배 가능
-                        const w = qi.width_mm || 0;
-                        const h = qi.height_mm || 0;
-                        if ((code.startsWith('hb_pt') || code.startsWith('hb_pi')) && w <= 600 && h <= 1800) return false;
-                        if ((code.startsWith('hb_pt') || code.startsWith('hb_pi')) && (w > 600 || h > 1800)) return true;
-                        // 허니콤 기타 대형 → 용차
-                        if (code.startsWith('hb_')) return true;
-                        return false;
-                    });
+                    const _hasHoneycomb = _allItems.some((qi: any) => (qi.code || '').startsWith('hb_'));
 
-                    if (_install) {
-                        shippingFee = 700000; // 용차배송 20만 + 시공 50만
-                    } else if (_needsTruck) {
-                        shippingFee = 200000; // 용차배송
-                    } else {
-                        shippingFee = 30000; // 택배 (배너, 소형 제품)
+                    if (_hasHoneycomb) {
+                        // 택배 가능 여부 판단: 배너(hb_bn_) 또는 소형(600x1800 이하) 제품만 있으면 택배
+                        const _needsTruck = _allItems.some((qi: any) => {
+                            const code = qi.code || '';
+                            if (!code.startsWith('hb_')) return false; // 허니콤이 아닌 제품은 무시
+                            // 가벽(hb_dw_), 글씨포토존(hb_ss_), 테이블(hb_tb_), 게이트(hb_tr_) → 용차 필수
+                            if (code.startsWith('hb_dw') || code.startsWith('hb_ss') || code.startsWith('hb_tb') || code.startsWith('hb_tr')) return true;
+                            // 배너는 항상 택배 가능
+                            if (code.startsWith('hb_bn')) return false;
+                            // 자유인쇄커팅/등신대 → 600x1800 이하면 택배 가능
+                            const w = qi.width_mm || 0;
+                            const h = qi.height_mm || 0;
+                            if ((code.startsWith('hb_pt') || code.startsWith('hb_pi')) && w <= 600 && h <= 1800) return false;
+                            if ((code.startsWith('hb_pt') || code.startsWith('hb_pi')) && (w > 600 || h > 1800)) return true;
+                            // 허니콤 기타 대형 → 용차
+                            return true;
+                        });
+
+                        if (_install) {
+                            shippingFee = 700000; // 용차배송 20만 + 시공 50만
+                        } else if (_needsTruck) {
+                            shippingFee = 200000; // 용차배송
+                        } else {
+                            shippingFee = 30000; // 택배 (배너, 소형 허니콤 제품)
+                        }
                     }
-                    console.log("[quote] shipping:", _region, 'needsTruck:', _needsTruck, 'install:', _install, 'fee:', shippingFee);
+                    // ★ 허니콤보드가 없는 제품(패브릭, 소량인쇄, 종이매대 등)은 전국 무료배송 → shippingFee = 0
+                    console.log("[quote] shipping:", _region, 'hasHoneycomb:', _hasHoneycomb, 'install:', _install, 'fee:', shippingFee);
                 }
 
                 return {
