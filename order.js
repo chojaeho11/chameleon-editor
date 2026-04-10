@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=309";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=309";
-import { SITE_CONFIG } from "./site-config.js?v=309";
-import { applySize } from "./canvas-size.js?v=309";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=309";
+import { canvas } from "./canvas-core.js?v=310";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=310";
+import { SITE_CONFIG } from "./site-config.js?v=310";
+import { applySize } from "./canvas-size.js?v=310";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=310";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=309";
+} from "./export.js?v=310";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1560,7 +1560,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=309');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=310');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2226,20 +2226,22 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
         } else {
             div.innerHTML = `
                 <div style="padding:15px; display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:center;">
-                        <img src="${displayImg}" loading="lazy" style="width:80px; height:80px; object-fit:contain; border:1px solid #eee; border-radius:8px; background:#fff;" onerror="this.src='https://placehold.co/100?text=No+Image'">
-                        <div style="flex:1;">
+                    <div style="display:flex; gap:14px; border-bottom:1px solid #f1f5f9; padding-bottom:15px; align-items:flex-start;">
+                        <img src="${displayImg}" loading="lazy" style="width:120px; height:120px; object-fit:contain; border:1px solid #eee; border-radius:10px; background:#fff; flex-shrink:0;" onerror="this.src='https://placehold.co/100?text=No+Image'">
+                        <div style="flex:1; min-width:0;">
                             <h4 style="margin:0; font-size:15px; color:#1e293b; font-weight:800; line-height:1.3;">${localName(item.product)}</h4>
-                            ${(displayMmW && displayMmH) ? `<div style="font-size:11px; color:#6366f1; margin-top:2px; font-weight:bold;">📐 ${window._isUSsite && window._isUSsite() ? (displayMmW/25.4).toFixed(2)+'x'+(displayMmH/25.4).toFixed(2)+' in' : displayMmW+'x'+displayMmH+'mm'}</div>` : ''}
-                            <div style="font-size:14px; font-weight:900; color:#1e1b4b; margin-top:8px;">${window.t('label_subtotal', 'Total')}: ${formatCurrency(totalItemPrice)}</div>
-                            ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:6px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
-                            <div style="margin-top:6px; display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap;">
+                                ${(displayMmW && displayMmH) ? `<span style="font-size:11px; color:#6366f1; font-weight:bold;">📐 ${window._isUSsite && window._isUSsite() ? (displayMmW/25.4).toFixed(2)+'x'+(displayMmH/25.4).toFixed(2)+' in' : displayMmW+'x'+displayMmH+'mm'}</span>` : ''}
+                                <span style="font-size:14px; font-weight:900; color:#1e1b4b;">${formatCurrency(totalItemPrice)}</span>
+                            </div>
+                            <div style="margin-top:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                                ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집')}</button>` : ''}
                                 ${item.originalUrl
-                                    ? `<label style="cursor:pointer; font-size:11px; color:#fff; background:#f97316; padding:4px 12px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-rotate"></i> 파일 재첨부<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`
-                                    : `<label style="cursor:pointer; font-size:11px; color:#fff; background:#dc2626; padding:4px 12px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-paperclip"></i> 파일 첨부<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`}
+                                    ? `<label style="cursor:pointer; font-size:11px; color:#fff; background:#f97316; padding:5px 10px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-rotate"></i> 파일 재첨부<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`
+                                    : `<label style="cursor:pointer; font-size:11px; color:#fff; background:#dc2626; padding:5px 10px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-paperclip"></i> 파일 첨부<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`}
+                                <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:18px; padding:5px 8px; cursor:pointer;"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
-                        <button onclick="event.stopPropagation(); window.removeCartItem(${idx})" style="border:none; background:none; color:#ef4444; font-size:20px; padding:10px;"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                     
                     ${addonHtml ? `
@@ -2938,7 +2940,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=309');
+                const { generateDesignPNG } = await import('./export.js?v=310');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
