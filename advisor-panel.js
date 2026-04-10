@@ -375,7 +375,7 @@ export function initAdvisorPanel() {
     if (!document.getElementById('advMobileHideStyle')) {
         const _s = document.createElement('style');
         _s.id = 'advMobileHideStyle';
-        _s.textContent = '@media(max-width:768px){.adv-shortcut-btns,.adv-designer-register{display:none!important;}}';
+        _s.textContent = '@media(max-width:768px){.adv-shortcut-btns{grid-template-columns:1fr 1fr!important;font-size:11px!important;}.adv-shortcut-btns .adv-grid-btn{padding:10px 4px!important;font-size:11px!important;}}';
         document.head.appendChild(_s);
     }
 
@@ -416,13 +416,8 @@ export function initAdvisorPanel() {
         }
     });
 
-    // 홈 진입 시 자동으로 채팅 패널 열기
-    setTimeout(() => {
-        const isHome = !document.getElementById('editorWrap') || document.getElementById('editorWrap').style.display === 'none' || document.getElementById('editorWrap').style.display === '';
-        if (isHome && panelEl && panelEl.style.display !== 'block') {
-            openPanel();
-        }
-    }, 800);
+    // 홈 진입 시 자동 열기 비활성화 (플로팅 버튼으로 열기)
+    // (자동 열림 제거됨)
 
     // URL 파라미터 ?chat=1 → 챗봇 자동 오픈 + 스크롤
     try {
@@ -452,6 +447,7 @@ function _getContactLinks() {
     let html = '';
     html += `<button class="adv-header-btn" id="advPhoneBtn" title=""><i class="fa-solid fa-phone" style="font-size:13px;"></i></button>`;
     html += `<a href="mailto:design@chameleon.design" class="adv-header-btn" style="text-decoration:none;color:#fff;" title=""><i class="fa-solid fa-envelope" style="font-size:13px;"></i></a>`;
+    html += `<button class="adv-header-btn" onclick="if(window.toggleAdvisorPanel)window.toggleAdvisorPanel()" title="닫기" style="margin-left:2px;"><i class="fa-solid fa-xmark" style="font-size:15px;"></i></button>`;
     return html;
 }
 
