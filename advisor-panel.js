@@ -382,14 +382,25 @@ export function initAdvisorPanel() {
     window._startAdvisor = startAdvisor;
     window.startQuoteFlow = startQuoteFlow;
 
-    // 전역 함수: 어디서든 카프 패널 열기
+    // 전역 함수: 어디서든 카프 패널 열기/닫기
     window.openAdvisorPanel = function() {
         openPanel();
-        panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => {
             const inp = document.getElementById('advInput');
             if (inp) inp.focus();
         }, 400);
+    };
+    window.toggleAdvisorPanel = function() {
+        if (!panelEl) return;
+        const fab = document.getElementById('floatingChatBtn');
+        if (panelEl.style.display === 'block') {
+            panelEl.style.display = 'none';
+            if (fab) fab.innerHTML = '<i class="fa-solid fa-comments"></i>';
+        } else {
+            openPanel();
+            if (fab) fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            setTimeout(() => { const inp = document.getElementById('advInput'); if (inp) inp.focus(); }, 400);
+        }
     };
 
     // 우측 하단 챗봇 숨기기 (카프로 통일)
@@ -398,17 +409,10 @@ export function initAdvisorPanel() {
     if (chamTrigger) chamTrigger.style.display = 'none';
     if (chamWindow) chamWindow.style.display = 'none';
 
-    ['btnAiAdvisor', 'btnAiAdvisor2', 'btnChatbotOpen'].forEach(id => {
+    ['btnAiAdvisor', 'btnAiAdvisor2', 'btnChatbotOpen', 'floatingChatBtn'].forEach(id => {
         const btn = document.getElementById(id);
-        if (btn) {
-            btn.addEventListener('click', () => {
-                openPanel();
-                panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                setTimeout(() => {
-                    const inp = document.getElementById('advInput');
-                    if (inp) inp.focus();
-                }, 400);
-            });
+        if (btn && id !== 'floatingChatBtn') {
+            btn.addEventListener('click', () => { window.toggleAdvisorPanel(); });
         }
     });
 
