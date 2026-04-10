@@ -1149,7 +1149,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             }
         }
 
-        const _isQuoteReq = !_hasInvalidWallSize && (_explicitQuote || (_isConfirm && _prevAskedConfirm));
+        // ★ 견적 강제는 "고객이 내용 확인 후 OK"한 경우만! "견적서 줘"는 AI가 auto로 판단하게 함
+        const _isQuoteReq = !_hasInvalidWallSize && (_isConfirm && _prevAskedConfirm);
         const toolChoice = _isQuoteReq
             ? { type: "tool" as const, name: "generate_quote" }
             : { type: "auto" as const };
@@ -1253,18 +1254,98 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     console.log("[quote] fallback extracted (customer msgs only):", JSON.stringify(qItems));
                 }
 
-                // ★ AI가 제공한 items에서도 가벽 규격 검증 (서버 최종 방어)
-                const _wallItem = qItems.find((qi: any) => (qi.code || '').startsWith('hb_dw'));
-                if (_wallItem) {
-                    const _ww = _wallItem.width_mm || 0;
-                    const _wh = _wallItem.height_mm || 0;
-                    if (_ww % 1000 !== 0 || (_wh > 0 && ![2000,2200,2400,3000].includes(_wh))) {
-                        console.log("[quote] ★ BLOCKED AI wall item: invalid size", _ww, _wh);
-                        return { type: "chat", chat_message: `죄송합니다. 가벽 사이즈가 규격에 맞지 않습니다.\n- 가로: 1미터 단위만 가능 (${_ww}mm → 불가)\n- 높이: 2m, 2.2m, 2.4m, 3m 중 선택\n사이즈를 다시 정해주세요!`, products: [] };
+                // ═══════════════════════════════════════════════════════════
+                // ★★★ 서버 보정 레이어: AI 실수를 자동 교정 ★★★
+                // ═══════════════════════════════════════════════════════════
+                let _corrections: string[] = []; // 보정 내역 (견적서에 안내)
+
+                // [보정1] 가벽 사이즈 자동 스냅 (차단 대신 보정)
+                qItems.forEach((qi: any) => {
+                    if (!(qi.code || '').startsWith('hb_dw') || qi.is_addon) return;
+                    const w = qi.width_mm || 0;
+                    const h = qi.height_mm || 0;
+                    // 가로: 1000mm 단위로 반올림
+                    if (w > 0 && w % 1000 !== 0) {
+                        const snapped = Math.round(w / 1000) * 1000;
+                        _corrections.push(`가벽 가로 ${w}mm → ${snapped}mm (1m 단위 조정)`);
+                        qi.width_mm = snapped;
                     }
+                    // 높이: 가장 가까운 규격으로 스냅
+                    const validH = [2000, 2200, 2400, 3000];
+                    if (h > 0 && !validH.includes(h)) {
+                        let closest = validH.reduce((a, b) => Math.abs(b - h) < Math.abs(a - h) ? b : a);
+                        if (h < 2000) closest = 2000; // 2m 미만은 2m (가격 동일)
+                        _corrections.push(`가벽 높이 ${h}mm → ${closest}mm (규격 조정, 실제 높이는 파일 기준 커팅 가능)`);
+                        qi.height_mm = closest;
+                    }
+                });
+
+                // [보정2] 고객이 안 시킨 제품 제거 (고객 메시지에 없는 키워드)
+                const _productKeywordMap: Record<string, RegExp> = {
+                    'hb_dw': /가벽|파티션|전시벽|전시월|partition|wall/i,
+                    'hb_bn': /배너|banner|현수막/i,
+                    'hb_pi': /등신대|standee|life.?size/i,
+                    'hb_pt': /인쇄커팅|자유커팅|모양커팅|사각커팅|print.?cut/i,
+                    'hb_ss': /글씨|스카시|letter|sign/i,
+                    'hb_bx': /박스|box/i,
+                    'hb_tb': /테이블|table|카운터/i,
+                    'hb_tr': /게이트|아치|gate|arch|입구/i,
+                    'hb_insta': /인스타|instagram/i,
+                };
+                const _beforeCount = qItems.length;
+                qItems = qItems.filter((qi: any) => {
+                    if (qi.is_addon) return true; // addon은 유지
+                    const code = qi.code || '';
+                    // 허니콤 제품만 필터 (패브릭/기타는 통과)
+                    const prefix = Object.keys(_productKeywordMap).find(p => code.startsWith(p));
+                    if (!prefix) return true; // 허니콤이 아닌 제품은 통과
+                    const pattern = _productKeywordMap[prefix];
+                    if (pattern.test(_customerMsgsOnly)) return true; // 고객이 요청한 제품
+                    console.log("[quote] ★ REMOVED unrequested product:", code, qi.name);
+                    _corrections.push(`${qi.name || code}: 요청하지 않은 제품 제거됨`);
+                    return false;
+                });
+                if (_beforeCount > qItems.length) {
+                    console.log("[quote] removed", _beforeCount - qItems.length, "unrequested items");
                 }
 
-                console.log("[quote] final qItems:", JSON.stringify(qItems));
+                // [보정3] addon이 남았는데 메인 제품이 없으면 addon도 제거
+                const _hasMainItem = qItems.some((qi: any) => !qi.is_addon);
+                if (!_hasMainItem && qItems.length > 0) {
+                    console.log("[quote] ★ REMOVED orphan addons (no main product)");
+                    qItems = [];
+                }
+
+                // [보정4] items가 비어있으면 견적 생성 대신 안내 메시지 반환
+                if (qItems.length === 0) {
+                    console.log("[quote] ★ No valid items after correction, returning chat message");
+                    return { type: "chat", chat_message: "죄송합니다, 견적에 포함할 제품 정보가 부족합니다. 제품명, 사이즈, 수량을 다시 한번 알려주시면 정확한 견적서를 만들어 드릴게요!", products: [] };
+                }
+
+                // [보정5] DB에 없는 제품 코드 제거
+                qItems = qItems.filter((qi: any) => {
+                    if (qi.is_addon) {
+                        const exists = allAddons.find((a: any) => a.code === qi.code);
+                        if (!exists) {
+                            // 이름 매핑으로 재시도
+                            const _nameMap: Record<string, string> = { '보조받침대': 'b0001', '조명': '87545', '코너기둥': 'For', '가재단': 'txl0001', '오버록': 'txl0002', '인터록': 'txl0003', '말아박기': 'txl0004', '끈고리': '45783', '상단끈고리': '45783', '멜빵고리': '45722', '봉마감': '45787', '상단봉마감': '45787' };
+                            const mapped = _nameMap[qi.name];
+                            if (mapped) { qi.code = mapped; return true; }
+                            console.log("[quote] ★ REMOVED unknown addon:", qi.code, qi.name);
+                            return false;
+                        }
+                        return true;
+                    }
+                    const exists = products.find((p: any) => p.code === qi.code);
+                    if (!exists) {
+                        console.log("[quote] ★ REMOVED unknown product:", qi.code, qi.name);
+                        return false;
+                    }
+                    return true;
+                });
+
+                console.log("[quote] final qItems after corrections:", JSON.stringify(qItems));
+                if (_corrections.length > 0) console.log("[quote] corrections:", _corrections);
 
                 // ★ 패브릭 메인 제품 누락 방어: addon만 있고 메인 원단이 없으면 자동 추가
                 const _allFabricCats = ['ch10s','ch20s','ch40s','cn16s','cn20s','obo10s','lin20s'];
@@ -1524,7 +1605,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
 
                 return {
                     type: "quote",
-                    chat_message: qResult.summary || "견적서를 생성합니다.",
+                    chat_message: (qResult.summary || "견적서를 생성합니다.") + (_corrections.length > 0 ? '\n\n⚠️ 자동 보정 사항:\n' + _corrections.map(c => '• ' + c).join('\n') : ''),
                     quote_data: {
                         customer_name: qResult.customer_name || '',
                         items: quoteItems,
