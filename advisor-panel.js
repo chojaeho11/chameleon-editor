@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI 채팅 + 콜백 요청
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=299';
+import { SITE_CONFIG } from './site-config.js?v=300';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -292,7 +292,7 @@ window._quoteToCart = async function(quoteId) {
         return;
     }
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=299');
+        const { addProductToCartDirectly } = await import('./order.js?v=300');
         // ★ 할인 아이템 분리, 메인/addon 그룹핑
         const allItems = qData.items.filter(i => (i.total || 0) >= 0); // 할인 행 제외
         const discountItems = qData.items.filter(i => (i.total || 0) < 0);
@@ -374,10 +374,11 @@ export function renderShortcutButtons(containerId) {
     const lang = getLang();
     container.innerHTML = `
         <style>
-        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:1100px;margin:0 auto;padding:0 6px;width:100%;box-sizing:border-box;}
-        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 4px;border-radius:14px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;}
+        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;}
+        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:5px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 2px;border-radius:14px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;}
+        .adv-ext-btn i{flex-shrink:0;}
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
-        @media(max-width:768px){.adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;padding:0 4px;}.adv-ext-btn{padding:11px 2px;font-size:11px;gap:4px;border-radius:12px;}}
+        @media(max-width:768px){.adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:3px;padding:0 3px;}.adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}}
         </style>
         <div class="adv-ext-grid">
             <a href="${location.origin}/design-market.html" target="_blank" class="adv-ext-btn">
@@ -1385,7 +1386,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=299');
+        const { addProductToCartDirectly } = await import('./order.js?v=300');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
