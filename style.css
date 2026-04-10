@@ -4012,7 +4012,7 @@ body {
     .icon-item.active { background: transparent; color: #6366f1; }
     .icon-item.active::before { display: none; }
 
-    /* 서브패널 바텀시트 — flex column 구조 (헤더 + 스크롤 본문) */
+    /* 서브패널 바텀시트 — display는 JS가 인라인 스타일로 제어 (none/flex) */
     #subPanel {
         position: fixed !important;
         bottom: 56px !important;
@@ -4025,8 +4025,7 @@ body {
         border-radius: 16px 16px 0 0;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
         padding: 0 !important;
-        overflow: hidden !important; /* 외부는 잘림, 본문에서만 스크롤 */
-        display: flex !important;
+        overflow: hidden !important;
         flex-direction: column !important;
         transition: transform 0.3s ease;
     }
