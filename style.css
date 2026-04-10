@@ -4010,7 +4010,7 @@ body {
     .icon-item.active { background: transparent; color: #6366f1; }
     .icon-item.active::before { display: none; }
 
-    /* 서브패널 바텀시트 */
+    /* 서브패널 바텀시트 — 핸들 영역을 위한 padding-top 추가 */
     #subPanel {
         position: fixed !important;
         bottom: 56px !important;
@@ -4022,7 +4022,7 @@ body {
         z-index: 10000 !important;
         border-radius: 16px 16px 0 0;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
-        padding: 0 12px 12px 12px !important;
+        padding: 56px 12px 12px 12px !important; /* top:56px = 핸들 영역 확보 */
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
@@ -4030,36 +4030,48 @@ body {
         touch-action: pan-y;
         transition: transform 0.3s ease;
     }
-    /* 드래그 핸들 + 닫기 버튼 표시 (항상 상단 고정) */
+    /* 드래그 핸들 영역 — 패널 최상단에 절대 고정 (스크롤 영향 없음) */
     #subPanelDragHandle {
-        display: block;
-        position: sticky;
-        top: 0;
-        background: #fff;
-        z-index: 5;
-        padding: 14px 0 10px 0 !important;
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 48px !important;
+        padding: 0 !important;
+        background: #fff !important;
+        border-radius: 16px 16px 0 0;
         border-bottom: 1px solid #f1f5f9;
-        margin: 0 -12px 8px -12px;
+        z-index: 100;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
     #subPanelDragHandle > div:first-child {
         width: 50px !important;
         height: 5px !important;
         background: #cbd5e1 !important;
+        border-radius: 3px !important;
+        margin: 0 !important;
     }
     #subPanelCloseBtn {
         display: flex !important;
         position: absolute !important;
-        top: 8px !important;
-        right: 12px !important;
-        width: 32px !important;
-        height: 32px !important;
-        align-items: center;
-        justify-content: center;
+        top: 50% !important;
+        right: 14px !important;
+        transform: translateY(-50%) !important;
+        width: 36px !important;
+        height: 36px !important;
+        align-items: center !important;
+        justify-content: center !important;
         background: #f1f5f9 !important;
+        border: none !important;
         border-radius: 50% !important;
-        font-size: 20px !important;
+        font-size: 22px !important;
         color: #475569 !important;
         padding: 0 !important;
+        cursor: pointer !important;
+        line-height: 1 !important;
     }
     #subPanel .sub-panel-header { font-size: 13px; padding-bottom: 8px; margin-bottom: 8px; }
 
