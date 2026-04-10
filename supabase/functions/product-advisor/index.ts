@@ -1132,7 +1132,24 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         const _isConfirm = /^(맞|맞아|네|ㅇㅇ|좋아|ok|yes|はい|그래|응|넵|확인|진행|만들어|이대로|주세요)/i.test(trimmedMsg.trim());
         const _allConv = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ');
         const _prevAskedConfirm = /이대로.*진행|견적서.*드릴까|내용.*맞으시|확인.*부탁|추가.*뺄.*것|빠진.*것|변경.*사항/.test(_allConv);
-        const _isQuoteReq = _explicitQuote || (_isConfirm && _prevAskedConfirm);
+
+        // ★ 가벽 규격 외 사이즈 감지 → 견적 강제 해제 (AI가 사이즈 확인부터 하도록)
+        const _hasWallKeyword = /가벽|파티션|전시벽|partition/i.test(trimmedMsg);
+        let _hasInvalidWallSize = false;
+        if (_hasWallKeyword) {
+            // 가로: 1미터 단위가 아닌 값 감지 (예: 3.2, 3200, 1.5, 2500 등)
+            const _widthMatch = trimmedMsg.match(/(?:가로\s*)?(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)/i) || trimmedMsg.match(/(\d+(?:\.\d+)?)\s*(?:미터|m)\s*[x×에]\s*(\d+(?:\.\d+)?)/i);
+            if (_widthMatch) {
+                const w = parseFloat(_widthMatch[1]);
+                const h = parseFloat(_widthMatch[2]);
+                const wMm = w < 100 ? w * 1000 : w; // 3.2 → 3200, 3200 → 3200
+                const hMm = h < 100 ? h * 1000 : h;
+                if (wMm % 1000 !== 0) _hasInvalidWallSize = true;
+                if (![2000,2200,2400,3000].includes(hMm) && hMm > 100) _hasInvalidWallSize = true;
+            }
+        }
+
+        const _isQuoteReq = !_hasInvalidWallSize && (_explicitQuote || (_isConfirm && _prevAskedConfirm));
         const toolChoice = _isQuoteReq
             ? { type: "tool" as const, name: "generate_quote" }
             : { type: "auto" as const };
