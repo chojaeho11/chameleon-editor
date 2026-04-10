@@ -281,25 +281,42 @@ serve(async (req) => {
 - ❌ DB에 없는 가격/사이즈를 만들어내지 마!
 - ❌ 일반 가벽/배너 가격으로 특수 상품(인스타판넬, 글씨포토존 등)을 안내하지 마!
 
-## 가격/견적 규칙
-- ⚠️ 가격을 물어보면 → **"사이즈와 수량을 알려주시면 정확한 견적서를 바로 만들어 드릴게요!"** 라고 안내.
-- ❌ A4 기준 가격, ㎡당 단가 등 대략적인 가격을 말하지 마! 부정확한 가격은 혼란만 줘.
-- ❌ "아래 상품에서 선택하세요", "상품 링크에서 확인하세요" 같은 안내 하지 마!
-- ✅ 대신 사이즈/수량/옵션을 물어보고 → 견적서를 직접 만들어줘.
-- 수량 할인 안내 (패브릭 등 일반 제품): "수량이 많을수록 할인돼요! 3개 이상이면 20%부터 최대 50%까지!"
-- ★ **허니콤보드 금액별 할인 (자동 적용!)**: 200만원↑ 10% / 300만원↑ 15% / 500만원↑ 20% / 700만원↑ 25% / 1000만원↑ 30%. PRO 구독 10% 추가 → 최대 40% 할인! 견적서에 자동 반영되니 고객에게 "금액이 클수록 할인이 커져요!"라고 안내해.
-- ❌ 절대 계산 과정(공식, ㎡당 단가, 곱셈식, A4 기준 가격)을 보여주지 마.
+## 가격/견적 규칙 (★★★ 매우 중요 — 견적서 PDF 생성 절대 금지!)
+- ⚠️ **절대 generate_quote 도구를 호출하지 마!** 견적서 PDF 생성은 비활성화됨.
+- ✅ 고객이 가격을 물어보면 → **직접 간단히 계산해서 알려주고, 제품 링크를 함께 안내**해.
+- ✅ 안내 형식 (반드시 이 흐름을 따라):
+  1. 사이즈/수량/옵션을 확인 (필요하면 한번에 물어봐)
+  2. **간단히 계산해서 가격 안내**: "제가 계산해보니 약 OO원 정도예요"
+  3. **할인 가능성 안내**: "할인 적용이나 옵션에 따라 가격이 달라질 수 있어요"
+  4. **링크 안내**: "정확한 견적은 아래 제품 링크를 클릭해서 장바구니에 담으시면 장바구니에서 확인 가능해요!"
+  5. products 배열에 해당 제품을 넣어서 카드로 보여줘 (반드시!)
+- 가격 계산 기준 (개략):
+  · 패브릭(쉬폰/광목/캔버스 등): 1m²당 약 15,000원 → (가로m × 세로m × 15000) × 수량
+  · 허니콤 가벽: 1칸(1m×2.4m) = 약 180,000원 → (칸수 × 180,000원)
+  · 그 외는 "정확한 금액은 장바구니에서 확인해주세요"라고만 안내
+- ❌ 계산 과정(공식, 곱셈식)을 자세히 보여주지 마. 결과만 간단히.
+- 수량 할인: "3개 이상 20%, 100개 이상 40% 할인 적용돼서 더 저렴해져요"
+- ★ **허니콤보드 금액별 할인**: 200만원↑ 10% / 300만원↑ 15% / 500만원↑ 20% / 700만원↑ 25% / 1000만원↑ 30%. PRO 구독 10% 추가.
 
-## 견적서 자동 생성 흐름 (매우 중요!)
-- 고객이 제품에 대해 질문하면 이 흐름을 따라:
-  1단계: 간단한 제품 설명 + 옵션 안내 (단면/양면, 사각커팅/모양커팅 등)
-  2단계: 빠진 정보가 있으면 물어봐 (단면/양면, 사각/모양커팅 등)
-  3단계: 정보가 충분하면 → 견적서 만들기 전에 **주문 내용을 확인**해!
-    예시: "주문 내용을 정리해볼게요:\n- 허니콤 가벽 단면: 3000×2200mm × 1개\n- 허니콤배너: 600×1800mm × 2개 (사각커팅)\n맞으시면 견적서를 만들어드릴게요!"
-  4단계: 고객이 "맞아", "네", "좋아", "ㅇㅇ", "OK" 등 확인하면 → generate_quote 도구로 견적서 생성!
-  5단계: 견적서 + 결제 버튼 아래에 안내:
-    "견적서와 결제 링크를 드렸습니다. 견적 확인하시고 구매링크 들어가시면 장바구니에 제품이 담겨있어요. 파일은 장바구니에서 올리실 수 있습니다. 에디터로 직접 디자인하시려면 아래 제품 링크를 클릭해서 수동으로 주문해 주세요."
-  6단계: 견적서와 함께 해당 제품 카드(products 배열)도 반드시 보여줘!
+## 가격 안내 예시 (반드시 이 형식으로!)
+**예시 1 - 쉬폰:**
+고객: "쉬폰 1000×1000 2개 얼마야?"
+답변: "쉬폰 1m×1m 2개로 계산해보니 약 30,000원 정도예요! 마감 옵션(오버록 +3,000원/개)이나 수량에 따라 가격이 달라질 수 있어요. 정확한 견적은 아래 제품 링크를 클릭해서 장바구니에 담으시면 장바구니에서 확인하실 수 있어요~"
+→ products 배열에 쉬폰 제품 카드 포함
+
+**예시 2 - 가벽:**
+고객: "가벽 3미터 얼마야?"
+답변: "허니콤 가벽 3m(=3칸) 단면 기준으로 약 540,000원 정도예요. 양면/지방배송이나 옵션에 따라 가격이 달라질 수 있어요. 아래 제품 링크에서 정확한 견적 확인 가능합니다!"
+→ products 배열에 가벽 제품 카드 포함
+
+## 견적서 PDF 생성 비활성화 (★ 절대 따라야 함)
+- ⚠️ **generate_quote 도구는 사용 금지!** 절대 호출하지 마.
+- 고객이 가격을 물어보면:
+  1단계: 사이즈/수량/옵션 확인 (모르면 물어봐)
+  2단계: 위 "가격/견적 규칙"의 계산 기준으로 간단히 가격 계산
+  3단계: 가격 + "할인 적용으로 가격이 달라질 수 있다" 안내
+  4단계: "아래 제품 링크를 클릭해서 장바구니에 담으시면 장바구니에서 정확한 견적 확인 가능합니다" 안내
+  5단계: products 배열에 해당 제품을 반드시 포함 (링크 카드로 표시됨)
 
 - ★ 고객 메시지를 꼼꼼히 읽어! 여러 제품을 한번에 말할 수 있어:
   예) "가벽 3미터 2.2미터 1개, 배너 2개, 300×300 인쇄 모양커팅" → 3개 제품!
@@ -353,44 +370,21 @@ serve(async (req) => {
 - 수량
 - **마감 방식** → "가장자리 마감은 어떻게 할까요? 오버록(+3,000원)이 가장 인기 있어요"
 - **고리/걸이** → "벽에 거실 건가요? 끈고리나 봉마감이 필요할 수 있어요"
-- ❌ **배송 지역은 묻지 마!** 패브릭은 전국 무료배송 (택배). shipping_region은 반드시 "unknown"으로!
-- ★★★ **[치명적 오류 방지] generate_quote items 첫 번째에 반드시 메인 원단 인쇄 제품을 넣어라!** 이것이 인쇄 비용이다! 이걸 빼면 인쇄비가 0원이 되어 완전히 잘못된 견적이 나온다!
-  items[0] = 메인 원단 제품 (code, name, width_mm, height_mm, quantity) ← 이게 인쇄 비용!
-  items[1~] = 마감/고리 addon (is_addon:true) ← 이건 후가공 비용!
-  ❌ 절대로 addon만 넣고 메인 원단을 빼지 마라! 인쇄비 없는 견적은 완전히 잘못된 것이다!
-  예: items: [{ code:"ch10s_1", name:"광목인쇄", width_mm:700, height_mm:1300, quantity:3 }, { code:"txl0002", name:"오버록", quantity:3, is_addon:true }]
-- ★ **addon 수량 = 메인 제품 수량과 동일!** 3개 주문이면 오버록도 3개. quantity를 메인 제품과 맞춰!
+- ❌ **배송 지역은 묻지 마!** 패브릭은 전국 무료배송 (택배).
 
-모든 정보가 모이면 → **바로 견적서를 만들지 말고**, 먼저 주문 내용을 정리해서 보여주고 물어봐:
+모든 정보가 모이면 → **간단히 가격을 계산해서 안내하고 제품 링크를 보여줘**. 절대 견적서 PDF를 만들지 마!
 
-허니콤 가벽 예시:
-"주문 내용을 정리해볼게요:
-- 허니콤 가벽 단면 3000×2200mm × 2개
-- 보조받침대: 2개
-이대로 견적서를 만들어 드릴게요!
-혹시 양면 인쇄이거나 지방 배송이시라면 견적이 달라지니 말씀해 주세요. 수정해서 다시 견적 드릴게요!"
+패브릭 안내 예시:
+"광목 700×1300mm 3개로 계산해보니 약 27,000원 정도예요! (1m²당 약 15,000원 기준)
+오버록 마감(+3,000원/개), 끈고리 등 옵션과 수량 할인에 따라 가격이 달라질 수 있어요.
+정확한 견적은 아래 제품 링크를 클릭해서 장바구니에 담으시면 장바구니에서 확인 가능합니다!"
++ products 배열에 광목 제품 카드 포함
 
-패브릭 예시:
-"주문 내용을 정리해볼게요:
-- 패브릭 포스터 300×400mm × 1,000개
-- 오버록 마감 (+3,000원)
-- 상단끈고리 (+2,000원)
-- 배송: 전국 무료배송
-이대로 견적서를 만들어 드릴까요?"
-
-고객이 "네", "맞아", "이대로 해줘" 등 **최종 확인**을 하면 그때 generate_quote를 호출해.
-❌ 정보가 모였더라도 고객 확인 없이 바로 견적서를 만들지 마!
-❌ 질문을 던져놓고 답을 안 받았는데 견적서를 만들지 마!
-generate_quote의 delivery_note에 수집된 정보를 정리해서 넣어. (예: "울산 / 10월 셋째주 / 배송만 / 보조받침대 2개")
-정보가 부족하면 견적서를 만들지 말고 부족한 부분만 자연스럽게 물어봐.
-6. **⚠️ 제품 링크(카드)는 오직 2가지 경우에만! products 배열을 채워:**
-   ① 견적서를 생성할 때 (generate_quote 도구 사용 시)
-   ② 고객이 링크를 원할 때: "링크 줘", "URL", "보여줘", "어디서 사?", "어디서 살 수 있어?", "사는곳", "구매하는곳", "주문하는곳", "살수있는곳", "파는곳", "구매링크", "주문링크", "where to buy", "how to order", "どこで買える", "購入ページ"
-   ❌ 그 외 모든 경우에는 products를 반드시 빈 배열[]로!
-   ❌ 제품 안내/설명 → products 빈 배열!
+6. **⚠️ 제품 링크(카드)는 가격을 안내하거나 고객이 링크를 원할 때 products 배열을 채워:**
+   ① 가격 문의/계산 답변할 때 (반드시 해당 제품 카드 포함!)
+   ② 고객이 링크를 원할 때: "링크 줘", "URL", "보여줘", "어디서 사?", "구매하는곳" 등
+   ❌ 단순 인사/잡담 → products 빈 배열!
    ❌ 옵션 질문(단면/양면? 사각/모양? 원단 종류?) → products 빈 배열!
-   ❌ 주문 내용 확인(정리해볼게요) → products 빈 배열!
-   ❌ "~있어?", "~안내해줘", "얼마야?" → products 빈 배열! 텍스트로만 설명!
 7. **매칭되는 상품이 없으면**: "아쉽게도 그 제품은 지금 취급하고 있지 않아요" + 비슷한 대체 상품 추천
 
 ## 패브릭 인쇄 안내 흐름 (중요!)
@@ -989,41 +983,6 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 },
                 required: ["summary", "products"]
             }
-        },
-        {
-            name: "generate_quote",
-            description: "Generate a formal PDF quotation (견적서) when customer EXPLICITLY asks for a quote/견적서/見積書/quotation with specific products, sizes, and quantities. Use this ONLY when they say '견적서', '견적', 'quote', '見積', NOT for general price inquiries.",
-            input_schema: {
-                type: "object" as const,
-                properties: {
-                    summary: { type: "string" as const, description: "Response message to customer about the quote" },
-                    customer_name: { type: "string" as const, description: "Customer name if known from conversation" },
-                    items: {
-                        type: "array" as const,
-                        items: {
-                            type: "object" as const,
-                            properties: {
-                                code: { type: "string" as const, description: "Product code from database" },
-                                name: { type: "string" as const, description: "Product name" },
-                                width_mm: { type: "number" as const, description: "Width in mm" },
-                                height_mm: { type: "number" as const, description: "Height in mm" },
-                                quantity: { type: "number" as const, description: "Number of units" },
-                                side: { type: "number" as const, description: "1 for single-sided, 2 for double-sided (wall panels)" },
-                                is_addon: { type: "boolean" as const, description: "true if this is an addon option (마감, 고리 etc), not a main product" }
-                            },
-                            required: ["code", "name", "width_mm", "height_mm", "quantity"]
-                        }
-                    },
-                    shipping_region: { type: "string" as const, enum: ["seoul_gyeonggi", "province", "unknown"], description: "Customer's shipping region. 'seoul_gyeonggi' for 서울/경기/인천 (free shipping), 'province' for 지방/other regions (extra fee), 'unknown' if not mentioned" },
-                    wants_install: { type: "boolean" as const, description: "true if customer wants installation/시공/설치 service. false if they explicitly declined or only want delivery. null/omit if not discussed." },
-                    delivery_note: { type: "string" as const, description: "Delivery/order notes collected from conversation: region, date needed, special requests, etc. e.g. '부산 / 3월 15일까지 / 설치 필요 / 보조받침대 2개'" },
-                    products: {
-                        type: "array" as const,
-                        items: { type: "object" as const, properties: { code: { type: "string" as const }, name: { type: "string" as const }, reason: { type: "string" as const }, recommended_width_mm: { type: "number" as const }, recommended_height_mm: { type: "number" as const }, price_display: { type: "string" as const }, img_url: { type: "string" as const }, design_title: { type: "string" as const } }, required: ["code","name","reason","recommended_width_mm","recommended_height_mm","price_display","design_title"] }
-                    }
-                },
-                required: ["summary", "items"]
-            }
         }];
 
         // ★ 상품 카탈로그 썸네일 — 고객 이미지와 매칭용
@@ -1149,11 +1108,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             }
         }
 
-        // ★ 견적 강제는 "고객이 내용 확인 후 OK"한 경우만! "견적서 줘"는 AI가 auto로 판단하게 함
-        const _isQuoteReq = !_hasInvalidWallSize && (_isConfirm && _prevAskedConfirm);
-        const toolChoice = _isQuoteReq
-            ? { type: "tool" as const, name: "generate_quote" }
-            : { type: "auto" as const };
+        // ★ 견적서 PDF 생성 비활성화 — 항상 recommend_products 사용 (가격 안내 + 링크)
+        const toolChoice = { type: "auto" as const };
         console.log(`[kapu] msg="${trimmedMsg.substring(0,40)}", history=${conversation_history?.length || 0}`);
 
         async function callClaude(model: string, retries = 0): Promise<any> {
@@ -1205,8 +1161,24 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             const blocks = data.content || [];
             const toolBlock = blocks.find((b: any) => b.type === "tool_use");
 
-            // ★ generate_quote 도구 처리
+            // ★ generate_quote 도구 처리 — 비활성화됨 (안전장치: 만약 AI가 호출하면 chat으로 변환)
             if (toolBlock && toolBlock.name === "generate_quote") {
+                console.log("[quote] ★ generate_quote called but DISABLED — converting to chat");
+                const _fallbackMsg = clientLang === 'ja'
+                    ? '正確な見積もりは下記の商品リンクをクリックしてカートに追加すると、カートで確認できます！'
+                    : clientLang === 'us' || clientLang === 'en'
+                    ? 'For an accurate quote, please click the product link below and add it to your cart — you can review the quote in the cart!'
+                    : '정확한 견적은 아래 제품 링크를 클릭해서 장바구니에 담으시면 장바구니에서 확인 가능합니다!';
+                return new Response(JSON.stringify({
+                    type: "chat",
+                    chat_message: _fallbackMsg,
+                    summary: _fallbackMsg,
+                    products: [],
+                    room_id: clientRoomId || null
+                }), { headers: { ...cors, "Content-Type": "application/json" } });
+            }
+            // (이전 generate_quote 처리 로직 — 비활성화됨)
+            if (false && toolBlock && toolBlock.name === "generate_quote") {
                 const qResult = toolBlock.input;
                 console.log("[quote] AI items:", JSON.stringify(qResult.items));
                 let qItems = qResult.items || [];
@@ -1287,34 +1259,45 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 });
 
                 // [보정2] AI 사이즈 파싱 오류 교정: 고객 메시지에서 실제 숫자 재추출
+                // ★ 고객 메시지에서 모든 사이즈 후보를 수집 (가장 마지막에 언급된 것을 우선)
+                const _allCustomerSizes: Array<{w:number, h:number}> = [];
+                {
+                    const _sizePatternsAll = [
+                        /(\d{2,5})\s*[-~xX×*]\s*(\d{2,5})\s*(?:mm|MM|밀리|미리)?/g,
+                        /(\d+(?:\.\d+)?)\s*(?:미터|m)\s*[-~xX×*에]\s*(\d+(?:\.\d+)?)\s*(?:미터|m)/gi,
+                        /가로\s*(\d+(?:\.\d+)?)\s*(?:mm|미터|m)?\s*.*?(?:세로|높이|x)\s*(\d+(?:\.\d+)?)/gi,
+                    ];
+                    for (const pat of _sizePatternsAll) {
+                        let mm;
+                        while ((mm = pat.exec(_customerMsgsOnly)) !== null) {
+                            let nw = parseFloat(mm[1]);
+                            let nh = parseFloat(mm[2]);
+                            if (nw < 100) nw = Math.round(nw * 1000);
+                            if (nh < 100) nh = Math.round(nh * 1000);
+                            if (nw > 0 && nh > 0 && nw <= 10000 && nh <= 10000) {
+                                _allCustomerSizes.push({ w: nw, h: nh });
+                            }
+                        }
+                    }
+                }
+                console.log("[quote] all customer sizes detected:", JSON.stringify(_allCustomerSizes));
+
                 qItems.forEach((qi: any) => {
                     if (qi.is_addon) return;
                     const w = qi.width_mm || 0;
                     const h = qi.height_mm || 0;
-                    // 비정상적으로 큰 사이즈 감지 (10m 이상이면 의심)
-                    if (w >= 10000 || h >= 10000) {
-                        // 고객 메시지에서 사이즈 재추출
-                        const _sizePatterns = [
-                            /(\d{2,5})\s*[-~xX×*]\s*(\d{2,5})/,  // 3000-1200, 3000x1200
-                            /(\d+(?:\.\d+)?)\s*(?:미터|m)\s*[-~xX×에]\s*(\d+(?:\.\d+)?)\s*(?:미터|m)?/i,  // 3미터 x 1.2미터
-                            /가로\s*(\d+(?:\.\d+)?)\s*(?:mm|미터|m)?\s*.*?(?:세로|높이|x)\s*(\d+(?:\.\d+)?)/i,
-                        ];
-                        for (const pat of _sizePatterns) {
-                            const m = _customerMsgsOnly.match(pat);
-                            if (m) {
-                                let nw = parseFloat(m[1]);
-                                let nh = parseFloat(m[2]);
-                                // 미터 → mm 변환
-                                if (nw < 100) nw = Math.round(nw * 1000);
-                                if (nh < 100) nh = Math.round(nh * 1000);
-                                if (nw > 0 && nh > 0 && nw <= 10000 && nh <= 10000) {
-                                    _corrections.push(`사이즈 교정: ${w}×${h}mm → ${nw}×${nh}mm (고객 요청 기준)`);
-                                    qi.width_mm = nw;
-                                    qi.height_mm = nh;
-                                    console.log("[quote] ★ SIZE FIX:", w + "x" + h, "→", nw + "x" + nh);
-                                    break;
-                                }
-                            }
+                    // ★ AI가 보낸 사이즈가 비정상적이거나 (>=10000), 고객이 명시한 사이즈와 다르면 교정
+                    const _aiInvalid = (w >= 10000 || h >= 10000);
+                    const _aiNotMatchingCustomer = _allCustomerSizes.length > 0 &&
+                        !_allCustomerSizes.some(s => s.w === w && s.h === h);
+                    if (_aiInvalid || _aiNotMatchingCustomer) {
+                        // 가장 마지막(최신) 사이즈 사용
+                        if (_allCustomerSizes.length > 0) {
+                            const last = _allCustomerSizes[_allCustomerSizes.length - 1];
+                            _corrections.push(`사이즈 교정: ${w}×${h}mm → ${last.w}×${last.h}mm (고객 요청 기준)`);
+                            console.log("[quote] ★ SIZE FIX:", w + "x" + h, "→", last.w + "x" + last.h);
+                            qi.width_mm = last.w;
+                            qi.height_mm = last.h;
                         }
                     }
                 });
@@ -1572,8 +1555,16 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     const dbP = products.find((p: any) => p.code === qi.code);
                     console.log("[quote] matching", qi.code, "→", dbP ? dbP.name : "NOT FOUND");
                     if (!dbP) continue;
-                    const wMm = qi.width_mm || dbP.width_mm || 0;
-                    const hMm = qi.height_mm || dbP.height_mm || 0;
+                    // ★ custom_size 제품은 DB 기본 사이즈가 비정상(5m 이상)이면 1000×1000으로 fallback
+                    let _dbDefW = dbP.width_mm || 0;
+                    let _dbDefH = dbP.height_mm || 0;
+                    if (dbP.is_custom_size && (_dbDefW >= 5000 || _dbDefH >= 5000)) {
+                        console.log("[quote] ★ DB default size too large for custom_size product, using 1000x1000:", qi.code, _dbDefW, _dbDefH);
+                        _dbDefW = 1000;
+                        _dbDefH = 1000;
+                    }
+                    const wMm = qi.width_mm || _dbDefW || 0;
+                    const hMm = qi.height_mm || _dbDefH || 0;
                     const area = (wMm * hMm) / 1000000;
                     const side = qi.side || 1;
                     // 면적 기반 가격 계산: _raw_per_sqm이 1m²당 단가 (calcPricePerSqm에서 계산)
@@ -1809,8 +1800,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             result = await callClaude("claude-haiku-4-5-20251001");
         } catch (claudeErr: any) {
             console.error("[kapu] callClaude failed:", claudeErr.message);
-            // ★ generate_quote 모드에서 실패하면 대화 기반 fallback 견적서 생성
-            if (_isQuoteReq) {
+            // ★ 견적서 PDF 생성 비활성화됨 — fallback 비활성화
+            if (false) {
                 console.log("[kapu] fallback quote generation from conversation");
                 const _fbText = (conversation_history || []).map((h: any) => typeof h.content === 'string' ? h.content : '').join(' ') + ' ' + trimmedMsg;
                 const fbItems: any[] = [];

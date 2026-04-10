@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI 채팅 + 콜백 요청
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=297';
+import { SITE_CONFIG } from './site-config.js?v=298';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -93,9 +93,9 @@ function clearChat() {
 }
 
 const WELCOME = {
-    kr: `안녕하세요! 무엇을 도와드릴까요? 😊\n원하시는 제품의 설명과 링크, 견적서까지 완벽하게 정리해서 드릴 수 있습니다. 제작하고 싶은 제품을 말씀만 해주세요. 제가 편안하게 안내할게요. 클릭하고 파일만 올리면 끝나도록!`,
-    ja: `こんにちは！何かお手伝いできることはありますか？\nご希望の商品の説明・リンク・見積書まで完璧にまとめてお渡しできます。作りたい商品をおっしゃってください。クリックしてファイルをアップロードするだけで完了！`,
-    en: `Hello! How can I help you?\nI can provide product descriptions, links, and quotes all perfectly organized. Just tell me what you'd like to make — I'll guide you comfortably. Click and upload your file, that's it!`,
+    kr: `안녕하세요! 무엇을 도와드릴까요? 😊\n원하시는 제품에 대해 물어보시면 설명과 제품을 구매할 수 있는 링크를 드릴게요.`,
+    ja: `こんにちは！何かお手伝いできることはありますか？😊\nご希望の商品についてお尋ねいただければ、説明と購入リンクをお送りいたします。`,
+    en: `Hello! How can I help you? 😊\nAsk me about any product and I'll provide a description and a purchase link for you.`,
     zh: `您好！有什么可以帮您的吗？\n我可以为您完美整理产品说明、链接和报价。告诉我您想制作什么产品，我来轻松引导您。点击上传文件就搞定！`,
     es: `Toca <b>¡Juega Aquí!</b> arriba para transformar tus fotos y hacer pedidos rápidos.\n\nDinos qué producto necesitas en el chat o sube una foto de referencia — te guiaremos para que tu pedido sea fácil.`,
     de: `Tippen Sie oben auf <b>Hier spielen!</b>, um Ihre Fotos kreativ zu verändern und schnell zu bestellen.\n\nSagen Sie uns im Chat, welches Produkt Sie brauchen, oder laden Sie ein Referenzfoto hoch — wir begleiten Sie durch den Bestellprozess.`,
@@ -240,9 +240,9 @@ function showEntryForm() {
     try { localStorage.setItem('kapu_customer', JSON.stringify({ name: 'Guest', phone: '' })); } catch(e) {}
     const lang = getLang();
     const msgs = {
-        kr: '안녕하세요! 무엇을 도와드릴까요? 😊\n원하시는 제품의 설명과 링크, 견적서까지 완벽하게 정리해서 드릴 수 있습니다. 제작하고 싶은 제품을 말씀만 해주세요. 제가 편안하게 안내할게요. 클릭하고 파일만 올리면 끝나도록!',
-        ja: 'こんにちは！何かお手伝いできることはありますか？\nご希望の商品の説明・リンク・見積書まで完璧にまとめてお渡しできます。作りたい商品をおっしゃってください。クリックしてファイルをアップロードするだけで完了！',
-        en: 'Hello! How can I help you?\nI can provide product descriptions, links, and quotes all perfectly organized. Just tell me what you\'d like to make — I\'ll guide you comfortably. Click and upload your file, that\'s it!'
+        kr: '안녕하세요! 무엇을 도와드릴까요? 😊\n원하시는 제품에 대해 물어보시면 설명과 제품을 구매할 수 있는 링크를 드릴게요.',
+        ja: 'こんにちは！何かお手伝いできることはありますか？😊\nご希望の商品についてお尋ねいただければ、説明と購入リンクをお送りいたします。',
+        en: 'Hello! How can I help you? 😊\nAsk me about any product and I\'ll provide a description and a purchase link for you.'
     };
     addBubble(msgs[lang] || msgs['en'], 'ai');
 }
@@ -292,7 +292,7 @@ window._quoteToCart = async function(quoteId) {
         return;
     }
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=297');
+        const { addProductToCartDirectly } = await import('./order.js?v=298');
         // ★ 할인 아이템 분리, 메인/addon 그룹핑
         const allItems = qData.items.filter(i => (i.total || 0) >= 0); // 할인 행 제외
         const discountItems = qData.items.filter(i => (i.total || 0) < 0);
@@ -474,9 +474,11 @@ function openPanel() {
 
 // ─── 헤더 전화/이메일 링크 ───
 function _getContactLinks() {
+    // 순서: 이메일 → 전화 → 새로고침 → X (좌→우)
     let html = '';
-    html += `<button class="adv-header-btn" id="advPhoneBtn" title=""><i class="fa-solid fa-phone" style="font-size:13px;"></i></button>`;
     html += `<a href="mailto:design@chameleon.design" class="adv-header-btn" style="text-decoration:none;color:#fff;" title=""><i class="fa-solid fa-envelope" style="font-size:13px;"></i></a>`;
+    html += `<button class="adv-header-btn" id="advPhoneBtn" title=""><i class="fa-solid fa-phone" style="font-size:13px;"></i></button>`;
+    html += `<button class="adv-header-btn" id="advResetBtn" title="${t('reset')}"><i class="fa-solid fa-rotate-right" style="font-size:13px;"></i></button>`;
     html += `<button class="adv-header-btn" onclick="if(window.toggleAdvisorPanel)window.toggleAdvisorPanel()" title="닫기" style="margin-left:2px;"><i class="fa-solid fa-xmark" style="font-size:15px;"></i></button>`;
     return html;
 }
@@ -574,12 +576,6 @@ function buildPanelUI() {
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
                 ${_getContactLinks()}
-                <button class="adv-header-btn" id="advConsultantBtn" title="${t('consultant')}">
-                    <i class="fa-solid fa-phone-volume"></i>
-                </button>
-                <button class="adv-header-btn" id="advResetBtn" title="${t('reset')}">
-                    <i class="fa-solid fa-rotate-right"></i>
-                </button>
             </div>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
@@ -625,11 +621,6 @@ function buildPanelUI() {
     if (emailBtn && emailBtn.tagName === 'A') {
         _attachTooltip(emailBtn, 'email');
     }
-
-    // 연락처 남기기
-    document.getElementById('advConsultantBtn').addEventListener('click', () => {
-        startCallbackFlow();
-    });
 
     // 전송
     document.getElementById('advSendBtn').addEventListener('click', sendFromInput);
@@ -1394,7 +1385,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=297');
+        const { addProductToCartDirectly } = await import('./order.js?v=298');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
