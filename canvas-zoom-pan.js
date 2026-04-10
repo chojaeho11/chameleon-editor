@@ -28,7 +28,7 @@ export function initZoomPan() {
         };
     }
 
-    // 2. 화면 꽉 채우기 (Fit)
+    // 2. 화면 꽉 채우기 (Fit) - 모바일은 상단 정렬, 도구바 영역 제외
     if(btnFit) {
         btnFit.onclick = () => {
             const board = canvas.getObjects().find(o => o.isBoard);
@@ -36,24 +36,29 @@ export function initZoomPan() {
 
             const canvasW = canvas.width;
             const canvasH = canvas.height;
-            const padding = 50; // 여백
+            const _isMobile = window.innerWidth <= 768;
+
+            // 모바일: 하단 도구바(컨트롤바+iconBar) 영역 제외, 상단 여백 최소
+            const _topReserve = _isMobile ? 8 : 0;
+            const _bottomReserve = _isMobile ? 110 : 0;
+            const padding = _isMobile ? 24 : 50;
 
             const boardW = board.width * board.scaleX;
             const boardH = board.height * board.scaleY;
 
+            const visibleH = canvasH - _topReserve - _bottomReserve;
             const availW = canvasW - (padding * 2);
-            const availH = canvasH - (padding * 2);
+            const availH = visibleH - padding;
 
             const zoom = Math.min(availW / boardW, availH / boardH);
-            
-            // 줌 적용
+
             canvas.setZoom(zoom);
 
-            // 화면 중앙으로 이동 (Panning)
             const vpt = canvas.viewportTransform;
             vpt[4] = (canvasW - boardW * zoom) / 2;
-            vpt[5] = (canvasH - boardH * zoom) / 2;
-            
+            // 모바일: 상단 정렬 (가운데 X), PC: 가운데
+            vpt[5] = _isMobile ? _topReserve : (canvasH - boardH * zoom) / 2;
+
             canvas.requestRenderAll();
         };
     }
@@ -209,15 +214,16 @@ export function initZoomPan() {
                 Math.pow(mid.x - initialMidX, 2) + Math.pow(mid.y - initialMidY, 2)
             );
 
-            // 데드존 임계값 (픽셀)
-            const DEADZONE = 15;
+            // 데드존 임계값 (픽셀) — 줌은 매우 큰 변화일 때만, 팬은 적당한 이동 시
+            const ZOOM_DEADZONE = 60;   // 60px 이상 손가락 거리 변화해야 줌
+            const PAN_DEADZONE = 8;     // 8px 이상 중심점 이동하면 팬
 
             if (!zoomIntent && !panIntent) {
-                // 아직 의도가 결정되지 않은 상태 → 큰 변화가 일어난 쪽으로 결정
-                if (distDelta > DEADZONE && distDelta > midDelta * 1.2) {
-                    zoomIntent = true;  // 거리 변화가 크면 줌
-                } else if (midDelta > DEADZONE) {
-                    panIntent = true;   // 중심점 이동이 크면 팬
+                // 팬을 우선 (작은 이동에도 반응) → 부드러운 사용감
+                if (midDelta > PAN_DEADZONE) {
+                    panIntent = true;
+                } else if (distDelta > ZOOM_DEADZONE) {
+                    zoomIntent = true;
                 } else {
                     // 아직 임계값 미달 → 아무것도 안 함 (대지 안 흔들림)
                     return;

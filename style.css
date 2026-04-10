@@ -5105,7 +5105,7 @@ video {
 
     /* 3. 하단 줌/가이드 바 (아이콘바 위) */
     .bottom-dock {
-        bottom: 60px !important;
+        bottom: 56px !important;
         top: auto !important;
         transform: translateX(-50%) !important;
         z-index: 9000 !important;
@@ -5154,10 +5154,10 @@ video {
     }
 
 
-    /* --- 2. 하단 줌/가이드 바 (아이콘바 위에 고정) --- */
+    /* --- 2. 하단 줌/가이드 바 (아이콘바 바로 위 인접) --- */
     .bottom-dock {
         position: fixed !important;
-        bottom: 60px !important;        /* 아이콘바(56px) 바로 위 */
+        bottom: 56px !important;        /* 아이콘바 바로 위 (56px = iconBar 높이) */
         top: auto !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
