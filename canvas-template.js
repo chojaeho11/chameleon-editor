@@ -1260,14 +1260,9 @@ window.loadSideBarTemplates = async function(targetProductKey, keyword = "", pag
         const sp = document.getElementById('subPanel');
         const _isMobile = window.innerWidth <= 768;
         if (sp) sp.style.display = _isMobile ? 'flex' : 'block';
-        // 모바일: 드래그 핸들 + X 버튼 강제 표시
-        if (_isMobile) {
-            const _h = document.getElementById('subPanelDragHandle');
-            const _cb = document.getElementById('subPanelCloseBtn');
-            if (_h) _h.style.cssText = 'display:flex;position:relative;flex-shrink:0;width:100%;height:56px;padding:0;margin:0;background:#fff;border-bottom:1px solid #e2e8f0;align-items:center;justify-content:center;box-sizing:border-box;cursor:grab;touch-action:none;border-radius:16px 16px 0 0;';
-            const _b = _h && _h.querySelector('div');
-            if (_b) _b.style.cssText = 'width:60px;height:6px;background:#cbd5e1;border-radius:3px;margin:0;';
-            if (_cb) _cb.style.cssText = 'display:flex;position:absolute;top:50%;right:14px;transform:translateY(-50%);width:40px;height:40px;align-items:center;justify-content:center;background:#ef4444;border:none;border-radius:50%;font-size:24px;color:#fff;font-weight:700;padding:0;cursor:pointer;line-height:1;box-shadow:0 2px 6px rgba(239,68,68,0.4);z-index:9999;';
+        // 모바일: 독립 X 닫기 버튼 표시
+        if (_isMobile && window._showFloatingCloseBtn) {
+            window._showFloatingCloseBtn();
         }
         // 아이콘 active 처리
         document.querySelectorAll('.icon-item').forEach(i => i.classList.remove('active'));

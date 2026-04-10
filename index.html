@@ -501,7 +501,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=317">
+<link rel="stylesheet" href="./style.css?v=318">
 
 <meta name="naver-site-verification" content="141eed82fa50fd6f98fa7bfe8dc481a202beb8cf" />
 
@@ -574,7 +574,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 2초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},2000);
 </script>
-<script src="toast.js?v=317"></script>
+<script src="toast.js?v=318"></script>
 <script>
 // v175: 서비스 워커 + 모든 캐시 강제 삭제
 if ('serviceWorker' in navigator) {
@@ -5495,30 +5495,30 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=317"></script>
-<script type="module" src="./canvas-core.js?v=317"></script>
-<script src="./wall-3d-preview.js?v=317" defer></script>
-<script src="./wall-3d-walls.js?v=317" defer></script>
-<script type="module" src="./canvas-size.js?v=317"></script>
-<script type="module" src="./canvas-guides.js?v=317"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=317"></script>
-<script type="module" src="./canvas-objects.js?v=317"></script>
-<script type="module" src="./canvas-image.js?v=317"></script>
-<script type="module" src="./canvas-template.js?v=317"></script>
-<script type="module" src="./canvas-ai.js?v=317"></script>
-<script type="module" src="./canvas-retouch.js?v=317"></script>
-<script type="module" src="./canvas-utils.js?v=317"></script>
-<script type="module" src="./shortcuts.js?v=317"></script>
-<script type="module" src="./context-menu.js?v=317"></script>
-<script type="module" src="./export.js?v=317"></script>
-<script type="module" src="./order.js?v=317"></script>
-<script type="module" src="./login.js?v=317"></script>
-<script type="module" src="./my-design.js?v=317"></script>
-<script type="module" src="./ppt-mode.js?v=317"></script>
-<script type="module" src="./main.js?v=317"></script>
+<script type="module" src="./config.js?v=318"></script>
+<script type="module" src="./canvas-core.js?v=318"></script>
+<script src="./wall-3d-preview.js?v=318" defer></script>
+<script src="./wall-3d-walls.js?v=318" defer></script>
+<script type="module" src="./canvas-size.js?v=318"></script>
+<script type="module" src="./canvas-guides.js?v=318"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=318"></script>
+<script type="module" src="./canvas-objects.js?v=318"></script>
+<script type="module" src="./canvas-image.js?v=318"></script>
+<script type="module" src="./canvas-template.js?v=318"></script>
+<script type="module" src="./canvas-ai.js?v=318"></script>
+<script type="module" src="./canvas-retouch.js?v=318"></script>
+<script type="module" src="./canvas-utils.js?v=318"></script>
+<script type="module" src="./shortcuts.js?v=318"></script>
+<script type="module" src="./context-menu.js?v=318"></script>
+<script type="module" src="./export.js?v=318"></script>
+<script type="module" src="./order.js?v=318"></script>
+<script type="module" src="./login.js?v=318"></script>
+<script type="module" src="./my-design.js?v=318"></script>
+<script type="module" src="./ppt-mode.js?v=318"></script>
+<script type="module" src="./main.js?v=318"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=317";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=318";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -5621,6 +5621,7 @@ window.filterFxCards = function(cat, btn) {
             subPanel.style.display = 'none';
             allContents.forEach(c => c.style.display = 'none');
             allIcons.forEach(i => i.classList.remove('active'));
+            window._hideFloatingCloseBtn && window._hideFloatingCloseBtn();
             return;
         }
 
@@ -5635,16 +5636,9 @@ window.filterFxCards = function(cat, btn) {
         subPanel.style.transition = '';
         if (clickedIcon) clickedIcon.classList.add('active');
 
-        // ★ 모바일: 드래그 핸들 + X 닫기 버튼 강제 표시 (인라인 스타일로 CSS 우회)
-        const _handle = document.getElementById('subPanelDragHandle');
-        const _closeBtn = document.getElementById('subPanelCloseBtn');
-        if (_isMobile && _handle && _closeBtn) {
-            _handle.style.cssText = 'display:flex;position:relative;flex-shrink:0;width:100%;height:56px;padding:0;margin:0;background:#fff;border-bottom:1px solid #e2e8f0;align-items:center;justify-content:center;box-sizing:border-box;cursor:grab;touch-action:none;border-radius:16px 16px 0 0;';
-            const _bar = _handle.querySelector('div');
-            if (_bar) _bar.style.cssText = 'width:60px;height:6px;background:#cbd5e1;border-radius:3px;margin:0;';
-            _closeBtn.style.cssText = 'display:flex;position:absolute;top:50%;right:14px;transform:translateY(-50%);width:40px;height:40px;align-items:center;justify-content:center;background:#ef4444;border:none;border-radius:50%;font-size:24px;color:#fff;font-weight:700;padding:0;cursor:pointer;line-height:1;box-shadow:0 2px 6px rgba(239,68,68,0.4);z-index:9999;';
-        } else if (_handle) {
-            _handle.style.display = 'none';
+        // ★ 모바일: 독립 고정 X 닫기 버튼 표시
+        if (_isMobile) {
+            window._showFloatingCloseBtn && window._showFloatingCloseBtn();
         }
 
         // 패널별 데이터 로드 트리거
@@ -5665,6 +5659,40 @@ window.filterFxCards = function(cat, btn) {
     document.querySelectorAll('.icon-item').forEach(function(item) {
         item.onclick = function() { window.toggleSubPanel(item.dataset.panel); };
     });
+
+    // ★ 모바일 전용 독립 X 닫기 버튼 (subPanel 외부, body 직속 fixed)
+    (function() {
+        if (document.getElementById('mobileSubPanelCloser')) return;
+        const closer = document.createElement('button');
+        closer.id = 'mobileSubPanelCloser';
+        closer.type = 'button';
+        closer.innerHTML = '&times;';
+        closer.style.cssText = 'display:none;position:fixed;top:auto;bottom:calc(50vh + 20px);right:14px;width:48px;height:48px;align-items:center;justify-content:center;background:#ef4444;border:none;border-radius:50%;font-size:28px;color:#fff;font-weight:700;padding:0;cursor:pointer;line-height:1;box-shadow:0 4px 12px rgba(239,68,68,0.5);z-index:99999;';
+        closer.onclick = function() {
+            const sp = document.getElementById('subPanel');
+            if (sp) sp.style.display = 'none';
+            document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+            document.querySelectorAll('.icon-item').forEach(function(i) { i.classList.remove('active'); });
+            closer.style.display = 'none';
+        };
+        document.body.appendChild(closer);
+
+        window._showFloatingCloseBtn = function() {
+            // subPanel이 실제로 열렸는지 확인 후 표시 위치 조정
+            requestAnimationFrame(function() {
+                const sp = document.getElementById('subPanel');
+                if (!sp || sp.style.display === 'none') { closer.style.display = 'none'; return; }
+                const rect = sp.getBoundingClientRect();
+                // subPanel 상단 우측에 배치
+                closer.style.top = (rect.top + 8) + 'px';
+                closer.style.bottom = 'auto';
+                closer.style.display = 'flex';
+            });
+        };
+        window._hideFloatingCloseBtn = function() {
+            closer.style.display = 'none';
+        };
+    })();
 
     // ─── [모바일] 바텀시트 드래그 핸들로 닫기 (터치 + 마우스 모두 지원) ───
     (function() {
@@ -6317,7 +6345,7 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
-<script src="./text-wizard.js?v=317"></script> 
+<script src="./text-wizard.js?v=318"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -6611,11 +6639,11 @@ window.filterFxCards = function(cat, btn) {
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=317 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=317';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=317'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=317';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=317';
+    // ★ 여기 파일명 뒤에 ?v=318 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=318';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=318'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=318';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=318';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -7172,7 +7200,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=317').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=318').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -8137,7 +8165,7 @@ window.applyCanvasCrop = function() {
     });
 
     // 새 대지 크기 적용
-    import('./canvas-size.js?v=317').then(mod => {
+    import('./canvas-size.js?v=318').then(mod => {
         if (mod.applySize) {
             mod.applySize(Math.round(cropW), Math.round(cropH), 'CroppedCustom', 'standard', 'resize');
             // 오브젝트 다시 추가 (applySize가 resize 모드에서 보존)
@@ -10726,7 +10754,7 @@ if (w >= 20 && h >= 20) {
         const pricePerSheet = product._original_price || product.price || 0;
 
         // box-nesting.js의 calculateBoxPrice 동적 임포트
-        import('./box-nesting.js?v=317').then(mod => {
+        import('./box-nesting.js?v=318').then(mod => {
             const result = mod.calculateBoxPrice(w, h, d, pricePerSheet);
 
             if (result.error) {
@@ -11063,7 +11091,7 @@ if (w >= 20 && h >= 20) {
         window.__fabricGuideConfig = config;
 
         // 캔버스 가이드 재적용
-        import('./canvas-ai.js?v=317').then(mod => {
+        import('./canvas-ai.js?v=318').then(mod => {
             if (mod.applyFabricGuides) mod.applyFabricGuides(config);
         }).catch(e => console.error('Fabric guide update error:', e));
     };
@@ -11332,14 +11360,14 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=317');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=318');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=317')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=318')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -11391,7 +11419,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=317')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=318')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -11399,7 +11427,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=317');
+                    const m = await import('./order.js?v=318');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -11469,7 +11497,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=317').then(m => {
+            import('./order.js?v=318').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -12064,7 +12092,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=317').then(m => {
+        import('./order.js?v=318').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -12439,7 +12467,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=317');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=318');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -12457,7 +12485,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=317');
+                    const mod = await import('./canvas-ai.js?v=318');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -12473,7 +12501,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=317');
+                    const mod = await import('./canvas-ai.js?v=318');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -12532,7 +12560,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=317');
+                    const mod = await import('./canvas-ai.js?v=318');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -12543,7 +12571,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=317');
+                    const mod = await import('./canvas-ai.js?v=318');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -12623,7 +12651,7 @@ if (w >= 20 && h >= 20) {
         if (window.__fabricGuideConfig) {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=317');
+                    const mod = await import('./canvas-ai.js?v=318');
                     if (mod.applyFabricGuides) mod.applyFabricGuides(window.__fabricGuideConfig);
                 } catch(e) { console.error('Fabric guide error:', e); }
             }, 800);
@@ -12792,7 +12820,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=317');
+                await import('./canvas-objects.js?v=318');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -14359,7 +14387,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=317';
+    import { sb, initConfig } from './config.js?v=318';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {
@@ -16542,7 +16570,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=317').then(function(mod) {
+            import('./order.js?v=318').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -17519,8 +17547,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=317"></script>
-<script src="./npc-wizard.js?v=317"></script>
+<script src="./gif-maker.js?v=318"></script>
+<script src="./npc-wizard.js?v=318"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">
