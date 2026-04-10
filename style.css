@@ -962,6 +962,16 @@ button, input, textarea, select { font-family: inherit; }
         background: #e5e5e5 !important;
         border-bottom: none !important;
     }
+    /* 에디터 진입 시 body/mainEditor도 같은 회색으로 (상단 흰 공백 제거) */
+    body.editor-active {
+        background: #e5e5e5 !important;
+    }
+    body.editor-active #mainEditor {
+        background: #e5e5e5 !important;
+    }
+    body.editor-active .editor-wrap {
+        background: #e5e5e5 !important;
+    }
 
     /* 사이드바 & 우측 스택 -> 모바일 슬라이드 패널로 변환 */
     .side {
