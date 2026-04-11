@@ -2523,9 +2523,10 @@ async function loadGigs() {
 
     let html = '';
     for (const g of gigs) {
+      try {
         const d = dMap[g.designer_id] || {};
-        const _loc = localizeSampleGig(g);
-        const _displayTitle = _loc.title;
+        const _loc = localizeSampleGig(g) || { title: g.title || '', description: g.description || '' };
+        const _displayTitle = _loc.title || g.title || '';
         const thumb = g.thumbnail
             ? `<img src="${g.thumbnail}" alt="">`
             : `<div class="placeholder"><i class="fa-solid fa-image"></i></div>`;
@@ -2534,9 +2535,10 @@ async function loadGigs() {
         const avatar = d.photo_url
             ? `<img src="${d.photo_url}">`
             : `<div class="ava-fallback">${(d.display_name||'D')[0]}</div>`;
-        const rating = g.avg_rating > 0
+        const rating = (g.avg_rating && g.avg_rating > 0)
             ? `<div class="rating">${renderStars(g.avg_rating)} <span class="count">(${g.total_reviews||0})</span></div>`
             : `<div class="rating" style="color:#cbd5e1;">☆☆☆☆☆ <span class="count">New</span></div>`;
+        const fromLabel = LANG==='ko'?'시작가':LANG==='ja'?'最低価格':LANG==='zh'?'起价':LANG==='ar'?'ابتداءً من':LANG==='es'?'Desde':LANG==='de'?'Ab':LANG==='fr'?'À partir de':'From';
         html += `
         <div class="gig-card" onclick="showGigDetail('${g.id}')">
             <div class="thumb">${thumb}${countryBadge}</div>
@@ -2546,18 +2548,25 @@ async function loadGigs() {
                 ${rating}
                 <div class="bottom">
                     <div>
-                        <div class="from-label">${LANG==='ko'?'시작가':LANG==='ja'?'最低価格':'From'}</div>
-                        <div class="from-price">${formatPrice(g.standard_price)}</div>
+                        <div class="from-label">${fromLabel}</div>
+                        <div class="from-price">${formatPrice(g.standard_price || 0)}</div>
                     </div>
                     <div style="font-size:10px;color:#94a3b8;"><i class="fa-solid fa-cart-shopping"></i> ${g.order_count||0}</div>
                 </div>
             </div>
         </div>`;
+      } catch (cardErr) {
+        console.error('[loadGigs] failed to render gig card:', g?.id, cardErr);
+      }
     }
-    grid.innerHTML = html;
+    grid.innerHTML = html || `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-store-slash"></i><p>No gigs to show.</p></div>`;
   } catch (e) {
-    console.error('[loadGigs] exception:', e);
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i><p>${escHtml(e.message || String(e))}</p></div>`;
+    console.error('[loadGigs] exception:', e, e?.stack);
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;color:#ef4444;padding:30px;">
+        <i class="fa-solid fa-triangle-exclamation fa-2x" style="color:#ef4444;margin-bottom:12px;"></i>
+        <p style="font-weight:700;margin-bottom:6px;">${escHtml(e.message || String(e))}</p>
+        <p style="font-size:11px;color:#94a3b8;word-break:break-all;">${escHtml((e.stack || '').split('\n').slice(0, 3).join(' | '))}</p>
+    </div>`;
   }
 }
 
