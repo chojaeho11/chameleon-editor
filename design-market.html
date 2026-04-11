@@ -4890,13 +4890,6 @@ async function showMyRequestDetail(requestId) {
         } catch (e) { console.warn('[selfheal] write failed:', e); }
     }
 
-    // Visible in-page diagnostic so we can see exactly what state the page is in
-    // without needing to read the browser console.
-    _myDetailFinalHtml += `
-    <div style="margin-top:12px;padding:10px 12px;background:#fef9c3;border:1px dashed #facc15;border-radius:8px;font-size:11px;color:#78350f;font-family:monospace;line-height:1.5;">
-        <b>DEBUG:</b> req.status=${r.status} | req.selected_bid_id=${r.selected_bid_id || 'null'} | bids=${(bids||[]).length} | effectiveBidId=${_effectiveSelectedBidId || 'null'}
-    </div>`;
-
     if (_effectiveSelectedBidId) {
         // Fetch the selected bid WITHOUT the embed first (the embed can fail
         // silently when the FK relationship is broken or the designer was
@@ -4918,12 +4911,6 @@ async function showMyRequestDetail(requestId) {
                 .maybeSingle();
             _selBid2 = { ..._selBid2, designer_profiles: _dpRow || {} };
         }
-
-        // Add to debug strip
-        _myDetailFinalHtml += `
-        <div style="margin-top:6px;padding:10px 12px;background:#fef9c3;border:1px dashed #facc15;border-radius:8px;font-size:11px;color:#78350f;font-family:monospace;line-height:1.5;">
-            <b>DEBUG bid:</b> selBid=${_selBid2?'OK':'NULL'} | payment_status=${_selBid2?.payment_status||'null'} | final_files=${(_selBid2?.final_design_urls||[]).length} | err=${_selBidErr?_selBidErr.message:'none'}
-        </div>`;
 
         _selectedBidForPayment = _selBid2;
         if (_selBid2) {
