@@ -877,9 +877,10 @@ async function sendMessage(text, imageData) {
             startQuoteFlow();
             return;
         }
-        // ★ 에디터/셀프디자인 키워드 감지 → 사이즈 입력 다이얼로그 바로 표시
+        // ★ 셀프디자인/에디터 키워드 감지 → 설명 버블 표시
+        // (실제 에디터 열기는 메인화면 상단의 '셀프디자인' 버튼으로 유도)
         const _editorKeys = [
-            '셀프디자인','셀프 디자인','셀프디자','에디터로','에디터 열기','에디터 링크','에디터에서','직접 디자인','내가 디자인','내가디자인','디자인 직접',
+            '셀프디자인','셀프 디자인','셀프디자','에디터','에디터로','에디터 열기','에디터 링크','에디터에서','직접 디자인','내가 디자인','내가디자인','디자인 직접',
             'editor','self design','self-design','design myself','open editor',
             'セルフデザイン','エディター','エディタ','エディターで','自分でデザイン','エディタを開く',
             '自助设计','编辑器','自己设计',
@@ -890,9 +891,19 @@ async function sendMessage(text, imageData) {
         ];
         if (_editorKeys.some(k => _userLower.includes(k))) {
             addBubble(text, 'user');
-            if (typeof window._advOpenEditor === 'function') {
-                window._advOpenEditor();
-            }
+            const _lang = getLang();
+            const _selfDesignMsg = {
+                kr: '에디터를 통해 셀프로 디자인 할 수 있어요. 다 작업하신 후에는 파일 다운받기를 통해 다운받거나 고객님 개인 서버에 보관도 가능합니다.\n\n메인화면 상단의 🎨 **셀프디자인** 버튼을 이용해 주세요!',
+                ja: 'エディターでセルフデザインが可能です。作業後はファイルをダウンロードしたり、お客様専用サーバーに保存することもできます。\n\nメイン画面上部の 🎨 **セルフデザイン** ボタンをご利用ください！',
+                en: 'You can design your own artwork with our editor. When finished, download the file or save it to your personal server.\n\nUse the 🎨 **Self-Design** button at the top of the main screen!',
+                zh: '您可以通过编辑器进行自助设计。完成后可以下载文件或保存到个人服务器。\n\n请使用主页顶部的 🎨 **自助设计** 按钮！',
+                es: 'Puede diseñar su propio arte con nuestro editor. Al terminar, descargue el archivo o guárdelo en su servidor personal.\n\n¡Use el botón 🎨 **Auto-Diseño** en la parte superior de la pantalla principal!',
+                de: 'Sie können Ihre eigenen Designs mit unserem Editor gestalten. Nach Fertigstellung können Sie die Datei herunterladen oder auf Ihrem persönlichen Server speichern.\n\nVerwenden Sie die 🎨 **Selbstgestaltung**-Schaltfläche oben auf dem Hauptbildschirm!',
+                fr: 'Vous pouvez concevoir votre propre design avec notre éditeur. Une fois terminé, téléchargez le fichier ou enregistrez-le sur votre serveur personnel.\n\nUtilisez le bouton 🎨 **Auto-Design** en haut de l\'écran principal !',
+                ar: 'يمكنك تصميم أعمالك الخاصة باستخدام المحرر. عند الانتهاء، قم بتنزيل الملف أو حفظه على خادمك الشخصي.\n\nاستخدم زر 🎨 **التصميم الذاتي** في أعلى الشاشة الرئيسية!'
+            };
+            const _msg = _selfDesignMsg[_lang] || _selfDesignMsg.en;
+            setTimeout(() => addBubble(_msg, 'ai'), 200);
             return;
         }
     }
