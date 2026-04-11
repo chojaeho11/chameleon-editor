@@ -203,6 +203,7 @@
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
             <li class="nav-item" onclick="showSection('sec-withdrawals', this)"><i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리</li>
+            <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 출금관리</li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
 
             <div class="nav-label">Marketing</div>
@@ -494,13 +495,62 @@
                     <th>최근 업로드 (3건)</th>
                     <th style="text-align:right;">출금액</th>
                     <th width="160">기여 등급 / 메모(사유)</th>
-                    <th>계좌정보 (은행/번호/예금주)</th> 
+                    <th>계좌정보 (은행/번호/예금주)</th>
                     <th style="text-align:center;">상태</th>
                     <th style="text-align:center;">관리</th>
                 </tr>
             </thead>
             <tbody id="withdrawalListBody"></tbody>
         </table>
+    </div>
+</div>
+
+<div id="sec-design-withdrawals" class="section">
+    <div class="card" style="margin-bottom:20px;border-left:5px solid #7c3aed;">
+        <h3 style="margin-top:0;color:#7c3aed;">🎨 디자인마켓 출금 신청</h3>
+        <p style="font-size:12px;color:#64748b;margin:0 0 10px 0;">디자이너의 지갑 출금 요청 목록입니다. 프로필 미검증 상태이면 반드시 세금·은행 정보를 확인하고 ✓ 프로필 검증 후 승인하세요.</p>
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="loadDesignWithdrawals()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+            <select id="dwFilterStatus" onchange="loadDesignWithdrawals()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
+                <option value="">전체 상태</option>
+                <option value="pending" selected>대기중</option>
+                <option value="approved">승인됨</option>
+                <option value="rejected">거절됨</option>
+                <option value="paid">지급완료</option>
+            </select>
+            <select id="dwFilterCountry" onchange="loadDesignWithdrawals()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
+                <option value="">전체 국가</option>
+                <option value="KR">🇰🇷 한국</option>
+                <option value="JP">🇯🇵 일본</option>
+                <option value="US">🇺🇸 미국</option>
+                <option value="CN">🇨🇳 중국</option>
+                <option value="GB">🇬🇧 영국</option>
+                <option value="DE">🇩🇪 독일</option>
+                <option value="FR">🇫🇷 프랑스</option>
+                <option value="SA">🇸🇦 사우디</option>
+                <option value="MA">🇲🇦 모로코</option>
+                <option value="SG">🇸🇬 싱가포르</option>
+            </select>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="min-width:1400px;">
+                <thead>
+                    <tr style="background:#faf5ff;">
+                        <th width="90">신청일</th>
+                        <th width="140">디자이너</th>
+                        <th width="60">국가</th>
+                        <th style="text-align:right;" width="110">요청액</th>
+                        <th style="text-align:right;" width="110">실수령</th>
+                        <th width="220">법적정보 / 세금ID</th>
+                        <th width="260">은행 / 국제송금</th>
+                        <th width="80">검증</th>
+                        <th width="90" style="text-align:center;">상태</th>
+                        <th width="150" style="text-align:center;">처리</th>
+                    </tr>
+                </thead>
+                <tbody id="designWithdrawalListBody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
+            </table>
+        </div>
     </div>
 </div>
             <div id="sec-accounting" class="section">

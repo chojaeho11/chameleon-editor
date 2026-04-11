@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=287";
-import { showLoading } from "./global_common.js?v=287";
+import { sb } from "./global_config.js?v=288";
+import { showLoading } from "./global_common.js?v=288";
 
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
@@ -774,4 +774,251 @@ window.approveWithdrawal = async (requestId) => {
 // [결산]
 window.loadAccountingData = async () => {
     showToast("결산 조회 기능 준비중...", "info");
+};
+
+// =========================================================
+// [디자인마켓 출금 관리] - design_withdrawal_requests 테이블 기반
+// =========================================================
+const _DW_COUNTRY_FLAG = {
+    KR:'🇰🇷', JP:'🇯🇵', US:'🇺🇸', CN:'🇨🇳', GB:'🇬🇧',
+    DE:'🇩🇪', FR:'🇫🇷', IT:'🇮🇹', ES:'🇪🇸',
+    SA:'🇸🇦', MA:'🇲🇦', SG:'🇸🇬', VN:'🇻🇳', TH:'🇹🇭'
+};
+
+window.loadDesignWithdrawals = async () => {
+    const tbody = document.getElementById('designWithdrawalListBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;">로딩 중...</td></tr>';
+
+    const statusFilter  = document.getElementById('dwFilterStatus')?.value || '';
+    const countryFilter = document.getElementById('dwFilterCountry')?.value || '';
+
+    try {
+        let q = sb.from('design_withdrawal_requests')
+            .select('*')
+            .order('requested_at', { ascending: false })
+            .limit(100);
+        if (statusFilter)  q = q.eq('status', statusFilter);
+        if (countryFilter) q = q.eq('country', countryFilter);
+
+        const { data: rows, error } = await q;
+        if (error) throw error;
+
+        if (!rows || rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">조건에 맞는 출금 요청이 없습니다.</td></tr>';
+            return;
+        }
+
+        // Fetch designer profiles (display_name + email)
+        const designerIds = [...new Set(rows.map(r => r.designer_id).filter(Boolean))];
+        const { data: dps } = await sb.from('designer_profiles')
+            .select('id, display_name, photo_url, country, is_demo')
+            .in('id', designerIds);
+        const dpMap = {};
+        (dps || []).forEach(d => dpMap[d.id] = d);
+
+        // Fetch tax profiles (to show current verified state)
+        const { data: tps } = await sb.from('designer_tax_profiles')
+            .select('designer_id, verified, verified_at')
+            .in('designer_id', designerIds);
+        const tpMap = {};
+        (tps || []).forEach(t => tpMap[t.designer_id] = t);
+
+        // Fetch auth users email via profiles table
+        const { data: profs } = await sb.from('profiles')
+            .select('id, email, username')
+            .in('id', designerIds);
+        const profMap = {};
+        (profs || []).forEach(p => profMap[p.id] = p);
+
+        tbody.innerHTML = '';
+        rows.forEach(r => {
+            const dp = dpMap[r.designer_id] || {};
+            const tp = tpMap[r.designer_id] || {};
+            const profile = profMap[r.designer_id] || {};
+            const flag = _DW_COUNTRY_FLAG[r.country] || '🌐';
+            const email = profile.email || '';
+            const displayName = dp.display_name || profile.username || '(이름없음)';
+            const avatar = dp.photo_url
+                ? `<img src="${dp.photo_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid #e2e8f0;">`
+                : `<div style="width:32px;height:32px;border-radius:50%;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;">${displayName[0] || 'D'}</div>`;
+
+            const legalInfo = `
+                <div style="font-size:11px;line-height:1.5;">
+                    <div><b>${r.legal_name || '-'}</b> <span style="color:#64748b;">(${r.tax_id_type || '-'})</span></div>
+                    <div style="color:#64748b;font-family:monospace;word-break:break-all;">${r.tax_id || '-'}</div>
+                    <div style="color:#94a3b8;font-size:10px;">${r.residence_address || '-'}</div>
+                </div>`;
+
+            let bankInfo = `
+                <div style="font-size:11px;line-height:1.5;">
+                    <div><b>${r.bank_name || '-'}</b> / ${r.bank_holder || '-'}</div>
+                    <div style="color:#64748b;font-family:monospace;">${r.bank_account || '-'}</div>`;
+            if (r.country && r.country !== 'KR') {
+                bankInfo += `
+                    <div style="margin-top:4px;padding:4px 6px;background:#eff6ff;border-radius:4px;">
+                        ${r.swift_bic ? `<div style="color:#1e40af;"><b>SWIFT:</b> ${r.swift_bic}</div>` : ''}
+                        ${r.iban ? `<div style="color:#1e40af;word-break:break-all;"><b>IBAN:</b> ${r.iban}</div>` : ''}
+                        ${r.routing_number ? `<div style="color:#1e40af;"><b>Routing:</b> ${r.routing_number}</div>` : ''}
+                        ${r.bank_address ? `<div style="color:#64748b;font-size:10px;">${r.bank_address}</div>` : ''}
+                        ${r.payout_currency ? `<div style="color:#7c3aed;font-weight:700;">${r.payout_currency}${r.claim_tax_treaty ? ' · Treaty claimed' : ''}</div>` : ''}
+                    </div>`;
+            }
+            bankInfo += '</div>';
+
+            let verifyBadge = '';
+            if (tp.verified) {
+                verifyBadge = `<span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap;">✓ 검증됨</span>`;
+            } else {
+                verifyBadge = `<button onclick="verifyDesignerTaxProfile('${r.designer_id}')" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">⧖ 검증하기</button>`;
+            }
+
+            const stMap = {
+                pending:  { lbl: '대기중',    style: 'background:#fef3c7;color:#92400e;' },
+                approved: { lbl: '승인됨',    style: 'background:#dbeafe;color:#1e40af;' },
+                rejected: { lbl: '거절됨',    style: 'background:#fee2e2;color:#991b1b;' },
+                paid:     { lbl: '지급완료',  style: 'background:#dcfce7;color:#166534;' }
+            };
+            const st = stMap[r.status] || stMap.pending;
+
+            let actionHtml = '';
+            if (r.status === 'pending') {
+                actionHtml = `
+                    <button class="btn btn-success btn-sm" onclick="approveDesignWithdrawal('${r.id}')" style="padding:4px 8px;font-size:11px;margin-right:2px;">승인</button>
+                    <button class="btn btn-outline btn-sm" onclick="rejectDesignWithdrawal('${r.id}')" style="padding:4px 8px;font-size:11px;color:#dc2626;border-color:#fecaca;">거절</button>`;
+            } else if (r.status === 'approved') {
+                actionHtml = `<button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:4px 8px;font-size:11px;">지급완료 처리</button>`;
+            } else {
+                actionHtml = `<span style="font-size:10px;color:#94a3b8;">${r.processed_at ? new Date(r.processed_at).toLocaleDateString() : '-'}</span>`;
+            }
+
+            tbody.innerHTML += `
+                <tr style="vertical-align:top;">
+                    <td style="font-size:11px;">${new Date(r.requested_at).toLocaleDateString()}<br><span style="color:#94a3b8;">${new Date(r.requested_at).toLocaleTimeString()}</span></td>
+                    <td>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            ${avatar}
+                            <div style="min-width:0;">
+                                <div style="font-size:12px;font-weight:700;${dp.is_demo?'color:#f59e0b;':''}">${displayName}${dp.is_demo?' <span style="font-size:9px;">(DEMO)</span>':''}</div>
+                                <div style="font-size:10px;color:#64748b;word-break:break-all;">${email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align:center;font-size:14px;">${flag}<br><span style="font-size:10px;color:#64748b;">${r.country || '-'}</span></td>
+                    <td style="text-align:right;font-weight:700;color:#7c3aed;">${(r.gross_amount||0).toLocaleString()}원</td>
+                    <td style="text-align:right;font-weight:700;color:#16a34a;">${(r.net_amount||0).toLocaleString()}원<br><span style="font-size:9px;color:#94a3b8;font-weight:400;">(-${((r.vat_amount||0)+(r.card_fee_amount||0)+(r.platform_fee_amount||0)).toLocaleString()} fee)</span></td>
+                    <td>${legalInfo}</td>
+                    <td>${bankInfo}</td>
+                    <td style="text-align:center;">${verifyBadge}</td>
+                    <td style="text-align:center;"><span class="badge" style="${st.style}padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;">${st.lbl}</span></td>
+                    <td style="text-align:center;">${actionHtml}</td>
+                </tr>`;
+        });
+    } catch (e) {
+        console.error('[loadDesignWithdrawals] error:', e);
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#ef4444;padding:20px;">${e.message}</td></tr>`;
+    }
+};
+
+window.verifyDesignerTaxProfile = async (designerId) => {
+    if (!confirm("이 디자이너의 세금·은행 정보를 검증 완료로 표시하시겠습니까?\n\n검증 전에 세금 ID, 은행 정보, 주소가 모두 정확한지 확인하세요.")) return;
+    try {
+        const { data: u } = await sb.auth.getUser();
+        const { error } = await sb.from('designer_tax_profiles')
+            .update({
+                verified: true,
+                verified_at: new Date().toISOString(),
+                verified_by: u?.user?.id || null
+            })
+            .eq('designer_id', designerId);
+        if (error) throw error;
+        showToast("프로필 검증 완료", "success");
+        loadDesignWithdrawals();
+    } catch (e) {
+        showToast("검증 실패: " + e.message, "error");
+    }
+};
+
+window.approveDesignWithdrawal = async (reqId) => {
+    if (!confirm("이 출금 요청을 승인하시겠습니까?\n\n승인 후 송금을 진행하고, 송금이 완료되면 '지급완료 처리' 버튼을 눌러주세요.")) return;
+    try {
+        const { error } = await sb.from('design_withdrawal_requests')
+            .update({ status: 'approved', processed_at: new Date().toISOString() })
+            .eq('id', reqId);
+        if (error) throw error;
+        showToast("출금 요청이 승인되었습니다. 송금 후 지급완료 처리를 해주세요.", "success");
+        loadDesignWithdrawals();
+    } catch (e) {
+        showToast("승인 실패: " + e.message, "error");
+    }
+};
+
+window.rejectDesignWithdrawal = async (reqId) => {
+    const reason = prompt("거절 사유를 입력하세요 (디자이너에게 전달됩니다):");
+    if (reason === null) return;
+    try {
+        // Fetch gross to restore wallet
+        const { data: r } = await sb.from('design_withdrawal_requests')
+            .select('designer_id, gross_amount, status')
+            .eq('id', reqId)
+            .maybeSingle();
+        if (!r) throw new Error('요청을 찾을 수 없습니다');
+        if (r.status !== 'pending') throw new Error('대기 상태 요청만 거절할 수 있습니다');
+
+        const { error: uErr } = await sb.from('design_withdrawal_requests')
+            .update({
+                status: 'rejected',
+                processed_at: new Date().toISOString(),
+                admin_note: reason || null
+            })
+            .eq('id', reqId);
+        if (uErr) throw uErr;
+
+        // Restore designer wallet_balance (move back from pending_withdrawal)
+        const { data: dp } = await sb.from('designer_profiles')
+            .select('wallet_balance, wallet_pending_withdrawal')
+            .eq('id', r.designer_id)
+            .maybeSingle();
+        if (dp) {
+            await sb.from('designer_profiles').update({
+                wallet_balance: (dp.wallet_balance || 0) + (r.gross_amount || 0),
+                wallet_pending_withdrawal: Math.max(0, (dp.wallet_pending_withdrawal || 0) - (r.gross_amount || 0))
+            }).eq('id', r.designer_id);
+        }
+        showToast("거절 처리 및 잔액 복원 완료", "success");
+        loadDesignWithdrawals();
+    } catch (e) {
+        showToast("거절 실패: " + e.message, "error");
+    }
+};
+
+window.markDesignWithdrawalPaid = async (reqId) => {
+    if (!confirm("송금이 완료되었습니까? 지급완료 상태로 변경합니다.")) return;
+    try {
+        const { data: r } = await sb.from('design_withdrawal_requests')
+            .select('designer_id, gross_amount, status')
+            .eq('id', reqId)
+            .maybeSingle();
+        if (!r) throw new Error('요청을 찾을 수 없습니다');
+
+        const { error } = await sb.from('design_withdrawal_requests')
+            .update({ status: 'paid', processed_at: new Date().toISOString() })
+            .eq('id', reqId);
+        if (error) throw error;
+
+        // Clear pending_withdrawal since money is now actually out the door
+        const { data: dp } = await sb.from('designer_profiles')
+            .select('wallet_pending_withdrawal')
+            .eq('id', r.designer_id)
+            .maybeSingle();
+        if (dp) {
+            await sb.from('designer_profiles').update({
+                wallet_pending_withdrawal: Math.max(0, (dp.wallet_pending_withdrawal || 0) - (r.gross_amount || 0))
+            }).eq('id', r.designer_id);
+        }
+        showToast("지급완료 처리되었습니다", "success");
+        loadDesignWithdrawals();
+    } catch (e) {
+        showToast("처리 실패: " + e.message, "error");
+    }
 };
