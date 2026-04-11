@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=419";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=419";
-import { SITE_CONFIG } from "./site-config.js?v=419";
-import { applySize } from "./canvas-size.js?v=419";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=419";
+import { canvas } from "./canvas-core.js?v=420";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=420";
+import { SITE_CONFIG } from "./site-config.js?v=420";
+import { applySize } from "./canvas-size.js?v=420";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=420";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=419";
+} from "./export.js?v=420";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1560,7 +1560,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=419');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=420');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2867,7 +2867,11 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
         const item = cartData[i];
         const idx = String(i + 1).padStart(2, '0');
 
-        if (item.designPdfUrl && item.type === 'design') {
+        // ★ 멀티페이지(종이매대 등): 사전 생성된 단면 PNG는 대표 썸네일일 뿐이므로,
+        //    각 face(페이지)를 개별 PNG로 생성해 업로드한다.
+        const _hasMultiPages = item.type === 'design' && item.pages && item.pages.length > 1;
+
+        if (item.designPdfUrl && item.type === 'design' && !_hasMultiPages) {
             if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
                 const res = await withTimeout(fetch(item.designPdfUrl), PDF_TIMEOUT);
@@ -2928,26 +2932,55 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             continue;
         }
 
-        if (!item.originalUrl && item.type === 'design' && item.json && item.product) {
+        if ((!item.originalUrl || _hasMultiPages) && item.type === 'design' && (item.json || _hasMultiPages) && item.product) {
             let hasContent = false;
-            if (item.json.objects && Array.isArray(item.json.objects)) {
-                const validObjects = item.json.objects.filter(obj => !obj.isBoard);
+            const _chkJson = item.json || (item.pages && item.pages[0]);
+            if (_chkJson && _chkJson.objects && Array.isArray(_chkJson.objects)) {
+                const validObjects = _chkJson.objects.filter(obj => !obj.isBoard);
                 if (validObjects.length > 0) hasContent = true;
+            } else if (_hasMultiPages) {
+                hasContent = true; // pdMode: 여러 페이지가 있으면 콘텐츠로 간주
             }
             if (!hasContent) continue;
 
             if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
-                // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=419');
-                let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+                const { generateDesignPNG } = await import('./export.js?v=420');
 
-                if(fileBlob) {
-                    const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${orderId}/design_${idx}.png`), UPLOAD_TIMEOUT);
-                    if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.png`, url: url, type: 'product' });
-                    else errors.push(`product_${idx} upload failed`);
-                } else { errors.push(`product_${idx} PNG generation timeout/failed`); }
+                if (targetPages.length > 1) {
+                    // ★ 멀티페이지 (종이매대 등): 각 face를 개별 PNG로 생성·업로드
+                    const _pdFaceLabels = ['01_상단광고', '02_옆면', '03_선반', '04_하단'];
+                    for (let pi = 0; pi < targetPages.length; pi++) {
+                        const pageJson = targetPages[pi];
+                        const boardJson = (pageJson.objects || []).find(o => o.isBoard);
+                        if (!boardJson) continue;
+                        const pw = (boardJson.width || item.width || 1000) * (boardJson.scaleX || 1);
+                        const ph = (boardJson.height || item.height || 1000) * (boardJson.scaleY || 1);
+                        const px = boardJson.left || 0;
+                        const py = boardJson.top || 0;
+
+                        let faceBlob = await withTimeout(generateDesignPNG(pageJson, pw, ph, px, py), PDF_TIMEOUT);
+                        if (faceBlob) {
+                            const faceLabel = _pdFaceLabels[pi] || ('face_' + String(pi + 1).padStart(2, '0'));
+                            const faceIdx = String(pi + 1).padStart(2, '0');
+                            const url = await withTimeout(uploadFileToSupabase(faceBlob, `orders/${orderId}/design_${idx}_${faceIdx}.png`), UPLOAD_TIMEOUT);
+                            if (url) uploadedFiles.push({ name: `product_${idx}_${faceLabel}_${item.product.name}.png`, url: url, type: 'product' });
+                            else errors.push(`product_${idx}_${faceIdx} upload failed`);
+                        } else {
+                            errors.push(`product_${idx}_${String(pi + 1).padStart(2, '0')} PNG generation failed`);
+                        }
+                    }
+                } else {
+                    // 단일 페이지
+                    let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
+
+                    if(fileBlob) {
+                        const url = await withTimeout(uploadFileToSupabase(fileBlob, `orders/${orderId}/design_${idx}.png`), UPLOAD_TIMEOUT);
+                        if(url) uploadedFiles.push({ name: `product_${idx}_${item.product.name}.png`, url: url, type: 'product' });
+                        else errors.push(`product_${idx} upload failed`);
+                    } else { errors.push(`product_${idx} PNG generation timeout/failed`); }
+                }
             } catch(err) {
                 console.error("디자인 변환 실패:", err);
                 errors.push(`product_${idx}: ${err.message || err}`);
