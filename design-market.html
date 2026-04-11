@@ -3851,6 +3851,9 @@ async function clientMarkComplete(requestId, bidId) {
         if (error) throw error;
         showToast(_p3Label('payment_pending_files'), 'success');
         await showMyRequestDetail(requestId);
+        // Immediately open the rating modal so the user can leave a review
+        // right after completing — no need to wait for the designer to upload.
+        setTimeout(() => { try { openRatingModal(requestId, bidId); } catch(e){} }, 200);
     } catch (e) {
         console.error('[complete] error:', e);
         showToast('Error: ' + (e.message || ''), 'error');
@@ -4976,35 +4979,34 @@ async function showMyRequestDetail(requestId) {
                 </div>`;
             }
 
-            // ★ If client already clicked complete, show "waiting for designer to upload" notice
-            if (_ps === 'completed_pending_files') {
-                const _waitingTxt = LANG==='en'?'Transaction marked complete. Waiting for the designer to upload the final files (image + PDF). Once uploaded, payment is released to the designer.':LANG==='ja'?'取引完了処理済み。デザイナーが最終ファイル（画像 + PDF）をアップロードするのを待っています。アップロードされると報酬が支払われます。':'완료 처리됨. 디자이너가 최종 파일(이미지 + PDF)을 업로드하기를 기다리는 중입니다. 업로드가 완료되면 대금이 디자이너에게 지급됩니다.';
-                _myDetailFinalHtml += `
-                <div style="padding:14px 16px;background:#dbeafe;border:1.5px solid #93c5fd;border-radius:12px;margin:14px 0 4px;display:flex;align-items:center;gap:12px;">
-                    <i class="fa-solid fa-hourglass-half" style="font-size:22px;color:#2563eb;"></i>
-                    <div style="font-size:12px;color:#1e40af;line-height:1.6;">${_waitingTxt}</div>
-                </div>`;
-            }
-
-            // ★ If released, show success notice + Leave Review CTA (if not yet reviewed)
-            if (_ps === 'released') {
-                // Check if a review already exists (use limit instead of maybeSingle
-                // to avoid 406 if duplicate rows exist)
+            // After client marks complete OR after payment is released,
+            // show rating CTA (if not yet reviewed) + appropriate status notice.
+            if (_ps === 'completed_pending_files' || _ps === 'released') {
                 const { data: _revRows } = await sb.from('design_reviews')
                     .select('rating')
                     .eq('request_id', r.id)
                     .limit(1);
                 const _existingRev = _revRows && _revRows.length > 0 ? _revRows[0] : null;
 
-                const _doneTxt = LANG==='en'?'All done! The designer has been paid.':LANG==='ja'?'すべて完了しました！デザイナーへの支払いが完了しています。':'모든 거래가 완료되었습니다! 디자이너에게 대금이 지급되었습니다.';
-                _myDetailFinalHtml += `
-                <div style="padding:14px 16px;background:#dcfce7;border:1.5px solid #86efac;border-radius:12px;margin:14px 0 4px;display:flex;align-items:center;gap:12px;">
-                    <i class="fa-solid fa-circle-check" style="font-size:22px;color:#16a34a;"></i>
-                    <div style="font-size:12px;color:#15803d;line-height:1.6;font-weight:600;">${_doneTxt}</div>
-                </div>`;
+                // Status notice
+                if (_ps === 'completed_pending_files') {
+                    const _waitingTxt = LANG==='en'?'Transaction marked complete. Waiting for the designer to upload the final files (image + PDF). Once uploaded, payment is released to the designer.':LANG==='ja'?'取引完了処理済み。デザイナーが最終ファイル（画像 + PDF）をアップロードするのを待っています。アップロードされると報酬が支払われます。':'완료 처리됨. 디자이너가 최종 파일(이미지 + PDF)을 업로드하기를 기다리는 중입니다. 업로드가 완료되면 대금이 디자이너에게 지급됩니다.';
+                    _myDetailFinalHtml += `
+                    <div style="padding:14px 16px;background:#dbeafe;border:1.5px solid #93c5fd;border-radius:12px;margin:14px 0 4px;display:flex;align-items:center;gap:12px;">
+                        <i class="fa-solid fa-hourglass-half" style="font-size:22px;color:#2563eb;"></i>
+                        <div style="font-size:12px;color:#1e40af;line-height:1.6;">${_waitingTxt}</div>
+                    </div>`;
+                } else {
+                    const _doneTxt = LANG==='en'?'All done! The designer has been paid.':LANG==='ja'?'すべて完了しました！デザイナーへの支払いが完了しています。':'모든 거래가 완료되었습니다! 디자이너에게 대금이 지급되었습니다.';
+                    _myDetailFinalHtml += `
+                    <div style="padding:14px 16px;background:#dcfce7;border:1.5px solid #86efac;border-radius:12px;margin:14px 0 4px;display:flex;align-items:center;gap:12px;">
+                        <i class="fa-solid fa-circle-check" style="font-size:22px;color:#16a34a;"></i>
+                        <div style="font-size:12px;color:#15803d;line-height:1.6;font-weight:600;">${_doneTxt}</div>
+                    </div>`;
+                }
 
+                // Rating CTA (shows at completed_pending_files and released, if not yet reviewed)
                 if (!_existingRev) {
-                    // Big star-rating CTA
                     const _rateTitle = LANG==='en'?'How was your experience?':LANG==='ja'?'デザイナーの評価をお願いします':'디자이너 평가를 남겨주세요';
                     const _rateDesc  = LANG==='en'?'Rate communication, quality and delivery speed. Your review helps other clients pick the right designer.':LANG==='ja'?'コミュニケーション・品質・納期スピードを評価してください。他の依頼者が良いデザイナーを選ぶのに役立ちます。':'커뮤니케이션·품질·납기 속도를 평가해주세요. 다른 의뢰인이 좋은 디자이너를 고르는 데 도움이 됩니다.';
                     const _rateBtn   = LANG==='en'?'Leave a Star Rating':LANG==='ja'?'星評価を残す':'별점 평가 남기기';
@@ -5013,12 +5015,11 @@ async function showMyRequestDetail(requestId) {
                         <div style="font-size:28px;margin-bottom:6px;">⭐ ⭐ ⭐ ⭐ ⭐</div>
                         <div style="font-size:16px;font-weight:800;color:#78350f;margin-bottom:6px;">${_rateTitle}</div>
                         <div style="font-size:12px;color:#92400e;margin-bottom:14px;line-height:1.6;">${_rateDesc}</div>
-                        <button onclick="openRatingModal('${r.id}')" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,0.4);font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+                        <button onclick="openRatingModal('${r.id}','${_selBid2.id}')" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,0.4);font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
                             <i class="fa-solid fa-star"></i> ${_rateBtn}
                         </button>
                     </div>`;
                 } else {
-                    // Already reviewed — show acknowledgment
                     const _thanksTxt = LANG==='en'?'Thanks for your review!':LANG==='ja'?'レビューありがとうございました！':'리뷰를 남겨주셔서 감사합니다!';
                     _myDetailFinalHtml += `
                     <div style="padding:12px 14px;background:#faf5ff;border:1px solid #ddd6fe;border-radius:10px;margin:8px 0 4px;text-align:center;font-size:12px;color:#6d28d9;font-weight:700;">
@@ -5733,19 +5734,31 @@ function _p4Label(key) {
     return (L[LANG] || L.en)[key] || L.en[key] || key;
 }
 
-async function openRatingModal(requestId) {
-    const { data: r } = await sb.from('design_requests').select('selected_bid_id, gig_id, gig_tier').eq('id', requestId).single();
-    if (!r?.selected_bid_id) { showToast(t('toast_no_designer'), 'error'); return; }
-    const { data: bid } = await sb.from('design_bids').select('designer_id, price').eq('id', r.selected_bid_id).single();
+async function openRatingModal(requestId, explicitBidId) {
+    const { data: r } = await sb.from('design_requests').select('selected_bid_id, gig_id, gig_tier').eq('id', requestId).maybeSingle();
+    // Prefer explicit bid id from the caller, fall back to request.selected_bid_id,
+    // then fall back to any bid whose payment_status indicates it's the working bid.
+    let _bidId = explicitBidId || r?.selected_bid_id || null;
+    if (!_bidId) {
+        const { data: _rows } = await sb.from('design_bids')
+            .select('id')
+            .eq('request_id', requestId)
+            .in('payment_status', ['paid','completed_pending_files','released'])
+            .limit(1);
+        if (_rows && _rows.length > 0) _bidId = _rows[0].id;
+    }
+    if (!_bidId) { showToast(t('toast_no_designer'), 'error'); return; }
+
+    const { data: bid } = await sb.from('design_bids').select('designer_id, price').eq('id', _bidId).maybeSingle();
     if (!bid) { showToast(t('toast_bid_not_found'), 'error'); return; }
 
     currentRatingData = {
         request_id: requestId,
         designer_id: bid.designer_id,
         price: bid.price,
-        bid_id: r.selected_bid_id,
-        gig_id: r.gig_id || null,
-        gig_tier: r.gig_tier || null
+        bid_id: _bidId,
+        gig_id: r?.gig_id || null,
+        gig_tier: r?.gig_tier || null
     };
     window._ratingSubs = { communication: 0, quality: 0, speed: 0 };
     window._ratingImages = [];
