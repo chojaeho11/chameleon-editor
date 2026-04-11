@@ -311,6 +311,7 @@
         @keyframes chatFadeIn{from{opacity:0;}to{opacity:1;}}
         .chat-panel{background:#fff;width:100%;max-width:460px;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(15,23,42,0.2);animation:chatSlideIn 0.25s cubic-bezier(0.4,0,0.2,1);overflow:hidden;}
         @keyframes chatSlideIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+        @keyframes pulse-green{0%,100%{box-shadow:0 2px 8px rgba(22,163,74,0.4);}50%{box-shadow:0 2px 16px rgba(22,163,74,0.8);}}
         .chat-header{display:flex;align-items:center;gap:12px;padding:16px 18px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;flex-shrink:0;}
         .chat-header .chat-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.4);flex-shrink:0;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;}
         .chat-header .chat-peer-info{flex:1;min-width:0;}
@@ -6106,7 +6107,11 @@ async function loadMyBids() {
         let _finalDesignSection = '';
         const _ps = b.payment_status;
         const _net66 = Math.floor(b.price * FEE_NET_PCT / 100);
-        if (_isSelected || _reqCompleted) {
+        // Also unlock the payment-state section whenever payment_status has
+        // moved past pending — that's the reliable signal that the client has
+        // paid (even if bid.status never got flipped to 'selected' due to RLS).
+        const _psActive = _ps && _ps !== 'pending';
+        if (_isSelected || _reqCompleted || _psActive) {
             // Show payment status badge row first
             let _psBadgeHtml = '';
             if (_ps === 'pending') _psBadgeHtml = `<span class="pay-status-badge pending">${_p3Label('payment_pending')}</span>`;
@@ -6230,7 +6235,10 @@ async function loadMyBids() {
                     <span class="category-badge" style="margin-right:8px;">${catName(r.category)}</span>
                     <span class="my-bid-title">${escHtml(r.title || t('deleted_request'))}</span>
                 </div>
-                <div style="display:flex;gap:6px;align-items:center;">
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+                    ${_ps === 'completed_pending_files' ? `<span style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(22,163,74,0.4);animation:pulse-green 1.6s infinite;white-space:nowrap;">✅ ${LANG==='en'?'CLIENT COMPLETED':LANG==='ja'?'依頼者完了':'의뢰인 완료!'}</span>` : ''}
+                    ${_ps === 'paid' ? `<span style="background:#3730a3;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap;">💰 ${LANG==='en'?'PAID':LANG==='ja'?'決済済み':'결제완료'}</span>` : ''}
+                    ${_ps === 'released' ? `<span style="background:#7c3aed;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap;">💸 ${LANG==='en'?'PAID OUT':LANG==='ja'?'支払済':'지급완료'}</span>` : ''}
                     ${_reqCompleted ? `<span class="badge-sm badge-complete">${LANG==='ja'?'取引完了':LANG==='en'?'Completed':'거래완료'}</span>` : `<span class="badge-sm ${bst.cls}">${bst.label}</span>`}
                 </div>
             </div>
