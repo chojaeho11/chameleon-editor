@@ -125,8 +125,9 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
 <meta name="twitter:image" content="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1772681692107_1409904-0a2de3f2-b797-472d-bf50-914c6ed0d8a4.png">
 <meta name="twitter:image:alt" content="카멜레온프린팅 - 친환경 전시·팝업스토어 인쇄">
 
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" href="/mascot-character.png">
-<link rel="shortcut icon" href="/mascot-character.png">
 <link rel="apple-touch-icon" href="/mascot-character.png">
 <link rel="canonical" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
@@ -501,7 +502,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=350">
+<link rel="stylesheet" href="./style.css?v=400">
 
 <meta name="naver-site-verification" content="141eed82fa50fd6f98fa7bfe8dc481a202beb8cf" />
 
@@ -574,7 +575,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 2초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},2000);
 </script>
-<script src="toast.js?v=350"></script>
+<script src="toast.js?v=400"></script>
 <script>
 // v175: 서비스 워커 + 모든 캐시 강제 삭제
 if ('serviceWorker' in navigator) {
@@ -1234,18 +1235,35 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const _sb = window.sb || window.supabaseClient;
                 if (!_sb) return;
-                let query = _sb.from('orders')
-                    .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review, site_code')
-                    .not('status', 'in', '("임시작성","관리자차단","취소됨")')
-                    .order('created_at', { ascending: false })
-                    .limit(100);
 
-                if (searchQuery) {
-                    query = query.or(`manager_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
+                // ★ 5분 캐시 — Supabase 부하의 가장 큰 부분 (100건 × items/photos)
+                // 검색어가 있을 때는 캐시 우회
+                const _cf = window.cachedFetch;
+                let data;
+
+                if (!searchQuery && _cf) {
+                    data = await _cf('order_tracker_100', 5, async () => {
+                        const r = await _sb.from('orders')
+                            .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review, site_code')
+                            .not('status', 'in', '("임시작성","관리자차단","취소됨")')
+                            .order('created_at', { ascending: false })
+                            .limit(100);
+                        if (r.error) throw r.error;
+                        return r.data;
+                    });
+                } else {
+                    let query = _sb.from('orders')
+                        .select('id, manager_name, phone, status, items, production_photos, created_at, delivery_target_date, customer_review, site_code')
+                        .not('status', 'in', '("임시작성","관리자차단","취소됨")')
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+                    if (searchQuery) {
+                        query = query.or(`manager_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
+                    }
+                    const r = await query;
+                    if (r.error) { console.error('orderTracker:', r.error); return; }
+                    data = r.data;
                 }
-
-                const { data, error } = await query;
-                if (error) { console.error('orderTracker:', error); return; }
 
                 // 배송완료 7일 지난건 제외
                 const now = Date.now();
@@ -5514,30 +5532,30 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=350"></script>
-<script type="module" src="./canvas-core.js?v=350"></script>
-<script src="./wall-3d-preview.js?v=350" defer></script>
-<script src="./wall-3d-walls.js?v=350" defer></script>
-<script type="module" src="./canvas-size.js?v=350"></script>
-<script type="module" src="./canvas-guides.js?v=350"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=350"></script>
-<script type="module" src="./canvas-objects.js?v=350"></script>
-<script type="module" src="./canvas-image.js?v=350"></script>
-<script type="module" src="./canvas-template.js?v=350"></script>
-<script type="module" src="./canvas-ai.js?v=350"></script>
-<script type="module" src="./canvas-retouch.js?v=350"></script>
-<script type="module" src="./canvas-utils.js?v=350"></script>
-<script type="module" src="./shortcuts.js?v=350"></script>
-<script type="module" src="./context-menu.js?v=350"></script>
-<script type="module" src="./export.js?v=350"></script>
-<script type="module" src="./order.js?v=350"></script>
-<script type="module" src="./login.js?v=350"></script>
-<script type="module" src="./my-design.js?v=350"></script>
-<script type="module" src="./ppt-mode.js?v=350"></script>
-<script type="module" src="./main.js?v=350"></script>
+<script type="module" src="./config.js?v=400"></script>
+<script type="module" src="./canvas-core.js?v=400"></script>
+<script src="./wall-3d-preview.js?v=400" defer></script>
+<script src="./wall-3d-walls.js?v=400" defer></script>
+<script type="module" src="./canvas-size.js?v=400"></script>
+<script type="module" src="./canvas-guides.js?v=400"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=400"></script>
+<script type="module" src="./canvas-objects.js?v=400"></script>
+<script type="module" src="./canvas-image.js?v=400"></script>
+<script type="module" src="./canvas-template.js?v=400"></script>
+<script type="module" src="./canvas-ai.js?v=400"></script>
+<script type="module" src="./canvas-retouch.js?v=400"></script>
+<script type="module" src="./canvas-utils.js?v=400"></script>
+<script type="module" src="./shortcuts.js?v=400"></script>
+<script type="module" src="./context-menu.js?v=400"></script>
+<script type="module" src="./export.js?v=400"></script>
+<script type="module" src="./order.js?v=400"></script>
+<script type="module" src="./login.js?v=400"></script>
+<script type="module" src="./my-design.js?v=400"></script>
+<script type="module" src="./ppt-mode.js?v=400"></script>
+<script type="module" src="./main.js?v=400"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=350";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=400";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -6462,7 +6480,7 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
-<script src="./text-wizard.js?v=350"></script> 
+<script src="./text-wizard.js?v=400"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -6756,11 +6774,11 @@ window.filterFxCards = function(cat, btn) {
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=350 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=350';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=350'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=350';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=350';
+    // ★ 여기 파일명 뒤에 ?v=400 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=400';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=400'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=400';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=400';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -6820,6 +6838,82 @@ window.filterFxCards = function(cat, btn) {
 
     window.canvas = canvas;
     window.sb = sb; // ★ [핵심] 데이터베이스 연결 도구 전역 등록
+
+    // ═══════════════════════════════════════════════════════════════
+    // localStorage TTL cache helpers (Supabase load reduction)
+    // ───────────────────────────────────────────────────────────────
+    // Goal: cache stable Supabase responses (categories, products,
+    // templates) so repeat visits within the TTL don't hit the server.
+    // Bump CACHE_VERSION to invalidate everything globally if the
+    // schema changes or you ship new admin data.
+    // ═══════════════════════════════════════════════════════════════
+    const CACHE_VERSION = 'v2';
+    window.CACHE_VERSION = CACHE_VERSION;
+
+    /**
+     * Read a cached value if it exists and hasn't expired.
+     * Returns the parsed payload or null if missing/expired/corrupt.
+     */
+    window.cacheGet = function(key, ttlMin) {
+        try {
+            const raw = localStorage.getItem('cache:' + CACHE_VERSION + ':' + key);
+            if (!raw) return null;
+            const obj = JSON.parse(raw);
+            if (!obj || typeof obj.t !== 'number') return null;
+            const ageMs = Date.now() - obj.t;
+            if (ageMs > ttlMin * 60 * 1000) return null;
+            return obj.d;
+        } catch (e) { return null; }
+    };
+
+    /**
+     * Save a payload under a cache key with current timestamp.
+     * Silently ignores quota errors (private mode, full storage).
+     */
+    window.cacheSet = function(key, data) {
+        try {
+            localStorage.setItem('cache:' + CACHE_VERSION + ':' + key,
+                JSON.stringify({ t: Date.now(), d: data }));
+        } catch (e) { /* ignore */ }
+    };
+
+    /**
+     * "Stale-or-fetch" wrapper. Returns cached data immediately if
+     * fresh; otherwise runs the fetcher and caches the result.
+     * Usage: const rows = await cachedFetch('top_cats', 180, () => sb.from(...).select(...));
+     * The fetcher should return either { data, error } (Supabase style)
+     * or a plain array. Errors do NOT poison the cache.
+     */
+    window.cachedFetch = async function(key, ttlMin, fetcher) {
+        const hit = window.cacheGet(key, ttlMin);
+        if (hit !== null) return hit;
+        try {
+            const res = await fetcher();
+            // Supabase-style response → unwrap data
+            if (res && typeof res === 'object' && 'data' in res) {
+                if (res.error) throw res.error;
+                if (res.data != null) window.cacheSet(key, res.data);
+                return res.data;
+            }
+            // Plain payload
+            if (res != null) window.cacheSet(key, res);
+            return res;
+        } catch (e) {
+            console.warn('[cachedFetch] fetch failed for', key, e);
+            return null;
+        }
+    };
+
+    /** Clear all cached entries (admin-triggered or version bump). */
+    window.cacheClearAll = function() {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('cache:')) keys.push(k);
+        }
+        keys.forEach(k => localStorage.removeItem(k));
+        console.log('[cache] cleared', keys.length, 'entries');
+    };
 
     // ★ 읽지 않은 관리자 메시지 팝업
     window.checkUnreadMessages = async function() {
@@ -7317,7 +7411,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=350').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=400').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -7443,13 +7537,15 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
     if (!sb) { console.warn("[loadSpecialProducts] sb가 아직 초기화되지 않음"); return; }
 
     try {
-        const { data: products, error } = await sb.from('admin_products')
-            .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order')
-            .eq(flagColumn, true)
-            .order('sort_order', { ascending: true })
-            .limit(limitCount);
-
-        if (error) throw error;
+        // 180분 캐시 — 같은 flagColumn+limit 조합당 별도 키
+        const _cacheKey = 'special_' + flagColumn + '_' + limitCount;
+        const products = await window.cachedFetch(_cacheKey, 180, () =>
+            sb.from('admin_products')
+                .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order')
+                .eq(flagColumn, true)
+                .order('sort_order', { ascending: true })
+                .limit(limitCount)
+        );
 
         if (!products || products.length === 0) {
             section.style.display = 'none';
@@ -7926,11 +8022,14 @@ async function renderQuickMenu() {
     itemContainer.innerHTML = '<div style="text-align:center; padding:50px; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
     try {
-        // 대분류, 중분류, 검색용 상품 정보를 동시에 가져옴
-        const [{ data: topCats }, { data: subCats }, { data: allProds }] = await Promise.all([
-            sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true }),
-            sb.from('admin_categories').select('*').order('sort_order', { ascending: true }),
-            sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true })
+        // 대분류, 중분류, 검색용 상품 정보를 동시에 가져옴 (180분 캐시)
+        const [topCats, subCats, allProds] = await Promise.all([
+            window.cachedFetch('top_cats', 180, () =>
+                sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true })),
+            window.cachedFetch('subcats', 180, () =>
+                sb.from('admin_categories').select('*').order('sort_order', { ascending: true })),
+            window.cachedFetch('all_prods_lite', 180, () =>
+                sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true }))
         ]);
 
         // 전역 변수 초기화 (검색 오류 방지 핵심)
@@ -7948,6 +8047,7 @@ async function renderQuickMenu() {
         }
 
         tabContainer.innerHTML = '';
+        if (!topCats) { console.warn('[renderQuickMenu] no topCats'); return; }
         topCats.forEach(top => {
             const btn = document.createElement('button');
             btn.className = 'cat-tab';
@@ -7994,7 +8094,21 @@ async function renderQuickMenu() {
             tabContainer.appendChild(btn);
         });
 
-        if (tabContainer.firstChild) tabContainer.firstChild.click();
+        // ★ 기본 활성 탭: 허니콤보드 우선, 없으면 첫 번째 탭
+        // 허니콤 대분류 코드 = 이름에 "허니콤" 또는 "honeycomb"가 들어간 소분류의 top_category_code
+        let _defaultTabBtn = null;
+        try {
+            const _hcSub = (subCats || []).find(s => {
+                const n = (s.name || '').toLowerCase();
+                return n.includes('허니콤') || n.includes('honeycomb') || n.includes('ハニカム');
+            });
+            const _hcTopCode = _hcSub && _hcSub.top_category_code;
+            if (_hcTopCode) {
+                _defaultTabBtn = tabContainer.querySelector('.cat-tab[data-top-code="' + _hcTopCode + '"]');
+            }
+        } catch (e) { /* ignore */ }
+        if (!_defaultTabBtn) _defaultTabBtn = tabContainer.firstChild;
+        if (_defaultTabBtn) _defaultTabBtn.click();
 
         // ★ 상단 카테고리 메뉴 바 채우기
         const tcmTrack = document.getElementById('topCatMenuTrack');
@@ -8282,7 +8396,7 @@ window.applyCanvasCrop = function() {
     });
 
     // 새 대지 크기 적용
-    import('./canvas-size.js?v=350').then(mod => {
+    import('./canvas-size.js?v=400').then(mod => {
         if (mod.applySize) {
             mod.applySize(Math.round(cropW), Math.round(cropH), 'CroppedCustom', 'standard', 'resize');
             // 오브젝트 다시 추가 (applySize가 resize 모드에서 보존)
@@ -9730,8 +9844,6 @@ window.showChoiceModal = async function(key) {
             <div id="choiceRightActions" class="choice-right-actions" style="${window.innerWidth <= 768 ? 'order:1; flex:0 0 100%; width:100%;' : ''}">
                 ${rightSideUI}
                 ${_isBooklet ? '' : optionsHtml}
-                ${''/* qty/total 영역 제거 — 장바구니에서 처리 */}
-                ${''/* bulkDiscountTable + total 영역 제거 — 장바구니에서 처리 */}
                 <div id="promoDiscountBox" style="position:relative; margin-top:12px; border-radius:14px; ${_isBooklet?'display:none;':''}; overflow:visible; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                         <span style="background:#ef4444; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px; flex-shrink:0;">${lang==='ja'?'追加10%OFF':lang==='en'?'Extra 10% OFF':lang==='zh'?'额外10%折扣':lang==='es'?'10% extra':lang==='de'?'10% extra':lang==='fr'?'10% en plus':'추가 10% 할인'}</span>
@@ -9775,40 +9887,6 @@ window.showChoiceModal = async function(key) {
 
     modal.style.display = 'flex';
     window._relatedProductsLoading = false; // 추천상품 플래그 리셋
-
-    // ★ 강제 제거: MutationObserver로 어떤 시점에 렌더되어도 모두 삭제
-    (function() {
-        const _killSelectors = [
-            '[data-npc="qty"]', '[data-npc="qtyLabel"]', '[data-npc="total"]',
-            '#bulkDiscountTable', '#bulkDiscountInfo', '#modalRealtimeTotal',
-            '#promoDiscountBox', '#fixedProdQty'
-        ];
-        function _killNow() {
-            _killSelectors.forEach(sel => {
-                modal.querySelectorAll(sel).forEach(el => {
-                    try { el.remove(); } catch(e) { el.style.display = 'none'; }
-                });
-            });
-        }
-        _killNow();
-        setTimeout(_killNow, 0);
-        setTimeout(_killNow, 100);
-        setTimeout(_killNow, 300);
-        setTimeout(_killNow, 1000);
-        // MutationObserver로 새 요소 추가 시 자동 제거
-        try {
-            if (window._modalKillObserver) window._modalKillObserver.disconnect();
-            window._modalKillObserver = new MutationObserver(() => _killNow());
-            window._modalKillObserver.observe(modal, { childList: true, subtree: true });
-            // 모달 닫힐 때 observer 해제
-            setTimeout(() => {
-                if (modal.style.display === 'none' && window._modalKillObserver) {
-                    window._modalKillObserver.disconnect();
-                    window._modalKillObserver = null;
-                }
-            }, 60000);
-        } catch(e) { console.warn('observer fail:', e); }
-    })();
 
     // ★ 책자 상품: 위자드 초기 계산 + 통화 포맷터 설정
     if (_isBooklet) {
@@ -10900,7 +10978,7 @@ if (w >= 20 && h >= 20) {
         const pricePerSheet = product._original_price || product.price || 0;
 
         // box-nesting.js의 calculateBoxPrice 동적 임포트
-        import('./box-nesting.js?v=350').then(mod => {
+        import('./box-nesting.js?v=400').then(mod => {
             const result = mod.calculateBoxPrice(w, h, d, pricePerSheet);
 
             if (result.error) {
@@ -11237,18 +11315,36 @@ if (w >= 20 && h >= 20) {
         window.__fabricGuideConfig = config;
 
         // 캔버스 가이드 재적용
-        import('./canvas-ai.js?v=350').then(mod => {
+        import('./canvas-ai.js?v=400').then(mod => {
             if (mod.applyFabricGuides) mod.applyFabricGuides(config);
         }).catch(e => console.error('Fabric guide update error:', e));
     };
 
     // [3] 선택 완료 -> 에디터 이동 또는 장바구니 (안전성 강화 버전)
     window.confirmChoice = function(mode) {
-        if (window.isDirectCartAddInProgress) return;
-        
+        try {
+        console.log('[confirmChoice] called with mode:', mode);
+        // Defensive: if a previous click left this stuck true (e.g., uncaught
+        // exception before reset), self-heal so the user is not blocked forever.
+        if (window.isDirectCartAddInProgress) {
+            const _stuckSince = window._isDirectCartAddSetAt || 0;
+            if (Date.now() - _stuckSince > 5000) {
+                console.warn('[confirmChoice] clearing stuck isDirectCartAddInProgress');
+                window.isDirectCartAddInProgress = false;
+            } else {
+                console.warn('[confirmChoice] blocked by isDirectCartAddInProgress');
+                return;
+            }
+        }
+        window._isDirectCartAddSetAt = Date.now();
+
         // 1. 상품 정보 확인 (없으면 중단)
         const product = window.selectedProductForChoice;
-        if (!product) { showToast(window.t ? window.t('msg_product_not_found', 'Product information not found.') : 'Product information not found.', 'error'); return; }
+        if (!product) {
+            console.error('[confirmChoice] selectedProductForChoice is null');
+            showToast(window.t ? window.t('msg_product_not_found', 'Product information not found.') : 'Product information not found.', 'error');
+            return;
+        }
 
         // ★ [핵심] 상품 코드 확실하게 가져오기 (변수 의존성 제거)
         const targetCode = product.code || window.currentProductKey;
@@ -11307,7 +11403,7 @@ if (w >= 20 && h >= 20) {
 
         // 커스텀 모드일 경우 재계산
         if (window.isCustomModeCurrent) {
-            finalQty = parseInt(document.getElementById('inputCustQty').value || 1);
+            finalQty = parseInt(document.getElementById('inputCustQty')?.value || 1);
 
             // ★ 고정가 작품상품 (머그컵/티셔츠/스티커): 사이즈 불필요, 고정단가
             if (product._artworkTypeFixed) {
@@ -11320,12 +11416,12 @@ if (w >= 20 && h >= 20) {
                 finalPricePerItem = window.__boxCalculatedPrice;
             // ★ 사이즈고정상품: DB 사이즈 + 고정단가 사용 (회배계산X)
             } else if (product.is_file_upload) {
-                finalW = product.width_mm || parseInt(document.getElementById('inputCustW').value || 0);
-                finalH = product.height_mm || parseInt(document.getElementById('inputCustH').value || 0);
+                finalW = product.width_mm || parseInt(document.getElementById('inputCustW')?.value || 0);
+                finalH = product.height_mm || parseInt(document.getElementById('inputCustH')?.value || 0);
                 finalPricePerItem = unitPrice;
             } else {
-                const _wRaw = document.getElementById('inputCustW').value || 0;
-                const _hRaw = document.getElementById('inputCustH').value || 0;
+                const _wRaw = document.getElementById('inputCustW')?.value || 0;
+                const _hRaw = document.getElementById('inputCustH')?.value || 0;
                 finalW = window._getInputMm ? window._getInputMm(_wRaw) : parseInt(_wRaw);
                 finalH = window._getInputMm ? window._getInputMm(_hRaw) : parseInt(_hRaw);
 
@@ -11506,14 +11602,14 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=350');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=400');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=350')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=400')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -11565,7 +11661,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=350')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=400')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -11573,7 +11669,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=350');
+                    const m = await import('./order.js?v=400');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -11643,7 +11739,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=350').then(m => {
+            import('./order.js?v=400').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -11697,6 +11793,12 @@ if (w >= 20 && h >= 20) {
                 showToast((window.t ? window.t('msg_cart_add_failed', 'Failed to add to cart: ') : 'Failed to add to cart: ') + err.message, 'error');
                 window.isDirectCartAddInProgress = false;
             });
+        }
+        } catch (e) {
+            // Surface any uncaught exception so the user is not silently blocked
+            console.error('[confirmChoice] uncaught exception:', e);
+            window.isDirectCartAddInProgress = false;
+            try { showToast('Error: ' + (e.message || String(e)), 'error'); } catch(_) {}
         }
     };
 
@@ -12238,7 +12340,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=350').then(m => {
+        import('./order.js?v=400').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -12613,7 +12715,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=350');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=400');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -12631,7 +12733,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=350');
+                    const mod = await import('./canvas-ai.js?v=400');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -12647,7 +12749,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=350');
+                    const mod = await import('./canvas-ai.js?v=400');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -12730,7 +12832,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=350');
+                    const mod = await import('./canvas-ai.js?v=400');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -12741,7 +12843,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=350');
+                    const mod = await import('./canvas-ai.js?v=400');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -12821,7 +12923,7 @@ if (w >= 20 && h >= 20) {
         if (window.__fabricGuideConfig) {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=350');
+                    const mod = await import('./canvas-ai.js?v=400');
                     if (mod.applyFabricGuides) mod.applyFabricGuides(window.__fabricGuideConfig);
                 } catch(e) { console.error('Fabric guide error:', e); }
             }, 800);
@@ -12990,7 +13092,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=350');
+                await import('./canvas-objects.js?v=400');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -13308,23 +13410,47 @@ if (w >= 20 && h >= 20) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>로딩 중...</div>';
 
         try {
-            // DB 쿼리 준비
-            let query = sb.from('library')
-                .select('id, thumb_url, category, tags', { count: 'exact' })
-                // 우선표시 항목 먼저, 최근 선택 순 → 나머지는 오래된 순
-                .order('is_featured', { ascending: false, nullsFirst: false })
-                .order('featured_at', { ascending: false, nullsFirst: true })
-                .order('created_at', { ascending: true })
-                .in('category', ['user_vector', 'user_image', 'photo-bg'])
-                .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
+            const _isCacheableTplPage = (page === 0 && (!lastSearchKeyword || !lastSearchKeyword.trim()));
+            let data, count;
 
-            // 검색어 필터 (태그 검색)
-            if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
-                query = query.ilike('tags', `%${lastSearchKeyword}%`);
+            if (_isCacheableTplPage && window.cachedFetch) {
+                // 첫 페이지 + 검색어 없음 → 3일 캐시
+                // ★ 키 이름을 rows/total로 변경 — cachedFetch가 {data}를 자동
+                //   unwrap하기 때문에 data 필드를 그대로 쓰면 count가 사라짐
+                const cached = await window.cachedFetch('templates_page0_v2', 4320, async () => {
+                    const r = await sb.from('library')
+                        .select('id, thumb_url, category, tags', { count: 'exact' })
+                        .order('is_featured', { ascending: false, nullsFirst: false })
+                        .order('featured_at', { ascending: false, nullsFirst: true })
+                        .order('created_at', { ascending: true })
+                        .in('category', ['user_vector', 'user_image', 'photo-bg'])
+                        .range(0, ITEMS_PER_PAGE - 1);
+                    if (r.error) throw r.error;
+                    // 'rows' / 'total' 키로 감싸서 cachedFetch의 자동 unwrap 회피
+                    return { rows: r.data, total: r.count };
+                });
+                data = (cached && cached.rows) || [];
+                count = (cached && cached.total) || 0;
+            } else {
+                // 페이지네이션 또는 검색 — 캐시 안 함
+                let query = sb.from('library')
+                    .select('id, thumb_url, category, tags', { count: 'exact' })
+                    .order('is_featured', { ascending: false, nullsFirst: false })
+                    .order('featured_at', { ascending: false, nullsFirst: true })
+                    .order('created_at', { ascending: true })
+                    .in('category', ['user_vector', 'user_image', 'photo-bg'])
+                    .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
+                if (lastSearchKeyword && lastSearchKeyword.trim() !== '') {
+                    query = query.ilike('tags', `%${lastSearchKeyword}%`);
+                }
+                const r = await query;
+                if (r.error) throw r.error;
+                data = r.data;
+                count = r.count;
             }
 
-            const { data, error, count } = await query;
-
+            // Maintain compatibility with original error variable name
+            const error = null;
             if (error) throw error;
 
             grid.innerHTML = ''; // 기존 내용 지우기
@@ -14557,7 +14683,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=350';
+    import { sb, initConfig } from './config.js?v=400';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {
@@ -16740,7 +16866,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=350').then(function(mod) {
+            import('./order.js?v=400').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -17717,8 +17843,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=350"></script>
-<script src="./npc-wizard.js?v=350"></script>
+<script src="./gif-maker.js?v=400"></script>
+<script src="./npc-wizard.js?v=400"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">

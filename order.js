@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=350";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=350";
-import { SITE_CONFIG } from "./site-config.js?v=350";
-import { applySize } from "./canvas-size.js?v=350";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=350";
+import { canvas } from "./canvas-core.js?v=400";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=400";
+import { SITE_CONFIG } from "./site-config.js?v=400";
+import { applySize } from "./canvas-size.js?v=400";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=400";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=350";
+} from "./export.js?v=400";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -1560,7 +1560,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=350');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=400');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2940,7 +2940,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             try {
                 // 고화질 PNG 생성 (loadFromJSON → 캡처)
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=350');
+                const { generateDesignPNG } = await import('./export.js?v=400');
                 let fileBlob = await withTimeout(generateDesignPNG(targetPages, item.width, item.height, item.boardX || 0, item.boardY || 0), PDF_TIMEOUT);
 
                 if(fileBlob) {
@@ -3068,7 +3068,13 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             fileName: item.fileName || '',
             originalUrl: item.originalUrl || '',
             uploadedFiles: item.uploadedFiles || null,
-            cutlineUrl: item.cutlineUrl || ''
+            cutlineUrl: item.cutlineUrl || '',
+            // Phase 3a: design-market bid linkage (for DB trigger that marks
+            // design_bids.payment_status='paid' when this order is marked completed)
+            _designBidId: item._designBidId || null,
+            _designRequestId: item._designRequestId || null,
+            _designerId: item._designerId || null,
+            _gigId: item._gigId || null
         };
     }).filter(i => i !== null);
 
@@ -3251,7 +3257,12 @@ async function processFinalPayment() {
                     price: compatible,
                     product: { name: localName(item.product), price: item.product.price, code: item.product.code||item.product.key, img: item.product.img },
                     selectedAddons: item.selectedAddons,
-                    addonQuantities: item.addonQuantities
+                    addonQuantities: item.addonQuantities,
+                    // Phase 3a: design-market bid linkage
+                    _designBidId: item._designBidId || null,
+                    _designRequestId: item._designRequestId || null,
+                    _designerId: item._designerId || null,
+                    _gigId: item._gigId || null
                  };
             }).filter(x=>x);
 
