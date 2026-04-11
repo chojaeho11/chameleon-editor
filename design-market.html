@@ -2591,8 +2591,11 @@ async function showGigDetail(gigId) {
     if (_gLoc.title) g.title = _gLoc.title;
     if (_gLoc.description) g.description = _gLoc.description;
 
-    // Increment view count (fire and forget)
-    sb.rpc('increment_gig_view', { _gig_id: gigId }).catch(() => {});
+    // Increment view count (fire and forget) — sb.rpc() returns a thenable
+    // builder, not a Promise, so we wrap in an IIFE rather than chaining .catch
+    (async () => {
+        try { await sb.rpc('increment_gig_view', { _gig_id: gigId }); } catch(_) {}
+    })();
 
     const { data: d } = await sb.from('designer_profiles').select('*').eq('id', g.designer_id).single();
     const designer = d || {};
