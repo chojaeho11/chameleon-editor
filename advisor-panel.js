@@ -3,7 +3,7 @@
 // 검색바 아래 대형 채팅창. AI 채팅 + 콜백 요청
 // ============================================================
 
-import { SITE_CONFIG } from './site-config.js?v=350';
+import { SITE_CONFIG } from './site-config.js?v=399';
 
 const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -292,7 +292,7 @@ window._quoteToCart = async function(quoteId) {
         return;
     }
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=350');
+        const { addProductToCartDirectly } = await import('./order.js?v=399');
         // ★ 할인 아이템 분리, 메인/addon 그룹핑
         const allItems = qData.items.filter(i => (i.total || 0) >= 0); // 할인 행 제외
         const discountItems = qData.items.filter(i => (i.total || 0) < 0);
@@ -372,32 +372,140 @@ export function renderShortcutButtons(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
     const lang = getLang();
+
+    // Localized labels
+    const L = {
+        kr: {
+            self_design: '셀프디자인',
+            quick_quote: '빠른견적서',
+            product_search: '제품검색',
+            banner_title: '디자인을 의뢰하세요',
+            banner_sub: '디자이너라면 일거리가 쏟아집니다 · 디자이너로 등록하세요',
+            banner_tag: '🌍 전세계 고객사와 전문가를 연결하는 디자인 중계 사이트',
+            banner_cta: '디자인 마켓 바로가기'
+        },
+        ja: {
+            self_design: 'セルフデザイン',
+            quick_quote: 'クイック見積',
+            product_search: '商品検索',
+            banner_title: 'デザインを依頼しましょう',
+            banner_sub: 'デザイナーなら依頼が殺到 · デザイナー登録はこちら',
+            banner_tag: '🌍 世界中のクライアントと専門家をつなぐデザインマッチングサイト',
+            banner_cta: 'デザインマーケットへ'
+        },
+        en: {
+            self_design: 'Self Design',
+            quick_quote: 'Quick Quote',
+            product_search: 'Search',
+            banner_title: 'Hire a Designer',
+            banner_sub: 'A designer? Get a flood of work · Register now',
+            banner_tag: '🌍 The marketplace connecting clients with design experts worldwide',
+            banner_cta: 'Visit the Design Market'
+        },
+        zh: {
+            self_design: '自助设计',
+            quick_quote: '快速报价',
+            product_search: '产品搜索',
+            banner_title: '委托设计师',
+            banner_sub: '您是设计师？工作源源不断 · 立即注册',
+            banner_tag: '🌍 连接全球客户与设计专家的设计中介平台',
+            banner_cta: '进入设计市场'
+        },
+        ar: {
+            self_design: 'تصميم ذاتي',
+            quick_quote: 'عرض سريع',
+            product_search: 'بحث المنتجات',
+            banner_title: 'اطلب من مصمم',
+            banner_sub: 'هل أنت مصمم؟ ستنهال عليك الطلبات · سجل الآن',
+            banner_tag: '🌍 منصة وساطة تربط العملاء بخبراء التصميم حول العالم',
+            banner_cta: 'انتقل إلى سوق التصميم'
+        },
+        es: {
+            self_design: 'Autodiseño',
+            quick_quote: 'Cotización rápida',
+            product_search: 'Buscar producto',
+            banner_title: 'Contrata a un diseñador',
+            banner_sub: '¿Eres diseñador? Recibe muchos encargos · Regístrate ya',
+            banner_tag: '🌍 La plataforma que conecta clientes y expertos del diseño en todo el mundo',
+            banner_cta: 'Ir al Mercado de Diseño'
+        },
+        de: {
+            self_design: 'Selbstdesign',
+            quick_quote: 'Schnellangebot',
+            product_search: 'Produktsuche',
+            banner_title: 'Beauftragen Sie einen Designer',
+            banner_sub: 'Sie sind Designer? Erhalten Sie viele Aufträge · Jetzt registrieren',
+            banner_tag: '🌍 Die Plattform, die Kunden und Design-Profis weltweit verbindet',
+            banner_cta: 'Zum Design-Marktplatz'
+        },
+        fr: {
+            self_design: 'Conception personnelle',
+            quick_quote: 'Devis rapide',
+            product_search: 'Rechercher produit',
+            banner_title: 'Engagez un designer',
+            banner_sub: 'Vous êtes designer ? Recevez plein de missions · Inscrivez-vous',
+            banner_tag: '🌍 La plateforme qui connecte clients et experts du design dans le monde entier',
+            banner_cta: 'Accéder au Marché du Design'
+        }
+    };
+    const t = L[lang] || L.en;
+
     container.innerHTML = `
         <style>
-        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;}
-        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:5px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 2px;border-radius:14px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;}
+        .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
+        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;box-sizing:border-box;}
+        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 2px;border-radius:14px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;}
         .adv-ext-btn i{flex-shrink:0;}
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
-        @media(max-width:768px){.adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:3px;padding:0 3px;}.adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}}
+
+        /* Design Market Banner */
+        .dm-banner{position:relative;display:block;width:100%;background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 35%,#7c3aed 70%,#db2777 100%);border-radius:18px;padding:22px 26px;text-decoration:none;color:#fff;overflow:hidden;box-shadow:0 8px 28px rgba(124,58,237,0.35);transition:all 0.25s;border:1.5px solid rgba(255,255,255,0.15);}
+        .dm-banner:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(124,58,237,0.5);}
+        .dm-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.25) 0%,transparent 70%);pointer-events:none;}
+        .dm-banner::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,0.2) 0%,transparent 70%);pointer-events:none;}
+        .dm-banner-inner{position:relative;display:flex;align-items:center;gap:20px;z-index:1;}
+        .dm-banner-icon{flex-shrink:0;width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 4px 14px rgba(251,191,36,0.4);}
+        .dm-banner-text{flex:1;min-width:0;}
+        .dm-banner-title{font-size:22px;font-weight:900;letter-spacing:-0.4px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.15);}
+        .dm-banner-sub{font-size:13px;font-weight:600;opacity:0.95;margin-bottom:6px;line-height:1.5;}
+        .dm-banner-tag{font-size:11px;opacity:0.85;font-weight:500;}
+        .dm-banner-cta{flex-shrink:0;background:#fbbf24;color:#1e1b4b;padding:11px 20px;border-radius:12px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 12px rgba(251,191,36,0.4);}
+        .dm-banner:hover .dm-banner-cta{background:#fff;transform:scale(1.05);}
+
+        @media(max-width:768px){
+            .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
+            .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
+            .dm-banner{padding:16px 18px;border-radius:16px;}
+            .dm-banner-inner{flex-direction:column;text-align:center;gap:12px;}
+            .dm-banner-icon{width:52px;height:52px;font-size:24px;}
+            .dm-banner-title{font-size:18px;}
+            .dm-banner-sub{font-size:12px;}
+            .dm-banner-tag{font-size:10px;}
+            .dm-banner-cta{padding:10px 16px;font-size:12px;}
+        }
         </style>
-        <div class="adv-ext-grid">
-            <a href="${location.origin}/design-market.html" target="_blank" class="adv-ext-btn">
-                <i class="fa-solid fa-palette"></i> ${{kr:'디자인의뢰',ja:'デザイン依頼',en:'Design Request'}[lang]||'Design Request'}
-            </a>
-            <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn">
-                <i class="fa-solid fa-pen-ruler"></i> ${{kr:'셀프디자인',ja:'セルフデザイン',en:'Self Design'}[lang]||'Self Design'}
-            </a>
-            <a href="javascript:void(0)" onclick="if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();" class="adv-ext-btn">
-                <i class="fa-solid fa-building-columns"></i> ${{kr:'행사전시문의',ja:'イベント相談',en:'Event Inquiry'}[lang]||'Event Inquiry'}
-            </a>
-            <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn">
-                <i class="fa-solid fa-magnifying-glass"></i> ${{kr:'제품검색',ja:'商品検索',en:'Search'}[lang]||'Search'}
-            </a>
-            <a href="javascript:void(0)" onclick="if(window.openAuthModal)window.openAuthModal('signup')" class="adv-ext-btn">
-                <i class="fa-solid fa-user-plus"></i> ${{kr:'회원가입',ja:'新規登録',en:'Sign Up'}[lang]||'Sign Up'}
-            </a>
-            <a href="${location.origin}/design-market.html#register" target="_blank" class="adv-ext-btn">
-                <i class="fa-solid fa-pen-nib"></i> ${{kr:'디자이너등록',ja:'デザイナー登録',en:'Be a Designer'}[lang]||'Be a Designer'}
+        <div class="adv-ext-wrap">
+            <div class="adv-ext-grid">
+                <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn">
+                    <i class="fa-solid fa-pen-ruler"></i> ${t.self_design}
+                </a>
+                <a href="javascript:void(0)" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()" class="adv-ext-btn">
+                    <i class="fa-solid fa-file-invoice"></i> ${t.quick_quote}
+                </a>
+                <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i> ${t.product_search}
+                </a>
+            </div>
+            <a href="${location.origin}/design-market" class="dm-banner" target="_blank">
+                <div class="dm-banner-inner">
+                    <div class="dm-banner-icon">🎨</div>
+                    <div class="dm-banner-text">
+                        <div class="dm-banner-title">${t.banner_title}</div>
+                        <div class="dm-banner-sub">${t.banner_sub}</div>
+                        <div class="dm-banner-tag">${t.banner_tag}</div>
+                    </div>
+                    <div class="dm-banner-cta">${t.banner_cta} <i class="fa-solid fa-arrow-right"></i></div>
+                </div>
             </a>
         </div>
     `;
@@ -769,6 +877,24 @@ async function sendMessage(text, imageData) {
             startQuoteFlow();
             return;
         }
+        // ★ 에디터/셀프디자인 키워드 감지 → 사이즈 입력 다이얼로그 바로 표시
+        const _editorKeys = [
+            '셀프디자인','셀프 디자인','셀프디자','에디터로','에디터 열기','에디터 링크','에디터에서','직접 디자인','내가 디자인','내가디자인','디자인 직접',
+            'editor','self design','self-design','design myself','open editor',
+            'セルフデザイン','エディター','エディタ','エディターで','自分でデザイン','エディタを開く',
+            '自助设计','编辑器','自己设计',
+            'auto-diseño','editor yo','propio diseño',
+            'selbstgestaltung','editor öffnen','selbst entwerfen',
+            'auto-design','concevoir moi-même','ouvrir éditeur',
+            'تصميم ذاتي','المحرر'
+        ];
+        if (_editorKeys.some(k => _userLower.includes(k))) {
+            addBubble(text, 'user');
+            if (typeof window._advOpenEditor === 'function') {
+                window._advOpenEditor();
+            }
+            return;
+        }
     }
 
     isProcessing = true;
@@ -825,7 +951,8 @@ async function sendMessage(text, imageData) {
 - 폰케이스: 커플 사진이나 특별한 디자인의 실용적 선물.
 예산별 추천: ~3만원(머그컵/폰케이스), ~5만원(캔버스액자/패브릭포스터), ~10만원(등신대/포토북세트), 10만원+(등신대+캔버스액자 세트)
 결혼식 이벤트면 "허니콤보드 등신대를 포토존으로 세워두면 하객들이 재미있어하는 이벤트가 됩니다"라고 적극 추천. 집에 두는 선물이면 캔버스액자나 패브릭포스터를 추천. 결혼식 청첩장/초대장은 소량인쇄(pp_lf_2) 추천.
-[중요] 인사나 잡담에는 제품을 추천하지 말고 짧고 재치있게 인사만 해라 (예: "안녕하세요! 무엇을 도와드릴까요?"). 구체적 질문이 있을 때만 관련 제품 3개를 추천할 것. 사용자가 구체적 제품을 물어도 해당 제품 + 관련 제품 2개를 함께 추천.`
+[중요] 인사나 잡담에는 제품을 추천하지 말고 짧고 재치있게 인사만 해라 (예: "안녕하세요! 무엇을 도와드릴까요?"). 구체적 질문이 있을 때만 관련 제품 3개를 추천할 것. 사용자가 구체적 제품을 물어도 해당 제품 + 관련 제품 2개를 함께 추천.
+★★★ [셀프디자인/에디터 요청 규칙] 고객이 "직접 디자인하고 싶다", "에디터 열어줘", "디자인 툴 링크", "셀프로 만들고 싶다" 같은 의사를 보이면 절대로 계속 질문하지 말고 한 문장으로 안내해라: "✏️ 직접 디자인하시려면 '셀프디자인'이라고 입력해주세요. 사이즈 입력 후 에디터가 바로 열립니다!" 브랜드 색상·폰트·로고 등에 대해 긴 질문 리스트를 주면 안 된다. 고객이 이미 "직접 만들겠다"고 했으면 에디터로 연결하는 것이 답이다.`
         };
         const payload = {
             message: text,
@@ -1081,26 +1208,28 @@ function startQuoteFlow() {
         ? 'For bulk orders, a dedicated manager will call you directly. Please enter your file, name, and phone number. We will contact you within 30 minutes.'
         : '대량 주문건은 전담 매니저가 고객님께 전화를 해서 안내해 드립니다. 파일과 성함, 전화번호를 적어주시면 30분 이내에 연락을 드립니다.';
 
+    const memoPh = {kr:'요청사항 (사이즈, 수량, 용도 등)',ja:'ご要望（サイズ、数量、用途など）',en:'Request details (size, qty, purpose)',zh:'需求详情（尺寸、数量、用途）',ar:'تفاصيل الطلب (الحجم، الكمية، الغرض)',es:'Detalles (tamaño, cantidad, uso)',de:'Details (Größe, Menge, Zweck)',fr:'Détails (taille, quantité, usage)'}[lang] || 'Request details';
+
     const card = document.createElement('div');
     card.className = 'adv-row adv-row-ai';
+    card.style.cssText = 'display:block; width:100%; margin-bottom:12px;';
     card.innerHTML = `
-        <div class="adv-avatar"><i class="fa-solid fa-file-invoice"></i></div>
-        <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #7dd3fc; border-radius:16px; padding:16px; max-width:85%;">
-            <div style="text-align:center; margin-bottom:10px;">
-                <div style="font-size:24px;">📋</div>
-                <div style="font-weight:700; color:#0369a1; font-size:14px;">${t('quoteTitle')}</div>
+        <div style="width:100%; box-sizing:border-box; background:linear-gradient(180deg,#ffffff,#f8fafc); border:1px solid #e2e8f0; border-radius:16px; padding:18px 16px; box-shadow:0 2px 12px rgba(15,23,42,0.06); word-break:keep-all; overflow-wrap:break-word;">
+            <div style="text-align:center; margin-bottom:14px;">
+                <div style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:20px; margin-bottom:8px; box-shadow:0 4px 12px rgba(14,165,233,0.3);">📋</div>
+                <div style="font-weight:800; color:#0f172a; font-size:15px; letter-spacing:-0.3px;">${t('quoteTitle')}</div>
             </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <input id="advQuoteName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
-                <input id="advQuotePhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
-                <textarea id="advQuoteMemo" placeholder="${{kr:'요청사항을 적어주세요 (사이즈, 수량, 용도 등)',ja:'ご要望をお書きください（サイズ、数量、用途など）',en:'Describe your request (size, qty, purpose etc.)'}[lang]||'Describe your request'}" rows="3" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
-                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#0369a1; background:#fff; border:1.5px dashed #7dd3fc; border-radius:10px; padding:10px 14px;">
-                    <input id="advQuoteFiles" type="file" multiple accept="image/*,.pdf" style="font-size:12px; flex:1;">
-                    <span>${t('quoteFilePh')}</span>
+            <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                <input id="advQuoteName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; background:#fff; transition:border-color 0.15s;">
+                <input id="advQuotePhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; background:#fff; transition:border-color 0.15s;">
+                <textarea id="advQuoteMemo" placeholder="${memoPh}" rows="3" style="width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; background:#fff; resize:vertical; min-height:72px;"></textarea>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:#475569; background:#fff; border:1.5px dashed #cbd5e1; border-radius:10px; padding:12px 14px; box-sizing:border-box; width:100%;">
+                    <i class="fa-solid fa-paperclip" style="color:#0ea5e9;"></i>
+                    <input id="advQuoteFiles" type="file" multiple accept="image/*,.pdf" style="font-size:12px; flex:1; min-width:0;">
                 </label>
-                <div style="font-size:12px; color:#334155; line-height:1.6; margin-top:4px; padding:8px 10px; background:#fff; border-radius:8px; border:1px solid #e2e8f0;">${quoteNotice}</div>
+                <div style="font-size:11px; color:#64748b; line-height:1.55; margin-top:2px; padding:10px 12px; background:#f1f5f9; border-radius:8px; word-break:keep-all; overflow-wrap:break-word; white-space:normal;">${quoteNotice}</div>
                 <div id="advQuoteErr" style="color:#ef4444; font-size:12px; text-align:center; display:none;"></div>
-                <button id="advQuoteSubmit" style="background:#0284c7; color:#fff; border:none; padding:12px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; width:100%;">${t('quoteSubmit')}</button>
+                <button id="advQuoteSubmit" style="background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; border:none; padding:13px 16px; border-radius:10px; font-weight:800; cursor:pointer; font-size:14px; width:100%; box-sizing:border-box; margin-top:4px; box-shadow:0 2px 8px rgba(14,165,233,0.25);">${t('quoteSubmit')}</button>
             </div>
         </div>
     `;
@@ -1379,7 +1508,7 @@ async function openEditor(rec) {
 // ─── 장바구니 ───
 async function addToCart(rec, btnEl) {
     try {
-        const { addProductToCartDirectly } = await import('./order.js?v=350');
+        const { addProductToCartDirectly } = await import('./order.js?v=399');
         let priceKRW = rec._raw_price_krw || 50000;
         if (rec.is_custom_size && rec._raw_per_sqm_krw && rec.recommended_width_mm > 0 && rec.recommended_height_mm > 0) {
             const area = (rec.recommended_width_mm / 1000) * (rec.recommended_height_mm / 1000);
