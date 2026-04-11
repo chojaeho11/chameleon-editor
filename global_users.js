@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=288";
-import { showLoading } from "./global_common.js?v=288";
+import { sb } from "./global_config.js?v=289";
+import { showLoading } from "./global_common.js?v=289";
 
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
@@ -884,10 +884,15 @@ window.loadDesignWithdrawals = async () => {
             let actionHtml = '';
             if (r.status === 'pending') {
                 actionHtml = `
-                    <button class="btn btn-success btn-sm" onclick="approveDesignWithdrawal('${r.id}')" style="padding:4px 8px;font-size:11px;margin-right:2px;">승인</button>
-                    <button class="btn btn-outline btn-sm" onclick="rejectDesignWithdrawal('${r.id}')" style="padding:4px 8px;font-size:11px;color:#dc2626;border-color:#fecaca;">거절</button>`;
+                    <div style="display:flex;flex-direction:column;gap:3px;align-items:stretch;">
+                        <button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 8px;font-size:11px;font-weight:700;background:#16a34a;border-color:#15803d;">💸 지급완료</button>
+                        <div style="display:flex;gap:3px;">
+                            <button class="btn btn-outline btn-sm" onclick="approveDesignWithdrawal('${r.id}')" style="padding:3px 6px;font-size:10px;flex:1;">승인만</button>
+                            <button class="btn btn-outline btn-sm" onclick="rejectDesignWithdrawal('${r.id}')" style="padding:3px 6px;font-size:10px;flex:1;color:#dc2626;border-color:#fecaca;">거절</button>
+                        </div>
+                    </div>`;
             } else if (r.status === 'approved') {
-                actionHtml = `<button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:4px 8px;font-size:11px;">지급완료 처리</button>`;
+                actionHtml = `<button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 10px;font-size:11px;background:#16a34a;border-color:#15803d;">💸 지급완료 처리</button>`;
             } else {
                 actionHtml = `<span style="font-size:10px;color:#94a3b8;">${r.processed_at ? new Date(r.processed_at).toLocaleDateString() : '-'}</span>`;
             }

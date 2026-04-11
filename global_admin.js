@@ -1,18 +1,18 @@
-import { sb, initConfig } from "./global_config.js?v=288";
+import { sb, initConfig } from "./global_config.js?v=289";
 
 // ✅ [추가] 이 두 줄을 꼭 넣어야 팝업창 오류가 해결됩니다!
 window.sb = sb;
 window._supabase = sb; 
 
-import { checkAdminAccess } from "./global_common.js?v=288";
+import { checkAdminAccess } from "./global_common.js?v=289";
 
 // 나머지 기능 파일들 불러오기
-import "./global_orders.js?v=288";
-import "./global_products.js?v=288";
-import "./global_users.js?v=288";
-import "./global_assets.js?v=288";
-import "./global_stats.js?v=288";
-import "./global_reviews.js?v=288";
+import "./global_orders.js?v=289";
+import "./global_products.js?v=289";
+import "./global_users.js?v=289";
+import "./global_assets.js?v=289";
+import "./global_stats.js?v=289";
+import "./global_reviews.js?v=289";
 
 window.addEventListener('DOMContentLoaded', async () => { 
     // 1. 화면 깜빡임 방지
