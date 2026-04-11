@@ -4890,14 +4890,41 @@ async function showMyRequestDetail(requestId) {
         } catch (e) { console.warn('[selfheal] write failed:', e); }
     }
 
+    // Visible in-page diagnostic so we can see exactly what state the page is in
+    // without needing to read the browser console.
+    _myDetailFinalHtml += `
+    <div style="margin-top:12px;padding:10px 12px;background:#fef9c3;border:1px dashed #facc15;border-radius:8px;font-size:11px;color:#78350f;font-family:monospace;line-height:1.5;">
+        <b>DEBUG:</b> req.status=${r.status} | req.selected_bid_id=${r.selected_bid_id || 'null'} | bids=${(bids||[]).length} | effectiveBidId=${_effectiveSelectedBidId || 'null'}
+    </div>`;
+
     if (_effectiveSelectedBidId) {
-        // Fetch the selected bid (with designer profile join). Use maybeSingle.
-        const { data: _selBid2, error: _selBidErr } = await sb.from('design_bids')
-            .select('*, designer_profiles:designer_id(display_name, photo_url, avg_rating, total_reviews)')
+        // Fetch the selected bid WITHOUT the embed first (the embed can fail
+        // silently when the FK relationship is broken or the designer was
+        // deleted). We then fetch the designer profile separately.
+        const { data: _selBid2Raw, error: _selBidErr } = await sb.from('design_bids')
+            .select('*')
             .eq('id', _effectiveSelectedBidId)
             .maybeSingle();
-        console.log('[showMyRequestDetail] selBid loaded:', _selBid2, 'err:', _selBidErr);
+        console.log('[showMyRequestDetail] selBid loaded:', _selBid2Raw, 'err:', _selBidErr);
         if (_selBidErr) console.warn('[showMyRequestDetail] selBid lookup failed:', _selBidErr);
+
+        // Pull designer profile separately so a missing/deleted profile cannot
+        // wipe out the whole bid row
+        let _selBid2 = _selBid2Raw;
+        if (_selBid2 && _selBid2.designer_id) {
+            const { data: _dpRow } = await sb.from('designer_profiles')
+                .select('display_name, photo_url, avg_rating, total_reviews')
+                .eq('id', _selBid2.designer_id)
+                .maybeSingle();
+            _selBid2 = { ..._selBid2, designer_profiles: _dpRow || {} };
+        }
+
+        // Add to debug strip
+        _myDetailFinalHtml += `
+        <div style="margin-top:6px;padding:10px 12px;background:#fef9c3;border:1px dashed #facc15;border-radius:8px;font-size:11px;color:#78350f;font-family:monospace;line-height:1.5;">
+            <b>DEBUG bid:</b> selBid=${_selBid2?'OK':'NULL'} | payment_status=${_selBid2?.payment_status||'null'} | final_files=${(_selBid2?.final_design_urls||[]).length} | err=${_selBidErr?_selBidErr.message:'none'}
+        </div>`;
+
         _selectedBidForPayment = _selBid2;
         if (_selBid2) {
             const _dp = _selBid2.designer_profiles || {};
@@ -4915,7 +4942,7 @@ async function showMyRequestDetail(requestId) {
             else if (_ps === 'completed_pending_files') _psBadge = `<span class="pay-status-badge pending-files">${_p3Label('payment_pending_files')}</span>`;
             else if (_ps === 'released') _psBadge = `<span class="pay-status-badge released">${_p3Label('payment_released')}</span>`;
 
-            _myDetailFinalHtml = `
+            _myDetailFinalHtml += `
             <div style="margin-top:20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:14px;padding:20px;">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
                     ${_dpAvatar}
