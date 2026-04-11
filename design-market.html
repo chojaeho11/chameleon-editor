@@ -1394,32 +1394,140 @@
     <div class="modal-box" style="position:relative;max-width:500px;">
         <button class="modal-close" onclick="closeWithdrawModal()">&times;</button>
         <h2 style="margin:0 0 6px 0;"><i class="fa-solid fa-money-bill-transfer"></i> <span id="withdrawTitle">💸 출금 요청</span></h2>
-        <p style="color:#64748b;font-size:13px;margin-bottom:16px;">Available balance: <b id="withdrawAvailable" style="color:#7c3aed;">-</b></p>
+        <p style="color:#64748b;font-size:13px;margin-bottom:14px;"><span id="withdrawAvailLbl">Available balance</span>: <b id="withdrawAvailable" style="color:#7c3aed;">-</b></p>
+
+        <!-- Profile status banner: either "go fill profile" or "profile ready" -->
+        <div id="withdrawProfileBanner" style="margin-bottom:14px;"></div>
+
         <div class="form-group">
             <label id="withdrawAmountLabel">출금 금액 <span class="req">*</span></label>
-            <input type="number" class="form-input" id="withdrawAmount" min="1" placeholder="Amount in KRW" oninput="updateWithdrawPreview()">
+            <div style="display:flex;gap:8px;">
+                <input type="number" class="form-input" id="withdrawAmount" min="1" placeholder="Amount" oninput="updateWithdrawPreview()" style="flex:1;">
+                <button type="button" onclick="withdrawFillMax()" style="background:#7c3aed;color:#fff;border:none;padding:0 18px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;" id="withdrawMaxBtn">MAX</button>
+            </div>
         </div>
         <div id="withdrawPreview"></div>
-        <div class="form-row" style="margin-top:12px;">
-            <div class="form-group">
-                <label id="withdrawBankNameLabel">Bank <span class="req">*</span></label>
-                <input type="text" class="form-input" id="withdrawBankName" placeholder="Bank name">
-            </div>
-            <div class="form-group">
-                <label id="withdrawHolderLabel">Holder <span class="req">*</span></label>
-                <input type="text" class="form-input" id="withdrawHolder" placeholder="Account holder">
-            </div>
-        </div>
-        <div class="form-group">
-            <label id="withdrawAccountLabel">Account <span class="req">*</span></label>
-            <input type="text" class="form-input" id="withdrawAccount" placeholder="Account number">
-        </div>
-        <div class="form-group">
+
+        <div class="form-group" style="margin-top:10px;">
             <label id="withdrawMemoLabel">Memo</label>
             <textarea class="form-input" id="withdrawMemo" rows="2" placeholder="Optional note"></textarea>
         </div>
-        <div style="text-align:center;margin-top:18px;">
-            <button class="btn btn-primary btn-lg" onclick="submitWithdrawRequest()"><i class="fa-solid fa-paper-plane"></i> <span id="withdrawSubmitLbl">Submit Request</span></button>
+
+        <div style="margin-top:12px;padding:10px 12px;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;font-size:11px;color:#78350f;line-height:1.6;" id="withdrawTaxNote"></div>
+
+        <div style="text-align:center;margin-top:16px;">
+            <button class="btn btn-primary btn-lg" onclick="submitWithdrawRequest()" id="withdrawSubmitBtn"><i class="fa-solid fa-paper-plane"></i> <span id="withdrawSubmitLbl">Submit Request</span></button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Phase 5: Designer tax / banking profile modal ===== -->
+<div class="modal-overlay" id="taxProfileModal">
+    <div class="modal-box" style="position:relative;max-width:640px;max-height:92vh;overflow-y:auto;">
+        <button class="modal-close" onclick="closeTaxProfileModal()">&times;</button>
+        <h2 style="margin:0 0 4px 0;"><i class="fa-solid fa-id-card"></i> <span id="tpTitle">세금·은행 정보</span></h2>
+        <p style="color:#64748b;font-size:12px;margin-bottom:14px;" id="tpSubtitle">Required for international payouts and tax reporting. This information is stored encrypted and only used by the platform admin for processing withdrawals.</p>
+
+        <div id="tpVerifiedBanner" style="margin-bottom:12px;"></div>
+
+        <!-- Country & legal name -->
+        <div class="form-row">
+            <div class="form-group">
+                <label id="tpLblCountry">Country of residence <span class="req">*</span></label>
+                <select class="form-input" id="tpCountry" onchange="_tpOnCountryChange()"></select>
+            </div>
+            <div class="form-group">
+                <label id="tpLblTaxIdType">Entity type <span class="req">*</span></label>
+                <select class="form-input" id="tpTaxIdType">
+                    <option value="personal">Personal</option>
+                    <option value="business">Business</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label id="tpLblLegalName">Legal name (must match bank account holder) <span class="req">*</span></label>
+            <input type="text" class="form-input" id="tpLegalName" placeholder="As printed on official ID">
+        </div>
+
+        <div class="form-group">
+            <label id="tpLblTaxId">Tax ID <span class="req">*</span></label>
+            <input type="text" class="form-input" id="tpTaxId" placeholder="Tax ID">
+            <div id="tpTaxIdHint" style="font-size:11px;color:#94a3b8;margin-top:4px;"></div>
+        </div>
+
+        <div class="form-group">
+            <label id="tpLblDob">Date of birth</label>
+            <input type="date" class="form-input" id="tpDob">
+        </div>
+
+        <div class="form-group">
+            <label id="tpLblAddress">Full residence address <span class="req">*</span></label>
+            <textarea class="form-input" id="tpAddress" rows="2" placeholder="Street, city, postal code, country"></textarea>
+        </div>
+
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;">
+        <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px;"><i class="fa-solid fa-building-columns" style="color:#7c3aed;"></i> <span id="tpBankingHdr">Banking information</span></div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label id="tpLblBankName">Bank name <span class="req">*</span></label>
+                <input type="text" class="form-input" id="tpBankName">
+            </div>
+            <div class="form-group">
+                <label id="tpLblBankHolder">Account holder <span class="req">*</span></label>
+                <input type="text" class="form-input" id="tpBankHolder">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label id="tpLblBankAccount">Account number <span class="req">*</span></label>
+            <input type="text" class="form-input" id="tpBankAccount">
+        </div>
+
+        <!-- International section — shown when country != KR -->
+        <div id="tpIntlSection" style="display:none;padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:800;color:#1e40af;margin-bottom:10px;"><i class="fa-solid fa-globe"></i> <span id="tpIntlHdr">International wire information</span></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="tpLblSwift">SWIFT / BIC <span class="req">*</span></label>
+                    <input type="text" class="form-input" id="tpSwift" placeholder="8 or 11 chars">
+                </div>
+                <div class="form-group">
+                    <label id="tpLblRouting">Routing / Clearing code</label>
+                    <input type="text" class="form-input" id="tpRouting" placeholder="US ABA, CN CNAPS, etc.">
+                </div>
+            </div>
+            <div class="form-group">
+                <label id="tpLblIban">IBAN (Europe / Middle East)</label>
+                <input type="text" class="form-input" id="tpIban" placeholder="e.g., DE89370400440532013000">
+            </div>
+            <div class="form-group">
+                <label id="tpLblBankAddress">Bank branch address <span class="req">*</span></label>
+                <textarea class="form-input" id="tpBankAddress" rows="2" placeholder="Required by SWIFT wires"></textarea>
+            </div>
+            <div class="form-group">
+                <label id="tpLblCurrency">Payout currency</label>
+                <select class="form-input" id="tpCurrency">
+                    <option value="KRW">KRW (South Korean Won)</option>
+                    <option value="USD">USD (US Dollar)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="JPY">JPY (Japanese Yen)</option>
+                    <option value="GBP">GBP (British Pound)</option>
+                    <option value="CNY">CNY (Chinese Yuan)</option>
+                    <option value="SGD">SGD (Singapore Dollar)</option>
+                </select>
+            </div>
+            <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#1e40af;cursor:pointer;line-height:1.5;">
+                <input type="checkbox" id="tpTreaty" style="margin-top:2px;">
+                <span id="tpLblTreaty">I claim tax treaty benefits between my country of residence and the Republic of Korea (admin will verify before applying reduced withholding)</span>
+            </label>
+        </div>
+
+        <div style="padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:11px;color:#991b1b;line-height:1.6;margin-bottom:14px;" id="tpLegalNotice"></div>
+
+        <div style="text-align:center;">
+            <button class="btn btn-primary btn-lg" onclick="saveTaxProfile()" id="tpSaveBtn"><i class="fa-solid fa-check"></i> <span id="tpSaveLbl">Save</span></button>
         </div>
     </div>
 </div>
@@ -3550,7 +3658,46 @@ function _p3Label(key) {
             withdraw_status_pending: 'Pending',
             withdraw_status_approved: 'Approved',
             withdraw_status_rejected: 'Rejected',
-            withdraw_status_paid: 'Paid'
+            withdraw_status_paid: 'Paid',
+            withdraw_available: 'Available balance',
+            withdraw_max_btn: 'MAX',
+            withdraw_profile_missing: 'Please fill in your tax & banking information first.',
+            withdraw_profile_missing_btn: 'Go to Tax & Banking',
+            withdraw_profile_ok: 'Tax & banking profile on file',
+            withdraw_profile_unverified: 'Profile pending admin verification',
+            withdraw_tax_note: '⚠ This withdrawal will be manually processed by the admin. Taxes may be withheld per your country\'s treaty with Korea. You are responsible for filing personal income tax in your country of residence.',
+            tax_profile_btn: 'Tax & Banking Info',
+            tp_title: '🪪 Tax & Banking Information',
+            tp_subtitle: 'Required for international payouts and tax reporting. This information is stored securely and only used by the admin when processing withdrawals.',
+            tp_country: 'Country of residence',
+            tp_tax_id_type: 'Entity type',
+            tp_entity_personal: 'Personal',
+            tp_entity_business: 'Business',
+            tp_legal_name: 'Legal name (must match bank account holder)',
+            tp_legal_name_ph: 'As printed on your official ID',
+            tp_tax_id: 'Tax ID',
+            tp_dob: 'Date of birth',
+            tp_address: 'Full residence address',
+            tp_address_ph: 'Street, city, postal code, country',
+            tp_banking_hdr: 'Banking information',
+            tp_bank_name: 'Bank name',
+            tp_bank_holder: 'Account holder',
+            tp_bank_account: 'Account number',
+            tp_intl_hdr: 'International wire information',
+            tp_swift: 'SWIFT / BIC',
+            tp_routing: 'Routing / Clearing code',
+            tp_routing_ph: 'US ABA, CN CNAPS, etc.',
+            tp_iban: 'IBAN (Europe / Middle East)',
+            tp_bank_address: 'Bank branch address',
+            tp_bank_address_ph: 'Required by SWIFT wires',
+            tp_currency: 'Payout currency',
+            tp_treaty: 'I claim tax treaty benefits between my country of residence and the Republic of Korea (admin will verify before applying reduced withholding)',
+            tp_legal_notice: '🔒 By saving, you affirm that the information above is true and complete. False tax information may result in permanent account suspension and notification to the relevant tax authorities. The platform acts as a withholding agent for Korean source withholding tax where required.',
+            tp_save: 'Save',
+            tp_save_success: 'Tax & banking profile saved.',
+            tp_save_required: 'Please fill in all required fields.',
+            tp_verified: '✓ Verified by admin',
+            tp_unverified: '⧖ Not yet verified by admin'
         },
         ko: {
             fee_title: '💳 수수료 안내',
@@ -3602,7 +3749,46 @@ function _p3Label(key) {
             withdraw_status_pending: '대기중',
             withdraw_status_approved: '승인됨',
             withdraw_status_rejected: '거절됨',
-            withdraw_status_paid: '입금완료'
+            withdraw_status_paid: '입금완료',
+            withdraw_available: '출금 가능 잔액',
+            withdraw_max_btn: '최대',
+            withdraw_profile_missing: '먼저 세금·은행 정보를 입력해주세요.',
+            withdraw_profile_missing_btn: '세금·은행 정보 입력하기',
+            withdraw_profile_ok: '세금·은행 정보가 등록되어 있습니다',
+            withdraw_profile_unverified: '관리자 확인 대기중',
+            withdraw_tax_note: '⚠ 이 출금 요청은 관리자가 수동으로 처리합니다. 국가별 조세조약에 따라 원천징수가 적용될 수 있으며, 거주국에서의 개인 소득세 신고는 본인 책임입니다.',
+            tax_profile_btn: '세금·은행 정보',
+            tp_title: '🪪 세금·은행 정보',
+            tp_subtitle: '해외 송금과 세금신고를 위해 필수 입력해야 합니다. 이 정보는 안전하게 보관되며 관리자가 출금 처리 시에만 열람합니다.',
+            tp_country: '거주 국가',
+            tp_tax_id_type: '구분',
+            tp_entity_personal: '개인',
+            tp_entity_business: '사업자',
+            tp_legal_name: '법적 성명 (예금주와 동일해야 함)',
+            tp_legal_name_ph: '신분증에 표기된 이름 그대로',
+            tp_tax_id: '세금 ID',
+            tp_dob: '생년월일',
+            tp_address: '상세 거주지 주소',
+            tp_address_ph: '도로명, 시/도, 우편번호, 국가',
+            tp_banking_hdr: '은행 정보',
+            tp_bank_name: '은행명',
+            tp_bank_holder: '예금주',
+            tp_bank_account: '계좌번호',
+            tp_intl_hdr: '국제 송금 정보',
+            tp_swift: 'SWIFT / BIC',
+            tp_routing: 'Routing / Clearing 코드',
+            tp_routing_ph: 'US ABA, CN CNAPS 등',
+            tp_iban: 'IBAN (유럽 / 중동)',
+            tp_bank_address: '은행 지점 주소',
+            tp_bank_address_ph: 'SWIFT 송금 시 필수',
+            tp_currency: '지급 통화',
+            tp_treaty: '거주국과 대한민국 사이의 조세조약 혜택 적용을 신청합니다 (관리자 확인 후 감면 원천징수 적용)',
+            tp_legal_notice: '🔒 저장 시, 위 정보가 진실되고 완전함을 확인하신 것으로 간주됩니다. 허위 세무 정보 입력 시 계정이 영구 정지되며, 관할 세무 당국에 통보될 수 있습니다. 플랫폼은 필요한 경우 대한민국 원천징수 의무자로서 대리 납부합니다.',
+            tp_save: '저장',
+            tp_save_success: '세금·은행 정보가 저장되었습니다.',
+            tp_save_required: '필수 항목을 모두 입력해주세요.',
+            tp_verified: '✓ 관리자 확인 완료',
+            tp_unverified: '⧖ 관리자 확인 대기중'
         },
         ja: {
             fee_title: '💳 手数料のご案内',
@@ -3654,7 +3840,46 @@ function _p3Label(key) {
             withdraw_status_pending: '処理待ち',
             withdraw_status_approved: '承認済み',
             withdraw_status_rejected: '拒否',
-            withdraw_status_paid: '入金完了'
+            withdraw_status_paid: '入金完了',
+            withdraw_available: '出金可能残高',
+            withdraw_max_btn: '最大',
+            withdraw_profile_missing: '先に税金・銀行情報を入力してください。',
+            withdraw_profile_missing_btn: '税金・銀行情報を入力',
+            withdraw_profile_ok: '税金・銀行情報が登録されています',
+            withdraw_profile_unverified: '管理者確認待ち',
+            withdraw_tax_note: '⚠ この出金申請は管理者が手動で処理します。各国の租税条約により源泉徴収が適用される場合があります。居住国での個人所得税申告はご本人の責任です。',
+            tax_profile_btn: '税金・銀行情報',
+            tp_title: '🪪 税金・銀行情報',
+            tp_subtitle: '海外送金と税務報告のために必須です。この情報は安全に保管され、管理者が出金処理時のみ閲覧します。',
+            tp_country: '居住国',
+            tp_tax_id_type: '区分',
+            tp_entity_personal: '個人',
+            tp_entity_business: '事業者',
+            tp_legal_name: '法的氏名（口座名義と同一である必要があります）',
+            tp_legal_name_ph: '身分証明書に記載されている通り',
+            tp_tax_id: '税務ID',
+            tp_dob: '生年月日',
+            tp_address: '居住地の完全な住所',
+            tp_address_ph: '番地、市区町村、郵便番号、国',
+            tp_banking_hdr: '銀行情報',
+            tp_bank_name: '銀行名',
+            tp_bank_holder: '口座名義',
+            tp_bank_account: '口座番号',
+            tp_intl_hdr: '国際送金情報',
+            tp_swift: 'SWIFT / BIC',
+            tp_routing: 'Routing / Clearing コード',
+            tp_routing_ph: 'US ABA, CN CNAPS など',
+            tp_iban: 'IBAN（欧州/中東）',
+            tp_bank_address: '銀行支店住所',
+            tp_bank_address_ph: 'SWIFT送金時に必須',
+            tp_currency: '支払通貨',
+            tp_treaty: '居住国と大韓民国間の租税条約上の特典適用を申請します（管理者確認後に軽減源泉徴収を適用）',
+            tp_legal_notice: '🔒 保存することで、上記の情報が真実かつ完全であることを確認したものとみなされます。虚偽の税務情報を入力した場合、アカウントが恒久的に停止され、該当する税務当局に通報される可能性があります。プラットフォームは必要に応じて大韓民国源泉徴収義務者として代理納付します。',
+            tp_save: '保存',
+            tp_save_success: '税金・銀行情報が保存されました。',
+            tp_save_required: '必須項目をすべて入力してください。',
+            tp_verified: '✓ 管理者確認済み',
+            tp_unverified: '⧖ 管理者確認待ち'
         }
     };
     return (L[LANG] || L.en)[key] || L.en[key] || key;
@@ -3938,9 +4163,14 @@ async function renderWalletSection(containerId) {
                     <div class="wc-val">${formatPrice(w.total_earnings || 0)}</div>
                 </div>
             </div>
-            <button class="btn btn-primary" style="margin-top:12px;" onclick="openWithdrawModal(${w.wallet_balance || 0})" ${(w.wallet_balance||0) <= 0 ? 'disabled' : ''}>
-                <i class="fa-solid fa-money-bill-transfer"></i> ${_p3Label('withdraw_btn')}
-            </button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                <button class="btn btn-primary" onclick="openWithdrawModal(${w.wallet_balance || 0})" ${(w.wallet_balance||0) <= 0 ? 'disabled' : ''}>
+                    <i class="fa-solid fa-money-bill-transfer"></i> ${_p3Label('withdraw_btn')}
+                </button>
+                <button class="btn btn-outline" onclick="openTaxProfileModal()">
+                    <i class="fa-solid fa-id-card"></i> ${_p3Label('tax_profile_btn')}
+                </button>
+            </div>
             ${renderFeeBreakdownBox({ compact: true, showNote: false })}
             <div id="withdrawHistory" style="margin-top:14px;"></div>
         </div>
@@ -3979,19 +4209,93 @@ async function loadWithdrawHistory() {
     el.innerHTML = html;
 }
 
-function openWithdrawModal(availableBalance) {
+// ═══════════════════════════════════════════════════════════════
+// Phase 5: Tax ID per-country configuration
+// ═══════════════════════════════════════════════════════════════
+// Label + placeholder + hint for each country's "Tax ID" field.
+// Used by openTaxProfileModal() to adapt labels when country changes.
+const TAX_ID_CONFIG = {
+    KR: { label:{ko:'주민등록번호 / 사업자번호', ja:'住民登録番号/事業者番号', en:'RRN / Business Number'},
+          placeholder:'000000-0000000', hint:{ko:'13자리 주민번호 또는 10자리 사업자번호', ja:'13桁住民登録番号または10桁事業者番号', en:'13-digit RRN or 10-digit Business Number'} },
+    JP: { label:{ko:'마이넘버 / 법인번호', ja:'マイナンバー/法人番号', en:'My Number / Corporate Number'},
+          placeholder:'000000000000', hint:{ko:'12자리 마이넘버 또는 13자리 법인번호', ja:'12桁マイナンバーまたは13桁法人番号', en:'12-digit My Number or 13-digit Corporate Number'} },
+    US: { label:{ko:'SSN / ITIN / EIN', ja:'SSN/ITIN/EIN', en:'SSN / ITIN / EIN (W-9)'},
+          placeholder:'000-00-0000 or 00-0000000', hint:{ko:'미국 사회보장번호(SSN) 또는 고용주식별번호(EIN)', ja:'米国社会保障番号（SSN）または雇用主識別番号（EIN）', en:'US Social Security Number, ITIN, or Employer ID'} },
+    CN: { label:{ko:'신분증번호 / 통일사회신용코드', ja:'身分証番号/統一社会信用コード', en:'Resident ID / USCI'},
+          placeholder:'18 digits', hint:{ko:'18자리 신분증번호 또는 18자리 통일사회신용코드', ja:'18桁身分証番号または18桁統一社会信用コード', en:'18-digit Resident ID or 18-digit USCI'} },
+    GB: { label:{ko:'UTR / NI 번호', ja:'UTR/NI番号', en:'UTR / NI Number'},
+          placeholder:'10 digits or AB123456C', hint:{ko:'영국 세무 참조번호 UTR 또는 국민보험번호 NI', ja:'英国税務参照番号UTRまたは国民保険番号NI', en:'UK Unique Taxpayer Reference or National Insurance Number'} },
+    DE: { label:{ko:'Steuer-ID / USt-IdNr.', ja:'Steuer-ID/USt-IdNr.', en:'Steuer-ID / VAT ID'},
+          placeholder:'11 digits or DE000000000', hint:{ko:'11자리 Tax-ID 또는 부가세 번호(VAT ID)', ja:'11桁Tax-IDまたは付加価値税番号（VAT ID）', en:'11-digit Tax-ID or VAT registration number'} },
+    FR: { label:{ko:'NIR (Numéro fiscal) / SIRET', ja:'NIR/SIRET', en:'NIR / SIRET'},
+          placeholder:'13 digits or 14 digits', hint:{ko:'개인: 13자리 NIR / 사업자: 14자리 SIRET', ja:'個人: 13桁NIR / 事業者: 14桁SIRET', en:'13-digit personal NIR or 14-digit business SIRET'} },
+    IT: { label:{ko:'Codice Fiscale / P. IVA', ja:'税コード/付加価値税番号', en:'Codice Fiscale / P.IVA'},
+          placeholder:'16 chars or 11 digits', hint:{ko:'개인 16자리 세금코드 또는 11자리 VAT 번호', ja:'個人16桁税コードまたは11桁VAT番号', en:'16-char personal code or 11-digit VAT'} },
+    ES: { label:{ko:'NIF / NIE / CIF', ja:'NIF/NIE/CIF', en:'NIF / NIE / CIF'},
+          placeholder:'X0000000A', hint:{ko:'스페인 NIF/NIE(개인) 또는 CIF(법인)', ja:'スペインNIF/NIE(個人)またはCIF(法人)', en:'Spanish NIF/NIE (personal) or CIF (corporate)'} },
+    SA: { label:{ko:'국민번호 / VAT 번호', ja:'国民番号/VAT番号', en:'National ID / VAT Number'},
+          placeholder:'10 digits or 15 digits', hint:{ko:'10자리 국민번호 또는 15자리 VAT 번호', ja:'10桁国民番号または15桁VAT番号', en:'10-digit National ID or 15-digit VAT Number'} },
+    MA: { label:{ko:'CIN / ICE', ja:'CIN/ICE', en:'CIN / ICE'},
+          placeholder:'CIN or 15-digit ICE', hint:{ko:'모로코 개인 CIN 또는 15자리 기업 ICE', ja:'モロッコ個人CINまたは15桁企業ICE', en:'Morocco CIN (personal) or 15-digit ICE (business)'} },
+    SG: { label:{ko:'NRIC / UEN', ja:'NRIC/UEN', en:'NRIC / UEN'},
+          placeholder:'S1234567A or 10 chars', hint:{ko:'싱가포르 개인 NRIC/FIN 또는 사업자 UEN', ja:'シンガポール個人NRIC/FINまたは事業者UEN', en:'Singapore personal NRIC/FIN or business UEN'} }
+};
+function _tpTaxIdCfg(country) {
+    return TAX_ID_CONFIG[country] || {
+        label:{ko:'세금 ID / VAT / TIN', ja:'税ID/VAT/TIN', en:'Tax ID / VAT / TIN'},
+        placeholder:'Tax ID', hint:{ko:'거주국에서 발급한 납세자식별번호', ja:'居住国発行の納税者識別番号', en:'Taxpayer identification number issued by your country'}
+    };
+}
+
+async function openWithdrawModal(availableBalance) {
+    document.getElementById('withdrawAvailLbl').textContent = _p3Label('withdraw_available');
+    document.getElementById('withdrawTitle').textContent = _p3Label('withdraw_title');
+    document.getElementById('withdrawAmountLabel').innerHTML = _p3Label('withdraw_amount') + ' <span class="req">*</span>';
+    document.getElementById('withdrawMemoLabel').textContent = _p3Label('withdraw_memo');
+    document.getElementById('withdrawSubmitLbl').textContent = _p3Label('withdraw_submit');
+    document.getElementById('withdrawMaxBtn').textContent = _p3Label('withdraw_max_btn');
+    document.getElementById('withdrawTaxNote').textContent = _p3Label('withdraw_tax_note');
+
     document.getElementById('withdrawAvailable').textContent = formatPrice(availableBalance || 0);
+    document.getElementById('withdrawAvailable').dataset.raw = String(availableBalance || 0);
     document.getElementById('withdrawAmount').value = '';
-    document.getElementById('withdrawBankName').value = '';
-    document.getElementById('withdrawAccount').value = '';
-    document.getElementById('withdrawHolder').value = '';
     document.getElementById('withdrawMemo').value = '';
     document.getElementById('withdrawPreview').innerHTML = renderFeeBreakdownBox({ compact: true, showNote: false });
+
+    // Check tax profile status and show banner
+    const banner = document.getElementById('withdrawProfileBanner');
+    const submitBtn = document.getElementById('withdrawSubmitBtn');
+    banner.innerHTML = '<div style="text-align:center;padding:10px;color:#94a3b8;font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    const { data: prof } = await sb.from('designer_tax_profiles').select('*').eq('designer_id', userId).maybeSingle();
+    if (!prof) {
+        banner.innerHTML = `
+            <div style="padding:12px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;">
+                <div style="font-size:12px;color:#991b1b;font-weight:700;margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation"></i> ${_p3Label('withdraw_profile_missing')}</div>
+                <button onclick="closeWithdrawModal();openTaxProfileModal();" style="background:#dc2626;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-id-card"></i> ${_p3Label('withdraw_profile_missing_btn')}</button>
+            </div>`;
+        submitBtn.disabled = true;
+    } else {
+        const verifiedTxt = prof.verified ? _p3Label('tp_verified') : _p3Label('withdraw_profile_unverified');
+        const verifiedCls = prof.verified ? 'background:#dcfce7;border-color:#86efac;color:#166534;' : 'background:#fef3c7;border-color:#fde68a;color:#92400e;';
+        banner.innerHTML = `
+            <div style="padding:10px 12px;border:1.5px solid;border-radius:10px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;${verifiedCls}">
+                <span><i class="fa-solid fa-circle-check"></i> ${_p3Label('withdraw_profile_ok')} (${prof.country})</span>
+                <span>${verifiedTxt}</span>
+            </div>`;
+        submitBtn.disabled = false;
+    }
     document.getElementById('withdrawModal').classList.add('show');
 }
 
 function closeWithdrawModal() {
     document.getElementById('withdrawModal').classList.remove('show');
+}
+
+function withdrawFillMax() {
+    const raw = parseInt(document.getElementById('withdrawAvailable').dataset.raw || '0', 10);
+    const amtEl = document.getElementById('withdrawAmount');
+    amtEl.value = raw;
+    updateWithdrawPreview();
 }
 
 function updateWithdrawPreview() {
@@ -4005,22 +4309,14 @@ function updateWithdrawPreview() {
 
 async function submitWithdrawRequest() {
     const amt = parseInt(document.getElementById('withdrawAmount').value || '0', 10);
-    const bank = document.getElementById('withdrawBankName').value.trim();
-    const account = document.getElementById('withdrawAccount').value.trim();
-    const holder = document.getElementById('withdrawHolder').value.trim();
     const memo = document.getElementById('withdrawMemo').value.trim();
+    const avail = parseInt(document.getElementById('withdrawAvailable').dataset.raw || '0', 10);
     if (!amt || amt <= 0) { showToast(_p3Label('withdraw_insufficient'), 'error'); return; }
-    if (!bank || !account || !holder) {
-        showToast(LANG==='en'?'Please enter all bank info':LANG==='ja'?'すべての銀行情報を入力してください':'은행 정보를 모두 입력해주세요', 'error');
-        return;
-    }
+    if (amt > avail) { showToast(_p3Label('withdraw_insufficient'), 'error'); return; }
     if (!confirm(_p3Label('withdraw_confirm'))) return;
     try {
         const { error } = await sb.rpc('submit_design_withdrawal_request', {
             _gross: amt,
-            _bank_name: bank,
-            _bank_account: account,
-            _bank_holder: holder,
             _memo: memo || null
         });
         if (error) throw error;
@@ -4029,6 +4325,166 @@ async function submitWithdrawRequest() {
         renderWalletSection('walletSection');
     } catch (e) {
         console.error('[withdraw] error:', e);
+        showToast((e.message || 'Error'), 'error');
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Phase 5: Tax profile modal
+// ═══════════════════════════════════════════════════════════════
+async function openTaxProfileModal() {
+    // Apply translated labels
+    const _setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    _setText('tpTitle',          _p3Label('tp_title'));
+    _setText('tpSubtitle',       _p3Label('tp_subtitle'));
+    _setText('tpLblCountry',     _p3Label('tp_country') + ' *');
+    _setText('tpLblTaxIdType',   _p3Label('tp_tax_id_type') + ' *');
+    _setText('tpLblLegalName',   _p3Label('tp_legal_name') + ' *');
+    _setText('tpLblDob',         _p3Label('tp_dob'));
+    _setText('tpLblAddress',     _p3Label('tp_address') + ' *');
+    _setText('tpBankingHdr',     _p3Label('tp_banking_hdr'));
+    _setText('tpLblBankName',    _p3Label('tp_bank_name') + ' *');
+    _setText('tpLblBankHolder',  _p3Label('tp_bank_holder') + ' *');
+    _setText('tpLblBankAccount', _p3Label('tp_bank_account') + ' *');
+    _setText('tpIntlHdr',        _p3Label('tp_intl_hdr'));
+    _setText('tpLblSwift',       _p3Label('tp_swift') + ' *');
+    _setText('tpLblRouting',     _p3Label('tp_routing'));
+    _setText('tpLblIban',        _p3Label('tp_iban'));
+    _setText('tpLblBankAddress', _p3Label('tp_bank_address') + ' *');
+    _setText('tpLblCurrency',    _p3Label('tp_currency'));
+    _setText('tpLblTreaty',      _p3Label('tp_treaty'));
+    _setText('tpLegalNotice',    _p3Label('tp_legal_notice'));
+    _setText('tpSaveLbl',        _p3Label('tp_save'));
+
+    document.getElementById('tpLegalName').placeholder  = _p3Label('tp_legal_name_ph');
+    document.getElementById('tpAddress').placeholder    = _p3Label('tp_address_ph');
+    document.getElementById('tpRouting').placeholder    = _p3Label('tp_routing_ph');
+    document.getElementById('tpBankAddress').placeholder= _p3Label('tp_bank_address_ph');
+
+    // Entity type options
+    const typeSel = document.getElementById('tpTaxIdType');
+    typeSel.innerHTML = `
+        <option value="personal">${_p3Label('tp_entity_personal')}</option>
+        <option value="business">${_p3Label('tp_entity_business')}</option>`;
+
+    // Populate country dropdown from COUNTRY_LIST
+    const cSel = document.getElementById('tpCountry');
+    cSel.innerHTML = COUNTRY_LIST.map(c => `<option value="${c.code}">${c.flag} ${c.label[LANG] || c.label.en}</option>`).join('');
+
+    // Load existing profile
+    const { data: prof } = await sb.from('designer_tax_profiles').select('*').eq('designer_id', userId).maybeSingle();
+    if (prof) {
+        cSel.value                                     = prof.country || 'KR';
+        document.getElementById('tpTaxIdType').value   = prof.tax_id_type || 'personal';
+        document.getElementById('tpLegalName').value   = prof.legal_name || '';
+        document.getElementById('tpTaxId').value       = prof.tax_id || '';
+        document.getElementById('tpDob').value         = prof.date_of_birth || '';
+        document.getElementById('tpAddress').value     = prof.residence_address || '';
+        document.getElementById('tpBankName').value    = prof.bank_name || '';
+        document.getElementById('tpBankHolder').value  = prof.bank_holder || '';
+        document.getElementById('tpBankAccount').value = prof.bank_account || '';
+        document.getElementById('tpSwift').value       = prof.swift_bic || '';
+        document.getElementById('tpRouting').value     = prof.routing_number || '';
+        document.getElementById('tpIban').value        = prof.iban || '';
+        document.getElementById('tpBankAddress').value = prof.bank_address || '';
+        document.getElementById('tpCurrency').value    = prof.payout_currency || 'KRW';
+        document.getElementById('tpTreaty').checked    = !!prof.claim_tax_treaty;
+        const vb = document.getElementById('tpVerifiedBanner');
+        vb.innerHTML = prof.verified
+            ? `<div style="padding:8px 12px;background:#dcfce7;border:1px solid #86efac;border-radius:8px;font-size:12px;color:#166534;font-weight:700;">${_p3Label('tp_verified')}</div>`
+            : `<div style="padding:8px 12px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;font-size:12px;color:#92400e;font-weight:700;">${_p3Label('tp_unverified')}</div>`;
+    } else {
+        // Default country from designer profile if available
+        cSel.value = (designerProfile && designerProfile.country) || 'KR';
+        ['tpLegalName','tpTaxId','tpDob','tpAddress','tpBankName','tpBankHolder','tpBankAccount','tpSwift','tpRouting','tpIban','tpBankAddress'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        document.getElementById('tpCurrency').value = 'KRW';
+        document.getElementById('tpTreaty').checked = false;
+        document.getElementById('tpVerifiedBanner').innerHTML = '';
+    }
+
+    _tpOnCountryChange();
+    document.getElementById('taxProfileModal').classList.add('show');
+}
+
+function closeTaxProfileModal() {
+    document.getElementById('taxProfileModal').classList.remove('show');
+}
+
+function _tpOnCountryChange() {
+    const country = document.getElementById('tpCountry').value || 'KR';
+    const cfg = _tpTaxIdCfg(country);
+    const L = LANG;
+    document.getElementById('tpLblTaxId').innerHTML = (cfg.label[L] || cfg.label.en) + ' <span class="req">*</span>';
+    document.getElementById('tpTaxId').placeholder = cfg.placeholder;
+    document.getElementById('tpTaxIdHint').textContent = cfg.hint[L] || cfg.hint.en;
+
+    // Show/hide international section
+    const intl = document.getElementById('tpIntlSection');
+    if (country === 'KR') {
+        intl.style.display = 'none';
+    } else {
+        intl.style.display = '';
+    }
+}
+
+async function saveTaxProfile() {
+    const country    = document.getElementById('tpCountry').value;
+    const taxIdType  = document.getElementById('tpTaxIdType').value;
+    const legalName  = document.getElementById('tpLegalName').value.trim();
+    const taxId      = document.getElementById('tpTaxId').value.trim();
+    const dob        = document.getElementById('tpDob').value || null;
+    const address    = document.getElementById('tpAddress').value.trim();
+    const bankName   = document.getElementById('tpBankName').value.trim();
+    const bankHolder = document.getElementById('tpBankHolder').value.trim();
+    const bankAcct   = document.getElementById('tpBankAccount').value.trim();
+    const swift      = document.getElementById('tpSwift').value.trim();
+    const routing    = document.getElementById('tpRouting').value.trim();
+    const iban       = document.getElementById('tpIban').value.trim();
+    const bankAddr   = document.getElementById('tpBankAddress').value.trim();
+    const currency   = document.getElementById('tpCurrency').value;
+    const treaty     = document.getElementById('tpTreaty').checked;
+
+    // Required validation
+    if (!country || !legalName || !taxId || !address || !bankName || !bankHolder || !bankAcct) {
+        showToast(_p3Label('tp_save_required'), 'error');
+        return;
+    }
+    // International requires SWIFT + bank address
+    if (country !== 'KR' && (!swift || !bankAddr)) {
+        showToast(_p3Label('tp_save_required'), 'error');
+        return;
+    }
+
+    const row = {
+        designer_id: userId,
+        country,
+        legal_name: legalName,
+        tax_id_type: taxIdType,
+        tax_id: taxId,
+        date_of_birth: dob,
+        residence_address: address,
+        bank_name: bankName,
+        bank_holder: bankHolder,
+        bank_account: bankAcct,
+        swift_bic: swift || null,
+        routing_number: routing || null,
+        iban: iban || null,
+        bank_address: bankAddr || null,
+        payout_currency: currency,
+        claim_tax_treaty: treaty,
+        // Editing resets verification — admin must re-approve after each change
+        verified: false,
+        verified_at: null,
+        verified_by: null
+    };
+
+    try {
+        const { error } = await sb.from('designer_tax_profiles').upsert(row, { onConflict: 'designer_id' });
+        if (error) throw error;
+        showToast(_p3Label('tp_save_success'), 'success');
+        closeTaxProfileModal();
+    } catch (e) {
+        console.error('[saveTaxProfile] error:', e);
         showToast((e.message || 'Error'), 'error');
     }
 }
