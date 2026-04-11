@@ -154,10 +154,13 @@ WHERE NOT EXISTS (
 -- ──────────────────────────────────────────────────────────
 -- Small set so the "Open Requests" tab has something to show
 -- when filtering by these countries.
+-- Uses gen_random_uuid() for customer_id (matches the pattern
+-- from seed_demo_design_requests.sql). The FK to auth.users is
+-- assumed already dropped by that earlier seed.
 INSERT INTO public.design_requests
     (id, customer_id, title, category, description, budget_min, budget_max, country,
      phone, files, is_demo, status, created_at)
-SELECT gen_random_uuid(), NULL, s.title, s.category, s.description,
+SELECT gen_random_uuid(), gen_random_uuid(), s.title, s.category, s.description,
        s.budget_min, s.budget_max, s.country,
        '', '[]'::jsonb, true, 'completed', NOW() - (s.age_days || ' days')::interval
 FROM (VALUES
