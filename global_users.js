@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=290";
-import { showLoading } from "./global_common.js?v=290";
+import { sb } from "./global_config.js?v=291";
+import { showLoading } from "./global_common.js?v=291";
 
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
@@ -925,17 +925,15 @@ window.loadDesignWithdrawals = async () => {
     }
 };
 
+// These four handlers call SECURITY DEFINER RPCs defined in
+// phase5b_admin_withdrawal_rpcs.sql — the RPC itself checks that
+// profiles.role='admin' and then bypasses RLS to update the rows.
+// Direct table UPDATEs from the client fail silently under RLS
+// because admin users are not the row owner.
 window.verifyDesignerTaxProfile = async (designerId) => {
     if (!confirm("이 디자이너의 세금·은행 정보를 검증 완료로 표시하시겠습니까?\n\n검증 전에 세금 ID, 은행 정보, 주소가 모두 정확한지 확인하세요.")) return;
     try {
-        const { data: u } = await sb.auth.getUser();
-        const { error } = await sb.from('designer_tax_profiles')
-            .update({
-                verified: true,
-                verified_at: new Date().toISOString(),
-                verified_by: u?.user?.id || null
-            })
-            .eq('designer_id', designerId);
+        const { error } = await sb.rpc('admin_verify_designer_tax_profile', { _designer_id: designerId });
         if (error) throw error;
         showToast("프로필 검증 완료", "success");
         loadDesignWithdrawals();
@@ -947,9 +945,7 @@ window.verifyDesignerTaxProfile = async (designerId) => {
 window.approveDesignWithdrawal = async (reqId) => {
     if (!confirm("이 출금 요청을 승인하시겠습니까?\n\n승인 후 송금을 진행하고, 송금이 완료되면 '지급완료 처리' 버튼을 눌러주세요.")) return;
     try {
-        const { error } = await sb.from('design_withdrawal_requests')
-            .update({ status: 'approved', processed_at: new Date().toISOString() })
-            .eq('id', reqId);
+        const { error } = await sb.rpc('admin_approve_design_withdrawal', { _req_id: reqId });
         if (error) throw error;
         showToast("출금 요청이 승인되었습니다. 송금 후 지급완료 처리를 해주세요.", "success");
         loadDesignWithdrawals();
@@ -962,34 +958,8 @@ window.rejectDesignWithdrawal = async (reqId) => {
     const reason = prompt("거절 사유를 입력하세요 (디자이너에게 전달됩니다):");
     if (reason === null) return;
     try {
-        // Fetch gross to restore wallet
-        const { data: r } = await sb.from('design_withdrawal_requests')
-            .select('designer_id, gross_amount, status')
-            .eq('id', reqId)
-            .maybeSingle();
-        if (!r) throw new Error('요청을 찾을 수 없습니다');
-        if (r.status !== 'pending') throw new Error('대기 상태 요청만 거절할 수 있습니다');
-
-        const { error: uErr } = await sb.from('design_withdrawal_requests')
-            .update({
-                status: 'rejected',
-                processed_at: new Date().toISOString(),
-                admin_note: reason || null
-            })
-            .eq('id', reqId);
-        if (uErr) throw uErr;
-
-        // Restore designer wallet_balance (move back from pending_withdrawal)
-        const { data: dp } = await sb.from('designer_profiles')
-            .select('wallet_balance, wallet_pending_withdrawal')
-            .eq('id', r.designer_id)
-            .maybeSingle();
-        if (dp) {
-            await sb.from('designer_profiles').update({
-                wallet_balance: (dp.wallet_balance || 0) + (r.gross_amount || 0),
-                wallet_pending_withdrawal: Math.max(0, (dp.wallet_pending_withdrawal || 0) - (r.gross_amount || 0))
-            }).eq('id', r.designer_id);
-        }
+        const { error } = await sb.rpc('admin_reject_design_withdrawal', { _req_id: reqId, _reason: reason || null });
+        if (error) throw error;
         showToast("거절 처리 및 잔액 복원 완료", "success");
         loadDesignWithdrawals();
     } catch (e) {
@@ -1000,27 +970,8 @@ window.rejectDesignWithdrawal = async (reqId) => {
 window.markDesignWithdrawalPaid = async (reqId) => {
     if (!confirm("송금이 완료되었습니까? 지급완료 상태로 변경합니다.")) return;
     try {
-        const { data: r } = await sb.from('design_withdrawal_requests')
-            .select('designer_id, gross_amount, status')
-            .eq('id', reqId)
-            .maybeSingle();
-        if (!r) throw new Error('요청을 찾을 수 없습니다');
-
-        const { error } = await sb.from('design_withdrawal_requests')
-            .update({ status: 'paid', processed_at: new Date().toISOString() })
-            .eq('id', reqId);
+        const { error } = await sb.rpc('admin_mark_design_withdrawal_paid', { _req_id: reqId });
         if (error) throw error;
-
-        // Clear pending_withdrawal since money is now actually out the door
-        const { data: dp } = await sb.from('designer_profiles')
-            .select('wallet_pending_withdrawal')
-            .eq('id', r.designer_id)
-            .maybeSingle();
-        if (dp) {
-            await sb.from('designer_profiles').update({
-                wallet_pending_withdrawal: Math.max(0, (dp.wallet_pending_withdrawal || 0) - (r.gross_amount || 0))
-            }).eq('id', r.designer_id);
-        }
         showToast("지급완료 처리되었습니다", "success");
         loadDesignWithdrawals();
     } catch (e) {
