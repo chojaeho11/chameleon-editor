@@ -262,6 +262,7 @@ export function resizeCanvasToFit() {
     if(!board) return;
 
     // 모바일: 보드를 화면 상단에 크게 배치 (도구바 영역만 제외)
+    // PC: 보드를 stage의 세로 중앙에 배치
     const _isMobile = window.innerWidth <= 768;
     const _bottomReserve = _isMobile ? 110 : 0;  // 하단 컨트롤바 + iconBar
     const _topReserve = _isMobile ? 8 : 0;       // 상단 8px만 띄움
@@ -275,8 +276,12 @@ export function resizeCanvasToFit() {
     const zoom = Math.min(availW / board.width, availH / board.height);
 
     const panX = (stage.clientWidth - board.width * zoom) / 2;
-    // 보드를 visible 영역 상단에 배치 (가운데가 아닌 위쪽)
-    const panY = _topReserve;
+    // 모바일: visible 영역 상단에 anchor (키보드/도구바 공간 확보용)
+    // PC: stage 세로 중앙에 배치
+    const boardScreenH = board.height * zoom;
+    const panY = _isMobile
+        ? _topReserve
+        : (stage.clientHeight - boardScreenH) / 2;
 
     c.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);
     c.requestRenderAll();
