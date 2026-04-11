@@ -464,24 +464,22 @@ export function renderShortcutButtons(containerId) {
         .dm-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.25) 0%,transparent 70%);pointer-events:none;}
         .dm-banner::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,0.2) 0%,transparent 70%);pointer-events:none;}
         .dm-banner-inner{position:relative;display:flex;align-items:center;gap:20px;z-index:1;}
-        .dm-banner-icon{flex-shrink:0;width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 4px 14px rgba(251,191,36,0.4);}
         .dm-banner-text{flex:1;min-width:0;}
-        .dm-banner-title{font-size:22px;font-weight:900;letter-spacing:-0.4px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.15);}
-        .dm-banner-sub{font-size:13px;font-weight:600;opacity:0.95;margin-bottom:6px;line-height:1.5;}
-        .dm-banner-tag{font-size:11px;opacity:0.85;font-weight:500;}
-        .dm-banner-cta{flex-shrink:0;background:#fbbf24;color:#1e1b4b;padding:11px 20px;border-radius:12px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 12px rgba(251,191,36,0.4);}
-        .dm-banner:hover .dm-banner-cta{background:#fff;transform:scale(1.05);}
+        .dm-banner-title{font-size:22px;font-weight:900;letter-spacing:-0.4px;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,0.15);}
+        .dm-banner-sub{font-size:15px;font-weight:600;opacity:0.95;margin-bottom:8px;line-height:1.55;}
+        .dm-banner-tag{font-size:14px;opacity:0.92;font-weight:600;line-height:1.5;}
+        .dm-banner-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;}
+        .dm-banner:hover .dm-banner-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.05);box-shadow:0 6px 18px rgba(251,191,36,0.5);}
 
         @media(max-width:768px){
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
             .dm-banner{padding:16px 18px;border-radius:16px;}
             .dm-banner-inner{flex-direction:column;text-align:center;gap:12px;}
-            .dm-banner-icon{width:52px;height:52px;font-size:24px;}
             .dm-banner-title{font-size:18px;}
-            .dm-banner-sub{font-size:12px;}
-            .dm-banner-tag{font-size:10px;}
-            .dm-banner-cta{padding:10px 16px;font-size:12px;}
+            .dm-banner-sub{font-size:13px;}
+            .dm-banner-tag{font-size:12px;}
+            .dm-banner-cta{padding:11px 18px;font-size:13px;}
         }
         </style>
         <div class="adv-ext-wrap">
@@ -498,7 +496,6 @@ export function renderShortcutButtons(containerId) {
             </div>
             <a href="${location.origin}/design-market" class="dm-banner" target="_blank">
                 <div class="dm-banner-inner">
-                    <div class="dm-banner-icon">🎨</div>
                     <div class="dm-banner-text">
                         <div class="dm-banner-title">${t.banner_title}</div>
                         <div class="dm-banner-sub">${t.banner_sub}</div>
