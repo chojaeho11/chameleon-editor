@@ -430,59 +430,114 @@ export function initExport() {
         btnPNG.onclick = async () => {
             // [수정] 다국어 적용
             if (!currentUser) { showToast(window.t('msg_login_required', "Login required."), "warn"); return; }
-            
+
             const btn = btnPNG;
             const originalHTML = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${window.t('msg_saving', "Saving...")}`;
             btn.disabled = true;
 
             try {
-                // 주문 시스템 로직(generateRasterPDF)을 활용하여 PNG 생성
-                const board = canvas.getObjects().find(o => o.isBoard);
-                const finalW = board ? board.width * board.scaleX : canvas.width;
-                const finalH = board ? board.height * board.scaleY : canvas.height;
-                const cropX = board ? board.left : 0;
-                const cropY = board ? board.top : 0;
+                // 종이매대 / 멀티페이지 모드인지 감지
+                const _pdMode = !!window.__pdMode;
+                const _allPages = window.__pageDataList || pageDataList;
+                const _isMulti = _pdMode && _allPages && _allPages.length > 1;
 
-                const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', '_promoPanel', '_promoPanelBg']);
+                if (_isMulti) {
+                    // 현재 페이지 상태 저장 → 모든 페이지 PNG 순차 다운로드
+                    if (typeof window.savePageState === 'function') window.savePageState();
+                    const _pdFaceLabels = ['01_상단광고', '02_옆면', '03_선반', '04_하단'];
+                    for (let i = 0; i < _allPages.length; i++) {
+                        const json = _allPages[i];
+                        const boardJson = (json.objects || []).find(o => o.isBoard);
+                        if (!boardJson) continue;
+                        const pw = (boardJson.width || canvas.width) * (boardJson.scaleX || 1);
+                        const ph = (boardJson.height || canvas.height) * (boardJson.scaleY || 1);
+                        const px = boardJson.left || 0;
+                        const py = boardJson.top || 0;
 
-                // 가상 캔버스 생성
-                const tempEl = document.createElement('canvas');
-                const tempCanvas = new fabric.StaticCanvas(tempEl);
-                tempCanvas.setWidth(finalW);
-                tempCanvas.setHeight(finalH);
-                tempCanvas.setBackgroundColor('#ffffff'); // 흰색 배경
+                        const tempEl = document.createElement('canvas');
+                        const tempCanvas = new fabric.StaticCanvas(tempEl);
+                        tempCanvas.setWidth(pw);
+                        tempCanvas.setHeight(ph);
+                        tempCanvas.setBackgroundColor('#ffffff');
 
-                await new Promise(resolve => {
-                    tempCanvas.loadFromJSON(json, () => {
-                        // 뷰포트 이동으로 좌표 보정 (이동 X, 이동 Y)
-                        tempCanvas.setViewportTransform([1, 0, 0, 1, -cropX, -cropY]);
-                        tempCanvas.renderAll();
-                        setTimeout(resolve, 500); // 렌더링 안정화
+                        // mockup/excludeFromExport 제거
+                        const filtered = { ...json };
+                        if (filtered.objects) {
+                            filtered.objects = filtered.objects
+                                .filter(o => !o.isMockup && !o.excludeFromExport)
+                                .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
+                        }
+
+                        await new Promise(resolve => {
+                            tempCanvas.loadFromJSON(filtered, () => {
+                                tempCanvas.setBackgroundColor('#ffffff');
+                                tempCanvas.setViewportTransform([1, 0, 0, 1, -px, -py]);
+                                tempCanvas.renderAll();
+                                setTimeout(resolve, 400);
+                            });
+                        });
+
+                        const _maxPx = 150000000;
+                        let _pngMult = 72 / 96;
+                        const _basePx = pw * ph;
+                        if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(0.5, Math.floor(Math.sqrt(_maxPx / _basePx) * 10) / 10);
+                        const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: _pngMult });
+
+                        const link = document.createElement('a');
+                        const faceLabel = _pdFaceLabels[i] || ('0' + (i + 1) + '_face');
+                        link.download = `design_${faceLabel}_${Date.now()}.png`;
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        tempCanvas.dispose();
+
+                        // 브라우저 팝업 차단 방지 — 순차 다운로드 간 약간의 간격
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+                    showToast(window.t('msg_design_saved', "All faces downloaded!"), "success");
+                } else {
+                    // 단일 페이지: 현재 캔버스 그대로 캡처
+                    const board = canvas.getObjects().find(o => o.isBoard);
+                    const finalW = board ? board.width * board.scaleX : canvas.width;
+                    const finalH = board ? board.height * board.scaleY : canvas.height;
+                    const cropX = board ? board.left : 0;
+                    const cropY = board ? board.top : 0;
+
+                    const json = canvas.toJSON(['id', 'isBoard', 'selectable', 'evented', 'locked', 'isGuide', 'isMockup', 'excludeFromExport', 'isEffectGroup', 'isMainText', 'isClone', 'paintFirst', '_promoPanel', '_promoPanelBg']);
+
+                    const tempEl = document.createElement('canvas');
+                    const tempCanvas = new fabric.StaticCanvas(tempEl);
+                    tempCanvas.setWidth(finalW);
+                    tempCanvas.setHeight(finalH);
+                    tempCanvas.setBackgroundColor('#ffffff');
+
+                    await new Promise(resolve => {
+                        tempCanvas.loadFromJSON(json, () => {
+                            tempCanvas.setViewportTransform([1, 0, 0, 1, -cropX, -cropY]);
+                            tempCanvas.renderAll();
+                            setTimeout(resolve, 500);
+                        });
                     });
-                });
 
-                // 입력 크기(mm)와 동일한 물리 크기로 PNG 생성
-                // 일러스트레이터/포토샵은 DPI 메타데이터 없는 PNG를 72DPI로 해석
-                // board px = mm × 3.7795 (96DPI), 72DPI 기준 px = mm × 2.8346
-                // multiplier = 72/96 = 0.75 → 일러스트에서 열면 정확한 mm 크기
-                const _maxPx = 150000000;
-                let _pngMult = 72 / 96; // 0.75 (72DPI 기준 정확한 mm)
-                const _basePx = finalW * finalH;
-                if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(0.5, Math.floor(Math.sqrt(_maxPx / _basePx) * 10) / 10);
-                const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: _pngMult });
-                
-                const link = document.createElement('a');
-                link.download = `design_${new Date().getTime()}.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                tempCanvas.dispose();
+                    const _maxPx = 150000000;
+                    let _pngMult = 72 / 96;
+                    const _basePx = finalW * finalH;
+                    if (_basePx * _pngMult * _pngMult > _maxPx) _pngMult = Math.max(0.5, Math.floor(Math.sqrt(_maxPx / _basePx) * 10) / 10);
+                    const dataUrl = tempCanvas.toDataURL({ format: 'png', multiplier: _pngMult });
+
+                    const link = document.createElement('a');
+                    link.download = `design_${new Date().getTime()}.png`;
+                    link.href = dataUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    tempCanvas.dispose();
+                }
 
             } catch (err) {
                 console.error("PNG 저장 실패:", err);
-                // [수정] 다국어 적용
                 showToast(window.t('msg_save_failed', "Save Failed."), "error");
             } finally {
                 btn.disabled = false;
@@ -505,71 +560,143 @@ export function initExport() {
             btn.disabled = true;
 
             try {
-                // ★ 라이브 캔버스에서 직접 고화질 캡처 (loadFromJSON 없음)
-                const board = canvas.getObjects().find(o => o.isBoard);
-                const finalW = board ? board.width * board.scaleX : canvas.width;
-                const finalH = board ? board.height * board.scaleY : canvas.height;
-                const cropX = board ? board.left : 0;
-                const cropY = board ? board.top : 0;
-
                 const MM_TO_PX = 3.7795;
-                const pwMM = finalW / MM_TO_PX;
-                const phMM = finalH / MM_TO_PX;
-
-                // 현재 뷰포트/선택 상태 저장
-                const origVT = canvas.viewportTransform.slice();
-                const activeObj = canvas.getActiveObject();
-                canvas.discardActiveObject();
-
-                // 뷰포트를 대지 기준으로 리셋
-                canvas.setViewportTransform([1, 0, 0, 1, -cropX, -cropY]);
-                // 목업/가이드/보드 테두리 숨기기
-                const hiddenObjs = [];
-                canvas.getObjects().forEach(o => {
-                    if (o.isMockup || o.excludeFromExport || o.isGuide) {
-                        if (o.visible !== false) { o.visible = false; hiddenObjs.push(o); }
-                    }
-                    if (o.isBoard && (o.stroke || o.shadow)) {
-                        o._origStroke = o.stroke; o._origShadow = o.shadow;
-                        o.stroke = null; o.shadow = null; hiddenObjs.push(o);
-                    }
-                });
-                canvas.renderAll();
-
-                // 고화질 캡처
-                const _maxPx = 100000000;
-                const _basePx = finalW * finalH;
-                let _mult = 4;
-                if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
-
-                const imgData = canvas.toDataURL({ format: 'png', multiplier: _mult, width: finalW, height: finalH, left: 0, top: 0 });
-
-                // 원래 상태 복원
-                hiddenObjs.forEach(o => {
-                    if (o.isMockup || o.excludeFromExport || o.isGuide) o.visible = true;
-                    if (o.isBoard) {
-                        if (o._origStroke !== undefined) { o.stroke = o._origStroke; delete o._origStroke; }
-                        if (o._origShadow !== undefined) { o.shadow = o._origShadow; delete o._origShadow; }
-                    }
-                });
-                canvas.setViewportTransform(origVT);
-                if (activeObj) canvas.setActiveObject(activeObj);
-                canvas.renderAll();
-
-                // PDF 생성
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: pwMM > phMM ? 'l' : 'p', unit: 'mm', format: [pwMM, phMM], compress: true });
-                doc.addImage(imgData, 'PNG', 0, 0, pwMM, phMM, undefined, 'NONE');
 
-                const actualDPI = Math.round((finalW * _mult / pwMM) * 25.4);
-                console.log(`[PDF] ${Math.round(pwMM)}×${Math.round(phMM)}mm, ${Math.round(finalW*_mult)}×${Math.round(finalH*_mult)}px, ${actualDPI}DPI`);
+                // 종이매대 / 멀티페이지 모드인지 감지
+                const _pdMode = !!window.__pdMode;
+                const _allPages = window.__pageDataList || pageDataList;
+                const _isMulti = _pdMode && _allPages && _allPages.length > 1;
 
-                const blob = doc.output('blob');
-                if (blob) {
-                    downloadBlob(blob, `design_result_${Date.now()}.pdf`);
-                    showToast(window.t('msg_design_saved', "PDF Downloaded!"), "success");
+                if (_isMulti) {
+                    // ── 멀티 페이지 PDF (종이매대 4면 등) ──
+                    // 현재 페이지 상태 저장 후 모든 페이지를 순차 렌더
+                    if (typeof window.savePageState === 'function') window.savePageState();
+
+                    let doc = null;
+                    for (let i = 0; i < _allPages.length; i++) {
+                        const json = _allPages[i];
+                        const boardJson = (json.objects || []).find(o => o.isBoard);
+                        if (!boardJson) continue;
+                        const pw = (boardJson.width || canvas.width) * (boardJson.scaleX || 1);
+                        const ph = (boardJson.height || canvas.height) * (boardJson.scaleY || 1);
+                        const px = boardJson.left || 0;
+                        const py = boardJson.top || 0;
+                        const pwMM = pw / MM_TO_PX;
+                        const phMM = ph / MM_TO_PX;
+
+                        // 가상 캔버스에 페이지 로드
+                        const tempEl = document.createElement('canvas');
+                        const tempCanvas = new fabric.StaticCanvas(tempEl);
+                        tempCanvas.setWidth(pw);
+                        tempCanvas.setHeight(ph);
+                        tempCanvas.setBackgroundColor('#ffffff');
+
+                        const filtered = { ...json };
+                        if (filtered.objects) {
+                            filtered.objects = filtered.objects
+                                .filter(o => !o.isMockup && !o.excludeFromExport && !o.isGuide)
+                                .map(o => o.isBoard ? { ...o, strokeWidth: 0, stroke: null, shadow: null } : o);
+                        }
+
+                        await new Promise(resolve => {
+                            tempCanvas.loadFromJSON(filtered, () => {
+                                tempCanvas.setBackgroundColor('#ffffff');
+                                tempCanvas.setViewportTransform([1, 0, 0, 1, -px, -py]);
+                                tempCanvas.renderAll();
+                                setTimeout(resolve, 400);
+                            });
+                        });
+
+                        const _maxPx = 100000000;
+                        const _basePx = pw * ph;
+                        let _mult = 4;
+                        if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+                        const imgData = tempCanvas.toDataURL({ format: 'png', multiplier: _mult });
+
+                        if (!doc) {
+                            doc = new jsPDF({ orientation: pwMM > phMM ? 'l' : 'p', unit: 'mm', format: [pwMM, phMM], compress: true });
+                        } else {
+                            doc.addPage([pwMM, phMM], pwMM > phMM ? 'l' : 'p');
+                        }
+                        doc.addImage(imgData, 'PNG', 0, 0, pwMM, phMM, undefined, 'NONE');
+                        tempCanvas.dispose();
+                    }
+
+                    if (!doc) throw new Error('No valid pages to export');
+                    const blob = doc.output('blob');
+                    if (blob) {
+                        downloadBlob(blob, `design_result_${Date.now()}.pdf`);
+                        showToast(window.t('msg_design_saved', "PDF Downloaded!"), "success");
+                    } else {
+                        throw new Error("PDF Generation Failed.");
+                    }
                 } else {
-                    throw new Error("PDF Generation Failed.");
+                    // ── 단일 페이지 PDF ──
+                    // ★ 라이브 캔버스에서 직접 고화질 캡처 (loadFromJSON 없음)
+                    const board = canvas.getObjects().find(o => o.isBoard);
+                    const finalW = board ? board.width * board.scaleX : canvas.width;
+                    const finalH = board ? board.height * board.scaleY : canvas.height;
+                    const cropX = board ? board.left : 0;
+                    const cropY = board ? board.top : 0;
+
+                    const pwMM = finalW / MM_TO_PX;
+                    const phMM = finalH / MM_TO_PX;
+
+                    // 현재 뷰포트/선택 상태 저장
+                    const origVT = canvas.viewportTransform.slice();
+                    const activeObj = canvas.getActiveObject();
+                    canvas.discardActiveObject();
+
+                    // 뷰포트를 대지 기준으로 리셋
+                    canvas.setViewportTransform([1, 0, 0, 1, -cropX, -cropY]);
+                    // 목업/가이드/보드 테두리 숨기기
+                    const hiddenObjs = [];
+                    canvas.getObjects().forEach(o => {
+                        if (o.isMockup || o.excludeFromExport || o.isGuide) {
+                            if (o.visible !== false) { o.visible = false; hiddenObjs.push(o); }
+                        }
+                        if (o.isBoard && (o.stroke || o.shadow)) {
+                            o._origStroke = o.stroke; o._origShadow = o.shadow;
+                            o.stroke = null; o.shadow = null; hiddenObjs.push(o);
+                        }
+                    });
+                    canvas.renderAll();
+
+                    // 고화질 캡처
+                    const _maxPx = 100000000;
+                    const _basePx = finalW * finalH;
+                    let _mult = 4;
+                    if (_basePx * _mult * _mult > _maxPx) _mult = Math.max(2, Math.floor(Math.sqrt(_maxPx / _basePx)));
+
+                    const imgData = canvas.toDataURL({ format: 'png', multiplier: _mult, width: finalW, height: finalH, left: 0, top: 0 });
+
+                    // 원래 상태 복원
+                    hiddenObjs.forEach(o => {
+                        if (o.isMockup || o.excludeFromExport || o.isGuide) o.visible = true;
+                        if (o.isBoard) {
+                            if (o._origStroke !== undefined) { o.stroke = o._origStroke; delete o._origStroke; }
+                            if (o._origShadow !== undefined) { o.shadow = o._origShadow; delete o._origShadow; }
+                        }
+                    });
+                    canvas.setViewportTransform(origVT);
+                    if (activeObj) canvas.setActiveObject(activeObj);
+                    canvas.renderAll();
+
+                    // PDF 생성
+                    const doc = new jsPDF({ orientation: pwMM > phMM ? 'l' : 'p', unit: 'mm', format: [pwMM, phMM], compress: true });
+                    doc.addImage(imgData, 'PNG', 0, 0, pwMM, phMM, undefined, 'NONE');
+
+                    const actualDPI = Math.round((finalW * _mult / pwMM) * 25.4);
+                    console.log(`[PDF] ${Math.round(pwMM)}×${Math.round(phMM)}mm, ${Math.round(finalW*_mult)}×${Math.round(finalH*_mult)}px, ${actualDPI}DPI`);
+
+                    const blob = doc.output('blob');
+                    if (blob) {
+                        downloadBlob(blob, `design_result_${Date.now()}.pdf`);
+                        showToast(window.t('msg_design_saved', "PDF Downloaded!"), "success");
+                    } else {
+                        throw new Error("PDF Generation Failed.");
+                    }
                 }
 
             } catch (err) {
