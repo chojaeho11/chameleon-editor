@@ -5735,7 +5735,15 @@ function _p4Label(key) {
 }
 
 async function openRatingModal(requestId, explicitBidId) {
-    const { data: r } = await sb.from('design_requests').select('selected_bid_id, gig_id, gig_tier').eq('id', requestId).maybeSingle();
+  try {
+    console.log('[openRatingModal] called with', { requestId, explicitBidId });
+
+    const { data: r, error: _rErr } = await sb.from('design_requests')
+        .select('selected_bid_id, gig_id, gig_tier')
+        .eq('id', requestId)
+        .maybeSingle();
+    if (_rErr) console.warn('[openRatingModal] request fetch err:', _rErr);
+
     // Prefer explicit bid id from the caller, fall back to request.selected_bid_id,
     // then fall back to any bid whose payment_status indicates it's the working bid.
     let _bidId = explicitBidId || r?.selected_bid_id || null;
@@ -5747,10 +5755,14 @@ async function openRatingModal(requestId, explicitBidId) {
             .limit(1);
         if (_rows && _rows.length > 0) _bidId = _rows[0].id;
     }
-    if (!_bidId) { showToast(t('toast_no_designer'), 'error'); return; }
+    if (!_bidId) { showToast(t('toast_no_designer') || 'No designer selected', 'error'); return; }
 
-    const { data: bid } = await sb.from('design_bids').select('designer_id, price').eq('id', _bidId).maybeSingle();
-    if (!bid) { showToast(t('toast_bid_not_found'), 'error'); return; }
+    const { data: bid, error: _bErr } = await sb.from('design_bids')
+        .select('designer_id, price')
+        .eq('id', _bidId)
+        .maybeSingle();
+    if (_bErr) console.warn('[openRatingModal] bid fetch err:', _bErr);
+    if (!bid) { showToast(t('toast_bid_not_found') || 'Bid not found', 'error'); return; }
 
     currentRatingData = {
         request_id: requestId,
@@ -5763,26 +5775,39 @@ async function openRatingModal(requestId, explicitBidId) {
     window._ratingSubs = { communication: 0, quality: 0, speed: 0 };
     window._ratingImages = [];
 
-    // Apply translated labels
-    document.getElementById('ratingTitle').textContent = _p4Label('title');
-    document.getElementById('ratingSubtitle').textContent = _p4Label('subtitle');
-    document.getElementById('ratingLblCommunication').textContent = _p4Label('communication');
-    document.getElementById('ratingLblQuality').textContent = _p4Label('quality');
-    document.getElementById('ratingLblSpeed').textContent = _p4Label('speed');
-    document.getElementById('ratingLblOverall').textContent = _p4Label('overall');
-    document.getElementById('ratingLblReview').textContent = _p4Label('review');
-    document.getElementById('ratingLblImages').textContent = _p4Label('images');
-    document.getElementById('ratingImagesHint').textContent = _p4Label('images_hint');
-    document.getElementById('ratingSubmitLbl').textContent = _p4Label('submit');
-    document.getElementById('ratingComment').placeholder = _p4Label('placeholder');
-    document.getElementById('ratingComment').value = '';
-    document.getElementById('ratingImagePreview').innerHTML = '';
+    // Apply translated labels (guarded — the modal HTML might not exist yet)
+    const _setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    _setText('ratingTitle',          _p4Label('title'));
+    _setText('ratingSubtitle',       _p4Label('subtitle'));
+    _setText('ratingLblCommunication', _p4Label('communication'));
+    _setText('ratingLblQuality',     _p4Label('quality'));
+    _setText('ratingLblSpeed',       _p4Label('speed'));
+    _setText('ratingLblOverall',     _p4Label('overall'));
+    _setText('ratingLblReview',      _p4Label('review'));
+    _setText('ratingLblImages',      _p4Label('images'));
+    _setText('ratingImagesHint',     _p4Label('images_hint'));
+    _setText('ratingSubmitLbl',      _p4Label('submit'));
+
+    const _commentEl = document.getElementById('ratingComment');
+    if (_commentEl) { _commentEl.placeholder = _p4Label('placeholder'); _commentEl.value = ''; }
+    const _previewEl = document.getElementById('ratingImagePreview');
+    if (_previewEl) _previewEl.innerHTML = '';
 
     _updateRatingStarsDisplay();
     _updateOverallDisplay();
     _bindRatingStarHandlers();
 
-    document.getElementById('ratingModal').classList.add('show');
+    const _modalEl = document.getElementById('ratingModal');
+    if (!_modalEl) {
+        showToast('Rating modal not found in DOM', 'error');
+        return;
+    }
+    _modalEl.classList.add('show');
+    console.log('[openRatingModal] shown');
+  } catch (e) {
+    console.error('[openRatingModal] error:', e);
+    showToast('Rating modal error: ' + (e.message || e), 'error');
+  }
 }
 
 function closeRatingModal() {
