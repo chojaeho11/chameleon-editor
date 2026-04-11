@@ -162,29 +162,60 @@
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
+        // Tone mapping for more natural exposure and highlights
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.05;
         container.appendChild(renderer.domElement);
 
         // Built-in orbit controls
         setupControls(renderer.domElement);
 
-        // Lights
-        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        // ── Natural 3-point lighting ──
+        // Hemisphere: soft sky→ground gradient, gives ambient color variation
+        // so faces angled up look slightly cooler than faces angled down.
+        const hemi = new THREE.HemisphereLight(0xe6f0ff, 0xb8a888, 0.55);
+        hemi.position.set(0, 12, 0);
+        scene.add(hemi);
+
+        // Low ambient so directional shadows remain visible
+        const ambient = new THREE.AmbientLight(0xffffff, 0.18);
         scene.add(ambient);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(5, 8, 5);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 512;
-        dirLight.shadow.mapSize.height = 512;
-        scene.add(dirLight);
+        // Key light: warm "sun" from upper right, casts the main shadow
+        const keyLight = new THREE.DirectionalLight(0xfff2dc, 1.25);
+        keyLight.position.set(7, 11, 5);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        keyLight.shadow.camera.near = 0.5;
+        keyLight.shadow.camera.far = 40;
+        keyLight.shadow.camera.left = -10;
+        keyLight.shadow.camera.right = 10;
+        keyLight.shadow.camera.top = 10;
+        keyLight.shadow.camera.bottom = -10;
+        keyLight.shadow.bias = -0.0004;
+        keyLight.shadow.normalBias = 0.02;
+        keyLight.shadow.radius = 4;
+        scene.add(keyLight);
 
-        const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
-        backLight.position.set(-3, 4, -5);
-        scene.add(backLight);
+        // Fill light: cool, opposite side, softens the shadow side
+        const fillLight = new THREE.DirectionalLight(0xdce6ff, 0.45);
+        fillLight.position.set(-6, 6, -2);
+        scene.add(fillLight);
 
-        // Floor
+        // Rim/back light: separates subject from background
+        const rimLight = new THREE.DirectionalLight(0xffffff, 0.35);
+        rimLight.position.set(-2, 5, -8);
+        scene.add(rimLight);
+
+        // Floor — very slight metalness + moderate roughness so the floor
+        // picks up subtle gradient from the hemisphere/directional lights
         const floorGeo = new THREE.PlaneGeometry(20, 20);
-        const floorMat = new THREE.MeshStandardMaterial({ color: COL_FLOOR, roughness: 0.9 });
+        const floorMat = new THREE.MeshStandardMaterial({
+            color: COL_FLOOR,
+            roughness: 0.75,
+            metalness: 0.05
+        });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         floor.receiveShadow = true;
