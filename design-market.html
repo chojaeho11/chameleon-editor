@@ -3594,8 +3594,10 @@ async function loadRequests() {
 }
 
 function escHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (str === null || str === undefined || str === '') return '';
+    // Force to string so numbers/objects don't blow up when we call .replace
+    const s = typeof str === 'string' ? str : String(str);
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ═══════════════════════════════════════════════════════════════
