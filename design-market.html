@@ -3527,7 +3527,7 @@ function _p3Label(key) {
             client_complete_btn: '✅ Mark as Complete',
             client_complete_confirm: 'Have you received the final design and are ready to complete the transaction? After this, the designer will upload the final archive files.',
             final_upload_title: '📦 Upload Final Archive (Required)',
-            final_upload_desc: 'After the client marks Complete, upload BOTH at least one image and at least one PDF. Payment will be credited to your wallet once uploaded.',
+            final_upload_desc: 'After the client marks Complete, upload the final files (image and/or PDF). Payment will be credited to your wallet once uploaded.',
             final_need_both: 'Please include at least one image file and one PDF in the final archive.',
             final_upload_btn: 'Upload Final Files',
             wallet_title: '💰 Designer Wallet',
@@ -3579,7 +3579,7 @@ function _p3Label(key) {
             client_complete_btn: '✅ 완료 처리',
             client_complete_confirm: '최종 디자인을 받으셨고, 거래를 완료하시겠습니까? 완료 후 디자이너가 최종 아카이브 파일을 업로드합니다.',
             final_upload_title: '📦 최종 아카이브 업로드 (필수)',
-            final_upload_desc: '의뢰인이 완료 처리를 하면, 이미지 1개 이상과 PDF 1개 이상을 반드시 함께 업로드해야 합니다. 업로드 후 대금이 지갑에 적립됩니다.',
+            final_upload_desc: '의뢰인이 완료 처리를 하면, 최종 파일(이미지 또는 PDF)을 업로드해주세요. 업로드 후 대금이 지갑에 적립됩니다.',
             final_need_both: '이미지 파일 1개 이상과 PDF 파일 1개 이상을 함께 업로드해 주세요.',
             final_upload_btn: '최종 파일 업로드',
             wallet_title: '💰 디자이너 지갑',
@@ -3631,7 +3631,7 @@ function _p3Label(key) {
             client_complete_btn: '✅ 完了処理',
             client_complete_confirm: '最終デザインを受け取り、取引を完了しますか？完了後、デザイナーが最終アーカイブファイルをアップロードします。',
             final_upload_title: '📦 最終アーカイブのアップロード（必須）',
-            final_upload_desc: '依頼者が完了処理をしたら、画像1枚以上とPDF1つ以上を必ず一緒にアップロードしてください。アップロード後に代金がウォレットに加算されます。',
+            final_upload_desc: '依頼者が完了処理をしたら、最終ファイル（画像またはPDF）をアップロードしてください。アップロード後に代金がウォレットに加算されます。',
             final_need_both: '画像ファイルを1つ以上とPDFファイルを1つ以上含めてアップロードしてください。',
             final_upload_btn: '最終ファイルをアップロード',
             wallet_title: '💰 デザイナーウォレット',
@@ -3867,12 +3867,6 @@ async function clientMarkComplete(requestId, bidId) {
 async function uploadFinalArchive(bidId, files) {
     if (!files || files.length === 0) return;
     const fileList = Array.from(files);
-    const hasImage = fileList.some(f => /^image\//.test(f.type) || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(f.name));
-    const hasPdf = fileList.some(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
-    if (!hasImage || !hasPdf) {
-        showToast(_p3Label('final_need_both'), 'error');
-        return;
-    }
     const _msgUploading = LANG==='ja'?'アップロード中...':LANG==='en'?'Uploading...':'업로드 중...';
     showToast(_msgUploading, 'info');
     try {
