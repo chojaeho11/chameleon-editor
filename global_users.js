@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=289";
-import { showLoading } from "./global_common.js?v=289";
+import { sb } from "./global_config.js?v=290";
+import { showLoading } from "./global_common.js?v=290";
 
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
@@ -877,7 +877,7 @@ window.loadDesignWithdrawals = async () => {
                 pending:  { lbl: '대기중',    style: 'background:#fef3c7;color:#92400e;' },
                 approved: { lbl: '승인됨',    style: 'background:#dbeafe;color:#1e40af;' },
                 rejected: { lbl: '거절됨',    style: 'background:#fee2e2;color:#991b1b;' },
-                paid:     { lbl: '지급완료',  style: 'background:#dcfce7;color:#166534;' }
+                paid:     { lbl: '지급완료',  style: 'background:#fee2e2;color:#dc2626;border:1px solid #fecaca;' }
             };
             const st = stMap[r.status] || stMap.pending;
 
@@ -885,14 +885,14 @@ window.loadDesignWithdrawals = async () => {
             if (r.status === 'pending') {
                 actionHtml = `
                     <div style="display:flex;flex-direction:column;gap:3px;align-items:stretch;">
-                        <button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 8px;font-size:11px;font-weight:700;background:#16a34a;border-color:#15803d;">💸 지급완료</button>
+                        <button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 8px;font-size:11px;font-weight:700;background:#16a34a;border-color:#15803d;color:#fff;">💰 지급전</button>
                         <div style="display:flex;gap:3px;">
                             <button class="btn btn-outline btn-sm" onclick="approveDesignWithdrawal('${r.id}')" style="padding:3px 6px;font-size:10px;flex:1;">승인만</button>
                             <button class="btn btn-outline btn-sm" onclick="rejectDesignWithdrawal('${r.id}')" style="padding:3px 6px;font-size:10px;flex:1;color:#dc2626;border-color:#fecaca;">거절</button>
                         </div>
                     </div>`;
             } else if (r.status === 'approved') {
-                actionHtml = `<button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 10px;font-size:11px;background:#16a34a;border-color:#15803d;">💸 지급완료 처리</button>`;
+                actionHtml = `<button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 10px;font-size:11px;background:#16a34a;border-color:#15803d;color:#fff;">💰 지급전</button>`;
             } else {
                 actionHtml = `<span style="font-size:10px;color:#94a3b8;">${r.processed_at ? new Date(r.processed_at).toLocaleDateString() : '-'}</span>`;
             }
