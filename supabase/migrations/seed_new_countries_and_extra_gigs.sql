@@ -76,6 +76,10 @@ WHERE NOT EXISTS (
 -- ──────────────────────────────────────────────────────────
 -- These are attached to the first demo designer from the target
 -- country. Skipped if a gig with the same title already exists.
+-- First, drop the designer_gigs → auth.users FK so we can attach
+-- gigs to demo designer_profiles rows (which have synthetic UUIDs).
+ALTER TABLE public.designer_gigs
+    DROP CONSTRAINT IF EXISTS designer_gigs_designer_id_fkey;
 WITH picks AS (
     SELECT country, id AS designer_id, ROW_NUMBER() OVER (PARTITION BY country ORDER BY display_name) AS rn
     FROM public.designer_profiles WHERE is_demo = true
