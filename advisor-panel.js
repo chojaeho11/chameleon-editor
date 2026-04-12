@@ -380,9 +380,9 @@ export function renderShortcutButtons(containerId) {
             quick_quote: '빠른견적서',
             product_search: '제품검색',
             // ── Design Market banner (left) ──
-            banner_title: '디자인을 의뢰하세요',
-            banner_sub: '전세계 디자이너와 의뢰인을 연결합니다.<br>실력있는 디자이너들은 다 여기 있습니다.',
-            banner_cta: '디자인 마켓',
+            hub_title: '디자인 중계부터 아르바이트까지',
+            hub_sub: '모든 중계 서비스를 한곳에 모았습니다',
+            hub_cta: '모든 서비스 보기',
             pitch_only: '단',
             pitch_num: '5%',
             pitch_label: '업계 최저 수수료',
@@ -397,9 +397,9 @@ export function renderShortcutButtons(containerId) {
             self_design: 'セルフデザイン',
             quick_quote: 'クイック見積',
             product_search: '商品検索',
-            banner_title: 'デザインを依頼',
-            banner_sub: '世界中のデザイナーと依頼者をつなぎます。<br>実力派デザイナーが揃っています。',
-            banner_cta: 'デザインマーケット',
+            hub_title: 'デザイン仲介からアルバイトまで',
+            hub_sub: 'すべての仲介サービスを一つに',
+            hub_cta: 'すべてのサービスを見る',
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: '業界最安手数料',
@@ -413,9 +413,9 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Self Design',
             quick_quote: 'Quick Quote',
             product_search: 'Search',
-            banner_title: 'Hire a Designer',
-            banner_sub: 'Connecting designers and clients worldwide.<br>All the top designers are right here.',
-            banner_cta: 'Design Market',
+            hub_title: 'From design to part-time jobs',
+            hub_sub: 'All matching services in one place',
+            hub_cta: 'View All Services',
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: 'INDUSTRY-LOWEST FEE',
@@ -429,9 +429,9 @@ export function renderShortcutButtons(containerId) {
             self_design: '自助设计',
             quick_quote: '快速报价',
             product_search: '产品搜索',
-            banner_title: '委托设计师',
-            banner_sub: '连接全球设计师与客户。<br>优秀设计师都在这里。',
-            banner_cta: '设计市场',
+            hub_title: '设计中介到兼职招聘',
+            hub_sub: '所有中介服务集于一处',
+            hub_cta: '查看所有服务',
             pitch_only: '仅',
             pitch_num: '5%',
             pitch_label: '业界最低手续费',
@@ -445,9 +445,9 @@ export function renderShortcutButtons(containerId) {
             self_design: 'تصميم ذاتي',
             quick_quote: 'عرض سريع',
             product_search: 'بحث المنتجات',
-            banner_title: 'اطلب من مصمم',
-            banner_sub: 'نربط المصممين والعملاء حول العالم.<br>كل كبار المصممين هنا.',
-            banner_cta: 'سوق التصميم',
+            hub_title: 'من وساطة التصميم إلى الوظائف المؤقتة',
+            hub_sub: 'جميع خدمات الوساطة في مكان واحد',
+            hub_cta: 'عرض جميع الخدمات',
             pitch_only: 'فقط',
             pitch_num: '5%',
             pitch_label: 'أدنى عمولة في الصناعة',
@@ -461,9 +461,9 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Autodiseño',
             quick_quote: 'Cotización rápida',
             product_search: 'Buscar',
-            banner_title: 'Contrata un Diseñador',
-            banner_sub: 'Conectamos diseñadores y clientes en todo el mundo.<br>Los mejores diseñadores están aquí.',
-            banner_cta: 'Mercado de Diseño',
+            hub_title: 'De diseño a empleo temporal',
+            hub_sub: 'Todos los servicios de intermediación en un solo lugar',
+            hub_cta: 'Ver todos los servicios',
             pitch_only: 'SOLO',
             pitch_num: '5%',
             pitch_label: 'COMISIÓN MÁS BAJA',
@@ -477,9 +477,9 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Selbstdesign',
             quick_quote: 'Schnellangebot',
             product_search: 'Suche',
-            banner_title: 'Designer beauftragen',
-            banner_sub: 'Wir verbinden Designer und Kunden weltweit.<br>Die besten Designer sind hier.',
-            banner_cta: 'Design-Markt',
+            hub_title: 'Vom Design bis zum Nebenjob',
+            hub_sub: 'Alle Vermittlungsdienste an einem Ort',
+            hub_cta: 'Alle Dienste ansehen',
             pitch_only: 'NUR',
             pitch_num: '5%',
             pitch_label: 'NIEDRIGSTE GEBÜHR DER BRANCHE',
@@ -493,9 +493,9 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Conception',
             quick_quote: 'Devis rapide',
             product_search: 'Recherche',
-            banner_title: 'Engagez un Designer',
-            banner_sub: 'Nous connectons designers et clients dans le monde entier.<br>Les meilleurs designers sont ici.',
-            banner_cta: 'Marché du Design',
+            hub_title: 'Du design aux emplois temporaires',
+            hub_sub: 'Tous les services d\'intermédiation en un seul endroit',
+            hub_cta: 'Voir tous les services',
             pitch_only: 'SEULEMENT',
             pitch_num: '5%',
             pitch_label: 'COMMISSION LA PLUS BASSE',
@@ -516,55 +516,25 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-btn i{flex-shrink:0;}
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
 
-        /* Two-banner grid */
-        .dm-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;}
-
-        /* Base banner */
-        .dm-banner{position:relative;display:flex;flex-direction:column;width:100%;border-radius:18px;padding:18px 22px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;min-height:130px;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);}
-        .dm-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
-
-        /* Purple·pink — designer */
-        .dm-banner.dm-designer{background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 35%,#7c3aed 70%,#db2777 100%);}
-        .dm-banner.dm-designer::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.22) 0%,transparent 70%);pointer-events:none;}
-        .dm-banner.dm-designer::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,0.18) 0%,transparent 70%);pointer-events:none;}
-
-        /* Emerald·teal — partner */
-        .dm-banner.dm-partner{background:linear-gradient(135deg,#042f2e 0%,#064e3b 30%,#059669 65%,#0891b2 100%);}
-        .dm-banner.dm-partner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.2) 0%,transparent 70%);pointer-events:none;}
-        .dm-banner.dm-partner::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(14,165,233,0.15) 0%,transparent 70%);pointer-events:none;}
-
-        .dm-banner-inner{position:relative;display:flex;flex-direction:column;flex:1;z-index:2;}
-        .dm-banner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px;}
-        .dm-banner-textcol{flex:1;min-width:0;}
-        .dm-banner-title{font-size:19px;font-weight:900;letter-spacing:-0.5px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.25);line-height:1.2;}
-        .dm-banner-sub{font-size:12px;font-weight:500;opacity:0.92;line-height:1.4;letter-spacing:-0.1px;}
-        .dm-banner-desc{font-size:11px;opacity:0.85;font-weight:500;line-height:1.45;margin-top:6px;letter-spacing:-0.1px;}
-
-        /* Hero 5% block (no box — free floating, number only) */
-        .dm-fee{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:90px;}
-        .dm-fee-num{font-size:50px;font-weight:900;color:#fff;line-height:1;letter-spacing:-3px;text-shadow:0 3px 14px rgba(0,0,0,0.35);font-feature-settings:"tnum";padding:0 2px;}
-
-        /* CTA row */
-        .dm-banner-cta-row{display:flex;justify-content:flex-end;margin-top:auto;padding-top:12px;}
-        .dm-banner-cta{background:#fff;color:#1e1b4b;padding:10px 18px;border-radius:999px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.18);transition:all 0.22s;letter-spacing:-0.1px;min-width:130px;box-sizing:border-box;}
-        .dm-banner.dm-partner .dm-banner-cta{color:#042f2e;}
-        .dm-banner:hover .dm-banner-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
-        .dm-banner:hover .dm-banner-cta i{transform:translateX(3px);}
-        .dm-banner-cta i{transition:transform 0.22s;}
-
+        /* Single services hub banner */
+        .dm-hub-banner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 25%,#4338ca 50%,#7c3aed 75%,#059669 100%);}
+        .dm-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
+        .dm-hub-banner::before{content:'';position:absolute;top:-50px;right:-50px;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,0.2) 0%,transparent 70%);pointer-events:none;}
+        .dm-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(16,185,129,0.15) 0%,transparent 70%);pointer-events:none;}
+        .dm-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
+        .dm-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.3);line-height:1.25;}
+        .dm-hub-sub{font-size:12px;font-weight:500;opacity:0.88;line-height:1.5;}
+        .dm-hub-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.18);transition:all 0.22s;position:relative;z-index:2;}
+        .dm-hub-banner:hover .dm-hub-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
+        .dm-hub-banner:hover .dm-hub-cta i{transform:translateX(3px);}
+        .dm-hub-cta i{transition:transform 0.22s;}
         @media(max-width:768px){
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
-            .dm-banner-grid{grid-template-columns:1fr;gap:10px;}
-            .dm-banner{padding:16px 18px;border-radius:16px;min-height:120px;}
-            .dm-banner-title{font-size:17px;}
-            .dm-banner-sub{font-size:11px;line-height:1.4;}
-            .dm-banner-desc{font-size:10.5px;line-height:1.4;}
-            .dm-banner-head{gap:12px;}
-            .dm-fee{width:80px;}
-            .dm-fee-num{font-size:42px;letter-spacing:-2px;}
-            .dm-banner-cta{padding:9px 14px;font-size:11px;min-width:120px;}
-            .dm-banner-cta-row{padding-top:10px;}
+            .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:column;text-align:center;gap:14px;}
+            .dm-hub-title{font-size:16px;}
+            .dm-hub-sub{font-size:11px;}
+            .dm-hub-cta{padding:11px 18px;font-size:12px;}
         }
         </style>
         <div class="adv-ext-wrap">
@@ -579,43 +549,13 @@ export function renderShortcutButtons(containerId) {
                     <i class="fa-solid fa-magnifying-glass"></i> ${t.product_search}
                 </a>
             </div>
-            <div class="dm-banner-grid">
-                <!-- LEFT: Designer marketplace -->
-                <a href="${location.origin}/design-market" class="dm-banner dm-designer" target="_blank">
-                    <div class="dm-banner-inner">
-                        <div class="dm-banner-head">
-                            <div class="dm-banner-textcol">
-                                <div class="dm-banner-title">${t.banner_title}</div>
-                                <div class="dm-banner-sub">${t.banner_sub}</div>
-                            </div>
-                            <div class="dm-fee">
-                                <div class="dm-fee-num">${t.pitch_num}</div>
-                            </div>
-                        </div>
-                        <div class="dm-banner-cta-row">
-                            <div class="dm-banner-cta">${t.banner_cta} <i class="fa-solid fa-arrow-right"></i></div>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- RIGHT: Print partner network -->
-                <a href="${location.origin}/partner-register" class="dm-banner dm-partner" target="_blank">
-                    <div class="dm-banner-inner">
-                        <div class="dm-banner-head">
-                            <div class="dm-banner-textcol">
-                                <div class="dm-banner-title">${t.partner_title}</div>
-                                <div class="dm-banner-sub">${t.partner_sub}</div>
-                            </div>
-                            <div class="dm-fee">
-                                <div class="dm-fee-num">${t.pitch_num}</div>
-                            </div>
-                        </div>
-                        <div class="dm-banner-cta-row">
-                            <div class="dm-banner-cta">${t.partner_cta} <i class="fa-solid fa-arrow-right"></i></div>
-                        </div>
-                    </div>
-                </a>
-            </div>
+            <a href="${location.origin}/services" class="dm-hub-banner" target="_blank">
+                <div class="dm-hub-text">
+                    <div class="dm-hub-title">${t.hub_title}</div>
+                    <div class="dm-hub-sub">${t.hub_sub}</div>
+                </div>
+                <div class="dm-hub-cta">${t.hub_cta} <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
         </div>
     `;
 }
