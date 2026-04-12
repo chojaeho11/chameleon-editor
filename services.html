@@ -244,7 +244,7 @@ async function aiSearch() {
         }
 
         if (totalResults === 0) {
-            // No DB results — fall back to keyword routing
+            // No DB results — try keyword routing first
             const matches = [];
             for (const [svcId, keywords] of Object.entries(AI_KEYWORDS)) {
                 if (keywords.some(k => ql.includes(k))) {
@@ -261,9 +261,8 @@ async function aiSearch() {
                     </a>
                 `).join('');
             } else {
-                html = `<div style="text-align:center;padding:20px;color:#64748b;font-size:13px;">
-                    "${q}"에 대한 결과가 없습니다. 다른 키워드로 검색해보세요.
-                </div>`;
+                // No keyword match either — ask Claude AI
+                html = await askClaude(q);
             }
         } else {
             html = `<div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">📋 "${q}" 검색 결과 ${totalResults}건</div>` + html;
@@ -273,6 +272,61 @@ async function aiSearch() {
     } catch (e) {
         console.error('[aiSearch]', e);
         result.innerHTML = `<div style="color:#ef4444;font-size:12px;padding:12px;">검색 오류: ${e.message}</div>`;
+    }
+}
+
+// ── Claude AI chat ──
+const AI_API = 'https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/product-advisor';
+const AI_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+let chatHistory = [];
+
+async function askClaude(msg) {
+    chatHistory.push({ role: 'user', content: msg });
+    if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+    try {
+        const sysPrompt = {
+            role: 'system',
+            content: `You are the AI assistant for Chameleon Services, a platform that connects people with 8 services:
+1. Design Market (디자인 마켓) — hire designers → /design-market
+2. Print Partners (출력 파트너) — register as production partner → /partner-register
+3. Part-time Jobs (타임 알바) — find/post jobs → /jobs
+4. Real Estate (부동산) — rent/buy/sell properties → /realty
+5. Expert Matching (전문가 매칭) — find experts for moving, lessons, repair → /experts
+6. Dating & Social (만남·소셜) — meet new people → /dating
+7. Local Community (지역 커뮤니티) — join local groups → /community
+8. Secondhand Market (중고거래) — buy/sell used items → /market
+
+Rules:
+- Respond in the same language the user writes in (Korean, Japanese, English, etc.)
+- Keep responses short (2-4 sentences max)
+- If the user asks about a service, include the relevant link
+- For general chat (greetings, questions, humor), be friendly and helpful
+- Always mention that all services are FREE (수수료 5% only when platform handles money)
+- You're helpful, witty, and concise`
+        };
+        const res = await fetch(AI_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AI_KEY, 'apikey': AI_KEY },
+            body: JSON.stringify({
+                message: msg,
+                lang: LANG === 'ko' ? 'kr' : LANG,
+                conversation_history: [sysPrompt, ...chatHistory.slice(-10)]
+            })
+        });
+        if (!res.ok) throw new Error('API ' + res.status);
+        const data = await res.json();
+        const reply = data.chat_message || data.summary || '죄송합니다. 다시 시도해주세요.';
+        chatHistory.push({ role: 'assistant', content: reply });
+        return `<div style="padding:16px;background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="width:28px;height:28px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#fff;font-size:12px;"></i></div>
+                <span style="font-size:12px;font-weight:800;color:#7c3aed;">Chameleon AI</span>
+            </div>
+            <div style="font-size:13px;color:#334155;line-height:1.65;white-space:pre-wrap;">${reply.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
+        </div>`;
+    } catch (e) {
+        console.error('[askClaude]', e);
+        return `<div style="padding:16px;background:#fef2f2;border-radius:14px;border:1px solid #fecaca;font-size:12px;color:#991b1b;">AI 응답 오류: ${e.message}</div>`;
     }
 }
 
