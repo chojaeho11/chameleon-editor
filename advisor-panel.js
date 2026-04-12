@@ -386,6 +386,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: '단',
             pitch_num: '5%',
             pitch_label: '업계 최저 수수료',
+            pitch_label_short: '최저 수수료',
             // ── Partner/Production network banner (right) ──
             partner_title: '출력·시공업체인가요?',
             partner_sub: '고객과 연결해 드립니다.',
@@ -402,6 +403,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: '業界最安手数料',
+            pitch_label_short: '最安手数料',
             partner_title: '印刷·施工業者ですか？',
             partner_sub: 'お客様とおつなぎします。',
             partner_desc: '制作·施工可能な品目を登録<br><br>最寄りの業者に自動連携<br><br>カメレオンが資材までお届け',
@@ -417,6 +419,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: 'INDUSTRY-LOWEST FEE',
+            pitch_label_short: 'LOWEST FEE',
             partner_title: 'Print or Install Company?',
             partner_sub: 'We connect you with clients.',
             partner_desc: 'Register the items you can produce or install<br><br>Auto-matched to the nearest client<br><br>Chameleon even supplies the materials',
@@ -432,6 +435,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: '仅',
             pitch_num: '5%',
             pitch_label: '业界最低手续费',
+            pitch_label_short: '最低手续费',
             partner_title: '印刷·施工企业？',
             partner_sub: '为您对接客户。',
             partner_desc: '注册可制作或施工的品类<br><br>自动匹配最近的客户<br><br>卡梅隆还提供材料供应',
@@ -447,6 +451,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: 'فقط',
             pitch_num: '5%',
             pitch_label: 'أدنى عمولة في الصناعة',
+            pitch_label_short: 'أدنى عمولة',
             partner_title: 'شركة طباعة أو تركيب؟',
             partner_sub: 'نصلك بالعملاء.',
             partner_desc: 'سجل المنتجات التي يمكنك إنتاجها أو تركيبها<br><br>مطابقة تلقائية مع أقرب عميل<br><br>شاميليون يوفر المواد أيضاً',
@@ -462,6 +467,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: 'SOLO',
             pitch_num: '5%',
             pitch_label: 'COMISIÓN MÁS BAJA',
+            pitch_label_short: 'COMISIÓN BAJA',
             partner_title: '¿Empresa de impresión o montaje?',
             partner_sub: 'Te conectamos con los clientes.',
             partner_desc: 'Registra los artículos que puedes producir o montar<br><br>Emparejamiento automático con el cliente más cercano<br><br>Chameleon también suministra los materiales',
@@ -477,6 +483,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: 'NUR',
             pitch_num: '5%',
             pitch_label: 'NIEDRIGSTE GEBÜHR DER BRANCHE',
+            pitch_label_short: 'NIEDRIGSTE GEBÜHR',
             partner_title: 'Druck- oder Montagefirma?',
             partner_sub: 'Wir verbinden Sie mit Kunden.',
             partner_desc: 'Registrieren Sie, was Sie produzieren oder installieren können<br><br>Automatische Zuordnung zum nächstgelegenen Kunden<br><br>Chameleon liefert auch die Materialien',
@@ -492,6 +499,7 @@ export function renderShortcutButtons(containerId) {
             pitch_only: 'SEULEMENT',
             pitch_num: '5%',
             pitch_label: 'COMMISSION LA PLUS BASSE',
+            pitch_label_short: 'COMMISSION MINI',
             partner_title: 'Société d\'impression ou d\'installation ?',
             partner_sub: 'Nous vous connectons aux clients.',
             partner_desc: 'Enregistrez ce que vous pouvez produire ou installer<br><br>Mise en relation automatique avec le client le plus proche<br><br>Chameleon fournit également les matériaux',
@@ -508,64 +516,57 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-btn i{flex-shrink:0;}
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
 
-        /* ═══════════════════════════════════════════════
-           Two-banner grid — premium editorial feel
-           ═══════════════════════════════════════════════ */
-        .dm-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;align-items:stretch;}
+        /* Two-banner grid */
+        .dm-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;}
 
-        /* Base banner — minimal chrome, layered depth via gradients */
-        .dm-banner{position:relative;display:flex;flex-direction:column;width:100%;border-radius:20px;padding:28px 28px 24px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s cubic-bezier(0.22,1,0.36,1);min-height:220px;box-sizing:border-box;box-shadow:0 10px 40px -8px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.08);}
-        .dm-banner:hover{transform:translateY(-3px);box-shadow:0 20px 60px -10px rgba(0,0,0,0.45),0 4px 12px rgba(0,0,0,0.15);}
+        /* Base banner */
+        .dm-banner{position:relative;display:flex;flex-direction:column;width:100%;border-radius:18px;padding:20px 22px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;min-height:155px;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);}
+        .dm-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
 
-        /* Purple·pink — designer market (deep editorial gradient) */
-        .dm-banner.dm-designer{background:radial-gradient(ellipse at top right,#a855f7 0%,#7c3aed 25%,#4338ca 55%,#1e1b4b 100%);}
-        .dm-banner.dm-designer::before{content:'';position:absolute;top:-80px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(251,191,36,0.18) 0%,transparent 65%);pointer-events:none;}
-        .dm-banner.dm-designer::after{content:'';position:absolute;bottom:-100px;left:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(236,72,153,0.14) 0%,transparent 65%);pointer-events:none;}
+        /* Purple·pink — designer */
+        .dm-banner.dm-designer{background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 35%,#7c3aed 70%,#db2777 100%);}
+        .dm-banner.dm-designer::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.22) 0%,transparent 70%);pointer-events:none;}
+        .dm-banner.dm-designer::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,0.18) 0%,transparent 70%);pointer-events:none;}
 
-        /* Emerald·teal — partner network (cooler, premium) */
-        .dm-banner.dm-partner{background:radial-gradient(ellipse at top right,#10b981 0%,#059669 25%,#064e3b 55%,#022c22 100%);}
-        .dm-banner.dm-partner::before{content:'';position:absolute;top:-80px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(251,191,36,0.15) 0%,transparent 65%);pointer-events:none;}
-        .dm-banner.dm-partner::after{content:'';position:absolute;bottom:-100px;left:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(6,182,212,0.12) 0%,transparent 65%);pointer-events:none;}
+        /* Emerald·teal — partner */
+        .dm-banner.dm-partner{background:linear-gradient(135deg,#042f2e 0%,#064e3b 30%,#059669 65%,#0891b2 100%);}
+        .dm-banner.dm-partner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.2) 0%,transparent 70%);pointer-events:none;}
+        .dm-banner.dm-partner::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(14,165,233,0.15) 0%,transparent 70%);pointer-events:none;}
 
-        .dm-banner-inner{position:relative;display:flex;flex-direction:column;flex:1;z-index:2;gap:16px;}
-
-        /* Header row: text on left, hero 5% number on right */
-        .dm-banner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;}
+        .dm-banner-inner{position:relative;display:flex;flex-direction:column;flex:1;z-index:2;}
+        .dm-banner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px;}
         .dm-banner-textcol{flex:1;min-width:0;}
-        .dm-banner-title{font-size:21px;font-weight:900;letter-spacing:-0.6px;margin-bottom:8px;text-shadow:0 1px 3px rgba(0,0,0,0.25);line-height:1.15;}
-        .dm-banner-sub{font-size:13px;font-weight:500;opacity:0.92;line-height:1.55;letter-spacing:-0.1px;}
-        .dm-banner-desc{font-size:12px;opacity:0.88;font-weight:500;line-height:1.75;margin-top:10px;letter-spacing:-0.1px;}
+        .dm-banner-title{font-size:19px;font-weight:900;letter-spacing:-0.5px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.25);line-height:1.2;}
+        .dm-banner-sub{font-size:12px;font-weight:500;opacity:0.92;line-height:1.4;letter-spacing:-0.1px;}
+        .dm-banner-desc{font-size:11px;opacity:0.85;font-weight:500;line-height:1.45;margin-top:6px;letter-spacing:-0.1px;}
 
-        /* ── Hero "5%" block (top-right corner) ── */
-        .dm-fee{flex-shrink:0;display:flex;flex-direction:column;align-items:center;text-align:center;width:128px;padding:2px 0;}
-        .dm-fee-only{font-size:10px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:3px;text-transform:uppercase;margin-bottom:-2px;text-shadow:0 1px 2px rgba(0,0,0,0.25);}
-        .dm-fee-num{font-size:62px;font-weight:900;color:#fff;line-height:0.9;letter-spacing:-4px;text-shadow:0 4px 20px rgba(0,0,0,0.3),0 1px 0 rgba(255,255,255,0.1);font-feature-settings:"tnum";position:relative;padding:0 4px;}
-        .dm-fee-num::after{content:'';position:absolute;left:10%;right:10%;bottom:4px;height:2px;background:linear-gradient(90deg,transparent,#fbbf24,transparent);opacity:0.8;}
-        .dm-fee-label{font-size:9px;font-weight:700;color:#fbbf24;letter-spacing:1.5px;text-transform:uppercase;margin-top:6px;line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,0.3);}
+        /* Hero 5% block (no box — free floating) */
+        .dm-fee{flex-shrink:0;display:flex;flex-direction:column;align-items:center;text-align:center;width:110px;}
+        .dm-fee-num{font-size:46px;font-weight:900;color:#fff;line-height:1;letter-spacing:-3px;text-shadow:0 3px 14px rgba(0,0,0,0.35);font-feature-settings:"tnum";padding:0 2px;}
+        .dm-fee-label{font-size:10px;font-weight:700;color:#fbbf24;letter-spacing:0.5px;margin-top:4px;line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,0.35);}
 
-        /* CTA row — pushed to bottom of banner */
-        .dm-banner-cta-row{display:flex;justify-content:flex-end;margin-top:auto;}
-        .dm-banner-cta{background:#fff;color:#1e1b4b;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.2),0 1px 3px rgba(0,0,0,0.1);transition:all 0.25s;letter-spacing:-0.2px;min-width:140px;box-sizing:border-box;}
-        .dm-banner.dm-partner .dm-banner-cta{color:#022c22;}
-        .dm-banner:hover .dm-banner-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 22px rgba(251,191,36,0.55);}
+        /* CTA row */
+        .dm-banner-cta-row{display:flex;justify-content:flex-end;margin-top:auto;padding-top:12px;}
+        .dm-banner-cta{background:#fff;color:#1e1b4b;padding:10px 18px;border-radius:999px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.18);transition:all 0.22s;letter-spacing:-0.1px;min-width:130px;box-sizing:border-box;}
+        .dm-banner.dm-partner .dm-banner-cta{color:#042f2e;}
+        .dm-banner:hover .dm-banner-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
         .dm-banner:hover .dm-banner-cta i{transform:translateX(3px);}
-        .dm-banner-cta i{transition:transform 0.25s;}
+        .dm-banner-cta i{transition:transform 0.22s;}
 
         @media(max-width:768px){
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
-            .dm-banner-grid{grid-template-columns:1fr;gap:12px;}
-            .dm-banner{padding:22px 20px 20px;border-radius:18px;min-height:200px;}
-            .dm-banner-inner{gap:14px;}
-            .dm-banner-title{font-size:19px;}
-            .dm-banner-sub{font-size:12px;}
-            .dm-banner-desc{font-size:11px;line-height:1.75;}
-            .dm-banner-head{gap:14px;}
-            .dm-fee{width:108px;}
-            .dm-fee-only{font-size:9px;letter-spacing:2.5px;}
-            .dm-fee-num{font-size:52px;letter-spacing:-3px;}
-            .dm-fee-label{font-size:8px;letter-spacing:1px;}
-            .dm-banner-cta{padding:11px 18px;font-size:12px;min-width:130px;}
+            .dm-banner-grid{grid-template-columns:1fr;gap:10px;}
+            .dm-banner{padding:18px 18px;border-radius:16px;min-height:150px;}
+            .dm-banner-title{font-size:17px;}
+            .dm-banner-sub{font-size:11px;line-height:1.4;}
+            .dm-banner-desc{font-size:10.5px;line-height:1.4;}
+            .dm-banner-head{gap:12px;}
+            .dm-fee{width:96px;}
+            .dm-fee-num{font-size:38px;letter-spacing:-2px;}
+            .dm-fee-label{font-size:9px;}
+            .dm-banner-cta{padding:9px 14px;font-size:11px;min-width:120px;}
+            .dm-banner-cta-row{padding-top:10px;}
         }
         </style>
         <div class="adv-ext-wrap">
@@ -590,9 +591,8 @@ export function renderShortcutButtons(containerId) {
                                 <div class="dm-banner-sub">${t.banner_sub}</div>
                             </div>
                             <div class="dm-fee">
-                                <div class="dm-fee-only">${t.pitch_only}</div>
                                 <div class="dm-fee-num">${t.pitch_num}</div>
-                                <div class="dm-fee-label">${t.pitch_label}</div>
+                                <div class="dm-fee-label">${t.pitch_label_short || t.pitch_label}</div>
                             </div>
                         </div>
                         <div class="dm-banner-cta-row">
@@ -611,9 +611,8 @@ export function renderShortcutButtons(containerId) {
                                 <div class="dm-banner-desc">${t.partner_desc}</div>
                             </div>
                             <div class="dm-fee">
-                                <div class="dm-fee-only">${t.pitch_only}</div>
                                 <div class="dm-fee-num">${t.pitch_num}</div>
-                                <div class="dm-fee-label">${t.pitch_label}</div>
+                                <div class="dm-fee-label">${t.pitch_label_short || t.pitch_label}</div>
                             </div>
                         </div>
                         <div class="dm-banner-cta-row">
