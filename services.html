@@ -236,32 +236,74 @@ async function aiSearch() {
     input.focus();
     const loadingBubble = addLoading();
 
-    // Split query into words and search each word separately
-    // This way "서울 알바" matches rows containing "서울" OR "알바"
-    const words = q.split(/\s+/).filter(w => w.length >= 1);
-    const orParts = words.flatMap(w => {
-        const p = `%${w}%`;
-        return [`title.ilike.${p}`,`description.ilike.${p}`];
-    });
-    // Also add city/location columns
-    const locParts = words.map(w => `location_city.ilike.%${w}%`);
-    const cityParts = words.map(w => `city.ilike.%${w}%`);
+    // ── Smart intent detection ──
+    // 1. Detect which service the user wants (intent)
+    // 2. Detect location words (city filter)
+    // 3. Only search the relevant table(s)
+    const INTENT_KEYWORDS = {
+        jobs: ['알바','시급','아르바이트','일자리','구인','파트타임','part-time','job','work','バイト','アルバイト','求人','兼职','招聘'],
+        realty: ['부동산','전세','월세','매매','원룸','아파트','상가','집','오피스텔','rent','apartment','studio','不動産','賃貸','マンション','房产','租房'],
+        expert: ['전문가','이사','인테리어','레슨','수리','청소','과외','expert','moving','lesson','repair','専門家','引越し','レッスン','专家'],
+        social: ['만남','데이트','소개팅','매칭','dating','meetup','出会い','约会'],
+        community: ['모임','동호회','커뮤니티','동네','취미','group','community','hobby','コミュニティ','グループ','社区'],
+        market: ['중고','거래','팔다','판매','secondhand','used','sell','中古','売','二手','买卖']
+    };
+    const CITY_KEYWORDS = ['서울','부산','인천','대전','대구','광주','울산','제주','강남','이태원','종로','해운대','東京','渋谷','新宿','大阪','名古屋','福岡','New York','Brooklyn','Chicago','LA','Los Angeles','San Francisco','Austin','Houston'];
 
-    const jobsOr = [...orParts, ...locParts].join(',');
-    const realtyOr = [...words.flatMap(w => [`title.ilike.%${w}%`,`city.ilike.%${w}%`,`address.ilike.%${w}%`])].join(',');
-    const expertOr = [...words.flatMap(w => [`display_name.ilike.%${w}%`,`category.ilike.%${w}%`,`city.ilike.%${w}%`,`description.ilike.%${w}%`])].join(',');
-    const groupOr = [...words.flatMap(w => [`name.ilike.%${w}%`,`category.ilike.%${w}%`,`city.ilike.%${w}%`,`description.ilike.%${w}%`])].join(',');
-    const itemOr = [...words.flatMap(w => [`title.ilike.%${w}%`,`category.ilike.%${w}%`,`city.ilike.%${w}%`,`description.ilike.%${w}%`])].join(',');
+    const words = q.split(/\s+/).filter(w => w.length >= 1);
+
+    // Detect intent
+    let intent = null;
+    for (const [svc, kws] of Object.entries(INTENT_KEYWORDS)) {
+        if (kws.some(k => ql.includes(k))) { intent = svc; break; }
+    }
+
+    // Detect city
+    let cityFilter = null;
+    for (const city of CITY_KEYWORDS) {
+        if (ql.includes(city.toLowerCase())) { cityFilter = city; break; }
+    }
+
+    // Content keywords = words minus city
+    const contentWords = words.filter(w => !cityFilter || w.toLowerCase() !== cityFilter.toLowerCase());
+    const contentPtn = contentWords.map(w => `%${w}%`);
 
     try {
-        // Search all tables in parallel
-        const [jobs, realty, experts, groups, items] = await Promise.all([
-            sb.from('community_jobs').select('id,title,hourly_rate,location_city,country,job_type').or(jobsOr).eq('status','active').limit(5),
-            sb.from('community_realty').select('id,title,listing_type,city,country,deposit,monthly_rent,price,images').or(realtyOr).eq('status','active').limit(5),
-            sb.from('community_experts').select('id,display_name,category,city,country,hourly_rate,rating,photo_url').or(expertOr).eq('status','active').limit(5),
-            sb.from('community_groups').select('id,name,category,city,country,member_count,image_url').or(groupOr).limit(5),
-            sb.from('community_secondhand').select('id,title,price,category,condition,city,country,images,status').or(itemOr).limit(5)
-        ]);
+        let jobs = {data:[]}, realty = {data:[]}, experts = {data:[]}, groups = {data:[]}, items = {data:[]};
+
+        // Only search relevant tables based on intent (or all if no intent detected)
+        const searchAll = !intent;
+
+        if (intent === 'jobs' || searchAll) {
+            let jq = sb.from('community_jobs').select('id,title,hourly_rate,location_city,country,job_type').eq('status','active');
+            if (cityFilter) jq = jq.ilike('location_city', `%${cityFilter}%`);
+            if (contentWords.length > 0) jq = jq.or(contentPtn.flatMap(p => [`title.ilike.${p}`,`description.ilike.${p}`]).join(','));
+            jobs = await jq.limit(5);
+        }
+        if (intent === 'realty' || searchAll) {
+            let rq = sb.from('community_realty').select('id,title,listing_type,city,country,deposit,monthly_rent,price,images').eq('status','active');
+            if (cityFilter) rq = rq.ilike('city', `%${cityFilter}%`);
+            if (contentWords.length > 0) rq = rq.or(contentPtn.flatMap(p => [`title.ilike.${p}`,`description.ilike.${p}`]).join(','));
+            realty = await rq.limit(5);
+        }
+        if (intent === 'expert' || searchAll) {
+            let eq = sb.from('community_experts').select('id,display_name,category,city,country,hourly_rate,rating,photo_url').eq('status','active');
+            if (cityFilter) eq = eq.ilike('city', `%${cityFilter}%`);
+            if (contentWords.length > 0) eq = eq.or(contentPtn.flatMap(p => [`display_name.ilike.${p}`,`category.ilike.${p}`,`description.ilike.${p}`]).join(','));
+            experts = await eq.limit(5);
+        }
+        if (intent === 'community' || searchAll) {
+            let gq = sb.from('community_groups').select('id,name,category,city,country,member_count,image_url');
+            if (cityFilter) gq = gq.ilike('city', `%${cityFilter}%`);
+            if (contentWords.length > 0) gq = gq.or(contentPtn.flatMap(p => [`name.ilike.${p}`,`category.ilike.${p}`,`description.ilike.${p}`]).join(','));
+            groups = await gq.limit(5);
+        }
+        if (intent === 'market' || searchAll) {
+            let mq = sb.from('community_secondhand').select('id,title,price,category,condition,city,country,images,status');
+            if (cityFilter) mq = mq.ilike('city', `%${cityFilter}%`);
+            if (contentWords.length > 0) mq = mq.or(contentPtn.flatMap(p => [`title.ilike.${p}`,`category.ilike.${p}`,`description.ilike.${p}`]).join(','));
+            items = await mq.limit(5);
+        }
 
         let html = '';
         const sections = [
