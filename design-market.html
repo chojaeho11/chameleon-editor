@@ -4,12 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>디자인 마켓</title>
+    <!-- ★ Prevent language flash: hide body until translateStaticHTML runs -->
+    <script>
+        // Run the language-detect logic AGAIN here, very early, so the
+        // <html lang> attribute matches before any CSS/layout renders.
+        (function(){
+            try {
+                var params = new URLSearchParams(location.search);
+                var lp = (params.get('lang')||'').toLowerCase();
+                var host = location.hostname;
+                var lang = 'ko';
+                if (lp) {
+                    if (lp==='jp'||lp==='ja') lang='ja';
+                    else if (lp==='zh'||lp==='cn') lang='zh';
+                    else if (lp==='ar'||lp==='sa'||lp==='ma') lang='ar';
+                    else if (lp==='es') lang='es';
+                    else if (lp==='de') lang='de';
+                    else if (lp==='fr') lang='fr';
+                    else if (lp==='en'||lp==='us') lang='en';
+                    else lang = lp;
+                } else if (host.includes('cafe0101')) lang='ja';
+                else if (host.includes('cafe3355')||host.includes('chameleon.design')) lang='en';
+                document.documentElement.lang = lang;
+            } catch(_) {}
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
     <style>
         *{box-sizing:border-box;margin:0;padding:0;}
-        body{background:#f8f9fc;font-family:'Pretendard',sans-serif;color:#1e293b;min-height:100vh;}
+        /* ★ hide body until JS finishes translating (prevents KR→target flash) */
+        body{background:#f8f9fc;font-family:'Pretendard',sans-serif;color:#1e293b;min-height:100vh;visibility:hidden;}
+        body.dm-ready{visibility:visible;}
+        /* safety net: if JS never runs, show after 800ms */
+        @keyframes __dmShow{to{visibility:visible;}}
+        body{animation:__dmShow 0s linear 0.8s forwards;}
 
         /* ===== 헤더 ===== */
         .site-header{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
@@ -2074,6 +2104,9 @@ let portfolioUrls = [];
     // Restore dismissed banners
     _restoreDismissedBanners();
 
+    // ★ All static text is now localized → reveal the body (prevents KR→target flash)
+    document.body.classList.add('dm-ready');
+
     // Load initial data — gigs is the default tab now
     // Catch any unhandled rejections so the error surfaces visibly instead
     // of becoming a silent "Uncaught (in promise)"
@@ -2527,14 +2560,18 @@ async function loadGigs() {
         const d = dMap[g.designer_id] || {};
         const _loc = localizeSampleGig(g) || { title: g.title || '', description: g.description || '' };
         const _displayTitle = _loc.title || g.title || '';
+        // Fallback to picsum.photos seeded by gig id if the saved thumbnail 404s.
+        // We use data-seed so the onerror handler can swap src without ugly inline JS.
+        const _gigFallback = 'https://picsum.photos/seed/gig-' + (g.id || '').replace(/-/g,'').slice(0,8) + '/800/600';
         const thumb = g.thumbnail
-            ? `<img src="${g.thumbnail}" alt="">`
-            : `<div class="placeholder"><i class="fa-solid fa-image"></i></div>`;
+            ? `<img src="${g.thumbnail}" alt="" onerror="this.onerror=null;this.src='${_gigFallback}';">`
+            : `<img src="${_gigFallback}" alt="">`;
         const country = COUNTRY_LIST.find(c => c.code === g.country);
         const countryBadge = country ? `<div class="country-flag">${country.flag} ${country.code}</div>` : '';
+        const _avaFallback = 'https://i.pravatar.cc/100?u=' + encodeURIComponent(d.id || d.display_name || 'd');
         const avatar = d.photo_url
-            ? `<img src="${d.photo_url}">`
-            : `<div class="ava-fallback">${(d.display_name||'D')[0]}</div>`;
+            ? `<img src="${d.photo_url}" onerror="this.onerror=null;this.src='${_avaFallback}';">`
+            : `<img src="${_avaFallback}">`;
         const rating = (g.avg_rating && g.avg_rating > 0)
             ? `<div class="rating">${renderStars(g.avg_rating)} <span class="count">(${g.total_reviews||0})</span></div>`
             : `<div class="rating" style="color:#cbd5e1;">☆☆☆☆☆ <span class="count">New</span></div>`;
@@ -3116,9 +3153,10 @@ async function loadDesignerShowcase() {
     </div>`;
     for (const d of designers) {
         const specs = (d.specialties || []).slice(0, 3).map(s => `<span class="specialty-tag">${s}</span>`).join('');
+        const _dFallback = 'https://i.pravatar.cc/200?u=' + encodeURIComponent(d.id || d.display_name || 'd');
         const avatarHtml = d.photo_url
-            ? `<img class="designer-avatar" src="${d.photo_url}" alt="">`
-            : `<div class="designer-avatar-placeholder">${(d.display_name||'D')[0]}</div>`;
+            ? `<img class="designer-avatar" src="${d.photo_url}" alt="" onerror="this.onerror=null;this.src='${_dFallback}';">`
+            : `<img class="designer-avatar" src="${_dFallback}" alt="">`;
         html += `
         <div class="designer-card" onclick="showDesignerProfile('${d.id}')">
             ${avatarHtml}
