@@ -199,15 +199,31 @@ async function aiSearch() {
     result.style.display = 'block';
     result.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
-    const ptn = `%${q}%`;
+    // Split query into words and search each word separately
+    // This way "서울 알바" matches rows containing "서울" OR "알바"
+    const words = q.split(/\s+/).filter(w => w.length >= 1);
+    const orParts = words.flatMap(w => {
+        const p = `%${w}%`;
+        return [`title.ilike.${p}`,`description.ilike.${p}`];
+    });
+    // Also add city/location columns
+    const locParts = words.map(w => `location_city.ilike.%${w}%`);
+    const cityParts = words.map(w => `city.ilike.%${w}%`);
+
+    const jobsOr = [...orParts, ...locParts].join(',');
+    const realtyOr = [...words.flatMap(w => [`title.ilike.%${w}%`,`city.ilike.%${w}%`,`address.ilike.%${w}%`])].join(',');
+    const expertOr = [...words.flatMap(w => [`display_name.ilike.%${w}%`,`category.ilike.%${w}%`,`city.ilike.%${w}%`,`description.ilike.%${w}%`])].join(',');
+    const groupOr = [...words.flatMap(w => [`name.ilike.%${w}%`,`category.ilike.%${w}%`,`city.ilike.%${w}%`,`description.ilike.%${w}%`])].join(',');
+    const itemOr = [...words.flatMap(w => [`title.ilike.%${w}%`,`category.ilike.%${w}%`,`city.ilike.%${w}%`,`description.ilike.%${w}%`])].join(',');
+
     try {
         // Search all tables in parallel
         const [jobs, realty, experts, groups, items] = await Promise.all([
-            sb.from('community_jobs').select('id,title,hourly_rate,location_city,country,job_type').or(`title.ilike.${ptn},location_city.ilike.${ptn},description.ilike.${ptn}`).eq('status','active').limit(5),
-            sb.from('community_realty').select('id,title,listing_type,city,country,deposit,monthly_rent,price,images').or(`title.ilike.${ptn},city.ilike.${ptn},address.ilike.${ptn}`).eq('status','active').limit(5),
-            sb.from('community_experts').select('id,display_name,category,city,country,hourly_rate,rating,photo_url').or(`display_name.ilike.${ptn},category.ilike.${ptn},city.ilike.${ptn},description.ilike.${ptn}`).eq('status','active').limit(5),
-            sb.from('community_groups').select('id,name,category,city,country,member_count,image_url').or(`name.ilike.${ptn},category.ilike.${ptn},city.ilike.${ptn},description.ilike.${ptn}`).limit(5),
-            sb.from('community_secondhand').select('id,title,price,category,condition,city,country,images,status').or(`title.ilike.${ptn},category.ilike.${ptn},city.ilike.${ptn},description.ilike.${ptn}`).limit(5)
+            sb.from('community_jobs').select('id,title,hourly_rate,location_city,country,job_type').or(jobsOr).eq('status','active').limit(5),
+            sb.from('community_realty').select('id,title,listing_type,city,country,deposit,monthly_rent,price,images').or(realtyOr).eq('status','active').limit(5),
+            sb.from('community_experts').select('id,display_name,category,city,country,hourly_rate,rating,photo_url').or(expertOr).eq('status','active').limit(5),
+            sb.from('community_groups').select('id,name,category,city,country,member_count,image_url').or(groupOr).limit(5),
+            sb.from('community_secondhand').select('id,title,price,category,condition,city,country,images,status').or(itemOr).limit(5)
         ]);
 
         let html = '';
