@@ -6,6 +6,7 @@
 <title>Chameleon Services</title>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
     var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
@@ -184,38 +185,94 @@ const AI_KEYWORDS = {
     market: ['중고','거래','팔다','사다','secondhand','used','中古','売買','二手','买卖']
 };
 
-function aiSearch() {
-    const q = (document.getElementById('aiInput').value || '').trim().toLowerCase();
+// Supabase client
+const sb = supabase.createClient(
+    'https://qinvtnhiidtmrzosyvys.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+);
+
+async function aiSearch() {
+    const q = (document.getElementById('aiInput').value || '').trim();
     if (!q) return;
+    const ql = q.toLowerCase();
     const result = document.getElementById('aiResult');
     result.style.display = 'block';
+    result.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
-    // Find matching services
-    const matches = [];
-    for (const [svcId, keywords] of Object.entries(AI_KEYWORDS)) {
-        if (keywords.some(k => q.includes(k))) {
-            const svc = SERVICES.find(s => s.id === svcId);
-            if (svc) matches.push(svc);
+    const ptn = `%${q}%`;
+    try {
+        // Search all tables in parallel
+        const [jobs, realty, experts, groups, items] = await Promise.all([
+            sb.from('community_jobs').select('id,title,hourly_rate,location_city,country,job_type').or(`title.ilike.${ptn},location_city.ilike.${ptn},description.ilike.${ptn}`).eq('status','active').limit(5),
+            sb.from('community_realty').select('id,title,listing_type,city,country,deposit,monthly_rent,price,images').or(`title.ilike.${ptn},city.ilike.${ptn},address.ilike.${ptn}`).eq('status','active').limit(5),
+            sb.from('community_experts').select('id,display_name,category,city,country,hourly_rate,rating,photo_url').or(`display_name.ilike.${ptn},category.ilike.${ptn},city.ilike.${ptn},description.ilike.${ptn}`).eq('status','active').limit(5),
+            sb.from('community_groups').select('id,name,category,city,country,member_count,image_url').or(`name.ilike.${ptn},category.ilike.${ptn},city.ilike.${ptn},description.ilike.${ptn}`).limit(5),
+            sb.from('community_secondhand').select('id,title,price,category,condition,city,country,images,status').or(`title.ilike.${ptn},category.ilike.${ptn},city.ilike.${ptn},description.ilike.${ptn}`).limit(5)
+        ]);
+
+        let html = '';
+        const sections = [
+            { icon:'⏰', label:'알바', data: jobs.data, color:'#d97706', url:'/jobs',
+              render: r => `<b>${r.title}</b> · ${r.location_city||''} · ${(r.hourly_rate||0).toLocaleString()}${r.country==='KR'?'원':r.country==='JP'?'円':'$/hr'}` },
+            { icon:'🏠', label:'부동산', data: realty.data, color:'#0891b2', url:'/realty',
+              render: r => `<b>${r.title}</b> · ${r.city||''}${r.monthly_rent?' · '+(r.monthly_rent).toLocaleString():''}` },
+            { icon:'🔧', label:'전문가', data: experts.data, color:'#6366f1', url:'/experts',
+              render: r => `<b>${r.display_name}</b> · ${r.category||''} · ⭐ ${r.rating||0}` },
+            { icon:'🏘️', label:'커뮤니티', data: groups.data, color:'#14b8a6', url:'/community',
+              render: r => `<b>${r.name}</b> · 👥 ${r.member_count||1}명` },
+            { icon:'🛍️', label:'중고거래', data: items.data, color:'#f59e0b', url:'/market',
+              render: r => `<b>${r.title}</b> · ${(r.price||0).toLocaleString()}${r.country==='KR'?'원':r.country==='JP'?'円':'$'} · ${r.status==='sold'?'거래완료':r.status==='reserved'?'예약중':'판매중'}` }
+        ];
+
+        let totalResults = 0;
+        for (const sec of sections) {
+            if (!sec.data || sec.data.length === 0) continue;
+            totalResults += sec.data.length;
+            html += `<div style="margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+                    <span style="font-size:16px;">${sec.icon}</span>
+                    <span style="font-size:13px;font-weight:800;color:${sec.color};">${sec.label}</span>
+                    <span style="font-size:10px;color:#94a3b8;">${sec.data.length}건</span>
+                    <a href="${sec.url}" target="_blank" style="margin-left:auto;font-size:11px;color:${sec.color};text-decoration:none;font-weight:700;">더보기 →</a>
+                </div>`;
+            for (const r of sec.data) {
+                html += `<div style="padding:10px 12px;background:#f8fafc;border-radius:10px;margin-bottom:6px;font-size:12px;color:#475569;line-height:1.5;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='#f8fafc'" onclick="window.open('${sec.url}','_blank')">
+                    ${sec.render(r)}
+                </div>`;
+            }
+            html += '</div>';
         }
-    }
 
-    if (matches.length > 0) {
-        result.innerHTML = matches.map(s => `
-            <a href="${s.url}" target="_blank" style="display:flex;align-items:center;gap:14px;padding:14px;background:${s.bg};border:1px solid ${s.color}30;border-radius:12px;text-decoration:none;color:#1e293b;margin-bottom:8px;transition:all .15s;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform=''">
-                <span style="font-size:28px;">${s.icon}</span>
-                <div style="flex:1;">
-                    <div style="font-size:14px;font-weight:800;">${s.name[LANG]||s.name.ko}</div>
-                    <div style="font-size:11px;color:#64748b;">${s.desc[LANG]||s.desc.ko}</div>
-                </div>
-                <i class="fa-solid fa-arrow-right" style="color:${s.color};"></i>
-            </a>
-        `).join('');
-    } else {
-        const allLinks = SERVICES.map(s => `<a href="${s.url}" target="_blank" style="color:${s.color};font-weight:700;text-decoration:none;font-size:12px;">${s.icon} ${s.name[LANG]||s.name.ko}</a>`).join(' · ');
-        result.innerHTML = `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;">
-            "${q}"에 해당하는 서비스를 찾지 못했어요.<br>
-            <div style="margin-top:10px;">${allLinks}</div>
-        </div>`;
+        if (totalResults === 0) {
+            // No DB results — fall back to keyword routing
+            const matches = [];
+            for (const [svcId, keywords] of Object.entries(AI_KEYWORDS)) {
+                if (keywords.some(k => ql.includes(k))) {
+                    const svc = SERVICES.find(s => s.id === svcId);
+                    if (svc) matches.push(svc);
+                }
+            }
+            if (matches.length > 0) {
+                html = matches.map(s => `
+                    <a href="${s.url}" target="_blank" style="display:flex;align-items:center;gap:14px;padding:14px;background:${s.bg};border:1px solid ${s.color}30;border-radius:12px;text-decoration:none;color:#1e293b;margin-bottom:8px;">
+                        <span style="font-size:28px;">${s.icon}</span>
+                        <div style="flex:1;"><div style="font-size:14px;font-weight:800;">${s.name[LANG]||s.name.ko}</div><div style="font-size:11px;color:#64748b;">${s.desc[LANG]||s.desc.ko}</div></div>
+                        <i class="fa-solid fa-arrow-right" style="color:${s.color};"></i>
+                    </a>
+                `).join('');
+            } else {
+                html = `<div style="text-align:center;padding:20px;color:#64748b;font-size:13px;">
+                    "${q}"에 대한 결과가 없습니다. 다른 키워드로 검색해보세요.
+                </div>`;
+            }
+        } else {
+            html = `<div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">📋 "${q}" 검색 결과 ${totalResults}건</div>` + html;
+        }
+
+        result.innerHTML = html;
+    } catch (e) {
+        console.error('[aiSearch]', e);
+        result.innerHTML = `<div style="color:#ef4444;font-size:12px;padding:12px;">검색 오류: ${e.message}</div>`;
     }
 }
 
