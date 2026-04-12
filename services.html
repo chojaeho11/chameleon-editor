@@ -190,6 +190,11 @@ const AI_KEYWORDS = {
     market: ['중고','거래','팔다','사다','secondhand','used','中古','売買','二手','买卖']
 };
 
+// Claude AI + chat state
+const AI_API = 'https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/product-advisor';
+const AI_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+let chatHistory = [];
+
 // Supabase client
 const sb = supabase.createClient(
     'https://qinvtnhiidtmrzosyvys.supabase.co',
