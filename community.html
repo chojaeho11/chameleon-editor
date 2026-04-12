@@ -280,7 +280,7 @@ async function loadGroups(){
     if(error||!data||data.length===0){grid.innerHTML=`<div class="empty"><i class="fa-solid fa-people-group"></i>${t('empty')}</div>`;return;}
     grid.innerHTML=data.map(g=>`
         <div class="group-card" onclick="openGroup('${g.id}')">
-            <div class="group-icon" style="color:#14b8a6;"><i class="fa-solid ${catIcon(g.category)}"></i></div>
+            <div class="group-icon" style="color:#14b8a6;overflow:hidden;">${g.image_url?`<img src="${g.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" onerror="this.style.display='none'">`:`<i class="fa-solid ${catIcon(g.category)}"></i>`}</div>
             <span class="cat-label">${catName(g.category)}</span>
             <h3>${esc(g.name)}</h3>
             <p>${esc(g.description||'')}</p>

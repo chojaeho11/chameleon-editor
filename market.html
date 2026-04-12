@@ -321,7 +321,7 @@ async function loadItems(){
     grid.innerHTML=data.map(item=>`
         <div class="item-card" onclick="showDetail('${item.id}')">
             <span class="status-badge ${statusClass(item.status)}">${statusLabel(item.status)}</span>
-            <div class="item-img"><i class="fa-solid fa-image"></i></div>
+            <div class="item-img">${(Array.isArray(item.images)&&item.images.length>0)?`<img src="${item.images[0]}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:`<i class="fa-solid fa-image"></i>`}</div>
             <div class="item-body">
                 <h3>${esc(item.title)}</h3>
                 <div class="item-price">${fmtPrice(item.price)} ${t('won')}</div>
