@@ -97,20 +97,22 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;background:#fff;c
     <div class="cat-strip-inner" id="catStrip"></div>
 </section>
 
-<!-- Live Services -->
-<section class="section">
-    <div class="section-header">
-        <h2 id="secLiveTitle">지금 이용할 수 있는 서비스</h2>
+<!-- AI Assistant -->
+<section class="section" style="max-width:700px;">
+    <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:20px;padding:28px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+        <div style="text-align:center;margin-bottom:18px;">
+            <div style="font-size:32px;margin-bottom:6px;">🤖</div>
+            <div style="font-size:16px;font-weight:900;color:#0f172a;" id="aiTitle">무엇을 찾고 계세요?</div>
+            <div style="font-size:12px;color:#64748b;" id="aiSub">알바, 부동산, 전문가, 중고거래 등 원하는 서비스를 물어보세요</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <input id="aiInput" type="text" placeholder="예: 강남 시급 15000원 이상 알바" style="flex:1;padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:14px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter')aiSearch()">
+            <button onclick="aiSearch()" style="padding:14px 22px;background:#7c3aed;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        <div id="aiResult" style="margin-top:16px;display:none;"></div>
+        <!-- Quick suggestion chips -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:center;" id="aiChips"></div>
     </div>
-    <div class="svc-grid" id="liveGrid"></div>
-</section>
-
-<!-- Coming Soon -->
-<section class="section" style="padding-top:0;">
-    <div class="section-header">
-        <h2 id="secSoonTitle">곧 만나요</h2>
-    </div>
-    <div class="soon-grid" id="soonGrid"></div>
 </section>
 
 <!-- Footer -->
@@ -170,14 +172,62 @@ const SERVICES = [
      url:'/market', live:true }
 ];
 
+// ── AI Search keywords → service routing ──
+const AI_KEYWORDS = {
+    design: ['디자인','로고','배너','패키지','명함','브랜딩','design','logo','banner','デザイン','ロゴ','设计'],
+    partner: ['출력','시공','인쇄','파트너','print','install','印刷','施工','打印'],
+    jobs: ['알바','시급','아르바이트','일자리','구인','part-time','job','アルバイト','求人','兼职','招聘'],
+    realty: ['부동산','전세','월세','매매','집','원룸','아파트','real estate','rent','不動産','賃貸','房产','租房'],
+    expert: ['전문가','숨고','이사','인테리어','레슨','수리','청소','expert','moving','interior','専門家','引越し','专家','搬家'],
+    social: ['만남','데이트','소개팅','친구','dating','meetup','出会い','デート','约会','交友'],
+    community: ['동네','커뮤니티','동호회','모임','취미','community','group','hobby','コミュニティ','趣味','社区','兴趣'],
+    market: ['중고','거래','팔다','사다','secondhand','used','中古','売買','二手','买卖']
+};
+
+function aiSearch() {
+    const q = (document.getElementById('aiInput').value || '').trim().toLowerCase();
+    if (!q) return;
+    const result = document.getElementById('aiResult');
+    result.style.display = 'block';
+
+    // Find matching services
+    const matches = [];
+    for (const [svcId, keywords] of Object.entries(AI_KEYWORDS)) {
+        if (keywords.some(k => q.includes(k))) {
+            const svc = SERVICES.find(s => s.id === svcId);
+            if (svc) matches.push(svc);
+        }
+    }
+
+    if (matches.length > 0) {
+        result.innerHTML = matches.map(s => `
+            <a href="${s.url}" target="_blank" style="display:flex;align-items:center;gap:14px;padding:14px;background:${s.bg};border:1px solid ${s.color}30;border-radius:12px;text-decoration:none;color:#1e293b;margin-bottom:8px;transition:all .15s;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform=''">
+                <span style="font-size:28px;">${s.icon}</span>
+                <div style="flex:1;">
+                    <div style="font-size:14px;font-weight:800;">${s.name[LANG]||s.name.ko}</div>
+                    <div style="font-size:11px;color:#64748b;">${s.desc[LANG]||s.desc.ko}</div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color:${s.color};"></i>
+            </a>
+        `).join('');
+    } else {
+        const allLinks = SERVICES.map(s => `<a href="${s.url}" target="_blank" style="color:${s.color};font-weight:700;text-decoration:none;font-size:12px;">${s.icon} ${s.name[LANG]||s.name.ko}</a>`).join(' · ');
+        result.innerHTML = `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;">
+            "${q}"에 해당하는 서비스를 찾지 못했어요.<br>
+            <div style="margin-top:10px;">${allLinks}</div>
+// ── Quick chips ──
+const CHIPS = {
+    ko: ['강남 알바','원룸 월세','로고 디자인 의뢰','이사 견적','중고 아이폰','동네 모임','소개팅'],
+    ja: ['渋谷 アルバイト','ワンルーム 賃貸','ロゴデザイン','引越し見積','中古iPhone','趣味の集まり','出会い'],
+    en: ['Part-time NYC','Studio rent','Logo design','Moving quote','Used iPhone','Local groups','Meetups'],
+    zh: ['兼职招聘','一室租房','标志设计','搬家报价','二手手机','兴趣小组','交友']
+};
+
 // ── Render ──
 function render() {
-    // i18n
     document.getElementById('heroBadge').textContent = t('badge');
     document.getElementById('heroTitle').innerHTML = t('title');
     document.getElementById('heroSub').textContent = t('sub');
-    document.getElementById('secLiveTitle').textContent = t('live_title');
-    document.getElementById('secSoonTitle').textContent = t('soon_title');
     document.getElementById('footText').textContent = t('foot');
 
     // Lang bar
@@ -189,32 +239,29 @@ function render() {
 
     // Category strip
     document.getElementById('catStrip').innerHTML = SERVICES.map(s => `
-        <a class="cat-icon ${s.live?'live':''}" href="${s.live?s.url:'#'}" ${s.live?'target="_blank"':''}>
-            <div class="cat-circle" style="${s.live?'background:'+s.bg+';border-color:'+s.color+'30;':''}">${s.icon}</div>
+        <a class="cat-icon live" href="${s.url}" target="_blank">
+            <div class="cat-circle" style="background:${s.bg};border-color:${s.color}30;">${s.icon}</div>
             <span class="cat-label">${(s.name[LANG]||s.name.ko)}</span>
         </a>
     `).join('');
 
-    // Live cards
-    const liveServices = SERVICES.filter(s => s.live);
-    document.getElementById('liveGrid').innerHTML = liveServices.map(s => `
-        <a class="svc-card" href="${s.url}" target="_blank">
-            <div class="icon" style="background:${s.bg};color:${s.color};font-size:28px;">${s.icon}</div>
-            <div class="info">
-                <h3>${s.name[LANG]||s.name.ko} <span class="badge" style="background:#22c55e;">LIVE</span></h3>
-                <p>${s.desc[LANG]||s.desc.ko}</p>
-            </div>
-            <i class="fa-solid fa-chevron-right arrow"></i>
-        </a>
-    `).join('');
+    // AI chatbot i18n
+    const aiT = {
+        title:{ko:'무엇을 찾고 계세요?',ja:'何をお探しですか？',en:'What are you looking for?',zh:'您在找什么？'},
+        sub:{ko:'알바, 부동산, 전문가, 중고거래 등 원하는 서비스를 물어보세요',ja:'アルバイト、不動産、専門家など、お探しのサービスを入力してください',en:'Ask about jobs, real estate, experts, secondhand items, and more',zh:'搜索兼职、房产、专家、二手交易等服务'},
+        ph:{ko:'예: 강남 시급 15000원 이상 알바',ja:'例: 渋谷 時給1500円以上',en:'e.g. part-time job near me $15/hr',zh:'例：附近时薪15元以上兼职'}
+    };
+    document.getElementById('aiTitle').textContent = (aiT.title[LANG]||aiT.title.ko);
+    document.getElementById('aiSub').textContent = (aiT.sub[LANG]||aiT.sub.ko);
+    document.getElementById('aiInput').placeholder = (aiT.ph[LANG]||aiT.ph.ko);
 
-    // Coming soon cards
-    const soonServices = SERVICES.filter(s => !s.live);
-    document.getElementById('soonGrid').innerHTML = soonServices.map(s => `
-        <div class="soon-card">
-            <span class="icon">${s.icon}</span>
-            <h4>${s.name[LANG]||s.name.ko}</h4>
-            <p>${s.desc[LANG]||s.desc.ko}</p>
+    // Quick chips
+    const chips = CHIPS[LANG] || CHIPS.ko;
+    document.getElementById('aiChips').innerHTML = chips.map(c =>
+        `<button onclick="document.getElementById('aiInput').value='${c}';aiSearch();" style="padding:6px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;font-size:11px;font-weight:600;color:#475569;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='#f5f3ff';this.style.borderColor='#c4b5fd';this.style.color='#7c3aed'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0';this.style.color='#475569'">${c}</button>`
+    ).join('');
+
+    // Remove old card sections (no longer needed)
             <span class="soon-badge">COMING SOON</span>
         </div>
     `).join('');
