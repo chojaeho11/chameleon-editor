@@ -71,6 +71,7 @@ GRANT EXECUTE ON FUNCTION admin_approve_production_partner(uuid) TO authenticate
 CREATE OR REPLACE FUNCTION touch_production_partner_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN NEW.updated_at := NOW(); RETURN NEW; END;
 $$;
+DROP TRIGGER IF EXISTS trg_pp_updated_at ON production_partners;
 CREATE TRIGGER trg_pp_updated_at BEFORE UPDATE ON production_partners FOR EACH ROW EXECUTE FUNCTION touch_production_partner_updated_at();
 
 -- Indexes
