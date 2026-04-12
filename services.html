@@ -3,241 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Services Hub - Chameleon Platform</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<title>Chameleon Services</title>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script>
+(function(){
+    var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
+    if(l){if(l==='jp'||l==='ja')l='ja';else if(l==='zh'||l==='cn')l='zh';else if(l==='en'||l==='us')l='en';else if(!['es','de','fr','ar'].includes(l))l='ko';}
+    else if(h.includes('cafe0101'))l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design'))l='en';else l='ko';
+    document.documentElement.lang=l;window.__LANG=l;
+})();
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Pretendard Variable',sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;}
-.hero{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 40%,#4f46e5 100%);color:#fff;padding:60px 20px 50px;text-align:center;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,0.05) 0%,transparent 60%);animation:pulse 8s ease-in-out infinite;}
-@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
-.hero h1{font-size:clamp(24px,4vw,40px);font-weight:800;margin-bottom:12px;position:relative;}
-.hero p{font-size:clamp(14px,2vw,18px);opacity:0.85;max-width:600px;margin:0 auto;position:relative;}
-.lang-bar{position:absolute;top:16px;right:20px;display:flex;gap:6px;flex-wrap:wrap;}
-.lang-bar button{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .2s;}
-.lang-bar button:hover,.lang-bar button.active{background:rgba(255,255,255,0.3);border-color:rgba(255,255,255,0.5);}
-.back-link{position:absolute;top:16px;left:20px;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;display:flex;align-items:center;gap:6px;}
-.back-link:hover{color:#fff;}
-.container{max-width:1100px;margin:0 auto;padding:30px 20px 60px;}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
-@media(max-width:700px){.grid{grid-template-columns:1fr;}}
-.card{background:#fff;border-radius:16px;padding:28px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);transition:transform .25s,box-shadow .25s;position:relative;overflow:hidden;border:1px solid #e2e8f0;}
-.card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,0.1);}
-.card .accent{position:absolute;top:0;left:0;right:0;height:4px;}
-.card .icon{font-size:36px;margin-bottom:14px;display:block;}
-.card h3{font-size:18px;font-weight:700;margin-bottom:6px;}
-.card .desc{font-size:13px;color:#64748b;line-height:1.6;margin-bottom:18px;min-height:40px;}
-.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;margin-bottom:14px;}
-.badge-live{background:#dcfce7;color:#166534;}
-.badge-soon{background:#f1f5f9;color:#94a3b8;}
-.cta{display:inline-block;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:all .2s;border:none;cursor:pointer;}
-.cta-active{background:#4f46e5;color:#fff;}
-.cta-active:hover{background:#4338ca;transform:scale(1.03);}
-.cta-disabled{background:#f1f5f9;color:#94a3b8;cursor:not-allowed;pointer-events:none;}
-.footer{text-align:center;padding:30px 20px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:20px;}
+body{font-family:'Pretendard Variable','Pretendard',sans-serif;background:#fff;color:#1e293b;-webkit-font-smoothing:antialiased;}
+
+/* ── Nav ── */
+.nav{background:#fff;border-bottom:1px solid #f1f5f9;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#1e293b;font-size:18px;font-weight:900;}
+.nav-logo i{color:#7c3aed;font-size:20px;}
+.nav-right{display:flex;gap:6px;}
+.nav-right a{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;color:#475569;border:1px solid #e2e8f0;transition:all .15s;}
+.nav-right a:hover{background:#f8fafc;}
+
+/* ── Hero ── */
+.hero{background:#fff;padding:48px 20px 40px;text-align:center;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#f5f3ff;color:#7c3aed;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:16px;}
+.hero h1{font-size:clamp(26px,4.5vw,42px);font-weight:900;color:#0f172a;letter-spacing:-1px;line-height:1.2;margin-bottom:12px;}
+.hero h1 em{font-style:normal;color:#7c3aed;}
+.hero p{font-size:15px;color:#64748b;max-width:480px;margin:0 auto;line-height:1.6;}
+
+/* ── Category icons strip ── */
+.cat-strip{background:#fff;border-bottom:1px solid #f1f5f9;padding:24px 20px;}
+.cat-strip-inner{max-width:900px;margin:0 auto;display:flex;justify-content:center;gap:24px;flex-wrap:wrap;}
+.cat-icon{display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:#475569;min-width:72px;transition:all .2s;position:relative;}
+.cat-icon:hover{color:#7c3aed;}
+.cat-icon:hover .cat-circle{background:#f5f3ff;border-color:#c4b5fd;transform:translateY(-2px);}
+.cat-circle{width:56px;height:56px;border-radius:16px;background:#f8fafc;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.cat-icon.live .cat-circle{background:#f5f3ff;border-color:#c4b5fd;}
+.cat-icon.live::after{content:'';position:absolute;top:2px;right:16px;width:8px;height:8px;background:#22c55e;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #22c55e;}
+.cat-label{font-size:11px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;}
+
+/* ── Featured section ── */
+.section{max-width:960px;margin:0 auto;padding:40px 20px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.section-header h2{font-size:20px;font-weight:900;color:#0f172a;letter-spacing:-0.5px;}
+.section-header a{font-size:13px;color:#7c3aed;font-weight:700;text-decoration:none;}
+
+/* ── Service cards (featured) ── */
+.svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+@media(max-width:640px){.svc-grid{grid-template-columns:1fr;}}
+.svc-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;display:flex;gap:18px;align-items:flex-start;transition:all .2s;text-decoration:none;color:#1e293b;cursor:pointer;}
+.svc-card:hover{border-color:#c4b5fd;box-shadow:0 8px 30px rgba(124,58,237,0.08);transform:translateY(-2px);}
+.svc-card .icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.svc-card .info{flex:1;min-width:0;}
+.svc-card .info h3{font-size:16px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.svc-card .info h3 .badge{font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;color:#fff;}
+.svc-card .info p{font-size:12px;color:#64748b;line-height:1.5;}
+.svc-card .arrow{color:#cbd5e1;font-size:18px;align-self:center;transition:all .2s;}
+.svc-card:hover .arrow{color:#7c3aed;transform:translateX(3px);}
+
+/* ── Coming Soon grid ── */
+.soon-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;}
+@media(max-width:640px){.soon-grid{grid-template-columns:repeat(2,1fr);}}
+.soon-card{background:#f8fafc;border:1px solid #f1f5f9;border-radius:14px;padding:20px;text-align:center;color:#94a3b8;}
+.soon-card .icon{font-size:28px;margin-bottom:8px;display:block;opacity:0.6;}
+.soon-card h4{font-size:13px;font-weight:800;color:#64748b;margin-bottom:4px;}
+.soon-card p{font-size:11px;line-height:1.4;}
+.soon-card .soon-badge{display:inline-block;font-size:9px;font-weight:800;background:#e2e8f0;color:#64748b;padding:2px 8px;border-radius:999px;margin-top:8px;}
+
+/* ── Footer ── */
+.foot{text-align:center;padding:40px 20px;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9;margin-top:20px;}
+.foot a{color:#7c3aed;text-decoration:none;font-weight:700;}
 </style>
 </head>
 <body>
 
-<div class="hero">
-    <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="back">홈</span></a>
-    <div class="lang-bar" id="langBar"></div>
-    <h1 data-i18n="title">모든 서비스를 하나의 플랫폼에서</h1>
-    <p data-i18n="subtitle">비즈니스와 사람을 연결하는 카멜레온 플랫폼의 다양한 서비스를 만나보세요.</p>
-</div>
+<!-- Nav -->
+<nav class="nav">
+    <a class="nav-logo" href="/"><i class="fa-solid fa-palette"></i> Chameleon</a>
+    <div class="nav-right" id="langBar"></div>
+</nav>
 
-<div class="container">
-    <div class="grid" id="serviceGrid"></div>
-</div>
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-badge"><i class="fa-solid fa-bolt"></i> <span id="heroBadge">업계 최저 수수료 5%</span></div>
+    <h1 id="heroTitle">필요한 서비스,<br><em>한 곳에서</em> 바로 연결</h1>
+    <p id="heroSub">디자인부터 출력·시공, 아르바이트까지. 카멜레온이 운영하는 모든 중계 서비스를 만나보세요.</p>
+</section>
 
-<div class="footer">
-    &copy; 2026 Chameleon Platform. All rights reserved.
-</div>
+<!-- Category icon strip -->
+<section class="cat-strip">
+    <div class="cat-strip-inner" id="catStrip"></div>
+</section>
+
+<!-- Live Services -->
+<section class="section">
+    <div class="section-header">
+        <h2 id="secLiveTitle">지금 이용할 수 있는 서비스</h2>
+    </div>
+    <div class="svc-grid" id="liveGrid"></div>
+</section>
+
+<!-- Coming Soon -->
+<section class="section" style="padding-top:0;">
+    <div class="section-header">
+        <h2 id="secSoonTitle">곧 만나요</h2>
+    </div>
+    <div class="soon-grid" id="soonGrid"></div>
+</section>
+
+<!-- Footer -->
+<footer class="foot">
+    <span id="footText">© 2026 Chameleon Printing. 모든 서비스는 수수료 5%로 운영됩니다.</span><br>
+    <a href="/">← 메인으로 돌아가기</a>
+</footer>
 
 <script>
-// ─── i18n ───
-const LANGS = {
-    ko: { code:'ko', label:'한국어',
-        back:'홈', title:'모든 서비스를 하나의 플랫폼에서', subtitle:'비즈니스와 사람을 연결하는 카멜레온 플랫폼의 다양한 서비스를 만나보세요.',
-        live:'LIVE', soon:'COMING SOON', go:'바로가기', notify:'알림 신청',
-        s1t:'디자인 마켓', s1d:'전문 디자이너에게 맞춤 디자인을 의뢰하고 받아보세요.',
-        s2t:'출력·시공 파트너', s2d:'출력/시공 파트너로 등록하고 주문을 받아보세요.',
-        s3t:'알바·파트타임', s3d:'우리 동네 알바·파트타임 일자리를 찾아보세요.',
-        s4t:'부동산', s4d:'해외 거주자를 위한 부동산 매물 정보를 확인하세요.',
-        s5t:'서비스 마켓플레이스', s5d:'이사, 수리, 청소 등 생활 서비스를 한곳에서.',
-        s6t:'소개팅·모임', s6d:'같은 지역의 사람들과 만남과 교류의 기회를.',
-        s7t:'동네 커뮤니티', s7d:'우리 동네 소식과 정보를 이웃과 함께 나눠요.',
-        s8t:'중고거래', s8d:'해외에서도 안전한 중고거래, 직거래·택배 모두 OK.'
-    },
-    ja: { code:'ja', label:'日本語',
-        back:'ホーム', title:'すべてのサービスを一つのプラットフォームで', subtitle:'ビジネスと人をつなぐカメレオンプラットフォームの多様なサービスをご覧ください。',
-        live:'LIVE', soon:'COMING SOON', go:'詳しく見る', notify:'通知を受ける',
-        s1t:'デザインマーケット', s1d:'プロのデザイナーにカスタムデザインを依頼できます。',
-        s2t:'出力・施工パートナー', s2d:'出力/施工パートナーとして登録し、注文を受けましょう。',
-        s3t:'アルバイト', s3d:'近所のアルバイト・パートタイムの求人を探せます。',
-        s4t:'不動産', s4d:'海外在住者向けの不動産物件情報をチェック。',
-        s5t:'サービスマーケット', s5d:'引越し、修理、清掃など生活サービスをまとめて。',
-        s6t:'出会い・交流', s6d:'同じ地域の人々との出会いと交流の機会を。',
-        s7t:'地域コミュニティ', s7d:'地域のニュースや情報をご近所と共有しましょう。',
-        s8t:'中古取引', s8d:'海外でも安全な中古取引、直接取引・配送もOK。'
-    },
-    en: { code:'en', label:'English',
-        back:'Home', title:'All Services on One Platform', subtitle:'Discover the diverse services of Chameleon Platform connecting businesses and people.',
-        live:'LIVE', soon:'COMING SOON', go:'Explore', notify:'Get Notified',
-        s1t:'Design Market', s1d:'Request custom designs from professional designers.',
-        s2t:'Production Partners', s2d:'Register as a printing/installation partner and receive orders.',
-        s3t:'Part-time Jobs', s3d:'Find part-time and gig jobs in your neighborhood.',
-        s4t:'Real Estate', s4d:'Browse property listings for overseas residents.',
-        s5t:'Service Marketplace', s5d:'Moving, repairs, cleaning and more life services in one place.',
-        s6t:'Meetups', s6d:'Meet and connect with people in your local area.',
-        s7t:'Local Community', s7d:'Share local news and info with your neighbors.',
-        s8t:'Secondhand Market', s8d:'Safe secondhand trading overseas, in-person or shipped.'
-    },
-    zh: { code:'zh', label:'中文',
-        back:'首页', title:'所有服务尽在一个平台', subtitle:'探索变色龙平台连接商业与人的多样服务。',
-        live:'LIVE', soon:'即将上线', go:'了解更多', notify:'订阅通知',
-        s1t:'设计市场', s1d:'向专业设计师定制设计。',
-        s2t:'印刷·施工合作伙伴', s2d:'注册为印刷/施工合作伙伴并接收订单。',
-        s3t:'兼职工作', s3d:'寻找附近的兼职和零工机会。',
-        s4t:'房地产', s4d:'查看海外居民房产信息。',
-        s5t:'服务市场', s5d:'搬家、维修、清洁等生活服务一站式解决。',
-        s6t:'社交聚会', s6d:'与同地区的人们交流认识。',
-        s7t:'社区', s7d:'与邻居分享本地新闻和信息。',
-        s8t:'二手市场', s8d:'海外也能安全交易二手物品。'
-    },
-    ar: { code:'ar', label:'العربية',
-        back:'الرئيسية', title:'جميع الخدمات في منصة واحدة', subtitle:'اكتشف خدمات منصة كاميليون المتنوعة التي تربط الأعمال بالناس.',
-        live:'LIVE', soon:'قريبا', go:'استكشف', notify:'أعلمني',
-        s1t:'سوق التصميم', s1d:'اطلب تصاميم مخصصة من مصممين محترفين.',
-        s2t:'شركاء الطباعة', s2d:'سجل كشريك طباعة واستقبل الطلبات.',
-        s3t:'وظائف جزئية', s3d:'ابحث عن وظائف جزئية في منطقتك.',
-        s4t:'عقارات', s4d:'تصفح العقارات للمقيمين في الخارج.',
-        s5t:'سوق الخدمات', s5d:'نقل وإصلاح وتنظيف وخدمات أخرى.',
-        s6t:'لقاءات', s6d:'تعرف على أشخاص في منطقتك.',
-        s7t:'مجتمع محلي', s7d:'شارك الأخبار والمعلومات مع جيرانك.',
-        s8t:'سوق مستعمل', s8d:'تداول آمن للمستعملات في الخارج.'
-    },
-    es: { code:'es', label:'Espanol',
-        back:'Inicio', title:'Todos los servicios en una plataforma', subtitle:'Descubre los diversos servicios de la plataforma Chameleon que conectan negocios y personas.',
-        live:'LIVE', soon:'PROXIMAMENTE', go:'Explorar', notify:'Notificarme',
-        s1t:'Mercado de Diseno', s1d:'Solicita disenos personalizados a disenadores profesionales.',
-        s2t:'Socios de Produccion', s2d:'Registrate como socio de impresion y recibe pedidos.',
-        s3t:'Empleos Parciales', s3d:'Encuentra trabajos de medio tiempo en tu zona.',
-        s4t:'Inmobiliaria', s4d:'Consulta propiedades para residentes en el extranjero.',
-        s5t:'Mercado de Servicios', s5d:'Mudanzas, reparaciones, limpieza y mas en un solo lugar.',
-        s6t:'Encuentros', s6d:'Conoce y conecta con personas de tu area local.',
-        s7t:'Comunidad Local', s7d:'Comparte noticias e info local con tus vecinos.',
-        s8t:'Mercado de Segunda Mano', s8d:'Compraventa segura de segunda mano en el extranjero.'
-    },
-    de: { code:'de', label:'Deutsch',
-        back:'Startseite', title:'Alle Dienste auf einer Plattform', subtitle:'Entdecken Sie die vielfaltigen Dienste der Chameleon-Plattform.',
-        live:'LIVE', soon:'DEMNACHST', go:'Entdecken', notify:'Benachrichtigen',
-        s1t:'Design-Markt', s1d:'Beauftragen Sie professionelle Designer mit individuellem Design.',
-        s2t:'Produktionspartner', s2d:'Registrieren Sie sich als Druck-/Installationspartner.',
-        s3t:'Teilzeitjobs', s3d:'Finden Sie Teilzeitjobs in Ihrer Nahe.',
-        s4t:'Immobilien', s4d:'Immobilienangebote fur Auslandsbewohner.',
-        s5t:'Service-Marktplatz', s5d:'Umzug, Reparatur, Reinigung und mehr an einem Ort.',
-        s6t:'Treffen', s6d:'Lernen Sie Menschen in Ihrer Region kennen.',
-        s7t:'Lokale Community', s7d:'Teilen Sie lokale Neuigkeiten mit Ihren Nachbarn.',
-        s8t:'Gebrauchtmarkt', s8d:'Sicherer Gebrauchthandel auch im Ausland.'
-    },
-    fr: { code:'fr', label:'Francais',
-        back:'Accueil', title:'Tous les services sur une seule plateforme', subtitle:'Decouvrez les divers services de la plateforme Chameleon reliant entreprises et personnes.',
-        live:'LIVE', soon:'BIENTOT', go:'Decouvrir', notify:'Me notifier',
-        s1t:'Marche du Design', s1d:'Demandez des designs personnalises a des designers professionnels.',
-        s2t:'Partenaires de Production', s2d:"Inscrivez-vous en tant que partenaire d'impression et recevez des commandes.",
-        s3t:'Jobs a Temps Partiel', s3d:'Trouvez des emplois a temps partiel pres de chez vous.',
-        s4t:'Immobilier', s4d:"Consultez les annonces immobilieres pour les residents a l'etranger.",
-        s5t:'Marche des Services', s5d:'Demenagement, reparation, nettoyage et plus en un seul endroit.',
-        s6t:'Rencontres', s6d:'Rencontrez et connectez avec des personnes de votre region.',
-        s7t:'Communaute Locale', s7d:'Partagez les nouvelles et infos locales avec vos voisins.',
-        s8t:"Marche de l'Occasion", s8d:"Echanges securises d'occasion meme a l'etranger."
-    }
-};
+const LANG = window.__LANG || 'ko';
 
+// ── i18n ──
+const T = {
+    badge:    {ko:'업계 최저 수수료 5%',ja:'業界最安手数料 5%',en:'Industry-lowest 5% fee',zh:'业界最低5%手续费'},
+    title:    {ko:'필요한 서비스,<br><em>한 곳에서</em> 바로 연결',ja:'必要なサービスを<br><em>ワンストップ</em>で',en:'Every service you need,<br><em>one platform</em>',zh:'所需服务，<br><em>一站式</em>连接'},
+    sub:      {ko:'디자인부터 출력·시공, 아르바이트까지. 카멜레온이 운영하는 모든 중계 서비스를 만나보세요.',ja:'デザインから印刷・施工、アルバイトまで。カメレオンのすべての仲介サービスをご覧ください。',en:'From design to printing, installation, and part-time jobs. Explore all matching services by Chameleon.',zh:'从设计到印刷·施工·兼职。探索卡梅隆运营的所有中介服务。'},
+    live_title:{ko:'지금 이용할 수 있는 서비스',ja:'現在利用可能なサービス',en:'Available Now',zh:'现在可用的服务'},
+    soon_title:{ko:'곧 만나요',ja:'もうすぐ',en:'Coming Soon',zh:'即将推出'},
+    foot:     {ko:'© 2026 Chameleon Printing. 모든 서비스는 수수료 5%로 운영됩니다.',ja:'© 2026 Chameleon Printing. 全サービス手数料5%。',en:'© 2026 Chameleon Printing. All services operate at 5% commission.',zh:'© 2026 Chameleon Printing. 所有服务佣金5%。'},
+    back:     {ko:'← 메인으로 돌아가기',ja:'← メインに戻る',en:'← Back to Main',zh:'← 返回主页'}
+};
+function t(k){return (T[k]||{})[LANG]||(T[k]||{}).ko||k;}
+
+// ── Services data ──
 const SERVICES = [
-    { key:'s1', icon:'🎨', href:'/design-market', live:true,  gradient:'linear-gradient(135deg,#7c3aed,#a78bfa)' },
-    { key:'s2', icon:'🏭', href:'/partner-register', live:true,  gradient:'linear-gradient(135deg,#059669,#34d399)' },
-    { key:'s3', icon:'⏰', href:'#', live:false, gradient:'linear-gradient(135deg,#d97706,#fbbf24)' },
-    { key:'s4', icon:'🏠', href:'#', live:false, gradient:'linear-gradient(135deg,#2563eb,#60a5fa)' },
-    { key:'s5', icon:'🔧', href:'#', live:false, gradient:'linear-gradient(135deg,#dc2626,#f87171)' },
-    { key:'s6', icon:'💕', href:'#', live:false, gradient:'linear-gradient(135deg,#ec4899,#f9a8d4)' },
-    { key:'s7', icon:'🏘️', href:'#', live:false, gradient:'linear-gradient(135deg,#0891b2,#67e8f9)' },
-    { key:'s8', icon:'🛍️', href:'#', live:false, gradient:'linear-gradient(135deg,#7c3aed,#c084fc)' }
+    {id:'design',   icon:'🎨', color:'#7c3aed', bg:'#f5f3ff',
+     name:{ko:'디자인 마켓',ja:'デザインマーケット',en:'Design Market',zh:'设计市场'},
+     desc:{ko:'전세계 디자이너에게 의뢰하세요. 로고, 배너, 패키지, 웹 디자인 등.',ja:'世界中のデザイナーに依頼。ロゴ、バナー、パッケージ、Webデザインなど。',en:'Hire designers worldwide. Logos, banners, packaging, web design & more.',zh:'委托全球设计师。标志、横幅、包装、网页设计等。'},
+     url:'/design-market', live:true },
+    {id:'partner',  icon:'🏭', color:'#059669', bg:'#ecfdf5',
+     name:{ko:'출력·시공 파트너',ja:'印刷·施工パートナー',en:'Print & Install Partners',zh:'印刷·施工合伙'},
+     desc:{ko:'전세계 출력·시공 업체와 고객을 연결. 파트너로 등록하고 주문을 받으세요.',ja:'世界の印刷・施工業者とお客様を接続。パートナー登録して注文を受けましょう。',en:'Connect print & install companies with clients globally. Register as a partner.',zh:'连接全球印刷·施工企业与客户。注册成为合作伙伴。'},
+     url:'/partner-register', live:true },
+    {id:'jobs',     icon:'⏰', color:'#d97706', bg:'#fffbeb',
+     name:{ko:'타임 알바',ja:'タイムアルバイト',en:'Part-time Jobs',zh:'兼职工作'},
+     desc:{ko:'근처 알바 한눈에. 시급 · 시간대 · 거리순 매칭.',ja:'近くのアルバイトを一覧。時給・時間帯・距離でマッチング。',en:'Find nearby part-time jobs. Match by hourly rate, schedule & distance.',zh:'附近兼职一览。按时薪·时段·距离匹配。'},
+     url:'#', live:false },
+    {id:'realty',   icon:'🏠', color:'#0891b2', bg:'#ecfeff',
+     name:{ko:'부동산 중계',ja:'不動産仲介',en:'Real Estate',zh:'房产中介'},
+     desc:{ko:'전·월세, 매매, 상가. 가까운 매물을 연결.',ja:'賃貸・売買・店舗。近くの物件をマッチング。',en:'Rent, buy, sell. Nearby property matching.',zh:'租房·买卖·商铺。附近房源匹配。'},
+     url:'#', live:false },
+    {id:'expert',   icon:'🔧', color:'#6366f1', bg:'#eef2ff',
+     name:{ko:'전문가 매칭',ja:'専門家マッチング',en:'Expert Matching',zh:'专家匹配'},
+     desc:{ko:'이사, 인테리어, 레슨, 수리 등 전문가를 찾아드려요.',ja:'引越し、インテリア、レッスン、修理などの専門家をマッチング。',en:'Moving, interior, lessons, repairs — find the right expert.',zh:'搬家·装修·课程·维修——找到合适的专家。'},
+     url:'#', live:false },
+    {id:'social',   icon:'💕', color:'#ec4899', bg:'#fdf2f8',
+     name:{ko:'만남·소셜',ja:'出会い・ソーシャル',en:'Meetups & Social',zh:'社交·约会'},
+     desc:{ko:'같은 동네, 같은 관심사. 새로운 만남.',ja:'同じ町、同じ趣味。新しい出会い。',en:'Same neighborhood, same interests. New connections.',zh:'同一社区，同一兴趣。全新社交。'},
+     url:'#', live:false },
+    {id:'community',icon:'🏘️', color:'#14b8a6', bg:'#f0fdfa',
+     name:{ko:'지역 커뮤니티',ja:'地域コミュニティ',en:'Local Community',zh:'社区论坛'},
+     desc:{ko:'우리 동네 소식, 모임, 나눔.',ja:'ご近所のニュース、集まり、分かち合い。',en:'Local news, gatherings, sharing.',zh:'社区新闻·聚会·分享。'},
+     url:'#', live:false },
+    {id:'market',   icon:'🛍️', color:'#f59e0b', bg:'#fffbeb',
+     name:{ko:'중고거래',ja:'中古取引',en:'Secondhand Market',zh:'二手交易'},
+     desc:{ko:'안전한 동네 중고 거래.',ja:'安全なご近所中古取引。',en:'Safe local secondhand trading.',zh:'安全的本地二手交易。'},
+     url:'#', live:false }
 ];
 
-let currentLang = 'ko';
+// ── Render ──
+function render() {
+    // i18n
+    document.getElementById('heroBadge').textContent = t('badge');
+    document.getElementById('heroTitle').innerHTML = t('title');
+    document.getElementById('heroSub').textContent = t('sub');
+    document.getElementById('secLiveTitle').textContent = t('live_title');
+    document.getElementById('secSoonTitle').textContent = t('soon_title');
+    document.getElementById('footText').textContent = t('foot');
 
-function detectLang() {
-    const params = new URLSearchParams(location.search);
-    if (params.get('lang') && LANGS[params.get('lang')]) return params.get('lang');
-    const nav = (navigator.language || '').toLowerCase();
-    if (nav.startsWith('ko')) return 'ko';
-    if (nav.startsWith('ja')) return 'ja';
-    if (nav.startsWith('zh')) return 'zh';
-    if (nav.startsWith('ar')) return 'ar';
-    if (nav.startsWith('es')) return 'es';
-    if (nav.startsWith('de')) return 'de';
-    if (nav.startsWith('fr')) return 'fr';
-    return 'en';
-}
+    // Lang bar
+    const langs = [{c:'ko',l:'한국어'},{c:'ja',l:'日本語'},{c:'en',l:'EN'},{c:'zh',l:'中文'}];
+    document.getElementById('langBar').innerHTML = langs.map(l => {
+        const u = new URL(location.href); u.searchParams.set('lang',l.c);
+        return `<a href="${u}" style="${LANG===l.c?'background:#7c3aed;color:#fff;border-color:#7c3aed;':''}">${l.l}</a>`;
+    }).join('');
 
-function setLang(lang) {
-    currentLang = lang;
-    const t = LANGS[lang];
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (t[key]) el.textContent = t[key];
-    });
-    document.querySelectorAll('.lang-bar button').forEach(b => {
-        b.classList.toggle('active', b.dataset.lang === lang);
-    });
-    document.documentElement.lang = lang;
-    if (lang === 'ar') document.documentElement.dir = 'rtl'; else document.documentElement.dir = 'ltr';
-    renderCards(t);
-}
+    // Category strip
+    document.getElementById('catStrip').innerHTML = SERVICES.map(s => `
+        <a class="cat-icon ${s.live?'live':''}" href="${s.live?s.url:'#'}" ${s.live?'target="_blank"':''}>
+            <div class="cat-circle" style="${s.live?'background:'+s.bg+';border-color:'+s.color+'30;':''}">${s.icon}</div>
+            <span class="cat-label">${(s.name[LANG]||s.name.ko)}</span>
+        </a>
+    `).join('');
 
-function renderLangBar() {
-    const bar = document.getElementById('langBar');
-    bar.innerHTML = '';
-    Object.values(LANGS).forEach(l => {
-        const btn = document.createElement('button');
-        btn.textContent = l.label;
-        btn.dataset.lang = l.code;
-        btn.onclick = () => setLang(l.code);
-        bar.appendChild(btn);
-    });
-}
+    // Live cards
+    const liveServices = SERVICES.filter(s => s.live);
+    document.getElementById('liveGrid').innerHTML = liveServices.map(s => `
+        <a class="svc-card" href="${s.url}" target="_blank">
+            <div class="icon" style="background:${s.bg};color:${s.color};font-size:28px;">${s.icon}</div>
+            <div class="info">
+                <h3>${s.name[LANG]||s.name.ko} <span class="badge" style="background:#22c55e;">LIVE</span></h3>
+                <p>${s.desc[LANG]||s.desc.ko}</p>
+            </div>
+            <i class="fa-solid fa-chevron-right arrow"></i>
+        </a>
+    `).join('');
 
-function renderCards(t) {
-    const grid = document.getElementById('serviceGrid');
-    grid.innerHTML = '';
-    SERVICES.forEach(s => {
-        const title = t[s.key+'t'];
-        const desc = t[s.key+'d'];
-        const badgeClass = s.live ? 'badge-live' : 'badge-soon';
-        const badgeText = s.live ? t.live : t.soon;
-        const ctaClass = s.live ? 'cta-active' : 'cta-disabled';
-        const ctaText = s.live ? t.go : t.notify;
-        const linkAttr = s.live ? `href="${s.href}"` : '';
-
-        grid.innerHTML += `
-        <div class="card">
-            <div class="accent" style="background:${s.gradient};"></div>
+    // Coming soon cards
+    const soonServices = SERVICES.filter(s => !s.live);
+    document.getElementById('soonGrid').innerHTML = soonServices.map(s => `
+        <div class="soon-card">
             <span class="icon">${s.icon}</span>
-            <span class="badge ${badgeClass}">${badgeText}</span>
-            <h3>${title}</h3>
-            <p class="desc">${desc}</p>
-            <a ${linkAttr} class="cta ${ctaClass}">${ctaText} ${s.live ? '<i class="fa-solid fa-arrow-right" style="margin-left:4px;"></i>' : ''}</a>
-        </div>`;
-    });
+            <h4>${s.name[LANG]||s.name.ko}</h4>
+            <p>${s.desc[LANG]||s.desc.ko}</p>
+            <span class="soon-badge">COMING SOON</span>
+        </div>
+    `).join('');
 }
 
-// ─── Init ───
-renderLangBar();
-setLang(detectLang());
+render();
 </script>
 </body>
 </html>
