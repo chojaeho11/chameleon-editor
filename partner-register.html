@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ko" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Partner Registration</title>
+    <script>
+        (function(){
+            try {
+                var params = new URLSearchParams(location.search);
+                var lp = (params.get('lang')||'').toLowerCase();
+                var host = location.hostname;
+                var lang = 'ko';
+                if (lp) {
+                    if (lp==='jp'||lp==='ja') lang='ja';
+                    else if (lp==='zh'||lp==='cn') lang='zh';
+                    else if (lp==='ar'||lp==='sa'||lp==='ma') lang='ar';
+                    else if (lp==='es') lang='es';
+                    else if (lp==='de') lang='de';
+                    else if (lp==='fr') lang='fr';
+                    else if (lp==='en'||lp==='us') lang='en';
+                    else lang = lp;
+                } else if (host.includes('cafe0101')) lang='ja';
+                else if (host.includes('cafe3355')||host.includes('chameleon.design')) lang='en';
+                document.documentElement.lang = lang;
+            } catch(_) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{background:#f8f9fc;font-family:'Pretendard',sans-serif;color:#1e293b;min-height:100vh;visibility:hidden;}
+        body.ready{visibility:visible;}
+        @keyframes __show{to{visibility:visible;}}
+        body{animation:__show 0s linear 0.8s forwards;}
+
+        .site-header{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+        .site-header .logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;}
+        .site-header .logo i{font-size:22px;color:#7c3aed;}
+        .site-header .logo span{font-size:18px;font-weight:800;color:#1e293b;}
+        .header-right{display:flex;align-items:center;gap:12px;}
+        .header-right .user-info{font-size:13px;color:#64748b;font-weight:600;}
+        .header-btn{padding:8px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;font-size:13px;font-weight:600;color:#475569;cursor:pointer;transition:0.15s;text-decoration:none;font-family:inherit;}
+        .header-btn:hover{background:#f8fafc;border-color:#cbd5e1;}
+        .header-btn.primary{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+        .header-btn.primary:hover{background:#6d28d9;}
+        .header-btn.danger{color:#ef4444;border-color:#fca5a5;}
+
+        .container{max-width:720px;margin:0 auto;padding:24px 20px 60px;}
+
+        .page-title{font-size:24px;font-weight:900;text-align:center;margin-bottom:8px;color:#0f172a;}
+        .page-subtitle{font-size:14px;color:#64748b;text-align:center;margin-bottom:32px;line-height:1.6;}
+
+        /* Auth section */
+        .auth-section{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;}
+        .auth-title{font-size:16px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#1e293b;}
+        .auth-logged-in{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+        .auth-logged-in .email{font-size:14px;font-weight:700;color:#7c3aed;}
+        .auth-row{display:flex;gap:10px;margin-bottom:12px;}
+        .auth-row input{flex:1;padding:11px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;transition:border-color 0.15s;}
+        .auth-row input:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+        .auth-btns{display:flex;gap:8px;}
+        .auth-btns button{padding:10px 20px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:0.15s;}
+        .auth-btns .btn-login{background:#7c3aed;color:#fff;}
+        .auth-btns .btn-login:hover{background:#6d28d9;}
+        .auth-btns .btn-signup{background:#f1f5f9;color:#475569;}
+        .auth-btns .btn-signup:hover{background:#e2e8f0;}
+        .auth-error{color:#ef4444;font-size:12px;margin-top:8px;display:none;}
+
+        /* Form card */
+        .form-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;}
+        .form-card.disabled{opacity:0.5;pointer-events:none;}
+        .section-title{font-size:16px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:#1e293b;padding-bottom:12px;border-bottom:1px solid #f1f5f9;}
+        .form-group{margin-bottom:18px;}
+        .form-group label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:7px;}
+        .form-group label .req{color:#ef4444;margin-left:2px;}
+        .form-input{width:100%;padding:11px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;transition:border-color 0.15s;}
+        .form-input:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+        select.form-input{appearance:auto;}
+        textarea.form-input{resize:vertical;min-height:100px;line-height:1.6;}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+        @media(max-width:768px){.form-row{grid-template-columns:1fr;}}
+
+        /* Capability checkboxes */
+        .cap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+        @media(max-width:768px){.cap-grid{grid-template-columns:1fr;}}
+        .cap-category{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;transition:all 0.15s;}
+        .cap-category.active{border-color:#c4b5fd;background:#f5f3ff;}
+        .cap-header{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+        .cap-header input[type="checkbox"]{width:18px;height:18px;accent-color:#7c3aed;cursor:pointer;}
+        .cap-header .cap-label{font-size:13px;font-weight:700;color:#1e293b;flex:1;}
+        .cap-header .cap-toggle{color:#94a3b8;font-size:12px;transition:transform 0.2s;}
+        .cap-header .cap-toggle.open{transform:rotate(180deg);}
+        .cap-subs{display:none;padding:10px 0 0 28px;}
+        .cap-subs.show{display:flex;flex-wrap:wrap;gap:8px;}
+        .cap-sub{display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;}
+        .cap-sub input{accent-color:#7c3aed;cursor:pointer;}
+
+        /* Agreement */
+        .agree-box{background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1.5px solid #fcd34d;border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:12px;}
+        .agree-box input{width:20px;height:20px;accent-color:#7c3aed;margin-top:2px;cursor:pointer;flex-shrink:0;}
+        .agree-box label{font-size:14px;font-weight:700;color:#78350f;cursor:pointer;line-height:1.5;}
+        .agree-box .agree-detail{font-size:12px;color:#92400e;margin-top:4px;line-height:1.6;}
+
+        /* Submit */
+        .submit-btn{width:100%;padding:16px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(124,58,237,0.3);transition:all 0.15s;font-family:inherit;margin-top:8px;}
+        .submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.4);}
+        .submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
+
+        /* Success */
+        .success-card{background:#fff;border:2px solid #22c55e;border-radius:16px;padding:40px 24px;text-align:center;display:none;}
+        .success-card i{font-size:48px;color:#22c55e;margin-bottom:16px;}
+        .success-card h2{font-size:20px;font-weight:900;color:#166534;margin-bottom:12px;}
+        .success-card p{font-size:14px;color:#475569;line-height:1.7;}
+
+        /* Tax section extras */
+        .intl-fields{display:none;}
+        .intl-fields.show{display:block;}
+        .tax-hint{font-size:11px;color:#94a3b8;margin-top:4px;}
+
+        /* Lang selector */
+        .lang-selector{display:flex;align-items:center;gap:4px;}
+        .lang-btn{padding:4px 8px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;}
+        .lang-btn.active{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+
+        @media(max-width:768px){
+            .container{padding:16px 14px 40px;}
+            .form-card{padding:18px 16px;}
+            .auth-section{padding:18px 16px;}
+            .page-title{font-size:20px;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+    <a class="logo" href="index.html"><i class="fas fa-palette"></i><span>Chameleon</span></a>
+    <div class="header-right">
+        <div class="lang-selector" id="langSelector"></div>
+    </div>
+</header>
+
+<div class="container">
+    <h1 class="page-title" id="pageTitle"></h1>
+    <p class="page-subtitle" id="pageSubtitle"></p>
+
+    <!-- Auth Section -->
+    <div class="auth-section" id="authSection">
+        <div class="auth-title"><i class="fas fa-user-circle"></i> <span id="authTitle"></span></div>
+        <!-- Logged out -->
+        <div id="authLoggedOut">
+            <div class="auth-row">
+                <input type="email" id="authEmail" placeholder="email@example.com">
+            </div>
+            <div class="auth-row">
+                <input type="password" id="authPassword" placeholder="Password (min 6 chars)">
+            </div>
+            <div class="auth-btns">
+                <button class="btn-login" id="btnLogin" onclick="doLogin()"></button>
+                <button class="btn-signup" id="btnSignup" onclick="doSignup()"></button>
+            </div>
+            <div class="auth-error" id="authError"></div>
+        </div>
+        <!-- Logged in -->
+        <div id="authLoggedIn" style="display:none">
+            <div class="auth-logged-in">
+                <span class="email" id="userEmail"></span>
+                <button class="header-btn danger" onclick="doLogout()" id="btnLogout"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Form -->
+    <form id="regForm" class="disabled" onsubmit="return false;">
+
+        <!-- 1. Company Info -->
+        <div class="form-card" id="cardCompany">
+            <div class="section-title"><i class="fas fa-building" style="color:#7c3aed"></i> <span id="secCompany"></span></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="lblCompanyName"></label>
+                    <input class="form-input" id="fCompanyName" required>
+                </div>
+                <div class="form-group">
+                    <label id="lblContactName"></label>
+                    <input class="form-input" id="fContactName" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label id="lblCountry"></label>
+                <select class="form-input" id="fCountry" onchange="onCountryChange()"></select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="lblCity"></label>
+                    <input class="form-input" id="fCity">
+                </div>
+                <div class="form-group">
+                    <label id="lblPhone"></label>
+                    <input class="form-input" id="fPhone" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label id="lblAddress"></label>
+                <input class="form-input" id="fAddress" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="lblEmail"></label>
+                    <input class="form-input" type="email" id="fEmail" required>
+                </div>
+                <div class="form-group">
+                    <label id="lblWebsite"></label>
+                    <input class="form-input" id="fWebsite" placeholder="https://">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Production Capabilities -->
+        <div class="form-card" id="cardCaps">
+            <div class="section-title"><i class="fas fa-cogs" style="color:#7c3aed"></i> <span id="secCaps"></span></div>
+            <div class="cap-grid" id="capGrid"></div>
+            <div class="form-group">
+                <label id="lblCapsNote"></label>
+                <textarea class="form-input" id="fCapsNote" rows="4"></textarea>
+            </div>
+        </div>
+
+        <!-- 3. Tax & Banking -->
+        <div class="form-card" id="cardTax">
+            <div class="section-title"><i class="fas fa-university" style="color:#7c3aed"></i> <span id="secTax"></span></div>
+            <div class="form-group">
+                <label id="lblLegalName"></label>
+                <input class="form-input" id="fLegalName">
+            </div>
+            <div class="form-group">
+                <label id="lblTaxType"></label>
+                <select class="form-input" id="fTaxType">
+                    <option value="personal" id="optPersonal"></option>
+                    <option value="business" id="optBusiness"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="lblTaxId"></label>
+                <input class="form-input" id="fTaxId">
+                <div class="tax-hint" id="taxHint"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="lblBankName"></label>
+                    <input class="form-input" id="fBankName">
+                </div>
+                <div class="form-group">
+                    <label id="lblBankHolder"></label>
+                    <input class="form-input" id="fBankHolder">
+                </div>
+            </div>
+            <div class="form-group">
+                <label id="lblBankAccount"></label>
+                <input class="form-input" id="fBankAccount">
+            </div>
+            <!-- International fields -->
+            <div class="intl-fields" id="intlFields">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>SWIFT / BIC</label>
+                        <input class="form-input" id="fSwift">
+                    </div>
+                    <div class="form-group">
+                        <label>IBAN</label>
+                        <input class="form-input" id="fIban">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Routing Number</label>
+                        <input class="form-input" id="fRouting">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblBankAddr"></label>
+                        <input class="form-input" id="fBankAddr">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label id="lblPayoutCurrency"></label>
+                <select class="form-input" id="fPayoutCurrency">
+                    <option value="KRW">KRW (Korean Won)</option>
+                    <option value="JPY">JPY (Japanese Yen)</option>
+                    <option value="USD">USD (US Dollar)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="GBP">GBP (British Pound)</option>
+                    <option value="CNY">CNY (Chinese Yuan)</option>
+                    <option value="SAR">SAR (Saudi Riyal)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 4. Agreement -->
+        <div class="form-card" id="cardAgree">
+            <div class="section-title"><i class="fas fa-handshake" style="color:#7c3aed"></i> <span id="secAgree"></span></div>
+            <div class="agree-box">
+                <input type="checkbox" id="fAgree">
+                <div>
+                    <label for="fAgree" id="lblAgree"></label>
+                    <div class="agree-detail" id="agreeDetail"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="button" class="submit-btn" id="btnSubmit" disabled onclick="doSubmit()"></button>
+    </form>
+
+    <!-- Success message -->
+    <div class="success-card" id="successCard">
+        <i class="fas fa-check-circle"></i>
+        <h2 id="successTitle"></h2>
+        <p id="successMsg"></p>
+    </div>
+</div>
+
+<script>
+// ===== Supabase =====
+const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// ===== Language detection =====
+const LANG = (function(){
+    const p = new URLSearchParams(location.search);
+    const lp = (p.get('lang')||'').toLowerCase();
+    const h = location.hostname;
+    if (lp) {
+        if (lp==='jp'||lp==='ja') return 'ja';
+        if (lp==='zh'||lp==='cn') return 'zh';
+        if (lp==='ar'||lp==='sa'||lp==='ma') return 'ar';
+        if (lp==='es') return 'es';
+        if (lp==='de') return 'de';
+        if (lp==='fr') return 'fr';
+        if (lp==='en'||lp==='us') return 'en';
+        return lp;
+    }
+    if (h.includes('cafe0101')) return 'ja';
+    if (h.includes('cafe3355')||h.includes('chameleon.design')) return 'en';
+    return 'ko';
+})();
+
+// ===== i18n =====
+const I18N = {
+    page_title: {ko:'생산 파트너 등록',ja:'生産パートナー登録',en:'Production Partner Registration',zh:'生产合作伙伴注册',ar:'تسجيل شريك الإنتاج',es:'Registro de socio de produccion',de:'Produktionspartner-Registrierung',fr:'Inscription partenaire de production'},
+    page_subtitle: {ko:'인쇄/시공 회사라면 카멜레온 프린팅의 글로벌 파트너가 되어보세요',ja:'印刷・施工会社ならカメレオンプリンティングのグローバルパートナーに',en:'Join Chameleon Printing as a global production partner for printing & installation',zh:'加入变色龙印刷成为全球生产合作伙伴',ar:'انضم الى شبكة شركاء الإنتاج العالمية',es:'Unase como socio de produccion global',de:'Werden Sie globaler Produktionspartner',fr:'Rejoignez le reseau de partenaires de production'},
+    auth_title: {ko:'계정',ja:'アカウント',en:'Account',zh:'账户',ar:'الحساب',es:'Cuenta',de:'Konto',fr:'Compte'},
+    login: {ko:'로그인',ja:'ログイン',en:'Log in',zh:'登录',ar:'تسجيل الدخول',es:'Iniciar sesion',de:'Anmelden',fr:'Connexion'},
+    signup: {ko:'회원가입',ja:'新規登録',en:'Sign up',zh:'注册',ar:'إنشاء حساب',es:'Registrarse',de:'Registrieren',fr:'S\'inscrire'},
+    logout: {ko:'로그아웃',ja:'ログアウト',en:'Log out',zh:'退出',ar:'تسجيل الخروج',es:'Cerrar sesion',de:'Abmelden',fr:'Deconnexion'},
+    login_required: {ko:'로그인 후 양식을 작성할 수 있습니다',ja:'ログイン後にフォームを記入できます',en:'Please log in to fill out the form',zh:'请先登录再填写表单',ar:'يرجى تسجيل الدخول لملء النموذج',es:'Inicie sesion para completar el formulario',de:'Bitte melden Sie sich an',fr:'Veuillez vous connecter'},
+    sec_company: {ko:'회사 정보',ja:'会社情報',en:'Company Information',zh:'公司信息',ar:'معلومات الشركة',es:'Informacion de la empresa',de:'Firmeninformationen',fr:'Informations entreprise'},
+    sec_caps: {ko:'생산 능력',ja:'生産能力',en:'Production Capabilities',zh:'生产能力',ar:'القدرات الإنتاجية',es:'Capacidades de produccion',de:'Produktionsfahigkeiten',fr:'Capacites de production'},
+    sec_tax: {ko:'세금 및 정산',ja:'税金・決済情報',en:'Tax & Banking',zh:'税务和银行信息',ar:'الضرائب والبنوك',es:'Impuestos y banca',de:'Steuer & Bank',fr:'Fiscalite & banque'},
+    sec_agree: {ko:'이용 약관',ja:'利用規約',en:'Terms & Agreement',zh:'条款与协议',ar:'الشروط والاتفاقية',es:'Terminos y acuerdo',de:'Vereinbarung',fr:'Conditions'},
+    company_name: {ko:'회사명',ja:'会社名',en:'Company Name',zh:'公司名称',ar:'اسم الشركة',es:'Nombre de la empresa',de:'Firmenname',fr:'Nom de l\'entreprise'},
+    contact_name: {ko:'담당자명',ja:'担当者名',en:'Contact Name',zh:'联系人姓名',ar:'اسم جهة الاتصال',es:'Nombre de contacto',de:'Ansprechpartner',fr:'Nom du contact'},
+    country: {ko:'국가',ja:'国',en:'Country',zh:'国家',ar:'الدولة',es:'Pais',de:'Land',fr:'Pays'},
+    city: {ko:'도시',ja:'都市',en:'City',zh:'城市',ar:'المدينة',es:'Ciudad',de:'Stadt',fr:'Ville'},
+    address: {ko:'주소',ja:'住所',en:'Address',zh:'地址',ar:'العنوان',es:'Direccion',de:'Adresse',fr:'Adresse'},
+    phone: {ko:'전화번호',ja:'電話番号',en:'Phone',zh:'电话',ar:'الهاتف',es:'Telefono',de:'Telefon',fr:'Telephone'},
+    email: {ko:'이메일',ja:'メール',en:'Email',zh:'邮箱',ar:'البريد الإلكتروني',es:'Correo',de:'E-Mail',fr:'E-mail'},
+    website: {ko:'웹사이트 (선택)',ja:'ウェブサイト（任意）',en:'Website (optional)',zh:'网站（选填）',ar:'الموقع الإلكتروني (اختياري)',es:'Sitio web (opcional)',de:'Website (optional)',fr:'Site web (optionnel)'},
+    caps_note: {ko:'보유 장비 및 최대 제작 사이즈 등 (자유 기술)',ja:'保有設備・最大制作サイズなど（自由記述）',en:'Equipment details, max production sizes, etc. (free text)',zh:'设备详情、最大生产尺寸等（自由填写）',ar:'تفاصيل المعدات والأحجام القصوى وما إلى ذلك',es:'Detalles de equipamiento, tamanos maximos, etc.',de:'Ausstattung, maximale Groessen usw.',fr:'Details de l\'equipement, tailles maximales, etc.'},
+    legal_name: {ko:'법적 상호명',ja:'法人名',en:'Legal Name',zh:'法定名称',ar:'الاسم القانوني',es:'Nombre legal',de:'Firmenbezeichnung',fr:'Raison sociale'},
+    tax_type: {ko:'과세 유형',ja:'課税タイプ',en:'Tax ID Type',zh:'税务类型',ar:'نوع الضريبة',es:'Tipo de impuesto',de:'Steuerart',fr:'Type d\'imposition'},
+    personal: {ko:'개인',ja:'個人',en:'Personal',zh:'个人',ar:'شخصي',es:'Personal',de:'Privat',fr:'Particulier'},
+    business: {ko:'사업자',ja:'法人',en:'Business',zh:'企业',ar:'تجاري',es:'Empresa',de:'Firma',fr:'Entreprise'},
+    bank_name: {ko:'은행명',ja:'銀行名',en:'Bank Name',zh:'银行名称',ar:'اسم البنك',es:'Nombre del banco',de:'Bankname',fr:'Nom de la banque'},
+    bank_holder: {ko:'예금주',ja:'口座名義',en:'Account Holder',zh:'账户持有人',ar:'صاحب الحساب',es:'Titular de la cuenta',de:'Kontoinhaber',fr:'Titulaire du compte'},
+    bank_account: {ko:'계좌번호',ja:'口座番号',en:'Account Number',zh:'账号',ar:'رقم الحساب',es:'Numero de cuenta',de:'Kontonummer',fr:'Numero de compte'},
+    bank_addr: {ko:'은행 주소',ja:'銀行住所',en:'Bank Address',zh:'银行地址',ar:'عنوان البنك',es:'Direccion del banco',de:'Bankadresse',fr:'Adresse de la banque'},
+    payout_currency: {ko:'정산 통화',ja:'決済通貨',en:'Payout Currency',zh:'结算货币',ar:'عملة الدفع',es:'Moneda de pago',de:'Auszahlungswahrung',fr:'Devise de paiement'},
+    agree_label: {ko:'플랫폼 수수료 5%에 동의합니다',ja:'プラットフォーム手数料5%に同意します',en:'I agree to the 5% platform commission',zh:'我同意5%平台佣金',ar:'أوافق على عمولة المنصة بنسبة 5%',es:'Acepto la comision del 5% de la plataforma',de:'Ich stimme der 5% Plattformgebueehr zu',fr:'J\'accepte la commission de 5% de la plateforme'},
+    agree_detail: {ko:'카멜레온 프린팅은 주문 중개 시 총 금액의 5%를 수수료로 차감합니다. 나머지 95%가 파트너에게 정산됩니다.',ja:'カメレオンプリンティングは注文仲介時に合計金額の5%を手数料として差し引きます。残りの95%がパートナーに精算されます。',en:'Chameleon Printing deducts a 5% commission on brokered orders. The remaining 95% is settled to the partner.',zh:'变色龙印刷在中介订单时扣除总金额的5%作为佣金。剩余的95%将结算给合作伙伴。',ar:'تقتطع المنصة عمولة 5% على الطلبات. يتم تسوية النسبة المتبقية 95% للشريك.',es:'Se deduce una comision del 5% en los pedidos intermediados. El 95% restante se liquida al socio.',de:'Es wird eine Provision von 5% auf vermittelte Auftraege erhoben. Die verbleibenden 95% werden an den Partner ausgezahlt.',fr:'Une commission de 5% est deduite sur les commandes. Les 95% restants sont verses au partenaire.'},
+    submit: {ko:'파트너 등록 신청',ja:'パートナー登録申請',en:'Submit Registration',zh:'提交注册',ar:'تقديم التسجيل',es:'Enviar registro',de:'Registrierung absenden',fr:'Soumettre l\'inscription'},
+    submitting: {ko:'등록 중...',ja:'登録中...',en:'Submitting...',zh:'提交中...',ar:'جاري التقديم...',es:'Enviando...',de:'Wird gesendet...',fr:'Envoi en cours...'},
+    success_title: {ko:'등록이 완료되었습니다!',ja:'登録が完了しました！',en:'Registration Complete!',zh:'注册完成！',ar:'تم التسجيل بنجاح!',es:'Registro completado!',de:'Registrierung abgeschlossen!',fr:'Inscription terminee!'},
+    success_msg: {ko:'관리자 확인 후 활성화됩니다. 이메일로 결과를 안내드리겠습니다.',ja:'管理者の確認後に有効化されます。メールで結果をお知らせします。',en:'Your account will be activated after admin review. We will notify you by email.',zh:'管理员审核后将激活您的账户。我们将通过电子邮件通知您结果。',ar:'سيتم تفعيل حسابك بعد مراجعة المسؤول. سنبلغك بالنتيجة عبر البريد الإلكتروني.',es:'Su cuenta se activara tras la revision del administrador. Le notificaremos por correo.',de:'Ihr Konto wird nach Pruefung aktiviert. Wir benachrichtigen Sie per E-Mail.',fr:'Votre compte sera active apres verification. Nous vous informerons par e-mail.'},
+    error_agree: {ko:'수수료 5% 동의가 필요합니다',ja:'手数料5%への同意が必要です',en:'You must agree to the 5% commission',zh:'您必须同意5%佣金',ar:'يجب الموافقة على عمولة 5%',es:'Debe aceptar la comision del 5%',de:'Sie muessen der 5% Gebuehr zustimmen',fr:'Vous devez accepter la commission de 5%'},
+    error_required: {ko:'필수 항목을 모두 입력해주세요',ja:'必須項目をすべて入力してください',en:'Please fill in all required fields',zh:'请填写所有必填字段',ar:'يرجى ملء جميع الحقول المطلوبة',es:'Complete todos los campos obligatorios',de:'Bitte fuellen Sie alle Pflichtfelder aus',fr:'Veuillez remplir tous les champs obligatoires'},
+    error_caps: {ko:'최소 1개 이상의 생산 카테고리를 선택해주세요',ja:'少なくとも1つの生産カテゴリを選択してください',en:'Please select at least one production category',zh:'请至少选择一个生产类别',ar:'يرجى اختيار فئة إنتاج واحدة على الأقل',es:'Seleccione al menos una categoria',de:'Bitte wahlen Sie mindestens eine Kategorie',fr:'Veuillez selectionner au moins une categorie'}
+};
+function t(key) { return (I18N[key]||{})[LANG] || (I18N[key]||{}).en || key; }
+
+// ===== Country list (same as design-market) =====
+const COUNTRY_LIST = [
+    { code:'KR', flag:'\u{1F1F0}\u{1F1F7}', label:{ko:'한국',ja:'韓国',en:'Korea',zh:'韩国',ar:'كوريا',es:'Corea',de:'Korea',fr:'Coree'} },
+    { code:'JP', flag:'\u{1F1EF}\u{1F1F5}', label:{ko:'일본',ja:'日本',en:'Japan',zh:'日本',ar:'اليابان',es:'Japon',de:'Japan',fr:'Japon'} },
+    { code:'US', flag:'\u{1F1FA}\u{1F1F8}', label:{ko:'미국',ja:'アメリカ',en:'USA',zh:'美国',ar:'أمريكا',es:'EE.UU.',de:'USA',fr:'USA'} },
+    { code:'GB', flag:'\u{1F1EC}\u{1F1E7}', label:{ko:'영국',ja:'イギリス',en:'UK',zh:'英国',ar:'بريطانيا',es:'Reino Unido',de:'UK',fr:'Royaume-Uni'} },
+    { code:'CN', flag:'\u{1F1E8}\u{1F1F3}', label:{ko:'중국',ja:'中国',en:'China',zh:'中国',ar:'الصين',es:'China',de:'China',fr:'Chine'} },
+    { code:'DE', flag:'\u{1F1E9}\u{1F1EA}', label:{ko:'독일',ja:'ドイツ',en:'Germany',zh:'德国',ar:'ألمانيا',es:'Alemania',de:'Deutschland',fr:'Allemagne'} },
+    { code:'FR', flag:'\u{1F1EB}\u{1F1F7}', label:{ko:'프랑스',ja:'フランス',en:'France',zh:'法国',ar:'فرنسا',es:'Francia',de:'Frankreich',fr:'France'} },
+    { code:'ES', flag:'\u{1F1EA}\u{1F1F8}', label:{ko:'스페인',ja:'スペイン',en:'Spain',zh:'西班牙',ar:'إسبانيا',es:'Espana',de:'Spanien',fr:'Espagne'} },
+    { code:'SA', flag:'\u{1F1F8}\u{1F1E6}', label:{ko:'사우디',ja:'サウジ',en:'Saudi Arabia',zh:'沙特',ar:'السعودية',es:'Arabia Saudi',de:'Saudi-Arabien',fr:'Arabie Saoudite'} },
+    { code:'SG', flag:'\u{1F1F8}\u{1F1EC}', label:{ko:'싱가포르',ja:'シンガポール',en:'Singapore',zh:'新加坡',ar:'سنغافورة',es:'Singapur',de:'Singapur',fr:'Singapour'} },
+    { code:'MA', flag:'\u{1F1F2}\u{1F1E6}', label:{ko:'모로코',ja:'モロッコ',en:'Morocco',zh:'摩洛哥',ar:'المغرب',es:'Marruecos',de:'Marokko',fr:'Maroc'} },
+    { code:'AU', flag:'\u{1F1E6}\u{1F1FA}', label:{ko:'호주',ja:'オーストラリア',en:'Australia',zh:'澳大利亚',ar:'أستراليا',es:'Australia',de:'Australien',fr:'Australie'} },
+    { code:'IN', flag:'\u{1F1EE}\u{1F1F3}', label:{ko:'인도',ja:'インド',en:'India',zh:'印度',ar:'الهند',es:'India',de:'Indien',fr:'Inde'} },
+    { code:'TH', flag:'\u{1F1F9}\u{1F1ED}', label:{ko:'태국',ja:'タイ',en:'Thailand',zh:'泰国',ar:'تايلاند',es:'Tailandia',de:'Thailand',fr:'Thailande'} },
+    { code:'VN', flag:'\u{1F1FB}\u{1F1F3}', label:{ko:'베트남',ja:'ベトナム',en:'Vietnam',zh:'越南',ar:'فيتنام',es:'Vietnam',de:'Vietnam',fr:'Vietnam'} },
+    { code:'OTHER', flag:'\u{1F30D}', label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'} }
+];
+
+// ===== Tax ID config (same pattern as design-market) =====
+const TAX_ID_CONFIG = {
+    KR: { label:{ko:'주민등록번호 / 사업자번호',ja:'住民登録番号/事業者番号',en:'RRN / Business Number'}, placeholder:'000000-0000000', hint:{ko:'13자리 주민번호 또는 10자리 사업자번호',ja:'13桁住民登録番号または10桁事業者番号',en:'13-digit RRN or 10-digit Business Number'} },
+    JP: { label:{ko:'마이넘버 / 법인번호',ja:'マイナンバー/法人番号',en:'My Number / Corporate Number'}, placeholder:'000000000000', hint:{ko:'12자리 마이넘버 또는 13자리 법인번호',ja:'12桁マイナンバーまたは13桁法人番号',en:'12-digit My Number or 13-digit Corporate Number'} },
+    US: { label:{ko:'SSN / EIN',ja:'SSN/EIN',en:'SSN / ITIN / EIN (W-9)'}, placeholder:'000-00-0000', hint:{ko:'미국 SSN 또는 EIN',ja:'米国SSNまたはEIN',en:'US Social Security Number or Employer ID'} },
+    CN: { label:{ko:'신분증번호',ja:'身分証番号',en:'Resident ID / USCI'}, placeholder:'18 digits', hint:{ko:'18자리 신분증번호',ja:'18桁身分証番号',en:'18-digit Resident ID or USCI'} },
+    GB: { label:{ko:'UTR / NI',ja:'UTR/NI番号',en:'UTR / NI Number'}, placeholder:'10 digits or AB123456C', hint:{ko:'영국 UTR 또는 NI',ja:'英国UTRまたはNI番号',en:'UK UTR or NI Number'} },
+    DE: { label:{ko:'Steuer-ID',ja:'Steuer-ID',en:'Steuer-ID / VAT ID'}, placeholder:'11 digits', hint:{ko:'11자리 Tax-ID',ja:'11桁Tax-ID',en:'11-digit Tax-ID or VAT'} },
+    FR: { label:{ko:'NIR / SIRET',ja:'NIR/SIRET',en:'NIR / SIRET'}, placeholder:'13-14 digits', hint:{ko:'NIR 또는 SIRET',ja:'NIRまたはSIRET',en:'NIR or SIRET'} },
+    ES: { label:{ko:'NIF / CIF',ja:'NIF/CIF',en:'NIF / NIE / CIF'}, placeholder:'X0000000A', hint:{ko:'NIF 또는 CIF',ja:'NIFまたはCIF',en:'NIF, NIE, or CIF'} },
+    SA: { label:{ko:'국민번호 / VAT',ja:'国民番号/VAT',en:'National ID / VAT'}, placeholder:'10-15 digits', hint:{ko:'국민번호 또는 VAT',ja:'国民番号またはVAT',en:'National ID or VAT Number'} },
+    MA: { label:{ko:'CIN / ICE',ja:'CIN/ICE',en:'CIN / ICE'}, placeholder:'CIN or 15-digit ICE', hint:{ko:'CIN 또는 ICE',ja:'CINまたはICE',en:'CIN or ICE'} },
+    SG: { label:{ko:'NRIC / UEN',ja:'NRIC/UEN',en:'NRIC / UEN'}, placeholder:'S1234567A', hint:{ko:'NRIC 또는 UEN',ja:'NRICまたはUEN',en:'NRIC or UEN'} }
+};
+function getTaxCfg(country) {
+    return TAX_ID_CONFIG[country] || { label:{ko:'세금 ID',ja:'税ID',en:'Tax ID / VAT / TIN'}, placeholder:'Tax ID', hint:{ko:'납세자식별번호',ja:'納税者識別番号',en:'Taxpayer identification number'} };
+}
+
+// ===== Categories =====
+const CATEGORIES = [
+    { id:'honeycomb', icon:'fa-cubes',
+      label:{ko:'허니컴보드',ja:'ハニカムボード',en:'Honeycomb Board',zh:'蜂窝板',ar:'لوح خلية النحل',es:'Panel de nido de abeja',de:'Wabenplatte',fr:'Panneau nid d\'abeille'},
+      items:[
+        {id:'wall',label:{ko:'가벽',ja:'仮壁',en:'Wall Panel',zh:'隔墙',ar:'جدار',es:'Panel de pared',de:'Wandpaneel',fr:'Cloison'}},
+        {id:'banner',label:{ko:'배너',ja:'バナー',en:'Banner',zh:'横幅',ar:'لافتة',es:'Banner',de:'Banner',fr:'Banniere'}},
+        {id:'standee',label:{ko:'등신대',ja:'等身大',en:'Standee',zh:'人形立牌',ar:'ستاندي',es:'Standee',de:'Aufsteller',fr:'Silhouette'}},
+        {id:'letter',label:{ko:'글씨스카시',ja:'切り文字',en:'Cut Letters',zh:'雕刻字',ar:'حروف مقطوعة',es:'Letras cortadas',de:'Buchstaben',fr:'Lettres decoupees'}},
+        {id:'furniture',label:{ko:'가구',ja:'家具',en:'Furniture',zh:'家具',ar:'أثاث',es:'Muebles',de:'Moebel',fr:'Mobilier'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'fabric-print', icon:'fa-shirt',
+      label:{ko:'패브릭 인쇄',ja:'ファブリック印刷',en:'Fabric Print',zh:'织物印刷',ar:'طباعة القماش',es:'Impresion en tela',de:'Stoffdruck',fr:'Impression tissu'},
+      items:[
+        {id:'backdrop',label:{ko:'백월/배경',ja:'バックドロップ',en:'Backdrop',zh:'背景墙',ar:'خلفية',es:'Fondo',de:'Hintergrund',fr:'Toile de fond'}},
+        {id:'curtain',label:{ko:'커튼/블라인드',ja:'カーテン/ブラインド',en:'Curtain/Blind',zh:'窗帘',ar:'ستارة',es:'Cortina',de:'Vorhang',fr:'Rideau'}},
+        {id:'flag',label:{ko:'깃발/배너',ja:'旗/バナー',en:'Flag/Banner',zh:'旗帜',ar:'علم',es:'Bandera',de:'Flagge',fr:'Drapeau'}},
+        {id:'tablecloth',label:{ko:'테이블보',ja:'テーブルクロス',en:'Tablecloth',zh:'桌布',ar:'مفرش طاولة',es:'Mantel',de:'Tischdecke',fr:'Nappe'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'paper-stand', icon:'fa-box-open',
+      label:{ko:'종이 스탠드',ja:'紙スタンド',en:'Paper/Cardboard Stand',zh:'纸质展架',ar:'حامل ورقي',es:'Expositor de carton',de:'Papieraufsteller',fr:'Presentoir carton'},
+      items:[
+        {id:'display-stand',label:{ko:'진열대',ja:'陳列台',en:'Display Stand',zh:'展示架',ar:'حامل عرض',es:'Expositor',de:'Displaystaender',fr:'Presentoir'}},
+        {id:'counter',label:{ko:'카운터',ja:'カウンター',en:'Counter',zh:'柜台',ar:'كاونتر',es:'Mostrador',de:'Theke',fr:'Comptoir'}},
+        {id:'shelf',label:{ko:'선반형',ja:'棚型',en:'Shelf Type',zh:'货架式',ar:'رف',es:'Estante',de:'Regal',fr:'Etagere'}},
+        {id:'floor-stand',label:{ko:'바닥형',ja:'フロア型',en:'Floor Stand',zh:'落地式',ar:'حامل أرضي',es:'Expositor de suelo',de:'Bodenaufsteller',fr:'Presentoir sol'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'foamex-print', icon:'fa-vector-square',
+      label:{ko:'포맥스 인쇄',ja:'フォーメックス印刷',en:'Foamex / PVC Print',zh:'PVC发泡板印刷',ar:'طباعة فومكس',es:'Impresion Foamex',de:'Foamex-Druck',fr:'Impression Foamex'},
+      items:[
+        {id:'sign',label:{ko:'간판',ja:'看板',en:'Sign',zh:'招牌',ar:'لافتة',es:'Letrero',de:'Schild',fr:'Enseigne'}},
+        {id:'board',label:{ko:'보드',ja:'ボード',en:'Board',zh:'板材',ar:'لوحة',es:'Tablero',de:'Tafel',fr:'Panneau'}},
+        {id:'cut-shape',label:{ko:'재단형',ja:'カット型',en:'Cut Shape',zh:'异形裁切',ar:'شكل مقطوع',es:'Forma cortada',de:'Formschnitt',fr:'Decoupe'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'foamboard-print', icon:'fa-clone',
+      label:{ko:'폼보드 인쇄',ja:'フォームボード印刷',en:'Foam Board Print',zh:'泡沫板印刷',ar:'طباعة لوح الفوم',es:'Impresion Foam Board',de:'Schaumstoffplatte',fr:'Impression Foam Board'},
+      items:[
+        {id:'foam-sign',label:{ko:'간판',ja:'看板',en:'Sign',zh:'招牌',ar:'لافتة',es:'Letrero',de:'Schild',fr:'Enseigne'}},
+        {id:'pop',label:{ko:'POP',ja:'POP',en:'POP Display',zh:'POP展示',ar:'POP',es:'POP',de:'POP',fr:'POP'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'acrylic-print', icon:'fa-gem',
+      label:{ko:'아크릴 인쇄',ja:'アクリル印刷',en:'Acrylic Print',zh:'亚克力印刷',ar:'طباعة أكريليك',es:'Impresion acrilica',de:'Acryldruck',fr:'Impression acrylique'},
+      items:[
+        {id:'sign',label:{ko:'간판',ja:'看板',en:'Sign',zh:'招牌',ar:'لافتة',es:'Letrero',de:'Schild',fr:'Enseigne'}},
+        {id:'nameplate',label:{ko:'명패',ja:'銘板',en:'Nameplate',zh:'铭牌',ar:'لوحة اسم',es:'Placa',de:'Namensschild',fr:'Plaque'}},
+        {id:'display',label:{ko:'디스플레이',ja:'ディスプレイ',en:'Display',zh:'展示架',ar:'عرض',es:'Display',de:'Display',fr:'Presentoir'}},
+        {id:'light-box',label:{ko:'라이트박스',ja:'ライトボックス',en:'Light Box',zh:'灯箱',ar:'صندوق إضاءة',es:'Caja de luz',de:'Leuchtkasten',fr:'Caisson lumineux'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'goods', icon:'fa-gift',
+      label:{ko:'굿즈',ja:'グッズ',en:'Promotional Goods',zh:'周边商品',ar:'منتجات ترويجية',es:'Productos promocionales',de:'Werbeartikel',fr:'Goodies'},
+      items:[
+        {id:'keyring',label:{ko:'키링',ja:'キーリング',en:'Keyring',zh:'钥匙扣',ar:'ميدالية مفاتيح',es:'Llavero',de:'Schluesselanhaenger',fr:'Porte-cles'}},
+        {id:'badge',label:{ko:'뱃지',ja:'バッジ',en:'Badge',zh:'徽章',ar:'شارة',es:'Insignia',de:'Abzeichen',fr:'Badge'}},
+        {id:'phone-case',label:{ko:'폰케이스',ja:'スマホケース',en:'Phone Case',zh:'手机壳',ar:'غلاف هاتف',es:'Funda',de:'Handyhuelle',fr:'Coque'}},
+        {id:'mug',label:{ko:'머그컵',ja:'マグカップ',en:'Mug',zh:'马克杯',ar:'كوب',es:'Taza',de:'Tasse',fr:'Mug'}},
+        {id:'tumbler',label:{ko:'텀블러',ja:'タンブラー',en:'Tumbler',zh:'保温杯',ar:'كوب حراري',es:'Vaso termico',de:'Thermobecher',fr:'Gobelet'}},
+        {id:'fan',label:{ko:'부채',ja:'うちわ',en:'Fan',zh:'扇子',ar:'مروحة',es:'Abanico',de:'Faecher',fr:'Eventail'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'biz-print', icon:'fa-print',
+      label:{ko:'인쇄물',ja:'印刷物',en:'Business Print',zh:'商业印刷',ar:'مطبوعات تجارية',es:'Impresion comercial',de:'Geschaeftsdruck',fr:'Impression commerciale'},
+      items:[
+        {id:'business-card',label:{ko:'명함',ja:'名刺',en:'Business Card',zh:'名片',ar:'بطاقة عمل',es:'Tarjeta de visita',de:'Visitenkarte',fr:'Carte de visite'}},
+        {id:'flyer',label:{ko:'전단지',ja:'チラシ',en:'Flyer',zh:'传单',ar:'نشرة',es:'Folleto',de:'Flyer',fr:'Flyer'}},
+        {id:'brochure',label:{ko:'브로슈어',ja:'パンフレット',en:'Brochure',zh:'宣传册',ar:'كتيب',es:'Folleto',de:'Broschuere',fr:'Brochure'}},
+        {id:'booklet',label:{ko:'책자',ja:'冊子',en:'Booklet',zh:'小册子',ar:'كتيب',es:'Librito',de:'Broschuerenheft',fr:'Livret'}},
+        {id:'poster',label:{ko:'포스터',ja:'ポスター',en:'Poster',zh:'海报',ar:'ملصق',es:'Poster',de:'Poster',fr:'Affiche'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'tshirt-print', icon:'fa-tshirt',
+      label:{ko:'의류 인쇄',ja:'衣料印刷',en:'Apparel / T-shirt Print',zh:'服装印刷',ar:'طباعة الملابس',es:'Impresion textil',de:'Textildruck',fr:'Impression textile'},
+      items:[
+        {id:'tshirt',label:{ko:'티셔츠',ja:'Tシャツ',en:'T-shirt',zh:'T恤',ar:'تي شيرت',es:'Camiseta',de:'T-Shirt',fr:'T-shirt'}},
+        {id:'hoodie',label:{ko:'후드',ja:'パーカー',en:'Hoodie',zh:'卫衣',ar:'هودي',es:'Sudadera',de:'Hoodie',fr:'Sweat'}},
+        {id:'uniform',label:{ko:'유니폼',ja:'ユニフォーム',en:'Uniform',zh:'制服',ar:'زي موحد',es:'Uniforme',de:'Uniform',fr:'Uniforme'}},
+        {id:'eco-bag',label:{ko:'에코백',ja:'エコバッグ',en:'Eco Bag',zh:'环保袋',ar:'حقيبة بيئية',es:'Bolsa ecologica',de:'Oeko-Tasche',fr:'Sac ecologique'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'banner-stand', icon:'fa-flag',
+      label:{ko:'배너 스탠드',ja:'バナースタンド',en:'Banner Stand',zh:'易拉宝/展架',ar:'حامل لافتات',es:'Soporte de banner',de:'Bannerstaender',fr:'Support de banniere'},
+      items:[
+        {id:'x-banner',label:{ko:'X배너',ja:'Xバナー',en:'X-Banner',zh:'X展架',ar:'X بانر',es:'X-Banner',de:'X-Banner',fr:'X-Banner'}},
+        {id:'roll-up',label:{ko:'롤업',ja:'ロールアップ',en:'Roll-up',zh:'易拉宝',ar:'رول أب',es:'Roll-up',de:'Roll-up',fr:'Roll-up'}},
+        {id:'a-frame',label:{ko:'A프레임',ja:'Aフレーム',en:'A-Frame',zh:'A型架',ar:'A فريم',es:'Caballete',de:'A-Rahmen',fr:'Chevalet'}},
+        {id:'flag-banner',label:{ko:'깃발배너',ja:'旗バナー',en:'Flag Banner',zh:'旗帜展架',ar:'بانر علم',es:'Bandera publicitaria',de:'Fahne',fr:'Oriflamme'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'standee', icon:'fa-person',
+      label:{ko:'등신대',ja:'等身大パネル',en:'Standee / Cut-out',zh:'人形立牌',ar:'مجسم',es:'Silueta',de:'Aufsteller',fr:'Silhouette'},
+      items:[
+        {id:'life-size',label:{ko:'등신대',ja:'等身大',en:'Life-size',zh:'等身大',ar:'بالحجم الطبيعي',es:'Tamano real',de:'Lebensgroesse',fr:'Taille reelle'}},
+        {id:'photo-zone',label:{ko:'포토존',ja:'フォトゾーン',en:'Photo Zone',zh:'拍照区',ar:'منطقة تصوير',es:'Zona de fotos',de:'Fotozone',fr:'Zone photo'}},
+        {id:'cut-out',label:{ko:'커팅형',ja:'カッティング型',en:'Cut-out',zh:'异形裁切',ar:'قص',es:'Recorte',de:'Ausschnitt',fr:'Decoupe'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]},
+    { id:'other', icon:'fa-ellipsis',
+      label:{ko:'기타 서비스',ja:'その他サービス',en:'Other Services',zh:'其他服务',ar:'خدمات أخرى',es:'Otros servicios',de:'Sonstige Dienste',fr:'Autres services'},
+      items:[
+        {id:'custom',label:{ko:'주문제작',ja:'オーダーメイド',en:'Custom Order',zh:'定制',ar:'طلب مخصص',es:'Pedido personalizado',de:'Sonderanfertigung',fr:'Sur mesure'}},
+        {id:'installation',label:{ko:'시공',ja:'施工',en:'Installation',zh:'安装施工',ar:'تركيب',es:'Instalacion',de:'Installation',fr:'Installation'}},
+        {id:'delivery',label:{ko:'배송',ja:'配送',en:'Delivery',zh:'配送',ar:'توصيل',es:'Entrega',de:'Lieferung',fr:'Livraison'}},
+        {id:'other',label:{ko:'기타',ja:'その他',en:'Other',zh:'其他',ar:'أخرى',es:'Otro',de:'Sonstiges',fr:'Autre'}}
+    ]}
+];
+
+// ===== State =====
+let currentUser = null;
+
+// ===== Render language selector =====
+function renderLangSelector() {
+    const langs = ['ko','ja','en','zh','ar','es','de','fr'];
+    const labels = {ko:'KO',ja:'JA',en:'EN',zh:'ZH',ar:'AR',es:'ES',de:'DE',fr:'FR'};
+    const el = document.getElementById('langSelector');
+    el.innerHTML = langs.map(l => {
+        const active = l === LANG ? ' active' : '';
+        const url = new URL(location.href);
+        url.searchParams.set('lang', l);
+        return `<a class="lang-btn${active}" href="${url.toString()}">${labels[l]}</a>`;
+    }).join('');
+}
+
+// ===== Render capabilities grid =====
+function renderCapabilities() {
+    const grid = document.getElementById('capGrid');
+    grid.innerHTML = CATEGORIES.map(cat => {
+        const catLabel = cat.label[LANG] || cat.label.en;
+        const subsHtml = cat.items.map(item => {
+            const itemLabel = item.label[LANG] || item.label.en;
+            return `<label class="cap-sub"><input type="checkbox" data-cat="${cat.id}" data-item="${item.id}"> ${itemLabel}</label>`;
+        }).join('');
+        return `<div class="cap-category" data-cat="${cat.id}">
+            <div class="cap-header" onclick="toggleCat(this)">
+                <input type="checkbox" onclick="event.stopPropagation();toggleCatCheck(this,'${cat.id}')">
+                <span class="cap-label"><i class="fas ${cat.icon}" style="color:#7c3aed;margin-right:4px"></i> ${catLabel}</span>
+                <i class="fas fa-chevron-down cap-toggle"></i>
+            </div>
+            <div class="cap-subs" id="subs_${cat.id}">${subsHtml}</div>
+        </div>`;
+    }).join('');
+}
+
+function toggleCat(header) {
+    const subs = header.nextElementSibling;
+    const toggle = header.querySelector('.cap-toggle');
+    subs.classList.toggle('show');
+    toggle.classList.toggle('open');
+    header.closest('.cap-category').classList.toggle('active', subs.classList.contains('show'));
+}
+
+function toggleCatCheck(cb, catId) {
+    const subs = document.getElementById('subs_' + catId);
+    const checks = subs.querySelectorAll('input[type="checkbox"]');
+    checks.forEach(c => c.checked = cb.checked);
+    if (cb.checked && !subs.classList.contains('show')) {
+        subs.classList.add('show');
+        cb.closest('.cap-header').querySelector('.cap-toggle').classList.add('open');
+        cb.closest('.cap-category').classList.add('active');
+    }
+}
+
+// ===== Country change =====
+function onCountryChange() {
+    const country = document.getElementById('fCountry').value;
+    // Tax ID label
+    const cfg = getTaxCfg(country);
+    document.getElementById('lblTaxId').innerHTML = (cfg.label[LANG] || cfg.label.en) + ' <span class="req">*</span>';
+    document.getElementById('fTaxId').placeholder = cfg.placeholder || '';
+    document.getElementById('taxHint').textContent = (cfg.hint[LANG] || cfg.hint.en || '');
+    // International fields
+    document.getElementById('intlFields').classList.toggle('show', country !== 'KR');
+}
+
+// ===== Populate country dropdown =====
+function populateCountries() {
+    const sel = document.getElementById('fCountry');
+    sel.innerHTML = COUNTRY_LIST.map(c => `<option value="${c.code}">${c.flag} ${c.label[LANG] || c.label.en}</option>`).join('');
+    // Default based on language
+    const defaults = {ko:'KR',ja:'JP',en:'US',zh:'CN',ar:'SA',es:'ES',de:'DE',fr:'FR'};
+    sel.value = defaults[LANG] || 'US';
+    onCountryChange();
+}
+
+// ===== Translate static elements =====
+function translatePage() {
+    document.title = t('page_title');
+    document.getElementById('pageTitle').textContent = t('page_title');
+    document.getElementById('pageSubtitle').textContent = t('page_subtitle');
+    document.getElementById('authTitle').textContent = t('auth_title');
+    document.getElementById('btnLogin').textContent = t('login');
+    document.getElementById('btnSignup').textContent = t('signup');
+    document.getElementById('btnLogout').textContent = t('logout');
+
+    document.getElementById('secCompany').textContent = t('sec_company');
+    document.getElementById('lblCompanyName').innerHTML = t('company_name') + ' <span class="req">*</span>';
+    document.getElementById('lblContactName').innerHTML = t('contact_name') + ' <span class="req">*</span>';
+    document.getElementById('lblCountry').innerHTML = t('country') + ' <span class="req">*</span>';
+    document.getElementById('lblCity').textContent = t('city');
+    document.getElementById('lblAddress').innerHTML = t('address') + ' <span class="req">*</span>';
+    document.getElementById('lblPhone').innerHTML = t('phone') + ' <span class="req">*</span>';
+    document.getElementById('lblEmail').innerHTML = t('email') + ' <span class="req">*</span>';
+    document.getElementById('lblWebsite').textContent = t('website');
+
+    document.getElementById('secCaps').textContent = t('sec_caps');
+    document.getElementById('lblCapsNote').textContent = t('caps_note');
+
+    document.getElementById('secTax').textContent = t('sec_tax');
+    document.getElementById('lblLegalName').textContent = t('legal_name');
+    document.getElementById('lblTaxType').textContent = t('tax_type');
+    document.getElementById('optPersonal').textContent = t('personal');
+    document.getElementById('optBusiness').textContent = t('business');
+    document.getElementById('lblBankName').textContent = t('bank_name');
+    document.getElementById('lblBankHolder').textContent = t('bank_holder');
+    document.getElementById('lblBankAccount').textContent = t('bank_account');
+    document.getElementById('lblBankAddr').textContent = t('bank_addr');
+    document.getElementById('lblPayoutCurrency').textContent = t('payout_currency');
+
+    document.getElementById('secAgree').textContent = t('sec_agree');
+    document.getElementById('lblAgree').textContent = t('agree_label');
+    document.getElementById('agreeDetail').textContent = t('agree_detail');
+
+    document.getElementById('btnSubmit').textContent = t('submit');
+    document.getElementById('successTitle').textContent = t('success_title');
+    document.getElementById('successMsg').textContent = t('success_msg');
+}
+
+// ===== Auth =====
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+        currentUser = session.user;
+        document.getElementById('authLoggedOut').style.display = 'none';
+        document.getElementById('authLoggedIn').style.display = 'block';
+        document.getElementById('userEmail').textContent = currentUser.email;
+        document.getElementById('fEmail').value = currentUser.email;
+        enableForm(true);
+    } else {
+        currentUser = null;
+        document.getElementById('authLoggedOut').style.display = 'block';
+        document.getElementById('authLoggedIn').style.display = 'none';
+        enableForm(false);
+    }
+}
+
+function enableForm(on) {
+    const cards = document.querySelectorAll('#regForm .form-card');
+    const btn = document.getElementById('btnSubmit');
+    cards.forEach(c => c.classList.toggle('disabled', !on));
+    btn.disabled = !on;
+    if (!on) {
+        document.getElementById('authError').style.display = 'block';
+        document.getElementById('authError').textContent = t('login_required');
+        document.getElementById('authError').style.color = '#64748b';
+    } else {
+        document.getElementById('authError').style.display = 'none';
+    }
+}
+
+async function doLogin() {
+    const email = document.getElementById('authEmail').value.trim();
+    const pw = document.getElementById('authPassword').value;
+    if (!email || !pw) return;
+    const errEl = document.getElementById('authError');
+    errEl.style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) {
+        errEl.textContent = error.message;
+        errEl.style.display = 'block';
+        errEl.style.color = '#ef4444';
+        return;
+    }
+    await checkAuth();
+}
+
+async function doSignup() {
+    const email = document.getElementById('authEmail').value.trim();
+    const pw = document.getElementById('authPassword').value;
+    if (!email || pw.length < 6) {
+        const errEl = document.getElementById('authError');
+        errEl.textContent = 'Email required, password min 6 characters';
+        errEl.style.display = 'block';
+        errEl.style.color = '#ef4444';
+        return;
+    }
+    const errEl = document.getElementById('authError');
+    errEl.style.display = 'none';
+    const { error } = await sb.auth.signUp({ email, password: pw });
+    if (error) {
+        errEl.textContent = error.message;
+        errEl.style.display = 'block';
+        errEl.style.color = '#ef4444';
+        return;
+    }
+    // Auto-login after signup
+    await sb.auth.signInWithPassword({ email, password: pw });
+    await checkAuth();
+}
+
+async function doLogout() {
+    await sb.auth.signOut();
+    currentUser = null;
+    document.getElementById('authLoggedOut').style.display = 'block';
+    document.getElementById('authLoggedIn').style.display = 'none';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
+    enableForm(false);
+}
+
+// ===== Collect capabilities =====
+function collectCapabilities() {
+    const caps = [];
+    CATEGORIES.forEach(cat => {
+        const checked = [];
+        const subs = document.querySelectorAll(`input[data-cat="${cat.id}"]:checked`);
+        subs.forEach(s => checked.push(s.dataset.item));
+        if (checked.length > 0) {
+            caps.push({ category: cat.id, items: checked });
+        }
+    });
+    return caps;
+}
+
+// ===== Submit =====
+async function doSubmit() {
+    if (!currentUser) return;
+
+    // Validate agreement
+    if (!document.getElementById('fAgree').checked) {
+        alert(t('error_agree'));
+        return;
+    }
+
+    // Validate required fields
+    const required = ['fCompanyName','fContactName','fAddress','fPhone','fEmail'];
+    for (const id of required) {
+        if (!document.getElementById(id).value.trim()) {
+            alert(t('error_required'));
+            document.getElementById(id).focus();
+            return;
+        }
+    }
+
+    // Validate at least one capability
+    const caps = collectCapabilities();
+    if (caps.length === 0) {
+        alert(t('error_caps'));
+        return;
+    }
+
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.textContent = t('submitting');
+
+    const payload = {
+        user_id: currentUser.id,
+        company_name: document.getElementById('fCompanyName').value.trim(),
+        country: document.getElementById('fCountry').value,
+        city: document.getElementById('fCity').value.trim() || null,
+        address: document.getElementById('fAddress').value.trim(),
+        contact_name: document.getElementById('fContactName').value.trim(),
+        phone: document.getElementById('fPhone').value.trim(),
+        email: document.getElementById('fEmail').value.trim(),
+        website: document.getElementById('fWebsite').value.trim() || null,
+        capabilities: caps,
+        capabilities_note: document.getElementById('fCapsNote').value.trim() || null,
+        legal_name: document.getElementById('fLegalName').value.trim() || null,
+        tax_id_type: document.getElementById('fTaxType').value,
+        tax_id: document.getElementById('fTaxId').value.trim() || null,
+        bank_name: document.getElementById('fBankName').value.trim() || null,
+        bank_holder: document.getElementById('fBankHolder').value.trim() || null,
+        bank_account: document.getElementById('fBankAccount').value.trim() || null,
+        swift_bic: document.getElementById('fSwift').value.trim() || null,
+        iban: document.getElementById('fIban').value.trim() || null,
+        routing_number: document.getElementById('fRouting').value.trim() || null,
+        bank_address: document.getElementById('fBankAddr').value.trim() || null,
+        payout_currency: document.getElementById('fPayoutCurrency').value,
+        agreed_5pct: true
+    };
+
+    const { error } = await sb.from('production_partners').insert(payload);
+    if (error) {
+        alert('Error: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = t('submit');
+        return;
+    }
+
+    // Show success
+    document.getElementById('regForm').style.display = 'none';
+    document.getElementById('successCard').style.display = 'block';
+}
+
+// ===== Init =====
+(async function init() {
+    renderLangSelector();
+    translatePage();
+    renderCapabilities();
+    populateCountries();
+    await checkAuth();
+    document.body.classList.add('ready');
+})();
+</script>
+</body>
+</html>
