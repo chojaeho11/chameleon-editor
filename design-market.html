@@ -3645,11 +3645,49 @@ function escHtml(str) {
 // Phase 3a: Payment / Completion / Withdrawal
 // ═══════════════════════════════════════════════════════════════
 
-// Fee model (designer receives 66% of gross)
-const FEE_VAT_PCT      = 10;   // 부가세
-const FEE_CARD_PCT     = 4;    // 카드사 수수료
-const FEE_PLATFORM_PCT = 20;   // 플랫폼 수수료
-const FEE_NET_PCT      = 100 - FEE_VAT_PCT - FEE_CARD_PCT - FEE_PLATFORM_PCT; // 66
+// ═══════════════════════════════════════════════════════════════
+// Fee model (industry-lowest 5% platform fee, designer ~90% take-home)
+// Two payment routes — KR clients go through TossPay (Korean entity,
+// VAT applies); international clients go through Stripe (US LLC,
+// no VAT on service sales).
+// Company real net is always 5% of gross.
+// ═══════════════════════════════════════════════════════════════
+const FEE_MODELS = {
+    KR: {
+        pg_name:          'TossPay',
+        pg_fee_pct:       2.9,   // TossPay average card rate
+        platform_fee_pct: 5.5,   // includes 10% Korean VAT on the 5% real commission
+        net_pct:          91.6,  // designer take-home
+        company_net_pct:  5,     // company actual net after VAT
+        vat_applicable:   true,
+        route_label:      '🇰🇷 한국 / Toss'
+    },
+    INTL: {
+        pg_name:          'Stripe',
+        pg_fee_pct:       5.0,   // international card + FX (average)
+        platform_fee_pct: 5.0,   // US LLC, no VAT on services
+        net_pct:          90.0,
+        company_net_pct:  5,
+        vat_applicable:   false,
+        route_label:      '🌍 International / Stripe'
+    }
+};
+
+// Which fee route applies to the current viewer.
+// Defaults based on detected country so the wallet/withdraw UI
+// shows matching numbers even before the designer profile loads.
+function _feeRoute() {
+    const c = (designerProfile && designerProfile.country) || detectDefaultCountry() || COUNTRY_FILTER || 'KR';
+    return c === 'KR' ? FEE_MODELS.KR : FEE_MODELS.INTL;
+}
+
+// Back-compat shims — some older call sites still reference these
+// constants. We point them at the KR defaults so the math stays sane,
+// but all new UI should use `_feeRoute()` directly.
+const FEE_VAT_PCT      = 10;
+const FEE_CARD_PCT     = 4;
+const FEE_PLATFORM_PCT = 5;   // NEW — was 20
+const FEE_NET_PCT      = 90;  // NEW — was 66 (round figure for bid card hints)
 
 // Platform bank info (display only — customer transfers manually)
 const PLATFORM_BANK_INFO = {
@@ -3937,35 +3975,71 @@ function _p3Label(key) {
     return (L[LANG] || L.en)[key] || L.en[key] || key;
 }
 
-// 수수료 분해 계산
-function calcFeeBreakdown(gross) {
-    const vat = Math.floor(gross * FEE_VAT_PCT / 100);
-    const card = Math.floor(gross * FEE_CARD_PCT / 100);
-    const plat = Math.floor(gross * FEE_PLATFORM_PCT / 100);
-    const net = gross - vat - card - plat;
-    return { gross, vat, card, plat, net };
+// 수수료 분해 계산 — route-aware
+function calcFeeBreakdown(gross, routeOverride) {
+    const r = routeOverride || _feeRoute();
+    const pg    = Math.floor(gross * r.pg_fee_pct / 100);
+    const plat  = Math.floor(gross * r.platform_fee_pct / 100);
+    const net   = gross - pg - plat;
+    // Legacy fields kept so old call sites don't break
+    const vat   = r.vat_applicable ? Math.floor(plat * 10 / 110) : 0;
+    const card  = pg;
+    return { gross, vat, card, plat, net, route: r };
 }
 
 // 재사용 가능한 수수료 안내 박스 HTML
+// Designer-facing: emphasizes "5% 수수료" + breakdown + "약 90% 실수령"
 function renderFeeBreakdownBox(opts) {
-    const { gross, compact, showNote } = opts || {};
-    const b = gross ? calcFeeBreakdown(gross) : null;
+    const { gross, compact, showNote, showComparison } = opts || {};
+    const r = _feeRoute();
+    const b = gross ? calcFeeBreakdown(gross, r) : null;
+
+    // Headline: "플랫폼 수수료 단 5%" + net %
+    const head5 = LANG==='ko'?'플랫폼 수수료 단':LANG==='ja'?'プラットフォーム手数料 わずか':LANG==='zh'?'平台手续费仅':LANG==='ar'?'عمولة المنصة فقط':LANG==='es'?'Comisión solo':LANG==='de'?'Plattformgebühr nur':LANG==='fr'?'Commission seulement':'Platform fee only';
+    const headNet = LANG==='ko'?'디자이너 실수령':LANG==='ja'?'デザイナー手取り':LANG==='zh'?'设计师实收':LANG==='ar'?'المصمم يتلقى':LANG==='es'?'Diseñador recibe':LANG==='de'?'Designer erhält':LANG==='fr'?'Le designer reçoit':'Designer receives';
+    const inclPg = LANG==='ko'?'결제수수료·세금 별도':LANG==='ja'?'決済手数料・税金は別途':LANG==='zh'?'支付手续费和税费另计':LANG==='ar'?'رسوم الدفع والضرائب منفصلة':LANG==='es'?'Comisión de pago y impuestos aparte':LANG==='de'?'Zahlungsgebühr und Steuern separat':LANG==='fr'?'Frais de paiement et taxes séparés':'payment fee & tax separate';
+
+    // Amount-specific rows (only when gross is known)
     const rows = b ? `
-        <div class="fb-row"><span>${_p3Label('fee_vat')} (${FEE_VAT_PCT}%)</span><span>-${formatPrice(b.vat)}</span></div>
-        <div class="fb-row"><span>${_p3Label('fee_card')} (${FEE_CARD_PCT}%)</span><span>-${formatPrice(b.card)}</span></div>
-        <div class="fb-row"><span>${_p3Label('fee_platform')} (${FEE_PLATFORM_PCT}%)</span><span>-${formatPrice(b.plat)}</span></div>
-        <div class="fb-row fb-net"><span>${_p3Label('fee_net')} (${FEE_NET_PCT}%)</span><span>${formatPrice(b.net)}</span></div>
+        <div class="fb-row"><span><i class="fa-solid fa-percent" style="color:#64748b;"></i> ${r.pg_name} (${r.pg_fee_pct}%)</span><span>-${formatPrice(b.pg || b.card)}</span></div>
+        <div class="fb-row"><span><i class="fa-solid fa-building" style="color:#64748b;"></i> ${_p3Label('fee_platform')} (${r.platform_fee_pct}%)</span><span>-${formatPrice(b.plat)}</span></div>
+        <div class="fb-row fb-net"><span><i class="fa-solid fa-wallet" style="color:#16a34a;"></i> ${_p3Label('fee_net')} (${r.net_pct}%)</span><span>${formatPrice(b.net)}</span></div>
     ` : `
-        <div class="fb-row"><span>${_p3Label('fee_vat')}</span><span>${FEE_VAT_PCT}%</span></div>
-        <div class="fb-row"><span>${_p3Label('fee_card')}</span><span>${FEE_CARD_PCT}%</span></div>
-        <div class="fb-row"><span>${_p3Label('fee_platform')}</span><span>${FEE_PLATFORM_PCT}%</span></div>
-        <div class="fb-row fb-net"><span>${_p3Label('fee_net')}</span><span>${FEE_NET_PCT}%</span></div>
+        <div class="fb-row"><span><i class="fa-solid fa-percent" style="color:#64748b;"></i> ${r.pg_name}</span><span>${r.pg_fee_pct}%</span></div>
+        <div class="fb-row"><span><i class="fa-solid fa-building" style="color:#64748b;"></i> ${_p3Label('fee_platform')}</span><span>${r.platform_fee_pct}%</span></div>
+        <div class="fb-row fb-net"><span><i class="fa-solid fa-wallet" style="color:#16a34a;"></i> ${_p3Label('fee_net')}</span><span>~${r.net_pct}%</span></div>
     `;
+
+    // Competitive comparison (optional, shown on wallet page)
+    let compareHtml = '';
+    if (showComparison) {
+        const title = LANG==='ko'?'업계 수수료 비교':LANG==='ja'?'業界手数料比較':LANG==='zh'?'行业手续费对比':LANG==='ar'?'مقارنة العمولات':LANG==='es'?'Comparación de comisiones':LANG==='de'?'Gebührenvergleich':LANG==='fr'?'Comparaison des commissions':'Industry fee comparison';
+        compareHtml = `
+        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0;">
+            <div style="font-size:11px;font-weight:800;color:#475569;margin-bottom:6px;">📊 ${title}</div>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:11px;">
+                <div style="color:#7c3aed;font-weight:800;">🦎 Chameleon</div><div style="color:#16a34a;font-weight:800;text-align:right;">5%</div>
+                <div style="color:#64748b;">Upwork</div><div style="text-align:right;color:#64748b;">10%</div>
+                <div style="color:#64748b;">99designs</div><div style="text-align:right;color:#64748b;">15%</div>
+                <div style="color:#64748b;">Fiverr</div><div style="text-align:right;color:#64748b;">20%</div>
+                <div style="color:#64748b;">크몽 Kmong</div><div style="text-align:right;color:#64748b;">20%</div>
+            </div>
+        </div>`;
+    }
+
     return `
     <div class="fee-box ${compact ? 'compact' : ''}">
-        <div class="fb-title"><i class="fa-solid fa-circle-info"></i> ${_p3Label('fee_title')}</div>
-        ${showNote !== false ? `<div class="fb-desc">${_p3Label('fee_desc')}</div>` : ''}
+        <div class="fb-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+            <span><i class="fa-solid fa-circle-info"></i> ${_p3Label('fee_title')}</span>
+            <span style="font-size:10px;color:#94a3b8;font-weight:600;">${r.route_label}</span>
+        </div>
+        <div style="padding:10px 12px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #c4b5fd;border-radius:10px;margin:8px 0 10px;">
+            <div style="font-size:12px;color:#6d28d9;font-weight:700;">${head5} <b style="font-size:16px;color:#7c3aed;">5%</b> <span style="font-size:10px;color:#94a3b8;font-weight:500;">(${inclPg})</span></div>
+            <div style="font-size:11px;color:#16a34a;font-weight:700;margin-top:2px;">${headNet}: <b>~${r.net_pct}%</b></div>
+        </div>
+        ${showNote !== false ? `<div class="fb-desc" style="font-size:11px;color:#64748b;margin-bottom:6px;">${_p3Label('fee_desc')}</div>` : ''}
         <div class="fb-rows">${rows}</div>
+        ${compareHtml}
     </div>`;
 }
 
@@ -4223,7 +4297,7 @@ async function renderWalletSection(containerId) {
                     <i class="fa-solid fa-id-card"></i> ${_p3Label('tax_profile_btn')}
                 </button>
             </div>
-            ${renderFeeBreakdownBox({ compact: true, showNote: false })}
+            ${renderFeeBreakdownBox({ compact: true, showNote: false, showComparison: true })}
             <div id="withdrawHistory" style="margin-top:14px;"></div>
         </div>
     `;
