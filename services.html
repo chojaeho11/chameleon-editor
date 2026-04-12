@@ -230,222 +230,107 @@ async function aiSearch() {
     if (!q) return;
     const ql = q.toLowerCase();
 
-    // Add user bubble + clear input immediately
     addBubble(q, 'user');
     input.value = '';
     input.focus();
     const loadingBubble = addLoading();
 
-    // ── Smart intent detection ──
-    // 1. Detect which service the user wants (intent)
-    // 2. Detect location words (city filter)
-    // 3. Only search the relevant table(s)
-    const INTENT_KEYWORDS = {
-        jobs: ['알바','시급','아르바이트','일자리','구인','파트타임','part-time','job','work','バイト','アルバイト','求人','兼职','招聘'],
-        realty: ['부동산','전세','월세','매매','원룸','아파트','상가','집','오피스텔','rent','apartment','studio','不動産','賃貸','マンション','房产','租房'],
-        expert: ['전문가','이사','인테리어','레슨','수리','청소','과외','expert','moving','lesson','repair','専門家','引越し','レッスン','专家'],
-        social: ['만남','데이트','소개팅','매칭','dating','meetup','出会い','约会'],
-        community: ['모임','동호회','커뮤니티','동네','취미','group','community','hobby','コミュニティ','グループ','社区'],
-        market: ['중고','거래','팔다','판매','secondhand','used','sell','中古','売','二手','买卖']
-    };
-    const CITY_KEYWORDS = ['서울','부산','인천','대전','대구','광주','울산','제주','강남','이태원','종로','해운대','東京','渋谷','新宿','大阪','名古屋','福岡','New York','Brooklyn','Chicago','LA','Los Angeles','San Francisco','Austin','Houston'];
-
-    const words = q.split(/\s+/).filter(w => w.length >= 1);
-
-    // Detect intent
-    let intent = null;
-    for (const [svc, kws] of Object.entries(INTENT_KEYWORDS)) {
-        if (kws.some(k => ql.includes(k))) { intent = svc; break; }
-    }
-
-    // Detect city
-    let cityFilter = null;
-    for (const city of CITY_KEYWORDS) {
-        if (ql.includes(city.toLowerCase())) { cityFilter = city; break; }
-    }
-
-    // Content keywords = words minus city
-    const contentWords = words.filter(w => !cityFilter || w.toLowerCase() !== cityFilter.toLowerCase());
-    const contentPtn = contentWords.map(w => `%${w}%`);
-
     try {
-        let jobs = {data:[]}, realty = {data:[]}, experts = {data:[]}, groups = {data:[]}, items = {data:[]};
+        // Step 1: Quick DB search for context (broad, all tables)
+        const dbContext = await gatherDbContext(q);
 
-        // Only search relevant tables based on intent (or all if no intent detected)
-        const searchAll = !intent;
+        // Step 2: Send to Claude with DB context for natural response
+        const reply = await askClaudeWithContext(q, dbContext);
 
-        if (intent === 'jobs' || searchAll) {
-            let jq = sb.from('community_jobs').select('id,title,hourly_rate,location_city,country,job_type').eq('status','active');
-            if (cityFilter) jq = jq.ilike('location_city', `%${cityFilter}%`);
-            if (contentWords.length > 0) jq = jq.or(contentPtn.flatMap(p => [`title.ilike.${p}`,`description.ilike.${p}`]).join(','));
-            jobs = await jq.limit(5);
-        }
-        if (intent === 'realty' || searchAll) {
-            let rq = sb.from('community_realty').select('id,title,listing_type,city,country,deposit,monthly_rent,price,images').eq('status','active');
-            if (cityFilter) rq = rq.ilike('city', `%${cityFilter}%`);
-            if (contentWords.length > 0) rq = rq.or(contentPtn.flatMap(p => [`title.ilike.${p}`,`description.ilike.${p}`]).join(','));
-            realty = await rq.limit(5);
-        }
-        if (intent === 'expert' || searchAll) {
-            let eq = sb.from('community_experts').select('id,display_name,category,city,country,hourly_rate,rating,photo_url').eq('status','active');
-            if (cityFilter) eq = eq.ilike('city', `%${cityFilter}%`);
-            if (contentWords.length > 0) eq = eq.or(contentPtn.flatMap(p => [`display_name.ilike.${p}`,`category.ilike.${p}`,`description.ilike.${p}`]).join(','));
-            experts = await eq.limit(5);
-        }
-        if (intent === 'community' || searchAll) {
-            let gq = sb.from('community_groups').select('id,name,category,city,country,member_count,image_url');
-            if (cityFilter) gq = gq.ilike('city', `%${cityFilter}%`);
-            if (contentWords.length > 0) gq = gq.or(contentPtn.flatMap(p => [`name.ilike.${p}`,`category.ilike.${p}`,`description.ilike.${p}`]).join(','));
-            groups = await gq.limit(5);
-        }
-        if (intent === 'market' || searchAll) {
-            let mq = sb.from('community_secondhand').select('id,title,price,category,condition,city,country,images,status');
-            if (cityFilter) mq = mq.ilike('city', `%${cityFilter}%`);
-            if (contentWords.length > 0) mq = mq.or(contentPtn.flatMap(p => [`title.ilike.${p}`,`category.ilike.${p}`,`description.ilike.${p}`]).join(','));
-            items = await mq.limit(5);
-        }
-
-        let html = '';
-        const sections = [
-            { icon:'⏰', label:'알바', data: jobs.data, color:'#d97706', url:'/jobs',
-              render: r => `<b>${r.title}</b> · ${r.location_city||''} · ${(r.hourly_rate||0).toLocaleString()}${r.country==='KR'?'원':r.country==='JP'?'円':'$/hr'}` },
-            { icon:'🏠', label:'부동산', data: realty.data, color:'#0891b2', url:'/realty',
-              render: r => `<b>${r.title}</b> · ${r.city||''}${r.monthly_rent?' · '+(r.monthly_rent).toLocaleString():''}` },
-            { icon:'🔧', label:'전문가', data: experts.data, color:'#6366f1', url:'/experts',
-              render: r => `<b>${r.display_name}</b> · ${r.category||''} · ⭐ ${r.rating||0}` },
-            { icon:'🏘️', label:'커뮤니티', data: groups.data, color:'#14b8a6', url:'/community',
-              render: r => `<b>${r.name}</b> · 👥 ${r.member_count||1}명` },
-            { icon:'🛍️', label:'중고거래', data: items.data, color:'#f59e0b', url:'/market',
-              render: r => `<b>${r.title}</b> · ${(r.price||0).toLocaleString()}${r.country==='KR'?'원':r.country==='JP'?'円':'$'} · ${r.status==='sold'?'거래완료':r.status==='reserved'?'예약중':'판매중'}` }
-        ];
-
-        let totalResults = 0;
-        const foundSections = [];
-        for (const sec of sections) {
-            if (!sec.data || sec.data.length === 0) continue;
-            totalResults += sec.data.length;
-            foundSections.push(sec);
-        }
-
-        if (totalResults > 0) {
-            // Natural AI-style intro
-            const greetings = {
-                ko: [
-                    `"${q}" 검색 결과를 찾았어요! 총 ${totalResults}건이 있습니다.`,
-                    `${q}에 대해 ${totalResults}개의 결과가 있네요! 아래에서 확인해보세요.`,
-                    `좋은 소식이에요! "${q}" 관련 ${totalResults}건을 찾았습니다.`
-                ],
-                ja: [`「${q}」で${totalResults}件見つかりました！`],
-                en: [`Found ${totalResults} results for "${q}"! Check them out below.`],
-                zh: [`找到了${totalResults}条"${q}"的结果！`]
-            };
-            const msgs = greetings[LANG] || greetings.ko;
-            const intro = msgs[Math.floor(Math.random() * msgs.length)];
-
-            html = `<div style="margin-bottom:10px;">${intro}</div>`;
-
-            for (const sec of foundSections) {
-                // Natural section intro
-                const secIntros = {
-                    '알바': {ko:`⏰ ${sec.data.length}개의 알바 자리가 있어요`,ja:`⏰ ${sec.data.length}件のアルバイトがあります`,en:`⏰ ${sec.data.length} job(s) found`},
-                    '부동산': {ko:`🏠 ${sec.data.length}개의 매물을 찾았어요`,ja:`🏠 ${sec.data.length}件の物件を見つけました`,en:`🏠 ${sec.data.length} listing(s) found`},
-                    '전문가': {ko:`🔧 ${sec.data.length}명의 전문가가 있어요`,ja:`🔧 ${sec.data.length}人の専門家がいます`,en:`🔧 ${sec.data.length} expert(s) found`},
-                    '커뮤니티': {ko:`🏘️ ${sec.data.length}개의 모임을 찾았어요`,ja:`🏘️ ${sec.data.length}件のグループがあります`,en:`🏘️ ${sec.data.length} group(s) found`},
-                    '중고거래': {ko:`🛍️ ${sec.data.length}개의 매물이 있어요`,ja:`🛍️ ${sec.data.length}件の商品があります`,en:`🛍️ ${sec.data.length} item(s) found`}
-                };
-                const si = secIntros[sec.label] || {};
-                html += `<div style="font-size:13px;font-weight:700;color:${sec.color};margin:12px 0 8px;">${si[LANG]||si.ko||sec.label}</div>`;
-                for (const r of sec.data) {
-                    html += `<a href="${sec.url}" target="_blank" style="display:block;padding:12px 14px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:12px;margin-bottom:6px;font-size:13px;color:#334155;line-height:1.5;text-decoration:none;transition:all .15s;" onmouseover="this.style.background='#f5f3ff';this.style.borderColor='#c4b5fd'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9'">
-                        ${sec.render(r)}
-                    </a>`;
-                }
-            }
-            html += `<div style="text-align:center;margin-top:14px;font-size:12px;color:#94a3b8;">다른 질문이 있으시면 편하게 물어보세요 😊</div>`;
-        }
-
-        if (totalResults === 0) {
-            // No DB results — try keyword routing first
-            const matches = [];
-            for (const [svcId, keywords] of Object.entries(AI_KEYWORDS)) {
-                if (keywords.some(k => ql.includes(k))) {
-                    const svc = SERVICES.find(s => s.id === svcId);
-                    if (svc) matches.push(svc);
-                }
-            }
-            if (matches.length > 0) {
-                html = matches.map(s => `
-                    <a href="${s.url}" target="_blank" style="display:flex;align-items:center;gap:14px;padding:14px;background:${s.bg};border:1px solid ${s.color}30;border-radius:12px;text-decoration:none;color:#1e293b;margin-bottom:8px;">
-                        <span style="font-size:28px;">${s.icon}</span>
-                        <div style="flex:1;"><div style="font-size:14px;font-weight:800;">${s.name[LANG]||s.name.ko}</div><div style="font-size:11px;color:#64748b;">${s.desc[LANG]||s.desc.ko}</div></div>
-                        <i class="fa-solid fa-arrow-right" style="color:${s.color};"></i>
-                    </a>
-                `).join('');
-            } else {
-                // No keyword match either — ask Claude AI
-                html = await askClaude(q);
-            }
-        } else {
-            html = `<div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">📋 "${q}" 검색 결과 ${totalResults}건</div>` + html;
-        }
-
-        // Remove loading bubble and add result
         loadingBubble.remove();
-        addBubble(html, 'ai');
+        addBubble(reply, 'ai');
     } catch (e) {
         console.error('[aiSearch]', e);
         loadingBubble.remove();
-        addBubble(`오류가 발생했어요: ${e.message}`, 'ai');
+        addBubble('죄송합니다. 오류가 발생했어요: ' + e.message, 'ai');
     }
 }
 
-// ── Claude AI chat ──
-const AI_API = 'https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/product-advisor';
-const AI_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-let chatHistory = [];
+// Gather DB results as text context for Claude
+async function gatherDbContext(q) {
 
-async function askClaude(msg) {
+    const words = q.split(/\s+/).filter(w => w.length >= 1);
+    const ptn = words.map(w => `%${w}%`);
+    const mkOr = (cols) => ptn.flatMap(p => cols.map(c => `${c}.ilike.${p}`)).join(',');
+
+    const [jobs, realty, experts, groups, items] = await Promise.all([
+        ptn.length ? sb.from('community_jobs').select('title,hourly_rate,location_city,country').or(mkOr(['title','description','location_city'])).eq('status','active').limit(5) : {data:[]},
+        ptn.length ? sb.from('community_realty').select('title,listing_type,city,country,deposit,monthly_rent,price').or(mkOr(['title','city','address'])).eq('status','active').limit(5) : {data:[]},
+        ptn.length ? sb.from('community_experts').select('display_name,category,city,country,hourly_rate,rating').or(mkOr(['display_name','category','city','description'])).eq('status','active').limit(5) : {data:[]},
+        ptn.length ? sb.from('community_groups').select('name,category,city,country,member_count').or(mkOr(['name','category','city','description'])).limit(5) : {data:[]},
+        ptn.length ? sb.from('community_secondhand').select('title,price,category,condition,city,country,status').or(mkOr(['title','category','city','description'])).limit(5) : {data:[]}
+    ]);
+
+    let context = '';
+    if (jobs.data?.length) context += '\n[알바/Jobs]\n' + jobs.data.map(r => `- ${r.title} | ${r.location_city} | ${r.hourly_rate}${r.country==='KR'?'원':r.country==='JP'?'円':'$/hr'}`).join('\n');
+    if (realty.data?.length) context += '\n[부동산/Realty]\n' + realty.data.map(r => `- ${r.title} | ${r.city} | ${r.listing_type} | ${r.deposit||r.price||0}/${r.monthly_rent||0}`).join('\n');
+    if (experts.data?.length) context += '\n[전문가/Experts]\n' + experts.data.map(r => `- ${r.display_name} | ${r.category} | ${r.city} | ⭐${r.rating}`).join('\n');
+    if (groups.data?.length) context += '\n[커뮤니티/Groups]\n' + groups.data.map(r => `- ${r.name} | ${r.category} | ${r.city} | ${r.member_count}명`).join('\n');
+    if (items.data?.length) context += '\n[중고거래/Secondhand]\n' + items.data.map(r => `- ${r.title} | ${r.price}${r.country==='KR'?'원':r.country==='JP'?'円':'$'} | ${r.city} | ${r.status}`).join('\n');
+
+    return context || '(검색 결과 없음)';
+}
+
+async function askClaudeWithContext(msg, dbContext) {
     chatHistory.push({ role: 'user', content: msg });
     if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
-    try {
-        const sysPrompt = {
-            role: 'system',
-            content: `You are the AI assistant for Chameleon Services, a platform that connects people with 8 services:
-1. Design Market (디자인 마켓) — hire designers → /design-market
-2. Print Partners (출력 파트너) — register as production partner → /partner-register
-3. Part-time Jobs (타임 알바) — find/post jobs → /jobs
-4. Real Estate (부동산) — rent/buy/sell properties → /realty
-5. Expert Matching (전문가 매칭) — find experts for moving, lessons, repair → /experts
-6. Dating & Social (만남·소셜) — meet new people → /dating
-7. Local Community (지역 커뮤니티) — join local groups → /community
-8. Secondhand Market (중고거래) — buy/sell used items → /market
 
-Rules:
-- Respond in the same language the user writes in (Korean, Japanese, English, etc.)
-- Keep responses short (2-4 sentences max)
-- If the user asks about a service, include the relevant link
-- For general chat (greetings, questions, humor), be friendly and helpful
-- Always mention that all services are FREE (수수료 5% only when platform handles money)
-- You're helpful, witty, and concise`
-        };
-        const res = await fetch(AI_API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AI_KEY, 'apikey': AI_KEY },
-            body: JSON.stringify({
-                message: msg,
-                lang: LANG === 'ko' ? 'kr' : LANG,
-                conversation_history: [sysPrompt, ...chatHistory.slice(-10)]
-            })
-        });
-        if (!res.ok) throw new Error('API ' + res.status);
-        const data = await res.json();
-        const reply = data.chat_message || data.summary || '죄송합니다. 다시 시도해주세요.';
-        chatHistory.push({ role: 'assistant', content: reply });
-        return reply.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-    } catch (e) {
-        console.error('[askClaude]', e);
-        return `AI 응답 오류: ${e.message}`;
-    }
+    const sysPrompt = {
+        role: 'system',
+        content: `You are a friendly AI concierge for Chameleon Services platform. You help users find jobs, apartments, experts, dates, community groups, and secondhand items.
+
+AVAILABLE SERVICES & LINKS:
+- 🎨 Design Market: /design-market
+- 🏭 Print Partners: /partner-register
+- ⏰ Part-time Jobs: /jobs
+- 🏠 Real Estate: /realty
+- 🔧 Expert Matching: /experts
+- 💕 Dating & Social: /dating
+- 🏘️ Local Community: /community
+- 🛍️ Secondhand Market: /market
+
+DATABASE SEARCH RESULTS FOR THIS QUERY:
+${dbContext}
+
+RULES:
+1. Respond in the SAME LANGUAGE the user writes in
+2. Be conversational, warm, and helpful (like a friend, not a robot)
+3. If DB results exist, naturally mention them: "서울에서 3개의 알바를 찾았어요!" then list them briefly
+4. For each result, include a link to the relevant service page
+5. If the user asks about something NOT in the results, suggest which service to check
+6. For general chat (greetings, jokes, life advice), respond naturally — you're a real conversational AI
+7. Keep responses concise (3-6 sentences for search results, 1-3 for chat)
+8. Use the actual data from DB results — don't make up listings
+9. If no DB results, don't say "검색 결과가 없습니다" robotically — say something like "아직 등록된 게 없네요, 직접 등록해보시겠어요?" and link to the service
+10. All services are FREE to use. Only 5% fee when platform handles money.
+11. Format links as: [서비스명](/url) — they will be rendered as clickable`
+    };
+
+    const res = await fetch(AI_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AI_KEY, 'apikey': AI_KEY },
+        body: JSON.stringify({
+            message: msg,
+            lang: LANG === 'ko' ? 'kr' : LANG,
+            conversation_history: [sysPrompt, ...chatHistory.slice(-10)]
+        })
+    });
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data = await res.json();
+    let reply = data.chat_message || data.summary || '죄송합니다. 다시 시도해주세요.';
+    chatHistory.push({ role: 'assistant', content: reply });
+
+    // Convert markdown-style links [text](/url) to clickable HTML
+    reply = reply.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#7c3aed;font-weight:700;text-decoration:underline;">$1</a>');
+    // Convert newlines to <br>
+    reply = reply.replace(/\n/g, '<br>');
+
+    return reply;
 }
 
 // ── Quick chips ──
