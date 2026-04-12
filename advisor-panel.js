@@ -389,8 +389,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label_short: '최저 수수료',
             // ── Partner/Production network banner (right) ──
             partner_title: '출력·시공업체인가요?',
-            partner_sub: '고객과 연결해 드립니다.',
-            partner_desc: '제작 및 시공이 가능한 품목을 등록<br><br>고객과 가장 가까운 업체로 자동 연결<br><br>카멜레온이 자재까지 납품합니다',
+            partner_sub: '가까운 고객과 출력업체를 연결합니다.<br>제작 가능한 품목을 등록하세요.',
+            partner_desc: '',
             partner_cta: '파트너 등록'
         },
         ja: {
@@ -405,8 +405,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label: '業界最安手数料',
             pitch_label_short: '最安手数料',
             partner_title: '印刷·施工業者ですか？',
-            partner_sub: 'お客様とおつなぎします。',
-            partner_desc: '制作·施工可能な品目を登録<br><br>最寄りの業者に自動連携<br><br>カメレオンが資材までお届け',
+            partner_sub: '近くのお客様と印刷業者をつなぎます。<br>製作可能な品目を登録してください。',
+            partner_desc: '',
             partner_cta: 'パートナー登録'
         },
         en: {
@@ -421,8 +421,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label: 'INDUSTRY-LOWEST FEE',
             pitch_label_short: 'LOWEST FEE',
             partner_title: 'Print or Install Company?',
-            partner_sub: 'We connect you with clients.',
-            partner_desc: 'Register the items you can produce or install<br><br>Auto-matched to the nearest client<br><br>Chameleon even supplies the materials',
+            partner_sub: 'We connect nearby clients with print companies.<br>Register the items you can produce.',
+            partner_desc: '',
             partner_cta: 'Join as Partner'
         },
         zh: {
@@ -437,8 +437,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label: '业界最低手续费',
             pitch_label_short: '最低手续费',
             partner_title: '印刷·施工企业？',
-            partner_sub: '为您对接客户。',
-            partner_desc: '注册可制作或施工的品类<br><br>自动匹配最近的客户<br><br>卡梅隆还提供材料供应',
+            partner_sub: '为附近客户与印刷企业牵线搭桥。<br>请注册您可以制作的品类。',
+            partner_desc: '',
             partner_cta: '成为合作伙伴'
         },
         ar: {
@@ -453,8 +453,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label: 'أدنى عمولة في الصناعة',
             pitch_label_short: 'أدنى عمولة',
             partner_title: 'شركة طباعة أو تركيب؟',
-            partner_sub: 'نصلك بالعملاء.',
-            partner_desc: 'سجل المنتجات التي يمكنك إنتاجها أو تركيبها<br><br>مطابقة تلقائية مع أقرب عميل<br><br>شاميليون يوفر المواد أيضاً',
+            partner_sub: 'نربط العملاء القريبين بشركات الطباعة.<br>سجّل المنتجات التي يمكنك إنتاجها.',
+            partner_desc: '',
             partner_cta: 'انضم كشريك'
         },
         es: {
@@ -469,8 +469,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label: 'COMISIÓN MÁS BAJA',
             pitch_label_short: 'COMISIÓN BAJA',
             partner_title: '¿Empresa de impresión o montaje?',
-            partner_sub: 'Te conectamos con los clientes.',
-            partner_desc: 'Registra los artículos que puedes producir o montar<br><br>Emparejamiento automático con el cliente más cercano<br><br>Chameleon también suministra los materiales',
+            partner_sub: 'Conectamos clientes cercanos con imprentas.<br>Registra los artículos que puedes producir.',
+            partner_desc: '',
             partner_cta: 'Ser Socio'
         },
         de: {
@@ -485,8 +485,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label: 'NIEDRIGSTE GEBÜHR DER BRANCHE',
             pitch_label_short: 'NIEDRIGSTE GEBÜHR',
             partner_title: 'Druck- oder Montagefirma?',
-            partner_sub: 'Wir verbinden Sie mit Kunden.',
-            partner_desc: 'Registrieren Sie, was Sie produzieren oder installieren können<br><br>Automatische Zuordnung zum nächstgelegenen Kunden<br><br>Chameleon liefert auch die Materialien',
+            partner_sub: 'Wir verbinden nahe Kunden mit Druckereien.<br>Registrieren Sie Ihre Produkte.',
+            partner_desc: '',
             partner_cta: 'Partner werden'
         },
         fr: {
@@ -501,8 +501,8 @@ export function renderShortcutButtons(containerId) {
             pitch_label: 'COMMISSION LA PLUS BASSE',
             pitch_label_short: 'COMMISSION MINI',
             partner_title: 'Société d\'impression ou d\'installation ?',
-            partner_sub: 'Nous vous connectons aux clients.',
-            partner_desc: 'Enregistrez ce que vous pouvez produire ou installer<br><br>Mise en relation automatique avec le client le plus proche<br><br>Chameleon fournit également les matériaux',
+            partner_sub: 'Nous connectons les clients proches aux imprimeurs.<br>Enregistrez ce que vous pouvez produire.',
+            partner_desc: '',
             partner_cta: 'Devenir Partenaire'
         }
     };
@@ -520,7 +520,7 @@ export function renderShortcutButtons(containerId) {
         .dm-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;}
 
         /* Base banner */
-        .dm-banner{position:relative;display:flex;flex-direction:column;width:100%;border-radius:18px;padding:20px 22px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;min-height:155px;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);}
+        .dm-banner{position:relative;display:flex;flex-direction:column;width:100%;border-radius:18px;padding:18px 22px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;min-height:130px;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);}
         .dm-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
 
         /* Purple·pink — designer */
@@ -540,10 +540,9 @@ export function renderShortcutButtons(containerId) {
         .dm-banner-sub{font-size:12px;font-weight:500;opacity:0.92;line-height:1.4;letter-spacing:-0.1px;}
         .dm-banner-desc{font-size:11px;opacity:0.85;font-weight:500;line-height:1.45;margin-top:6px;letter-spacing:-0.1px;}
 
-        /* Hero 5% block (no box — free floating) */
-        .dm-fee{flex-shrink:0;display:flex;flex-direction:column;align-items:center;text-align:center;width:110px;}
-        .dm-fee-num{font-size:46px;font-weight:900;color:#fff;line-height:1;letter-spacing:-3px;text-shadow:0 3px 14px rgba(0,0,0,0.35);font-feature-settings:"tnum";padding:0 2px;}
-        .dm-fee-label{font-size:10px;font-weight:700;color:#fbbf24;letter-spacing:0.5px;margin-top:4px;line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,0.35);}
+        /* Hero 5% block (no box — free floating, number only) */
+        .dm-fee{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:90px;}
+        .dm-fee-num{font-size:50px;font-weight:900;color:#fff;line-height:1;letter-spacing:-3px;text-shadow:0 3px 14px rgba(0,0,0,0.35);font-feature-settings:"tnum";padding:0 2px;}
 
         /* CTA row */
         .dm-banner-cta-row{display:flex;justify-content:flex-end;margin-top:auto;padding-top:12px;}
@@ -557,14 +556,13 @@ export function renderShortcutButtons(containerId) {
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
             .dm-banner-grid{grid-template-columns:1fr;gap:10px;}
-            .dm-banner{padding:18px 18px;border-radius:16px;min-height:150px;}
+            .dm-banner{padding:16px 18px;border-radius:16px;min-height:120px;}
             .dm-banner-title{font-size:17px;}
             .dm-banner-sub{font-size:11px;line-height:1.4;}
             .dm-banner-desc{font-size:10.5px;line-height:1.4;}
             .dm-banner-head{gap:12px;}
-            .dm-fee{width:96px;}
-            .dm-fee-num{font-size:38px;letter-spacing:-2px;}
-            .dm-fee-label{font-size:9px;}
+            .dm-fee{width:80px;}
+            .dm-fee-num{font-size:42px;letter-spacing:-2px;}
             .dm-banner-cta{padding:9px 14px;font-size:11px;min-width:120px;}
             .dm-banner-cta-row{padding-top:10px;}
         }
@@ -592,7 +590,6 @@ export function renderShortcutButtons(containerId) {
                             </div>
                             <div class="dm-fee">
                                 <div class="dm-fee-num">${t.pitch_num}</div>
-                                <div class="dm-fee-label">${t.pitch_label_short || t.pitch_label}</div>
                             </div>
                         </div>
                         <div class="dm-banner-cta-row">
@@ -608,11 +605,9 @@ export function renderShortcutButtons(containerId) {
                             <div class="dm-banner-textcol">
                                 <div class="dm-banner-title">${t.partner_title}</div>
                                 <div class="dm-banner-sub">${t.partner_sub}</div>
-                                <div class="dm-banner-desc">${t.partner_desc}</div>
                             </div>
                             <div class="dm-fee">
                                 <div class="dm-fee-num">${t.pitch_num}</div>
-                                <div class="dm-fee-label">${t.pitch_label_short || t.pitch_label}</div>
                             </div>
                         </div>
                         <div class="dm-banner-cta-row">
