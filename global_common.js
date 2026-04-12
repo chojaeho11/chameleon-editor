@@ -1,4 +1,4 @@
-import { sb } from "./global_config.js?v=293";
+import { sb } from "./global_config.js?v=294";
 
 // [공통] 로딩 화면 제어
 export function showLoading(show) {

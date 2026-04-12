@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=293";
-import { showLoading, formatCurrency } from "./global_common.js?v=293";
+import { sb } from "./global_config.js?v=294";
+import { showLoading, formatCurrency } from "./global_common.js?v=294";
 
 // i18n helper (admin UI — falls back to Korean for admin context)
 const _t = (k, kr) => (window.t ? window.t(k, kr) : kr);

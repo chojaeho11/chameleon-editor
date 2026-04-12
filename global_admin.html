@@ -2032,10 +2032,11 @@ window.showSection = function(id, el) {
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #6366f1; padding-bottom:15px;">
             <h3 style="margin:0; color:#4338ca;">🦎 AI 챗봇 학습 관리</h3>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button class="btn btn-outline btn-sm" onclick="cbShowTab('logs')" id="cbTabLogs">📋 상담 로그</button>
                 <button class="btn btn-primary btn-sm" onclick="cbShowTab('knowledge')" id="cbTabKnowledge">📚 학습 데이터</button>
                 <button class="btn btn-outline btn-sm" onclick="cbShowTab('settings')" id="cbTabSettings">⚙️ 설정</button>
+                <button class="btn btn-outline btn-sm" onclick="cbShowTab('services')" id="cbTabServices" style="background:#059669;color:#fff;border-color:#059669;">🌐 서비스 AI 채팅</button>
             </div>
         </div>
         <div id="cbPanelLogs" style="display:none;">
@@ -2146,6 +2147,25 @@ window.showSection = function(id, el) {
                 <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="cbSaveSettings()">💾 설정 저장</button>
             </div>
             <div class="card" style="margin-top:15px;"><h4 style="margin:0 0 10px;">📊 통계</h4><div id="cbStats" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"></div></div>
+        </div>
+
+        <!-- Services AI Chat Panel -->
+        <div id="cbPanelServices" style="display:none;">
+            <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid #6ee7b7;border-radius:14px;padding:16px;margin-bottom:15px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <h4 style="margin:0;color:#059669;">🌐 서비스 AI 채팅 관리</h4>
+                    <button class="btn btn-outline btn-sm" onclick="loadServicesChatLog()" style="border-color:#6ee7b7;color:#059669;">🔄 새로고침</button>
+                </div>
+                <p style="font-size:12px;color:#064e3b;margin:0;">서비스 허브(/services)에서 사용자들이 AI와 나눈 대화 기록을 확인합니다.</p>
+            </div>
+            <div id="servicesChatList" style="max-height:600px;overflow-y:auto;">
+                <div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
+                    <i class="fa-solid fa-comments" style="font-size:32px;margin-bottom:10px;display:block;color:#d1d5db;"></i>
+                    서비스 AI 채팅 기록이 여기에 표시됩니다.<br>
+                    <span style="font-size:11px;">(서비스 허브의 채팅은 현재 DB에 저장되지 않고 실시간 세션에서만 유지됩니다. 추후 chat_rooms 연동 시 여기에 기록됩니다.)</span>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 </div>
@@ -2808,12 +2828,23 @@ window.showSection = function(id, el) {
         document.getElementById('cbPanelLogs').style.display = (tab === 'logs') ? 'block' : 'none';
         document.getElementById('cbPanelKnowledge').style.display = (tab === 'knowledge') ? 'block' : 'none';
         document.getElementById('cbPanelSettings').style.display = (tab === 'settings') ? 'block' : 'none';
+        document.getElementById('cbPanelServices').style.display = (tab === 'services') ? 'block' : 'none';
         document.getElementById('cbTabLogs').className = 'btn btn-' + (tab === 'logs' ? 'primary' : 'outline') + ' btn-sm';
         document.getElementById('cbTabKnowledge').className = 'btn btn-' + (tab === 'knowledge' ? 'primary' : 'outline') + ' btn-sm';
         document.getElementById('cbTabSettings').className = 'btn btn-' + (tab === 'settings' ? 'primary' : 'outline') + ' btn-sm';
+        var svcBtn = document.getElementById('cbTabServices');
+        if (svcBtn) svcBtn.style.opacity = (tab === 'services') ? '1' : '0.7';
         if (tab === 'logs') qaLoadSessions();
         if (tab === 'knowledge') cbLoadKnowledge();
         if (tab === 'settings') cbLoadSettings();
+        if (tab === 'services' && window.loadServicesChatLog) window.loadServicesChatLog();
+    };
+
+    // Services AI chat log loader (placeholder — will connect to DB when chat storage is added)
+    window.loadServicesChatLog = function() {
+        var el = document.getElementById('servicesChatList');
+        if (!el) return;
+        el.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;font-size:13px;"><i class="fa-solid fa-comments" style="font-size:32px;margin-bottom:10px;display:block;color:#10b981;"></i>서비스 AI 채팅은 현재 실시간 세션 기반입니다.<br>추후 대화 기록이 DB에 저장되면 이곳에서 전체 대화를 확인하고 관리할 수 있습니다.<br><br><div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;text-align:left;font-size:12px;color:#166534;line-height:1.6;"><b>📋 계획:</b><br>1. 서비스 허브 채팅 → DB 저장 (room_id + messages)<br>2. 고객별 대화 전체 보기 (고객 화면과 동일한 채팅 뷰)<br>3. AI 응답 품질 평가 + 학습 데이터 추출</div></div>';
     };
     var cbKnAllData = []; // 로컬 캐시 (검색용)
     window.cbLoadKnowledge = async function() {
