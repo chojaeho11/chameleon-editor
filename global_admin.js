@@ -1,18 +1,18 @@
-import { sb, initConfig } from "./global_config.js?v=292";
+import { sb, initConfig } from "./global_config.js?v=293";
 
 // ✅ [추가] 이 두 줄을 꼭 넣어야 팝업창 오류가 해결됩니다!
 window.sb = sb;
 window._supabase = sb; 
 
-import { checkAdminAccess } from "./global_common.js?v=292";
+import { checkAdminAccess } from "./global_common.js?v=293";
 
 // 나머지 기능 파일들 불러오기
-import "./global_orders.js?v=292";
-import "./global_products.js?v=292";
-import "./global_users.js?v=292";
-import "./global_assets.js?v=292";
-import "./global_stats.js?v=292";
-import "./global_reviews.js?v=292";
+import "./global_orders.js?v=293";
+import "./global_products.js?v=293";
+import "./global_users.js?v=293";
+import "./global_assets.js?v=293";
+import "./global_stats.js?v=293";
+import "./global_reviews.js?v=293";
 
 window.addEventListener('DOMContentLoaded', async () => { 
     // 1. 화면 깜빡임 방지
@@ -82,6 +82,7 @@ window.showSection = (secId, navEl) => {
         case 'sec-callback': if(window.loadCallbackList) window.loadCallbackList('pending'); break;
         case 'sec-review-gen': if(window.initReviewGen) window.initReviewGen(); break;
         case 'sec-production-partners': if(window.loadProductionPartners) window.loadProductionPartners(); break;
+        case 'sec-community-hub': if(window.loadCommunityHubStats) window.loadCommunityHubStats(); break;
     }
 };
 

@@ -204,8 +204,12 @@
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
             <li class="nav-item" onclick="showSection('sec-withdrawals', this)"><i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리</li>
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 출금관리</li>
-            <li class="nav-item" onclick="showSection('sec-production-partners', this)"><i class="fa-solid fa-industry"></i> 🏭 출력 파트너 관리</li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
+
+            <div class="nav-label">🌐 서비스 종합관리</div>
+            <li class="nav-item" onclick="showSection('sec-community-hub', this)"><i class="fa-solid fa-grip"></i> 서비스 대시보드</li>
+            <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자인 마켓</li>
+            <li class="nav-item" onclick="showSection('sec-production-partners', this)"><i class="fa-solid fa-industry"></i> 출력 파트너</li>
 
             <div class="nav-label">Marketing</div>
             <li class="nav-item" onclick="window.open('marketing_bot.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-robot" style="color:#a78bfa;"></i> 🤖 마케팅 봇</li>
@@ -551,6 +555,100 @@
                 </thead>
                 <tbody id="designWithdrawalListBody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Community Hub Dashboard ═══ -->
+<div id="sec-community-hub" class="section">
+    <div class="card" style="border-left:5px solid #7c3aed;">
+        <h3 style="margin:0 0 6px;color:#7c3aed;font-size:18px;">🌐 서비스 종합관리 대시보드</h3>
+        <p style="font-size:12px;color:#64748b;margin:0 0 20px;">모든 중계 서비스를 한눈에. 등록 현황 · 매출 · 파트너 · 통계를 관리합니다.</p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:24px;">
+            <!-- Design Market -->
+            <div style="padding:18px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #c4b5fd;border-radius:14px;cursor:pointer;" onclick="showSection('sec-design-withdrawals',document.querySelector('[onclick*=sec-design-withdrawals]'))">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">🎨</span>
+                    <span style="background:#22c55e;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">LIVE</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#4c1d95;margin-bottom:4px;">디자인 마켓</div>
+                <div style="font-size:11px;color:#7c3aed;" id="hubDesignStats">디자이너 · 의뢰 · 출금 관리</div>
+            </div>
+
+            <!-- Production Partners -->
+            <div style="padding:18px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:14px;cursor:pointer;" onclick="showSection('sec-production-partners',document.querySelector('[onclick*=sec-production-partners]'))">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">🏭</span>
+                    <span style="background:#22c55e;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">LIVE</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#064e3b;margin-bottom:4px;">출력·시공 파트너</div>
+                <div style="font-size:11px;color:#059669;" id="hubPartnerStats">파트너 등록 · 승인 · 매칭 관리</div>
+            </div>
+
+            <!-- Part-time Jobs -->
+            <div style="padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;opacity:0.6;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">⏰</span>
+                    <span style="background:#94a3b8;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">SOON</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#475569;margin-bottom:4px;">타임 알바</div>
+                <div style="font-size:11px;color:#94a3b8;">일자리 · 근무자 매칭</div>
+            </div>
+
+            <!-- Real Estate -->
+            <div style="padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;opacity:0.6;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">🏠</span>
+                    <span style="background:#94a3b8;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">SOON</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#475569;margin-bottom:4px;">부동산 중계</div>
+                <div style="font-size:11px;color:#94a3b8;">매물 · 중개 관리</div>
+            </div>
+
+            <!-- Expert Matching -->
+            <div style="padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;opacity:0.6;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">🔧</span>
+                    <span style="background:#94a3b8;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">SOON</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#475569;margin-bottom:4px;">전문가 매칭</div>
+                <div style="font-size:11px;color:#94a3b8;">숨고형 서비스 매칭</div>
+            </div>
+
+            <!-- Meetups -->
+            <div style="padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;opacity:0.6;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">💕</span>
+                    <span style="background:#94a3b8;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">SOON</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#475569;margin-bottom:4px;">만남·소셜</div>
+                <div style="font-size:11px;color:#94a3b8;">매칭 · 모임 관리</div>
+            </div>
+
+            <!-- Local Community -->
+            <div style="padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;opacity:0.6;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">🏘️</span>
+                    <span style="background:#94a3b8;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">SOON</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#475569;margin-bottom:4px;">지역 커뮤니티</div>
+                <div style="font-size:11px;color:#94a3b8;">동네 게시판 · 모임</div>
+            </div>
+
+            <!-- Secondhand -->
+            <div style="padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;opacity:0.6;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:24px;">🛍️</span>
+                    <span style="background:#94a3b8;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;">SOON</span>
+                </div>
+                <div style="font-size:15px;font-weight:900;color:#475569;margin-bottom:4px;">중고거래</div>
+                <div style="font-size:11px;color:#94a3b8;">중고 매물 · 거래 관리</div>
+            </div>
+        </div>
+
+        <div style="padding:14px;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;font-size:12px;color:#78350f;line-height:1.6;">
+            <b>📌 로드맵:</b> 디자인 마켓과 출력 파트너는 현재 운영 중입니다. 나머지 6개 서비스는 순차적으로 구축 예정이며, 각 서비스가 활성화되면 이 대시보드에 실시간 통계와 관리 기능이 추가됩니다.
         </div>
     </div>
 </div>

@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=292";
-import { showLoading } from "./global_common.js?v=292";
+import { sb } from "./global_config.js?v=293";
+import { showLoading } from "./global_common.js?v=293";
 
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
@@ -1101,5 +1101,32 @@ window.suspendProductionPartner = async (partnerId) => {
         loadProductionPartners();
     } catch (e) {
         showToast("정지 실패: " + e.message, "error");
+    }
+};
+// =========================================================
+// [서비스 종합관리 대시보드] — 실시간 통계 로드
+// =========================================================
+window.loadCommunityHubStats = async () => {
+    try {
+        // Design market stats
+        const [{ count: designerCount }, { count: gigCount }, { count: requestCount }, { count: withdrawCount }] = await Promise.all([
+            sb.from('designer_profiles').select('*', { count: 'exact', head: true }),
+            sb.from('designer_gigs').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+            sb.from('design_requests').select('*', { count: 'exact', head: true }),
+            sb.from('design_withdrawal_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+        ]);
+        const ds = document.getElementById('hubDesignStats');
+        if (ds) ds.innerHTML = `디자이너 <b>${designerCount||0}</b> · Gig <b>${gigCount||0}</b> · 의뢰 <b>${requestCount||0}</b> · 대기출금 <b>${withdrawCount||0}</b>`;
+
+        // Partner stats
+        const [{ count: partnerTotal }, { count: partnerPending }, { count: partnerActive }] = await Promise.all([
+            sb.from('production_partners').select('*', { count: 'exact', head: true }),
+            sb.from('production_partners').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            sb.from('production_partners').select('*', { count: 'exact', head: true }).eq('status', 'active')
+        ]);
+        const ps = document.getElementById('hubPartnerStats');
+        if (ps) ps.innerHTML = `전체 <b>${partnerTotal||0}</b> · 대기 <b style="color:#d97706;">${partnerPending||0}</b> · 활성 <b style="color:#16a34a;">${partnerActive||0}</b>`;
+    } catch (e) {
+        console.warn('[communityHub] stats load failed:', e);
     }
 };
