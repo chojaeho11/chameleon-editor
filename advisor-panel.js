@@ -388,8 +388,8 @@ export function renderShortcutButtons(containerId) {
             // ── Partner/Production network banner (right) ──
             partner_title: '출력업체 파트너',
             partner_sub: '전세계 출력업체와 고객을 연결',
-            partner_desc: '허니콤부스 · 패브릭인쇄 · 종이매대 · 광고인쇄 · 상업인쇄 · 굿즈 · 인테리어까지. 만들 수 있는 품목을 등록하면 주문이 들어올 때 자동 알림',
-            partner_tag: '⚡ 가장 가까운 업체 우선 · 5분 내 미응답 시 다음 업체로',
+            partner_desc: '제작 가능 품목 등록 → 가장 가까운 업체에 자동 알림 → 5분 내 미응답 시 다음 업체로',
+            partner_tag: '',
             partner_cta: '파트너 등록',
             partner_pitch1: '업계 최저 수수료',
             partner_pitch2: '단 5%'
@@ -405,8 +405,8 @@ export function renderShortcutButtons(containerId) {
             pitch_line2: 'わずか 5%',
             partner_title: '印刷パートナー',
             partner_sub: '世界の印刷業者とお客様を接続',
-            partner_desc: 'ハニカムブース・ファブリック印刷・紙陳列・広告印刷・商業印刷・グッズ・インテリアまで。製作可能な品目を登録すると注文時に自動通知',
-            partner_tag: '⚡ 最寄り業者を優先 · 5分以内に応答なければ次の業者へ',
+            partner_desc: '製作可能な品目を登録 → 最寄り業者に自動通知 → 5分以内に応答なければ次へ',
+            partner_tag: '',
             partner_cta: 'パートナー登録',
             partner_pitch1: '業界最安手数料',
             partner_pitch2: 'わずか 5%'
@@ -422,8 +422,8 @@ export function renderShortcutButtons(containerId) {
             pitch_line2: 'Only 5% Fee',
             partner_title: 'Print Partners',
             partner_sub: 'Connecting print companies and clients worldwide',
-            partner_desc: 'Honeycomb booths, fabric print, paper displays, ad print, commercial print, goods, interior. Register what you can produce and get auto-notified when matching orders come in',
-            partner_tag: '⚡ Nearest partner first · If no response in 5 min, routed to next',
+            partner_desc: 'Register what you produce → auto-notify the nearest partner → route to next if no reply in 5 min',
+            partner_tag: '',
             partner_cta: 'Join as Partner',
             partner_pitch1: 'Industry-Lowest',
             partner_pitch2: 'Only 5% Fee'
@@ -439,8 +439,8 @@ export function renderShortcutButtons(containerId) {
             pitch_line2: '仅 5%',
             partner_title: '印刷合作伙伴',
             partner_sub: '连接全球印刷企业与客户',
-            partner_desc: '蜂窝展位·布料印刷·纸质陈列·广告印刷·商业印刷·周边·室内装饰。注册您能生产的品类，订单到来时自动通知',
-            partner_tag: '⚡ 优先最近的合作伙伴 · 5分钟未响应则转下一家',
+            partner_desc: '注册可生产品类 → 最近合作伙伴自动通知 → 5分钟未响应则转下一家',
+            partner_tag: '',
             partner_cta: '成为合作伙伴',
             partner_pitch1: '业界最低手续费',
             partner_pitch2: '仅 5%'
@@ -456,8 +456,8 @@ export function renderShortcutButtons(containerId) {
             pitch_line2: '5% فقط',
             partner_title: 'شركاء الطباعة',
             partner_sub: 'ربط شركات الطباعة بالعملاء حول العالم',
-            partner_desc: 'أكشاك العسل، طباعة الأقمشة، عروض ورقية، طباعة إعلانات، طباعة تجارية، هدايا، ديكور. سجل ما يمكنك إنتاجه واحصل على إشعار تلقائي عند وصول الطلبات',
-            partner_tag: '⚡ أقرب شريك أولاً · إذا لم يرد خلال 5 دقائق، يتم التحويل للتالي',
+            partner_desc: 'سجل ما يمكنك إنتاجه ← إشعار تلقائي لأقرب شريك ← التحويل للتالي إذا لم يرد خلال 5 دقائق',
+            partner_tag: '',
             partner_cta: 'انضم كشريك',
             partner_pitch1: 'أدنى عمولة',
             partner_pitch2: '5% فقط'
@@ -473,8 +473,8 @@ export function renderShortcutButtons(containerId) {
             pitch_line2: 'Solo 5%',
             partner_title: 'Socios de Impresión',
             partner_sub: 'Conectando imprentas y clientes en todo el mundo',
-            partner_desc: 'Stands panal, impresión textil, displays de papel, impresión publicitaria y comercial, merchandising, decoración. Regístrate con lo que puedas producir y recibe avisos automáticos',
-            partner_tag: '⚡ Socio más cercano primero · Si no responde en 5 min, pasa al siguiente',
+            partner_desc: 'Registra lo que produces → aviso automático al socio más cercano → al siguiente si no responde en 5 min',
+            partner_tag: '',
             partner_cta: 'Ser Socio',
             partner_pitch1: 'Comisión más baja',
             partner_pitch2: 'Solo 5%'
@@ -490,8 +490,8 @@ export function renderShortcutButtons(containerId) {
             pitch_line2: 'Nur 5%',
             partner_title: 'Druck-Partner',
             partner_sub: 'Druckereien und Kunden weltweit verbinden',
-            partner_desc: 'Waben-Stände, Textildruck, Papierdisplays, Werbe- und Geschäftsdruck, Merchandise, Interieur. Registrieren Sie, was Sie produzieren können, und erhalten Sie automatische Benachrichtigungen',
-            partner_tag: '⚡ Nächstgelegener Partner zuerst · Bei keiner Reaktion in 5 Min. wird weitergeleitet',
+            partner_desc: 'Produktpalette registrieren → nächstgelegener Partner wird automatisch benachrichtigt → weiter zum nächsten nach 5 Min.',
+            partner_tag: '',
             partner_cta: 'Partner werden',
             partner_pitch1: 'Branchen-niedrigste',
             partner_pitch2: 'Nur 5%'
@@ -507,8 +507,8 @@ export function renderShortcutButtons(containerId) {
             pitch_line2: 'Seulement 5%',
             partner_title: 'Partenaires d\'Impression',
             partner_sub: 'Connecter imprimeurs et clients dans le monde entier',
-            partner_desc: 'Stands nid d\'abeille, impression textile, présentoirs papier, impression pub et commerciale, goodies, décoration. Inscrivez ce que vous pouvez produire et recevez des notifications automatiques',
-            partner_tag: '⚡ Partenaire le plus proche en priorité · Si pas de réponse en 5 min, transféré au suivant',
+            partner_desc: 'Inscrivez vos capacités → notification auto au partenaire le plus proche → transfert au suivant après 5 min',
+            partner_tag: '',
             partner_cta: 'Devenir Partenaire',
             partner_pitch1: 'Commission la Plus Basse',
             partner_pitch2: 'Seulement 5%'
@@ -524,10 +524,10 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-btn i{flex-shrink:0;}
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
 
-        /* Two-banner grid */
-        .dm-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;}
-        /* Base banner style — shared by both banners */
-        .dm-banner{position:relative;display:block;width:100%;border-radius:18px;padding:22px 24px;text-decoration:none;color:#fff;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.25);transition:all 0.25s;border:1.5px solid rgba(255,255,255,0.15);min-height:160px;box-sizing:border-box;}
+        /* Two-banner grid — equal height via grid stretch on desktop, stacked on mobile */
+        .dm-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;}
+        /* Base banner — uses flex column with consistent internal structure */
+        .dm-banner{position:relative;display:flex;flex-direction:column;width:100%;border-radius:18px;padding:22px 22px;text-decoration:none;color:#fff;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.25);transition:all 0.25s;border:1.5px solid rgba(255,255,255,0.15);min-height:170px;box-sizing:border-box;}
         .dm-banner:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,0,0,0.35);}
         /* Purple/pink — designer market */
         .dm-banner.dm-designer{background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 35%,#7c3aed 70%,#db2777 100%);}
@@ -538,22 +538,22 @@ export function renderShortcutButtons(containerId) {
         .dm-banner.dm-partner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.22) 0%,transparent 70%);pointer-events:none;}
         .dm-banner.dm-partner::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(14,165,233,0.18) 0%,transparent 70%);pointer-events:none;}
 
-        .dm-banner-inner{position:relative;display:flex;flex-direction:column;height:100%;z-index:1;}
-        .dm-banner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px;}
+        .dm-banner-inner{position:relative;display:flex;flex-direction:column;flex:1;z-index:1;}
+        .dm-banner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:8px;}
         .dm-banner-textcol{flex:1;min-width:0;}
-        .dm-banner-title{font-size:20px;font-weight:900;letter-spacing:-0.4px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.2);line-height:1.2;}
+        .dm-banner-title{font-size:19px;font-weight:900;letter-spacing:-0.4px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.2);line-height:1.2;}
         .dm-banner-sub{font-size:12px;font-weight:600;opacity:0.92;line-height:1.4;}
-        .dm-banner-desc{font-size:11px;opacity:0.85;font-weight:500;line-height:1.5;margin-top:6px;}
-        .dm-banner-tag{font-size:11px;opacity:0.88;font-weight:700;line-height:1.4;margin-top:auto;padding-top:10px;}
+        .dm-banner-desc{font-size:11px;opacity:0.82;font-weight:500;line-height:1.5;margin-top:6px;}
+        .dm-banner-tag{font-size:11px;opacity:0.85;font-weight:700;line-height:1.4;}
 
-        /* Pitch pill (top-right) — "5% fee" */
-        .dm-banner-pill{flex-shrink:0;text-align:center;padding:8px 12px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(251,191,36,0.45);border-radius:12px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);min-width:90px;}
+        /* Pitch pill — fixed width so both banners align horizontally */
+        .dm-banner-pill{flex-shrink:0;text-align:center;padding:8px 10px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(251,191,36,0.45);border-radius:12px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);width:96px;}
         .dm-banner-pill-1{font-size:9px;font-weight:700;color:rgba(255,255,255,0.88);text-transform:uppercase;letter-spacing:0.3px;line-height:1.2;margin-bottom:2px;}
-        .dm-banner-pill-2{font-size:18px;font-weight:900;color:#fbbf24;letter-spacing:-0.5px;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,0.3);}
+        .dm-banner-pill-2{font-size:17px;font-weight:900;color:#fbbf24;letter-spacing:-0.5px;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,0.3);}
 
-        /* CTA row (bottom) */
-        .dm-banner-cta-row{display:flex;justify-content:flex-end;margin-top:14px;}
-        .dm-banner-cta{background:#fff;color:#1e1b4b;padding:10px 18px;border-radius:10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;}
+        /* CTA — fixed width button, pushed to bottom via margin-top:auto */
+        .dm-banner-cta-row{display:flex;justify-content:flex-end;margin-top:auto;padding-top:12px;}
+        .dm-banner-cta{background:#fff;color:#1e1b4b;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;width:130px;box-sizing:border-box;}
         .dm-banner.dm-partner .dm-banner-cta{color:#042f2e;}
         .dm-banner:hover .dm-banner-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.05);box-shadow:0 6px 18px rgba(251,191,36,0.5);}
 
@@ -561,14 +561,16 @@ export function renderShortcutButtons(containerId) {
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
             .dm-banner-grid{grid-template-columns:1fr;gap:10px;}
-            .dm-banner{padding:16px 16px;border-radius:16px;min-height:0;}
+            .dm-banner{padding:16px 16px;border-radius:16px;min-height:150px;}
             .dm-banner-title{font-size:17px;}
             .dm-banner-sub{font-size:11px;}
-            .dm-banner-desc{font-size:10px;}
-            .dm-banner-pill{min-width:80px;padding:7px 10px;}
+            .dm-banner-desc{font-size:10px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;}
+            .dm-banner-tag{font-size:10px;}
+            .dm-banner-pill{width:90px;padding:7px 8px;}
             .dm-banner-pill-1{font-size:8px;}
-            .dm-banner-pill-2{font-size:16px;}
-            .dm-banner-cta{padding:9px 14px;font-size:11px;}
+            .dm-banner-pill-2{font-size:15px;}
+            .dm-banner-cta{padding:9px 12px;font-size:11px;width:125px;}
+            .dm-banner-cta-row{padding-top:10px;}
         }
         </style>
         <div class="adv-ext-wrap">
@@ -589,7 +591,7 @@ export function renderShortcutButtons(containerId) {
                     <div class="dm-banner-inner">
                         <div class="dm-banner-head">
                             <div class="dm-banner-textcol">
-                                <div class="dm-banner-title">🎨 ${t.banner_title}</div>
+                                <div class="dm-banner-title">${t.banner_title}</div>
                                 <div class="dm-banner-sub">${t.banner_sub}</div>
                             </div>
                             <div class="dm-banner-pill">
@@ -608,7 +610,7 @@ export function renderShortcutButtons(containerId) {
                     <div class="dm-banner-inner">
                         <div class="dm-banner-head">
                             <div class="dm-banner-textcol">
-                                <div class="dm-banner-title">🌐 ${t.partner_title}</div>
+                                <div class="dm-banner-title">${t.partner_title}</div>
                                 <div class="dm-banner-sub">${t.partner_sub}</div>
                                 <div class="dm-banner-desc">${t.partner_desc}</div>
                             </div>
@@ -617,7 +619,6 @@ export function renderShortcutButtons(containerId) {
                                 <div class="dm-banner-pill-2">${t.partner_pitch2}</div>
                             </div>
                         </div>
-                        <div class="dm-banner-tag">${t.partner_tag}</div>
                         <div class="dm-banner-cta-row">
                             <div class="dm-banner-cta">${t.partner_cta} <i class="fa-solid fa-arrow-right"></i></div>
                         </div>
