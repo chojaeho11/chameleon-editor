@@ -225,22 +225,51 @@ async function aiSearch() {
         ];
 
         let totalResults = 0;
+        const foundSections = [];
         for (const sec of sections) {
             if (!sec.data || sec.data.length === 0) continue;
             totalResults += sec.data.length;
-            html += `<div style="margin-bottom:14px;">
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-                    <span style="font-size:16px;">${sec.icon}</span>
-                    <span style="font-size:13px;font-weight:800;color:${sec.color};">${sec.label}</span>
-                    <span style="font-size:10px;color:#94a3b8;">${sec.data.length}건</span>
-                    <a href="${sec.url}" target="_blank" style="margin-left:auto;font-size:11px;color:${sec.color};text-decoration:none;font-weight:700;">더보기 →</a>
-                </div>`;
-            for (const r of sec.data) {
-                html += `<div style="padding:10px 12px;background:#f8fafc;border-radius:10px;margin-bottom:6px;font-size:12px;color:#475569;line-height:1.5;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='#f8fafc'" onclick="window.open('${sec.url}','_blank')">
-                    ${sec.render(r)}
-                </div>`;
+            foundSections.push(sec);
+        }
+
+        if (totalResults > 0) {
+            // Natural AI-style intro
+            const greetings = {
+                ko: [
+                    `"${q}" 검색 결과를 찾았어요! 총 ${totalResults}건이 있습니다.`,
+                    `${q}에 대해 ${totalResults}개의 결과가 있네요! 아래에서 확인해보세요.`,
+                    `좋은 소식이에요! "${q}" 관련 ${totalResults}건을 찾았습니다.`
+                ],
+                ja: [`「${q}」で${totalResults}件見つかりました！`],
+                en: [`Found ${totalResults} results for "${q}"! Check them out below.`],
+                zh: [`找到了${totalResults}条"${q}"的结果！`]
+            };
+            const msgs = greetings[LANG] || greetings.ko;
+            const intro = msgs[Math.floor(Math.random() * msgs.length)];
+
+            html = `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;">
+                <div style="width:32px;height:32px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#fff;font-size:13px;"></i></div>
+                <div style="font-size:14px;color:#334155;line-height:1.6;padding-top:5px;">${intro}</div>
+            </div>`;
+
+            for (const sec of foundSections) {
+                // Natural section intro
+                const secIntros = {
+                    '알바': {ko:`⏰ ${sec.data.length}개의 알바 자리가 있어요`,ja:`⏰ ${sec.data.length}件のアルバイトがあります`,en:`⏰ ${sec.data.length} job(s) found`},
+                    '부동산': {ko:`🏠 ${sec.data.length}개의 매물을 찾았어요`,ja:`🏠 ${sec.data.length}件の物件を見つけました`,en:`🏠 ${sec.data.length} listing(s) found`},
+                    '전문가': {ko:`🔧 ${sec.data.length}명의 전문가가 있어요`,ja:`🔧 ${sec.data.length}人の専門家がいます`,en:`🔧 ${sec.data.length} expert(s) found`},
+                    '커뮤니티': {ko:`🏘️ ${sec.data.length}개의 모임을 찾았어요`,ja:`🏘️ ${sec.data.length}件のグループがあります`,en:`🏘️ ${sec.data.length} group(s) found`},
+                    '중고거래': {ko:`🛍️ ${sec.data.length}개의 매물이 있어요`,ja:`🛍️ ${sec.data.length}件の商品があります`,en:`🛍️ ${sec.data.length} item(s) found`}
+                };
+                const si = secIntros[sec.label] || {};
+                html += `<div style="font-size:13px;font-weight:700;color:${sec.color};margin:12px 0 8px;">${si[LANG]||si.ko||sec.label}</div>`;
+                for (const r of sec.data) {
+                    html += `<a href="${sec.url}" target="_blank" style="display:block;padding:12px 14px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:12px;margin-bottom:6px;font-size:13px;color:#334155;line-height:1.5;text-decoration:none;transition:all .15s;" onmouseover="this.style.background='#f5f3ff';this.style.borderColor='#c4b5fd'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9'">
+                        ${sec.render(r)}
+                    </a>`;
+                }
             }
-            html += '</div>';
+            html += `<div style="text-align:center;margin-top:14px;font-size:12px;color:#94a3b8;">다른 질문이 있으시면 편하게 물어보세요 😊</div>`;
         }
 
         if (totalResults === 0) {
