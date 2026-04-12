@@ -98,21 +98,26 @@ body{font-family:'Pretendard Variable','Pretendard',sans-serif;background:#fff;c
     <div class="cat-strip-inner" id="catStrip"></div>
 </section>
 
-<!-- AI Assistant -->
+<!-- AI Chat -->
 <section class="section" style="max-width:700px;">
-    <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:20px;padding:28px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
-        <div style="text-align:center;margin-bottom:18px;">
-            <div style="font-size:24px;margin-bottom:6px;"><i class="fa-solid fa-magnifying-glass" style="color:#7c3aed;"></i></div>
-            <div style="font-size:16px;font-weight:900;color:#0f172a;" id="aiTitle">무엇을 찾고 계세요?</div>
-            <div style="font-size:12px;color:#64748b;" id="aiSub">알바, 부동산, 전문가, 중고거래 등 원하는 서비스를 물어보세요</div>
+    <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.06);overflow:hidden;display:flex;flex-direction:column;max-height:600px;">
+        <!-- Chat messages area -->
+        <div id="chatArea" style="flex:1;overflow-y:auto;padding:20px 20px 0;min-height:100px;">
+            <!-- Welcome message -->
+            <div id="chatWelcome" style="text-align:center;padding:16px 0;">
+                <div style="font-size:20px;margin-bottom:6px;"><i class="fa-solid fa-magnifying-glass" style="color:#7c3aed;"></i></div>
+                <div style="font-size:16px;font-weight:900;color:#0f172a;" id="aiTitle">무엇을 찾고 계세요?</div>
+                <div style="font-size:12px;color:#64748b;margin-bottom:12px;" id="aiSub">알바, 부동산, 전문가, 중고거래 등 원하는 서비스를 물어보세요</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;" id="aiChips"></div>
+            </div>
         </div>
-        <div style="display:flex;gap:10px;">
-            <input id="aiInput" type="text" placeholder="예: 강남 시급 15000원 이상 알바" style="flex:1;padding:14px 18px;border:1.5px solid #e2e8f0;border-radius:14px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter')aiSearch()">
-            <button onclick="aiSearch()" style="padding:14px 22px;background:#7c3aed;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <!-- Input bar (fixed at bottom) -->
+        <div style="padding:14px 20px;border-top:1px solid #f1f5f9;background:#fff;">
+            <div style="display:flex;gap:10px;">
+                <input id="aiInput" type="text" placeholder="메시지를 입력하세요..." style="flex:1;padding:12px 16px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSearch();}">
+                <button onclick="aiSearch()" style="padding:12px 18px;background:#7c3aed;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
         </div>
-        <div id="aiResult" style="margin-top:16px;display:none;"></div>
-        <!-- Quick suggestion chips -->
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:center;" id="aiChips"></div>
     </div>
 </section>
 
@@ -191,13 +196,45 @@ const sb = supabase.createClient(
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
 );
 
+function addBubble(content, type) {
+    const area = document.getElementById('chatArea');
+    // Hide welcome on first message
+    const welcome = document.getElementById('chatWelcome');
+    if (welcome) welcome.style.display = 'none';
+
+    const bubble = document.createElement('div');
+    bubble.style.cssText = type === 'user'
+        ? 'display:flex;justify-content:flex-end;margin-bottom:12px;'
+        : 'display:flex;justify-content:flex-start;margin-bottom:12px;';
+
+    if (type === 'user') {
+        bubble.innerHTML = `<div style="background:#7c3aed;color:#fff;padding:10px 16px;border-radius:16px 16px 4px 16px;max-width:80%;font-size:13px;line-height:1.5;">${content.replace(/</g,'&lt;')}</div>`;
+    } else {
+        bubble.innerHTML = `<div style="max-width:90%;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <div style="width:24px;height:24px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#fff;font-size:10px;"></i></div>
+            <span style="font-size:11px;font-weight:700;color:#7c3aed;">AI</span>
+        </div><div style="background:#f8fafc;border:1px solid #f1f5f9;padding:14px 16px;border-radius:4px 16px 16px 16px;font-size:13px;color:#334155;line-height:1.6;">${content}</div></div>`;
+    }
+    area.appendChild(bubble);
+    area.scrollTop = area.scrollHeight;
+    return bubble;
+}
+
+function addLoading() {
+    return addBubble('<i class="fa-solid fa-spinner fa-spin" style="color:#94a3b8;"></i>', 'ai');
+}
+
 async function aiSearch() {
-    const q = (document.getElementById('aiInput').value || '').trim();
+    const input = document.getElementById('aiInput');
+    const q = (input.value || '').trim();
     if (!q) return;
     const ql = q.toLowerCase();
-    const result = document.getElementById('aiResult');
-    result.style.display = 'block';
-    result.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+
+    // Add user bubble + clear input immediately
+    addBubble(q, 'user');
+    input.value = '';
+    input.focus();
+    const loadingBubble = addLoading();
 
     // Split query into words and search each word separately
     // This way "서울 알바" matches rows containing "서울" OR "알바"
@@ -263,10 +300,7 @@ async function aiSearch() {
             const msgs = greetings[LANG] || greetings.ko;
             const intro = msgs[Math.floor(Math.random() * msgs.length)];
 
-            html = `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;">
-                <div style="width:32px;height:32px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#fff;font-size:13px;"></i></div>
-                <div style="font-size:14px;color:#334155;line-height:1.6;padding-top:5px;">${intro}</div>
-            </div>`;
+            html = `<div style="margin-bottom:10px;">${intro}</div>`;
 
             for (const sec of foundSections) {
                 // Natural section intro
@@ -313,10 +347,13 @@ async function aiSearch() {
             html = `<div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">📋 "${q}" 검색 결과 ${totalResults}건</div>` + html;
         }
 
-        result.innerHTML = html;
+        // Remove loading bubble and add result
+        loadingBubble.remove();
+        addBubble(html, 'ai');
     } catch (e) {
         console.error('[aiSearch]', e);
-        result.innerHTML = `<div style="color:#ef4444;font-size:12px;padding:12px;">검색 오류: ${e.message}</div>`;
+        loadingBubble.remove();
+        addBubble(`오류가 발생했어요: ${e.message}`, 'ai');
     }
 }
 
@@ -362,16 +399,10 @@ Rules:
         const data = await res.json();
         const reply = data.chat_message || data.summary || '죄송합니다. 다시 시도해주세요.';
         chatHistory.push({ role: 'assistant', content: reply });
-        return `<div style="padding:16px;background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                <div style="width:28px;height:28px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#fff;font-size:12px;"></i></div>
-                <span style="font-size:12px;font-weight:800;color:#7c3aed;">Chameleon AI</span>
-            </div>
-            <div style="font-size:13px;color:#334155;line-height:1.65;white-space:pre-wrap;">${reply.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
-        </div>`;
+        return reply.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     } catch (e) {
         console.error('[askClaude]', e);
-        return `<div style="padding:16px;background:#fef2f2;border-radius:14px;border:1px solid #fecaca;font-size:12px;color:#991b1b;">AI 응답 오류: ${e.message}</div>`;
+        return `AI 응답 오류: ${e.message}`;
     }
 }
 
