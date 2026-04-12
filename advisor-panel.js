@@ -379,97 +379,139 @@ export function renderShortcutButtons(containerId) {
             self_design: '셀프디자인',
             quick_quote: '빠른견적서',
             product_search: '제품검색',
+            // ── Design Market banner (left) ──
             banner_title: '디자인을 의뢰하세요',
-            banner_sub: '디자이너라면 일거리가 쏟아집니다 · 디자이너로 등록하세요',
-            banner_tag: '🌍 전세계 고객사와 전문가를 연결하는 디자인 중계 사이트',
-            banner_cta: '디자인 마켓 바로가기',
-            pitch_line1: '업계 최저 수수료 5%',
-            pitch_line2: '디자인 의뢰는 카멜레온',
-            pitch_compare: '크몽 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            banner_sub: '전세계 디자이너와 의뢰인을 연결',
+            banner_cta: '디자인 마켓',
+            pitch_line1: '업계 최저 수수료',
+            pitch_line2: '단 5%',
+            // ── Partner/Production network banner (right) ──
+            partner_title: '출력업체 파트너',
+            partner_sub: '전세계 출력업체와 고객을 연결',
+            partner_desc: '허니콤부스 · 패브릭인쇄 · 종이매대 · 광고인쇄 · 상업인쇄 · 굿즈 · 인테리어까지. 만들 수 있는 품목을 등록하면 주문이 들어올 때 자동 알림',
+            partner_tag: '⚡ 가장 가까운 업체 우선 · 5분 내 미응답 시 다음 업체로',
+            partner_cta: '파트너 등록',
+            partner_pitch1: '업계 최저 수수료',
+            partner_pitch2: '단 5%'
         },
         ja: {
             self_design: 'セルフデザイン',
             quick_quote: 'クイック見積',
             product_search: '商品検索',
-            banner_title: 'デザインを依頼しましょう',
-            banner_sub: 'デザイナーなら依頼が殺到 · デザイナー登録はこちら',
-            banner_tag: '🌍 世界中のクライアントと専門家をつなぐデザインマッチングサイト',
-            banner_cta: 'デザインマーケットへ',
-            pitch_line1: '業界最安手数料 5%',
-            pitch_line2: 'デザイン依頼はカメレオン',
-            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            banner_title: 'デザインを依頼',
+            banner_sub: '世界中のデザイナーと依頼者を接続',
+            banner_cta: 'デザインマーケット',
+            pitch_line1: '業界最安手数料',
+            pitch_line2: 'わずか 5%',
+            partner_title: '印刷パートナー',
+            partner_sub: '世界の印刷業者とお客様を接続',
+            partner_desc: 'ハニカムブース・ファブリック印刷・紙陳列・広告印刷・商業印刷・グッズ・インテリアまで。製作可能な品目を登録すると注文時に自動通知',
+            partner_tag: '⚡ 最寄り業者を優先 · 5分以内に応答なければ次の業者へ',
+            partner_cta: 'パートナー登録',
+            partner_pitch1: '業界最安手数料',
+            partner_pitch2: 'わずか 5%'
         },
         en: {
             self_design: 'Self Design',
             quick_quote: 'Quick Quote',
             product_search: 'Search',
             banner_title: 'Hire a Designer',
-            banner_sub: 'A designer? Get a flood of work · Register now',
-            banner_tag: '🌍 The marketplace connecting clients with design experts worldwide',
-            banner_cta: 'Visit the Design Market',
-            pitch_line1: 'Industry-Lowest 5% Fee',
-            pitch_line2: 'Design with Chameleon',
-            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            banner_sub: 'Connecting designers and clients worldwide',
+            banner_cta: 'Design Market',
+            pitch_line1: 'Industry-Lowest',
+            pitch_line2: 'Only 5% Fee',
+            partner_title: 'Print Partners',
+            partner_sub: 'Connecting print companies and clients worldwide',
+            partner_desc: 'Honeycomb booths, fabric print, paper displays, ad print, commercial print, goods, interior. Register what you can produce and get auto-notified when matching orders come in',
+            partner_tag: '⚡ Nearest partner first · If no response in 5 min, routed to next',
+            partner_cta: 'Join as Partner',
+            partner_pitch1: 'Industry-Lowest',
+            partner_pitch2: 'Only 5% Fee'
         },
         zh: {
             self_design: '自助设计',
             quick_quote: '快速报价',
             product_search: '产品搜索',
             banner_title: '委托设计师',
-            banner_sub: '您是设计师？工作源源不断 · 立即注册',
-            banner_tag: '🌍 连接全球客户与设计专家的设计中介平台',
-            banner_cta: '进入设计市场',
-            pitch_line1: '业界最低手续费 5%',
-            pitch_line2: '设计委托就选卡梅隆',
-            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            banner_sub: '连接全球设计师与客户',
+            banner_cta: '设计市场',
+            pitch_line1: '业界最低手续费',
+            pitch_line2: '仅 5%',
+            partner_title: '印刷合作伙伴',
+            partner_sub: '连接全球印刷企业与客户',
+            partner_desc: '蜂窝展位·布料印刷·纸质陈列·广告印刷·商业印刷·周边·室内装饰。注册您能生产的品类，订单到来时自动通知',
+            partner_tag: '⚡ 优先最近的合作伙伴 · 5分钟未响应则转下一家',
+            partner_cta: '成为合作伙伴',
+            partner_pitch1: '业界最低手续费',
+            partner_pitch2: '仅 5%'
         },
         ar: {
             self_design: 'تصميم ذاتي',
             quick_quote: 'عرض سريع',
             product_search: 'بحث المنتجات',
             banner_title: 'اطلب من مصمم',
-            banner_sub: 'هل أنت مصمم؟ ستنهال عليك الطلبات · سجل الآن',
-            banner_tag: '🌍 منصة وساطة تربط العملاء بخبراء التصميم حول العالم',
-            banner_cta: 'انتقل إلى سوق التصميم',
-            pitch_line1: 'أدنى عمولة في الصناعة 5%',
-            pitch_line2: 'اطلب التصميم مع شاميليون',
-            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            banner_sub: 'ربط المصممين والعملاء حول العالم',
+            banner_cta: 'سوق التصميم',
+            pitch_line1: 'أدنى عمولة',
+            pitch_line2: '5% فقط',
+            partner_title: 'شركاء الطباعة',
+            partner_sub: 'ربط شركات الطباعة بالعملاء حول العالم',
+            partner_desc: 'أكشاك العسل، طباعة الأقمشة، عروض ورقية، طباعة إعلانات، طباعة تجارية، هدايا، ديكور. سجل ما يمكنك إنتاجه واحصل على إشعار تلقائي عند وصول الطلبات',
+            partner_tag: '⚡ أقرب شريك أولاً · إذا لم يرد خلال 5 دقائق، يتم التحويل للتالي',
+            partner_cta: 'انضم كشريك',
+            partner_pitch1: 'أدنى عمولة',
+            partner_pitch2: '5% فقط'
         },
         es: {
             self_design: 'Autodiseño',
             quick_quote: 'Cotización rápida',
-            product_search: 'Buscar producto',
-            banner_title: 'Contrata a un diseñador',
-            banner_sub: '¿Eres diseñador? Recibe muchos encargos · Regístrate ya',
-            banner_tag: '🌍 La plataforma que conecta clientes y expertos del diseño en todo el mundo',
-            banner_cta: 'Ir al Mercado de Diseño',
-            pitch_line1: 'Comisión Más Baja 5%',
-            pitch_line2: 'Diseño con Chameleon',
-            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            product_search: 'Buscar',
+            banner_title: 'Contrata un Diseñador',
+            banner_sub: 'Conectando diseñadores y clientes en todo el mundo',
+            banner_cta: 'Mercado de Diseño',
+            pitch_line1: 'Comisión más baja',
+            pitch_line2: 'Solo 5%',
+            partner_title: 'Socios de Impresión',
+            partner_sub: 'Conectando imprentas y clientes en todo el mundo',
+            partner_desc: 'Stands panal, impresión textil, displays de papel, impresión publicitaria y comercial, merchandising, decoración. Regístrate con lo que puedas producir y recibe avisos automáticos',
+            partner_tag: '⚡ Socio más cercano primero · Si no responde en 5 min, pasa al siguiente',
+            partner_cta: 'Ser Socio',
+            partner_pitch1: 'Comisión más baja',
+            partner_pitch2: 'Solo 5%'
         },
         de: {
             self_design: 'Selbstdesign',
             quick_quote: 'Schnellangebot',
-            product_search: 'Produktsuche',
-            banner_title: 'Beauftragen Sie einen Designer',
-            banner_sub: 'Sie sind Designer? Erhalten Sie viele Aufträge · Jetzt registrieren',
-            banner_tag: '🌍 Die Plattform, die Kunden und Design-Profis weltweit verbindet',
-            banner_cta: 'Zum Design-Marktplatz',
-            pitch_line1: 'Branchen-niedrigste 5% Gebühr',
-            pitch_line2: 'Design mit Chameleon',
-            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            product_search: 'Suche',
+            banner_title: 'Designer beauftragen',
+            banner_sub: 'Designer und Kunden weltweit verbinden',
+            banner_cta: 'Design-Markt',
+            pitch_line1: 'Branchen-niedrigste',
+            pitch_line2: 'Nur 5%',
+            partner_title: 'Druck-Partner',
+            partner_sub: 'Druckereien und Kunden weltweit verbinden',
+            partner_desc: 'Waben-Stände, Textildruck, Papierdisplays, Werbe- und Geschäftsdruck, Merchandise, Interieur. Registrieren Sie, was Sie produzieren können, und erhalten Sie automatische Benachrichtigungen',
+            partner_tag: '⚡ Nächstgelegener Partner zuerst · Bei keiner Reaktion in 5 Min. wird weitergeleitet',
+            partner_cta: 'Partner werden',
+            partner_pitch1: 'Branchen-niedrigste',
+            partner_pitch2: 'Nur 5%'
         },
         fr: {
-            self_design: 'Conception personnelle',
+            self_design: 'Conception',
             quick_quote: 'Devis rapide',
-            product_search: 'Rechercher produit',
-            banner_title: 'Engagez un designer',
-            banner_sub: 'Vous êtes designer ? Recevez plein de missions · Inscrivez-vous',
-            banner_tag: '🌍 La plateforme qui connecte clients et experts du design dans le monde entier',
-            banner_cta: 'Accéder au Marché du Design',
-            pitch_line1: 'Commission la Plus Basse 5%',
-            pitch_line2: 'Design avec Chameleon',
-            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
+            product_search: 'Recherche',
+            banner_title: 'Engagez un Designer',
+            banner_sub: 'Connecter designers et clients dans le monde entier',
+            banner_cta: 'Marché du Design',
+            pitch_line1: 'Commission la Plus Basse',
+            pitch_line2: 'Seulement 5%',
+            partner_title: 'Partenaires d\'Impression',
+            partner_sub: 'Connecter imprimeurs et clients dans le monde entier',
+            partner_desc: 'Stands nid d\'abeille, impression textile, présentoirs papier, impression pub et commerciale, goodies, décoration. Inscrivez ce que vous pouvez produire et recevez des notifications automatiques',
+            partner_tag: '⚡ Partenaire le plus proche en priorité · Si pas de réponse en 5 min, transféré au suivant',
+            partner_cta: 'Devenir Partenaire',
+            partner_pitch1: 'Commission la Plus Basse',
+            partner_pitch2: 'Seulement 5%'
         }
     };
     const t = L[lang] || L.en;
@@ -482,37 +524,51 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-btn i{flex-shrink:0;}
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
 
-        /* Design Market Banner */
-        .dm-banner{position:relative;display:block;width:100%;background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 35%,#7c3aed 70%,#db2777 100%);border-radius:18px;padding:22px 26px;text-decoration:none;color:#fff;overflow:hidden;box-shadow:0 8px 28px rgba(124,58,237,0.35);transition:all 0.25s;border:1.5px solid rgba(255,255,255,0.15);}
-        .dm-banner:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(124,58,237,0.5);}
-        .dm-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.25) 0%,transparent 70%);pointer-events:none;}
-        .dm-banner::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,0.2) 0%,transparent 70%);pointer-events:none;}
-        .dm-banner-inner{position:relative;display:flex;align-items:center;gap:20px;z-index:1;}
-        .dm-banner-text{flex:1;min-width:0;}
-        .dm-banner-title{font-size:22px;font-weight:900;letter-spacing:-0.4px;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,0.15);}
-        .dm-banner-sub{font-size:15px;font-weight:600;opacity:0.95;margin-bottom:8px;line-height:1.55;}
-        .dm-banner-tag{font-size:14px;opacity:0.92;font-weight:600;line-height:1.5;}
-        /* Pitch block (center) — "Industry-lowest 5% fee" headline + comparison */
-        .dm-banner-pitch{flex-shrink:0;text-align:center;padding:12px 18px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(251,191,36,0.4);border-radius:14px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);max-width:240px;}
-        .dm-banner-pitch-line1{font-size:14px;font-weight:900;color:#fbbf24;letter-spacing:-0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:1.2;margin-bottom:2px;}
-        .dm-banner-pitch-line2{font-size:13px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.2;margin-bottom:6px;}
-        .dm-banner-pitch-compare{font-size:9px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0;line-height:1.4;}
-        .dm-banner-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;}
+        /* Two-banner grid */
+        .dm-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;}
+        /* Base banner style — shared by both banners */
+        .dm-banner{position:relative;display:block;width:100%;border-radius:18px;padding:22px 24px;text-decoration:none;color:#fff;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.25);transition:all 0.25s;border:1.5px solid rgba(255,255,255,0.15);min-height:160px;box-sizing:border-box;}
+        .dm-banner:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,0,0,0.35);}
+        /* Purple/pink — designer market */
+        .dm-banner.dm-designer{background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 35%,#7c3aed 70%,#db2777 100%);}
+        .dm-banner.dm-designer::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.25) 0%,transparent 70%);pointer-events:none;}
+        .dm-banner.dm-designer::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,0.2) 0%,transparent 70%);pointer-events:none;}
+        /* Teal/emerald — partner network */
+        .dm-banner.dm-partner{background:linear-gradient(135deg,#042f2e 0%,#064e3b 30%,#059669 65%,#0891b2 100%);}
+        .dm-banner.dm-partner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(251,191,36,0.22) 0%,transparent 70%);pointer-events:none;}
+        .dm-banner.dm-partner::after{content:'';position:absolute;bottom:-50px;left:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(14,165,233,0.18) 0%,transparent 70%);pointer-events:none;}
+
+        .dm-banner-inner{position:relative;display:flex;flex-direction:column;height:100%;z-index:1;}
+        .dm-banner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px;}
+        .dm-banner-textcol{flex:1;min-width:0;}
+        .dm-banner-title{font-size:20px;font-weight:900;letter-spacing:-0.4px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.2);line-height:1.2;}
+        .dm-banner-sub{font-size:12px;font-weight:600;opacity:0.92;line-height:1.4;}
+        .dm-banner-desc{font-size:11px;opacity:0.85;font-weight:500;line-height:1.5;margin-top:6px;}
+        .dm-banner-tag{font-size:11px;opacity:0.88;font-weight:700;line-height:1.4;margin-top:auto;padding-top:10px;}
+
+        /* Pitch pill (top-right) — "5% fee" */
+        .dm-banner-pill{flex-shrink:0;text-align:center;padding:8px 12px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(251,191,36,0.45);border-radius:12px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);min-width:90px;}
+        .dm-banner-pill-1{font-size:9px;font-weight:700;color:rgba(255,255,255,0.88);text-transform:uppercase;letter-spacing:0.3px;line-height:1.2;margin-bottom:2px;}
+        .dm-banner-pill-2{font-size:18px;font-weight:900;color:#fbbf24;letter-spacing:-0.5px;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,0.3);}
+
+        /* CTA row (bottom) */
+        .dm-banner-cta-row{display:flex;justify-content:flex-end;margin-top:14px;}
+        .dm-banner-cta{background:#fff;color:#1e1b4b;padding:10px 18px;border-radius:10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;}
+        .dm-banner.dm-partner .dm-banner-cta{color:#042f2e;}
         .dm-banner:hover .dm-banner-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.05);box-shadow:0 6px 18px rgba(251,191,36,0.5);}
 
         @media(max-width:768px){
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
-            .dm-banner{padding:16px 18px;border-radius:16px;}
-            .dm-banner-inner{flex-direction:column;text-align:center;gap:12px;}
-            .dm-banner-title{font-size:18px;}
-            .dm-banner-sub{font-size:13px;}
-            .dm-banner-tag{font-size:12px;}
-            .dm-banner-pitch{max-width:100%;padding:10px 14px;}
-            .dm-banner-pitch-line1{font-size:15px;}
-            .dm-banner-pitch-line2{font-size:13px;}
-            .dm-banner-pitch-compare{font-size:10px;}
-            .dm-banner-cta{padding:11px 18px;font-size:13px;}
+            .dm-banner-grid{grid-template-columns:1fr;gap:10px;}
+            .dm-banner{padding:16px 16px;border-radius:16px;min-height:0;}
+            .dm-banner-title{font-size:17px;}
+            .dm-banner-sub{font-size:11px;}
+            .dm-banner-desc{font-size:10px;}
+            .dm-banner-pill{min-width:80px;padding:7px 10px;}
+            .dm-banner-pill-1{font-size:8px;}
+            .dm-banner-pill-2{font-size:16px;}
+            .dm-banner-cta{padding:9px 14px;font-size:11px;}
         }
         </style>
         <div class="adv-ext-wrap">
@@ -527,21 +583,47 @@ export function renderShortcutButtons(containerId) {
                     <i class="fa-solid fa-magnifying-glass"></i> ${t.product_search}
                 </a>
             </div>
-            <a href="${location.origin}/design-market" class="dm-banner" target="_blank">
-                <div class="dm-banner-inner">
-                    <div class="dm-banner-text">
-                        <div class="dm-banner-title">${t.banner_title}</div>
-                        <div class="dm-banner-sub">${t.banner_sub}</div>
-                        <div class="dm-banner-tag">${t.banner_tag}</div>
+            <div class="dm-banner-grid">
+                <!-- LEFT: Designer marketplace -->
+                <a href="${location.origin}/design-market" class="dm-banner dm-designer" target="_blank">
+                    <div class="dm-banner-inner">
+                        <div class="dm-banner-head">
+                            <div class="dm-banner-textcol">
+                                <div class="dm-banner-title">🎨 ${t.banner_title}</div>
+                                <div class="dm-banner-sub">${t.banner_sub}</div>
+                            </div>
+                            <div class="dm-banner-pill">
+                                <div class="dm-banner-pill-1">${t.pitch_line1}</div>
+                                <div class="dm-banner-pill-2">${t.pitch_line2}</div>
+                            </div>
+                        </div>
+                        <div class="dm-banner-cta-row">
+                            <div class="dm-banner-cta">${t.banner_cta} <i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
                     </div>
-                    <div class="dm-banner-pitch">
-                        <div class="dm-banner-pitch-line1">${t.pitch_line1}</div>
-                        <div class="dm-banner-pitch-line2">${t.pitch_line2}</div>
-                        <div class="dm-banner-pitch-compare">${t.pitch_compare}</div>
+                </a>
+
+                <!-- RIGHT: Print partner network -->
+                <a href="${location.origin}/partner-register" class="dm-banner dm-partner" target="_blank">
+                    <div class="dm-banner-inner">
+                        <div class="dm-banner-head">
+                            <div class="dm-banner-textcol">
+                                <div class="dm-banner-title">🌐 ${t.partner_title}</div>
+                                <div class="dm-banner-sub">${t.partner_sub}</div>
+                                <div class="dm-banner-desc">${t.partner_desc}</div>
+                            </div>
+                            <div class="dm-banner-pill">
+                                <div class="dm-banner-pill-1">${t.partner_pitch1}</div>
+                                <div class="dm-banner-pill-2">${t.partner_pitch2}</div>
+                            </div>
+                        </div>
+                        <div class="dm-banner-tag">${t.partner_tag}</div>
+                        <div class="dm-banner-cta-row">
+                            <div class="dm-banner-cta">${t.partner_cta} <i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
                     </div>
-                    <div class="dm-banner-cta">${t.banner_cta} <i class="fa-solid fa-arrow-right"></i></div>
-                </div>
-            </a>
+                </a>
+            </div>
         </div>
     `;
 }
