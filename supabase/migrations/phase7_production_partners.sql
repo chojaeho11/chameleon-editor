@@ -48,9 +48,13 @@ CREATE TABLE IF NOT EXISTS public.production_partners (
 
 -- RLS: anyone can insert (registration is open), own rows readable
 ALTER TABLE production_partners ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "pp_insert" ON production_partners;
 CREATE POLICY "pp_insert" ON production_partners FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "pp_select_own" ON production_partners;
 CREATE POLICY "pp_select_own" ON production_partners FOR SELECT USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "pp_select_admin" ON production_partners;
 CREATE POLICY "pp_select_admin" ON production_partners FOR SELECT USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+DROP POLICY IF EXISTS "pp_update_own" ON production_partners;
 CREATE POLICY "pp_update_own" ON production_partners FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
 -- Admin RPC for approving partners

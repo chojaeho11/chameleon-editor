@@ -212,62 +212,97 @@ ALTER TABLE community_user_temperature ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_safe_transactions ENABLE ROW LEVEL SECURITY;
 
 -- ── community_jobs ──
+DROP POLICY IF EXISTS "community_jobs_select" ON community_jobs;
 CREATE POLICY "community_jobs_select" ON community_jobs FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_jobs_insert" ON community_jobs;
 CREATE POLICY "community_jobs_insert" ON community_jobs FOR INSERT WITH CHECK (auth.uid() = poster_id);
+DROP POLICY IF EXISTS "community_jobs_update" ON community_jobs;
 CREATE POLICY "community_jobs_update" ON community_jobs FOR UPDATE USING (auth.uid() = poster_id);
 
 -- ── community_job_applications ──
+DROP POLICY IF EXISTS "community_job_applications_select" ON community_job_applications;
 CREATE POLICY "community_job_applications_select" ON community_job_applications FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_job_applications_insert" ON community_job_applications;
 CREATE POLICY "community_job_applications_insert" ON community_job_applications FOR INSERT WITH CHECK (auth.uid() = applicant_id);
+DROP POLICY IF EXISTS "community_job_applications_update" ON community_job_applications;
 CREATE POLICY "community_job_applications_update" ON community_job_applications FOR UPDATE USING (auth.uid() = applicant_id);
 
 -- ── community_realty ──
+DROP POLICY IF EXISTS "community_realty_select" ON community_realty;
 CREATE POLICY "community_realty_select" ON community_realty FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_realty_insert" ON community_realty;
 CREATE POLICY "community_realty_insert" ON community_realty FOR INSERT WITH CHECK (auth.uid() = poster_id);
+DROP POLICY IF EXISTS "community_realty_update" ON community_realty;
 CREATE POLICY "community_realty_update" ON community_realty FOR UPDATE USING (auth.uid() = poster_id);
 
 -- ── community_experts ──
+DROP POLICY IF EXISTS "community_experts_select" ON community_experts;
 CREATE POLICY "community_experts_select" ON community_experts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_experts_insert" ON community_experts;
 CREATE POLICY "community_experts_insert" ON community_experts FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "community_experts_update" ON community_experts;
 CREATE POLICY "community_experts_update" ON community_experts FOR UPDATE USING (auth.uid() = user_id);
 
 -- ── community_expert_requests ──
+DROP POLICY IF EXISTS "community_expert_requests_select" ON community_expert_requests;
 CREATE POLICY "community_expert_requests_select" ON community_expert_requests FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_expert_requests_insert" ON community_expert_requests;
 CREATE POLICY "community_expert_requests_insert" ON community_expert_requests FOR INSERT WITH CHECK (auth.uid() = requester_id);
+DROP POLICY IF EXISTS "community_expert_requests_update" ON community_expert_requests;
 CREATE POLICY "community_expert_requests_update" ON community_expert_requests FOR UPDATE USING (auth.uid() = requester_id);
 
 -- ── community_dating_profiles ──
+DROP POLICY IF EXISTS "community_dating_profiles_select" ON community_dating_profiles;
 CREATE POLICY "community_dating_profiles_select" ON community_dating_profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_dating_profiles_insert" ON community_dating_profiles;
 CREATE POLICY "community_dating_profiles_insert" ON community_dating_profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "community_dating_profiles_update" ON community_dating_profiles;
 CREATE POLICY "community_dating_profiles_update" ON community_dating_profiles FOR UPDATE USING (auth.uid() = user_id);
 
 -- ── community_dating_likes ──
+DROP POLICY IF EXISTS "community_dating_likes_select" ON community_dating_likes;
 CREATE POLICY "community_dating_likes_select" ON community_dating_likes FOR SELECT USING (auth.uid() = from_user OR auth.uid() = to_user);
+DROP POLICY IF EXISTS "community_dating_likes_insert" ON community_dating_likes;
 CREATE POLICY "community_dating_likes_insert" ON community_dating_likes FOR INSERT WITH CHECK (auth.uid() = from_user);
 
 -- ── community_groups ──
+DROP POLICY IF EXISTS "community_groups_select" ON community_groups;
 CREATE POLICY "community_groups_select" ON community_groups FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_groups_insert" ON community_groups;
 CREATE POLICY "community_groups_insert" ON community_groups FOR INSERT WITH CHECK (auth.uid() = creator_id);
+DROP POLICY IF EXISTS "community_groups_update" ON community_groups;
 CREATE POLICY "community_groups_update" ON community_groups FOR UPDATE USING (auth.uid() = creator_id);
 
 -- ── community_posts ──
+DROP POLICY IF EXISTS "community_posts_select" ON community_posts;
 CREATE POLICY "community_posts_select" ON community_posts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_posts_insert" ON community_posts;
 CREATE POLICY "community_posts_insert" ON community_posts FOR INSERT WITH CHECK (auth.uid() = author_id);
+DROP POLICY IF EXISTS "community_posts_update" ON community_posts;
 CREATE POLICY "community_posts_update" ON community_posts FOR UPDATE USING (auth.uid() = author_id);
 
 -- ── community_secondhand ──
+DROP POLICY IF EXISTS "community_secondhand_select" ON community_secondhand;
 CREATE POLICY "community_secondhand_select" ON community_secondhand FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_secondhand_insert" ON community_secondhand;
 CREATE POLICY "community_secondhand_insert" ON community_secondhand FOR INSERT WITH CHECK (auth.uid() = seller_id);
+DROP POLICY IF EXISTS "community_secondhand_update" ON community_secondhand;
 CREATE POLICY "community_secondhand_update" ON community_secondhand FOR UPDATE USING (auth.uid() = seller_id);
 
 -- ── community_user_temperature ──
+DROP POLICY IF EXISTS "community_user_temperature_select" ON community_user_temperature;
 CREATE POLICY "community_user_temperature_select" ON community_user_temperature FOR SELECT USING (true);
+DROP POLICY IF EXISTS "community_user_temperature_insert" ON community_user_temperature;
 CREATE POLICY "community_user_temperature_insert" ON community_user_temperature FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "community_user_temperature_update" ON community_user_temperature;
 CREATE POLICY "community_user_temperature_update" ON community_user_temperature FOR UPDATE USING (auth.uid() = user_id);
 
 -- ── community_safe_transactions ──
+DROP POLICY IF EXISTS "community_safe_transactions_select" ON community_safe_transactions;
 CREATE POLICY "community_safe_transactions_select" ON community_safe_transactions FOR SELECT USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
+DROP POLICY IF EXISTS "community_safe_transactions_insert" ON community_safe_transactions;
 CREATE POLICY "community_safe_transactions_insert" ON community_safe_transactions FOR INSERT WITH CHECK (auth.uid() = buyer_id);
+DROP POLICY IF EXISTS "community_safe_transactions_update" ON community_safe_transactions;
 CREATE POLICY "community_safe_transactions_update" ON community_safe_transactions FOR UPDATE USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
 
 -- ============================================================
