@@ -264,19 +264,19 @@ async function gatherDbContext(q) {
     const mkOr = (cols) => ptn.flatMap(p => cols.map(c => `${c}.ilike.${p}`)).join(',');
 
     const [jobs, realty, experts, groups, items] = await Promise.all([
-        ptn.length ? sb.from('community_jobs').select('title,hourly_rate,location_city,country').or(mkOr(['title','description','location_city'])).eq('status','active').limit(5) : {data:[]},
-        ptn.length ? sb.from('community_realty').select('title,listing_type,city,country,deposit,monthly_rent,price').or(mkOr(['title','city','address'])).eq('status','active').limit(5) : {data:[]},
-        ptn.length ? sb.from('community_experts').select('display_name,category,city,country,hourly_rate,rating').or(mkOr(['display_name','category','city','description'])).eq('status','active').limit(5) : {data:[]},
-        ptn.length ? sb.from('community_groups').select('name,category,city,country,member_count').or(mkOr(['name','category','city','description'])).limit(5) : {data:[]},
-        ptn.length ? sb.from('community_secondhand').select('title,price,category,condition,city,country,status').or(mkOr(['title','category','city','description'])).limit(5) : {data:[]}
+        ptn.length ? sb.from('community_jobs').select('*').or(mkOr(['title','description','location_city'])).eq('status','active').limit(5) : {data:[]},
+        ptn.length ? sb.from('community_realty').select('*').or(mkOr(['title','city','address','description'])).eq('status','active').limit(5) : {data:[]},
+        ptn.length ? sb.from('community_experts').select('*').or(mkOr(['display_name','category','city','description'])).eq('status','active').limit(5) : {data:[]},
+        ptn.length ? sb.from('community_groups').select('*').or(mkOr(['name','category','city','description'])).limit(5) : {data:[]},
+        ptn.length ? sb.from('community_secondhand').select('*').or(mkOr(['title','category','city','description'])).limit(5) : {data:[]}
     ]);
 
     let context = '';
-    if (jobs.data?.length) context += '\n[알바/Jobs]\n' + jobs.data.map(r => `- ${r.title} | ${r.location_city} | ${r.hourly_rate}${r.country==='KR'?'원':r.country==='JP'?'円':'$/hr'}`).join('\n');
-    if (realty.data?.length) context += '\n[부동산/Realty]\n' + realty.data.map(r => `- ${r.title} | ${r.city} | ${r.listing_type} | ${r.deposit||r.price||0}/${r.monthly_rent||0}`).join('\n');
-    if (experts.data?.length) context += '\n[전문가/Experts]\n' + experts.data.map(r => `- ${r.display_name} | ${r.category} | ${r.city} | ⭐${r.rating}`).join('\n');
-    if (groups.data?.length) context += '\n[커뮤니티/Groups]\n' + groups.data.map(r => `- ${r.name} | ${r.category} | ${r.city} | ${r.member_count}명`).join('\n');
-    if (items.data?.length) context += '\n[중고거래/Secondhand]\n' + items.data.map(r => `- ${r.title} | ${r.price}${r.country==='KR'?'원':r.country==='JP'?'円':'$'} | ${r.city} | ${r.status}`).join('\n');
+    if (jobs.data?.length) context += '\n[알바]\n' + jobs.data.map(r => `- ${r.title} | 위치: ${r.location_city} ${r.location_detail||''} | 시급: ${r.hourly_rate}${r.country==='KR'?'원':r.country==='JP'?'円':'$/hr'} | 근무: ${r.work_days||''} ${r.work_hours||''} | 전화: ${r.contact_phone||'미등록'} | 유형: ${r.job_type} | 설명: ${(r.description||'').slice(0,80)}`).join('\n');
+    if (realty.data?.length) context += '\n[부동산]\n' + realty.data.map(r => `- ${r.title} | ${r.listing_type} | 위치: ${r.city} ${r.address||''} | 보증금: ${(r.deposit||0).toLocaleString()} 월세: ${(r.monthly_rent||0).toLocaleString()} 매매가: ${(r.price||0).toLocaleString()} | ${r.area_sqm||'?'}㎡ ${r.rooms||'?'}룸 ${r.floor_info||''} | 전화: ${r.contact_phone||'미등록'}`).join('\n');
+    if (experts.data?.length) context += '\n[전문가]\n' + experts.data.map(r => `- ${r.display_name} | 분야: ${r.category} | 위치: ${r.city} | 시급: ${r.hourly_rate} | 평점: ⭐${r.rating}(${r.review_count||0}건) | 설명: ${(r.description||'').slice(0,80)}`).join('\n');
+    if (groups.data?.length) context += '\n[커뮤니티]\n' + groups.data.map(r => `- ${r.name} | 카테고리: ${r.category} | 위치: ${r.city} | 멤버: ${r.member_count}명 | 설명: ${(r.description||'').slice(0,80)}`).join('\n');
+    if (items.data?.length) context += '\n[중고거래]\n' + items.data.map(r => `- ${r.title} | 가격: ${(r.price||0).toLocaleString()}${r.country==='KR'?'원':r.country==='JP'?'円':'$'} | 위치: ${r.city} | 상태: ${r.condition} | 거래: ${r.status==='sold'?'완료':r.status==='reserved'?'예약중':'판매중'} | 설명: ${(r.description||'').slice(0,80)}`).join('\n');
 
     return context || '(검색 결과 없음)';
 }
@@ -306,12 +306,13 @@ ${dbContext}
 
 규칙:
 - 사용자의 언어로 대답 (한국어면 한국어, 일본어면 일본어)
-- DB 결과가 있으면 자연스럽게 소개. 예: "서울에서 알바 3개를 찾았어요!"
-- 결과마다 해당 서비스 링크 포함: [타임알바](/jobs)
+- DB 결과가 있으면 전화번호, 시급, 위치, 설명 등 정확한 데이터를 포함해서 안내
+- 예: "서울 강남구에 카페 바리스타 알바가 있어요! 시급 12,000원이고, 근무시간은 월~금 09:00-14:00입니다. 연락처는 010-1234-5678이에요."
+- 결과마다 해당 서비스 페이지 링크 포함: [타임알바 더보기](/jobs)
 - 일반 대화(인사, 잡담)에도 친근하게 대답
-- 짧고 자연스럽게 (검색=3~5문장, 대화=1~2문장)
-- DB에 없는 내용은 만들지 마
-- 인쇄 제품(허니콤보드, 포맥스 등) 안내는 하지 마. 이건 서비스 허브야.
+- DB에 없는 전화번호나 가격은 절대 만들지 마. DB에 있는 것만 안내
+- 인쇄 제품(허니콤보드, 포맥스 등) 안내는 하지 마. 이건 중계 서비스 허브야.
+- 사용자가 물은 것과 관련 없는 서비스 결과는 제외하고 관련 있는 것만 안내
 
 사용자 메시지: ${msg}`;
 
