@@ -194,6 +194,12 @@ const AI_KEYWORDS = {
 const AI_API = 'https://qinvtnhiidtmrzosyvys.supabase.co/functions/v1/product-advisor';
 const AI_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 let chatHistory = [];
+const SESSION_ID = 'svc_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+
+// Save chat message to DB for admin review
+function saveChatMsg(role, msg) {
+    try { sb.from('community_chat_log').insert({ session_id: SESSION_ID, role, message: msg.slice(0,2000), lang: LANG }).then(()=>{}); } catch(_){}
+}
 
 // Supabase client
 const sb = supabase.createClient(
@@ -236,12 +242,12 @@ async function aiSearch() {
     const ql = q.toLowerCase();
 
     addBubble(q, 'user');
+    saveChatMsg('user', q);
     input.value = '';
     input.focus();
     const loadingBubble = addLoading();
 
     try {
-        // Step 1: Quick DB search for context (broad, all tables)
         const dbContext = await gatherDbContext(q);
 
         // Step 2: Send to Claude with DB context for natural response
@@ -249,6 +255,7 @@ async function aiSearch() {
 
         loadingBubble.remove();
         addBubble(reply, 'ai');
+        saveChatMsg('ai', reply.replace(/<[^>]*>/g,'').slice(0,2000));
     } catch (e) {
         console.error('[aiSearch]', e);
         loadingBubble.remove();
