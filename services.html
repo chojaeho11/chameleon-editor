@@ -327,7 +327,9 @@ ${dbContext}
         body: JSON.stringify({
             message: contextMsg,
             lang: LANG === 'ko' ? 'kr' : LANG,
-            conversation_history: chatHistory.slice(-4)
+            conversation_history: chatHistory.slice(-4),
+            room_id: 'svc-hub-' + SESSION_ID,
+            source: 'services-hub'
         })
     });
     if (!res.ok) throw new Error('API ' + res.status);

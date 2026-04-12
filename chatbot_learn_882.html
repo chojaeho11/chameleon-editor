@@ -484,6 +484,7 @@ function getSb() { return sb; }
         var lang = document.getElementById('qaReportLang').value;
         var q = sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
             .or('source.like.bot-%,source.like.chatbot%,source.like.ai-%,source.like.embed-%')
+            .not('source', 'like', 'services-hub%')
             .gte('created_at', date + 'T00:00:00+09:00')
             .lte('created_at', date + 'T23:59:59+09:00')
             .order('updated_at', { ascending: false })
