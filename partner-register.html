@@ -83,20 +83,11 @@
         .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
         @media(max-width:768px){.form-row{grid-template-columns:1fr;}}
 
-        /* Capability checkboxes */
-        .cap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-        @media(max-width:768px){.cap-grid{grid-template-columns:1fr;}}
-        .cap-category{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;transition:all 0.15s;}
-        .cap-category.active{border-color:#c4b5fd;background:#f5f3ff;}
-        .cap-header{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
-        .cap-header input[type="checkbox"]{width:18px;height:18px;accent-color:#7c3aed;cursor:pointer;}
-        .cap-header .cap-label{font-size:13px;font-weight:700;color:#1e293b;flex:1;}
-        .cap-header .cap-toggle{color:#94a3b8;font-size:12px;transition:transform 0.2s;}
-        .cap-header .cap-toggle.open{transform:rotate(180deg);}
-        .cap-subs{display:none;padding:10px 0 0 28px;}
-        .cap-subs.show{display:flex;flex-wrap:wrap;gap:8px;}
-        .cap-sub{display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;}
-        .cap-sub input{accent-color:#7c3aed;cursor:pointer;}
+        /* Capability simple checkboxes */
+        .cap-simple-item{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all 0.15s;font-size:14px;font-weight:600;color:#1e293b;}
+        .cap-simple-item:hover{background:#f5f3ff;border-color:#c4b5fd;}
+        .cap-simple-item input{width:20px;height:20px;accent-color:#7c3aed;cursor:pointer;flex-shrink:0;}
+        .cap-simple-item input:checked ~ span{color:#7c3aed;}
 
         /* Agreement */
         .agree-box{background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1.5px solid #fcd34d;border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:12px;}
@@ -176,6 +167,13 @@
     <!-- Registration Form -->
     <form id="regForm" class="disabled" onsubmit="return false;">
 
+        <!-- Hero description -->
+        <div class="form-card" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-color:#c4b5fd;text-align:center;padding:28px 24px;">
+            <div style="font-size:28px;margin-bottom:8px;">🏭</div>
+            <div id="heroTitle" style="font-size:17px;font-weight:900;color:#4c1d95;margin-bottom:8px;line-height:1.4;"></div>
+            <div id="heroDesc" style="font-size:13px;color:#6d28d9;line-height:1.65;opacity:0.9;"></div>
+        </div>
+
         <!-- 1. Company Info -->
         <div class="form-card" id="cardCompany">
             <div class="section-title"><i class="fas fa-building" style="color:#7c3aed"></i> <span id="secCompany"></span></div>
@@ -185,47 +183,31 @@
                     <input class="form-input" id="fCompanyName" required>
                 </div>
                 <div class="form-group">
-                    <label id="lblContactName"></label>
-                    <input class="form-input" id="fContactName" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label id="lblCountry"></label>
-                <select class="form-input" id="fCountry" onchange="onCountryChange()"></select>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label id="lblCity"></label>
-                    <input class="form-input" id="fCity">
-                </div>
-                <div class="form-group">
                     <label id="lblPhone"></label>
                     <input class="form-input" id="fPhone" required>
                 </div>
             </div>
-            <div class="form-group">
-                <label id="lblAddress"></label>
-                <input class="form-input" id="fAddress" required>
-            </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label id="lblEmail"></label>
-                    <input class="form-input" type="email" id="fEmail" required>
+                    <label id="lblCountry"></label>
+                    <select class="form-input" id="fCountry" onchange="onCountryChange()"></select>
                 </div>
                 <div class="form-group">
-                    <label id="lblWebsite"></label>
-                    <input class="form-input" id="fWebsite" placeholder="https://">
+                    <label id="lblCity"></label>
+                    <input class="form-input" id="fCity">
                 </div>
             </div>
         </div>
 
-        <!-- 2. Production Capabilities -->
+        <!-- 2. Production Capabilities — 5 simple checkboxes -->
         <div class="form-card" id="cardCaps">
             <div class="section-title"><i class="fas fa-cogs" style="color:#7c3aed"></i> <span id="secCaps"></span></div>
-            <div class="cap-grid" id="capGrid"></div>
-            <div class="form-group">
-                <label id="lblCapsNote"></label>
-                <textarea class="form-input" id="fCapsNote" rows="4"></textarea>
+            <div style="display:flex;flex-direction:column;gap:14px;" id="capSimple">
+                <label class="cap-simple-item"><input type="checkbox" value="honeycomb"> <span id="capLbl1"></span></label>
+                <label class="cap-simple-item"><input type="checkbox" value="large-format"> <span id="capLbl2"></span></label>
+                <label class="cap-simple-item"><input type="checkbox" value="acrylic-goods"> <span id="capLbl3"></span></label>
+                <label class="cap-simple-item"><input type="checkbox" value="apparel"> <span id="capLbl4"></span></label>
+                <label class="cap-simple-item"><input type="checkbox" value="installation"> <span id="capLbl5"></span></label>
             </div>
         </div>
 
@@ -351,8 +333,15 @@ const LANG = (function(){
 
 // ===== i18n =====
 const I18N = {
-    page_title: {ko:'생산 파트너 등록',ja:'生産パートナー登録',en:'Production Partner Registration',zh:'生产合作伙伴注册',ar:'تسجيل شريك الإنتاج',es:'Registro de socio de produccion',de:'Produktionspartner-Registrierung',fr:'Inscription partenaire de production'},
-    page_subtitle: {ko:'인쇄/시공 회사라면 카멜레온 프린팅의 글로벌 파트너가 되어보세요',ja:'印刷・施工会社ならカメレオンプリンティングのグローバルパートナーに',en:'Join Chameleon Printing as a global production partner for printing & installation',zh:'加入变色龙印刷成为全球生产合作伙伴',ar:'انضم الى شبكة شركاء الإنتاج العالمية',es:'Unase como socio de produccion global',de:'Werden Sie globaler Produktionspartner',fr:'Rejoignez le reseau de partenaires de production'},
+    page_title: {ko:'출력·시공 파트너 등록',ja:'印刷·施工パートナー登録',en:'Print & Install Partner Registration',zh:'印刷·施工合作伙伴注册',ar:'تسجيل شريك الطباعة والتركيب',es:'Registro de socio de impresión',de:'Druck- & Montagepartner-Registrierung',fr:'Inscription partenaire impression & installation'},
+    page_subtitle: {ko:'카멜레온 프린팅의 글로벌 파트너가 되어보세요',ja:'カメレオンプリンティングのグローバルパートナーに',en:'Join Chameleon Printing\'s global partner network',zh:'加入变色龙印刷的全球合作伙伴网络',ar:'انضم إلى شبكة شركاء الطباعة العالمية',es:'Únase a la red global de socios',de:'Werden Sie globaler Partner',fr:'Rejoignez le réseau mondial de partenaires'},
+    hero_title: {ko:'전세계 고객과 가장 가까운 출력·시공 업체를 연결합니다',ja:'世界中のお客様と最寄りの印刷・施工業者をつなぎます',en:'We connect clients worldwide with the nearest print & install partner',zh:'我们将全球客户与最近的印刷·施工合作伙伴连接',ar:'نربط العملاء حول العالم بأقرب شريك طباعة وتركيب',es:'Conectamos clientes con el socio de impresión más cercano',de:'Wir verbinden Kunden weltweit mit dem nächsten Druck- & Montagepartner',fr:'Nous connectons les clients avec le partenaire le plus proche'},
+    hero_desc: {ko:'제작·시공이 가능한 품목을 등록해 주세요.<br>고객 주문이 들어오면 가장 가까운 파트너에게 자동으로 알림이 갑니다.<br>카멜레온이 자재 납품과 품질관리까지 함께합니다. 수수료는 업계 최저 5%.',ja:'製作・施工が可能な品目を登録してください。<br>お客様の注文が入ると、最寄りのパートナーに自動通知されます。<br>カメレオンが資材供給と品質管理をサポートします。手数料は業界最安の5%。',en:'Register the items you can produce or install.<br>When a client order comes in, the nearest partner is auto-notified.<br>Chameleon handles material supply and quality control. Just 5% commission.',zh:'请注册您可以制作或施工的品类。<br>客户订单到来时，最近的合作伙伴将自动收到通知。<br>卡梅隆提供材料供应和质量控制。手续费仅5%。',ar:'سجّل المنتجات التي يمكنك إنتاجها أو تركيبها.<br>عند وصول طلب عميل، يتم إخطار أقرب شريك تلقائياً.<br>شاميليون يتولى توريد المواد ومراقبة الجودة. عمولة 5% فقط.',es:'Registre los artículos que puede producir o instalar.<br>Cuando llega un pedido, el socio más cercano es notificado automáticamente.<br>Chameleon gestiona el suministro y control de calidad. Solo 5% de comisión.',de:'Registrieren Sie, was Sie produzieren oder installieren können.<br>Bei eingehenden Bestellungen wird der nächste Partner automatisch benachrichtigt.<br>Chameleon kümmert sich um Materialbeschaffung und Qualitätskontrolle. Nur 5% Gebühr.',fr:'Enregistrez ce que vous pouvez produire ou installer.<br>Quand une commande arrive, le partenaire le plus proche est notifié automatiquement.<br>Chameleon gère l\'approvisionnement et le contrôle qualité. Seulement 5% de commission.'},
+    cap1: {ko:'허니콤보드 제작·시공 (디지털 커터)',ja:'ハニカムボード製作·施工（デジタルカッター）',en:'Honeycomb board production & install (digital cutter)',zh:'蜂窝板制作·施工（数字切割机）',ar:'إنتاج وتركيب ألواح الخلية (قاطع رقمي)',es:'Producción e instalación de paneles panal (cortadora digital)',de:'Wabenplatten-Produktion & Montage (Digitalschneider)',fr:'Production & installation panneaux nid d\'abeille (découpe numérique)'},
+    cap2: {ko:'실사출력·포맥스 인쇄 (실사출력기)',ja:'大判出力・フォメックス印刷（大判プリンター）',en:'Large format & foamex print (wide-format printer)',zh:'大幅面输出·PVC板印刷（大幅面打印机）',ar:'طباعة كبيرة وفوميكس (طابعة كبيرة)',es:'Impresión gran formato y foamex (impresora gran formato)',de:'Großformatdruck & Foamex (Großformatdrucker)',fr:'Impression grand format & foamex (imprimante grand format)'},
+    cap3: {ko:'아크릴·굿즈 인쇄·커팅 (레이저 커팅기)',ja:'アクリル・グッズ印刷・カット（レーザーカッター）',en:'Acrylic & goods print/cut (laser cutter)',zh:'亚克力·周边印刷·切割（激光切割机）',ar:'طباعة وقطع أكريليك وبضائع (قاطع ليزر)',es:'Impresión y corte acrílico y merchandising (cortadora láser)',de:'Acryl- & Merchandise-Druck/Schnitt (Laserschneider)',fr:'Impression & découpe acrylique et goodies (découpe laser)'},
+    cap4: {ko:'의류 인쇄 (DTP 장비)',ja:'アパレル印刷（DTP機器）',en:'Apparel printing (DTP equipment)',zh:'服装印刷（DTP设备）',ar:'طباعة الملابس (معدات DTP)',es:'Impresión de ropa (equipo DTP)',de:'Textildruck (DTP-Ausrüstung)',fr:'Impression textile (équipement DTP)'},
+    cap5: {ko:'시공 인력 (설치·시공 전문)',ja:'施工チーム（設置・施工専門）',en:'Installation crew (install & construction)',zh:'施工团队（安装·施工专业）',ar:'فريق التركيب (تركيب وبناء)',es:'Equipo de instalación (montaje y construcción)',de:'Montageteam (Installation & Aufbau)',fr:'Équipe d\'installation (montage & construction)'},
     auth_title: {ko:'계정',ja:'アカウント',en:'Account',zh:'账户',ar:'الحساب',es:'Cuenta',de:'Konto',fr:'Compte'},
     login: {ko:'로그인',ja:'ログイン',en:'Log in',zh:'登录',ar:'تسجيل الدخول',es:'Iniciar sesion',de:'Anmelden',fr:'Connexion'},
     signup: {ko:'회원가입',ja:'新規登録',en:'Sign up',zh:'注册',ar:'إنشاء حساب',es:'Registrarse',de:'Registrieren',fr:'S\'inscrire'},
@@ -557,45 +546,6 @@ function renderLangSelector() {
     }).join('');
 }
 
-// ===== Render capabilities grid =====
-function renderCapabilities() {
-    const grid = document.getElementById('capGrid');
-    grid.innerHTML = CATEGORIES.map(cat => {
-        const catLabel = cat.label[LANG] || cat.label.en;
-        const subsHtml = cat.items.map(item => {
-            const itemLabel = item.label[LANG] || item.label.en;
-            return `<label class="cap-sub"><input type="checkbox" data-cat="${cat.id}" data-item="${item.id}"> ${itemLabel}</label>`;
-        }).join('');
-        return `<div class="cap-category" data-cat="${cat.id}">
-            <div class="cap-header" onclick="toggleCat(this)">
-                <input type="checkbox" onclick="event.stopPropagation();toggleCatCheck(this,'${cat.id}')">
-                <span class="cap-label"><i class="fas ${cat.icon}" style="color:#7c3aed;margin-right:4px"></i> ${catLabel}</span>
-                <i class="fas fa-chevron-down cap-toggle"></i>
-            </div>
-            <div class="cap-subs" id="subs_${cat.id}">${subsHtml}</div>
-        </div>`;
-    }).join('');
-}
-
-function toggleCat(header) {
-    const subs = header.nextElementSibling;
-    const toggle = header.querySelector('.cap-toggle');
-    subs.classList.toggle('show');
-    toggle.classList.toggle('open');
-    header.closest('.cap-category').classList.toggle('active', subs.classList.contains('show'));
-}
-
-function toggleCatCheck(cb, catId) {
-    const subs = document.getElementById('subs_' + catId);
-    const checks = subs.querySelectorAll('input[type="checkbox"]');
-    checks.forEach(c => c.checked = cb.checked);
-    if (cb.checked && !subs.classList.contains('show')) {
-        subs.classList.add('show');
-        cb.closest('.cap-header').querySelector('.cap-toggle').classList.add('open');
-        cb.closest('.cap-category').classList.add('active');
-    }
-}
-
 // ===== Country change =====
 function onCountryChange() {
     const country = document.getElementById('fCountry').value;
@@ -628,18 +578,23 @@ function translatePage() {
     document.getElementById('btnSignup').textContent = t('signup');
     document.getElementById('btnLogout').textContent = t('logout');
 
+    // Hero
+    document.getElementById('heroTitle').innerHTML = t('hero_title');
+    document.getElementById('heroDesc').innerHTML = t('hero_desc');
+
     document.getElementById('secCompany').textContent = t('sec_company');
     document.getElementById('lblCompanyName').innerHTML = t('company_name') + ' <span class="req">*</span>';
-    document.getElementById('lblContactName').innerHTML = t('contact_name') + ' <span class="req">*</span>';
+    document.getElementById('lblPhone').innerHTML = t('phone') + ' <span class="req">*</span>';
     document.getElementById('lblCountry').innerHTML = t('country') + ' <span class="req">*</span>';
     document.getElementById('lblCity').textContent = t('city');
-    document.getElementById('lblAddress').innerHTML = t('address') + ' <span class="req">*</span>';
-    document.getElementById('lblPhone').innerHTML = t('phone') + ' <span class="req">*</span>';
-    document.getElementById('lblEmail').innerHTML = t('email') + ' <span class="req">*</span>';
-    document.getElementById('lblWebsite').textContent = t('website');
 
     document.getElementById('secCaps').textContent = t('sec_caps');
-    document.getElementById('lblCapsNote').textContent = t('caps_note');
+    // 5 capability labels
+    document.getElementById('capLbl1').textContent = t('cap1');
+    document.getElementById('capLbl2').textContent = t('cap2');
+    document.getElementById('capLbl3').textContent = t('cap3');
+    document.getElementById('capLbl4').textContent = t('cap4');
+    document.getElementById('capLbl5').textContent = t('cap5');
 
     document.getElementById('secTax').textContent = t('sec_tax');
     document.getElementById('lblLegalName').textContent = t('legal_name');
@@ -743,20 +698,6 @@ async function doLogout() {
     enableForm(false);
 }
 
-// ===== Collect capabilities =====
-function collectCapabilities() {
-    const caps = [];
-    CATEGORIES.forEach(cat => {
-        const checked = [];
-        const subs = document.querySelectorAll(`input[data-cat="${cat.id}"]:checked`);
-        subs.forEach(s => checked.push(s.dataset.item));
-        if (checked.length > 0) {
-            caps.push({ category: cat.id, items: checked });
-        }
-    });
-    return caps;
-}
-
 // ===== Submit =====
 async function doSubmit() {
     if (!currentUser) return;
@@ -768,7 +709,7 @@ async function doSubmit() {
     }
 
     // Validate required fields
-    const required = ['fCompanyName','fContactName','fAddress','fPhone','fEmail'];
+    const required = ['fCompanyName','fPhone'];
     for (const id of required) {
         if (!document.getElementById(id).value.trim()) {
             alert(t('error_required'));
@@ -777,8 +718,11 @@ async function doSubmit() {
         }
     }
 
-    // Validate at least one capability
-    const caps = collectCapabilities();
+    // Collect simple capability checkboxes
+    const caps = [];
+    document.querySelectorAll('#capSimple input[type="checkbox"]:checked').forEach(cb => {
+        caps.push({ category: cb.value, items: [] });
+    });
     if (caps.length === 0) {
         alert(t('error_caps'));
         return;
@@ -793,13 +737,13 @@ async function doSubmit() {
         company_name: document.getElementById('fCompanyName').value.trim(),
         country: document.getElementById('fCountry').value,
         city: document.getElementById('fCity').value.trim() || null,
-        address: document.getElementById('fAddress').value.trim(),
-        contact_name: document.getElementById('fContactName').value.trim(),
+        address: document.getElementById('fCity').value.trim() || '',
+        contact_name: currentUser.email.split('@')[0],
         phone: document.getElementById('fPhone').value.trim(),
-        email: document.getElementById('fEmail').value.trim(),
-        website: document.getElementById('fWebsite').value.trim() || null,
+        email: currentUser.email,
+        website: null,
         capabilities: caps,
-        capabilities_note: document.getElementById('fCapsNote').value.trim() || null,
+        capabilities_note: null,
         legal_name: document.getElementById('fLegalName').value.trim() || null,
         tax_id_type: document.getElementById('fTaxType').value,
         tax_id: document.getElementById('fTaxId').value.trim() || null,
@@ -831,7 +775,7 @@ async function doSubmit() {
 (async function init() {
     renderLangSelector();
     translatePage();
-    renderCapabilities();
+    // Capabilities are static checkboxes, no dynamic render needed
     populateCountries();
     await checkAuth();
     document.body.classList.add('ready');
