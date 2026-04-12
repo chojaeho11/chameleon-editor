@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>만남 - Chameleon</title>
+<script>
+(function(){
+    var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
+    if(l){if(l==='jp'||l==='ja')l='ja';else if(l==='en'||l==='us')l='en';else if(!['es','de','fr','zh'].includes(l))l='ko';}
+    else if(h.includes('cafe0101'))l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design'))l='en';else l='ko';
+    document.documentElement.lang=l;window.__LANG=l;
+})();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',sans-serif;background:#fdf2f8;color:#1e293b;min-height:100vh;}
+.nav{background:#fff;border-bottom:1px solid #fce7f3;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#1e293b;font-size:18px;font-weight:900;}
+.nav-logo i{color:#ec4899;font-size:20px;}
+.nav-right{display:flex;gap:6px;}
+.lang-btn{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;color:#475569;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-family:inherit;}
+.lang-btn.active{background:#ec4899;color:#fff;border-color:#ec4899;}
+.hero{background:linear-gradient(135deg,#fdf2f8,#fce7f3);padding:40px 20px;text-align:center;border-bottom:1px solid #fbcfe8;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#ec4899;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:12px;border:1px solid #fbcfe8;}
+.hero h1{font-size:clamp(24px,4vw,36px);font-weight:900;color:#831843;letter-spacing:-1px;line-height:1.3;margin-bottom:8px;}
+.hero h1 em{font-style:normal;color:#ec4899;}
+.hero p{font-size:14px;color:#9d174d;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:800px;margin:0 auto;padding:24px 20px 60px;}
+/* Auth */
+.auth-section{background:#fff;border:1px solid #fce7f3;border-radius:16px;padding:20px;margin-bottom:20px;}
+.auth-title{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.auth-row{display:flex;gap:8px;margin-bottom:10px;}
+.auth-row input{flex:1;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;}
+.auth-row input:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,0.12);}
+.auth-btns{display:flex;gap:8px;}
+.auth-btns button{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-login{background:#ec4899;color:#fff;}.btn-login:hover{background:#db2777;}
+.btn-signup{background:#fce7f3;color:#9d174d;}
+.auth-error{color:#ef4444;font-size:12px;margin-top:6px;display:none;}
+.auth-logged-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.auth-logged-in .email{font-size:14px;font-weight:700;color:#ec4899;}
+.btn-logout{padding:8px 14px;border:1px solid #fca5a5;background:#fff;border-radius:8px;font-size:12px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit;}
+/* Tabs */
+.tabs{display:flex;gap:8px;margin-bottom:20px;}
+.tab-btn{padding:10px 20px;border:1.5px solid #fce7f3;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#64748b;transition:all .15s;}
+.tab-btn.active{background:#ec4899;color:#fff;border-color:#ec4899;}
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.filters select{padding:8px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;font-family:inherit;background:#fff;}
+/* Profile grid */
+.profile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.profile-card{background:#fff;border:1px solid #fce7f3;border-radius:20px;overflow:hidden;transition:all .2s;position:relative;}
+.profile-card:hover{box-shadow:0 8px 32px rgba(236,72,153,0.12);transform:translateY(-2px);}
+.profile-photo{width:100%;height:240px;background:linear-gradient(135deg,#fce7f3,#fbcfe8);display:flex;align-items:center;justify-content:center;font-size:72px;color:#f9a8d4;}
+.profile-body{padding:16px;}
+.profile-body h3{font-size:17px;font-weight:800;margin-bottom:2px;}
+.profile-body .age-gender{font-size:13px;color:#ec4899;font-weight:700;margin-bottom:6px;}
+.profile-body .bio{font-size:13px;color:#64748b;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.interest-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
+.interest-tag{padding:3px 10px;background:#fdf2f8;border:1px solid #fce7f3;border-radius:999px;font-size:10px;font-weight:700;color:#9d174d;}
+.profile-actions{display:flex;gap:8px;}
+.btn-pass,.btn-like{flex:1;padding:10px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-pass{background:#f1f5f9;color:#64748b;}.btn-pass:hover{background:#e2e8f0;}
+.btn-like{background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;}.btn-like:hover{opacity:0.9;}
+.btn-report{position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.9);border:none;border-radius:8px;padding:6px 10px;font-size:11px;color:#94a3b8;cursor:pointer;font-family:inherit;font-weight:600;}
+.btn-report:hover{color:#ef4444;}
+/* Match notification */
+.match-popup{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;}
+.match-popup.show{display:flex;}
+.match-card{background:linear-gradient(135deg,#ec4899,#f472b6);border-radius:24px;padding:40px;text-align:center;color:#fff;max-width:360px;width:90%;}
+.match-card h2{font-size:28px;font-weight:900;margin-bottom:8px;}
+.match-card p{font-size:14px;opacity:0.9;margin-bottom:20px;}
+.match-card button{padding:12px 32px;background:#fff;color:#ec4899;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
+/* Form */
+.form-card{background:#fff;border:1px solid #fce7f3;border-radius:16px;padding:24px;margin-bottom:20px;}
+.form-card.disabled{opacity:0.5;pointer-events:none;}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#0f172a;padding-bottom:10px;border-bottom:1px solid #fce7f3;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;}
+.form-group label .req{color:#ef4444;}
+.form-input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;}
+.form-input:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,0.12);}
+select.form-input{appearance:auto;}
+textarea.form-input{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+@media(max-width:640px){.form-row,.form-row3{grid-template-columns:1fr;}.profile-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}.profile-photo{height:180px;}}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;}
+.submit-btn:hover{opacity:0.9;}
+.interest-input{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.interest-input input{flex:1;min-width:120px;}
+.interest-input button{padding:8px 14px;background:#ec4899;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+.my-interests{display:flex;gap:4px;flex-wrap:wrap;}
+.my-interest{padding:4px 12px;background:#fdf2f8;border:1px solid #fbcfe8;border-radius:999px;font-size:12px;font-weight:700;color:#9d174d;cursor:pointer;}
+.my-interest:hover{background:#fce7f3;text-decoration:line-through;}
+.empty{text-align:center;padding:60px 20px;color:#d1d5db;grid-column:1/-1;}
+.empty i{font-size:48px;margin-bottom:12px;display:block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:999;display:none;}
+.toast.show{display:block;animation:fadeUp .3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.foot{text-align:center;padding:32px 20px;color:#d1d5db;font-size:12px;border-top:1px solid #fce7f3;}
+.foot a{color:#ec4899;text-decoration:none;font-weight:700;}
+@media(max-width:640px){.container{padding:16px 14px 40px;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-logo" href="/services"><i class="fa-solid fa-heart"></i> Chameleon</a>
+    <div class="nav-right" id="langBar"></div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge"><i class="fa-solid fa-heart"></i> <span id="heroBadgeTxt"></span></div>
+    <h1 id="heroTitle"></h1>
+    <p id="heroSub"></p>
+</section>
+
+<div class="container">
+    <div class="auth-section">
+        <div class="auth-title"><i class="fas fa-user-circle" style="color:#ec4899"></i> <span id="authTitle"></span></div>
+        <div id="authLoggedOut">
+            <div class="auth-row"><input type="email" id="authEmail" placeholder="email@example.com"></div>
+            <div class="auth-row"><input type="password" id="authPw" placeholder="Password (min 6)"></div>
+            <div class="auth-btns"><button class="btn-login" onclick="doLogin()" id="btnLogin"></button><button class="btn-signup" onclick="doSignup()" id="btnSignup"></button></div>
+            <div class="auth-error" id="authError"></div>
+        </div>
+        <div id="authLoggedIn" style="display:none">
+            <div class="auth-logged-in"><span class="email" id="userEmail"></span><button class="btn-logout" onclick="doLogout()" id="btnLogout"></button></div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('browse')" id="tabBrowse"></button>
+        <button class="tab-btn" onclick="switchTab('profile')" id="tabProfile"></button>
+    </div>
+
+    <!-- Browse Tab -->
+    <div id="browseTab">
+        <div class="filters">
+            <select id="filterGender" onchange="loadProfiles()"></select>
+            <select id="filterLooking" onchange="loadProfiles()"></select>
+            <select id="filterCity" onchange="loadProfiles()"><option value="">All</option></select>
+        </div>
+        <div class="profile-grid" id="profileGrid"></div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div id="profileTab" style="display:none">
+        <div class="form-card" id="profileForm">
+            <div class="section-title"><i class="fa-solid fa-heart" style="color:#ec4899"></i> <span id="secProfile"></span></div>
+            <div class="form-row">
+                <div class="form-group"><label><span id="lblName"></span> <span class="req">*</span></label><input class="form-input" id="fName" maxlength="30"></div>
+                <div class="form-group"><label id="lblAge"></label><input class="form-input" id="fAge" type="number" min="18" max="99"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblGender"></label><select class="form-input" id="fGender"></select></div>
+                <div class="form-group"><label id="lblLooking"></label><select class="form-input" id="fLooking"></select></div>
+            </div>
+            <div class="form-group"><label id="lblBio"></label><textarea class="form-input" id="fBio" maxlength="300"></textarea></div>
+            <div class="form-group">
+                <label id="lblInterests"></label>
+                <div class="interest-input">
+                    <input class="form-input" id="fInterestInput" placeholder="gaming, cooking..." style="flex:1;">
+                    <button onclick="addInterest()" id="btnAddInterest">+</button>
+                </div>
+                <div class="my-interests" id="myInterests"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblCity"></label><input class="form-input" id="fCity"></div>
+                <div class="form-group"><label id="lblAgeRange"></label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input class="form-input" id="fAgeMin" type="number" min="18" max="99" value="18" style="width:70px;">
+                        <span>~</span>
+                        <input class="form-input" id="fAgeMax" type="number" min="18" max="99" value="99" style="width:70px;">
+                    </div>
+                </div>
+            </div>
+            <button class="submit-btn" onclick="saveProfile()" id="btnSaveProfile"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Match Popup -->
+<div class="match-popup" id="matchPopup" onclick="closeMatch()">
+    <div class="match-card" onclick="event.stopPropagation()">
+        <div style="font-size:48px;margin-bottom:12px;">&#128149;</div>
+        <h2 id="matchTitle"></h2>
+        <p id="matchSub"></p>
+        <button onclick="closeMatch()" id="btnMatchOk">OK!</button>
+    </div>
+</div>
+
+<footer class="foot"><a href="/services" id="footBack"></a></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG=window.__LANG||'ko';
+const SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+let currentUser=null;
+let myInterests=[];
+
+const T={
+    heroBadge:{ko:'무료 이용',ja:'無料利用',en:'FREE'},
+    heroTitle:{ko:'새로운 인연을<br><em>만나보세요</em>',ja:'新しい出会いを<br><em>見つけよう</em>',en:'Find<br><em>new connections</em>'},
+    heroSub:{ko:'같은 동네, 같은 관심사. 안전하게 새로운 사람을 만나보세요.',ja:'同じ街、同じ趣味。安全に新しい人と出会いましょう。',en:'Same neighborhood, same interests. Meet new people safely.'},
+    authTitle:{ko:'로그인 / 회원가입',ja:'ログイン / 会員登録',en:'Login / Sign Up'},
+    login:{ko:'로그인',ja:'ログイン',en:'Login'},signup:{ko:'회원가입',ja:'会員登録',en:'Sign Up'},logout:{ko:'로그아웃',ja:'ログアウト',en:'Logout'},
+    tabBrowse:{ko:'프로필 둘러보기',ja:'プロフィール閲覧',en:'Browse'},tabProfile:{ko:'내 프로필',ja:'マイプロフィール',en:'My Profile'},
+    allGender:{ko:'성별 전체',ja:'性別すべて',en:'All Genders'},male:{ko:'남성',ja:'男性',en:'Male'},female:{ko:'여성',ja:'女性',en:'Female'},other:{ko:'기타',ja:'その他',en:'Other'},
+    allLooking:{ko:'목적 전체',ja:'目的すべて',en:'All'},friends:{ko:'친구',ja:'友達',en:'Friends'},dating:{ko:'연애',ja:'恋愛',en:'Dating'},both:{ko:'모두',ja:'両方',en:'Both'},
+    allCities:{ko:'전체 지역',ja:'全地域',en:'All Cities'},
+    secProfile:{ko:'내 프로필 만들기',ja:'マイプロフィール作成',en:'Create My Profile'},
+    name:{ko:'닉네임',ja:'ニックネーム',en:'Nickname'},age:{ko:'나이',ja:'年齢',en:'Age'},gender:{ko:'성별',ja:'性別',en:'Gender'},
+    lookingFor:{ko:'목적',ja:'目的',en:'Looking For'},bio:{ko:'자기소개',ja:'自己紹介',en:'Bio'},
+    interests:{ko:'관심사',ja:'趣味',en:'Interests'},city:{ko:'도시',ja:'都市',en:'City'},
+    ageRange:{ko:'희망 나이대',ja:'希望年齢層',en:'Age Range'},
+    saveProfile:{ko:'프로필 저장',ja:'プロフィール保存',en:'Save Profile'},
+    like:{ko:'좋아요',ja:'いいね',en:'Like'},pass:{ko:'패스',ja:'パス',en:'Pass'},report:{ko:'신고',ja:'報告',en:'Report'},
+    matchTitle:{ko:'매칭됐어요!',ja:'マッチしました！',en:"It's a Match!"},
+    matchSub:{ko:'서로 좋아요를 눌렀어요. 이제 대화를 시작해보세요!',ja:'お互いいいねしました。会話を始めましょう！',en:"You both liked each other. Start a conversation!"},
+    saved:{ko:'저장 완료!',ja:'保存完了！',en:'Saved!'},liked:{ko:'좋아요!',ja:'いいね！',en:'Liked!'},passed:{ko:'패스',ja:'パス',en:'Passed'},
+    empty:{ko:'프로필이 없습니다',ja:'プロフィールがまだありません',en:'No profiles yet'},
+    loginFirst:{ko:'로그인이 필요합니다',ja:'ログインが必要です',en:'Please login first'},
+    back:{ko:'← 서비스 목록',ja:'← サービス一覧',en:'← Services'},
+    yearsOld:{ko:'세',ja:'歳',en:'y/o'},
+};
+function t(k){return(T[k]||{})[LANG]||(T[k]||{}).ko||k;}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+function genderLabel(g){return{male:t('male'),female:t('female'),other:t('other')}[g]||g;}
+function lookingLabel(l){return{friends:t('friends'),dating:t('dating'),both:t('both')}[l]||l;}
+
+function renderI18n(){
+    document.getElementById('heroBadgeTxt').textContent=t('heroBadge');
+    document.getElementById('heroTitle').innerHTML=t('heroTitle');
+    document.getElementById('heroSub').textContent=t('heroSub');
+    document.getElementById('authTitle').textContent=t('authTitle');
+    document.getElementById('btnLogin').textContent=t('login');
+    document.getElementById('btnSignup').textContent=t('signup');
+    document.getElementById('btnLogout').textContent=t('logout');
+    document.getElementById('tabBrowse').textContent=t('tabBrowse');
+    document.getElementById('tabProfile').textContent=t('tabProfile');
+    document.getElementById('secProfile').textContent=t('secProfile');
+    document.getElementById('lblName').textContent=t('name');
+    document.getElementById('lblAge').textContent=t('age');
+    document.getElementById('lblGender').textContent=t('gender');
+    document.getElementById('lblLooking').textContent=t('lookingFor');
+    document.getElementById('lblBio').textContent=t('bio');
+    document.getElementById('lblInterests').textContent=t('interests');
+    document.getElementById('lblCity').textContent=t('city');
+    document.getElementById('lblAgeRange').textContent=t('ageRange');
+    document.getElementById('btnSaveProfile').textContent=t('saveProfile');
+    document.getElementById('matchTitle').textContent=t('matchTitle');
+    document.getElementById('matchSub').textContent=t('matchSub');
+    document.getElementById('footBack').textContent=t('back');
+
+    document.getElementById('filterGender').innerHTML=`<option value="">${t('allGender')}</option><option value="male">${t('male')}</option><option value="female">${t('female')}</option><option value="other">${t('other')}</option>`;
+    document.getElementById('filterLooking').innerHTML=`<option value="">${t('allLooking')}</option><option value="friends">${t('friends')}</option><option value="dating">${t('dating')}</option><option value="both">${t('both')}</option>`;
+    document.getElementById('fGender').innerHTML=`<option value="male">${t('male')}</option><option value="female">${t('female')}</option><option value="other">${t('other')}</option>`;
+    document.getElementById('fLooking').innerHTML=`<option value="both">${t('both')}</option><option value="friends">${t('friends')}</option><option value="dating">${t('dating')}</option>`;
+
+    const langs=[{c:'ko',l:'KR'},{c:'ja',l:'JP'},{c:'en',l:'EN'}];
+    document.getElementById('langBar').innerHTML=langs.map(l=>{const u=new URL(location.href);u.searchParams.set('lang',l.c);return `<a class="lang-btn${LANG===l.c?' active':''}" href="${u}">${l.l}</a>`;}).join('');
+}
+
+async function checkAuth(){
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){currentUser=session.user;document.getElementById('authLoggedOut').style.display='none';document.getElementById('authLoggedIn').style.display='block';document.getElementById('userEmail').textContent=session.user.email;document.getElementById('profileForm').classList.remove('disabled');loadMyProfile();}
+    else{currentUser=null;document.getElementById('authLoggedOut').style.display='block';document.getElementById('authLoggedIn').style.display='none';document.getElementById('profileForm').classList.add('disabled');}
+}
+async function doLogin(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';checkAuth();}
+async function doSignup(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signUp({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';toast(t('signup')+' OK!');checkAuth();}
+async function doLogout(){await sb.auth.signOut();currentUser=null;checkAuth();}
+
+function switchTab(tab){document.getElementById('browseTab').style.display=tab==='browse'?'block':'none';document.getElementById('profileTab').style.display=tab==='profile'?'block':'none';document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='browse'?0:1)));}
+
+function addInterest(){
+    const inp=document.getElementById('fInterestInput');
+    const val=inp.value.trim();
+    if(val&&!myInterests.includes(val)){myInterests.push(val);renderInterests();}
+    inp.value='';
+}
+function removeInterest(i){myInterests.splice(i,1);renderInterests();}
+function renderInterests(){
+    document.getElementById('myInterests').innerHTML=myInterests.map((t,i)=>`<span class="my-interest" onclick="removeInterest(${i})">${esc(t)} &times;</span>`).join('');
+}
+
+async function loadMyProfile(){
+    if(!currentUser)return;
+    const{data}=await sb.from('community_dating_profiles').select('*').eq('user_id',currentUser.id).maybeSingle();
+    if(data){
+        document.getElementById('fName').value=data.display_name||'';
+        document.getElementById('fAge').value=data.age||'';
+        document.getElementById('fGender').value=data.gender||'male';
+        document.getElementById('fLooking').value=data.looking_for||'both';
+        document.getElementById('fBio').value=data.bio||'';
+        document.getElementById('fCity').value=data.city||'';
+        document.getElementById('fAgeMin').value=data.age_min||18;
+        document.getElementById('fAgeMax').value=data.age_max||99;
+        myInterests=Array.isArray(data.interests)?data.interests:[];
+        renderInterests();
+    }
+}
+
+async function loadProfiles(){
+    const gender=document.getElementById('filterGender').value;
+    const looking=document.getElementById('filterLooking').value;
+    const city=document.getElementById('filterCity').value;
+    let q=sb.from('community_dating_profiles').select('*').eq('is_active',true).order('last_active',{ascending:false}).limit(50);
+    if(gender)q=q.eq('gender',gender);
+    if(looking)q=q.eq('looking_for',looking);
+    if(city)q=q.eq('city',city);
+    if(currentUser)q=q.neq('user_id',currentUser.id);
+    const{data,error}=await q;
+    const grid=document.getElementById('profileGrid');
+    if(error||!data||data.length===0){grid.innerHTML=`<div class="empty"><i class="fa-solid fa-heart-crack"></i>${t('empty')}</div>`;return;}
+    grid.innerHTML=data.map(p=>{
+        const interests=Array.isArray(p.interests)?p.interests:[];
+        return `
+        <div class="profile-card">
+            <button class="btn-report" onclick="toast('${t('report')}')">${t('report')}</button>
+            <div class="profile-photo"><i class="fa-solid fa-user"></i></div>
+            <div class="profile-body">
+                <h3>${esc(p.display_name)}</h3>
+                <div class="age-gender">${p.age||'?'} ${t('yearsOld')} &middot; ${genderLabel(p.gender)} &middot; ${lookingLabel(p.looking_for)}</div>
+                ${p.bio?`<div class="bio">${esc(p.bio)}</div>`:''}
+                <div class="interest-tags">${interests.slice(0,5).map(i=>`<span class="interest-tag">${esc(i)}</span>`).join('')}</div>
+                <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;"><i class="fa-solid fa-location-dot"></i> ${esc(p.city||'')}</div>
+                <div class="profile-actions">
+                    <button class="btn-pass" onclick="doPass('${p.user_id}')"><i class="fa-solid fa-xmark"></i> ${t('pass')}</button>
+                    <button class="btn-like" onclick="doLike('${p.user_id}')"><i class="fa-solid fa-heart"></i> ${t('like')}</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    // cities
+    const cities=[...new Set(data.map(p=>p.city).filter(Boolean))];
+    const cf=document.getElementById('filterCity');
+    const cv=cf.value;
+    cf.innerHTML=`<option value="">${t('allCities')}</option>`+cities.map(c=>`<option value="${esc(c)}"${c===cv?' selected':''}>${esc(c)}</option>`).join('');
+}
+
+async function saveProfile(){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const name=document.getElementById('fName').value.trim();
+    if(!name){toast(t('name')+' required');return;}
+    const row={
+        user_id:currentUser.id,
+        display_name:name,
+        age:parseInt(document.getElementById('fAge').value)||null,
+        gender:document.getElementById('fGender').value,
+        bio:document.getElementById('fBio').value.trim()||null,
+        interests:myInterests,
+        city:document.getElementById('fCity').value.trim()||null,
+        country:LANG==='ja'?'JP':LANG==='en'?'US':'KR',
+        looking_for:document.getElementById('fLooking').value,
+        age_min:parseInt(document.getElementById('fAgeMin').value)||18,
+        age_max:parseInt(document.getElementById('fAgeMax').value)||99,
+        last_active:new Date().toISOString()
+    };
+    const{error}=await sb.from('community_dating_profiles').upsert(row,{onConflict:'user_id'});
+    if(error){toast(error.message);return;}
+    toast(t('saved'));
+}
+
+async function doLike(toUser){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const{error}=await sb.from('community_dating_likes').upsert({from_user:currentUser.id,to_user:toUser,is_like:true},{onConflict:'from_user,to_user'});
+    if(error){toast(error.message);return;}
+    toast(t('liked'));
+    // Check for mutual like
+    const{data}=await sb.from('community_dating_likes').select('id').eq('from_user',toUser).eq('to_user',currentUser.id).eq('is_like',true).maybeSingle();
+    if(data){document.getElementById('matchPopup').classList.add('show');}
+}
+async function doPass(toUser){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    await sb.from('community_dating_likes').upsert({from_user:currentUser.id,to_user:toUser,is_like:false},{onConflict:'from_user,to_user'});
+    toast(t('passed'));
+}
+function closeMatch(){document.getElementById('matchPopup').classList.remove('show');}
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+renderI18n();checkAuth();loadProfiles();
+</script>
+</body>
+</html>

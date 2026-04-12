@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>타임알바 - Chameleon</title>
+<script>
+(function(){
+    var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
+    if(l){if(l==='jp'||l==='ja')l='ja';else if(l==='en'||l==='us')l='en';else if(!['es','de','fr','zh'].includes(l))l='ko';}
+    else if(h.includes('cafe0101'))l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design'))l='en';else l='ko';
+    document.documentElement.lang=l;window.__LANG=l;
+})();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',sans-serif;background:#f8f9fc;color:#1e293b;min-height:100vh;}
+.nav{background:#fff;border-bottom:1px solid #f1f5f9;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#1e293b;font-size:18px;font-weight:900;}
+.nav-logo i{color:#7c3aed;font-size:20px;}
+.nav-right{display:flex;gap:6px;}
+.nav-right a,.lang-btn{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;color:#475569;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-family:inherit;}
+.lang-btn.active{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+.hero{background:linear-gradient(135deg,#fffbeb,#fef3c7);padding:40px 20px;text-align:center;border-bottom:1px solid #fde68a;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#d97706;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:12px;border:1px solid #fde68a;}
+.hero h1{font-size:clamp(24px,4vw,36px);font-weight:900;color:#78350f;letter-spacing:-1px;line-height:1.3;margin-bottom:8px;}
+.hero h1 em{font-style:normal;color:#d97706;}
+.hero p{font-size:14px;color:#92400e;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:800px;margin:0 auto;padding:24px 20px 60px;}
+.auth-section{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px;}
+.auth-title{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.auth-row{display:flex;gap:8px;margin-bottom:10px;}
+.auth-row input{flex:1;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;}
+.auth-row input:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.12);}
+.auth-btns{display:flex;gap:8px;}
+.auth-btns button{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-login{background:#7c3aed;color:#fff;}
+.btn-login:hover{background:#6d28d9;}
+.btn-signup{background:#f1f5f9;color:#475569;}
+.btn-signup:hover{background:#e2e8f0;}
+.auth-error{color:#ef4444;font-size:12px;margin-top:6px;display:none;}
+.auth-logged-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.auth-logged-in .email{font-size:14px;font-weight:700;color:#7c3aed;}
+.btn-logout{padding:8px 14px;border:1px solid #fca5a5;background:#fff;border-radius:8px;font-size:12px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit;}
+.tabs{display:flex;gap:8px;margin-bottom:20px;}
+.tab-btn{padding:10px 20px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#64748b;transition:all .15s;}
+.tab-btn.active{background:#d97706;color:#fff;border-color:#d97706;}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filters select{padding:8px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;font-family:inherit;background:#fff;}
+.filters select:focus{outline:none;border-color:#7c3aed;}
+.card-grid{display:grid;gap:14px;}
+.job-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;transition:all .2s;cursor:pointer;}
+.job-card:hover{border-color:#fde68a;box-shadow:0 8px 24px rgba(217,119,6,0.08);transform:translateY(-1px);}
+.job-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.job-card h3{font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px;}
+.job-card .pay{font-size:18px;font-weight:900;color:#d97706;}
+.job-card .meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#64748b;margin-bottom:8px;}
+.job-card .meta span{display:flex;align-items:center;gap:4px;}
+.job-card .desc{font-size:13px;color:#475569;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.badge-type{display:inline-block;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:800;margin-bottom:8px;}
+.badge-part-time{background:#fef3c7;color:#92400e;}
+.badge-full-time{background:#dbeafe;color:#1e40af;}
+.badge-one-day{background:#fce7f3;color:#9d174d;}
+.badge-free{background:#dcfce7;color:#166534;font-size:11px;font-weight:800;padding:4px 12px;border-radius:999px;}
+.apply-section{background:#f8fafc;border-top:1px solid #f1f5f9;margin:16px -20px -20px;padding:16px 20px;border-radius:0 0 16px 16px;}
+.apply-section h4{font-size:13px;font-weight:700;margin-bottom:10px;color:#475569;}
+.apply-row{display:flex;gap:8px;}
+.apply-row input,.apply-row textarea{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:inherit;}
+.apply-row textarea{min-height:60px;resize:vertical;}
+.apply-btn{padding:10px 18px;background:#d97706;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.form-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:20px;}
+.form-card.disabled{opacity:0.5;pointer-events:none;}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#0f172a;padding-bottom:10px;border-bottom:1px solid #f1f5f9;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;}
+.form-group label .req{color:#ef4444;}
+.form-input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;}
+.form-input:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.12);}
+select.form-input{appearance:auto;}
+textarea.form-input{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:640px){.form-row{grid-template-columns:1fr;}}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;}
+.submit-btn:hover{opacity:0.9;}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.empty{text-align:center;padding:60px 20px;color:#94a3b8;}
+.empty i{font-size:48px;margin-bottom:12px;display:block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:999;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+.toast.show{display:block;animation:fadeUp .3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.foot{text-align:center;padding:32px 20px;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9;}
+.foot a{color:#7c3aed;text-decoration:none;font-weight:700;}
+@media(max-width:640px){.container{padding:16px 14px 40px;}.form-card,.auth-section{padding:16px;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-logo" href="/services"><i class="fa-solid fa-palette"></i> Chameleon</a>
+    <div class="nav-right" id="langBar"></div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge"><i class="fa-solid fa-clock"></i> <span id="heroBadgeTxt"></span></div>
+    <h1 id="heroTitle"></h1>
+    <p id="heroSub"></p>
+</section>
+
+<div class="container">
+    <div class="auth-section" id="authSection">
+        <div class="auth-title"><i class="fas fa-user-circle" style="color:#7c3aed"></i> <span id="authTitle"></span></div>
+        <div id="authLoggedOut">
+            <div class="auth-row"><input type="email" id="authEmail" placeholder="email@example.com"></div>
+            <div class="auth-row"><input type="password" id="authPw" placeholder="Password (min 6)"></div>
+            <div class="auth-btns">
+                <button class="btn-login" onclick="doLogin()" id="btnLogin"></button>
+                <button class="btn-signup" onclick="doSignup()" id="btnSignup"></button>
+            </div>
+            <div class="auth-error" id="authError"></div>
+        </div>
+        <div id="authLoggedIn" style="display:none">
+            <div class="auth-logged-in">
+                <span class="email" id="userEmail"></span>
+                <button class="btn-logout" onclick="doLogout()" id="btnLogout"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('browse')" id="tabBrowse"></button>
+        <button class="tab-btn" onclick="switchTab('post')" id="tabPost"></button>
+    </div>
+
+    <!-- Browse Tab -->
+    <div id="browseTab">
+        <div class="filters">
+            <select id="filterType" onchange="loadJobs()">
+                <option value="">전체</option>
+            </select>
+            <select id="filterCity" onchange="loadJobs()">
+                <option value="">전체 지역</option>
+            </select>
+            <select id="sortBy" onchange="loadJobs()">
+                <option value="newest">최신순</option>
+                <option value="pay">시급 높은순</option>
+            </select>
+        </div>
+        <div class="card-grid" id="jobList"></div>
+    </div>
+
+    <!-- Post Tab -->
+    <div id="postTab" style="display:none">
+        <div class="form-card" id="postForm">
+            <div class="section-title"><i class="fa-solid fa-bullhorn" style="color:#d97706"></i> <span id="secPostTitle"></span></div>
+            <div class="form-group">
+                <label><span id="lblTitle"></span> <span class="req">*</span></label>
+                <input class="form-input" id="fTitle" maxlength="100">
+            </div>
+            <div class="form-group">
+                <label id="lblDesc"></label>
+                <textarea class="form-input" id="fDesc"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="lblJobType"></label>
+                    <select class="form-input" id="fJobType">
+                        <option value="part-time">파트타임</option>
+                        <option value="full-time">풀타임</option>
+                        <option value="one-day">일일</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label id="lblHourly"></label>
+                    <input class="form-input" id="fHourly" type="number" min="0" placeholder="10000">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="lblCity"></label>
+                    <input class="form-input" id="fCity" placeholder="Seoul">
+                </div>
+                <div class="form-group">
+                    <label id="lblLocation"></label>
+                    <input class="form-input" id="fLocation" placeholder="강남역 근처">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="lblDays"></label>
+                    <input class="form-input" id="fDays" placeholder="Mon,Wed,Fri">
+                </div>
+                <div class="form-group">
+                    <label id="lblHours"></label>
+                    <input class="form-input" id="fHours" placeholder="09:00-18:00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label id="lblPhone"></label>
+                <input class="form-input" id="fPhone" placeholder="010-1234-5678">
+            </div>
+            <button class="submit-btn" onclick="postJob()" id="btnSubmit"></button>
+        </div>
+    </div>
+</div>
+
+<footer class="foot"><a href="/services" id="footBack">← 서비스 목록</a></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG = window.__LANG || 'ko';
+const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+let currentUser = null;
+
+const T = {
+    heroBadge:{ko:'무료 이용',ja:'無料利用',en:'FREE'},
+    heroTitle:{ko:'내 근처 알바,<br><em>바로</em> 구하세요',ja:'近くのアルバイト、<br><em>すぐに</em>見つかる',en:'Part-time jobs nearby,<br><em>find them</em> instantly'},
+    heroSub:{ko:'구인·구직 모두 무료! 카멜레온이 연결해드립니다.',ja:'求人・求職どちらも無料！カメレオンがつなぎます。',en:'Posting & applying both FREE! Chameleon connects you.'},
+    authTitle:{ko:'로그인 / 회원가입',ja:'ログイン / 会員登録',en:'Login / Sign Up'},
+    login:{ko:'로그인',ja:'ログイン',en:'Login'},
+    signup:{ko:'회원가입',ja:'会員登録',en:'Sign Up'},
+    logout:{ko:'로그아웃',ja:'ログアウト',en:'Logout'},
+    tabBrowse:{ko:'알바 찾기',ja:'バイト探し',en:'Find Jobs'},
+    tabPost:{ko:'알바 올리기',ja:'求人掲載',en:'Post a Job'},
+    allTypes:{ko:'전체 유형',ja:'全タイプ',en:'All Types'},
+    allCities:{ko:'전체 지역',ja:'全地域',en:'All Cities'},
+    newest:{ko:'최신순',ja:'新着順',en:'Newest'},
+    highPay:{ko:'시급 높은순',ja:'時給順',en:'Highest Pay'},
+    partTime:{ko:'파트타임',ja:'パートタイム',en:'Part-time'},
+    fullTime:{ko:'풀타임',ja:'フルタイム',en:'Full-time'},
+    oneDay:{ko:'일일',ja:'単発',en:'One-day'},
+    secPost:{ko:'알바 공고 등록',ja:'求人掲載',en:'Post a Job Listing'},
+    title:{ko:'제목',ja:'タイトル',en:'Title'},
+    desc:{ko:'상세 설명',ja:'詳細説明',en:'Description'},
+    jobType:{ko:'근무 유형',ja:'勤務タイプ',en:'Job Type'},
+    hourly:{ko:'시급 (원)',ja:'時給 (円)',en:'Hourly Rate (KRW)'},
+    city:{ko:'도시',ja:'都市',en:'City'},
+    locationDetail:{ko:'상세 위치',ja:'詳細場所',en:'Location Detail'},
+    workDays:{ko:'근무 요일',ja:'勤務曜日',en:'Work Days'},
+    workHours:{ko:'근무 시간',ja:'勤務時間',en:'Work Hours'},
+    phone:{ko:'연락처',ja:'連絡先',en:'Phone'},
+    submit:{ko:'공고 등록하기',ja:'求人を掲載する',en:'Post Job'},
+    perHour:{ko:'원/시간',ja:'円/時',en:'KRW/hr'},
+    apply:{ko:'지원하기',ja:'応募する',en:'Apply'},
+    applyMsg:{ko:'지원 메시지',ja:'応募メッセージ',en:'Application message'},
+    applyPhone:{ko:'연락처',ja:'連絡先',en:'Your phone'},
+    applied:{ko:'지원 완료!',ja:'応募完了！',en:'Applied!'},
+    posted:{ko:'등록 완료!',ja:'掲載完了！',en:'Posted!'},
+    empty:{ko:'등록된 알바가 없습니다',ja:'バイトがまだありません',en:'No jobs posted yet'},
+    loginFirst:{ko:'로그인이 필요합니다',ja:'ログインが必要です',en:'Please login first'},
+    back:{ko:'← 서비스 목록',ja:'← サービス一覧',en:'← Services'},
+};
+function t(k){return(T[k]||{})[LANG]||(T[k]||{}).ko||k;}
+function formatPay(v){return v?Number(v).toLocaleString():'0';}
+
+// i18n render
+function renderI18n(){
+    document.getElementById('heroBadgeTxt').textContent=t('heroBadge');
+    document.getElementById('heroTitle').innerHTML=t('heroTitle');
+    document.getElementById('heroSub').textContent=t('heroSub');
+    document.getElementById('authTitle').textContent=t('authTitle');
+    document.getElementById('btnLogin').textContent=t('login');
+    document.getElementById('btnSignup').textContent=t('signup');
+    document.getElementById('btnLogout').textContent=t('logout');
+    document.getElementById('tabBrowse').textContent=t('tabBrowse');
+    document.getElementById('tabPost').textContent=t('tabPost');
+    document.getElementById('secPostTitle').textContent=t('secPost');
+    document.getElementById('lblTitle').innerHTML=t('title');
+    document.getElementById('lblDesc').textContent=t('desc');
+    document.getElementById('lblJobType').textContent=t('jobType');
+    document.getElementById('lblHourly').textContent=t('hourly');
+    document.getElementById('lblCity').textContent=t('city');
+    document.getElementById('lblLocation').textContent=t('locationDetail');
+    document.getElementById('lblDays').textContent=t('workDays');
+    document.getElementById('lblHours').textContent=t('workHours');
+    document.getElementById('lblPhone').textContent=t('phone');
+    document.getElementById('btnSubmit').textContent=t('submit');
+    document.getElementById('footBack').textContent=t('back');
+
+    // Filter options
+    const ft=document.getElementById('filterType');
+    ft.innerHTML=`<option value="">${t('allTypes')}</option><option value="part-time">${t('partTime')}</option><option value="full-time">${t('fullTime')}</option><option value="one-day">${t('oneDay')}</option>`;
+    document.getElementById('filterCity').querySelector('option').textContent=t('allCities');
+    const sb2=document.getElementById('sortBy');
+    sb2.innerHTML=`<option value="newest">${t('newest')}</option><option value="pay">${t('highPay')}</option>`;
+
+    // Job type select in form
+    const jt=document.getElementById('fJobType');
+    jt.innerHTML=`<option value="part-time">${t('partTime')}</option><option value="full-time">${t('fullTime')}</option><option value="one-day">${t('oneDay')}</option>`;
+
+    // Lang bar
+    const langs=[{c:'ko',l:'KR'},{c:'ja',l:'JP'},{c:'en',l:'EN'}];
+    document.getElementById('langBar').innerHTML=langs.map(l=>{
+        const u=new URL(location.href);u.searchParams.set('lang',l.c);
+        return `<a class="lang-btn${LANG===l.c?' active':''}" href="${u}">${l.l}</a>`;
+    }).join('');
+}
+
+function typeBadge(type){
+    const cls={['part-time']:'badge-part-time',['full-time']:'badge-full-time',['one-day']:'badge-one-day'}[type]||'badge-part-time';
+    const label={['part-time']:t('partTime'),['full-time']:t('fullTime'),['one-day']:t('oneDay')}[type]||type;
+    return `<span class="badge-type ${cls}">${label}</span>`;
+}
+
+// Auth
+async function checkAuth(){
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){
+        currentUser=session.user;
+        document.getElementById('authLoggedOut').style.display='none';
+        document.getElementById('authLoggedIn').style.display='block';
+        document.getElementById('userEmail').textContent=session.user.email;
+        document.getElementById('postForm').classList.remove('disabled');
+    } else {
+        currentUser=null;
+        document.getElementById('authLoggedOut').style.display='block';
+        document.getElementById('authLoggedIn').style.display='none';
+        document.getElementById('postForm').classList.add('disabled');
+    }
+}
+async function doLogin(){
+    const email=document.getElementById('authEmail').value.trim();
+    const pw=document.getElementById('authPw').value;
+    const{error}=await sb.auth.signInWithPassword({email,password:pw});
+    if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}
+    document.getElementById('authError').style.display='none';
+    checkAuth();
+}
+async function doSignup(){
+    const email=document.getElementById('authEmail').value.trim();
+    const pw=document.getElementById('authPw').value;
+    const{error}=await sb.auth.signUp({email,password:pw});
+    if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}
+    document.getElementById('authError').style.display='none';
+    toast(t('signup')+' OK!');
+    checkAuth();
+}
+async function doLogout(){
+    await sb.auth.signOut();
+    currentUser=null;
+    checkAuth();
+}
+
+// Tabs
+function switchTab(tab){
+    document.getElementById('browseTab').style.display=tab==='browse'?'block':'none';
+    document.getElementById('postTab').style.display=tab==='post'?'block':'none';
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='browse'?0:1)));
+}
+
+// Load jobs
+async function loadJobs(){
+    const type=document.getElementById('filterType').value;
+    const city=document.getElementById('filterCity').value;
+    const sort=document.getElementById('sortBy').value;
+    let q=sb.from('community_jobs').select('*').eq('status','active');
+    if(type)q=q.eq('job_type',type);
+    if(city)q=q.eq('location_city',city);
+    if(sort==='pay')q=q.order('hourly_rate',{ascending:false});
+    else q=q.order('created_at',{ascending:false});
+    q=q.limit(50);
+    const{data,error}=await q;
+    const list=document.getElementById('jobList');
+    if(error||!data||data.length===0){
+        list.innerHTML=`<div class="empty"><i class="fa-solid fa-briefcase"></i>${t('empty')}</div>`;
+        return;
+    }
+    list.innerHTML=data.map(j=>`
+        <div class="job-card" data-id="${j.id}">
+            ${typeBadge(j.job_type)}
+            <div class="top">
+                <h3>${esc(j.title)}</h3>
+                <span class="pay">${formatPay(j.hourly_rate)} ${t('perHour')}</span>
+            </div>
+            <div class="meta">
+                <span><i class="fa-solid fa-location-dot"></i> ${esc(j.location_city||'')} ${esc(j.location_detail||'')}</span>
+                <span><i class="fa-solid fa-calendar"></i> ${esc(j.work_days||'')}</span>
+                <span><i class="fa-solid fa-clock"></i> ${esc(j.work_hours||'')}</span>
+            </div>
+            ${j.description?`<div class="desc">${esc(j.description)}</div>`:''}
+            ${j.contact_phone?`<div class="meta" style="margin-top:6px"><span><i class="fa-solid fa-phone"></i> ${esc(j.contact_phone)}</span></div>`:''}
+            <div class="apply-section">
+                <h4>${t('apply')}</h4>
+                <div class="apply-row" style="flex-direction:column;gap:6px;">
+                    <input placeholder="${t('applyPhone')}" id="applyPhone_${j.id}">
+                    <textarea placeholder="${t('applyMsg')}" id="applyMsg_${j.id}" style="min-height:50px;"></textarea>
+                    <button class="apply-btn" onclick="applyJob('${j.id}')">${t('apply')}</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    // Populate city filter
+    const cities=[...new Set(data.map(j=>j.location_city).filter(Boolean))];
+    const cf=document.getElementById('filterCity');
+    const current=cf.value;
+    cf.innerHTML=`<option value="">${t('allCities')}</option>`+cities.map(c=>`<option value="${esc(c)}"${c===current?' selected':''}>${esc(c)}</option>`).join('');
+}
+
+async function postJob(){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const title=document.getElementById('fTitle').value.trim();
+    if(!title){toast(t('title')+' required');return;}
+    const{error}=await sb.from('community_jobs').insert({
+        poster_id:currentUser.id,
+        title,
+        description:document.getElementById('fDesc').value.trim()||null,
+        job_type:document.getElementById('fJobType').value,
+        hourly_rate:parseInt(document.getElementById('fHourly').value)||0,
+        location_city:document.getElementById('fCity').value.trim()||null,
+        location_detail:document.getElementById('fLocation').value.trim()||null,
+        work_days:document.getElementById('fDays').value.trim()||null,
+        work_hours:document.getElementById('fHours').value.trim()||null,
+        contact_phone:document.getElementById('fPhone').value.trim()||null,
+        country:LANG==='ja'?'JP':LANG==='en'?'US':'KR'
+    });
+    if(error){toast(error.message);return;}
+    toast(t('posted'));
+    document.getElementById('fTitle').value='';document.getElementById('fDesc').value='';
+    document.getElementById('fHourly').value='';document.getElementById('fPhone').value='';
+    switchTab('browse');loadJobs();
+}
+
+async function applyJob(jobId){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const phone=document.getElementById('applyPhone_'+jobId).value.trim();
+    const msg=document.getElementById('applyMsg_'+jobId).value.trim();
+    const{error}=await sb.from('community_job_applications').insert({
+        job_id:jobId, applicant_id:currentUser.id, message:msg||null, phone:phone||null
+    });
+    if(error){toast(error.message);return;}
+    toast(t('applied'));
+}
+
+function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+renderI18n();
+checkAuth();
+loadJobs();
+</script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전문가 매칭 - Chameleon</title>
+<script>
+(function(){
+    var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
+    if(l){if(l==='jp'||l==='ja')l='ja';else if(l==='en'||l==='us')l='en';else if(!['es','de','fr','zh'].includes(l))l='ko';}
+    else if(h.includes('cafe0101'))l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design'))l='en';else l='ko';
+    document.documentElement.lang=l;window.__LANG=l;
+})();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',sans-serif;background:#f8f9fc;color:#1e293b;min-height:100vh;}
+.nav{background:#fff;border-bottom:1px solid #f1f5f9;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#1e293b;font-size:18px;font-weight:900;}
+.nav-logo i{color:#7c3aed;font-size:20px;}
+.nav-right{display:flex;gap:6px;}
+.lang-btn{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;color:#475569;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-family:inherit;}
+.lang-btn.active{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+.hero{background:linear-gradient(135deg,#eef2ff,#e0e7ff);padding:40px 20px;text-align:center;border-bottom:1px solid #c7d2fe;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#6366f1;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:12px;border:1px solid #c7d2fe;}
+.hero h1{font-size:clamp(24px,4vw,36px);font-weight:900;color:#312e81;letter-spacing:-1px;line-height:1.3;margin-bottom:8px;}
+.hero h1 em{font-style:normal;color:#6366f1;}
+.hero p{font-size:14px;color:#4338ca;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+/* Auth */
+.auth-section{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px;}
+.auth-title{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.auth-row{display:flex;gap:8px;margin-bottom:10px;}
+.auth-row input{flex:1;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;}
+.auth-row input:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
+.auth-btns{display:flex;gap:8px;}
+.auth-btns button{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-login{background:#6366f1;color:#fff;}.btn-login:hover{background:#4f46e5;}
+.btn-signup{background:#f1f5f9;color:#475569;}
+.auth-error{color:#ef4444;font-size:12px;margin-top:6px;display:none;}
+.auth-logged-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.auth-logged-in .email{font-size:14px;font-weight:700;color:#6366f1;}
+.btn-logout{padding:8px 14px;border:1px solid #fca5a5;background:#fff;border-radius:8px;font-size:12px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit;}
+/* Categories */
+.cat-strip{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;justify-content:center;}
+.cat-chip{padding:8px 18px;border:1.5px solid #e2e8f0;background:#fff;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;color:#475569;transition:all .15s;}
+.cat-chip:hover,.cat-chip.active{background:#6366f1;color:#fff;border-color:#6366f1;}
+/* Tabs */
+.tabs{display:flex;gap:8px;margin-bottom:20px;}
+.tab-btn{padding:10px 20px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#64748b;transition:all .15s;}
+.tab-btn.active{background:#6366f1;color:#fff;border-color:#6366f1;}
+/* Expert cards */
+.expert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.expert-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;text-align:center;transition:all .2s;}
+.expert-card:hover{border-color:#c7d2fe;box-shadow:0 8px 24px rgba(99,102,241,0.08);transform:translateY(-2px);}
+.expert-avatar{width:72px;height:72px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px;color:#6366f1;}
+.expert-card h3{font-size:16px;font-weight:800;margin-bottom:4px;}
+.expert-card .cat-label{font-size:11px;font-weight:700;color:#6366f1;background:#eef2ff;padding:3px 10px;border-radius:999px;display:inline-block;margin-bottom:8px;}
+.expert-rating{display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;color:#f59e0b;margin-bottom:6px;}
+.expert-meta{font-size:12px;color:#64748b;}
+.expert-rate{font-size:16px;font-weight:900;color:#6366f1;margin-top:8px;}
+/* Form */
+.form-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:20px;}
+.form-card.disabled{opacity:0.5;pointer-events:none;}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#0f172a;padding-bottom:10px;border-bottom:1px solid #f1f5f9;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;}
+.form-group label .req{color:#ef4444;}
+.form-input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;}
+.form-input:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
+select.form-input{appearance:auto;}
+textarea.form-input{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:640px){.form-row{grid-template-columns:1fr;}.expert-grid{grid-template-columns:1fr;}}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;}
+.submit-btn:hover{opacity:0.9;}
+.empty{text-align:center;padding:60px 20px;color:#94a3b8;grid-column:1/-1;}
+.empty i{font-size:48px;margin-bottom:12px;display:block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:999;display:none;}
+.toast.show{display:block;animation:fadeUp .3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.foot{text-align:center;padding:32px 20px;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9;}
+.foot a{color:#7c3aed;text-decoration:none;font-weight:700;}
+@media(max-width:640px){.container{padding:16px 14px 40px;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-logo" href="/services"><i class="fa-solid fa-palette"></i> Chameleon</a>
+    <div class="nav-right" id="langBar"></div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge"><i class="fa-solid fa-wrench"></i> <span id="heroBadgeTxt"></span></div>
+    <h1 id="heroTitle"></h1>
+    <p id="heroSub"></p>
+</section>
+
+<div class="container">
+    <div class="auth-section">
+        <div class="auth-title"><i class="fas fa-user-circle" style="color:#6366f1"></i> <span id="authTitle"></span></div>
+        <div id="authLoggedOut">
+            <div class="auth-row"><input type="email" id="authEmail" placeholder="email@example.com"></div>
+            <div class="auth-row"><input type="password" id="authPw" placeholder="Password (min 6)"></div>
+            <div class="auth-btns"><button class="btn-login" onclick="doLogin()" id="btnLogin"></button><button class="btn-signup" onclick="doSignup()" id="btnSignup"></button></div>
+            <div class="auth-error" id="authError"></div>
+        </div>
+        <div id="authLoggedIn" style="display:none">
+            <div class="auth-logged-in"><span class="email" id="userEmail"></span><button class="btn-logout" onclick="doLogout()" id="btnLogout"></button></div>
+        </div>
+    </div>
+
+    <!-- Category chips -->
+    <div class="cat-strip" id="catStrip"></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('experts')" id="tabExperts"></button>
+        <button class="tab-btn" onclick="switchTab('request')" id="tabRequest"></button>
+        <button class="tab-btn" onclick="switchTab('register')" id="tabRegister"></button>
+    </div>
+
+    <!-- Experts Tab -->
+    <div id="expertsTab">
+        <div class="expert-grid" id="expertGrid"></div>
+    </div>
+
+    <!-- Request Tab -->
+    <div id="requestTab" style="display:none">
+        <div class="form-card" id="requestForm">
+            <div class="section-title"><i class="fa-solid fa-clipboard-list" style="color:#6366f1"></i> <span id="secRequest"></span></div>
+            <div class="form-group"><label><span id="lblReqCat"></span></label><select class="form-input" id="fReqCat"></select></div>
+            <div class="form-group"><label><span id="lblReqTitle"></span> <span class="req">*</span></label><input class="form-input" id="fReqTitle"></div>
+            <div class="form-group"><label id="lblReqDesc"></label><textarea class="form-input" id="fReqDesc"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblBudgetMin"></label><input class="form-input" id="fBudgetMin" type="number" min="0"></div>
+                <div class="form-group"><label id="lblBudgetMax"></label><input class="form-input" id="fBudgetMax" type="number" min="0"></div>
+            </div>
+            <div class="form-group"><label id="lblReqCity"></label><input class="form-input" id="fReqCity"></div>
+            <button class="submit-btn" onclick="submitRequest()" id="btnReqSubmit"></button>
+        </div>
+    </div>
+
+    <!-- Register as Expert Tab -->
+    <div id="registerTab" style="display:none">
+        <div class="form-card" id="registerForm">
+            <div class="section-title"><i class="fa-solid fa-user-tie" style="color:#6366f1"></i> <span id="secRegister"></span></div>
+            <div class="form-row">
+                <div class="form-group"><label><span id="lblRegName"></span> <span class="req">*</span></label><input class="form-input" id="fRegName"></div>
+                <div class="form-group"><label id="lblRegCat"></label><select class="form-input" id="fRegCat"></select></div>
+            </div>
+            <div class="form-group"><label id="lblRegDesc"></label><textarea class="form-input" id="fRegDesc"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblRegRate"></label><input class="form-input" id="fRegRate" type="number" min="0"></div>
+                <div class="form-group"><label id="lblRegCity"></label><input class="form-input" id="fRegCity"></div>
+            </div>
+            <button class="submit-btn" onclick="registerExpert()" id="btnRegSubmit"></button>
+        </div>
+    </div>
+</div>
+
+<footer class="foot"><a href="/services" id="footBack"></a></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG=window.__LANG||'ko';
+const SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+let currentUser=null;
+let selectedCat='';
+
+const CATS=[
+    {id:'moving',    icon:'fa-truck-moving',  ko:'이사',      ja:'引越し',     en:'Moving'},
+    {id:'interior',  icon:'fa-couch',         ko:'인테리어',  ja:'インテリア', en:'Interior'},
+    {id:'lessons',   icon:'fa-graduation-cap',ko:'레슨',      ja:'レッスン',   en:'Lessons'},
+    {id:'repair',    icon:'fa-screwdriver-wrench',ko:'수리',   ja:'修理',      en:'Repair'},
+    {id:'cleaning',  icon:'fa-broom',         ko:'청소',      ja:'掃除',      en:'Cleaning'},
+    {id:'carwash',   icon:'fa-car',           ko:'세차',      ja:'洗車',      en:'Car Wash'},
+    {id:'photo',     icon:'fa-camera',        ko:'촬영',      ja:'撮影',      en:'Photography'},
+    {id:'beauty',    icon:'fa-scissors',      ko:'뷰티',      ja:'ビューティ', en:'Beauty'},
+    {id:'tutoring',  icon:'fa-book',          ko:'과외',      ja:'家庭教師',   en:'Tutoring'},
+    {id:'other',     icon:'fa-ellipsis',      ko:'기타',      ja:'その他',     en:'Other'},
+];
+
+const T={
+    heroBadge:{ko:'무료 견적',ja:'無料見積もり',en:'FREE Quotes'},
+    heroTitle:{ko:'전문가를 만나보세요,<br><em>무료</em> 견적',ja:'専門家に出会う、<br><em>無料</em>見積もり',en:'Meet experts,<br><em>free</em> quotes'},
+    heroSub:{ko:'이사, 인테리어, 레슨, 수리 등 전문가를 찾아드려요. 무료!',ja:'引越し、インテリア、レッスン、修理の専門家をマッチング。無料！',en:'Moving, interior, lessons, repairs & more. Free matching!'},
+    authTitle:{ko:'로그인 / 회원가입',ja:'ログイン / 会員登録',en:'Login / Sign Up'},
+    login:{ko:'로그인',ja:'ログイン',en:'Login'},signup:{ko:'회원가입',ja:'会員登録',en:'Sign Up'},logout:{ko:'로그아웃',ja:'ログアウト',en:'Logout'},
+    tabExperts:{ko:'전문가 찾기',ja:'専門家検索',en:'Find Experts'},
+    tabRequest:{ko:'견적 요청',ja:'見積依頼',en:'Request Quote'},
+    tabRegister:{ko:'전문가 등록',ja:'専門家登録',en:'Register as Expert'},
+    all:{ko:'전체',ja:'すべて',en:'All'},
+    secRequest:{ko:'견적 요청하기',ja:'見積もり依頼',en:'Request a Quote'},
+    secRegister:{ko:'전문가로 등록',ja:'専門家として登録',en:'Register as Expert'},
+    category:{ko:'분야',ja:'カテゴリ',en:'Category'},title:{ko:'제목',ja:'タイトル',en:'Title'},desc:{ko:'설명',ja:'説明',en:'Description'},
+    budgetMin:{ko:'최소 예산 (원)',ja:'最低予算 (円)',en:'Min Budget (KRW)'},budgetMax:{ko:'최대 예산 (원)',ja:'最高予算 (円)',en:'Max Budget (KRW)'},
+    city:{ko:'도시',ja:'都市',en:'City'},name:{ko:'이름',ja:'名前',en:'Name'},rate:{ko:'시급 (원)',ja:'時給 (円)',en:'Hourly Rate (KRW)'},
+    submitReq:{ko:'견적 요청하기',ja:'見積依頼する',en:'Submit Request'},submitReg:{ko:'전문가 등록하기',ja:'専門家登録する',en:'Register'},
+    perHour:{ko:'원/시간',ja:'円/時',en:'KRW/hr'},reviews:{ko:'리뷰',ja:'レビュー',en:'reviews'},
+    posted:{ko:'등록 완료!',ja:'登録完了！',en:'Submitted!'},
+    empty:{ko:'등록된 전문가가 없습니다',ja:'専門家がまだいません',en:'No experts yet'},
+    loginFirst:{ko:'로그인이 필요합니다',ja:'ログインが必要です',en:'Please login first'},
+    back:{ko:'← 서비스 목록',ja:'← サービス一覧',en:'← Services'},
+    verified:{ko:'인증됨',ja:'認証済',en:'Verified'},
+};
+function t(k){return(T[k]||{})[LANG]||(T[k]||{}).ko||k;}
+function catName(id){const c=CATS.find(x=>x.id===id);return c?c[LANG]||c.ko:id;}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+
+function renderI18n(){
+    document.getElementById('heroBadgeTxt').textContent=t('heroBadge');
+    document.getElementById('heroTitle').innerHTML=t('heroTitle');
+    document.getElementById('heroSub').textContent=t('heroSub');
+    document.getElementById('authTitle').textContent=t('authTitle');
+    document.getElementById('btnLogin').textContent=t('login');
+    document.getElementById('btnSignup').textContent=t('signup');
+    document.getElementById('btnLogout').textContent=t('logout');
+    document.getElementById('tabExperts').textContent=t('tabExperts');
+    document.getElementById('tabRequest').textContent=t('tabRequest');
+    document.getElementById('tabRegister').textContent=t('tabRegister');
+    document.getElementById('secRequest').textContent=t('secRequest');
+    document.getElementById('secRegister').textContent=t('secRegister');
+    document.getElementById('lblReqCat').textContent=t('category');
+    document.getElementById('lblReqTitle').textContent=t('title');
+    document.getElementById('lblReqDesc').textContent=t('desc');
+    document.getElementById('lblBudgetMin').textContent=t('budgetMin');
+    document.getElementById('lblBudgetMax').textContent=t('budgetMax');
+    document.getElementById('lblReqCity').textContent=t('city');
+    document.getElementById('btnReqSubmit').textContent=t('submitReq');
+    document.getElementById('lblRegName').textContent=t('name');
+    document.getElementById('lblRegCat').textContent=t('category');
+    document.getElementById('lblRegDesc').textContent=t('desc');
+    document.getElementById('lblRegRate').textContent=t('rate');
+    document.getElementById('lblRegCity').textContent=t('city');
+    document.getElementById('btnRegSubmit').textContent=t('submitReg');
+    document.getElementById('footBack').textContent=t('back');
+
+    // Cat strip
+    document.getElementById('catStrip').innerHTML=
+        `<button class="cat-chip${!selectedCat?' active':''}" onclick="filterCat('')">${t('all')}</button>`+
+        CATS.map(c=>`<button class="cat-chip${selectedCat===c.id?' active':''}" onclick="filterCat('${c.id}')"><i class="fa-solid ${c.icon}"></i> ${c[LANG]||c.ko}</button>`).join('');
+
+    // Cat selects
+    const catOpts=CATS.map(c=>`<option value="${c.id}">${c[LANG]||c.ko}</option>`).join('');
+    document.getElementById('fReqCat').innerHTML=catOpts;
+    document.getElementById('fRegCat').innerHTML=catOpts;
+
+    // Lang bar
+    const langs=[{c:'ko',l:'KR'},{c:'ja',l:'JP'},{c:'en',l:'EN'}];
+    document.getElementById('langBar').innerHTML=langs.map(l=>{const u=new URL(location.href);u.searchParams.set('lang',l.c);return `<a class="lang-btn${LANG===l.c?' active':''}" href="${u}">${l.l}</a>`;}).join('');
+}
+
+async function checkAuth(){
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){currentUser=session.user;document.getElementById('authLoggedOut').style.display='none';document.getElementById('authLoggedIn').style.display='block';document.getElementById('userEmail').textContent=session.user.email;document.getElementById('requestForm').classList.remove('disabled');document.getElementById('registerForm').classList.remove('disabled');}
+    else{currentUser=null;document.getElementById('authLoggedOut').style.display='block';document.getElementById('authLoggedIn').style.display='none';document.getElementById('requestForm').classList.add('disabled');document.getElementById('registerForm').classList.add('disabled');}
+}
+async function doLogin(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';checkAuth();}
+async function doSignup(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signUp({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';toast(t('signup')+' OK!');checkAuth();}
+async function doLogout(){await sb.auth.signOut();currentUser=null;checkAuth();}
+
+function switchTab(tab){
+    ['experts','request','register'].forEach(t=>{document.getElementById(t+'Tab').style.display=t===tab?'block':'none';});
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i==={experts:0,request:1,register:2}[tab]));
+}
+function filterCat(cat){selectedCat=cat;renderI18n();loadExperts();}
+
+async function loadExperts(){
+    let q=sb.from('community_experts').select('*').eq('status','active').order('rating',{ascending:false}).limit(50);
+    if(selectedCat)q=q.eq('category',selectedCat);
+    const{data,error}=await q;
+    const grid=document.getElementById('expertGrid');
+    if(error||!data||data.length===0){grid.innerHTML=`<div class="empty"><i class="fa-solid fa-wrench"></i>${t('empty')}</div>`;return;}
+    grid.innerHTML=data.map(e=>`
+        <div class="expert-card">
+            <div class="expert-avatar">${e.photo_url?`<img src="${esc(e.photo_url)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`:`<i class="fa-solid fa-user"></i>`}</div>
+            <h3>${esc(e.display_name)} ${e.verified?'<i class="fa-solid fa-circle-check" style="color:#6366f1;font-size:14px;" title="'+t('verified')+'"></i>':''}</h3>
+            <span class="cat-label">${catName(e.category)}</span>
+            <div class="expert-rating">
+                ${'<i class="fa-solid fa-star"></i>'.repeat(Math.round(e.rating||0))}${'<i class="fa-regular fa-star"></i>'.repeat(5-Math.round(e.rating||0))}
+                <span style="color:#64748b;font-weight:600;">${Number(e.rating||0).toFixed(1)} (${e.review_count||0} ${t('reviews')})</span>
+            </div>
+            <div class="expert-meta"><i class="fa-solid fa-location-dot"></i> ${esc(e.city||'')}</div>
+            <div class="expert-rate">${e.hourly_rate?Number(e.hourly_rate).toLocaleString()+' '+t('perHour'):''}</div>
+        </div>
+    `).join('');
+}
+
+async function submitRequest(){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const title=document.getElementById('fReqTitle').value.trim();
+    if(!title){toast(t('title')+' required');return;}
+    const{error}=await sb.from('community_expert_requests').insert({
+        requester_id:currentUser.id,
+        category:document.getElementById('fReqCat').value,
+        title,
+        description:document.getElementById('fReqDesc').value.trim()||null,
+        budget_min:parseInt(document.getElementById('fBudgetMin').value)||null,
+        budget_max:parseInt(document.getElementById('fBudgetMax').value)||null,
+        city:document.getElementById('fReqCity').value.trim()||null,
+        country:LANG==='ja'?'JP':LANG==='en'?'US':'KR'
+    });
+    if(error){toast(error.message);return;}
+    toast(t('posted'));document.getElementById('fReqTitle').value='';document.getElementById('fReqDesc').value='';
+}
+
+async function registerExpert(){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const name=document.getElementById('fRegName').value.trim();
+    if(!name){toast(t('name')+' required');return;}
+    const{error}=await sb.from('community_experts').insert({
+        user_id:currentUser.id,
+        display_name:name,
+        category:document.getElementById('fRegCat').value,
+        description:document.getElementById('fRegDesc').value.trim()||null,
+        hourly_rate:parseInt(document.getElementById('fRegRate').value)||0,
+        city:document.getElementById('fRegCity').value.trim()||null,
+        country:LANG==='ja'?'JP':LANG==='en'?'US':'KR'
+    });
+    if(error){toast(error.message);return;}
+    toast(t('posted'));switchTab('experts');loadExperts();
+}
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+renderI18n();checkAuth();loadExperts();
+</script>
+</body>
+</html>

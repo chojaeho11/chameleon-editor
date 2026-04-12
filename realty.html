@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부동산 - Chameleon</title>
+<script>
+(function(){
+    var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
+    if(l){if(l==='jp'||l==='ja')l='ja';else if(l==='en'||l==='us')l='en';else if(!['es','de','fr','zh'].includes(l))l='ko';}
+    else if(h.includes('cafe0101'))l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design'))l='en';else l='ko';
+    document.documentElement.lang=l;window.__LANG=l;
+})();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',sans-serif;background:#f8f9fc;color:#1e293b;min-height:100vh;}
+.nav{background:#fff;border-bottom:1px solid #f1f5f9;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#1e293b;font-size:18px;font-weight:900;}
+.nav-logo i{color:#7c3aed;font-size:20px;}
+.nav-right{display:flex;gap:6px;}
+.lang-btn{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;color:#475569;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-family:inherit;}
+.lang-btn.active{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+.hero{background:linear-gradient(135deg,#ecfeff,#cffafe);padding:40px 20px;text-align:center;border-bottom:1px solid #a5f3fc;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#0891b2;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:12px;border:1px solid #a5f3fc;}
+.hero h1{font-size:clamp(24px,4vw,36px);font-weight:900;color:#164e63;letter-spacing:-1px;line-height:1.3;margin-bottom:8px;}
+.hero h1 em{font-style:normal;color:#0891b2;}
+.hero p{font-size:14px;color:#155e75;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+.auth-section{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px;}
+.auth-title{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.auth-row{display:flex;gap:8px;margin-bottom:10px;}
+.auth-row input{flex:1;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;}
+.auth-row input:focus{outline:none;border-color:#0891b2;box-shadow:0 0 0 3px rgba(8,145,178,0.12);}
+.auth-btns{display:flex;gap:8px;}
+.auth-btns button{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-login{background:#0891b2;color:#fff;}
+.btn-login:hover{background:#0e7490;}
+.btn-signup{background:#f1f5f9;color:#475569;}
+.auth-error{color:#ef4444;font-size:12px;margin-top:6px;display:none;}
+.auth-logged-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.auth-logged-in .email{font-size:14px;font-weight:700;color:#0891b2;}
+.btn-logout{padding:8px 14px;border:1px solid #fca5a5;background:#fff;border-radius:8px;font-size:12px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit;}
+.tabs{display:flex;gap:8px;margin-bottom:20px;}
+.tab-btn{padding:10px 20px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#64748b;transition:all .15s;}
+.tab-btn.active{background:#0891b2;color:#fff;border-color:#0891b2;}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filters select,.filters input{padding:8px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;font-family:inherit;background:#fff;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.realty-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;transition:all .2s;cursor:pointer;}
+.realty-card:hover{border-color:#a5f3fc;box-shadow:0 8px 24px rgba(8,145,178,0.08);transform:translateY(-2px);}
+.realty-img{width:100%;height:160px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:48px;}
+.realty-body{padding:16px;}
+.realty-body .badge-listing{display:inline-block;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:800;margin-bottom:6px;}
+.badge-rent{background:#ecfeff;color:#0891b2;}
+.badge-buy{background:#f0fdf4;color:#166534;}
+.badge-sell{background:#fef2f2;color:#991b1b;}
+.badge-commercial{background:#fefce8;color:#854d0e;}
+.realty-body h3{font-size:15px;font-weight:800;margin-bottom:6px;color:#0f172a;}
+.realty-price{font-size:18px;font-weight:900;color:#0891b2;margin-bottom:4px;}
+.realty-price small{font-size:12px;color:#64748b;font-weight:600;}
+.realty-meta{display:flex;gap:10px;font-size:12px;color:#64748b;flex-wrap:wrap;}
+.realty-meta span{display:flex;align-items:center;gap:3px;}
+.detail-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.detail-overlay.show{display:flex;}
+.detail-card{background:#fff;border-radius:20px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;padding:28px;}
+.detail-close{float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;}
+.detail-close:hover{color:#ef4444;}
+.form-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:20px;}
+.form-card.disabled{opacity:0.5;pointer-events:none;}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#0f172a;padding-bottom:10px;border-bottom:1px solid #f1f5f9;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;}
+.form-group label .req{color:#ef4444;}
+.form-input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;}
+.form-input:focus{outline:none;border-color:#0891b2;box-shadow:0 0 0 3px rgba(8,145,178,0.12);}
+select.form-input{appearance:auto;}
+textarea.form-input{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+@media(max-width:640px){.form-row,.form-row3{grid-template-columns:1fr;}.card-grid{grid-template-columns:1fr;}}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;}
+.submit-btn:hover{opacity:0.9;}
+.empty{text-align:center;padding:60px 20px;color:#94a3b8;grid-column:1/-1;}
+.empty i{font-size:48px;margin-bottom:12px;display:block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:999;display:none;}
+.toast.show{display:block;animation:fadeUp .3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.foot{text-align:center;padding:32px 20px;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9;}
+.foot a{color:#7c3aed;text-decoration:none;font-weight:700;}
+@media(max-width:640px){.container{padding:16px 14px 40px;}.form-card,.auth-section{padding:16px;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-logo" href="/services"><i class="fa-solid fa-palette"></i> Chameleon</a>
+    <div class="nav-right" id="langBar"></div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge"><i class="fa-solid fa-house"></i> <span id="heroBadgeTxt"></span></div>
+    <h1 id="heroTitle"></h1>
+    <p id="heroSub"></p>
+</section>
+
+<div class="container">
+    <div class="auth-section" id="authSection">
+        <div class="auth-title"><i class="fas fa-user-circle" style="color:#0891b2"></i> <span id="authTitle"></span></div>
+        <div id="authLoggedOut">
+            <div class="auth-row"><input type="email" id="authEmail" placeholder="email@example.com"></div>
+            <div class="auth-row"><input type="password" id="authPw" placeholder="Password (min 6)"></div>
+            <div class="auth-btns"><button class="btn-login" onclick="doLogin()" id="btnLogin"></button><button class="btn-signup" onclick="doSignup()" id="btnSignup"></button></div>
+            <div class="auth-error" id="authError"></div>
+        </div>
+        <div id="authLoggedIn" style="display:none">
+            <div class="auth-logged-in"><span class="email" id="userEmail"></span><button class="btn-logout" onclick="doLogout()" id="btnLogout"></button></div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('browse')" id="tabBrowse"></button>
+        <button class="tab-btn" onclick="switchTab('post')" id="tabPost"></button>
+    </div>
+
+    <!-- Browse -->
+    <div id="browseTab">
+        <div class="filters">
+            <select id="filterType" onchange="loadListings()"></select>
+            <select id="filterCity" onchange="loadListings()"><option value="">전체</option></select>
+        </div>
+        <div class="card-grid" id="listingGrid"></div>
+    </div>
+
+    <!-- Post -->
+    <div id="postTab" style="display:none">
+        <div class="form-card" id="postForm">
+            <div class="section-title"><i class="fa-solid fa-building" style="color:#0891b2"></i> <span id="secPost"></span></div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblType"></label>
+                    <select class="form-input" id="fType"></select>
+                </div>
+                <div class="form-group"><label><span id="lblTitle"></span> <span class="req">*</span></label>
+                    <input class="form-input" id="fTitle" maxlength="100">
+                </div>
+            </div>
+            <div class="form-group"><label id="lblDesc"></label><textarea class="form-input" id="fDesc"></textarea></div>
+            <div class="form-row3">
+                <div class="form-group"><label id="lblPrice"></label><input class="form-input" id="fPrice" type="number" min="0"></div>
+                <div class="form-group"><label id="lblDeposit"></label><input class="form-input" id="fDeposit" type="number" min="0"></div>
+                <div class="form-group"><label id="lblRent"></label><input class="form-input" id="fRent" type="number" min="0"></div>
+            </div>
+            <div class="form-row3">
+                <div class="form-group"><label id="lblArea"></label><input class="form-input" id="fArea" type="number" min="0" step="0.1"></div>
+                <div class="form-group"><label id="lblRooms"></label><input class="form-input" id="fRooms" type="number" min="0"></div>
+                <div class="form-group"><label id="lblFloor"></label><input class="form-input" id="fFloor" placeholder="3/15"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblAddress"></label><input class="form-input" id="fAddress"></div>
+                <div class="form-group"><label id="lblCity"></label><input class="form-input" id="fCity"></div>
+            </div>
+            <div class="form-group"><label id="lblPhone"></label><input class="form-input" id="fPhone" placeholder="010-1234-5678"></div>
+            <button class="submit-btn" onclick="postListing()" id="btnSubmit"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Detail overlay -->
+<div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+    <div class="detail-card" id="detailCard"></div>
+</div>
+
+<footer class="foot"><a href="/services" id="footBack"></a></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG=window.__LANG||'ko';
+const SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+let currentUser=null;
+
+const T={
+    heroBadge:{ko:'무료 이용',ja:'無料利用',en:'FREE'},
+    heroTitle:{ko:'내 주변 매물,<br><em>무료로</em> 찾기',ja:'近くの物件を<br><em>無料で</em>探す',en:'Find properties nearby,<br><em>for free</em>'},
+    heroSub:{ko:'전세, 월세, 매매, 상가까지. 무료로 매물을 등록하고 찾아보세요.',ja:'賃貸から売買まで。無料で物件を掲載・検索。',en:'Rent, buy, sell, or commercial. Post and find properties for free.'},
+    authTitle:{ko:'로그인 / 회원가입',ja:'ログイン / 会員登録',en:'Login / Sign Up'},
+    login:{ko:'로그인',ja:'ログイン',en:'Login'},signup:{ko:'회원가입',ja:'会員登録',en:'Sign Up'},logout:{ko:'로그아웃',ja:'ログアウト',en:'Logout'},
+    tabBrowse:{ko:'매물 찾기',ja:'物件検索',en:'Browse'},tabPost:{ko:'매물 등록',ja:'物件掲載',en:'Post Listing'},
+    allTypes:{ko:'전체 유형',ja:'全タイプ',en:'All Types'},allCities:{ko:'전체 지역',ja:'全地域',en:'All Cities'},
+    rent:{ko:'월세',ja:'月額賃貸',en:'Monthly Rent'},jeonse:{ko:'전세',ja:'一時金賃貸',en:'Lease (Jeonse)'},buy:{ko:'매매',ja:'売買',en:'Buy/Sell'},commercial:{ko:'상가',ja:'店舗',en:'Commercial'},
+    secPost:{ko:'매물 등록',ja:'物件掲載',en:'Post a Listing'},
+    listingType:{ko:'매물 유형',ja:'物件タイプ',en:'Listing Type'},title:{ko:'제목',ja:'タイトル',en:'Title'},desc:{ko:'상세 설명',ja:'詳細',en:'Description'},
+    price:{ko:'매매가 (만원)',ja:'価格 (万円)',en:'Price'},deposit:{ko:'보증금 (만원)',ja:'敷金 (万円)',en:'Deposit'},monthlyRent:{ko:'월세 (만원)',ja:'月額 (万円)',en:'Monthly Rent'},
+    area:{ko:'면적 (㎡)',ja:'面積 (㎡)',en:'Area (㎡)'},rooms:{ko:'방 수',ja:'部屋数',en:'Rooms'},floor:{ko:'층',ja:'階',en:'Floor'},
+    address:{ko:'주소',ja:'住所',en:'Address'},city:{ko:'도시',ja:'都市',en:'City'},phone:{ko:'연락처',ja:'連絡先',en:'Phone'},
+    submit:{ko:'매물 등록하기',ja:'物件を掲載する',en:'Post Listing'},
+    posted:{ko:'등록 완료!',ja:'掲載完了！',en:'Posted!'},
+    empty:{ko:'등록된 매물이 없습니다',ja:'物件がまだありません',en:'No listings yet'},
+    loginFirst:{ko:'로그인이 필요합니다',ja:'ログインが必要です',en:'Please login first'},
+    back:{ko:'← 서비스 목록',ja:'← サービス一覧',en:'← Services'},
+    contact:{ko:'연락처',ja:'連絡先',en:'Contact'},close:{ko:'닫기',ja:'閉じる',en:'Close'},
+    manwon:{ko:'만원',ja:'万円',en:'0K KRW'},
+};
+function t(k){return(T[k]||{})[LANG]||(T[k]||{}).ko||k;}
+function fmtPrice(v){return v?Number(v).toLocaleString():'0';}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';};
+
+const typeMap={rent:'rent',jeonse:'buy',buy:'buy',sell:'sell',commercial:'commercial'};
+function typeBadge(lt){
+    const map={rent:'badge-rent',buy:'badge-buy',sell:'badge-sell',commercial:'badge-commercial'};
+    const lbl={rent:t('rent'),buy:t('buy'),sell:t('buy'),commercial:t('commercial')}[lt]||lt;
+    return `<span class="badge-listing ${map[lt]||'badge-rent'}">${lbl}</span>`;
+}
+
+function renderI18n(){
+    document.getElementById('heroBadgeTxt').textContent=t('heroBadge');
+    document.getElementById('heroTitle').innerHTML=t('heroTitle');
+    document.getElementById('heroSub').textContent=t('heroSub');
+    document.getElementById('authTitle').textContent=t('authTitle');
+    document.getElementById('btnLogin').textContent=t('login');
+    document.getElementById('btnSignup').textContent=t('signup');
+    document.getElementById('btnLogout').textContent=t('logout');
+    document.getElementById('tabBrowse').textContent=t('tabBrowse');
+    document.getElementById('tabPost').textContent=t('tabPost');
+    document.getElementById('secPost').textContent=t('secPost');
+    document.getElementById('lblType').textContent=t('listingType');
+    document.getElementById('lblTitle').textContent=t('title');
+    document.getElementById('lblDesc').textContent=t('desc');
+    document.getElementById('lblPrice').textContent=t('price');
+    document.getElementById('lblDeposit').textContent=t('deposit');
+    document.getElementById('lblRent').textContent=t('monthlyRent');
+    document.getElementById('lblArea').textContent=t('area');
+    document.getElementById('lblRooms').textContent=t('rooms');
+    document.getElementById('lblFloor').textContent=t('floor');
+    document.getElementById('lblAddress').textContent=t('address');
+    document.getElementById('lblCity').textContent=t('city');
+    document.getElementById('lblPhone').textContent=t('phone');
+    document.getElementById('btnSubmit').textContent=t('submit');
+    document.getElementById('footBack').textContent=t('back');
+
+    const ft=document.getElementById('filterType');
+    ft.innerHTML=`<option value="">${t('allTypes')}</option><option value="rent">${t('rent')}</option><option value="buy">${t('jeonse')}</option><option value="sell">${t('buy')}</option><option value="commercial">${t('commercial')}</option>`;
+    const fType=document.getElementById('fType');
+    fType.innerHTML=ft.innerHTML;
+
+    const langs=[{c:'ko',l:'KR'},{c:'ja',l:'JP'},{c:'en',l:'EN'}];
+    document.getElementById('langBar').innerHTML=langs.map(l=>{const u=new URL(location.href);u.searchParams.set('lang',l.c);return `<a class="lang-btn${LANG===l.c?' active':''}" href="${u}">${l.l}</a>`;}).join('');
+}
+
+async function checkAuth(){
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){currentUser=session.user;document.getElementById('authLoggedOut').style.display='none';document.getElementById('authLoggedIn').style.display='block';document.getElementById('userEmail').textContent=session.user.email;document.getElementById('postForm').classList.remove('disabled');}
+    else{currentUser=null;document.getElementById('authLoggedOut').style.display='block';document.getElementById('authLoggedIn').style.display='none';document.getElementById('postForm').classList.add('disabled');}
+}
+async function doLogin(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';checkAuth();}
+async function doSignup(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signUp({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';toast(t('signup')+' OK!');checkAuth();}
+async function doLogout(){await sb.auth.signOut();currentUser=null;checkAuth();}
+
+function switchTab(tab){document.getElementById('browseTab').style.display=tab==='browse'?'block':'none';document.getElementById('postTab').style.display=tab==='post'?'block':'none';document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='browse'?0:1)));}
+
+async function loadListings(){
+    const type=document.getElementById('filterType').value;
+    const city=document.getElementById('filterCity').value;
+    let q=sb.from('community_realty').select('*').eq('status','active').order('created_at',{ascending:false}).limit(50);
+    if(type)q=q.eq('listing_type',type);
+    if(city)q=q.eq('city',city);
+    const{data,error}=await q;
+    const grid=document.getElementById('listingGrid');
+    if(error||!data||data.length===0){grid.innerHTML=`<div class="empty"><i class="fa-solid fa-house"></i>${t('empty')}</div>`;return;}
+    grid.innerHTML=data.map(r=>`
+        <div class="realty-card" onclick="showDetail('${r.id}')">
+            <div class="realty-img"><i class="fa-solid fa-house-chimney"></i></div>
+            <div class="realty-body">
+                ${typeBadge(r.listing_type)}
+                <h3>${esc(r.title)}</h3>
+                <div class="realty-price">
+                    ${r.deposit?`${fmtPrice(r.deposit)} ${t('manwon')}`:''} ${r.monthly_rent?`/ ${fmtPrice(r.monthly_rent)} ${t('manwon')}`:''} ${r.price&&!r.deposit?fmtPrice(r.price)+' '+t('manwon'):''}
+                </div>
+                <div class="realty-meta">
+                    ${r.area_sqm?`<span><i class="fa-solid fa-ruler-combined"></i> ${r.area_sqm}㎡</span>`:''}
+                    ${r.rooms?`<span><i class="fa-solid fa-door-open"></i> ${r.rooms}</span>`:''}
+                    ${r.floor_info?`<span><i class="fa-solid fa-building"></i> ${esc(r.floor_info)}</span>`:''}
+                    <span><i class="fa-solid fa-location-dot"></i> ${esc(r.city||'')}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    // populate city filter
+    const cities=[...new Set(data.map(r=>r.city).filter(Boolean))];
+    const cf=document.getElementById('filterCity');
+    const cv=cf.value;
+    cf.innerHTML=`<option value="">${t('allCities')}</option>`+cities.map(c=>`<option value="${esc(c)}"${c===cv?' selected':''}>${esc(c)}</option>`).join('');
+    window._listings=data;
+}
+
+function showDetail(id){
+    const r=(window._listings||[]).find(x=>x.id===id);if(!r)return;
+    document.getElementById('detailCard').innerHTML=`
+        <button class="detail-close" onclick="closeDetail()">&times;</button>
+        <div style="text-align:center;font-size:60px;color:#a5f3fc;margin:20px 0;"><i class="fa-solid fa-house-chimney"></i></div>
+        ${typeBadge(r.listing_type)}
+        <h2 style="font-size:20px;font-weight:900;margin:10px 0;">${esc(r.title)}</h2>
+        <div class="realty-price" style="font-size:22px;margin-bottom:12px;">
+            ${r.deposit?fmtPrice(r.deposit)+' '+t('manwon'):''} ${r.monthly_rent?'/ '+fmtPrice(r.monthly_rent)+' '+t('manwon'):''} ${r.price&&!r.deposit?fmtPrice(r.price)+' '+t('manwon'):''}
+        </div>
+        <div style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px;">
+            ${r.area_sqm?t('area')+': '+r.area_sqm+'㎡<br>':''}
+            ${r.rooms?t('rooms')+': '+r.rooms+'<br>':''}
+            ${r.floor_info?t('floor')+': '+esc(r.floor_info)+'<br>':''}
+            ${r.address?t('address')+': '+esc(r.address)+'<br>':''}
+            ${r.city?t('city')+': '+esc(r.city)+'<br>':''}
+        </div>
+        ${r.description?`<p style="font-size:14px;color:#475569;line-height:1.6;margin-bottom:16px;white-space:pre-wrap;">${esc(r.description)}</p>`:''}
+        ${r.contact_phone?`<div style="background:#ecfeff;padding:14px;border-radius:12px;text-align:center;font-weight:700;color:#0891b2;font-size:16px;"><i class="fa-solid fa-phone"></i> ${esc(r.contact_phone)}</div>`:''}
+    `;
+    document.getElementById('detailOverlay').classList.add('show');
+}
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('show');}
+
+async function postListing(){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const title=document.getElementById('fTitle').value.trim();
+    if(!title){toast(t('title')+' required');return;}
+    const{error}=await sb.from('community_realty').insert({
+        poster_id:currentUser.id,
+        listing_type:document.getElementById('fType').value||'rent',
+        title,
+        description:document.getElementById('fDesc').value.trim()||null,
+        price:parseInt(document.getElementById('fPrice').value)||0,
+        deposit:parseInt(document.getElementById('fDeposit').value)||0,
+        monthly_rent:parseInt(document.getElementById('fRent').value)||0,
+        area_sqm:parseFloat(document.getElementById('fArea').value)||null,
+        rooms:parseInt(document.getElementById('fRooms').value)||null,
+        floor_info:document.getElementById('fFloor').value.trim()||null,
+        address:document.getElementById('fAddress').value.trim()||null,
+        city:document.getElementById('fCity').value.trim()||null,
+        contact_phone:document.getElementById('fPhone').value.trim()||null,
+        country:LANG==='ja'?'JP':LANG==='en'?'US':'KR'
+    });
+    if(error){toast(error.message);return;}
+    toast(t('posted'));switchTab('browse');loadListings();
+}
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+renderI18n();checkAuth();loadListings();
+</script>
+</body>
+</html>

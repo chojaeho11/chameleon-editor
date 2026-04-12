@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중고거래 - Chameleon</title>
+<script>
+(function(){
+    var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
+    if(l){if(l==='jp'||l==='ja')l='ja';else if(l==='en'||l==='us')l='en';else if(!['es','de','fr','zh'].includes(l))l='ko';}
+    else if(h.includes('cafe0101'))l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design'))l='en';else l='ko';
+    document.documentElement.lang=l;window.__LANG=l;
+})();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',sans-serif;background:#f8f9fc;color:#1e293b;min-height:100vh;}
+.nav{background:#fff;border-bottom:1px solid #f1f5f9;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#1e293b;font-size:18px;font-weight:900;}
+.nav-logo i{color:#f59e0b;font-size:20px;}
+.nav-right{display:flex;gap:6px;}
+.lang-btn{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;color:#475569;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-family:inherit;}
+.lang-btn.active{background:#f59e0b;color:#fff;border-color:#f59e0b;}
+.hero{background:linear-gradient(135deg,#fffbeb,#fef3c7);padding:40px 20px;text-align:center;border-bottom:1px solid #fde68a;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#f59e0b;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:12px;border:1px solid #fde68a;}
+.hero h1{font-size:clamp(24px,4vw,36px);font-weight:900;color:#78350f;letter-spacing:-1px;line-height:1.3;margin-bottom:8px;}
+.hero h1 em{font-style:normal;color:#f59e0b;}
+.hero p{font-size:14px;color:#92400e;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+/* Auth */
+.auth-section{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px;}
+.auth-title{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.auth-row{display:flex;gap:8px;margin-bottom:10px;}
+.auth-row input{flex:1;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;}
+.auth-row input:focus{outline:none;border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.12);}
+.auth-btns{display:flex;gap:8px;}
+.auth-btns button{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-login{background:#f59e0b;color:#fff;}.btn-login:hover{background:#d97706;}
+.btn-signup{background:#fffbeb;color:#92400e;}
+.auth-error{color:#ef4444;font-size:12px;margin-top:6px;display:none;}
+.auth-logged-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.auth-logged-in .email{font-size:14px;font-weight:700;color:#f59e0b;}
+.btn-logout{padding:8px 14px;border:1px solid #fca5a5;background:#fff;border-radius:8px;font-size:12px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit;}
+/* Tabs */
+.tabs{display:flex;gap:8px;margin-bottom:20px;}
+.tab-btn{padding:10px 20px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#64748b;transition:all .15s;}
+.tab-btn.active{background:#f59e0b;color:#fff;border-color:#f59e0b;}
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filters select{padding:8px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;font-family:inherit;background:#fff;}
+/* Item grid */
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.item-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative;}
+.item-card:hover{border-color:#fde68a;box-shadow:0 8px 24px rgba(245,158,11,0.08);transform:translateY(-2px);}
+.item-img{width:100%;height:180px;background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:48px;color:#d1d5db;}
+.item-body{padding:14px;}
+.item-body h3{font-size:14px;font-weight:700;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.item-price{font-size:18px;font-weight:900;color:#0f172a;margin-bottom:6px;}
+.item-meta{display:flex;gap:8px;font-size:11px;color:#94a3b8;flex-wrap:wrap;align-items:center;}
+.item-meta span{display:flex;align-items:center;gap:3px;}
+/* Status badges */
+.status-badge{position:absolute;top:12px;left:12px;padding:4px 12px;border-radius:999px;font-size:10px;font-weight:800;z-index:1;}
+.status-active{background:#dcfce7;color:#166534;}
+.status-reserved{background:#fef9c3;color:#854d0e;}
+.status-sold{background:#f1f5f9;color:#64748b;}
+/* Condition */
+.cond-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;margin-right:4px;}
+.cond-new{background:#dcfce7;color:#166534;}.cond-like-new{background:#e0f2fe;color:#0369a1;}.cond-good{background:#fef3c7;color:#92400e;}.cond-fair{background:#fed7aa;color:#9a3412;}.cond-poor{background:#fecaca;color:#991b1b;}
+.nego-badge{display:inline-block;padding:2px 8px;background:#f5f3ff;color:#7c3aed;border-radius:999px;font-size:10px;font-weight:700;}
+/* Temperature */
+.temp-display{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;}
+.temp-cold{background:#dbeafe;color:#1e40af;}
+.temp-normal{background:#dcfce7;color:#166534;}
+.temp-warm{background:#fef3c7;color:#92400e;}
+.temp-hot{background:#fecaca;color:#991b1b;}
+/* Detail overlay */
+.detail-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.detail-overlay.show{display:flex;}
+.detail-card{background:#fff;border-radius:20px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;padding:28px;}
+.detail-close{float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;}.detail-close:hover{color:#ef4444;}
+/* Safe transaction box */
+.safe-tx-box{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fde68a;border-radius:14px;padding:18px;margin-top:16px;}
+.safe-tx-box h4{font-size:14px;font-weight:800;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.safe-tx-box p{font-size:12px;color:#78350f;line-height:1.6;margin-bottom:10px;}
+.safe-tx-box .fee-note{font-size:11px;color:#b45309;font-weight:600;}
+.safe-tx-btn{padding:12px 24px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;width:100%;}
+.safe-tx-btn:hover{opacity:0.9;}
+/* Form */
+.form-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:20px;}
+.form-card.disabled{opacity:0.5;pointer-events:none;}
+.section-title{font-size:16px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#0f172a;padding-bottom:10px;border-bottom:1px solid #f1f5f9;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;}
+.form-group label .req{color:#ef4444;}
+.form-input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;}
+.form-input:focus{outline:none;border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.12);}
+select.form-input{appearance:auto;}
+textarea.form-input{resize:vertical;min-height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:640px){.form-row{grid-template-columns:1fr;}.item-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}.item-img{height:140px;}}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;}
+.submit-btn:hover{opacity:0.9;}
+/* Seller profile */
+.seller-profile{display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border-radius:12px;margin:12px 0;}
+.seller-avatar{width:44px;height:44px;border-radius:50%;background:#fffbeb;display:flex;align-items:center;justify-content:center;font-size:20px;color:#f59e0b;}
+.seller-info{flex:1;}
+.seller-info .name{font-size:14px;font-weight:800;}
+.seller-info .stats{font-size:11px;color:#64748b;margin-top:2px;}
+.msg-btn{padding:10px 20px;background:#f59e0b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
+.msg-btn:hover{background:#d97706;}
+.empty{text-align:center;padding:60px 20px;color:#94a3b8;grid-column:1/-1;}
+.empty i{font-size:48px;margin-bottom:12px;display:block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;z-index:999;display:none;}
+.toast.show{display:block;animation:fadeUp .3s;}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.foot{text-align:center;padding:32px 20px;color:#94a3b8;font-size:12px;border-top:1px solid #f1f5f9;}
+.foot a{color:#f59e0b;text-decoration:none;font-weight:700;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-logo" href="/services"><i class="fa-solid fa-store"></i> Chameleon</a>
+    <div class="nav-right" id="langBar"></div>
+</nav>
+
+<section class="hero">
+    <div class="hero-badge"><i class="fa-solid fa-hand-holding-heart"></i> <span id="heroBadgeTxt"></span></div>
+    <h1 id="heroTitle"></h1>
+    <p id="heroSub"></p>
+</section>
+
+<div class="container">
+    <div class="auth-section">
+        <div class="auth-title"><i class="fas fa-user-circle" style="color:#f59e0b"></i> <span id="authTitle"></span></div>
+        <div id="authLoggedOut">
+            <div class="auth-row"><input type="email" id="authEmail" placeholder="email@example.com"></div>
+            <div class="auth-row"><input type="password" id="authPw" placeholder="Password (min 6)"></div>
+            <div class="auth-btns"><button class="btn-login" onclick="doLogin()" id="btnLogin"></button><button class="btn-signup" onclick="doSignup()" id="btnSignup"></button></div>
+            <div class="auth-error" id="authError"></div>
+        </div>
+        <div id="authLoggedIn" style="display:none">
+            <div class="auth-logged-in"><span class="email" id="userEmail"></span><button class="btn-logout" onclick="doLogout()" id="btnLogout"></button></div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('browse')" id="tabBrowse"></button>
+        <button class="tab-btn" onclick="switchTab('sell')" id="tabSell"></button>
+    </div>
+
+    <!-- Browse -->
+    <div id="browseTab">
+        <div class="filters">
+            <select id="filterCat" onchange="loadItems()"></select>
+            <select id="filterStatus" onchange="loadItems()"></select>
+            <select id="filterCity" onchange="loadItems()"><option value="">All</option></select>
+        </div>
+        <div class="item-grid" id="itemGrid"></div>
+    </div>
+
+    <!-- Sell -->
+    <div id="sellTab" style="display:none">
+        <div class="form-card" id="sellForm">
+            <div class="section-title"><i class="fa-solid fa-tag" style="color:#f59e0b"></i> <span id="secSell"></span></div>
+            <div class="form-group"><label><span id="lblTitle"></span> <span class="req">*</span></label><input class="form-input" id="fTitle" maxlength="80"></div>
+            <div class="form-group"><label id="lblDesc"></label><textarea class="form-input" id="fDesc"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblPrice"></label><input class="form-input" id="fPrice" type="number" min="0"></div>
+                <div class="form-group"><label id="lblCategory"></label><select class="form-input" id="fCategory"></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label id="lblCondition"></label><select class="form-input" id="fCondition"></select></div>
+                <div class="form-group"><label id="lblCity"></label><input class="form-input" id="fCity"></div>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="fNego" checked style="width:18px;height:18px;accent-color:#f59e0b;">
+                <label for="fNego" id="lblNego" style="margin:0;cursor:pointer;"></label>
+            </div>
+            <button class="submit-btn" onclick="postItem()" id="btnSubmit"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Detail -->
+<div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+    <div class="detail-card" id="detailCard"></div>
+</div>
+
+<footer class="foot"><a href="/services" id="footBack"></a></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG=window.__LANG||'ko';
+const SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+let currentUser=null;
+
+const ITEM_CATS=[
+    {id:'electronics',ko:'전자기기',ja:'電子機器',en:'Electronics'},
+    {id:'fashion',ko:'패션',ja:'ファッション',en:'Fashion'},
+    {id:'furniture',ko:'가구',ja:'家具',en:'Furniture'},
+    {id:'books',ko:'도서',ja:'書籍',en:'Books'},
+    {id:'sports',ko:'스포츠',ja:'スポーツ',en:'Sports'},
+    {id:'beauty',ko:'뷰티',ja:'コスメ',en:'Beauty'},
+    {id:'kids',ko:'유아동',ja:'キッズ',en:'Kids'},
+    {id:'hobby',ko:'취미',ja:'趣味',en:'Hobby'},
+    {id:'kitchen',ko:'주방',ja:'キッチン',en:'Kitchen'},
+    {id:'other',ko:'기타',ja:'その他',en:'Other'},
+];
+const CONDITIONS=[
+    {id:'new',ko:'새상품',ja:'新品',en:'New'},
+    {id:'like-new',ko:'거의새것',ja:'ほぼ新品',en:'Like New'},
+    {id:'good',ko:'상태좋음',ja:'良好',en:'Good'},
+    {id:'fair',ko:'보통',ja:'普通',en:'Fair'},
+    {id:'poor',ko:'하',ja:'使用感あり',en:'Poor'},
+];
+
+const T={
+    heroBadge:{ko:'무료 중고거래',ja:'無料中古取引',en:'FREE Secondhand'},
+    heroTitle:{ko:'이웃과 거래하세요,<br><em>무료</em> 중고거래',ja:'ご近所で取引、<br><em>無料</em>中古売買',en:'Trade with neighbors,<br><em>free</em> secondhand market'},
+    heroSub:{ko:'안전거래 시스템으로 안심하고 거래하세요. 중계 수수료 5%.',ja:'安全取引システムで安心売買。仲介手数料5%。',en:'Safe escrow system. Only 5% fee on safe transactions.'},
+    authTitle:{ko:'로그인 / 회원가입',ja:'ログイン / 会員登録',en:'Login / Sign Up'},
+    login:{ko:'로그인',ja:'ログイン',en:'Login'},signup:{ko:'회원가입',ja:'会員登録',en:'Sign Up'},logout:{ko:'로그아웃',ja:'ログアウト',en:'Logout'},
+    tabBrowse:{ko:'물건 찾기',ja:'商品検索',en:'Browse'},tabSell:{ko:'물건 팔기',ja:'出品する',en:'Sell Item'},
+    allCats:{ko:'전체 카테고리',ja:'全カテゴリ',en:'All Categories'},allStatus:{ko:'전체 상태',ja:'全状態',en:'All Status'},allCities:{ko:'전체 지역',ja:'全地域',en:'All Cities'},
+    active:{ko:'판매중',ja:'販売中',en:'For Sale'},reserved:{ko:'예약중',ja:'予約中',en:'Reserved'},sold:{ko:'거래완료',ja:'取引完了',en:'Sold'},
+    secSell:{ko:'물건 팔기',ja:'出品する',en:'Sell an Item'},
+    title:{ko:'제목',ja:'タイトル',en:'Title'},desc:{ko:'설명',ja:'説明',en:'Description'},
+    price:{ko:'가격 (원)',ja:'価格 (円)',en:'Price (KRW)'},category:{ko:'카테고리',ja:'カテゴリ',en:'Category'},
+    condition:{ko:'상태',ja:'状態',en:'Condition'},city:{ko:'지역',ja:'地域',en:'City'},
+    negotiable:{ko:'가격 협상 가능',ja:'価格交渉可',en:'Negotiable'},
+    submit:{ko:'등록하기',ja:'出品する',en:'Post Item'},
+    posted:{ko:'등록 완료!',ja:'出品完了！',en:'Posted!'},
+    empty:{ko:'등록된 물건이 없습니다',ja:'商品がまだありません',en:'No items yet'},
+    loginFirst:{ko:'로그인이 필요합니다',ja:'ログインが必要です',en:'Please login first'},
+    back:{ko:'← 서비스 목록',ja:'← サービス一覧',en:'← Services'},
+    won:{ko:'원',ja:'円',en:'KRW'},
+    views:{ko:'조회',ja:'閲覧',en:'views'},chats:{ko:'채팅',ja:'チャット',en:'chats'},
+    sendMsg:{ko:'메시지 보내기',ja:'メッセージ送信',en:'Send Message'},
+    safeTitle:{ko:'안전거래',ja:'安全取引',en:'Safe Transaction'},
+    safeDesc:{ko:'카멜레온이 중간에서 결제를 보관합니다. 물건을 받은 후 확인하면 판매자에게 돈이 전달됩니다.',ja:'カメレオンが決済を一時預かり。商品受取確認後、売り手に支払われます。',en:'Chameleon holds the payment. After buyer confirms receipt, money is released to seller.'},
+    safeFee:{ko:'안전거래 수수료: 거래금액의 5%',ja:'安全取引手数料: 取引額の5%',en:'Safe transaction fee: 5% of amount'},
+    safeBuy:{ko:'안전거래로 구매하기',ja:'安全取引で購入',en:'Buy with Safe Transaction'},
+    temp:{ko:'온도',ja:'温度',en:'Temp'},
+    sellerProfile:{ko:'판매자 정보',ja:'出品者情報',en:'Seller Profile'},
+    close:{ko:'닫기',ja:'閉じる',en:'Close'},
+};
+function t(k){return(T[k]||{})[LANG]||(T[k]||{}).ko||k;}
+function catName(id){const c=ITEM_CATS.find(x=>x.id===id);return c?c[LANG]||c.ko:id;}
+function condName(id){const c=CONDITIONS.find(x=>x.id===id);return c?c[LANG]||c.ko:id;}
+function condClass(id){return 'cond-'+(id||'good');}
+function statusLabel(s){return{active:t('active'),reserved:t('reserved'),sold:t('sold')}[s]||s;}
+function statusClass(s){return{active:'status-active',reserved:'status-reserved',sold:'status-sold'}[s]||'status-active';}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+function fmtPrice(v){return v?Number(v).toLocaleString():'0';}
+
+function tempDisplay(temp){
+    const v=Number(temp)||36.5;
+    let cls='temp-normal';
+    if(v<36)cls='temp-cold';else if(v>=36&&v<37.5)cls='temp-normal';else if(v>=37.5&&v<40)cls='temp-warm';else cls='temp-hot';
+    return `<span class="temp-display ${cls}"><i class="fa-solid fa-temperature-half"></i> ${v.toFixed(1)}&deg;C</span>`;
+}
+
+function renderI18n(){
+    document.getElementById('heroBadgeTxt').textContent=t('heroBadge');
+    document.getElementById('heroTitle').innerHTML=t('heroTitle');
+    document.getElementById('heroSub').textContent=t('heroSub');
+    document.getElementById('authTitle').textContent=t('authTitle');
+    document.getElementById('btnLogin').textContent=t('login');
+    document.getElementById('btnSignup').textContent=t('signup');
+    document.getElementById('btnLogout').textContent=t('logout');
+    document.getElementById('tabBrowse').textContent=t('tabBrowse');
+    document.getElementById('tabSell').textContent=t('tabSell');
+    document.getElementById('secSell').textContent=t('secSell');
+    document.getElementById('lblTitle').textContent=t('title');
+    document.getElementById('lblDesc').textContent=t('desc');
+    document.getElementById('lblPrice').textContent=t('price');
+    document.getElementById('lblCategory').textContent=t('category');
+    document.getElementById('lblCondition').textContent=t('condition');
+    document.getElementById('lblCity').textContent=t('city');
+    document.getElementById('lblNego').textContent=t('negotiable');
+    document.getElementById('btnSubmit').textContent=t('submit');
+    document.getElementById('footBack').textContent=t('back');
+
+    document.getElementById('filterCat').innerHTML=`<option value="">${t('allCats')}</option>`+ITEM_CATS.map(c=>`<option value="${c.id}">${c[LANG]||c.ko}</option>`).join('');
+    document.getElementById('filterStatus').innerHTML=`<option value="">${t('allStatus')}</option><option value="active">${t('active')}</option><option value="reserved">${t('reserved')}</option><option value="sold">${t('sold')}</option>`;
+    document.getElementById('fCategory').innerHTML=ITEM_CATS.map(c=>`<option value="${c.id}">${c[LANG]||c.ko}</option>`).join('');
+    document.getElementById('fCondition').innerHTML=CONDITIONS.map(c=>`<option value="${c.id}">${c[LANG]||c.ko}</option>`).join('');
+
+    const langs=[{c:'ko',l:'KR'},{c:'ja',l:'JP'},{c:'en',l:'EN'}];
+    document.getElementById('langBar').innerHTML=langs.map(l=>{const u=new URL(location.href);u.searchParams.set('lang',l.c);return `<a class="lang-btn${LANG===l.c?' active':''}" href="${u}">${l.l}</a>`;}).join('');
+}
+
+async function checkAuth(){
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){currentUser=session.user;document.getElementById('authLoggedOut').style.display='none';document.getElementById('authLoggedIn').style.display='block';document.getElementById('userEmail').textContent=session.user.email;document.getElementById('sellForm').classList.remove('disabled');}
+    else{currentUser=null;document.getElementById('authLoggedOut').style.display='block';document.getElementById('authLoggedIn').style.display='none';document.getElementById('sellForm').classList.add('disabled');}
+}
+async function doLogin(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';checkAuth();}
+async function doSignup(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signUp({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';toast(t('signup')+' OK!');checkAuth();}
+async function doLogout(){await sb.auth.signOut();currentUser=null;checkAuth();}
+
+function switchTab(tab){document.getElementById('browseTab').style.display=tab==='browse'?'block':'none';document.getElementById('sellTab').style.display=tab==='sell'?'block':'none';document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='browse'?0:1)));}
+
+async function loadItems(){
+    const cat=document.getElementById('filterCat').value;
+    const status=document.getElementById('filterStatus').value;
+    const city=document.getElementById('filterCity').value;
+    let q=sb.from('community_secondhand').select('*').order('created_at',{ascending:false}).limit(50);
+    if(cat)q=q.eq('category',cat);
+    if(status)q=q.eq('status',status);
+    if(city)q=q.eq('city',city);
+    const{data,error}=await q;
+    const grid=document.getElementById('itemGrid');
+    if(error||!data||data.length===0){grid.innerHTML=`<div class="empty"><i class="fa-solid fa-store"></i>${t('empty')}</div>`;return;}
+    grid.innerHTML=data.map(item=>`
+        <div class="item-card" onclick="showDetail('${item.id}')">
+            <span class="status-badge ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+            <div class="item-img"><i class="fa-solid fa-image"></i></div>
+            <div class="item-body">
+                <h3>${esc(item.title)}</h3>
+                <div class="item-price">${fmtPrice(item.price)} ${t('won')}</div>
+                <div style="margin-bottom:6px;">
+                    <span class="cond-badge ${condClass(item.condition)}">${condName(item.condition)}</span>
+                    ${item.is_negotiable?`<span class="nego-badge">${t('negotiable')}</span>`:''}
+                </div>
+                <div class="item-meta">
+                    <span><i class="fa-solid fa-location-dot"></i> ${esc(item.city||'')}</span>
+                    <span><i class="fa-solid fa-eye"></i> ${item.view_count||0}</span>
+                    <span><i class="fa-solid fa-comment"></i> ${item.chat_count||0}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    window._items=data;
+    // cities
+    const cities=[...new Set(data.map(i=>i.city).filter(Boolean))];
+    const cf=document.getElementById('filterCity');
+    const cv=cf.value;
+    cf.innerHTML=`<option value="">${t('allCities')}</option>`+cities.map(c=>`<option value="${esc(c)}"${c===cv?' selected':''}>${esc(c)}</option>`).join('');
+}
+
+async function showDetail(id){
+    const item=(window._items||[]).find(x=>x.id===id);if(!item)return;
+    // Increment view count (fire-and-forget)
+    (async()=>{try{await sb.from('community_secondhand').update({view_count:(item.view_count||0)+1}).eq('id',id);}catch(e){}})();
+    // Get seller temperature
+    let temp=36.5;
+    if(item.seller_id){
+        const{data:td}=await sb.from('community_user_temperature').select('temperature').eq('user_id',item.seller_id).maybeSingle();
+        if(td)temp=td.temperature;
+    }
+    const isMine=currentUser&&currentUser.id===item.seller_id;
+    document.getElementById('detailCard').innerHTML=`
+        <button class="detail-close" onclick="closeDetail()">&times;</button>
+        <div style="text-align:center;font-size:60px;color:#d1d5db;margin:16px 0;"><i class="fa-solid fa-image"></i></div>
+        <span class="status-badge ${statusClass(item.status)}" style="position:static;display:inline-block;margin-bottom:8px;">${statusLabel(item.status)}</span>
+        <h2 style="font-size:20px;font-weight:900;margin-bottom:4px;">${esc(item.title)}</h2>
+        <div style="font-size:24px;font-weight:900;color:#0f172a;margin-bottom:8px;">${fmtPrice(item.price)} ${t('won')}</div>
+        <div style="margin-bottom:10px;">
+            <span class="cond-badge ${condClass(item.condition)}">${condName(item.condition)}</span>
+            ${item.is_negotiable?`<span class="nego-badge">${t('negotiable')}</span>`:''}
+        </div>
+        <div class="item-meta" style="margin-bottom:12px;font-size:12px;color:#64748b;">
+            <span><i class="fa-solid fa-tag"></i> ${catName(item.category)}</span>
+            <span><i class="fa-solid fa-location-dot"></i> ${esc(item.city||'')}</span>
+            <span><i class="fa-solid fa-eye"></i> ${(item.view_count||0)+1} ${t('views')}</span>
+            <span><i class="fa-solid fa-comment"></i> ${item.chat_count||0} ${t('chats')}</span>
+        </div>
+        ${item.description?`<p style="font-size:14px;color:#475569;line-height:1.7;margin-bottom:16px;white-space:pre-wrap;">${esc(item.description)}</p>`:''}
+
+        <!-- Seller Profile -->
+        <div class="seller-profile">
+            <div class="seller-avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="seller-info">
+                <div class="name">${esc((item.seller_id||'').substring(0,8))} ${tempDisplay(temp)}</div>
+                <div class="stats">${t('sellerProfile')}</div>
+            </div>
+            ${!isMine?`<button class="msg-btn" onclick="sendMessage('${item.seller_id}')"><i class="fa-solid fa-comment"></i> ${t('sendMsg')}</button>`:''}
+        </div>
+
+        <!-- Safe Transaction -->
+        ${!isMine&&item.status==='active'?`
+        <div class="safe-tx-box">
+            <h4><i class="fa-solid fa-shield-halved"></i> ${t('safeTitle')}</h4>
+            <p>${t('safeDesc')}</p>
+            <div class="fee-note">${t('safeFee')}</div>
+            <button class="safe-tx-btn" onclick="startSafeTx('${item.id}',${item.price})" style="margin-top:10px;">
+                <i class="fa-solid fa-shield-halved"></i> ${t('safeBuy')} (${fmtPrice(Math.round(item.price*1.05))} ${t('won')})
+            </button>
+        </div>
+        `:''}
+    `;
+    document.getElementById('detailOverlay').classList.add('show');
+}
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('show');}
+
+function sendMessage(sellerId){
+    toast(t('sendMsg')+' - Coming soon!');
+}
+
+async function startSafeTx(itemId,amount){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const{error}=await sb.from('community_safe_transactions').insert({
+        item_id:itemId,
+        buyer_id:currentUser.id,
+        seller_id:(window._items||[]).find(x=>x.id===itemId)?.seller_id,
+        amount:Math.round(amount*1.05),
+        status:'pending'
+    });
+    if(error){toast(error.message);return;}
+    // Mark item as reserved
+    await sb.from('community_secondhand').update({status:'reserved'}).eq('id',itemId);
+    toast(t('safeTitle')+' - OK!');
+    closeDetail();loadItems();
+}
+
+async function postItem(){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    const title=document.getElementById('fTitle').value.trim();
+    if(!title){toast(t('title')+' required');return;}
+    const{error}=await sb.from('community_secondhand').insert({
+        seller_id:currentUser.id,
+        title,
+        description:document.getElementById('fDesc').value.trim()||null,
+        price:parseInt(document.getElementById('fPrice').value)||0,
+        category:document.getElementById('fCategory').value,
+        condition:document.getElementById('fCondition').value,
+        city:document.getElementById('fCity').value.trim()||null,
+        is_negotiable:document.getElementById('fNego').checked,
+        country:LANG==='ja'?'JP':LANG==='en'?'US':'KR'
+    });
+    if(error){toast(error.message);return;}
+    // Ensure temperature record exists
+    if(currentUser){
+        await sb.from('community_user_temperature').upsert({user_id:currentUser.id},{onConflict:'user_id',ignoreDuplicates:true});
+    }
+    toast(t('posted'));document.getElementById('fTitle').value='';document.getElementById('fDesc').value='';document.getElementById('fPrice').value='';
+    switchTab('browse');loadItems();
+}
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+renderI18n();checkAuth();loadItems();
+</script>
+</body>
+</html>
