@@ -382,7 +382,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: '디자인을 의뢰하세요',
             banner_sub: '디자이너라면 일거리가 쏟아집니다 · 디자이너로 등록하세요',
             banner_tag: '🌍 전세계 고객사와 전문가를 연결하는 디자인 중계 사이트',
-            banner_cta: '디자인 마켓 바로가기'
+            banner_cta: '디자인 마켓 바로가기',
+            pitch_line1: '업계 최저 수수료 5%',
+            pitch_line2: '디자인 의뢰는 카멜레온',
+            pitch_compare: '크몽 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         },
         ja: {
             self_design: 'セルフデザイン',
@@ -391,7 +394,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: 'デザインを依頼しましょう',
             banner_sub: 'デザイナーなら依頼が殺到 · デザイナー登録はこちら',
             banner_tag: '🌍 世界中のクライアントと専門家をつなぐデザインマッチングサイト',
-            banner_cta: 'デザインマーケットへ'
+            banner_cta: 'デザインマーケットへ',
+            pitch_line1: '業界最安手数料 5%',
+            pitch_line2: 'デザイン依頼はカメレオン',
+            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         },
         en: {
             self_design: 'Self Design',
@@ -400,7 +406,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: 'Hire a Designer',
             banner_sub: 'A designer? Get a flood of work · Register now',
             banner_tag: '🌍 The marketplace connecting clients with design experts worldwide',
-            banner_cta: 'Visit the Design Market'
+            banner_cta: 'Visit the Design Market',
+            pitch_line1: 'Industry-Lowest 5% Fee',
+            pitch_line2: 'Design with Chameleon',
+            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         },
         zh: {
             self_design: '自助设计',
@@ -409,7 +418,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: '委托设计师',
             banner_sub: '您是设计师？工作源源不断 · 立即注册',
             banner_tag: '🌍 连接全球客户与设计专家的设计中介平台',
-            banner_cta: '进入设计市场'
+            banner_cta: '进入设计市场',
+            pitch_line1: '业界最低手续费 5%',
+            pitch_line2: '设计委托就选卡梅隆',
+            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         },
         ar: {
             self_design: 'تصميم ذاتي',
@@ -418,7 +430,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: 'اطلب من مصمم',
             banner_sub: 'هل أنت مصمم؟ ستنهال عليك الطلبات · سجل الآن',
             banner_tag: '🌍 منصة وساطة تربط العملاء بخبراء التصميم حول العالم',
-            banner_cta: 'انتقل إلى سوق التصميم'
+            banner_cta: 'انتقل إلى سوق التصميم',
+            pitch_line1: 'أدنى عمولة في الصناعة 5%',
+            pitch_line2: 'اطلب التصميم مع شاميليون',
+            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         },
         es: {
             self_design: 'Autodiseño',
@@ -427,7 +442,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: 'Contrata a un diseñador',
             banner_sub: '¿Eres diseñador? Recibe muchos encargos · Regístrate ya',
             banner_tag: '🌍 La plataforma que conecta clientes y expertos del diseño en todo el mundo',
-            banner_cta: 'Ir al Mercado de Diseño'
+            banner_cta: 'Ir al Mercado de Diseño',
+            pitch_line1: 'Comisión Más Baja 5%',
+            pitch_line2: 'Diseño con Chameleon',
+            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         },
         de: {
             self_design: 'Selbstdesign',
@@ -436,7 +454,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: 'Beauftragen Sie einen Designer',
             banner_sub: 'Sie sind Designer? Erhalten Sie viele Aufträge · Jetzt registrieren',
             banner_tag: '🌍 Die Plattform, die Kunden und Design-Profis weltweit verbindet',
-            banner_cta: 'Zum Design-Marktplatz'
+            banner_cta: 'Zum Design-Marktplatz',
+            pitch_line1: 'Branchen-niedrigste 5% Gebühr',
+            pitch_line2: 'Design mit Chameleon',
+            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         },
         fr: {
             self_design: 'Conception personnelle',
@@ -445,7 +466,10 @@ export function renderShortcutButtons(containerId) {
             banner_title: 'Engagez un designer',
             banner_sub: 'Vous êtes designer ? Recevez plein de missions · Inscrivez-vous',
             banner_tag: '🌍 La plateforme qui connecte clients et experts du design dans le monde entier',
-            banner_cta: 'Accéder au Marché du Design'
+            banner_cta: 'Accéder au Marché du Design',
+            pitch_line1: 'Commission la Plus Basse 5%',
+            pitch_line2: 'Design avec Chameleon',
+            pitch_compare: 'Kmong 20% · Fiverr 20% · 99designs 15% · Upwork 10% · 🦎 Chameleon 5%'
         }
     };
     const t = L[lang] || L.en;
@@ -468,6 +492,11 @@ export function renderShortcutButtons(containerId) {
         .dm-banner-title{font-size:22px;font-weight:900;letter-spacing:-0.4px;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,0.15);}
         .dm-banner-sub{font-size:15px;font-weight:600;opacity:0.95;margin-bottom:8px;line-height:1.55;}
         .dm-banner-tag{font-size:14px;opacity:0.92;font-weight:600;line-height:1.5;}
+        /* Pitch block (center) — "Industry-lowest 5% fee" headline + comparison */
+        .dm-banner-pitch{flex-shrink:0;text-align:center;padding:12px 18px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(251,191,36,0.4);border-radius:14px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);max-width:240px;}
+        .dm-banner-pitch-line1{font-size:14px;font-weight:900;color:#fbbf24;letter-spacing:-0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.3);line-height:1.2;margin-bottom:2px;}
+        .dm-banner-pitch-line2{font-size:13px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.2;margin-bottom:6px;}
+        .dm-banner-pitch-compare{font-size:9px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0;line-height:1.4;}
         .dm-banner-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all 0.2s;}
         .dm-banner:hover .dm-banner-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.05);box-shadow:0 6px 18px rgba(251,191,36,0.5);}
 
@@ -479,6 +508,10 @@ export function renderShortcutButtons(containerId) {
             .dm-banner-title{font-size:18px;}
             .dm-banner-sub{font-size:13px;}
             .dm-banner-tag{font-size:12px;}
+            .dm-banner-pitch{max-width:100%;padding:10px 14px;}
+            .dm-banner-pitch-line1{font-size:15px;}
+            .dm-banner-pitch-line2{font-size:13px;}
+            .dm-banner-pitch-compare{font-size:10px;}
             .dm-banner-cta{padding:11px 18px;font-size:13px;}
         }
         </style>
@@ -500,6 +533,11 @@ export function renderShortcutButtons(containerId) {
                         <div class="dm-banner-title">${t.banner_title}</div>
                         <div class="dm-banner-sub">${t.banner_sub}</div>
                         <div class="dm-banner-tag">${t.banner_tag}</div>
+                    </div>
+                    <div class="dm-banner-pitch">
+                        <div class="dm-banner-pitch-line1">${t.pitch_line1}</div>
+                        <div class="dm-banner-pitch-line2">${t.pitch_line2}</div>
+                        <div class="dm-banner-pitch-compare">${t.pitch_compare}</div>
                     </div>
                     <div class="dm-banner-cta">${t.banner_cta} <i class="fa-solid fa-arrow-right"></i></div>
                 </div>
