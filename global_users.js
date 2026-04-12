@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=291";
-import { showLoading } from "./global_common.js?v=291";
+import { sb } from "./global_config.js?v=292";
+import { showLoading } from "./global_common.js?v=292";
 
 // ==========================================
 // [회원 관리 통합] 페이지네이션 & 검색 & 메모
@@ -976,5 +976,130 @@ window.markDesignWithdrawalPaid = async (reqId) => {
         loadDesignWithdrawals();
     } catch (e) {
         showToast("처리 실패: " + e.message, "error");
+    }
+};
+
+// =========================================================
+// [출력 파트너 관리]
+// =========================================================
+window.loadProductionPartners = async () => {
+    const tbody = document.getElementById('productionPartnerListBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;">로딩 중...</td></tr>';
+
+    const statusFilter = document.getElementById('ppFilterStatus')?.value || '';
+    const countryFilter = document.getElementById('ppFilterCountry')?.value || '';
+
+    try {
+        let q = sb.from('production_partners')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (statusFilter) q = q.eq('status', statusFilter);
+        if (countryFilter) q = q.eq('country', countryFilter);
+
+        const { data: rows, error } = await q;
+        if (error) throw error;
+
+        if (!rows || rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">등록된 파트너가 없습니다.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        rows.forEach(r => {
+            // Parse capabilities
+            const caps = Array.isArray(r.capabilities) ? r.capabilities : [];
+            const capHtml = caps.map(c => {
+                const items = (c.items || []).join(', ');
+                return `<span style="display:inline-block;background:#f5f3ff;color:#7c3aed;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;margin:1px;">${c.category}${items ? ': '+items : ''}</span>`;
+            }).join(' ');
+
+            // Bank info
+            let bankHtml = `<div style="font-size:11px;line-height:1.4;">
+                <div><b>${r.bank_name || '-'}</b> / ${r.bank_holder || '-'}</div>
+                <div style="color:#64748b;font-family:monospace;">${r.bank_account || '-'}</div>`;
+            if (r.country && r.country !== 'KR' && r.swift_bic) {
+                bankHtml += `<div style="color:#1e40af;font-size:10px;">SWIFT: ${r.swift_bic}${r.iban ? ' | IBAN: '+r.iban : ''}</div>`;
+            }
+            bankHtml += '</div>';
+
+            // Status badge
+            const stMap = {
+                pending:   { lbl: '대기중',  style: 'background:#fef3c7;color:#92400e;' },
+                active:    { lbl: '활성',    style: 'background:#dcfce7;color:#166534;' },
+                verified:  { lbl: '검증됨',  style: 'background:#dbeafe;color:#1e40af;' },
+                suspended: { lbl: '정지',    style: 'background:#fee2e2;color:#991b1b;' }
+            };
+            const st = stMap[r.status] || stMap.pending;
+
+            // Actions
+            let actionHtml = '';
+            if (r.status === 'pending') {
+                actionHtml = `
+                    <div style="display:flex;flex-direction:column;gap:3px;">
+                        <button class="btn btn-success btn-sm" onclick="approveProductionPartner('${r.id}')" style="padding:4px 8px;font-size:11px;">승인</button>
+                        <button class="btn btn-outline btn-sm" onclick="suspendProductionPartner('${r.id}')" style="padding:3px 6px;font-size:10px;color:#dc2626;border-color:#fecaca;">거절</button>
+                    </div>`;
+            } else if (r.status === 'active' || r.status === 'verified') {
+                actionHtml = `<button class="btn btn-outline btn-sm" onclick="suspendProductionPartner('${r.id}')" style="padding:3px 6px;font-size:10px;color:#dc2626;border-color:#fecaca;">정지</button>`;
+            } else if (r.status === 'suspended') {
+                actionHtml = `<button class="btn btn-success btn-sm" onclick="approveProductionPartner('${r.id}')" style="padding:4px 8px;font-size:11px;">재활성</button>`;
+            }
+
+            // Country flag
+            const flags = {KR:'🇰🇷',JP:'🇯🇵',US:'🇺🇸',CN:'🇨🇳',GB:'🇬🇧',DE:'🇩🇪',FR:'🇫🇷',ES:'🇪🇸',SA:'🇸🇦',MA:'🇲🇦',SG:'🇸🇬',IT:'🇮🇹',VN:'🇻🇳',TH:'🇹🇭'};
+            const flag = flags[r.country] || '🌐';
+
+            tbody.innerHTML += `
+                <tr style="vertical-align:top;">
+                    <td style="font-size:11px;">${new Date(r.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <div style="font-size:12px;font-weight:700;">${r.company_name || '-'}</div>
+                        <div style="font-size:10px;color:#64748b;">${r.contact_name} · ${r.phone}</div>
+                        <div style="font-size:10px;color:#94a3b8;">${r.email}</div>
+                    </td>
+                    <td style="text-align:center;">${flag}<br><span style="font-size:10px;color:#64748b;">${r.country}</span></td>
+                    <td>
+                        <div style="font-size:10px;color:#64748b;">${r.contact_name}</div>
+                        <div style="font-size:11px;font-weight:600;">${r.phone}</div>
+                        <div style="font-size:10px;color:#94a3b8;">${r.email}</div>
+                    </td>
+                    <td style="max-width:300px;"><div style="display:flex;flex-wrap:wrap;gap:2px;">${capHtml || '<span style="color:#94a3b8;font-size:11px;">없음</span>'}</div>${r.capabilities_note ? `<div style="font-size:10px;color:#94a3b8;margin-top:4px;">${r.capabilities_note}</div>` : ''}</td>
+                    <td>${bankHtml}</td>
+                    <td style="text-align:center;"><span style="${st.style}padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;">${st.lbl}</span></td>
+                    <td style="text-align:center;">${actionHtml}</td>
+                </tr>`;
+        });
+    } catch (e) {
+        console.error('[loadProductionPartners] error:', e);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:20px;">${e.message}</td></tr>`;
+    }
+};
+
+window.approveProductionPartner = async (partnerId) => {
+    if (!confirm("이 파트너를 승인하시겠습니까?")) return;
+    try {
+        const { error } = await sb.rpc('admin_approve_production_partner', { _partner_id: partnerId });
+        if (error) throw error;
+        showToast("파트너 승인 완료", "success");
+        loadProductionPartners();
+    } catch (e) {
+        showToast("승인 실패: " + e.message, "error");
+    }
+};
+
+window.suspendProductionPartner = async (partnerId) => {
+    const reason = prompt("정지 사유를 입력하세요:");
+    if (reason === null) return;
+    try {
+        const { error } = await sb.from('production_partners')
+            .update({ status: 'suspended', admin_note: reason || null })
+            .eq('id', partnerId);
+        if (error) throw error;
+        showToast("파트너 정지됨", "success");
+        loadProductionPartners();
+    } catch (e) {
+        showToast("정지 실패: " + e.message, "error");
     }
 };

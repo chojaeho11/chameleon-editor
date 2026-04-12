@@ -204,6 +204,7 @@
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
             <li class="nav-item" onclick="showSection('sec-withdrawals', this)"><i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리</li>
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 출금관리</li>
+            <li class="nav-item" onclick="showSection('sec-production-partners', this)"><i class="fa-solid fa-industry"></i> 🏭 출력 파트너 관리</li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
 
             <div class="nav-label">Marketing</div>
@@ -549,6 +550,53 @@
                     </tr>
                 </thead>
                 <tbody id="designWithdrawalListBody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="sec-production-partners" class="section">
+    <div class="card" style="margin-bottom:20px;border-left:5px solid #7c3aed;">
+        <h3 style="margin-top:0;color:#7c3aed;">🏭 출력·시공 파트너 관리</h3>
+        <p style="font-size:12px;color:#64748b;margin:0 0 10px 0;">출력/시공 파트너 신청 목록입니다. 심사 후 승인하면 파트너로 활동할 수 있습니다.</p>
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="loadProductionPartners()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+            <select id="ppFilterStatus" onchange="loadProductionPartners()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
+                <option value="">전체 상태</option>
+                <option value="pending">대기중</option>
+                <option value="active">활성</option>
+                <option value="suspended">정지</option>
+            </select>
+            <select id="ppFilterCountry" onchange="loadProductionPartners()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
+                <option value="">전체 국가</option>
+                <option value="KR">🇰🇷 한국</option>
+                <option value="JP">🇯🇵 일본</option>
+                <option value="US">🇺🇸 미국</option>
+                <option value="CN">🇨🇳 중국</option>
+                <option value="GB">🇬🇧 영국</option>
+                <option value="DE">🇩🇪 독일</option>
+                <option value="FR">🇫🇷 프랑스</option>
+                <option value="ES">🇪🇸 스페인</option>
+                <option value="SA">🇸🇦 사우디</option>
+                <option value="MA">🇲🇦 모로코</option>
+                <option value="SG">🇸🇬 싱가포르</option>
+            </select>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="min-width:1400px;">
+                <thead>
+                    <tr style="background:#faf5ff;">
+                        <th width="80">등록일</th>
+                        <th width="180">회사명</th>
+                        <th width="60">국가</th>
+                        <th width="160">연락처</th>
+                        <th width="300">제작가능품목</th>
+                        <th width="220">은행정보</th>
+                        <th width="80" style="text-align:center;">상태</th>
+                        <th width="100" style="text-align:center;">처리</th>
+                    </tr>
+                </thead>
+                <tbody id="productionPartnerListBody"><tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
             </table>
         </div>
     </div>
