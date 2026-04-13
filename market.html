@@ -771,16 +771,87 @@ window.deleteMyItem=async function(itemId){
     if(error){toast(error.message);return;}
     toast('삭제됨');loadMyTx();loadItems();
 };
-window.editMyItem=async function(itemId){
+window._editState={itemId:null,images:[],newFiles:[]};
+window.editMyItem=function(itemId){
     const item=(window._myListings||[]).find(x=>x.id===itemId);
     if(!item)return;
-    const nTitle=prompt('제목 수정',item.title);if(nTitle===null)return;
-    const nDesc=prompt('설명 수정 (취소 시 기존 유지)',item.description||'');if(nDesc===null)return;
-    const nPrice=prompt('가격 수정',item.price);if(nPrice===null)return;
-    const up={title:nTitle.trim()||item.title,description:nDesc.trim()||null,price:parseInt(nPrice)||item.price};
-    const{error}=await sb.from('community_secondhand').update(up).eq('id',itemId).eq('seller_id',currentUser.id);
+    window._editState={itemId,images:Array.isArray(item.images)?[...item.images]:[],newFiles:[]};
+    // 모달 없으면 생성
+    let modal=document.getElementById('editItemModal');
+    if(!modal){
+        modal=document.createElement('div');
+        modal.id='editItemModal';
+        modal.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML=`<div style="background:#fff;border-radius:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:24px;position:relative;">
+            <button onclick="document.getElementById('editItemModal').style.display='none'" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;cursor:pointer;color:#64748b;">×</button>
+            <h2 style="font-size:18px;font-weight:900;margin-bottom:16px;">✏️ 상품 수정</h2>
+            <div class="form-group"><label>제목</label><input class="form-input" id="eTitle"></div>
+            <div class="form-group"><label>설명</label><textarea class="form-input" id="eDesc"></textarea></div>
+            <div class="form-group"><label>가격 (원)</label><input class="form-input" id="ePrice" type="number" min="0"></div>
+            <div class="form-group">
+                <label>📷 사진 (클릭하면 삭제 · 새 사진 추가 가능)</label>
+                <div id="eImages" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
+                <input type="file" id="eAddPhotos" accept="image/*" multiple onchange="editAddPhotos(event)" style="padding:8px;border:1.5px dashed #e2e8f0;border-radius:10px;width:100%;cursor:pointer;background:#fafafa;font-family:inherit;">
+                <div id="eNewPhotos" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+            </div>
+            <button class="submit-btn" onclick="saveEditItem()" style="width:100%;">💾 저장</button>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+    modal.style.display='flex';
+    document.getElementById('eTitle').value=item.title||'';
+    document.getElementById('eDesc').value=item.description||'';
+    document.getElementById('ePrice').value=item.price||0;
+    document.getElementById('eAddPhotos').value='';
+    document.getElementById('eNewPhotos').innerHTML='';
+    renderEditImages();
+};
+function renderEditImages(){
+    const box=document.getElementById('eImages');
+    box.innerHTML=(window._editState.images||[]).map((url,i)=>
+        `<div style="position:relative;cursor:pointer;" onclick="removeEditImage(${i})" title="클릭하면 삭제">
+            <img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid #fde68a;">
+            <span style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">✕</span>
+        </div>`
+    ).join('')||'<div style="font-size:12px;color:#94a3b8;">사진이 없습니다</div>';
+}
+window.removeEditImage=function(idx){
+    window._editState.images.splice(idx,1);
+    renderEditImages();
+};
+window.editAddPhotos=function(ev){
+    const files=Array.from(ev.target.files||[]).slice(0,8);
+    window._editState.newFiles=files;
+    document.getElementById('eNewPhotos').innerHTML=files.map((f,i)=>{
+        const url=URL.createObjectURL(f);
+        return `<div style="position:relative;"><img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid #10b981;"><span style="position:absolute;top:-6px;right:-6px;background:#10b981;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">+${i+1}</span></div>`;
+    }).join('');
+};
+window.saveEditItem=async function(){
+    const st=window._editState;
+    if(!st.itemId||!currentUser)return;
+    const title=document.getElementById('eTitle').value.trim();
+    const desc=document.getElementById('eDesc').value.trim();
+    const price=parseInt(document.getElementById('ePrice').value)||0;
+    if(!title){toast('제목을 입력하세요');return;}
+    // 새 파일 업로드
+    const uploaded=[];
+    for(let i=0;i<st.newFiles.length;i++){
+        const f=st.newFiles[i];
+        const ext=(f.name.split('.').pop()||'jpg').toLowerCase();
+        const path=`market/${currentUser.id}/${Date.now()}_${i}.${ext}`;
+        const{error}=await sb.storage.from('community').upload(path,f,{upsert:false});
+        if(!error){const{data}=sb.storage.from('community').getPublicUrl(path);if(data?.publicUrl)uploaded.push(data.publicUrl);}
+    }
+    const finalImages=[...(st.images||[]),...uploaded];
+    const{error}=await sb.from('community_secondhand').update({
+        title,description:desc||null,price,
+        images:finalImages.length>0?finalImages:null
+    }).eq('id',st.itemId).eq('seller_id',currentUser.id);
     if(error){toast(error.message);return;}
-    toast('수정됨');loadMyTx();
+    toast('수정 완료');
+    document.getElementById('editItemModal').style.display='none';
+    loadMyTx();loadItems();
 };
 
 // 판매 탭 열 때 기존 계좌 정보 프리필
