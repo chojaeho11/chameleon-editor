@@ -9845,30 +9845,6 @@ window.showChoiceModal = async function(key) {
             <div id="choiceRightActions" class="choice-right-actions" style="${window.innerWidth <= 768 ? 'order:1; flex:0 0 100%; width:100%;' : ''}">
                 ${rightSideUI}
                 ${_isBooklet ? '' : optionsHtml}
-                ${_isBooklet ? '' : `
-                <div data-npc="qty" style="background:#f8fafc; border-radius:10px; padding:12px; margin-top:12px; border:1px solid #e2e8f0;">
-                    <div style="font-size:12px; font-weight:700; color:#6366f1; margin-bottom:8px;">📦 ${{ja:'数量',en:'Quantity',zh:'数量',ar:'الكمية',es:'Cantidad',de:'Menge',fr:'Quantité',kr:'수량'}[lang]||'Quantity'}</div>
-                    <div style="display:flex; border:2px solid #6366f1; border-radius:10px; overflow:hidden; height:42px;">
-                        <button type="button" onclick="const i=document.getElementById('fixedProdQty'); i.value=Math.max(1, parseInt(i.value||1)-1); window.updateModalTotal && window.updateModalTotal();" style="flex:0 0 44px; border:none; background:#eef2ff; cursor:pointer; font-weight:bold; font-size:18px;">-</button>
-                        <input type="number" id="fixedProdQty" value="1" min="1" style="flex:1; text-align:center; border:none; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; font-weight:bold; font-size:16px; outline:none;" oninput="window.updateModalTotal && window.updateModalTotal();">
-                        <button type="button" onclick="const i=document.getElementById('fixedProdQty'); i.value=parseInt(i.value||1)+1; window.updateModalTotal && window.updateModalTotal();" style="flex:0 0 44px; border:none; background:#eef2ff; cursor:pointer; font-weight:bold; font-size:18px;">+</button>
-                    </div>
-                </div>
-                <div id="bulkDiscountTable" style="margin-top:10px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px;">
-                    <div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:6px;">🎯 ${{ja:'数量割引',en:'Bulk Discount',zh:'数量折扣',ar:'خصم الكمية',es:'Descuento por cantidad',de:'Mengenrabatt',fr:'Remise quantité',kr:'수량별 할인'}[lang]||'Bulk Discount'}</div>
-                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:4px; font-size:11px;">
-                        <div style="text-align:center; padding:6px 2px; background:#fef3c7; border-radius:6px;"><div style="color:#92400e; font-weight:700;">3+</div><div style="color:#b45309; font-weight:800;">20%</div></div>
-                        <div style="text-align:center; padding:6px 2px; background:#fde68a; border-radius:6px;"><div style="color:#92400e; font-weight:700;">10+</div><div style="color:#b45309; font-weight:800;">30%</div></div>
-                        <div style="text-align:center; padding:6px 2px; background:#fcd34d; border-radius:6px;"><div style="color:#78350f; font-weight:700;">101+</div><div style="color:#92400e; font-weight:800;">40%</div></div>
-                        <div style="text-align:center; padding:6px 2px; background:#fbbf24; border-radius:6px;"><div style="color:#78350f; font-weight:700;">501+</div><div style="color:#92400e; font-weight:800;">50%</div></div>
-                    </div>
-                    <div id="bulkDiscountInfo" style="display:none; margin-top:8px; text-align:center; padding:6px; background:#fef2f2; border-radius:6px;"></div>
-                </div>
-                <div data-npc="total" style="margin-top:10px; background:linear-gradient(135deg,#1e1b4b,#312e81); color:#fff; border-radius:12px; padding:14px; text-align:center;">
-                    <div style="font-size:11px; opacity:0.85; font-weight:600; margin-bottom:4px;">💰 ${{ja:'合計(オプション込)',en:'Total (incl. options)',zh:'总计(含选项)',ar:'الإجمالي',es:'Total',de:'Gesamt',fr:'Total',kr:'옵션 포함 최종가'}[lang]||'Total (incl. options)'}</div>
-                    <div id="modalRealtimeTotal" style="font-size:24px; font-weight:900; color:#fbbf24;">0</div>
-                </div>
-                `}
                 <div id="promoDiscountBox" style="position:relative; margin-top:12px; border-radius:14px; ${_isBooklet?'display:none;':''}; overflow:visible; border:1.5px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); padding:14px 16px; cursor:pointer;">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                         <span style="background:#ef4444; color:#fff; font-size:11px; font-weight:800; padding:3px 8px; border-radius:20px; flex-shrink:0;">${lang==='ja'?'追加10%OFF':lang==='en'?'Extra 10% OFF':lang==='zh'?'额外10%折扣':lang==='es'?'10% extra':lang==='de'?'10% extra':lang==='fr'?'10% en plus':'추가 10% 할인'}</span>
