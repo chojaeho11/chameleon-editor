@@ -524,23 +524,17 @@ function closeDetail(){document.getElementById('detailOverlay').classList.remove
 async function sendMessage(sellerId,itemId){
     if(!currentUser){toast(t('loginFirst'));return;}
     if(currentUser.id===sellerId){toast('본인 상품입니다');return;}
-    const body=prompt(t('msgPrompt'));
-    if(!body||!body.trim())return;
-    try{
-        const{error}=await sb.from('community_messages').insert({
-            from_user_id:currentUser.id,
-            to_user_id:sellerId,
-            item_id:itemId||null,
-            body:body.trim(),
-            read_at:null
-        });
-        if(error){
-            // 테이블 없으면 chat_rooms로 시도
-            const roomId=[currentUser.id,sellerId].sort().join('_');
-            await sb.from('chat_messages').insert({room_id:roomId,sender_id:currentUser.id,recipient_id:sellerId,content:body.trim(),item_id:itemId||null}).catch(()=>{});
-        }
-        toast(t('msgSent'));
-    }catch(e){toast(e.message||'fail');}
+    if(!window.UserChat){toast('채팅 로딩 실패');return;}
+    const item=(window._items||[]).find(x=>x.id===itemId);
+    let sellerProf=null;
+    try{const{data}=await sb.from('profiles').select('username,avatar_url').eq('id',sellerId).maybeSingle();sellerProf=data;}catch(e){}
+    UserChat.open({
+        sb,currentUser,
+        otherUserId:sellerId,
+        otherName:sellerProf?.username||'판매자',
+        topic:item?'item#'+itemId:'',
+        otherAvatarUrl:sellerProf?.avatar_url||(window.CMAvatar?CMAvatar.pickFor(sellerId):'')
+    });
 }
 
 // 사이트 국가 감지 (site-config.js와 동일 로직)
@@ -883,6 +877,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 renderI18n();checkAuth();loadItems();
 </script>
 <script src="/avatar-render.js?v=2"></script>
+<script src="/user-chat.js?v=1"></script>
 <script src="/community-nav.js?v=4" defer></script>
 </body>
 </html>

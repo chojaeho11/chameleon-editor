@@ -278,6 +278,7 @@ async function loadExperts(){
     const grid=document.getElementById('expertGrid');
     if(error||!data||data.length===0){grid.innerHTML=`<div class="empty"><i class="fa-solid fa-wrench"></i>${t('empty')}</div>`;return;}
     const expProfMap = window.CMAvatar ? await CMAvatar.loadProfiles(sb, data.map(e=>e.user_id)) : {};
+    window._expertsCache = data;
     grid.innerHTML=data.map(e=>{
         const up = expProfMap[e.user_id] || null;
         const photoSrc = up?.avatar_url || (window.CMAvatar ? CMAvatar.pickFor(e.user_id||e.id) : null);
@@ -285,7 +286,7 @@ async function loadExperts(){
             ? `<img src="${esc(photoSrc)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
             : `<i class="fa-solid fa-user"></i>`;
         return `
-        <div class="expert-card">
+        <div class="expert-card" style="cursor:pointer;" onclick="showExpertDetail('${e.id}')">
             <div class="expert-avatar">${avatarHtml}</div>
             <h3>${esc(e.display_name)} ${e.verified?'<i class="fa-solid fa-circle-check" style="color:#6366f1;font-size:14px;" title="'+t('verified')+'"></i>':''}</h3>
             <span class="cat-label">${catName(e.category)}</span>
@@ -298,6 +299,52 @@ async function loadExperts(){
         </div>
     `;}).join('');
 }
+
+window.showExpertDetail = function(expertId){
+    const e = (window._expertsCache||[]).find(x=>String(x.id)===String(expertId));
+    if(!e) return;
+    const photoSrc = window.CMAvatar ? CMAvatar.pickFor(e.user_id||e.id) : '';
+    let modal = document.getElementById('expertDetailModal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'expertDetailModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;';
+        document.body.appendChild(modal);
+    }
+    modal.innerHTML = `<div style="background:#fff;width:100%;max-width:520px;max-height:90vh;overflow:auto;border-radius:20px;padding:28px;position:relative;">
+        <button onclick="document.getElementById('expertDetailModal').remove()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:28px;cursor:pointer;color:#64748b;line-height:1;">×</button>
+        <div style="text-align:center;margin-bottom:20px;">
+            <img src="${photoSrc}" style="width:108px;height:108px;border-radius:50%;object-fit:cover;border:4px solid #e0e7ff;box-shadow:0 6px 20px rgba(99,102,241,0.2);">
+            <h2 style="font-size:22px;font-weight:900;margin-top:14px;color:#1e1b4b;">${(e.display_name||'').replace(/</g,'&lt;')} ${e.verified?'<i class="fa-solid fa-circle-check" style="color:#6366f1;font-size:18px;"></i>':''}</h2>
+            <span style="display:inline-block;background:#ede9fe;color:#6366f1;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;margin-top:6px;">${catName(e.category)}</span>
+        </div>
+        <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="color:#f59e0b;font-size:18px;">${'★'.repeat(Math.round(e.rating||0))}${'☆'.repeat(5-Math.round(e.rating||0))}</span>
+                <span style="font-size:13px;color:#64748b;font-weight:700;">${Number(e.rating||0).toFixed(1)} · ${e.review_count||0} 리뷰</span>
+            </div>
+            ${e.hourly_rate?`<div style="font-size:18px;font-weight:900;color:#0f172a;">${Number(e.hourly_rate).toLocaleString()}원/시간</div>`:''}
+            ${e.city?`<div style="font-size:13px;color:#64748b;margin-top:6px;"><i class="fa-solid fa-location-dot"></i> ${(e.city||'').replace(/</g,'&lt;')}</div>`:''}
+        </div>
+        ${e.bio?`<div style="background:#fff;border:1px solid #f1f5f9;border-radius:12px;padding:14px;margin-bottom:14px;font-size:14px;line-height:1.7;color:#334155;white-space:pre-wrap;">${(e.bio||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>`:''}
+        ${e.experience?`<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:#78350f;"><b>경력</b><br>${(e.experience||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>`:''}
+        <button onclick="chatWithExpert('${e.id}','${(e.display_name||'').replace(/'/g,'\\\'')}','${e.user_id||''}')" style="width:100%;padding:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px -6px rgba(99,102,241,0.5);">💬 ${(e.display_name||'전문가')}님과 채팅하기</button>
+    </div>`;
+    modal.addEventListener('click', ev=>{ if(ev.target===modal) modal.remove(); }, { once:true });
+};
+
+window.chatWithExpert = function(expertId, expertName, expertUserId){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    if(!expertUserId){toast('전문가 계정 정보가 없습니다');return;}
+    if(!window.UserChat){toast('채팅 모듈 로딩 실패');return;}
+    UserChat.open({
+        sb, currentUser,
+        otherUserId: expertUserId,
+        otherName: expertName,
+        topic: 'expert#' + expertId,
+        otherAvatarUrl: window.CMAvatar ? CMAvatar.pickFor(expertUserId||expertId) : ''
+    });
+};
 
 async function submitRequest(){
     if(!currentUser){toast(t('loginFirst'));return;}
@@ -339,6 +386,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 renderI18n();checkAuth();loadExperts();
 </script>
 <script src="/avatar-render.js?v=2"></script>
+<script src="/user-chat.js?v=1"></script>
 <script src="/community-nav.js?v=4" defer></script>
 </body>
 </html>
