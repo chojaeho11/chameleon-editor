@@ -10536,11 +10536,10 @@ window.updateModalTotal = function() {
     const discountAmount = Math.floor(productTotal * discountRate / 100) * 100;
     const finalTotal = productTotal + optionTotal - discountAmount;
 
-    // 할인 가격표 UI 업데이트 — bulkDiscountTable은 항상 숨김 (DB 콘텐츠에 이미 있음)
     // ★ 가격 표시 먼저! (다른 코드에서 에러가 나도 가격은 무조건 업데이트)
     try {
         const display = document.getElementById('modalRealtimeTotal');
-        if(display) display.innerText = fmtLocal(finalTotal);
+        if(display) { display.innerText = fmtLocal(finalTotal); display.style.display = ''; }
         const promoEl = document.getElementById('promoDiscountPrice');
         if(promoEl) {
             const discounted = Math.floor(finalTotal * 0.90);
@@ -10548,10 +10547,16 @@ window.updateModalTotal = function() {
         }
     } catch (e) { console.error('[updateModalTotal] price display error:', e); }
 
-    // 할인 가격표 숨김
+    // 할인 가격표: 허니콤보드 원판 외에는 표시 (별도 로직에서 숨김 처리됨)
     try {
         const discountTableEl = document.getElementById('bulkDiscountTable');
-        if (discountTableEl) discountTableEl.style.display = 'none';
+        if (discountTableEl) {
+            const _isHcBoard = window.selectedProductForChoice && (
+                window.selectedProductForChoice.category === 'Honeycomb Board'
+                || (window._getTopCategoryCode && window._getTopCategoryCode(window.selectedProductForChoice.category) === 'Wholesale Board Prices')
+            );
+            discountTableEl.style.display = _isHcBoard ? 'none' : '';
+        }
     } catch(e) {}
 
     // 할인 금액 표시
