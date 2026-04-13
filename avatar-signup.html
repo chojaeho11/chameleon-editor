@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자기 만들기 - Chameleon</title>
+<script>
+(function(){
+    var p=new URLSearchParams(location.search),l=(p.get('lang')||'').toLowerCase(),h=location.hostname;
+    if(l){if(l==='jp'||l==='ja')l='ja';else if(l==='en'||l==='us')l='en';else if(!['es','de','fr','zh'].includes(l))l='ko';}
+    else if(h.includes('cafe0101'))l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design'))l='en';else l='ko';
+    document.documentElement.lang=l;window.__LANG=l;
+})();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',sans-serif;background:linear-gradient(135deg,#ede9fe,#fae8ff,#fce7f3);color:#1e293b;min-height:100vh;}
+.nav{background:#fff;border-bottom:1px solid #f1f5f9;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#1e293b;font-size:18px;font-weight:900;}
+.nav-logo i{color:#a855f7;font-size:20px;}
+.wrap{max-width:1000px;margin:0 auto;padding:30px 20px 60px;}
+.hero{text-align:center;margin-bottom:28px;}
+.hero h1{font-size:clamp(22px,4vw,32px);font-weight:900;letter-spacing:-1px;margin-bottom:8px;color:#581c87;}
+.hero p{color:#64748b;font-size:14px;}
+
+.stage{display:grid;grid-template-columns:320px 1fr;gap:24px;}
+@media(max-width:720px){.stage{grid-template-columns:1fr;}}
+
+.preview{background:#fff;border-radius:24px;padding:24px;box-shadow:0 12px 40px -10px rgba(168,85,247,0.25);border:1px solid #f3e8ff;position:sticky;top:80px;align-self:start;}
+.preview-svg{width:100%;height:280px;display:block;}
+.preview-name{text-align:center;font-weight:900;font-size:18px;margin-top:10px;color:#6d28d9;}
+.preview-hint{text-align:center;font-size:11px;color:#94a3b8;margin-top:4px;}
+
+.builder{background:#fff;border-radius:24px;padding:20px;box-shadow:0 8px 30px -8px rgba(0,0,0,0.08);}
+.builder-tabs{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.builder-tabs::-webkit-scrollbar{display:none;}
+.b-tab{flex:0 0 auto;padding:10px 14px;border:none;background:#f5f3ff;color:#6d28d9;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.b-tab.active{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;box-shadow:0 4px 12px -2px rgba(168,85,247,0.5);}
+
+.parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;}
+.part{aspect-ratio:1;border:2px solid transparent;border-radius:14px;background:#fafafa;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.15s;padding:4px;}
+.part:hover{background:#f5f3ff;}
+.part.active{border-color:#a855f7;background:#f5f3ff;box-shadow:0 4px 14px -4px rgba(168,85,247,0.45);}
+.part svg{width:100%;height:100%;}
+
+.color-row{display:flex;gap:8px;flex-wrap:wrap;}
+.color-chip{width:36px;height:36px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:0.15s;}
+.color-chip.active{border-color:#a855f7;transform:scale(1.1);}
+
+.signup-form{background:#fff;border-radius:24px;padding:24px;margin-top:24px;box-shadow:0 8px 30px -8px rgba(0,0,0,0.08);}
+.signup-form h2{font-size:18px;font-weight:900;margin-bottom:14px;color:#581c87;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;}
+.field input{width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-family:inherit;outline:none;transition:0.15s;}
+.field input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,0.15);}
+.btn-primary{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;transition:0.15s;box-shadow:0 8px 24px -6px rgba(168,85,247,0.5);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 30px -6px rgba(168,85,247,0.6);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.msg{font-size:12px;padding:10px 12px;border-radius:10px;margin-top:10px;}
+.msg.err{background:#fee2e2;color:#b91c1c;}
+.msg.ok{background:#dcfce7;color:#166534;}
+</style>
+</head>
+<body>
+<nav class="nav">
+    <a class="nav-logo" href="/services"><i class="fa-solid fa-palette"></i> Chameleon</a>
+    <a href="/services" style="font-size:12px;color:#64748b;text-decoration:none;">← <span id="backTxt">돌아가기</span></a>
+</nav>
+
+<div class="wrap">
+    <div class="hero">
+        <h1 id="heroTitle">🎨 자기 만들기</h1>
+        <p id="heroSub">싸이월드처럼 나만의 아바타를 만들어 보세요</p>
+    </div>
+
+    <div class="stage">
+        <div class="preview">
+            <svg class="preview-svg" id="avatarPreview" viewBox="0 0 200 240"></svg>
+            <div class="preview-name" id="previewName">이름 없음</div>
+            <div class="preview-hint" id="previewHint">오른쪽에서 파츠를 선택하세요</div>
+        </div>
+
+        <div class="builder">
+            <div class="builder-tabs" id="tabBar"></div>
+            <div id="tabContent"></div>
+        </div>
+    </div>
+
+    <div class="signup-form">
+        <h2 id="signupTitle">📱 가입 정보</h2>
+        <div class="field">
+            <label id="lblNick">별명</label>
+            <input type="text" id="inpNick" placeholder="예: 초록이" maxlength="20">
+        </div>
+        <div class="field">
+            <label id="lblPhone">전화번호</label>
+            <input type="tel" id="inpPhone" placeholder="010-1234-5678">
+        </div>
+        <div class="field">
+            <label id="lblPw">비밀번호 (6자 이상)</label>
+            <input type="password" id="inpPw" placeholder="••••••">
+        </div>
+        <div class="field">
+            <label id="lblPw2">비밀번호 확인</label>
+            <input type="password" id="inpPw2" placeholder="••••••">
+        </div>
+        <button class="btn-primary" id="btnSignup"><span id="btnSignupTxt">🎉 아바타로 가입하기</span></button>
+        <div id="msgBox"></div>
+    </div>
+</div>
+
+<script>
+const SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const LANG=(window.__LANG||'ko');
+
+// i18n
+const T={
+    ko:{title:'🎨 자기 만들기',sub:'싸이월드처럼 나만의 아바타를 만들어 보세요',back:'돌아가기',sTitle:'📱 가입 정보',nick:'별명',phone:'전화번호',pw:'비밀번호 (6자 이상)',pw2:'비밀번호 확인',btn:'🎉 아바타로 가입하기',noName:'이름 없음',hint:'오른쪽에서 파츠를 선택하세요',
+     gender:'성별',face:'얼굴형',skin:'피부톤',hair:'머리',brow:'눈썹',eye:'눈',glasses:'안경',mouth:'입',outfit:'옷',bg:'배경',
+     male:'남',female:'여',none:'없음',errNick:'별명을 입력하세요',errPhone:'전화번호 형식이 올바르지 않습니다',errPw:'비밀번호는 6자 이상',errPwMatch:'비밀번호가 일치하지 않습니다',ok:'가입 완료! 돌아갑니다...',errDup:'이미 가입된 전화번호입니다',err:'가입 실패'},
+    ja:{title:'🎨 アバターメイカー',sub:'自分だけのアバターを作りましょう',back:'戻る',sTitle:'📱 登録情報',nick:'ニックネーム',phone:'電話番号',pw:'パスワード (6文字以上)',pw2:'パスワード確認',btn:'🎉 アバターで登録',noName:'名前なし',hint:'右側でパーツを選んでください',
+     gender:'性別',face:'顔型',skin:'肌色',hair:'髪',brow:'眉',eye:'目',glasses:'メガネ',mouth:'口',outfit:'服',bg:'背景',
+     male:'男',female:'女',none:'なし',errNick:'ニックネームを入力',errPhone:'電話番号の形式が正しくありません',errPw:'パスワードは6文字以上',errPwMatch:'パスワードが一致しません',ok:'登録完了！戻ります...',errDup:'この電話番号は既に登録済みです',err:'登録失敗'},
+    en:{title:'🎨 Avatar Maker',sub:'Create your own avatar, Cyworld-style',back:'Back',sTitle:'📱 Signup Info',nick:'Nickname',phone:'Phone',pw:'Password (6+ chars)',pw2:'Confirm Password',btn:'🎉 Sign up with Avatar',noName:'No Name',hint:'Pick parts from the right',
+     gender:'Gender',face:'Face',skin:'Skin',hair:'Hair',brow:'Brow',eye:'Eyes',glasses:'Glasses',mouth:'Mouth',outfit:'Outfit',bg:'Background',
+     male:'M',female:'F',none:'None',errNick:'Enter a nickname',errPhone:'Invalid phone format',errPw:'Password must be 6+ chars',errPwMatch:'Passwords do not match',ok:'Signed up! Going back...',errDup:'This phone is already registered',err:'Signup failed'}
+};
+const L=T[LANG]||T.en;
+['heroTitle','heroSub','backTxt','signupTitle','lblNick','lblPhone','lblPw','lblPw2','btnSignupTxt','previewName','previewHint'].forEach(()=>{});
+document.getElementById('heroTitle').textContent=L.title;
+document.getElementById('heroSub').textContent=L.sub;
+document.getElementById('backTxt').textContent=L.back;
+document.getElementById('signupTitle').textContent=L.sTitle;
+document.getElementById('lblNick').textContent=L.nick;
+document.getElementById('lblPhone').textContent=L.phone;
+document.getElementById('lblPw').textContent=L.pw;
+document.getElementById('lblPw2').textContent=L.pw2;
+document.getElementById('btnSignupTxt').textContent=L.btn;
+document.getElementById('previewName').textContent=L.noName;
+document.getElementById('previewHint').textContent=L.hint;
+
+// ========== 아바타 파츠 SVG 라이브러리 ==========
+// 모든 파츠는 200x240 viewBox, 내부 g 요소로 구성
+const SKIN_COLORS=['#fde1c8','#f5c9a6','#d9a377','#a97455','#7c4d36'];
+const HAIR_COLORS=['#111827','#6b3a1f','#c2974e','#e9b88c','#dc2626','#a855f7','#fbbf24','#94a3b8'];
+const BG_COLORS=['#fef3c7','#ddd6fe','#fce7f3','#d1fae5','#dbeafe','#fed7aa','#e5e7eb'];
+
+const PARTS={
+    face:[
+        {id:0,name:'둥근',draw:(s)=>`<ellipse cx="100" cy="115" rx="54" ry="62" fill="${s}"/>`},
+        {id:1,name:'긴',draw:(s)=>`<ellipse cx="100" cy="118" rx="46" ry="68" fill="${s}"/>`},
+        {id:2,name:'각진',draw:(s)=>`<path d="M 52 95 Q 52 75 100 72 Q 148 75 148 95 L 148 140 Q 148 175 100 180 Q 52 175 52 140 Z" fill="${s}"/>`},
+        {id:3,name:'하트',draw:(s)=>`<path d="M 55 100 Q 55 75 75 70 Q 100 68 100 75 Q 100 68 125 70 Q 145 75 145 100 Q 145 160 100 180 Q 55 160 55 100 Z" fill="${s}"/>`}
+    ],
+    hair:[
+        {id:0,name:'없음',draw:()=>``},
+        {id:1,name:'단발',draw:(c)=>`<path d="M 50 100 Q 45 55 100 45 Q 155 55 150 100 Q 150 60 100 58 Q 50 60 50 100 Z" fill="${c}"/>`},
+        {id:2,name:'숏컷',draw:(c)=>`<path d="M 55 85 Q 60 50 100 48 Q 140 50 145 85 Q 130 65 100 63 Q 70 65 55 85 Z" fill="${c}"/>`},
+        {id:3,name:'긴머리',draw:(c)=>`<path d="M 45 105 Q 42 50 100 45 Q 158 50 155 105 L 160 200 L 148 205 L 148 108 Q 148 68 100 65 Q 52 68 52 108 L 52 205 L 40 200 Z" fill="${c}"/>`},
+        {id:4,name:'곱슬',draw:(c)=>`<g fill="${c}"><circle cx="65" cy="72" r="16"/><circle cx="85" cy="58" r="17"/><circle cx="105" cy="55" r="18"/><circle cx="128" cy="62" r="16"/><circle cx="143" cy="80" r="14"/><path d="M 50 95 Q 50 75 100 72 Q 150 75 150 95 L 150 110 Q 150 80 100 78 Q 50 80 50 110 Z"/></g>`},
+        {id:5,name:'모히칸',draw:(c)=>`<path d="M 88 40 L 92 85 L 108 85 L 112 40 Q 100 30 88 40 Z" fill="${c}"/>`},
+        {id:6,name:'포니테일',draw:(c)=>`<g fill="${c}"><path d="M 50 100 Q 45 55 100 48 Q 155 55 150 100 Q 150 60 100 60 Q 50 60 50 100 Z"/><ellipse cx="155" cy="130" rx="10" ry="30" transform="rotate(15 155 130)"/></g>`},
+        {id:7,name:'투블럭',draw:(c)=>`<path d="M 62 78 Q 65 50 100 48 Q 135 50 138 78 L 140 92 Q 138 75 100 72 Q 62 75 60 92 Z" fill="${c}"/>`}
+    ],
+    brow:[
+        {id:0,name:'없음',draw:()=>``},
+        {id:1,name:'일자',draw:()=>`<g stroke="#222" stroke-width="4" stroke-linecap="round"><line x1="72" y1="105" x2="90" y2="105"/><line x1="110" y1="105" x2="128" y2="105"/></g>`},
+        {id:2,name:'굵은',draw:()=>`<g fill="#222"><ellipse cx="81" cy="105" rx="11" ry="3.5"/><ellipse cx="119" cy="105" rx="11" ry="3.5"/></g>`},
+        {id:3,name:'치켜',draw:()=>`<g stroke="#222" stroke-width="4" stroke-linecap="round" fill="none"><path d="M 72 108 L 90 102"/><path d="M 110 102 L 128 108"/></g>`},
+        {id:4,name:'화난',draw:()=>`<g stroke="#222" stroke-width="4" stroke-linecap="round" fill="none"><path d="M 72 102 L 92 110"/><path d="M 108 110 L 128 102"/></g>`},
+        {id:5,name:'웃는',draw:()=>`<g stroke="#222" stroke-width="3.5" fill="none" stroke-linecap="round"><path d="M 70 108 Q 81 100 92 108"/><path d="M 108 108 Q 119 100 130 108"/></g>`}
+    ],
+    eye:[
+        {id:0,name:'동그란',draw:()=>`<g><circle cx="80" cy="122" r="7" fill="#fff"/><circle cx="80" cy="122" r="4" fill="#222"/><circle cx="120" cy="122" r="7" fill="#fff"/><circle cx="120" cy="122" r="4" fill="#222"/></g>`},
+        {id:1,name:'반짝',draw:()=>`<g><circle cx="80" cy="122" r="8" fill="#fff" stroke="#222" stroke-width="1.5"/><circle cx="81" cy="122" r="5" fill="#222"/><circle cx="83" cy="120" r="1.5" fill="#fff"/><circle cx="120" cy="122" r="8" fill="#fff" stroke="#222" stroke-width="1.5"/><circle cx="121" cy="122" r="5" fill="#222"/><circle cx="123" cy="120" r="1.5" fill="#fff"/></g>`},
+        {id:2,name:'^^',draw:()=>`<g stroke="#222" stroke-width="3.5" fill="none" stroke-linecap="round"><path d="M 72 122 Q 80 115 88 122"/><path d="M 112 122 Q 120 115 128 122"/></g>`},
+        {id:3,name:'졸린',draw:()=>`<g stroke="#222" stroke-width="3.5" stroke-linecap="round"><line x1="72" y1="122" x2="88" y2="122"/><line x1="112" y1="122" x2="128" y2="122"/></g>`},
+        {id:4,name:'윙크',draw:()=>`<g><circle cx="80" cy="122" r="7" fill="#fff"/><circle cx="80" cy="122" r="4" fill="#222"/><path d="M 112 122 Q 120 115 128 122" stroke="#222" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>`},
+        {id:5,name:'큰눈',draw:()=>`<g><ellipse cx="80" cy="122" rx="9" ry="11" fill="#fff"/><circle cx="80" cy="123" r="5" fill="#222"/><circle cx="82" cy="121" r="1.6" fill="#fff"/><ellipse cx="120" cy="122" rx="9" ry="11" fill="#fff"/><circle cx="120" cy="123" r="5" fill="#222"/><circle cx="122" cy="121" r="1.6" fill="#fff"/></g>`}
+    ],
+    glasses:[
+        {id:0,name:'없음',draw:()=>``},
+        {id:1,name:'둥근',draw:()=>`<g stroke="#111" stroke-width="2.5" fill="none"><circle cx="80" cy="122" r="13"/><circle cx="120" cy="122" r="13"/><line x1="93" y1="122" x2="107" y2="122"/></g>`},
+        {id:2,name:'네모',draw:()=>`<g stroke="#111" stroke-width="2.5" fill="none"><rect x="66" y="112" width="26" height="18" rx="3"/><rect x="108" y="112" width="26" height="18" rx="3"/><line x1="92" y1="121" x2="108" y2="121"/></g>`},
+        {id:3,name:'선글라스',draw:()=>`<g fill="#1e293b"><rect x="66" y="112" width="28" height="18" rx="3"/><rect x="106" y="112" width="28" height="18" rx="3"/><rect x="94" y="119" width="12" height="3"/></g>`},
+        {id:4,name:'하트',draw:()=>`<g stroke="#ec4899" stroke-width="2.5" fill="none"><path d="M 80 115 Q 72 115 72 120 Q 72 125 80 132 Q 88 125 88 120 Q 88 115 80 115 Z"/><path d="M 120 115 Q 112 115 112 120 Q 112 125 120 132 Q 128 125 128 120 Q 128 115 120 115 Z"/><line x1="88" y1="123" x2="112" y2="123"/></g>`}
+    ],
+    mouth:[
+        {id:0,name:'웃음',draw:()=>`<path d="M 85 150 Q 100 162 115 150" stroke="#b91c1c" stroke-width="3" fill="none" stroke-linecap="round"/>`},
+        {id:1,name:'활짝',draw:()=>`<path d="M 80 148 Q 100 170 120 148 Q 100 156 80 148 Z" fill="#b91c1c"/>`},
+        {id:2,name:'O',draw:()=>`<ellipse cx="100" cy="155" rx="6" ry="7" fill="#b91c1c"/>`},
+        {id:3,name:'무표정',draw:()=>`<line x1="88" y1="155" x2="112" y2="155" stroke="#b91c1c" stroke-width="3" stroke-linecap="round"/>`},
+        {id:4,name:'삐죽',draw:()=>`<path d="M 85 155 Q 100 148 115 155" stroke="#b91c1c" stroke-width="3" fill="none" stroke-linecap="round"/>`},
+        {id:5,name:'혓바닥',draw:()=>`<g><path d="M 85 150 Q 100 165 115 150" stroke="#b91c1c" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="100" cy="158" rx="5" ry="4" fill="#ec4899"/></g>`},
+        {id:6,name:'🧔',draw:()=>`<g><path d="M 85 150 Q 100 160 115 150" stroke="#b91c1c" stroke-width="3" fill="none"/><path d="M 70 150 Q 70 175 100 185 Q 130 175 130 150 Q 115 165 100 165 Q 85 165 70 150 Z" fill="#3f2408"/></g>`}
+    ],
+    outfit:[
+        {id:0,name:'티셔츠',draw:(c)=>`<path d="M 40 220 L 55 195 L 80 190 L 100 200 L 120 190 L 145 195 L 160 220 L 160 240 L 40 240 Z" fill="${c||'#6366f1'}"/>`},
+        {id:1,name:'후드',draw:(c)=>`<g fill="${c||'#ef4444'}"><path d="M 50 210 Q 40 190 60 185 L 80 195 L 100 200 L 120 195 L 140 185 Q 160 190 150 210 L 160 240 L 40 240 Z"/><path d="M 78 195 Q 85 178 100 180 Q 115 178 122 195" fill="#fff"/></g>`},
+        {id:2,name:'정장',draw:(c)=>`<g><path d="M 40 220 L 55 195 L 100 210 L 145 195 L 160 220 L 160 240 L 40 240 Z" fill="#1e293b"/><path d="M 85 200 L 100 210 L 115 200 L 100 240 Z" fill="#fff"/><rect x="97" y="215" width="6" height="25" fill="#111"/></g>`},
+        {id:3,name:'원피스',draw:(c)=>`<path d="M 30 240 L 55 195 L 80 195 L 100 210 L 120 195 L 145 195 L 170 240 Z" fill="${c||'#ec4899'}"/>`}
+    ]
+};
+
+// 현재 아바타 상태
+const A={
+    gender:'female',
+    skin:0,
+    face:0,
+    hair:3,
+    hairColor:1,
+    brow:1,
+    eye:1,
+    glasses:0,
+    mouth:0,
+    outfit:0,
+    outfitColor:'#a855f7',
+    bg:1
+};
+
+function renderAvatar(target){
+    const skin=SKIN_COLORS[A.skin];
+    const hairC=HAIR_COLORS[A.hairColor];
+    const bgC=BG_COLORS[A.bg];
+    const svg=`
+        <rect width="200" height="240" rx="24" fill="${bgC}"/>
+        <g>
+            <!-- 목 -->
+            <rect x="88" y="170" width="24" height="22" fill="${skin}"/>
+            <!-- 옷 -->
+            ${PARTS.outfit[A.outfit].draw(A.outfitColor)}
+            <!-- 얼굴 -->
+            ${PARTS.face[A.face].draw(skin)}
+            <!-- 머리 -->
+            ${PARTS.hair[A.hair].draw(hairC)}
+            <!-- 눈썹 -->
+            ${PARTS.brow[A.brow].draw()}
+            <!-- 눈 -->
+            ${PARTS.eye[A.eye].draw()}
+            <!-- 안경 -->
+            ${PARTS.glasses[A.glasses].draw()}
+            <!-- 입 -->
+            ${PARTS.mouth[A.mouth].draw()}
+            <!-- 볼터치 -->
+            <circle cx="68" cy="145" r="8" fill="#fca5a5" opacity="0.5"/>
+            <circle cx="132" cy="145" r="8" fill="#fca5a5" opacity="0.5"/>
+        </g>
+    `;
+    (target||document.getElementById('avatarPreview')).innerHTML=svg;
+}
+
+// 미니 아바타 썸네일 (파츠 선택 칸용)
+function miniAvatar(partKey, idx){
+    const tmp={...A};tmp[partKey]=idx;
+    const skin=SKIN_COLORS[tmp.skin],hairC=HAIR_COLORS[tmp.hairColor];
+    return `<svg viewBox="0 0 200 240">
+        <ellipse cx="100" cy="115" rx="54" ry="62" fill="${skin}"/>
+        ${partKey==='hair'?PARTS.hair[idx].draw(hairC):PARTS.hair[A.hair].draw(hairC)}
+        ${partKey==='brow'?PARTS.brow[idx].draw():PARTS.brow[A.brow].draw()}
+        ${partKey==='eye'?PARTS.eye[idx].draw():PARTS.eye[A.eye].draw()}
+        ${partKey==='glasses'?PARTS.glasses[idx].draw():PARTS.glasses[A.glasses].draw()}
+        ${partKey==='mouth'?PARTS.mouth[idx].draw():PARTS.mouth[A.mouth].draw()}
+        ${partKey==='face'?PARTS.face[idx].draw(skin):''}
+        ${partKey==='outfit'?PARTS.outfit[idx].draw(A.outfitColor):''}
+    </svg>`;
+}
+
+// 탭 정의
+const TABS=[
+    {k:'gender',i:'fa-venus-mars',label:L.gender,type:'choice',opts:['female','male']},
+    {k:'face',i:'fa-circle',label:L.face,type:'parts',list:PARTS.face},
+    {k:'skin',i:'fa-palette',label:L.skin,type:'colors',list:SKIN_COLORS},
+    {k:'hair',i:'fa-scissors',label:L.hair,type:'parts',list:PARTS.hair,withColor:HAIR_COLORS,colorKey:'hairColor'},
+    {k:'brow',i:'fa-arrow-up',label:L.brow,type:'parts',list:PARTS.brow},
+    {k:'eye',i:'fa-eye',label:L.eye,type:'parts',list:PARTS.eye},
+    {k:'glasses',i:'fa-glasses',label:L.glasses,type:'parts',list:PARTS.glasses},
+    {k:'mouth',i:'fa-smile',label:L.mouth,type:'parts',list:PARTS.mouth},
+    {k:'outfit',i:'fa-shirt',label:L.outfit,type:'parts',list:PARTS.outfit,withOutfitColor:true},
+    {k:'bg',i:'fa-image',label:L.bg,type:'colors',list:BG_COLORS}
+];
+let currentTab=0;
+
+function renderTabs(){
+    document.getElementById('tabBar').innerHTML=TABS.map((t,i)=>
+        `<button class="b-tab${i===currentTab?' active':''}" onclick="setTab(${i})"><i class="fa-solid ${t.i}"></i> ${t.label}</button>`
+    ).join('');
+    renderTabContent();
+}
+function renderTabContent(){
+    const t=TABS[currentTab];
+    const box=document.getElementById('tabContent');
+    if(t.type==='choice'){
+        box.innerHTML=`<div class="parts-grid">
+            <div class="part${A.gender==='female'?' active':''}" onclick="A.gender='female';renderAvatar();renderTabContent();"><div style="font-size:40px;">👩</div></div>
+            <div class="part${A.gender==='male'?' active':''}" onclick="A.gender='male';renderAvatar();renderTabContent();"><div style="font-size:40px;">👨</div></div>
+        </div>`;
+    } else if(t.type==='parts'){
+        let html='<div class="parts-grid">';
+        t.list.forEach((p,i)=>{
+            html+=`<div class="part${A[t.k]===i?' active':''}" onclick="A.${t.k}=${i};renderAvatar();renderTabContent();">${miniAvatar(t.k,i)}</div>`;
+        });
+        html+='</div>';
+        if(t.withColor){
+            html+='<div style="margin-top:14px;font-size:11px;color:#64748b;font-weight:700;margin-bottom:8px;">머리 색상</div><div class="color-row">';
+            t.withColor.forEach((c,i)=>{
+                html+=`<div class="color-chip${A[t.colorKey]===i?' active':''}" style="background:${c}" onclick="A.${t.colorKey}=${i};renderAvatar();renderTabContent();"></div>`;
+            });
+            html+='</div>';
+        }
+        if(t.withOutfitColor){
+            const outfitCs=['#a855f7','#ec4899','#ef4444','#f59e0b','#10b981','#3b82f6','#1e293b','#fff'];
+            html+='<div style="margin-top:14px;font-size:11px;color:#64748b;font-weight:700;margin-bottom:8px;">옷 색상</div><div class="color-row">';
+            outfitCs.forEach((c)=>{
+                html+=`<div class="color-chip${A.outfitColor===c?' active':''}" style="background:${c};border:1.5px solid #e2e8f0;" onclick="A.outfitColor='${c}';renderAvatar();renderTabContent();"></div>`;
+            });
+            html+='</div>';
+        }
+        box.innerHTML=html;
+    } else if(t.type==='colors'){
+        box.innerHTML='<div class="color-row">'+t.list.map((c,i)=>
+            `<div class="color-chip${A[t.k]===i?' active':''}" style="background:${c};border:1.5px solid #e2e8f0;" onclick="A.${t.k}=${i};renderAvatar();renderTabContent();"></div>`
+        ).join('')+'</div>';
+    }
+}
+window.setTab=function(i){currentTab=i;renderTabs();};
+
+renderAvatar();
+renderTabs();
+
+// 별명 → 프리뷰 동기화
+document.getElementById('inpNick').addEventListener('input',e=>{
+    document.getElementById('previewName').textContent=e.target.value||L.noName;
+});
+
+// ========== 가입 처리 ==========
+function showMsg(text,cls){
+    document.getElementById('msgBox').innerHTML=`<div class="msg ${cls}">${text}</div>`;
+}
+
+async function signup(){
+    const nick=document.getElementById('inpNick').value.trim();
+    const phoneRaw=document.getElementById('inpPhone').value.trim();
+    const pw=document.getElementById('inpPw').value;
+    const pw2=document.getElementById('inpPw2').value;
+
+    if(!nick){showMsg(L.errNick,'err');return;}
+    const phone=phoneRaw.replace(/[^\d]/g,'');
+    if(phone.length<9||phone.length>15){showMsg(L.errPhone,'err');return;}
+    if(pw.length<6){showMsg(L.errPw,'err');return;}
+    if(pw!==pw2){showMsg(L.errPwMatch,'err');return;}
+
+    const btn=document.getElementById('btnSignup');
+    btn.disabled=true;
+    try{
+        // 가상 이메일 생성 (Supabase Auth는 email 필수)
+        const fakeEmail=`u${phone}@phone.chameleon.local`;
+        const {data,error}=await sb.auth.signUp({email:fakeEmail,password:pw,options:{data:{phone,nickname:nick}}});
+        if(error){
+            const msg=error.message||'';
+            if(msg.toLowerCase().includes('already')||msg.toLowerCase().includes('registered')){showMsg(L.errDup,'err');}
+            else{showMsg(L.err+': '+msg,'err');}
+            btn.disabled=false;return;
+        }
+        // 프로필 저장
+        const uid=data.user?.id;
+        if(uid){
+            await sb.from('profiles').upsert({id:uid,username:nick,email:fakeEmail,avatar_json:A,site:(window.__SITE_CODE||'KR')});
+        }
+        showMsg(L.ok,'ok');
+        setTimeout(()=>{const back=new URLSearchParams(location.search).get('back')||'/services';location.href=back;},1500);
+    }catch(e){
+        showMsg(L.err+': '+e.message,'err');
+        btn.disabled=false;
+    }
+}
+document.getElementById('btnSignup').addEventListener('click',signup);
+</script>
+</body>
+</html>
