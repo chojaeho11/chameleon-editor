@@ -380,8 +380,8 @@ export function renderShortcutButtons(containerId) {
             quick_quote: '빠른견적서',
             product_search: '제품검색',
             // ── Design Market banner (left) ──
-            hub_title: '디자인 중계부터 아르바이트까지',
-            hub_sub: '모든 중계 서비스를 한곳에 모았습니다',
+            hub_title: '세상에 모든 서비스를 밴드하다',
+            hub_sub: '디자인 · 인력 · 모임 · 중고장터',
             hub_cta: '모든 서비스 보기',
             pitch_only: '단',
             pitch_num: '5%',
@@ -397,8 +397,8 @@ export function renderShortcutButtons(containerId) {
             self_design: 'セルフデザイン',
             quick_quote: 'クイック見積',
             product_search: '商品検索',
-            hub_title: 'デザイン仲介からアルバイトまで',
-            hub_sub: 'すべての仲介サービスを一つに',
+            hub_title: '世界中のサービスをバンドする',
+            hub_sub: 'デザイン · 人材 · コミュニティ · 中古マーケット',
             hub_cta: 'すべてのサービスを見る',
             pitch_only: 'ONLY',
             pitch_num: '5%',
@@ -413,8 +413,8 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Self Design',
             quick_quote: 'Quick Quote',
             product_search: 'Search',
-            hub_title: 'From design to part-time jobs',
-            hub_sub: 'All matching services in one place',
+            hub_title: 'Band every service in the world',
+            hub_sub: 'Design · Talent · Community · Marketplace',
             hub_cta: 'View All Services',
             pitch_only: 'ONLY',
             pitch_num: '5%',
@@ -429,8 +429,8 @@ export function renderShortcutButtons(containerId) {
             self_design: '自助设计',
             quick_quote: '快速报价',
             product_search: '产品搜索',
-            hub_title: '设计中介到兼职招聘',
-            hub_sub: '所有中介服务集于一处',
+            hub_title: '联结世界上所有的服务',
+            hub_sub: '设计 · 人才 · 社群 · 二手市场',
             hub_cta: '查看所有服务',
             pitch_only: '仅',
             pitch_num: '5%',
@@ -445,8 +445,8 @@ export function renderShortcutButtons(containerId) {
             self_design: 'تصميم ذاتي',
             quick_quote: 'عرض سريع',
             product_search: 'بحث المنتجات',
-            hub_title: 'من وساطة التصميم إلى الوظائف المؤقتة',
-            hub_sub: 'جميع خدمات الوساطة في مكان واحد',
+            hub_title: 'اجمع كل خدمات العالم معاً',
+            hub_sub: 'التصميم · المواهب · المجتمع · السوق المستعمل',
             hub_cta: 'عرض جميع الخدمات',
             pitch_only: 'فقط',
             pitch_num: '5%',
@@ -461,8 +461,8 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Autodiseño',
             quick_quote: 'Cotización rápida',
             product_search: 'Buscar',
-            hub_title: 'De diseño a empleo temporal',
-            hub_sub: 'Todos los servicios de intermediación en un solo lugar',
+            hub_title: 'Conecta todos los servicios del mundo',
+            hub_sub: 'Diseño · Talento · Comunidad · Mercado',
             hub_cta: 'Ver todos los servicios',
             pitch_only: 'SOLO',
             pitch_num: '5%',
@@ -477,8 +477,8 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Selbstdesign',
             quick_quote: 'Schnellangebot',
             product_search: 'Suche',
-            hub_title: 'Vom Design bis zum Nebenjob',
-            hub_sub: 'Alle Vermittlungsdienste an einem Ort',
+            hub_title: 'Alle Dienste der Welt verbinden',
+            hub_sub: 'Design · Talente · Community · Secondhand',
             hub_cta: 'Alle Dienste ansehen',
             pitch_only: 'NUR',
             pitch_num: '5%',
@@ -493,8 +493,8 @@ export function renderShortcutButtons(containerId) {
             self_design: 'Conception',
             quick_quote: 'Devis rapide',
             product_search: 'Recherche',
-            hub_title: 'Du design aux emplois temporaires',
-            hub_sub: 'Tous les services d\'intermédiation en un seul endroit',
+            hub_title: 'Relier tous les services du monde',
+            hub_sub: 'Design · Talents · Communauté · Marché',
             hub_cta: 'Voir tous les services',
             pitch_only: 'SEULEMENT',
             pitch_num: '5%',
@@ -517,7 +517,9 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
 
         /* Single services hub banner */
-        .dm-hub-banner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 25%,#4338ca 50%,#7c3aed 75%,#059669 100%);}
+        @keyframes dmBandPulse { 0%,100%{transform:scale(1);filter:drop-shadow(0 0 12px rgba(251,191,36,0.5));} 50%{transform:scale(1.04);filter:drop-shadow(0 0 22px rgba(251,191,36,0.9));} }
+        .dm-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 25%,#4338ca 50%,#7c3aed 75%,#059669 100%);}
+        .dm-hub-band{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:14px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e1b4b;font-size:34px;font-weight:900;letter-spacing:2px;font-family:'Arial Black','Helvetica',sans-serif;box-shadow:0 6px 20px -4px rgba(251,191,36,0.6),inset 0 2px 0 rgba(255,255,255,0.3);animation:dmBandPulse 2.4s ease-in-out infinite;position:relative;z-index:3;text-shadow:0 2px 0 rgba(255,255,255,0.3);}
         .dm-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
         .dm-hub-banner::before{content:'';position:absolute;top:-50px;right:-50px;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,0.2) 0%,transparent 70%);pointer-events:none;}
         .dm-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(16,185,129,0.15) 0%,transparent 70%);pointer-events:none;}
@@ -531,10 +533,11 @@ export function renderShortcutButtons(containerId) {
         @media(max-width:768px){
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
-            .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:column;text-align:center;gap:14px;}
-            .dm-hub-title{font-size:16px;}
-            .dm-hub-sub{font-size:11px;}
-            .dm-hub-cta{padding:11px 18px;font-size:12px;}
+            .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
+            .dm-hub-band{font-size:24px;padding:8px 12px;border-radius:10px;letter-spacing:1px;}
+            .dm-hub-title{font-size:14px;}
+            .dm-hub-sub{font-size:10.5px;}
+            .dm-hub-cta{display:none;}
         }
         </style>
         <div class="adv-ext-wrap">
@@ -550,6 +553,7 @@ export function renderShortcutButtons(containerId) {
                 </a>
             </div>
             <a href="${location.origin}/services" class="dm-hub-banner" target="_blank">
+                <div class="dm-hub-band">BAND</div>
                 <div class="dm-hub-text">
                     <div class="dm-hub-title">${t.hub_title}</div>
                     <div class="dm-hub-sub">${t.hub_sub}</div>
