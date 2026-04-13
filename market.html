@@ -351,11 +351,15 @@ async function showDetail(id){
     (async()=>{try{await sb.from('community_secondhand').update({view_count:(item.view_count||0)+1}).eq('id',id);}catch(e){}})();
     // Get seller temperature
     let temp=36.5;
+    let sellerProf=null;
     if(item.seller_id){
         const{data:td}=await sb.from('community_user_temperature').select('temperature').eq('user_id',item.seller_id).maybeSingle();
         if(td)temp=td.temperature;
+        try{const{data:pp}=await sb.from('profiles').select('id,username,avatar_url').eq('id',item.seller_id).maybeSingle();sellerProf=pp;}catch(e){}
     }
     const isMine=currentUser&&currentUser.id===item.seller_id;
+    const sellerAvatar = window.CMAvatar ? CMAvatar.html(sellerProf, 48) : '<i class="fa-solid fa-user"></i>';
+    const sellerName = sellerProf?.username || (item.seller_id||'').substring(0,8);
     document.getElementById('detailCard').innerHTML=`
         <button class="detail-close" onclick="closeDetail()">&times;</button>
         <div style="text-align:center;font-size:60px;color:#d1d5db;margin:16px 0;"><i class="fa-solid fa-image"></i></div>
@@ -376,9 +380,9 @@ async function showDetail(id){
 
         <!-- Seller Profile -->
         <div class="seller-profile">
-            <div class="seller-avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="seller-avatar" style="background:none;padding:0;">${sellerAvatar}</div>
             <div class="seller-info">
-                <div class="name">${esc((item.seller_id||'').substring(0,8))} ${tempDisplay(temp)}</div>
+                <div class="name">${esc(sellerName)} ${tempDisplay(temp)}</div>
                 <div class="stats">${t('sellerProfile')}</div>
             </div>
             ${!isMine?`<button class="msg-btn" onclick="sendMessage('${item.seller_id}')"><i class="fa-solid fa-comment"></i> ${t('sendMsg')}</button>`:''}
@@ -448,6 +452,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 
 renderI18n();checkAuth();loadItems();
 </script>
-<script src="/community-nav.js?v=1" defer></script>
+<script src="/avatar-render.js?v=1"></script>
+<script src="/community-nav.js?v=2" defer></script>
 </body>
 </html>

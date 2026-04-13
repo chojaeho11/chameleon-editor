@@ -65,7 +65,8 @@ body{font-family:'Pretendard',sans-serif;background:#f0fdfa;color:#1e293b;min-he
 .post-feed{display:flex;flex-direction:column;gap:14px;}
 .post-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;}
 .post-card .post-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.post-avatar{width:36px;height:36px;border-radius:50%;background:#f0fdfa;display:flex;align-items:center;justify-content:center;font-size:16px;color:#14b8a6;}
+.post-avatar{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.post-avatar i.fa-user{width:36px;height:36px;border-radius:50%;background:#f0fdfa;display:flex;align-items:center;justify-content:center;font-size:16px;color:#14b8a6;}
 .post-card .post-author{font-size:13px;font-weight:700;}
 .post-card .post-time{font-size:11px;color:#94a3b8;}
 .post-card h3{font-size:15px;font-weight:800;margin-bottom:6px;}
@@ -331,12 +332,17 @@ async function loadPosts(groupId){
     const{data,error}=await sb.from('community_posts').select('*').eq('group_id',groupId).order('created_at',{ascending:false}).limit(50);
     const feed=document.getElementById('postFeed');
     if(error||!data||data.length===0){feed.innerHTML=`<div class="empty"><i class="fa-solid fa-pen-to-square"></i>${t('emptyPosts')}</div>`;return;}
-    feed.innerHTML=data.map(p=>`
+    const profMap = (window.CMAvatar ? await CMAvatar.loadProfiles(sb, data.map(p=>p.author_id)) : {});
+    feed.innerHTML=data.map(p=>{
+        const prof = profMap[p.author_id] || null;
+        const name = prof?.username || (p.author_id?.substring(0,8) || 'User');
+        const avatarHtml = window.CMAvatar ? CMAvatar.html(prof, 36) : '<i class="fa-solid fa-user"></i>';
+        return `
         <div class="post-card">
             <div class="post-header">
-                <div class="post-avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="post-avatar" style="background:none;padding:0;">${avatarHtml}</div>
                 <div>
-                    <div class="post-author">${esc(p.author_id?.substring(0,8)||'User')}</div>
+                    <div class="post-author">${esc(name)}</div>
                     <div class="post-time">${timeAgo(p.created_at)}</div>
                 </div>
             </div>
@@ -347,7 +353,7 @@ async function loadPosts(groupId){
                 <span class="post-action"><i class="fa-solid fa-comment"></i> ${p.comments||0} ${t('comment')}</span>
             </div>
         </div>
-    `).join('');
+    `;}).join('');
 }
 
 async function createPost(){
@@ -371,6 +377,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 
 renderI18n();checkAuth();loadGroups();
 </script>
-<script src="/community-nav.js?v=1" defer></script>
+<script src="/avatar-render.js?v=1"></script>
+<script src="/community-nav.js?v=2" defer></script>
 </body>
 </html>
