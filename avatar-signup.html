@@ -82,7 +82,7 @@ body{font-family:'Pretendard',sans-serif;background:linear-gradient(135deg,#ede9
     <div class="section-label" id="galleryLabel">✨ 아바타 갤러리</div>
     <div class="gallery" id="gallery"></div>
 
-    <div class="signup-form">
+    <div class="signup-form" id="signupForm" style="visibility:hidden;">
         <h2 id="signupTitle">📱 가입 정보</h2>
         <div class="field">
             <label id="lblNick">별명</label>
@@ -217,18 +217,16 @@ document.getElementById('selCC').value=DEFAULT_CC;
 // 로그인 상태 확인 — 기존 고객이면 가입폼 숨기고 아바타 저장만
 let EXISTING_USER=null;
 (async()=>{
+    const form=document.getElementById('signupForm');
     try{
         const {data:{user}}=await sb.auth.getUser();
         if(user){
             EXISTING_USER=user;
-            // 현재 아바타 미리 선택
             const {data:prof}=await sb.from('profiles').select('avatar_url,username').eq('id',user.id).maybeSingle();
             if(prof?.avatar_url){
                 const i=AVATARS.indexOf(prof.avatar_url);
                 if(i>=0) window.pickAvatar(i);
             }
-            // 가입폼 -> 저장폼으로 변환
-            const form=document.querySelector('.signup-form');
             form.innerHTML=`<h2>🎨 ${L.selLabel}</h2>
                 <p style="font-size:13px;color:#64748b;margin-bottom:14px;">${prof?.username?prof.username+' 님':''} — 원하는 아바타를 골라 저장하세요.</p>
                 <button class="btn-primary" id="btnSave">💾 ${LANG==='ja'?'アバターを保存':LANG==='en'?'Save Avatar':'아바타 저장'}</button>
@@ -243,6 +241,7 @@ let EXISTING_USER=null;
             });
         }
     }catch(e){console.warn(e);}
+    form.style.visibility='visible';
 })();
 
 async function signup(){
