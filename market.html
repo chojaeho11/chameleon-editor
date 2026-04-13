@@ -242,10 +242,14 @@ const T={
     won:{ko:'원',ja:'円',en:'KRW'},
     views:{ko:'조회',ja:'閲覧',en:'views'},chats:{ko:'채팅',ja:'チャット',en:'chats'},
     sendMsg:{ko:'메시지 보내기',ja:'メッセージ送信',en:'Send Message'},
-    safeTitle:{ko:'안전거래',ja:'安全取引',en:'Safe Transaction'},
-    safeDesc:{ko:'카멜레온이 중간에서 결제를 보관합니다. 물건을 받은 후 확인하면 판매자에게 돈이 전달됩니다.',ja:'カメレオンが決済を一時預かり。商品受取確認後、売り手に支払われます。',en:'Chameleon holds the payment. After buyer confirms receipt, money is released to seller.'},
-    safeFee:{ko:'안전거래 수수료: 거래금액의 5%',ja:'安全取引手数料: 取引額の5%',en:'Safe transaction fee: 5% of amount'},
-    safeBuy:{ko:'안전거래로 구매하기',ja:'安全取引で購入',en:'Buy with Safe Transaction'},
+    msgPrompt:{ko:'판매자에게 보낼 메시지를 입력하세요',ja:'売り手へのメッセージを入力',en:'Message to seller'},
+    msgSent:{ko:'메시지가 전송되었습니다',ja:'メッセージを送信しました',en:'Message sent'},
+    phone:{ko:'전화번호',ja:'電話番号',en:'Phone'},
+    photos:{ko:'상세 사진',ja:'詳細写真',en:'Photos'},
+    safeTitle:{ko:'안전거래 (카드결제)',ja:'安全取引 (カード決済)',en:'Safe Transaction (Card)'},
+    safeDesc:{ko:'카드결제로 진행. 카멜레온이 중간에서 보관 → 물건 수령 확인 후 판매자에게 지급.',ja:'カード決済で進行。カメレオンが一時預かり → 商品確認後に支払い。',en:'Card payment. Chameleon holds in escrow → released after buyer confirms receipt.'},
+    safeFee:{ko:'합계 수수료 20% (부가세 10% + 카드 5% + 안전거래 5%)',ja:'合計手数料20% (消費税10% + カード5% + 安全取引5%)',en:'Total fee 20% (VAT 10% + Card 5% + Safe 5%)'},
+    safeBuy:{ko:'카드로 안전결제',ja:'カードで安全決済',en:'Pay Safely with Card'},
     temp:{ko:'온도',ja:'温度',en:'Temp'},
     sellerProfile:{ko:'판매자 정보',ja:'出品者情報',en:'Seller Profile'},
     close:{ko:'닫기',ja:'閉じる',en:'Close'},
@@ -355,14 +359,26 @@ async function showDetail(id){
     if(item.seller_id){
         const{data:td}=await sb.from('community_user_temperature').select('temperature').eq('user_id',item.seller_id).maybeSingle();
         if(td)temp=td.temperature;
-        try{const{data:pp}=await sb.from('profiles').select('id,username,avatar_url').eq('id',item.seller_id).maybeSingle();sellerProf=pp;}catch(e){}
+        try{const{data:pp}=await sb.from('profiles').select('id,username,avatar_url,phone').eq('id',item.seller_id).maybeSingle();sellerProf=pp;}catch(e){}
     }
     const isMine=currentUser&&currentUser.id===item.seller_id;
-    const sellerAvatar = window.CMAvatar ? CMAvatar.html(sellerProf, 48) : '<i class="fa-solid fa-user"></i>';
+    const sellerAvatar = window.CMAvatar ? CMAvatar.html(sellerProf, 48, {seed:item.seller_id}) : '<i class="fa-solid fa-user"></i>';
     const sellerName = sellerProf?.username || (item.seller_id||'').substring(0,8);
+    const sellerPhone = sellerProf?.phone || item.seller_phone || '';
+    const images = Array.isArray(item.images) ? item.images.filter(Boolean) : [];
+    const mainImg = images[0] || '';
+    const galleryHtml = images.length > 0
+        ? `<div style="display:flex;gap:8px;overflow-x:auto;margin:12px 0;padding-bottom:4px;">
+            ${images.map((src,i)=>`<img src="${esc(src)}" onclick="document.getElementById('mktMainImg').src='${esc(src)}'" style="width:80px;height:80px;flex-shrink:0;border-radius:8px;object-fit:cover;cursor:pointer;border:2px solid ${i===0?'#f59e0b':'transparent'};">`).join('')}
+        </div>`
+        : '';
+    const mainImgHtml = mainImg
+        ? `<img id="mktMainImg" src="${esc(mainImg)}" style="width:100%;max-height:320px;object-fit:contain;border-radius:12px;background:#f1f5f9;margin:12px 0;">`
+        : `<div style="text-align:center;font-size:60px;color:#d1d5db;margin:16px 0;"><i class="fa-solid fa-image"></i></div>`;
     document.getElementById('detailCard').innerHTML=`
         <button class="detail-close" onclick="closeDetail()">&times;</button>
-        <div style="text-align:center;font-size:60px;color:#d1d5db;margin:16px 0;"><i class="fa-solid fa-image"></i></div>
+        ${mainImgHtml}
+        ${galleryHtml}
         <span class="status-badge ${statusClass(item.status)}" style="position:static;display:inline-block;margin-bottom:8px;">${statusLabel(item.status)}</span>
         <h2 style="font-size:20px;font-weight:900;margin-bottom:4px;">${esc(item.title)}</h2>
         <div style="font-size:24px;font-weight:900;color:#0f172a;margin-bottom:8px;">${fmtPrice(item.price)} ${t('won')}</div>
@@ -384,8 +400,9 @@ async function showDetail(id){
             <div class="seller-info">
                 <div class="name">${esc(sellerName)} ${tempDisplay(temp)}</div>
                 <div class="stats">${t('sellerProfile')}</div>
+                ${sellerPhone?`<div style="font-size:12px;color:#475569;margin-top:4px;"><i class="fa-solid fa-phone" style="color:#10b981;"></i> <a href="tel:${esc(sellerPhone)}" style="color:#10b981;font-weight:700;text-decoration:none;">${esc(sellerPhone)}</a></div>`:''}
             </div>
-            ${!isMine?`<button class="msg-btn" onclick="sendMessage('${item.seller_id}')"><i class="fa-solid fa-comment"></i> ${t('sendMsg')}</button>`:''}
+            ${!isMine?`<button class="msg-btn" onclick="sendMessage('${item.seller_id}','${esc(item.id)}')"><i class="fa-solid fa-comment"></i> ${t('sendMsg')}</button>`:''}
         </div>
 
         <!-- Safe Transaction -->
@@ -395,7 +412,7 @@ async function showDetail(id){
             <p>${t('safeDesc')}</p>
             <div class="fee-note">${t('safeFee')}</div>
             <button class="safe-tx-btn" onclick="startSafeTx('${item.id}',${item.price})" style="margin-top:10px;">
-                <i class="fa-solid fa-shield-halved"></i> ${t('safeBuy')} (${fmtPrice(Math.round(item.price*1.05))} ${t('won')})
+                <i class="fa-solid fa-credit-card"></i> ${t('safeBuy')} (${fmtPrice(Math.round(item.price*1.2))} ${t('won')})
             </button>
         </div>
         `:''}
@@ -404,17 +421,40 @@ async function showDetail(id){
 }
 function closeDetail(){document.getElementById('detailOverlay').classList.remove('show');}
 
-function sendMessage(sellerId){
-    toast(t('sendMsg')+' - Coming soon!');
+async function sendMessage(sellerId,itemId){
+    if(!currentUser){toast(t('loginFirst'));return;}
+    if(currentUser.id===sellerId){toast('본인 상품입니다');return;}
+    const body=prompt(t('msgPrompt'));
+    if(!body||!body.trim())return;
+    try{
+        const{error}=await sb.from('community_messages').insert({
+            from_user_id:currentUser.id,
+            to_user_id:sellerId,
+            item_id:itemId||null,
+            body:body.trim(),
+            read_at:null
+        });
+        if(error){
+            // 테이블 없으면 chat_rooms로 시도
+            const roomId=[currentUser.id,sellerId].sort().join('_');
+            await sb.from('chat_messages').insert({room_id:roomId,sender_id:currentUser.id,recipient_id:sellerId,content:body.trim(),item_id:itemId||null}).catch(()=>{});
+        }
+        toast(t('msgSent'));
+    }catch(e){toast(e.message||'fail');}
 }
 
 async function startSafeTx(itemId,amount){
     if(!currentUser){toast(t('loginFirst'));return;}
+    const total=Math.round(amount*1.2);
+    const fee=total-amount;
+    if(!confirm(`카드결제로 ${fmtPrice(total)}원 결제를 진행합니다.\n(상품가 ${fmtPrice(amount)} + 수수료 ${fmtPrice(fee)} = 20%)\n\n계속하시겠습니까?`))return;
     const{error}=await sb.from('community_safe_transactions').insert({
         item_id:itemId,
         buyer_id:currentUser.id,
         seller_id:(window._items||[]).find(x=>x.id===itemId)?.seller_id,
-        amount:Math.round(amount*1.05),
+        amount:total,
+        fee:fee,
+        payment_method:'card',
         status:'pending'
     });
     if(error){toast(error.message);return;}
