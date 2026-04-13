@@ -10567,16 +10567,10 @@ window.updateModalTotal = function() {
         }
     } catch (e) { console.error('[updateModalTotal] price display error:', e); }
 
-    // 할인 가격표: 허니콤보드 원판 외에는 표시 (별도 로직에서 숨김 처리됨)
+    // 할인 가격표: 할인 제외 카테고리(허니콤보드 전제품 포함)면 숨김
     try {
         const discountTableEl = document.getElementById('bulkDiscountTable');
-        if (discountTableEl) {
-            const _isHcBoard = window.selectedProductForChoice && (
-                window.selectedProductForChoice.category === 'Honeycomb Board'
-                || (window._getTopCategoryCode && window._getTopCategoryCode(window.selectedProductForChoice.category) === 'Wholesale Board Prices')
-            );
-            discountTableEl.style.display = _isHcBoard ? 'none' : '';
-        }
+        if (discountTableEl) discountTableEl.style.display = _isExcluded ? 'none' : '';
     } catch(e) {}
 
     // 할인 금액 표시
