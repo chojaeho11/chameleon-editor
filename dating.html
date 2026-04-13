@@ -325,7 +325,7 @@ async function loadProfiles(){
     grid.innerHTML=data.map(p=>{
         const interests=Array.isArray(p.interests)?p.interests:[];
         const up = profMap[p.user_id] || null;
-        const photoSrc = (Array.isArray(p.photos)&&p.photos.length>0) ? p.photos[0] : up?.avatar_url;
+        const photoSrc = up?.avatar_url || (window.CMAvatar ? CMAvatar.pickFor(p.user_id||p.id) : null);
         const photoHtml = photoSrc
             ? `<img src="${photoSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fa-solid fa-user" style="display:none;font-size:72px;color:#f9a8d4;"></i>`
             : `<i class="fa-solid fa-user"></i>`;
@@ -396,7 +396,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 
 renderI18n();checkAuth();loadProfiles();
 </script>
-<script src="/avatar-render.js?v=1"></script>
+<script src="/avatar-render.js?v=2"></script>
 <script src="/community-nav.js?v=4" defer></script>
 </body>
 </html>

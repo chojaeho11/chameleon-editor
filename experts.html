@@ -280,7 +280,7 @@ async function loadExperts(){
     const expProfMap = window.CMAvatar ? await CMAvatar.loadProfiles(sb, data.map(e=>e.user_id)) : {};
     grid.innerHTML=data.map(e=>{
         const up = expProfMap[e.user_id] || null;
-        const photoSrc = e.photo_url || up?.avatar_url;
+        const photoSrc = up?.avatar_url || (window.CMAvatar ? CMAvatar.pickFor(e.user_id||e.id) : null);
         const avatarHtml = photoSrc
             ? `<img src="${esc(photoSrc)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
             : `<i class="fa-solid fa-user"></i>`;
@@ -338,7 +338,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 
 renderI18n();checkAuth();loadExperts();
 </script>
-<script src="/avatar-render.js?v=1"></script>
+<script src="/avatar-render.js?v=2"></script>
 <script src="/community-nav.js?v=4" defer></script>
 </body>
 </html>

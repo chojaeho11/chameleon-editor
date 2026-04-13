@@ -2330,9 +2330,12 @@ async function showDesignerProfile(designerId) {
         }
     }
 
-    const avatarHtml = d.photo_url
-        ? `<img src="${d.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ede9fe;">`
-        : `<div style="width:80px;height:80px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;">${(d.display_name||'D')[0]}</div>`;
+    const _avaBig = (window.CMAvatar ? CMAvatar.pickFor(d.id || d.display_name || 'd') : null);
+    const avatarHtml = _avaBig
+        ? `<img src="${_avaBig}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ede9fe;">`
+        : (d.photo_url
+            ? `<img src="${d.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ede9fe;">`
+            : `<div style="width:80px;height:80px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;">${(d.display_name||'D')[0]}</div>`);
 
     const specs = (d.specialties || []).map(s => `<span class="specialty-tag" style="font-size:12px;padding:4px 10px;">${catName(s)}</span>`).join(' ');
 
@@ -2568,10 +2571,8 @@ async function loadGigs() {
             : `<img src="${_gigFallback}" alt="">`;
         const country = COUNTRY_LIST.find(c => c.code === g.country);
         const countryBadge = country ? `<div class="country-flag">${country.flag} ${country.code}</div>` : '';
-        const _avaFallback = 'https://i.pravatar.cc/100?u=' + encodeURIComponent(d.id || d.display_name || 'd');
-        const avatar = d.photo_url
-            ? `<img src="${d.photo_url}" onerror="this.onerror=null;this.src='${_avaFallback}';">`
-            : `<img src="${_avaFallback}">`;
+        const _avaPreset = (window.CMAvatar ? CMAvatar.pickFor(d.id || d.display_name || 'd') : 'https://i.pravatar.cc/100?u=' + encodeURIComponent(d.id || d.display_name || 'd'));
+        const avatar = `<img src="${_avaPreset}">`;
         const rating = (g.avg_rating && g.avg_rating > 0)
             ? `<div class="rating">${renderStars(g.avg_rating)} <span class="count">(${g.total_reviews||0})</span></div>`
             : `<div class="rating" style="color:#cbd5e1;">☆☆☆☆☆ <span class="count">New</span></div>`;
@@ -2636,9 +2637,12 @@ async function showGigDetail(gigId) {
 
     const { data: d } = await sb.from('designer_profiles').select('*').eq('id', g.designer_id).single();
     const designer = d || {};
-    const avatar = designer.photo_url
-        ? `<img src="${designer.photo_url}" alt="">`
-        : `<div class="ava-fallback">${(designer.display_name||'D')[0]}</div>`;
+    const _avaDet = (window.CMAvatar ? CMAvatar.pickFor(designer.id || designer.display_name || 'd') : null);
+    const avatar = _avaDet
+        ? `<img src="${_avaDet}" alt="">`
+        : (designer.photo_url
+            ? `<img src="${designer.photo_url}" alt="">`
+            : `<div class="ava-fallback">${(designer.display_name||'D')[0]}</div>`);
 
     // Gallery
     const gallery = Array.isArray(g.gallery) ? g.gallery : [];
@@ -6899,7 +6903,7 @@ async function uploadFinalDesign(bidId, files) {
     }
 }
 </script>
-<script src="/avatar-render.js?v=1"></script>
+<script src="/avatar-render.js?v=2"></script>
 <script src="/community-nav.js?v=4" defer></script>
 </body>
 </html>
