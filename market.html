@@ -15,6 +15,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<script src="https://js.tosspayments.com/v1"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Pretendard',sans-serif;background:#f8f9fc;color:#1e293b;min-height:100vh;}
@@ -443,26 +445,109 @@ async function sendMessage(sellerId,itemId){
     }catch(e){toast(e.message||'fail');}
 }
 
+// 사이트 국가 감지 (site-config.js와 동일 로직)
+function _siteCountry(){
+    const h=location.hostname;
+    if(h.includes('cafe0101'))return 'JP';
+    if(h.includes('cafe3355')||h.includes('chameleon.design'))return 'US';
+    return 'KR';
+}
+// 국가별 PG 키 (site-config.js와 동기 유지)
+const PG_KEYS={
+    KR:{provider:'toss',clientKey:'live_ck_4yKeq5bgrpLgoDjOgjeBrGX0lzW6'},
+    JP:{provider:'stripe',publishableKey:'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'},
+    US:{provider:'stripe',publishableKey:'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'}
+};
+const CURRENCY_RATE={KR:1,JP:0.1,US:0.001};
+
 async function startSafeTx(itemId,amount){
     if(!currentUser){toast(t('loginFirst'));return;}
+    const item=(window._items||[]).find(x=>x.id===itemId);
+    if(!item){toast('item not found');return;}
     const total=Math.round(amount*1.2);
     const fee=total-amount;
-    if(!confirm(`카드결제로 ${fmtPrice(total)}원 결제를 진행합니다.\n(상품가 ${fmtPrice(amount)} + 수수료 ${fmtPrice(fee)} = 20%)\n\n계속하시겠습니까?`))return;
-    const{error}=await sb.from('community_safe_transactions').insert({
+    if(!confirm(`안전결제 ${fmtPrice(total)}원\n(상품가 ${fmtPrice(amount)} + 수수료 ${fmtPrice(fee)} = 20%)\n\n카드결제를 진행합니다.`))return;
+
+    // 1. safe_transactions에 pending_payment 레코드 생성
+    const {data:tx,error}=await sb.from('community_safe_transactions').insert({
         item_id:itemId,
         buyer_id:currentUser.id,
-        seller_id:(window._items||[]).find(x=>x.id===itemId)?.seller_id,
+        seller_id:item.seller_id,
         amount:total,
         fee:fee,
         payment_method:'card',
-        status:'pending'
-    });
+        status:'pending_payment'
+    }).select('id').single();
     if(error){toast(error.message);return;}
-    // Mark item as reserved
+
+    // 2. 상품 reserved 처리
     await sb.from('community_secondhand').update({status:'reserved'}).eq('id',itemId);
-    toast(t('safeTitle')+' - OK!');
-    closeDetail();loadItems();
+
+    // 3. 국가별 PG로 결제 진행
+    const country=_siteCountry();
+    const pg=PG_KEYS[country]||PG_KEYS.KR;
+    const successUrl=location.origin+`/market?safe_paid=1&tx=${tx.id}`;
+    const failUrl=location.origin+`/market?safe_failed=1&tx=${tx.id}`;
+    const orderName=`중고거래 #${itemId}`;
+    const customerName=currentUser.user_metadata?.nickname||currentUser.email||'Customer';
+
+    if(pg.provider==='toss'){
+        if(!window.TossPayments){toast('Toss SDK 로딩 실패');return;}
+        try{
+            const toss=TossPayments(pg.clientKey);
+            await toss.requestPayment('카드',{
+                amount:total,
+                orderId:'SAFE-'+Date.now()+'-'+tx.id,
+                orderName:orderName,
+                customerName:customerName,
+                successUrl,failUrl
+            });
+        }catch(err){
+            if(err.code!=='USER_CANCEL')toast('결제 오류: '+err.message);
+            // 실패 시 pending 원복
+            await sb.from('community_safe_transactions').update({status:'cancelled'}).eq('id',tx.id);
+            await sb.from('community_secondhand').update({status:'active'}).eq('id',itemId);
+        }
+    }else if(pg.provider==='stripe'){
+        if(typeof Stripe==='undefined'){toast('Stripe SDK 로딩 실패');return;}
+        try{
+            const stripe=Stripe(pg.publishableKey);
+            const rate=CURRENCY_RATE[country]||1;
+            const currencyMap={JP:'jpy',US:'usd'};
+            const currency=currencyMap[country]||'usd';
+            const zeroDec=['jpy'];
+            const localAmount=zeroDec.includes(currency)?Math.round(total*rate):Math.round(total*rate*100)/100;
+            const {data,error:fe}=await sb.functions.invoke('create-stripe-session',{
+                body:{amount:localAmount,currency,order_id:'SAFE-'+tx.id,cancel_url:failUrl,success_url:successUrl}
+            });
+            if(fe||data?.error)throw (fe||new Error(data.error));
+            await stripe.redirectToCheckout({sessionId:data.sessionId});
+        }catch(err){
+            toast('Stripe 오류: '+err.message);
+            await sb.from('community_safe_transactions').update({status:'cancelled'}).eq('id',tx.id);
+            await sb.from('community_secondhand').update({status:'active'}).eq('id',itemId);
+        }
+    }
 }
+
+// 결제 성공 후 돌아왔을 때 처리 (페이지 로드 시 URL 파라미터 체크)
+(async()=>{
+    const p=new URLSearchParams(location.search);
+    const txId=p.get('tx');
+    if(p.get('safe_paid')==='1'&&txId){
+        try{await sb.from('community_safe_transactions').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',txId);}catch(e){}
+        toast('✅ 결제 완료! 판매자에게 알림이 전송되었습니다.');
+        history.replaceState({},'','/market');
+    }else if(p.get('safe_failed')==='1'&&txId){
+        try{
+            const{data:txd}=await sb.from('community_safe_transactions').select('item_id').eq('id',txId).maybeSingle();
+            if(txd?.item_id)await sb.from('community_secondhand').update({status:'active'}).eq('id',txd.item_id);
+            await sb.from('community_safe_transactions').update({status:'cancelled'}).eq('id',txId);
+        }catch(e){}
+        toast('결제가 취소되었습니다');
+        history.replaceState({},'','/market');
+    }
+})();
 
 async function postItem(){
     if(!currentUser){toast(t('loginFirst'));return;}

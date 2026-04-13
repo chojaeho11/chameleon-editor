@@ -21,11 +21,13 @@ DROP POLICY IF EXISTS "send_own_messages" ON community_messages;
 CREATE POLICY "send_own_messages" ON community_messages FOR INSERT
     WITH CHECK (auth.uid() = from_user_id);
 
--- 안전거래 수수료/결제수단 컬럼 추가
+-- 안전거래 수수료/결제수단/결제완료 컬럼 추가
 ALTER TABLE community_safe_transactions
     ADD COLUMN IF NOT EXISTS fee integer default 0;
 ALTER TABLE community_safe_transactions
     ADD COLUMN IF NOT EXISTS payment_method text default 'card';
+ALTER TABLE community_safe_transactions
+    ADD COLUMN IF NOT EXISTS paid_at timestamptz;
 
 -- profiles.phone 컬럼 (없으면 추가)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone text;
