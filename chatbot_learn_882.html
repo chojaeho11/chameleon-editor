@@ -102,7 +102,15 @@
                 </div>
                 <div id="qaReportStats" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:15px;"></div>
                 <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
-                    <input type="date" id="qaReportDate" class="input-text" style="width:150px;">
+                    <select id="qaReportPeriod" class="input-text" style="width:140px;" onchange="qaOnPeriodChange()">
+                        <option value="today">오늘</option>
+                        <option value="7" selected>최근 7일</option>
+                        <option value="30">최근 30일</option>
+                        <option value="90">최근 90일</option>
+                        <option value="all">전체</option>
+                        <option value="day">특정 날짜</option>
+                    </select>
+                    <input type="date" id="qaReportDate" class="input-text" style="width:150px; display:none;">
                     <select id="qaReportLang" class="input-text" style="width:120px;">
                         <option value="all">모든 언어</option>
                         <option value="kr">🇰🇷 한국어</option>
@@ -475,20 +483,35 @@ function getSb() { return sb; }
         _loadSessionPreviews(sb);
     };
 
+    window.qaOnPeriodChange = function() {
+        var per = document.getElementById('qaReportPeriod').value;
+        document.getElementById('qaReportDate').style.display = (per === 'day') ? '' : 'none';
+    };
     window.qaLoadSessions = async function() {
         var sb = getSb(); if (!sb) return;
         _filterMode = 'all';
+        var periodEl = document.getElementById('qaReportPeriod');
+        var period = periodEl ? periodEl.value : '7';
         var dateEl = document.getElementById('qaReportDate');
-        if (!dateEl.value) dateEl.value = _kstDate();
-        var date = dateEl.value;
         var lang = document.getElementById('qaReportLang').value;
         var q = sb.from('chat_rooms').select('id, customer_name, site_lang, source, created_at, updated_at, status')
             .or('source.like.bot-%,source.like.chatbot%,source.like.ai-%,source.like.embed-%')
             .not('source', 'like', 'services-hub%')
-            .gte('created_at', date + 'T00:00:00+09:00')
-            .lte('created_at', date + 'T23:59:59+09:00')
             .order('updated_at', { ascending: false })
-            .limit(50);
+            .limit(period === 'all' ? 500 : period === '90' ? 300 : period === '30' ? 200 : 100);
+        // 기간 필터
+        if (period === 'today') {
+            var today = _kstDate();
+            q = q.gte('created_at', today + 'T00:00:00+09:00').lte('created_at', today + 'T23:59:59+09:00');
+        } else if (period === 'day') {
+            if (!dateEl.value) dateEl.value = _kstDate();
+            var date = dateEl.value;
+            q = q.gte('created_at', date + 'T00:00:00+09:00').lte('created_at', date + 'T23:59:59+09:00');
+        } else if (period === '7' || period === '30' || period === '90') {
+            var days = parseInt(period);
+            var from = new Date(Date.now() - days * 86400000 + 9*3600000).toISOString().split('T')[0];
+            q = q.gte('created_at', from + 'T00:00:00+09:00');
+        } // 'all': 필터 없음
         if (lang !== 'all') q = q.eq('site_lang', lang);
         var res = await q;
         _sessions = res.data || [];
