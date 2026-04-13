@@ -4871,27 +4871,17 @@ async function handleSubReturn() {
                         (function(){
                             var h=window.location.hostname||'';var p=new URLSearchParams(window.location.search);var lg=p.get('lang')||'';
                             var l='kr';if(h.includes('cafe0101')||lg==='ja')l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design')||lg==='en')l='en';else if(lg==='zh')l='zh';else if(lg==='ar')l='ar';else if(lg==='es')l='es';else if(lg==='de')l='de';else if(lg==='fr')l='fr';
-                            var guide={
-                                kr:'서울/경기는 무료배송+시공. 지방만 추가해주세요. 택배 최대: 600×1800mm',
-                                ja:'東京近郊は送料+設置無料。地方のみ追加。宅配最大: 600×1800mm',
-                                en:'Seoul/Gyeonggi: Free shipping+install. Add only for other regions. Max courier: 600×1800mm',
-                                zh:'首尔/京畿免费配送+安装。仅地方需追加。快递最大: 600×1800mm',
-                                ar:'سيول/كيونغكي: شحن+تركيب مجاني. أضف للمناطق الأخرى فقط. أقصى حجم: 600×1800mm',
-                                es:'Seul/Gyeonggi: Envio+instalacion gratis. Solo otras regiones. Max courier: 600×1800mm',
-                                de:'Seoul/Gyeonggi: Versand+Montage kostenlos. Nur andere Regionen. Max Paket: 600×1800mm',
-                                fr:'Seoul/Gyeonggi: Livraison+pose gratuites. Autres regions uniquement. Max colis: 600×1800mm'
-                            };
                             var g=document.getElementById('cartShippingGuide');
-                            if(g) g.textContent=guide[l]||guide['kr'];
+                            if(g){ g.textContent=''; g.style.display='none'; }
                             var freeNote={
-                                kr:'✅ 보드류 외 패브릭 등 모든 제품의 배송비는 무료이므로 선택하지 않아도 됩니다.',
-                                ja:'✅ ボード類以外（ファブリック等）の送料は無料なので選択不要です。',
-                                en:'✅ Shipping is FREE for all products except boards (fabric, etc.). No need to choose.',
-                                zh:'✅ 板类以外（布料等）所有产品免运费，无需选择。',
-                                ar:'✅ الشحن مجاني لجميع المنتجات باستثناء الألواح (قماش، إلخ). لا حاجة للاختيار.',
-                                es:'✅ Envío GRATIS para todos los productos excepto tableros (tela, etc.). No hace falta elegir.',
-                                de:'✅ Versand für alle Produkte außer Platten (Stoff usw.) KOSTENLOS. Keine Auswahl nötig.',
-                                fr:'✅ Livraison GRATUITE pour tous les produits sauf les plaques (tissu, etc.). Pas de sélection nécessaire.'
+                                kr:'✅ 허니콤보드 수도권은 무료로 배송·시공·철거합니다.',
+                                ja:'✅ ハニカムボード首都圏は配送・設置・撤去 無料。',
+                                en:'✅ Free delivery, installation, and removal for honeycomb boards in the metro area.',
+                                zh:'✅ 蜂窝板首都圈免费配送、安装、拆除。',
+                                ar:'✅ توصيل وتركيب وإزالة ألواح خلية النحل مجاناً في المنطقة الحضرية.',
+                                es:'✅ Entrega, instalación y desmontaje gratis de paneles nido de abeja en área metropolitana.',
+                                de:'✅ Wabenplatten im Großraum kostenlose Lieferung, Montage und Demontage.',
+                                fr:'✅ Livraison, pose et dépose gratuites pour panneaux nid d\'abeille en zone métropolitaine.'
                             };
                             var fn=document.getElementById('cartShippingFreeNote');
                             if(fn) fn.textContent=freeNote[l]||freeNote['kr'];
@@ -4906,7 +4896,8 @@ async function handleSubReturn() {
                             var btns=[
                                 {fee:200000, kr:'용차배송',ja:'車両配送',en:'Truck',zh:'车辆配送',ar:'شاحنة',es:'Camión',de:'LKW',fr:'Camion'},
                                 {fee:700000, kr:'배송시공',ja:'配送+設置',en:'Install',zh:'配送+安装',ar:'تركيب',es:'Instalación',de:'Montage',fr:'Pose'},
-                                {fee:30000,  kr:'보드류 택배',ja:'ボード類 宅配',en:'Board Courier',zh:'板类 快递',ar:'بريد الألواح',es:'Courier Tableros',de:'Platten Paket',fr:'Colis Plaques'}
+                                {fee:30000,  kr:'보드류 택배',ja:'ボード類 宅配',en:'Board Courier',zh:'板类 快递',ar:'بريد الألواح',es:'Courier Tableros',de:'Platten Paket',fr:'Colis Plaques'},
+                                {fee:5000,   kr:'일반택배',ja:'一般宅配',en:'Standard Courier',zh:'普通快递',ar:'بريد عادي',es:'Courier Estándar',de:'Standard Paket',fr:'Colis Standard'}
                             ];
                             var lbl={kr:'지방 ',ja:'地方 ',en:'Regional ',zh:'地方 ',ar:'إقليمي ',es:'Regional ',de:'Regional ',fr:'Regional '};
                             var box=document.getElementById('cartShippingBtns');
