@@ -186,15 +186,22 @@ async function loadSystemData() {
         const country = SITE_CONFIG.COUNTRY; 
 
         // 옵션 카테고리 + 옵션 병렬 로드 (1시간 localStorage 캐시)
+        // ★ null/빈 데이터는 절대 캐시하지 않음 (Supabase 장애 시 오염 방지)
         let catResult, addonResult;
-        const _cacheKey = 'chameleon_addons_cache';
+        const _cacheKey = 'chameleon_addons_cache_v2';
         const _cacheExpiry = 60 * 60 * 1000; // 1시간
+        try { localStorage.removeItem('chameleon_addons_cache'); } catch(e) {} // 구버전 오염 캐시 제거
         try {
             const _cached = localStorage.getItem(_cacheKey);
             if (_cached) {
                 const _c = JSON.parse(_cached);
-                if (_c.ts && Date.now() - _c.ts < _cacheExpiry) {
+                const _valid = _c.ts && Date.now() - _c.ts < _cacheExpiry
+                    && Array.isArray(_c.cats) && _c.cats.length > 0
+                    && Array.isArray(_c.addons) && _c.addons.length > 0;
+                if (_valid) {
                     catResult = { data: _c.cats }; addonResult = { data: _c.addons };
+                } else {
+                    localStorage.removeItem(_cacheKey);
                 }
             }
         } catch(e) {}
@@ -203,7 +210,14 @@ async function loadSystemData() {
                 sb.from('addon_categories').select('*').order('sort_order', {ascending: true}),
                 sb.from('admin_addons').select('*').order('sort_order', {ascending: true})
             ]);
-            try { localStorage.setItem(_cacheKey, JSON.stringify({ ts: Date.now(), cats: catResult.data, addons: addonResult.data })); } catch(e) {}
+            // ★ 에러 또는 빈 결과는 캐시하지 않음
+            const _catsOk = catResult && !catResult.error && Array.isArray(catResult.data) && catResult.data.length > 0;
+            const _addonsOk = addonResult && !addonResult.error && Array.isArray(addonResult.data) && addonResult.data.length > 0;
+            if (_catsOk && _addonsOk) {
+                try { localStorage.setItem(_cacheKey, JSON.stringify({ ts: Date.now(), cats: catResult.data, addons: addonResult.data })); } catch(e) {}
+            } else {
+                console.warn('[loadSystemData] addon fetch empty/error — cache skipped', { catErr: catResult?.error, addonErr: addonResult?.error, catLen: catResult?.data?.length, addonLen: addonResult?.data?.length });
+            }
         }
         const addonCats = catResult.data;
         if (addonCats) {
