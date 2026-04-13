@@ -530,20 +530,62 @@ async function startSafeTx(itemId,amount){
     }
 }
 
-// 결제 성공 후 돌아왔을 때 처리 (페이지 로드 시 URL 파라미터 체크)
+// 결제 성공 후 돌아왔을 때 처리 — Toss는 서버 승인 API 호출, Stripe는 webhook에서 처리됨
 (async()=>{
     const p=new URLSearchParams(location.search);
-    const txId=p.get('tx');
-    if(p.get('safe_paid')==='1'&&txId){
-        try{await sb.from('community_safe_transactions').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',txId);}catch(e){}
-        toast('✅ 결제 완료! 판매자에게 알림이 전송되었습니다.');
-        history.replaceState({},'','/market');
-    }else if(p.get('safe_failed')==='1'&&txId){
+    // Toss 성공 콜백: paymentKey, orderId, amount 포함
+    const paymentKey=p.get('paymentKey');
+    const tossOrderId=p.get('orderId');
+    const tossAmount=p.get('amount');
+    if(paymentKey&&tossOrderId&&tossAmount){
+        // orderId 형식: SAFE-{timestamp}-{txId}
+        const m=/^SAFE-\d+-(\d+)$/.exec(tossOrderId);
+        const txId=m?m[1]:null;
+        if(!txId){toast('잘못된 주문 ID');history.replaceState({},'','/market');return;}
+        toast('결제 검증 중...');
         try{
-            const{data:txd}=await sb.from('community_safe_transactions').select('item_id').eq('id',txId).maybeSingle();
-            if(txd?.item_id)await sb.from('community_secondhand').update({status:'active'}).eq('id',txd.item_id);
-            await sb.from('community_safe_transactions').update({status:'cancelled'}).eq('id',txId);
-        }catch(e){}
+            const{data,error}=await sb.functions.invoke('confirm-safe-tx-toss',{
+                body:{paymentKey,orderId:tossOrderId,amount:Number(tossAmount),txId}
+            });
+            if(error||data?.error){throw new Error(data?.error||error.message);}
+            toast('✅ 결제 완료! 판매자에게 알림이 전송되었습니다.');
+        }catch(err){
+            toast('결제 검증 실패: '+err.message);
+        }
+        history.replaceState({},'','/market');
+        loadItems();
+        return;
+    }
+    // Toss 실패 콜백 (code, message 포함)
+    const failCode=p.get('code');
+    if(failCode&&tossOrderId){
+        const m=/^SAFE-\d+-(\d+)$/.exec(tossOrderId);
+        const txId=m?m[1]:null;
+        if(txId){
+            try{
+                const{data:txd}=await sb.from('community_safe_transactions').select('item_id').eq('id',txId).maybeSingle();
+                if(txd?.item_id)await sb.from('community_secondhand').update({status:'active'}).eq('id',txd.item_id);
+                await sb.from('community_safe_transactions').update({status:'cancelled'}).eq('id',txId);
+            }catch(e){}
+        }
+        toast('결제 취소: '+(p.get('message')||failCode));
+        history.replaceState({},'','/market');
+        return;
+    }
+    // Stripe 성공 복귀: webhook이 이미 처리했을 것. 단순 확인 메시지만.
+    if(p.get('safe_paid')==='1'){
+        toast('✅ 결제 처리 중입니다. 잠시 후 확인 완료됩니다.');
+        history.replaceState({},'','/market');
+        setTimeout(loadItems,2000);
+    }else if(p.get('safe_failed')==='1'){
+        const txId=p.get('tx');
+        if(txId){
+            try{
+                const{data:txd}=await sb.from('community_safe_transactions').select('item_id').eq('id',txId).maybeSingle();
+                if(txd?.item_id)await sb.from('community_secondhand').update({status:'active'}).eq('id',txd.item_id);
+                await sb.from('community_safe_transactions').update({status:'cancelled'}).eq('id',txId);
+            }catch(e){}
+        }
         toast('결제가 취소되었습니다');
         history.replaceState({},'','/market');
     }

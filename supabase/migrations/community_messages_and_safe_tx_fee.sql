@@ -28,6 +28,16 @@ ALTER TABLE community_safe_transactions
     ADD COLUMN IF NOT EXISTS payment_method text default 'card';
 ALTER TABLE community_safe_transactions
     ADD COLUMN IF NOT EXISTS paid_at timestamptz;
+ALTER TABLE community_safe_transactions
+    ADD COLUMN IF NOT EXISTS toss_payment_key text;
+ALTER TABLE community_safe_transactions
+    ADD COLUMN IF NOT EXISTS stripe_session_id text;
+ALTER TABLE community_safe_transactions
+    ADD COLUMN IF NOT EXISTS stripe_payment_intent text;
+ALTER TABLE community_safe_transactions
+    ADD COLUMN IF NOT EXISTS released_at timestamptz; -- 에스크로 해제 시점
+ALTER TABLE community_safe_transactions
+    ADD COLUMN IF NOT EXISTS dispute_status text;     -- null/opened/resolved_buyer/resolved_seller
 
 -- profiles.phone 컬럼 (없으면 추가)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone text;
