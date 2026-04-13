@@ -68,6 +68,13 @@
     }
 
     async function findOrCreateChat(sb, currentUser, otherUserId, topic){
+        // 상대 uuid가 auth.users에 존재하는지 미리 확인
+        const { data: prof } = await sb.from('profiles').select('id').eq('id', otherUserId).maybeSingle();
+        if (!prof) {
+            const err = new Error('상대방이 존재하지 않거나 데모 계정입니다');
+            err.code = 'NO_USER';
+            throw err;
+        }
         // sorted pair으로 unique 보장
         const [a,b] = [currentUser.id, otherUserId].sort();
         const { data: existing } = await sb.from('user_chats').select('*')
@@ -78,7 +85,12 @@
         const { data: created, error } = await sb.from('user_chats').insert({
             user_a: a, user_b: b, topic: topic || ''
         }).select('id').single();
-        if (error) throw error;
+        if (error) {
+            if (String(error.message||'').includes('foreign key')) {
+                throw new Error('상대방 계정 정보가 유효하지 않습니다 (데모 계정일 수 있습니다)');
+            }
+            throw error;
+        }
         return created.id;
     }
 
