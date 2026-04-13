@@ -4325,8 +4325,81 @@ async function handleSubReturn() {
             <div class="pd-foot">${L.foot}</div>
         </div>`;
     };
+
+    // ==== 허니콤보드 배너 (teal/emerald 테마) ====
+    const HB_I18N = {
+        kr:{title:['인쇄 전시용 ','허니콤보드 전문','생산기업.'], sub:'가벽·POP 전시용으로 특화 개발. 사인 제작 업체가 직접 보드까지 생산합니다 — 누구보다 사인용 허니콤보드를 가장 잘 이해하는 기업입니다.', c1t:'우수한 평활도', c1d:'보드 표면이 매우 평평하여 UV인쇄 시 굴곡 없이 깔끔하게 인쇄됩니다.', c2t:'V컷 날 부러짐 최소화', c2d:'코어 용지를 절삭 가공이 잘되고 단단한 전용지로 개발 — V컷 날 수명이 길어집니다.', c3t:'본드 도포 균일', c3d:'본드 도포면이 뭉침 없이 일정해 커팅 시 찍힘·터짐이 발생하지 않습니다.', c4t:'고급 표면지로 발색 우수', c4d:'프리미엄 표면지 채택 — UV 인쇄 시 색 재현력과 선명도가 돋보입니다.', f1t:'🌍 전세계 소량 배송 · 무료', f1d:'고객님 위치 근처 3PL 창고를 확보해 상품을 보관합니다. 10매 단위 포장으로 찾으실 때 문제없이 납품됩니다. <b>배송비는 무료</b>입니다.', f2t:'🎁 첫 구매 샘플 무료', f2d:'처음 구매하시는 고객께 <b>30×30cm 샘플을 종류별로 무료</b> 발송해 드립니다. 실제 품질을 직접 확인 후 결정하세요.', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'제작 공장: <b>한국 · 싱가포르 · 모로코</b> · 결제: <b>10% 선금, 90% 잔금</b>(완성 사진 확인 후).'},
+        ja:{title:['印刷展示用 ','ハニカムボード専門','メーカー。'], sub:'仮壁・POP展示用に特化開発。看板製作会社が自社でボードまで生産 — 看板用ハニカムボードを最も深く理解する企業です。', c1t:'優れた平滑度', c1d:'表面が非常に平らで、UV印刷時に歪みなくきれいに印刷されます。', c2t:'V カット刃折れ最小化', c2d:'コア紙を切削加工に適した硬質専用紙で開発 — V カット刃の寿命が延びます。', c3t:'均一な糊塗布', c3d:'糊の塗布面がムラなく一定で、カット時の欠け・裂けが発生しません。', c4t:'高級表面紙で発色良好', c4d:'プレミアム表面紙採用 — UV印刷時の色再現性と鮮明度が優れています。', f1t:'🌍 世界中へ少量配送 · 送料無料', f1d:'お客様の近隣に3PL倉庫を確保し商品を保管。10枚単位梱包で受取時も問題なく納品。<b>送料は無料</b>です。', f2t:'🎁 初回購入サンプル無料', f2d:'初めてご購入のお客様に<b>30×30cmサンプルを種類別に無料</b>でお届け。実物品質をご確認後にご判断ください。', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'生産工場：<b>韓国 · シンガポール · モロッコ</b> · 支払：<b>10% 前金・90% 残金</b>（完成写真確認後）。'},
+        en:{title:['A dedicated manufacturer of ','print-grade honeycomb board','.'], sub:'Engineered specifically for wall partitions and POP display. A signage company that also produces the board — we understand signage honeycomb better than anyone.', c1t:'Exceptionally flat surface', c1d:'An ultra-flat board surface means UV printing stays crisp with zero waviness.', c2t:'Minimal V-cut blade breakage', c2d:'Our core paper is engineered for clean cutting and strength — your V-cut blades last much longer.', c3t:'Uniform adhesive coating', c3d:'The adhesive layer is consistent with no lumps — no cracking or tearing during die-cutting.', c4t:'Premium facing paper', c4d:'Top-tier facing paper delivers superior color reproduction and sharpness under UV print.', f1t:'🌍 Small-batch worldwide shipping · FREE', f1d:'We secure a 3PL warehouse near your location and stock the product there. Packed in units of 10 for safe pickup. <b>Shipping is free</b>.', f2t:'🎁 Free first-time samples', f2d:'For first-time customers we send <b>30×30cm samples — one of each type — for free</b>. Verify real quality before committing.', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'Factories: <b>Korea · Singapore · Morocco</b> · Payment: <b>10% deposit, 90% balance</b> after you approve finished photos.'},
+        zh:{title:['专注印刷展示用 ','蜂窝板专业','生产企业。'], sub:'专为隔墙、POP展示开发。招牌制作公司亲自生产蜂窝板——最懂招牌用蜂窝板的企业。', c1t:'表面平整度极佳', c1d:'板面极为平整，UV 印刷不扭曲、图像清晰锐利。', c2t:'最大化减少 V 型刀断裂', c2d:'专门开发易切削且坚硬的芯纸 — V 刀寿命更长。', c3t:'胶层涂布均匀', c3d:'胶层均匀无结块 — 裁切时不会出现裂口或撕裂。', c4t:'优质面纸 · 色彩出众', c4d:'采用高级面纸 — UV 印刷色彩还原与清晰度都更好。', f1t:'🌍 全球少量配送 · 免运费', f1d:'在您附近的 3PL 仓库存货。以 10 张一组打包，随时取货无忧。<b>运费免费</b>。', f2t:'🎁 首次购买 · 免费样品', f2d:'首次购买客户可获<b>每款 30×30cm 免费样品</b>。先确认实际品质再决定。', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'工厂：<b>韩国 · 新加坡 · 摩洛哥</b> · 付款：<b>10% 定金，90% 尾款</b>（成品照片确认后）。'},
+        ar:{title:['مُصنِّع متخصص في ','ألواح خلية النحل للطباعة','.'], sub:'مُصمَّم خصيصاً للحوائط الفاصلة وعرض POP. شركة لافتات تُنتج الألواح بنفسها — نفهم خلية النحل للافتات أكثر من أي أحد.', c1t:'سطح مستوٍ بشكل استثنائي', c1d:'سطح اللوح فائق الاستواء يضمن طباعة UV حادة بدون تموّج.', c2t:'تقليل كسر شفرة V-Cut', c2d:'ورق النواة مُصمَّم للقص النظيف والمتانة — تدوم شفرات V-cut أطول بكثير.', c3t:'توزيع الصمغ منتظم', c3d:'طبقة الصمغ منتظمة بلا كتل — لا يوجد تشقق أو تمزق أثناء القص.', c4t:'ورق سطح فاخر', c4d:'ورق سطح ممتاز يوفر إعادة إنتاج لوني ووضوحاً فائقين تحت طباعة UV.', f1t:'🌍 شحن عالمي بكميات صغيرة · مجاني', f1d:'نؤمّن مستودع 3PL قرب موقعك ونخزن المنتج هناك. مُعبَّأ بحزم من 10 قطع للاستلام الآمن. <b>الشحن مجاني</b>.', f2t:'🎁 عينات مجانية للمشتري لأول مرة', f2d:'للعملاء الجدد نرسل <b>عينات 30×30 سم — واحدة من كل نوع — مجاناً</b>. تحقق من الجودة قبل الالتزام.', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'المصانع: <b>كوريا · سنغافورة · المغرب</b> · الدفع: <b>10% عربون، 90% رصيد</b> بعد الموافقة على صور المنتج النهائي.'},
+        es:{title:['Fabricante especializado en ','paneles nido de abeja','para impresión.'], sub:'Desarrollado específicamente para tabiques y expositores POP. Una empresa de rotulación que también fabrica el panel — entendemos el nido de abeja para señalética como nadie.', c1t:'Superficie excepcionalmente plana', c1d:'Una superficie ultraplana mantiene la impresión UV nítida sin ondulaciones.', c2t:'Mínima rotura de cuchillas V-cut', c2d:'Papel nuclear diseñado para corte limpio y resistencia — las cuchillas V-cut duran mucho más.', c3t:'Capa adhesiva uniforme', c3d:'La capa de adhesivo es uniforme sin grumos — sin grietas ni rasgaduras al troquelar.', c4t:'Papel de superficie premium', c4d:'Papel de superficie de alta gama — reproducción del color y nitidez superiores bajo impresión UV.', f1t:'🌍 Envíos mundiales en lotes pequeños · GRATIS', f1d:'Reservamos un almacén 3PL cerca de usted y almacenamos el producto allí. Empaquetado en unidades de 10 para retiro seguro. <b>Envío gratis</b>.', f2t:'🎁 Muestras gratuitas para nuevos clientes', f2d:'A los clientes nuevos les enviamos <b>muestras 30×30 cm — una de cada tipo — gratis</b>. Verifique la calidad real antes de comprometerse.', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'Fábricas: <b>Corea · Singapur · Marruecos</b> · Pago: <b>10% anticipo, 90% saldo</b> tras aprobar fotos finales.'},
+        de:{title:['Spezialisierter Hersteller von ','Waben­platten für den Druck','.'], sub:'Speziell für Stellwände und POP-Displays entwickelt. Ein Schilderhersteller, der auch die Platten produziert — niemand versteht Waben-Platten für Beschilderung besser.', c1t:'Außergewöhnlich plane Oberfläche', c1d:'Extrem ebene Plattenoberfläche hält den UV-Druck scharf und ohne Welligkeit.', c2t:'Minimaler V-Cut-Messerbruch', c2d:'Kernpapier auf saubere Schneidbarkeit und Festigkeit optimiert — V-Cut-Klingen halten deutlich länger.', c3t:'Gleichmäßiger Kleberauftrag', c3d:'Die Kleberschicht ist gleichmäßig und klumpenfrei — keine Risse oder Ausbrüche beim Stanzen.', c4t:'Premium-Deckpapier', c4d:'Erstklassiges Deckpapier liefert überlegene Farbtreue und Schärfe bei UV-Druck.', f1t:'🌍 Weltweiter Kleinmengenversand · GRATIS', f1d:'Wir sichern ein 3PL-Lager in Ihrer Nähe und lagern das Produkt dort. Verpackt in Einheiten zu 10 Stück für sichere Abholung. <b>Versand kostenlos</b>.', f2t:'🎁 Kostenlose Muster für Neukunden', f2d:'Neukunden erhalten <b>30×30 cm Muster — je eines pro Typ — kostenlos</b>. Prüfen Sie die echte Qualität vor der Bestellung.', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'Werke: <b>Korea · Singapur · Marokko</b> · Zahlung: <b>10% Anzahlung, 90% Rest</b> nach Freigabe der Endfotos.'},
+        fr:{title:['Fabricant spécialisé de ','panneaux nid d\'abeille','pour l\'impression.'], sub:'Conçus spécifiquement pour cloisons et présentoirs POP. Une entreprise d\'enseignes qui fabrique aussi le panneau — personne ne comprend mieux le nid d\'abeille pour signalétique.', c1t:'Surface exceptionnellement plane', c1d:'Une surface ultra-plane garantit une impression UV nette, sans ondulation.', c2t:'Casse de lame V-cut minimisée', c2d:'Papier âme conçu pour une coupe propre et résistante — les lames V-cut durent beaucoup plus longtemps.', c3t:'Couche adhésive uniforme', c3d:'Couche adhésive régulière sans grumeaux — pas de fissures ni déchirures lors de la découpe.', c4t:'Papier de surface premium', c4d:'Papier de surface haut de gamme — reproduction des couleurs et netteté supérieures sous impression UV.', f1t:'🌍 Livraison mondiale en petites quantités · GRATUITE', f1d:'Nous sécurisons un entrepôt 3PL près de chez vous et y stockons le produit. Emballé par unités de 10 pour un retrait sûr. <b>Livraison gratuite</b>.', f2t:'🎁 Échantillons gratuits pour première commande', f2d:'Aux nouveaux clients nous envoyons <b>des échantillons 30×30 cm — un de chaque type — gratuitement</b>. Vérifiez la qualité réelle avant de vous engager.', p1l:'한국어 · English · 日本語', p2l:'Français · Deutsch · العربية', foot:'Usines : <b>Corée · Singapour · Maroc</b> · Paiement : <b>10% d\'acompte, 90% de solde</b> après validation des photos finales.'}
+    };
+    window.renderHoneycombBoardBanner = function(product, lang) {
+        if (!product) return '';
+        const topCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
+        const isHb = topCat === 'Wholesale Board Prices' || topCat === 'honeycomb_board' || product.category === 'Honeycomb Board' || product.code === '21355677' || product.code === '21355677_copy';
+        if (!isHb) return '';
+        const L = HB_I18N[lang] || HB_I18N.en;
+        return `<div class="pd-banner hb-theme" dir="${lang==='ar'?'rtl':'ltr'}">
+            <div class="pd-badge">CHAMELEON · HONEYCOMB BOARD</div>
+            <div class="pd-banner-title">${L.title[0]}<span class="hl">${L.title[1]}</span>${L.title[2]}</div>
+            <div class="pd-banner-sub">${L.sub}</div>
+            <div class="pd-cards pd-cards-2">
+                <div class="pd-card"><div class="pd-card-num">1</div><div class="pd-card-body"><div class="pd-card-t">${L.c1t}</div><div class="pd-card-d">${L.c1d}</div></div></div>
+                <div class="pd-card"><div class="pd-card-num">2</div><div class="pd-card-body"><div class="pd-card-t">${L.c2t}</div><div class="pd-card-d">${L.c2d}</div></div></div>
+                <div class="pd-card"><div class="pd-card-num">3</div><div class="pd-card-body"><div class="pd-card-t">${L.c3t}</div><div class="pd-card-d">${L.c3d}</div></div></div>
+                <div class="pd-card"><div class="pd-card-num">4</div><div class="pd-card-body"><div class="pd-card-t">${L.c4t}</div><div class="pd-card-d">${L.c4d}</div></div></div>
+            </div>
+            <div class="hb-features">
+                <div class="hb-feat"><div class="hb-feat-t">${L.f1t}</div><div class="hb-feat-d">${L.f1d}</div></div>
+                <div class="hb-feat"><div class="hb-feat-t">${L.f2t}</div><div class="hb-feat-d">${L.f2d}</div></div>
+            </div>
+            <div class="pd-phones">
+                <div class="pd-phone"><span class="pd-phone-lang">${L.p1l}</span><span class="pd-phone-ic">📞</span> <a href="tel:${PH1.replace(/\s/g,'')}">${PH1}</a></div>
+                <div class="pd-phone"><span class="pd-phone-lang">${L.p2l}</span><span class="pd-phone-ic">📞</span> <a href="tel:${PH2.replace(/\s/g,'')}">${PH2}</a></div>
+            </div>
+            <div class="pd-foot">${L.foot}</div>
+        </div>`;
+    };
 })();
 </script>
+<style>
+/* 허니콤보드 테마 오버라이드 (teal/emerald) */
+.pd-banner.hb-theme{background:linear-gradient(135deg,#042f2e 0%,#064e3b 50%,#0f172a 100%);}
+.pd-banner.hb-theme::before{background:radial-gradient(circle,rgba(52,211,153,0.18) 0%,rgba(52,211,153,0) 60%);}
+.pd-banner.hb-theme::after{background:radial-gradient(circle,rgba(45,212,191,0.2) 0%,rgba(45,212,191,0) 60%);}
+.pd-banner.hb-theme .pd-badge{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.35);color:#6ee7b7;}
+.pd-banner.hb-theme .pd-badge::before{background:#6ee7b7;box-shadow:0 0 10px #6ee7b7;}
+.pd-banner.hb-theme .pd-banner-title .hl{background:linear-gradient(120deg,#a7f3d0 0%,#6ee7b7 50%,#34d399 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.pd-banner.hb-theme .pd-card::before{background:linear-gradient(180deg,#6ee7b7,#10b981);}
+.pd-banner.hb-theme .pd-card:hover{border-color:rgba(52,211,153,0.4);}
+.pd-banner.hb-theme .pd-card-num{background:linear-gradient(135deg,#6ee7b7 0%,#10b981 100%);box-shadow:0 8px 24px -6px rgba(52,211,153,0.5);}
+.pd-banner.hb-theme .pd-phones{background:linear-gradient(135deg,rgba(52,211,153,0.06) 0%,rgba(52,211,153,0.02) 100%);border-color:rgba(52,211,153,0.2);}
+.pd-banner.hb-theme .pd-phone-lang{color:rgba(110,231,183,0.8);}
+.pd-banner.hb-theme .pd-phone-ic{background:rgba(52,211,153,0.14);}
+.pd-banner.hb-theme .pd-phone a{color:#6ee7b7;}
+.pd-banner.hb-theme .pd-phone a:hover{color:#a7f3d0;}
+.pd-banner.hb-theme .pd-foot b{color:#6ee7b7;}
+/* 4개 카드 레이아웃 — 2열 2행 (PC), 1열 (mobile) */
+.pd-cards-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+@media(max-width:640px){.pd-cards-2{grid-template-columns:1fr;}}
+.pd-cards-2 .pd-card:nth-child(1){animation:pdCardInL 0.7s 0.6s both cubic-bezier(.22,1,.36,1);}
+.pd-cards-2 .pd-card:nth-child(2){animation:pdCardInR 0.7s 0.75s both cubic-bezier(.22,1,.36,1);}
+.pd-cards-2 .pd-card:nth-child(3){animation:pdCardInL 0.7s 0.9s both cubic-bezier(.22,1,.36,1);}
+.pd-cards-2 .pd-card:nth-child(4){animation:pdCardInR 0.7s 1.05s both cubic-bezier(.22,1,.36,1);}
+/* 특장점 피처 블록 (배송/샘플) */
+.hb-features{position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:640px){.hb-features{grid-template-columns:1fr;}}
+.hb-feat{position:relative;padding:20px 22px;background:linear-gradient(135deg,rgba(52,211,153,0.1) 0%,rgba(52,211,153,0.02) 100%);border:1px solid rgba(52,211,153,0.25);border-radius:16px;animation:pdFadeUp 0.7s 1.2s both ease-out;}
+.hb-feat:nth-child(2){animation-delay:1.35s;}
+.hb-feat-t{font-size:16px;font-weight:900;color:#6ee7b7;margin-bottom:8px;letter-spacing:-0.2px;}
+.hb-feat-d{font-size:13.5px;line-height:1.7;color:rgba(209,250,229,0.88);}
+.hb-feat-d b{color:#a7f3d0;font-weight:800;}
+@media(max-width:640px){.hb-feat-t{font-size:14.5px;}.hb-feat-d{font-size:12.5px;}}
+</style>
 
 <!-- PC 텍스트 퀵 툴바 (캔버스 위 플로팅) -->
 <div id="pcTextQuickBar" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:6px 10px; gap:6px; align-items:center; flex-wrap:nowrap;">
@@ -9923,6 +9996,7 @@ window.showChoiceModal = async function(key) {
             <div class="choice-left-content" style="${window.innerWidth <= 768 ? 'order:2; flex:0 0 100%; width:100%;' : ''}">
                 ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='zh'?'市场商品':lang==='ar'?'منتج السوق':lang==='es'?'Producto del Mercado':lang==='de'?'Marktplatz-Produkt':lang==='fr'?'Produit Marketplace':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
                 ${(typeof window.renderPaperDisplayBanner === 'function' && window.renderPaperDisplayBanner(product, lang)) || ''}
+                ${(typeof window.renderHoneycombBoardBanner === 'function' && window.renderHoneycombBoardBanner(product, lang)) || ''}
                 <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
                 <div class="product-detail-render" style="line-height:1.8; width:100%; overflow:hidden; box-sizing:border-box;"></div>
                 <div id="commonInfoContainer" style="overflow:hidden; width:100%;"></div>
