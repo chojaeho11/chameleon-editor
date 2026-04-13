@@ -23,8 +23,19 @@ window.loadMembers = async (isNewSearch = false) => {
 
     try {
 
+    // PRO 구독중 필터: subscriptions 에서 active user_ids 먼저 조회
+    let proUserIds = null;
+    if (roleVal === 'pro_active') {
+        const { data: actSubs } = await sb.from('subscriptions')
+            .select('user_id')
+            .in('status', ['active', 'trialing']);
+        proUserIds = (actSubs || []).map(s => s.user_id);
+        if (proUserIds.length === 0) proUserIds = ['__none__']; // 조회결과 0개 유지
+    }
+
     let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at, site', { count: 'exact' });
-    if (roleVal !== 'all') query = query.eq('role', roleVal);
+    if (roleVal !== 'all' && roleVal !== 'pro_active') query = query.eq('role', roleVal);
+    if (proUserIds) query = query.in('id', proUserIds);
     if (siteVal !== 'all') query = query.eq('site', siteVal);
     if (keyword) {
         // UUID 형식이면 ID 직접 검색, 아니면 이메일/이름 검색
@@ -44,7 +55,8 @@ window.loadMembers = async (isNewSearch = false) => {
 
     // 먼저 count만 가져와서 페이지 범위 보정
     const countQuery = sb.from('profiles').select('id', { count: 'exact', head: true });
-    if (roleVal !== 'all') countQuery.eq('role', roleVal);
+    if (roleVal !== 'all' && roleVal !== 'pro_active') countQuery.eq('role', roleVal);
+    if (proUserIds) countQuery.in('id', proUserIds);
     if (siteVal !== 'all') countQuery.eq('site', siteVal);
     if (keyword) {
         const isUUID2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(keyword);
