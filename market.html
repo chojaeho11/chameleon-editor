@@ -188,6 +188,11 @@ textarea.form-input{resize:vertical;min-height:80px;}
                 <input type="checkbox" id="fNego" checked style="width:18px;height:18px;accent-color:#f59e0b;">
                 <label for="fNego" id="lblNego" style="margin:0;cursor:pointer;"></label>
             </div>
+            <div class="form-group">
+                <label>📷 상품 사진 (최대 8장)</label>
+                <input type="file" id="fPhotos" accept="image/*" multiple onchange="previewPhotos(event)" style="padding:8px;border:1.5px dashed #e2e8f0;border-radius:10px;width:100%;font-family:inherit;cursor:pointer;background:#fafafa;">
+                <div id="photoPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+            </div>
             <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:12px;">
                 <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:8px;">🏦 판매자 입금 계좌 (안전거래 판매 대금 수령용)</div>
                 <div class="form-row">
@@ -339,13 +344,14 @@ async function loadMyTx(){
     const box=document.getElementById('mytxList');
     if(!currentUser){box.innerHTML='<div class="empty" style="padding:40px;text-align:center;color:#64748b;">로그인이 필요합니다</div>';return;}
     box.innerHTML='<div style="text-align:center;padding:30px;">로딩 중...</div>';
-    const [buyerRes,sellerRes]=await Promise.all([
+    const [buyerRes,sellerRes,mineRes]=await Promise.all([
         sb.from('community_safe_transactions').select('*').eq('buyer_id',currentUser.id).order('created_at',{ascending:false}),
-        sb.from('community_safe_transactions').select('*').eq('seller_id',currentUser.id).order('created_at',{ascending:false})
+        sb.from('community_safe_transactions').select('*').eq('seller_id',currentUser.id).order('created_at',{ascending:false}),
+        sb.from('community_secondhand').select('*').eq('seller_id',currentUser.id).order('created_at',{ascending:false})
     ]);
+    window._myListings=mineRes.data||[];
     const all=[...(buyerRes.data||[]).map(t=>({...t,role:'buyer'})),...(sellerRes.data||[]).map(t=>({...t,role:'seller'}))]
         .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-    if(all.length===0){box.innerHTML='<div class="empty" style="padding:40px;text-align:center;color:#64748b;">거래 내역이 없습니다</div>';return;}
     const itemIds=[...new Set(all.map(t=>t.item_id).filter(Boolean))];
     const{data:items}=await sb.from('community_secondhand').select('id,title').in('id',itemIds);
     const itemMap={};(items||[]).forEach(i=>itemMap[i.id]=i);
@@ -356,7 +362,33 @@ async function loadMyTx(){
         settled:{txt:'✅ 송금완료',color:'#10b981'},
         cancelled:{txt:'취소',color:'#ef4444'}
     };
-    box.innerHTML=all.map(tx=>{
+    // "내 판매 상품" 섹션 HTML
+    const myItems=window._myListings||[];
+    const listingsHtml=myItems.length>0?`
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:18px;">
+            <h3 style="font-size:15px;font-weight:900;margin-bottom:12px;color:#0f172a;">📋 내 판매 상품 (${myItems.length})</h3>
+            ${myItems.map(it=>{
+                const sl={active:{txt:'판매중',color:'#10b981'},reserved:{txt:'예약중',color:'#f59e0b'},sold:{txt:'거래완료',color:'#64748b'}}[it.status]||{txt:it.status,color:'#64748b'};
+                const thumb=(Array.isArray(it.images)&&it.images[0])?`<img src="${it.images[0]}" style="width:54px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0;">`:'';
+                const actions=it.status==='active'
+                    ?`<button onclick="markItemSold('${it.id}')" style="padding:6px 10px;background:#64748b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">판매완료</button>
+                      <button onclick="editMyItem('${it.id}')" style="padding:6px 10px;background:#f59e0b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">수정</button>
+                      <button onclick="deleteMyItem('${it.id}')" style="padding:6px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">삭제</button>`
+                    :it.status==='sold'
+                    ?`<button onclick="reactivateItem('${it.id}')" style="padding:6px 10px;background:#10b981;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">다시 판매</button>
+                      <button onclick="deleteMyItem('${it.id}')" style="padding:6px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">삭제</button>`
+                    :`<button onclick="editMyItem('${it.id}')" style="padding:6px 10px;background:#f59e0b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">수정</button>`;
+                return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                    ${thumb}
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;font-size:13px;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.title)}</div>
+                        <div style="font-size:12px;color:#475569;margin-top:2px;">${fmtPrice(it.price)}원 · <span style="color:${sl.color};font-weight:700;">${sl.txt}</span></div>
+                    </div>
+                    <div style="display:flex;gap:4px;flex-shrink:0;">${actions}</div>
+                </div>`;
+            }).join('')}
+        </div>`:'';
+    box.innerHTML=listingsHtml+(all.length===0?'<div class="empty" style="padding:20px;text-align:center;color:#64748b;">안전거래 내역이 없습니다</div>':all.map(tx=>{
         const it=itemMap[tx.item_id]||{title:'(상품 정보 없음)'};
         const sl=statusLabel[tx.status]||{txt:tx.status,color:'#64748b'};
         const roleLabel=tx.role==='buyer'?'구매':'판매';
@@ -658,6 +690,34 @@ async function startSafeTx(itemId,amount){
     }
 })();
 
+// 사진 미리보기 + 업로드 대기
+window._pendingPhotos=[];
+window.previewPhotos=function(ev){
+    const files=Array.from(ev.target.files||[]).slice(0,8);
+    window._pendingPhotos=files;
+    const box=document.getElementById('photoPreview');
+    box.innerHTML=files.map((f,i)=>{
+        const url=URL.createObjectURL(f);
+        return `<div style="position:relative;"><img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #fde68a;"><span style="position:absolute;top:-6px;right:-6px;background:#f59e0b;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">${i+1}</span></div>`;
+    }).join('');
+};
+
+async function uploadPhotosIfAny(){
+    const files=window._pendingPhotos||[];
+    if(files.length===0||!currentUser)return [];
+    const urls=[];
+    for(let i=0;i<files.length;i++){
+        const f=files[i];
+        const ext=(f.name.split('.').pop()||'jpg').toLowerCase();
+        const path=`market/${currentUser.id}/${Date.now()}_${i}.${ext}`;
+        const{error}=await sb.storage.from('community').upload(path,f,{upsert:false});
+        if(error){console.warn('upload fail',error);continue;}
+        const{data}=sb.storage.from('community').getPublicUrl(path);
+        if(data?.publicUrl)urls.push(data.publicUrl);
+    }
+    return urls;
+}
+
 async function postItem(){
     if(!currentUser){toast(t('loginFirst'));return;}
     const title=document.getElementById('fTitle').value.trim();
@@ -666,6 +726,9 @@ async function postItem(){
     const accHolder=document.getElementById('fAccHolder').value.trim();
     const accNum=document.getElementById('fAccNum').value.trim();
     if(!bankName||!accHolder||!accNum){toast('판매자 입금 계좌 정보를 모두 입력하세요');return;}
+    const btn=document.getElementById('btnSubmit');btn.disabled=true;
+    toast('사진 업로드 중...');
+    const images=await uploadPhotosIfAny();
     const{error}=await sb.from('community_secondhand').insert({
         seller_id:currentUser.id,
         title,
@@ -675,8 +738,10 @@ async function postItem(){
         condition:document.getElementById('fCondition').value,
         city:document.getElementById('fCity').value.trim()||null,
         is_negotiable:document.getElementById('fNego').checked,
+        images:images.length>0?images:null,
         country:LANG==='ja'?'JP':LANG==='en'?'US':'KR'
     });
+    btn.disabled=false;
     if(error){toast(error.message);return;}
     // 판매자 프로필에 계좌 정보 저장 (재사용)
     await sb.from('profiles').update({bank_name:bankName,account_holder:accHolder,account_number:accNum}).eq('id',currentUser.id);
@@ -684,8 +749,39 @@ async function postItem(){
         await sb.from('community_user_temperature').upsert({user_id:currentUser.id},{onConflict:'user_id',ignoreDuplicates:true});
     }
     toast(t('posted'));document.getElementById('fTitle').value='';document.getElementById('fDesc').value='';document.getElementById('fPrice').value='';
+    document.getElementById('fPhotos').value='';document.getElementById('photoPreview').innerHTML='';window._pendingPhotos=[];
     switchTab('browse');loadItems();
 }
+
+// ===== 내 판매 상품 관리 (수정/판매완료/삭제) =====
+window.markItemSold=async function(itemId){
+    if(!confirm('해당 상품을 판매완료로 변경할까요?'))return;
+    const{error}=await sb.from('community_secondhand').update({status:'sold'}).eq('id',itemId).eq('seller_id',currentUser.id);
+    if(error){toast(error.message);return;}
+    toast('판매완료 처리됨');loadMyTx();loadItems();
+};
+window.reactivateItem=async function(itemId){
+    const{error}=await sb.from('community_secondhand').update({status:'active'}).eq('id',itemId).eq('seller_id',currentUser.id);
+    if(error){toast(error.message);return;}
+    toast('다시 판매중으로 변경');loadMyTx();loadItems();
+};
+window.deleteMyItem=async function(itemId){
+    if(!confirm('정말 삭제할까요? 되돌릴 수 없습니다.'))return;
+    const{error}=await sb.from('community_secondhand').delete().eq('id',itemId).eq('seller_id',currentUser.id);
+    if(error){toast(error.message);return;}
+    toast('삭제됨');loadMyTx();loadItems();
+};
+window.editMyItem=async function(itemId){
+    const item=(window._myListings||[]).find(x=>x.id===itemId);
+    if(!item)return;
+    const nTitle=prompt('제목 수정',item.title);if(nTitle===null)return;
+    const nDesc=prompt('설명 수정 (취소 시 기존 유지)',item.description||'');if(nDesc===null)return;
+    const nPrice=prompt('가격 수정',item.price);if(nPrice===null)return;
+    const up={title:nTitle.trim()||item.title,description:nDesc.trim()||null,price:parseInt(nPrice)||item.price};
+    const{error}=await sb.from('community_secondhand').update(up).eq('id',itemId).eq('seller_id',currentUser.id);
+    if(error){toast(error.message);return;}
+    toast('수정됨');loadMyTx();
+};
 
 // 판매 탭 열 때 기존 계좌 정보 프리필
 async function prefillBank(){
