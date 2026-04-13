@@ -4866,6 +4866,7 @@ async function handleSubReturn() {
                     <div id="cartShippingAddRow" style="display:none; margin-bottom:10px;">
                         <div id="cartShippingGuide" style="font-size:13px; color:#dc2626; font-weight:600; margin-bottom:8px; line-height:1.5;"></div>
                         <div id="cartShippingBtns" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:6px;"></div>
+                        <div id="cartShippingFreeNote" style="font-size:11px; color:#059669; font-weight:600; margin-top:8px; padding:8px 10px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; line-height:1.5;"></div>
                         <script>
                         (function(){
                             var h=window.location.hostname||'';var p=new URLSearchParams(window.location.search);var lg=p.get('lang')||'';
@@ -4882,6 +4883,18 @@ async function handleSubReturn() {
                             };
                             var g=document.getElementById('cartShippingGuide');
                             if(g) g.textContent=guide[l]||guide['kr'];
+                            var freeNote={
+                                kr:'✅ 보드류 외 패브릭 등 모든 제품의 배송비는 무료이므로 선택하지 않아도 됩니다.',
+                                ja:'✅ ボード類以外（ファブリック等）の送料は無料なので選択不要です。',
+                                en:'✅ Shipping is FREE for all products except boards (fabric, etc.). No need to choose.',
+                                zh:'✅ 板类以外（布料等）所有产品免运费，无需选择。',
+                                ar:'✅ الشحن مجاني لجميع المنتجات باستثناء الألواح (قماش، إلخ). لا حاجة للاختيار.',
+                                es:'✅ Envío GRATIS para todos los productos excepto tableros (tela, etc.). No hace falta elegir.',
+                                de:'✅ Versand für alle Produkte außer Platten (Stoff usw.) KOSTENLOS. Keine Auswahl nötig.',
+                                fr:'✅ Livraison GRATUITE pour tous les produits sauf les plaques (tissu, etc.). Pas de sélection nécessaire.'
+                            };
+                            var fn=document.getElementById('cartShippingFreeNote');
+                            if(fn) fn.textContent=freeNote[l]||freeNote['kr'];
                             var _r=(window.SITE_CONFIG&&window.SITE_CONFIG.CURRENCY_RATE)||{};
                             var _fmt=function(krw){
                                 if(l==='ja') return '¥'+Math.round(krw*(_r.JP||0.1)).toLocaleString();
@@ -4893,7 +4906,7 @@ async function handleSubReturn() {
                             var btns=[
                                 {fee:200000, kr:'용차배송',ja:'車両配送',en:'Truck',zh:'车辆配送',ar:'شاحنة',es:'Camión',de:'LKW',fr:'Camion'},
                                 {fee:700000, kr:'배송시공',ja:'配送+設置',en:'Install',zh:'配送+安装',ar:'تركيب',es:'Instalación',de:'Montage',fr:'Pose'},
-                                {fee:30000,  kr:'택배',ja:'宅配',en:'Courier',zh:'快递',ar:'بريد',es:'Courier',de:'Paket',fr:'Colis'}
+                                {fee:30000,  kr:'보드류 택배',ja:'ボード類 宅配',en:'Board Courier',zh:'板类 快递',ar:'بريد الألواح',es:'Courier Tableros',de:'Platten Paket',fr:'Colis Plaques'}
                             ];
                             var lbl={kr:'지방 ',ja:'地方 ',en:'Regional ',zh:'地方 ',ar:'إقليمي ',es:'Regional ',de:'Regional ',fr:'Regional '};
                             var box=document.getElementById('cartShippingBtns');
