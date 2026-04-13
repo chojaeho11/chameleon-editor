@@ -764,20 +764,20 @@ window.NpcWizard = {
             // 글씨 스카시 → 전용 위자드
             this._goStep('lsTypeSelect');
         } else if (this.isPaperDisplay) {
-            // 종이매대 → 전용 위자드
-            this._goStep('pdSize');
+            // 종이매대 → 도입부(상담/VIP/직접) 화면 먼저
+            this._goStep('pdIntro');
         } else if (this.isHoneycomb) {
             // 허니콤보드 → 매니저 상담 여부 확인
             this._goStep('honeycombAsk');
         } else if (this.isCustom && this.isGeneral) {
-            // 면적 기반 시공 상품 (종이매대 등) → 디자인 방법 선택 화면 먼저
-            this._goStep('chooseDesign');
+            // 면적 기반 시공 상품 (종이매대 등) → 바로 사이즈 입력
+            this._goStep('size');
         } else if (this.isCustom) {
             // 커스텀 인쇄 상품 → 파일/디자인 위자드 진행
             this._goStep('askFile');
         } else {
-            // 일반 상품 + 고정 사이즈 상품 → 디자인 방법 선택 화면 먼저
-            this._goStep('chooseDesign');
+            // 일반 상품 + 고정 사이즈 상품 → 바로 사이즈 입력
+            this._goStep('size');
         }
         this._watchFileUpload();
     },
@@ -898,22 +898,12 @@ window.NpcWizard = {
         if (!_isPdMiddle) {
             this._showSection('header');
         }
-        // 종이매대: 위자드가 자체 UI를 사용하므로 기본 UI 항상 숨김
+        // 종이매대: 위자드가 자체 UI를 사용 — 업로드/사이즈/견적 영역만 숨기고
+        // 수량/할인표/총금액/구독할인/구매하기 버튼은 그대로 노출 (고객이 가격 확인 후 구매 가능)
         if (this.isPaperDisplay) {
-            // sections 기반
-            ['upload', 'uploadPreview', 'size', 'price', 'estimate', 'qtyLabel', 'qty', 'total', 'buttons'].forEach(k => {
+            ['upload', 'uploadPreview', 'size', 'price', 'estimate'].forEach(k => {
                 const el = this.sections[k]; if (el) el.style.display = 'none';
             });
-            // ID 기반
-            ['bulkDiscountTable', 'bulkDiscountInfo', 'promoDiscountBox'].forEach(id => {
-                const el = document.getElementById(id); if (el) el.style.display = 'none';
-            });
-            // 파일올리기 버튼/프로구독 등 data-npc 밖의 요소들
-            const _rightActions = document.getElementById('choiceRightActions');
-            if (_rightActions) {
-                _rightActions.querySelectorAll('button[onclick*="confirmChoice"]').forEach(el => el.style.display = 'none');
-                _rightActions.querySelectorAll('[data-npc="total"]').forEach(el => el.style.display = 'none');
-            }
         }
 
         switch (stepName) {
@@ -979,36 +969,6 @@ window.NpcWizard = {
                 if (window.updateModalTotal) window.updateModalTotal();
                 break;
 
-            case 'chooseDesign':
-                // 파일 없음 → 직접/의뢰/문의 + 해외 전화번호 안내
-                this._renderBubble(_t('chooseDesign'), [
-                    { label: _t('selfDesign'), cls: 'npc-yes', onclick: "window.NpcWizard._chooseSelfDesign()" },
-                    { label: _t('expertDesign'), cls: 'npc-expert', onclick: "window.NpcWizard._chooseExpert()" },
-                    { label: '📨 자료 보내고 문의하기', cls: 'npc-inquiry', onclick: "window.NpcWizard._chooseInquiry()" },
-                ], true);
-                // 해외 문의 전화번호 박스 추가
-                setTimeout(() => {
-                    const slot = document.querySelector('.npc-slot, [data-npc="buttons"]');
-                    if (slot && !document.getElementById('npcIntlPhoneBox')) {
-                        const phoneBox = document.createElement('div');
-                        phoneBox.id = 'npcIntlPhoneBox';
-                        phoneBox.style.cssText = 'margin-top:14px;padding:16px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:14px;text-align:center;';
-                        phoneBox.innerHTML = `
-                            <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:10px;">📞 해외 문의 (International)</div>
-                            <a href="tel:+821034913535" style="display:block;padding:10px 12px;background:#fff;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#1e1b4b;font-weight:700;font-size:14px;border:1.5px solid #fbbf24;">
-                                <div style="font-size:11px;color:#92400e;margin-bottom:2px;">🇰🇷 EN / 日本語</div>
-                                <div style="font-size:18px;font-weight:900;letter-spacing:0.5px;">+82 10 3491-3535</div>
-                            </a>
-                            <a href="tel:+212617901092" style="display:block;padding:10px 12px;background:#fff;border-radius:10px;text-decoration:none;color:#1e1b4b;font-weight:700;font-size:14px;border:1.5px solid #fbbf24;">
-                                <div style="font-size:11px;color:#92400e;margin-bottom:2px;">🇲🇦 FR / العربية / EN</div>
-                                <div style="font-size:18px;font-weight:900;letter-spacing:0.5px;">+212 617901092</div>
-                            </a>
-                        `;
-                        slot.appendChild(phoneBox);
-                    }
-                }, 50);
-                break;
-
             case 'expertChat':
                 // 전문가 의뢰 → 안내 메시지 + 채팅 열기
                 this._renderBubble(_t('expertMsg'), null, true);
@@ -1053,6 +1013,87 @@ window.NpcWizard = {
             }
 
             // ═══ 종이매대 (Cardboard Display Stand) 전용 스텝 ═══
+
+            case 'pdIntro': {
+                // 종이매대 도입부: 직접 주문 / VIP 자료문의 + 해외 상담 전화번호
+                const _lang = (typeof window.CURRENT_LANG !== 'undefined' && window.CURRENT_LANG) ? window.CURRENT_LANG : 'kr';
+                const _L = {
+                    selfTitle: {kr:'직접 디자인하기',ja:'自分でデザイン',en:'Design it myself',zh:'自己设计',ar:'تصميم بنفسي',es:'Diseñar yo mismo',de:'Selbst gestalten',fr:'Concevoir moi-même'}[_lang]||'Design it myself',
+                    selfDesc: {kr:'사이즈 입력 후 에디터에서 디자인',ja:'サイズ入力後エディタでデザイン',en:'Enter size and design in the editor',zh:'输入尺寸后在编辑器中设计',ar:'أدخل الحجم وصمم في المحرر',es:'Ingrese tamaño y diseñe en el editor',de:'Größe eingeben und im Editor gestalten',fr:'Entrez la taille et concevez dans l\'éditeur'}[_lang]||'Enter size and design in the editor',
+                    vipTitle: {kr:'자료 보내고 문의하기',ja:'資料を送って問い合わせ',en:'Send Files & Inquire',zh:'发送资料咨询',ar:'إرسال الملفات والاستفسار',es:'Enviar archivos y consultar',de:'Dateien senden & anfragen',fr:'Envoyer des fichiers et demander'}[_lang]||'Send Files & Inquire',
+                    vipDesc: {kr:'디자인 파일 업로드 + 전문가 견적',ja:'デザインファイル送付 + 専門家の見積',en:'Upload files + expert quote',zh:'上传文件 + 专家报价',ar:'تحميل الملفات + عرض خبير',es:'Subir archivos + cotización experta',de:'Dateien hochladen + Expertenangebot',fr:'Envoyer des fichiers + devis expert'}[_lang]||'Upload files + expert quote',
+                    intlTitle: {kr:'해외 상담 · International',ja:'海外からのお問い合わせ',en:'International Consultation',zh:'海外咨询',ar:'استشارة دولية',es:'Consulta internacional',de:'Internationale Beratung',fr:'Consultation internationale'}[_lang]||'International Consultation',
+                    orText: {kr:'또는',ja:'または',en:'or',zh:'或',ar:'أو',es:'o',de:'oder',fr:'ou'}[_lang]||'or'
+                };
+
+                this._renderBubble(_t('chooseDesign'), null, false);
+
+                const slot = this.guideEl && this.guideEl.querySelector('#npcContentSlot');
+                if (slot) {
+                    slot.innerHTML = `
+                        <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+                            <button onclick="window.NpcWizard._goStep('pdSize')"
+                                style="display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;background:#000;color:#fff;border:none;border-radius:14px;cursor:pointer;text-align:left;transition:transform 0.15s, box-shadow 0.15s;box-shadow:0 2px 8px rgba(0,0,0,0.12);"
+                                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(0,0,0,0.2)';"
+                                onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.12)';">
+                                <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🎨</div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:15px;font-weight:800;letter-spacing:-0.2px;">${_L.selfTitle}</div>
+                                    <div style="font-size:11px;opacity:0.7;margin-top:2px;">${_L.selfDesc}</div>
+                                </div>
+                                <div style="font-size:16px;opacity:0.6;">›</div>
+                            </button>
+
+                            <button onclick="window.NpcWizard._chooseInquiry()"
+                                style="display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;background:#fff;color:#1e1b4b;border:1.5px solid #e5e7eb;border-radius:14px;cursor:pointer;text-align:left;transition:all 0.15s;"
+                                onmouseover="this.style.borderColor='#6366f1';this.style.boxShadow='0 4px 14px rgba(99,102,241,0.12)';"
+                                onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='none';">
+                                <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📨</div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="display:flex;align-items:center;gap:6px;">
+                                        <div style="font-size:15px;font-weight:800;letter-spacing:-0.2px;">${_L.vipTitle}</div>
+                                        <span style="font-size:9px;font-weight:800;color:#fff;background:linear-gradient(135deg,#f59e0b,#d97706);padding:2px 6px;border-radius:10px;letter-spacing:0.3px;">VIP</span>
+                                    </div>
+                                    <div style="font-size:11px;color:#64748b;margin-top:2px;">${_L.vipDesc}</div>
+                                </div>
+                                <div style="font-size:16px;color:#94a3b8;">›</div>
+                            </button>
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:10px;margin:18px 0 10px;">
+                            <div style="flex:1;height:1px;background:#e5e7eb;"></div>
+                            <span style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${_L.orText}</span>
+                            <div style="flex:1;height:1px;background:#e5e7eb;"></div>
+                        </div>
+
+                        <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;">
+                            <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;">
+                                <span style="display:inline-flex;width:18px;height:18px;border-radius:50%;background:#1e1b4b;color:#fff;align-items:center;justify-content:center;font-size:10px;">📞</span>
+                                <span>${_L.intlTitle}</span>
+                            </div>
+                            <a href="tel:+821034913535" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:6px;text-decoration:none;transition:all 0.15s;"
+                                onmouseover="this.style.borderColor='#1e1b4b';this.style.background='#f8fafc';"
+                                onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff';">
+                                <span style="font-size:16px;">🇰🇷</span>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:1px;">EN · 日本語</div>
+                                    <div style="font-size:14px;font-weight:800;color:#1e1b4b;letter-spacing:0.2px;">+82 10 3491-3535</div>
+                                </div>
+                            </a>
+                            <a href="tel:+212617901092" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;transition:all 0.15s;"
+                                onmouseover="this.style.borderColor='#1e1b4b';this.style.background='#f8fafc';"
+                                onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff';">
+                                <span style="font-size:16px;">🇲🇦</span>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:1px;">FR · العربية · EN</div>
+                                    <div style="font-size:14px;font-weight:800;color:#1e1b4b;letter-spacing:0.2px;">+212 617 901 092</div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                }
+                break;
+            }
 
             case 'pdSize': {
                 // Step 1: 전체 가로/높이 입력
@@ -1200,7 +1241,7 @@ window.NpcWizard = {
                             <input type="color" value="${c.bgColor}" onchange="window.NpcWizard._pdCustom.bgColor=this.value;" style="width:36px;height:36px;border:none;cursor:pointer;border-radius:6px;">
                         </div>
                         <div style="display:flex;flex-direction:column;gap:8px;">
-                            <button class="npc-choice-btn npc-yes" style="width:100%;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
+                            <button class="npc-choice-btn" style="width:100%;padding:14px;font-size:15px;font-weight:700;background:#000000;color:#ffffff;border:none;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
                             <button class="npc-choice-btn" style="width:100%;padding:12px;font-size:14px;background:#f1f5f9;border:1px solid #cbd5e1;color:#64748b;font-weight:600;" onclick="window.NpcWizard._pdAfterCustomize()">${_t('pdSkipDesign')}</button>
                         </div>
                     `;
@@ -1211,13 +1252,11 @@ window.NpcWizard = {
             }
 
             case 'pdSummary': {
-                // Step 5 (or 6): 주문 요약 + 장바구니
-                this._showSection('total');
+                // Step 5 (or 6): 주문 요약 + 장바구니 (수량/할인/총금액은 장바구니에서 처리)
                 const calc2 = this._pdCalcShelves(this._pdHeight, this._pdAdHeight, this._pdShelfHeight);
                 const shelfTxt = _t('pdShelfUnit').replace('{count}', calc2.count).replace('{h}', this._pdShelfHeight);
                 const matNames = { corrugated: _t('pdMatCorrugated'), honeycomb: _t('pdMatHoneycomb'), foam: _t('pdMatFoam') };
                 const matTxt = matNames[this._pdMaterial] || matNames.corrugated;
-                const refTxt = this._pdRefName || _t('pdNone');
                 const c2 = this._pdCustom;
                 const customParts = [];
                 if (c2.ad) customParts.push(_t('pdAdDesign'));
@@ -1237,34 +1276,10 @@ window.NpcWizard = {
                             <div class="pd-summary-row"><span>${_t('pdBgColor')}</span><span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:${c2.bgColor};border:1px solid #cbd5e1;vertical-align:middle;"></span></div>
                             <div class="pd-summary-row"><span>${_t('pdCustomize')}</span><strong>${customTxt}</strong></div>
                         </div>
-                        <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:14px;font-size:15px;font-weight:700;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
-                        <div class="pd-input-row" style="margin-top:12px;">
-                            <label>${_t('pdQty')}</label>
-                            <div style="display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; height:40px; flex:1;">
-                                <button onclick="const i=document.getElementById('npcPdQty');i.value=Math.max(1,parseInt(i.value)-1);window.NpcWizard._pdUpdateTotal2();" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">-</button>
-                                <input type="number" id="npcPdQty" value="1" min="1" style="width:50px;text-align:center;border:none;font-weight:bold;font-size:15px;" oninput="window.NpcWizard._pdUpdateTotal2();">
-                                <button onclick="const i=document.getElementById('npcPdQty');i.value=parseInt(i.value)+1;window.NpcWizard._pdUpdateTotal2();" style="flex:1;border:none;background:#f8fafc;cursor:pointer;font-weight:bold;">+</button>
-                            </div>
-                        </div>
-                        <div id="npcPdDiscountTable" style="margin-top:10px;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;font-size:11px;">
-                            <div style="background:#1e1e2e;padding:6px 10px;color:#fff;font-weight:700;font-size:11px;">${_t('pdBulkDiscount')}</div>
-                            <div style="display:grid;grid-template-columns:repeat(5,1fr);text-align:center;">
-                                <div class="pd-dsc-tier" data-min="1" data-max="3" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">1~2</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;">0%</div></div>
-                                <div class="pd-dsc-tier" data-min="3" data-max="10" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">3~9</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#f59e0b;">20%</div></div>
-                                <div class="pd-dsc-tier" data-min="10" data-max="101" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">10~100</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#f59e0b;">30%</div></div>
-                                <div class="pd-dsc-tier" data-min="101" data-max="501" style="padding:6px 2px;border-right:1px solid #e2e8f0;background:#f8fafc;color:#334155;"><div style="font-weight:800;">101~500</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#ef4444;">40%</div></div>
-                                <div class="pd-dsc-tier" data-min="501" data-max="999999" style="padding:6px 2px;background:#f8fafc;color:#334155;"><div style="font-weight:800;">501+</div><div style="font-size:9px;color:#94a3b8;">${_t('pdUnit')}</div><div style="font-weight:700;color:#ef4444;">50%</div></div>
-                            </div>
-                        </div>
-                        <div id="npcPdTotalPrice2" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:14px;border-radius:10px;text-align:center;margin-top:10px;">
-                            <div style="font-size:12px;opacity:0.85;">${_t('pdTotalAmount')}</div>
-                            <div style="font-size:22px;font-weight:900;" id="npcPdTotalVal2"></div>
-                        </div>
-                        <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:12px;padding:16px;font-size:16px;" onclick="window.NpcWizard._pdAddToCart()">${_t('pdAddToCart')}</button>
+                        <button class="npc-choice-btn" style="width:100%;margin-top:12px;padding:14px;font-size:15px;font-weight:700;background:#000000;color:#ffffff;border:none;" onclick="window.NpcWizard._pdOpenEditor()">🎨 ${_t('pdOpenEditor')}</button>
+                        <button class="npc-choice-btn npc-yes" style="width:100%;margin-top:10px;padding:16px;font-size:16px;" onclick="window.NpcWizard._pdAddToCart()">${_t('pdAddToCart')}</button>
                     `;
                 }
-                this._insertToSlot('total');
-                setTimeout(() => this._pdUpdateTotal2(), 50);
                 break;
             }
 
@@ -1408,8 +1423,8 @@ window.NpcWizard = {
             // 허니콤 직접주문: 디자인 선택 없이 바로 사이즈
             this._goStep('size');
         } else {
-            // 파일 없음 → 직접/의뢰 먼저 선택
-            this._goStep('chooseDesign');
+            // 파일 없음 → 바로 사이즈 입력
+            this._goStep('size');
         }
     },
 
@@ -1968,9 +1983,8 @@ window.NpcWizard = {
         if (step === 'upload') { this._goStep('askFile'); return; }
         if (step === 'size' && this.hasFile) { this._goStep('upload'); return; }
         if (step === 'size' && !this.hasFile && this._fromHoneycombDirect) { this._goStep('askFile'); return; }
-        if (step === 'size' && !this.hasFile) { this._goStep('chooseDesign'); return; }
-        if (step === 'chooseDesign') { this._goStep('askFile'); return; }
-        if (step === 'expertChat') { this._goStep('chooseDesign'); return; }
+        if (step === 'size' && !this.hasFile) { this._goStep('askFile'); return; }
+        if (step === 'expertChat') { this._goStep('askFile'); return; }
         if (step === 'options') { this._goStep('size'); return; }
         if (step === 'final' && this.hasOptions) { this._goStep('options'); return; }
         if (step === 'final' && this.isCustom) { this._goStep('size'); return; }
