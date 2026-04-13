@@ -4243,6 +4243,68 @@ async function handleSubReturn() {
 })();
 </script>
 
+<!-- ==== 종이매대 공통 상단 배너 (모든 pd_ 상품 상세 상단) ==== -->
+<style>
+@keyframes pdBannerSlide { 0%,100%{transform:translateX(0);} 33%{transform:translateX(-100%);} 66%{transform:translateX(-200%);} }
+@keyframes pdBannerFade { 0%,30%{opacity:1;} 33%,63%{opacity:0;} 66%,96%{opacity:0;} 100%{opacity:1;} }
+@keyframes pdCardFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+.pd-banner{position:relative;margin-bottom:20px;border-radius:20px;overflow:hidden;background:linear-gradient(135deg,#0f172a 0%,#1e293b 45%,#312e81 100%);color:#fff;padding:22px 24px;box-shadow:0 10px 40px rgba(49,46,129,0.25);border:1.5px solid #475569;}
+.pd-banner::before{content:'';position:absolute;inset:-50%;background:radial-gradient(circle at 20% 30%,rgba(251,191,36,0.15),transparent 40%),radial-gradient(circle at 80% 70%,rgba(99,102,241,0.25),transparent 40%);animation:pdBannerFade 18s ease infinite;}
+.pd-banner-title{position:relative;font-size:18px;font-weight:900;line-height:1.5;margin-bottom:6px;letter-spacing:-0.3px;}
+.pd-banner-title .hl{background:linear-gradient(90deg,#fbbf24,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.pd-banner-sub{position:relative;font-size:12px;opacity:0.85;line-height:1.6;margin-bottom:16px;}
+.pd-cards{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+@media(max-width:640px){.pd-cards{grid-template-columns:1fr;}}
+.pd-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:14px 14px;animation:pdCardFloat 4s ease-in-out infinite;}
+.pd-card:nth-child(2){animation-delay:1.3s;}
+.pd-card:nth-child(3){animation-delay:2.6s;}
+.pd-card-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0f172a;font-weight:900;font-size:13px;margin-bottom:8px;}
+.pd-card-t{font-size:13px;font-weight:800;margin-bottom:4px;color:#fbbf24;}
+.pd-card-d{font-size:11px;line-height:1.55;opacity:0.9;}
+.pd-phones{position:relative;background:rgba(0,0,0,0.28);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;border:1px solid rgba(255,255,255,0.08);}
+.pd-phone{display:flex;align-items:center;gap:10px;font-size:12px;}
+.pd-phone-lang{font-size:10px;opacity:0.7;min-width:82px;}
+.pd-phone a{color:#fbbf24;font-weight:800;text-decoration:none;}
+.pd-foot{position:relative;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,0.12);font-size:11px;opacity:0.82;line-height:1.6;}
+.pd-foot b{color:#fbbf24;}
+</style>
+<script>
+(function(){
+    const PD_I18N = {
+        kr:{title:['종이매대는 빠르게 조립되지만 ','튼튼함','도 중요합니다.'], sub:'카멜레온프린팅은 골판지까지 직접 연구·생산해 더 튼튼하면서도 가볍게 만듭니다.', c1t:'샘플 1개 먼저', c1d:'실물 품질을 먼저 확인하세요. 샘플 주문을 권장합니다.', c2t:'전세계 무료 배송', c2d:'단 1개라도 전세계 어디든 무료로 배송해 드립니다.', c3t:'전화상담 & 칼선 제공', c3d:'고객 가이드·디자인 작업이 필요한 주문은 아래 번호로 연락주세요.', p1l:'한국어 / English / 日本語', p2l:'Français / Deutsch / العربية', foot:'모든 제품의 <b>디자인은 무료</b>입니다. 진열할 제품의 크기를 알려주시면 무료 설계·디자인해 드립니다. 결제는 <b>10% 선금, 90% 잔금</b>(완성 사진 확인 후). 제작 공장: <b>한국·싱가포르·모로코</b>.'},
+        ja:{title:['紙什器は素早く組み立てられ、','頑丈さ','も重要です。'], sub:'カメレオン印刷は段ボールまで自社で研究・生産し、より丈夫かつ軽量に仕上げます。', c1t:'まずサンプル1個', c1d:'実物品質をまず確認ください。サンプル注文をお勧めします。', c2t:'世界中送料無料', c2d:'1個からでも世界中どこへでも無料でお届けします。', c3t:'電話相談 & カットライン提供', c3d:'ガイド・デザイン作業が必要な注文は下記番号へご連絡ください。', p1l:'한국어 / English / 日本語', p2l:'Français / Deutsch / العربية', foot:'全製品<b>デザイン無料</b>。設置する商品のサイズをお知らせいただければ、無料で設計・デザインいたします。お支払いは<b>10%前金・90%残金</b>（完成写真確認後）。生産工場：<b>韓国・シンガポール・モロッコ</b>。'},
+        en:{title:['Paper stands assemble fast — ','durability','matters just as much.'], sub:'Chameleon Printing develops and produces its own corrugated board, making stands stronger yet lighter.', c1t:'Order a Sample First', c1d:'Please verify real-world quality — we recommend a sample order first.', c2t:'Free Worldwide Shipping', c2d:'Even for a single unit, we ship free anywhere in the world.', c3t:'Phone Support & Die-cut Files', c3d:'If you need guidance or custom design, call the numbers below.', p1l:'Korean / English / Japanese', p2l:'French / German / Arabic', foot:'All designs are <b>free of charge</b>. Tell us the size of your product and we will design and engineer it for free. Payment: <b>10% deposit, 90% balance</b> after you approve finished photos. Factories: <b>Korea · Singapore · Morocco</b>.'},
+        zh:{title:['纸质展示架组装快速，','坚固耐用','同样重要。'], sub:'Chameleon Printing 自主研发并生产瓦楞纸板，使展示架更坚固、更轻盈。', c1t:'先订购样品', c1d:'建议先订购一个样品确认实物品质。', c2t:'全球免费配送', c2d:'哪怕只有一件，我们也免费发往全球任何地方。', c3t:'电话咨询 & 提供刀线', c3d:'需要指导或定制设计的订单，请拨打下方电话。', p1l:'韩语 / 英语 / 日语', p2l:'法语 / 德语 / 阿拉伯语', foot:'所有<b>设计免费</b>。告诉我们商品尺寸，我们将免费为您设计。付款：<b>10% 定金，90% 尾款</b>（确认成品照片后）。工厂：<b>韩国·新加坡·摩洛哥</b>。'},
+        ar:{title:['حوامل العرض الورقية تُجمَّع بسرعة — ','المتانة','لا تقل أهمية.'], sub:'كاميليون برينتينغ تطور وتنتج الكرتون المضلع بنفسها لتجعل الحوامل أقوى وأخف.', c1t:'اطلب عينة أولاً', c1d:'يرجى التحقق من الجودة الفعلية — نوصي بطلب عينة أولاً.', c2t:'شحن مجاني عالمي', c2d:'حتى لو قطعة واحدة، نشحن مجاناً إلى أي مكان في العالم.', c3t:'دعم هاتفي وملفات قص', c3d:'للطلبات التي تحتاج إرشاداً أو تصميماً مخصصاً اتصل بالأرقام أدناه.', p1l:'الكورية / الإنجليزية / اليابانية', p2l:'الفرنسية / الألمانية / العربية', foot:'جميع التصاميم <b>مجانية</b>. أخبرنا بمقاس منتجك وسنصممه مجاناً. الدفع: <b>10% عربون، 90% رصيد</b> بعد مراجعة صور المنتج النهائي. المصانع: <b>كوريا · سنغافورة · المغرب</b>.'},
+        es:{title:['Los expositores de cartón se montan rápido — la ','resistencia','es igual de importante.'], sub:'Chameleon Printing desarrolla y produce su propio cartón corrugado para crear expositores más fuertes y ligeros.', c1t:'Pide una muestra primero', c1d:'Verifique la calidad real — recomendamos pedir una muestra primero.', c2t:'Envío gratis mundial', c2d:'Incluso por una sola unidad, enviamos gratis a cualquier parte del mundo.', c3t:'Soporte telefónico y troquel', c3d:'Para pedidos con guía o diseño personalizado, llame a los números abajo.', p1l:'Coreano / Inglés / Japonés', p2l:'Francés / Alemán / Árabe', foot:'Todos los <b>diseños son gratuitos</b>. Indíquenos el tamaño de su producto y diseñamos gratis. Pago: <b>10% anticipo, 90% saldo</b> tras aprobar las fotos finales. Fábricas: <b>Corea · Singapur · Marruecos</b>.'},
+        de:{title:['Kartondisplays sind schnell aufgebaut — ','Stabilität','ist ebenso wichtig.'], sub:'Chameleon Printing entwickelt und produziert die Wellpappe selbst — stärker und gleichzeitig leichter.', c1t:'Erst ein Muster bestellen', c1d:'Prüfen Sie die Qualität real — wir empfehlen zuerst ein Musterexemplar.', c2t:'Weltweit kostenloser Versand', c2d:'Auch nur ein Stück versenden wir weltweit kostenlos.', c3t:'Tel. Beratung & Stanzdaten', c3d:'Für Aufträge mit Beratung oder individuellem Design rufen Sie bitte die unten stehenden Nummern an.', p1l:'Koreanisch / Englisch / Japanisch', p2l:'Französisch / Deutsch / Arabisch', foot:'Alle <b>Designs sind kostenlos</b>. Nennen Sie uns die Maße und wir designen gratis. Zahlung: <b>10% Anzahlung, 90% Rest</b> nach Freigabe der Endfotos. Werke: <b>Korea · Singapur · Marokko</b>.'},
+        fr:{title:['Les PLV carton se montent vite — la ','solidité','compte tout autant.'], sub:'Chameleon Printing développe et produit son propre carton ondulé pour des présentoirs plus solides et plus légers.', c1t:'Commandez un échantillon', c1d:'Vérifiez la qualité réelle — nous recommandons une commande d\'échantillon d\'abord.', c2t:'Livraison mondiale gratuite', c2d:'Même pour une seule unité, nous livrons gratuitement partout dans le monde.', c3t:'Conseil téléphonique & fichiers de découpe', c3d:'Pour les commandes nécessitant conseil ou design, appelez les numéros ci-dessous.', p1l:'Coréen / Anglais / Japonais', p2l:'Français / Allemand / Arabe', foot:'Tous les <b>designs sont gratuits</b>. Indiquez-nous la taille et nous concevons gratuitement. Paiement : <b>10% d\'acompte, 90% de solde</b> après validation des photos finales. Usines : <b>Corée · Singapour · Maroc</b>.'}
+    };
+    const PH1 = '+82 10 3491 3535';
+    const PH2 = '+212 617 901 092';
+    window.renderPaperDisplayBanner = function(product, lang) {
+        if (!product || !product.code) return '';
+        const c = product.code;
+        if (!c.startsWith('pd_') || c.startsWith('pd_tr') || c.startsWith('pd_ac')) return '';
+        const L = PD_I18N[lang] || PD_I18N.en;
+        return `<div class="pd-banner" dir="${lang==='ar'?'rtl':'ltr'}">
+            <div class="pd-banner-title">${L.title[0]}<span class="hl">${L.title[1]}</span>${L.title[2]}</div>
+            <div class="pd-banner-sub">${L.sub}</div>
+            <div class="pd-cards">
+                <div class="pd-card"><div class="pd-card-num">1</div><div class="pd-card-t">${L.c1t}</div><div class="pd-card-d">${L.c1d}</div></div>
+                <div class="pd-card"><div class="pd-card-num">2</div><div class="pd-card-t">${L.c2t}</div><div class="pd-card-d">${L.c2d}</div></div>
+                <div class="pd-card"><div class="pd-card-num">3</div><div class="pd-card-t">${L.c3t}</div><div class="pd-card-d">${L.c3d}</div></div>
+            </div>
+            <div class="pd-phones">
+                <div class="pd-phone"><span class="pd-phone-lang">${L.p1l}</span>📞 <a href="tel:${PH1.replace(/\s/g,'')}">${PH1}</a></div>
+                <div class="pd-phone"><span class="pd-phone-lang">${L.p2l}</span>📞 <a href="tel:${PH2.replace(/\s/g,'')}">${PH2}</a></div>
+            </div>
+            <div class="pd-foot">${L.foot}</div>
+        </div>`;
+    };
+})();
+</script>
+
 <!-- PC 텍스트 퀵 툴바 (캔버스 위 플로팅) -->
 <div id="pcTextQuickBar" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:6px 10px; gap:6px; align-items:center; flex-wrap:nowrap;">
     <button onclick="window.pcTextAlign('left')" class="pc-tq-align pc-tq-align-active" data-align="left" style="border:none; background:#f1f5f9; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:13px; color:#334155;"><i class="fa-solid fa-align-left"></i></button>
@@ -9837,6 +9899,7 @@ window.showChoiceModal = async function(key) {
 
             <div class="choice-left-content" style="${window.innerWidth <= 768 ? 'order:2; flex:0 0 100%; width:100%;' : ''}">
                 ${product.is_general_product ? '<div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; padding:5px 12px; border-radius:20px; margin-bottom:15px; font-size:12px; color:#16a34a; font-weight:600;"><i class="fa-solid fa-store"></i> '+(lang==='ja'?'マーケットプレイス商品':lang==='zh'?'市场商品':lang==='ar'?'منتج السوق':lang==='es'?'Producto del Mercado':lang==='de'?'Marktplatz-Produkt':lang==='fr'?'Produit Marketplace':lang==='en'?'Marketplace Product':'마켓플레이스 상품')+'</div>' : ''}
+                ${(typeof window.renderPaperDisplayBanner === 'function' && window.renderPaperDisplayBanner(product, lang)) || ''}
                 <h2 style="font-size:28px; font-weight:900; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">${dName}</h2>
                 <div class="product-detail-render" style="line-height:1.8; width:100%; overflow:hidden; box-sizing:border-box;"></div>
                 <div id="commonInfoContainer" style="overflow:hidden; width:100%;"></div>
