@@ -97,6 +97,24 @@ window.loadMembers = async (isNewSearch = false) => {
         }
     } catch(e) {}
 
+    // PRO 구독 정보 조회 (현재 페이지 회원들)
+    let subMap = {}; // { userId: { plan_type, current_period_end, status, created_at } }
+    try {
+        const { data: subs } = await sb.from('subscriptions')
+            .select('user_id, plan_type, status, current_period_end, created_at')
+            .in('user_id', memberIds)
+            .in('status', ['active', 'trialing']);
+        if (subs) {
+            subs.forEach(s => {
+                // 한 유저에 복수 구독이 있으면 가장 긴 종료일 우선
+                const prev = subMap[s.user_id];
+                if (!prev || (s.plan_type === 'lifetime') || (s.current_period_end && (!prev.current_period_end || new Date(s.current_period_end) > new Date(prev.current_period_end)))) {
+                    subMap[s.user_id] = s;
+                }
+            });
+        }
+    } catch(e) { console.warn('subscriptions 조회 실패:', e); }
+
     members.forEach(m => {
         let name = m.username || m.email?.split('@')[0] || '미등록';
         let badgeColor = '#f1f5f9'; let displayRole = '일반';
@@ -133,6 +151,29 @@ window.loadMembers = async (isNewSearch = false) => {
 
         const siteFlag = m.site === 'JP' ? '🇯🇵' : m.site === 'US' ? '🇺🇸' : m.site === 'KR' ? '🇰🇷' : '🌐';
 
+        // PRO 구독 배지
+        const sub = subMap[m.id];
+        let subBadge = '';
+        if (sub) {
+            const planLabel = sub.plan_type === 'lifetime' ? '평생' : sub.plan_type === 'annual' ? '연간' : sub.plan_type === 'monthly' ? '월간' : sub.plan_type === 'signup_promo' ? '무료체험' : sub.plan_type;
+            let remainText = '';
+            let remainColor = '#10b981';
+            if (sub.plan_type === 'lifetime') {
+                remainText = '∞';
+                remainColor = '#a855f7';
+            } else if (sub.current_period_end) {
+                const end = new Date(sub.current_period_end);
+                const diffDays = Math.ceil((end - new Date()) / 86400000);
+                remainText = diffDays >= 0 ? (diffDays + '일 남음') : '만료';
+                remainColor = diffDays >= 30 ? '#10b981' : diffDays >= 7 ? '#f59e0b' : '#ef4444';
+            }
+            const endDateStr = sub.plan_type === 'lifetime' ? '평생 이용' : (sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : '-');
+            subBadge = `<div style="margin-top:4px; display:inline-flex; flex-direction:column; background:linear-gradient(135deg,#ede9fe,#fae8ff); border:1px solid #c4b5fd; border-radius:8px; padding:4px 8px; font-size:10px; line-height:1.4;" title="종료일: ${endDateStr}">
+                <span style="font-weight:800; color:#6d28d9;">⭐PRO ${planLabel}</span>
+                <span style="color:${remainColor}; font-weight:700;">${remainText}</span>
+            </div>`;
+        }
+
         tbody.innerHTML += `
             <tr style="border-bottom:1px solid #f1f5f9; height:50px;${ref ? ' background:#fffbeb;' : ''}">
                 <td style="color:#64748b; font-size:12px; text-align:center;">${new Date(m.created_at).toLocaleDateString()}</td>
@@ -150,7 +191,7 @@ window.loadMembers = async (isNewSearch = false) => {
     <button class="btn btn-outline btn-sm" style="margin-left:4px; color:#0891b2; border-color:#0891b2;" onclick="viewMemberOrders('${m.id}', '${name.replace(/'/g, "\\'")}')">📦주문</button>
 </td>
                 <td style="padding:5px 15px;">${memoHtml}</td>
-                <td style="text-align:center;"><span class="badge" style="background:${badgeColor}; font-size:11px;">${displayRole}</span></td>
+                <td style="text-align:center;"><span class="badge" style="background:${badgeColor}; font-size:11px;">${displayRole}</span>${subBadge}</td>
                 <td style="padding:5px 15px;">${roleSelect}</td>
             </tr>
         `;
