@@ -38,9 +38,27 @@
         .cnav-item.active{color:#7c3aed;border-bottom-color:#7c3aed;font-weight:800;}
         .cnav-item.active i{opacity:1;color:#7c3aed;}
         @media(max-width:640px){
-            .cnav-bar{padding:0 6px;}
-            .cnav-item{padding:11px 11px;font-size:12px;gap:5px;}
+            .cnav-bar{padding:0 4px;}
+            .cnav-item{padding:10px 9px;font-size:11.5px;gap:4px;}
             .cnav-item i{font-size:12px;}
+        }
+        /* 모바일: 상단 헤더 공간 절약 */
+        @media(max-width:640px){
+            nav.nav{padding:0 12px !important;height:50px !important;}
+            nav.nav .nav-logo{font-size:15px !important;}
+            nav.nav .nav-logo i{font-size:17px !important;}
+            nav.nav .nav-right{gap:3px !important;}
+            nav.nav .nav-right a, nav.nav .nav-right .lang-btn{padding:4px 7px !important;font-size:10.5px !important;}
+            header.site-header{padding:0 12px !important;}
+            /* 서비스홈 뱃지 모바일에서 컴팩트 */
+            .cnav-logo-home{padding:4px 8px !important;font-size:10.5px !important;margin-left:6px !important;}
+            .cnav-logo-home i{font-size:10px !important;}
+        }
+        /* 좁을 때(< 380): 서비스홈 뱃지 텍스트 숨기고 아이콘만 */
+        @media(max-width:380px){
+            .cnav-home-txt{display:none !important;}
+            .cnav-logo-home{padding:6px 9px !important;}
+            .cnav-logo-home i{font-size:13px !important;}
         }
     `;
     document.head.appendChild(style);
@@ -59,7 +77,7 @@
                 const badge = document.createElement('a');
                 badge.href = '/services' + q;
                 badge.className = 'cnav-logo-home';
-                badge.innerHTML = `<i class="fa-solid fa-house"></i> ${homeLabel}`;
+                badge.innerHTML = `<i class="fa-solid fa-house"></i><span class="cnav-home-txt"> ${homeLabel}</span>`;
                 badge.style.cssText = 'margin-left:10px;padding:5px 12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-radius:999px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 3px 10px -2px rgba(124,58,237,0.4);';
                 logo.parentNode.insertBefore(badge, logo.nextSibling);
             }
