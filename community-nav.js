@@ -30,7 +30,7 @@
 
     const style = document.createElement('style');
     style.textContent = `
-        .cnav-bar{position:sticky;top:56px;z-index:99;background:#fff;border-bottom:1px solid #e2e8f0;padding:0 12px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;box-shadow:0 2px 6px rgba(15,23,42,0.04);}
+        .cnav-bar{position:sticky;top:0;z-index:99;background:#fff;border-bottom:1px solid #e2e8f0;padding:0 12px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;box-shadow:0 2px 6px rgba(15,23,42,0.04);}
         .cnav-bar::-webkit-scrollbar{display:none;}
         .cnav-item{display:inline-flex;align-items:center;gap:7px;padding:12px 14px;color:#64748b;text-decoration:none;font-size:13px;font-weight:600;border-bottom:2.5px solid transparent;transition:color 0.15s,border-color 0.15s;flex-shrink:0;}
         .cnav-item i{font-size:13px;opacity:0.85;}
@@ -46,11 +46,14 @@
     document.head.appendChild(style);
 
     function inject() {
-        const existingNav = document.querySelector('nav.nav');
+        const existingNav = document.querySelector('nav.nav, header.site-header, header.header, header');
         if (existingNav && existingNav.parentNode) {
             existingNav.parentNode.insertBefore(bar, existingNav.nextSibling);
+            // 상단 스티키 위치 = 기존 헤더 높이 (디자인마켓 등에서 자동 계산)
+            const headerH = existingNav.getBoundingClientRect().height || 56;
+            bar.style.top = Math.round(headerH) + 'px';
             // 로고 옆에 "서비스홈" 링크 추가 (첫 번째 항목 텍스트 재활용)
-            const logo = existingNav.querySelector('.nav-logo');
+            const logo = existingNav.querySelector('.nav-logo, .logo, a.logo');
             if (logo && !existingNav.querySelector('.cnav-logo-home')) {
                 const homeLabel = MENU[0].t[LANG] || MENU[0].t.en;
                 const badge = document.createElement('a');
