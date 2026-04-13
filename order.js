@@ -2420,13 +2420,20 @@ function updateSummary(prodTotal, addonTotal, total) {
         dateInput.min = d.toISOString().split('T')[0];
         if (!dateInput.value) dateInput.value = d.toISOString().split('T')[0];
     }
-    // ★ 챗봇 견적서 PDF 링크 표시
+    // ★ 챗봇 견적서 PDF 링크 표시 — 현재 장바구니에 챗봇 견적 아이템이 있을 때만
     const _quotePdfUrl = localStorage.getItem('chameleon_quote_pdf_url');
     const _quotePdfLink = document.getElementById('cartQuotePdfLink');
     const _quotePdfBtn = document.getElementById('cartQuotePdfBtn');
-    if (_quotePdfLink && _quotePdfBtn && _quotePdfUrl) {
-        _quotePdfBtn.href = _quotePdfUrl;
-        _quotePdfLink.style.display = 'block';
+    const _hasChatQuoteItems = cartData.some(i => i.product && i.product._quote_item);
+    if (_quotePdfLink && _quotePdfBtn) {
+        if (_quotePdfUrl && _hasChatQuoteItems) {
+            _quotePdfBtn.href = _quotePdfUrl;
+            _quotePdfLink.style.display = 'block';
+        } else {
+            _quotePdfLink.style.display = 'none';
+            // 챗봇 견적 아이템이 없으면 오래된 URL 제거 (다른 상품 장바구니에 영향 방지)
+            if (!_hasChatQuoteItems && _quotePdfUrl) localStorage.removeItem('chameleon_quote_pdf_url');
+        }
     }
 
     const displayTotal = finalTotal + quoteShipping;
