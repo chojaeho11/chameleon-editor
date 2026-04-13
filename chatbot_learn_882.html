@@ -692,6 +692,35 @@ function getSb() { return sb; }
             if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) {}
             var messages = (d && d.messages) || [];
             var room = (d && d.room) || {};
+
+            // 같은 고객의 이전 대화 조회 (customer_name 매칭)
+            var priorRooms = [];
+            var priorMsgsByRoom = {};
+            try {
+                if (room.customer_name && room.customer_name.trim()) {
+                    var { data: others } = await sb.from('chat_rooms')
+                        .select('id, customer_name, site_lang, source, created_at')
+                        .eq('customer_name', room.customer_name)
+                        .neq('id', roomId)
+                        .or('source.like.bot-%,source.like.chatbot%,source.like.ai-%,source.like.embed-%')
+                        .not('source', 'like', 'services-hub%')
+                        .order('created_at', { ascending: true })
+                        .limit(20);
+                    priorRooms = others || [];
+                    if (priorRooms.length > 0) {
+                        var ids = priorRooms.map(function(r){return r.id});
+                        var { data: pm } = await sb.from('chat_messages')
+                            .select('room_id, sender_type, sender_name, message, created_at')
+                            .in('room_id', ids)
+                            .order('created_at', { ascending: true })
+                            .limit(600);
+                        (pm || []).forEach(function(m) {
+                            if (!priorMsgsByRoom[m.room_id]) priorMsgsByRoom[m.room_id] = [];
+                            priorMsgsByRoom[m.room_id].push(m);
+                        });
+                    }
+                }
+            } catch(e) { console.warn('prior rooms load fail:', e); }
             var isNonKr = _forceLang !== 'kr';
 
             if (!messages.length) { detail.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">메시지 없음</div>'; return; }
@@ -701,6 +730,34 @@ function getSb() { return sb; }
             h += ' <span style="font-size:11px;color:#64748b;">'+new Date(room.created_at).toLocaleString('ko-KR')+'</span></div>';
             if (isNonKr) h += '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;">해외 ('+room.site_lang+')</span>';
             h += '</div>';
+
+            // 이전 대화 섹션 (접힌 상태로 상단에 표시)
+            if (priorRooms.length > 0) {
+                h += '<div style="margin-bottom:14px;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:10px;">';
+                h += '<div style="font-size:12px;font-weight:800;color:#854d0e;margin-bottom:8px;">📜 같은 고객의 이전 대화 ('+priorRooms.length+'건)</div>';
+                priorRooms.forEach(function(pr, pIdx) {
+                    var pmsgs = priorMsgsByRoom[pr.id] || [];
+                    var pTime = new Date(pr.created_at).toLocaleString('ko-KR');
+                    var detailId = 'qaPrior_' + pIdx;
+                    h += '<details style="margin-bottom:4px;">';
+                    h += '<summary style="cursor:pointer;font-size:12px;font-weight:700;color:#713f12;padding:4px 6px;">';
+                    h += '🕐 ' + pTime + ' <span style="color:#a16207;font-weight:500;">(' + pmsgs.length + '건)</span>';
+                    h += '</summary>';
+                    h += '<div style="padding:8px 6px;display:flex;flex-direction:column;gap:4px;">';
+                    pmsgs.forEach(function(pm) {
+                        var pIsUser = pm.sender_type === 'customer';
+                        var pIsBot = pm.sender_type === 'chatbot';
+                        var ptxt = qaEsc((pm.message || '').replace(/<!--PRODUCTS:.*?-->/g, '').trim().substring(0, 300));
+                        var plabel = pIsUser ? '👤' : pIsBot ? '🦎' : '👨‍💼';
+                        var pbg = pIsUser ? '#dbeafe' : pIsBot ? '#ede9fe' : '#e0e7ff';
+                        h += '<div style="background:' + pbg + ';padding:6px 10px;border-radius:8px;font-size:11px;color:#1e293b;line-height:1.5;">';
+                        h += '<span style="font-weight:700;margin-right:4px;">' + plabel + '</span>' + ptxt;
+                        h += '</div>';
+                    });
+                    h += '</div></details>';
+                });
+                h += '</div>';
+            }
 
             h += '<div style="display:flex;flex-direction:column;gap:8px;">';
             messages.forEach(function(m, idx) {
