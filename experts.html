@@ -277,9 +277,16 @@ async function loadExperts(){
     const{data,error}=await q;
     const grid=document.getElementById('expertGrid');
     if(error||!data||data.length===0){grid.innerHTML=`<div class="empty"><i class="fa-solid fa-wrench"></i>${t('empty')}</div>`;return;}
-    grid.innerHTML=data.map(e=>`
+    const expProfMap = window.CMAvatar ? await CMAvatar.loadProfiles(sb, data.map(e=>e.user_id)) : {};
+    grid.innerHTML=data.map(e=>{
+        const up = expProfMap[e.user_id] || null;
+        const photoSrc = e.photo_url || up?.avatar_url;
+        const avatarHtml = photoSrc
+            ? `<img src="${esc(photoSrc)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+            : `<i class="fa-solid fa-user"></i>`;
+        return `
         <div class="expert-card">
-            <div class="expert-avatar">${e.photo_url?`<img src="${esc(e.photo_url)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`:`<i class="fa-solid fa-user"></i>`}</div>
+            <div class="expert-avatar">${avatarHtml}</div>
             <h3>${esc(e.display_name)} ${e.verified?'<i class="fa-solid fa-circle-check" style="color:#6366f1;font-size:14px;" title="'+t('verified')+'"></i>':''}</h3>
             <span class="cat-label">${catName(e.category)}</span>
             <div class="expert-rating">
@@ -289,7 +296,7 @@ async function loadExperts(){
             <div class="expert-meta"><i class="fa-solid fa-location-dot"></i> ${esc(e.city||'')}</div>
             <div class="expert-rate">${e.hourly_rate?Number(e.hourly_rate).toLocaleString()+' '+t('perHour'):''}</div>
         </div>
-    `).join('');
+    `;}).join('');
 }
 
 async function submitRequest(){

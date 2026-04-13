@@ -4,7 +4,7 @@
     const LANG = (window.__LANG || document.documentElement.lang || 'ko').toLowerCase();
 
     const MENU = [
-        { path: '/services',       i: 'fa-th-large',         t: { ko:'서비스 허브', ja:'サービスハブ', en:'Hub',       zh:'服务中心', es:'Centro',    de:'Hub',       fr:'Hub' } },
+        { path: '/services',       i: 'fa-house',            t: { ko:'서비스홈',     ja:'サービスホーム', en:'Service Home', zh:'服务首页', es:'Inicio',    de:'Start',     fr:'Accueil' } },
         { path: '/community',      i: 'fa-users',            t: { ko:'지역 커뮤니티', ja:'コミュニティ', en:'Community', zh:'社区',     es:'Comunidad', de:'Community', fr:'Communauté' } },
         { path: '/market',         i: 'fa-store',            t: { ko:'중고장터',   ja:'中古市場',     en:'Market',    zh:'二手',     es:'Mercado',   de:'Markt',     fr:'Marché' } },
         { path: '/jobs',           i: 'fa-briefcase',        t: { ko:'타임알바',   ja:'バイト',       en:'Jobs',      zh:'兼职',     es:'Empleos',   de:'Jobs',      fr:'Emplois' } },
@@ -49,6 +49,17 @@
         const existingNav = document.querySelector('nav.nav');
         if (existingNav && existingNav.parentNode) {
             existingNav.parentNode.insertBefore(bar, existingNav.nextSibling);
+            // 로고 옆에 "서비스홈" 링크 추가 (첫 번째 항목 텍스트 재활용)
+            const logo = existingNav.querySelector('.nav-logo');
+            if (logo && !existingNav.querySelector('.cnav-logo-home')) {
+                const homeLabel = MENU[0].t[LANG] || MENU[0].t.en;
+                const badge = document.createElement('a');
+                badge.href = '/services' + q;
+                badge.className = 'cnav-logo-home';
+                badge.innerHTML = `<i class="fa-solid fa-house"></i> ${homeLabel}`;
+                badge.style.cssText = 'margin-left:10px;padding:5px 12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-radius:999px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 3px 10px -2px rgba(124,58,237,0.4);';
+                logo.parentNode.insertBefore(badge, logo.nextSibling);
+            }
         } else {
             (document.body.firstChild ? document.body.insertBefore(bar, document.body.firstChild) : document.body.appendChild(bar));
         }
