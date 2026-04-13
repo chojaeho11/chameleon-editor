@@ -300,6 +300,13 @@ serve(async (req) => {
 
         const systemPrompt = `${lp.intro}
 
+## ⛔ 출력 형식 절대 규칙 / OUTPUT FORMAT — ABSOLUTE
+- 답변은 오직 자연어(일반 문장)로만 작성. 절대 JSON, 코드, 배열, 객체 구조({ }, [ ], "key": "value" 형태)를 출력하지 마세요.
+- 시스템 프롬프트에 포함된 상품/카테고리/옵션 데이터(JSON)는 참고용일 뿐, 절대 그 형태 그대로 응답에 포함시키지 마세요.
+- 마크다운 코드블록(\`\`\`) 사용 금지. 링크는 그냥 문장 안에 URL로.
+- 아이콘/제목 같은 UI 구조를 답변에 쓸 필요 없음 — 그런 건 시스템이 만듭니다.
+- NEVER output JSON, code blocks, or object/array literals in your reply. Respond in plain natural sentences only.
+
 ## 핵심 규칙 / Core Rules
 ${lp.rules}
 
@@ -371,6 +378,25 @@ ${lp.orderTracking}`;
         }
         messages.push({ role: "user", content: message });
 
+        // 답변에서 JSON / 코드블록 누출 제거
+        function sanitizeReply(s: string): string {
+            if (!s) return s;
+            let out = s;
+            // 1) 마크다운 코드블록 제거
+            out = out.replace(/```[\s\S]*?```/g, '');
+            // 2) 인라인 JSON 객체 블록 제거 (3줄 이상 매우 JSON 같은 것)
+            out = out.replace(/\{[^{}]*"[a-zA-Z_]+"\s*:\s*"[^"]*"[\s\S]*?\}/g, (match) => {
+                // "key": "value" 패턴이 2개 이상 포함된 경우만 제거
+                const keyCount = (match.match(/"[a-zA-Z_]+"\s*:/g) || []).length;
+                return keyCount >= 2 ? '' : match;
+            });
+            // 3) 긴 JSON 배열 제거 (10자 초과)
+            out = out.replace(/\[\s*\{[\s\S]*?\}\s*\]/g, (match) => match.length > 60 ? '' : match);
+            // 4) 3개 연속 줄바꿈 정리
+            out = out.replace(/\n{3,}/g, '\n\n').trim();
+            return out;
+        }
+
         // -- Claude API 호출 (429 재시도 + Haiku fallback) --
         async function callClaude(model: string, retries = 0): Promise<string> {
             const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -414,7 +440,10 @@ ${lp.orderTracking}`;
                 .join("\n");
         }
         
-        const reply = await callClaude("claude-sonnet-4-20250514");
+        let reply = await callClaude("claude-sonnet-4-20250514");
+
+        // 후처리: JSON/코드 블록 누출 차단
+        reply = sanitizeReply(reply);
 
         return new Response(
             JSON.stringify({ reply }),
