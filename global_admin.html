@@ -225,6 +225,7 @@
             <div class="nav-label">Management</div>
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
             <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
+            <li class="nav-item" onclick="showSection('sec-safetx', this); loadSafeTxAdmin();"><i class="fa-solid fa-building-columns"></i> 안전거래 송금</li>
 
             <div class="nav-label">Assets</div>
             <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 & 로고</li>
@@ -1676,7 +1677,22 @@
             <span id="memberPageLabel" style="font-size:13px; font-weight:bold; color:#334155;">Page 1</span>
             <button class="btn btn-outline btn-sm" onclick="changeMemberPage(1)">다음 ▶</button>
         </div>
-    </div> </div> <div id="sec-templates" class="section">
+    </div> </div>
+
+    <!-- ==== SECTION: 안전거래 송금 관리 ==== -->
+    <div id="sec-safetx" class="section">
+        <h2 style="font-size:22px;font-weight:900;margin-bottom:6px;">🏦 안전거래 송금 관리</h2>
+        <p style="color:#64748b;font-size:13px;margin-bottom:20px;">구매자 수령 확인된 거래를 판매자 계좌로 송금 처리합니다. 5% 수수료 자동 공제.</p>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="loadSafeTxAdmin('received')">📦 송금 대기 (received)</button>
+            <button class="btn btn-outline btn-sm" onclick="loadSafeTxAdmin('paid')">💳 결제완료/배송중 (paid)</button>
+            <button class="btn btn-outline btn-sm" onclick="loadSafeTxAdmin('settled')">✅ 송금완료 (settled)</button>
+            <button class="btn btn-outline btn-sm" onclick="loadSafeTxAdmin('all')">전체</button>
+        </div>
+        <div id="safeTxList" style="background:#fff;border-radius:14px;padding:14px;"></div>
+    </div>
+
+    <div id="sec-templates" class="section">
     <div class="product-layout">
         <div class="card tpl-form">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">

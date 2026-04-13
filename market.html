@@ -152,6 +152,7 @@ textarea.form-input{resize:vertical;min-height:80px;}
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('browse')" id="tabBrowse"></button>
         <button class="tab-btn" onclick="switchTab('sell')" id="tabSell"></button>
+        <button class="tab-btn" onclick="switchTab('mytx')" id="tabMyTx">📦 내 거래</button>
     </div>
 
     <!-- Browse -->
@@ -162,6 +163,11 @@ textarea.form-input{resize:vertical;min-height:80px;}
             <select id="filterCity" onchange="loadItems()"><option value="">All</option></select>
         </div>
         <div class="item-grid" id="itemGrid"></div>
+    </div>
+
+    <!-- My Transactions -->
+    <div id="mytxTab" style="display:none">
+        <div id="mytxList" style="max-width:760px;margin:20px auto;"></div>
     </div>
 
     <!-- Sell -->
@@ -181,6 +187,15 @@ textarea.form-input{resize:vertical;min-height:80px;}
             <div class="form-group" style="display:flex;align-items:center;gap:10px;">
                 <input type="checkbox" id="fNego" checked style="width:18px;height:18px;accent-color:#f59e0b;">
                 <label for="fNego" id="lblNego" style="margin:0;cursor:pointer;"></label>
+            </div>
+            <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:12px;">
+                <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:8px;">🏦 판매자 입금 계좌 (안전거래 판매 대금 수령용)</div>
+                <div class="form-row">
+                    <div class="form-group"><label style="font-size:11px;">은행</label><input class="form-input" id="fBankName" placeholder="예: 국민은행"></div>
+                    <div class="form-group"><label style="font-size:11px;">예금주</label><input class="form-input" id="fAccHolder" placeholder="홍길동"></div>
+                </div>
+                <div class="form-group"><label style="font-size:11px;">계좌번호</label><input class="form-input" id="fAccNum" placeholder="123-456-789012"></div>
+                <div style="font-size:11px;color:#78350f;">수수료 5%를 공제한 95%가 구매자 수령 확인 후 이 계좌로 송금됩니다</div>
             </div>
             <button class="submit-btn" onclick="postItem()" id="btnSubmit"></button>
         </div>
@@ -311,7 +326,57 @@ async function doLogin(){const e=document.getElementById('authEmail').value.trim
 async function doSignup(){const e=document.getElementById('authEmail').value.trim(),p=document.getElementById('authPw').value;const{error}=await sb.auth.signUp({email:e,password:p});if(error){document.getElementById('authError').textContent=error.message;document.getElementById('authError').style.display='block';return;}document.getElementById('authError').style.display='none';toast(t('signup')+' OK!');checkAuth();}
 async function doLogout(){await sb.auth.signOut();currentUser=null;checkAuth();}
 
-function switchTab(tab){document.getElementById('browseTab').style.display=tab==='browse'?'block':'none';document.getElementById('sellTab').style.display=tab==='sell'?'block':'none';document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='browse'?0:1)));}
+function switchTab(tab){
+    document.getElementById('browseTab').style.display=tab==='browse'?'block':'none';
+    document.getElementById('sellTab').style.display=tab==='sell'?'block':'none';
+    document.getElementById('mytxTab').style.display=tab==='mytx'?'block':'none';
+    const idx={browse:0,sell:1,mytx:2}[tab]||0;
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+    if(tab==='mytx')loadMyTx();
+}
+
+async function loadMyTx(){
+    const box=document.getElementById('mytxList');
+    if(!currentUser){box.innerHTML='<div class="empty" style="padding:40px;text-align:center;color:#64748b;">로그인이 필요합니다</div>';return;}
+    box.innerHTML='<div style="text-align:center;padding:30px;">로딩 중...</div>';
+    const [buyerRes,sellerRes]=await Promise.all([
+        sb.from('community_safe_transactions').select('*').eq('buyer_id',currentUser.id).order('created_at',{ascending:false}),
+        sb.from('community_safe_transactions').select('*').eq('seller_id',currentUser.id).order('created_at',{ascending:false})
+    ]);
+    const all=[...(buyerRes.data||[]).map(t=>({...t,role:'buyer'})),...(sellerRes.data||[]).map(t=>({...t,role:'seller'}))]
+        .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    if(all.length===0){box.innerHTML='<div class="empty" style="padding:40px;text-align:center;color:#64748b;">거래 내역이 없습니다</div>';return;}
+    const itemIds=[...new Set(all.map(t=>t.item_id).filter(Boolean))];
+    const{data:items}=await sb.from('community_secondhand').select('id,title').in('id',itemIds);
+    const itemMap={};(items||[]).forEach(i=>itemMap[i.id]=i);
+    const statusLabel={
+        pending_payment:{txt:'결제 대기',color:'#64748b'},
+        paid:{txt:'결제완료 · 배송중',color:'#f59e0b'},
+        received:{txt:'수령확인 · 송금대기',color:'#6366f1'},
+        settled:{txt:'✅ 송금완료',color:'#10b981'},
+        cancelled:{txt:'취소',color:'#ef4444'}
+    };
+    box.innerHTML=all.map(tx=>{
+        const it=itemMap[tx.item_id]||{title:'(상품 정보 없음)'};
+        const sl=statusLabel[tx.status]||{txt:tx.status,color:'#64748b'};
+        const roleLabel=tx.role==='buyer'?'구매':'판매';
+        const feeLine=tx.role==='seller'?`수수료 ${fmtPrice(tx.fee||0)} · 수령액 ${fmtPrice((tx.amount||0)-(tx.fee||0))}`:`총 ${fmtPrice(tx.amount||0)}`;
+        return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                <div>
+                    <span style="display:inline-block;background:${tx.role==='buyer'?'#dbeafe':'#fce7f3'};color:${tx.role==='buyer'?'#1e40af':'#be185d'};font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">${roleLabel}</span>
+                    <span style="font-weight:800;margin-left:6px;">${esc(it.title)}</span>
+                </div>
+                <span style="color:${sl.color};font-size:12px;font-weight:700;">${sl.txt}</span>
+            </div>
+            <div style="font-size:13px;color:#475569;">${feeLine}원 · ${new Date(tx.created_at).toLocaleDateString()}</div>
+            ${tx.role==='buyer'&&tx.status==='paid'?`<button onclick="confirmReceived('${tx.id}')" style="margin-top:10px;padding:10px 16px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;">📦 수령 확인 (판매자 송금 진행)</button>`:''}
+            ${tx.role==='seller'&&tx.status==='received'?`<div style="margin-top:8px;padding:8px 12px;background:#f0f9ff;border-radius:8px;font-size:12px;color:#0369a1;">💰 구매자가 수령 확인했습니다. 관리자 검토 후 계좌로 송금됩니다.</div>`:''}
+            ${tx.role==='seller'&&tx.status==='settled'?`<div style="margin-top:8px;padding:8px 12px;background:#ecfdf5;border-radius:8px;font-size:12px;color:#065f46;">✅ 송금 완료 (${tx.payout_sent_at?new Date(tx.payout_sent_at).toLocaleDateString():'-'})</div>`:''}
+        </div>`;
+    }).join('');
+}
+window.loadMyTx=loadMyTx;
 
 async function loadItems(){
     const cat=document.getElementById('filterCat').value;
@@ -597,6 +662,10 @@ async function postItem(){
     if(!currentUser){toast(t('loginFirst'));return;}
     const title=document.getElementById('fTitle').value.trim();
     if(!title){toast(t('title')+' required');return;}
+    const bankName=document.getElementById('fBankName').value.trim();
+    const accHolder=document.getElementById('fAccHolder').value.trim();
+    const accNum=document.getElementById('fAccNum').value.trim();
+    if(!bankName||!accHolder||!accNum){toast('판매자 입금 계좌 정보를 모두 입력하세요');return;}
     const{error}=await sb.from('community_secondhand').insert({
         seller_id:currentUser.id,
         title,
@@ -609,13 +678,38 @@ async function postItem(){
         country:LANG==='ja'?'JP':LANG==='en'?'US':'KR'
     });
     if(error){toast(error.message);return;}
-    // Ensure temperature record exists
+    // 판매자 프로필에 계좌 정보 저장 (재사용)
+    await sb.from('profiles').update({bank_name:bankName,account_holder:accHolder,account_number:accNum}).eq('id',currentUser.id);
     if(currentUser){
         await sb.from('community_user_temperature').upsert({user_id:currentUser.id},{onConflict:'user_id',ignoreDuplicates:true});
     }
     toast(t('posted'));document.getElementById('fTitle').value='';document.getElementById('fDesc').value='';document.getElementById('fPrice').value='';
     switchTab('browse');loadItems();
 }
+
+// 판매 탭 열 때 기존 계좌 정보 프리필
+async function prefillBank(){
+    if(!currentUser)return;
+    const{data}=await sb.from('profiles').select('bank_name,account_holder,account_number').eq('id',currentUser.id).maybeSingle();
+    if(data){
+        if(data.bank_name)document.getElementById('fBankName').value=data.bank_name;
+        if(data.account_holder)document.getElementById('fAccHolder').value=data.account_holder;
+        if(data.account_number)document.getElementById('fAccNum').value=data.account_number;
+    }
+}
+setTimeout(prefillBank,500);
+
+// 구매자: 수령 확인 → status='received' → 관리자에게 송금 요청 (self-serve)
+window.confirmReceived=async function(txId){
+    if(!confirm('상품을 정상적으로 수령하셨나요?\n확인 시 판매자에게 송금 절차가 시작됩니다.'))return;
+    const{error}=await sb.from('community_safe_transactions').update({
+        status:'received',
+        received_confirmed_at:new Date().toISOString()
+    }).eq('id',txId).eq('buyer_id',currentUser.id);
+    if(error){toast(error.message);return;}
+    toast('✅ 수령 확인 완료. 판매자 송금 예정');
+    if(window.loadMyTx)loadMyTx();
+};
 
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 
