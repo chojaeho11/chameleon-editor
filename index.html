@@ -8097,17 +8097,23 @@ async function renderQuickMenu() {
         // ★ 기본 활성 탭: 허니콤보드 우선, 없으면 첫 번째 탭
         // 허니콤 대분류 코드 = 이름에 "허니콤" 또는 "honeycomb"가 들어간 소분류의 top_category_code
         let _defaultTabBtn = null;
+        const _REDIRECT_TOPS = ['Wholesale Board Prices', 'paper_display', 'user_artwork'];
         try {
             const _hcSub = (subCats || []).find(s => {
                 const n = (s.name || '').toLowerCase();
                 return n.includes('허니콤') || n.includes('honeycomb') || n.includes('ハニカム');
             });
             const _hcTopCode = _hcSub && _hcSub.top_category_code;
-            if (_hcTopCode) {
+            if (_hcTopCode && !_REDIRECT_TOPS.includes(_hcTopCode)) {
                 _defaultTabBtn = tabContainer.querySelector('.cat-tab[data-top-code="' + _hcTopCode + '"]');
             }
         } catch (e) { /* ignore */ }
-        if (!_defaultTabBtn) _defaultTabBtn = tabContainer.firstChild;
+        if (!_defaultTabBtn) {
+            const _tabs = tabContainer.querySelectorAll('.cat-tab');
+            for (const t of _tabs) {
+                if (!_REDIRECT_TOPS.includes(t.getAttribute('data-top-code'))) { _defaultTabBtn = t; break; }
+            }
+        }
         if (_defaultTabBtn) _defaultTabBtn.click();
 
         // ★ 상단 카테고리 메뉴 바 채우기
