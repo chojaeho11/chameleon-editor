@@ -248,10 +248,10 @@ const T={
     msgSent:{ko:'메시지가 전송되었습니다',ja:'メッセージを送信しました',en:'Message sent'},
     phone:{ko:'전화번호',ja:'電話番号',en:'Phone'},
     photos:{ko:'상세 사진',ja:'詳細写真',en:'Photos'},
-    safeTitle:{ko:'안전거래 (카드결제)',ja:'安全取引 (カード決済)',en:'Safe Transaction (Card)'},
-    safeDesc:{ko:'카드결제로 진행. 카멜레온이 중간에서 보관 → 물건 수령 확인 후 판매자에게 지급.',ja:'カード決済で進行。カメレオンが一時預かり → 商品確認後に支払い。',en:'Card payment. Chameleon holds in escrow → released after buyer confirms receipt.'},
-    safeFee:{ko:'합계 수수료 20% (부가세 10% + 카드 5% + 안전거래 5%)',ja:'合計手数料20% (消費税10% + カード5% + 安全取引5%)',en:'Total fee 20% (VAT 10% + Card 5% + Safe 5%)'},
-    safeBuy:{ko:'카드로 안전결제',ja:'カードで安全決済',en:'Pay Safely with Card'},
+    safeTitle:{ko:'안전거래 (계좌이체)',ja:'安全取引 (銀行振込)',en:'Safe Transaction (Bank Transfer)'},
+    safeDesc:{ko:'계좌이체로 입금 → 카멜레온이 보관 → 수령 확인 후 수수료 5%를 제외한 금액을 판매자에게 송금합니다.',ja:'銀行振込で入金 → カメレオンが一時預かり → 受取確認後、手数料5%を差し引いた金額を売り手に送金します。',en:'Bank transfer → held by Chameleon → once buyer confirms receipt, seller receives amount minus 5% fee.'},
+    safeFee:{ko:'수수료 5% (판매자 송금 시 자동 공제)',ja:'手数料5% (売り手送金時に自動差引)',en:'5% fee (deducted when sending to seller)'},
+    safeBuy:{ko:'계좌이체로 안전결제',ja:'銀行振込で安全決済',en:'Pay Safely with Bank Transfer'},
     temp:{ko:'온도',ja:'温度',en:'Temp'},
     sellerProfile:{ko:'판매자 정보',ja:'出品者情報',en:'Seller Profile'},
     close:{ko:'닫기',ja:'閉じる',en:'Close'},
@@ -414,8 +414,9 @@ async function showDetail(id){
             <p>${t('safeDesc')}</p>
             <div class="fee-note">${t('safeFee')}</div>
             <button class="safe-tx-btn" onclick="startSafeTx('${item.id}',${item.price})" style="margin-top:10px;">
-                <i class="fa-solid fa-credit-card"></i> ${t('safeBuy')} (${fmtPrice(Math.round(item.price*1.2))} ${t('won')})
+                <i class="fa-solid fa-building-columns"></i> ${t('safeBuy')} (${fmtPrice(item.price)} ${t('won')})
             </button>
+            <div style="font-size:11px;color:#78350f;margin-top:6px;text-align:center;">판매자 수령액: ${fmtPrice(Math.round(item.price*0.95))} ${t('won')} (5% 공제 후)</div>
         </div>
         `:''}
     `;
@@ -464,9 +465,10 @@ async function startSafeTx(itemId,amount){
     if(!currentUser){toast(t('loginFirst'));return;}
     const item=(window._items||[]).find(x=>x.id===itemId);
     if(!item){toast('item not found');return;}
-    const total=Math.round(amount*1.2);
-    const fee=total-amount;
-    if(!confirm(`안전결제 ${fmtPrice(total)}원\n(상품가 ${fmtPrice(amount)} + 수수료 ${fmtPrice(fee)} = 20%)\n\n카드결제를 진행합니다.`))return;
+    const total=amount;                          // 구매자가 이체하는 금액 = 상품가 그대로
+    const fee=Math.round(amount*0.05);           // 플랫폼 수수료 5%
+    const sellerReceives=total-fee;              // 판매자 수령액 = 95%
+    if(!confirm(`계좌이체로 ${fmtPrice(total)}원 입금합니다.\n\n상품가: ${fmtPrice(amount)}원\n수수료(5%): ${fmtPrice(fee)}원 (판매자 송금 시 공제)\n판매자 수령액: ${fmtPrice(sellerReceives)}원\n\n계속하시겠습니까?`))return;
 
     // 1. safe_transactions에 pending_payment 레코드 생성
     const {data:tx,error}=await sb.from('community_safe_transactions').insert({
@@ -475,7 +477,7 @@ async function startSafeTx(itemId,amount){
         seller_id:item.seller_id,
         amount:total,
         fee:fee,
-        payment_method:'card',
+        payment_method:'transfer',
         status:'pending_payment'
     }).select('id').single();
     if(error){toast(error.message);return;}
@@ -495,7 +497,7 @@ async function startSafeTx(itemId,amount){
         if(!window.TossPayments){toast('Toss SDK 로딩 실패');return;}
         try{
             const toss=TossPayments(pg.clientKey);
-            await toss.requestPayment('카드',{
+            await toss.requestPayment('계좌이체',{
                 amount:total,
                 orderId:'SAFE-'+Date.now()+'-'+tx.id,
                 orderName:orderName,

@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
     const itemRows = await itemRes.json()
     const item = Array.isArray(itemRows) ? itemRows[0] : null
     if (!item) throw new Error('item not found')
-    const expectedTotal = Math.round(item.price * 1.2) // 20% 수수료
+    // 구매자 이체 금액 = 상품가 그대로 (수수료 5%는 판매자 송금 시 공제)
+    const expectedTotal = Number(item.price)
     if (Number(amount) !== expectedTotal) {
       throw new Error(`amount mismatch: expected ${expectedTotal}, got ${amount}`)
     }
