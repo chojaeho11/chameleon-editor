@@ -27,8 +27,8 @@ body{font-family:'Pretendard',sans-serif;background:linear-gradient(135deg,#ede9
 .hero p{color:#64748b;font-size:14px;}
 
 .selected-box{background:#fff;border-radius:24px;padding:20px;box-shadow:0 12px 40px -10px rgba(168,85,247,0.25);border:1.5px solid #f3e8ff;margin-bottom:20px;display:flex;align-items:center;gap:20px;}
-.selected-img{width:110px;height:110px;border-radius:24px;background:#f5f3ff;background-size:cover;background-position:center;flex-shrink:0;border:3px solid #a855f7;box-shadow:0 6px 20px -4px rgba(168,85,247,0.4);}
-.selected-empty{width:110px;height:110px;border-radius:24px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;color:#c4b5fd;font-size:42px;flex-shrink:0;border:3px dashed #c4b5fd;}
+.selected-img{width:110px;height:143px;border-radius:20px;background:#f5f3ff;background-size:cover;background-position:center;flex-shrink:0;border:3px solid #a855f7;box-shadow:0 6px 20px -4px rgba(168,85,247,0.4);}
+.selected-empty{width:110px;height:143px;border-radius:20px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;color:#c4b5fd;font-size:42px;flex-shrink:0;border:3px dashed #c4b5fd;}
 .selected-text{flex:1;min-width:0;}
 .selected-text .label{font-size:11px;color:#94a3b8;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
 .selected-text .title{font-size:18px;font-weight:900;color:#581c87;line-height:1.3;}
@@ -36,7 +36,7 @@ body{font-family:'Pretendard',sans-serif;background:linear-gradient(135deg,#ede9
 
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;background:#fff;border-radius:24px;padding:16px;box-shadow:0 8px 30px -8px rgba(0,0,0,0.08);}
 @media(max-width:640px){.gallery{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;padding:12px;}}
-.ava-item{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;cursor:pointer;background:#f8fafc;border:3px solid transparent;transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s;}
+.ava-item{position:relative;aspect-ratio:1/1.3;border-radius:14px;overflow:hidden;cursor:pointer;background:#f8fafc;border:3px solid transparent;transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s;}
 .ava-item img{width:100%;height:100%;object-fit:cover;display:block;}
 .ava-item:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 10px 24px -8px rgba(168,85,247,0.35);}
 .ava-item.selected{border-color:#a855f7;transform:scale(1.04);box-shadow:0 10px 30px -6px rgba(168,85,247,0.55);}
@@ -90,7 +90,31 @@ body{font-family:'Pretendard',sans-serif;background:linear-gradient(135deg,#ede9
         </div>
         <div class="field">
             <label id="lblPhone">전화번호</label>
-            <input type="tel" id="inpPhone" placeholder="010-1234-5678">
+            <div style="display:flex;gap:8px;">
+                <select id="selCC" style="width:130px;padding:12px 8px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px;font-family:inherit;background:#fff;outline:none;">
+                    <option value="+82">🇰🇷 +82</option>
+                    <option value="+81">🇯🇵 +81</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+86">🇨🇳 +86</option>
+                    <option value="+212">🇲🇦 +212</option>
+                    <option value="+966">🇸🇦 +966</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+65">🇸🇬 +65</option>
+                    <option value="+60">🇲🇾 +60</option>
+                    <option value="+66">🇹🇭 +66</option>
+                    <option value="+84">🇻🇳 +84</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+61">🇦🇺 +61</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+52">🇲🇽 +52</option>
+                </select>
+                <input type="tel" id="inpPhone" placeholder="10-1234-5678" style="flex:1;">
+            </div>
         </div>
         <div class="field">
             <label id="lblPw">비밀번호 (6자 이상)</label>
@@ -150,9 +174,7 @@ const AVATARS=[
     'd65994b43d4e223c5fa0495f084c7385.jpg',
     'd9f7509e9d7ae342d05fc65adc57ac74.jpg',
     'e1def68bb6012e5cd8842acc1bcc3614.jpg',
-    'e3c00131ff552529c6ba8cd2df24ae41.jpg',
-    'e9592690192c8ffe52cd4b354a6a17dc.jpg',
-    'fc77e556f6bcf453354c65839898548f.jpg'
+    'e3c00131ff552529c6ba8cd2df24ae41.jpg'
 ].map(f=>'/avatar/'+f);
 
 let selectedIdx=null;
@@ -187,24 +209,62 @@ function showMsg(text,cls){
     document.getElementById('msgBox').innerHTML=`<div class="msg ${cls}">${text}</div>`;
 }
 
+// 사이트 기본 국가 코드 자동 선택
+const HOST=location.hostname;
+const DEFAULT_CC=HOST.includes('cafe0101')?'+81':HOST.includes('cafe3355')||HOST.includes('chameleon.design')?'+1':'+82';
+document.getElementById('selCC').value=DEFAULT_CC;
+
+// 로그인 상태 확인 — 기존 고객이면 가입폼 숨기고 아바타 저장만
+let EXISTING_USER=null;
+(async()=>{
+    try{
+        const {data:{user}}=await sb.auth.getUser();
+        if(user){
+            EXISTING_USER=user;
+            // 현재 아바타 미리 선택
+            const {data:prof}=await sb.from('profiles').select('avatar_url,username').eq('id',user.id).maybeSingle();
+            if(prof?.avatar_url){
+                const i=AVATARS.indexOf(prof.avatar_url);
+                if(i>=0) window.pickAvatar(i);
+            }
+            // 가입폼 -> 저장폼으로 변환
+            const form=document.querySelector('.signup-form');
+            form.innerHTML=`<h2>🎨 ${L.selLabel}</h2>
+                <p style="font-size:13px;color:#64748b;margin-bottom:14px;">${prof?.username?prof.username+' 님':''} — 원하는 아바타를 골라 저장하세요.</p>
+                <button class="btn-primary" id="btnSave">💾 ${LANG==='ja'?'アバターを保存':LANG==='en'?'Save Avatar':'아바타 저장'}</button>
+                <div id="msgBox"></div>`;
+            document.getElementById('btnSave').addEventListener('click',async()=>{
+                if(selectedIdx===null){showMsg(L.errPick,'err');return;}
+                const btn=document.getElementById('btnSave');btn.disabled=true;
+                const {error}=await sb.from('profiles').update({avatar_url:AVATARS[selectedIdx]}).eq('id',user.id);
+                if(error){showMsg(L.err+': '+error.message,'err');btn.disabled=false;return;}
+                showMsg(L.ok,'ok');
+                setTimeout(()=>{const back=new URLSearchParams(location.search).get('back')||'/services';location.href=back;},1200);
+            });
+        }
+    }catch(e){console.warn(e);}
+})();
+
 async function signup(){
     if(selectedIdx===null){showMsg(L.errPick,'err');return;}
     const nick=document.getElementById('inpNick').value.trim();
+    const cc=document.getElementById('selCC').value;
     const phoneRaw=document.getElementById('inpPhone').value.trim();
     const pw=document.getElementById('inpPw').value;
     const pw2=document.getElementById('inpPw2').value;
 
     if(!nick){showMsg(L.errNick,'err');return;}
-    const phone=phoneRaw.replace(/[^\d]/g,'');
-    if(phone.length<9||phone.length>15){showMsg(L.errPhone,'err');return;}
+    const phoneDigits=phoneRaw.replace(/[^\d]/g,'').replace(/^0+/,'');
+    if(phoneDigits.length<7||phoneDigits.length>14){showMsg(L.errPhone,'err');return;}
+    const fullPhone=cc+phoneDigits;
     if(pw.length<6){showMsg(L.errPw,'err');return;}
     if(pw!==pw2){showMsg(L.errPwMatch,'err');return;}
 
     const btn=document.getElementById('btnSignup');
     btn.disabled=true;
     try{
-        const fakeEmail=`u${phone}@phone.chameleon.local`;
-        const {data,error}=await sb.auth.signUp({email:fakeEmail,password:pw,options:{data:{phone,nickname:nick,avatar_url:AVATARS[selectedIdx]}}});
+        const fakeEmail=`u${fullPhone.replace(/\+/g,'')}@phone.chameleon.local`;
+        const {data,error}=await sb.auth.signUp({email:fakeEmail,password:pw,options:{data:{phone:fullPhone,nickname:nick,avatar_url:AVATARS[selectedIdx]}}});
         if(error){
             const msg=error.message||'';
             if(msg.toLowerCase().includes('already')||msg.toLowerCase().includes('registered')){showMsg(L.errDup,'err');}
