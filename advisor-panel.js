@@ -517,15 +517,15 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
 
         /* Single services hub banner */
-        @keyframes dmBandPulse { 0%,100%{transform:scale(1);filter:drop-shadow(0 0 12px rgba(251,191,36,0.5));} 50%{transform:scale(1.04);filter:drop-shadow(0 0 22px rgba(251,191,36,0.9));} }
-        .dm-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 25%,#4338ca 50%,#7c3aed 75%,#059669 100%);}
-        .dm-hub-band{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:14px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e1b4b;font-size:34px;font-weight:900;letter-spacing:2px;font-family:'Arial Black','Helvetica',sans-serif;box-shadow:0 6px 20px -4px rgba(251,191,36,0.6),inset 0 2px 0 rgba(255,255,255,0.3);animation:dmBandPulse 2.4s ease-in-out infinite;position:relative;z-index:3;text-shadow:0 2px 0 rgba(255,255,255,0.3);}
+        @keyframes dmBandPulse { 0%,100%{text-shadow:0 0 16px rgba(186,230,253,0.55);} 50%{text-shadow:0 0 28px rgba(186,230,253,0.95),0 0 8px rgba(186,230,253,0.6);} }
+        .dm-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);background:linear-gradient(90deg,#2e1065 0%,#4c1d95 25%,#6d28d9 55%,#7c3aed 80%,#059669 100%);}
+        .dm-hub-band{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#bae6fd;font-size:38px;font-weight:900;letter-spacing:-1px;font-family:'Arial Black','Helvetica',sans-serif;animation:dmBandPulse 2.4s ease-in-out infinite;position:relative;z-index:3;}
         .dm-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
         .dm-hub-banner::before{content:'';position:absolute;top:-50px;right:-50px;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,0.2) 0%,transparent 70%);pointer-events:none;}
         .dm-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(16,185,129,0.15) 0%,transparent 70%);pointer-events:none;}
         .dm-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
-        .dm-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,0.3);line-height:1.25;}
-        .dm-hub-sub{font-size:12px;font-weight:500;opacity:0.88;line-height:1.5;}
+        .dm-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,0.3);line-height:1.25;}
+        .dm-hub-sub{font-size:16px;font-weight:700;color:#bae6fd;line-height:1.5;letter-spacing:0.2px;}
         .dm-hub-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.18);transition:all 0.22s;position:relative;z-index:2;}
         .dm-hub-banner:hover .dm-hub-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
         .dm-hub-banner:hover .dm-hub-cta i{transform:translateX(3px);}
@@ -534,9 +534,9 @@ export function renderShortcutButtons(containerId) {
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
             .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
-            .dm-hub-band{font-size:24px;padding:8px 12px;border-radius:10px;letter-spacing:1px;}
+            .dm-hub-band{font-size:28px;letter-spacing:-1px;}
             .dm-hub-title{font-size:14px;}
-            .dm-hub-sub{font-size:10.5px;}
+            .dm-hub-sub{font-size:13px;}
             .dm-hub-cta{display:none;}
         }
         </style>
