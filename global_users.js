@@ -23,14 +23,18 @@ window.loadMembers = async (isNewSearch = false) => {
 
     try {
 
-    // PRO 구독중 필터: subscriptions 에서 active user_ids 먼저 조회
+    // PRO 구독자 필터: subscriptions active 또는 profiles.role='subscriber' 모두 포함
     let proUserIds = null;
     if (roleVal === 'pro_active') {
         const { data: actSubs } = await sb.from('subscriptions')
             .select('user_id')
             .in('status', ['active', 'trialing']);
-        proUserIds = (actSubs || []).map(s => s.user_id);
-        if (proUserIds.length === 0) proUserIds = ['__none__']; // 조회결과 0개 유지
+        const subIds = (actSubs || []).map(s => s.user_id);
+        const { data: subRoleProfiles } = await sb.from('profiles')
+            .select('id').eq('role', 'subscriber');
+        const roleIds = (subRoleProfiles || []).map(p => p.id);
+        proUserIds = Array.from(new Set([...subIds, ...roleIds]));
+        if (proUserIds.length === 0) proUserIds = ['__none__'];
     }
 
     let query = sb.from('profiles').select('id, email, username, role, deposit, mileage, total_spend, logo_count, contributor_tier, penalty_reason, admin_memo, created_at, site', { count: 'exact' });
@@ -114,8 +118,7 @@ window.loadMembers = async (isNewSearch = false) => {
     try {
         const { data: subs } = await sb.from('subscriptions')
             .select('user_id, plan_type, status, current_period_end, created_at')
-            .in('user_id', memberIds)
-            .in('status', ['active', 'trialing']);
+            .in('user_id', memberIds);
         if (subs) {
             subs.forEach(s => {
                 // 한 유저에 복수 구독이 있으면 가장 긴 종료일 우선
@@ -163,23 +166,37 @@ window.loadMembers = async (isNewSearch = false) => {
 
         const siteFlag = m.site === 'JP' ? '🇯🇵' : m.site === 'US' ? '🇺🇸' : m.site === 'KR' ? '🇰🇷' : '🌐';
 
-        // PRO 구독 배지
+        // PRO 구독 배지 (subscriptions 레코드 또는 role=subscriber 양쪽 모두 표시)
         const sub = subMap[m.id];
         let subBadge = '';
-        if (sub) {
-            const planLabel = sub.plan_type === 'lifetime' ? '평생' : sub.plan_type === 'annual' ? '연간' : sub.plan_type === 'monthly' ? '월간' : sub.plan_type === 'signup_promo' ? '무료체험' : sub.plan_type;
+        if (sub || m.role === 'subscriber') {
+            const planType = sub?.plan_type || 'subscriber';
+            const planLabel = planType === 'lifetime' ? '평생' : planType === 'annual' ? '연간' : planType === 'monthly' ? '월간' : planType === 'signup_promo' ? '무료체험' : 'PRO';
             let remainText = '';
             let remainColor = '#10b981';
-            if (sub.plan_type === 'lifetime') {
-                remainText = '∞';
+            let endDate = null;
+
+            if (planType === 'lifetime') {
+                remainText = '∞ 평생';
                 remainColor = '#a855f7';
-            } else if (sub.current_period_end) {
-                const end = new Date(sub.current_period_end);
-                const diffDays = Math.ceil((end - new Date()) / 86400000);
-                remainText = diffDays >= 0 ? (diffDays + '일 남음') : '만료';
-                remainColor = diffDays >= 30 ? '#10b981' : diffDays >= 7 ? '#f59e0b' : '#ef4444';
+            } else if (sub?.current_period_end) {
+                endDate = new Date(sub.current_period_end);
+            } else if (sub?.created_at) {
+                // current_period_end 누락 시 created_at 기반 추정
+                const days = planType === 'annual' ? 365 : 30;
+                endDate = new Date(new Date(sub.created_at).getTime() + days * 86400000);
             }
-            const endDateStr = sub.plan_type === 'lifetime' ? '평생 이용' : (sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : '-');
+
+            if (endDate && planType !== 'lifetime') {
+                const diffDays = Math.ceil((endDate - new Date()) / 86400000);
+                remainText = diffDays >= 0 ? `${diffDays}일 남음` : `만료 ${Math.abs(diffDays)}일`;
+                remainColor = diffDays >= 30 ? '#10b981' : diffDays >= 7 ? '#f59e0b' : '#ef4444';
+            } else if (!sub && m.role === 'subscriber') {
+                remainText = '기간정보 없음';
+                remainColor = '#64748b';
+            }
+
+            const endDateStr = planType === 'lifetime' ? '평생 이용' : (endDate ? endDate.toLocaleDateString() + (sub?.current_period_end ? '' : ' (추정)') : '-');
             subBadge = `<div style="margin-top:4px; display:inline-flex; flex-direction:column; background:linear-gradient(135deg,#ede9fe,#fae8ff); border:1px solid #c4b5fd; border-radius:8px; padding:4px 8px; font-size:10px; line-height:1.4;" title="종료일: ${endDateStr}">
                 <span style="font-weight:800; color:#6d28d9;">⭐PRO ${planLabel}</span>
                 <span style="color:${remainColor}; font-weight:700;">${remainText}</span>
