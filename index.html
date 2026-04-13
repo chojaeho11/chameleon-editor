@@ -706,15 +706,10 @@ if ('caches' in window) {
 .product-full-page .modal-box {
     padding-top: 48px !important;
 }
-/* ★ 상세페이지: 수량 입력/총금액/할인 표시 전역 숨김 (장바구니에서 처리) */
-[data-npc="qty"],
-[data-npc="qtyLabel"],
-[data-npc="total"],
-#bulkDiscountTable,
-#bulkDiscountInfo,
-#modalRealtimeTotal,
-#promoDiscountBox,
-#fixedProdQty {
+/* 상세페이지: 수량/총금액/할인 표시 복원. 챗봇(npcGuideArea) 내부에서만 숨김 처리 */
+#npcGuideArea [data-npc="qty"],
+#npcGuideArea [data-npc="qtyLabel"],
+#npcGuideArea [data-npc="total"] {
     display: none !important;
 }
 </style>
