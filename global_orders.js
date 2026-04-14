@@ -3041,16 +3041,20 @@ window.openAdminSlotModal = async (dateStr) => {
             return m ? parseInt(m[1]) : 0;
         };
         const _isCourier = (fee) => fee === 5000 || fee === 30000;
-        const _isLocalTruck = (fee) => fee === 100000 || fee === 200000; // 유료/지방 용차배송 (시공X)
-        const dlvCourier = deliveryOnly.filter(o => _isCourier(_parseShipFee(o)));
-        const dlvLocalTruck = deliveryOnly.filter(o => _isLocalTruck(_parseShipFee(o)));
-        const dlvFreeMetro = deliveryOnly.filter(o => {
+        const _isMetroTruck = (fee) => fee === 100000;       // 수도권 용차
+        const _isLocalTruck = (fee) => fee === 200000;       // 지방 용차
+        const _isMetroRemoval = (fee) => fee === 100001;     // 수도권 철거
+        const dlvCourier     = deliveryOnly.filter(o => _isCourier(_parseShipFee(o)));
+        const dlvMetroTruck  = deliveryOnly.filter(o => _isMetroTruck(_parseShipFee(o)));
+        const dlvLocalTruck  = deliveryOnly.filter(o => _isLocalTruck(_parseShipFee(o)));
+        const dlvMetroRemoval= deliveryOnly.filter(o => _isMetroRemoval(_parseShipFee(o)));
+        const dlvFreeMetro   = deliveryOnly.filter(o => {
             const fee = _parseShipFee(o);
-            return !_isCourier(fee) && !_isLocalTruck(fee) && isMetroArea(o.address);
+            return !_isCourier(fee) && !_isMetroTruck(fee) && !_isLocalTruck(fee) && !_isMetroRemoval(fee) && isMetroArea(o.address);
         });
         const dlvOther = deliveryOnly.filter(o => {
             const fee = _parseShipFee(o);
-            return !_isCourier(fee) && !_isLocalTruck(fee) && !isMetroArea(o.address);
+            return !_isCourier(fee) && !_isMetroTruck(fee) && !_isLocalTruck(fee) && !_isMetroRemoval(fee) && !isMetroArea(o.address);
         });
 
         // ── 2열 레이아웃 생성 ──
@@ -3130,10 +3134,12 @@ window.openAdminSlotModal = async (dateStr) => {
         html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 배송 목록</h4>';
 
         // 설치시간 지정건은 좌측 시간표에 이미 표시됨 → 우측에선 제외
-        // 우측: 무료배송(수도권) → 택배 → 지방 용차 → 기타
+        // 우측: 무료배송(수도권) → 수도권 용차 → 지방 용차 → 보드/일반 택배 → 수도권 철거 → 기타
         if (dlvFreeMetro.length > 0) html += renderDeliveryGroup('🚚 서울/경기 무료배송', dlvFreeMetro, '#0ea5e9', '#f0f9ff');
-        if (dlvCourier.length > 0) html += renderDeliveryGroup('📦 택배 (일반/대형)', dlvCourier, '#f59e0b', '#fffbeb');
+        if (dlvMetroTruck.length > 0) html += renderDeliveryGroup('🚛 수도권 용차배송', dlvMetroTruck, '#0284c7', '#e0f2fe');
         if (dlvLocalTruck.length > 0) html += renderDeliveryGroup('🚛 지방 용차배송', dlvLocalTruck, '#ec4899', '#fdf2f8');
+        if (dlvCourier.length > 0) html += renderDeliveryGroup('📦 택배 (보드/일반)', dlvCourier, '#f59e0b', '#fffbeb');
+        if (dlvMetroRemoval.length > 0) html += renderDeliveryGroup('🔧 수도권 철거', dlvMetroRemoval, '#2563eb', '#dbeafe');
         if (dlvOther.length > 0) html += renderDeliveryGroup('📦 기타 배송', dlvOther, '#64748b', '#f1f5f9');
 
         if (deliveryOnly.length === 0) {

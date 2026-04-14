@@ -4886,14 +4886,14 @@ async function handleSubReturn() {
                             var g=document.getElementById('cartShippingGuide');
                             if(g){ g.textContent=''; g.style.display='none'; }
                             var freeNote={
-                                kr:'✅ 서울/경기 50만원 이상 허니콤보드: 무료 배송·시공·철거 / 50만원 미만은 유료 용차 10만원 (설치·철거 불가, 택배 가능)',
-                                ja:'✅ 首都圏50万円以上ハニカムボード: 配送・設置・撤去 無料 / 50万円未満は有料車両10万円',
-                                en:'✅ Metro KR 500K+ honeycomb: Free delivery/install/removal. Below 500K = paid truck 100K (no install, courier ok).',
-                                zh:'✅ 首都圈50万以上蜂窝板：免费配送、安装、拆除 / 50万以下需付费货车10万 (不含安装)',
-                                ar:'✅ المنطقة الحضرية 500K+ مجاني / أقل = شاحنة مدفوعة 100K',
-                                es:'✅ Metro 500K+ gratis / menos = camión pagado 100K',
-                                de:'✅ Großraum 500K+ kostenlos / darunter = bezahlt 100K',
-                                fr:'✅ Métro 500K+ gratuit / moins = camion payant 100K'
+                                kr:'✅ 서울/경기 100만원 이상 무료 배송·설치·철거. 100만원 미만은 유료 설치·철거.',
+                                ja:'✅ 首都圏100万円以上は配送・設置・撤去無料。100万円未満は有料。',
+                                en:'✅ Metro KR 1,000,000+ : Free delivery/install/removal. Under 1M = paid.',
+                                zh:'✅ 首都圈100万以上免费配送、安装、拆除。100万以下需付费。',
+                                ar:'✅ المنطقة الحضرية 1M+ مجاني / أقل = مدفوع',
+                                es:'✅ Metro 1M+ gratis / menos = pagado',
+                                de:'✅ Großraum 1M+ kostenlos / darunter = bezahlt',
+                                fr:'✅ Métro 1M+ gratuit / moins = payant'
                             };
                             var fn=document.getElementById('cartShippingFreeNote');
                             if(fn) fn.textContent=freeNote[l]||freeNote['kr'];
@@ -4906,12 +4906,31 @@ async function handleSubReturn() {
                                 return Math.round(krw/10000)+'만원';
                             };
                             var btns=[
-                                {fee:100000, kr:'유료 용차 (50만원 미만/설치불가)',ja:'有料車両 (50万円未満)',en:'Paid Truck (<500K, no install)',zh:'付费货车 (50万以下)',ar:'شاحنة مدفوعة',es:'Camión pago',de:'Bezahlt LKW',fr:'Camion payant'},
-                                {fee:200000, kr:'용차배송',ja:'車両配送',en:'Truck',zh:'车辆配送',ar:'شاحنة',es:'Camión',de:'LKW',fr:'Camion'},
-                                {fee:700000, kr:'배송시공',ja:'配送+設置',en:'Install',zh:'配送+安装',ar:'تركيب',es:'Instalación',de:'Montage',fr:'Pose'},
+                                {fee:100000, kr:'수도권 용차배송',ja:'首都圏 車両配送',en:'Metro Truck',zh:'首都圈 货车',ar:'شاحنة حضرية',es:'Camión metro',de:'Großraum LKW',fr:'Camion métro'},
+                                {fee:200000, kr:'지방 용차배송',ja:'地方 車両配送',en:'Regional Truck',zh:'地方 货车',ar:'شاحنة إقليمية',es:'Camión regional',de:'Regional LKW',fr:'Camion régional'},
+                                {fee:700000, kr:'지방 설치배송',ja:'地方 設置配送',en:'Regional Install',zh:'地方 安装配送',ar:'تركيب إقليمي',es:'Instalación regional',de:'Regional Montage',fr:'Pose régionale'},
                                 {fee:30000,  kr:'보드류 택배',ja:'ボード類 宅配',en:'Board Courier',zh:'板类 快递',ar:'بريد الألواح',es:'Courier Tableros',de:'Platten Paket',fr:'Colis Plaques'},
-                                {fee:5000,   kr:'일반택배',ja:'一般宅配',en:'Standard Courier',zh:'普通快递',ar:'بريد عادي',es:'Courier Estándar',de:'Standard Paket',fr:'Colis Standard'}
+                                {fee:5000,   kr:'기타제품 일반택배',ja:'一般 宅配',en:'Standard Courier',zh:'普通快递',ar:'بريد عادي',es:'Courier estándar',de:'Standard Paket',fr:'Colis standard'},
+                                {fee:100001, kr:'수도권 철거 (10만원)',ja:'首都圏 撤去',en:'Metro Removal',zh:'首都圈 拆除',ar:'إزالة',es:'Desmontaje metro',de:'Großraum Demontage',fr:'Démontage métro'}
                             ];
+
+                            // 노랑 안내 버튼: 100만원 이상 수도권 무료 배송·설치
+                            var notice = document.createElement('button');
+                            notice.type = 'button';
+                            notice.disabled = true;
+                            var noticeTxt = {
+                                kr:'⭐ 100만원 이상 수도권은 무료 배송·설치',
+                                ja:'⭐ 100万円以上 首都圏 無料配送・設置',
+                                en:'⭐ Metro KR 1M+ : Free delivery & install',
+                                zh:'⭐ 100万以上 首都圈 免费配送·安装',
+                                ar:'⭐ 1M+ مجاني',
+                                es:'⭐ 1M+ metro gratis',
+                                de:'⭐ 1M+ Großraum kostenlos',
+                                fr:'⭐ 1M+ métro gratuit'
+                            };
+                            notice.textContent = noticeTxt[l] || noticeTxt['kr'];
+                            notice.style.cssText = 'grid-column:1/-1;padding:12px;border:2px solid #f59e0b;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border-radius:10px;font-size:14px;font-weight:800;text-align:center;cursor:default;margin-bottom:6px;box-shadow:0 2px 6px rgba(245,158,11,0.25);';
+                            box.appendChild(notice);
                             var lbl={kr:'지방 ',ja:'地方 ',en:'Regional ',zh:'地方 ',ar:'إقليمي ',es:'Regional ',de:'Regional ',fr:'Regional '};
                             var box=document.getElementById('cartShippingBtns');
                             if(!box)return;
