@@ -87,6 +87,7 @@ async function _pollNewOrders() {
         const { data } = await sb.from('orders')
             .select('id, manager_name, total_amount, status')
             .neq('status', '임시작성')
+            .neq('status', '관리자차단')
             .order('id', { ascending: false })
             .limit(1);
         if (!data || !data[0]) return;
