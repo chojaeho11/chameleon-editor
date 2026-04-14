@@ -3305,7 +3305,21 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         items: itemsToSave,
         site_code: _siteCode,
         staff_manager_id: window.tempOrderInfo?.staffManagerId || null,
-        admin_note: (window.tempOrderInfo?.isHqOrder ? '[고객지정] 본사 직접 처리 요청\n' : '') + (localStorage.getItem('chameleon_quote_pdf_url') ? '[견적서] ' + localStorage.getItem('chameleon_quote_pdf_url') : '') || null
+        admin_note: (() => {
+            let note = '';
+            if (window.tempOrderInfo?.isHqOrder) note += '[고객지정] 본사 직접 처리 요청\n';
+            // 배송 메타 (관리자 분류용)
+            try {
+                const sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+                const fee = sd.fee || window._nonMetroFeeApplied || 0;
+                const label = sd.label || '';
+                const removal = window._cartWantsRemoval ? '1' : '0';
+                note += `[SHIPPING:fee=${fee};label=${label};removal=${removal}]\n`;
+            } catch(e) {}
+            const pdfUrl = localStorage.getItem('chameleon_quote_pdf_url');
+            if (pdfUrl) note += '[견적서] ' + pdfUrl;
+            return note || null;
+        })()
     }]).select();
     
     if (orderError) throw orderError; 
@@ -4444,6 +4458,23 @@ window._removeCartShipping = function() {
     window._nonMetroFeeApplied = 0;
     if (window.renderCart) window.renderCart();
 };
+
+// ── 철거 토글 (서울/경기 무료, 별도 1슬롯 카운트) ──
+window._toggleCartRemoval = function(checked) {
+    try { localStorage.setItem('chameleon_wants_removal', checked ? '1' : '0'); } catch(e) {}
+    window._cartWantsRemoval = !!checked;
+};
+// 페이지 로드 시 체크박스 복원
+(function _initRemoval(){
+    try {
+        const v = localStorage.getItem('chameleon_wants_removal') === '1';
+        window._cartWantsRemoval = v;
+        document.addEventListener('DOMContentLoaded', () => {
+            const cb = document.getElementById('cartWantsRemoval');
+            if (cb) cb.checked = v;
+        });
+    } catch(e) {}
+})();
 
 // 장바구니 마일리지 값을 KRW로 반환하는 헬퍼
 window.getCartMileageKRW = function() {
