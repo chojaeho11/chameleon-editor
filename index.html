@@ -10059,8 +10059,8 @@ window.showChoiceModal = async function(key) {
                 <input type="hidden" id="inputCustW" value="${product.width_mm || 0}">
                 <input type="hidden" id="inputCustH" value="${product.height_mm || 0}">
             </div>` : (() => {
-                // 허니콤 벽 제품 감지 → 사이즈 선택 피커 표시
-                const _isWall = product.category === 'hb_display_wall' || (product.code && product.code.startsWith('hb_dw'));
+                // 허니콤 벽 빌더 — hb_dw_1 1개만 (나머지는 일반 상품)
+                const _isWall = (product.code === 'hb_dw_1');
                 const _isUS2 = window._isUSsite && window._isUSsite();
                 if (_isWall) {
                     const _sideLabel = {ja:'面',en:'Side',zh:'面',ar:'وجه',es:'Lado',de:'Seite',fr:'Face',kr:'면'}[lang]||'Side';
@@ -11771,8 +11771,8 @@ if (w >= 20 && h >= 20) {
             window._bookletOrderDesc = `표지:${bkCover?.value||'-'}, 내지:${bkInner?.value||'-'}(${innerPrice}원/p), ${bkPages}p×${bkCopies}부, 코팅:${bkCoating?.value||'none'}${bkEffects.length ? ', 특수효과:'+bkEffects.join('+') : ''}`;
         }
 
-        // 4-2. 벽면 제품: _wallPanelsData에서 가격/수량 오버라이드
-        const _isWallProduct = product.category === 'hb_display_wall' || (targetCode && targetCode.startsWith('hb_dw'));
+        // 4-2. 벽면 제품: _wallPanelsData에서 가격/수량 오버라이드 (hb_dw_1만)
+        const _isWallProduct = (targetCode === 'hb_dw_1');
         if (_isWallProduct && window._wallPanelsData) {
             const wd = window._wallPanelsData;
             finalPricePerItem = wd.totalPrice;
@@ -12919,7 +12919,8 @@ if (w >= 20 && h >= 20) {
         // 픽셀 변환 및 캔버스 설정
         const canvasW = Math.round(displayW * 3.7795);
         const canvasH = Math.round(displayH * 3.7795);
-        const isWallProduct = typeof key === 'string' && (key.includes('Wall') || key.startsWith('hb_dw'));
+        // ★ 가벽 빌더는 hb_dw_1 1개 제품만 적용. 나머지 hb_dw_* / hb_display_wall은 일반 상품으로 처리
+        const isWallProduct = typeof key === 'string' && (key.includes('Wall') || key === 'hb_dw_1');
         const isBoxProduct = typeof key === 'string' && key.startsWith('hb_bx');
         const mode = isWallProduct ? 'wall' : isBoxProduct ? 'box' : 'standard';
 
