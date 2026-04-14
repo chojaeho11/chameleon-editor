@@ -250,9 +250,11 @@
                 const _isRemovalOrder = /SHIPPING:fee=100001/.test(o.admin_note || '');
                 const _doneFlag = isDone || _installed || _removed;
                 const _doneKind = _isRemovalOrder ? 'removed' : 'installed';
+                // 적재/완료/사진 중 하나라도 체크됐으면 카드 50% 회색
+                const _anyAction = _loaded || _installed || _removed || _photos.length > 0;
                 const pillStyle = (active, color) => `padding:8px 4px;border-radius:8px;border:2px solid ${active?color:'#cbd5e1'};background:${active?color:'#fff'};color:${active?'#fff':'#475569'};font-weight:800;font-size:12px;cursor:pointer;text-align:center;${active?`box-shadow:0 2px 6px ${color}55;`:''}line-height:1.2;`;
                 list.innerHTML += `
-                    <div class="task-card ${_doneFlag ? 'completed' : ''}" draggable="true" data-order-id="${o.id}" ondragstart="_dragStart(event)" ondragover="_dragOver(event)" ondrop="_dragDrop(event)" ondragend="_dragEnd(event)" style="cursor:move; padding:12px; margin-bottom:10px;">
+                    <div class="task-card ${_doneFlag ? 'completed' : ''}" draggable="true" data-order-id="${o.id}" ondragstart="_dragStart(event)" ondragover="_dragOver(event)" ondrop="_dragDrop(event)" ondragend="_dragEnd(event)" style="cursor:move; padding:12px; margin-bottom:10px;${_anyAction?'opacity:0.5;filter:grayscale(0.5);':''}">
                         <!-- 상단 3개 액션 버튼 -->
                         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:8px;">
                             <button onclick="toggleDriverLoaded('${o.id}', ${!_loaded})" style="${pillStyle(_loaded,'#f97316')}">${_loaded?'✓ 적재완료':'🚛 적재완료'}</button>
