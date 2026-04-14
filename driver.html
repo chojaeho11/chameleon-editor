@@ -185,6 +185,14 @@
             const _seen = new Set((assignedOrders||[]).map(o => o.id));
             const _merged = [...(assignedOrders||[])];
             (instOrders||[]).forEach(o => { if (!_seen.has(o.id)) _merged.push(o); });
+            // 저장된 정렬 순서 적용
+            try {
+                const _savedOrder = JSON.parse(localStorage.getItem(`driverOrder_${driverId}_${date}`) || '[]');
+                if (_savedOrder.length) {
+                    const _idx = (id) => { const i = _savedOrder.indexOf(String(id)); return i === -1 ? 9999 : i; };
+                    _merged.sort((a,b) => _idx(a.id) - _idx(b.id));
+                }
+            } catch(e){}
             const orders = _merged;
 
             const list = document.getElementById('taskList');
@@ -264,7 +272,7 @@
                 const _isRemovalOrder = /SHIPPING:fee=100001/.test(o.admin_note || '');
                 const _isInstall = !!o.installation_time || /SHIPPING:fee=(100000|700000)/.test(o.admin_note || '');
                 list.innerHTML += `
-                    <div class="task-card ${isDone ? 'completed' : ''}">
+                    <div class="task-card ${isDone ? 'completed' : ''}" draggable="true" data-order-id="${o.id}" ondragstart="_dragStart(event)" ondragover="_dragOver(event)" ondrop="_dragDrop(event)" ondragend="_dragEnd(event)" style="cursor:move;">
                         <span class="status-tag ${isDone ? 'done' : 'active'}">
                             ${isDone ? '배송완료' : '배송중'}
                         </span>
@@ -375,6 +383,26 @@
         const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
         if (error) showToast('저장 실패: ' + error.message, 'error');
     };
+
+    // ── 드래그 정렬 (localStorage에 driver+date별로 순서 저장) ──
+    let _dragSrc = null;
+    window._dragStart = (e) => { _dragSrc = e.currentTarget; e.dataTransfer.effectAllowed='move'; e.currentTarget.style.opacity='0.4'; };
+    window._dragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect='move'; };
+    window._dragDrop = (e) => {
+        e.preventDefault();
+        if (!_dragSrc || _dragSrc === e.currentTarget) return;
+        const list = document.getElementById('taskList');
+        const target = e.currentTarget;
+        const rect = target.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height/2;
+        list.insertBefore(_dragSrc, after ? target.nextSibling : target);
+        // 순서 저장
+        const driverId = document.getElementById('driverSelect').value;
+        const date = document.getElementById('workDate').value;
+        const order = [...list.querySelectorAll('[data-order-id]')].map(el => el.dataset.orderId);
+        try { localStorage.setItem(`driverOrder_${driverId}_${date}`, JSON.stringify(order)); } catch(e){}
+    };
+    window._dragEnd = (e) => { e.currentTarget.style.opacity=''; _dragSrc = null; };
 
     // 일반화된 CHK 마커 토글 (kind: dlv | installed | removed)
     window.toggleDriverFlag = async function(orderId, kind, checked) {

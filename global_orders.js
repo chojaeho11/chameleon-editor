@@ -3208,6 +3208,63 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
     return html;
 }
 
+// ── 사진 일괄 다운로드 (날짜 범위) ──
+window.openBulkPhotoDownload = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const wk = new Date(); wk.setDate(wk.getDate()-7); const wkStr = wk.toISOString().split('T')[0];
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:30000;display:flex;align-items:center;justify-content:center;';
+    ov.onclick = (e) => { if (e.target===ov) ov.remove(); };
+    ov.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;min-width:380px;max-width:520px;">
+        <h3 style="margin:0 0 14px;">📥 설치/철거 사진 일괄 다운로드</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div><label style="font-size:12px;color:#64748b;">시작일</label><input type="date" id="bulkPhFrom" value="${wkStr}" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;"></div>
+            <div><label style="font-size:12px;color:#64748b;">종료일</label><input type="date" id="bulkPhTo" value="${today}" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;"></div>
+        </div>
+        <div id="bulkPhStatus" style="font-size:13px;color:#475569;margin-bottom:10px;min-height:20px;"></div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="this.closest('[data-bulk]').remove()" style="flex:1;padding:10px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;">취소</button>
+            <button id="bulkPhStart" style="flex:2;padding:10px;background:#0ea5e9;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">다운로드 시작</button>
+        </div>
+    </div>`;
+    ov.dataset.bulk = '1';
+    document.body.appendChild(ov);
+    document.getElementById('bulkPhStart').onclick = async () => {
+        const from = document.getElementById('bulkPhFrom').value;
+        const to = document.getElementById('bulkPhTo').value;
+        const stat = document.getElementById('bulkPhStatus');
+        if (!from || !to) { stat.textContent='날짜를 선택하세요'; stat.style.color='#dc2626'; return; }
+        stat.textContent = '주문 조회중...'; stat.style.color = '#475569';
+        try {
+            const { data } = await sb.from('orders')
+                .select('id, manager_name, delivery_target_date, admin_note')
+                .gte('delivery_target_date', from)
+                .lte('delivery_target_date', to);
+            const allUrls = [];
+            (data||[]).forEach(o => {
+                const m = (o.admin_note||'').match(/\[PHOTOS:([^\]]+)\]/);
+                if (!m) return;
+                m[1].split(',').filter(Boolean).forEach(u => allUrls.push({ url: u, name: `${o.delivery_target_date}_${(o.manager_name||'').replace(/[^\w가-힣]/g,'_')}_${o.id}_${allUrls.length}.jpg` }));
+            });
+            if (allUrls.length === 0) { stat.textContent='해당 기간에 사진이 없습니다.'; stat.style.color='#64748b'; return; }
+            stat.textContent = `${allUrls.length}장 다운로드 중... (개별 저장됨, 브라우저가 묻거든 모두 허용 클릭)`;
+            for (let i=0; i<allUrls.length; i++) {
+                const a = document.createElement('a');
+                a.href = allUrls[i].url;
+                a.download = allUrls[i].name;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                stat.textContent = `다운로드 중... ${i+1}/${allUrls.length}`;
+                await new Promise(r => setTimeout(r, 250));
+            }
+            stat.textContent = `✓ ${allUrls.length}장 다운로드 완료`;
+            stat.style.color = '#059669';
+        } catch (e) { stat.textContent = '오류: ' + e.message; stat.style.color='#dc2626'; }
+    };
+};
+
 // ── 사진 뷰어 모달 ──
 window.adminViewPhotos = function(orderId, urls) {
     const ov = document.createElement('div');
