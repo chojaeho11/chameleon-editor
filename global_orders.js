@@ -3018,12 +3018,25 @@ window.openAdminSlotModal = async (dateStr) => {
             }
         });
 
-        // 일반 배송 분류
+        // 일반 배송 분류 (installation_time 없는 건만)
         const deliveryOnly = dayOrders.filter(o => !o.installation_time);
-        const dlvHcMetro = deliveryOnly.filter(o => isHoneycombOrder(o) && isMetroArea(o.address));
-        const dlvHcLocal = deliveryOnly.filter(o => isHoneycombOrder(o) && !isMetroArea(o.address));
-        const dlvOtherMetro = deliveryOnly.filter(o => !isHoneycombOrder(o) && isMetroArea(o.address));
-        const dlvOtherLocal = deliveryOnly.filter(o => !isHoneycombOrder(o) && !isMetroArea(o.address));
+        // admin_note에서 SHIPPING meta 파싱
+        const _parseShipFee = (o) => {
+            const m = (o.admin_note || '').match(/\[SHIPPING:fee=(\d+)/);
+            return m ? parseInt(m[1]) : 0;
+        };
+        const _isCourier = (fee) => fee === 5000 || fee === 30000;
+        const _isLocalTruck = (fee) => fee === 200000; // 지방 용차배송 (시공X)
+        const dlvCourier = deliveryOnly.filter(o => _isCourier(_parseShipFee(o)));
+        const dlvLocalTruck = deliveryOnly.filter(o => _isLocalTruck(_parseShipFee(o)));
+        const dlvFreeMetro = deliveryOnly.filter(o => {
+            const fee = _parseShipFee(o);
+            return !_isCourier(fee) && !_isLocalTruck(fee) && isMetroArea(o.address);
+        });
+        const dlvOther = deliveryOnly.filter(o => {
+            const fee = _parseShipFee(o);
+            return !_isCourier(fee) && !_isLocalTruck(fee) && !isMetroArea(o.address);
+        });
 
         // ── 2열 레이아웃 생성 ──
         let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">';
@@ -3088,23 +3101,15 @@ window.openAdminSlotModal = async (dateStr) => {
         html += '<div>';
         html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 배송 목록</h4>';
 
-        // 시간지정 배송 (설치 시간 있는 건)
-        const timedDelivery = installOrders.filter(o => !o.manager_name?.startsWith('[차단]'));
-        if (timedDelivery.length > 0) {
-            html += renderDeliveryGroup('⏰ 시간지정 설치', timedDelivery, '#6d28d9', '#ede9fe', true);
-        }
+        // 설치시간 지정건은 좌측 시간표에 이미 표시됨 → 우측에선 제외
+        // 우측: 무료배송(수도권) → 택배 → 지방 용차 → 기타
+        if (dlvFreeMetro.length > 0) html += renderDeliveryGroup('🚚 서울/경기 무료배송', dlvFreeMetro, '#0ea5e9', '#f0f9ff');
+        if (dlvCourier.length > 0) html += renderDeliveryGroup('📦 택배 (일반/대형)', dlvCourier, '#f59e0b', '#fffbeb');
+        if (dlvLocalTruck.length > 0) html += renderDeliveryGroup('🚛 지방 용차배송', dlvLocalTruck, '#ec4899', '#fdf2f8');
+        if (dlvOther.length > 0) html += renderDeliveryGroup('📦 기타 배송', dlvOther, '#64748b', '#f1f5f9');
 
-        // 허니콤 수도권
-        if (dlvHcMetro.length > 0) html += renderDeliveryGroup('🔧 허니콤보드 · 수도권', dlvHcMetro, '#7c3aed', '#f5f3ff');
-        // 허니콤 지방
-        if (dlvHcLocal.length > 0) html += renderDeliveryGroup('🔧 허니콤보드 · 지방', dlvHcLocal, '#9333ea', '#faf5ff');
-        // 기타 수도권
-        if (dlvOtherMetro.length > 0) html += renderDeliveryGroup('📦 기타제품 · 수도권', dlvOtherMetro, '#2563eb', '#eff6ff');
-        // 기타 지방
-        if (dlvOtherLocal.length > 0) html += renderDeliveryGroup('📦 기타제품 · 지방', dlvOtherLocal, '#0284c7', '#f0f9ff');
-
-        if (deliveryOnly.length === 0 && timedDelivery.length === 0) {
-            html += '<div style="text-align:center; padding:30px; color:#cbd5e1;">배송 건 없음</div>';
+        if (deliveryOnly.length === 0) {
+            html += '<div style="text-align:center; padding:30px; color:#cbd5e1;">배송 건 없음 (설치 시공건은 좌측 시간표에서 확인)</div>';
         }
 
         html += '</div></div>'; // grid 닫기
