@@ -970,28 +970,42 @@ window.refreshCartDeliveryTimeSlots = async function() {
 };
 
 // ── 해당 날짜 예약 현황 조회 ──
+// 정책: 최종 used = max(BASE_OCCUPIED_TEAMS, adminBlocks) + customerBookings
+// → 관리자 "2팀 차단" = 2팀 점유로 표시 (baseline 1팀과 중복 가산 X)
 async function fetchInstallationSlots(date) {
-    const slotTeams = {};
-    // 1팀은 항상 사전 점유로 카운트
-    INSTALL_TIME_SLOTS.forEach(s => slotTeams[s] = BASE_OCCUPIED_TEAMS);
+    const adminBlocks = {};
+    const customerBookings = {};
+    INSTALL_TIME_SLOTS.forEach(s => { adminBlocks[s] = 0; customerBookings[s] = 0; });
 
     try {
         const _sb = window.sb || sb;
         const { data } = await _sb.from('orders')
-            .select('installation_time, total_amount')
+            .select('installation_time, total_amount, status, manager_name')
             .eq('delivery_target_date', date)
             .not('installation_time', 'is', null);
 
         (data || []).forEach(order => {
             const startIdx = INSTALL_TIME_SLOTS.indexOf(order.installation_time);
             if (startIdx === -1) return;
-            const info = getInstallationSlotInfo(order.total_amount || 0);
-            const endIdx = Math.min(startIdx + Math.max(info.slots, 1), INSTALL_TIME_SLOTS.length);
-            for (let i = startIdx; i < endIdx; i++) {
-                slotTeams[INSTALL_TIME_SLOTS[i]]++;
+            const isBlock = order.status === '관리자차단' || (order.manager_name || '').startsWith('[차단]');
+            if (isBlock) {
+                // 관리자 차단은 1슬롯만 점유 (단일 시간대)
+                adminBlocks[INSTALL_TIME_SLOTS[startIdx]]++;
+            } else {
+                const info = getInstallationSlotInfo(order.total_amount || 0);
+                const endIdx = Math.min(startIdx + Math.max(info.slots, 1), INSTALL_TIME_SLOTS.length);
+                for (let i = startIdx; i < endIdx; i++) {
+                    customerBookings[INSTALL_TIME_SLOTS[i]]++;
+                }
             }
         });
     } catch(e) { console.warn('설치 슬롯 조회 실패:', e); }
+
+    const slotTeams = {};
+    INSTALL_TIME_SLOTS.forEach(s => {
+        slotTeams[s] = Math.max(BASE_OCCUPIED_TEAMS, adminBlocks[s]) + customerBookings[s];
+        if (slotTeams[s] > MAX_TEAMS) slotTeams[s] = MAX_TEAMS;
+    });
     return slotTeams;
 }
 

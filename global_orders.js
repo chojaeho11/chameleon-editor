@@ -3170,6 +3170,41 @@ window.adminAddSlotBlock = async () => {
     }
 };
 
+// ── 그날 전체 시간대 일괄 차단 ──
+window.adminBlockAllDay = async (teams) => {
+    const dateStr = window._adminSlotDate;
+    if (!dateStr) return;
+    if (!confirm(`${dateStr} 전체 시간대(${ADMIN_SLOTS.length}개)에 ${teams}팀씩 차단합니다. 진행하시겠습니까?`)) return;
+
+    const memo = (document.getElementById('adminSlotMemo')?.value || '일괄 차단').trim();
+    try {
+        const rows = [];
+        ADMIN_SLOTS.forEach(time => {
+            for (let i = 0; i < teams; i++) {
+                rows.push({
+                    delivery_target_date: dateStr,
+                    installation_time: time,
+                    total_amount: 1000000,
+                    manager_name: `[차단] ${memo}`,
+                    phone: '-',
+                    status: '관리자차단',
+                    payment_status: '-',
+                    items: [],
+                    site_code: 'KR'
+                });
+            }
+        });
+        const { error } = await sb.from('orders').insert(rows);
+        if (error) throw error;
+        showToast(`${dateStr} 전체 ${ADMIN_SLOTS.length}개 시간대에 ${teams}팀씩 차단 완료 (총 ${rows.length}건)`, 'success');
+        if (document.getElementById('adminSlotMemo')) document.getElementById('adminSlotMemo').value = '';
+        openAdminSlotModal(dateStr);
+        renderAdminCalendar();
+    } catch (e) {
+        showToast('일괄 차단 실패: ' + e.message, 'error');
+    }
+};
+
 // ── 배송일 변경 팝업 ──
 window.openDeliveryDateEdit = (orderId, currentDate) => {
     // 간단한 팝업으로 날짜 선택

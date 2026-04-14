@@ -481,6 +481,12 @@
                                 <input id="adminSlotMemo" class="input-text" placeholder="메모" style="flex:1; min-width:80px; font-size:12px;">
                                 <button class="btn btn-primary btn-sm" onclick="adminAddSlotBlock()" style="font-size:12px;"><i class="fa-solid fa-plus"></i> 추가</button>
                             </div>
+                            <div style="display:flex; gap:6px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+                                <span style="font-size:11px; font-weight:bold; color:#dc2626;"><i class="fa-solid fa-calendar-xmark"></i> 그날 전체 시간대 일괄 차단:</span>
+                                <button class="btn btn-sm" onclick="adminBlockAllDay(1)" style="font-size:11px; background:#fef3c7; border:1px solid #f59e0b; color:#92400e;">1팀</button>
+                                <button class="btn btn-sm" onclick="adminBlockAllDay(2)" style="font-size:11px; background:#fed7aa; border:1px solid #ea580c; color:#9a3412;">2팀</button>
+                                <button class="btn btn-sm" onclick="adminBlockAllDay(3)" style="font-size:11px; background:#fecaca; border:1px solid #dc2626; color:#991b1b;">전체(3팀)</button>
+                            </div>
                         </div>
                         <!-- 시간 슬롯 + 배송 목록 -->
                         <div id="adminSlotContent"></div>
