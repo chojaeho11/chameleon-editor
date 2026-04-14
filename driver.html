@@ -145,16 +145,26 @@
         document.getElementById('loading').style.display = 'flex';
 
         try {
-            // 그날의 모든 시공/배송/철거 주문 (관리자 차단/임시작성/취소 제외)
-            // 카테고리: installation_time 있음 OR SHIPPING fee=100000/100001/200000/700000 OR 100만원이상 수도권 무료
+            // 그날의 시공/철거/수도권 배송 — 택배·지방 일반배송은 제외
             const { data: rawOrders, error } = await sb.from('orders')
                 .select('*')
                 .eq('delivery_target_date', date)
-                .not('status', 'in', '("관리자차단","임시작성","취소됨")')
+                .not('status', 'in', '("관리자차단","임시작성","취소됨","취소","삭제됨","결제대기")')
                 .order('installation_time', { ascending: true });
             if (error) throw error;
-            // 그날의 모든 주문 표시 (관리자차단/임시작성/취소됨만 제외)
-            let orders = (rawOrders||[]);
+            const _metroKw = ['서울','경기','인천','성남','분당','수원','고양','용인','부천','안산','안양','화성','광명','군포','하남','과천','시흥','파주','김포','일산','판교','동탄','위례','세종'];
+            const _isMetro = (addr) => !addr || _metroKw.some(k => addr.includes(k));
+            const _shipFee = (n) => { const m = (n||'').match(/SHIPPING:fee=(\d+)/); return m ? parseInt(m[1]) : 0; };
+            // 표시 대상: 시공시간 지정 / 수도권 유료설치 / 수도권 철거 / 지방 설치배송 / 100만원+ 수도권 (무료배송설치)
+            let orders = (rawOrders||[]).filter(o => {
+                if (o.installation_time) return true;
+                const f = _shipFee(o.admin_note);
+                if (f === 100000 || f === 100001 || f === 700000) return true; // 수도권 유료설치/철거, 지방 설치배송
+                if (f === 5000 || f === 30000) return false; // 택배 제외
+                if (f === 200000) return false; // 지방 일반 용차 제외
+                if ((o.total_amount||0) >= 1000000 && _isMetro(o.address)) return true; // 100만+ 수도권 무료배송설치
+                return false;
+            });
             // 팀 필터 — 현재는 admin_note의 [TEAM:N] 마커로 분류 (없으면 1팀 기본)
             if (teamSel !== 'all') {
                 const wantTeam = teamSel === 'team1' ? 1 : (teamSel === 'team2' ? 2 : 3);

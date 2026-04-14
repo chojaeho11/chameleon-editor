@@ -3016,7 +3016,8 @@ window.openAdminSlotModal = async (dateStr) => {
     try {
         const { data: orders } = await sb.from('orders')
             .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id, items, delivery_target_date, admin_note')
-            .eq('delivery_target_date', dateStr);
+            .eq('delivery_target_date', dateStr)
+            .not('status', 'in', '("취소됨","취소","삭제됨","임시작성","결제대기")');
         const dayOrders = orders || [];
 
         // 슬롯별 팀 수 + 주문 매핑
