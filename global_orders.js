@@ -3041,7 +3041,7 @@ window.openAdminSlotModal = async (dateStr) => {
             return m ? parseInt(m[1]) : 0;
         };
         const _isCourier = (fee) => fee === 5000 || fee === 30000;
-        const _isLocalTruck = (fee) => fee === 200000; // 지방 용차배송 (시공X)
+        const _isLocalTruck = (fee) => fee === 100000 || fee === 200000; // 유료/지방 용차배송 (시공X)
         const dlvCourier = deliveryOnly.filter(o => _isCourier(_parseShipFee(o)));
         const dlvLocalTruck = deliveryOnly.filter(o => _isLocalTruck(_parseShipFee(o)));
         const dlvFreeMetro = deliveryOnly.filter(o => {
@@ -3148,7 +3148,17 @@ window.openAdminSlotModal = async (dateStr) => {
     }
 };
 
+function _dedupeByName(orders) {
+    const seen = new Map();
+    orders.forEach(o => {
+        const key = (o.manager_name || '') + '|' + (o.phone || '');
+        if (!seen.has(key)) seen.set(key, o);
+    });
+    return [...seen.values()];
+}
+
 function renderDeliveryGroup(title, orders, color, bg, showTime) {
+    orders = _dedupeByName(orders);
     let html = `<div style="margin-bottom:14px;">
         <div style="font-size:15px; font-weight:bold; color:${color}; padding:8px 12px; background:${bg}; border-radius:6px 6px 0 0; border-left:3px solid ${color};">${title} (${orders.length}건)</div>
         <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 6px 6px;">`;

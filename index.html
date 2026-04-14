@@ -4886,14 +4886,14 @@ async function handleSubReturn() {
                             var g=document.getElementById('cartShippingGuide');
                             if(g){ g.textContent=''; g.style.display='none'; }
                             var freeNote={
-                                kr:'✅ 허니콤보드 수도권은 무료로 배송·시공·철거합니다.',
-                                ja:'✅ ハニカムボード首都圏は配送・設置・撤去 無料。',
-                                en:'✅ Free delivery, installation, and removal for honeycomb boards in the metro area.',
-                                zh:'✅ 蜂窝板首都圈免费配送、安装、拆除。',
-                                ar:'✅ توصيل وتركيب وإزالة ألواح خلية النحل مجاناً في المنطقة الحضرية.',
-                                es:'✅ Entrega, instalación y desmontaje gratis de paneles nido de abeja en área metropolitana.',
-                                de:'✅ Wabenplatten im Großraum kostenlose Lieferung, Montage und Demontage.',
-                                fr:'✅ Livraison, pose et dépose gratuites pour panneaux nid d\'abeille en zone métropolitaine.'
+                                kr:'✅ 서울/경기 50만원 이상 허니콤보드: 무료 배송·시공·철거 / 50만원 미만은 유료 용차 10만원 (설치·철거 불가, 택배 가능)',
+                                ja:'✅ 首都圏50万円以上ハニカムボード: 配送・設置・撤去 無料 / 50万円未満は有料車両10万円',
+                                en:'✅ Metro KR 500K+ honeycomb: Free delivery/install/removal. Below 500K = paid truck 100K (no install, courier ok).',
+                                zh:'✅ 首都圈50万以上蜂窝板：免费配送、安装、拆除 / 50万以下需付费货车10万 (不含安装)',
+                                ar:'✅ المنطقة الحضرية 500K+ مجاني / أقل = شاحنة مدفوعة 100K',
+                                es:'✅ Metro 500K+ gratis / menos = camión pagado 100K',
+                                de:'✅ Großraum 500K+ kostenlos / darunter = bezahlt 100K',
+                                fr:'✅ Métro 500K+ gratuit / moins = camion payant 100K'
                             };
                             var fn=document.getElementById('cartShippingFreeNote');
                             if(fn) fn.textContent=freeNote[l]||freeNote['kr'];
@@ -4906,6 +4906,7 @@ async function handleSubReturn() {
                                 return Math.round(krw/10000)+'만원';
                             };
                             var btns=[
+                                {fee:100000, kr:'유료 용차 (50만원 미만/설치불가)',ja:'有料車両 (50万円未満)',en:'Paid Truck (<500K, no install)',zh:'付费货车 (50万以下)',ar:'شاحنة مدفوعة',es:'Camión pago',de:'Bezahlt LKW',fr:'Camion payant'},
                                 {fee:200000, kr:'용차배송',ja:'車両配送',en:'Truck',zh:'车辆配送',ar:'شاحنة',es:'Camión',de:'LKW',fr:'Camion'},
                                 {fee:700000, kr:'배송시공',ja:'配送+設置',en:'Install',zh:'配送+安装',ar:'تركيب',es:'Instalación',de:'Montage',fr:'Pose'},
                                 {fee:30000,  kr:'보드류 택배',ja:'ボード類 宅配',en:'Board Courier',zh:'板类 快递',ar:'بريد الألواح',es:'Courier Tableros',de:'Platten Paket',fr:'Colis Plaques'},
