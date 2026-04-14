@@ -2752,7 +2752,7 @@ async function processOrderSubmission() {
         address,
         request,
         deliveryDate,
-        installationTime: selectedInstallationTime || null,
+        installationTime: (document.getElementById('cartDeliveryTime')?.value) || selectedInstallationTime || null,
         referrerId: window.verifiedReferrerId || null,
         referrerEmail: window.verifiedReferrerEmail || null,
         staffManagerId: selectedStaffManagerId,
