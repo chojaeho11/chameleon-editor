@@ -3032,53 +3032,54 @@ window.openAdminSlotModal = async (dateStr) => {
         html += '<div>';
         html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 설치 예약 시간표</h4>';
         html += '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
-        html += '<thead><tr style="background:#f8fafc;"><th style="padding:10px; text-align:left;">시간</th><th style="padding:10px; text-align:center; width:70px;">팀</th><th style="padding:10px; text-align:left;">고객</th><th style="padding:10px; width:40px;"></th></tr></thead><tbody>';
+        html += '<thead><tr style="background:#f8fafc;"><th style="padding:10px; text-align:left;">시간</th><th style="padding:10px; text-align:center; width:70px;">2/3팀</th><th style="padding:10px; text-align:left;" colspan="2">고객 / 차단</th></tr></thead><tbody>';
 
         ADMIN_SLOTS.forEach((slot, idx) => {
             const endSlot = idx + 1 < ADMIN_SLOTS.length ? ADMIN_SLOTS[idx + 1] : '22:00';
-            const used = slotTeams[slot] || 0;
-            const isFull = used >= ADMIN_MAX_TEAMS;
-            const barColor = isFull ? '#ef4444' : (used > 0 ? '#f59e0b' : '#22c55e');
-            const bgColor = isFull ? '#fef2f2' : (used > 0 ? '#fffbeb' : '#fff');
-
             const uniqueOrders = [...new Map(slotOrders[slot].map(o => [o.id, o])).values()];
-            let custHtml = uniqueOrders.map(o => {
-                const info = getInstallationDisplayInfo(o);
-                const isBlock = o.manager_name?.startsWith('[차단]');
-                return `<div style="padding:2px 0; ${isBlock?'color:#94a3b8; font-style:italic;':''}">
-                    <span style="font-weight:600;">${o.manager_name}</span>
-                    ${!isBlock && o.phone ? `<span style="color:#6366f1; margin-left:4px;">${o.phone}</span>` : ''}
-                    ${info ? `<span style="color:#6d28d9; font-size:12px;">(${info.duration})</span>` : ''}
-                </div>`;
-            }).join('') || '<span style="color:#cbd5e1;">-</span>';
-
-            let removeHtml = uniqueOrders.map(o => `<button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:14px; padding:2px 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')" title="제거">✕</button>`).join('');
-
-            // 팀별 동그라미: 클릭해 차단/해제. 실제 고객 예약 슬롯은 클릭 비활성
             const adminBlockOrders = uniqueOrders.filter(o => (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단');
-            const customerCount = used - adminBlockOrders.length;
-            const dotsHtml = [0,1,2].map(i => {
-                const isFilled = i < used;
-                const isCustomer = i < customerCount;
-                const isBlock = isFilled && !isCustomer;
-                if (isCustomer) {
-                    return `<div title="고객 예약" style="width:18px; height:18px; border-radius:50%; background:${barColor}; border:2px solid ${barColor};"></div>`;
-                } else if (isBlock) {
-                    const blockOrder = adminBlockOrders[i - customerCount];
-                    const oid = blockOrder ? blockOrder.id : '';
-                    return `<div title="클릭해 차단 해제" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${i+1},'${oid}')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#dc2626; border:2px solid #991b1b; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:bold;">×</div>`;
-                } else {
-                    return `<div title="클릭해 차단" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${i+1},'')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#fff; border:2px dashed #94a3b8;"></div>`;
+            const customerOrders = uniqueOrders.filter(o => !((o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단'));
+            // 표시 우선순위: 고객 예약 → 관리자 차단. 1팀(베이스라인)은 행에서 숨김 → 2팀/3팀 슬롯만
+            const displayOrders = [...customerOrders, ...adminBlockOrders].slice(0, ADMIN_MAX_TEAMS - 1);
+            const usedDisplay = displayOrders.length; // 0/1/2
+            const isFull = usedDisplay >= ADMIN_MAX_TEAMS - 1;
+            const barColor = isFull ? '#ef4444' : (usedDisplay > 0 ? '#f59e0b' : '#22c55e');
+            const bgColor = isFull ? '#fef2f2' : (usedDisplay > 0 ? '#fffbeb' : '#fff');
+
+            // 2팀/3팀 동그라미만 표시 (1팀=베이스라인 숨김)
+            const dotsHtml = [0,1].map(i => {
+                const teamNo = i + 2;
+                const order = displayOrders[i];
+                if (!order) {
+                    return `<div title="클릭해 ${teamNo}팀 차단" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${teamNo},'')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#fff; border:2px dashed #94a3b8;"></div>`;
                 }
+                const isBlock = (order.manager_name||'').startsWith('[차단]') || order.status === '관리자차단';
+                if (isBlock) {
+                    return `<div title="클릭해 ${teamNo}팀 차단 해제" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${teamNo},'${order.id}')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#dc2626; border:2px solid #991b1b; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:bold;">×</div>`;
+                }
+                return `<div title="${teamNo}팀 고객 예약" style="width:18px; height:18px; border-radius:50%; background:${barColor}; border:2px solid ${barColor};"></div>`;
             }).join('');
 
+            // 고객 정보: 2팀 [이름] [전화] [주소] / 3팀 ...
+            let custHtml = displayOrders.map((o, i) => {
+                const teamNo = i + 2;
+                const isBlock = (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단';
+                if (isBlock) {
+                    return `<div style="padding:2px 0; color:#94a3b8; font-style:italic;"><b style="color:#dc2626;">${teamNo}팀</b> 관리자 차단 <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:12px; padding:0 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')">[해제]</button></div>`;
+                }
+                const phone = o.phone ? `<span style="color:#6366f1; margin-left:6px;">${o.phone}</span>` : '';
+                const addr = o.address ? `<div style="font-size:11px; color:#64748b; margin-left:32px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : '';
+                const info = getInstallationDisplayInfo(o);
+                const dur = info ? `<span style="color:#6d28d9; font-size:11px; margin-left:4px;">(${info.duration})</span>` : '';
+                return `<div style="padding:2px 0;"><b style="color:#0ea5e9;">${teamNo}팀</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${dur}${addr}</div>`;
+            }).join('') || '<span style="color:#cbd5e1;">-</span>';
+
             html += `<tr style="border-bottom:1px solid #f1f5f9; background:${bgColor};">
-                <td style="padding:10px; font-weight:bold; white-space:nowrap; font-size:15px;">${slot}~${endSlot}</td>
-                <td style="padding:10px; text-align:center;">
+                <td style="padding:10px; font-weight:bold; white-space:nowrap; font-size:15px; vertical-align:top;">${slot}~${endSlot}</td>
+                <td style="padding:10px; text-align:center; vertical-align:top;">
                     <div style="display:flex; gap:5px; justify-content:center;">${dotsHtml}</div>
                 </td>
-                <td style="padding:10px;">${custHtml}</td>
-                <td style="padding:10px; text-align:center;">${removeHtml}</td>
+                <td style="padding:10px;" colspan="2">${custHtml}</td>
             </tr>`;
         });
         html += '</tbody></table></div>';
