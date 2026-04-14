@@ -3172,12 +3172,34 @@ window.openAdminSlotModal = async (dateStr) => {
         if (dlvLocalInstall.length > 0)  html += renderDeliveryGroup('지방 설치배송', dlvLocalInstall, '#9333ea', '#f5f3ff');
         if (dlvBoardCourier.length > 0)  html += renderDeliveryGroup('보드류 택배', dlvBoardCourier, '#f59e0b', '#fffbeb');
         if (dlvStdCourier.length > 0)    html += renderDeliveryGroup('기타제품 일반택배', dlvStdCourier, '#10b981', '#ecfdf5');
-        if (dlvMetroRemoval.length > 0)  html += renderDeliveryGroup('수도권 철거', dlvMetroRemoval, '#2563eb', '#dbeafe');
         if (dlvOther.length > 0)         html += renderDeliveryGroup('기타 배송', dlvOther, '#64748b', '#f1f5f9');
 
         if (deliveryOnly.length === 0) {
-            html += '<div style="text-align:center; padding:30px; color:#cbd5e1;">배송 건 없음 (설치 시공건은 좌측 시간표에서 확인)</div>';
+            html += '<div style="text-align:center; padding:20px; color:#cbd5e1;">배송 건 없음 (설치 시공건은 좌측 시간표에서 확인)</div>';
         }
+
+        // ===== 철거 섹션 (항상 표시 — 비어있어도) =====
+        // SHIPPING fee=100001 (수도권 철거) + admin_note의 rdate=오늘 매칭
+        const _todayRemovals = [];
+        try {
+            const { data: rDay } = await sb.from('orders')
+                .select('id, manager_name, phone, address, admin_note, status, total_amount, delivery_target_date')
+                .ilike('admin_note', `%rdate=${dateStr}%`)
+                .not('status','in','("취소됨","취소","삭제됨","임시작성","결제대기")');
+            (rDay||[]).forEach(o => _todayRemovals.push(o));
+        } catch(e) { console.warn('removal fetch', e); }
+        // 중복 제거 (id 기준)
+        const _allRemovals = [...dlvMetroRemoval, ..._todayRemovals];
+        const _seenR = new Set();
+        const _uniqueRemovals = _allRemovals.filter(o => { if (_seenR.has(o.id)) return false; _seenR.add(o.id); return true; });
+
+        html += '<div style="margin-top:20px; padding-top:14px; border-top:2px dashed #cbd5e1;"><h4 style="margin:0 0 10px 0; font-size:17px; color:#dc2626;"><i class="fa-solid fa-screwdriver-wrench"></i> 철거 목록</h4>';
+        if (_uniqueRemovals.length > 0) {
+            html += renderDeliveryGroup('🔧 수도권 철거', _uniqueRemovals, '#dc2626', '#fee2e2');
+        } else {
+            html += '<div style="text-align:center; padding:18px; color:#94a3b8; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; font-size:13px;">철거 요청 건 없음</div>';
+        }
+        html += '</div>';
 
         html += '</div></div>'; // grid 닫기
 
