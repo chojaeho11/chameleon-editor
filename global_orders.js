@@ -3175,6 +3175,10 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
         const note = o.admin_note || '';
         const inspChecked = /\[CHK:insp=1\]/.test(note);
         const dlvChecked  = /\[CHK:dlv=1\]/.test(note);
+        const installedChk= /\[CHK:installed=1\]/.test(note);
+        const removedChk  = /\[CHK:removed=1\]/.test(note);
+        const _photosM    = note.match(/\[PHOTOS:([^\]]+)\]/);
+        const _photoUrls  = _photosM ? _photosM[1].split(',').filter(Boolean) : [];
         const _esc = (s) => String(s||'').replace(/'/g,"\\'");
         const pillBase = 'display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:28px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.12s;user-select:none;border:1.5px solid;';
         const pillOff = pillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
@@ -3185,9 +3189,12 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
                     <div><span style="font-weight:700;">${o.manager_name||'-'}</span> <span style="color:#6366f1;">${o.phone || ''}</span> ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}</div>
                     ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px;">${o.address}</div>` : ''}
                 </div>
-                <div style="display:flex; gap:6px; align-items:center; justify-content:flex-end;">
+                <div style="display:flex; gap:5px; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
                     <span onclick="adminToggleOrderCheck('${o.id}','insp',${!inspChecked})" style="${inspChecked?pillOn:pillOff}">검수</span>
                     <span onclick="adminToggleOrderCheck('${o.id}','dlv',${!dlvChecked})" style="${dlvChecked?pillOn:pillOff}">배송</span>
+                    ${installedChk ? `<span style="${pillOn}">설치✓</span>` : ''}
+                    ${removedChk ? `<span style="${pillOn}">철거✓</span>` : ''}
+                    ${_photoUrls.length ? `<span onclick="adminViewPhotos('${o.id}', ${JSON.stringify(_photoUrls).replace(/"/g,'&quot;')})" style="${pillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;">📸 ${_photoUrls.length}</span>` : ''}
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">
                     ${driver ? `<span style="color:#059669; font-size:12px;">🚛${driver.name}</span>` : ''}
@@ -3200,6 +3207,28 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
     html += '</div></div>';
     return html;
 }
+
+// ── 사진 뷰어 모달 ──
+window.adminViewPhotos = function(orderId, urls) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:30000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow:auto;';
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+    const close = document.createElement('button');
+    close.textContent = '✕ 닫기';
+    close.style.cssText = 'position:fixed;top:20px;right:20px;padding:10px 20px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;z-index:1;';
+    close.onclick = () => ov.remove();
+    ov.appendChild(close);
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;max-width:1400px;width:100%;';
+    urls.forEach(u => {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'background:#fff;border-radius:10px;overflow:hidden;';
+        wrap.innerHTML = `<img src="${u}" style="width:100%;height:auto;display:block;cursor:zoom-in;" onclick="window.open('${u}','_blank')"><a href="${u}" download style="display:block;padding:8px;text-align:center;background:#0284c7;color:#fff;text-decoration:none;font-weight:700;">📥 다운로드</a>`;
+        grid.appendChild(wrap);
+    });
+    ov.appendChild(grid);
+    document.body.appendChild(ov);
+};
 
 // ── 검수/배송 체크 토글 (admin_note에 [CHK:insp=1] / [CHK:dlv=1] 마커) ──
 window.adminToggleOrderCheck = async (orderId, kind, checked) => {

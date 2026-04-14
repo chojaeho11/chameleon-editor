@@ -169,14 +169,23 @@
         document.getElementById('loading').style.display = 'flex';
 
         try {
-            // 1. 주문 데이터 가져오기
-            const { data: orders, error } = await sb.from('orders')
+            // 1. 주문 데이터: 본인 배차 OR 설치/철거 카테고리 전체
+            const { data: assignedOrders, error } = await sb.from('orders')
                 .select('*')
                 .eq('staff_driver_id', driverId)
                 .eq('delivery_target_date', date)
                 .order('delivery_time', { ascending: true });
-
             if (error) throw error;
+            // 추가: installation_time 있거나 SHIPPING fee가 100000/100001/700000 인 주문 (배차 안 된 것 포함)
+            const { data: instOrders } = await sb.from('orders')
+                .select('*')
+                .eq('delivery_target_date', date)
+                .or('installation_time.not.is.null,admin_note.ilike.%SHIPPING:fee=100000%,admin_note.ilike.%SHIPPING:fee=100001%,admin_note.ilike.%SHIPPING:fee=700000%')
+                .neq('status', '관리자차단');
+            const _seen = new Set((assignedOrders||[]).map(o => o.id));
+            const _merged = [...(assignedOrders||[])];
+            (instOrders||[]).forEach(o => { if (!_seen.has(o.id)) _merged.push(o); });
+            const orders = _merged;
 
             const list = document.getElementById('taskList');
             list.innerHTML = '';
@@ -248,6 +257,12 @@
                 }
 
                 const _loaded = /\[CHK:dlv=1\]/.test(o.admin_note || '');
+                const _installed = /\[CHK:installed=1\]/.test(o.admin_note || '');
+                const _removed = /\[CHK:removed=1\]/.test(o.admin_note || '');
+                const _photoMatch = (o.admin_note || '').match(/\[PHOTOS:([^\]]+)\]/);
+                const _photos = _photoMatch ? _photoMatch[1].split(',').filter(Boolean) : [];
+                const _isRemovalOrder = /SHIPPING:fee=100001/.test(o.admin_note || '');
+                const _isInstall = !!o.installation_time || /SHIPPING:fee=(100000|700000)/.test(o.admin_note || '');
                 list.innerHTML += `
                     <div class="task-card ${isDone ? 'completed' : ''}">
                         <span class="status-tag ${isDone ? 'done' : 'active'}">
@@ -283,7 +298,25 @@
                                 <i class="fa-solid fa-map"></i> 지도보기
                             </a>
                         </div>
-                        <button class="finish-btn ${isDone ? 'done' : ''}" onclick="toggleComplete('${o.id}', '${o.status}')">
+                        ${(_isInstall||_isRemovalOrder) ? `
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;">
+                            ${_isRemovalOrder ? `
+                                <button onclick="toggleDriverFlag('${o.id}','removed',${!_removed})" style="padding:10px;border-radius:10px;border:2px solid ${_removed?'#ea580c':'#cbd5e1'};background:${_removed?'#f97316':'#fff'};color:${_removed?'#fff':'#475569'};font-weight:800;font-size:13px;cursor:pointer;${_removed?'box-shadow:0 2px 8px rgba(249,115,22,0.35);':''}">
+                                    ${_removed?'✓ 철거 완료':'🔧 철거 완료'}
+                                </button>
+                            ` : `
+                                <button onclick="toggleDriverFlag('${o.id}','installed',${!_installed})" style="padding:10px;border-radius:10px;border:2px solid ${_installed?'#ea580c':'#cbd5e1'};background:${_installed?'#f97316':'#fff'};color:${_installed?'#fff':'#475569'};font-weight:800;font-size:13px;cursor:pointer;${_installed?'box-shadow:0 2px 8px rgba(249,115,22,0.35);':''}">
+                                    ${_installed?'✓ 설치 완료':'🔧 설치 완료'}
+                                </button>
+                            `}
+                            <label style="padding:10px;border-radius:10px;border:2px solid ${_photos.length?'#0284c7':'#cbd5e1'};background:${_photos.length?'#0ea5e9':'#fff'};color:${_photos.length?'#fff':'#475569'};font-weight:800;font-size:13px;cursor:pointer;text-align:center;${_photos.length?'box-shadow:0 2px 8px rgba(14,165,233,0.35);':''}">
+                                📸 ${_isRemovalOrder?'철거':'설치'} 사진 ${_photos.length?`(${_photos.length})`:''}
+                                <input type="file" accept="image/*" capture="environment" multiple style="display:none;" onchange="uploadDriverPhotos('${o.id}', this.files)">
+                            </label>
+                        </div>
+                        ${_photos.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${_photos.slice(0,6).map(u=>`<img src="${u}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;" onclick="window.open('${u}','_blank')">`).join('')}</div>` : ''}
+                        ` : ''}
+                        <button class="finish-btn ${isDone ? 'done' : ''}" style="margin-top:8px;" onclick="toggleComplete('${o.id}', '${o.status}')">
                             ${isDone ? '<i class="fa-solid fa-check"></i> 완료된 배송입니다' : '📦 배송 완료 처리'}
                         </button>
                     </div>`;
@@ -341,6 +374,51 @@
         if (!time) return;
         const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
         if (error) showToast('저장 실패: ' + error.message, 'error');
+    };
+
+    // 일반화된 CHK 마커 토글 (kind: dlv | installed | removed)
+    window.toggleDriverFlag = async function(orderId, kind, checked) {
+        try {
+            const { data } = await sb.from('orders').select('admin_note,status').eq('id', orderId).maybeSingle();
+            let note = (data && data.admin_note) || '';
+            const re = new RegExp(`\\[CHK:${kind}=1\\]`, 'g');
+            note = note.replace(re, '');
+            if (checked) note = (note + ` [CHK:${kind}=1]`).trim();
+            const update = { admin_note: note };
+            // 설치/철거 완료 → status도 자동 업데이트
+            if (checked && (kind === 'installed' || kind === 'removed')) update.status = '배송완료';
+            const { error } = await sb.from('orders').update(update).eq('id', orderId);
+            if (error) throw error;
+            showToast(checked ? '✓ 표시 (관리자 즉시 반영)' : '해제됨', 'success', 1500);
+            loadMyTasks();
+        } catch (e) { showToast('실패: ' + e.message, 'error'); }
+    };
+
+    // 사진 업로드 (Storage 'install-photos' 버킷)
+    window.uploadDriverPhotos = async function(orderId, files) {
+        if (!files || files.length === 0) return;
+        showToast(`사진 ${files.length}장 업로드중...`, 'info', 2000);
+        try {
+            const { data: cur } = await sb.from('orders').select('admin_note').eq('id', orderId).maybeSingle();
+            let note = (cur && cur.admin_note) || '';
+            const existing = (note.match(/\[PHOTOS:([^\]]+)\]/) || [, ''])[1].split(',').filter(Boolean);
+            const urls = [...existing];
+            for (const f of files) {
+                const ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
+                const path = `order-${orderId}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+                const { error: upErr } = await sb.storage.from('install-photos').upload(path, f, { upsert: false, contentType: f.type });
+                if (upErr) { console.warn('upload err', upErr); continue; }
+                const { data: pub } = sb.storage.from('install-photos').getPublicUrl(path);
+                if (pub && pub.publicUrl) urls.push(pub.publicUrl);
+            }
+            note = note.replace(/\[PHOTOS:[^\]]+\]/g, '').trim();
+            if (urls.length) note = (note + ` [PHOTOS:${urls.join(',')}]`).trim();
+            await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
+            showToast(`✓ 사진 ${files.length}장 업로드 완료`, 'success');
+            loadMyTasks();
+        } catch (e) {
+            showToast('업로드 실패: ' + e.message, 'error');
+        }
     };
 
     // 차량 적재 토글 (관리자 페이지의 [배송] 알약과 동기화 — admin_note의 [CHK:dlv=1] 마커)
