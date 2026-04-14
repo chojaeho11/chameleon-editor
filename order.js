@@ -2759,6 +2759,8 @@ function updateSummary(prodTotal, addonTotal, total) {
     // ★ 배송비 추가/삭제 행 표시
     const shAddRow = document.getElementById('cartShippingAddRow');
     if (shAddRow) shAddRow.style.display = (quoteShipping > 0 || cartData.length === 0) ? 'none' : 'block';
+    // 배송 버튼 매번 재렌더 (선택 강조 갱신 + DOM 누락 방지)
+    if (window._renderCartShippingBtns) { try { window._renderCartShippingBtns(); } catch(e) { console.warn('shipping btns render', e); } }
 
     const elTotal = document.getElementById("summaryTotal"); if(elTotal) elTotal.innerText = formatCurrency(displayTotal);
     const cartCount = document.getElementById("cartCount"); if(cartCount) cartCount.innerText = `(${cartData.length})`;

@@ -4881,7 +4881,7 @@ async function handleSubReturn() {
                         <style>@media (max-width:768px){#cartShippingBtns{grid-template-columns:repeat(2,1fr) !important;}}</style>
                         <div id="cartShippingFreeNote" style="font-size:11px; color:#059669; font-weight:600; margin-top:8px; padding:8px 10px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; line-height:1.5;"></div>
                         <script>
-                        (function(){
+                        window._renderCartShippingBtns = function(){
                             var h=window.location.hostname||'';var p=new URLSearchParams(window.location.search);var lg=p.get('lang')||'';
                             var l='kr';if(h.includes('cafe0101')||lg==='ja')l='ja';else if(h.includes('cafe3355')||h.includes('chameleon.design')||lg==='en')l='en';else if(lg==='zh')l='zh';else if(lg==='ar')l='ar';else if(lg==='es')l='es';else if(lg==='de')l='de';else if(lg==='fr')l='fr';
                             var g=document.getElementById('cartShippingGuide');
@@ -4918,6 +4918,7 @@ async function handleSubReturn() {
                             var lbl={kr:'',ja:'',en:'',zh:'',ar:'',es:'',de:'',fr:''};
                             var box=document.getElementById('cartShippingBtns');
                             if(!box)return;
+                            box.innerHTML='';
 
                             // 노랑 안내 버튼 (먼저 추가)
                             var notice = document.createElement('button');
@@ -4951,7 +4952,10 @@ async function handleSubReturn() {
                                     : 'padding:14px 8px;border:2px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;min-width:0;text-align:center;transition:all 0.15s;line-height:1.3;word-break:keep-all;';
                                 box.appendChild(btn);
                             });
-                        })();
+                        };
+                        // 최초 1회 + DOMContentLoaded 시점 안전 호출
+                        if (document.readyState !== 'loading') window._renderCartShippingBtns();
+                        else document.addEventListener('DOMContentLoaded', window._renderCartShippingBtns);
                         </script>
                     </div>
 
@@ -5759,7 +5763,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
 <script type="module" src="./export.js?v=424"></script>
-<script type="module" src="./order.js?v=435"></script>
+<script type="module" src="./order.js?v=436"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>
 <script type="module" src="./ppt-mode.js?v=424"></script>
@@ -6987,7 +6991,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=435'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=436'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
@@ -11907,7 +11911,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=435');
+                    const m = await import('./order.js?v=436');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -11977,7 +11981,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=435').then(m => {
+            import('./order.js?v=436').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -12578,7 +12582,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=435').then(m => {
+        import('./order.js?v=436').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17104,7 +17108,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=435').then(function(mod) {
+            import('./order.js?v=436').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
