@@ -2996,7 +2996,7 @@ window.openAdminSlotModal = async (dateStr) => {
 
     try {
         const { data: orders } = await sb.from('orders')
-            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id, items, delivery_target_date')
+            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id, items, delivery_target_date, admin_note')
             .eq('delivery_target_date', dateStr);
         const dayOrders = orders || [];
 
