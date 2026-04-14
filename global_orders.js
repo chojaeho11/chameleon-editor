@@ -3101,7 +3101,10 @@ window.openAdminSlotModal = async (dateStr) => {
                 return `<div title="${teamNo}팀 고객 예약" style="width:18px; height:18px; border-radius:50%; background:${barColor}; border:2px solid ${barColor};"></div>`;
             }).join('');
 
-            // 고객 정보: 2팀 [이름] [전화] [주소] / 3팀 ...
+            // 고객 정보: 2팀 [이름] [전화] [주소] + 적재/배송 알약 / 사진
+            const _slotPillBase = 'display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid;margin-left:4px;';
+            const _slotPillOff = _slotPillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
+            const _slotPillOn  = _slotPillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 1px 4px rgba(249,115,22,0.3);';
             let custHtml = displayOrders.map((o, i) => {
                 const teamNo = i + 2;
                 const isBlock = (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단';
@@ -3109,13 +3112,23 @@ window.openAdminSlotModal = async (dateStr) => {
                     return `<div style="padding:2px 0; color:#94a3b8; font-style:italic;"><b style="color:#dc2626;">${teamNo}팀</b> 관리자 차단 <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:12px; padding:0 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')">[해제]</button></div>`;
                 }
                 const phone = o.phone ? `<span style="color:#6366f1; margin-left:6px;">${o.phone}</span>` : '';
-                const addr = o.address ? `<div style="font-size:11px; color:#64748b; margin-left:32px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : '';
+                const addr = o.address ? `<div style="font-size:11px; color:#64748b; margin-left:24px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : '';
+                const _n = o.admin_note || '';
+                const _ld = /\[CHK:loaded=1\]/.test(_n);
+                const _dv = /\[CHK:delivered=1\]/.test(_n) || /\[CHK:installed=1\]/.test(_n) || /\[CHK:removed=1\]/.test(_n);
+                const _phM = _n.match(/\[PHOTOS:([^\]]+)\]/);
+                const _phUrls = _phM ? _phM[1].split(',').filter(Boolean) : [];
+                const _pills = `
+                    <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','loaded',${!_ld})" style="${_ld?_slotPillOn:_slotPillOff}">적재</span>
+                    <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','delivered',${!_dv})" style="${_dv?_slotPillOn:_slotPillOff}">${o._isRemoval?'철거':'배송'}완료</span>
+                    ${_phUrls.length ? `<span onclick="event.stopPropagation();adminViewPhotos('${o.id}', ${JSON.stringify(_phUrls).replace(/"/g,'&quot;')})" style="${_slotPillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;">📸${_phUrls.length}</span>` : ''}
+                `;
                 if (o._isRemoval) {
-                    return `<div style="padding:2px 0;"><b style="color:#2563eb;">${teamNo}팀 🔧 철거</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${addr}</div>`;
+                    return `<div style="padding:3px 0;"><b style="color:#2563eb;">${teamNo}팀 🔧 철거</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${_pills}${addr}</div>`;
                 }
                 const info = getInstallationDisplayInfo(o);
                 const dur = info ? `<span style="color:#6d28d9; font-size:11px; margin-left:4px;">(${info.duration})</span>` : '';
-                return `<div style="padding:2px 0;"><b style="color:#0ea5e9;">${teamNo}팀</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${dur}${addr}</div>`;
+                return `<div style="padding:3px 0;"><b style="color:#0ea5e9;">${teamNo}팀</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${dur}${_pills}${addr}</div>`;
             }).join('') || '<span style="color:#cbd5e1;">-</span>';
 
             html += `<tr style="border-bottom:1px solid #f1f5f9; background:${bgColor};">
