@@ -251,11 +251,11 @@
                 const _doneFlag = isDone || _installed || _removed;
                 // 배송기사 앱은 단일 마커 'delivered'만 사용 (관리자도 동일 마커 인식)
                 const _doneKind = 'delivered';
-                // 적재/완료/사진 중 하나라도 체크됐으면 카드 50% 회색
-                const _anyAction = _loaded || _installed || _removed || _photos.length > 0;
+                // 적재완료 + 배송완료 둘 다 체크돼야 카드 회색 (사진 업로드는 회색이어도 가능)
+                const _bothDone = _loaded && (_installed || _removed);
                 const pillStyle = (active, color) => `padding:8px 4px;border-radius:8px;border:2px solid ${active?color:'#cbd5e1'};background:${active?color:'#fff'};color:${active?'#fff':'#475569'};font-weight:800;font-size:12px;cursor:pointer;text-align:center;${active?`box-shadow:0 2px 6px ${color}55;`:''}line-height:1.2;`;
                 list.innerHTML += `
-                    <div class="task-card ${_doneFlag ? 'completed' : ''}" draggable="true" data-order-id="${o.id}" ondragstart="_dragStart(event)" ondragover="_dragOver(event)" ondrop="_dragDrop(event)" ondragend="_dragEnd(event)" style="cursor:move; padding:12px; margin-bottom:10px;${_anyAction?'opacity:0.5;filter:grayscale(0.5);':''}">
+                    <div class="task-card ${_doneFlag ? 'completed' : ''}" draggable="true" data-order-id="${o.id}" ondragstart="_dragStart(event)" ondragover="_dragOver(event)" ondrop="_dragDrop(event)" ondragend="_dragEnd(event)" style="cursor:move; padding:12px; margin-bottom:10px;${_bothDone?'opacity:0.5;filter:grayscale(0.5);':''}">
                         <!-- 상단 3개 액션 버튼 -->
                         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:8px;">
                             <button onclick="toggleDriverLoaded('${o.id}', ${!_loaded})" style="${pillStyle(_loaded,'#f97316')}">${_loaded?'✓ 적재완료':'🚛 적재완료'}</button>
