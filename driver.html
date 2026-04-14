@@ -16,7 +16,7 @@
     <style>
         body { margin: 0; background: #f1f5f9; font-family: 'Pretendard', sans-serif; color: #334155; -webkit-tap-highlight-color: transparent; padding-bottom: 30px; }
 
-        .navbar { background: #6366f1; color: white; padding: 15px 20px; padding-top: env(safe-area-inset-top, 20px); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(99,102,241,0.3); }
+        .navbar { background: #6366f1; color: white; padding: 18px 20px 14px; padding-top: calc(env(safe-area-inset-top, 0px) + 28px); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(99,102,241,0.3); }
         .app-header { display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
 
@@ -271,17 +271,13 @@
                             <a href="tel:${o.phone || ''}" style="text-align:center; padding:7px; border-radius:6px; background:#f0fdf4; color:#059669; text-decoration:none; font-size:12px; font-weight:700; border:1px solid #bbf7d0;"><i class="fa-solid fa-phone"></i> 전화</a>
                             <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address || '')}" target="_blank" style="text-align:center; padding:7px; border-radius:6px; background:#eff6ff; color:#2563eb; text-decoration:none; font-size:12px; font-weight:700; border:1px solid #bfdbfe;"><i class="fa-solid fa-map"></i> 지도</a>
                         </div>
-                        <!-- 고객메모 + 주차노하우 토글 -->
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                        <!-- 고객메모 + 순서 이동 -->
+                        <div style="display:grid; grid-template-columns:1fr auto auto; gap:5px;">
                             <button onclick="toggleSection('memo_${o.id}')" style="padding:6px; border-radius:6px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:11px; font-weight:700; cursor:pointer;">📝 고객메모${o.request_note?' ●':''}</button>
-                            <button onclick="toggleSection('tip_${o.id}')" style="padding:6px; border-radius:6px; background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; font-size:11px; font-weight:700; cursor:pointer;">💡 주차노하우${tip?' ●':''}</button>
+                            <button onclick="moveCard('${o.id}', -1)" style="padding:6px 10px; border-radius:6px; background:#fff; color:#475569; border:1px solid #cbd5e1; font-size:13px; font-weight:700; cursor:pointer;" title="위로">▲</button>
+                            <button onclick="moveCard('${o.id}', 1)" style="padding:6px 10px; border-radius:6px; background:#fff; color:#475569; border:1px solid #cbd5e1; font-size:13px; font-weight:700; cursor:pointer;" title="아래로">▼</button>
                         </div>
                         <div id="memo_${o.id}" style="display:none; margin-top:6px; padding:8px; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; font-size:12px; color:#78350f; white-space:pre-wrap;">${o.request_note || '메모 없음'}</div>
-                        <div id="tip_${o.id}" style="display:none; margin-top:6px;">
-                            ${tip ? `<div style="padding:8px; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:6px; font-size:12px; color:#5b21b6;">${tip.content.replace(/\n/g,'<br>')}<div style="font-size:10px; opacity:0.7; text-align:right; margin-top:4px;">- ${tip.writer_name||'동료'}</div></div>` : ''}
-                            <textarea id="input_tip_${o.id}" placeholder="이곳 노하우 공유" style="width:100%; padding:6px; margin-top:4px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; min-height:50px;">${tip?tip.content:''}</textarea>
-                            <button onclick="saveKnowhow('${o.address}','${o.id}')" style="width:100%; padding:6px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; margin-top:4px; cursor:pointer;">💾 저장</button>
-                        </div>
                         ${_photos.length ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:6px;">${_photos.slice(0,8).map(u=>`<img src="${u}" style="width:42px;height:42px;object-fit:cover;border-radius:4px;cursor:pointer;" onclick="window.open('${u}','_blank')">`).join('')}</div>` : ''}
                     </div>`;
             });
@@ -341,6 +337,23 @@
     };
 
     window.toggleSection = (id) => { const el = document.getElementById(id); if (el) el.style.display = el.style.display==='none' ? 'block' : 'none'; };
+
+    // 카드 위/아래 이동 (순서 저장)
+    window.moveCard = (orderId, dir) => {
+        const list = document.getElementById('taskList');
+        const cards = [...list.querySelectorAll('[data-order-id]')];
+        const idx = cards.findIndex(c => c.dataset.orderId === String(orderId));
+        if (idx === -1) return;
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= cards.length) return;
+        if (dir < 0) list.insertBefore(cards[idx], cards[newIdx]);
+        else list.insertBefore(cards[newIdx], cards[idx]);
+        // 저장
+        const teamSel = document.getElementById('driverSelect').value || 'all';
+        const date = document.getElementById('workDate').value;
+        const order = [...list.querySelectorAll('[data-order-id]')].map(el => el.dataset.orderId);
+        try { localStorage.setItem(`driverOrder_${teamSel}_${date}`, JSON.stringify(order)); } catch(e){}
+    };
 
     // ── 드래그 정렬 (localStorage에 driver+date별로 순서 저장) ──
     let _dragSrc = null;
