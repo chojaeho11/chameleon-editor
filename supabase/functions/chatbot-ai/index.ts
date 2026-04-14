@@ -378,22 +378,23 @@ ${lp.orderTracking}`;
         }
         messages.push({ role: "user", content: message });
 
-        // 답변에서 JSON / 코드블록 누출 제거
+        // 답변에서 JSON / 코드블록 누출 제거 — 단, 결과가 비면 원본 유지
         function sanitizeReply(s: string): string {
             if (!s) return s;
+            const original = s;
             let out = s;
-            // 1) 마크다운 코드블록 제거
             out = out.replace(/```[\s\S]*?```/g, '');
-            // 2) 인라인 JSON 객체 블록 제거 (3줄 이상 매우 JSON 같은 것)
             out = out.replace(/\{[^{}]*"[a-zA-Z_]+"\s*:\s*"[^"]*"[\s\S]*?\}/g, (match) => {
-                // "key": "value" 패턴이 2개 이상 포함된 경우만 제거
                 const keyCount = (match.match(/"[a-zA-Z_]+"\s*:/g) || []).length;
                 return keyCount >= 2 ? '' : match;
             });
-            // 3) 긴 JSON 배열 제거 (10자 초과)
             out = out.replace(/\[\s*\{[\s\S]*?\}\s*\]/g, (match) => match.length > 60 ? '' : match);
-            // 4) 3개 연속 줄바꿈 정리
             out = out.replace(/\n{3,}/g, '\n\n').trim();
+            // ★ sanitize 후 빈 문자열이면 원본 그대로 반환 (전체 wipe-out 방지)
+            if (!out || out.length < 5) {
+                console.warn('[sanitizeReply] result empty after strip — returning original');
+                return original.replace(/\n{3,}/g, '\n\n').trim();
+            }
             return out;
         }
 
@@ -440,10 +441,26 @@ ${lp.orderTracking}`;
                 .join("\n");
         }
         
-        let reply = await callClaude("claude-sonnet-4-20250514");
+        let reply = '';
+        try {
+            reply = await callClaude("claude-sonnet-4-6");
+        } catch (eM) {
+            console.warn('Sonnet 4.6 failed, falling back to Haiku:', eM);
+            reply = await callClaude("claude-haiku-4-5-20251001");
+        }
 
         // 후처리: JSON/코드 블록 누출 차단
         reply = sanitizeReply(reply);
+
+        // ★ 그래도 빈 응답이면 친화 메시지로 폴백
+        if (!reply || !reply.trim()) {
+            const fb: Record<string,string> = {
+                kr: '죄송해요, 지금 답변을 준비하지 못했어요. 한 번 더 질문해 주시거나 하단 \'상담사 연결\' 버튼을 눌러주세요!',
+                ja: '申し訳ございません、ただいま回答を準備できませんでした。もう一度ご質問いただくか、下の「相談員に接続」をご利用ください。',
+                en: 'Sorry, I couldn\'t generate a reply this time. Please ask again or click "Connect to Agent" below.'
+            };
+            reply = fb[lang === 'us' ? 'en' : lang] || fb.kr;
+        }
 
         return new Response(
             JSON.stringify({ reply }),
