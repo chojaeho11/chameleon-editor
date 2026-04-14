@@ -247,11 +247,15 @@
                         </div>`;
                 }
 
+                const _loaded = /\[CHK:dlv=1\]/.test(o.admin_note || '');
                 list.innerHTML += `
                     <div class="task-card ${isDone ? 'completed' : ''}">
                         <span class="status-tag ${isDone ? 'done' : 'active'}">
                             ${isDone ? '배송완료' : '배송중'}
                         </span>
+                        <button onclick="toggleDriverLoaded('${o.id}', ${!_loaded})" style="margin-left:6px;border-radius:999px;padding:6px 14px;border:1.5px solid ${_loaded?'#ea580c':'#cbd5e1'};background:${_loaded?'#f97316':'#fff'};color:${_loaded?'#fff':'#64748b'};font-size:13px;font-weight:700;cursor:pointer;${_loaded?'box-shadow:0 2px 6px rgba(249,115,22,0.35);':''}">
+                            ${_loaded ? '✓ 적재 완료' : '🚛 차량 적재'}
+                        </button>
                         <div class="client-name">${o.manager_name || o.user_name || '고객'}</div>
                         <div class="client-addr">
                             <i class="fa-solid fa-map-pin" style="margin-top:3px; color:#ef4444;"></i>
@@ -337,6 +341,22 @@
         if (!time) return;
         const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
         if (error) showToast('저장 실패: ' + error.message, 'error');
+    };
+
+    // 차량 적재 토글 (관리자 페이지의 [배송] 알약과 동기화 — admin_note의 [CHK:dlv=1] 마커)
+    window.toggleDriverLoaded = async function(orderId, checked) {
+        try {
+            const { data } = await sb.from('orders').select('admin_note').eq('id', orderId).maybeSingle();
+            let note = (data && data.admin_note) || '';
+            note = note.replace(/\[CHK:dlv=1\]/g, '');
+            if (checked) note = (note + ' [CHK:dlv=1]').trim();
+            const { error } = await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
+            if (error) throw error;
+            showToast(checked ? '✓ 차량 적재 표시됨 (관리자에 즉시 반영)' : '적재 표시 해제', 'success');
+            loadMyTasks();
+        } catch (e) {
+            showToast('처리 실패: ' + e.message, 'error');
+        }
     };
 
     window.toggleComplete = async function(orderId, currentStatus) {
