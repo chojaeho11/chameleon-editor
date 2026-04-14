@@ -3018,6 +3018,21 @@ window.openAdminSlotModal = async (dateStr) => {
             }
         });
 
+        // 철거 건: admin_note의 rdate=dateStr이면 rtime 슬롯에 1팀 추가 (파랑 표시)
+        try {
+            const { data: rData } = await sb.from('orders')
+                .select('id, admin_note, manager_name, phone, address, total_amount, status')
+                .ilike('admin_note', `%rdate=${dateStr}%`);
+            (rData || []).forEach(o => {
+                const m = (o.admin_note || '').match(/rtime=(\d{2}:\d{2})/);
+                if (!m) return;
+                const t = m[1];
+                if (!ADMIN_SLOTS.includes(t)) return;
+                slotTeams[t]++;
+                slotOrders[t].push({ ...o, _isRemoval: true });
+            });
+        } catch(e) { console.warn('철거 조회 실패:', e); }
+
         // 일반 배송 분류 (installation_time 없는 건만)
         const deliveryOnly = dayOrders.filter(o => !o.installation_time);
         // admin_note에서 SHIPPING meta 파싱
@@ -3049,11 +3064,18 @@ window.openAdminSlotModal = async (dateStr) => {
 
         ADMIN_SLOTS.forEach((slot, idx) => {
             const endSlot = idx + 1 < ADMIN_SLOTS.length ? ADMIN_SLOTS[idx + 1] : '22:00';
-            const uniqueOrders = [...new Map(slotOrders[slot].map(o => [o.id, o])).values()];
+            // 같은 id가 여러 entry로 들어올 수 있으므로 _isRemoval 플래그 보존
+            const _byId = new Map();
+            slotOrders[slot].forEach(o => {
+                const key = `${o.id}|${o._isRemoval?'r':'i'}`;
+                if (!_byId.has(key)) _byId.set(key, o);
+            });
+            const uniqueOrders = [..._byId.values()];
             const adminBlockOrders = uniqueOrders.filter(o => (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단');
-            const customerOrders = uniqueOrders.filter(o => !((o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단'));
-            // 표시 우선순위: 고객 예약 → 관리자 차단. 1팀(베이스라인)은 행에서 숨김 → 2팀/3팀 슬롯만
-            const displayOrders = [...customerOrders, ...adminBlockOrders].slice(0, ADMIN_MAX_TEAMS - 1);
+            const removalOrders = uniqueOrders.filter(o => o._isRemoval);
+            const customerOrders = uniqueOrders.filter(o => !o._isRemoval && !((o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단'));
+            // 표시 우선순위: 고객 시공 → 철거 → 관리자 차단. 1팀(베이스라인)은 숨김 → 2팀/3팀만
+            const displayOrders = [...customerOrders, ...removalOrders, ...adminBlockOrders].slice(0, ADMIN_MAX_TEAMS - 1);
             const usedDisplay = displayOrders.length; // 0/1/2
             const isFull = usedDisplay >= ADMIN_MAX_TEAMS - 1;
             const barColor = isFull ? '#ef4444' : (usedDisplay > 0 ? '#f59e0b' : '#22c55e');
@@ -3070,6 +3092,9 @@ window.openAdminSlotModal = async (dateStr) => {
                 if (isBlock) {
                     return `<div title="클릭해 ${teamNo}팀 차단 해제" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${teamNo},'${order.id}')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#dc2626; border:2px solid #991b1b; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:bold;">×</div>`;
                 }
+                if (order._isRemoval) {
+                    return `<div title="${teamNo}팀 철거" style="width:18px; height:18px; border-radius:50%; background:#2563eb; border:2px solid #1d4ed8; display:flex; align-items:center; justify-content:center; color:#fff; font-size:9px; font-weight:bold;">철</div>`;
+                }
                 return `<div title="${teamNo}팀 고객 예약" style="width:18px; height:18px; border-radius:50%; background:${barColor}; border:2px solid ${barColor};"></div>`;
             }).join('');
 
@@ -3082,6 +3107,9 @@ window.openAdminSlotModal = async (dateStr) => {
                 }
                 const phone = o.phone ? `<span style="color:#6366f1; margin-left:6px;">${o.phone}</span>` : '';
                 const addr = o.address ? `<div style="font-size:11px; color:#64748b; margin-left:32px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : '';
+                if (o._isRemoval) {
+                    return `<div style="padding:2px 0;"><b style="color:#2563eb;">${teamNo}팀 🔧 철거</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${addr}</div>`;
+                }
                 const info = getInstallationDisplayInfo(o);
                 const dur = info ? `<span style="color:#6d28d9; font-size:11px; margin-left:4px;">(${info.duration})</span>` : '';
                 return `<div style="padding:2px 0;"><b style="color:#0ea5e9;">${teamNo}팀</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${dur}${addr}</div>`;

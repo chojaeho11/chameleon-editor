@@ -1135,6 +1135,7 @@ async function fetchInstallationSlots(date) {
 
     try {
         const _sb = window.sb || sb;
+        // 1) 그날 installation_time 가진 주문
         const { data } = await _sb.from('orders')
             .select('installation_time, total_amount, status, manager_name')
             .eq('delivery_target_date', date)
@@ -1145,7 +1146,6 @@ async function fetchInstallationSlots(date) {
             if (startIdx === -1) return;
             const isBlock = order.status === '관리자차단' || (order.manager_name || '').startsWith('[차단]');
             if (isBlock) {
-                // 관리자 차단은 1슬롯만 점유 (단일 시간대)
                 adminBlocks[INSTALL_TIME_SLOTS[startIdx]]++;
             } else {
                 const info = getInstallationSlotInfo(order.total_amount || 0);
@@ -1154,6 +1154,17 @@ async function fetchInstallationSlots(date) {
                     customerBookings[INSTALL_TIME_SLOTS[i]]++;
                 }
             }
+        });
+
+        // 2) 그날에 철거(rdate=date)가 잡힌 주문도 1슬롯 점유
+        const { data: rData } = await _sb.from('orders')
+            .select('admin_note')
+            .ilike('admin_note', `%rdate=${date}%`);
+        (rData || []).forEach(o => {
+            const m = (o.admin_note || '').match(/rtime=(\d{2}:\d{2})/);
+            if (!m) return;
+            const t = m[1];
+            if (INSTALL_TIME_SLOTS.includes(t)) customerBookings[t]++;
         });
     } catch(e) { console.warn('설치 슬롯 조회 실패:', e); }
 
