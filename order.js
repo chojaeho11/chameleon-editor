@@ -822,6 +822,7 @@ function hasBoardInCart() {
 // 모든 금액 주문 가능, 제한 없음
 
 // ── 장바구니 합계 (KRW) ──
+window.calculateCartTotalKRW = function() { return calculateCartTotalKRW(); };
 function calculateCartTotalKRW() {
     let total = 0;
     cartData.forEach(item => {
@@ -2776,6 +2777,22 @@ function updateSummary(prodTotal, addonTotal, total) {
     // ★ 배송 선택지: 카트 비어있지 않으면 항상 표시 (선택 후에도 변경 가능)
     const shAddRow = document.getElementById('cartShippingAddRow');
     if (shAddRow) shAddRow.style.display = (cartData.length === 0) ? 'none' : 'block';
+    // ★ 자동 사전선택: 허니콤 + 100만원 미만 → 수도권 유료설치 자동 체크 (사용자가 한 번도 만지지 않은 경우만)
+    try {
+        const _hcAuto = window._cartHasHoneycomb && window._cartHasHoneycomb();
+        const _totalAuto = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
+        const _userTouched = localStorage.getItem('chameleon_metro_install_touched') === '1';
+        if (_hcAuto && _totalAuto < 1000000 && _totalAuto > 0 && !_userTouched) {
+            const _alreadySet = localStorage.getItem('chameleon_metro_install') === '1';
+            const _hasOtherShip = (() => {
+                try { const s = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}'); return s.fee && s.fee !== 100000 && s.fee !== 200000; } catch(e) { return false; }
+            })();
+            if (!_alreadySet && !_hasOtherShip) {
+                localStorage.setItem('chameleon_metro_install', '1');
+                if (typeof _syncMetroFee === 'function') _syncMetroFee();
+            }
+        }
+    } catch(e) {}
     // 배송 버튼 매번 재렌더 (선택 강조 갱신 + DOM 누락 방지)
     if (window._renderCartShippingBtns) { try { window._renderCartShippingBtns(); } catch(e) { console.warn('shipping btns render', e); } }
 
@@ -4655,6 +4672,7 @@ window._removeCartShipping = function() {
 
 // 수도권 유료설치/철거: 토글 (다른 배송과 별개로 복수 선택 가능)
 window._toggleMetroInstall = function() {
+    localStorage.setItem('chameleon_metro_install_touched', '1');
     const cur = localStorage.getItem('chameleon_metro_install') === '1';
     if (cur) {
         localStorage.removeItem('chameleon_metro_install');

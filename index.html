@@ -4934,8 +4934,17 @@ async function handleSubReturn() {
                                 de:'1M+ Großraum kostenlos',
                                 fr:'1M+ métro gratuit'
                             };
-                            notice.textContent = noticeTxt[l] || noticeTxt['kr'];
-                            notice.style.cssText = 'grid-column:1/-1;padding:12px;border:2px solid #f59e0b;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border-radius:10px;font-size:14px;font-weight:800;text-align:center;cursor:default;margin-bottom:6px;box-shadow:0 2px 6px rgba(245,158,11,0.25);';
+                            // 100만원 이상 + 수도권 주소 → 강조
+                            var _addrEl = document.getElementById('cartReceiverAddr');
+                            var _addr = _addrEl ? (_addrEl.value||'') : '';
+                            var _metroKw = ['서울','경기','인천','성남','분당','수원','고양','용인','부천','안산','안양','화성','광명','군포','하남','과천','시흥','파주','김포','일산','판교','동탄','위례','세종'];
+                            var _isMetro = !_addr || _metroKw.some(function(k){return _addr.indexOf(k)>=0;});
+                            var _cartTot = (window.calculateCartTotalKRW ? window.calculateCartTotalKRW() : 0);
+                            var _noticeActive = _cartTot >= 1000000 && _isMetro;
+                            notice.textContent = (_noticeActive ? '✓ ' : '') + (noticeTxt[l] || noticeTxt['kr']) + (_noticeActive ? ' (적용됨)' : '');
+                            notice.style.cssText = _noticeActive
+                                ? 'grid-column:1/-1;padding:14px;border:3px solid #d97706;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border-radius:10px;font-size:14px;font-weight:900;text-align:center;cursor:default;margin-bottom:6px;box-shadow:0 6px 16px rgba(245,158,11,0.5);transform:scale(1.02);'
+                                : 'grid-column:1/-1;padding:12px;border:2px solid #f59e0b;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border-radius:10px;font-size:14px;font-weight:800;text-align:center;cursor:default;margin-bottom:6px;box-shadow:0 2px 6px rgba(245,158,11,0.25);';
                             box.appendChild(notice);
 
                             // 현재 선택 상태
@@ -5773,7 +5782,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
 <script type="module" src="./export.js?v=424"></script>
-<script type="module" src="./order.js?v=440"></script>
+<script type="module" src="./order.js?v=441"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>
 <script type="module" src="./ppt-mode.js?v=424"></script>
@@ -7001,7 +7010,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=440'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=441'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
@@ -11921,7 +11930,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=440');
+                    const m = await import('./order.js?v=441');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -11991,7 +12000,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=440').then(m => {
+            import('./order.js?v=441').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -12592,7 +12601,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=440').then(m => {
+        import('./order.js?v=441').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17118,7 +17127,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=440').then(function(mod) {
+            import('./order.js?v=441').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
