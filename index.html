@@ -4914,26 +4914,28 @@ async function handleSubReturn() {
                                 {fee:100001, kr:'수도권 철거 (10만원)',ja:'首都圏 撤去',en:'Metro Removal',zh:'首都圈 拆除',ar:'إزالة',es:'Desmontaje metro',de:'Großraum Demontage',fr:'Démontage métro'}
                             ];
 
-                            // 노랑 안내 버튼: 100만원 이상 수도권 무료 배송·설치
+                            var lbl={kr:'',ja:'',en:'',zh:'',ar:'',es:'',de:'',fr:''};
+                            var box=document.getElementById('cartShippingBtns');
+                            if(!box)return;
+
+                            // 노랑 안내 버튼 (먼저 추가)
                             var notice = document.createElement('button');
                             notice.type = 'button';
                             notice.disabled = true;
                             var noticeTxt = {
-                                kr:'⭐ 100만원 이상 수도권은 무료 배송·설치',
-                                ja:'⭐ 100万円以上 首都圏 無料配送・設置',
-                                en:'⭐ Metro KR 1M+ : Free delivery & install',
-                                zh:'⭐ 100万以上 首都圈 免费配送·安装',
-                                ar:'⭐ 1M+ مجاني',
-                                es:'⭐ 1M+ metro gratis',
-                                de:'⭐ 1M+ Großraum kostenlos',
-                                fr:'⭐ 1M+ métro gratuit'
+                                kr:'100만원 이상 수도권은 무료 배송·설치',
+                                ja:'100万円以上 首都圏 無料配送・設置',
+                                en:'Metro KR 1M+ : Free delivery & install',
+                                zh:'100万以上 首都圈 免费配送·安装',
+                                ar:'1M+ مجاني',
+                                es:'1M+ metro gratis',
+                                de:'1M+ Großraum kostenlos',
+                                fr:'1M+ métro gratuit'
                             };
                             notice.textContent = noticeTxt[l] || noticeTxt['kr'];
                             notice.style.cssText = 'grid-column:1/-1;padding:12px;border:2px solid #f59e0b;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border-radius:10px;font-size:14px;font-weight:800;text-align:center;cursor:default;margin-bottom:6px;box-shadow:0 2px 6px rgba(245,158,11,0.25);';
                             box.appendChild(notice);
-                            var lbl={kr:'지방 ',ja:'地方 ',en:'Regional ',zh:'地方 ',ar:'إقليمي ',es:'Regional ',de:'Regional ',fr:'Regional '};
-                            var box=document.getElementById('cartShippingBtns');
-                            if(!box)return;
+
                             // 현재 선택된 배송 fee
                             var _curFee = 0;
                             try { var _sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}'); _curFee = _sd.fee||0; } catch(e){}
