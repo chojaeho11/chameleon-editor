@@ -3173,28 +3173,33 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
         const isDone = o.status === '배송완료' || o.status === '완료됨';
         const installInfo = showTime ? getInstallationDisplayInfo(o) : null;
         const note = o.admin_note || '';
-        const inspChecked = /\[CHK:insp=1\]/.test(note);
-        const dlvChecked  = /\[CHK:dlv=1\]/.test(note);
-        const installedChk= /\[CHK:installed=1\]/.test(note);
-        const removedChk  = /\[CHK:removed=1\]/.test(note);
-        const _photosM    = note.match(/\[PHOTOS:([^\]]+)\]/);
-        const _photoUrls  = _photosM ? _photosM[1].split(',').filter(Boolean) : [];
+        // 통합 마커: loaded/delivered/courier/localtruck/installed/removed/insp
+        const loadedChk    = /\[CHK:loaded=1\]/.test(note);
+        const deliveredChk = /\[CHK:delivered=1\]/.test(note) || /\[CHK:installed=1\]/.test(note) || /\[CHK:removed=1\]/.test(note);
+        const courierChk   = /\[CHK:courier=1\]/.test(note);
+        const localTruckChk= /\[CHK:localtruck=1\]/.test(note);
+        const inspChecked  = /\[CHK:insp=1\]/.test(note);
+        const _photosM     = note.match(/\[PHOTOS:([^\]]+)\]/);
+        const _photoUrls   = _photosM ? _photosM[1].split(',').filter(Boolean) : [];
         const _esc = (s) => String(s||'').replace(/'/g,"\\'");
         const pillBase = 'display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:28px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.12s;user-select:none;border:1.5px solid;';
         const pillOff = pillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
         const pillOn  = pillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 2px 6px rgba(249,115,22,0.35);';
         html += `<div style="padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${isDone?'opacity:0.5;':''}">
-            <div style="display:grid; grid-template-columns:1fr 140px 110px; gap:12px; align-items:center;">
+            <div style="display:grid; grid-template-columns:1fr 280px 110px; gap:12px; align-items:center;">
                 <div style="min-width:0;">
                     <div><span style="font-weight:700;">${o.manager_name||'-'}</span> <span style="color:#6366f1;">${o.phone || ''}</span> ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}</div>
                     ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px;">${o.address}</div>` : ''}
                 </div>
-                <div style="display:flex; gap:5px; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
-                    <span onclick="adminToggleOrderCheck('${o.id}','insp',${!inspChecked})" style="${inspChecked?pillOn:pillOff}">검수</span>
-                    <span onclick="adminToggleOrderCheck('${o.id}','dlv',${!dlvChecked})" style="${dlvChecked?pillOn:pillOff}">배송</span>
-                    ${installedChk ? `<span style="${pillOn}">설치✓</span>` : ''}
-                    ${removedChk ? `<span style="${pillOn}">철거✓</span>` : ''}
-                    ${_photoUrls.length ? `<span onclick="adminViewPhotos('${o.id}', ${JSON.stringify(_photoUrls).replace(/"/g,'&quot;')})" style="${pillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;">📸 ${_photoUrls.length}</span>` : ''}
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; align-items:center;">
+                    <span onclick="adminToggleOrderCheck('${o.id}','loaded',${!loadedChk})" style="${loadedChk?pillOn:pillOff}">적재완료</span>
+                    <span onclick="adminToggleOrderCheck('${o.id}','delivered',${!deliveredChk})" style="${deliveredChk?pillOn:pillOff}">배송완료</span>
+                    <span onclick="adminToggleOrderCheck('${o.id}','courier',${!courierChk})" style="${courierChk?pillOn:pillOff}">택배완료</span>
+                    <span onclick="adminToggleOrderCheck('${o.id}','localtruck',${!localTruckChk})" style="${localTruckChk?pillOn:pillOff}">지방용차</span>
+                </div>
+                <div style="display:flex; gap:5px; align-items:center; justify-content:flex-end; margin-top:4px;">
+                    <span onclick="adminToggleOrderCheck('${o.id}','insp',${!inspChecked})" style="${inspChecked?pillOn:pillOff};font-size:11px;padding:0 8px;height:24px;min-width:auto;">검수</span>
+                    ${_photoUrls.length ? `<span onclick="adminViewPhotos('${o.id}', ${JSON.stringify(_photoUrls).replace(/"/g,'&quot;')})" style="${pillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;font-size:11px;height:24px;padding:0 10px;min-width:auto;">📸 ${_photoUrls.length}</span>` : ''}
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">
                     ${driver ? `<span style="color:#059669; font-size:12px;">🚛${driver.name}</span>` : ''}

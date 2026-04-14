@@ -242,14 +242,15 @@
                         </div>`;
                 }
 
-                const _loaded = /\[CHK:dlv=1\]/.test(o.admin_note || '');
-                const _installed = /\[CHK:installed=1\]/.test(o.admin_note || '');
-                const _removed = /\[CHK:removed=1\]/.test(o.admin_note || '');
+                const _loaded = /\[CHK:loaded=1\]/.test(o.admin_note || '');
+                const _installed = /\[CHK:delivered=1\]/.test(o.admin_note || '') || /\[CHK:installed=1\]/.test(o.admin_note || '');
+                const _removed = /\[CHK:delivered=1\]/.test(o.admin_note || '') || /\[CHK:removed=1\]/.test(o.admin_note || '');
                 const _photoMatch = (o.admin_note || '').match(/\[PHOTOS:([^\]]+)\]/);
                 const _photos = _photoMatch ? _photoMatch[1].split(',').filter(Boolean) : [];
                 const _isRemovalOrder = /SHIPPING:fee=100001/.test(o.admin_note || '');
                 const _doneFlag = isDone || _installed || _removed;
-                const _doneKind = _isRemovalOrder ? 'removed' : 'installed';
+                // 배송기사 앱은 단일 마커 'delivered'만 사용 (관리자도 동일 마커 인식)
+                const _doneKind = 'delivered';
                 // 적재/완료/사진 중 하나라도 체크됐으면 카드 50% 회색
                 const _anyAction = _loaded || _installed || _removed || _photos.length > 0;
                 const pillStyle = (active, color) => `padding:8px 4px;border-radius:8px;border:2px solid ${active?color:'#cbd5e1'};background:${active?color:'#fff'};color:${active?'#fff':'#475569'};font-weight:800;font-size:12px;cursor:pointer;text-align:center;${active?`box-shadow:0 2px 6px ${color}55;`:''}line-height:1.2;`;
@@ -405,20 +406,9 @@
         }
     };
 
-    // 차량 적재 토글 (관리자 페이지의 [배송] 알약과 동기화 — admin_note의 [CHK:dlv=1] 마커)
-    window.toggleDriverLoaded = async function(orderId, checked) {
-        try {
-            const { data } = await sb.from('orders').select('admin_note').eq('id', orderId).maybeSingle();
-            let note = (data && data.admin_note) || '';
-            note = note.replace(/\[CHK:dlv=1\]/g, '');
-            if (checked) note = (note + ' [CHK:dlv=1]').trim();
-            const { error } = await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
-            if (error) throw error;
-            showToast(checked ? '✓ 차량 적재 표시됨 (관리자에 즉시 반영)' : '적재 표시 해제', 'success');
-            loadMyTasks();
-        } catch (e) {
-            showToast('처리 실패: ' + e.message, 'error');
-        }
+    // 적재 완료 토글 (관리자 [적재완료] 알약과 동기화 — [CHK:loaded=1])
+    window.toggleDriverLoaded = function(orderId, checked) {
+        return window.toggleDriverFlag(orderId, 'loaded', checked);
     };
 
     window.toggleComplete = async function(orderId, currentStatus) {
