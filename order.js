@@ -979,10 +979,14 @@ window.refreshCartRemovalTimeSlots = async function() {
 
 // ── 카트 시간대 버튼 그리드 동적 갱신 (1팀 사전점유 + 팀별 상태 + 금액별 슬롯) ──
 window.refreshCartDeliveryTimeSlots = async function() {
-    // 허니콤 카테고리 없으면 섹션 자체 숨김
+    // 노출 조건: (1) 허니콤 카테고리 상품 OR (2) 수도권 유료설치(100000) / 수도권 철거(100001) 선택
+    let _selFee = 0;
+    try { _selFee = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}').fee || 0; } catch(e) {}
+    const _shipTriggers = _selFee === 100000 || _selFee === 100001;
+    const _showSched = (window._cartHasHoneycomb && window._cartHasHoneycomb()) || _shipTriggers;
     const sec = document.getElementById('cartHcSchedSection');
-    if (sec) sec.style.display = window._cartHasHoneycomb && window._cartHasHoneycomb() ? 'block' : 'none';
-    if (sec && sec.style.display === 'none') return;
+    if (sec) sec.style.display = _showSched ? 'block' : 'none';
+    if (!_showSched) return;
 
     await _renderCartTimeGrid({ hiddenId:'cartDeliveryTime', gridId:'cartDeliveryTimeGrid', dateId:'cartDeliveryDate', prefix:'delivery' });
 
