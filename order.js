@@ -842,8 +842,164 @@ function getInstallationSlotInfo(totalKRW) {
 // 1팀은 항상 점유된 것으로 표시 (실제 운영 가능 팀 = MAX_TEAMS - 1)
 const BASE_OCCUPIED_TEAMS = 1;
 
+// 카트에 허니콤 카테고리 상품이 있는지 판정
+window._cartHasHoneycomb = function() {
+    if (!Array.isArray(cartData) || cartData.length === 0) return false;
+    return cartData.some(it => {
+        const p = it.product || {};
+        const cat = (p.category || '').toLowerCase();
+        const code = (p.code || '').toLowerCase();
+        const name = (p.name || '').toLowerCase();
+        return cat.includes('honeycomb') || cat.includes('hb_') || code.startsWith('hb_')
+            || name.includes('허니콤') || name.includes('honeycomb') || name.includes('ハニカム') || name.includes('リボード');
+    });
+};
+
+// 통합 슬롯 렌더러 (배송/철거 공용) - color: full=red, selected=orange, available=indigo
+async function _renderCartTimeGrid({ hiddenId, gridId, dateId, prefix }) {
+    const hidden = document.getElementById(hiddenId);
+    const grid = document.getElementById(gridId);
+    const dateInput = document.getElementById(dateId);
+    if (!hidden || !grid || !dateInput) return;
+    const date = dateInput.value;
+
+    const cartTotalKRW = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
+    const slotInfo = getInstallationSlotInfo(cartTotalKRW);
+    const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
+    const T = {
+        booked:  { kr:'예약', ja:'予約', en:'Booked' }[lang]||'Booked',
+        avail:   { kr:'가능', ja:'空き', en:'Open' }[lang]||'Open',
+        full:    { kr:'마감', ja:'満員', en:'Full' }[lang]||'Full',
+        team:    { kr:'팀', ja:'チーム', en:'Team' }[lang]||'Team',
+        loading: { kr:'로딩중...', ja:'読込中...', en:'Loading...' }[lang]||'Loading...',
+        unavail: { kr:'100만원 미만 — 시간 지정 불가', ja:'時間指定不可', en:'Time not selectable' }[lang]||'Not selectable'
+    };
+
+    grid.innerHTML = '';
+    if (slotInfo.type === 'date_only') {
+        const note = document.createElement('div');
+        note.style.cssText = 'grid-column:1/-1;padding:10px;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;font-size:12px;text-align:center;';
+        note.textContent = T.unavail;
+        grid.appendChild(note);
+        hidden.value = '';
+        return;
+    }
+    if (!date) return;
+
+    const loading = document.createElement('div');
+    loading.style.cssText = 'grid-column:1/-1;padding:8px;text-align:center;color:#6366f1;font-size:12px;';
+    loading.textContent = T.loading;
+    grid.appendChild(loading);
+
+    let booked = {};
+    try { booked = await fetchInstallationSlots(date); }
+    catch(e) { INSTALL_TIME_SLOTS.forEach(s => booked[s] = BASE_OCCUPIED_TEAMS); }
+
+    grid.innerHTML = '';
+    const need = Math.max(slotInfo.slots, 1);
+    const prevValue = hidden.value || '';
+
+    INSTALL_TIME_SLOTS.forEach((slot, idx) => {
+        let canBook = true;
+        for (let i = 0; i < need; i++) {
+            const j = idx + i;
+            if (j >= INSTALL_TIME_SLOTS.length) { canBook = false; break; }
+            const used = booked[INSTALL_TIME_SLOTS[j]] || 0;
+            if (used >= MAX_TEAMS) { canBook = false; break; }
+        }
+        const usedHere = booked[slot] || 0;
+        const endIdx = Math.min(idx + need, INSTALL_TIME_SLOTS.length);
+        const endTime = endIdx < INSTALL_TIME_SLOTS.length ? INSTALL_TIME_SLOTS[endIdx] : '22:00';
+        const rangeLabel = need > 1 ? `${slot} ~ ${endTime}` : slot;
+        const chips = [];
+        for (let k = 1; k <= MAX_TEAMS; k++) {
+            const isB = k <= usedHere;
+            chips.push(`<span style="font-size:10px;padding:1px 5px;border-radius:6px;background:${isB?'#fee2e2':'#ecfdf5'};color:${isB?'#dc2626':'#10b981'};border:1px solid ${isB?'#dc2626':'#10b981'};">${k}${T.team} ${isB?T.booked:T.avail}</span>`);
+        }
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.val = slot;
+        const baseStyle = 'padding:8px 6px;border-radius:10px;font-size:12px;font-weight:700;text-align:left;cursor:pointer;line-height:1.4;transition:all 0.15s;';
+        if (!canBook) {
+            // 마감 = 빨강
+            btn.style.cssText = baseStyle + 'border:2px solid #dc2626;background:#fee2e2;color:#991b1b;cursor:not-allowed;';
+            btn.disabled = true;
+        } else {
+            btn.style.cssText = baseStyle + 'border:2px solid #cbd5e1;background:#fff;color:#475569;';
+        }
+        btn.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;"><b style="font-size:13px;">${rangeLabel}</b></div><div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">${chips.join('')}</div>${!canBook?`<div style="font-size:10px;color:#dc2626;margin-top:2px;font-weight:800;">${T.full}</div>`:''}`;
+        grid.appendChild(btn);
+    });
+
+    const _selectBtn = (val) => {
+        hidden.value = val;
+        grid.querySelectorAll('button').forEach(b => {
+            if (b.disabled) return;
+            if (b.dataset.val === val && val) {
+                // 선택됨 = 주황
+                b.style.border = '3px solid #ea580c';
+                b.style.background = 'linear-gradient(135deg,#fed7aa,#fb923c)';
+                b.style.color = '#7c2d12';
+                b.style.boxShadow = '0 4px 12px rgba(234,88,12,0.35)';
+                b.style.transform = 'scale(1.02)';
+            } else {
+                b.style.border = '2px solid #cbd5e1';
+                b.style.background = '#fff';
+                b.style.color = '#475569';
+                b.style.boxShadow = '';
+                b.style.transform = '';
+            }
+        });
+        // 배송 선택 시 철거 영역 활성화
+        if (prefix === 'delivery') _updateRemovalGate();
+    };
+    grid.querySelectorAll('button').forEach(b => {
+        if (b.disabled) return;
+        b.addEventListener('click', () => _selectBtn(b.dataset.val || ''));
+    });
+
+    const target = grid.querySelector(`button[data-val="${prevValue}"]`);
+    if (prevValue && target && !target.disabled) _selectBtn(prevValue);
+}
+
+// 철거 섹션 활성/비활성 (배송일+시간 모두 선택돼야 활성)
+function _updateRemovalGate() {
+    const wrap = document.getElementById('cartRemovalRowWrap');
+    if (!wrap) return;
+    const dDate = document.getElementById('cartDeliveryDate')?.value;
+    const dTime = document.getElementById('cartDeliveryTime')?.value;
+    const ready = !!(dDate && dTime);
+    wrap.style.opacity = ready ? '1' : '0.5';
+    wrap.style.pointerEvents = ready ? 'auto' : 'none';
+}
+
+window.refreshCartRemovalTimeSlots = async function() {
+    await _renderCartTimeGrid({ hiddenId:'cartRemovalTime', gridId:'cartRemovalTimeGrid', dateId:'cartRemovalDate', prefix:'removal' });
+};
+
 // ── 카트 시간대 버튼 그리드 동적 갱신 (1팀 사전점유 + 팀별 상태 + 금액별 슬롯) ──
 window.refreshCartDeliveryTimeSlots = async function() {
+    // 허니콤 카테고리 없으면 섹션 자체 숨김
+    const sec = document.getElementById('cartHcSchedSection');
+    if (sec) sec.style.display = window._cartHasHoneycomb && window._cartHasHoneycomb() ? 'block' : 'none';
+    if (sec && sec.style.display === 'none') return;
+
+    await _renderCartTimeGrid({ hiddenId:'cartDeliveryTime', gridId:'cartDeliveryTimeGrid', dateId:'cartDeliveryDate', prefix:'delivery' });
+
+    // 철거 일정 select 갱신 + 게이트
+    const rDate = document.getElementById('cartRemovalDate');
+    if (rDate && !rDate.dataset.bound) {
+        rDate.dataset.bound = '1';
+        rDate.addEventListener('change', () => window.refreshCartRemovalTimeSlots());
+    }
+    await window.refreshCartRemovalTimeSlots();
+    _updateRemovalGate();
+};
+
+// 더미: 호환성 (오래된 호출 흡수)
+window._renderCartTimeGrid_legacy = async function() {
+    return; // 신규 _renderCartTimeGrid가 모두 처리
+    /* legacy body retained as comment, harmless dead code below */
     const hidden = document.getElementById('cartDeliveryTime');
     const grid = document.getElementById('cartDeliveryTimeGrid');
     const note = document.getElementById('cartDeliveryTimeNote');
@@ -3313,8 +3469,10 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
                 const sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
                 const fee = sd.fee || window._nonMetroFeeApplied || 0;
                 const label = sd.label || '';
-                const removal = window._cartWantsRemoval ? '1' : '0';
-                note += `[SHIPPING:fee=${fee};label=${label};removal=${removal}]\n`;
+                const rDate = document.getElementById('cartRemovalDate')?.value || '';
+                const rTime = document.getElementById('cartRemovalTime')?.value || '';
+                const removal = (rDate && rTime) ? '1' : '0';
+                note += `[SHIPPING:fee=${fee};label=${label};removal=${removal};rdate=${rDate};rtime=${rTime}]\n`;
             } catch(e) {}
             const pdfUrl = localStorage.getItem('chameleon_quote_pdf_url');
             if (pdfUrl) note += '[견적서] ' + pdfUrl;
