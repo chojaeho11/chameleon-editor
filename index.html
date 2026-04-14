@@ -4887,14 +4887,14 @@ async function handleSubReturn() {
                             var g=document.getElementById('cartShippingGuide');
                             if(g){ g.textContent=''; g.style.display='none'; }
                             var freeNote={
-                                kr:'✅ 서울/경기 100만원 이상 무료 배송·설치·철거. 100만원 미만은 유료 설치·철거.',
-                                ja:'✅ 首都圏100万円以上は配送・設置・撤去無料。100万円未満は有料。',
-                                en:'✅ Metro KR 1,000,000+ : Free delivery/install/removal. Under 1M = paid.',
-                                zh:'✅ 首都圈100万以上免费配送、安装、拆除。100万以下需付费。',
-                                ar:'✅ المنطقة الحضرية 1M+ مجاني / أقل = مدفوع',
-                                es:'✅ Metro 1M+ gratis / menos = pagado',
-                                de:'✅ Großraum 1M+ kostenlos / darunter = bezahlt',
-                                fr:'✅ Métro 1M+ gratuit / moins = payant'
+                                kr:'✅ 허니콤보드·포맥스·폼보드 등 보드류는 600~1800mm까지 택배 가능. 그 이상 사이즈는 용차배송만 가능합니다.',
+                                ja:'✅ ハニカム・フォメックス・フォームボード等は600~1800mmまで宅配可。それ以上は車両配送のみ。',
+                                en:'✅ Boards (honeycomb/formex/foam) can ship by courier up to 600~1800mm. Larger = truck only.',
+                                zh:'✅ 蜂窝板·PVC板·泡沫板等板类600~1800mm以内可快递，超过尺寸仅限货车配送。',
+                                ar:'✅ الألواح حتى 1800mm بالبريد، أكبر = شاحنة فقط',
+                                es:'✅ Tableros hasta 1800mm por courier, mayor = camión',
+                                de:'✅ Platten bis 1800mm Kurier, größer = nur LKW',
+                                fr:'✅ Plaques jusqu\'à 1800mm courrier, plus grand = camion'
                             };
                             var fn=document.getElementById('cartShippingFreeNote');
                             if(fn) fn.textContent=freeNote[l]||freeNote['kr'];
