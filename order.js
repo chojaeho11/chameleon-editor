@@ -562,6 +562,7 @@ export async function initOrderSystem() {
 
 // 사용자 등급별 할인율 가져오기
 async function fetchUserDiscountRate() {
+    window.isProSubscriber = false;
     if (!currentUser) {
         currentUserDiscountRate = 0;
         return;
@@ -576,18 +577,24 @@ async function fetchUserDiscountRate() {
         else if (role === 'subscriber') currentUserDiscountRate = 0.10;
         else currentUserDiscountRate = 0;
 
-        // PRO 구독자는 최소 10% 할인 보장 (등급 할인이 더 낮을 경우)
-        if (role !== 'subscriber' && currentUserDiscountRate < 0.10) {
-            try {
-                const { data: subData } = await sb.from('subscriptions')
-                    .select('status')
-                    .eq('user_id', currentUser.id)
-                    .eq('status', 'active')
-                    .maybeSingle();
-                if (subData) {
-                    currentUserDiscountRate = Math.max(currentUserDiscountRate, 0.10);
-                }
-            } catch(subErr) { /* ignore */ }
+        if (role === 'subscriber') window.isProSubscriber = true;
+
+        // PRO 구독자: subscriptions.status='active' 확인 → 최소 10% 보장 + PRO 플래그
+        try {
+            const { data: subData } = await sb.from('subscriptions')
+                .select('status')
+                .eq('user_id', currentUser.id)
+                .eq('status', 'active')
+                .maybeSingle();
+            if (subData) {
+                window.isProSubscriber = true;
+                currentUserDiscountRate = Math.max(currentUserDiscountRate, 0.10);
+            }
+        } catch(subErr) { /* ignore */ }
+
+        // 할인율 반영 후 카트 재렌더 (이미 카트 화면이 떠 있을 수 있음)
+        if (window.renderCart && document.getElementById('cartPage')?.style.display === 'block') {
+            try { window.renderCart(); } catch(e) {}
         }
 
     } catch(e) {
@@ -2396,9 +2403,12 @@ function updateSummary(prodTotal, addonTotal, total) {
     cartData.forEach(item => {
         const prodCat = item.product ? item.product.category : '';
 
-        if (excludedSet.has(prodCat)) {
+        // PRO 구독자는 제외 카테고리도 등급할인 대상에 포함
+        const _excluded = excludedSet.has(prodCat) && !window.isProSubscriber;
+        if (_excluded) {
             hasExcludedItem = true;
         } else {
+            if (excludedSet.has(prodCat)) hasExcludedItem = true; // PRO여도 안내 표시는 유지
             const unitPrice = item.product.price || 0;
             const qty = item.qty || 1;
             let baseTotal = unitPrice * qty;
