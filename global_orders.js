@@ -2979,6 +2979,16 @@ function isHoneycombOrder(order) {
     });
 }
 
+// ── 모달 닫기 + 새로고침 + 5분 자동갱신 ──
+let _adminSlotAutoTimer = null;
+window.closeAdminSlotModal = () => {
+    document.getElementById('adminSlotModal').style.display = 'none';
+    if (_adminSlotAutoTimer) { clearInterval(_adminSlotAutoTimer); _adminSlotAutoTimer = null; }
+};
+window.adminSlotRefresh = () => {
+    if (window._adminSlotDate) openAdminSlotModal(window._adminSlotDate);
+};
+
 // ── 관리자 날짜 클릭 팝업 ──
 window.openAdminSlotModal = async (dateStr) => {
     const modal = document.getElementById('adminSlotModal');
@@ -2989,6 +2999,15 @@ window.openAdminSlotModal = async (dateStr) => {
     titleEl.textContent = `📅 ${dateStr} 설치/배송 스케줄`;
     modal.style.display = 'flex';
     content.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩중...</div>';
+    // 5분 자동 갱신 타이머 (열릴 때마다 재시작)
+    if (_adminSlotAutoTimer) clearInterval(_adminSlotAutoTimer);
+    _adminSlotAutoTimer = setInterval(() => {
+        if (document.getElementById('adminSlotModal').style.display !== 'none' && window._adminSlotDate) {
+            const _stat = document.getElementById('adminSlotAutoStatus');
+            if (_stat) { _stat.textContent = '⟳ 갱신중...'; _stat.style.color = '#0ea5e9'; }
+            openAdminSlotModal(window._adminSlotDate);
+        }
+    }, 5 * 60 * 1000);
 
     const timeSelect = document.getElementById('adminSlotTime');
     if (timeSelect) timeSelect.innerHTML = ADMIN_SLOTS.map(s => `<option value="${s}">${s}</option>`).join('');
