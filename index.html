@@ -7822,7 +7822,8 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         }
 
         // 카테고리 sort_order로 그룹 정렬 → 그 안에서 상품 sort_order
-        const subCats = await window.cachedFetch('subcats', 5, () =>
+        // ★ 별도 키('subcats_order')로 저장 — renderQuickMenu의 'subcats' 캐시(전체 컬럼)를 덮어쓰지 않도록
+        const subCats = await window.cachedFetch('subcats_order', 5, () =>
             sb.from('admin_categories').select('code, sort_order').order('sort_order', { ascending: true })
         );
         const _catOrder = {};
@@ -8300,6 +8301,18 @@ async function renderQuickMenu() {
     const itemContainer = document.getElementById('quickMenuContainer');
     if (!tabContainer || !itemContainer) return;
     if (!sb) { console.warn("[renderQuickMenu] sb가 아직 초기화되지 않음"); return; }
+    // 1회성 캐시 정화: 손상된 subcats 캐시(name 컬럼 없음) 자동 삭제
+    try {
+        const _raw = localStorage.getItem('cache:subcats');
+        if (_raw) {
+            const _parsed = JSON.parse(_raw);
+            const _data = _parsed && _parsed.data;
+            if (Array.isArray(_data) && _data.length > 0 && _data[0] && _data[0].name === undefined) {
+                localStorage.removeItem('cache:subcats');
+                console.log('[cache] removed corrupted subcats cache');
+            }
+        }
+    } catch(e) {}
 
     itemContainer.innerHTML = '<div style="text-align:center; padding:50px; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
