@@ -3054,10 +3054,28 @@ window.openAdminSlotModal = async (dateStr) => {
 
             let removeHtml = uniqueOrders.map(o => `<button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:14px; padding:2px 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')" title="제거">✕</button>`).join('');
 
+            // 팀별 동그라미: 클릭해 차단/해제. 실제 고객 예약 슬롯은 클릭 비활성
+            const adminBlockOrders = uniqueOrders.filter(o => (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단');
+            const customerCount = used - adminBlockOrders.length;
+            const dotsHtml = [0,1,2].map(i => {
+                const isFilled = i < used;
+                const isCustomer = i < customerCount;
+                const isBlock = isFilled && !isCustomer;
+                if (isCustomer) {
+                    return `<div title="고객 예약" style="width:18px; height:18px; border-radius:50%; background:${barColor}; border:2px solid ${barColor};"></div>`;
+                } else if (isBlock) {
+                    const blockOrder = adminBlockOrders[i - customerCount];
+                    const oid = blockOrder ? blockOrder.id : '';
+                    return `<div title="클릭해 차단 해제" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${i+1},'${oid}')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#dc2626; border:2px solid #991b1b; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:bold;">×</div>`;
+                } else {
+                    return `<div title="클릭해 차단" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${i+1},'')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#fff; border:2px dashed #94a3b8;"></div>`;
+                }
+            }).join('');
+
             html += `<tr style="border-bottom:1px solid #f1f5f9; background:${bgColor};">
                 <td style="padding:10px; font-weight:bold; white-space:nowrap; font-size:15px;">${slot}~${endSlot}</td>
                 <td style="padding:10px; text-align:center;">
-                    <div style="display:flex; gap:3px; justify-content:center;">${[0,1,2].map(i=>`<div style="width:14px; height:14px; border-radius:50%; background:${i<used?barColor:'#e2e8f0'};"></div>`).join('')}</div>
+                    <div style="display:flex; gap:5px; justify-content:center;">${dotsHtml}</div>
                 </td>
                 <td style="padding:10px;">${custHtml}</td>
                 <td style="padding:10px; text-align:center;">${removeHtml}</td>
@@ -3167,6 +3185,37 @@ window.adminAddSlotBlock = async () => {
         renderAdminCalendar();
     } catch (e) {
         showToast('차단 추가 실패: ' + e.message, 'error');
+    }
+};
+
+// ── 동그라미 클릭: 개별 팀 차단 추가/해제 ──
+window.adminToggleSlotBlock = async (dateStr, time, teamNo, blockOrderId) => {
+    try {
+        if (blockOrderId) {
+            // 차단 해제
+            await sb.from('orders').delete().eq('id', blockOrderId);
+            showToast(`${time} ${teamNo}팀 차단 해제`, 'success');
+        } else {
+            // 차단 추가
+            const memo = (document.getElementById('adminSlotMemo')?.value || '관리자 차단').trim();
+            const { error } = await sb.from('orders').insert({
+                delivery_target_date: dateStr,
+                installation_time: time,
+                total_amount: 1000000,
+                manager_name: `[차단] ${memo}`,
+                phone: '-',
+                status: '관리자차단',
+                payment_status: '-',
+                items: [],
+                site_code: 'KR'
+            });
+            if (error) throw error;
+            showToast(`${time} 차단 추가 (${teamNo}팀째)`, 'success');
+        }
+        openAdminSlotModal(dateStr);
+        renderAdminCalendar();
+    } catch (e) {
+        showToast('처리 실패: ' + e.message, 'error');
     }
 };
 

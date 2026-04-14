@@ -469,25 +469,15 @@
                             <button onclick="document.getElementById('adminSlotModal').style.display='none'" style="background:none; border:none; font-size:22px; cursor:pointer; color:#64748b;">&times;</button>
                         </div>
                         <!-- 관리자 수동 예약 추가 (상단) -->
-                        <div style="margin-bottom:16px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
-                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <span style="font-size:12px; font-weight:bold; color:#6366f1;"><i class="fa-solid fa-plus-circle"></i> 스케줄 차단</span>
-                                <select id="adminSlotTime" class="input-text" style="width:100px; font-size:12px;"></select>
-                                <select id="adminSlotType" class="input-text" style="width:150px; font-size:12px;">
-                                    <option value="block">🚫 1팀 차단</option>
-                                    <option value="block2">🚫 2팀 차단</option>
-                                    <option value="block_all">🔒 완전 차단 (3팀)</option>
-                                </select>
-                                <input id="adminSlotMemo" class="input-text" placeholder="메모" style="flex:1; min-width:80px; font-size:12px;">
-                                <button class="btn btn-primary btn-sm" onclick="adminAddSlotBlock()" style="font-size:12px;"><i class="fa-solid fa-plus"></i> 추가</button>
-                            </div>
-                            <div style="display:flex; gap:6px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;">
-                                <span style="font-size:11px; font-weight:bold; color:#dc2626;"><i class="fa-solid fa-calendar-xmark"></i> 그날 전체 시간대 일괄 차단:</span>
-                                <button class="btn btn-sm" onclick="adminBlockAllDay(1)" style="font-size:11px; background:#fef3c7; border:1px solid #f59e0b; color:#92400e;">1팀</button>
-                                <button class="btn btn-sm" onclick="adminBlockAllDay(2)" style="font-size:11px; background:#fed7aa; border:1px solid #ea580c; color:#9a3412;">2팀</button>
-                                <button class="btn btn-sm" onclick="adminBlockAllDay(3)" style="font-size:11px; background:#fecaca; border:1px solid #dc2626; color:#991b1b;">전체(3팀)</button>
-                            </div>
+                        <div style="margin-bottom:14px; padding:10px 12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <span style="font-size:12px; color:#475569;"><i class="fa-solid fa-circle-info"></i> 시간표의 동그라미를 클릭해 팀별 차단/해제. 그날 전체 차단은 →</span>
+                            <input id="adminSlotMemo" class="input-text" placeholder="메모(선택)" style="flex:1; min-width:80px; font-size:12px;">
+                            <button class="btn btn-sm" onclick="adminBlockAllDay(1)" style="font-size:11px; background:#fef3c7; border:1px solid #f59e0b; color:#92400e;">전체 1팀</button>
+                            <button class="btn btn-sm" onclick="adminBlockAllDay(2)" style="font-size:11px; background:#fed7aa; border:1px solid #ea580c; color:#9a3412;">전체 2팀</button>
+                            <button class="btn btn-sm" onclick="adminBlockAllDay(3)" style="font-size:11px; background:#fecaca; border:1px solid #dc2626; color:#991b1b;">전체(3팀)</button>
                         </div>
+                        <select id="adminSlotTime" style="display:none;"></select>
+                        <select id="adminSlotType" style="display:none;"></select>
                         <!-- 시간 슬롯 + 배송 목록 -->
                         <div id="adminSlotContent"></div>
                     </div>
