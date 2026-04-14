@@ -153,20 +153,8 @@
                 .not('status', 'in', '("관리자차단","임시작성","취소됨")')
                 .order('installation_time', { ascending: true });
             if (error) throw error;
-            const _metroKw = ['서울','경기','인천','성남','분당','수원','고양','용인','부천','안산','안양','화성','광명','군포','하남','과천','시흥','파주','김포','일산','판교','동탄','위례','세종'];
-            const _isMetro = (addr) => !addr || _metroKw.some(k => addr.includes(k));
-            const _shipFee = (n) => { const m = (n||'').match(/SHIPPING:fee=(\d+)/); return m ? parseInt(m[1]) : 0; };
-            const _isInstallOrDeliveryOrRemoval = (o) => {
-                if (o.installation_time) return true;
-                const f = _shipFee(o.admin_note);
-                if (f === 100000 || f === 100001 || f === 200000 || f === 700000) return true;
-                // rdate (철거 일정) 매치
-                if ((o.admin_note||'').includes(`rdate=${date}`)) return true;
-                // 100만원 이상 + 수도권 = 무료배송 설치건
-                if ((o.total_amount||0) >= 1000000 && _isMetro(o.address)) return true;
-                return false;
-            };
-            let orders = (rawOrders||[]).filter(_isInstallOrDeliveryOrRemoval);
+            // 그날의 모든 주문 표시 (관리자차단/임시작성/취소됨만 제외)
+            let orders = (rawOrders||[]);
             // 팀 필터 — 현재는 admin_note의 [TEAM:N] 마커로 분류 (없으면 1팀 기본)
             if (teamSel !== 'all') {
                 const wantTeam = teamSel === 'team1' ? 1 : (teamSel === 'team2' ? 2 : 3);
@@ -260,63 +248,38 @@
                 const _photoMatch = (o.admin_note || '').match(/\[PHOTOS:([^\]]+)\]/);
                 const _photos = _photoMatch ? _photoMatch[1].split(',').filter(Boolean) : [];
                 const _isRemovalOrder = /SHIPPING:fee=100001/.test(o.admin_note || '');
-                const _isInstall = !!o.installation_time || /SHIPPING:fee=(100000|700000)/.test(o.admin_note || '');
+                const _doneFlag = isDone || _installed || _removed;
+                const _doneKind = _isRemovalOrder ? 'removed' : 'installed';
+                const pillStyle = (active, color) => `padding:8px 4px;border-radius:8px;border:2px solid ${active?color:'#cbd5e1'};background:${active?color:'#fff'};color:${active?'#fff':'#475569'};font-weight:800;font-size:12px;cursor:pointer;text-align:center;${active?`box-shadow:0 2px 6px ${color}55;`:''}line-height:1.2;`;
                 list.innerHTML += `
-                    <div class="task-card ${isDone ? 'completed' : ''}" draggable="true" data-order-id="${o.id}" ondragstart="_dragStart(event)" ondragover="_dragOver(event)" ondrop="_dragDrop(event)" ondragend="_dragEnd(event)" style="cursor:move;">
-                        <span class="status-tag ${isDone ? 'done' : 'active'}">
-                            ${isDone ? '배송완료' : '배송중'}
-                        </span>
-                        <button onclick="toggleDriverLoaded('${o.id}', ${!_loaded})" style="margin-left:6px;border-radius:999px;padding:6px 14px;border:1.5px solid ${_loaded?'#ea580c':'#cbd5e1'};background:${_loaded?'#f97316':'#fff'};color:${_loaded?'#fff':'#64748b'};font-size:13px;font-weight:700;cursor:pointer;${_loaded?'box-shadow:0 2px 6px rgba(249,115,22,0.35);':''}">
-                            ${_loaded ? '✓ 적재 완료' : '🚛 차량 적재'}
-                        </button>
-                        <div class="client-name">${o.manager_name || o.user_name || '고객'}</div>
-                        <div class="client-addr">
-                            <i class="fa-solid fa-map-pin" style="margin-top:3px; color:#ef4444;"></i>
-                            ${o.address || '주소 없음'}
+                    <div class="task-card ${_doneFlag ? 'completed' : ''}" draggable="true" data-order-id="${o.id}" ondragstart="_dragStart(event)" ondragover="_dragOver(event)" ondrop="_dragDrop(event)" ondragend="_dragEnd(event)" style="cursor:move; padding:12px; margin-bottom:10px;">
+                        <!-- 상단 3개 액션 버튼 -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:8px;">
+                            <button onclick="toggleDriverLoaded('${o.id}', ${!_loaded})" style="${pillStyle(_loaded,'#f97316')}">${_loaded?'✓ 적재완료':'🚛 적재완료'}</button>
+                            <button onclick="toggleDriverFlag('${o.id}','${_doneKind}',${!(_doneKind==='removed'?_removed:_installed)})" style="${pillStyle(_doneKind==='removed'?_removed:_installed,'#10b981')}">${(_doneKind==='removed'?_removed:_installed)?'✓ '+(_isRemovalOrder?'철거':'배송'):'✅ '+(_isRemovalOrder?'철거':'배송')+'완료'}</button>
+                            <label style="${pillStyle(_photos.length>0,'#0ea5e9')}">📸 사진${_photos.length?`(${_photos.length})`:''}<input type="file" accept="image/*" capture="environment" multiple style="display:none;" onchange="uploadDriverPhotos('${o.id}', this.files)"></label>
                         </div>
-                        ${o.request_note ? `<div class="note-box"><i class="fa-solid fa-bullhorn"></i> ${o.request_note}</div>` : ''}
-                        ${(function(){
-                            if(!o.installation_time) return '';
-                            var SL=["08:00","10:00","12:00","14:00","16:00","18:00","20:00"];
-                            var si=SL.indexOf(o.installation_time); if(si===-1) return '';
-                            var ta=o.total_amount||0, ns=ta>=5000000?7:(ta>=3000000?2:1);
-                            var ei=Math.min(si+ns,SL.length), et=ei<SL.length?SL[ei]:'22:00';
-                            var dl=ns===7?'종일':(ns*2)+'시간';
-                            return '<div style="margin-top:10px;padding:12px;background:#ede9fe;border-radius:10px;border:1px solid #c4b5fd;"><div style="font-weight:800;color:#6d28d9;font-size:14px;"><i class="fa-solid fa-person-digging"></i> 설치 예약</div><div style="font-size:16px;font-weight:bold;color:#4c1d95;margin-top:4px;">'+o.installation_time+' ~ '+et+' ('+dl+')</div></div>';
-                        })()}
-                        ${knowhowHtml}
-                        <select class="time-select" onchange="updateDeliveryTime('${o.id}', this.value)" ${isDone ? 'disabled' : ''}>
-                            ${timeOptions}
-                        </select>
-                        <div class="btn-group">
-                            <a href="tel:${o.phone || ''}" class="action-btn btn-call">
-                                <i class="fa-solid fa-phone"></i> 전화걸기
-                            </a>
-                            <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address || '')}" target="_blank" class="action-btn btn-map">
-                                <i class="fa-solid fa-map"></i> 지도보기
-                            </a>
+                        <!-- 고객 정보 (컴팩트) -->
+                        <div style="font-weight:700; font-size:15px; margin-bottom:2px;">${o.manager_name || o.user_name || '고객'} <span style="color:#6366f1; font-size:13px;">${o.phone || ''}</span></div>
+                        <div style="font-size:12px; color:#475569; margin-bottom:6px;"><i class="fa-solid fa-map-pin" style="color:#ef4444; font-size:11px;"></i> ${o.address || '주소 없음'}</div>
+                        ${o.installation_time ? `<div style="display:inline-block; font-size:11px; padding:2px 6px; border-radius:4px; background:#ede9fe; color:#6d28d9; font-weight:700; margin-bottom:6px;">⏰ 설치 ${o.installation_time}</div>` : ''}
+                        <!-- 전화/지도 -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:6px;">
+                            <a href="tel:${o.phone || ''}" style="text-align:center; padding:7px; border-radius:6px; background:#f0fdf4; color:#059669; text-decoration:none; font-size:12px; font-weight:700; border:1px solid #bbf7d0;"><i class="fa-solid fa-phone"></i> 전화</a>
+                            <a href="https://map.naver.com/v5/search/${encodeURIComponent(o.address || '')}" target="_blank" style="text-align:center; padding:7px; border-radius:6px; background:#eff6ff; color:#2563eb; text-decoration:none; font-size:12px; font-weight:700; border:1px solid #bfdbfe;"><i class="fa-solid fa-map"></i> 지도</a>
                         </div>
-                        ${(_isInstall||_isRemovalOrder) ? `
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;">
-                            ${_isRemovalOrder ? `
-                                <button onclick="toggleDriverFlag('${o.id}','removed',${!_removed})" style="padding:10px;border-radius:10px;border:2px solid ${_removed?'#ea580c':'#cbd5e1'};background:${_removed?'#f97316':'#fff'};color:${_removed?'#fff':'#475569'};font-weight:800;font-size:13px;cursor:pointer;${_removed?'box-shadow:0 2px 8px rgba(249,115,22,0.35);':''}">
-                                    ${_removed?'✓ 철거 완료':'🔧 철거 완료'}
-                                </button>
-                            ` : `
-                                <button onclick="toggleDriverFlag('${o.id}','installed',${!_installed})" style="padding:10px;border-radius:10px;border:2px solid ${_installed?'#ea580c':'#cbd5e1'};background:${_installed?'#f97316':'#fff'};color:${_installed?'#fff':'#475569'};font-weight:800;font-size:13px;cursor:pointer;${_installed?'box-shadow:0 2px 8px rgba(249,115,22,0.35);':''}">
-                                    ${_installed?'✓ 설치 완료':'🔧 설치 완료'}
-                                </button>
-                            `}
-                            <label style="padding:10px;border-radius:10px;border:2px solid ${_photos.length?'#0284c7':'#cbd5e1'};background:${_photos.length?'#0ea5e9':'#fff'};color:${_photos.length?'#fff':'#475569'};font-weight:800;font-size:13px;cursor:pointer;text-align:center;${_photos.length?'box-shadow:0 2px 8px rgba(14,165,233,0.35);':''}">
-                                📸 ${_isRemovalOrder?'철거':'설치'} 사진 ${_photos.length?`(${_photos.length})`:''}
-                                <input type="file" accept="image/*" capture="environment" multiple style="display:none;" onchange="uploadDriverPhotos('${o.id}', this.files)">
-                            </label>
+                        <!-- 고객메모 + 주차노하우 토글 -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                            <button onclick="toggleSection('memo_${o.id}')" style="padding:6px; border-radius:6px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:11px; font-weight:700; cursor:pointer;">📝 고객메모${o.request_note?' ●':''}</button>
+                            <button onclick="toggleSection('tip_${o.id}')" style="padding:6px; border-radius:6px; background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; font-size:11px; font-weight:700; cursor:pointer;">💡 주차노하우${tip?' ●':''}</button>
                         </div>
-                        ${_photos.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${_photos.slice(0,6).map(u=>`<img src="${u}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;" onclick="window.open('${u}','_blank')">`).join('')}</div>` : ''}
-                        ` : ''}
-                        <button class="finish-btn ${isDone ? 'done' : ''}" style="margin-top:8px;" onclick="toggleComplete('${o.id}', '${o.status}')">
-                            ${isDone ? '<i class="fa-solid fa-check"></i> 완료된 배송입니다' : '📦 배송 완료 처리'}
-                        </button>
+                        <div id="memo_${o.id}" style="display:none; margin-top:6px; padding:8px; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; font-size:12px; color:#78350f; white-space:pre-wrap;">${o.request_note || '메모 없음'}</div>
+                        <div id="tip_${o.id}" style="display:none; margin-top:6px;">
+                            ${tip ? `<div style="padding:8px; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:6px; font-size:12px; color:#5b21b6;">${tip.content.replace(/\n/g,'<br>')}<div style="font-size:10px; opacity:0.7; text-align:right; margin-top:4px;">- ${tip.writer_name||'동료'}</div></div>` : ''}
+                            <textarea id="input_tip_${o.id}" placeholder="이곳 노하우 공유" style="width:100%; padding:6px; margin-top:4px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; min-height:50px;">${tip?tip.content:''}</textarea>
+                            <button onclick="saveKnowhow('${o.address}','${o.id}')" style="width:100%; padding:6px; background:#6d28d9; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; margin-top:4px; cursor:pointer;">💾 저장</button>
+                        </div>
+                        ${_photos.length ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:6px;">${_photos.slice(0,8).map(u=>`<img src="${u}" style="width:42px;height:42px;object-fit:cover;border-radius:4px;cursor:pointer;" onclick="window.open('${u}','_blank')">`).join('')}</div>` : ''}
                     </div>`;
             });
 
@@ -373,6 +336,8 @@
         const { error } = await sb.from('orders').update({ delivery_time: time }).eq('id', orderId);
         if (error) showToast('저장 실패: ' + error.message, 'error');
     };
+
+    window.toggleSection = (id) => { const el = document.getElementById(id); if (el) el.style.display = el.style.display==='none' ? 'block' : 'none'; };
 
     // ── 드래그 정렬 (localStorage에 driver+date별로 순서 저장) ──
     let _dragSrc = null;
