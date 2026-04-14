@@ -4940,7 +4940,11 @@ async function handleSubReturn() {
                             var _metroKw = ['서울','경기','인천','성남','분당','수원','고양','용인','부천','안산','안양','화성','광명','군포','하남','과천','시흥','파주','김포','일산','판교','동탄','위례','세종'];
                             var _isMetro = !_addr || _metroKw.some(function(k){return _addr.indexOf(k)>=0;});
                             var _cartTot = (window.calculateCartTotalKRW ? window.calculateCartTotalKRW() : 0);
-                            var _noticeActive = _cartTot >= 1000000 && _isMetro;
+                            // 다른 유료 배송이 선택돼 있으면 노랑 노티스는 비활성
+                            var _hasAnyShip = false;
+                            try { var _sd2 = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}'); _hasAnyShip = !!(_sd2.fee && _sd2.fee > 0); } catch(e){}
+                            if (!_hasAnyShip) _hasAnyShip = localStorage.getItem('chameleon_metro_install')==='1' || localStorage.getItem('chameleon_metro_removal')==='1';
+                            var _noticeActive = _cartTot >= 1000000 && _isMetro && !_hasAnyShip;
                             notice.textContent = (_noticeActive ? '✓ ' : '') + (noticeTxt[l] || noticeTxt['kr']) + (_noticeActive ? ' (적용됨)' : '');
                             notice.style.cssText = _noticeActive
                                 ? 'grid-column:1/-1;padding:14px;border:3px solid #d97706;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border-radius:10px;font-size:14px;font-weight:900;text-align:center;cursor:default;margin-bottom:6px;box-shadow:0 6px 16px rgba(245,158,11,0.5);transform:scale(1.02);'
