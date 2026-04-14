@@ -3176,24 +3176,21 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
         const inspChecked = /\[CHK:insp=1\]/.test(note);
         const dlvChecked  = /\[CHK:dlv=1\]/.test(note);
         const _esc = (s) => String(s||'').replace(/'/g,"\\'");
+        const pillBase = 'display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:28px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.12s;user-select:none;border:1.5px solid;';
+        const pillOff = pillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
+        const pillOn  = pillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 2px 6px rgba(249,115,22,0.35);';
         html += `<div style="padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${isDone?'opacity:0.5;':''}">
-            <div style="display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center;">
+            <div style="display:grid; grid-template-columns:1fr 140px 110px; gap:12px; align-items:center;">
                 <div style="min-width:0;">
                     <div><span style="font-weight:700;">${o.manager_name||'-'}</span> <span style="color:#6366f1;">${o.phone || ''}</span> ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}</div>
                     ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px;">${o.address}</div>` : ''}
                 </div>
-                <div style="display:flex; gap:14px; align-items:center; padding:0 8px;">
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:${inspChecked?'#059669':'#64748b'}; cursor:pointer; white-space:nowrap;">
-                        <input type="checkbox" ${inspChecked?'checked':''} onchange="adminToggleOrderCheck('${o.id}','insp',this.checked)" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;">
-                        검수
-                    </label>
-                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:${dlvChecked?'#0284c7':'#64748b'}; cursor:pointer; white-space:nowrap;">
-                        <input type="checkbox" ${dlvChecked?'checked':''} onchange="adminToggleOrderCheck('${o.id}','dlv',this.checked)" style="width:18px; height:18px; cursor:pointer; accent-color:#0284c7;">
-                        배송
-                    </label>
+                <div style="display:flex; gap:6px; align-items:center; justify-content:flex-end;">
+                    <span onclick="adminToggleOrderCheck('${o.id}','insp',${!inspChecked})" style="${inspChecked?pillOn:pillOff}">검수</span>
+                    <span onclick="adminToggleOrderCheck('${o.id}','dlv',${!dlvChecked})" style="${dlvChecked?pillOn:pillOff}">배송</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    ${driver ? `<span style="color:#059669; font-size:13px;">🚛${driver.name}</span>` : ''}
+                <div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">
+                    ${driver ? `<span style="color:#059669; font-size:12px;">🚛${driver.name}</span>` : ''}
                     ${isDone ? '<span style="color:#22c55e;">✅</span>' : `<span style="color:#94a3b8; font-size:11px;">${o.status||''}</span>`}
                     <button style="background:#f0f4ff; border:1px solid #c7d2fe; color:#4f46e5; border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer;" onclick="openDeliveryDateEdit('${o.id}','${o.delivery_target_date||''}')" title="배송일 변경">📅</button>
                 </div>
@@ -3213,7 +3210,9 @@ window.adminToggleOrderCheck = async (orderId, kind, checked) => {
         note = note.replace(re, '');
         if (checked) note = (note + ` [CHK:${kind}=1]`).trim();
         await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
-        showToast(`${kind==='insp'?'검수':'배송'} ${checked?'체크':'해제'}`, 'success');
+        showToast(`${kind==='insp'?'검수':'배송'} ${checked?'체크':'해제'}`, 'success', 1500);
+        // 모달 재렌더로 시각 즉시 반영
+        if (window._adminSlotDate) openAdminSlotModal(window._adminSlotDate);
     } catch (e) {
         showToast('체크 실패: ' + e.message, 'error');
     }
