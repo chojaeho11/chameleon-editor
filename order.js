@@ -2756,9 +2756,9 @@ function updateSummary(prodTotal, addonTotal, total) {
     window.finalPaymentAmount = displayTotal;
     finalPaymentAmount = displayTotal;
 
-    // ★ 배송비 추가/삭제 행 표시
+    // ★ 배송 선택지: 카트 비어있지 않으면 항상 표시 (선택 후에도 변경 가능)
     const shAddRow = document.getElementById('cartShippingAddRow');
-    if (shAddRow) shAddRow.style.display = (quoteShipping > 0 || cartData.length === 0) ? 'none' : 'block';
+    if (shAddRow) shAddRow.style.display = (cartData.length === 0) ? 'none' : 'block';
     // 배송 버튼 매번 재렌더 (선택 강조 갱신 + DOM 누락 방지)
     if (window._renderCartShippingBtns) { try { window._renderCartShippingBtns(); } catch(e) { console.warn('shipping btns render', e); } }
 
