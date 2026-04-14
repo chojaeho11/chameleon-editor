@@ -4757,7 +4757,8 @@ async function handleSubReturn() {
                         <input type="text" id="cartReceiverAddr" class="ai-input-pretty" data-i18n-placeholder="cart_address_ph" placeholder="배송 받으실 주소" style="margin:0; height:40px; font-size:13px;">
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <style>@media (max-width:768px){.cartDateTimeRow{grid-template-columns:1fr !important;}}</style>
+                    <div class="cartDateTimeRow" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                         <div>
                             <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_delivery_date">희망 배송일</label>
                             <input type="date" id="cartDeliveryDate" class="ai-input-pretty" style="margin:0; height:40px; font-size:13px;">

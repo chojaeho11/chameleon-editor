@@ -3146,7 +3146,7 @@ window.adminAddSlotBlock = async () => {
     if (!dateStr || !time) return;
 
     try {
-        const blocksToAdd = type === 'block_all' ? ADMIN_MAX_TEAMS : 1;
+        const blocksToAdd = type === 'block_all' ? ADMIN_MAX_TEAMS : (type === 'block2' ? 2 : 1);
         for (let i = 0; i < blocksToAdd; i++) {
             await sb.from('orders').insert({
                 delivery_target_date: dateStr,
