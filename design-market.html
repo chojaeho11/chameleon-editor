@@ -669,9 +669,9 @@
 
 <!-- ===== 헤더 ===== -->
 <header class="site-header">
-    <a class="logo" href="design-market">
+    <a class="logo" href="index.html" title="카멜레온홈">
         <i class="fa-solid fa-palette"></i>
-        <span>디자인 마켓</span>
+        <span>카멜레온홈</span>
     </a>
     <div class="header-right">
         <span class="user-info" id="headerUserInfo"></span>
@@ -1742,6 +1742,7 @@ function fillCountrySelect(selectEl, defaultCode) {
 const I18N = {
     // Header
     design_market: { ko: '디자인 마켓', ja: 'デザインマーケット', en: 'Design Market' },
+    chameleon_home: { ko: '카멜레온홈', ja: 'カメレオンホーム', en: 'Chameleon Home' },
     nim: { ko: ' 님', ja: ' 様', en: '' },
     home: { ko: '홈', ja: 'ホーム', en: 'Home' },
     logout: { ko: '로그아웃', ja: 'ログアウト', en: 'Logout' },
@@ -2123,7 +2124,7 @@ function translateStaticHTML() {
     // Title
     document.title = t('design_market');
     // Header logo
-    document.querySelector('.site-header .logo span').textContent = t('design_market');
+    document.querySelector('.site-header .logo span').textContent = t('chameleon_home');
     // Header buttons
     const headerBtns = document.querySelectorAll('.header-right .header-btn');
     headerBtns[0].innerHTML = '<i class="fa-solid fa-house"></i> ' + t('home');
