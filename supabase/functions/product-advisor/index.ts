@@ -96,6 +96,7 @@ serve(async (req) => {
                 .select("customer_message,admin_answer,category,lang,reviewed_at,created_at")
                 .eq("is_reviewed", true).eq("is_active", true)
                 .order("reviewed_at", { ascending: false, nullsFirst: false }).limit(200),
+            // chatbot_knowledge는 아래에서 별도 fetch (위치 유지 위해 placeholder)
             sb.from("admin_addons")
                 .select("code,name,name_jp,name_us,category_code,price,price_jp,price_us"),
             sb.from("addon_categories")
@@ -570,12 +571,13 @@ serve(async (req) => {
 - **대량 주문제작 상품** (is_bulk_order) / 쇼핑백 / 연포장 / 패키지 박스 등: 15~20일 소요
 - ⭐ **허니콤보드(리보드) 외 전 제품 무료배송!**
 - 허니콤보드(리보드) 배송/설치/철거 정책 (★최신★):
-  · **수도권(서울/경기) 100만원 이상**: 무료 배송 + 무료 설치 + 무료 철거
-  · **수도권 100만원 미만**: 유료 배송 10만원 (설치 포함, 철거 별도 10만원)
-  · **지방 설치배송**: 70만원 (배송+설치 포함)
+  · **수도권(서울/경기) 100만원 이상**: 무료 배송 + 무료 설치 (※ 철거는 별도 10만원 유료!)
+  · **수도권 100만원 미만**: 유료 배송 10만원 (설치 포함) + 철거 별도 10만원
+  · **지방 설치배송**: 70만원 (배송+설치 포함, 철거 별도)
   · **지방 용차배송**: 20만원 (배송만, 설치 불가)
-  · **수도권 철거 단독**: 10만원
+  · **수도권 철거 단독**: 10만원 (반드시 유료)
   · **보드류 택배**: 30,000원 / **일반택배**: 5,000원
+  · ⚠️ **철거는 어떤 경우에도 항상 별도 유료 10만원** — "100만원 이상이면 철거도 무료"라고 절대 안내하지 말 것!
   · ⚠️ 100만원 미만 수도권은 무료가 아님 — 유료 10만원 설치 포함
   · ★ 허니콤보드 배너(hb_bn_1, hb_bn_2, hb_bn_3)만 유일하게 택배 가능! (옵션에서 배송비 선택)
   · 그 외 허니콤보드 제품은 택배 불가 (용차배송만 가능)
@@ -863,8 +865,27 @@ serve(async (req) => {
         };
         const labels = dataLabels[clientLang] || dataLabels['us'];
 
+        // ★ chatbot_knowledge 테이블도 함께 로드 (관리자 학습 페이지에서 추가한 것)
+        let knowledgeData: any[] = [];
+        try {
+            const { data: kn } = await sb.from('chatbot_knowledge')
+                .select('question,answer,category,language,keywords,priority')
+                .eq('is_active', true)
+                .neq('category', '_system_prompt').neq('category', '_managers')
+                .order('priority', { ascending: false })
+                .limit(200);
+            const _langMap: Record<string,string> = { ko:'kr', kr:'kr', ja:'ja', jp:'ja', en:'us', us:'us' };
+            knowledgeData = (kn || []).map((k: any) => ({
+                customer_message: (k.question || '') + (k.keywords ? ` (${k.keywords})` : ''),
+                admin_answer: k.answer || '',
+                category: k.category || 'general',
+                lang: _langMap[(k.language||'ko').toLowerCase()] || 'kr',
+                reviewed_at: null
+            })).filter((q: any) => q.customer_message.trim() && q.admin_answer.trim());
+        } catch (e) { console.warn('chatbot_knowledge load failed:', e); }
+
         // Q&A 학습 데이터 구성 — 언어별 필터링 + kr 공통 포함
-        const allQaData = qaRes.data || [];
+        const allQaData = [...knowledgeData, ...(qaRes.data || [])];
         // ★ "디자인 무료" 관련 QA 필터링 (모든 디자인 의뢰는 유료 → 디자인마켓)
         const _filteredQa = allQaData.filter((q: any) => {
             const a = (q.admin_answer || '');
