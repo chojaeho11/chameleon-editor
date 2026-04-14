@@ -563,12 +563,15 @@ export async function initOrderSystem() {
 // 사용자 등급별 할인율 가져오기
 async function fetchUserDiscountRate() {
     window.isProSubscriber = false;
-    if (!currentUser) {
+    const _user = currentUser || window.currentUser;
+    if (!_user) {
         currentUserDiscountRate = 0;
+        console.log('[discount] no user → 0%');
         return;
     }
     try {
-        const { data } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+        const _sb = sb || window.sb;
+        const { data } = await _sb.from('profiles').select('role').eq('id', _user.id).maybeSingle();
         const role = data?.role;
 
         if (role === 'franchise') currentUserDiscountRate = 0.10;
@@ -581,21 +584,21 @@ async function fetchUserDiscountRate() {
 
         // PRO 구독자: subscriptions.status='active' 확인 → 최소 10% 보장 + PRO 플래그
         try {
-            const { data: subData } = await sb.from('subscriptions')
+            const { data: subData } = await _sb.from('subscriptions')
                 .select('status')
-                .eq('user_id', currentUser.id)
+                .eq('user_id', _user.id)
                 .eq('status', 'active')
                 .maybeSingle();
             if (subData) {
                 window.isProSubscriber = true;
                 currentUserDiscountRate = Math.max(currentUserDiscountRate, 0.10);
             }
-        } catch(subErr) { /* ignore */ }
+        } catch(subErr) { console.warn('[discount] sub query err:', subErr); }
 
-        // 할인율 반영 후 카트 재렌더 (이미 카트 화면이 떠 있을 수 있음)
-        if (window.renderCart && document.getElementById('cartPage')?.style.display === 'block') {
-            try { window.renderCart(); } catch(e) {}
-        }
+        console.log('[discount] role=', role, 'PRO=', window.isProSubscriber, 'rate=', currentUserDiscountRate);
+
+        // 할인율 반영 후 카트 재렌더 (항상 시도 — 화면이 떠 있을 때만 visible 영향)
+        try { if (window.renderCart) window.renderCart(); } catch(e) {}
 
     } catch(e) {
         console.warn("등급 정보 로드 실패:", e);
