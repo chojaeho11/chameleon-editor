@@ -326,8 +326,25 @@ window._quoteToCart = async function(quoteId) {
             // ★ addon 수량 = 각 addon의 qty (견적서에서 이미 메인 수량과 맞춰짐)
             const addonQtyMap = {};
             group.addons.forEach(a => { if (a._code) addonQtyMap[a._code] = a.qty || mainQty; });
-            // ★ 할인 적용된 실효 단가 사용 (total/qty) — 견적서 금액 그대로 장바구니에
-            const effectivePrice = (item.total && mainQty > 0) ? Math.round(item.total / mainQty) : item.unit_price;
+            // ★ 할인 적용된 실효 단가 (total/qty). AI 응답이 total/unit_price를 누락하는 경우 PRODUCT_DB로 폴백
+            let effectivePrice = (item.total && mainQty > 0) ? Math.round(item.total / mainQty) : item.unit_price;
+            if (!effectivePrice || isNaN(effectivePrice) || effectivePrice <= 0) {
+                // 1) PRODUCT_DB에서 m² 단가 × 면적 계산 시도
+                const _db = (window.PRODUCT_DB && window.PRODUCT_DB[item._code]) || rec;
+                const _sqmPrice = _db && (_db._base_sqm_price || (_db.price_per_sqm) || 0);
+                const _wm = (item._width_mm || 0) / 1000;
+                const _hm = (item._height_mm || 0) / 1000;
+                if (_sqmPrice > 0 && _wm > 0 && _hm > 0) {
+                    effectivePrice = Math.round(_sqmPrice * _wm * _hm);
+                } else if (_db && _db.price > 0) {
+                    effectivePrice = Number(_db.price);
+                }
+                if (!effectivePrice || effectivePrice <= 0) {
+                    console.warn('[quote→cart] price missing for', item._code, item.name, '— skipping item');
+                    continue; // 가격 산정 불가 시 아예 담지 않음 (잘못된 0원 담기 방지)
+                }
+                console.log('[quote→cart] price fallback for', item._code, '→', effectivePrice);
+            }
             addProductToCartDirectly({
                 code: item._code || rec.code || '',
                 name: item.name,
