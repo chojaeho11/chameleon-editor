@@ -171,6 +171,71 @@
                     await creditReferralBonus(dbId, refId);
                 }
 
+                // Phase 3a: 디자인 마켓 입찰 결제 완료 마킹
+                // 장바구니에 design_fee 아이템이 있었다면 해당 design_bids를 paid로 업데이트
+                // 실패한 항목은 localStorage에 남겨서 design-market 페이지가 자동 재시도하게 함
+                try {
+                    const pending = JSON.parse(localStorage.getItem('dm_pending_design_bids') || '[]');
+                    if (pending && pending.length > 0) {
+                        // 현재 세션의 access token 확보 (RPC 호출용)
+                        let accessToken = SUPABASE_KEY;
+                        try {
+                            // 키 후보들 시도 (Supabase JS는 sb-{ref}-auth-token 사용)
+                            const candidates = [
+                                'sb-qinvtnhiidtmrzosyvys-auth-token',
+                                'supabase.auth.token'
+                            ];
+                            for (const k of candidates) {
+                                const raw = localStorage.getItem(k);
+                                if (!raw) continue;
+                                try {
+                                    const parsed = JSON.parse(raw);
+                                    const tok = parsed?.access_token || parsed?.currentSession?.access_token;
+                                    if (tok) { accessToken = tok; break; }
+                                } catch(_) {}
+                            }
+                        } catch(_) {}
+
+                        const stillPending = [];
+                        for (const p of pending) {
+                            let succeeded = false;
+                            try {
+                                const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/mark_design_bid_paid`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${accessToken}`,
+                                        'apikey': SUPABASE_KEY
+                                    },
+                                    body: JSON.stringify({
+                                        _bid_id: p.bidId,
+                                        _method: 'cart',
+                                        _order_id: parseInt(dbId, 10)
+                                    })
+                                });
+                                if (resp.ok) {
+                                    succeeded = true;
+                                    console.log('[design-market] marked bid paid:', p.bidId);
+                                } else {
+                                    const txt = await resp.text();
+                                    console.error('[design-market] mark paid HTTP', resp.status, txt);
+                                }
+                            } catch (dmErr) {
+                                console.error('[design-market] mark paid fetch failed:', dmErr);
+                            }
+                            if (!succeeded) stillPending.push(p);
+                        }
+                        // 실패한 항목만 남기고 성공 항목은 제거
+                        if (stillPending.length === 0) {
+                            localStorage.removeItem('dm_pending_design_bids');
+                        } else {
+                            localStorage.setItem('dm_pending_design_bids', JSON.stringify(stillPending));
+                        }
+                    }
+                } catch (dmOuterErr) {
+                    console.error('[design-market] pending bids processing error:', dmOuterErr);
+                }
+
                 // 결제 성공 처리
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('title').innerText = "Payment Successful!";

@@ -699,12 +699,10 @@
         if (window.initWallPagesMulti) {
             window.initWallPagesMulti(cfg.walls, cfg.doubleSided, cfg.activeIndex);
         }
-        // 가격 재계산
-        if (window.initWallConfig) {
-            // renderUI만 갱신 (rebuild는 위에서 이미 함)
-            cfg.pricePerSqm = cfg.pricePerSqm || 60000;
-            window.__wallCalculatedPrice = cfg.totalPrice;
-        }
+        // 가격 재계산 (sizes/sides 변경 후 stale totalPrice 방지)
+        cfg.pricePerSqm = cfg.pricePerSqm || 60000;
+        if (window.calcWallTotalPrice) window.calcWallTotalPrice();
+        if (window.renderWallConfigUI) window.renderWallConfigUI();
     }
 
     // ─── 액세서리: 모서리 기둥 / 상단 조명 / 야외 받침대 ───

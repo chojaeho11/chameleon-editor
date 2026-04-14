@@ -333,6 +333,7 @@ function calcWallTotalPrice() {
     window.__wallCalculatedPrice = cfg.totalPrice;
     return cfg.totalPrice;
 }
+window.calcWallTotalPrice = calcWallTotalPrice;
 
 const MM_TO_PX = 3.7795;
 
@@ -453,6 +454,7 @@ function renderWallConfigUI() {
         wallFaceTabs.style.display = showTabs ? 'flex' : 'none';
     }
 }
+window.renderWallConfigUI = renderWallConfigUI;
 
 // --- 벽 선택 ---
 window.selectWall = (index) => {

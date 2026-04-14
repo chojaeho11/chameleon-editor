@@ -5704,8 +5704,8 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./config.js?v=424"></script>
 <script type="module" src="./canvas-core.js?v=424"></script>
 <script src="./wall-3d-preview.js?v=424" defer></script>
-<script src="./wall-3d-walls.js?v=424" defer></script>
-<script type="module" src="./canvas-size.js?v=424"></script>
+<script src="./wall-3d-walls.js?v=425" defer></script>
+<script type="module" src="./canvas-size.js?v=425"></script>
 <script type="module" src="./canvas-guides.js?v=424"></script>
 <script type="module" src="./canvas-zoom-pan.js?v=424"></script>
 <script type="module" src="./canvas-objects.js?v=424"></script>
@@ -6946,7 +6946,7 @@ window.filterFxCards = function(cat, btn) {
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
     import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=424'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=424';
+    import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
     // -----------------------------------------------------------
@@ -8571,7 +8571,7 @@ window.applyCanvasCrop = function() {
     });
 
     // 새 대지 크기 적용
-    import('./canvas-size.js?v=424').then(mod => {
+    import('./canvas-size.js?v=425').then(mod => {
         if (mod.applySize) {
             mod.applySize(Math.round(cropW), Math.round(cropH), 'CroppedCustom', 'standard', 'resize');
             // 오브젝트 다시 추가 (applySize가 resize 모드에서 보존)

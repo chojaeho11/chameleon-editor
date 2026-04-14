@@ -1242,20 +1242,24 @@ window._loadArtworkGenreGrid = async function() {
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
     try {
-        // 각 장르별 최신 1개씩 가져오기
-        const promises = genres.map(g =>
-            sb.from('admin_products')
+        // 각 장르별 최신 1개씩 가져오기 (180분 캐시 — index.html cachedFetch 활용)
+        const _cf = (window.cachedFetch && typeof window.cachedFetch === 'function') ? window.cachedFetch : null;
+        const promises = genres.map(g => {
+            const fetcher = () => sb.from('admin_products')
                 .select('code, name, name_jp, name_us, img_url')
                 .eq('category', g.code)
                 .eq('partner_status', 'approved')
                 .order('created_at', { ascending: false })
-                .limit(1)
-        );
+                .limit(1);
+            return _cf ? _cf('artwork_genre_' + g.code, 180, fetcher) : fetcher();
+        });
         const results = await Promise.all(promises);
 
         grid.innerHTML = '';
         genres.forEach((g, i) => {
-            const items = results[i].data;
+            // cachedFetch returns plain array; Supabase returns {data}
+            const r = results[i];
+            const items = Array.isArray(r) ? r : (r && r.data);
             const gName = lang==='ja' ? g.name_jp : lang==='en' ? g.name_us : lang==='zh' ? g.name_cn : lang==='es' ? g.name_es : lang==='de' ? g.name_de : lang==='fr' ? g.name_fr : g.name;
             const p = items && items[0];
             const thumbUrl = p ? (window.getTinyThumb ? window.getTinyThumb(p.img_url, 240) : p.img_url) : '';
