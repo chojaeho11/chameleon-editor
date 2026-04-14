@@ -864,7 +864,10 @@ async function _renderCartTimeGrid({ hiddenId, gridId, dateId, prefix }) {
     const date = dateInput.value;
 
     const cartTotalKRW = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
-    const slotInfo = getInstallationSlotInfo(cartTotalKRW);
+    let slotInfo = getInstallationSlotInfo(cartTotalKRW);
+    // 수도권 유료설치/철거 선택 시 시간 지정 강제 활성화 (금액 무관)
+    const _metroPicked = localStorage.getItem('chameleon_metro_install') === '1' || localStorage.getItem('chameleon_metro_removal') === '1';
+    if (slotInfo.type === 'date_only' && _metroPicked) slotInfo = { type: '2hour', slots: 1 };
     const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
     const T = {
         booked:  { kr:'예약', ja:'予約', en:'Booked' }[lang]||'Booked',
@@ -962,14 +965,12 @@ async function _renderCartTimeGrid({ hiddenId, gridId, dateId, prefix }) {
     if (prevValue && target && !target.disabled) _selectBtn(prevValue);
 }
 
-// 철거 섹션 활성/비활성 (배송일+시간 모두 선택돼야 활성)
+// 철거 섹션 활성/비활성: 수도권 철거 토글 ON일 때만 활성
 function _updateRemovalGate() {
     const wrap = document.getElementById('cartRemovalRowWrap');
     if (!wrap) return;
-    const dDate = document.getElementById('cartDeliveryDate')?.value;
-    const dTime = document.getElementById('cartDeliveryTime')?.value;
-    const ready = !!(dDate && dTime);
-    wrap.style.opacity = ready ? '1' : '0.5';
+    const ready = localStorage.getItem('chameleon_metro_removal') === '1';
+    wrap.style.opacity = ready ? '1' : '0.4';
     wrap.style.pointerEvents = ready ? 'auto' : 'none';
 }
 
@@ -979,11 +980,10 @@ window.refreshCartRemovalTimeSlots = async function() {
 
 // ── 카트 시간대 버튼 그리드 동적 갱신 (1팀 사전점유 + 팀별 상태 + 금액별 슬롯) ──
 window.refreshCartDeliveryTimeSlots = async function() {
-    // 노출 조건: (1) 허니콤 카테고리 상품 OR (2) 수도권 유료설치(100000) / 수도권 철거(100001) 선택
-    let _selFee = 0;
-    try { _selFee = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}').fee || 0; } catch(e) {}
-    const _shipTriggers = _selFee === 100000 || _selFee === 100001;
-    const _showSched = (window._cartHasHoneycomb && window._cartHasHoneycomb()) || _shipTriggers;
+    // 노출 조건: (1) 허니콤 카테고리 상품 OR (2) 수도권 유료설치/철거 선택
+    const _metroInst = localStorage.getItem('chameleon_metro_install') === '1';
+    const _metroRem  = localStorage.getItem('chameleon_metro_removal') === '1';
+    const _showSched = (window._cartHasHoneycomb && window._cartHasHoneycomb()) || _metroInst || _metroRem;
     const sec = document.getElementById('cartHcSchedSection');
     if (sec) sec.style.display = _showSched ? 'block' : 'none';
     if (!_showSched) return;
@@ -4630,9 +4630,50 @@ window._addCartShipping = function(fee, label) {
 };
 window._removeCartShipping = function() {
     localStorage.removeItem('chameleon_quote_shipping');
+    localStorage.removeItem('chameleon_metro_install');
+    localStorage.removeItem('chameleon_metro_removal');
     window._nonMetroFeeApplied = 0;
     if (window.renderCart) window.renderCart();
 };
+
+// 수도권 유료설치/철거: 토글 (다른 배송과 별개로 복수 선택 가능)
+window._toggleMetroInstall = function() {
+    const cur = localStorage.getItem('chameleon_metro_install') === '1';
+    if (cur) {
+        localStorage.removeItem('chameleon_metro_install');
+    } else {
+        localStorage.setItem('chameleon_metro_install', '1');
+        // 메인 배송이 비-수도권이었으면 클리어 (메트로 옵션 충돌 방지)
+        try {
+            const sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}');
+            if (sd.fee && sd.fee !== 100000) {
+                localStorage.removeItem('chameleon_quote_shipping');
+                window._nonMetroFeeApplied = 0;
+            }
+        } catch(e) {}
+    }
+    _syncMetroFee();
+    if (window.renderCart) window.renderCart();
+};
+window._toggleMetroRemoval = function() {
+    const cur = localStorage.getItem('chameleon_metro_removal') === '1';
+    if (cur) localStorage.removeItem('chameleon_metro_removal');
+    else localStorage.setItem('chameleon_metro_removal', '1');
+    _syncMetroFee();
+    if (window.renderCart) window.renderCart();
+};
+function _syncMetroFee() {
+    // 메트로 옵션이 켜져있으면 합산 fee를 quote_shipping에 반영 (요약 표시용)
+    const inst = localStorage.getItem('chameleon_metro_install') === '1';
+    const rem  = localStorage.getItem('chameleon_metro_removal') === '1';
+    if (!inst && !rem) return;
+    let total = 0; const labels = [];
+    if (inst) { total += 100000; labels.push('수도권 유료설치'); }
+    if (rem)  { total += 100000; labels.push('수도권 철거'); }
+    const sd = { fee: total, label: labels.join(' + '), ts: Date.now(), shipping_region: 'metro', metro_install: inst, metro_removal: rem };
+    localStorage.setItem('chameleon_quote_shipping', JSON.stringify(sd));
+    window._nonMetroFeeApplied = total;
+}
 
 // ── 철거 토글 (서울/경기 무료, 별도 1슬롯 카운트) ──
 window._toggleCartRemoval = function(checked) {
