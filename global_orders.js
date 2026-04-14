@@ -3217,7 +3217,8 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
         const pillBase = 'display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:28px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.12s;user-select:none;border:1.5px solid;';
         const pillOff = pillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
         const pillOn  = pillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 2px 6px rgba(249,115,22,0.35);';
-        html += `<div style="padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${isDone?'opacity:0.5;':''}">
+        const _anyDone = isDone || loadedChk || deliveredChk || courierChk || localTruckChk;
+        html += `<div style="padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${_anyDone?'background:#f0fdf4;border-left:3px solid #10b981;':''}">
             <div style="display:grid; grid-template-columns:1fr 280px 110px; gap:12px; align-items:center;">
                 <div style="min-width:0;">
                     <div><span style="font-weight:700;">${o.manager_name||'-'}</span> <span style="color:#6366f1;">${o.phone || ''}</span> ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}</div>
