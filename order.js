@@ -4263,26 +4263,17 @@ window.applyCartMaxMileage = function() {
 };
 
 window.updateCartFinalTotal = function() {
-    const cartTotalKRW = calculateCartTotalKRW();
-    const gradeDiscount = Math.floor(cartTotalKRW * currentUserDiscountRate);
-    const referralDiscount = window.verifiedReferrerId ? Math.floor(cartTotalKRW * 0.05) : 0;
-    const afterDiscountKRW = cartTotalKRW - gradeDiscount - referralDiscount;
-
-    // 배송비 포함 (견적서 배송비 또는 비수도권 배송비)
-    let shippingKRW = window._nonMetroFeeApplied || 0;
-    if (!shippingKRW) {
-        try {
-            const shData = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
-            if (shData.ts && (Date.now() - shData.ts < 86400000) && shData.fee > 0) shippingKRW = shData.fee;
-        } catch(e) {}
-    }
+    // 합계(displayed)와 동일한 기준에서 마일리지만 차감 — 배송비/할인 계산 분기에서 발생하던 불일치 방지
+    const baseTotalKRW = (typeof window.finalPaymentAmount === 'number' && window.finalPaymentAmount > 0)
+        ? window.finalPaymentAmount
+        : calculateCartTotalKRW();
 
     // 입력값(현지 통화)을 KRW로 역환산
     const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
     const mileInput = document.getElementById('cartUseMileage');
     const localMileageVal = mileInput ? (parseFloat(mileInput.value) || 0) : 0;
     const usedMileageKRW = mileRate > 0 ? Math.round(localMileageVal / mileRate) : 0;
-    const finalTotalKRW = afterDiscountKRW + shippingKRW - usedMileageKRW;
+    const finalTotalKRW = baseTotalKRW - usedMileageKRW;
 
     const finalRow = document.getElementById('cartFinalRow');
     const finalEl = document.getElementById('cartFinalTotal');
