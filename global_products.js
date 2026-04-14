@@ -4,6 +4,14 @@ import { showLoading, formatCurrency } from "./global_common.js?v=294";
 // i18n helper (admin UI — falls back to Korean for admin context)
 const _t = (k, kr) => (window.t ? window.t(k, kr) : kr);
 
+// 한글/특수문자 파일명 → Storage 안전 ASCII 키로 변환
+function _safeStoragePath(prefix, file) {
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const base = (file.name.replace(/\.[^.]+$/, '') || 'file').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40) || 'img';
+    return `${prefix}/${Date.now()}_${Math.random().toString(36).slice(2,7)}_${base}.${ext}`;
+}
+window._safeStoragePath = _safeStoragePath;
+
 // 홈페이지 카테고리/제품 캐시 무효화 (관리자 저장 후 즉시 반영)
 function _clearHomeCategoryCache() {
     try {
@@ -471,7 +479,7 @@ window.previewAddonImage = async (input) => {
     
     showLoading(true);
     try {
-        const path = `addons/${Date.now()}_${file.name}`;
+        const path = _safeStoragePath('addons', file);
         const { error } = await sb.storage.from('products').upload(path, file);
         if (error) throw error;
 
@@ -1330,8 +1338,7 @@ window.previewProductImage = async (input) => {
     btn.disabled = true; // 업로드 완료 전까지 저장 금지
 
     try {
-        const path = `products/${Date.now()}_${file.name}`;
-        // Bucket 이름이 'products'가 맞는지 확인 필요
+        const path = _safeStoragePath('products', file);
         const { error } = await sb.storage.from('products').upload(path, file);
         
         if (error) {
@@ -2075,9 +2082,8 @@ window.initPopupQuill = () => {
                             const range = this.quill.getSelection(true);
                             
                             try {
-                                // 1. Supabase Storage에 자동 업로드
-                                const fileName = `detail_${Date.now()}_${file.name}`;
-                                const path = `products/${fileName}`;
+                                // 1. Supabase Storage에 자동 업로드 (파일명 ASCII 안전화)
+                                const path = _safeStoragePath('products/detail', file);
                                 
                                 // global_config.js에서 가져온 sb 객체 사용
                                 const { data, error } = await sb.storage.from('products').upload(path, file);
