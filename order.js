@@ -297,8 +297,13 @@ export async function initOrderSystem() {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
             // ★ 100만원 미만이면 배송 옵션 1개 이상 필수
+            // (예외: 천원단위/만원단위 주문상품 — 배송비 없이 결제 가능)
+            const _shipExempt = cartData.some(it => {
+                const c = String((it.product && (it.product.code || it.product.product_key || it.product.id)) || '');
+                return c === '21355677' || c === '21355677_copy';
+            });
             const _cartTotal = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
-            if (_cartTotal < 1000000) {
+            if (_cartTotal < 1000000 && !_shipExempt) {
                 let _hasShip = false;
                 try {
                     const _sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}');
