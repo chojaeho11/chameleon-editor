@@ -8293,11 +8293,11 @@ async function renderQuickMenu() {
     try {
         // 대분류, 중분류, 검색용 상품 정보를 동시에 가져옴 (180분 캐시)
         const [topCats, subCats, allProds] = await Promise.all([
-            window.cachedFetch('top_cats', 180, () =>
+            window.cachedFetch('top_cats', 3, () =>
                 sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true })),
-            window.cachedFetch('subcats', 180, () =>
+            window.cachedFetch('subcats', 3, () =>
                 sb.from('admin_categories').select('*').order('sort_order', { ascending: true })),
-            window.cachedFetch('all_prods_lite', 180, () =>
+            window.cachedFetch('all_prods_lite', 5, () =>
                 sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true }))
         ]);
 

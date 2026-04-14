@@ -4,6 +4,16 @@ import { showLoading, formatCurrency } from "./global_common.js?v=294";
 // i18n helper (admin UI — falls back to Korean for admin context)
 const _t = (k, kr) => (window.t ? window.t(k, kr) : kr);
 
+// 홈페이지 카테고리/제품 캐시 무효화 (관리자 저장 후 즉시 반영)
+function _clearHomeCategoryCache() {
+    try {
+        const targets = ['cache:top_cats','cache:subcats','cache:all_prods_lite'];
+        targets.forEach(k => localStorage.removeItem(k));
+        console.log('[admin] home category cache cleared');
+    } catch(e) {}
+}
+window._clearHomeCategoryCache = _clearHomeCategoryCache;
+
 // [전역 변수]
 let editingTopCatId = null;
 let editingCategoryId = null;
@@ -180,6 +190,7 @@ window.addTopCategoryDB = async () => {
 
     if(error) showToast(_t('err_prefix','Error: ') + error.message, "error");
     else {
+        _clearHomeCategoryCache();
         showToast(editingTopCatId ? _t('msg_updated','Updated.') : _t('msg_saved','Saved.'), "success");
         resetTopCategoryForm();
     }
@@ -343,6 +354,7 @@ window.addCategoryDB = async () => {
 
     if(error) showToast(_t('err_prefix','Error: ') + error.message, "error");
     else {
+        _clearHomeCategoryCache();
         showToast(editingCategoryId ? _t('msg_updated','Updated.') : _t('msg_saved','Saved.'), "success");
         resetCategoryForm();
     }
@@ -1104,6 +1116,7 @@ window.addProductDB = async () => {
 
     if(error) showToast(_t('err_failed','Failed: ') + error.message, "error");
     else {
+        _clearHomeCategoryCache();
         showToast(_t('msg_saved','Saved.'), "success");
         resetProductForm();
         if(document.getElementById('filterProdCat').value === cat) {
