@@ -79,7 +79,10 @@
     <div style="font-size:12px; font-weight:bold; color:#64748b; margin-bottom:5px;">작업 설정</div>
     <div class="form-row">
         <select id="driverSelect" class="input-box" onchange="saveDriverAndLoad()">
-            <option value="">기사님 선택...</option>
+            <option value="all">전체 (모든 팀)</option>
+            <option value="team1">1팀</option>
+            <option value="team2">2팀</option>
+            <option value="team3">3팀</option>
         </select>
     </div>
     <div class="form-row">
@@ -119,81 +122,68 @@
         // 기사 목록 로드
         await loadDriverList();
 
-        // 저장된 기사 ID가 있으면 자동 선택
-        let savedDriverId = null; try { savedDriverId = localStorage.getItem('my_driver_id'); } catch(e) {}
-        if (savedDriverId) {
-            document.getElementById('driverSelect').value = savedDriverId;
-            await loadMyTasks();
-        } else {
-            document.getElementById('loading').style.display = 'none';
-        }
+        // 저장된 팀 (없으면 '전체')
+        let savedTeam = 'all'; try { savedTeam = localStorage.getItem('my_team') || 'all'; } catch(e) {}
+        document.getElementById('driverSelect').value = savedTeam;
+        await loadMyTasks();
     }
 
-    // 기사님 목록 로드
-    async function loadDriverList() {
-        try {
-            const { data, error } = await sb.from('admin_staff').select('*').eq('role', 'driver');
-            if (error) throw error;
+    // 팀 모드 — DB 기사 목록 로드 불필요
+    async function loadDriverList() { /* no-op: 팀 선택 모드 */ }
 
-            const sel = document.getElementById('driverSelect');
-            if (data && data.length > 0) {
-                data.forEach(d => {
-                    const opt = document.createElement('option');
-                    opt.value = d.id;
-                    opt.textContent = d.name + ' 기사님';
-                    sel.appendChild(opt);
-                });
-                console.log(`기사 ${data.length}명 로드 완료`);
-            } else {
-                console.warn('등록된 기사가 없습니다.');
-            }
-        } catch (e) {
-            console.error('기사 목록 로드 실패:', e);
-            document.getElementById('taskList').innerHTML = `<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i> 기사 목록 로드 실패: ${e.message}</div>`;
-        }
-    }
-
-    // 기사 선택 시 저장 및 로드
+    // 팀 선택 시 저장 및 로드
     window.saveDriverAndLoad = function() {
-        const id = document.getElementById('driverSelect').value;
-        if (id) try { localStorage.setItem('my_driver_id', id); } catch(e) {}
+        const v = document.getElementById('driverSelect').value;
+        try { localStorage.setItem('my_team', v); } catch(e) {}
         loadMyTasks();
     };
 
     // 데이터 로드
     window.loadMyTasks = async function() {
-        const driverId = document.getElementById('driverSelect').value;
+        const teamSel = document.getElementById('driverSelect').value || 'all';
         const date = document.getElementById('workDate').value;
-
-        if (!driverId) return;
         document.getElementById('loading').style.display = 'flex';
 
         try {
-            // 1. 주문 데이터: 본인 배차 OR 설치/철거 카테고리 전체
-            const { data: assignedOrders, error } = await sb.from('orders')
+            // 그날의 모든 시공/배송/철거 주문 (관리자 차단/임시작성/취소 제외)
+            // 카테고리: installation_time 있음 OR SHIPPING fee=100000/100001/200000/700000 OR 100만원이상 수도권 무료
+            const { data: rawOrders, error } = await sb.from('orders')
                 .select('*')
-                .eq('staff_driver_id', driverId)
                 .eq('delivery_target_date', date)
-                .order('delivery_time', { ascending: true });
+                .not('status', 'in', '("관리자차단","임시작성","취소됨")')
+                .order('installation_time', { ascending: true });
             if (error) throw error;
-            // 추가: installation_time 있거나 SHIPPING fee가 100000/100001/700000 인 주문 (배차 안 된 것 포함)
-            const { data: instOrders } = await sb.from('orders')
-                .select('*')
-                .eq('delivery_target_date', date)
-                .or('installation_time.not.is.null,admin_note.ilike.%SHIPPING:fee=100000%,admin_note.ilike.%SHIPPING:fee=100001%,admin_note.ilike.%SHIPPING:fee=700000%')
-                .neq('status', '관리자차단');
-            const _seen = new Set((assignedOrders||[]).map(o => o.id));
-            const _merged = [...(assignedOrders||[])];
-            (instOrders||[]).forEach(o => { if (!_seen.has(o.id)) _merged.push(o); });
+            const _metroKw = ['서울','경기','인천','성남','분당','수원','고양','용인','부천','안산','안양','화성','광명','군포','하남','과천','시흥','파주','김포','일산','판교','동탄','위례','세종'];
+            const _isMetro = (addr) => !addr || _metroKw.some(k => addr.includes(k));
+            const _shipFee = (n) => { const m = (n||'').match(/SHIPPING:fee=(\d+)/); return m ? parseInt(m[1]) : 0; };
+            const _isInstallOrDeliveryOrRemoval = (o) => {
+                if (o.installation_time) return true;
+                const f = _shipFee(o.admin_note);
+                if (f === 100000 || f === 100001 || f === 200000 || f === 700000) return true;
+                // rdate (철거 일정) 매치
+                if ((o.admin_note||'').includes(`rdate=${date}`)) return true;
+                // 100만원 이상 + 수도권 = 무료배송 설치건
+                if ((o.total_amount||0) >= 1000000 && _isMetro(o.address)) return true;
+                return false;
+            };
+            let orders = (rawOrders||[]).filter(_isInstallOrDeliveryOrRemoval);
+            // 팀 필터 — 현재는 admin_note의 [TEAM:N] 마커로 분류 (없으면 1팀 기본)
+            if (teamSel !== 'all') {
+                const wantTeam = teamSel === 'team1' ? 1 : (teamSel === 'team2' ? 2 : 3);
+                orders = orders.filter(o => {
+                    const m = (o.admin_note||'').match(/\[TEAM:(\d)\]/);
+                    const t = m ? parseInt(m[1]) : 1;
+                    return t === wantTeam;
+                });
+            }
             // 저장된 정렬 순서 적용
             try {
-                const _savedOrder = JSON.parse(localStorage.getItem(`driverOrder_${driverId}_${date}`) || '[]');
+                const _savedOrder = JSON.parse(localStorage.getItem(`driverOrder_${teamSel}_${date}`) || '[]');
                 if (_savedOrder.length) {
                     const _idx = (id) => { const i = _savedOrder.indexOf(String(id)); return i === -1 ? 9999 : i; };
-                    _merged.sort((a,b) => _idx(a.id) - _idx(b.id));
+                    orders.sort((a,b) => _idx(a.id) - _idx(b.id));
                 }
             } catch(e){}
-            const orders = _merged;
 
             const list = document.getElementById('taskList');
             list.innerHTML = '';
@@ -396,11 +386,10 @@
         const rect = target.getBoundingClientRect();
         const after = (e.clientY - rect.top) > rect.height/2;
         list.insertBefore(_dragSrc, after ? target.nextSibling : target);
-        // 순서 저장
-        const driverId = document.getElementById('driverSelect').value;
+        const teamSel = document.getElementById('driverSelect').value || 'all';
         const date = document.getElementById('workDate').value;
         const order = [...list.querySelectorAll('[data-order-id]')].map(el => el.dataset.orderId);
-        try { localStorage.setItem(`driverOrder_${driverId}_${date}`, JSON.stringify(order)); } catch(e){}
+        try { localStorage.setItem(`driverOrder_${teamSel}_${date}`, JSON.stringify(order)); } catch(e){}
     };
     window._dragEnd = (e) => { e.currentTarget.style.opacity=''; _dragSrc = null; };
 
