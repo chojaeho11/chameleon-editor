@@ -817,17 +817,111 @@ function calculateCartTotalKRW() {
 }
 
 // ── 설치 슬롯 정보 (금액 기반) ──
+// 정책:
+//  - <100만: 시간 지정 불가 (date_only)
+//  - <500만: 1슬롯 (2시간)
+//  - <1000만: 2슬롯 (4시간) — 시작시간 + 다음 1개 차단
+//  - ≥1000만: 4슬롯 (8시간)
 function getInstallationSlotInfo(totalKRW) {
     if (totalKRW < 1000000) return { type: 'date_only', slots: 0 };
-    if (totalKRW < 3000000) return { type: '2hour', slots: 1 };
-    if (totalKRW < 5000000) return { type: '4hour', slots: 2 };
-    return { type: 'fullday', slots: 7 };
+    if (totalKRW < 5000000) return { type: '2hour', slots: 1 };
+    if (totalKRW < 10000000) return { type: '4hour', slots: 2 };
+    return { type: '8hour', slots: 4 };
 }
+
+// 1팀은 항상 점유된 것으로 표시 (실제 운영 가능 팀 = MAX_TEAMS - 1)
+const BASE_OCCUPIED_TEAMS = 1;
+
+// ── 카트 시간대 select 동적 갱신 (1팀 사전점유 + 다른고객 예약 차단 + 금액별 슬롯) ──
+window.refreshCartDeliveryTimeSlots = async function() {
+    const sel = document.getElementById('cartDeliveryTime');
+    const dateInput = document.getElementById('cartDeliveryDate');
+    if (!sel || !dateInput) return;
+    const date = dateInput.value;
+
+    const cartTotalKRW = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
+    const slotInfo = getInstallationSlotInfo(cartTotalKRW);
+
+    const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
+    const L = (k) => ({
+        any:        { kr:'시간 무관', ja:'時間指定なし', en:'Any time', zh:'不指定时间', ar:'أي وقت', es:'Cualquier hora', de:'Beliebig', fr:'À tout moment' }[k===undefined?lang:lang],
+        full:       { kr:'마감', ja:'満員', en:'Full', zh:'已满', ar:'ممتلئ', es:'Lleno', de:'Voll', fr:'Complet' }[lang],
+        teamsLeft:  { kr:'팀 가능', ja:'チーム可', en:'teams left', zh:'团队剩余', ar:'فرق متاحة', es:'equipos', de:'Teams frei', fr:'équipes' }[lang],
+        unavail:    { kr:'설치시간 지정 불가 (100만원 미만)', ja:'時間指定不可', en:'Time not selectable (<$1,000)', zh:'无法指定时间', ar:'غير قابل للاختيار', es:'No seleccionable', de:'Nicht wählbar', fr:'Non sélectionnable' }[lang],
+        loading:    { kr:'로딩중...', ja:'読込中...', en:'Loading...', zh:'加载中...', ar:'تحميل...', es:'Cargando...', de:'Lädt...', fr:'Chargement...' }[lang]
+    });
+
+    sel.innerHTML = '';
+    const optAny = document.createElement('option');
+    optAny.value = '';
+    optAny.textContent = L().any;
+    sel.appendChild(optAny);
+
+    if (slotInfo.type === 'date_only') {
+        // 100만원 미만: 시간 무관만
+        sel.disabled = true;
+        sel.title = L().unavail;
+        return;
+    }
+    sel.disabled = false;
+    sel.title = '';
+
+    if (!date) return;
+
+    // 로딩 옵션
+    const optLoad = document.createElement('option');
+    optLoad.disabled = true; optLoad.textContent = L().loading;
+    sel.appendChild(optLoad);
+
+    let booked = {};
+    try { booked = await fetchInstallationSlots(date); }
+    catch(e) { console.warn(e); INSTALL_TIME_SLOTS.forEach(s => booked[s] = BASE_OCCUPIED_TEAMS); }
+
+    // 로딩 제거
+    sel.removeChild(optLoad);
+
+    const prevValue = sel.dataset.prevValue || '';
+    INSTALL_TIME_SLOTS.forEach((slot, idx) => {
+        // 이 슬롯에서 시작했을 때 필요한 연속 슬롯이 모두 가용한가
+        let canBook = true;
+        const need = Math.max(slotInfo.slots, 1);
+        for (let i = 0; i < need; i++) {
+            const j = idx + i;
+            if (j >= INSTALL_TIME_SLOTS.length) { canBook = false; break; }
+            const used = booked[INSTALL_TIME_SLOTS[j]] || 0;
+            if (used >= MAX_TEAMS) { canBook = false; break; }
+        }
+        const usedHere = booked[slot] || 0;
+        const remain = Math.max(0, MAX_TEAMS - usedHere);
+
+        const opt = document.createElement('option');
+        opt.value = slot;
+        const endIdx = Math.min(idx + need, INSTALL_TIME_SLOTS.length);
+        const endTime = endIdx < INSTALL_TIME_SLOTS.length ? INSTALL_TIME_SLOTS[endIdx] : '22:00';
+        const rangeLabel = need > 1 ? `${slot} ~ ${endTime}` : slot;
+        if (canBook) {
+            opt.textContent = `${rangeLabel} (${remain}${L().teamsLeft})`;
+        } else {
+            opt.textContent = `${rangeLabel} — ${L().full}`;
+            opt.disabled = true;
+        }
+        sel.appendChild(opt);
+    });
+
+    // 이전 선택값 복원 (가능할 때만)
+    if (prevValue) {
+        const target = [...sel.options].find(o => o.value === prevValue && !o.disabled);
+        if (target) sel.value = prevValue;
+        else sel.value = '';
+    }
+    sel.onchange = () => { sel.dataset.prevValue = sel.value; };
+};
 
 // ── 해당 날짜 예약 현황 조회 ──
 async function fetchInstallationSlots(date) {
     const slotTeams = {};
-    INSTALL_TIME_SLOTS.forEach(s => slotTeams[s] = 0);
+    // 1팀은 항상 사전 점유로 카운트
+    INSTALL_TIME_SLOTS.forEach(s => slotTeams[s] = BASE_OCCUPIED_TEAMS);
 
     try {
         const _sb = window.sb || sb;
@@ -840,8 +934,8 @@ async function fetchInstallationSlots(date) {
             const startIdx = INSTALL_TIME_SLOTS.indexOf(order.installation_time);
             if (startIdx === -1) return;
             const info = getInstallationSlotInfo(order.total_amount || 0);
-            const endIdx = info.type === 'fullday' ? INSTALL_TIME_SLOTS.length : Math.min(startIdx + info.slots, INSTALL_TIME_SLOTS.length);
-            for (let i = (info.type === 'fullday' ? 0 : startIdx); i < endIdx; i++) {
+            const endIdx = Math.min(startIdx + Math.max(info.slots, 1), INSTALL_TIME_SLOTS.length);
+            for (let i = startIdx; i < endIdx; i++) {
                 slotTeams[INSTALL_TIME_SLOTS[i]]++;
             }
         });
@@ -942,31 +1036,7 @@ async function openInstallationTimeModal() {
 function renderTimeSlots(grid, bookedSlots, slotInfo) {
     grid.innerHTML = '';
 
-    // 종일
-    if (slotInfo.type === 'fullday') {
-        const maxUsed = Math.max(...INSTALL_TIME_SLOTS.map(s => bookedSlots[s] || 0));
-        const canBook = maxUsed < MAX_TEAMS;
-        const div = document.createElement('div');
-        div.className = 'time-slot' + (canBook ? ' slot-available' : ' slot-full');
-        div.style.gridColumn = '1 / -1';
-        div.innerHTML = `<div>08:00 ~ 22:00</div>`;
-        if (canBook) {
-            div.onclick = () => {
-                grid.querySelectorAll('.time-slot').forEach(s => s.classList.remove('slot-selected'));
-                div.classList.add('slot-selected');
-                selectedInstallationTime = '08:00';
-                document.getElementById("btnConfirmInstallTime").disabled = false;
-            };
-            // 종일은 옵션이 하나뿐이므로 자동 선택
-            div.classList.add('slot-selected');
-            selectedInstallationTime = '08:00';
-            document.getElementById("btnConfirmInstallTime").disabled = false;
-        }
-        grid.appendChild(div);
-        return;
-    }
-
-    // 2시간 / 4시간 슬롯
+    // 2시간 / 4시간 / 8시간 슬롯
     INSTALL_TIME_SLOTS.forEach((slot, idx) => {
         let canBook = true;
         for (let i = 0; i < slotInfo.slots; i++) {
@@ -2420,6 +2490,12 @@ function updateSummary(prodTotal, addonTotal, total) {
         dateInput.min = d.toISOString().split('T')[0];
         if (!dateInput.value) dateInput.value = d.toISOString().split('T')[0];
     }
+    if (dateInput && !dateInput.dataset.bound) {
+        dateInput.dataset.bound = '1';
+        dateInput.addEventListener('change', () => { window.refreshCartDeliveryTimeSlots(); });
+    }
+    // 시간대 슬롯 갱신 (배송일/카트금액 변경 반영)
+    if (window.refreshCartDeliveryTimeSlots) window.refreshCartDeliveryTimeSlots();
     // ★ 챗봇 견적서 PDF 링크 표시 — 현재 장바구니에 챗봇 견적 아이템이 있을 때만
     const _quotePdfUrl = localStorage.getItem('chameleon_quote_pdf_url');
     const _quotePdfLink = document.getElementById('cartQuotePdfLink');
