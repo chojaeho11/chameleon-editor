@@ -883,9 +883,12 @@ async function _renderCartTimeGrid({ hiddenId, gridId, dateId, prefix }) {
 
     const cartTotalKRW = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
     let slotInfo = getInstallationSlotInfo(cartTotalKRW);
-    // 수도권 유료설치/철거 선택 시 시간 지정 강제 활성화 (금액 무관)
+    // 수도권 유료설치/철거 OR 지방 용차/설치배송 선택 시 시간 지정 강제 활성화 (금액 무관)
     const _metroPicked = localStorage.getItem('chameleon_metro_install') === '1' || localStorage.getItem('chameleon_metro_removal') === '1';
-    if (slotInfo.type === 'date_only' && _metroPicked) slotInfo = { type: '2hour', slots: 1 };
+    let _shipForceFee = 0;
+    try { _shipForceFee = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}').fee || 0; } catch(e) {}
+    const _shipForces = _metroPicked || _shipForceFee === 200000 || _shipForceFee === 700000 || _shipForceFee === 100000 || _shipForceFee === 100001;
+    if (slotInfo.type === 'date_only' && _shipForces) slotInfo = { type: '2hour', slots: 1 };
     const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
     const T = {
         booked:  { kr:'예약', ja:'予約', en:'Booked' }[lang]||'Booked',
@@ -998,10 +1001,13 @@ window.refreshCartRemovalTimeSlots = async function() {
 
 // ── 카트 시간대 버튼 그리드 동적 갱신 (1팀 사전점유 + 팀별 상태 + 금액별 슬롯) ──
 window.refreshCartDeliveryTimeSlots = async function() {
-    // 노출 조건: (1) 허니콤 카테고리 상품 OR (2) 수도권 유료설치/철거 선택
+    // 노출 조건: (1) 허니콤 카테고리 OR (2) 메트로 토글 OR (3) 지방 용차/설치배송 선택
     const _metroInst = localStorage.getItem('chameleon_metro_install') === '1';
     const _metroRem  = localStorage.getItem('chameleon_metro_removal') === '1';
-    const _showSched = (window._cartHasHoneycomb && window._cartHasHoneycomb()) || _metroInst || _metroRem;
+    let _selFee = 0;
+    try { _selFee = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}').fee || 0; } catch(e) {}
+    const _shipShowsSched = _selFee === 100000 || _selFee === 100001 || _selFee === 200000 || _selFee === 700000;
+    const _showSched = (window._cartHasHoneycomb && window._cartHasHoneycomb()) || _metroInst || _metroRem || _shipShowsSched;
     const sec = document.getElementById('cartHcSchedSection');
     if (sec) sec.style.display = _showSched ? 'block' : 'none';
     if (!_showSched) return;
