@@ -832,59 +832,81 @@ function getInstallationSlotInfo(totalKRW) {
 // 1팀은 항상 점유된 것으로 표시 (실제 운영 가능 팀 = MAX_TEAMS - 1)
 const BASE_OCCUPIED_TEAMS = 1;
 
-// ── 카트 시간대 select 동적 갱신 (1팀 사전점유 + 다른고객 예약 차단 + 금액별 슬롯) ──
+// ── 카트 시간대 버튼 그리드 동적 갱신 (1팀 사전점유 + 팀별 상태 + 금액별 슬롯) ──
 window.refreshCartDeliveryTimeSlots = async function() {
-    const sel = document.getElementById('cartDeliveryTime');
+    const hidden = document.getElementById('cartDeliveryTime');
+    const grid = document.getElementById('cartDeliveryTimeGrid');
+    const note = document.getElementById('cartDeliveryTimeNote');
     const dateInput = document.getElementById('cartDeliveryDate');
-    if (!sel || !dateInput) return;
+    if (!hidden || !grid || !dateInput) return;
     const date = dateInput.value;
 
     const cartTotalKRW = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
     const slotInfo = getInstallationSlotInfo(cartTotalKRW);
 
     const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
-    const L = (k) => ({
-        any:        { kr:'시간 무관', ja:'時間指定なし', en:'Any time', zh:'不指定时间', ar:'أي وقت', es:'Cualquier hora', de:'Beliebig', fr:'À tout moment' }[k===undefined?lang:lang],
-        full:       { kr:'마감', ja:'満員', en:'Full', zh:'已满', ar:'ممتلئ', es:'Lleno', de:'Voll', fr:'Complet' }[lang],
-        teamsLeft:  { kr:'팀 가능', ja:'チーム可', en:'teams left', zh:'团队剩余', ar:'فرق متاحة', es:'equipos', de:'Teams frei', fr:'équipes' }[lang],
-        unavail:    { kr:'설치시간 지정 불가 (100만원 미만)', ja:'時間指定不可', en:'Time not selectable (<$1,000)', zh:'无法指定时间', ar:'غير قابل للاختيار', es:'No seleccionable', de:'Nicht wählbar', fr:'Non sélectionnable' }[lang],
-        loading:    { kr:'로딩중...', ja:'読込中...', en:'Loading...', zh:'加载中...', ar:'تحميل...', es:'Cargando...', de:'Lädt...', fr:'Chargement...' }[lang]
-    });
+    const T = {
+        any:     { kr:'시간 무관', ja:'時間指定なし', en:'Any time', zh:'不指定时间', ar:'أي وقت', es:'Cualquier hora', de:'Beliebig', fr:'À tout moment' }[lang],
+        booked:  { kr:'예약', ja:'予約済', en:'Booked', zh:'已预约', ar:'محجوز', es:'Reservado', de:'Belegt', fr:'Réservé' }[lang],
+        avail:   { kr:'가능', ja:'空き', en:'Open', zh:'可预约', ar:'متاح', es:'Disponible', de:'Frei', fr:'Libre' }[lang],
+        full:    { kr:'마감', ja:'満員', en:'Full', zh:'已满', ar:'ممتلئ', es:'Lleno', de:'Voll', fr:'Complet' }[lang],
+        unavail: { kr:'100만원 미만 — 시간 지정 불가', ja:'時間指定不可', en:'Time not selectable (<$1,000)', zh:'无法指定时间', ar:'غير قابل', es:'No seleccionable', de:'Nicht wählbar', fr:'Non sélectionnable' }[lang],
+        loading: { kr:'로딩중...', ja:'読込中...', en:'Loading...', zh:'加载中...', ar:'تحميل...', es:'Cargando...', de:'Lädt...', fr:'Chargement...' }[lang],
+        team:    { kr:'팀', ja:'チーム', en:'Team', zh:'团', ar:'فريق', es:'Equipo', de:'Team', fr:'Équipe' }[lang],
+        spans:   { kr:'슬롯', ja:'スロット', en:'slots', zh:'时段', ar:'فترات', es:'slots', de:'Slots', fr:'créneaux' }[lang]
+    };
 
-    sel.innerHTML = '';
-    const optAny = document.createElement('option');
-    optAny.value = '';
-    optAny.textContent = L().any;
-    sel.appendChild(optAny);
+    grid.innerHTML = '';
+    if (note) note.textContent = '';
+
+    const renderAnyOnly = (msg) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.style.cssText = 'grid-column:1/-1;padding:10px 12px;border:2px solid #6366f1;background:#eef2ff;color:#4338ca;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;';
+        btn.textContent = T.any;
+        btn.onclick = () => { hidden.value=''; grid.querySelectorAll('button').forEach(b=>b.style.outline=''); btn.style.outline='3px solid #4338ca'; };
+        grid.appendChild(btn);
+        if (msg && note) note.textContent = msg;
+        hidden.value = '';
+        btn.style.outline = '3px solid #4338ca';
+    };
 
     if (slotInfo.type === 'date_only') {
-        // 100만원 미만: 시간 무관만
-        sel.disabled = true;
-        sel.title = L().unavail;
+        renderAnyOnly(T.unavail);
         return;
     }
-    sel.disabled = false;
-    sel.title = '';
 
-    if (!date) return;
+    if (!date) {
+        renderAnyOnly('');
+        return;
+    }
 
-    // 로딩 옵션
-    const optLoad = document.createElement('option');
-    optLoad.disabled = true; optLoad.textContent = L().loading;
-    sel.appendChild(optLoad);
+    // 로딩 표시
+    const loading = document.createElement('div');
+    loading.style.cssText = 'grid-column:1/-1;padding:8px;text-align:center;color:#6366f1;font-size:12px;';
+    loading.textContent = T.loading;
+    grid.appendChild(loading);
 
     let booked = {};
     try { booked = await fetchInstallationSlots(date); }
-    catch(e) { console.warn(e); INSTALL_TIME_SLOTS.forEach(s => booked[s] = BASE_OCCUPIED_TEAMS); }
+    catch(e) { INSTALL_TIME_SLOTS.forEach(s => booked[s] = BASE_OCCUPIED_TEAMS); }
 
-    // 로딩 제거
-    sel.removeChild(optLoad);
+    grid.innerHTML = '';
 
-    const prevValue = sel.dataset.prevValue || '';
+    // "시간 무관" 버튼
+    const anyBtn = document.createElement('button');
+    anyBtn.type = 'button';
+    anyBtn.dataset.val = '';
+    anyBtn.style.cssText = 'grid-column:1/-1;padding:10px;border:2px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;';
+    anyBtn.textContent = T.any;
+    grid.appendChild(anyBtn);
+
+    const need = Math.max(slotInfo.slots, 1);
+    const prevValue = hidden.value || '';
+
     INSTALL_TIME_SLOTS.forEach((slot, idx) => {
-        // 이 슬롯에서 시작했을 때 필요한 연속 슬롯이 모두 가용한가
+        // 연속 슬롯 사용량 확인
         let canBook = true;
-        const need = Math.max(slotInfo.slots, 1);
         for (let i = 0; i < need; i++) {
             const j = idx + i;
             if (j >= INSTALL_TIME_SLOTS.length) { canBook = false; break; }
@@ -892,29 +914,49 @@ window.refreshCartDeliveryTimeSlots = async function() {
             if (used >= MAX_TEAMS) { canBook = false; break; }
         }
         const usedHere = booked[slot] || 0;
-        const remain = Math.max(0, MAX_TEAMS - usedHere);
-
-        const opt = document.createElement('option');
-        opt.value = slot;
         const endIdx = Math.min(idx + need, INSTALL_TIME_SLOTS.length);
         const endTime = endIdx < INSTALL_TIME_SLOTS.length ? INSTALL_TIME_SLOTS[endIdx] : '22:00';
         const rangeLabel = need > 1 ? `${slot} ~ ${endTime}` : slot;
-        if (canBook) {
-            opt.textContent = `${rangeLabel} (${remain}${L().teamsLeft})`;
-        } else {
-            opt.textContent = `${rangeLabel} — ${L().full}`;
-            opt.disabled = true;
+
+        // 팀별 상태 칩
+        const chips = [];
+        for (let k = 1; k <= MAX_TEAMS; k++) {
+            const isBooked = k <= usedHere;
+            const color = isBooked ? '#94a3b8' : '#10b981';
+            chips.push(`<span style="font-size:10px;padding:1px 5px;border-radius:6px;background:${isBooked?'#f1f5f9':'#ecfdf5'};color:${color};border:1px solid ${color};">${k}${T.team} ${isBooked?T.booked:T.avail}</span>`);
         }
-        sel.appendChild(opt);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.val = slot;
+        const baseStyle = 'padding:8px 6px;border-radius:10px;font-size:12px;font-weight:700;text-align:left;cursor:pointer;line-height:1.4;';
+        if (canBook) {
+            btn.style.cssText = baseStyle + 'border:2px solid #6366f1;background:#eef2ff;color:#4338ca;';
+        } else {
+            btn.style.cssText = baseStyle + 'border:2px solid #e2e8f0;background:#f8fafc;color:#94a3b8;cursor:not-allowed;';
+            btn.disabled = true;
+        }
+        btn.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;"><b style="font-size:13px;">${rangeLabel}</b>${need>1?`<span style="font-size:10px;color:#64748b;">${need}${T.spans}</span>`:''}</div><div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">${chips.join('')}</div>${!canBook?`<div style="font-size:10px;color:#ef4444;margin-top:2px;">${T.full}</div>`:''}`;
+        grid.appendChild(btn);
+    });
+
+    // 클릭 핸들러 (위임)
+    const _selectBtn = (val) => {
+        hidden.value = val;
+        grid.querySelectorAll('button').forEach(b => {
+            b.style.outline = (b.dataset.val === val) ? '3px solid #4338ca' : '';
+            b.style.outlineOffset = '-1px';
+        });
+    };
+    grid.querySelectorAll('button').forEach(b => {
+        if (b.disabled) return;
+        b.addEventListener('click', () => _selectBtn(b.dataset.val || ''));
     });
 
     // 이전 선택값 복원 (가능할 때만)
-    if (prevValue) {
-        const target = [...sel.options].find(o => o.value === prevValue && !o.disabled);
-        if (target) sel.value = prevValue;
-        else sel.value = '';
-    }
-    sel.onchange = () => { sel.dataset.prevValue = sel.value; };
+    const target = grid.querySelector(`button[data-val="${prevValue}"]`);
+    if (prevValue && target && !target.disabled) _selectBtn(prevValue);
+    else _selectBtn('');
 };
 
 // ── 해당 날짜 예약 현황 조회 ──

@@ -4764,15 +4764,9 @@ async function handleSubReturn() {
                         </div>
                         <div>
                             <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;" data-i18n="cart_delivery_time">희망 시간대</label>
-                            <select id="cartDeliveryTime" class="ai-input-pretty" style="margin:0; height:40px; font-size:13px;">
-                                <option value="" data-i18n="cart_time_any">시간 무관</option>
-                                <option value="08:00">08:00</option>
-                                <option value="10:00">10:00</option>
-                                <option value="12:00">12:00</option>
-                                <option value="14:00">14:00</option>
-                                <option value="16:00">16:00</option>
-                                <option value="18:00">18:00</option>
-                            </select>
+                            <input type="hidden" id="cartDeliveryTime" value="">
+                            <div id="cartDeliveryTimeGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;"></div>
+                            <div id="cartDeliveryTimeNote" style="margin-top:6px; font-size:11px; color:#64748b;"></div>
                         </div>
                     </div>
 
@@ -5717,7 +5711,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
 <script type="module" src="./export.js?v=424"></script>
-<script type="module" src="./order.js?v=426"></script>
+<script type="module" src="./order.js?v=427"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>
 <script type="module" src="./ppt-mode.js?v=424"></script>
@@ -6945,7 +6939,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=426'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=427'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
@@ -11865,7 +11859,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=426');
+                    const m = await import('./order.js?v=427');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -11935,7 +11929,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=426').then(m => {
+            import('./order.js?v=427').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -12536,7 +12530,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=426').then(m => {
+        import('./order.js?v=427').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17062,7 +17056,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=426').then(function(mod) {
+            import('./order.js?v=427').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
