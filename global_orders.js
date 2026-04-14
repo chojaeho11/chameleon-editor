@@ -3172,26 +3172,52 @@ function renderDeliveryGroup(title, orders, color, bg, showTime) {
         const driver = staffList.find(s => s.id == o.staff_driver_id);
         const isDone = o.status === '배송완료' || o.status === '완료됨';
         const installInfo = showTime ? getInstallationDisplayInfo(o) : null;
-        const region = isMetroArea(o.address) ? '수도권' : '지방';
-        html += `<div style="padding:8px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${isDone?'opacity:0.5;':''}">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <span style="font-weight:600;">${o.manager_name}</span>
-                    <span style="color:#6366f1; margin-left:6px;">${o.phone || ''}</span>
-                    ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; margin-left:6px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}
+        const note = o.admin_note || '';
+        const inspChecked = /\[CHK:insp=1\]/.test(note);
+        const dlvChecked  = /\[CHK:dlv=1\]/.test(note);
+        const _esc = (s) => String(s||'').replace(/'/g,"\\'");
+        html += `<div style="padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${isDone?'opacity:0.5;':''}">
+            <div style="display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center;">
+                <div style="min-width:0;">
+                    <div><span style="font-weight:700;">${o.manager_name||'-'}</span> <span style="color:#6366f1;">${o.phone || ''}</span> ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}</div>
+                    ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px;">${o.address}</div>` : ''}
+                </div>
+                <div style="display:flex; gap:14px; align-items:center; padding:0 8px;">
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:${inspChecked?'#059669':'#64748b'}; cursor:pointer; white-space:nowrap;">
+                        <input type="checkbox" ${inspChecked?'checked':''} onchange="adminToggleOrderCheck('${o.id}','insp',this.checked)" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;">
+                        검수
+                    </label>
+                    <label style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:${dlvChecked?'#0284c7':'#64748b'}; cursor:pointer; white-space:nowrap;">
+                        <input type="checkbox" ${dlvChecked?'checked':''} onchange="adminToggleOrderCheck('${o.id}','dlv',this.checked)" style="width:18px; height:18px; cursor:pointer; accent-color:#0284c7;">
+                        배송
+                    </label>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
                     ${driver ? `<span style="color:#059669; font-size:13px;">🚛${driver.name}</span>` : ''}
-                    ${isDone ? '<span style="color:#22c55e;">✅</span>' : `<span style="color:#94a3b8; font-size:12px;">${o.status}</span>`}
-                    <button style="background:#f0f4ff; border:1px solid #c7d2fe; color:#4f46e5; border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer; margin-left:4px;" onclick="openDeliveryDateEdit('${o.id}','${o.delivery_target_date||''}')" title="배송일 변경">📅변경</button>
+                    ${isDone ? '<span style="color:#22c55e;">✅</span>' : `<span style="color:#94a3b8; font-size:11px;">${o.status||''}</span>`}
+                    <button style="background:#f0f4ff; border:1px solid #c7d2fe; color:#4f46e5; border-radius:4px; font-size:11px; padding:2px 6px; cursor:pointer;" onclick="openDeliveryDateEdit('${o.id}','${o.delivery_target_date||''}')" title="배송일 변경">📅</button>
                 </div>
             </div>
-            ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : ''}
         </div>`;
     });
     html += '</div></div>';
     return html;
 }
+
+// ── 검수/배송 체크 토글 (admin_note에 [CHK:insp=1] / [CHK:dlv=1] 마커) ──
+window.adminToggleOrderCheck = async (orderId, kind, checked) => {
+    try {
+        const { data } = await sb.from('orders').select('admin_note').eq('id', orderId).maybeSingle();
+        let note = (data && data.admin_note) || '';
+        const re = new RegExp(`\\[CHK:${kind}=1\\]`, 'g');
+        note = note.replace(re, '');
+        if (checked) note = (note + ` [CHK:${kind}=1]`).trim();
+        await sb.from('orders').update({ admin_note: note }).eq('id', orderId);
+        showToast(`${kind==='insp'?'검수':'배송'} ${checked?'체크':'해제'}`, 'success');
+    } catch (e) {
+        showToast('체크 실패: ' + e.message, 'error');
+    }
+};
 
 // ── 관리자 설치 예약 제거 ──
 window.adminRemoveInstallation = async (orderId, dateStr) => {
