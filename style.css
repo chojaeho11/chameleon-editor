@@ -3046,7 +3046,7 @@ body {
     display: block !important;
     position: absolute;
     right: -120px;
-    bottom: 70px;
+    bottom: -10px;
     width: 176px;
     max-width: 176px;
     height: auto;
