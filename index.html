@@ -16096,11 +16096,15 @@ window.filterModalItems = function(keyword) {
 /* === 섹션 박스 (온라인디지털, 인쇄물, 직접입력 구분) === */
 .dsm-section-box {
     background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 2px solid transparent;
     border-radius: 18px;
     padding: 18px 16px 16px;
     margin-bottom: 14px;
     backdrop-filter: blur(8px);
+    background-image: linear-gradient(rgba(255,255,255,0.08), rgba(255,255,255,0.08)),
+                      linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
 }
 .dsm-section-box:last-child { margin-bottom: 0; }
 .dsm-custom-input-box { padding: 14px 16px; border: 2px solid #38bdf8 !important; }
