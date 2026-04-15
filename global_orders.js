@@ -1272,12 +1272,11 @@ window.openVipDetail = async (id) => {
     const qqCategory = qqMatch ? qqMatch[1] : '';
     if (qqMatch) memo = memo.replace(qqMatch[0], '');
 
-    // 잠금 상태 → 비번 확인
-    if (lockMatch && sessionStorage.getItem('vipUnlock_' + id) !== '1') {
+    // 잠금 상태 → 매번 비번 확인 (세션 캐시 사용 안 함)
+    if (lockMatch) {
         const pw = prompt(`🔒 ${lockedBy} 매니저가 잠금한 문의입니다.\n비밀번호를 입력하세요.`);
         if (!pw) return;
         if (btoa(pw) !== lockPwB64) { showToast('비밀번호가 일치하지 않습니다.', 'error'); return; }
-        sessionStorage.setItem('vipUnlock_' + id, '1');
     }
 
     const realFiles = (item.files || []).filter(f => f.type !== '_error_log');
@@ -1357,7 +1356,6 @@ window.assignQQAndLock = async (id) => {
         const newMemo = `[LOCK:${btoa(pw)}:${mgr}]\n` + existing;
         const { error } = await sb.from('vip_orders').update({ memo: newMemo, preferred_manager: mgr, status: '상담중: ' + mgr }).eq('id', id);
         if (error) return showToast('실패: ' + error.message, 'error');
-        sessionStorage.setItem('vipUnlock_' + id, '1');
         showToast(`${mgr} 지정 + 잠금 완료`, 'success');
         modal.remove();
         loadVipOrders();
