@@ -207,8 +207,10 @@
     section, article, aside, form, fieldset {
         background: #242a3d !important; color: #d4d4d8 !important; border-color: #374151 !important;
     }
-    /* div 전반 흰색 제거 */
-    div { background-color: transparent; }
+    /* 전역 글씨 밝기 보정 */
+    body, body * { color: #e5e7eb; }
+    body h1, body h2, body h3, body h4, body h5, body h6 { color: #fcd34d !important; }
+    body .text-muted, body small { color: #9ca3af !important; }
 
     h1, h2, h3, h4, h5 { color: #fcd34d !important; }
     label { color: #cbd5e1 !important; }

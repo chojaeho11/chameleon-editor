@@ -234,3 +234,19 @@ input[type=checkbox], input[type=radio] { accent-color: #fcd34d; }
 /* 제목/회색 텍스트 가독성 */
 h1, h2, h3, h4, h5 { color: #fcd34d; }
 small, .text-muted { color: #9ca3af !important; }
+
+/* 전역 글씨 밝기 (검은색/짙은 회색 → 라이트) */
+body, body * { color: #e5e7eb; }
+body h1, body h2, body h3, body h4, body h5, body h6 { color: #fcd34d !important; }
+body a { color: #93c5fd; }
+body a:hover { color: #fcd34d; }
+body [style*="color:#0f172a"], body [style*="color:#1e293b"], body [style*="color:#334155"],
+body [style*="color:#475569"], body [style*="color:#000"], body [style*="color:black"],
+body [style*="color: #0f172a"], body [style*="color: #1e293b"], body [style*="color: #334155"],
+body [style*="color: #475569"], body [style*="color: #000"], body [style*="color: black"] {
+    color: #e5e7eb !important;
+}
+
+/* 이미지 썸네일은 다크 배경 유지하되 img 자체는 영향 X */
+img { background: transparent !important; }
+.tpl-thumb, .preview-img { background: #1a1f2e !important; }
