@@ -245,14 +245,24 @@
         <div class="content-scroll">
             
             <div id="sec-vip" class="section active">
+                <style>
+                    #sec-vip .card { background: linear-gradient(180deg,#0f172a 0%,#1e1b4b 100%); border:1px solid #312e81; color:#e2e8f0; }
+                    #sec-vip h3 { color:#fbbf24 !important; }
+                    #sec-vip table { background:transparent; color:#e2e8f0; }
+                    #sec-vip thead th { background:#1e1b4b !important; color:#fbbf24 !important; border-bottom:2px solid #312e81 !important; }
+                    #sec-vip tbody tr { background:#0f172a; border-bottom:1px solid #1e293b; }
+                    #sec-vip tbody tr:hover { background:#1e293b; }
+                    #sec-vip tbody td { color:#e2e8f0; border-color:#1e293b; }
+                    #sec-vip .badge { filter: brightness(1.05); }
+                </style>
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
-                        <h3 style="margin:0; display:flex; align-items:center; gap:10px; color: #312e81;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #312e81; padding-bottom:15px;">
+                        <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
                             <i class="fa-solid fa-crown" style="color:#fbbf24;"></i> VIP 파일 접수 내역
                         </h3>
                         <div>
                             <button class="btn btn-danger" onclick="deleteSelectedVipOrders()">선택 삭제</button>
-                            <button class="btn btn-outline" onclick="loadVipOrders()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                            <button class="btn btn-outline" onclick="loadVipOrders()" style="color:#fbbf24;border-color:#fbbf24;"><i class="fa-solid fa-rotate"></i> 새로고침</button>
                         </div>
                     </div>
                     <table>

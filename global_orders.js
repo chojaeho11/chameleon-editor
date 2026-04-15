@@ -1087,12 +1087,14 @@ window.loadVipOrders = async () => {
             const realFiles = item.files ? item.files.filter(f => f.type !== '_error_log') : [];
             let filesHtml = realFiles.length ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:2px; font-size:11px;">💾 ${f.name}</a>`).join('') : '<span style="color:#ccc;">파일 없음</span>';
 
-            // 잠금 처리: memo 내부에 [LOCK:base64pw:manager] 마커가 있으면 잠금 상태
-            const rawMemo = item.memo || '';
+            // 마커 해석: [LOCK:pw:manager] 또는 [QQ:카테고리]
+            let rawMemo = item.memo || '';
             const lockMatch = rawMemo.match(/^\[LOCK:([^:]+):([^\]]+)\]\n?/);
             const lockedBy = lockMatch ? lockMatch[2] : null;
-            const lockPw = lockMatch ? atob(lockMatch[1]) : null;
-            const cleanMemo = lockMatch ? rawMemo.replace(lockMatch[0], '') : rawMemo;
+            if (lockMatch) rawMemo = rawMemo.replace(lockMatch[0], '');
+            const qqMatch = rawMemo.match(/^\[QQ:([^\]]+)\]\n?/);
+            const qqCategory = qqMatch ? qqMatch[1] : null;
+            const cleanMemo = qqMatch ? rawMemo.replace(qqMatch[0], '') : rawMemo;
             const unlocked = lockMatch ? sessionStorage.getItem('vipUnlock_' + item.id) === '1' : true;
 
             // 담당 (컨택한 매니저 or preferred_manager)
@@ -1104,13 +1106,32 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
                 : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
 
+            // QQ(빠른견적) 미지정 행: 접수시간 + 카테고리 + 담당자지정 버튼만 표시
+            if (qqCategory && !assignedManager && !lockMatch) {
+                const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777' }[qqCategory] || '#475569';
+                tbody.innerHTML += `
+                    <tr style="background:#0f172a; color:#e2e8f0;">
+                        <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
+                        <td style="color:#cbd5e1;">${new Date(item.created_at).toLocaleString()}</td>
+                        <td colspan="6" style="padding:12px;">
+                            <span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:6px 12px;font-size:13px;">🚀 빠른견적 · ${qqCategory}</span>
+                            <span style="color:#94a3b8;margin-left:10px;font-size:12px;">내용은 담당자 지정 후 열람됩니다.</span>
+                        </td>
+                        <td style="text-align:center;">
+                            <button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;font-weight:700;" onclick="assignQQAndLock(${item.id})">🔒 담당자지정</button>
+                        </td>
+                    </tr>`;
+                return;
+            }
             // 잠금: 잠근 본인(세션 unlocked) 외에는 전체 행을 숨김 행으로 대체
             if (lockMatch && !unlocked) {
+                const catBadge = qqCategory ? `<span class="badge" style="background:#475569;color:#fff;margin-right:8px;">${qqCategory}</span>` : '';
                 tbody.innerHTML += `
-                    <tr style="background:#f8fafc;">
+                    <tr style="background:#1e293b;color:#cbd5e1;">
                         <td><input type="checkbox" class="vip-chk" value="${item.id}" disabled></td>
-                        <td colspan="7" style="color:#94a3b8; font-style:italic; padding:12px;">
-                            🔒 <b>${lockedBy}</b> 매니저가 잠금한 문의입니다. (담당자 외 열람 불가)
+                        <td style="color:#94a3b8;">${new Date(item.created_at).toLocaleString()}</td>
+                        <td colspan="6" style="color:#94a3b8; font-style:italic; padding:12px;">
+                            ${catBadge}🔒 <b>${lockedBy}</b> 매니저가 잠금한 문의입니다. (담당자 외 열람 불가)
                         </td>
                         <td style="text-align:center;">
                             <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="unlockVip(${item.id})">🔓 열람</button>
@@ -1120,7 +1141,8 @@ window.loadVipOrders = async () => {
             }
             const nameCell = `<span style="font-weight:bold;">${item.customer_name || ''}</span>`;
             const phoneCell = item.customer_phone || '';
-            const memoCell = formatVipMemo(cleanMemo);
+            const qqBadgeHtml = qqCategory ? `<div style="margin-bottom:6px;"><span class="badge" style="background:#312e81;color:#fbbf24;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span></div>` : '';
+            const memoCell = qqBadgeHtml + formatVipMemo(cleanMemo);
 
             // 상태 + 관리 버튼
             let statusBadge = '';
@@ -1228,6 +1250,48 @@ window.unlockVip = async (id) => {
     sessionStorage.setItem('vipUnlock_' + id, '1');
     showToast('열람 허용', 'success');
     loadVipOrders();
+};
+
+// QQ(빠른견적) 담당자 지정 + 즉시 잠금 (한번에 처리)
+window.assignQQAndLock = async (id) => {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:24px;width:380px;max-width:90%;">
+            <h3 style="margin:0 0 14px 0;font-size:16px;font-weight:800;">🔒 빠른견적 담당자 지정</h3>
+            <div style="font-size:12px;color:#64748b;margin-bottom:14px;">담당자를 선택하면 내용에 비밀번호가 걸리며, 담당자 외에는 열람할 수 없습니다.</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="은미"> 👩 은미 매니저</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="성희"> 👩 성희 매니저</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="지숙"> 👩 지숙 매니저</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="본사"> 🏢 본사</label>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px;font-weight:700;color:#334155;">열람 비밀번호</label>
+                <input id="qqLockPw" type="password" placeholder="본인만 기억할 비번" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;">
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button id="qqLockCancel" style="flex:1;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer;">취소</button>
+                <button id="qqLockOk" style="flex:2;padding:10px;border:none;border-radius:10px;background:#312e81;color:#fff;font-weight:800;cursor:pointer;">지정 + 잠금</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('#qqLockCancel').onclick = () => modal.remove();
+    modal.querySelector('#qqLockOk').onclick = async () => {
+        const mgr = modal.querySelector('input[name=qqMgr]:checked')?.value;
+        const pw = modal.querySelector('#qqLockPw').value.trim();
+        if (!mgr) return showToast('담당자를 선택하세요', 'error');
+        if (!pw) return showToast('비밀번호를 입력하세요', 'error');
+        const { data: row } = await sb.from('vip_orders').select('memo').eq('id', id).single();
+        const existing = (row?.memo || '').replace(/^\[LOCK:[^\]]+\]\n?/, '');
+        const newMemo = `[LOCK:${btoa(pw)}:${mgr}]\n` + existing;
+        const { error } = await sb.from('vip_orders').update({ memo: newMemo, preferred_manager: mgr, status: '상담중: ' + mgr }).eq('id', id);
+        if (error) return showToast('실패: ' + error.message, 'error');
+        sessionStorage.setItem('vipUnlock_' + id, '1');
+        showToast(`${mgr} 지정 + 잠금 완료`, 'success');
+        modal.remove();
+        loadVipOrders();
+    };
 };
 
 window.unlockVipPermanent = async (id) => {
