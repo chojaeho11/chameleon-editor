@@ -2379,24 +2379,52 @@ window.sendFileErrorSelected = async () => {
     loadOrders();
 };
 
+// admin_note 마커 추출/병합 헬퍼 (사용자에게는 보이지 않게 분리)
+function _splitAdminNote(raw) {
+    const text = raw || '';
+    const markerRegexes = [
+        /\[SHIPPING:[^\]]*\]\s*\n?/g,
+        /##CONTACT_REQ##[^\n]*\n?/g,
+        /##CONTACT_DONE##[^\n]*\n?/g,
+        /\[고객지정\][^\n]*\n?/g,
+        /\[환불완료\][^\n]*\n?/g,
+        /\[LOCK:[^\]]+\]\s*\n?/g
+    ];
+    const markers = [];
+    let body = text;
+    markerRegexes.forEach(re => {
+        const matches = body.match(re);
+        if (matches) markers.push(...matches.map(m => m.replace(/\n+$/, '')));
+        body = body.replace(re, '');
+    });
+    return { markers: markers.join('\n'), body: body.trim() };
+}
+function _mergeAdminNote(markers, body) {
+    return [markers, body].filter(s => s && s.trim()).join('\n');
+}
+
 // ★ 주문 메모 열기/수정
 window.openOrderMemo = async (orderId) => {
     const { data: order } = await sb.from('orders').select('admin_note, id').eq('id', orderId).single();
-    const currentNote = order?.admin_note || '';
+    const { markers, body } = _splitAdminNote(order?.admin_note);
+    window._memoMarkers = markers; // 저장 시 다시 합칠 마커
+    window._memoOrderId = orderId;
 
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:20000;display:flex;align-items:center;justify-content:center;';
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    const markerHint = markers ? `<div style="margin-top:8px;font-size:11px;color:#94a3b8;background:#f8fafc;border-radius:6px;padding:6px 8px;">⚙️ 시스템 데이터(배송비/고객소통/잠금 등)는 자동 보존됩니다.</div>` : '';
     overlay.innerHTML = `
         <div style="background:#fff;border-radius:16px;padding:24px;width:420px;max-width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
             <h3 style="margin:0 0 4px;font-size:16px;">📝 주문 메모 (${orderId})</h3>
             <p style="margin:0 0 12px;font-size:12px;color:#94a3b8;">관리자/스태프 간 공유 메모</p>
-            <textarea id="_memoInput" rows="4" style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;resize:vertical;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">${currentNote}</textarea>
+            <textarea id="_memoInput" rows="5" placeholder="메모를 입력하세요" style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;resize:vertical;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">${body.replace(/</g,'&lt;')}</textarea>
+            ${markerHint}
             <div style="display:flex;gap:8px;margin-top:12px;justify-content:space-between;">
-                <button onclick="document.getElementById('_memoInput').value='';sb.from('orders').update({admin_note:null}).eq('id','${orderId}').then(()=>{showToast('메모 삭제됨','success');this.closest('div[style*=fixed]').remove();loadOrders();});" style="padding:8px 16px;border:1px solid #fca5a5;background:#fff;border-radius:8px;cursor:pointer;font-size:12px;color:#ef4444;">삭제</button>
+                <button onclick="window._deleteMemoBody('${orderId}', this)" style="padding:8px 16px;border:1px solid #fca5a5;background:#fff;border-radius:8px;cursor:pointer;font-size:12px;color:#ef4444;">삭제</button>
                 <div style="display:flex;gap:8px;">
                     <button onclick="this.closest('div[style*=fixed]').remove();" style="padding:8px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;font-size:12px;color:#64748b;">닫기</button>
-                    <button onclick="const v=document.getElementById('_memoInput').value;sb.from('orders').update({admin_note:v||null}).eq('id','${orderId}').then(()=>{showToast('메모 저장됨','success');this.closest('div[style*=fixed]').remove();loadOrders();});" style="padding:8px 16px;border:none;background:#6366f1;color:#fff;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">저장</button>
+                    <button onclick="window._saveMemoBody('${orderId}', this)" style="padding:8px 16px;border:none;background:#6366f1;color:#fff;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">저장</button>
                 </div>
             </div>
         </div>`;
@@ -2404,6 +2432,22 @@ window.openOrderMemo = async (orderId) => {
     const ta = document.getElementById('_memoInput');
     ta.focus();
     ta.setSelectionRange(ta.value.length, ta.value.length);
+};
+window._saveMemoBody = async (orderId, btn) => {
+    const v = document.getElementById('_memoInput').value;
+    const merged = _mergeAdminNote(window._memoMarkers || '', v);
+    await sb.from('orders').update({ admin_note: merged || null }).eq('id', orderId);
+    showToast('메모 저장됨', 'success');
+    btn.closest('div[style*=fixed]').remove();
+    if (window.loadOrders) loadOrders();
+};
+window._deleteMemoBody = async (orderId, btn) => {
+    // 사용자 메모만 비우고 마커는 유지
+    const merged = _mergeAdminNote(window._memoMarkers || '', '');
+    await sb.from('orders').update({ admin_note: merged || null }).eq('id', orderId);
+    showToast('메모 삭제됨', 'success');
+    btn.closest('div[style*=fixed]').remove();
+    if (window.loadOrders) loadOrders();
 };
 
 window.deleteOrdersSelected = async (force) => {
