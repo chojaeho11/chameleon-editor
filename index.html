@@ -1155,9 +1155,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const budget = (fd.get('budget')||'').trim();
             const memo = (fd.get('memo')||'').trim();
             const fileInput = form.querySelector('input[name=files]');
-            // 본사 자동 배정 조건: 1000만원 예산 OR 종이매대/패브릭 카테고리 (비번 1234)
-            const isVIP1000 = (budget === '1000만원') || (cat === '종이매대') || (cat === '패브릭');
-            const lockPrefix = isVIP1000 ? `[LOCK:${btoa('1234')}:본사]\n` : '';
+            // 자동 담당 배정 규칙
+            // - 허니콤 + 500만원 → 지숙 (pw 1946)
+            // - 1000만원 OR 종이매대 OR 패브릭 → 본사 (pw 1234)
+            let autoManager = '', autoPw = '';
+            if (cat === '허니콤' && budget === '500만원') { autoManager = '지숙'; autoPw = '1946'; }
+            else if (budget === '1000만원' || cat === '종이매대' || cat === '패브릭') { autoManager = '본사'; autoPw = '1234'; }
+            const isVIP1000 = !!autoManager;
+            const lockPrefix = isVIP1000 ? `[LOCK:${btoa(autoPw)}:${autoManager}]\n` : '';
             const body = lockPrefix + [`[QQ:${cat}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
             try {
                 const sb = window.sb || window.supabase;
@@ -1180,9 +1185,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     customer_phone: phone,
                     memo: body,
                     files: uploaded,
-                    status: isVIP1000 ? '상담중: 본사' : '대기중'
+                    status: autoManager ? ('상담중: ' + autoManager) : '대기중'
                 };
-                if (isVIP1000) insertPayload.preferred_manager = '본사';
+                if (autoManager) insertPayload.preferred_manager = autoManager;
                 const { error } = await sb.from('vip_orders').insert(insertPayload);
                 if (error) { alert('전송 실패: ' + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
                 document.getElementById('qqSurveyModal').style.display = 'none';

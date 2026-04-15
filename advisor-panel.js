@@ -944,8 +944,11 @@ function openQQSurvey(cat) {
         const budget = (fd.get('budget')||'').trim();
         const memo = (fd.get('memo')||'').trim();
         const fileInput = form.querySelector('input[name=files]');
-        const isVIP1000 = (budget === '1000만원') || (c === '종이매대') || (c === '패브릭');
-        const lockPrefix = isVIP1000 ? `[LOCK:${btoa('1234')}:본사]\n` : '';
+        let autoManager = '', autoPw = '';
+        if (c === '허니콤' && budget === '500만원') { autoManager = '지숙'; autoPw = '1946'; }
+        else if (budget === '1000만원' || c === '종이매대' || c === '패브릭') { autoManager = '본사'; autoPw = '1234'; }
+        const isVIP1000 = !!autoManager;
+        const lockPrefix = isVIP1000 ? `[LOCK:${btoa(autoPw)}:${autoManager}]\n` : '';
         const body = lockPrefix + [`[QQ:${c}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
         try {
             const sb = window.sb || window.supabase;
@@ -963,8 +966,8 @@ function openQQSurvey(cat) {
                     uploaded.push({ name: f.name, url: pub.publicUrl });
                 }
             }
-            const payload = { customer_name: name, customer_phone: phone, memo: body, files: uploaded, status: isVIP1000 ? '상담중: 본사' : '대기중' };
-            if (isVIP1000) payload.preferred_manager = '본사';
+            const payload = { customer_name: name, customer_phone: phone, memo: body, files: uploaded, status: autoManager ? ('상담중: ' + autoManager) : '대기중' };
+            if (autoManager) payload.preferred_manager = autoManager;
             const { error } = await sb.from('vip_orders').insert(payload);
             if (error) { alert('전송 실패: ' + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
             document.getElementById('qqSurveyModal').style.display = 'none';
