@@ -137,141 +137,21 @@ tr:hover td { background: #f8fafc; }
     align-items: start;
 }
 
-/* ================= 전역 다크 테마 (눈 편안한 slate 톤) =================
-   팔레트:
-   - 기본 배경: #808080
-   - 카드: #6b6b6b
-   - 보더: #5a5a5a
-   - 본문 글씨: #d4d4d8
-   - 보조 글씨: #9ca3af
-   - 포인트: #fcd34d (부드러운 골드)
-*/
-body { background: #808080 !important; color: #ffffff !important; }
-.top-bar { background: #6b6b6b !important; border-bottom: 1px solid #5a5a5a !important; }
-.page-title { color: #fcd34d !important; }
-.content-scroll { background: #808080 !important; }
+/* ================= 기본 라이트 테마 (본문) + 네이비 사이드바 ================= */
+body { background: #f1f5f9; color: #334155; }
+.top-bar { background: #ffffff; border-bottom: 1px solid #e2e8f0; }
+.page-title { color: #0f172a; }
+.content-scroll { background: #f1f5f9; }
 
-/* 사이드바 (50% 회색 베이스) */
-.sidebar { background: #6b6b6b !important; }
-.sidebar-header { color: #fcd34d !important; border-bottom-color: #5a5a5a !important; }
-.nav-item { color: #ffffff !important; }
-.nav-item:hover { background: #808080 !important; color: #fcd34d !important; }
-.nav-item.active { background: #4a4a4a !important; color: #fcd34d !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+/* 사이드바 (네이비) */
+.sidebar { background: #1e1b4b !important; color: #ffffff !important; }
+.sidebar-header { color: #fbbf24 !important; border-bottom-color: #312e81 !important; }
+.nav-item { color: #cbd5e1 !important; }
+.nav-item:hover { background: #312e81 !important; color: #ffffff !important; }
+.nav-item.active { background: #4338ca !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+.nav-label { color: #94a3b8 !important; }
 
-/* 카드/섹션 */
-.card { background: #6b6b6b !important; border: 1px solid #5a5a5a !important; color: #ffffff !important; box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important; }
-.card h1, .card h2, .card h3, .card h4, .card h5 { color: #fcd34d !important; }
-.card label, .card .form-label { color: #cbd5e1 !important; }
-
-/* 테이블 - 얼룩무늬 없이 통일 */
-table { background: transparent !important; color: #ffffff !important; }
-th { background: #4a4a4a !important; color: #fcd34d !important; border-bottom: 2px solid #5a5a5a !important; }
-tbody, tbody tr, tbody tr:nth-child(even), tbody tr:nth-child(odd) { background: #6b6b6b !important; }
-td { color: #ffffff !important; border-bottom: 1px solid #5a5a5a !important; background: transparent !important; }
-tr:hover td { background: #808080 !important; }
-/* 인라인 흰색 배경 전부 다크로 */
-[style*="background:white"], [style*="background: white"],
-[style*="background:#fff"], [style*="background: #fff"],
-[style*="background:#ffffff"], [style*="background: #ffffff"],
-[style*="background:#f8fafc"], [style*="background: #f8fafc"],
-[style*="background:#f1f5f9"], [style*="background: #f1f5f9"],
-[style*="background-color:white"], [style*="background-color: white"],
-[style*="background-color:#fff"] {
-    background: #6b6b6b !important; color: #d4d4d8 !important;
-}
-
-/* 입력 요소 */
-.input-text, input[type=text], input[type=tel], input[type=email], input[type=password],
-input[type=number], input[type=date], input[type=month], input[type=search], input[type=url],
-input[type=file], textarea, select {
-    background: #808080 !important;
-    color: #d4d4d8 !important;
-    border: 1px solid #5a5a5a !important;
-}
-input:focus, textarea:focus, select:focus { border-color: #fcd34d !important; outline: none !important; }
-input::placeholder, textarea::placeholder { color: #6b7280 !important; }
-input[type=checkbox], input[type=radio] { accent-color: #fcd34d; }
-
-/* 버튼 재조정 */
-.btn-outline { background: #808080 !important; border: 1px solid #5a5a5a !important; color: #d4d4d8 !important; }
-.btn-outline:hover { background: #4a4a4a !important; border-color: #fcd34d !important; color: #fcd34d !important; }
-.btn-file { background: #808080 !important; color: #d4d4d8 !important; border: 1px solid #5a5a5a !important; }
-.btn-file:hover { color: #fcd34d !important; border-color: #fcd34d !important; }
-.btn-danger { background: #7f1d1d !important; color: #fecaca !important; }
-.staff-select { background: #808080 !important; color: #d4d4d8 !important; border: 1px solid #5a5a5a !important; }
-
-/* 드롭존/파일 업로드 */
-.file-drop-zone { background: #808080 !important; color: #9ca3af !important; border-color: #5a5a5a !important; }
-.file-list-area { background: #808080 !important; border-color: #5a5a5a !important; }
-.file-item-row { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
-.addon-checkbox-group { background: #808080 !important; border-color: #5a5a5a !important; }
-.addon-check-item { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
-
-/* 통계 카드 */
-.stat-card { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
-.stat-icon { background: #4a4a4a !important; color: #fcd34d !important; }
-.stat-info div:first-child { color: #9ca3af !important; }
-.stat-info div:last-child { color: #fcd34d !important; }
-.progress-bar-bg { background: #4a4a4a !important; }
-
-/* 모달 */
-.modal-box { background: #6b6b6b !important; color: #d4d4d8 !important; border: 1px solid #5a5a5a; }
-.modal-header { border-bottom-color: #5a5a5a !important; color: #fcd34d !important; }
-
-/* 로딩 오버레이 */
-#loading { background: rgba(26,31,46,0.85) !important; }
-
-/* 템플릿 카드 */
-.tpl-card { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
-.tpl-thumb { background: #808080 !important; border-bottom-color: #5a5a5a !important; }
-
-/* 배지 */
-.badge-site { background: #808080 !important; border-color: #5a5a5a !important; }
-
-/* 결제 뱃지 */
-.pay-wait { background: #4a4a4a !important; color: #d4d4d8 !important; border-color: #5a5a5a !important; }
-
-/* 제목/회색 텍스트 가독성 */
-h1, h2, h3, h4, h5 { color: #fcd34d; }
-small, .text-muted { color: #9ca3af !important; }
-
-/* 전역 글씨 밝기 (흰색) */
-body, body * { color: #ffffff !important; }
-/* 버튼 내 텍스트는 버튼 자체의 색상 유지 */
-.btn-primary, .btn-sky, .btn-vip, .btn-success { color: #ffffff !important; }
-.btn-danger { color: #fecaca !important; }
-
-/* 인라인 밝은 배경(#f0fdf4, #fef3c7 등) 전부 다크로 강제 */
-[style*="background:#f0fdf4"], [style*="background: #f0fdf4"],
-[style*="background:#fef3c7"], [style*="background: #fef3c7"],
-[style*="background:#fefce8"], [style*="background: #fefce8"],
-[style*="background:#eff6ff"], [style*="background: #eff6ff"],
-[style*="background:#f0f9ff"], [style*="background: #f0f9ff"],
-[style*="background:#ecfeff"], [style*="background: #ecfeff"],
-[style*="background:#fdf2f8"], [style*="background: #fdf2f8"],
-[style*="background:#fff7ed"], [style*="background: #fff7ed"],
-[style*="background:#f5f3ff"], [style*="background: #f5f3ff"],
-[style*="background:#faf5ff"], [style*="background: #faf5ff"],
-[style*="background:#ede9fe"], [style*="background: #ede9fe"],
-[style*="background:#dbeafe"], [style*="background: #dbeafe"],
-[style*="background:#dcfce7"], [style*="background: #dcfce7"],
-[style*="background:#bbf7d0"], [style*="background: #bbf7d0"],
-[style*="background:#fee2e2"], [style*="background: #fee2e2"],
-[style*="background:#fecaca"], [style*="background: #fecaca"],
-[style*="background:#fed7aa"], [style*="background: #fed7aa"] {
-    background: #6b6b6b !important;
-}
-body h1, body h2, body h3, body h4, body h5, body h6 { color: #fcd34d !important; }
-body a { color: #93c5fd; }
-body a:hover { color: #fcd34d; }
-body [style*="color:#0f172a"], body [style*="color:#1e293b"], body [style*="color:#334155"],
-body [style*="color:#475569"], body [style*="color:#000"], body [style*="color:black"],
-body [style*="color: #0f172a"], body [style*="color: #1e293b"], body [style*="color: #334155"],
-body [style*="color: #475569"], body [style*="color: #000"], body [style*="color: black"] {
-    color: #e5e7eb !important;
-}
-
-img { background-color: transparent !important; }
+img { background-color: transparent; }
 
 /* ===== 라이트 테마 강제 섹션 (템플릿 / 폰트 / 상품&옵션) ===== */
 body #sec-templates, body #sec-fonts, body #sec-products { background: #f8fafc !important; padding: 20px !important; border-radius: 12px !important; }
