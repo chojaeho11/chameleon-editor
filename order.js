@@ -3010,12 +3010,12 @@ async function processOrderSubmission() {
 
     const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
 
-    // ★ 최소 주문금액 10,000원 (천원단위 주문상품 21355677 예외)
-    const MIN_ORDER_KRW = 10000;
+    // ★ 최소 주문금액 100,000원 (천원단위 주문상품 21355677 예외)
+    const MIN_ORDER_KRW = 100000;
     const isExempt = cartData.some(item => item.product && (String(item.product.code) === '21355677' || String(item.product.product_key) === '21355677' || String(item.product.id) === '21355677'));
     if (!isExempt && rawTotal < MIN_ORDER_KRW) {
         const lang = CURRENT_LANG;
-        const minAmounts = { kr: '10,000원', ja: '1,000円', en: '$10', zh: '¥70', ar: '10,000 ₩', es: '$10', de: '10€', fr: '10€' };
+        const minAmounts = { kr: '100,000원', ja: '10,000円', en: '$100', zh: '¥700', ar: '100,000 ₩', es: '$100', de: '100€', fr: '100€' };
         const titles = { kr: '최소 주문금액 안내', ja: '最低注文金額のご案内', en: 'Minimum Order Notice', zh: '最低订购金额提示', ar: 'إشعار الحد الأدنى للطلب', es: 'Aviso de pedido mínimo', de: 'Mindestbestellwert', fr: 'Montant minimum de commande' };
         const line1 = { kr: '카멜레온프린팅은 도매쇼핑몰로', ja: 'カメレオンプリンティングは卸売サイトのため', en: 'Chameleon Printing is a wholesale shop.', zh: '变色龙印刷是批发商城', ar: 'طباعة كاميليون متجر جملة', es: 'Chameleon Printing es una tienda mayorista.', de: 'Chameleon Printing ist ein Großhandelsshop.', fr: 'Chameleon Printing est une boutique en gros.' };
         const line2 = { kr: '최소 주문금액은', ja: '最低注文金額は', en: 'The minimum order amount is', zh: '最低订购金额为', ar: 'الحد الأدنى للطلب', es: 'El pedido mínimo es de', de: 'Der Mindestbestellwert beträgt', fr: 'Le montant minimum est de' };
