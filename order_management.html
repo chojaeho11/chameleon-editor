@@ -203,19 +203,31 @@
     .back-btn:hover { background: #2d3450 !important; border-color: #fcd34d !important; color: #fcd34d !important; }
 
     main, .main, .content, .page-content, .card, .panel, .section-box, .card-inner,
-    .filter-bar, .toolbar, .summary-bar, .stat-box, .data-wrap {
+    .filter-bar, .toolbar, .summary-bar, .stat-box, .data-wrap,
+    section, article, aside, form, fieldset {
         background: #242a3d !important; color: #d4d4d8 !important; border-color: #374151 !important;
     }
+    /* div 전반 흰색 제거 */
+    div { background-color: transparent; }
 
     h1, h2, h3, h4, h5 { color: #fcd34d !important; }
     label { color: #cbd5e1 !important; }
 
     table { background: transparent !important; color: #d4d4d8 !important; border-color: #374151 !important; }
     thead, thead tr, thead th { background: #2d3450 !important; color: #fcd34d !important; border-color: #374151 !important; }
-    tbody tr { background: transparent !important; }
-    tbody tr:nth-child(even) { background: #1f2437 !important; }
-    tbody tr:hover { background: #2d3450 !important; }
-    td, th { border-color: #374151 !important; color: #d4d4d8 !important; }
+    tbody, tbody tr, tbody tr:nth-child(even), tbody tr:nth-child(odd) { background: #242a3d !important; }
+    tbody tr:hover, tbody tr:hover td { background: #2d3450 !important; }
+    td, th { border-color: #374151 !important; color: #d4d4d8 !important; background: transparent !important; }
+    /* 인라인 배경 오버라이드 */
+    [style*="background:white"], [style*="background: white"],
+    [style*="background:#fff"], [style*="background: #fff"],
+    [style*="background:#ffffff"], [style*="background: #ffffff"],
+    [style*="background:#f8fafc"], [style*="background: #f8fafc"],
+    [style*="background:#f1f5f9"], [style*="background: #f1f5f9"],
+    [style*="background-color:white"], [style*="background-color: white"],
+    [style*="background-color:#fff"], [style*="background-color: #fff"] {
+        background: #242a3d !important; color: #d4d4d8 !important;
+    }
 
     input[type=text], input[type=tel], input[type=email], input[type=password],
     input[type=number], input[type=date], input[type=month], input[type=search],

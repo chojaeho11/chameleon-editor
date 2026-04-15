@@ -163,11 +163,22 @@ body { background: #1a1f2e !important; color: #d4d4d8 !important; }
 .card h1, .card h2, .card h3, .card h4, .card h5 { color: #fcd34d !important; }
 .card label, .card .form-label { color: #cbd5e1 !important; }
 
-/* 테이블 */
+/* 테이블 - 얼룩무늬 없이 통일 */
 table { background: transparent !important; color: #d4d4d8 !important; }
 th { background: #2d3450 !important; color: #fcd34d !important; border-bottom: 2px solid #374151 !important; }
-td { color: #d4d4d8 !important; border-bottom: 1px solid #2d3450 !important; background: transparent !important; }
+tbody, tbody tr, tbody tr:nth-child(even), tbody tr:nth-child(odd) { background: #242a3d !important; }
+td { color: #d4d4d8 !important; border-bottom: 1px solid #374151 !important; background: transparent !important; }
 tr:hover td { background: #2d3450 !important; }
+/* 인라인 흰색 배경 전부 다크로 */
+[style*="background:white"], [style*="background: white"],
+[style*="background:#fff"], [style*="background: #fff"],
+[style*="background:#ffffff"], [style*="background: #ffffff"],
+[style*="background:#f8fafc"], [style*="background: #f8fafc"],
+[style*="background:#f1f5f9"], [style*="background: #f1f5f9"],
+[style*="background-color:white"], [style*="background-color: white"],
+[style*="background-color:#fff"] {
+    background: #242a3d !important; color: #d4d4d8 !important;
+}
 
 /* 입력 요소 */
 .input-text, input[type=text], input[type=tel], input[type=email], input[type=password],
