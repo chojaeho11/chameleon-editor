@@ -273,23 +273,27 @@ body [style*="color: #475569"], body [style*="color: #000"], body [style*="color
 
 img { background-color: transparent !important; }
 
-/* ===== 템플릿 & 폰트 섹션: 라이트 테마 강제 ===== */
-body #sec-templates, body #sec-fonts { background: #f8fafc !important; padding: 20px !important; border-radius: 12px !important; }
-body #sec-templates *, body #sec-fonts * { color: #334155 !important; }
+/* ===== 라이트 테마 강제 섹션 (템플릿 / 폰트 / 상품&옵션) ===== */
+body #sec-templates, body #sec-fonts, body #sec-products { background: #f8fafc !important; padding: 20px !important; border-radius: 12px !important; }
+body #sec-templates *, body #sec-fonts *, body #sec-products * { color: #334155 !important; }
 #sec-templates h1, #sec-templates h2, #sec-templates h3, #sec-templates h4, #sec-templates h5,
-#sec-fonts h1, #sec-fonts h2, #sec-fonts h3, #sec-fonts h4, #sec-fonts h5 { color: #1e293b !important; }
-#sec-templates .card, #sec-fonts .card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important; }
-#sec-templates table, #sec-fonts table { background: #ffffff !important; }
-#sec-templates th, #sec-fonts th { background: #f8fafc !important; color: #64748b !important; border-bottom: 1px solid #e2e8f0 !important; }
+#sec-fonts h1, #sec-fonts h2, #sec-fonts h3, #sec-fonts h4, #sec-fonts h5,
+#sec-products h1, #sec-products h2, #sec-products h3, #sec-products h4, #sec-products h5 { color: #1e293b !important; }
+#sec-templates .card, #sec-fonts .card, #sec-products .card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important; }
+#sec-templates table, #sec-fonts table, #sec-products table { background: #ffffff !important; }
+#sec-templates th, #sec-fonts th, #sec-products th { background: #f8fafc !important; color: #64748b !important; border-bottom: 1px solid #e2e8f0 !important; }
 #sec-templates tbody tr, #sec-templates tbody tr:nth-child(even), #sec-templates tbody tr:nth-child(odd),
-#sec-fonts tbody tr, #sec-fonts tbody tr:nth-child(even), #sec-fonts tbody tr:nth-child(odd) { background: #ffffff !important; }
-#sec-templates tbody tr:hover, #sec-fonts tbody tr:hover { background: #f8fafc !important; }
-#sec-templates td, #sec-fonts td { border-bottom: 1px solid #f1f5f9 !important; }
+#sec-fonts tbody tr, #sec-fonts tbody tr:nth-child(even), #sec-fonts tbody tr:nth-child(odd),
+#sec-products tbody tr, #sec-products tbody tr:nth-child(even), #sec-products tbody tr:nth-child(odd) { background: #ffffff !important; }
+#sec-templates tbody tr:hover, #sec-fonts tbody tr:hover, #sec-products tbody tr:hover { background: #f8fafc !important; }
+#sec-templates td, #sec-fonts td, #sec-products td { border-bottom: 1px solid #f1f5f9 !important; }
 #sec-templates input, #sec-templates textarea, #sec-templates select,
-#sec-fonts input, #sec-fonts textarea, #sec-fonts select {
+#sec-fonts input, #sec-fonts textarea, #sec-fonts select,
+#sec-products input, #sec-products textarea, #sec-products select {
     background: #ffffff !important; color: #334155 !important; border: 1px solid #cbd5e1 !important;
 }
-#sec-templates input::placeholder, #sec-fonts input::placeholder { color: #94a3b8 !important; }
+#sec-templates input::placeholder, #sec-fonts input::placeholder, #sec-products input::placeholder { color: #94a3b8 !important; }
+#sec-products label { color: #475569 !important; }
 #sec-templates .tpl-card, #sec-fonts .tpl-card { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
 /* tpl-thumb: 인라인 background-image 절대 건드리지 않음. background-color도 최소화 */
 #sec-templates .tpl-thumb, #sec-fonts .tpl-thumb { border-bottom: 1px solid #f1f5f9 !important; }
