@@ -290,11 +290,8 @@ body #sec-templates *, body #sec-fonts * { color: #334155 !important; }
     background: #ffffff !important; color: #334155 !important; border: 1px solid #cbd5e1 !important;
 }
 #sec-templates input::placeholder, #sec-fonts input::placeholder { color: #94a3b8 !important; }
-#sec-templates .tpl-card, #sec-fonts .tpl-card { background: #ffffff !important; border-color: #e2e8f0 !important; }
-#sec-templates .tpl-thumb, #sec-fonts .tpl-thumb {
-    /* background 단축 쓰면 inline background-image가 지워짐. color만 지정. */
-    background-color: #f8fafc !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-}
+#sec-templates .tpl-card, #sec-fonts .tpl-card { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+/* tpl-thumb: 인라인 background-image 절대 건드리지 않음. background-color도 최소화 */
+#sec-templates .tpl-thumb, #sec-fonts .tpl-thumb { border-bottom: 1px solid #f1f5f9 !important; }
 #sec-templates .btn-outline, #sec-fonts .btn-outline { background: #ffffff !important; color: #334155 !important; border-color: #cbd5e1 !important; }
 #sec-templates label, #sec-fonts label { color: #475569 !important; }
