@@ -1104,11 +1104,14 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
                 : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
 
-            // 연락처 / 메모 마스킹
+            // 잠금 시 모든 내용 가림 (고객명/연락처/메모/첨부파일)
+            let nameCell = `<span style="font-weight:bold;">${item.customer_name || ''}</span>`;
             let phoneCell = item.customer_phone || '';
             let memoCell = formatVipMemo(cleanMemo);
             if (lockMatch && !unlocked) {
-                phoneCell = `<span style="color:#94a3b8;">🔒 잠김</span>`;
+                nameCell = `<span style="color:#94a3b8;">🔒</span>`;
+                phoneCell = `<span style="color:#94a3b8;">🔒</span>`;
+                filesHtml = `<span style="color:#94a3b8;">🔒</span>`;
                 memoCell = `<div style="color:#94a3b8; font-style:italic;">🔒 ${lockedBy} 매니저가 잠금 처리한 문의입니다.</div>
                             <button class="btn btn-outline btn-sm" style="font-size:11px;margin-top:4px;" onclick="unlockVip(${item.id})">🔓 열람</button>`;
             }
@@ -1141,7 +1144,7 @@ window.loadVipOrders = async () => {
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
                     <td>${managerBadge}</td>
-                    <td style="font-weight:bold;">${item.customer_name}</td>
+                    <td>${nameCell}</td>
                     <td>${phoneCell}</td>
                     <td style="font-size:13px; color:#475569; word-break:break-all;">${memoCell}</td>
                     <td>${filesHtml}</td>
