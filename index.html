@@ -892,8 +892,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var goods = document.getElementById('goodsSection');
     var paperDisplay = document.getElementById('paperDisplaySection');
     var popular = document.getElementById('popularSection');
-    // 허니콤보드(HotDeal) → 종이매대(paperDisplay) → 나머지
+    // 허니콤보드(HotDeal) → 허니콤 영상 → 종이매대(paperDisplay) → 나머지
     if (hotDeal) { moveAfter(hotDeal, cursor); cursor = hotDeal; }
+    var hcVideo = document.getElementById('honeycombVideoSection');
+    if (hcVideo) { moveAfter(hcVideo, cursor); cursor = hcVideo; }
     if (paperDisplay) { moveAfter(paperDisplay, cursor); cursor = paperDisplay; }
     [bizDeal, printService, goods].forEach(function(sec) {
         if (sec) { moveAfter(sec, cursor); cursor = sec; }
@@ -1919,6 +1921,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 </script>
+
+<!-- 허니콤보드 소개 영상 (hotDeal 바로 아래 삽입용) -->
+<section id="honeycombVideoSection" style="max-width:1100px; margin:18px auto 0 auto; padding:30px 24px; display:flex; align-items:center; gap:24px; background:#fff; border-radius:18px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+    <div style="flex:0 0 60%; max-width:60%; border-radius:16px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.10);">
+        <video autoplay muted loop playsinline style="width:100%; display:block;">
+            <source src="/123123.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div style="flex:1; min-width:0; padding:0 10px;">
+        <h2 style="font-size:32px; font-weight:900; line-height:1.25; color:#1e293b; margin:0 0 18px 0;" data-i18n-html="hc_video_h2">
+            허니콤보드 <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">원판부터 포장재까지</em>
+        </h2>
+        <p style="font-size:15px; color:#64748b; line-height:1.7; margin:0 0 20px 0;" data-i18n-html="hc_video_p">
+            전시부스, 팝업스토어, 상업 인테리어 공간에 쓰이는<br>
+            친환경 허니콤보드를 원판/재단/인쇄/포장재까지 한번에.<br>
+            <b style="color:#6366f1;">전세계 어디나 무료로 배송됩니다.</b>
+        </p>
+        <a href="/paper-stand" style="display:inline-flex; align-items:center; gap:8px; padding:12px 26px; border-radius:50px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:14px; font-weight:700; text-decoration:none; box-shadow:0 4px 16px rgba(99,102,241,0.3);" data-i18n-html="hc_video_cta">
+            자세히 보기 <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+</section>
 
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
