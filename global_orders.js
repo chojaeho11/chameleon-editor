@@ -1104,17 +1104,23 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
                 : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
 
-            // 잠금 시 모든 내용 가림 (고객명/연락처/메모/첨부파일)
-            let nameCell = `<span style="font-weight:bold;">${item.customer_name || ''}</span>`;
-            let phoneCell = item.customer_phone || '';
-            let memoCell = formatVipMemo(cleanMemo);
+            // 잠금: 잠근 본인(세션 unlocked) 외에는 전체 행을 숨김 행으로 대체
             if (lockMatch && !unlocked) {
-                nameCell = `<span style="color:#94a3b8;">🔒</span>`;
-                phoneCell = `<span style="color:#94a3b8;">🔒</span>`;
-                filesHtml = `<span style="color:#94a3b8;">🔒</span>`;
-                memoCell = `<div style="color:#94a3b8; font-style:italic;">🔒 ${lockedBy} 매니저가 잠금 처리한 문의입니다.</div>
-                            <button class="btn btn-outline btn-sm" style="font-size:11px;margin-top:4px;" onclick="unlockVip(${item.id})">🔓 열람</button>`;
+                tbody.innerHTML += `
+                    <tr style="background:#f8fafc;">
+                        <td><input type="checkbox" class="vip-chk" value="${item.id}" disabled></td>
+                        <td colspan="7" style="color:#94a3b8; font-style:italic; padding:12px;">
+                            🔒 <b>${lockedBy}</b> 매니저가 잠금한 문의입니다. (담당자 외 열람 불가)
+                        </td>
+                        <td style="text-align:center;">
+                            <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="unlockVip(${item.id})">🔓 열람</button>
+                        </td>
+                    </tr>`;
+                return;
             }
+            const nameCell = `<span style="font-weight:bold;">${item.customer_name || ''}</span>`;
+            const phoneCell = item.customer_phone || '';
+            const memoCell = formatVipMemo(cleanMemo);
 
             // 상태 + 관리 버튼
             let statusBadge = '';
