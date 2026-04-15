@@ -139,36 +139,36 @@ tr:hover td { background: #f8fafc; }
 
 /* ================= 전역 다크 테마 (눈 편안한 slate 톤) =================
    팔레트:
-   - 기본 배경: #1a1f2e
-   - 카드: #242a3d
-   - 보더: #374151
+   - 기본 배경: #808080
+   - 카드: #6b6b6b
+   - 보더: #5a5a5a
    - 본문 글씨: #d4d4d8
    - 보조 글씨: #9ca3af
    - 포인트: #fcd34d (부드러운 골드)
 */
-body { background: #1a1f2e !important; color: #d4d4d8 !important; }
-.top-bar { background: #242a3d !important; border-bottom: 1px solid #374151 !important; }
+body { background: #808080 !important; color: #ffffff !important; }
+.top-bar { background: #6b6b6b !important; border-bottom: 1px solid #5a5a5a !important; }
 .page-title { color: #fcd34d !important; }
-.content-scroll { background: #1a1f2e !important; }
+.content-scroll { background: #808080 !important; }
 
-/* 사이드바 (톤 다운) */
-.sidebar { background: #242a3d !important; }
-.sidebar-header { color: #fcd34d !important; border-bottom-color: #374151 !important; }
-.nav-item { color: #d4d4d8 !important; }
-.nav-item:hover { background: #2d3450 !important; color: #fcd34d !important; }
-.nav-item.active { background: #3b4a6b !important; color: #fcd34d !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+/* 사이드바 (50% 회색 베이스) */
+.sidebar { background: #6b6b6b !important; }
+.sidebar-header { color: #fcd34d !important; border-bottom-color: #5a5a5a !important; }
+.nav-item { color: #ffffff !important; }
+.nav-item:hover { background: #808080 !important; color: #fcd34d !important; }
+.nav-item.active { background: #4a4a4a !important; color: #fcd34d !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
 
 /* 카드/섹션 */
-.card { background: #242a3d !important; border: 1px solid #374151 !important; color: #d4d4d8 !important; box-shadow: 0 4px 16px rgba(0,0,0,0.35) !important; }
+.card { background: #6b6b6b !important; border: 1px solid #5a5a5a !important; color: #ffffff !important; box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important; }
 .card h1, .card h2, .card h3, .card h4, .card h5 { color: #fcd34d !important; }
 .card label, .card .form-label { color: #cbd5e1 !important; }
 
 /* 테이블 - 얼룩무늬 없이 통일 */
-table { background: transparent !important; color: #d4d4d8 !important; }
-th { background: #2d3450 !important; color: #fcd34d !important; border-bottom: 2px solid #374151 !important; }
-tbody, tbody tr, tbody tr:nth-child(even), tbody tr:nth-child(odd) { background: #242a3d !important; }
-td { color: #d4d4d8 !important; border-bottom: 1px solid #374151 !important; background: transparent !important; }
-tr:hover td { background: #2d3450 !important; }
+table { background: transparent !important; color: #ffffff !important; }
+th { background: #4a4a4a !important; color: #fcd34d !important; border-bottom: 2px solid #5a5a5a !important; }
+tbody, tbody tr, tbody tr:nth-child(even), tbody tr:nth-child(odd) { background: #6b6b6b !important; }
+td { color: #ffffff !important; border-bottom: 1px solid #5a5a5a !important; background: transparent !important; }
+tr:hover td { background: #808080 !important; }
 /* 인라인 흰색 배경 전부 다크로 */
 [style*="background:white"], [style*="background: white"],
 [style*="background:#fff"], [style*="background: #fff"],
@@ -177,59 +177,59 @@ tr:hover td { background: #2d3450 !important; }
 [style*="background:#f1f5f9"], [style*="background: #f1f5f9"],
 [style*="background-color:white"], [style*="background-color: white"],
 [style*="background-color:#fff"] {
-    background: #242a3d !important; color: #d4d4d8 !important;
+    background: #6b6b6b !important; color: #d4d4d8 !important;
 }
 
 /* 입력 요소 */
 .input-text, input[type=text], input[type=tel], input[type=email], input[type=password],
 input[type=number], input[type=date], input[type=month], input[type=search], input[type=url],
 input[type=file], textarea, select {
-    background: #1a1f2e !important;
+    background: #808080 !important;
     color: #d4d4d8 !important;
-    border: 1px solid #374151 !important;
+    border: 1px solid #5a5a5a !important;
 }
 input:focus, textarea:focus, select:focus { border-color: #fcd34d !important; outline: none !important; }
 input::placeholder, textarea::placeholder { color: #6b7280 !important; }
 input[type=checkbox], input[type=radio] { accent-color: #fcd34d; }
 
 /* 버튼 재조정 */
-.btn-outline { background: #1a1f2e !important; border: 1px solid #374151 !important; color: #d4d4d8 !important; }
-.btn-outline:hover { background: #2d3450 !important; border-color: #fcd34d !important; color: #fcd34d !important; }
-.btn-file { background: #1a1f2e !important; color: #d4d4d8 !important; border: 1px solid #374151 !important; }
+.btn-outline { background: #808080 !important; border: 1px solid #5a5a5a !important; color: #d4d4d8 !important; }
+.btn-outline:hover { background: #4a4a4a !important; border-color: #fcd34d !important; color: #fcd34d !important; }
+.btn-file { background: #808080 !important; color: #d4d4d8 !important; border: 1px solid #5a5a5a !important; }
 .btn-file:hover { color: #fcd34d !important; border-color: #fcd34d !important; }
 .btn-danger { background: #7f1d1d !important; color: #fecaca !important; }
-.staff-select { background: #1a1f2e !important; color: #d4d4d8 !important; border: 1px solid #374151 !important; }
+.staff-select { background: #808080 !important; color: #d4d4d8 !important; border: 1px solid #5a5a5a !important; }
 
 /* 드롭존/파일 업로드 */
-.file-drop-zone { background: #1a1f2e !important; color: #9ca3af !important; border-color: #374151 !important; }
-.file-list-area { background: #1a1f2e !important; border-color: #374151 !important; }
-.file-item-row { background: #242a3d !important; border-color: #374151 !important; color: #d4d4d8 !important; }
-.addon-checkbox-group { background: #1a1f2e !important; border-color: #374151 !important; }
-.addon-check-item { background: #242a3d !important; border-color: #374151 !important; color: #d4d4d8 !important; }
+.file-drop-zone { background: #808080 !important; color: #9ca3af !important; border-color: #5a5a5a !important; }
+.file-list-area { background: #808080 !important; border-color: #5a5a5a !important; }
+.file-item-row { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
+.addon-checkbox-group { background: #808080 !important; border-color: #5a5a5a !important; }
+.addon-check-item { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
 
 /* 통계 카드 */
-.stat-card { background: #242a3d !important; border-color: #374151 !important; color: #d4d4d8 !important; }
-.stat-icon { background: #2d3450 !important; color: #fcd34d !important; }
+.stat-card { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
+.stat-icon { background: #4a4a4a !important; color: #fcd34d !important; }
 .stat-info div:first-child { color: #9ca3af !important; }
 .stat-info div:last-child { color: #fcd34d !important; }
-.progress-bar-bg { background: #2d3450 !important; }
+.progress-bar-bg { background: #4a4a4a !important; }
 
 /* 모달 */
-.modal-box { background: #242a3d !important; color: #d4d4d8 !important; border: 1px solid #374151; }
-.modal-header { border-bottom-color: #374151 !important; color: #fcd34d !important; }
+.modal-box { background: #6b6b6b !important; color: #d4d4d8 !important; border: 1px solid #5a5a5a; }
+.modal-header { border-bottom-color: #5a5a5a !important; color: #fcd34d !important; }
 
 /* 로딩 오버레이 */
 #loading { background: rgba(26,31,46,0.85) !important; }
 
 /* 템플릿 카드 */
-.tpl-card { background: #242a3d !important; border-color: #374151 !important; color: #d4d4d8 !important; }
-.tpl-thumb { background: #1a1f2e !important; border-bottom-color: #374151 !important; }
+.tpl-card { background: #6b6b6b !important; border-color: #5a5a5a !important; color: #d4d4d8 !important; }
+.tpl-thumb { background: #808080 !important; border-bottom-color: #5a5a5a !important; }
 
 /* 배지 */
-.badge-site { background: #1a1f2e !important; border-color: #374151 !important; }
+.badge-site { background: #808080 !important; border-color: #5a5a5a !important; }
 
 /* 결제 뱃지 */
-.pay-wait { background: #2d3450 !important; color: #d4d4d8 !important; border-color: #374151 !important; }
+.pay-wait { background: #4a4a4a !important; color: #d4d4d8 !important; border-color: #5a5a5a !important; }
 
 /* 제목/회색 텍스트 가독성 */
 h1, h2, h3, h4, h5 { color: #fcd34d; }
@@ -259,7 +259,7 @@ body, body * { color: #ffffff !important; }
 [style*="background:#fee2e2"], [style*="background: #fee2e2"],
 [style*="background:#fecaca"], [style*="background: #fecaca"],
 [style*="background:#fed7aa"], [style*="background: #fed7aa"] {
-    background: #242a3d !important;
+    background: #6b6b6b !important;
 }
 body h1, body h2, body h3, body h4, body h5, body h6 { color: #fcd34d !important; }
 body a { color: #93c5fd; }
