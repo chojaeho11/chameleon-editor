@@ -273,9 +273,9 @@ body [style*="color: #475569"], body [style*="color: #000"], body [style*="color
 
 img { background-color: transparent !important; }
 
-/* ===== 템플릿 & 폰트 섹션: 라이트 테마 (원본 복원) ===== */
-#sec-templates, #sec-fonts { background: transparent !important; }
-#sec-templates *, #sec-fonts * { color: #334155 !important; }
+/* ===== 템플릿 & 폰트 섹션: 라이트 테마 강제 ===== */
+body #sec-templates, body #sec-fonts { background: #f8fafc !important; padding: 20px !important; border-radius: 12px !important; }
+body #sec-templates *, body #sec-fonts * { color: #334155 !important; }
 #sec-templates h1, #sec-templates h2, #sec-templates h3, #sec-templates h4, #sec-templates h5,
 #sec-fonts h1, #sec-fonts h2, #sec-fonts h3, #sec-fonts h4, #sec-fonts h5 { color: #1e293b !important; }
 #sec-templates .card, #sec-fonts .card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important; }
