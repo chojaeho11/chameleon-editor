@@ -1155,8 +1155,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const budget = (fd.get('budget')||'').trim();
             const memo = (fd.get('memo')||'').trim();
             const fileInput = form.querySelector('input[name=files]');
-            // 1000만원: 본사 자동 배정 + 자동 잠금 (비번 1234)
-            const isVIP1000 = (budget === '1000만원');
+            // 본사 자동 배정 조건: 1000만원 예산 OR 종이매대/패브릭 카테고리 (비번 1234)
+            const isVIP1000 = (budget === '1000만원') || (cat === '종이매대') || (cat === '패브릭');
             const lockPrefix = isVIP1000 ? `[LOCK:${btoa('1234')}:본사]\n` : '';
             const body = lockPrefix + [`[QQ:${cat}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
             try {

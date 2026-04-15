@@ -944,7 +944,7 @@ function openQQSurvey(cat) {
         const budget = (fd.get('budget')||'').trim();
         const memo = (fd.get('memo')||'').trim();
         const fileInput = form.querySelector('input[name=files]');
-        const isVIP1000 = (budget === '1000만원');
+        const isVIP1000 = (budget === '1000만원') || (c === '종이매대') || (c === '패브릭');
         const lockPrefix = isVIP1000 ? `[LOCK:${btoa('1234')}:본사]\n` : '';
         const body = lockPrefix + [`[QQ:${c}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
         try {
