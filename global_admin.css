@@ -247,9 +247,9 @@ body [style*="color: #475569"], body [style*="color: #000"], body [style*="color
     color: #e5e7eb !important;
 }
 
-/* 이미지 썸네일은 다크 배경 유지하되 img 자체는 영향 X */
-img { background: transparent !important; }
-.tpl-thumb, .preview-img { background: #1a1f2e !important; }
+/* 이미지 썸네일 - background 단축속성으로 하면 background-image가 지워지므로 background-color만 지정 */
+img { background-color: transparent !important; }
+.tpl-thumb, .preview-img { background-color: #1a1f2e !important; }
 
 /* ===== 템플릿 & 로고 / 폰트 관리 섹션은 라이트 테마로 복원 ===== */
 #sec-templates, #sec-fonts { background: #f8fafc !important; padding: 20px; border-radius: 12px; }
@@ -269,6 +269,6 @@ img { background: transparent !important; }
 }
 #sec-templates input::placeholder, #sec-fonts input::placeholder { color: #94a3b8 !important; }
 #sec-templates .tpl-card, #sec-fonts .tpl-card { background: #ffffff !important; border-color: #e2e8f0 !important; color: #334155 !important; }
-#sec-templates .tpl-thumb, #sec-fonts .tpl-thumb { background: #f8fafc !important; border-bottom-color: #f1f5f9 !important; }
+#sec-templates .tpl-thumb, #sec-fonts .tpl-thumb { background-color: #f8fafc !important; border-bottom-color: #f1f5f9 !important; }
 #sec-templates .btn-outline, #sec-fonts .btn-outline { background: #ffffff !important; color: #334155 !important; border-color: #cbd5e1 !important; }
 #sec-templates label, #sec-fonts label { color: #475569 !important; }
