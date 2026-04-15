@@ -1,6 +1,6 @@
 {
   "page_title": "カメレオンプリンティング｜印刷オンラインショップ 生地印刷・紙製什器・ハニカムボード",
-  "hero_title": "<span>カメレオンプリンティング</span><br>The Print Hub",
+  "hero_title": "<small class=\"hero-tagline\">業者向け卸売印刷モール</small><span>カメレオンプリンティング</span><em class=\"hero-min-order\">卸売モール最低注文金額は10,000円です</em>",
   "hero_desc": "バナー、展示パネル、販促物のデザインから印刷注文まで。デザイン経験不要、無料でご利用いただけます。",
   "wall_option_desc": "カスタムデザインを始める",
   "search_placeholder": "今日はどんな商品をお探しですか？",
@@ -1920,7 +1920,7 @@
   "design_load_failed": "デザインの読み込み失敗: ",
   "msg_object_locked": "オブジェクトが固定されました",
   "msg_object_unlocked": "固定が解除されました",
-  "min_order_notice": "カメレオンプリンティングは卸売サイトです。最低注文金額は1,000円です。最高品質と最安値をお約束します。",
+  "min_order_notice": "業者専用の卸売ショッピングモールです。最低注文金額がある分、品質と価格でお応えします。小額注文の急増により最低金額を設定しました。ご了承ください。",
   "coupon_first_label": "🎉 初回購入限定",
   "coupon_first_title": "¥3,000 無料クーポン",
   "coupon_first_desc": "会員登録後の初回注文で3,000円まで無料！",

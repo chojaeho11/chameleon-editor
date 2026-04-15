@@ -1,6 +1,6 @@
 {
   "page_title": "Chameleon Printing – Imprenta Online | Impresión en Tela, Displays de Cartón y Paneles Honeycomb Board",
-  "hero_title": "<span>Chameleon Printing</span><br>The Print Hub",
+  "hero_title": "<small class=\"hero-tagline\">Imprenta Mayorista para Profesionales</small><span>Chameleon Printing</span><em class=\"hero-min-order\">Pedido mínimo mayorista: $100</em>",
   "hero_desc": "Paneles Honeycomb Board, impresión textil, displays, banners — diseña gratis online, envío a toda España.",
   "wall_option_desc": "Crear Diseño Personalizado",
   "search_placeholder": "¿Qué producto buscas hoy?",
@@ -1888,7 +1888,7 @@
   "menu_create": "Crear Menú",
   "msg_object_locked": "Objeto bloqueado",
   "msg_object_unlocked": "Objeto desbloqueado",
-  "min_order_notice": "Chameleon Printing es mayorista. Pedido mínimo: 10,000 KRW. Prometemos la mejor calidad al mejor precio.",
+  "min_order_notice": "Tienda mayorista exclusiva para profesionales. Con nuestro pedido mínimo, garantizamos calidad y mejor precio. Establecido por la avalancha de pedidos pequeños. Gracias por su comprensión.",
   "coupon_first_label": "🎉 Solo primera compra",
   "coupon_first_title": "Cupón gratis de 30,000 KRW",
   "coupon_first_desc": "¡Hasta 30,000 KRW gratis en tu primer pedido!",

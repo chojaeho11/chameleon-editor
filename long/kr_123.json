@@ -1,6 +1,6 @@
 {
   "page_title": "카멜레온프린팅 - 허니콤보드 원단 패브릭 광고 인쇄",
-  "hero_title": "<span>카멜레온프린팅</span><br>The Print Hub",
+  "hero_title": "<small class=\"hero-tagline\">업자를 위한 도매인쇄몰</small><span>카멜레온프린팅</span><em class=\"hero-min-order\">도매몰 최소 주문금액은 10만원입니다</em>",
   "hero_desc": "회원가입만으로 에디터의 모든 서비스를 무료로 이용가능합니다.",
   "wall_option_desc": "맞춤형 디자인 시작하기",
   "search_placeholder": "오늘은 어떤 제품을 찾으시나요?",
@@ -1527,7 +1527,7 @@
   "design_load_failed": "디자인 로드 실패: ",
   "msg_object_locked": "객체가 고정되었습니다",
   "msg_object_unlocked": "고정이 해제되었습니다",
-  "min_order_notice": "카멜레온프린팅은 도매 쇼핑몰로 최소 주문금액은 1만원입니다. 최고급 품질과 최저의 가격을 약속합니다.",
+  "min_order_notice": "업자만을 위한 도매 쇼핑몰입니다. 최소 주문금액이 있는만큼 품질과 가격으로 보답하겠습니다. 소액 주문량이 너무 폭주하여 최소 주문금액을 설정하였습니다. 양해 부탁드립니다.",
   "coupon_first_label": "🎉 첫 구매 고객 한정",
   "coupon_first_title": "3만원 무료 쿠폰",
   "coupon_first_desc": "회원가입 후 첫 주문 시 3만원까지 무료!",
