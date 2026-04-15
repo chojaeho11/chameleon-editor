@@ -74,7 +74,7 @@ window.loadTemplates = async (isNewSearch = false) => {
         // if(thumbUrl && thumbUrl.includes('supabase.co') && !isAudio) {
         //     thumbUrl += '?width=200&height=200&resize=cover&quality=50';
         // }
-        console.log('[tpl-thumb]', t.id, t.category, 'url:', thumbUrl);
+        // console.log 제거 (base64 데이터로 콘솔 도배됨)
 
         const badgeColor = (t.product_key && t.product_key !== 'custom') ? '#dbeafe' : '#f1f5f9';
         const badgeText = (t.product_key && t.product_key !== 'custom') ? '#1e40af' : '#64748b';
@@ -82,9 +82,12 @@ window.loadTemplates = async (isNewSearch = false) => {
 
         // 오디오: 커버 이미지 없으면 음악 아이콘 표시
         const isAudioUrl = isAudio && thumbUrl && (thumbUrl.endsWith('.mp3')||thumbUrl.endsWith('.wav')||thumbUrl.endsWith('.ogg')||thumbUrl.endsWith('.m4a')||thumbUrl.includes('/audio/'));
+        // <img> 태그로 변경 (background-image + data URL 조합이 일부 CSS override에서 가려지는 이슈 회피)
         const thumbContent = isAudioUrl
             ? `<div class="tpl-thumb" style="background:#f0f4ff; display:flex; align-items:center; justify-content:center; font-size:48px; color:#6366f1;">🎵</div>`
-            : `<div class="tpl-thumb" style="background-image:url('${thumbUrl}'); background-size:contain; background-repeat:no-repeat; background-position:center;"></div>`;
+            : (thumbUrl
+                ? `<div class="tpl-thumb" style="display:flex;align-items:center;justify-content:center;overflow:hidden;"><img src="${thumbUrl}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='❌'"></div>`
+                : `<div class="tpl-thumb" style="display:flex;align-items:center;justify-content:center;color:#cbd5e1;">🖼️</div>`);
 
         // 오디오: 재생 버튼 추가
         const audioBtn = isAudio && t.data_url
