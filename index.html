@@ -892,12 +892,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var goods = document.getElementById('goodsSection');
     var paperDisplay = document.getElementById('paperDisplaySection');
     var popular = document.getElementById('popularSection');
-    [hotDeal, bizDeal, printService, goods].forEach(function(sec) {
+    // 허니콤보드(HotDeal) → 종이매대(paperDisplay) → 나머지
+    if (hotDeal) { moveAfter(hotDeal, cursor); cursor = hotDeal; }
+    if (paperDisplay) { moveAfter(paperDisplay, cursor); cursor = paperDisplay; }
+    [bizDeal, printService, goods].forEach(function(sec) {
         if (sec) { moveAfter(sec, cursor); cursor = sec; }
     });
-    // 종이매대 섹션
-    if (paperDisplay) { moveAfter(paperDisplay, cursor); cursor = paperDisplay; }
-    // 허니콤보드 원판 → 종이매대 바로 다음
+    // 허니콤보드 원판
     var wholesaleBoard = document.getElementById('wholesaleBoardSection');
     if (wholesaleBoard) { moveAfter(wholesaleBoard, cursor); cursor = wholesaleBoard; }
     // 영상1 (expositor4) → 원판 바로 다음
