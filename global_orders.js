@@ -1258,6 +1258,35 @@ window.unlockVip = async (id) => {
     loadVipOrders();
 };
 
+// VIP 첨부파일 일괄 다운로드 (ZIP)
+window.downloadAllVipFiles = async (id) => {
+    if (typeof JSZip === 'undefined') { showToast('JSZip 로드 안됨', 'error'); return; }
+    const { data: row, error } = await sb.from('vip_orders').select('files, customer_name, created_at').eq('id', id).single();
+    if (error) { showToast('로드 실패', 'error'); return; }
+    const files = (row.files || []).filter(f => f.type !== '_error_log' && f.url);
+    if (!files.length) { showToast('파일이 없습니다', 'warn'); return; }
+    showToast('압축 중...', 'info');
+    try {
+        const zip = new JSZip();
+        for (const f of files) {
+            const resp = await fetch(f.url);
+            if (!resp.ok) throw new Error(`${f.name} 다운로드 실패 (${resp.status})`);
+            const blob = await resp.blob();
+            zip.file(f.name, blob);
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const stamp = new Date(row.created_at).toISOString().slice(0,10);
+        const fname = `VIP_${row.customer_name||id}_${stamp}.zip`;
+        if (typeof saveAs !== 'undefined') saveAs(zipBlob, fname);
+        else {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(zipBlob); a.download = fname; a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+        showToast('다운로드 완료', 'success');
+    } catch (e) { showToast('다운로드 오류: ' + e.message, 'error'); }
+};
+
 // QQ(빠른견적) 상세 팝업: 잠금이면 비번 입력 → 팝업으로 내용 표시
 window.openVipDetail = async (id) => {
     const { data: item, error } = await sb.from('vip_orders').select('*').eq('id', id).single();
@@ -1279,8 +1308,18 @@ window.openVipDetail = async (id) => {
     }
 
     const realFiles = (item.files || []).filter(f => f.type !== '_error_log');
+    const isImg = (n) => /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(n);
     const filesHtml = realFiles.length
-        ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:3px;">💾 ${f.name}</a>`).join('')
+        ? `<div style="display:flex;flex-wrap:wrap;gap:8px;">${realFiles.map(f => isImg(f.name)
+            ? `<div style="display:flex;flex-direction:column;align-items:center;width:90px;">
+                 <a href="${f.url}" target="_blank" style="display:block;width:90px;height:90px;border-radius:8px;overflow:hidden;border:1px solid #312e81;background:#1e1b4b;">
+                   <img src="${f.url}" alt="${f.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                 </a>
+                 <a href="${f.url}" target="_blank" download="${f.name}" style="font-size:10px;color:#94a3b8;margin-top:3px;text-align:center;word-break:break-all;text-decoration:none;">💾 ${f.name.length>14?f.name.substring(0,12)+'…':f.name}</a>
+               </div>`
+            : `<a href="${f.url}" target="_blank" download="${f.name}" class="btn btn-outline btn-sm" style="margin:0;">📄 ${f.name}</a>`
+          ).join('')}</div>
+          <div style="margin-top:10px;"><button class="btn btn-sm" style="background:#0ea5e9;color:#fff;border:none;font-weight:700;" onclick="downloadAllVipFiles(${id})">📥 전체 일괄 다운로드 (${realFiles.length}개)</button></div>`
         : '<span style="color:#94a3b8;">첨부파일 없음</span>';
 
     let modal = document.getElementById('vipDetailModal');
