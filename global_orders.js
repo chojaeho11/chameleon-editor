@@ -1111,67 +1111,13 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span>`
                 : `<span style="color:#94a3b8;">-</span>`;
 
-            // QQ(빠른견적) 행: 내용 숨김, 상세보기 버튼으로 팝업 열람
-            if (qqCategory) {
-                const lockLabel = lockMatch ? `🔒 ${lockedBy} 잠금` : (assignedManager ? '🔓 오픈' : '🆕 미지정');
-                const statusText = st.includes('상담중:') ? `💬 ${assignedManager} 상담중` : (st === '확인됨' ? '✅ 완료' : '대기중');
-                tbody.innerHTML += `
-                    <tr style="background:#0f172a; color:#e2e8f0;">
-                        <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
-                        <td style="color:#cbd5e1;">${new Date(item.created_at).toLocaleString()}</td>
-                        <td>${managerBadge}</td>
-                        <td>${catBadgeCell}</td>
-                        <td colspan="4" style="padding:12px;color:#94a3b8;font-size:12px;">${lockLabel} · 내용은 상세보기에서 확인</td>
-                        <td style="text-align:center;">
-                            <button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;font-weight:700;" onclick="openVipDetail(${item.id})">📋 상세보기</button>
-                        </td>
-                    </tr>`;
-                return;
-            }
-            // QQ 외 일반 건: 기존 잠금 로직 유지 (마스킹 행)
-            if (lockMatch && !unlocked) {
-                tbody.innerHTML += `
-                    <tr style="background:#1e293b;color:#cbd5e1;">
-                        <td><input type="checkbox" class="vip-chk" value="${item.id}" disabled></td>
-                        <td style="color:#94a3b8;">${new Date(item.created_at).toLocaleString()}</td>
-                        <td>${managerBadge}</td>
-                        <td>${catBadgeCell}</td>
-                        <td colspan="5" style="color:#94a3b8; font-style:italic; padding:12px;">
-                            🔒 <b>${lockedBy}</b> 매니저가 잠금한 문의입니다. (담당자 외 열람 불가)
-                        </td>
-                        <td style="text-align:center;">
-                            <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="unlockVip(${item.id})">🔓 열람</button>
-                        </td>
-                    </tr>`;
-                return;
-            }
-            const nameCell = `<span style="font-weight:bold;">${item.customer_name || ''}</span>`;
-            const phoneCell = item.customer_phone || '';
-            const qqBadgeHtml = qqCategory ? `<div style="margin-bottom:6px;"><span class="badge" style="background:#312e81;color:#fbbf24;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span></div>` : '';
-            const memoCell = qqBadgeHtml + formatVipMemo(cleanMemo);
-
-            // 상태 + 관리 버튼
-            let statusBadge = '';
-            let actionHtml = '';
-            if (st.includes('상담중:')) {
-                statusBadge = `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;">💬 ${assignedManager} 상담중</span>`;
-                actionHtml = `<button class="btn btn-sm" style="background:#15803d;color:#fff;border:none;font-size:11px;" onclick="updateVipStatus(${item.id},'확인됨')">✅ 완료</button>
-                              <button class="btn btn-sm" style="background:#94a3b8;color:#fff;border:none;font-size:11px;margin-top:3px;" onclick="updateVipStatus(${item.id},'대기중')">↩ 대기</button>`;
-            } else if (st === '확인됨') {
-                statusBadge = `<span class="badge" style="background:#dcfce7;color:#15803d;">✅ 완료</span>`;
-                actionHtml = `<button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="updateVipStatus(${item.id},'대기중')">↩ 대기로</button>`;
-            } else {
-                statusBadge = `<span class="badge" style="background:#fee2e2;color:#ef4444;">대기중</span>`;
-                actionHtml = `<button class="btn btn-primary btn-sm" style="font-size:11px;" onclick="openVipAssignModal(${item.id})">확인</button>`;
-            }
-            // 잠금 토글 버튼 (담당자 있을 때만)
-            if (assignedManager) {
-                if (lockMatch) {
-                    actionHtml += `<button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;margin-top:3px;" onclick="unlockVipPermanent(${item.id})">🔓 잠금해제</button>`;
-                } else {
-                    actionHtml += `<button class="btn btn-sm" style="background:#475569;color:#fff;border:none;font-size:11px;margin-top:3px;" onclick="lockVip(${item.id},'${assignedManager}')">🔒 잠금</button>`;
-                }
-            }
+            // 모든 VIP 행: 컴팩트 표시 + 상세보기 팝업 (QQ 여부 무관)
+            const lockLabel = lockMatch ? `🔒 ${lockedBy} 잠금` : (assignedManager ? '🔓 오픈' : '🆕 미지정');
+            const statusBadge = st.includes('상담중:')
+                ? `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;">💬 ${assignedManager} 상담중</span>`
+                : (st === '확인됨'
+                    ? `<span class="badge" style="background:#dcfce7;color:#15803d;">✅ 완료</span>`
+                    : `<span class="badge" style="background:#fee2e2;color:#ef4444;">대기중</span>`);
 
             tbody.innerHTML += `
                 <tr style="background:${st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a'};color:#e2e8f0;">
@@ -1179,12 +1125,11 @@ window.loadVipOrders = async () => {
                     <td>${new Date(item.created_at).toLocaleString()}</td>
                     <td>${managerBadge}</td>
                     <td>${catBadgeCell}</td>
-                    <td>${nameCell}</td>
-                    <td>${phoneCell}</td>
-                    <td style="font-size:13px; color:#cbd5e1; word-break:break-all;">${memoCell}</td>
-                    <td>${filesHtml}</td>
+                    <td colspan="4" style="padding:12px;color:#94a3b8;font-size:12px;">${lockLabel} · 내용은 상세보기에서 확인</td>
                     <td style="text-align:center;">${statusBadge}</td>
-                    <td style="text-align:center;">${actionHtml}</td>
+                    <td style="text-align:center;">
+                        <button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;font-weight:700;" onclick="openVipDetail(${item.id})">📋 상세보기</button>
+                    </td>
                 </tr>`;
         });
     } catch (e) {
