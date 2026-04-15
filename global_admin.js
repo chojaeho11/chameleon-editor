@@ -11,7 +11,7 @@ import "./global_orders.js?v=294";
 import "./global_products.js?v=296";
 import "./global_users.js?v=297";
 import "./global_safetx.js?v=1";
-import "./global_assets.js?v=294";
+import "./global_assets.js?v=295";
 import "./global_stats.js?v=294";
 import "./global_reviews.js?v=294";
 

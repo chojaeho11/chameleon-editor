@@ -70,10 +70,11 @@ window.loadTemplates = async (isNewSearch = false) => {
     data.forEach(t => {
         let thumbUrl = t.thumb_url;
         const isAudio = t.category === 'audio';
-        // Supabase 이미지 리사이징 (옵션) — 오디오 파일 URL에는 적용 안함
-        if(thumbUrl && thumbUrl.includes('supabase.co') && !isAudio) {
-            thumbUrl += '?width=200&height=200&resize=cover&quality=50';
-        }
+        // (리사이징 쿼리 제거: 일부 버킷에서 transform 엔드포인트가 차단되어 이미지 안 보이는 문제)
+        // if(thumbUrl && thumbUrl.includes('supabase.co') && !isAudio) {
+        //     thumbUrl += '?width=200&height=200&resize=cover&quality=50';
+        // }
+        console.log('[tpl-thumb]', t.id, t.category, 'url:', thumbUrl);
 
         const badgeColor = (t.product_key && t.product_key !== 'custom') ? '#dbeafe' : '#f1f5f9';
         const badgeText = (t.product_key && t.product_key !== 'custom') ? '#1e40af' : '#64748b';
