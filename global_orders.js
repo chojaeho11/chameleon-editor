@@ -1106,32 +1106,35 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
                 : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
 
-            // QQ(빠른견적) 미지정 행: 접수시간 + 카테고리 + 담당자지정 버튼만 표시
-            if (qqCategory && !assignedManager && !lockMatch) {
+            // QQ(빠른견적) 행: 내용 숨김, 상세보기 버튼으로 팝업 열람
+            if (qqCategory) {
                 const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777' }[qqCategory] || '#475569';
+                const lockLabel = lockMatch ? `🔒 ${lockedBy} 잠금` : (assignedManager ? '🔓 오픈' : '🆕 미지정');
+                const statusText = st.includes('상담중:') ? `💬 ${assignedManager} 상담중` : (st === '확인됨' ? '✅ 완료' : '대기중');
                 tbody.innerHTML += `
                     <tr style="background:#0f172a; color:#e2e8f0;">
                         <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                         <td style="color:#cbd5e1;">${new Date(item.created_at).toLocaleString()}</td>
-                        <td colspan="6" style="padding:12px;">
-                            <span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:6px 12px;font-size:13px;">🚀 빠른견적 · ${qqCategory}</span>
-                            <span style="color:#94a3b8;margin-left:10px;font-size:12px;">내용은 담당자 지정 후 열람됩니다.</span>
+                        <td>${managerBadge}</td>
+                        <td colspan="4" style="padding:12px;">
+                            <span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:6px 14px;font-size:13px;">🚀 ${qqCategory}</span>
+                            <span style="color:#94a3b8;margin-left:10px;font-size:12px;">${lockLabel}</span>
                         </td>
+                        <td style="text-align:center;color:#e2e8f0;font-size:11px;">${statusText}</td>
                         <td style="text-align:center;">
-                            <button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;font-weight:700;" onclick="assignQQAndLock(${item.id})">🔒 담당자지정</button>
+                            <button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;font-weight:700;" onclick="openVipDetail(${item.id})">📋 상세보기</button>
                         </td>
                     </tr>`;
                 return;
             }
-            // 잠금: 잠근 본인(세션 unlocked) 외에는 전체 행을 숨김 행으로 대체
+            // QQ 외 일반 건: 기존 잠금 로직 유지 (마스킹 행)
             if (lockMatch && !unlocked) {
-                const catBadge = qqCategory ? `<span class="badge" style="background:#475569;color:#fff;margin-right:8px;">${qqCategory}</span>` : '';
                 tbody.innerHTML += `
                     <tr style="background:#1e293b;color:#cbd5e1;">
                         <td><input type="checkbox" class="vip-chk" value="${item.id}" disabled></td>
                         <td style="color:#94a3b8;">${new Date(item.created_at).toLocaleString()}</td>
                         <td colspan="6" style="color:#94a3b8; font-style:italic; padding:12px;">
-                            ${catBadge}🔒 <b>${lockedBy}</b> 매니저가 잠금한 문의입니다. (담당자 외 열람 불가)
+                            🔒 <b>${lockedBy}</b> 매니저가 잠금한 문의입니다. (담당자 외 열람 불가)
                         </td>
                         <td style="text-align:center;">
                             <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="unlockVip(${item.id})">🔓 열람</button>
@@ -1250,6 +1253,69 @@ window.unlockVip = async (id) => {
     sessionStorage.setItem('vipUnlock_' + id, '1');
     showToast('열람 허용', 'success');
     loadVipOrders();
+};
+
+// QQ(빠른견적) 상세 팝업: 잠금이면 비번 입력 → 팝업으로 내용 표시
+window.openVipDetail = async (id) => {
+    const { data: item, error } = await sb.from('vip_orders').select('*').eq('id', id).single();
+    if (error) { showToast('로드 실패', 'error'); return; }
+    let memo = item.memo || '';
+    const lockMatch = memo.match(/^\[LOCK:([^:]+):([^\]]+)\]\n?/);
+    const lockedBy = lockMatch ? lockMatch[2] : null;
+    const lockPwB64 = lockMatch ? lockMatch[1] : null;
+    if (lockMatch) memo = memo.replace(lockMatch[0], '');
+    const qqMatch = memo.match(/^\[QQ:([^\]]+)\]\n?/);
+    const qqCategory = qqMatch ? qqMatch[1] : '';
+    if (qqMatch) memo = memo.replace(qqMatch[0], '');
+
+    // 잠금 상태 → 비번 확인
+    if (lockMatch && sessionStorage.getItem('vipUnlock_' + id) !== '1') {
+        const pw = prompt(`🔒 ${lockedBy} 매니저가 잠금한 문의입니다.\n비밀번호를 입력하세요.`);
+        if (!pw) return;
+        if (btoa(pw) !== lockPwB64) { showToast('비밀번호가 일치하지 않습니다.', 'error'); return; }
+        sessionStorage.setItem('vipUnlock_' + id, '1');
+    }
+
+    const realFiles = (item.files || []).filter(f => f.type !== '_error_log');
+    const filesHtml = realFiles.length
+        ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:3px;">💾 ${f.name}</a>`).join('')
+        : '<span style="color:#94a3b8;">첨부파일 없음</span>';
+
+    let modal = document.getElementById('vipDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'vipDetailModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;';
+        document.body.appendChild(modal);
+    }
+    const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777' }[qqCategory] || '#475569';
+    const lockBtn = lockMatch
+        ? `<button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-weight:700;" onclick="unlockVipPermanent(${id})">🔓 잠금 해제</button>`
+        : `<button class="btn btn-sm" style="background:#312e81;color:#fff;border:none;font-weight:700;" onclick="document.getElementById('vipDetailModal').remove();assignQQAndLock(${id})">🔒 담당자 지정 + 잠금</button>`;
+
+    modal.innerHTML = `
+        <div style="background:#0f172a;color:#e2e8f0;border-radius:20px;padding:24px;width:560px;max-width:100%;max-height:92vh;overflow-y:auto;border:1px solid #312e81;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #312e81;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    ${qqCategory ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:6px 14px;font-size:14px;">🚀 ${qqCategory}</span>` : ''}
+                    <span style="color:#fbbf24;font-weight:800;">VIP 문의 상세</span>
+                </div>
+                <button onclick="document.getElementById('vipDetailModal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;">&times;</button>
+            </div>
+            <div style="display:grid;grid-template-columns:90px 1fr;gap:10px;font-size:13px;">
+                <div style="color:#94a3b8;">접수일시</div><div>${new Date(item.created_at).toLocaleString()}</div>
+                <div style="color:#94a3b8;">담당</div><div>${item.preferred_manager || lockedBy || '<span style=color:#94a3b8>미지정</span>'}</div>
+                <div style="color:#94a3b8;">고객명</div><div style="font-weight:700;color:#fbbf24;">${item.customer_name || '-'}</div>
+                <div style="color:#94a3b8;">연락처</div><div style="font-weight:700;">${item.customer_phone || '-'}</div>
+                <div style="color:#94a3b8;">요청내용</div>
+                <div style="white-space:pre-wrap;background:#1e1b4b;padding:10px;border-radius:8px;">${(memo||'-').replace(/</g,'&lt;')}</div>
+                <div style="color:#94a3b8;">첨부파일</div><div>${filesHtml}</div>
+            </div>
+            <div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #312e81;padding-top:14px;">
+                ${lockBtn}
+                <button class="btn btn-sm" style="background:#475569;color:#fff;border:none;" onclick="document.getElementById('vipDetailModal').remove()">닫기</button>
+            </div>
+        </div>`;
 };
 
 // QQ(빠른견적) 담당자 지정 + 즉시 잠금 (한번에 처리)
