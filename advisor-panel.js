@@ -855,21 +855,76 @@ function buildPanelUI() {
     // 포토스튜디오 버튼
     document.getElementById('advStudioBtn')?.addEventListener('click', () => enterStudioMode());
 
-    // 빠른견적 카테고리 버튼 → 홈페이지의 설문 모달 열기
+    // 빠른견적 카테고리 버튼 → 설문 모달 직접 생성/열기
     panelEl.querySelectorAll('.adv-qq-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
             const cat = btn.dataset.qqcat;
-            const modal = document.getElementById('qqSurveyModal');
-            const catInput = document.getElementById('qqCategory');
-            const title = document.getElementById('qqModalTitle');
-            const form = document.getElementById('qqSurveyForm');
-            if (!modal || !catInput || !form) { alert('견적서 모듈을 불러오지 못했습니다.'); return; }
-            form.reset();
-            catInput.value = cat;
-            if (title) title.textContent = '🚀 ' + cat + ' 빠른견적서';
-            modal.style.display = 'flex';
+            openQQSurvey(cat);
         });
     });
+}
+
+function openQQSurvey(cat) {
+    let modal = document.getElementById('qqSurveyModal');
+    if (modal && modal.parentNode !== document.body) document.body.appendChild(modal);
+    if (!modal) {
+        // 폴백: 모달 직접 생성
+        modal = document.createElement('div');
+        modal.id = 'qqSurveyModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:2147483647;display:none;align-items:center;justify-content:center;padding:12px;';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:20px;padding:24px;width:480px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
+                    <h3 id="qqModalTitle" style="margin:0;font-size:18px;font-weight:800;color:#1e293b;">🚀 빠른견적서</h3>
+                    <button type="button" onclick="document.getElementById('qqSurveyModal').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;">&times;</button>
+                </div>
+                <div style="font-size:12px;color:#64748b;margin-bottom:14px;">아래 항목을 입력하시면 담당 매니저가 빠르게 견적을 보내드립니다.</div>
+                <form id="qqSurveyForm" onsubmit="return window.submitQuickQuote(event)">
+                    <input type="hidden" id="qqCategory" name="category" value="">
+                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">성함 *</label><input type="text" name="name" required style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">연락처 *</label><input type="tel" name="phone" required placeholder="010-0000-0000" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">수량 / 사이즈</label><input type="text" name="quantity" placeholder="예: 100개, 1200x600mm" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">사용 용도 / 납품일</label><input type="text" name="purpose" placeholder="예: 전시 부스, 12월 20일 납품" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                    <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:700;color:#334155;">요청사항</label><textarea name="memo" rows="3" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea></div>
+                    <button type="submit" style="width:100%;padding:14px;background:linear-gradient(135deg,#312e81,#1e1b4b);color:#fff;font-weight:800;font-size:15px;border:none;border-radius:12px;cursor:pointer;">견적 요청 보내기</button>
+                </form>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+    // z-index 최상위 보장
+    modal.style.zIndex = '2147483647';
+    const form = modal.querySelector('#qqSurveyForm');
+    const catInput = modal.querySelector('#qqCategory');
+    const title = modal.querySelector('#qqModalTitle');
+    if (form) form.reset();
+    if (catInput) catInput.value = cat;
+    if (title) title.textContent = '🚀 ' + cat + ' 빠른견적서';
+    modal.style.display = 'flex';
+
+    // submitQuickQuote 핸들러가 없으면 여기서 정의
+    if (!window.submitQuickQuote) {
+        window.submitQuickQuote = async function(ev) {
+            ev.preventDefault();
+            const fd = new FormData(ev.target);
+            const c = fd.get('category');
+            const name = (fd.get('name')||'').trim();
+            const phone = (fd.get('phone')||'').trim();
+            const qty = (fd.get('quantity')||'').trim();
+            const purpose = (fd.get('purpose')||'').trim();
+            const memo = (fd.get('memo')||'').trim();
+            const body = [`[QQ:${c}]`, qty && `수량/사이즈: ${qty}`, purpose && `용도/납품일: ${purpose}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
+            try {
+                const sb = window.sb || window.supabase;
+                if (!sb) { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); return false; }
+                const { error } = await sb.from('vip_orders').insert({ customer_name: name, customer_phone: phone, memo: body, files: [], status: '대기중' });
+                if (error) { alert('전송 실패: ' + error.message); return false; }
+                document.getElementById('qqSurveyModal').style.display = 'none';
+                alert('✅ ' + c + ' 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.');
+            } catch(e) { alert('오류: ' + e.message); }
+            return false;
+        };
+    }
 }
 
 // ─── 헤더 업데이트 ───
