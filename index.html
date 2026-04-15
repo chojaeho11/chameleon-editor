@@ -1092,7 +1092,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div style="margin-bottom:10px;">
                     <label style="font-size:12px;font-weight:700;color:#334155;">예산금액</label>
-                    <input type="text" name="budget" placeholder="예: 100만원, 미정" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;">
+                    <input type="hidden" name="budget" id="qqBudgetValue" value="">
+                    <div id="qqBudgetBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;">
+                        <button type="button" class="qq-budget-btn" data-budget="10만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">10만원</button>
+                        <button type="button" class="qq-budget-btn" data-budget="100만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">100만원</button>
+                        <button type="button" class="qq-budget-btn" data-budget="500만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">500만원</button>
+                        <button type="button" class="qq-budget-btn" data-budget="1000만원" style="padding:10px 4px;border:1.5px solid #fbbf24;border-radius:10px;background:#fef3c7;color:#78350f;font-weight:800;font-size:13px;cursor:pointer;">1000만원</button>
+                    </div>
                 </div>
                 <div style="margin-bottom:10px;">
                     <label style="font-size:12px;font-weight:700;color:#334155;">요청사항</label>
@@ -1116,7 +1122,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('qqModalTitle').textContent = '🚀 ' + cat + ' 빠른견적서';
                 document.getElementById('qqSurveyForm').reset();
                 document.getElementById('qqCategory').value = cat;
+                document.getElementById('qqBudgetValue').value = '';
+                document.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(b => { b.style.background = b.dataset.budget==='1000만원' ? '#fef3c7' : '#fff'; b.style.color = b.dataset.budget==='1000만원' ? '#78350f' : ''; });
                 document.getElementById('qqSurveyModal').style.display = 'flex';
+            });
+        });
+        // 예산 버튼 선택
+        document.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('qqBudgetValue').value = btn.dataset.budget;
+                document.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(b => {
+                    const is1000 = b.dataset.budget === '1000만원';
+                    b.style.background = is1000 ? '#fef3c7' : '#fff';
+                    b.style.color = is1000 ? '#78350f' : '';
+                    b.style.borderColor = is1000 ? '#fbbf24' : '#cbd5e1';
+                });
+                btn.style.background = '#312e81';
+                btn.style.color = '#fff';
+                btn.style.borderColor = '#312e81';
             });
         });
         window.submitQuickQuote = async function(ev) {
@@ -1132,7 +1155,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const budget = (fd.get('budget')||'').trim();
             const memo = (fd.get('memo')||'').trim();
             const fileInput = form.querySelector('input[name=files]');
-            const body = [`[QQ:${cat}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
+            // 1000만원: 본사 자동 배정 + 자동 잠금 (비번 1234)
+            const isVIP1000 = (budget === '1000만원');
+            const lockPrefix = isVIP1000 ? `[LOCK:${btoa('1234')}:본사]\n` : '';
+            const body = lockPrefix + [`[QQ:${cat}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
             try {
                 const sb = window.sb || window.supabase;
                 if (!sb) { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
@@ -1149,13 +1175,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         uploaded.push({ name: f.name, url: pub.publicUrl });
                     }
                 }
-                const { error } = await sb.from('vip_orders').insert({
+                const insertPayload = {
                     customer_name: name,
                     customer_phone: phone,
                     memo: body,
                     files: uploaded,
-                    status: '대기중'
-                });
+                    status: isVIP1000 ? '상담중: 본사' : '대기중'
+                };
+                if (isVIP1000) insertPayload.preferred_manager = '본사';
+                const { error } = await sb.from('vip_orders').insert(insertPayload);
                 if (error) { alert('전송 실패: ' + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
                 document.getElementById('qqSurveyModal').style.display = 'none';
                 alert('✅ ' + cat + ' 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.');

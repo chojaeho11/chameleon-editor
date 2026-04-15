@@ -1234,8 +1234,7 @@ window.assignVipConsultant = async (id, name) => {
 
 // VIP 잠금: 담당 매니저가 비번을 걸어 다른 사람이 메모/전화번호를 못 보게 함
 window.lockVip = async (id, manager) => {
-    const pw = prompt(`${manager} 매니저: 이 문의 잠금 비밀번호를 입력하세요. (본인만 기억)`);
-    if (!pw) return;
+    const pw = '1234'; // 고정 비번
     const { data: row, error: e1 } = await sb.from('vip_orders').select('memo').eq('id', id).single();
     if (e1) { showToast('로드 실패', 'error'); return; }
     const existing = (row.memo || '').replace(/^\[LOCK:[^\]]+\]\n?/, '');
@@ -1335,10 +1334,7 @@ window.assignQQAndLock = async (id) => {
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="지숙"> 👩 지숙 매니저</label>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="본사"> 🏢 본사</label>
             </div>
-            <div style="margin-bottom:14px;">
-                <label style="font-size:12px;font-weight:700;color:#334155;">열람 비밀번호</label>
-                <input id="qqLockPw" type="password" placeholder="본인만 기억할 비번" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;">
-            </div>
+            <div style="margin-bottom:14px;font-size:12px;color:#64748b;background:#f1f5f9;padding:10px;border-radius:8px;">🔑 고정 비밀번호: <b>1234</b></div>
             <div style="display:flex;gap:8px;">
                 <button id="qqLockCancel" style="flex:1;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer;">취소</button>
                 <button id="qqLockOk" style="flex:2;padding:10px;border:none;border-radius:10px;background:#312e81;color:#fff;font-weight:800;cursor:pointer;">지정 + 잠금</button>
@@ -1348,9 +1344,8 @@ window.assignQQAndLock = async (id) => {
     modal.querySelector('#qqLockCancel').onclick = () => modal.remove();
     modal.querySelector('#qqLockOk').onclick = async () => {
         const mgr = modal.querySelector('input[name=qqMgr]:checked')?.value;
-        const pw = modal.querySelector('#qqLockPw').value.trim();
+        const pw = '1234'; // 고정 비번
         if (!mgr) return showToast('담당자를 선택하세요', 'error');
-        if (!pw) return showToast('비밀번호를 입력하세요', 'error');
         const { data: row } = await sb.from('vip_orders').select('memo').eq('id', id).single();
         const existing = (row?.memo || '').replace(/^\[LOCK:[^\]]+\]\n?/, '');
         const newMemo = `[LOCK:${btoa(pw)}:${mgr}]\n` + existing;

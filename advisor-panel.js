@@ -884,7 +884,15 @@ function openQQSurvey(cat) {
                     <input type="hidden" id="qqCategory" name="category" value="">
                     <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">성함 *</label><input type="text" name="name" required style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
                     <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">연락처 *</label><input type="tel" name="phone" required placeholder="010-0000-0000" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
-                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">예산금액</label><input type="text" name="budget" placeholder="예: 100만원, 미정" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">예산금액</label>
+                        <input type="hidden" name="budget" id="qqBudgetValue" value="">
+                        <div id="qqBudgetBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;">
+                            <button type="button" class="qq-budget-btn" data-budget="10만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">10만원</button>
+                            <button type="button" class="qq-budget-btn" data-budget="100만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">100만원</button>
+                            <button type="button" class="qq-budget-btn" data-budget="500만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">500만원</button>
+                            <button type="button" class="qq-budget-btn" data-budget="1000만원" style="padding:10px 4px;border:1.5px solid #fbbf24;border-radius:10px;background:#fef3c7;color:#78350f;font-weight:800;font-size:13px;cursor:pointer;">1000만원</button>
+                        </div>
+                    </div>
                     <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">요청사항</label><textarea name="memo" rows="3" placeholder="수량/사이즈/납품일/용도 등 자세히" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea></div>
                     <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:700;color:#334155;">파일 업로드</label><input type="file" name="files" multiple style="width:100%;padding:8px;border:1.5px dashed #cbd5e1;border-radius:10px;margin-top:4px;background:#f8fafc;"></div>
                     <button type="submit" style="width:100%;padding:14px;background:linear-gradient(135deg,#312e81,#1e1b4b);color:#fff;font-weight:800;font-size:15px;border:none;border-radius:12px;cursor:pointer;">견적 요청 보내기</button>
@@ -900,6 +908,26 @@ function openQQSurvey(cat) {
     if (form) form.reset();
     if (catInput) catInput.value = cat;
     if (title) title.textContent = '🚀 ' + cat + ' 빠른견적서';
+    // 예산 버튼 이벤트 바인딩
+    modal.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(b => {
+        const is1000 = b.dataset.budget === '1000만원';
+        b.style.background = is1000 ? '#fef3c7' : '#fff';
+        b.style.color = is1000 ? '#78350f' : '';
+        b.style.borderColor = is1000 ? '#fbbf24' : '#cbd5e1';
+        b.onclick = () => {
+            const bv = modal.querySelector('#qqBudgetValue');
+            if (bv) bv.value = b.dataset.budget;
+            modal.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(x => {
+                const is1k = x.dataset.budget === '1000만원';
+                x.style.background = is1k ? '#fef3c7' : '#fff';
+                x.style.color = is1k ? '#78350f' : '';
+                x.style.borderColor = is1k ? '#fbbf24' : '#cbd5e1';
+            });
+            b.style.background = '#312e81';
+            b.style.color = '#fff';
+            b.style.borderColor = '#312e81';
+        };
+    });
     modal.style.display = 'flex';
 
     // submitQuickQuote: 파일 업로드 포함 버전으로 항상 재정의
@@ -916,7 +944,9 @@ function openQQSurvey(cat) {
         const budget = (fd.get('budget')||'').trim();
         const memo = (fd.get('memo')||'').trim();
         const fileInput = form.querySelector('input[name=files]');
-        const body = [`[QQ:${c}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
+        const isVIP1000 = (budget === '1000만원');
+        const lockPrefix = isVIP1000 ? `[LOCK:${btoa('1234')}:본사]\n` : '';
+        const body = lockPrefix + [`[QQ:${c}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
         try {
             const sb = window.sb || window.supabase;
             if (!sb) { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
@@ -933,7 +963,9 @@ function openQQSurvey(cat) {
                     uploaded.push({ name: f.name, url: pub.publicUrl });
                 }
             }
-            const { error } = await sb.from('vip_orders').insert({ customer_name: name, customer_phone: phone, memo: body, files: uploaded, status: '대기중' });
+            const payload = { customer_name: name, customer_phone: phone, memo: body, files: uploaded, status: isVIP1000 ? '상담중: 본사' : '대기중' };
+            if (isVIP1000) payload.preferred_manager = '본사';
+            const { error } = await sb.from('vip_orders').insert(payload);
             if (error) { alert('전송 실패: ' + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
             document.getElementById('qqSurveyModal').style.display = 'none';
             alert('✅ ' + c + ' 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.');
