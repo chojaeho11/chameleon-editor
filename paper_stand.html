@@ -517,19 +517,19 @@ async function submitPdSample() {
 
 <!-- 영상 소개 2: arco5 (하단) -->
 <section class="video-section" style="max-width:1300px; margin:0 auto; padding:60px 24px 40px; display:flex; align-items:center; gap:24px;">
-    <div class="video-wrap" style="flex:1; min-width:0;">
+    <div class="video-wrap" style="flex:1; min-width:0; border-radius:18px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.12);">
         <video autoplay muted loop playsinline style="width:100%; display:block;">
-            <source src="/arco5.mp4" type="video/mp4">
+            <source src="/123123.mp4" type="video/mp4">
         </video>
     </div>
     <div class="video-text" style="flex:0 0 320px; padding-right:40px;">
-        <h2 style="font-size:42px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:24px;" data-i18n-html="video2_h2">
-            멋진 이벤트<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3분</em> 완성
+        <h2 style="font-size:38px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:20px;" data-i18n-html="video2_h2">
+            허니콤보드 <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">원판부터 포장재까지</em>
         </h2>
-        <p style="font-size:20px; color:#64748b; line-height:1.7; margin-bottom:32px;" data-i18n-html="video2_p">
-            게이트를 통과해서<br>
-            멋진 제품을<br>
-            체험하게 하세요.
+        <p style="font-size:18px; color:#64748b; line-height:1.7; margin-bottom:28px;" data-i18n-html="video2_p">
+            전시부스, 팝업스토어, 상업 인테리어 공간에 쓰이는<br>
+            친환경 허니콤보드를 원판/재단/인쇄/포장재까지 한번에.<br>
+            <b style="color:#6366f1;">전세계 어디나 무료로 배송됩니다.</b>
         </p>
         <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.3); transition:all 0.3s;" data-i18n-html="btn_view_products_up">
             상품 보기 <i class="fa-solid fa-arrow-up"></i>
@@ -1021,24 +1021,24 @@ step4_desc: {
 },
 // ── Video 2 ──
 video2_h2: {
-    ko:'멋진 이벤트<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3분</em> 완성',
-    ja:'素敵なイベント<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3分</em>で完成',
-    en:'Amazing Events<br>Ready in <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',
-    zh:'精彩活动<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3分钟</em>完成',
-    ar:'فعاليات رائعة<br>جاهزة في <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 دقائق</em>',
-    es:'Eventos Increibles<br>Listos en <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',
-    de:'Tolle Events<br>Fertig in <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>',
-    fr:'Evenements Incroyables<br>Prets en <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">3 Min</em>'
+    ko:'허니콤보드 <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">원판부터 포장재까지</em>',
+    ja:'ハニカムボード <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">原板から梱包材まで</em>',
+    en:'Honeycomb Board <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">From Raw Sheets to Packaging</em>',
+    zh:'蜂窝板 <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">从原板到包装材料</em>',
+    ar:'لوح خلية النحل <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">من الألواح الخام إلى التغليف</em>',
+    es:'Panel Honeycomb <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">De la lámina al embalaje</em>',
+    de:'Wabenplatte <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Von Rohplatte bis Verpackung</em>',
+    fr:'Panneau Nid d\'abeille <em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">De la plaque à l\'emballage</em>'
 },
 video2_p: {
-    ko:'게이트를 통과해서<br>멋진 제품을<br>체험하게 하세요.',
-    ja:'ゲートを通過して<br>素敵な製品を<br>体験させましょう。',
-    en:'Walk through the gate<br>and experience<br>amazing products.',
-    zh:'通过门廊<br>体验<br>精彩产品。',
-    ar:'امر عبر البوابة<br>وجرب<br>منتجات رائعة.',
-    es:'Pasa por la puerta<br>y experimenta<br>productos increibles.',
-    de:'Gehen Sie durch das Tor<br>und erleben Sie<br>tolle Produkte.',
-    fr:'Passez la porte<br>et decouvrez<br>des produits incroyables.'
+    ko:'전시부스, 팝업스토어, 상업 인테리어 공간에 쓰이는<br>친환경 허니콤보드를 원판/재단/인쇄/포장재까지 한번에.<br><b style="color:#6366f1;">전세계 어디나 무료로 배송됩니다.</b>',
+    ja:'展示ブース・ポップアップストア・商業空間用の<br>エコハニカムボードを原板・裁断・印刷・梱包材まで一括対応。<br><b style="color:#6366f1;">世界中どこでも無料配送いたします。</b>',
+    en:'Eco honeycomb board for exhibition booths, pop-up stores, and commercial interiors.<br>From raw sheets to cutting, printing, and packaging — all in one.<br><b style="color:#6366f1;">Free worldwide shipping.</b>',
+    zh:'用于展台、快闪店、商业空间的环保蜂窝板。<br>原板/裁切/印刷/包装一站式服务。<br><b style="color:#6366f1;">全球免费配送。</b>',
+    ar:'لوح خلية النحل الصديق للبيئة لأكشاك المعارض والمتاجر المؤقتة والتصميم الداخلي التجاري.<br>من الألواح الخام إلى التقطيع والطباعة والتغليف في مكان واحد.<br><b style="color:#6366f1;">شحن مجاني لجميع أنحاء العالم.</b>',
+    es:'Panel Honeycomb ecológico para stands, pop-up stores e interiores comerciales.<br>De la lámina en bruto al corte, impresión y embalaje, todo en uno.<br><b style="color:#6366f1;">Envío gratis a todo el mundo.</b>',
+    de:'Umweltfreundliche Wabenplatte für Messestände, Pop-up-Stores und Ladenbau.<br>Von der Rohplatte bis zum Zuschnitt, Druck und zur Verpackung — alles aus einer Hand.<br><b style="color:#6366f1;">Weltweit kostenloser Versand.</b>',
+    fr:'Panneau nid d\'abeille écologique pour stands, pop-up stores et intérieurs commerciaux.<br>De la plaque brute à la découpe, l\'impression et l\'emballage — tout-en-un.<br><b style="color:#6366f1;">Livraison gratuite partout dans le monde.</b>'
 },
 btn_view_products_up: {
     ko:'상품 보기 <i class="fa-solid fa-arrow-up"></i>',
