@@ -757,6 +757,11 @@ function buildPanelUI() {
                 ${_getContactLinks()}
             </div>
         </div>
+        <div id="advQQBar" style="display:flex;gap:6px;padding:8px 10px;background:linear-gradient(90deg,#312e81,#1e1b4b);border-bottom:1px solid #4338ca;">
+            <button type="button" class="adv-qq-btn" data-qqcat="허니콤" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e293b;font-weight:800;font-size:12px;cursor:pointer;">🍯 허니콤</button>
+            <button type="button" class="adv-qq-btn" data-qqcat="종이매대" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;font-weight:800;font-size:12px;cursor:pointer;">📦 종이매대</button>
+            <button type="button" class="adv-qq-btn" data-qqcat="패브릭" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#f472b6,#db2777);color:#fff;font-weight:800;font-size:12px;cursor:pointer;">🧵 패브릭</button>
+        </div>
         <div class="adv-chat-area" id="advChatArea"></div>
         <div class="adv-img-preview" id="advImgPreview" style="display:none">
             <img id="advImgThumb" src="" alt="">
@@ -849,6 +854,22 @@ function buildPanelUI() {
 
     // 포토스튜디오 버튼
     document.getElementById('advStudioBtn')?.addEventListener('click', () => enterStudioMode());
+
+    // 빠른견적 카테고리 버튼 → 홈페이지의 설문 모달 열기
+    panelEl.querySelectorAll('.adv-qq-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const cat = btn.dataset.qqcat;
+            const modal = document.getElementById('qqSurveyModal');
+            const catInput = document.getElementById('qqCategory');
+            const title = document.getElementById('qqModalTitle');
+            const form = document.getElementById('qqSurveyForm');
+            if (!modal || !catInput || !form) { alert('견적서 모듈을 불러오지 못했습니다.'); return; }
+            form.reset();
+            catInput.value = cat;
+            if (title) title.textContent = '🚀 ' + cat + ' 빠른견적서';
+            modal.style.display = 'flex';
+        });
+    });
 }
 
 // ─── 헤더 업데이트 ───

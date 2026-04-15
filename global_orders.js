@@ -1068,7 +1068,7 @@ function formatVipMemo(memo) {
 window.loadVipOrders = async () => {
     const tbody = document.getElementById('vipOrderListBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="spinner"></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;"><div class="spinner"></div></td></tr>';
 
     try {
         const { data, error } = await sb.from('vip_orders')
@@ -1078,7 +1078,7 @@ window.loadVipOrders = async () => {
 
         if (error) throw error;
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">접수된 VIP 주문이 없습니다.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:#999;">접수된 VIP 주문이 없습니다.</td></tr>';
             return;
         }
 
@@ -1106,9 +1106,13 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
                 : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
 
+            const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777' }[qqCategory] || '#475569';
+            const catBadgeCell = qqCategory
+                ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span>`
+                : `<span style="color:#94a3b8;">-</span>`;
+
             // QQ(빠른견적) 행: 내용 숨김, 상세보기 버튼으로 팝업 열람
             if (qqCategory) {
-                const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777' }[qqCategory] || '#475569';
                 const lockLabel = lockMatch ? `🔒 ${lockedBy} 잠금` : (assignedManager ? '🔓 오픈' : '🆕 미지정');
                 const statusText = st.includes('상담중:') ? `💬 ${assignedManager} 상담중` : (st === '확인됨' ? '✅ 완료' : '대기중');
                 tbody.innerHTML += `
@@ -1116,11 +1120,8 @@ window.loadVipOrders = async () => {
                         <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                         <td style="color:#cbd5e1;">${new Date(item.created_at).toLocaleString()}</td>
                         <td>${managerBadge}</td>
-                        <td colspan="4" style="padding:12px;">
-                            <span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:6px 14px;font-size:13px;">🚀 ${qqCategory}</span>
-                            <span style="color:#94a3b8;margin-left:10px;font-size:12px;">${lockLabel}</span>
-                        </td>
-                        <td style="text-align:center;color:#e2e8f0;font-size:11px;">${statusText}</td>
+                        <td>${catBadgeCell}</td>
+                        <td colspan="4" style="padding:12px;color:#94a3b8;font-size:12px;">${lockLabel} · 내용은 상세보기에서 확인</td>
                         <td style="text-align:center;">
                             <button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;font-weight:700;" onclick="openVipDetail(${item.id})">📋 상세보기</button>
                         </td>
@@ -1133,7 +1134,9 @@ window.loadVipOrders = async () => {
                     <tr style="background:#1e293b;color:#cbd5e1;">
                         <td><input type="checkbox" class="vip-chk" value="${item.id}" disabled></td>
                         <td style="color:#94a3b8;">${new Date(item.created_at).toLocaleString()}</td>
-                        <td colspan="6" style="color:#94a3b8; font-style:italic; padding:12px;">
+                        <td>${managerBadge}</td>
+                        <td>${catBadgeCell}</td>
+                        <td colspan="5" style="color:#94a3b8; font-style:italic; padding:12px;">
                             🔒 <b>${lockedBy}</b> 매니저가 잠금한 문의입니다. (담당자 외 열람 불가)
                         </td>
                         <td style="text-align:center;">
@@ -1175,6 +1178,7 @@ window.loadVipOrders = async () => {
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
                     <td>${managerBadge}</td>
+                    <td>${catBadgeCell}</td>
                     <td>${nameCell}</td>
                     <td>${phoneCell}</td>
                     <td style="font-size:13px; color:#475569; word-break:break-all;">${memoCell}</td>
