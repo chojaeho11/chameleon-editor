@@ -3046,9 +3046,9 @@ body {
     display: block !important;
     position: absolute;
     right: -120px;
-    bottom: -30px;
-    width: 160px;
-    max-width: 160px;
+    bottom: 70px;
+    width: 176px;
+    max-width: 176px;
     height: auto;
     animation: bounceUpDn 3s ease-in-out infinite;
     pointer-events: none;
