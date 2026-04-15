@@ -2788,22 +2788,7 @@ function updateSummary(prodTotal, addonTotal, total) {
     // ★ 배송 선택지: 카트 비어있지 않으면 항상 표시 (선택 후에도 변경 가능)
     const shAddRow = document.getElementById('cartShippingAddRow');
     if (shAddRow) shAddRow.style.display = (cartData.length === 0) ? 'none' : 'block';
-    // ★ 자동 사전선택: 허니콤 + 100만원 미만 → 수도권 유료설치 자동 체크 (사용자가 한 번도 만지지 않은 경우만)
-    try {
-        const _hcAuto = window._cartHasHoneycomb && window._cartHasHoneycomb();
-        const _totalAuto = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
-        const _userTouched = localStorage.getItem('chameleon_metro_install_touched') === '1';
-        if (_hcAuto && _totalAuto < 1000000 && _totalAuto > 0 && !_userTouched) {
-            const _alreadySet = localStorage.getItem('chameleon_metro_install') === '1';
-            const _hasOtherShip = (() => {
-                try { const s = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}'); return s.fee && s.fee !== 100000 && s.fee !== 200000; } catch(e) { return false; }
-            })();
-            if (!_alreadySet && !_hasOtherShip) {
-                localStorage.setItem('chameleon_metro_install', '1');
-                if (typeof _syncMetroFee === 'function') _syncMetroFee();
-            }
-        }
-    } catch(e) {}
+    // [자동 사전선택 제거됨] — 모든 사용자가 7개 배송 옵션 중 1개를 명시적으로 선택해야 결제 진행됨
     // 배송 버튼 매번 재렌더 (선택 강조 갱신 + DOM 누락 방지)
     if (window._renderCartShippingBtns) { try { window._renderCartShippingBtns(); } catch(e) { console.warn('shipping btns render', e); } }
 
