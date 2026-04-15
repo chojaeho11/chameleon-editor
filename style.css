@@ -132,9 +132,9 @@ button, input, textarea, select { font-family: inherit; }
     font-style: normal; margin-top: 10px; letter-spacing: 0;
 }
 @media (max-width: 768px) {
-    .hero-title .hero-tagline { font-size: 40px !important; font-weight: 900 !important; }
-    .hero-title span { font-size: 56px !important; font-weight: 900 !important; }
-    .hero-title .hero-min-order { font-size: 13px !important; }
+    .hero-title .hero-tagline { font-size: 20px !important; font-weight: 800 !important; }
+    .hero-title span { font-size: 52px !important; font-weight: 900 !important; }
+    .hero-title .hero-min-order { font-size: 12px !important; }
     .hero-mascot { display: none !important; }
 }
 .hero-mascot { display: none !important; }
