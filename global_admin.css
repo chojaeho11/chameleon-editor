@@ -235,8 +235,32 @@ input[type=checkbox], input[type=radio] { accent-color: #fcd34d; }
 h1, h2, h3, h4, h5 { color: #fcd34d; }
 small, .text-muted { color: #9ca3af !important; }
 
-/* 전역 글씨 밝기 (검은색/짙은 회색 → 흰색) */
-body, body * { color: #ffffff; }
+/* 전역 글씨 밝기 (흰색) */
+body, body * { color: #ffffff !important; }
+/* 버튼 내 텍스트는 버튼 자체의 색상 유지 */
+.btn-primary, .btn-sky, .btn-vip, .btn-success { color: #ffffff !important; }
+.btn-danger { color: #fecaca !important; }
+
+/* 인라인 밝은 배경(#f0fdf4, #fef3c7 등) 전부 다크로 강제 */
+[style*="background:#f0fdf4"], [style*="background: #f0fdf4"],
+[style*="background:#fef3c7"], [style*="background: #fef3c7"],
+[style*="background:#fefce8"], [style*="background: #fefce8"],
+[style*="background:#eff6ff"], [style*="background: #eff6ff"],
+[style*="background:#f0f9ff"], [style*="background: #f0f9ff"],
+[style*="background:#ecfeff"], [style*="background: #ecfeff"],
+[style*="background:#fdf2f8"], [style*="background: #fdf2f8"],
+[style*="background:#fff7ed"], [style*="background: #fff7ed"],
+[style*="background:#f5f3ff"], [style*="background: #f5f3ff"],
+[style*="background:#faf5ff"], [style*="background: #faf5ff"],
+[style*="background:#ede9fe"], [style*="background: #ede9fe"],
+[style*="background:#dbeafe"], [style*="background: #dbeafe"],
+[style*="background:#dcfce7"], [style*="background: #dcfce7"],
+[style*="background:#bbf7d0"], [style*="background: #bbf7d0"],
+[style*="background:#fee2e2"], [style*="background: #fee2e2"],
+[style*="background:#fecaca"], [style*="background: #fecaca"],
+[style*="background:#fed7aa"], [style*="background: #fed7aa"] {
+    background: #242a3d !important;
+}
 body h1, body h2, body h3, body h4, body h5, body h6 { color: #fcd34d !important; }
 body a { color: #93c5fd; }
 body a:hover { color: #fcd34d; }
@@ -253,7 +277,7 @@ img { background-color: transparent !important; }
 
 /* ===== 템플릿 & 로고 / 폰트 관리 섹션은 라이트 테마로 복원 ===== */
 #sec-templates, #sec-fonts { background: #f8fafc !important; padding: 20px; border-radius: 12px; }
-#sec-templates *, #sec-fonts * { color: #334155; }
+#sec-templates, #sec-templates *, #sec-fonts, #sec-fonts * { color: #334155 !important; }
 #sec-templates h1, #sec-templates h2, #sec-templates h3, #sec-templates h4, #sec-templates h5,
 #sec-fonts h1, #sec-fonts h2, #sec-fonts h3, #sec-fonts h4, #sec-fonts h5 { color: #1e293b !important; }
 #sec-templates .card, #sec-fonts .card { background: #ffffff !important; color: #334155 !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important; }
