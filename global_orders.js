@@ -1174,14 +1174,14 @@ window.loadVipOrders = async () => {
             }
 
             tbody.innerHTML += `
-                <tr style="${st === '대기중' || st === 'quote' ? 'background:#fff7ed;' : ''}">
+                <tr style="background:${st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a'};color:#e2e8f0;">
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
                     <td>${managerBadge}</td>
                     <td>${catBadgeCell}</td>
                     <td>${nameCell}</td>
                     <td>${phoneCell}</td>
-                    <td style="font-size:13px; color:#475569; word-break:break-all;">${memoCell}</td>
+                    <td style="font-size:13px; color:#cbd5e1; word-break:break-all;">${memoCell}</td>
                     <td>${filesHtml}</td>
                     <td style="text-align:center;">${statusBadge}</td>
                     <td style="text-align:center;">${actionHtml}</td>

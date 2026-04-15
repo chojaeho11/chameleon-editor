@@ -3,7 +3,7 @@
 body { margin: 0; display: flex; height: 100vh; font-family: 'Pretendard', sans-serif; background: #f1f5f9; color: #334155; overflow: hidden; }
 
 /* 사이드바 */
-.sidebar { width: 260px; background: #1e293b; color: white; display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; }
+.sidebar { width: 260px; background: #1e1b4b; color: white; display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; }
 .sidebar-header { padding: 25px 20px; font-weight: 800; font-size: 20px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; color: #818cf8; }
 .nav-menu { list-style: none; padding: 20px 10px; margin: 0; display: flex; flex-direction: column; gap: 5px; }
 .nav-item { padding: 12px 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 15px; color: #cbd5e1; }
