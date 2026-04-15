@@ -1085,15 +1085,39 @@ window.loadVipOrders = async () => {
         tbody.innerHTML = '';
         data.forEach(item => {
             const realFiles = item.files ? item.files.filter(f => f.type !== '_error_log') : [];
-            let filesHtml = realFiles.length ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:2px;">💾 ${f.name}</a>`).join('') : '<span style="color:#ccc;">파일 없음</span>';
+            let filesHtml = realFiles.length ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:2px; font-size:11px;">💾 ${f.name}</a>`).join('') : '<span style="color:#ccc;">파일 없음</span>';
+
+            // 잠금 처리: memo 내부에 [LOCK:base64pw:manager] 마커가 있으면 잠금 상태
+            const rawMemo = item.memo || '';
+            const lockMatch = rawMemo.match(/^\[LOCK:([^:]+):([^\]]+)\]\n?/);
+            const lockedBy = lockMatch ? lockMatch[2] : null;
+            const lockPw = lockMatch ? atob(lockMatch[1]) : null;
+            const cleanMemo = lockMatch ? rawMemo.replace(lockMatch[0], '') : rawMemo;
+            const unlocked = lockMatch ? sessionStorage.getItem('vipUnlock_' + item.id) === '1' : true;
+
+            // 담당 (컨택한 매니저 or preferred_manager)
+            const st = item.status || '';
+            let assignedManager = item.preferred_manager || '';
+            if (st.includes('상담중:')) assignedManager = st.replace('상담중:', '').trim();
+            else if (lockedBy) assignedManager = lockedBy;
+            const managerBadge = assignedManager
+                ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
+                : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
+
+            // 연락처 / 메모 마스킹
+            let phoneCell = item.customer_phone || '';
+            let memoCell = formatVipMemo(cleanMemo);
+            if (lockMatch && !unlocked) {
+                phoneCell = `<span style="color:#94a3b8;">🔒 잠김</span>`;
+                memoCell = `<div style="color:#94a3b8; font-style:italic;">🔒 ${lockedBy} 매니저가 잠금 처리한 문의입니다.</div>
+                            <button class="btn btn-outline btn-sm" style="font-size:11px;margin-top:4px;" onclick="unlockVip(${item.id})">🔓 열람</button>`;
+            }
 
             // 상태 + 관리 버튼
             let statusBadge = '';
             let actionHtml = '';
-            const st = item.status || '';
             if (st.includes('상담중:')) {
-                const who = st.replace('상담중:', '').trim();
-                statusBadge = `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;">💬 ${who} 상담중</span>`;
+                statusBadge = `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;">💬 ${assignedManager} 상담중</span>`;
                 actionHtml = `<button class="btn btn-sm" style="background:#15803d;color:#fff;border:none;font-size:11px;" onclick="updateVipStatus(${item.id},'확인됨')">✅ 완료</button>
                               <button class="btn btn-sm" style="background:#94a3b8;color:#fff;border:none;font-size:11px;margin-top:3px;" onclick="updateVipStatus(${item.id},'대기중')">↩ 대기</button>`;
             } else if (st === '확인됨') {
@@ -1103,15 +1127,23 @@ window.loadVipOrders = async () => {
                 statusBadge = `<span class="badge" style="background:#fee2e2;color:#ef4444;">대기중</span>`;
                 actionHtml = `<button class="btn btn-primary btn-sm" style="font-size:11px;" onclick="openVipAssignModal(${item.id})">확인</button>`;
             }
+            // 잠금 토글 버튼 (담당자 있을 때만)
+            if (assignedManager) {
+                if (lockMatch) {
+                    actionHtml += `<button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;margin-top:3px;" onclick="unlockVipPermanent(${item.id})">🔓 잠금해제</button>`;
+                } else {
+                    actionHtml += `<button class="btn btn-sm" style="background:#475569;color:#fff;border:none;font-size:11px;margin-top:3px;" onclick="lockVip(${item.id},'${assignedManager}')">🔒 잠금</button>`;
+                }
+            }
 
             tbody.innerHTML += `
                 <tr style="${st === '대기중' || st === 'quote' ? 'background:#fff7ed;' : ''}">
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
-                    <td><span class="badge">${item.preferred_manager || '미지정'}</span></td>
+                    <td>${managerBadge}</td>
                     <td style="font-weight:bold;">${item.customer_name}</td>
-                    <td>${item.customer_phone}</td>
-                    <td style="font-size:13px; color:#475569; max-width:300px; word-break:break-all;">${formatVipMemo(item.memo)}</td>
+                    <td>${phoneCell}</td>
+                    <td style="font-size:13px; color:#475569; word-break:break-all;">${memoCell}</td>
                     <td>${filesHtml}</td>
                     <td style="text-align:center;">${statusBadge}</td>
                     <td style="text-align:center;">${actionHtml}</td>
@@ -1155,10 +1187,51 @@ window.openVipAssignModal = (id) => {
 
 window.assignVipConsultant = async (id, name) => {
     const newStatus = '상담중: ' + name;
-    const { error } = await sb.from('vip_orders').update({ status: newStatus }).eq('id', id);
+    const { error } = await sb.from('vip_orders').update({ status: newStatus, preferred_manager: name }).eq('id', id);
     document.getElementById('vipAssignModal').style.display = 'none';
     if (error) { showToast('변경 실패: ' + error.message, 'error'); return; }
     showToast(`${name} 상담 배정 완료`, 'success');
+    loadVipOrders();
+};
+
+// VIP 잠금: 담당 매니저가 비번을 걸어 다른 사람이 메모/전화번호를 못 보게 함
+window.lockVip = async (id, manager) => {
+    const pw = prompt(`${manager} 매니저: 이 문의 잠금 비밀번호를 입력하세요. (본인만 기억)`);
+    if (!pw) return;
+    const { data: row, error: e1 } = await sb.from('vip_orders').select('memo').eq('id', id).single();
+    if (e1) { showToast('로드 실패', 'error'); return; }
+    const existing = (row.memo || '').replace(/^\[LOCK:[^\]]+\]\n?/, '');
+    const marker = `[LOCK:${btoa(pw)}:${manager}]\n`;
+    const { error } = await sb.from('vip_orders').update({ memo: marker + existing }).eq('id', id);
+    if (error) { showToast('잠금 실패: ' + error.message, 'error'); return; }
+    sessionStorage.setItem('vipUnlock_' + id, '1');
+    showToast('잠금 완료', 'success');
+    loadVipOrders();
+};
+
+window.unlockVip = async (id) => {
+    const { data: row } = await sb.from('vip_orders').select('memo').eq('id', id).single();
+    const m = (row?.memo || '').match(/^\[LOCK:([^:]+):([^\]]+)\]/);
+    if (!m) { sessionStorage.setItem('vipUnlock_' + id, '1'); loadVipOrders(); return; }
+    const pw = prompt(`${m[2]} 매니저가 잠금 처리한 문의입니다. 비밀번호를 입력하세요.`);
+    if (!pw) return;
+    if (btoa(pw) !== m[1]) { showToast('비밀번호가 일치하지 않습니다.', 'error'); return; }
+    sessionStorage.setItem('vipUnlock_' + id, '1');
+    showToast('열람 허용', 'success');
+    loadVipOrders();
+};
+
+window.unlockVipPermanent = async (id) => {
+    const { data: row } = await sb.from('vip_orders').select('memo').eq('id', id).single();
+    const m = (row?.memo || '').match(/^\[LOCK:([^:]+):([^\]]+)\]\n?/);
+    if (!m) return;
+    const pw = prompt(`${m[2]} 매니저의 잠금을 해제하려면 비밀번호를 입력하세요.`);
+    if (!pw) return;
+    if (btoa(pw) !== m[1]) { showToast('비밀번호가 일치하지 않습니다.', 'error'); return; }
+    const cleaned = row.memo.replace(m[0], '');
+    await sb.from('vip_orders').update({ memo: cleaned }).eq('id', id);
+    sessionStorage.removeItem('vipUnlock_' + id);
+    showToast('잠금 해제 완료', 'success');
     loadVipOrders();
 };
 
