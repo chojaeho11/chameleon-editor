@@ -758,9 +758,9 @@ function buildPanelUI() {
             </div>
         </div>
         <div id="advQQBar" style="display:flex;gap:6px;padding:8px 10px;background:linear-gradient(90deg,#312e81,#1e1b4b);border-bottom:1px solid #4338ca;">
-            <button type="button" class="adv-qq-btn" data-qqcat="허니콤" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e293b;font-weight:800;font-size:12px;cursor:pointer;">🍯 허니콤</button>
-            <button type="button" class="adv-qq-btn" data-qqcat="종이매대" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;font-weight:800;font-size:12px;cursor:pointer;">📦 종이매대</button>
-            <button type="button" class="adv-qq-btn" data-qqcat="패브릭" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#f472b6,#db2777);color:#fff;font-weight:800;font-size:12px;cursor:pointer;">🧵 패브릭</button>
+            <button type="button" class="adv-qq-btn" data-qqcat="허니콤" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e293b;font-weight:800;font-size:12px;cursor:pointer;">🍯 ${_qqT().catHoneycomb}</button>
+            <button type="button" class="adv-qq-btn" data-qqcat="종이매대" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;font-weight:800;font-size:12px;cursor:pointer;">📦 ${_qqT().catPaper}</button>
+            <button type="button" class="adv-qq-btn" data-qqcat="패브릭" style="flex:1;padding:8px 6px;border:none;border-radius:10px;background:linear-gradient(135deg,#f472b6,#db2777);color:#fff;font-weight:800;font-size:12px;cursor:pointer;">🧵 ${_qqT().catFabric}</button>
         </div>
         <div class="adv-chat-area" id="advChatArea"></div>
         <div class="adv-img-preview" id="advImgPreview" style="display:none">
@@ -865,49 +865,67 @@ function buildPanelUI() {
     });
 }
 
+const QQ_I18N = {
+    kr: { title:'빠른견적서', desc:'아래 항목을 입력하시면 담당 매니저가 빠르게 견적을 보내드립니다.', name:'성함', phone:'연락처', budget:'예산금액', memo:'요청사항', memoPh:'수량/사이즈/납품일/용도 등 자세히', files:'파일 업로드', submit:'견적 요청 보내기', sending:'⏳ 전송 중...', connErr:'연결 오류. 새로고침 후 다시 시도해주세요.', upErr:'파일 업로드 실패: ', sendErr:'전송 실패: ', success:'✅ {cat} 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.', b1:'10만원', b2:'100만원', b3:'500만원', b4:'1000만원', catHoneycomb:'허니콤', catPaper:'종이매대', catFabric:'패브릭' },
+    ja: { title:'クイック見積', desc:'以下の項目を入力いただくと、担当マネージャーが迅速にお見積りをお送りします。', name:'お名前', phone:'電話番号', budget:'ご予算', memo:'ご要望', memoPh:'数量/サイズ/納期/用途など詳しく', files:'ファイルアップロード', submit:'見積りを依頼する', sending:'⏳ 送信中...', connErr:'接続エラー。再読み込みしてください。', upErr:'ファイルアップロード失敗: ', sendErr:'送信失敗: ', success:'✅ {cat} の見積依頼を受付ました。担当者が連絡いたします。', b1:'10万円', b2:'100万円', b3:'500万円', b4:'1000万円', catHoneycomb:'ハニカム', catPaper:'紙製什器', catFabric:'ファブリック' },
+    en: { title:'Quick Quote', desc:'Fill in the fields below and our manager will send you a quote quickly.', name:'Name', phone:'Phone', budget:'Budget', memo:'Requests', memoPh:'Qty / size / deadline / purpose, etc.', files:'File Upload', submit:'Send Quote Request', sending:'⏳ Sending...', connErr:'Connection error. Please refresh and try again.', upErr:'Upload failed: ', sendErr:'Send failed: ', success:'✅ {cat} quote request received. Our manager will contact you shortly.', b1:'$100', b2:'$1,000', b3:'$5,000', b4:'$10,000', catHoneycomb:'Honeycomb', catPaper:'Paper Display', catFabric:'Fabric' },
+    zh: { title:'快速报价', desc:'请填写下列信息，负责人将为您快速报价。', name:'姓名', phone:'联系方式', budget:'预算', memo:'需求', memoPh:'数量/尺寸/交期/用途等详细说明', files:'文件上传', submit:'提交报价请求', sending:'⏳ 发送中...', connErr:'连接错误。请刷新后重试。', upErr:'上传失败: ', sendErr:'发送失败: ', success:'✅ {cat} 报价请求已提交。负责人将尽快联系您。', b1:'¥700', b2:'¥7,000', b3:'¥35,000', b4:'¥70,000', catHoneycomb:'蜂窝板', catPaper:'纸制展架', catFabric:'面料' },
+    es: { title:'Cotización Rápida', desc:'Complete los campos y nuestro gerente le enviará una cotización rápidamente.', name:'Nombre', phone:'Teléfono', budget:'Presupuesto', memo:'Solicitudes', memoPh:'Cantidad / tamaño / plazo / uso, etc.', files:'Subir archivos', submit:'Enviar solicitud', sending:'⏳ Enviando...', connErr:'Error de conexión. Actualice e intente de nuevo.', upErr:'Error al subir: ', sendErr:'Error al enviar: ', success:'✅ Solicitud de cotización {cat} recibida. Nuestro gerente le contactará pronto.', b1:'$100', b2:'$1,000', b3:'$5,000', b4:'$10,000', catHoneycomb:'Panal', catPaper:'Display de papel', catFabric:'Tela' },
+    de: { title:'Schnellangebot', desc:'Füllen Sie die Felder aus und unser Manager sendet Ihnen schnell ein Angebot.', name:'Name', phone:'Telefon', budget:'Budget', memo:'Anfragen', memoPh:'Menge / Größe / Termin / Zweck usw.', files:'Datei-Upload', submit:'Angebotsanfrage senden', sending:'⏳ Senden...', connErr:'Verbindungsfehler. Bitte aktualisieren.', upErr:'Upload fehlgeschlagen: ', sendErr:'Senden fehlgeschlagen: ', success:'✅ {cat} Angebotsanfrage erhalten. Unser Manager meldet sich in Kürze.', b1:'100€', b2:'1.000€', b3:'5.000€', b4:'10.000€', catHoneycomb:'Wabe', catPaper:'Papierdisplay', catFabric:'Stoff' },
+    fr: { title:'Devis Rapide', desc:'Remplissez les champs, notre gérant vous enverra rapidement un devis.', name:'Nom', phone:'Téléphone', budget:'Budget', memo:'Demandes', memoPh:'Quantité / taille / délai / utilisation, etc.', files:'Téléverser fichiers', submit:'Envoyer la demande', sending:'⏳ Envoi...', connErr:'Erreur de connexion. Veuillez actualiser.', upErr:'Échec téléversement: ', sendErr:'Échec envoi: ', success:'✅ Demande de devis {cat} reçue. Notre gérant vous contactera rapidement.', b1:'100€', b2:'1 000€', b3:'5 000€', b4:'10 000€', catHoneycomb:'Nid d\'abeille', catPaper:'Présentoir papier', catFabric:'Tissu' },
+    ar: { title:'عرض سعر سريع', desc:'املأ الحقول أدناه وسيرسل مديرنا عرض سعر بسرعة.', name:'الاسم', phone:'الهاتف', budget:'الميزانية', memo:'الطلبات', memoPh:'الكمية / الحجم / الموعد / الغرض، إلخ.', files:'رفع الملفات', submit:'إرسال طلب العرض', sending:'⏳ جارٍ الإرسال...', connErr:'خطأ في الاتصال. يُرجى التحديث.', upErr:'فشل الرفع: ', sendErr:'فشل الإرسال: ', success:'✅ تم استلام طلب عرض {cat}. سيتصل بك مديرنا قريبًا.', b1:'100 دولار', b2:'1,000 دولار', b3:'5,000 دولار', b4:'10,000 دولار', catHoneycomb:'خلية النحل', catPaper:'عرض ورقي', catFabric:'قماش' }
+};
+function _qqT() {
+    const L = (typeof getLang === 'function' ? getLang() : 'kr') || 'kr';
+    return QQ_I18N[L] || QQ_I18N.kr;
+}
+function _qqLocalCat(catKey) {
+    const T = _qqT();
+    const map = { '허니콤': T.catHoneycomb, '종이매대': T.catPaper, '패브릭': T.catFabric };
+    return map[catKey] || catKey;
+}
+
 function openQQSurvey(cat) {
-    let modal = document.getElementById('qqSurveyModal');
-    if (modal && modal.parentNode !== document.body) document.body.appendChild(modal);
-    if (!modal) {
-        // 폴백: 모달 직접 생성
-        modal = document.createElement('div');
-        modal.id = 'qqSurveyModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:2147483647;display:none;align-items:center;justify-content:center;padding:12px;';
-        modal.innerHTML = `
-            <div style="background:#fff;border-radius:20px;padding:24px;width:480px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
-                    <h3 id="qqModalTitle" style="margin:0;font-size:18px;font-weight:800;color:#1e293b;">🚀 빠른견적서</h3>
-                    <button type="button" onclick="document.getElementById('qqSurveyModal').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;">&times;</button>
-                </div>
-                <div style="font-size:12px;color:#64748b;margin-bottom:14px;">아래 항목을 입력하시면 담당 매니저가 빠르게 견적을 보내드립니다.</div>
-                <form id="qqSurveyForm" onsubmit="return window.submitQuickQuote(event)">
-                    <input type="hidden" id="qqCategory" name="category" value="">
-                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">성함 *</label><input type="text" name="name" required style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
-                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">연락처 *</label><input type="tel" name="phone" required placeholder="010-0000-0000" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
-                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">예산금액</label>
-                        <input type="hidden" name="budget" id="qqBudgetValue" value="">
-                        <div id="qqBudgetBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;">
-                            <button type="button" class="qq-budget-btn" data-budget="10만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">10만원</button>
-                            <button type="button" class="qq-budget-btn" data-budget="100만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">100만원</button>
-                            <button type="button" class="qq-budget-btn" data-budget="500만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">500만원</button>
-                            <button type="button" class="qq-budget-btn" data-budget="1000만원" style="padding:10px 4px;border:1.5px solid #fbbf24;border-radius:10px;background:#fef3c7;color:#78350f;font-weight:800;font-size:13px;cursor:pointer;">1000만원</button>
-                        </div>
+    const T = _qqT();
+    // 기존 모달 제거하고 매번 새로 생성 (언어 전환 대응)
+    const old = document.getElementById('qqSurveyModal');
+    if (old) old.remove();
+    const modal = document.createElement('div');
+    modal.id = 'qqSurveyModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:2147483647;display:none;align-items:center;justify-content:center;padding:12px;';
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:20px;padding:24px;width:480px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
+                <h3 id="qqModalTitle" style="margin:0;font-size:18px;font-weight:800;color:#1e293b;">🚀 ${T.title}</h3>
+                <button type="button" onclick="document.getElementById('qqSurveyModal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;">&times;</button>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-bottom:14px;">${T.desc}</div>
+            <form id="qqSurveyForm" onsubmit="return window.submitQuickQuote(event)">
+                <input type="hidden" id="qqCategory" name="category" value="">
+                <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.name} *</label><input type="text" name="name" required style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.phone} *</label><input type="tel" name="phone" required placeholder="+82 10 1234 5678" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.budget}</label>
+                    <input type="hidden" name="budget" id="qqBudgetValue" value="">
+                    <div id="qqBudgetBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;">
+                        <button type="button" class="qq-budget-btn" data-budget="10만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">${T.b1}</button>
+                        <button type="button" class="qq-budget-btn" data-budget="100만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">${T.b2}</button>
+                        <button type="button" class="qq-budget-btn" data-budget="500만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">${T.b3}</button>
+                        <button type="button" class="qq-budget-btn" data-budget="1000만원" style="padding:10px 4px;border:1.5px solid #fbbf24;border-radius:10px;background:#fef3c7;color:#78350f;font-weight:800;font-size:13px;cursor:pointer;">${T.b4}</button>
                     </div>
-                    <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">요청사항</label><textarea name="memo" rows="3" placeholder="수량/사이즈/납품일/용도 등 자세히" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea></div>
-                    <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:700;color:#334155;">파일 업로드</label><input type="file" name="files" multiple style="width:100%;padding:8px;border:1.5px dashed #cbd5e1;border-radius:10px;margin-top:4px;background:#f8fafc;"></div>
-                    <button type="submit" style="width:100%;padding:14px;background:linear-gradient(135deg,#312e81,#1e1b4b);color:#fff;font-weight:800;font-size:15px;border:none;border-radius:12px;cursor:pointer;">견적 요청 보내기</button>
-                </form>
-            </div>`;
-        document.body.appendChild(modal);
-    }
-    // z-index 최상위 보장
-    modal.style.zIndex = '2147483647';
+                </div>
+                <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.memo}</label><textarea name="memo" rows="3" placeholder="${T.memoPh}" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea></div>
+                <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.files}</label><input type="file" name="files" multiple style="width:100%;padding:8px;border:1.5px dashed #cbd5e1;border-radius:10px;margin-top:4px;background:#f8fafc;"></div>
+                <button type="submit" style="width:100%;padding:14px;background:linear-gradient(135deg,#312e81,#1e1b4b);color:#fff;font-weight:800;font-size:15px;border:none;border-radius:12px;cursor:pointer;">${T.submit}</button>
+            </form>
+        </div>`;
+    document.body.appendChild(modal);
+
     const form = modal.querySelector('#qqSurveyForm');
     const catInput = modal.querySelector('#qqCategory');
     const title = modal.querySelector('#qqModalTitle');
     if (form) form.reset();
     if (catInput) catInput.value = cat;
-    if (title) title.textContent = '🚀 ' + cat + ' 빠른견적서';
+    if (title) title.textContent = '🚀 ' + _qqLocalCat(cat) + ' ' + T.title;
     // 예산 버튼 이벤트 바인딩
     modal.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(b => {
         const is1000 = b.dataset.budget === '1000만원';
@@ -933,10 +951,11 @@ function openQQSurvey(cat) {
     // submitQuickQuote: 파일 업로드 포함 버전으로 항상 재정의
     window.submitQuickQuote = async function(ev) {
         ev.preventDefault();
+        const T = _qqT();
         const form = ev.target;
         const btn = form.querySelector('button[type=submit]');
         const origLabel = btn ? btn.textContent : '';
-        if (btn) { btn.disabled = true; btn.textContent = '⏳ 전송 중...'; }
+        if (btn) { btn.disabled = true; btn.textContent = T.sending; }
         const fd = new FormData(form);
         const c = fd.get('category');
         const name = (fd.get('name')||'').trim();
@@ -952,7 +971,7 @@ function openQQSurvey(cat) {
         const body = lockPrefix + [`[QQ:${c}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
         try {
             const sb = window.sb || window.supabase;
-            if (!sb) { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
+            if (!sb) { alert(T.connErr); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
             const uploaded = [];
             if (fileInput && fileInput.files && fileInput.files.length) {
                 const ts = Date.now(); const rnd = Math.random().toString(36).substring(2,8);
@@ -961,7 +980,7 @@ function openQQSurvey(cat) {
                     const ext = (f.name.split('.').pop() || 'bin').replace(/[^a-zA-Z0-9]/g,'');
                     const path = `vip_uploads/QQ_${ts}_${rnd}_${i}.${ext}`;
                     const { error: upErr } = await sb.storage.from('orders').upload(path, f);
-                    if (upErr) { alert('파일 업로드 실패: '+upErr.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
+                    if (upErr) { alert(T.upErr+upErr.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
                     const { data: pub } = sb.storage.from('orders').getPublicUrl(path);
                     uploaded.push({ name: f.name, url: pub.publicUrl });
                 }
@@ -969,10 +988,10 @@ function openQQSurvey(cat) {
             const payload = { customer_name: name, customer_phone: phone, memo: body, files: uploaded, status: autoManager ? ('상담중: ' + autoManager) : '대기중' };
             if (autoManager) payload.preferred_manager = autoManager;
             const { error } = await sb.from('vip_orders').insert(payload);
-            if (error) { alert('전송 실패: ' + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
-            document.getElementById('qqSurveyModal').style.display = 'none';
-            alert('✅ ' + c + ' 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.');
-        } catch(e) { alert('오류: ' + e.message); }
+            if (error) { alert(T.sendErr + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
+            const mm = document.getElementById('qqSurveyModal'); if (mm) mm.remove();
+            alert(T.success.replace('{cat}', _qqLocalCat(c)));
+        } catch(e) { alert('Error: ' + e.message); }
         if(btn){btn.disabled=false;btn.textContent=origLabel;}
         return false;
     };
