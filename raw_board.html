@@ -441,13 +441,13 @@ async function submitPdSample() {
 </section>
 <style>
 @media (max-width: 768px) {
-    .video-section { flex-direction:column !important; gap:20px !important; padding:32px 0 24px !important; }
-    .video-section .video-text { flex:unset !important; width:100% !important; padding-left:0 !important; text-align:center; }
-    .video-section .video-text h2 { font-size:28px !important; }
-    .video-section .video-text p { font-size:16px !important; }
-    .video-section .video-text button { margin:0 auto; }
-    .video-section .video-text { padding:0 16px !important; }
-    .video-section .video-wrap { flex:unset !important; width:100vw !important; margin-left:-16px; }
+    .video-section { flex-direction:column !important; gap:20px !important; padding:32px 16px 24px !important; }
+    .video-section .video-text { flex:unset !important; width:100% !important; max-width:420px !important; margin:0 auto !important; padding:0 !important; text-align:center !important; }
+    .video-section .video-text h2 { font-size:26px !important; }
+    .video-section .video-text p { font-size:15px !important; text-align:center !important; }
+    .video-section .video-text > div { text-align:left; max-width:320px; margin-left:auto !important; margin-right:auto !important; }
+    .video-section .video-text button { margin:0 auto !important; display:inline-flex !important; }
+    .video-section .video-wrap { flex:unset !important; width:100% !important; max-width:420px !important; margin:0 auto !important; }
 }
 </style>
 
