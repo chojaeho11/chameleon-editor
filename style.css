@@ -136,10 +136,12 @@ button, input, textarea, select { font-family: inherit; }
     .hero-title span { font-size: 44px !important; font-weight: 900 !important; line-height: 1.1 !important; }
     .hero-title .hero-min-order { font-size: 12px !important; }
 }
-/* 히어로 마스코트 완전 숨김 (hero-section 범위 안에서만) */
-.hero-section img.hero-mascot,
-.hero-section > div > img,
-.hero-mascot { display: none !important; visibility: hidden !important; }
+/* 히어로 마스코트: 모바일만 숨김, PC는 표시 */
+@media (max-width: 768px) {
+    .hero-section img.hero-mascot,
+    .hero-section > div > img,
+    .hero-mascot { display: none !important; visibility: hidden !important; }
+}
 .hero-cta-row {
     display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
 }
