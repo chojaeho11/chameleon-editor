@@ -1091,16 +1091,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="tel" name="phone" required placeholder="010-0000-0000" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;">
                 </div>
                 <div style="margin-bottom:10px;">
-                    <label style="font-size:12px;font-weight:700;color:#334155;">수량 / 사이즈</label>
-                    <input type="text" name="quantity" placeholder="예: 100개, 1200x600mm" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;">
+                    <label style="font-size:12px;font-weight:700;color:#334155;">예산금액</label>
+                    <input type="text" name="budget" placeholder="예: 100만원, 미정" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;">
                 </div>
                 <div style="margin-bottom:10px;">
-                    <label style="font-size:12px;font-weight:700;color:#334155;">사용 용도 / 납품일</label>
-                    <input type="text" name="purpose" placeholder="예: 전시 부스, 12월 20일 납품" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;">
+                    <label style="font-size:12px;font-weight:700;color:#334155;">요청사항</label>
+                    <textarea name="memo" rows="3" placeholder="수량/사이즈/납품일/용도 등 자세히" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea>
                 </div>
                 <div style="margin-bottom:14px;">
-                    <label style="font-size:12px;font-weight:700;color:#334155;">요청사항</label>
-                    <textarea name="memo" rows="3" placeholder="자세한 요청사항을 입력해주세요" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea>
+                    <label style="font-size:12px;font-weight:700;color:#334155;">파일 업로드 (다중 선택 가능)</label>
+                    <input type="file" name="files" multiple style="width:100%;padding:8px;border:1.5px dashed #cbd5e1;border-radius:10px;margin-top:4px;background:#f8fafc;">
                 </div>
                 <button type="submit" style="width:100%;padding:14px;background:linear-gradient(135deg,#312e81,#1e1b4b);color:#fff;font-weight:800;font-size:15px;border:none;border-radius:12px;cursor:pointer;">견적 요청 보내기</button>
             </form>
@@ -1121,28 +1121,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         window.submitQuickQuote = async function(ev) {
             ev.preventDefault();
-            const fd = new FormData(ev.target);
+            const form = ev.target;
+            const btn = form.querySelector('button[type=submit]');
+            const origLabel = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ 전송 중...'; }
+            const fd = new FormData(form);
             const cat = fd.get('category');
             const name = (fd.get('name')||'').trim();
             const phone = (fd.get('phone')||'').trim();
-            const qty = (fd.get('quantity')||'').trim();
-            const purpose = (fd.get('purpose')||'').trim();
+            const budget = (fd.get('budget')||'').trim();
             const memo = (fd.get('memo')||'').trim();
-            const body = [`[QQ:${cat}]`, qty && `수량/사이즈: ${qty}`, purpose && `용도/납품일: ${purpose}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
+            const fileInput = form.querySelector('input[name=files]');
+            const body = [`[QQ:${cat}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
             try {
                 const sb = window.sb || window.supabase;
-                if (!sb) { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); return false; }
+                if (!sb) { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
+                const uploaded = [];
+                if (fileInput && fileInput.files && fileInput.files.length) {
+                    const ts = Date.now(); const rnd = Math.random().toString(36).substring(2,8);
+                    for (let i=0; i<fileInput.files.length; i++) {
+                        const f = fileInput.files[i];
+                        const ext = (f.name.split('.').pop() || 'bin').replace(/[^a-zA-Z0-9]/g,'');
+                        const path = `vip_uploads/QQ_${ts}_${rnd}_${i}.${ext}`;
+                        const { error: upErr } = await sb.storage.from('orders').upload(path, f);
+                        if (upErr) { alert('파일 업로드 실패: '+upErr.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
+                        const { data: pub } = sb.storage.from('orders').getPublicUrl(path);
+                        uploaded.push({ name: f.name, url: pub.publicUrl });
+                    }
+                }
                 const { error } = await sb.from('vip_orders').insert({
                     customer_name: name,
                     customer_phone: phone,
                     memo: body,
-                    files: [],
+                    files: uploaded,
                     status: '대기중'
                 });
-                if (error) { alert('전송 실패: ' + error.message); return false; }
+                if (error) { alert('전송 실패: ' + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
                 document.getElementById('qqSurveyModal').style.display = 'none';
                 alert('✅ ' + cat + ' 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.');
             } catch(e) { alert('오류: ' + e.message); }
+            if(btn){btn.disabled=false;btn.textContent=origLabel;}
             return false;
         };
     })();
