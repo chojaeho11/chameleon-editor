@@ -822,6 +822,35 @@ function hasHoneycombInCart() {
     return cartData.some(item => isHoneycombProduct(item.product));
 }
 
+// ── 허니콤 택배 불가 판정 ──
+// 정책: 허니콤보드 제품군은 기본적으로 용차/설치배송만 가능.
+// 예외: 허니콤 배너(hb_bn_*), 자유인쇄커팅(hb_pt_*) → 최대 치수 180cm 이하일 때만 택배 허용.
+function isHoneycombCourierEligible(item) {
+    if (!item || !item.product) return false;
+    const p = item.product;
+    const code = String(p.code || p.product_key || '').toLowerCase();
+    if (!(code.startsWith('hb_bn') || code.startsWith('hb_pt'))) return false;
+    // 치수 체크 (mm 단위). width_mm/height_mm 또는 item._custW/_custH 등 다양한 필드 커버
+    const dims = [
+        p.width_mm, p.height_mm,
+        item.width_mm, item.height_mm,
+        item._custW, item._custH,
+        item.w_mm, item.h_mm
+    ].map(v => parseInt(v) || 0).filter(v => v > 0);
+    if (dims.length === 0) return true; // 치수 정보 없으면 허용 (판단 불가)
+    const maxDim = Math.max(...dims);
+    return maxDim <= 1800; // 1800mm = 180cm
+}
+function cartBlocksCourier() {
+    // 카트에 '택배 불가' 허니콤 아이템이 하나라도 있으면 true
+    return cartData.some(item => {
+        if (!isHoneycombProduct(item.product)) return false;
+        return !isHoneycombCourierEligible(item);
+    });
+}
+window.cartBlocksCourier = cartBlocksCourier;
+window.isHoneycombCourierEligible = isHoneycombCourierEligible;
+
 // ── 보드류 감지 (허니콤보드, 포맥스, 폼보드) ──
 function isBoardProduct(product) {
     if (!product) return false;
@@ -2206,21 +2235,27 @@ async function addCanvasToCart() {
     window.pendingSelectedAddons = null;
     window.pendingSelectedAddonQtys = null;
 
-    // ★ 에디터 경로 스마트 배송 디폴트: 배송 옵션이 아직 없을 때 상품 타입에 맞는 기본 배송을 미리 선택
+    // ★ 에디터 경로 스마트 배송 디폴트
     // - 허니콤보드/허니콤 가벽 → 수도권 유료설치 10만원 (지방은 고객이 변경 가능)
     // - 기타(패브릭 등) → 기타제품 일반택배 5천원
+    // - 가벽이 카트에 있는데 택배(5000/30000)가 선택돼 있으면 설치배송으로 강제 전환 (가벽은 택배 불가)
     try {
-        const _existingFee = (window._nonMetroFeeApplied || 0) ||
-            (JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}').fee || 0);
+        const _sdObj = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+        const _curFee = (window._nonMetroFeeApplied || 0) || (_sdObj.fee || 0);
         const _metroPicked = localStorage.getItem('chameleon_metro_install') === '1' ||
             localStorage.getItem('chameleon_metro_removal') === '1';
-        if (!_existingFee && !_metroPicked && typeof hasHoneycombInCart === 'function') {
+        const _blocksCourier = (typeof cartBlocksCourier === 'function') && cartBlocksCourier();
+        const _invalidCourier = _blocksCourier && (_curFee === 5000 || _curFee === 30000);
+        if (_invalidCourier) {
+            // 가벽 담긴 상태에서 택배 선택돼 있으면 제거 후 수도권 설치로 전환
+            if (typeof window._removeCartShipping === 'function') window._removeCartShipping();
+            localStorage.setItem('chameleon_metro_install', '1');
+            if (typeof _syncMetroFee === 'function') _syncMetroFee();
+        } else if (!_curFee && !_metroPicked && typeof hasHoneycombInCart === 'function') {
             if (hasHoneycombInCart()) {
-                // 수도권 유료설치 기본값
                 localStorage.setItem('chameleon_metro_install', '1');
                 if (typeof _syncMetroFee === 'function') _syncMetroFee();
             } else if (cartData.length > 0) {
-                // 일반 상품(패브릭 등) → 일반택배 5천원 기본
                 if (typeof window._addCartShipping === 'function') {
                     window._addCartShipping(5000, '기타제품 일반택배');
                 }

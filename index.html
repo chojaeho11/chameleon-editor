@@ -5210,12 +5210,20 @@ async function handleSubReturn() {
                             try { var _sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping')||'{}'); _curFee = _sd.fee||0; } catch(e){}
                             var _metroInst = localStorage.getItem('chameleon_metro_install') === '1';
                             var _metroRem  = localStorage.getItem('chameleon_metro_removal') === '1';
+                            // ★ 허니콤보드 제품군은 기본적으로 택배 불가 (허니콤 배너/자유인쇄커팅 180cm 이하만 예외)
+                            var _wallOnly = !!(window.cartBlocksCourier && window.cartBlocksCourier());
+                            var _courierFees = { 30000: 1, 5000: 1 };
                             btns.forEach(function(b){
                                 var btn=document.createElement('button');
                                 btn.dataset.fee = b.fee;
                                 var isMetroInst = (b.fee === 100000);
                                 var isMetroRem  = (b.fee === 100001);
-                                if (isMetroInst) btn.onclick = function(){ window._toggleMetroInstall(); };
+                                var isCourierBlocked = _wallOnly && _courierFees[b.fee];
+                                if (isCourierBlocked) {
+                                    btn.onclick = function(){
+                                        if (window.showToast) window.showToast('허니콤보드 제품은 용차/설치배송만 가능합니다. (배너·자유인쇄커팅 180cm 이하만 택배 가능)', 'warn');
+                                    };
+                                } else if (isMetroInst) btn.onclick = function(){ window._toggleMetroInstall(); };
                                 else if (isMetroRem) btn.onclick = function(){ window._toggleMetroRemoval(); };
                                 else btn.onclick = function(){
                                     localStorage.removeItem('chameleon_metro_install');
@@ -5224,9 +5232,14 @@ async function handleSubReturn() {
                                 };
                                 btn.textContent=(b[l]||b['en']);
                                 var isSel = isMetroInst ? _metroInst : (isMetroRem ? _metroRem : (b.fee === _curFee && !_metroInst && !_metroRem));
-                                btn.style.cssText = isSel
-                                    ? 'padding:14px 8px;border:3px solid #059669;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;width:100%;min-width:0;text-align:center;box-shadow:0 4px 12px rgba(16,185,129,0.4);transform:scale(1.02);line-height:1.3;word-break:keep-all;'
-                                    : 'padding:14px 8px;border:2px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;min-width:0;text-align:center;transition:all 0.15s;line-height:1.3;word-break:keep-all;';
+                                if (isCourierBlocked) {
+                                    btn.style.cssText = 'padding:14px 8px;border:2px dashed #cbd5e1;background:#f1f5f9;color:#94a3b8;border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;width:100%;min-width:0;text-align:center;line-height:1.3;word-break:keep-all;opacity:0.6;text-decoration:line-through;';
+                                    btn.title = '허니콤보드 제품은 용차/설치배송만 가능 (배너·자유인쇄커팅 180cm 이하만 택배 가능)';
+                                } else {
+                                    btn.style.cssText = isSel
+                                        ? 'padding:14px 8px;border:3px solid #059669;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;width:100%;min-width:0;text-align:center;box-shadow:0 4px 12px rgba(16,185,129,0.4);transform:scale(1.02);line-height:1.3;word-break:keep-all;'
+                                        : 'padding:14px 8px;border:2px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;min-width:0;text-align:center;transition:all 0.15s;line-height:1.3;word-break:keep-all;';
+                                }
                                 box.appendChild(btn);
                             });
                         };
@@ -6040,7 +6053,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
 <script type="module" src="./export.js?v=424"></script>
-<script type="module" src="./order.js?v=444"></script>
+<script type="module" src="./order.js?v=445"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>
 <script type="module" src="./ppt-mode.js?v=424"></script>
@@ -7268,7 +7281,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=444'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=445'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
@@ -12214,7 +12227,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=444');
+                    const m = await import('./order.js?v=445');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -12284,7 +12297,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=444').then(m => {
+            import('./order.js?v=445').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -12885,7 +12898,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=444').then(m => {
+        import('./order.js?v=445').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17416,7 +17429,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=444').then(function(mod) {
+            import('./order.js?v=445').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
