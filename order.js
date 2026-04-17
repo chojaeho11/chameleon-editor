@@ -3593,6 +3593,36 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 // [수정됨] 최종 결제 버튼 클릭 시 실행
 // ============================================================
 async function processFinalPayment() {
+    // ★ 배송 옵션 가드: 100만원 미만 주문은 배송 옵션 1개 이상 필수 (모든 결제 경로 공통)
+    try {
+        const _shipExempt = cartData.some(it => {
+            const c = String((it.product && (it.product.code || it.product.product_key || it.product.id)) || '');
+            return c === '21355677' || c === '21355677_copy';
+        });
+        const _cartTotal = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
+        if (_cartTotal > 0 && _cartTotal < 1000000 && !_shipExempt) {
+            let _hasShip = false;
+            try {
+                const _sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+                if (_sd.fee && _sd.fee > 0) _hasShip = true;
+            } catch(e) {}
+            if (!_hasShip && (localStorage.getItem('chameleon_metro_install') === '1' || localStorage.getItem('chameleon_metro_removal') === '1')) _hasShip = true;
+            if (!_hasShip) {
+                const _msg = { kr:'배송 옵션을 선택해주세요. (100만원 미만은 배송 방법 선택 필수)', ja:'配送オプションを選択してください', en:'Please select a shipping option', zh:'请选择配送方式', es:'Seleccione una opción de envío', de:'Bitte Versandoption wählen', fr:'Veuillez sélectionner une option d\'expédition', ar:'يرجى اختيار خيار الشحن' };
+                showToast(_msg[CURRENT_LANG] || _msg['en'], 'warn');
+                try { document.getElementById('checkoutModal').style.display = 'none'; } catch(e) {}
+                const _box = document.getElementById('cartShippingBtns');
+                if (_box) {
+                    _box.scrollIntoView({ behavior:'smooth', block:'center' });
+                    _box.style.outline = '3px solid #ef4444';
+                    _box.style.borderRadius = '10px';
+                    setTimeout(() => { _box.style.outline = ''; }, 2500);
+                }
+                return;
+            }
+        }
+    } catch(e) { console.warn('[shipping guard]', e); }
+
     // ★ 미로그인 시 가입 유도 (결제 정보 유지)
     if (!currentUser) {
         // 소셜 로그인 대비: 결제 상태를 sessionStorage에 보존
