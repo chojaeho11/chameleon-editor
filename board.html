@@ -470,17 +470,30 @@
         }
 
         /* Quill 툴바 커스텀 */
-        .ql-toolbar.ql-snow { 
-            border-top-left-radius: 10px; 
-            border-top-right-radius: 10px; 
-            border-color: #e2e8f0; 
-            background: #f8fafc; 
+        .ql-toolbar.ql-snow {
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border-color: #e2e8f0;
+            background: #f8fafc;
         }
         .ql-container.ql-snow {
             border-bottom-left-radius: 10px;
             border-bottom-right-radius: 10px;
             border-color: #e2e8f0;
             font-family: 'Pretendard';
+        }
+        /* Quill 1.3.6 ql-video 버튼 사이즈 강제 (브라우저/CSS 엣지케이스 대응) */
+        .ql-toolbar.ql-snow button.ql-video {
+            width: 28px !important;
+            height: 24px !important;
+            padding: 3px 5px !important;
+            display: inline-block !important;
+            float: left !important;
+        }
+        .ql-toolbar.ql-snow button.ql-video svg {
+            width: 18px;
+            height: 18px;
+            float: left;
         }
 
         /* ===== 모바일 반응형 ===== */
@@ -500,7 +513,7 @@
     </style>
 </head>
 <body>
-<script src="toast.js?v=426"></script>
+<script src="toast.js?v=427"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -1644,7 +1657,7 @@
 </script>
 <script type="module">
     // 1. config.js에서 sb와 initConfig를 가져옵니다.
-    import { sb, initConfig } from './config.js?v=426';
+    import { sb, initConfig } from './config.js?v=427';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {
