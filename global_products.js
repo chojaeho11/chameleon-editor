@@ -4302,14 +4302,14 @@ window.wizRunPipeline = async () => {
                     htmlBody += `<p style="color:#6366f1; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
                 }
 
-                // community_posts에 게시
+                // blog_posts에 게시
                 const seoMeta = JSON.stringify({
                     meta_description: content.meta_description || '',
                     focus_keyword: focusKw,
                     hashtags: content.hashtags || [],
                     og_image: thumbnailUrl
                 });
-                const { data: inserted, error: postErr } = await sb.from('community_posts').insert({
+                const { data: inserted, error: postErr } = await sb.from('blog_posts').insert({
                     category: 'blog',
                     country_code: cfg.countryCode,
                     title: content.title || title,
@@ -4541,7 +4541,7 @@ window.wizRunDirectPipeline = async () => {
                 if (content.hashtags?.length) htmlBody += `<p style="color:#6366f1; margin-top:20px;">${content.hashtags.map(t => '#' + t).join(' ')}</p>`;
 
                 const seoMeta = JSON.stringify({ meta_description: content.meta_description || '', focus_keyword: focusKw, hashtags: content.hashtags || [], og_image: thumbnailUrl });
-                const { error: postErr } = await sb.from('community_posts').insert({
+                const { error: postErr } = await sb.from('blog_posts').insert({
                     category: 'blog', country_code: cfg.countryCode,
                     title: content.title || title, content: htmlBody,
                     author_name: authorName, author_email: user?.email || '', author_id: user?.id || null,
@@ -5330,7 +5330,7 @@ async function _adpGenerateBlogs(prod, thumbnailUrl) {
             }
 
             const seoMeta = JSON.stringify({ meta_description: content.meta_description || '', focus_keyword: focusKw, hashtags: content.hashtags || [], og_image: thumbnailUrl });
-            const { data: inserted } = await sb.from('community_posts').insert({
+            const { data: inserted } = await sb.from('blog_posts').insert({
                 category: 'blog', country_code: cfg.countryCode,
                 title: content.title || prod.name, content: htmlBody,
                 author_name: authorName, author_email: user?.email || '',

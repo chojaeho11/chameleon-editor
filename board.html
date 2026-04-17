@@ -500,7 +500,7 @@
     </style>
 </head>
 <body>
-<script src="toast.js?v=424"></script>
+<script src="toast.js?v=425"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -891,7 +891,7 @@
             let data, error;
             if (category === 'blog') {
                 // 블로그는 모든 국가 글을 보여줌 (Google SEO용)
-                let query = sb.from('community_posts')
+                let query = sb.from('blog_posts')
                     .select('id, title, author_name, created_at, view_count, thumbnail, rating, country_code')
                     .eq('category', 'blog');
                 if (subCode) query = query.eq('target_code', subCode);
@@ -907,7 +907,7 @@
                     });
                 }
             } else {
-                let query = sb.from('community_posts')
+                let query = sb.from('blog_posts')
                     .select('id, title, author_name, created_at, view_count, thumbnail, rating, country_code')
                     .eq('category', category)
                     .eq('country_code', currentCountry);
@@ -978,7 +978,7 @@
         showSection('view');
         try {
             await sb.rpc('increment_view_count', { post_id: id });
-            const { data: post, error } = await sb.from('community_posts').select('*').eq('id', id).single();
+            const { data: post, error } = await sb.from('blog_posts').select('*').eq('id', id).single();
             if (error) throw error;
             // [수정] 다국어 적용
             if (!post) { showToast(window.t ? window.t('msg_post_deleted') : 'Post deleted.', "warn"); goToList(); return; }
@@ -1020,7 +1020,7 @@
                 const sourceId = seoMeta.source_id || post.id; // 원본 ID (자기 자신이면 원본)
                 try {
                     // 같은 source_id를 가진 다른 언어 버전 검색
-                    const { data: siblings } = await sb.from('community_posts')
+                    const { data: siblings } = await sb.from('blog_posts')
                         .select('id, country_code, markdown')
                         .eq('category', 'blog')
                         .or(`id.eq.${sourceId},markdown->>source_id.eq.${sourceId}`);
@@ -1317,7 +1317,7 @@
             const { error: cmtError } = await sb.from('community_comments').delete().eq('post_id', postId);
             if (cmtError) console.warn(T.commentDeleteWarn + ":", cmtError.message);
 
-            const { error: postError } = await sb.from('community_posts').delete().eq('id', postId);
+            const { error: postError } = await sb.from('blog_posts').delete().eq('id', postId);
             if (postError) throw postError;
 
             showToast(T.deleted, "success");
@@ -1403,7 +1403,7 @@
 
                 if (isEditMode) {
                     if (!currentUser) throw new Error(T.noPermission);
-                    const { error } = await sb.from('community_posts').update(payload).eq('id', postId);
+                    const { error } = await sb.from('blog_posts').update(payload).eq('id', postId);
                     if (error) throw error;
                     showToast(T.editDone, "success");
                     location.reload();
@@ -1421,7 +1421,7 @@
                         }
                     }
                     
-                    const { error } = await sb.from('community_posts').insert(payload);
+                    const { error } = await sb.from('blog_posts').insert(payload);
                     if (error) throw error;
                     
                     showToast(T.posted, "success");
@@ -1455,7 +1455,7 @@
         const targetTag = langMap[targetLang];
 
         try {
-            const { data: post } = await sb.from('community_posts').select('*').eq('id', postId).single();
+            const { data: post } = await sb.from('blog_posts').select('*').eq('id', postId).single();
             showToast("타이틀과 본문을 정밀 번역 중입니다. 잠시만 기다려 주세요...", "info");
 
             async function translateSafe(text, target) {
@@ -1502,7 +1502,7 @@
             };
             delete newPost.id;
 
-            const { data, error } = await sb.from('community_posts').insert(newPost).select().single();
+            const { data, error } = await sb.from('blog_posts').insert(newPost).select().single();
             if (error) throw error;
             
             if(confirm("번역 복제 완료! 새 게시물로 이동할까요?")) {
@@ -1518,13 +1518,13 @@
         const langMap = { JP: 'ja', US: 'en', CN: 'zh', AR: 'ar', ES: 'es', DE: 'de', FR: 'fr' };
 
         // 1. 모든 KR 블로그 글 조회
-        const { data: krPosts, error } = await sb.from('community_posts')
+        const { data: krPosts, error } = await sb.from('blog_posts')
             .select('*').eq('category', 'blog').eq('country_code', 'KR')
             .order('created_at', { ascending: false });
         if (error || !krPosts) { showToast('KR 글 조회 실패', 'error'); return; }
 
         // 2. 이미 번역된 글 확인 (source_id가 있는 것들)
-        const { data: existingTranslated } = await sb.from('community_posts')
+        const { data: existingTranslated } = await sb.from('blog_posts')
             .select('id, country_code, markdown')
             .eq('category', 'blog')
             .in('country_code', targetCountries);
@@ -1603,7 +1603,7 @@
                     // 원본 KR 글에도 source_id 추가 (자기 자신 = 원본 표시)
                     if (!seoMeta.source_id) {
                         const origMeta = { ...seoMeta, source_id: post.id };
-                        await sb.from('community_posts').update({ markdown: JSON.stringify(origMeta) }).eq('id', post.id);
+                        await sb.from('blog_posts').update({ markdown: JSON.stringify(origMeta) }).eq('id', post.id);
                     }
 
                     const newPost = {
@@ -1620,7 +1620,7 @@
                         view_count: 0
                     };
 
-                    const { error: insertErr } = await sb.from('community_posts').insert(newPost);
+                    const { error: insertErr } = await sb.from('blog_posts').insert(newPost);
                     if (insertErr) throw insertErr;
 
                     created++;
@@ -1644,7 +1644,7 @@
 </script>
 <script type="module">
     // 1. config.js에서 sb와 initConfig를 가져옵니다.
-    import { sb, initConfig } from './config.js?v=424';
+    import { sb, initConfig } from './config.js?v=425';
 
     // [유입 경로 상세 분석 함수]
     function getTrafficSource() {

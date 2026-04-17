@@ -179,7 +179,7 @@ textarea.form-input { resize:vertical; min-height:80px; }
 </style>
 </head>
 <body>
-<script src="toast.js?v=424"></script>
+<script src="toast.js?v=425"></script>
 
 <!-- 상단 헤더 -->
 <div class="top-header">
@@ -708,7 +708,7 @@ textarea.form-input { resize:vertical; min-height:80px; }
 </div>
 
 <script type="module">
-import { initConfig, sb as _sb, currentUser, isAdmin } from './config.js?v=424';
+import { initConfig, sb as _sb, currentUser, isAdmin } from './config.js?v=425';
 
 let sb;
 const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
@@ -966,7 +966,7 @@ window.publishContent = async function(id) {
     if (!data) return;
 
     if (data.platform === 'blog' || data.platform === 'website') {
-        // 블로그/사이트: community_posts에 실제 게시 + marketing_content 상태 업데이트
+        // 블로그/사이트: blog_posts에 실제 게시 + marketing_content 상태 업데이트
         try {
             const { data: { user } } = await sb.auth.getUser();
             const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '카멜레온';
@@ -981,7 +981,7 @@ window.publishContent = async function(id) {
             htmlBody = '<p>' + htmlBody + '</p>';
 
             // KR 블로그에 게시
-            await sb.from('community_posts').insert({
+            await sb.from('blog_posts').insert({
                 category: 'blog',
                 country_code: 'KR',
                 title: data.title || '(제목 없음)',
@@ -1435,7 +1435,7 @@ window.publishBlogOneClick = async function() {
                 const focusKw = content.focus_keyword || '';
                 const htmlBody = mdToHtml(bodyText, photoUrl, content.title, content.hashtags, metaDesc, focusKw, lang);
 
-                // community_posts에 게시 (SEO 메타데이터를 markdown 필드에 JSON으로 저장)
+                // blog_posts에 게시 (SEO 메타데이터를 markdown 필드에 JSON으로 저장)
                 const seoMeta = JSON.stringify({
                     meta_description: metaDesc,
                     focus_keyword: focusKw,
@@ -1443,7 +1443,7 @@ window.publishBlogOneClick = async function() {
                     og_image: photoUrl
                 });
 
-                const { error: postErr } = await sb.from('community_posts').insert({
+                const { error: postErr } = await sb.from('blog_posts').insert({
                     category: 'blog',
                     country_code: cfg.countryCode,
                     title: content.title || topic,
@@ -1561,7 +1561,7 @@ window.publishBlogOneClick = async function() {
 
 // 최근 발행 블로그 이력
 async function loadBlogHistory() {
-    const { data } = await sb.from('community_posts')
+    const { data } = await sb.from('blog_posts')
         .select('id, title, thumbnail, created_at, country_code')
         .eq('category', 'blog')
         .order('created_at', { ascending: false })

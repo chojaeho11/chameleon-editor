@@ -29,7 +29,7 @@
 </style>
 </head>
 <body>
-<script src="toast.js?v=267"></script>
+<script src="toast.js?v=268"></script>
 
     <div id="loading"><div class="spinner"></div></div>
     
@@ -2387,7 +2387,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=267"></script>
+    <script type="module" src="global_admin.js?v=268"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
@@ -2748,7 +2748,7 @@ window.showSection = function(id, el) {
             const postIds = [...new Set(allComments.map(c => c.post_id).filter(Boolean))];
             let postMap = {};
             if (postIds.length > 0) {
-                const { data: posts } = await sb.from('community_posts').select('id, title, country_code').in('id', postIds);
+                const { data: posts } = await sb.from('blog_posts').select('id, title, country_code').in('id', postIds);
                 if (posts) posts.forEach(p => { postMap[p.id] = { title: p.title || '', cc: p.country_code || 'KR' }; });
             }
 
@@ -5082,12 +5082,12 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     if (!sb) { console.error('Supabase 미연결'); return; }
     const langMap = { JP: 'ja', US: 'en', CN: 'zh', AR: 'ar', ES: 'es', DE: 'de', FR: 'fr' };
 
-    const { data: krPosts, error } = await sb.from('community_posts')
+    const { data: krPosts, error } = await sb.from('blog_posts')
         .select('*').eq('category', 'blog').eq('country_code', 'KR')
         .order('created_at', { ascending: false });
     if (error || !krPosts) { console.error('KR 글 조회 실패', error); return; }
 
-    const { data: existingTranslated } = await sb.from('community_posts')
+    const { data: existingTranslated } = await sb.from('blog_posts')
         .select('id, country_code, markdown')
         .eq('category', 'blog')
         .in('country_code', targetCountries);
@@ -5164,7 +5164,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
 
                 if (!seoMeta.source_id) {
                     const origMeta = { ...seoMeta, source_id: post.id };
-                    await sb.from('community_posts').update({ markdown: JSON.stringify(origMeta) }).eq('id', post.id);
+                    await sb.from('blog_posts').update({ markdown: JSON.stringify(origMeta) }).eq('id', post.id);
                 }
 
                 const newPost = {
@@ -5181,7 +5181,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
                     view_count: 0
                 };
 
-                const { error: insertErr } = await sb.from('community_posts').insert(newPost);
+                const { error: insertErr } = await sb.from('blog_posts').insert(newPost);
                 if (insertErr) throw insertErr;
 
                 created++;

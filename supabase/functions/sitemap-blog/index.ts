@@ -34,7 +34,7 @@ serve(async (req) => {
 
         // 블로그 포스트 조회 (최근 1000개, markdown 포함 for source_id)
         const { data: posts, error } = await sb
-            .from("community_posts")
+            .from("blog_posts")
             .select("id, title, created_at, country_code, thumbnail, markdown")
             .eq("category", "blog")
             .order("created_at", { ascending: false })
