@@ -219,7 +219,15 @@ export function loadCartFromStorage() {
 export async function initOrderSystem() {
     // [수정] 무조건적인 초기화 코드 제거 (기존 상품 보존)
     // 용량 부족 문제는 addProductToCartDirectly나 saveCart의 에러 핸들링에서 처리합니다.
-    
+
+    // ★ 페이지 로드 시 localStorage에서 배송비 상태 복원 (런타임 변수가 리로드로 사라지는 문제 방지)
+    try {
+        const _sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+        if (_sd && typeof _sd.fee === 'number' && _sd.fee > 0) {
+            window._nonMetroFeeApplied = _sd.fee;
+        }
+    } catch(e) {}
+
     loadCartFromStorage();
     
     await fetchUserDiscountRate(); 
@@ -638,6 +646,18 @@ function getOrderInfo() {
     const cartNote = document.getElementById("cartRequestNote");
     const cartManager = document.getElementById("cartStaffManager");
 
+    // ★ 배송비: 런타임 변수 우선, 없으면 localStorage에서 복원 (페이지 리로드 시 손실 방지)
+    let _shippingFee = window._nonMetroFeeApplied || 0;
+    if (!_shippingFee) {
+        try {
+            const _sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+            if (_sd && typeof _sd.fee === 'number' && _sd.fee > 0) {
+                _shippingFee = _sd.fee;
+                window._nonMetroFeeApplied = _sd.fee;
+            }
+        } catch(e) {}
+    }
+
     return {
         manager: (cartName && cartName.value) || document.getElementById("orderName")?.value || window.t('default_customer', "Customer"),
         phone: (cartPhone && cartPhone.value) || document.getElementById("orderPhone")?.value || "",
@@ -646,7 +666,7 @@ function getOrderInfo() {
         date: (cartDate && cartDate.value) || selectedDeliveryDate || new Date().toISOString().split('T')[0],
         installationTime: (cartTime && cartTime.value) || null,
         staffManager: (cartManager && cartManager.value) || null,
-        shippingFee: (window._nonMetroFeeApplied || 0)
+        shippingFee: _shippingFee
     };
 }
 
@@ -2185,6 +2205,28 @@ async function addCanvasToCart() {
     // ★ [버그수정] pendingSelectedAddons 초기화 (다음 렌더링에서 다른 아이템에 잘못 적용 방지)
     window.pendingSelectedAddons = null;
     window.pendingSelectedAddonQtys = null;
+
+    // ★ 에디터 경로 스마트 배송 디폴트: 배송 옵션이 아직 없을 때 상품 타입에 맞는 기본 배송을 미리 선택
+    // - 허니콤보드/허니콤 가벽 → 수도권 유료설치 10만원 (지방은 고객이 변경 가능)
+    // - 기타(패브릭 등) → 기타제품 일반택배 5천원
+    try {
+        const _existingFee = (window._nonMetroFeeApplied || 0) ||
+            (JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}').fee || 0);
+        const _metroPicked = localStorage.getItem('chameleon_metro_install') === '1' ||
+            localStorage.getItem('chameleon_metro_removal') === '1';
+        if (!_existingFee && !_metroPicked && typeof hasHoneycombInCart === 'function') {
+            if (hasHoneycombInCart()) {
+                // 수도권 유료설치 기본값
+                localStorage.setItem('chameleon_metro_install', '1');
+                if (typeof _syncMetroFee === 'function') _syncMetroFee();
+            } else if (cartData.length > 0) {
+                // 일반 상품(패브릭 등) → 일반택배 5천원 기본
+                if (typeof window._addCartShipping === 'function') {
+                    window._addCartShipping(5000, '기타제품 일반택배');
+                }
+            }
+        }
+    } catch(e) { console.warn('[default shipping]', e); }
 
     renderCart();
 
