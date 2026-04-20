@@ -78,20 +78,14 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 .fr-pitch-card p .hl-inline{background:linear-gradient(120deg,#fef3c7 0%,#fef3c7 100%);padding:2px 6px;border-radius:5px;font-weight:700;color:#92400e;}
 .fr-pitch-card p i{display:block;margin-top:6px;color:#6366f1;font-style:normal;font-size:13px;font-weight:600;}
 
-/* Product categories grid (franchise lineup) — sky-blue theme to match WITH banner */
+/* Franchise products CTA — sky-blue theme to match WITH banner */
 .fr-cats{background:linear-gradient(135deg,#f0f9ff,#e0f2fe 60%,#eff6ff);}
-.fr-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1100px;margin:0 auto;}
-.fr-cat-card{background:#fff;border:1px solid #bae6fd;border-radius:16px;padding:22px 20px;text-decoration:none;color:inherit;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;}
-.fr-cat-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(29,78,216,0.15);border-color:#1d4ed8;}
-.fr-cat-card .num{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#60a5fa,#1d4ed8);color:#fff;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(29,78,216,0.25);}
-.fr-cat-card .icon{font-size:34px;flex-shrink:0;}
-.fr-cat-card .info{flex:1;min-width:0;}
-.fr-cat-card .cname{font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px;}
-.fr-cat-card .cdesc{font-size:12px;color:#64748b;line-height:1.5;}
-.fr-cat-card .arrow{flex-shrink:0;color:#1d4ed8;font-size:16px;transition:transform 0.2s;}
-.fr-cat-card:hover .arrow{transform:translateX(3px);}
+.fr-cats-cta{display:inline-flex;align-items:center;justify-content:center;gap:14px;padding:20px 40px;background:linear-gradient(135deg,#60a5fa,#1d4ed8);color:#fff;text-decoration:none;border-radius:16px;font-size:18px;font-weight:800;letter-spacing:-0.3px;box-shadow:0 10px 30px rgba(29,78,216,0.35);transition:transform 0.2s,box-shadow 0.2s;}
+.fr-cats-cta:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(29,78,216,0.5);}
+.fr-cats-cta i{transition:transform 0.2s;}
+.fr-cats-cta:hover i.fa-arrow-right{transform:translateX(4px);}
 @media (max-width:768px){
-    .fr-cat-grid{grid-template-columns:1fr;gap:12px;}
+    .fr-cats-cta{padding:16px 28px;font-size:15px;gap:10px;}
 }
 .fr-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
 .fr-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
@@ -202,12 +196,16 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     </div>
 </section>
 
-<!-- Franchise product categories (what you can sell) -->
+<!-- Franchise-exclusive products CTA (replaces old 9-category grid) -->
 <section class="fr-section fr-cats">
-    <div class="container">
+    <div class="container" style="text-align:center;">
         <h2 class="fr-section-title" id="txtCatsH2"></h2>
         <p class="fr-section-sub" id="txtCatsSub"></p>
-        <div class="fr-cat-grid" id="catGrid"></div>
+        <a href="/#franchiseSection" class="fr-cats-cta">
+            <i class="fa-solid fa-box-open"></i>
+            <span id="txtCatsCta"></span>
+            <i class="fa-solid fa-arrow-right" style="font-size:14px;"></i>
+        </a>
     </div>
 </section>
 
@@ -324,8 +322,9 @@ const L = {
         heroSub:'현수막 플로터 한 대와 작은 작업 공간이면 충분합니다. 허니콤보드 가벽·골판지·배너·종이매대 — 반제품으로 받아서 실사 출력만 붙여 납품하는 독점 가맹 파트너 프로그램.',
         ctaInquiry:'지금 가맹 문의',
         ctaCall:'바로 통화',
-        catsH2:'가맹점이 <span class="hl">판매할 수 있는</span> 제품군',
-        catsSub:'전시·디스플레이부터 굿즈·인쇄물까지. 카멜레온이 공급하는 전 라인을 귀사 지역에서 독점 판매하세요',
+        catsH2:'가맹점 <span class="hl">전용 제품</span>을 확인하세요',
+        catsSub:'허니콤보드 반제품 등 가맹점에만 공급하는 라인업을 홈페이지에서 바로 보실 수 있습니다',
+        catsCta:'가맹점 전용 제품 보기',
         pitchHl:'<span class="hl">가맹비 무료</span><br><span class="midline">기존 아이템으로는 이제 어렵습니다</span><br>함께해요, 기적이 펼쳐집니다',
         pitchSub:'<span class="em">플로터 1대와 작은 공간 그리고 열정</span>만 있다면 글로벌 회사의 CEO가 될 수 있습니다. 동네 광고사에 멈추지 마세요. <span class="em">카멜레온프린팅과 함께해요</span>. 함께하신 분들은 이미 부자가 되었습니다.',
         p1t:'가맹비 0원 · 초기 재고 부담 없음',
@@ -383,8 +382,9 @@ const L = {
         heroSub:'中古プロッター1台と小さな作業スペースがあれば十分。ハニカムボード仮壁・段ボール・バナー・ペーパースタンドを半製品で受け取り、実写出力を貼って納品する独占加盟プログラム。',
         ctaInquiry:'加盟お問い合わせ',
         ctaCall:'今すぐ電話',
-        catsH2:'加盟店が<span class="hl">販売できる</span>製品群',
-        catsSub:'展示・ディスプレイからグッズ・印刷物まで。カメレオンが供給する全ラインを貴社地域で独占販売',
+        catsH2:'加盟店<span class="hl">専用製品</span>をご確認ください',
+        catsSub:'ハニカムボード半製品など、加盟店限定で供給するラインナップをホームページで直接ご覧いただけます',
+        catsCta:'加盟店専用製品を見る',
         pitchHl:'<span class="hl">加盟金0円</span><br><span class="midline">既存のアイテムだけではもう厳しい時代です</span><br>一緒に、奇跡が広がります',
         pitchSub:'<span class="em">プロッター1台と小さなスペース、そして情熱</span>があれば、グローバル企業のCEOになれます。町の小さな広告代理店で止まらないで。<span class="em">カメレオンプリンティングと一緒に</span>。既に参加された方々は富裕層になりました。',
         p1t:'加盟金0円・初期在庫負担なし',
@@ -442,8 +442,9 @@ const L = {
         heroSub:'A used plotter and a small workspace are all you need. Receive pre-cut honeycomb walls, corrugated panels, banners and paper stands — print your graphics, laminate them on, and deliver. Exclusive franchise partner program.',
         ctaInquiry:'Apply Now',
         ctaCall:'Call Now',
-        catsH2:'Product categories <span class="hl">you can sell</span>',
-        catsSub:'From exhibition displays to goods and print collateral — sell the full Chameleon lineup exclusively in your region',
+        catsH2:'See <span class="hl">franchise-exclusive</span> products',
+        catsSub:'Honeycomb semi-finished goods and more — the lineup we supply only to franchise partners, viewable now on the main site',
+        catsCta:'View Franchise-Exclusive Products',
         pitchHl:'<span class="hl">$0 Franchise Fee</span><br><span class="midline">Your current product lineup alone won\'t cut it anymore</span><br>Together, miracles unfold',
         pitchSub:'With just <span class="em">one plotter, a small workspace, and passion</span>, you can become CEO of a global company. Do not settle for being a neighborhood print shop. <span class="em">Partner with Chameleon Printing</span>. Those who joined are already wealthy.',
         p1t:'$0 franchise fee · No inventory burden',
@@ -501,8 +502,9 @@ const L = {
         heroSub:'一台二手喷绘机和小工作室就够了。接收预裁切的蜂窝板仿墙、瓦楞板、横幅和纸展台，印刷图像后粘贴交付。独家加盟合作伙伴计划。',
         ctaInquiry:'立即申请',
         ctaCall:'立即致电',
-        catsH2:'加盟店可<span class="hl">销售</span>的产品类别',
-        catsSub:'从展示陈列到文创与印刷物——在您的区域独家销售卡米利翁完整产品线',
+        catsH2:'查看<span class="hl">加盟专供</span>产品',
+        catsSub:'蜂窝板半成品等加盟店专属供应的产品线，可直接在主站查看',
+        catsCta:'查看加盟专供产品',
         pitchHl:'<span class="hl">加盟费0元</span><br><span class="midline">仅靠现有产品已难以突围</span><br>携手同行，奇迹在此展开',
         pitchSub:'只要<span class="em">一台喷绘机、一个小工作室和热情</span>，您就能成为全球公司的CEO。不要止步于小区广告店。<span class="em">与卡米利翁印刷携手共进</span>。已经加入的伙伴都已成为富翁。',
         p1t:'加盟费0元 · 无库存负担',
@@ -560,8 +562,9 @@ const L = {
         heroSub:'آلة بلوتر مستعملة ومساحة عمل صغيرة تكفيان. استلم منتجات نصف مصنعة مقطوعة (جدران خلية النحل، كرتون مموج، لافتات، حوامل ورقية)، اطبع الرسومات، ألصقها، وسلمها. برنامج شراكة حصري.',
         ctaInquiry:'قدم الآن',
         ctaCall:'اتصل الآن',
-        catsH2:'فئات المنتجات التي <span class="hl">يمكنك بيعها</span>',
-        catsSub:'من شاشات العرض إلى المنتجات والمطبوعات — بع خط منتجات كاميليون كاملاً بحصرية في منطقتك',
+        catsH2:'شاهد <span class="hl">المنتجات الحصرية للامتياز</span>',
+        catsSub:'منتجات نصف مصنعة من خلية النحل وأكثر — خط الإنتاج الذي نورّده فقط لشركاء الامتياز، يمكن معاينته على الموقع الرئيسي',
+        catsCta:'عرض منتجات الامتياز الحصرية',
         pitchHl:'<span class="hl">رسوم امتياز صفر</span><br><span class="midline">منتجاتك الحالية وحدها لم تعد تكفي</span><br>معاً، تتكشف المعجزات',
         pitchSub:'بـ<span class="em">آلة بلوتر واحدة، مساحة عمل صغيرة، وشغف</span> فقط، يمكنك أن تصبح مدير شركة عالمية. لا تكتفي بكونك محل إعلانات محلياً. <span class="em">شارك مع كاميليون للطباعة</span>. من انضموا بالفعل أصبحوا أثرياء.',
         p1t:'0 رسوم امتياز · بدون عبء مخزون',
@@ -619,8 +622,9 @@ const L = {
         heroSub:'Un plotter usado y un pequeño taller son todo lo que necesita. Reciba semiproductos pre-cortados (paneles nido de abeja, cartón corrugado, banners, expositores de papel), imprima sus gráficos, lamínelos y entregue. Programa de franquicia exclusiva.',
         ctaInquiry:'Solicitar ahora',
         ctaCall:'Llamar ahora',
-        catsH2:'Categorías que <span class="hl">puede vender</span>',
-        catsSub:'Desde displays de exposición hasta goods e impresos — venda toda la línea Chameleon exclusivamente en su región',
+        catsH2:'Vea los productos <span class="hl">exclusivos de franquicia</span>',
+        catsSub:'Semiproductos nido de abeja y más — la línea que suministramos solo a socios de franquicia, visible ahora en el sitio principal',
+        catsCta:'Ver productos exclusivos',
         pitchHl:'<span class="hl">Franquicia $0</span><br><span class="midline">Con los artículos actuales ya no alcanza</span><br>Juntos, los milagros se despliegan',
         pitchSub:'Con solo <span class="em">un plotter, un pequeño taller y pasión</span>, puede ser CEO de una empresa global. No se quede como una imprenta del barrio. <span class="em">Asóciese con Chameleon Printing</span>. Los que ya se unieron son ricos.',
         p1t:'Sin franquicia · Sin stock inicial',
@@ -678,8 +682,9 @@ const L = {
         heroSub:'Ein gebrauchter Plotter und ein kleiner Arbeitsplatz reichen. Empfangen Sie zugeschnittene Halbfertigprodukte (Wabenplatten-Wände, Wellpappe, Banner, Papier-Displays), drucken Sie Ihre Grafiken, laminieren Sie auf und liefern Sie. Exklusives Partnerprogramm.',
         ctaInquiry:'Jetzt bewerben',
         ctaCall:'Jetzt anrufen',
-        catsH2:'Produktkategorien, die <span class="hl">Sie verkaufen können</span>',
-        catsSub:'Von Messedisplays bis Goods und Drucksachen — vertreiben Sie das gesamte Chameleon-Sortiment exklusiv in Ihrer Region',
+        catsH2:'Sehen Sie <span class="hl">Franchise-exklusive</span> Produkte',
+        catsSub:'Waben-Halbfertigware und mehr — das Sortiment, das wir ausschließlich an Franchise-Partner liefern, jetzt auf der Hauptseite einsehbar',
+        catsCta:'Franchise-Exklusivprodukte ansehen',
         pitchHl:'<span class="hl">Franchise 0€</span><br><span class="midline">Mit dem bisherigen Sortiment wird es zunehmend schwer</span><br>Gemeinsam entfalten sich Wunder',
         pitchSub:'Mit nur <span class="em">einem Plotter, einer kleinen Werkstatt und Leidenschaft</span> werden Sie CEO eines globalen Unternehmens. Bleiben Sie nicht beim Stadtteil-Druckerei stehen. <span class="em">Partnerschaft mit Chameleon Printing</span>. Wer bereits beigetreten ist, ist längst reich.',
         p1t:'0€ Franchise · Keine Lagerlast',
@@ -737,8 +742,9 @@ const L = {
         heroSub:'Un traceur d\'occasion et un petit atelier suffisent. Recevez des semi-produits pré-découpés (cloisons nid d\'abeille, carton ondulé, bannières, présentoirs en papier), imprimez vos graphiques, laminez-les et livrez. Programme de franchise exclusif.',
         ctaInquiry:'Postuler maintenant',
         ctaCall:'Appeler',
-        catsH2:'Catégories de produits <span class="hl">que vous pouvez vendre</span>',
-        catsSub:'Du display d\'exposition aux goods et imprimés — vendez toute la gamme Chameleon en exclusivité dans votre région',
+        catsH2:'Voir les produits <span class="hl">exclusifs franchise</span>',
+        catsSub:'Semi-produits nid d\'abeille et plus — la gamme que nous fournissons uniquement aux partenaires franchisés, visible dès maintenant sur le site principal',
+        catsCta:'Voir les produits exclusifs',
         pitchHl:'<span class="hl">Franchise 0€</span><br><span class="midline">Vos produits actuels ne suffiront plus</span><br>Ensemble, les miracles se déploient',
         pitchSub:'Avec seulement <span class="em">un traceur, un petit atelier et de la passion</span>, vous pouvez devenir PDG d\'une société mondiale. Ne restez pas une imprimerie de quartier. <span class="em">Associez-vous à Chameleon Printing</span>. Ceux qui ont rejoint sont déjà riches.',
         p1t:'0€ franchise · Pas de stock initial',
@@ -790,38 +796,6 @@ const L = {
         msgErr:'Envoi échoué. Veuillez réessayer.'
     }
 };
-
-// ============== Franchise product categories ==============
-// 가맹점이 판매할 수 있는 대분류 9개 (숫자 + 아이콘 + 8개 언어)
-const CATEGORIES = [
-    { num:'01', icon:'🏗️', href:'/raw-board',
-      name:{ko:'허니콤보드 원판', ja:'ハニカムボード原板', en:'Honeycomb Raw Sheets', zh:'蜂窝板原板', ar:'ألواح خلية النحل الخام', es:'Lámina nido de abeja', de:'Waben-Rohplatten', fr:'Plaques nid d\'abeille'},
-      desc:{ko:'전시·진열·공간 제작용 친환경 원자재', ja:'展示・陳列・空間用エコ原材料', en:'Eco raw material for exhibitions & spaces', zh:'展示与空间用环保原板', ar:'مواد خام صديقة للبيئة للمعارض', es:'Material eco para exposiciones', de:'Öko-Rohmaterial für Messen', fr:'Matière écologique pour expositions'} },
-    { num:'02', icon:'🧱', href:'/',
-      name:{ko:'허니콤 가벽', ja:'ハニカム仮壁', en:'Honeycomb Wall Partitions', zh:'蜂窝板仿墙', ar:'جدران خلية النحل', es:'Muros nido de abeja', de:'Waben-Stellwände', fr:'Cloisons nid d\'abeille'},
-      desc:{ko:'전시 부스·팝업스토어·백월 대형 파티션', ja:'展示ブース・ポップアップ・背壁の大型パーティション', en:'Large partitions for booths, pop-ups, back-walls', zh:'展位·快闪店·背景墙大型隔断', ar:'حواجز كبيرة للأجنحة والمتاجر المنبثقة', es:'Grandes tabiques para stands y pop-ups', de:'Große Stellwände für Messen und Pop-Ups', fr:'Grandes cloisons pour stands et pop-ups'} },
-    { num:'03', icon:'🎨', href:'/',
-      name:{ko:'허니콤 배너·자유인쇄커팅', ja:'ハニカムバナー・自由カット', en:'Honeycomb Banners & Custom-Cut', zh:'蜂窝板横幅·自由裁切', ar:'لافتات خلية النحل وقص حر', es:'Banners nido de abeja / Corte libre', de:'Waben-Banner & freier Zuschnitt', fr:'Bannières nid d\'abeille / découpe libre'},
-      desc:{ko:'행사·이벤트·등신대에 최적 (택배 가능)', ja:'イベント・等身大に最適（宅配対応）', en:'Perfect for events & life-size cutouts (courier OK)', zh:'适合活动·等身立牌（可快递）', ar:'مثالي للفعاليات والمجسمات (شحن بالبريد)', es:'Ideal para eventos y figuras (envío posible)', de:'Ideal für Events & Aufsteller (Paketversand OK)', fr:'Idéal pour événements et figurines (colis OK)'} },
-    { num:'04', icon:'📦', href:'/paper-stand',
-      name:{ko:'종이매대 · Cardboard Display', ja:'ペーパースタンド', en:'Cardboard Display Stands', zh:'纸展台', ar:'حوامل عرض ورقية', es:'Expositores de cartón', de:'Papier-Displays', fr:'Présentoirs en carton'},
-      desc:{ko:'마트·편의점·매장 진열대 특화 (핫제품)', ja:'小売店舗向け陳列台の定番（人気商品）', en:'Retail display stands — our hottest item', zh:'零售店陈列台（热销产品）', ar:'حوامل بيع بالتجزئة — منتجنا الرائج', es:'Expositores de retail — producto estrella', de:'Retail-Displays — unser Topseller', fr:'Présentoirs retail — produit phare'} },
-    { num:'05', icon:'🧵', href:'/',
-      name:{ko:'패브릭 인쇄', ja:'ファブリック印刷', en:'Fabric Printing', zh:'布料印刷', ar:'طباعة الأقمشة', es:'Impresión en tela', de:'Stoffdruck', fr:'Impression tissu'},
-      desc:{ko:'현수막·배너·깃발·벽면 장식 (무료 샘플)', ja:'横断幕・バナー・旗・壁装飾（無料サンプル）', en:'Banners, flags, wall décor (free samples)', zh:'横幅·旗帜·墙饰（免费样品）', ar:'لافتات وأعلام وديكور جداري (عينات مجانية)', es:'Banners, banderas, decoración (muestras gratis)', de:'Banner, Fahnen, Wanddekor (kostenlose Muster)', fr:'Bannières, drapeaux, décor mural (échantillons gratuits)'} },
-    { num:'06', icon:'📢', href:'/',
-      name:{ko:'광고 인쇄·현수막', ja:'広告印刷・横断幕', en:'Advertising Print & Banners', zh:'广告印刷·横幅', ar:'طباعة إعلانية ولافتات', es:'Impresión publicitaria', de:'Werbedruck & Banner', fr:'Impression publicitaire'},
-      desc:{ko:'실사출력·포맥스·시트지 등', ja:'実写出力・フォメックス・シートなど', en:'Large-format print, foamex, vinyl signs', zh:'写真喷绘·雪弗板·贴纸', ar:'طباعة واسعة، فوميكس، لافتات فينيل', es:'Gran formato, foamex, vinilos', de:'Großformatdruck, Foamex, Folien', fr:'Grand format, foamex, vinyles'} },
-    { num:'07', icon:'🏠', href:'/',
-      name:{ko:'홈 인테리어', ja:'ホームインテリア', en:'Home Interior', zh:'家居装饰', ar:'ديكور منزلي', es:'Interiorismo', de:'Wohn-Interieur', fr:'Déco intérieure'},
-      desc:{ko:'포스터·액자·벽지·커스텀 데코', ja:'ポスター・額・壁紙・カスタムデコ', en:'Posters, frames, wallpaper, custom décor', zh:'海报·画框·壁纸·定制装饰', ar:'ملصقات وإطارات وورق جدران وديكور مخصص', es:'Pósters, marcos, papel pintado, decoración', de:'Poster, Rahmen, Tapeten, Individual-Deko', fr:'Posters, cadres, papiers peints, déco'} },
-    { num:'08', icon:'🎁', href:'/',
-      name:{ko:'굿즈 · 판촉물', ja:'グッズ・販促品', en:'Goods & Promotional', zh:'文创·促销品', ar:'منتجات ترويجية', es:'Goods y promocionales', de:'Goods & Werbeartikel', fr:'Goods & promotionnel'},
-      desc:{ko:'아크릴·키링·티셔츠·머그컵·스티커', ja:'アクリル・キーホルダー・Tシャツ・マグ・シール', en:'Acrylic, keyrings, tees, mugs, stickers', zh:'亚克力·钥匙扣·T恤·马克杯·贴纸', ar:'أكريليك وسلاسل مفاتيح وقمصان وأكواب وملصقات', es:'Acrílico, llaveros, camisetas, tazas, stickers', de:'Acryl, Schlüsselanhänger, T-Shirts, Tassen, Sticker', fr:'Acrylique, porte-clés, T-shirts, mugs, stickers'} },
-    { num:'09', icon:'📇', href:'/',
-      name:{ko:'상업 인쇄물', ja:'商業印刷物', en:'Commercial Print', zh:'商业印刷物', ar:'مطبوعات تجارية', es:'Impresión comercial', de:'Geschäftsdrucksachen', fr:'Impression commerciale'},
-      desc:{ko:'명함·전단·카탈로그·포장재', ja:'名刺・チラシ・カタログ・包装材', en:'Business cards, flyers, catalogs, packaging', zh:'名片·传单·画册·包装', ar:'بطاقات أعمال ومنشورات وكتالوجات وتغليف', es:'Tarjetas, flyers, catálogos, embalaje', de:'Visitenkarten, Flyer, Kataloge, Verpackung', fr:'Cartes, flyers, catalogues, emballages'} }
-];
 
 // ============== Testimonials (6 countries x 8 langs) ==============
 // Each testimonial: {flag, initials, name, country, years, revenue, quote (per lang)}
@@ -945,6 +919,7 @@ setTxt('txtPitchHl', T.pitchHl);
 setTxt('txtPitchSub', T.pitchSub);
 setTxt('txtCatsH2', T.catsH2);
 setTxt('txtCatsSub', T.catsSub);
+setTxt('txtCatsCta', T.catsCta);
 setTxt('p1t', T.p1t); setTxt('p1d', T.p1d);
 setTxt('p2t', T.p2t); setTxt('p2d', T.p2d);
 setTxt('p3t', T.p3t); setTxt('p3d', T.p3d);
@@ -974,27 +949,6 @@ setTxt('btnSubmit', T.btnSubmit);
     const opts = sel.querySelectorAll('option');
     const vals = ['expBlank','expNone','expPrint','expSign','expRetail','expOther'];
     opts.forEach((o,i)=>{ if(vals[i]) o.textContent = T[vals[i]] || ''; });
-})();
-
-// Render franchise categories
-(function(){
-    const grid = document.getElementById('catGrid');
-    if(!grid) return;
-    CATEGORIES.forEach(c => {
-        const card = document.createElement('a');
-        card.className = 'fr-cat-card';
-        card.href = c.href;
-        card.innerHTML = `
-            <div class="num">${c.num}</div>
-            <div class="icon">${c.icon}</div>
-            <div class="info">
-                <div class="cname">${c.name[lang] || c.name.en}</div>
-                <div class="cdesc">${c.desc[lang] || c.desc.en}</div>
-            </div>
-            <i class="fa-solid fa-arrow-right arrow"></i>
-        `;
-        grid.appendChild(card);
-    });
 })();
 
 // Render testimonials
