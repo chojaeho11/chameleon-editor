@@ -78,15 +78,22 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 .fr-pitch-card p .hl-inline{background:linear-gradient(120deg,#fef3c7 0%,#fef3c7 100%);padding:2px 6px;border-radius:5px;font-weight:700;color:#92400e;}
 .fr-pitch-card p i{display:block;margin-top:6px;color:#6366f1;font-style:normal;font-size:13px;font-weight:600;}
 
-/* Franchise products CTA — sky-blue theme to match WITH banner */
+/* Franchise-exclusive products grid — sky-blue theme */
 .fr-cats{background:linear-gradient(135deg,#f0f9ff,#e0f2fe 60%,#eff6ff);}
-.fr-cats-cta{display:inline-flex;align-items:center;justify-content:center;gap:14px;padding:20px 40px;background:linear-gradient(135deg,#60a5fa,#1d4ed8);color:#fff;text-decoration:none;border-radius:16px;font-size:18px;font-weight:800;letter-spacing:-0.3px;box-shadow:0 10px 30px rgba(29,78,216,0.35);transition:transform 0.2s,box-shadow 0.2s;}
-.fr-cats-cta:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(29,78,216,0.5);}
-.fr-cats-cta i{transition:transform 0.2s;}
-.fr-cats-cta:hover i.fa-arrow-right{transform:translateX(4px);}
-@media (max-width:768px){
-    .fr-cats-cta{padding:16px 28px;font-size:15px;gap:10px;}
-}
+.fr-prod-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1200px;margin:0 auto;}
+.fr-prod-loading{grid-column:1/-1;text-align:center;padding:40px;color:#1d4ed8;font-size:15px;font-weight:700;}
+.fr-prod-card{background:#fff;border:1px solid #bae6fd;border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;cursor:pointer;display:flex;flex-direction:column;}
+.fr-prod-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(29,78,216,0.18);border-color:#1d4ed8;}
+.fr-prod-img{position:relative;width:100%;aspect-ratio:1/1;background:#f1f5f9;overflow:hidden;}
+.fr-prod-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.fr-prod-img .badge{position:absolute;top:10px;left:10px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;letter-spacing:0.3px;}
+.fr-prod-info{padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.fr-prod-name{font-size:14px;font-weight:800;color:#0f172a;line-height:1.35;min-height:38px;}
+.fr-prod-meta{font-size:11px;color:#64748b;}
+.fr-prod-price{margin-top:4px;font-size:15px;font-weight:900;color:#1d4ed8;}
+.fr-prod-empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:#64748b;font-size:14px;background:#fff;border:1px dashed #bae6fd;border-radius:16px;}
+@media (max-width:992px){ .fr-prod-grid{grid-template-columns:repeat(3,1fr);} }
+@media (max-width:640px){ .fr-prod-grid{grid-template-columns:repeat(2,1fr);gap:12px;} .fr-prod-name{font-size:13px;min-height:34px;} }
 .fr-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
 .fr-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
 
@@ -196,16 +203,14 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     </div>
 </section>
 
-<!-- Franchise-exclusive products CTA (replaces old 9-category grid) -->
+<!-- Franchise-exclusive products (loaded inline from top_category 123456789) -->
 <section class="fr-section fr-cats">
-    <div class="container" style="text-align:center;">
+    <div class="container">
         <h2 class="fr-section-title" id="txtCatsH2"></h2>
         <p class="fr-section-sub" id="txtCatsSub"></p>
-        <a href="/#franchiseSection" class="fr-cats-cta">
-            <i class="fa-solid fa-box-open"></i>
-            <span id="txtCatsCta"></span>
-            <i class="fa-solid fa-arrow-right" style="font-size:14px;"></i>
-        </a>
+        <div id="frProductGrid" class="fr-prod-grid">
+            <div class="fr-prod-loading"><i class="fa-solid fa-spinner fa-spin"></i> <span id="txtCatsLoading"></span></div>
+        </div>
     </div>
 </section>
 
@@ -322,9 +327,10 @@ const L = {
         heroSub:'현수막 플로터 한 대와 작은 작업 공간이면 충분합니다. 허니콤보드 가벽·골판지·배너·종이매대 — 반제품으로 받아서 실사 출력만 붙여 납품하는 독점 가맹 파트너 프로그램.',
         ctaInquiry:'지금 가맹 문의',
         ctaCall:'바로 통화',
-        catsH2:'가맹점 <span class="hl">전용 제품</span>을 확인하세요',
-        catsSub:'허니콤보드 반제품 등 가맹점에만 공급하는 라인업을 홈페이지에서 바로 보실 수 있습니다',
-        catsCta:'가맹점 전용 제품 보기',
+        catsH2:'가맹점 <span class="hl">전용 제품</span>',
+        catsSub:'허니콤보드 반제품 등 가맹 파트너에게만 공급하는 제품 라인업입니다. 완제품 가격의 1/3 수준으로 매입 가능.',
+        catsLoading:'제품을 불러오는 중...',
+        catsEmpty:'등록된 전용 제품이 없습니다. 담당자에게 문의해주세요.',
         pitchHl:'<span class="hl">가맹비 무료</span><br><span class="midline">기존 아이템으로는 이제 어렵습니다</span><br>함께해요, 기적이 펼쳐집니다',
         pitchSub:'<span class="em">플로터 1대와 작은 공간 그리고 열정</span>만 있다면 글로벌 회사의 CEO가 될 수 있습니다. 동네 광고사에 멈추지 마세요. <span class="em">카멜레온프린팅과 함께해요</span>. 함께하신 분들은 이미 부자가 되었습니다.',
         p1t:'가맹비 0원 · 초기 재고 부담 없음',
@@ -382,9 +388,10 @@ const L = {
         heroSub:'中古プロッター1台と小さな作業スペースがあれば十分。ハニカムボード仮壁・段ボール・バナー・ペーパースタンドを半製品で受け取り、実写出力を貼って納品する独占加盟プログラム。',
         ctaInquiry:'加盟お問い合わせ',
         ctaCall:'今すぐ電話',
-        catsH2:'加盟店<span class="hl">専用製品</span>をご確認ください',
-        catsSub:'ハニカムボード半製品など、加盟店限定で供給するラインナップをホームページで直接ご覧いただけます',
-        catsCta:'加盟店専用製品を見る',
+        catsH2:'加盟店<span class="hl">専用製品</span>',
+        catsSub:'ハニカムボード半製品など、加盟パートナーのみに供給する製品ラインナップ。完成品価格の1/3で仕入れ可能。',
+        catsLoading:'製品を読み込み中...',
+        catsEmpty:'登録された専用製品はありません。担当者までお問い合わせください。',
         pitchHl:'<span class="hl">加盟金0円</span><br><span class="midline">既存のアイテムだけではもう厳しい時代です</span><br>一緒に、奇跡が広がります',
         pitchSub:'<span class="em">プロッター1台と小さなスペース、そして情熱</span>があれば、グローバル企業のCEOになれます。町の小さな広告代理店で止まらないで。<span class="em">カメレオンプリンティングと一緒に</span>。既に参加された方々は富裕層になりました。',
         p1t:'加盟金0円・初期在庫負担なし',
@@ -442,9 +449,10 @@ const L = {
         heroSub:'A used plotter and a small workspace are all you need. Receive pre-cut honeycomb walls, corrugated panels, banners and paper stands — print your graphics, laminate them on, and deliver. Exclusive franchise partner program.',
         ctaInquiry:'Apply Now',
         ctaCall:'Call Now',
-        catsH2:'See <span class="hl">franchise-exclusive</span> products',
-        catsSub:'Honeycomb semi-finished goods and more — the lineup we supply only to franchise partners, viewable now on the main site',
-        catsCta:'View Franchise-Exclusive Products',
+        catsH2:'<span class="hl">Franchise-exclusive</span> products',
+        catsSub:'Honeycomb semi-finished goods and more — the lineup we supply only to franchise partners. Source at ~1/3 of retail price.',
+        catsLoading:'Loading products…',
+        catsEmpty:'No exclusive products registered yet. Please contact us.',
         pitchHl:'<span class="hl">$0 Franchise Fee</span><br><span class="midline">Your current product lineup alone won\'t cut it anymore</span><br>Together, miracles unfold',
         pitchSub:'With just <span class="em">one plotter, a small workspace, and passion</span>, you can become CEO of a global company. Do not settle for being a neighborhood print shop. <span class="em">Partner with Chameleon Printing</span>. Those who joined are already wealthy.',
         p1t:'$0 franchise fee · No inventory burden',
@@ -502,9 +510,10 @@ const L = {
         heroSub:'一台二手喷绘机和小工作室就够了。接收预裁切的蜂窝板仿墙、瓦楞板、横幅和纸展台，印刷图像后粘贴交付。独家加盟合作伙伴计划。',
         ctaInquiry:'立即申请',
         ctaCall:'立即致电',
-        catsH2:'查看<span class="hl">加盟专供</span>产品',
-        catsSub:'蜂窝板半成品等加盟店专属供应的产品线，可直接在主站查看',
-        catsCta:'查看加盟专供产品',
+        catsH2:'<span class="hl">加盟专供</span>产品',
+        catsSub:'蜂窝板半成品等仅向加盟伙伴供应的产品线。以成品零售价的1/3采购。',
+        catsLoading:'加载中…',
+        catsEmpty:'暂无专供产品，请联系客服。',
         pitchHl:'<span class="hl">加盟费0元</span><br><span class="midline">仅靠现有产品已难以突围</span><br>携手同行，奇迹在此展开',
         pitchSub:'只要<span class="em">一台喷绘机、一个小工作室和热情</span>，您就能成为全球公司的CEO。不要止步于小区广告店。<span class="em">与卡米利翁印刷携手共进</span>。已经加入的伙伴都已成为富翁。',
         p1t:'加盟费0元 · 无库存负担',
@@ -562,9 +571,10 @@ const L = {
         heroSub:'آلة بلوتر مستعملة ومساحة عمل صغيرة تكفيان. استلم منتجات نصف مصنعة مقطوعة (جدران خلية النحل، كرتون مموج، لافتات، حوامل ورقية)، اطبع الرسومات، ألصقها، وسلمها. برنامج شراكة حصري.',
         ctaInquiry:'قدم الآن',
         ctaCall:'اتصل الآن',
-        catsH2:'شاهد <span class="hl">المنتجات الحصرية للامتياز</span>',
-        catsSub:'منتجات نصف مصنعة من خلية النحل وأكثر — خط الإنتاج الذي نورّده فقط لشركاء الامتياز، يمكن معاينته على الموقع الرئيسي',
-        catsCta:'عرض منتجات الامتياز الحصرية',
+        catsH2:'<span class="hl">منتجات الامتياز الحصرية</span>',
+        catsSub:'منتجات نصف مصنعة من خلية النحل وأكثر — نورّدها فقط لشركاء الامتياز. السعر حوالي ثلث التجزئة.',
+        catsLoading:'جارٍ تحميل المنتجات…',
+        catsEmpty:'لا توجد منتجات حصرية مسجلة بعد. يرجى التواصل معنا.',
         pitchHl:'<span class="hl">رسوم امتياز صفر</span><br><span class="midline">منتجاتك الحالية وحدها لم تعد تكفي</span><br>معاً، تتكشف المعجزات',
         pitchSub:'بـ<span class="em">آلة بلوتر واحدة، مساحة عمل صغيرة، وشغف</span> فقط، يمكنك أن تصبح مدير شركة عالمية. لا تكتفي بكونك محل إعلانات محلياً. <span class="em">شارك مع كاميليون للطباعة</span>. من انضموا بالفعل أصبحوا أثرياء.',
         p1t:'0 رسوم امتياز · بدون عبء مخزون',
@@ -622,9 +632,10 @@ const L = {
         heroSub:'Un plotter usado y un pequeño taller son todo lo que necesita. Reciba semiproductos pre-cortados (paneles nido de abeja, cartón corrugado, banners, expositores de papel), imprima sus gráficos, lamínelos y entregue. Programa de franquicia exclusiva.',
         ctaInquiry:'Solicitar ahora',
         ctaCall:'Llamar ahora',
-        catsH2:'Vea los productos <span class="hl">exclusivos de franquicia</span>',
-        catsSub:'Semiproductos nido de abeja y más — la línea que suministramos solo a socios de franquicia, visible ahora en el sitio principal',
-        catsCta:'Ver productos exclusivos',
+        catsH2:'Productos <span class="hl">exclusivos de franquicia</span>',
+        catsSub:'Semiproductos nido de abeja y más — la línea que suministramos solo a socios de franquicia. A ~1/3 del precio retail.',
+        catsLoading:'Cargando productos…',
+        catsEmpty:'Aún no hay productos exclusivos. Contáctenos por favor.',
         pitchHl:'<span class="hl">Franquicia $0</span><br><span class="midline">Con los artículos actuales ya no alcanza</span><br>Juntos, los milagros se despliegan',
         pitchSub:'Con solo <span class="em">un plotter, un pequeño taller y pasión</span>, puede ser CEO de una empresa global. No se quede como una imprenta del barrio. <span class="em">Asóciese con Chameleon Printing</span>. Los que ya se unieron son ricos.',
         p1t:'Sin franquicia · Sin stock inicial',
@@ -682,9 +693,10 @@ const L = {
         heroSub:'Ein gebrauchter Plotter und ein kleiner Arbeitsplatz reichen. Empfangen Sie zugeschnittene Halbfertigprodukte (Wabenplatten-Wände, Wellpappe, Banner, Papier-Displays), drucken Sie Ihre Grafiken, laminieren Sie auf und liefern Sie. Exklusives Partnerprogramm.',
         ctaInquiry:'Jetzt bewerben',
         ctaCall:'Jetzt anrufen',
-        catsH2:'Sehen Sie <span class="hl">Franchise-exklusive</span> Produkte',
-        catsSub:'Waben-Halbfertigware und mehr — das Sortiment, das wir ausschließlich an Franchise-Partner liefern, jetzt auf der Hauptseite einsehbar',
-        catsCta:'Franchise-Exklusivprodukte ansehen',
+        catsH2:'<span class="hl">Franchise-exklusive</span> Produkte',
+        catsSub:'Waben-Halbfertigware und mehr — ausschließlich für Franchise-Partner. Beschaffung zu ~1/3 des Einzelhandelspreises.',
+        catsLoading:'Produkte werden geladen…',
+        catsEmpty:'Noch keine exklusiven Produkte registriert. Bitte kontaktieren Sie uns.',
         pitchHl:'<span class="hl">Franchise 0€</span><br><span class="midline">Mit dem bisherigen Sortiment wird es zunehmend schwer</span><br>Gemeinsam entfalten sich Wunder',
         pitchSub:'Mit nur <span class="em">einem Plotter, einer kleinen Werkstatt und Leidenschaft</span> werden Sie CEO eines globalen Unternehmens. Bleiben Sie nicht beim Stadtteil-Druckerei stehen. <span class="em">Partnerschaft mit Chameleon Printing</span>. Wer bereits beigetreten ist, ist längst reich.',
         p1t:'0€ Franchise · Keine Lagerlast',
@@ -742,9 +754,10 @@ const L = {
         heroSub:'Un traceur d\'occasion et un petit atelier suffisent. Recevez des semi-produits pré-découpés (cloisons nid d\'abeille, carton ondulé, bannières, présentoirs en papier), imprimez vos graphiques, laminez-les et livrez. Programme de franchise exclusif.',
         ctaInquiry:'Postuler maintenant',
         ctaCall:'Appeler',
-        catsH2:'Voir les produits <span class="hl">exclusifs franchise</span>',
-        catsSub:'Semi-produits nid d\'abeille et plus — la gamme que nous fournissons uniquement aux partenaires franchisés, visible dès maintenant sur le site principal',
-        catsCta:'Voir les produits exclusifs',
+        catsH2:'Produits <span class="hl">exclusifs franchise</span>',
+        catsSub:'Semi-produits nid d\'abeille et plus — fournis uniquement aux partenaires franchisés. À ~1/3 du prix retail.',
+        catsLoading:'Chargement des produits…',
+        catsEmpty:'Pas encore de produits exclusifs. Contactez-nous.',
         pitchHl:'<span class="hl">Franchise 0€</span><br><span class="midline">Vos produits actuels ne suffiront plus</span><br>Ensemble, les miracles se déploient',
         pitchSub:'Avec seulement <span class="em">un traceur, un petit atelier et de la passion</span>, vous pouvez devenir PDG d\'une société mondiale. Ne restez pas une imprimerie de quartier. <span class="em">Associez-vous à Chameleon Printing</span>. Ceux qui ont rejoint sont déjà riches.',
         p1t:'0€ franchise · Pas de stock initial',
@@ -919,7 +932,7 @@ setTxt('txtPitchHl', T.pitchHl);
 setTxt('txtPitchSub', T.pitchSub);
 setTxt('txtCatsH2', T.catsH2);
 setTxt('txtCatsSub', T.catsSub);
-setTxt('txtCatsCta', T.catsCta);
+setTxt('txtCatsLoading', T.catsLoading);
 setTxt('p1t', T.p1t); setTxt('p1d', T.p1d);
 setTxt('p2t', T.p2t); setTxt('p2d', T.p2d);
 setTxt('p3t', T.p3t); setTxt('p3d', T.p3d);
@@ -986,6 +999,71 @@ setTxt('btnSubmit', T.btnSubmit);
         if(code===lang) a.className='active';
         box.appendChild(a);
     });
+})();
+
+// ============== Load franchise-exclusive products (top_category 123456789) ==============
+(async function loadFranchiseProducts(){
+    const grid = document.getElementById('frProductGrid');
+    if(!grid) return;
+    const FRANCHISE_TOP_CAT = '123456789';
+    const sbUrl = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    try {
+        const sb = window.supabase.createClient(sbUrl, sbKey);
+        const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', FRANCHISE_TOP_CAT);
+        const catCodes = (subCats || []).map(c => c.code);
+        if (catCodes.length === 0) catCodes.push(FRANCHISE_TOP_CAT);
+        const { data: products, error } = await sb.from('admin_products')
+            .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, sort_order')
+            .in('category', catCodes)
+            .order('sort_order', { ascending: true })
+            .limit(30);
+        if (error) throw error;
+        grid.innerHTML = '';
+        if (!products || products.length === 0) {
+            grid.innerHTML = '<div class="fr-prod-empty">' + (T.catsEmpty || '') + '</div>';
+            return;
+        }
+        // Pick name by lang
+        const nameFieldByLang = { ko:'name', ja:'name_jp', en:'name_us', zh:'name_cn', ar:'name_ar', es:'name_es', de:'name_de', fr:'name_fr' };
+        const priceFieldByLang = { ja:'price_jp', en:'price_us' };
+        const currencySymbol = { ko:'₩', ja:'¥', en:'$', zh:'¥', ar:'$', es:'€', de:'€', fr:'€' };
+        // Main site origin for product detail deep-links (cross-site friendly)
+        const mainOrigin = (function(){
+            const h = location.hostname;
+            if (h.includes('cafe0101')) return 'https://www.cafe0101.com';
+            if (h.includes('cafe3355') || h.includes('chameleon.design')) return 'https://www.cafe3355.com';
+            return 'https://www.cafe2626.com';
+        })();
+        products.forEach(p => {
+            const nameField = nameFieldByLang[lang] || 'name';
+            const displayName = p[nameField] || p.name || '';
+            let displayPrice = '';
+            if (lang === 'ja' && p.price_jp) displayPrice = '¥' + Number(p.price_jp).toLocaleString();
+            else if (lang === 'en' && p.price_us) displayPrice = '$' + Number(p.price_us).toFixed(2);
+            else displayPrice = (currencySymbol[lang] || '₩') + Number(p.price || 0).toLocaleString();
+            const sizeText = (p.width_mm && p.height_mm) ? (p.width_mm + ' × ' + p.height_mm + ' mm') : '';
+            const img = p.img_url || 'https://placehold.co/400?text=No+Image';
+            const card = document.createElement('a');
+            card.className = 'fr-prod-card';
+            card.href = mainOrigin + '/?product=' + encodeURIComponent(p.code);
+            card.innerHTML = `
+                <div class="fr-prod-img">
+                    <img src="${img}" alt="${displayName}" loading="lazy" onerror="this.src='https://placehold.co/400?text=No+Image'">
+                    <div class="badge">WITH</div>
+                </div>
+                <div class="fr-prod-info">
+                    <div class="fr-prod-name">${displayName}</div>
+                    ${sizeText ? `<div class="fr-prod-meta">${sizeText}</div>` : ''}
+                    <div class="fr-prod-price">${displayPrice}</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    } catch(e) {
+        console.error('[franchise products]', e);
+        grid.innerHTML = '<div class="fr-prod-empty">' + (T.catsEmpty || 'Error loading products') + '</div>';
+    }
 })();
 
 // ============== Toast ==============
