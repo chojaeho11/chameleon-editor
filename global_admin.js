@@ -83,8 +83,104 @@ window.showSection = (secId, navEl) => {
         case 'sec-callback': if(window.loadCallbackList) window.loadCallbackList('pending'); break;
         case 'sec-review-gen': if(window.initReviewGen) window.initReviewGen(); break;
         case 'sec-production-partners': if(window.loadProductionPartners) window.loadProductionPartners(); break;
+        case 'sec-franchise-inquiries': if(window.loadFranchiseInquiries) window.loadFranchiseInquiries(); break;
         case 'sec-community-hub': if(window.loadCommunityHubStats) window.loadCommunityHubStats(); break;
     }
+};
+
+// =========================================================
+// [가맹 문의] 관리
+// =========================================================
+window.loadFranchiseInquiries = async () => {
+    const sb = (typeof getSb === 'function') ? getSb() : window.sb;
+    if (!sb) { console.error('[가맹문의] sb 없음'); return; }
+    const body = document.getElementById('franchiseInquiryListBody');
+    const cntLabel = document.getElementById('fiCountLabel');
+    if (!body) return;
+    body.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#64748b;">로딩 중...</td></tr>';
+
+    const statusFilter = document.getElementById('fiFilterStatus')?.value || '';
+    const langFilter = document.getElementById('fiFilterLang')?.value || '';
+    try {
+        let q = sb.from('franchise_inquiries').select('*').order('created_at', { ascending: false }).limit(500);
+        if (statusFilter) q = q.eq('status', statusFilter);
+        if (langFilter) q = q.eq('lang_submitted', langFilter);
+        const { data, error } = await q;
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            body.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">접수된 문의가 없습니다.</td></tr>';
+            if (cntLabel) cntLabel.textContent = '0건';
+            return;
+        }
+        if (cntLabel) cntLabel.textContent = data.length + '건';
+
+        const esc = (s) => (s == null ? '' : String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const langFlag = { ko:'🇰🇷', ja:'🇯🇵', en:'🇺🇸', zh:'🇨🇳', ar:'🇸🇦', es:'🇪🇸', de:'🇩🇪', fr:'🇫🇷' };
+        const expLabel = { none:'경험없음', print:'디지털인쇄', sign:'사인업', retail:'유통', other:'기타' };
+        const statusColors = { new:['#fef3c7','#92400e','신규'], contacted:['#dbeafe','#1e40af','연락완료'], qualified:['#d1fae5','#065f46','적격'], rejected:['#fee2e2','#991b1b','거절'], closed:['#f1f5f9','#475569','종결'] };
+
+        body.innerHTML = data.map(row => {
+            const sc = statusColors[row.status] || statusColors.new;
+            const dt = row.created_at ? new Date(row.created_at).toLocaleString('ko-KR', { dateStyle:'short', timeStyle:'short' }) : '';
+            const flag = langFlag[row.lang_submitted] || '🌐';
+            const exp = row.experience ? (expLabel[row.experience] || row.experience) : '';
+            return `
+                <tr data-id="${row.id}">
+                    <td style="font-size:11px;color:#64748b;white-space:nowrap;">${esc(dt)}</td>
+                    <td><div style="font-weight:700;">${esc(row.name)}</div><div style="font-size:11px;color:#94a3b8;">${flag} ${esc(row.lang_submitted||'')}</div></td>
+                    <td style="font-size:12px;">${esc(row.country||'')}</td>
+                    <td style="font-size:12px;"><a href="mailto:${esc(row.email)}" style="color:#6366f1;">${esc(row.email)}</a></td>
+                    <td style="font-size:12px;">${row.phone ? `<a href="tel:${esc(row.phone)}" style="color:#6366f1;">${esc(row.phone)}</a>` : '-'}</td>
+                    <td style="font-size:12px;"><div>${esc(row.company||'-')}</div><div style="color:#94a3b8;font-size:11px;">${esc(exp)}</div></td>
+                    <td style="font-size:12px;color:#334155;max-width:280px;word-break:break-word;white-space:pre-wrap;">${esc(row.message||'-')}</td>
+                    <td><input id="fiMemo_${row.id}" value="${esc(row.admin_memo||'')}" placeholder="관리자 메모" style="width:100%;padding:5px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;" onblur="saveFranchiseMemo('${row.id}', this.value)"></td>
+                    <td style="text-align:center;">
+                        <select onchange="updateFranchiseStatus('${row.id}', this.value)" style="padding:4px 6px;background:${sc[0]};color:${sc[1]};border:none;border-radius:4px;font-size:11px;font-weight:700;">
+                            <option value="new" ${row.status==='new'?'selected':''}>신규</option>
+                            <option value="contacted" ${row.status==='contacted'?'selected':''}>연락완료</option>
+                            <option value="qualified" ${row.status==='qualified'?'selected':''}>적격</option>
+                            <option value="rejected" ${row.status==='rejected'?'selected':''}>거절</option>
+                            <option value="closed" ${row.status==='closed'?'selected':''}>종결</option>
+                        </select>
+                    </td>
+                    <td style="text-align:center;"><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;padding:4px 10px;font-size:11px;" onclick="deleteFranchiseInquiry('${row.id}')">삭제</button></td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        console.error('[가맹문의] 로드 실패:', e);
+        body.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:#ef4444;">로딩 실패: ${e.message}</td></tr>`;
+    }
+};
+
+window.updateFranchiseStatus = async (id, status) => {
+    const sb = (typeof getSb === 'function') ? getSb() : window.sb;
+    if (!sb) return;
+    const patch = { status };
+    if (status === 'contacted') patch.contacted_at = new Date().toISOString();
+    const { error } = await sb.from('franchise_inquiries').update(patch).eq('id', id);
+    if (error) { if(window.showToast) showToast('상태 변경 실패: ' + error.message, 'error'); return; }
+    if (window.showToast) showToast('상태가 변경되었습니다.', 'success');
+    window.loadFranchiseInquiries();
+};
+
+window.saveFranchiseMemo = async (id, memo) => {
+    const sb = (typeof getSb === 'function') ? getSb() : window.sb;
+    if (!sb) return;
+    const { error } = await sb.from('franchise_inquiries').update({ admin_memo: memo }).eq('id', id);
+    if (error) { if(window.showToast) showToast('메모 저장 실패: ' + error.message, 'error'); return; }
+    if (window.showToast) showToast('메모 저장됨', 'success');
+};
+
+window.deleteFranchiseInquiry = async (id) => {
+    if (!confirm('이 가맹 문의를 삭제하시겠습니까?')) return;
+    const sb = (typeof getSb === 'function') ? getSb() : window.sb;
+    if (!sb) return;
+    const { error } = await sb.from('franchise_inquiries').delete().eq('id', id);
+    if (error) { if(window.showToast) showToast('삭제 실패: ' + error.message, 'error'); return; }
+    if (window.showToast) showToast('삭제되었습니다.', 'success');
+    window.loadFranchiseInquiries();
 };
 
 // =========================================================

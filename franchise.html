@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가맹점 문의 · Chameleon Printing Franchise</title>
+<meta name="description" content="세계 어디서나 반제품을 받아 실사출력만 하면 끝. 허니콤보드 가벽·골판지·배너·종이매대 등 프리미엄 전시인쇄 제품을 독점 공급받는 무자본 가맹 프로그램.">
+<script>
+(function(){
+    var p = new URLSearchParams(location.search);
+    var qLang = p.get('lang');
+    var h = location.hostname;
+    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
+    var lang = qLang || hostLang;
+    var supported = ['ko','ja','en','zh','ar','es','de','fr'];
+    if(supported.indexOf(lang)<0) lang='ko';
+    window.__FR_LANG = lang;
+    document.documentElement.lang = lang;
+    if(lang==='ar') document.documentElement.dir='rtl';
+})();
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="site-config.js?v=447"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-height:1.6;}
+[dir="rtl"] body{font-family:'Pretendard','Noto Sans Arabic',sans-serif;}
+.container{max-width:1200px;margin:0 auto;padding:0 20px;}
+
+/* Header */
+.fr-header{background:#fff;border-bottom:1px solid #e2e8f0;padding:16px 0;position:sticky;top:0;z-index:50;}
+.fr-header .container{display:flex;align-items:center;justify-content:space-between;}
+.fr-logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:900;color:#0f172a;text-decoration:none;}
+.fr-logo i{color:#6366f1;font-size:24px;}
+.fr-lang-pick{display:flex;gap:4px;}
+.fr-lang-pick a{padding:6px 10px;border-radius:6px;text-decoration:none;color:#475569;font-size:12px;font-weight:700;border:1px solid #e2e8f0;}
+.fr-lang-pick a.active{background:#6366f1;color:#fff;border-color:#6366f1;}
+
+/* Hero */
+.fr-hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#334155 100%);color:#fff;padding:80px 0 100px;position:relative;overflow:hidden;}
+.fr-hero::before{content:"";position:absolute;top:-100px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.3) 0%,transparent 70%);border-radius:50%;}
+.fr-hero-inner{position:relative;text-align:center;}
+.fr-hero-badge{display:inline-block;background:rgba(99,102,241,0.2);border:1px solid rgba(129,140,248,0.4);color:#c7d2fe;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:24px;}
+.fr-hero h1{font-size:48px;font-weight:900;line-height:1.2;margin-bottom:20px;}
+.fr-hero h1 .hl{background:linear-gradient(135deg,#818cf8,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.fr-hero-sub{font-size:18px;color:#cbd5e1;max-width:760px;margin:0 auto 32px;}
+.fr-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:16px 32px;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 10px 30px rgba(99,102,241,0.4);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(99,102,241,0.55);}
+.btn-ghost{background:transparent;color:#e2e8f0;padding:16px 28px;border:1px solid #475569;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+.btn-ghost:hover{border-color:#cbd5e1;color:#fff;}
+
+/* Section */
+.fr-section{padding:80px 0;}
+.fr-section-title{font-size:36px;font-weight:900;text-align:center;margin-bottom:16px;color:#0f172a;}
+.fr-section-title .hl{color:#6366f1;}
+.fr-section-sub{font-size:16px;color:#64748b;text-align:center;max-width:720px;margin:0 auto 48px;}
+
+/* Pitch grid */
+.fr-pitch{background:#f8fafc;}
+.fr-pitch-card{background:#fff;padding:32px 24px;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #e2e8f0;}
+.fr-pitch-card .ic{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px;}
+.fr-pitch-card h3{font-size:17px;font-weight:800;margin-bottom:10px;color:#0f172a;}
+.fr-pitch-card p{font-size:14px;color:#475569;line-height:1.7;}
+.fr-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.fr-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+
+/* Detail long-form */
+.fr-detail-box{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:40px;box-shadow:0 4px 12px rgba(0,0,0,0.04);}
+.fr-detail-box h3{font-size:22px;font-weight:900;margin-bottom:18px;color:#0f172a;}
+.fr-detail-box p{font-size:15px;color:#334155;margin-bottom:16px;line-height:1.85;}
+.fr-detail-box .highlight{background:linear-gradient(135deg,#fef3c7,#fde68a);padding:3px 8px;border-radius:6px;font-weight:700;color:#92400e;}
+.fr-bulletpoint{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid #f1f5f9;}
+.fr-bulletpoint:last-child{border-bottom:0;}
+.fr-bulletpoint .ic{flex-shrink:0;width:40px;height:40px;border-radius:10px;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;}
+.fr-bulletpoint .txt{flex:1;}
+.fr-bulletpoint .t{font-weight:800;color:#0f172a;margin-bottom:4px;font-size:16px;}
+.fr-bulletpoint .d{font-size:14px;color:#475569;line-height:1.7;}
+
+/* Testimonials */
+.fr-test{background:linear-gradient(135deg,#f8fafc,#eef2ff);}
+.fr-test-card{background:#fff;padding:28px;border-radius:16px;border:1px solid #e2e8f0;position:relative;}
+.fr-test-card .quote-ic{position:absolute;top:20px;right:20px;font-size:40px;color:#c7d2fe;opacity:0.6;}
+[dir="rtl"] .fr-test-card .quote-ic{right:auto;left:20px;}
+.fr-test-avatar{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.fr-test-avatar .av{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;}
+.fr-test-avatar .info .name{font-weight:800;color:#0f172a;font-size:15px;}
+.fr-test-avatar .info .meta{font-size:12px;color:#64748b;margin-top:2px;}
+.fr-test-card .quote{font-size:14px;color:#334155;line-height:1.75;font-style:italic;}
+.fr-test-card .revenue{margin-top:14px;padding-top:14px;border-top:1px solid #f1f5f9;font-size:13px;font-weight:800;color:#059669;}
+
+/* Contact phones */
+.fr-contact{background:#0f172a;color:#fff;padding:60px 0;}
+.fr-contact h2{font-size:28px;font-weight:900;text-align:center;margin-bottom:12px;color:#fff;}
+.fr-contact .sub{text-align:center;color:#94a3b8;margin-bottom:36px;font-size:15px;}
+.fr-phones{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:900px;margin:0 auto;}
+.fr-phone-card{background:rgba(99,102,241,0.1);border:1px solid rgba(129,140,248,0.3);border-radius:14px;padding:20px;text-align:center;}
+.fr-phone-card .flag{font-size:28px;margin-bottom:8px;}
+.fr-phone-card .label{font-size:12px;color:#94a3b8;font-weight:700;margin-bottom:6px;letter-spacing:0.5px;}
+.fr-phone-card a{color:#e0e7ff;font-weight:800;font-size:15px;text-decoration:none;}
+.fr-phone-card a:hover{color:#fff;}
+
+/* Inquiry form */
+.fr-form-wrap{background:#fff;}
+.fr-form{background:linear-gradient(135deg,#fff,#f8fafc);border:1px solid #e2e8f0;border-radius:20px;padding:40px;max-width:720px;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,0.04);}
+.fr-form .row{margin-bottom:18px;}
+.fr-form label{display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;}
+.fr-form input,.fr-form textarea,.fr-form select{width:100%;padding:12px 14px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;transition:border-color 0.15s;}
+.fr-form input:focus,.fr-form textarea:focus,.fr-form select:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.1);}
+.fr-form textarea{resize:vertical;min-height:100px;}
+.fr-form .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fr-submit{width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:900;cursor:pointer;transition:transform 0.15s;}
+.fr-submit:hover{transform:translateY(-1px);}
+.fr-submit:disabled{opacity:0.6;cursor:wait;}
+
+/* Footer */
+.fr-footer{background:#0f172a;color:#94a3b8;padding:30px 0;text-align:center;font-size:13px;border-top:1px solid #1e293b;}
+.fr-footer a{color:#c7d2fe;text-decoration:none;margin:0 8px;}
+
+/* Toast */
+.fr-toast{position:fixed;top:20px;right:20px;padding:14px 20px;border-radius:10px;color:#fff;font-weight:700;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,0.25);animation:frSlide 0.3s;}
+.fr-toast.success{background:#10b981;}
+.fr-toast.error{background:#ef4444;}
+@keyframes frSlide{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+@media (max-width:768px){
+    .fr-hero h1{font-size:32px;}
+    .fr-hero-sub{font-size:15px;}
+    .fr-section-title{font-size:26px;}
+    .fr-grid-3,.fr-grid-2{grid-template-columns:1fr;}
+    .fr-phones{grid-template-columns:repeat(2,1fr);}
+    .fr-detail-box{padding:24px;}
+    .fr-form{padding:24px;}
+    .fr-form .grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<header class="fr-header">
+    <div class="container">
+        <a href="/" class="fr-logo"><i class="fa-solid fa-palette"></i> <span>Chameleon</span></a>
+        <div class="fr-lang-pick" id="langPick"></div>
+    </div>
+</header>
+
+<section class="fr-hero">
+    <div class="container">
+        <div class="fr-hero-inner">
+            <div class="fr-hero-badge" id="txtBadge"></div>
+            <h1 id="txtHeroH1"></h1>
+            <p class="fr-hero-sub" id="txtHeroSub"></p>
+            <div class="fr-hero-ctas">
+                <a href="#inquiry" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> <span id="txtCtaInquiry"></span></a>
+                <a href="#phones" class="btn-ghost"><i class="fa-solid fa-phone"></i> <span id="txtCtaCall"></span></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Three headline value props -->
+<section class="fr-section fr-pitch">
+    <div class="container">
+        <h2 class="fr-section-title"><span class="hl" id="txtPitchHl"></span></h2>
+        <p class="fr-section-sub" id="txtPitchSub"></p>
+        <div class="fr-grid-3">
+            <div class="fr-pitch-card"><div class="ic">💰</div><h3 id="p1t"></h3><p id="p1d"></p></div>
+            <div class="fr-pitch-card"><div class="ic">🌍</div><h3 id="p2t"></h3><p id="p2d"></p></div>
+            <div class="fr-pitch-card"><div class="ic">🔓</div><h3 id="p3t"></h3><p id="p3d"></p></div>
+        </div>
+    </div>
+</section>
+
+<!-- Long-form detail -->
+<section class="fr-section">
+    <div class="container">
+        <h2 class="fr-section-title" id="txtDetailH2"></h2>
+        <p class="fr-section-sub" id="txtDetailSub"></p>
+        <div class="fr-detail-box">
+            <div id="txtDetailBody"></div>
+
+            <div style="margin-top:30px;">
+                <div class="fr-bulletpoint"><div class="ic">1</div><div class="txt"><div class="t" id="b1t"></div><div class="d" id="b1d"></div></div></div>
+                <div class="fr-bulletpoint"><div class="ic">2</div><div class="txt"><div class="t" id="b2t"></div><div class="d" id="b2d"></div></div></div>
+                <div class="fr-bulletpoint"><div class="ic">3</div><div class="txt"><div class="t" id="b3t"></div><div class="d" id="b3d"></div></div></div>
+                <div class="fr-bulletpoint"><div class="ic">4</div><div class="txt"><div class="t" id="b4t"></div><div class="d" id="b4d"></div></div></div>
+                <div class="fr-bulletpoint"><div class="ic">5</div><div class="txt"><div class="t" id="b5t"></div><div class="d" id="b5d"></div></div></div>
+                <div class="fr-bulletpoint"><div class="ic">6</div><div class="txt"><div class="t" id="b6t"></div><div class="d" id="b6d"></div></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="fr-section fr-test">
+    <div class="container">
+        <h2 class="fr-section-title" id="txtTestH2"></h2>
+        <p class="fr-section-sub" id="txtTestSub"></p>
+        <div class="fr-grid-3" id="testGrid"></div>
+    </div>
+</section>
+
+<!-- Contact phones -->
+<section id="phones" class="fr-contact">
+    <div class="container">
+        <h2 id="txtPhonesH2"></h2>
+        <p class="sub" id="txtPhonesSub"></p>
+        <div class="fr-phones">
+            <div class="fr-phone-card"><div class="flag">🇯🇵</div><div class="label">日本語</div><a href="tel:+821034913535">+82 10 3491 3535</a></div>
+            <div class="fr-phone-card"><div class="flag">🇺🇸</div><div class="label">English</div><a href="tel:+821034913535">+82 10 3491 3535</a></div>
+            <div class="fr-phone-card"><div class="flag">🇫🇷</div><div class="label">Français</div><a href="tel:+212617901092">+212 617 901 092</a></div>
+            <div class="fr-phone-card"><div class="flag">🇸🇦</div><div class="label">العربية</div><a href="tel:+212617901092">+212 617 901 092</a></div>
+        </div>
+    </div>
+</section>
+
+<!-- Inquiry form -->
+<section id="inquiry" class="fr-section fr-form-wrap">
+    <div class="container">
+        <h2 class="fr-section-title" id="txtFormH2"></h2>
+        <p class="fr-section-sub" id="txtFormSub"></p>
+
+        <form class="fr-form" id="frForm">
+            <div class="grid">
+                <div class="row">
+                    <label for="frName" id="lblName"></label>
+                    <input id="frName" name="name" type="text" required>
+                </div>
+                <div class="row">
+                    <label for="frCountry" id="lblCountry"></label>
+                    <input id="frCountry" name="country" type="text" required>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="row">
+                    <label for="frEmail" id="lblEmail"></label>
+                    <input id="frEmail" name="email" type="email" required>
+                </div>
+                <div class="row">
+                    <label for="frPhone" id="lblPhone"></label>
+                    <input id="frPhone" name="phone" type="tel">
+                </div>
+            </div>
+            <div class="row">
+                <label for="frCompany" id="lblCompany"></label>
+                <input id="frCompany" name="company" type="text">
+            </div>
+            <div class="row">
+                <label for="frExp" id="lblExp"></label>
+                <select id="frExp" name="experience">
+                    <option value=""></option>
+                    <option value="none"></option>
+                    <option value="print"></option>
+                    <option value="sign"></option>
+                    <option value="retail"></option>
+                    <option value="other"></option>
+                </select>
+            </div>
+            <div class="row">
+                <label for="frMsg" id="lblMsg"></label>
+                <textarea id="frMsg" name="message" rows="4"></textarea>
+            </div>
+            <button type="submit" class="fr-submit" id="btnSubmit"></button>
+        </form>
+    </div>
+</section>
+
+<footer class="fr-footer">
+    <div class="container">
+        <div>© 2026 Chameleon Printing Franchise Program</div>
+        <div style="margin-top:8px;">
+            <a href="/">Main</a> · <a href="/services">Services</a> · <a href="/raw-board">Raw Board</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+// ============== i18n dictionary ==============
+const L = {
+    ko:{
+        langLabel:'한국어',
+        badge:'⚡ 무자본 · 가맹비 0원 · 지역 독점',
+        heroH1:['카멜레온과 함께','<span class="hl">세계 시장</span>에서 성장하세요'],
+        heroSub:'현수막 플로터 한 대와 작은 작업 공간이면 충분합니다. 허니콤보드 가벽·골판지·배너·종이매대 — 반제품으로 받아서 실사 출력만 붙여 납품하는 독점 가맹 파트너 프로그램.',
+        ctaInquiry:'지금 가맹 문의',
+        ctaCall:'바로 통화',
+        pitchHl:'왜 카멜레온 가맹점이 답인가',
+        pitchSub:'비싼 설비 투자 없이 세계적으로 각광받는 허니콤보드 전시 인쇄 사업을 독점 운영할 수 있는 유일한 경로',
+        p1t:'가맹비 0원 · 초기 재고 부담 없음',
+        p1d:'소량 샘플을 홈페이지 가격의 50%에 구매해 시작. 대량 오더는 한국·말레이시아·모로코 공장에서 세계 최저가로 공급. 마진 50% 구조.',
+        p2t:'전 세계 어디서든 반제품 수령',
+        p2d:'허니콤 가벽·골판지·배너·종이매대·패브릭 샘플이 커팅 완료 상태로 FOB 선적. 귀사는 실사 출력만 붙여서 판매. 해상운송료·관세는 현지 결제.',
+        p3t:'독점 지역 + 홈페이지 무상 복제',
+        p3d:'지역당 1개 파트너만 선발. 연매출 100만불 이상 달성 파트너에게는 관리자 페이지 포함 카멜레온 홈페이지를 귀사 도메인에 무상 복제.',
+        detailH2:'<span class="hl">가맹점 프로그램</span> 전체 안내',
+        detailSub:'반드시 읽어주세요 — 이 비즈니스의 본질을 담았습니다',
+        detailBody:`<p>현수막을 출력하는 장비가 있으신가요? 저희와 같이 성장해요. <strong>전 세계 어디서나 반제품을 받아 실사 출력 후 붙여서 납품할 수 있도록 반제품을 제공</strong>합니다. 허니콤보드 가벽과 골판지 가벽, 배너 등의 제품을 커팅만 되어 있는 상태로 제공받아 출력물을 붙여서 판매하세요.</p>
+<p><span class="highlight">비싼 장비 없이도 카멜레온프린팅의 모든 제품을 판매</span>할 수 있습니다. 카멜레온프린팅의 핫제품인 종이매대와 패브릭 샘플도 <strong>무상으로 보내드립니다</strong>. 샘플을 보여주고 오더를 받으세요.</p>
+<p>대량 주문은 <strong>말레이시아·한국·모로코 공장</strong>에서 제작하여 세계 어느 곳보다도 저렴하게 공급합니다.</p>
+<p><strong>가맹비 없음. 초기 물량 제한 없음.</strong> 소량의 샘플을 구매하여 영업하세요. 샘플 반제품 가격은 홈페이지에 기재된 가격의 <span class="highlight">50%</span>에 공급됩니다.</p>
+<p>배송은 <strong>FOB 방식</strong>으로 배에 선적까지 해드리고, 이후 해상운송료와 항구에서 귀사까지의 운임·세금은 가맹점에서 직접 결제하면 됩니다.</p>`,
+        b1t:'필요한 것은 단 세 가지',
+        b1d:'약 1,000달러짜리 중고 플로터, 작은 작업 공간, 그리고 열정. 그게 전부입니다.',
+        b2t:'연매출 100만불 달성 시 홈페이지 무상 복제',
+        b2d:'관리자 페이지를 포함한 카멜레온프린팅의 모든 기능을 귀사 도메인에 복제해 드립니다.',
+        b3t:'기존 전시 인쇄 사업자에게 최적',
+        b3d:'가맹비 없이 무자본으로 세계적으로 각광받는 허니콤보드 사업을 지역 독점으로 확보할 수 있습니다.',
+        b4t:'지금 서두르세요 — 지역당 1개만',
+        b4d:'각 지역에 1개의 가맹점만을 무료로 제공합니다. 먼저 문의하는 파트너가 지역을 선점합니다.',
+        b5t:'카멜레온과 파트너가 되세요',
+        b5d:'자본금은 필요 없습니다. 당신을 부자로 안내합니다. 지금 가맹된 업체들의 평균 매출액을 확인하세요.',
+        b6t:'마진 구조: 50%',
+        b6d:'샘플 반제품 가격이 홈페이지 가격의 50%. 출력·설치 마진을 더하면 대부분 50%를 확보할 수 있습니다.',
+        testH2:'<span class="hl">전 세계 파트너</span>들의 이야기',
+        testSub:'실제 운영 중인 가맹점주들의 후기 (익명 처리된 평균 매출 공개)',
+        phonesH2:'언제든 전화주세요',
+        phonesSub:'4개 언어로 담당자가 직접 상담해드립니다',
+        formH2:'<span class="hl">가맹 문의</span> 접수',
+        formSub:'영업일 기준 48시간 이내에 담당자가 연락드립니다',
+        lblName:'이름',
+        lblCountry:'국가',
+        lblEmail:'이메일',
+        lblPhone:'전화번호 (선택)',
+        lblCompany:'회사명 (선택)',
+        lblExp:'경험',
+        expBlank:'선택해주세요',
+        expNone:'인쇄 경험 없음',
+        expPrint:'디지털 인쇄 경험자',
+        expSign:'간판·사인 제작업',
+        expRetail:'유통·소매업',
+        expOther:'기타',
+        lblMsg:'문의 내용 (선택)',
+        btnSubmit:'문의 보내기',
+        msgOk:'문의가 접수되었습니다. 48시간 내에 연락드리겠습니다.',
+        msgErr:'전송 실패. 잠시 후 다시 시도해주세요.'
+    },
+    ja:{
+        langLabel:'日本語',
+        badge:'⚡ 無資本 · 加盟金0円 · 地域独占',
+        heroH1:['カメレオンと共に','<span class="hl">世界市場</span>で成長しましょう'],
+        heroSub:'中古プロッター1台と小さな作業スペースがあれば十分。ハニカムボード仮壁・段ボール・バナー・ペーパースタンドを半製品で受け取り、実写出力を貼って納品する独占加盟プログラム。',
+        ctaInquiry:'加盟お問い合わせ',
+        ctaCall:'今すぐ電話',
+        pitchHl:'なぜカメレオン加盟店が最適なのか',
+        pitchSub:'高額な設備投資なしで、世界的に注目されるハニカムボード展示印刷事業を地域独占で運営できる唯一の道',
+        p1t:'加盟金0円・初期在庫負担なし',
+        p1d:'少量サンプルをHP価格の50%で仕入れ開始。大量オーダーは韓国・マレーシア・モロッコ工場で世界最安供給。粗利50%構造。',
+        p2t:'世界中どこでも半製品受取',
+        p2d:'ハニカム仮壁・段ボール・バナー・ペーパースタンド・ファブリック見本をカット済みでFOB出荷。貴社は実写出力を貼るだけ。海上運賃・関税は現地決済。',
+        p3t:'地域独占＋ホームページ無償複製',
+        p3d:'地域ごとに1社のみ採用。年商100万ドル達成パートナーには管理画面を含むカメレオンHPを貴社ドメインへ無償複製。',
+        detailH2:'<span class="hl">加盟店プログラム</span>の全案内',
+        detailSub:'必ずお読みください — このビジネスの本質',
+        detailBody:`<p>横断幕を出力する機材をお持ちですか？ 私たちと一緒に成長しましょう。<strong>世界中どこでも半製品を受け取り、実写出力を貼って納品できるよう半製品を提供</strong>します。ハニカム仮壁、段ボール仮壁、バナーなどをカットのみの状態で受け取り、出力を貼って販売してください。</p>
+<p><span class="highlight">高価な設備なしでカメレオンプリンティングの全製品を販売</span>できます。人気のペーパースタンドやファブリック見本も<strong>無償で提供</strong>します。見本を見せてオーダーを受けてください。</p>
+<p>大量注文は<strong>マレーシア・韓国・モロッコ工場</strong>で製造し、世界のどこよりも安く供給します。</p>
+<p><strong>加盟金なし、初期数量制限なし。</strong>少量サンプルを購入して営業してください。サンプル半製品価格はHP掲載価格の<span class="highlight">50%</span>で供給します。</p>
+<p>配送は<strong>FOB方式</strong>で船積みまで対応。以降の海上運賃と港から貴社までの輸送費・税金は加盟店が現地で決済します。</p>`,
+        b1t:'必要なものは3つだけ',
+        b1d:'約1,000ドルの中古プロッター、小さな作業スペース、そして情熱。それだけです。',
+        b2t:'年商100万ドル達成でHP無償複製',
+        b2d:'管理画面を含むカメレオンプリンティングの全機能を貴社ドメインに複製します。',
+        b3t:'既存の展示印刷事業者に最適',
+        b3d:'加盟金なし、無資本で世界的に注目されるハニカムボード事業を地域独占で獲得可能。',
+        b4t:'今すぐお急ぎを — 地域1社限定',
+        b4d:'各地域に1社のみ無料提供。先に問い合わせたパートナーが地域を確保します。',
+        b5t:'カメレオンのパートナーに',
+        b5d:'資本金不要。あなたを富裕層へ導きます。現在加盟中の業者の平均売上をご確認ください。',
+        b6t:'粗利構造：50%',
+        b6d:'サンプル半製品価格がHP価格の50%。出力・施工マージンを加えれば概ね50%を確保。',
+        testH2:'<span class="hl">世界のパートナー</span>の声',
+        testSub:'実際に運営中の加盟店主の声（匿名処理済み平均売上公開）',
+        phonesH2:'いつでもお電話ください',
+        phonesSub:'4言語で担当者が直接ご相談',
+        formH2:'<span class="hl">加盟お問い合わせ</span>',
+        formSub:'営業日48時間以内に担当者よりご連絡',
+        lblName:'お名前',
+        lblCountry:'国',
+        lblEmail:'メール',
+        lblPhone:'電話番号（任意）',
+        lblCompany:'会社名（任意）',
+        lblExp:'経験',
+        expBlank:'選択してください',
+        expNone:'印刷経験なし',
+        expPrint:'デジタル印刷経験者',
+        expSign:'看板・サイン制作業',
+        expRetail:'流通・小売業',
+        expOther:'その他',
+        lblMsg:'お問い合わせ内容（任意）',
+        btnSubmit:'送信する',
+        msgOk:'お問い合わせを受付けました。48時間以内にご連絡いたします。',
+        msgErr:'送信に失敗しました。しばらくしてから再度お試しください。'
+    },
+    en:{
+        langLabel:'English',
+        badge:'⚡ Zero capital · $0 franchise fee · Regional exclusivity',
+        heroH1:['Grow with Chameleon','in the <span class="hl">global market</span>'],
+        heroSub:'A used plotter and a small workspace are all you need. Receive pre-cut honeycomb walls, corrugated panels, banners and paper stands — print your graphics, laminate them on, and deliver. Exclusive franchise partner program.',
+        ctaInquiry:'Apply Now',
+        ctaCall:'Call Now',
+        pitchHl:'Why partner with Chameleon',
+        pitchSub:'The only path to operate the globally-demanded honeycomb exhibition-print business under regional exclusivity — without heavy equipment investment',
+        p1t:'$0 franchise fee · No inventory burden',
+        p1d:'Start with small samples at 50% of retail. Bulk orders produced in Korea, Malaysia, Morocco at world-lowest cost. 50% margin structure.',
+        p2t:'Semi-finished goods shipped worldwide',
+        p2d:'Honeycomb walls, corrugated, banners, paper stands, fabric samples — shipped pre-cut, FOB. You only print and apply graphics. Freight/duties paid locally.',
+        p3t:'Regional exclusivity + free website clone',
+        p3d:'One partner per region. Partners reaching $1M annual revenue receive a free clone of the Chameleon website (admin included) on their own domain.',
+        detailH2:'Full <span class="hl">Franchise Program</span> Overview',
+        detailSub:'Please read carefully — this is the essence of the business',
+        detailBody:`<p>Do you own a banner-printing plotter? Grow with us. <strong>We supply pre-cut semi-finished products worldwide, so you only need to print graphics, apply them, and deliver.</strong> Honeycomb walls, corrugated walls, banners and more are shipped cut-to-size. You print, laminate, sell.</p>
+<p><span class="highlight">Sell the full Chameleon product line without expensive equipment.</span> Paper stands and fabric samples — our hottest products — are provided <strong>free of charge</strong>. Show samples, collect orders.</p>
+<p>Bulk orders are produced at our <strong>Malaysia, Korea and Morocco factories</strong>, supplied at the lowest prices worldwide.</p>
+<p><strong>No franchise fee. No minimum volume.</strong> Start with small samples. Sample semi-finished pricing is <span class="highlight">50% of listed retail</span>.</p>
+<p>Shipping is <strong>FOB</strong> — we load to the vessel; ocean freight, port charges and duties are paid by the franchise locally.</p>`,
+        b1t:'Only three things required',
+        b1d:'A ~$1,000 used plotter, a small workspace, and passion. That is all.',
+        b2t:'Free website clone at $1M annual revenue',
+        b2d:'We clone the entire Chameleon site (including admin) to your domain — all features included.',
+        b3t:'Ideal for existing exhibition-print operators',
+        b3d:'With no franchise fee and no capital, secure a regional monopoly on the globally-demanded honeycomb business.',
+        b4t:'Hurry — only one partner per region',
+        b4d:'We grant one free franchise slot per region. First come, first served.',
+        b5t:'Become a Chameleon partner',
+        b5d:'No capital required. We guide you to wealth. Check the average revenue of current franchisees.',
+        b6t:'Margin structure: 50%',
+        b6d:'Sample semi-finished pricing at 50% of retail. Add your print & install margin — most partners secure ~50%.',
+        testH2:'<span class="hl">Global partner</span> testimonials',
+        testSub:'Stories from currently operating franchisees (anonymized average revenue disclosed)',
+        phonesH2:'Call us anytime',
+        phonesSub:'Direct consultation in 4 languages',
+        formH2:'<span class="hl">Franchise Inquiry</span>',
+        formSub:'A team member will reach out within 48 business hours',
+        lblName:'Name',
+        lblCountry:'Country',
+        lblEmail:'Email',
+        lblPhone:'Phone (optional)',
+        lblCompany:'Company (optional)',
+        lblExp:'Experience',
+        expBlank:'Please select',
+        expNone:'No print experience',
+        expPrint:'Digital print operator',
+        expSign:'Signage / sign-making',
+        expRetail:'Retail / distribution',
+        expOther:'Other',
+        lblMsg:'Message (optional)',
+        btnSubmit:'Send Inquiry',
+        msgOk:'Inquiry received. We will contact you within 48 hours.',
+        msgErr:'Submission failed. Please try again shortly.'
+    },
+    zh:{
+        langLabel:'中文',
+        badge:'⚡ 零资本 · 加盟费0元 · 区域独占',
+        heroH1:['与卡米利翁一起','在<span class="hl">全球市场</span>中成长'],
+        heroSub:'一台二手喷绘机和小工作室就够了。接收预裁切的蜂窝板仿墙、瓦楞板、横幅和纸展台，印刷图像后粘贴交付。独家加盟合作伙伴计划。',
+        ctaInquiry:'立即申请',
+        ctaCall:'立即致电',
+        pitchHl:'为何选择卡米利翁加盟店',
+        pitchSub:'无需重设备投资即可独占运营全球需求蜂窝板展示印刷业务的唯一途径',
+        p1t:'加盟费0元 · 无库存负担',
+        p1d:'以网站价50%购买少量样品起步。大宗订单由韩国、马来西亚、摩洛哥工厂以全球最低价供应。50%毛利结构。',
+        p2t:'半成品全球发货',
+        p2d:'蜂窝板仿墙、瓦楞板、横幅、纸展台、布样均预裁切FOB发货。贵司只需印刷图像并粘贴。海运费/关税由当地支付。',
+        p3t:'区域独占+免费克隆网站',
+        p3d:'每个区域仅招一位合作伙伴。年营收达100万美元的合作伙伴可获得卡米利翁完整网站(含后台)免费克隆至贵司域名。',
+        detailH2:'<span class="hl">加盟店计划</span>全面介绍',
+        detailSub:'请仔细阅读 — 这是业务的精髓',
+        detailBody:`<p>您拥有横幅印刷喷绘机吗？与我们共同成长。<strong>我们向全球供应预裁切的半成品，您只需印刷图像、粘贴、交付即可。</strong>蜂窝板仿墙、瓦楞板仿墙、横幅等以裁切状态发货。您印刷、粘贴、销售。</p>
+<p><span class="highlight">无需昂贵设备即可销售卡米利翁全线产品。</span>我们的热销产品纸展台和布样<strong>免费提供</strong>。展示样品，接收订单。</p>
+<p>大宗订单由我们的<strong>马来西亚、韩国、摩洛哥工厂</strong>生产，以全球最低价供应。</p>
+<p><strong>无加盟费、无最低数量。</strong>从少量样品开始。样品半成品价格为零售价的<span class="highlight">50%</span>。</p>
+<p>发货采用<strong>FOB方式</strong>——我们装船，海运费、港口费和关税由加盟店当地支付。</p>`,
+        b1t:'仅需三样',
+        b1d:'约1,000美元二手喷绘机、小工作室、热情。仅此而已。',
+        b2t:'年营收100万美元即获免费网站克隆',
+        b2d:'将包含后台的卡米利翁完整网站克隆至您的域名——所有功能齐全。',
+        b3t:'最适合现有展示印刷业者',
+        b3d:'无加盟费、零资本，即可在全球需求的蜂窝板业务中获得区域独占。',
+        b4t:'请尽快——每区域仅限一位',
+        b4d:'每个区域仅提供一个免费加盟名额。先到先得。',
+        b5t:'成为卡米利翁合作伙伴',
+        b5d:'无需资本金。引导您走向富裕。查看目前加盟业者的平均销售额。',
+        b6t:'毛利结构：50%',
+        b6d:'样品半成品价格为零售的50%。加上印刷、施工毛利，通常能确保50%。',
+        testH2:'<span class="hl">全球合作伙伴</span>的声音',
+        testSub:'实际运营中的加盟店主的反馈（匿名处理平均销售额）',
+        phonesH2:'随时致电',
+        phonesSub:'4种语言直接咨询',
+        formH2:'<span class="hl">加盟咨询</span>',
+        formSub:'工作日48小时内专员联系',
+        lblName:'姓名',
+        lblCountry:'国家',
+        lblEmail:'邮箱',
+        lblPhone:'电话（选填）',
+        lblCompany:'公司（选填）',
+        lblExp:'经验',
+        expBlank:'请选择',
+        expNone:'无印刷经验',
+        expPrint:'数字印刷业者',
+        expSign:'标牌制作业',
+        expRetail:'零售/分销',
+        expOther:'其他',
+        lblMsg:'咨询内容（选填）',
+        btnSubmit:'发送咨询',
+        msgOk:'咨询已受理，48小时内将与您联系。',
+        msgErr:'发送失败，请稍后再试。'
+    },
+    ar:{
+        langLabel:'العربية',
+        badge:'⚡ بدون رأس مال · رسوم امتياز 0 · حصرية إقليمية',
+        heroH1:['نموا مع كاميليون','في <span class="hl">السوق العالمي</span>'],
+        heroSub:'آلة بلوتر مستعملة ومساحة عمل صغيرة تكفيان. استلم منتجات نصف مصنعة مقطوعة (جدران خلية النحل، كرتون مموج، لافتات، حوامل ورقية)، اطبع الرسومات، ألصقها، وسلمها. برنامج شراكة حصري.',
+        ctaInquiry:'قدم الآن',
+        ctaCall:'اتصل الآن',
+        pitchHl:'لماذا شراكة كاميليون',
+        pitchSub:'الطريق الوحيد لتشغيل أعمال طباعة معارض خلية النحل المطلوبة عالمياً بحصرية إقليمية دون استثمار معدات ثقيلة',
+        p1t:'0 رسوم امتياز · بدون عبء مخزون',
+        p1d:'ابدأ بعينات صغيرة بنصف سعر التجزئة. الطلبيات الكبيرة تُصنع في مصانع كوريا وماليزيا والمغرب بأدنى سعر عالمي. هيكل ربح 50٪.',
+        p2t:'شحن نصف مصنع حول العالم',
+        p2d:'جدران، كرتون، لافتات، حوامل ورقية، عينات أقمشة تُشحن مقطوعة FOB. أنت فقط تطبع الرسومات وتلصقها. الشحن والجمارك محلياً.',
+        p3t:'حصرية إقليمية + استنساخ موقع مجاني',
+        p3d:'شريك واحد لكل منطقة. الشركاء الذين يصلون لإيرادات 1 مليون دولار سنوياً يحصلون على نسخة مجانية من موقع كاميليون (بما في ذلك الإدارة) على نطاقهم.',
+        detailH2:'<span class="hl">برنامج الامتياز</span> الشامل',
+        detailSub:'يرجى القراءة بعناية — هذا جوهر العمل',
+        detailBody:`<p>هل تملك آلة بلوتر لطباعة اللافتات؟ انمُ معنا. <strong>نوفر منتجات نصف مصنعة مقطوعة في جميع أنحاء العالم، فتحتاج فقط للطباعة واللصق والتسليم.</strong> جدران خلية النحل، جدران الكرتون المموج، اللافتات وغيرها تُشحن بمقاسات مقطوعة.</p>
+<p><span class="highlight">بع خط منتجات كاميليون الكامل دون معدات باهظة.</span> منتجاتنا الرائجة من حوامل ورقية وعينات أقمشة تُقدم <strong>مجاناً</strong>. اعرض العينات، اجمع الطلبات.</p>
+<p>الطلبيات الكبيرة تُصنع في مصانعنا في <strong>ماليزيا وكوريا والمغرب</strong>، بأدنى سعر عالمياً.</p>
+<p><strong>بدون رسوم امتياز. بدون حد أدنى.</strong> ابدأ بعينات صغيرة. سعر العينات نصف المصنعة <span class="highlight">50٪ من سعر التجزئة</span>.</p>
+<p>الشحن <strong>FOB</strong> — نحمّل على السفينة؛ الشحن البحري ورسوم الموانئ والجمارك يدفعها الامتياز محلياً.</p>`,
+        b1t:'ثلاثة أشياء فقط',
+        b1d:'بلوتر مستعمل بحوالي 1000 دولار، مساحة عمل صغيرة، وشغف. هذا كل شيء.',
+        b2t:'استنساخ موقع مجاني عند 1 مليون دولار سنوياً',
+        b2d:'نستنسخ موقع كاميليون الكامل (بما في ذلك الإدارة) على نطاقك.',
+        b3t:'مثالي لمشغلي الطباعة الحالية',
+        b3d:'بدون رسوم وبدون رأس مال، احصل على احتكار إقليمي لأعمال خلية النحل المطلوبة عالمياً.',
+        b4t:'أسرع — شريك واحد فقط لكل منطقة',
+        b4d:'نمنح فرصة امتياز مجانية واحدة لكل منطقة. الأسبق له الأولوية.',
+        b5t:'كن شريك كاميليون',
+        b5d:'لا يلزم رأس مال. نقودك إلى الثروة. تحقق من متوسط إيرادات أصحاب الامتياز الحاليين.',
+        b6t:'هيكل الربح: 50٪',
+        b6d:'سعر العينة نصف المصنعة 50٪ من التجزئة. مع هامش الطباعة والتركيب، معظم الشركاء يؤمنون ~50٪.',
+        testH2:'قصص <span class="hl">الشركاء العالميين</span>',
+        testSub:'قصص من أصحاب الامتياز العاملين حالياً (متوسط إيرادات مجهول الهوية)',
+        phonesH2:'اتصل في أي وقت',
+        phonesSub:'استشارة مباشرة بـ 4 لغات',
+        formH2:'<span class="hl">استفسار الامتياز</span>',
+        formSub:'سيتواصل معك عضو الفريق خلال 48 ساعة عمل',
+        lblName:'الاسم',
+        lblCountry:'الدولة',
+        lblEmail:'البريد الإلكتروني',
+        lblPhone:'الهاتف (اختياري)',
+        lblCompany:'الشركة (اختياري)',
+        lblExp:'الخبرة',
+        expBlank:'اختر',
+        expNone:'لا خبرة طباعة',
+        expPrint:'مشغل طباعة رقمية',
+        expSign:'صناعة لافتات',
+        expRetail:'تجزئة / توزيع',
+        expOther:'أخرى',
+        lblMsg:'الرسالة (اختياري)',
+        btnSubmit:'إرسال الاستفسار',
+        msgOk:'تم استلام استفسارك. سنتواصل خلال 48 ساعة.',
+        msgErr:'فشل الإرسال. يرجى المحاولة لاحقاً.'
+    },
+    es:{
+        langLabel:'Español',
+        badge:'⚡ Sin capital · Franquicia $0 · Exclusividad regional',
+        heroH1:['Crezca con Chameleon','en el <span class="hl">mercado global</span>'],
+        heroSub:'Un plotter usado y un pequeño taller son todo lo que necesita. Reciba semiproductos pre-cortados (paneles nido de abeja, cartón corrugado, banners, expositores de papel), imprima sus gráficos, lamínelos y entregue. Programa de franquicia exclusiva.',
+        ctaInquiry:'Solicitar ahora',
+        ctaCall:'Llamar ahora',
+        pitchHl:'Por qué asociarse con Chameleon',
+        pitchSub:'El único camino para operar el negocio de impresión de exposiciones en panel nido de abeja de demanda global bajo exclusividad regional — sin inversión pesada',
+        p1t:'Sin franquicia · Sin stock inicial',
+        p1d:'Comience con muestras pequeñas al 50% del precio de retail. Pedidos grandes producidos en Corea, Malasia, Marruecos al precio más bajo del mundo. Estructura de margen 50%.',
+        p2t:'Semiproductos enviados mundialmente',
+        p2d:'Paneles, cartón, banners, expositores, muestras de tela — enviados pre-cortados, FOB. Usted solo imprime y lamina. Flete/aranceles se pagan localmente.',
+        p3t:'Exclusividad + clon de web gratis',
+        p3d:'Un socio por región. Los que alcancen $1M anual reciben un clon gratis del sitio Chameleon (con admin) en su dominio.',
+        detailH2:'Descripción completa del <span class="hl">Programa de Franquicia</span>',
+        detailSub:'Lea con atención — la esencia del negocio',
+        detailBody:`<p>¿Tiene un plotter para imprimir banners? Crezca con nosotros. <strong>Suministramos semiproductos pre-cortados en todo el mundo, solo necesita imprimir gráficos, laminarlos y entregar.</strong> Paneles, cartón, banners y más se envían cortados a medida.</p>
+<p><span class="highlight">Venda toda la línea Chameleon sin equipos costosos.</span> Nuestros productos estrella — expositores de papel y muestras de tela — se proveen <strong>gratis</strong>. Muestre, recoja pedidos.</p>
+<p>Los pedidos grandes se producen en <strong>Malasia, Corea y Marruecos</strong>, al precio más bajo del mundo.</p>
+<p><strong>Sin franquicia. Sin mínimo.</strong> Inicie con muestras. El precio del semiproducto es <span class="highlight">50% del retail</span>.</p>
+<p>Envío <strong>FOB</strong> — cargamos al barco; el flete marítimo, cargos portuarios y aranceles los paga la franquicia localmente.</p>`,
+        b1t:'Solo tres cosas',
+        b1d:'Un plotter usado de ~$1,000, un taller pequeño, y pasión. Eso es todo.',
+        b2t:'Clon de sitio gratis al alcanzar $1M',
+        b2d:'Clonamos el sitio completo (con admin) a su dominio — todas las funciones.',
+        b3t:'Ideal para operadores existentes',
+        b3d:'Sin franquicia y sin capital, asegure monopolio regional del negocio nido de abeja.',
+        b4t:'Apresúrese — solo un socio por región',
+        b4d:'Damos un slot gratis por región. Primer llegado, primer servido.',
+        b5t:'Sea socio de Chameleon',
+        b5d:'Sin capital. Le guiamos a la riqueza. Vea el ingreso promedio de franquiciados actuales.',
+        b6t:'Margen: 50%',
+        b6d:'Precio de semiproducto al 50% del retail. Con margen de impresión e instalación, la mayoría asegura ~50%.',
+        testH2:'Historias de <span class="hl">socios globales</span>',
+        testSub:'Historias de franquiciados actuales (ingreso promedio anónimo)',
+        phonesH2:'Llámenos en cualquier momento',
+        phonesSub:'Consulta directa en 4 idiomas',
+        formH2:'<span class="hl">Consulta de franquicia</span>',
+        formSub:'Un miembro del equipo contactará en 48h hábiles',
+        lblName:'Nombre',
+        lblCountry:'País',
+        lblEmail:'Correo',
+        lblPhone:'Teléfono (opcional)',
+        lblCompany:'Empresa (opcional)',
+        lblExp:'Experiencia',
+        expBlank:'Seleccione',
+        expNone:'Sin experiencia impresión',
+        expPrint:'Operador de impresión',
+        expSign:'Fabricación de rótulos',
+        expRetail:'Retail / distribución',
+        expOther:'Otra',
+        lblMsg:'Mensaje (opcional)',
+        btnSubmit:'Enviar consulta',
+        msgOk:'Consulta recibida. Contactaremos en 48h.',
+        msgErr:'Envío falló. Intente de nuevo.'
+    },
+    de:{
+        langLabel:'Deutsch',
+        badge:'⚡ Kein Kapital · 0€ Franchise · Regionale Exklusivität',
+        heroH1:['Wachsen Sie mit Chameleon','im <span class="hl">Weltmarkt</span>'],
+        heroSub:'Ein gebrauchter Plotter und ein kleiner Arbeitsplatz reichen. Empfangen Sie zugeschnittene Halbfertigprodukte (Wabenplatten-Wände, Wellpappe, Banner, Papier-Displays), drucken Sie Ihre Grafiken, laminieren Sie auf und liefern Sie. Exklusives Partnerprogramm.',
+        ctaInquiry:'Jetzt bewerben',
+        ctaCall:'Jetzt anrufen',
+        pitchHl:'Warum Partnerschaft mit Chameleon',
+        pitchSub:'Der einzige Weg, das global nachgefragte Wabenplatten-Messedruck-Geschäft unter regionaler Exklusivität zu betreiben — ohne schwere Geräteinvestition',
+        p1t:'0€ Franchise · Keine Lagerlast',
+        p1d:'Starten Sie mit kleinen Mustern zu 50% des Einzelhandelspreises. Großaufträge aus Korea, Malaysia, Marokko zum weltweit niedrigsten Preis. 50% Margenstruktur.',
+        p2t:'Halbfertigware weltweit versandt',
+        p2d:'Wabenwände, Wellpappe, Banner, Displays, Stoffmuster — vorgeschnitten FOB verschifft. Sie drucken und laminieren nur. Fracht/Zölle lokal.',
+        p3t:'Regionale Exklusivität + Kostenloser Website-Klon',
+        p3d:'Ein Partner pro Region. Partner mit $1M Jahresumsatz erhalten einen kostenlosen Klon der Chameleon-Website (inkl. Admin) auf ihrer Domain.',
+        detailH2:'Vollständige <span class="hl">Franchise-Programm</span>-Übersicht',
+        detailSub:'Bitte sorgfältig lesen — das Wesen des Geschäfts',
+        detailBody:`<p>Besitzen Sie einen Banner-Plotter? Wachsen Sie mit uns. <strong>Wir liefern weltweit zugeschnittene Halbfertigprodukte — Sie müssen nur drucken, aufkleben, liefern.</strong> Wabenwände, Wellpapp-Wände, Banner usw. werden zugeschnitten versandt.</p>
+<p><span class="highlight">Verkaufen Sie das gesamte Chameleon-Sortiment ohne teure Geräte.</span> Unsere Top-Produkte Papier-Displays und Stoffmuster werden <strong>kostenlos</strong> bereitgestellt.</p>
+<p>Großaufträge werden in unseren <strong>Werken in Malaysia, Korea und Marokko</strong> hergestellt, zum weltweit niedrigsten Preis.</p>
+<p><strong>Keine Franchise-Gebühr. Keine Mindestmenge.</strong> Starten Sie mit Mustern. Muster-Halbfertigpreis: <span class="highlight">50% des Einzelhandels</span>.</p>
+<p>Versand <strong>FOB</strong> — wir laden aufs Schiff; Seefracht, Hafengebühren und Zölle zahlt das Franchise lokal.</p>`,
+        b1t:'Nur drei Dinge nötig',
+        b1d:'Ein ~$1.000 Gebraucht-Plotter, kleine Werkstatt, und Leidenschaft. Das ist alles.',
+        b2t:'Kostenloser Website-Klon bei $1M Jahresumsatz',
+        b2d:'Wir klonen die komplette Chameleon-Site (inkl. Admin) auf Ihre Domain.',
+        b3t:'Ideal für bestehende Messedrucker',
+        b3d:'Ohne Franchise und ohne Kapital sichern Sie regionales Monopol im Wabenplatten-Geschäft.',
+        b4t:'Beeilen Sie sich — nur ein Partner pro Region',
+        b4d:'Ein kostenloser Franchise-Platz pro Region. Wer zuerst kommt, mahlt zuerst.',
+        b5t:'Werden Sie Chameleon-Partner',
+        b5d:'Kein Kapital. Wir führen Sie zum Reichtum. Prüfen Sie den Durchschnittsumsatz aktueller Franchisees.',
+        b6t:'Margenstruktur: 50%',
+        b6d:'Muster-Halbfertigpreis bei 50% des Einzelhandels. Mit Druck- und Installationsmarge meistens ~50%.',
+        testH2:'Stimmen von <span class="hl">globalen Partnern</span>',
+        testSub:'Geschichten aktiver Franchisees (anonymisierter Durchschnittsumsatz)',
+        phonesH2:'Rufen Sie jederzeit an',
+        phonesSub:'Direkte Beratung in 4 Sprachen',
+        formH2:'<span class="hl">Franchise-Anfrage</span>',
+        formSub:'Ein Teammitglied meldet sich innerhalb 48 Werkstunden',
+        lblName:'Name',
+        lblCountry:'Land',
+        lblEmail:'E-Mail',
+        lblPhone:'Telefon (optional)',
+        lblCompany:'Firma (optional)',
+        lblExp:'Erfahrung',
+        expBlank:'Bitte wählen',
+        expNone:'Keine Druckerfahrung',
+        expPrint:'Digitaldruck-Betreiber',
+        expSign:'Schilder-/Beschilderungsbau',
+        expRetail:'Einzelhandel / Vertrieb',
+        expOther:'Sonstiges',
+        lblMsg:'Nachricht (optional)',
+        btnSubmit:'Anfrage senden',
+        msgOk:'Anfrage erhalten. Wir melden uns innerhalb 48h.',
+        msgErr:'Senden fehlgeschlagen. Bitte erneut versuchen.'
+    },
+    fr:{
+        langLabel:'Français',
+        badge:'⚡ Sans capital · Franchise 0€ · Exclusivité régionale',
+        heroH1:['Grandissez avec Chameleon','sur le <span class="hl">marché mondial</span>'],
+        heroSub:'Un traceur d\'occasion et un petit atelier suffisent. Recevez des semi-produits pré-découpés (cloisons nid d\'abeille, carton ondulé, bannières, présentoirs en papier), imprimez vos graphiques, laminez-les et livrez. Programme de franchise exclusif.',
+        ctaInquiry:'Postuler maintenant',
+        ctaCall:'Appeler',
+        pitchHl:'Pourquoi s\'associer à Chameleon',
+        pitchSub:'La seule voie pour exploiter l\'activité d\'impression d\'exposition nid d\'abeille demandée mondialement en exclusivité régionale — sans investissement lourd',
+        p1t:'0€ franchise · Pas de stock initial',
+        p1d:'Commencez avec de petits échantillons à 50% du prix retail. Commandes importantes produites en Corée, Malaisie, Maroc au prix le plus bas au monde. Marge 50%.',
+        p2t:'Semi-produits expédiés mondialement',
+        p2d:'Cloisons, carton, bannières, présentoirs, échantillons tissu — expédiés pré-découpés FOB. Vous imprimez et laminez. Fret/taxes payés localement.',
+        p3t:'Exclusivité + clone de site gratuit',
+        p3d:'Un partenaire par région. Les partenaires atteignant 1M$ annuel reçoivent un clone gratuit du site Chameleon (avec admin) sur leur domaine.',
+        detailH2:'Programme de <span class="hl">franchise</span> complet',
+        detailSub:'Veuillez lire attentivement — l\'essence de l\'activité',
+        detailBody:`<p>Possédez-vous un traceur pour bannières ? Grandissons ensemble. <strong>Nous fournissons des semi-produits pré-découpés dans le monde entier, vous n\'avez qu\'à imprimer, laminer, livrer.</strong> Cloisons nid d\'abeille, carton ondulé, bannières, etc. sont expédiés découpés.</p>
+<p><span class="highlight">Vendez toute la gamme Chameleon sans équipement coûteux.</span> Nos produits phares — présentoirs en papier et échantillons tissu — sont fournis <strong>gratuitement</strong>.</p>
+<p>Les grosses commandes sont produites dans nos <strong>usines de Malaisie, Corée et Maroc</strong>, au prix le plus bas au monde.</p>
+<p><strong>Pas de franchise. Pas de minimum.</strong> Commencez avec des échantillons. Le prix du semi-produit est <span class="highlight">50% du retail</span>.</p>
+<p>Expédition <strong>FOB</strong> — nous chargeons à bord ; le fret maritime, les frais de port et les droits sont payés par la franchise localement.</p>`,
+        b1t:'Seulement trois choses',
+        b1d:'Un traceur d\'occasion ~1 000$, un petit atelier, et de la passion. C\'est tout.',
+        b2t:'Clone de site gratuit à 1M$ de CA',
+        b2d:'Nous clonons le site Chameleon complet (avec admin) sur votre domaine.',
+        b3t:'Idéal pour imprimeurs d\'exposition existants',
+        b3d:'Sans franchise et sans capital, obtenez un monopole régional sur l\'activité nid d\'abeille.',
+        b4t:'Dépêchez-vous — un seul partenaire par région',
+        b4d:'Nous accordons une place de franchise gratuite par région. Premier arrivé, premier servi.',
+        b5t:'Devenez partenaire Chameleon',
+        b5d:'Aucun capital. Nous vous guidons vers la richesse. Vérifiez le CA moyen des franchisés actuels.',
+        b6t:'Structure de marge : 50%',
+        b6d:'Prix semi-produit à 50% du retail. Avec la marge d\'impression et d\'installation, la plupart des partenaires sécurisent ~50%.',
+        testH2:'Témoignages de <span class="hl">partenaires mondiaux</span>',
+        testSub:'Récits de franchisés actifs (CA moyen anonymisé)',
+        phonesH2:'Appelez-nous à tout moment',
+        phonesSub:'Consultation directe en 4 langues',
+        formH2:'<span class="hl">Demande de franchise</span>',
+        formSub:'Un membre de l\'équipe vous contactera sous 48h ouvrables',
+        lblName:'Nom',
+        lblCountry:'Pays',
+        lblEmail:'E-mail',
+        lblPhone:'Téléphone (optionnel)',
+        lblCompany:'Entreprise (optionnel)',
+        lblExp:'Expérience',
+        expBlank:'Sélectionner',
+        expNone:'Aucune expérience d\'impression',
+        expPrint:'Opérateur d\'impression numérique',
+        expSign:'Fabrication d\'enseignes',
+        expRetail:'Commerce / distribution',
+        expOther:'Autre',
+        lblMsg:'Message (optionnel)',
+        btnSubmit:'Envoyer la demande',
+        msgOk:'Demande reçue. Nous vous contacterons sous 48h.',
+        msgErr:'Envoi échoué. Veuillez réessayer.'
+    }
+};
+
+// ============== Testimonials (6 countries x 8 langs) ==============
+// Each testimonial: {flag, initials, name, country, years, revenue, quote (per lang)}
+const TESTIMONIALS = [
+    {
+        flag:'🇺🇸', initials:'MJ',
+        name:{ko:'마이클 J.', ja:'マイケル J.', en:'Michael J.', zh:'Michael J.', ar:'مايكل ج.', es:'Michael J.', de:'Michael J.', fr:'Michael J.'},
+        country:{ko:'미국 · 로스앤젤레스', ja:'米国・ロサンゼルス', en:'USA · Los Angeles', zh:'美国·洛杉矶', ar:'أمريكا · لوس أنجلوس', es:'EE. UU. · Los Ángeles', de:'USA · Los Angeles', fr:'États-Unis · Los Angeles'},
+        years:{ko:'가맹 3년차', ja:'加盟3年目', en:'3rd year', zh:'加盟第3年', ar:'السنة 3', es:'3er año', de:'3. Jahr', fr:'3ème année'},
+        revenue:{ko:'연매출 · 약 $1.2M', ja:'年商約$1.2M', en:'Revenue · ~$1.2M', zh:'年营收约$1.2M', ar:'الإيراد ~$1.2M', es:'Ingresos ~$1.2M', de:'Umsatz ~$1.2M', fr:'CA ~$1.2M'},
+        quote:{
+            ko:'전시 부스용 허니콤 벽을 현지에서 찾다가 가격에 놀랐습니다. 카멜레온 덕분에 같은 품질을 30% 낮은 가격에 공급할 수 있게 됐고, 단 3개월 만에 투자 회수했습니다.',
+            ja:'展示ブース用のハニカム壁を現地で探していて価格に驚きました。カメレオンのおかげで同品質を30%安く供給でき、3ヶ月で投資回収。',
+            en:'I was shocked by local prices for honeycomb exhibition walls. Thanks to Chameleon I can supply the same quality 30% cheaper — broke even in three months.',
+            zh:'我曾为展示墙的本地价格而震惊。感谢卡米利翁，我能以30%更低的价格供应同等质量——3个月收回投资。',
+            ar:'صُدمت بالأسعار المحلية لجدران المعارض. بفضل كاميليون أوفر نفس الجودة بـ30% أقل، استرددت استثماري في 3 أشهر.',
+            es:'Me sorprendieron los precios locales para muros de exposición. Gracias a Chameleon ofrezco la misma calidad 30% más barata — recuperé en 3 meses.',
+            de:'Die lokalen Preise für Messewände waren schockierend. Dank Chameleon biete ich gleiche Qualität 30% günstiger — Kapitalrückfluss in 3 Monaten.',
+            fr:'Les prix locaux des murs d\'exposition m\'ont choqué. Grâce à Chameleon, je fournis la même qualité 30% moins cher — amorti en 3 mois.'
+        }
+    },
+    {
+        flag:'🇯🇵', initials:'YT',
+        name:{ko:'요시다 T.', ja:'吉田 T.', en:'Yoshida T.', zh:'吉田 T.', ar:'يوشيدا ت.', es:'Yoshida T.', de:'Yoshida T.', fr:'Yoshida T.'},
+        country:{ko:'일본 · 도쿄', ja:'日本・東京', en:'Japan · Tokyo', zh:'日本·东京', ar:'اليابان · طوكيو', es:'Japón · Tokio', de:'Japan · Tokio', fr:'Japon · Tokyo'},
+        years:{ko:'가맹 2년차', ja:'加盟2年目', en:'2nd year', zh:'加盟第2年', ar:'السنة 2', es:'2do año', de:'2. Jahr', fr:'2ème année'},
+        revenue:{ko:'연매출 · 약 ¥68M', ja:'年商約¥68M', en:'Revenue · ~¥68M', zh:'年营收约¥68M', ar:'الإيراد ~¥68M', es:'Ingresos ~¥68M', de:'Umsatz ~¥68M', fr:'CA ~¥68M'},
+        quote:{
+            ko:'기존 현수막 인쇄소를 운영하다가 전시 제품군을 추가했습니다. 장비 투자 없이 신규 매출 라인이 생겼고, 종이매대는 특히 반응이 좋습니다.',
+            ja:'既存の横断幕印刷所を運営していて、展示製品を追加。設備投資なしで新規売上が立ち、ペーパースタンドは特に反応良好。',
+            en:'I run a banner print shop and added exhibition products. A new revenue line without equipment investment — paper stands perform especially well.',
+            zh:'我经营横幅印刷店，追加了展示产品。无需设备投资即新增营收线，纸展台反响尤佳。',
+            ar:'أدير محل طباعة لافتات وأضفت منتجات المعارض. خط إيرادات جديد بدون استثمار معدات، حوامل الورق أداؤها ممتاز.',
+            es:'Administro una imprenta de banners y añadí productos de exposición. Nueva línea de ingresos sin inversión — los expositores destacan.',
+            de:'Ich betreibe eine Banner-Druckerei und habe Messeprodukte ergänzt. Neue Umsatzlinie ohne Investition — Papier-Displays laufen besonders gut.',
+            fr:'Je gère une imprimerie de banderoles et j\'ai ajouté les produits d\'exposition. Nouvelle source de revenus sans investissement — les présentoirs cartonnent.'
+        }
+    },
+    {
+        flag:'🇸🇬', initials:'LC',
+        name:{ko:'림 첸', ja:'リム・チェン', en:'Lim Chen', zh:'林 陈', ar:'ليم تشين', es:'Lim Chen', de:'Lim Chen', fr:'Lim Chen'},
+        country:{ko:'싱가포르', ja:'シンガポール', en:'Singapore', zh:'新加坡', ar:'سنغافورة', es:'Singapur', de:'Singapur', fr:'Singapour'},
+        years:{ko:'가맹 1년차', ja:'加盟1年目', en:'1st year', zh:'加盟第1年', ar:'السنة 1', es:'1er año', de:'1. Jahr', fr:'1ère année'},
+        revenue:{ko:'연매출 · 약 SGD 620K', ja:'年商約SGD 620K', en:'Revenue · ~SGD 620K', zh:'年营收约SGD 620K', ar:'الإيراد ~SGD 620K', es:'Ingresos ~SGD 620K', de:'Umsatz ~SGD 620K', fr:'CA ~SGD 620K'},
+        quote:{
+            ko:'아시아 허브답게 전시 수요가 많은데 현지 공급이 부족했습니다. 말레이시아 공장이 가까워 리드타임이 짧고, FOB 구조가 명확해 자금 회전이 편했습니다.',
+            ja:'アジアハブらしく展示需要が多いが現地供給が不足。マレーシア工場が近くリードタイムが短く、FOB構造が明確で資金回転が楽。',
+            en:'As an Asia hub we have strong exhibition demand but weak local supply. The Malaysia factory is close — short lead time, clean FOB structure, smooth cash flow.',
+            zh:'作为亚洲枢纽展示需求大但本地供应不足。马来西亚工厂近交期短，FOB结构清晰资金周转顺畅。',
+            ar:'كمحور آسيوي لدينا طلب عالي على المعارض لكن التوريد المحلي ضعيف. مصنع ماليزيا قريب — مهلة قصيرة، هيكل FOB نظيف، تدفق نقدي سلس.',
+            es:'Como hub asiático hay mucha demanda de exposición pero poco suministro local. La fábrica de Malasia está cerca — plazo corto, FOB claro, flujo de caja ágil.',
+            de:'Als Asien-Hub haben wir hohe Messenachfrage aber schwaches lokales Angebot. Die Malaysia-Fabrik ist nah — kurze Lieferzeit, klare FOB, reibungsloser Cashflow.',
+            fr:'En tant que hub asiatique, la demande d\'exposition est forte mais l\'offre locale faible. L\'usine Malaisie est proche — délai court, FOB clair, trésorerie fluide.'
+        }
+    },
+    {
+        flag:'🇩🇪', initials:'KS',
+        name:{ko:'카를라 S.', ja:'カーラ S.', en:'Karla S.', zh:'Karla S.', ar:'كارلا س.', es:'Karla S.', de:'Karla S.', fr:'Karla S.'},
+        country:{ko:'독일 · 함부르크', ja:'ドイツ・ハンブルク', en:'Germany · Hamburg', zh:'德国·汉堡', ar:'ألمانيا · هامبورغ', es:'Alemania · Hamburgo', de:'Deutschland · Hamburg', fr:'Allemagne · Hambourg'},
+        years:{ko:'가맹 2년차', ja:'加盟2年目', en:'2nd year', zh:'加盟第2年', ar:'السنة 2', es:'2do año', de:'2. Jahr', fr:'2ème année'},
+        revenue:{ko:'연매출 · 약 €820K', ja:'年商約€820K', en:'Revenue · ~€820K', zh:'年营收约€820K', ar:'الإيراد ~€820K', es:'Ingresos ~€820K', de:'Umsatz ~€820K', fr:'CA ~€820K'},
+        quote:{
+            ko:'친환경 종이 소재가 독일 시장에 완벽히 맞았습니다. 무역 박람회 시즌마다 오더가 쏟아지고, 모로코 공장에서 유럽까지의 리드타임도 훌륭합니다.',
+            ja:'エコ紙素材がドイツ市場にピッタリ。見本市シーズンごとにオーダー殺到、モロッコ工場から欧州へのリードタイムも優秀。',
+            en:'The eco-friendly paper material fits the German market perfectly. Orders pour in each trade-show season, and the Morocco-to-Europe lead time is excellent.',
+            zh:'环保纸材非常适合德国市场。每逢展会季订单蜂拥，摩洛哥到欧洲的交期出色。',
+            ar:'مادة الورق الصديقة للبيئة تناسب السوق الألمانية بشكل مثالي. تنهمر الطلبات كل موسم معرض، ومهلة المغرب-أوروبا ممتازة.',
+            es:'El material de papel ecológico encaja perfecto en Alemania. Los pedidos llueven cada temporada de feria, y el plazo Marruecos-Europa es excelente.',
+            de:'Das umweltfreundliche Papiermaterial passt perfekt zum deutschen Markt. Zu jeder Messesaison regnet es Aufträge, und die Lieferzeit Marokko-Europa ist exzellent.',
+            fr:'Le matériau papier écologique correspond parfaitement au marché allemand. Les commandes pleuvent chaque saison de salon, et le délai Maroc-Europe est excellent.'
+        }
+    },
+    {
+        flag:'🇬🇧', initials:'RH',
+        name:{ko:'리처드 H.', ja:'リチャード H.', en:'Richard H.', zh:'Richard H.', ar:'ريتشارد هـ.', es:'Richard H.', de:'Richard H.', fr:'Richard H.'},
+        country:{ko:'영국 · 런던', ja:'英国・ロンドン', en:'UK · London', zh:'英国·伦敦', ar:'المملكة المتحدة · لندن', es:'Reino Unido · Londres', de:'Großbritannien · London', fr:'Royaume-Uni · Londres'},
+        years:{ko:'가맹 4년차', ja:'加盟4年目', en:'4th year', zh:'加盟第4年', ar:'السنة 4', es:'4to año', de:'4. Jahr', fr:'4ème année'},
+        revenue:{ko:'연매출 · £1.4M 돌파', ja:'年商£1.4M突破', en:'Revenue · £1.4M+', zh:'年营收突破£1.4M', ar:'الإيراد £1.4M+', es:'Ingresos £1.4M+', de:'Umsatz £1.4M+', fr:'CA £1.4M+'},
+        quote:{
+            ko:'100만불을 넘기자 카멜레온 홈페이지 복제를 지원받았습니다. 관리자 페이지까지 그대로라 자체 쇼핑몰을 따로 만들 필요가 없었죠. 이거 정말 큰 혜택입니다.',
+            ja:'100万ドルを超えたらカメレオンHPの複製支援を受けました。管理画面もそのままで、自社ECを別途作る必要なし。本当に大きな特典。',
+            en:'After crossing $1M, Chameleon cloned their entire site to me — admin included. No need to build my own storefront. This benefit is huge.',
+            zh:'突破100万美元后，卡米利翁把整站克隆给了我，包括后台。不用自建商城。这个福利真的很大。',
+            ar:'بعد تجاوز مليون دولار، استنسخت كاميليون موقعها بالكامل لي — بما في ذلك الإدارة. لا حاجة لبناء متجري. هذه ميزة ضخمة.',
+            es:'Tras superar $1M, Chameleon clonó su sitio entero — con admin incluido. No necesité montar mi tienda. Un beneficio enorme.',
+            de:'Nach Überschreiten von $1M klonte Chameleon ihre gesamte Site zu mir — inkl. Admin. Kein eigener Shop nötig. Ein riesiger Vorteil.',
+            fr:'Après avoir dépassé 1M$, Chameleon a cloné tout leur site chez moi — admin inclus. Pas besoin de construire ma boutique. Un avantage énorme.'
+        }
+    },
+    {
+        flag:'🇫🇷', initials:'AD',
+        name:{ko:'아멜리 D.', ja:'アメリ D.', en:'Amélie D.', zh:'Amélie D.', ar:'أميلي د.', es:'Amélie D.', de:'Amélie D.', fr:'Amélie D.'},
+        country:{ko:'프랑스 · 파리', ja:'フランス・パリ', en:'France · Paris', zh:'法国·巴黎', ar:'فرنسا · باريس', es:'Francia · París', de:'Frankreich · Paris', fr:'France · Paris'},
+        years:{ko:'가맹 1년차', ja:'加盟1年目', en:'1st year', zh:'加盟第1年', ar:'السنة 1', es:'1er año', de:'1. Jahr', fr:'1ère année'},
+        revenue:{ko:'연매출 · 약 €410K', ja:'年商約€410K', en:'Revenue · ~€410K', zh:'年营收约€410K', ar:'الإيراد ~€410K', es:'Ingresos ~€410K', de:'Umsatz ~€410K', fr:'CA ~€410K'},
+        quote:{
+            ko:'패션 리테일러들에게 팝업 디스플레이를 공급합니다. 카멜레온 마진 50% 구조 덕분에 광고 예산을 많이 쓸 수 있어 첫 해에도 탄탄한 출발을 했습니다.',
+            ja:'ファッションリテーラーにポップアップディスプレイを供給。カメレオンのマージン50%構造で広告予算が確保でき、初年度から堅調スタート。',
+            en:'I supply pop-up displays to fashion retailers. Chameleon\'s 50% margin structure lets me invest heavily in marketing — a solid first year.',
+            zh:'我为时尚零售商供应快闪展示。卡米利翁50%毛利结构让我能大力投入营销，首年表现稳健。',
+            ar:'أزود متاجر الأزياء بعروض منبثقة. هيكل هامش 50٪ من كاميليون يتيح لي الاستثمار بقوة في التسويق، بداية صلبة في السنة الأولى.',
+            es:'Proveo pop-ups a minoristas de moda. La estructura de 50% de Chameleon me permite invertir en marketing — sólido primer año.',
+            de:'Ich beliefere Fashion-Retailer mit Pop-Up-Displays. Die 50%-Margenstruktur von Chameleon lässt mich stark in Marketing investieren — solides erstes Jahr.',
+            fr:'Je fournis des pop-ups aux détaillants mode. La marge 50% de Chameleon me permet d\'investir en marketing — une première année solide.'
+        }
+    }
+];
+
+// ============== Apply i18n ==============
+const lang = window.__FR_LANG || 'ko';
+const T = L[lang] || L.ko;
+
+function setTxt(id, html){ const el=document.getElementById(id); if(el) el.innerHTML = html; }
+
+setTxt('txtBadge', T.badge);
+setTxt('txtHeroH1', T.heroH1[0] + '<br>' + T.heroH1[1]);
+setTxt('txtHeroSub', T.heroSub);
+setTxt('txtCtaInquiry', T.ctaInquiry);
+setTxt('txtCtaCall', T.ctaCall);
+setTxt('txtPitchHl', T.pitchHl);
+setTxt('txtPitchSub', T.pitchSub);
+setTxt('p1t', T.p1t); setTxt('p1d', T.p1d);
+setTxt('p2t', T.p2t); setTxt('p2d', T.p2d);
+setTxt('p3t', T.p3t); setTxt('p3d', T.p3d);
+setTxt('txtDetailH2', T.detailH2);
+setTxt('txtDetailSub', T.detailSub);
+setTxt('txtDetailBody', T.detailBody);
+['b1','b2','b3','b4','b5','b6'].forEach(k=>{ setTxt(k+'t', T[k+'t']); setTxt(k+'d', T[k+'d']); });
+setTxt('txtTestH2', T.testH2);
+setTxt('txtTestSub', T.testSub);
+setTxt('txtPhonesH2', T.phonesH2);
+setTxt('txtPhonesSub', T.phonesSub);
+setTxt('txtFormH2', T.formH2);
+setTxt('txtFormSub', T.formSub);
+setTxt('lblName', T.lblName);
+setTxt('lblCountry', T.lblCountry);
+setTxt('lblEmail', T.lblEmail);
+setTxt('lblPhone', T.lblPhone);
+setTxt('lblCompany', T.lblCompany);
+setTxt('lblExp', T.lblExp);
+setTxt('lblMsg', T.lblMsg);
+setTxt('btnSubmit', T.btnSubmit);
+
+// Experience select options
+(function(){
+    const sel = document.getElementById('frExp');
+    if(!sel) return;
+    const opts = sel.querySelectorAll('option');
+    const vals = ['expBlank','expNone','expPrint','expSign','expRetail','expOther'];
+    opts.forEach((o,i)=>{ if(vals[i]) o.textContent = T[vals[i]] || ''; });
+})();
+
+// Render testimonials
+(function(){
+    const grid = document.getElementById('testGrid');
+    if(!grid) return;
+    TESTIMONIALS.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'fr-test-card';
+        card.innerHTML = `
+            <i class="fa-solid fa-quote-right quote-ic"></i>
+            <div class="fr-test-avatar">
+                <div class="av">${t.initials}</div>
+                <div class="info">
+                    <div class="name">${t.flag} ${t.name[lang] || t.name.en}</div>
+                    <div class="meta">${t.country[lang] || t.country.en} · ${t.years[lang] || t.years.en}</div>
+                </div>
+            </div>
+            <p class="quote">"${t.quote[lang] || t.quote.en}"</p>
+            <div class="revenue">💰 ${t.revenue[lang] || t.revenue.en}</div>
+        `;
+        grid.appendChild(card);
+    });
+})();
+
+// Language picker
+(function(){
+    const box = document.getElementById('langPick');
+    if(!box) return;
+    const langs = [['ko','KR'],['ja','JP'],['en','EN'],['zh','CN'],['ar','AR'],['es','ES'],['de','DE'],['fr','FR']];
+    langs.forEach(([code,label])=>{
+        const a = document.createElement('a');
+        a.textContent = label;
+        a.href = '?lang='+code;
+        if(code===lang) a.className='active';
+        box.appendChild(a);
+    });
+})();
+
+// ============== Toast ==============
+function showToast(msg, type){
+    const t = document.createElement('div');
+    t.className = 'fr-toast ' + (type||'success');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 4500);
+}
+
+// ============== Form submit ==============
+(function(){
+    const form = document.getElementById('frForm');
+    if(!form) return;
+    form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        const origLabel = btn.textContent;
+        btn.textContent = '…';
+
+        const payload = {
+            name: document.getElementById('frName').value.trim(),
+            country: document.getElementById('frCountry').value.trim(),
+            email: document.getElementById('frEmail').value.trim(),
+            phone: document.getElementById('frPhone').value.trim(),
+            company: document.getElementById('frCompany').value.trim(),
+            experience: document.getElementById('frExp').value,
+            message: document.getElementById('frMsg').value.trim(),
+            lang_submitted: lang,
+            page_url: location.href,
+            user_agent: navigator.userAgent.substring(0,200)
+        };
+
+        try {
+            const sbUrl = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+            const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+            const sb = window.supabase.createClient(sbUrl, sbKey);
+            const { error } = await sb.from('franchise_inquiries').insert(payload);
+            if(error) throw error;
+            showToast(T.msgOk, 'success');
+            form.reset();
+        } catch(err){
+            console.error('[franchise] submit', err);
+            showToast(T.msgErr, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = origLabel;
+        }
+    });
+})();
+</script>
+
+</body>
+</html>

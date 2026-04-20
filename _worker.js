@@ -704,6 +704,7 @@ ${hreflangTags('/editor')}
         const STANDALONE_PAGES = {
             'paper-stand': '/paper_stand.html',
             'raw-board': '/raw_board.html',
+            'franchise': '/franchise.html',
         };
         if (STANDALONE_PAGES[path]) {
             const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);

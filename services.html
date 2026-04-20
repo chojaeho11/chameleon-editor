@@ -150,9 +150,9 @@ const SERVICES = [
      desc:{ko:'전세계 디자이너에게 의뢰하세요. 로고, 배너, 패키지, 웹 디자인 등.',ja:'世界中のデザイナーに依頼。ロゴ、バナー、パッケージ、Webデザインなど。',en:'Hire designers worldwide. Logos, banners, packaging, web design & more.',zh:'委托全球设计师。标志、横幅、包装、网页设计等。'},
      url:'/design-market', live:true },
     {id:'partner',  icon:'🏭', color:'#059669', bg:'#ecfdf5',
-     name:{ko:'출력·시공 파트너',ja:'印刷·施工パートナー',en:'Print & Install Partners',zh:'印刷·施工合伙'},
-     desc:{ko:'전세계 출력·시공 업체와 고객을 연결. 파트너로 등록하고 주문을 받으세요.',ja:'世界の印刷・施工業者とお客様を接続。パートナー登録して注文を受けましょう。',en:'Connect print & install companies with clients globally. Register as a partner.',zh:'连接全球印刷·施工企业与客户。注册成为合作伙伴。'},
-     url:'/partner-register', live:true },
+     name:{ko:'가맹점 문의',ja:'加盟店お問い合わせ',en:'Franchise Inquiry',zh:'加盟咨询'},
+     desc:{ko:'무자본·가맹비 0원으로 허니콤보드 독점 사업. 지역당 1개 파트너만 선발.',ja:'無資本・加盟金0円でハニカムボード独占事業。地域ごとに1社のみ選抜。',en:'Zero-capital, zero-franchise-fee honeycomb board business. One partner per region.',zh:'零资本零加盟费的蜂窝板独家业务。每个区域仅招一位合作伙伴。'},
+     url:'/franchise', live:true },
     {id:'jobs',     icon:'⏰', color:'#d97706', bg:'#fffbeb',
      name:{ko:'타임 알바',ja:'タイムアルバイト',en:'Part-time Jobs',zh:'兼职工作'},
      desc:{ko:'근처 알바 한눈에. 시급 · 시간대 · 거리순 매칭.',ja:'近くのアルバイトを一覧。時給・時間帯・距離でマッチング。',en:'Find nearby part-time jobs. Match by hourly rate, schedule & distance.',zh:'附近兼职一览。按时薪·时段·距离匹配。'},
@@ -182,7 +182,7 @@ const SERVICES = [
 // ── AI Search keywords → service routing ──
 const AI_KEYWORDS = {
     design: ['디자인','로고','배너','패키지','명함','브랜딩','design','logo','banner','デザイン','ロゴ','设计'],
-    partner: ['출력','시공','인쇄','파트너','print','install','印刷','施工','打印'],
+    partner: ['가맹','가맹점','franchise','franchisee','加盟','加盟店','加盟咨询','partner','출력','시공','인쇄','파트너','print','install','印刷','施工','打印'],
     jobs: ['알바','시급','아르바이트','일자리','구인','part-time','job','アルバイト','求人','兼职','招聘'],
     realty: ['부동산','전세','월세','매매','집','원룸','아파트','real estate','rent','不動産','賃貸','房产','租房'],
     expert: ['전문가','숨고','이사','인테리어','레슨','수리','청소','expert','moving','interior','専門家','引越し','专家','搬家'],
@@ -302,7 +302,7 @@ async function askClaudeWithContext(msg, dbContext) {
 
 서비스 목록:
 🎨 디자인 마켓 → /design-market
-🏭 출력 파트너 → /partner-register
+🏭 가맹점 문의 → /franchise
 ⏰ 타임 알바 → /jobs
 🏠 부동산 → /realty
 🔧 전문가 매칭 → /experts
