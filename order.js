@@ -2239,6 +2239,7 @@ async function addCanvasToCart() {
     // - 허니콤보드/허니콤 가벽 → 수도권 유료설치 10만원 (지방은 고객이 변경 가능)
     // - 기타(패브릭 등) → 기타제품 일반택배 5천원
     // - 가벽이 카트에 있는데 택배(5000/30000)가 선택돼 있으면 설치배송으로 강제 전환 (가벽은 택배 불가)
+    // - 천원단위/만원단위(21355677/_copy)만 담긴 카트는 배송비 자동 부여 안 함
     try {
         const _sdObj = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
         const _curFee = (window._nonMetroFeeApplied || 0) || (_sdObj.fee || 0);
@@ -2246,12 +2247,16 @@ async function addCanvasToCart() {
             localStorage.getItem('chameleon_metro_removal') === '1';
         const _blocksCourier = (typeof cartBlocksCourier === 'function') && cartBlocksCourier();
         const _invalidCourier = _blocksCourier && (_curFee === 5000 || _curFee === 30000);
+        const _allShipExempt = cartData.length > 0 && cartData.every(it => {
+            const c = String((it.product && (it.product.code || it.product.product_key || it.product.id)) || '');
+            return c === '21355677' || c === '21355677_copy';
+        });
         if (_invalidCourier) {
             // 가벽 담긴 상태에서 택배 선택돼 있으면 제거 후 수도권 설치로 전환
             if (typeof window._removeCartShipping === 'function') window._removeCartShipping();
             localStorage.setItem('chameleon_metro_install', '1');
             if (typeof _syncMetroFee === 'function') _syncMetroFee();
-        } else if (!_curFee && !_metroPicked && typeof hasHoneycombInCart === 'function') {
+        } else if (!_curFee && !_metroPicked && !_allShipExempt && typeof hasHoneycombInCart === 'function') {
             if (hasHoneycombInCart()) {
                 localStorage.setItem('chameleon_metro_install', '1');
                 if (typeof _syncMetroFee === 'function') _syncMetroFee();
