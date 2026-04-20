@@ -2398,6 +2398,26 @@ function renderCart() {
         }
     } catch(e) {}
 
+    // ★ 천원/만원 단위 주문만 담긴 카트는 이전 세션의 잔여 배송 선택을 제거 (강제 0원 배송)
+    try {
+        const _allShipExempt = cartData.length > 0 && cartData.every(it => {
+            const c = String((it.product && (it.product.code || it.product.product_key || it.product.id)) || '');
+            return c === '21355677' || c === '21355677_copy';
+        });
+        if (_allShipExempt) {
+            const _hasStaleShip =
+                localStorage.getItem('chameleon_quote_shipping') ||
+                localStorage.getItem('chameleon_metro_install') === '1' ||
+                localStorage.getItem('chameleon_metro_removal') === '1';
+            if (_hasStaleShip) {
+                localStorage.removeItem('chameleon_quote_shipping');
+                localStorage.removeItem('chameleon_metro_install');
+                localStorage.removeItem('chameleon_metro_removal');
+                window._nonMetroFeeApplied = 0;
+            }
+        }
+    } catch(e) {}
+
     listArea.innerHTML = "";
 
     let grandTotal = 0; let grandProductTotal = 0; let grandAddonTotal = 0;
@@ -2868,8 +2888,13 @@ function updateSummary(prodTotal, addonTotal, total) {
     finalPaymentAmount = displayTotal;
 
     // ★ 배송 선택지: 카트 비어있지 않으면 항상 표시 (선택 후에도 변경 가능)
+    //   단, 천원/만원 단위 주문만 담긴 카트는 배송 불필요이므로 숨김
     const shAddRow = document.getElementById('cartShippingAddRow');
-    if (shAddRow) shAddRow.style.display = (cartData.length === 0) ? 'none' : 'block';
+    const _allExemptForShip = cartData.length > 0 && cartData.every(it => {
+        const c = String((it.product && (it.product.code || it.product.product_key || it.product.id)) || '');
+        return c === '21355677' || c === '21355677_copy';
+    });
+    if (shAddRow) shAddRow.style.display = (cartData.length === 0 || _allExemptForShip) ? 'none' : 'block';
     // [자동 사전선택 제거됨] — 모든 사용자가 7개 배송 옵션 중 1개를 명시적으로 선택해야 결제 진행됨
     // 배송 버튼 매번 재렌더 (선택 강조 갱신 + DOM 누락 방지)
     if (window._renderCartShippingBtns) { try { window._renderCartShippingBtns(); } catch(e) { console.warn('shipping btns render', e); } }
