@@ -576,7 +576,7 @@ export function renderShortcutButtons(containerId) {
         .dm-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
         .dm-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,0.3);line-height:1.25;}
         .dm-hub-sub{font-size:16px;font-weight:700;color:#bae6fd;line-height:1.5;letter-spacing:0.2px;}
-        .dm-hub-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.18);transition:all 0.22s;position:relative;z-index:2;}
+        .dm-hub-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;min-width:190px;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,0.18);transition:all 0.22s;position:relative;z-index:2;}
         .dm-hub-banner:hover .dm-hub-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
         .dm-hub-banner:hover .dm-hub-cta i{transform:translateX(3px);}
         .dm-hub-cta i{transition:transform 0.22s;}
@@ -590,7 +590,7 @@ export function renderShortcutButtons(containerId) {
         .tg-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
         .tg-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;color:#1e3a8a;line-height:1.25;}
         .tg-hub-sub{font-size:13px;color:#1d4ed8;line-height:1.55;font-weight:700;}
-        .tg-hub-cta{flex-shrink:0;background:#1d4ed8;color:#fff;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 14px rgba(29,78,216,0.35);transition:all 0.22s;position:relative;z-index:2;}
+        .tg-hub-cta{flex-shrink:0;background:#1d4ed8;color:#fff;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;min-width:190px;box-sizing:border-box;box-shadow:0 4px 14px rgba(29,78,216,0.35);transition:all 0.22s;position:relative;z-index:2;}
         .tg-hub-banner:hover .tg-hub-cta{background:#1e40af;color:#dbeafe;transform:scale(1.04);box-shadow:0 6px 20px rgba(29,78,216,0.55);}
         .tg-hub-banner:hover .tg-hub-cta i{transform:translateX(3px);}
         .tg-hub-cta i{transition:transform 0.22s;}

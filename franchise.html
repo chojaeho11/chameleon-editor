@@ -78,17 +78,17 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 .fr-pitch-card p .hl-inline{background:linear-gradient(120deg,#fef3c7 0%,#fef3c7 100%);padding:2px 6px;border-radius:5px;font-weight:700;color:#92400e;}
 .fr-pitch-card p i{display:block;margin-top:6px;color:#6366f1;font-style:normal;font-size:13px;font-weight:600;}
 
-/* Product categories grid (franchise lineup) */
-.fr-cats{background:linear-gradient(135deg,#fefce8,#f0fdf4);}
+/* Product categories grid (franchise lineup) — sky-blue theme to match WITH banner */
+.fr-cats{background:linear-gradient(135deg,#f0f9ff,#e0f2fe 60%,#eff6ff);}
 .fr-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1100px;margin:0 auto;}
-.fr-cat-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:22px 20px;text-decoration:none;color:inherit;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;}
-.fr-cat-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,0.08);border-color:#84cc16;}
-.fr-cat-card .num{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#facc15,#84cc16);color:#14532d;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.fr-cat-card{background:#fff;border:1px solid #bae6fd;border-radius:16px;padding:22px 20px;text-decoration:none;color:inherit;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;}
+.fr-cat-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(29,78,216,0.15);border-color:#1d4ed8;}
+.fr-cat-card .num{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#60a5fa,#1d4ed8);color:#fff;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(29,78,216,0.25);}
 .fr-cat-card .icon{font-size:34px;flex-shrink:0;}
 .fr-cat-card .info{flex:1;min-width:0;}
 .fr-cat-card .cname{font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px;}
 .fr-cat-card .cdesc{font-size:12px;color:#64748b;line-height:1.5;}
-.fr-cat-card .arrow{flex-shrink:0;color:#84cc16;font-size:16px;transition:transform 0.2s;}
+.fr-cat-card .arrow{flex-shrink:0;color:#1d4ed8;font-size:16px;transition:transform 0.2s;}
 .fr-cat-card:hover .arrow{transform:translateX(3px);}
 @media (max-width:768px){
     .fr-cat-grid{grid-template-columns:1fr;gap:12px;}
