@@ -5014,7 +5014,7 @@ async function handleSubReturn() {
 
                     <style>@media (max-width:768px){.cartDateTimeRow{grid-template-columns:1fr !important;}}</style>
                     <div id="cartHcSchedSection" style="display:none;">
-                        <div style="margin-bottom:8px; padding:8px 12px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); border-radius:8px; font-size:13px; font-weight:700; color:#5b21b6;">
+                        <div style="margin-bottom:8px; padding:8px 12px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); border-radius:8px; font-size:13px; font-weight:700; color:#5b21b6;" data-i18n="cart_hc_sched_notice">
                             🔧 허니콤보드 설치 일정 — 배송일/시간 먼저 선택 후 철거 일정 선택
                         </div>
                         <div class="cartDateTimeRow" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
@@ -6054,7 +6054,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
 <script type="module" src="./export.js?v=424"></script>
-<script type="module" src="./order.js?v=448"></script>
+<script type="module" src="./order.js?v=449"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>
 <script type="module" src="./ppt-mode.js?v=424"></script>
@@ -7282,7 +7282,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=448'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=449'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
@@ -12235,7 +12235,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=448');
+                    const m = await import('./order.js?v=449');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -12305,7 +12305,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=448').then(m => {
+            import('./order.js?v=449').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -12906,7 +12906,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=448').then(m => {
+        import('./order.js?v=449').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17437,7 +17437,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=448').then(function(mod) {
+            import('./order.js?v=449').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
