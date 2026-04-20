@@ -903,9 +903,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 허니콤보드 원판
     var wholesaleBoard = document.getElementById('wholesaleBoardSection');
     if (wholesaleBoard) { moveAfter(wholesaleBoard, cursor); cursor = wholesaleBoard; }
-    // 가맹점 전용 상품 섹션
-    var franchiseSec = document.getElementById('franchiseSection');
-    if (franchiseSec) { moveAfter(franchiseSec, cursor); cursor = franchiseSec; }
     // 영상1 (expositor4) → 원판 바로 다음
     if (psVideo1) { moveAfter(psVideo1, cursor); cursor = psVideo1; }
     // 인기 상품
@@ -2084,22 +2081,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<div id="franchiseSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background:linear-gradient(135deg,#f0f9ff,#e0f2fe); padding:20px; border-radius:12px; border:1.5px solid #bae6fd;">
-    <div class="hotdeal-header">
-        <h2 style="color:#1d4ed8;">
-            <span data-i18n="home_franchise_title">가맹점 전용 상품</span>
-            <span class="badge-hot" style="background:#1d4ed8;">WITH</span>
-        </h2>
-        <p data-i18n="home_franchise_desc" style="color:#1e40af;">반제품을 소량 구매해 출력해 붙이면 완제품 가격의 1/3 수준으로 판매 가능합니다.
-            <a href="/franchise" style="margin-left:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1d4ed8;color:#fff;border-radius:999px;font-size:12px;font-weight:800;text-decoration:none;">가맹 문의하기 <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></a>
-        </p>
-    </div>
-    <div class="hotdeal-scroll-wrap">
-        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('franchiseGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
-        <div id="franchiseGrid" class="hotdeal-grid"></div>
-        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('franchiseGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-</div>
 
 <div id="popularSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #fefce8; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
@@ -7929,7 +7910,6 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('franchiseSection', 'franchiseGrid', '123456789', 15);
         // ★ 흘러가는 배너 로드
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
@@ -13910,7 +13890,6 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('franchiseSection', 'franchiseGrid', '123456789', 15);
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
