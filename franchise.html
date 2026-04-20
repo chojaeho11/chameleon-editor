@@ -56,6 +56,15 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 .fr-section-title{font-size:36px;font-weight:900;text-align:center;margin-bottom:16px;color:#0f172a;}
 .fr-section-title .hl{color:#6366f1;}
 .fr-section-sub{font-size:16px;color:#64748b;text-align:center;max-width:720px;margin:0 auto 48px;}
+/* Big pitch title — used for franchise hook */
+.fr-pitch-bigtitle{font-size:44px;font-weight:900;text-align:center;margin-bottom:22px;line-height:1.22;letter-spacing:-0.5px;color:#0f172a;}
+.fr-pitch-bigtitle .hl{background:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+.fr-pitch-bigsub{font-size:19px;font-weight:600;color:#334155;text-align:center;max-width:900px;margin:0 auto 48px;line-height:1.7;}
+.fr-pitch-bigsub .em{color:#6366f1;font-weight:800;}
+@media (max-width:768px){
+    .fr-pitch-bigtitle{font-size:28px;}
+    .fr-pitch-bigsub{font-size:15px;}
+}
 
 /* Pitch grid */
 .fr-pitch{background:#f8fafc;}
@@ -162,8 +171,8 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 <!-- Three headline value props -->
 <section class="fr-section fr-pitch">
     <div class="container">
-        <h2 class="fr-section-title"><span class="hl" id="txtPitchHl"></span></h2>
-        <p class="fr-section-sub" id="txtPitchSub"></p>
+        <h2 class="fr-pitch-bigtitle" id="txtPitchHl"></h2>
+        <p class="fr-pitch-bigsub" id="txtPitchSub"></p>
         <div class="fr-grid-3">
             <div class="fr-pitch-card"><div class="ic">💰</div><h3 id="p1t"></h3><p id="p1d"></p></div>
             <div class="fr-pitch-card"><div class="ic">🌍</div><h3 id="p2t"></h3><p id="p2d"></p></div>
@@ -285,8 +294,8 @@ const L = {
         heroSub:'현수막 플로터 한 대와 작은 작업 공간이면 충분합니다. 허니콤보드 가벽·골판지·배너·종이매대 — 반제품으로 받아서 실사 출력만 붙여 납품하는 독점 가맹 파트너 프로그램.',
         ctaInquiry:'지금 가맹 문의',
         ctaCall:'바로 통화',
-        pitchHl:'왜 카멜레온 가맹점이 답인가',
-        pitchSub:'비싼 설비 투자 없이 세계적으로 각광받는 허니콤보드 전시 인쇄 사업을 독점 운영할 수 있는 유일한 경로',
+        pitchHl:'가맹비 <span class="hl">무료</span>, 하지만 매출은 <span class="hl">10배</span>. <span class="hl">함께해요</span>, 기적이 펼쳐집니다',
+        pitchSub:'<span class="em">플로터 1대와 작은 공간 그리고 열정</span>만 있다면 글로벌 회사의 CEO가 될 수 있습니다. 동네 광고사에 멈추지 마세요. <span class="em">카멜레온프린팅과 함께해요</span>. 함께하신 분들은 이미 부자가 되었습니다.',
         p1t:'가맹비 0원 · 초기 재고 부담 없음',
         p1d:'소량 샘플을 홈페이지 가격의 50%에 구매해 시작. 대량 오더는 한국·말레이시아·모로코 공장에서 세계 최저가로 공급. 마진 50% 구조.',
         p2t:'전 세계 어디서든 반제품 수령',
@@ -342,8 +351,8 @@ const L = {
         heroSub:'中古プロッター1台と小さな作業スペースがあれば十分。ハニカムボード仮壁・段ボール・バナー・ペーパースタンドを半製品で受け取り、実写出力を貼って納品する独占加盟プログラム。',
         ctaInquiry:'加盟お問い合わせ',
         ctaCall:'今すぐ電話',
-        pitchHl:'なぜカメレオン加盟店が最適なのか',
-        pitchSub:'高額な設備投資なしで、世界的に注目されるハニカムボード展示印刷事業を地域独占で運営できる唯一の道',
+        pitchHl:'加盟金<span class="hl">0円</span>、でも売上は<span class="hl">10倍</span>。<span class="hl">一緒に</span>、奇跡が広がります',
+        pitchSub:'<span class="em">プロッター1台と小さなスペース、そして情熱</span>があれば、グローバル企業のCEOになれます。町の小さな広告代理店で止まらないで。<span class="em">カメレオンプリンティングと一緒に</span>。既に参加された方々は富裕層になりました。',
         p1t:'加盟金0円・初期在庫負担なし',
         p1d:'少量サンプルをHP価格の50%で仕入れ開始。大量オーダーは韓国・マレーシア・モロッコ工場で世界最安供給。粗利50%構造。',
         p2t:'世界中どこでも半製品受取',
@@ -399,8 +408,8 @@ const L = {
         heroSub:'A used plotter and a small workspace are all you need. Receive pre-cut honeycomb walls, corrugated panels, banners and paper stands — print your graphics, laminate them on, and deliver. Exclusive franchise partner program.',
         ctaInquiry:'Apply Now',
         ctaCall:'Call Now',
-        pitchHl:'Why partner with Chameleon',
-        pitchSub:'The only path to operate the globally-demanded honeycomb exhibition-print business under regional exclusivity — without heavy equipment investment',
+        pitchHl:'<span class="hl">$0</span> franchise fee, but <span class="hl">10×</span> revenue. <span class="hl">Together</span>, miracles unfold',
+        pitchSub:'With just <span class="em">one plotter, a small workspace, and passion</span>, you can become CEO of a global company. Do not settle for being a neighborhood print shop. <span class="em">Partner with Chameleon Printing</span>. Those who joined are already wealthy.',
         p1t:'$0 franchise fee · No inventory burden',
         p1d:'Start with small samples at 50% of retail. Bulk orders produced in Korea, Malaysia, Morocco at world-lowest cost. 50% margin structure.',
         p2t:'Semi-finished goods shipped worldwide',
@@ -456,8 +465,8 @@ const L = {
         heroSub:'一台二手喷绘机和小工作室就够了。接收预裁切的蜂窝板仿墙、瓦楞板、横幅和纸展台，印刷图像后粘贴交付。独家加盟合作伙伴计划。',
         ctaInquiry:'立即申请',
         ctaCall:'立即致电',
-        pitchHl:'为何选择卡米利翁加盟店',
-        pitchSub:'无需重设备投资即可独占运营全球需求蜂窝板展示印刷业务的唯一途径',
+        pitchHl:'加盟费<span class="hl">0元</span>，营收<span class="hl">10倍</span>。<span class="hl">携手同行</span>，奇迹在此展开',
+        pitchSub:'只要<span class="em">一台喷绘机、一个小工作室和热情</span>，您就能成为全球公司的CEO。不要止步于小区广告店。<span class="em">与卡米利翁印刷携手共进</span>。已经加入的伙伴都已成为富翁。',
         p1t:'加盟费0元 · 无库存负担',
         p1d:'以网站价50%购买少量样品起步。大宗订单由韩国、马来西亚、摩洛哥工厂以全球最低价供应。50%毛利结构。',
         p2t:'半成品全球发货',
@@ -513,8 +522,8 @@ const L = {
         heroSub:'آلة بلوتر مستعملة ومساحة عمل صغيرة تكفيان. استلم منتجات نصف مصنعة مقطوعة (جدران خلية النحل، كرتون مموج، لافتات، حوامل ورقية)، اطبع الرسومات، ألصقها، وسلمها. برنامج شراكة حصري.',
         ctaInquiry:'قدم الآن',
         ctaCall:'اتصل الآن',
-        pitchHl:'لماذا شراكة كاميليون',
-        pitchSub:'الطريق الوحيد لتشغيل أعمال طباعة معارض خلية النحل المطلوبة عالمياً بحصرية إقليمية دون استثمار معدات ثقيلة',
+        pitchHl:'رسوم امتياز <span class="hl">صفر</span>، لكن الإيرادات <span class="hl">10×</span>. <span class="hl">معاً</span>، تتكشف المعجزات',
+        pitchSub:'بـ<span class="em">آلة بلوتر واحدة، مساحة عمل صغيرة، وشغف</span> فقط، يمكنك أن تصبح مدير شركة عالمية. لا تكتفي بكونك محل إعلانات محلياً. <span class="em">شارك مع كاميليون للطباعة</span>. من انضموا بالفعل أصبحوا أثرياء.',
         p1t:'0 رسوم امتياز · بدون عبء مخزون',
         p1d:'ابدأ بعينات صغيرة بنصف سعر التجزئة. الطلبيات الكبيرة تُصنع في مصانع كوريا وماليزيا والمغرب بأدنى سعر عالمي. هيكل ربح 50٪.',
         p2t:'شحن نصف مصنع حول العالم',
@@ -570,8 +579,8 @@ const L = {
         heroSub:'Un plotter usado y un pequeño taller son todo lo que necesita. Reciba semiproductos pre-cortados (paneles nido de abeja, cartón corrugado, banners, expositores de papel), imprima sus gráficos, lamínelos y entregue. Programa de franquicia exclusiva.',
         ctaInquiry:'Solicitar ahora',
         ctaCall:'Llamar ahora',
-        pitchHl:'Por qué asociarse con Chameleon',
-        pitchSub:'El único camino para operar el negocio de impresión de exposiciones en panel nido de abeja de demanda global bajo exclusividad regional — sin inversión pesada',
+        pitchHl:'Franquicia <span class="hl">$0</span>, pero ingresos <span class="hl">10×</span>. <span class="hl">Juntos</span>, los milagros se despliegan',
+        pitchSub:'Con solo <span class="em">un plotter, un pequeño taller y pasión</span>, puede ser CEO de una empresa global. No se quede como una imprenta del barrio. <span class="em">Asóciese con Chameleon Printing</span>. Los que ya se unieron son ricos.',
         p1t:'Sin franquicia · Sin stock inicial',
         p1d:'Comience con muestras pequeñas al 50% del precio de retail. Pedidos grandes producidos en Corea, Malasia, Marruecos al precio más bajo del mundo. Estructura de margen 50%.',
         p2t:'Semiproductos enviados mundialmente',
@@ -627,8 +636,8 @@ const L = {
         heroSub:'Ein gebrauchter Plotter und ein kleiner Arbeitsplatz reichen. Empfangen Sie zugeschnittene Halbfertigprodukte (Wabenplatten-Wände, Wellpappe, Banner, Papier-Displays), drucken Sie Ihre Grafiken, laminieren Sie auf und liefern Sie. Exklusives Partnerprogramm.',
         ctaInquiry:'Jetzt bewerben',
         ctaCall:'Jetzt anrufen',
-        pitchHl:'Warum Partnerschaft mit Chameleon',
-        pitchSub:'Der einzige Weg, das global nachgefragte Wabenplatten-Messedruck-Geschäft unter regionaler Exklusivität zu betreiben — ohne schwere Geräteinvestition',
+        pitchHl:'Franchise <span class="hl">0€</span>, aber Umsatz <span class="hl">10×</span>. <span class="hl">Gemeinsam</span> entfalten sich Wunder',
+        pitchSub:'Mit nur <span class="em">einem Plotter, einer kleinen Werkstatt und Leidenschaft</span> werden Sie CEO eines globalen Unternehmens. Bleiben Sie nicht beim Stadtteil-Druckerei stehen. <span class="em">Partnerschaft mit Chameleon Printing</span>. Wer bereits beigetreten ist, ist längst reich.',
         p1t:'0€ Franchise · Keine Lagerlast',
         p1d:'Starten Sie mit kleinen Mustern zu 50% des Einzelhandelspreises. Großaufträge aus Korea, Malaysia, Marokko zum weltweit niedrigsten Preis. 50% Margenstruktur.',
         p2t:'Halbfertigware weltweit versandt',
@@ -684,8 +693,8 @@ const L = {
         heroSub:'Un traceur d\'occasion et un petit atelier suffisent. Recevez des semi-produits pré-découpés (cloisons nid d\'abeille, carton ondulé, bannières, présentoirs en papier), imprimez vos graphiques, laminez-les et livrez. Programme de franchise exclusif.',
         ctaInquiry:'Postuler maintenant',
         ctaCall:'Appeler',
-        pitchHl:'Pourquoi s\'associer à Chameleon',
-        pitchSub:'La seule voie pour exploiter l\'activité d\'impression d\'exposition nid d\'abeille demandée mondialement en exclusivité régionale — sans investissement lourd',
+        pitchHl:'Franchise <span class="hl">0€</span>, mais CA <span class="hl">×10</span>. <span class="hl">Ensemble</span>, les miracles se déploient',
+        pitchSub:'Avec seulement <span class="em">un traceur, un petit atelier et de la passion</span>, vous pouvez devenir PDG d\'une société mondiale. Ne restez pas une imprimerie de quartier. <span class="em">Associez-vous à Chameleon Printing</span>. Ceux qui ont rejoint sont déjà riches.',
         p1t:'0€ franchise · Pas de stock initial',
         p1d:'Commencez avec de petits échantillons à 50% du prix retail. Commandes importantes produites en Corée, Malaisie, Maroc au prix le plus bas au monde. Marge 50%.',
         p2t:'Semi-produits expédiés mondialement',

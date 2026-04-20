@@ -408,7 +408,12 @@ export function renderShortcutButtons(containerId) {
             partner_title: '출력·시공업체인가요?',
             partner_sub: '가까운 고객과 출력업체를 연결합니다.<br>제작 가능한 품목을 등록하세요.',
             partner_desc: '',
-            partner_cta: '파트너 등록'
+            partner_cta: '파트너 등록',
+            // ── TOGETHER / franchise banner ──
+            tg_word: '함께',
+            tg_title: '가맹비 무료 · 매출 10배 · 지역 독점',
+            tg_sub: '플로터 1대와 열정만 있다면, 글로벌 CEO가 됩니다',
+            tg_cta: '가맹 문의하기'
         },
         ja: {
             self_design: 'セルフデザイン',
@@ -424,7 +429,11 @@ export function renderShortcutButtons(containerId) {
             partner_title: '印刷·施工業者ですか？',
             partner_sub: '近くのお客様と印刷業者をつなぎます。<br>製作可能な品目を登録してください。',
             partner_desc: '',
-            partner_cta: 'パートナー登録'
+            partner_cta: 'パートナー登録',
+            tg_word: '一緒に',
+            tg_title: '加盟金0円 · 売上10倍 · 地域独占',
+            tg_sub: 'プロッター1台と情熱があれば、グローバルCEOに',
+            tg_cta: '加盟お問い合わせ'
         },
         en: {
             self_design: 'Self Design',
@@ -440,7 +449,11 @@ export function renderShortcutButtons(containerId) {
             partner_title: 'Print or Install Company?',
             partner_sub: 'We connect nearby clients with print companies.<br>Register the items you can produce.',
             partner_desc: '',
-            partner_cta: 'Join as Partner'
+            partner_cta: 'Join as Partner',
+            tg_word: 'TOGETHER',
+            tg_title: '$0 Franchise · 10× Revenue · Regional Exclusivity',
+            tg_sub: 'One plotter, one passion — become a global CEO',
+            tg_cta: 'Franchise Inquiry'
         },
         zh: {
             self_design: '自助设计',
@@ -456,7 +469,11 @@ export function renderShortcutButtons(containerId) {
             partner_title: '印刷·施工企业？',
             partner_sub: '为附近客户与印刷企业牵线搭桥。<br>请注册您可以制作的品类。',
             partner_desc: '',
-            partner_cta: '成为合作伙伴'
+            partner_cta: '成为合作伙伴',
+            tg_word: '携手',
+            tg_title: '加盟费0元 · 营收10倍 · 区域独占',
+            tg_sub: '一台喷绘机一份热情，成为全球CEO',
+            tg_cta: '加盟咨询'
         },
         ar: {
             self_design: 'تصميم ذاتي',
@@ -472,7 +489,11 @@ export function renderShortcutButtons(containerId) {
             partner_title: 'شركة طباعة أو تركيب؟',
             partner_sub: 'نربط العملاء القريبين بشركات الطباعة.<br>سجّل المنتجات التي يمكنك إنتاجها.',
             partner_desc: '',
-            partner_cta: 'انضم كشريك'
+            partner_cta: 'انضم كشريك',
+            tg_word: 'معاً',
+            tg_title: 'رسوم 0 · 10× إيراد · حصرية إقليمية',
+            tg_sub: 'بلوتر واحد وشغف، كن مديراً عالمياً',
+            tg_cta: 'استفسار الامتياز'
         },
         es: {
             self_design: 'Autodiseño',
@@ -488,7 +509,11 @@ export function renderShortcutButtons(containerId) {
             partner_title: '¿Empresa de impresión o montaje?',
             partner_sub: 'Conectamos clientes cercanos con imprentas.<br>Registra los artículos que puedes producir.',
             partner_desc: '',
-            partner_cta: 'Ser Socio'
+            partner_cta: 'Ser Socio',
+            tg_word: 'JUNTOS',
+            tg_title: 'Franquicia $0 · 10× Ingresos · Exclusividad',
+            tg_sub: 'Un plotter y pasión — sé CEO global',
+            tg_cta: 'Consulta Franquicia'
         },
         de: {
             self_design: 'Selbstdesign',
@@ -504,7 +529,11 @@ export function renderShortcutButtons(containerId) {
             partner_title: 'Druck- oder Montagefirma?',
             partner_sub: 'Wir verbinden nahe Kunden mit Druckereien.<br>Registrieren Sie Ihre Produkte.',
             partner_desc: '',
-            partner_cta: 'Partner werden'
+            partner_cta: 'Partner werden',
+            tg_word: 'ZUSAMMEN',
+            tg_title: 'Franchise 0€ · 10× Umsatz · Exklusivität',
+            tg_sub: 'Ein Plotter, Leidenschaft — werden Sie globaler CEO',
+            tg_cta: 'Franchise-Anfrage'
         },
         fr: {
             self_design: 'Conception',
@@ -520,7 +549,11 @@ export function renderShortcutButtons(containerId) {
             partner_title: 'Société d\'impression ou d\'installation ?',
             partner_sub: 'Nous connectons les clients proches aux imprimeurs.<br>Enregistrez ce que vous pouvez produire.',
             partner_desc: '',
-            partner_cta: 'Devenir Partenaire'
+            partner_cta: 'Devenir Partenaire',
+            tg_word: 'ENSEMBLE',
+            tg_title: 'Franchise 0€ · CA ×10 · Exclusivité',
+            tg_sub: 'Un traceur, une passion — devenez PDG mondial',
+            tg_cta: 'Demande de franchise'
         }
     };
     const t = L[lang] || L.en;
@@ -547,6 +580,21 @@ export function renderShortcutButtons(containerId) {
         .dm-hub-banner:hover .dm-hub-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
         .dm-hub-banner:hover .dm-hub-cta i{transform:translateX(3px);}
         .dm-hub-cta i{transition:transform 0.22s;}
+        /* TOGETHER / franchise banner */
+        @keyframes tgGlow { 0%,100%{text-shadow:0 0 18px rgba(253,186,116,0.6),0 0 6px rgba(253,186,116,0.3);} 50%{text-shadow:0 0 32px rgba(253,186,116,1),0 0 10px rgba(253,186,116,0.7);} }
+        .tg-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(180,83,9,0.35);border:1.5px solid rgba(255,255,255,0.14);background:linear-gradient(90deg,#7f1d1d 0%,#b91c1c 20%,#c2410c 45%,#ea580c 70%,#f59e0b 100%);}
+        .tg-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(180,83,9,0.55);}
+        .tg-hub-banner::before{content:'';position:absolute;top:-80px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(253,224,71,0.28) 0%,transparent 70%);pointer-events:none;}
+        .tg-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(250,204,21,0.18) 0%,transparent 70%);pointer-events:none;}
+        .tg-hub-word{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#fde68a;font-size:34px;font-weight:900;letter-spacing:-0.5px;font-family:'Arial Black','Helvetica',sans-serif;animation:tgGlow 2.4s ease-in-out infinite;position:relative;z-index:3;line-height:1;}
+        .tg-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
+        .tg-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,0.3);line-height:1.25;}
+        .tg-hub-sub{font-size:13px;color:rgba(255,255,255,0.93);line-height:1.55;font-weight:600;}
+        .tg-hub-cta{flex-shrink:0;background:rgba(255,255,255,0.92);color:#9a3412;padding:10px 18px;border-radius:12px;font-weight:900;font-size:14px;display:flex;align-items:center;gap:7px;transition:all 0.2s;position:relative;z-index:3;white-space:nowrap;}
+        .tg-hub-cta i{transition:transform 0.25s;}
+        .tg-hub-banner:hover .tg-hub-cta{background:#fde047;color:#7c2d12;transform:scale(1.04);box-shadow:0 6px 20px rgba(253,224,71,0.55);}
+        .tg-hub-banner:hover .tg-hub-cta i{transform:translateX(3px);}
+
         @media(max-width:768px){
             .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
             .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
@@ -555,6 +603,11 @@ export function renderShortcutButtons(containerId) {
             .dm-hub-title{font-size:14px;}
             .dm-hub-sub{font-size:13px;}
             .dm-hub-cta{display:none;}
+            .tg-hub-banner{padding:16px 18px;border-radius:16px;gap:12px;}
+            .tg-hub-word{font-size:22px;letter-spacing:-1px;}
+            .tg-hub-title{font-size:14px;}
+            .tg-hub-sub{font-size:12px;}
+            .tg-hub-cta{display:none;}
         }
         </style>
         <div class="adv-ext-wrap">
@@ -576,6 +629,14 @@ export function renderShortcutButtons(containerId) {
                     <div class="dm-hub-sub">${t.hub_sub}</div>
                 </div>
                 <div class="dm-hub-cta">${t.hub_cta} <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+            <a href="${location.origin}/franchise" class="tg-hub-banner">
+                <div class="tg-hub-word">${t.tg_word}</div>
+                <div class="tg-hub-text">
+                    <div class="tg-hub-title">${t.tg_title}</div>
+                    <div class="tg-hub-sub">${t.tg_sub}</div>
+                </div>
+                <div class="tg-hub-cta">${t.tg_cta} <i class="fa-solid fa-arrow-right"></i></div>
             </a>
         </div>
     `;
