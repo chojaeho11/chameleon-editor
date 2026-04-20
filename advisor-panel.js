@@ -411,8 +411,8 @@ export function renderShortcutButtons(containerId) {
             partner_cta: '파트너 등록',
             // ── TOGETHER / franchise banner ──
             tg_word: 'WITH',
-            tg_title: '가맹비 무료 · 매출 10배 · 지역 독점',
-            tg_sub: '플로터 1대와 열정만 있다면, 글로벌 CEO가 됩니다',
+            tg_title: '가맹비 무료, 카멜레온과 함께 세계 시장에서 성장하세요',
+            tg_sub: '플로터 1대와 작은 공간 그리고 열정만 있다면, 글로벌 회사의 CEO가 될 수 있습니다',
             tg_cta: '가맹 문의하기'
         },
         ja: {
@@ -431,8 +431,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'パートナー登録',
             tg_word: 'WITH',
-            tg_title: '加盟金0円 · 売上10倍 · 地域独占',
-            tg_sub: 'プロッター1台と情熱があれば、グローバルCEOに',
+            tg_title: '加盟金0円、カメレオンと共に世界市場で成長しましょう',
+            tg_sub: 'プロッター1台と小さなスペース、そして情熱があれば、グローバル企業のCEOになれます',
             tg_cta: '加盟お問い合わせ'
         },
         en: {
@@ -451,8 +451,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Join as Partner',
             tg_word: 'WITH',
-            tg_title: '$0 Franchise · 10× Revenue · Regional Exclusivity',
-            tg_sub: 'One plotter, one passion — become a global CEO',
+            tg_title: '$0 franchise fee — grow in the global market with Chameleon',
+            tg_sub: 'With one plotter, a small workspace, and passion, you can become CEO of a global company',
             tg_cta: 'Franchise Inquiry'
         },
         zh: {
@@ -471,8 +471,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: '成为合作伙伴',
             tg_word: 'WITH',
-            tg_title: '加盟费0元 · 营收10倍 · 区域独占',
-            tg_sub: '一台喷绘机一份热情，成为全球CEO',
+            tg_title: '加盟费0元，与卡米利翁一起在全球市场中成长',
+            tg_sub: '一台喷绘机、一个小工作室和热情，您就能成为全球公司的CEO',
             tg_cta: '加盟咨询'
         },
         ar: {
@@ -491,8 +491,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'انضم كشريك',
             tg_word: 'WITH',
-            tg_title: 'رسوم 0 · 10× إيراد · حصرية إقليمية',
-            tg_sub: 'بلوتر واحد وشغف، كن مديراً عالمياً',
+            tg_title: 'رسوم امتياز صفر — انمُ في السوق العالمي مع كاميليون',
+            tg_sub: 'بآلة بلوتر، مساحة عمل صغيرة، وشغف، يمكنك أن تصبح مدير شركة عالمية',
             tg_cta: 'استفسار الامتياز'
         },
         es: {
@@ -511,8 +511,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Ser Socio',
             tg_word: 'WITH',
-            tg_title: 'Franquicia $0 · 10× Ingresos · Exclusividad',
-            tg_sub: 'Un plotter y pasión — sé CEO global',
+            tg_title: 'Franquicia $0 — crezca en el mercado global con Chameleon',
+            tg_sub: 'Con un plotter, un pequeño taller y pasión, puede ser CEO de una empresa global',
             tg_cta: 'Consulta Franquicia'
         },
         de: {
@@ -531,8 +531,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Partner werden',
             tg_word: 'WITH',
-            tg_title: 'Franchise 0€ · 10× Umsatz · Exklusivität',
-            tg_sub: 'Ein Plotter, Leidenschaft — werden Sie globaler CEO',
+            tg_title: 'Franchise 0€ — wachsen Sie mit Chameleon im Weltmarkt',
+            tg_sub: 'Mit einem Plotter, einer kleinen Werkstatt und Leidenschaft werden Sie CEO eines globalen Unternehmens',
             tg_cta: 'Franchise-Anfrage'
         },
         fr: {
@@ -551,8 +551,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Devenir Partenaire',
             tg_word: 'WITH',
-            tg_title: 'Franchise 0€ · CA ×10 · Exclusivité',
-            tg_sub: 'Un traceur, une passion — devenez PDG mondial',
+            tg_title: 'Franchise 0€ — grandissez sur le marché mondial avec Chameleon',
+            tg_sub: 'Avec un traceur, un petit atelier et de la passion, vous pouvez devenir PDG d\'une société mondiale',
             tg_cta: 'Demande de franchise'
         }
     };
@@ -580,18 +580,18 @@ export function renderShortcutButtons(containerId) {
         .dm-hub-banner:hover .dm-hub-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
         .dm-hub-banner:hover .dm-hub-cta i{transform:translateX(3px);}
         .dm-hub-cta i{transition:transform 0.22s;}
-        /* WITH / franchise banner — yellow → green theme */
-        @keyframes tgGlow { 0%,100%{text-shadow:0 0 18px rgba(254,240,138,0.7),0 0 6px rgba(254,240,138,0.4);} 50%{text-shadow:0 0 32px rgba(254,240,138,1),0 0 10px rgba(254,240,138,0.8);} }
-        .tg-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#052e16;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(21,128,61,0.35);border:1.5px solid rgba(255,255,255,0.18);background:linear-gradient(90deg,#fde047 0%,#facc15 22%,#a3e635 48%,#22c55e 75%,#15803d 100%);}
-        .tg-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(21,128,61,0.55);}
-        .tg-hub-banner::before{content:'';position:absolute;top:-80px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(254,240,138,0.5) 0%,transparent 70%);pointer-events:none;}
-        .tg-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(34,197,94,0.22) 0%,transparent 70%);pointer-events:none;}
-        .tg-hub-word{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#14532d;font-size:38px;font-weight:900;letter-spacing:-1px;font-family:'Arial Black','Helvetica',sans-serif;animation:tgGlow 2.4s ease-in-out infinite;position:relative;z-index:3;line-height:1;text-shadow:0 2px 0 rgba(255,255,255,0.35);}
+        /* WITH / franchise banner — very light sky-blue with blue text/button */
+        @keyframes tgGlow { 0%,100%{text-shadow:0 0 18px rgba(147,197,253,0.55),0 0 6px rgba(59,130,246,0.35);} 50%{text-shadow:0 0 32px rgba(147,197,253,0.95),0 0 10px rgba(59,130,246,0.6);} }
+        .tg-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#1e3a8a;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 6px 22px rgba(59,130,246,0.18);border:1.5px solid rgba(147,197,253,0.45);background:linear-gradient(90deg,#f0f9ff 0%,#e0f2fe 40%,#dbeafe 75%,#eff6ff 100%);}
+        .tg-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(59,130,246,0.28);}
+        .tg-hub-banner::before{content:'';position:absolute;top:-80px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(147,197,253,0.45) 0%,transparent 70%);pointer-events:none;}
+        .tg-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(191,219,254,0.5) 0%,transparent 70%);pointer-events:none;}
+        .tg-hub-word{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#1d4ed8;font-size:38px;font-weight:900;letter-spacing:-1px;font-family:'Arial Black','Helvetica',sans-serif;animation:tgGlow 2.4s ease-in-out infinite;position:relative;z-index:3;line-height:1;text-shadow:0 2px 0 rgba(255,255,255,0.55);}
         .tg-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
-        .tg-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;color:#052e16;line-height:1.25;}
-        .tg-hub-sub{font-size:13px;color:#14532d;line-height:1.55;font-weight:700;}
-        .tg-hub-cta{flex-shrink:0;background:#14532d;color:#fde047;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 14px rgba(5,46,22,0.35);transition:all 0.22s;position:relative;z-index:2;}
-        .tg-hub-banner:hover .tg-hub-cta{background:#052e16;color:#fef08a;transform:scale(1.04);box-shadow:0 6px 20px rgba(5,46,22,0.55);}
+        .tg-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;color:#1e3a8a;line-height:1.25;}
+        .tg-hub-sub{font-size:13px;color:#1d4ed8;line-height:1.55;font-weight:700;}
+        .tg-hub-cta{flex-shrink:0;background:#1d4ed8;color:#fff;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 14px rgba(29,78,216,0.35);transition:all 0.22s;position:relative;z-index:2;}
+        .tg-hub-banner:hover .tg-hub-cta{background:#1e40af;color:#dbeafe;transform:scale(1.04);box-shadow:0 6px 20px rgba(29,78,216,0.55);}
         .tg-hub-banner:hover .tg-hub-cta i{transform:translateX(3px);}
         .tg-hub-cta i{transition:transform 0.22s;}
 

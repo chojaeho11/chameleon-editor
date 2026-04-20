@@ -903,6 +903,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 허니콤보드 원판
     var wholesaleBoard = document.getElementById('wholesaleBoardSection');
     if (wholesaleBoard) { moveAfter(wholesaleBoard, cursor); cursor = wholesaleBoard; }
+    // 가맹점 전용 상품 섹션
+    var franchiseSec = document.getElementById('franchiseSection');
+    if (franchiseSec) { moveAfter(franchiseSec, cursor); cursor = franchiseSec; }
     // 영상1 (expositor4) → 원판 바로 다음
     if (psVideo1) { moveAfter(psVideo1, cursor); cursor = psVideo1; }
     // 인기 상품
@@ -2078,6 +2081,23 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('wholesaleBoardGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
         <div id="wholesaleBoardGrid" class="hotdeal-grid"></div>
         <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('wholesaleBoardGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<div id="franchiseSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background:linear-gradient(135deg,#f0f9ff,#e0f2fe); padding:20px; border-radius:12px; border:1.5px solid #bae6fd;">
+    <div class="hotdeal-header">
+        <h2 style="color:#1d4ed8;">
+            <span data-i18n="home_franchise_title">가맹점 전용 상품</span>
+            <span class="badge-hot" style="background:#1d4ed8;">WITH</span>
+        </h2>
+        <p data-i18n="home_franchise_desc" style="color:#1e40af;">반제품을 소량 구매해 출력해 붙이면 완제품 가격의 1/3 수준으로 판매 가능합니다.
+            <a href="/franchise" style="margin-left:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1d4ed8;color:#fff;border-radius:999px;font-size:12px;font-weight:800;text-decoration:none;">가맹 문의하기 <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></a>
+        </p>
+    </div>
+    <div class="hotdeal-scroll-wrap">
+        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('franchiseGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="franchiseGrid" class="hotdeal-grid"></div>
+        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('franchiseGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 
@@ -7909,6 +7929,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('franchiseSection', 'franchiseGrid', '123456789', 15);
         // ★ 흘러가는 배너 로드
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
@@ -7916,7 +7937,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=441').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=442').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -8133,10 +8154,16 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
 }
 
 // ★ 대분류 기반 상품 로드 (허니콤보드 원판 등 — 대분류 아래 모든 소분류 상품)
-async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitCount) {
+async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitCount, opts) {
     const section = document.getElementById(sectionId);
     const grid = document.getElementById(gridId);
     if (!grid || !sb) return;
+    // Badge label/color by top category (override via opts)
+    const badgeByCat = {
+        'Wholesale Board Prices': { label:'RAW', color:'#b45309' },
+        '123456789':              { label:'WITH', color:'#1d4ed8' }
+    };
+    const badge = (opts && opts.badge) || badgeByCat[topCategoryCode] || { label:'HOT', color:'#ef4444' };
     try {
         // 대분류의 모든 소분류 코드 조회
         const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', topCategoryCode);
@@ -8160,7 +8187,7 @@ async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitC
             var rawImg = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
             var imgSrc = window.getTinyThumb ? window.getTinyThumb(rawImg, 400) : rawImg;
             var sizeText = (p.width_mm && p.height_mm) ? (window._isUSsite && window._isUSsite() ? (p.width_mm/25.4).toFixed(1)+' x '+(p.height_mm/25.4).toFixed(1)+' in' : p.width_mm+' x '+p.height_mm+'mm') : 'Option';
-            card.innerHTML = '<div class="hotdeal-img-box"><img src="'+imgSrc+'" alt="'+(seoAlt(p)||loc.name)+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div style="position:absolute;top:10px;left:10px;background:#b45309;color:white;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">RAW</div></div><div class="hotdeal-info"><div class="hotdeal-title">'+loc.name+'</div><div class="hotdeal-meta">'+sizeText+'</div><div class="hotdeal-price">'+loc.formattedPrice+'</div></div>';
+            card.innerHTML = '<div class="hotdeal-img-box"><img src="'+imgSrc+'" alt="'+(seoAlt(p)||loc.name)+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div style="position:absolute;top:10px;left:10px;background:'+badge.color+';color:white;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">'+badge.label+'</div></div><div class="hotdeal-info"><div class="hotdeal-title">'+loc.name+'</div><div class="hotdeal-meta">'+sizeText+'</div><div class="hotdeal-price">'+loc.formattedPrice+'</div></div>';
             card.onclick = function() { window.loadProductDetailAndOpen(p.code); };
             grid.appendChild(card);
         });
@@ -13883,6 +13910,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('franchiseSection', 'franchiseGrid', '123456789', 15);
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
