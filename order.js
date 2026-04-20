@@ -467,7 +467,7 @@ export async function initOrderSystem() {
                 const _pc = item.product.code || '';
                 const _cat = item.product.category || '';
                 const _tc = window._getTopCategoryCode ? window._getTopCategoryCode(_cat) : '';
-                const _nd = _pc === '21355677' || _pc === '21355677_copy' || _tc === 'Wholesale Board Prices' || _tc === 'honeycomb_board' || _cat === 'hb_display_wall' || _pc.startsWith('hb_dw') || item.product._calculated_price;
+                const _nd = _pc === '21355677' || _pc === '21355677_copy' || _tc === 'Wholesale Board Prices' || _tc === 'honeycomb_board' || _tc === '123456789' || _cat === 'hb_display_wall' || _pc.startsWith('hb_dw') || item.product._calculated_price;
                 let dr = 0;
                 if (!_nd && qty >= 3) { if (qty >= 501) dr = 0.50; else if (qty >= 101) dr = 0.40; else if (qty >= 10) dr = 0.30; else dr = 0.20; }
                 itemBase -= Math.floor(itemBase * dr / 100) * 100;
@@ -2453,7 +2453,7 @@ function renderCart() {
         
         let baseProductTotal = (item.product.price || 0) * item.qty;
 
-        // 수량 할인 적용 (커스텀사이즈, 허니콤보드, 보드류 도매, 천원단위 주문, 가벽 제외)
+        // 수량 할인 적용 (커스텀사이즈, 허니콤보드, 보드류 도매, 천원단위 주문, 가벽, 가맹점 전용 제외)
         // ★ 커스텀사이즈 상품은 상세페이지에서 이미 할인 적용된 가격으로 담기므로 제외
         const _pCode = item.product.code || '';
         const _pCat = item.product.category || '';
@@ -2461,6 +2461,7 @@ function renderCart() {
         const _noDiscount = _pCode === '21355677' || _pCode === '21355677_copy'
             || _pTopCat === 'Wholesale Board Prices'
             || _pTopCat === 'honeycomb_board'
+            || _pTopCat === '123456789'
             || _pCat === 'hb_display_wall' || _pCode.startsWith('hb_dw')
             || item.product._calculated_price;
         let _qtyDiscountRate = 0;
@@ -2739,6 +2740,7 @@ function updateSummary(prodTotal, addonTotal, total) {
             const _noDisc3 = _pCode3 === '21355677' || _pCode3 === '21355677_copy'
                 || _pTopCat3 === 'Wholesale Board Prices'
                 || _pTopCat3 === 'honeycomb_board'
+                || _pTopCat3 === '123456789'
                 || _pCat3 === 'hb_display_wall' || _pCode3.startsWith('hb_dw')
                 || item.product._calculated_price;
             if (!_noDisc3 && qty >= 3) {
@@ -3093,7 +3095,7 @@ async function processOrderSubmission() {
         const _pc2 = item.product.code || '';
         const _cat2 = item.product.category || '';
         const _tc2 = window._getTopCategoryCode ? window._getTopCategoryCode(_cat2) : '';
-        const _nd2 = _pc2 === '21355677' || _pc2 === '21355677_copy' || _tc2 === 'Wholesale Board Prices' || _tc2 === 'honeycomb_board' || _cat2 === 'hb_display_wall' || _pc2.startsWith('hb_dw') || item.product._calculated_price;
+        const _nd2 = _pc2 === '21355677' || _pc2 === '21355677_copy' || _tc2 === 'Wholesale Board Prices' || _tc2 === 'honeycomb_board' || _tc2 === '123456789' || _cat2 === 'hb_display_wall' || _pc2.startsWith('hb_dw') || item.product._calculated_price;
         let _dr2 = 0;
         if (!_nd2 && qty >= 3) {
             if (qty >= 501) _dr2 = 0.50;

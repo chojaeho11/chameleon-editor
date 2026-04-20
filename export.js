@@ -1733,6 +1733,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             const _noDiscount2 = _pCode2 === '21355677' || _pCode2 === '21355677_copy'
                 || _pTopCat2 === 'Wholesale Board Prices'
                 || _pTopCat2 === 'honeycomb_board'
+                || _pTopCat2 === '123456789'
                 || _pCat2 === 'hb_display_wall' || _pCode2.startsWith('hb_dw')
                 || item.product._calculated_price;
             let _qtyDiscRate2 = 0;
