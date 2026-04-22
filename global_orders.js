@@ -3513,19 +3513,7 @@ window.openAdminSlotModal = async (dateStr) => {
         }
         html += '</div></div>';
 
-        // 🏗️ 지방 설치배송
-        html += `<div style="margin-bottom:14px; border:1.5px solid #9333ea; border-radius:12px; overflow:hidden;">
-            <div style="padding:12px 16px; background:#f5f3ff; color:#6d28d9; font-weight:900; display:flex; align-items:center; gap:10px;">
-                <span style="font-size:16px;">🏗️ 지방 설치배송</span>
-                <span style="margin-left:auto; background:#fff; padding:2px 10px; border-radius:999px; font-size:12px;">${dlvLocalInstall.length}건</span>
-            </div>
-            <div style="padding:8px; background:#fff;">`;
-        if (dlvLocalInstall.length === 0) {
-            html += '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:14px; font-style:italic;">해당 없음</div>';
-        } else {
-            html += renderDeliveryGroup('', dlvLocalInstall, '#9333ea', '#fff');
-        }
-        html += '</div></div>';
+        // 🏗️ 지방 설치배송은 각 팀 섹션에 포함되어 있으므로 별도 섹션 제거
 
         // 📦 택배 (보드류 + 일반택배 + 기타)
         const courierAll = [...dlvBoardCourier, ...dlvStdCourier, ...dlvOther];
