@@ -3297,11 +3297,19 @@ window.openAdminSlotModal = async (dateStr) => {
             const { data: rData } = await sb.from('orders')
                 .select('id, admin_note, manager_name, phone, address, total_amount, status, assigned_team')
                 .ilike('admin_note', `%rdate=${dateStr}%`);
+            // 중복 제거: 같은 주문 ID 또는 같은 고객(이름+전화)은 1회만
+            const _seenIds = new Set();
+            const _seenCustomers = new Set();
             (rData || []).forEach(o => {
+                if (_seenIds.has(o.id)) return;
+                const ck = `${(o.manager_name||'').trim()}|${(o.phone||'').replace(/\D/g,'')}`;
+                if (ck !== '|' && _seenCustomers.has(ck)) return;
+                _seenIds.add(o.id);
+                if (ck !== '|') _seenCustomers.add(ck);
+
                 const m = (o.admin_note || '').match(/rtime=(\d{2}:\d{2})/);
-                if (!m) return;
-                const period = _legacyToPeriod(m[1]);
-                if (!period) return;
+                const period = m ? _legacyToPeriod(m[1]) : 'any';
+                if (!period || !periodOrders[period]) return;
                 const team = (o.assigned_team && periodOrders[period][o.assigned_team]) ? o.assigned_team : 'unassigned';
                 periodOrders[period][team].push({ ...o, _isRemoval: true });
             });
