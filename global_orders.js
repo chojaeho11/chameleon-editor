@@ -4603,21 +4603,22 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
     if (!_sb || !dateStr) return { ok:false, error:'no sb or date' };
     const msg = (m) => { if (window.showToast) window.showToast(m, 'info'); else console.log(m); };
 
-    // 1) 당일 모든 주문 (취소 제외, 배송 확정된 건)
+    // 1) 당일 팀 업무 대상 주문만 (배송기간 or 설치시간이 있는 건 — 팀 섹션 기준과 동일)
     const { data: orders, error } = await _sb.from('orders')
-        .select('id, address, total_amount, delivery_period, is_province_install, assigned_team, status')
+        .select('id, address, total_amount, delivery_period, installation_time, is_province_install, assigned_team, status')
         .eq('delivery_target_date', dateStr)
-        .not('status', 'in', '(취소,주문취소)');
+        .not('status', 'in', '(취소,주문취소,취소됨,삭제됨,임시작성,결제대기,관리자차단)');
     if (error) { console.error('[rebalance]', error); return { ok:false, error }; }
-    if (!orders || orders.length === 0) {
-        msg(`${dateStr}: 주문 없음`);
+    const teamEligible = (orders || []).filter(o => o.delivery_period || o.installation_time || o.is_province_install);
+    if (teamEligible.length === 0) {
+        msg(`${dateStr}: 팀 배정 대상 주문 없음`);
         return { ok:true, changed:0, total:0 };
     }
 
     // 2) 지방설치 주문은 해당 팀 고정 (바꾸지 않음)
     const provinceByTeam = { seoul:[], hwaseong:[], north:[] };
     const regularOrders = [];
-    orders.forEach(o => {
+    teamEligible.forEach(o => {
         if (o.is_province_install) {
             const t = o.assigned_team && provinceByTeam[o.assigned_team] ? o.assigned_team : 'seoul';
             provinceByTeam[t].push(o);
@@ -4631,28 +4632,21 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
     Object.keys(provinceByTeam).forEach(t => { if (provinceByTeam[t].length > 0) lockedTeams.add(t); });
 
     // 4) 사용 가능 팀 리스트 (우선순위: 김팀장(seoul) → 서부장(hwaseong) → 3팀(north))
-    const availableTeams = TEAM_IDS.filter(t => !lockedTeams.has(t));
+    //    항상 모든 가용 팀을 활성화 — 순차 채움이 자연스럽게 뒤 팀을 쉬게 함
+    const activeTeams = TEAM_IDS.filter(t => !lockedTeams.has(t));
 
-    // 5) 총 필요 시간 계산 → 필요 팀 수 결정 (8시간 기준)
-    const totalHours = regularOrders.reduce((acc, o) => acc + _orderHours(o), 0);
-    let activeTeamCount;
-    if (totalHours <= TEAM_DAILY_HOURS) activeTeamCount = 1;
-    else if (totalHours <= TEAM_DAILY_HOURS * 2) activeTeamCount = 2;
-    else activeTeamCount = 3;
-    const usableTeamCount = Math.min(activeTeamCount, availableTeams.length);
-    const activeTeams = availableTeams.slice(0, Math.max(1, usableTeamCount));
-
-    // 6) 주문 분배: 시간 기반 순차 채움 — 1팀 8시간 꽉 차야 2팀으로 넘김
+    // 5) 주문 분배: 1팀 8시간 꽉 차야 2팀, 2팀 꽉 차야 3팀 (엄격한 순차 채움)
     const teamBuckets = {};
     const teamHoursUsed = {};
     activeTeams.forEach(t => { teamBuckets[t] = []; teamHoursUsed[t] = 0; });
+    const totalHours = regularOrders.reduce((acc, o) => acc + _orderHours(o), 0);
 
-    // 큰 건 먼저 배치 (bin packing 개선) → 소요시간 내림차순
+    // 큰 건 먼저 배치 (bin packing 개선) → 팀 1이 최대한 꽉 차도록
     const sortedOrders = regularOrders.slice().sort((a, b) => _orderHours(b) - _orderHours(a));
 
     sortedOrders.forEach(o => {
         const h = _orderHours(o);
-        // 첫 팀부터 — 해당 팀에 아직 여유가 있으면 그 팀으로
+        // 첫 팀부터 순차 — 팀1 8시간 내 맞으면 팀1, 아니면 팀2, 아니면 팀3
         for (const t of activeTeams) {
             if (teamHoursUsed[t] + h <= TEAM_DAILY_HOURS) {
                 teamBuckets[t].push(o);
@@ -4660,7 +4654,7 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
                 return;
             }
         }
-        // 모든 팀 포화 → 남는 시간이 가장 많은 팀에 강제
+        // 모든 팀이 8시간 초과 — 남는 시간이 가장 많은 팀에 강제 배정
         let best = activeTeams[0];
         activeTeams.forEach(t => { if (teamHoursUsed[t] < teamHoursUsed[best]) best = t; });
         teamBuckets[best].push(o);
@@ -4686,7 +4680,7 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
         _sb.from('orders').update({ assigned_team: u.assigned_team }).eq('id', u.id)
     ));
     const errCount = results.filter(r => r.error).length;
-    msg(`${dateStr}: ${updates.length}건 재배정 완료 (${activeTeams.length}팀, 총 ${totalHours}h + 지방 ${orders.length-regularOrders.length}건)${errCount?`, 실패 ${errCount}`:''}`);
+    msg(`${dateStr}: ${updates.length}건 재배정 완료 (${activeTeams.length}팀, 총 ${totalHours}h + 지방 ${teamEligible.length-regularOrders.length}건)${errCount?`, 실패 ${errCount}`:''}`);
     return { ok:true, changed:updates.length, total:regularOrders.length, teams:activeTeams.length, errors:errCount };
 };
 
