@@ -914,6 +914,137 @@ function getInstallationSlotInfo(totalKRW) {
 // 1팀은 항상 점유된 것으로 표시 (실제 운영 가능 팀 = MAX_TEAMS - 1)
 const BASE_OCCUPIED_TEAMS = 1;
 
+// ========================================================================
+// [Phase 1] 시간대 모델: 오전 8건 / 오후 10건 / 야간 6건 / 시간상관없음
+// ========================================================================
+const PERIOD_CAPACITY = { am: 8, pm: 10, night: 6 };
+const PERIOD_TIME_MIDPOINT = { am: '09:00', pm: '14:00', night: '19:00' };  // 기사앱/관리자 하위호환용
+
+// installation_time HH:MM → am / pm / night 매핑 (레거시 주문 집계용)
+function _timeToPeriod(hhmm) {
+    if (!hhmm) return null;
+    if (hhmm < '12:00') return 'am';
+    if (hhmm < '18:00') return 'pm';
+    return 'night';
+}
+
+// 당일 기간별 예약 건수 조회 (orders.delivery_period + 레거시 installation_time 합산)
+async function fetchPeriodBookings(date) {
+    const result = { am: 0, pm: 0, night: 0, any: 0 };
+    if (!date) return result;
+    try {
+        const _sb = window.sb || sb;
+        const { data } = await _sb.from('orders')
+            .select('delivery_period, installation_time, status, manager_name')
+            .eq('delivery_target_date', date);
+        (data || []).forEach(o => {
+            const isBlock = o.status === '관리자차단' || (o.manager_name || '').startsWith('[차단]');
+            let p = o.delivery_period;
+            if (!p) p = _timeToPeriod(o.installation_time);
+            if (!p) return;
+            // 'any' 는 캐파에서 1건 분배 — 관리자가 배정 전까지 PM에 가산
+            if (p === 'any') { result.any++; result.pm++; return; }
+            if (result[p] !== undefined) result[p]++;
+            if (isBlock) { /* 관리자차단도 캐파 차감으로 사용 */ }
+        });
+    } catch(e) { console.warn('[fetchPeriodBookings]', e); }
+    return result;
+}
+
+// 주소 → 배정 팀 ('hwaseong' | 'north' | 'seoul')
+function _assignDeliveryTeam(address) {
+    if (!address) return null;
+    const a = String(address).replace(/\s+/g, '');
+    // 화성팀: 화성·수원·경기남부·서울 강남권
+    const hwaseongRe = /화성|수원|오산|평택|안성|용인|이천|여주|광주시|하남|안양|군포|안산|시흥|과천|의왕|성남|강남|서초|송파|동작/;
+    // 북부팀: 경기북부 + 서울 동북부
+    const northRe = /의정부|양주|고양|파주|동두천|포천|남양주|구리|가평|연천|강북구|도봉|노원|중랑|광진|성북|동대문/;
+    if (hwaseongRe.test(a)) return 'hwaseong';
+    if (northRe.test(a)) return 'north';
+    return 'seoul';
+}
+
+// 지방설치 판정: 서울/경기/인천 외 + 총액 70만원 이상
+function _isProvinceInstall(address, totalKRW) {
+    if (!address) return false;
+    const a = String(address).replace(/\s+/g, '');
+    const isCapital = /서울|경기|인천/.test(a);
+    if (isCapital) return false;
+    return (totalKRW || 0) >= 700000;
+}
+
+// 설치 소요분: 100만원당 1시간 + 이동 1시간, 최소 60분, 지방은 480분(하루)
+function _calcInstallDurationMin(totalKRW, isProvince) {
+    if (isProvince) return 480;
+    const installMin = Math.max(60, Math.floor((totalKRW || 0) / 1000000) * 60);
+    return installMin + 60; // +이동 1h
+}
+
+// 공통: 3개 기간 카드 + "시간 상관없음" 렌더러
+// opts: { hiddenId, gridId, dateId, bookings, onSelect(value), initialValue }
+function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange }) {
+    if (!grid) return;
+    const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
+    const T = {
+        am:       { kr:'🌅 오전',   ja:'🌅 午前',   en:'🌅 Morning',   zh:'🌅 上午' }[lang] || '🌅 Morning',
+        amSub:    { kr:'08:00 – 12:00',   ja:'08:00 – 12:00', en:'08:00 – 12:00', zh:'08:00 – 12:00' }[lang] || '08:00 – 12:00',
+        pm:       { kr:'☀️ 오후',   ja:'☀️ 午後',   en:'☀️ Afternoon', zh:'☀️ 下午' }[lang] || '☀️ Afternoon',
+        pmSub:    { kr:'12:00 – 18:00',   ja:'12:00 – 18:00', en:'12:00 – 18:00', zh:'12:00 – 18:00' }[lang] || '12:00 – 18:00',
+        night:    { kr:'🌙 야간',   ja:'🌙 夜間',   en:'🌙 Night',     zh:'🌙 夜间' }[lang] || '🌙 Night',
+        nightSub: { kr:'18:00 – 22:00',   ja:'18:00 – 22:00', en:'18:00 – 22:00', zh:'18:00 – 22:00' }[lang] || '18:00 – 22:00',
+        any:      { kr:'📅 시간 상관없음', ja:'📅 時間指定なし', en:'📅 Any time', zh:'📅 时间不限' }[lang] || '📅 Any time',
+        anySub:   { kr:'기사가 경로 최적화', ja:'ドライバーが最適化', en:'Driver optimises route', zh:'司机自动安排' }[lang] || 'Driver optimises route',
+        booked:   { kr:'예약', ja:'予約', en:'booked', zh:'已预约' }[lang] || 'booked',
+        left:     { kr:'남음', ja:'空き', en:'left', zh:'剩余' }[lang] || 'left',
+        full:     { kr:'마감', ja:'満員', en:'Full', zh:'已满' }[lang] || 'Full'
+    };
+    const periods = [
+        { key:'am',    title:T.am,    sub:T.amSub,    cap:PERIOD_CAPACITY.am },
+        { key:'pm',    title:T.pm,    sub:T.pmSub,    cap:PERIOD_CAPACITY.pm },
+        { key:'night', title:T.night, sub:T.nightSub, cap:PERIOD_CAPACITY.night },
+        { key:'any',   title:T.any,   sub:T.anySub,   cap:null }
+    ];
+    grid.innerHTML = '';
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(auto-fit,minmax(180px,1fr))';
+    grid.style.gap = '10px';
+
+    const select = (val) => {
+        if (hidden) hidden.value = val;
+        grid.querySelectorAll('[data-period]').forEach(card => {
+            const isSel = card.dataset.period === val;
+            card.style.borderColor = isSel ? '#ea580c' : '#cbd5e1';
+            card.style.background  = isSel ? 'linear-gradient(135deg,#fed7aa,#fb923c)' : '#fff';
+            card.style.color       = isSel ? '#7c2d12' : '#334155';
+            card.style.boxShadow   = isSel ? '0 6px 18px rgba(234,88,12,0.35)' : '';
+            card.style.transform   = isSel ? 'scale(1.02)' : '';
+        });
+        if (typeof onChange === 'function') onChange(val);
+    };
+
+    periods.forEach(p => {
+        const used = (bookings && bookings[p.key]) || 0;
+        const isFull = p.cap !== null && used >= p.cap;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.dataset.period = p.key;
+        const base = 'padding:14px 12px;border-radius:14px;border:2px solid #cbd5e1;background:#fff;color:#334155;font-weight:700;text-align:left;cursor:pointer;transition:all 0.15s;';
+        card.style.cssText = base + (isFull ? 'opacity:0.55;cursor:not-allowed;border-color:#dc2626;background:#fef2f2;color:#991b1b;' : '');
+        card.disabled = !!isFull;
+        const capLine = p.cap === null
+            ? `<div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;">${p.sub}</div>`
+            : `<div style="font-size:11px;color:${isFull?'#991b1b':'#64748b'};margin-top:4px;font-weight:600;">${p.sub}</div>
+               <div style="font-size:11px;margin-top:6px;font-weight:800;color:${isFull?'#991b1b':'#059669'};">
+                 ${isFull ? T.full : `${used}/${p.cap} · ${p.cap - used} ${T.left}`}
+               </div>`;
+        card.innerHTML = `<div style="font-size:15px;font-weight:800;">${p.title}</div>${capLine}`;
+        if (!isFull) card.addEventListener('click', () => select(p.key));
+        grid.appendChild(card);
+    });
+
+    if (initialValue) select(initialValue);
+}
+
 // 카트에 허니콤 카테고리 상품이 있는지 판정
 window._cartHasHoneycomb = function() {
     if (!Array.isArray(cartData) || cartData.length === 0) return false;
@@ -969,75 +1100,15 @@ async function _renderCartTimeGrid({ hiddenId, gridId, dateId, prefix }) {
     loading.textContent = T.loading;
     grid.appendChild(loading);
 
-    let booked = {};
-    try { booked = await fetchInstallationSlots(date); }
-    catch(e) { INSTALL_TIME_SLOTS.forEach(s => booked[s] = BASE_OCCUPIED_TEAMS); }
+    const bookings = await fetchPeriodBookings(date);
 
-    grid.innerHTML = '';
-    const need = Math.max(slotInfo.slots, 1);
-    const prevValue = hidden.value || '';
-
-    INSTALL_TIME_SLOTS.forEach((slot, idx) => {
-        let canBook = true;
-        for (let i = 0; i < need; i++) {
-            const j = idx + i;
-            if (j >= INSTALL_TIME_SLOTS.length) { canBook = false; break; }
-            const used = booked[INSTALL_TIME_SLOTS[j]] || 0;
-            if (used >= MAX_TEAMS) { canBook = false; break; }
-        }
-        const usedHere = booked[slot] || 0;
-        const endIdx = Math.min(idx + need, INSTALL_TIME_SLOTS.length);
-        const endTime = endIdx < INSTALL_TIME_SLOTS.length ? INSTALL_TIME_SLOTS[endIdx] : '22:00';
-        const rangeLabel = need > 1 ? `${slot} ~ ${endTime}` : slot;
-        const chips = [];
-        for (let k = 1; k <= MAX_TEAMS; k++) {
-            const isB = k <= usedHere;
-            chips.push(`<span style="font-size:10px;padding:1px 5px;border-radius:6px;background:${isB?'#fee2e2':'#ecfdf5'};color:${isB?'#dc2626':'#10b981'};border:1px solid ${isB?'#dc2626':'#10b981'};">${k}${T.team} ${isB?T.booked:T.avail}</span>`);
-        }
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.dataset.val = slot;
-        const baseStyle = 'padding:8px 6px;border-radius:10px;font-size:12px;font-weight:700;text-align:left;cursor:pointer;line-height:1.4;transition:all 0.15s;';
-        if (!canBook) {
-            // 마감 = 빨강
-            btn.style.cssText = baseStyle + 'border:2px solid #dc2626;background:#fee2e2;color:#991b1b;cursor:not-allowed;';
-            btn.disabled = true;
-        } else {
-            btn.style.cssText = baseStyle + 'border:2px solid #cbd5e1;background:#fff;color:#475569;';
-        }
-        btn.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;"><b style="font-size:13px;">${rangeLabel}</b></div><div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">${chips.join('')}</div>${!canBook?`<div style="font-size:10px;color:#dc2626;margin-top:2px;font-weight:800;">${T.full}</div>`:''}`;
-        grid.appendChild(btn);
+    renderPeriodCards({
+        grid,
+        hidden,
+        bookings,
+        initialValue: hidden.value || '',
+        onChange: () => { if (prefix === 'delivery') _updateRemovalGate(); }
     });
-
-    const _selectBtn = (val) => {
-        hidden.value = val;
-        grid.querySelectorAll('button').forEach(b => {
-            if (b.disabled) return;
-            if (b.dataset.val === val && val) {
-                // 선택됨 = 주황
-                b.style.border = '3px solid #ea580c';
-                b.style.background = 'linear-gradient(135deg,#fed7aa,#fb923c)';
-                b.style.color = '#7c2d12';
-                b.style.boxShadow = '0 4px 12px rgba(234,88,12,0.35)';
-                b.style.transform = 'scale(1.02)';
-            } else {
-                b.style.border = '2px solid #cbd5e1';
-                b.style.background = '#fff';
-                b.style.color = '#475569';
-                b.style.boxShadow = '';
-                b.style.transform = '';
-            }
-        });
-        // 배송 선택 시 철거 영역 활성화
-        if (prefix === 'delivery') _updateRemovalGate();
-    };
-    grid.querySelectorAll('button').forEach(b => {
-        if (b.disabled) return;
-        b.addEventListener('click', () => _selectBtn(b.dataset.val || ''));
-    });
-
-    const target = grid.querySelector(`button[data-val="${prevValue}"]`);
-    if (prevValue && target && !target.disabled) _selectBtn(prevValue);
 }
 
 // 철거 섹션 활성/비활성: 수도권 철거 토글 ON일 때만 활성
@@ -1336,7 +1407,7 @@ async function openInstallationTimeModal() {
         descEl.textContent = descs[CURRENT_LANG] || descs['en'];
     }
 
-    renderTimeSlots(grid, bookedSlots, slotInfo);
+    await renderTimeSlots(grid, bookedSlots, slotInfo);
 
     if (btnConfirm) {
         btnConfirm.onclick = () => {
@@ -1347,35 +1418,29 @@ async function openInstallationTimeModal() {
     }
 }
 
-// ── 시간 슬롯 렌더링 ──
-function renderTimeSlots(grid, bookedSlots, slotInfo) {
+// ── 시간 슬롯 렌더링: 3개 기간 카드 + 시간상관없음 (Phase 1) ──
+async function renderTimeSlots(grid, bookedSlotsUnused, slotInfo) {
+    if (!grid) return;
     grid.innerHTML = '';
-
-    // 2시간 / 4시간 / 8시간 슬롯
-    INSTALL_TIME_SLOTS.forEach((slot, idx) => {
-        let canBook = true;
-        for (let i = 0; i < slotInfo.slots; i++) {
-            if (idx + i >= INSTALL_TIME_SLOTS.length) { canBook = false; break; }
-            const used = bookedSlots[INSTALL_TIME_SLOTS[idx + i]] || 0;
-            if (used >= MAX_TEAMS) { canBook = false; break; }
+    const bookings = await fetchPeriodBookings(selectedDeliveryDate);
+    // 하단 확정 버튼 잠금 해제용 fake hidden
+    let _hidden = grid._periodHidden;
+    if (!_hidden) {
+        _hidden = document.createElement('input');
+        _hidden.type = 'hidden';
+        grid._periodHidden = _hidden;
+    }
+    renderPeriodCards({
+        grid,
+        hidden: _hidden,
+        bookings,
+        initialValue: selectedInstallationTime || '',
+        onChange: (val) => {
+            // selectedInstallationTime 에는 period 키('am'|'pm'|'night'|'any')를 저장
+            selectedInstallationTime = val || null;
+            const btn = document.getElementById("btnConfirmInstallTime");
+            if (btn) btn.disabled = !val;
         }
-
-        const endIdx = Math.min(idx + slotInfo.slots, INSTALL_TIME_SLOTS.length);
-        const endTime = endIdx < INSTALL_TIME_SLOTS.length ? INSTALL_TIME_SLOTS[endIdx] : '22:00';
-
-        const div = document.createElement('div');
-        div.className = `time-slot ${canBook ? 'slot-available' : 'slot-full'}`;
-        div.innerHTML = `<div>${slot} ~ ${endTime}</div>`;
-
-        if (canBook) {
-            div.onclick = () => {
-                grid.querySelectorAll('.time-slot').forEach(s => s.classList.remove('slot-selected'));
-                div.classList.add('slot-selected');
-                selectedInstallationTime = slot;
-                document.getElementById("btnConfirmInstallTime").disabled = false;
-            };
-        }
-        grid.appendChild(div);
     });
 }
 
@@ -3072,13 +3137,30 @@ async function processOrderSubmission() {
         } catch(e) { selectedStaffManagerId = null; }
     }
 
+    // 기간(period) 결정: 장바구니 hidden 우선, 모달 선택값 fallback
+    const _periodValue = (document.getElementById('cartDeliveryTime')?.value) || selectedInstallationTime || null;
+    const _isAny = _periodValue === 'any';
+    const _period = (_periodValue === 'am' || _periodValue === 'pm' || _periodValue === 'night' || _periodValue === 'any') ? _periodValue : null;
+    const _legacyTime = _period && _period !== 'any' ? PERIOD_TIME_MIDPOINT[_period] : null;
+
+    // 자동 팀 배정 + 지방설치 판정 + 설치 소요시간
+    const _cartTotalForAssign = (typeof calculateCartTotalKRW === 'function') ? calculateCartTotalKRW() : 0;
+    const _assignedTeam = _assignDeliveryTeam(address);
+    const _province = _isProvinceInstall(address, _cartTotalForAssign);
+    const _installDuration = _calcInstallDurationMin(_cartTotalForAssign, _province);
+
     window.tempOrderInfo = {
         manager,
         phone,
         address,
         request,
         deliveryDate,
-        installationTime: (document.getElementById('cartDeliveryTime')?.value) || selectedInstallationTime || null,
+        installationTime: _legacyTime,  // 레거시 HH:MM (기사앱/관리자 달력 하위호환)
+        deliveryPeriod: _period,        // 'am' | 'pm' | 'night' | 'any'
+        deliveryTimeFlexible: _isAny,
+        assignedTeam: _assignedTeam,    // 'hwaseong' | 'north' | 'seoul'
+        isProvinceInstall: _province,
+        installDurationMin: _installDuration,
         referrerId: window.verifiedReferrerId || null,
         referrerEmail: window.verifiedReferrerEmail || null,
         staffManagerId: selectedStaffManagerId,
@@ -3606,6 +3688,11 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         order_date: new Date().toISOString(),
         delivery_target_date: deliveryDate,
         installation_time: window.tempOrderInfo?.installationTime || null,
+        delivery_period: window.tempOrderInfo?.deliveryPeriod || null,
+        delivery_time_flexible: !!window.tempOrderInfo?.deliveryTimeFlexible,
+        assigned_team: window.tempOrderInfo?.assignedTeam || null,
+        is_province_install: !!window.tempOrderInfo?.isProvinceInstall,
+        install_duration_min: window.tempOrderInfo?.installDurationMin || null,
         manager_name: manager,
         phone,
         address,
