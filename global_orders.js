@@ -3430,6 +3430,7 @@ window.openAdminSlotModal = async (dateStr) => {
                 list.forEach((o, idx) => {
                     const isBlock = (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단';
                     const _n = o.admin_note || '';
+                    const _insp = /\[CHK:insp=1\]/.test(_n);
                     const _ld = /\[CHK:loaded=1\]/.test(_n);
                     const _dv = /\[CHK:delivered=1\]/.test(_n) || /\[CHK:installed=1\]/.test(_n) || /\[CHK:removed=1\]/.test(_n);
                     const _phM = _n.match(/\[PHOTOS:([^\]]+)\]/);
@@ -3473,10 +3474,14 @@ window.openAdminSlotModal = async (dateStr) => {
                                 </div>
                             </div>
                             ${o.address ? `<div style="color:#64748b; font-size:12px; margin-bottom:4px;">📍 ${o.address}${province}</div>` : ''}
-                            <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','loaded',${!_ld})" style="${_ld?_slotPillOn:_slotPillOff}">적재</span>
-                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','delivered',${!_dv})" style="${_dv?_slotPillOn:_slotPillOff}">${o._isRemoval?'철거':'배송'}완료</span>
+                            <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','insp',${!_insp})" style="${_insp?_slotPillOn:_slotPillOff}">검수완료</span>
+                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','loaded',${!_ld})" style="${_ld?_slotPillOn:_slotPillOff}">적재완료</span>
+                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','delivered',${!_dv})" style="${_dv?_slotPillOn:_slotPillOff}">${o._isRemoval?'철거':'설치'}완료</span>
                                 ${_phUrls.length ? `<span onclick="event.stopPropagation();adminViewPhotos('${o.id}', ${JSON.stringify(_phUrls).replace(/"/g,'&quot;')})" style="${_slotPillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;">📸${_phUrls.length}</span>` : ''}
+                                <span style="margin-left:auto; display:flex; gap:3px;">
+                                    ${TEAM_ORDER.filter(t=>t!==teamKey).map(t=>`<button onclick="window.adminTransferTeam('${dateStr}','${o.id}','${t}')" style="padding:2px 8px; font-size:10px; background:#fff; border:1.5px solid ${TEAM_META[t].color}; color:${TEAM_META[t].color}; border-radius:999px; cursor:pointer; font-weight:700;" title="${TEAM_META[t].shortLabel}(으)로 이동">→${TEAM_META[t].shortLabel}</button>`).join('')}
+                                </span>
                             </div>
                         </div>
                     </div>`;
@@ -3509,7 +3514,7 @@ window.openAdminSlotModal = async (dateStr) => {
         if (dlvLocalTruck.length === 0) {
             html += '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:14px; font-style:italic;">해당 없음</div>';
         } else {
-            html += renderDeliveryGroup('', dlvLocalTruck, '#ec4899', '#fff');
+            html += renderDeliveryGroup('', dlvLocalTruck, '#ec4899', '#fff', false, 'local_truck');
         }
         html += '</div></div>';
 
@@ -3527,9 +3532,9 @@ window.openAdminSlotModal = async (dateStr) => {
         if (courierAll.length === 0) {
             html += '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:14px; font-style:italic;">해당 없음</div>';
         } else {
-            if (dlvBoardCourier.length > 0) html += renderDeliveryGroup('보드류 택배', dlvBoardCourier, '#f59e0b', '#fffbeb');
-            if (dlvStdCourier.length > 0)   html += renderDeliveryGroup('일반택배',     dlvStdCourier,   '#10b981', '#ecfdf5');
-            if (dlvOther.length > 0)        html += renderDeliveryGroup('기타 배송',    dlvOther,        '#64748b', '#f1f5f9');
+            if (dlvBoardCourier.length > 0) html += renderDeliveryGroup('보드류 택배', dlvBoardCourier, '#f59e0b', '#fffbeb', false, 'courier');
+            if (dlvStdCourier.length > 0)   html += renderDeliveryGroup('일반택배',     dlvStdCourier,   '#10b981', '#ecfdf5', false, 'courier');
+            if (dlvOther.length > 0)        html += renderDeliveryGroup('기타 배송',    dlvOther,        '#64748b', '#f1f5f9', false, 'courier');
         }
         html += '</div></div>';
 
@@ -3550,43 +3555,55 @@ function _dedupeByName(orders) {
     return [...seen.values()];
 }
 
-function renderDeliveryGroup(title, orders, color, bg, showTime) {
+function renderDeliveryGroup(title, orders, color, bg, showTime, mode) {
     orders = _dedupeByName(orders);
-    let html = `<div style="margin-bottom:14px;">
+    // mode: 'local_truck' (검수/적재/배송출발) | 'courier' (포장/택배출발) | 기본 (full)
+    let html = title ? `<div style="margin-bottom:14px;">
         <div style="font-size:15px; font-weight:bold; color:${color}; padding:8px 12px; background:${bg}; border-radius:6px 6px 0 0; border-left:3px solid ${color};">${title} (${orders.length}건)</div>
-        <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 6px 6px;">`;
+        <div style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 6px 6px;">` : '<div style="margin-bottom:4px;"><div>';
     orders.forEach(o => {
         const driver = staffList.find(s => s.id == o.staff_driver_id);
         const isDone = o.status === '배송완료' || o.status === '완료됨';
         const installInfo = showTime ? getInstallationDisplayInfo(o) : null;
         const note = o.admin_note || '';
-        // 통합 마커: loaded/delivered/courier/localtruck/installed/removed/insp
         const loadedChk    = /\[CHK:loaded=1\]/.test(note);
         const deliveredChk = /\[CHK:delivered=1\]/.test(note) || /\[CHK:installed=1\]/.test(note) || /\[CHK:removed=1\]/.test(note);
         const courierChk   = /\[CHK:courier=1\]/.test(note);
-        const localTruckChk= /\[CHK:localtruck=1\]/.test(note);
         const inspChecked  = /\[CHK:insp=1\]/.test(note);
         const _photosM     = note.match(/\[PHOTOS:([^\]]+)\]/);
         const _photoUrls   = _photosM ? _photosM[1].split(',').filter(Boolean) : [];
-        const _esc = (s) => String(s||'').replace(/'/g,"\\'");
         const pillBase = 'display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:28px;padding:0 12px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.12s;user-select:none;border:1.5px solid;';
         const pillOff = pillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
         const pillOn  = pillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 2px 6px rgba(249,115,22,0.35);';
-        const _anyDone = isDone || loadedChk || deliveredChk || courierChk || localTruckChk;
+        // 모드별 버튼 정의
+        let actionPills = '';
+        if (mode === 'courier') {
+            // 포장완료 / 택배출발
+            actionPills = `
+                <span onclick="adminToggleOrderCheck('${o.id}','loaded',${!loadedChk})" style="${loadedChk?pillOn:pillOff}">포장완료</span>
+                <span onclick="adminToggleOrderCheck('${o.id}','courier',${!courierChk})" style="${courierChk?pillOn:pillOff}">택배출발</span>`;
+        } else if (mode === 'local_truck') {
+            // 검수완료 / 적재완료 / 배송출발
+            actionPills = `
+                <span onclick="adminToggleOrderCheck('${o.id}','insp',${!inspChecked})" style="${inspChecked?pillOn:pillOff}">검수완료</span>
+                <span onclick="adminToggleOrderCheck('${o.id}','loaded',${!loadedChk})" style="${loadedChk?pillOn:pillOff}">적재완료</span>
+                <span onclick="adminToggleOrderCheck('${o.id}','delivered',${!deliveredChk})" style="${deliveredChk?pillOn:pillOff}">배송출발</span>`;
+        } else {
+            // 기본 (full, legacy)
+            actionPills = `
+                <span onclick="adminToggleOrderCheck('${o.id}','insp',${!inspChecked})" style="${inspChecked?pillOn:pillOff}">검수완료</span>
+                <span onclick="adminToggleOrderCheck('${o.id}','loaded',${!loadedChk})" style="${loadedChk?pillOn:pillOff}">적재완료</span>
+                <span onclick="adminToggleOrderCheck('${o.id}','delivered',${!deliveredChk})" style="${deliveredChk?pillOn:pillOff}">배송완료</span>`;
+        }
+        const _anyDone = isDone || loadedChk || deliveredChk || courierChk;
         html += `<div style="padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; ${_anyDone?'background:#f0fdf4;border-left:3px solid #10b981;':''}">
-            <div style="display:grid; grid-template-columns:1fr 280px 110px; gap:12px; align-items:center;">
-                <div style="min-width:0;">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <div style="flex:1; min-width:220px;">
                     <div><span style="font-weight:700;">${o.manager_name||'-'}</span> <span style="color:#6366f1;">${o.phone || ''}</span> ${installInfo ? `<span style="background:#ede9fe; color:#6d28d9; padding:2px 6px; border-radius:3px; font-size:12px;">${installInfo.start}~${installInfo.end}</span>` : ''}</div>
                     ${o.address ? `<div style="color:#64748b; font-size:12px; margin-top:3px;">${o.address}</div>` : ''}
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; align-items:center;">
-                    <span onclick="adminToggleOrderCheck('${o.id}','loaded',${!loadedChk})" style="${loadedChk?pillOn:pillOff}">적재완료</span>
-                    <span onclick="adminToggleOrderCheck('${o.id}','delivered',${!deliveredChk})" style="${deliveredChk?pillOn:pillOff}">배송완료</span>
-                    <span onclick="adminToggleOrderCheck('${o.id}','courier',${!courierChk})" style="${courierChk?pillOn:pillOff}">택배완료</span>
-                    <span onclick="adminToggleOrderCheck('${o.id}','localtruck',${!localTruckChk})" style="${localTruckChk?pillOn:pillOff}">지방용차</span>
-                </div>
-                <div style="display:flex; gap:5px; align-items:center; justify-content:flex-end; margin-top:4px;">
-                    <span onclick="adminToggleOrderCheck('${o.id}','insp',${!inspChecked})" style="${inspChecked?pillOn:pillOff};font-size:11px;padding:0 8px;height:24px;min-width:auto;">검수</span>
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                    ${actionPills}
                     ${_photoUrls.length ? `<span onclick="adminViewPhotos('${o.id}', ${JSON.stringify(_photoUrls).replace(/"/g,'&quot;')})" style="${pillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;font-size:11px;height:24px;padding:0 10px;min-width:auto;">📸 ${_photoUrls.length}</span>` : ''}
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">
@@ -4575,7 +4592,10 @@ window.deleteProductionPhoto = async function(orderId, photoIndex) {
 // ============================================================================
 
 const TEAM_IDS = ['seoul', 'hwaseong', 'north'];
-const TEAM_DAILY_CAPACITY = 8;
+const TEAM_DAILY_CAPACITY = 8;   // legacy (건수)
+const TEAM_DAILY_HOURS = 8;      // 하루 가용 작업시간 (시간 기반)
+// 주문별 예상 소요시간 (100만원당 1시간, 이동포함, 최소 1시간)
+const _orderHours = (o) => Math.max(1, Math.ceil((o.total_amount || 0) / 1000000));
 
 // 하루치 재배정: dateStr = 'YYYY-MM-DD'
 window.rebalanceDeliveryTeams = async function(dateStr) {
@@ -4613,38 +4633,38 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
     // 4) 사용 가능 팀 리스트 (우선순위: 김팀장(seoul) → 서부장(hwaseong) → 3팀(north))
     const availableTeams = TEAM_IDS.filter(t => !lockedTeams.has(t));
 
-    // 5) 팀 수 결정 — 실제 활성 팀 수만큼만 사용 (나머지는 쉬게 함)
-    const regularCount = regularOrders.length;
+    // 5) 총 필요 시간 계산 → 필요 팀 수 결정 (8시간 기준)
+    const totalHours = regularOrders.reduce((acc, o) => acc + _orderHours(o), 0);
     let activeTeamCount;
-    if (regularCount <= TEAM_DAILY_CAPACITY) activeTeamCount = 1;        // 8건 이하 → 1팀만
-    else if (regularCount <= TEAM_DAILY_CAPACITY * 2) activeTeamCount = 2; // 9~16건 → 2팀
-    else activeTeamCount = 3;                                              // 17건+ → 3팀
+    if (totalHours <= TEAM_DAILY_HOURS) activeTeamCount = 1;
+    else if (totalHours <= TEAM_DAILY_HOURS * 2) activeTeamCount = 2;
+    else activeTeamCount = 3;
     const usableTeamCount = Math.min(activeTeamCount, availableTeams.length);
     const activeTeams = availableTeams.slice(0, Math.max(1, usableTeamCount));
 
-    // 6) 주문 분배: **용량 우선 순차 채움** (1팀이 8건 꽉 차야 2팀으로 넘김)
-    //    주소 기반 선호는 정렬 시드로만 사용 — 같은 지역이 같은 팀에 몰리도록
+    // 6) 주문 분배: 시간 기반 순차 채움 — 1팀 8시간 꽉 차야 2팀으로 넘김
     const teamBuckets = {};
-    activeTeams.forEach(t => teamBuckets[t] = []);
+    const teamHoursUsed = {};
+    activeTeams.forEach(t => { teamBuckets[t] = []; teamHoursUsed[t] = 0; });
 
-    // 정렬: 같은 지역끼리 몰리게 seoul → hwaseong → north 순으로 (우선 팀이 몰려 들어감)
-    const regionPriority = { seoul:0, hwaseong:1, north:2 };
-    const sortedOrders = regularOrders.slice().sort((a, b) => {
-        const pa = regionPriority[a.assigned_team] ?? 9;
-        const pb = regionPriority[b.assigned_team] ?? 9;
-        return pa - pb;
-    });
+    // 큰 건 먼저 배치 (bin packing 개선) → 소요시간 내림차순
+    const sortedOrders = regularOrders.slice().sort((a, b) => _orderHours(b) - _orderHours(a));
 
     sortedOrders.forEach(o => {
-        // 첫 팀부터 순차로 채움: 팀 1 꽉 차야 팀 2로 넘어감
+        const h = _orderHours(o);
+        // 첫 팀부터 — 해당 팀에 아직 여유가 있으면 그 팀으로
         for (const t of activeTeams) {
-            if (teamBuckets[t].length < TEAM_DAILY_CAPACITY) {
+            if (teamHoursUsed[t] + h <= TEAM_DAILY_HOURS) {
                 teamBuckets[t].push(o);
+                teamHoursUsed[t] += h;
                 return;
             }
         }
-        // 모든 팀 포화 → 첫 팀에 강제 (사실상 발생 안 함, 17건+는 이미 3팀 할당됐기 때문)
-        teamBuckets[activeTeams[0]].push(o);
+        // 모든 팀 포화 → 남는 시간이 가장 많은 팀에 강제
+        let best = activeTeams[0];
+        activeTeams.forEach(t => { if (teamHoursUsed[t] < teamHoursUsed[best]) best = t; });
+        teamBuckets[best].push(o);
+        teamHoursUsed[best] += h;
     });
 
     // 7) DB 업데이트 (변경된 건만)
@@ -4657,8 +4677,8 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
     // 지방 주문은 원래 팀 고정으로 유지 (변경 없음)
 
     if (updates.length === 0) {
-        msg(`${dateStr}: 재배정 변경 없음 (${regularCount}건, ${activeTeams.length}팀)`);
-        return { ok:true, changed:0, total:regularCount, teams:activeTeams.length };
+        msg(`${dateStr}: 재배정 변경 없음 (${totalHours}h / ${activeTeams.length}팀)`);
+        return { ok:true, changed:0, total:regularOrders.length, teams:activeTeams.length };
     }
 
     // 배치 업데이트 (병렬)
@@ -4666,8 +4686,8 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
         _sb.from('orders').update({ assigned_team: u.assigned_team }).eq('id', u.id)
     ));
     const errCount = results.filter(r => r.error).length;
-    msg(`${dateStr}: ${updates.length}건 재배정 완료 (${activeTeams.length}팀, ${regularCount}건 + 지방 ${orders.length-regularCount}건)${errCount?`, 실패 ${errCount}`:''}`);
-    return { ok:true, changed:updates.length, total:regularCount, teams:activeTeams.length, errors:errCount };
+    msg(`${dateStr}: ${updates.length}건 재배정 완료 (${activeTeams.length}팀, 총 ${totalHours}h + 지방 ${orders.length-regularOrders.length}건)${errCount?`, 실패 ${errCount}`:''}`);
+    return { ok:true, changed:updates.length, total:regularOrders.length, teams:activeTeams.length, errors:errCount };
 };
 
 // 여러 날짜 일괄 재배정 (다가오는 7일)
@@ -4684,6 +4704,22 @@ window.rebalanceUpcomingWeek = async function() {
         if (r && r.changed) totalChanged += r.changed;
     }
     if (window.showToast) window.showToast(`7일치 재배정 완료 (총 ${totalChanged}건 변경)`, 'success');
+};
+
+// 관리자: 주문을 다른 팀으로 이동 (DB assigned_team 업데이트)
+window.adminTransferTeam = async function(dateStr, orderId, toTeam) {
+    const _sb = window.sb || (typeof sb !== 'undefined' ? sb : null);
+    if (!_sb || !orderId || !toTeam) return;
+    const teamLabels = { seoul:'🔵 김팀장 (1팀)', hwaseong:'🟡 서부장 (2팀)', north:'🟣 3팀' };
+    if (!confirm(`이 주문을 ${teamLabels[toTeam] || toTeam}(으)로 이동하시겠습니까?`)) return;
+    const { error } = await _sb.from('orders').update({ assigned_team: toTeam }).eq('id', orderId);
+    if (error) {
+        console.error('[transferTeam]', error);
+        if (window.showToast) window.showToast('팀 이동 실패: '+(error.message||''), 'error');
+        return;
+    }
+    if (window.showToast) window.showToast(`${teamLabels[toTeam]}(으)로 이동 완료`, 'success');
+    if (window.openAdminSlotModal) window.openAdminSlotModal(dateStr);
 };
 
 // [Phase 2] 관리자 팀별 주문 순서 이동 (localStorage 기반, 팀/날짜별 저장)
