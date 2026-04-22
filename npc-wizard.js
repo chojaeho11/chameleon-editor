@@ -1020,6 +1020,8 @@ window.NpcWizard = {
                 const _L = {
                     selfTitle: {kr:'직접 디자인하기',ja:'自分でデザイン',en:'Design it myself',zh:'自己设计',ar:'تصميم بنفسي',es:'Diseñar yo mismo',de:'Selbst gestalten',fr:'Concevoir moi-même'}[_lang]||'Design it myself',
                     selfDesc: {kr:'사이즈 입력 후 에디터에서 디자인',ja:'サイズ入力後エディタでデザイン',en:'Enter size and design in the editor',zh:'输入尺寸后在编辑器中设计',ar:'أدخل الحجم وصمم في المحرر',es:'Ingrese tamaño y diseñe en el editor',de:'Größe eingeben und im Editor gestalten',fr:'Entrez la taille et concevez dans l\'éditeur'}[_lang]||'Enter size and design in the editor',
+                    buyTitle: {kr:'구매하기',ja:'購入する',en:'Purchase',zh:'购买',ar:'شراء',es:'Comprar',de:'Kaufen',fr:'Acheter'}[_lang]||'Purchase',
+                    buyDesc: {kr:'파일 업로드는 장바구니에서',ja:'ファイルアップロードはカートで',en:'Upload files in the cart',zh:'在购物车上传文件',ar:'ارفع الملفات في السلة',es:'Suba archivos en el carrito',de:'Dateien im Warenkorb hochladen',fr:'Téléchargez les fichiers dans le panier'}[_lang]||'Upload files in the cart',
                     vipTitle: {kr:'자료 보내고 문의하기',ja:'資料を送って問い合わせ',en:'Send Files & Inquire',zh:'发送资料咨询',ar:'إرسال الملفات والاستفسار',es:'Enviar archivos y consultar',de:'Dateien senden & anfragen',fr:'Envoyer des fichiers et demander'}[_lang]||'Send Files & Inquire',
                     vipDesc: {kr:'디자인 파일 업로드 + 전문가 견적',ja:'デザインファイル送付 + 専門家の見積',en:'Upload files + expert quote',zh:'上传文件 + 专家报价',ar:'تحميل الملفات + عرض خبير',es:'Subir archivos + cotización experta',de:'Dateien hochladen + Expertenangebot',fr:'Envoyer des fichiers + devis expert'}[_lang]||'Upload files + expert quote',
                     intlTitle: {kr:'해외 상담 · International',ja:'海外からのお問い合わせ',en:'International Consultation',zh:'海外咨询',ar:'استشارة دولية',es:'Consulta internacional',de:'Internationale Beratung',fr:'Consultation internationale'}[_lang]||'International Consultation',
@@ -1042,6 +1044,18 @@ window.NpcWizard = {
                                     <div style="font-size:11px;opacity:0.7;margin-top:2px;">${_L.selfDesc}</div>
                                 </div>
                                 <div style="font-size:16px;opacity:0.6;">›</div>
+                            </button>
+
+                            <button onclick="(function(){ try{ if(window.NpcWizard&&window.NpcWizard._hideAll)window.NpcWizard._hideAll(); }catch(e){} if(window.confirmChoice)window.confirmChoice('cart'); })()"
+                                style="display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;background:#4ccc02;color:#fff;border:none;border-radius:14px;cursor:pointer;text-align:left;transition:transform 0.15s, box-shadow 0.15s;box-shadow:0 2px 8px rgba(74,222,128,0.25);"
+                                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(74,222,128,0.4)';"
+                                onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(74,222,128,0.25)';">
+                                <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🛒</div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:15px;font-weight:800;letter-spacing:-0.2px;">${_L.buyTitle}</div>
+                                    <div style="font-size:11px;opacity:0.9;margin-top:2px;">${_L.buyDesc}</div>
+                                </div>
+                                <div style="font-size:16px;opacity:0.7;">›</div>
                             </button>
 
                             <button onclick="window.NpcWizard._chooseInquiry()"
