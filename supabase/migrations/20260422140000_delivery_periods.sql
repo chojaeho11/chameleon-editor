@@ -11,9 +11,9 @@ ALTER TABLE public.orders
     ADD COLUMN IF NOT EXISTS is_province_install boolean DEFAULT false,
     ADD COLUMN IF NOT EXISTS install_duration_min int;      -- 설치 소요분 (100만원당 60분, 최소 60)
 
-CREATE INDEX IF NOT EXISTS idx_orders_delivery_date_period ON public.orders (delivery_date, delivery_period);
-CREATE INDEX IF NOT EXISTS idx_orders_assigned_team        ON public.orders (assigned_team, delivery_date);
-CREATE INDEX IF NOT EXISTS idx_orders_province_install     ON public.orders (is_province_install, delivery_date);
+CREATE INDEX IF NOT EXISTS idx_orders_delivery_date_period ON public.orders (delivery_target_date, delivery_period);
+CREATE INDEX IF NOT EXISTS idx_orders_assigned_team        ON public.orders (assigned_team, delivery_target_date);
+CREATE INDEX IF NOT EXISTS idx_orders_province_install     ON public.orders (is_province_install, delivery_target_date);
 
 -- 기존 installation_time 값 → delivery_period 자동 매핑 (일회성 백필)
 UPDATE public.orders
