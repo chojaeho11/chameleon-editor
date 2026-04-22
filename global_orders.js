@@ -3263,41 +3263,47 @@ window.openAdminSlotModal = async (dateStr) => {
 
     try {
         const { data: orders } = await sb.from('orders')
-            .select('id, installation_time, total_amount, manager_name, phone, address, status, staff_driver_id, items, delivery_target_date, admin_note')
+            .select('id, installation_time, delivery_period, assigned_team, is_province_install, install_duration_min, total_amount, manager_name, phone, address, status, staff_driver_id, items, delivery_target_date, admin_note')
             .eq('delivery_target_date', dateStr)
             .not('status', 'in', '("취소됨","취소","삭제됨","임시작성","결제대기")');
         const dayOrders = orders || [];
 
-        // 슬롯별 팀 수 + 주문 매핑
-        const slotTeams = {};
-        const slotOrders = {};
-        ADMIN_SLOTS.forEach(s => { slotTeams[s] = 0; slotOrders[s] = []; });
-
-        const installOrders = dayOrders.filter(o => o.installation_time);
-        installOrders.forEach(o => {
-            const startIdx = ADMIN_SLOTS.indexOf(o.installation_time);
-            if (startIdx === -1) return;
-            const total = o.total_amount || 0;
-            const slots = total >= 5000000 ? 7 : (total >= 3000000 ? 2 : 1);
-            const endIdx = slots === 7 ? ADMIN_SLOTS.length : Math.min(startIdx + slots, ADMIN_SLOTS.length);
-            for (let i = (slots === 7 ? 0 : startIdx); i < endIdx; i++) {
-                slotTeams[ADMIN_SLOTS[i]]++;
-                slotOrders[ADMIN_SLOTS[i]].push(o);
-            }
+        // [Phase 2] 기간×팀 매트릭스: periodOrders[period][team] = [orders...]
+        const PERIOD_KEYS = ['am', 'pm', 'night', 'any'];
+        const TEAM_KEYS_ADMIN = ['seoul', 'hwaseong', 'north', 'unassigned'];
+        const periodOrders = {};
+        PERIOD_KEYS.forEach(p => {
+            periodOrders[p] = { seoul: [], hwaseong: [], north: [], unassigned: [] };
         });
 
-        // 철거 건: admin_note의 rdate=dateStr이면 rtime 슬롯에 1팀 추가 (파랑 표시)
+        // installation_time → period 매핑 폴백
+        const _legacyToPeriod = (t) => {
+            if (!t) return null;
+            if (t < '12:00') return 'am';
+            if (t < '18:00') return 'pm';
+            return 'night';
+        };
+
+        const installOrders = dayOrders.filter(o => o.delivery_period || o.installation_time);
+        installOrders.forEach(o => {
+            const period = o.delivery_period || _legacyToPeriod(o.installation_time);
+            if (!period || !periodOrders[period]) return;
+            const team = (o.assigned_team && periodOrders[period][o.assigned_team]) ? o.assigned_team : 'unassigned';
+            periodOrders[period][team].push(o);
+        });
+
+        // 철거 건: admin_note의 rdate=dateStr이면 해당 시간대에 표시 (파랑 배지)
         try {
             const { data: rData } = await sb.from('orders')
-                .select('id, admin_note, manager_name, phone, address, total_amount, status')
+                .select('id, admin_note, manager_name, phone, address, total_amount, status, assigned_team')
                 .ilike('admin_note', `%rdate=${dateStr}%`);
             (rData || []).forEach(o => {
                 const m = (o.admin_note || '').match(/rtime=(\d{2}:\d{2})/);
                 if (!m) return;
-                const t = m[1];
-                if (!ADMIN_SLOTS.includes(t)) return;
-                slotTeams[t]++;
-                slotOrders[t].push({ ...o, _isRemoval: true });
+                const period = _legacyToPeriod(m[1]);
+                if (!period) return;
+                const team = (o.assigned_team && periodOrders[period][o.assigned_team]) ? o.assigned_team : 'unassigned';
+                periodOrders[period][team].push({ ...o, _isRemoval: true });
             });
         } catch(e) { console.warn('철거 조회 실패:', e); }
 
@@ -3327,87 +3333,120 @@ window.openAdminSlotModal = async (dateStr) => {
         // ── 2열 레이아웃 생성 ──
         let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">';
 
-        // ===== 좌측: 설치 시간 슬롯 =====
+        // ===== 좌측: 3 시간대 × 3팀 매트릭스 =====
+        const PERIOD_META = {
+            am:    { label:'🌅 오전',  sub:'08:00–12:00', cap:8,  bg:'#fef3c7', fg:'#92400e' },
+            pm:    { label:'☀️ 오후',  sub:'12:00–18:00', cap:10, bg:'#fed7aa', fg:'#9a3412' },
+            night: { label:'🌙 야간',  sub:'18:00–22:00', cap:6,  bg:'#e0e7ff', fg:'#3730a3' },
+            any:   { label:'📅 시간 무관', sub:'기사가 경로 최적화', cap:null, bg:'#f3f4f6', fg:'#374151' }
+        };
+        const TEAM_META = {
+            seoul:      { label:'🔵 서울팀',   color:'#1d4ed8', bg:'#dbeafe' },
+            hwaseong:   { label:'🟡 화성팀',   color:'#92400e', bg:'#fef3c7' },
+            north:      { label:'🟣 북부팀',   color:'#4338ca', bg:'#e0e7ff' },
+            unassigned: { label:'⚪ 미배정',   color:'#64748b', bg:'#f1f5f9' }
+        };
+        const _slotPillBase = 'display:inline-flex;align-items:center;justify-content:center;height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid;';
+        const _slotPillOff  = _slotPillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
+        const _slotPillOn   = _slotPillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 1px 4px rgba(249,115,22,0.3);';
+
         html += '<div>';
-        html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 설치 예약 시간표</h4>';
-        html += '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
-        html += '<thead><tr style="background:#f8fafc;"><th style="padding:10px; text-align:left;">시간</th><th style="padding:10px; text-align:center; width:70px;">2/3팀</th><th style="padding:10px; text-align:left;" colspan="2">고객 / 차단</th></tr></thead><tbody>';
+        html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 설치·배송 기간별 스케줄</h4>';
 
-        ADMIN_SLOTS.forEach((slot, idx) => {
-            const endSlot = idx + 1 < ADMIN_SLOTS.length ? ADMIN_SLOTS[idx + 1] : '22:00';
-            // 같은 id가 여러 entry로 들어올 수 있으므로 _isRemoval 플래그 보존
-            const _byId = new Map();
-            slotOrders[slot].forEach(o => {
-                const key = `${o.id}|${o._isRemoval?'r':'i'}`;
-                if (!_byId.has(key)) _byId.set(key, o);
+        // 팀별 하루 총 건수 (배정 능력 바)
+        const teamDayTotals = { seoul:0, hwaseong:0, north:0, unassigned:0 };
+        PERIOD_KEYS.forEach(p => {
+            Object.keys(teamDayTotals).forEach(t => {
+                teamDayTotals[t] += periodOrders[p][t].length;
             });
-            const uniqueOrders = [..._byId.values()];
-            const adminBlockOrders = uniqueOrders.filter(o => (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단');
-            const removalOrders = uniqueOrders.filter(o => o._isRemoval);
-            const customerOrders = uniqueOrders.filter(o => !o._isRemoval && !((o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단'));
-            // 표시 우선순위: 고객 시공 → 철거 → 관리자 차단. 1팀(베이스라인)은 숨김 → 2팀/3팀만
-            const displayOrders = [...customerOrders, ...removalOrders, ...adminBlockOrders].slice(0, ADMIN_MAX_TEAMS - 1);
-            const usedDisplay = displayOrders.length; // 0/1/2
-            const isFull = usedDisplay >= ADMIN_MAX_TEAMS - 1;
-            const barColor = isFull ? '#ef4444' : (usedDisplay > 0 ? '#f59e0b' : '#22c55e');
-            const bgColor = isFull ? '#fef2f2' : (usedDisplay > 0 ? '#fffbeb' : '#fff');
-
-            // 2팀/3팀 동그라미만 표시 (1팀=베이스라인 숨김)
-            const dotsHtml = [0,1].map(i => {
-                const teamNo = i + 2;
-                const order = displayOrders[i];
-                if (!order) {
-                    return `<div title="클릭해 ${teamNo}팀 차단" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${teamNo},'')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#fff; border:2px dashed #94a3b8;"></div>`;
-                }
-                const isBlock = (order.manager_name||'').startsWith('[차단]') || order.status === '관리자차단';
-                if (isBlock) {
-                    return `<div title="클릭해 ${teamNo}팀 차단 해제" onclick="adminToggleSlotBlock('${dateStr}','${slot}',${teamNo},'${order.id}')" style="cursor:pointer; width:18px; height:18px; border-radius:50%; background:#dc2626; border:2px solid #991b1b; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:bold;">×</div>`;
-                }
-                if (order._isRemoval) {
-                    return `<div title="${teamNo}팀 철거" style="width:18px; height:18px; border-radius:50%; background:#2563eb; border:2px solid #1d4ed8; display:flex; align-items:center; justify-content:center; color:#fff; font-size:9px; font-weight:bold;">철</div>`;
-                }
-                return `<div title="${teamNo}팀 고객 예약" style="width:18px; height:18px; border-radius:50%; background:${barColor}; border:2px solid ${barColor};"></div>`;
-            }).join('');
-
-            // 고객 정보: 2팀 [이름] [전화] [주소] + 적재/배송 알약 / 사진
-            const _slotPillBase = 'display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid;margin-left:4px;';
-            const _slotPillOff = _slotPillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
-            const _slotPillOn  = _slotPillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 1px 4px rgba(249,115,22,0.3);';
-            let custHtml = displayOrders.map((o, i) => {
-                const teamNo = i + 2;
-                const isBlock = (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단';
-                if (isBlock) {
-                    return `<div style="padding:2px 0; color:#94a3b8; font-style:italic;"><b style="color:#dc2626;">${teamNo}팀</b> 관리자 차단 <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:12px; padding:0 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')">[해제]</button></div>`;
-                }
-                const phone = o.phone ? `<span style="color:#6366f1; margin-left:6px;">${o.phone}</span>` : '';
-                const addr = o.address ? `<div style="font-size:11px; color:#64748b; margin-left:24px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.address}</div>` : '';
-                const _n = o.admin_note || '';
-                const _ld = /\[CHK:loaded=1\]/.test(_n);
-                const _dv = /\[CHK:delivered=1\]/.test(_n) || /\[CHK:installed=1\]/.test(_n) || /\[CHK:removed=1\]/.test(_n);
-                const _phM = _n.match(/\[PHOTOS:([^\]]+)\]/);
-                const _phUrls = _phM ? _phM[1].split(',').filter(Boolean) : [];
-                const _pills = `
-                    <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','loaded',${!_ld})" style="${_ld?_slotPillOn:_slotPillOff}">적재</span>
-                    <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','delivered',${!_dv})" style="${_dv?_slotPillOn:_slotPillOff}">${o._isRemoval?'철거':'배송'}완료</span>
-                    ${_phUrls.length ? `<span onclick="event.stopPropagation();adminViewPhotos('${o.id}', ${JSON.stringify(_phUrls).replace(/"/g,'&quot;')})" style="${_slotPillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;">📸${_phUrls.length}</span>` : ''}
-                `;
-                if (o._isRemoval) {
-                    return `<div style="padding:3px 0;"><b style="color:#2563eb;">${teamNo}팀 🔧 철거</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${_pills}${addr}</div>`;
-                }
-                const info = getInstallationDisplayInfo(o);
-                const dur = info ? `<span style="color:#6d28d9; font-size:11px; margin-left:4px;">(${info.duration})</span>` : '';
-                return `<div style="padding:3px 0;"><b style="color:#0ea5e9;">${teamNo}팀</b> <span style="font-weight:600;">${o.manager_name||'고객'}</span>${phone}${dur}${_pills}${addr}</div>`;
-            }).join('') || '<span style="color:#cbd5e1;">-</span>';
-
-            html += `<tr style="border-bottom:1px solid #f1f5f9; background:${bgColor};">
-                <td style="padding:10px; font-weight:bold; white-space:nowrap; font-size:15px; vertical-align:top;">${slot}~${endSlot}</td>
-                <td style="padding:10px; text-align:center; vertical-align:top;">
-                    <div style="display:flex; gap:5px; justify-content:center;">${dotsHtml}</div>
-                </td>
-                <td style="padding:10px;" colspan="2">${custHtml}</td>
-            </tr>`;
         });
-        html += '</tbody></table></div>';
+
+        html += '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; gap:14px; flex-wrap:wrap; font-size:12px; font-weight:700;">';
+        html += '<span style="color:#475569;">📊 팀별 총 건수:</span>';
+        ['seoul','hwaseong','north','unassigned'].forEach(t => {
+            const m = TEAM_META[t];
+            const cnt = teamDayTotals[t];
+            const overLim = cnt > 8;
+            html += `<span style="display:inline-flex; align-items:center; gap:5px; padding:2px 10px; border-radius:999px; background:${m.bg}; color:${m.color}; ${overLim?'outline:2px solid #dc2626;':''}">${m.label} <b style="font-size:13px;">${cnt}</b>${overLim?' ⚠️':''}</span>`;
+        });
+        const totalCount = Object.values(teamDayTotals).reduce((a,b)=>a+b,0);
+        html += `<span style="margin-left:auto; color:#64748b;">합계 <b style="color:#0f172a; font-size:13px;">${totalCount}건</b></span>`;
+        html += `<button onclick="window.rebalanceDeliveryTeams('${dateStr}').then(()=>window.openAdminSlotModal('${dateStr}'))" style="padding:4px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">🔄 재배정</button>`;
+        html += '</div>';
+
+        // 기간별 카드
+        PERIOD_KEYS.forEach(periodKey => {
+            const meta = PERIOD_META[periodKey];
+            const totalInPeriod = Object.values(periodOrders[periodKey]).reduce((a,arr)=>a+arr.length,0);
+            const capLabel = meta.cap !== null
+                ? `<span style="font-size:11px; color:${totalInPeriod>meta.cap?'#dc2626':'#64748b'}; font-weight:700;">${totalInPeriod}/${meta.cap}${totalInPeriod>meta.cap?' ⚠️':''}</span>`
+                : `<span style="font-size:11px; color:#64748b; font-weight:700;">${totalInPeriod}건</span>`;
+
+            html += `<div style="margin-bottom:14px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                <div style="padding:10px 14px; background:${meta.bg}; color:${meta.fg}; font-weight:800; display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:15px;">${meta.label}</span>
+                    <span style="font-size:11px; opacity:0.85; font-weight:600;">${meta.sub}</span>
+                    <span style="margin-left:auto;">${capLabel}</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0;">`;
+
+            ['seoul','hwaseong','north'].forEach(teamKey => {
+                const teamMeta = TEAM_META[teamKey];
+                const teamOrders = periodOrders[periodKey][teamKey] || [];
+                html += `<div style="padding:8px 10px; border-right:1px solid #f1f5f9; background:#fff;">
+                    <div style="font-size:11px; font-weight:800; color:${teamMeta.color}; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between;">
+                        <span>${teamMeta.label}</span>
+                        <span style="background:${teamMeta.bg}; padding:1px 7px; border-radius:8px;">${teamOrders.length}</span>
+                    </div>`;
+
+                if (teamOrders.length === 0) {
+                    html += '<div style="font-size:10px; color:#cbd5e1; text-align:center; padding:8px 0;">-</div>';
+                } else {
+                    teamOrders.forEach(o => {
+                        const isBlock = (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단';
+                        const _n = o.admin_note || '';
+                        const _ld = /\[CHK:loaded=1\]/.test(_n);
+                        const _dv = /\[CHK:delivered=1\]/.test(_n) || /\[CHK:installed=1\]/.test(_n) || /\[CHK:removed=1\]/.test(_n);
+                        const _phM = _n.match(/\[PHOTOS:([^\]]+)\]/);
+                        const _phUrls = _phM ? _phM[1].split(',').filter(Boolean) : [];
+                        const province = o.is_province_install ? ' <span style="background:#fee2e2;color:#991b1b;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;">지방</span>' : '';
+                        const rowBg = isBlock ? '#fef2f2' : (o._isRemoval ? '#eff6ff' : '#fff');
+                        const rowBorder = isBlock ? '#dc2626' : (o._isRemoval ? '#2563eb' : '#e2e8f0');
+                        if (isBlock) {
+                            html += `<div style="padding:5px 6px; border-left:3px solid ${rowBorder}; background:${rowBg}; margin-bottom:4px; border-radius:4px; font-size:11px; color:#991b1b;"><b>🚫 차단</b> <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:10px; padding:0 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')">[해제]</button></div>`;
+                            return;
+                        }
+                        const kindLabel = o._isRemoval ? '🔧 철거' : '🔧 설치';
+                        html += `<div style="padding:6px 7px; border-left:3px solid ${rowBorder}; background:${rowBg}; margin-bottom:4px; border-radius:4px; font-size:11px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px; margin-bottom:2px;">
+                                <b style="color:#0f172a;">${(o.manager_name||'고객').slice(0,8)}</b>
+                                <span style="color:${o._isRemoval?'#2563eb':'#6d28d9'}; font-size:10px; font-weight:700;">${kindLabel}</span>
+                            </div>
+                            ${o.phone ? `<div style="color:#6366f1; font-size:10px;">📞 ${o.phone}</div>` : ''}
+                            ${o.address ? `<div style="color:#64748b; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;">📍 ${o.address}${province}</div>` : ''}
+                            <div style="display:flex; gap:3px; margin-top:4px; flex-wrap:wrap;">
+                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','loaded',${!_ld})" style="${_ld?_slotPillOn:_slotPillOff}">적재</span>
+                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','delivered',${!_dv})" style="${_dv?_slotPillOn:_slotPillOff}">${o._isRemoval?'철거':'배송'}</span>
+                                ${_phUrls.length ? `<span onclick="event.stopPropagation();adminViewPhotos('${o.id}', ${JSON.stringify(_phUrls).replace(/"/g,'&quot;')})" style="${_slotPillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;">📸${_phUrls.length}</span>` : ''}
+                            </div>
+                        </div>`;
+                    });
+                }
+                html += '</div>';
+            });
+            html += '</div></div>';
+        });
+
+        // 미배정 섹션 (있을 때만)
+        const unassignedCount = PERIOD_KEYS.reduce((a,p)=>a+periodOrders[p].unassigned.length,0);
+        if (unassignedCount > 0) {
+            html += `<div style="margin-bottom:14px; padding:10px 14px; background:#fef3c7; border:1.5px dashed #f59e0b; border-radius:10px;">
+                <div style="font-size:12px; font-weight:800; color:#92400e; margin-bottom:6px;">⚠️ 미배정 주문 ${unassignedCount}건 — 팀 배정 필요</div>
+                <button onclick="window.rebalanceDeliveryTeams('${dateStr}').then(()=>window.openAdminSlotModal('${dateStr}'))" style="padding:5px 14px; background:#f59e0b; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">🤖 자동 배정 실행</button>
+            </div>`;
+        }
+
+        html += '</div>';
 
         // ===== 우측: 배송 목록 (분류별) =====
         html += '<div>';
