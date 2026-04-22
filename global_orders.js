@@ -4615,31 +4615,27 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
         return { ok:true, changed:0, total:0 };
     }
 
-    // 2) 지방설치 판정 (플래그 OR 주소+금액 폴백): 서울/경기/인천 외 + 70만원 이상
-    const _isProvince = (o) => {
-        if (o.is_province_install) return true;
-        const a = String(o.address || '').replace(/\s+/g, '');
-        if (!a) return false;
-        if (/서울|경기|인천/.test(a)) return false;
-        return (o.total_amount || 0) >= 700000;
-    };
-    // 플래그 누락된 지방 주문 자동 보정 — DB에 is_province_install=true 저장
-    const _fixProvince = [];
+    // 2) 지방설치 판정은 **is_province_install 플래그만** 신뢰 (주문 시 고객이 명시 선택한 건)
+    //    주소 기반 자동 감지는 오판 위험 (수원·화성 등은 경기도) — 제거
+    //    잘못 설정된 플래그는 수도권 주소일 경우 자동 해제
+    const METRO_RE = /서울|경기|인천|수원|성남|고양|용인|부천|안산|안양|화성|광명|군포|하남|과천|시흥|파주|김포|평택|의정부|양주|포천|남양주|구리|오산|이천|여주|광주시|안성|동두천/;
+    const _isMetroAddr = (addr) => METRO_RE.test(String(addr||'').replace(/\s+/g,''));
+    const _unsetProvince = [];
     teamEligible.forEach(o => {
-        if (_isProvince(o) && !o.is_province_install) {
-            _fixProvince.push(o.id);
-            o.is_province_install = true;
+        if (o.is_province_install && _isMetroAddr(o.address)) {
+            _unsetProvince.push(o.id);
+            o.is_province_install = false;
         }
     });
-    if (_fixProvince.length > 0) {
-        await Promise.all(_fixProvince.map(id =>
-            _sb.from('orders').update({ is_province_install: true }).eq('id', id)
+    if (_unsetProvince.length > 0) {
+        await Promise.all(_unsetProvince.map(id =>
+            _sb.from('orders').update({ is_province_install: false }).eq('id', id)
         ));
     }
 
     // 3) 지방설치 주문은 독점 팀 배정 — 첫 번째 지방 건이 team1 독점, 두 번째면 team2 독점 ...
-    const provinceOrders = teamEligible.filter(o => _isProvince(o));
-    const regularOrders  = teamEligible.filter(o => !_isProvince(o));
+    const provinceOrders = teamEligible.filter(o => o.is_province_install);
+    const regularOrders  = teamEligible.filter(o => !o.is_province_install);
     const provinceByTeam = { seoul:[], hwaseong:[], north:[] };
     const lockedTeams = new Set();
     // 지방 건을 team1, team2, team3 순으로 독점 배정
