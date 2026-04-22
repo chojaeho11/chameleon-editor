@@ -313,11 +313,18 @@
                                     <button class="btn btn-outline btn-sm" id="btnFilterRefundFail" onclick="filterOrders('환불실패', this)" style="border-color:#dc2626; color:#dc2626;">❌ 환불실패</button>
                                 </div>
                             </div>
-                            <div style="display:flex; gap:5px; align-items:center; background:#f0fdf4; padding:5px 10px; border-radius:8px; border:1px solid #bbf7d0;">
-                                <span style="font-weight:bold;">매출정산 엑셀: </span>
-<input type="month" id="excelMonth" class="input-text" style="width:130px; display:inline-block;" value="2026-01">
-<button class="btn btn-success" onclick="downloadMonthlyExcel()">📊 다운로드</button>
-                                </button>
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <div style="display:flex; gap:5px; align-items:center; background:#eef2ff; padding:5px 10px; border-radius:8px; border:1px solid #c7d2fe;">
+                                    <span style="font-weight:bold; font-size:12px; color:#4338ca;">🤖 팀 배정:</span>
+                                    <input type="date" id="rebalanceDate" class="input-text" style="width:130px; height:30px; border:1px solid #a5b4fc; font-size:11px;">
+                                    <button class="btn btn-sm" style="background:#6366f1; color:#fff; border:none; padding:4px 10px; font-size:11px; font-weight:700;" onclick="window.rebalanceDeliveryTeams(document.getElementById('rebalanceDate').value || new Date().toISOString().slice(0,10)).then(()=>window.loadOrders&&window.loadOrders())">🔄 재배정</button>
+                                    <button class="btn btn-sm" style="background:#8b5cf6; color:#fff; border:none; padding:4px 10px; font-size:11px; font-weight:700;" onclick="window.rebalanceUpcomingWeek().then(()=>window.loadOrders&&window.loadOrders())" title="다가오는 7일 전부">📅 7일</button>
+                                </div>
+                                <div style="display:flex; gap:5px; align-items:center; background:#f0fdf4; padding:5px 10px; border-radius:8px; border:1px solid #bbf7d0;">
+                                    <span style="font-weight:bold; font-size:12px;">매출정산 엑셀:</span>
+                                    <input type="month" id="excelMonth" class="input-text" style="width:130px; display:inline-block;" value="2026-01">
+                                    <button class="btn btn-success btn-sm" onclick="downloadMonthlyExcel()">📊 다운로드</button>
+                                </div>
                             </div>
                         </div>
 

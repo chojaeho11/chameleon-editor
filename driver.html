@@ -80,9 +80,9 @@
     <div class="form-row">
         <select id="driverSelect" class="input-box" onchange="saveDriverAndLoad()">
             <option value="all">전체 (모든 팀)</option>
-            <option value="team1">1팀</option>
-            <option value="team2">2팀</option>
-            <option value="team3">3팀</option>
+            <option value="seoul">🔵 서울팀</option>
+            <option value="hwaseong">🟡 화성팀 (화성·수원·남부·강남)</option>
+            <option value="north">🟣 북부팀 (의정부·고양·동북)</option>
         </select>
     </div>
     <div class="form-row">
@@ -165,13 +165,15 @@
                 if ((o.total_amount||0) >= 1000000 && _isMetro(o.address)) return true; // 100만+ 수도권 무료배송설치
                 return false;
             });
-            // 팀 필터 — 현재는 admin_note의 [TEAM:N] 마커로 분류 (없으면 1팀 기본)
+            // 팀 필터 — orders.assigned_team 기준 (legacy admin_note [TEAM:N] 도 fallback 지원)
             if (teamSel !== 'all') {
-                const wantTeam = teamSel === 'team1' ? 1 : (teamSel === 'team2' ? 2 : 3);
+                const legacyMap = { seoul:1, hwaseong:2, north:3 };
                 orders = orders.filter(o => {
-                    const m = (o.admin_note||'').match(/\[TEAM:(\d)\]/);
+                    if (o.assigned_team) return o.assigned_team === teamSel;
+                    // fallback: legacy [TEAM:N] marker
+                    const m = (o.admin_note || '').match(/\[TEAM:(\d)\]/);
                     const t = m ? parseInt(m[1]) : 1;
-                    return t === wantTeam;
+                    return t === legacyMap[teamSel];
                 });
             }
             // 저장된 정렬 순서 적용
@@ -275,7 +277,25 @@
                         <!-- 고객 정보 (컴팩트) -->
                         <div style="font-weight:700; font-size:15px; margin-bottom:2px;">${o.manager_name || o.user_name || '고객'} <span style="color:#6366f1; font-size:13px;">${o.phone || ''}</span></div>
                         <div style="font-size:12px; color:#475569; margin-bottom:6px;"><i class="fa-solid fa-map-pin" style="color:#ef4444; font-size:11px;"></i> ${o.address || '주소 없음'}</div>
-                        ${o.installation_time ? `<div style="display:block; font-size:18px; padding:12px; border-radius:10px; background:linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; font-weight:900; margin-bottom:8px; text-align:center; border:2px solid #dc2626; box-shadow:0 2px 8px rgba(220,38,38,0.25);">⏰ 고객 지정 설치시간 ${o.installation_time}</div>` : ''}
+                        ${(() => {
+                            const perLabels = { am:{t:'🌅 오전 (08-12시)', bg:'#fef3c7', fg:'#92400e'}, pm:{t:'☀️ 오후 (12-18시)', bg:'#fed7aa', fg:'#9a3412'}, night:{t:'🌙 야간 (18-22시)', bg:'#e0e7ff', fg:'#3730a3'}, any:{t:'📅 시간 상관없음', bg:'#f3f4f6', fg:'#374151'} };
+                            const teamLabels = { seoul:{t:'🔵 서울팀', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{t:'🟡 화성팀', bg:'#fef3c7', fg:'#92400e'}, north:{t:'🟣 북부팀', bg:'#e0e7ff', fg:'#4338ca'} };
+                            const parts = [];
+                            if (o.delivery_period && perLabels[o.delivery_period]) {
+                                const p = perLabels[o.delivery_period];
+                                parts.push(`<span style="display:inline-block;padding:6px 12px;border-radius:8px;background:${p.bg};color:${p.fg};font-weight:800;font-size:14px;">${p.t}</span>`);
+                            } else if (o.installation_time) {
+                                parts.push(`<span style="display:inline-block;padding:6px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-weight:900;font-size:15px;">⏰ ${o.installation_time}</span>`);
+                            }
+                            if (o.assigned_team && teamLabels[o.assigned_team]) {
+                                const t = teamLabels[o.assigned_team];
+                                parts.push(`<span style="display:inline-block;padding:6px 12px;border-radius:8px;background:${t.bg};color:${t.fg};font-weight:800;font-size:13px;">${t.t}</span>`);
+                            }
+                            if (o.is_province_install) {
+                                parts.push(`<span style="display:inline-block;padding:6px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-weight:900;font-size:13px;">🚨 지방 하루종일</span>`);
+                            }
+                            return parts.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${parts.join('')}</div>` : '';
+                        })()}
                         <!-- 전화/지도 -->
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:6px;">
                             <a href="tel:${o.phone || ''}" style="text-align:center; padding:7px; border-radius:6px; background:#f0fdf4; color:#059669; text-decoration:none; font-size:12px; font-weight:700; border:1px solid #bbf7d0;"><i class="fa-solid fa-phone"></i> 전화</a>

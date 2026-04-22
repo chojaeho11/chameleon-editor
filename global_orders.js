@@ -414,7 +414,7 @@ window.toggleAutoDownload = async () => {
 // 수동 즉시 다운로드 (단일 주문) — ZIP 폴백
 window.autoDownloadOrder = async (orderId) => {
     const { data: order } = await sb.from('orders')
-        .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time')
+        .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time, delivery_period, assigned_team, is_province_install')
         .eq('id', orderId).single();
     if (!order) { showToast('주문을 찾을 수 없습니다.', 'error'); return; }
     if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
@@ -449,7 +449,7 @@ window.manualDownloadSelected = async () => {
     for (const id of ids) {
         try {
             const { data: order } = await sb.from('orders')
-                .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time')
+                .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time, delivery_period, assigned_team, is_province_install')
                 .eq('id', id).single();
             if (!order) { fail++; continue; }
             const files = (order.files || []).filter(f => f.url && f.type !== '_error_log');
@@ -471,7 +471,7 @@ async function _runAutoDownloadCheck() {
     const status = document.getElementById('autoDownloadStatus');
     try {
         let query = sb.from('orders')
-            .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time')
+            .select('id, files, manager_name, created_at, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time, delivery_period, assigned_team, is_province_install')
             .neq('status', '임시작성').neq('status', '관리자차단')
             .not('status', 'in', '("취소요청","취소됨")')
             .order('created_at', { ascending: false })
@@ -1518,6 +1518,17 @@ window.loadOrders = async () => {
                 const dd = new Date(order.delivery_target_date);
                 const delDate = `${dd.getMonth() + 1}.${dd.getDate()}`;
                 deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px; cursor:pointer; text-decoration:underline dotted;" onclick="event.stopPropagation(); openDeliveryDateEdit('${order.id}','${order.delivery_target_date}')" title="클릭하여 배송일 변경">(배)${delDate}</div>`;
+                // 시간대 + 팀 + 지방 뱃지
+                const periodLabels = { am:'🌅오전', pm:'☀️오후', night:'🌙야간', any:'📅무관' };
+                const teamInfo = { seoul:{name:'서울', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{name:'화성', bg:'#fef3c7', fg:'#92400e'}, north:{name:'북부', bg:'#e0e7ff', fg:'#4338ca'} };
+                const badges = [];
+                if (order.delivery_period) badges.push(`<span style="background:#f1f5f9;color:#475569;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">${periodLabels[order.delivery_period] || order.delivery_period}</span>`);
+                if (order.assigned_team && teamInfo[order.assigned_team]) {
+                    const t = teamInfo[order.assigned_team];
+                    badges.push(`<span style="background:${t.bg};color:${t.fg};font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;">${t.name}팀</span>`);
+                }
+                if (order.is_province_install) badges.push(`<span style="background:#fee2e2;color:#991b1b;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;">지방</span>`);
+                if (badges.length) deliveryHtml += `<div style="display:flex;gap:2px;margin-top:2px;flex-wrap:wrap;">${badges.join('')}</div>`;
             } else {
                 deliveryHtml = `<div style="font-size:10px; color:#94a3b8; cursor:pointer; margin-top:2px;" onclick="event.stopPropagation(); openDeliveryDateEdit('${order.id}','')" title="배송일 지정">+배송일</div>`;
             }
@@ -4467,4 +4478,122 @@ window.deleteProductionPhoto = async function(orderId, photoIndex) {
     await sb.from('orders').update({ production_photos: photos }).eq('id', orderId);
     document.querySelector('div[style*="inset:0"]')?.remove();
     window.openAdminInquiryPanel(orderId);
+};
+
+// ============================================================================
+// [Phase 2] 배송 자동 스케줄링 (팀 재배정)
+// 규칙:
+//   - 1팀 (서울팀) 기본. 비지방 주문 ≤ 8건 → 1팀 전부 처리
+//   - 9~16건 → 2팀 (서울팀 + 화성팀 또는 북부팀)
+//   - 17+ → 3팀 모두 동원
+//   - 지방설치 주문은 해당 팀을 하루 종일 점유 (다른 주문 받지 못함)
+//   - 팀 선정 가중치: 주소 기반 초기 배정(assigned_team) 우선 존중
+// ============================================================================
+
+const TEAM_IDS = ['seoul', 'hwaseong', 'north'];
+const TEAM_DAILY_CAPACITY = 8;
+
+// 하루치 재배정: dateStr = 'YYYY-MM-DD'
+window.rebalanceDeliveryTeams = async function(dateStr) {
+    const _sb = window.sb || (typeof sb !== 'undefined' ? sb : null);
+    if (!_sb || !dateStr) return { ok:false, error:'no sb or date' };
+    const msg = (m) => { if (window.showToast) window.showToast(m, 'info'); else console.log(m); };
+
+    // 1) 당일 모든 주문 (취소 제외, 배송 확정된 건)
+    const { data: orders, error } = await _sb.from('orders')
+        .select('id, address, total_amount, delivery_period, is_province_install, assigned_team, status')
+        .eq('delivery_target_date', dateStr)
+        .not('status', 'in', '(취소,주문취소)');
+    if (error) { console.error('[rebalance]', error); return { ok:false, error }; }
+    if (!orders || orders.length === 0) {
+        msg(`${dateStr}: 주문 없음`);
+        return { ok:true, changed:0, total:0 };
+    }
+
+    // 2) 지방설치 주문은 해당 팀 고정 (바꾸지 않음)
+    const provinceByTeam = { seoul:[], hwaseong:[], north:[] };
+    const regularOrders = [];
+    orders.forEach(o => {
+        if (o.is_province_install) {
+            const t = o.assigned_team && provinceByTeam[o.assigned_team] ? o.assigned_team : 'seoul';
+            provinceByTeam[t].push(o);
+        } else {
+            regularOrders.push(o);
+        }
+    });
+
+    // 3) 지방설치로 막힌 팀 확인 — 그 팀은 다른 주문 받지 못함
+    const lockedTeams = new Set();
+    Object.keys(provinceByTeam).forEach(t => { if (provinceByTeam[t].length > 0) lockedTeams.add(t); });
+
+    // 4) 사용 가능 팀 리스트 (우선순위: 서울 → 화성 → 북부)
+    const availableTeams = TEAM_IDS.filter(t => !lockedTeams.has(t));
+
+    // 5) 팀 수 결정
+    const regularCount = regularOrders.length;
+    let activeTeamCount;
+    if (regularCount <= TEAM_DAILY_CAPACITY) activeTeamCount = 1;
+    else if (regularCount <= TEAM_DAILY_CAPACITY * 2) activeTeamCount = 2;
+    else activeTeamCount = 3;
+    const usableTeamCount = Math.min(activeTeamCount, availableTeams.length);
+    const activeTeams = availableTeams.slice(0, Math.max(1, usableTeamCount));
+
+    // 6) 주문 분배: 주소 기반 선호 팀 존중하며 배분, 용량 초과 시 다음 팀으로 오버플로
+    const teamBuckets = {};
+    activeTeams.forEach(t => teamBuckets[t] = []);
+    const preferOrder = (preferred) => {
+        if (preferred && activeTeams.includes(preferred)) {
+            return [preferred, ...activeTeams.filter(t => t !== preferred)];
+        }
+        return activeTeams.slice();
+    };
+    regularOrders.forEach(o => {
+        const order = preferOrder(o.assigned_team);
+        for (const t of order) {
+            if (teamBuckets[t].length < TEAM_DAILY_CAPACITY) {
+                teamBuckets[t].push(o);
+                return;
+            }
+        }
+        // 모든 팀 포화 → 첫 팀에 강제 (관리자 조정 필요)
+        teamBuckets[activeTeams[0]].push(o);
+    });
+
+    // 7) DB 업데이트 (변경된 건만)
+    const updates = [];
+    Object.keys(teamBuckets).forEach(t => {
+        teamBuckets[t].forEach(o => {
+            if (o.assigned_team !== t) updates.push({ id: o.id, assigned_team: t });
+        });
+    });
+    // 지방 주문은 원래 팀 고정으로 유지 (변경 없음)
+
+    if (updates.length === 0) {
+        msg(`${dateStr}: 재배정 변경 없음 (${regularCount}건, ${activeTeams.length}팀)`);
+        return { ok:true, changed:0, total:regularCount, teams:activeTeams.length };
+    }
+
+    // 배치 업데이트 (병렬)
+    const results = await Promise.all(updates.map(u =>
+        _sb.from('orders').update({ assigned_team: u.assigned_team }).eq('id', u.id)
+    ));
+    const errCount = results.filter(r => r.error).length;
+    msg(`${dateStr}: ${updates.length}건 재배정 완료 (${activeTeams.length}팀, ${regularCount}건 + 지방 ${orders.length-regularCount}건)${errCount?`, 실패 ${errCount}`:''}`);
+    return { ok:true, changed:updates.length, total:regularCount, teams:activeTeams.length, errors:errCount };
+};
+
+// 여러 날짜 일괄 재배정 (다가오는 7일)
+window.rebalanceUpcomingWeek = async function() {
+    const today = new Date();
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(today.getTime() + i*86400000);
+        dates.push(d.toISOString().split('T')[0]);
+    }
+    let totalChanged = 0;
+    for (const d of dates) {
+        const r = await window.rebalanceDeliveryTeams(d);
+        if (r && r.changed) totalChanged += r.changed;
+    }
+    if (window.showToast) window.showToast(`7일치 재배정 완료 (총 ${totalChanged}건 변경)`, 'success');
 };
