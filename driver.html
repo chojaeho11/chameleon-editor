@@ -79,10 +79,13 @@
     <div style="font-size:12px; font-weight:bold; color:#64748b; margin-bottom:5px;">작업 설정</div>
     <div class="form-row">
         <select id="driverSelect" class="input-box" onchange="saveDriverAndLoad()">
-            <option value="all">전체 (모든 팀)</option>
-            <option value="seoul">🔵 김팀장 (1팀)</option>
-            <option value="hwaseong">🟡 서부장 (2팀)</option>
-            <option value="north">🟣 3팀</option>
+            <option value="all">전체 (모든 업무)</option>
+            <option value="seoul">🔵 김팀장 (1팀) — 설치·철거</option>
+            <option value="hwaseong">🟡 서부장 (2팀) — 설치·철거</option>
+            <option value="north">🟣 3팀 — 설치·철거</option>
+            <option value="local_truck">🚐 지방 용차배송</option>
+            <option value="local_install">🏗️ 지방 설치배송</option>
+            <option value="courier">📦 택배 (보드류·일반)</option>
         </select>
     </div>
     <div class="form-row">
@@ -155,27 +158,29 @@
             const _metroKw = ['서울','경기','인천','성남','분당','수원','고양','용인','부천','안산','안양','화성','광명','군포','하남','과천','시흥','파주','김포','일산','판교','동탄','위례','세종'];
             const _isMetro = (addr) => !addr || _metroKw.some(k => addr.includes(k));
             const _shipFee = (n) => { const m = (n||'').match(/SHIPPING:fee=(\d+)/); return m ? parseInt(m[1]) : 0; };
-            // 표시 대상: 시공시간 지정 / 수도권 유료설치 / 수도권 철거 / 지방 설치배송 / 100만원+ 수도권 (무료배송설치)
-            let orders = (rawOrders||[]).filter(o => {
+            const _isTeamJob = (o) => {
                 if (o.installation_time) return true;
                 const f = _shipFee(o.admin_note);
-                if (f === 100000 || f === 100001 || f === 700000) return true; // 수도권 유료설치/철거, 지방 설치배송
-                if (f === 5000 || f === 30000) return false; // 택배 제외
-                if (f === 200000) return false; // 지방 일반 용차 제외
+                if (f === 100000 || f === 100001) return true; // 수도권 유료설치/철거
                 if ((o.total_amount||0) >= 1000000 && _isMetro(o.address)) return true; // 100만+ 수도권 무료배송설치
                 return false;
-            });
-            // 팀 필터 — orders.assigned_team 기준 (legacy admin_note [TEAM:N] 도 fallback 지원)
-            if (teamSel !== 'all') {
+            };
+            // 카테고리별 필터: seoul/hwaseong/north | local_truck | local_install | courier | all
+            let orders = (rawOrders||[]).filter(o => {
+                const f = _shipFee(o.admin_note);
+                if (teamSel === 'local_truck')   return f === 200000;
+                if (teamSel === 'local_install') return f === 700000;
+                if (teamSel === 'courier')       return f === 5000 || f === 30000;
+                // 팀 필터 또는 전체 — 팀 소속 건만 표시 (택배·지방 제외)
+                if (!_isTeamJob(o)) return false;
+                if (teamSel === 'all') return true;
+                // 팀 매칭 (assigned_team 우선, 없으면 legacy [TEAM:N] fallback)
+                if (o.assigned_team) return o.assigned_team === teamSel;
                 const legacyMap = { seoul:1, hwaseong:2, north:3 };
-                orders = orders.filter(o => {
-                    if (o.assigned_team) return o.assigned_team === teamSel;
-                    // fallback: legacy [TEAM:N] marker
-                    const m = (o.admin_note || '').match(/\[TEAM:(\d)\]/);
-                    const t = m ? parseInt(m[1]) : 1;
-                    return t === legacyMap[teamSel];
-                });
-            }
+                const m = (o.admin_note || '').match(/\[TEAM:(\d)\]/);
+                const t = m ? parseInt(m[1]) : 1;
+                return t === legacyMap[teamSel];
+            });
             // 저장된 정렬 순서 적용
             try {
                 const _savedOrder = JSON.parse(localStorage.getItem(`driverOrder_${teamSel}_${date}`) || '[]');

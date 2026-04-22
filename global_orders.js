@@ -3330,8 +3330,8 @@ window.openAdminSlotModal = async (dateStr) => {
         const dlvMetroRemoval   = deliveryOnly.filter(o => _isMetroRemoval(_parseShipFee(o)));
         const dlvOther          = deliveryOnly.filter(o => { const f=_parseShipFee(o); return !_isAnyKnown(f) && !isMetroArea(o.address); });
 
-        // ── 2열 레이아웃 생성 ──
-        let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">';
+        // ── 단일 컬럼 레이아웃 — 6 섹션 (팀1/팀2/팀3/지방용차/지방설치/택배) ──
+        let html = '<div style="max-width:900px; margin:0 auto;">';
 
         // ===== 좌측: 3 시간대 × 3팀 매트릭스 =====
         const PERIOD_META = {
@@ -3477,47 +3477,56 @@ window.openAdminSlotModal = async (dateStr) => {
 
         html += '</div>';
 
-        // ===== 우측: 배송 목록 (분류별) =====
-        html += '<div>';
-        html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#2563eb;"><i class="fa-solid fa-truck-fast"></i> 배송 목록</h4>';
+        // ===== 지방/택배 섹션 (팀 섹션 아래 순차 렌더링) =====
+        html += '<div style="margin-top:22px; padding-top:14px; border-top:2px dashed #cbd5e1;"></div>';
 
-        // 우측: 카트 7개 버튼과 1:1 매칭 (설치시간 있는 건은 좌측에만)
-        if (dlvFreeMetro.length > 0)     html += renderDeliveryGroup('100만원 이상 수도권 무료배송 설치', dlvFreeMetro, '#d97706', '#fef3c7');
-        if (dlvMetroPaidInst.length > 0) html += renderDeliveryGroup('수도권 유료설치', dlvMetroPaidInst, '#0284c7', '#e0f2fe');
-        if (dlvLocalTruck.length > 0)    html += renderDeliveryGroup('지방 용차배송', dlvLocalTruck, '#ec4899', '#fdf2f8');
-        if (dlvLocalInstall.length > 0)  html += renderDeliveryGroup('지방 설치배송', dlvLocalInstall, '#9333ea', '#f5f3ff');
-        if (dlvBoardCourier.length > 0)  html += renderDeliveryGroup('보드류 택배', dlvBoardCourier, '#f59e0b', '#fffbeb');
-        if (dlvStdCourier.length > 0)    html += renderDeliveryGroup('기타제품 일반택배', dlvStdCourier, '#10b981', '#ecfdf5');
-        if (dlvOther.length > 0)         html += renderDeliveryGroup('기타 배송', dlvOther, '#64748b', '#f1f5f9');
-
-        if (deliveryOnly.length === 0) {
-            html += '<div style="text-align:center; padding:20px; color:#cbd5e1;">배송 건 없음 (설치 시공건은 좌측 시간표에서 확인)</div>';
-        }
-
-        // ===== 철거 섹션 (항상 표시 — 비어있어도) =====
-        // SHIPPING fee=100001 (수도권 철거) + admin_note의 rdate=오늘 매칭
-        const _todayRemovals = [];
-        try {
-            const { data: rDay } = await sb.from('orders')
-                .select('id, manager_name, phone, address, admin_note, status, total_amount, delivery_target_date')
-                .ilike('admin_note', `%rdate=${dateStr}%`)
-                .not('status','in','("취소됨","취소","삭제됨","임시작성","결제대기")');
-            (rDay||[]).forEach(o => _todayRemovals.push(o));
-        } catch(e) { console.warn('removal fetch', e); }
-        // 중복 제거 (id 기준)
-        const _allRemovals = [...dlvMetroRemoval, ..._todayRemovals];
-        const _seenR = new Set();
-        const _uniqueRemovals = _allRemovals.filter(o => { if (_seenR.has(o.id)) return false; _seenR.add(o.id); return true; });
-
-        html += '<div style="margin-top:20px; padding-top:14px; border-top:2px dashed #cbd5e1;"><h4 style="margin:0 0 10px 0; font-size:17px; color:#dc2626;"><i class="fa-solid fa-screwdriver-wrench"></i> 철거 목록</h4>';
-        if (_uniqueRemovals.length > 0) {
-            html += renderDeliveryGroup('🔧 수도권 철거', _uniqueRemovals, '#dc2626', '#fee2e2');
+        // 🚐 지방 용차배송
+        html += `<div style="margin-bottom:14px; border:1.5px solid #ec4899; border-radius:12px; overflow:hidden;">
+            <div style="padding:12px 16px; background:#fdf2f8; color:#be185d; font-weight:900; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:16px;">🚐 지방 용차배송</span>
+                <span style="margin-left:auto; background:#fff; padding:2px 10px; border-radius:999px; font-size:12px;">${dlvLocalTruck.length}건</span>
+            </div>
+            <div style="padding:8px; background:#fff;">`;
+        if (dlvLocalTruck.length === 0) {
+            html += '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:14px; font-style:italic;">해당 없음</div>';
         } else {
-            html += '<div style="text-align:center; padding:18px; color:#94a3b8; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; font-size:13px;">철거 요청 건 없음</div>';
+            html += renderDeliveryGroup('', dlvLocalTruck, '#ec4899', '#fff');
         }
-        html += '</div>';
+        html += '</div></div>';
 
-        html += '</div></div>'; // grid 닫기
+        // 🏗️ 지방 설치배송
+        html += `<div style="margin-bottom:14px; border:1.5px solid #9333ea; border-radius:12px; overflow:hidden;">
+            <div style="padding:12px 16px; background:#f5f3ff; color:#6d28d9; font-weight:900; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:16px;">🏗️ 지방 설치배송</span>
+                <span style="margin-left:auto; background:#fff; padding:2px 10px; border-radius:999px; font-size:12px;">${dlvLocalInstall.length}건</span>
+            </div>
+            <div style="padding:8px; background:#fff;">`;
+        if (dlvLocalInstall.length === 0) {
+            html += '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:14px; font-style:italic;">해당 없음</div>';
+        } else {
+            html += renderDeliveryGroup('', dlvLocalInstall, '#9333ea', '#fff');
+        }
+        html += '</div></div>';
+
+        // 📦 택배 (보드류 + 일반택배 + 기타)
+        const courierAll = [...dlvBoardCourier, ...dlvStdCourier, ...dlvOther];
+        html += `<div style="margin-bottom:14px; border:1.5px solid #f59e0b; border-radius:12px; overflow:hidden;">
+            <div style="padding:12px 16px; background:#fffbeb; color:#b45309; font-weight:900; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:16px;">📦 택배</span>
+                <span style="font-size:11px; color:#92400e; font-weight:600; opacity:0.85;">(보드류·일반택배)</span>
+                <span style="margin-left:auto; background:#fff; padding:2px 10px; border-radius:999px; font-size:12px;">${courierAll.length}건</span>
+            </div>
+            <div style="padding:8px; background:#fff;">`;
+        if (courierAll.length === 0) {
+            html += '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:14px; font-style:italic;">해당 없음</div>';
+        } else {
+            if (dlvBoardCourier.length > 0) html += renderDeliveryGroup('보드류 택배', dlvBoardCourier, '#f59e0b', '#fffbeb');
+            if (dlvStdCourier.length > 0)   html += renderDeliveryGroup('일반택배',     dlvStdCourier,   '#10b981', '#ecfdf5');
+            if (dlvOther.length > 0)        html += renderDeliveryGroup('기타 배송',    dlvOther,        '#64748b', '#f1f5f9');
+        }
+        html += '</div></div>';
+
+        html += '</div>'; // 단일 컬럼 닫기
 
         content.innerHTML = html;
     } catch (e) {
