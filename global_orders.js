@@ -3323,12 +3323,18 @@ window.openAdminSlotModal = async (dateStr) => {
         const _isAnyKnown = (fee) => _isBoardCourier(fee)||_isStdCourier(fee)||_isMetroPaidInst(fee)||_isLocalTruck(fee)||_isLocalInstall(fee)||_isMetroRemoval(fee);
         const dlvFreeMetro      = deliveryOnly.filter(o => { const f=_parseShipFee(o); return !_isAnyKnown(f) && isMetroArea(o.address); });
         const dlvMetroPaidInst  = deliveryOnly.filter(o => _isMetroPaidInst(_parseShipFee(o)));
-        const dlvLocalTruck     = deliveryOnly.filter(o => _isLocalTruck(_parseShipFee(o)));
+        // 지방 용차배송: 명시적 용차(200000) + 비수도권 주소의 기타(fee 미상) 주문 포함
+        const dlvLocalTruck     = deliveryOnly.filter(o => {
+            const f = _parseShipFee(o);
+            if (_isLocalTruck(f)) return true;
+            if (!_isAnyKnown(f) && !isMetroArea(o.address)) return true;
+            return false;
+        });
         const dlvLocalInstall   = deliveryOnly.filter(o => _isLocalInstall(_parseShipFee(o)));
         const dlvBoardCourier   = deliveryOnly.filter(o => _isBoardCourier(_parseShipFee(o)));
         const dlvStdCourier     = deliveryOnly.filter(o => _isStdCourier(_parseShipFee(o)));
         const dlvMetroRemoval   = deliveryOnly.filter(o => _isMetroRemoval(_parseShipFee(o)));
-        const dlvOther          = deliveryOnly.filter(o => { const f=_parseShipFee(o); return !_isAnyKnown(f) && !isMetroArea(o.address); });
+        const dlvOther          = []; // 기타 배송 → 지방 용차배송으로 통합
 
         // ── 단일 컬럼 레이아웃 — 6 섹션 (팀1/팀2/팀3/지방용차/지방설치/택배) ──
         let html = '<div style="max-width:900px; margin:0 auto;">';
@@ -3404,10 +3410,16 @@ window.openAdminSlotModal = async (dateStr) => {
             const meta = TEAM_META[teamKey];
             const list = teamFlat[teamKey];
             const isResting = list.length === 0;
+            // 팀 총 소요시간 (설치만, 철거 제외)
+            const _teamHours = list.reduce((acc, o) => {
+                if (o._isRemoval) return acc;
+                return acc + Math.max(1, Math.ceil((o.total_amount||0) / 1000000));
+            }, 0);
 
             html += `<div style="margin-bottom:14px; border:1.5px solid ${meta.color}; border-radius:12px; overflow:hidden; ${isResting?'opacity:0.5;':''}">
                 <div style="padding:12px 16px; background:${meta.bg}; color:${meta.color}; font-weight:900; display:flex; align-items:center; gap:10px;">
                     <span style="font-size:16px;">${meta.label}</span>
+                    ${_teamHours>0?`<span style="background:#fff; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:800;">⏱ 총 ${_teamHours}시간</span>`:''}
                     <span style="margin-left:auto; background:#fff; padding:2px 10px; border-radius:999px; font-size:12px;">${list.length}건${isResting?' (쉼)':''}</span>
                 </div>
                 <div style="padding:8px; background:#fff;">`;
@@ -3436,6 +3448,11 @@ window.openAdminSlotModal = async (dateStr) => {
                     const kindLabel = o._isRemoval ? '🔧 철거' : '🔧 설치';
                     const isFirst = idx === 0;
                     const isLast = idx === list.length - 1;
+                    // 💰 금액 + ⏱️ 소요예상 (100만원당 1시간, 이동포함, 최소 1시간)
+                    const _totalKRW = o.total_amount || 0;
+                    const _amtLabel = _totalKRW >= 10000 ? (Math.round(_totalKRW/10000).toLocaleString()+'만원') : (_totalKRW.toLocaleString()+'원');
+                    const _hoursEst = Math.max(1, Math.ceil(_totalKRW / 1000000));
+                    const _durLabel = o._isRemoval ? '' : `⏱ ${_hoursEst}시간`;
                     html += `<div style="padding:10px 12px; border-left:3px solid ${rowBorder}; background:${rowBg}; margin-bottom:5px; border-radius:6px; font-size:13px; display:flex; gap:10px; align-items:flex-start;">
                         <div style="display:flex; flex-direction:column; gap:2px; flex-shrink:0;">
                             <button onclick="window.adminMoveTeamOrder('${dateStr}','${teamKey}','${o.id}',-1)" style="padding:2px 6px; background:${isFirst?'#f1f5f9':'#fff'}; border:1px solid #cbd5e1; border-radius:4px; cursor:${isFirst?'not-allowed':'pointer'}; font-size:10px; color:${isFirst?'#cbd5e1':'#475569'};" ${isFirst?'disabled':''}>▲</button>
@@ -3448,7 +3465,9 @@ window.openAdminSlotModal = async (dateStr) => {
                                     <b style="color:#0f172a; font-size:14px;">${o.manager_name||'고객'}</b>
                                     ${o.phone ? `<span style="color:#6366f1; font-size:12px; margin-left:6px;">📞 ${o.phone}</span>` : ''}
                                 </div>
-                                <div style="display:flex; gap:4px; flex-shrink:0;">
+                                <div style="display:flex; gap:4px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;">
+                                    <span style="background:#fef9c3; color:#854d0e; font-size:10px; font-weight:800; padding:2px 7px; border-radius:4px;">💰 ${_amtLabel}</span>
+                                    ${_durLabel?`<span style="background:#ddd6fe; color:#5b21b6; font-size:10px; font-weight:800; padding:2px 7px; border-radius:4px;">${_durLabel}</span>`:''}
                                     <span style="background:${periodMeta.bg}; color:${periodMeta.fg}; font-size:10px; font-weight:800; padding:2px 7px; border-radius:4px;">${periodMeta.label}</span>
                                     <span style="color:${o._isRemoval?'#2563eb':'#6d28d9'}; font-size:11px; font-weight:800;">${kindLabel}</span>
                                 </div>
