@@ -1520,7 +1520,7 @@ window.loadOrders = async () => {
                 deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px; cursor:pointer; text-decoration:underline dotted;" onclick="event.stopPropagation(); openDeliveryDateEdit('${order.id}','${order.delivery_target_date}')" title="클릭하여 배송일 변경">(배)${delDate}</div>`;
                 // 시간대 + 팀 + 지방 뱃지
                 const periodLabels = { am:'🌅오전', pm:'☀️오후', night:'🌙야간', any:'📅무관' };
-                const teamInfo = { seoul:{name:'서울', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{name:'화성', bg:'#fef3c7', fg:'#92400e'}, north:{name:'북부', bg:'#e0e7ff', fg:'#4338ca'} };
+                const teamInfo = { seoul:{name:'김팀장', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{name:'서부장', bg:'#fef3c7', fg:'#92400e'}, north:{name:'3팀', bg:'#e0e7ff', fg:'#4338ca'} };
                 const badges = [];
                 if (order.delivery_period) badges.push(`<span style="background:#f1f5f9;color:#475569;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">${periodLabels[order.delivery_period] || order.delivery_period}</span>`);
                 if (order.assigned_team && teamInfo[order.assigned_team]) {
@@ -3341,108 +3341,137 @@ window.openAdminSlotModal = async (dateStr) => {
             any:   { label:'📅 시간 무관', sub:'기사가 경로 최적화', cap:null, bg:'#f3f4f6', fg:'#374151' }
         };
         const TEAM_META = {
-            seoul:      { label:'🔵 서울팀',   color:'#1d4ed8', bg:'#dbeafe' },
-            hwaseong:   { label:'🟡 화성팀',   color:'#92400e', bg:'#fef3c7' },
-            north:      { label:'🟣 북부팀',   color:'#4338ca', bg:'#e0e7ff' },
-            unassigned: { label:'⚪ 미배정',   color:'#64748b', bg:'#f1f5f9' }
+            seoul:      { label:'🔵 김팀장 (1팀)', shortLabel:'김팀장', color:'#1d4ed8', bg:'#dbeafe' },
+            hwaseong:   { label:'🟡 서부장 (2팀)', shortLabel:'서부장', color:'#92400e', bg:'#fef3c7' },
+            north:      { label:'🟣 3팀',          shortLabel:'3팀',   color:'#4338ca', bg:'#e0e7ff' },
+            unassigned: { label:'⚪ 미배정',        shortLabel:'미배정', color:'#64748b', bg:'#f1f5f9' }
         };
+        const TEAM_ORDER = ['seoul', 'hwaseong', 'north'];
         const _slotPillBase = 'display:inline-flex;align-items:center;justify-content:center;height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid;';
         const _slotPillOff  = _slotPillBase + 'background:#fff;color:#64748b;border-color:#cbd5e1;';
         const _slotPillOn   = _slotPillBase + 'background:#f97316;color:#fff;border-color:#ea580c;box-shadow:0 1px 4px rgba(249,115,22,0.3);';
 
         html += '<div>';
-        html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 설치·배송 기간별 스케줄</h4>';
+        html += '<h4 style="margin:0 0 12px 0; font-size:17px; color:#6d28d9;"><i class="fa-solid fa-wrench"></i> 팀별 스케줄</h4>';
 
-        // 팀별 하루 총 건수 (배정 능력 바)
-        const teamDayTotals = { seoul:0, hwaseong:0, north:0, unassigned:0 };
-        PERIOD_KEYS.forEach(p => {
-            Object.keys(teamDayTotals).forEach(t => {
-                teamDayTotals[t] += periodOrders[p][t].length;
+        // 팀별로 주문 통합 (기간 구분 없이 한 리스트로 - 순서 조정 가능)
+        // 저장된 수동 순서 적용 (localStorage)
+        const orderKey = `adminTeamOrder_${dateStr}`;
+        let savedOrders = {};
+        try { savedOrders = JSON.parse(localStorage.getItem(orderKey) || '{}'); } catch(e) {}
+
+        // 기간 우선순위 (기본 정렬): 오전 → 오후 → 야간 → 무관
+        const PERIOD_PRIORITY = { am:0, pm:1, night:2, any:3 };
+        const _periodOfOrder = (o) => o.delivery_period || _legacyToPeriod(o.installation_time) || 'any';
+
+        const teamFlat = { seoul: [], hwaseong: [], north: [], unassigned: [] };
+        Object.keys(teamFlat).forEach(t => {
+            PERIOD_KEYS.forEach(p => {
+                (periodOrders[p][t] || []).forEach(o => teamFlat[t].push(o));
             });
+            // 기본 정렬: 기간 순, 같은 기간이면 생성시간 순
+            teamFlat[t].sort((a, b) => {
+                const pa = PERIOD_PRIORITY[_periodOfOrder(a)] ?? 9;
+                const pb = PERIOD_PRIORITY[_periodOfOrder(b)] ?? 9;
+                if (pa !== pb) return pa - pb;
+                return 0;
+            });
+            // 사용자가 수동으로 저장한 순서 적용
+            const saved = savedOrders[t];
+            if (saved && Array.isArray(saved) && saved.length) {
+                const idx = (id) => { const i = saved.indexOf(String(id)); return i === -1 ? 9999 : i; };
+                teamFlat[t].sort((a, b) => idx(a.id) - idx(b.id));
+            }
         });
 
+        // 상단 요약 바
         html += '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; gap:14px; flex-wrap:wrap; font-size:12px; font-weight:700;">';
         html += '<span style="color:#475569;">📊 팀별 총 건수:</span>';
         ['seoul','hwaseong','north','unassigned'].forEach(t => {
             const m = TEAM_META[t];
-            const cnt = teamDayTotals[t];
+            const cnt = teamFlat[t].length;
+            if (cnt === 0 && t !== 'seoul' && t !== 'hwaseong') return;
             const overLim = cnt > 8;
-            html += `<span style="display:inline-flex; align-items:center; gap:5px; padding:2px 10px; border-radius:999px; background:${m.bg}; color:${m.color}; ${overLim?'outline:2px solid #dc2626;':''}">${m.label} <b style="font-size:13px;">${cnt}</b>${overLim?' ⚠️':''}</span>`;
+            html += `<span style="display:inline-flex; align-items:center; gap:5px; padding:2px 10px; border-radius:999px; background:${m.bg}; color:${m.color}; ${overLim?'outline:2px solid #dc2626;':''}">${m.shortLabel} <b style="font-size:13px;">${cnt}</b>${overLim?' ⚠️':''}</span>`;
         });
-        const totalCount = Object.values(teamDayTotals).reduce((a,b)=>a+b,0);
+        const totalCount = Object.values(teamFlat).reduce((a,arr)=>a+arr.length,0);
         html += `<span style="margin-left:auto; color:#64748b;">합계 <b style="color:#0f172a; font-size:13px;">${totalCount}건</b></span>`;
         html += `<button onclick="window.rebalanceDeliveryTeams('${dateStr}').then(()=>window.openAdminSlotModal('${dateStr}'))" style="padding:4px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">🔄 재배정</button>`;
         html += '</div>';
 
-        // 기간별 카드
-        PERIOD_KEYS.forEach(periodKey => {
-            const meta = PERIOD_META[periodKey];
-            const totalInPeriod = Object.values(periodOrders[periodKey]).reduce((a,arr)=>a+arr.length,0);
-            const capLabel = meta.cap !== null
-                ? `<span style="font-size:11px; color:${totalInPeriod>meta.cap?'#dc2626':'#64748b'}; font-weight:700;">${totalInPeriod}/${meta.cap}${totalInPeriod>meta.cap?' ⚠️':''}</span>`
-                : `<span style="font-size:11px; color:#64748b; font-weight:700;">${totalInPeriod}건</span>`;
+        // 팀별 카드 (순차 리스트 + 위아래 버튼)
+        TEAM_ORDER.forEach(teamKey => {
+            const meta = TEAM_META[teamKey];
+            const list = teamFlat[teamKey];
+            const isResting = list.length === 0;
 
-            html += `<div style="margin-bottom:14px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
-                <div style="padding:10px 14px; background:${meta.bg}; color:${meta.fg}; font-weight:800; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:15px;">${meta.label}</span>
-                    <span style="font-size:11px; opacity:0.85; font-weight:600;">${meta.sub}</span>
-                    <span style="margin-left:auto;">${capLabel}</span>
+            html += `<div style="margin-bottom:14px; border:1.5px solid ${meta.color}; border-radius:12px; overflow:hidden; ${isResting?'opacity:0.5;':''}">
+                <div style="padding:12px 16px; background:${meta.bg}; color:${meta.color}; font-weight:900; display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:16px;">${meta.label}</span>
+                    <span style="margin-left:auto; background:#fff; padding:2px 10px; border-radius:999px; font-size:12px;">${list.length}건${isResting?' (쉼)':''}</span>
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0;">`;
+                <div style="padding:8px; background:#fff;">`;
 
-            ['seoul','hwaseong','north'].forEach(teamKey => {
-                const teamMeta = TEAM_META[teamKey];
-                const teamOrders = periodOrders[periodKey][teamKey] || [];
-                html += `<div style="padding:8px 10px; border-right:1px solid #f1f5f9; background:#fff;">
-                    <div style="font-size:11px; font-weight:800; color:${teamMeta.color}; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between;">
-                        <span>${teamMeta.label}</span>
-                        <span style="background:${teamMeta.bg}; padding:1px 7px; border-radius:8px;">${teamOrders.length}</span>
-                    </div>`;
+            if (list.length === 0) {
+                html += '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:14px; font-style:italic;">오늘은 쉬는 날 💤</div>';
+            } else {
+                list.forEach((o, idx) => {
+                    const isBlock = (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단';
+                    const _n = o.admin_note || '';
+                    const _ld = /\[CHK:loaded=1\]/.test(_n);
+                    const _dv = /\[CHK:delivered=1\]/.test(_n) || /\[CHK:installed=1\]/.test(_n) || /\[CHK:removed=1\]/.test(_n);
+                    const _phM = _n.match(/\[PHOTOS:([^\]]+)\]/);
+                    const _phUrls = _phM ? _phM[1].split(',').filter(Boolean) : [];
+                    const periodKey2 = _periodOfOrder(o);
+                    const periodMeta = PERIOD_META[periodKey2] || PERIOD_META.any;
+                    const province = o.is_province_install ? ' <span style="background:#fee2e2;color:#991b1b;font-size:10px;font-weight:800;padding:1px 5px;border-radius:3px;">지방</span>' : '';
+                    const rowBg = isBlock ? '#fef2f2' : (o._isRemoval ? '#eff6ff' : '#fafbfc');
+                    const rowBorder = isBlock ? '#dc2626' : (o._isRemoval ? '#2563eb' : '#e2e8f0');
 
-                if (teamOrders.length === 0) {
-                    html += '<div style="font-size:10px; color:#cbd5e1; text-align:center; padding:8px 0;">-</div>';
-                } else {
-                    teamOrders.forEach(o => {
-                        const isBlock = (o.manager_name||'').startsWith('[차단]') || o.status === '관리자차단';
-                        const _n = o.admin_note || '';
-                        const _ld = /\[CHK:loaded=1\]/.test(_n);
-                        const _dv = /\[CHK:delivered=1\]/.test(_n) || /\[CHK:installed=1\]/.test(_n) || /\[CHK:removed=1\]/.test(_n);
-                        const _phM = _n.match(/\[PHOTOS:([^\]]+)\]/);
-                        const _phUrls = _phM ? _phM[1].split(',').filter(Boolean) : [];
-                        const province = o.is_province_install ? ' <span style="background:#fee2e2;color:#991b1b;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;">지방</span>' : '';
-                        const rowBg = isBlock ? '#fef2f2' : (o._isRemoval ? '#eff6ff' : '#fff');
-                        const rowBorder = isBlock ? '#dc2626' : (o._isRemoval ? '#2563eb' : '#e2e8f0');
-                        if (isBlock) {
-                            html += `<div style="padding:5px 6px; border-left:3px solid ${rowBorder}; background:${rowBg}; margin-bottom:4px; border-radius:4px; font-size:11px; color:#991b1b;"><b>🚫 차단</b> <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:10px; padding:0 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')">[해제]</button></div>`;
-                            return;
-                        }
-                        const kindLabel = o._isRemoval ? '🔧 철거' : '🔧 설치';
-                        html += `<div style="padding:6px 7px; border-left:3px solid ${rowBorder}; background:${rowBg}; margin-bottom:4px; border-radius:4px; font-size:11px;">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px; margin-bottom:2px;">
-                                <b style="color:#0f172a;">${(o.manager_name||'고객').slice(0,8)}</b>
-                                <span style="color:${o._isRemoval?'#2563eb':'#6d28d9'}; font-size:10px; font-weight:700;">${kindLabel}</span>
+                    if (isBlock) {
+                        html += `<div style="padding:8px 10px; border-left:3px solid ${rowBorder}; background:${rowBg}; margin-bottom:5px; border-radius:4px; font-size:12px; color:#991b1b;"><b>🚫 관리자 차단</b> <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:11px; padding:0 4px;" onclick="adminRemoveInstallation('${o.id}','${dateStr}')">[해제]</button></div>`;
+                        return;
+                    }
+
+                    const kindLabel = o._isRemoval ? '🔧 철거' : '🔧 설치';
+                    const isFirst = idx === 0;
+                    const isLast = idx === list.length - 1;
+                    html += `<div style="padding:10px 12px; border-left:3px solid ${rowBorder}; background:${rowBg}; margin-bottom:5px; border-radius:6px; font-size:13px; display:flex; gap:10px; align-items:flex-start;">
+                        <div style="display:flex; flex-direction:column; gap:2px; flex-shrink:0;">
+                            <button onclick="window.adminMoveTeamOrder('${dateStr}','${teamKey}','${o.id}',-1)" style="padding:2px 6px; background:${isFirst?'#f1f5f9':'#fff'}; border:1px solid #cbd5e1; border-radius:4px; cursor:${isFirst?'not-allowed':'pointer'}; font-size:10px; color:${isFirst?'#cbd5e1':'#475569'};" ${isFirst?'disabled':''}>▲</button>
+                            <div style="text-align:center; font-size:11px; font-weight:900; color:${meta.color};">${idx+1}</div>
+                            <button onclick="window.adminMoveTeamOrder('${dateStr}','${teamKey}','${o.id}',1)" style="padding:2px 6px; background:${isLast?'#f1f5f9':'#fff'}; border:1px solid #cbd5e1; border-radius:4px; cursor:${isLast?'not-allowed':'pointer'}; font-size:10px; color:${isLast?'#cbd5e1':'#475569'};" ${isLast?'disabled':''}>▼</button>
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:4px;">
+                                <div>
+                                    <b style="color:#0f172a; font-size:14px;">${o.manager_name||'고객'}</b>
+                                    ${o.phone ? `<span style="color:#6366f1; font-size:12px; margin-left:6px;">📞 ${o.phone}</span>` : ''}
+                                </div>
+                                <div style="display:flex; gap:4px; flex-shrink:0;">
+                                    <span style="background:${periodMeta.bg}; color:${periodMeta.fg}; font-size:10px; font-weight:800; padding:2px 7px; border-radius:4px;">${periodMeta.label}</span>
+                                    <span style="color:${o._isRemoval?'#2563eb':'#6d28d9'}; font-size:11px; font-weight:800;">${kindLabel}</span>
+                                </div>
                             </div>
-                            ${o.phone ? `<div style="color:#6366f1; font-size:10px;">📞 ${o.phone}</div>` : ''}
-                            ${o.address ? `<div style="color:#64748b; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;">📍 ${o.address}${province}</div>` : ''}
-                            <div style="display:flex; gap:3px; margin-top:4px; flex-wrap:wrap;">
+                            ${o.address ? `<div style="color:#64748b; font-size:12px; margin-bottom:4px;">📍 ${o.address}${province}</div>` : ''}
+                            <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                 <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','loaded',${!_ld})" style="${_ld?_slotPillOn:_slotPillOff}">적재</span>
-                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','delivered',${!_dv})" style="${_dv?_slotPillOn:_slotPillOff}">${o._isRemoval?'철거':'배송'}</span>
+                                <span onclick="event.stopPropagation();adminToggleOrderCheck('${o.id}','delivered',${!_dv})" style="${_dv?_slotPillOn:_slotPillOff}">${o._isRemoval?'철거':'배송'}완료</span>
                                 ${_phUrls.length ? `<span onclick="event.stopPropagation();adminViewPhotos('${o.id}', ${JSON.stringify(_phUrls).replace(/"/g,'&quot;')})" style="${_slotPillBase}background:#0ea5e9;color:#fff;border-color:#0284c7;">📸${_phUrls.length}</span>` : ''}
                             </div>
-                        </div>`;
-                    });
-                }
-                html += '</div>';
-            });
+                        </div>
+                    </div>`;
+                });
+            }
             html += '</div></div>';
         });
 
         // 미배정 섹션 (있을 때만)
-        const unassignedCount = PERIOD_KEYS.reduce((a,p)=>a+periodOrders[p].unassigned.length,0);
+        const unassignedCount = teamFlat.unassigned.length;
         if (unassignedCount > 0) {
-            html += `<div style="margin-bottom:14px; padding:10px 14px; background:#fef3c7; border:1.5px dashed #f59e0b; border-radius:10px;">
-                <div style="font-size:12px; font-weight:800; color:#92400e; margin-bottom:6px;">⚠️ 미배정 주문 ${unassignedCount}건 — 팀 배정 필요</div>
-                <button onclick="window.rebalanceDeliveryTeams('${dateStr}').then(()=>window.openAdminSlotModal('${dateStr}'))" style="padding:5px 14px; background:#f59e0b; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">🤖 자동 배정 실행</button>
+            html += `<div style="margin-bottom:14px; padding:12px 14px; background:#fef3c7; border:1.5px dashed #f59e0b; border-radius:10px;">
+                <div style="font-size:13px; font-weight:800; color:#92400e; margin-bottom:8px;">⚠️ 미배정 주문 ${unassignedCount}건 — 팀 배정 필요</div>
+                <button onclick="window.rebalanceDeliveryTeams('${dateStr}').then(()=>window.openAdminSlotModal('${dateStr}'))" style="padding:6px 16px; background:#f59e0b; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">🤖 자동 배정 실행</button>
             </div>`;
         }
 
@@ -4565,36 +4594,40 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
     const lockedTeams = new Set();
     Object.keys(provinceByTeam).forEach(t => { if (provinceByTeam[t].length > 0) lockedTeams.add(t); });
 
-    // 4) 사용 가능 팀 리스트 (우선순위: 서울 → 화성 → 북부)
+    // 4) 사용 가능 팀 리스트 (우선순위: 김팀장(seoul) → 서부장(hwaseong) → 3팀(north))
     const availableTeams = TEAM_IDS.filter(t => !lockedTeams.has(t));
 
-    // 5) 팀 수 결정
+    // 5) 팀 수 결정 — 실제 활성 팀 수만큼만 사용 (나머지는 쉬게 함)
     const regularCount = regularOrders.length;
     let activeTeamCount;
-    if (regularCount <= TEAM_DAILY_CAPACITY) activeTeamCount = 1;
-    else if (regularCount <= TEAM_DAILY_CAPACITY * 2) activeTeamCount = 2;
-    else activeTeamCount = 3;
+    if (regularCount <= TEAM_DAILY_CAPACITY) activeTeamCount = 1;        // 8건 이하 → 1팀만
+    else if (regularCount <= TEAM_DAILY_CAPACITY * 2) activeTeamCount = 2; // 9~16건 → 2팀
+    else activeTeamCount = 3;                                              // 17건+ → 3팀
     const usableTeamCount = Math.min(activeTeamCount, availableTeams.length);
     const activeTeams = availableTeams.slice(0, Math.max(1, usableTeamCount));
 
-    // 6) 주문 분배: 주소 기반 선호 팀 존중하며 배분, 용량 초과 시 다음 팀으로 오버플로
+    // 6) 주문 분배: **용량 우선 순차 채움** (1팀이 8건 꽉 차야 2팀으로 넘김)
+    //    주소 기반 선호는 정렬 시드로만 사용 — 같은 지역이 같은 팀에 몰리도록
     const teamBuckets = {};
     activeTeams.forEach(t => teamBuckets[t] = []);
-    const preferOrder = (preferred) => {
-        if (preferred && activeTeams.includes(preferred)) {
-            return [preferred, ...activeTeams.filter(t => t !== preferred)];
-        }
-        return activeTeams.slice();
-    };
-    regularOrders.forEach(o => {
-        const order = preferOrder(o.assigned_team);
-        for (const t of order) {
+
+    // 정렬: 같은 지역끼리 몰리게 seoul → hwaseong → north 순으로 (우선 팀이 몰려 들어감)
+    const regionPriority = { seoul:0, hwaseong:1, north:2 };
+    const sortedOrders = regularOrders.slice().sort((a, b) => {
+        const pa = regionPriority[a.assigned_team] ?? 9;
+        const pb = regionPriority[b.assigned_team] ?? 9;
+        return pa - pb;
+    });
+
+    sortedOrders.forEach(o => {
+        // 첫 팀부터 순차로 채움: 팀 1 꽉 차야 팀 2로 넘어감
+        for (const t of activeTeams) {
             if (teamBuckets[t].length < TEAM_DAILY_CAPACITY) {
                 teamBuckets[t].push(o);
                 return;
             }
         }
-        // 모든 팀 포화 → 첫 팀에 강제 (관리자 조정 필요)
+        // 모든 팀 포화 → 첫 팀에 강제 (사실상 발생 안 함, 17건+는 이미 3팀 할당됐기 때문)
         teamBuckets[activeTeams[0]].push(o);
     });
 
@@ -4635,4 +4668,38 @@ window.rebalanceUpcomingWeek = async function() {
         if (r && r.changed) totalChanged += r.changed;
     }
     if (window.showToast) window.showToast(`7일치 재배정 완료 (총 ${totalChanged}건 변경)`, 'success');
+};
+
+// [Phase 2] 관리자 팀별 주문 순서 이동 (localStorage 기반, 팀/날짜별 저장)
+window.adminMoveTeamOrder = function(dateStr, teamKey, orderId, direction) {
+    if (!dateStr || !teamKey || !orderId || !direction) return;
+    const key = `adminTeamOrder_${dateStr}`;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) {}
+    // 현재 화면의 팀 순서를 가져와서 로컬스토리지 초기화 (첫 이동 시)
+    if (!saved[teamKey] || !Array.isArray(saved[teamKey])) {
+        // 현재 DOM에서 팀 내 주문 순서 추출
+        const modal = document.getElementById('adminSlotModal');
+        if (!modal) return;
+        const teamSection = modal.querySelector(`[data-team-section="${teamKey}"]`);
+        // fallback: 모든 버튼 data-order-id 수집
+        const buttons = modal.querySelectorAll(`button[onclick*="adminMoveTeamOrder('${dateStr}','${teamKey}'"]`);
+        const idSet = new Set();
+        buttons.forEach(b => {
+            const m = (b.getAttribute('onclick') || '').match(/'([0-9a-f-]+)',-?\d+\)/i);
+            if (m) idSet.add(m[1]);
+        });
+        saved[teamKey] = [...idSet];
+    }
+    const arr = saved[teamKey];
+    const idx = arr.indexOf(String(orderId));
+    if (idx === -1) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= arr.length) return;
+    // swap
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    saved[teamKey] = arr;
+    localStorage.setItem(key, JSON.stringify(saved));
+    // 모달 새로 렌더
+    if (window.openAdminSlotModal) window.openAdminSlotModal(dateStr);
 };

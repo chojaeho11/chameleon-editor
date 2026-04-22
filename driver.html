@@ -80,9 +80,9 @@
     <div class="form-row">
         <select id="driverSelect" class="input-box" onchange="saveDriverAndLoad()">
             <option value="all">전체 (모든 팀)</option>
-            <option value="seoul">🔵 서울팀</option>
-            <option value="hwaseong">🟡 화성팀 (화성·수원·남부·강남)</option>
-            <option value="north">🟣 북부팀 (의정부·고양·동북)</option>
+            <option value="seoul">🔵 김팀장 (1팀)</option>
+            <option value="hwaseong">🟡 서부장 (2팀)</option>
+            <option value="north">🟣 3팀</option>
         </select>
     </div>
     <div class="form-row">
@@ -279,7 +279,7 @@
                         <div style="font-size:12px; color:#475569; margin-bottom:6px;"><i class="fa-solid fa-map-pin" style="color:#ef4444; font-size:11px;"></i> ${o.address || '주소 없음'}</div>
                         ${(() => {
                             const perLabels = { am:{t:'🌅 오전 (08-12시)', bg:'#fef3c7', fg:'#92400e'}, pm:{t:'☀️ 오후 (12-18시)', bg:'#fed7aa', fg:'#9a3412'}, night:{t:'🌙 야간 (18-22시)', bg:'#e0e7ff', fg:'#3730a3'}, any:{t:'📅 시간 상관없음', bg:'#f3f4f6', fg:'#374151'} };
-                            const teamLabels = { seoul:{t:'🔵 서울팀', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{t:'🟡 화성팀', bg:'#fef3c7', fg:'#92400e'}, north:{t:'🟣 북부팀', bg:'#e0e7ff', fg:'#4338ca'} };
+                            const teamLabels = { seoul:{t:'🔵 김팀장 (1팀)', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{t:'🟡 서부장 (2팀)', bg:'#fef3c7', fg:'#92400e'}, north:{t:'🟣 3팀', bg:'#e0e7ff', fg:'#4338ca'} };
                             const parts = [];
                             if (o.delivery_period && perLabels[o.delivery_period]) {
                                 const p = perLabels[o.delivery_period];
