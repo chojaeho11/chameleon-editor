@@ -4615,21 +4615,40 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
         return { ok:true, changed:0, total:0 };
     }
 
-    // 2) 지방설치 주문은 해당 팀 고정 (바꾸지 않음)
-    const provinceByTeam = { seoul:[], hwaseong:[], north:[] };
-    const regularOrders = [];
+    // 2) 지방설치 판정 (플래그 OR 주소+금액 폴백): 서울/경기/인천 외 + 70만원 이상
+    const _isProvince = (o) => {
+        if (o.is_province_install) return true;
+        const a = String(o.address || '').replace(/\s+/g, '');
+        if (!a) return false;
+        if (/서울|경기|인천/.test(a)) return false;
+        return (o.total_amount || 0) >= 700000;
+    };
+    // 플래그 누락된 지방 주문 자동 보정 — DB에 is_province_install=true 저장
+    const _fixProvince = [];
     teamEligible.forEach(o => {
-        if (o.is_province_install) {
-            const t = o.assigned_team && provinceByTeam[o.assigned_team] ? o.assigned_team : 'seoul';
-            provinceByTeam[t].push(o);
-        } else {
-            regularOrders.push(o);
+        if (_isProvince(o) && !o.is_province_install) {
+            _fixProvince.push(o.id);
+            o.is_province_install = true;
         }
     });
+    if (_fixProvince.length > 0) {
+        await Promise.all(_fixProvince.map(id =>
+            _sb.from('orders').update({ is_province_install: true }).eq('id', id)
+        ));
+    }
 
-    // 3) 지방설치로 막힌 팀 확인 — 그 팀은 다른 주문 받지 못함
+    // 3) 지방설치 주문은 독점 팀 배정 — 첫 번째 지방 건이 team1 독점, 두 번째면 team2 독점 ...
+    const provinceOrders = teamEligible.filter(o => _isProvince(o));
+    const regularOrders  = teamEligible.filter(o => !_isProvince(o));
+    const provinceByTeam = { seoul:[], hwaseong:[], north:[] };
     const lockedTeams = new Set();
-    Object.keys(provinceByTeam).forEach(t => { if (provinceByTeam[t].length > 0) lockedTeams.add(t); });
+    // 지방 건을 team1, team2, team3 순으로 독점 배정
+    const TEAM_SEQ = ['seoul', 'hwaseong', 'north'];
+    provinceOrders.forEach((o, i) => {
+        const t = TEAM_SEQ[Math.min(i, TEAM_SEQ.length - 1)];
+        provinceByTeam[t].push(o);
+        lockedTeams.add(t);
+    });
 
     // 4) 사용 가능 팀 리스트 (우선순위: 김팀장(seoul) → 서부장(hwaseong) → 3팀(north))
     //    항상 모든 가용 팀을 활성화 — 순차 채움이 자연스럽게 뒤 팀을 쉬게 함
@@ -4661,14 +4680,21 @@ window.rebalanceDeliveryTeams = async function(dateStr) {
         teamHoursUsed[best] += h;
     });
 
-    // 7) DB 업데이트 (변경된 건만)
+    // 7) DB 업데이트 (변경된 건만) — regular + province 모두 포함
     const updates = [];
     Object.keys(teamBuckets).forEach(t => {
         teamBuckets[t].forEach(o => {
             if (o.assigned_team !== t) updates.push({ id: o.id, assigned_team: t });
         });
     });
-    // 지방 주문은 원래 팀 고정으로 유지 (변경 없음)
+    Object.keys(provinceByTeam).forEach(t => {
+        provinceByTeam[t].forEach(o => {
+            if (o.assigned_team !== t) updates.push({ id: o.id, assigned_team: t });
+        });
+    });
+
+    // 수동 정렬 초기화 (팀 구성이 바뀌었으므로 기본 오전→오후→야간 순서 적용)
+    try { localStorage.removeItem(`adminTeamOrder_${dateStr}`); } catch(e) {}
 
     if (updates.length === 0) {
         msg(`${dateStr}: 재배정 변경 없음 (${totalHours}h / ${activeTeams.length}팀)`);
