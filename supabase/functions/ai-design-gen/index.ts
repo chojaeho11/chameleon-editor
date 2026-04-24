@@ -140,14 +140,27 @@ serve(async (req) => {
       });
     });
 
-    const responsesBody = {
+    // ChatGPT 웹과 동일하게 — 디자인 전문가 system + reasoning으로 먼저 설계한 뒤 image_generation 호출
+    const systemInstructions = `당신은 인쇄 디자인 전문가입니다. 사용자의 요청을 받으면:
+
+1) 먼저 디자인의 구성·레이아웃·색상·폰트·텍스트 위치를 상세히 설계합니다.
+2) 한글 텍스트는 정확한 맞춤법과 띄어쓰기를 유지하세요. 오타·깨짐·변형된 한글은 절대 금지입니다.
+3) 첨부된 이미지가 있으면 그 이미지들을 실제 디자인에 자연스럽게 배치하고 통합합니다.
+4) 그 다음 image_generation 도구를 호출해 이미지를 생성합니다. 도구에 전달하는 프롬프트에는 모든 한글 텍스트를 정확히 명시하고, 텍스트가 선명하게 렌더링되도록 구체적으로 지시하세요 (예: "큰 볼드 한글 제목 '허니콤보드 50% 할인'을 상단 중앙에 배치, Noto Sans KR 스타일의 두꺼운 글씨").
+5) 상업 인쇄 기준의 고품질 결과물을 목표로 합니다. 배치는 균형 있게, 여백은 넉넉하게.`;
+
+    const responsesBody: any = {
       model: "gpt-5",
+      instructions: systemInstructions,
       input: [{ role: "user", content: userContent }],
+      reasoning: { effort: "medium" },
       tools: [{
         type: "image_generation",
         size: finalSize,
         quality: "high",
+        output_format: "png",
       }],
+      tool_choice: { type: "image_generation" },
     };
 
     const openaiRes = await fetch("https://api.openai.com/v1/responses", {
