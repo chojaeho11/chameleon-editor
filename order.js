@@ -3312,6 +3312,22 @@ async function processOrderSubmission() {
     const checkoutModal = document.getElementById("checkoutModal");
     checkoutModal.style.display = "flex";
 
+    // ★ 디자인 마켓 디자인비 주문: 카드 결제만 허용 (무통장/예치금 비활성)
+    try {
+        const _payRadios = document.getElementsByName('paymentMethod');
+        const _designFeeOnly = typeof _isDesignFeeOnlyCart === 'function' && _isDesignFeeOnlyCart();
+        Array.from(_payRadios).forEach(r => {
+            const row = r.closest('label');
+            if (_designFeeOnly) {
+                if (r.value === 'card') { r.checked = true; if (row) row.style.display = ''; }
+                else { r.checked = false; if (row) row.style.display = 'none'; }
+            } else {
+                // 일반 주문: 복원
+                if (row) row.style.display = '';
+            }
+        });
+    } catch(e) { console.warn('[payment method restrict]', e); }
+
     // 비수도권 배송비 표시
     const nmFeeCheckout = document.getElementById('nonMetroFeeCheckout');
     const nmFeeAmountEl = document.getElementById('nonMetroFeeAmount');
@@ -3963,10 +3979,30 @@ async function processFinalPayment() {
             }
         }
 
-        const orderId = window.currentDbId; 
+        const orderId = window.currentDbId;
 
         const selected = document.querySelector('input[name="paymentMethod"]:checked');
         const method = selected ? selected.value : 'card';
+
+        // ★ 디자인비 주문은 카드결제 필수 (무통장/예치금 차단 — 사기 방지)
+        if (typeof _isDesignFeeOnlyCart === 'function' && _isDesignFeeOnlyCart() && method !== 'card') {
+            const lang = CURRENT_LANG || 'kr';
+            const msgs = {
+                kr: '디자인 의뢰 결제는 카드로만 가능합니다.',
+                ja: 'デザイン依頼の決済はカード払いのみです。',
+                en: 'Design fees must be paid by card only.',
+                zh: '设计费用仅支持信用卡付款。',
+                es: 'El pago del diseño solo se acepta con tarjeta.',
+                de: 'Designgebühren können nur per Karte bezahlt werden.',
+                fr: 'Les frais de design ne peuvent être payés que par carte.',
+                ar: 'يتم دفع رسوم التصميم عبر البطاقة فقط.'
+            };
+            showToast(msgs[lang] || msgs.en, 'error');
+            // 카드 라디오로 강제 전환
+            const cardRadio = document.querySelector('input[name="paymentMethod"][value="card"]');
+            if (cardRadio) cardRadio.checked = true;
+            return;
+        }
 
         if (method === 'deposit') {
             const balanceSpan = document.getElementById('myCurrentDepositDisplay');
