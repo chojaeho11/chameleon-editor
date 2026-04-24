@@ -414,6 +414,14 @@ const STAMP_IMAGE_URL = "https://gdadmin.signmini.com/data/etc/stampImage";
 // [1] 내보내기 버튼 초기화 (주문 시스템 방식 적용)
 // ==========================================================
 export function initExport() {
+    // ★ 빠른 PNG 다운로드 (bottom-dock / 우클릭 메뉴 등에서 호출) — 기존 PNG 버튼과 동일 동작
+    window.quickDownloadPng = function() {
+        const btn = document.getElementById('btnPNG');
+        if (btn && typeof btn.onclick === 'function') { btn.onclick(); return; }
+        if (btn) { btn.click(); return; }
+        if (window.showToast) window.showToast('다운로드 버튼을 찾을 수 없습니다.', 'warn');
+    };
+
     // 1. SVG 다운로드
     const btnSVG = document.getElementById("btnDownloadSVG");
     if (btnSVG) {

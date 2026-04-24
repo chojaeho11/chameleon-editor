@@ -4486,6 +4486,7 @@ async function handleSubReturn() {
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
             </button>
             <div class="bottom-dock">
+                <button onclick="window.quickDownloadPng && window.quickDownloadPng()" class="zoom-btn" title="디자인 PNG 다운로드" style="color:#059669;"><i class="fa-solid fa-download"></i></button>
                 <button onclick="window.toggleBackgroundLock()" class="zoom-btn" title="배경 잠금/해제"><i class="fa-solid fa-lock"></i></button>
                 <button onclick="document.getElementById('btnFitScreen').click()" class="zoom-btn" title="화면 맞춤"><i class="fa-solid fa-compress"></i></button>
                 <div class="divider"></div>
@@ -6286,8 +6287,8 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./canvas-utils.js?v=424"></script>
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
-<script type="module" src="./export.js?v=424"></script>
-<script type="module" src="./order.js?v=450"></script>
+<script type="module" src="./export.js?v=425"></script>
+<script type="module" src="./order.js?v=451"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>
 <script type="module" src="./ppt-mode.js?v=424"></script>
@@ -7515,7 +7516,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=450'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=451'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
@@ -12471,7 +12472,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=450');
+                    const m = await import('./order.js?v=451');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -12541,7 +12542,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=450').then(m => {
+            import('./order.js?v=451').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -13142,7 +13143,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=450').then(m => {
+        import('./order.js?v=451').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17673,7 +17674,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=450').then(function(mod) {
+            import('./order.js?v=451').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;

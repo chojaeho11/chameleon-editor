@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=424";
+} from "./export.js?v=425";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -2010,7 +2010,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=424');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=425');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -2696,7 +2696,10 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                         ${(displayMmW && displayMmH) ? `<div style="font-size:12px; color:#6366f1; margin-top:4px; font-weight:bold;">📐 ${window._isUSsite && window._isUSsite() ? (displayMmW/25.4).toFixed(2)+'x'+(displayMmH/25.4).toFixed(2)+' in' : displayMmW+'x'+displayMmH+'mm'}</div>` : ''}
                         <div style="font-size:13px; color:#64748b; margin-top:5px;">${item.type === 'file_upload' ? item.fileName : (item.fileName || window.t('msg_file_attached_separately', '(File attached separately)'))}</div>
                         <div style="font-size:12px; color:#94a3b8; margin-top:5px;">${window.t('label_unit_price', 'Unit Price')}: ${formatCurrency(item.product.price)}</div>
-                        ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="margin-top:8px; border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
+                        <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+                            ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집하기')}</button>` : ''}
+                            ${item.type === 'design' && item.thumb ? `<button onclick="event.stopPropagation(); window.downloadCartDesign(${idx})" style="border:1px solid #059669; background:#ecfdf5; color:#059669; padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-download"></i> 다운로드</button>` : ''}
+                        </div>
                         <div style="margin-top:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                             ${item.originalUrl
                                 ? `<label style="cursor:pointer; font-size:12px; color:#fff; background:#f97316; padding:6px 14px; border-radius:8px; font-weight:700; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-rotate"></i> ${(window.t && window.t('cart_file_reattach')) || '파일 재첨부'}<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`
@@ -2740,6 +2743,7 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
                             </div>
                             <div style="margin-top:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                                 ${item.type === 'design' && item.jsonUrl ? `<button onclick="event.stopPropagation(); window.reEditCartItem(${idx})" style="border:1px solid #6366f1; background:#f5f3ff; color:#6366f1; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-pen-to-square"></i> ${window.t('btn_re_edit', '다시 편집')}</button>` : ''}
+                                ${item.type === 'design' && item.thumb ? `<button onclick="event.stopPropagation(); window.downloadCartDesign(${idx})" style="border:1px solid #059669; background:#ecfdf5; color:#059669; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;"><i class="fa-solid fa-download"></i> 다운로드</button>` : ''}
                                 ${item.originalUrl
                                     ? `<label style="cursor:pointer; font-size:11px; color:#fff; background:#f97316; padding:5px 10px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-rotate"></i> ${(window.t && window.t('cart_file_reattach')) || '파일 재첨부'}<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`
                                     : `<label style="cursor:pointer; font-size:11px; color:#fff; background:#dc2626; padding:5px 10px; border-radius:6px; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-paperclip"></i> ${(window.t && window.t('cart_file_attach')) || '파일 첨부'}<input type="file" style="display:none;" onchange="window._uploadCartItemFile(${idx}, this)"></label>`}
@@ -3492,7 +3496,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=424');
+                const { generateDesignPNG } = await import('./export.js?v=425');
 
                 if (targetPages.length > 1) {
                     // ★ 멀티페이지 (종이매대 등): 각 face를 개별 PNG로 생성·업로드
@@ -4314,6 +4318,28 @@ window.removeCartItem = function(idx) {
 
     // 5. 렌더링
     renderCart();
+};
+
+// ★ 장바구니 아이템 디자인 다운로드
+window.downloadCartDesign = async function(idx) {
+    const item = cartData && cartData[idx];
+    if (!item || !item.thumb) { showToast('다운로드할 디자인이 없습니다.', 'warn'); return; }
+    const safeName = (item.product && (item.product.name || item.product.code)) || 'design';
+    const fname = `${safeName}_${Date.now()}.png`.replace(/[^\w.\-]+/g, '_');
+    try {
+        const res = await fetch(item.thumb, { mode: 'cors' });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fname; a.style.display = 'none';
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
+    } catch(e) {
+        console.warn('direct download failed, fallback to link:', e);
+        const a = document.createElement('a');
+        a.href = item.thumb; a.download = fname; a.target = '_blank';
+        document.body.appendChild(a); a.click(); a.remove();
+    }
 };
 
 // ★ 장바구니 아이템 다시 편집하기
