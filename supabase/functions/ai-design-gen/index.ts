@@ -79,12 +79,16 @@ serve(async (req) => {
     // ── 유저 식별 ──
     let userId: string | null = null;
     let isPro = false;
+    let isUnlimited = false; // 테스트용 특수 계정: 한도 무제한
+    const PRIV_EMAILS = ["doubleu202201@gmail.com", "korea900as@gmail.com"];
     const authHeader = authHeaderRaw || req.headers.get("Authorization") || "";
     const tokenStr = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
     if (tokenStr && tokenStr !== Deno.env.get("SUPABASE_ANON_KEY")) {
       const { data: userRes } = await supa.auth.getUser(tokenStr);
       if (userRes?.user) {
         userId = userRes.user.id;
+        const userEmail = (userRes.user.email || "").toLowerCase();
+        if (PRIV_EMAILS.includes(userEmail)) isUnlimited = true;
         // PRO 판정: subscriptions active/trialing OR profiles.role='subscriber'
         const [{ data: subs }, { data: prof }] = await Promise.all([
           supa.from("subscriptions").select("status").eq("user_id", userId).in("status", ["active", "trialing"]).limit(1),
@@ -115,8 +119,8 @@ serve(async (req) => {
       usageCount = count || 0;
     }
 
-    const dailyLimit = isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
-    if (usageCount >= dailyLimit) {
+    const dailyLimit = isUnlimited ? 99999 : (isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT);
+    if (!isUnlimited && usageCount >= dailyLimit) {
       return new Response(JSON.stringify({
         error: `오늘 사용 한도(${dailyLimit}회)에 도달했습니다.${isPro ? "" : " PRO 구독 시 50회까지 가능합니다."}`,
         limit: dailyLimit,
