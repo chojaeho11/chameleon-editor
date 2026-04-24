@@ -411,8 +411,8 @@ export function renderShortcutButtons(containerId) {
             partner_cta: '파트너 등록',
             // ── TOGETHER / franchise banner ──
             tg_word: 'WITH',
-            tg_title: '가맹비 무료, 카멜레온과 함께 세계 시장에서 성장하세요',
-            tg_sub: '플로터 1대와 작은 공간 그리고 열정만 있다면, 글로벌 회사의 CEO가 될 수 있습니다',
+            tg_title: '가맹비무료. 카멜레온과 함께 부자되기',
+            tg_sub: '자본금없이 기존 광고사가 매출 10배 올리는법',
             tg_cta: '가맹 문의하기'
         },
         ja: {
@@ -431,8 +431,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'パートナー登録',
             tg_word: 'WITH',
-            tg_title: '加盟金0円、カメレオンと共に世界市場で成長しましょう',
-            tg_sub: 'プロッター1台と小さなスペース、そして情熱があれば、グローバル企業のCEOになれます',
+            tg_title: '加盟金無料。カメレオンと共に富を築こう',
+            tg_sub: '資本金なしで既存の広告代理店が売上を10倍に上げる方法',
             tg_cta: '加盟お問い合わせ'
         },
         en: {
@@ -451,8 +451,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Join as Partner',
             tg_word: 'WITH',
-            tg_title: '$0 franchise fee — grow in the global market with Chameleon',
-            tg_sub: 'With one plotter, a small workspace, and passion, you can become CEO of a global company',
+            tg_title: '$0 franchise fee. Build wealth with Chameleon',
+            tg_sub: 'How existing ad agencies 10x their revenue with zero capital',
             tg_cta: 'Franchise Inquiry'
         },
         zh: {
@@ -471,8 +471,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: '成为合作伙伴',
             tg_word: 'WITH',
-            tg_title: '加盟费0元，与卡米利翁一起在全球市场中成长',
-            tg_sub: '一台喷绘机、一个小工作室和热情，您就能成为全球公司的CEO',
+            tg_title: '加盟费0元，与卡米利翁一起致富',
+            tg_sub: '零资本让现有广告公司营收翻10倍的方法',
             tg_cta: '加盟咨询'
         },
         ar: {
@@ -491,8 +491,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'انضم كشريك',
             tg_word: 'WITH',
-            tg_title: 'رسوم امتياز صفر — انمُ في السوق العالمي مع كاميليون',
-            tg_sub: 'بآلة بلوتر، مساحة عمل صغيرة، وشغف، يمكنك أن تصبح مدير شركة عالمية',
+            tg_title: 'رسوم امتياز صفر. ابنِ ثروتك مع كاميليون',
+            tg_sub: 'كيف تضاعف وكالات الإعلان القائمة إيراداتها 10 أضعاف بدون رأس مال',
             tg_cta: 'استفسار الامتياز'
         },
         es: {
@@ -511,8 +511,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Ser Socio',
             tg_word: 'WITH',
-            tg_title: 'Franquicia $0 — crezca en el mercado global con Chameleon',
-            tg_sub: 'Con un plotter, un pequeño taller y pasión, puede ser CEO de una empresa global',
+            tg_title: 'Franquicia $0. Hágase rico con Chameleon',
+            tg_sub: 'Cómo las agencias existentes multiplican x10 sus ingresos sin capital',
             tg_cta: 'Consulta Franquicia'
         },
         de: {
@@ -531,8 +531,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Partner werden',
             tg_word: 'WITH',
-            tg_title: 'Franchise 0€ — wachsen Sie mit Chameleon im Weltmarkt',
-            tg_sub: 'Mit einem Plotter, einer kleinen Werkstatt und Leidenschaft werden Sie CEO eines globalen Unternehmens',
+            tg_title: 'Franchise 0€. Werden Sie reich mit Chameleon',
+            tg_sub: 'Wie bestehende Werbeagenturen ohne Kapital ihren Umsatz verzehnfachen',
             tg_cta: 'Franchise-Anfrage'
         },
         fr: {
@@ -551,8 +551,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Devenir Partenaire',
             tg_word: 'WITH',
-            tg_title: 'Franchise 0€ — grandissez sur le marché mondial avec Chameleon',
-            tg_sub: 'Avec un traceur, un petit atelier et de la passion, vous pouvez devenir PDG d\'une société mondiale',
+            tg_title: 'Franchise 0€. Devenez riche avec Chameleon',
+            tg_sub: 'Comment les agences existantes multiplient x10 leurs revenus sans capital',
             tg_cta: 'Demande de franchise'
         }
     };
