@@ -98,7 +98,6 @@ window.generateAiDesign = async function() {
 
         let fetchBody;
         if (attachedImages.length > 0) {
-            // multipart: 이미지 포함 → /v1/images/edits
             const fd = new FormData();
             fd.append('prompt', prompt);
             fd.append('size', sizeEl ? sizeEl.value : '1024x1024');
@@ -107,10 +106,9 @@ window.generateAiDesign = async function() {
                 fd.append('image', img.file, img.file.name || `upload-${i}.png`);
             });
             fetchBody = fd;
-            // Content-Type은 브라우저가 boundary와 함께 자동 설정
         } else {
             headers['Content-Type'] = 'application/json';
-            fetchBody = JSON.stringify({ prompt, size: sizeEl ? sizeEl.value : '1024x1024' });
+            fetchBody = JSON.stringify({ prompt, size: sizeEl ? sizeEl.value : '1024x1024', authToken });
         }
 
         const res = await fetch(FN_URL, {

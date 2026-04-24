@@ -59,6 +59,7 @@ serve(async (req) => {
       const body = await req.json().catch(() => ({}));
       prompt = (body?.prompt || "").toString().trim();
       size = (body?.size || "1024x1024").toString();
+      authHeaderRaw = (body?.authToken || "").toString();
     }
 
     if (!prompt || prompt.length < 3) {
@@ -81,13 +82,22 @@ serve(async (req) => {
     let isPro = false;
     let isUnlimited = false; // 테스트용 특수 계정: 한도 무제한
     const PRIV_EMAILS = ["doubleu202201@gmail.com", "korea900as@gmail.com"];
-    const authHeader = authHeaderRaw || req.headers.get("Authorization") || "";
-    const tokenStr = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
-    if (tokenStr && tokenStr !== Deno.env.get("SUPABASE_ANON_KEY")) {
-      const { data: userRes } = await supa.auth.getUser(tokenStr);
+    const SUPA_ANON = Deno.env.get("SUPABASE_ANON_KEY") || "";
+
+    // 토큰 후보: 1) form authToken 2) Authorization header (Bearer 제거)
+    const rawHeader = req.headers.get("Authorization") || "";
+    const headerToken = rawHeader.startsWith("Bearer ") ? rawHeader.slice(7) : rawHeader;
+    const tokenStr = authHeaderRaw || headerToken;
+
+    console.log("[auth] hasFormToken=", !!authHeaderRaw, "hasHeader=", !!headerToken, "isAnon=", tokenStr === SUPA_ANON);
+
+    if (tokenStr && tokenStr !== SUPA_ANON) {
+      const { data: userRes, error: userErr } = await supa.auth.getUser(tokenStr);
+      if (userErr) console.log("[auth] getUser error:", userErr.message);
       if (userRes?.user) {
         userId = userRes.user.id;
         const userEmail = (userRes.user.email || "").toLowerCase();
+        console.log("[auth] userId=", userId, "email=", userEmail);
         if (PRIV_EMAILS.includes(userEmail)) isUnlimited = true;
         // PRO 판정: subscriptions active/trialing OR profiles.role='subscriber'
         const [{ data: subs }, { data: prof }] = await Promise.all([
@@ -95,7 +105,12 @@ serve(async (req) => {
           supa.from("profiles").select("role").eq("id", userId).maybeSingle(),
         ]);
         if ((subs && subs.length > 0) || prof?.role === "subscriber" || prof?.role === "admin") isPro = true;
+        console.log("[auth] isPro=", isPro, "isUnlimited=", isUnlimited, "role=", prof?.role);
+      } else {
+        console.log("[auth] no user resolved from token");
       }
+    } else {
+      console.log("[auth] anonymous request");
     }
 
     const clientIp = (req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "0.0.0.0").split(",")[0].trim();
