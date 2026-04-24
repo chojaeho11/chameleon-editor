@@ -158,12 +158,11 @@ window.generateAiDesign = async function() {
     btnEl.style.cursor = 'not-allowed';
     btnEl.style.opacity = '0.7';
 
-    const etaLabel = attachedImages.length > 0 ? '약 40~90초 (이미지 편집)' : '약 20~60초';
     resultEl.innerHTML = `<div class="aid-preview-loading">
         <div class="spinner"></div>
         <div style="font-size:15px; color:#6d28d9; font-weight:800; margin-bottom:6px;">AI가 디자인을 생성중입니다</div>
-        <div style="font-size:12px; color:#64748b;">${etaLabel}</div>
-        <div style="font-size:11px; color:#94a3b8; margin-top:8px;">${selectedSize.label} · ${selectedSize.dim}mm</div>
+        <div style="font-size:12px; color:#64748b;">약 2~3분 정도 소요됩니다. 잠시만 기다려 주세요.</div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:8px;">${selectedSize.label} · ${selectedSize.dim}</div>
     </div>`;
 
     try {
