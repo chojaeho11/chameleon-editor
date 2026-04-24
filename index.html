@@ -725,7 +725,7 @@ if ('caches' in window) {
 
     <!-- ★ AI 디자인 생성기 (타이틀 바로 아래) -->
     <style>
-        #aiDesignHero { max-width:1600px; margin:16px auto 20px; padding:0 16px; box-sizing:border-box; }
+        #aiDesignHero { max-width:1100px; margin:16px auto 20px; padding:0 4px; box-sizing:border-box; width:100%; }
         #aiDesignHero .aid-card {
             background:
                 radial-gradient(ellipse at 10% -10%, rgba(139,92,246,0.12) 0%, transparent 55%),
@@ -933,7 +933,7 @@ if ('caches' in window) {
 
                     <div class="aid-controls-simple">
                         <label class="aid-upload" title="첨부 이미지 (최대 4장)">
-                            📎 첨부이미지 (4장까지)
+                            첨부이미지 (4장까지)
                             <input id="aiDesignFile" type="file" accept="image/png,image/jpeg,image/webp" multiple style="display:none;"
                                 onchange="window.addAiDesignImages && window.addAiDesignImages(this.files); this.value='';">
                         </label>
