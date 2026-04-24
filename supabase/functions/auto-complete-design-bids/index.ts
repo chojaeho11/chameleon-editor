@@ -26,11 +26,12 @@ serve(async (req) => {
     const supa = createClient(SUPA_URL, SERVICE_KEY);
 
     // 1) 카드결제로 15일 이상 지난 주문들 검색 (디자인비 주문)
+    // payment_method: "카드(31)", "카드(51)" 등 접미사 포함이므로 LIKE 사용
     const cutoff = new Date(Date.now() - GRACE_DAYS * 24 * 3600 * 1000).toISOString();
     const { data: oldOrders, error: ordErr } = await supa
       .from("orders")
       .select("id, created_at, items, status, payment_method, payment_status")
-      .eq("payment_method", "카드")
+      .ilike("payment_method", "카드%")
       .lt("created_at", cutoff)
       .in("status", ["결제완료", "칼선작업", "완료됨", "발송완료", "배송", "배송완료"])
       .limit(500);
