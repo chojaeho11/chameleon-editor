@@ -77,11 +77,11 @@ window.generateAiDesign = async function() {
     btnEl.style.cursor = 'not-allowed';
     btnEl.style.opacity = '0.7';
 
-    resultEl.style.display = 'block';
     const etaLabel = attachedImages.length > 0 ? '약 30~60초 (이미지 편집)' : '약 15~40초';
-    resultEl.innerHTML = `<div style="padding:30px 20px; text-align:center; background:#fff; border:1.5px dashed #c7d2fe; border-radius:12px;">
-        <div style="font-size:14px; color:#6366f1; font-weight:700;">🎨 AI가 고품질(high) 디자인을 생성중입니다... (${etaLabel})</div>
-        <div style="margin-top:8px; font-size:12px; color:#64748b;">한글 텍스트 포함 디자인은 시간이 조금 더 걸립니다</div>
+    resultEl.innerHTML = `<div class="aid-preview-loading">
+        <div class="spinner"></div>
+        <div style="font-size:15px; color:#6d28d9; font-weight:800; margin-bottom:6px;">AI가 디자인을 생성중입니다</div>
+        <div style="font-size:12px; color:#64748b;">${etaLabel}</div>
     </div>`;
 
     try {
@@ -122,15 +122,10 @@ window.generateAiDesign = async function() {
         if (!res.ok) {
             const msg = data?.error || `오류 (${res.status})`;
             const detail = data?.detail ? `<div style="margin-top:6px; font-size:11px; color:#7f1d1d; opacity:0.8;">${escapeHtml(data.detail)}</div>` : '';
-            resultEl.innerHTML = `<div style="padding:20px; text-align:center; background:#fef2f2; border:1.5px solid #fecaca; border-radius:12px; color:#991b1b; font-size:13px; font-weight:600;">
-                ⚠️ ${escapeHtml(msg)}${detail}
+            resultEl.innerHTML = `<div style="padding:40px 24px; text-align:center; color:#991b1b;">
+                <div style="font-size:40px; margin-bottom:12px;">⚠️</div>
+                <div style="font-size:14px; font-weight:700;">${escapeHtml(msg)}</div>${detail}
             </div>`;
-            if (res.status === 429 && quotaEl) {
-                quotaEl.textContent = `오늘 한도 소진 (${data.used}/${data.limit})`;
-                quotaEl.style.background = '#fef2f2';
-                quotaEl.style.color = '#dc2626';
-                quotaEl.style.borderColor = '#fecaca';
-            }
             return;
         }
 
@@ -143,19 +138,25 @@ window.generateAiDesign = async function() {
             quotaEl.style.borderColor = '#a7f3d0';
         }
 
-        resultEl.innerHTML = `<div style="padding:14px; background:#fff; border:1.5px solid #c7d2fe; border-radius:12px;">
-            <img src="${imageUrl}" alt="AI 생성 이미지" style="width:100%; max-width:720px; display:block; margin:0 auto; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.08);">
-            <div style="display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
-                <a href="${imageUrl}" download="ai-design-${Date.now()}.png" target="_blank" style="padding:10px 18px; background:#6366f1; color:#fff; border-radius:10px; font-size:13px; font-weight:800; text-decoration:none; cursor:pointer;">💾 다운로드</a>
-                <button type="button" onclick="window.useAsAiDesignInput && window.useAsAiDesignInput('${imageUrl}')" style="padding:10px 18px; background:#8b5cf6; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">🎨 이 이미지로 재편집</button>
-                <button type="button" onclick="window.sendAiDesignToEditor && window.sendAiDesignToEditor('${imageUrl}')" style="padding:10px 18px; background:#10b981; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">✏️ 에디터로 보내기</button>
-                <button type="button" onclick="document.getElementById('aiDesignResult').style.display='none';document.getElementById('aiDesignPrompt').focus()" style="padding:10px 18px; background:#fff; color:#6366f1; border:1.5px solid #c7d2fe; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">🔄 닫기</button>
+        resultEl.innerHTML = `
+            <div class="aid-preview-img-wrap">
+                <img src="${imageUrl}" alt="AI 생성 이미지">
             </div>
-        </div>`;
+            <div class="aid-preview-actions">
+                <button type="button" class="aid-act-primary" onclick="window.sendAiDesignToEditor && window.sendAiDesignToEditor('${imageUrl}')">
+                    ✏️ 에디터로 추가편집
+                </button>
+                <a href="${imageUrl}" download="ai-design-${Date.now()}.png" target="_blank" class="aid-act-secondary">
+                    💾 고화질 다운로드
+                </a>
+            </div>
+        `;
     } catch (e) {
         console.error('AI design error:', e);
-        resultEl.innerHTML = `<div style="padding:20px; text-align:center; background:#fef2f2; border:1.5px solid #fecaca; border-radius:12px; color:#991b1b; font-size:13px;">
-            ⚠️ 네트워크 오류: ${escapeHtml(String(e.message || e))}
+        resultEl.innerHTML = `<div style="padding:40px 24px; text-align:center; color:#991b1b;">
+            <div style="font-size:40px; margin-bottom:12px;">⚠️</div>
+            <div style="font-size:14px; font-weight:700;">네트워크 오류</div>
+            <div style="margin-top:6px; font-size:12px;">${escapeHtml(String(e.message || e))}</div>
         </div>`;
     } finally {
         btnEl.disabled = false;

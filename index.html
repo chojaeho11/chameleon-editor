@@ -745,6 +745,9 @@ if ('caches' in window) {
             mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
         }
+        #aiDesignHero .aid-layout { display:grid; grid-template-columns: minmax(0, 1fr) 500px; gap:24px; align-items:stretch; }
+        #aiDesignHero .aid-left { display:flex; flex-direction:column; min-width:0; }
+        #aiDesignHero .aid-right { min-width:0; }
         #aiDesignHero .aid-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
         #aiDesignHero .aid-title {
             font-size:22px; font-weight:900; letter-spacing:-0.3px;
@@ -773,7 +776,7 @@ if ('caches' in window) {
             display:block;
         }
         #aiDesignHero .aid-input:focus { border-color:#8b5cf6; box-shadow:0 0 0 4px rgba(139,92,246,0.12); background:#fff; }
-        #aiDesignHero .aid-controls { display:grid; grid-template-columns: 140px 160px 1fr; gap:10px; align-items:stretch; margin-top:12px; }
+        #aiDesignHero .aid-controls { display:grid; grid-template-columns: 120px 140px 1fr; gap:10px; align-items:stretch; margin-top:12px; }
         #aiDesignHero .aid-upload {
             display:inline-flex; align-items:center; justify-content:center;
             background:rgba(255,255,255,0.9); border:1.5px solid rgba(199,210,254,0.7);
@@ -809,6 +812,55 @@ if ('caches' in window) {
         #aiDesignHero .aid-examples { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
         #aiDesignHero .aid-chip { font-size:12px; padding:6px 14px; border-radius:999px; background:rgba(255,255,255,0.7); border:1px solid rgba(199,210,254,0.7); color:#4f46e5; cursor:pointer; transition:all .15s; font-weight:600; }
         #aiDesignHero .aid-chip:hover { background:#eef2ff; border-color:#8b5cf6; color:#6d28d9; transform:translateY(-1px); }
+        /* 우측 결과 패널 */
+        #aiDesignHero .aid-preview {
+            background:linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(238,242,255,0.6) 100%);
+            border:1.5px dashed rgba(139,92,246,0.4);
+            border-radius:18px;
+            min-height:480px;
+            display:flex; flex-direction:column;
+            position:relative; overflow:hidden;
+        }
+        #aiDesignHero .aid-preview-empty {
+            flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding:40px 24px; text-align:center; color:#8b5cf6;
+        }
+        #aiDesignHero .aid-preview-empty .emoji { font-size:56px; margin-bottom:12px; filter:drop-shadow(0 4px 12px rgba(139,92,246,0.25)); }
+        #aiDesignHero .aid-preview-empty .main { font-size:15px; font-weight:800; color:#6d28d9; margin-bottom:4px; }
+        #aiDesignHero .aid-preview-empty .sub { font-size:12px; color:#64748b; line-height:1.6; }
+        #aiDesignHero .aid-preview-loading {
+            flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding:40px 24px; text-align:center;
+        }
+        #aiDesignHero .aid-preview-loading .spinner {
+            width:56px; height:56px; border-radius:50%;
+            border:4px solid rgba(139,92,246,0.2); border-top-color:#8b5cf6;
+            animation: aidSpin 0.9s linear infinite; margin-bottom:16px;
+        }
+        @keyframes aidSpin { to { transform:rotate(360deg); } }
+        #aiDesignHero .aid-preview-img-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:18px; background:#fff; border-radius:16px 16px 0 0; }
+        #aiDesignHero .aid-preview-img-wrap img { max-width:100%; max-height:440px; display:block; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.08); }
+        #aiDesignHero .aid-preview-actions { display:grid; grid-template-columns: 1fr 1fr; gap:8px; padding:14px 16px; background:#fff; border-top:1px solid #eef2ff; border-radius:0 0 16px 16px; }
+        #aiDesignHero .aid-act-primary {
+            padding:14px 16px; background:linear-gradient(135deg,#10b981 0%, #059669 100%);
+            color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:900;
+            cursor:pointer; transition:all .18s; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+            text-decoration:none; box-shadow:0 4px 12px -4px rgba(16,185,129,0.5);
+        }
+        #aiDesignHero .aid-act-primary:hover { transform:translateY(-1px); box-shadow:0 8px 18px -4px rgba(16,185,129,0.55); }
+        #aiDesignHero .aid-act-secondary {
+            padding:14px 16px; background:linear-gradient(135deg,#6366f1 0%, #4f46e5 100%);
+            color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:900;
+            cursor:pointer; transition:all .18s; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+            text-decoration:none; box-shadow:0 4px 12px -4px rgba(99,102,241,0.5);
+        }
+        #aiDesignHero .aid-act-secondary:hover { transform:translateY(-1px); box-shadow:0 8px 18px -4px rgba(99,102,241,0.55); }
+        /* 모바일: 세로 스택 */
+        @media (max-width:900px) {
+            #aiDesignHero .aid-layout { grid-template-columns: 1fr; gap:16px; }
+            #aiDesignHero .aid-preview { min-height:auto; }
+            #aiDesignHero .aid-preview-img-wrap img { max-height:360px; }
+        }
         @media (max-width:640px) {
             #aiDesignHero { margin:8px auto 12px; padding:0 10px; }
             #aiDesignHero .aid-card { padding:16px 16px; border-radius:16px; }
@@ -819,6 +871,7 @@ if ('caches' in window) {
             #aiDesignHero .aid-controls { grid-template-columns: 1fr 1fr 1.4fr; gap:8px; margin-top:10px; }
             #aiDesignHero .aid-upload, #aiDesignHero .aid-size, #aiDesignHero .aid-btn { min-height:46px; font-size:12px; padding:0 8px; }
             #aiDesignHero .aid-examples { display:none; }
+            #aiDesignHero .aid-preview-actions { grid-template-columns:1fr; }
         }
     </style>
     <div id="aiDesignHero">
@@ -829,33 +882,45 @@ if ('caches' in window) {
                 <span class="aid-hint"><span class="dot"></span> GPT-5 · 한글 지원 · 이미지 편집</span>
             </div>
             <div class="aid-lead">이제 AI가 <b>가벽·배너·리플릿·전단지·명함</b> 등 모든 디자인을 완벽하게 해드립니다.</div>
-            <textarea id="aiDesignPrompt" rows="2" class="aid-input"
-                placeholder="어떤 디자인이 필요하신가요?"
-                oninput="this.style.height='auto';this.style.height=Math.min(160,this.scrollHeight)+'px'"></textarea>
-            <div class="aid-controls">
-                <label class="aid-upload" title="이미지 첨부 (최대 4장)">
-                    이미지
-                    <input id="aiDesignFile" type="file" accept="image/png,image/jpeg,image/webp" multiple style="display:none;"
-                        onchange="window.addAiDesignImages && window.addAiDesignImages(this.files); this.value='';">
-                </label>
-                <select id="aiDesignSize" class="aid-size" title="출력 비율">
-                    <option value="1024x1024">⬜ 정사각형</option>
-                    <option value="1024x1536">📱 세로</option>
-                    <option value="1536x1024">🖥️ 가로</option>
-                </select>
-                <button id="aiDesignBtn" class="aid-btn" onclick="window.generateAiDesign && window.generateAiDesign()">
-                    🎨 생성하기
-                </button>
+            <div class="aid-layout">
+                <div class="aid-left">
+                    <textarea id="aiDesignPrompt" rows="2" class="aid-input"
+                        placeholder="어떤 디자인이 필요하신가요?"
+                        oninput="this.style.height='auto';this.style.height=Math.min(160,this.scrollHeight)+'px'"></textarea>
+                    <div class="aid-controls">
+                        <label class="aid-upload" title="이미지 첨부 (최대 4장)">
+                            이미지
+                            <input id="aiDesignFile" type="file" accept="image/png,image/jpeg,image/webp" multiple style="display:none;"
+                                onchange="window.addAiDesignImages && window.addAiDesignImages(this.files); this.value='';">
+                        </label>
+                        <select id="aiDesignSize" class="aid-size" title="출력 비율">
+                            <option value="1024x1024">⬜ 정사각형</option>
+                            <option value="1024x1536">📱 세로</option>
+                            <option value="1536x1024">🖥️ 가로</option>
+                        </select>
+                        <button id="aiDesignBtn" class="aid-btn" onclick="window.generateAiDesign && window.generateAiDesign()">
+                            🎨 생성하기
+                        </button>
+                    </div>
+                    <div id="aiDesignThumbs" class="aid-thumbs"></div>
+                    <div class="aid-examples">
+                        <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='카멜레온프린팅 3단 리플릿, 녹색 톤, CHAMELEON PRINTING 헤더, 서비스 소개 4칸, 연락처'; document.getElementById('aiDesignPrompt').focus();">🌿 3단 리플릿</span>
+                        <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='카페 오픈 이벤트 전단지, 파스텔톤, 커피잔 일러스트, 주소와 전화번호 하단 배치'; document.getElementById('aiDesignPrompt').focus();">☕ 카페 전단지</span>
+                        <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='SALE 50%할인 프로모션 배너, 강렬한 빨강 배경, 큰 숫자 강조'; document.getElementById('aiDesignPrompt').focus();">🔥 할인 배너</span>
+                        <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='미니멀 기업 명함 디자인, 네이비 블루, 로고 좌측 상단, 정보는 우측 정렬'; document.getElementById('aiDesignPrompt').focus();">💼 명함</span>
+                        <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='전시부스 현수막, 대형 인쇄용, 제품 사진 좌측 + 브랜드명 중앙'; document.getElementById('aiDesignPrompt').focus();">🎪 전시 현수막</span>
+                    </div>
+                </div>
+                <div class="aid-right">
+                    <div id="aiDesignResult" class="aid-preview">
+                        <div class="aid-preview-empty">
+                            <div class="emoji">🎨</div>
+                            <div class="main">여기에 생성된 디자인이 표시됩니다</div>
+                            <div class="sub">왼쪽에 설명을 입력하고 생성 버튼을 누르면<br>약 30~60초 뒤 AI가 완성된 디자인을 보여줍니다</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="aiDesignThumbs" class="aid-thumbs"></div>
-            <div class="aid-examples">
-                <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='카멜레온프린팅 3단 리플릿, 녹색 톤, CHAMELEON PRINTING 헤더, 서비스 소개 4칸, 연락처'; document.getElementById('aiDesignPrompt').focus();">🌿 3단 리플릿</span>
-                <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='카페 오픈 이벤트 전단지, 파스텔톤, 커피잔 일러스트, 주소와 전화번호 하단 배치'; document.getElementById('aiDesignPrompt').focus();">☕ 카페 전단지</span>
-                <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='SALE 50%할인 프로모션 배너, 강렬한 빨강 배경, 큰 숫자 강조'; document.getElementById('aiDesignPrompt').focus();">🔥 할인 배너</span>
-                <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='미니멀 기업 명함 디자인, 네이비 블루, 로고 좌측 상단, 정보는 우측 정렬'; document.getElementById('aiDesignPrompt').focus();">💼 명함</span>
-                <span class="aid-chip" onclick="document.getElementById('aiDesignPrompt').value='전시부스 현수막, 대형 인쇄용, 제품 사진 좌측 + 브랜드명 중앙'; document.getElementById('aiDesignPrompt').focus();">🎪 전시 현수막</span>
-            </div>
-            <div id="aiDesignResult" style="display:none; margin-top:16px;"></div>
         </div>
     </div>
 
@@ -8056,7 +8121,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=7').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=8').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
