@@ -58,11 +58,22 @@ function renderSizeGrid() {
 function renderColorGrid() {
     const grid = document.getElementById('aiColorGrid');
     if (!grid) return;
-    grid.innerHTML = COLOR_PRESETS.map(c => {
+    let html = COLOR_PRESETS.map(c => {
         const sel = selectedColor.key === c.key ? 'selected' : '';
         const bg = c.hex.startsWith('linear') ? `background:${c.hex};` : `background:${c.hex};`;
         return `<div class="aid-color-swatch ${sel}" title="${c.key}" style="${bg}" onclick="window.selectAiColor('${c.key}')"></div>`;
     }).join('');
+    // 수동 색상 선택기 — 마지막 칸
+    const customSel = selectedColor.key === 'custom' ? 'selected' : '';
+    const customBg = selectedColor.key === 'custom' ? selectedColor.hex : '#ffffff';
+    html += `<div class="aid-color-swatch aid-color-custom ${customSel}" title="직접 선택"
+        style="background:conic-gradient(from 180deg, red, yellow, lime, cyan, blue, magenta, red); position:relative;"
+        onclick="document.getElementById('aiColorPicker').click()">
+        <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; font-weight:900; text-shadow:0 0 4px rgba(0,0,0,0.6);">+</span>
+        ${customSel ? `<span style="position:absolute; inset:0; background:${customBg}; border-radius:inherit;"></span><span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; text-shadow:0 1px 3px rgba(0,0,0,0.5);">✓</span>` : ''}
+        <input id="aiColorPicker" type="color" value="${customSel ? customBg : '#8b5cf6'}" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="window.selectCustomAiColor(this.value)">
+    </div>`;
+    grid.innerHTML = html;
 }
 
 window.selectAiSize = function(key) {
@@ -72,6 +83,21 @@ window.selectAiSize = function(key) {
 window.selectAiColor = function(key) {
     const found = COLOR_PRESETS.find(c => c.key === key);
     if (found) { selectedColor = found; renderColorGrid(); }
+};
+// 수동 색상 선택
+window.selectCustomAiColor = function(hex) {
+    if (!hex) return;
+    // 간단한 hex → 영어 묘사 (Lightness 기반)
+    const rgb = hex.match(/^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+    let desc = 'custom color ' + hex;
+    if (rgb) {
+        const r = parseInt(rgb[1],16), g = parseInt(rgb[2],16), b = parseInt(rgb[3],16);
+        const max = Math.max(r,g,b), min = Math.min(r,g,b);
+        const l = (max+min) / 510;
+        desc = `${l>0.85?'very light ':l<0.2?'deep dark ':l<0.45?'rich ':''}${hex} color`;
+    }
+    selectedColor = { key:'custom', hex, en: desc };
+    renderColorGrid();
 };
 
 function relocateAiPanel() {
