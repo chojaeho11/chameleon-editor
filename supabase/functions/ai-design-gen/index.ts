@@ -149,9 +149,9 @@ serve(async (req) => {
 4) 그 다음 image_generation 도구를 호출해 이미지를 생성합니다. 도구에 전달하는 프롬프트에는 모든 한글 텍스트를 정확히 명시하고, 텍스트가 선명하게 렌더링되도록 구체적으로 지시하세요 (예: "큰 볼드 한글 제목 '허니콤보드 50% 할인'을 상단 중앙에 배치, Noto Sans KR 스타일의 두꺼운 글씨").
 5) 상업 인쇄 기준의 고품질 결과물을 목표로 합니다. 배치는 균형 있게, 여백은 넉넉하게.`;
 
-    // 작동 확인된 gpt-5.1을 우선 사용. 더 높은 티어(5.5/5.4-pro/5.4)는 API 공개 후 활성화 예정.
-    // 각 후보에 짧은 preflight 타임아웃을 걸어 hang 모델로 인한 Gateway 504 방지.
-    const MODEL_CANDIDATES = ["gpt-5.1", "gpt-5"];
+    // gpt-5.4: Frontier 모델 (API 공식 제공). 폴백으로 5.1 / 5.
+    // 각 후보에 90초 타임아웃 — 100s Gateway 보호.
+    const MODEL_CANDIDATES = ["gpt-5.4", "gpt-5.1", "gpt-5"];
     let openaiRes: Response | null = null;
     let lastErrText = "";
     let usedModel = "";
