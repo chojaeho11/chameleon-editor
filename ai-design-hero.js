@@ -137,7 +137,7 @@ window.generateAiDesign = async function() {
         const { imageUrl, used, limit, isPro, remaining } = data;
 
         if (quotaEl) {
-            quotaEl.textContent = `${isPro ? 'PRO' : '무료'} · ${used}/${limit} 사용 (남음 ${remaining})`;
+            quotaEl.textContent = '✓ 생성 완료';
             quotaEl.style.background = '#ecfdf5';
             quotaEl.style.color = '#065f46';
             quotaEl.style.borderColor = '#a7f3d0';

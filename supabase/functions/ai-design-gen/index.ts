@@ -116,41 +116,9 @@ serve(async (req) => {
     const clientIp = (req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "0.0.0.0").split(",")[0].trim();
     const ipHash = await hashIp(clientIp);
 
-    // ── 일일 사용량 체크 (KST 기준 24시간 롤링) ──
-    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    let usageCount = 0;
-    if (userId) {
-      const { count } = await supa.from("ai_design_usage")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("created_at", since);
-      usageCount = count || 0;
-    } else {
-      const { count } = await supa.from("ai_design_usage")
-        .select("*", { count: "exact", head: true })
-        .eq("ip_hash", ipHash)
-        .is("user_id", null)
-        .gte("created_at", since);
-      usageCount = count || 0;
-    }
-
-    const dailyLimit = isUnlimited ? 99999 : (isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT);
-    if (!isUnlimited && usageCount >= dailyLimit) {
-      return new Response(JSON.stringify({
-        error: `오늘 사용 한도(${dailyLimit}회)에 도달했습니다.${isPro ? "" : " PRO 구독 시 50회까지 가능합니다."}`,
-        limit: dailyLimit,
-        used: usageCount,
-        isPro,
-        authDebug: {
-          hasToken: !!tokenStr,
-          tokenLen: tokenStr ? tokenStr.length : 0,
-          isAnon: tokenStr === SUPA_ANON,
-          userIdResolved: !!userId,
-        },
-      }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
+    // ── 일일 한도 정책 제거됨 (로깅만 유지) ──
+    const usageCount = 0;
+    const dailyLimit = 99999;
 
     // ── OpenAI Responses API + image_generation 도구 (ChatGPT 웹과 동일 경로) ──
     // GPT-5가 업로드 이미지를 이해하고 프롬프트 요구사항을 반영한 새 이미지 생성
