@@ -149,36 +149,49 @@ serve(async (req) => {
 4) 그 다음 image_generation 도구를 호출해 이미지를 생성합니다. 도구에 전달하는 프롬프트에는 모든 한글 텍스트를 정확히 명시하고, 텍스트가 선명하게 렌더링되도록 구체적으로 지시하세요 (예: "큰 볼드 한글 제목 '허니콤보드 50% 할인'을 상단 중앙에 배치, Noto Sans KR 스타일의 두꺼운 글씨").
 5) 상업 인쇄 기준의 고품질 결과물을 목표로 합니다. 배치는 균형 있게, 여백은 넉넉하게.`;
 
-    const responsesBody: any = {
-      model: "gpt-5",
-      instructions: systemInstructions,
-      input: [{ role: "user", content: userContent }],
-      reasoning: { effort: "medium" },
-      tools: [{
-        type: "image_generation",
-        size: finalSize,
-        quality: "high",
-        output_format: "png",
-      }],
-      tool_choice: { type: "image_generation" },
-    };
-
-    const openaiRes = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(responsesBody),
-    });
-
-    if (!openaiRes.ok) {
-      const errText = await openaiRes.text();
-      console.error("OpenAI Responses error:", openaiRes.status, errText);
-      return new Response(JSON.stringify({ error: `이미지 생성 실패: ${openaiRes.status}`, detail: errText.slice(0, 800) }), {
+    // 최신 모델 우선 시도 (gpt-5.5 → gpt-5 순서로 폴백)
+    const MODEL_CANDIDATES = ["gpt-5.5", "gpt-5"];
+    let openaiRes: Response | null = null;
+    let lastErrText = "";
+    let usedModel = "";
+    for (const m of MODEL_CANDIDATES) {
+      const responsesBody: any = {
+        model: m,
+        instructions: systemInstructions,
+        input: [{ role: "user", content: userContent }],
+        reasoning: { effort: "high" },
+        tools: [{
+          type: "image_generation",
+          size: finalSize,
+          quality: "high",
+          output_format: "png",
+        }],
+        tool_choice: { type: "image_generation" },
+      };
+      const r = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENAI_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(responsesBody),
+      });
+      if (r.ok) { openaiRes = r; usedModel = m; break; }
+      lastErrText = await r.text();
+      console.error(`[${m}] ${r.status}: ${lastErrText.slice(0, 300)}`);
+      // 모델 미존재(404) 또는 권한 없음(403)이면 다음 후보로, 그 외는 즉시 실패
+      if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
+        return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800) }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+    if (!openaiRes) {
+      return new Response(JSON.stringify({ error: "사용 가능한 모델 없음", detail: lastErrText.slice(0, 800) }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+    console.log("[ai] used model:", usedModel);
 
     const aiData = await openaiRes.json();
     // output 배열에서 image_generation_call 결과 추출
