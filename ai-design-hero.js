@@ -264,10 +264,68 @@ window.sendAiDesignToEditor = function(imageUrl, sizeKey, widthMm, heightMm) {
             heightMm: heightMm || 0,
         }));
     } catch(e) {}
+
+    // 선택된 사이즈로 직접 에디터 열기 ('custom' 키 + mm 단위)
+    if (typeof window.startEditorDirect === 'function' && widthMm && heightMm) {
+        Promise.resolve(window.startEditorDirect('custom', widthMm, heightMm)).then(() => {
+            injectAiImageToCanvas();
+        }).catch(e => { console.warn('editor open failed:', e); });
+        return;
+    }
+    // 폴백: self-design 버튼 클릭
     const selfDesignBtn = document.querySelector('[data-i18n="self_design"], .adv-ext-btn');
-    if (selfDesignBtn) { selfDesignBtn.click(); return; }
-    alert('셀프디자인 버튼을 눌러 에디터로 이동해주세요. 배경 이미지와 캔버스 크기가 자동 적용됩니다.');
+    if (selfDesignBtn) { selfDesignBtn.click(); setTimeout(injectAiImageToCanvas, 800); return; }
+    alert('에디터를 열 수 없습니다.');
 };
+
+// 에디터 캔버스가 준비되면 AI 생성 이미지를 추가
+function injectAiImageToCanvas() {
+    let retries = 0;
+    const attempt = () => {
+        const canvas = window.canvas;
+        if (canvas && typeof fabric !== 'undefined' && fabric.Image) {
+            const imgUrl = sessionStorage.getItem('ai_design_bg_image');
+            if (!imgUrl) return;
+            fabric.Image.fromURL(imgUrl, (img) => {
+                if (!img) { console.warn('AI image load failed'); return; }
+                const cw = canvas.width || 1000, ch = canvas.height || 1000;
+                const iw = img.width || 1024, ih = img.height || 1024;
+                const scale = Math.min(cw / iw, ch / ih);
+                img.set({
+                    left: (cw - iw * scale) / 2,
+                    top: (ch - ih * scale) / 2,
+                    scaleX: scale, scaleY: scale,
+                    selectable: true, hasControls: true,
+                });
+                canvas.add(img);
+                canvas.setActiveObject(img);
+                canvas.requestRenderAll();
+                try { sessionStorage.removeItem('ai_design_bg_image'); } catch(e) {}
+            }, { crossOrigin: 'anonymous' });
+        } else if (retries++ < 40) {
+            setTimeout(attempt, 250);
+        }
+    };
+    setTimeout(attempt, 600);
+}
+window._injectAiImageToCanvas = injectAiImageToCanvas;
+
+// 로그인 리디렉션 등으로 페이지가 재로딩된 뒤에도 AI 이미지가 보존돼 있으면 자동 주입
+(function watchPendingAiImage(){
+    try {
+        if (!sessionStorage.getItem('ai_design_bg_image')) return;
+    } catch(e) { return; }
+    const editorOpen = () => {
+        const me = document.getElementById('mainEditor');
+        if (me && me.style.display === 'flex') return true;
+        if (document.body && document.body.classList.contains('editor-active')) return true;
+        return false;
+    };
+    const iv = setInterval(() => {
+        if (editorOpen() && window.canvas) { clearInterval(iv); injectAiImageToCanvas(); }
+    }, 400);
+    setTimeout(() => clearInterval(iv), 45000);
+})();
 
 function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
