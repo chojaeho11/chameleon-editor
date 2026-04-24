@@ -1,7 +1,25 @@
 import { sb } from './config.js?v=292';
 
 const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const FN_URL = SUPABASE_URL + '/functions/v1/ai-design-gen';
+
+// 타이틀 바로 아래로 패널을 이동 (CSS 순서 이슈 방지)
+function relocateAiPanel() {
+    const panel = document.getElementById('aiDesignHero');
+    const hero = document.querySelector('#startScreen .hero-section') || document.querySelector('.hero-section');
+    if (panel && hero && hero.parentNode && panel.previousElementSibling !== hero) {
+        hero.parentNode.insertBefore(panel, hero.nextSibling);
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', relocateAiPanel);
+} else {
+    relocateAiPanel();
+}
+// 다른 스크립트가 나중에 DOM을 재구성할 수 있으므로 몇 번 재시도
+setTimeout(relocateAiPanel, 300);
+setTimeout(relocateAiPanel, 1500);
 
 window.generateAiDesign = async function() {
     const promptEl = document.getElementById('aiDesignPrompt');
@@ -38,8 +56,11 @@ window.generateAiDesign = async function() {
             if (session?.access_token) authHeader = 'Bearer ' + session.access_token;
         } catch(e) {}
 
-        const headers = { 'Content-Type': 'application/json' };
-        if (authHeader) headers['Authorization'] = authHeader;
+        const headers = {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON,
+            'Authorization': authHeader || ('Bearer ' + SUPABASE_ANON),
+        };
 
         const res = await fetch(FN_URL, {
             method: 'POST',

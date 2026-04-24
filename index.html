@@ -724,25 +724,35 @@ if ('caches' in window) {
     </div>
 
     <!-- ★ AI 디자인 생성기 (타이틀 바로 아래) -->
-    <div id="aiDesignHero" style="max-width:900px; margin:6px auto 14px; padding:0 10px; box-sizing:border-box;">
-        <div style="background:linear-gradient(135deg,#eff6ff 0%,#f5f3ff 100%); border:1.5px solid #c7d2fe; border-radius:16px; padding:18px 20px; box-shadow:0 4px 16px rgba(99,102,241,0.08);">
+    <style>
+        #aiDesignHero .aid-row { display:flex; gap:8px; align-items:stretch; flex-wrap:nowrap; }
+        #aiDesignHero .aid-input { flex:1; min-width:0; padding:12px 14px; font-size:14px; border:1.5px solid #c7d2fe; border-radius:12px; resize:none; outline:none; background:#fff; color:#1e293b; line-height:1.5; font-family:inherit; }
+        #aiDesignHero .aid-size { padding:0 10px; font-size:13px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; color:#1e293b; cursor:pointer; font-weight:700; min-width:80px; }
+        #aiDesignHero .aid-btn { padding:0 22px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer; white-space:nowrap; box-shadow:0 4px 12px rgba(99,102,241,0.35); min-height:46px; }
+        @media (max-width:640px) {
+            #aiDesignHero .aid-row { flex-wrap:wrap; }
+            #aiDesignHero .aid-input { flex-basis:100%; }
+            #aiDesignHero .aid-size { flex:1; min-width:0; padding:10px 8px; }
+            #aiDesignHero .aid-btn { flex:2; padding:10px 8px; }
+        }
+    </style>
+    <div id="aiDesignHero" style="max-width:900px; margin:8px auto 14px; padding:0 10px; box-sizing:border-box;">
+        <div style="background:linear-gradient(135deg,#eff6ff 0%,#f5f3ff 100%); border:1.5px solid #c7d2fe; border-radius:16px; padding:16px 18px; box-shadow:0 4px 16px rgba(99,102,241,0.08);">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
-                <span style="font-size:18px; font-weight:900; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">
+                <span style="font-size:17px; font-weight:900; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">
                     ✨ AI 디자인 생성
                 </span>
                 <span id="aiDesignQuota" style="font-size:11px; color:#6366f1; font-weight:700; background:#fff; padding:3px 10px; border-radius:999px; border:1px solid #c7d2fe;">일 3회 무료 · PRO 50회</span>
             </div>
-            <div style="display:flex; gap:8px; align-items:stretch;">
-                <textarea id="aiDesignPrompt" rows="1" placeholder="예: 카페 오픈 이벤트 전단지, 파스텔톤, 커피잔 일러스트, 심플한 레이아웃"
-                    style="flex:1; min-width:0; padding:12px 14px; font-size:14px; border:1.5px solid #c7d2fe; border-radius:12px; resize:none; outline:none; background:#fff; color:#1e293b; line-height:1.5; font-family:inherit;"
+            <div class="aid-row">
+                <textarea id="aiDesignPrompt" rows="1" class="aid-input" placeholder="예: 카페 오픈 이벤트 전단지, 파스텔톤, 커피잔 일러스트"
                     oninput="this.style.height='auto';this.style.height=Math.min(120,this.scrollHeight)+'px'"></textarea>
-                <select id="aiDesignSize" style="padding:0 12px; font-size:13px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; color:#1e293b; cursor:pointer; font-weight:700;">
+                <select id="aiDesignSize" class="aid-size">
                     <option value="1024x1024">정사각형</option>
                     <option value="1024x1536">세로</option>
                     <option value="1536x1024">가로</option>
                 </select>
-                <button id="aiDesignBtn" onclick="window.generateAiDesign && window.generateAiDesign()"
-                    style="padding:0 22px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer; white-space:nowrap; box-shadow:0 4px 12px rgba(99,102,241,0.35); transition:transform .15s;">
+                <button id="aiDesignBtn" class="aid-btn" onclick="window.generateAiDesign && window.generateAiDesign()">
                     🎨 생성
                 </button>
             </div>
