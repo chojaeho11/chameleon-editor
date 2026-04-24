@@ -422,6 +422,41 @@ export function initExport() {
         if (window.showToast) window.showToast('다운로드 버튼을 찾을 수 없습니다.', 'warn');
     };
 
+    // ★ 스포이드 — 선택된 도형/글씨의 fill을 브라우저 EyeDropper API로 선택한 색으로 변경
+    window.activateEyedropper = async function() {
+        const canvas = window.canvas;
+        if (!canvas) return;
+        const obj = canvas.getActiveObject();
+        if (!obj) {
+            if (window.showToast) window.showToast('먼저 도형이나 글씨를 선택해주세요.', 'warn');
+            else alert('먼저 도형이나 글씨를 선택해주세요.');
+            return;
+        }
+        if (typeof window.EyeDropper !== 'function') {
+            alert('브라우저가 스포이드를 지원하지 않습니다. Chrome/Edge 95+ 를 사용해주세요.');
+            return;
+        }
+        try {
+            const picker = new window.EyeDropper();
+            const result = await picker.open();
+            const color = result && result.sRGBHex;
+            if (!color) return;
+            const t = obj.type || '';
+            if (t.indexOf('text') !== -1 || t === 'i-text' || t === 'textbox') {
+                obj.set('fill', color);
+            } else if (t === 'group' && Array.isArray(obj._objects)) {
+                obj._objects.forEach(o => { try { o.set('fill', color); } catch(e){} });
+            } else {
+                obj.set('fill', color);
+            }
+            canvas.requestRenderAll();
+            if (typeof window.savePageState === 'function') window.savePageState();
+            if (window.showToast) window.showToast(`색상 적용: ${color}`, 'success');
+        } catch(e) {
+            // 사용자 취소(esc) 등 — 무시
+        }
+    };
+
     // 1. SVG 다운로드
     const btnSVG = document.getElementById("btnDownloadSVG");
     if (btnSVG) {
