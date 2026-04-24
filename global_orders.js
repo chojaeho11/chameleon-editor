@@ -1,6 +1,22 @@
 import { sb } from "./global_config.js?v=294";
 import { showLoading } from "./global_common.js?v=294";
 
+// [권한] 특수 관리자 (주문취소 복구 + 매니저 변경 허용)
+const _PRIV_EMAILS = ['doubleu202201@gmail.com', 'korea900as@gmail.com'];
+let _isPrivileged = false;
+(async () => {
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        const email = (session?.user?.email || '').toLowerCase();
+        _isPrivileged = _PRIV_EMAILS.includes(email);
+        if (_isPrivileged) {
+            window._isPrivilegedAdmin = true;
+            console.log('[privileged] admin override enabled for', email);
+        }
+    } catch(e) {}
+})();
+window.isPrivilegedAdmin = () => _isPrivileged;
+
 // [추천인] 무통장입금 확인 시 추천인 적립
 async function creditReferralBonus(orderId) {
     try {
@@ -1695,8 +1711,8 @@ function createStaffSelectHTML(orderId, role, selectedId) {
         opts += `<option value="${s.id}" ${isSelected ? 'selected' : ''}>${s.name}</option>`;
     });
 
-    // ★ 매니저가 이미 배정된 경우 변경 불가 (잠금)
-    const isLocked = role === 'manager' && selectedId;
+    // ★ 매니저가 이미 배정된 경우 변경 불가 (잠금) — 특수 관리자는 예외
+    const isLocked = role === 'manager' && selectedId && !_isPrivileged;
     const disabledAttr = isLocked ? 'disabled' : '';
     const lockStyle = isLocked ? 'cursor:not-allowed;opacity:0.85;' : '';
 
@@ -1754,9 +1770,11 @@ window.updateActionButtons = () => {
     } else if (s === '취소요청') {
         div.innerHTML = `<button class="btn btn-success" onclick="approveCancelSelected()" style="font-weight:bold;">💳 카드 취소승인</button><button class="btn" onclick="completeCashRefundSelected()" style="font-weight:bold;background:#d97706;color:white;">💰 현금 환불완료</button><button class="btn btn-outline" onclick="rejectCancelSelected()" style="font-weight:bold;">🔙 취소거절</button>`;
     } else if (s === '주문취소') {
-        div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+        const restoreBtn = _isPrivileged ? `<button class="btn btn-success" onclick="restoreCanceledSelected()" style="font-weight:bold;background:#10b981;color:#fff;">🔄 주문 복구</button>` : '';
+        div.innerHTML = restoreBtn + `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '취소됨') {
-        div.innerHTML = `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
+        const restoreBtn = _isPrivileged ? `<button class="btn btn-success" onclick="restoreCanceledSelected()" style="font-weight:bold;background:#10b981;color:#fff;">🔄 주문 복구</button>` : '';
+        div.innerHTML = restoreBtn + `<button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else if (s === '환불대기') {
         div.innerHTML = `<button class="btn btn-success" onclick="approveRefundHQ()" style="font-weight:bold;">✅ 본사승인 (카드=PG환불, 무통장=승인만)</button><button class="btn" onclick="completeRefundSelected()" style="font-weight:bold;background:#2563eb;color:white;">💰 환불완료 (경리팀 송금 후)</button><button class="btn btn-outline" onclick="rejectRefundSelected()" style="font-weight:bold;">🔙 환불거절</button>`;
     } else if (s === '환불실패') {
@@ -1973,6 +1991,36 @@ window.adminCancelSelected = async () => {
     if (failCount > 0) resultMsg += `, 환불실패 ${failCount}건 (환불실패 탭에서 재시도)`;
     showToast(resultMsg, failCount > 0 ? 'warn' : 'success');
     updateCancelReqBadge();
+    loadOrders();
+};
+
+// [주문 복구] 취소된 주문을 입금완료 상태로 복구 (특수 관리자 전용)
+window.restoreCanceledSelected = async () => {
+    if (!_isPrivileged) { showToast("권한이 없습니다.", "error"); return; }
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
+    const opt = prompt(`${ids.length}건의 주문을 복구합니다.\n복구 상태 선택:\n1 = 입금완료 (status=결제완료, payment=입금완료)\n2 = 결제완료 (status=결제완료, payment=결제완료)\n3 = 칼선작업`, '1');
+    if (!opt) return;
+    let newStatus, newPayment;
+    if (opt === '1') { newStatus = '결제완료'; newPayment = '입금완료'; }
+    else if (opt === '2') { newStatus = '결제완료'; newPayment = '결제완료'; }
+    else if (opt === '3') { newStatus = '칼선작업'; newPayment = '입금완료'; }
+    else { showToast("잘못된 입력", "warn"); return; }
+
+    showLoading(true);
+    let ok = 0, ng = 0;
+    const nowKst = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+    for (const id of ids) {
+        try {
+            const { data: cur } = await sb.from('orders').select('admin_note').eq('id', id).maybeSingle();
+            const note = (cur?.admin_note ? cur.admin_note + '\n' : '') + `[복구] ${nowKst} → ${newStatus}/${newPayment}`;
+            const { error } = await sb.from('orders').update({ status: newStatus, payment_status: newPayment, admin_note: note }).eq('id', id);
+            if (error) throw error;
+            ok++;
+        } catch (e) { console.error('restore', id, e); ng++; }
+    }
+    showLoading(false);
+    showToast(`복구 완료: ${ok}건${ng?`, 실패 ${ng}`:''}`, ng?'warn':'success');
     loadOrders();
 };
 
@@ -4001,8 +4049,8 @@ window.updateOrderStaff = async (id, role, selectEl) => {
         selectEl.style.fontWeight = 'normal';
     }
 
-    // ★ 매니저 배정 후 즉시 잠금 (변경 불가)
-    if (role === 'manager' && val) {
+    // ★ 매니저 배정 후 즉시 잠금 (변경 불가) — 특수 관리자는 예외
+    if (role === 'manager' && val && !_isPrivileged) {
         selectEl.disabled = true;
         selectEl.style.cursor = 'not-allowed';
         selectEl.style.opacity = '0.85';
