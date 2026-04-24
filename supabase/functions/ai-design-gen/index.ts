@@ -127,54 +127,66 @@ serve(async (req) => {
       });
     }
 
-    // ── OpenAI gpt-image-1 호출 ──
-    // 이미지 업로드가 있으면 /v1/images/edits (고품질 편집), 없으면 /v1/images/generations
-    let openaiRes: Response;
-    if (inputImages.length > 0) {
-      const fd = new FormData();
-      fd.append("model", "gpt-image-1");
-      fd.append("prompt", prompt);
-      fd.append("size", finalSize);
-      fd.append("quality", "high");
-      fd.append("n", "1");
-      inputImages.forEach((img) => {
-        const blob = new Blob([img.data], { type: img.type });
-        fd.append("image[]", blob, img.name);
-      });
-      openaiRes = await fetch("https://api.openai.com/v1/images/edits", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${OPENAI_KEY}` },
-        body: fd,
-      });
-    } else {
-      openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-image-1",
-          prompt: prompt,
-          size: finalSize,
-          n: 1,
-          quality: "high",
-        }),
-      });
+    // ── OpenAI Responses API + image_generation 도구 (ChatGPT 웹과 동일 경로) ──
+    // GPT-5가 업로드 이미지를 이해하고 프롬프트 요구사항을 반영한 새 이미지 생성
+    function bytesToB64(bytes: Uint8Array): string {
+      let bin = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      return btoa(bin);
     }
+
+    const userContent: any[] = [{ type: "input_text", text: prompt }];
+    inputImages.forEach((img) => {
+      const b64 = bytesToB64(img.data);
+      userContent.push({
+        type: "input_image",
+        image_url: `data:${img.type || "image/png"};base64,${b64}`,
+      });
+    });
+
+    const responsesBody = {
+      model: "gpt-5",
+      input: [{ role: "user", content: userContent }],
+      tools: [{
+        type: "image_generation",
+        size: finalSize,
+        quality: "high",
+      }],
+    };
+
+    const openaiRes = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(responsesBody),
+    });
 
     if (!openaiRes.ok) {
       const errText = await openaiRes.text();
-      console.error("OpenAI error:", openaiRes.status, errText);
-      return new Response(JSON.stringify({ error: `이미지 생성 실패: ${openaiRes.status}`, detail: errText.slice(0, 500) }), {
+      console.error("OpenAI Responses error:", openaiRes.status, errText);
+      return new Response(JSON.stringify({ error: `이미지 생성 실패: ${openaiRes.status}`, detail: errText.slice(0, 800) }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     const aiData = await openaiRes.json();
-    const b64 = aiData?.data?.[0]?.b64_json;
+    // output 배열에서 image_generation_call 결과 추출
+    let b64: string | null = null;
+    const outputs: any[] = aiData?.output || [];
+    for (const item of outputs) {
+      if (item?.type === "image_generation_call" && item?.result) {
+        b64 = item.result;
+        break;
+      }
+    }
     if (!b64) {
-      return new Response(JSON.stringify({ error: "이미지 데이터 누락" }), {
+      console.error("No image_generation_call result:", JSON.stringify(aiData).slice(0, 2000));
+      return new Response(JSON.stringify({ error: "이미지 생성 결과 누락", detail: JSON.stringify(aiData).slice(0, 500) }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
