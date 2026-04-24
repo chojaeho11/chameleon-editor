@@ -3107,10 +3107,13 @@ async function creditReferralBonus(orderId, referrerId) {
 // [수정] 주문 정보 제출
 // ============================================================
 async function processOrderSubmission() {
-    const manager = document.getElementById("inputManagerName").value;
-    const phone = document.getElementById("inputManagerPhone").value;
+    // ★ 디자인 마켓 디자인비 전용 주문: 배송 정보 불필요 — 기본값 주입 후 진행
+    const _designFeeOnly = typeof _isDesignFeeOnlyCart === 'function' && _isDesignFeeOnlyCart();
+
+    let manager = document.getElementById("inputManagerName").value;
+    let phone = document.getElementById("inputManagerPhone").value;
     const request = document.getElementById("inputRequest").value;
-    
+
     let address = "";
     if (CURRENT_LANG === 'kr') {
         address = document.getElementById("inputAddressKR").value;
@@ -3123,13 +3126,24 @@ async function processOrderSubmission() {
         address = `${st1} ${st2}, ${city}, ${state} ${zip}`;
     }
 
-    if(!manager || !address) { showToast(window.t('alert_input_shipping'), "warn"); return; }
+    if (_designFeeOnly) {
+        // 디자인비: 로그인 유저 정보로 대체
+        manager = manager || (currentUser && (currentUser.user_metadata?.username || currentUser.email)) || '디자인 결제';
+        phone = phone || '';
+        address = address || '(배송 없음 — 디자인 데이터)';
+    } else if (!manager || !address) {
+        showToast(window.t('alert_input_shipping'), "warn"); return;
+    }
     
     const deliveryDate = selectedDeliveryDate || new Date().toISOString().split('T')[0];
 
-    // ★ 고객이 선택한 담당 매니저 (필수)
+    // ★ 고객이 선택한 담당 매니저 (필수) — 디자인비 전용은 본사 자동
     const staffMgrEl = document.getElementById('inputStaffManager');
-    const rawStaffMgrId = staffMgrEl ? staffMgrEl.value : '';
+    let rawStaffMgrId = staffMgrEl ? staffMgrEl.value : '';
+    if (_designFeeOnly && !rawStaffMgrId) {
+        rawStaffMgrId = '__hq__';
+        if (staffMgrEl) staffMgrEl.value = '__hq__';
+    }
     if (!rawStaffMgrId) {
         const lang = CURRENT_LANG || 'kr';
         const msgs = {
