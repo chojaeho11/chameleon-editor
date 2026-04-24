@@ -141,6 +141,12 @@ serve(async (req) => {
         limit: dailyLimit,
         used: usageCount,
         isPro,
+        authDebug: {
+          hasToken: !!tokenStr,
+          tokenLen: tokenStr ? tokenStr.length : 0,
+          isAnon: tokenStr === SUPA_ANON,
+          userIdResolved: !!userId,
+        },
       }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
