@@ -4488,7 +4488,7 @@ async function handleSubReturn() {
             <div class="bottom-dock">
                 <button onclick="window.quickDownloadPng && window.quickDownloadPng()" class="zoom-btn" title="디자인 PNG 다운로드" style="color:#059669;"><i class="fa-solid fa-download"></i></button>
                 <button onclick="document.getElementById('quickUploadInput').click()" class="zoom-btn" title="이미지 업로드" style="color:#2563eb;"><i class="fa-solid fa-upload"></i></button>
-                <input type="file" id="quickUploadInput" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;" onchange="window.handleFileSelect && window.handleFileSelect(this); this.value='';">
+                <input type="file" id="quickUploadInput" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;" onchange="window.quickUploadImage && window.quickUploadImage(this); this.value='';">
                 <button onclick="window.activateEyedropper && window.activateEyedropper()" class="zoom-btn" title="스포이드 — 도형/글씨 선택 후 눌러 다른 곳 색상 가져오기" style="color:#ea580c;"><i class="fa-solid fa-eye-dropper"></i></button>
                 <div class="divider"></div>
                 <button onclick="window.toggleBackgroundLock()" class="zoom-btn" title="배경 잠금/해제"><i class="fa-solid fa-lock"></i></button>
@@ -6291,7 +6291,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./canvas-utils.js?v=424"></script>
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
-<script type="module" src="./export.js?v=426"></script>
+<script type="module" src="./export.js?v=427"></script>
 <script type="module" src="./order.js?v=451"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>

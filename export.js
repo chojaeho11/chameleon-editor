@@ -414,6 +414,56 @@ const STAMP_IMAGE_URL = "https://gdadmin.signmini.com/data/etc/stampImage";
 // [1] 내보내기 버튼 초기화 (주문 시스템 방식 적용)
 // ==========================================================
 export function initExport() {
+    // ★ 빠른 이미지 업로드 — bottom-dock 업로드 버튼. 이미지를 캔버스에 바로 추가 + 배경 잠금 위로 올림
+    window.quickUploadImage = function(input) {
+        if (!input || !input.files || !input.files[0]) return;
+        const file = input.files[0];
+        if (!file.type || !file.type.startsWith('image/')) {
+            if (window.showToast) window.showToast('이미지 파일만 업로드 가능합니다.', 'warn');
+            return;
+        }
+        if (typeof fabric === 'undefined' || !fabric.Image) {
+            if (window.showToast) window.showToast('에디터가 아직 준비되지 않았습니다.', 'warn');
+            return;
+        }
+        const cvs = window.canvas;
+        if (!cvs) { if (window.showToast) window.showToast('캔버스를 찾을 수 없습니다.', 'error'); return; }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            fabric.Image.fromURL(e.target.result, (img) => {
+                if (!img) { if (window.showToast) window.showToast('이미지 로드 실패', 'error'); return; }
+                const board = cvs.getObjects().find(o => o.isBoard);
+                let cw, ch, cx, cy;
+                if (board) {
+                    cw = board.width * (board.scaleX || 1);
+                    ch = board.height * (board.scaleY || 1);
+                    cx = board.left + cw / 2;
+                    cy = board.top + ch / 2;
+                } else {
+                    cw = cvs.width; ch = cvs.height; cx = cw/2; cy = ch/2;
+                }
+                // 보드의 60%에 맞춰 중앙 배치
+                const maxW = cw * 0.6, maxH = ch * 0.6;
+                const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+                img.set({
+                    scaleX: scale, scaleY: scale,
+                    originX: 'center', originY: 'center',
+                    left: cx, top: cy,
+                    selectable: true, hasControls: true, evented: true,
+                });
+                cvs.add(img);
+                cvs.bringToFront(img);
+                cvs.setActiveObject(img);
+                cvs.requestRenderAll();
+                if (typeof window.savePageState === 'function') window.savePageState();
+                if (window.showToast) window.showToast('이미지가 추가되었습니다.', 'success');
+            }, { crossOrigin: 'anonymous' });
+        };
+        reader.onerror = () => { if (window.showToast) window.showToast('파일을 읽을 수 없습니다.', 'error'); };
+        reader.readAsDataURL(file);
+    };
+
     // ★ 빠른 PNG 다운로드 (bottom-dock / 우클릭 메뉴 등에서 호출) — 기존 PNG 버튼과 동일 동작
     window.quickDownloadPng = function() {
         const btn = document.getElementById('btnPNG');
