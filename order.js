@@ -304,6 +304,8 @@ export async function initOrderSystem() {
     if(btnGoCheckout) {
         btnGoCheckout.onclick = () => {
             if(cartData.length === 0) { showToast(window.t('msg_cart_empty', "Your cart is empty."), "warn"); return; }
+            // ★ 디자인 마켓 디자인비만 담긴 장바구니 — 배송·최소주문 체크 건너뜀
+            if (_isDesignFeeOnlyCart()) { processOrderSubmission(); return; }
             // ★ 100만원 미만이면 배송 옵션 1개 이상 필수
             // (예외: 천원단위/만원단위 주문상품 — 배송비 없이 결제 가능)
             const _shipExempt = cartData.some(it => {
@@ -2451,9 +2453,27 @@ async function addFileToCart(e) {
 // ============================================================
 // [5] 장바구니 렌더링
 // ============================================================
+// ★ 디자인 마켓 디자인비 전용 장바구니 판별
+function _isDesignFeeOnlyCart() {
+    if (!Array.isArray(cartData) || cartData.length === 0) return false;
+    return cartData.every(it => {
+        const p = it.product || {};
+        const code = String(p.code || p.product_key || p.id || '');
+        return code.startsWith('design_fee_') || p.category === 'design_fee';
+    });
+}
+window._isDesignFeeOnlyCart = _isDesignFeeOnlyCart;
+
 function renderCart() {
     const listArea = document.getElementById("cartListArea");
     if(!listArea) return;
+
+    // 디자인비 전용 장바구니: 배송 정보 UI + 최소 주문 안내 숨김
+    const _designOnly = _isDesignFeeOnlyCart();
+    const _delivWrap = document.getElementById('cartDeliveryInfoWrap');
+    if (_delivWrap) _delivWrap.style.display = _designOnly ? 'none' : '';
+    const _minNotice = document.getElementById('minOrderNotice');
+    if (_minNotice) _minNotice.style.display = _designOnly ? 'none' : '';
 
     // ★ renderCart 진입 시 localStorage와 cartData 동기화 (모듈 버전 불일치 방어)
     try {
@@ -3205,9 +3225,9 @@ async function processOrderSubmission() {
 
     const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
 
-    // ★ 최소 주문금액 100,000원 (천원단위 주문상품 21355677 예외)
+    // ★ 최소 주문금액 100,000원 (천원단위 주문상품 21355677 예외, 디자인비 예외)
     const MIN_ORDER_KRW = 100000;
-    const isExempt = cartData.some(item => item.product && (String(item.product.code) === '21355677' || String(item.product.product_key) === '21355677' || String(item.product.id) === '21355677'));
+    const isExempt = _isDesignFeeOnlyCart() || cartData.some(item => item.product && (String(item.product.code) === '21355677' || String(item.product.product_key) === '21355677' || String(item.product.id) === '21355677'));
     if (!isExempt && rawTotal < MIN_ORDER_KRW) {
         const lang = CURRENT_LANG;
         const minAmounts = { kr: '100,000원', ja: '10,000円', en: '$100', zh: '¥700', ar: '100 دولار', es: '$100', de: '100€', fr: '100€' };
@@ -3794,7 +3814,10 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 // ============================================================
 async function processFinalPayment() {
     // ★ 배송 옵션 가드: 100만원 미만 주문은 배송 옵션 1개 이상 필수 (모든 결제 경로 공통)
+    // 예외: 천원/만원단위 주문, 디자인 마켓 디자인비 전용 주문
     try {
+        if (_isDesignFeeOnlyCart()) { /* 디자인비 전용: 배송 체크 건너뜀 */ }
+        else {
         const _shipExempt = cartData.some(it => {
             const c = String((it.product && (it.product.code || it.product.product_key || it.product.id)) || '');
             return c === '21355677' || c === '21355677_copy';
@@ -3821,6 +3844,7 @@ async function processFinalPayment() {
                 return;
             }
         }
+        } // end else (디자인비 전용 아닐 때만)
     } catch(e) { console.warn('[shipping guard]', e); }
 
     // ★ 미로그인 시 가입 유도 (결제 정보 유지)

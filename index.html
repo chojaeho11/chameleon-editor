@@ -5230,7 +5230,7 @@ async function handleSubReturn() {
             </div>
 
             <!-- ★ 배송/연락처 정보 입력 -->
-            <div style="width:100%;">
+            <div style="width:100%;" id="cartDeliveryInfoWrap">
                 <div style="background:white; padding:20px; border-radius:12px;">
                     <h3 style="margin-top:0;"><i class="fa-solid fa-truck"></i> <span data-i18n="cart_delivery_title">배송 정보</span></h3>
 
@@ -6292,7 +6292,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=424"></script>
 <script type="module" src="./context-menu.js?v=424"></script>
 <script type="module" src="./export.js?v=427"></script>
-<script type="module" src="./order.js?v=451"></script>
+<script type="module" src="./order.js?v=452"></script>
 <script type="module" src="./login.js?v=424"></script>
 <script type="module" src="./my-design.js?v=424"></script>
 <script type="module" src="./ppt-mode.js?v=424"></script>
@@ -7520,7 +7520,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=424 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=424';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=451'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=452'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=425';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=424';
 
@@ -12476,7 +12476,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=451');
+                    const m = await import('./order.js?v=452');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -12546,7 +12546,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=451').then(m => {
+            import('./order.js?v=452').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -13147,7 +13147,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=451').then(m => {
+        import('./order.js?v=452').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17678,7 +17678,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=451').then(function(mod) {
+            import('./order.js?v=452').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
