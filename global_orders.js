@@ -1519,17 +1519,15 @@ window.loadOrders = async () => {
                 return `${sym}${Number(v).toLocaleString()}`;
             };
             
-            // [스태프 선택] 배경색 꽉 차게 변경된 함수 사용
-            // 본사 지정 주문 — 기본은 "🏢 본사" 고정 배지, 특수 관리자는 배지 + 드롭다운 둘 다 표시
+            // [스태프 선택] 본사 지정 주문 표시 + 특수 관리자에겐 "🏢 본사" 옵션이 포함된 드롭다운
             const isHqOrder = (order.admin_note || '').includes('[고객지정] 본사');
             let managerOpts;
-            if (isHqOrder && !order.staff_manager_id) {
-                const hqBadge = `<div style="background:#0ea5e9;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:bold;text-align:center;margin-bottom:3px;">🏢 본사</div>`;
-                managerOpts = _isPrivileged
-                    ? hqBadge + createStaffSelectHTML(order.id, 'manager', order.staff_manager_id)
-                    : hqBadge;
+            if (isHqOrder && !order.staff_manager_id && !_isPrivileged) {
+                // 일반 관리자: 본사 배지만 (변경 불가)
+                managerOpts = `<div style="background:#0ea5e9;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;text-align:center;">🏢 본사</div>`;
             } else {
-                managerOpts = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id);
+                // 특수 관리자 또는 일반 주문: 드롭다운 (본사 옵션 포함)
+                managerOpts = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id, isHqOrder);
             }
             const driverOpts = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
 
@@ -1695,9 +1693,9 @@ window.loadOrders = async () => {
         updateCancelReqBadge();
     }
 };
-function createStaffSelectHTML(orderId, role, selectedId) {
+function createStaffSelectHTML(orderId, role, selectedId, isHqOrder) {
     let opts = `<option value="">미지정</option>`;
-    
+
     // 기본 스타일 (미지정 상태)
     let style = `background-color: #ffffff; color: #334155; border: 1px solid #e2e8f0;`;
 
@@ -1708,6 +1706,13 @@ function createStaffSelectHTML(orderId, role, selectedId) {
         if (role === 'manager') return FIELD_MANAGERS.some(n => s.name.includes(n));
         return true;
     });
+
+    // 특수 관리자 — 매니저 드롭다운에 "🏢 본사" 옵션 추가
+    if (role === 'manager' && _isPrivileged) {
+        const hqSelected = !!isHqOrder && !selectedId;
+        if (hqSelected) style = `background-color: #0ea5e9; color: #ffffff; border: 1px solid #0284c7; font-weight:bold;`;
+        opts += `<option value="__HQ__" ${hqSelected?'selected':''}>🏢 본사</option>`;
+    }
 
     filteredStaff.forEach(s => {
         const isSelected = String(s.id) === String(selectedId);
@@ -4033,16 +4038,43 @@ function getInstallationDisplayInfo(order) {
 
 window.updateOrderStaff = async (id, role, selectEl) => {
     const val = selectEl.value;
+
+    // 특수 값 "__HQ__" → 본사 지정 (staff_manager_id=null + admin_note에 [고객지정] 본사 마커)
+    if (role === 'manager' && val === '__HQ__') {
+        if (!_isPrivileged) { showToast("권한이 없습니다.", "error"); return; }
+        const { data: cur } = await sb.from('orders').select('admin_note').eq('id', id).maybeSingle();
+        let note = cur?.admin_note || '';
+        if (!note.includes('[고객지정] 본사')) note = (note ? note + '\n' : '') + '[고객지정] 본사';
+        const { error } = await sb.from('orders').update({ staff_manager_id: null, admin_note: note }).eq('id', id);
+        if (error) { showToast("본사 지정 실패: " + error.message, "error"); return; }
+        selectEl.style.backgroundColor = '#0ea5e9';
+        selectEl.style.color = '#ffffff';
+        selectEl.style.borderColor = '#0284c7';
+        selectEl.style.fontWeight = 'bold';
+        showToast("🏢 본사로 지정됨", "success");
+        return;
+    }
+
     const field = role === 'manager' ? 'staff_manager_id' : 'staff_driver_id';
 
+    // 매니저로 바꾸는 경우 — 기존 본사 마커가 있으면 제거
+    const updatePayload = { [field]: val || null };
+    if (role === 'manager' && val) {
+        const { data: cur } = await sb.from('orders').select('admin_note').eq('id', id).maybeSingle();
+        const note = cur?.admin_note || '';
+        if (note.includes('[고객지정] 본사')) {
+            updatePayload.admin_note = note.replace(/\n?\[고객지정\] 본사/g, '').trim();
+        }
+    }
+
     // 1. DB 업데이트 (비동기 처리하되 UI는 먼저 반응)
-    sb.from('orders').update({ [field]: val || null }).eq('id', id).then(({ error }) => {
+    sb.from('orders').update(updatePayload).eq('id', id).then(({ error }) => {
         if(error) showToast("담당자 변경 실패: " + error.message, "error");
     });
 
     // 2. 선택된 스태프 정보 찾기
     const staff = staffList.find(s => String(s.id) === String(val));
-    
+
     // 3. UI 전체 색상 즉시 적용
     if (staff && staff.color) {
         selectEl.style.backgroundColor = staff.color;
