@@ -35,21 +35,43 @@ serve(async (req) => {
       });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const prompt: string = (body?.prompt || "").toString().trim();
-    const size: string = (body?.size || "1024x1024").toString();
+    const contentType = req.headers.get("content-type") || "";
+    let prompt = "";
+    let size = "1024x1024";
+    let inputImages: { name: string; data: Uint8Array; type: string }[] = [];
+    let authHeaderRaw = "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const form = await req.formData();
+      prompt = (form.get("prompt")?.toString() || "").trim();
+      size = (form.get("size")?.toString() || "1024x1024");
+      authHeaderRaw = form.get("authToken")?.toString() || "";
+      // 이미지 최대 4장까지
+      const files = form.getAll("image");
+      for (const f of files) {
+        if (f instanceof File && f.size > 0) {
+          const buf = new Uint8Array(await f.arrayBuffer());
+          inputImages.push({ name: f.name || "upload.png", data: buf, type: f.type || "image/png" });
+          if (inputImages.length >= 4) break;
+        }
+      }
+    } else {
+      const body = await req.json().catch(() => ({}));
+      prompt = (body?.prompt || "").toString().trim();
+      size = (body?.size || "1024x1024").toString();
+    }
 
     if (!prompt || prompt.length < 3) {
       return new Response(JSON.stringify({ error: "프롬프트를 입력해주세요 (3자 이상)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
-    if (prompt.length > 1000) {
-      return new Response(JSON.stringify({ error: "프롬프트가 너무 깁니다 (1000자 이하)" }), {
+    if (prompt.length > 2000) {
+      return new Response(JSON.stringify({ error: "프롬프트가 너무 깁니다 (2000자 이하)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
-    const allowedSizes = ["1024x1024", "1024x1536", "1536x1024"];
+    const allowedSizes = ["1024x1024", "1024x1536", "1536x1024", "auto"];
     const finalSize = allowedSizes.includes(size) ? size : "1024x1024";
 
     const supa = createClient(SUPA_URL, SERVICE_KEY);
@@ -57,10 +79,10 @@ serve(async (req) => {
     // ── 유저 식별 ──
     let userId: string | null = null;
     let isPro = false;
-    const authHeader = req.headers.get("Authorization") || "";
-    if (authHeader.startsWith("Bearer ")) {
-      const token = authHeader.slice(7);
-      const { data: userRes } = await supa.auth.getUser(token);
+    const authHeader = authHeaderRaw || req.headers.get("Authorization") || "";
+    const tokenStr = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+    if (tokenStr && tokenStr !== Deno.env.get("SUPABASE_ANON_KEY")) {
+      const { data: userRes } = await supa.auth.getUser(tokenStr);
       if (userRes?.user) {
         userId = userRes.user.id;
         // PRO 판정: subscriptions active/trialing OR profiles.role='subscriber'
@@ -106,20 +128,40 @@ serve(async (req) => {
     }
 
     // ── OpenAI gpt-image-1 호출 ──
-    const openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-image-1",
-        prompt: prompt,
-        size: finalSize,
-        n: 1,
-        quality: "medium",
-      }),
-    });
+    // 이미지 업로드가 있으면 /v1/images/edits (고품질 편집), 없으면 /v1/images/generations
+    let openaiRes: Response;
+    if (inputImages.length > 0) {
+      const fd = new FormData();
+      fd.append("model", "gpt-image-1");
+      fd.append("prompt", prompt);
+      fd.append("size", finalSize);
+      fd.append("quality", "high");
+      fd.append("n", "1");
+      inputImages.forEach((img) => {
+        const blob = new Blob([img.data], { type: img.type });
+        fd.append("image[]", blob, img.name);
+      });
+      openaiRes = await fetch("https://api.openai.com/v1/images/edits", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${OPENAI_KEY}` },
+        body: fd,
+      });
+    } else {
+      openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENAI_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-image-1",
+          prompt: prompt,
+          size: finalSize,
+          n: 1,
+          quality: "high",
+        }),
+      });
+    }
 
     if (!openaiRes.ok) {
       const errText = await openaiRes.text();

@@ -729,9 +729,16 @@ if ('caches' in window) {
         #aiDesignHero .aid-input { flex:1; min-width:0; padding:12px 14px; font-size:14px; border:1.5px solid #c7d2fe; border-radius:12px; resize:none; outline:none; background:#fff; color:#1e293b; line-height:1.5; font-family:inherit; }
         #aiDesignHero .aid-size { padding:0 10px; font-size:13px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; color:#1e293b; cursor:pointer; font-weight:700; min-width:80px; }
         #aiDesignHero .aid-btn { padding:0 22px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer; white-space:nowrap; box-shadow:0 4px 12px rgba(99,102,241,0.35); min-height:46px; }
+        #aiDesignHero .aid-upload { display:inline-flex; align-items:center; justify-content:center; padding:0 14px; background:#fff; border:1.5px solid #c7d2fe; border-radius:12px; cursor:pointer; font-size:12px; font-weight:700; color:#4f46e5; min-height:46px; transition:all .15s; }
+        #aiDesignHero .aid-upload:hover { background:#eef2ff; }
+        #aiDesignHero .aid-thumbs { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+        #aiDesignHero .aid-thumb { position:relative; width:56px; height:56px; border-radius:8px; overflow:hidden; border:1.5px solid #c7d2fe; background:#fff; }
+        #aiDesignHero .aid-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+        #aiDesignHero .aid-thumb button { position:absolute; top:2px; right:2px; width:18px; height:18px; border:none; background:rgba(0,0,0,0.6); color:#fff; border-radius:50%; cursor:pointer; font-size:11px; padding:0; line-height:1; }
         @media (max-width:640px) {
             #aiDesignHero .aid-row { flex-wrap:wrap; }
             #aiDesignHero .aid-input { flex-basis:100%; }
+            #aiDesignHero .aid-upload { flex:1; min-width:0; padding:10px 6px; font-size:11px; }
             #aiDesignHero .aid-size { flex:1; min-width:0; padding:10px 8px; }
             #aiDesignHero .aid-btn { flex:2; padding:10px 8px; }
         }
@@ -743,10 +750,16 @@ if ('caches' in window) {
                     ✨ AI 디자인 생성
                 </span>
                 <span id="aiDesignQuota" style="font-size:11px; color:#6366f1; font-weight:700; background:#fff; padding:3px 10px; border-radius:999px; border:1px solid #c7d2fe;">일 3회 무료 · PRO 50회</span>
+                <span style="font-size:10px; color:#64748b; margin-left:auto;">한글 지원 · 이미지 편집 가능</span>
             </div>
             <div class="aid-row">
-                <textarea id="aiDesignPrompt" rows="1" class="aid-input" placeholder="예: 카페 오픈 이벤트 전단지, 파스텔톤, 커피잔 일러스트"
+                <textarea id="aiDesignPrompt" rows="1" class="aid-input" placeholder="예: 카페 오픈 이벤트 전단지, 파스텔톤, 커피잔 일러스트 / 이미지 업로드 시 편집 가능"
                     oninput="this.style.height='auto';this.style.height=Math.min(120,this.scrollHeight)+'px'"></textarea>
+                <label class="aid-upload" title="이미지 첨부 (최대 4장)">
+                    📎 사진
+                    <input id="aiDesignFile" type="file" accept="image/png,image/jpeg,image/webp" multiple style="display:none;"
+                        onchange="window.addAiDesignImages && window.addAiDesignImages(this.files); this.value='';">
+                </label>
                 <select id="aiDesignSize" class="aid-size">
                     <option value="1024x1024">정사각형</option>
                     <option value="1024x1536">세로</option>
@@ -756,6 +769,7 @@ if ('caches' in window) {
                     🎨 생성
                 </button>
             </div>
+            <div id="aiDesignThumbs" class="aid-thumbs"></div>
             <div id="aiDesignResult" style="display:none; margin-top:14px;"></div>
         </div>
     </div>
@@ -7957,7 +7971,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=2').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=3').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
