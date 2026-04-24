@@ -725,54 +725,67 @@ if ('caches' in window) {
 
     <!-- ★ AI 디자인 생성기 (타이틀 바로 아래) -->
     <style>
-        #aiDesignHero { max-width:1200px; margin:14px auto 18px; padding:0 14px; box-sizing:border-box; }
+        #aiDesignHero { max-width:1400px; margin:16px auto 20px; padding:0 16px; box-sizing:border-box; }
         #aiDesignHero .aid-card {
             background:
                 radial-gradient(ellipse at 10% -10%, rgba(139,92,246,0.12) 0%, transparent 55%),
                 radial-gradient(ellipse at 110% 110%, rgba(99,102,241,0.10) 0%, transparent 55%),
                 linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
             border:1px solid rgba(199,210,254,0.6);
-            border-radius:20px;
-            padding:22px 26px;
-            box-shadow:0 10px 40px -10px rgba(99,102,241,0.18), 0 2px 8px rgba(0,0,0,0.03);
+            border-radius:22px;
+            padding:26px 32px;
+            box-shadow:0 12px 44px -12px rgba(99,102,241,0.2), 0 2px 8px rgba(0,0,0,0.03);
             position:relative; overflow:hidden;
         }
         #aiDesignHero .aid-card::before {
-            content:''; position:absolute; inset:0; border-radius:20px;
+            content:''; position:absolute; inset:0; border-radius:22px;
             background:linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.3) 50%, rgba(236,72,153,0.2) 100%);
-            padding:1.5px; -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            padding:1.5px;
+            -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
         }
-        #aiDesignHero .aid-head { display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+        #aiDesignHero .aid-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
         #aiDesignHero .aid-title {
-            font-size:20px; font-weight:900; letter-spacing:-0.3px;
+            font-size:22px; font-weight:900; letter-spacing:-0.3px;
             background:linear-gradient(135deg,#4f46e5 0%,#8b5cf6 50%,#ec4899 100%);
             -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
         }
         #aiDesignHero .aid-badge { font-size:11px; font-weight:700; padding:4px 12px; border-radius:999px; border:1px solid #c7d2fe; background:rgba(255,255,255,0.7); color:#4f46e5; backdrop-filter:blur(4px); }
         #aiDesignHero .aid-hint { font-size:11px; color:#64748b; margin-left:auto; display:flex; align-items:center; gap:6px; }
         #aiDesignHero .aid-hint .dot { width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981; }
-        #aiDesignHero .aid-row { display:grid; grid-template-columns: 1fr 120px 130px 150px; gap:10px; align-items:stretch; }
+        #aiDesignHero .aid-lead {
+            font-size:14px; color:#475569; font-weight:500; margin-bottom:16px;
+            line-height:1.6; letter-spacing:-0.1px;
+        }
+        #aiDesignHero .aid-lead b {
+            background:linear-gradient(135deg,#4f46e5 0%,#8b5cf6 100%);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            font-weight:800;
+        }
         #aiDesignHero .aid-input {
-            min-width:0; padding:14px 18px; font-size:15px;
-            border:1.5px solid rgba(199,210,254,0.7); border-radius:14px;
-            resize:none; outline:none; background:rgba(255,255,255,0.85);
-            color:#1e293b; line-height:1.55; font-family:inherit;
-            transition:all .2s; min-height:52px;
+            width:100%; box-sizing:border-box;
+            padding:18px 22px; font-size:16px;
+            border:1.5px solid rgba(199,210,254,0.7); border-radius:16px;
+            resize:none; outline:none; background:rgba(255,255,255,0.9);
+            color:#1e293b; line-height:1.6; font-family:inherit;
+            transition:all .2s; min-height:72px;
+            display:block;
         }
         #aiDesignHero .aid-input:focus { border-color:#8b5cf6; box-shadow:0 0 0 4px rgba(139,92,246,0.12); background:#fff; }
+        #aiDesignHero .aid-controls { display:grid; grid-template-columns: 140px 160px 1fr; gap:10px; align-items:stretch; margin-top:12px; }
         #aiDesignHero .aid-upload {
-            display:inline-flex; align-items:center; justify-content:center; gap:6px;
-            background:rgba(255,255,255,0.85); border:1.5px solid rgba(199,210,254,0.7);
-            border-radius:14px; cursor:pointer; font-size:13px; font-weight:700;
-            color:#4f46e5; min-height:52px; transition:all .18s;
+            display:inline-flex; align-items:center; justify-content:center;
+            background:rgba(255,255,255,0.9); border:1.5px solid rgba(199,210,254,0.7);
+            border-radius:14px; cursor:pointer; font-size:14px; font-weight:700;
+            color:#4f46e5; min-height:54px; transition:all .18s;
         }
         #aiDesignHero .aid-upload:hover { background:#eef2ff; transform:translateY(-1px); box-shadow:0 6px 14px -6px rgba(99,102,241,0.3); }
         #aiDesignHero .aid-size {
-            padding:0 14px; font-size:13px;
+            padding:0 14px; font-size:14px;
             border:1.5px solid rgba(199,210,254,0.7); border-radius:14px;
-            background:rgba(255,255,255,0.85); color:#1e293b;
-            cursor:pointer; font-weight:700; min-height:52px;
+            background:rgba(255,255,255,0.9); color:#1e293b;
+            cursor:pointer; font-weight:700; min-height:54px;
             transition:all .18s;
         }
         #aiDesignHero .aid-size:hover { border-color:#8b5cf6; }
@@ -783,7 +796,7 @@ if ('caches' in window) {
             color:#fff; border:none; border-radius:14px;
             font-size:15px; font-weight:900; cursor:pointer; white-space:nowrap;
             box-shadow:0 6px 20px -6px rgba(99,102,241,0.5);
-            min-height:52px; transition:all .2s;
+            min-height:54px; transition:all .2s;
             letter-spacing:-0.2px;
         }
         #aiDesignHero .aid-btn:hover { background-position:100% 100%; transform:translateY(-1px); box-shadow:0 8px 24px -4px rgba(139,92,246,0.55); }
@@ -793,22 +806,19 @@ if ('caches' in window) {
         #aiDesignHero .aid-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
         #aiDesignHero .aid-thumb button { position:absolute; top:3px; right:3px; width:20px; height:20px; border:none; background:rgba(0,0,0,0.7); color:#fff; border-radius:50%; cursor:pointer; font-size:12px; padding:0; line-height:1; transition:all .15s; }
         #aiDesignHero .aid-thumb button:hover { background:#dc2626; transform:scale(1.1); }
-        #aiDesignHero .aid-examples { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
-        #aiDesignHero .aid-chip { font-size:11px; padding:5px 12px; border-radius:999px; background:rgba(255,255,255,0.7); border:1px solid rgba(199,210,254,0.7); color:#4f46e5; cursor:pointer; transition:all .15s; font-weight:600; }
-        #aiDesignHero .aid-chip:hover { background:#eef2ff; border-color:#8b5cf6; color:#6d28d9; }
+        #aiDesignHero .aid-examples { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+        #aiDesignHero .aid-chip { font-size:12px; padding:6px 14px; border-radius:999px; background:rgba(255,255,255,0.7); border:1px solid rgba(199,210,254,0.7); color:#4f46e5; cursor:pointer; transition:all .15s; font-weight:600; }
+        #aiDesignHero .aid-chip:hover { background:#eef2ff; border-color:#8b5cf6; color:#6d28d9; transform:translateY(-1px); }
         @media (max-width:640px) {
             #aiDesignHero { margin:8px auto 12px; padding:0 10px; }
-            #aiDesignHero .aid-card { padding:14px 14px; border-radius:14px; }
-            #aiDesignHero .aid-title { font-size:16px; }
+            #aiDesignHero .aid-card { padding:16px 16px; border-radius:16px; }
+            #aiDesignHero .aid-title { font-size:17px; }
             #aiDesignHero .aid-hint { display:none; }
-            #aiDesignHero .aid-row { grid-template-columns: 1fr; gap:8px; }
-            #aiDesignHero .aid-input { font-size:14px; padding:12px 14px; min-height:46px; }
-            #aiDesignHero .aid-mobile-sub { display:grid !important; grid-template-columns: 1fr 1fr 1.4fr; gap:8px; }
-            #aiDesignHero .aid-upload, #aiDesignHero .aid-size, #aiDesignHero .aid-btn { min-height:44px; font-size:12px; padding:0 8px; }
+            #aiDesignHero .aid-lead { font-size:12px; margin-bottom:12px; }
+            #aiDesignHero .aid-input { font-size:14px; padding:14px 16px; min-height:60px; }
+            #aiDesignHero .aid-controls { grid-template-columns: 1fr 1fr 1.4fr; gap:8px; margin-top:10px; }
+            #aiDesignHero .aid-upload, #aiDesignHero .aid-size, #aiDesignHero .aid-btn { min-height:46px; font-size:12px; padding:0 8px; }
             #aiDesignHero .aid-examples { display:none; }
-        }
-        @media (min-width:641px) {
-            #aiDesignHero .aid-mobile-sub { display:contents; }
         }
     </style>
     <div id="aiDesignHero">
@@ -818,25 +828,24 @@ if ('caches' in window) {
                 <span id="aiDesignQuota" class="aid-badge">일 3회 무료 · PRO 50회</span>
                 <span class="aid-hint"><span class="dot"></span> GPT-5 · 한글 지원 · 이미지 편집</span>
             </div>
-            <div class="aid-row">
-                <textarea id="aiDesignPrompt" rows="1" class="aid-input"
-                    placeholder="어떤 디자인이 필요하신가요? 예: 카페 오픈 전단지 / 허니콤보드 제품 홍보 배너 / 이벤트 포스터"
-                    oninput="this.style.height='auto';this.style.height=Math.min(140,this.scrollHeight)+'px'"></textarea>
-                <div class="aid-mobile-sub" style="display:contents;">
-                    <label class="aid-upload" title="이미지 첨부 (최대 4장)">
-                        📎 이미지
-                        <input id="aiDesignFile" type="file" accept="image/png,image/jpeg,image/webp" multiple style="display:none;"
-                            onchange="window.addAiDesignImages && window.addAiDesignImages(this.files); this.value='';">
-                    </label>
-                    <select id="aiDesignSize" class="aid-size" title="출력 비율">
-                        <option value="1024x1024">⬜ 정사각형</option>
-                        <option value="1024x1536">📱 세로</option>
-                        <option value="1536x1024">🖥️ 가로</option>
-                    </select>
-                    <button id="aiDesignBtn" class="aid-btn" onclick="window.generateAiDesign && window.generateAiDesign()">
-                        🎨 생성하기
-                    </button>
-                </div>
+            <div class="aid-lead">이제 AI가 <b>가벽·배너·리플릿·전단지·명함</b> 등 모든 디자인을 완벽하게 해드립니다.</div>
+            <textarea id="aiDesignPrompt" rows="2" class="aid-input"
+                placeholder="어떤 디자인이 필요하신가요?"
+                oninput="this.style.height='auto';this.style.height=Math.min(160,this.scrollHeight)+'px'"></textarea>
+            <div class="aid-controls">
+                <label class="aid-upload" title="이미지 첨부 (최대 4장)">
+                    이미지
+                    <input id="aiDesignFile" type="file" accept="image/png,image/jpeg,image/webp" multiple style="display:none;"
+                        onchange="window.addAiDesignImages && window.addAiDesignImages(this.files); this.value='';">
+                </label>
+                <select id="aiDesignSize" class="aid-size" title="출력 비율">
+                    <option value="1024x1024">⬜ 정사각형</option>
+                    <option value="1024x1536">📱 세로</option>
+                    <option value="1536x1024">🖥️ 가로</option>
+                </select>
+                <button id="aiDesignBtn" class="aid-btn" onclick="window.generateAiDesign && window.generateAiDesign()">
+                    🎨 생성하기
+                </button>
             </div>
             <div id="aiDesignThumbs" class="aid-thumbs"></div>
             <div class="aid-examples">
@@ -8047,7 +8056,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=5').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=6').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
