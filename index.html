@@ -725,7 +725,7 @@ if ('caches' in window) {
 
     <!-- ★ AI 디자인 생성기 (타이틀 바로 아래) -->
     <style>
-        #aiDesignHero { max-width:1400px; margin:16px auto 20px; padding:0 16px; box-sizing:border-box; }
+        #aiDesignHero { max-width:1600px; margin:16px auto 20px; padding:0 16px; box-sizing:border-box; }
         #aiDesignHero .aid-card {
             background:
                 radial-gradient(ellipse at 10% -10%, rgba(139,92,246,0.12) 0%, transparent 55%),
@@ -815,13 +815,12 @@ if ('caches' in window) {
         /* 구조화된 입력 폼 */
         #aiDesignHero .aid-section-title { font-size:12px; font-weight:800; color:#4f46e5; margin:14px 0 8px 2px; letter-spacing:-0.1px; }
         #aiDesignHero .aid-section-title:first-child { margin-top:0; }
-        #aiDesignHero .aid-size-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
-        #aiDesignHero .aid-size-card { background:rgba(255,255,255,0.9); border:1.5px solid rgba(199,210,254,0.7); border-radius:12px; padding:10px 8px; cursor:pointer; text-align:center; transition:all .15s; position:relative; }
+        #aiDesignHero .aid-size-grid { display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; }
+        #aiDesignHero .aid-size-card { background:rgba(255,255,255,0.9); border:1.5px solid rgba(199,210,254,0.7); border-radius:12px; padding:12px 8px; cursor:pointer; text-align:center; transition:all .15s; }
         #aiDesignHero .aid-size-card:hover { background:#eef2ff; border-color:#8b5cf6; transform:translateY(-1px); }
         #aiDesignHero .aid-size-card.selected { background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%); border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,0.15); }
-        #aiDesignHero .aid-size-card .shape { display:inline-block; background:linear-gradient(135deg,#8b5cf6 0%,#ec4899 100%); border-radius:2px; margin-bottom:4px; }
-        #aiDesignHero .aid-size-card .name { font-size:11px; font-weight:800; color:#1e293b; display:block; }
-        #aiDesignHero .aid-size-card .dim { font-size:10px; color:#64748b; display:block; margin-top:1px; }
+        #aiDesignHero .aid-size-card .name { font-size:13px; font-weight:800; color:#1e293b; display:block; }
+        #aiDesignHero .aid-size-card .dim { font-size:11px; color:#64748b; display:block; margin-top:2px; }
         #aiDesignHero .aid-color-grid { display:grid; grid-template-columns:repeat(10, 1fr); gap:6px; }
         #aiDesignHero .aid-color-swatch { aspect-ratio:1; border-radius:10px; cursor:pointer; border:2px solid transparent; transition:all .12s; position:relative; }
         #aiDesignHero .aid-color-swatch:hover { transform:scale(1.08); }
@@ -838,7 +837,7 @@ if ('caches' in window) {
         #aiDesignHero .aid-input-small:focus { border-color:#8b5cf6; box-shadow:0 0 0 4px rgba(139,92,246,0.12); background:#fff; }
         #aiDesignHero .aid-controls-simple { display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:stretch; margin-top:10px; }
         @media (max-width:640px) {
-            #aiDesignHero .aid-size-grid { grid-template-columns:repeat(2, 1fr); }
+            #aiDesignHero .aid-size-grid { grid-template-columns:repeat(3, 1fr); }
             #aiDesignHero .aid-color-grid { grid-template-columns:repeat(8, 1fr); }
             #aiDesignHero .aid-controls-simple { grid-template-columns:1fr; }
         }
@@ -922,12 +921,11 @@ if ('caches' in window) {
                     <div class="aid-section-title">② 배경 색상</div>
                     <div class="aid-color-grid" id="aiColorGrid"></div>
 
-                    <!-- 3) 텍스트 -->
-                    <div class="aid-section-title">③ 제목 / 부제</div>
+                    <!-- 3) 제목 -->
+                    <div class="aid-section-title">③ 제목</div>
                     <input id="aiDesignTitle" class="aid-input-small" placeholder="제목 (예: CHAMELEON PRINTING, 50% SALE)" maxlength="60">
-                    <input id="aiDesignSubtitle" class="aid-input-small" placeholder="부제 (예: Premium Print Solutions)" maxlength="80">
 
-                    <!-- 4) 추가 설명 -->
+                    <!-- 4) 스타일·추가 설명 -->
                     <div class="aid-section-title">④ 스타일·추가 설명 <span style="font-weight:400; color:#94a3b8; font-size:11px;">(선택)</span></div>
                     <textarea id="aiDesignPrompt" rows="2" class="aid-input"
                         placeholder="예: 미니멀 일러스트, 기하학적 패턴, 사진 첨부 시 활용"
@@ -8155,7 +8153,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=10').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=11').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 

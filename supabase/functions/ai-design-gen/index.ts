@@ -140,17 +140,16 @@ serve(async (req) => {
       });
     });
 
-    // English-only output — Korean/other CJK scripts garble badly in gpt-image.
-    // Users will edit Korean text afterward in our editor.
     const systemInstructions = `You are a professional commercial print designer.
 
 RULES:
 1) Plan layout, colors, typography, and composition carefully based on the user's specifications.
 2) Call image_generation tool with a detailed prompt.
-3) CRITICAL: ALL TEXT in the generated image MUST be in ENGLISH using Latin alphabet only. Never include Korean Hangul, Chinese, Japanese, or any non-Latin scripts. If the user provides Korean text in quotes, keep it exactly as they wrote it ONLY IF it is already Latin/English; otherwise do not include any text that is not Latin.
-4) Produce sharp, crisp, editorial-quality typography. No garbled or distorted letters.
-5) If reference images are attached, integrate them naturally into the composition.
-6) Output should be commercial-print quality: balanced composition, generous whitespace, clear visual hierarchy, professional typography.`;
+3) CRITICAL: ALL TEXT must be ENGLISH Latin alphabet only. No Korean, Chinese, Japanese or other scripts. No gibberish.
+4) CRITICAL: Design must be FULL-BLEED — edge-to-edge, filling the ENTIRE frame. NO white border, NO outer padding, NO margin, NO card-style inset. Composition extends to every corner.
+5) Sharp, crisp, editorial-quality typography.
+6) If reference images are attached, integrate them naturally.
+7) Commercial-print quality: balanced composition, clear visual hierarchy, professional typography.`;
 
     // gpt-5.4: Frontier 모델 (API 공식 제공). 폴백으로 5.1 / 5.
     // 각 후보에 90초 타임아웃 — 100s Gateway 보호.

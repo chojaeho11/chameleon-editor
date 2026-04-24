@@ -4,16 +4,15 @@ const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const FN_URL = SUPABASE_URL + '/functions/v1/ai-design-gen';
 
-// ── 사이즈 프리셋 (width × height in mm) ──
+// ── 사이즈 프리셋 (GPT가 제공하는 이미지 aspect ratio) ──
+// w / h 는 에디터 캔버스용 mm 단위 (AI 이미지 aspect에 맞춰 정한 값)
 const SIZE_PRESETS = [
-    { key:'wall1',   label:'가벽 1칸',   dim:'1000×2200',  w:1000, h:2200, model:'1024x1536', en:'Single-panel wall graphic, tall vertical portrait 1000×2200mm' },
-    { key:'wall2',   label:'가벽 2칸',   dim:'2000×2200',  w:2000, h:2200, model:'1024x1024', en:'Two-panel wall graphic, nearly square 2000×2200mm' },
-    { key:'wall3',   label:'가벽 3칸',   dim:'3000×2200',  w:3000, h:2200, model:'1536x1024', en:'Three-panel wall graphic, wide landscape 3000×2200mm' },
-    { key:'a4p',     label:'A4 세로',    dim:'210×297',    w:210,  h:297,  model:'1024x1536', en:'A4 portrait flyer 210×297mm' },
-    { key:'a4l',     label:'A4 가로',    dim:'297×210',    w:297,  h:210,  model:'1536x1024', en:'A4 landscape flyer 297×210mm' },
-    { key:'banner',  label:'배너',       dim:'600×1800',   w:600,  h:1800, model:'1024x1536', en:'Tall banner 600×1800mm' },
-    { key:'square',  label:'정사각',     dim:'1000×1000',  w:1000, h:1000, model:'1024x1024', en:'Square 1000×1000mm' },
-    { key:'thumb',   label:'썸네일',     dim:'1280×720',   w:1280, h:720,  model:'1536x1024', en:'Web thumbnail 1280×720px, landscape' },
+    { key:'auto',    label:'자동',       dim:'AI 선택',   w:1000, h:1000, model:'auto',      en:'auto aspect ratio, model picks best' },
+    { key:'square',  label:'정사각형',   dim:'1:1',       w:1000, h:1000, model:'1024x1024', en:'square 1:1 composition' },
+    { key:'portrait',label:'세로',       dim:'3:4',       w:1050, h:1400, model:'1024x1536', en:'portrait 3:4 composition' },
+    { key:'story',   label:'스토리',     dim:'9:16',      w:900,  h:1600, model:'1024x1536', en:'vertical story 9:16 composition' },
+    { key:'land',    label:'가로',       dim:'4:3',       w:1400, h:1050, model:'1536x1024', en:'landscape 4:3 composition' },
+    { key:'wide',    label:'와이드',     dim:'16:9',      w:1600, h:900,  model:'1536x1024', en:'widescreen 16:9 composition' },
 ];
 
 // ── 배경 색상 팔레트 ──
@@ -40,7 +39,7 @@ const COLOR_PRESETS = [
     { key:'gradient',hex:'linear-gradient(135deg,#8b5cf6,#ec4899)', en:'gradient purple-to-pink' },
 ];
 
-let selectedSize = SIZE_PRESETS[6]; // 기본: 정사각
+let selectedSize = SIZE_PRESETS[0]; // 기본: 자동
 let selectedColor = COLOR_PRESETS[0]; // 기본: 흰색
 const attachedImages = [];
 
@@ -48,15 +47,8 @@ function renderSizeGrid() {
     const grid = document.getElementById('aiSizeGrid');
     if (!grid) return;
     grid.innerHTML = SIZE_PRESETS.map(s => {
-        // 모양 프리뷰 크기 계산 (최대 36x36)
-        const maxDim = 36;
-        const ratio = s.w / s.h;
-        let sw, sh;
-        if (ratio >= 1) { sw = maxDim; sh = Math.max(8, Math.round(maxDim/ratio)); }
-        else { sh = maxDim; sw = Math.max(8, Math.round(maxDim*ratio)); }
         const sel = selectedSize.key === s.key ? 'selected' : '';
         return `<div class="aid-size-card ${sel}" data-key="${s.key}" onclick="window.selectAiSize('${s.key}')">
-            <div class="shape" style="width:${sw}px; height:${sh}px;"></div>
             <span class="name">${s.label}</span>
             <span class="dim">${s.dim}</span>
         </div>`;
@@ -135,25 +127,21 @@ window.removeAiDesignImage = function(idx) { attachedImages.splice(idx, 1); rend
 // ── 한/영 혼용 → 영어 프롬프트 빌더 ──
 function buildEnglishPrompt() {
     const title = (document.getElementById('aiDesignTitle')?.value || '').trim();
-    const subtitle = (document.getElementById('aiDesignSubtitle')?.value || '').trim();
     const extra = (document.getElementById('aiDesignPrompt')?.value || '').trim();
 
     const parts = [];
-    parts.push(`Professional print design. Format: ${selectedSize.en}.`);
+    parts.push(`Full-bleed professional design. Aspect: ${selectedSize.en}.`);
+    parts.push('The design must FILL the ENTIRE frame edge-to-edge — NO white border, NO padding, NO margin, NO outer frame. Composition extends completely to all four edges.');
     parts.push(`Background: ${selectedColor.en}.`);
     if (title) {
-        parts.push(`Large prominent title text (rendered clearly in ENGLISH LATIN CHARACTERS only): "${title}".`);
+        parts.push(`Large prominent title text (ENGLISH LATIN CHARACTERS only): "${title}".`);
     }
-    if (subtitle) {
-        parts.push(`Subtitle below (rendered clearly in ENGLISH LATIN CHARACTERS only): "${subtitle}".`);
-    }
-    parts.push('Modern, clean, commercial print-ready layout with balanced composition and clear hierarchy.');
-    parts.push('All text in the image MUST be English only, no Korean or other scripts. No gibberish or mistranslated characters.');
+    parts.push('Modern, clean, commercial print-ready layout. Balanced composition. Clear visual hierarchy.');
+    parts.push('All text in the image MUST be English only — no Korean or other scripts. No gibberish or mistranslated characters.');
     if (extra) {
-        // 추가 설명은 영문 힌트로 감싼다
-        parts.push(`Additional style/elements (interpret and translate to visual design): ${extra}`);
+        parts.push(`Additional style/elements (interpret visually): ${extra}`);
     }
-    parts.push('High quality, editorial design, sharp typography.');
+    parts.push('High quality, editorial, sharp typography.');
     return parts.join(' ');
 }
 
@@ -256,6 +244,30 @@ window.generateAiDesign = async function() {
 };
 
 window.sendAiDesignToEditor = function(imageUrl, sizeKey, widthMm, heightMm) {
+    // 'auto' 사이즈는 실제 이미지 비율에 맞춰 캔버스 크기 결정
+    if (sizeKey === 'auto') {
+        const probe = new Image();
+        probe.crossOrigin = 'anonymous';
+        probe.onload = () => {
+            const maxSide = 1200;
+            let w, h;
+            if (probe.naturalWidth >= probe.naturalHeight) {
+                w = maxSide;
+                h = Math.max(200, Math.round(maxSide * probe.naturalHeight / probe.naturalWidth));
+            } else {
+                h = maxSide;
+                w = Math.max(200, Math.round(maxSide * probe.naturalWidth / probe.naturalHeight));
+            }
+            openEditorWithAiImage(imageUrl, sizeKey, w, h);
+        };
+        probe.onerror = () => openEditorWithAiImage(imageUrl, sizeKey, 1000, 1000);
+        probe.src = imageUrl;
+        return;
+    }
+    openEditorWithAiImage(imageUrl, sizeKey, widthMm, heightMm);
+};
+
+function openEditorWithAiImage(imageUrl, sizeKey, widthMm, heightMm) {
     try {
         sessionStorage.setItem('ai_design_bg_image', imageUrl);
         sessionStorage.setItem('ai_design_canvas_size', JSON.stringify({
@@ -265,18 +277,16 @@ window.sendAiDesignToEditor = function(imageUrl, sizeKey, widthMm, heightMm) {
         }));
     } catch(e) {}
 
-    // 선택된 사이즈로 직접 에디터 열기 ('custom' 키 + mm 단위)
     if (typeof window.startEditorDirect === 'function' && widthMm && heightMm) {
         Promise.resolve(window.startEditorDirect('custom', widthMm, heightMm)).then(() => {
             injectAiImageToCanvas();
         }).catch(e => { console.warn('editor open failed:', e); });
         return;
     }
-    // 폴백: self-design 버튼 클릭
     const selfDesignBtn = document.querySelector('[data-i18n="self_design"], .adv-ext-btn');
     if (selfDesignBtn) { selfDesignBtn.click(); setTimeout(injectAiImageToCanvas, 800); return; }
     alert('에디터를 열 수 없습니다.');
-};
+}
 
 // 에디터 캔버스가 준비되면 AI 생성 이미지를 추가
 function injectAiImageToCanvas() {
