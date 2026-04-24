@@ -59,3 +59,12 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/admin-reset-pw/deno.json"
 entrypoint = "./functions/admin-reset-pw/index.ts"
+
+# ─── 외부 서비스 webhook: JWT 검증 없이 수신 (서명으로 검증) ───
+[functions.stripe-subscription-webhook]
+enabled = true
+verify_jwt = false
+
+[functions.safe-tx-stripe-webhook]
+enabled = true
+verify_jwt = false
