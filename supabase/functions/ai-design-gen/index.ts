@@ -151,9 +151,9 @@ RULES:
 6) If reference images are attached, integrate them naturally.
 7) Commercial-print quality: balanced composition, clear visual hierarchy, professional typography.`;
 
-    // gpt-5.4: Frontier 모델 (API 공식 제공). 폴백으로 5.1 / 5.
+    // gpt-5.5: Frontier 모델 (API 공식 제공). 폴백으로 5.4 / 5.1 / 5.
     // 각 후보에 90초 타임아웃 — 100s Gateway 보호.
-    const MODEL_CANDIDATES = ["gpt-5.4", "gpt-5.1", "gpt-5"];
+    const MODEL_CANDIDATES = ["gpt-5.5", "gpt-5.4", "gpt-5.1", "gpt-5"];
     let openaiRes: Response | null = null;
     let lastErrText = "";
     let usedModel = "";

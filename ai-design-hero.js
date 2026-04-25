@@ -14,7 +14,7 @@ function aiGetLang() {
 }
 const AI_I18N = {
     kr: {
-        title: '✨ AI 디자인 스튜디오', free:'무료 사용', hint:'GPT-5.4 · 영문 텍스트 · 에디터에서 한글 편집',
+        title: '✨ AI 디자인 스튜디오', free:'무료 사용', hint:'GPT-5.5 · 영문 텍스트 · 에디터에서 한글 편집',
         lead: '현재는 <b>영문으로 디자인</b>됩니다. 10일 후 <b>국가별 언어 서비스팩</b>이 출시됩니다. 현재는 <b>에디터로 보낸 후 글씨부분을 도형으로 가리고 글씨를 수정</b>할 수 있습니다.',
         s1:'① 사이즈 선택', s2:'② 배경 색상', s3:'③ 제목', s4:'④ 스타일·추가 설명', optional:'(선택)',
         titlePh:'제목 (예: CHAMELEON PRINTING, 50% SALE)', promptPh:'내용 및 전화번호, 스타일 등을 적어주세요',
@@ -25,7 +25,7 @@ const AI_I18N = {
         sizes:{auto:'자동',square:'정사각형',portrait:'세로',story:'스토리',land:'가로',wide:'와이드',autoDim:'AI 선택'}
     },
     ja: {
-        title:'✨ AIデザインスタジオ', free:'無料', hint:'GPT-5.4 · 英文テキスト · エディターで日本語編集',
+        title:'✨ AIデザインスタジオ', free:'無料', hint:'GPT-5.5 · 英文テキスト · エディターで日本語編集',
         lead:'現在は<b>英文でデザイン</b>されます。10日後に<b>国別言語サービスパック</b>が公開されます。現在は<b>エディターに送った後、文字部分を図形で覆って修正</b>できます。',
         s1:'① サイズ選択', s2:'② 背景色', s3:'③ タイトル', s4:'④ スタイル·追加説明', optional:'(任意)',
         titlePh:'タイトル (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·電話番号·スタイルなどを記入',
@@ -36,7 +36,7 @@ const AI_I18N = {
         sizes:{auto:'自動',square:'正方形',portrait:'縦',story:'ストーリー',land:'横',wide:'ワイド',autoDim:'AI選択'}
     },
     en: {
-        title:'✨ AI Design Studio', free:'Free use', hint:'GPT-5.4 · English text · Edit in editor',
+        title:'✨ AI Design Studio', free:'Free use', hint:'GPT-5.5 · English text · Edit in editor',
         lead:'Designs are currently generated in <b>English</b>. A <b>country-specific language pack</b> launches in 10 days. For now, after sending to the editor you can <b>cover text with shapes and replace it</b>.',
         s1:'① Size', s2:'② Background Color', s3:'③ Title', s4:'④ Style / Extra details', optional:'(optional)',
         titlePh:'Title (e.g. CHAMELEON PRINTING, 50% SALE)', promptPh:'Content, phone number, style, etc.',
@@ -47,7 +47,7 @@ const AI_I18N = {
         sizes:{auto:'Auto',square:'Square',portrait:'Portrait',story:'Story',land:'Landscape',wide:'Widescreen',autoDim:'AI choose'}
     },
     zh: {
-        title:'✨ AI 设计工作室', free:'免费使用', hint:'GPT-5.4 · 英文文本 · 编辑器中汉化',
+        title:'✨ AI 设计工作室', free:'免费使用', hint:'GPT-5.5 · 英文文本 · 编辑器中汉化',
         lead:'目前以<b>英文设计</b>。10 天后将推出<b>各国语言服务包</b>。现在可在<b>编辑器中用图形遮挡文字并替换</b>。',
         s1:'① 尺寸选择', s2:'② 背景色', s3:'③ 标题', s4:'④ 风格·补充说明', optional:'(可选)',
         titlePh:'标题 (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·电话·风格等',
@@ -58,7 +58,7 @@ const AI_I18N = {
         sizes:{auto:'自动',square:'正方形',portrait:'竖版',story:'故事',land:'横版',wide:'宽屏',autoDim:'AI选择'}
     },
     ar: {
-        title:'✨ استوديو التصميم بالذكاء الاصطناعي', free:'استخدام مجاني', hint:'GPT-5.4 · نص إنجليزي · تحرير في المحرر',
+        title:'✨ استوديو التصميم بالذكاء الاصطناعي', free:'استخدام مجاني', hint:'GPT-5.5 · نص إنجليزي · تحرير في المحرر',
         lead:'يتم التصميم حاليًا <b>باللغة الإنجليزية</b>. ستصدر <b>حزمة لغات خاصة بكل بلد</b> خلال 10 أيام. يمكنك الآن <b>إرسال التصميم إلى المحرر ثم تغطية النص بأشكال واستبداله</b>.',
         s1:'① المقاس', s2:'② لون الخلفية', s3:'③ العنوان', s4:'④ النمط / تفاصيل إضافية', optional:'(اختياري)',
         titlePh:'العنوان (مثال: CHAMELEON PRINTING, 50% SALE)', promptPh:'المحتوى والهاتف والنمط وغيرها',
@@ -69,7 +69,7 @@ const AI_I18N = {
         sizes:{auto:'تلقائي',square:'مربع',portrait:'عمودي',story:'قصة',land:'أفقي',wide:'شاشة عريضة',autoDim:'اختيار AI'}
     },
     es: {
-        title:'✨ Estudio de Diseño con IA', free:'Uso gratis', hint:'GPT-5.4 · Texto en inglés · Edita en el editor',
+        title:'✨ Estudio de Diseño con IA', free:'Uso gratis', hint:'GPT-5.5 · Texto en inglés · Edita en el editor',
         lead:'Los diseños se generan actualmente en <b>inglés</b>. En 10 días se lanzará un <b>paquete de idioma por país</b>. Por ahora, envía el diseño al editor y <b>cubre el texto con formas para reemplazarlo</b>.',
         s1:'① Tamaño', s2:'② Color de fondo', s3:'③ Título', s4:'④ Estilo / Detalles extra', optional:'(opcional)',
         titlePh:'Título (ej. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenido, teléfono, estilo, etc.',
@@ -80,7 +80,7 @@ const AI_I18N = {
         sizes:{auto:'Auto',square:'Cuadrado',portrait:'Vertical',story:'Historia',land:'Horizontal',wide:'Panorámico',autoDim:'IA elige'}
     },
     de: {
-        title:'✨ AI Design Studio', free:'Kostenlose Nutzung', hint:'GPT-5.4 · Englischer Text · Im Editor bearbeiten',
+        title:'✨ AI Design Studio', free:'Kostenlose Nutzung', hint:'GPT-5.5 · Englischer Text · Im Editor bearbeiten',
         lead:'Designs werden aktuell in <b>Englisch</b> erstellt. In 10 Tagen erscheint ein <b>länderspezifisches Sprachpaket</b>. Jetzt schon: Design in den Editor senden, <b>Text mit Formen überdecken und ersetzen</b>.',
         s1:'① Größe', s2:'② Hintergrundfarbe', s3:'③ Titel', s4:'④ Stil / Zusatzdetails', optional:'(optional)',
         titlePh:'Titel (z.B. CHAMELEON PRINTING, 50% SALE)', promptPh:'Inhalt, Telefon, Stil usw.',
@@ -91,7 +91,7 @@ const AI_I18N = {
         sizes:{auto:'Auto',square:'Quadrat',portrait:'Hoch',story:'Story',land:'Quer',wide:'Breitbild',autoDim:'KI wählt'}
     },
     fr: {
-        title:'✨ Studio de Design IA', free:'Utilisation gratuite', hint:'GPT-5.4 · Texte anglais · Modifier dans l\'éditeur',
+        title:'✨ Studio de Design IA', free:'Utilisation gratuite', hint:'GPT-5.5 · Texte anglais · Modifier dans l\'éditeur',
         lead:'Les designs sont actuellement en <b>anglais</b>. Un <b>pack linguistique par pays</b> sortira dans 10 jours. Pour l\'instant, envoyez au <b>éditeur et masquez le texte avec des formes pour le remplacer</b>.',
         s1:'① Taille', s2:'② Couleur de fond', s3:'③ Titre', s4:'④ Style / Détails supplémentaires', optional:'(facultatif)',
         titlePh:'Titre (ex. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenu, téléphone, style, etc.',
