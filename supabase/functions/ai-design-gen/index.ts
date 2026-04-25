@@ -152,6 +152,7 @@ TEXT RULES:
 - Render text in the language specified by the user (Korean / Japanese / English / Chinese / Arabic / Spanish / German / French) using the correct script (Hangul, Kana/Kanji, Latin, Hanzi, Arabic, etc.) with accurate spelling and grammar.
 - If the user provides a title or text, reproduce it EXACTLY as given — no paraphrasing, no translation.
 - NO gibberish, NO fake or mistranslated characters.
+- CRITICAL — small-text policy: image generation models cannot render small text reliably. ONLY render text that is LARGE and clearly readable (the headline/title, and at most 1-2 short tagline phrases). DO NOT generate paragraphs of body copy, fine print, captions, dense text blocks, lorem-ipsum-style filler, or any small/tiny text. Replace what would be body copy with iconography, simple shape blocks, color bars, photographic content, or empty negative space. The user can add small text afterwards in the editor.
 
 DESIGN RULES:
 - Editorial, commercial-print quality: sharp typography, balanced composition, clear visual hierarchy.

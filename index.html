@@ -851,11 +851,15 @@ if ('caches' in window) {
             position:relative; overflow:hidden;
         }
         #aiDesignHero .aid-preview-empty {
-            flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-            padding:40px 24px; text-align:center; color:#8b5cf6;
+            flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+            padding:0; text-align:center; color:#8b5cf6;
         }
-        #aiDesignHero .aid-preview-empty .emoji { font-size:56px; margin-bottom:12px; filter:drop-shadow(0 4px 12px rgba(139,92,246,0.25)); }
-        #aiDesignHero .aid-preview-empty .main { font-size:15px; font-weight:800; color:#6d28d9; margin-bottom:4px; }
+        #aiDesignHero .aid-example-img {
+            width:100%; height:auto; max-height:360px; object-fit:cover;
+            border-radius:14px 14px 0 0; display:block;
+        }
+        #aiDesignHero .aid-example-caption { padding:14px 20px 20px; }
+        #aiDesignHero .aid-preview-empty .main { font-size:14px; font-weight:800; color:#6d28d9; margin-bottom:4px; }
         #aiDesignHero .aid-preview-empty .sub { font-size:12px; color:#64748b; line-height:1.6; }
         #aiDesignHero .aid-preview-loading {
             flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -945,9 +949,11 @@ if ('caches' in window) {
                 <div class="aid-right">
                     <div id="aiDesignResult" class="aid-preview">
                         <div class="aid-preview-empty">
-                            <div class="emoji">🎨</div>
-                            <div class="main">여기에 생성된 디자인이 표시됩니다</div>
-                            <div class="sub">왼쪽에서 사이즈 · 색상 · 제목을 선택한 뒤<br>🎨 생성 버튼을 누르세요 (약 30~60초)</div>
+                            <img src="/9555.png?v=1" alt="예시 디자인" class="aid-example-img">
+                            <div class="aid-example-caption">
+                                <div class="main">예시 — 이런 디자인이 생성됩니다</div>
+                                <div class="sub">왼쪽에서 사이즈 · 색상 · 제목을 선택한 뒤<br>🎨 생성 버튼을 누르세요 (약 30~60초)</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -8157,7 +8163,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=19').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=20').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 

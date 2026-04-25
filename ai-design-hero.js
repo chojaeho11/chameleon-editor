@@ -18,7 +18,7 @@ const AI_I18N = {
         lead: '<b>원하는 디자인을 마음껏 해보세요.</b> 수정할 부분이 있다면 에디터에서 수정하세요.',
         s1:'① 사이즈 선택', s2:'② 배경 색상', s3:'③ 제목', s4:'④ 스타일·추가 설명', optional:'(선택)',
         titlePh:'제목 (예: CHAMELEON PRINTING, 50% SALE)', promptPh:'내용 및 전화번호, 스타일 등을 적어주세요',
-        uploadBtn:'첨부이미지 (4장까지)', genBtn:'🎨 AI 디자인 생성하기', emptyMain:'여기에 생성된 디자인이 표시됩니다',
+        uploadBtn:'첨부이미지 (4장까지)', genBtn:'🎨 AI 디자인 생성하기', emptyMain:'예시 — 이런 디자인이 생성됩니다',
         emptySub:'왼쪽에서 사이즈 · 색상 · 제목을 선택한 뒤<br>🎨 생성 버튼을 누르세요 (약 30~60초)',
         loadMain:'AI가 디자인을 생성중입니다', loadSub:'약 2~3분 정도 소요됩니다. 잠시만 기다려 주세요.',
         editBtn:'✏️ 에디터로 추가편집', dlBtn:'💾 고화질 다운로드', customPick:'직접 선택',
@@ -29,7 +29,7 @@ const AI_I18N = {
         lead:'<b>お好きなデザインを思いのまま作ってください。</b> 修正したい部分はエディターで編集できます。',
         s1:'① サイズ選択', s2:'② 背景色', s3:'③ タイトル', s4:'④ スタイル·追加説明', optional:'(任意)',
         titlePh:'タイトル (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·電話番号·スタイルなどを記入',
-        uploadBtn:'画像添付 (最大4枚)', genBtn:'🎨 AIデザイン生成', emptyMain:'生成されたデザインがここに表示されます',
+        uploadBtn:'画像添付 (最大4枚)', genBtn:'🎨 AIデザイン生成', emptyMain:'例 — このようなデザインが生成されます',
         emptySub:'左でサイズ·色·タイトルを選び<br>🎨 生成ボタンを押してください (約30〜60秒)',
         loadMain:'AIがデザイン生成中です', loadSub:'約2〜3分かかります。しばらくお待ちください。',
         editBtn:'✏️ エディターで編集', dlBtn:'💾 高画質ダウンロード', customPick:'カスタム色',
@@ -40,7 +40,7 @@ const AI_I18N = {
         lead:'<b>Design freely as you wish.</b> If you want to make edits, fix them in the editor.',
         s1:'① Size', s2:'② Background Color', s3:'③ Title', s4:'④ Style / Extra details', optional:'(optional)',
         titlePh:'Title (e.g. CHAMELEON PRINTING, 50% SALE)', promptPh:'Content, phone number, style, etc.',
-        uploadBtn:'Attach images (up to 4)', genBtn:'🎨 Generate AI Design', emptyMain:'Your generated design appears here',
+        uploadBtn:'Attach images (up to 4)', genBtn:'🎨 Generate AI Design', emptyMain:'Example — designs like this will be generated',
         emptySub:'Pick size · color · title on the left,<br>then press 🎨 Generate (30–60 s)',
         loadMain:'AI is generating your design', loadSub:'This takes ~2–3 minutes. Please wait.',
         editBtn:'✏️ Open in Editor', dlBtn:'💾 HD Download', customPick:'Pick custom',
@@ -51,7 +51,7 @@ const AI_I18N = {
         lead:'<b>尽情创作您想要的设计。</b> 需要修改的部分请在编辑器中修改。',
         s1:'① 尺寸选择', s2:'② 背景色', s3:'③ 标题', s4:'④ 风格·补充说明', optional:'(可选)',
         titlePh:'标题 (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·电话·风格等',
-        uploadBtn:'附加图片 (最多4张)', genBtn:'🎨 生成AI设计', emptyMain:'生成的设计将显示在这里',
+        uploadBtn:'附加图片 (最多4张)', genBtn:'🎨 生成AI设计', emptyMain:'示例 — 将生成此类设计',
         emptySub:'在左侧选择尺寸·颜色·标题后<br>点击 🎨 生成 (约30–60秒)',
         loadMain:'AI正在生成设计', loadSub:'大约需要2–3分钟，请稍候。',
         editBtn:'✏️ 在编辑器中继续编辑', dlBtn:'💾 高清下载', customPick:'自选',
@@ -62,7 +62,7 @@ const AI_I18N = {
         lead:'<b>صمم بحرية كما تشاء.</b> إذا كنت ترغب في تعديل أي جزء، فقم بتعديله في المحرر.',
         s1:'① المقاس', s2:'② لون الخلفية', s3:'③ العنوان', s4:'④ النمط / تفاصيل إضافية', optional:'(اختياري)',
         titlePh:'العنوان (مثال: CHAMELEON PRINTING, 50% SALE)', promptPh:'المحتوى والهاتف والنمط وغيرها',
-        uploadBtn:'إرفاق صور (حتى 4)', genBtn:'🎨 إنشاء تصميم بالذكاء الاصطناعي', emptyMain:'سيظهر تصميمك هنا',
+        uploadBtn:'إرفاق صور (حتى 4)', genBtn:'🎨 إنشاء تصميم بالذكاء الاصطناعي', emptyMain:'مثال — سيتم إنشاء تصاميم مثل هذه',
         emptySub:'اختر المقاس واللون والعنوان على اليسار<br>ثم اضغط 🎨 إنشاء (30–60 ثانية)',
         loadMain:'يقوم الذكاء الاصطناعي بإنشاء التصميم', loadSub:'قد يستغرق هذا 2–3 دقائق. يرجى الانتظار.',
         editBtn:'✏️ فتح في المحرر', dlBtn:'💾 تحميل عالي الجودة', customPick:'اختيار مخصص',
@@ -73,7 +73,7 @@ const AI_I18N = {
         lead:'<b>Diseña libremente como quieras.</b> Si necesitas editar algo, hazlo en el editor.',
         s1:'① Tamaño', s2:'② Color de fondo', s3:'③ Título', s4:'④ Estilo / Detalles extra', optional:'(opcional)',
         titlePh:'Título (ej. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenido, teléfono, estilo, etc.',
-        uploadBtn:'Adjuntar imágenes (hasta 4)', genBtn:'🎨 Generar Diseño IA', emptyMain:'Tu diseño generado aparecerá aquí',
+        uploadBtn:'Adjuntar imágenes (hasta 4)', genBtn:'🎨 Generar Diseño IA', emptyMain:'Ejemplo — se generarán diseños como este',
         emptySub:'Elige tamaño · color · título a la izquierda,<br>luego pulsa 🎨 Generar (30–60 s)',
         loadMain:'La IA está generando tu diseño', loadSub:'Esto tarda 2–3 minutos. Espere, por favor.',
         editBtn:'✏️ Abrir en Editor', dlBtn:'💾 Descarga HD', customPick:'Personalizado',
@@ -84,7 +84,7 @@ const AI_I18N = {
         lead:'<b>Gestalten Sie ganz nach Belieben.</b> Was Sie anpassen möchten, können Sie im Editor bearbeiten.',
         s1:'① Größe', s2:'② Hintergrundfarbe', s3:'③ Titel', s4:'④ Stil / Zusatzdetails', optional:'(optional)',
         titlePh:'Titel (z.B. CHAMELEON PRINTING, 50% SALE)', promptPh:'Inhalt, Telefon, Stil usw.',
-        uploadBtn:'Bilder anhängen (bis 4)', genBtn:'🎨 KI-Design generieren', emptyMain:'Ihr generiertes Design erscheint hier',
+        uploadBtn:'Bilder anhängen (bis 4)', genBtn:'🎨 KI-Design generieren', emptyMain:'Beispiel — solche Designs werden generiert',
         emptySub:'Wählen Sie links Größe · Farbe · Titel<br>und drücken 🎨 Generieren (30–60 s)',
         loadMain:'KI erstellt Ihr Design', loadSub:'Das dauert ca. 2–3 Minuten. Bitte warten.',
         editBtn:'✏️ Im Editor öffnen', dlBtn:'💾 HD-Download', customPick:'Benutzerdefiniert',
@@ -95,7 +95,7 @@ const AI_I18N = {
         lead:'<b>Créez librement le design que vous voulez.</b> Pour toute modification, utilisez l\'éditeur.',
         s1:'① Taille', s2:'② Couleur de fond', s3:'③ Titre', s4:'④ Style / Détails supplémentaires', optional:'(facultatif)',
         titlePh:'Titre (ex. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenu, téléphone, style, etc.',
-        uploadBtn:'Joindre des images (max 4)', genBtn:'🎨 Générer le Design IA', emptyMain:'Votre design généré apparaîtra ici',
+        uploadBtn:'Joindre des images (max 4)', genBtn:'🎨 Générer le Design IA', emptyMain:'Exemple — des designs de ce type seront générés',
         emptySub:'Choisissez taille · couleur · titre à gauche,<br>puis appuyez sur 🎨 Générer (30–60 s)',
         loadMain:'L\'IA génère votre design', loadSub:'Cela prend 2–3 minutes. Veuillez patienter.',
         editBtn:'✏️ Ouvrir dans l\'Éditeur', dlBtn:'💾 Téléchargement HD', customPick:'Personnalisé',
@@ -332,6 +332,7 @@ function buildEnglishPrompt() {
     lines.push('=== DIRECTION ===');
     lines.push('Treat the brief above as creative direction. Build a rich, cinematic, fully-realized composition — characters, props, lighting, mood, palette, branding all integrated. Movie-poster / editorial / campaign-art quality.');
     lines.push(`Sharp commercial-print typography appropriate for ${lang.script}. Reproduce the headline text EXACTLY as given.`);
+    lines.push('TEXT SIZE RULE — only render LARGE clearly-readable text (headline + at most 1-2 short tagline phrases). DO NOT render small text, body paragraphs, fine print, captions, lorem-ipsum, or dense text blocks. Replace body copy with icons, shape blocks, color bars, or empty negative space. The user adds small text in the editor afterwards.');
     return lines.join('\n');
 }
 
