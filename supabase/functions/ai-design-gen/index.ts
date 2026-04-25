@@ -120,117 +120,81 @@ serve(async (req) => {
     const usageCount = 0;
     const dailyLimit = 99999;
 
-    // ── 2단계 파이프라인 + SSE 스트리밍 ──
-    // Stage 1: GPT-5.5가 사용자 브리프를 시네마틱한 디테일 프롬프트로 확장 (~5-10s)
-    // Stage 2: gpt-image-2 + partial_images=2 스트리밍으로 점진적 이미지 출력 (~30-180s)
-    function bytesToB64(bytes: Uint8Array): string {
-      let bin = "";
-      const chunk = 0x8000;
-      for (let i = 0; i < bytes.length; i += chunk) {
-        bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
-      }
-      return btoa(bin);
-    }
+    // ── Images API 직접 호출 (속도 우선, GPT-5.5 reasoning 단계 생략) ──
 
-    const systemInstructions = `You are a senior creative director for high-end commercial print and poster design (movie posters, K-pop covers, magazine spreads, brand campaigns).
-
-WORKFLOW:
-1) Read the user's brief carefully (concept/style notes, title, aspect, background).
-2) INTERPRET RICHLY — imagine subjects, characters, props, scene, lighting, color palette, mood, and brand integration like a movie-poster art director. Do NOT default to a minimal text-only card unless the user explicitly asks for that.
-3) Build an extremely detailed image_generation prompt that fully realizes the creative vision (subjects, composition, background, lighting, palette, typography placement, brand elements).
-4) Call image_generation tool ONCE with this rich, cinematic prompt.
-
-TEXT RULES:
-- Render text in the language specified by the user (Korean / Japanese / English / Chinese / Arabic / Spanish / German / French) using the correct script (Hangul, Kana/Kanji, Latin, Hanzi, Arabic, etc.) with accurate spelling and grammar.
-- If the user provides a title or text, reproduce it EXACTLY as given — no paraphrasing, no translation.
-- NO gibberish, NO fake or mistranslated characters.
-- CRITICAL — small-text policy: image generation models cannot render small text reliably. ONLY render text that is LARGE and clearly readable (the headline/title, and at most 1-2 short tagline phrases). DO NOT generate paragraphs of body copy, fine print, captions, dense text blocks, lorem-ipsum-style filler, or any small/tiny text. Replace what would be body copy with iconography, simple shape blocks, color bars, photographic content, or empty negative space.
-
-DESIGN RULES:
-- Editorial, commercial-print quality: sharp typography, balanced composition, clear visual hierarchy.
-- Composition should fill the frame; allow margins or borders only when the design intent calls for them.
-- If reference images are attached, integrate them naturally and preserve key features.`;
-
-    const userContent: any[] = [{ type: "input_text", text: prompt }];
-    inputImages.forEach((img) => {
-      const b64ref = bytesToB64(img.data);
-      userContent.push({
-        type: "input_image",
-        image_url: `data:${img.type || "image/png"};base64,${b64ref}`,
-      });
-    });
-
-    // gpt-image-1.5: 첫 작동 안정 상태. gpt-image-2는 OpenAI 측에서 느려서 게이트웨이 504 유발.
-    const PARENT_MODELS = ["gpt-5.5-2026-04-23", "gpt-5.4", "gpt-5.1"];
+    // Images API 직접 호출 — Responses API + GPT-5.5 reasoning 단계 생략 → 30-60초 단축
+    // 첨부 이미지 있으면 /images/edits, 없으면 /images/generations
     const IMAGE_MODEL = "gpt-image-1.5";
-    let openaiRes: Response | null = null;
-    let lastErrText = "";
-    let usedModel = "";
     const hasInputImages = inputImages.length > 0;
-    for (const m of PARENT_MODELS) {
-      const imgTool: any = {
-        type: "image_generation",
-        model: IMAGE_MODEL,
-        size: finalSize,
-        quality: "high",
-        output_format: "png",
-      };
-      if (hasInputImages) imgTool.input_fidelity = "high";
-      const responsesBody: any = {
-        model: m,
-        instructions: systemInstructions,
-        input: [{ role: "user", content: userContent }],
-        tools: [imgTool],
-        tool_choice: { type: "image_generation" },
-      };
-      const abort = new AbortController();
-      const timer = setTimeout(() => abort.abort(), 240_000);
-      let r: Response;
-      const t0 = Date.now();
-      try {
-        r = await fetch("https://api.openai.com/v1/responses", {
+    const usedModel = IMAGE_MODEL;
+
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 180_000);
+    let openaiRes: Response;
+    const t0 = Date.now();
+
+    try {
+      if (hasInputImages) {
+        const fd = new FormData();
+        fd.append("model", IMAGE_MODEL);
+        fd.append("prompt", prompt);
+        fd.append("size", finalSize);
+        fd.append("quality", "high");
+        fd.append("input_fidelity", "high");
+        fd.append("output_format", "png");
+        fd.append("n", "1");
+        for (let i = 0; i < inputImages.length; i++) {
+          const img = inputImages[i];
+          const ab = img.data.buffer.slice(img.data.byteOffset, img.data.byteOffset + img.data.byteLength) as ArrayBuffer;
+          const blob = new Blob([ab], { type: img.type || "image/png" });
+          fd.append("image[]", blob, img.name || `ref-${i}.png`);
+        }
+        openaiRes = await fetch("https://api.openai.com/v1/images/edits", {
           method: "POST",
-          headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify(responsesBody),
+          headers: { "Authorization": `Bearer ${OPENAI_KEY}` },
+          body: fd,
           signal: abort.signal,
         });
-      } catch (e: any) {
-        clearTimeout(timer);
-        const elapsed = Date.now() - t0;
-        console.error(`[${m}] fetch error after ${elapsed}ms: ${e?.message || e}`);
-        lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
-        continue;
-      }
-      clearTimeout(timer);
-      const elapsed = Date.now() - t0;
-      console.log(`[${m}] status=${r.status} elapsed=${elapsed}ms`);
-      if (r.ok) { openaiRes = r; usedModel = m; break; }
-      lastErrText = await r.text();
-      console.error(`[${m}] ${r.status}: ${lastErrText.slice(0, 300)}`);
-      if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
-        return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m }), {
-          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      } else {
+        openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: IMAGE_MODEL,
+            prompt,
+            size: finalSize,
+            quality: "high",
+            output_format: "png",
+            n: 1,
+          }),
+          signal: abort.signal,
         });
       }
+    } catch (e: any) {
+      clearTimeout(timer);
+      const elapsed = Date.now() - t0;
+      console.error(`[images-api] fetch error after ${elapsed}ms: ${e?.message || e}`);
+      return new Response(JSON.stringify({ error: "OpenAI 호출 실패", detail: String(e?.message || e) }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
-    if (!openaiRes) {
-      return new Response(JSON.stringify({ error: "사용 가능한 모델 없음", detail: lastErrText.slice(0, 800) }), {
+    clearTimeout(timer);
+    const elapsed = Date.now() - t0;
+    console.log(`[images-api] status=${openaiRes.status} elapsed=${elapsed}ms`);
+
+    if (!openaiRes.ok) {
+      const errTxt = await openaiRes.text();
+      console.error(`[images-api] ${openaiRes.status}: ${errTxt.slice(0, 400)}`);
+      return new Response(JSON.stringify({ error: `이미지 생성 실패: ${openaiRes.status}`, detail: errTxt.slice(0, 800) }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     const aiData = await openaiRes.json();
-    let b64: string | null = null;
-    const outputs: any[] = aiData?.output || [];
-    for (const item of outputs) {
-      if (item?.type === "image_generation_call" && item?.result) {
-        b64 = item.result;
-        break;
-      }
-    }
+    const b64: string | null = aiData?.data?.[0]?.b64_json || null;
     if (!b64) {
-      console.error("No image_generation_call result:", JSON.stringify(aiData).slice(0, 2000));
-      return new Response(JSON.stringify({ error: "이미지 생성 결과 누락", detail: JSON.stringify(aiData).slice(0, 500) }), {
+      console.error("No b64_json in response:", JSON.stringify(aiData).slice(0, 1000));
+      return new Response(JSON.stringify({ error: "이미지 데이터 누락", detail: JSON.stringify(aiData).slice(0, 500) }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }

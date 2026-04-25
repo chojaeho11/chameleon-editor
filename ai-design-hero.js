@@ -20,7 +20,7 @@ const AI_I18N = {
         titlePh:'제목 (예: CHAMELEON PRINTING, 50% SALE)', promptPh:'내용 및 전화번호, 스타일 등을 적어주세요',
         uploadBtn:'첨부이미지 (4장까지)', genBtn:'🎨 AI 디자인 생성하기', genBtnLoading:'⏳ 생성중...', previewHint:'미리보기 · 곧 또렷해집니다', emptyMain:'예시 — 이런 디자인이 생성됩니다',
         emptySub:'왼쪽에서 사이즈 · 색상 · 제목을 선택한 뒤<br>🎨 생성 버튼을 누르세요 (약 30~60초)',
-        loadMain:'AI가 디자인을 생성중입니다', loadSub:'약 2~3분 정도 소요됩니다. 잠시만 기다려 주세요.',
+        loadMain:'AI가 디자인을 생성중입니다', loadSub:'약 30~60초 정도 소요됩니다. 잠시만 기다려 주세요.',
         editBtn:'✏️ 에디터로 추가편집', dlBtn:'💾 고화질 다운로드', customPick:'직접 선택',
         sizes:{auto:'자동',square:'정사각형',portrait:'세로',story:'스토리',land:'가로',wide:'와이드',autoDim:'AI 선택'}
     },
@@ -31,7 +31,7 @@ const AI_I18N = {
         titlePh:'タイトル (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·電話番号·スタイルなどを記入',
         uploadBtn:'画像添付 (最大4枚)', genBtn:'🎨 AIデザイン生成', genBtnLoading:'⏳ 生成中...', previewHint:'プレビュー · 間もなく鮮明になります', emptyMain:'例 — このようなデザインが生成されます',
         emptySub:'左でサイズ·色·タイトルを選び<br>🎨 生成ボタンを押してください (約30〜60秒)',
-        loadMain:'AIがデザイン生成中です', loadSub:'約2〜3分かかります。しばらくお待ちください。',
+        loadMain:'AIがデザイン生成中です', loadSub:'約30〜60秒かかります。しばらくお待ちください。',
         editBtn:'✏️ エディターで編集', dlBtn:'💾 高画質ダウンロード', customPick:'カスタム色',
         sizes:{auto:'自動',square:'正方形',portrait:'縦',story:'ストーリー',land:'横',wide:'ワイド',autoDim:'AI選択'}
     },
@@ -42,7 +42,7 @@ const AI_I18N = {
         titlePh:'Title (e.g. CHAMELEON PRINTING, 50% SALE)', promptPh:'Content, phone number, style, etc.',
         uploadBtn:'Attach images (up to 4)', genBtn:'🎨 Generate AI Design', genBtnLoading:'⏳ Generating...', previewHint:'Preview · sharpening soon', emptyMain:'Example — designs like this will be generated',
         emptySub:'Pick size · color · title on the left,<br>then press 🎨 Generate (30–60 s)',
-        loadMain:'AI is generating your design', loadSub:'This takes ~2–3 minutes. Please wait.',
+        loadMain:'AI is generating your design', loadSub:'This takes ~30–60 seconds. Please wait.',
         editBtn:'✏️ Open in Editor', dlBtn:'💾 HD Download', customPick:'Pick custom',
         sizes:{auto:'Auto',square:'Square',portrait:'Portrait',story:'Story',land:'Landscape',wide:'Widescreen',autoDim:'AI choose'}
     },
@@ -53,7 +53,7 @@ const AI_I18N = {
         titlePh:'标题 (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·电话·风格等',
         uploadBtn:'附加图片 (最多4张)', genBtn:'🎨 生成AI设计', genBtnLoading:'⏳ 生成中...', previewHint:'预览 · 即将清晰', emptyMain:'示例 — 将生成此类设计',
         emptySub:'在左侧选择尺寸·颜色·标题后<br>点击 🎨 生成 (约30–60秒)',
-        loadMain:'AI正在生成设计', loadSub:'大约需要2–3分钟，请稍候。',
+        loadMain:'AI正在生成设计', loadSub:'大约需要30–60秒，请稍候。',
         editBtn:'✏️ 在编辑器中继续编辑', dlBtn:'💾 高清下载', customPick:'自选',
         sizes:{auto:'自动',square:'正方形',portrait:'竖版',story:'故事',land:'横版',wide:'宽屏',autoDim:'AI选择'}
     },
@@ -64,7 +64,7 @@ const AI_I18N = {
         titlePh:'العنوان (مثال: CHAMELEON PRINTING, 50% SALE)', promptPh:'المحتوى والهاتف والنمط وغيرها',
         uploadBtn:'إرفاق صور (حتى 4)', genBtn:'🎨 إنشاء تصميم بالذكاء الاصطناعي', genBtnLoading:'⏳ جارٍ الإنشاء...', previewHint:'معاينة · ستصبح أكثر وضوحًا قريبًا', emptyMain:'مثال — سيتم إنشاء تصاميم مثل هذه',
         emptySub:'اختر المقاس واللون والعنوان على اليسار<br>ثم اضغط 🎨 إنشاء (30–60 ثانية)',
-        loadMain:'يقوم الذكاء الاصطناعي بإنشاء التصميم', loadSub:'قد يستغرق هذا 2–3 دقائق. يرجى الانتظار.',
+        loadMain:'يقوم الذكاء الاصطناعي بإنشاء التصميم', loadSub:'يستغرق ذلك 30–60 ثانية. يرجى الانتظار.',
         editBtn:'✏️ فتح في المحرر', dlBtn:'💾 تحميل عالي الجودة', customPick:'اختيار مخصص',
         sizes:{auto:'تلقائي',square:'مربع',portrait:'عمودي',story:'قصة',land:'أفقي',wide:'شاشة عريضة',autoDim:'اختيار AI'}
     },
@@ -75,7 +75,7 @@ const AI_I18N = {
         titlePh:'Título (ej. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenido, teléfono, estilo, etc.',
         uploadBtn:'Adjuntar imágenes (hasta 4)', genBtn:'🎨 Generar Diseño IA', genBtnLoading:'⏳ Generando...', previewHint:'Vista previa · pronto se aclarará', emptyMain:'Ejemplo — se generarán diseños como este',
         emptySub:'Elige tamaño · color · título a la izquierda,<br>luego pulsa 🎨 Generar (30–60 s)',
-        loadMain:'La IA está generando tu diseño', loadSub:'Esto tarda 2–3 minutos. Espere, por favor.',
+        loadMain:'La IA está generando tu diseño', loadSub:'Tarda 30–60 segundos. Por favor espere.',
         editBtn:'✏️ Abrir en Editor', dlBtn:'💾 Descarga HD', customPick:'Personalizado',
         sizes:{auto:'Auto',square:'Cuadrado',portrait:'Vertical',story:'Historia',land:'Horizontal',wide:'Panorámico',autoDim:'IA elige'}
     },
@@ -86,7 +86,7 @@ const AI_I18N = {
         titlePh:'Titel (z.B. CHAMELEON PRINTING, 50% SALE)', promptPh:'Inhalt, Telefon, Stil usw.',
         uploadBtn:'Bilder anhängen (bis 4)', genBtn:'🎨 KI-Design generieren', genBtnLoading:'⏳ Wird generiert...', previewHint:'Vorschau · wird gleich schärfer', emptyMain:'Beispiel — solche Designs werden generiert',
         emptySub:'Wählen Sie links Größe · Farbe · Titel<br>und drücken 🎨 Generieren (30–60 s)',
-        loadMain:'KI erstellt Ihr Design', loadSub:'Das dauert ca. 2–3 Minuten. Bitte warten.',
+        loadMain:'KI erstellt Ihr Design', loadSub:'Das dauert ca. 30–60 Sekunden. Bitte warten.',
         editBtn:'✏️ Im Editor öffnen', dlBtn:'💾 HD-Download', customPick:'Benutzerdefiniert',
         sizes:{auto:'Auto',square:'Quadrat',portrait:'Hoch',story:'Story',land:'Quer',wide:'Breitbild',autoDim:'KI wählt'}
     },
@@ -97,7 +97,7 @@ const AI_I18N = {
         titlePh:'Titre (ex. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenu, téléphone, style, etc.',
         uploadBtn:'Joindre des images (max 4)', genBtn:'🎨 Générer le Design IA', genBtnLoading:'⏳ Génération...', previewHint:'Aperçu · bientôt plus net', emptyMain:'Exemple — des designs de ce type seront générés',
         emptySub:'Choisissez taille · couleur · titre à gauche,<br>puis appuyez sur 🎨 Générer (30–60 s)',
-        loadMain:'L\'IA génère votre design', loadSub:'Cela prend 2–3 minutes. Veuillez patienter.',
+        loadMain:'L\'IA génère votre design', loadSub:'Cela prend 30–60 secondes. Veuillez patienter.',
         editBtn:'✏️ Ouvrir dans l\'Éditeur', dlBtn:'💾 Téléchargement HD', customPick:'Personnalisé',
         sizes:{auto:'Auto',square:'Carré',portrait:'Portrait',story:'Story',land:'Paysage',wide:'Panoramique',autoDim:'IA choisit'}
     }
