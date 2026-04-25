@@ -310,27 +310,29 @@ const AI_LANG_META = {
     fr: { name: 'French',   script: 'Latin alphabet' },
 };
 
-// ── 사이트 언어 기반 다국어 프롬프트 빌더 ──
+// ── 사이트 언어 기반 다국어 프롬프트 빌더 (creative brief 우선 구조) ──
 function buildEnglishPrompt() {
     const title = (document.getElementById('aiDesignTitle')?.value || '').trim();
     const extra = (document.getElementById('aiDesignPrompt')?.value || '').trim();
     const langKey = aiGetLang();
     const lang = AI_LANG_META[langKey] || AI_LANG_META.en;
 
-    const parts = [];
-    parts.push(`Full-bleed professional design. Aspect: ${selectedSize.en}.`);
-    parts.push('The design must FILL the ENTIRE frame edge-to-edge — NO white border, NO padding, NO margin, NO outer frame. Composition extends completely to all four edges.');
-    parts.push(`Background: ${selectedColor.en}.`);
-    parts.push(`All on-image text MUST be in ${lang.name} using ${lang.script}, with correct spelling and grammar. Do NOT use English unless the user's title/content is already in English. NO gibberish, NO fake or mistranslated characters.`);
-    if (title) {
-        parts.push(`Large prominent title text — reproduce EXACTLY as given: "${title}".`);
-    }
-    parts.push('Modern, clean, commercial print-ready layout. Balanced composition. Clear visual hierarchy.');
+    const lines = [];
+    lines.push('=== USER CREATIVE BRIEF ===');
     if (extra) {
-        parts.push(`Additional style/elements (interpret visually, keep any included text in ${lang.name}): ${extra}`);
+        lines.push(`Concept / style / extras: ${extra}`);
     }
-    parts.push(`High quality, editorial, sharp typography appropriate for ${lang.script}.`);
-    return parts.join(' ');
+    if (title) {
+        lines.push(`Headline text (render in image EXACTLY as written, do not translate or paraphrase): "${title}"`);
+    }
+    lines.push(`Aspect ratio: ${selectedSize.en}`);
+    lines.push(`Base background reference color: ${selectedColor.en} (use as accent or palette anchor — override if the cinematic concept calls for different scenery)`);
+    lines.push(`On-image text language: ${lang.name} (${lang.script}). All text MUST be in ${lang.name} with accurate spelling and grammar — no gibberish, no fake characters.`);
+    lines.push('');
+    lines.push('=== DIRECTION ===');
+    lines.push('Treat the brief above as creative direction. Build a rich, cinematic, fully-realized composition — characters, props, lighting, mood, palette, branding all integrated. Movie-poster / editorial / campaign-art quality.');
+    lines.push(`Sharp commercial-print typography appropriate for ${lang.script}. Reproduce the headline text EXACTLY as given.`);
+    return lines.join('\n');
 }
 
 window.generateAiDesign = async function() {

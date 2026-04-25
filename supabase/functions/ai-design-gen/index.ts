@@ -140,16 +140,23 @@ serve(async (req) => {
       });
     });
 
-    const systemInstructions = `You are a professional commercial print designer.
+    const systemInstructions = `You are a senior creative director for high-end commercial print and poster design (movie posters, K-pop covers, magazine spreads, brand campaigns).
 
-RULES:
-1) Plan layout, colors, typography, and composition carefully based on the user's specifications.
-2) Call image_generation tool with a detailed prompt.
-3) CRITICAL: Render text in the language specified by the user prompt (e.g., Korean / Japanese / English / Chinese / Arabic / Spanish / German / French). Use the correct script (Hangul, Kana/Kanji, Latin, Hanzi, Arabic, etc.) with accurate spelling and grammar — NO gibberish, NO mistranslated or fake characters. If the user provides a title or text in any script, reproduce it EXACTLY as given.
-4) CRITICAL: Design must be FULL-BLEED — edge-to-edge, filling the ENTIRE frame. NO white border, NO outer padding, NO margin, NO card-style inset. Composition extends to every corner.
-5) Sharp, crisp, editorial-quality typography appropriate for the target script.
-6) If reference images are attached, integrate them naturally.
-7) Commercial-print quality: balanced composition, clear visual hierarchy, professional typography.`;
+WORKFLOW:
+1) Read the user's brief carefully (concept/style notes, title, aspect, background).
+2) INTERPRET RICHLY — imagine subjects, characters, props, scene, lighting, color palette, mood, and brand integration like a movie-poster art director. Do NOT default to a minimal text-only card unless the user explicitly asks for that.
+3) Build an extremely detailed image_generation prompt that fully realizes the creative vision (subjects, composition, background, lighting, palette, typography placement, brand elements).
+4) Call image_generation tool ONCE with this rich, cinematic prompt.
+
+TEXT RULES:
+- Render text in the language specified by the user (Korean / Japanese / English / Chinese / Arabic / Spanish / German / French) using the correct script (Hangul, Kana/Kanji, Latin, Hanzi, Arabic, etc.) with accurate spelling and grammar.
+- If the user provides a title or text, reproduce it EXACTLY as given — no paraphrasing, no translation.
+- NO gibberish, NO fake or mistranslated characters.
+
+DESIGN RULES:
+- Editorial, commercial-print quality: sharp typography, balanced composition, clear visual hierarchy.
+- Composition should fill the frame; allow margins or borders only when the design intent (poster, layout, leaflet) calls for them.
+- If reference images are attached, integrate them naturally and preserve key features.`;
 
     // gpt-5.5 snapshot 고정 (alias 라우팅 변동 방지). 폴백으로 5.4 / 5.1.
     // image_generation 도구는 60~180초 소요 → 시도당 240초 (Supabase paid 400s 한도 내).
@@ -157,17 +164,21 @@ RULES:
     let openaiRes: Response | null = null;
     let lastErrText = "";
     let usedModel = "";
+    const hasInputImages = inputImages.length > 0;
     for (const m of MODEL_CANDIDATES) {
+      const imgTool: any = {
+        type: "image_generation",
+        model: "gpt-image-1.5",
+        size: finalSize,
+        quality: "high",
+        output_format: "png",
+      };
+      if (hasInputImages) imgTool.input_fidelity = "high";
       const responsesBody: any = {
         model: m,
         instructions: systemInstructions,
         input: [{ role: "user", content: userContent }],
-        tools: [{
-          type: "image_generation",
-          size: finalSize,
-          quality: "high",
-          output_format: "png",
-        }],
+        tools: [imgTool],
         tool_choice: { type: "image_generation" },
       };
       const abort = new AbortController();
