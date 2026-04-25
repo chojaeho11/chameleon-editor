@@ -871,6 +871,7 @@ if ('caches' in window) {
             animation: aidSpin 0.9s linear infinite; margin-bottom:16px;
         }
         @keyframes aidSpin { to { transform:rotate(360deg); } }
+        @keyframes aidShimmer { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
         #aiDesignHero .aid-preview-img-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:18px; background:#fff; border-radius:16px 16px 0 0; }
         #aiDesignHero .aid-preview-img-wrap img { max-width:100%; max-height:440px; display:block; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.08); }
         #aiDesignHero .aid-preview-actions { display:grid; grid-template-columns: 1fr 1fr; gap:8px; padding:14px 16px; background:#fff; border-top:1px solid #eef2ff; border-radius:0 0 16px 16px; }
@@ -8159,7 +8160,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=27').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=28').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 

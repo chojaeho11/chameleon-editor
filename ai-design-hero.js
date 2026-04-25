@@ -312,7 +312,35 @@ window.generateAiDesign = async function() {
         <div style="font-size:15px; color:#6d28d9; font-weight:800; margin-bottom:6px;">${T2.loadMain}</div>
         <div style="font-size:12px; color:#64748b;">${T2.loadSub}</div>
         <div style="font-size:11px; color:#94a3b8; margin-top:8px;">${sLabel} · ${sDim}</div>
+        <div class="aid-progress-track" style="margin-top:18px; width:80%; max-width:320px; height:10px; background:#ede9fe; border-radius:999px; overflow:hidden; position:relative;">
+            <div id="aiProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#8b5cf6,#ec4899); border-radius:999px; transition:width 0.4s ease-out; position:relative;">
+                <div style="position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation:aidShimmer 1.4s linear infinite;"></div>
+            </div>
+        </div>
+        <div id="aiProgressLabel" style="margin-top:6px; font-size:11px; font-weight:700; color:#6d28d9;">0%</div>
     </div>`;
+
+    const progressStart = Date.now();
+    const progressInterval = setInterval(() => {
+        const bar = document.getElementById('aiProgressBar');
+        const lbl = document.getElementById('aiProgressLabel');
+        if (!bar) return;
+        const elapsed = (Date.now() - progressStart) / 1000;
+        let pct;
+        if (elapsed <= 60)        pct = (elapsed / 60) * 50;                       // 0-60s: 0→50%
+        else if (elapsed <= 120)  pct = 50 + ((elapsed - 60) / 60) * 40;            // 60-120s: 50→90%
+        else if (elapsed <= 240)  pct = 90 + ((elapsed - 120) / 120) * 5;           // 120-240s: 90→95%
+        else                       pct = 95;                                          // 240s+: cap at 95%
+        bar.style.width = pct.toFixed(1) + '%';
+        if (lbl) lbl.textContent = Math.floor(pct) + '%';
+    }, 250);
+    const finishProgress = () => {
+        clearInterval(progressInterval);
+        const bar = document.getElementById('aiProgressBar');
+        const lbl = document.getElementById('aiProgressLabel');
+        if (bar) bar.style.width = '100%';
+        if (lbl) lbl.textContent = '100%';
+    };
 
     try {
         let authToken = '';
@@ -356,6 +384,8 @@ window.generateAiDesign = async function() {
 
         const { imageUrl, model, imageModel } = data;
         if (model) console.log('[AI design] parent model:', model, '| image model:', imageModel || '(default)');
+        finishProgress();
+        await new Promise(r => setTimeout(r, 280)); // 100% 잠깐 보여주기
         renderFinalDesign(resultEl, quotaEl, imageUrl);
     } catch (e) {
         console.error('AI design error:', e);
@@ -365,6 +395,7 @@ window.generateAiDesign = async function() {
             <div style="margin-top:6px; font-size:12px;">${escapeHtml(String(e.message || e))}</div>
         </div>`;
     } finally {
+        clearInterval(progressInterval);
         btnEl.disabled = false;
         btnEl.innerHTML = originalBtnHtml;
         btnEl.style.cursor = 'pointer';
