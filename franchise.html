@@ -75,22 +75,11 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 .fr-globe-sub{font-size:15px;color:#cbd5e1;text-align:center;max-width:720px;margin:0 auto 48px;}
 .fr-globe-wrap{position:relative;width:100%;max-width:1100px;margin:0 auto;aspect-ratio:2/1;background:rgba(15,23,42,0.4);border-radius:24px;border:1px solid rgba(167,139,250,0.2);overflow:hidden;}
 .fr-globe-img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;opacity:0.55;filter:brightness(1.5) saturate(0.8) hue-rotate(40deg);}
-/* SVG 콘텐츠가 viewBox 가로의 0~86.71%만 차지 (오른쪽 13%는 빈 영역). 마커 좌표계를 그 영역에 맞춤. */
-.fr-globe-markers{position:absolute;left:0;top:0;width:86.71%;height:100%;pointer-events:none;}
-.fr-globe-markers .fr-globe-marker{pointer-events:auto;}
-.fr-globe-marker{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#c4b5fd 20%,#8b5cf6 70%);transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(167,139,250,0.8);animation:frPulse 2.4s ease-out infinite;cursor:pointer;}
-.fr-globe-marker::after{content:attr(data-city);position:absolute;left:50%;top:-26px;transform:translateX(-50%);background:rgba(15,23,42,0.95);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;}
-.fr-globe-marker:hover::after{opacity:1;}
-@keyframes frPulse {
-    0% { box-shadow:0 0 0 0 rgba(167,139,250,0.7), 0 0 12px rgba(167,139,250,0.8); transform:translate(-50%,-50%) scale(1); }
-    50% { box-shadow:0 0 0 12px rgba(167,139,250,0), 0 0 18px rgba(167,139,250,0.6); transform:translate(-50%,-50%) scale(1.25); }
-    100% { box-shadow:0 0 0 0 rgba(167,139,250,0), 0 0 12px rgba(167,139,250,0.8); transform:translate(-50%,-50%) scale(1); }
-}
-@media (max-width:768px){
-    .fr-globe-wrap{padding:10px;border-radius:14px;}
-    .fr-globe-marker{width:10px;height:10px;}
-    .fr-globe-marker::after{font-size:9px;top:-22px;}
-}
+.fr-globe-routes{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.fr-globe-routes .route-line{stroke:rgba(167,139,250,0.45);stroke-width:0.25;stroke-dasharray:0.6 0.6;fill:none;}
+.fr-globe-routes .route-cargo{filter:drop-shadow(0 0 1.2px #c4b5fd) drop-shadow(0 0 0.6px #fff);}
+.fr-globe-routes .route-hub{filter:drop-shadow(0 0 1.5px rgba(167,139,250,0.9));}
+@keyframes frHubPulse { 0%,100%{r:0.9;opacity:1;} 50%{r:1.4;opacity:0.7;} }
 
 /* Pitch grid */
 .fr-pitch{background:#f8fafc;}
@@ -234,19 +223,74 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         <p class="fr-globe-sub" id="txtGlobeSub"></p>
         <div class="fr-globe-wrap" id="frGlobeWrap">
             <img class="fr-globe-img" src="/worldmap.svg?v=1" alt="" loading="lazy">
-            <!-- 10 city markers: Europe 4 · USA 2 · Korea · Japan · Morocco · Malaysia -->
-            <div class="fr-globe-markers">
-                <div class="fr-globe-marker" data-city="London"       style="left:49.9%; top:21.4%; animation-delay:0s;"></div>
-                <div class="fr-globe-marker" data-city="Paris"        style="left:50.6%; top:22.9%; animation-delay:0.3s;"></div>
-                <div class="fr-globe-marker" data-city="Berlin"       style="left:53.7%; top:20.8%; animation-delay:0.6s;"></div>
-                <div class="fr-globe-marker" data-city="Rome"         style="left:53.5%; top:26.7%; animation-delay:0.9s;"></div>
-                <div class="fr-globe-marker" data-city="New York"     style="left:29.4%; top:27.4%; animation-delay:1.2s;"></div>
-                <div class="fr-globe-marker" data-city="Los Angeles"  style="left:17.2%; top:31.1%; animation-delay:1.5s;"></div>
-                <div class="fr-globe-marker" data-city="Seoul"        style="left:85.3%; top:29.1%; animation-delay:1.8s;"></div>
-                <div class="fr-globe-marker" data-city="Tokyo"        style="left:88.8%; top:30.2%; animation-delay:2.1s;"></div>
-                <div class="fr-globe-marker" data-city="Casablanca"   style="left:47.9%; top:31.3%; animation-delay:0.15s;"></div>
-                <div class="fr-globe-marker" data-city="Kuala Lumpur" style="left:78.2%; top:48.3%; animation-delay:0.45s;"></div>
-            </div>
+            <!-- 물류 흐름 애니메이션 — 대륙 간 곡선 경로 + 이동하는 화물 점 -->
+            <svg class="fr-globe-routes" viewBox="0 0 100 50" preserveAspectRatio="none">
+                <defs>
+                    <!-- Hub anchors (x,y in 0-100, 0-50 — preserveAspectRatio:none stretches to fit) -->
+                    <!-- Continent rough centers: USA-W(15,16), USA-E(25,15), EU(45,12), AFR(48,28), ME(53,18), IND(58,22), EA(72,16), SEA(72,25), AUS(78,35) -->
+                    <path id="r-na-eu"    d="M 25 15 Q 35 5  45 12"/>
+                    <path id="r-eu-asia"  d="M 47 12 Q 60 4  72 16"/>
+                    <path id="r-eu-afr"   d="M 46 13 Q 47 22 48 28"/>
+                    <path id="r-eu-ind"   d="M 47 13 Q 53 18 58 22"/>
+                    <path id="r-usw-asia" d="M 15 16 Q 45 -8 72 16"/>
+                    <path id="r-asia-aus" d="M 72 17 Q 76 26 78 35"/>
+                    <path id="r-use-afr"  d="M 25 16 Q 38 28 48 28"/>
+                    <path id="r-asia-sea" d="M 72 17 Q 72 21 72 25"/>
+                </defs>
+                <!-- Faint route lines -->
+                <use href="#r-na-eu"    class="route-line"/>
+                <use href="#r-eu-asia"  class="route-line"/>
+                <use href="#r-eu-afr"   class="route-line"/>
+                <use href="#r-eu-ind"   class="route-line"/>
+                <use href="#r-usw-asia" class="route-line"/>
+                <use href="#r-asia-aus" class="route-line"/>
+                <use href="#r-use-afr"  class="route-line"/>
+                <use href="#r-asia-sea" class="route-line"/>
+
+                <!-- Animated cargo dots traveling each route -->
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="5s" repeatCount="indefinite"><mpath href="#r-na-eu"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="5s" begin="2.5s" repeatCount="indefinite"><mpath href="#r-na-eu"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="6s" repeatCount="indefinite"><mpath href="#r-eu-asia"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="6s" begin="3s" repeatCount="indefinite"><mpath href="#r-eu-asia"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="4.5s" repeatCount="indefinite"><mpath href="#r-eu-afr"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="5s" begin="1s" repeatCount="indefinite"><mpath href="#r-eu-ind"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="9s" repeatCount="indefinite"><mpath href="#r-usw-asia"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="9s" begin="4.5s" repeatCount="indefinite"><mpath href="#r-usw-asia"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="4.5s" repeatCount="indefinite"><mpath href="#r-asia-aus"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="6s" repeatCount="indefinite"><mpath href="#r-use-afr"/></animateMotion>
+                </circle>
+                <circle r="0.5" fill="#c4b5fd" class="route-cargo">
+                    <animateMotion dur="3s" repeatCount="indefinite"><mpath href="#r-asia-sea"/></animateMotion>
+                </circle>
+
+                <!-- Hub markers (continent anchors, gentle pulse) -->
+                <circle cx="15" cy="16" r="0.9" fill="#a78bfa" class="route-hub"><animate attributeName="r" values="0.9;1.4;0.9" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.6;1" dur="2.4s" repeatCount="indefinite"/></circle>
+                <circle cx="25" cy="15" r="0.9" fill="#a78bfa" class="route-hub"><animate attributeName="r" values="0.9;1.4;0.9" dur="2.4s" begin="0.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.6;1" dur="2.4s" begin="0.4s" repeatCount="indefinite"/></circle>
+                <circle cx="46" cy="12" r="0.9" fill="#a78bfa" class="route-hub"><animate attributeName="r" values="0.9;1.4;0.9" dur="2.4s" begin="0.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.6;1" dur="2.4s" begin="0.8s" repeatCount="indefinite"/></circle>
+                <circle cx="48" cy="28" r="0.9" fill="#a78bfa" class="route-hub"><animate attributeName="r" values="0.9;1.4;0.9" dur="2.4s" begin="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.6;1" dur="2.4s" begin="1.2s" repeatCount="indefinite"/></circle>
+                <circle cx="58" cy="22" r="0.9" fill="#a78bfa" class="route-hub"><animate attributeName="r" values="0.9;1.4;0.9" dur="2.4s" begin="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.6;1" dur="2.4s" begin="1.6s" repeatCount="indefinite"/></circle>
+                <circle cx="72" cy="16" r="0.9" fill="#a78bfa" class="route-hub"><animate attributeName="r" values="0.9;1.4;0.9" dur="2.4s" begin="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.6;1" dur="2.4s" begin="2s" repeatCount="indefinite"/></circle>
+                <circle cx="78" cy="35" r="0.9" fill="#a78bfa" class="route-hub"><animate attributeName="r" values="0.9;1.4;0.9" dur="2.4s" begin="2.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.6;1" dur="2.4s" begin="2.2s" repeatCount="indefinite"/></circle>
+            </svg>
         </div>
     </div>
 </section>
@@ -387,8 +431,8 @@ const L = {
         p2d:'허니콤 가벽·골판지·배너·종이매대·패브릭 샘플이 커팅 완료 상태로 FOB 선적. 귀사는 실사 출력만 붙여서 판매. 해상운송료·관세는 현지 결제.',
         p3t:'독점 지역 — 지금 선점하세요',
         p3d:'<b>강력한 홈페이지가 있다면 당신도 대기업 CEO입니다.</b> 쇼핑몰 초기 세팅비용 <span class="hl-inline">500만원</span> · 월 관리비 <span class="hl-inline">100만원</span>으로 <b>연매출 100억</b>에 도전하세요. 지역당 1개 파트너만 선발됩니다.',
-        globeTitle:'전 세계 <span class="hl">10개 도시</span>에서 가맹점 운영 중',
-        globeSub:'런던·파리·베를린·로마·뉴욕·LA·서울·도쿄·카사블랑카·쿠알라룸푸르 — 카멜레온 파트너들이 활약하고 있습니다',
+        globeTitle:'전 세계로 흐르는 <span class="hl">카멜레온 물류 네트워크</span>',
+        globeSub:'아시아 · 유럽 · 미주 · 아프리카 · 오세아니아 — 매일 반제품이 전 세계 파트너에게 흘러갑니다',
         detailH2:'<span class="hl">가맹점 프로그램</span> 전체 안내',
         detailSub:'반드시 읽어주세요 — 이 비즈니스의 본질을 담았습니다',
         detailBody:`<p>현수막을 출력하는 장비가 있으신가요? 저희와 같이 성장해요. <strong>전 세계 어디서나 반제품을 받아 실사 출력 후 붙여서 납품할 수 있도록 반제품을 제공</strong>합니다. 허니콤보드 가벽과 골판지 가벽, 배너 등의 제품을 커팅만 되어 있는 상태로 제공받아 출력물을 붙여서 판매하세요.</p>
@@ -450,8 +494,8 @@ const L = {
         p2d:'ハニカム仮壁・段ボール・バナー・ペーパースタンド・ファブリック見本をカット済みでFOB出荷。貴社は実写出力を貼るだけ。海上運賃・関税は現地決済。',
         p3t:'地域独占 — 今すぐ確保を',
         p3d:'<b>強力なホームページがあれば、あなたも大企業のCEOです。</b>ECサイト初期セットアップ <span class="hl-inline">約55万円</span> · 月額管理費 <span class="hl-inline">約11万円</span>で<b>年商10億円</b>に挑戦。地域ごとに1社のみ選抜。',
-        globeTitle:'世界 <span class="hl">10都市</span>で加盟店が稼働中',
-        globeSub:'ロンドン・パリ・ベルリン・ローマ・NY・LA・ソウル・東京・カサブランカ・クアラルンプール — カメレオンのパートナーが活躍しています',
+        globeTitle:'世界へ流れる <span class="hl">カメレオンの物流ネットワーク</span>',
+        globeSub:'アジア・ヨーロッパ・米州・アフリカ・オセアニア — 半製品が毎日、世界中のパートナーへ流れています',
         detailH2:'<span class="hl">加盟店プログラム</span>の全案内',
         detailSub:'必ずお読みください — このビジネスの本質',
         detailBody:`<p>横断幕を出力する機材をお持ちですか？ 私たちと一緒に成長しましょう。<strong>世界中どこでも半製品を受け取り、実写出力を貼って納品できるよう半製品を提供</strong>します。ハニカム仮壁、段ボール仮壁、バナーなどをカットのみの状態で受け取り、出力を貼って販売してください。</p>
@@ -513,8 +557,8 @@ const L = {
         p2d:'Honeycomb walls, corrugated, banners, paper stands, fabric samples — shipped pre-cut, FOB. You only print and apply graphics. Freight/duties paid locally.',
         p3t:'Regional exclusivity — claim your territory now',
         p3d:'<b>With a powerful website, you become a global CEO too.</b> Initial e-commerce setup from <span class="hl-inline">$3,500</span> · monthly maintenance <span class="hl-inline">$700</span> — aim for <b>$7M annual revenue</b>. One partner per region only.',
-        globeTitle:'Franchises operating in <span class="hl">10 cities</span> worldwide',
-        globeSub:'London, Paris, Berlin, Rome, New York, LA, Seoul, Tokyo, Casablanca, Kuala Lumpur — Chameleon partners are thriving',
+        globeTitle:'The <span class="hl">Chameleon logistics network</span> flows worldwide',
+        globeSub:'Asia · Europe · Americas · Africa · Oceania — semi-finished goods flow to partners across the globe every day',
         detailH2:'Full <span class="hl">Franchise Program</span> Overview',
         detailSub:'Please read carefully — this is the essence of the business',
         detailBody:`<p>Do you own a banner-printing plotter? Grow with us. <strong>We supply pre-cut semi-finished products worldwide, so you only need to print graphics, apply them, and deliver.</strong> Honeycomb walls, corrugated walls, banners and more are shipped cut-to-size. You print, laminate, sell.</p>
@@ -576,8 +620,8 @@ const L = {
         p2d:'蜂窝板仿墙、瓦楞板、横幅、纸展台、布样均预裁切FOB发货。贵司只需印刷图像并粘贴。海运费/关税由当地支付。',
         p3t:'区域独占 — 立即抢占',
         p3d:'<b>有了强大的官网，您也是大企业 CEO。</b>电商初期搭建费 <span class="hl-inline">约¥25,000</span> · 月度维护费 <span class="hl-inline">约¥5,000</span>，挑战<b>年销售¥5,000 万</b>。每个区域仅招一位合作伙伴。',
-        globeTitle:'全球 <span class="hl">10 个城市</span>已有加盟店运营',
-        globeSub:'伦敦、巴黎、柏林、罗马、纽约、洛杉矶、首尔、东京、卡萨布兰卡、吉隆坡 — 卡米利翁合作伙伴遍布全球',
+        globeTitle:'流向全球的 <span class="hl">卡米利翁物流网络</span>',
+        globeSub:'亚洲·欧洲·美洲·非洲·大洋洲 — 半成品每天流向全球合作伙伴',
         detailH2:'<span class="hl">加盟店计划</span>全面介绍',
         detailSub:'请仔细阅读 — 这是业务的精髓',
         detailBody:`<p>您拥有横幅印刷喷绘机吗？与我们共同成长。<strong>我们向全球供应预裁切的半成品，您只需印刷图像、粘贴、交付即可。</strong>蜂窝板仿墙、瓦楞板仿墙、横幅等以裁切状态发货。您印刷、粘贴、销售。</p>
@@ -639,8 +683,8 @@ const L = {
         p2d:'جدران، كرتون، لافتات، حوامل ورقية، عينات أقمشة تُشحن مقطوعة FOB. أنت فقط تطبع الرسومات وتلصقها. الشحن والجمارك محلياً.',
         p3t:'حصرية إقليمية — احجز منطقتك الآن',
         p3d:'<b>بموقع إلكتروني قوي، تصبح أنت أيضًا مديرًا تنفيذيًا لشركة كبرى.</b> إعداد المتجر الإلكتروني بـ <span class="hl-inline">$3,500</span> · رسوم شهرية <span class="hl-inline">$700</span> — استهدف <b>$7M إيرادات سنوية</b>. شريك واحد فقط لكل منطقة.',
-        globeTitle:'وكلاء يعملون في <span class="hl">10 مدن</span> حول العالم',
-        globeSub:'لندن وباريس وبرلين وروما ونيويورك ولوس أنجلوس وسيول وطوكيو والدار البيضاء وكوالالمبور — شركاء كاميليون يحققون النجاح',
+        globeTitle:'<span class="hl">شبكة كاميليون اللوجستية</span> تتدفق حول العالم',
+        globeSub:'آسيا · أوروبا · الأمريكتان · أفريقيا · أوقيانوسيا — تتدفق المنتجات شبه الجاهزة يوميًا إلى الشركاء حول العالم',
         detailH2:'<span class="hl">برنامج الامتياز</span> الشامل',
         detailSub:'يرجى القراءة بعناية — هذا جوهر العمل',
         detailBody:`<p>هل تملك آلة بلوتر لطباعة اللافتات؟ انمُ معنا. <strong>نوفر منتجات نصف مصنعة مقطوعة في جميع أنحاء العالم، فتحتاج فقط للطباعة واللصق والتسليم.</strong> جدران خلية النحل، جدران الكرتون المموج، اللافتات وغيرها تُشحن بمقاسات مقطوعة.</p>
@@ -702,8 +746,8 @@ const L = {
         p2d:'Paneles, cartón, banners, expositores, muestras de tela — enviados pre-cortados, FOB. Usted solo imprime y lamina. Flete/aranceles se pagan localmente.',
         p3t:'Exclusividad regional — reserve su zona',
         p3d:'<b>Con un sitio web potente, usted también es CEO global.</b> Configuración inicial e-commerce desde <span class="hl-inline">$3,500</span> · mantenimiento mensual <span class="hl-inline">$700</span> — apunte a <b>$7M de facturación anual</b>. Solo un socio por región.',
-        globeTitle:'Franquicias en <span class="hl">10 ciudades</span> del mundo',
-        globeSub:'Londres, París, Berlín, Roma, Nueva York, LA, Seúl, Tokio, Casablanca, Kuala Lumpur — los socios Chameleon prosperan',
+        globeTitle:'La <span class="hl">red logística de Chameleon</span> fluye por todo el mundo',
+        globeSub:'Asia · Europa · América · África · Oceanía — los productos semiterminados fluyen cada día hacia socios en todo el mundo',
         detailH2:'Descripción completa del <span class="hl">Programa de Franquicia</span>',
         detailSub:'Lea con atención — la esencia del negocio',
         detailBody:`<p>¿Tiene un plotter para imprimir banners? Crezca con nosotros. <strong>Suministramos semiproductos pre-cortados en todo el mundo, solo necesita imprimir gráficos, laminarlos y entregar.</strong> Paneles, cartón, banners y más se envían cortados a medida.</p>
@@ -765,8 +809,8 @@ const L = {
         p2d:'Wabenwände, Wellpappe, Banner, Displays, Stoffmuster — vorgeschnitten FOB verschifft. Sie drucken und laminieren nur. Fracht/Zölle lokal.',
         p3t:'Regionale Exklusivität — sichern Sie sich Ihr Gebiet',
         p3d:'<b>Mit einer starken Website sind auch Sie CEO eines Großunternehmens.</b> E-Commerce-Setup ab <span class="hl-inline">3.500 €</span> · monatliche Betreuung <span class="hl-inline">700 €</span> — streben Sie <b>7 Mio. € Jahresumsatz</b> an. Nur ein Partner pro Region.',
-        globeTitle:'Franchises in <span class="hl">10 Städten</span> weltweit',
-        globeSub:'London, Paris, Berlin, Rom, New York, LA, Seoul, Tokio, Casablanca, Kuala Lumpur — Chameleon-Partner sind erfolgreich',
+        globeTitle:'Das <span class="hl">Chameleon-Logistiknetz</span> fließt weltweit',
+        globeSub:'Asien · Europa · Amerika · Afrika · Ozeanien — Halbfertigware fließt täglich zu Partnern weltweit',
         detailH2:'Vollständige <span class="hl">Franchise-Programm</span>-Übersicht',
         detailSub:'Bitte sorgfältig lesen — das Wesen des Geschäfts',
         detailBody:`<p>Besitzen Sie einen Banner-Plotter? Wachsen Sie mit uns. <strong>Wir liefern weltweit zugeschnittene Halbfertigprodukte — Sie müssen nur drucken, aufkleben, liefern.</strong> Wabenwände, Wellpapp-Wände, Banner usw. werden zugeschnitten versandt.</p>
@@ -828,8 +872,8 @@ const L = {
         p2d:'Cloisons, carton, bannières, présentoirs, échantillons tissu — expédiés pré-découpés FOB. Vous imprimez et laminez. Fret/taxes payés localement.',
         p3t:'Exclusivité régionale — réservez votre zone',
         p3d:'<b>Avec un site puissant, vous êtes aussi PDG d\'un grand groupe.</b> Mise en place e-commerce dès <span class="hl-inline">3 500 €</span> · maintenance mensuelle <span class="hl-inline">700 €</span> — visez <b>7 M€ de chiffre d\'affaires annuel</b>. Un seul partenaire par région.',
-        globeTitle:'Franchises dans <span class="hl">10 villes</span> à travers le monde',
-        globeSub:'Londres, Paris, Berlin, Rome, New York, LA, Séoul, Tokyo, Casablanca, Kuala Lumpur — les partenaires Chameleon prospèrent',
+        globeTitle:'Le <span class="hl">réseau logistique Chameleon</span> rayonne dans le monde',
+        globeSub:'Asie · Europe · Amériques · Afrique · Océanie — les produits semi-finis circulent chaque jour vers les partenaires partout dans le monde',
         detailH2:'Programme de <span class="hl">franchise</span> complet',
         detailSub:'Veuillez lire attentivement — l\'essence de l\'activité',
         detailBody:`<p>Possédez-vous un traceur pour bannières ? Grandissons ensemble. <strong>Nous fournissons des semi-produits pré-découpés dans le monde entier, vous n\'avez qu\'à imprimer, laminer, livrer.</strong> Cloisons nid d\'abeille, carton ondulé, bannières, etc. sont expédiés découpés.</p>
