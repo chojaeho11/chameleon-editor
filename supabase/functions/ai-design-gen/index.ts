@@ -124,7 +124,7 @@ serve(async (req) => {
 
     // Images API 직접 호출 — Responses API + GPT-5.5 reasoning 단계 생략 → 30-60초 단축
     // 첨부 이미지 있으면 /images/edits, 없으면 /images/generations
-    const IMAGE_MODEL = "gpt-image-2";
+    const IMAGE_MODEL: string = "gpt-image-2";
     const hasInputImages = inputImages.length > 0;
     const usedModel = IMAGE_MODEL;
 
@@ -140,9 +140,10 @@ serve(async (req) => {
         fd.append("prompt", prompt);
         fd.append("size", finalSize);
         fd.append("quality", "high");
-        fd.append("input_fidelity", "high");
         fd.append("output_format", "png");
         fd.append("n", "1");
+        // input_fidelity: gpt-image-1.5만 지원, gpt-image-2는 거부 (invalid_input_fidelity_model)
+        if (IMAGE_MODEL === "gpt-image-1.5") fd.append("input_fidelity", "high");
         for (let i = 0; i < inputImages.length; i++) {
           const img = inputImages[i];
           const ab = img.data.buffer.slice(img.data.byteOffset, img.data.byteOffset + img.data.byteLength) as ArrayBuffer;
