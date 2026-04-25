@@ -73,8 +73,11 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 .fr-globe .fr-section-title{color:#fff;}
 .fr-globe .fr-section-title .hl{background:linear-gradient(135deg,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .fr-globe-sub{font-size:15px;color:#cbd5e1;text-align:center;max-width:720px;margin:0 auto 48px;}
-.fr-globe-wrap{position:relative;width:100%;max-width:1100px;margin:0 auto;aspect-ratio:2/1;background:rgba(15,23,42,0.4);border-radius:24px;padding:20px;border:1px solid rgba(167,139,250,0.2);}
-.fr-globe-img{width:100%;height:100%;display:block;object-fit:contain;opacity:0.55;filter:brightness(1.5) saturate(0.8) hue-rotate(40deg);}
+.fr-globe-wrap{position:relative;width:100%;max-width:1100px;margin:0 auto;aspect-ratio:2/1;background:rgba(15,23,42,0.4);border-radius:24px;border:1px solid rgba(167,139,250,0.2);overflow:hidden;}
+.fr-globe-img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;opacity:0.55;filter:brightness(1.5) saturate(0.8) hue-rotate(40deg);}
+/* SVG 콘텐츠가 viewBox 가로의 0~86.71%만 차지 (오른쪽 13%는 빈 영역). 마커 좌표계를 그 영역에 맞춤. */
+.fr-globe-markers{position:absolute;left:0;top:0;width:86.71%;height:100%;pointer-events:none;}
+.fr-globe-markers .fr-globe-marker{pointer-events:auto;}
 .fr-globe-marker{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#c4b5fd 20%,#8b5cf6 70%);transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(167,139,250,0.8);animation:frPulse 2.4s ease-out infinite;cursor:pointer;}
 .fr-globe-marker::after{content:attr(data-city);position:absolute;left:50%;top:-26px;transform:translateX(-50%);background:rgba(15,23,42,0.95);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .fr-globe-marker:hover::after{opacity:1;}
@@ -231,7 +234,8 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         <p class="fr-globe-sub" id="txtGlobeSub"></p>
         <div class="fr-globe-wrap" id="frGlobeWrap">
             <img class="fr-globe-img" src="/worldmap.svg?v=1" alt="" loading="lazy">
-            <!-- 22 city markers (purple pulsing) -->
+            <!-- 22 city markers (purple pulsing). Wrapped in markers div sized to actual SVG content (86.71% wide). -->
+            <div class="fr-globe-markers">
             <div class="fr-globe-marker" data-city="Seoul"      style="left:85.3%; top:29.1%; animation-delay:0s;"></div>
             <div class="fr-globe-marker" data-city="Tokyo"      style="left:88.8%; top:30.2%; animation-delay:0.2s;"></div>
             <div class="fr-globe-marker" data-city="Shanghai"   style="left:83.8%; top:32.7%; animation-delay:0.4s;"></div>
@@ -254,6 +258,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
             <div class="fr-globe-marker" data-city="Mexico City" style="left:22.5%; top:39.2%; animation-delay:1.9s;"></div>
             <div class="fr-globe-marker" data-city="São Paulo"  style="left:37%;   top:63%;   animation-delay:2.1s;"></div>
             <div class="fr-globe-marker" data-city="Sydney"     style="left:92%;   top:68.9%; animation-delay:2.3s;"></div>
+            </div>
         </div>
     </div>
 </section>
