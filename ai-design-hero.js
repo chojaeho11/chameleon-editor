@@ -298,24 +298,38 @@ window.addAiDesignImages = function(files) {
 };
 window.removeAiDesignImage = function(idx) { attachedImages.splice(idx, 1); renderThumbs(); };
 
-// ── 한/영 혼용 → 영어 프롬프트 빌더 ──
+// ── 사이트 언어 → 디자인 텍스트 언어 매핑 ──
+const AI_LANG_META = {
+    kr: { name: 'Korean',   script: 'Hangul (한글)' },
+    ja: { name: 'Japanese', script: 'Japanese (Kana + Kanji)' },
+    en: { name: 'English',  script: 'Latin alphabet' },
+    zh: { name: 'Chinese',  script: 'Simplified Chinese (汉字)' },
+    ar: { name: 'Arabic',   script: 'Arabic script (RTL)' },
+    es: { name: 'Spanish',  script: 'Latin alphabet' },
+    de: { name: 'German',   script: 'Latin alphabet' },
+    fr: { name: 'French',   script: 'Latin alphabet' },
+};
+
+// ── 사이트 언어 기반 다국어 프롬프트 빌더 ──
 function buildEnglishPrompt() {
     const title = (document.getElementById('aiDesignTitle')?.value || '').trim();
     const extra = (document.getElementById('aiDesignPrompt')?.value || '').trim();
+    const langKey = aiGetLang();
+    const lang = AI_LANG_META[langKey] || AI_LANG_META.en;
 
     const parts = [];
     parts.push(`Full-bleed professional design. Aspect: ${selectedSize.en}.`);
     parts.push('The design must FILL the ENTIRE frame edge-to-edge — NO white border, NO padding, NO margin, NO outer frame. Composition extends completely to all four edges.');
     parts.push(`Background: ${selectedColor.en}.`);
+    parts.push(`All on-image text MUST be in ${lang.name} using ${lang.script}, with correct spelling and grammar. Do NOT use English unless the user's title/content is already in English. NO gibberish, NO fake or mistranslated characters.`);
     if (title) {
-        parts.push(`Large prominent title text (ENGLISH LATIN CHARACTERS only): "${title}".`);
+        parts.push(`Large prominent title text — reproduce EXACTLY as given: "${title}".`);
     }
     parts.push('Modern, clean, commercial print-ready layout. Balanced composition. Clear visual hierarchy.');
-    parts.push('All text in the image MUST be English only — no Korean or other scripts. No gibberish or mistranslated characters.');
     if (extra) {
-        parts.push(`Additional style/elements (interpret visually): ${extra}`);
+        parts.push(`Additional style/elements (interpret visually, keep any included text in ${lang.name}): ${extra}`);
     }
-    parts.push('High quality, editorial, sharp typography.');
+    parts.push(`High quality, editorial, sharp typography appropriate for ${lang.script}.`);
     return parts.join(' ');
 }
 

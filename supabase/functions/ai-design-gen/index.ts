@@ -145,9 +145,9 @@ serve(async (req) => {
 RULES:
 1) Plan layout, colors, typography, and composition carefully based on the user's specifications.
 2) Call image_generation tool with a detailed prompt.
-3) CRITICAL: ALL TEXT must be ENGLISH Latin alphabet only. No Korean, Chinese, Japanese or other scripts. No gibberish.
+3) CRITICAL: Render text in the language specified by the user prompt (e.g., Korean / Japanese / English / Chinese / Arabic / Spanish / German / French). Use the correct script (Hangul, Kana/Kanji, Latin, Hanzi, Arabic, etc.) with accurate spelling and grammar — NO gibberish, NO mistranslated or fake characters. If the user provides a title or text in any script, reproduce it EXACTLY as given.
 4) CRITICAL: Design must be FULL-BLEED — edge-to-edge, filling the ENTIRE frame. NO white border, NO outer padding, NO margin, NO card-style inset. Composition extends to every corner.
-5) Sharp, crisp, editorial-quality typography.
+5) Sharp, crisp, editorial-quality typography appropriate for the target script.
 6) If reference images are attached, integrate them naturally.
 7) Commercial-print quality: balanced composition, clear visual hierarchy, professional typography.`;
 
