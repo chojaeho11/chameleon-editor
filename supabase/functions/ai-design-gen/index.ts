@@ -120,9 +120,54 @@ serve(async (req) => {
     const usageCount = 0;
     const dailyLimit = 99999;
 
-    // ── Images API 직접 호출 (속도 우선, GPT-5.5 reasoning 단계 생략) ──
+    // ── Stage 1: 문화 레퍼런스 인식 (영화/K-pop/브랜드 등) — GPT-5.5 가벼운 호출 ──
+    // 사용자 원본 텍스트는 보존하고, 컨텍스트를 짧게 덧붙이기만 함.
+    let enrichedPrompt = prompt;
+    const stage1Start = Date.now();
+    try {
+      const ctxAbort = new AbortController();
+      const ctxTimer = setTimeout(() => ctxAbort.abort(), 15_000);
+      const ctxRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "gpt-5.5-2026-04-23",
+          max_tokens: 300,
+          messages: [
+            {
+              role: "system",
+              content: `You are a cultural-reference detector for image generation prompts. Read the user's brief and identify if it references a real movie, song, K-pop group, brand, anime, novel, historical event, or any well-known cultural touchstone.
 
-    // Images API 직접 호출 — Responses API + GPT-5.5 reasoning 단계 생략 → 30-60초 단축
+If YES: output 80-150 English words describing the iconic visual elements of that reference (key cast/characters, era, color palette, signature scenes, costume style, mood, typography style). Do NOT translate or paraphrase the user's original title text. Do NOT add any small/body text.
+
+If NO cultural reference detected: output the single word "NONE".
+
+Output ONLY the description (or "NONE") — no preamble, no markdown, no quotes.`,
+            },
+            { role: "user", content: prompt },
+          ],
+        }),
+        signal: ctxAbort.signal,
+      });
+      clearTimeout(ctxTimer);
+      if (ctxRes.ok) {
+        const ctxData: any = await ctxRes.json();
+        const ctxText = ctxData?.choices?.[0]?.message?.content?.trim();
+        const stage1Ms = Date.now() - stage1Start;
+        if (ctxText && ctxText !== "NONE" && ctxText.length > 30) {
+          enrichedPrompt = `${prompt}\n\n=== CULTURAL CONTEXT (use as visual reference) ===\n${ctxText}`;
+          console.log(`[stage1] cultural ref detected (${ctxText.length} chars) in ${stage1Ms}ms`);
+        } else {
+          console.log(`[stage1] no cultural ref (${stage1Ms}ms)`);
+        }
+      } else {
+        console.warn(`[stage1] ${ctxRes.status} — skipping context enrichment`);
+      }
+    } catch (e: any) {
+      console.warn(`[stage1] error: ${e?.message || e} — skipping`);
+    }
+
+    // ── Stage 2: Images API 직접 호출 ──
     // 첨부 이미지 있으면 /images/edits, 없으면 /images/generations
     const IMAGE_MODEL: string = "gpt-image-2";
     const hasInputImages = inputImages.length > 0;
@@ -137,7 +182,7 @@ serve(async (req) => {
       if (hasInputImages) {
         const fd = new FormData();
         fd.append("model", IMAGE_MODEL);
-        fd.append("prompt", prompt);
+        fd.append("prompt", enrichedPrompt);
         fd.append("size", finalSize);
         fd.append("quality", "high");
         fd.append("output_format", "png");
@@ -162,7 +207,7 @@ serve(async (req) => {
           headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: IMAGE_MODEL,
-            prompt,
+            prompt: enrichedPrompt,
             size: finalSize,
             quality: "high",
             output_format: "png",
