@@ -68,6 +68,28 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     .fr-pitch-bigsub{font-size:15px;}
 }
 
+/* World map of franchise locations */
+.fr-globe{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 60%,#312e81 100%);color:#fff;padding:80px 0;}
+.fr-globe .fr-section-title{color:#fff;}
+.fr-globe .fr-section-title .hl{background:linear-gradient(135deg,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.fr-globe-sub{font-size:15px;color:#cbd5e1;text-align:center;max-width:720px;margin:0 auto 48px;}
+.fr-globe-wrap{position:relative;width:100%;max-width:1100px;margin:0 auto;aspect-ratio:1000/500;background:rgba(15,23,42,0.4);border-radius:24px;padding:20px;border:1px solid rgba(167,139,250,0.2);}
+.fr-globe-svg{width:100%;height:100%;display:block;}
+.fr-globe-svg path{fill:rgba(167,139,250,0.18);stroke:rgba(167,139,250,0.35);stroke-width:0.6;}
+.fr-globe-marker{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#c4b5fd 20%,#8b5cf6 70%);transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(167,139,250,0.8);animation:frPulse 2.4s ease-out infinite;cursor:pointer;}
+.fr-globe-marker::after{content:attr(data-city);position:absolute;left:50%;top:-26px;transform:translateX(-50%);background:rgba(15,23,42,0.95);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.fr-globe-marker:hover::after{opacity:1;}
+@keyframes frPulse {
+    0% { box-shadow:0 0 0 0 rgba(167,139,250,0.7), 0 0 12px rgba(167,139,250,0.8); transform:translate(-50%,-50%) scale(1); }
+    50% { box-shadow:0 0 0 12px rgba(167,139,250,0), 0 0 18px rgba(167,139,250,0.6); transform:translate(-50%,-50%) scale(1.25); }
+    100% { box-shadow:0 0 0 0 rgba(167,139,250,0), 0 0 12px rgba(167,139,250,0.8); transform:translate(-50%,-50%) scale(1); }
+}
+@media (max-width:768px){
+    .fr-globe-wrap{padding:10px;border-radius:14px;}
+    .fr-globe-marker{width:10px;height:10px;}
+    .fr-globe-marker::after{font-size:9px;top:-22px;}
+}
+
 /* Pitch grid */
 .fr-pitch{background:#f8fafc;}
 .fr-pitch-card{background:#fff;padding:32px 24px;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid #e2e8f0;}
@@ -203,6 +225,69 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     </div>
 </section>
 
+<!-- World map of franchise locations -->
+<section class="fr-section fr-globe">
+    <div class="container">
+        <h2 class="fr-section-title" id="txtGlobeTitle"></h2>
+        <p class="fr-globe-sub" id="txtGlobeSub"></p>
+        <div class="fr-globe-wrap" id="frGlobeWrap">
+            <svg class="fr-globe-svg" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+                <!-- North America -->
+                <path d="M 80 110 Q 60 80 110 70 Q 180 60 240 90 L 280 130 Q 260 170 230 200 L 250 240 Q 230 270 200 280 Q 150 280 120 260 Q 80 230 70 180 Q 65 140 80 110 Z"/>
+                <!-- Greenland -->
+                <path d="M 295 65 Q 320 55 340 75 Q 345 110 320 120 Q 300 115 290 95 Z"/>
+                <!-- Central America / Caribbean -->
+                <path d="M 200 270 Q 230 275 250 290 L 260 310 Q 245 320 220 315 L 200 295 Z"/>
+                <!-- South America -->
+                <path d="M 270 310 Q 300 320 320 350 Q 335 400 320 440 Q 300 470 280 460 Q 260 430 255 380 Q 255 340 270 310 Z"/>
+                <!-- Europe -->
+                <path d="M 470 100 Q 510 90 555 95 Q 590 110 600 140 L 595 165 Q 560 175 520 170 Q 480 160 465 130 Z"/>
+                <!-- Africa -->
+                <path d="M 495 180 Q 545 175 580 195 Q 605 240 600 290 Q 580 340 545 365 Q 510 365 490 330 Q 475 280 480 230 Q 485 200 495 180 Z"/>
+                <!-- Middle East -->
+                <path d="M 600 175 Q 640 175 660 200 L 655 225 Q 620 230 605 215 Z"/>
+                <!-- Russia / N Asia -->
+                <path d="M 600 80 Q 700 70 820 80 Q 880 95 890 130 L 880 160 Q 800 170 720 165 Q 650 155 605 140 Q 595 110 600 80 Z"/>
+                <!-- East Asia -->
+                <path d="M 760 170 Q 820 175 850 195 Q 870 230 855 260 Q 820 270 790 260 Q 760 240 755 210 Z"/>
+                <!-- SE Asia -->
+                <path d="M 800 280 Q 840 285 870 305 Q 875 340 850 350 Q 815 348 800 325 Z"/>
+                <!-- India -->
+                <path d="M 700 220 Q 730 220 745 240 Q 745 275 720 285 Q 695 280 690 250 Z"/>
+                <!-- Australia -->
+                <path d="M 850 380 Q 905 375 935 400 Q 940 430 905 440 Q 870 440 850 420 Q 845 395 850 380 Z"/>
+                <!-- Japan -->
+                <path d="M 880 195 Q 895 190 900 210 L 895 235 Q 882 230 878 215 Z"/>
+                <!-- UK -->
+                <path d="M 462 110 Q 475 110 478 125 L 472 140 Q 462 138 458 125 Z"/>
+            </svg>
+            <!-- 22 city markers (purple pulsing) -->
+            <div class="fr-globe-marker" data-city="Seoul"      style="left:85.3%; top:29.1%; animation-delay:0s;"></div>
+            <div class="fr-globe-marker" data-city="Tokyo"      style="left:88.8%; top:30.2%; animation-delay:0.2s;"></div>
+            <div class="fr-globe-marker" data-city="Shanghai"   style="left:83.8%; top:32.7%; animation-delay:0.4s;"></div>
+            <div class="fr-globe-marker" data-city="Hong Kong"  style="left:81.7%; top:37.6%; animation-delay:0.6s;"></div>
+            <div class="fr-globe-marker" data-city="Bangkok"    style="left:78%;   top:42.4%; animation-delay:0.8s;"></div>
+            <div class="fr-globe-marker" data-city="Singapore"  style="left:78.8%; top:49.2%; animation-delay:1s;"></div>
+            <div class="fr-globe-marker" data-city="Mumbai"     style="left:70.2%; top:39.4%; animation-delay:1.2s;"></div>
+            <div class="fr-globe-marker" data-city="Dubai"      style="left:65.4%; top:36%;   animation-delay:1.4s;"></div>
+            <div class="fr-globe-marker" data-city="Riyadh"     style="left:63%;   top:36.3%; animation-delay:1.6s;"></div>
+            <div class="fr-globe-marker" data-city="Cairo"      style="left:58.7%; top:33.3%; animation-delay:1.8s;"></div>
+            <div class="fr-globe-marker" data-city="Istanbul"   style="left:58%;   top:27.2%; animation-delay:0.1s;"></div>
+            <div class="fr-globe-marker" data-city="Moscow"     style="left:60.4%; top:19%;   animation-delay:0.3s;"></div>
+            <div class="fr-globe-marker" data-city="Berlin"     style="left:53.7%; top:20.8%; animation-delay:0.5s;"></div>
+            <div class="fr-globe-marker" data-city="Paris"      style="left:50.6%; top:22.9%; animation-delay:0.7s;"></div>
+            <div class="fr-globe-marker" data-city="London"     style="left:49.9%; top:21.4%; animation-delay:0.9s;"></div>
+            <div class="fr-globe-marker" data-city="Madrid"     style="left:48.9%; top:27.5%; animation-delay:1.1s;"></div>
+            <div class="fr-globe-marker" data-city="New York"   style="left:29.4%; top:27.4%; animation-delay:1.3s;"></div>
+            <div class="fr-globe-marker" data-city="Los Angeles" style="left:17.2%; top:31.1%; animation-delay:1.5s;"></div>
+            <div class="fr-globe-marker" data-city="Toronto"    style="left:27.9%; top:25.7%; animation-delay:1.7s;"></div>
+            <div class="fr-globe-marker" data-city="Mexico City" style="left:22.5%; top:39.2%; animation-delay:1.9s;"></div>
+            <div class="fr-globe-marker" data-city="São Paulo"  style="left:37%;   top:63%;   animation-delay:2.1s;"></div>
+            <div class="fr-globe-marker" data-city="Sydney"     style="left:92%;   top:68.9%; animation-delay:2.3s;"></div>
+        </div>
+    </div>
+</section>
+
 <!-- Franchise-exclusive products (loaded inline from top_category 123456789) -->
 <section class="fr-section fr-cats">
     <div class="container">
@@ -323,7 +408,7 @@ const L = {
     ko:{
         langLabel:'한국어',
         badge:'⚡ 무자본 · 가맹비 0원 · 지역 독점',
-        heroH1:['카멜레온과 함께','<span class="hl">세계 시장</span>에서 성장하세요'],
+        heroH1:['<span class="hl">동네 광고사</span>에서 멈추지 마세요','카멜레온과 함께 성장해요'],
         heroSub:'현수막 플로터 한 대와 작은 작업 공간이면 충분합니다. 허니콤보드 가벽·골판지·배너·종이매대 — 반제품으로 받아서 실사 출력만 붙여 납품하는 독점 가맹 파트너 프로그램.',
         ctaInquiry:'지금 가맹 문의',
         ctaCall:'바로 통화',
@@ -331,14 +416,16 @@ const L = {
         catsSub:'<b>반제품은 인쇄가 되어 있지 않습니다.</b> 커팅만 되어 있으므로 실사출력 장비를 이용하여 붙여서 사용이 가능합니다. 반제품의 사이즈는 기재된 사이즈로 변경이 불가합니다. 디지털 커터가 있으신 가맹점은 허니콤보드 <b>원판을 구매하여 직접 커팅</b>하면 더 저렴합니다(원판 크기 1400×2200). 파트너에게만 공급하는 라인업으로 <b>일반 구매자는 구매 불가능</b>합니다. 한국 (평택·부산항)까지 선적해 드리며 이후는 <b>FOB 방식</b>으로 직접 인도해야 합니다. 이 외 다른 모든 제품은 원하시는 방식으로 배송되며 배송비는 별도 부가됩니다.',
         catsLoading:'제품을 불러오는 중...',
         catsEmpty:'등록된 전용 제품이 없습니다. 담당자에게 문의해주세요.',
-        pitchHl:'<span class="hl">가맹비 무료</span><br><span class="midline">기존 아이템으로는 이제 어렵습니다</span><br>함께해요, 기적이 펼쳐집니다',
-        pitchSub:'<span class="em">플로터 1대와 작은 공간 그리고 열정</span>만 있다면 글로벌 회사의 CEO가 될 수 있습니다. 동네 광고사에 멈추지 마세요. <span class="em">카멜레온프린팅과 함께해요</span>. 함께하신 분들은 이미 부자가 되었습니다.',
+        pitchHl:'지금은 <span class="hl">온라인 판매 시대</span>,<br><span class="midline">당신에게도 강력한 홈페이지가 필요합니다</span>',
+        pitchSub:'<span class="em">카멜레온과 똑같은 홈페이지를 만들어 드립니다.</span> 카멜레온의 상품을 도매가격으로 공급받고 당신만의 상품도 올릴 수 있습니다. 로고와 전화번호를 바꾸세요. 당신의 홈페이지가 만들어집니다.',
         p1t:'가맹비 0원 · 초기 재고 부담 없음',
         p1d:'<b>반제품을 소량 구매하세요.</b> 출력해서 붙이면 커팅기 없이도 허니콤보드 가벽과 배너를 만들 수 있습니다. <span class="hl-inline">(완제품가격의 1/3 수준)</span> 고가 장비가 필요한 제품들은 무료 샘플을 보여주시고 카멜레온이 만들어서 보내드립니다. <i>(종이매대, 패브릭, 굿즈, 인쇄물)</i>',
         p2t:'전 세계 어디서든 반제품 수령',
         p2d:'허니콤 가벽·골판지·배너·종이매대·패브릭 샘플이 커팅 완료 상태로 FOB 선적. 귀사는 실사 출력만 붙여서 판매. 해상운송료·관세는 현지 결제.',
-        p3t:'독점 지역 + 홈페이지 무상 복제',
-        p3d:'지역당 1개 파트너만 선발. 연매출 100만불 이상 달성 파트너에게는 관리자 페이지 포함 카멜레온 홈페이지를 귀사 도메인에 무상 복제.',
+        p3t:'독점 지역 — 지금 선점하세요',
+        p3d:'<b>강력한 홈페이지가 있다면 당신도 대기업 CEO입니다.</b> 쇼핑몰 초기 세팅비용 <span class="hl-inline">500만원</span> · 월 관리비 <span class="hl-inline">100만원</span>으로 <b>연매출 100억</b>에 도전하세요. 지역당 1개 파트너만 선발됩니다.',
+        globeTitle:'전 세계 <span class="hl">22개 도시</span>에서 가맹점 운영 중',
+        globeSub:'서울·도쿄·상하이·홍콩·싱가포르·두바이·베를린·파리·런던·뉴욕·시드니까지 — 카멜레온 파트너들이 활약하고 있습니다',
         detailH2:'<span class="hl">가맹점 프로그램</span> 전체 안내',
         detailSub:'반드시 읽어주세요 — 이 비즈니스의 본질을 담았습니다',
         detailBody:`<p>현수막을 출력하는 장비가 있으신가요? 저희와 같이 성장해요. <strong>전 세계 어디서나 반제품을 받아 실사 출력 후 붙여서 납품할 수 있도록 반제품을 제공</strong>합니다. 허니콤보드 가벽과 골판지 가벽, 배너 등의 제품을 커팅만 되어 있는 상태로 제공받아 출력물을 붙여서 판매하세요.</p>
@@ -384,7 +471,7 @@ const L = {
     ja:{
         langLabel:'日本語',
         badge:'⚡ 無資本 · 加盟金0円 · 地域独占',
-        heroH1:['カメレオンと共に','<span class="hl">世界市場</span>で成長しましょう'],
+        heroH1:['<span class="hl">街の広告屋</span>で立ち止まらないで','カメレオンと共に成長しましょう'],
         heroSub:'中古プロッター1台と小さな作業スペースがあれば十分。ハニカムボード仮壁・段ボール・バナー・ペーパースタンドを半製品で受け取り、実写出力を貼って納品する独占加盟プログラム。',
         ctaInquiry:'加盟お問い合わせ',
         ctaCall:'今すぐ電話',
@@ -392,14 +479,16 @@ const L = {
         catsSub:'<b>半製品は印刷されていません。</b>カット済みのため、実写出力機で印刷して貼り付けてご使用ください。半製品のサイズは記載サイズから変更できません。デジタルカッターをお持ちの加盟店は、<b>原板を購入して自社でカット</b>する方が安価です（原板サイズ 1400×2200）。パートナー限定ラインで、<b>一般購入不可</b>。韓国（平沢・釜山港）まで船積みし、以降は<b>FOBで直接引き取り</b>。その他の商品はご希望の配送方法で、送料は別途加算されます。',
         catsLoading:'製品を読み込み中...',
         catsEmpty:'登録された専用製品はありません。担当者までお問い合わせください。',
-        pitchHl:'<span class="hl">加盟金0円</span><br><span class="midline">既存のアイテムだけではもう厳しい時代です</span><br>一緒に、奇跡が広がります',
-        pitchSub:'<span class="em">プロッター1台と小さなスペース、そして情熱</span>があれば、グローバル企業のCEOになれます。町の小さな広告代理店で止まらないで。<span class="em">カメレオンプリンティングと一緒に</span>。既に参加された方々は富裕層になりました。',
+        pitchHl:'今は<span class="hl">オンライン販売の時代</span>、<br><span class="midline">あなたにも強力なホームページが必要です</span>',
+        pitchSub:'<span class="em">カメレオンと同じホームページを作ってお渡しします。</span>カメレオンの商品を卸価格で仕入れ、ご自身の商品も掲載できます。ロゴと電話番号を変更するだけ。あなただけのホームページが完成します。',
         p1t:'加盟金0円・初期在庫負担なし',
         p1d:'<b>半製品を少量から仕入れてください。</b>印刷して貼るだけで、カッティング機がなくてもハニカム仮壁・バナーが作れます。<span class="hl-inline">(完成品価格の1/3程度)</span>高額な設備が必要な製品は無料サンプルをお見せし、カメレオンが製作して発送します。<i>(ペーパースタンド・ファブリック・グッズ・印刷物)</i>',
         p2t:'世界中どこでも半製品受取',
         p2d:'ハニカム仮壁・段ボール・バナー・ペーパースタンド・ファブリック見本をカット済みでFOB出荷。貴社は実写出力を貼るだけ。海上運賃・関税は現地決済。',
-        p3t:'地域独占＋ホームページ無償複製',
-        p3d:'地域ごとに1社のみ採用。年商100万ドル達成パートナーには管理画面を含むカメレオンHPを貴社ドメインへ無償複製。',
+        p3t:'地域独占 — 今すぐ確保を',
+        p3d:'<b>強力なホームページがあれば、あなたも大企業のCEOです。</b>ECサイト初期セットアップ <span class="hl-inline">約55万円</span> · 月額管理費 <span class="hl-inline">約11万円</span>で<b>年商10億円</b>に挑戦。地域ごとに1社のみ選抜。',
+        globeTitle:'世界 <span class="hl">22都市</span>で加盟店が稼働中',
+        globeSub:'ソウル・東京・上海・香港・シンガポール・ドバイ・ベルリン・パリ・ロンドン・ニューヨーク・シドニーまで — カメレオンのパートナーが活躍しています',
         detailH2:'<span class="hl">加盟店プログラム</span>の全案内',
         detailSub:'必ずお読みください — このビジネスの本質',
         detailBody:`<p>横断幕を出力する機材をお持ちですか？ 私たちと一緒に成長しましょう。<strong>世界中どこでも半製品を受け取り、実写出力を貼って納品できるよう半製品を提供</strong>します。ハニカム仮壁、段ボール仮壁、バナーなどをカットのみの状態で受け取り、出力を貼って販売してください。</p>
@@ -445,7 +534,7 @@ const L = {
     en:{
         langLabel:'English',
         badge:'⚡ Zero capital · $0 franchise fee · Regional exclusivity',
-        heroH1:['Grow with Chameleon','in the <span class="hl">global market</span>'],
+        heroH1:['Don\'t stop at the <span class="hl">corner sign shop</span>','Grow together with Chameleon'],
         heroSub:'A used plotter and a small workspace are all you need. Receive pre-cut honeycomb walls, corrugated panels, banners and paper stands — print your graphics, laminate them on, and deliver. Exclusive franchise partner program.',
         ctaInquiry:'Apply Now',
         ctaCall:'Call Now',
@@ -453,14 +542,16 @@ const L = {
         catsSub:'<b>Semi-finished goods are NOT pre-printed.</b> They come pre-cut — use your own printer to print graphics and laminate them on. Sizes are fixed (not customizable). If you own a digital cutter, <b>buying raw sheets and cutting in-house</b> is cheaper (raw sheet 1400×2200). This lineup is for partners only — <b>not available for retail buyers</b>. We ship to Korea (Pyeongtaek / Busan port); from there it is <b>FOB — you arrange onward shipping</b>. All other products ship by your preferred method with separate freight charges.',
         catsLoading:'Loading products…',
         catsEmpty:'No exclusive products registered yet. Please contact us.',
-        pitchHl:'<span class="hl">$0 Franchise Fee</span><br><span class="midline">Your current product lineup alone won\'t cut it anymore</span><br>Together, miracles unfold',
-        pitchSub:'With just <span class="em">one plotter, a small workspace, and passion</span>, you can become CEO of a global company. Do not settle for being a neighborhood print shop. <span class="em">Partner with Chameleon Printing</span>. Those who joined are already wealthy.',
+        pitchHl:'This is the <span class="hl">era of online retail</span>,<br><span class="midline">and you need a powerful website too</span>',
+        pitchSub:'<span class="em">We will build you a website identical to Chameleon\'s.</span> Source Chameleon products at wholesale and add your own products too. Just swap the logo and phone number — your own website is ready.',
         p1t:'$0 franchise fee · No inventory burden',
         p1d:'<b>Buy small quantities of semi-finished goods.</b> Print graphics, apply them, and you can produce honeycomb walls and banners without any cutting machine. <span class="hl-inline">(~1/3 of the finished retail price)</span> For products that require expensive equipment, show free samples — Chameleon manufactures and ships them to you. <i>(Paper stands, fabric, goods, print collateral)</i>',
         p2t:'Semi-finished goods shipped worldwide',
         p2d:'Honeycomb walls, corrugated, banners, paper stands, fabric samples — shipped pre-cut, FOB. You only print and apply graphics. Freight/duties paid locally.',
-        p3t:'Regional exclusivity + free website clone',
-        p3d:'One partner per region. Partners reaching $1M annual revenue receive a free clone of the Chameleon website (admin included) on their own domain.',
+        p3t:'Regional exclusivity — claim your territory now',
+        p3d:'<b>With a powerful website, you become a global CEO too.</b> Initial e-commerce setup from <span class="hl-inline">$3,500</span> · monthly maintenance <span class="hl-inline">$700</span> — aim for <b>$7M annual revenue</b>. One partner per region only.',
+        globeTitle:'Franchises operating in <span class="hl">22 cities</span> worldwide',
+        globeSub:'From Seoul, Tokyo, Shanghai, Hong Kong, Singapore, Dubai, Berlin, Paris, London, New York to Sydney — Chameleon partners are thriving',
         detailH2:'Full <span class="hl">Franchise Program</span> Overview',
         detailSub:'Please read carefully — this is the essence of the business',
         detailBody:`<p>Do you own a banner-printing plotter? Grow with us. <strong>We supply pre-cut semi-finished products worldwide, so you only need to print graphics, apply them, and deliver.</strong> Honeycomb walls, corrugated walls, banners and more are shipped cut-to-size. You print, laminate, sell.</p>
@@ -506,7 +597,7 @@ const L = {
     zh:{
         langLabel:'中文',
         badge:'⚡ 零资本 · 加盟费0元 · 区域独占',
-        heroH1:['与卡米利翁一起','在<span class="hl">全球市场</span>中成长'],
+        heroH1:['不要止步于<span class="hl">街角广告店</span>','与卡米利翁携手共进'],
         heroSub:'一台二手喷绘机和小工作室就够了。接收预裁切的蜂窝板仿墙、瓦楞板、横幅和纸展台，印刷图像后粘贴交付。独家加盟合作伙伴计划。',
         ctaInquiry:'立即申请',
         ctaCall:'立即致电',
@@ -514,14 +605,16 @@ const L = {
         catsSub:'<b>半成品不含印刷。</b>已裁切完成，使用自有喷绘机印刷图像后粘贴即可。半成品尺寸固定，不可变更。拥有数字切割机的加盟店<b>可直接购买原板自行裁切</b>更为划算（原板尺寸 1400×2200）。本产品线仅面向合作伙伴，<b>一般用户无法购买</b>。运输至韩国（平泽·釜山港），之后采用 <b>FOB 方式自行提货</b>。其他产品按您指定方式配送，运费另计。',
         catsLoading:'加载中…',
         catsEmpty:'暂无专供产品，请联系客服。',
-        pitchHl:'<span class="hl">加盟费0元</span><br><span class="midline">仅靠现有产品已难以突围</span><br>携手同行，奇迹在此展开',
-        pitchSub:'只要<span class="em">一台喷绘机、一个小工作室和热情</span>，您就能成为全球公司的CEO。不要止步于小区广告店。<span class="em">与卡米利翁印刷携手共进</span>。已经加入的伙伴都已成为富翁。',
+        pitchHl:'如今是<span class="hl">线上销售时代</span>，<br><span class="midline">您也需要一个强大的官网</span>',
+        pitchSub:'<span class="em">我们为您打造与卡米利翁完全一样的网站。</span>以批发价进货卡米利翁产品，并可上架您自己的商品。只需更换 LOGO 和电话——您专属的官网即刻完成。',
         p1t:'加盟费0元 · 无库存负担',
         p1d:'<b>少量采购半成品。</b>印刷图像后粘贴即可，无需裁切设备也能制作蜂窝板仿墙和横幅。<span class="hl-inline">(约为成品零售价的1/3)</span>需要昂贵设备的产品，您展示免费样品，卡米利翁为您制造并发货。<i>(纸展台、布料、文创品、印刷物)</i>',
         p2t:'半成品全球发货',
         p2d:'蜂窝板仿墙、瓦楞板、横幅、纸展台、布样均预裁切FOB发货。贵司只需印刷图像并粘贴。海运费/关税由当地支付。',
-        p3t:'区域独占+免费克隆网站',
-        p3d:'每个区域仅招一位合作伙伴。年营收达100万美元的合作伙伴可获得卡米利翁完整网站(含后台)免费克隆至贵司域名。',
+        p3t:'区域独占 — 立即抢占',
+        p3d:'<b>有了强大的官网，您也是大企业 CEO。</b>电商初期搭建费 <span class="hl-inline">约¥25,000</span> · 月度维护费 <span class="hl-inline">约¥5,000</span>，挑战<b>年销售¥5,000 万</b>。每个区域仅招一位合作伙伴。',
+        globeTitle:'全球 <span class="hl">22 个城市</span>已有加盟店运营',
+        globeSub:'从首尔、东京、上海、香港、新加坡、迪拜、柏林、巴黎、伦敦、纽约到悉尼 — 卡米利翁合作伙伴遍布全球',
         detailH2:'<span class="hl">加盟店计划</span>全面介绍',
         detailSub:'请仔细阅读 — 这是业务的精髓',
         detailBody:`<p>您拥有横幅印刷喷绘机吗？与我们共同成长。<strong>我们向全球供应预裁切的半成品，您只需印刷图像、粘贴、交付即可。</strong>蜂窝板仿墙、瓦楞板仿墙、横幅等以裁切状态发货。您印刷、粘贴、销售。</p>
@@ -567,7 +660,7 @@ const L = {
     ar:{
         langLabel:'العربية',
         badge:'⚡ بدون رأس مال · رسوم امتياز 0 · حصرية إقليمية',
-        heroH1:['نموا مع كاميليون','في <span class="hl">السوق العالمي</span>'],
+        heroH1:['لا تتوقف عند <span class="hl">محل إعلانات الحي</span>','انموا مع كاميليون'],
         heroSub:'آلة بلوتر مستعملة ومساحة عمل صغيرة تكفيان. استلم منتجات نصف مصنعة مقطوعة (جدران خلية النحل، كرتون مموج، لافتات، حوامل ورقية)، اطبع الرسومات، ألصقها، وسلمها. برنامج شراكة حصري.',
         ctaInquiry:'قدم الآن',
         ctaCall:'اتصل الآن',
@@ -575,14 +668,16 @@ const L = {
         catsSub:'<b>المنتجات نصف المصنعة غير مطبوعة.</b> مُقطّعة فقط، فاستخدم جهاز الطباعة الخاص بك لطباعة الرسومات وإلصاقها. المقاسات ثابتة ولا يمكن تغييرها. إذا كان لديك قاطعة رقمية، فإن <b>شراء الألواح الخام وقصها داخلياً</b> أرخص (مقاس اللوح الخام 1400×2200). خط منتجات للشركاء فقط — <b>لا يُباع للعامة</b>. نشحن إلى كوريا (ميناء بيونغتيك / بوسان)، ومن ثم <b>FOB — تُرتّب الشحن بنفسك</b>. جميع المنتجات الأخرى تُشحن بالطريقة التي تختارها مع رسوم شحن منفصلة.',
         catsLoading:'جارٍ تحميل المنتجات…',
         catsEmpty:'لا توجد منتجات حصرية مسجلة بعد. يرجى التواصل معنا.',
-        pitchHl:'<span class="hl">رسوم امتياز صفر</span><br><span class="midline">منتجاتك الحالية وحدها لم تعد تكفي</span><br>معاً، تتكشف المعجزات',
-        pitchSub:'بـ<span class="em">آلة بلوتر واحدة، مساحة عمل صغيرة، وشغف</span> فقط، يمكنك أن تصبح مدير شركة عالمية. لا تكتفي بكونك محل إعلانات محلياً. <span class="em">شارك مع كاميليون للطباعة</span>. من انضموا بالفعل أصبحوا أثرياء.',
+        pitchHl:'هذا <span class="hl">عصر البيع عبر الإنترنت</span>،<br><span class="midline">وأنت أيضًا تحتاج إلى موقع إلكتروني قوي</span>',
+        pitchSub:'<span class="em">سننشئ لك موقعًا إلكترونيًا مطابقًا تمامًا لموقع كاميليون.</span> احصل على منتجات كاميليون بسعر الجملة وأضف منتجاتك الخاصة. فقط استبدل الشعار ورقم الهاتف — موقعك جاهز.',
         p1t:'0 رسوم امتياز · بدون عبء مخزون',
         p1d:'<b>اشترِ كميات صغيرة من المنتجات نصف المصنعة.</b> اطبع الرسومات وألصقها لتصنع جدران خلية النحل واللافتات دون آلة قص. <span class="hl-inline">(حوالي ثلث سعر التجزئة للمنتج النهائي)</span> المنتجات التي تحتاج معدات باهظة، أرِ العميل عينات مجانية وكاميليون ستصنعها وتشحنها إليك. <i>(حوامل ورقية، أقمشة، منتجات، مطبوعات)</i>',
         p2t:'شحن نصف مصنع حول العالم',
         p2d:'جدران، كرتون، لافتات، حوامل ورقية، عينات أقمشة تُشحن مقطوعة FOB. أنت فقط تطبع الرسومات وتلصقها. الشحن والجمارك محلياً.',
-        p3t:'حصرية إقليمية + استنساخ موقع مجاني',
-        p3d:'شريك واحد لكل منطقة. الشركاء الذين يصلون لإيرادات 1 مليون دولار سنوياً يحصلون على نسخة مجانية من موقع كاميليون (بما في ذلك الإدارة) على نطاقهم.',
+        p3t:'حصرية إقليمية — احجز منطقتك الآن',
+        p3d:'<b>بموقع إلكتروني قوي، تصبح أنت أيضًا مديرًا تنفيذيًا لشركة كبرى.</b> إعداد المتجر الإلكتروني بـ <span class="hl-inline">$3,500</span> · رسوم شهرية <span class="hl-inline">$700</span> — استهدف <b>$7M إيرادات سنوية</b>. شريك واحد فقط لكل منطقة.',
+        globeTitle:'وكلاء يعملون في <span class="hl">22 مدينة</span> حول العالم',
+        globeSub:'من سيول وطوكيو وشانغهاي وهونغ كونغ وسنغافورة ودبي وبرلين وباريس ولندن ونيويورك إلى سيدني — شركاء كاميليون يحققون النجاح',
         detailH2:'<span class="hl">برنامج الامتياز</span> الشامل',
         detailSub:'يرجى القراءة بعناية — هذا جوهر العمل',
         detailBody:`<p>هل تملك آلة بلوتر لطباعة اللافتات؟ انمُ معنا. <strong>نوفر منتجات نصف مصنعة مقطوعة في جميع أنحاء العالم، فتحتاج فقط للطباعة واللصق والتسليم.</strong> جدران خلية النحل، جدران الكرتون المموج، اللافتات وغيرها تُشحن بمقاسات مقطوعة.</p>
@@ -628,7 +723,7 @@ const L = {
     es:{
         langLabel:'Español',
         badge:'⚡ Sin capital · Franquicia $0 · Exclusividad regional',
-        heroH1:['Crezca con Chameleon','en el <span class="hl">mercado global</span>'],
+        heroH1:['No se detenga en la <span class="hl">imprenta del barrio</span>','crezca junto a Chameleon'],
         heroSub:'Un plotter usado y un pequeño taller son todo lo que necesita. Reciba semiproductos pre-cortados (paneles nido de abeja, cartón corrugado, banners, expositores de papel), imprima sus gráficos, lamínelos y entregue. Programa de franquicia exclusiva.',
         ctaInquiry:'Solicitar ahora',
         ctaCall:'Llamar ahora',
@@ -636,14 +731,16 @@ const L = {
         catsSub:'<b>Los semiproductos NO vienen impresos.</b> Vienen pre-cortados — use su propio plotter para imprimir gráficos y laminarlos. Los tamaños son fijos, no personalizables. Si tiene una cortadora digital, <b>comprar láminas en bruto y cortar internamente</b> es más económico (lámina bruta 1400×2200). Esta línea es solo para socios — <b>no disponible para minoristas</b>. Enviamos a Corea (puerto Pyeongtaek / Busan); a partir de ahí es <b>FOB — usted gestiona el transporte</b>. Todos los demás productos se envían por su método preferido, con costos de envío separados.',
         catsLoading:'Cargando productos…',
         catsEmpty:'Aún no hay productos exclusivos. Contáctenos por favor.',
-        pitchHl:'<span class="hl">Franquicia $0</span><br><span class="midline">Con los artículos actuales ya no alcanza</span><br>Juntos, los milagros se despliegan',
-        pitchSub:'Con solo <span class="em">un plotter, un pequeño taller y pasión</span>, puede ser CEO de una empresa global. No se quede como una imprenta del barrio. <span class="em">Asóciese con Chameleon Printing</span>. Los que ya se unieron son ricos.',
+        pitchHl:'Estamos en la <span class="hl">era del comercio online</span>,<br><span class="midline">usted también necesita un sitio web potente</span>',
+        pitchSub:'<span class="em">Le construimos un sitio idéntico al de Chameleon.</span> Compre los productos Chameleon a precio mayorista y suba también los suyos. Cambie el logo y el teléfono — su propio sitio web está listo.',
         p1t:'Sin franquicia · Sin stock inicial',
         p1d:'<b>Compre pequeñas cantidades de semiproductos.</b> Imprima los gráficos, lamínelos, y puede fabricar cloisons nid d\'abeille y banners sin ninguna cortadora. <span class="hl-inline">(aprox. 1/3 del precio retail del producto terminado)</span> Para productos que requieren equipo costoso, muestre muestras gratuitas — Chameleon los fabrica y envía. <i>(Expositores de papel, tela, goods, impresos)</i>',
         p2t:'Semiproductos enviados mundialmente',
         p2d:'Paneles, cartón, banners, expositores, muestras de tela — enviados pre-cortados, FOB. Usted solo imprime y lamina. Flete/aranceles se pagan localmente.',
-        p3t:'Exclusividad + clon de web gratis',
-        p3d:'Un socio por región. Los que alcancen $1M anual reciben un clon gratis del sitio Chameleon (con admin) en su dominio.',
+        p3t:'Exclusividad regional — reserve su zona',
+        p3d:'<b>Con un sitio web potente, usted también es CEO global.</b> Configuración inicial e-commerce desde <span class="hl-inline">$3,500</span> · mantenimiento mensual <span class="hl-inline">$700</span> — apunte a <b>$7M de facturación anual</b>. Solo un socio por región.',
+        globeTitle:'Franquicias en <span class="hl">22 ciudades</span> del mundo',
+        globeSub:'Desde Seúl, Tokio, Shanghái, Hong Kong, Singapur, Dubái, Berlín, París, Londres, Nueva York hasta Sídney — los socios Chameleon prosperan',
         detailH2:'Descripción completa del <span class="hl">Programa de Franquicia</span>',
         detailSub:'Lea con atención — la esencia del negocio',
         detailBody:`<p>¿Tiene un plotter para imprimir banners? Crezca con nosotros. <strong>Suministramos semiproductos pre-cortados en todo el mundo, solo necesita imprimir gráficos, laminarlos y entregar.</strong> Paneles, cartón, banners y más se envían cortados a medida.</p>
@@ -689,7 +786,7 @@ const L = {
     de:{
         langLabel:'Deutsch',
         badge:'⚡ Kein Kapital · 0€ Franchise · Regionale Exklusivität',
-        heroH1:['Wachsen Sie mit Chameleon','im <span class="hl">Weltmarkt</span>'],
+        heroH1:['Bleiben Sie nicht beim <span class="hl">Eckwerbeladen</span> stehen','wachsen Sie mit Chameleon'],
         heroSub:'Ein gebrauchter Plotter und ein kleiner Arbeitsplatz reichen. Empfangen Sie zugeschnittene Halbfertigprodukte (Wabenplatten-Wände, Wellpappe, Banner, Papier-Displays), drucken Sie Ihre Grafiken, laminieren Sie auf und liefern Sie. Exklusives Partnerprogramm.',
         ctaInquiry:'Jetzt bewerben',
         ctaCall:'Jetzt anrufen',
@@ -697,14 +794,16 @@ const L = {
         catsSub:'<b>Halbfertigware ist NICHT vorgedruckt.</b> Sie kommt vorgeschnitten — drucken Sie Ihre Grafiken selbst und kleben Sie sie auf. Die Größen sind fix und nicht anpassbar. Mit einem Digitalschneider ist der <b>Kauf von Rohplatten und Eigenzuschnitt</b> günstiger (Rohplatte 1400×2200). Diese Linie ist ausschließlich für Partner — <b>nicht für Endkunden</b>. Wir liefern nach Korea (Hafen Pyeongtaek / Busan); ab dort <b>FOB — Weiterversand übernehmen Sie</b>. Alle anderen Produkte versenden wir nach Ihrer Wunschmethode mit separaten Versandkosten.',
         catsLoading:'Produkte werden geladen…',
         catsEmpty:'Noch keine exklusiven Produkte registriert. Bitte kontaktieren Sie uns.',
-        pitchHl:'<span class="hl">Franchise 0€</span><br><span class="midline">Mit dem bisherigen Sortiment wird es zunehmend schwer</span><br>Gemeinsam entfalten sich Wunder',
-        pitchSub:'Mit nur <span class="em">einem Plotter, einer kleinen Werkstatt und Leidenschaft</span> werden Sie CEO eines globalen Unternehmens. Bleiben Sie nicht beim Stadtteil-Druckerei stehen. <span class="em">Partnerschaft mit Chameleon Printing</span>. Wer bereits beigetreten ist, ist längst reich.',
+        pitchHl:'Wir leben im <span class="hl">Zeitalter des Online-Handels</span>,<br><span class="midline">auch Sie brauchen eine leistungsstarke Website</span>',
+        pitchSub:'<span class="em">Wir bauen Ihnen eine Website identisch zur Chameleon-Seite.</span> Beziehen Sie Chameleon-Produkte zum Großhandelspreis und stellen Sie zusätzlich eigene Produkte ein. Tauschen Sie nur Logo und Telefonnummer — Ihre Website ist fertig.',
         p1t:'0€ Franchise · Keine Lagerlast',
         p1d:'<b>Kaufen Sie kleine Mengen Halbfertigware.</b> Drucken, aufkleben — und Sie fertigen Wabenwände und Banner ganz ohne Schneidemaschine. <span class="hl-inline">(ca. 1/3 des Einzelhandelspreises des Fertigprodukts)</span> Produkte mit teurem Geräte-Bedarf: zeigen Sie kostenlose Muster, Chameleon fertigt und versendet. <i>(Papier-Displays, Stoffe, Goods, Drucksachen)</i>',
         p2t:'Halbfertigware weltweit versandt',
         p2d:'Wabenwände, Wellpappe, Banner, Displays, Stoffmuster — vorgeschnitten FOB verschifft. Sie drucken und laminieren nur. Fracht/Zölle lokal.',
-        p3t:'Regionale Exklusivität + Kostenloser Website-Klon',
-        p3d:'Ein Partner pro Region. Partner mit $1M Jahresumsatz erhalten einen kostenlosen Klon der Chameleon-Website (inkl. Admin) auf ihrer Domain.',
+        p3t:'Regionale Exklusivität — sichern Sie sich Ihr Gebiet',
+        p3d:'<b>Mit einer starken Website sind auch Sie CEO eines Großunternehmens.</b> E-Commerce-Setup ab <span class="hl-inline">3.500 €</span> · monatliche Betreuung <span class="hl-inline">700 €</span> — streben Sie <b>7 Mio. € Jahresumsatz</b> an. Nur ein Partner pro Region.',
+        globeTitle:'Franchises in <span class="hl">22 Städten</span> weltweit',
+        globeSub:'Von Seoul, Tokio, Shanghai, Hongkong, Singapur, Dubai, Berlin, Paris, London, New York bis Sydney — Chameleon-Partner sind erfolgreich',
         detailH2:'Vollständige <span class="hl">Franchise-Programm</span>-Übersicht',
         detailSub:'Bitte sorgfältig lesen — das Wesen des Geschäfts',
         detailBody:`<p>Besitzen Sie einen Banner-Plotter? Wachsen Sie mit uns. <strong>Wir liefern weltweit zugeschnittene Halbfertigprodukte — Sie müssen nur drucken, aufkleben, liefern.</strong> Wabenwände, Wellpapp-Wände, Banner usw. werden zugeschnitten versandt.</p>
@@ -750,7 +849,7 @@ const L = {
     fr:{
         langLabel:'Français',
         badge:'⚡ Sans capital · Franchise 0€ · Exclusivité régionale',
-        heroH1:['Grandissez avec Chameleon','sur le <span class="hl">marché mondial</span>'],
+        heroH1:['Ne vous arrêtez pas à <span class="hl">l\'imprimerie de quartier</span>','grandissez avec Chameleon'],
         heroSub:'Un traceur d\'occasion et un petit atelier suffisent. Recevez des semi-produits pré-découpés (cloisons nid d\'abeille, carton ondulé, bannières, présentoirs en papier), imprimez vos graphiques, laminez-les et livrez. Programme de franchise exclusif.',
         ctaInquiry:'Postuler maintenant',
         ctaCall:'Appeler',
@@ -758,14 +857,16 @@ const L = {
         catsSub:'<b>Les semi-produits ne sont PAS pré-imprimés.</b> Ils arrivent pré-découpés — utilisez votre traceur pour imprimer vos graphiques et les coller. Les dimensions sont fixes, non personnalisables. Si vous disposez d\'une découpeuse numérique, <b>acheter des plaques brutes et les découper en interne</b> revient moins cher (plaque brute 1400×2200). Cette gamme est réservée aux partenaires — <b>non disponible au détail</b>. Nous livrons en Corée (port de Pyeongtaek / Busan) ; ensuite <b>FOB — vous organisez le transport</b>. Tous les autres produits sont expédiés selon votre méthode, avec frais de port séparés.',
         catsLoading:'Chargement des produits…',
         catsEmpty:'Pas encore de produits exclusifs. Contactez-nous.',
-        pitchHl:'<span class="hl">Franchise 0€</span><br><span class="midline">Vos produits actuels ne suffiront plus</span><br>Ensemble, les miracles se déploient',
-        pitchSub:'Avec seulement <span class="em">un traceur, un petit atelier et de la passion</span>, vous pouvez devenir PDG d\'une société mondiale. Ne restez pas une imprimerie de quartier. <span class="em">Associez-vous à Chameleon Printing</span>. Ceux qui ont rejoint sont déjà riches.',
+        pitchHl:'C\'est <span class="hl">l\'ère du commerce en ligne</span>,<br><span class="midline">vous aussi avez besoin d\'un site web puissant</span>',
+        pitchSub:'<span class="em">Nous vous construisons un site identique à celui de Chameleon.</span> Achetez les produits Chameleon au prix de gros et ajoutez aussi vos propres produits. Changez simplement le logo et le téléphone — votre site est prêt.',
         p1t:'0€ franchise · Pas de stock initial',
         p1d:'<b>Achetez de petites quantités de semi-produits.</b> Imprimez vos graphiques, collez-les, et vous fabriquez cloisons nid d\'abeille et bannières sans aucune machine de découpe. <span class="hl-inline">(environ 1/3 du prix retail du produit fini)</span> Pour les produits nécessitant un équipement coûteux, présentez des échantillons gratuits — Chameleon fabrique et expédie. <i>(Présentoirs papier, tissus, goods, imprimés)</i>',
         p2t:'Semi-produits expédiés mondialement',
         p2d:'Cloisons, carton, bannières, présentoirs, échantillons tissu — expédiés pré-découpés FOB. Vous imprimez et laminez. Fret/taxes payés localement.',
-        p3t:'Exclusivité + clone de site gratuit',
-        p3d:'Un partenaire par région. Les partenaires atteignant 1M$ annuel reçoivent un clone gratuit du site Chameleon (avec admin) sur leur domaine.',
+        p3t:'Exclusivité régionale — réservez votre zone',
+        p3d:'<b>Avec un site puissant, vous êtes aussi PDG d\'un grand groupe.</b> Mise en place e-commerce dès <span class="hl-inline">3 500 €</span> · maintenance mensuelle <span class="hl-inline">700 €</span> — visez <b>7 M€ de chiffre d\'affaires annuel</b>. Un seul partenaire par région.',
+        globeTitle:'Franchises dans <span class="hl">22 villes</span> à travers le monde',
+        globeSub:'De Séoul, Tokyo, Shanghai, Hong Kong, Singapour, Dubaï, Berlin, Paris, Londres, New York à Sydney — les partenaires Chameleon prospèrent',
         detailH2:'Programme de <span class="hl">franchise</span> complet',
         detailSub:'Veuillez lire attentivement — l\'essence de l\'activité',
         detailBody:`<p>Possédez-vous un traceur pour bannières ? Grandissons ensemble. <strong>Nous fournissons des semi-produits pré-découpés dans le monde entier, vous n\'avez qu\'à imprimer, laminer, livrer.</strong> Cloisons nid d\'abeille, carton ondulé, bannières, etc. sont expédiés découpés.</p>
@@ -936,6 +1037,8 @@ setTxt('txtCatsLoading', T.catsLoading);
 setTxt('p1t', T.p1t); setTxt('p1d', T.p1d);
 setTxt('p2t', T.p2t); setTxt('p2d', T.p2d);
 setTxt('p3t', T.p3t); setTxt('p3d', T.p3d);
+setTxt('txtGlobeTitle', T.globeTitle);
+setTxt('txtGlobeSub', T.globeSub);
 setTxt('txtDetailH2', T.detailH2);
 setTxt('txtDetailSub', T.detailSub);
 setTxt('txtDetailBody', T.detailBody);
