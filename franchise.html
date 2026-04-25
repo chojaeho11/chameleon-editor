@@ -234,52 +234,18 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         <p class="fr-globe-sub" id="txtGlobeSub"></p>
         <div class="fr-globe-wrap" id="frGlobeWrap">
             <img class="fr-globe-img" src="/worldmap.svg?v=1" alt="" loading="lazy">
-            <!-- 22 city markers (purple pulsing). Wrapped in markers div sized to actual SVG content (86.71% wide). -->
+            <!-- 10 city markers: Europe 4 · USA 2 · Korea · Japan · Morocco · Malaysia -->
             <div class="fr-globe-markers">
-            <div class="fr-globe-marker" data-city="Seoul"      style="left:85.3%; top:29.1%; animation-delay:0s;"></div>
-            <div class="fr-globe-marker" data-city="Tokyo"      style="left:88.8%; top:30.2%; animation-delay:0.2s;"></div>
-            <div class="fr-globe-marker" data-city="Shanghai"   style="left:83.8%; top:32.7%; animation-delay:0.4s;"></div>
-            <div class="fr-globe-marker" data-city="Hong Kong"  style="left:81.7%; top:37.6%; animation-delay:0.6s;"></div>
-            <div class="fr-globe-marker" data-city="Bangkok"    style="left:78%;   top:42.4%; animation-delay:0.8s;"></div>
-            <div class="fr-globe-marker" data-city="Singapore"  style="left:78.8%; top:49.2%; animation-delay:1s;"></div>
-            <div class="fr-globe-marker" data-city="Mumbai"     style="left:70.2%; top:39.4%; animation-delay:1.2s;"></div>
-            <div class="fr-globe-marker" data-city="Dubai"      style="left:65.4%; top:36%;   animation-delay:1.4s;"></div>
-            <div class="fr-globe-marker" data-city="Riyadh"     style="left:63%;   top:36.3%; animation-delay:1.6s;"></div>
-            <div class="fr-globe-marker" data-city="Cairo"      style="left:58.7%; top:33.3%; animation-delay:1.8s;"></div>
-            <div class="fr-globe-marker" data-city="Istanbul"   style="left:58%;   top:27.2%; animation-delay:0.1s;"></div>
-            <div class="fr-globe-marker" data-city="Moscow"     style="left:60.4%; top:19%;   animation-delay:0.3s;"></div>
-            <div class="fr-globe-marker" data-city="Berlin"     style="left:53.7%; top:20.8%; animation-delay:0.5s;"></div>
-            <div class="fr-globe-marker" data-city="Paris"      style="left:50.6%; top:22.9%; animation-delay:0.7s;"></div>
-            <div class="fr-globe-marker" data-city="London"     style="left:49.9%; top:21.4%; animation-delay:0.9s;"></div>
-            <div class="fr-globe-marker" data-city="Madrid"     style="left:48.9%; top:27.5%; animation-delay:1.1s;"></div>
-            <div class="fr-globe-marker" data-city="New York"   style="left:29.4%; top:27.4%; animation-delay:1.3s;"></div>
-            <div class="fr-globe-marker" data-city="Los Angeles" style="left:17.2%; top:31.1%; animation-delay:1.5s;"></div>
-            <div class="fr-globe-marker" data-city="Toronto"    style="left:27.9%; top:25.7%; animation-delay:1.7s;"></div>
-            <div class="fr-globe-marker" data-city="Mexico City" style="left:22.5%; top:39.2%; animation-delay:1.9s;"></div>
-            <div class="fr-globe-marker" data-city="São Paulo"  style="left:37%;   top:63%;   animation-delay:2.1s;"></div>
-            <div class="fr-globe-marker" data-city="Sydney"     style="left:92%;   top:68.9%; animation-delay:2.3s;"></div>
-            <!-- USA / Canada 추가 -->
-            <div class="fr-globe-marker" data-city="Chicago"    style="left:25.7%; top:26.7%; animation-delay:0.15s;"></div>
-            <div class="fr-globe-marker" data-city="Miami"      style="left:27.7%; top:35.7%; animation-delay:0.35s;"></div>
-            <div class="fr-globe-marker" data-city="Houston"    style="left:23.5%; top:33.4%; animation-delay:0.55s;"></div>
-            <div class="fr-globe-marker" data-city="Seattle"    style="left:16%;   top:23.6%; animation-delay:0.75s;"></div>
-            <div class="fr-globe-marker" data-city="Atlanta"    style="left:26.6%; top:31.3%; animation-delay:0.95s;"></div>
-            <div class="fr-globe-marker" data-city="Vancouver"  style="left:15.8%; top:22.6%; animation-delay:1.15s;"></div>
-            <!-- Europe 추가 -->
-            <div class="fr-globe-marker" data-city="Rome"       style="left:53.5%; top:26.7%; animation-delay:1.35s;"></div>
-            <div class="fr-globe-marker" data-city="Amsterdam"  style="left:51.4%; top:20.9%; animation-delay:1.55s;"></div>
-            <div class="fr-globe-marker" data-city="Vienna"     style="left:54.6%; top:23.2%; animation-delay:1.75s;"></div>
-            <div class="fr-globe-marker" data-city="Stockholm"  style="left:55%;   top:17.1%; animation-delay:1.95s;"></div>
-            <div class="fr-globe-marker" data-city="Barcelona"  style="left:50.6%; top:27%;   animation-delay:2.15s;"></div>
-            <div class="fr-globe-marker" data-city="Munich"     style="left:53.2%; top:23.3%; animation-delay:0.05s;"></div>
-            <div class="fr-globe-marker" data-city="Lisbon"     style="left:47.5%; top:28.5%; animation-delay:0.25s;"></div>
-            <!-- Africa 추가 -->
-            <div class="fr-globe-marker" data-city="Casablanca" style="left:47.9%; top:31.3%; animation-delay:0.45s;"></div>
-            <div class="fr-globe-marker" data-city="Algiers"    style="left:50.8%; top:29.6%; animation-delay:0.65s;"></div>
-            <div class="fr-globe-marker" data-city="Lagos"      style="left:50.9%; top:46.4%; animation-delay:0.85s;"></div>
-            <div class="fr-globe-marker" data-city="Nairobi"    style="left:60.2%; top:50.7%; animation-delay:1.05s;"></div>
-            <div class="fr-globe-marker" data-city="Johannesburg" style="left:57.8%; top:64.6%; animation-delay:1.25s;"></div>
-            <div class="fr-globe-marker" data-city="Cape Town"  style="left:55.1%; top:68.8%; animation-delay:1.45s;"></div>
+                <div class="fr-globe-marker" data-city="London"       style="left:49.9%; top:21.4%; animation-delay:0s;"></div>
+                <div class="fr-globe-marker" data-city="Paris"        style="left:50.6%; top:22.9%; animation-delay:0.3s;"></div>
+                <div class="fr-globe-marker" data-city="Berlin"       style="left:53.7%; top:20.8%; animation-delay:0.6s;"></div>
+                <div class="fr-globe-marker" data-city="Rome"         style="left:53.5%; top:26.7%; animation-delay:0.9s;"></div>
+                <div class="fr-globe-marker" data-city="New York"     style="left:29.4%; top:27.4%; animation-delay:1.2s;"></div>
+                <div class="fr-globe-marker" data-city="Los Angeles"  style="left:17.2%; top:31.1%; animation-delay:1.5s;"></div>
+                <div class="fr-globe-marker" data-city="Seoul"        style="left:85.3%; top:29.1%; animation-delay:1.8s;"></div>
+                <div class="fr-globe-marker" data-city="Tokyo"        style="left:88.8%; top:30.2%; animation-delay:2.1s;"></div>
+                <div class="fr-globe-marker" data-city="Casablanca"   style="left:47.9%; top:31.3%; animation-delay:0.15s;"></div>
+                <div class="fr-globe-marker" data-city="Kuala Lumpur" style="left:78.2%; top:48.3%; animation-delay:0.45s;"></div>
             </div>
         </div>
     </div>
@@ -421,8 +387,8 @@ const L = {
         p2d:'허니콤 가벽·골판지·배너·종이매대·패브릭 샘플이 커팅 완료 상태로 FOB 선적. 귀사는 실사 출력만 붙여서 판매. 해상운송료·관세는 현지 결제.',
         p3t:'독점 지역 — 지금 선점하세요',
         p3d:'<b>강력한 홈페이지가 있다면 당신도 대기업 CEO입니다.</b> 쇼핑몰 초기 세팅비용 <span class="hl-inline">500만원</span> · 월 관리비 <span class="hl-inline">100만원</span>으로 <b>연매출 100억</b>에 도전하세요. 지역당 1개 파트너만 선발됩니다.',
-        globeTitle:'전 세계 <span class="hl">40+개 도시</span>에서 가맹점 운영 중',
-        globeSub:'뉴욕·LA·시카고·런던·파리·베를린·로마·라고스·요하네스버그·서울·도쿄·시드니까지 — 카멜레온 파트너들이 활약하고 있습니다',
+        globeTitle:'전 세계 <span class="hl">10개 도시</span>에서 가맹점 운영 중',
+        globeSub:'런던·파리·베를린·로마·뉴욕·LA·서울·도쿄·카사블랑카·쿠알라룸푸르 — 카멜레온 파트너들이 활약하고 있습니다',
         detailH2:'<span class="hl">가맹점 프로그램</span> 전체 안내',
         detailSub:'반드시 읽어주세요 — 이 비즈니스의 본질을 담았습니다',
         detailBody:`<p>현수막을 출력하는 장비가 있으신가요? 저희와 같이 성장해요. <strong>전 세계 어디서나 반제품을 받아 실사 출력 후 붙여서 납품할 수 있도록 반제품을 제공</strong>합니다. 허니콤보드 가벽과 골판지 가벽, 배너 등의 제품을 커팅만 되어 있는 상태로 제공받아 출력물을 붙여서 판매하세요.</p>
@@ -484,8 +450,8 @@ const L = {
         p2d:'ハニカム仮壁・段ボール・バナー・ペーパースタンド・ファブリック見本をカット済みでFOB出荷。貴社は実写出力を貼るだけ。海上運賃・関税は現地決済。',
         p3t:'地域独占 — 今すぐ確保を',
         p3d:'<b>強力なホームページがあれば、あなたも大企業のCEOです。</b>ECサイト初期セットアップ <span class="hl-inline">約55万円</span> · 月額管理費 <span class="hl-inline">約11万円</span>で<b>年商10億円</b>に挑戦。地域ごとに1社のみ選抜。',
-        globeTitle:'世界 <span class="hl">40+都市</span>で加盟店が稼働中',
-        globeSub:'NY・LA・シカゴ・ロンドン・パリ・ベルリン・ローマ・ラゴス・ヨハネスブルク・ソウル・東京・シドニーまで — カメレオンのパートナーが活躍しています',
+        globeTitle:'世界 <span class="hl">10都市</span>で加盟店が稼働中',
+        globeSub:'ロンドン・パリ・ベルリン・ローマ・NY・LA・ソウル・東京・カサブランカ・クアラルンプール — カメレオンのパートナーが活躍しています',
         detailH2:'<span class="hl">加盟店プログラム</span>の全案内',
         detailSub:'必ずお読みください — このビジネスの本質',
         detailBody:`<p>横断幕を出力する機材をお持ちですか？ 私たちと一緒に成長しましょう。<strong>世界中どこでも半製品を受け取り、実写出力を貼って納品できるよう半製品を提供</strong>します。ハニカム仮壁、段ボール仮壁、バナーなどをカットのみの状態で受け取り、出力を貼って販売してください。</p>
@@ -547,8 +513,8 @@ const L = {
         p2d:'Honeycomb walls, corrugated, banners, paper stands, fabric samples — shipped pre-cut, FOB. You only print and apply graphics. Freight/duties paid locally.',
         p3t:'Regional exclusivity — claim your territory now',
         p3d:'<b>With a powerful website, you become a global CEO too.</b> Initial e-commerce setup from <span class="hl-inline">$3,500</span> · monthly maintenance <span class="hl-inline">$700</span> — aim for <b>$7M annual revenue</b>. One partner per region only.',
-        globeTitle:'Franchises operating in <span class="hl">40+ cities</span> worldwide',
-        globeSub:'From New York, LA, Chicago, London, Paris, Berlin, Rome, Lagos, Johannesburg, Seoul, Tokyo to Sydney — Chameleon partners are thriving',
+        globeTitle:'Franchises operating in <span class="hl">10 cities</span> worldwide',
+        globeSub:'London, Paris, Berlin, Rome, New York, LA, Seoul, Tokyo, Casablanca, Kuala Lumpur — Chameleon partners are thriving',
         detailH2:'Full <span class="hl">Franchise Program</span> Overview',
         detailSub:'Please read carefully — this is the essence of the business',
         detailBody:`<p>Do you own a banner-printing plotter? Grow with us. <strong>We supply pre-cut semi-finished products worldwide, so you only need to print graphics, apply them, and deliver.</strong> Honeycomb walls, corrugated walls, banners and more are shipped cut-to-size. You print, laminate, sell.</p>
@@ -610,8 +576,8 @@ const L = {
         p2d:'蜂窝板仿墙、瓦楞板、横幅、纸展台、布样均预裁切FOB发货。贵司只需印刷图像并粘贴。海运费/关税由当地支付。',
         p3t:'区域独占 — 立即抢占',
         p3d:'<b>有了强大的官网，您也是大企业 CEO。</b>电商初期搭建费 <span class="hl-inline">约¥25,000</span> · 月度维护费 <span class="hl-inline">约¥5,000</span>，挑战<b>年销售¥5,000 万</b>。每个区域仅招一位合作伙伴。',
-        globeTitle:'全球 <span class="hl">40+ 个城市</span>已有加盟店运营',
-        globeSub:'从纽约、洛杉矶、芝加哥、伦敦、巴黎、柏林、罗马、拉各斯、约翰内斯堡、首尔、东京到悉尼 — 卡米利翁合作伙伴遍布全球',
+        globeTitle:'全球 <span class="hl">10 个城市</span>已有加盟店运营',
+        globeSub:'伦敦、巴黎、柏林、罗马、纽约、洛杉矶、首尔、东京、卡萨布兰卡、吉隆坡 — 卡米利翁合作伙伴遍布全球',
         detailH2:'<span class="hl">加盟店计划</span>全面介绍',
         detailSub:'请仔细阅读 — 这是业务的精髓',
         detailBody:`<p>您拥有横幅印刷喷绘机吗？与我们共同成长。<strong>我们向全球供应预裁切的半成品，您只需印刷图像、粘贴、交付即可。</strong>蜂窝板仿墙、瓦楞板仿墙、横幅等以裁切状态发货。您印刷、粘贴、销售。</p>
@@ -673,8 +639,8 @@ const L = {
         p2d:'جدران، كرتون، لافتات، حوامل ورقية، عينات أقمشة تُشحن مقطوعة FOB. أنت فقط تطبع الرسومات وتلصقها. الشحن والجمارك محلياً.',
         p3t:'حصرية إقليمية — احجز منطقتك الآن',
         p3d:'<b>بموقع إلكتروني قوي، تصبح أنت أيضًا مديرًا تنفيذيًا لشركة كبرى.</b> إعداد المتجر الإلكتروني بـ <span class="hl-inline">$3,500</span> · رسوم شهرية <span class="hl-inline">$700</span> — استهدف <b>$7M إيرادات سنوية</b>. شريك واحد فقط لكل منطقة.',
-        globeTitle:'وكلاء يعملون في <span class="hl">40+ مدينة</span> حول العالم',
-        globeSub:'من نيويورك ولوس أنجلوس وشيكاغو ولندن وباريس وبرلين وروما ولاغوس وجوهانسبرغ وسيول وطوكيو إلى سيدني — شركاء كاميليون يحققون النجاح',
+        globeTitle:'وكلاء يعملون في <span class="hl">10 مدن</span> حول العالم',
+        globeSub:'لندن وباريس وبرلين وروما ونيويورك ولوس أنجلوس وسيول وطوكيو والدار البيضاء وكوالالمبور — شركاء كاميليون يحققون النجاح',
         detailH2:'<span class="hl">برنامج الامتياز</span> الشامل',
         detailSub:'يرجى القراءة بعناية — هذا جوهر العمل',
         detailBody:`<p>هل تملك آلة بلوتر لطباعة اللافتات؟ انمُ معنا. <strong>نوفر منتجات نصف مصنعة مقطوعة في جميع أنحاء العالم، فتحتاج فقط للطباعة واللصق والتسليم.</strong> جدران خلية النحل، جدران الكرتون المموج، اللافتات وغيرها تُشحن بمقاسات مقطوعة.</p>
@@ -736,8 +702,8 @@ const L = {
         p2d:'Paneles, cartón, banners, expositores, muestras de tela — enviados pre-cortados, FOB. Usted solo imprime y lamina. Flete/aranceles se pagan localmente.',
         p3t:'Exclusividad regional — reserve su zona',
         p3d:'<b>Con un sitio web potente, usted también es CEO global.</b> Configuración inicial e-commerce desde <span class="hl-inline">$3,500</span> · mantenimiento mensual <span class="hl-inline">$700</span> — apunte a <b>$7M de facturación anual</b>. Solo un socio por región.',
-        globeTitle:'Franquicias en <span class="hl">40+ ciudades</span> del mundo',
-        globeSub:'Desde Nueva York, LA, Chicago, Londres, París, Berlín, Roma, Lagos, Johannesburgo, Seúl, Tokio hasta Sídney — los socios Chameleon prosperan',
+        globeTitle:'Franquicias en <span class="hl">10 ciudades</span> del mundo',
+        globeSub:'Londres, París, Berlín, Roma, Nueva York, LA, Seúl, Tokio, Casablanca, Kuala Lumpur — los socios Chameleon prosperan',
         detailH2:'Descripción completa del <span class="hl">Programa de Franquicia</span>',
         detailSub:'Lea con atención — la esencia del negocio',
         detailBody:`<p>¿Tiene un plotter para imprimir banners? Crezca con nosotros. <strong>Suministramos semiproductos pre-cortados en todo el mundo, solo necesita imprimir gráficos, laminarlos y entregar.</strong> Paneles, cartón, banners y más se envían cortados a medida.</p>
@@ -799,8 +765,8 @@ const L = {
         p2d:'Wabenwände, Wellpappe, Banner, Displays, Stoffmuster — vorgeschnitten FOB verschifft. Sie drucken und laminieren nur. Fracht/Zölle lokal.',
         p3t:'Regionale Exklusivität — sichern Sie sich Ihr Gebiet',
         p3d:'<b>Mit einer starken Website sind auch Sie CEO eines Großunternehmens.</b> E-Commerce-Setup ab <span class="hl-inline">3.500 €</span> · monatliche Betreuung <span class="hl-inline">700 €</span> — streben Sie <b>7 Mio. € Jahresumsatz</b> an. Nur ein Partner pro Region.',
-        globeTitle:'Franchises in <span class="hl">40+ Städten</span> weltweit',
-        globeSub:'Von New York, LA, Chicago, London, Paris, Berlin, Rom, Lagos, Johannesburg, Seoul, Tokio bis Sydney — Chameleon-Partner sind erfolgreich',
+        globeTitle:'Franchises in <span class="hl">10 Städten</span> weltweit',
+        globeSub:'London, Paris, Berlin, Rom, New York, LA, Seoul, Tokio, Casablanca, Kuala Lumpur — Chameleon-Partner sind erfolgreich',
         detailH2:'Vollständige <span class="hl">Franchise-Programm</span>-Übersicht',
         detailSub:'Bitte sorgfältig lesen — das Wesen des Geschäfts',
         detailBody:`<p>Besitzen Sie einen Banner-Plotter? Wachsen Sie mit uns. <strong>Wir liefern weltweit zugeschnittene Halbfertigprodukte — Sie müssen nur drucken, aufkleben, liefern.</strong> Wabenwände, Wellpapp-Wände, Banner usw. werden zugeschnitten versandt.</p>
@@ -862,8 +828,8 @@ const L = {
         p2d:'Cloisons, carton, bannières, présentoirs, échantillons tissu — expédiés pré-découpés FOB. Vous imprimez et laminez. Fret/taxes payés localement.',
         p3t:'Exclusivité régionale — réservez votre zone',
         p3d:'<b>Avec un site puissant, vous êtes aussi PDG d\'un grand groupe.</b> Mise en place e-commerce dès <span class="hl-inline">3 500 €</span> · maintenance mensuelle <span class="hl-inline">700 €</span> — visez <b>7 M€ de chiffre d\'affaires annuel</b>. Un seul partenaire par région.',
-        globeTitle:'Franchises dans <span class="hl">40+ villes</span> à travers le monde',
-        globeSub:'De New York, LA, Chicago, Londres, Paris, Berlin, Rome, Lagos, Johannesburg, Séoul, Tokyo à Sydney — les partenaires Chameleon prospèrent',
+        globeTitle:'Franchises dans <span class="hl">10 villes</span> à travers le monde',
+        globeSub:'Londres, Paris, Berlin, Rome, New York, LA, Séoul, Tokyo, Casablanca, Kuala Lumpur — les partenaires Chameleon prospèrent',
         detailH2:'Programme de <span class="hl">franchise</span> complet',
         detailSub:'Veuillez lire attentivement — l\'essence de l\'activité',
         detailBody:`<p>Possédez-vous un traceur pour bannières ? Grandissons ensemble. <strong>Nous fournissons des semi-produits pré-découpés dans le monde entier, vous n\'avez qu\'à imprimer, laminer, livrer.</strong> Cloisons nid d\'abeille, carton ondulé, bannières, etc. sont expédiés découpés.</p>
