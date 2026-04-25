@@ -16,8 +16,8 @@ const AI_I18N = {
     kr: {
         title: '✨ AI 디자인 스튜디오', free:'무료 사용', hint:'GPT-5.5 · 영문 텍스트 · 에디터에서 한글 편집',
         lead: '<b>원하는 디자인을 마음껏 해보세요.</b> 수정할 부분이 있다면 에디터에서 수정하세요.',
-        s1:'① 사이즈 선택', s2:'② 배경 색상', s3:'③ 제목', s4:'④ 스타일·추가 설명', optional:'(선택)',
-        titlePh:'제목 (예: CHAMELEON PRINTING, 50% SALE)', promptPh:'내용 및 전화번호, 스타일 등을 적어주세요',
+        s1:'① 사이즈 선택', s2:'② 제목', s3:'③ 작은 글씨', optional:'(선택)', required:'(필수)',
+        titlePh:'제목 (예: 악마는 프라다를 입는다, 50% SALE)', promptPh:'부제·태그라인·전화번호 등 (없으면 비워두세요)',
         uploadBtn:'첨부이미지 (4장까지)', genBtn:'🎨 AI 디자인 생성하기', genBtnLoading:'⏳ 생성중...', previewHint:'미리보기 · 곧 또렷해집니다', emptyMain:'예시 — 이런 디자인이 생성됩니다',
         emptySub:'왼쪽에서 사이즈 · 색상 · 제목을 선택한 뒤<br>🎨 생성 버튼을 누르세요 (약 30~60초)',
         loadMain:'AI가 디자인을 생성중입니다', loadSub:'약 30~60초 정도 소요됩니다. 잠시만 기다려 주세요.',
@@ -27,8 +27,8 @@ const AI_I18N = {
     ja: {
         title:'✨ AIデザインスタジオ', free:'無料', hint:'GPT-5.5 · 英文テキスト · エディターで日本語編集',
         lead:'<b>お好きなデザインを思いのまま作ってください。</b> 修正したい部分はエディターで編集できます。',
-        s1:'① サイズ選択', s2:'② 背景色', s3:'③ タイトル', s4:'④ スタイル·追加説明', optional:'(任意)',
-        titlePh:'タイトル (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·電話番号·スタイルなどを記入',
+        s1:'① サイズ選択', s2:'② タイトル', s3:'③ 小さい文字', optional:'(任意)', required:'(必須)',
+        titlePh:'タイトル (例: プラダを着た悪魔, 50% SALE)', promptPh:'サブタイトル·タグライン·電話番号など (空欄可)',
         uploadBtn:'画像添付 (最大4枚)', genBtn:'🎨 AIデザイン生成', genBtnLoading:'⏳ 生成中...', previewHint:'プレビュー · 間もなく鮮明になります', emptyMain:'例 — このようなデザインが生成されます',
         emptySub:'左でサイズ·色·タイトルを選び<br>🎨 生成ボタンを押してください (約30〜60秒)',
         loadMain:'AIがデザイン生成中です', loadSub:'約30〜60秒かかります。しばらくお待ちください。',
@@ -38,8 +38,8 @@ const AI_I18N = {
     en: {
         title:'✨ AI Design Studio', free:'Free use', hint:'GPT-5.5 · English text · Edit in editor',
         lead:'<b>Design freely as you wish.</b> If you want to make edits, fix them in the editor.',
-        s1:'① Size', s2:'② Background Color', s3:'③ Title', s4:'④ Style / Extra details', optional:'(optional)',
-        titlePh:'Title (e.g. CHAMELEON PRINTING, 50% SALE)', promptPh:'Content, phone number, style, etc.',
+        s1:'① Size', s2:'② Title', s3:'③ Small text', optional:'(optional)', required:'(required)',
+        titlePh:'Title (e.g. The Devil Wears Prada, 50% SALE)', promptPh:'Subtitle, tagline, phone number, etc. (leave blank if none)',
         uploadBtn:'Attach images (up to 4)', genBtn:'🎨 Generate AI Design', genBtnLoading:'⏳ Generating...', previewHint:'Preview · sharpening soon', emptyMain:'Example — designs like this will be generated',
         emptySub:'Pick size · color · title on the left,<br>then press 🎨 Generate (30–60 s)',
         loadMain:'AI is generating your design', loadSub:'This takes ~30–60 seconds. Please wait.',
@@ -49,8 +49,8 @@ const AI_I18N = {
     zh: {
         title:'✨ AI 设计工作室', free:'免费使用', hint:'GPT-5.5 · 英文文本 · 编辑器中汉化',
         lead:'<b>尽情创作您想要的设计。</b> 需要修改的部分请在编辑器中修改。',
-        s1:'① 尺寸选择', s2:'② 背景色', s3:'③ 标题', s4:'④ 风格·补充说明', optional:'(可选)',
-        titlePh:'标题 (例: CHAMELEON PRINTING, 50% SALE)', promptPh:'内容·电话·风格等',
+        s1:'① 尺寸选择', s2:'② 标题', s3:'③ 小字', optional:'(可选)', required:'(必填)',
+        titlePh:'标题 (例: 穿普拉达的女王, 50% SALE)', promptPh:'副标题·标语·电话等 (可留空)',
         uploadBtn:'附加图片 (最多4张)', genBtn:'🎨 生成AI设计', genBtnLoading:'⏳ 生成中...', previewHint:'预览 · 即将清晰', emptyMain:'示例 — 将生成此类设计',
         emptySub:'在左侧选择尺寸·颜色·标题后<br>点击 🎨 生成 (约30–60秒)',
         loadMain:'AI正在生成设计', loadSub:'大约需要30–60秒，请稍候。',
@@ -60,8 +60,8 @@ const AI_I18N = {
     ar: {
         title:'✨ استوديو التصميم بالذكاء الاصطناعي', free:'استخدام مجاني', hint:'GPT-5.5 · نص إنجليزي · تحرير في المحرر',
         lead:'<b>صمم بحرية كما تشاء.</b> إذا كنت ترغب في تعديل أي جزء، فقم بتعديله في المحرر.',
-        s1:'① المقاس', s2:'② لون الخلفية', s3:'③ العنوان', s4:'④ النمط / تفاصيل إضافية', optional:'(اختياري)',
-        titlePh:'العنوان (مثال: CHAMELEON PRINTING, 50% SALE)', promptPh:'المحتوى والهاتف والنمط وغيرها',
+        s1:'① المقاس', s2:'② العنوان', s3:'③ نص صغير', optional:'(اختياري)', required:'(مطلوب)',
+        titlePh:'العنوان (مثال: The Devil Wears Prada, 50% SALE)', promptPh:'العنوان الفرعي · الشعار · الهاتف (اتركه فارغًا إن لم يلزم)',
         uploadBtn:'إرفاق صور (حتى 4)', genBtn:'🎨 إنشاء تصميم بالذكاء الاصطناعي', genBtnLoading:'⏳ جارٍ الإنشاء...', previewHint:'معاينة · ستصبح أكثر وضوحًا قريبًا', emptyMain:'مثال — سيتم إنشاء تصاميم مثل هذه',
         emptySub:'اختر المقاس واللون والعنوان على اليسار<br>ثم اضغط 🎨 إنشاء (30–60 ثانية)',
         loadMain:'يقوم الذكاء الاصطناعي بإنشاء التصميم', loadSub:'يستغرق ذلك 30–60 ثانية. يرجى الانتظار.',
@@ -71,8 +71,8 @@ const AI_I18N = {
     es: {
         title:'✨ Estudio de Diseño con IA', free:'Uso gratis', hint:'GPT-5.5 · Texto en inglés · Edita en el editor',
         lead:'<b>Diseña libremente como quieras.</b> Si necesitas editar algo, hazlo en el editor.',
-        s1:'① Tamaño', s2:'② Color de fondo', s3:'③ Título', s4:'④ Estilo / Detalles extra', optional:'(opcional)',
-        titlePh:'Título (ej. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenido, teléfono, estilo, etc.',
+        s1:'① Tamaño', s2:'② Título', s3:'③ Texto pequeño', optional:'(opcional)', required:'(obligatorio)',
+        titlePh:'Título (ej. El Diablo viste de Prada, 50% SALE)', promptPh:'Subtítulo · eslogan · teléfono, etc. (déjalo en blanco si no aplica)',
         uploadBtn:'Adjuntar imágenes (hasta 4)', genBtn:'🎨 Generar Diseño IA', genBtnLoading:'⏳ Generando...', previewHint:'Vista previa · pronto se aclarará', emptyMain:'Ejemplo — se generarán diseños como este',
         emptySub:'Elige tamaño · color · título a la izquierda,<br>luego pulsa 🎨 Generar (30–60 s)',
         loadMain:'La IA está generando tu diseño', loadSub:'Tarda 30–60 segundos. Por favor espere.',
@@ -82,8 +82,8 @@ const AI_I18N = {
     de: {
         title:'✨ AI Design Studio', free:'Kostenlose Nutzung', hint:'GPT-5.5 · Englischer Text · Im Editor bearbeiten',
         lead:'<b>Gestalten Sie ganz nach Belieben.</b> Was Sie anpassen möchten, können Sie im Editor bearbeiten.',
-        s1:'① Größe', s2:'② Hintergrundfarbe', s3:'③ Titel', s4:'④ Stil / Zusatzdetails', optional:'(optional)',
-        titlePh:'Titel (z.B. CHAMELEON PRINTING, 50% SALE)', promptPh:'Inhalt, Telefon, Stil usw.',
+        s1:'① Größe', s2:'② Titel', s3:'③ Kleiner Text', optional:'(optional)', required:'(erforderlich)',
+        titlePh:'Titel (z.B. Der Teufel trägt Prada, 50% SALE)', promptPh:'Untertitel · Tagline · Telefon usw. (bei Bedarf leer lassen)',
         uploadBtn:'Bilder anhängen (bis 4)', genBtn:'🎨 KI-Design generieren', genBtnLoading:'⏳ Wird generiert...', previewHint:'Vorschau · wird gleich schärfer', emptyMain:'Beispiel — solche Designs werden generiert',
         emptySub:'Wählen Sie links Größe · Farbe · Titel<br>und drücken 🎨 Generieren (30–60 s)',
         loadMain:'KI erstellt Ihr Design', loadSub:'Das dauert ca. 30–60 Sekunden. Bitte warten.',
@@ -93,8 +93,8 @@ const AI_I18N = {
     fr: {
         title:'✨ Studio de Design IA', free:'Utilisation gratuite', hint:'GPT-5.5 · Texte anglais · Modifier dans l\'éditeur',
         lead:'<b>Créez librement le design que vous voulez.</b> Pour toute modification, utilisez l\'éditeur.',
-        s1:'① Taille', s2:'② Couleur de fond', s3:'③ Titre', s4:'④ Style / Détails supplémentaires', optional:'(facultatif)',
-        titlePh:'Titre (ex. CHAMELEON PRINTING, 50% SALE)', promptPh:'Contenu, téléphone, style, etc.',
+        s1:'① Taille', s2:'② Titre', s3:'③ Petit texte', optional:'(facultatif)', required:'(obligatoire)',
+        titlePh:'Titre (ex. Le Diable s\'habille en Prada, 50% SALE)', promptPh:'Sous-titre · slogan · téléphone, etc. (laissez vide si rien)',
         uploadBtn:'Joindre des images (max 4)', genBtn:'🎨 Générer le Design IA', genBtnLoading:'⏳ Génération...', previewHint:'Aperçu · bientôt plus net', emptyMain:'Exemple — des designs de ce type seront générés',
         emptySub:'Choisissez taille · couleur · titre à gauche,<br>puis appuyez sur 🎨 Générer (30–60 s)',
         loadMain:'L\'IA génère votre design', loadSub:'Cela prend 30–60 secondes. Veuillez patienter.',
@@ -120,32 +120,7 @@ const SIZE_PRESETS = [
     { key:'wide',    dim:'16:9',  w:1600, h:900,  model:'1536x1024', en:'widescreen 16:9 composition' },
 ];
 
-// ── 배경 색상 팔레트 (19색 + 직접선택 1 = 총 20칸 = PC 2행) ──
-const COLOR_PRESETS = [
-    { key:'white',   hex:'#ffffff', en:'clean white' },
-    // 2번째 칸은 직접 선택 picker (renderColorGrid에서 주입)
-    { key:'navy',    hex:'#1e3a8a', en:'deep navy blue' },
-    { key:'blue',    hex:'#2563eb', en:'vibrant blue' },
-    { key:'sky',     hex:'#38bdf8', en:'sky blue' },
-    { key:'green',   hex:'#16a34a', en:'fresh green' },
-    { key:'mint',    hex:'#6ee7b7', en:'mint pastel' },
-    { key:'yellow',  hex:'#facc15', en:'sunny yellow' },
-    { key:'orange',  hex:'#f97316', en:'warm orange' },
-    { key:'red',     hex:'#dc2626', en:'bold red' },
-    { key:'pink',    hex:'#ec4899', en:'vivid pink' },
-    { key:'purple',  hex:'#8b5cf6', en:'rich purple' },
-    { key:'lavender',hex:'#e0d9ff', en:'soft lavender' },
-    { key:'gray',    hex:'#64748b', en:'slate gray' },
-    { key:'black',   hex:'#111827', en:'deep black' },
-    { key:'beige',   hex:'#d6cfc0', en:'warm beige' },
-    { key:'peach',   hex:'#fed7aa', en:'peach pastel' },
-    { key:'teal',    hex:'#0d9488', en:'modern teal' },
-    { key:'gold',    hex:'#ca8a04', en:'luxury gold' },
-    { key:'gradient',hex:'linear-gradient(135deg,#8b5cf6,#ec4899)', en:'gradient purple-to-pink' },
-];
-
 let selectedSize = SIZE_PRESETS[0]; // 기본: 자동
-let selectedColor = COLOR_PRESETS[0]; // 기본: 흰색
 const attachedImages = [];
 
 function renderSizeGrid() {
@@ -163,55 +138,9 @@ function renderSizeGrid() {
     }).join('');
 }
 
-function renderColorGrid() {
-    const grid = document.getElementById('aiColorGrid');
-    if (!grid) return;
-    const customSel = selectedColor.key === 'custom' ? 'selected' : '';
-    const customBg = selectedColor.key === 'custom' ? selectedColor.hex : '#ffffff';
-    const customSwatch = `<div class="aid-color-swatch aid-color-custom ${customSel}" title="${AI_T().customPick||'직접 선택'}"
-        style="background:conic-gradient(from 180deg, red, yellow, lime, cyan, blue, magenta, red); position:relative; overflow:hidden;"
-        onclick="document.getElementById('aiColorPicker').click()">
-        ${customSel
-            ? `<span style="position:absolute; inset:0; background:${customBg}; border-radius:inherit;"></span>
-               <span style="position:relative; z-index:2; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; text-shadow:0 1px 3px rgba(0,0,0,0.5);">✓</span>`
-            : `<span style="position:relative; z-index:2; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-size:18px; font-weight:900; text-shadow:0 0 4px rgba(0,0,0,0.6);">+</span>`
-        }
-        <input id="aiColorPicker" type="color" value="${customSel ? customBg : '#8b5cf6'}" style="position:absolute; inset:0; opacity:0; cursor:pointer; z-index:3;" onchange="window.selectCustomAiColor(this.value)">
-    </div>`;
-
-    let html = '';
-    COLOR_PRESETS.forEach((c, i) => {
-        const sel = selectedColor.key === c.key ? 'selected' : '';
-        const bg = c.hex.startsWith('linear') ? `background:${c.hex};` : `background:${c.hex};`;
-        html += `<div class="aid-color-swatch ${sel}" title="${c.key}" style="${bg}" onclick="window.selectAiColor('${c.key}')"></div>`;
-        // white(첫 번째) 바로 뒤에 custom picker 삽입
-        if (i === 0) html += customSwatch;
-    });
-    grid.innerHTML = html;
-}
-
 window.selectAiSize = function(key) {
     const found = SIZE_PRESETS.find(s => s.key === key);
     if (found) { selectedSize = found; renderSizeGrid(); }
-};
-window.selectAiColor = function(key) {
-    const found = COLOR_PRESETS.find(c => c.key === key);
-    if (found) { selectedColor = found; renderColorGrid(); }
-};
-// 수동 색상 선택
-window.selectCustomAiColor = function(hex) {
-    if (!hex) return;
-    // 간단한 hex → 영어 묘사 (Lightness 기반)
-    const rgb = hex.match(/^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
-    let desc = 'custom color ' + hex;
-    if (rgb) {
-        const r = parseInt(rgb[1],16), g = parseInt(rgb[2],16), b = parseInt(rgb[3],16);
-        const max = Math.max(r,g,b), min = Math.min(r,g,b);
-        const l = (max+min) / 510;
-        desc = `${l>0.85?'very light ':l<0.2?'deep dark ':l<0.45?'rich ':''}${hex} color`;
-    }
-    selectedColor = { key:'custom', hex, en: desc };
-    renderColorGrid();
 };
 
 function relocateAiPanel() {
@@ -231,12 +160,11 @@ function applyAiI18n() {
     const hintEl = document.querySelector('#aiDesignHero .aid-hint');
     if (hintEl) hintEl.innerHTML = `<span class="dot"></span> ${T.hint}`;
     set('#aiDesignHero .aid-lead', T.lead);
-    // 섹션 타이틀 4개 (.aid-section-title 요소가 순서대로 4개)
+    // 섹션 타이틀 3개: ① 사이즈 / ② 제목(필수) / ③ 작은 글씨(선택)
     const secs = document.querySelectorAll('#aiDesignHero .aid-section-title');
     if (secs[0]) secs[0].innerHTML = T.s1;
-    if (secs[1]) secs[1].innerHTML = T.s2;
-    if (secs[2]) secs[2].innerHTML = T.s3;
-    if (secs[3]) secs[3].innerHTML = `${T.s4} <span style="font-weight:400; color:#94a3b8; font-size:11px;">${T.optional}</span>`;
+    if (secs[1]) secs[1].innerHTML = `${T.s2} <span style="font-weight:400; color:#ef4444; font-size:11px;">${T.required || '(required)'}</span>`;
+    if (secs[2]) secs[2].innerHTML = `${T.s3} <span style="font-weight:400; color:#94a3b8; font-size:11px;">${T.optional}</span>`;
     setAttr('#aiDesignTitle', 'placeholder', T.titlePh);
     setAttr('#aiDesignPrompt', 'placeholder', T.promptPh);
     // 첨부이미지 버튼 — label 안 첫 텍스트노드만 교체
@@ -258,7 +186,6 @@ function initAi() {
     relocateAiPanel();
     applyAiI18n();
     renderSizeGrid();
-    renderColorGrid();
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAi);
@@ -313,26 +240,22 @@ const AI_LANG_META = {
 // ── 사이트 언어 기반 다국어 프롬프트 빌더 (creative brief 우선 구조) ──
 function buildEnglishPrompt() {
     const title = (document.getElementById('aiDesignTitle')?.value || '').trim();
-    const extra = (document.getElementById('aiDesignPrompt')?.value || '').trim();
+    const small = (document.getElementById('aiDesignPrompt')?.value || '').trim();
     const langKey = aiGetLang();
     const lang = AI_LANG_META[langKey] || AI_LANG_META.en;
 
     const lines = [];
-    lines.push('=== USER CREATIVE BRIEF ===');
-    if (extra) {
-        lines.push(`Concept / style / extras: ${extra}`);
-    }
-    if (title) {
-        lines.push(`Headline text (render in image EXACTLY as written, do not translate or paraphrase): "${title}"`);
+    lines.push('=== USER BRIEF ===');
+    lines.push(`Headline text — render in image VERBATIM, do not translate or paraphrase: "${title}"`);
+    if (small) {
+        lines.push(`Secondary text — render VERBATIM at smaller readable size: "${small}"`);
     }
     lines.push(`Aspect ratio: ${selectedSize.en}`);
-    lines.push(`Base background reference color: ${selectedColor.en} (use as accent or palette anchor — override if the cinematic concept calls for different scenery)`);
     lines.push(`On-image text language: ${lang.name} (${lang.script}). All text MUST be in ${lang.name} with accurate spelling and grammar — no gibberish, no fake characters.`);
     lines.push('');
     lines.push('=== DIRECTION ===');
-    lines.push('Treat the brief above as creative direction. Build a rich, cinematic, fully-realized composition — characters, props, lighting, mood, palette, branding all integrated. Movie-poster / editorial / campaign-art quality.');
-    lines.push(`Sharp commercial-print typography appropriate for ${lang.script}. Reproduce the headline text EXACTLY as given.`);
-    lines.push('TEXT SIZE RULE — only render LARGE clearly-readable text (headline + at most 1-2 short tagline phrases). DO NOT render small text, body paragraphs, fine print, captions, lorem-ipsum, or dense text blocks. Replace body copy with icons, shape blocks, color bars, or empty negative space. The user adds small text in the editor afterwards.');
+    lines.push('Decide all visual elements yourself: subject matter, characters, scene, lighting, color palette, mood, composition, typography style. If the headline references a known movie / song / brand / cultural work, lean into that work\'s iconic visuals. Otherwise design a rich, cinematic, editorial-quality composition appropriate to the headline.');
+    lines.push(`Sharp commercial-print typography appropriate for ${lang.script}. Reproduce the headline ${small ? 'and secondary text' : 'text'} EXACTLY as given — no extra fake captions, body copy, or lorem-ipsum.`);
     return lines.join('\n');
 }
 
@@ -364,9 +287,19 @@ window.generateAiDesign = async function() {
     const resultEl = document.getElementById('aiDesignResult');
     const quotaEl = document.getElementById('aiDesignQuota');
 
-    const prompt = buildEnglishPrompt();
-
     const T2 = AI_T();
+    const titleVal = (document.getElementById('aiDesignTitle')?.value || '').trim();
+    if (!titleVal) {
+        const titleEl = document.getElementById('aiDesignTitle');
+        if (titleEl) {
+            titleEl.focus();
+            titleEl.style.borderColor = '#ef4444';
+            setTimeout(() => { titleEl.style.borderColor = ''; }, 2000);
+        }
+        return;
+    }
+
+    const prompt = buildEnglishPrompt();
     btnEl.disabled = true;
     const originalBtnHtml = btnEl.innerHTML;
     btnEl.innerHTML = T2.genBtnLoading || '⏳ ...';

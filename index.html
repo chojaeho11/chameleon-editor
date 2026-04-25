@@ -920,18 +920,14 @@ if ('caches' in window) {
                     <div class="aid-section-title">① 사이즈 선택</div>
                     <div class="aid-size-grid" id="aiSizeGrid"></div>
 
-                    <!-- 2) 배경색 -->
-                    <div class="aid-section-title">② 배경 색상</div>
-                    <div class="aid-color-grid" id="aiColorGrid"></div>
+                    <!-- 2) 제목 (필수) -->
+                    <div class="aid-section-title">② 제목 <span style="font-weight:400; color:#ef4444; font-size:11px;">(필수)</span></div>
+                    <input id="aiDesignTitle" class="aid-input-small" placeholder="제목 (예: 악마는 프라다를 입는다, 50% SALE)" maxlength="60">
 
-                    <!-- 3) 제목 -->
-                    <div class="aid-section-title">③ 제목</div>
-                    <input id="aiDesignTitle" class="aid-input-small" placeholder="제목 (예: CHAMELEON PRINTING, 50% SALE)" maxlength="60">
-
-                    <!-- 4) 스타일·추가 설명 -->
-                    <div class="aid-section-title">④ 스타일·추가 설명 <span style="font-weight:400; color:#94a3b8; font-size:11px;">(선택)</span></div>
+                    <!-- 3) 작은 글씨 (선택) -->
+                    <div class="aid-section-title">③ 작은 글씨 <span style="font-weight:400; color:#94a3b8; font-size:11px;">(선택)</span></div>
                     <textarea id="aiDesignPrompt" rows="2" class="aid-input"
-                        placeholder="내용 및 전화번호, 스타일 등을 적어주세요"
+                        placeholder="부제·태그라인·전화번호 등 (없으면 비워두세요. 디자인은 GPT가 알아서 결정)"
                         oninput="this.style.height='auto';this.style.height=Math.min(120,this.scrollHeight)+'px'"></textarea>
 
                     <div class="aid-controls-simple">
@@ -952,7 +948,7 @@ if ('caches' in window) {
                             <img src="/9555.png?v=2" alt="예시 디자인" class="aid-example-img">
                             <div class="aid-example-caption">
                                 <div class="main">예시 — 이런 디자인이 생성됩니다</div>
-                                <div class="sub">왼쪽에서 사이즈 · 색상 · 제목을 선택한 뒤<br>🎨 생성 버튼을 누르세요 (약 30~60초)</div>
+                                <div class="sub">왼쪽에서 사이즈와 제목을 입력한 뒤<br>🎨 생성 버튼을 누르세요 (약 30~60초)</div>
                             </div>
                         </div>
                     </div>
@@ -8163,7 +8159,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=25').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=26').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
