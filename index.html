@@ -908,9 +908,8 @@ if ('caches' in window) {
             <div class="aid-head">
                 <span class="aid-title">✨ AI 디자인 스튜디오</span>
                 <span id="aiDesignQuota" class="aid-badge">무료 사용</span>
-                <span class="aid-hint"><span class="dot"></span> GPT-5.5 · 영문 텍스트 · 에디터에서 한글 편집</span>
             </div>
-            <div class="aid-lead">현재는 <b>영문으로 디자인</b>됩니다. 10일 후 <b>국가별 언어 서비스팩</b>이 출시됩니다. 현재는 <b>에디터로 보낸 후 글씨부분을 도형으로 가리고 글씨를 수정</b>할 수 있습니다.</div>
+            <div class="aid-lead"><b>원하는 디자인을 마음껏 해보세요.</b> 수정할 부분이 있다면 에디터에서 수정하세요.</div>
             <div class="aid-layout">
                 <div class="aid-left">
                     <!-- 1) 사이즈 선택 -->
@@ -8158,7 +8157,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=15').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=16').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
