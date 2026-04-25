@@ -159,61 +159,66 @@ DESIGN RULES:
 - Composition should fill the frame; allow margins or borders only when the design intent (poster, layout, leaflet) calls for them.
 - If reference images are attached, integrate them naturally and preserve key features.`;
 
-    // gpt-5.5 snapshot 고정 (alias 라우팅 변동 방지). 폴백으로 5.4 / 5.1.
-    // image_generation 도구는 60~180초 소요 → 시도당 240초 (Supabase paid 400s 한도 내).
-    const MODEL_CANDIDATES = ["gpt-5.5-2026-04-23", "gpt-5.4", "gpt-5.1"];
+    // 부모 모델: gpt-5.5 snapshot 우선, 폴백 5.4/5.1
+    // 이미지 모델: gpt-image-2 우선 (4/21 발표, GA 5월 초 — 계정에 따라 지금 접근 가능), 폴백 1.5
+    // 시도당 240초 (Supabase paid 400s 한도 내).
+    const PARENT_MODELS = ["gpt-5.5-2026-04-23", "gpt-5.4", "gpt-5.1"];
+    const IMAGE_MODELS = ["gpt-image-2", "gpt-image-1.5"];
     let openaiRes: Response | null = null;
     let lastErrText = "";
     let usedModel = "";
+    let usedImageModel = "";
     const hasInputImages = inputImages.length > 0;
-    for (const m of MODEL_CANDIDATES) {
-      const imgTool: any = {
-        type: "image_generation",
-        model: "gpt-image-1.5",
-        size: finalSize,
-        quality: "high",
-        output_format: "png",
-      };
-      if (hasInputImages) imgTool.input_fidelity = "high";
-      const responsesBody: any = {
-        model: m,
-        instructions: systemInstructions,
-        input: [{ role: "user", content: userContent }],
-        tools: [imgTool],
-        tool_choice: { type: "image_generation" },
-      };
-      const abort = new AbortController();
-      const timer = setTimeout(() => abort.abort(), 240_000);
-      let r: Response;
-      const t0 = Date.now();
-      try {
-        r = await fetch("https://api.openai.com/v1/responses", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${OPENAI_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(responsesBody),
-          signal: abort.signal,
-        });
-      } catch (e: any) {
+    outer: for (const m of PARENT_MODELS) {
+      for (const im of IMAGE_MODELS) {
+        const imgTool: any = {
+          type: "image_generation",
+          model: im,
+          size: finalSize,
+          quality: "high",
+          output_format: "png",
+        };
+        if (hasInputImages) imgTool.input_fidelity = "high";
+        const responsesBody: any = {
+          model: m,
+          instructions: systemInstructions,
+          input: [{ role: "user", content: userContent }],
+          tools: [imgTool],
+          tool_choice: { type: "image_generation" },
+        };
+        const abort = new AbortController();
+        const timer = setTimeout(() => abort.abort(), 240_000);
+        let r: Response;
+        const t0 = Date.now();
+        try {
+          r = await fetch("https://api.openai.com/v1/responses", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${OPENAI_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(responsesBody),
+            signal: abort.signal,
+          });
+        } catch (e: any) {
+          clearTimeout(timer);
+          const elapsed = Date.now() - t0;
+          console.error(`[${m}+${im}] fetch error after ${elapsed}ms: ${e?.message || e}`);
+          lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
+          continue;
+        }
         clearTimeout(timer);
         const elapsed = Date.now() - t0;
-        console.error(`[${m}] fetch error after ${elapsed}ms: ${e?.message || e}`);
-        lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
-        continue;
-      }
-      clearTimeout(timer);
-      const elapsed = Date.now() - t0;
-      console.log(`[${m}] status=${r.status} elapsed=${elapsed}ms`);
-      if (r.ok) { openaiRes = r; usedModel = m; break; }
-      lastErrText = await r.text();
-      console.error(`[${m}] ${r.status}: ${lastErrText.slice(0, 300)}`);
-      // 모델 미지원(404/400) 또는 권한(403) 만 폴백, 나머지는 즉시 실패
-      if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
-        return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m }), {
-          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+        console.log(`[${m}+${im}] status=${r.status} elapsed=${elapsed}ms`);
+        if (r.ok) { openaiRes = r; usedModel = m; usedImageModel = im; break outer; }
+        lastErrText = await r.text();
+        console.error(`[${m}+${im}] ${r.status}: ${lastErrText.slice(0, 300)}`);
+        // 모델 미지원(404/400) 또는 권한(403) 만 폴백, 나머지는 즉시 실패
+        if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
+          return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m, imageModel: im }), {
+            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
       }
     }
     if (!openaiRes) {
@@ -269,6 +274,7 @@ DESIGN RULES:
       isPro,
       remaining: dailyLimit - usageCount - 1,
       model: usedModel,
+      imageModel: usedImageModel,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
