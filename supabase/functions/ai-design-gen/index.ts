@@ -160,60 +160,57 @@ DESIGN RULES:
       });
     });
 
-    // 부모: gpt-5.5 / 이미지: gpt-image-2 → 1.5 폴백. 시도당 240초.
+    // gpt-image-1.5: 첫 작동 안정 상태. gpt-image-2는 OpenAI 측에서 느려서 게이트웨이 504 유발.
     const PARENT_MODELS = ["gpt-5.5-2026-04-23", "gpt-5.4", "gpt-5.1"];
-    const IMAGE_MODELS = ["gpt-image-2", "gpt-image-1.5"];
+    const IMAGE_MODEL = "gpt-image-1.5";
     let openaiRes: Response | null = null;
     let lastErrText = "";
     let usedModel = "";
-    let usedImageModel = "";
     const hasInputImages = inputImages.length > 0;
-    outer: for (const m of PARENT_MODELS) {
-      for (const im of IMAGE_MODELS) {
-        const imgTool: any = {
-          type: "image_generation",
-          model: im,
-          size: finalSize,
-          quality: "high",
-          output_format: "png",
-        };
-        if (hasInputImages) imgTool.input_fidelity = "high";
-        const responsesBody: any = {
-          model: m,
-          instructions: systemInstructions,
-          input: [{ role: "user", content: userContent }],
-          tools: [imgTool],
-          tool_choice: { type: "image_generation" },
-        };
-        const abort = new AbortController();
-        const timer = setTimeout(() => abort.abort(), 240_000);
-        let r: Response;
-        const t0 = Date.now();
-        try {
-          r = await fetch("https://api.openai.com/v1/responses", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify(responsesBody),
-            signal: abort.signal,
-          });
-        } catch (e: any) {
-          clearTimeout(timer);
-          const elapsed = Date.now() - t0;
-          console.error(`[${m}+${im}] fetch error after ${elapsed}ms: ${e?.message || e}`);
-          lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
-          continue;
-        }
+    for (const m of PARENT_MODELS) {
+      const imgTool: any = {
+        type: "image_generation",
+        model: IMAGE_MODEL,
+        size: finalSize,
+        quality: "high",
+        output_format: "png",
+      };
+      if (hasInputImages) imgTool.input_fidelity = "high";
+      const responsesBody: any = {
+        model: m,
+        instructions: systemInstructions,
+        input: [{ role: "user", content: userContent }],
+        tools: [imgTool],
+        tool_choice: { type: "image_generation" },
+      };
+      const abort = new AbortController();
+      const timer = setTimeout(() => abort.abort(), 240_000);
+      let r: Response;
+      const t0 = Date.now();
+      try {
+        r = await fetch("https://api.openai.com/v1/responses", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify(responsesBody),
+          signal: abort.signal,
+        });
+      } catch (e: any) {
         clearTimeout(timer);
         const elapsed = Date.now() - t0;
-        console.log(`[${m}+${im}] status=${r.status} elapsed=${elapsed}ms`);
-        if (r.ok) { openaiRes = r; usedModel = m; usedImageModel = im; break outer; }
-        lastErrText = await r.text();
-        console.error(`[${m}+${im}] ${r.status}: ${lastErrText.slice(0, 300)}`);
-        if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
-          return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m, imageModel: im }), {
-            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        }
+        console.error(`[${m}] fetch error after ${elapsed}ms: ${e?.message || e}`);
+        lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
+        continue;
+      }
+      clearTimeout(timer);
+      const elapsed = Date.now() - t0;
+      console.log(`[${m}] status=${r.status} elapsed=${elapsed}ms`);
+      if (r.ok) { openaiRes = r; usedModel = m; break; }
+      lastErrText = await r.text();
+      console.error(`[${m}] ${r.status}: ${lastErrText.slice(0, 300)}`);
+      if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
+        return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
       }
     }
     if (!openaiRes) {
@@ -265,7 +262,7 @@ DESIGN RULES:
       isPro,
       remaining: dailyLimit - usageCount - 1,
       model: usedModel,
-      imageModel: usedImageModel,
+      imageModel: IMAGE_MODEL,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
