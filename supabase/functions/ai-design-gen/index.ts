@@ -151,9 +151,9 @@ RULES:
 6) If reference images are attached, integrate them naturally.
 7) Commercial-print quality: balanced composition, clear visual hierarchy, professional typography.`;
 
-    // gpt-5.5: Frontier 모델 (API 공식 제공). 폴백으로 5.4 / 5.1 / 5.
-    // 각 후보에 90초 타임아웃 — 100s Gateway 보호.
-    const MODEL_CANDIDATES = ["gpt-5.5", "gpt-5.4", "gpt-5.1", "gpt-5"];
+    // gpt-5.5 snapshot 고정 (alias 라우팅 변동 방지). 폴백으로 5.4 / 5.1.
+    // image_generation 도구는 60~180초 소요 → 시도당 240초 (Supabase paid 400s 한도 내).
+    const MODEL_CANDIDATES = ["gpt-5.5-2026-04-23", "gpt-5.4", "gpt-5.1"];
     let openaiRes: Response | null = null;
     let lastErrText = "";
     let usedModel = "";
@@ -170,10 +170,10 @@ RULES:
         }],
         tool_choice: { type: "image_generation" },
       };
-      // 모델별 90초 타임아웃 — 100s Gateway 제한 보호
       const abort = new AbortController();
-      const timer = setTimeout(() => abort.abort(), 90_000);
+      const timer = setTimeout(() => abort.abort(), 240_000);
       let r: Response;
+      const t0 = Date.now();
       try {
         r = await fetch("https://api.openai.com/v1/responses", {
           method: "POST",
@@ -186,16 +186,20 @@ RULES:
         });
       } catch (e: any) {
         clearTimeout(timer);
-        console.error(`[${m}] fetch error: ${e?.message || e}`);
-        lastErrText = `fetch error: ${e?.message || e}`;
+        const elapsed = Date.now() - t0;
+        console.error(`[${m}] fetch error after ${elapsed}ms: ${e?.message || e}`);
+        lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
         continue;
       }
       clearTimeout(timer);
+      const elapsed = Date.now() - t0;
+      console.log(`[${m}] status=${r.status} elapsed=${elapsed}ms`);
       if (r.ok) { openaiRes = r; usedModel = m; break; }
       lastErrText = await r.text();
       console.error(`[${m}] ${r.status}: ${lastErrText.slice(0, 300)}`);
+      // 모델 미지원(404/400) 또는 권한(403) 만 폴백, 나머지는 즉시 실패
       if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
-        return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800) }), {
+        return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m }), {
           status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
@@ -252,6 +256,7 @@ RULES:
       limit: dailyLimit,
       isPro,
       remaining: dailyLimit - usageCount - 1,
+      model: usedModel,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });

@@ -396,7 +396,8 @@ window.generateAiDesign = async function() {
             return;
         }
 
-        const { imageUrl } = data;
+        const { imageUrl, model } = data;
+        if (model) console.log('[AI design] generated with model:', model);
 
         if (quotaEl) {
             quotaEl.textContent = '✓ 생성 완료';
