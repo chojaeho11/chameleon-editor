@@ -124,7 +124,7 @@ serve(async (req) => {
 
     // Images API 직접 호출 — Responses API + GPT-5.5 reasoning 단계 생략 → 30-60초 단축
     // 첨부 이미지 있으면 /images/edits, 없으면 /images/generations
-    const IMAGE_MODEL = "gpt-image-1.5";
+    const IMAGE_MODEL = "gpt-image-2";
     const hasInputImages = inputImages.length > 0;
     const usedModel = IMAGE_MODEL;
 
