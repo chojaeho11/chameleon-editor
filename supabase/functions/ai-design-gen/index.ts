@@ -132,10 +132,6 @@ serve(async (req) => {
       return btoa(bin);
     }
 
-    const PARENT_MODEL = "gpt-5.5-2026-04-23";
-    const IMAGE_MODEL = "gpt-image-2";
-    const hasInputImages = inputImages.length > 0;
-
     const systemInstructions = `You are a senior creative director for high-end commercial print and poster design (movie posters, K-pop covers, magazine spreads, brand campaigns).
 
 WORKFLOW:
@@ -155,171 +151,123 @@ DESIGN RULES:
 - Composition should fill the frame; allow margins or borders only when the design intent calls for them.
 - If reference images are attached, integrate them naturally and preserve key features.`;
 
-    // SSE 스트림 — 첫 바이트 즉시 전송 + 10초마다 heartbeat → 게이트웨이 타임아웃 방지
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-
-    const sseStream = new ReadableStream({
-      async start(controller) {
-        const send = (event: string, data: any) => {
-          try {
-            controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
-          } catch {}
-        };
-        const ping = () => {
-          try { controller.enqueue(encoder.encode(`: hb\n\n`)); } catch {}
-        };
-
-        // 1) 즉시 첫 바이트 전송 (게이트웨이 타임아웃 방지)
-        send("meta", { model: PARENT_MODEL, imageModel: IMAGE_MODEL, phase: "generating" });
-        const heartbeat = setInterval(ping, 10_000);
-        const tStart = Date.now();
-        let stage2Reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
-        const tm2 = setTimeout(() => { try { stage2Reader?.cancel(); } catch {} }, 350_000);
-
-        try {
-          // 2) 단일 호출: GPT-5.5 + image_generation(gpt-image-2) 스트리밍
-          const userContent: any[] = [{ type: "input_text", text: prompt }];
-          inputImages.forEach((img) => {
-            const b64ref = bytesToB64(img.data);
-            userContent.push({
-              type: "input_image",
-              image_url: `data:${img.type || "image/png"};base64,${b64ref}`,
-            });
-          });
-
-          const imgTool: any = {
-            type: "image_generation",
-            model: IMAGE_MODEL,
-            size: finalSize,
-            quality: "high",
-            output_format: "png",
-            partial_images: 2,
-          };
-          if (hasInputImages) imgTool.input_fidelity = "high";
-
-          const t2 = Date.now();
-          const r2 = await fetch("https://api.openai.com/v1/responses", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: PARENT_MODEL,
-              instructions: systemInstructions,
-              input: [{ role: "user", content: userContent }],
-              tools: [imgTool],
-              tool_choice: { type: "image_generation" },
-              stream: true,
-            }),
-          });
-
-          if (!r2.ok) {
-            const errTxt = await r2.text();
-            console.error(`[stage2] ${r2.status}: ${errTxt.slice(0, 400)}`);
-            send("error", { error: `이미지 생성 실패 ${r2.status}`, detail: errTxt.slice(0, 600) });
-            return;
-          }
-
-          stage2Reader = r2.body!.getReader();
-          let buffer = "";
-          let finalB64: string | null = null;
-          while (true) {
-            const { done, value } = await stage2Reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const events = buffer.split("\n\n");
-            buffer = events.pop() || "";
-            for (const block of events) {
-              let dataLine = "";
-              for (const ln of block.split("\n")) {
-                if (ln.startsWith("data: ")) dataLine = ln.slice(6);
-                else if (ln.startsWith("data:")) dataLine = ln.slice(5);
-              }
-              if (!dataLine || dataLine === "[DONE]") continue;
-              let evt: any;
-              try { evt = JSON.parse(dataLine); } catch { continue; }
-              const t = evt?.type;
-              if (t === "response.image_generation_call.partial_image") {
-                const partialB64 = evt.partial_image_b64;
-                const idx = evt.partial_image_index ?? 0;
-                if (partialB64) {
-                  send("partial", { index: idx, b64: partialB64 });
-                  console.log(`[stream] partial ${idx} @ ${Date.now() - t2}ms`);
-                }
-              } else if (t === "response.output_item.done" && evt?.item?.type === "image_generation_call") {
-                if (evt.item.result) finalB64 = evt.item.result;
-              } else if (t === "response.completed") {
-                if (!finalB64 && evt?.response?.output) {
-                  for (const it of evt.response.output) {
-                    if (it?.type === "image_generation_call" && it?.result) { finalB64 = it.result; break; }
-                  }
-                }
-              } else if (t === "error" || t === "response.error") {
-                console.error(`[stream] error:`, JSON.stringify(evt).slice(0, 400));
-                send("error", { error: evt?.error?.message || "스트림 에러" });
-                return;
-              }
-            }
-          }
-
-          if (!finalB64) {
-            send("error", { error: "최종 이미지 누락" });
-            return;
-          }
-
-          // 4) Storage 업로드 + final 이벤트
-          const bin = Uint8Array.from(atob(finalB64), (c) => c.charCodeAt(0));
-          const fname = `ai/${new Date().toISOString().slice(0,10)}/${crypto.randomUUID()}.png`;
-          const { error: upErr } = await supa.storage.from("generated-images")
-            .upload(fname, bin, { contentType: "image/png", upsert: false });
-          let imageUrl: string;
-          if (upErr) {
-            console.warn(`[upload] failed: ${upErr.message} — sending base64`);
-            imageUrl = `data:image/png;base64,${finalB64}`;
-          } else {
-            const { data: pub } = supa.storage.from("generated-images").getPublicUrl(fname);
-            imageUrl = pub.publicUrl;
-          }
-
-          try {
-            await supa.from("ai_design_usage").insert({
-              user_id: userId,
-              ip_hash: userId ? null : ipHash,
-              prompt,
-              image_url: imageUrl.startsWith("data:") ? null : imageUrl,
-            });
-          } catch {}
-
-          send("final", {
-            imageUrl,
-            used: usageCount + 1,
-            limit: dailyLimit,
-            isPro,
-            remaining: dailyLimit - usageCount - 1,
-            model: PARENT_MODEL,
-            imageModel: IMAGE_MODEL,
-            totalMs: Date.now() - tStart,
-          });
-          send("done", {});
-        } catch (e: any) {
-          console.error(`[stream] fatal: ${e?.message || e}`);
-          send("error", { error: String(e?.message || e) });
-        } finally {
-          clearInterval(heartbeat);
-          clearTimeout(tm2);
-          try { stage2Reader?.cancel(); } catch {}
-          try { controller.close(); } catch {}
-        }
-      },
+    const userContent: any[] = [{ type: "input_text", text: prompt }];
+    inputImages.forEach((img) => {
+      const b64ref = bytesToB64(img.data);
+      userContent.push({
+        type: "input_image",
+        image_url: `data:${img.type || "image/png"};base64,${b64ref}`,
+      });
     });
 
-    return new Response(sseStream, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        "Connection": "keep-alive",
-        "X-Accel-Buffering": "no",
-      },
+    // 부모: gpt-5.5 / 이미지: gpt-image-2 → 1.5 폴백. 시도당 240초.
+    const PARENT_MODELS = ["gpt-5.5-2026-04-23", "gpt-5.4", "gpt-5.1"];
+    const IMAGE_MODELS = ["gpt-image-2", "gpt-image-1.5"];
+    let openaiRes: Response | null = null;
+    let lastErrText = "";
+    let usedModel = "";
+    let usedImageModel = "";
+    const hasInputImages = inputImages.length > 0;
+    outer: for (const m of PARENT_MODELS) {
+      for (const im of IMAGE_MODELS) {
+        const imgTool: any = {
+          type: "image_generation",
+          model: im,
+          size: finalSize,
+          quality: "high",
+          output_format: "png",
+        };
+        if (hasInputImages) imgTool.input_fidelity = "high";
+        const responsesBody: any = {
+          model: m,
+          instructions: systemInstructions,
+          input: [{ role: "user", content: userContent }],
+          tools: [imgTool],
+          tool_choice: { type: "image_generation" },
+        };
+        const abort = new AbortController();
+        const timer = setTimeout(() => abort.abort(), 240_000);
+        let r: Response;
+        const t0 = Date.now();
+        try {
+          r = await fetch("https://api.openai.com/v1/responses", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify(responsesBody),
+            signal: abort.signal,
+          });
+        } catch (e: any) {
+          clearTimeout(timer);
+          const elapsed = Date.now() - t0;
+          console.error(`[${m}+${im}] fetch error after ${elapsed}ms: ${e?.message || e}`);
+          lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
+          continue;
+        }
+        clearTimeout(timer);
+        const elapsed = Date.now() - t0;
+        console.log(`[${m}+${im}] status=${r.status} elapsed=${elapsed}ms`);
+        if (r.ok) { openaiRes = r; usedModel = m; usedImageModel = im; break outer; }
+        lastErrText = await r.text();
+        console.error(`[${m}+${im}] ${r.status}: ${lastErrText.slice(0, 300)}`);
+        if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
+          return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m, imageModel: im }), {
+            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      }
+    }
+    if (!openaiRes) {
+      return new Response(JSON.stringify({ error: "사용 가능한 모델 없음", detail: lastErrText.slice(0, 800) }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const aiData = await openaiRes.json();
+    let b64: string | null = null;
+    const outputs: any[] = aiData?.output || [];
+    for (const item of outputs) {
+      if (item?.type === "image_generation_call" && item?.result) {
+        b64 = item.result;
+        break;
+      }
+    }
+    if (!b64) {
+      console.error("No image_generation_call result:", JSON.stringify(aiData).slice(0, 2000));
+      return new Response(JSON.stringify({ error: "이미지 생성 결과 누락", detail: JSON.stringify(aiData).slice(0, 500) }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const fname = `ai/${new Date().toISOString().slice(0,10)}/${crypto.randomUUID()}.png`;
+    const { error: upErr } = await supa.storage.from("generated-images")
+      .upload(fname, bin, { contentType: "image/png", upsert: false });
+    let imageUrl = "";
+    if (upErr) {
+      console.warn("Storage upload failed, returning base64:", upErr.message);
+      imageUrl = `data:image/png;base64,${b64}`;
+    } else {
+      const { data: pub } = supa.storage.from("generated-images").getPublicUrl(fname);
+      imageUrl = pub.publicUrl;
+    }
+
+    await supa.from("ai_design_usage").insert({
+      user_id: userId,
+      ip_hash: userId ? null : ipHash,
+      prompt,
+      image_url: imageUrl.startsWith("data:") ? null : imageUrl,
+    });
+
+    return new Response(JSON.stringify({
+      imageUrl,
+      used: usageCount + 1,
+      limit: dailyLimit,
+      isPro,
+      remaining: dailyLimit - usageCount - 1,
+      model: usedModel,
+      imageModel: usedImageModel,
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
 
   } catch (e) {

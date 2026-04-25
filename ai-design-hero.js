@@ -409,12 +409,11 @@ window.generateAiDesign = async function() {
         }
 
         const res = await fetch(FN_URL, { method: 'POST', headers, body: fetchBody });
+        const data = await res.json().catch(() => ({}));
 
-        // 에러는 JSON으로 옴
         if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            const msg = errData?.error || `오류 (${res.status})`;
-            const detail = errData?.detail ? `<div style="margin-top:6px; font-size:11px; color:#7f1d1d; opacity:0.8;">${escapeHtml(errData.detail)}</div>` : '';
+            const msg = data?.error || `오류 (${res.status})`;
+            const detail = data?.detail ? `<div style="margin-top:6px; font-size:11px; color:#7f1d1d; opacity:0.8;">${escapeHtml(data.detail)}</div>` : '';
             resultEl.innerHTML = `<div style="padding:40px 24px; text-align:center; color:#991b1b;">
                 <div style="font-size:40px; margin-bottom:12px;">⚠️</div>
                 <div style="font-size:14px; font-weight:700;">${escapeHtml(msg)}</div>${detail}
@@ -422,93 +421,9 @@ window.generateAiDesign = async function() {
             return;
         }
 
-        // SSE 처리: partial → 점진적 미리보기, final → 최종 이미지
-        const ct = res.headers.get('content-type') || '';
-        if (!ct.includes('text/event-stream')) {
-            // 호환: 옛 JSON 응답
-            const data = await res.json().catch(() => ({}));
-            const { imageUrl, model, imageModel } = data;
-            if (model) console.log('[AI design] parent model:', model, '| image model:', imageModel || '(default)');
-            renderFinalDesign(resultEl, quotaEl, imageUrl);
-            return;
-        }
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = '';
-        let firstPartialShown = false;
-        let finalData = null;
-        let streamErr = null;
-        const t0 = Date.now();
-
-        const showPartial = (b64, idx) => {
-            const dataUrl = `data:image/png;base64,${b64}`;
-            const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
-            const T = AI_T();
-            resultEl.innerHTML = `
-                <div class="aid-preview-img-wrap" style="position:relative;">
-                    <img src="${dataUrl}" alt="AI generating" style="filter: blur(${idx === 0 ? 8 : 3}px); transition: filter 0.5s;">
-                    <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.35);">
-                        <div class="spinner" style="margin-bottom:10px;"></div>
-                        <div style="font-size:13px; font-weight:800; color:#6d28d9; background:rgba(255,255,255,0.9); padding:6px 14px; border-radius:999px;">
-                            ${T.loadMain || 'AI'} · ${elapsed}s
-                        </div>
-                        <div style="font-size:11px; color:#64748b; margin-top:6px; background:rgba(255,255,255,0.9); padding:4px 10px; border-radius:999px;">
-                            ${idx + 1}/2 · ${T.previewHint || ''}
-                        </div>
-                    </div>
-                </div>`;
-            firstPartialShown = true;
-        };
-
-        outer: while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buf += decoder.decode(value, { stream: true });
-            const blocks = buf.split('\n\n');
-            buf = blocks.pop() || '';
-            for (const block of blocks) {
-                let event = 'message';
-                let dataLine = '';
-                for (const line of block.split('\n')) {
-                    if (line.startsWith('event: ')) event = line.slice(7).trim();
-                    else if (line.startsWith('data: ')) dataLine = line.slice(6);
-                    else if (line.startsWith('data:')) dataLine = line.slice(5);
-                }
-                if (!dataLine) continue;
-                let payload;
-                try { payload = JSON.parse(dataLine); } catch { continue; }
-                if (event === 'meta') {
-                    console.log('[AI design] meta:', payload);
-                } else if (event === 'partial') {
-                    showPartial(payload.b64, payload.index);
-                } else if (event === 'final') {
-                    finalData = payload;
-                    console.log('[AI design] parent model:', payload.model, '| image model:', payload.imageModel, '| total:', payload.totalMs + 'ms');
-                } else if (event === 'error') {
-                    streamErr = payload.error || '스트림 에러';
-                } else if (event === 'done') {
-                    break outer;
-                }
-            }
-        }
-
-        if (streamErr) {
-            resultEl.innerHTML = `<div style="padding:40px 24px; text-align:center; color:#991b1b;">
-                <div style="font-size:40px; margin-bottom:12px;">⚠️</div>
-                <div style="font-size:14px; font-weight:700;">${escapeHtml(streamErr)}</div>
-            </div>`;
-            return;
-        }
-        if (!finalData?.imageUrl) {
-            resultEl.innerHTML = `<div style="padding:40px 24px; text-align:center; color:#991b1b;">
-                <div style="font-size:40px; margin-bottom:12px;">⚠️</div>
-                <div style="font-size:14px; font-weight:700;">최종 이미지 누락</div>
-            </div>`;
-            return;
-        }
-
-        renderFinalDesign(resultEl, quotaEl, finalData.imageUrl);
+        const { imageUrl, model, imageModel } = data;
+        if (model) console.log('[AI design] parent model:', model, '| image model:', imageModel || '(default)');
+        renderFinalDesign(resultEl, quotaEl, imageUrl);
     } catch (e) {
         console.error('AI design error:', e);
         resultEl.innerHTML = `<div style="padding:40px 24px; text-align:center; color:#991b1b;">
