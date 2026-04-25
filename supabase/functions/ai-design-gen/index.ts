@@ -120,8 +120,9 @@ serve(async (req) => {
     const usageCount = 0;
     const dailyLimit = 99999;
 
-    // ── OpenAI Responses API + image_generation 도구 (ChatGPT 웹과 동일 경로) ──
-    // GPT-5가 업로드 이미지를 이해하고 프롬프트 요구사항을 반영한 새 이미지 생성
+    // ── 2단계 파이프라인 + SSE 스트리밍 ──
+    // Stage 1: GPT-5.5가 사용자 브리프를 시네마틱한 디테일 프롬프트로 확장 (~5-10s)
+    // Stage 2: gpt-image-2 + partial_images=2 스트리밍으로 점진적 이미지 출력 (~30-180s)
     function bytesToB64(bytes: Uint8Array): string {
       let bin = "";
       const chunk = 0x8000;
@@ -131,152 +132,241 @@ serve(async (req) => {
       return btoa(bin);
     }
 
-    const userContent: any[] = [{ type: "input_text", text: prompt }];
+    const PARENT_MODEL = "gpt-5.5-2026-04-23";
+    const IMAGE_MODEL = "gpt-image-2";
+    const hasInputImages = inputImages.length > 0;
+
+    // ===== Stage 1: Prompt expansion =====
+    const expansionSystem = `You are a senior art director for movie posters, K-pop campaign art, magazine covers, and high-end commercial print.
+
+Given a user brief, expand it into a single richly detailed image generation prompt (target 350-500 words) that fully realizes the creative vision: subjects, characters, props, composition, lighting, color palette, mood, atmosphere, brand integration, typography placement and style.
+
+OUTPUT RULES:
+- Output ONLY the expanded prompt as one continuous block of plain text.
+- No preamble. No headings. No markdown. No bullet points. No commentary. No quotes around it.
+- Preserve the user's specified language for any text that should appear in the image (e.g., if the brief says Korean Hangul, your prompt must explicitly instruct Korean Hangul text in the image).
+- Reproduce any user-provided headline/title text VERBATIM with quotes around it so the downstream model copies it letter-for-letter.
+- Enforce the small-text policy: explicitly state that ONLY the headline plus at most 1-2 short tagline phrases should be rendered as text; replace any body copy with iconography, shape blocks, photographic content, or negative space.
+- Do not omit any concrete element from the user's brief (characters, products, style references).`;
+
+    let expandedPrompt = prompt;
+    let stage1Ms = 0;
+    try {
+      const t1 = Date.now();
+      const stage1Body = {
+        model: PARENT_MODEL,
+        messages: [
+          { role: "system", content: expansionSystem },
+          { role: "user", content: `USER BRIEF:\n\n${prompt}` },
+        ],
+      };
+      const ab1 = new AbortController();
+      const tm1 = setTimeout(() => ab1.abort(), 30_000);
+      const r1 = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(stage1Body),
+        signal: ab1.signal,
+      });
+      clearTimeout(tm1);
+      stage1Ms = Date.now() - t1;
+      if (r1.ok) {
+        const j1: any = await r1.json();
+        const txt = j1?.choices?.[0]?.message?.content?.trim();
+        if (txt && txt.length > 50) {
+          expandedPrompt = txt;
+          console.log(`[stage1] expanded prompt (${expandedPrompt.length} chars) in ${stage1Ms}ms`);
+        } else {
+          console.warn(`[stage1] empty/short response, falling back to raw prompt`);
+        }
+      } else {
+        const errTxt = await r1.text();
+        console.warn(`[stage1] ${r1.status}: ${errTxt.slice(0, 200)} — using raw prompt`);
+      }
+    } catch (e: any) {
+      console.warn(`[stage1] error: ${e?.message || e} — using raw prompt`);
+    }
+
+    // ===== Stage 2: Streaming image generation =====
+    const userContent: any[] = [{ type: "input_text", text: expandedPrompt }];
     inputImages.forEach((img) => {
-      const b64 = bytesToB64(img.data);
+      const b64ref = bytesToB64(img.data);
       userContent.push({
         type: "input_image",
-        image_url: `data:${img.type || "image/png"};base64,${b64}`,
+        image_url: `data:${img.type || "image/png"};base64,${b64ref}`,
       });
     });
 
-    const systemInstructions = `You are a senior creative director for high-end commercial print and poster design (movie posters, K-pop covers, magazine spreads, brand campaigns).
+    const stage2Instructions = `Render the user's prompt as a single high-quality image. Reproduce all quoted text VERBATIM. Avoid rendering any small or illegible text. Keep composition cinematic and editorial.`;
 
-WORKFLOW:
-1) Read the user's brief carefully (concept/style notes, title, aspect, background).
-2) INTERPRET RICHLY — imagine subjects, characters, props, scene, lighting, color palette, mood, and brand integration like a movie-poster art director. Do NOT default to a minimal text-only card unless the user explicitly asks for that.
-3) Build an extremely detailed image_generation prompt that fully realizes the creative vision (subjects, composition, background, lighting, palette, typography placement, brand elements).
-4) Call image_generation tool ONCE with this rich, cinematic prompt.
+    const imgTool: any = {
+      type: "image_generation",
+      model: IMAGE_MODEL,
+      size: finalSize,
+      quality: "high",
+      output_format: "png",
+      partial_images: 2,
+    };
+    if (hasInputImages) imgTool.input_fidelity = "high";
 
-TEXT RULES:
-- Render text in the language specified by the user (Korean / Japanese / English / Chinese / Arabic / Spanish / German / French) using the correct script (Hangul, Kana/Kanji, Latin, Hanzi, Arabic, etc.) with accurate spelling and grammar.
-- If the user provides a title or text, reproduce it EXACTLY as given — no paraphrasing, no translation.
-- NO gibberish, NO fake or mistranslated characters.
-- CRITICAL — small-text policy: image generation models cannot render small text reliably. ONLY render text that is LARGE and clearly readable (the headline/title, and at most 1-2 short tagline phrases). DO NOT generate paragraphs of body copy, fine print, captions, dense text blocks, lorem-ipsum-style filler, or any small/tiny text. Replace what would be body copy with iconography, simple shape blocks, color bars, photographic content, or empty negative space. The user can add small text afterwards in the editor.
+    const stage2Body = {
+      model: PARENT_MODEL,
+      instructions: stage2Instructions,
+      input: [{ role: "user", content: userContent }],
+      tools: [imgTool],
+      tool_choice: { type: "image_generation" },
+      stream: true,
+    };
 
-DESIGN RULES:
-- Editorial, commercial-print quality: sharp typography, balanced composition, clear visual hierarchy.
-- Composition should fill the frame; allow margins or borders only when the design intent (poster, layout, leaflet) calls for them.
-- If reference images are attached, integrate them naturally and preserve key features.`;
+    const ab2 = new AbortController();
+    const tm2 = setTimeout(() => ab2.abort(), 300_000);
+    let openaiRes: Response;
+    const t2 = Date.now();
+    try {
+      openaiRes = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(stage2Body),
+        signal: ab2.signal,
+      });
+    } catch (e: any) {
+      clearTimeout(tm2);
+      console.error(`[stage2] fetch error: ${e?.message || e}`);
+      return new Response(JSON.stringify({ error: "이미지 생성 요청 실패", detail: String(e?.message || e) }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
-    // 부모 모델: gpt-5.5 snapshot 우선, 폴백 5.4/5.1
-    // 이미지 모델: gpt-image-2 우선 (4/21 발표, GA 5월 초 — 계정에 따라 지금 접근 가능), 폴백 1.5
-    // 시도당 240초 (Supabase paid 400s 한도 내).
-    const PARENT_MODELS = ["gpt-5.5-2026-04-23", "gpt-5.4", "gpt-5.1"];
-    const IMAGE_MODELS = ["gpt-image-2", "gpt-image-1.5"];
-    let openaiRes: Response | null = null;
-    let lastErrText = "";
-    let usedModel = "";
-    let usedImageModel = "";
-    const hasInputImages = inputImages.length > 0;
-    outer: for (const m of PARENT_MODELS) {
-      for (const im of IMAGE_MODELS) {
-        const imgTool: any = {
-          type: "image_generation",
-          model: im,
-          size: finalSize,
-          quality: "high",
-          output_format: "png",
+    if (!openaiRes.ok) {
+      clearTimeout(tm2);
+      const errTxt = await openaiRes.text();
+      console.error(`[stage2] ${openaiRes.status}: ${errTxt.slice(0, 400)}`);
+      return new Response(JSON.stringify({ error: `이미지 생성 실패: ${openaiRes.status}`, detail: errTxt.slice(0, 800) }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // ===== SSE pipe to client =====
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const reader = openaiRes.body!.getReader();
+
+    const sseStream = new ReadableStream({
+      async start(controller) {
+        const send = (event: string, data: any) => {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
         };
-        if (hasInputImages) imgTool.input_fidelity = "high";
-        const responsesBody: any = {
-          model: m,
-          instructions: systemInstructions,
-          input: [{ role: "user", content: userContent }],
-          tools: [imgTool],
-          tool_choice: { type: "image_generation" },
-        };
-        const abort = new AbortController();
-        const timer = setTimeout(() => abort.abort(), 240_000);
-        let r: Response;
-        const t0 = Date.now();
+        send("meta", { model: PARENT_MODEL, imageModel: IMAGE_MODEL, stage1Ms });
+
+        let buffer = "";
+        let finalB64: string | null = null;
         try {
-          r = await fetch("https://api.openai.com/v1/responses", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${OPENAI_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(responsesBody),
-            signal: abort.signal,
-          });
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const events = buffer.split("\n\n");
+            buffer = events.pop() || "";
+            for (const block of events) {
+              const lines = block.split("\n");
+              let dataLine = "";
+              for (const ln of lines) {
+                if (ln.startsWith("data: ")) dataLine = ln.slice(6);
+                else if (ln.startsWith("data:")) dataLine = ln.slice(5);
+              }
+              if (!dataLine || dataLine === "[DONE]") continue;
+              let evt: any;
+              try { evt = JSON.parse(dataLine); } catch { continue; }
+              const t = evt?.type;
+              if (t === "response.image_generation_call.partial_image") {
+                const partialB64 = evt.partial_image_b64;
+                const idx = evt.partial_image_index ?? 0;
+                if (partialB64) {
+                  send("partial", { index: idx, b64: partialB64 });
+                  console.log(`[stream] partial ${idx} (${partialB64.length} b64)`);
+                }
+              } else if (t === "response.output_item.done" && evt?.item?.type === "image_generation_call") {
+                if (evt.item.result) finalB64 = evt.item.result;
+              } else if (t === "response.completed") {
+                if (!finalB64 && evt?.response?.output) {
+                  for (const it of evt.response.output) {
+                    if (it?.type === "image_generation_call" && it?.result) { finalB64 = it.result; break; }
+                  }
+                }
+              } else if (t === "error" || t === "response.error") {
+                console.error(`[stream] error event:`, JSON.stringify(evt).slice(0, 400));
+                send("error", { error: evt?.error?.message || "스트림 에러" });
+              }
+            }
+          }
         } catch (e: any) {
-          clearTimeout(timer);
-          const elapsed = Date.now() - t0;
-          console.error(`[${m}+${im}] fetch error after ${elapsed}ms: ${e?.message || e}`);
-          lastErrText = `fetch error after ${elapsed}ms: ${e?.message || e}`;
-          continue;
+          console.error(`[stream] read error: ${e?.message || e}`);
+          send("error", { error: String(e?.message || e) });
+          controller.close();
+          clearTimeout(tm2);
+          return;
         }
-        clearTimeout(timer);
-        const elapsed = Date.now() - t0;
-        console.log(`[${m}+${im}] status=${r.status} elapsed=${elapsed}ms`);
-        if (r.ok) { openaiRes = r; usedModel = m; usedImageModel = im; break outer; }
-        lastErrText = await r.text();
-        console.error(`[${m}+${im}] ${r.status}: ${lastErrText.slice(0, 300)}`);
-        // 모델 미지원(404/400) 또는 권한(403) 만 폴백, 나머지는 즉시 실패
-        if (r.status !== 404 && r.status !== 400 && r.status !== 403) {
-          return new Response(JSON.stringify({ error: `이미지 생성 실패: ${r.status}`, detail: lastErrText.slice(0, 800), model: m, imageModel: im }), {
-            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        clearTimeout(tm2);
+
+        if (!finalB64) {
+          send("error", { error: "최종 이미지 누락" });
+          controller.close();
+          return;
+        }
+
+        try {
+          const bin = Uint8Array.from(atob(finalB64), (c) => c.charCodeAt(0));
+          const fname = `ai/${new Date().toISOString().slice(0,10)}/${crypto.randomUUID()}.png`;
+          const { error: upErr } = await supa.storage.from("generated-images")
+            .upload(fname, bin, { contentType: "image/png", upsert: false });
+          let imageUrl: string;
+          if (upErr) {
+            console.warn(`[upload] failed: ${upErr.message} — sending base64`);
+            imageUrl = `data:image/png;base64,${finalB64}`;
+          } else {
+            const { data: pub } = supa.storage.from("generated-images").getPublicUrl(fname);
+            imageUrl = pub.publicUrl;
+          }
+
+          await supa.from("ai_design_usage").insert({
+            user_id: userId,
+            ip_hash: userId ? null : ipHash,
+            prompt,
+            image_url: imageUrl.startsWith("data:") ? null : imageUrl,
           });
+
+          const totalMs = Date.now() - t2 + stage1Ms;
+          send("final", {
+            imageUrl,
+            used: usageCount + 1,
+            limit: dailyLimit,
+            isPro,
+            remaining: dailyLimit - usageCount - 1,
+            model: PARENT_MODEL,
+            imageModel: IMAGE_MODEL,
+            totalMs,
+          });
+          send("done", {});
+        } catch (e: any) {
+          console.error(`[finalize] ${e?.message || e}`);
+          send("error", { error: String(e?.message || e) });
         }
-      }
-    }
-    if (!openaiRes) {
-      return new Response(JSON.stringify({ error: "사용 가능한 모델 없음", detail: lastErrText.slice(0, 800) }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-    console.log("[ai] used model:", usedModel);
-
-    const aiData = await openaiRes.json();
-    // output 배열에서 image_generation_call 결과 추출
-    let b64: string | null = null;
-    const outputs: any[] = aiData?.output || [];
-    for (const item of outputs) {
-      if (item?.type === "image_generation_call" && item?.result) {
-        b64 = item.result;
-        break;
-      }
-    }
-    if (!b64) {
-      console.error("No image_generation_call result:", JSON.stringify(aiData).slice(0, 2000));
-      return new Response(JSON.stringify({ error: "이미지 생성 결과 누락", detail: JSON.stringify(aiData).slice(0, 500) }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // ── Storage 업로드 ──
-    const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    const fname = `ai/${new Date().toISOString().slice(0,10)}/${crypto.randomUUID()}.png`;
-    const { error: upErr } = await supa.storage.from("generated-images")
-      .upload(fname, bin, { contentType: "image/png", upsert: false });
-    let imageUrl = "";
-    if (upErr) {
-      console.warn("Storage upload failed, returning base64:", upErr.message);
-      imageUrl = `data:image/png;base64,${b64}`;
-    } else {
-      const { data: pub } = supa.storage.from("generated-images").getPublicUrl(fname);
-      imageUrl = pub.publicUrl;
-    }
-
-    // ── 사용 기록 ──
-    await supa.from("ai_design_usage").insert({
-      user_id: userId,
-      ip_hash: userId ? null : ipHash,
-      prompt,
-      image_url: imageUrl.startsWith("data:") ? null : imageUrl,
+        controller.close();
+      },
+      cancel() {
+        try { reader.cancel(); } catch {}
+        clearTimeout(tm2);
+      },
     });
 
-    return new Response(JSON.stringify({
-      imageUrl,
-      used: usageCount + 1,
-      limit: dailyLimit,
-      isPro,
-      remaining: dailyLimit - usageCount - 1,
-      model: usedModel,
-      imageModel: usedImageModel,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    return new Response(sseStream, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
     });
 
   } catch (e) {
