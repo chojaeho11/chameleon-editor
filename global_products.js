@@ -1395,6 +1395,19 @@ window.applyMaterialToCategory = async () => {
     else showToast(`${cat}: "${label}" ` + _t('msg_applied','applied.'), "success");
 };
 
+// [출력 기호+이름] 미리 정의된 프리셋 선택 → 입력칸 자동 채움
+window.applyPrintPreset = () => {
+    const sel = document.getElementById('newProdPrintPreset');
+    if (!sel || !sel.value) return;
+    const [symbol, label] = sel.value.split('|');
+    const symEl = document.getElementById('newProdPrintSymbol');
+    const lblEl = document.getElementById('newProdPrintLabel');
+    if (symEl) symEl.value = symbol || '';
+    if (lblEl) lblEl.value = label || '';
+    // 적용 후 드롭다운 리셋 (다음 선택 가능하게)
+    sel.value = '';
+};
+
 // [출력 기호+이름] 카테고리 전체에 일괄 적용
 window.applyPrintCodeToCategory = async () => {
     const cat = document.getElementById('newProdCategory').value;

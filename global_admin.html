@@ -1209,7 +1209,60 @@
                 </label>
                 <div style="margin-top:10px; padding:10px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px;">
                     <label class="form-label" style="font-weight:800; color:#92400e; font-size:12px;">🏭 출력 기호 + 이름 (자동다운로드 폴더 분류용)</label>
-                    <div style="display:flex; gap:6px; margin-top:4px;">
+                    <select id="newProdPrintPreset" class="input-text" style="width:100%; margin-top:4px; font-size:13px;" onchange="window.applyPrintPreset()">
+                        <option value="">— 미리 정의된 기호 선택 (또는 아래에 직접 입력) —</option>
+                        <optgroup label="🟫 허니콤보드 / 박스">
+                            <option value="HW20|허니콤보드가벽 화화10">HW20 — 허니콤보드가벽 화화10</option>
+                            <option value="HW22|허니콤보드가벽 화화10">HW22 — 허니콤보드가벽 화화10</option>
+                            <option value="HW24|허니콤보드가벽 화화10">HW24 — 허니콤보드가벽 화화10</option>
+                            <option value="HX|허니콤박스 화화10">HX — 허니콤박스 화화10</option>
+                            <option value="HW30|허니콤보드가벽 화화10 3미터">HW30 — 허니콤보드가벽 화화10 3미터</option>
+                            <option value="HD|등신대(하단받침) 화화16">HD — 등신대(하단받침) 화화16</option>
+                            <option value="HR|자유인쇄커팅 화화16">HR — 자유인쇄커팅 화화16</option>
+                            <option value="HY|연결형배너 화화16">HY — 연결형배너 화화16</option>
+                            <option value="HP|병풍형가벽 화화16">HP — 병풍형가벽 화화16</option>
+                            <option value="HB|허니콤배너 화화16">HB — 허니콤배너 화화16</option>
+                            <option value="HG|글씨포토존박스 화화16">HG — 글씨포토존박스 화화16</option>
+                            <option value="HT|글씨커팅(딱맞게) 화화16">HT — 글씨커팅(딱맞게) 화화16</option>
+                            <option value="HS|고객 칼선레이어 화화16">HS — 고객 칼선레이어 화화16</option>
+                            <option value="HC|크라프트허니콤 크라프트16">HC — 크라프트허니콤 크라프트16</option>
+                        </optgroup>
+                        <optgroup label="🟧 골판지">
+                            <option value="GW|골판지가벽 골판지화크">GW — 골판지가벽 골판지화크</option>
+                            <option value="GB|골판지배너 골판지화크">GB — 골판지배너 골판지화크</option>
+                            <option value="GM|종이매대 골판지화크">GM — 종이매대 골판지화크</option>
+                        </optgroup>
+                        <optgroup label="🧵 패브릭">
+                            <option value="FG20N|광목20수 네츄럴">FG20N — 광목20수 네츄럴</option>
+                            <option value="FG20W|광목20수 화이트">FG20W — 광목20수 화이트</option>
+                            <option value="FG20B|광목20수 백아이">FG20B — 광목20수 백아이</option>
+                            <option value="FG30B|광목30수 백아이">FG30B — 광목30수 백아이</option>
+                            <option value="FG30N|광목30수 네츄럴">FG30N — 광목30수 네츄럴</option>
+                            <option value="FG16N|광목16수 네츄럴">FG16N — 광목16수 네츄럴</option>
+                            <option value="FG10N|광목10수 네츄럴">FG10N — 광목10수 네츄럴</option>
+                            <option value="FO20B|옥스포드20수 백아이">FO20B — 옥스포드20수 백아이</option>
+                            <option value="FO10W|옥스포드10수 화이트">FO10W — 옥스포드10수 화이트</option>
+                            <option value="FC10W|캔버스10수 화이트">FC10W — 캔버스10수 화이트</option>
+                            <option value="FSP|쉬폰">FSP — 쉬폰</option>
+                            <option value="FB20R|비스코스레이온">FB20R — 비스코스레이온</option>
+                            <option value="FRN|린넨">FRN — 린넨</option>
+                        </optgroup>
+                        <optgroup label="🪧 사인">
+                            <option value="SH|현수막천">SH — 현수막천</option>
+                            <option value="SM|메쉬천">SM — 메쉬천</option>
+                            <option value="SA|에이브리시트지">SA — 에이브리시트지</option>
+                            <option value="SP3|포맥스3T">SP3 — 포맥스3T</option>
+                            <option value="SP5|포맥스5T">SP5 — 포맥스5T</option>
+                            <option value="SB5|폼보드5T">SB5 — 폼보드5T</option>
+                            <option value="SB10|폼보드10T">SB10 — 폼보드10T</option>
+                            <option value="SA3|아크릴3T">SA3 — 아크릴3T</option>
+                            <option value="SA5|아크릴5T">SA5 — 아크릴5T</option>
+                            <option value="SAU|아크릴유색">SAU — 아크릴유색</option>
+                            <option value="PP|종이인쇄물">PP — 종이인쇄물</option>
+                            <option value="HX2|허니콤원지">HX2 — 허니콤원지</option>
+                        </optgroup>
+                    </select>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
                         <input id="newProdPrintSymbol" class="input-text" placeholder="기호 (예: HW20)" style="width:35%; font-weight:700; text-transform:uppercase;" maxlength="20">
                         <input id="newProdPrintLabel" class="input-text" placeholder="이름 (예: 허니콤보드가벽 화화10)" style="flex:1;" maxlength="60">
                     </div>
