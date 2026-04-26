@@ -73,7 +73,9 @@ async function getAccessToken(saJson: string): Promise<string> {
   const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claim = b64url(JSON.stringify({
     iss: sa.client_email,
-    scope: "https://www.googleapis.com/auth/drive.file",
+    // drive.file 은 앱이 만든 파일만 접근 가능 → 공유받은 기존 폴더는 못 봄.
+    // drive 스코프로 변경: 공유된 폴더 안에서 읽기/쓰기 모두 가능.
+    scope: "https://www.googleapis.com/auth/drive",
     aud: "https://oauth2.googleapis.com/token",
     exp: now + 3600,
     iat: now,
@@ -182,10 +184,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const SA_JSON = Deno.env.get("GOOGLE_DRIVE_SA_JSON");
-    const ROOT_ID = Deno.env.get("GOOGLE_DRIVE_ROOT_FOLDER_ID");
+    const SA_JSON = (Deno.env.get("GOOGLE_DRIVE_SA_JSON") || "").trim();
+    const ROOT_ID = (Deno.env.get("GOOGLE_DRIVE_ROOT_FOLDER_ID") || "").trim();
     const SUPA_URL = Deno.env.get("SUPABASE_URL");
     const SUPA_SVC = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    console.log(`[drive sync] ROOT_ID="${ROOT_ID}" (length=${ROOT_ID.length})`);
     if (!SA_JSON || !ROOT_ID) {
       return new Response(JSON.stringify({ error: "Drive env vars missing", needed: ["GOOGLE_DRIVE_SA_JSON", "GOOGLE_DRIVE_ROOT_FOLDER_ID"] }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
