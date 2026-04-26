@@ -1110,6 +1110,8 @@ window.addProductDB = async () => {
         cutline_url: document.getElementById('newProdCutlineUrl') ? document.getElementById('newProdCutlineUrl').value : '',
         mockup_url: document.getElementById('newProdMockupUrl') ? document.getElementById('newProdMockupUrl').value : '',
         material: document.getElementById('newProdMaterial') ? document.getElementById('newProdMaterial').value : '',
+        print_symbol: document.getElementById('newProdPrintSymbol') ? document.getElementById('newProdPrintSymbol').value.trim().toUpperCase() : '',
+        print_label: document.getElementById('newProdPrintLabel') ? document.getElementById('newProdPrintLabel').value.trim() : '',
         addons: addons
     };
 
@@ -1192,6 +1194,13 @@ window.editProductLoad = async (id) => {
     // 소재 로드
     if (document.getElementById('newProdMaterial')) {
         document.getElementById('newProdMaterial').value = data.material || '';
+    }
+    // 출력 기호 + 이름 로드
+    if (document.getElementById('newProdPrintSymbol')) {
+        document.getElementById('newProdPrintSymbol').value = data.print_symbol || '';
+    }
+    if (document.getElementById('newProdPrintLabel')) {
+        document.getElementById('newProdPrintLabel').value = data.print_label || '';
     }
 
     // 칼선/목업 URL 로드
@@ -1384,6 +1393,19 @@ window.applyMaterialToCategory = async () => {
     const { error } = await sb.from('admin_products').update({ material }).eq('category', cat);
     if (error) showToast(_t('err_failed','Failed: ') + error.message, "error");
     else showToast(`${cat}: "${label}" ` + _t('msg_applied','applied.'), "success");
+};
+
+// [출력 기호+이름] 카테고리 전체에 일괄 적용
+window.applyPrintCodeToCategory = async () => {
+    const cat = document.getElementById('newProdCategory').value;
+    const symbol = (document.getElementById('newProdPrintSymbol').value || '').trim().toUpperCase();
+    const label = (document.getElementById('newProdPrintLabel').value || '').trim();
+    if (!cat) { showToast(_t('err_select_cat_first','Please select a category first.'), "warn"); return; }
+    if (!symbol && !label) { showToast('기호 또는 이름을 입력해주세요.', 'warn'); return; }
+    if (!confirm(`[${cat}] 카테고리 전체 상품에 "${symbol} / ${label}"(을)를 적용합니까?`)) return;
+    const { error } = await sb.from('admin_products').update({ print_symbol: symbol, print_label: label }).eq('category', cat);
+    if (error) showToast(_t('err_failed','Failed: ') + error.message, "error");
+    else showToast(`${cat}: "${symbol} / ${label}" ` + _t('msg_applied','applied.'), "success");
 };
 
 // [소재] 사용자 정의 소재 추가

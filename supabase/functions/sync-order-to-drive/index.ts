@@ -228,6 +228,17 @@ serve(async (req) => {
 
     // 3) Drive 토큰 + 폴더 생성
     const token = await withRetry("auth", () => getAccessToken(SA_JSON));
+
+    // DEBUG: 부모 폴더에 SA가 직접 접근 가능한지 사전 확인
+    try {
+      const checkUrl = `https://www.googleapis.com/drive/v3/files/${ROOT_ID}?fields=id,name,mimeType,driveId&supportsAllDrives=true`;
+      const checkR = await fetch(checkUrl, { headers: { Authorization: `Bearer ${token}` } });
+      const checkText = await checkR.text();
+      console.log(`[drive sync] parent check: status=${checkR.status} body=${checkText.slice(0, 400)}`);
+    } catch (e: any) {
+      console.warn(`[drive sync] parent check error: ${e?.message || e}`);
+    }
+
     const folder = await withRetry("folder", () => createUniqueFolder(baseName, ROOT_ID, token));
     console.log(`[drive sync] folder created: ${folder.name} (${folder.id})`);
 
