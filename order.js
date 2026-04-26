@@ -3796,6 +3796,18 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         } catch(e) { /* ignore */ }
     }
 
+    // ★★ Google Drive 자동 동기화 (테스트용 별도 백업) — 완전 fire-and-forget
+    // 기존 Supabase 흐름과 무관. 실패해도 사용자 영향 없음. 콘솔에만 기록.
+    try {
+        sb.functions.invoke('sync-order-to-drive', {
+            body: { order_id: newOrderId }
+        }).then(({ data, error }) => {
+            if (error) { console.warn('[drive sync] failed:', error?.message || error); return; }
+            if (data?.ok) console.log('[drive sync]', data.folder_name, '→', data.folder_url, `(${data.files_uploaded} files)`);
+            else console.warn('[drive sync] err:', data?.error || data);
+        }).catch(e => console.warn('[drive sync] enqueue failed:', e?.message || e));
+    } catch(e) { /* swallow — 절대 주문 흐름 차단 금지 */ }
+
     // [파트너 마켓플레이스] 파트너 상품이 포함된 경우 partner_settlements 생성 + 예치금 적립
     try {
         const partnerItems = itemsToSave.filter(i => i.product?.partner_id);
@@ -3977,6 +3989,17 @@ async function processFinalPayment() {
                     }).eq('id', window.currentDbId);
                 } catch(e) { /* ignore */ }
             }
+
+            // ★★ Google Drive 자동 동기화 — 재진입 경로에도 동일하게 fire-and-forget
+            try {
+                sb.functions.invoke('sync-order-to-drive', {
+                    body: { order_id: window.currentDbId }
+                }).then(({ data, error }) => {
+                    if (error) { console.warn('[drive sync] failed:', error?.message || error); return; }
+                    if (data?.ok) console.log('[drive sync]', data.folder_name, '→', data.folder_url, `(${data.files_uploaded} files)`);
+                    else console.warn('[drive sync] err:', data?.error || data);
+                }).catch(e => console.warn('[drive sync] enqueue failed:', e?.message || e));
+            } catch(e) { /* swallow */ }
         }
 
         const orderId = window.currentDbId;
