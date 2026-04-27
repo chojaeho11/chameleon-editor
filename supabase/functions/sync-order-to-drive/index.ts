@@ -174,6 +174,22 @@ async function uploadFile(
   return j.id;
 }
 
+// ── Drive: 폴더 색상 설정 (Drive UI에서 시각적 구분용) ──
+//    유효 색상은 #ac725e #d06b64 #f83a22 #fa573c #ff7537 #ffad46 #42d692 #16a765 등
+async function setFolderColor(folderId: string, colorHex: string, token: string): Promise<void> {
+  const url = `https://www.googleapis.com/drive/v3/files/${folderId}?supportsAllDrives=true&fields=id,folderColorRgb`;
+  const r = await fetch(url, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ folderColorRgb: colorHex }),
+  });
+  if (!r.ok) throw new Error(`set folder color: ${r.status} ${await r.text()}`);
+}
+
+// 색상 코드
+const COLOR_HAS_FILES = "#16a765";  // 초록 — 고객 파일 있음
+const COLOR_EMPTY = "#f83a22";      // 빨강 — 메모만 있음 (고객 파일 미입력)
+
 // ── Drive: 폴더 안의 같은 이름 파일들 중복 제거 (가장 오래된 것만 유지) ──
 async function dedupFilesInFolder(folderId: string, token: string): Promise<number> {
   const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,createdTime)&pageSize=200&orderBy=createdTime&supportsAllDrives=true&includeItemsFromAllDrives=true`;
@@ -400,6 +416,40 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
+
+    // ★ 모드: 'refresh_colors' — 고객주문 폴더 안 모든 customer 폴더 색상을 현재 파일 상태에 맞게 갱신
+    //    수동으로 Drive에 파일을 넣은 후 호출하면 색상이 업데이트됨
+    if (body?.mode === 'refresh_colors') {
+      const token = await withRetry("auth", () => getAccessToken(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN));
+      const ordersFolderId = await findFolderByName(CUSTOMER_ORDERS_FOLDER_NAME, ROOT_ID, token);
+      if (!ordersFolderId) {
+        return new Response(JSON.stringify({ error: "고객주문 folder not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const subfolders = await listFolderChildren(ordersFolderId, token);
+      const customerFolders = subfolders.filter((f: any) => f.mimeType === "application/vnd.google-apps.folder");
+      const results: any[] = [];
+      for (const folder of customerFolders) {
+        try {
+          const children = await listFolderChildren(folder.id, token);
+          const designFiles = children.filter((f: any) =>
+            f.mimeType !== "application/vnd.google-apps.folder" &&
+            !(f.name || "").endsWith("_정보.txt")
+          );
+          const targetColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
+          await setFolderColor(folder.id, targetColor, token);
+          results.push({ name: folder.name, design_files: designFiles.length, color: targetColor });
+        } catch (e: any) {
+          results.push({ name: folder.name, error: String(e?.message || e) });
+        }
+      }
+      console.log(`[drive sync] refresh_colors done: ${results.length} folders processed`);
+      return new Response(JSON.stringify({ ok: true, mode: 'refresh_colors', folders_processed: results.length, results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const orderId = (body?.order_id || "").toString().trim();
     if (!orderId) {
       return new Response(JSON.stringify({ error: "order_id required" }), {
@@ -469,13 +519,27 @@ serve(async (req) => {
           if (r.ok) {
             const j = await r.json();
             if ((j.files || []).length > 0) {
-              console.log(`[drive sync] already synced — memo "${expectedMemoName}" exists, skipping order=${orderId}`);
+              console.log(`[drive sync] already synced — memo "${expectedMemoName}" exists, applying color and skipping order=${orderId}`);
+              // 이미 sync된 폴더에도 색상은 갱신 (디자인 파일이 추후 추가됐을 수 있음)
+              let appliedColor = "";
+              try {
+                const finalFiles = await listFolderChildren(customerFolderForCheck, token);
+                const designFiles = finalFiles.filter((f: any) =>
+                  f.mimeType !== "application/vnd.google-apps.folder" &&
+                  !(f.name || "").endsWith("_정보.txt")
+                );
+                appliedColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
+                await setFolderColor(customerFolderForCheck, appliedColor, token);
+              } catch (colorErr: any) {
+                console.warn(`[drive sync] skip-path color update failed: ${colorErr?.message || colorErr}`);
+              }
               const folderUrl = `https://drive.google.com/drive/folders/${customerFolderForCheck}`;
               return new Response(JSON.stringify({
                 ok: true,
                 skipped: 'already synced (memo exists)',
                 customer_folder_id: customerFolderForCheck,
                 customer_folder_url: folderUrl,
+                folder_color: appliedColor,
               }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
           }
@@ -618,6 +682,28 @@ serve(async (req) => {
       console.warn(`[drive sync] file dedup failed: ${e?.message || e}`);
     }
 
+    // 9-3) ★ 폴더 색상 마킹: 고객 디자인 파일이 있으면 초록, 메모만 있으면 빨강
+    //      (Drive UI에서 한눈에 어떤 폴더에 고객 파일이 들어있는지 확인 가능)
+    let folderColorApplied = "";
+    try {
+      const finalFiles = await listFolderChildren(finalCustomerFolderId, token);
+      // 메모(.txt)와 폴더 제외한 디자인 파일 카운트
+      const designFiles = finalFiles.filter((f: any) =>
+        f.mimeType !== "application/vnd.google-apps.folder" &&
+        !(f.name || "").endsWith("_정보.txt")
+      );
+      const targetColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
+      try {
+        await setFolderColor(finalCustomerFolderId, targetColor, token);
+        folderColorApplied = targetColor;
+        console.log(`[drive sync] folder color set: ${targetColor} (${designFiles.length} design files)`);
+      } catch (colorErr: any) {
+        console.warn(`[drive sync] folder color set failed: ${colorErr?.message || colorErr}`);
+      }
+    } catch (e: any) {
+      console.warn(`[drive sync] folder color check failed: ${e?.message || e}`);
+    }
+
     const customerFolderUrl = `https://drive.google.com/drive/folders/${finalCustomerFolderId}`;
     const orderDocFolderUrl = `https://drive.google.com/drive/folders/${orderDocFolderId}`;
     console.log(`[drive sync] done order=${orderId} customer=${customer} files=${filesUploaded.length}/${allFiles.length + 1} url=${customerFolderUrl}`);
@@ -631,6 +717,7 @@ serve(async (req) => {
       order_doc_folder_id: orderDocFolderId,
       order_doc_folder_url: orderDocFolderUrl,
       merged_from_manual: mergedFromManual,
+      folder_color: folderColorApplied,
       files_uploaded: filesUploaded.length,
       files_failed: fileErrors.length,
       file_errors: fileErrors,

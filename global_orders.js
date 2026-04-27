@@ -578,6 +578,27 @@ async function _writeFile(dirHandle, fileName, blob) {
     await writable.close();
 }
 
+window.refreshDriveColors = async (btn) => {
+    const origText = btn?.innerText || '🎨 Drive 색상 갱신';
+    if (btn) { btn.disabled = true; btn.innerText = '⏳ 갱신 중...'; }
+    try {
+        const { data, error } = await sb.functions.invoke('sync-order-to-drive', {
+            body: { mode: 'refresh_colors' }
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        const n = data?.folders_processed || 0;
+        const greens = (data?.results || []).filter(r => r.color === '#16a765').length;
+        const reds = (data?.results || []).filter(r => r.color === '#f83a22').length;
+        showToast(`✅ Drive 색상 갱신 완료: 총 ${n}개 폴더 (🟢 ${greens} / 🔴 ${reds})`, 'success', 4000);
+    } catch (e) {
+        console.error('refreshDriveColors error:', e);
+        showToast('Drive 색상 갱신 실패: ' + (e?.message || e), 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerText = origText; }
+    }
+};
+
 window.toggleAutoDownload = async () => {
     if (!_autoDownloadActive) {
         // 켜기: 먼저 폴더 선택

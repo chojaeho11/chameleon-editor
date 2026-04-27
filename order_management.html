@@ -275,6 +275,7 @@ window.showSection = function(){};
                     </select>
                     <button class="btn btn-primary" onclick="resetPage();loadOrders()"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
                     <button class="btn btn-outline" onclick="document.getElementById('recoveryPanel').style.display=document.getElementById('recoveryPanel').style.display==='none'?'block':'none'" style="font-weight:600; font-size:12px;">🔧 문서복구</button>
+                    <button class="btn btn-outline" onclick="refreshDriveColors(this)" style="font-weight:600; font-size:12px;" title="고객주문 폴더에 수동으로 파일 추가했을 때 색상 갱신">🎨 Drive 색상 갱신</button>
                     <button id="autoDownloadBtn" class="btn btn-outline" onclick="toggleAutoDownload()" style="font-weight:600; font-size:12px;">📥 자동다운 OFF</button>
                     <span id="autoDownloadStatus" style="font-size:11px; color:#64748b; display:none;"></span>
                     <div id="action-buttons" style="margin-left:auto; display:flex; gap:6px;"></div>
@@ -480,12 +481,12 @@ window.showSection = function(){};
 <!-- TOAST -->
 <div id="toast-container" style="position:fixed;top:68px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
 
-<script src="toast.js?v=429"></script>
+<script src="toast.js?v=430"></script>
 <script type="module">
-import { sb, initConfig } from './global_config.js?v=429';
-import { checkAdminAccess, showLoading } from './global_common.js?v=429';
+import { sb, initConfig } from './global_config.js?v=430';
+import { checkAdminAccess, showLoading } from './global_common.js?v=430';
 import './global_orders.js?v=468';
-import './global_stats.js?v=429';
+import './global_stats.js?v=430';
 
 window.sb = sb;
 window._supabase = sb;
