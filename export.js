@@ -1777,6 +1777,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         if (_hasWallPanels) {
             const sqmPrice = item.product._wallUnitPricePerSqm || 0;
             const dRate = item.product._wallDiscountRate || 0;
+            const wallQty = item.qty || 1;  // ★ 핵심 수정: 가벽 수량 반영 (28개, 8개 등)
 
             // 각 벽면의 할인 적용 금액 합산
             let wallSubtotal = 0;
@@ -1788,7 +1789,8 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 return { wp, wi, wArea, wDiscounted };
             });
 
-            totalAmt += wallSubtotal;
+            // ★ qty 곱셈 적용 — 한 벽면 구성을 N개 주문하면 wallSubtotal × N이 진짜 합계
+            totalAmt += wallSubtotal * wallQty;
 
             // 각 벽면을 개별 행으로 표시 (요약 행 없이 바로 상세)
             wallRows.forEach(({ wp, wi, wArea, wDiscounted }) => {
@@ -1796,13 +1798,16 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 const wName = `${pdfName}\n벽면${wi+1}: ${wp.w/1000}m × ${wp.h/1000}m`;
                 const splitW = doc.splitTextToSize(wName, nameColWidth - 4);
                 const rh = Math.max(8, 4 + (splitW.length * 5));
+                // 수량 컬럼: "양면 × 28" 형태 (qty>1일 때) / "양면" (qty=1)
+                const qtyDisplay = wallQty > 1 ? `${sideLabel}\n× ${wallQty}` : sideLabel;
+                const rowAmount = wDiscounted * wallQty;  // ★ 행별 금액도 qty 반영
                 curX = 15;
                 drawCell(doc, curX, y, cols[0], rh, no++, 'center'); curX += cols[0];
                 drawCell(doc, curX, y, cols[1], rh, splitW, 'left', 8); curX += cols[1];
                 drawCell(doc, curX, y, cols[2], rh, `${wArea.toFixed(1)}㎡`, 'left', 8); curX += cols[2];
-                drawCell(doc, curX, y, cols[3], rh, sideLabel, 'center', 8); curX += cols[3];
-                drawCell(doc, curX, y, cols[4], rh, '', 'right'); curX += cols[4];
-                drawCell(doc, curX, y, cols[5], rh, formatCurrencyForPDF(wDiscounted), 'right', 8);
+                drawCell(doc, curX, y, cols[3], rh, qtyDisplay, 'center', 8); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], rh, wallQty > 1 ? formatCurrencyForPDF(wDiscounted) : '', 'right', 8); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], rh, formatCurrencyForPDF(rowAmount), 'right', 8);
                 y += rh;
                 if(y > 260) { doc.addPage(); y = 20; }
             });
