@@ -311,6 +311,14 @@ serve(async (req) => {
       });
     }
 
+    // ★ 임시작성(미결제) 주문은 동기화 스킵 — Drive 노이즈 방지
+    if (order.status === '임시작성') {
+      console.log(`[drive sync] skip draft order=${orderId} status=임시작성`);
+      return new Response(JSON.stringify({ ok: true, skipped: 'draft order', order_no: order.id, status: order.status }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // 2) 명명 정보 추출
     //    상품의 print_symbol(예: "HB")을 우선 사용, 없으면 product.code(예: "hb_bn_1") fallback
     const firstItem = Array.isArray(order.items) ? order.items[0] : null;

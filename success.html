@@ -166,6 +166,14 @@
                     throw new Error("No payment verification data found.");
                 }
 
+                // ★★ 결제 확정 → Google Drive 동기화 (fire-and-forget)
+                try {
+                    await invokeFunction('sync-order-to-drive', { order_id: dbId });
+                    console.log('[drive sync] triggered for order', dbId);
+                } catch(e) {
+                    console.warn('[drive sync] enqueue failed:', e?.message || e);
+                }
+
                 // 추천인 적립
                 if (refId) {
                     await creditReferralBonus(dbId, refId);

@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=426";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=426";
-import { SITE_CONFIG } from "./site-config.js?v=426";
-import { applySize } from "./canvas-size.js?v=426";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=426";
+import { canvas } from "./canvas-core.js?v=427";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=427";
+import { SITE_CONFIG } from "./site-config.js?v=427";
+import { applySize } from "./canvas-size.js?v=427";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=427";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -4105,7 +4105,16 @@ async function processFinalPayment() {
                 const bankUpdate = { status: '접수됨', payment_method: '무통장입금', payment_status: '입금대기', depositor_name: depositorName };
                 if (receiptInfo) bankUpdate.receipt_info = receiptInfo;
                 await sb.from('orders').update(bankUpdate).eq('id', orderId);
-                
+
+                // ★★ 결제 확정 → Google Drive 동기화 (fire-and-forget)
+                try {
+                    sb.functions.invoke('sync-order-to-drive', { body: { order_id: orderId } })
+                      .then(({ data, error }) => {
+                          if (error) console.warn('[drive sync] failed:', error?.message || error);
+                          else console.log('[drive sync]', data?.customer_folder_url || data);
+                      }).catch(e => console.warn('[drive sync] enqueue failed:', e?.message || e));
+                } catch(e) {}
+
                 // 장바구니 비우기
                 try {
                     localStorage.setItem(cartStorageKey(), '[]');
@@ -4206,6 +4215,15 @@ async function processDepositPayment(payAmount, useMileage) {
             payment_method: '예치금',
             status: '접수됨'
         }).eq('id', window.currentDbId);
+
+        // ★★ 결제 확정 → Google Drive 동기화 (fire-and-forget)
+        try {
+            sb.functions.invoke('sync-order-to-drive', { body: { order_id: window.currentDbId } })
+              .then(({ data, error }) => {
+                  if (error) console.warn('[drive sync] failed:', error?.message || error);
+                  else console.log('[drive sync]', data?.customer_folder_url || data);
+              }).catch(e => console.warn('[drive sync] enqueue failed:', e?.message || e));
+        } catch(e) {}
 
         // 추천인 적립
         if (window.tempOrderInfo?.referrerId) {
