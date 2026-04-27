@@ -463,10 +463,15 @@ async function _savePcAutomationOrder(order) {
         f && f.url && f.type !== '_error_log' && f.type !== 'order_sheet' && f.type !== 'quotation'
     );
 
-    // 파일명 패턴 customer_file_{idx}_{fileIdx}_{originalName}로 item index 추출
+    // 파일명에서 item index 추출 — 4가지 업로드 패턴 모두 지원:
+    //   customer_file_NN_NN_xxx  (멀티 파일)
+    //   customer_file_NN_xxx     (단일 파일)
+    //   cutline_NN_NN_xxx
+    //   cutline_NN_xxx
+    // → 첫 2자리 숫자(또는 그 이상)가 item index (1-based)
     const fileByItem = {};
     for (const f of designFiles) {
-        const m = (f.name || '').match(/customer_file_(\d{2})_(\d{2})_/) || (f.name || '').match(/cutline_(\d{2})_/);
+        const m = (f.name || '').match(/^(?:customer_file|cutline)_(\d+)_/);
         if (m) {
             const itemIdx = parseInt(m[1], 10) - 1;
             (fileByItem[itemIdx] = fileByItem[itemIdx] || []).push(f);
