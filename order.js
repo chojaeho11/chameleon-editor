@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=425";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=425";
-import { SITE_CONFIG } from "./site-config.js?v=425";
-import { applySize } from "./canvas-size.js?v=425";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=425";
+import { canvas } from "./canvas-core.js?v=426";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=426";
+import { SITE_CONFIG } from "./site-config.js?v=426";
+import { applySize } from "./canvas-size.js?v=426";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=426";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -2507,7 +2507,12 @@ function renderCart() {
 
     let grandTotal = 0; let grandProductTotal = 0; let grandAddonTotal = 0;
 
-    if(cartData.length === 0) {
+    // 일괄 업로드 파일은 노란 박스 안에 별도 렌더 (메인 리스트와 분리)
+    renderBulkUploadFiles();
+
+    // 메인 리스트 비어있는지 판단할 때 file_upload는 제외
+    const _hasMainItems = cartData.some(it => it.product && it.type !== 'file_upload');
+    if(!_hasMainItems) {
         listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">${window.t('msg_cart_empty')}</div>`;
         updateSummary(0, 0, 0); return;
     }
@@ -2529,6 +2534,8 @@ function renderCart() {
 
     cartData.forEach((item, idx) => {
         if (!item.product) return;
+        // 일괄 업로드된 파일은 메인 카트 리스트에서 제외 (노란 박스 안에 별도 렌더)
+        if (item.type === 'file_upload') return;
 
         if (!item.qty) item.qty = 1;
         if (item.isOpen === undefined) item.isOpen = true;
@@ -4742,6 +4749,53 @@ window.updateCartQtyInput = function(idx, val) {
 // ============================================================
 // [9] 직접 장바구니 담기 및 일괄 업로드
 // ============================================================
+
+// 일괄 업로드된 파일들을 노란 박스 안에 썸네일 그리드로 렌더
+function renderBulkUploadFiles() {
+    const previewBox = document.getElementById('bulkUploadFilesPreview');
+    if (!previewBox) return;
+
+    // file_upload 타입 아이템들과 원래 cartData 인덱스를 함께 수집
+    const bulkItems = [];
+    cartData.forEach((it, originalIdx) => {
+        if (it && it.type === 'file_upload') bulkItems.push({ item: it, idx: originalIdx });
+    });
+
+    if (bulkItems.length === 0) {
+        previewBox.style.display = 'none';
+        previewBox.innerHTML = '';
+        return;
+    }
+
+    previewBox.style.display = 'block';
+    const chipsHtml = bulkItems.map(({ item, idx }) => {
+        const thumb = item.thumb || item.product?.img || 'https://cdn-icons-png.flaticon.com/512/337/337946.png';
+        const name = item.fileName || item.product?.name || 'file';
+        const safeName = String(name).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        return `
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px; width:120px; position:relative;">
+                <button onclick="event.stopPropagation(); window.removeCartItem(${idx});"
+                        title="삭제"
+                        style="position:absolute; top:4px; right:4px; background:#ef4444; color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <img src="${thumb}" alt="${safeName}" style="width:96px; height:96px; object-fit:cover; border-radius:8px; background:#fff;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/337/337946.png'">
+                <div style="font-size:11px; color:#475569; text-align:center; word-break:break-all; line-height:1.3; max-width:108px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${safeName}</div>
+            </div>
+        `;
+    }).join('');
+
+    previewBox.innerHTML = `
+        <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-paperclip" style="color:#10b981;"></i>
+            업로드된 파일 (${bulkItems.length}개)
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            ${chipsHtml}
+        </div>
+    `;
+}
+
 export async function processBulkCartUpload(files) {
     if (!files || files.length === 0) return;
 
