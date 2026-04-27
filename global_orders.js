@@ -377,6 +377,193 @@ async function _getSubDir(parent, name) {
     return await parent.getDirectoryHandle(name, { create: true });
 }
 
+// ==========================================================================
+// PC 자동화용 다운로드 (별도 흐름) — 기존 자동다운/수동다운과 완전 분리
+// 폴더 구조:
+//   {루트}/{고객명}/
+//     {기호}_{이름}_{고객명}_{NN}.{확장자}  ← 디자인 파일들
+//     order_info.json                       ← Python 파싱용
+//     order_info.txt                        ← 사람 읽기용
+// 기호 템플릿: {h}=height/100, {w}=width/100  (예: HW{h} + 2200mm → HW22)
+// ==========================================================================
+let _pcRootDirHandle = null;
+let _symbolCache = {}; // code → { symbol, label }
+
+async function _loadSymbolCache() {
+    const { data } = await sb.from('admin_products').select('code, print_symbol, print_label').not('code','like','ua_%').limit(1000);
+    if (!data) return;
+    _symbolCache = {};
+    data.forEach(p => {
+        if (p.print_symbol) _symbolCache[p.code] = { symbol: p.print_symbol, label: p.print_label || '' };
+    });
+    console.log('[PC다운] 기호 캐시:', Object.keys(_symbolCache).length, '개 상품');
+}
+
+function _sanitizeFsName(s) {
+    if (!s) return 'unknown';
+    return String(s)
+        .replace(/[\\/:*?"<>|\r\n\t]/g, '_')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '')
+        .slice(0, 80) || 'unknown';
+}
+
+// 기호 템플릿 치환 — {h}=Math.round(height/100), {w}=Math.round(width/100)
+function _resolveSymbol(template, item) {
+    if (!template) return '';
+    const h = Number(item?.height) || 0;
+    const w = Number(item?.width) || 0;
+    return template
+        .replace(/\{h\}/g, String(Math.round(h / 100)))
+        .replace(/\{w\}/g, String(Math.round(w / 100)));
+}
+
+window.pcAutoDownloadSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast('선택된 주문이 없습니다.', 'warn'); return; }
+
+    if (!_pcRootDirHandle) {
+        try {
+            _pcRootDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        } catch (e) {
+            showToast('PC 자동화용 폴더를 선택해주세요.', 'warn');
+            return;
+        }
+    }
+
+    await _loadSymbolCache();
+
+    showToast(`${ids.length}건 PC 자동화 다운 시작...`, 'info');
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+        try {
+            const { data: order } = await sb.from('orders')
+                .select('id, files, manager_name, created_at, order_date, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time, delivery_period, assigned_team, is_province_install')
+                .eq('id', id).single();
+            if (!order) { fail++; continue; }
+            await _savePcAutomationOrder(order);
+            ok++;
+        } catch (e) {
+            console.error('[PC다운] 오류:', id, e);
+            fail++;
+        }
+    }
+    const msg = `PC 자동화: ${ok}건 저장 완료` + (fail > 0 ? `, ${fail}건 실패` : '');
+    showToast(msg, fail > 0 ? 'warn' : 'success');
+};
+
+async function _savePcAutomationOrder(order) {
+    const customer = _sanitizeFsName(order.manager_name || `order_${order.id}`);
+    const customerDir = await _getSubDir(_pcRootDirHandle, customer);
+
+    const items = Array.isArray(order.items) ? order.items : [];
+    // 자동화 다운로드는 작업지시서/견적서/_error_log 제외 — 고객 디자인 파일만
+    const designFiles = (order.files || []).filter(f =>
+        f && f.url && f.type !== '_error_log' && f.type !== 'order_sheet' && f.type !== 'quotation'
+    );
+
+    // 파일명 패턴 customer_file_{idx}_{fileIdx}_{originalName}로 item index 추출
+    const fileByItem = {};
+    for (const f of designFiles) {
+        const m = (f.name || '').match(/customer_file_(\d{2})_(\d{2})_/) || (f.name || '').match(/cutline_(\d{2})_/);
+        if (m) {
+            const itemIdx = parseInt(m[1], 10) - 1;
+            (fileByItem[itemIdx] = fileByItem[itemIdx] || []).push(f);
+        } else {
+            (fileByItem['_unmatched'] = fileByItem['_unmatched'] || []).push(f);
+        }
+    }
+
+    // 각 아이템별로 디자인 파일 저장 (새 이름 규칙)
+    const enrichedItems = [];
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const code = item.product?.code || item.productCode || '';
+        const sym = _symbolCache[code] || { symbol: '', label: '' };
+        const symbol = _resolveSymbol(sym.symbol, item) || 'NOSYM';
+        const label = sym.label || item.productName || item.product?.name || 'unknown';
+        const itemFiles = fileByItem[i] || [];
+
+        for (let fi = 0; fi < itemFiles.length; fi++) {
+            const f = itemFiles[fi];
+            const ext = ((f.name || '').split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const seq = String(fi + 1).padStart(2, '0');
+            const baseName = `${_sanitizeFsName(symbol)}_${_sanitizeFsName(label)}_${customer}_${seq}`;
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) await _writeFile(customerDir, `${baseName}.${ext || 'bin'}`, blob);
+                else console.warn('[PC다운] blob null:', f.url);
+            } catch (e) {
+                console.error('[PC다운] 파일 저장실패:', f.name, e);
+            }
+        }
+
+        enrichedItems.push({
+            index: i + 1,
+            product_code: code,
+            product_name: item.productName || item.product?.name || '',
+            print_symbol: symbol,
+            print_label: label,
+            symbol_template: sym.symbol || '',
+            size_mm: { w: item.width || 0, h: item.height || 0 },
+            qty: item.qty || 0,
+            unit_price: item.price || 0,
+            sides: item.product?._artworkType || '',
+            addons: item.selectedAddons || {},
+            addon_qty: item.addonQuantities || {},
+            file_count: (fileByItem[i] || []).length,
+        });
+    }
+
+    // _unmatched 파일도 같이 저장 (item 매칭 안 된 것들)
+    if (fileByItem['_unmatched']?.length) {
+        for (let fi = 0; fi < fileByItem['_unmatched'].length; fi++) {
+            const f = fileByItem['_unmatched'][fi];
+            try {
+                const blob = await _fetchFileBlob(f.url);
+                if (blob) await _writeFile(customerDir, `_extra_${String(fi+1).padStart(2,'0')}_${_sanitizeFsName(f.name || 'file')}`, blob);
+            } catch (e) {}
+        }
+    }
+
+    // order_info.json — Python json.load() 가능
+    const info = {
+        order_no: order.id,
+        customer: order.manager_name || '',
+        phone: order.phone || '',
+        address: order.address || '',
+        delivery_target_date: order.delivery_target_date || '',
+        request_note: order.request_note || '',
+        site_code: order.site_code || '',
+        total_amount: order.total_amount || 0,
+        status: order.status || '',
+        order_date: order.order_date || order.created_at || '',
+        items: enrichedItems,
+    };
+    const jsonBlob = new Blob([JSON.stringify(info, null, 2)], { type: 'application/json;charset=utf-8' });
+    await _writeFile(customerDir, 'order_info.json', jsonBlob);
+
+    // order_info.txt — 사람 읽기용
+    let txt = '';
+    txt += `주문번호: ${order.id}\n`;
+    txt += `고객명: ${order.manager_name || ''}\n`;
+    txt += `연락처: ${order.phone || ''}\n`;
+    txt += `주소: ${order.address || ''}\n`;
+    txt += `납기: ${order.delivery_target_date || ''}\n`;
+    txt += `요청사항: ${order.request_note || ''}\n`;
+    txt += `\n=== 품목 ===\n`;
+    enrichedItems.forEach(it => {
+        txt += `[${String(it.index).padStart(2,'0')}] ${it.print_symbol} | ${it.print_label} | ${it.product_name}\n`;
+        txt += `     사이즈: ${it.size_mm.w}×${it.size_mm.h}mm · 수량: ${it.qty} · 면: ${it.sides || '-'}\n`;
+        txt += `     파일수: ${it.file_count}개\n`;
+    });
+    const txtBlob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    await _writeFile(customerDir, 'order_info.txt', txtBlob);
+
+    console.log(`[PC다운] 완료: ${customer} (주문 ${order.id})`);
+}
+
 // 폴더에 파일 쓰기
 async function _writeFile(dirHandle, fileName, blob) {
     const safe = fileName.replace(/[\\/:*?"<>|]/g, '_');
@@ -1797,6 +1984,7 @@ window.updateActionButtons = () => {
     }
     // 모든 탭에 공통 버튼 추가
     div.innerHTML += `<button class="btn" onclick="manualDownloadSelected()" style="background:#0ea5e9;color:white;margin-left:6px;">📥 수동다운</button>`;
+    div.innerHTML += `<button class="btn" onclick="pcAutoDownloadSelected()" style="background:#7c3aed;color:white;margin-left:4px;" title="PC 자동화용 별도 다운 — 고객명 폴더 + 기호 파일명 + order_info.json">🤖 PC다운</button>`;
     div.innerHTML += `<button class="btn" onclick="photoUploadSelected()" style="background:#10b981;color:white;margin-left:4px;">📷 제작사진</button>`;
     div.innerHTML += `<button class="btn" onclick="inquirySelected()" style="background:#8b5cf6;color:white;margin-left:4px;">💬 문의답변</button>`;
 };
