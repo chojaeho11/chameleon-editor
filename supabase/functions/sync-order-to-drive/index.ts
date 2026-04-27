@@ -174,6 +174,77 @@ async function uploadFile(
   return j.id;
 }
 
+// ── Drive: 폴더 안의 같은 이름 파일들 중복 제거 (가장 오래된 것만 유지) ──
+async function dedupFilesInFolder(folderId: string, token: string): Promise<number> {
+  const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,createdTime)&pageSize=200&orderBy=createdTime&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) {
+    console.warn(`[dedup files] list failed: ${r.status}`);
+    return 0;
+  }
+  const j = await r.json();
+  const files = j.files || [];
+  // 이름별로 그룹핑
+  const byName: Record<string, any[]> = {};
+  for (const f of files) {
+    if (!byName[f.name]) byName[f.name] = [];
+    byName[f.name].push(f);
+  }
+  let trashed = 0;
+  for (const name in byName) {
+    const group = byName[name];
+    if (group.length <= 1) continue;
+    // 가장 오래된 것(첫 번째, orderBy createdTime asc) 유지, 나머지 휴지통
+    for (let i = 1; i < group.length; i++) {
+      try {
+        await trashItem(group[i].id, token);
+        trashed++;
+      } catch (e: any) {
+        console.warn(`[dedup files] trash failed ${group[i].name}: ${e?.message || e}`);
+      }
+    }
+  }
+  if (trashed > 0) console.log(`[dedup files] trashed ${trashed} duplicate files in folder ${folderId}`);
+  return trashed;
+}
+
+// ── Drive: 같은 이름의 중복 폴더가 여러 개 있으면 가장 오래된 것 하나로 통합 ──
+//    동시 실행(race condition)으로 같은 이름 폴더가 여러 개 생긴 경우를 정리
+async function dedupFolder(name: string, parentId: string, token: string): Promise<string | null> {
+  const q = `name='${name.replace(/'/g, "\\'")}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,createdTime)&pageSize=20&orderBy=createdTime&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) {
+    console.warn(`[dedup] list failed: ${r.status}`);
+    return null;
+  }
+  const j = await r.json();
+  const folders = j.files || [];
+  if (folders.length === 0) return null;
+  if (folders.length === 1) return folders[0].id;
+  // 중복: 가장 먼저 만들어진 것을 유지, 나머지는 콘텐츠 이전 후 휴지통
+  const keep = folders[0];
+  console.log(`[dedup] "${name}" has ${folders.length} duplicates → keeping oldest ${keep.id}`);
+  for (let i = 1; i < folders.length; i++) {
+    const dup = folders[i];
+    try {
+      const children = await listFolderChildren(dup.id, token);
+      for (const child of children) {
+        try {
+          await moveItem(child.id, dup.id, keep.id, token);
+        } catch (e: any) {
+          console.warn(`[dedup] move failed ${child.name}: ${e?.message || e}`);
+        }
+      }
+      await trashItem(dup.id, token);
+      console.log(`[dedup] merged & trashed dup ${dup.id} (${children.length} items moved)`);
+    } catch (e: any) {
+      console.warn(`[dedup] dup ${dup.id} cleanup failed: ${e?.message || e}`);
+    }
+  }
+  return keep.id;
+}
+
 // ── Drive: 폴더 안의 모든 항목 (파일 + 폴더) 나열 ──
 async function listFolderChildren(folderId: string, token: string): Promise<{ id: string; name: string; mimeType: string }[]> {
   const q = `'${folderId}' in parents and trashed=false`;
@@ -384,6 +455,36 @@ serve(async (req) => {
     // 3) Drive 토큰 (OAuth refresh_token 기반)
     const token = await withRetry("auth", () => getAccessToken(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN));
 
+    // 3-2) ★ 멱등성 체크: 이미 동기화된 주문이면 작업 스킵 (중복 호출 방지)
+    //      판단 기준: {고객명}_{주문일} 폴더 안에 {baseName}_정보.txt 파일이 이미 있으면 동기화 완료된 상태
+    try {
+      const customerOrdersForCheck = await findFolderByName(CUSTOMER_ORDERS_FOLDER_NAME, ROOT_ID, token);
+      if (customerOrdersForCheck) {
+        const customerFolderForCheck = await findFolderByName(customerFolderName, customerOrdersForCheck, token);
+        if (customerFolderForCheck) {
+          const expectedMemoName = `${baseName}_정보.txt`;
+          const q = `name='${expectedMemoName.replace(/'/g, "\\'")}' and '${customerFolderForCheck}' in parents and trashed=false`;
+          const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=1&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+          const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+          if (r.ok) {
+            const j = await r.json();
+            if ((j.files || []).length > 0) {
+              console.log(`[drive sync] already synced — memo "${expectedMemoName}" exists, skipping order=${orderId}`);
+              const folderUrl = `https://drive.google.com/drive/folders/${customerFolderForCheck}`;
+              return new Response(JSON.stringify({
+                ok: true,
+                skipped: 'already synced (memo exists)',
+                customer_folder_id: customerFolderForCheck,
+                customer_folder_url: folderUrl,
+              }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn(`[drive sync] idempotency check failed (proceeding): ${e?.message || e}`);
+    }
+
     // 4) 폴더 트리 준비:
     //    {ROOT}/고객주문/{고객명}_{주문일}/   + {ROOT}/작업지시서/
     const customerOrdersFolderId = await withRetry("customerOrdersFolder", () => findOrCreateFolder(CUSTOMER_ORDERS_FOLDER_NAME, ROOT_ID, token));
@@ -493,7 +594,31 @@ serve(async (req) => {
       fileErrors.push({ name: "정보.txt", error: String(e?.message || e) });
     }
 
-    const customerFolderUrl = `https://drive.google.com/drive/folders/${customerFolderId}`;
+    // 9) 동시 실행으로 같은 이름 폴더가 여러 개 생긴 경우를 정리 (race condition 방어)
+    let finalCustomerFolderId = customerFolderId;
+    try {
+      const dedupedId = await dedupFolder(customerFolderName, customerOrdersFolderId, token);
+      if (dedupedId && dedupedId !== customerFolderId) {
+        console.log(`[drive sync] dedup: customer folder consolidated ${customerFolderId} → ${dedupedId}`);
+        finalCustomerFolderId = dedupedId;
+      }
+    } catch (e: any) {
+      console.warn(`[drive sync] customer folder dedup failed: ${e?.message || e}`);
+    }
+
+    // 9-2) ★ 파일 레벨 dedup: 같은 이름 파일이 여러 개 있으면 오래된 것만 남기고 정리
+    //      이중 트리거로 인한 race condition으로 동일 파일이 여러 번 업로드된 경우 자동 정리
+    try {
+      const trashedCustomer = await dedupFilesInFolder(finalCustomerFolderId, token);
+      const trashedOrderDoc = await dedupFilesInFolder(orderDocFolderId, token);
+      if (trashedCustomer + trashedOrderDoc > 0) {
+        console.log(`[drive sync] file dedup cleaned: customer=${trashedCustomer}, orderDoc=${trashedOrderDoc}`);
+      }
+    } catch (e: any) {
+      console.warn(`[drive sync] file dedup failed: ${e?.message || e}`);
+    }
+
+    const customerFolderUrl = `https://drive.google.com/drive/folders/${finalCustomerFolderId}`;
     const orderDocFolderUrl = `https://drive.google.com/drive/folders/${orderDocFolderId}`;
     console.log(`[drive sync] done order=${orderId} customer=${customer} files=${filesUploaded.length}/${allFiles.length + 1} url=${customerFolderUrl}`);
 
@@ -501,7 +626,7 @@ serve(async (req) => {
       ok: true,
       order_date: orderDateStr,
       customer_folder_name: customerFolderName,
-      customer_folder_id: customerFolderId,
+      customer_folder_id: finalCustomerFolderId,
       customer_folder_url: customerFolderUrl,
       order_doc_folder_id: orderDocFolderId,
       order_doc_folder_url: orderDocFolderUrl,

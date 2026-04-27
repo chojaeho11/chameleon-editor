@@ -166,13 +166,8 @@
                     throw new Error("No payment verification data found.");
                 }
 
-                // ★★ 결제 확정 → Google Drive 동기화 (fire-and-forget)
-                try {
-                    await invokeFunction('sync-order-to-drive', { order_id: dbId });
-                    console.log('[drive sync] triggered for order', dbId);
-                } catch(e) {
-                    console.warn('[drive sync] enqueue failed:', e?.message || e);
-                }
+                // ★ Drive 동기화는 confirm-payment / verify-stripe-payment에서 서버 사이드로 처리됨
+                //   (이중 트리거로 인한 race condition 방지를 위해 브라우저 트리거 제거)
 
                 // 추천인 적립
                 if (refId) {

@@ -65,6 +65,46 @@ Deno.serve(async (req) => {
       )
     }
 
+    // ★★ 결제 검증 완료 → DB 업데이트 + Google Drive 동기화 (서버 사이드)
+    // 클라이언트에서도 success.html이 DB 업데이트하지만, 사용자가 탭 닫는 경우 대비
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+      if (supabaseUrl && supabaseKey && db_id) {
+        // DB 상태 업데이트
+        await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${db_id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify({
+            status: '접수됨',
+            payment_status: '결제완료',
+            payment_method: 'Stripe Card',
+            toss_payment_key: session_id,
+          }),
+        })
+
+        // Drive 동기화 트리거 (fire-and-forget)
+        fetch(`${supabaseUrl}/functions/v1/sync-order-to-drive`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+          },
+          body: JSON.stringify({ order_id: db_id }),
+        }).then(r => r.json())
+          .then(d => console.log('[drive sync] verify-stripe trigger:', d?.skipped || d?.customer_folder_url || d))
+          .catch(e => console.warn('[drive sync] verify-stripe fetch failed:', e?.message || e))
+      }
+    } catch (e: any) {
+      console.warn('[verify-stripe] post-success update failed:', e?.message || e)
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
