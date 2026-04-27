@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=424";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=424";
-import { SITE_CONFIG } from "./site-config.js?v=424";
+import { canvas } from "./canvas-core.js?v=425";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=425";
+import { SITE_CONFIG } from "./site-config.js?v=425";
 import { applySize } from "./canvas-size.js?v=425";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=424";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=425";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -4745,7 +4745,26 @@ window.updateCartQtyInput = function(idx, val) {
 export async function processBulkCartUpload(files) {
     if (!files || files.length === 0) return;
 
-    const fileList = Array.from(files);
+    const MAX_BULK_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    const allFiles = Array.from(files);
+
+    // 100MB 초과 파일 분리 — 큰 파일은 Drive 안내
+    const oversized = allFiles.filter(f => f.size > MAX_BULK_FILE_SIZE);
+    const fileList = allFiles.filter(f => f.size <= MAX_BULK_FILE_SIZE);
+
+    if (oversized.length > 0) {
+        const list = oversized.map(f => `• ${f.name} (${(f.size/1024/1024).toFixed(0)}MB)`).join('\n');
+        alert(
+            `다음 ${oversized.length}개 파일은 100MB를 초과해 업로드되지 않았습니다:\n\n${list}\n\n` +
+            `📁 큰 파일 업로드 방법:\n` +
+            `① 우선 작은 파일들로 결제 진행\n` +
+            `② 결제 후 자동 생성되는 구글 드라이브 폴더(고객명_오늘날짜)에 직접 업로드\n` +
+            `③ 또는 카카오톡 / 이메일(design@chameleon.design)로 전송\n\n` +
+            `※ 다음 단계로 직접 안내드립니다.`
+        );
+    }
+
+    if (fileList.length === 0) return; // 100MB 이하 파일이 없으면 종료
 
     const loading = document.getElementById("loading");
     if(loading) {
