@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=427";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=427";
-import { SITE_CONFIG } from "./site-config.js?v=427";
-import { applySize } from "./canvas-size.js?v=427";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=427";
+import { canvas } from "./canvas-core.js?v=428";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=428";
+import { SITE_CONFIG } from "./site-config.js?v=428";
+import { applySize } from "./canvas-size.js?v=428";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=428";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,

@@ -15,14 +15,14 @@
 //
 // 폴더 구조:
 //   {루트(다크팩토리)}/
-//     {YYYY-MM-DD}/                                      ← 오늘 날짜 (KST)
-//       {고객명}/                                        ← 같은 날 같은 고객은 누적
+//     고객주문/
+//       {고객명}_{YYYY-MM-DD}/                           ← 고객명 + 주문일 (같은 고객 같은 날은 누적)
 //         {코드}_{주문번호}_{고객명}_01.{ext}            ← 디자인 파일들
 //         {코드}_{주문번호}_{고객명}_02.{ext}
+//         {코드}_{주문번호}_{고객명}_정보.txt            ← 주문 전체 정보
 //     작업지시서/                                        ← 평면적 누적
 //       {코드}_{주문번호}_{고객명}_작업지시서.pdf
 //       {코드}_{주문번호}_{고객명}_견적서.pdf
-//       {코드}_{주문번호}_{고객명}_정보.txt              ← 주문 전체 정보
 //
 // 파일이 없어도 폴더는 생성됨.
 
@@ -36,6 +36,7 @@ const corsHeaders = {
 };
 
 const ORDER_DOC_FOLDER_NAME = "작업지시서";
+const CUSTOMER_ORDERS_FOLDER_NAME = "고객주문";
 
 // ── 폴더/파일 이름 정리 (OS 금지 문자만 제거, 한글/괄호는 유지) ──
 function sanitize(s: string): string {
@@ -56,6 +57,13 @@ function todayKST(): string {
   const m = String(kst.getUTCMonth() + 1).padStart(2, "0");
   const d = String(kst.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+// ── YYYY-MM-DD → "M월D일" (한국어 짧은 날짜) ──
+function toKoreanShortDate(yyyymmdd: string): string {
+  const m = yyyymmdd.match(/^\d{4}-(\d{2})-(\d{2})/);
+  if (!m) return yyyymmdd;
+  return `${parseInt(m[1], 10)}월${parseInt(m[2], 10)}일`;
 }
 
 // ── KST 기준 풀 타임스탬프 ──
@@ -164,6 +172,34 @@ async function uploadFile(
   if (!r.ok) throw new Error(`upload ${name}: ${r.status} ${await r.text()}`);
   const j = await r.json();
   return j.id;
+}
+
+// ── Drive: 폴더 안의 모든 항목 (파일 + 폴더) 나열 ──
+async function listFolderChildren(folderId: string, token: string): Promise<{ id: string; name: string; mimeType: string }[]> {
+  const q = `'${folderId}' in parents and trashed=false`;
+  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType)&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) throw new Error(`list children: ${r.status} ${await r.text()}`);
+  const j = await r.json();
+  return j.files || [];
+}
+
+// ── Drive: 파일/폴더 부모 변경 (이동) ──
+async function moveItem(itemId: string, fromParent: string, toParent: string, token: string): Promise<void> {
+  const url = `https://www.googleapis.com/drive/v3/files/${itemId}?addParents=${toParent}&removeParents=${fromParent}&supportsAllDrives=true&fields=id,parents`;
+  const r = await fetch(url, { method: "PATCH", headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) throw new Error(`move: ${r.status} ${await r.text()}`);
+}
+
+// ── Drive: 폴더(또는 파일) 삭제 (휴지통으로 이동) ──
+async function trashItem(itemId: string, token: string): Promise<void> {
+  const url = `https://www.googleapis.com/drive/v3/files/${itemId}?supportsAllDrives=true`;
+  const r = await fetch(url, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ trashed: true }),
+  });
+  if (!r.ok) throw new Error(`trash: ${r.status} ${await r.text()}`);
 }
 
 // ── 재시도 헬퍼 ──
@@ -336,18 +372,55 @@ serve(async (req) => {
     const customerRaw = order.manager_name || "GUEST";
     const customer = sanitize(customerRaw);
     const orderNo = sanitize(String(order.id || "NOID"));
-    const dateStr = todayKST();
+    // 주문일 기준: order.order_date 우선, 없으면 KST 오늘
+    const orderDateStr = (order.order_date && /^\d{4}-\d{2}-\d{2}/.test(String(order.order_date)))
+      ? String(order.order_date).slice(0, 10)
+      : todayKST();
+    // 폴더명용 짧은 한국어 날짜 (예: 4월27일)
+    const orderDateShort = toKoreanShortDate(orderDateStr);
+    const customerFolderName = sanitize(`${customerRaw}_${orderDateShort}`);
     const baseName = `${code}_${orderNo}_${customer}`;  // 파일 prefix
 
     // 3) Drive 토큰 (OAuth refresh_token 기반)
     const token = await withRetry("auth", () => getAccessToken(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN));
 
     // 4) 폴더 트리 준비:
-    //    {ROOT}/{날짜}/{고객명}/    + {ROOT}/작업지시서/
-    const dateFolderId = await withRetry("dateFolder", () => findOrCreateFolder(dateStr, ROOT_ID, token));
-    const customerFolderId = await withRetry("customerFolder", () => findOrCreateFolder(customer, dateFolderId, token));
+    //    {ROOT}/고객주문/{고객명}_{주문일}/   + {ROOT}/작업지시서/
+    const customerOrdersFolderId = await withRetry("customerOrdersFolder", () => findOrCreateFolder(CUSTOMER_ORDERS_FOLDER_NAME, ROOT_ID, token));
+    const customerFolderId = await withRetry("customerFolder", () => findOrCreateFolder(customerFolderName, customerOrdersFolderId, token));
     const orderDocFolderId = await withRetry("orderDocFolder", () => findOrCreateFolder(ORDER_DOC_FOLDER_NAME, ROOT_ID, token));
-    console.log(`[drive sync] folders ready: ${dateStr}/${customer} (${customerFolderId}), ${ORDER_DOC_FOLDER_NAME} (${orderDocFolderId})`);
+    console.log(`[drive sync] folders ready: ${CUSTOMER_ORDERS_FOLDER_NAME}/${customerFolderName} (${customerFolderId}), ${ORDER_DOC_FOLDER_NAME} (${orderDocFolderId})`);
+
+    // 4-2) ★ 고객이 미리 만들어둔 {고객명} 폴더 (날짜 접미사 없음) 자동 병합
+    //      예: 고객이 "진기효" 폴더에 큰 파일 업로드 → 주문 시 "진기효_4월27일"로 자동 이전
+    let mergedFromManual = 0;
+    try {
+      const manualFolderId = await findFolderByName(customer, customerOrdersFolderId, token);
+      if (manualFolderId && manualFolderId !== customerFolderId) {
+        console.log(`[drive sync] manual folder found: ${customer} (${manualFolderId}) — merging into ${customerFolderName}`);
+        const children = await listFolderChildren(manualFolderId, token);
+        for (const child of children) {
+          try {
+            await moveItem(child.id, manualFolderId, customerFolderId, token);
+            mergedFromManual++;
+          } catch (e: any) {
+            console.warn(`[drive sync] move failed: ${child.name} — ${e?.message || e}`);
+          }
+        }
+        console.log(`[drive sync] merged ${mergedFromManual}/${children.length} items from manual folder`);
+        // 모든 항목 이동 성공 시 빈 폴더 휴지통으로
+        if (mergedFromManual === children.length && children.length > 0) {
+          try {
+            await trashItem(manualFolderId, token);
+            console.log(`[drive sync] empty manual folder trashed: ${customer}`);
+          } catch (e: any) {
+            console.warn(`[drive sync] trash empty folder failed: ${e?.message || e}`);
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn(`[drive sync] manual folder merge skipped: ${e?.message || e}`);
+    }
 
     // 5) 파일 분류
     const allFiles = (Array.isArray(order.files) ? order.files : [])
@@ -406,13 +479,13 @@ serve(async (req) => {
       }
     }
 
-    // 8) 정보 메모 (txt) 업로드 — 항상 생성
+    // 8) 정보 메모 (txt) — 항상 생성, 고객 폴더({날짜}/{고객명}/) 안에 저장
     try {
       const memoContent = buildOrderMemo(order);
       const memoBytes = new TextEncoder().encode(memoContent);
       const memoName = `${baseName}_정보.txt`;
       await withRetry("memo", () =>
-        uploadFile(memoName, orderDocFolderId, "text/plain; charset=utf-8", memoBytes, token)
+        uploadFile(memoName, customerFolderId, "text/plain; charset=utf-8", memoBytes, token)
       );
       filesUploaded.push(memoName);
     } catch (e: any) {
@@ -426,11 +499,13 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      date: dateStr,
+      order_date: orderDateStr,
+      customer_folder_name: customerFolderName,
       customer_folder_id: customerFolderId,
       customer_folder_url: customerFolderUrl,
       order_doc_folder_id: orderDocFolderId,
       order_doc_folder_url: orderDocFolderUrl,
+      merged_from_manual: mergedFromManual,
       files_uploaded: filesUploaded.length,
       files_failed: fileErrors.length,
       file_errors: fileErrors,
