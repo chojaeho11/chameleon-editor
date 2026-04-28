@@ -5115,7 +5115,17 @@ function _syncMetroFee() {
     // 메트로 옵션이 켜져있으면 합산 fee를 quote_shipping에 반영 (요약 표시용)
     const inst = localStorage.getItem('chameleon_metro_install') === '1';
     const rem  = localStorage.getItem('chameleon_metro_removal') === '1';
-    if (!inst && !rem) return;
+    if (!inst && !rem) {
+        // 둘 다 해제 → 메트로 quote_shipping이 남아있으면 제거 (다른 배송 옵션은 보존)
+        try {
+            const sd = JSON.parse(localStorage.getItem('chameleon_quote_shipping') || '{}');
+            if (sd.shipping_region === 'metro') {
+                localStorage.removeItem('chameleon_quote_shipping');
+                window._nonMetroFeeApplied = 0;
+            }
+        } catch(e) {}
+        return;
+    }
     let total = 0; const labels = [];
     if (inst) { total += 100000; labels.push('수도권 유료설치'); }
     if (rem)  { total += 100000; labels.push('수도권 철거'); }
