@@ -399,7 +399,9 @@ export default {
         if (!isPrerender && BOT_UA.test(ua) && !path.includes('.')) {
             // Skip admin/internal paths
             const skipPaths = ['board', 'mypage', 'success', 'fail', 'partner', 'global_admin', 'driver', 'admin_m_secret_882', 'marketing_bot'];
-            if (!skipPaths.includes(path)) {
+            // SEO 최우선: 정적 랜딩 페이지가 있는 경로는 봇도 그 페이지를 보도록 동적 prerender 스킵
+            const STATIC_LANDING_PATHS = ['honeycomb', 'honeycomb-board', 'paper-stand', 'raw-board', 'franchise'];
+            if (!skipPaths.includes(path) && !STATIC_LANDING_PATHS.includes(path)) {
                 // Pages with custom-built HTML (no SPA route → skip Prerender.io)
                 const CUSTOM_LANDING = ['editor'];
                 // ★ ?product= 쿼리파라미터가 있으면 Prerender.io 건너뛰기 (SPA가 홈으로 렌더링됨)
@@ -705,6 +707,8 @@ ${hreflangTags('/editor')}
             'paper-stand': '/paper_stand.html',
             'raw-board': '/raw_board.html',
             'franchise': '/franchise.html',
+            'honeycomb': '/honeycomb.html',
+            'honeycomb-board': '/honeycomb.html',
         };
         if (STANDALONE_PAGES[path]) {
             const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);

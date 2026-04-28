@@ -1,9 +1,9 @@
 console.log('🔵 order.js v174 loaded');
-import { canvas } from "./canvas-core.js?v=430";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=430";
-import { SITE_CONFIG } from "./site-config.js?v=430";
-import { applySize } from "./canvas-size.js?v=430";
-import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=430";
+import { canvas } from "./canvas-core.js?v=431";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=431";
+import { SITE_CONFIG } from "./site-config.js?v=431";
+import { applySize } from "./canvas-size.js?v=431";
+import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=431";
 import {
     generateOrderSheetPDF,
     generateQuotationPDF,
@@ -11,7 +11,7 @@ import {
     generateRasterPDF,
     generateReceiptPDF,
     generateTransactionStatementPDF
-} from "./export.js?v=430";
+} from "./export.js?v=431";
 
 // [안전장치] 번역 함수가 없으면 기본값 반환
 window.t = window.t || function(key, def) { return def || key; };
@@ -2012,7 +2012,7 @@ async function addCanvasToCart() {
     let boxLayoutPdfUrl = null;
     if (window.__boxMode && window.__boxNesting && window.__boxDims) {
         try {
-            const { generateBoxLayoutPDF } = await import('./export.js?v=430');
+            const { generateBoxLayoutPDF } = await import('./export.js?v=431');
             const layoutBlob = await generateBoxLayoutPDF(
                 window.__boxNesting.sheets,
                 window.__boxDims,
@@ -3553,7 +3553,7 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             if (loading) loading.querySelector('p').innerText = `${window.t('msg_converting_design', "Converting design...")} (${i+1}/${cartData.length})`;
             try {
                 const targetPages = (item.pages && item.pages.length > 0) ? item.pages : [item.json];
-                const { generateDesignPNG } = await import('./export.js?v=430');
+                const { generateDesignPNG } = await import('./export.js?v=431');
 
                 if (targetPages.length > 1) {
                     // ★ 멀티페이지 (종이매대 등): 각 face를 개별 PNG로 생성·업로드

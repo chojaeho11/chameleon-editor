@@ -353,8 +353,8 @@
     <xhtml:link rel="alternate" hreflang="de" href="https://www.cafe3355.com/honeycomb?lang=de"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://www.cafe3355.com/honeycomb?lang=fr"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://chameleon.design/honeycomb"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.cafe0101.com/honeycomb</loc>
