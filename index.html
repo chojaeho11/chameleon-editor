@@ -12493,17 +12493,7 @@ if (w >= 20 && h >= 20) {
 
         // 6. 실행 (에디터 or 장바구니)
 
-        // ★ 패브릭인쇄22222: 항상 에디터로 이동 (장바구니/파일업로드도 에디터 경유)
         const _fabricTopCat = window._getTopCategoryCode && window._getTopCategoryCode(product.category);
-        if (_fabricTopCat === '22222' && mode !== 'editor') {
-            // 파일 업로드 후에도 에디터로 이동
-            if (mode === 'upload') {
-                // 파일 업로드 먼저 처리 후 에디터로 이동
-                // (아래에서 upload 처리 후 에디터 이동 로직 추가)
-            } else {
-                mode = 'editor'; // cart → editor 강제 전환
-            }
-        }
 
         // ★ 패브릭 가이드 정보 저장 (에디터에서 사용)
         if (_fabricTopCat === '22222') {
