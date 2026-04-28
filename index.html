@@ -295,10 +295,14 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
     // 국가별 FAQ 데이터
     var faqData = {
         KR: [
-            { q:'최소 주문 수량이 있나요?', a:'아니요, 1개부터 주문 가능합니다. 소량 주문도 환영합니다.' },
+            { q:'허니콤보드란 무엇인가요?', a:'허니콤보드는 100% 종이로 만든 친환경 보드입니다. 내부가 벌집(허니콤) 구조로 되어 있어 가볍지만 단단하며, 팝업스토어·전시부스·매장 디스플레이·등신대 제작에 가장 많이 사용됩니다. 카멜레온프린팅은 국내 1위 허니콤보드 인쇄 전문 업체입니다.' },
+            { q:'허니콤보드 가격은 얼마인가요?', a:'허니콤보드 가격은 사이즈와 두께(10mm/16mm/20mm), 인쇄 방식에 따라 달라집니다. 사이트에서 사이즈 입력 시 즉시 견적이 자동 산출되며, 최저 10,000원부터 주문 가능합니다.' },
+            { q:'허니콤보드 사이즈는 어떻게 정해지나요?', a:'가로·세로 1mm 단위로 자유롭게 입력 가능합니다. 한 장 기준 최대 2400×2400mm까지 제작되며, 그 이상은 분할 출력 후 조립합니다.' },
+            { q:'허니콤보드와 일반 폼보드의 차이점은?', a:'허니콤보드는 100% 종이로 친환경적이고 재활용이 가능한 반면, 일반 폼보드는 플라스틱(EPS) 소재라 재활용이 어렵습니다. 허니콤보드가 더 가볍고 친환경 디스플레이에 적합합니다.' },
+            { q:'허니콤보드 가벽은 어떻게 설치하나요?', a:'별도 공구 없이 끼움식·부착식으로 간편 설치됩니다. 수도권은 카멜레온프린팅에서 직접 설치 서비스도 제공합니다.' },
+            { q:'최소 주문 수량이 있나요?', a:'아니요, 허니콤보드 1장부터 주문 가능합니다. 소량 주문도 환영합니다.' },
             { q:'무료 디자인 에디터는 어떻게 사용하나요?', a:'상품을 선택 후 "디자인하기" 버튼을 클릭하면 브라우저에서 바로 디자인할 수 있습니다. 별도 프로그램 설치 불필요.' },
-            { q:'배송은 얼마나 걸리나요?', a:'국내 기준 평균 2-3일, 당일 배송 옵션도 있습니다.' },
-            { q:'허니콤보드와 일반 폼보드의 차이점은?', a:'허니콤보드는 골판지 허니콤 구조로 일반 폼보드보다 친환경적이고 가볍습니다. 재활용 가능합니다.' }
+            { q:'배송은 얼마나 걸리나요?', a:'오전 주문 시 당일 출고 가능합니다(영업일 기준). 국내 평균 1~3일, 수도권은 직접 설치 서비스도 가능합니다.' }
         ],
         JP: [
             { q:'最小注文数量はありますか？', a:'いいえ、1個から注文可能です。小ロット注文も歓迎します。' },
@@ -342,10 +346,23 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
             "hasOfferCatalog": {
                 "@type": "OfferCatalog",
                 "name": cc === 'JP' ? '印刷製品カタログ' : cc === 'KR' ? '인쇄 제품 카탈로그' : 'Print Product Catalog',
-                "itemListElement": [
-                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'ハニカムボード印刷' : cc === 'KR' ? '허니콤보드 인쇄' : 'Honeycomb Board Printing' } },
-                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? 'ファブリック印刷' : cc === 'KR' ? '패브릭 인쇄' : 'Fabric Printing' } },
-                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": cc === 'JP' ? '紙什器制作' : cc === 'KR' ? '종이매대 제작' : 'Cardboard Display Stand' } }
+                "itemListElement": cc === 'KR' ? [
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "허니콤보드 인쇄" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "허니콤보드 가벽 제작" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "허니콤보드 등신대 제작" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "허니콤보드 전시부스" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "허니콤보드 백월(Back Wall)" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "패브릭 인쇄" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "종이매대 제작" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "팝업스토어 인쇄" } }
+                ] : cc === 'JP' ? [
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "ハニカムボード印刷" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "ファブリック印刷" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "紙什器制作" } }
+                ] : [
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Honeycomb Board Printing" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fabric Printing" } },
+                    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cardboard Display Stand" } }
                 ]
             }
         },
@@ -499,7 +516,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=431">
+<link rel="stylesheet" href="./style.css?v=432">
 
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
@@ -570,7 +587,7 @@ window.loadEditorLibraries = function() {
 // 스플래시 안전장치: 2초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},2000);
 </script>
-<script src="toast.js?v=431"></script>
+<script src="toast.js?v=432"></script>
 <script>
 // v175: 서비스 워커 + 모든 캐시 강제 삭제
 if ('serviceWorker' in navigator) {
@@ -711,39 +728,75 @@ if ('caches' in window) {
 
 <div id="startScreen">
 
-    <!-- ★ SEO: 검색엔진(특히 네이버)이 JS 실행 없이도 키워드를 인식할 수 있도록 정적 콘텐츠 노출 -->
+    <!-- ★ SEO: 검색엔진(특히 네이버 Yeti, 다음 Daumoa)이 JS 실행 없이도 키워드를 인식할 수 있도록 정적 콘텐츠 노출 -->
     <noscript>
         <div style="max-width:960px;margin:24px auto;padding:24px;font-family:sans-serif;line-height:1.7;color:#1e293b;">
             <h1 style="font-size:28px;font-weight:800;margin-bottom:16px;">허니콤보드 인쇄·가벽·디스플레이 전문 — 카멜레온프린팅</h1>
             <p style="font-size:16px;color:#475569;margin-bottom:20px;">
-                <strong>카멜레온프린팅</strong>은 <strong>허니콤보드 인쇄·가벽·등신대·전시부스</strong> 제작 전문 업체입니다.
-                100% 친환경 종이로 제작된 <strong>허니콤보드</strong>는 가볍고 튼튼하며 재활용이 가능해 팝업스토어, 전시회, 매장 디스플레이에 최적화된 소재입니다.
-                무료 온라인 디자인 에디터로 직접 디자인부터 인쇄, 전국 당일 배송까지 한번에 처리됩니다.
+                <strong>카멜레온프린팅</strong>은 국내 1위 <strong>허니콤보드</strong> 인쇄·가벽·등신대·전시부스 제작 전문 업체입니다.
+                <strong>허니콤보드</strong>는 종이를 벌집(Honeycomb) 구조로 가공한 친환경 100% 종이 소재로,
+                가볍고 튼튼하며 재활용이 가능해 팝업스토어, 전시회, 매장 디스플레이, 백월(Back Wall), 등신대 제작에 가장 많이 사용됩니다.
+                카멜레온프린팅의 <strong>허니콤보드</strong>는 1mm 단위 맞춤 사이즈, 10/16/20mm 두께 선택, 오전 주문 시 당일 출고가 가능합니다.
+                무료 온라인 디자인 에디터로 직접 디자인부터 인쇄, 전국 배송, 수도권 직접 설치까지 한번에 처리됩니다.
             </p>
-            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">주요 제품</h2>
+
+            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">허니콤보드란?</h2>
+            <p style="font-size:15px;color:#475569;">
+                <strong>허니콤보드(Honeycomb Board)</strong>는 종이를 벌집 모양으로 가공해 강도와 경량성을 동시에 갖춘 친환경 보드입니다.
+                일반 폼보드(EPS, 플라스틱 소재) 대비 재활용이 가능하고 친환경적이며, 무게는 가볍지만 강도가 높아
+                <strong>허니콤보드 가벽</strong>, <strong>허니콤보드 등신대</strong>, <strong>허니콤보드 전시부스</strong>, 매장 POP, 백월 등에 적합합니다.
+            </p>
+
+            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">허니콤보드 주요 활용</h2>
             <ul style="margin-left:20px;font-size:15px;">
-                <li><a href="/honeycomb">허니콤보드 인쇄·가벽·등신대</a> — 친환경 종이 허니콤보드, 맞춤 사이즈 제작</li>
-                <li><a href="/honeycomb">허니콤보드 가격·사이즈 안내</a> — 1mm 단위 맞춤 / 당일 출고</li>
-                <li><a href="/?_p=fabric">패브릭 인쇄</a> — 폴리에스터·면 천 위 직접 인쇄</li>
-                <li><a href="/paper_stand.html">종이매대·등신대</a> — 행사·매장 디스플레이</li>
+                <li><strong>허니콤보드 가벽</strong> — 전시·촬영장 가벽으로 끼움식 조립, 재사용 가능</li>
+                <li><strong>허니콤보드 등신대(스탠디)</strong> — 인물·캐릭터 등신대, 행사·매장 홍보용</li>
+                <li><strong>허니콤보드 전시부스</strong> — 팝업스토어, 박람회 부스, 단기 행사장</li>
+                <li><strong>허니콤보드 백월(Back Wall)</strong> — 전시 부스 후면, 포토존 배경 대형 패널</li>
+                <li><strong>허니콤보드 매장 디스플레이</strong> — POP 광고, 매대, 입체 디스플레이</li>
+                <li><strong>허니콤보드 친환경 포장재</strong> — 플라스틱 대체 ESG 포장재</li>
+            </ul>
+
+            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">카멜레온프린팅 허니콤보드 특장점</h2>
+            <ul style="margin-left:20px;font-size:15px;">
+                <li><strong>국내 1위 허니콤보드 인쇄 전문</strong> — 국내 최대 라인업, 누적 제작 1,000건 이상</li>
+                <li><strong>친환경 100% 종이</strong> — 재활용·생분해 가능, ESG 인증 대응</li>
+                <li><strong>1mm 단위 맞춤 사이즈</strong> — 가로·세로 최대 2400×2400mm까지 한 장 제작</li>
+                <li><strong>두께 선택</strong> — 10mm / 16mm / 20mm 두께 다양</li>
+                <li><strong>당일 출고</strong> — 오전 주문 시 당일 출고 (영업일 기준)</li>
+                <li><strong>최저 10,000원부터</strong> — 사이즈 입력 시 즉시 견적 자동 산출</li>
+                <li><strong>무료 디자인 에디터</strong> — 온라인에서 직접 디자인, 디자인비 0원</li>
+                <li><strong>수도권 직접 설치</strong> — 전시·팝업스토어 현장 설치 서비스</li>
+            </ul>
+
+            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">취급 제품</h2>
+            <ul style="margin-left:20px;font-size:15px;">
+                <li><a href="/honeycomb">허니콤보드 인쇄·가벽·등신대 (전체)</a></li>
+                <li><a href="/?_p=fabric">패브릭 인쇄</a> — 폴리에스터·면 천 직접 인쇄</li>
+                <li><a href="/paper-stand">종이매대·등신대</a> — 친환경 디스플레이</li>
                 <li><a href="/?_p=banner">배너·현수막</a> — 실사출력·포맥스 인쇄</li>
                 <li><a href="/?_p=acrylic">아크릴 굿즈·키링</a> — UV 인쇄</li>
             </ul>
-            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">왜 카멜레온프린팅인가요?</h2>
-            <ul style="margin-left:20px;font-size:15px;">
-                <li><strong>국내 1위 허니콤보드 인쇄 전문</strong> — 국내 최대 라인업, 1mm 단위 맞춤 제작</li>
-                <li><strong>친환경 100% 종이</strong> — 재활용·생분해 가능한 허니콤 종이</li>
-                <li><strong>당일 출고</strong> — 오전 주문 시 당일 출고 가능</li>
-                <li><strong>전국 무료배송</strong> — 일정 금액 이상 주문 시 전국 무료배송</li>
-                <li><strong>무료 디자인 에디터</strong> — 온라인에서 바로 디자인 작업</li>
-                <li><strong>설치 서비스</strong> — 수도권 전시·팝업스토어 직접 설치</li>
-            </ul>
-            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">자주 사용되는 키워드</h2>
-            <p style="font-size:14px;color:#64748b;">
-                허니콤보드, 허니콤보드 인쇄, 허니콤보드 가벽, 허니콤보드 가격, 허니콤보드 사이즈, 허니콤보드 제작, 허니콤 종이, 허니콤 가벽, 종이매대, 등신대 제작, 팝업스토어 인쇄, 전시부스 제작, 백월 디자인, 패브릭 인쇄, 친환경 인쇄
+
+            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">허니콤보드 자주 묻는 질문</h2>
+            <h3 style="font-size:16px;font-weight:700;margin-top:14px;">Q. 허니콤보드 가격은 얼마인가요?</h3>
+            <p style="font-size:14px;color:#475569;">사이즈와 두께(10/16/20mm)에 따라 다릅니다. 최저 10,000원부터, 사이트에서 사이즈 입력 시 즉시 견적이 산출됩니다.</p>
+            <h3 style="font-size:16px;font-weight:700;margin-top:14px;">Q. 허니콤보드 사이즈는 어떻게 정해지나요?</h3>
+            <p style="font-size:14px;color:#475569;">가로·세로 1mm 단위로 자유 입력 가능, 한 장 기준 최대 2400×2400mm까지 제작됩니다.</p>
+            <h3 style="font-size:16px;font-weight:700;margin-top:14px;">Q. 허니콤보드 제작 기간은?</h3>
+            <p style="font-size:14px;color:#475569;">오전 주문 시 당일 출고 가능합니다(영업일 기준).</p>
+            <h3 style="font-size:16px;font-weight:700;margin-top:14px;">Q. 허니콤보드 가벽은 어떻게 설치하나요?</h3>
+            <p style="font-size:14px;color:#475569;">별도 공구 없이 끼움식·부착식으로 간편 설치, 수도권 직접 설치 서비스 제공.</p>
+
+            <h2 style="font-size:22px;font-weight:700;margin:24px 0 12px;">검색 키워드</h2>
+            <p style="font-size:13px;color:#64748b;">
+                허니콤보드, 허니콤보드 인쇄, 허니콤보드 가격, 허니콤보드 사이즈, 허니콤보드 가벽, 허니콤보드 등신대,
+                허니콤보드 제작, 허니콤보드 전시, 허니콤보드 백월, 허니콤보드 친환경, 허니콤 가벽, 허니콤 종이,
+                카멜레온프린팅, 종이매대, 등신대 제작, 팝업스토어 인쇄, 전시부스 제작, 백월 디자인, 패브릭 인쇄, 친환경 인쇄
             </p>
-            <p style="margin-top:24px;font-size:13px;color:#94a3b8;">
-                ※ 본 페이지는 JavaScript가 비활성화된 환경에서 표시되는 검색엔진 친화적 콘텐츠입니다. 실제 서비스는 <a href="/">메인 페이지</a>에서 이용 가능합니다.
+            <p style="margin-top:20px;font-size:13px;color:#94a3b8;">
+                ※ 본 영역은 검색엔진 봇이 JavaScript 실행 없이 콘텐츠를 인식할 수 있도록 제공되는 SEO 콘텐츠입니다.
+                실제 서비스는 <a href="/">카멜레온프린팅 메인 페이지</a>에서 이용 가능합니다.
             </p>
         </div>
     </noscript>
@@ -6393,30 +6446,30 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=431"></script>
-<script type="module" src="./canvas-core.js?v=431"></script>
-<script src="./wall-3d-preview.js?v=431" defer></script>
-<script src="./wall-3d-walls.js?v=431" defer></script>
-<script type="module" src="./canvas-size.js?v=431"></script>
-<script type="module" src="./canvas-guides.js?v=431"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=431"></script>
-<script type="module" src="./canvas-objects.js?v=431"></script>
-<script type="module" src="./canvas-image.js?v=431"></script>
-<script type="module" src="./canvas-template.js?v=431"></script>
-<script type="module" src="./canvas-ai.js?v=431"></script>
-<script type="module" src="./canvas-retouch.js?v=431"></script>
-<script type="module" src="./canvas-utils.js?v=431"></script>
-<script type="module" src="./shortcuts.js?v=431"></script>
-<script type="module" src="./context-menu.js?v=431"></script>
-<script type="module" src="./export.js?v=431"></script>
+<script type="module" src="./config.js?v=432"></script>
+<script type="module" src="./canvas-core.js?v=432"></script>
+<script src="./wall-3d-preview.js?v=432" defer></script>
+<script src="./wall-3d-walls.js?v=432" defer></script>
+<script type="module" src="./canvas-size.js?v=432"></script>
+<script type="module" src="./canvas-guides.js?v=432"></script>
+<script type="module" src="./canvas-zoom-pan.js?v=432"></script>
+<script type="module" src="./canvas-objects.js?v=432"></script>
+<script type="module" src="./canvas-image.js?v=432"></script>
+<script type="module" src="./canvas-template.js?v=432"></script>
+<script type="module" src="./canvas-ai.js?v=432"></script>
+<script type="module" src="./canvas-retouch.js?v=432"></script>
+<script type="module" src="./canvas-utils.js?v=432"></script>
+<script type="module" src="./shortcuts.js?v=432"></script>
+<script type="module" src="./context-menu.js?v=432"></script>
+<script type="module" src="./export.js?v=432"></script>
 <script type="module" src="./order.js?v=455"></script>
-<script type="module" src="./login.js?v=431"></script>
-<script type="module" src="./my-design.js?v=431"></script>
-<script type="module" src="./ppt-mode.js?v=431"></script>
-<script type="module" src="./main.js?v=431"></script>
+<script type="module" src="./login.js?v=432"></script>
+<script type="module" src="./my-design.js?v=432"></script>
+<script type="module" src="./ppt-mode.js?v=432"></script>
+<script type="module" src="./main.js?v=432"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=431";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=432";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -7341,7 +7394,7 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
-<script src="./text-wizard.js?v=431"></script> 
+<script src="./text-wizard.js?v=432"></script> 
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -7635,11 +7688,11 @@ window.filterFxCards = function(cat, btn) {
 </html>
 
 <script type="module">
-    // ★ 여기 파일명 뒤에 ?v=431 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=431';
+    // ★ 여기 파일명 뒤에 ?v=432 를 꼭 붙여야 캐시가 깨집니다!
+    import { canvas, setMaxLimits } from './canvas-core.js?v=432';
     import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=455'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=431';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=431';
+    import { applySize } from './canvas-size.js?v=432';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=432';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -9298,7 +9351,7 @@ window.applyCanvasCrop = function() {
     });
 
     // 새 대지 크기 적용
-    import('./canvas-size.js?v=431').then(mod => {
+    import('./canvas-size.js?v=432').then(mod => {
         if (mod.applySize) {
             mod.applySize(Math.round(cropW), Math.round(cropH), 'CroppedCustom', 'standard', 'resize');
             // 오브젝트 다시 추가 (applySize가 resize 모드에서 보존)
@@ -11902,7 +11955,7 @@ if (w >= 20 && h >= 20) {
         const pricePerSheet = product._original_price || product.price || 0;
 
         // box-nesting.js의 calculateBoxPrice 동적 임포트
-        import('./box-nesting.js?v=431').then(mod => {
+        import('./box-nesting.js?v=432').then(mod => {
             const result = mod.calculateBoxPrice(w, h, d, pricePerSheet);
 
             if (result.error) {
@@ -12239,7 +12292,7 @@ if (w >= 20 && h >= 20) {
         window.__fabricGuideConfig = config;
 
         // 캔버스 가이드 재적용
-        import('./canvas-ai.js?v=431').then(mod => {
+        import('./canvas-ai.js?v=432').then(mod => {
             if (mod.applyFabricGuides) mod.applyFabricGuides(config);
         }).catch(e => console.error('Fabric guide update error:', e));
     };
@@ -12526,14 +12579,14 @@ if (w >= 20 && h >= 20) {
                     const uploadBtn = document.getElementById('btnKeyringUpload');
                     if (uploadBtn) uploadBtn.style.display = 'none';
 
-                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=431');
+                    const { openMiniKeyringEditor } = await import('./keyring-mini-editor.js?v=432');
                     openMiniKeyringEditor(
                         container, file,
                         // onConfirm: 편집 완료된 이미지 + 칼선 dataURL
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=431')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=432')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -12585,7 +12638,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=431')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=432')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -13640,7 +13693,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=431');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=432');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -13658,7 +13711,7 @@ if (w >= 20 && h >= 20) {
             window.__letterSignMode = false; // 사용 후 초기화
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=431');
+                    const mod = await import('./canvas-ai.js?v=432');
                     if (mod.runDesignWizardForLetterSign) {
                         mod.runDesignWizardForLetterSign(lsData.titleText || '', lsData.bottomText || '', lsData.style || 'forest');
                     }
@@ -13674,7 +13727,7 @@ if (w >= 20 && h >= 20) {
             window.__advisorDesignPending = null;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=431');
+                    const mod = await import('./canvas-ai.js?v=432');
                     if (mod.runDesignWizard) {
                         await mod.runDesignWizard(adv.title || '', adv.style || 'forest');
                     }
@@ -13757,7 +13810,7 @@ if (w >= 20 && h >= 20) {
         if (_bizTplId && _bizTplId !== 'blank') {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=431');
+                    const mod = await import('./canvas-ai.js?v=432');
                     if (mod.applyBizCardTemplate) mod.applyBizCardTemplate(_bizTplId);
                 } catch(e) { console.error('Biz card template error:', e); }
             }, 600);
@@ -13768,7 +13821,7 @@ if (w >= 20 && h >= 20) {
             window.__promoSelection = _promoSelection;
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=431');
+                    const mod = await import('./canvas-ai.js?v=432');
                     if (mod.applyPromoPages) mod.applyPromoPages(_promoSelection);
                 } catch(e) { console.error('Promo pages error:', e); }
             }, 600);
@@ -13848,7 +13901,7 @@ if (w >= 20 && h >= 20) {
         if (window.__fabricGuideConfig) {
             setTimeout(async () => {
                 try {
-                    const mod = await import('./canvas-ai.js?v=431');
+                    const mod = await import('./canvas-ai.js?v=432');
                     if (mod.applyFabricGuides) mod.applyFabricGuides(window.__fabricGuideConfig);
                 } catch(e) { console.error('Fabric guide error:', e); }
             }, 800);
@@ -14017,7 +14070,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=431');
+                await import('./canvas-objects.js?v=432');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -15608,7 +15661,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=431';
+    import { sb, initConfig } from './config.js?v=432';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {
@@ -18772,8 +18825,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=431"></script>
-<script src="./npc-wizard.js?v=431"></script>
+<script src="./gif-maker.js?v=432"></script>
+<script src="./npc-wizard.js?v=432"></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">
