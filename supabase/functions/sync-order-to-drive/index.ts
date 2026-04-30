@@ -468,6 +468,130 @@ serve(async (req) => {
       });
     }
 
+    // ★ 모드: 'migrate_folder_names' — 옛 포맷({고객}_{날짜})과 신 포맷({날짜}_{고객}) 중복 폴더 병합
+    //    - 중복 그룹: 같은 고객+날짜 조합으로 양쪽 포맷이 다 존재
+    //    - 신 포맷이 있으면 신 포맷이 primary, 옛 포맷의 자식들을 신 포맷 폴더로 이동 후 옛 폴더 휴지통으로
+    //    - 단독 옛 포맷만 있으면 신 포맷으로 rename
+    //    - dry_run: true 옵션으로 미리보기 가능
+    if (body?.mode === 'migrate_folder_names') {
+      const dryRun = !!body?.dry_run;
+      const token = await withRetry("auth", () => getAccessToken(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN));
+      const ordersFolderId = await findFolderByName(CUSTOMER_ORDERS_FOLDER_NAME, ROOT_ID, token);
+      if (!ordersFolderId) {
+        return new Response(JSON.stringify({ error: "고객주문 folder not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const subfolders = await listFolderChildren(ordersFolderId, token);
+      const customerFolders = subfolders.filter((f: any) => f.mimeType === "application/vnd.google-apps.folder");
+
+      // Parse + group
+      const groups: Record<string, { id: string; name: string; format: 'old' | 'new' }[]> = {};
+      const skipped: string[] = [];
+      for (const f of customerFolders) {
+        const newMatch = (f.name || "").match(/^(\d+월\d+일)_(.+)$/);
+        const oldMatch = (f.name || "").match(/^(.+)_(\d+월\d+일)$/);
+        let date = "", customer = "", format: 'old' | 'new' | null = null;
+        // 신 포맷 우선 매치 (날짜가 앞)
+        if (newMatch) { date = newMatch[1]; customer = newMatch[2]; format = 'new'; }
+        else if (oldMatch) { date = oldMatch[2]; customer = oldMatch[1]; format = 'old'; }
+        else { skipped.push(f.name); continue; }
+        const key = `${date}|${customer}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push({ id: f.id, name: f.name, format });
+      }
+
+      const results: any[] = [];
+      let merged = 0, renamed = 0, errors = 0;
+      for (const [key, folders] of Object.entries(groups)) {
+        const [date, customer] = key.split('|');
+        const canonicalName = `${date}_${customer}`;
+
+        if (folders.length === 1) {
+          const only = folders[0];
+          if (only.format === 'old') {
+            // 단독 옛 포맷 → rename
+            if (!dryRun) {
+              try {
+                const r = await fetch(`https://www.googleapis.com/drive/v3/files/${only.id}?supportsAllDrives=true`, {
+                  method: 'PATCH',
+                  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name: canonicalName }),
+                });
+                if (!r.ok) throw new Error(`rename ${r.status}: ${await r.text()}`);
+                renamed++;
+              } catch (e: any) {
+                errors++;
+                results.push({ action: 'rename', from: only.name, to: canonicalName, error: e?.message || String(e) });
+                continue;
+              }
+            }
+            results.push({ action: 'rename', from: only.name, to: canonicalName, dry_run: dryRun });
+          }
+          continue;
+        }
+
+        // 중복: primary는 신 포맷 우선, 없으면 첫 번째
+        const newFmt = folders.find(f => f.format === 'new');
+        const primary = newFmt || folders[0];
+        const others = folders.filter(f => f.id !== primary.id);
+
+        let movedFiles = 0;
+        const otherDetails: any[] = [];
+        for (const other of others) {
+          try {
+            const children = await listFolderChildren(other.id, token);
+            if (!dryRun) {
+              for (const child of children) {
+                try {
+                  await moveItem(child.id, other.id, primary.id, token);
+                  movedFiles++;
+                } catch (e: any) {
+                  console.warn(`[migrate] move failed ${child.name}: ${e?.message || e}`);
+                }
+              }
+              await trashItem(other.id, token);
+            }
+            otherDetails.push({ name: other.name, children: children.length });
+          } catch (e: any) {
+            errors++;
+            otherDetails.push({ name: other.name, error: e?.message || String(e) });
+          }
+        }
+
+        // primary가 옛 포맷이면 rename
+        if (primary.format === 'old' && !dryRun) {
+          try {
+            const r = await fetch(`https://www.googleapis.com/drive/v3/files/${primary.id}?supportsAllDrives=true`, {
+              method: 'PATCH',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: canonicalName }),
+            });
+            if (r.ok) renamed++;
+          } catch (e: any) {
+            console.warn(`[migrate] rename primary failed: ${e?.message || e}`);
+          }
+        }
+
+        merged++;
+        results.push({
+          action: 'merge',
+          primary: primary.name,
+          primary_renamed_to: primary.format === 'old' ? canonicalName : null,
+          others: otherDetails,
+          files_moved: movedFiles,
+          dry_run: dryRun,
+        });
+      }
+
+      console.log(`[migrate] dry_run=${dryRun} groups=${results.length} merged=${merged} renamed=${renamed} errors=${errors} skipped=${skipped.length}`);
+      return new Response(JSON.stringify({
+        ok: true, mode: 'migrate_folder_names', dry_run: dryRun,
+        merged, renamed, errors, skipped_count: skipped.length, skipped,
+        results,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const orderId = (body?.order_id || "").toString().trim();
     if (!orderId) {
       return new Response(JSON.stringify({ error: "order_id required" }), {
