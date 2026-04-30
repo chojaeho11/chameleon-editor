@@ -100,20 +100,33 @@ Deno.serve(async (req) => {
           }),
         })
 
-        // ★★ 결제 확정 → Google Drive 자동 동기화 (서버 사이드 트리거, fire-and-forget)
-        // success.html에서도 트리거하지만, 사용자가 탭 닫아도 동기화 보장하기 위해 서버에서도 호출
+        // ★★ 결제 확정 → Google Drive 자동 동기화 (서버 사이드 backup 트리거)
+        // 핵심 트리거는 success.html의 브라우저측 호출. 여기는 보강용.
+        // EdgeRuntime.waitUntil로 응답 반환 후에도 sync 완료까지 컨텍스트 유지
+        // (없으면 fire-and-forget이 응답 직후 잘림)
         try {
-          fetch(`${supabaseUrl}/functions/v1/sync-order-to-drive`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`,
-              'apikey': supabaseKey,
-            },
-            body: JSON.stringify({ order_id: dbId }),
-          }).then(r => r.json())
-            .then(d => console.log('[drive sync] confirm-payment trigger:', d?.skipped || d?.customer_folder_url || d))
-            .catch(e => console.warn('[drive sync] confirm-payment fetch failed:', e?.message || e))
+          const syncTask = (async () => {
+            try {
+              const r = await fetch(`${supabaseUrl}/functions/v1/sync-order-to-drive`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'apikey': supabaseKey,
+                },
+                body: JSON.stringify({ order_id: dbId }),
+              })
+              const d = await r.json()
+              console.log('[drive sync] confirm-payment trigger:', d?.skipped || d?.customer_folder_url || d)
+            } catch (e: any) {
+              console.warn('[drive sync] confirm-payment failed:', e?.message || e)
+            }
+          })()
+          // @ts-ignore — Supabase Edge Function global
+          if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+            // @ts-ignore
+            EdgeRuntime.waitUntil(syncTask)
+          }
         } catch (e: any) {
           console.warn('[drive sync] confirm-payment enqueue failed:', e?.message || e)
         }

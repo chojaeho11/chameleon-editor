@@ -166,8 +166,23 @@
                     throw new Error("No payment verification data found.");
                 }
 
-                // ★ Drive 동기화는 confirm-payment / verify-stripe-payment에서 서버 사이드로 처리됨
-                //   (이중 트리거로 인한 race condition 방지를 위해 브라우저 트리거 제거)
+                // ★ Drive 동기화: 브라우저측 핵심 트리거 (서버측 트리거는 backup)
+                //   서버 fire-and-forget이 Edge Function 종료로 잘려나가는 케이스 대비
+                //   sync-order-to-drive의 멱등성 체크가 중복 호출 자동 dedup
+                try {
+                    fetch(`${SUPABASE_URL}/functions/v1/sync-order-to-drive`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'apikey': SUPABASE_KEY,
+                        },
+                        body: JSON.stringify({ order_id: dbId }),
+                        keepalive: true  // 페이지 unload 후에도 fetch 완주
+                    }).then(r => r.json())
+                      .then(d => console.log('[drive sync] browser trigger:', d?.skipped || d?.customer_folder_url || d))
+                      .catch(e => console.warn('[drive sync] browser trigger failed:', e?.message || e));
+                } catch(e) { console.warn('[drive sync] browser enqueue failed:', e?.message || e); }
 
                 // 추천인 적립
                 if (refId) {

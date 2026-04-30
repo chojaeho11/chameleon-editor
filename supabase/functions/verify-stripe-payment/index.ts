@@ -88,18 +88,33 @@ Deno.serve(async (req) => {
           }),
         })
 
-        // Drive 동기화 트리거 (fire-and-forget)
-        fetch(`${supabaseUrl}/functions/v1/sync-order-to-drive`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`,
-            'apikey': supabaseKey,
-          },
-          body: JSON.stringify({ order_id: db_id }),
-        }).then(r => r.json())
-          .then(d => console.log('[drive sync] verify-stripe trigger:', d?.skipped || d?.customer_folder_url || d))
-          .catch(e => console.warn('[drive sync] verify-stripe fetch failed:', e?.message || e))
+        // Drive 동기화 트리거 (서버 사이드 backup) — EdgeRuntime.waitUntil로 응답 후에도 컨텍스트 유지
+        try {
+          const syncTask = (async () => {
+            try {
+              const r = await fetch(`${supabaseUrl}/functions/v1/sync-order-to-drive`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'apikey': supabaseKey,
+                },
+                body: JSON.stringify({ order_id: db_id }),
+              })
+              const d = await r.json()
+              console.log('[drive sync] verify-stripe trigger:', d?.skipped || d?.customer_folder_url || d)
+            } catch (e: any) {
+              console.warn('[drive sync] verify-stripe failed:', e?.message || e)
+            }
+          })()
+          // @ts-ignore — Supabase Edge Function global
+          if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+            // @ts-ignore
+            EdgeRuntime.waitUntil(syncTask)
+          }
+        } catch (e: any) {
+          console.warn('[drive sync] verify-stripe enqueue failed:', e?.message || e)
+        }
       }
     } catch (e: any) {
       console.warn('[verify-stripe] post-success update failed:', e?.message || e)
