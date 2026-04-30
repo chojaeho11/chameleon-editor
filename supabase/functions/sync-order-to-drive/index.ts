@@ -499,7 +499,7 @@ serve(async (req) => {
       : todayKST();
     // 폴더명용 짧은 한국어 날짜 (예: 4월27일)
     const orderDateShort = toKoreanShortDate(orderDateStr);
-    const customerFolderName = sanitize(`${customerRaw}_${orderDateShort}`);
+    const customerFolderName = sanitize(`${orderDateShort}_${customerRaw}`);
     const baseName = `${code}_${orderNo}_${customer}`;  // 파일 prefix
 
     // 3) Drive 토큰 (OAuth refresh_token 기반)
@@ -556,8 +556,8 @@ serve(async (req) => {
     const orderDocFolderId = await withRetry("orderDocFolder", () => findOrCreateFolder(ORDER_DOC_FOLDER_NAME, ROOT_ID, token));
     console.log(`[drive sync] folders ready: ${CUSTOMER_ORDERS_FOLDER_NAME}/${customerFolderName} (${customerFolderId}), ${ORDER_DOC_FOLDER_NAME} (${orderDocFolderId})`);
 
-    // 4-2) ★ 고객이 미리 만들어둔 {고객명} 폴더 (날짜 접미사 없음) 자동 병합
-    //      예: 고객이 "진기효" 폴더에 큰 파일 업로드 → 주문 시 "진기효_4월27일"로 자동 이전
+    // 4-2) ★ 고객이 미리 만들어둔 {고객명} 폴더 (날짜 접두사 없음) 자동 병합
+    //      예: 고객이 "진기효" 폴더에 큰 파일 업로드 → 주문 시 "4월27일_진기효"로 자동 이전
     let mergedFromManual = 0;
     try {
       const manualFolderId = await findFolderByName(customer, customerOrdersFolderId, token);
