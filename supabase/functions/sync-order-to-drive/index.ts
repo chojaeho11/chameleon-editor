@@ -190,6 +190,20 @@ async function setFolderColor(folderId: string, colorHex: string, token: string)
 const COLOR_HAS_FILES = "#16a765";  // 초록 — 고객 파일 있음
 const COLOR_EMPTY = "#f83a22";      // 빨강 — 메모만 있음 (고객 파일 미입력)
 
+// ── Drive: 빈 폴더 마킹 — 색상 빨강 + modifiedTime을 1970으로 (수정날짜 정렬 시 맨 아래로) ──
+//    Drive UI에서 "수정 날짜 ↓" 정렬 시 빈 폴더는 자동으로 하단에 모이고
+//    파일이 들어있는 폴더는 최근 활동 순으로 상단에 정렬됨.
+//    추후 고객이 파일을 직접 업로드하면 Drive가 modifiedTime을 자동으로 현재로 갱신 → 자동으로 상단 이동.
+async function markFolderEmpty(folderId: string, token: string): Promise<void> {
+  const url = `https://www.googleapis.com/drive/v3/files/${folderId}?supportsAllDrives=true&fields=id,folderColorRgb,modifiedTime`;
+  const r = await fetch(url, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ folderColorRgb: COLOR_EMPTY, modifiedTime: "1970-01-01T00:00:00.000Z" }),
+  });
+  if (!r.ok) throw new Error(`mark folder empty: ${r.status} ${await r.text()}`);
+}
+
 // ── Drive: 폴더 안의 같은 이름 파일들 중복 제거 (가장 오래된 것만 유지) ──
 async function dedupFilesInFolder(folderId: string, token: string): Promise<number> {
   const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'&fields=files(id,name,createdTime)&pageSize=200&orderBy=createdTime&supportsAllDrives=true&includeItemsFromAllDrives=true`;
@@ -438,7 +452,11 @@ serve(async (req) => {
             !(f.name || "").endsWith("_정보.txt")
           );
           const targetColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
-          await setFolderColor(folder.id, targetColor, token);
+          if (designFiles.length > 0) {
+            await setFolderColor(folder.id, targetColor, token);
+          } else {
+            await markFolderEmpty(folder.id, token);
+          }
           results.push({ name: folder.name, design_files: designFiles.length, color: targetColor });
         } catch (e: any) {
           results.push({ name: folder.name, error: String(e?.message || e) });
@@ -529,7 +547,11 @@ serve(async (req) => {
                   !(f.name || "").endsWith("_정보.txt")
                 );
                 appliedColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
-                await setFolderColor(customerFolderForCheck, appliedColor, token);
+                if (designFiles.length > 0) {
+                  await setFolderColor(customerFolderForCheck, appliedColor, token);
+                } else {
+                  await markFolderEmpty(customerFolderForCheck, token);
+                }
               } catch (colorErr: any) {
                 console.warn(`[drive sync] skip-path color update failed: ${colorErr?.message || colorErr}`);
               }
@@ -694,7 +716,11 @@ serve(async (req) => {
       );
       const targetColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
       try {
-        await setFolderColor(finalCustomerFolderId, targetColor, token);
+        if (designFiles.length > 0) {
+          await setFolderColor(finalCustomerFolderId, targetColor, token);
+        } else {
+          await markFolderEmpty(finalCustomerFolderId, token);
+        }
         folderColorApplied = targetColor;
         console.log(`[drive sync] folder color set: ${targetColor} (${designFiles.length} design files)`);
       } catch (colorErr: any) {
