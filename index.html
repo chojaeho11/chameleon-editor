@@ -5334,11 +5334,25 @@ async function handleSubReturn() {
             background:#27272a !important; color:#ffffff !important;
             border:1px solid #525252 !important;
             color-scheme: dark;
+            padding-right: 38px !important;
+            position: relative;
         }
+        /* 캘린더 아이콘을 흰색 SVG로 교체 (모든 브라우저 동일) */
         #cartPage #cartDeliveryInfoWrap input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1) brightness(2);
-            cursor: pointer;
-            opacity: 0.85;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>") !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            background-size: 20px 20px !important;
+            background-color: transparent !important;
+            width: 24px !important;
+            height: 24px !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
+            filter: none !important;
+            margin-right: 4px;
+        }
+        #cartPage #cartDeliveryInfoWrap input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 0.7 !important;
         }
         /* 시간대 그리드 unavailable 안내 ("100만원 미만 — 시간 지정 불가") */
         #cartPage #cartDeliveryTimeGrid > div[style*="dashed"],
@@ -11552,7 +11566,7 @@ window._bkCalc = function() {
 // [수정 1] 금액 계산 함수 (단품/옵션 모두 수량 곱하기 적용)
 // [최종 수정] 금액 계산 함수 (상품과 옵션 수량 완전 분리)
 window.updateModalTotal = function() {
-    console.log('[updateModalTotal] v346 called');
+    console.log('[updateModalTotal] v347 called');
     const product = window.selectedProductForChoice;
     if(!product) return;
 
