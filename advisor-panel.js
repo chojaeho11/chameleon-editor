@@ -727,7 +727,7 @@ function _attachTooltip(el, type) {
     const lang = getLang();
     let content = '';
     if (type === 'phone') {
-        if (lang === 'kr') content = '<div style="font-weight:800;margin-bottom:6px;">📞 전화 문의</div><div>🏭 본사: 031-366-1984</div><div>👤 지숙: 010-3455-1946</div><div>👤 은미: 010-7793-5393</div><div>👤 성희: 010-3490-3328</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 평일 09:00~18:00</div>';
+        if (lang === 'kr') content = '<div style="font-weight:800;margin-bottom:6px;">📞 전화 문의</div><div>🏭 본사: 031-366-1984</div><div>👤 지숙: 010-3455-1946</div><div>👤 은미: 010-7793-5393</div><div>👤 성희: 010-3490-3328</div><div>👤 연두: 010-2525-9943</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 평일 09:00~18:00</div>';
         else if (lang === 'ja') content = '<div style="font-weight:800;margin-bottom:6px;">📞 お電話</div><div>🇯🇵 047-712-1148</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 平日 09:00〜18:00</div>';
         else content = '<div style="font-weight:800;margin-bottom:6px;">📞 Contact</div><div>✉️ design@chameleon.design</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ Weekdays 09:00-18:00 KST</div>';
     } else {
@@ -764,8 +764,10 @@ function _showPhonePopup() {
                     <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 지숙 매니저 010-3455-1946</a>
                 <a href="tel:010-7793-5393" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
                     <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 은미 매니저 010-7793-5393</a>
-                <a href="tel:010-3490-3328" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">
+                <a href="tel:010-3490-3328" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
                     <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-3490-3328</a>
+                <a href="tel:010-2525-9943" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">
+                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 연두 매니저 010-2525-9943</a>
             </div>
             <div style="background:#eff6ff;border-radius:12px;padding:12px 16px;margin-bottom:6px;">
                 <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:4px;">✉️ 이메일</div>

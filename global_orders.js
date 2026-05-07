@@ -196,6 +196,9 @@ window.requestContact = async (orderId) => {
                     <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="this.querySelector('input').checked=true">
                         <input type="radio" name="crManager" value="지숙" style="accent-color:#7c3aed;"> <b>지숙</b> 매니저
                     </label>
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="this.querySelector('input').checked=true">
+                        <input type="radio" name="crManager" value="연두" style="accent-color:#7c3aed;"> <b>연두</b> 매니저
+                    </label>
                 </div>
                 <textarea id="crReason" rows="2" placeholder="소통 요청 사유 (선택)" style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:inherit;resize:vertical;"></textarea>
                 <button onclick="submitContactReq('${orderId}','manager')" style="width:100%;margin-top:10px;padding:10px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">매니저에게 소통 요청</button>
@@ -1391,6 +1394,7 @@ window.openVipAssignModal = (id) => {
                 <button onclick="assignVipConsultant(${id},'은미')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>은미</b> 매니저</button>
                 <button onclick="assignVipConsultant(${id},'성희')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>성희</b> 매니저</button>
                 <button onclick="assignVipConsultant(${id},'지숙')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>지숙</b> 매니저</button>
+                <button onclick="assignVipConsultant(${id},'연두')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>연두</b> 매니저</button>
                 <button onclick="assignVipConsultant(${id},'본사')" style="padding:12px;border:1.5px solid #0ea5e9;border-radius:10px;background:#f0f9ff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">🏢 <b>본사</b> 직접 처리</button>
             </div>
         </div>
@@ -1545,6 +1549,7 @@ window.assignQQAndLock = async (id) => {
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="은미"> 👩 은미 매니저</label>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="성희"> 👩 성희 매니저</label>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="지숙"> 👩 지숙 매니저</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="연두"> 👩 연두 매니저</label>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="radio" name="qqMgr" value="본사"> 🏢 본사</label>
             </div>
             <div style="margin-bottom:14px;font-size:12px;color:#64748b;background:#f1f5f9;padding:10px;border-radius:8px;">🔑 고정 비밀번호: <b>1234</b></div>
@@ -1631,7 +1636,7 @@ window.loadOrders = async () => {
             // 매니저 필터 드롭다운 채우기
             const filterMgr = document.getElementById('filterManager');
             if (filterMgr) {
-                const _FM = ['은미', '성희', '지숙'];
+                const _FM = ['은미', '성희', '지숙', '연두'];
                 const managers = staffList.filter(s => s.role === 'manager' && _FM.some(n => s.name.includes(n)));
                 managers.forEach(m => {
                     const opt = document.createElement('option');
@@ -1912,8 +1917,8 @@ function createStaffSelectHTML(orderId, role, selectedId, isHqOrder) {
     // 기본 스타일 (미지정 상태)
     let style = `background-color: #ffffff; color: #334155; border: 1px solid #e2e8f0;`;
 
-    // ★ 매니저: 은미/성희/지숙만 표시 (나머지는 본사 소속)
-    const FIELD_MANAGERS = ['은미', '성희', '지숙'];
+    // ★ 매니저: 은미/성희/지숙/연두만 표시 (나머지는 본사 소속)
+    const FIELD_MANAGERS = ['은미', '성희', '지숙', '연두'];
     const filteredStaff = staffList.filter(s => {
         if (s.role !== role) return false;
         if (role === 'manager') return FIELD_MANAGERS.some(n => s.name.includes(n));

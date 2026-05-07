@@ -1475,12 +1475,13 @@ async function openDeliveryInfoModal() {
                 };
                 if (mgrLabel) mgrLabel.textContent = labels[lang] || labels['en'];
 
-                // 본사 + 매니저 버튼 (고정 4개: 본사, 은미, 성희, 지숙)
+                // 본사 + 매니저 버튼 (고정 5개: 본사, 은미, 성희, 지숙, 연두)
                 const btnConfig = [
                     { label: { kr:'🏢 본사', ja:'🏢 本社', en:'🏢 HQ', zh:'🏢 总部', es:'🏢 Sede', de:'🏢 Zentrale', fr:'🏢 Siège', ar:'🏢 المقر' }, color:'#0ea5e9', id:'__hq__' },
                     { name:'은미', label:{ kr:'👩 은미', ja:'👩 ウンミ', en:'👩 Eunmi', zh:'👩 恩美', es:'👩 Eunmi', de:'👩 Eunmi', fr:'👩 Eunmi', ar:'👩 أونمي' }, color:'#8b5cf6' },
                     { name:'성희', label:{ kr:'👩 성희', ja:'👩 ソンヒ', en:'👩 Sunghee', zh:'👩 成熙', es:'👩 Sunghee', de:'👩 Sunghee', fr:'👩 Sunghee', ar:'👩 سونغهي' }, color:'#ec4899' },
-                    { name:'지숙', label:{ kr:'👩 지숙', ja:'👩 ジスク', en:'👩 Jisook', zh:'👩 智淑', es:'👩 Jisook', de:'👩 Jisook', fr:'👩 Jisook', ar:'👩 جيسوك' }, color:'#f59e0b' }
+                    { name:'지숙', label:{ kr:'👩 지숙', ja:'👩 ジスク', en:'👩 Jisook', zh:'👩 智淑', es:'👩 Jisook', de:'👩 Jisook', fr:'👩 Jisook', ar:'👩 جيسوك' }, color:'#f59e0b' },
+                    { name:'연두', label:{ kr:'👩 연두', ja:'👩 ヨンドゥ', en:'👩 Yeondu', zh:'👩 软豆', es:'👩 Yeondu', de:'👩 Yeondu', fr:'👩 Yeondu', ar:'👩 يوندو' }, color:'#10b981' }
                 ];
 
                 const hqWrap = document.getElementById('staffManagerHqBtn');
@@ -3152,7 +3153,7 @@ async function processOrderSubmission() {
     let selectedStaffManagerId = (rawStaffMgrId && !isHqSelected) ? rawStaffMgrId : null;
     // ★ 장바구니 매니저 버튼이 문자열 이름(eunmi, sunghee 등)인 경우 DB ID로 변환
     if (selectedStaffManagerId && isNaN(Number(selectedStaffManagerId))) {
-        const _nameMap = { eunmi:'은미', sunghee:'성희', jisook:'지숙' };
+        const _nameMap = { eunmi:'은미', sunghee:'성희', jisook:'지숙', yeondu:'연두' };
         const _lookupName = _nameMap[selectedStaffManagerId.toLowerCase()] || selectedStaffManagerId;
         try {
             const { data: _mgrRow } = await sb.from('admin_staff').select('id').eq('role','manager').ilike('name', '%' + _lookupName + '%').single();

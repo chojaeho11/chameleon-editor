@@ -5471,7 +5471,8 @@ async function handleSubReturn() {
                             {value:'__hq__', isHq:true, label:hq[l]||hq['en']},
                             {value:'eunmi', label:{kr:'👩 은미',ja:'👩 ウンミ',en:'👩 Eunmi',zh:'👩 恩美',ar:'👩 أونمي',es:'👩 Eunmi',de:'👩 Eunmi',fr:'👩 Eunmi'}[l]||'Eunmi'},
                             {value:'sunghee', label:{kr:'👩 성희',ja:'👩 ソンヒ',en:'👩 Sunghee',zh:'👩 成熙',ar:'👩 سونغهي',es:'👩 Sunghee',de:'👩 Sunghee',fr:'👩 Sunghee'}[l]||'Sunghee'},
-                            {value:'jisook', label:{kr:'👩 지숙',ja:'👩 ジスク',en:'👩 Jisook',zh:'👩 智淑',ar:'👩 جيسوك',es:'👩 Jisook',de:'👩 Jisook',fr:'👩 Jisook'}[l]||'Jisook'}
+                            {value:'jisook', label:{kr:'👩 지숙',ja:'👩 ジスク',en:'👩 Jisook',zh:'👩 智淑',ar:'👩 جيسوك',es:'👩 Jisook',de:'👩 Jisook',fr:'👩 Jisook'}[l]||'Jisook'},
+                            {value:'yeondu', label:{kr:'👩 연두',ja:'👩 ヨンドゥ',en:'👩 Yeondu',zh:'👩 软豆',ar:'👩 يوندو',es:'👩 Yeondu',de:'👩 Yeondu',fr:'👩 Yeondu'}[l]||'Yeondu'}
                         ];
                         var box=document.getElementById('cartManagerBtns');
                         var hqWrap=document.getElementById('cartManagerHqBtnWrap');
@@ -6463,7 +6464,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=434"></script>
 <script type="module" src="./context-menu.js?v=434"></script>
 <script type="module" src="./export.js?v=434"></script>
-<script type="module" src="./order.js?v=455"></script>
+<script type="module" src="./order.js?v=456"></script>
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./my-design.js?v=434"></script>
 <script type="module" src="./ppt-mode.js?v=434"></script>
@@ -7616,8 +7617,10 @@ window.filterFxCards = function(cat, btn) {
                     '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 지숙 매니저 010-3455-1946</a>' +
                 '<a href="tel:010-7793-5393" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
                     '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 은미 매니저 010-7793-5393</a>' +
-                '<a href="tel:010-3490-3328" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">' +
+                '<a href="tel:010-3490-3328" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
                     '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-3490-3328</a>' +
+                '<a href="tel:010-2525-9943" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">' +
+                    '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 연두 매니저 010-2525-9943</a>' +
             '</div>' +
             // 닫기
             '<div onclick="this.closest(\'div[style*=inset]\').remove()" style="text-align:center;margin-top:14px;font-size:13px;color:#999;cursor:pointer;font-weight:600;">닫기</div>' +
@@ -7691,7 +7694,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=434 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=434';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=455'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=456'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=434';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=434';
 
@@ -8326,7 +8329,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=444').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=445').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
         import('./ai-design-hero.js?v=28').catch(e => console.warn('AI design hero init skipped:', e));
@@ -12637,7 +12640,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=455');
+                    const m = await import('./order.js?v=456');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -12707,7 +12710,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=455').then(m => {
+            import('./order.js?v=456').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -13308,7 +13311,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=455').then(m => {
+        import('./order.js?v=456').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -15559,7 +15562,7 @@ if (w >= 20 && h >= 20) {
 
         <div style="margin-bottom: 15px;">
             <label class="form-label" style="font-weight:bold; font-size:13px; margin-bottom:5px; display:block;" data-i18n="label_select_manager">담당 매니저 선택 (Optional)</label>
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px;">
+            <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px;">
                 <label class="manager-select">
                     <input type="radio" name="vipManager" value="은미 매니저" checked>
                     <div class="mgr-box" data-i18n="vip_form_mgr1">은미 매니저</div>
@@ -15573,8 +15576,12 @@ if (w >= 20 && h >= 20) {
                     <div class="mgr-box" data-i18n="vip_form_mgr3">성희 매니저</div>
                 </label>
                 <label class="manager-select">
+                    <input type="radio" name="vipManager" value="연두 매니저">
+                    <div class="mgr-box" data-i18n="vip_form_mgr4">연두 매니저</div>
+                </label>
+                <label class="manager-select">
                     <input type="radio" name="vipManager" value="본사담당자">
-                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;" data-i18n="vip_form_mgr4">본사담당자</div>
+                    <div class="mgr-box" style="background:#f1f5f9; color:#64748b;" data-i18n="vip_form_mgr5">본사담당자</div>
                 </label>
             </div>
             <style>
@@ -17839,7 +17846,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=455').then(function(mod) {
+            import('./order.js?v=456').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -18160,19 +18167,19 @@ window.dsmRenderProducts = async function(keyword) {
 
     // 기본 상담사 (DB 로드 실패 시) — 국가별
     var _mgrLabels = {
-        kr: ['지숙','은미','성희'],
-        ja: ['相談員 1','相談員 2','相談員 3'],
-        en: ['Consultant 1','Consultant 2','Consultant 3'],
-        zh: ['顾问 1','顾问 2','顾问 3'],
-        es: ['Consultor 1','Consultor 2','Consultor 3'],
-        fr: ['Conseiller 1','Conseiller 2','Conseiller 3'],
-        de: ['Berater 1','Berater 2','Berater 3'],
-        ar: ['مستشار 1','مستشار 2','مستشار 3']
+        kr: ['지숙','은미','성희','연두'],
+        ja: ['相談員 1','相談員 2','相談員 3','相談員 4'],
+        en: ['Consultant 1','Consultant 2','Consultant 3','Consultant 4'],
+        zh: ['顾问 1','顾问 2','顾问 3','顾问 4'],
+        es: ['Consultor 1','Consultor 2','Consultor 3','Consultor 4'],
+        fr: ['Conseiller 1','Conseiller 2','Conseiller 3','Conseiller 4'],
+        de: ['Berater 1','Berater 2','Berater 3','Berater 4'],
+        ar: ['مستشار 1','مستشار 2','مستشار 3','مستشار 4']
     };
     var _ml = _mgrLabels[_lang2] || _mgrLabels['en'];
     var DEFAULT_MANAGERS = _lang2 === 'kr'
-        ? [{name:'지숙', phone:'010-3455-1946'}, {name:'은미', phone:'010-7793-5393'}, {name:'성희', phone:'010-3490-3328'}]
-        : [{name:_ml[0]}, {name:_ml[1]}, {name:_ml[2]}];
+        ? [{name:'지숙', phone:'010-3455-1946'}, {name:'은미', phone:'010-7793-5393'}, {name:'성희', phone:'010-3490-3328'}, {name:'연두', phone:'010-2525-9943'}]
+        : [{name:_ml[0]}, {name:_ml[1]}, {name:_ml[2]}, {name:_ml[3]}];
 
     // ── 매니저 선택 UI 표시 ──
     function showManagerPicker(managers, msgArea) {
