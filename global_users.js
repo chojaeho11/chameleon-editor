@@ -577,6 +577,73 @@ window.deleteStaffDB = async (id) => {
     }
 };
 
+// [매니저 휴가 관리] — 휴가 시 OFF로 토글하면 챗봇/장바구니에서 회색 처리되어 선택 불가
+// 데이터: chatbot_knowledge.category='_managers' 의 is_active 컬럼
+const FIELD_MGR_NAMES = ['은미', '성희', '지숙', '연두']; // 현장 매니저 last-name fragments
+
+window.loadMgrVacation = async () => {
+    const grid = document.getElementById('mgrVacationGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;">로딩 중...</div>';
+    const { data, error } = await sb.from('chatbot_knowledge')
+        .select('id, question, answer, is_active')
+        .eq('category', '_managers');
+    if (error) { grid.innerHTML = `<div style="color:#ef4444;">로드 실패: ${error.message}</div>`; return; }
+
+    // 현장 매니저만 필터링 (이름에 fragment 포함된 row)
+    const rows = (data || []).filter(r => FIELD_MGR_NAMES.some(n => (r.question || '').includes(n)));
+    // 이름 정렬: 은미 → 성희 → 지숙 → 연두 순서
+    rows.sort((a, b) => {
+        const ai = FIELD_MGR_NAMES.findIndex(n => (a.question || '').includes(n));
+        const bi = FIELD_MGR_NAMES.findIndex(n => (b.question || '').includes(n));
+        return ai - bi;
+    });
+
+    if (!rows.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;">등록된 매니저가 없습니다.</div>';
+        return;
+    }
+
+    grid.innerHTML = rows.map(r => {
+        let phone = '';
+        try { phone = JSON.parse(r.answer || '{}').phone || ''; } catch(e) {}
+        const phoneFmt = phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+        const onColor = r.is_active ? '#10b981' : '#94a3b8';
+        const bgColor = r.is_active ? '#ecfdf5' : '#f1f5f9';
+        const statusText = r.is_active ? '✅ 근무중' : '🌴 휴가중';
+        const statusBg = r.is_active ? '#d1fae5' : '#fed7aa';
+        const statusColor = r.is_active ? '#065f46' : '#9a3412';
+        const btnLabel = r.is_active ? '휴가 ON' : '근무 복귀';
+        const btnBg = r.is_active ? '#f59e0b' : '#10b981';
+        return `
+            <div style="border:2px solid ${onColor}; background:${bgColor}; border-radius:12px; padding:14px; transition:all 0.2s;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="font-size:16px; font-weight:800; color:#1e293b;">👩 ${r.question}</div>
+                    <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:10px; background:${statusBg}; color:${statusColor};">${statusText}</span>
+                </div>
+                ${phoneFmt ? `<div style="font-size:12px; color:#64748b; margin-bottom:10px;">📞 ${phoneFmt}</div>` : ''}
+                <button onclick="toggleMgrVacation(${r.id}, ${!r.is_active})"
+                    style="width:100%; padding:9px; background:${btnBg}; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s;">
+                    ${btnLabel}
+                </button>
+            </div>
+        `;
+    }).join('');
+};
+
+window.toggleMgrVacation = async (id, newActive) => {
+    const { error } = await sb.from('chatbot_knowledge')
+        .update({ is_active: newActive })
+        .eq('id', id);
+    if (error) {
+        if (window.showToast) showToast('변경 실패: ' + error.message, 'error');
+        else alert('변경 실패: ' + error.message);
+        return;
+    }
+    if (window.showToast) showToast(newActive ? '✅ 근무 복귀 처리됨' : '🌴 휴가 처리됨', 'success');
+    loadMgrVacation();
+};
+
 // [가맹점 신청 관리]
 window.loadPartnerApplications = async () => {
     const tbody = document.getElementById('partnerAppListBody');

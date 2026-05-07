@@ -1736,6 +1736,16 @@
 
 
             <div id="sec-staff" class="section">
+                <!-- 🌴 매니저 휴가 관리 -->
+                <div class="card" style="margin-bottom:16px; border:2px solid #fde68a; background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <h3 style="margin:0;color:#92400e;">🌴 매니저 휴가 관리</h3>
+                        <button class="btn btn-outline btn-sm" onclick="loadMgrVacation()" style="font-size:12px;">🔄 새로고침</button>
+                    </div>
+                    <div style="font-size:12px;color:#78350f;margin-bottom:12px;">매니저가 휴가 중일 때 <b>OFF</b>로 전환하면 챗봇과 장바구니에서 회색 처리되어 선택할 수 없습니다.</div>
+                    <div id="mgrVacationGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;"></div>
+                </div>
+
                 <div class="product-layout">
                     <div class="card tpl-form">
                         <h3 style="margin-top:0;">👤 스태프 등록</h3>
@@ -2513,7 +2523,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=270"></script>
+    <script type="module" src="global_admin.js?v=271"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">

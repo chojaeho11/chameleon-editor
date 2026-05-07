@@ -5458,7 +5458,7 @@ async function handleSubReturn() {
                         <div id="cartManagerBtns" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%; margin-bottom:6px;"></div>
                         <div id="cartManagerHqBtnWrap" style="width:100%;"></div>
                     </div>
-                    <script>(function(){
+                    <script>(async function(){
                         var h=window.location.hostname||'';
                         var p=new URLSearchParams(window.location.search);
                         var lg=p.get('lang')||'';
@@ -5467,11 +5467,13 @@ async function handleSubReturn() {
                         else if(h.includes('cafe3355')||h.includes('chameleon.design')||lg==='en') l='en';
                         else if(lg==='zh') l='zh'; else if(lg==='ar') l='ar'; else if(lg==='es') l='es'; else if(lg==='de') l='de'; else if(lg==='fr') l='fr';
                         var hq={kr:'🏢 본사진행',ja:'🏢 本社対応',en:'🏢 HQ handles',zh:'🏢 总部处理',ar:'🏢 المقر',es:'🏢 Sede central',de:'🏢 Zentrale',fr:'🏢 Siege'};
+                        // 휴가 라벨 (회색 표시 시)
+                        var vac={kr:' (휴가중)',ja:' (休暇中)',en:' (On leave)',zh:' (休假中)',ar:' (في إجازة)',es:' (De vacaciones)',de:' (Im Urlaub)',fr:' (En conge)'};
                         var mgrs=[
-                            {value:'eunmi', label:{kr:'👩 은미',ja:'👩 ウンミ',en:'👩 Eunmi',zh:'👩 恩美',ar:'👩 أونمي',es:'👩 Eunmi',de:'👩 Eunmi',fr:'👩 Eunmi'}[l]||'Eunmi'},
-                            {value:'sunghee', label:{kr:'👩 성희',ja:'👩 ソンヒ',en:'👩 Sunghee',zh:'👩 成熙',ar:'👩 سونغهي',es:'👩 Sunghee',de:'👩 Sunghee',fr:'👩 Sunghee'}[l]||'Sunghee'},
-                            {value:'jisook', label:{kr:'👩 지숙',ja:'👩 ジスク',en:'👩 Jisook',zh:'👩 智淑',ar:'👩 جيسوك',es:'👩 Jisook',de:'👩 Jisook',fr:'👩 Jisook'}[l]||'Jisook'},
-                            {value:'yeondu', label:{kr:'👩 연두',ja:'👩 ヨンドゥ',en:'👩 Yeondu',zh:'👩 软豆',ar:'👩 يوندو',es:'👩 Yeondu',de:'👩 Yeondu',fr:'👩 Yeondu'}[l]||'Yeondu'},
+                            {value:'eunmi', name:'은미', label:{kr:'👩 은미',ja:'👩 ウンミ',en:'👩 Eunmi',zh:'👩 恩美',ar:'👩 أونمي',es:'👩 Eunmi',de:'👩 Eunmi',fr:'👩 Eunmi'}[l]||'Eunmi'},
+                            {value:'sunghee', name:'성희', label:{kr:'👩 성희',ja:'👩 ソンヒ',en:'👩 Sunghee',zh:'👩 成熙',ar:'👩 سونغهي',es:'👩 Sunghee',de:'👩 Sunghee',fr:'👩 Sunghee'}[l]||'Sunghee'},
+                            {value:'jisook', name:'지숙', label:{kr:'👩 지숙',ja:'👩 ジスク',en:'👩 Jisook',zh:'👩 智淑',ar:'👩 جيسوك',es:'👩 Jisook',de:'👩 Jisook',fr:'👩 Jisook'}[l]||'Jisook'},
+                            {value:'yeondu', name:'연두', label:{kr:'👩 연두',ja:'👩 ヨンドゥ',en:'👩 Yeondu',zh:'👩 软豆',ar:'👩 يوندو',es:'👩 Yeondu',de:'👩 Yeondu',fr:'👩 Yeondu'}[l]||'Yeondu'},
                             {value:'__hq__', isHq:true, label:hq[l]||hq['en']}
                         ];
                         var box=document.getElementById('cartManagerBtns');
@@ -5481,29 +5483,60 @@ async function handleSubReturn() {
                         // 기본 스타일 (선택 안 됨)
                         var STYLE_MGR_BASE='width:100%;padding:12px 4px;border:2px solid #f59e0b;background:#fef3c7;color:#92400e;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;min-width:0;white-space:nowrap;';
                         var STYLE_MGR_SEL ='width:100%;padding:12px 4px;border:2.5px solid #d97706;background:#fde68a;color:#78350f;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.15s;min-width:0;white-space:nowrap;box-shadow:0 0 0 2px #fcd34d inset;';
+                        // 휴가중 스타일 (회색, 클릭 불가)
+                        var STYLE_MGR_OFF ='width:100%;padding:12px 4px;border:2px solid #cbd5e1;background:#f1f5f9;color:#94a3b8;border-radius:10px;font-size:12px;font-weight:600;cursor:not-allowed;transition:all 0.15s;min-width:0;white-space:nowrap;text-decoration:line-through;opacity:0.7;';
                         var STYLE_HQ_BASE='width:100%;padding:14px 8px;border:2px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.15s;';
                         var STYLE_HQ_SEL ='width:100%;padding:14px 8px;border:2px solid #6366f1;background:#eef2ff;color:#4338ca;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.15s;';
+
+                        // 활성 상태 로드: chatbot_knowledge._managers 의 is_active
+                        var inactiveSet = new Set();
+                        try {
+                            var sb = window.sb || window.supabase;
+                            if (sb) {
+                                var r = await sb.from('chatbot_knowledge').select('question,is_active').eq('category','_managers');
+                                if (r && r.data) {
+                                    r.data.forEach(function(row){
+                                        if (row.is_active === false) {
+                                            mgrs.forEach(function(m){
+                                                if (m.name && row.question && row.question.indexOf(m.name) !== -1) inactiveSet.add(m.value);
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        } catch(e) { console.warn('[cart-mgr] is_active 로드 실패', e); }
+
                         function _resetAll(){
                             var allBtns=[].concat([].slice.call(hqWrap?hqWrap.querySelectorAll('button'):[]),[].slice.call(box.querySelectorAll('button')));
                             allBtns.forEach(function(b){
+                                if (b.dataset.off === '1') { b.style.cssText = STYLE_MGR_OFF; return; }
                                 b.style.cssText = b.dataset.isHq==='1' ? STYLE_HQ_BASE : STYLE_MGR_BASE;
                             });
                         }
                         function _select(btn){
                             _resetAll();
+                            if (btn.dataset.off === '1') return; // 휴가중은 선택 불가
                             btn.style.cssText = btn.dataset.isHq==='1' ? STYLE_HQ_SEL : STYLE_MGR_SEL;
                         }
                         mgrs.forEach(function(m){
                             var btn=document.createElement('button');
                             btn.type='button';
-                            btn.textContent=m.label;
+                            var isOff = !m.isHq && inactiveSet.has(m.value);
+                            btn.textContent = isOff ? (m.label + (vac[l]||vac['en'])) : m.label;
                             btn.dataset.val=m.value;
                             btn.dataset.isHq=m.isHq?'1':'0';
-                            btn.style.cssText = m.isHq ? STYLE_HQ_SEL : STYLE_MGR_BASE; // HQ는 기본 선택됨
-                            btn.onclick=function(){
-                                hidden.value=m.value;
-                                _select(btn);
-                            };
+                            btn.dataset.off = isOff ? '1' : '0';
+                            if (isOff) {
+                                btn.style.cssText = STYLE_MGR_OFF;
+                                btn.disabled = true;
+                                btn.title = '휴가중인 매니저는 선택할 수 없습니다';
+                            } else {
+                                btn.style.cssText = m.isHq ? STYLE_HQ_SEL : STYLE_MGR_BASE; // HQ는 기본 선택됨
+                                btn.onclick=function(){
+                                    hidden.value=m.value;
+                                    _select(btn);
+                                };
+                            }
                             if(m.isHq){
                                 if(hqWrap) hqWrap.appendChild(btn);
                                 else box.appendChild(btn);
@@ -6470,7 +6503,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=434"></script>
 <script type="module" src="./context-menu.js?v=434"></script>
 <script type="module" src="./export.js?v=434"></script>
-<script type="module" src="./order.js?v=457"></script>
+<script type="module" src="./order.js?v=458"></script>
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./my-design.js?v=434"></script>
 <script type="module" src="./ppt-mode.js?v=434"></script>
@@ -7700,7 +7733,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=434 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=434';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=457'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=458'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=434';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=434';
 
@@ -12646,7 +12679,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=457');
+                    const m = await import('./order.js?v=458');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -12716,7 +12749,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=457').then(m => {
+            import('./order.js?v=458').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -13317,7 +13350,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=457').then(m => {
+        import('./order.js?v=458').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17852,7 +17885,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=457').then(function(mod) {
+            import('./order.js?v=458').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -18189,6 +18222,10 @@ window.dsmRenderProducts = async function(keyword) {
 
     // ── 매니저 선택 UI 표시 ──
     function showManagerPicker(managers, msgArea) {
+        // 휴가중 라벨 (다국어)
+        var _vacLabels = {kr:' (휴가중)',ja:' (休暇中)',en:' (On leave)',zh:' (休假中)',ar:' (في إجازة)',es:' (De vacaciones)',de:' (Im Urlaub)',fr:' (En conge)'};
+        var _vacLabel = _vacLabels[_lang2] || _vacLabels['en'];
+
         var h = '<div style="padding:4px 0;">';
         h += '<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:16px; padding:16px; color:#fff; box-shadow:0 4px 15px rgba(102,126,234,0.3);">';
         h += '<div style="text-align:center; margin-bottom:12px;">';
@@ -18200,17 +18237,27 @@ window.dsmRenderProducts = async function(keyword) {
         var colors = ['#4f46e5','#7c3aed','#2563eb','#0891b2','#059669'];
         managers.forEach(function(mgr, i) {
             var c = colors[i % colors.length];
-            h += '<button class="cham-mgr-btn" data-name="' + mgr.name + '" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background=\'rgba(255,255,255,0.3)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">';
-            h += '<span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">🧑‍💼</span>';
-            h += '<span style="flex:1; text-align:left;"><div>' + mgr.name + _lt('mgrSuffix') + '</div>';
-            h += '</span><span style="font-size:18px;">→</span></button>';
+            var isOff = mgr.is_active === false;
+            if (isOff) {
+                // 휴가중 - 회색 + 클릭 불가
+                h += '<button class="cham-mgr-btn" data-name="' + mgr.name + '" data-off="1" disabled style="background:rgba(148,163,184,0.25); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.15); padding:12px 16px; border-radius:12px; cursor:not-allowed; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; text-decoration:line-through; opacity:0.65;" title="휴가중인 매니저">';
+                h += '<span style="background:rgba(255,255,255,0.1); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">🌴</span>';
+                h += '<span style="flex:1; text-align:left;"><div>' + mgr.name + _lt('mgrSuffix') + _vacLabel + '</div>';
+                h += '</span></button>';
+            } else {
+                h += '<button class="cham-mgr-btn" data-name="' + mgr.name + '" style="background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background=\'rgba(255,255,255,0.3)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">';
+                h += '<span style="background:rgba(255,255,255,0.2); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">🧑‍💼</span>';
+                h += '<span style="flex:1; text-align:left;"><div>' + mgr.name + _lt('mgrSuffix') + '</div>';
+                h += '</span><span style="font-size:18px;">→</span></button>';
+            }
         });
         h += '</div></div></div>';
         msgArea.insertAdjacentHTML('beforeend', h);
         msgArea.scrollTop = msgArea.scrollHeight;
-        
+
         var btns = msgArea.querySelectorAll('.cham-mgr-btn');
         btns.forEach(function(btn) {
+            if (btn.dataset.off === '1') return; // 휴가중은 클릭 무시
             btn.addEventListener('click', function() {
                 startLive(btn.getAttribute('data-name'));
             });
@@ -18263,13 +18310,17 @@ window.dsmRenderProducts = async function(keyword) {
             var sb = getSb();
             if (!sb) { showManagerPicker(DEFAULT_MANAGERS, msgArea); return; }
 
-            sb.from('chatbot_knowledge').select('question,answer')
-              .eq('category', '_managers').eq('is_active', true)
+            // is_active=true로 필터하지 않고 전체 로드 → 휴가중도 회색으로 표시
+            sb.from('chatbot_knowledge').select('question,answer,is_active')
+              .eq('category', '_managers')
               .then(function(res) {
                 var mgrs = [];
                 if (res.data && res.data.length > 0) {
                     res.data.forEach(function(m) {
-                        try { mgrs.push(JSON.parse(m.answer)); } catch(e) { mgrs.push({name: m.question}); }
+                        var info = { name: m.question };
+                        try { info = JSON.parse(m.answer); } catch(e) {}
+                        info.is_active = m.is_active !== false; // 기본 true
+                        mgrs.push(info);
                     });
                 }
                 showManagerPicker(mgrs.length > 0 ? mgrs : DEFAULT_MANAGERS, msgArea);

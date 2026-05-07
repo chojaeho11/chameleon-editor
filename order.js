@@ -1490,10 +1490,31 @@ async function openDeliveryInfoModal() {
                 mgrBtns.innerHTML = '';
                 if (hqWrap) hqWrap.innerHTML = '';
 
+                // 휴가중 라벨 (다국어)
+                const _vacLabels = {kr:' (휴가중)',ja:' (休暇中)',en:' (On leave)',zh:' (休假中)',ar:' (في إجازة)',es:' (De vacaciones)',de:' (Im Urlaub)',fr:' (En conge)'};
+
+                // 활성 상태 로드: chatbot_knowledge._managers 의 is_active
+                const _inactiveSet = new Set();
+                try {
+                    const r = await sb.from('chatbot_knowledge').select('question,is_active').eq('category','_managers');
+                    if (r && r.data) {
+                        r.data.forEach(row => {
+                            if (row.is_active === false) {
+                                btnConfig.forEach(cfg => {
+                                    if (cfg.name && row.question && row.question.indexOf(cfg.name) !== -1) {
+                                        _inactiveSet.add(cfg.name);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } catch(e) { console.warn('[deliveryInfo-mgr] is_active 로드 실패', e); }
+
                 // 모든 매니저 버튼 선택 상태 동기화 함수
                 const _syncAllMgrBtns = () => {
                     const allBtns = [...(hqWrap ? hqWrap.querySelectorAll('button') : []), ...mgrBtns.querySelectorAll('button')];
                     allBtns.forEach(b => {
+                        if (b.dataset.off === '1') return; // 휴가중은 회색 유지
                         const c = b.dataset.color;
                         if (b.dataset.staffId === mgrHidden.value) {
                             b.style.background = c; b.style.color = '#fff';
@@ -1507,28 +1528,36 @@ async function openDeliveryInfoModal() {
                     const matchMgr = cfg.name ? managers.find(m => m.name.includes(cfg.name)) : null;
                     const staffId = matchMgr ? String(matchMgr.id) : (cfg.id || '');
                     const isHq = cfg.id === '__hq__';
+                    const isOff = !isHq && cfg.name && _inactiveSet.has(cfg.name);
                     // 매니저는 통일된 노랑색, 본사는 cfg.color (하늘색) 사용
                     const bgColor = isHq ? cfg.color : MGR_COLOR;
-                    const text = cfg.label[lang] || cfg.label['en'];
+                    const text = (cfg.label[lang] || cfg.label['en']) + (isOff ? (_vacLabels[lang] || _vacLabels['en']) : '');
 
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.textContent = text;
                     btn.dataset.staffId = staffId;
                     btn.dataset.color = bgColor;
-                    btn.style.cssText = isHq
-                        ? `width:100%;padding:16px 8px;border:2.5px solid ${bgColor};border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;background:${bgColor};color:#fff;transition:all 0.2s;`
-                        : `width:100%;padding:12px 4px;border:2.5px solid ${bgColor};border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:${bgColor};transition:all 0.2s;min-width:0;white-space:nowrap;`;
-                    btn.onmouseenter = () => { if (mgrHidden.value !== staffId) { btn.style.background = bgColor + '18'; } };
-                    btn.onmouseleave = () => { if (mgrHidden.value !== staffId) { btn.style.background = '#fff'; } };
-                    btn.onclick = () => {
-                        if (mgrHidden.value === staffId) {
-                            mgrHidden.value = '';
-                        } else {
-                            mgrHidden.value = staffId;
-                        }
-                        _syncAllMgrBtns();
-                    };
+                    btn.dataset.off = isOff ? '1' : '0';
+                    if (isOff) {
+                        btn.style.cssText = `width:100%;padding:12px 4px;border:2px solid #cbd5e1;background:#f1f5f9;color:#94a3b8;border-radius:10px;font-size:12px;font-weight:600;cursor:not-allowed;transition:all 0.2s;min-width:0;white-space:nowrap;text-decoration:line-through;opacity:0.7;`;
+                        btn.disabled = true;
+                        btn.title = lang === 'kr' ? '휴가중인 매니저는 선택할 수 없습니다' : 'This manager is currently on leave';
+                    } else {
+                        btn.style.cssText = isHq
+                            ? `width:100%;padding:16px 8px;border:2.5px solid ${bgColor};border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;background:${bgColor};color:#fff;transition:all 0.2s;`
+                            : `width:100%;padding:12px 4px;border:2.5px solid ${bgColor};border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:${bgColor};transition:all 0.2s;min-width:0;white-space:nowrap;`;
+                        btn.onmouseenter = () => { if (mgrHidden.value !== staffId) { btn.style.background = bgColor + '18'; } };
+                        btn.onmouseleave = () => { if (mgrHidden.value !== staffId) { btn.style.background = '#fff'; } };
+                        btn.onclick = () => {
+                            if (mgrHidden.value === staffId) {
+                                mgrHidden.value = '';
+                            } else {
+                                mgrHidden.value = staffId;
+                            }
+                            _syncAllMgrBtns();
+                        };
+                    }
 
                     if (isHq) {
                         (hqWrap || mgrBtns).appendChild(btn);
