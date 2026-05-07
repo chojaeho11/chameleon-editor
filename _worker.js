@@ -38,97 +38,120 @@ const SEO_CATEGORIES = {
     'roll-blind': { prefix: 'rb_' },
 };
 
-// Multilingual SEO metadata for category pages (JP/US)
+// Multilingual SEO metadata for category pages (KR/JP/US)
 const CATEGORY_SEO = {
     honeycomb: {
+        KR: { title: '허니콤보드 인쇄·가벽·디스플레이 전문 | 카멜레온프린팅', desc: '허니콤보드 인쇄·가벽·등신대·전시부스 제작 전문. 친환경 100% 종이 허니콤보드, 1:1 맞춤 사이즈, 당일 출고 가능. 무료 디자인 에디터로 디자인부터 전국 배송까지.', keywords: '허니콤보드,허니콤보드 인쇄,허니콤 가벽,허니콤보드 가격,허니콤보드 사이즈,허니콤보드 제작,허니콤,종이가벽,종이매대,팝업스토어,등신대제작,전시부스,백월,친환경 인쇄,카멜레온프린팅' },
         JP: { title: 'ハニカムボード印刷 - エコ紙ディスプレイ | カメレオンプリンティング', desc: 'エコハニカムボードのカスタム印刷。ポップアップストア・展示ブース・店舗ディスプレイに最適。無料オンラインエディターでデザイン可能。', keywords: 'ハニカムボード,ハニカムボード印刷,紙ディスプレイ,ポップアップストア,エコ展示,展示ブース' },
         US: { title: 'Honeycomb Board Printing - Eco Cardboard Display | Chameleon Printing', desc: 'Custom eco-friendly Honeycomb Board printing. Perfect for pop-up stores, exhibition booths & retail displays. Free online design editor included.', keywords: 'Honeycomb Board,Honeycomb Board printing,Honeycomb Board exhibition booth,cardboard display,pop-up store display,eco display,exhibition booth,trade show display,retail display board' },
     },
     'fabric-print': {
+        KR: { title: '패브릭 인쇄·천 인쇄·실사출력 전문 | 카멜레온프린팅', desc: '고화질 패브릭(천) 맞춤 인쇄. 광목·면포·옥스포드·쉬폰 등 다양한 원단. 백월·포토존 배경·현수막 천 제작. 무료 디자인 에디터 포함.', keywords: '패브릭인쇄,천인쇄,실사출력,광목인쇄,면포인쇄,옥스포드인쇄,쉬폰인쇄,백월,포토존 배경,현수막 천,배경막 인쇄,패브릭 배너,카멜레온프린팅' },
         JP: { title: 'ファブリック印刷 - 高画質布印刷 | カメレオンプリンティング', desc: '高画質ファブリック（布）カスタム印刷。バックウォール・フォトゾーン・背景幕に最適。無料デザインエディター付き。', keywords: 'ファブリック印刷,布印刷,バックウォール,フォトゾーン,背景幕,タペストリー印刷' },
         US: { title: 'Fabric Printing - High Quality Custom Cloth Print | Chameleon Printing', desc: 'High-resolution custom fabric printing. Ideal for backwalls, photo zones, backdrops & banners. Free online design editor available.', keywords: 'fabric printing,cloth printing,backwall,photo zone,backdrop printing,custom fabric,banner printing' },
     },
     'paper-stand': {
+        KR: { title: '종이매대·종이 디스플레이·POP 진열대 제작 | 카멜레온프린팅', desc: '친환경 종이매대 맞춤 제작. 마트·편의점·매장 진열대 전문. 무료 에디터로 디자인, 전국 배송, 당일 출고 가능.', keywords: '종이매대,종이 디스플레이,POP 진열대,매장 진열대,종이 진열대,친환경 진열대,골판지 디스플레이,진열대 제작,종이가구,홍보 진열대' },
         JP: { title: '紙什器 制作 - エコPOPディスプレイ | カメレオンプリンティング', desc: 'エコ紙什器のカスタム制作。スーパー・コンビニ・店舗の陳列台に最適。無料エディターでデザイン、全国配送対応。', keywords: '紙什器,紙ディスプレイ,POP什器,店舗什器,エコ什器,段ボールディスプレイ' },
         US: { title: 'Cardboard Display Stand - Eco Cardboard POP Display | Chameleon Printing', desc: 'Custom eco-friendly cardboard display stands. Perfect for retail POP displays, stores & supermarkets. Free design editor, nationwide delivery.', keywords: 'cardboard display stand,cardboard display,POP display,retail display,eco display stand,point of purchase' },
     },
     goods: {
+        KR: { title: '굿즈 제작·아크릴 키링·포토카드 인쇄 | 카멜레온프린팅', desc: '아크릴 굿즈 맞춤 제작. 키링·포토카드·아크릴 스탠드·뱃지·스마트톡. 무료 에디터로 디자인, 1개부터 주문 가능.', keywords: '굿즈제작,아크릴키링,포토카드,아크릴 스탠드,아크릴 뱃지,스마트톡,팬굿즈,아이돌굿즈,캐릭터굿즈,굿즈 인쇄,소량 굿즈' },
         JP: { title: 'アクリルグッズ制作 - キーホルダー・フォトカード | カメレオンプリンティング', desc: 'アクリルグッズのカスタム制作。キーホルダー・フォトカード・アクリルスタンド・バッジ。無料エディターでデザイン可能。', keywords: 'アクリルグッズ,アクリルキーホルダー,フォトカード,アクリルスタンド,バッジ制作,グッズ制作' },
         US: { title: 'Acrylic Goods - Keychains, Photo Cards & Stands | Chameleon Printing', desc: 'Custom acrylic goods. Keychains, photo cards, acrylic stands & badges. Design with free online editor, small orders welcome.', keywords: 'acrylic goods,acrylic keychain,photo card,acrylic stand,acrylic badge,custom goods,merchandise' },
     },
     'acrylic-print': {
+        KR: { title: '아크릴 인쇄·UV 아크릴 간판·명패 제작 | 카멜레온프린팅', desc: '고품질 아크릴 UV 인쇄. 간판·명패·안내판·인테리어 소품. 무료 에디터, 다양한 두께·사이즈, 당일 출고.', keywords: '아크릴인쇄,UV아크릴,아크릴 간판,아크릴 명패,아크릴 안내판,아크릴 표찰,아크릴 액자,투명아크릴,UV프린팅,아크릴제작' },
         JP: { title: 'アクリル印刷 - UVアクリル看板 | カメレオンプリンティング', desc: '高品質アクリルUV印刷。看板・ネームプレート・案内板・インテリア小物。無料エディター、多様な厚さ・サイズ。', keywords: 'アクリル印刷,アクリル看板,UVアクリル,アクリル案内板,ネームプレート' },
         US: { title: 'Acrylic Printing - UV Acrylic Signs & Displays | Chameleon Printing', desc: 'High-quality acrylic UV printing. Signs, nameplates, information boards & interior decor. Free design editor, various sizes.', keywords: 'acrylic printing,acrylic sign,UV acrylic,acrylic display,nameplate,acrylic board' },
     },
     'paper-furniture': {
-        JP: { title: '紙家具 制作 - エコ段ボール家具 | カメレオンプリンティング', desc: 'エコ紙家具のカスタム制作。展示・イベント・ポップアップストア用テーブル・椅子・棚。軽量で丈夫な段ボール家具。', keywords: '紙家具,段ボール家具,エコ家具,展示家具,ポップアップストア家具,イベント家具' },
+        KR: { title: '종이가구·골판지 가구·전시 가구 제작 | 카멜레온프린팅', desc: '친환경 종이가구 맞춤 제작. 전시·이벤트·팝업스토어용 테이블·의자·선반. 가볍고 튼튼한 골판지 가구.', keywords: '종이가구,골판지가구,친환경 가구,전시가구,팝업스토어 가구,이벤트 가구,종이 테이블,종이 의자,종이 선반,에코가구' },
+        JP: { title: '紙家具 制作 - エコ段ボール家具 | カメレオンプリンティング', desc: 'エコ紙家具のカスタム制作。展示・イベント・ポップアップストア用テーブル・椅子・棚。軽量で丈夫な段ボール家具。', keywords: '紙家具,段ボール家具,エコ家具,展시家具,ポップアップストア家具,イベント家具' },
         US: { title: 'Paper Furniture - Eco Cardboard Furniture | Chameleon Printing', desc: 'Custom eco-friendly paper furniture. Tables, chairs & shelves for exhibitions, events & pop-up stores. Lightweight yet strong cardboard furniture.', keywords: 'paper furniture,cardboard furniture,eco furniture,exhibition furniture,pop-up store furniture,event furniture' },
     },
     'foamex-print': {
+        KR: { title: '포맥스 인쇄·PVC 폼보드 간판 제작 | 카멜레온프린팅', desc: '고품질 포맥스(PVC 폼보드) 맞춤 인쇄. 간판·안내판·인테리어·전시용. 무료 디자인 에디터, 다양한 두께·사이즈.', keywords: '포맥스인쇄,포맥스간판,PVC폼보드,폼보드 인쇄,포맥스 제작,PVC 인쇄,포맥스 안내판,포맥스 사인,포맥스 가격,포맥스 사이즈' },
         JP: { title: 'フォーレックス印刷 - PVCフォームボード | カメレオンプリンティング', desc: '高品質フォーレックス（PVCフォームボード）カスタム印刷。看板・案内板・インテリア・展示用。無料デザインエディター付き。', keywords: 'フォーレックス印刷,PVCフォームボード,フォーレックス看板,案内板印刷,PVC印刷' },
         US: { title: 'Foamex Printing - PVC Foam Board Print | Chameleon Printing', desc: 'High-quality Foamex (PVC foam board) custom printing. Perfect for signs, displays, interior decor & exhibitions. Free design editor.', keywords: 'foamex printing,PVC foam board,foamex sign,foam board printing,PVC printing,display board' },
     },
     'foamboard-print': {
+        KR: { title: '폼보드 인쇄·우드락 보드 제작 | 카멜레온프린팅', desc: '폼보드(우드락) 맞춤 인쇄. 전시·안내·POP·포토존 패널. 무료 에디터, 라미네이팅 옵션, 빠른 배송.', keywords: '폼보드인쇄,우드락,우드락 인쇄,폼보드 제작,포토존 패널,전시 보드,POP 보드,행사 보드,학교 발표 보드' },
         JP: { title: 'フォームボード印刷 - スチレンボード | カメレオンプリンティング', desc: 'フォームボード（スチレンボード）カスタム印刷。展示・案内・POP・フォトゾーンに最適。無料エディター、全国配送。', keywords: 'フォームボード印刷,スチレンボード,展示ボード,POPボード,パネル印刷' },
         US: { title: 'Foam Board Printing - Custom Display Board | Chameleon Printing', desc: 'Custom foam board printing for exhibitions, signage, POP displays & photo zones. Free online editor, lamination options, fast delivery.', keywords: 'foam board printing,foam board display,styrene board,POP display board,exhibition board,custom foam board' },
     },
     'foamex-stand': {
+        KR: { title: '포맥스 디스플레이·PVC 진열대 제작 | 카멜레온프린팅', desc: '포맥스(PVC) 진열대 맞춤 제작. 매장 진열·상품 디스플레이·전시회용. 내구성 우수한 PVC 소재, 무료 디자인 에디터.', keywords: '포맥스 진열대,PVC 진열대,포맥스 디스플레이,매장 진열대,상품 디스플레이,전시회 진열대,PVC 디스플레이' },
         JP: { title: 'フォーレックスディスプレイ - PVC什器 | カメレオンプリンティング', desc: 'フォーレックス（PVC）什器のカスタム制作。店舗陳列・商品ディスプレイ・展示会用。耐久性に優れたPVC素材。', keywords: 'フォーレックス什器,PVC什器,PVCディスプレイ,店舗什器,展示会什器' },
         US: { title: 'Foamex Display Stand - PVC Product Display | Chameleon Printing', desc: 'Custom Foamex (PVC) display stands. Ideal for retail, product displays & exhibitions. Durable PVC material, free design editor.', keywords: 'foamex display,PVC display stand,retail display,product display,PVC stand,exhibition display' },
     },
     'biz-print': {
+        KR: { title: '명함 인쇄·전단지·브로슈어 제작 | 카멜레온프린팅', desc: '고급 명함·전단지·브로슈어·리플렛 맞춤 인쇄. 무료 온라인 에디터, 다양한 용지·후가공 옵션, 당일 출고.', keywords: '명함인쇄,명함제작,전단지인쇄,브로슈어,리플렛,팜플렛,카탈로그,명함 디자인,명함 가격,소량 명함,고급 명함' },
         JP: { title: '名刺印刷 & 印刷物制作 | カメレオンプリンティング', desc: '高級名刺・チラシ・パンフレット・リーフレットのカスタム印刷。無料オンラインエディター、多様な用紙・加工オプション。', keywords: '名刺印刷,チラシ印刷,パンフレット,リーフレット,印刷物制作,名刺制作' },
         US: { title: 'Business Card & Print Materials | Chameleon Printing', desc: 'Premium business cards, flyers, brochures & leaflets. Design with free online editor, various paper & finishing options, fast delivery.', keywords: 'business card printing,flyer printing,brochure,leaflet,print materials,custom business card' },
     },
     'promo-items': {
+        KR: { title: '판촉물·기념품·노벨티 제작 | 카멜레온프린팅', desc: '기업 판촉물·기념품·노벨티 맞춤 제작. 머그컵·텀블러·볼펜·에코백 등. 소량 주문 가능, 무료 에디터.', keywords: '판촉물,판촉물제작,기념품제작,노벨티,기업 판촉물,굿즈제작,머그컵 제작,텀블러 제작,에코백 제작,단체 기념품' },
         JP: { title: '販促品 制作 - ノベルティ・記念品 | カメレオンプリンティング', desc: '企業販促品・記念品・ノベルティのカスタム制作。マグカップ・タンブラー・ボールペン・エコバッグなど。少量注文OK。', keywords: '販促品,ノベルティ,記念品制作,企業販促品,オリジナルグッズ,名入れグッズ' },
         US: { title: 'Promotional Items - Custom Branded Merchandise | Chameleon Printing', desc: 'Custom promotional items & branded merchandise. Mugs, tumblers, pens, tote bags & more. Free design editor, small orders welcome.', keywords: 'promotional items,branded merchandise,corporate gifts,custom mugs,promotional products,branded goods' },
     },
     'tshirt-print': {
+        KR: { title: '단체티·티셔츠 인쇄·유니폼 제작 | 카멜레온프린팅', desc: '맞춤 티셔츠 인쇄. 단체티·유니폼·이벤트티·커플티. 무료 에디터, 1장부터 주문 가능, DTF/실크 인쇄.', keywords: '단체티,티셔츠인쇄,단체복,유니폼제작,이벤트티,커플티,DTF 인쇄,실크 인쇄,학교 단체티,회사 단체티,동아리 티셔츠' },
         JP: { title: 'Tシャツ印刷 - オリジナルTシャツ制作 | カメレオンプリンティング', desc: 'カスタムTシャツ印刷。団体Tシャツ・ユニフォーム・イベントTシャツ。無料エディター、1枚から注文可能。', keywords: 'Tシャツ印刷,オリジナルTシャツ,団体Tシャツ,ユニフォーム,イベントTシャツ' },
         US: { title: 'T-Shirt Printing - Custom Apparel & Team Wear | Chameleon Printing', desc: 'Custom t-shirt printing. Team wear, uniforms, event shirts & couple tees. Free design editor, order from 1 piece.', keywords: 't-shirt printing,custom t-shirt,team wear,uniform printing,apparel printing,custom clothing' },
     },
     'banner-stand': {
+        KR: { title: '배너 거치대·X배너·롤업 배너 제작 | 카멜레온프린팅', desc: '배너 거치대 맞춤 제작. X배너·롤업 배너·디스플레이 거치대. 전시회·이벤트·매장 프로모션용. 무료 디자인 에디터.', keywords: '배너 거치대,X배너,롤업배너,롤업 거치대,전시회 배너,이벤트 배너,매장 배너,홍보 배너,행사 배너,스탠드 배너' },
         JP: { title: 'バナースタンド - X型・ロールアップバナー | カメレオンプリンティング', desc: 'バナースタンドのカスタム制作。X型バナー・ロールアップバナー。展示会・イベント・店舗プロモーション用。', keywords: 'バナースタンド,Xバナー,ロールアップバナー,展示会バナー,イベントバナー' },
         US: { title: 'Banner Stands - X-Banner & Roll-up Banner | Chameleon Printing', desc: 'Custom banner stands. X-banners, roll-up banners & display stands. For trade shows, events & retail. Free design editor.', keywords: 'banner stand,X-banner,roll-up banner,trade show banner,event banner,display stand,retractable banner,exhibition banner,convention banner,trade show display' },
     },
     standee: {
+        KR: { title: '등신대 제작·실물 사이즈 패널 | 카멜레온프린팅', desc: '등신대(실물 사이즈 패널) 맞춤 제작. 아이돌·캐릭터·이벤트·홍보용. 무료 에디터, 고품질 UV 인쇄, 전국 배송.', keywords: '등신대,등신대제작,실물 사이즈 패널,아이돌 등신대,캐릭터 등신대,이벤트 등신대,팬미팅 등신대,홍보 등신대,사이니지 등신대' },
         JP: { title: '等身大パネル制作 - ライフサイズスタンディー | カメレオンプリンティング', desc: '等身大パネル（ライフサイズパネル）のカスタム制作。アイドル・キャラクター・イベント用。無料エディター付き。', keywords: '等身大パネル,ライフサイズパネル,スタンディー,アイドルパネル,キャラクターパネル' },
         US: { title: 'Life-Size Standee - Custom Cutout Display | Chameleon Printing', desc: 'Custom life-size standees & cutout displays. For celebrities, characters, events & promotions. Free design editor, high-quality UV print.', keywords: 'life-size standee,standee,cutout display,life-size cutout,cardboard standee,promotional standee' },
     },
     curtain: {
+        KR: { title: '커튼 인쇄·맞춤 사진 커튼 제작 | 카멜레온프린팅', desc: '맞춤 커튼 인쇄. 인테리어·매장·이벤트용 사진 커튼, 다양한 원단, 주문 사이즈 대응. 무료 디자인 에디터.', keywords: '커튼인쇄,사진커튼,맞춤커튼,오리지널 커튼,인테리어 커튼,매장 커튼,이벤트 커튼,프린팅 커튼' },
         JP: { title: 'カーテン印刷 - オリジナルカーテン制作 | カメレオンプリンティング', desc: 'カスタムカーテン印刷。インテリア・店舗・イベント用。写真カーテン、多様な生地、オーダーサイズ対応。無料デザインエディター。', keywords: 'カーテン印刷,オリジナルカーテン,写真カーテン,インテリアカーテン,イベントカーテン' },
         US: { title: 'Custom Printed Curtains - Photo Curtains | Chameleon Printing', desc: 'Custom printed curtains for interior, stores & events. Photo curtains with various fabrics, custom sizes, free design editor.', keywords: 'custom curtain,printed curtain,photo curtain,interior curtain,event curtain' },
     },
     'shopping-bag': {
+        KR: { title: '쇼핑백·종이백·부직포백 제작 | 카멜레온프린팅', desc: '맞춤 쇼핑백 인쇄. 종이백·부직포백·에코백. 브랜드 로고 인쇄, 다양한 사이즈, 소량부터 대량까지.', keywords: '쇼핑백,쇼핑백제작,종이백,부직포백,에코백,쇼핑백 인쇄,로고 쇼핑백,쇼핑백 가격,쇼핑백 사이즈,선물 쇼핑백' },
         JP: { title: 'ショッピングバッグ制作 - 紙袋・不織布バッグ | カメレオンプリンティング', desc: 'カスタムショッピングバッグ印刷。紙袋・不織布バッグ・エコバッグ。ブランドロゴ印刷、多様なサイズ、少量から大量まで。', keywords: 'ショッピングバッグ,紙袋,不織布バッグ,エコバッグ,カスタムバッグ,ブランドバッグ' },
         US: { title: 'Shopping Bags - Custom Paper & Non-woven Bags | Chameleon Printing', desc: 'Custom printed shopping bags. Paper bags, non-woven bags & tote bags. Brand logo printing, various sizes.', keywords: 'shopping bag,paper bag,non-woven bag,tote bag,custom bag,branded bag' },
     },
     'box-package': {
+        KR: { title: '박스 패키지·맞춤 박스 인쇄 | 카멜레온프린팅', desc: '맞춤 박스 패키지 인쇄. 상품박스·선물박스·택배박스. 무료 에디터로 디자인, 소량 주문 가능.', keywords: '박스인쇄,패키지인쇄,선물박스,상품박스,택배박스,맞춤박스,박스 제작,골판지 박스,단상자,중상자' },
         JP: { title: 'ボックスパッケージ制作 - カスタム箱印刷 | カメレオンプリンティング', desc: 'カスタムボックスパッケージ印刷。商品箱・ギフトボックス・配送箱。無料エディターでデザイン、少量注文OK。', keywords: 'ボックス印刷,パッケージ印刷,ギフトボックス,商品箱,カスタム箱' },
         US: { title: 'Box Packaging - Custom Box Printing | Chameleon Printing', desc: 'Custom box packaging. Product boxes, gift boxes & shipping boxes. Free design editor, small orders available.', keywords: 'box packaging,custom box,gift box,product box,packaging printing' },
     },
     'rubber-magnet': {
+        KR: { title: '고무자석·맞춤 냉장고 자석 제작 | 카멜레온프린팅', desc: '맞춤 고무자석 인쇄. 냉장고 자석·판촉용·기념품. 무료 에디터, 소량 주문 가능, 다양한 사이즈.', keywords: '고무자석,냉장고자석,자석 제작,홍보 자석,판촉 자석,기념품 자석,자석 인쇄,캐릭터 자석' },
         JP: { title: 'ゴムマグネット制作 - カスタム冷蔵庫マグネット | カメレオンプリンティング', desc: 'カスタムゴムマグネット印刷。冷蔵庫マグネット・販促品・記念品。無料エディター、少量注文可能。', keywords: 'ゴムマグネット,冷蔵庫マグネット,カスタムマグネット,販促マグネット,記念品マグネット' },
         US: { title: 'Rubber Magnets - Custom Fridge Magnets | Chameleon Printing', desc: 'Custom rubber magnet printing. Fridge magnets for promotions, souvenirs & gifts. Free design editor.', keywords: 'rubber magnet,fridge magnet,custom magnet,promotional magnet,souvenir magnet' },
     },
     'flex-sign': {
+        KR: { title: '플렉스 사인·실사 간판·옥외 광고 | 카멜레온프린팅', desc: '맞춤 플렉스 사인 제작. 매장·건물·옥외 광고 간판. 내후성 소재, 대형 사이즈 대응. 무료 에디터.', keywords: '플렉스 사인,실사 간판,옥외광고,매장 간판,건물 간판,광고 간판,간판 제작,대형 간판,플렉스 인쇄,현수막 간판' },
         JP: { title: 'フレックスサイン - 屋外広告看板 | カメレオンプリンティング', desc: 'カスタムフレックスサイン制作。店舗・建物・屋外広告看板。耐候性素材、大型サイズ対応。', keywords: 'フレックスサイン,屋外看板,広告看板,店舗看板,建物看板' },
         US: { title: 'Flex Signs - Outdoor Advertising Signs | Chameleon Printing', desc: 'Custom flex signs for outdoor advertising. Store fronts, buildings & commercial signs. Weather-resistant, large formats.', keywords: 'flex sign,outdoor sign,advertising sign,store sign,building sign' },
     },
     'blackout-blind': {
+        KR: { title: '암막 블라인드·맞춤 인쇄 롤스크린 | 카멜레온프린팅', desc: '맞춤 암막 블라인드 인쇄. 매장·사무실·주택용. 99% 차광, 주문 사이즈, 무료 디자인 에디터.', keywords: '암막블라인드,롤스크린,맞춤블라인드,차광커튼,프린팅 블라인드,사진 블라인드,홈 블라인드,사무실 블라인드' },
         JP: { title: '遮光ブラインド - カスタム印刷ロールスクリーン | カメレオンプリンティング', desc: 'カスタム遮光ブラインド印刷。店舗・オフィス・住宅用。99%遮光、オーダーサイズ、無料エディター。', keywords: '遮光ブラインド,ロールスクリーン,カスタムブラインド,遮光カーテン,印刷ブラインド' },
         US: { title: 'Blackout Blinds - Custom Printed Roller Blinds | Chameleon Printing', desc: 'Custom printed blackout blinds. For stores, offices & homes. 99% light blocking, custom sizes.', keywords: 'blackout blind,roller blind,custom blind,light blocking blind,printed blind' },
     },
     'flexible-package': {
+        KR: { title: '연포장·맞춤 파우치·스탠드백 제작 | 카멜레온프린팅', desc: '맞춤 연포장 인쇄. 식품 파우치·지퍼백·스탠드 파우치. 소량부터 대량까지 대응.', keywords: '연포장,파우치인쇄,지퍼백,스탠드파우치,식품포장,간식포장,화장품 파우치,식품 파우치 제작' },
         JP: { title: '軟包装印刷 - カスタムパウチ・袋 | カメレオンプリンティング', desc: 'カスタム軟包装印刷。食品パウチ・ジッパー袋・スタンドパウチ。少量から大量まで対応。', keywords: '軟包装,パウチ印刷,ジッパー袋,スタンドパウチ,食品包装' },
         US: { title: 'Flexible Packaging - Custom Pouches & Bags | Chameleon Printing', desc: 'Custom flexible packaging printing. Food pouches, zipper bags & stand-up pouches. Small to bulk orders.', keywords: 'flexible packaging,custom pouch,zipper bag,stand-up pouch,food packaging' },
     },
     placard: {
+        KR: { title: '피켓·플래카드·응원 피켓 제작 | 카멜레온프린팅', desc: '맞춤 피켓·플래카드 인쇄. 이벤트·응원·시위·판촉용. 무료 에디터, 주문 사이즈 대응.', keywords: '피켓,플래카드,응원피켓,이벤트피켓,콘서트 피켓,팬미팅 피켓,단체 피켓,홍보 피켓,시위 피켓' },
         JP: { title: 'プラカード制作 - カスタムプラカード印刷 | カメレオンプリンティング', desc: 'カスタムプラカード印刷。イベント・応援・デモ・販促用。無料エディター、オーダーサイズ対応。', keywords: 'プラカード,プラカード印刷,応援プラカード,イベントプラカード' },
         US: { title: 'Placards - Custom Sign Boards | Chameleon Printing', desc: 'Custom printed placards for events, campaigns & promotions. Free design editor, various sizes.', keywords: 'placard,sign board,custom placard,event sign,campaign sign' },
     },
     'roll-blind': {
+        KR: { title: '롤 블라인드·맞춤 인쇄 롤스크린 | 카멜레온프린팅', desc: '맞춤 롤 블라인드 인쇄. 매장·사무실·주택용. 주문 사이즈, 무료 디자인 에디터.', keywords: '롤블라인드,롤스크린,맞춤블라인드,프린팅 블라인드,창문 블라인드,사진 블라인드,사무실 블라인드,홈 블라인드' },
         JP: { title: 'ロールブラインド - カスタム印刷ロールスクリーン | カメレオンプリンティング', desc: 'カスタムロールブラインド印刷。店舗・オフィス・住宅用。オーダーサイズ、無料デザインエディター。', keywords: 'ロールブラインド,ロールスクリーン,カスタムブラインド,印刷ブラインド' },
         US: { title: 'Roll Blinds - Custom Printed Roller Blinds | Chameleon Printing', desc: 'Custom printed roll blinds for stores, offices & homes. Custom sizes, free design editor.', keywords: 'roll blind,roller blind,custom blind,printed blind,window blind' },
     },
@@ -456,18 +479,21 @@ export default {
                     if (!path) {
                         const homeData = cc === 'JP' ? {
                             lang: 'ja', siteName: 'カメレオンプリンティング',
-                            title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-                            desc: 'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
+                            title: 'ハニカムボード・ファブリック印刷専門 - カメレオンプリンティング',
+                            desc: 'ハニカムボード印刷・仕切り壁・等身大パネル・展示ブース、ファブリック印刷、アクリルグッズ、名刺、バナー、看板、フォーレックス、フォームボード制作。無料デザインエディター付きオンライン印刷サービス。',
+                            keywords: 'ハニカムボード,ハニカムボード印刷,紙ディスプレイ,ファブリック印刷,布印刷,アクリルグッズ,アクリル印刷,ポップアップストア,展示ブース,等身大パネル,名刺印刷,バナースタンド,フォーレックス,フォームボード,カメレオンプリンティング,オンライン印刷,無料デザインエディター',
                             domain: 'https://www.cafe0101.com'
                         } : cc === 'US' ? {
                             lang: 'en', siteName: 'Chameleon Printing',
-                            title: 'Chameleon Printing - Eco Display & Pop-up Store Printing with Free Design Editor',
-                            desc: 'Honeycomb Boards, fabric printing, acrylic goods, banners, signs & packaging. Free online design editor like Canva. Global print marketplace - sell your products worldwide.',
+                            title: 'Honeycomb Board & Fabric Printing - Chameleon Printing',
+                            desc: 'Custom Honeycomb Boards, fabric printing, acrylic goods, banners, signs, foam boards & packaging. Free online design editor like Canva. Worldwide shipping. Wholesale print marketplace.',
+                            keywords: 'Honeycomb Board printing,fabric printing,cloth printing,acrylic goods,acrylic printing,pop-up store,exhibition booth,life-size standee,business card,banner stand,foam board,foamex,Chameleon Printing,online printing,free design editor,Canva alternative,wholesale printing',
                             domain: 'https://www.cafe3355.com'
                         } : {
                             lang: 'ko', siteName: '카멜레온프린팅',
-                            title: '카멜레온프린팅 - 에코 전시 & 팝업스토어 인쇄 & 무료 디자인 에디터',
-                            desc: '허니콤보드, 패브릭 인쇄, 아크릴 굿즈, 배너, 간판, 패키지까지. 무료 온라인 디자인 에디터로 디자인부터 인쇄까지. 글로벌 인쇄 마켓플레이스.',
+                            title: '허니콤보드·패브릭·아크릴 인쇄 전문 - 카멜레온프린팅',
+                            desc: '허니콤보드 인쇄·가벽·등신대·전시부스, 패브릭 인쇄, 아크릴 굿즈, 명함, 배너, 간판, 포맥스, 폼보드까지. 무료 디자인 에디터로 디자인부터 인쇄·전국 배송까지. 도매 인쇄 전문몰.',
+                            keywords: '허니콤보드,허니콤보드 인쇄,허니콤 가벽,종이가벽,종이매대,등신대제작,전시부스,팝업스토어,패브릭인쇄,천인쇄,아크릴인쇄,아크릴 굿즈,포맥스인쇄,폼보드,명함인쇄,단체티,롤업배너,X배너,쇼핑백,박스인쇄,카멜레온프린팅,온라인인쇄,UV인쇄,무료디자인에디터,당일출고,도매인쇄',
                             domain: 'https://www.cafe2626.com'
                         };
                         // Fetch some products for the homepage
@@ -493,7 +519,8 @@ export default {
                         const homeHtml = `<!DOCTYPE html><html lang="${homeData.lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escHtml(homeData.title)}</title>
 <meta name="description" content="${escHtml(homeData.desc)}">
-<meta name="robots" content="index, follow">
+${homeData.keywords ? `<meta name="keywords" content="${escHtml(homeData.keywords)}">` : ''}
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${escHtml(homeData.title)}">
 <meta property="og:description" content="${escHtml(homeData.desc)}">
