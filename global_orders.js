@@ -3628,9 +3628,9 @@ window.openAdminSlotModal = async (dateStr) => {
 
         // ===== 좌측: 3 시간대 × 3팀 매트릭스 =====
         const PERIOD_META = {
-            am:    { label:'🌅 오전',  sub:'08:00–12:00', cap:8,  bg:'#fef3c7', fg:'#92400e' },
-            pm:    { label:'☀️ 오후',  sub:'12:00–18:00', cap:10, bg:'#fed7aa', fg:'#9a3412' },
-            night: { label:'🌙 야간',  sub:'18:00–22:00', cap:6,  bg:'#e0e7ff', fg:'#3730a3' },
+            am:    { label:'🌅 오전',  sub:'08:00–12:00', cap:6,  bg:'#fef3c7', fg:'#92400e' },
+            pm:    { label:'☀️ 오후',  sub:'12:00–18:00', cap:6,  bg:'#fed7aa', fg:'#9a3412' },
+            night: { label:'🌙 야간',  sub:'18:00–22:00', cap:3,  bg:'#e0e7ff', fg:'#3730a3' },
             any:   { label:'📅 시간 무관', sub:'기사가 경로 최적화', cap:null, bg:'#f3f4f6', fg:'#374151' }
         };
         const TEAM_META = {

@@ -917,9 +917,9 @@ function getInstallationSlotInfo(totalKRW) {
 const BASE_OCCUPIED_TEAMS = 1;
 
 // ========================================================================
-// [Phase 1] 시간대 모델: 오전 8건 / 오후 10건 / 야간 6건 / 시간상관없음
+// [Phase 1] 시간대 모델: 오전 6건 / 오후 6건 / 야간 3건 / 시간상관없음
 // ========================================================================
-const PERIOD_CAPACITY = { am: 8, pm: 10, night: 6 };
+const PERIOD_CAPACITY = { am: 6, pm: 6, night: 3 };
 const PERIOD_TIME_MIDPOINT = { am: '09:00', pm: '14:00', night: '19:00' };  // 기사앱/관리자 하위호환용
 
 // installation_time HH:MM → am / pm / night 매핑 (레거시 주문 집계용)
