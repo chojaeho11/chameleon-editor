@@ -23,6 +23,25 @@ User-agent: Yandex
 Allow: /
 Crawl-delay: 3
 
+# Naver Yeti — 한국 검색 엔진 우선 크롤링
+User-agent: Yeti
+Allow: /
+Crawl-delay: 0
+
+# Naver 광고 / 캐러셀 봇
+User-agent: NaverBot
+Allow: /
+Crawl-delay: 0
+
+# Daum 다음 검색
+User-agent: Daum
+Allow: /
+Crawl-delay: 1
+
+User-agent: Daumoa
+Allow: /
+Crawl-delay: 1
+
 # cafe2626.com (Korea)
 Sitemap: https://www.cafe2626.com/sitemap.xml
 Sitemap: https://www.cafe2626.com/sitemap-products.xml

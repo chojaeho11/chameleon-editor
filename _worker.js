@@ -274,6 +274,16 @@ function generateCategoryHtml(products, path, cc) {
     const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": `${domain}/${path}`,
         "mainEntity": { "@type": "ItemList", "itemListElement": jsonLdItems } });
 
+    // ★ BreadcrumbList — 검색결과에 경로(홈 > 카테고리) 표시
+    const breadcrumbLd = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": siteName, "item": domain + "/" },
+            { "@type": "ListItem", "position": 2, "name": title.split(' - ')[0].split(' | ')[0], "item": `${domain}/${path}` }
+        ]
+    });
+
     // ★ 네이버 캐러셀(ListItem) 전용 — 광고 확장소재용 별도 ItemList
     // Naver Search Advisor 카탈로그 캐러셀 공식 예시 형식 (item 중첩 + position string)
     const naverCarouselItems = [];
@@ -307,6 +317,7 @@ ${keywords ? `<meta name="keywords" content="${escHtml(keywords)}">` : ''}
 <link rel="canonical" href="${domain}/${path}">
 ${hreflangTags('/' + path)}
 <script type="application/ld+json">${jsonLd}</script>
+<script type="application/ld+json">${breadcrumbLd}</script>
 ${naverCarouselLd}
 </head><body><h1>${escHtml(title)}</h1>
 <p>${escHtml(desc)}</p>
@@ -572,9 +583,51 @@ ${homeData.keywords ? `<meta name="keywords" content="${escHtml(homeData.keyword
 ${hreflangTags('/')}
 <script type="application/ld+json">${JSON.stringify({
     "@context": "https://schema.org", "@graph": [
-        { "@type": "Organization", "name": homeData.siteName, "url": homeData.domain,
-          "sameAs": ["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"] },
-        { "@type": "WebSite", "name": homeData.siteName, "url": homeData.domain, "inLanguage": homeData.lang }
+        {
+            "@type": "Organization",
+            "name": homeData.siteName,
+            "url": homeData.domain,
+            "logo": "https://www.cafe2626.com/mascot-character.png",
+            "sameAs": ["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"]
+        },
+        {
+            "@type": "WebSite",
+            "name": homeData.siteName,
+            "url": homeData.domain,
+            "inLanguage": homeData.lang,
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": { "@type": "EntryPoint", "urlTemplate": homeData.domain + "/?q={search_term_string}" },
+                "query-input": "required name=search_term_string"
+            }
+        },
+        // LocalBusiness — 네이버는 지역 사업자 정보를 강력히 활용 (지도/검색)
+        ...(cc === 'KR' ? [{
+            "@type": "LocalBusiness",
+            "@id": homeData.domain + "/#localbusiness",
+            "name": "(주)카멜레온프린팅",
+            "alternateName": homeData.siteName,
+            "image": "https://www.cafe2626.com/mascot-character.png",
+            "url": homeData.domain,
+            "telephone": "+82-31-366-1984",
+            "priceRange": "₩₩",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "우정읍 한말길 72-2",
+                "addressLocality": "화성시",
+                "addressRegion": "경기도",
+                "postalCode": "18555",
+                "addressCountry": "KR"
+            },
+            "openingHoursSpecification": [{
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+                "opens": "09:00",
+                "closes": "18:00"
+            }],
+            "sameAs": ["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"],
+            "description": "허니콤보드 인쇄, 패브릭 인쇄, 종이매대 도매 전문 인쇄소. 친환경 가벽·등신대·전시부스 제작."
+        }] : [])
     ]
 })}</script>
 ${homeCarouselLd}
