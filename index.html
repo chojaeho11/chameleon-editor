@@ -11414,7 +11414,7 @@ window._bkCalc = function() {
 // [수정 1] 금액 계산 함수 (단품/옵션 모두 수량 곱하기 적용)
 // [최종 수정] 금액 계산 함수 (상품과 옵션 수량 완전 분리)
 window.updateModalTotal = function() {
-    console.log('[updateModalTotal] v341 called');
+    console.log('[updateModalTotal] v342 called');
     const product = window.selectedProductForChoice;
     if(!product) return;
 
@@ -11743,6 +11743,48 @@ window.updateModalTotal = function() {
         const qty = parseInt(qInput ? qInput.value : 1) || 1;
         const product = window.selectedProductForChoice;
 
+        // ★★★ [핵심] 허니콤 박스 상품: box-nesting.js 결과를 그대로 사용
+        // 박스는 6면 전개 + 시트 네스팅으로 단가가 결정됨 → m²×단가 방식 적용 금지
+        const _isBoxProduct = !!(
+            (product && product.category === 'honeycomb_box') ||
+            (product && typeof product.product_key === 'string' && product.product_key.startsWith('hb_bx')) ||
+            (product && typeof product.code === 'string' && product.code.startsWith('hb_bx')) ||
+            document.getElementById('boxModalW')
+        );
+        if (_isBoxProduct && window.__boxCalculatedPrice && window.__boxCalculatedPrice > 0) {
+            const _boxUnit = window.__boxCalculatedPrice;
+            const _boxTotal = _boxUnit * qty;
+            // 언어별 포맷
+            const _urlP = new URLSearchParams(window.location.search);
+            let _lng = _urlP.get('lang');
+            if (!_lng) {
+                if (window.location.hostname.includes('cafe0101.com')) _lng = 'ja';
+                else if (window.location.hostname.includes('cafe3355.com') || window.location.hostname.includes('chameleon.design')) _lng = 'en';
+                else _lng = 'kr';
+            }
+            const _rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
+            const _fmt = (v) => {
+                if (_lng === 'ja') return '¥' + Math.floor(v * (_rates.JP || 0.1)).toLocaleString();
+                if (['en','ar'].includes(_lng)) { const u = v * (_rates.US || 0.001); return u >= 10 ? '$' + Math.round(u).toLocaleString() : '$' + u.toFixed(2); }
+                if (['es','de','fr'].includes(_lng)) { const e = v * (_rates[_lng.toUpperCase()] || 0.001); return e >= 10 ? '€' + Math.round(e).toLocaleString() : '€' + e.toFixed(2); }
+                if (_lng === 'zh') return '¥' + Math.round(v * (_rates.CN || 0.05)).toLocaleString();
+                return Math.floor(v).toLocaleString() + '원';
+            };
+            if (priceDisplay) {
+                priceDisplay.innerText = _fmt(_boxTotal);
+                priceDisplay.dataset.rawPrice = _boxTotal;
+                priceDisplay.dataset.rawUnitPrice = _boxUnit;
+            }
+            if (sizeDisplay) {
+                const _d = window.__boxModalDims || {};
+                const _dimW = _d.w || 0, _dimH = _d.h || 0, _dimD = _d.d || 0;
+                const _box6area = ((2 * (_dimW*_dimH + _dimH*_dimD + _dimW*_dimD)) / 1000000).toFixed(2);
+                const _boxLbl = {ja:'ボックス',en:'Box',zh:'箱体',ar:'صندوق',es:'Caja',de:'Box',fr:'Boîte',kr:'박스'}[_lng] || 'Box';
+                sizeDisplay.innerText = `${_dimW} × ${_dimH} × ${_dimD}mm (${_boxLbl}, ${_box6area}㎡)`;
+            }
+            return; // ★ 박스 상품은 여기서 끝 — m²×단가 분기로 가지 않음
+        }
+
         // ★ [핵심] 언어 감지
         const urlParams = new URLSearchParams(window.location.search);
         let lang = urlParams.get('lang');
@@ -12044,23 +12086,26 @@ if (w >= 20 && h >= 20) {
                 }
             }
 
-            // calcResultPrice에도 반영 (updateModalTotal에서 사용)
-            if (calcPriceEl) {
-                calcPriceEl.textContent = formatVal(result.totalPrice);
-                calcPriceEl.dataset.rawPrice = result.totalPrice;
-                calcPriceEl.dataset.rawUnitPrice = 0; // 박스: rawPrice fallback 사용
-            }
-
-            // 전역 저장 (주문 시 사용)
+            // 전역 저장 (주문 시 사용) — 박스 1개당 단가 보존
             window.__boxModalDims = { w, h, d };
             window.__boxCalculatedPrice = result.totalPrice;
             window.__boxNesting = result;
             window.__boxSheetCount = result.sheetCount;
 
-            // product 가격 오버라이드 (장바구니용)
+            // product 가격 오버라이드 (장바구니용) — 항상 박스 1개당 단가
             if (!product._original_price) product._original_price = product.price;
             product.price = result.totalPrice;
             product._calculated_price = true;
+
+            // calcResultPrice에 수량 반영해서 저장 (updateModalTotal에서 사용)
+            const _qInput = window._getActiveQtyInput && window._getActiveQtyInput();
+            const _curQty = _qInput ? (parseInt(_qInput.value) || 1) : 1;
+            const _totalForQty = result.totalPrice * _curQty;
+            if (calcPriceEl) {
+                calcPriceEl.textContent = formatVal(_totalForQty);
+                calcPriceEl.dataset.rawPrice = _totalForQty;
+                calcPriceEl.dataset.rawUnitPrice = result.totalPrice; // 박스 1개 단가
+            }
 
             if (window.updateModalTotal) window.updateModalTotal();
         }).catch(err => {
