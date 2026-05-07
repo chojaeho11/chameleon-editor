@@ -3406,9 +3406,25 @@ async function handleSubReturn() {
                     .neq('photo_url', '')
                     .not('photo_url', 'is', null)
                     .order('created_at', { ascending: false })
-                    .limit(200);
+                    .limit(400); // 중복 제거 후에도 충분하도록 더 많이 가져옴
 
-                _homeShuffled = _shuffleArr(result.data || []);
+                // 중복 제거: 같은 사진 URL은 1번만, 같은 코멘트 시작 부분(30자) 도 1번만
+                var rawData = result.data || [];
+                var seenPhotos = new Set();
+                var seenCommentHeads = new Set();
+                var deduped = [];
+                rawData.forEach(function(r) {
+                    var photoKey = (r.photo_url || '').trim();
+                    var commentKey = (r.comment || '').trim().substring(0, 30).replace(/\s+/g,'');
+                    if (photoKey && seenPhotos.has(photoKey)) return;          // 같은 사진 — 스킵
+                    if (commentKey && seenCommentHeads.has(commentKey)) return; // 비슷한 코멘트 — 스킵
+                    if (photoKey) seenPhotos.add(photoKey);
+                    if (commentKey) seenCommentHeads.add(commentKey);
+                    deduped.push(r);
+                });
+                console.log('[홈 후기] 원본:', rawData.length, '→ 중복제거 후:', deduped.length);
+
+                _homeShuffled = _shuffleArr(deduped);
                 _homeShownCount = 0;
                 grid.innerHTML = '';
             } catch(e) {
@@ -13120,10 +13136,29 @@ if (w >= 20 && h >= 20) {
             }
         }
 
+        // ★ 중복 제거: 같은 사진 또는 같은 코멘트 시작부분(30자) 1번만 표시
+        // (영구 기록은 DB에 모두 남기되, 화면 노출만 dedup)
+        if (!window._rvSeenPhotos) window._rvSeenPhotos = new Set();
+        if (!window._rvSeenCommentHeads) window._rvSeenCommentHeads = new Set();
+        if (page === 0) { // 첫 페이지면 dedup 캐시 초기화
+            window._rvSeenPhotos.clear();
+            window._rvSeenCommentHeads.clear();
+        }
+        const _dedupedReviews = [];
+        reviews.forEach(r => {
+            const photoKey = (r.photo_url || '').trim();
+            const commentKey = (r.comment || '').trim().substring(0, 30).replace(/\s+/g, '');
+            if (photoKey && window._rvSeenPhotos.has(photoKey)) return;
+            if (commentKey && window._rvSeenCommentHeads.has(commentKey)) return;
+            if (photoKey) window._rvSeenPhotos.add(photoKey);
+            if (commentKey) window._rvSeenCommentHeads.add(commentKey);
+            _dedupedReviews.push(r);
+        });
+
         // 리뷰 카드 렌더링
         const _langFlagImg = { kr: 'kr', ja: 'jp', en: 'us', zh: 'cn', ar: 'sa', es: 'es', de: 'de', fr: 'fr' };
         let html = '';
-        reviews.forEach(r => {
+        _dedupedReviews.forEach(r => {
             const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
             const date = new Date(r.created_at).toLocaleDateString();
             const hasPhoto = r.photo_url && r.photo_url.trim();

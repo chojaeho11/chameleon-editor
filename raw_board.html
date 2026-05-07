@@ -1389,6 +1389,20 @@ window.loadPdReviews = async function() {
             return;
         }
 
+        // ★ 중복 제거 (같은 사진 / 같은 코멘트 시작부분)
+        if (!window._rbSeenPhotos) window._rbSeenPhotos = new Set();
+        if (!window._rbSeenCmtHead) window._rbSeenCmtHead = new Set();
+        if (_rvPage === 0) { window._rbSeenPhotos.clear(); window._rbSeenCmtHead.clear(); }
+        data = data.filter(function(r) {
+            var pk = (r.photo_url||'').trim();
+            var ck = (r.comment||'').trim().substring(0,30).replace(/\s+/g,'');
+            if (pk && window._rbSeenPhotos.has(pk)) return false;
+            if (ck && window._rbSeenCmtHead.has(ck)) return false;
+            if (pk) window._rbSeenPhotos.add(pk);
+            if (ck) window._rbSeenCmtHead.add(ck);
+            return true;
+        });
+
         if (_rvPage === 0) grid.innerHTML = '';
 
         data.forEach(function(r) {
