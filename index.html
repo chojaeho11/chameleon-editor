@@ -5303,6 +5303,77 @@ async function handleSubReturn() {
   </div>
 </div>
 <div id="cartPage" style="display:none; position:fixed; inset:0; background:#f1f5f9; z-index: 12000; overflow-y:auto; padding-top: 40px;">
+    <!-- ═════════ 장바구니 섹션별 테마 (간결화) ═════════ -->
+    <style>
+        /* 1. 파일 업로드 — 검정 배경 + 흰글씨 */
+        #cartPage #bulkUploadZone {
+            background: #0f0f10 !important;
+            border: 2px dashed #525252 !important;
+        }
+        #cartPage #bulkUploadZone .bulk-upload-cta > div:nth-child(1) { color: #fbbf24 !important; }
+        #cartPage #bulkUploadZone .bulk-upload-cta > div:nth-child(2) { color: #ffffff !important; }
+        #cartPage #bulkUploadZone .bulk-upload-cta > div:nth-child(3) { color: #a3a3a3 !important; }
+        #cartPage #bulkUploadZone.drag-over {
+            background: #1a1a1c !important;
+            border-color: #fbbf24 !important;
+        }
+
+        /* 3. 배송 정보 — 검정 배경 + 흰글씨 */
+        #cartPage #cartDeliveryInfoWrap > div { background:#0f0f10 !important; color:#ffffff; }
+        #cartPage #cartDeliveryInfoWrap h3 { color:#ffffff !important; }
+        #cartPage #cartDeliveryInfoWrap label { color:#d4d4d4 !important; }
+        #cartPage #cartDeliveryInfoWrap input.ai-input-pretty,
+        #cartPage #cartDeliveryInfoWrap textarea.ai-input-pretty {
+            background:#1f1f22 !important; color:#ffffff !important; border-color:#404040 !important;
+        }
+        #cartPage #cartDeliveryInfoWrap input.ai-input-pretty::placeholder,
+        #cartPage #cartDeliveryInfoWrap textarea.ai-input-pretty::placeholder { color:#737373 !important; }
+        #cartPage #cartHcSchedSection { background:#1a1a1c !important; border-color:#3f3f3f !important; }
+        #cartPage #cartHcSchedSection > div:first-child {
+            background:linear-gradient(135deg,#3b2876,#2d1f5e) !important; color:#e9d5ff !important;
+        }
+
+        /* 4. 결제 금액 — 네이버 녹색 #03c75a */
+        #cartPage #cartPaymentSection > div { background:#03c75a !important; color:#ffffff; }
+        #cartPage #cartPaymentSection h3 { color:#ffffff !important; }
+        #cartPage #cartPaymentSection > div > div span { color:#ffffff !important; }
+        #cartPage #cartPaymentSection #summaryItemPrice,
+        #cartPage #cartPaymentSection #summaryAddonPrice,
+        #cartPage #cartPaymentSection #summaryTotal,
+        #cartPage #cartPaymentSection #cartFinalTotal { color:#ffffff !important; font-weight:900; }
+        #cartPage #cartPaymentSection #summaryDiscount { color:#fef3c7 !important; }
+        #cartPage #cartPaymentSection hr { border-top-color: rgba(255,255,255,0.3) !important; }
+        #cartPage #cartPaymentSection #cartShippingFreeNote {
+            background:#ffffff !important; border-color:#a7f3d0 !important; color:#059669 !important;
+        }
+        #cartPage #cartPaymentSection #cartShippingGuide { color:#fee2e2 !important; }
+        /* 마일리지 박스: 결제금액 안의 흰 인셋 카드 */
+        #cartPage #cartMileageSection { background:#ffffff !important; border-color:#03c75a !important; }
+        /* 결제하기 버튼: 흰배경에 녹색 글씨로 반전 */
+        #cartPage #btnGoCheckout {
+            background:#ffffff !important; color:#03c75a !important;
+            border:2px solid #ffffff !important; font-weight:900;
+        }
+        #cartPage #btnGoCheckout:hover { background:#f0fdf4 !important; }
+        /* 최소주문 안내 */
+        #cartPage #minOrderNotice { background:#ffffff !important; border-color:#fbbf24 !important; }
+
+        /* 5. 담당 매니저 — 흰 배경 (결제금액 안의 인셋 흰카드) */
+        #cartPage #cartManagerRow {
+            background:#ffffff !important;
+            border:1px solid #e5e7eb !important;
+            margin:14px 0 12px 0 !important;
+        }
+        #cartPage #cartManagerRow label[for],
+        #cartPage #cartManagerRow > label { color:#374151 !important; }
+
+        /* 모바일 보정 */
+        @media (max-width: 600px) {
+            #cartPage #cartDeliveryInfoWrap > div,
+            #cartPage #cartPaymentSection > div { padding:16px !important; }
+        }
+    </style>
+
     <div style="max-width: 1000px; margin: 0 auto; padding-bottom: 60px;">
         <div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
             <h1>🛒 <span data-i18n="cart_title">장바구니</span> <span id="cartCount">(0)</span></h1>
@@ -5355,14 +5426,14 @@ async function handleSubReturn() {
                 </div>
 
                 <!-- 큰 파일 안내 (구글 드라이브) -->
-                <div style="margin-top:12px; background:#fff1f2; border:1.5px solid #fecdd3; border-radius:12px; padding:16px 18px;">
-                    <div style="font-size:14px; color:#9f1239; line-height:1.75;">
-                        <div style="font-size:15px; font-weight:800; margin-bottom:8px;">
+                <div style="margin-top:12px; background:#1f1015; border:1.5px solid #7f1d1d; border-radius:12px; padding:16px 18px;">
+                    <div style="font-size:14px; color:#fca5a5; line-height:1.75;">
+                        <div style="font-size:15px; font-weight:800; margin-bottom:8px; color:#fecaca;">
                             <i class="fa-solid fa-triangle-exclamation"></i> 100MB 초과 파일은 업로드가 안 됩니다
                         </div>
                         <div style="margin-bottom:12px;">
-                            아래 <b>구글 드라이브 링크</b>로 들어가서 <b>본인 이름(또는 주문번호)으로 폴더를 만들어</b> 큰 파일을 업로드해주세요.<br>
-                            업로드 후 <b>카카오톡 또는 이메일로 담당자에게 알려주시면</b> 주문과 매칭하여 처리해드립니다.
+                            아래 <b style="color:#fff;">구글 드라이브 링크</b>로 들어가서 <b style="color:#fff;">본인 이름(또는 주문번호)으로 폴더를 만들어</b> 큰 파일을 업로드해주세요.<br>
+                            업로드 후 <b style="color:#fff;">카카오톡 또는 이메일로 담당자에게 알려주시면</b> 주문과 매칭하여 처리해드립니다.
                         </div>
                         <a href="https://drive.google.com/drive/folders/19QDUC69xal69AJ5voxuUdXULcum2JNNF?dmr=1&ec=wgc-drive-hero-goto"
                            target="_blank"
@@ -5396,8 +5467,8 @@ async function handleSubReturn() {
                     box-shadow: 0 8px 24px rgba(220,38,38,0.2);
                 }
                 #bulkUploadZone:hover {
-                    border-color: #ea580c;
-                    box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+                    border-color: #fbbf24;
+                    box-shadow: 0 4px 12px rgba(251,191,36,0.25);
                 }
                 @media (max-width: 600px) {
                     #bulkUploadZone .bulk-upload-cta > div:nth-child(1) { font-size: 44px !important; }
@@ -5575,10 +5646,10 @@ async function handleSubReturn() {
                 </div>
             </div>
 
-            <div style="width: 100%;">
+            <div style="width: 100%;" id="cartPaymentSection">
                 <div style="background:white; padding:20px; border-radius:12px;">
                     <h3 data-i18n="label_payment_amt">결제 금액</h3>
-                    
+
                     <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
                         <span data-i18n="label_product_price">상품</span>
                         <span id="summaryItemPrice">0원</span>
@@ -11444,7 +11515,7 @@ window._bkCalc = function() {
 // [수정 1] 금액 계산 함수 (단품/옵션 모두 수량 곱하기 적용)
 // [최종 수정] 금액 계산 함수 (상품과 옵션 수량 완전 분리)
 window.updateModalTotal = function() {
-    console.log('[updateModalTotal] v344 called');
+    console.log('[updateModalTotal] v345 called');
     const product = window.selectedProductForChoice;
     if(!product) return;
 
