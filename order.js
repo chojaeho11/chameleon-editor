@@ -1475,13 +1475,14 @@ async function openDeliveryInfoModal() {
                 };
                 if (mgrLabel) mgrLabel.textContent = labels[lang] || labels['en'];
 
-                // 본사 + 매니저 버튼 (고정 5개: 본사, 은미, 성희, 지숙, 연두)
+                // 매니저 4명 (2x2) + 본사 (하단) — 통일된 노랑색
+                const MGR_COLOR = '#f59e0b';
                 const btnConfig = [
-                    { label: { kr:'🏢 본사', ja:'🏢 本社', en:'🏢 HQ', zh:'🏢 总部', es:'🏢 Sede', de:'🏢 Zentrale', fr:'🏢 Siège', ar:'🏢 المقر' }, color:'#0ea5e9', id:'__hq__' },
-                    { name:'은미', label:{ kr:'👩 은미', ja:'👩 ウンミ', en:'👩 Eunmi', zh:'👩 恩美', es:'👩 Eunmi', de:'👩 Eunmi', fr:'👩 Eunmi', ar:'👩 أونمي' }, color:'#8b5cf6' },
-                    { name:'성희', label:{ kr:'👩 성희', ja:'👩 ソンヒ', en:'👩 Sunghee', zh:'👩 成熙', es:'👩 Sunghee', de:'👩 Sunghee', fr:'👩 Sunghee', ar:'👩 سونغهي' }, color:'#ec4899' },
-                    { name:'지숙', label:{ kr:'👩 지숙', ja:'👩 ジスク', en:'👩 Jisook', zh:'👩 智淑', es:'👩 Jisook', de:'👩 Jisook', fr:'👩 Jisook', ar:'👩 جيسوك' }, color:'#f59e0b' },
-                    { name:'연두', label:{ kr:'👩 연두', ja:'👩 ヨンドゥ', en:'👩 Yeondu', zh:'👩 软豆', es:'👩 Yeondu', de:'👩 Yeondu', fr:'👩 Yeondu', ar:'👩 يوندو' }, color:'#10b981' }
+                    { name:'은미', label:{ kr:'👩 은미', ja:'👩 ウンミ', en:'👩 Eunmi', zh:'👩 恩美', es:'👩 Eunmi', de:'👩 Eunmi', fr:'👩 Eunmi', ar:'👩 أونمي' }, color: MGR_COLOR },
+                    { name:'성희', label:{ kr:'👩 성희', ja:'👩 ソンヒ', en:'👩 Sunghee', zh:'👩 成熙', es:'👩 Sunghee', de:'👩 Sunghee', fr:'👩 Sunghee', ar:'👩 سونغهي' }, color: MGR_COLOR },
+                    { name:'지숙', label:{ kr:'👩 지숙', ja:'👩 ジスク', en:'👩 Jisook', zh:'👩 智淑', es:'👩 Jisook', de:'👩 Jisook', fr:'👩 Jisook', ar:'👩 جيسوك' }, color: MGR_COLOR },
+                    { name:'연두', label:{ kr:'👩 연두', ja:'👩 ヨンドゥ', en:'👩 Yeondu', zh:'👩 软豆', es:'👩 Yeondu', de:'👩 Yeondu', fr:'👩 Yeondu', ar:'👩 يوندو' }, color: MGR_COLOR },
+                    { label: { kr:'🏢 본사', ja:'🏢 本社', en:'🏢 HQ', zh:'🏢 总部', es:'🏢 Sede', de:'🏢 Zentrale', fr:'🏢 Siège', ar:'🏢 المقر' }, color:'#0ea5e9', id:'__hq__' }
                 ];
 
                 const hqWrap = document.getElementById('staffManagerHqBtn');
@@ -1505,9 +1506,10 @@ async function openDeliveryInfoModal() {
                 btnConfig.forEach((cfg, idx) => {
                     const matchMgr = cfg.name ? managers.find(m => m.name.includes(cfg.name)) : null;
                     const staffId = matchMgr ? String(matchMgr.id) : (cfg.id || '');
-                    const bgColor = (matchMgr && matchMgr.color) || cfg.color;
+                    const isHq = cfg.id === '__hq__';
+                    // 매니저는 통일된 노랑색, 본사는 cfg.color (하늘색) 사용
+                    const bgColor = isHq ? cfg.color : MGR_COLOR;
                     const text = cfg.label[lang] || cfg.label['en'];
-                    const isHq = idx === 0;
 
                     const btn = document.createElement('button');
                     btn.type = 'button';
@@ -1536,7 +1538,7 @@ async function openDeliveryInfoModal() {
                 });
 
                 // ★ 본사 기본 선택
-                const hqBtn = btnConfig[0];
+                const hqBtn = btnConfig.find(c => c.id === '__hq__') || btnConfig[btnConfig.length-1];
                 const hqStaffId = hqBtn.id || '__hq__';
                 mgrHidden.value = hqStaffId;
                 _syncAllMgrBtns();

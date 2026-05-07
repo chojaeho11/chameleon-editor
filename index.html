@@ -5455,8 +5455,8 @@ async function handleSubReturn() {
                     <div id="cartManagerRow" style="margin-bottom:12px; width:100%;">
                         <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:6px;" data-i18n="cart_manager">담당 매니저</label>
                         <input type="hidden" id="cartStaffManager" value="__hq__">
-                        <div id="cartManagerHqBtnWrap" style="margin-bottom:6px; width:100%;"></div>
-                        <div id="cartManagerBtns" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; width:100%;"></div>
+                        <div id="cartManagerBtns" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%; margin-bottom:6px;"></div>
+                        <div id="cartManagerHqBtnWrap" style="width:100%;"></div>
                     </div>
                     <script>(function(){
                         var h=window.location.hostname||'';
@@ -5468,32 +5468,38 @@ async function handleSubReturn() {
                         else if(lg==='zh') l='zh'; else if(lg==='ar') l='ar'; else if(lg==='es') l='es'; else if(lg==='de') l='de'; else if(lg==='fr') l='fr';
                         var hq={kr:'🏢 본사진행',ja:'🏢 本社対応',en:'🏢 HQ handles',zh:'🏢 总部处理',ar:'🏢 المقر',es:'🏢 Sede central',de:'🏢 Zentrale',fr:'🏢 Siege'};
                         var mgrs=[
-                            {value:'__hq__', isHq:true, label:hq[l]||hq['en']},
                             {value:'eunmi', label:{kr:'👩 은미',ja:'👩 ウンミ',en:'👩 Eunmi',zh:'👩 恩美',ar:'👩 أونمي',es:'👩 Eunmi',de:'👩 Eunmi',fr:'👩 Eunmi'}[l]||'Eunmi'},
                             {value:'sunghee', label:{kr:'👩 성희',ja:'👩 ソンヒ',en:'👩 Sunghee',zh:'👩 成熙',ar:'👩 سونغهي',es:'👩 Sunghee',de:'👩 Sunghee',fr:'👩 Sunghee'}[l]||'Sunghee'},
                             {value:'jisook', label:{kr:'👩 지숙',ja:'👩 ジスク',en:'👩 Jisook',zh:'👩 智淑',ar:'👩 جيسوك',es:'👩 Jisook',de:'👩 Jisook',fr:'👩 Jisook'}[l]||'Jisook'},
-                            {value:'yeondu', label:{kr:'👩 연두',ja:'👩 ヨンドゥ',en:'👩 Yeondu',zh:'👩 软豆',ar:'👩 يوندو',es:'👩 Yeondu',de:'👩 Yeondu',fr:'👩 Yeondu'}[l]||'Yeondu'}
+                            {value:'yeondu', label:{kr:'👩 연두',ja:'👩 ヨンドゥ',en:'👩 Yeondu',zh:'👩 软豆',ar:'👩 يوندو',es:'👩 Yeondu',de:'👩 Yeondu',fr:'👩 Yeondu'}[l]||'Yeondu'},
+                            {value:'__hq__', isHq:true, label:hq[l]||hq['en']}
                         ];
                         var box=document.getElementById('cartManagerBtns');
                         var hqWrap=document.getElementById('cartManagerHqBtnWrap');
                         var hidden=document.getElementById('cartStaffManager');
                         if(!box||!hidden)return;
+                        // 기본 스타일 (선택 안 됨)
+                        var STYLE_MGR_BASE='width:100%;padding:12px 4px;border:2px solid #f59e0b;background:#fef3c7;color:#92400e;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;min-width:0;white-space:nowrap;';
+                        var STYLE_MGR_SEL ='width:100%;padding:12px 4px;border:2.5px solid #d97706;background:#fde68a;color:#78350f;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.15s;min-width:0;white-space:nowrap;box-shadow:0 0 0 2px #fcd34d inset;';
+                        var STYLE_HQ_BASE='width:100%;padding:14px 8px;border:2px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.15s;';
+                        var STYLE_HQ_SEL ='width:100%;padding:14px 8px;border:2px solid #6366f1;background:#eef2ff;color:#4338ca;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.15s;';
                         function _resetAll(){
                             var allBtns=[].concat([].slice.call(hqWrap?hqWrap.querySelectorAll('button'):[]),[].slice.call(box.querySelectorAll('button')));
-                            allBtns.forEach(function(b){ b.style.border='2px solid #e2e8f0'; b.style.background='#fff'; b.style.color='#475569'; });
+                            allBtns.forEach(function(b){
+                                b.style.cssText = b.dataset.isHq==='1' ? STYLE_HQ_BASE : STYLE_MGR_BASE;
+                            });
                         }
                         function _select(btn){
                             _resetAll();
-                            btn.style.border='2px solid #6366f1'; btn.style.background='#eef2ff'; btn.style.color='#4338ca';
+                            btn.style.cssText = btn.dataset.isHq==='1' ? STYLE_HQ_SEL : STYLE_MGR_SEL;
                         }
                         mgrs.forEach(function(m){
                             var btn=document.createElement('button');
                             btn.type='button';
                             btn.textContent=m.label;
                             btn.dataset.val=m.value;
-                            btn.style.cssText=m.isHq
-                                ? 'width:100%;padding:14px 8px;border:2px solid #6366f1;background:#eef2ff;color:#4338ca;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.15s;'
-                                : 'width:100%;padding:12px 4px;border:2px solid #e2e8f0;background:#fff;color:#475569;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;min-width:0;white-space:nowrap;';
+                            btn.dataset.isHq=m.isHq?'1':'0';
+                            btn.style.cssText = m.isHq ? STYLE_HQ_SEL : STYLE_MGR_BASE; // HQ는 기본 선택됨
                             btn.onclick=function(){
                                 hidden.value=m.value;
                                 _select(btn);
@@ -5789,8 +5795,8 @@ async function handleSubReturn() {
         <div id="staffManagerSelectWrap" style="margin-top:14px; display:none; width:100%;">
             <p id="staffManagerLabel" style="font-size:13px; color:#475569; margin-bottom:8px; font-weight:600; text-align:center;">상담하신 담당 매니저님이 계시다면 선택해주세요.</p>
             <input type="hidden" id="inputStaffManager" value="">
-            <div id="staffManagerHqBtn" style="margin-bottom:8px; width:100%;"></div>
-            <div id="staffManagerBtns" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; width:100%;"></div>
+            <div id="staffManagerBtns" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%; margin-bottom:8px;"></div>
+            <div id="staffManagerHqBtn" style="width:100%;"></div>
             <p id="staffManagerGuide" style="font-size:12px; color:#94a3b8; margin-top:8px; text-align:center; display:none;"></p>
         </div>
 
@@ -6464,7 +6470,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=434"></script>
 <script type="module" src="./context-menu.js?v=434"></script>
 <script type="module" src="./export.js?v=434"></script>
-<script type="module" src="./order.js?v=456"></script>
+<script type="module" src="./order.js?v=457"></script>
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./my-design.js?v=434"></script>
 <script type="module" src="./ppt-mode.js?v=434"></script>
@@ -7694,7 +7700,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=434 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=434';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=456'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=457'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=434';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=434';
 
@@ -12640,7 +12646,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=456');
+                    const m = await import('./order.js?v=457');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -12710,7 +12716,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=456').then(m => {
+            import('./order.js?v=457').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -13311,7 +13317,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=456').then(m => {
+        import('./order.js?v=457').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17846,7 +17852,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=456').then(function(mod) {
+            import('./order.js?v=457').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
