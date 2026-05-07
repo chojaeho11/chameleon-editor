@@ -26,7 +26,8 @@
       "Bash(grep -n \"key: ''''menu''''\\\\|Menu\\\\|Flyer\\\\|Poster\" canvas-template.js)",
       "Bash(grep -n \"applyNewWizard\\\\|key: ''''menu''''\" canvas-template.js)",
       "Bash(while read:*)",
-      "Bash(do sed:*)"
+      "Bash(do sed:*)",
+      "Bash(awk '{print length}')"
     ]
   }
 }
