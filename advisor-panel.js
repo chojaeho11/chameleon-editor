@@ -1143,21 +1143,6 @@ async function sendMessage(text, imageData) {
     if (text && !imageData) {
         const _userLower = text.toLowerCase();
 
-        // 0) 주소/위치 요청 — 가장 먼저 체크
-        const _addrKeys = ['본사 주소','회사 주소','회사주소','본사주소','주소 알려','주소알려','어디 있','어디있','어디에 있','어디에있','위치 알려','위치알려','오시는 길','찾아가','찾아오','공장 주소','공장주소','방문하려','방문 하려',
-            '住所','本社住所','会社住所','場所はどこ','アクセス','工場住所',
-            'address','company address','hq address','headquarters address','where are you located','your location','where is your','directions to',
-            '地址','公司地址','总部地址','工厂地址','在哪里','怎么去',
-            'dirección','ubicación','dónde están',
-            'adresse','firmenadresse','standort','wo sind sie',
-            'l\'adresse','où êtes-vous',
-            'العنوان','عنوان الشركة','أين أنتم'];
-        if (_addrKeys.some(k => _userLower.includes(k))) {
-            addBubble(text, 'user');
-            showAddressCard();
-            return;
-        }
-
         // 1) 이메일 요청 (가장 먼저 체크 — 다른 키워드와 겹치지 않게)
         const _emailKeys = ['이메일','이메 일','이멜','메일주소','메일 주소','이메일주소','이메일 주소','메일로',
             'メール','メールアドレス','eメール',
@@ -1206,6 +1191,25 @@ async function sendMessage(text, imageData) {
             showPhoneCard();
             return;
         }
+
+        // 4) 주소/위치 요청 — phone 체크 이후 (그래야 "본사 전화"가 phone으로 가고 "본사 주소"가 address로 감)
+        // 제외: "배송 주소 변경" 같은 고객 주소 관련은 AI가 처리
+        const _addrExclusions = ['배송 주소','배송주소','주문 주소','주문주소','받는 사람','받는사람','수령인','주소 변경','주소변경','주소 수정','주소수정','주소 입력','주소입력','주소 작성','주소작성','우편번호','주소 검색','주소검색','내 주소','제 주소'];
+        const _isCustomerAddrQuery = _addrExclusions.some(k => _userLower.includes(k));
+        const _addrKeys = ['주소','위치','오시는 길','찾아가','찾아오','방문하','어디 있','어디있','어디에 있','어디에있','어디예요','어디에요','어디서','어디인가','회사가 어디','본사가 어디','공장','지점',
+            '住所','所在地','場所はどこ','アクセス','どこにあり',
+            'company address','hq address','headquarters address','your address','where are you located','your location','where is your office','directions to','visit you','your office','company location',
+            '公司地址','总部地址','在哪里','怎么去','工厂地址','工厂在',
+            'dirección de la empresa','dirección de la oficina','ubicación','dónde están','dónde estás','cómo llegar',
+            'firmenadresse','büroadresse','standort','wo sind sie','wo befindet sich','wie komme ich',
+            'adresse de l\'entreprise','adresse du bureau','où êtes-vous','où se trouve','comment venir',
+            'عنوان الشركة','عنوان المكتب','أين أنتم','أين الشركة','كيف أصل'];
+        if (!_isCustomerAddrQuery && _addrKeys.some(k => _userLower.includes(k))) {
+            addBubble(text, 'user');
+            showAddressCard();
+            return;
+        }
+
         // ★ 견적 요청 키워드 감지 → 견적 폼 바로 표시
         const _quoteKeys = ['견적요청','부스견적','전시견적','대량견적','quote request','booth quote','見積もり依頼','ブース見積もり'];
         if (_quoteKeys.some(k => _userLower.includes(k))) {
