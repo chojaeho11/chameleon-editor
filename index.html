@@ -11444,7 +11444,7 @@ window._bkCalc = function() {
 // [수정 1] 금액 계산 함수 (단품/옵션 모두 수량 곱하기 적용)
 // [최종 수정] 금액 계산 함수 (상품과 옵션 수량 완전 분리)
 window.updateModalTotal = function() {
-    console.log('[updateModalTotal] v342 called');
+    console.log('[updateModalTotal] v343 called');
     const product = window.selectedProductForChoice;
     if(!product) return;
 
@@ -11934,6 +11934,50 @@ window.updateModalTotal = function() {
                 if (w > mH && wInput2) wInput2.value = mH;
                 if (h > mH && hInput2) hInput2.value = mH;
                 showToast(_maxMsg, 'warn');
+                return;
+            }
+        }
+
+        // ★ 현수막 원단 최대 폭 제한 (롤 원단)
+        // UV 3미터 대폭: 3000mm, 일반 현수막: 1600mm. 길이는 무제한 (롤이므로)
+        // → 짧은 쪽(폭)이 maxW를 초과하면 주문 불가
+        const _bannerCodesUV3m = ['234423423', '44578_copy']; // UV 3미터 대폭 현수막
+        const _bannerCodes1600 = ['44578', '5646456', '44578_copy_copy', '34453453', '4354536', '45646456', '3453535', '3243243424', '752005']; // 일반 현수막 (1600mm)
+        const _isBannerUV3m = _bannerCodesUV3m.includes(product.code);
+        const _isBanner1600 = _bannerCodes1600.includes(product.code);
+        if (_isBannerUV3m || _isBanner1600) {
+            const _bannerMaxW = _isBannerUV3m ? 3000 : 1600;
+            const _shortSide = Math.min(w, h);
+            if (_shortSide > _bannerMaxW) {
+                const _bannerMsgs = {
+                    kr: `현수막 원단 사이즈 이상은 주문 불가합니다.\n원단 최대 폭: ${_bannerMaxW}mm (길이는 무제한)`,
+                    ja: `横断幕生地の最大幅(${_bannerMaxW}mm)を超えるサイズは注文できません。`,
+                    en: `Cannot order beyond banner fabric size. Max width: ${_bannerMaxW}mm (length unlimited).`,
+                    zh: `超过横幅布料尺寸(最大宽度${_bannerMaxW}mm)无法下单。`,
+                    ar: `لا يمكن الطلب بحجم يتجاوز قماش اللافتة. الحد الأقصى للعرض: ${_bannerMaxW}mm.`,
+                    es: `No se puede pedir más allá del tamaño de la tela. Ancho máx: ${_bannerMaxW}mm.`,
+                    de: `Bestellung über die Bannerstoffgröße hinaus nicht möglich. Max. Breite: ${_bannerMaxW}mm.`,
+                    fr: `Commande impossible au-delà de la taille du tissu. Largeur max : ${_bannerMaxW}mm.`
+                };
+                const _bannerMsg = _bannerMsgs[lang] || _bannerMsgs.en;
+                // 짧은 쪽 자동 cap (또는 둘 다 maxW 초과면 둘 다 cap)
+                const _wInputB = document.getElementById('inputCustW');
+                const _hInputB = document.getElementById('inputCustH');
+                if (w > _bannerMaxW && h > _bannerMaxW) {
+                    // 둘 다 초과 → 짧은 쪽을 maxW로
+                    if (w <= h) { if (_wInputB) _wInputB.value = _bannerMaxW; }
+                    else        { if (_hInputB) _hInputB.value = _bannerMaxW; }
+                } else if (w > _bannerMaxW && w === _shortSide) {
+                    if (_wInputB) _wInputB.value = _bannerMaxW;
+                } else if (h > _bannerMaxW && h === _shortSide) {
+                    if (_hInputB) _hInputB.value = _bannerMaxW;
+                }
+                showToast(_bannerMsg, 'warn');
+                if (priceDisplay) {
+                    priceDisplay.innerText = lang === 'kr' ? '주문 불가' : 'Cannot order';
+                    priceDisplay.dataset.rawPrice = 0;
+                    priceDisplay.dataset.rawUnitPrice = 0;
+                }
                 return;
             }
         }
