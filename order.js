@@ -984,7 +984,7 @@ function _calcInstallDurationMin(totalKRW, isProvince) {
 
 // 공통: 3개 기간 카드 + "시간 상관없음" 렌더러
 // opts: { hiddenId, gridId, dateId, bookings, onSelect(value), initialValue }
-function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange }) {
+function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange, mode }) {
     if (!grid) return;
     const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
     const T = {
@@ -998,13 +998,16 @@ function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange }) {
         anySub:   { kr:'기사가 경로 최적화', ja:'ドライバーが最適化', en:'Driver optimises route', zh:'司机自动安排' }[lang] || 'Driver optimises route',
         booked:   { kr:'예약', ja:'予約', en:'booked', zh:'已预约' }[lang] || 'booked',
         left:     { kr:'남음', ja:'空き', en:'left', zh:'剩余' }[lang] || 'left',
-        full:     { kr:'마감', ja:'満員', en:'Full', zh:'已满' }[lang] || 'Full'
+        full:     { kr:'마감', ja:'満員', en:'Full', zh:'已满' }[lang] || 'Full',
+        removalOnly: { kr:'철거는 야간/시간상관없음만 가능', ja:'撤去は夜間/指定なしのみ', en:'Removal: night/any only', zh:'拆除仅夜间/不限' }[lang] || 'Removal: night/any only'
     };
+    // ★ 철거(removal)는 영업시간 외 작업 → 오전/오후 선택 불가, 야간/시간상관없음만
+    const isRemoval = mode === 'removal';
     const periods = [
-        { key:'am',    title:T.am,    sub:T.amSub,    cap:PERIOD_CAPACITY.am },
-        { key:'pm',    title:T.pm,    sub:T.pmSub,    cap:PERIOD_CAPACITY.pm },
-        { key:'night', title:T.night, sub:T.nightSub, cap:PERIOD_CAPACITY.night },
-        { key:'any',   title:T.any,   sub:T.anySub,   cap:null }
+        { key:'am',    title:T.am,    sub:T.amSub,    cap:PERIOD_CAPACITY.am,    blocked: isRemoval },
+        { key:'pm',    title:T.pm,    sub:T.pmSub,    cap:PERIOD_CAPACITY.pm,    blocked: isRemoval },
+        { key:'night', title:T.night, sub:T.nightSub, cap:PERIOD_CAPACITY.night, blocked: false },
+        { key:'any',   title:T.any,   sub:T.anySub,   cap:null,                  blocked: false }
     ];
     grid.innerHTML = '';
     grid.style.display = 'grid';
@@ -1027,24 +1030,44 @@ function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange }) {
     periods.forEach(p => {
         const used = (bookings && bookings[p.key]) || 0;
         const isFull = p.cap !== null && used >= p.cap;
+        const isBlocked = !!p.blocked;
+        const isDisabled = isFull || isBlocked;
         const card = document.createElement('button');
         card.type = 'button';
         card.dataset.period = p.key;
         const base = 'padding:14px 12px;border-radius:14px;border:2px solid #cbd5e1;background:#fff;color:#334155;font-weight:700;text-align:left;cursor:pointer;transition:all 0.15s;';
-        card.style.cssText = base + (isFull ? 'opacity:0.55;cursor:not-allowed;border-color:#dc2626;background:#fef2f2;color:#991b1b;' : '');
-        card.disabled = !!isFull;
-        const capLine = p.cap === null
-            ? `<div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;">${p.sub}</div>`
-            : `<div style="font-size:11px;color:${isFull?'#991b1b':'#64748b'};margin-top:4px;font-weight:600;">${p.sub}</div>
+        let extraStyle = '';
+        if (isBlocked) extraStyle = 'opacity:0.45;cursor:not-allowed;border-color:#cbd5e1;background:#f1f5f9;color:#94a3b8;text-decoration:line-through;';
+        else if (isFull) extraStyle = 'opacity:0.55;cursor:not-allowed;border-color:#dc2626;background:#fef2f2;color:#991b1b;';
+        card.style.cssText = base + extraStyle;
+        card.disabled = isDisabled;
+        if (isBlocked) card.title = T.removalOnly;
+        let capLine;
+        if (isBlocked) {
+            capLine = `<div style="font-size:11px;color:#94a3b8;margin-top:4px;font-weight:600;">${p.sub}</div>
+                       <div style="font-size:10px;margin-top:6px;font-weight:700;color:#94a3b8;">${T.removalOnly}</div>`;
+        } else if (p.cap === null) {
+            capLine = `<div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:600;">${p.sub}</div>`;
+        } else {
+            capLine = `<div style="font-size:11px;color:${isFull?'#991b1b':'#64748b'};margin-top:4px;font-weight:600;">${p.sub}</div>
                <div style="font-size:11px;margin-top:6px;font-weight:800;color:${isFull?'#991b1b':'#059669'};">
                  ${isFull ? T.full : `${used}/${p.cap} · ${p.cap - used} ${T.left}`}
                </div>`;
+        }
         card.innerHTML = `<div style="font-size:15px;font-weight:800;">${p.title}</div>${capLine}`;
-        if (!isFull) card.addEventListener('click', () => select(p.key));
+        if (!isDisabled) card.addEventListener('click', () => select(p.key));
         grid.appendChild(card);
     });
 
-    if (initialValue) select(initialValue);
+    // 철거에서 am/pm이 이전에 저장돼 있었다면 무시 (회색이라 선택할 수 없음)
+    if (initialValue) {
+        const _blockedKeys = periods.filter(x => x.blocked).map(x => x.key);
+        if (_blockedKeys.includes(initialValue)) {
+            if (hidden) hidden.value = '';
+        } else {
+            select(initialValue);
+        }
+    }
 }
 
 // 카트에 허니콤 카테고리 상품이 있는지 판정
@@ -1109,6 +1132,7 @@ async function _renderCartTimeGrid({ hiddenId, gridId, dateId, prefix }) {
         hidden,
         bookings,
         initialValue: hidden.value || '',
+        mode: prefix, // 'delivery' or 'removal' — removal disables AM/PM
         onChange: () => { if (prefix === 'delivery') _updateRemovalGate(); }
     });
 }
