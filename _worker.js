@@ -286,17 +286,32 @@ function generateCategoryHtml(products, path, cc) {
 
     // ★ 네이버 캐러셀(ListItem) 전용 — 광고 확장소재용 별도 ItemList
     // Naver Search Advisor 카탈로그 캐러셀 공식 예시 형식 (item 중첩 + position string)
+    // + Google Product Snippet 검증 통과를 위한 offers 필수 필드 포함
+    const _currency = cc === 'JP' ? 'JPY' : cc === 'US' ? 'USD' : 'KRW';
     const naverCarouselItems = [];
     products.slice(0, 10).forEach((p, i) => {
         if (!p.img_url) return;
         const name = getProductName(p, cc);
+        const _price = cc === 'JP' ? (p.price_jp || p.price || 0) : cc === 'US' ? (p.price_us || p.price || 0) : (p.price || 0);
+        const _rawDesc = cc === 'JP' ? (p.description_jp || p.description || '') : cc === 'US' ? (p.description_us || p.description || '') : (p.description || '');
+        const _desc = (_rawDesc || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 160) || name;
         naverCarouselItems.push({
             "@type": "ListItem",
             "item": {
                 "@type": "Product",
                 "name": name,
+                "description": _desc,
                 "image": p.img_url,
-                "url": `${domain}/${p.code}`
+                "url": `${domain}/${p.code}`,
+                "brand": { "@type": "Brand", "name": siteName },
+                "offers": {
+                    "@type": "Offer",
+                    "url": `${domain}/${p.code}`,
+                    "priceCurrency": _currency,
+                    "price": String(_price || 0),
+                    "availability": "https://schema.org/InStock",
+                    "seller": { "@type": "Organization", "name": siteName }
+                }
             },
             "position": String(naverCarouselItems.length + 1)
         });
@@ -529,9 +544,9 @@ export default {
                             keywords: '허니콤보드,허니콤보드 인쇄,허니콤 가벽,종이가벽,종이매대,등신대제작,전시부스,팝업스토어,패브릭인쇄,천인쇄,아크릴인쇄,아크릴 굿즈,포맥스인쇄,폼보드,명함인쇄,단체티,롤업배너,X배너,쇼핑백,박스인쇄,카멜레온프린팅,온라인인쇄,UV인쇄,무료디자인에디터,당일출고,도매인쇄',
                             domain: 'https://www.cafe2626.com'
                         };
-                        // Fetch some products for the homepage
+                        // Fetch some products for the homepage (price/desc 포함 — 구조화 데이터용)
                         const homeProducts = await fetchFromSupabase(
-                            'admin_products?select=code,name,name_jp,name_us,img_url&or=(partner_id.is.null,partner_status.eq.approved)&order=sort_order.asc&limit=30'
+                            'admin_products?select=code,name,name_jp,name_us,img_url,price,price_jp,price_us,description&or=(partner_id.is.null,partner_status.eq.approved)&order=sort_order.asc&limit=30'
                         );
                         let productItems = '';
                         // ★ 네이버 캐러셀(ListItem) 전용 — 광고 확장소재용
@@ -545,14 +560,29 @@ export default {
 <p style="font-size:13px;margin:6px 0;">${escHtml(name)}</p></div>\n`;
                                     // 캐러셀에는 상위 10개만 (네이버 광고 확장소재 권장)
                                     // 네이버 공식 예시 형식: item 중첩 + @type:Product + position string
+                                    // + Google Product Snippet 검증 통과를 위한 offers 필수 필드 포함
                                     if (homeCarouselItems.length < 10) {
+                                        const _hCurrency = cc === 'JP' ? 'JPY' : cc === 'US' ? 'USD' : 'KRW';
+                                        const _hPrice = cc === 'JP' ? (p.price_jp || p.price || 0) : cc === 'US' ? (p.price_us || p.price || 0) : (p.price || 0);
+                                        const _hRawDesc = (p.description || '').toString();
+                                        const _hDesc = _hRawDesc.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 160) || name;
                                         homeCarouselItems.push({
                                             "@type": "ListItem",
                                             "item": {
                                                 "@type": "Product",
                                                 "name": name,
+                                                "description": _hDesc,
                                                 "image": p.img_url,
-                                                "url": `${homeData.domain}/${p.code}`
+                                                "url": `${homeData.domain}/${p.code}`,
+                                                "brand": { "@type": "Brand", "name": homeData.siteName },
+                                                "offers": {
+                                                    "@type": "Offer",
+                                                    "url": `${homeData.domain}/${p.code}`,
+                                                    "priceCurrency": _hCurrency,
+                                                    "price": String(_hPrice || 0),
+                                                    "availability": "https://schema.org/InStock",
+                                                    "seller": { "@type": "Organization", "name": homeData.siteName }
+                                                }
                                             },
                                             "position": String(homeCarouselItems.length + 1)
                                         });
