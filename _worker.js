@@ -274,6 +274,24 @@ function generateCategoryHtml(products, path, cc) {
     const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": `${domain}/${path}`,
         "mainEntity": { "@type": "ItemList", "itemListElement": jsonLdItems } });
 
+    // ★ 네이버 캐러셀(ListItem) 전용 — 광고 확장소재용 별도 ItemList
+    // Naver Search Advisor 캐러셀 가이드 형식 (url/image/name 직접)
+    const naverCarouselItems = [];
+    products.slice(0, 10).forEach((p, i) => {
+        if (!p.img_url) return;
+        const name = getProductName(p, cc);
+        naverCarouselItems.push({
+            "@type": "ListItem",
+            "position": naverCarouselItems.length + 1,
+            "url": `${domain}/${p.code}`,
+            "image": p.img_url,
+            "name": name
+        });
+    });
+    const naverCarouselLd = naverCarouselItems.length > 0
+        ? `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", "itemListElement": naverCarouselItems })}</script>`
+        : '';
+
     return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escHtml(title)}</title>
 <meta name="description" content="${escHtml(desc)}">
@@ -286,6 +304,7 @@ ${keywords ? `<meta name="keywords" content="${escHtml(keywords)}">` : ''}
 <link rel="canonical" href="${domain}/${path}">
 ${hreflangTags('/' + path)}
 <script type="application/ld+json">${jsonLd}</script>
+${naverCarouselLd}
 </head><body><h1>${escHtml(title)}</h1>
 <p>${escHtml(desc)}</p>
 <p>${products.length} products</p>${items}
@@ -501,16 +520,31 @@ export default {
                             'admin_products?select=code,name,name_jp,name_us,img_url&or=(partner_id.is.null,partner_status.eq.approved)&order=sort_order.asc&limit=30'
                         );
                         let productItems = '';
+                        // ★ 네이버 캐러셀(ListItem) 전용 — 광고 확장소재용
+                        const homeCarouselItems = [];
                         if (homeProducts && homeProducts.length > 0) {
-                            homeProducts.forEach(p => {
+                            homeProducts.forEach((p, i) => {
                                 const name = getProductName(p, cc);
                                 if (p.img_url) {
                                     productItems += `<div style="display:inline-block;margin:10px;text-align:center;max-width:200px;">
 <a href="${homeData.domain}/${encodeURIComponent(p.code)}"><img src="${escHtml(p.img_url)}" alt="${escHtml(name)}" width="200" height="200" loading="lazy"></a>
 <p style="font-size:13px;margin:6px 0;">${escHtml(name)}</p></div>\n`;
+                                    // 캐러셀에는 상위 10개만 (네이버 광고 확장소재 권장)
+                                    if (homeCarouselItems.length < 10) {
+                                        homeCarouselItems.push({
+                                            "@type": "ListItem",
+                                            "position": homeCarouselItems.length + 1,
+                                            "url": `${homeData.domain}/${p.code}`,
+                                            "image": p.img_url,
+                                            "name": name
+                                        });
+                                    }
                                 }
                             });
                         }
+                        const homeCarouselLd = homeCarouselItems.length > 0
+                            ? `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", "itemListElement": homeCarouselItems })}</script>`
+                            : '';
                         // Category links for bots to discover
                         const catLinks = Object.keys(SEO_CATEGORIES).map(c =>
                             `<a href="${homeData.domain}/${c}">${c}</a>`
@@ -536,6 +570,7 @@ ${hreflangTags('/')}
         { "@type": "WebSite", "name": homeData.siteName, "url": homeData.domain, "inLanguage": homeData.lang }
     ]
 })}</script>
+${homeCarouselLd}
 </head><body>
 <h1>${escHtml(homeData.title)}</h1>
 <p>${escHtml(homeData.desc)}</p>
