@@ -275,21 +275,24 @@ function generateCategoryHtml(products, path, cc) {
         "mainEntity": { "@type": "ItemList", "itemListElement": jsonLdItems } });
 
     // ★ 네이버 캐러셀(ListItem) 전용 — 광고 확장소재용 별도 ItemList
-    // Naver Search Advisor 캐러셀 가이드 형식 (url/image/name 직접)
+    // Naver Search Advisor 카탈로그 캐러셀 공식 예시 형식 (item 중첩 + position string)
     const naverCarouselItems = [];
     products.slice(0, 10).forEach((p, i) => {
         if (!p.img_url) return;
         const name = getProductName(p, cc);
         naverCarouselItems.push({
             "@type": "ListItem",
-            "position": naverCarouselItems.length + 1,
-            "url": `${domain}/${p.code}`,
-            "image": p.img_url,
-            "name": name
+            "item": {
+                "@type": "Product",
+                "name": name,
+                "image": p.img_url,
+                "url": `${domain}/${p.code}`
+            },
+            "position": String(naverCarouselItems.length + 1)
         });
     });
     const naverCarouselLd = naverCarouselItems.length > 0
-        ? `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", "itemListElement": naverCarouselItems })}</script>`
+        ? `<script type="application/ld+json">${JSON.stringify({ "@context": "http://schema.org", "@type": "ItemList", "itemListElement": naverCarouselItems })}</script>`
         : '';
 
     return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -530,20 +533,24 @@ export default {
 <a href="${homeData.domain}/${encodeURIComponent(p.code)}"><img src="${escHtml(p.img_url)}" alt="${escHtml(name)}" width="200" height="200" loading="lazy"></a>
 <p style="font-size:13px;margin:6px 0;">${escHtml(name)}</p></div>\n`;
                                     // 캐러셀에는 상위 10개만 (네이버 광고 확장소재 권장)
+                                    // 네이버 공식 예시 형식: item 중첩 + @type:Product + position string
                                     if (homeCarouselItems.length < 10) {
                                         homeCarouselItems.push({
                                             "@type": "ListItem",
-                                            "position": homeCarouselItems.length + 1,
-                                            "url": `${homeData.domain}/${p.code}`,
-                                            "image": p.img_url,
-                                            "name": name
+                                            "item": {
+                                                "@type": "Product",
+                                                "name": name,
+                                                "image": p.img_url,
+                                                "url": `${homeData.domain}/${p.code}`
+                                            },
+                                            "position": String(homeCarouselItems.length + 1)
                                         });
                                     }
                                 }
                             });
                         }
                         const homeCarouselLd = homeCarouselItems.length > 0
-                            ? `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", "itemListElement": homeCarouselItems })}</script>`
+                            ? `<script type="application/ld+json">${JSON.stringify({ "@context": "http://schema.org", "@type": "ItemList", "itemListElement": homeCarouselItems })}</script>`
                             : '';
                         // Category links for bots to discover
                         const catLinks = Object.keys(SEO_CATEGORIES).map(c =>
