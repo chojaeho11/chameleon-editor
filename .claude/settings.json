@@ -27,7 +27,8 @@
       "Bash(grep -n \"applyNewWizard\\\\|key: ''''menu''''\" canvas-template.js)",
       "Bash(while read:*)",
       "Bash(do sed:*)",
-      "Bash(awk '{print length}')"
+      "Bash(awk '{print length}')",
+      "WebFetch(domain:printtree.kr)"
     ]
   }
 }

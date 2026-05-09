@@ -42,12 +42,16 @@
 
 <style>
 :root {
-    --primary: #e11d48;
-    --primary-dark: #be123c;
-    --accent: #f97316;
-    --bg: #fafbfc;
-    --text: #1e293b;
-    --text-light: #64748b;
+    --primary: #92400e;
+    --primary-dark: #78350f;
+    --accent: #b45309;
+    --cream: #faf6ed;
+    --cream-dark: #f3ead4;
+    --brown: #78350f;
+    --brown-dark: #451a03;
+    --bg: #fdfaf3;
+    --text: #451a03;
+    --text-light: #78350f;
     --border: #e5e7eb;
     --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
     --radius: 16px;
@@ -63,10 +67,48 @@ body {
 }
 a { text-decoration: none; color: inherit; }
 
-/* ── 헤더 ── */
+/* ── 상단 미색 브랜드 띠 (Printtree 스타일) ── */
+.brand-band {
+    background: var(--cream);
+    border-bottom: 1px solid var(--cream-dark);
+    padding: 18px 24px;
+}
+.brand-band-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px;
+}
+.brand-tagline {
+    font-size: 12px; letter-spacing: 3px; color: var(--brown); font-weight: 700;
+    text-transform: uppercase;
+}
+.brand-logo {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 32px; font-weight: 900; color: var(--brown-dark);
+    letter-spacing: 6px; text-align: center;
+    text-transform: uppercase;
+}
+.brand-search {
+    display: flex; justify-content: flex-end;
+}
+.brand-search input {
+    width: 220px; padding: 10px 16px; border-radius: 50px;
+    border: 1px solid var(--cream-dark); background: #fff;
+    font-size: 13px; outline: none; color: var(--brown);
+}
+.brand-search input::placeholder { color: #b08968; }
+@media (max-width: 768px) {
+    .brand-band { padding: 14px 16px; }
+    .brand-band-inner { grid-template-columns: 1fr; gap: 12px; text-align: center; }
+    .brand-tagline { font-size: 10px; letter-spacing: 2px; }
+    .brand-logo { font-size: 24px; letter-spacing: 4px; }
+    .brand-search { justify-content: center; }
+    .brand-search input { width: 100%; max-width: 300px; }
+}
+
+/* ── 헤더 (메인 네비) ── */
 .site-header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(255,255,255,0.92);
+    background: rgba(255,255,255,0.97);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
@@ -74,19 +116,19 @@ a { text-decoration: none; color: inherit; }
 .header-inner {
     max-width: 1200px; margin: 0 auto;
     display: flex; align-items: center; justify-content: space-between;
-    height: 60px;
+    height: 56px;
 }
-.logo { font-size: 17px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; white-space: nowrap; }
-.nav-links { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
+.logo { font-size: 16px; font-weight: 900; color: var(--brown); letter-spacing: -0.5px; white-space: nowrap; }
+.nav-links { display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
 .nav-links a {
-    font-size: 13px; font-weight: 600; color: var(--text-light);
+    font-size: 13px; font-weight: 700; color: var(--brown);
     transition: color 0.2s; white-space: nowrap;
 }
 .nav-links a:hover { color: var(--primary); }
 .btn-home {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 7px 14px; border-radius: 8px;
-    background: var(--primary); color: #fff;
+    background: var(--brown); color: #fff;
     font-size: 12px; font-weight: 700;
     transition: all 0.2s; white-space: nowrap;
 }
@@ -307,29 +349,68 @@ a { text-decoration: none; color: inherit; }
 </head>
 <body>
 
-<!-- 헤더 -->
+<!-- 미색 브랜드 띠 (Printtree 스타일) -->
+<div class="brand-band">
+    <div class="brand-band-inner">
+        <div class="brand-tagline">— MAKE YOUR OWN FABRICS —</div>
+        <a href="/" class="brand-logo">COTTON PRINT</a>
+        <div class="brand-search">
+            <input type="text" placeholder="원단·디자인 검색" id="cottonSearchInput" onkeydown="if(event.key==='Enter')window._cottonSearch();">
+        </div>
+    </div>
+</div>
+
+<!-- 헤더 (메인 네비) -->
 <header class="site-header">
     <div class="header-inner">
         <a id="logoLink" href="/" class="logo">
-            <i class="fa-solid fa-shirt" style="margin-right:4px;"></i>Cotton Print · 코튼프린팅
+            <i class="fa-solid fa-shirt" style="margin-right:4px;color:var(--accent);"></i>코튼프린팅
         </a>
         <nav class="nav-links">
-            <div class="lang-selector" id="langSelector"></div>
+            <a href="#products">디자인 원단</a>
+            <a href="#process">주문 방법</a>
+            <a href="#reviewSection">고객 후기</a>
+            <a href="https://www.cafe2626.com" class="btn-home" style="color:#fff;">메인몰 →</a>
+            <div class="lang-selector" id="langSelector" style="display:none;"></div>
         </nav>
     </div>
 </header>
+<script>
+window._cottonSearch = function(){
+    var v = (document.getElementById('cottonSearchInput')||{}).value || '';
+    if (v.trim()) location.href = 'https://www.cafe2626.com/?q=' + encodeURIComponent(v.trim());
+};
+</script>
 
-<!-- 히어로 -->
-<section class="hero">
-    <div class="hero-content">
-        <button class="hero-badge" style="cursor:pointer; border:2px solid #e11d48; background:rgba(255,255,255,0.9); font-family:inherit; transition:all 0.2s;" onclick="openPdSampleRequest()" onmouseover="this.style.background='#fff1f2'" onmouseout="this.style.background='rgba(255,255,255,0.9)'"><i class="fa-solid fa-gift" style="color:#e11d48;"></i> 무료 패브릭 샘플 요청하기</button>
-        <h1>고화질 <em>패브릭 인쇄</em><br>광목·면포·옥스포드·쉬폰까지</h1>
-        <p style="font-size:18px;color:#475569;line-height:1.7;max-width:680px;margin:0 auto 32px;">
-            백월 · 포토존 배경 · 현수막 천 · 인테리어 커튼<br>
-            맞춤 사이즈 · 친환경 잉크 · 무료 디자인 에디터
+<!-- 히어로 (cotton 영상 백그라운드) -->
+<section class="hero" style="position:relative; background:#0c0a09; padding:0; overflow:hidden; height:560px;">
+    <video autoplay muted loop playsinline style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.55;">
+        <source src="/cotton.mp4" type="video/mp4">
+    </video>
+    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(12,10,9,0.3) 0%, rgba(12,10,9,0.55) 100%);"></div>
+    <div class="hero-content" style="position:relative; z-index:2; padding:80px 24px 60px; max-width:900px; margin:0 auto; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <button class="hero-badge" style="cursor:pointer; border:1.5px solid #fde047; background:rgba(255,255,255,0.12); color:#fde047; font-family:inherit; font-weight:800; padding:8px 20px; border-radius:50px; font-size:13px; backdrop-filter:blur(8px); margin-bottom:24px;" onclick="openPdSampleRequest()">
+            🎁 무료 패브릭 샘플 요청
+        </button>
+        <h1 style="color:#faf6ed; font-size:54px; font-weight:900; line-height:1.2; margin:0 0 18px; text-shadow:0 4px 24px rgba(0,0,0,0.4); letter-spacing:-1px;">
+            진짜 천에 인쇄해 드립니다.
+        </h1>
+        <p style="color:rgba(250,246,237,0.92); font-size:19px; line-height:1.7; max-width:680px; margin:0 auto 40px; text-shadow:0 2px 12px rgba(0,0,0,0.4);">
+            광목 · 면포 · 옥스포드 · 쉬폰 · 린넨<br>
+            <span style="font-size:15px; opacity:0.8;">백월 · 포토존 · 인테리어 커튼 · 현수막 천</span>
         </p>
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:18px 44px; border-radius:50px; border:none; background:#faf6ed; color:#451a03; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.3); transition:all 0.3s;">
+            패브릭 원단 보기 <i class="fa-solid fa-arrow-down"></i>
+        </button>
     </div>
 </section>
+<style>
+@media (max-width:768px) {
+    .hero { height:460px !important; }
+    .hero h1 { font-size:32px !important; }
+    .hero p { font-size:15px !important; }
+}
+</style>
 
 <script>
 function openPdSampleRequest() {
@@ -428,34 +509,59 @@ async function submitPdSample() {
     }
 }</script>
 
-<!-- 패브릭 소개 인트로 (영상 대신 텍스트 + 이미지) -->
-<section style="max-width:1100px; margin:0 auto; padding:60px 24px 30px; display:grid; grid-template-columns:1fr 1fr; gap:36px; align-items:center;" class="intro-grid">
-    <div>
-        <h2 style="font-size:36px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:18px;">
-            <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">진짜 천</em>에<br>인쇄해 드립니다.
-        </h2>
-        <p style="font-size:17px; color:#475569; line-height:1.8; margin-bottom:24px;">
-            카멜레온 프린팅의 패브릭 사업부 — 고급 디지털 잉크젯 프린터로
-            <strong>광목·면포·옥스포드·쉬폰</strong> 등 다양한 천 위에 사진처럼
-            선명한 색감을 구현합니다.
-            <br><br>
-            <strong>백월·포토존 배경·현수막 천·인테리어 커튼</strong>까지
-            한 곳에서 디자인부터 제작·배송까지 책임집니다.
-        </p>
-        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#e11d48,#f97316); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(225,29,72,0.3); transition:all 0.3s;">
-            상품 보기 <i class="fa-solid fa-arrow-down"></i>
-        </button>
+<!-- 카테고리 둘러보기 (Printtree 스타일 — 둥근 카테고리 아이콘) -->
+<section style="max-width:1100px; margin:60px auto 30px; padding:0 24px;">
+    <div style="text-align:center; margin-bottom:32px;">
+        <div style="font-size:11px; letter-spacing:6px; color:var(--accent); font-weight:700; margin-bottom:8px;">FABRIC CATEGORIES</div>
+        <h2 style="font-size:28px; font-weight:900; color:var(--brown-dark);">원단 카테고리</h2>
     </div>
-    <div>
-        <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg" alt="패브릭 인쇄 샘플" style="width:100%; border-radius:16px; box-shadow:0 12px 32px rgba(0,0,0,0.12);">
+    <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:14px;" class="cat-icons">
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">🌸</div><div class="cat-icon-name">꽃무늬</div></a>
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">🌿</div><div class="cat-icon-name">자연</div></a>
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">🐾</div><div class="cat-icon-name">동물</div></a>
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">📏</div><div class="cat-icon-name">줄무늬</div></a>
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">⚪</div><div class="cat-icon-name">도트</div></a>
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">🔷</div><div class="cat-icon-name">기하학</div></a>
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">A</div><div class="cat-icon-name">타이포</div></a>
+        <a href="#products" class="cat-icon-card"><div class="cat-icon">👶</div><div class="cat-icon-name">유아용</div></a>
+    </div>
+</section>
+<style>
+.cat-icon-card { display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer; transition:transform 0.2s; }
+.cat-icon-card:hover { transform:translateY(-4px); }
+.cat-icon { width:80px; height:80px; border-radius:50%; background:#fff; border:1.5px solid var(--cream-dark);
+    display:flex; align-items:center; justify-content:center; font-size:36px; color:var(--brown);
+    box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+.cat-icon-name { font-size:13px; font-weight:700; color:var(--brown); }
+@media (max-width:768px) {
+    .cat-icons { grid-template-columns:repeat(4,1fr) !important; gap:10px !important; }
+    .cat-icon { width:60px; height:60px; font-size:26px; }
+    .cat-icon-name { font-size:11px; }
+}
+</style>
+
+<!-- 패브릭 드레이프 쇼케이스 (Printtree 스타일 — 진짜 천 사진 3개) -->
+<section style="max-width:1300px; margin:40px auto 0; padding:40px 24px;">
+    <div style="text-align:center; margin-bottom:32px;">
+        <div style="font-size:11px; letter-spacing:6px; color:var(--accent); font-weight:700; margin-bottom:8px;">— REAL FABRIC, REAL PRINT —</div>
+        <h2 style="font-size:30px; font-weight:900; color:var(--brown-dark);">진짜 천에 진짜 인쇄</h2>
+        <p style="font-size:14px; color:var(--text-light); margin-top:10px;">디자인이 그대로 살아 움직이는 친환경 디지털 잉크젯 프린팅</p>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px;" class="drape-grid">
+        <div style="aspect-ratio:3/4; border-radius:6px; overflow:hidden; background:#f5f5f4; box-shadow:0 8px 24px rgba(69,26,3,0.15);">
+            <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg" alt="광목 패브릭" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div style="aspect-ratio:3/4; border-radius:6px; overflow:hidden; background:#f5f5f4; box-shadow:0 8px 24px rgba(69,26,3,0.15);">
+            <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/wizard/1771881492818_0.jpg" alt="면포 패브릭" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div style="aspect-ratio:3/4; border-radius:6px; overflow:hidden; background:#f5f5f4; box-shadow:0 8px 24px rgba(69,26,3,0.15);">
+            <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg" alt="옥스포드 패브릭" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        </div>
     </div>
 </section>
 <style>
 @media (max-width: 768px) {
-    .intro-grid { grid-template-columns:1fr !important; padding:36px 20px 20px !important; gap:20px !important; }
-    .intro-grid h2 { font-size:26px !important; text-align:center; }
-    .intro-grid p { font-size:15px !important; text-align:center; }
-    .intro-grid button { margin:0 auto; display:flex !important; }
+    .drape-grid { grid-template-columns:1fr !important; }
 }
 </style>
 
@@ -625,7 +731,7 @@ function toggleKapuChat() {
 <section class="section" id="psShortsSection" style="display:none; background:#fff;">
     <div style="text-align:center; margin-bottom:20px;">
         <h2 class="section-title" id="psShortsTitle">🎬 영상으로 만나보세요</h2>
-        <p class="section-desc" id="psShortsDesc">종이매대 제작 과정과 활용 사례를 확인하세요</p>
+        <p class="section-desc" id="psShortsDesc">패브릭 인쇄 제작 과정과 활용 사례를 확인하세요</p>
     </div>
     <div id="psShortsGrid" style="display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:10px; scrollbar-width:thin; max-width:1100px; margin:0 auto;"></div>
 </section>
@@ -633,13 +739,13 @@ function toggleKapuChat() {
 (function(){
     var _psL = window.__PS_LANG || 'ko';
     var _sTitles = {ko:'🎬 영상으로 만나보세요',ja:'🎬 動画でチェック',en:'🎬 Watch Our Videos',zh:'🎬 视频展示',ar:'🎬 شاهد الفيديو',es:'🎬 Mira nuestros videos',de:'🎬 Unsere Videos',fr:'🎬 Nos vidéos'};
-    var _sDescs = {ko:'종이매대 제작 과정과 활용 사례를 확인하세요',ja:'紙什器の制作過程と活用事例をご覧ください',en:'See our paper display production and use cases',zh:'查看纸质展示架的制作过程和使用案例',ar:'شاهد عملية إنتاج حوامل العرض الورقية',es:'Vea nuestros expositores de papel',de:'Entdecken Sie unsere Papier-Displays',fr:'Découvrez nos présentoirs en papier'};
+    var _sDescs = {ko:'패브릭 인쇄 제작 과정과 활용 사례를 확인하세요',ja:'ファブリック印刷の制作過程と活用事例をご覧ください',en:'See our fabric printing production and use cases',zh:'查看布料印刷的制作过程和使用案例',ar:'شاهد عملية إنتاج طباعة الأقمشة',es:'Vea nuestra impresión textil',de:'Entdecken Sie unseren Stoffdruck',fr:'Découvrez notre impression textile'};
     var _sT = document.getElementById('psShortsTitle'); if (_sT) _sT.textContent = _sTitles[_psL] || _sTitles.en;
     var _sD = document.getElementById('psShortsDesc'); if (_sD) _sD.textContent = _sDescs[_psL] || _sDescs.en;
     function _loadPsShorts() {
         var _sb = window.sb || (typeof supabase !== 'undefined' ? supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null);
         if (!_sb) { setTimeout(_loadPsShorts, 1000); return; }
-        _sb.from('library').select('id, data_url, tags').eq('category','shorts-paper-stand').order('created_at',{ascending:false}).limit(10).then(function(res) {
+        _sb.from('library').select('id, data_url, tags').in('category',['shorts-fabric-print','shorts-cotton-print','shorts-paper-stand']).order('created_at',{ascending:false}).limit(10).then(function(res) {
             if (!res.data || res.data.length === 0) return;
             var section = document.getElementById('psShortsSection');
             var grid = document.getElementById('psShortsGrid');
@@ -1347,45 +1453,49 @@ window.loadPdReviews = async function() {
 
     try {
         var data = null;
-        // 첫 로드: 전략 결정 (pd_ 언어별 → pd_ 전체 → 언어별 전체)
+        // [Cotton Print] 패브릭 상품 후기만: 코드가 cb*, ua_fabric*, 패브릭 카테고리 코드들
+        // 1순위: cotton_print.js가 등록한 fabricCodes 배열 사용 (정확)
+        // 2순위: cb* / ua_fabric* LIKE 검색 (fallback)
+        // 3순위: 언어별 전체 (마지막 fallback)
+        var fabCodes = window._cottonFabricCodes || null;
         if (_rvPage === 0 && !_rvFallback) {
-            var res = await _rvSupa.from('product_reviews')
-                .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                .like('product_code', 'pd_%')
-                .eq('lang', siteLang)
-                .gte('rating', 4)
-                .order('created_at', { ascending: false })
-                .range(from, to);
-            data = res.data;
-            if (data && data.length > 0) {
-                _rvFallback = 'pd_lang'; // pd_ + 해당언어
-            } else {
+            // 1순위: 정확한 fabric 코드 in 검색
+            if (fabCodes && fabCodes.length > 0) {
+                var res = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .in('product_code', fabCodes.slice(0, 100))
+                    .eq('lang', siteLang)
+                    .gte('rating', 4)
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+                data = res.data;
+                if (data && data.length > 0) { _rvFallback = 'fab_codes'; window._cottonFabCodes100 = fabCodes.slice(0, 100); }
+            }
+            // 2순위: cb%/ua_fabric% LIKE
+            if (!data || data.length === 0) {
                 var res2 = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .like('product_code', 'pd_%')
+                    .or('product_code.like.cb%,product_code.like.ua_fabric%')
                     .gte('rating', 4)
                     .order('created_at', { ascending: false })
                     .range(from, to);
                 data = res2.data;
-                if (data && data.length > 0) {
-                    _rvFallback = 'pd_all'; // pd_ 전체
-                } else {
-                    _rvFallback = 'lang_all'; // 해당언어 전체
-                }
+                if (data && data.length > 0) { _rvFallback = 'fabric_like'; }
+                else { _rvFallback = 'lang_all'; }
             }
         }
-        // 결정된 전략으로 쿼리
+        // 결정된 전략으로 페이지 로드
         if (_rvPage > 0 || _rvFallback === 'lang_all') {
-            if (_rvFallback === 'pd_lang') {
+            if (_rvFallback === 'fab_codes' && window._cottonFabCodes100) {
                 var r = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .like('product_code', 'pd_%').eq('lang', siteLang).gte('rating', 4)
+                    .in('product_code', window._cottonFabCodes100).eq('lang', siteLang).gte('rating', 4)
                     .order('created_at', { ascending: false }).range(from, to);
                 data = r.data;
-            } else if (_rvFallback === 'pd_all') {
+            } else if (_rvFallback === 'fabric_like') {
                 var r = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .like('product_code', 'pd_%').gte('rating', 4)
+                    .or('product_code.like.cb%,product_code.like.ua_fabric%').gte('rating', 4)
                     .order('created_at', { ascending: false }).range(from, to);
                 data = r.data;
             } else {
@@ -1480,7 +1590,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="cotton_print.js?v=2"></script>
+<script src="cotton_print.js?v=3"></script>
 
 
 </body>

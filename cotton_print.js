@@ -213,32 +213,46 @@
 
         try {
             // 패브릭(천) 인쇄 상품 조회
-            // top_category_code = '22222' (패브릭인쇄 대분류) 에 속한 모든 카테고리의 상품
-            // 1) cb 로 시작 (광목 등 원단 상품)
-            // 2) category cbo20s, cbo30s (광목 카테고리)
-            // 3) is_fabric_print 플래그
-            // 4) ua_fabric 제외 (사용자 작품 — 메인몰에서 처리)
-            // 먼저 패브릭 대분류(22222)의 소분류 코드 모두 가져오기
-            const { data: subCats } = await sb.from('admin_categories')
-                .select('code')
+            // top_category_code = '22222' (패브릭인쇄 대분류)에 속한 모든 소분류의 상품
+            // 1) 패브릭 대분류 소분류 코드 모두 조회
+            // 2) admin_products WHERE category IN (...) — 메인몰 관리자가 패브릭 카테고리에 등록한 상품 그대로
+            // 3) ua_fabric 제외 (사용자 작품 — 메인몰에서 처리)
+            const { data: subCats, error: subErr } = await sb.from('admin_categories')
+                .select('code, name')
                 .eq('top_category_code', '22222');
+            if (subErr) throw subErr;
             const subCodes = (subCats || []).map(c => c.code);
 
-            let query = sb.from('admin_products').select('*');
-            // OR: cb로 시작 OR 패브릭 소분류에 속함 OR is_fabric_print true
-            const orParts = ['code.like.cb%', 'is_fabric_print.eq.true'];
+            let products = [];
             if (subCodes.length > 0) {
-                // category in (...subCodes) — supabase 'in' 연산자
-                orParts.push('category.in.(' + subCodes.join(',') + ')');
+                const { data, error } = await sb.from('admin_products')
+                    .select('*')
+                    .in('category', subCodes);
+                if (error) throw error;
+                products = data || [];
             }
-            const { data: products, error } = await query.or(orParts.join(','));
-
-            if (error) throw error;
+            // cb로 시작하는 광목 상품도 포함 (혹시 카테고리 매핑이 안 된 것)
+            try {
+                const { data: cbProds } = await sb.from('admin_products')
+                    .select('*')
+                    .like('code', 'cb%');
+                if (cbProds && cbProds.length) {
+                    const existing = new Set(products.map(p => p.code));
+                    cbProds.forEach(p => { if (!existing.has(p.code)) products.push(p); });
+                }
+            } catch (e) {}
 
             // ua_fabric 제외 (사용자 업로드 작품은 cotton-print.com 노출 X)
             const visible = (products || [])
                 .filter(p => !(p.code || '').startsWith('ua_'))
                 .sort(function(a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+
+            // 후기 시스템에서 사용할 수 있도록 전역에 fabric 상품 코드 저장
+            window._cottonFabricCodes = visible.map(p => p.code).filter(Boolean);
+            // 후기 다시 로드 (코드가 준비된 후)
+            if (window.loadPdReviews && typeof window._rvPage !== 'undefined' && window._rvPage === 0) {
+                try { window.loadPdReviews(); } catch(e) {}
+            }
 
             grid.innerHTML = '';
 
