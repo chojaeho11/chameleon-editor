@@ -385,6 +385,18 @@ export default {
         // ========== cotton-print.com 전용 도메인 라우팅 ==========
         // 패브릭 인쇄 전문 서브사이트
         if (url.hostname.includes('cotton-print.com')) {
+            // /designer → cotton_designer.html (이미지 → 패턴 디자이너)
+            if (path === 'designer' || path === 'designer.html') {
+                const rewriteUrl = new URL('/cotton_designer.html', url.origin);
+                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
+                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
+                    const loc = new URL(resp.headers.get('Location'), url.origin);
+                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+                }
+                const h = new Headers(resp.headers);
+                h.set('Cache-Control', 'public, max-age=300, s-maxage=300');
+                return new Response(resp.body, { status: 200, headers: h });
+            }
             // 루트 → cotton_print.html 직접 서빙
             if (path === '' || path === 'index.html') {
                 const rewriteUrl = new URL('/cotton_print.html', url.origin);
@@ -402,7 +414,7 @@ export default {
             if (path === 'sitemap.xml' || path === 'robots.txt' || path === 'favicon.ico' ||
                 path === 'version.txt' || path.includes('.') && !path.startsWith('?')) {
                 // 자산 그대로 (cotton_print.js 등)
-                if (path === 'cotton_print.js' || path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.svg') || path.endsWith('.ico') || path.endsWith('.txt') || path.endsWith('.xml')) {
+                if (path === 'cotton_print.js' || path === 'cotton_designer.js' || path === 'cotton.mp4' || path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.svg') || path.endsWith('.ico') || path.endsWith('.txt') || path.endsWith('.xml') || path.endsWith('.mp4')) {
                     return await env.ASSETS.fetch(request);
                 }
             }
@@ -890,6 +902,7 @@ ${hreflangTags('/editor')}
             'raw-board': '/raw_board.html',
             'franchise': '/franchise.html',
             'cotton-print': '/cotton_print.html',
+            'cotton-designer': '/cotton_designer.html',
         };
         if (STANDALONE_PAGES[path]) {
             const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);
