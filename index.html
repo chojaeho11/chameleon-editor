@@ -8950,6 +8950,11 @@ async function loadScrollBanner() {
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
         }
+        // ★ 패브릭 인쇄 → cotton-print.com 별도 사이트로 이동 (한국어만)
+        if (topCode === '23434242' && (CURRENT_LANG === 'ko' || !CURRENT_LANG)) {
+            location.href = 'https://www.cotton-print.com/';
+            return;
+        }
         if (!sb) { console.warn("[openTopMenu] sb가 아직 초기화되지 않음"); return; }
         const modal = document.getElementById('categoryDetailModal');
         const grid = document.getElementById('catProductGrid');
@@ -9317,6 +9322,19 @@ async function renderQuickMenu() {
                         const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
                         const rbLang = langMap[CURRENT_LANG];
                         location.href = '/raw-board' + (rbLang ? '?lang=' + rbLang : '');
+                        return;
+                    }
+                    // ★ 패브릭 인쇄 → cotton-print.com 별도 사이트로 이동
+                    // 한국어만 cotton-print.com (단일 언어 운영), 다국어는 메인몰 카테고리 페이지로
+                    if (top.code === '23434242') {
+                        if (CURRENT_LANG === 'ko' || !CURRENT_LANG) {
+                            location.href = 'https://www.cotton-print.com/';
+                        } else {
+                            // JP/EN 등은 cafe2626/cafe0101/cafe3355 의 /fabric-print 카테고리 페이지로
+                            const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
+                            const fbLang = langMap[CURRENT_LANG];
+                            location.href = '/fabric-print' + (fbLang ? '?lang=' + fbLang : '');
+                        }
                         return;
                     }
                     const wasActive = btn.classList.contains('active');
