@@ -14,7 +14,7 @@ const PRERENDER_TOKEN = '2JsjKgGMzVH9qEqjkYam';
 // SEO category → DB query mapping
 const SEO_CATEGORIES = {
     honeycomb: { top: 'honeycomb_board' },
-    'fabric-print': { top: '23434242' },
+    'fabric-print': { top: '22222' },
     'paper-stand': { prefix: 'pd_' },
     goods: { top: '77777' },
     'acrylic-print': { prefix: 'acrylic' },

@@ -213,14 +213,25 @@
 
         try {
             // 패브릭(천) 인쇄 상품 조회
+            // top_category_code = '22222' (패브릭인쇄 대분류) 에 속한 모든 카테고리의 상품
             // 1) cb 로 시작 (광목 등 원단 상품)
             // 2) category cbo20s, cbo30s (광목 카테고리)
-            // 3) category 23434242 (패브릭 인쇄 top category)
-            // 4) is_fabric_print 플래그 (있으면)
-            // 5) ua_fabric 제외 (사용자 작품 — 메인몰에서 처리)
-            const { data: products, error } = await sb.from('admin_products')
-                .select('*')
-                .or('code.like.cb%,category.eq.cbo20s,category.eq.cbo30s,category.eq.23434242,category.eq.fabric_print,is_fabric_print.eq.true');
+            // 3) is_fabric_print 플래그
+            // 4) ua_fabric 제외 (사용자 작품 — 메인몰에서 처리)
+            // 먼저 패브릭 대분류(22222)의 소분류 코드 모두 가져오기
+            const { data: subCats } = await sb.from('admin_categories')
+                .select('code')
+                .eq('top_category_code', '22222');
+            const subCodes = (subCats || []).map(c => c.code);
+
+            let query = sb.from('admin_products').select('*');
+            // OR: cb로 시작 OR 패브릭 소분류에 속함 OR is_fabric_print true
+            const orParts = ['code.like.cb%', 'is_fabric_print.eq.true'];
+            if (subCodes.length > 0) {
+                // category in (...subCodes) — supabase 'in' 연산자
+                orParts.push('category.in.(' + subCodes.join(',') + ')');
+            }
+            const { data: products, error } = await query.or(orParts.join(','));
 
             if (error) throw error;
 
