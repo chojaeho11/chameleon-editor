@@ -7,6 +7,18 @@
 // 사용자: URL이 /?_p=honeycomb으로 변경되지만 페이지 이동 없음 (SPA 정상 작동)
 (function(){
     var p = location.pathname;
+    var qsAll = new URLSearchParams(location.search);
+    var slugAll = (p && p !== '/' && p.indexOf('.') === -1) ? p.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '') : (qsAll.get('_p') || '');
+    var langParam = qsAll.get('lang') || '';
+    var hostKr = location.hostname.indexOf('cafe2626') >= 0 || location.hostname.indexOf('chameleon-print.pages.dev') >= 0;
+    var isKrUser = (!langParam || langParam === 'ko' || langParam === 'kr') && hostKr;
+
+    // ★ 패브릭 인쇄 경로 → cotton-print.com 즉시 리다이렉트 (한국어 사용자만)
+    if (isKrUser && (slugAll === 'fabric-print' || slugAll === 'fabric')) {
+        location.replace('https://www.cotton-print.com/');
+        return;
+    }
+
     if (p && p !== '/' && p !== '/index.html' && p.indexOf('.') === -1) {
         var slug = p.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
         if (slug) {
@@ -9228,6 +9240,17 @@ async function renderQuickMenu() {
                     location.href = '/raw-board' + (rbLang && rbLang !== 'ko' ? '?lang=' + rbLang : '');
                     return;
                 }
+                // ★ 패브릭 인쇄 → cotton-print.com 별도 사이트로 이동 (한국어만)
+                if (top.code === '22222') {
+                    if (CURRENT_LANG === 'ko' || !CURRENT_LANG || CURRENT_LANG === 'kr') {
+                        location.href = 'https://www.cotton-print.com/';
+                    } else {
+                        const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
+                        const fbLang = langMap[CURRENT_LANG];
+                        location.href = '/fabric-print' + (fbLang ? '?lang=' + fbLang : '');
+                    }
+                    return;
+                }
                 // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
                 if (top.code === 'user_artwork') {
                     document.getElementById('productPickerModal').style.display = 'none';
@@ -9246,7 +9269,7 @@ async function renderQuickMenu() {
         // ★ 기본 활성 탭: 허니콤보드 우선, 없으면 첫 번째 탭
         // 허니콤 대분류 코드 = 이름에 "허니콤" 또는 "honeycomb"가 들어간 소분류의 top_category_code
         let _defaultTabBtn = null;
-        const _REDIRECT_TOPS = ['Wholesale Board Prices', 'paper_display', 'user_artwork'];
+        const _REDIRECT_TOPS = ['Wholesale Board Prices', 'paper_display', 'user_artwork', '22222'];
         try {
             const _hcSub = (subCats || []).find(s => {
                 const n = (s.name || '').toLowerCase();
