@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>패브릭 인쇄·천 인쇄·실사출력 전문 - Cotton Print</title>
+<meta name="description" content="고화질 패브릭(천) 맞춤 인쇄. 광목·면포·옥스포드·쉬폰 등 다양한 원단. 백월·포토존 배경·현수막 천·인테리어 커튼 제작. 무료 디자인 에디터.">
+<meta name="keywords" content="패브릭인쇄,천인쇄,실사출력,광목인쇄,면포인쇄,옥스포드인쇄,쉬폰인쇄,백월,포토존 배경,현수막 천,배경막 인쇄,패브릭 배너,인테리어 커튼 인쇄,코튼프린팅,카멜레온프린팅">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="Cotton Print · 코튼프린팅">
+<meta property="og:title" content="패브릭 인쇄·천 인쇄·실사출력 전문 - Cotton Print">
+<meta property="og:description" content="고화질 패브릭 맞춤 인쇄. 광목·면포·옥스포드·쉬폰. 백월·포토존·현수막 천·커튼. 무료 디자인 에디터.">
+<meta property="og:url" content="https://www.cotton-print.com/">
+<meta property="og:image" content="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg">
+<link rel="canonical" href="https://www.cotton-print.com/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Cotton Print · 코튼프린팅","url":"https://www.cotton-print.com","inLanguage":"ko","alternateName":"카멜레온프린팅 패브릭 사업부","publisher":{"@type":"Organization","name":"(주)카멜레온프린팅","url":"https://www.cafe2626.com","sameAs":["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com"]}}
+</script>
+<script>
+(function(){
+    var params = new URLSearchParams(location.search);
+    var langParam = params.get('lang');
+    var h = location.hostname;
+    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
+    var lang = langParam || hostLang;
+    var supported = ['ko','ja','en','zh','ar','es','de','fr'];
+    if(supported.indexOf(lang)<0) lang='ko';
+    window.__PS_LANG = lang;
+    document.documentElement.lang = lang;
+})();
+</script>
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+:root {
+    --primary: #e11d48;
+    --primary-dark: #be123c;
+    --accent: #f97316;
+    --bg: #fafbfc;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e5e7eb;
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 16px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+
+/* ── 헤더 ── */
+.site-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+}
+.header-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+}
+.logo { font-size: 17px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; white-space: nowrap; }
+.nav-links { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
+.nav-links a {
+    font-size: 13px; font-weight: 600; color: var(--text-light);
+    transition: color 0.2s; white-space: nowrap;
+}
+.nav-links a:hover { color: var(--primary); }
+.btn-home {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 7px 14px; border-radius: 8px;
+    background: var(--primary); color: #fff;
+    font-size: 12px; font-weight: 700;
+    transition: all 0.2s; white-space: nowrap;
+}
+.btn-home:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+/* ── 히어로 ── */
+.hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 30%, #fecdd3 60%, #fda4af 100%);
+    padding: 80px 24px 60px;
+    text-align: center;
+}
+.hero::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(225,29,72,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(249,115,22,0.06) 0%, transparent 50%);
+    animation: heroFloat 20s ease-in-out infinite;
+}
+@keyframes heroFloat {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-2%, -1%); }
+}
+.hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+.hero-steps { text-align:center; max-width:620px; margin:0 auto; }
+.hero-steps .step { margin-bottom:16px; }
+.hero-steps .step-text { font-size:15px; color:#475569; line-height:1.7; }
+.hero-steps .step-text b { color:#1e293b; }
+.hero-steps .step-footer { margin-top:20px; font-size:13px; font-weight:700; color:#6366f1; }
+.hero-badge {
+    display: inline-block; padding: 6px 16px; border-radius: 20px;
+    background: rgba(255,255,255,0.8); color: var(--primary);
+    font-size: 13px; font-weight: 700; margin-bottom: 20px;
+    backdrop-filter: blur(4px);
+}
+.hero h1 {
+    font-size: 42px; font-weight: 900; line-height: 1.3;
+    color: var(--text); margin-bottom: 16px;
+}
+.hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--primary), #f97316);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero p {
+    font-size: 17px; color: var(--text-light);
+    max-width: 600px; margin: 0 auto 32px;
+}
+.hero-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 16px 36px; border-radius: 50px; border: none;
+    background: linear-gradient(135deg, var(--primary), #f97316);
+    color: #fff; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+}
+.hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.5); }
+
+/* ── 특장점 ── */
+.features {
+    max-width: 1200px; margin: -40px auto 0; padding: 0 24px;
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;
+}
+.feature-card {
+    background: #fff; border-radius: var(--radius); padding: 28px 24px;
+    box-shadow: var(--card-shadow); text-align: center;
+    transition: transform 0.2s;
+}
+.feature-card:hover { transform: translateY(-4px); }
+.feature-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px; margin-bottom: 16px;
+}
+.feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.feature-card p { font-size: 14px; color: var(--text-light); line-height: 1.5; }
+
+/* ── 섹션 공통 ── */
+.section { max-width: 1200px; margin: 0 auto; padding: 60px 24px; }
+.section-title {
+    font-size: 28px; font-weight: 900; text-align: center; margin-bottom: 8px;
+}
+.section-desc {
+    font-size: 15px; color: var(--text-light); text-align: center; margin-bottom: 40px;
+}
+
+/* ── 상품 그리드 ── */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+}
+.product-card {
+    background: #fff; border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--card-shadow); cursor: pointer;
+    transition: all 0.25s;
+}
+.product-card:hover { transform: translateY(-6px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+.product-img {
+    width: 100%; aspect-ratio: 1/1; object-fit: cover;
+    background: #f1f5f9; display: block;
+}
+.product-info { padding: 16px 18px 20px; }
+.product-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+.product-size { font-size: 13px; color: var(--text-light); margin-bottom: 8px; }
+.product-price { font-size: 17px; font-weight: 800; color: var(--primary); }
+.product-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    background: var(--primary); color: #fff;
+    font-size: 11px; font-weight: 700; margin-bottom: 8px;
+}
+
+/* ── 로딩 ── */
+.loading-spinner {
+    text-align: center; padding: 60px 0;
+}
+.loading-spinner::after {
+    content: ''; display: inline-block;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 프로세스 ── */
+.process-steps {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;
+    counter-reset: step;
+}
+.process-step {
+    text-align: center; padding: 24px 16px;
+    position: relative;
+}
+.process-step::before {
+    counter-increment: step;
+    content: counter(step);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    font-size: 18px; font-weight: 800; margin-bottom: 16px;
+}
+.process-step h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.process-step p { font-size: 13px; color: var(--text-light); }
+
+/* ── CTA 배너 ── */
+.cta-banner {
+    background: linear-gradient(135deg, var(--primary), #f97316);
+    border-radius: var(--radius); padding: 48px 32px;
+    text-align: center; color: #fff;
+    margin: 0 24px;
+    max-width: 1152px; margin-left: auto; margin-right: auto;
+}
+.cta-banner h2 { font-size: 26px; font-weight: 800; margin-bottom: 12px; }
+.cta-banner p { font-size: 15px; opacity: 0.9; margin-bottom: 24px; }
+.cta-banner button {
+    padding: 14px 32px; border-radius: 50px; border: none;
+    background: #fff; color: var(--primary);
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s;
+}
+.cta-banner button:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+
+/* ── 푸터 ── */
+.site-footer {
+    background: #1e293b; color: #94a3b8; padding: 40px 24px;
+    margin-top: 60px; text-align: center; font-size: 13px;
+}
+.site-footer a { color: #cbd5e1; }
+.site-footer a:hover { color: #fff; }
+
+/* ── 빈 상태 ── */
+.empty-state {
+    text-align: center; padding: 60px 24px; color: var(--text-light);
+}
+.empty-state i { font-size: 48px; margin-bottom: 16px; display: block; opacity: 0.3; }
+
+/* ── 언어 선택 ── */
+.lang-selector { display:flex; gap:2px; align-items:center; margin:0 8px; }
+.lang-selector a { font-size:14px; padding:2px 4px; border-radius:4px; opacity:0.5; transition:0.2s; text-decoration:none; }
+.lang-selector a:hover { opacity:0.8; }
+.lang-selector a.active { opacity:1; font-weight:bold; background:rgba(99,102,241,0.1); }
+
+/* ── 반응형 ── */
+@media (max-width: 768px) {
+    .site-header { padding: 0 12px; }
+    .header-inner { height: 48px; }
+    .logo { font-size: 15px; }
+    .nav-links { gap: 8px; }
+    .nav-links a { font-size: 12px; }
+    .btn-home { padding: 6px 10px; font-size: 11px; }
+    .lang-selector { gap:1px; margin:0 4px; }
+    .lang-selector a { font-size:12px; padding:1px 2px; }
+    .hero { padding: 50px 20px 36px; }
+    .hero h1 { font-size: 26px; }
+    .hero p { font-size: 14px; }
+    .features { grid-template-columns: repeat(2, 1fr); margin-top: -20px; gap: 10px; }
+    .feature-card { padding: 20px 14px; }
+    .feature-icon { width: 44px; height: 44px; font-size: 20px; }
+    .feature-card h3 { font-size: 14px; }
+    .feature-card p { font-size: 12px; }
+    .section-title { font-size: 22px; }
+    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .product-info { padding: 12px 14px 16px; }
+    .product-name { font-size: 13px; }
+    .product-price { font-size: 15px; }
+}
+@media (max-width: 480px) {
+    .hero h1 { font-size: 22px; }
+    .hero-cta { padding: 13px 26px; font-size: 14px; }
+    .features { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .feature-card { padding: 16px 10px; }
+    .feature-card h3 { font-size: 13px; }
+    .feature-card p { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="site-header">
+    <div class="header-inner">
+        <a id="logoLink" href="/" class="logo">
+            <i class="fa-solid fa-shirt" style="margin-right:4px;"></i>Cotton Print · 코튼프린팅
+        </a>
+        <nav class="nav-links">
+            <div class="lang-selector" id="langSelector"></div>
+        </nav>
+    </div>
+</header>
+
+<!-- 히어로 -->
+<section class="hero">
+    <div class="hero-content">
+        <button class="hero-badge" style="cursor:pointer; border:2px solid #e11d48; background:rgba(255,255,255,0.9); font-family:inherit; transition:all 0.2s;" onclick="openPdSampleRequest()" onmouseover="this.style.background='#fff1f2'" onmouseout="this.style.background='rgba(255,255,255,0.9)'"><i class="fa-solid fa-gift" style="color:#e11d48;"></i> 무료 패브릭 샘플 요청하기</button>
+        <h1>고화질 <em>패브릭 인쇄</em><br>광목·면포·옥스포드·쉬폰까지</h1>
+        <p style="font-size:18px;color:#475569;line-height:1.7;max-width:680px;margin:0 auto 32px;">
+            백월 · 포토존 배경 · 현수막 천 · 인테리어 커튼<br>
+            맞춤 사이즈 · 친환경 잉크 · 무료 디자인 에디터
+        </p>
+    </div>
+</section>
+
+<script>
+function openPdSampleRequest() {
+    // 메인 사이트의 VIP 모달이 있으면 사용, 없으면 자체 모달
+    var vipModal = document.getElementById('vipOrderModal');
+    if (vipModal) {
+        vipModal.style.display = 'flex';
+        return;
+    }
+    document.getElementById('pdSampleModal').style.display = 'flex';
+}
+</script>
+
+<!-- 패브릭 인쇄 샘플 요청 모달 -->
+<div id="pdSampleModal" class="modal-bg" style="z-index:30000; display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5);">
+    <div style="background:#fff; border-radius:16px; width:520px; max-width:95%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="background:linear-gradient(135deg,#4338ca,#6366f1); padding:24px; border-radius:16px 16px 0 0; text-align:center; color:#fff;">
+            <h3 style="margin:0; font-size:20px;"><i class="fa-solid fa-gift" style="color:#fbbf24;"></i> <span data-i18n="pd_sample_title">무료 샘플 요청</span></h3>
+            <p style="margin:8px 0 0; font-size:12px; opacity:0.85;" data-i18n="pd_sample_desc">담당자가 확인 후 연락드립니다.</p>
+        </div>
+        <div style="padding:20px;">
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_name">성함 / 회사명</label>
+                    <input id="pdSampleName" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" data-i18n-placeholder="pd_sample_name_ph" placeholder="예: 홍길동 / (주)ABC">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_phone">연락처</label>
+                    <input id="pdSamplePhone" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="+82-10-0000-0000">
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_email">이메일</label>
+                <input id="pdSampleEmail" type="email" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_memo">요청 내용</label>
+                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요."></textarea>
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_file">참고 파일</label>
+                <div onclick="document.getElementById('pdSampleFileInput').click()" style="border:2px dashed #c7d2fe; background:#faf5ff; padding:16px; text-align:center; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#faf5ff'">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:20px; color:#6366f1; margin-bottom:4px;"></i>
+                    <div style="color:#6366f1; font-size:12px; font-weight:600;" data-i18n="pd_sample_file_click">클릭하여 파일 선택 (이미지, PDF, AI 등)</div>
+                </div>
+                <input type="file" id="pdSampleFileInput" multiple style="display:none;" onchange="updatePdSampleFiles(this)">
+                <div id="pdSampleFileList" style="margin-top:6px; font-size:11px; color:#6366f1;"></div>
+            </div>
+            <button onclick="submitPdSample()" style="width:100%; padding:14px; border:none; border-radius:10px; background:linear-gradient(135deg,#4338ca,#6366f1); color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">
+                <i class="fa-solid fa-paper-plane"></i> <span data-i18n="pd_sample_submit">샘플 요청하기</span>
+            </button>
+            <button onclick="document.getElementById('pdSampleModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:8px; font-family:inherit;" data-i18n="pd_sample_close">닫기</button>
+        </div>
+    </div>
+</div>
+<script>
+var _pdSampleFiles = [];
+function updatePdSampleFiles(input) {
+    _pdSampleFiles = Array.from(input.files);
+    var list = document.getElementById('pdSampleFileList');
+    list.innerHTML = _pdSampleFiles.map(function(f) { return '📎 ' + f.name; }).join('<br>');
+}
+async function submitPdSample() {
+    var name = document.getElementById('pdSampleName').value.trim();
+    var phone = document.getElementById('pdSamplePhone').value.trim();
+    var email = document.getElementById('pdSampleEmail').value.trim();
+    var memo = document.getElementById('pdSampleMemo').value.trim();
+    if (!name || (!phone && !email)) { alert(window.__PS_LANG==='ko'?'성함과 연락처를 입력해주세요.':'Please enter your name and contact info.'); return; }
+    try {
+        var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
+        if (!sb) throw new Error('Connection failed');
+        // 파일 업로드
+        var uploadedFiles = [];
+        for (var i = 0; i < _pdSampleFiles.length; i++) {
+            var f = _pdSampleFiles[i];
+            var path = 'vip/' + Date.now() + '_' + f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            var { data: upData, error: upErr } = await sb.storage.from('design').upload(path, f);
+            if (!upErr && upData) {
+                var { data: urlData } = sb.storage.from('design').getPublicUrl(path);
+                uploadedFiles.push({ name: f.name, url: urlData.publicUrl, type: f.type });
+            }
+        }
+        await sb.from('vip_orders').insert({
+            customer_name: name,
+            customer_phone: phone || email,
+            preferred_manager: '본사담당자',
+            memo: '[패브릭 인쇄 샘플 요청 - cotton-print.com] Email: ' + email + ' | ' + memo,
+            files: uploadedFiles.length > 0 ? uploadedFiles : null,
+            status: 'pending'
+        });
+        document.getElementById('pdSampleModal').style.display = 'none';
+        _pdSampleFiles = [];
+        alert(window.__PS_LANG==='ko'?'샘플 요청이 접수되었습니다! 담당자가 곧 연락드리겠습니다.':window.__PS_LANG==='ja'?'サンプルリクエストが送信されました！担当者がすぐにご連絡いたします。':'Sample request submitted! Our team will contact you shortly.');
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+}</script>
+
+<!-- 패브릭 소개 인트로 (영상 대신 텍스트 + 이미지) -->
+<section style="max-width:1100px; margin:0 auto; padding:60px 24px 30px; display:grid; grid-template-columns:1fr 1fr; gap:36px; align-items:center;" class="intro-grid">
+    <div>
+        <h2 style="font-size:36px; font-weight:900; line-height:1.25; color:#1e293b; margin-bottom:18px;">
+            <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">진짜 천</em>에<br>인쇄해 드립니다.
+        </h2>
+        <p style="font-size:17px; color:#475569; line-height:1.8; margin-bottom:24px;">
+            카멜레온 프린팅의 패브릭 사업부 — 고급 디지털 잉크젯 프린터로
+            <strong>광목·면포·옥스포드·쉬폰</strong> 등 다양한 천 위에 사진처럼
+            선명한 색감을 구현합니다.
+            <br><br>
+            <strong>백월·포토존 배경·현수막 천·인테리어 커튼</strong>까지
+            한 곳에서 디자인부터 제작·배송까지 책임집니다.
+        </p>
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#e11d48,#f97316); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(225,29,72,0.3); transition:all 0.3s;">
+            상품 보기 <i class="fa-solid fa-arrow-down"></i>
+        </button>
+    </div>
+    <div>
+        <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg" alt="패브릭 인쇄 샘플" style="width:100%; border-radius:16px; box-shadow:0 12px 32px rgba(0,0,0,0.12);">
+    </div>
+</section>
+<style>
+@media (max-width: 768px) {
+    .intro-grid { grid-template-columns:1fr !important; padding:36px 20px 20px !important; gap:20px !important; }
+    .intro-grid h2 { font-size:26px !important; text-align:center; }
+    .intro-grid p { font-size:15px !important; text-align:center; }
+    .intro-grid button { margin:0 auto; display:flex !important; }
+}
+</style>
+
+<!-- 상품 목록 (최상단) -->
+<section class="section" id="products" style="padding-top:32px;">
+    <h2 class="section-title">패브릭 인쇄 상품</h2>
+    <p class="section-desc">원하는 원단을 선택하고 무료 에디터로 디자인을 시작하세요</p>
+    <div id="productGrid" class="product-grid">
+        <div class="loading-spinner"></div>
+    </div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+        <i class="fa-solid fa-box-open"></i>
+        <p>패브릭 인쇄 상품을 준비 중입니다. 곧 만나보실 수 있어요!</p>
+    </div>
+</section>
+
+<!-- 특장점 -->
+<div class="features" style="margin-top:40px;">
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#fff1f2; color:var(--primary);">
+            <i class="fa-solid fa-image"></i>
+        </div>
+        <h3>고화질 실사출력</h3>
+        <p>최신 디지털 프린터로 사진 같은 색감과 선명한 디테일을 천에 그대로 옮깁니다.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#fff7ed; color:var(--accent);">
+            <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <h3>다양한 원단</h3>
+        <p>광목 20수·30수·면포·옥스포드·쉬폰·린넨 등 용도에 맞는 원단을 선택하세요.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#ecfdf5; color:#10b981;">
+            <i class="fa-solid fa-leaf"></i>
+        </div>
+        <h3>친환경 잉크</h3>
+        <p>인체에 무해한 친환경 잉크 사용. 인테리어·매장·전시·이벤트 어디든 안심.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon" style="background:#fce7f3; color:#db2777;">
+            <i class="fa-solid fa-truck-fast"></i>
+        </div>
+        <h3>당일 출고</h3>
+        <p>평일 오후 3시 이전 주문 확인 시 당일 출고. 전국 배송 가능합니다.</p>
+    </div>
+</div>
+
+<!-- 주문 프로세스 -->
+<section class="section" id="process" style="background:#fff;">
+    <h2 class="section-title">간편 주문 프로세스</h2>
+    <p class="section-desc">4단계로 나만의 패브릭 인쇄를 완성하세요</p>
+    <div class="process-steps">
+        <div class="process-step">
+            <h4>원단 선택</h4>
+            <p>광목·면포·옥스포드·쉬폰 중 용도에 맞게 선택</p>
+        </div>
+        <div class="process-step">
+            <h4>사이즈 입력</h4>
+            <p>가로 최대 1600mm, 길이 무제한 (롤 원단)</p>
+        </div>
+        <div class="process-step">
+            <h4>디자인 편집</h4>
+            <p>무료 에디터로 이미지·텍스트 자유 편집</p>
+        </div>
+        <div class="process-step">
+            <h4>주문 완료</h4>
+            <p>장바구니 담고 결제하면 즉시 제작 시작</p>
+        </div>
+    </div>
+</section>
+
+<!-- 활용 사례 -->
+<section class="section" style="background:#fff;">
+    <h2 class="section-title">패브릭 인쇄 활용 사례</h2>
+    <p class="section-desc">한 장의 천이 공간을 바꿉니다</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; max-width:1100px; margin:0 auto;">
+        <div style="padding:24px 18px; background:#fff1f2; border-radius:14px; text-align:center;">
+            <div style="font-size:32px; margin-bottom:10px;">📸</div>
+            <h4 style="font-size:16px; font-weight:800; color:#1e293b; margin-bottom:6px;">포토존 백월</h4>
+            <p style="font-size:13px; color:#64748b; line-height:1.6;">팬미팅·결혼식·기업 행사의 포토존 배경</p>
+        </div>
+        <div style="padding:24px 18px; background:#fff7ed; border-radius:14px; text-align:center;">
+            <div style="font-size:32px; margin-bottom:10px;">🏪</div>
+            <h4 style="font-size:16px; font-weight:800; color:#1e293b; margin-bottom:6px;">매장 디스플레이</h4>
+            <p style="font-size:13px; color:#64748b; line-height:1.6;">윈도우 디스플레이·천 현수막·매장 인테리어</p>
+        </div>
+        <div style="padding:24px 18px; background:#ecfdf5; border-radius:14px; text-align:center;">
+            <div style="font-size:32px; margin-bottom:10px;">🪟</div>
+            <h4 style="font-size:16px; font-weight:800; color:#1e293b; margin-bottom:6px;">인테리어 커튼</h4>
+            <p style="font-size:13px; color:#64748b; line-height:1.6;">홈·카페·사무실용 사진 커튼·암막 커튼</p>
+        </div>
+        <div style="padding:24px 18px; background:#faf5ff; border-radius:14px; text-align:center;">
+            <div style="font-size:32px; margin-bottom:10px;">🎪</div>
+            <h4 style="font-size:16px; font-weight:800; color:#1e293b; margin-bottom:6px;">전시·이벤트</h4>
+            <p style="font-size:13px; color:#64748b; line-height:1.6;">전시부스 백드롭·이벤트 천 배너·팝업스토어</p>
+        </div>
+    </div>
+
+    <div style="font-size:14px; color:#475569; line-height:1.8; margin:36px auto 0; max-width:760px; background:#f8fafc; padding:18px 22px; border-radius:12px; border:1px solid #e2e8f0; text-align:center;">
+        <strong style="color:#1e293b;">📞 패브릭 인쇄 전문 상담</strong>
+        &nbsp;|&nbsp;
+        <a href="tel:0313661984" style="color:#e11d48;font-weight:700;text-decoration:none;">031-366-1984</a>
+        &nbsp;·&nbsp;
+        <a href="mailto:design@chameleon.design" style="color:#e11d48;font-weight:700;text-decoration:none;">design@chameleon.design</a>
+        <br>
+        <span style="font-size:12px; color:#94a3b8;">평일 09:00~18:00 · 카멜레온프린팅 패브릭 사업부</span>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="section">
+    <div class="cta-banner">
+        <h2>지금 바로 시작하세요</h2>
+        <p>무료 에디터로 패브릭을 디자인하고, 맞춤 제작·당일 출고까지!</p>
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+            <i class="fa-solid fa-arrow-up"></i> 상품 보기
+        </button>
+    </div>
+</section>
+
+<!-- 카푸 AI 챗봇 (플로팅) -->
+<div id="kapuChatWrap" style="display:none; position:fixed; bottom:80px; right:16px; width:400px; height:620px; z-index:9999; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.25);">
+    <iframe id="kapuChatFrame" src="" style="width:100%;height:100%;border:none;border-radius:16px;"></iframe>
+</div>
+<button id="kapuFab" onclick="toggleKapuChat()" style="
+    position:fixed; bottom:16px; right:16px; z-index:9999;
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:linear-gradient(135deg, var(--primary), #8b5cf6);
+    color:#fff; font-size:22px; cursor:pointer;
+    box-shadow:0 4px 20px rgba(99,102,241,0.4);
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.3s;
+" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+</button>
+<script>
+(function(){
+    var h = location.hostname;
+    var psL = window.__PS_LANG || 'ko';
+    var kapuMap = {ko:'kr',ja:'ja',en:'en',zh:'cn',ar:'ar',es:'es',de:'de',fr:'fr'};
+    window._kapuLang = kapuMap[psL] || 'kr';
+})();
+function toggleKapuChat() {
+    var wrap = document.getElementById('kapuChatWrap');
+    var frame = document.getElementById('kapuChatFrame');
+    var fab = document.getElementById('kapuFab');
+    if (wrap.style.display === 'none') {
+        if (!frame.src || frame.src === '' || frame.src === location.href) {
+            frame.src = '/chameleon-chatbot.html?lang=' + (window._kapuLang || 'kr');
+        }
+        wrap.style.display = 'block';
+        fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    } else {
+        wrap.style.display = 'none';
+        fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+    }
+}
+</script>
+<style>
+@media (max-width: 480px) {
+    #kapuChatWrap { width: calc(100vw - 16px) !important; height: calc(100vh - 100px) !important; right: 8px !important; bottom: 76px !important; }
+}
+</style>
+
+<!-- 쇼츠 영상 섹션 -->
+<section class="section" id="psShortsSection" style="display:none; background:#fff;">
+    <div style="text-align:center; margin-bottom:20px;">
+        <h2 class="section-title" id="psShortsTitle">🎬 영상으로 만나보세요</h2>
+        <p class="section-desc" id="psShortsDesc">종이매대 제작 과정과 활용 사례를 확인하세요</p>
+    </div>
+    <div id="psShortsGrid" style="display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:10px; scrollbar-width:thin; max-width:1100px; margin:0 auto;"></div>
+</section>
+<script>
+(function(){
+    var _psL = window.__PS_LANG || 'ko';
+    var _sTitles = {ko:'🎬 영상으로 만나보세요',ja:'🎬 動画でチェック',en:'🎬 Watch Our Videos',zh:'🎬 视频展示',ar:'🎬 شاهد الفيديو',es:'🎬 Mira nuestros videos',de:'🎬 Unsere Videos',fr:'🎬 Nos vidéos'};
+    var _sDescs = {ko:'종이매대 제작 과정과 활용 사례를 확인하세요',ja:'紙什器の制作過程と活用事例をご覧ください',en:'See our paper display production and use cases',zh:'查看纸质展示架的制作过程和使用案例',ar:'شاهد عملية إنتاج حوامل العرض الورقية',es:'Vea nuestros expositores de papel',de:'Entdecken Sie unsere Papier-Displays',fr:'Découvrez nos présentoirs en papier'};
+    var _sT = document.getElementById('psShortsTitle'); if (_sT) _sT.textContent = _sTitles[_psL] || _sTitles.en;
+    var _sD = document.getElementById('psShortsDesc'); if (_sD) _sD.textContent = _sDescs[_psL] || _sDescs.en;
+    function _loadPsShorts() {
+        var _sb = window.sb || (typeof supabase !== 'undefined' ? supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null);
+        if (!_sb) { setTimeout(_loadPsShorts, 1000); return; }
+        _sb.from('library').select('id, data_url, tags').eq('category','shorts-paper-stand').order('created_at',{ascending:false}).limit(10).then(function(res) {
+            if (!res.data || res.data.length === 0) return;
+            var section = document.getElementById('psShortsSection');
+            var grid = document.getElementById('psShortsGrid');
+            if (!section || !grid) return;
+            section.style.display = '';
+            var html = '';
+            res.data.forEach(function(item) {
+                var url = item.data_url || '';
+                var title = item.tags || '';
+                var isTiktok = url.includes('tiktok.com');
+                if (isTiktok) {
+                    var tm = url.match(/video\/(\d+)/); if (!tm) return;
+                    html += '<div style="flex:0 0 220px;scroll-snap-align:start;border-radius:14px;overflow:hidden;background:#000;width:220px;height:391px;"><iframe src="https://www.tiktok.com/embed/v2/'+tm[1]+'?autoplay=1&mute=1" style="width:100%;height:100%;border:none;" allow="autoplay;encrypted-media" allowfullscreen></iframe>'+(title?'<div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.8));color:#fff;font-size:12px;font-weight:600;">'+title+'</div>':'')+'</div>';
+                } else {
+                    var m = url.match(/shorts\/([a-zA-Z0-9_-]+)/) || url.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]+)/); if (!m) return;
+                    var vid = m[1];
+                    html += '<div style="flex:0 0 220px;scroll-snap-align:start;border-radius:14px;overflow:hidden;background:#000;position:relative;cursor:pointer;width:220px;height:391px;" onclick="this.innerHTML=\'<iframe src=\x22https://www.youtube.com/embed/'+vid+'?autoplay=1&mute=1&loop=1&playlist='+vid+'\x22 style=\x22width:100%;height:100%;border:none;\x22 allow=\x22autoplay;encrypted-media\x22 allowfullscreen></iframe>\';this.style.cursor=\x22default\x22;this.onclick=null;"><img src="https://img.youtube.com/vi/'+vid+'/0.jpg" style="width:100%;height:100%;object-fit:cover;"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;background:rgba(255,0,0,0.85);border-radius:50%;display:flex;align-items:center;justify-content:center;"><div style="width:0;height:0;border-style:solid;border-width:10px 0 10px 18px;border-color:transparent transparent transparent #fff;margin-left:3px;"></div></div>'+(title?'<div style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.8));color:#fff;font-size:12px;font-weight:600;">'+title+'</div>':'')+'</div>';
+                }
+            });
+            grid.innerHTML = html;
+        });
+    }
+    setTimeout(_loadPsShorts, 1500);
+})();
+</script>
+
+<!-- 고객 리뷰 섹션 -->
+<section class="section" id="reviewSection" style="background:#f8fafc;">
+    <h2 class="section-title">패브릭 인쇄 후기</h2>
+    <p class="section-desc">실제 패브릭 인쇄를 받아본 고객님들의 후기</p>
+    <div id="pdReviewGrid" class="rv-grid"></div>
+    <div id="pdReviewEmpty" style="display:none; text-align:center; padding:30px; color:#94a3b8;">
+        <i class="fa-solid fa-comment-dots" style="font-size:28px; margin-bottom:8px; display:block; opacity:0.3;"></i>
+        <p data-i18n="review_empty">아직 등록된 후기가 없습니다.</p>
+    </div>
+    <div style="text-align:center; margin-top:20px;">
+        <button id="pdReviewMore" class="rv-more-btn" onclick="loadPdReviews()" style="display:none;" data-i18n="review_more">더보기</button>
+    </div>
+</section>
+<style>
+.rv-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.rv-card { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.06); transition:transform 0.2s; cursor:pointer; }
+.rv-card:hover { transform:translateY(-3px); box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+.rv-photo { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f1f5f9; }
+.rv-body { padding:10px 12px 12px; }
+.rv-stars { color:#f59e0b; font-size:11px; margin-bottom:4px; }
+.rv-text { font-size:11px; color:#475569; line-height:1.5; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.rv-user { display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; }
+.rv-more-btn { padding:10px 32px; border-radius:8px; border:1px solid #c7d2fe; background:#fff; color:#6366f1; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+.rv-more-btn:hover { background:#eef2ff; }
+@media (max-width:768px) { .rv-grid { grid-template-columns:repeat(2,1fr); gap:10px; } }
+@media (max-width:480px) { .rv-grid { grid-template-columns:repeat(2,1fr); gap:8px; } .rv-body { padding:8px 10px; } }
+</style>
+
+<!-- 푸터 -->
+<footer class="site-footer" style="background:#1e293b; color:#94a3b8; padding:48px 24px 32px; margin-top:0;">
+    <div style="max-width:1000px; margin:0 auto;">
+        <div style="display:flex; gap:40px; flex-wrap:wrap; justify-content:space-between; margin-bottom:32px;">
+            <!-- 브랜드 -->
+            <div style="min-width:200px;">
+                <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:10px;">
+                    <i class="fa-solid fa-shirt" style="color:#fb7185; margin-right:6px;"></i>Cotton Print · 코튼프린팅
+                </div>
+                <p style="font-size:12px; line-height:1.7;">패브릭(천) 인쇄 전문 - (주)카멜레온프린팅 사업부.<br>광목·면포·옥스포드·쉬폰 맞춤 인쇄.</p>
+            </div>
+            <!-- 링크 -->
+            <div style="min-width:120px;">
+                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_links_title">바로가기</div>
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+                    <a href="/" id="footerHomeLink" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_main">카멜레온프린팅 메인</a>
+                    <a href="/board.html" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_community">커뮤니티</a>
+                    <a href="/mypage.html" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_mypage">마이페이지</a>
+                </div>
+            </div>
+            <!-- 연락처 -->
+            <div style="min-width:180px;">
+                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_contact_title">문의</div>
+                <div style="font-size:12px; line-height:2;">
+                    📞 <a href="tel:0313661984" style="color:#cbd5e1;text-decoration:none;">031-366-1984</a><br>
+                    📧 <a href="mailto:design@chameleon.design" style="color:#cbd5e1;text-decoration:none;">design@chameleon.design</a><br>
+                    🕐 평일 09:00~18:00
+                </div>
+            </div>
+        </div>
+        <div style="border-top:1px solid #334155; padding-top:16px; text-align:center; font-size:11px; color:#64748b;">
+            &copy; 2026 Cotton Print · (주)카멜레온프린팅. All rights reserved.<br>
+            메인몰: <a href="https://www.cafe2626.com" style="color:#fb7185;">cafe2626.com</a>
+        </div>
+    </div>
+</footer>
+
+<!-- JSON-LD 구조화 데이터 (SEO) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "패브릭 인쇄·천 인쇄·실사출력 전문 - Cotton Print",
+  "description": "고화질 패브릭(천) 맞춤 인쇄. 광목·면포·옥스포드·쉬폰. 백월·포토존 배경·현수막 천·인테리어 커튼.",
+  "url": "https://www.cotton-print.com/",
+  "inLanguage": "ko",
+  "publisher": {
+    "@type": "Organization",
+    "name": "(주)카멜레온프린팅",
+    "url": "https://www.cafe2626.com",
+    "logo": "https://www.cafe2626.com/mascot-character.png",
+    "sameAs": [
+      "https://www.cafe2626.com",
+      "https://www.cotton-print.com",
+      "https://www.cafe0101.com",
+      "https://www.cafe3355.com"
+    ]
+  },
+  "mainEntity": {
+    "@type": "Product",
+    "name": "패브릭 인쇄 (천 인쇄)",
+    "alternateName": ["패브릭 인쇄","천 인쇄","실사출력","Fabric Printing","Cotton Printing","Cloth Printing"],
+    "description": "광목 20수·30수·면포·옥스포드·쉬폰·린넨 등 다양한 원단에 친환경 잉크로 고화질 인쇄. 백월·포토존·커튼·현수막 천 제작.",
+    "category": "패브릭 인쇄",
+    "material": "광목, 면포, 옥스포드, 쉬폰, 린넨",
+    "brand": {
+      "@type": "Brand",
+      "name": "Cotton Print · 카멜레온프린팅"
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "KRW",
+      "lowPrice": "5000",
+      "highPrice": "500000",
+      "availability": "https://schema.org/InStock",
+      "offerCount": "10"
+    },
+    "image": "https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg"
+  },
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type":"ListItem","position":1,"name":"Cotton Print","item":"https://www.cotton-print.com/"},
+      {"@type":"ListItem","position":2,"name":"패브릭 인쇄","item":"https://www.cotton-print.com/"}
+    ]
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"LocalBusiness",
+  "name":"(주)카멜레온프린팅 - Cotton Print 패브릭 사업부",
+  "image":"https://www.cafe2626.com/mascot-character.png",
+  "url":"https://www.cotton-print.com",
+  "telephone":"+82-31-366-1984",
+  "priceRange":"₩₩",
+  "address":{"@type":"PostalAddress","streetAddress":"우정읍 한말길 72-2","addressLocality":"화성시","addressRegion":"경기도","postalCode":"18555","addressCountry":"KR"},
+  "openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}]
+}
+</script>
+
+<!-- i18n 다국어 시스템 -->
+<script>
+(function(){
+var LANG = window.__PS_LANG || 'ko';
+var I18N = {
+// ── SEO ──
+meta_title: {
+    ko:'종이매대 - 카멜레온프린팅 | 친환경 종이 진열대 전문',
+    ja:'紙什器 - カメレオンプリンティング | エコ紙製ディスプレイ専門',
+    en:'Cardboard Display Stand - Chameleon Printing | Eco-Friendly Cardboard Displays',
+    zh:'纸展架 - 变色龙印刷 | 环保纸展架专家',
+    ar:'حوامل ورقية - كاميليون للطباعة | عروض ورقية صديقة للبيئة',
+    es:'Expositor de Papel - Chameleon Printing | Expositores Ecologicos',
+    de:'Papieraufsteller - Chameleon Printing | Umweltfreundliche Papier-Displays',
+    fr:'Presentoir Papier - Chameleon Printing | Presentoirs Papier Ecologiques'
+},
+meta_desc: {
+    ko:'친환경 종이매대(종이 진열대) 전문. 무료 에디터로 직접 디자인하고 주문까지 한번에. 맞춤 사이즈, 다양한 디자인 템플릿 제공.',
+    ja:'エコ紙什器専門。無料エディタで自分でデザインし、注文まで一度に。カスタムサイズ、豊富なデザインテンプレート。',
+    en:'Eco-friendly cardboard display stands. Design with our free editor and order custom sizes in one step. Various design templates available.',
+    zh:'环保纸展架专家。使用免费编辑器自行设计，一站式定制尺寸下单。提供多种设计模板。',
+    ar:'حوامل عرض ورقية صديقة للبيئة. صمم بنفسك باستخدام المحرر المجاني واطلب بمقاسات مخصصة.',
+    es:'Expositores de papel ecologicos. Disena con nuestro editor gratuito y pide a medida en un solo paso.',
+    de:'Umweltfreundliche Papier-Displays. Gestalten Sie mit unserem kostenlosen Editor und bestellen Sie in einem Schritt.',
+    fr:'Presentoirs papier ecologiques. Concevez avec notre editeur gratuit et commandez sur mesure en une etape.'
+},
+meta_keywords: {
+    ko:'종이매대,종이진열대,친환경진열대,매대제작,종이디스플레이,팝업스토어진열대,카멜레온프린팅',
+    ja:'紙什器,紙ディスプレイ,エコディスプレイ,什器製作,ポップアップストア什器,カメレオンプリンティング',
+    en:'cardboard display stand,eco display,paper stand,custom display,pop-up store display,chameleon printing',
+    zh:'纸展架,纸质展示架,环保展架,展架定制,纸质陈列架,变色龙印刷',
+    ar:'حامل ورقي,عرض ورقي,حامل صديق للبيئة,طباعة كاميليون',
+    es:'expositor papel,display ecologico,expositor carton,chameleon printing',
+    de:'Papieraufsteller,Oko-Display,Papier-Display,Chameleon Printing',
+    fr:'presentoir papier,display ecologique,presentoir carton,chameleon printing'
+},
+// ── Header ──
+logo: {
+    ko:'종이매대', ja:'紙什器', en:'Cardboard Display', zh:'纸展架',
+    ar:'حامل ورقي', es:'Expositor', de:'Papierstand', fr:'Presentoir'
+},
+nav_products: {
+    ko:'상품', ja:'商品', en:'Products', zh:'产品',
+    ar:'المنتجات', es:'Productos', de:'Produkte', fr:'Produits'
+},
+nav_process: {
+    ko:'주문방법', ja:'注文方法', en:'How to Order', zh:'订购方式',
+    ar:'طريقة الطلب', es:'Como Pedir', de:'Bestellvorgang', fr:'Comment Commander'
+},
+nav_main: {
+    ko:'메인', ja:'メイン', en:'Home', zh:'首页',
+    ar:'الرئيسية', es:'Inicio', de:'Startseite', fr:'Accueil'
+},
+// ── Hero ──
+hero_badge: {
+    ko:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> 무료 샘플 요청하기',
+    ja:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> 無料サンプル申請',
+    en:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> Request Free Sample',
+    zh:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> 申请免费样品',
+    ar:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> اطلب عينة مجانية',
+    es:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> Solicitar Muestra Gratis',
+    de:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> Kostenloses Muster anfordern',
+    fr:'<i class="fa-solid fa-gift" style="color:#6366f1;"></i> Demander un Echantillon Gratuit'
+},
+hero_h1: {
+    ko:'디자인 <em>샘플제작</em> 무료.<br>타사대비 <em>반값</em>제작.',
+    ja:'デザイン<em>サンプル無料</em>。<br>他社の<em>半額</em>で制作。',
+    en:'Free Design <em>Samples</em>.<br><em>Half Price</em> vs Competitors.',
+    zh:'设计<em>样品免费</em>。<br>比同行<em>半价</em>制作。',
+    ar:'<em>عينات تصميم مجانية</em>.<br><em>نصف السعر</em> مقارنة بالمنافسين.',
+    es:'<em>Muestras de Diseno</em> Gratis.<br><em>Mitad de Precio</em> vs Competidores.',
+    de:'Design-<em>Muster kostenlos</em>.<br><em>Halber Preis</em> im Vergleich.',
+    fr:'<em>Echantillons</em> Design Gratuits.<br><em>Moitie Prix</em> vs Concurrents.'
+},
+hero_p: {
+    ko:'<div class="step"><div class="step-text">샘플요청하기에 <b>로고 및 제품</b>에 대해 간략히 적어주세요.<br>디자인 및 샘플을 제작해서 직접 보실 수 있도록 보내드립니다.</div></div><div class="step"><div class="step-text">샘플을 보시고 문제가 없다면 <b>계약금 30%</b> 입금 후 작업이 시작되며<br>제작이 완료되면 제품검수를 위한 사진을 보내드립니다.</div></div><div class="step-footer">1,000개 기준 제작기간 10일 · 배송기간 5일</div>',
+    ja:'<div class="step"><div class="step-text">サンプル申請フォームに<b>ロゴと製品情報</b>を簡単にご記入ください。<br>デザインとサンプルを制作し、実物をご確認いただけるようお届けします。</div></div><div class="step"><div class="step-text">サンプルをご確認いただき問題がなければ、<b>契約金30%</b>のお振込後に制作開始。<br>制作完了後、検品用の写真をお送りします。</div></div><div class="step-footer">1,000個基準 制作期間10日 · 配送期間5日</div>',
+    en:'<div class="step"><div class="step-text">Briefly describe your <b>logo and product</b> in the sample request form.<br>We will create a design and sample and send it to you for review.</div></div><div class="step"><div class="step-text">Once you approve the sample, production starts after <b>30% deposit</b>.<br>When production is complete, we will send inspection photos.</div></div><div class="step-footer">Based on 1,000 units: Production 10 days · Shipping 5 days</div>',
+    zh:'<div class="step"><div class="step-text">在样品申请中简要描述您的<b>Logo和产品</b>。<br>我们将制作设计和样品寄给您实物确认。</div></div><div class="step"><div class="step-text">样品确认无误后，支付<b>30%定金</b>即开始生产。<br>生产完成后会发送验收照片。</div></div><div class="step-footer">1,000个基准 生产周期10天 · 配送5天</div>',
+    ar:'<div class="step"><div class="step-text">اكتب وصفا موجزا عن <b>الشعار والمنتج</b> في نموذج طلب العينة.<br>سنقوم بإنشاء التصميم والعينة وإرسالها إليك للمراجعة.</div></div><div class="step"><div class="step-text">بعد الموافقة على العينة، يبدأ الإنتاج بعد دفع <b>30% دفعة مقدمة</b>.<br>عند اكتمال الإنتاج، سنرسل صور الفحص.</div></div><div class="step-footer">بناءً على 1,000 وحدة: الإنتاج 10 أيام · الشحن 5 أيام</div>',
+    es:'<div class="step"><div class="step-text">Describa brevemente su <b>logo y producto</b> en el formulario de muestra.<br>Crearemos un diseno y muestra y se lo enviaremos para su revision.</div></div><div class="step"><div class="step-text">Una vez aprobada la muestra, la produccion comienza tras el <b>deposito del 30%</b>.<br>Al completar la produccion, enviaremos fotos de inspeccion.</div></div><div class="step-footer">Base 1,000 unidades: Produccion 10 dias · Envio 5 dias</div>',
+    de:'<div class="step"><div class="step-text">Beschreiben Sie kurz Ihr <b>Logo und Produkt</b> im Musteranfrageformular.<br>Wir erstellen ein Design und Muster und senden es Ihnen zur Prufung.</div></div><div class="step"><div class="step-text">Nach Freigabe des Musters beginnt die Produktion nach <b>30% Anzahlung</b>.<br>Nach Fertigstellung senden wir Inspektionsfotos.</div></div><div class="step-footer">Basis 1.000 Stuck: Produktion 10 Tage · Versand 5 Tage</div>',
+    fr:'<div class="step"><div class="step-text">Decrivez brievement votre <b>logo et produit</b> dans le formulaire.<br>Nous creerons un design et echantillon et vous l\'enverrons pour examen.</div></div><div class="step"><div class="step-text">Une fois l\'echantillon approuve, la production commence apres <b>acompte de 30%</b>.<br>A la fin de la production, nous enverrons des photos d\'inspection.</div></div><div class="step-footer">Base 1 000 unites: Production 10 jours · Livraison 5 jours</div>'
+},
+// ── Video 1 ──
+video1_h2: {
+    ko:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>순식간에<br>조립되는<br>원터치형',
+    ja:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>一瞬で<br>組み立て<br>ワンタッチ式',
+    en:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Instant<br>Assembly<br>One-Touch',
+    zh:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>瞬间<br>组装<br>一触即成',
+    ar:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>تجميع<br>فوري<br>بلمسة واحدة',
+    es:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Montaje<br>Instantaneo<br>Un Solo Toque',
+    de:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Sofortige<br>Montage<br>Ein Handgriff',
+    fr:'<em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WOW</em><br>Montage<br>Instantane<br>En Un Geste'
+},
+video1_p: {
+    ko:'펼치기만 하면 완성.<br>도구 없이 누구나 1분 만에<br>설치할 수 있습니다.',
+    ja:'広げるだけで完成。<br>道具不要、誰でも1分で<br>設置できます。',
+    en:'Just unfold and it is done.<br>No tools needed — anyone can<br>set it up in 1 minute.',
+    zh:'展开即完成。<br>无需工具，任何人<br>1分钟内即可安装。',
+    ar:'افتحه فقط وسيكون جاهزا.<br>بدون ادوات — يمكن لاي شخص<br>تركيبه في دقيقة واحدة.',
+    es:'Solo despliega y listo.<br>Sin herramientas — cualquiera<br>lo monta en 1 minuto.',
+    de:'Einfach aufklappen — fertig.<br>Ohne Werkzeug — jeder kann es<br>in 1 Minute aufbauen.',
+    fr:'Depliez et c\'est pret.<br>Sans outils — tout le monde peut<br>l\'installer en 1 minute.'
+},
+btn_view_products_down: {
+    ko:'상품 보기 <i class="fa-solid fa-arrow-down"></i>',
+    ja:'商品を見る <i class="fa-solid fa-arrow-down"></i>',
+    en:'View Products <i class="fa-solid fa-arrow-down"></i>',
+    zh:'查看产品 <i class="fa-solid fa-arrow-down"></i>',
+    ar:'عرض المنتجات <i class="fa-solid fa-arrow-down"></i>',
+    es:'Ver Productos <i class="fa-solid fa-arrow-down"></i>',
+    de:'Produkte ansehen <i class="fa-solid fa-arrow-down"></i>',
+    fr:'Voir les Produits <i class="fa-solid fa-arrow-down"></i>'
+},
+// ── Products Section ──
+section_products_title: {
+    ko:'종이매대 상품', ja:'紙什器 商品', en:'Cardboard Display Products', zh:'纸展架产品',
+    ar:'منتجات الحوامل الورقية', es:'Productos Expositores', de:'Papieraufsteller Produkte', fr:'Produits Presentoirs'
+},
+section_products_desc: {
+    ko:'원하는 상품을 선택하고 무료 에디터로 디자인을 시작하세요',
+    ja:'商品を選んで無料エディタでデザインを始めましょう',
+    en:'Choose a product and start designing with our free editor',
+    zh:'选择产品，使用免费编辑器开始设计',
+    ar:'اختر منتجا وابدا التصميم باستخدام المحرر المجاني',
+    es:'Elige un producto y empieza a disenar con nuestro editor gratuito',
+    de:'Wahlen Sie ein Produkt und starten Sie das Design mit unserem kostenlosen Editor',
+    fr:'Choisissez un produit et commencez a concevoir avec notre editeur gratuit'
+},
+empty_state: {
+    ko:'종이매대 상품을 준비 중입니다. 곧 만나보실 수 있어요!',
+    ja:'紙什器商品を準備中です。もうすぐご覧いただけます！',
+    en:'Paper display products are coming soon. Stay tuned!',
+    zh:'纸展架产品正在准备中，敬请期待！',
+    ar:'منتجات الحوامل الورقية قادمة قريبا. ترقبوا!',
+    es:'Los productos expositores estaran disponibles pronto.',
+    de:'Papieraufsteller-Produkte kommen bald. Bleiben Sie dran!',
+    fr:'Les produits presentoirs arrivent bientot. Restez a l\'ecoute !'
+},
+// ── Features ──
+feat_size_title: {
+    ko:'맞춤 사이즈', ja:'カスタムサイズ', en:'Custom Size', zh:'定制尺寸',
+    ar:'مقاس مخصص', es:'Tamano Personalizado', de:'Individuelle Grosse', fr:'Taille Sur Mesure'
+},
+feat_size_desc: {
+    ko:'원하는 크기로 자유롭게 제작. 폭, 높이, 깊이를 직접 입력하세요.',
+    ja:'お好みのサイズで自由に製作。幅、高さ、奥行きを直接入力。',
+    en:'Freely customize dimensions. Enter width, height, and depth as you like.',
+    zh:'自由定制尺寸。自行输入宽度、高度和深度。',
+    ar:'خصص الابعاد بحرية. ادخل العرض والارتفاع والعمق كما تشاء.',
+    es:'Personaliza las dimensiones libremente. Introduce ancho, alto y profundidad.',
+    de:'Frei anpassbare Masse. Geben Sie Breite, Hohe und Tiefe ein.',
+    fr:'Personnalisez librement les dimensions. Saisissez largeur, hauteur et profondeur.'
+},
+feat_editor_title: {
+    ko:'무료 에디터', ja:'無料エディタ', en:'Free Editor', zh:'免费编辑器',
+    ar:'محرر مجاني', es:'Editor Gratuito', de:'Kostenloser Editor', fr:'Editeur Gratuit'
+},
+feat_editor_desc: {
+    ko:'전문 디자인 에디터로 직접 디자인. 이미지, 텍스트, 서체 자유롭게 편집.',
+    ja:'プロ仕様のデザインエディタで直接デザイン。画像・テキスト・フォントを自由に編集。',
+    en:'Design with our professional editor. Freely edit images, text, and fonts.',
+    zh:'使用专业设计编辑器直接设计。自由编辑图片、文字和字体。',
+    ar:'صمم باستخدام محررنا الاحترافي. حرر الصور والنصوص والخطوط بحرية.',
+    es:'Disena con nuestro editor profesional. Edita imagenes, texto y fuentes.',
+    de:'Gestalten Sie mit unserem Profi-Editor. Bilder, Text und Schriften frei bearbeiten.',
+    fr:'Concevez avec notre editeur professionnel. Modifiez images, textes et polices.'
+},
+feat_eco_title: {
+    ko:'친환경 소재', ja:'エコ素材', en:'Eco-Friendly', zh:'环保材料',
+    ar:'صديق للبيئة', es:'Ecologico', de:'Umweltfreundlich', fr:'Ecologique'
+},
+feat_eco_desc: {
+    ko:'재활용 가능한 친환경 종이 소재로 제작. 가볍고 튼튼합니다.',
+    ja:'リサイクル可能なエコ紙素材で製作。軽くて丈夫です。',
+    en:'Made from recyclable eco-friendly paper. Lightweight yet durable.',
+    zh:'采用可回收环保纸材制作。轻便且坚固。',
+    ar:'مصنوع من ورق معاد التدوير صديق للبيئة. خفيف ومتين.',
+    es:'Fabricado con papel reciclable y ecologico. Ligero y resistente.',
+    de:'Aus recycelbarem, umweltfreundlichem Papier. Leicht und robust.',
+    fr:'Fabrique en papier recyclable ecologique. Leger et resistant.'
+},
+feat_ship_title: {
+    ko:'빠른 배송', ja:'迅速配送', en:'Fast Shipping', zh:'快速配送',
+    ar:'شحن سريع', es:'Envio Rapido', de:'Schneller Versand', fr:'Livraison Rapide'
+},
+feat_ship_desc: {
+    ko:'주문 확인 후 신속하게 제작하여 배송해드립니다.',
+    ja:'注文確認後、迅速に製作・配送いたします。',
+    en:'Quick production and shipping after order confirmation.',
+    zh:'订单确认后快速制作并发货。',
+    ar:'انتاج وشحن سريع بعد تاكيد الطلب.',
+    es:'Produccion y envio rapidos tras confirmar el pedido.',
+    de:'Schnelle Produktion und Versand nach Bestellbestatigung.',
+    fr:'Production et livraison rapides apres confirmation de commande.'
+},
+// ── Process ──
+process_title: {
+    ko:'간편 주문 프로세스', ja:'簡単注文プロセス', en:'Easy Order Process', zh:'简易订购流程',
+    ar:'عملية طلب سهلة', es:'Proceso de Pedido Facil', de:'Einfacher Bestellprozess', fr:'Processus de Commande Simple'
+},
+process_desc: {
+    ko:'4단계로 나만의 종이매대를 완성하세요',
+    ja:'4ステップでオリジナル紙什器を完成',
+    en:'Complete your custom cardboard display in 4 steps',
+    zh:'4步完成您的定制纸展架',
+    ar:'اكمل حامل العرض المخصص في 4 خطوات',
+    es:'Completa tu expositor en 4 pasos',
+    de:'In 4 Schritten zum eigenen Papieraufsteller',
+    fr:'Realisez votre presentoir en 4 etapes'
+},
+step1_title: {
+    ko:'상품 선택', ja:'商品選択', en:'Choose Product', zh:'选择产品',
+    ar:'اختر المنتج', es:'Elegir Producto', de:'Produkt wahlen', fr:'Choisir le Produit'
+},
+step1_desc: {
+    ko:'원하는 종이매대 타입을 선택합니다',
+    ja:'お好みの紙什器タイプを選択します',
+    en:'Select the cardboard display type you want',
+    zh:'选择您想要的纸展架类型',
+    ar:'اختر نوع حامل العرض الورقي',
+    es:'Selecciona el tipo de expositor que deseas',
+    de:'Wahlen Sie den gewunschten Papieraufsteller-Typ',
+    fr:'Selectionnez le type de presentoir souhaite'
+},
+step2_title: {
+    ko:'사이즈 입력', ja:'サイズ入力', en:'Enter Size', zh:'输入尺寸',
+    ar:'ادخل المقاس', es:'Introducir Tamano', de:'Grosse eingeben', fr:'Saisir la Taille'
+},
+step2_desc: {
+    ko:'폭, 높이, 깊이를 자유롭게 지정합니다',
+    ja:'幅、高さ、奥行きを自由に指定します',
+    en:'Freely specify width, height, and depth',
+    zh:'自由指定宽度、高度和深度',
+    ar:'حدد العرض والارتفاع والعمق بحرية',
+    es:'Especifica ancho, alto y profundidad libremente',
+    de:'Breite, Hohe und Tiefe frei angeben',
+    fr:'Specifiez librement largeur, hauteur et profondeur'
+},
+step3_title: {
+    ko:'디자인 편집', ja:'デザイン編集', en:'Edit Design', zh:'编辑设计',
+    ar:'تعديل التصميم', es:'Editar Diseno', de:'Design bearbeiten', fr:'Modifier le Design'
+},
+step3_desc: {
+    ko:'무료 에디터로 이미지와 텍스트를 배치합니다',
+    ja:'無料エディタで画像とテキストを配置します',
+    en:'Place images and text with the free editor',
+    zh:'使用免费编辑器放置图片和文字',
+    ar:'ضع الصور والنصوص باستخدام المحرر المجاني',
+    es:'Coloca imagenes y texto con el editor gratuito',
+    de:'Platzieren Sie Bilder und Text mit dem kostenlosen Editor',
+    fr:'Placez images et textes avec l\'editeur gratuit'
+},
+step4_title: {
+    ko:'주문 완료', ja:'注文完了', en:'Order Complete', zh:'下单完成',
+    ar:'اكتمال الطلب', es:'Pedido Completado', de:'Bestellung abgeschlossen', fr:'Commande Terminee'
+},
+step4_desc: {
+    ko:'장바구니에 담고 결제하면 끝!',
+    ja:'カートに入れて決済すれば完了！',
+    en:'Add to cart, pay, and you are done!',
+    zh:'加入购物车，付款即可！',
+    ar:'اضف الى السلة وادفع وانتهى!',
+    es:'Anade al carrito, paga y listo!',
+    de:'In den Warenkorb, bezahlen — fertig!',
+    fr:'Ajoutez au panier, payez, c\'est fait !'
+},
+// ── Video 2 ──
+video2_h2: {
+    ko:'허니콤보드 <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">원판부터 포장재까지</em>',
+    ja:'ハニカムボード <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">原板から梱包材まで</em>',
+    en:'Honeycomb Board <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">From Raw Sheets to Packaging</em>',
+    zh:'蜂窝板 <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">从原板到包装材料</em>',
+    ar:'لوح خلية النحل <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">من الألواح الخام إلى التغليف</em>',
+    es:'Panel Honeycomb <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">De la lámina al embalaje</em>',
+    de:'Wabenplatte <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Von Rohplatte bis Verpackung</em>',
+    fr:'Panneau Nid d\'abeille <em style="font-style:normal; background:linear-gradient(135deg,#e11d48,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">De la plaque à l\'emballage</em>'
+},
+video2_p: {
+    ko:'전시부스, 팝업스토어, 상업 인테리어 공간에 쓰이는<br>친환경 허니콤보드를 원판/재단/인쇄/포장재까지 한번에.<br><b style="color:#6366f1;">전세계 어디나 무료로 배송됩니다.</b>',
+    ja:'展示ブース・ポップアップストア・商業空間用の<br>エコハニカムボードを原板・裁断・印刷・梱包材まで一括対応。<br><b style="color:#6366f1;">世界中どこでも無料配送いたします。</b>',
+    en:'Eco honeycomb board for exhibition booths, pop-up stores, and commercial interiors.<br>From raw sheets to cutting, printing, and packaging — all in one.<br><b style="color:#6366f1;">Free worldwide shipping.</b>',
+    zh:'用于展台、快闪店、商业空间的环保蜂窝板。<br>原板/裁切/印刷/包装一站式服务。<br><b style="color:#6366f1;">全球免费配送。</b>',
+    ar:'لوح خلية النحل الصديق للبيئة لأكشاك المعارض والمتاجر المؤقتة والتصميم الداخلي التجاري.<br>من الألواح الخام إلى التقطيع والطباعة والتغليف في مكان واحد.<br><b style="color:#6366f1;">شحن مجاني لجميع أنحاء العالم.</b>',
+    es:'Panel Honeycomb ecológico para stands, pop-up stores e interiores comerciales.<br>De la lámina en bruto al corte, impresión y embalaje, todo en uno.<br><b style="color:#6366f1;">Envío gratis a todo el mundo.</b>',
+    de:'Umweltfreundliche Wabenplatte für Messestände, Pop-up-Stores und Ladenbau.<br>Von der Rohplatte bis zum Zuschnitt, Druck und zur Verpackung — alles aus einer Hand.<br><b style="color:#6366f1;">Weltweit kostenloser Versand.</b>',
+    fr:'Panneau nid d\'abeille écologique pour stands, pop-up stores et intérieurs commerciaux.<br>De la plaque brute à la découpe, l\'impression et l\'emballage — tout-en-un.<br><b style="color:#6366f1;">Livraison gratuite partout dans le monde.</b>'
+},
+btn_view_products_up: {
+    ko:'상품 보기 <i class="fa-solid fa-arrow-up"></i>',
+    ja:'商品を見る <i class="fa-solid fa-arrow-up"></i>',
+    en:'View Products <i class="fa-solid fa-arrow-up"></i>',
+    zh:'查看产品 <i class="fa-solid fa-arrow-up"></i>',
+    ar:'عرض المنتجات <i class="fa-solid fa-arrow-up"></i>',
+    es:'Ver Productos <i class="fa-solid fa-arrow-up"></i>',
+    de:'Produkte ansehen <i class="fa-solid fa-arrow-up"></i>',
+    fr:'Voir les Produits <i class="fa-solid fa-arrow-up"></i>'
+},
+// ── CTA ──
+cta_title: {
+    ko:'지금 바로 시작하세요',
+    ja:'今すぐ始めましょう',
+    en:'Get Started Now',
+    zh:'立即开始',
+    ar:'ابدا الان',
+    es:'Empieza Ahora',
+    de:'Jetzt Starten',
+    fr:'Commencez Maintenant'
+},
+cta_desc: {
+    ko:'무료 에디터로 종이매대를 디자인하고, 맞춤 제작까지 한번에!',
+    ja:'無料エディタで紙什器をデザインし、カスタム製作まで一度に！',
+    en:'Design your cardboard display with our free editor and order custom — all at once!',
+    zh:'使用免费编辑器设计纸展架，一站式定制制作！',
+    ar:'صمم حامل العرض الورقي بالمحرر المجاني واطلب تصنيعا مخصصا!',
+    es:'Disena tu expositor con el editor gratuito y pide a medida!',
+    de:'Gestalten Sie Ihren Papieraufsteller mit dem kostenlosen Editor und bestellen Sie!',
+    fr:'Concevez votre presentoir avec l\'editeur gratuit et commandez sur mesure !'
+},
+cta_btn: {
+    ko:'<i class="fa-solid fa-arrow-up"></i> 상품 보기',
+    ja:'<i class="fa-solid fa-arrow-up"></i> 商品を見る',
+    en:'<i class="fa-solid fa-arrow-up"></i> View Products',
+    zh:'<i class="fa-solid fa-arrow-up"></i> 查看产品',
+    ar:'<i class="fa-solid fa-arrow-up"></i> عرض المنتجات',
+    es:'<i class="fa-solid fa-arrow-up"></i> Ver Productos',
+    de:'<i class="fa-solid fa-arrow-up"></i> Produkte ansehen',
+    fr:'<i class="fa-solid fa-arrow-up"></i> Voir les Produits'
+},
+// ── Footer ──
+footer_main: {
+    ko:'카멜레온프린팅 메인', ja:'カメレオンプリンティング メイン', en:'Chameleon Printing Home', zh:'变色龙印刷 首页',
+    ar:'كاميليون للطباعة الرئيسية', es:'Chameleon Printing Inicio', de:'Chameleon Printing Startseite', fr:'Chameleon Printing Accueil'
+},
+footer_community: {
+    ko:'커뮤니티', ja:'コミュニティ', en:'Community', zh:'社区',
+    ar:'المجتمع', es:'Comunidad', de:'Community', fr:'Communaute'
+},
+footer_mypage: {
+    ko:'마이페이지', ja:'マイページ', en:'My Page', zh:'我的页面',
+    ar:'صفحتي', es:'Mi Pagina', de:'Meine Seite', fr:'Ma Page'
+},
+footer_brand_desc: {
+    ko:'전 세계 인쇄 파트너. 무료 에디터로 디자인하고 맞춤 제작까지.',
+    ja:'世界中の印刷パートナー。無料エディタでデザインからカスタム製作まで。',
+    en:'Your global printing partner. Design with our free editor and get custom production.',
+    zh:'您的全球印刷伙伴。使用免费编辑器设计，定制生产一站式服务。',
+    ar:'شريككم العالمي في الطباعة. صمم بالمحرر المجاني واحصل على إنتاج مخصص.',
+    es:'Tu socio global de impresion. Disena con nuestro editor gratuito y produccion a medida.',
+    de:'Ihr globaler Druckpartner. Gestalten Sie mit unserem Editor und erhalten Sie Massanfertigung.',
+    fr:'Votre partenaire mondial d\'impression. Concevez avec notre editeur et obtenez une production sur mesure.'
+},
+footer_links_title: {
+    ko:'바로가기', ja:'リンク', en:'Quick Links', zh:'快速链接',
+    ar:'روابط سريعة', es:'Enlaces', de:'Links', fr:'Liens rapides'
+},
+footer_contact_title: {
+    ko:'문의', ja:'お問い合わせ', en:'Contact', zh:'联系我们',
+    ar:'اتصل بنا', es:'Contacto', de:'Kontakt', fr:'Contact'
+},
+footer_contact_info: {
+    ko:'📞 031-366-1984<br>📧 design@chameleon.design<br>🕐 평일 09:00~18:00',
+    ja:'📞 047-712-1148<br>📧 design@chameleon.design<br>🕐 平日 09:00~18:00 (JST)',
+    en:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Mon-Fri 09:00~18:00 (KST)',
+    zh:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 周一至周五 09:00~18:00 (KST)',
+    ar:'📧 design@chameleon.design<br>📞 3535-3491-10-82+<br>🕐 الاثنين-الجمعة 09:00~18:00',
+    es:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Lun-Vie 09:00~18:00 (KST)',
+    de:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Mo-Fr 09:00~18:00 (KST)',
+    fr:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Lun-Ven 09:00~18:00 (KST)'
+},
+review_title: {
+    ko:'고객 후기', ja:'お客様レビュー', en:'Customer Reviews', zh:'客户评价',
+    ar:'آراء العملاء', es:'Opiniones de Clientes', de:'Kundenbewertungen', fr:'Avis Clients'
+},
+review_desc: {
+    ko:'종이매대를 사용한 고객님들의 생생한 후기',
+    ja:'紙什器をご利用のお客様からの声',
+    en:'Real reviews from customers who used our cardboard display stands',
+    zh:'使用纸展架的客户真实评价',
+    ar:'تقييمات حقيقية من عملائنا',
+    es:'Opiniones reales de clientes que usaron nuestros expositores',
+    de:'Echte Bewertungen von Kunden, die unsere Papieraufsteller genutzt haben',
+    fr:'Avis reels de clients ayant utilise nos presentoirs papier'
+},
+review_empty: {
+    ko:'아직 등록된 후기가 없습니다.',
+    ja:'まだレビューがありません。',
+    en:'No reviews yet.',
+    zh:'暂无评价。',
+    ar:'لا توجد تقييمات بعد.',
+    es:'Aun no hay opiniones.',
+    de:'Noch keine Bewertungen.',
+    fr:'Pas encore d\'avis.'
+},
+review_more: {
+    ko:'더보기', ja:'もっと見る', en:'Load More', zh:'加载更多',
+    ar:'المزيد', es:'Ver mas', de:'Mehr laden', fr:'Voir plus'
+},
+pd_sample_title: {
+    ko:'무료 샘플 요청', ja:'無料サンプル申請', en:'Free Sample Request', zh:'免费样品申请',
+    ar:'طلب عينة مجانية', es:'Solicitud de Muestra Gratis', de:'Kostenloses Muster anfordern', fr:'Demande d\'Echantillon Gratuit'
+},
+pd_sample_desc: {
+    ko:'담당자가 확인 후 연락드립니다.', ja:'担当者が確認後ご連絡いたします。', en:'Our team will review and contact you.', zh:'负责人确认后会联系您。',
+    ar:'سيتواصل معكم فريقنا بعد المراجعة.', es:'Nuestro equipo revisara y le contactara.', de:'Unser Team wird Sie kontaktieren.', fr:'Notre equipe vous contactera.'
+},
+pd_sample_name: {
+    ko:'성함 / 회사명', ja:'お名前 / 会社名', en:'Name / Company', zh:'姓名 / 公司',
+    ar:'الاسم / الشركة', es:'Nombre / Empresa', de:'Name / Firma', fr:'Nom / Entreprise'
+},
+pd_sample_name_ph: {
+    ko:'예: 홍길동 / (주)ABC', ja:'例: 田中太郎 / ABC株式会社', en:'e.g. John / ABC Inc.', zh:'例: 张三 / ABC公司',
+    ar:'مثال: أحمد / شركة ABC', es:'Ej: Juan / ABC S.L.', de:'z.B. Max / ABC GmbH', fr:'Ex: Jean / ABC SARL'
+},
+pd_sample_phone: {
+    ko:'연락처', ja:'電話番号', en:'Phone', zh:'电话',
+    ar:'الهاتف', es:'Telefono', de:'Telefon', fr:'Telephone'
+},
+pd_sample_email: {
+    ko:'이메일', ja:'メールアドレス', en:'Email', zh:'邮箱',
+    ar:'البريد الإلكتروني', es:'Correo electronico', de:'E-Mail', fr:'Email'
+},
+pd_sample_memo: {
+    ko:'요청 내용', ja:'ご要望', en:'Request Details', zh:'需求说明',
+    ar:'تفاصيل الطلب', es:'Detalles de la solicitud', de:'Anfrage-Details', fr:'Details de la demande'
+},
+pd_sample_memo_ph: {
+    ko:'원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요.', ja:'ご希望の製品種類、サイズ、数量、用途などをご記入ください。', en:'Describe the product type, size, quantity, and purpose you need.', zh:'请填写您需要的产品类型、尺寸、数量、用途等。',
+    ar:'اكتب نوع المنتج والمقاس والكمية والاستخدام.', es:'Describa el tipo de producto, tamano, cantidad y uso.', de:'Beschreiben Sie Produkttyp, Grosse, Menge und Verwendung.', fr:'Decrivez le type de produit, taille, quantite et usage.'
+},
+pd_sample_submit: {
+    ko:'샘플 요청하기', ja:'サンプルを申請する', en:'Submit Sample Request', zh:'提交样品申请',
+    ar:'تقديم طلب العينة', es:'Enviar solicitud', de:'Musteranfrage senden', fr:'Envoyer la demande'
+},
+pd_sample_file: {
+    ko:'참고 파일', ja:'参考ファイル', en:'Reference Files', zh:'参考文件',
+    ar:'ملفات مرجعية', es:'Archivos de referencia', de:'Referenzdateien', fr:'Fichiers de reference'
+},
+pd_sample_file_click: {
+    ko:'클릭하여 파일 선택 (이미지, PDF, AI 등)', ja:'クリックしてファイル選択（画像、PDF、AIなど）', en:'Click to select files (images, PDF, AI, etc.)', zh:'点击选择文件（图片、PDF、AI等）',
+    ar:'انقر لاختيار الملفات (صور، PDF، AI)', es:'Haga clic para seleccionar archivos (imagenes, PDF, AI)', de:'Klicken Sie, um Dateien auszuwahlen (Bilder, PDF, AI)', fr:'Cliquez pour choisir des fichiers (images, PDF, AI)'
+},
+pd_sample_close: {
+    ko:'닫기', ja:'閉じる', en:'Close', zh:'关闭',
+    ar:'إغلاق', es:'Cerrar', de:'Schliessen', fr:'Fermer'
+}
+};
+
+// Expose for paper_stand.js
+window.__PS_I18N = I18N;
+
+function t(key) {
+    var entry = I18N[key];
+    if (!entry) return '';
+    return entry[LANG] || entry['ko'] || '';
+}
+
+function applyI18n() {
+    // Text content
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n');
+        var val = t(key);
+        if (val) el.textContent = val;
+    });
+    // HTML content
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n-html');
+        var val = t(key);
+        if (val) el.innerHTML = val;
+    });
+    // Placeholder
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n-placeholder');
+        var val = t(key);
+        if (val) el.placeholder = val;
+    });
+    // Title & meta
+    document.title = t('meta_title');
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', t('meta_desc'));
+    var metaKw = document.querySelector('meta[name="keywords"]');
+    if (metaKw) metaKw.setAttribute('content', t('meta_keywords'));
+}
+
+function buildLangSelector() {
+    var sel = document.getElementById('langSelector');
+    if (!sel) return;
+    var langs = [
+        {code:'ko', label:'KR',  url:'https://cafe2626.com/paper-stand'},
+        {code:'ja', label:'JP',  url:'https://cafe0101.com/paper-stand'},
+        {code:'en', label:'US',  url:'https://chameleon.design/paper-stand'},
+        {code:'zh', label:'CN',  url:'https://chameleon.design/paper-stand?lang=zh'},
+        {code:'ar', label:'SA',  url:'https://chameleon.design/paper-stand?lang=ar'},
+        {code:'es', label:'ES',  url:'https://chameleon.design/paper-stand?lang=es'},
+        {code:'de', label:'DE',  url:'https://chameleon.design/paper-stand?lang=de'},
+        {code:'fr', label:'FR',  url:'https://chameleon.design/paper-stand?lang=fr'}
+    ];
+    var html = '';
+    langs.forEach(function(l) {
+        var cls = (l.code === LANG) ? ' class="active"' : '';
+        html += '<a href="' + l.url + '"' + cls + ' title="' + l.label + '">' + l.label + '</a>';
+    });
+    sel.innerHTML = html;
+}
+
+function addHreflangTags() {
+    var supported = ['ko','ja','en','zh','ar','es','de','fr'];
+    var base = location.origin + location.pathname;
+    supported.forEach(function(code) {
+        var link = document.createElement('link');
+        link.rel = 'alternate';
+        link.hreflang = code;
+        link.href = base + '?lang=' + code;
+        document.head.appendChild(link);
+    });
+    // x-default
+    var def = document.createElement('link');
+    def.rel = 'alternate';
+    def.hreflang = 'x-default';
+    def.href = base;
+    document.head.appendChild(def);
+}
+
+// 종이매대 리뷰 로드 (페이지네이션 + 언어별 + 클릭 이동)
+var _rvPage = 0;
+var _rvPageSize = 8;
+var _rvSupa = null;
+var _rvFallback = false;
+
+window.loadPdReviews = async function() {
+    var grid = document.getElementById('pdReviewGrid');
+    var empty = document.getElementById('pdReviewEmpty');
+    var moreBtn = document.getElementById('pdReviewMore');
+    if (!grid) return;
+
+    if (!_rvSupa) {
+        _rvSupa = window.supabase ? window.supabase.createClient(
+            'https://qinvtnhiidtmrzosyvys.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+        ) : null;
+    }
+    if (!_rvSupa) { if(empty) empty.style.display='block'; return; }
+
+    var _langDb = {ko:'kr', ja:'ja', en:'en', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'kr'};
+    var siteLang = _langDb[LANG] || LANG;
+    var from = _rvPage * _rvPageSize;
+    var to = from + _rvPageSize - 1;
+
+    try {
+        var data = null;
+        // 첫 로드: 전략 결정 (pd_ 언어별 → pd_ 전체 → 언어별 전체)
+        if (_rvPage === 0 && !_rvFallback) {
+            var res = await _rvSupa.from('product_reviews')
+                .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                .like('product_code', 'pd_%')
+                .eq('lang', siteLang)
+                .gte('rating', 4)
+                .order('created_at', { ascending: false })
+                .range(from, to);
+            data = res.data;
+            if (data && data.length > 0) {
+                _rvFallback = 'pd_lang'; // pd_ + 해당언어
+            } else {
+                var res2 = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .like('product_code', 'pd_%')
+                    .gte('rating', 4)
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+                data = res2.data;
+                if (data && data.length > 0) {
+                    _rvFallback = 'pd_all'; // pd_ 전체
+                } else {
+                    _rvFallback = 'lang_all'; // 해당언어 전체
+                }
+            }
+        }
+        // 결정된 전략으로 쿼리
+        if (_rvPage > 0 || _rvFallback === 'lang_all') {
+            if (_rvFallback === 'pd_lang') {
+                var r = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .like('product_code', 'pd_%').eq('lang', siteLang).gte('rating', 4)
+                    .order('created_at', { ascending: false }).range(from, to);
+                data = r.data;
+            } else if (_rvFallback === 'pd_all') {
+                var r = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .like('product_code', 'pd_%').gte('rating', 4)
+                    .order('created_at', { ascending: false }).range(from, to);
+                data = r.data;
+            } else {
+                var r = await _rvSupa.from('product_reviews')
+                    .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .eq('lang', siteLang).gte('rating', 4)
+                    .order('created_at', { ascending: false }).range(from, to);
+                data = r.data;
+            }
+        }
+
+        if (!data || data.length === 0) {
+            if (_rvPage === 0 && empty) empty.style.display = 'block';
+            if (moreBtn) moreBtn.style.display = 'none';
+            return;
+        }
+
+        // ★ 중복 제거 (같은 사진 / 같은 코멘트 시작부분)
+        if (!window._psSeenPhotos) window._psSeenPhotos = new Set();
+        if (!window._psSeenCmtHead) window._psSeenCmtHead = new Set();
+        if (_rvPage === 0) { window._psSeenPhotos.clear(); window._psSeenCmtHead.clear(); }
+        data = data.filter(function(r) {
+            var pk = (r.photo_url||'').trim();
+            var ck = (r.comment||'').trim().substring(0,30).replace(/\s+/g,'');
+            if (pk && window._psSeenPhotos.has(pk)) return false;
+            if (ck && window._psSeenCmtHead.has(ck)) return false;
+            if (pk) window._psSeenPhotos.add(pk);
+            if (ck) window._psSeenCmtHead.add(ck);
+            return true;
+        });
+
+        if (_rvPage === 0) grid.innerHTML = '';
+
+        data.forEach(function(r) {
+            var stars = '';
+            for (var i = 0; i < 5; i++) stars += i < r.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+            var d = new Date(r.created_at);
+            var ds = d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+            var photoHtml = (r.photo_url && r.photo_url.trim()) ? '<img class="rv-photo" src="'+r.photo_url+'" alt="review" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+            var card = document.createElement('div');
+            card.className = 'rv-card';
+            if (r.product_code) {
+                card.onclick = (function(code) { return function() {
+                    var base = LANG==='ko'?'https://www.cafe2626.com':LANG==='ja'?'https://www.cafe0101.com':'https://chameleon.design';
+                    var p = '?product='+encodeURIComponent(code);
+                    if (LANG!=='ko'&&LANG!=='ja'&&LANG!=='en') p+='&lang='+LANG;
+                    window.location.href = base+'/'+p;
+                }; })(r.product_code);
+            }
+            card.innerHTML = photoHtml +
+                '<div class="rv-body">' +
+                    '<div class="rv-stars">'+stars+'</div>' +
+                    '<p class="rv-text">"'+(r.comment||'').replace(/</g,'&lt;')+'"</p>' +
+                    '<div class="rv-user"><span>'+(r.user_name||'').replace(/</g,'&lt;')+'</span><span>'+ds+'</span></div>' +
+                '</div>';
+            grid.appendChild(card);
+        });
+
+        _rvPage++;
+        if (moreBtn) moreBtn.style.display = data.length >= _rvPageSize ? 'inline-block' : 'none';
+
+    } catch(e) {
+        console.error('[pdReviews]', e);
+        if (_rvPage === 0 && empty) empty.style.display = 'block';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    buildLangSelector();
+    applyI18n();
+    addHreflangTags();
+    // 로고 & 푸터 링크: 현재 언어로 메인 사이트 이동
+    var h = location.hostname;
+    var isJp = h.indexOf('cafe0101')>=0;
+    var isKr = h.indexOf('cafe2626')>=0;
+    var homeHref;
+    if (isKr && LANG === 'ko') homeHref = '/';
+    else if (isJp && LANG === 'ja') homeHref = '/';
+    else if (LANG === 'ko') homeHref = 'https://www.cafe2626.com/';
+    else if (LANG === 'ja') homeHref = 'https://www.cafe0101.com/';
+    else if (LANG === 'en') homeHref = 'https://chameleon.design/';
+    else homeHref = 'https://chameleon.design/?lang=' + LANG;
+    ['logoLink','footerHomeLink'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.href = homeHref;
+    });
+
+    // 리뷰 로드
+    loadPdReviews();
+});
+})();
+</script>
+
+<!-- 상품 로딩 스크립트 -->
+<script src="cotton_print.js?v=1"></script>
+
+
+</body>
+</html>
