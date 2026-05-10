@@ -621,22 +621,34 @@ async function submitPdSample() {
         <div style="font-size:11px; letter-spacing:6px; color:var(--accent); font-weight:700; margin-bottom:8px;">FABRIC CATEGORIES</div>
         <h2 style="font-size:28px; font-weight:900; color:var(--brown-dark);">원단 카테고리</h2>
     </div>
-    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:18px; max-width:760px; margin:0 auto;" class="cat-icons">
+    <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:14px;" class="cat-icons">
         <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('animal', document.querySelector('.pf-chip[data-cat=animal]'));}, 100)">
             <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="9" r="1.8"/><circle cx="10" cy="6" r="1.8"/><circle cx="14" cy="6" r="1.8"/><circle cx="18" cy="9" r="1.8"/><path d="M7 17c0-3 2-5 5-5s5 2 5 5c0 1.5-1 2.5-2.5 2.5s-2-1-2.5-1-1 1-2.5 1S7 18.5 7 17Z"/></svg></div>
             <div class="cat-icon-name">동물</div>
-        </a>
-        <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('modern', document.querySelector('.pf-chip[data-cat=modern]'));}, 100)">
-            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12,3 21,8 21,16 12,21 3,16 3,8"/><polyline points="3,8 12,12 21,8"/><line x1="12" y1="12" x2="12" y2="21"/></svg></div>
-            <div class="cat-icon-name">모던</div>
         </a>
         <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('plant', document.querySelector('.pf-chip[data-cat=plant]'));}, 100)">
             <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V8M12 8C12 8 8 5 5 6C5 9 8 12 12 8ZM12 8C12 8 16 5 19 6C19 9 16 12 12 8Z"/></svg></div>
             <div class="cat-icon-name">식물</div>
         </a>
+        <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('people', document.querySelector('.pf-chip[data-cat=people]'));}, 100)">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/></svg></div>
+            <div class="cat-icon-name">사람</div>
+        </a>
+        <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('modern', document.querySelector('.pf-chip[data-cat=modern]'));}, 100)">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12,3 21,8 21,16 12,21 3,16 3,8"/><polyline points="3,8 12,12 21,8"/><line x1="12" y1="12" x2="12" y2="21"/></svg></div>
+            <div class="cat-icon-name">모던</div>
+        </a>
         <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('scenery', document.querySelector('.pf-chip[data-cat=scenery]'));}, 100)">
             <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l5-7 4 5 3-4 6 6"/><circle cx="17" cy="6" r="2"/><path d="M3 21h18"/></svg></div>
             <div class="cat-icon-name">풍경</div>
+        </a>
+        <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('typo', document.querySelector('.pf-chip[data-cat=typo]'));}, 100)">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V7l3 12M5 19l3-12 4 12M12 19l4-12 4 12"/><line x1="6.5" y1="14" x2="9.5" y2="14"/><line x1="13" y1="14" x2="17" y2="14"/></svg></div>
+            <div class="cat-icon-name">타이포</div>
+        </a>
+        <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('kids', document.querySelector('.pf-chip[data-cat=kids]'));}, 100)">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="4"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/><circle cx="10" cy="9" r="0.6" fill="currentColor"/><circle cx="14" cy="9" r="0.6" fill="currentColor"/></svg></div>
+            <div class="cat-icon-name">키즈</div>
         </a>
         <a href="#patternFilterChips" class="cat-icon-card" onclick="setTimeout(function(){cpFilterByCat('etc', document.querySelector('.pf-chip[data-cat=etc]'));}, 100)">
             <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="11" r="1" fill="currentColor"/><circle cx="12" cy="11" r="1" fill="currentColor"/><circle cx="16" cy="11" r="1" fill="currentColor"/></svg></div>
@@ -654,10 +666,16 @@ async function submitPdSample() {
 .cat-icon svg { width:38px; height:38px; }
 .cat-icon-name { font-size:13px; font-weight:700; color:#374151; letter-spacing:-0.3px; }
 @media (max-width:768px) {
-    .cat-icons { grid-template-columns:repeat(4,1fr) !important; gap:10px !important; }
-    .cat-icon { width:62px; height:62px; }
-    .cat-icon svg { width:28px; height:28px; }
+    .cat-icons { grid-template-columns:repeat(4,1fr) !important; gap:14px 10px !important; }
+    .cat-icon { width:58px; height:58px; }
+    .cat-icon svg { width:26px; height:26px; }
     .cat-icon-name { font-size:11px; }
+}
+@media (max-width:380px) {
+    .cat-icons { grid-template-columns:repeat(4,1fr) !important; gap:12px 6px !important; }
+    .cat-icon { width:52px; height:52px; }
+    .cat-icon svg { width:22px; height:22px; }
+    .cat-icon-name { font-size:10px; }
 }
 </style>
 
@@ -678,9 +696,12 @@ async function submitPdSample() {
     <div id="patternFilterChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; padding:4px 0;">
         <button class="pf-chip pf-chip-active" data-cat="" onclick="cpFilterByCat('', this)">전체</button>
         <button class="pf-chip" data-cat="animal" onclick="cpFilterByCat('animal', this)">동물</button>
-        <button class="pf-chip" data-cat="modern" onclick="cpFilterByCat('modern', this)">모던</button>
         <button class="pf-chip" data-cat="plant" onclick="cpFilterByCat('plant', this)">식물</button>
+        <button class="pf-chip" data-cat="people" onclick="cpFilterByCat('people', this)">사람</button>
+        <button class="pf-chip" data-cat="modern" onclick="cpFilterByCat('modern', this)">모던</button>
         <button class="pf-chip" data-cat="scenery" onclick="cpFilterByCat('scenery', this)">풍경</button>
+        <button class="pf-chip" data-cat="typo" onclick="cpFilterByCat('typo', this)">타이포</button>
+        <button class="pf-chip" data-cat="kids" onclick="cpFilterByCat('kids', this)">키즈</button>
         <button class="pf-chip" data-cat="etc" onclick="cpFilterByCat('etc', this)">기타</button>
     </div>
     <div id="patternGallery" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px;">
@@ -730,9 +751,12 @@ async function submitPdSample() {
                             <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;">카테고리</label>
                             <select id="upPatternCat" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit; background:#fff;">
                                 <option value="animal">동물</option>
-                                <option value="modern">모던</option>
                                 <option value="plant">식물</option>
+                                <option value="people">사람</option>
+                                <option value="modern">모던</option>
                                 <option value="scenery">풍경</option>
+                                <option value="typo">타이포</option>
+                                <option value="kids">키즈</option>
                                 <option value="etc">기타</option>
                             </select>
                         </div>
@@ -1055,9 +1079,9 @@ async function submitPdSample() {
     });
 
     // 등록된 패턴 갤러리 로드 (status='approved'만)
-    var CAT_LABELS = { animal:'동물', modern:'모던', plant:'식물', scenery:'풍경', etc:'기타',
+    var CAT_LABELS = { animal:'동물', plant:'식물', people:'사람', modern:'모던', scenery:'풍경', typo:'타이포', kids:'키즈', etc:'기타',
         // 구 카테고리 호환 (자동 매핑)
-        floral:'식물', natural:'식물', stripe:'모던', dot:'모던', geometric:'모던', typo:'기타', kids:'기타' };
+        floral:'식물', natural:'식물', stripe:'모던', dot:'모던', geometric:'모던' };
 
     var _currentCat = '';
     window.cpFilterByCat = function(cat, btn) {
