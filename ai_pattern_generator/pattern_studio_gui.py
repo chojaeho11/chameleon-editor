@@ -290,10 +290,10 @@ class PatternStudioApp(tk.Tk):
 
     def _make_card(self, parent, title: str) -> ttk.Frame:
         outer = ttk.Frame(parent, style="Card.TFrame")
-        # 그림자 효과는 ttk로 직접 어려우니 단순 보더만
+        # tk.Label의 pady/padx는 단일 정수만 받음 — 비대칭 패딩은 .pack()에서 적용
         title_lbl = tk.Label(outer, text=title, bg=COLORS["card"], fg=COLORS["brown"],
-                             font=("Segoe UI", 11, "bold"), anchor="w", padx=14, pady=(10, 0))
-        title_lbl.pack(fill="x")
+                             font=("Segoe UI", 11, "bold"), anchor="w", padx=14)
+        title_lbl.pack(fill="x", pady=(10, 0))
         return outer
 
     # ──────────── 데이터 ────────────
