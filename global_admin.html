@@ -211,6 +211,7 @@
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자인 마켓</li>
             <li class="nav-item" onclick="showSection('sec-production-partners', this)"><i class="fa-solid fa-industry"></i> 출력 파트너</li>
             <li class="nav-item" onclick="showSection('sec-franchise-inquiries', this); if(window.loadFranchiseInquiries) loadFranchiseInquiries();"><i class="fa-solid fa-handshake"></i> 가맹 문의</li>
+            <li class="nav-item" onclick="showSection('sec-cotton-patterns', this); if(window.loadCpPatterns) loadCpPatterns();" style="background:linear-gradient(90deg,#451a03 0%,#78350f 100%); color:#fde047;"><i class="fa-solid fa-shirt" style="color:#fde047;"></i> 🧵 Cotton Print 패턴 마켓</li>
 
             <div class="nav-label">Marketing</div>
             <li class="nav-item" onclick="window.open('marketing_bot.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-robot" style="color:#a78bfa;"></i> 🤖 마케팅 봇</li>
@@ -771,6 +772,392 @@
         </div>
     </div>
 </div>
+
+<!-- ===== 🧵 Cotton Print 패턴 마켓 관리 ===== -->
+<div id="sec-cotton-patterns" class="section">
+    <style>
+        #sec-cotton-patterns .card { background:linear-gradient(180deg,#451a03 0%,#78350f 100%); border:1px solid #92400e; color:#fef3c7; }
+        #sec-cotton-patterns h3 { color:#fde047 !important; }
+        #sec-cotton-patterns table { background:transparent; color:#fef3c7; }
+        #sec-cotton-patterns thead th { background:#78350f !important; color:#fde047 !important; border-bottom:2px solid #92400e !important; padding:10px 8px; }
+        #sec-cotton-patterns tbody tr { background:rgba(0,0,0,0.15); border-bottom:1px solid #92400e; }
+        #sec-cotton-patterns tbody tr:hover { background:rgba(252,211,77,0.08) !important; }
+        #sec-cotton-patterns tbody td { color:#fef3c7; border-color:#92400e; padding:10px 8px; vertical-align:middle; }
+        #sec-cotton-patterns .cp-tab-btn { padding:10px 22px; border:none; border-radius:50px; font-weight:700; cursor:pointer; font-size:13px; transition:all 0.2s; }
+        #sec-cotton-patterns .cp-tab-active { background:#fde047; color:#451a03; }
+        #sec-cotton-patterns .cp-tab-inactive { background:transparent; color:#fde047; border:1px solid #fde047; }
+        #sec-cotton-patterns .cp-thumb { width:60px; height:60px; border-radius:8px; object-fit:cover; border:2px solid #fde047; }
+        #sec-cotton-patterns .cp-badge { display:inline-block; padding:3px 10px; border-radius:50px; font-size:11px; font-weight:700; }
+        #sec-cotton-patterns .cp-badge-pending { background:#fbbf24; color:#451a03; }
+        #sec-cotton-patterns .cp-badge-approved { background:#22c55e; color:#fff; }
+        #sec-cotton-patterns .cp-badge-rejected { background:#dc2626; color:#fff; }
+        #sec-cotton-patterns .cp-badge-confirmed { background:#3b82f6; color:#fff; }
+        #sec-cotton-patterns .cp-badge-paid { background:#10b981; color:#fff; }
+        #sec-cotton-patterns .cp-input { padding:6px 10px; border-radius:6px; border:1px solid #92400e; background:#451a03; color:#fde047; font-size:13px; width:110px; }
+        #sec-cotton-patterns .cp-summary-card { background:rgba(0,0,0,0.25); border:1px solid #92400e; border-radius:10px; padding:14px 18px; }
+        #sec-cotton-patterns .cp-summary-num { font-size:22px; font-weight:900; color:#fde047; }
+        #sec-cotton-patterns .cp-summary-label { font-size:11px; color:#fbbf24; text-transform:uppercase; letter-spacing:1.5px; margin-top:4px; }
+    </style>
+
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #92400e; padding-bottom:14px;">
+            <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-shirt" style="color:#fde047;"></i> Cotton Print · 디자이너 패턴 마켓
+            </h3>
+            <a href="https://www.cotton-print.com" target="_blank" style="color:#fde047; font-size:13px; font-weight:700; text-decoration:none;"><i class="fa-solid fa-external-link"></i> cotton-print.com 방문</a>
+        </div>
+
+        <!-- 요약 카드 4개 -->
+        <div id="cpSummaryCards" style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;">
+            <div class="cp-summary-card"><div class="cp-summary-num" id="cpStatPending">-</div><div class="cp-summary-label">승인 대기 패턴</div></div>
+            <div class="cp-summary-card"><div class="cp-summary-num" id="cpStatApproved">-</div><div class="cp-summary-label">승인 완료 패턴</div></div>
+            <div class="cp-summary-card"><div class="cp-summary-num" id="cpStatRoyalty">-</div><div class="cp-summary-label">미확정 적립 (건)</div></div>
+            <div class="cp-summary-card"><div class="cp-summary-num" id="cpStatPaid">-</div><div class="cp-summary-label">누적 지급 (원)</div></div>
+        </div>
+
+        <!-- 탭 -->
+        <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
+            <button id="cpTab1" class="cp-tab-btn cp-tab-active" onclick="cpSwitchTab('patterns')"><i class="fa-solid fa-palette"></i> 패턴 승인 관리</button>
+            <button id="cpTab2" class="cp-tab-btn cp-tab-inactive" onclick="cpSwitchTab('royalties')"><i class="fa-solid fa-coins"></i> 디자이너 적립 관리</button>
+            <button id="cpTab3" class="cp-tab-btn cp-tab-inactive" onclick="cpSwitchTab('summary')"><i class="fa-solid fa-chart-pie"></i> 디자이너별 합계</button>
+            <button class="cp-tab-btn cp-tab-inactive" onclick="loadCpPatterns(); loadCpRoyalties(); loadCpSummary();" style="margin-left:auto;"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+        </div>
+
+        <!-- ─── Tab 1: 패턴 승인 ─── -->
+        <div id="cpPanelPatterns">
+            <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center;">
+                <select id="cpFilterPatStatus" onchange="loadCpPatterns()" class="cp-input" style="width:140px;">
+                    <option value="pending">승인 대기</option>
+                    <option value="approved">승인 완료</option>
+                    <option value="rejected">거절</option>
+                    <option value="">전체</option>
+                </select>
+                <span id="cpPatCount" style="font-size:12px; color:#fbbf24;"></span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="min-width:1100px; width:100%;">
+                    <thead>
+                        <tr>
+                            <th width="80">썸네일</th>
+                            <th>패턴명 / 카테고리</th>
+                            <th width="130">디자이너</th>
+                            <th width="110">등록일</th>
+                            <th width="180">원본/목업</th>
+                            <th width="100" style="text-align:center;">상태</th>
+                            <th width="180" style="text-align:center;">처리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cpPatternListBody"><tr><td colspan="7" style="text-align:center; padding:30px;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ─── Tab 2: 적립 관리 ─── -->
+        <div id="cpPanelRoyalties" style="display:none;">
+            <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center;">
+                <select id="cpFilterRoyStatus" onchange="loadCpRoyalties()" class="cp-input" style="width:140px;">
+                    <option value="pending">미확정 (판매가 입력 필요)</option>
+                    <option value="confirmed">적립 확정 (지급 대기)</option>
+                    <option value="paid">지급 완료</option>
+                    <option value="">전체</option>
+                </select>
+                <span id="cpRoyCount" style="font-size:12px; color:#fbbf24;"></span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="min-width:1200px; width:100%;">
+                    <thead>
+                        <tr>
+                            <th width="100">접수일</th>
+                            <th>패턴 / 디자이너</th>
+                            <th width="100">원단</th>
+                            <th width="80">수량</th>
+                            <th width="140">판매가 (원)</th>
+                            <th width="120">10% 적립</th>
+                            <th width="100" style="text-align:center;">상태</th>
+                            <th width="180" style="text-align:center;">처리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cpRoyaltyListBody"><tr><td colspan="8" style="text-align:center; padding:30px;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ─── Tab 3: 디자이너별 합계 ─── -->
+        <div id="cpPanelSummary" style="display:none;">
+            <div style="overflow-x:auto;">
+                <table style="min-width:900px; width:100%;">
+                    <thead>
+                        <tr>
+                            <th>디자이너</th>
+                            <th width="100" style="text-align:center;">주문 건수</th>
+                            <th width="160" style="text-align:right;">미확정 (원)</th>
+                            <th width="160" style="text-align:right;">확정 (지급대기)</th>
+                            <th width="160" style="text-align:right;">지급완료</th>
+                            <th width="160" style="text-align:right;">총 적립</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cpSummaryListBody"><tr><td colspan="6" style="text-align:center; padding:30px;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// 🧵 Cotton Print 패턴 마켓 관리
+// ════════════════════════════════════════════════════════
+(function(){
+    var CAT_LABELS = { floral:'플로럴', natural:'내추럴', animal:'애니멀', stripe:'스트라이프', dot:'도트', geometric:'지오메트릭', typo:'타이포', kids:'키즈' };
+    function getSb() {
+        if (window.sb) return window.sb;
+        if (typeof window.supabase === 'undefined') return null;
+        return window.supabase.createClient(
+            'https://qinvtnhiidtmrzosyvys.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+        );
+    }
+    function fmtDate(s) {
+        if (!s) return '-';
+        var d = new Date(s);
+        return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+    }
+    function fmtMoney(n) { return (n||0).toLocaleString('ko-KR'); }
+
+    window.cpSwitchTab = function(tab) {
+        document.getElementById('cpPanelPatterns').style.display = tab==='patterns' ? '' : 'none';
+        document.getElementById('cpPanelRoyalties').style.display = tab==='royalties' ? '' : 'none';
+        document.getElementById('cpPanelSummary').style.display = tab==='summary' ? '' : 'none';
+        document.getElementById('cpTab1').className = 'cp-tab-btn ' + (tab==='patterns' ? 'cp-tab-active' : 'cp-tab-inactive');
+        document.getElementById('cpTab2').className = 'cp-tab-btn ' + (tab==='royalties' ? 'cp-tab-active' : 'cp-tab-inactive');
+        document.getElementById('cpTab3').className = 'cp-tab-btn ' + (tab==='summary' ? 'cp-tab-active' : 'cp-tab-inactive');
+        if (tab==='royalties') loadCpRoyalties();
+        if (tab==='summary') loadCpSummary();
+    };
+
+    // ───── 요약 카드 ─────
+    async function loadCpStats() {
+        var sb = getSb(); if (!sb) return;
+        try {
+            var p = await sb.from('user_patterns').select('id,status', { count:'exact' });
+            var pending = (p.data||[]).filter(function(x){return x.status==='pending';}).length;
+            var approved = (p.data||[]).filter(function(x){return x.status==='approved';}).length;
+            document.getElementById('cpStatPending').textContent = pending;
+            document.getElementById('cpStatApproved').textContent = approved;
+
+            var r = await sb.from('pattern_royalties').select('status, royalty_amount');
+            var rPending = (r.data||[]).filter(function(x){return x.status==='pending';}).length;
+            var paidSum = (r.data||[]).filter(function(x){return x.status==='paid';}).reduce(function(a,b){return a+(b.royalty_amount||0);}, 0);
+            document.getElementById('cpStatRoyalty').textContent = rPending;
+            document.getElementById('cpStatPaid').textContent = fmtMoney(paidSum);
+        } catch(e) { console.warn('[cp stats]', e); }
+    }
+
+    // ───── Tab 1: 패턴 승인 ─────
+    window.loadCpPatterns = async function() {
+        loadCpStats();
+        var sb = getSb(); if (!sb) return;
+        var status = document.getElementById('cpFilterPatStatus').value;
+        var tbody = document.getElementById('cpPatternListBody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...</td></tr>';
+        try {
+            var q = sb.from('user_patterns').select('*').order('created_at',{ascending:false}).limit(100);
+            if (status) q = q.eq('status', status);
+            var { data, error } = await q;
+            if (error) throw error;
+            document.getElementById('cpPatCount').textContent = '총 ' + (data||[]).length + '건';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">결과 없음</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(function(p){
+                var thumb = p.thumb_url ? '<img class="cp-thumb" src="'+p.thumb_url+'" onerror="this.style.opacity=0.3">' : '<div style="width:60px;height:60px;background:#92400e;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fde047;">?</div>';
+                var cat = CAT_LABELS[p.category] || p.category || '-';
+                var mockups = (p.mockup_urls||[]).slice(0,4).map(function(u,i){
+                    return '<a href="'+u+'" target="_blank" title="목업 '+(i+1)+'"><img src="'+u+'" style="width:32px;height:32px;border-radius:4px;object-fit:cover;margin-right:2px;border:1px solid #92400e;"></a>';
+                }).join('');
+                var origLink = p.original_url ? '<a href="'+p.original_url+'" target="_blank" style="color:#fde047; font-size:11px;"><i class="fa-solid fa-download"></i> 원본</a>' : '<span style="color:#94a3b8;font-size:11px;">없음</span>';
+                var statusBadge = '<span class="cp-badge cp-badge-'+(p.status||'pending')+'">'+
+                    ({pending:'대기',approved:'승인',rejected:'거절'}[p.status]||p.status)+'</span>';
+                var actions = '';
+                if (p.status === 'pending') {
+                    actions = '<button class="btn btn-success btn-sm" onclick="cpApprovePattern(\''+p.id+'\')">승인</button> ' +
+                              '<button class="btn btn-danger btn-sm" onclick="cpRejectPattern(\''+p.id+'\')">거절</button>';
+                } else if (p.status === 'approved') {
+                    actions = '<button class="btn btn-outline btn-sm" onclick="cpRejectPattern(\''+p.id+'\')" style="color:#fbbf24;border-color:#fbbf24;">승인 취소</button>';
+                } else {
+                    actions = '<button class="btn btn-success btn-sm" onclick="cpApprovePattern(\''+p.id+'\')">재승인</button>';
+                }
+                return '<tr>' +
+                    '<td>'+thumb+'</td>' +
+                    '<td><div style="font-weight:700;">'+(p.name||'-')+'</div><div style="font-size:11px;color:#fbbf24;">'+cat+'</div>' +
+                        (p.description ? '<div style="font-size:11px;color:#94a3b8;margin-top:3px;">'+p.description.slice(0,60)+'</div>' : '') + '</td>' +
+                    '<td>'+(p.author||'<span style="color:#94a3b8;">미입력</span>')+'</td>' +
+                    '<td style="font-size:12px;">'+fmtDate(p.created_at)+'</td>' +
+                    '<td>'+origLink+'<div style="margin-top:4px;">'+mockups+'</div></td>' +
+                    '<td style="text-align:center;">'+statusBadge+'</td>' +
+                    '<td style="text-align:center;">'+actions+'</td>' +
+                '</tr>';
+            }).join('');
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#fca5a5;">오류: '+e.message+'</td></tr>';
+        }
+    };
+
+    window.cpApprovePattern = async function(id) {
+        if (!confirm('이 패턴을 승인하시겠습니까? cotton-print.com 갤러리에 노출됩니다.')) return;
+        var sb = getSb(); if (!sb) return;
+        var { error } = await sb.from('user_patterns').update({ status:'approved' }).eq('id', id);
+        if (error) { alert('실패: '+error.message); return; }
+        loadCpPatterns();
+    };
+    window.cpRejectPattern = async function(id) {
+        if (!confirm('이 패턴을 거절(또는 승인 취소)하시겠습니까?')) return;
+        var sb = getSb(); if (!sb) return;
+        var { error } = await sb.from('user_patterns').update({ status:'rejected' }).eq('id', id);
+        if (error) { alert('실패: '+error.message); return; }
+        loadCpPatterns();
+    };
+
+    // ───── Tab 2: 적립 관리 ─────
+    window.loadCpRoyalties = async function() {
+        loadCpStats();
+        var sb = getSb(); if (!sb) return;
+        var status = document.getElementById('cpFilterRoyStatus').value;
+        var tbody = document.getElementById('cpRoyaltyListBody');
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...</td></tr>';
+        try {
+            var q = sb.from('pattern_royalties').select('*, user_patterns(name, thumb_url)').order('created_at',{ascending:false}).limit(100);
+            if (status) q = q.eq('status', status);
+            var { data, error } = await q;
+            if (error) throw error;
+            document.getElementById('cpRoyCount').textContent = '총 ' + (data||[]).length + '건';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">결과 없음</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(function(r){
+                var pName = (r.user_patterns && r.user_patterns.name) || '<span style="color:#94a3b8;">(삭제됨)</span>';
+                var pThumb = (r.user_patterns && r.user_patterns.thumb_url) ?
+                    '<img src="'+r.user_patterns.thumb_url+'" style="width:32px;height:32px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px;">' : '';
+                var statusBadge = '<span class="cp-badge cp-badge-'+(r.status||'pending')+'">'+
+                    ({pending:'미확정',confirmed:'확정',paid:'지급완료'}[r.status]||r.status)+'</span>';
+
+                var saleInput = '', royaltyDisplay = '', actions = '';
+                if (r.status === 'pending') {
+                    saleInput = '<input type="number" id="cpSale_'+r.id+'" class="cp-input" placeholder="판매가" value="'+(r.sale_amount||'')+'" onkeyup="cpCalcRoyalty(\''+r.id+'\')">';
+                    royaltyDisplay = '<span id="cpRoy_'+r.id+'" style="color:#fde047;font-weight:700;">'+(r.royalty_amount?fmtMoney(r.royalty_amount)+'원':'-')+'</span>';
+                    actions = '<button class="btn btn-success btn-sm" onclick="cpConfirmRoyalty(\''+r.id+'\')"><i class="fa-solid fa-check"></i> 적립 확정</button>';
+                } else if (r.status === 'confirmed') {
+                    saleInput = '<span style="color:#fef3c7;">'+fmtMoney(r.sale_amount)+'원</span>';
+                    royaltyDisplay = '<span style="color:#22c55e;font-weight:700;">'+fmtMoney(r.royalty_amount)+'원</span>';
+                    actions = '<button class="btn btn-primary btn-sm" onclick="cpMarkPaid(\''+r.id+'\')"><i class="fa-solid fa-money-bill-wave"></i> 지급 처리</button>' +
+                              '<br><button class="btn btn-outline btn-sm" onclick="cpRevertRoyalty(\''+r.id+'\')" style="color:#fbbf24;border-color:#fbbf24;margin-top:4px;">되돌리기</button>';
+                } else {
+                    saleInput = '<span style="color:#fef3c7;">'+fmtMoney(r.sale_amount)+'원</span>';
+                    royaltyDisplay = '<span style="color:#10b981;font-weight:700;">'+fmtMoney(r.royalty_amount)+'원</span>';
+                    actions = '<span style="font-size:11px;color:#94a3b8;">'+fmtDate(r.paid_at||r.updated_at)+' 지급</span>';
+                }
+
+                return '<tr>' +
+                    '<td style="font-size:12px;">'+fmtDate(r.created_at)+'</td>' +
+                    '<td>'+pThumb+'<span style="font-weight:700;">'+pName+'</span><div style="font-size:11px;color:#fbbf24;margin-top:2px;">'+(r.designer_name||'미입력')+'</div></td>' +
+                    '<td style="font-size:11px;">'+(r.fabric_code||'-')+'</td>' +
+                    '<td style="font-size:11px;">'+(r.qty||'-')+'</td>' +
+                    '<td>'+saleInput+'</td>' +
+                    '<td>'+royaltyDisplay+'</td>' +
+                    '<td style="text-align:center;">'+statusBadge+'</td>' +
+                    '<td style="text-align:center;">'+actions+'</td>' +
+                '</tr>';
+            }).join('');
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#fca5a5;">오류: '+e.message+'</td></tr>';
+        }
+    };
+
+    window.cpCalcRoyalty = function(id) {
+        var v = parseInt(document.getElementById('cpSale_'+id).value) || 0;
+        var royalty = Math.round(v * 0.10);
+        document.getElementById('cpRoy_'+id).textContent = royalty ? fmtMoney(royalty) + '원' : '-';
+    };
+
+    window.cpConfirmRoyalty = async function(id) {
+        var sale = parseInt(document.getElementById('cpSale_'+id).value) || 0;
+        if (sale <= 0) { alert('판매가를 입력해주세요.'); return; }
+        var royalty = Math.round(sale * 0.10);
+        if (!confirm('판매가 '+fmtMoney(sale)+'원 → 디자이너 적립 '+fmtMoney(royalty)+'원을 확정하시겠습니까?')) return;
+        var sb = getSb(); if (!sb) return;
+        var { error } = await sb.from('pattern_royalties').update({
+            sale_amount: sale, royalty_amount: royalty, status: 'confirmed'
+        }).eq('id', id);
+        if (error) { alert('실패: '+error.message); return; }
+        loadCpRoyalties();
+    };
+
+    window.cpMarkPaid = async function(id) {
+        if (!confirm('이 건을 디자이너에게 지급 완료 처리하시겠습니까?')) return;
+        var sb = getSb(); if (!sb) return;
+        var { error } = await sb.from('pattern_royalties').update({
+            status: 'paid', paid_at: new Date().toISOString()
+        }).eq('id', id);
+        if (error) { alert('실패: '+error.message); return; }
+        loadCpRoyalties();
+    };
+
+    window.cpRevertRoyalty = async function(id) {
+        if (!confirm('확정 상태를 되돌려서 다시 미확정 상태로 변경할까요?')) return;
+        var sb = getSb(); if (!sb) return;
+        var { error } = await sb.from('pattern_royalties').update({ status: 'pending' }).eq('id', id);
+        if (error) { alert('실패: '+error.message); return; }
+        loadCpRoyalties();
+    };
+
+    // ───── Tab 3: 디자이너별 합계 ─────
+    window.loadCpSummary = async function() {
+        loadCpStats();
+        var sb = getSb(); if (!sb) return;
+        var tbody = document.getElementById('cpSummaryListBody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...</td></tr>';
+        try {
+            // designer_royalty_summary 뷰 사용 (있으면), 없으면 클라이언트에서 집계
+            var { data, error } = await sb.from('designer_royalty_summary').select('*').order('paid_amount', { ascending:false });
+            if (error) {
+                // 뷰 없을 경우 raw 테이블에서 집계
+                var raw = await sb.from('pattern_royalties').select('designer_name, status, royalty_amount').not('designer_name','is',null);
+                if (raw.error) throw raw.error;
+                var agg = {};
+                (raw.data||[]).forEach(function(r){
+                    if (!r.designer_name) return;
+                    if (!agg[r.designer_name]) agg[r.designer_name] = { designer_name:r.designer_name, total_orders:0, paid_amount:0, pending_payout:0, awaiting_confirm:0 };
+                    agg[r.designer_name].total_orders++;
+                    if (r.status==='paid') agg[r.designer_name].paid_amount += (r.royalty_amount||0);
+                    if (r.status==='confirmed') agg[r.designer_name].pending_payout += (r.royalty_amount||0);
+                    if (r.status==='pending') agg[r.designer_name].awaiting_confirm += (r.royalty_amount||0);
+                });
+                data = Object.values(agg).sort(function(a,b){return b.paid_amount-a.paid_amount;});
+            }
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">디자이너 적립 내역이 없습니다.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(function(d){
+                var total = (d.paid_amount||0) + (d.pending_payout||0) + (d.awaiting_confirm||0);
+                return '<tr>' +
+                    '<td style="font-weight:700;"><i class="fa-solid fa-user-pen" style="color:#fde047;margin-right:6px;"></i>'+d.designer_name+'</td>' +
+                    '<td style="text-align:center;">'+d.total_orders+'</td>' +
+                    '<td style="text-align:right; color:#fbbf24;">'+fmtMoney(d.awaiting_confirm)+'</td>' +
+                    '<td style="text-align:right; color:#3b82f6;">'+fmtMoney(d.pending_payout)+'</td>' +
+                    '<td style="text-align:right; color:#10b981; font-weight:700;">'+fmtMoney(d.paid_amount)+'</td>' +
+                    '<td style="text-align:right; color:#fde047; font-weight:900;">'+fmtMoney(total)+' 원</td>' +
+                '</tr>';
+            }).join('');
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#fca5a5;">오류: '+e.message+'</td></tr>';
+        }
+    };
+})();
+</script>
+
             <div id="sec-accounting" class="section">
                 <div class="card" style="margin-bottom:20px; border-left:5px solid #059669;">
                     <div style="border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:15px;">
