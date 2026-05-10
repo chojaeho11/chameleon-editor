@@ -1080,9 +1080,16 @@
             try { await sb.storage.from('design').remove(paths); }
             catch(e) { console.warn('storage delete partial fail:', e); }
         }
-        // 2) DB row 삭제
-        var { error } = await sb.from('user_patterns').delete().eq('id', p.id);
+        // 2) DB row 삭제 — .select()로 실제 삭제된 row를 받아 RLS 침묵 실패 감지
+        var { data: deleted, error } = await sb.from('user_patterns')
+            .delete()
+            .eq('id', p.id)
+            .select();
         if (error) throw error;
+        if (!deleted || deleted.length === 0) {
+            // RLS 정책 때문에 침묵 실패한 경우
+            throw new Error('RLS_BLOCKED');
+        }
     }
 
     window.cpDeletePattern = async function(id) {
@@ -1127,16 +1134,43 @@
             var { data: pats, error: ge } = await sb.from('user_patterns').select('*').in('id', ids);
             if (ge) throw ge;
             var ok = 0, fail = 0;
+            var failedIds = [];
             for (var i = 0; i < (pats||[]).length; i++) {
-                try { await _deletePatternRow(sb, pats[i]); ok++; }
-                catch(e) { console.warn('row delete fail', pats[i].id, e); fail++; }
+                try {
+                    await _deletePatternRow(sb, pats[i]);
+                    ok++;
+                    // ✓ 즉시 DOM에서 row 제거 — 화면 새로고침 없이 바로 사라짐
+                    var row = document.querySelector('tr[data-pattern-id="'+pats[i].id+'"]');
+                    if (row) {
+                        row.style.transition = 'opacity .3s, transform .3s';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(-20px)';
+                        setTimeout((function(r){ return function(){ r.remove(); }; })(row), 300);
+                    }
+                }
+                catch(e) {
+                    console.warn('row delete fail', pats[i].id, e);
+                    fail++;
+                    failedIds.push(pats[i].id);
+                }
             }
-            alert('삭제 완료: ✅ ' + ok + '건 / ✗ ' + fail + '건');
-            loadCpPatterns();
+            // 헤더 체크박스 풀기 + 카운트 갱신
+            var sel = document.getElementById('cpSelectAllPatterns'); if (sel) sel.checked = false;
+            cpUpdateBulkBtn();
+            // 통계만 다시 로드 (row는 이미 DOM에서 제거함)
+            loadCpStats();
+            // 결과 알림
+            var msg = '✅ ' + ok + '건 삭제 완료';
+            if (fail > 0) msg += '\n✗ ' + fail + '건 실패 (RLS 정책 또는 권한 문제)';
+            alert(msg);
         } catch(e) {
             alert('일괄 삭제 실패: ' + e.message);
         } finally {
-            if (btn) { btn.innerHTML = '<i class="fa-solid fa-trash"></i> <span id="cpBulkDeleteLabel">선택 삭제 (0)</span>'; }
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.innerHTML = '<i class="fa-solid fa-trash"></i> <span id="cpBulkDeleteLabel">선택 삭제 (0)</span>';
+            }
         }
     };
 
