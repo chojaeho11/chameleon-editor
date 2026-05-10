@@ -12,6 +12,14 @@ import sys
 import subprocess
 from pathlib import Path
 
+# Windows 콘솔이 cp949여도 유니코드 출력 안 깨지게
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 HERE = Path(__file__).parent.resolve()
 TARGET_BAT = HERE / "start_studio.bat"
 ICON_PATH = HERE / "studio.ico"  # 있으면 사용, 없으면 기본 아이콘

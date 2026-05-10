@@ -403,19 +403,25 @@ class PatternStudioApp(tk.Tk):
             messagebox.showerror("파일 누락", f"{installer.name}을 찾을 수 없습니다.")
             return
         try:
+            # 자식 프로세스 stdout이 UTF-8로 출력되도록
+            env = os.environ.copy()
+            env["PYTHONIOENCODING"] = "utf-8"
+            env["PYTHONUTF8"] = "1"
             res = subprocess.run(
                 [sys.executable, str(installer)],
                 cwd=str(HERE),
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
                 timeout=20,
+                env=env,
             )
             if res.returncode == 0:
                 self._log_line("✓ 바탕화면 바로가기 생성됨", "ok")
                 messagebox.showinfo("완료", "바탕화면에 'Cotton Pattern Studio' 바로가기를 만들었습니다.\n"
                                             "다음부터는 더블클릭으로 바로 실행할 수 있습니다.")
             else:
-                self._log_line(f"✗ 바로가기 생성 실패:\n{res.stderr}", "err")
-                messagebox.showerror("실패", res.stderr or "알 수 없는 에러")
+                err = (res.stderr or res.stdout or "").strip()
+                self._log_line(f"✗ 바로가기 생성 실패:\n{err}", "err")
+                messagebox.showerror("실패", err or "알 수 없는 에러")
         except Exception as e:
             self._log_line(f"✗ 바로가기 생성 실패: {e}", "err")
             messagebox.showerror("실패", str(e))
