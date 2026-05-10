@@ -24,7 +24,7 @@ const FABRIC_TYPES = {
     chiffon:  { name: '쉬폰', isCotton: false, desc: '얇고 비치는 원단. 커튼·드레스·드레이프 적합.' },
     oxford:   { name: '옥스포드', isCotton: false, desc: '내구성 뛰어난 폴리. 가방·실외 디스플레이용.' },
     rayon:    { name: '레이온/인견', isCotton: false, desc: '시원한 인견 원단. 여름 의류·블라우스 적합.' },
-    linen:    { name: '린넬', isCotton: false, desc: '천연 린넨. 고급 인테리어·식탁보·앞치마.' }
+    linen:    { name: '린넨', isCotton: false, desc: '천연 린넨. 고급 인테리어·식탁보·앞치마.' }
 };
 const COLOR_LABELS = { white: '화이트', natural: '네츄럴', ivory: '백아이보리' };
 
@@ -118,7 +118,7 @@ const FABRIC_NAMES_I18N = {
     chiffon:  { ko:'쉬폰', ja:'シフォン', en:'Chiffon' },
     oxford:   { ko:'옥스포드', ja:'オックスフォード', en:'Oxford' },
     rayon:    { ko:'레이온/인견', ja:'レーヨン', en:'Rayon' },
-    linen:    { ko:'린넬', ja:'リネン', en:'Linen' }
+    linen:    { ko:'린넨', ja:'リネン', en:'Linen' }
 };
 const COLOR_NAMES_I18N = {
     white:   { ko:'화이트', ja:'ホワイト', en:'White' },

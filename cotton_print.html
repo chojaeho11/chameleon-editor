@@ -1082,9 +1082,9 @@ async function submitPdSample() {
             // 3) 목업 (자동 생성 제거 — 어드민이 이후 수동 처리)
             var mockups = [];
 
-            // 4) DB 등록 (user_patterns 테이블 — 어드민 승인 후 노출)
+            // 4) DB 등록 (user_patterns 테이블 — 즉시 노출, 부적절 시 어드민이 사후 비공개)
             statusEl.textContent = __L({ko:'등록 중...', ja:'登録中...', en:'Registering...'});
-            await sb.from('user_patterns').insert({
+            var insertRes = await sb.from('user_patterns').insert({
                 name: name,
                 category: cat,
                 author: author || null,
@@ -1093,10 +1093,11 @@ async function submitPdSample() {
                 thumb_url: thumbUrl,
                 mockup_urls: mockups,
                 source: 'cotton-print.com',
-                status: 'pending'  // 어드민 승인 대기
+                status: 'approved'  // 자동 승인 — 카탈로그에 즉시 노출
             });
+            if (insertRes && insertRes.error) throw insertRes.error;
 
-            var doneMsg = { ko:'✅ 업로드 완료! 어드민 승인 후 카탈로그에 노출됩니다.', ja:'✅ アップロード完了！承認後カタログに表示されます。', en:'✅ Upload complete! Will appear in catalog after admin approval.', zh:'✅ 上传完成！管理员审核后显示在目录中。', ar:'✅ تم الرفع', es:'✅ Subido!', de:'✅ Hochgeladen!', fr:'✅ Telecharge!' };
+            var doneMsg = { ko:'✅ 등록 완료! 카탈로그에 즉시 노출됩니다. 디자이너 마이페이지에서 디자이너명 "' + (author||name) + '"으로 로그인하세요.', ja:'✅ 登録完了！カタログに即時表示されます。デザイナーマイページで「' + (author||name) + '」でログインしてください。', en:'✅ Registered! Now visible in catalog. Log in to Designer My Page with name "' + (author||name) + '".', zh:'✅ 已登记！立即显示在目录中。', ar:'✅ تم التسجيل', es:'✅ Registrado', de:'✅ Registriert', fr:'✅ Enregistre' };
             statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">' + (doneMsg[__lang]||doneMsg.ko) + '</span>';
             // 폼 초기화 (안전 가드)
             ['upPatternName','upPatternAuthor','upPatternDesc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
@@ -1109,6 +1110,8 @@ async function submitPdSample() {
                 var el = document.getElementById(id);
                 if (el) { el.style.background = '#fafaf9'; el.style.borderStyle = 'dashed'; el.style.borderColor = '#d6d3d1'; }
             });
+            // 갤러리 즉시 새로고침 (같은 IIFE 안의 loadPatternGallery 호출)
+            try { loadPatternGallery(); } catch(_){}
         } catch(e) {
             var errLbl = __L({ko:'오류', ja:'エラー', en:'Error'});
             statusEl.innerHTML = '<span style="color:#dc2626;">' + errLbl + ': ' + (e && e.message ? e.message : e) + '</span>';
@@ -2690,7 +2693,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="cotton_print.js?v=5"></script>
+<script src="cotton_print.js?v=6"></script>
 
 
 </body>
