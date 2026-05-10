@@ -1283,8 +1283,27 @@ async function submitPdSample() {
     </div>
 </section>
 
-<!-- 카푸 AI 챗봇 (팝업창으로 열기 — iframe 컨텍스트 이슈 회피) -->
-<button id="kapuFab" onclick="openKapuChat()" style="
+<!-- 카푸 AI 챗봇 (페이지 내 오버레이 iframe)
+     id="chatIframeWrap"으로도 참조 — chameleon-chatbot.html의 닫기 버튼이 이 ID를 찾음 -->
+<div id="kapuChatWrap" style="display:none; position:fixed; bottom:80px; right:16px; width:400px; height:620px; z-index:9999; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.25); background:#374151;">
+    <iframe id="kapuChatFrame" src="" style="width:100%;height:100%;border:none;border-radius:16px;display:block;"></iframe>
+</div>
+<script>
+// chameleon-chatbot.html 내부의 닫기 버튼이 parent.document.getElementById('chatIframeWrap')를 찾으므로 alias 등록
+(function(){
+    var w = document.getElementById('kapuChatWrap');
+    if (w && !document.getElementById('chatIframeWrap')) {
+        // 같은 요소를 두 ID로 참조할 수 있게 alias
+        Object.defineProperty(w, '_aliasName', { value: 'chatIframeWrap', writable:false });
+        var origGetElementById = document.getElementById.bind(document);
+        document.getElementById = function(id){
+            if (id === 'chatIframeWrap') return w;
+            return origGetElementById(id);
+        };
+    }
+})();
+</script>
+<button id="kapuFab" onclick="toggleKapuChat()" style="
     position:fixed; bottom:16px; right:16px; z-index:9999;
     width:56px; height:56px; border-radius:50%; border:none;
     background:linear-gradient(135deg, var(--primary), #8b5cf6);
@@ -1301,29 +1320,32 @@ async function submitPdSample() {
     var kapuMap = {ko:'kr',ja:'ja',en:'en',zh:'cn',ar:'ar',es:'es',de:'de',fr:'fr'};
     window._kapuLang = kapuMap[psL] || 'kr';
 })();
-// 팝업창으로 챗봇 열기 — iframe context 안에서 advisor-panel.js가
-// 침묵 실패하는 이슈 회피. 별도 윈도우는 own-context라 항상 동작.
-var _kapuPopupRef = null;
-function openKapuChat() {
-    var langParam = (window._kapuLang || 'kr');
-    // chat=1 파라미터 — initAdvisorPanel()이 이걸 보고 패널을 자동으로 열어줌 (이게 없으면 빈 화면)
-    var url = '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print&chat=1';
-    // 이미 열려있으면 포커스만
-    if (_kapuPopupRef && !_kapuPopupRef.closed) {
-        _kapuPopupRef.focus();
-        return;
-    }
-    var w = 480, h = 740;
-    var left = window.screenX + (window.outerWidth - w) - 30;
-    var top  = window.screenY + (window.outerHeight - h) - 80;
-    _kapuPopupRef = window.open(url, 'chameleonChat',
-        'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top +
-        ',resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no');
-    if (!_kapuPopupRef) {
-        // 팝업 차단되면 새 탭으로
-        window.open(url, '_blank');
+function toggleKapuChat() {
+    var wrap = document.getElementById('kapuChatWrap');
+    var frame = document.getElementById('kapuChatFrame');
+    var fab = document.getElementById('kapuFab');
+    if (wrap.style.display === 'none' || !wrap.style.display) {
+        if (!frame.src || frame.src === '' || frame.src === location.href) {
+            // Same-origin + chat=1 — initAdvisorPanel()이 이 파라미터를 보고 패널을 자동으로 열어줌
+            var langParam = (window._kapuLang || 'kr');
+            frame.src = '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print&chat=1';
+        }
+        wrap.style.display = 'block';
+        fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    } else {
+        wrap.style.display = 'none';
+        fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
     }
 }
+// iframe 안에서 닫기 버튼 누르면 부모창에 메시지 보냄
+window.addEventListener('message', function(e){
+    if (e.data === 'closeKapuChat' || (e.data && e.data.type === 'closeKapuChat')) {
+        var wrap = document.getElementById('kapuChatWrap');
+        var fab = document.getElementById('kapuFab');
+        if (wrap) wrap.style.display = 'none';
+        if (fab) fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+    }
+});
 </script>
 <style>
 @media (max-width: 480px) {
