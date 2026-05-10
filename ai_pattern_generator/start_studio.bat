@@ -37,3 +37,4 @@ if exist ".venv\Scripts\pythonw.exe" (
 )
 
 endlocal
+

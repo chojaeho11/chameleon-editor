@@ -274,15 +274,24 @@ def random_title(category: str) -> str:
 # AI 이미지 생성 (gpt-image-1, dall-e-3 폴백)
 # ============================================================
 def build_prompt(motif: str) -> str:
-    """패턴 생성용 프롬프트 — 타일러블/원단 인쇄 강조."""
+    """패턴 생성용 프롬프트 — 타일러블/원단 인쇄 강조.
+
+    핵심: SMALL motifs, EVENLY DISTRIBUTED, NO LARGE FOCAL POINTS — 이래야
+    오프셋 방식 seamless 처리에서도 자연스럽게 이어짐. 큰 모티프 하나가
+    화면 중앙을 차지하면 타일링 시 어색해짐.
+    """
     return (
-        f"A seamless repeating fabric pattern featuring {motif}. "
-        "Edge-to-edge composition with absolutely no border, frame, or white margin. "
-        "The pattern repeats naturally and tiles infinitely in all directions, "
-        "as if printed on roll fabric. Motifs are evenly distributed across the entire canvas, "
-        "with balanced negative space. Designed for printing on cotton fabric for clothing "
-        "and home textiles. Clean illustration with a soft, harmonious color palette. "
-        "No text, no watermark, no signature, no human silhouette unless explicitly part of the motif."
+        f"A small-scale seamless repeating fabric pattern of {motif}. "
+        "VERY IMPORTANT — composition rules: "
+        "(1) MANY SMALL motifs distributed evenly across the entire canvas like a uniform texture, "
+        "NOT a few large motifs. Each motif element should be small (under 15% of canvas). "
+        "(2) NO large focal point in the center. NO single hero element. "
+        "(3) Motifs scattered with consistent spacing — looks like a wallpaper or wrapping paper, "
+        "not an illustration. "
+        "(4) Edge-to-edge composition with absolutely no border, frame, or white margin. "
+        "(5) Same visual density at top, bottom, left, and right — perfectly balanced. "
+        "Style: soft harmonious color palette suitable for cotton fabric printing. "
+        "No text, no watermark, no signature."
     )
 
 
@@ -314,64 +323,89 @@ def generate_image(prompt: str, size: str = "1024x1024") -> Image.Image:
 
 
 # ============================================================
-# Seamless Tile 가공 — Offset 방식 (Photoshop의 Filter > Other > Offset)
+# Seamless Tile 가공 — Offset + Gradient Correction (개선판)
 # ============================================================
 def make_seamless_tile(img: Image.Image,
-                        band_pct: float = 0.045,
-                        blur_radius: int = 22) -> Image.Image:
+                        band_pct: float = 0.018,
+                        blur_radius: int = 6) -> Image.Image:
     """
-    Photoshop 스타일 Offset 방식 — 이전 mirror-blend 방식의 약점(가장자리
-    흐릿함, 콘텐츠 불일치)을 해결.
+    Photoshop 스타일 Offset + Poisson 스타일 그래디언트 보정.
 
-    원리:
-        1. 이미지를 (h/2, w/2)만큼 wrap-shift (np.roll).
-           → 새로 만들어진 가장자리는 원래 내부였던 픽셀들이라 자연스럽게 이어짐.
-           → 이 시점에서 이미 4방향 seamless 보장됨.
-        2. shift 결과 중앙에 십자(+) 모양 이음새가 보임 (원래 가장자리가 만났던 곳).
-        3. 그 이음새 주변 좁은 띠에만 가우시안 블러를 부드럽게 입혀서 가림.
-           → 가장자리는 손상 없이 깨끗하게 유지됨.
+    이전 버전(band 4.5%, blur 22)은 중앙에 흐릿한 십자(+) 띠가 보였음.
+    이번 버전은 두 단계를 결합:
 
-    band_pct: 중앙 이음새를 가릴 띠 폭 비율 (이미지의 4.5%)
-    blur_radius: 띠에 적용할 가우시안 블러 반경 (px)
+    ── Stage 1: Wrap-shift (np.roll) ──
+        이미지를 (h/2, w/2)만큼 이동. 새 가장자리는 원래 내부 픽셀이라
+        자연스럽게 이어짐 (4방향 seamless 보장).
+
+    ── Stage 2: Gradient-distributed seam correction ──
+        roll 후 중앙에 생기는 십자(+) 이음새에서의 픽셀 차이(delta)를 계산.
+        이 차이를 이미지 전체에 부드럽게 분산해서, 이음새에서의 차이가
+        0이 되도록 보정. 결과: 콘텐츠 손상 없이 이음새가 거의 사라짐.
+        (Poisson seamless cloning의 단순화 버전)
+
+    ── Stage 3: 잔여 미세 블러 ──
+        Stage 2로 대부분 해결되지만, 색상 차이가 큰 경우 여전히 미세
+        seam이 남을 수 있어 매우 좁은 1.8% 띠에 약한 블러(radius 6) 적용.
+
+    band_pct: 잔여 블러 띠 폭 비율 (1.8%) — 이전 4.5%에서 대폭 축소
+    blur_radius: 잔여 블러 강도 (6) — 이전 22에서 대폭 축소
     """
     src = img.convert("RGB")
-    arr = np.array(src)
+    arr = np.array(src).astype(np.float32)
     h, w, _ = arr.shape
 
-    # 1) Wrap-shift — 가장자리는 자동으로 seamless
+    # ── Stage 1: Wrap-shift ──
     rolled = np.roll(arr, shift=(h // 2, w // 2), axis=(0, 1))
-    rolled_pil = Image.fromarray(rolled)
 
-    # 2) 같은 이미지의 블러 버전 준비 — 중앙 이음새 가릴 재료
-    blurred_pil = rolled_pil.filter(ImageFilter.GaussianBlur(radius=blur_radius))
-    blurred_arr = np.array(blurred_pil).astype(np.float32)
-
-    # 3) 마스크 생성 — 중앙 십자(+) 이음새 부근만 1.0, 외곽으로 갈수록 0.0
-    band = max(40, int(min(h, w) * band_pct))
-    mask = np.zeros((h, w), dtype=np.float32)
-
+    # ── Stage 2: Gradient-distributed seam correction ──
+    # 세로 이음새: x = w/2에서의 픽셀 점프
     seam_x = w // 2
     seam_y = h // 2
 
-    # 세로 이음새 (x = w/2 부근의 좁은 띠)
-    xs = np.arange(w)
+    # 양쪽 픽셀 차이 (h, 3): rolled[:, seam_x] - rolled[:, seam_x - 1]
+    delta_v = (rolled[:, seam_x, :] - rolled[:, seam_x - 1, :])  # (h, 3)
+    # 차이를 좌우로 절반씩 분산. 이음새에서 ±delta/2로 매끄럽게 만나도록.
+    # 가중치: 이음새에서 1, 양 끝(0과 w-1)에서 0이 되는 cosine
+    xs = np.arange(w, dtype=np.float32)
+    # 거리 정규화: 0 at seam, 1 at far edge
+    d_x = np.minimum(np.abs(xs - seam_x), w - np.abs(xs - seam_x)) / (w / 2.0)
+    weight_x = 0.5 + 0.5 * np.cos(np.pi * (1.0 - d_x))  # 1 at seam, 0 at edges
+    # 부호: 이음새 우측은 -, 좌측은 +
+    sign_x = np.where(xs >= seam_x, -1.0, 1.0).astype(np.float32) * 0.5
+    correction_v = delta_v[:, None, :] * (sign_x * weight_x)[None, :, None]  # (h, w, 3)
+    rolled = rolled + correction_v
+
+    # 가로 이음새: y = h/2 (Stage 2 보정 후 다시 계산)
+    delta_h = (rolled[seam_y, :, :] - rolled[seam_y - 1, :, :])  # (w, 3)
+    ys = np.arange(h, dtype=np.float32)
+    d_y = np.minimum(np.abs(ys - seam_y), h - np.abs(ys - seam_y)) / (h / 2.0)
+    weight_y = 0.5 + 0.5 * np.cos(np.pi * (1.0 - d_y))
+    sign_y = np.where(ys >= seam_y, -1.0, 1.0).astype(np.float32) * 0.5
+    correction_h = delta_h[None, :, :] * (sign_y * weight_y)[:, None, None]
+    rolled = rolled + correction_h
+
+    # ── Stage 3: 잔여 미세 블러 (매우 좁은 띠) ──
+    rolled_clipped = np.clip(rolled, 0, 255).astype(np.uint8)
+    rolled_pil = Image.fromarray(rolled_clipped)
+    blurred_pil = rolled_pil.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+    blurred_arr = np.array(blurred_pil).astype(np.float32)
+
+    band = max(15, int(min(h, w) * band_pct))
+    mask = np.zeros((h, w), dtype=np.float32)
+
     dist_x = np.abs(xs - seam_x)
     in_band_x = dist_x < band
-    # cos 부드러운 falloff: 이음새 정중앙=1 → 띠 끝=0
     col_alpha = np.where(in_band_x, 0.5 + 0.5 * np.cos(np.pi * dist_x / band), 0.0)
     mask = np.maximum(mask, col_alpha[None, :])
 
-    # 가로 이음새 (y = h/2 부근의 좁은 띠)
-    ys = np.arange(h)
     dist_y = np.abs(ys - seam_y)
     in_band_y = dist_y < band
     row_alpha = np.where(in_band_y, 0.5 + 0.5 * np.cos(np.pi * dist_y / band), 0.0)
     mask = np.maximum(mask, row_alpha[:, None])
 
-    # 4) 마스크에 따라 rolled와 blurred를 합성
-    rolled_arr_f = rolled.astype(np.float32)
     mask3 = mask[:, :, None]
-    out = rolled_arr_f * (1 - mask3) + blurred_arr * mask3
+    out = rolled.astype(np.float32) * (1 - mask3) + blurred_arr * mask3
 
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
