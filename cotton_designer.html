@@ -63,9 +63,12 @@ a { text-decoration: none; color: inherit; }
 /* === 좌측 캔버스 영역 === */
 .canvas-panel {
     background: #fff; border: 1px solid var(--border); border-radius: 12px;
-    padding: 24px; min-height: 700px;
+    padding: 24px; min-height: 480px;
     display: flex; flex-direction: column;
+    position: sticky; top: 16px; align-self: flex-start;
+    max-height: calc(100vh - 32px); overflow-y: auto;
 }
+@media (max-width: 980px) { .canvas-panel { position:static; max-height:none; } }
 .canvas-header {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
@@ -84,8 +87,8 @@ a { text-decoration: none; color: inherit; }
     align-items: center; justify-content: center;
     border: 2px dashed var(--cream-dark); border-radius: 12px;
     background: var(--cream); cursor: pointer;
-    transition: all 0.2s; padding: 40px;
-    min-height: 500px;
+    transition: all 0.2s; padding: 32px;
+    min-height: 360px;
 }
 .upload-zone:hover, .upload-zone.dragover {
     border-color: var(--accent); background: var(--cream-dark);
@@ -100,8 +103,8 @@ a { text-decoration: none; color: inherit; }
 }
 
 .preview-area {
-    flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center;
-    position: relative;
+    flex: 1; display: none; flex-direction: column; align-items: center; justify-content: flex-start;
+    position: relative; padding-top: 12px;
 }
 .preview-area.active { display: flex; }
 .fabric-frame {
@@ -491,11 +494,65 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 마감 옵션 (DB 동기화 — admin_products의 addons) -->
+        <!-- 1) 원단 마감 (필수) -->
         <div class="side-card">
-            <div class="side-card-title">마감 옵션 <span style="font-size:10px; color:var(--text-light); font-weight:600;">선택한 원단의 옵션</span></div>
+            <div class="side-card-title">
+                원단 마감 <span style="color:#dc2626; font-weight:800;">*</span>
+                <span style="font-size:10px; color:var(--text-light); font-weight:600;">필수 선택</span>
+            </div>
             <div id="finishOptions" style="display:flex; flex-direction:column; gap:8px;">
-                <div style="padding:14px; text-align:center; color:var(--text-light); font-size:12px;">원단 선택 후 표시됩니다</div>
+                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="0">
+                    <input type="radio" name="finish" value="raw" checked onchange="window._cdOnFinishChange()">
+                    <span class="fin-opt-label"><b>가재단</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">생지 그대로 컷팅</span></span>
+                    <span class="fin-opt-price">+0원</span>
+                </label>
+                <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="3000">
+                    <input type="radio" name="finish" value="overlock" onchange="window._cdOnFinishChange()">
+                    <span class="fin-opt-label"><b>오버록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">올풀림 방지 박음질</span></span>
+                    <span class="fin-opt-price">+3,000원</span>
+                </label>
+                <label class="fin-opt" data-finish="interlock" data-name="인터록" data-extra="5000">
+                    <input type="radio" name="finish" value="interlock" onchange="window._cdOnFinishChange()">
+                    <span class="fin-opt-label"><b>인터록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">튼튼한 이중 마감</span></span>
+                    <span class="fin-opt-price">+5,000원</span>
+                </label>
+                <label class="fin-opt" data-finish="rolledhem" data-name="말아박기" data-extra="4000">
+                    <input type="radio" name="finish" value="rolledhem" onchange="window._cdOnFinishChange()">
+                    <span class="fin-opt-label"><b>말아박기</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">접어 박는 깔끔한 마감</span></span>
+                    <span class="fin-opt-price">+4,000원</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 2) 고리 옵션 (선택) -->
+        <div class="side-card">
+            <div class="side-card-title">
+                고리가 필요하신가요?
+                <span style="font-size:10px; color:var(--text-light); font-weight:600;">선택 안 해도 됩니다</span>
+            </div>
+            <div id="hookOptions" style="display:flex; flex-direction:column; gap:8px;">
+                <label class="fin-opt" data-hook="" data-name="" data-extra="0">
+                    <input type="radio" name="hook" value="" checked onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>선택 안 함</b></span>
+                    <span class="fin-opt-price">+0원</span>
+                </label>
+                <div id="hookExtraList" style="display:contents;"></div>
+            </div>
+        </div>
+
+        <!-- 3) 부자재 옵션 (선택) -->
+        <div class="side-card">
+            <div class="side-card-title">
+                부자재가 필요하신가요?
+                <span style="font-size:10px; color:var(--text-light); font-weight:600;">선택 안 해도 됩니다</span>
+            </div>
+            <div id="accessoryOptions" style="display:flex; flex-direction:column; gap:8px;">
+                <label class="fin-opt" data-acc="" data-name="" data-extra="0">
+                    <input type="radio" name="accessory" value="" checked onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b>선택 안 함</b></span>
+                    <span class="fin-opt-price">+0원</span>
+                </label>
+                <div id="accessoryExtraList" style="display:contents;"></div>
             </div>
         </div>
 
@@ -695,6 +752,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=7"></script>
+<script src="cotton_designer.js?v=8"></script>
 </body>
 </html>

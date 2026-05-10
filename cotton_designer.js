@@ -12,40 +12,52 @@ const HOEBAE_AREA_CM2 = 130 * 100; // = 13,000 cm²
 
 // admin_products / admin_categories 동기화 결과 — 런타임에 채워짐
 let DB_FABRICS = [];     // 패브릭만
-let DB_ACCESSORIES = []; // 부자재 (집게링/봉/벨크로 등 — 마감 옵션으로 활용)
+let DB_HOOKS = [];       // 고리 (선택)
+let DB_ACCESSORIES = []; // 그 외 부자재 (집게링/봉 등)
 let DB_GROUPS = {};      // group_label -> [products]
 
-// 원단 키워드로 그룹 분류 (대분류)
-// null 반환 = 노출 안 함, '__accessory__' = 부자재(마감 옵션 후보)
+// 원단 키워드로 그룹 분류
+// 반환: 패브릭 그룹명 / '__hook__' (고리) / '__accessory__' (그 외 부자재) / null (노출 안 함)
 function classifyGroup(p) {
     const n = (p.name || '').toLowerCase();
-    // 부자재 (집게/링/고리/걸이/봉/벨크로/아일릿/마감/시접/배접/재단/행거)
-    if (/집게|링|고리|걸이|봉|벨크로|아일릿|마감|시접|배접|재단|행거|클립|받침|스탠드/.test(n)) return '__accessory__';
+    // 고리 부자재 (고리/아일릿/후크/걸이만)
+    if (/^고리|\s고리|아일릿|후크|걸이|hook|eyelet/.test(n)) return '__hook__';
+    // 그 외 부자재 (집게/봉/벨크로/행거/클립/받침/스탠드/배접/재단)
+    if (/집게|링|봉|벨크로|행거|클립|받침|스탠드|배접|재단/.test(n)) return '__accessory__';
     if (/광목|면\b|cotton|cb/i.test(n) || (p.code||'').startsWith('cb')) return '면/광목';
     if (/쉬폰|chiffon|실크|silk/.test(n)) return '쉬폰/실크';
     if (/레이온|rayon|인견/.test(n)) return '레이온/인견';
     if (/폴리|polyester|oxford|옥스포드/.test(n)) return '폴리/옥스포드';
     if (/스티커|점착|sticker/.test(n)) return '점착/스티커';
-    return null; // 미분류 → 패브릭 탭에 노출하지 않음
+    return null;
 }
 
 // 상태
 const state = {
-    fabricGroup: '',        // 면/광목 등
-    fabricCode: '',         // admin_products.code
+    fabricGroup: '',
+    fabricCode: '',
     layout: 'basic',
-    orderWcm: 130,          // 출력 가로 (cm)
-    orderHcm: 100,          // 출력 세로 (cm)
-    orderQty: 1,            // 주문 수량 (개)
-    imgWcm: 10,             // 한 패턴 이미지 가로 (cm)
-    imgHcm: 10,             // 한 패턴 이미지 세로 (cm)
+    orderWcm: 130,
+    orderHcm: 100,
+    orderQty: 1,
+    imgWcm: 10,
+    imgHcm: 10,
     imgAspect: 1,
     img: null,
     imgDataUrl: null,
     imgFileName: '',
-    finishCode: null,
-    finishName: '마감 없음',
-    finishExtra: 0
+    // 1) 원단 마감 (필수, 기본 가재단)
+    finishCode: 'raw',
+    finishName: '가재단',
+    finishExtra: 0,
+    // 2) 고리 (선택)
+    hookCode: '',
+    hookName: '',
+    hookExtra: 0,
+    // 3) 부자재 (선택)
+    accCode: '',
+    accName: '',
+    accExtra: 0
 };
 
 function getFabric() {
@@ -153,22 +165,57 @@ async function loadDbFabrics() {
             .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
             .map(p => Object.assign(p, { group: classifyGroup(p) }));
 
-        // 부자재 별도 보관 (마감 옵션에 추가)
+        DB_HOOKS = classified.filter(p => p.group === '__hook__');
         DB_ACCESSORIES = classified.filter(p => p.group === '__accessory__');
-        // 패브릭만: null/__accessory__ 제외
-        DB_FABRICS = classified.filter(p => p.group && p.group !== '__accessory__');
+        DB_FABRICS = classified.filter(p => p.group && p.group !== '__hook__' && p.group !== '__accessory__');
 
-        // 그룹별 묶기
         DB_GROUPS = {};
         DB_FABRICS.forEach(p => {
             (DB_GROUPS[p.group] = DB_GROUPS[p.group] || []).push(p);
         });
 
         renderFabricGroups();
-        // 첫 그룹 자동 선택
+        renderHookOptions();
+        renderAccessoryOptions();
         const groups = Object.keys(DB_GROUPS);
         if (groups.length > 0) selectGroup(groups[0]);
     } catch(e) { console.error('[loadDbFabrics]', e); }
+}
+
+// 고리 옵션 렌더 (DB_HOOKS)
+function renderHookOptions() {
+    const list = document.getElementById('hookExtraList');
+    if (!list) return;
+    if (!DB_HOOKS.length) {
+        list.innerHTML = '<div style="padding:8px 12px; font-size:11px; color:var(--text-light);">현재 등록된 고리 옵션이 없습니다</div>';
+        return;
+    }
+    list.innerHTML = DB_HOOKS.map(h => {
+        const p = parseInt(h.price) || 0;
+        return `<label class="fin-opt" data-hook="${h.code}" data-name="${(h.name||'').replace(/"/g,'&quot;')}" data-extra="${p}">
+            <input type="radio" name="hook" value="${h.code}" onchange="window._cdOnHookChange()">
+            <span class="fin-opt-label"><b>${h.name}</b></span>
+            <span class="fin-opt-price">+${p.toLocaleString()}원</span>
+        </label>`;
+    }).join('');
+}
+
+// 부자재 옵션 렌더 (DB_ACCESSORIES)
+function renderAccessoryOptions() {
+    const list = document.getElementById('accessoryExtraList');
+    if (!list) return;
+    if (!DB_ACCESSORIES.length) {
+        list.innerHTML = '<div style="padding:8px 12px; font-size:11px; color:var(--text-light);">현재 등록된 부자재가 없습니다</div>';
+        return;
+    }
+    list.innerHTML = DB_ACCESSORIES.map(a => {
+        const p = parseInt(a.price) || 0;
+        return `<label class="fin-opt" data-acc="${a.code}" data-name="${(a.name||'').replace(/"/g,'&quot;')}" data-extra="${p}">
+            <input type="radio" name="accessory" value="${a.code}" onchange="window._cdOnAccessoryChange()">
+            <span class="fin-opt-label"><b>${a.name}</b></span>
+            <span class="fin-opt-price">+${p.toLocaleString()}원</span>
+        </label>`;
+    }).join('');
 }
 
 function renderFabricGroups() {
@@ -227,45 +274,8 @@ function updateFabricDetail() {
     document.getElementById('fabricDesc').innerHTML = `<b>${f.name}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${widthInfo}</div>`;
 }
 
-function renderFinishOptions() {
-    const f = getFabric();
-    const wrap = document.getElementById('finishOptions');
-    if (!wrap) return;
-
-    // ── addons 정규화 (배열/객체/문자열 모두 처리) ──
-    let raw = f ? f.addons : null;
-    if (typeof raw === 'string') {
-        try { raw = JSON.parse(raw); } catch(e) { raw = null; }
-    }
-    let addons = [];
-    if (Array.isArray(raw)) addons = raw;
-    else if (raw && typeof raw === 'object') addons = Object.values(raw);
-
-    const opts = [
-        { code: 'none', name: '마감 없음', price: 0, sub: '생지 그대로 컷팅' }
-    ];
-    addons.forEach(a => {
-        if (!a || typeof a !== 'object') return;
-        const price = a.price || a.price_kr || a.amount || 0;
-        opts.push({ code: (a.code||a.name||'opt').toString(), name: a.name || a.label || '옵션', price: parseInt(price)||0, sub: a.desc||a.description||'' });
-    });
-
-    // DB의 부자재(집게링, 봉, 벨크로 등)도 마감 옵션으로 추가
-    DB_ACCESSORIES.forEach(acc => {
-        opts.push({ code: acc.code, name: acc.name, price: parseInt(acc.price)||0, sub: '부자재' });
-    });
-
-    wrap.innerHTML = opts.map((o, i) => `
-        <label class="fin-opt" data-finish="${o.code}" data-extra="${o.price}" data-name="${(o.name||'').replace(/"/g,'&quot;')}">
-            <input type="radio" name="finish" value="${o.code}" ${i===0?'checked':''} onchange="window._cdOnFinishChange()">
-            <span class="fin-opt-label"><b>${o.name}</b>${o.sub?`<span style="color:var(--text-light); font-size:11px; margin-left:4px;">${o.sub}</span>`:''}</span>
-            <span class="fin-opt-price">${o.price>0?'+'+o.price.toLocaleString()+'원':'+0원'}</span>
-        </label>
-    `).join('');
-    state.finishCode = 'none';
-    state.finishName = '마감 없음';
-    state.finishExtra = 0;
-}
+// 원단 마감은 HTML에 하드코딩 (가재단/오버록/인터록/말아박기) — 여기서는 noop
+function renderFinishOptions() { /* 마감은 HTML 하드코딩 */ }
 
 function updateSizeLabels() {
     document.getElementById('topSizeLabel').textContent = state.orderWcm.toFixed(0) + 'cm';
@@ -316,11 +326,16 @@ window._cdQtyChg = function(d) {
 function updatePrice() {
     const hoebae = calcHoebae();
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    const finish = (state.finishExtra || 0) * state.orderQty;
-    const total = itemPrice * state.orderQty + finish;
+    const extras = (state.finishExtra||0) + (state.hookExtra||0) + (state.accExtra||0);
+    const extrasTotal = extras * state.orderQty;
+    const total = itemPrice * state.orderQty + extrasTotal;
+    const extraParts = [];
+    if (state.finishExtra > 0 || state.finishCode === 'raw') extraParts.push(state.finishName);
+    if (state.hookCode) extraParts.push('고리: ' + state.hookName);
+    if (state.accCode) extraParts.push('부자재: ' + state.accName);
     document.getElementById('pUnit').textContent = itemPrice.toLocaleString() + '원 (' + hoebae.toFixed(2) + '회배)';
     document.getElementById('pQty').textContent = state.orderQty + '개';
-    document.getElementById('pFinish').textContent = state.finishExtra > 0 ? state.finishName + ' (+' + finish.toLocaleString() + '원)' : '마감 없음';
+    document.getElementById('pFinish').textContent = (extraParts.length ? extraParts.join(' · ') : state.finishName) + (extras > 0 ? ' (+' + extrasTotal.toLocaleString() + '원)' : '');
     document.getElementById('pTotal').textContent = total.toLocaleString() + '원';
 }
 
@@ -350,7 +365,7 @@ window._cdOnSizeInput = function(which) {
 };
 
 // ────────────────────────────────────────────────
-// 마감 옵션 변경
+// 1) 원단 마감 변경
 // ────────────────────────────────────────────────
 window._cdOnFinishChange = function() {
     const checked = document.querySelector('input[name="finish"]:checked');
@@ -359,6 +374,26 @@ window._cdOnFinishChange = function() {
     state.finishCode = checked.value;
     state.finishName = label.dataset.name || label.querySelector('b').textContent;
     state.finishExtra = parseInt(label.dataset.extra || '0', 10);
+    updatePrice();
+};
+// 2) 고리 변경
+window._cdOnHookChange = function() {
+    const checked = document.querySelector('input[name="hook"]:checked');
+    if (!checked) return;
+    const label = checked.closest('.fin-opt');
+    state.hookCode = checked.value || '';
+    state.hookName = label.dataset.name || (state.hookCode ? label.querySelector('b').textContent : '');
+    state.hookExtra = parseInt(label.dataset.extra || '0', 10);
+    updatePrice();
+};
+// 3) 부자재 변경
+window._cdOnAccessoryChange = function() {
+    const checked = document.querySelector('input[name="accessory"]:checked');
+    if (!checked) return;
+    const label = checked.closest('.fin-opt');
+    state.accCode = checked.value || '';
+    state.accName = label.dataset.name || (state.accCode ? label.querySelector('b').textContent : '');
+    state.accExtra = parseInt(label.dataset.extra || '0', 10);
     updatePrice();
 };
 
@@ -478,15 +513,15 @@ window._cpUpdateCartUI = function() {
             body.innerHTML = '<div class="cart-empty"><i class="fa-regular fa-folder-open"></i><div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;">장바구니가 비어있습니다</div><div style="font-size:12px;">디자인을 완성하고 장바구니에 담아보세요</div></div>';
         } else {
             body.innerHTML = cart.map(function(it, i) {
-                // 구버전 카트 호환 (orderWmm/orderHmm)
                 const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
                 const opts = [
                     it.fabricName,
                     '출력 ' + sz,
                     it.hoebae ? it.hoebae.toFixed(2) + '회배' : null,
-                    it.layout,
                     it.qtyLabel,
-                    (it.finishCode && it.finishCode !== 'none') ? '마감: ' + (it.finishName || '') : null
+                    (it.finishCode && it.finishCode !== 'raw' && it.finishCode !== 'none') ? '마감: ' + (it.finishName || '') : (it.finishCode === 'raw' ? '가재단' : null),
+                    it.hookCode ? '고리: ' + (it.hookName||'') : null,
+                    it.accCode ? '부자재: ' + (it.accName||'') : null
                 ].filter(Boolean).join(' · ');
                 return '<div class="cart-item">' +
                     '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
@@ -545,9 +580,8 @@ function buildCartItem() {
     if (!f) { showToast('원단을 선택해주세요'); return null; }
     const hoebae = calcHoebae();
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    const finish = (state.finishExtra || 0) * state.orderQty;
-    const price = itemPrice * state.orderQty + finish;
-    // 파일명이 UUID/긴 hash면 무시, 깔끔한 이름만 표시
+    const extras = (state.finishExtra||0) + (state.hookExtra||0) + (state.accExtra||0);
+    const price = itemPrice * state.orderQty + extras * state.orderQty;
     const cleanFile = state.imgFileName
         ? state.imgFileName.replace(/\.[^.]+$/, '').replace(/^[a-f0-9-]{20,}$/i, '').slice(0, 20)
         : '';
@@ -563,7 +597,6 @@ function buildCartItem() {
         orderWcm: state.orderWcm,
         orderHcm: state.orderHcm,
         orderSize: state.orderWcm + '×' + state.orderHcm + 'cm',
-        // 통합주문관리 호환을 위해 mm도 포함
         width_mm: Math.round(state.orderWcm * 10),
         height_mm: Math.round(state.orderHcm * 10),
         hoebae: hoebae,
@@ -572,9 +605,9 @@ function buildCartItem() {
         layout: state.layout,
         qtyValue: state.orderQty,
         qtyLabel: state.orderQty + '개',
-        finishCode: state.finishCode,
-        finishName: state.finishName,
-        finishExtra: state.finishExtra || 0,
+        finishCode: state.finishCode, finishName: state.finishName, finishExtra: state.finishExtra || 0,
+        hookCode: state.hookCode, hookName: state.hookName, hookExtra: state.hookExtra || 0,
+        accCode: state.accCode, accName: state.accName, accExtra: state.accExtra || 0,
         price: price,
         addedAt: new Date().toISOString()
     };
@@ -610,7 +643,10 @@ window._cpOpenCheckout = function() {
     // 요약 렌더
     const list = document.getElementById('coItemList');
     list.innerHTML = cart.map(function(it){
-        const opts = [it.fabricName, '출력 ' + (it.orderSize||''), it.qtyLabel, (it.finishCode&&it.finishCode!=='none')?it.finishName:''].filter(Boolean).join(' · ');
+        const parts = [it.fabricName, '출력 ' + (it.orderSize||''), it.qtyLabel, '마감: '+(it.finishName||'가재단')];
+        if (it.hookCode) parts.push('고리: '+it.hookName);
+        if (it.accCode) parts.push('부자재: '+it.accName);
+        const opts = parts.filter(Boolean).join(' · ');
         return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + it.price.toLocaleString() + '원</div></div>';
     }).join('');
     document.getElementById('coTotalAmt').textContent = calcCartTotal().toLocaleString() + '원';
@@ -727,7 +763,13 @@ window._cpSubmitOrder = async function() {
                 hoebae: it.hoebae,
                 layout: it.layout,
                 qty: it.qtyValue,
-                addons: (it.finishCode && it.finishCode !== 'none') ? [{ code: it.finishCode, name: it.finishName, price: it.finishExtra }] : [],
+                addons: (function(){
+                    const arr = [];
+                    if (it.finishCode) arr.push({ type:'finish', code:it.finishCode, name:it.finishName, price:it.finishExtra||0 });
+                    if (it.hookCode) arr.push({ type:'hook', code:it.hookCode, name:it.hookName, price:it.hookExtra||0 });
+                    if (it.accCode) arr.push({ type:'accessory', code:it.accCode, name:it.accName, price:it.accExtra||0 });
+                    return arr;
+                })(),
                 unit_price: it.unitPrice,
                 price: it.price,
                 source: 'cotton-print'
