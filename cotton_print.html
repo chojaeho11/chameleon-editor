@@ -1213,90 +1213,9 @@ async function submitPdSample() {
 })();
 </script>
 
-<!-- 상품 목록: 2그룹 탭 -->
-<section class="section" id="products" style="padding-top:32px;">
-    <h2 class="section-title">패브릭 인쇄 상품</h2>
-    <p class="section-desc">원하는 원단을 선택하고 무료 에디터로 디자인을 시작하세요</p>
-
-    <!-- 그룹 탭 -->
-    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:28px; flex-wrap:wrap;">
-        <button id="prodTabA" class="prod-tab active" onclick="switchProductTab('fabric')"><i class="fa-solid fa-scissors"></i> 원단 인쇄 <span id="prodCountA" style="opacity:0.7; font-size:11px; margin-left:4px;"></span></button>
-        <button id="prodTabB" class="prod-tab" onclick="switchProductTab('roll')"><i class="fa-solid fa-scroll"></i> 대폭롤 인쇄 부자재 <span id="prodCountB" style="opacity:0.7; font-size:11px; margin-left:4px;"></span></button>
-    </div>
-
-    <div id="productGridFabric" class="product-grid">
-        <div class="loading-spinner"></div>
-    </div>
-    <div id="productGridRoll" class="product-grid" style="display:none;">
-        <div class="loading-spinner"></div>
-    </div>
-    <div id="emptyState" class="empty-state" style="display:none;">
-        <i class="fa-solid fa-box-open"></i>
-        <p>패브릭 인쇄 상품을 준비 중입니다. 곧 만나보실 수 있어요!</p>
-    </div>
-
-    <!-- 호환을 위한 hidden 컨테이너 (cotton_print.js가 사용) -->
-    <div id="productGrid" style="display:none;"></div>
-</section>
-<style>
-.prod-tab { padding:12px 24px; border:1.5px solid var(--cream-dark); background:#fff; color:var(--brown); border-radius:50px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px; }
-.prod-tab:hover { border-color:var(--brown); }
-.prod-tab.active { background:var(--brown-dark); color:#fde047; border-color:var(--brown-dark); }
-@media (max-width:480px) { .prod-tab { padding:10px 16px; font-size:12px; } }
-</style>
-<script>
-window.switchProductTab = function(t) {
-    document.getElementById('productGridFabric').style.display = t==='fabric' ? '' : 'none';
-    document.getElementById('productGridRoll').style.display = t==='roll' ? '' : 'none';
-    document.getElementById('prodTabA').classList.toggle('active', t==='fabric');
-    document.getElementById('prodTabB').classList.toggle('active', t==='roll');
-};
-// 상품 로딩 완료 후 분류 (cotton_print.js의 loadProducts가 #productGrid에 채운 카드를 width 기준으로 분리)
-window._cpClassifyProducts = function() {
-    var src = document.getElementById('productGrid');
-    if (!src) return;
-    var fabricGrid = document.getElementById('productGridFabric');
-    var rollGrid = document.getElementById('productGridRoll');
-    fabricGrid.innerHTML = '';
-    rollGrid.innerHTML = '';
-    var cards = Array.from(src.children);
-    var nFab = 0, nRoll = 0;
-    cards.forEach(function(card){
-        var name = (card.querySelector('.product-name') || {}).textContent || '';
-        var sizeText = (card.querySelector('.product-size') || {}).textContent || '';
-        // 대폭/롤/부자재 키워드 또는 폭 1300mm 이상 → 대폭롤 부자재
-        var widthMatch = sizeText.match(/(\d+)\s*x/);
-        var widthMm = widthMatch ? parseInt(widthMatch[1]) : 0;
-        var isRoll = /대폭|롤|광목.*150|벨크로|배접|아일릿|고리|봉/.test(name) || widthMm >= 1300;
-        var clone = card.cloneNode(true);
-        // 클론에 onclick 다시 부여
-        clone.onclick = card.onclick;
-        if (isRoll) { rollGrid.appendChild(clone); nRoll++; }
-        else { fabricGrid.appendChild(clone); nFab++; }
-    });
-    document.getElementById('prodCountA').textContent = nFab ? '('+nFab+')' : '';
-    document.getElementById('prodCountB').textContent = nRoll ? '('+nRoll+')' : '';
-    if (nFab === 0 && nRoll === 0) {
-        document.getElementById('emptyState').style.display = 'block';
-        document.getElementById('productGridFabric').style.display = 'none';
-        document.getElementById('productGridRoll').style.display = 'none';
-    } else if (nFab === 0) {
-        // 자동 전환 — 원단 인쇄가 비어있으면 대폭롤 탭으로
-        switchProductTab('roll');
-    }
-};
-// MutationObserver로 #productGrid 채워질 때마다 자동 분류
-(function(){
-    var src = document.getElementById('productGrid');
-    if (!src) return;
-    var obs = new MutationObserver(function(){
-        // 디바운스
-        clearTimeout(window._cpClassifyT);
-        window._cpClassifyT = setTimeout(function(){ window._cpClassifyProducts(); }, 80);
-    });
-    obs.observe(src, { childList:true, subtree:false });
-})();
-</script>
+<!-- 패브릭 인쇄 상품 섹션 제거 — 디자이너 패턴 컬렉션이 메인 진입점 -->
+<div id="productGrid" style="display:none;"></div>
+<div id="emptyState" style="display:none;"></div>
 
 <!-- 코튼프린팅 영업시간 -->
 <section class="section" style="background:#fff; padding-top:24px; padding-bottom:36px;">
@@ -2474,7 +2393,7 @@ window.loadPdReviews = async function() {
         if (_rvPage === 0 && !_rvFallback) {
             // 1순위: 정확한 fabric 코드 in 검색
             if (fabCodes && fabCodes.length > 0) {
-                // cotton_showcase도 함께 포함
+                // cotton_showcase + 모든 언어의 패브릭 후기 — 다국어 노출
                 var combinedCodes = fabCodes.slice(0, 99).concat(['cotton_showcase']);
                 var res = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
@@ -2484,6 +2403,16 @@ window.loadPdReviews = async function() {
                     .range(from, to);
                 data = res.data;
                 if (data && data.length > 0) { _rvFallback = 'fab_codes'; window._cottonFabCodes100 = combinedCodes; }
+            }
+            // fallback: 패브릭 코드 못 찾으면 모든 언어의 패브릭 관련 후기
+            if (!data || data.length === 0) {
+                var resAll = await _rvSupa.from('product_reviews')
+                    .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%')
+                    .gte('rating', 3)
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+                if (resAll.data && resAll.data.length) { data = resAll.data; _rvFallback = 'multilang'; }
             }
             // 2순위: cb%/ua_fabric% LIKE
             if (!data || data.length === 0) {
@@ -2503,9 +2432,15 @@ window.loadPdReviews = async function() {
             if (_rvFallback === 'fab_codes' && window._cottonFabCodes100) {
                 var r = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .in('product_code', window._cottonFabCodes100).eq('lang', siteLang).gte('rating', 4)
+                    .in('product_code', window._cottonFabCodes100).gte('rating', 3)
                     .order('created_at', { ascending: false }).range(from, to);
                 data = r.data;
+            } else if (_rvFallback === 'multilang') {
+                var r0 = await _rvSupa.from('product_reviews')
+                    .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%').gte('rating', 3)
+                    .order('created_at', { ascending: false }).range(from, to);
+                data = r0.data;
             } else if (_rvFallback === 'fabric_like') {
                 var r = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
