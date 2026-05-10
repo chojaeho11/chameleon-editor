@@ -2357,33 +2357,33 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="bizDealSection" class="hotdeal-wrapper" style="margin-top:0px;">
     <div class="hotdeal-header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
         <div>
-            <h2 style="color:#451a03; font-family:Georgia,serif; letter-spacing:3px; font-size:24px; margin-bottom:4px;">COTTON PRINT <span class="badge-hot" style="background:#fde047; color:#451a03; font-family:'Noto Sans KR',sans-serif; letter-spacing:0; font-size:11px; vertical-align:middle;">패브릭 사업부</span></h2>
-            <p style="color:#78350f; font-size:13px;">대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓</p>
+            <h2 style="color:#451a03; font-family:Georgia,serif; letter-spacing:3px; font-size:24px; margin-bottom:4px;">COTTON PRINT <span class="badge-hot" id="cpHomeBadge" style="background:#fde047; color:#451a03; font-family:'Noto Sans KR',sans-serif; letter-spacing:0; font-size:11px; vertical-align:middle;">패브릭 사업부</span></h2>
+            <p style="color:#78350f; font-size:13px;" id="cpHomeDesc">대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓</p>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a href="https://www.cotton-print.com/designer" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(69,26,3,0.2);">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> 내원단 만들기
+            <a href="https://www.cotton-print.com/designer" target="_blank" class="cp-home-link cp-link-designer" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(69,26,3,0.2);">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="cpHomeBtn1">내원단 만들기</span>
             </a>
-            <a href="https://www.cotton-print.com#patternFilterChips" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:#fff; color:#451a03; font-size:13px; font-weight:800; text-decoration:none; border:1.5px solid #f3ead4;">
-                <i class="fa-solid fa-palette"></i> 디자이너 패턴 컬렉션
+            <a href="https://www.cotton-print.com#patternFilterChips" target="_blank" class="cp-home-link cp-link-gallery" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:#fff; color:#451a03; font-size:13px; font-weight:800; text-decoration:none; border:1.5px solid #f3ead4;">
+                <i class="fa-solid fa-palette"></i> <span id="cpHomeBtn2">디자이너 패턴 컬렉션</span>
             </a>
-            <a href="https://www.cotton-print.com/designer" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#fde047,#facc15); color:#451a03; font-size:13px; font-weight:800; text-decoration:none;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> 등록하고 판매하세요
+            <a href="https://www.cotton-print.com/designer" target="_blank" class="cp-home-link cp-link-sell" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#fde047,#facc15); color:#451a03; font-size:13px; font-weight:800; text-decoration:none;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> <span id="cpHomeBtn3">등록하고 판매하세요</span>
             </a>
         </div>
     </div>
 
     <!-- 패턴 카테고리 칩 -->
     <div id="cpHomeChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding:0 4px;">
-        <button class="cp-home-chip cp-home-chip-active" data-cat="" onclick="loadCpHomePatterns('', this)">전체</button>
-        <button class="cp-home-chip" data-cat="animal" onclick="loadCpHomePatterns('animal', this)">동물</button>
-        <button class="cp-home-chip" data-cat="plant" onclick="loadCpHomePatterns('plant', this)">식물</button>
-        <button class="cp-home-chip" data-cat="people" onclick="loadCpHomePatterns('people', this)">사람</button>
-        <button class="cp-home-chip" data-cat="modern" onclick="loadCpHomePatterns('modern', this)">모던</button>
-        <button class="cp-home-chip" data-cat="scenery" onclick="loadCpHomePatterns('scenery', this)">풍경</button>
-        <button class="cp-home-chip" data-cat="typo" onclick="loadCpHomePatterns('typo', this)">타이포</button>
-        <button class="cp-home-chip" data-cat="kids" onclick="loadCpHomePatterns('kids', this)">키즈</button>
-        <button class="cp-home-chip" data-cat="etc" onclick="loadCpHomePatterns('etc', this)">기타</button>
+        <button class="cp-home-chip cp-home-chip-active" data-cat="" data-cpkey="all" onclick="loadCpHomePatterns('', this)">전체</button>
+        <button class="cp-home-chip" data-cat="animal" data-cpkey="animal" onclick="loadCpHomePatterns('animal', this)">동물</button>
+        <button class="cp-home-chip" data-cat="plant" data-cpkey="plant" onclick="loadCpHomePatterns('plant', this)">식물</button>
+        <button class="cp-home-chip" data-cat="people" data-cpkey="people" onclick="loadCpHomePatterns('people', this)">사람</button>
+        <button class="cp-home-chip" data-cat="modern" data-cpkey="modern" onclick="loadCpHomePatterns('modern', this)">모던</button>
+        <button class="cp-home-chip" data-cat="scenery" data-cpkey="scenery" onclick="loadCpHomePatterns('scenery', this)">풍경</button>
+        <button class="cp-home-chip" data-cat="typo" data-cpkey="typo" onclick="loadCpHomePatterns('typo', this)">타이포</button>
+        <button class="cp-home-chip" data-cat="kids" data-cpkey="kids" onclick="loadCpHomePatterns('kids', this)">키즈</button>
+        <button class="cp-home-chip" data-cat="etc" data-cpkey="etc" onclick="loadCpHomePatterns('etc', this)">기타</button>
     </div>
 
     <!-- 패턴 캐러셀 -->
@@ -2398,9 +2398,79 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="hotdeal-arrow hotdeal-arrow-right" style="display:flex;" onclick="scrollHotdeal('cpHomePatterns',1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
     <div style="text-align:right; margin-top:8px; padding-right:8px;">
-        <a href="https://www.cotton-print.com#patternFilterChips" target="_blank" style="font-size:12px; color:#b45309; font-weight:700; text-decoration:none;">전체 패턴 보기 <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></a>
+        <a href="https://www.cotton-print.com#patternFilterChips" target="_blank" class="cp-home-link cp-link-all" style="font-size:12px; color:#b45309; font-weight:700; text-decoration:none;"><span id="cpHomeAllBtn">전체 패턴 보기</span> <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></a>
     </div>
 </div>
+<script>
+// Cotton Print 섹션 다국어 적용 + 모든 cotton-print.com 링크에 ?lang= 부착
+(function(){
+    var DICT = {
+        kr: { badge:'패브릭 사업부', desc:'대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓', btn1:'내원단 만들기', btn2:'디자이너 패턴 컬렉션', btn3:'등록하고 판매하세요', allBtn:'전체 패턴 보기',
+              chips:{all:'전체',animal:'동물',plant:'식물',people:'사람',modern:'모던',scenery:'풍경',typo:'타이포',kids:'키즈',etc:'기타'} },
+        ja: { badge:'ファブリック事業部', desc:'最大幅130cm ロール生地 · 回杯あたり¥1,500 · デザイナーパターンマーケット', btn1:'生地デザイン', btn2:'デザイナーコレクション', btn3:'登録して販売', allBtn:'すべてのパターンを見る',
+              chips:{all:'すべて',animal:'動物',plant:'植物',people:'人物',modern:'モダン',scenery:'風景',typo:'タイポ',kids:'キッズ',etc:'その他'} },
+        en: { badge:'Fabric Division', desc:'Wide 130cm roll · $15/unit · Designer Pattern Marketplace', btn1:'Design My Fabric', btn2:'Designer Collection', btn3:'Upload & Sell', allBtn:'View All Patterns',
+              chips:{all:'All',animal:'Animal',plant:'Plant',people:'People',modern:'Modern',scenery:'Scenery',typo:'Typo',kids:'Kids',etc:'Etc'} },
+        zh: { badge:'面料事业部', desc:'幅宽130cm 卷布 · 每单位 ¥75 · 设计师图案市场', btn1:'设计我的布料', btn2:'设计师图案合集', btn3:'上传并销售', allBtn:'查看所有图案',
+              chips:{all:'全部',animal:'动物',plant:'植物',people:'人物',modern:'现代',scenery:'风景',typo:'字体',kids:'儿童',etc:'其他'} },
+        ar: { badge:'قسم النسيج', desc:'عرض 130 سم · 15$/وحدة · سوق انماط المصممين', btn1:'صمم قماشي', btn2:'مجموعة المصممين', btn3:'حمّل وبع', allBtn:'كل الانماط',
+              chips:{all:'الكل',animal:'حيوانات',plant:'نباتات',people:'اشخاص',modern:'حديث',scenery:'مناظر',typo:'طباعة',kids:'اطفال',etc:'اخرى'} },
+        es: { badge:'Division Tela', desc:'130 cm rollo · $15/unidad · Mercado de Disenadores', btn1:'Disenar Mi Tela', btn2:'Coleccion Disenadores', btn3:'Subir y Vender', allBtn:'Ver todos los patrones',
+              chips:{all:'Todo',animal:'Animal',plant:'Planta',people:'Personas',modern:'Moderno',scenery:'Paisaje',typo:'Tipografia',kids:'Ninos',etc:'Otros'} },
+        de: { badge:'Stoff-Abteilung', desc:'130cm Rolle · $15/Einheit · Designer-Marktplatz', btn1:'Stoff entwerfen', btn2:'Designer-Kollektion', btn3:'Hochladen & Verkaufen', allBtn:'Alle Muster',
+              chips:{all:'Alle',animal:'Tier',plant:'Pflanze',people:'Mensch',modern:'Modern',scenery:'Landschaft',typo:'Typo',kids:'Kinder',etc:'Sonst.'} },
+        fr: { badge:'Division Tissu', desc:'Largeur 130cm · $15/unite · Marche des designers', btn1:'Concevoir mon tissu', btn2:'Collection de designers', btn3:'Uploader & Vendre', allBtn:'Voir tous les motifs',
+              chips:{all:'Tous',animal:'Animal',plant:'Plante',people:'Personne',modern:'Moderne',scenery:'Paysage',typo:'Typographie',kids:'Enfants',etc:'Autres'} }
+    };
+    function applyCpHomeI18n() {
+        var lang = (window.CURRENT_LANG || 'kr').toLowerCase();
+        // 정규화: jp→ja, us→en, cn→zh
+        var langMap = { jp:'ja', us:'en', cn:'zh' };
+        if (langMap[lang]) lang = langMap[lang];
+        var t = DICT[lang] || DICT.kr;
+        function setTxt(id, v) { var el = document.getElementById(id); if (el && v) el.textContent = v; }
+        setTxt('cpHomeBadge', t.badge);
+        setTxt('cpHomeDesc', t.desc);
+        setTxt('cpHomeBtn1', t.btn1);
+        setTxt('cpHomeBtn2', t.btn2);
+        setTxt('cpHomeBtn3', t.btn3);
+        setTxt('cpHomeAllBtn', t.allBtn);
+        // 카테고리 칩
+        document.querySelectorAll('.cp-home-chip').forEach(function(c){
+            var k = c.dataset.cpkey; if (k && t.chips[k]) c.textContent = t.chips[k];
+        });
+        // cotton-print.com 링크에 ?lang= 부착 (한국어 외)
+        if (lang !== 'kr' && lang !== 'ko') {
+            var ja_or_other = lang;
+            document.querySelectorAll('.cp-home-link').forEach(function(a){
+                var href = a.getAttribute('href');
+                if (!href || href.indexOf('lang=') >= 0) return;
+                var sep = href.indexOf('?') >= 0 ? '&' : (href.indexOf('#') >= 0 ? '?' : '?');
+                // # 앞에 ?lang 추가하려면 분리
+                var hashPos = href.indexOf('#');
+                if (hashPos >= 0) {
+                    var base = href.slice(0, hashPos);
+                    var hash = href.slice(hashPos);
+                    var sep2 = base.indexOf('?') >= 0 ? '&' : '?';
+                    href = base + sep2 + 'lang=' + ja_or_other + hash;
+                } else {
+                    href = href + sep + 'lang=' + ja_or_other;
+                }
+                a.setAttribute('href', href);
+            });
+            // window._cpHomeLang으로 동적 카드 링크에도 사용
+            window._cpHomeLang = ja_or_other;
+        }
+    }
+    // CURRENT_LANG 준비될 때까지 대기 + 적용
+    function tryApply(){
+        if (typeof window.CURRENT_LANG !== 'undefined') applyCpHomeI18n();
+        else setTimeout(tryApply, 200);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tryApply);
+    else tryApply();
+})();
+</script>
 
 <style>
 .cp-home-chip { padding:7px 14px; border:1.5px solid #f3ead4; background:#fff; color:#78350f; font-size:12px; font-weight:700; border-radius:50px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s; }
@@ -2461,7 +2531,8 @@ document.addEventListener('DOMContentLoaded', function() {
             grid.innerHTML = data.map(function(p){
                 var label = CP_LABELS[p.category] || p.category || '';
                 var thumb = p.thumb_url || 'https://placehold.co/300?text=Pattern';
-                return '<a href="https://www.cotton-print.com/designer?pattern=' + p.id + '" target="_blank" class="cp-home-card">' +
+                var langSfx = window._cpHomeLang ? ('&lang=' + window._cpHomeLang) : '';
+                return '<a href="https://www.cotton-print.com/designer?pattern=' + p.id + langSfx + '" target="_blank" class="cp-home-card">' +
                     '<div class="cp-thumb"><img src="' + thumb + '" loading="lazy" alt="' + (p.name||'') + '" onerror="this.closest(\'.cp-home-card\').style.display=\'none\'"></div>' +
                     '<div class="cp-meta">' +
                         (label ? '<div class="cp-cat">' + label + '</div>' : '') +
