@@ -118,10 +118,33 @@ def create_lnk_via_powershell(shortcut_path: Path) -> Tuple[bool, str]:
         return False, f"  ✗ PowerShell 실행 오류: {e}"
 
 
-def fallback_copy_bat(desktop: Path) -> Path:
-    """폴백: .bat 파일을 바탕화면에 직접 복사."""
+def fallback_create_wrapper_bat(desktop: Path) -> Path:
+    """폴백: 절대경로로 원본 폴더의 GUI를 실행하는 wrapper .bat 생성.
+
+    원본 .bat을 그대로 복사하면 %~dp0가 바탕화면을 가리켜서
+    venv를 못 찾음. 이 wrapper는 무조건 원본 폴더로 cd 한 뒤 실행."""
     target = desktop / "Cotton Pattern Studio.bat"
-    shutil.copy2(TARGET_BAT, target)
+    venv_pyw = HERE / ".venv" / "Scripts" / "pythonw.exe"
+    venv_py = HERE / ".venv" / "Scripts" / "python.exe"
+    gui = HERE / "pattern_studio_gui.py"
+    launcher = HERE / "launch.py"
+    start_bat = HERE / "start_studio.bat"
+
+    content = (
+        '@echo off\r\n'
+        'chcp 65001 >nul\r\n'
+        f'cd /d "{HERE}"\r\n'
+        f'if exist "{venv_pyw}" (\r\n'
+        f'    start "" "{venv_pyw}" "{gui}"\r\n'
+        f') else if exist "{venv_py}" (\r\n'
+        f'    start "" "{venv_py}" "{gui}"\r\n'
+        f') else (\r\n'
+        f'    REM venv 미생성 — 원본 setup .bat으로 폴백\r\n'
+        f'    call "{start_bat}"\r\n'
+        ')\r\n'
+    )
+    # ASCII로 저장 (cmd.exe가 cp949로 파싱)
+    target.write_text(content, encoding="ascii", errors="replace")
     return target
 
 
@@ -143,7 +166,17 @@ def main():
             print(f"[warn] 바탕화면 폴더 생성 실패: {e}")
 
     shortcut_path = desktop / "Cotton Pattern Studio.lnk"
+    fallback_bat = desktop / "Cotton Pattern Studio.bat"
     print(f"[info] 생성할 바로가기: {shortcut_path}")
+
+    # 기존 (망가진 가능성 있는) 바로가기 정리 — 재설치 시
+    for old in [shortcut_path, fallback_bat]:
+        if old.exists():
+            try:
+                old.unlink()
+                print(f"[info] 기존 파일 삭제: {old.name}")
+            except Exception as e:
+                print(f"[warn] 기존 파일 삭제 실패: {e}")
 
     # 시도 1: PowerShell COM으로 .lnk 생성
     print("\n[try 1] PowerShell COM으로 .lnk 생성 중...")
@@ -155,17 +188,17 @@ def main():
         print(f"   {shortcut_path}")
         return
 
-    # 시도 2: .bat 파일을 직접 복사
-    print("\n[try 2] .lnk 실패 → .bat 파일 직접 복사로 폴백")
+    # 시도 2: 절대경로 wrapper .bat 생성
+    print("\n[try 2] .lnk 실패 → 절대경로 wrapper .bat 생성으로 폴백")
     try:
-        target = fallback_copy_bat(desktop)
+        target = fallback_create_wrapper_bat(desktop)
         if target.exists():
-            print(f"\n✅ 폴백 성공! 바탕화면에 .bat 파일이 생성됨:")
+            print(f"\n✅ 폴백 성공! 바탕화면에 wrapper .bat 생성됨:")
             print(f"   {target}")
             print(f"   더블클릭하면 GUI가 실행됩니다.")
             return
         else:
-            print(f"\n✗ 폴백도 실패: 복사 후 파일이 없음")
+            print(f"\n✗ 폴백도 실패: 생성 후 파일이 없음")
     except Exception as e:
         print(f"\n✗ 폴백 실패: {e}")
 
