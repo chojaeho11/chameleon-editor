@@ -389,126 +389,169 @@ window._cottonSearch = function(){
         <source src="/cotton.mp4" type="video/mp4">
     </video>
     <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(12,10,9,0.3) 0%, rgba(12,10,9,0.55) 100%);"></div>
-    <div class="hero-content" style="position:relative; z-index:2; padding:80px 24px 60px; max-width:900px; margin:0 auto; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-        <button class="hero-badge" style="cursor:pointer; border:1.5px solid #fde047; background:rgba(255,255,255,0.12); color:#fde047; font-family:inherit; font-weight:800; padding:8px 20px; border-radius:50px; font-size:13px; backdrop-filter:blur(8px); margin-bottom:24px;" onclick="openPdSampleRequest()">
-            🎁 무료 패브릭 샘플 요청
+    <div class="hero-content" style="position:relative; z-index:2; padding:80px 24px 60px; max-width:960px; margin:0 auto; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <button class="hero-badge" style="cursor:pointer; border:1.5px solid #fde047; background:rgba(255,255,255,0.12); color:#fde047; font-family:inherit; font-weight:800; padding:8px 20px; border-radius:50px; font-size:13px; backdrop-filter:blur(8px); margin-bottom:28px;" onclick="openPdSampleRequest()">
+            <i class="fa-solid fa-gift"></i> 무료 패브릭 샘플 요청
         </button>
-        <h1 style="color:#faf6ed; font-size:54px; font-weight:900; line-height:1.2; margin:0 0 18px; text-shadow:0 4px 24px rgba(0,0,0,0.4); letter-spacing:-1px;">
-            진짜 천에 인쇄해 드립니다.
+        <h1 class="cotton-title" style="font-family:Georgia,'Times New Roman',serif; font-size:84px; font-weight:900; line-height:1; margin:0 0 22px; letter-spacing:8px; background:linear-gradient(135deg,#fef3c7 0%,#fde047 35%,#facc15 65%,#f59e0b 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 4px 32px rgba(0,0,0,0.35); filter:drop-shadow(0 6px 18px rgba(0,0,0,0.45));">
+            COTTON PRINT
         </h1>
-        <p style="color:rgba(250,246,237,0.92); font-size:19px; line-height:1.7; max-width:680px; margin:0 auto 40px; text-shadow:0 2px 12px rgba(0,0,0,0.4);">
-            광목 · 면포 · 옥스포드 · 쉬폰 · 린넨<br>
-            <span style="font-size:15px; opacity:0.8;">백월 · 포토존 · 인테리어 커튼 · 현수막 천</span>
+        <p style="color:#faf6ed; font-size:22px; font-weight:700; line-height:1.5; margin:0 0 12px; text-shadow:0 2px 12px rgba(0,0,0,0.5); letter-spacing:-0.5px;">
+            도매업자를 위한 고품격 프린팅 시스템
         </p>
-        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:18px 44px; border-radius:50px; border:none; background:#faf6ed; color:#451a03; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.3); transition:all 0.3s;">
+        <p style="color:rgba(254,243,199,0.9); font-size:14px; font-weight:500; line-height:1.6; margin:0 0 36px; text-shadow:0 2px 8px rgba(0,0,0,0.5); border:1px solid rgba(254,243,199,0.35); padding:8px 18px; border-radius:50px; backdrop-filter:blur(6px); background:rgba(0,0,0,0.18);">
+            <i class="fa-solid fa-circle-info" style="margin-right:6px; color:#fde047;"></i>
+            최소 주문금액 10만원 · 업자 전용 (소량 구매 불가)
+        </p>
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:16px 40px; border-radius:50px; border:none; background:#faf6ed; color:#451a03; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35); transition:all 0.3s;">
             패브릭 원단 보기 <i class="fa-solid fa-arrow-down"></i>
         </button>
     </div>
 </section>
 <style>
 @media (max-width:768px) {
-    .hero { height:460px !important; }
-    .hero h1 { font-size:32px !important; }
+    .hero { height:520px !important; }
+    .hero .cotton-title { font-size:44px !important; letter-spacing:4px !important; }
     .hero p { font-size:15px !important; }
+}
+@media (max-width:480px) {
+    .hero .cotton-title { font-size:36px !important; letter-spacing:3px !important; }
 }
 </style>
 
 <script>
 function openPdSampleRequest() {
-    // 메인 사이트의 VIP 모달이 있으면 사용, 없으면 자체 모달
-    var vipModal = document.getElementById('vipOrderModal');
-    if (vipModal) {
-        vipModal.style.display = 'flex';
-        return;
-    }
     document.getElementById('pdSampleModal').style.display = 'flex';
 }
 </script>
 
-<!-- 패브릭 인쇄 샘플 요청 모달 -->
-<div id="pdSampleModal" class="modal-bg" style="z-index:30000; display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5);">
-    <div style="background:#fff; border-radius:16px; width:520px; max-width:95%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-        <div style="background:linear-gradient(135deg,#4338ca,#6366f1); padding:24px; border-radius:16px 16px 0 0; text-align:center; color:#fff;">
-            <h3 style="margin:0; font-size:20px;"><i class="fa-solid fa-gift" style="color:#fbbf24;"></i> <span data-i18n="pd_sample_title">무료 샘플 요청</span></h3>
-            <p style="margin:8px 0 0; font-size:12px; opacity:0.85;" data-i18n="pd_sample_desc">담당자가 확인 후 연락드립니다.</p>
+<!-- 무료 샘플 요청 + 회원가입 통합 모달 (업자 전용) -->
+<div id="pdSampleModal" class="modal-bg" style="z-index:30000; display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6);">
+    <div style="background:#fff; border-radius:18px; width:560px; max-width:95%; max-height:92vh; overflow-y:auto; box-shadow:0 24px 70px rgba(0,0,0,0.35);">
+        <div style="background:linear-gradient(135deg,#451a03,#78350f); padding:26px; border-radius:18px 18px 0 0; text-align:center; color:#faf6ed;">
+            <div style="font-size:11px; letter-spacing:5px; color:#fde047; font-weight:700; margin-bottom:6px;">— FREE FABRIC SAMPLE —</div>
+            <h3 style="margin:0; font-size:22px; font-weight:900;"><i class="fa-solid fa-gift" style="color:#fde047;"></i> 무료 샘플 + 업자 회원가입</h3>
+            <p style="margin:8px 0 0; font-size:12px; opacity:0.85;">정보 입력 → 자동 회원가입 → 샘플 무료 발송</p>
         </div>
-        <div style="padding:20px;">
+        <div style="padding:24px;">
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_name">성함 / 회사명</label>
-                    <input id="pdSampleName" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" data-i18n-placeholder="pd_sample_name_ph" placeholder="예: 홍길동 / (주)ABC">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">성함 / 담당자명 <span style="color:#dc2626;">*</span></label>
+                    <input id="pdSampleName" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: 홍길동">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_phone">연락처</label>
-                    <input id="pdSamplePhone" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="+82-10-0000-0000">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">회사명 / 상호 <span style="color:#dc2626;">*</span></label>
+                    <input id="pdSampleCompany" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: (주)ABC 패브릭">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">휴대전화 <span style="color:#dc2626;">*</span></label>
+                    <input id="pdSamplePhone" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="010-0000-0000">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">이메일 (로그인 ID)</label>
+                    <input id="pdSampleEmail" type="email" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
                 </div>
             </div>
             <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_email">이메일</label>
-                <input id="pdSampleEmail" type="email" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">샘플 받을 주소 <span style="color:#dc2626;">*</span></label>
+                <input id="pdSampleZip" style="width:130px; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; margin-bottom:6px;" placeholder="우편번호">
+                <input id="pdSampleAddr1" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; margin-bottom:6px;" placeholder="기본주소 (도로명/지번)">
+                <input id="pdSampleAddr2" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="상세주소 (동/호수)">
             </div>
-            <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_memo">요청 내용</label>
-                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요."></textarea>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">관심 원단 / 요청사항</label>
+                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" placeholder="예: 광목 30수, 옥스포드, 쉬폰 — 매장 디스플레이 용도 / 월 1,000m 예상"></textarea>
             </div>
-            <div style="margin-bottom:16px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_file">참고 파일</label>
-                <div onclick="document.getElementById('pdSampleFileInput').click()" style="border:2px dashed #c7d2fe; background:#faf5ff; padding:16px; text-align:center; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#faf5ff'">
-                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:20px; color:#6366f1; margin-bottom:4px;"></i>
-                    <div style="color:#6366f1; font-size:12px; font-weight:600;" data-i18n="pd_sample_file_click">클릭하여 파일 선택 (이미지, PDF, AI 등)</div>
-                </div>
-                <input type="file" id="pdSampleFileInput" multiple style="display:none;" onchange="updatePdSampleFiles(this)">
-                <div id="pdSampleFileList" style="margin-top:6px; font-size:11px; color:#6366f1;"></div>
-            </div>
-            <button onclick="submitPdSample()" style="width:100%; padding:14px; border:none; border-radius:10px; background:linear-gradient(135deg,#4338ca,#6366f1); color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;">
-                <i class="fa-solid fa-paper-plane"></i> <span data-i18n="pd_sample_submit">샘플 요청하기</span>
+            <label style="display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:#fef3c7; border-radius:8px; margin-bottom:14px; cursor:pointer;">
+                <input type="checkbox" id="pdSampleAgree" style="margin-top:3px;">
+                <span style="font-size:12px; color:#78350f; line-height:1.5;">개인정보 수집·이용 동의 (회원가입 및 샘플 발송 목적, 보유기간 5년)</span>
+            </label>
+            <button onclick="submitPdSample()" style="width:100%; padding:15px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:1px;">
+                <i class="fa-solid fa-paper-plane"></i> 회원가입 + 샘플 신청
             </button>
-            <button onclick="document.getElementById('pdSampleModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:8px; font-family:inherit;" data-i18n="pd_sample_close">닫기</button>
+            <button onclick="document.getElementById('pdSampleModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:6px; font-family:inherit;">닫기</button>
         </div>
     </div>
 </div>
 <script>
-var _pdSampleFiles = [];
-function updatePdSampleFiles(input) {
-    _pdSampleFiles = Array.from(input.files);
-    var list = document.getElementById('pdSampleFileList');
-    list.innerHTML = _pdSampleFiles.map(function(f) { return '📎 ' + f.name; }).join('<br>');
-}
 async function submitPdSample() {
     var name = document.getElementById('pdSampleName').value.trim();
+    var company = document.getElementById('pdSampleCompany').value.trim();
     var phone = document.getElementById('pdSamplePhone').value.trim();
     var email = document.getElementById('pdSampleEmail').value.trim();
+    var zip = document.getElementById('pdSampleZip').value.trim();
+    var addr1 = document.getElementById('pdSampleAddr1').value.trim();
+    var addr2 = document.getElementById('pdSampleAddr2').value.trim();
     var memo = document.getElementById('pdSampleMemo').value.trim();
-    if (!name || (!phone && !email)) { alert(window.__PS_LANG==='ko'?'성함과 연락처를 입력해주세요.':'Please enter your name and contact info.'); return; }
+    var agree = document.getElementById('pdSampleAgree').checked;
+
+    if (!name || !company) { alert('성함과 회사명을 입력해주세요.'); return; }
+    if (!phone) { alert('휴대전화 번호를 입력해주세요.'); return; }
+    if (!addr1) { alert('샘플 받을 주소를 입력해주세요.'); return; }
+    if (!agree) { alert('개인정보 수집·이용에 동의해주세요.'); return; }
+
+    var btn = event.target.closest('button');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...'; }
+
     try {
         var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
-        if (!sb) throw new Error('Connection failed');
-        // 파일 업로드
-        var uploadedFiles = [];
-        for (var i = 0; i < _pdSampleFiles.length; i++) {
-            var f = _pdSampleFiles[i];
-            var path = 'vip/' + Date.now() + '_' + f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            var { data: upData, error: upErr } = await sb.storage.from('design').upload(path, f);
-            if (!upErr && upData) {
-                var { data: urlData } = sb.storage.from('design').getPublicUrl(path);
-                uploadedFiles.push({ name: f.name, url: urlData.publicUrl, type: f.type });
-            }
-        }
+        if (!sb) throw new Error('연결 실패');
+
+        var fullAddr = '[' + zip + '] ' + addr1 + ' ' + addr2;
+
+        // 1) 회원가입 시도 (이메일 있으면 Supabase Auth, 없으면 phone-only 가입)
+        var memberCreated = false;
+        var loginId = email || (phone.replace(/[^0-9]/g,'') + '@cotton-print.com');
+        var tempPw = 'cotton' + Math.random().toString(36).slice(2,10) + '!';
+        try {
+            var { data: signupData, error: signupErr } = await sb.auth.signUp({
+                email: loginId,
+                password: tempPw,
+                options: { data: { name: name, company: company, phone: phone, address: fullAddr } }
+            });
+            if (!signupErr) memberCreated = true;
+        } catch(e) {}
+
+        // 2) members 테이블에 직접 INSERT (RLS 허용 가정)
+        try {
+            await sb.from('members').insert({
+                name: name, company: company, phone: phone,
+                email: email || null, address: fullAddr,
+                source: 'cotton-print.com', member_type: 'business',
+                temp_password: memberCreated ? null : tempPw
+            });
+        } catch(e) { /* 테이블 없으면 무시 */ }
+
+        // 3) 관리자 알림용 vip_orders 등록 (status: pending — 어드민 페이지 노출)
         await sb.from('vip_orders').insert({
-            customer_name: name,
-            customer_phone: phone || email,
+            customer_name: name + ' (' + company + ')',
+            customer_phone: phone,
             preferred_manager: '본사담당자',
-            memo: '[패브릭 인쇄 샘플 요청 - cotton-print.com] Email: ' + email + ' | ' + memo,
-            files: uploadedFiles.length > 0 ? uploadedFiles : null,
+            memo: '[무료샘플+회원가입 - cotton-print.com]\n' +
+                  '회사: ' + company + '\n' +
+                  '연락처: ' + phone + '\n' +
+                  '이메일: ' + (email || '미입력') + '\n' +
+                  '주소: ' + fullAddr + '\n' +
+                  '관심원단: ' + (memo || '없음') + '\n' +
+                  (memberCreated ? '✅ 회원가입 완료' : '⚠️ 임시PW: ' + tempPw),
+            files: null,
             status: 'pending'
         });
+
         document.getElementById('pdSampleModal').style.display = 'none';
-        _pdSampleFiles = [];
-        alert(window.__PS_LANG==='ko'?'샘플 요청이 접수되었습니다! 담당자가 곧 연락드리겠습니다.':window.__PS_LANG==='ja'?'サンプルリクエストが送信されました！担当者がすぐにご連絡いたします。':'Sample request submitted! Our team will contact you shortly.');
+        alert('✅ 샘플 신청이 접수되었습니다!\n담당자가 영업일 1~2일 내에 연락드리며,\n샘플은 입력하신 주소로 무료 발송됩니다.');
+        // 폼 초기화
+        ['pdSampleName','pdSampleCompany','pdSamplePhone','pdSampleEmail','pdSampleZip','pdSampleAddr1','pdSampleAddr2','pdSampleMemo'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+        document.getElementById('pdSampleAgree').checked = false;
     } catch(e) {
-        alert('Error: ' + e.message);
+        alert('오류: ' + e.message);
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 회원가입 + 샘플 신청'; }
     }
-}</script>
+}
+</script>
 
 <!-- 내 원단 만들기 CTA -->
 <section style="max-width:1100px; margin:48px auto 0; padding:0 24px;">
@@ -548,54 +591,390 @@ async function submitPdSample() {
         <h2 style="font-size:28px; font-weight:900; color:var(--brown-dark);">원단 카테고리</h2>
     </div>
     <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:14px;" class="cat-icons">
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">🌸</div><div class="cat-icon-name">꽃무늬</div></a>
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">🌿</div><div class="cat-icon-name">자연</div></a>
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">🐾</div><div class="cat-icon-name">동물</div></a>
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">📏</div><div class="cat-icon-name">줄무늬</div></a>
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">⚪</div><div class="cat-icon-name">도트</div></a>
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">🔷</div><div class="cat-icon-name">기하학</div></a>
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">A</div><div class="cat-icon-name">타이포</div></a>
-        <a href="#products" class="cat-icon-card"><div class="cat-icon">👶</div><div class="cat-icon-name">유아용</div></a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.5"/><path d="M12 9.5V4M12 19.5V14M9.5 12H4M19.5 12H14M10.2 10.2L7 7M14.8 13.8L17 17M13.8 10.2L17 7M10.2 13.8L7 17"/></svg></div>
+            <div class="cat-icon-name">플로럴</div>
+        </a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V8M12 8C12 8 8 5 5 6C5 9 8 12 12 8ZM12 8C12 8 16 5 19 6C19 9 16 12 12 8Z"/></svg></div>
+            <div class="cat-icon-name">내추럴</div>
+        </a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="9" r="1.8"/><circle cx="10" cy="6" r="1.8"/><circle cx="14" cy="6" r="1.8"/><circle cx="18" cy="9" r="1.8"/><path d="M7 17c0-3 2-5 5-5s5 2 5 5c0 1.5-1 2.5-2.5 2.5s-2-1-2.5-1-1 1-2.5 1S7 18.5 7 17Z"/></svg></div>
+            <div class="cat-icon-name">애니멀</div>
+        </a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="6" y1="3" x2="6" y2="21"/><line x1="11" y1="3" x2="11" y2="21"/><line x1="16" y1="3" x2="16" y2="21"/></svg></div>
+            <div class="cat-icon-name">스트라이프</div>
+        </a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/></svg></div>
+            <div class="cat-icon-name">도트</div>
+        </a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12,3 21,8 21,16 12,21 3,16 3,8"/><polyline points="3,8 12,12 21,8"/><line x1="12" y1="12" x2="12" y2="21"/></svg></div>
+            <div class="cat-icon-name">지오메트릭</div>
+        </a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V7l3 12M5 19l3-12 4 12M12 19l4-12 4 12"/><line x1="6.5" y1="14" x2="9.5" y2="14"/><line x1="13" y1="14" x2="17" y2="14"/></svg></div>
+            <div class="cat-icon-name">타이포</div>
+        </a>
+        <a href="#products" class="cat-icon-card">
+            <div class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="4"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/><circle cx="10" cy="9" r="0.6" fill="currentColor"/><circle cx="14" cy="9" r="0.6" fill="currentColor"/></svg></div>
+            <div class="cat-icon-name">키즈</div>
+        </a>
     </div>
 </section>
 <style>
 .cat-icon-card { display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer; transition:transform 0.2s; }
 .cat-icon-card:hover { transform:translateY(-4px); }
-.cat-icon { width:80px; height:80px; border-radius:50%; background:#fff; border:1.5px solid var(--cream-dark);
-    display:flex; align-items:center; justify-content:center; font-size:36px; color:var(--brown);
-    box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-.cat-icon-name { font-size:13px; font-weight:700; color:var(--brown); }
+.cat-icon-card:hover .cat-icon { background:#1f2937; color:#faf6ed; border-color:#1f2937; }
+.cat-icon { width:80px; height:80px; border-radius:50%; background:#fff; border:1.5px solid #e5e7eb;
+    display:flex; align-items:center; justify-content:center; color:#374151;
+    box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:all 0.25s; }
+.cat-icon svg { width:38px; height:38px; }
+.cat-icon-name { font-size:13px; font-weight:700; color:#374151; letter-spacing:-0.3px; }
 @media (max-width:768px) {
     .cat-icons { grid-template-columns:repeat(4,1fr) !important; gap:10px !important; }
-    .cat-icon { width:60px; height:60px; font-size:26px; }
+    .cat-icon { width:62px; height:62px; }
+    .cat-icon svg { width:28px; height:28px; }
     .cat-icon-name { font-size:11px; }
 }
 </style>
 
-<!-- 패브릭 드레이프 쇼케이스 (Printtree 스타일 — 진짜 천 사진 3개) -->
-<section style="max-width:1300px; margin:40px auto 0; padding:40px 24px;">
+<!-- 사용자 패턴 등록 (디자이너/작가용 패턴 업로드 — 자동 목업 생성) -->
+<section style="max-width:1300px; margin:48px auto 0; padding:40px 24px;">
     <div style="text-align:center; margin-bottom:32px;">
-        <div style="font-size:11px; letter-spacing:6px; color:var(--accent); font-weight:700; margin-bottom:8px;">— REAL FABRIC, REAL PRINT —</div>
-        <h2 style="font-size:30px; font-weight:900; color:var(--brown-dark);">진짜 천에 진짜 인쇄</h2>
-        <p style="font-size:14px; color:var(--text-light); margin-top:10px;">디자인이 그대로 살아 움직이는 친환경 디지털 잉크젯 프린팅</p>
+        <div style="font-size:11px; letter-spacing:6px; color:var(--accent); font-weight:700; margin-bottom:8px;">— DESIGNER MARKETPLACE —</div>
+        <h2 style="font-size:30px; font-weight:900; color:var(--brown-dark);">내 패턴을 등록하고 판매하세요</h2>
+        <p style="font-size:14px; color:var(--text-light); margin-top:10px;">디자이너 · 작가 · 일러스트레이터 — 원본 + 썸네일만 올리면 목업과 상세페이지가 자동 생성됩니다</p>
     </div>
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px;" class="drape-grid">
-        <div style="aspect-ratio:3/4; border-radius:6px; overflow:hidden; background:#f5f5f4; box-shadow:0 8px 24px rgba(69,26,3,0.15);">
-            <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg" alt="광목 패브릭" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:32px; align-items:stretch;" class="upload-grid">
+        <!-- 좌: 업로드 폼 -->
+        <div style="background:#fff; border-radius:18px; padding:28px; box-shadow:0 8px 28px rgba(69,26,3,0.08); border:1px solid var(--cream-dark);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-upload"></i></div>
+                <div>
+                    <div style="font-size:15px; font-weight:900; color:var(--brown-dark);">패턴 업로드</div>
+                    <div style="font-size:11px; color:var(--text-light);">원본 + 썸네일을 함께 등록해주세요</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;">패턴명 <span style="color:#dc2626;">*</span></label>
+                <input id="upPatternName" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: 빈티지 플로럴 #03">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:14px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;">카테고리</label>
+                    <select id="upPatternCat" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit; background:#fff;">
+                        <option value="floral">플로럴</option>
+                        <option value="natural">내추럴</option>
+                        <option value="animal">애니멀</option>
+                        <option value="stripe">스트라이프</option>
+                        <option value="dot">도트</option>
+                        <option value="geometric">지오메트릭</option>
+                        <option value="typo">타이포</option>
+                        <option value="kids">키즈</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;">디자이너명</label>
+                    <input id="upPatternAuthor" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="작가명/스튜디오">
+                </div>
+            </div>
+
+            <!-- 원본 파일 (대용량 OK) -->
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;">
+                    원본 파일 <span style="color:#dc2626;">*</span>
+                    <span style="font-weight:400; color:var(--text-light); font-size:11px;">(AI · PSD · PDF · TIFF · 고해상도 이미지 — 최대 200MB)</span>
+                </label>
+                <div onclick="document.getElementById('upOriginalInput').click()" id="upOriginalDrop" style="border:2px dashed #d6d3d1; background:#fafaf9; padding:22px; text-align:center; border-radius:10px; cursor:pointer; transition:0.2s;">
+                    <i class="fa-solid fa-file-arrow-up" style="font-size:24px; color:var(--brown);"></i>
+                    <div style="color:var(--brown-dark); font-size:13px; font-weight:700; margin-top:6px;">클릭하여 원본 파일 선택</div>
+                    <div id="upOriginalName" style="font-size:11px; color:var(--accent); margin-top:4px;"></div>
+                </div>
+                <input type="file" id="upOriginalInput" style="display:none;" accept=".ai,.psd,.pdf,.tif,.tiff,.png,.jpg,.jpeg,.eps,.svg" onchange="handleOriginalSelect(this)">
+            </div>
+
+            <!-- 썸네일 파일 (용량 제한) -->
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;">
+                    썸네일 이미지 <span style="color:#dc2626;">*</span>
+                    <span style="font-weight:400; color:var(--text-light); font-size:11px;">(JPG/PNG · 최대 3MB · 2000×2000px 권장)</span>
+                </label>
+                <div onclick="document.getElementById('upThumbInput').click()" id="upThumbDrop" style="border:2px dashed #d6d3d1; background:#fafaf9; padding:22px; text-align:center; border-radius:10px; cursor:pointer; transition:0.2s;">
+                    <i class="fa-solid fa-image" style="font-size:24px; color:var(--brown);"></i>
+                    <div style="color:var(--brown-dark); font-size:13px; font-weight:700; margin-top:6px;">클릭하여 썸네일 선택</div>
+                    <div id="upThumbInfo" style="font-size:11px; color:var(--accent); margin-top:4px;"></div>
+                </div>
+                <input type="file" id="upThumbInput" style="display:none;" accept="image/jpeg,image/png" onchange="handleThumbSelect(this)">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;">패턴 설명 / 키워드</label>
+                <textarea id="upPatternDesc" rows="2" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" placeholder="예: 보태니컬 빈티지, 카페 인테리어용, 흙톤 5색 조합"></textarea>
+            </div>
+
+            <label style="display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:#fef3c7; border-radius:8px; margin-bottom:14px; cursor:pointer;">
+                <input type="checkbox" id="upPatternAgree" style="margin-top:3px;">
+                <span style="font-size:11px; color:#78350f; line-height:1.5;">본 패턴은 본인 창작물이며, 카멜레온프린팅의 패브릭 인쇄 판매에 사용 동의합니다 (저작권은 작가에게 귀속).</span>
+            </label>
+
+            <button onclick="submitPatternUpload()" style="width:100%; padding:15px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:1px;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> 패턴 등록하기
+            </button>
+            <div id="upPatternStatus" style="margin-top:10px; font-size:12px; color:var(--brown-dark); text-align:center;"></div>
         </div>
-        <div style="aspect-ratio:3/4; border-radius:6px; overflow:hidden; background:#f5f5f4; box-shadow:0 8px 24px rgba(69,26,3,0.15);">
-            <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/wizard/1771881492818_0.jpg" alt="면포 패브릭" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
-        </div>
-        <div style="aspect-ratio:3/4; border-radius:6px; overflow:hidden; background:#f5f5f4; box-shadow:0 8px 24px rgba(69,26,3,0.15);">
-            <img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg" alt="옥스포드 패브릭" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+
+        <!-- 우: 자동 목업 미리보기 -->
+        <div style="background:linear-gradient(135deg,#fafaf9,#f5f5f4); border-radius:18px; padding:28px; border:1px solid var(--cream-dark);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+                <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#fde047,#facc15); color:#451a03; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div>
+                    <div style="font-size:15px; font-weight:900; color:var(--brown-dark);">자동 목업 미리보기</div>
+                    <div style="font-size:11px; color:var(--text-light);">썸네일이 패턴으로 반복되어 4가지 목업으로 생성됩니다</div>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div style="aspect-ratio:1; border-radius:10px; overflow:hidden; background:#fff; border:1px solid #e7e5e4; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <canvas id="mockupCanvas1" width="400" height="400" style="width:100%; height:100%; display:block;"></canvas>
+                    <div style="position:absolute; top:8px; left:8px; background:rgba(69,26,3,0.85); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:50px;">반복 패턴</div>
+                </div>
+                <div style="aspect-ratio:1; border-radius:10px; overflow:hidden; background:#fff; border:1px solid #e7e5e4; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <canvas id="mockupCanvas2" width="400" height="400" style="width:100%; height:100%; display:block;"></canvas>
+                    <div style="position:absolute; top:8px; left:8px; background:rgba(69,26,3,0.85); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:50px;">하프드롭</div>
+                </div>
+                <div style="aspect-ratio:1; border-radius:10px; overflow:hidden; background:#fff; border:1px solid #e7e5e4; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <canvas id="mockupCanvas3" width="400" height="400" style="width:100%; height:100%; display:block;"></canvas>
+                    <div style="position:absolute; top:8px; left:8px; background:rgba(69,26,3,0.85); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:50px;">미러</div>
+                </div>
+                <div style="aspect-ratio:1; border-radius:10px; overflow:hidden; background:#fff; border:1px solid #e7e5e4; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <canvas id="mockupCanvas4" width="400" height="400" style="width:100%; height:100%; display:block;"></canvas>
+                    <div style="position:absolute; top:8px; left:8px; background:rgba(69,26,3,0.85); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:50px;">드레이프</div>
+                </div>
+            </div>
+            <div style="margin-top:14px; padding:12px; background:#fff; border-radius:10px; font-size:11px; color:var(--text-light); line-height:1.6;">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
+                업로드 후 5분 이내 4가지 목업과 상세페이지가 자동 생성되며, 등록 승인 시 카탈로그에 노출됩니다.
+            </div>
         </div>
     </div>
 </section>
 <style>
 @media (max-width: 768px) {
-    .drape-grid { grid-template-columns:1fr !important; }
+    .upload-grid { grid-template-columns:1fr !important; }
 }
+#upOriginalDrop:hover, #upThumbDrop:hover { background:#fef3c7 !important; border-color:var(--brown) !important; }
 </style>
+<script>
+(function(){
+    var _origFile = null;
+    var _thumbFile = null;
+    var _thumbDataUrl = null;
+    var MAX_THUMB_BYTES = 3 * 1024 * 1024; // 3MB
+    var MAX_ORIG_BYTES = 200 * 1024 * 1024; // 200MB
+
+    window.handleOriginalSelect = function(input) {
+        var f = input.files[0];
+        if (!f) return;
+        if (f.size > MAX_ORIG_BYTES) {
+            alert('원본 파일은 200MB 이하만 업로드 가능합니다. 현재: ' + (f.size/1024/1024).toFixed(1) + 'MB');
+            input.value = '';
+            return;
+        }
+        _origFile = f;
+        document.getElementById('upOriginalName').innerHTML = '✅ ' + f.name + ' (' + (f.size/1024/1024).toFixed(1) + 'MB)';
+    };
+
+    window.handleThumbSelect = function(input) {
+        var f = input.files[0];
+        if (!f) return;
+        if (f.size > MAX_THUMB_BYTES) {
+            alert('썸네일은 3MB 이하만 업로드 가능합니다. 현재: ' + (f.size/1024/1024).toFixed(1) + 'MB\n압축 후 다시 시도해주세요.');
+            input.value = '';
+            return;
+        }
+        _thumbFile = f;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            _thumbDataUrl = e.target.result;
+            document.getElementById('upThumbInfo').innerHTML = '✅ ' + f.name + ' (' + (f.size/1024).toFixed(0) + 'KB) — 목업 생성 중...';
+            generateMockups(_thumbDataUrl);
+        };
+        reader.readAsDataURL(f);
+    };
+
+    function generateMockups(dataUrl) {
+        var img = new Image();
+        img.onload = function() {
+            // 1. 반복 패턴 (4×4 타일)
+            drawTilePattern('mockupCanvas1', img, 4, 0);
+            // 2. 하프드롭 (4×4 + 50% offset)
+            drawTilePattern('mockupCanvas2', img, 4, 0.5);
+            // 3. 미러 (좌우/상하 반전)
+            drawMirrorPattern('mockupCanvas3', img);
+            // 4. 드레이프 (그라디언트 그림자 오버레이로 천 느낌)
+            drawDrapePattern('mockupCanvas4', img);
+        };
+        img.src = dataUrl;
+    }
+
+    function drawTilePattern(id, img, n, offset) {
+        var c = document.getElementById(id), ctx = c.getContext('2d');
+        ctx.clearRect(0,0,c.width,c.height);
+        var size = c.width / n;
+        for (var y=0; y<n; y++) {
+            for (var x=-1; x<=n; x++) {
+                var dx = x * size + (y%2===1 ? size*offset : 0);
+                ctx.drawImage(img, dx, y*size, size, size);
+            }
+        }
+    }
+
+    function drawMirrorPattern(id, img) {
+        var c = document.getElementById(id), ctx = c.getContext('2d');
+        ctx.clearRect(0,0,c.width,c.height);
+        var s = c.width/2;
+        // 좌상
+        ctx.drawImage(img, 0, 0, s, s);
+        // 우상 (좌우반전)
+        ctx.save(); ctx.scale(-1,1); ctx.drawImage(img, -c.width, 0, s, s); ctx.restore();
+        // 좌하 (상하반전)
+        ctx.save(); ctx.scale(1,-1); ctx.drawImage(img, 0, -c.height, s, s); ctx.restore();
+        // 우하 (상하좌우반전)
+        ctx.save(); ctx.scale(-1,-1); ctx.drawImage(img, -c.width, -c.height, s, s); ctx.restore();
+    }
+
+    function drawDrapePattern(id, img) {
+        var c = document.getElementById(id), ctx = c.getContext('2d');
+        drawTilePattern(id, img, 5, 0);
+        // 천 드레이프 그림자 효과 (수직 그라디언트로 주름 느낌)
+        var grad = ctx.createLinearGradient(0,0,c.width,0);
+        for (var i=0; i<=10; i++) {
+            grad.addColorStop(i/10, i%2===0 ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.05)');
+        }
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,c.width,c.height);
+        // 상하 비네팅
+        var v = ctx.createLinearGradient(0,0,0,c.height);
+        v.addColorStop(0,'rgba(0,0,0,0.25)');
+        v.addColorStop(0.5,'rgba(0,0,0,0)');
+        v.addColorStop(1,'rgba(0,0,0,0.25)');
+        ctx.fillStyle = v;
+        ctx.fillRect(0,0,c.width,c.height);
+    }
+
+    window.submitPatternUpload = async function() {
+        var name = document.getElementById('upPatternName').value.trim();
+        var cat = document.getElementById('upPatternCat').value;
+        var author = document.getElementById('upPatternAuthor').value.trim();
+        var desc = document.getElementById('upPatternDesc').value.trim();
+        var agree = document.getElementById('upPatternAgree').checked;
+        var statusEl = document.getElementById('upPatternStatus');
+
+        if (!name) { alert('패턴명을 입력해주세요.'); return; }
+        if (!_origFile) { alert('원본 파일을 업로드해주세요.'); return; }
+        if (!_thumbFile) { alert('썸네일 파일을 업로드해주세요.'); return; }
+        if (!agree) { alert('저작권 동의가 필요합니다.'); return; }
+
+        var btn = event.target.closest('button');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...'; }
+
+        try {
+            var sb = window.supabase ? window.supabase.createClient(
+                'https://qinvtnhiidtmrzosyvys.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+            ) : null;
+            if (!sb) throw new Error('연결 실패');
+
+            var ts = Date.now();
+            var safeName = name.replace(/[^a-zA-Z0-9._-가-힣]/g,'_');
+
+            // 1) 원본 업로드
+            statusEl.textContent = '원본 파일 업로드 중...';
+            var origPath = 'patterns/original/' + ts + '_' + _origFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+            var { data: oU, error: oErr } = await sb.storage.from('design').upload(origPath, _origFile);
+            if (oErr) throw oErr;
+            var origUrl = sb.storage.from('design').getPublicUrl(origPath).data.publicUrl;
+
+            // 2) 썸네일 업로드
+            statusEl.textContent = '썸네일 업로드 중...';
+            var thumbPath = 'patterns/thumb/' + ts + '_' + _thumbFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+            var { data: tU, error: tErr } = await sb.storage.from('design').upload(thumbPath, _thumbFile);
+            if (tErr) throw tErr;
+            var thumbUrl = sb.storage.from('design').getPublicUrl(thumbPath).data.publicUrl;
+
+            // 3) 자동 목업 4종 PNG로 캡처
+            statusEl.textContent = '목업 생성 중...';
+            var mockups = [];
+            for (var i=1; i<=4; i++) {
+                var canvas = document.getElementById('mockupCanvas' + i);
+                var blob = await new Promise(function(res){ canvas.toBlob(res, 'image/jpeg', 0.85); });
+                if (blob) {
+                    var mockPath = 'patterns/mockup/' + ts + '_m' + i + '.jpg';
+                    var { error: mErr } = await sb.storage.from('design').upload(mockPath, blob);
+                    if (!mErr) mockups.push(sb.storage.from('design').getPublicUrl(mockPath).data.publicUrl);
+                }
+            }
+
+            // 4) DB 등록 (user_patterns 테이블 — 어드민 승인 후 노출)
+            statusEl.textContent = '등록 중...';
+            await sb.from('user_patterns').insert({
+                name: name,
+                category: cat,
+                author: author || null,
+                description: desc || null,
+                original_url: origUrl,
+                thumb_url: thumbUrl,
+                mockup_urls: mockups,
+                source: 'cotton-print.com',
+                status: 'pending'  // 어드민 승인 대기
+            });
+
+            statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">✅ 업로드 완료! 어드민 승인 후 카탈로그에 노출됩니다.</span>';
+            // 폼 초기화
+            ['upPatternName','upPatternAuthor','upPatternDesc'].forEach(function(id){ document.getElementById(id).value=''; });
+            document.getElementById('upOriginalName').textContent = '';
+            document.getElementById('upThumbInfo').textContent = '';
+            document.getElementById('upPatternAgree').checked = false;
+            _origFile = null; _thumbFile = null; _thumbDataUrl = null;
+            // 캔버스 초기화
+            for (var k=1; k<=4; k++) {
+                var ck = document.getElementById('mockupCanvas'+k);
+                ck.getContext('2d').clearRect(0,0,ck.width,ck.height);
+            }
+        } catch(e) {
+            statusEl.innerHTML = '<span style="color:#dc2626;">오류: ' + e.message + '</span>';
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 패턴 등록하기'; }
+        }
+    };
+
+    // 초기 캔버스 placeholder (옅은 격자)
+    document.addEventListener('DOMContentLoaded', function(){
+        for (var i=1; i<=4; i++) {
+            var c = document.getElementById('mockupCanvas'+i);
+            if (!c) continue;
+            var ctx = c.getContext('2d');
+            ctx.fillStyle = '#faf6ed';
+            ctx.fillRect(0,0,c.width,c.height);
+            ctx.strokeStyle = '#e7e5e4';
+            ctx.lineWidth = 1;
+            for (var x=0; x<c.width; x+=40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,c.height); ctx.stroke(); }
+            for (var y=0; y<c.height; y+=40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(c.width,y); ctx.stroke(); }
+            ctx.fillStyle = '#a8a29e';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('썸네일 업로드 시', c.width/2, c.height/2 - 8);
+            ctx.fillText('자동 생성', c.width/2, c.height/2 + 14);
+        }
+    });
+})();
+</script>
 
 <!-- 상품 목록 (최상단) -->
 <section class="section" id="products" style="padding-top:32px;">
