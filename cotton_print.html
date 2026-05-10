@@ -1294,7 +1294,14 @@ function toggleKapuChat() {
     var fab = document.getElementById('kapuFab');
     if (wrap.style.display === 'none') {
         if (!frame.src || frame.src === '' || frame.src === location.href) {
-            frame.src = '/chameleon-chatbot.html?lang=' + (window._kapuLang || 'kr');
+            // 언어별 메인몰 도메인의 챗봇 로드 (cotton-print.com에는 없음)
+            var psL = window.__PS_LANG || 'ko';
+            var chatBase;
+            if (psL === 'ja') chatBase = 'https://www.cafe0101.com';
+            else if (psL === 'en') chatBase = 'https://chameleon.design';
+            else chatBase = 'https://www.cafe2626.com';
+            var langParam = (window._kapuLang || 'kr');
+            frame.src = chatBase + '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print';
         }
         wrap.style.display = 'block';
         fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
@@ -1674,41 +1681,48 @@ function toggleKapuChat() {
 </script>
 
 <!-- 푸터 -->
-<footer class="site-footer" style="background:#1e293b; color:#94a3b8; padding:48px 24px 32px; margin-top:0;">
+<footer class="site-footer cp-footer" style="background:#1e293b; color:#94a3b8; padding:40px 20px 24px; margin-top:0;">
     <div style="max-width:1000px; margin:0 auto;">
-        <div style="display:flex; gap:40px; flex-wrap:wrap; justify-content:space-between; margin-bottom:32px;">
+        <div class="cp-footer-grid" style="display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:32px; margin-bottom:24px;">
             <!-- 브랜드 -->
-            <div style="min-width:200px;">
+            <div>
                 <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:10px;">
-                    <i class="fa-solid fa-shirt" style="color:#fb7185; margin-right:6px;"></i>Cotton Print · 코튼프린팅
+                    <i class="fa-solid fa-shirt" style="color:#fb7185; margin-right:6px;"></i><span data-i18n="footer_brand_name">Cotton Print · 코튼프린팅</span>
                 </div>
-                <p style="font-size:12px; line-height:1.7;">패브릭(천) 인쇄 전문 - (주)카멜레온프린팅 사업부.<br>광목·면포·옥스포드·쉬폰 맞춤 인쇄.</p>
+                <p style="font-size:12px; line-height:1.7;" data-i18n="footer_brand_desc_cotton">패브릭(천) 인쇄 전문 - (주)카멜레온프린팅 사업부. 광목·면포·옥스포드·쉬폰 맞춤 인쇄.</p>
             </div>
             <!-- 링크 -->
-            <div style="min-width:120px;">
+            <div>
                 <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_links_title">바로가기</div>
-                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
-                    <a href="/" id="footerHomeLink" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_main">카멜레온프린팅 메인</a>
-                    <a href="/mypage" style="color:#fde047; transition:color 0.2s; font-weight:700;"><i class="fa-solid fa-palette"></i> <span data-i18n="footer_designer_mypage">디자이너 마이페이지</span></a>
-                    <a href="/board.html" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_community">커뮤니티</a>
+                <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+                    <a href="https://www.cafe2626.com" target="_blank" id="footerHomeLink" style="color:#94a3b8;" data-i18n="footer_main">카멜레온프린팅 메인</a>
+                    <a href="/mypage" style="color:#fde047; font-weight:700;"><i class="fa-solid fa-palette"></i> <span data-i18n="footer_designer_mypage">디자이너 마이페이지</span></a>
+                    <a href="https://www.cafe2626.com/board.html" target="_blank" style="color:#94a3b8;" data-i18n="footer_community">커뮤니티</a>
                 </div>
             </div>
             <!-- 연락처 -->
-            <div style="min-width:180px;">
+            <div>
                 <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_contact_title">문의</div>
-                <div style="font-size:12px; line-height:2;">
-                    📞 <a href="tel:0313661984" style="color:#cbd5e1;text-decoration:none;">031-366-1984</a><br>
-                    📧 <a href="mailto:design@chameleon.design" style="color:#cbd5e1;text-decoration:none;">design@chameleon.design</a><br>
-                    🕐 평일 09:00~18:00
+                <div style="font-size:12px; line-height:1.9;">
+                    <div><i class="fa-solid fa-phone" style="color:#fb7185; width:16px;"></i> <a href="tel:0313661984" style="color:#cbd5e1; text-decoration:none;">031-366-1984</a></div>
+                    <div><i class="fa-solid fa-envelope" style="color:#fb7185; width:16px;"></i> <a href="mailto:design@chameleon.design" style="color:#cbd5e1; text-decoration:none; word-break:break-all;">design@chameleon.design</a></div>
+                    <div><i class="fa-solid fa-clock" style="color:#fb7185; width:16px;"></i> <span data-i18n="footer_hours">평일 09:00~18:00</span></div>
                 </div>
             </div>
         </div>
         <div style="border-top:1px solid #334155; padding-top:16px; text-align:center; font-size:11px; color:#64748b;">
-            &copy; 2026 Cotton Print · (주)카멜레온프린팅. All rights reserved.<br>
-            메인몰: <a href="https://www.cafe2626.com" style="color:#fb7185;">cafe2626.com</a>
+            &copy; 2026 Cotton Print · (주)카멜레온프린팅 · <a href="https://www.cafe2626.com" style="color:#fb7185;">cafe2626.com</a>
         </div>
     </div>
 </footer>
+<style>
+@media (max-width:768px) {
+    .cp-footer { padding:28px 16px 20px !important; }
+    .cp-footer-grid { grid-template-columns:1fr !important; gap:20px !important; }
+    .cp-footer-grid > div { padding-bottom:14px; border-bottom:1px solid #334155; }
+    .cp-footer-grid > div:last-child { border-bottom:none; padding-bottom:0; }
+}
+</style>
 
 <!-- JSON-LD 구조화 데이터 (SEO) -->
 <script type="application/ld+json">
@@ -2215,6 +2229,18 @@ up_desc: { ko:'패턴 설명 / 키워드', ja:'パターン説明・キーワー
 up_desc_ph: { ko:'예: 보태니컬 빈티지, 카페 인테리어용, 흙톤 5색 조합', ja:'例: ボタニカルビンテージ', en:'e.g. Botanical vintage, 5-color earth tone', zh:'例: 植物复古', ar:'مثال', es:'ej. Botanico vintage', de:'z.B. Botanisch Vintage', fr:'ex: Vintage botanique' },
 up_agree: { ko:'본 패턴은 본인 창작물이며, 카멜레온프린팅의 패브릭 인쇄 판매에 사용 동의합니다 (저작권은 작가에게 귀속).', ja:'本パターンは本人の創作物であり、カメレオンプリンティングの販売使用に同意します (著作権は作家に帰属)。', en:'This pattern is my original work and I agree to its use in Chameleon Printing\'s fabric sales (copyright remains with the artist).', zh:'本图案为本人原创，同意用于变色龙印刷销售', ar:'هذا النمط من اعمالي الاصلية', es:'Este patron es de mi autoria', de:'Dieses Muster ist mein Original', fr:'Ce motif est mon oeuvre originale' },
 up_submit_btn: { ko:'패턴 등록하기', ja:'パターンを登録', en:'Register Pattern', zh:'注册图案', ar:'سجل النمط', es:'Registrar patron', de:'Muster registrieren', fr:'Enregistrer le motif' },
+footer_brand_name: { ko:'Cotton Print · 코튼프린팅', ja:'Cotton Print · コットンプリント', en:'Cotton Print', zh:'Cotton Print · 棉印', ar:'Cotton Print', es:'Cotton Print', de:'Cotton Print', fr:'Cotton Print' },
+footer_brand_desc_cotton: {
+    ko:'패브릭(천) 인쇄 전문 - (주)카멜레온프린팅 사업부. 광목·면포·옥스포드·쉬폰 맞춤 인쇄.',
+    ja:'ファブリック(生地)印刷専門 - カメレオンプリンティング事業部。コットン・オックスフォード・シフォン カスタム印刷。',
+    en:'Premium fabric printing — a Chameleon Printing division. Cotton, oxford, chiffon custom prints.',
+    zh:'面料印刷专家 - 变色龙印刷事业部。棉、牛津布、雪纺定制印刷。',
+    ar:'متخصصون في طباعة الاقمشة الفاخرة - قسم كاميليون للطباعة.',
+    es:'Impresion de tela premium — division de Chameleon Printing.',
+    de:'Premium-Stoffdruck — eine Abteilung von Chameleon Printing.',
+    fr:'Impression textile premium — division Chameleon Printing.'
+},
+footer_hours: { ko:'평일 09:00~18:00', ja:'平日 09:00〜18:00 KST', en:'Mon-Fri 9:00-18:00 KST', zh:'工作日 09:00-18:00', ar:'الاثنين-الجمعة 09:00-18:00', es:'Lun-Vie 09:00-18:00', de:'Mo-Fr 09:00-18:00', fr:'Lun-Ven 09:00-18:00' },
 cp_market_title: {
     ko:'디자이너 패턴 컬렉션', ja:'デザイナーパターンコレクション', en:'Designer Pattern Collection',
     zh:'设计师图案合集', ar:'مجموعة انماط المصممين', es:'Coleccion de Disenadores',
