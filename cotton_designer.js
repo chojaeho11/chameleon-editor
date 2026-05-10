@@ -4,73 +4,57 @@
 (function(){
 'use strict';
 
-// 원단 데이터 (실제 카멜레온 admin_products 와 매핑)
-// type: 원단 카테고리 코드 → admin_products.code 매핑
-const FABRICS = {
-    cotton: [
-        { code: 'cb20001', name: '면20수 평직 (소폭:110cm)',
-          desc: '두께가 얇고 가장 일반적으로 사용되는 20수 평직 원단입니다.\n봄·가을용 원피스, 셔츠, 바지뿐만 아니라 주방용품, 식탁보, 커튼 등 다양한 제품에 활용하기 좋습니다.',
-          width_cm: 110, height_per_ma_cm: 91,
-          price_sample: 9460, price_1ma: 17820,
-          img: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg' },
-        { code: 'cb30001', name: '면30수 평직 (백아이보리)',
-          desc: '30수 평직 원단. 얇고 부드러우며 통기성이 좋아 여름용 의류와 인테리어 소품에 적합합니다.',
-          width_cm: 110, height_per_ma_cm: 91,
-          price_sample: 9460, price_1ma: 17820,
-          img: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/wizard/1771881492818_0.jpg' },
-        { code: '456456546', name: '광목20수 아이보리 대폭 롤인쇄',
-          desc: '대폭(150cm) 광목 원단. 백월·포토존 배경·현수막 천 제작에 추천.',
-          width_cm: 150, height_per_ma_cm: 91,
-          price_sample: 12000, price_1ma: 24000,
-          img: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg' }
-    ],
-    poly: [
-        { code: 'poly_1', name: '폴리에스터 옥스포드 (소폭:110cm)',
-          desc: '내구성이 뛰어난 폴리에스터 원단. 가방·파우치·실외 디스플레이용으로 적합.',
-          width_cm: 110, height_per_ma_cm: 91,
-          price_sample: 8500, price_1ma: 16500,
-          img: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg' }
-    ],
-    sticker: [
-        { code: 'sticker_fab', name: '점착 패브릭 스티커',
-          desc: '뒷면 접착이 가능한 점착 패브릭. 벽면·유리·매장 디스플레이용.',
-          width_cm: 110, height_per_ma_cm: 91,
-          price_sample: 11000, price_1ma: 22000,
-          img: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg' }
-    ],
-    silk: [
-        { code: 'silk_chiffon', name: '쉬폰 (소폭:110cm)',
-          desc: '얇고 비치는 쉬폰 원단. 인테리어 커튼·드레스·베일·드레이프에 적합.',
-          width_cm: 110, height_per_ma_cm: 91,
-          price_sample: 13000, price_1ma: 26000,
-          img: 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg' }
-    ]
-};
+// ════════════════════════════════════════════════════
+// 회배 단가 (1회배 = 1300×1000mm = 1.3 m²)
+// ════════════════════════════════════════════════════
+const HOEBAE_UNIT_PRICE = 15000;
+const HOEBAE_AREA_MM2 = 1300 * 1000; // = 1,300,000 mm²
+
+// admin_products / admin_categories 동기화 결과 — 런타임에 채워짐
+let DB_FABRICS = []; // [{ code, name, group, img, addons:[...] }]
+let DB_GROUPS = {};  // group_label -> [products]
+
+// 원단 키워드로 그룹 분류 (대분류)
+function classifyGroup(p) {
+    const n = (p.name || '').toLowerCase();
+    if (/광목|면|cotton|cb/i.test(n) || (p.code||'').startsWith('cb')) return '면/광목';
+    if (/쉬폰|chiffon/.test(n)) return '쉬폰/실크';
+    if (/실크|silk/.test(n)) return '쉬폰/실크';
+    if (/레이온|rayon|인견/.test(n)) return '레이온/인견';
+    if (/폴리|폴리에스터|oxford|옥스포드/.test(n)) return '폴리/옥스포드';
+    if (/스티커|점착|sticker/.test(n)) return '점착/스티커';
+    if (/벨크로|아일릿|봉|마감|시접|배접|재단/.test(n)) return '__finish__'; // 마감 부자재 분리
+    return '기타 패브릭';
+}
 
 // 상태
 const state = {
-    fabricType: 'cotton',
-    fabricCode: 'cb20001',
+    fabricGroup: '',        // 면/광목 등
+    fabricCode: '',         // admin_products.code
     layout: 'basic',
-    qty: '1ma', // 'sample' / '1ma' / number (마)
-    customQty: 0,
-    imgWcm: 10,
-    imgHcm: 10,
-    imgAspect: 1,      // width/height ratio of original image
-    img: null,         // HTMLImageElement
-    imgDataUrl: null,  // base64 for upload
+    orderWmm: 1300,         // 출력 가로 (mm)
+    orderHmm: 1000,         // 출력 세로 (mm)
+    orderQty: 1,            // 주문 수량 (개)
+    imgWcm: 10,             // 한 패턴 이미지 가로 (cm)
+    imgHcm: 10,             // 한 패턴 이미지 세로 (cm)
+    imgAspect: 1,
+    img: null,
+    imgDataUrl: null,
     imgFileName: '',
-    finish: 'raw',     // raw / hem / rod / eyelet / velcro
-    finishExtra: 0
+    finishCode: null,       // 선택된 마감 옵션 코드
+    finishName: '마감 없음',
+    finishExtra: 0          // 마감 추가 비용
 };
 
-const FINISH_LABELS = {
-    raw: '마감 없음',
-    hem: '시접 처리',
-    rod: '봉 거치',
-    eyelet: '아일릿(고리)',
-    velcro: '벨크로'
-};
+function getFabric() {
+    return DB_FABRICS.find(f => f.code === state.fabricCode) || null;
+}
+
+function calcHoebae() {
+    const w = state.orderWmm || 0;
+    const h = state.orderHmm || 0;
+    return (w * h) / HOEBAE_AREA_MM2;
+}
 
 // ────────────────────────────────────────────────
 // 이미지 업로드
@@ -137,60 +121,139 @@ window._cdResetImage = function() {
     zone.addEventListener('drop', e => window._cdUploadImage(e.dataTransfer.files));
 })();
 
-// ────────────────────────────────────────────────
-// 원단 선택
-// ────────────────────────────────────────────────
-window._cdSelectFabric = function(type) {
-    state.fabricType = type;
-    document.querySelectorAll('.fabric-type').forEach(el => el.classList.toggle('active', el.dataset.fabric === type));
-    populateFabricSelect();
-    state.fabricCode = FABRICS[type][0].code;
-    updateFabricDetail();
-    updateSizeLabels();
-    updatePrice();
-    window._cdRender();
-};
+// ════════════════════════════════════════════════════
+// DB에서 원단 + 마감 옵션 로드 (admin_products + addons)
+// ════════════════════════════════════════════════════
+async function loadDbFabrics() {
+    const sb = window.supabase ? window.supabase.createClient(
+        'https://qinvtnhiidtmrzosyvys.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+    ) : null;
+    if (!sb) return;
+    try {
+        // 패브릭 카테고리 (top_category_code='22222')
+        const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', '22222');
+        const codes = (subCats||[]).map(c => c.code);
+        let products = [];
+        if (codes.length > 0) {
+            const { data } = await sb.from('admin_products').select('code, name, img_url, addons, width_mm, height_mm, price, sort_order').in('category', codes);
+            products = data || [];
+        }
+        // 추가: cb로 시작하는 광목 상품
+        try {
+            const { data: cb } = await sb.from('admin_products').select('code, name, img_url, addons, width_mm, height_mm, price, sort_order').like('code', 'cb%');
+            const seen = new Set(products.map(p => p.code));
+            (cb||[]).forEach(p => { if (!seen.has(p.code)) products.push(p); });
+        } catch(e) {}
 
-function populateFabricSelect() {
+        DB_FABRICS = products
+            .filter(p => !(p.code||'').startsWith('ua_'))
+            .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
+            .map(p => Object.assign(p, { group: classifyGroup(p) }));
+
+        // 그룹별 묶기
+        DB_GROUPS = {};
+        DB_FABRICS.forEach(p => {
+            if (p.group === '__finish__') return; // 마감 부자재는 그룹탭에서 제외
+            (DB_GROUPS[p.group] = DB_GROUPS[p.group] || []).push(p);
+        });
+
+        renderFabricGroups();
+        // 첫 그룹 자동 선택
+        const groups = Object.keys(DB_GROUPS);
+        if (groups.length > 0) selectGroup(groups[0]);
+    } catch(e) { console.error('[loadDbFabrics]', e); }
+}
+
+function renderFabricGroups() {
+    const tabs = document.getElementById('fabricGroupTabs');
+    if (!tabs) return;
+    const groups = Object.keys(DB_GROUPS);
+    if (groups.length === 0) {
+        tabs.innerHTML = '<div style="grid-column:1/-1; padding:14px; text-align:center; color:#dc2626; font-size:12px;">DB에 등록된 패브릭 상품이 없습니다.<br>관리자 페이지에서 상품을 등록하세요.</div>';
+        return;
+    }
+    const groupIcon = { '면/광목':'fa-leaf', '쉬폰/실크':'fa-feather', '레이온/인견':'fa-wind', '폴리/옥스포드':'fa-flag', '점착/스티커':'fa-note-sticky', '기타 패브릭':'fa-shapes' };
+    tabs.innerHTML = groups.map((g,i) => {
+        return `<div class="fabric-type ${i===0?'active':''}" data-group="${g}" onclick="window._cdSelectGroup('${g}')">
+            <div class="fabric-type-icon"><i class="fa-solid ${groupIcon[g]||'fa-tag'}"></i></div>
+            <div class="fabric-type-label">${g}</div>
+        </div>`;
+    }).join('');
+}
+
+window._cdSelectGroup = function(g) { selectGroup(g); };
+function selectGroup(g) {
+    state.fabricGroup = g;
+    document.querySelectorAll('.fabric-type').forEach(el => el.classList.toggle('active', el.dataset.group === g));
+    const list = DB_GROUPS[g] || [];
     const sel = document.getElementById('fabricSelect');
-    if (!sel) return;
-    sel.innerHTML = '';
-    FABRICS[state.fabricType].forEach(f => {
-        const opt = document.createElement('option');
-        opt.value = f.code; opt.textContent = f.name;
-        sel.appendChild(opt);
-    });
-    sel.value = state.fabricCode;
+    sel.innerHTML = list.map(p => `<option value="${p.code}">${p.name}</option>`).join('');
+    if (list.length > 0) {
+        state.fabricCode = list[0].code;
+        sel.value = state.fabricCode;
+        updateFabricDetail();
+        renderFinishOptions();
+        updateSizeLabels();
+        updatePrice();
+        window._cdRender();
+    }
 }
 
 window._cdOnFabricChange = function() {
     state.fabricCode = document.getElementById('fabricSelect').value;
     updateFabricDetail();
+    renderFinishOptions();
     updateSizeLabels();
     updatePrice();
     window._cdRender();
 };
 
-function getFabric() {
-    const list = FABRICS[state.fabricType] || [];
-    return list.find(f => f.code === state.fabricCode) || list[0];
-}
+window._cdRefreshDb = function() { loadDbFabrics(); showToast('원단 DB 다시 불러오는 중...'); };
 
 function updateFabricDetail() {
     const f = getFabric();
     if (!f) return;
-    document.getElementById('fabricImg').style.backgroundImage = `url(${f.img})`;
-    document.getElementById('fabricDesc').innerHTML = `<b>${f.name}</b>${(f.desc||'').replace(/\n/g,'<br>')}`;
+    document.getElementById('fabricImg').style.backgroundImage = f.img_url ? `url(${f.img_url})` : '';
+    document.getElementById('fabricImg').style.backgroundSize = 'cover';
+    document.getElementById('fabricImg').style.backgroundPosition = 'center';
+    const widthInfo = f.width_mm ? `폭 ${f.width_mm}mm` : '대폭 1300mm 기준';
+    document.getElementById('fabricDesc').innerHTML = `<b>${f.name}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${widthInfo}</div>`;
+}
+
+function renderFinishOptions() {
+    const f = getFabric();
+    const wrap = document.getElementById('finishOptions');
+    if (!wrap) return;
+    let addons = [];
+    try { addons = Array.isArray(f && f.addons) ? f.addons : (typeof f?.addons === 'string' ? JSON.parse(f.addons) : []); }
+    catch(e) { addons = []; }
+
+    const opts = [
+        { code: 'none', name: '마감 없음', price: 0, sub: '생지 그대로 컷팅', isDefault: true }
+    ];
+    addons.forEach(a => {
+        // addon 형식: {name, price} 또는 {name, price_kr, price_jp, price_us}
+        const price = a.price || a.price_kr || 0;
+        opts.push({ code: (a.code||a.name||'opt').toString(), name: a.name || '옵션', price: parseInt(price)||0, sub: a.desc||'' });
+    });
+
+    wrap.innerHTML = opts.map((o, i) => `
+        <label class="fin-opt" data-finish="${o.code}" data-extra="${o.price}" data-name="${(o.name||'').replace(/"/g,'&quot;')}">
+            <input type="radio" name="finish" value="${o.code}" ${i===0?'checked':''} onchange="window._cdOnFinishChange()">
+            <span class="fin-opt-label"><b>${o.name}</b>${o.sub?`<span style="color:var(--text-light); font-size:11px; margin-left:4px;">${o.sub}</span>`:''}</span>
+            <span class="fin-opt-price">${o.price>0?'+'+o.price.toLocaleString()+'원':'+0원'}</span>
+        </label>
+    `).join('');
+    // 첫 옵션을 state에 적용
+    state.finishCode = 'none';
+    state.finishName = '마감 없음';
+    state.finishExtra = 0;
 }
 
 function updateSizeLabels() {
-    const f = getFabric();
-    if (!f) return;
-    const ma = state.qty === 'sample' ? 0.5 : (state.qty === '1ma' ? 1 : (state.customQty || 1));
-    const totalH = state.qty === 'sample' ? 45 : Math.round(f.height_per_ma_cm * ma);
-    const totalW = state.qty === 'sample' ? 54 : f.width_cm;
-    document.getElementById('topSizeLabel').textContent = totalW + 'cm';
-    document.getElementById('sideSizeLabel').textContent = totalH + 'cm';
+    document.getElementById('topSizeLabel').textContent = (state.orderWmm/10).toFixed(0) + 'cm';
+    document.getElementById('sideSizeLabel').textContent = (state.orderHmm/10).toFixed(0) + 'cm';
 }
 
 // ────────────────────────────────────────────────
@@ -202,43 +265,47 @@ window._cdSelectLayout = function(name) {
     window._cdRender();
 };
 
-// ────────────────────────────────────────────────
-// 수량 선택
-// ────────────────────────────────────────────────
-window._cdSelectQty = function(q) {
-    state.qty = q; state.customQty = 0;
-    document.querySelectorAll('.qty-option').forEach(el => el.classList.toggle('active', el.dataset.qty === q));
-    document.getElementById('qtyCustom').value = '';
+// ════════════════════════════════════════════════════
+// 회배 계산기 + 수량
+// ════════════════════════════════════════════════════
+window._cdCalcHoebae = function() {
+    const wEl = document.getElementById('orderWmm');
+    const hEl = document.getElementById('orderHmm');
+    const qEl = document.getElementById('orderQty');
+    let w = parseInt(wEl.value) || 1300;
+    let h = parseInt(hEl.value) || 1000;
+    let q = parseInt(qEl.value) || 1;
+    if (w > 1300) { w = 1300; wEl.value = 1300; showToast('가로는 최대 1300mm입니다'); }
+    if (w < 100) w = 100;
+    if (h < 100) h = 100;
+    if (q < 1) q = 1;
+    state.orderWmm = w; state.orderHmm = h; state.orderQty = q;
+    const hoebae = calcHoebae();
+    const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
+    const totalPrice = itemPrice * q + (state.finishExtra || 0) * q;
+    document.getElementById('hoebaeAmount').textContent = hoebae.toFixed(2) + ' 회배';
+    document.getElementById('hoebaePrice').textContent = itemPrice.toLocaleString() + '원';
     updateSizeLabels();
     updatePrice();
     window._cdRender();
 };
 
-window._cdApplyCustomQty = function() {
-    const v = parseInt(document.getElementById('qtyCustom').value);
-    if (!v || v < 1) { showToast('1마 이상 입력해주세요'); return; }
-    if (v > 500) { showToast('최대 500마까지 가능합니다'); return; }
-    state.qty = 'custom'; state.customQty = v;
-    document.querySelectorAll('.qty-option').forEach(el => el.classList.remove('active'));
-    updateSizeLabels();
-    updatePrice();
-    window._cdRender();
+window._cdQtyChg = function(d) {
+    const qEl = document.getElementById('orderQty');
+    let q = (parseInt(qEl.value) || 1) + d;
+    if (q < 1) q = 1; if (q > 999) q = 999;
+    qEl.value = q;
+    window._cdCalcHoebae();
 };
 
 function updatePrice() {
-    const f = getFabric();
-    if (!f) return;
-    let unit, qtyLabel, total;
-    if (state.qty === 'sample') {
-        unit = f.price_sample; qtyLabel = '샘플 1장'; total = unit;
-    } else if (state.qty === 'custom' && state.customQty > 0) {
-        unit = f.price_1ma; qtyLabel = state.customQty + '마'; total = unit * state.customQty;
-    } else {
-        unit = f.price_1ma; qtyLabel = '1마'; total = unit;
-    }
-    total += (state.finishExtra || 0);
-    document.getElementById('pUnit').textContent = unit.toLocaleString() + '원';
-    document.getElementById('pQty').textContent = qtyLabel + (state.finishExtra ? ' + ' + FINISH_LABELS[state.finish] : '');
+    const hoebae = calcHoebae();
+    const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
+    const finish = (state.finishExtra || 0) * state.orderQty;
+    const total = itemPrice * state.orderQty + finish;
+    document.getElementById('pUnit').textContent = itemPrice.toLocaleString() + '원 (' + hoebae.toFixed(2) + '회배)';
+    document.getElementById('pQty').textContent = state.orderQty + '개';
+    document.getElementById('pFinish').textContent = state.finishExtra > 0 ? state.finishName + ' (+' + finish.toLocaleString() + '원)' : '마감 없음';
     document.getElementById('pTotal').textContent = total.toLocaleString() + '원';
 }
 
@@ -273,8 +340,9 @@ window._cdOnSizeInput = function(which) {
 window._cdOnFinishChange = function() {
     const checked = document.querySelector('input[name="finish"]:checked');
     if (!checked) return;
-    state.finish = checked.value;
     const label = checked.closest('.fin-opt');
+    state.finishCode = checked.value;
+    state.finishName = label.dataset.name || label.querySelector('b').textContent;
     state.finishExtra = parseInt(label.dataset.extra || '0', 10);
     updatePrice();
 };
@@ -401,10 +469,11 @@ window._cpUpdateCartUI = function() {
             body.innerHTML = cart.map(function(it, i) {
                 const opts = [
                     it.fabricName,
-                    it.imageSize,
+                    '출력 ' + (it.orderSize || ''),
+                    it.hoebae ? it.hoebae.toFixed(2) + '회배' : null,
                     it.layout,
                     it.qtyLabel,
-                    it.finish !== 'raw' ? '마감: ' + (FINISH_LABELS[it.finish] || it.finish) : null
+                    (it.finishCode && it.finishCode !== 'none') ? '마감: ' + (it.finishName || '') : null
                 ].filter(Boolean).join(' · ');
                 return '<div class="cart-item">' +
                     '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
@@ -460,26 +529,30 @@ function captureThumbDataUrl() {
 
 function buildCartItem() {
     const f = getFabric();
-    if (!f) return null;
-    let unit, qtyLabel, base, qtyVal;
-    if (state.qty === 'sample') { unit = f.price_sample; qtyLabel = '샘플 1장'; base = unit; qtyVal = 'sample'; }
-    else if (state.qty === 'custom' && state.customQty > 0) { unit = f.price_1ma; qtyLabel = state.customQty + '마'; base = unit * state.customQty; qtyVal = state.customQty + '마'; }
-    else { unit = f.price_1ma; qtyLabel = '1마'; base = unit; qtyVal = '1마'; }
-    const price = base + (state.finishExtra || 0);
+    if (!f) { showToast('원단을 선택해주세요'); return null; }
+    const hoebae = calcHoebae();
+    const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
+    const finish = (state.finishExtra || 0) * state.orderQty;
+    const price = itemPrice * state.orderQty + finish;
     return {
         id: 't' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
-        title: state.imgFileName ? state.imgFileName.replace(/\.[^.]+$/, '') : '내 패턴 원단',
+        title: (state.imgFileName ? state.imgFileName.replace(/\.[^.]+$/, '') : '내 패턴 원단') + ' (' + (f.name||'') + ')',
         thumbDataUrl: captureThumbDataUrl(),
         imgDataUrl: state.imgDataUrl,
         imgFileName: state.imgFileName,
         fabricCode: f.code,
         fabricName: f.name,
-        fabricWidth: f.width_cm,
-        imageSize: state.imgWcm + 'x' + state.imgHcm + 'cm',
+        orderWmm: state.orderWmm,
+        orderHmm: state.orderHmm,
+        orderSize: state.orderWmm + '×' + state.orderHmm + 'mm',
+        hoebae: hoebae,
+        unitPrice: itemPrice,
+        imageSize: state.imgWcm + '×' + state.imgHcm + 'cm',
         layout: state.layout,
-        qtyValue: qtyVal,
-        qtyLabel: qtyLabel,
-        finish: state.finish,
+        qtyValue: state.orderQty,
+        qtyLabel: state.orderQty + '개',
+        finishCode: state.finishCode,
+        finishName: state.finishName,
         finishExtra: state.finishExtra || 0,
         price: price,
         addedAt: new Date().toISOString()
@@ -516,7 +589,7 @@ window._cpOpenCheckout = function() {
     // 요약 렌더
     const list = document.getElementById('coItemList');
     list.innerHTML = cart.map(function(it){
-        const opts = [it.fabricName, it.imageSize, it.qtyLabel, it.finish!=='raw'?FINISH_LABELS[it.finish]:''].filter(Boolean).join(' · ');
+        const opts = [it.fabricName, '출력 ' + (it.orderSize||''), it.qtyLabel, (it.finishCode&&it.finishCode!=='none')?it.finishName:''].filter(Boolean).join(' · ');
         return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + it.price.toLocaleString() + '원</div></div>';
     }).join('');
     document.getElementById('coTotalAmt').textContent = calcCartTotal().toLocaleString() + '원';
@@ -529,7 +602,10 @@ window._cpCloseCheckout = function() {
     document.body.style.overflow = '';
 };
 
-// 체크아웃 → vip_orders 등록 + 이미지들 업로드
+// 체크아웃 → orders 테이블 등록 + Toss/무통장 처리
+// Toss Payments 클라이언트 키 (cafe2626 메인몰과 동일 — 운영용)
+const TOSS_CLIENT_KEY = 'live_ck_KNbdOvk5rkkQE9aLdzlV3n07xlzm';
+
 window._cpSubmitOrder = async function() {
     const name = (document.getElementById('coName').value||'').trim();
     const phone = (document.getElementById('coPhone').value||'').trim();
@@ -559,7 +635,7 @@ window._cpSubmitOrder = async function() {
         ) : null;
         if (!sb) throw new Error('연결 실패');
 
-        // 디자인 이미지들 업로드
+        // 1) 디자인 이미지 업로드 (각 카트 아이템)
         const uploadedFiles = [];
         for (let i = 0; i < cart.length; i++) {
             const it = cart[i];
@@ -581,36 +657,78 @@ window._cpSubmitOrder = async function() {
         }
 
         const total = calcCartTotal();
-        const lines = cart.map(function(it,i){
-            return (i+1)+'. '+it.title+'\n   - '+it.fabricName+'\n   - 이미지 '+it.imageSize+' | 레이아웃 '+it.layout+' | '+it.qtyLabel+' | 마감: '+(FINISH_LABELS[it.finish]||it.finish)+'\n   - '+it.price.toLocaleString()+'원';
-        }).join('\n');
-
-        const fullAddr = '['+zip+'] '+addr1+' '+addr2;
-        const memoText = '[Cotton Print 주문]\n결제: '+(payMethod==='bank'?'무통장 입금':'카드결제 (담당자 연락 후 처리)')+'\n주소: '+fullAddr+'\n메모: '+(memo||'없음')+'\n이메일: '+(email||'없음')+'\n\n=== 주문 상품 ===\n'+lines+'\n\n합계: '+total.toLocaleString()+'원';
-
-        await sb.from('vip_orders').insert({
-            customer_name: name,
-            customer_phone: phone,
-            preferred_manager: '본사담당자',
-            memo: memoText,
-            files: uploadedFiles.length ? uploadedFiles : null,
-            status: 'pending'
+        // orders.items: 통합주문관리에서 인식할 수 있는 형식으로
+        const items = cart.map(function(it){
+            return {
+                product_code: it.fabricCode,
+                product_name: it.title,
+                fabric: it.fabricName,
+                width_mm: it.orderWmm,
+                height_mm: it.orderHmm,
+                hoebae: it.hoebae,
+                layout: it.layout,
+                qty: it.qtyValue,
+                addons: (it.finishCode && it.finishCode !== 'none') ? [{ code: it.finishCode, name: it.finishName, price: it.finishExtra }] : [],
+                unit_price: it.unitPrice,
+                price: it.price,
+                source: 'cotton-print'
+            };
         });
 
-        // 카트 비우기
+        const fullAddr = '[' + zip + '] ' + addr1 + ' ' + addr2;
+        const adminNote = '[COTTON-PRINT] 출처: cotton-print.com\n결제방법: ' + (payMethod==='bank'?'무통장입금':'카드결제(Toss)') + '\n이메일: ' + (email||'없음');
+
+        // 2) orders 테이블에 등록 → 통합주문관리에 즉시 표시
+        const orderInsertPayload = {
+            order_date: new Date().toISOString(),
+            manager_name: name,         // 통합주문관리에서 "고객 정보" 컬럼에 표시됨
+            phone: phone,
+            address: fullAddr,
+            request_note: memo || '',
+            status: payMethod === 'bank' ? '접수됨' : '임시작성',
+            payment_status: payMethod === 'bank' ? '입금대기' : '미결제',
+            payment_method: payMethod === 'bank' ? '무통장입금' : '카드',
+            total_amount: total,
+            discount_amount: 0,
+            items: items,
+            site_code: 'KR',
+            files: uploadedFiles.length ? uploadedFiles : null,
+            admin_note: adminNote
+        };
+        const { data: orderData, error: orderErr } = await sb.from('orders').insert([orderInsertPayload]).select();
+        if (orderErr) throw orderErr;
+        const newOrderId = orderData[0].id;
+
+        // 3) 결제 분기
+        if (payMethod === 'card') {
+            // Toss Payments 카드결제
+            if (!window.TossPayments) {
+                alert('결제 모듈을 불러오지 못했습니다. 무통장입금으로 다시 시도해주세요.');
+                throw new Error('Toss SDK missing');
+            }
+            const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+            const orderName = 'Cotton Print 주문 #' + newOrderId;
+            tossPayments.requestPayment('카드', {
+                amount: total,
+                orderId: 'CP-' + Date.now() + '-' + newOrderId,
+                orderName: orderName.length > 100 ? orderName.slice(0,100) : orderName,
+                customerName: name,
+                customerEmail: email || undefined,
+                successUrl: window.location.origin + '/order-success?db_id=' + newOrderId,
+                failUrl: window.location.origin + '/order-fail?db_id=' + newOrderId
+            }).catch(err => {
+                if (err.code !== 'USER_CANCEL') alert('결제 오류: ' + err.message);
+                btn.disabled = false; btn.innerHTML = orig;
+            });
+            return; // Toss SDK가 페이지 이동시킴
+        }
+
+        // 4) 무통장입금: 즉시 안내
         saveCart([]);
         window._cpUpdateCartUI();
         window._cpCloseCheckout();
         window._cpCartClose();
-
-        // 완료 안내
-        if (payMethod === 'bank') {
-            alert('✅ 주문이 접수되었습니다!\n\n[입금 안내]\n농협 351-1234-5678-90 (주)카멜레온프린팅\n금액: ' + total.toLocaleString() + '원\n\n* 입금 확인 후 영업일 내 제작 시작됩니다.\n* 담당자가 영업일 1~2일 내 연락드립니다.\n* 문의: 031-366-1984');
-        } else {
-            alert('✅ 주문이 접수되었습니다!\n\n카드결제 진행을 위해 담당자가 영업일 1~2일 내 연락드립니다.\n금액: ' + total.toLocaleString() + '원\n* 문의: 031-366-1984');
-        }
-
-        // 폼 초기화
+        alert('✅ 주문이 접수되었습니다! (주문번호: ' + newOrderId + ')\n\n[입금 안내]\n농협 351-1234-5678-90 (주)카멜레온프린팅\n금액: ' + total.toLocaleString() + '원\n\n* 입금 확인 후 영업일 내 제작 시작됩니다.\n* 통합주문관리에서 처리 진행 상황을 확인하실 수 있습니다.\n* 문의: 031-366-1984');
         ['coName','coPhone','coEmail','coZip','coAddr1','coAddr2','coMemo'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=''; });
     } catch(e) {
         alert('주문 처리 실패: ' + e.message);
@@ -791,10 +909,12 @@ async function autoLoadPatternFromUrl() {
 // ────────────────────────────────────────────────
 // 초기화
 // ────────────────────────────────────────────────
-populateFabricSelect();
-updateFabricDetail();
-updateSizeLabels();
-updatePrice();
+// DB에서 원단/마감 옵션 로드 후 첫 그룹 자동 선택
+loadDbFabrics().then(() => {
+    updateSizeLabels();
+    updatePrice();
+    if (window._cdCalcHoebae) window._cdCalcHoebae();
+});
 autoLoadPatternFromUrl();
 if (window._cpUpdateCartUI) window._cpUpdateCartUI();
 

@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Toss Payments SDK (한국 카드결제) -->
+<script src="https://js.tosspayments.com/v1/payment"></script>
 <style>
 :root {
     --cream: #faf6ed;
@@ -415,37 +417,20 @@ a { text-decoration: none; color: inherit; }
     <!-- 우측: 옵션 사이드바 -->
     <aside class="sidebar">
 
-        <!-- 원단 선택 -->
+        <!-- 원단 선택 (DB 동기화) -->
         <div class="side-card">
             <div class="side-card-title">
                 원단 선택
-                <span class="side-card-link" onclick="alert('원단 안내 페이지 준비 중입니다.')">원단 안내</span>
+                <span class="side-card-link" onclick="window._cdRefreshDb()"><i class="fa-solid fa-rotate"></i> 새로고침</span>
             </div>
-            <div class="fabric-types">
-                <div class="fabric-type active" data-fabric="cotton" onclick="window._cdSelectFabric('cotton')">
-                    <div class="fabric-type-icon"><i class="fa-solid fa-leaf"></i></div>
-                    <div class="fabric-type-label">면/인견</div>
-                </div>
-                <div class="fabric-type" data-fabric="poly" onclick="window._cdSelectFabric('poly')">
-                    <div class="fabric-type-icon"><i class="fa-solid fa-flag"></i></div>
-                    <div class="fabric-type-label">폴리</div>
-                </div>
-                <div class="fabric-type" data-fabric="sticker" onclick="window._cdSelectFabric('sticker')">
-                    <div class="fabric-type-icon"><i class="fa-solid fa-note-sticky"></i></div>
-                    <div class="fabric-type-label">스티커</div>
-                </div>
-                <div class="fabric-type" data-fabric="silk" onclick="window._cdSelectFabric('silk')">
-                    <div class="fabric-type-icon"><i class="fa-solid fa-feather"></i></div>
-                    <div class="fabric-type-label">실크</div>
-                </div>
+            <div id="fabricGroupTabs" class="fabric-types" style="margin-bottom:8px;">
+                <div style="grid-column:1/-1; padding:14px; text-align:center; color:var(--text-light); font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> 원단 불러오는 중...</div>
             </div>
             <select class="fabric-select" id="fabricSelect" onchange="window._cdOnFabricChange()"></select>
             <div class="fabric-detail">
-                <div class="fabric-detail-img" id="fabricImg" style="background-image:url(https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg); background-size:cover; background-position:center;"></div>
+                <div class="fabric-detail-img" id="fabricImg" style="background:#f5f5f4;"></div>
                 <div class="fabric-detail-text" id="fabricDesc">
-                    <b>면/인견 면20수 평직 (소폭:110cm)</b>
-                    두께가 얇고 가장 일반적으로 사용되는 20수 평직 원단입니다.
-                    봄·가을용 원피스, 셔츠, 바지뿐만 아니라 주방용품, 식탁보, 커튼 등 다양한 제품에 활용하기 좋습니다.
+                    원단을 선택해주세요.
                 </div>
             </div>
         </div>
@@ -474,35 +459,43 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 마감 옵션 -->
+        <!-- 출력 사이즈 + 회배 계산기 (대폭 1300mm 기준) -->
         <div class="side-card">
-            <div class="side-card-title">마감 옵션</div>
+            <div class="side-card-title">
+                출력 사이즈 (실제 출력)
+                <span style="font-size:10px; font-weight:600; color:var(--text-light);">대폭 1300mm</span>
+            </div>
+            <div class="size-controls">
+                <div class="size-input-group">
+                    <label>가로 (mm) — 최대 1300</label>
+                    <input type="number" class="size-input" id="orderWmm" value="1300" min="100" max="1300" step="10" oninput="window._cdCalcHoebae()">
+                </div>
+                <div class="size-input-group">
+                    <label>세로 (mm) — 무제한</label>
+                    <input type="number" class="size-input" id="orderHmm" value="1000" min="100" step="10" oninput="window._cdCalcHoebae()">
+                </div>
+            </div>
+            <div style="margin-top:10px; padding:12px; background:var(--cream); border-radius:8px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:var(--text-light);">회배 (1.3 m² 기준)</span>
+                    <b id="hoebaeAmount" style="color:var(--brown-dark);">1.00 회배</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-light);">회배 단가 × 회배 수</span>
+                    <b id="hoebaePrice" style="color:var(--accent);">15,000원</b>
+                </div>
+            </div>
+            <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
+                회배 = 가로(mm) × 세로(mm) ÷ 1,300,000. 회배당 15,000원. 1300×1000mm = 1회배 = 15,000원
+            </div>
+        </div>
+
+        <!-- 마감 옵션 (DB 동기화 — admin_products의 addons) -->
+        <div class="side-card">
+            <div class="side-card-title">마감 옵션 <span style="font-size:10px; color:var(--text-light); font-weight:600;">선택한 원단의 옵션</span></div>
             <div id="finishOptions" style="display:flex; flex-direction:column; gap:8px;">
-                <label class="fin-opt" data-finish="raw" data-extra="0">
-                    <input type="radio" name="finish" value="raw" checked onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>마감 없음</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">생지 그대로 컷팅</span></span>
-                    <span class="fin-opt-price">+0원</span>
-                </label>
-                <label class="fin-opt" data-finish="hem" data-extra="3000">
-                    <input type="radio" name="finish" value="hem" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>가장자리 시접 처리</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">올풀림 방지</span></span>
-                    <span class="fin-opt-price">+3,000원</span>
-                </label>
-                <label class="fin-opt" data-finish="rod" data-extra="5000">
-                    <input type="radio" name="finish" value="rod" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>봉 거치 (rod pocket)</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">상단 봉 통과</span></span>
-                    <span class="fin-opt-price">+5,000원</span>
-                </label>
-                <label class="fin-opt" data-finish="eyelet" data-extra="8000">
-                    <input type="radio" name="finish" value="eyelet" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>아일릿(고리) 부착</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">200mm 간격</span></span>
-                    <span class="fin-opt-price">+8,000원</span>
-                </label>
-                <label class="fin-opt" data-finish="velcro" data-extra="6000">
-                    <input type="radio" name="finish" value="velcro" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>벨크로 부착</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">탈부착 용이</span></span>
-                    <span class="fin-opt-price">+6,000원</span>
-                </label>
+                <div style="padding:14px; text-align:center; color:var(--text-light); font-size:12px;">원단 선택 후 표시됩니다</div>
             </div>
         </div>
 
@@ -535,35 +528,22 @@ a { text-decoration: none; color: inherit; }
 
         <!-- 수량 -->
         <div class="side-card">
-            <div class="side-card-title">수량</div>
-            <div class="qty-options">
-                <div class="qty-option" data-qty="sample" onclick="window._cdSelectQty('sample')">
-                    <div>
-                        <div class="qty-option-label">샘플 <span style="font-weight:400;color:var(--text-light);">(54×45cm)</span></div>
-                        <div class="qty-option-sub">사이즈 확인용</div>
-                    </div>
-                    <div class="qty-option-price">9,460원</div>
-                </div>
-                <div class="qty-option active" data-qty="1ma" onclick="window._cdSelectQty('1ma')">
-                    <div>
-                        <div class="qty-option-label">1마 <span style="font-weight:400;color:var(--text-light);">(110×91cm)</span></div>
-                        <div class="qty-option-sub">한 마 단위</div>
-                    </div>
-                    <div class="qty-option-price">17,820원</div>
-                </div>
-                <div class="qty-custom">
-                    <input type="number" id="qtyCustom" placeholder="1 ~ 500 마" min="1" max="500">
-                    <button onclick="window._cdApplyCustomQty()">적용</button>
-                </div>
+            <div class="side-card-title">주문 수량</div>
+            <div style="display:flex; align-items:center; gap:10px; padding:12px; background:#fafaf9; border-radius:8px;">
+                <button onclick="window._cdQtyChg(-1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">−</button>
+                <input type="number" id="orderQty" value="1" min="1" max="999" style="flex:1; text-align:center; border:1px solid var(--cream-dark); border-radius:8px; padding:8px; font-size:15px; font-weight:700;" oninput="window._cdCalcHoebae()">
+                <button onclick="window._cdQtyChg(1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">+</button>
+                <span style="font-size:12px; color:var(--text-light);">개</span>
             </div>
         </div>
 
         <!-- 가격 + 주문 -->
         <div class="side-card">
             <div class="price-summary">
-                <div class="price-row"><span>원단 단가</span><span id="pUnit">17,820원</span></div>
-                <div class="price-row"><span>수량</span><span id="pQty">1마</span></div>
-                <div class="price-row total"><span>합계</span><span id="pTotal">17,820원</span></div>
+                <div class="price-row"><span>출력 단가 (회배×15,000)</span><span id="pUnit">15,000원</span></div>
+                <div class="price-row"><span>수량</span><span id="pQty">1개</span></div>
+                <div class="price-row"><span>마감</span><span id="pFinish">-</span></div>
+                <div class="price-row total"><span>합계</span><span id="pTotal">15,000원</span></div>
             </div>
             <button class="order-btn" id="orderBtn" onclick="window._cdAddToCart()" disabled>
                 <i class="fa-solid fa-cart-plus"></i> &nbsp;장바구니에 담기
@@ -665,6 +645,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=2"></script>
+<script src="cotton_designer.js?v=3"></script>
 </body>
 </html>
