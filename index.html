@@ -13,9 +13,23 @@
     var hostKr = location.hostname.indexOf('cafe2626') >= 0 || location.hostname.indexOf('chameleon-print.pages.dev') >= 0;
     var isKrUser = (!langParam || langParam === 'ko' || langParam === 'kr') && hostKr;
 
-    // ★ 패브릭 인쇄 경로 → cotton-print.com 즉시 리다이렉트 (한국어 사용자만)
-    if (isKrUser && (slugAll === 'fabric-print' || slugAll === 'fabric')) {
-        location.replace('https://www.cotton-print.com/');
+    // ★ 패브릭 인쇄 경로 → cotton-print.com 즉시 리다이렉트 (모든 언어)
+    if (slugAll === 'fabric-print' || slugAll === 'fabric') {
+        // 호스트 → 언어 자동 감지 + URL ?lang= 우선
+        var h = location.hostname;
+        var lang = langParam;
+        if (!lang) {
+            if (h.indexOf('cafe0101') >= 0) lang = 'ja';
+            else if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) lang = 'en';
+            else if (h.indexOf('cafe2626') >= 0 || h.indexOf('chameleon-print.pages.dev') >= 0) lang = 'ko';
+        }
+        // 정규화 (kr→ko, jp→ja, us→en)
+        if (lang === 'kr') lang = 'ko';
+        if (lang === 'jp') lang = 'ja';
+        if (lang === 'us') lang = 'en';
+        var dest = 'https://www.cotton-print.com/';
+        if (lang && lang !== 'ko') dest += '?lang=' + lang;
+        location.replace(dest);
         return;
     }
 
