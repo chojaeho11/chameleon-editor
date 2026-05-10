@@ -1,0 +1,16 @@
+{
+  "rounds": 1,
+  "per_category": 1,
+  "sleep": 8,
+  "dry_run": false,
+  "categories": [
+    "animal",
+    "plant",
+    "people",
+    "modern",
+    "scenery",
+    "typo",
+    "kids",
+    "etc"
+  ]
+}

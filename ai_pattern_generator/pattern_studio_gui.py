@@ -76,22 +76,38 @@ def read_env() -> dict:
     if not ENV_FILE.exists():
         return {}
     data = {}
-    for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+    try:
+        text = ENV_FILE.read_text(encoding="utf-8-sig")  # BOM 있으면 자동 제거
+    except Exception:
+        text = ENV_FILE.read_text(encoding="utf-8", errors="replace")
+    for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = line.split("=", 1)
-        data[k.strip()] = v.strip()
+        v = v.strip()
+        # 따옴표로 감싸진 값 풀기
+        if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
+            v = v[1:-1]
+        data[k.strip()] = v
     return data
 
 
 def write_env(data: dict):
+    """값을 따옴표로 감싸서 저장 — 공백/특수문자 안전. 입력값은 양끝 공백/개행 제거."""
+    def q(v):
+        v = (v or "").strip().replace("\r", "").replace("\n", "")
+        # 내부 따옴표 이스케이프
+        v = v.replace('"', '\\"')
+        return f'"{v}"'
+
     lines = [
-        "# Cotton Pattern Studio — auto-generated, do not commit",
-        f"OPENAI_API_KEY={data.get('OPENAI_API_KEY', '')}",
-        f"SUPABASE_URL={data.get('SUPABASE_URL', 'https://qinvtnhiidtmrzosyvys.supabase.co')}",
-        f"SUPABASE_SERVICE_KEY={data.get('SUPABASE_SERVICE_KEY', '')}",
+        "# Cotton Pattern Studio - auto-generated, do not commit",
+        f"OPENAI_API_KEY={q(data.get('OPENAI_API_KEY'))}",
+        f"SUPABASE_URL={q(data.get('SUPABASE_URL', 'https://qinvtnhiidtmrzosyvys.supabase.co'))}",
+        f"SUPABASE_SERVICE_KEY={q(data.get('SUPABASE_SERVICE_KEY'))}",
     ]
+    # 끝에 줄바꿈 보장 (BOM 없이 UTF-8)
     ENV_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -350,8 +366,15 @@ class PatternStudioApp(tk.Tk):
         })
 
     def _save_keys(self):
-        oai = self.openai_var.get().strip()
-        sb = self.sb_var.get().strip()
+        # 양끝 공백/개행 + 사용자가 실수로 따옴표 채로 붙여넣은 경우도 제거
+        def clean(s):
+            s = (s or "").strip().strip('"').strip("'").strip()
+            return s.replace("\r", "").replace("\n", "")
+        oai = clean(self.openai_var.get())
+        sb = clean(self.sb_var.get())
+        # 정리된 값을 입력칸에도 다시 반영 (사용자가 시각적으로 확인 가능)
+        self.openai_var.set(oai)
+        self.sb_var.set(sb)
         if not oai or not oai.startswith("sk-"):
             messagebox.showwarning("OpenAI 키 확인", "OpenAI API 키는 보통 'sk-'로 시작합니다.")
         if not sb or not sb.startswith("eyJ"):
@@ -444,6 +467,10 @@ class PatternStudioApp(tk.Tk):
             creationflags = 0
             if os.name == "nt":
                 creationflags = subprocess.CREATE_NO_WINDOW
+            # 자식 프로세스 stdout이 UTF-8로 출력되도록 환경변수 강제
+            env = os.environ.copy()
+            env["PYTHONIOENCODING"] = "utf-8"
+            env["PYTHONUTF8"] = "1"
             self.proc = subprocess.Popen(
                 cmd,
                 cwd=str(HERE),
@@ -454,6 +481,7 @@ class PatternStudioApp(tk.Tk):
                 errors="replace",
                 bufsize=1,
                 creationflags=creationflags,
+                env=env,
             )
         except Exception as e:
             self._log_line(f"✗ 실행 실패: {e}", "err")
