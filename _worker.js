@@ -397,6 +397,18 @@ export default {
                 h.set('Cache-Control', 'public, max-age=300, s-maxage=300');
                 return new Response(resp.body, { status: 200, headers: h });
             }
+            // /mypage → cotton_mypage.html (디자이너 마이페이지)
+            if (path === 'mypage' || path === 'mypage.html' || path === 'designer-mypage') {
+                const rewriteUrl = new URL('/cotton_mypage.html', url.origin);
+                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
+                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
+                    const loc = new URL(resp.headers.get('Location'), url.origin);
+                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+                }
+                const h = new Headers(resp.headers);
+                h.set('Cache-Control', 'no-cache');
+                return new Response(resp.body, { status: 200, headers: h });
+            }
             // 루트 → cotton_print.html 직접 서빙
             if (path === '' || path === 'index.html') {
                 const rewriteUrl = new URL('/cotton_print.html', url.origin);
