@@ -301,7 +301,7 @@ def build_prompt(motif: str) -> str:
 
 
 def generate_image(prompt: str, size: str = "1024x1024",
-                   quality: str = "high") -> Image.Image:
+                   quality: str = "medium") -> Image.Image:
     """OpenAI 이미지 생성 — gpt-image-2 우선, 실패 시 단계별 폴백.
 
     모델 우선순위 (2026-05 기준 OpenAI 실제 출시 모델):
@@ -475,7 +475,8 @@ def register_pattern(name: str, category: str, author: str,
 # ============================================================
 # 워커: 카테고리 1개에 대해 패턴 1개 생성
 # ============================================================
-def generate_one(category: str, output_dir: Path, dry_run: bool = False) -> dict:
+def generate_one(category: str, output_dir: Path, dry_run: bool = False,
+                  quality: str = "medium") -> dict:
     cat_info = CATEGORIES[category]
     motif = random.choice(cat_info["motifs"])
     designer = random_designer_name()
@@ -485,9 +486,9 @@ def generate_one(category: str, output_dir: Path, dry_run: bool = False) -> dict
     print(f"  │  motif: {motif[:60]}{'…' if len(motif) > 60 else ''}")
 
     # 1) AI 이미지 생성
-    print("  │  [1/4] AI 이미지 생성 중...", end="", flush=True)
+    print(f"  │  [1/4] AI 이미지 생성 중 (quality={quality})...", end="", flush=True)
     t0 = time.time()
-    raw_img = generate_image(build_prompt(motif))
+    raw_img = generate_image(build_prompt(motif), quality=quality)
     print(f" ✓ ({time.time() - t0:.1f}s)")
 
     # 2) Seamless 타일 가공
@@ -552,6 +553,8 @@ def main():
                    help="로컬 저장만, 업로드/등록 안 함 (테스트용)")
     p.add_argument("--output", type=str, default="./generated_patterns",
                    help="로컬 저장 경로")
+    p.add_argument("--quality", choices=["low", "medium", "high"], default="medium",
+                   help="이미지 품질: low(~$0.01,~10s) / medium(~$0.04,~30-60s) / high(~$0.17,~90-180s)")
     args = p.parse_args()
 
     cats = args.categories or list(CATEGORIES.keys())
@@ -569,6 +572,7 @@ def main():
     print("=" * 64)
     print(f" 카테고리:  {', '.join(CATEGORIES[c]['ko'] for c in cats)} ({len(cats)}개)")
     print(f" 라운드:    {rounds_label} × 라운드당 {per_round}장")
+    print(f" 품질:      {args.quality} (이미지당 약 " + {"low":"10초/$0.01","medium":"30-60초/$0.04","high":"90-180초/$0.17"}[args.quality] + ")")
     print(f" 대기:      {args.sleep}초 (이미지 사이)")
     print(f" 저장:      {output_dir.resolve()}")
     print(f" Dry-run:   {args.dry_run}")
@@ -590,7 +594,7 @@ def main():
             for cat in cats:
                 for i in range(args.per_category):
                     try:
-                        generate_one(cat, output_dir, dry_run=args.dry_run)
+                        generate_one(cat, output_dir, dry_run=args.dry_run, quality=args.quality)
                         done += 1
                     except Exception as e:
                         failed += 1

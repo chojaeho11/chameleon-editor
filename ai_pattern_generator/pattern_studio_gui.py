@@ -269,15 +269,31 @@ class PatternStudioApp(tk.Tk):
         self.sleep_var = tk.IntVar(value=8)
         ttk.Spinbox(opts_grid, from_=0, to=600, textvariable=self.sleep_var, width=10).grid(row=2, column=1, sticky="e", pady=4)
 
+        ttk.Label(opts_grid, text="이미지 품질", style="Card.TLabel").grid(row=3, column=0, sticky="w", pady=4)
+        self.quality_var = tk.StringVar(value="medium")
+        quality_combo = ttk.Combobox(opts_grid, textvariable=self.quality_var,
+                                      values=["low", "medium", "high"],
+                                      state="readonly", width=8)
+        quality_combo.grid(row=3, column=1, sticky="e", pady=4)
+
         self.dryrun_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(opts_grid, text="Dry-run (로컬 저장만, 등록 안 함)",
-                        variable=self.dryrun_var).grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
+                        variable=self.dryrun_var).grid(row=4, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
-        # 비용 안내
-        cost_label = ttk.Label(opts_card,
-                               text="💰 gpt-image-1 medium · 약 $0.04/장 · 시간당 30~50장",
+        # 비용 안내 — 품질에 따라 동적 갱신
+        self.cost_label = ttk.Label(opts_card,
+                               text="",
                                style="Card.TLabel", foreground=COLORS["accent"], font=("Segoe UI", 9, "italic"))
-        cost_label.pack(anchor="w", padx=14, pady=(0, 12))
+        self.cost_label.pack(anchor="w", padx=14, pady=(0, 12))
+        def _update_cost(*_):
+            info = {
+                "low":    "💰 low · ~$0.01/장 · ~10초/장 · 시간당 ~250장 (디테일 적음)",
+                "medium": "💰 medium · ~$0.04/장 · ~30-60초/장 · 시간당 ~60-100장 (권장)",
+                "high":   "💰 high · ~$0.17/장 · ~90-180초/장 · 시간당 ~20-40장 (최고 품질)",
+            }
+            self.cost_label.config(text=info.get(self.quality_var.get(), ""))
+        quality_combo.bind("<<ComboboxSelected>>", _update_cost)
+        _update_cost()
 
         # ─── 우측: 카테고리 ───
         right = ttk.Frame(body)
@@ -351,6 +367,7 @@ class PatternStudioApp(tk.Tk):
         if "rounds" in cfg: self.rounds_var.set(cfg["rounds"])
         if "per_category" in cfg: self.percat_var.set(cfg["per_category"])
         if "sleep" in cfg: self.sleep_var.set(cfg["sleep"])
+        if "quality" in cfg: self.quality_var.set(cfg["quality"])
         if "dry_run" in cfg: self.dryrun_var.set(cfg["dry_run"])
         if "categories" in cfg:
             for code, v in self.cat_vars.items():
@@ -361,6 +378,7 @@ class PatternStudioApp(tk.Tk):
             "rounds": self.rounds_var.get(),
             "per_category": self.percat_var.get(),
             "sleep": self.sleep_var.get(),
+            "quality": self.quality_var.get(),
             "dry_run": self.dryrun_var.get(),
             "categories": [c for c, v in self.cat_vars.items() if v.get()],
         })
@@ -455,6 +473,7 @@ class PatternStudioApp(tk.Tk):
             "--rounds", str(self.rounds_var.get()),
             "--per-category", str(self.percat_var.get()),
             "--sleep", str(self.sleep_var.get()),
+            "--quality", self.quality_var.get(),
             "--categories", *cats,
         ]
         if self.dryrun_var.get():
