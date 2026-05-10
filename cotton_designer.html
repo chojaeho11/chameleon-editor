@@ -34,6 +34,23 @@ window.cdSwitchLang = function(lang) {
 window.addEventListener('DOMContentLoaded', function(){
     var cur = window.__CD_LANG || 'ko';
     document.querySelectorAll('.cd-flag').forEach(function(b){ b.classList.toggle('active', b.dataset.lang === cur); });
+    // JP/EN: 무통장 입금 옵션 숨김 + 카드 결제 자동 선택
+    if (cur && cur !== 'ko') {
+        var bankOpt = document.getElementById('coPayBankOpt');
+        if (bankOpt) bankOpt.style.display = 'none';
+        var cardRadio = document.querySelector('input[name="payMethod"][value="card"]');
+        if (cardRadio) cardRadio.checked = true;
+    }
+    // 모든 내부 링크에 lang 자동 부착 (cotton_print.html과 동일 로직)
+    if (cur && cur !== 'ko') {
+        document.querySelectorAll('a[href]').forEach(function(a){
+            var href = a.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+            if (href.startsWith('http://') || href.startsWith('https://')) return;
+            var sep = href.indexOf('?') >= 0 ? '&' : '?';
+            a.setAttribute('href', href + sep + 'lang=' + cur);
+        });
+    }
 });
 // 디자이너 페이지 i18n 사전
 window.__CD_I18N = {
@@ -824,20 +841,20 @@ a { text-decoration: none; color: inherit; }
         <!-- 가격 + 주문 -->
         <div class="side-card">
             <div class="price-summary">
-                <div class="price-row"><span>출력 단가 (회배×15,000)</span><span id="pUnit">15,000원</span></div>
-                <div class="price-row"><span>수량</span><span id="pQty">1개</span></div>
-                <div class="price-row"><span>마감 / 회배</span><span id="pFinish">-</span></div>
-                <div class="price-row" id="pDiscountRow" style="display:none;"><span>대량 할인 <span class="discount-badge" id="pDiscBadge">-</span></span><span id="pDiscount" style="color:#dc2626;">-0원</span></div>
-                <div class="price-row total"><span>합계</span><span id="pTotal">15,000원</span></div>
+                <div class="price-row"><span data-cdi18n="p_unit">출력 단가</span><span id="pUnit">15,000원</span></div>
+                <div class="price-row"><span data-cdi18n="p_qty">수량</span><span id="pQty">1개</span></div>
+                <div class="price-row"><span data-cdi18n="p_finish">마감 / 회배</span><span id="pFinish">-</span></div>
+                <div class="price-row" id="pDiscountRow" style="display:none;"><span data-cdi18n="p_discount">대량 할인</span><span id="pDiscount" style="color:#dc2626;">-0원</span></div>
+                <div class="price-row total"><span data-cdi18n="p_total">합계</span><span id="pTotal">15,000원</span></div>
             </div>
             <button class="order-btn" id="orderBtn" onclick="window._cdAddToCart()" disabled>
-                <i class="fa-solid fa-cart-plus"></i> &nbsp;장바구니에 담기
+                <i class="fa-solid fa-cart-plus"></i> &nbsp;<span data-cdi18n="btn_cart">장바구니에 담기</span>
             </button>
             <button class="order-btn" id="buyNowBtn" onclick="window._cdBuyNow()" disabled style="margin-top:8px; background:#fff; color:var(--brown-dark); border:1.5px solid var(--brown-dark);">
-                <i class="fa-solid fa-bolt"></i> &nbsp;바로 주문하기
+                <i class="fa-solid fa-bolt"></i> &nbsp;<span data-cdi18n="btn_buynow">바로 주문하기</span>
             </button>
             <div class="help-link">
-                도움이 필요하신가요? <a href="tel:031-366-1984">📞 031-366-1984</a>
+                <span data-cdi18n="help_link">도움이 필요하신가요?</span> <a href="tel:031-366-1984">📞 031-366-1984</a>
             </div>
         </div>
     </aside>
@@ -849,23 +866,23 @@ a { text-decoration: none; color: inherit; }
 <div class="cart-overlay" id="cartOverlay" onclick="window._cpCartClose()"></div>
 <aside class="cart-drawer" id="cartDrawer">
     <div class="cart-head">
-        <h3><i class="fa-solid fa-cart-shopping"></i> 장바구니 <span id="cartCountInline" style="font-size:13px; color:var(--text-light); font-weight:400; margin-left:6px;"></span></h3>
+        <h3><i class="fa-solid fa-cart-shopping"></i> <span data-cdi18n="cart_drawer_title">장바구니</span> <span id="cartCountInline" style="font-size:13px; color:var(--text-light); font-weight:400; margin-left:6px;"></span></h3>
         <button onclick="window._cpCartClose()">&times;</button>
     </div>
     <div class="cart-body" id="cartBody">
         <div class="cart-empty">
             <i class="fa-regular fa-folder-open"></i>
-            <div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;">장바구니가 비어있습니다</div>
-            <div style="font-size:12px;">디자인을 완성하고 장바구니에 담아보세요</div>
+            <div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;" data-cdi18n="cart_empty">장바구니가 비어있습니다</div>
+            <div style="font-size:12px;" data-cdi18n="cart_empty_sub">디자인을 완성하고 장바구니에 담아보세요</div>
         </div>
     </div>
     <div class="cart-foot">
         <div class="cart-total">
-            <span class="cart-total-label">총 결제금액</span>
+            <span class="cart-total-label" data-cdi18n="cart_total">총 결제금액</span>
             <span class="cart-total-amt" id="cartTotalAmt">0원</span>
         </div>
         <button class="cart-checkout-btn" id="cartCheckoutBtn" onclick="window._cpOpenCheckout()" disabled>
-            <i class="fa-solid fa-bag-shopping"></i> &nbsp;주문하기
+            <i class="fa-solid fa-bag-shopping"></i> &nbsp;<span data-cdi18n="cart_checkout">주문하기</span>
         </button>
     </div>
 </aside>
@@ -925,49 +942,49 @@ a { text-decoration: none; color: inherit; }
     <div class="co-card" style="position:relative;">
         <button class="co-close" onclick="window._cpCloseCheckout()">&times;</button>
         <div class="co-form">
-            <h3>주문 정보 입력</h3>
-            <div class="co-form-sub">정확히 입력해주세요. 결제는 무통장 입금 또는 본사 연락 후 카드결제 가능합니다.</div>
+            <h3 data-cdi18n="co_title">주문 정보 입력</h3>
+            <div class="co-form-sub" data-cdi18n="co_subtitle">정확히 입력해주세요.</div>
 
             <div class="co-section">
-                <span class="co-label">받으시는 분 <span style="color:#dc2626;">*</span></span>
-                <input id="coName" class="co-input" placeholder="홍길동">
+                <span class="co-label"><span data-cdi18n="co_name">받으시는 분</span> <span style="color:#dc2626;">*</span></span>
+                <input id="coName" class="co-input" placeholder="홍길동" data-cdi18n-ph="co_name">
             </div>
             <div class="co-section">
-                <span class="co-label">연락처 <span style="color:#dc2626;">*</span></span>
+                <span class="co-label"><span data-cdi18n="co_phone">연락처</span> <span style="color:#dc2626;">*</span></span>
                 <div class="co-row">
                     <input id="coPhone" class="co-input" placeholder="010-0000-0000">
-                    <input id="coEmail" class="co-input" type="email" placeholder="이메일 (선택)">
+                    <input id="coEmail" class="co-input" type="email" placeholder="이메일 (선택)" data-cdi18n-ph="co_email">
                 </div>
             </div>
             <div class="co-section">
-                <span class="co-label">배송지 <span style="color:#dc2626;">*</span></span>
-                <input id="coZip" class="co-input" placeholder="우편번호" style="width:160px; margin-bottom:6px;">
-                <input id="coAddr1" class="co-input" placeholder="기본 주소 (도로명/지번)" style="margin-bottom:6px;">
-                <input id="coAddr2" class="co-input" placeholder="상세 주소 (동/호수)">
+                <span class="co-label"><span data-cdi18n="co_address">배송지</span> <span style="color:#dc2626;">*</span></span>
+                <input id="coZip" class="co-input" placeholder="우편번호" data-cdi18n-ph="co_zip" style="width:160px; margin-bottom:6px;">
+                <input id="coAddr1" class="co-input" placeholder="기본 주소 (도로명/지번)" data-cdi18n-ph="co_addr1" style="margin-bottom:6px;">
+                <input id="coAddr2" class="co-input" placeholder="상세 주소 (동/호수)" data-cdi18n-ph="co_addr2">
             </div>
             <div class="co-section">
-                <span class="co-label">배송 메모 (선택)</span>
-                <input id="coMemo" class="co-input" placeholder="예: 부재 시 경비실에 맡겨주세요">
+                <span class="co-label" data-cdi18n="co_memo">배송 메모 (선택)</span>
+                <input id="coMemo" class="co-input" placeholder="예: 부재 시 경비실에 맡겨주세요" data-cdi18n-ph="co_memo_ph">
             </div>
             <div class="co-section">
-                <span class="co-label">결제 방법</span>
+                <span class="co-label" data-cdi18n="co_pay_method">결제 방법</span>
                 <div class="co-pay-opts">
-                    <label class="co-pay-opt"><input type="radio" name="payMethod" value="bank" checked> <i class="fa-solid fa-building-columns" style="color:var(--accent);"></i> 무통장 입금 <span style="color:var(--text-light); margin-left:auto; font-size:11px;">즉시 처리</span></label>
-                    <label class="co-pay-opt"><input type="radio" name="payMethod" value="card"> <i class="fa-solid fa-credit-card" style="color:var(--accent);"></i> 카드 결제 <span style="color:var(--text-light); margin-left:auto; font-size:11px;">담당자 연락 후 결제</span></label>
+                    <label class="co-pay-opt" id="coPayBankOpt"><input type="radio" name="payMethod" value="bank" checked> <i class="fa-solid fa-building-columns" style="color:var(--accent);"></i> <span data-cdi18n="co_pay_bank">무통장 입금</span> <span style="color:var(--text-light); margin-left:auto; font-size:11px;" data-cdi18n="co_pay_bank_sub">즉시 처리</span></label>
+                    <label class="co-pay-opt"><input type="radio" name="payMethod" value="card"> <i class="fa-solid fa-credit-card" style="color:var(--accent);"></i> <span data-cdi18n="co_pay_card">카드 결제</span> <span style="color:var(--text-light); margin-left:auto; font-size:11px;" data-cdi18n="co_pay_card_sub">토스/Stripe 결제</span></label>
                 </div>
             </div>
         </div>
         <aside class="co-summary">
-            <h4>주문 요약</h4>
+            <h4 data-cdi18n="co_summary">주문 요약</h4>
             <div id="coItemList" style="flex:1; overflow-y:auto;"></div>
             <div class="co-summary-total">
-                <span style="font-size:13px; color:var(--text-light); font-weight:700;">합계</span>
+                <span style="font-size:13px; color:var(--text-light); font-weight:700;" data-cdi18n="co_total">합계</span>
                 <span class="co-summary-total-amt" id="coTotalAmt">0원</span>
             </div>
             <button class="co-submit-btn" id="coSubmitBtn" onclick="window._cpSubmitOrder()">
-                <i class="fa-solid fa-paper-plane"></i> &nbsp;주문 완료하기
+                <i class="fa-solid fa-paper-plane"></i> &nbsp;<span data-cdi18n="co_submit">주문 완료하기</span>
             </button>
-            <div style="font-size:10px; color:var(--text-light); text-align:center; margin-top:8px;">
+            <div style="font-size:10px; color:var(--text-light); text-align:center; margin-top:8px;" data-cdi18n="co_note">
                 결제완료 확인 후 영업일 내 제작 시작됩니다
             </div>
         </aside>
@@ -980,6 +997,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=12"></script>
+<script src="cotton_designer.js?v=13"></script>
 </body>
 </html>
