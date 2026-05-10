@@ -93,14 +93,16 @@ function showError(msg) {
 
         const stripe = Stripe(STRIPE_PK);
 
-        // Edge function: create-stripe-session (메인몰에 이미 있음)
+        // Edge function: create-stripe-session
+        // cancel_url을 cotton-print 홈으로 → Stripe 좌측 상단 "Chameleon Printing" 클릭 시 홈으로 복귀
+        const homeUrl = 'https://www.cotton-print.com/?lang=' + lang;
         const { data: sess, error: sErr } = await sb.functions.invoke('create-stripe-session', {
             body: {
                 amount: localAmount,
                 currency: currency,
                 order_id: order.id,
-                cancel_url: location.href,
-                success_url: 'https://www.cafe2626.com/success.html?db_id=' + order.id
+                cancel_url: homeUrl,
+                success_url: 'https://www.cotton-print.com/?paid=1&order_id=' + order.id + '&lang=' + lang
             }
         });
         if (sErr) throw sErr;

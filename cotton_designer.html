@@ -148,7 +148,17 @@ window.__CD_I18N = {
     side_output_max: { ko:'대폭 130cm', ja:'最大幅130cm', en:'Max width 130cm' },
     p_discount: { ko:'대량 할인', ja:'大量割引', en:'Volume discount' },
     hook: { ko:'고리', ja:'吊り具', en:'Hook' },
-    acc: { ko:'부자재', ja:'付属品', en:'Accessory' }
+    acc: { ko:'부자재', ja:'付属品', en:'Accessory' },
+    unit_hoebae: { ko:'회배', ja:'回杯', en:'unit' },
+    processing: { ko:'처리 중...', ja:'処理中...', en:'Processing...' },
+    confirm_remove: { ko:'장바구니에서 제거하시겠습니까?', ja:'カートから削除しますか？', en:'Remove from cart?' },
+    alert_no_image: { ko:'먼저 이미지를 업로드해주세요', ja:'まず画像をアップロードしてください', en:'Please upload an image first' },
+    alert_no_fabric: { ko:'원단을 선택해주세요', ja:'生地を選んでください', en:'Please select a fabric' },
+    alert_name_required: { ko:'받으시는 분 성함을 입력해주세요.', ja:'受取人の氏名を入力してください。', en:'Please enter recipient name.' },
+    alert_phone_required: { ko:'연락처를 입력해주세요.', ja:'電話番号を入力してください。', en:'Please enter phone number.' },
+    alert_address_required: { ko:'배송지를 입력해주세요.', ja:'配送先を入力してください。', en:'Please enter shipping address.' },
+    alert_added_to_cart: { ko:'장바구니에 담았습니다', ja:'カートに追加しました', en:'Added to cart' },
+    alert_order_failed: { ko:'주문 처리 실패', ja:'注文失敗', en:'Order failed' }
 };
 window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.ko || ''; };
 function applyCdI18n() {
@@ -1013,6 +1023,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=14"></script>
+<script src="cotton_designer.js?v=15"></script>
 </body>
 </html>

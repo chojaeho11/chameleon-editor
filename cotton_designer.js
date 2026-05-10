@@ -104,13 +104,41 @@ const state = {
     accExtra: 0
 };
 
+// 언어별 원단/색상 이름 매핑 (i18n 사전과 동기화)
+const FABRIC_NAMES_I18N = {
+    cotton20: { ko:'면20수 평직', ja:'コットン20番 平織', en:'Cotton 20s Plain' },
+    cotton30: { ko:'면30수 평직', ja:'コットン30番 平織', en:'Cotton 30s Plain' },
+    cotton16: { ko:'면16수 평직', ja:'コットン16番 平織', en:'Cotton 16s Plain' },
+    cotton10: { ko:'면10수 평직', ja:'コットン10番 平織', en:'Cotton 10s Plain' },
+    chiffon:  { ko:'쉬폰', ja:'シフォン', en:'Chiffon' },
+    oxford:   { ko:'옥스포드', ja:'オックスフォード', en:'Oxford' },
+    rayon:    { ko:'레이온/인견', ja:'レーヨン', en:'Rayon' },
+    linen:    { ko:'린넬', ja:'リネン', en:'Linen' }
+};
+const COLOR_NAMES_I18N = {
+    white:   { ko:'화이트', ja:'ホワイト', en:'White' },
+    natural: { ko:'네츄럴', ja:'ナチュラル', en:'Natural' },
+    ivory:   { ko:'백아이보리', ja:'アイボリー', en:'Ivory' }
+};
+function getLangFabricName(type) {
+    var lang = window.__CD_LANG || 'ko';
+    var d = FABRIC_NAMES_I18N[type];
+    return d ? (d[lang] || d.ko) : type;
+}
+function getLangColorName(color) {
+    var lang = window.__CD_LANG || 'ko';
+    var d = COLOR_NAMES_I18N[color];
+    return d ? (d[lang] || d.ko) : color;
+}
+
 function getFabric() {
     const t = FABRIC_TYPES[state.fabricType] || FABRIC_TYPES.cotton20;
     const isCotton = t.isCotton;
-    const colorLabel = isCotton ? (' (' + (COLOR_LABELS[state.fabricColor]||'') + ')') : '';
+    const localizedName = getLangFabricName(state.fabricType);
+    const colorLabel = isCotton ? (' (' + getLangColorName(state.fabricColor) + ')') : '';
     return {
         code: state.fabricCode,
-        name: t.name + colorLabel,
+        name: localizedName + colorLabel,
         desc: t.desc,
         isCotton: isCotton,
         type: state.fabricType,
@@ -280,8 +308,36 @@ function updateFabricDetail() {
     document.getElementById('fabricDesc').innerHTML = `<b>${f.name}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${f.desc} · 대폭 130cm</div>`;
 }
 
-// 원단 마감은 HTML에 하드코딩 (가재단/오버록/인터록/말아박기) — 여기서는 noop
-function renderFinishOptions() { /* 마감은 HTML 하드코딩 */ }
+// 마감 옵션 가격 라벨 동적 갱신 (언어/통화)
+function renderFinishOptions() {
+    var unitLabel = window.cdT ? (window.cdT('unit_hoebae') || '회배') : '회배';
+    document.querySelectorAll('#finishOptions .fin-opt').forEach(function(label){
+        var extra = parseInt(label.dataset.extra || '0', 10);
+        var priceEl = label.querySelector('.fin-opt-price');
+        if (!priceEl) return;
+        if (extra === 0) {
+            priceEl.textContent = '+' + cdFmtPrice(0) + ' / ' + unitLabel;
+            // 가격 표시: +0원/회배 → +0원/회배 (KR), +¥0/回杯 (JP), +$0/unit (EN)
+        } else {
+            priceEl.textContent = '+' + cdFmtPrice(extra) + ' / ' + unitLabel;
+        }
+    });
+    // 고리 옵션 가격
+    document.querySelectorAll('#hookCollapse .fin-opt').forEach(function(label){
+        var extra = parseInt(label.dataset.extra || '0', 10);
+        var priceEl = label.querySelector('.fin-opt-price');
+        if (!priceEl) return;
+        priceEl.textContent = '+' + cdFmtPrice(extra);
+    });
+    // 부자재 가격
+    document.querySelectorAll('#accCollapse .fin-opt').forEach(function(label){
+        var extra = parseInt(label.dataset.extra || '0', 10);
+        var priceEl = label.querySelector('.fin-opt-price');
+        if (!priceEl) return;
+        priceEl.textContent = '+' + cdFmtPrice(extra);
+    });
+}
+// 페이지 로드 시 한 번 + 언어 변경 시 자동 호출됨 (cdSwitchLang은 페이지 새로고침이라 아래 로직 불필요)
 
 function updateSizeLabels() {
     document.getElementById('topSizeLabel').textContent = state.orderWcm.toFixed(0) + 'cm';
@@ -623,7 +679,7 @@ function captureThumbDataUrl() {
 
 function buildCartItem() {
     const f = getFabric();
-    if (!f) { showToast('원단을 선택해주세요'); return null; }
+    if (!f) { showToast(window.cdT?window.cdT("alert_no_fabric"):"원단을 선택해주세요"); return null; }
     const rawHoebae = calcHoebae();
     const hoebae = Math.max(1, rawHoebae);
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
@@ -672,7 +728,7 @@ function buildCartItem() {
 }
 
 window._cdAddToCart = function() {
-    if (!state.img || !state.imgDataUrl) { showToast('먼저 이미지를 업로드해주세요'); return; }
+    if (!state.img || !state.imgDataUrl) { showToast(window.cdT?window.cdT("alert_no_image"):"먼저 이미지를 업로드해주세요"); return; }
     const item = buildCartItem();
     if (!item) return;
     const cart = getCart();
@@ -684,7 +740,7 @@ window._cdAddToCart = function() {
 };
 
 window._cdBuyNow = function() {
-    if (!state.img || !state.imgDataUrl) { showToast('먼저 이미지를 업로드해주세요'); return; }
+    if (!state.img || !state.imgDataUrl) { showToast(window.cdT?window.cdT("alert_no_image"):"먼저 이미지를 업로드해주세요"); return; }
     const item = buildCartItem();
     if (!item) return;
     // 임시로 cart에 추가 후 즉시 체크아웃
@@ -767,9 +823,9 @@ window._cpSubmitOrder = async function() {
     const memo = (document.getElementById('coMemo').value||'').trim();
     const payMethod = (document.querySelector('input[name="payMethod"]:checked')||{}).value || 'bank';
 
-    if (!name) { alert('받으시는 분 성함을 입력해주세요.'); return; }
-    if (!phone) { alert('연락처를 입력해주세요.'); return; }
-    if (!addr1) { alert('배송지를 입력해주세요.'); return; }
+    if (!name) { alert(window.cdT?window.cdT("alert_name_required"):"받으시는 분 성함을 입력해주세요."); return; }
+    if (!phone) { alert(window.cdT?window.cdT("alert_phone_required"):"연락처를 입력해주세요."); return; }
+    if (!addr1) { alert(window.cdT?window.cdT("alert_address_required"):"배송지를 입력해주세요."); return; }
 
     const cart = getCart();
     if (cart.length === 0) return;
@@ -777,7 +833,7 @@ window._cpSubmitOrder = async function() {
     const btn = document.getElementById('coSubmitBtn');
     btn.disabled = true;
     const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (window.cdT?window.cdT("processing"):"처리 중...") + '';
 
     try {
         const sb = window.supabase ? window.supabase.createClient(
@@ -897,10 +953,10 @@ window._cpSubmitOrder = async function() {
 // (구) 주문 → 메인몰 리다이렉트 (디자이너 패턴 자동로드 시 사용 가능)
 // ────────────────────────────────────────────────
 window._cdSubmitOrder = async function() {
-    if (!state.img || !state.imgDataUrl) { showToast('먼저 이미지를 업로드해주세요'); return; }
+    if (!state.img || !state.imgDataUrl) { showToast(window.cdT?window.cdT("alert_no_image"):"먼저 이미지를 업로드해주세요"); return; }
 
     const f = getFabric();
-    if (!f) { showToast('원단을 선택해주세요'); return; }
+    if (!f) { showToast(window.cdT?window.cdT("alert_no_fabric"):"원단을 선택해주세요"); return; }
 
     const orderBtn = document.getElementById('orderBtn');
     const originalText = orderBtn.innerHTML;
@@ -1068,8 +1124,12 @@ async function autoLoadPatternFromUrl() {
 loadDbFabrics().then(() => {
     updateSizeLabels();
     updatePrice();
+    renderFinishOptions(); // 마감/고리/부자재 가격 라벨 동적 갱신 (언어/통화)
+    updateFabricDetail(); // 원단 상세 텍스트도 새로 적용
     if (window._cdCalcHoebae) window._cdCalcHoebae();
 });
+// i18n 적용 후 한 번 더 (ui i18n 적용된 후 가격 라벨 다시)
+setTimeout(function(){ renderFinishOptions(); updateFabricDetail(); updatePrice(); }, 200);
 autoLoadPatternFromUrl();
 if (window._cpUpdateCartUI) window._cpUpdateCartUI();
 
