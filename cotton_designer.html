@@ -158,7 +158,8 @@ window.__CD_I18N = {
     alert_phone_required: { ko:'연락처를 입력해주세요.', ja:'電話番号を入力してください。', en:'Please enter phone number.' },
     alert_address_required: { ko:'배송지를 입력해주세요.', ja:'配送先を入力してください。', en:'Please enter shipping address.' },
     alert_added_to_cart: { ko:'장바구니에 담았습니다', ja:'カートに追加しました', en:'Added to cart' },
-    alert_order_failed: { ko:'주문 처리 실패', ja:'注文失敗', en:'Order failed' }
+    alert_order_failed: { ko:'주문 처리 실패', ja:'注文失敗', en:'Order failed' },
+    no_accessory: { ko:'현재 등록된 부자재가 없습니다', ja:'現在登録されている付属品がありません', en:'No accessories registered yet' }
 };
 window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.ko || ''; };
 function applyCdI18n() {
@@ -1023,6 +1024,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=15"></script>
+<script src="cotton_designer.js?v=16"></script>
 </body>
 </html>

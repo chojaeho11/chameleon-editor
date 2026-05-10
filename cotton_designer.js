@@ -251,7 +251,7 @@ async function loadDbFabrics() {
         const codes = (subCats||[]).map(c => c.code);
         let products = [];
         if (codes.length > 0) {
-            const { data } = await sb.from('admin_products').select('code, name, price, sort_order').in('category', codes);
+            const { data } = await sb.from('admin_products').select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order').in('category', codes);
             products = data || [];
         }
         const classified = products
@@ -264,22 +264,28 @@ async function loadDbFabrics() {
     } catch(e) { console.error('[loadDbFabrics]', e); }
 }
 
-// 고리 옵션 렌더 (DB_HOOKS)
+// 고리 옵션 렌더 (DB_HOOKS) — DB 고리 추가 항목 (HTML 하드코딩 7개 외)
 function renderHookOptions() {
     const list = document.getElementById('hookExtraList');
     if (!list) return;
-    if (!DB_HOOKS.length) {
-        list.innerHTML = '<div style="padding:8px 12px; font-size:11px; color:var(--text-light);">현재 등록된 고리 옵션이 없습니다</div>';
-        return;
-    }
+    if (!DB_HOOKS.length) { list.innerHTML = ''; return; }
     list.innerHTML = DB_HOOKS.map(h => {
         const p = parseInt(h.price) || 0;
-        return `<label class="fin-opt" data-hook="${h.code}" data-name="${(h.name||'').replace(/"/g,'&quot;')}" data-extra="${p}">
+        const localName = pickProductName(h);
+        return `<label class="fin-opt" data-hook="${h.code}" data-name="${(localName||'').replace(/"/g,'&quot;')}" data-extra="${p}">
             <input type="radio" name="hook" value="${h.code}" onchange="window._cdOnHookChange()">
-            <span class="fin-opt-label"><b>${h.name}</b></span>
-            <span class="fin-opt-price">+${p.toLocaleString()}원</span>
+            <span class="fin-opt-label"><b>${localName}</b></span>
+            <span class="fin-opt-price">+${cdFmtPrice(p)}</span>
         </label>`;
     }).join('');
+}
+
+// 언어별 admin_products 이름 선택 (name_jp / name_us / name_kr / name)
+function pickProductName(p) {
+    var lang = window.__CD_LANG || 'ko';
+    if (lang === 'ja') return p.name_jp || p.name_kr || p.name || '';
+    if (lang === 'en') return p.name_us || p.name_en || p.name_kr || p.name || '';
+    return p.name_kr || p.name || '';
 }
 
 // 부자재 옵션 렌더 (DB_ACCESSORIES)
@@ -287,15 +293,16 @@ function renderAccessoryOptions() {
     const list = document.getElementById('accessoryExtraList');
     if (!list) return;
     if (!DB_ACCESSORIES.length) {
-        list.innerHTML = '<div style="padding:8px 12px; font-size:11px; color:var(--text-light);">현재 등록된 부자재가 없습니다</div>';
+        list.innerHTML = '<div style="padding:8px 12px; font-size:11px; color:var(--text-light);">' + (window.cdT?window.cdT('no_accessory'):'현재 등록된 부자재가 없습니다') + '</div>';
         return;
     }
     list.innerHTML = DB_ACCESSORIES.map(a => {
         const p = parseInt(a.price) || 0;
-        return `<label class="fin-opt" data-acc="${a.code}" data-name="${(a.name||'').replace(/"/g,'&quot;')}" data-extra="${p}">
+        const localName = pickProductName(a);
+        return `<label class="fin-opt" data-acc="${a.code}" data-name="${(localName||'').replace(/"/g,'&quot;')}" data-extra="${p}">
             <input type="radio" name="accessory" value="${a.code}" onchange="window._cdOnAccessoryChange()">
-            <span class="fin-opt-label"><b>${a.name}</b></span>
-            <span class="fin-opt-price">+${p.toLocaleString()}원</span>
+            <span class="fin-opt-label"><b>${localName}</b></span>
+            <span class="fin-opt-price">+${cdFmtPrice(p)}</span>
         </label>`;
     }).join('');
 }
