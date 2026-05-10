@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Stripe Checkout - Cotton Print</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root { --cream:#faf6ed; --brown-dark:#451a03; --brown:#78350f; --accent:#b45309; --gold:#fde047; }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans KR',sans-serif;background:#fdfaf3;color:var(--brown-dark);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:#fff;border-radius:18px;padding:40px;max-width:480px;width:100%;box-shadow:0 12px 40px rgba(69,26,3,0.12);text-align:center;}
+.logo{font-family:Georgia,serif;font-size:24px;font-weight:900;letter-spacing:5px;color:var(--brown-dark);margin-bottom:6px;}
+.tag{font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:24px;}
+.spinner{font-size:42px;color:var(--brown);margin:24px 0;}
+h2{font-size:20px;color:var(--brown-dark);margin-bottom:8px;}
+p{font-size:13px;color:var(--brown);line-height:1.7;}
+.amount{font-size:32px;font-weight:900;color:var(--brown-dark);margin:18px 0;}
+.btn{display:inline-block;padding:14px 32px;border-radius:50px;background:linear-gradient(135deg,var(--brown-dark),var(--brown));color:var(--gold);font-weight:800;text-decoration:none;cursor:pointer;border:none;font-family:inherit;font-size:14px;letter-spacing:1px;margin-top:16px;}
+.err{color:#dc2626;padding:14px;background:#fef2f2;border-radius:10px;margin-top:14px;font-size:12px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">COTTON PRINT</div>
+    <div class="tag">— STRIPE CHECKOUT —</div>
+    <div id="loading">
+        <div class="spinner"><i class="fa-solid fa-spinner fa-spin"></i></div>
+        <h2 id="h2Title">Connecting to Stripe...</h2>
+        <p id="pSub">Please wait while we redirect you to secure payment.</p>
+    </div>
+    <div id="error" style="display:none;">
+        <div style="font-size:42px;color:#dc2626;margin:24px 0;"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <h2>Payment Error</h2>
+        <div class="err" id="errMsg"></div>
+        <a href="https://www.cotton-print.com/designer" class="btn"><i class="fa-solid fa-arrow-left"></i> Back to Designer</a>
+    </div>
+</div>
+<script>
+const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const STRIPE_PK = 'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG';
+
+const I18N = {
+    ko: { connecting:'Stripe로 연결 중...', wait:'안전 결제 페이지로 이동합니다.', err:'결제 진행 오류', back:'디자이너로 돌아가기' },
+    ja: { connecting:'Stripeに接続中...', wait:'安全な決済ページへリダイレクトします。', err:'決済エラー', back:'デザイナーへ戻る' },
+    en: { connecting:'Connecting to Stripe...', wait:'Redirecting to secure payment.', err:'Payment Error', back:'Back to Designer' }
+};
+
+function showError(msg) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('errMsg').textContent = msg;
+}
+
+(async function() {
+    try {
+        const params = new URLSearchParams(location.search);
+        const orderId = params.get('order_id') || params.get('id');
+        const lang = params.get('lang') || 'en';
+        const t = I18N[lang] || I18N.en;
+        document.getElementById('h2Title').textContent = t.connecting;
+        document.getElementById('pSub').textContent = t.wait;
+
+        if (!orderId) { showError('Missing order_id'); return; }
+        if (typeof Stripe === 'undefined') { showError('Stripe SDK failed to load.'); return; }
+
+        const sb = window.supabase.createClient(SB_URL, SB_KEY);
+        const { data: order, error } = await sb.from('orders').select('id,total_amount,manager_name,items,site_code,payment_status').eq('id', orderId).single();
+        if (error || !order) { showError('Order not found.'); return; }
+        if (order.payment_status === '결제완료' || order.payment_status === 'paid') { showError('Already paid.'); return; }
+
+        // KRW → 현지 통화 변환 (메인몰과 동일)
+        const rates = { KR:1, JP:0.1, US:0.001, CN:0.05, AR:0.001, ES:0.001, DE:0.001, FR:0.001 };
+        const currMap = { ja:'jpy', en:'usd' };
+        const currency = currMap[lang] || 'usd';
+        const country = lang === 'ja' ? 'JP' : 'US';
+        const rate = rates[country] || 0.001;
+        const zeroDec = ['jpy'];
+        const krw = order.total_amount || 0;
+        const localAmount = zeroDec.includes(currency) ? Math.round(krw * rate) : Math.round(krw * rate * 100) / 100;
+
+        // Stripe 최소금액 (USD 0.50, JPY 50)
+        const minAmt = zeroDec.includes(currency) ? 50 : 0.50;
+        if (localAmount < minAmt) {
+            showError('Amount below Stripe minimum (' + minAmt + ' ' + currency.toUpperCase() + ').');
+            return;
+        }
+
+        const stripe = Stripe(STRIPE_PK);
+
+        // Edge function: create-stripe-session (메인몰에 이미 있음)
+        const { data: sess, error: sErr } = await sb.functions.invoke('create-stripe-session', {
+            body: {
+                amount: localAmount,
+                currency: currency,
+                order_id: order.id,
+                cancel_url: location.href,
+                success_url: 'https://www.cafe2626.com/success.html?db_id=' + order.id
+            }
+        });
+        if (sErr) throw sErr;
+        if (sess?.error) throw new Error(sess.error);
+
+        await stripe.redirectToCheckout({ sessionId: sess.sessionId });
+    } catch(e) {
+        showError(e.message || String(e));
+    }
+})();
+</script>
+</body>
+</html>

@@ -837,13 +837,18 @@ window._cpSubmitOrder = async function() {
         if (orderErr) throw orderErr;
         const newOrderId = orderData[0].id;
 
-        // 3) 결제 분기
+        // 3) 결제 분기 — 언어별 PG 자동 분기
         if (payMethod === 'card') {
-            // 카드결제: Toss는 cafe2626.com에 등록된 도메인 키만 인증 가능
-            // → 카트 비우고 cafe2626.com/cotton_checkout.html 로 리다이렉트
             saveCart([]);
             window._cpUpdateCartUI();
-            location.href = 'https://www.cafe2626.com/cotton_checkout.html?order_id=' + newOrderId;
+            var lang = window.__CD_LANG || 'ko';
+            if (lang === 'ko') {
+                // 한국: Toss (cafe2626.com 등록 도메인)
+                location.href = 'https://www.cafe2626.com/cotton_checkout.html?order_id=' + newOrderId;
+            } else {
+                // 해외 (JP/EN): Stripe Checkout
+                location.href = '/cotton_stripe_checkout.html?order_id=' + newOrderId + '&lang=' + lang;
+            }
             return;
         }
 
