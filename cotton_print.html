@@ -1311,14 +1311,10 @@ function toggleKapuChat() {
     var fab = document.getElementById('kapuFab');
     if (wrap.style.display === 'none') {
         if (!frame.src || frame.src === '' || frame.src === location.href) {
-            // 언어별 메인몰 도메인의 챗봇 로드 (cotton-print.com에는 없음)
-            var psL = window.__PS_LANG || 'ko';
-            var chatBase;
-            if (psL === 'ja') chatBase = 'https://www.cafe0101.com';
-            else if (psL === 'en') chatBase = 'https://chameleon.design';
-            else chatBase = 'https://www.cafe2626.com';
+            // Same-origin 로드 — cotton-print.com에 chameleon-chatbot.html이 같이 배포됨
+            // (cafe2626 도메인 iframe은 X-Frame-Options로 막힐 수 있어 same-origin 우선)
             var langParam = (window._kapuLang || 'kr');
-            frame.src = chatBase + '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print';
+            frame.src = '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print';
         }
         wrap.style.display = 'block';
         fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';

@@ -6506,7 +6506,21 @@ footer, .site-footer { padding-top: 28px !important; }
    디자인 사이즈 / 작품판매 / 템플릿 그리드 — 시원하게 키움
    ============================================================ */
 
-/* ─── 디자인 사이즈 패널: 보라/핑크 그라디언트 외곽선 제거 ─── */
+/* ─── 디자인 사이즈 패널: 모든 외곽선/배경 제거 + 카드 더 크게 ─── */
+/* DSM 패널을 감싸는 .quick-menu-wrapper의 배경/외곽선 제거 */
+.quick-menu-wrapper {
+    background: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 8px 0 !important;
+    width: 100% !important;
+    max-width: 1280px !important;
+}
+
 #dsmInlinePanel {
     max-width: 1280px !important;
     margin: 28px auto !important;
@@ -6517,47 +6531,72 @@ footer, .site-footer { padding-top: 28px !important; }
     background-image: none !important;
     border: none !important;
     border-radius: 0 !important;
-    padding: 8px 0 24px !important;
+    padding: 8px 0 28px !important;
     margin-bottom: 8px !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
 }
 .dsm-section-title {
     color: var(--dr-ink) !important;
-    font-size: 20px !important;
+    font-size: 22px !important;
     font-weight: 900 !important;
     letter-spacing: -.02em !important;
-    margin: 0 0 14px 4px !important;
+    margin: 0 0 18px 4px !important;
 }
 .dsm-section-title i { color: var(--dr-purple-deep) !important; }
 .dsm-section-box:nth-of-type(2) .dsm-section-title { color: var(--dr-ink) !important; }
 .dsm-section-box:nth-of-type(2) .dsm-section-title i { color: #f59e0b !important; }
 
-/* DSM 카드 — 시원하게 더 크게 */
+/* 그리드 자체도 더 크고 시원한 간격 */
+.dsm-grid-home,
+#dsmInlinePanel div[style*="grid-template-columns:repeat(6"] {
+    gap: 18px !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+}
+
+/* DSM 카드 — 훨씬 더 크게 */
 .dsm-card {
     background: #fff !important;
     border: none !important;
-    border-radius: 18px !important;
-    padding: 28px 12px !important;
-    box-shadow: 0 6px 18px rgba(15,23,42,.06), 0 2px 6px rgba(15,23,42,.04) !important;
+    border-radius: 20px !important;
+    padding: 38px 14px !important;
+    min-height: 150px !important;
+    box-shadow: 0 8px 22px rgba(15,23,42,.07), 0 2px 8px rgba(15,23,42,.04) !important;
     transition: transform .25s ease, box-shadow .25s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 .dsm-card:hover {
-    transform: translateY(-5px) !important;
-    box-shadow: 0 18px 36px -8px rgba(99,102,241,.22), 0 6px 14px rgba(15,23,42,.08) !important;
+    transform: translateY(-6px) !important;
+    box-shadow: 0 22px 44px -8px rgba(99,102,241,.25), 0 8px 16px rgba(15,23,42,.08) !important;
     background: #fff !important;
 }
-.dsm-icon { font-size: 40px !important; margin-bottom: 12px !important; }
-.dsm-name { font-size: 15px !important; font-weight: 800 !important; margin-bottom: 4px !important; }
+.dsm-icon { font-size: 48px !important; margin-bottom: 14px !important; line-height: 1 !important; }
+.dsm-name { font-size: 16px !important; font-weight: 800 !important; margin-bottom: 4px !important; }
 .dsm-size { font-size: 12px !important; color: var(--dr-ink-3) !important; }
 
-/* 모바일 — 카드 사이즈 시원하게 유지 */
+/* 태블릿 — 4열로 줄임 (카드 더 큼) */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .dsm-grid-home,
+    #dsmInlinePanel div[style*="grid-template-columns:repeat(6"] {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+/* 모바일 — 3열 + 카드 사이즈 적당히 */
 @media (max-width: 768px) {
-    .dsm-section-title { font-size: 16px !important; }
-    .dsm-card { padding: 18px 8px !important; border-radius: 14px !important; }
-    .dsm-icon { font-size: 28px !important; margin-bottom: 8px !important; }
-    .dsm-name { font-size: 12px !important; }
+    .dsm-section-title { font-size: 18px !important; }
+    .dsm-card { padding: 22px 8px !important; min-height: 110px !important; border-radius: 16px !important; }
+    .dsm-icon { font-size: 32px !important; margin-bottom: 8px !important; }
+    .dsm-name { font-size: 13px !important; }
     .dsm-size { font-size: 10px !important; }
+    .dsm-grid-home,
+    #dsmInlinePanel div[style*="grid-template-columns:repeat(6"] {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 10px !important;
+    }
 }
 
 /* ─── 작품 판매 마켓 배너: 더 크고 시원하게 ─── */

@@ -37,7 +37,10 @@
       "Bash(perl -pi -e 's|fa-spinner fa-spin\"></i> 업로드 중\\\\.\\\\.\\\\.|fa-spinner fa-spin\"></i> \\\\x27 + \\(typeof t === \"function\" ? \\(t\\(\"up_uploading\"\\) \\\\|\\\\| \"업로드 중...\"\\) : \"업로드 중...\"\\) + \\\\x27|g' cotton_print.html)",
       "Bash(awk -F: '$2 < 1800 && $2 > 1700 || $2 > 1790 && $2 < 1900 {print}')",
       "Bash(awk 'NR>=1700 && NR<=1820 && /<script|<\\\\/script>|^\\\\\\(function|^}\\\\\\)\\\\\\(\\\\\\)/' \"c:/Users/win 10/Desktop/작업/cotton_print.html\")",
-      "Bash(awk 'NR>=1700 && NR<=1820 && /<script|<\\\\/script>|^\\\\\\(function|^}\\\\\\)\\\\\\(\\\\\\)/{print NR\": \"$0}' \"c:/Users/win 10/Desktop/작업/cotton_print.html\")"
+      "Bash(awk 'NR>=1700 && NR<=1820 && /<script|<\\\\/script>|^\\\\\\(function|^}\\\\\\)\\\\\\(\\\\\\)/{print NR\": \"$0}' \"c:/Users/win 10/Desktop/작업/cotton_print.html\")",
+      "Bash(awk 'NR>=1272 && NR<=2100 && /^<\\\\/div>|<div class=\"quick-menu-wrapper\"/{print NR\": \"$0}' \"c:/Users/win 10/Desktop/작업/index.html\")",
+      "Bash(awk 'NR>=1272 && NR<=2200 && /quick-menu-wrapper/{print NR\": \"$0}' \"c:/Users/win 10/Desktop/작업/index.html\")",
+      "Bash(awk 'NR>=1985 && NR<=2300 && /quick-menu-wrapper|dsmInlinePanel|<!-- /{print NR\": \"$0}' \"c:/Users/win 10/Desktop/작업/index.html\")"
     ],
     "additionalDirectories": [
       "\\tmp"
