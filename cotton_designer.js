@@ -13,6 +13,7 @@ const HOEBAE_UNIT_PRICE = 15000;
 const HOEBAE_AREA_CM2 = 100 * 100; // 1 m² = 10,000 cm²
 const ROLL_MAX_WIDTH_CM = 130;     // 대폭 한계 — 초과 시 이어박기
 const SEAM_EXTRA_KRW = 10000;      // 이어박기 추가비 (130cm 초과 시, 1회 부과)
+const HALF_HOEBAE_PRICE = 8000;    // 반마(0.5회배 이하) 특가
 
 // 원단 8종 (가격 동일, 회배 단가 사용)
 const FABRIC_TYPES = {
@@ -385,10 +386,29 @@ window._cdCalcHoebae = function() {
     const seamEl = document.getElementById('seamNotice');
     if (seamEl) seamEl.style.display = state.seamExtra > 0 ? '' : 'none';
     const rawHoebae = calcHoebae();
-    const hoebae = Math.max(1, rawHoebae); // 최소 1배 청구
-    const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    document.getElementById('hoebaeAmount').textContent = hoebae.toFixed(2) + ' 회배' + (rawHoebae < 1 ? ' (min 1)' : '');
+    const tier = getHoebaeTier();
+    const itemPrice = calcItemPrice();
+    var lang = window.__CD_LANG || 'ko';
+    var tierLbl = '';
+    if (tier === 'half') tierLbl = lang==='ja' ? ' (半マ特価)' : lang==='en' ? ' (half-meter)' : ' (반마 특가)';
+    else if (tier === 'min') tierLbl = lang==='ja' ? ' (1回杯適用)' : lang==='en' ? ' (1-unit min)' : ' (1회배 적용)';
+    document.getElementById('hoebaeAmount').textContent = rawHoebae.toFixed(2) + ' 회배' + tierLbl;
     document.getElementById('hoebaePrice').textContent = cdFmtPrice(itemPrice);
+    // 단가 안내 노티스 표시/숨김
+    const tierEl = document.getElementById('tierNotice');
+    if (tierEl) {
+        if (tier === 'half') {
+            tierEl.style.display = '';
+            tierEl.dataset.cdi18n = 'tier_half_notice';
+            tierEl.textContent = window.cdT ? window.cdT('tier_half_notice') : '🎉 0.5회배(반마) 이하는 8,000원 특가';
+        } else if (tier === 'min') {
+            tierEl.style.display = '';
+            tierEl.dataset.cdi18n = 'tier_min_notice';
+            tierEl.textContent = window.cdT ? window.cdT('tier_min_notice') : 'ℹ️ 1회배 미만은 1회배(15,000원)로 청구됩니다';
+        } else {
+            tierEl.style.display = 'none';
+        }
+    }
     updateSizeLabels();
     updatePrice();
     window._cdRender();
@@ -412,15 +432,34 @@ window._cdToggleCollapse = function(id, head) {
     if (card) card.classList.toggle('open', !open);
 };
 
-// 회배 (최소 1배) — 1m² 미만은 1로 처리
+// 회배 청구 단위 — 0.5 이하는 0.5(반마), 0.5< x <1 은 1, 그 이상은 실제 회배
 function calcBillableHoebae() {
-    return Math.max(1, calcHoebae());
+    var h = calcHoebae();
+    if (h <= 0.5) return 0.5;
+    if (h < 1) return 1;
+    return h;
+}
+
+// 출력 단가 — 반마(≤0.5)는 8,000원 / 1배 미만은 15,000원 / 1배 이상은 회배×15,000
+function calcItemPrice() {
+    var h = calcHoebae();
+    if (h <= 0.5) return HALF_HOEBAE_PRICE;          // 반마 특가
+    if (h < 1) return HOEBAE_UNIT_PRICE;             // 1회배 미만은 1회배 가격
+    return Math.round(h * HOEBAE_UNIT_PRICE);
+}
+
+// 현재 사이즈가 어느 단계인지 — 표시용 라벨
+function getHoebaeTier() {
+    var h = calcHoebae();
+    if (h <= 0.5) return 'half';
+    if (h < 1) return 'min';
+    return 'full';
 }
 
 function updatePrice() {
     const rawHoebae = calcHoebae();           // 표시용 (실제 비율)
-    const hoebae = calcBillableHoebae();      // 청구용 (최소 1)
-    const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
+    const hoebae = calcBillableHoebae();      // 청구용 회배 (반마=0.5 / 미만=1 / 그외 실제)
+    const itemPrice = calcItemPrice();        // 출력 단가 (반마 8,000 / 1배 미만 15,000 / 그외 회배×15,000)
     const finishPerItem = Math.round((state.finishExtra || 0) * hoebae); // 회배 비례
     const otherPerItem = (state.hookExtra || 0) + (state.accExtra || 0) + (state.seamExtra || 0);
     const perItem = itemPrice + finishPerItem + otherPerItem;
@@ -706,8 +745,8 @@ function buildCartItem() {
     const f = getFabric();
     if (!f) { showToast(window.cdT?window.cdT("alert_no_fabric"):"원단을 선택해주세요"); return null; }
     const rawHoebae = calcHoebae();
-    const hoebae = Math.max(1, rawHoebae);
-    const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
+    const hoebae = calcBillableHoebae();      // 반마=0.5 / 미만=1 / 그외 실제
+    const itemPrice = calcItemPrice();        // 반마 8,000 / 1배 미만 15,000 / 그외 회배×15,000
     const finishPerItem = Math.round((state.finishExtra||0) * hoebae);
     const otherPerItem = (state.hookExtra||0) + (state.accExtra||0) + (state.seamExtra||0);
     const subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
