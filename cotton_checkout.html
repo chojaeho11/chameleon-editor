@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>결제 진행 - Cotton Print</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://js.tosspayments.com/v1/payment"></script>
+<style>
+:root { --cream:#faf6ed; --brown-dark:#451a03; --brown:#78350f; --accent:#b45309; --gold:#fde047; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR',sans-serif; background:#fdfaf3; color:var(--brown-dark); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+.card { background:#fff; border-radius:18px; padding:40px; max-width:480px; width:100%; box-shadow:0 12px 40px rgba(69,26,3,0.12); text-align:center; }
+.logo { font-family:Georgia,serif; font-size:24px; font-weight:900; letter-spacing:5px; color:var(--brown-dark); margin-bottom:6px; }
+.tag { font-size:11px; letter-spacing:3px; color:var(--accent); font-weight:700; margin-bottom:24px; }
+.spinner { font-size:42px; color:var(--brown); margin:24px 0; }
+h2 { font-size:20px; color:var(--brown-dark); margin-bottom:8px; }
+p { font-size:13px; color:var(--brown); line-height:1.7; }
+.amount { font-size:32px; font-weight:900; color:var(--brown-dark); margin:18px 0; }
+.btn { display:inline-block; padding:14px 32px; border-radius:50px; background:linear-gradient(135deg,var(--brown-dark),var(--brown)); color:var(--gold); font-weight:800; text-decoration:none; cursor:pointer; border:none; font-family:inherit; font-size:14px; letter-spacing:1px; margin-top:16px; }
+.err { color:#dc2626; padding:14px; background:#fef2f2; border-radius:10px; margin-top:14px; font-size:12px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">COTTON PRINT</div>
+    <div class="tag">— PAYMENT —</div>
+    <div id="loading">
+        <div class="spinner"><i class="fa-solid fa-spinner fa-spin"></i></div>
+        <h2>결제 준비 중...</h2>
+        <p>주문 정보를 불러와 토스 페이먼츠를 호출합니다.</p>
+    </div>
+    <div id="error" style="display:none;">
+        <div style="font-size:42px; color:#dc2626; margin:24px 0;"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <h2>결제 진행 오류</h2>
+        <div class="err" id="errMsg"></div>
+        <a href="https://www.cotton-print.com/designer" class="btn"><i class="fa-solid fa-arrow-left"></i> 디자이너로 돌아가기</a>
+    </div>
+</div>
+<script>
+const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const TOSS_KEY = 'live_ck_KNbdOvk5rkkQE9aLdzlV3n07xlzm'; // cafe2626.com 등록 키
+
+function showError(msg) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('errMsg').textContent = msg;
+}
+
+(async function() {
+    try {
+        const params = new URLSearchParams(location.search);
+        const orderId = params.get('order_id') || params.get('id') || params.get('db_id');
+        if (!orderId) { showError('주문 ID가 없습니다.'); return; }
+        if (!window.TossPayments) { showError('토스 페이먼츠 SDK 로드 실패. 새로고침해주세요.'); return; }
+
+        const sb = window.supabase.createClient(SB_URL, SB_KEY);
+        const { data: order, error } = await sb.from('orders')
+            .select('id, total_amount, manager_name, request_note, status, payment_status, items')
+            .eq('id', orderId).single();
+
+        if (error || !order) { showError('주문을 찾을 수 없습니다: ' + (error?.message||'no data')); return; }
+        if (order.payment_status === '결제완료') { showError('이미 결제 완료된 주문입니다.'); return; }
+
+        const amount = order.total_amount || 0;
+        if (amount <= 0) { showError('결제 금액이 0원입니다.'); return; }
+
+        const customerName = order.manager_name || '주문자';
+        const itemCount = (order.items || []).length;
+        const orderName = ('Cotton Print 주문 · ' + (itemCount > 1 ? '외 ' + (itemCount-1) + '건' : (order.items?.[0]?.product_name || ''))).slice(0, 100);
+
+        const tossPayments = TossPayments(TOSS_KEY);
+        await tossPayments.requestPayment('카드', {
+            amount: amount,
+            orderId: 'CP-' + Date.now() + '-' + order.id,
+            orderName: orderName,
+            customerName: customerName,
+            successUrl: location.origin + '/success.html?db_id=' + order.id,
+            failUrl: location.origin + '/fail.html?db_id=' + order.id
+        });
+    } catch (e) {
+        if (e.code === 'USER_CANCEL') {
+            showError('결제가 취소되었습니다.');
+        } else {
+            showError(e.message || String(e));
+        }
+    }
+})();
+</script>
+</body>
+</html>

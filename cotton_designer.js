@@ -547,9 +547,14 @@ function buildCartItem() {
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
     const finish = (state.finishExtra || 0) * state.orderQty;
     const price = itemPrice * state.orderQty + finish;
+    // 파일명이 UUID/긴 hash면 무시, 깔끔한 이름만 표시
+    const cleanFile = state.imgFileName
+        ? state.imgFileName.replace(/\.[^.]+$/, '').replace(/^[a-f0-9-]{20,}$/i, '').slice(0, 20)
+        : '';
+    const title = (f.name || '내 패턴 원단') + (cleanFile ? ' — ' + cleanFile : '');
     return {
         id: 't' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
-        title: (state.imgFileName ? state.imgFileName.replace(/\.[^.]+$/, '') : '내 패턴 원단') + ' (' + (f.name||'') + ')',
+        title: title,
         thumbDataUrl: captureThumbDataUrl(),
         imgDataUrl: state.imgDataUrl,
         imgFileName: state.imgFileName,
@@ -719,26 +724,12 @@ window._cpSubmitOrder = async function() {
 
         // 3) 결제 분기
         if (payMethod === 'card') {
-            // Toss Payments 카드결제
-            if (!window.TossPayments) {
-                alert('결제 모듈을 불러오지 못했습니다. 무통장입금으로 다시 시도해주세요.');
-                throw new Error('Toss SDK missing');
-            }
-            const tossPayments = TossPayments(TOSS_CLIENT_KEY);
-            const orderName = 'Cotton Print 주문 #' + newOrderId;
-            tossPayments.requestPayment('카드', {
-                amount: total,
-                orderId: 'CP-' + Date.now() + '-' + newOrderId,
-                orderName: orderName.length > 100 ? orderName.slice(0,100) : orderName,
-                customerName: name,
-                customerEmail: email || undefined,
-                successUrl: window.location.origin + '/order-success?db_id=' + newOrderId,
-                failUrl: window.location.origin + '/order-fail?db_id=' + newOrderId
-            }).catch(err => {
-                if (err.code !== 'USER_CANCEL') alert('결제 오류: ' + err.message);
-                btn.disabled = false; btn.innerHTML = orig;
-            });
-            return; // Toss SDK가 페이지 이동시킴
+            // 카드결제: Toss는 cafe2626.com에 등록된 도메인 키만 인증 가능
+            // → 카트 비우고 cafe2626.com/cotton_checkout.html 로 리다이렉트
+            saveCart([]);
+            window._cpUpdateCartUI();
+            location.href = 'https://www.cafe2626.com/cotton_checkout.html?order_id=' + newOrderId;
+            return;
         }
 
         // 4) 무통장입금: 즉시 안내
