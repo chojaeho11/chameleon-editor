@@ -1068,7 +1068,21 @@
         return m ? decodeURIComponent(m[1]) : null;
     }
     async function _deletePatternRow(sb, p) {
-        // 1) Storage 파일 삭제 (원본 + 썸네일 + 목업들)
+        // ⚠ 순서 중요: DB delete 먼저 → 성공해야만 Storage 삭제
+        //   (반대 순서면 RLS로 DB delete 실패 시 storage만 삭제되어 깨진 이미지 잔류)
+
+        // 1) DB row 삭제 — .select()로 실제 삭제된 row를 받아 RLS 침묵 실패 감지
+        var { data: deleted, error } = await sb.from('user_patterns')
+            .delete()
+            .eq('id', p.id)
+            .select();
+        if (error) throw error;
+        if (!deleted || deleted.length === 0) {
+            // RLS 정책으로 침묵 실패 — DB도 storage도 안 건드림
+            throw new Error('RLS_BLOCKED');
+        }
+
+        // 2) DB delete 성공했으니 이제 Storage 정리
         var paths = [];
         ['thumb_url','original_url'].forEach(function(k){
             var pp = _extractStoragePathFromUrl(p[k]); if (pp) paths.push(pp);
@@ -1078,18 +1092,41 @@
         });
         if (paths.length > 0) {
             try { await sb.storage.from('design').remove(paths); }
-            catch(e) { console.warn('storage delete partial fail:', e); }
+            catch(e) { console.warn('storage delete partial fail (non-fatal):', e); }
         }
-        // 2) DB row 삭제 — .select()로 실제 삭제된 row를 받아 RLS 침묵 실패 감지
-        var { data: deleted, error } = await sb.from('user_patterns')
-            .delete()
-            .eq('id', p.id)
-            .select();
-        if (error) throw error;
-        if (!deleted || deleted.length === 0) {
-            // RLS 정책 때문에 침묵 실패한 경우
-            throw new Error('RLS_BLOCKED');
-        }
+    }
+
+    // RLS 정책 누락 안내 — 한 번만 보여주는 모달
+    var _rlsWarningShown = false;
+    function _showRlsWarning() {
+        if (_rlsWarningShown) return;
+        _rlsWarningShown = true;
+        var sql = "-- Supabase SQL Editor에서 이 SQL을 실행하세요\n" +
+                  "-- https://supabase.com/dashboard/project/qinvtnhiidtmrzosyvys/sql/new\n\n" +
+                  "-- user_patterns 테이블에 DELETE 정책 추가\n" +
+                  "DROP POLICY IF EXISTS \"anon can delete patterns\" ON public.user_patterns;\n" +
+                  "CREATE POLICY \"anon can delete patterns\" ON public.user_patterns\n" +
+                  "  FOR DELETE TO anon, authenticated\n" +
+                  "  USING (true);\n\n" +
+                  "-- (선택) Storage design 버킷도 DELETE 허용 — 이미 되어 있으면 생략\n" +
+                  "DROP POLICY IF EXISTS \"anon can delete design files\" ON storage.objects;\n" +
+                  "CREATE POLICY \"anon can delete design files\" ON storage.objects\n" +
+                  "  FOR DELETE TO anon, authenticated\n" +
+                  "  USING (bucket_id = 'design');";
+
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;';
+        overlay.innerHTML = '<div style="background:#1e1b4b; color:#fef3c7; border:2px solid #fde047; border-radius:14px; padding:26px; max-width:680px; width:100%; max-height:88vh; overflow-y:auto;">' +
+            '<h3 style="margin:0 0 12px; color:#fde047;">⚠ Supabase RLS 정책 누락</h3>' +
+            '<p style="margin:0 0 14px; line-height:1.6;">DB DELETE가 침묵 실패했습니다. <code>user_patterns</code> 테이블에 DELETE 권한 정책이 없어서 그렇습니다.<br>아래 SQL을 <b>한 번만</b> 실행하시면 영구 해결됩니다:</p>' +
+            '<textarea readonly style="width:100%; height:240px; background:#0f172a; color:#a7f3d0; border:1px solid #475569; border-radius:8px; padding:12px; font-family:Consolas,monospace; font-size:12px; resize:vertical;">' + sql + '</textarea>' +
+            '<div style="display:flex; gap:10px; margin-top:14px; justify-content:flex-end;">' +
+                '<button onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.value); this.textContent=\'✓ 복사됨\';" style="padding:9px 18px; background:#fde047; color:#451a03; border:none; border-radius:6px; font-weight:800; cursor:pointer;">📋 SQL 복사</button>' +
+                '<a href="https://supabase.com/dashboard/project/qinvtnhiidtmrzosyvys/sql/new" target="_blank" style="padding:9px 18px; background:#22c55e; color:#fff; border:none; border-radius:6px; font-weight:800; text-decoration:none;">🌐 SQL Editor 열기</a>' +
+                '<button onclick="this.closest(\'div[style*=fixed]\').remove();" style="padding:9px 18px; background:#475569; color:#fff; border:none; border-radius:6px; font-weight:800; cursor:pointer;">닫기</button>' +
+            '</div>' +
+        '</div>';
+        document.body.appendChild(overlay);
     }
 
     window.cpDeletePattern = async function(id) {
@@ -1099,12 +1136,16 @@
             var { data: pat, error: ge } = await sb.from('user_patterns').select('*').eq('id', id).single();
             if (ge) throw ge;
             await _deletePatternRow(sb, pat);
-            // UI에서 제거
+            // UI에서 제거 (성공 시에만)
             var row = document.querySelector('tr[data-pattern-id="'+id+'"]');
             if (row) row.remove();
             loadCpStats();
         } catch(e) {
-            alert('삭제 실패: '+e.message);
+            if (e.message === 'RLS_BLOCKED') {
+                _showRlsWarning();
+            } else {
+                alert('삭제 실패: '+e.message);
+            }
         }
     };
 
@@ -1133,13 +1174,12 @@
             // 한번에 가져와서 storage 정리
             var { data: pats, error: ge } = await sb.from('user_patterns').select('*').in('id', ids);
             if (ge) throw ge;
-            var ok = 0, fail = 0;
-            var failedIds = [];
+            var ok = 0, fail = 0, rlsBlocked = 0;
             for (var i = 0; i < (pats||[]).length; i++) {
                 try {
                     await _deletePatternRow(sb, pats[i]);
                     ok++;
-                    // ✓ 즉시 DOM에서 row 제거 — 화면 새로고침 없이 바로 사라짐
+                    // ✓ 성공한 것만 DOM에서 제거
                     var row = document.querySelector('tr[data-pattern-id="'+pats[i].id+'"]');
                     if (row) {
                         row.style.transition = 'opacity .3s, transform .3s';
@@ -1151,18 +1191,21 @@
                 catch(e) {
                     console.warn('row delete fail', pats[i].id, e);
                     fail++;
-                    failedIds.push(pats[i].id);
+                    if (e.message === 'RLS_BLOCKED') rlsBlocked++;
                 }
             }
             // 헤더 체크박스 풀기 + 카운트 갱신
             var sel = document.getElementById('cpSelectAllPatterns'); if (sel) sel.checked = false;
             cpUpdateBulkBtn();
-            // 통계만 다시 로드 (row는 이미 DOM에서 제거함)
             loadCpStats();
-            // 결과 알림
-            var msg = '✅ ' + ok + '건 삭제 완료';
-            if (fail > 0) msg += '\n✗ ' + fail + '건 실패 (RLS 정책 또는 권한 문제)';
-            alert(msg);
+            // 결과 알림 — RLS 문제면 SQL 안내 모달 띄우기
+            if (rlsBlocked > 0) {
+                _showRlsWarning();
+            } else {
+                var msg = '✅ ' + ok + '건 삭제 완료';
+                if (fail > 0) msg += '\n✗ ' + fail + '건 실패';
+                alert(msg);
+            }
         } catch(e) {
             alert('일괄 삭제 실패: ' + e.message);
         } finally {
