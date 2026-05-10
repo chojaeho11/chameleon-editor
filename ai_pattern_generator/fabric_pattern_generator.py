@@ -63,121 +63,121 @@ CATEGORIES = {
     "animal": {
         "ko": "동물",
         "motifs": [
-            "cute kawaii cats with soft pastel colors",
-            "tropical birds and butterflies in vibrant tones",
-            "playful puppies in watercolor style",
-            "ocean creatures - whales, dolphins, jellyfish",
-            "forest animals - foxes, deer, owls in muted earth tones",
-            "geometric origami animals on cream background",
-            "safari animals - elephants, giraffes, zebras minimalist",
-            "rabbits and bears in vintage scandinavian style",
-            "tiny birds on branches japanese ink-wash",
-            "woodland creatures with mushrooms",
+            "tiny cute kawaii cats in pastel pink, mint, and yellow",
+            "small tropical birds and butterflies",
+            "small playful puppies, flat illustration",
+            "tiny ocean creatures - whales, dolphins, jellyfish, fish",
+            "small forest animals - foxes, deer, owls in muted earth tones",
+            "small geometric origami animals",
+            "tiny safari animals - elephants, giraffes, zebras",
+            "small rabbits and teddy bears, scandinavian flat style",
+            "tiny birds on small branches",
+            "small woodland creatures with tiny mushrooms",
         ],
     },
     "plant": {
         "ko": "식물",
         "motifs": [
-            "soft watercolor wildflowers in pastel pink and blue",
-            "tropical monstera and palm leaves on cream",
-            "minimalist line-art succulents",
-            "vintage botanical illustration of herbs",
-            "cherry blossoms with delicate branches",
-            "abstract eucalyptus leaves in sage green",
-            "wild lavender and chamomile",
-            "japanese ink-wash bamboo on rice paper",
-            "scandinavian folk flowers in muted colors",
-            "tiny pressed flowers and ferns",
+            "tiny wildflowers in pastel pink, blue, and yellow",
+            "small tropical monstera and palm leaves",
+            "small line-art succulents",
+            "tiny botanical herbs and ferns",
+            "small cherry blossoms scattered",
+            "small abstract eucalyptus leaves in sage green",
+            "tiny lavender sprigs and chamomile",
+            "small bamboo sprigs",
+            "small scandinavian folk flowers in muted colors",
+            "tiny pressed flowers and ferns scattered",
         ],
     },
     "people": {
         "ko": "사람",
         "motifs": [
-            "minimalist single-line drawings of faces",
-            "diverse silhouettes dancing in soft colors",
-            "abstract portrait sketches in earth tones",
-            "boho lifestyle figures with plants",
-            "yoga poses in continuous line art",
-            "cute chibi characters on pastel background",
-            "fashion illustration sketches in watercolor",
-            "vintage cameo profiles in cream and gold",
-            "tiny people walking minimalist",
-            "matisse-style cut-out figures",
+            "tiny minimalist single-line faces",
+            "small abstract dancing silhouettes in pastel",
+            "small line-art portrait sketches",
+            "tiny boho lifestyle figures",
+            "small yoga poses in single-line art",
+            "tiny chibi characters scattered",
+            "small fashion line-sketches",
+            "small abstract figures in mid-century flat style",
+            "tiny people walking in minimalist style",
+            "small matisse-style flat cut-out figures",
         ],
     },
     "modern": {
         "ko": "모던",
         "motifs": [
-            "clean geometric shapes - circles, squares, triangles in primary colors",
-            "bauhaus-inspired color blocks on neutral background",
-            "minimalist scandinavian abstract lines",
-            "terrazzo speckles in pink and beige",
-            "art-deco gold lines on deep navy",
-            "memphis design pastel shapes squiggles",
-            "midcentury modern atomic starburst",
-            "monochrome dot grid with subtle variation",
-            "bold abstract brush strokes in mustard and teal",
-            "minimalist arches and waves",
+            "small geometric shapes - circles, squares, triangles in primary colors",
+            "small bauhaus-inspired color blocks",
+            "minimalist scandinavian abstract lines and dots",
+            "small terrazzo speckles in pink and beige",
+            "small art-deco gold lines on deep navy flat background",
+            "small memphis design pastel shapes and squiggles",
+            "small midcentury modern atomic starbursts",
+            "monochrome dot grid pattern",
+            "small abstract flat shapes in mustard and teal",
+            "small minimalist arches and waves",
         ],
     },
     "scenery": {
         "ko": "풍경",
         "motifs": [
-            "tiny pastel mountain ranges with sun",
-            "rolling hills with little white houses",
-            "ocean waves in japanese ukiyo-e style",
-            "starry night sky with constellations",
-            "forest treetops aerial view",
-            "desert dunes with cacti minimalist",
-            "city skyline silhouette in soft pink dawn",
-            "snowy peaks in watercolor",
-            "tropical island with palm trees",
-            "lavender fields stretching to horizon",
+            "tiny pastel mountains with small suns scattered",
+            "tiny rolling hills with small houses",
+            "small wave shapes in flat blue tones",
+            "tiny stars and constellations on dark blue",
+            "small forest tree shapes in flat green",
+            "tiny desert dune shapes with cacti",
+            "small city skyline silhouettes scattered",
+            "small snowy peak shapes flat",
+            "small tropical island shapes with palm trees",
+            "tiny lavender field rows scattered",
         ],
     },
     "typo": {
         "ko": "타이포",
         "motifs": [
-            "abstract calligraphy brush strokes in black and red",
-            "scattered alphabet letters in retro fonts colorful",
-            "japanese kanji in elegant ink-wash",
-            "korean hangul in playful primary colors",
-            "vintage newspaper letterforms",
-            "graffiti tag scribbles in pastel",
-            "monogram letters overlapping art-deco",
-            "handwritten quotes in soft watercolor",
-            "abstract typography on cream paper",
-            "letter blocks scattered like building toys",
+            "small abstract calligraphy strokes in black and red",
+            "tiny alphabet letters in colorful retro fonts",
+            "small japanese kanji characters scattered",
+            "small korean hangul characters in playful colors",
+            "tiny vintage letterforms",
+            "small graffiti scribbles in pastel",
+            "small monogram letter shapes",
+            "tiny handwritten word marks",
+            "small abstract typography characters",
+            "small letter blocks like building toys",
         ],
     },
     "kids": {
         "ko": "키즈",
         "motifs": [
-            "rainbow clouds and unicorns in pastel",
-            "candy and ice cream illustrations",
-            "balloons and party hats in primary colors",
-            "school supplies - crayons, pencils, books",
-            "wooden toy blocks and teddy bears",
-            "circus tents and carousels vintage style",
-            "baby animals with stars and moons",
-            "spaceships and planets in dreamy pastels",
-            "cute dinosaurs in muted colors",
-            "fairy tale castles and dragons",
+            "small rainbow clouds and unicorns in pastel",
+            "tiny candy and ice cream icons",
+            "small balloons and party hats in primary colors",
+            "tiny school supplies - crayons, pencils, books",
+            "small wooden toy blocks and teddy bears",
+            "tiny circus tents and carousel icons",
+            "small baby animals with tiny stars and moons",
+            "tiny spaceships and planets in pastels",
+            "small cute dinosaurs in muted colors",
+            "small fairy tale castles and dragons",
         ],
     },
     "etc": {
         "ko": "기타",
         "motifs": [
-            "abstract paint brush strokes in mustard and indigo",
-            "vintage stamps and postmarks collection",
-            "colorful musical notes and instruments",
-            "kitchen utensils sketched simply",
-            "tools and gears in industrial style",
-            "stationery items - notebooks, pens, paper clips",
-            "tea cups, teapots, and pastries",
-            "vintage cameras and rolls of film",
-            "constellations and astronomical charts",
-            "antique keys and locks",
+            "small abstract flat shapes in mustard and indigo",
+            "tiny vintage stamp and postmark icons",
+            "small colorful musical notes and instruments",
+            "tiny kitchen utensil icons",
+            "small tools and gears scattered",
+            "tiny stationery icons - notebooks, pens, paper clips",
+            "small tea cups, teapots, and pastry icons",
+            "tiny vintage camera and film roll icons",
+            "small constellation and star icons",
+            "tiny antique key and lock icons",
         ],
     },
 }
@@ -274,28 +274,34 @@ def random_title(category: str) -> str:
 # AI 이미지 생성 (gpt-image-1, dall-e-3 폴백)
 # ============================================================
 def build_prompt(motif: str) -> str:
-    """패턴 생성용 프롬프트 — 타일러블/원단 인쇄 강조.
+    """패턴 생성용 프롬프트 — Flat digital illustration, no texture.
 
-    핵심: SMALL motifs, EVENLY DISTRIBUTED, NO LARGE FOCAL POINTS — 이래야
-    오프셋 방식 seamless 처리에서도 자연스럽게 이어짐. 큰 모티프 하나가
-    화면 중앙을 차지하면 타일링 시 어색해짐.
+    핵심 교훈:
+    - "fabric"이라는 단어를 쓰면 AI가 실제 천 결(weave)을 이미지 안에 그려버림
+    - "printing"도 종이 질감을 추가하게 만듦
+    - 결과물은 PRINT용 "flat digital graphic"이어야 함 (천에 인쇄할 원본 디자인)
+    - 작은 모티프를 많이 분산해야 seamless 이음새가 안 보임
     """
     return (
-        f"A small-scale seamless repeating fabric pattern of {motif}. "
-        "VERY IMPORTANT — composition rules: "
-        "(1) MANY SMALL motifs distributed evenly across the entire canvas like a uniform texture, "
-        "NOT a few large motifs. Each motif element should be small (under 15% of canvas). "
-        "(2) NO large focal point in the center. NO single hero element. "
-        "(3) Motifs scattered with consistent spacing — looks like a wallpaper or wrapping paper, "
-        "not an illustration. "
-        "(4) Edge-to-edge composition with absolutely no border, frame, or white margin. "
-        "(5) Same visual density at top, bottom, left, and right — perfectly balanced. "
-        "Style: soft harmonious color palette suitable for cotton fabric printing. "
-        "No text, no watermark, no signature."
+        f"Flat vector-style digital illustration: a dense small-scale repeating pattern of {motif}. "
+        "STYLE — strict requirements: "
+        "(1) FLAT digital art, like a vector illustration or modern surface pattern design. "
+        "(2) Solid clean background color (cream, white, off-white, or soft pastel). "
+        "(3) ABSOLUTELY NO fabric weave, NO canvas texture, NO paper grain, NO film grain, "
+        "NO photo texture. The background must be perfectly smooth and flat. "
+        "(4) NO fake texture overlay of any kind. This is a clean digital file, not a photo. "
+        "COMPOSITION — strict requirements: "
+        "(a) MANY small motifs scattered DENSELY and EVENLY across the entire image. "
+        "Each motif element under 12% of canvas width. "
+        "(b) NO large central focal point. NO hero element. Same visual density everywhere. "
+        "(c) Motifs distributed like a wallpaper or scrapbook paper print — high motif count. "
+        "(d) Edge-to-edge: absolutely no border, frame, vignette, or white margin. "
+        "(e) NO text, NO letters, NO watermark, NO signature, NO labels."
     )
 
 
-def generate_image(prompt: str, size: str = "1024x1024") -> Image.Image:
+def generate_image(prompt: str, size: str = "1024x1024",
+                   quality: str = "high") -> Image.Image:
     """OpenAI 이미지 생성 — gpt-image-2 우선, 실패 시 단계별 폴백.
 
     모델 우선순위 (2026-05 기준 OpenAI 실제 출시 모델):
@@ -303,30 +309,30 @@ def generate_image(prompt: str, size: str = "1024x1024") -> Image.Image:
       2. gpt-image-1.5 (중간 세대)
       3. gpt-image-1 (2025-04 출시)
       4. dall-e-3 (구세대, b64 미지원이라 url 다운로드)
+
+    quality: "low"/"medium"/"high" — high가 디테일 좋고 깔끔. medium은 약 $0.04, high는 약 $0.17/장
     """
     fallback_chain = [
-        ("gpt-image-2", "medium"),
-        ("gpt-image-1.5", "medium"),
-        ("gpt-image-1", "medium"),
+        ("gpt-image-2", quality),
+        ("gpt-image-1.5", quality),
+        ("gpt-image-1", quality),
     ]
-    last_err = None
-    for model, quality in fallback_chain:
+    for model, q in fallback_chain:
         try:
             resp = oai.images.generate(
-                model=model, prompt=prompt, size=size, quality=quality, n=1,
+                model=model, prompt=prompt, size=size, quality=q, n=1,
             )
             b64 = resp.data[0].b64_json
             if b64:
                 return Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
         except Exception as e:
-            last_err = e
             print(f"      ⚠ {model} 실패 → 다음 모델 시도 ({e.__class__.__name__})")
             continue
 
     # 마지막 폴백: dall-e-3 (URL 응답)
     print(f"      ⚠ 모든 gpt-image 실패 → dall-e-3 최종 폴백")
     resp = oai.images.generate(
-        model="dall-e-3", prompt=prompt, size=size, quality="standard", n=1,
+        model="dall-e-3", prompt=prompt, size=size, quality="hd", n=1,
     )
     url = resp.data[0].url
     r = requests.get(url, timeout=60)
