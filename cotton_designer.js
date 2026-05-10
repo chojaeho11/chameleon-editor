@@ -623,6 +623,42 @@ window._cpCloseCheckout = function() {
     document.body.style.overflow = '';
 };
 
+// 무통장 입금 안내 모달
+window._cpCloseBankInfo = function() {
+    const o = document.getElementById('bankInfoOverlay');
+    if (o) o.style.display = 'none';
+    document.body.style.overflow = '';
+};
+window._cpCopyAccount = function() {
+    const acc = '64770104277763'; // 하이픈 없는 숫자만
+    const btn = document.getElementById('biCopyBtn');
+    const orig = btn.innerHTML;
+    function done(ok) {
+        btn.innerHTML = ok ? '<i class="fa-solid fa-check"></i> 복사됨' : '<i class="fa-solid fa-xmark"></i> 실패';
+        btn.style.background = ok ? '#16a34a' : '#dc2626';
+        btn.style.color = '#fff';
+        setTimeout(function(){
+            btn.innerHTML = orig;
+            btn.style.background = '#451a03';
+            btn.style.color = '#fde047';
+        }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(acc).then(function(){ done(true); }).catch(function(){
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = acc; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); done(true); } catch(e){ done(false); }
+            document.body.removeChild(ta);
+        });
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = acc; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(true); } catch(e){ done(false); }
+        document.body.removeChild(ta);
+    }
+};
+
 // 체크아웃 → orders 테이블 등록 + Toss/무통장 처리
 // Toss Payments 클라이언트 키 (cafe2626 메인몰과 동일 — 운영용)
 const TOSS_CLIENT_KEY = 'live_ck_KNbdOvk5rkkQE9aLdzlV3n07xlzm';
@@ -732,13 +768,18 @@ window._cpSubmitOrder = async function() {
             return;
         }
 
-        // 4) 무통장입금: 즉시 안내
+        // 4) 무통장입금: 예쁜 모달로 안내
         saveCart([]);
         window._cpUpdateCartUI();
         window._cpCloseCheckout();
         window._cpCartClose();
-        alert('✅ 주문이 접수되었습니다! (주문번호: ' + newOrderId + ')\n\n[입금 안내]\n농협 351-1234-5678-90 (주)카멜레온프린팅\n금액: ' + total.toLocaleString() + '원\n\n* 입금 확인 후 영업일 내 제작 시작됩니다.\n* 통합주문관리에서 처리 진행 상황을 확인하실 수 있습니다.\n* 문의: 031-366-1984');
+        // 폼 초기화
         ['coName','coPhone','coEmail','coZip','coAddr1','coAddr2','coMemo'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=''; });
+        // 입금 안내 모달 표시
+        document.getElementById('biOrderId').textContent = '#' + newOrderId;
+        document.getElementById('biAmount').textContent = total.toLocaleString() + '원';
+        document.getElementById('bankInfoOverlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     } catch(e) {
         alert('주문 처리 실패: ' + e.message);
     } finally {
