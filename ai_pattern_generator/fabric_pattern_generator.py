@@ -31,7 +31,7 @@ from pathlib import Path
 from datetime import datetime
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 import requests
 from openai import OpenAI
 from supabase import create_client, Client
@@ -314,44 +314,64 @@ def generate_image(prompt: str, size: str = "1024x1024") -> Image.Image:
 
 
 # ============================================================
-# Seamless Tile 가공 (좌우/상하 이어지게)
+# Seamless Tile 가공 — Offset 방식 (Photoshop의 Filter > Other > Offset)
 # ============================================================
-def make_seamless_tile(img: Image.Image, fade_pct: float = 0.08) -> Image.Image:
+def make_seamless_tile(img: Image.Image,
+                        band_pct: float = 0.045,
+                        blur_radius: int = 22) -> Image.Image:
     """
-    이미지를 좌우/상하 이어지는 타일로 변환.
+    Photoshop 스타일 Offset 방식 — 이전 mirror-blend 방식의 약점(가장자리
+    흐릿함, 콘텐츠 불일치)을 해결.
 
     원리:
-        - 가장자리 픽셀이 반대쪽 가장자리와 같아져야 seamless 함.
-        - 양쪽 가장자리에서 거리 x인 픽셀들의 평균을 구해서, 가장자리에 가까울수록
-          그 평균값으로 부드럽게(코사인) 페이드.
-        - 결과적으로 left[0] == right[0] == avg, top[0] == bottom[0] == avg
-          → 4방향 모두 seamless 하게 이어짐.
+        1. 이미지를 (h/2, w/2)만큼 wrap-shift (np.roll).
+           → 새로 만들어진 가장자리는 원래 내부였던 픽셀들이라 자연스럽게 이어짐.
+           → 이 시점에서 이미 4방향 seamless 보장됨.
+        2. shift 결과 중앙에 십자(+) 모양 이음새가 보임 (원래 가장자리가 만났던 곳).
+        3. 그 이음새 주변 좁은 띠에만 가우시안 블러를 부드럽게 입혀서 가림.
+           → 가장자리는 손상 없이 깨끗하게 유지됨.
 
-    fade_pct: 페이드할 가장자리 폭 비율 (0.08 = 8%)
+    band_pct: 중앙 이음새를 가릴 띠 폭 비율 (이미지의 4.5%)
+    blur_radius: 띠에 적용할 가우시안 블러 반경 (px)
     """
-    arr = np.array(img.convert("RGB")).astype(np.float32)
+    src = img.convert("RGB")
+    arr = np.array(src)
     h, w, _ = arr.shape
-    fw = max(20, int(w * fade_pct))
-    fh = max(20, int(h * fade_pct))
 
-    out = arr.copy()
+    # 1) Wrap-shift — 가장자리는 자동으로 seamless
+    rolled = np.roll(arr, shift=(h // 2, w // 2), axis=(0, 1))
+    rolled_pil = Image.fromarray(rolled)
 
-    # ── 좌우 이음 (가로 방향) ──
-    for x in range(fw):
-        # 코사인 smoothstep: 0(가장자리) → 1(fw 안쪽)
-        a = 0.5 - 0.5 * np.cos(np.pi * x / fw)
-        # x번째와 반대쪽 (w-1-x)번째 픽셀의 평균
-        avg = (arr[:, x] + arr[:, w - 1 - x]) / 2
-        out[:, x] = arr[:, x] * a + avg * (1 - a)
-        out[:, w - 1 - x] = arr[:, w - 1 - x] * a + avg * (1 - a)
+    # 2) 같은 이미지의 블러 버전 준비 — 중앙 이음새 가릴 재료
+    blurred_pil = rolled_pil.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+    blurred_arr = np.array(blurred_pil).astype(np.float32)
 
-    # ── 상하 이음 (세로 방향) — 이미 좌우 처리한 결과 위에서 ──
-    arr2 = out.copy()
-    for y in range(fh):
-        a = 0.5 - 0.5 * np.cos(np.pi * y / fh)
-        avg = (arr2[y, :] + arr2[h - 1 - y, :]) / 2
-        out[y, :] = arr2[y, :] * a + avg * (1 - a)
-        out[h - 1 - y, :] = arr2[h - 1 - y, :] * a + avg * (1 - a)
+    # 3) 마스크 생성 — 중앙 십자(+) 이음새 부근만 1.0, 외곽으로 갈수록 0.0
+    band = max(40, int(min(h, w) * band_pct))
+    mask = np.zeros((h, w), dtype=np.float32)
+
+    seam_x = w // 2
+    seam_y = h // 2
+
+    # 세로 이음새 (x = w/2 부근의 좁은 띠)
+    xs = np.arange(w)
+    dist_x = np.abs(xs - seam_x)
+    in_band_x = dist_x < band
+    # cos 부드러운 falloff: 이음새 정중앙=1 → 띠 끝=0
+    col_alpha = np.where(in_band_x, 0.5 + 0.5 * np.cos(np.pi * dist_x / band), 0.0)
+    mask = np.maximum(mask, col_alpha[None, :])
+
+    # 가로 이음새 (y = h/2 부근의 좁은 띠)
+    ys = np.arange(h)
+    dist_y = np.abs(ys - seam_y)
+    in_band_y = dist_y < band
+    row_alpha = np.where(in_band_y, 0.5 + 0.5 * np.cos(np.pi * dist_y / band), 0.0)
+    mask = np.maximum(mask, row_alpha[:, None])
+
+    # 4) 마스크에 따라 rolled와 blurred를 합성
+    rolled_arr_f = rolled.astype(np.float32)
+    mask3 = mask[:, :, None]
+    out = rolled_arr_f * (1 - mask3) + blurred_arr * mask3
 
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
