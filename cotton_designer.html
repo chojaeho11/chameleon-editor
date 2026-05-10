@@ -153,21 +153,41 @@ a { text-decoration: none; color: inherit; }
     padding: 4px 10px; border: 1px solid var(--cream-dark); border-radius: 4px;
 }
 
-/* 원단 선택 (4 옵션) */
+/* 원단 선택 — 8 옵션 (4×2 그리드, 동그라미 작게) */
 .fabric-types {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
 }
 .fabric-type {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 12px 4px; border: 1.5px solid var(--border); border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 2px; border: 1.5px solid var(--border); border-radius: 50%;
     cursor: pointer; transition: all 0.2s; aspect-ratio: 1; justify-content: center;
+    min-width: 0; overflow: hidden;
 }
 .fabric-type:hover { border-color: var(--accent); }
-.fabric-type.active {
-    border-color: var(--brown-dark); background: var(--cream-dark);
+.fabric-type.active { border-color: var(--brown-dark); background: var(--cream-dark); }
+.fabric-type-icon { font-size: 16px; color: var(--brown); line-height: 1; }
+.fabric-type-label { font-size: 10px; color: var(--brown); font-weight: 700; line-height:1; white-space:nowrap; }
+@media (max-width:480px) {
+    .fabric-type-icon { font-size: 14px; }
+    .fabric-type-label { font-size: 9px; }
 }
-.fabric-type-icon { font-size: 22px; color: var(--brown); }
-.fabric-type-label { font-size: 10px; color: var(--brown); font-weight: 700; }
+
+/* 색상 선택 (면 종류) */
+.fabric-colors { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.color-chip { padding:6px 14px; border:1.5px solid var(--cream-dark); background:#fff; color:var(--brown); font-size:12px; font-weight:700; border-radius:50px; cursor:pointer; font-family:inherit; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+.color-chip:hover { border-color:var(--brown); }
+.color-chip.active { background:var(--brown-dark); color:var(--cream); border-color:var(--brown-dark); }
+.color-dot { width:12px; height:12px; border-radius:50%; border:1px solid #d6d3d1; }
+
+/* Collapse */
+.collapse-card { transition: all 0.2s; }
+.collapse-head { cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; }
+.collapse-arrow { transition: transform 0.2s; font-size:11px; margin-right:4px; color:var(--accent); }
+.collapse-card.open .collapse-arrow { transform: rotate(90deg); }
+.collapse-body.open { display:flex !important; }
+
+/* 대량 할인 배지 */
+.discount-badge { display:inline-block; padding:3px 10px; border-radius:50px; background:#fee2e2; color:#dc2626; font-size:11px; font-weight:800; margin-left:6px; }
 
 .fabric-name {
     font-size: 13px; color: var(--brown-dark); font-weight: 700;
@@ -420,21 +440,55 @@ a { text-decoration: none; color: inherit; }
     <!-- 우측: 옵션 사이드바 -->
     <aside class="sidebar">
 
-        <!-- 원단 선택 (DB 동기화) -->
+        <!-- 원단 선택 (8종 고정) -->
         <div class="side-card">
-            <div class="side-card-title">
-                원단 선택
-                <span class="side-card-link" onclick="window._cdRefreshDb()"><i class="fa-solid fa-rotate"></i> 새로고침</span>
-            </div>
-            <div id="fabricGroupTabs" class="fabric-types" style="margin-bottom:8px;">
-                <div style="grid-column:1/-1; padding:14px; text-align:center; color:var(--text-light); font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> 원단 불러오는 중...</div>
-            </div>
-            <select class="fabric-select" id="fabricSelect" onchange="window._cdOnFabricChange()"></select>
-            <div class="fabric-detail">
-                <div class="fabric-detail-img" id="fabricImg" style="background:#f5f5f4;"></div>
-                <div class="fabric-detail-text" id="fabricDesc">
-                    원단을 선택해주세요.
+            <div class="side-card-title">원단 선택</div>
+            <div class="fabric-types" style="margin-bottom:8px;">
+                <div class="fabric-type active" data-fab="cotton20" onclick="window._cdSelectFabricType('cotton20')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="fabric-type-label">면20수</div>
                 </div>
+                <div class="fabric-type" data-fab="cotton30" onclick="window._cdSelectFabricType('cotton30')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="fabric-type-label">면30수</div>
+                </div>
+                <div class="fabric-type" data-fab="cotton16" onclick="window._cdSelectFabricType('cotton16')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="fabric-type-label">면16수</div>
+                </div>
+                <div class="fabric-type" data-fab="cotton10" onclick="window._cdSelectFabricType('cotton10')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="fabric-type-label">면10수</div>
+                </div>
+                <div class="fabric-type" data-fab="chiffon" onclick="window._cdSelectFabricType('chiffon')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-feather"></i></div>
+                    <div class="fabric-type-label">쉬폰</div>
+                </div>
+                <div class="fabric-type" data-fab="oxford" onclick="window._cdSelectFabricType('oxford')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-flag"></i></div>
+                    <div class="fabric-type-label">옥스포드</div>
+                </div>
+                <div class="fabric-type" data-fab="rayon" onclick="window._cdSelectFabricType('rayon')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-wind"></i></div>
+                    <div class="fabric-type-label">레이온</div>
+                </div>
+                <div class="fabric-type" data-fab="linen" onclick="window._cdSelectFabricType('linen')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-shirt"></i></div>
+                    <div class="fabric-type-label">린넬</div>
+                </div>
+            </div>
+            <!-- 면 종류일 때만 색상 선택 표시 -->
+            <div id="fabricColorWrap" style="display:none;">
+                <div style="font-size:11px; font-weight:700; color:var(--brown-dark); margin-top:8px;">색상 선택</div>
+                <div class="fabric-colors">
+                    <button class="color-chip active" data-color="white" onclick="window._cdSelectColor('white', this)"><span class="color-dot" style="background:#fff;"></span>화이트</button>
+                    <button class="color-chip" data-color="natural" onclick="window._cdSelectColor('natural', this)"><span class="color-dot" style="background:#e7d8b8;"></span>네츄럴</button>
+                    <button class="color-chip" data-color="ivory" onclick="window._cdSelectColor('ivory', this)"><span class="color-dot" style="background:#f5ecd3;"></span>백아이보리</button>
+                </div>
+            </div>
+            <div class="fabric-detail" style="margin-top:12px;">
+                <div class="fabric-detail-img" id="fabricImg" style="background:#f5f5f4;"></div>
+                <div class="fabric-detail-text" id="fabricDesc">원단을 선택해주세요.</div>
             </div>
         </div>
 
@@ -494,59 +548,98 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 1) 원단 마감 (필수) -->
+        <!-- 1) 원단 마감 (필수, 제곱미터당 가격) -->
         <div class="side-card">
             <div class="side-card-title">
                 원단 마감 <span style="color:#dc2626; font-weight:800;">*</span>
-                <span style="font-size:10px; color:var(--text-light); font-weight:600;">필수 선택</span>
+                <span style="font-size:10px; color:var(--text-light); font-weight:600;">필수 / 제곱미터당</span>
             </div>
-            <div id="finishOptions" style="display:flex; flex-direction:column; gap:8px;">
-                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="0">
-                    <input type="radio" name="finish" value="raw" checked onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>가재단</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">생지 그대로 컷팅</span></span>
-                    <span class="fin-opt-price">+0원</span>
+            <div id="finishOptions" style="display:flex; flex-direction:column; gap:6px;">
+                <label class="fin-opt" data-finish="roll" data-name="롤인쇄" data-extra="0">
+                    <input type="radio" name="finish" value="roll" checked onchange="window._cdOnFinishChange()">
+                    <span class="fin-opt-label"><b>롤인쇄</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">기본·미가공</span></span>
+                    <span class="fin-opt-price">+0원/m²</span>
                 </label>
-                <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="3000">
+                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="3000">
+                    <input type="radio" name="finish" value="raw" onchange="window._cdOnFinishChange()">
+                    <span class="fin-opt-label"><b>가재단</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">사이즈 정밀 컷팅</span></span>
+                    <span class="fin-opt-price">+3,000원/m²</span>
+                </label>
+                <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="5000">
                     <input type="radio" name="finish" value="overlock" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>오버록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">올풀림 방지 박음질</span></span>
-                    <span class="fin-opt-price">+3,000원</span>
+                    <span class="fin-opt-label"><b>오버록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">올풀림 방지</span></span>
+                    <span class="fin-opt-price">+5,000원/m²</span>
                 </label>
-                <label class="fin-opt" data-finish="interlock" data-name="인터록" data-extra="5000">
+                <label class="fin-opt" data-finish="interlock" data-name="인터록" data-extra="7000">
                     <input type="radio" name="finish" value="interlock" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b>인터록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">튼튼한 이중 마감</span></span>
-                    <span class="fin-opt-price">+5,000원</span>
+                    <span class="fin-opt-price">+7,000원/m²</span>
                 </label>
-                <label class="fin-opt" data-finish="rolledhem" data-name="말아박기" data-extra="4000">
+                <label class="fin-opt" data-finish="rolledhem" data-name="말아박기" data-extra="8000">
                     <input type="radio" name="finish" value="rolledhem" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b>말아박기</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">접어 박는 깔끔한 마감</span></span>
-                    <span class="fin-opt-price">+4,000원</span>
+                    <span class="fin-opt-label"><b>말아박기</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;">고급 접어박기</span></span>
+                    <span class="fin-opt-price">+8,000원/m²</span>
                 </label>
             </div>
         </div>
 
-        <!-- 2) 고리 옵션 (선택) -->
-        <div class="side-card">
-            <div class="side-card-title">
-                고리가 필요하신가요?
-                <span style="font-size:10px; color:var(--text-light); font-weight:600;">선택 안 해도 됩니다</span>
+        <!-- 2) 고리 옵션 (선택, 접이식) -->
+        <div class="side-card collapse-card">
+            <div class="side-card-title collapse-head" onclick="window._cdToggleCollapse('hookCollapse', this)">
+                <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> 고리가 필요하신가요?</span>
+                <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="hookSummary">선택 안 함</span>
             </div>
-            <div id="hookOptions" style="display:flex; flex-direction:column; gap:8px;">
+            <div id="hookCollapse" class="collapse-body" style="display:none; flex-direction:column; gap:6px; margin-top:10px;">
                 <label class="fin-opt" data-hook="" data-name="" data-extra="0">
                     <input type="radio" name="hook" value="" checked onchange="window._cdOnHookChange()">
                     <span class="fin-opt-label"><b>선택 안 함</b></span>
                     <span class="fin-opt-price">+0원</span>
                 </label>
-                <div id="hookExtraList" style="display:contents;"></div>
+                <label class="fin-opt" data-hook="top_string" data-name="상단끈고리" data-extra="2000">
+                    <input type="radio" name="hook" value="top_string" onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>상단 끈 고리</b></span>
+                    <span class="fin-opt-price">+2,000원</span>
+                </label>
+                <label class="fin-opt" data-hook="top_rod" data-name="상단봉마감" data-extra="2000">
+                    <input type="radio" name="hook" value="top_rod" onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>상단 봉마감</b></span>
+                    <span class="fin-opt-price">+2,000원</span>
+                </label>
+                <label class="fin-opt" data-hook="topbottom_string" data-name="상하단끈고리" data-extra="4000">
+                    <input type="radio" name="hook" value="topbottom_string" onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>상하단 끈 고리</b></span>
+                    <span class="fin-opt-price">+4,000원</span>
+                </label>
+                <label class="fin-opt" data-hook="topbottom_rod" data-name="상하단봉마감" data-extra="3000">
+                    <input type="radio" name="hook" value="topbottom_rod" onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>상하단 봉마감</b></span>
+                    <span class="fin-opt-price">+3,000원</span>
+                </label>
+                <label class="fin-opt" data-hook="middle_split" data-name="가운데트임" data-extra="15000">
+                    <input type="radio" name="hook" value="middle_split" onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>가운데 트임</b></span>
+                    <span class="fin-opt-price">+15,000원</span>
+                </label>
+                <label class="fin-opt" data-hook="noren" data-name="노랜연결마감" data-extra="3000">
+                    <input type="radio" name="hook" value="noren" onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>노랜 연결 마감</b></span>
+                    <span class="fin-opt-price">+3,000원</span>
+                </label>
+                <label class="fin-opt" data-hook="eyelet4" data-name="아일렛타공4곳" data-extra="4000">
+                    <input type="radio" name="hook" value="eyelet4" onchange="window._cdOnHookChange()">
+                    <span class="fin-opt-label"><b>아일렛 타공 4곳</b></span>
+                    <span class="fin-opt-price">+4,000원</span>
+                </label>
             </div>
         </div>
 
-        <!-- 3) 부자재 옵션 (선택) -->
-        <div class="side-card">
-            <div class="side-card-title">
-                부자재가 필요하신가요?
-                <span style="font-size:10px; color:var(--text-light); font-weight:600;">선택 안 해도 됩니다</span>
+        <!-- 3) 부자재 옵션 (선택, 접이식) -->
+        <div class="side-card collapse-card">
+            <div class="side-card-title collapse-head" onclick="window._cdToggleCollapse('accCollapse', this)">
+                <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> 부자재가 필요하신가요?</span>
+                <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="accSummary">선택 안 함</span>
             </div>
-            <div id="accessoryOptions" style="display:flex; flex-direction:column; gap:8px;">
+            <div id="accCollapse" class="collapse-body" style="display:none; flex-direction:column; gap:6px; margin-top:10px;">
                 <label class="fin-opt" data-acc="" data-name="" data-extra="0">
                     <input type="radio" name="accessory" value="" checked onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b>선택 안 함</b></span>
@@ -599,7 +692,8 @@ a { text-decoration: none; color: inherit; }
             <div class="price-summary">
                 <div class="price-row"><span>출력 단가 (회배×15,000)</span><span id="pUnit">15,000원</span></div>
                 <div class="price-row"><span>수량</span><span id="pQty">1개</span></div>
-                <div class="price-row"><span>마감</span><span id="pFinish">-</span></div>
+                <div class="price-row"><span>마감 / m²</span><span id="pFinish">-</span></div>
+                <div class="price-row" id="pDiscountRow" style="display:none;"><span>대량 할인 <span class="discount-badge" id="pDiscBadge">-</span></span><span id="pDiscount" style="color:#dc2626;">-0원</span></div>
                 <div class="price-row total"><span>합계</span><span id="pTotal">15,000원</span></div>
             </div>
             <button class="order-btn" id="orderBtn" onclick="window._cdAddToCart()" disabled>
@@ -752,6 +846,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=8"></script>
+<script src="cotton_designer.js?v=9"></script>
 </body>
 </html>

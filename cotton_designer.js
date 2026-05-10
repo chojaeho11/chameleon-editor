@@ -8,7 +8,28 @@
 // 회배 단가 (1회배 = 130×100cm = 1.3 m²)
 // ════════════════════════════════════════════════════
 const HOEBAE_UNIT_PRICE = 15000;
-const HOEBAE_AREA_CM2 = 130 * 100; // = 13,000 cm²
+const HOEBAE_AREA_CM2 = 130 * 100;
+
+// 원단 8종 (가격 동일, 회배 단가 사용)
+const FABRIC_TYPES = {
+    cotton20: { name: '면20수 평직', isCotton: true, desc: '얇고 일반적인 20수 평직. 의류·인테리어 소품 활용 좋음.' },
+    cotton30: { name: '면30수 평직', isCotton: true, desc: '얇고 부드러운 30수 평직. 통기성 좋아 여름 의류 적합.' },
+    cotton16: { name: '면16수 평직', isCotton: true, desc: '두께감 있는 16수. 가방·파우치·러너 등 적합.' },
+    cotton10: { name: '면10수 평직', isCotton: true, desc: '두꺼운 10수. 백월·매장 디스플레이·인테리어용.' },
+    chiffon:  { name: '쉬폰', isCotton: false, desc: '얇고 비치는 원단. 커튼·드레스·드레이프 적합.' },
+    oxford:   { name: '옥스포드', isCotton: false, desc: '내구성 뛰어난 폴리. 가방·실외 디스플레이용.' },
+    rayon:    { name: '레이온/인견', isCotton: false, desc: '시원한 인견 원단. 여름 의류·블라우스 적합.' },
+    linen:    { name: '린넬', isCotton: false, desc: '천연 린넨. 고급 인테리어·식탁보·앞치마.' }
+};
+const COLOR_LABELS = { white: '화이트', natural: '네츄럴', ivory: '백아이보리' };
+
+// 대량 할인 정책 (수량 기준)
+function getVolumeDiscount(qty) {
+    if (qty >= 100) return { pct: 30, label: '100마+ 30%↓' };
+    if (qty >= 50)  return { pct: 20, label: '50마+ 20%↓' };
+    if (qty >= 10)  return { pct: 10, label: '10마+ 10%↓' };
+    return { pct: 0, label: '' };
+}
 
 // admin_products / admin_categories 동기화 결과 — 런타임에 채워짐
 let DB_FABRICS = [];     // 패브릭만
@@ -34,8 +55,9 @@ function classifyGroup(p) {
 
 // 상태
 const state = {
-    fabricGroup: '',
-    fabricCode: '',
+    fabricType: 'cotton20',           // 8종 중 1
+    fabricColor: 'white',             // 면 종류일 때만 사용
+    fabricCode: 'cotton20_white',     // 합성 코드 (orders.items 저장용)
     layout: 'basic',
     orderWcm: 130,
     orderHcm: 100,
@@ -46,23 +68,53 @@ const state = {
     img: null,
     imgDataUrl: null,
     imgFileName: '',
-    // 1) 원단 마감 (필수, 기본 가재단)
-    finishCode: 'raw',
-    finishName: '가재단',
-    finishExtra: 0,
-    // 2) 고리 (선택)
+    // 1) 원단 마감 (필수, 기본 롤인쇄, m²당 가격)
+    finishCode: 'roll',
+    finishName: '롤인쇄',
+    finishExtra: 0,                   // 단가/m²
+    // 2) 고리 (선택, 1회 가격)
     hookCode: '',
     hookName: '',
     hookExtra: 0,
-    // 3) 부자재 (선택)
+    // 3) 부자재 (선택, 1회 가격)
     accCode: '',
     accName: '',
     accExtra: 0
 };
 
 function getFabric() {
-    return DB_FABRICS.find(f => f.code === state.fabricCode) || null;
+    const t = FABRIC_TYPES[state.fabricType] || FABRIC_TYPES.cotton20;
+    const isCotton = t.isCotton;
+    const colorLabel = isCotton ? (' (' + (COLOR_LABELS[state.fabricColor]||'') + ')') : '';
+    return {
+        code: state.fabricCode,
+        name: t.name + colorLabel,
+        desc: t.desc,
+        isCotton: isCotton,
+        type: state.fabricType,
+        color: isCotton ? state.fabricColor : null
+    };
 }
+
+window._cdSelectFabricType = function(type) {
+    state.fabricType = type;
+    const t = FABRIC_TYPES[type] || FABRIC_TYPES.cotton20;
+    state.fabricCode = type + (t.isCotton ? '_' + state.fabricColor : '');
+    document.querySelectorAll('.fabric-type').forEach(el => el.classList.toggle('active', el.dataset.fab === type));
+    document.getElementById('fabricColorWrap').style.display = t.isCotton ? '' : 'none';
+    updateFabricDetail();
+    updatePrice();
+};
+
+window._cdSelectColor = function(color, btn) {
+    state.fabricColor = color;
+    const t = FABRIC_TYPES[state.fabricType] || FABRIC_TYPES.cotton20;
+    if (t.isCotton) state.fabricCode = state.fabricType + '_' + color;
+    document.querySelectorAll('.color-chip').forEach(el => el.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    updateFabricDetail();
+    updatePrice();
+};
 
 function calcHoebae() {
     const w = state.orderWcm || 0;
@@ -136,7 +188,7 @@ window._cdResetImage = function() {
 })();
 
 // ════════════════════════════════════════════════════
-// DB에서 원단 + 마감 옵션 로드 (admin_products + addons)
+// DB에서 부자재 옵션만 로드 (원단은 하드코딩 8종)
 // ════════════════════════════════════════════════════
 async function loadDbFabrics() {
     const sb = window.supabase ? window.supabase.createClient(
@@ -145,40 +197,20 @@ async function loadDbFabrics() {
     ) : null;
     if (!sb) return;
     try {
-        // 패브릭 카테고리 (top_category_code='22222')
         const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', '22222');
         const codes = (subCats||[]).map(c => c.code);
         let products = [];
         if (codes.length > 0) {
-            const { data } = await sb.from('admin_products').select('code, name, img_url, addons, width_mm, height_mm, price, sort_order').in('category', codes);
+            const { data } = await sb.from('admin_products').select('code, name, price, sort_order').in('category', codes);
             products = data || [];
         }
-        // 추가: cb로 시작하는 광목 상품
-        try {
-            const { data: cb } = await sb.from('admin_products').select('code, name, img_url, addons, width_mm, height_mm, price, sort_order').like('code', 'cb%');
-            const seen = new Set(products.map(p => p.code));
-            (cb||[]).forEach(p => { if (!seen.has(p.code)) products.push(p); });
-        } catch(e) {}
-
         const classified = products
             .filter(p => !(p.code||'').startsWith('ua_'))
             .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
             .map(p => Object.assign(p, { group: classifyGroup(p) }));
 
-        DB_HOOKS = classified.filter(p => p.group === '__hook__');
         DB_ACCESSORIES = classified.filter(p => p.group === '__accessory__');
-        DB_FABRICS = classified.filter(p => p.group && p.group !== '__hook__' && p.group !== '__accessory__');
-
-        DB_GROUPS = {};
-        DB_FABRICS.forEach(p => {
-            (DB_GROUPS[p.group] = DB_GROUPS[p.group] || []).push(p);
-        });
-
-        renderFabricGroups();
-        renderHookOptions();
         renderAccessoryOptions();
-        const groups = Object.keys(DB_GROUPS);
-        if (groups.length > 0) selectGroup(groups[0]);
     } catch(e) { console.error('[loadDbFabrics]', e); }
 }
 
@@ -218,60 +250,12 @@ function renderAccessoryOptions() {
     }).join('');
 }
 
-function renderFabricGroups() {
-    const tabs = document.getElementById('fabricGroupTabs');
-    if (!tabs) return;
-    const groups = Object.keys(DB_GROUPS);
-    if (groups.length === 0) {
-        tabs.innerHTML = '<div style="grid-column:1/-1; padding:14px; text-align:center; color:#dc2626; font-size:12px;">DB에 등록된 패브릭 상품이 없습니다.<br>관리자 페이지에서 상품을 등록하세요.</div>';
-        return;
-    }
-    const groupIcon = { '면/광목':'fa-leaf', '쉬폰/실크':'fa-feather', '레이온/인견':'fa-wind', '폴리/옥스포드':'fa-flag', '점착/스티커':'fa-note-sticky', '기타 패브릭':'fa-shapes' };
-    tabs.innerHTML = groups.map((g,i) => {
-        return `<div class="fabric-type ${i===0?'active':''}" data-group="${g}" onclick="window._cdSelectGroup('${g}')">
-            <div class="fabric-type-icon"><i class="fa-solid ${groupIcon[g]||'fa-tag'}"></i></div>
-            <div class="fabric-type-label">${g}</div>
-        </div>`;
-    }).join('');
-}
-
-window._cdSelectGroup = function(g) { selectGroup(g); };
-function selectGroup(g) {
-    state.fabricGroup = g;
-    document.querySelectorAll('.fabric-type').forEach(el => el.classList.toggle('active', el.dataset.group === g));
-    const list = DB_GROUPS[g] || [];
-    const sel = document.getElementById('fabricSelect');
-    sel.innerHTML = list.map(p => `<option value="${p.code}">${p.name}</option>`).join('');
-    if (list.length > 0) {
-        state.fabricCode = list[0].code;
-        sel.value = state.fabricCode;
-        updateFabricDetail();
-        renderFinishOptions();
-        updateSizeLabels();
-        updatePrice();
-        window._cdRender();
-    }
-}
-
-window._cdOnFabricChange = function() {
-    state.fabricCode = document.getElementById('fabricSelect').value;
-    updateFabricDetail();
-    renderFinishOptions();
-    updateSizeLabels();
-    updatePrice();
-    window._cdRender();
-};
-
-window._cdRefreshDb = function() { loadDbFabrics(); showToast('원단 DB 다시 불러오는 중...'); };
-
 function updateFabricDetail() {
     const f = getFabric();
     if (!f) return;
-    document.getElementById('fabricImg').style.backgroundImage = f.img_url ? `url(${f.img_url})` : '';
-    document.getElementById('fabricImg').style.backgroundSize = 'cover';
-    document.getElementById('fabricImg').style.backgroundPosition = 'center';
-    const widthInfo = f.width_mm ? `폭 ${f.width_mm}mm` : '대폭 1300mm 기준';
-    document.getElementById('fabricDesc').innerHTML = `<b>${f.name}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${widthInfo}</div>`;
+    const img = document.getElementById('fabricImg');
+    if (img) img.style.background = '#f5f5f4';
+    document.getElementById('fabricDesc').innerHTML = `<b>${f.name}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${f.desc} · 대폭 130cm</div>`;
 }
 
 // 원단 마감은 HTML에 하드코딩 (가재단/오버록/인터록/말아박기) — 여기서는 noop
@@ -323,19 +307,58 @@ window._cdQtyChg = function(d) {
     window._cdCalcHoebae();
 };
 
+// 토글: 고리/부자재 collapse
+window._cdToggleCollapse = function(id, head) {
+    const body = document.getElementById(id);
+    const card = head.closest('.collapse-card');
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'flex';
+    if (card) card.classList.toggle('open', !open);
+};
+
+// 면적(m²) — 1m² 미만은 1로 침
+function calcAreaM2() {
+    const cm2 = (state.orderWcm || 0) * (state.orderHcm || 0);
+    return Math.max(1, Math.ceil(cm2 / 10000));
+}
+
 function updatePrice() {
     const hoebae = calcHoebae();
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    const extras = (state.finishExtra||0) + (state.hookExtra||0) + (state.accExtra||0);
-    const extrasTotal = extras * state.orderQty;
-    const total = itemPrice * state.orderQty + extrasTotal;
-    const extraParts = [];
-    if (state.finishExtra > 0 || state.finishCode === 'raw') extraParts.push(state.finishName);
-    if (state.hookCode) extraParts.push('고리: ' + state.hookName);
-    if (state.accCode) extraParts.push('부자재: ' + state.accName);
+    const areaM2 = calcAreaM2();
+    const finishPerItem = (state.finishExtra || 0) * areaM2; // m²당 × 면적
+    const otherPerItem = (state.hookExtra || 0) + (state.accExtra || 0);
+    const perItem = itemPrice + finishPerItem + otherPerItem;
+    const subtotal = perItem * state.orderQty;
+    const disc = getVolumeDiscount(state.orderQty);
+    const discountAmt = Math.round(subtotal * disc.pct / 100);
+    const total = subtotal - discountAmt;
+
     document.getElementById('pUnit').textContent = itemPrice.toLocaleString() + '원 (' + hoebae.toFixed(2) + '회배)';
     document.getElementById('pQty').textContent = state.orderQty + '개';
-    document.getElementById('pFinish').textContent = (extraParts.length ? extraParts.join(' · ') : state.finishName) + (extras > 0 ? ' (+' + extrasTotal.toLocaleString() + '원)' : '');
+
+    const extraParts = [];
+    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + areaM2 + 'm² = ' + finishPerItem.toLocaleString() + '원' : ''));
+    if (state.hookCode) extraParts.push('고리: ' + state.hookName + ' (' + (state.hookExtra||0).toLocaleString() + '원)');
+    if (state.accCode) extraParts.push('부자재: ' + state.accName + ' (' + (state.accExtra||0).toLocaleString() + '원)');
+    document.getElementById('pFinish').innerHTML = extraParts.join('<br>');
+
+    const dRow = document.getElementById('pDiscountRow');
+    if (disc.pct > 0) {
+        dRow.style.display = '';
+        document.getElementById('pDiscBadge').textContent = disc.label;
+        document.getElementById('pDiscount').textContent = '-' + discountAmt.toLocaleString() + '원';
+    } else {
+        dRow.style.display = 'none';
+    }
+
+    // 고리/부자재 헤더 요약 표시
+    const hs = document.getElementById('hookSummary');
+    if (hs) hs.textContent = state.hookCode ? state.hookName + ' (+' + (state.hookExtra||0).toLocaleString() + ')' : '선택 안 함';
+    const as = document.getElementById('accSummary');
+    if (as) as.textContent = state.accCode ? state.accName + ' (+' + (state.accExtra||0).toLocaleString() + ')' : '선택 안 함';
+
     document.getElementById('pTotal').textContent = total.toLocaleString() + '원';
 }
 
@@ -580,8 +603,14 @@ function buildCartItem() {
     if (!f) { showToast('원단을 선택해주세요'); return null; }
     const hoebae = calcHoebae();
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    const extras = (state.finishExtra||0) + (state.hookExtra||0) + (state.accExtra||0);
-    const price = itemPrice * state.orderQty + extras * state.orderQty;
+    const areaM2 = calcAreaM2();
+    const finishPerItem = (state.finishExtra||0) * areaM2;
+    const otherPerItem = (state.hookExtra||0) + (state.accExtra||0);
+    const subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
+    const disc = getVolumeDiscount(state.orderQty);
+    const discountAmt = Math.round(subtotal * disc.pct / 100);
+    const price = subtotal - discountAmt;
+
     const cleanFile = state.imgFileName
         ? state.imgFileName.replace(/\.[^.]+$/, '').replace(/^[a-f0-9-]{20,}$/i, '').slice(0, 20)
         : '';
@@ -594,20 +623,26 @@ function buildCartItem() {
         imgFileName: state.imgFileName,
         fabricCode: f.code,
         fabricName: f.name,
+        fabricType: state.fabricType,
+        fabricColor: f.isCotton ? state.fabricColor : null,
         orderWcm: state.orderWcm,
         orderHcm: state.orderHcm,
         orderSize: state.orderWcm + '×' + state.orderHcm + 'cm',
         width_mm: Math.round(state.orderWcm * 10),
         height_mm: Math.round(state.orderHcm * 10),
+        areaM2: areaM2,
         hoebae: hoebae,
         unitPrice: itemPrice,
         imageSize: state.imgWcm + '×' + state.imgHcm + 'cm',
         layout: state.layout,
         qtyValue: state.orderQty,
         qtyLabel: state.orderQty + '개',
-        finishCode: state.finishCode, finishName: state.finishName, finishExtra: state.finishExtra || 0,
+        finishCode: state.finishCode, finishName: state.finishName, finishExtraM2: state.finishExtra || 0, finishTotal: finishPerItem,
         hookCode: state.hookCode, hookName: state.hookName, hookExtra: state.hookExtra || 0,
         accCode: state.accCode, accName: state.accName, accExtra: state.accExtra || 0,
+        subtotal: subtotal,
+        discountPct: disc.pct,
+        discountAmt: discountAmt,
         price: price,
         addedAt: new Date().toISOString()
     };
