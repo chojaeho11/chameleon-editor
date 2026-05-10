@@ -2360,7 +2360,7 @@ function addHreflangTags() {
 
 // 종이매대 리뷰 로드 (페이지네이션 + 언어별 + 클릭 이동)
 var _rvPage = 0;
-var _rvPageSize = 8;
+var _rvPageSize = 20;
 var _rvSupa = null;
 var _rvFallback = false;
 
@@ -2387,14 +2387,26 @@ window.loadPdReviews = async function() {
         var data = null;
         // [Cotton Print] 패브릭 상품 후기만: 코드가 cb*, ua_fabric*, 패브릭 카테고리 코드들
         // 1순위: cotton_print.js가 등록한 fabricCodes 배열 사용 (정확)
-        // 2순위: cb* / ua_fabric* LIKE 검색 (fallback)
-        // 3순위: 언어별 전체 (마지막 fallback)
-        var fabCodes = window._cottonFabricCodes || null;
+        // 패브릭 카테고리 코드 자동 조회 (없으면)
+        if (!window._cottonFabricCodes) {
+            try {
+                var subCatRes = await _rvSupa.from('admin_categories').select('code').eq('top_category_code', '22222');
+                if (subCatRes.data) {
+                    var subCodes = subCatRes.data.map(function(c){ return c.code; });
+                    if (subCodes.length > 0) {
+                        var prodRes = await _rvSupa.from('admin_products').select('code').in('category', subCodes);
+                        window._cottonFabricCodes = (prodRes.data||[]).map(function(p){ return p.code; });
+                    }
+                }
+            } catch(e) { console.warn('fabric codes lookup failed', e); }
+        }
+        var fabCodes = window._cottonFabricCodes || [];
+
         if (_rvPage === 0 && !_rvFallback) {
-            // 1순위: 정확한 fabric 코드 in 검색
-            if (fabCodes && fabCodes.length > 0) {
-                // cotton_showcase + 모든 언어의 패브릭 후기 — 다국어 노출
-                var combinedCodes = fabCodes.slice(0, 99).concat(['cotton_showcase']);
+            // 1순위: cotton_showcase + 정확한 fabric 코드 in 검색 (다국어 + 모든 평점)
+            var combinedCodes = fabCodes.slice(0, 200).concat(['cotton_showcase']);
+            window._cottonFabCodes100 = combinedCodes;
+            if (combinedCodes.length > 1) {
                 var res = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
                     .in('product_code', combinedCodes)
@@ -2402,55 +2414,47 @@ window.loadPdReviews = async function() {
                     .order('created_at', { ascending: false })
                     .range(from, to);
                 data = res.data;
-                if (data && data.length > 0) { _rvFallback = 'fab_codes'; window._cottonFabCodes100 = combinedCodes; }
+                if (data && data.length > 0) _rvFallback = 'fab_codes';
             }
-            // fallback: 패브릭 코드 못 찾으면 모든 언어의 패브릭 관련 후기
-            if (!data || data.length === 0) {
-                var resAll = await _rvSupa.from('product_reviews')
-                    .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%')
-                    .gte('rating', 3)
-                    .order('created_at', { ascending: false })
-                    .range(from, to);
-                if (resAll.data && resAll.data.length) { data = resAll.data; _rvFallback = 'multilang'; }
-            }
-            // 2순위: cb%/ua_fabric% LIKE
+            // 2순위: cb%/cotton%/fabric%/ua_fabric% LIKE 검색
             if (!data || data.length === 0) {
                 var res2 = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .or('product_code.like.cb%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase')
-                    .gte('rating', 4)
+                    .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase')
+                    .gte('rating', 3)
                     .order('created_at', { ascending: false })
                     .range(from, to);
-                data = res2.data;
-                if (data && data.length > 0) { _rvFallback = 'fabric_like'; }
-                else { _rvFallback = 'lang_all'; }
+                if (res2.data && res2.data.length) { data = res2.data; _rvFallback = 'fabric_like'; }
+            }
+            // 3순위 (광역): 사진이 있는 모든 고평점 후기 (사진 있는 = 실제 후기)
+            if (!data || data.length === 0) {
+                var res3 = await _rvSupa.from('product_reviews')
+                    .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
+                    .not('photo_url', 'is', null).gte('rating', 4)
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+                data = res3.data;
+                _rvFallback = 'photo_all';
             }
         }
-        // 결정된 전략으로 페이지 로드
-        if (_rvPage > 0 || _rvFallback === 'lang_all') {
+        // 결정된 전략으로 페이지 로드 (더보기)
+        if (_rvPage > 0) {
             if (_rvFallback === 'fab_codes' && window._cottonFabCodes100) {
                 var r = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
                     .in('product_code', window._cottonFabCodes100).gte('rating', 3)
                     .order('created_at', { ascending: false }).range(from, to);
                 data = r.data;
-            } else if (_rvFallback === 'multilang') {
-                var r0 = await _rvSupa.from('product_reviews')
-                    .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%').gte('rating', 3)
-                    .order('created_at', { ascending: false }).range(from, to);
-                data = r0.data;
             } else if (_rvFallback === 'fabric_like') {
                 var r = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .or('product_code.like.cb%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase').gte('rating', 4)
+                    .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase').gte('rating', 3)
                     .order('created_at', { ascending: false }).range(from, to);
                 data = r.data;
-            } else {
+            } else if (_rvFallback === 'photo_all') {
                 var r = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .eq('lang', siteLang).gte('rating', 4)
+                    .not('photo_url', 'is', null).gte('rating', 4)
                     .order('created_at', { ascending: false }).range(from, to);
                 data = r.data;
             }
