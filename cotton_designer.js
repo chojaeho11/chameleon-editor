@@ -5,10 +5,10 @@
 'use strict';
 
 // ════════════════════════════════════════════════════
-// 회배 단가 (1회배 = 1300×1000mm = 1.3 m²)
+// 회배 단가 (1회배 = 130×100cm = 1.3 m²)
 // ════════════════════════════════════════════════════
 const HOEBAE_UNIT_PRICE = 15000;
-const HOEBAE_AREA_MM2 = 1300 * 1000; // = 1,300,000 mm²
+const HOEBAE_AREA_CM2 = 130 * 100; // = 13,000 cm²
 
 // admin_products / admin_categories 동기화 결과 — 런타임에 채워짐
 let DB_FABRICS = [];     // 패브릭만
@@ -34,8 +34,8 @@ const state = {
     fabricGroup: '',        // 면/광목 등
     fabricCode: '',         // admin_products.code
     layout: 'basic',
-    orderWmm: 1300,         // 출력 가로 (mm)
-    orderHmm: 1000,         // 출력 세로 (mm)
+    orderWcm: 130,          // 출력 가로 (cm)
+    orderHcm: 100,          // 출력 세로 (cm)
     orderQty: 1,            // 주문 수량 (개)
     imgWcm: 10,             // 한 패턴 이미지 가로 (cm)
     imgHcm: 10,             // 한 패턴 이미지 세로 (cm)
@@ -43,9 +43,9 @@ const state = {
     img: null,
     imgDataUrl: null,
     imgFileName: '',
-    finishCode: null,       // 선택된 마감 옵션 코드
+    finishCode: null,
     finishName: '마감 없음',
-    finishExtra: 0          // 마감 추가 비용
+    finishExtra: 0
 };
 
 function getFabric() {
@@ -53,9 +53,9 @@ function getFabric() {
 }
 
 function calcHoebae() {
-    const w = state.orderWmm || 0;
-    const h = state.orderHmm || 0;
-    return (w * h) / HOEBAE_AREA_MM2;
+    const w = state.orderWcm || 0;
+    const h = state.orderHcm || 0;
+    return (w * h) / HOEBAE_AREA_CM2;
 }
 
 // ────────────────────────────────────────────────
@@ -268,8 +268,8 @@ function renderFinishOptions() {
 }
 
 function updateSizeLabels() {
-    document.getElementById('topSizeLabel').textContent = (state.orderWmm/10).toFixed(0) + 'cm';
-    document.getElementById('sideSizeLabel').textContent = (state.orderHmm/10).toFixed(0) + 'cm';
+    document.getElementById('topSizeLabel').textContent = state.orderWcm.toFixed(0) + 'cm';
+    document.getElementById('sideSizeLabel').textContent = state.orderHcm.toFixed(0) + 'cm';
 }
 
 // ────────────────────────────────────────────────
@@ -285,20 +285,19 @@ window._cdSelectLayout = function(name) {
 // 회배 계산기 + 수량
 // ════════════════════════════════════════════════════
 window._cdCalcHoebae = function() {
-    const wEl = document.getElementById('orderWmm');
-    const hEl = document.getElementById('orderHmm');
+    const wEl = document.getElementById('orderWcm');
+    const hEl = document.getElementById('orderHcm');
     const qEl = document.getElementById('orderQty');
-    let w = parseInt(wEl.value) || 1300;
-    let h = parseInt(hEl.value) || 1000;
+    let w = parseFloat(wEl.value) || 130;
+    let h = parseFloat(hEl.value) || 100;
     let q = parseInt(qEl.value) || 1;
-    if (w > 1300) { w = 1300; wEl.value = 1300; showToast('가로는 최대 1300mm입니다'); }
-    if (w < 100) w = 100;
-    if (h < 100) h = 100;
+    if (w > 130) { w = 130; wEl.value = 130; showToast('가로는 최대 130cm입니다'); }
+    if (w < 10) w = 10;
+    if (h < 10) h = 10;
     if (q < 1) q = 1;
-    state.orderWmm = w; state.orderHmm = h; state.orderQty = q;
+    state.orderWcm = w; state.orderHcm = h; state.orderQty = q;
     const hoebae = calcHoebae();
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    const totalPrice = itemPrice * q + (state.finishExtra || 0) * q;
     document.getElementById('hoebaeAmount').textContent = hoebae.toFixed(2) + ' 회배';
     document.getElementById('hoebaePrice').textContent = itemPrice.toLocaleString() + '원';
     updateSizeLabels();
@@ -372,9 +371,9 @@ window._cdRender = function() {
     state.imgWcm = parseFloat(document.getElementById('imgWcm').value) || 10;
     state.imgHcm = parseFloat(document.getElementById('imgHcm').value) || 10;
 
-    // 출력 사이즈를 cm 단위로 (state.orderWmm/Hmm은 mm)
-    const fabricW = (state.orderWmm || 1300) / 10;
-    const fabricH = (state.orderHmm || 1000) / 10;
+    // 출력 사이즈 (cm)
+    const fabricW = state.orderWcm || 130;
+    const fabricH = state.orderHcm || 100;
     const maxW = 780, maxH = 620;
     const scaleByW = maxW / fabricW;
     const scaleByH = maxH / fabricH;
@@ -479,9 +478,11 @@ window._cpUpdateCartUI = function() {
             body.innerHTML = '<div class="cart-empty"><i class="fa-regular fa-folder-open"></i><div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;">장바구니가 비어있습니다</div><div style="font-size:12px;">디자인을 완성하고 장바구니에 담아보세요</div></div>';
         } else {
             body.innerHTML = cart.map(function(it, i) {
+                // 구버전 카트 호환 (orderWmm/orderHmm)
+                const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
                 const opts = [
                     it.fabricName,
-                    '출력 ' + (it.orderSize || ''),
+                    '출력 ' + sz,
                     it.hoebae ? it.hoebae.toFixed(2) + '회배' : null,
                     it.layout,
                     it.qtyLabel,
@@ -554,9 +555,12 @@ function buildCartItem() {
         imgFileName: state.imgFileName,
         fabricCode: f.code,
         fabricName: f.name,
-        orderWmm: state.orderWmm,
-        orderHmm: state.orderHmm,
-        orderSize: state.orderWmm + '×' + state.orderHmm + 'mm',
+        orderWcm: state.orderWcm,
+        orderHcm: state.orderHcm,
+        orderSize: state.orderWcm + '×' + state.orderHcm + 'cm',
+        // 통합주문관리 호환을 위해 mm도 포함
+        width_mm: Math.round(state.orderWcm * 10),
+        height_mm: Math.round(state.orderHcm * 10),
         hoebae: hoebae,
         unitPrice: itemPrice,
         imageSize: state.imgWcm + '×' + state.imgHcm + 'cm',
@@ -675,8 +679,10 @@ window._cpSubmitOrder = async function() {
                 product_code: it.fabricCode,
                 product_name: it.title,
                 fabric: it.fabricName,
-                width_mm: it.orderWmm,
-                height_mm: it.orderHmm,
+                width_mm: it.width_mm || Math.round((it.orderWcm||130)*10),
+                height_mm: it.height_mm || Math.round((it.orderHcm||100)*10),
+                width_cm: it.orderWcm,
+                height_cm: it.orderHcm,
                 hoebae: it.hoebae,
                 layout: it.layout,
                 qty: it.qtyValue,

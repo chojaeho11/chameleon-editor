@@ -459,20 +459,20 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 출력 사이즈 + 회배 계산기 (대폭 1300mm 기준) -->
+        <!-- 출력 사이즈 + 회배 계산기 (대폭 130cm 기준) -->
         <div class="side-card">
             <div class="side-card-title">
                 출력 사이즈 (실제 출력)
-                <span style="font-size:10px; font-weight:600; color:var(--text-light);">대폭 1300mm</span>
+                <span style="font-size:10px; font-weight:600; color:var(--text-light);">대폭 130cm</span>
             </div>
             <div class="size-controls">
                 <div class="size-input-group">
-                    <label>가로 (mm) — 최대 1300</label>
-                    <input type="number" class="size-input" id="orderWmm" value="1300" min="100" max="1300" step="10" oninput="window._cdCalcHoebae()">
+                    <label>가로 (cm) — 최대 130</label>
+                    <input type="number" class="size-input" id="orderWcm" value="130" min="10" max="130" step="1" oninput="window._cdCalcHoebae()">
                 </div>
                 <div class="size-input-group">
-                    <label>세로 (mm) — 무제한</label>
-                    <input type="number" class="size-input" id="orderHmm" value="1000" min="100" step="10" oninput="window._cdCalcHoebae()">
+                    <label>세로 (cm) — 무제한</label>
+                    <input type="number" class="size-input" id="orderHcm" value="100" min="10" step="1" oninput="window._cdCalcHoebae()">
                 </div>
             </div>
             <div style="margin-top:10px; padding:12px; background:var(--cream); border-radius:8px; font-size:13px;">
@@ -487,7 +487,7 @@ a { text-decoration: none; color: inherit; }
             </div>
             <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
                 <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
-                회배 = 가로(mm) × 세로(mm) ÷ 1,300,000. 회배당 15,000원. 1300×1000mm = 1회배 = 15,000원
+                회배 = 가로(cm) × 세로(cm) ÷ 13,000. 회배당 15,000원. 130×100cm = 1회배 = 15,000원
             </div>
         </div>
 
@@ -645,6 +645,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=4"></script>
+<script src="cotton_designer.js?v=5"></script>
 </body>
 </html>
