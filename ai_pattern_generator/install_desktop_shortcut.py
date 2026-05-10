@@ -1,16 +1,22 @@
 """
-바탕화면 바로가기 생성 스크립트
-==============================
-"Cotton Pattern Studio.lnk"를 사용자 바탕화면에 만듭니다.
-PowerShell의 WScript.Shell COM을 호출하므로 추가 패키지 불필요.
+바탕화면 바로가기 생성 스크립트 (강화판)
+=====================================
+"Cotton Pattern Studio.lnk"를 바탕화면에 생성합니다.
+
+3단계 폴백:
+  1. PowerShell COM (WScript.Shell) - 가장 표준적
+  2. 만약 .lnk 생성 실패하면 → 같은 위치에 'Cotton Pattern Studio.bat' 복사
+  3. 실패해도 항상 어디에 생성하려 시도했는지 로그 출력
 
 실행: python install_desktop_shortcut.py
 """
 
 import os
 import sys
+import shutil
 import subprocess
 from pathlib import Path
+from typing import Tuple
 
 # Windows 콘솔이 cp949여도 유니코드 출력 안 깨지게
 if hasattr(sys.stdout, "reconfigure"):
@@ -22,66 +28,158 @@ if hasattr(sys.stdout, "reconfigure"):
 
 HERE = Path(__file__).parent.resolve()
 TARGET_BAT = HERE / "start_studio.bat"
-ICON_PATH = HERE / "studio.ico"  # 있으면 사용, 없으면 기본 아이콘
 
 
 def find_desktop() -> Path:
-    """바탕화면 경로 찾기 — OneDrive 경로도 고려."""
+    """바탕화면 경로 찾기 — OneDrive Desktop 우선, 후보 모두 시도."""
     candidates = []
     home = Path.home()
-    # OneDrive Desktop
-    onedrive = os.environ.get("OneDrive") or os.environ.get("OneDriveConsumer")
+
+    # 1순위: PowerShell이 알려주는 'Desktop' 폴더 (가장 정확)
+    try:
+        ps_desktop = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "[Environment]::GetFolderPath('Desktop')"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=5,
+        )
+        if ps_desktop.returncode == 0:
+            p = Path(ps_desktop.stdout.strip())
+            if p.exists():
+                candidates.append(p)
+    except Exception:
+        pass
+
+    # 2순위: OneDrive 경로
+    onedrive = os.environ.get("OneDrive") or os.environ.get("OneDriveConsumer") or os.environ.get("OneDriveCommercial")
     if onedrive:
         candidates.append(Path(onedrive) / "Desktop")
         candidates.append(Path(onedrive) / "바탕 화면")
-    # 일반 Desktop
-    candidates.append(home / "Desktop")
-    candidates.append(home / "바탕 화면")
-    # USERPROFILE
-    up = os.environ.get("USERPROFILE")
-    if up:
-        candidates.append(Path(up) / "Desktop")
-        candidates.append(Path(up) / "바탕 화면")
+
+    # 3순위: home/USERPROFILE
+    for base in [home, Path(os.environ.get("USERPROFILE", str(home)))]:
+        candidates.append(base / "Desktop")
+        candidates.append(base / "바탕 화면")
+        candidates.append(base / "OneDrive" / "Desktop")
+        candidates.append(base / "OneDrive" / "바탕 화면")
+
+    # 첫 번째로 존재하는 것
     for p in candidates:
-        if p.exists():
-            return p
+        try:
+            if p.exists() and p.is_dir():
+                return p
+        except Exception:
+            continue
+    # 폴백
     return home / "Desktop"
 
 
-def create_shortcut():
+def create_lnk_via_powershell(shortcut_path: Path) -> Tuple[bool, str]:
+    """PowerShell COM으로 .lnk 생성. (성공여부, 로그) 반환."""
+    # PowerShell 단일따옴표 here-string으로 변수 보간/이스케이프 회피
+    # path들을 PS 변수에 넣고 사용
+    ps_script = (
+        '$ErrorActionPreference = "Stop"; '
+        f'$lnk = "{shortcut_path}"; '
+        f'$tgt = "{TARGET_BAT}"; '
+        f'$wd  = "{HERE}"; '
+        'try {'
+        '  $WshShell = New-Object -ComObject WScript.Shell;'
+        '  $s = $WshShell.CreateShortcut($lnk);'
+        '  $s.TargetPath = $tgt;'
+        '  $s.WorkingDirectory = $wd;'
+        '  $s.WindowStyle = 7;'
+        '  $s.Description = "Cotton Print AI 패턴 생성기";'
+        '  $s.Save();'
+        '  if (Test-Path $lnk) { Write-Output "OK:$lnk" }'
+        '  else { Write-Output "NOFILE:$lnk"; exit 2 }'
+        '} catch {'
+        '  Write-Output ("ERR:" + $_.Exception.Message);'
+        '  exit 3'
+        '}'
+    )
+    try:
+        res = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+             "-Command", ps_script],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=15,
+        )
+        out = (res.stdout or "").strip()
+        err = (res.stderr or "").strip()
+        log = f"  PS exit={res.returncode}\n  stdout: {out}\n  stderr: {err}"
+        # 파일 실제 생성 검증
+        if shortcut_path.exists():
+            return True, log + "\n  ✓ 파일 검증 OK"
+        return False, log + "\n  ✗ Save()는 호출됐지만 파일이 없음"
+    except subprocess.TimeoutExpired:
+        return False, "  ✗ PowerShell 타임아웃 (15초)"
+    except Exception as e:
+        return False, f"  ✗ PowerShell 실행 오류: {e}"
+
+
+def fallback_copy_bat(desktop: Path) -> Path:
+    """폴백: .bat 파일을 바탕화면에 직접 복사."""
+    target = desktop / "Cotton Pattern Studio.bat"
+    shutil.copy2(TARGET_BAT, target)
+    return target
+
+
+def main():
     if os.name != "nt":
         sys.exit("Windows에서만 동작합니다.")
     if not TARGET_BAT.exists():
         sys.exit(f"start_studio.bat이 없습니다: {TARGET_BAT}")
 
     desktop = find_desktop()
+    print(f"[info] 바탕화면 경로: {desktop}")
+    print(f"[info] 바탕화면 존재: {desktop.exists()}")
+
+    if not desktop.exists():
+        try:
+            desktop.mkdir(parents=True, exist_ok=True)
+            print(f"[info] 바탕화면 폴더 생성됨")
+        except Exception as e:
+            print(f"[warn] 바탕화면 폴더 생성 실패: {e}")
+
     shortcut_path = desktop / "Cotton Pattern Studio.lnk"
+    print(f"[info] 생성할 바로가기: {shortcut_path}")
 
-    icon_arg = f'$s.IconLocation = "{ICON_PATH}"' if ICON_PATH.exists() else ""
+    # 시도 1: PowerShell COM으로 .lnk 생성
+    print("\n[try 1] PowerShell COM으로 .lnk 생성 중...")
+    ok, log = create_lnk_via_powershell(shortcut_path)
+    print(log)
 
-    ps_script = f"""
-$WshShell = New-Object -ComObject WScript.Shell
-$s = $WshShell.CreateShortcut("{shortcut_path}")
-$s.TargetPath = "{TARGET_BAT}"
-$s.WorkingDirectory = "{HERE}"
-$s.WindowStyle = 7
-$s.Description = "Cotton Print AI 패턴 생성기"
-{icon_arg}
-$s.Save()
-Write-Host "✓ 바로가기 생성됨: {shortcut_path}"
-"""
+    if ok:
+        print(f"\n✅ 성공! 바탕화면을 확인하세요:")
+        print(f"   {shortcut_path}")
+        return
 
-    result = subprocess.run(
-        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_script],
-        capture_output=True, text=True, encoding="utf-8", errors="replace"
-    )
-    if result.returncode != 0:
-        print("✗ 바로가기 생성 실패:")
-        print(result.stderr)
-        sys.exit(1)
-    print(result.stdout.strip() or f"✓ 생성 완료: {shortcut_path}")
-    print(f"\n바탕화면에서 'Cotton Pattern Studio'를 더블클릭하면 GUI가 열립니다.")
+    # 시도 2: .bat 파일을 직접 복사
+    print("\n[try 2] .lnk 실패 → .bat 파일 직접 복사로 폴백")
+    try:
+        target = fallback_copy_bat(desktop)
+        if target.exists():
+            print(f"\n✅ 폴백 성공! 바탕화면에 .bat 파일이 생성됨:")
+            print(f"   {target}")
+            print(f"   더블클릭하면 GUI가 실행됩니다.")
+            return
+        else:
+            print(f"\n✗ 폴백도 실패: 복사 후 파일이 없음")
+    except Exception as e:
+        print(f"\n✗ 폴백 실패: {e}")
+
+    # 모든 시도 실패
+    print("\n" + "=" * 60)
+    print("✗ 바로가기 생성에 실패했습니다.")
+    print("=" * 60)
+    print(f"\n수동으로 만드시려면:")
+    print(f"1. 파일 탐색기에서 다음 폴더 열기:")
+    print(f"   {HERE}")
+    print(f"2. 'start_studio.bat' 파일을 우클릭 → '바로 가기 만들기'")
+    print(f"3. 만들어진 .lnk 파일을 바탕화면으로 끌어다 놓기")
+    sys.exit(1)
 
 
 if __name__ == "__main__":
-    create_shortcut()
+    main()
