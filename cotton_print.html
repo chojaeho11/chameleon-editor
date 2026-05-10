@@ -787,7 +787,7 @@ async function submitPdSample() {
                     <div style="font-size:13px; font-weight:900; color:#78350f; margin-bottom:2px;"><i class="fa-solid fa-coins" style="color:#b45309;"></i> <span data-i18n="up_royalty_title">판매금액의 10% 적립금</span></div>
                     <div style="font-size:11px; color:#92400e; line-height:1.5;" data-i18n="up_royalty_desc">패턴이 사용될 때마다 자동 적립 · 적립금은 마이페이지에서 출금 신청</div>
                 </div>
-                <a href="/mypage" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:9px 16px; background:var(--brown-dark); color:var(--gold); border-radius:50px; font-size:12px; font-weight:800; text-decoration:none; white-space:nowrap;">
+                <a href="/mypage" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:9px 16px; background:var(--brown-dark); color:#fde047; border-radius:50px; font-size:12px; font-weight:800; text-decoration:none; white-space:nowrap;">
                     <i class="fa-solid fa-user"></i> <span data-i18n="up_mypage_btn">마이페이지로 가기</span>
                 </a>
             </div>
@@ -1042,7 +1042,7 @@ async function submitPdSample() {
         }
 
         var btn = event.target.closest('button');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (typeof t === "function" ? (t("up_uploading") || "업로드 중...") : "업로드 중...") + ''; }
 
         try {
             var sb = window.supabase ? window.supabase.createClient(
@@ -1085,7 +1085,8 @@ async function submitPdSample() {
                 status: 'pending'  // 어드민 승인 대기
             });
 
-            statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">✅ 업로드 완료! 어드민 승인 후 카탈로그에 노출됩니다.</span>';
+            var doneMsg = { ko:'✅ 업로드 완료! 어드민 승인 후 카탈로그에 노출됩니다.', ja:'✅ アップロード完了！承認後カタログに表示されます。', en:'✅ Upload complete! Will appear in catalog after admin approval.', zh:'✅ 上传完成！管理员审核后显示在目录中。', ar:'✅ تم الرفع', es:'✅ Subido!', de:'✅ Hochgeladen!', fr:'✅ Telecharge!' };
+            statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">' + (doneMsg[LANG]||doneMsg.ko) + '</span>';
             // 폼 초기화 (안전 가드)
             ['upPatternName','upPatternAuthor','upPatternDesc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
             var oName = document.getElementById('upOriginalName'); if (oName) oName.textContent = '';
@@ -1100,7 +1101,7 @@ async function submitPdSample() {
         } catch(e) {
             statusEl.innerHTML = '<span style="color:#dc2626;">오류: ' + e.message + '</span>';
         } finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 패턴 등록하기'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> ' + (t('up_submit_btn')||'패턴 등록하기'); }
         }
     };
 
@@ -1635,7 +1636,7 @@ function toggleKapuChat() {
         if (!comment) { alert('코멘트를 입력해주세요.'); return; }
 
         var btn = event.target.closest('button');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (typeof t === "function" ? (t("up_uploading") || "업로드 중...") : "업로드 중...") + ''; }
 
         try {
             var sb = window.supabase ? window.supabase.createClient(
@@ -2229,6 +2230,7 @@ up_desc: { ko:'패턴 설명 / 키워드', ja:'パターン説明・キーワー
 up_desc_ph: { ko:'예: 보태니컬 빈티지, 카페 인테리어용, 흙톤 5색 조합', ja:'例: ボタニカルビンテージ', en:'e.g. Botanical vintage, 5-color earth tone', zh:'例: 植物复古', ar:'مثال', es:'ej. Botanico vintage', de:'z.B. Botanisch Vintage', fr:'ex: Vintage botanique' },
 up_agree: { ko:'본 패턴은 본인 창작물이며, 카멜레온프린팅의 패브릭 인쇄 판매에 사용 동의합니다 (저작권은 작가에게 귀속).', ja:'本パターンは本人の創作物であり、カメレオンプリンティングの販売使用に同意します (著作権は作家に帰属)。', en:'This pattern is my original work and I agree to its use in Chameleon Printing\'s fabric sales (copyright remains with the artist).', zh:'本图案为本人原创，同意用于变色龙印刷销售', ar:'هذا النمط من اعمالي الاصلية', es:'Este patron es de mi autoria', de:'Dieses Muster ist mein Original', fr:'Ce motif est mon oeuvre originale' },
 up_submit_btn: { ko:'패턴 등록하기', ja:'パターンを登録', en:'Register Pattern', zh:'注册图案', ar:'سجل النمط', es:'Registrar patron', de:'Muster registrieren', fr:'Enregistrer le motif' },
+up_uploading: { ko:'업로드 중...', ja:'アップロード中...', en:'Uploading...', zh:'上传中...', ar:'جاري الرفع...', es:'Subiendo...', de:'Hochladen...', fr:'Telechargement...' },
 footer_brand_name: { ko:'Cotton Print · 코튼프린팅', ja:'Cotton Print · コットンプリント', en:'Cotton Print', zh:'Cotton Print · 棉印', ar:'Cotton Print', es:'Cotton Print', de:'Cotton Print', fr:'Cotton Print' },
 footer_brand_desc_cotton: {
     ko:'패브릭(천) 인쇄 전문 - (주)카멜레온프린팅 사업부. 광목·면포·옥스포드·쉬폰 맞춤 인쇄.',
