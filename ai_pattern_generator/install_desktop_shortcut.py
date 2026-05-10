@@ -28,6 +28,10 @@ if hasattr(sys.stdout, "reconfigure"):
 
 HERE = Path(__file__).parent.resolve()
 TARGET_BAT = HERE / "start_studio.bat"
+GUI_SCRIPT = HERE / "pattern_studio_gui.py"
+LAUNCH_SCRIPT = HERE / "launch.py"
+VENV_PYTHONW = HERE / ".venv" / "Scripts" / "pythonw.exe"
+VENV_PYTHON = HERE / ".venv" / "Scripts" / "python.exe"
 
 
 def find_desktop() -> Path:
@@ -75,18 +79,40 @@ def find_desktop() -> Path:
 
 
 def create_lnk_via_powershell(shortcut_path: Path) -> Tuple[bool, str]:
-    """PowerShell COM으로 .lnk 생성. (성공여부, 로그) 반환."""
-    # PowerShell 단일따옴표 here-string으로 변수 보간/이스케이프 회피
-    # path들을 PS 변수에 넣고 사용
+    """PowerShell COM으로 .lnk 생성. .bat 거치지 않고 pythonw.exe 직접 실행.
+
+    target/argument 결정:
+      - venv가 있고 pythonw.exe 존재 → pythonw.exe + pattern_studio_gui.py
+      - venv가 없으면 → 시스템 python.exe + launch.py (자동 setup + 실행)
+
+    .lnk가 .bat을 가리키면 OneDrive Online-only 상태에서 실행 안 되거나
+    파일 연결이 메모장으로 바뀌면 메모장에서 열림. .lnk가 pythonw.exe를
+    직접 가리키면 두 문제 모두 우회됨.
+    """
+    if VENV_PYTHONW.exists():
+        target_exe = VENV_PYTHONW
+        arg_script = GUI_SCRIPT
+    elif VENV_PYTHON.exists():
+        target_exe = VENV_PYTHON
+        arg_script = GUI_SCRIPT
+    else:
+        # venv 미생성 → launch.py가 venv 만들고 GUI 띄움 (콘솔창 보임)
+        target_exe = Path(sys.executable).with_name("pythonw.exe")
+        if not target_exe.exists():
+            target_exe = Path(sys.executable)
+        arg_script = LAUNCH_SCRIPT
+
     ps_script = (
         '$ErrorActionPreference = "Stop"; '
         f'$lnk = "{shortcut_path}"; '
-        f'$tgt = "{TARGET_BAT}"; '
+        f'$tgt = "{target_exe}"; '
+        f'$arg = "`"{arg_script}`""; '
         f'$wd  = "{HERE}"; '
         'try {'
         '  $WshShell = New-Object -ComObject WScript.Shell;'
         '  $s = $WshShell.CreateShortcut($lnk);'
         '  $s.TargetPath = $tgt;'
+        '  $s.Arguments = $arg;'
         '  $s.WorkingDirectory = $wd;'
         '  $s.WindowStyle = 7;'
         '  $s.Description = "Cotton Print AI 패턴 생성기";'
