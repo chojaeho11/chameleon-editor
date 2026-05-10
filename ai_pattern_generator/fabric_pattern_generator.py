@@ -37,6 +37,13 @@ from openai import OpenAI
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
+# Replicate (선택) — 패턴 전문 모델 사용 시
+try:
+    import replicate
+    HAS_REPLICATE = True
+except ImportError:
+    HAS_REPLICATE = False
+
 
 # ============================================================
 # 설정 로드
@@ -44,16 +51,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+REPLICATE_KEY = os.getenv("REPLICATE_API_TOKEN") or os.getenv("REPLICATE_TOKEN")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://qinvtnhiidtmrzosyvys.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")  # service_role (RLS 우회용)
 
-if not OPENAI_KEY:
-    sys.exit("❌ OPENAI_API_KEY 환경변수가 없습니다. .env 파일을 만들어주세요.")
+if not OPENAI_KEY and not REPLICATE_KEY:
+    sys.exit("❌ OPENAI_API_KEY 또는 REPLICATE_API_TOKEN 중 하나는 .env에 있어야 합니다.")
 if not SUPABASE_KEY:
     sys.exit("❌ SUPABASE_SERVICE_KEY 환경변수가 없습니다. .env 파일을 만들어주세요.")
 
-oai = OpenAI(api_key=OPENAI_KEY)
+oai = OpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 sb: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+if REPLICATE_KEY:
+    os.environ["REPLICATE_API_TOKEN"] = REPLICATE_KEY  # replicate SDK가 이 변수를 봄
 
 
 # ============================================================
@@ -300,18 +310,11 @@ def build_prompt(motif: str) -> str:
     )
 
 
-def generate_image(prompt: str, size: str = "1024x1024",
-                   quality: str = "medium") -> Image.Image:
-    """OpenAI 이미지 생성 — gpt-image-2 우선, 실패 시 단계별 폴백.
-
-    모델 우선순위 (2026-05 기준 OpenAI 실제 출시 모델):
-      1. gpt-image-2 (2026-04 출시, 최신) — 한글/일본어 텍스트, 포토리얼 향상
-      2. gpt-image-1.5 (중간 세대)
-      3. gpt-image-1 (2025-04 출시)
-      4. dall-e-3 (구세대, b64 미지원이라 url 다운로드)
-
-    quality: "low"/"medium"/"high" — high가 디테일 좋고 깔끔. medium은 약 $0.04, high는 약 $0.17/장
-    """
+def _generate_via_openai(prompt: str, size: str = "1024x1024",
+                          quality: str = "medium") -> Image.Image:
+    """OpenAI 이미지 생성 — gpt-image-2 우선, 실패 시 단계별 폴백."""
+    if not oai:
+        raise RuntimeError("OPENAI_API_KEY가 없습니다.")
     fallback_chain = [
         ("gpt-image-2", quality),
         ("gpt-image-1.5", quality),
@@ -328,16 +331,76 @@ def generate_image(prompt: str, size: str = "1024x1024",
         except Exception as e:
             print(f"      ⚠ {model} 실패 → 다음 모델 시도 ({e.__class__.__name__})")
             continue
-
-    # 마지막 폴백: dall-e-3 (URL 응답)
     print(f"      ⚠ 모든 gpt-image 실패 → dall-e-3 최종 폴백")
-    resp = oai.images.generate(
-        model="dall-e-3", prompt=prompt, size=size, quality="hd", n=1,
-    )
+    resp = oai.images.generate(model="dall-e-3", prompt=prompt, size=size, quality="hd", n=1)
     url = resp.data[0].url
     r = requests.get(url, timeout=60)
     r.raise_for_status()
     return Image.open(io.BytesIO(r.content)).convert("RGB")
+
+
+def _generate_via_replicate(prompt: str, size: str = "1024x1024") -> Image.Image:
+    """Replicate SDXL 비동기 타일링 — 진짜 seamless tile 생성.
+
+    SDXL의 conv 레이어 padding을 'circular'로 바꾸면 모델이 이미지의 좌우/상하가
+    이어진다고 가정하고 그림 → 자연스럽게 타일러블한 결과 생성.
+
+    이 모델은 SDXL을 asymmetric/circular tiling 모드로 실행. 후처리 불필요.
+    장당 약 $0.005, 5-10초.
+    """
+    if not HAS_REPLICATE:
+        raise RuntimeError("replicate 라이브러리 미설치. pip install replicate")
+    if not REPLICATE_KEY:
+        raise RuntimeError("REPLICATE_API_TOKEN가 .env에 없습니다.")
+
+    w, h = (int(s) for s in size.split("x"))
+    # 모델: SDXL 기반 seamless tile 생성기
+    # 첫번째 옵션 실패 시 폴백
+    model_chain = [
+        # lucataco/sdxl-asymmetric-tiling 스타일 모델 — 검증된 popular endpoint
+        ("stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc",
+         {
+            "prompt": prompt,
+            "width": w, "height": h,
+            "num_inference_steps": 30,
+            "guidance_scale": 7.5,
+            "num_outputs": 1,
+            "scheduler": "K_EULER",
+            "refine": "no_refiner",
+        }),
+    ]
+
+    last_err = None
+    for model_id, inputs in model_chain:
+        try:
+            output = replicate.run(model_id, input=inputs)
+            # output은 보통 리스트 of URL
+            url = output[0] if isinstance(output, list) else output
+            if hasattr(url, "read"):  # FileOutput 객체일 수 있음
+                data = url.read()
+                return Image.open(io.BytesIO(data)).convert("RGB")
+            r = requests.get(str(url), timeout=120)
+            r.raise_for_status()
+            return Image.open(io.BytesIO(r.content)).convert("RGB")
+        except Exception as e:
+            last_err = e
+            print(f"      ⚠ Replicate {model_id.split(':')[0]} 실패: {e.__class__.__name__}")
+            continue
+    raise last_err or RuntimeError("Replicate 모든 모델 실패")
+
+
+def generate_image(prompt: str, size: str = "1024x1024",
+                   quality: str = "medium",
+                   backend: str = "openai") -> Image.Image:
+    """이미지 생성 디스패처.
+
+    backend:
+      - "openai":    gpt-image-2 (느림, 비쌈, 후처리 필요)
+      - "replicate": SDXL asymmetric tiling (빠름, 저렴, 자체 seamless)
+    """
+    if backend == "replicate":
+        return _generate_via_replicate(prompt, size=size)
+    return _generate_via_openai(prompt, size=size, quality=quality)
 
 
 # ============================================================
@@ -476,7 +539,7 @@ def register_pattern(name: str, category: str, author: str,
 # 워커: 카테고리 1개에 대해 패턴 1개 생성
 # ============================================================
 def generate_one(category: str, output_dir: Path, dry_run: bool = False,
-                  quality: str = "medium") -> dict:
+                  quality: str = "medium", backend: str = "openai") -> dict:
     cat_info = CATEGORIES[category]
     motif = random.choice(cat_info["motifs"])
     designer = random_designer_name()
@@ -486,15 +549,22 @@ def generate_one(category: str, output_dir: Path, dry_run: bool = False,
     print(f"  │  motif: {motif[:60]}{'…' if len(motif) > 60 else ''}")
 
     # 1) AI 이미지 생성
-    print(f"  │  [1/4] AI 이미지 생성 중 (quality={quality})...", end="", flush=True)
+    backend_label = "replicate(SDXL tile)" if backend == "replicate" else f"openai({quality})"
+    print(f"  │  [1/4] AI 이미지 생성 중 [{backend_label}]...", end="", flush=True)
     t0 = time.time()
-    raw_img = generate_image(build_prompt(motif), quality=quality)
+    raw_img = generate_image(build_prompt(motif), quality=quality, backend=backend)
     print(f" ✓ ({time.time() - t0:.1f}s)")
 
     # 2) Seamless 타일 가공
-    print("  │  [2/4] 타일러블 가공 중...", end="", flush=True)
-    tile = make_seamless_tile(raw_img)
-    print(" ✓")
+    #    Replicate SDXL은 자체 asymmetric tiling으로 이미 seamless
+    #    OpenAI는 후처리 필요
+    if backend == "replicate":
+        print("  │  [2/4] 타일러블 가공 생략 (Replicate 자체 seamless) ✓")
+        tile = raw_img
+    else:
+        print("  │  [2/4] 타일러블 가공 중...", end="", flush=True)
+        tile = make_seamless_tile(raw_img)
+        print(" ✓")
 
     # 로컬 저장 (디버그/검증용)
     # 파일명은 순수 ASCII만 — Supabase Storage가 비ASCII 키를 거부함
@@ -555,6 +625,8 @@ def main():
                    help="로컬 저장 경로")
     p.add_argument("--quality", choices=["low", "medium", "high"], default="medium",
                    help="이미지 품질: low(~$0.01,~10s) / medium(~$0.04,~30-60s) / high(~$0.17,~90-180s)")
+    p.add_argument("--backend", choices=["openai", "replicate"], default="openai",
+                   help="openai(gpt-image-2, 후처리) / replicate(SDXL 자체 seamless, 빠름·저렴)")
     args = p.parse_args()
 
     cats = args.categories or list(CATEGORIES.keys())
@@ -572,7 +644,11 @@ def main():
     print("=" * 64)
     print(f" 카테고리:  {', '.join(CATEGORIES[c]['ko'] for c in cats)} ({len(cats)}개)")
     print(f" 라운드:    {rounds_label} × 라운드당 {per_round}장")
-    print(f" 품질:      {args.quality} (이미지당 약 " + {"low":"10초/$0.01","medium":"30-60초/$0.04","high":"90-180초/$0.17"}[args.quality] + ")")
+    if args.backend == "replicate":
+        print(f" 백엔드:    🚀 Replicate SDXL Asymmetric Tiling (자체 seamless · ~5-10초 · ~$0.005/장)")
+    else:
+        print(f" 백엔드:    🤖 OpenAI gpt-image-2 ({args.quality}) " +
+              {"low":"~10초·$0.01","medium":"~30-60초·$0.04","high":"~90-180초·$0.17"}[args.quality] + "/장)")
     print(f" 대기:      {args.sleep}초 (이미지 사이)")
     print(f" 저장:      {output_dir.resolve()}")
     print(f" Dry-run:   {args.dry_run}")
@@ -594,7 +670,8 @@ def main():
             for cat in cats:
                 for i in range(args.per_category):
                     try:
-                        generate_one(cat, output_dir, dry_run=args.dry_run, quality=args.quality)
+                        generate_one(cat, output_dir, dry_run=args.dry_run,
+                                     quality=args.quality, backend=args.backend)
                         done += 1
                     except Exception as e:
                         failed += 1

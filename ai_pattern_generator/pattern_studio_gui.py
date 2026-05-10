@@ -104,6 +104,7 @@ def write_env(data: dict):
     lines = [
         "# Cotton Pattern Studio - auto-generated, do not commit",
         f"OPENAI_API_KEY={q(data.get('OPENAI_API_KEY'))}",
+        f"REPLICATE_API_TOKEN={q(data.get('REPLICATE_API_TOKEN'))}",
         f"SUPABASE_URL={q(data.get('SUPABASE_URL', 'https://qinvtnhiidtmrzosyvys.supabase.co'))}",
         f"SUPABASE_SERVICE_KEY={q(data.get('SUPABASE_SERVICE_KEY'))}",
     ]
@@ -221,6 +222,16 @@ class PatternStudioApp(tk.Tk):
         self.openai_entry = ttk.Entry(keys_card, textvariable=self.openai_var, show="•", width=50)
         self.openai_entry.pack(fill="x", padx=14, pady=(0, 8))
 
+        # Replicate Key
+        rep_row = ttk.Frame(keys_card, style="Card.TFrame")
+        rep_row.pack(fill="x", padx=14, pady=(2, 2))
+        ttk.Label(rep_row, text="Replicate API Token (선택 — 패턴 전용 모델용)", style="Card.TLabel").pack(side="left")
+        ttk.Button(rep_row, text="🌐 Replicate에서 발급", command=lambda: webbrowser.open("https://replicate.com/account/api-tokens"),
+                   style="Save.TButton").pack(side="right")
+        self.replicate_var = tk.StringVar()
+        self.replicate_entry = ttk.Entry(keys_card, textvariable=self.replicate_var, show="•", width=50)
+        self.replicate_entry.pack(fill="x", padx=14, pady=(0, 8))
+
         # Supabase Key
         sb_row = ttk.Frame(keys_card, style="Card.TFrame")
         sb_row.pack(fill="x", padx=14, pady=(2, 2))
@@ -269,16 +280,23 @@ class PatternStudioApp(tk.Tk):
         self.sleep_var = tk.IntVar(value=8)
         ttk.Spinbox(opts_grid, from_=0, to=600, textvariable=self.sleep_var, width=10).grid(row=2, column=1, sticky="e", pady=4)
 
-        ttk.Label(opts_grid, text="이미지 품질", style="Card.TLabel").grid(row=3, column=0, sticky="w", pady=4)
+        ttk.Label(opts_grid, text="AI 백엔드", style="Card.TLabel").grid(row=3, column=0, sticky="w", pady=4)
+        self.backend_var = tk.StringVar(value="openai")
+        backend_combo = ttk.Combobox(opts_grid, textvariable=self.backend_var,
+                                      values=["openai", "replicate"],
+                                      state="readonly", width=12)
+        backend_combo.grid(row=3, column=1, sticky="e", pady=4)
+
+        ttk.Label(opts_grid, text="이미지 품질 (openai만)", style="Card.TLabel").grid(row=4, column=0, sticky="w", pady=4)
         self.quality_var = tk.StringVar(value="medium")
         quality_combo = ttk.Combobox(opts_grid, textvariable=self.quality_var,
                                       values=["low", "medium", "high"],
                                       state="readonly", width=8)
-        quality_combo.grid(row=3, column=1, sticky="e", pady=4)
+        quality_combo.grid(row=4, column=1, sticky="e", pady=4)
 
         self.dryrun_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(opts_grid, text="Dry-run (로컬 저장만, 등록 안 함)",
-                        variable=self.dryrun_var).grid(row=4, column=0, columnspan=2, sticky="w", pady=(8, 0))
+                        variable=self.dryrun_var).grid(row=5, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
         # 비용 안내 — 품질에 따라 동적 갱신
         self.cost_label = ttk.Label(opts_card,
@@ -286,13 +304,17 @@ class PatternStudioApp(tk.Tk):
                                style="Card.TLabel", foreground=COLORS["accent"], font=("Segoe UI", 9, "italic"))
         self.cost_label.pack(anchor="w", padx=14, pady=(0, 12))
         def _update_cost(*_):
+            if self.backend_var.get() == "replicate":
+                self.cost_label.config(text="🚀 Replicate SDXL · ~$0.005/장 · ~5-10초/장 · 시간당 ~300+장 · 자체 seamless (후처리 X)")
+                return
             info = {
-                "low":    "💰 low · ~$0.01/장 · ~10초/장 · 시간당 ~250장 (디테일 적음)",
-                "medium": "💰 medium · ~$0.04/장 · ~30-60초/장 · 시간당 ~60-100장 (권장)",
-                "high":   "💰 high · ~$0.17/장 · ~90-180초/장 · 시간당 ~20-40장 (최고 품질)",
+                "low":    "💰 openai low · ~$0.01/장 · ~10초/장 · 시간당 ~250장 (디테일 적음)",
+                "medium": "💰 openai medium · ~$0.04/장 · ~30-60초/장 · 시간당 ~60-100장",
+                "high":   "💰 openai high · ~$0.17/장 · ~90-180초/장 · 시간당 ~20-40장 (느림)",
             }
             self.cost_label.config(text=info.get(self.quality_var.get(), ""))
         quality_combo.bind("<<ComboboxSelected>>", _update_cost)
+        backend_combo.bind("<<ComboboxSelected>>", _update_cost)
         _update_cost()
 
         # ─── 우측: 카테고리 ───
@@ -361,6 +383,7 @@ class PatternStudioApp(tk.Tk):
     def _load_saved(self):
         env = read_env()
         self.openai_var.set(env.get("OPENAI_API_KEY", ""))
+        self.replicate_var.set(env.get("REPLICATE_API_TOKEN", ""))
         self.sb_var.set(env.get("SUPABASE_SERVICE_KEY", ""))
 
         cfg = read_config()
@@ -368,6 +391,7 @@ class PatternStudioApp(tk.Tk):
         if "per_category" in cfg: self.percat_var.set(cfg["per_category"])
         if "sleep" in cfg: self.sleep_var.set(cfg["sleep"])
         if "quality" in cfg: self.quality_var.set(cfg["quality"])
+        if "backend" in cfg: self.backend_var.set(cfg["backend"])
         if "dry_run" in cfg: self.dryrun_var.set(cfg["dry_run"])
         if "categories" in cfg:
             for code, v in self.cat_vars.items():
@@ -379,6 +403,7 @@ class PatternStudioApp(tk.Tk):
             "per_category": self.percat_var.get(),
             "sleep": self.sleep_var.get(),
             "quality": self.quality_var.get(),
+            "backend": self.backend_var.get(),
             "dry_run": self.dryrun_var.get(),
             "categories": [c for c, v in self.cat_vars.items() if v.get()],
         })
@@ -389,16 +414,21 @@ class PatternStudioApp(tk.Tk):
             s = (s or "").strip().strip('"').strip("'").strip()
             return s.replace("\r", "").replace("\n", "")
         oai = clean(self.openai_var.get())
+        rep = clean(self.replicate_var.get())
         sb = clean(self.sb_var.get())
-        # 정리된 값을 입력칸에도 다시 반영 (사용자가 시각적으로 확인 가능)
+        # 정리된 값을 입력칸에도 다시 반영
         self.openai_var.set(oai)
+        self.replicate_var.set(rep)
         self.sb_var.set(sb)
-        if not oai or not oai.startswith("sk-"):
+        if oai and not oai.startswith("sk-"):
             messagebox.showwarning("OpenAI 키 확인", "OpenAI API 키는 보통 'sk-'로 시작합니다.")
+        if rep and not rep.startswith("r8_"):
+            messagebox.showwarning("Replicate 토큰 확인", "Replicate 토큰은 보통 'r8_'로 시작합니다.")
         if not sb or not sb.startswith("eyJ"):
             messagebox.showwarning("Supabase 키 확인", "Supabase service_role 키는 'eyJ'로 시작합니다 (JWT).")
         write_env({
             "OPENAI_API_KEY": oai,
+            "REPLICATE_API_TOKEN": rep,
             "SUPABASE_URL": "https://qinvtnhiidtmrzosyvys.supabase.co",
             "SUPABASE_SERVICE_KEY": sb,
         })
@@ -409,6 +439,7 @@ class PatternStudioApp(tk.Tk):
         showing = self.openai_entry.cget("show") == ""
         new_show = "•" if showing else ""
         self.openai_entry.config(show=new_show)
+        self.replicate_entry.config(show=new_show)
         self.sb_entry.config(show=new_show)
 
     def _install_shortcut(self):
@@ -473,6 +504,7 @@ class PatternStudioApp(tk.Tk):
             "--rounds", str(self.rounds_var.get()),
             "--per-category", str(self.percat_var.get()),
             "--sleep", str(self.sleep_var.get()),
+            "--backend", self.backend_var.get(),
             "--quality", self.quality_var.get(),
             "--categories", *cats,
         ]

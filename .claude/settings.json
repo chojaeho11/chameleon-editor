@@ -42,7 +42,10 @@
       "Bash(awk 'NR>=1272 && NR<=2200 && /quick-menu-wrapper/{print NR\": \"$0}' \"c:/Users/win 10/Desktop/작업/index.html\")",
       "Bash(awk 'NR>=1985 && NR<=2300 && /quick-menu-wrapper|dsmInlinePanel|<!-- /{print NR\": \"$0}' \"c:/Users/win 10/Desktop/작업/index.html\")",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -Command ' *)",
-      "Bash(set PYTHONIOENCODING=utf-8)"
+      "Bash(set PYTHONIOENCODING=utf-8)",
+      "Bash(.venv\\\\Scripts\\\\python.exe -m pip install replicate --quiet)",
+      "Bash(./.venv/Scripts/python.exe -m pip install replicate --quiet)",
+      "Bash(./.venv/Scripts/python.exe -c \"import replicate; print\\('replicate installed:', replicate.__version__ if hasattr\\(replicate, '__version__'\\) else 'OK'\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp"

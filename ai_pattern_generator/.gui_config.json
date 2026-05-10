@@ -2,6 +2,7 @@
   "rounds": 1,
   "per_category": 1,
   "sleep": 8,
+  "quality": "medium",
   "dry_run": false,
   "categories": [
     "animal",
