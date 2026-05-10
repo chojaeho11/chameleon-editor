@@ -24,6 +24,7 @@ import threading
 import subprocess
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, Dict
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
@@ -115,10 +116,10 @@ class PatternStudioApp(tk.Tk):
         self.minsize(820, 720)
         self.configure(bg=COLORS["bg"])
 
-        self.proc: subprocess.Popen | None = None
-        self.reader_thread: threading.Thread | None = None
+        self.proc: Optional[subprocess.Popen] = None
+        self.reader_thread: Optional[threading.Thread] = None
         self.log_queue: queue.Queue = queue.Queue()
-        self.cat_vars: dict[str, tk.BooleanVar] = {}
+        self.cat_vars: Dict[str, tk.BooleanVar] = {}
 
         self._build_styles()
         self._build_ui()
