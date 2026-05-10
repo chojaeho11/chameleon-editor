@@ -1086,17 +1086,17 @@ async function submitPdSample() {
             });
 
             statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">✅ 업로드 완료! 어드민 승인 후 카탈로그에 노출됩니다.</span>';
-            // 폼 초기화
-            ['upPatternName','upPatternAuthor','upPatternDesc'].forEach(function(id){ document.getElementById(id).value=''; });
-            document.getElementById('upOriginalName').textContent = '';
-            document.getElementById('upThumbInfo').textContent = '';
-            document.getElementById('upPatternAgree').checked = false;
+            // 폼 초기화 (안전 가드)
+            ['upPatternName','upPatternAuthor','upPatternDesc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+            var oName = document.getElementById('upOriginalName'); if (oName) oName.textContent = '';
+            var tInfo = document.getElementById('upThumbInfo'); if (tInfo) tInfo.textContent = '';
+            var ag = document.getElementById('upPatternAgree'); if (ag) ag.checked = false;
             _origFile = null; _thumbFile = null; _thumbDataUrl = null;
-            // 캔버스 초기화
-            for (var k=1; k<=4; k++) {
-                var ck = document.getElementById('mockupCanvas'+k);
-                ck.getContext('2d').clearRect(0,0,ck.width,ck.height);
-            }
+            // 드롭존 시각 초기화
+            ['upThumbDrop','upOriginalDrop'].forEach(function(id){
+                var el = document.getElementById(id);
+                if (el) { el.style.background = '#fafaf9'; el.style.borderStyle = 'dashed'; el.style.borderColor = '#d6d3d1'; }
+            });
         } catch(e) {
             statusEl.innerHTML = '<span style="color:#dc2626;">오류: ' + e.message + '</span>';
         } finally {

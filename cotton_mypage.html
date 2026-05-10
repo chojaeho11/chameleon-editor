@@ -70,87 +70,202 @@ a { text-decoration:none; color:inherit; }
 <div class="cpm-header">
     <div class="cpm-header-inner">
         <div class="cpm-logo">COTTON PRINT <span>· DESIGNER</span></div>
-        <a href="https://www.cotton-print.com" class="cpm-back"><i class="fa-solid fa-arrow-left"></i> cotton-print.com</a>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button class="mp-flag" data-lang="ko" onclick="mpSwitchLang('ko')" title="한국어">🇰🇷</button>
+            <button class="mp-flag" data-lang="ja" onclick="mpSwitchLang('ja')" title="日本語">🇯🇵</button>
+            <button class="mp-flag" data-lang="en" onclick="mpSwitchLang('en')" title="English">🇺🇸</button>
+            <a href="https://www.cotton-print.com" class="cpm-back"><i class="fa-solid fa-arrow-left"></i> cotton-print.com</a>
+        </div>
     </div>
 </div>
 
 <!-- 로그인 화면 -->
 <div id="loginScreen" class="cpm-container">
     <div class="cpm-login">
-        <h2><i class="fa-solid fa-palette" style="color:var(--accent);"></i> 디자이너 마이페이지</h2>
-        <div class="desc">패턴 등록 시 사용한 디자이너명으로 로그인하세요</div>
-        <input id="loginName" class="cpm-input" placeholder="디자이너명 (Author)" autocomplete="off">
-        <input id="loginCode" class="cpm-input" placeholder="비밀코드 (선택, 회원가입 시 발급된 임시 PW)" autocomplete="off">
-        <button class="cpm-btn" onclick="cpmLogin()"><i class="fa-solid fa-right-to-bracket"></i> 로그인</button>
+        <h2><i class="fa-solid fa-palette" style="color:var(--accent);"></i> <span data-mpi="login_title">디자이너 마이페이지</span></h2>
+        <div class="desc" data-mpi="login_desc">패턴 등록 시 사용한 디자이너명으로 로그인하세요</div>
+        <input id="loginName" class="cpm-input" placeholder="디자이너명 (Author)" data-mpi-ph="login_name_ph" autocomplete="off">
+        <input id="loginCode" class="cpm-input" placeholder="비밀코드 (선택)" data-mpi-ph="login_code_ph" autocomplete="off">
+        <button class="cpm-btn" onclick="cpmLogin()"><i class="fa-solid fa-right-to-bracket"></i> <span data-mpi="login_btn">로그인</span></button>
         <div style="margin-top:14px; padding:10px; background:var(--cream); border-radius:8px; font-size:11px; color:var(--brown); line-height:1.6; text-align:center;">
-            아직 디자이너가 아니신가요?<br><a href="https://www.cotton-print.com" style="color:var(--accent); font-weight:700; text-decoration:underline;">cotton-print.com에서 패턴 등록</a>으로 시작하세요
+            <span data-mpi="not_designer">아직 디자이너가 아니신가요?</span><br><a href="https://www.cotton-print.com" style="color:var(--accent); font-weight:700; text-decoration:underline;" data-mpi="register_first">cotton-print.com에서 패턴 등록으로 시작하세요</a>
         </div>
     </div>
 </div>
 
 <!-- 대시보드 화면 -->
 <div id="dashboard" class="cpm-container" style="display:none;">
-    <div class="cpm-greet">안녕하세요, <span id="greetName"></span> 님 ✨</div>
-    <div class="cpm-sub">디자이너 활동 현황과 적립금을 확인하세요. <button onclick="cpmLogout()" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;text-decoration:underline;">로그아웃</button></div>
+    <div class="cpm-greet"><span data-mpi="hello">안녕하세요</span>, <span id="greetName"></span> <span data-mpi="hello_suffix">님 ✨</span></div>
+    <div class="cpm-sub"><span data-mpi="dash_sub">디자이너 활동 현황과 적립금을 확인하세요.</span> <button onclick="cpmLogout()" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;text-decoration:underline;" data-mpi="logout">로그아웃</button></div>
 
     <div class="cpm-stats">
-        <div class="cpm-stat"><div class="num" id="statPatterns">-</div><div class="lbl">등록 패턴</div></div>
-        <div class="cpm-stat"><div class="num" id="statApproved">-</div><div class="lbl">승인 완료</div></div>
-        <div class="cpm-stat"><div class="num" id="statSales">-</div><div class="lbl">판매 건수</div></div>
-        <div class="cpm-stat gold"><div class="num"><span id="statRoyalty">0</span><span style="font-size:14px; opacity:0.85;"> 원</span></div><div class="lbl">총 적립금</div></div>
+        <div class="cpm-stat"><div class="num" id="statPatterns">-</div><div class="lbl" data-mpi="stat_patterns">등록 패턴</div></div>
+        <div class="cpm-stat"><div class="num" id="statApproved">-</div><div class="lbl" data-mpi="stat_approved">승인 완료</div></div>
+        <div class="cpm-stat"><div class="num" id="statSales">-</div><div class="lbl" data-mpi="stat_sales">판매 건수</div></div>
+        <div class="cpm-stat gold"><div class="num"><span id="statRoyalty">0</span></div><div class="lbl" data-mpi="stat_royalty">총 적립금</div></div>
     </div>
 
     <div class="cpm-tabs">
-        <button class="cpm-tab active" data-pane="patterns" onclick="cpmSwitchTab('patterns', this)"><i class="fa-solid fa-palette"></i> 내 패턴</button>
-        <button class="cpm-tab" data-pane="royalties" onclick="cpmSwitchTab('royalties', this)"><i class="fa-solid fa-coins"></i> 적립 내역</button>
-        <button class="cpm-tab" data-pane="withdrawals" onclick="cpmSwitchTab('withdrawals', this)"><i class="fa-solid fa-money-bill-transfer"></i> 출금 내역</button>
+        <button class="cpm-tab active" data-pane="patterns" onclick="cpmSwitchTab('patterns', this)"><i class="fa-solid fa-palette"></i> <span data-mpi="tab_patterns">내 패턴</span></button>
+        <button class="cpm-tab" data-pane="royalties" onclick="cpmSwitchTab('royalties', this)"><i class="fa-solid fa-coins"></i> <span data-mpi="tab_royalties">적립 내역</span></button>
+        <button class="cpm-tab" data-pane="withdrawals" onclick="cpmSwitchTab('withdrawals', this)"><i class="fa-solid fa-money-bill-transfer"></i> <span data-mpi="tab_withdrawals">출금 내역</span></button>
     </div>
 
     <!-- 내 패턴 -->
     <div id="paneIPatterns" class="cpm-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 style="font-size:14px; color:var(--brown-dark);">내 패턴 목록</h3>
-            <a href="https://www.cotton-print.com" style="font-size:12px; color:var(--accent); font-weight:700;"><i class="fa-solid fa-plus"></i> 새 패턴 등록</a>
+            <h3 style="font-size:14px; color:var(--brown-dark);" data-mpi="my_pattern_list">내 패턴 목록</h3>
+            <a href="https://www.cotton-print.com" style="font-size:12px; color:var(--accent); font-weight:700;"><i class="fa-solid fa-plus"></i> <span data-mpi="add_new_pattern">새 패턴 등록</span></a>
         </div>
         <div style="overflow-x:auto;"><table class="cpm-table">
-            <thead><tr><th>썸네일</th><th>패턴명/카테고리</th><th width="100">등록일</th><th width="80" style="text-align:center;">상태</th><th width="100" style="text-align:center;">판매</th><th width="120" style="text-align:right;">총 적립</th></tr></thead>
-            <tbody id="myPatternsList"><tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">로딩 중...</td></tr></tbody>
+            <thead><tr><th data-mpi="th_thumb">썸네일</th><th data-mpi="th_name_cat">패턴명/카테고리</th><th width="100" data-mpi="th_date">등록일</th><th width="80" style="text-align:center;" data-mpi="th_status">상태</th><th width="100" style="text-align:center;" data-mpi="th_sales">판매</th><th width="120" style="text-align:right;" data-mpi="th_total_royalty">총 적립</th></tr></thead>
+            <tbody id="myPatternsList"><tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">...</td></tr></tbody>
         </table></div>
     </div>
 
     <!-- 적립 내역 -->
     <div id="paneIRoyalties" class="cpm-card" style="display:none;">
-        <h3 style="font-size:14px; color:var(--brown-dark); margin-bottom:14px;">적립 상세 내역</h3>
+        <h3 style="font-size:14px; color:var(--brown-dark); margin-bottom:14px;" data-mpi="royalty_detail">적립 상세 내역</h3>
         <div style="overflow-x:auto;"><table class="cpm-table">
-            <thead><tr><th width="100">접수일</th><th>패턴</th><th width="80">원단</th><th width="80">수량</th><th width="100" style="text-align:right;">판매가</th><th width="100" style="text-align:right;">적립 (10%)</th><th width="80" style="text-align:center;">상태</th></tr></thead>
-            <tbody id="myRoyaltyList"><tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">로딩 중...</td></tr></tbody>
+            <thead><tr><th width="100" data-mpi="th_received">접수일</th><th data-mpi="th_pattern">패턴</th><th width="80" data-mpi="th_fabric">원단</th><th width="80" data-mpi="th_qty">수량</th><th width="100" style="text-align:right;" data-mpi="th_sale">판매가</th><th width="100" style="text-align:right;" data-mpi="th_royalty">적립 (10%)</th><th width="80" style="text-align:center;" data-mpi="th_status">상태</th></tr></thead>
+            <tbody id="myRoyaltyList"><tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">...</td></tr></tbody>
         </table></div>
     </div>
 
     <!-- 출금 내역 -->
     <div id="paneIWithdrawals" class="cpm-card" style="display:none;">
-        <h3 style="font-size:14px; color:var(--brown-dark); margin-bottom:14px;">출금 요청 내역</h3>
+        <h3 style="font-size:14px; color:var(--brown-dark); margin-bottom:14px;" data-mpi="withdrawal_history">출금 요청 내역</h3>
         <div style="overflow-x:auto;"><table class="cpm-table">
-            <thead><tr><th width="100">신청일</th><th style="text-align:right;">총 적립</th><th style="text-align:right;">실수령</th><th>은행</th><th width="80" style="text-align:center;">상태</th></tr></thead>
-            <tbody id="myWithdrawalList"><tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">로딩 중...</td></tr></tbody>
+            <thead><tr><th width="100" data-mpi="th_request_date">신청일</th><th style="text-align:right;" data-mpi="th_gross">총 적립</th><th style="text-align:right;" data-mpi="th_net">실수령</th><th data-mpi="th_bank">은행</th><th width="80" style="text-align:center;" data-mpi="th_status">상태</th></tr></thead>
+            <tbody id="myWithdrawalList"><tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">...</td></tr></tbody>
         </table></div>
         <div style="margin-top:16px; padding:14px; background:var(--cream); border-radius:10px; font-size:12px; color:var(--brown-dark); line-height:1.6;">
             <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
-            <b>출금 안내:</b> 적립금이 확정 상태가 되면 본사 담당자가 디자이너님께 직접 연락하여 은행 정보를 받고 출금을 처리합니다.
-            급하시면 <a href="tel:0313661984" style="color:var(--accent); font-weight:700;">031-366-1984</a>로 문의하세요.
+            <span data-mpi="withdrawal_notice"><b>출금 안내:</b> 적립금이 확정 상태가 되면 본사 담당자가 디자이너님께 직접 연락하여 은행 정보를 받고 출금을 처리합니다.</span>
+            <a href="tel:0313661984" style="color:var(--accent); font-weight:700;">031-366-1984</a>
         </div>
     </div>
 </div>
+<style>
+.mp-flag { background:none; border:1.5px solid transparent; border-radius:50%; padding:0; font-size:16px; cursor:pointer; line-height:1; transition:all 0.2s; width:28px; height:28px; }
+.mp-flag:hover { border-color:rgba(253,224,71,0.5); }
+.mp-flag.active { border-color:var(--gold); background:rgba(253,224,71,0.1); }
+@media (max-width:768px) { .mp-flag { width:24px; height:24px; font-size:14px; } .cpm-back { font-size:11px; padding:6px 10px; } }
+</style>
 
 <script>
 const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const CAT_LABELS = { animal:'동물', plant:'식물', people:'사람', modern:'모던', scenery:'풍경', typo:'타이포', kids:'키즈', etc:'기타',
-    floral:'식물', natural:'식물', stripe:'모던', dot:'모던', geometric:'모던' };
+
+// 언어 감지
+(function(){
+    var p = new URLSearchParams(location.search);
+    var lp = p.get('lang');
+    var h = location.hostname;
+    var hl = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
+    var lang = lp || hl;
+    if (['ko','ja','en'].indexOf(lang) < 0) lang = 'ko';
+    window.__MP_LANG = lang;
+    document.documentElement.lang = lang;
+})();
+function mpSwitchLang(lang) { var u = new URL(location.href); u.searchParams.set('lang', lang); location.href = u.toString(); }
+window.mpSwitchLang = mpSwitchLang;
+
+// i18n 사전
+const MP_I18N = {
+    login_title: { ko:'디자이너 마이페이지', ja:'デザイナーマイページ', en:'Designer Dashboard' },
+    login_desc: { ko:'패턴 등록 시 사용한 디자이너명으로 로그인하세요', ja:'パターン登録時のデザイナー名でログインしてください', en:'Log in with the designer name you used when uploading patterns' },
+    login_name_ph: { ko:'디자이너명 (Author)', ja:'デザイナー名', en:'Designer Name (Author)' },
+    login_code_ph: { ko:'비밀코드 (선택)', ja:'シークレットコード (任意)', en:'Secret Code (optional)' },
+    login_btn: { ko:'로그인', ja:'ログイン', en:'Log In' },
+    not_designer: { ko:'아직 디자이너가 아니신가요?', ja:'まだデザイナー登録していない方', en:'Not a designer yet?' },
+    register_first: { ko:'cotton-print.com에서 패턴 등록으로 시작하세요', ja:'cotton-print.comでパターン登録から始める', en:'Start by uploading a pattern on cotton-print.com' },
+    hello: { ko:'안녕하세요', ja:'こんにちは', en:'Welcome,' },
+    hello_suffix: { ko:'님 ✨', ja:'様 ✨', en:'✨' },
+    dash_sub: { ko:'디자이너 활동 현황과 적립금을 확인하세요.', ja:'デザイナー活動状況と報酬を確認してください。', en:'Check your designer activity and royalties.' },
+    logout: { ko:'로그아웃', ja:'ログアウト', en:'Log out' },
+    stat_patterns: { ko:'등록 패턴', ja:'登録パターン', en:'Patterns' },
+    stat_approved: { ko:'승인 완료', ja:'承認済み', en:'Approved' },
+    stat_sales: { ko:'판매 건수', ja:'販売件数', en:'Sales' },
+    stat_royalty: { ko:'총 적립금', ja:'総報酬', en:'Total Royalty' },
+    tab_patterns: { ko:'내 패턴', ja:'マイパターン', en:'My Patterns' },
+    tab_royalties: { ko:'적립 내역', ja:'報酬履歴', en:'Royalty History' },
+    tab_withdrawals: { ko:'출금 내역', ja:'出金履歴', en:'Withdrawals' },
+    my_pattern_list: { ko:'내 패턴 목록', ja:'マイパターン一覧', en:'My Patterns' },
+    add_new_pattern: { ko:'새 패턴 등록', ja:'新しいパターン', en:'Upload New' },
+    royalty_detail: { ko:'적립 상세 내역', ja:'報酬詳細', en:'Royalty Details' },
+    withdrawal_history: { ko:'출금 요청 내역', ja:'出金リクエスト', en:'Withdrawal Requests' },
+    withdrawal_notice: { ko:'<b>출금 안내:</b> 적립금이 확정 상태가 되면 본사 담당자가 디자이너님께 직접 연락하여 은행 정보를 받고 출금을 처리합니다.', ja:'<b>出金案内:</b> 報酬確定後、担当者から銀行情報の確認と出金処理のご連絡があります。', en:'<b>Payout:</b> Once your royalty is confirmed, our team will contact you for bank info and process the withdrawal.' },
+    th_thumb: { ko:'썸네일', ja:'サムネイル', en:'Thumbnail' },
+    th_name_cat: { ko:'패턴명/카테고리', ja:'パターン名/カテゴリ', en:'Name/Category' },
+    th_date: { ko:'등록일', ja:'登録日', en:'Date' },
+    th_status: { ko:'상태', ja:'状態', en:'Status' },
+    th_sales: { ko:'판매', ja:'販売', en:'Sales' },
+    th_total_royalty: { ko:'총 적립', ja:'総報酬', en:'Total' },
+    th_received: { ko:'접수일', ja:'受付日', en:'Date' },
+    th_pattern: { ko:'패턴', ja:'パターン', en:'Pattern' },
+    th_fabric: { ko:'원단', ja:'生地', en:'Fabric' },
+    th_qty: { ko:'수량', ja:'数量', en:'Qty' },
+    th_sale: { ko:'판매가', ja:'販売価格', en:'Sale Price' },
+    th_royalty: { ko:'적립 (10%)', ja:'報酬 (10%)', en:'Royalty (10%)' },
+    th_request_date: { ko:'신청일', ja:'申請日', en:'Date' },
+    th_gross: { ko:'총 적립', ja:'総額', en:'Gross' },
+    th_net: { ko:'실수령', ja:'実受取', en:'Net' },
+    th_bank: { ko:'은행', ja:'銀行', en:'Bank' },
+    cat_animal: { ko:'동물', ja:'動物', en:'Animal' },
+    cat_plant: { ko:'식물', ja:'植物', en:'Plant' },
+    cat_people: { ko:'사람', ja:'人物', en:'People' },
+    cat_modern: { ko:'모던', ja:'モダン', en:'Modern' },
+    cat_scenery: { ko:'풍경', ja:'風景', en:'Scenery' },
+    cat_typo: { ko:'타이포', ja:'タイポ', en:'Typo' },
+    cat_kids: { ko:'키즈', ja:'キッズ', en:'Kids' },
+    cat_etc: { ko:'기타', ja:'その他', en:'Etc' },
+    s_pending: { ko:'심사중', ja:'審査中', en:'Pending' },
+    s_approved: { ko:'노출중', ja:'公開中', en:'Approved' },
+    s_rejected: { ko:'거절', ja:'拒否', en:'Rejected' },
+    s_unconfirmed: { ko:'미확정', ja:'未確定', en:'Pending' },
+    s_confirmed: { ko:'확정', ja:'確定', en:'Confirmed' },
+    s_paid: { ko:'지급완료', ja:'支払済', en:'Paid' },
+    s_pay_pending: { ko:'대기중', ja:'保留中', en:'Pending' },
+    no_patterns: { ko:'등록된 패턴이 없습니다.', ja:'登録されたパターンがありません。', en:'No patterns yet.' },
+    no_royalties: { ko:'아직 적립 내역이 없습니다.', ja:'まだ報酬がありません。', en:'No royalties yet.' },
+    no_withdrawals: { ko:'출금 내역이 없습니다.', ja:'出金履歴がありません。', en:'No withdrawals yet.' },
+    cnt: { ko:'건', ja:'件', en:'' }
+};
+function mpT(k) { var d = MP_I18N[k]; if (!d) return ''; return d[window.__MP_LANG] || d.ko || ''; }
+function applyMpI18n() {
+    document.querySelectorAll('[data-mpi]').forEach(function(el){
+        var k = el.getAttribute('data-mpi'); var v = mpT(k);
+        if (v) { if (v.indexOf('<') >= 0) el.innerHTML = v; else el.textContent = v; }
+    });
+    document.querySelectorAll('[data-mpi-ph]').forEach(function(el){
+        var v = mpT(el.getAttribute('data-mpi-ph')); if (v) el.placeholder = v;
+    });
+    var pageTitleMap = { ko:'디자이너 마이페이지 - Cotton Print', ja:'デザイナーマイページ - Cotton Print', en:'Designer Dashboard - Cotton Print' };
+    document.title = pageTitleMap[window.__MP_LANG] || pageTitleMap.ko;
+    // 활성 국기 표시
+    document.querySelectorAll('.mp-flag').forEach(function(b){ b.classList.toggle('active', b.dataset.lang === window.__MP_LANG); });
+}
+window.addEventListener('DOMContentLoaded', applyMpI18n);
+
+// 통화 변환 (cotton_designer와 동일)
+function fmtMoney(n) {
+    var v = Math.round(n||0);
+    var lang = window.__MP_LANG || 'ko';
+    if (lang === 'ja') return '¥' + Math.round(v*0.1).toLocaleString();
+    if (lang === 'en') return '$' + (Math.round(v*0.001*100)/100).toFixed(2);
+    return v.toLocaleString('ko-KR');
+}
+const CAT_LABELS = new Proxy({}, {
+    get: function(_, k) {
+        var aliases = { floral:'plant', natural:'plant', stripe:'modern', dot:'modern', geometric:'modern' };
+        var key = aliases[k] || k;
+        return mpT('cat_' + key) || k;
+    }
+});
 let _designer = null;
 
-function fmtMoney(n) { return (n||0).toLocaleString('ko-KR'); }
 function fmtDate(s) { if(!s) return '-'; const d = new Date(s); return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0'); }
 
 async function cpmLogin() {
@@ -160,7 +275,11 @@ async function cpmLogin() {
     // 해당 디자이너명으로 등록된 패턴이 있는지 확인 (1개라도 있으면 본인으로 인정 — 추후 비밀코드 검증 강화 가능)
     const { data, error } = await sb.from('user_patterns').select('id').eq('author', name).limit(1);
     if (error) { alert('확인 실패: '+error.message); return; }
-    if (!data || data.length === 0) { alert('해당 디자이너명으로 등록된 패턴이 없습니다.\ncotton-print.com에서 먼저 패턴을 등록해주세요.'); return; }
+    if (!data || data.length === 0) {
+        var msg = { ko:'해당 디자이너명으로 등록된 패턴이 없습니다.\ncotton-print.com에서 먼저 패턴을 등록해주세요.', ja:'このデザイナー名で登録されたパターンがありません。\ncotton-print.comでパターン登録から始めてください。', en:'No patterns found under this designer name.\nPlease register a pattern on cotton-print.com first.' };
+        alert(msg[window.__MP_LANG] || msg.ko);
+        return;
+    }
 
     _designer = name;
     sessionStorage.setItem('cpm_designer', name);
@@ -191,7 +310,7 @@ async function loadStats() {
     document.getElementById('statApproved').textContent = (pats||[]).filter(p=>p.status==='approved').length;
     document.getElementById('statSales').textContent = (roys||[]).length;
     const total = (roys||[]).reduce((a,b)=>a+(b.royalty_amount||0), 0);
-    document.getElementById('statRoyalty').textContent = fmtMoney(total);
+    document.getElementById('statRoyalty').textContent = fmtMoney(total); // 통화 자동 변환
 }
 
 async function loadMyPatterns() {
@@ -199,7 +318,7 @@ async function loadMyPatterns() {
     try {
         const { data, error } = await sb.from('user_patterns').select('*').eq('author', _designer).order('created_at',{ascending:false});
         if (error) throw error;
-        if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">등록된 패턴이 없습니다.</td></tr>'; return; }
+        if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">' + mpT('no_patterns') + '</td></tr>'; return; }
         // 패턴별 적립금 집계
         const { data: roys } = await sb.from('pattern_royalties').select('pattern_id, royalty_amount').eq('designer_name', _designer);
         const royMap = {};
@@ -211,9 +330,9 @@ async function loadMyPatterns() {
                 <td>${p.thumb_url ? `<img class="cpm-thumb" src="${p.thumb_url}">` : '<div class="cpm-thumb" style="background:#f5f5f4;"></div>'}</td>
                 <td><b>${(p.name||'').replace(/</g,'&lt;')}</b><br><span style="font-size:11px; color:var(--accent);">${cat}</span></td>
                 <td style="font-size:11px;">${fmtDate(p.created_at)}</td>
-                <td style="text-align:center;"><span class="cpm-badge cpm-badge-${p.status||'pending'}">${({pending:'심사중',approved:'노출중',rejected:'거절'})[p.status]||p.status}</span></td>
-                <td style="text-align:center; font-weight:700;">${r.count}건</td>
-                <td style="text-align:right; color:var(--accent); font-weight:800;">${fmtMoney(r.sum)}원</td>
+                <td style="text-align:center;"><span class="cpm-badge cpm-badge-${p.status||'pending'}">${({pending:mpT('s_pending'),approved:mpT('s_approved'),rejected:mpT('s_rejected')})[p.status]||p.status}</span></td>
+                <td style="text-align:center; font-weight:700;">${r.count}${mpT('cnt')}</td>
+                <td style="text-align:right; color:var(--accent); font-weight:800;">${fmtMoney(r.sum)}</td>
             </tr>`;
         }).join('');
     } catch(e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#dc2626;">${e.message}</td></tr>`; }
@@ -224,17 +343,17 @@ async function loadMyRoyalties() {
     try {
         const { data, error } = await sb.from('pattern_royalties').select('*, user_patterns(name, thumb_url)').eq('designer_name', _designer).order('created_at',{ascending:false});
         if (error) throw error;
-        if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">아직 적립 내역이 없습니다.</td></tr>'; return; }
+        if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">' + mpT('no_royalties') + '</td></tr>'; return; }
         tbody.innerHTML = data.map(r => {
-            const pName = (r.user_patterns && r.user_patterns.name) || '<span style="color:#94a3b8;">(삭제)</span>';
-            const stMap = {pending:'미확정', confirmed:'확정', paid:'지급완료'};
+            const pName = (r.user_patterns && r.user_patterns.name) || '<span style="color:#94a3b8;">-</span>';
+            const stMap = {pending:mpT('s_unconfirmed'), confirmed:mpT('s_confirmed'), paid:mpT('s_paid')};
             return `<tr>
                 <td style="font-size:11px;">${fmtDate(r.created_at)}</td>
                 <td>${pName}</td>
                 <td style="font-size:11px;">${r.fabric_code||'-'}</td>
                 <td style="font-size:11px;">${r.qty||'-'}</td>
-                <td style="text-align:right;">${r.sale_amount ? fmtMoney(r.sale_amount)+'원' : '<span style="color:#94a3b8;">대기</span>'}</td>
-                <td style="text-align:right; color:var(--accent); font-weight:700;">${r.royalty_amount ? fmtMoney(r.royalty_amount)+'원' : '-'}</td>
+                <td style="text-align:right;">${r.sale_amount ? fmtMoney(r.sale_amount) : '-'}</td>
+                <td style="text-align:right; color:var(--accent); font-weight:700;">${r.royalty_amount ? fmtMoney(r.royalty_amount) : '-'}</td>
                 <td style="text-align:center;"><span class="cpm-badge cpm-badge-${r.status}">${stMap[r.status]||r.status}</span></td>
             </tr>`;
         }).join('');
@@ -246,12 +365,12 @@ async function loadMyWithdrawals() {
     try {
         const { data, error } = await sb.from('design_withdrawal_requests').select('*').eq('legal_name', _designer).order('requested_at',{ascending:false});
         if (error) throw error;
-        if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">출금 내역이 없습니다.</td></tr>'; return; }
-        const stMap = {pending:'대기중', approved:'승인됨', rejected:'거절', paid:'지급완료'};
+        if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">' + mpT('no_withdrawals') + '</td></tr>'; return; }
+        const stMap = {pending:mpT('s_pay_pending'), approved:mpT('s_confirmed'), rejected:mpT('s_rejected'), paid:mpT('s_paid')};
         tbody.innerHTML = data.map(w => `<tr>
             <td style="font-size:11px;">${fmtDate(w.requested_at)}</td>
-            <td style="text-align:right; font-weight:700;">${fmtMoney(w.gross_amount)}원</td>
-            <td style="text-align:right; color:#16a34a; font-weight:800;">${fmtMoney(w.net_amount)}원</td>
+            <td style="text-align:right; font-weight:700;">${fmtMoney(w.gross_amount)}</td>
+            <td style="text-align:right; color:#16a34a; font-weight:800;">${fmtMoney(w.net_amount)}</td>
             <td style="font-size:11px;">${w.bank_name||'-'} / ${(w.bank_account||'').replace(/(\d{4})(?=\d)/g,'$1-')}</td>
             <td style="text-align:center;"><span class="cpm-badge cpm-badge-${w.status==='pending'?'pending':w.status==='paid'?'paid':'confirmed'}">${stMap[w.status]||w.status}</span></td>
         </tr>`).join('');
