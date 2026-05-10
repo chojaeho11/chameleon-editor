@@ -889,14 +889,15 @@
                     <thead>
                         <tr>
                             <th>디자이너</th>
-                            <th width="100" style="text-align:center;">주문 건수</th>
-                            <th width="160" style="text-align:right;">미확정 (원)</th>
-                            <th width="160" style="text-align:right;">확정 (지급대기)</th>
-                            <th width="160" style="text-align:right;">지급완료</th>
-                            <th width="160" style="text-align:right;">총 적립</th>
+                            <th width="80" style="text-align:center;">주문 건수</th>
+                            <th width="130" style="text-align:right;">미확정 (원)</th>
+                            <th width="140" style="text-align:right;">확정 (지급대기)</th>
+                            <th width="130" style="text-align:right;">지급완료</th>
+                            <th width="140" style="text-align:right;">총 적립</th>
+                            <th width="160" style="text-align:center;">출금</th>
                         </tr>
                     </thead>
-                    <tbody id="cpSummaryListBody"><tr><td colspan="6" style="text-align:center; padding:30px;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
+                    <tbody id="cpSummaryListBody"><tr><td colspan="7" style="text-align:center; padding:30px;">새로고침 버튼을 눌러주세요.</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -1112,17 +1113,15 @@
         loadCpRoyalties();
     };
 
-    // ───── Tab 3: 디자이너별 합계 ─────
+    // ───── Tab 3: 디자이너별 합계 + 출금처리 ─────
     window.loadCpSummary = async function() {
         loadCpStats();
         var sb = getSb(); if (!sb) return;
         var tbody = document.getElementById('cpSummaryListBody');
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...</td></tr>';
         try {
-            // designer_royalty_summary 뷰 사용 (있으면), 없으면 클라이언트에서 집계
             var { data, error } = await sb.from('designer_royalty_summary').select('*').order('paid_amount', { ascending:false });
             if (error) {
-                // 뷰 없을 경우 raw 테이블에서 집계
                 var raw = await sb.from('pattern_royalties').select('designer_name, status, royalty_amount').not('designer_name','is',null);
                 if (raw.error) throw raw.error;
                 var agg = {};
@@ -1137,22 +1136,190 @@
                 data = Object.values(agg).sort(function(a,b){return b.paid_amount-a.paid_amount;});
             }
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">디자이너 적립 내역이 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">디자이너 적립 내역이 없습니다.</td></tr>';
                 return;
             }
             tbody.innerHTML = data.map(function(d){
                 var total = (d.paid_amount||0) + (d.pending_payout||0) + (d.awaiting_confirm||0);
+                var withdrawBtn = (d.pending_payout > 0)
+                    ? '<button class="btn btn-primary btn-sm" onclick="cpOpenWithdrawalModal(\''+ d.designer_name.replace(/\'/g,"\\'") +'\', '+ d.pending_payout +')" style="background:#fde047; color:#451a03; border:none; font-weight:800;"><i class="fa-solid fa-money-bill-transfer"></i> 출금 처리</button>'
+                    : '<span style="font-size:11px; color:#94a3b8;">확정금 없음</span>';
                 return '<tr>' +
                     '<td style="font-weight:700;"><i class="fa-solid fa-user-pen" style="color:#fde047;margin-right:6px;"></i>'+d.designer_name+'</td>' +
                     '<td style="text-align:center;">'+d.total_orders+'</td>' +
                     '<td style="text-align:right; color:#fbbf24;">'+fmtMoney(d.awaiting_confirm)+'</td>' +
-                    '<td style="text-align:right; color:#3b82f6;">'+fmtMoney(d.pending_payout)+'</td>' +
+                    '<td style="text-align:right; color:#3b82f6; font-weight:700;">'+fmtMoney(d.pending_payout)+'</td>' +
                     '<td style="text-align:right; color:#10b981; font-weight:700;">'+fmtMoney(d.paid_amount)+'</td>' +
                     '<td style="text-align:right; color:#fde047; font-weight:900;">'+fmtMoney(total)+' 원</td>' +
+                    '<td style="text-align:center;">'+withdrawBtn+'</td>' +
                 '</tr>';
             }).join('');
         } catch(e) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#fca5a5;">오류: '+e.message+'</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#fca5a5;">오류: '+e.message+'</td></tr>';
+        }
+    };
+
+    // ───── 출금 처리 모달 (디자인마켓 시스템과 연결) ─────
+    window.cpOpenWithdrawalModal = async function(designerName, amount) {
+        // 디자이너의 등록된 회원정보(members 테이블) 조회 — 은행정보 자동 채우기용
+        var sb = getSb(); if (!sb) return;
+        var memberInfo = null;
+        try {
+            // user_patterns에서 author_email/contact 등 가져오는 첫 패턴 조회
+            var { data: pat } = await sb.from('user_patterns').select('*').eq('author', designerName).limit(1).single();
+            if (pat && pat.author_email) {
+                var { data: mem } = await sb.from('members').select('*').eq('email', pat.author_email).limit(1).single();
+                memberInfo = mem;
+            }
+        } catch(e) { /* 회원 미등록일 수 있음 */ }
+
+        var modalHtml = `
+        <div id="cpWithdrawModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:50000; display:flex; align-items:center; justify-content:center; padding:20px;">
+            <div style="background:#fff; border-radius:16px; width:600px; max-width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+                <div style="background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; padding:22px; border-radius:16px 16px 0 0; position:relative;">
+                    <h3 style="margin:0; font-size:18px; font-weight:900;"><i class="fa-solid fa-money-bill-transfer"></i> 디자이너 출금 처리</h3>
+                    <p style="margin:6px 0 0; font-size:12px; opacity:0.85;">${designerName} · 확정 적립금 ${fmtMoney(amount)}원 → 디자인마켓 출금관리로 등록</p>
+                    <button onclick="document.getElementById('cpWithdrawModal').remove()" style="position:absolute; top:14px; right:18px; background:none; border:none; color:#fde047; font-size:22px; cursor:pointer;">&times;</button>
+                </div>
+                <div style="padding:22px;">
+                    <div style="background:#fef3c7; padding:12px; border-radius:8px; margin-bottom:14px; font-size:12px; color:#78350f; line-height:1.6;">
+                        <i class="fa-solid fa-info-circle"></i> 이 폼은 <b>design_withdrawal_requests</b> 테이블에 직접 등록됩니다.
+                        등록 후 <b>🎨 디자인마켓 출금관리</b> 탭에서 승인/지급 처리하세요. 등록되면 해당 디자이너의 confirmed 적립금은 <b>paid 상태로 자동 변경</b>됩니다.
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#451a03;">디자이너명 (legal_name)</label>
+                            <input id="cpwLegalName" value="${designerName}" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#451a03;">국가</label>
+                            <select id="cpwCountry" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px;">
+                                <option value="KR">🇰🇷 한국 (KR)</option>
+                                <option value="JP">🇯🇵 일본 (JP)</option>
+                                <option value="US">🇺🇸 미국 (US)</option>
+                                <option value="CN">🇨🇳 중국 (CN)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#451a03;">총 적립금 (gross)</label>
+                            <input id="cpwGross" type="number" value="${amount}" readonly style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; background:#f5f5f4;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#451a03;">실수령액 (net)</label>
+                            <input id="cpwNet" type="number" value="${Math.floor(amount * 0.967)}" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px;">
+                            <div style="font-size:10px; color:#94a3b8; margin-top:2px;">기본: gross의 96.7% (3.3% 원천세 차감)</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:11px; font-weight:700; color:#451a03;">주민/사업자등록번호 (tax_id)</label>
+                        <input id="cpwTaxId" value="${memberInfo?.tax_id||''}" placeholder="123-45-67890" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px;">
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:11px; font-weight:700; color:#451a03;">주소 (residence_address)</label>
+                        <input id="cpwAddress" value="${memberInfo?.address||''}" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px;">
+                    </div>
+
+                    <div style="background:#f5f3ff; padding:12px; border-radius:8px; margin-bottom:10px;">
+                        <div style="font-size:12px; font-weight:700; color:#7c3aed; margin-bottom:8px;">🏦 은행 정보</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <input id="cpwBankName" placeholder="은행명 (예: KB국민은행)" style="padding:9px; border:1px solid #c4b5fd; border-radius:6px; font-size:12px;">
+                            <input id="cpwBankHolder" value="${designerName}" placeholder="예금주" style="padding:9px; border:1px solid #c4b5fd; border-radius:6px; font-size:12px;">
+                        </div>
+                        <input id="cpwBankAccount" placeholder="계좌번호" style="width:100%; padding:9px; border:1px solid #c4b5fd; border-radius:6px; font-size:12px; margin-top:8px; font-family:monospace;">
+                    </div>
+
+                    <button onclick="cpSubmitWithdrawal('${designerName.replace(/\'/g,"\\'")}', ${amount})" style="width:100%; padding:14px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:14px; font-weight:800; cursor:pointer; letter-spacing:1px;">
+                        <i class="fa-solid fa-paper-plane"></i> 출금 요청 등록 → 디자인마켓 출금관리로 이동
+                    </button>
+                </div>
+            </div>
+        </div>`;
+        var div = document.createElement('div');
+        div.innerHTML = modalHtml;
+        document.body.appendChild(div.firstElementChild);
+    };
+
+    window.cpSubmitWithdrawal = async function(designerName, totalAmount) {
+        var legalName = document.getElementById('cpwLegalName').value.trim();
+        var country = document.getElementById('cpwCountry').value;
+        var gross = parseInt(document.getElementById('cpwGross').value) || 0;
+        var net = parseInt(document.getElementById('cpwNet').value) || 0;
+        var taxId = document.getElementById('cpwTaxId').value.trim();
+        var address = document.getElementById('cpwAddress').value.trim();
+        var bankName = document.getElementById('cpwBankName').value.trim();
+        var bankHolder = document.getElementById('cpwBankHolder').value.trim();
+        var bankAccount = document.getElementById('cpwBankAccount').value.trim();
+
+        if (!legalName || !bankName || !bankAccount || !bankHolder) {
+            alert('성함, 은행명, 계좌번호, 예금주는 필수입니다.');
+            return;
+        }
+        if (!confirm('출금 요청을 등록하시겠습니까?\n\n총 적립: '+fmtMoney(gross)+'원 → 실수령: '+fmtMoney(net)+'원\n\n등록 후 해당 디자이너의 confirmed 적립금은 paid 상태로 변경됩니다.')) return;
+
+        var sb = getSb(); if (!sb) return;
+        try {
+            // 1) design_withdrawal_requests 등록
+            var fee = gross - net;
+            var { data: wReq, error: wErr } = await sb.from('design_withdrawal_requests').insert({
+                designer_id: null,  // cotton-print 디자이너는 designer_profile 없음 — null 허용 가정
+                country: country,
+                gross_amount: gross,
+                net_amount: net,
+                vat_amount: 0,
+                card_fee_amount: 0,
+                platform_fee_amount: fee,  // 원천세를 platform_fee로 처리
+                legal_name: legalName,
+                tax_id: taxId,
+                tax_id_type: country === 'KR' ? 'RRN' : 'OTHER',
+                residence_address: address,
+                bank_name: bankName,
+                bank_holder: bankHolder,
+                bank_account: bankAccount,
+                status: 'pending',
+                requested_at: new Date().toISOString(),
+                source: 'cotton_print_royalty',  // 출처 표시
+                memo: '[Cotton Print 패턴 적립] 디자이너: ' + designerName
+            }).select().single();
+
+            if (wErr) {
+                // designer_id NOT NULL이거나 source 컬럼 없을 수 있음 — 다시 시도
+                if (wErr.message && (wErr.message.indexOf('source') >= 0 || wErr.message.indexOf('designer_id') >= 0)) {
+                    var fallback = await sb.from('design_withdrawal_requests').insert({
+                        country: country, gross_amount: gross, net_amount: net,
+                        vat_amount: 0, card_fee_amount: 0, platform_fee_amount: fee,
+                        legal_name: legalName, tax_id: taxId,
+                        tax_id_type: country === 'KR' ? 'RRN' : 'OTHER',
+                        residence_address: address,
+                        bank_name: bankName, bank_holder: bankHolder, bank_account: bankAccount,
+                        status: 'pending', requested_at: new Date().toISOString()
+                    }).select().single();
+                    if (fallback.error) throw fallback.error;
+                    wReq = fallback.data;
+                } else {
+                    throw wErr;
+                }
+            }
+
+            // 2) 해당 디자이너의 confirmed 적립금 → paid 처리
+            var { error: uErr } = await sb.from('pattern_royalties').update({
+                status: 'paid',
+                paid_at: new Date().toISOString(),
+                withdrawal_request_id: wReq?.id || null
+            }).eq('designer_name', designerName).eq('status', 'confirmed');
+            if (uErr) console.warn('royalty update warning:', uErr);
+
+            document.getElementById('cpWithdrawModal').remove();
+            alert('✅ 출금 요청 등록 완료!\n디자인마켓 출금관리 탭으로 이동합니다.');
+            // 디자인마켓 출금관리로 이동
+            showSection('sec-design-withdrawals', document.querySelector('[onclick*=sec-design-withdrawals]'));
+            if (window.loadDesignWithdrawals) loadDesignWithdrawals();
+        } catch(e) {
+            alert('실패: ' + e.message);
         }
     };
 })();
