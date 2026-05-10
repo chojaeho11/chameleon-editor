@@ -1306,13 +1306,14 @@ async function submitPdSample() {
 var _kapuPopupRef = null;
 function openKapuChat() {
     var langParam = (window._kapuLang || 'kr');
-    var url = '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print';
+    // chat=1 파라미터 — initAdvisorPanel()이 이걸 보고 패널을 자동으로 열어줌 (이게 없으면 빈 화면)
+    var url = '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print&chat=1';
     // 이미 열려있으면 포커스만
     if (_kapuPopupRef && !_kapuPopupRef.closed) {
         _kapuPopupRef.focus();
         return;
     }
-    var w = 420, h = 680;
+    var w = 480, h = 740;
     var left = window.screenX + (window.outerWidth - w) - 30;
     var top  = window.screenY + (window.outerHeight - h) - 80;
     _kapuPopupRef = window.open(url, 'chameleonChat',
