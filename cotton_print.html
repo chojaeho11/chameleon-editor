@@ -829,7 +829,7 @@ async function submitPdSample() {
             </div>
 
             <!-- 안내 문구 -->
-            <div style="margin-top:14px; padding:10px 14px; background:#fafaf9; border-radius:8px; font-size:11px; color:var(--text-light); line-height:1.6;" data-i18n="up_either_hint">
+            <div style="margin-top:14px; padding:10px 14px; background:#fafaf9; border-radius:8px; font-size:11px; color:var(--text-light); line-height:1.6;" data-i18n-html="up_either_hint">
                 <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
                 썸네일 또는 원본 파일 중 <b>하나만 올려도 됩니다</b>. 원본이 이미지(JPG/PNG)면 자동으로 썸네일도 됩니다.
             </div>
@@ -1020,6 +1020,16 @@ async function submitPdSample() {
     }
 
     window.submitPatternUpload = async function() {
+        // 다른 IIFE 스코프의 LANG/t() 의존성 제거 — window.__PS_LANG 직접 사용
+        var __lang = window.__PS_LANG || 'ko';
+        var __t = function(k){
+            try {
+                var dict = window.__PS_I18N;
+                if (!dict || !dict[k]) return '';
+                return dict[k][__lang] || dict[k].ko || '';
+            } catch(_) { return ''; }
+        };
+        var __L = function(map){ return map[__lang] || map.ko || ''; };
         var name = document.getElementById('upPatternName').value.trim();
         var cat = document.getElementById('upPatternCat').value;
         var author = document.getElementById('upPatternAuthor').value.trim();
@@ -1027,10 +1037,10 @@ async function submitPdSample() {
         var agree = document.getElementById('upPatternAgree').checked;
         var statusEl = document.getElementById('upPatternStatus');
 
-        if (!name) { alert('패턴명을 입력해주세요.'); return; }
+        if (!name) { alert(__L({ko:'패턴명을 입력해주세요.', ja:'パターン名を入力してください。', en:'Please enter a pattern name.'})); return; }
         // 원본 또는 썸네일 둘 중 하나만 있으면 OK
-        if (!_origFile && !_thumbFile) { alert('썸네일 또는 원본 파일 중 하나는 필수입니다.'); return; }
-        if (!agree) { alert('저작권 동의가 필요합니다.'); return; }
+        if (!_origFile && !_thumbFile) { alert(__L({ko:'썸네일 또는 원본 파일 중 하나는 필수입니다.', ja:'サムネイルまたは原本ファイルが必要です。', en:'Either a thumbnail or an original file is required.'})); return; }
+        if (!agree) { alert(__L({ko:'저작권 동의가 필요합니다.', ja:'著作権同意が必要です。', en:'Copyright agreement is required.'})); return; }
 
         // 원본이 이미지이고 썸네일 없으면 → 원본을 썸네일로도 사용
         if (_origFile && !_thumbFile && /^image\//.test(_origFile.type)) {
@@ -1042,7 +1052,8 @@ async function submitPdSample() {
         }
 
         var btn = event.target.closest('button');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (typeof t === "function" ? (t("up_uploading") || "업로드 중...") : "업로드 중...") + ''; }
+        var uploadingTxt = __L({ko:'업로드 중...', ja:'アップロード中...', en:'Uploading...'});
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + uploadingTxt; }
 
         try {
             var sb = window.supabase ? window.supabase.createClient(
@@ -1055,14 +1066,14 @@ async function submitPdSample() {
             var safeName = name.replace(/[^a-zA-Z0-9._-가-힣]/g,'_');
 
             // 1) 원본 업로드
-            statusEl.textContent = '원본 파일 업로드 중...';
+            statusEl.textContent = __L({ko:'원본 파일 업로드 중...', ja:'原本ファイルアップロード中...', en:'Uploading original...'});
             var origPath = 'patterns/original/' + ts + '_' + _origFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
             var { data: oU, error: oErr } = await sb.storage.from('design').upload(origPath, _origFile);
             if (oErr) throw oErr;
             var origUrl = sb.storage.from('design').getPublicUrl(origPath).data.publicUrl;
 
             // 2) 썸네일 업로드
-            statusEl.textContent = '썸네일 업로드 중...';
+            statusEl.textContent = __L({ko:'썸네일 업로드 중...', ja:'サムネイルアップロード中...', en:'Uploading thumbnail...'});
             var thumbPath = 'patterns/thumb/' + ts + '_' + _thumbFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
             var { data: tU, error: tErr } = await sb.storage.from('design').upload(thumbPath, _thumbFile);
             if (tErr) throw tErr;
@@ -1072,7 +1083,7 @@ async function submitPdSample() {
             var mockups = [];
 
             // 4) DB 등록 (user_patterns 테이블 — 어드민 승인 후 노출)
-            statusEl.textContent = '등록 중...';
+            statusEl.textContent = __L({ko:'등록 중...', ja:'登録中...', en:'Registering...'});
             await sb.from('user_patterns').insert({
                 name: name,
                 category: cat,
@@ -1086,7 +1097,7 @@ async function submitPdSample() {
             });
 
             var doneMsg = { ko:'✅ 업로드 완료! 어드민 승인 후 카탈로그에 노출됩니다.', ja:'✅ アップロード完了！承認後カタログに表示されます。', en:'✅ Upload complete! Will appear in catalog after admin approval.', zh:'✅ 上传完成！管理员审核后显示在目录中。', ar:'✅ تم الرفع', es:'✅ Subido!', de:'✅ Hochgeladen!', fr:'✅ Telecharge!' };
-            statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">' + (doneMsg[LANG]||doneMsg.ko) + '</span>';
+            statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">' + (doneMsg[__lang]||doneMsg.ko) + '</span>';
             // 폼 초기화 (안전 가드)
             ['upPatternName','upPatternAuthor','upPatternDesc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
             var oName = document.getElementById('upOriginalName'); if (oName) oName.textContent = '';
@@ -1099,9 +1110,11 @@ async function submitPdSample() {
                 if (el) { el.style.background = '#fafaf9'; el.style.borderStyle = 'dashed'; el.style.borderColor = '#d6d3d1'; }
             });
         } catch(e) {
-            statusEl.innerHTML = '<span style="color:#dc2626;">오류: ' + e.message + '</span>';
+            var errLbl = __L({ko:'오류', ja:'エラー', en:'Error'});
+            statusEl.innerHTML = '<span style="color:#dc2626;">' + errLbl + ': ' + (e && e.message ? e.message : e) + '</span>';
         } finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> ' + (t('up_submit_btn')||'패턴 등록하기'); }
+            var submitTxt = (__t('up_submit_btn')) || __L({ko:'패턴 등록하기', ja:'パターン登録', en:'Submit pattern'});
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> ' + submitTxt; }
         }
     };
 
@@ -2677,7 +2690,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="cotton_print.js?v=4"></script>
+<script src="cotton_print.js?v=5"></script>
 
 
 </body>
