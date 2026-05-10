@@ -296,30 +296,42 @@ def build_prompt(motif: str) -> str:
 
 
 def generate_image(prompt: str, size: str = "1024x1024") -> Image.Image:
-    """OpenAI 이미지 생성 — gpt-image-1 우선, 실패 시 dall-e-3 폴백."""
-    try:
-        resp = oai.images.generate(
-            model="gpt-image-1",
-            prompt=prompt,
-            size=size,
-            quality="medium",
-            n=1,
-        )
-        b64 = resp.data[0].b64_json
-        return Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
-    except Exception as e:
-        print(f"      ⚠ gpt-image-1 실패 → dall-e-3 폴백 ({e.__class__.__name__})")
-        resp = oai.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            size=size,
-            quality="standard",
-            n=1,
-        )
-        url = resp.data[0].url
-        r = requests.get(url, timeout=60)
-        r.raise_for_status()
-        return Image.open(io.BytesIO(r.content)).convert("RGB")
+    """OpenAI 이미지 생성 — gpt-image-2 우선, 실패 시 단계별 폴백.
+
+    모델 우선순위 (2026-05 기준 OpenAI 실제 출시 모델):
+      1. gpt-image-2 (2026-04 출시, 최신) — 한글/일본어 텍스트, 포토리얼 향상
+      2. gpt-image-1.5 (중간 세대)
+      3. gpt-image-1 (2025-04 출시)
+      4. dall-e-3 (구세대, b64 미지원이라 url 다운로드)
+    """
+    fallback_chain = [
+        ("gpt-image-2", "medium"),
+        ("gpt-image-1.5", "medium"),
+        ("gpt-image-1", "medium"),
+    ]
+    last_err = None
+    for model, quality in fallback_chain:
+        try:
+            resp = oai.images.generate(
+                model=model, prompt=prompt, size=size, quality=quality, n=1,
+            )
+            b64 = resp.data[0].b64_json
+            if b64:
+                return Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
+        except Exception as e:
+            last_err = e
+            print(f"      ⚠ {model} 실패 → 다음 모델 시도 ({e.__class__.__name__})")
+            continue
+
+    # 마지막 폴백: dall-e-3 (URL 응답)
+    print(f"      ⚠ 모든 gpt-image 실패 → dall-e-3 최종 폴백")
+    resp = oai.images.generate(
+        model="dall-e-3", prompt=prompt, size=size, quality="standard", n=1,
+    )
+    url = resp.data[0].url
+    r = requests.get(url, timeout=60)
+    r.raise_for_status()
+    return Image.open(io.BytesIO(r.content)).convert("RGB")
 
 
 # ============================================================

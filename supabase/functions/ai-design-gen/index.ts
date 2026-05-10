@@ -169,9 +169,9 @@ Output ONLY the description (or "NONE") — no preamble, no markdown, no quotes.
 
     // ── Stage 2: Images API 직접 호출 ──
     // 첨부 이미지 있으면 /images/edits, 없으면 /images/generations
-    // 모델: gpt-image-1 (실제 존재하는 OpenAI 이미지 모델, 2025-04 출시)
-    // gpt-image-2 / gpt-image-1.5는 존재하지 않아 model_not_found → 502
-    const IMAGE_MODEL: string = "gpt-image-1";
+    // 모델: gpt-image-2 (2026-04 출시, 한글/일본어 텍스트 + 포토리얼 향상)
+    // 폴백: gpt-image-1.5 → gpt-image-1
+    const IMAGE_MODEL: string = "gpt-image-2";
     const hasInputImages = inputImages.length > 0;
     const usedModel = IMAGE_MODEL;
 
