@@ -58,6 +58,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-x: hidden; max-width: 100%; }
 body {
     font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
@@ -66,6 +67,31 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 a { text-decoration: none; color: inherit; }
+img, video, canvas { max-width: 100%; height: auto; }
+
+/* ── 모바일 글로벌 보정 ── */
+@media (max-width: 768px) {
+    section, .section { padding-left: 16px !important; padding-right: 16px !important; }
+    .features { grid-template-columns: 1fr !important; gap: 12px; padding: 0 16px; }
+    .process-steps { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+    .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+    .upload-grid { grid-template-columns: 1fr !important; }
+    /* 패턴 업로드 모달이 모바일에서 화면 안에 들어오게 */
+    #patternUploadModal > div { width: 100% !important; max-height: 95vh !important; border-radius: 14px !important; }
+    #patternUploadModal { padding: 8px !important; }
+    /* 갤러리 / 업로드 모달 내 디자이너 카드 */
+    #patternGallery { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    /* 헤더 패딩 / 검색바 */
+    .brand-band { padding: 12px 14px !important; }
+    .header-inner { height: 50px !important; }
+    /* 챗봇 iframe 모바일 풀스크린 (열렸을 때) */
+    #kapuChatWrap { width: calc(100vw - 16px) !important; height: 70vh !important; right: 8px !important; left: 8px !important; bottom: 78px !important; }
+}
+@media (max-width: 480px) {
+    #patternGallery { grid-template-columns: 1fr 1fr !important; }
+    .pattern-meta { padding: 10px !important; }
+    .pattern-name { font-size: 12px !important; }
+}
 
 /* ── 상단 미색 브랜드 띠 (Printtree 스타일) ── */
 .brand-band {
@@ -410,12 +436,17 @@ window._cottonSearch = function(){
 </section>
 <style>
 @media (max-width:768px) {
-    .hero { height:520px !important; }
-    .hero .cotton-title { font-size:44px !important; letter-spacing:4px !important; }
-    .hero p { font-size:15px !important; }
+    .hero { height:480px !important; }
+    .hero-content { padding:50px 16px 36px !important; }
+    .hero .cotton-title { font-size:38px !important; letter-spacing:3px !important; margin-bottom:14px !important; }
+    .hero p { font-size:14px !important; padding:6px 14px !important; }
 }
 @media (max-width:480px) {
-    .hero .cotton-title { font-size:36px !important; letter-spacing:3px !important; }
+    .hero .cotton-title { font-size:32px !important; letter-spacing:2px !important; }
+    .hero-badge { font-size:11px !important; padding:6px 14px !important; }
+}
+@media (max-width:380px) {
+    .hero .cotton-title { font-size:28px !important; letter-spacing:1.5px !important; }
 }
 </style>
 
@@ -1205,33 +1236,171 @@ function toggleKapuChat() {
 })();
 </script>
 
-<!-- 고객 리뷰 섹션 -->
-<section class="section" id="reviewSection" style="background:#f8fafc;">
-    <h2 class="section-title">패브릭 인쇄 후기</h2>
-    <p class="section-desc">실제 패브릭 인쇄를 받아본 고객님들의 후기</p>
+<!-- 유저 뽐내기 (User Showcase) — 자신의 작품을 자랑하는 코너 -->
+<section class="section" id="reviewSection" style="background:linear-gradient(180deg,#fdfaf3 0%,#fff 100%); padding-top:32px;">
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; max-width:1100px; margin:0 auto 24px; padding:0 16px; gap:16px; flex-wrap:wrap;">
+        <div>
+            <div style="font-size:11px; letter-spacing:5px; color:var(--accent); font-weight:700; margin-bottom:6px;">— USER SHOWCASE —</div>
+            <h2 style="font-size:26px; font-weight:900; color:var(--brown-dark); margin:0;">유저 뽐내기</h2>
+            <p style="font-size:13px; color:var(--text-light); margin-top:6px;">코튼프린팅으로 만든 작품을 자랑해주세요. 좋아요와 함께 모두에게 영감이 됩니다 ✨</p>
+        </div>
+        <button onclick="openShowcaseUpload()" style="display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border:none; border-radius:50px; background:linear-gradient(135deg,#fde047,#facc15); color:#451a03; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(250,204,21,0.4); font-family:inherit;">
+            <i class="fa-solid fa-camera"></i> 내 작품 자랑하기
+        </button>
+    </div>
     <div id="pdReviewGrid" class="rv-grid"></div>
-    <div id="pdReviewEmpty" style="display:none; text-align:center; padding:30px; color:#94a3b8;">
-        <i class="fa-solid fa-comment-dots" style="font-size:28px; margin-bottom:8px; display:block; opacity:0.3;"></i>
-        <p data-i18n="review_empty">아직 등록된 후기가 없습니다.</p>
+    <div id="pdReviewEmpty" style="display:none; text-align:center; padding:40px 20px; color:var(--text-light);">
+        <i class="fa-solid fa-camera-retro" style="font-size:36px; margin-bottom:10px; display:block; opacity:0.3; color:var(--brown);"></i>
+        <p style="font-size:13px;">첫 번째 작품 자랑의 주인공이 되어주세요!</p>
     </div>
     <div style="text-align:center; margin-top:20px;">
-        <button id="pdReviewMore" class="rv-more-btn" onclick="loadPdReviews()" style="display:none;" data-i18n="review_more">더보기</button>
+        <button id="pdReviewMore" class="rv-more-btn" onclick="loadPdReviews()" style="display:none;">더보기</button>
     </div>
 </section>
+
+<!-- 유저 뽐내기 업로드 모달 -->
+<div id="showcaseModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:30000; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:18px; width:480px; max-width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <div style="background:linear-gradient(135deg,#451a03,#78350f); padding:22px; border-radius:18px 18px 0 0; color:#fde047; text-align:center; position:relative;">
+            <div style="font-size:11px; letter-spacing:5px; font-weight:700; opacity:0.85;">— USER SHOWCASE —</div>
+            <h3 style="margin:6px 0 0; font-size:20px; font-weight:900;"><i class="fa-solid fa-camera"></i> 내 작품 자랑하기</h3>
+            <button onclick="closeShowcaseUpload()" style="position:absolute; top:14px; right:16px; background:none; border:none; color:#fde047; font-size:22px; cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:22px;">
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:4px;">닉네임 <span style="color:#dc2626;">*</span></label>
+                <input id="scName" maxlength="20" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: 패브릭마스터">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:4px;">평점</label>
+                <div id="scStars" style="font-size:24px; color:#fbbf24; letter-spacing:4px; cursor:pointer;">
+                    <i class="fa-solid fa-star" data-r="1"></i><i class="fa-solid fa-star" data-r="2"></i><i class="fa-solid fa-star" data-r="3"></i><i class="fa-solid fa-star" data-r="4"></i><i class="fa-solid fa-star" data-r="5"></i>
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:4px;">사진 <span style="color:#dc2626;">*</span> <span style="font-weight:400; color:var(--text-light); font-size:11px;">(JPG/PNG · 최대 5MB)</span></label>
+                <div onclick="document.getElementById('scPhoto').click()" id="scPhotoDrop" style="border:2px dashed #d6d3d1; background:#fafaf9; padding:20px; text-align:center; border-radius:10px; cursor:pointer;">
+                    <i class="fa-solid fa-image" style="font-size:22px; color:var(--brown);"></i>
+                    <div style="color:var(--brown-dark); font-size:13px; font-weight:700; margin-top:6px;">클릭하여 사진 선택</div>
+                    <div id="scPhotoInfo" style="font-size:11px; color:var(--accent); margin-top:4px;"></div>
+                </div>
+                <input type="file" id="scPhoto" style="display:none;" accept="image/jpeg,image/png" onchange="handleScPhoto(this)">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:4px;">코멘트 <span style="color:#dc2626;">*</span></label>
+                <textarea id="scComment" rows="3" maxlength="200" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" placeholder="작품 자랑이나 사용 후기를 짧게 남겨주세요"></textarea>
+            </div>
+            <button onclick="submitShowcase()" style="width:100%; padding:14px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:1px;">
+                <i class="fa-solid fa-paper-plane"></i> 자랑하기
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
-.rv-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
-.rv-card { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.06); transition:transform 0.2s; cursor:pointer; }
-.rv-card:hover { transform:translateY(-3px); box-shadow:0 4px 16px rgba(0,0,0,0.1); }
-.rv-photo { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f1f5f9; }
-.rv-body { padding:10px 12px 12px; }
-.rv-stars { color:#f59e0b; font-size:11px; margin-bottom:4px; }
-.rv-text { font-size:11px; color:#475569; line-height:1.5; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.rv-user { display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; }
-.rv-more-btn { padding:10px 32px; border-radius:8px; border:1px solid #c7d2fe; background:#fff; color:#6366f1; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s; }
-.rv-more-btn:hover { background:#eef2ff; }
-@media (max-width:768px) { .rv-grid { grid-template-columns:repeat(2,1fr); gap:10px; } }
+.rv-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:1100px; margin:0 auto; padding:0 16px; }
+.rv-card { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 4px 14px rgba(69,26,3,0.08); border:1px solid var(--cream-dark); transition:all 0.25s; cursor:pointer; }
+.rv-card:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(69,26,3,0.14); }
+.rv-photo { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f5f5f4; }
+.rv-body { padding:11px 13px 13px; }
+.rv-stars { color:#fbbf24; font-size:11px; margin-bottom:4px; }
+.rv-text { font-size:12px; color:var(--brown-dark); line-height:1.5; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.rv-user { display:flex; justify-content:space-between; font-size:10px; color:var(--text-light); }
+.rv-more-btn { padding:11px 32px; border-radius:50px; border:1px solid var(--cream-dark); background:#fff; color:var(--brown-dark); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+.rv-more-btn:hover { background:var(--cream); }
+@media (max-width:768px) { .rv-grid { grid-template-columns:repeat(2,1fr); gap:10px; padding:0 12px; } }
 @media (max-width:480px) { .rv-grid { grid-template-columns:repeat(2,1fr); gap:8px; } .rv-body { padding:8px 10px; } }
 </style>
+<script>
+(function(){
+    var _scRating = 5;
+    var _scFile = null;
+
+    window.openShowcaseUpload = function() {
+        document.getElementById('showcaseModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+    window.closeShowcaseUpload = function() {
+        document.getElementById('showcaseModal').style.display = 'none';
+        document.body.style.overflow = '';
+    };
+    document.addEventListener('click', function(e){
+        if (e.target.id === 'showcaseModal') window.closeShowcaseUpload();
+    });
+
+    // 별점 클릭
+    document.addEventListener('DOMContentLoaded', function(){
+        var stars = document.querySelectorAll('#scStars i');
+        stars.forEach(function(star){
+            star.onclick = function(){
+                _scRating = parseInt(this.dataset.r);
+                stars.forEach(function(s,i){
+                    s.className = i < _scRating ? 'fa-solid fa-star' : 'fa-regular fa-star';
+                });
+            };
+        });
+    });
+
+    window.handleScPhoto = function(input) {
+        var f = input.files[0];
+        if (!f) return;
+        if (f.size > 5*1024*1024) { alert('5MB 이하만 업로드 가능합니다.'); input.value=''; return; }
+        _scFile = f;
+        document.getElementById('scPhotoInfo').innerHTML = '✅ ' + f.name + ' (' + (f.size/1024).toFixed(0) + 'KB)';
+    };
+
+    window.submitShowcase = async function() {
+        var name = document.getElementById('scName').value.trim();
+        var comment = document.getElementById('scComment').value.trim();
+        if (!name) { alert('닉네임을 입력해주세요.'); return; }
+        if (!_scFile) { alert('사진을 업로드해주세요.'); return; }
+        if (!comment) { alert('코멘트를 입력해주세요.'); return; }
+
+        var btn = event.target.closest('button');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...'; }
+
+        try {
+            var sb = window.supabase ? window.supabase.createClient(
+                'https://qinvtnhiidtmrzosyvys.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+            ) : null;
+            if (!sb) throw new Error('연결 실패');
+
+            // 사진 업로드
+            var path = 'showcase/' + Date.now() + '_' + _scFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+            var { error: upErr } = await sb.storage.from('design').upload(path, _scFile);
+            if (upErr) throw upErr;
+            var photoUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+
+            // product_reviews에 cotton-print 코드로 저장 (기존 후기 시스템 활용)
+            await sb.from('product_reviews').insert({
+                user_name: name,
+                rating: _scRating,
+                comment: comment,
+                photo_url: photoUrl,
+                product_code: 'cotton_showcase',
+                lang: window.__PS_LANG || 'kr'
+            });
+
+            closeShowcaseUpload();
+            alert('✅ 작품이 등록되었습니다! 곧 갤러리에 노출됩니다.');
+            // 폼 초기화
+            document.getElementById('scName').value = '';
+            document.getElementById('scComment').value = '';
+            document.getElementById('scPhotoInfo').textContent = '';
+            _scFile = null;
+            _rvPage = 0;
+            window._psSeenPhotos && window._psSeenPhotos.clear();
+            window._psSeenCmtHead && window._psSeenCmtHead.clear();
+            setTimeout(function(){ if(window.loadPdReviews) loadPdReviews(); }, 800);
+        } catch(e) {
+            alert('업로드 실패: ' + e.message);
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 자랑하기'; }
+        }
+    };
+})();
+</script>
 
 <!-- 푸터 -->
 <footer class="site-footer" style="background:#1e293b; color:#94a3b8; padding:48px 24px 32px; margin-top:0;">
@@ -1894,21 +2063,22 @@ window.loadPdReviews = async function() {
         if (_rvPage === 0 && !_rvFallback) {
             // 1순위: 정확한 fabric 코드 in 검색
             if (fabCodes && fabCodes.length > 0) {
+                // cotton_showcase도 함께 포함
+                var combinedCodes = fabCodes.slice(0, 99).concat(['cotton_showcase']);
                 var res = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .in('product_code', fabCodes.slice(0, 100))
-                    .eq('lang', siteLang)
-                    .gte('rating', 4)
+                    .in('product_code', combinedCodes)
+                    .gte('rating', 3)
                     .order('created_at', { ascending: false })
                     .range(from, to);
                 data = res.data;
-                if (data && data.length > 0) { _rvFallback = 'fab_codes'; window._cottonFabCodes100 = fabCodes.slice(0, 100); }
+                if (data && data.length > 0) { _rvFallback = 'fab_codes'; window._cottonFabCodes100 = combinedCodes; }
             }
             // 2순위: cb%/ua_fabric% LIKE
             if (!data || data.length === 0) {
                 var res2 = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .or('product_code.like.cb%,product_code.like.ua_fabric%')
+                    .or('product_code.like.cb%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase')
                     .gte('rating', 4)
                     .order('created_at', { ascending: false })
                     .range(from, to);
@@ -1928,7 +2098,7 @@ window.loadPdReviews = async function() {
             } else if (_rvFallback === 'fabric_like') {
                 var r = await _rvSupa.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .or('product_code.like.cb%,product_code.like.ua_fabric%').gte('rating', 4)
+                    .or('product_code.like.cb%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase').gte('rating', 4)
                     .order('created_at', { ascending: false }).range(from, to);
                 data = r.data;
             } else {

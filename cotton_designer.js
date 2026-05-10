@@ -355,6 +355,24 @@ window._cdSubmitOrder = async function() {
         const { data: pubData } = sb.storage.from('orders').getPublicUrl(path);
         const fileUrl = pubData.publicUrl;
 
+        // 디자이너 패턴인 경우 — 판매시 10% 적립을 위해 royalty 레코드 prepare
+        if (state.designerPatternId) {
+            try {
+                // pattern_royalties 테이블에 pending 레코드 생성 (주문 확정 시 어드민이 paid 처리)
+                await sb.from('pattern_royalties').insert({
+                    pattern_id: state.designerPatternId,
+                    designer_name: state.designerName || null,
+                    fabric_code: f.code,
+                    qty: state.qty === 'custom' ? state.customQty : state.qty,
+                    img_w_cm: state.imgWcm,
+                    img_h_cm: state.imgHcm,
+                    royalty_rate: 0.10,  // 10% 적립
+                    status: 'pending',
+                    source: 'cotton-print.com'
+                });
+            } catch(rErr) { console.warn('royalty record failed:', rErr); }
+        }
+
         // 카멜레온 메인몰 장바구니로 이동 — URL 파라미터로 전달
         const params = new URLSearchParams({
             product: f.code,
@@ -364,6 +382,10 @@ window._cdSubmitOrder = async function() {
             cotton_img_h: state.imgHcm,
             cotton_qty: state.qty === 'custom' ? state.customQty : state.qty
         });
+        if (state.designerPatternId) {
+            params.set('designer_pattern_id', state.designerPatternId);
+            if (state.designerName) params.set('designer_name', state.designerName);
+        }
         const url = 'https://www.cafe2626.com/?' + params.toString();
         showToast('업로드 완료! 장바구니로 이동합니다...');
         setTimeout(() => { location.href = url; }, 800);
@@ -387,11 +409,89 @@ function showToast(msg) {
 }
 
 // ────────────────────────────────────────────────
+// URL ?pattern=ID 자동 로드 (디자이너 마켓플레이스에서 진입)
+// ────────────────────────────────────────────────
+async function autoLoadPatternFromUrl() {
+    const params = new URLSearchParams(location.search);
+    const patternId = params.get('pattern');
+    if (!patternId) return;
+
+    if (typeof window.supabase === 'undefined') {
+        for (let i = 0; i < 30; i++) {
+            await new Promise(r => setTimeout(r, 100));
+            if (typeof window.supabase !== 'undefined') break;
+        }
+    }
+    if (typeof window.supabase === 'undefined') return;
+
+    const sb = window.supabase.createClient(
+        'https://qinvtnhiidtmrzosyvys.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+    );
+
+    try {
+        const { data, error } = await sb.from('user_patterns').select('*').eq('id', patternId).single();
+        if (error || !data) return;
+
+        // 썸네일 URL을 이미지로 자동 로드
+        const url = data.thumb_url;
+        if (!url) return;
+
+        showToast('🎨 디자이너 패턴 "' + (data.name || '') + '" 로드 중...');
+
+        // CORS 우회: fetch → blob → DataURL
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            state.imgDataUrl = e.target.result;
+            state.imgFileName = (data.name || 'pattern') + '.jpg';
+            const img = new Image();
+            img.onload = function() {
+                state.img = img;
+                state.designerPatternId = patternId;
+                state.designerName = data.author || null;
+                state.designerOriginalUrl = data.original_url || null;
+                const ratio = img.width / img.height;
+                state.imgWcm = 10;
+                state.imgHcm = Math.round(10 / ratio * 10) / 10;
+                document.getElementById('imgWcm').value = state.imgWcm;
+                document.getElementById('imgHcm').value = state.imgHcm;
+                document.getElementById('uploadZone').style.display = 'none';
+                document.getElementById('previewArea').classList.add('active');
+                document.getElementById('btnReset').style.display = '';
+                document.getElementById('btnReplace').style.display = '';
+                document.getElementById('orderBtn').disabled = false;
+
+                // 디자이너 패턴 배지 추가
+                const previewArea = document.getElementById('previewArea');
+                if (previewArea && !document.getElementById('designerBadge')) {
+                    const badge = document.createElement('div');
+                    badge.id = 'designerBadge';
+                    badge.style.cssText = 'position:absolute; top:12px; left:12px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; padding:6px 12px; border-radius:50px; font-size:11px; font-weight:800; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.25);';
+                    badge.innerHTML = '<i class="fa-solid fa-palette"></i> ' + (data.author ? data.author + ' · ' : '') + (data.name || 'Designer Pattern');
+                    previewArea.style.position = 'relative';
+                    previewArea.appendChild(badge);
+                }
+
+                window._cdRender();
+                showToast('✅ 패턴 로드 완료! 원단을 선택하고 사이즈를 조정해보세요.');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(blob);
+    } catch (e) {
+        console.error('[autoLoadPattern] error:', e);
+    }
+}
+
+// ────────────────────────────────────────────────
 // 초기화
 // ────────────────────────────────────────────────
 populateFabricSelect();
 updateFabricDetail();
 updateSizeLabels();
 updatePrice();
+autoLoadPatternFromUrl();
 
 })();
