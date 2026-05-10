@@ -56,9 +56,20 @@ const state = {
     customQty: 0,
     imgWcm: 10,
     imgHcm: 10,
+    imgAspect: 1,      // width/height ratio of original image
     img: null,         // HTMLImageElement
     imgDataUrl: null,  // base64 for upload
-    imgFileName: ''
+    imgFileName: '',
+    finish: 'raw',     // raw / hem / rod / eyelet / velcro
+    finishExtra: 0
+};
+
+const FINISH_LABELS = {
+    raw: '마감 없음',
+    hem: '시접 처리',
+    rod: '봉 거치',
+    eyelet: '아일릿(고리)',
+    velcro: '벨크로'
 };
 
 // ────────────────────────────────────────────────
@@ -82,10 +93,9 @@ window._cdUploadImage = function(files) {
         const img = new Image();
         img.onload = function() {
             state.img = img;
-            // 이미지 비율 그대로 기본 사이즈 추측 (cm)
-            const ratio = img.width / img.height;
+            state.imgAspect = img.width / img.height;
             state.imgWcm = 10;
-            state.imgHcm = Math.round(10 / ratio * 10) / 10;
+            state.imgHcm = Math.round(10 / state.imgAspect * 10) / 10;
             document.getElementById('imgWcm').value = state.imgWcm;
             document.getElementById('imgHcm').value = state.imgHcm;
             document.getElementById('uploadZone').style.display = 'none';
@@ -93,6 +103,8 @@ window._cdUploadImage = function(files) {
             document.getElementById('btnReset').style.display = '';
             document.getElementById('btnReplace').style.display = '';
             document.getElementById('orderBtn').disabled = false;
+            const buyNowBtn = document.getElementById('buyNowBtn');
+            if (buyNowBtn) buyNowBtn.disabled = false;
             window._cdRender();
         };
         img.src = e.target.result;
@@ -224,10 +236,48 @@ function updatePrice() {
     } else {
         unit = f.price_1ma; qtyLabel = '1마'; total = unit;
     }
+    total += (state.finishExtra || 0);
     document.getElementById('pUnit').textContent = unit.toLocaleString() + '원';
-    document.getElementById('pQty').textContent = qtyLabel;
+    document.getElementById('pQty').textContent = qtyLabel + (state.finishExtra ? ' + ' + FINISH_LABELS[state.finish] : '');
     document.getElementById('pTotal').textContent = total.toLocaleString() + '원';
 }
+
+// ────────────────────────────────────────────────
+// 비율 유지 (가로 입력 → 세로 자동, 세로 입력 → 가로 자동)
+// ────────────────────────────────────────────────
+window._cdOnSizeInput = function(which) {
+    const wInput = document.getElementById('imgWcm');
+    const hInput = document.getElementById('imgHcm');
+    const lockEl = document.getElementById('aspectLock');
+    const locked = lockEl ? lockEl.checked : true;
+    if (locked && state.imgAspect) {
+        if (which === 'w') {
+            const w = parseFloat(wInput.value) || 1;
+            const h = Math.round((w / state.imgAspect) * 10) / 10;
+            hInput.value = h;
+        } else {
+            const h = parseFloat(hInput.value) || 1;
+            const w = Math.round((h * state.imgAspect) * 10) / 10;
+            wInput.value = w;
+        }
+    }
+    // 1300mm 폭 경고
+    const w = parseFloat(wInput.value) || 0;
+    if (w > 130) showToast('롤원단 최대폭은 130cm입니다');
+    window._cdRender();
+};
+
+// ────────────────────────────────────────────────
+// 마감 옵션 변경
+// ────────────────────────────────────────────────
+window._cdOnFinishChange = function() {
+    const checked = document.querySelector('input[name="finish"]:checked');
+    if (!checked) return;
+    state.finish = checked.value;
+    const label = checked.closest('.fin-opt');
+    state.finishExtra = parseInt(label.dataset.extra || '0', 10);
+    updatePrice();
+};
 
 // ────────────────────────────────────────────────
 // 캔버스 렌더링
@@ -317,8 +367,261 @@ window._cdRender = function() {
     ctx.strokeRect(0.5, 0.5, cw - 1, ch - 1);
 };
 
+// ════════════════════════════════════════════════
+// 🛒 cotton-print 자체 장바구니 (localStorage)
+// ════════════════════════════════════════════════
+const CART_KEY = 'cp_cart_v1';
+function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return []; } }
+function saveCart(c) { try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
+
+function calcCartTotal() {
+    return getCart().reduce(function(s, it) { return s + (it.price || 0); }, 0);
+}
+
+window._cpUpdateCartUI = function() {
+    const cart = getCart();
+    const badge = document.getElementById('cartBadge');
+    const inline = document.getElementById('cartCountInline');
+    const body = document.getElementById('cartBody');
+    const totalAmt = document.getElementById('cartTotalAmt');
+    const checkoutBtn = document.getElementById('cartCheckoutBtn');
+
+    if (badge) {
+        if (cart.length > 0) { badge.style.display = 'flex'; badge.textContent = cart.length; }
+        else { badge.style.display = 'none'; }
+    }
+    if (inline) inline.textContent = cart.length ? '(' + cart.length + ')' : '';
+    if (totalAmt) totalAmt.textContent = calcCartTotal().toLocaleString() + '원';
+    if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+
+    if (body) {
+        if (cart.length === 0) {
+            body.innerHTML = '<div class="cart-empty"><i class="fa-regular fa-folder-open"></i><div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;">장바구니가 비어있습니다</div><div style="font-size:12px;">디자인을 완성하고 장바구니에 담아보세요</div></div>';
+        } else {
+            body.innerHTML = cart.map(function(it, i) {
+                const opts = [
+                    it.fabricName,
+                    it.imageSize,
+                    it.layout,
+                    it.qtyLabel,
+                    it.finish !== 'raw' ? '마감: ' + (FINISH_LABELS[it.finish] || it.finish) : null
+                ].filter(Boolean).join(' · ');
+                return '<div class="cart-item">' +
+                    '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
+                    '<div class="cart-item-info">' +
+                        '<div class="cart-item-name">' + it.title + '</div>' +
+                        '<div class="cart-item-opts">' + opts + '</div>' +
+                        '<div class="cart-item-bottom">' +
+                            '<span class="cart-item-price">' + (it.price||0).toLocaleString() + '원</span>' +
+                            '<button class="cart-item-remove" onclick="window._cpCartRemove(' + i + ')"><i class="fa-solid fa-trash"></i> 삭제</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+    }
+};
+
+window._cpCartOpen = function() {
+    document.getElementById('cartOverlay').classList.add('open');
+    document.getElementById('cartDrawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window._cpUpdateCartUI();
+};
+window._cpCartClose = function() {
+    document.getElementById('cartOverlay').classList.remove('open');
+    document.getElementById('cartDrawer').classList.remove('open');
+    document.body.style.overflow = '';
+};
+window._cpCartRemove = function(i) {
+    const cart = getCart();
+    cart.splice(i, 1);
+    saveCart(cart);
+    window._cpUpdateCartUI();
+};
+
+// 캔버스의 현재 미리보기를 썸네일로 (리사이즈된 데이터URL)
+function captureThumbDataUrl() {
+    const canvas = document.getElementById('fabricCanvas');
+    if (!canvas) return null;
+    try {
+        const tmp = document.createElement('canvas');
+        const targetW = 240;
+        const ratio = canvas.width ? (canvas.height / canvas.width) : 1;
+        tmp.width = targetW;
+        tmp.height = Math.round(targetW * ratio);
+        const ctx = tmp.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0,0,tmp.width,tmp.height);
+        ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+        return tmp.toDataURL('image/jpeg', 0.7);
+    } catch (e) { return null; }
+}
+
+function buildCartItem() {
+    const f = getFabric();
+    if (!f) return null;
+    let unit, qtyLabel, base, qtyVal;
+    if (state.qty === 'sample') { unit = f.price_sample; qtyLabel = '샘플 1장'; base = unit; qtyVal = 'sample'; }
+    else if (state.qty === 'custom' && state.customQty > 0) { unit = f.price_1ma; qtyLabel = state.customQty + '마'; base = unit * state.customQty; qtyVal = state.customQty + '마'; }
+    else { unit = f.price_1ma; qtyLabel = '1마'; base = unit; qtyVal = '1마'; }
+    const price = base + (state.finishExtra || 0);
+    return {
+        id: 't' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+        title: state.imgFileName ? state.imgFileName.replace(/\.[^.]+$/, '') : '내 패턴 원단',
+        thumbDataUrl: captureThumbDataUrl(),
+        imgDataUrl: state.imgDataUrl,
+        imgFileName: state.imgFileName,
+        fabricCode: f.code,
+        fabricName: f.name,
+        fabricWidth: f.width_cm,
+        imageSize: state.imgWcm + 'x' + state.imgHcm + 'cm',
+        layout: state.layout,
+        qtyValue: qtyVal,
+        qtyLabel: qtyLabel,
+        finish: state.finish,
+        finishExtra: state.finishExtra || 0,
+        price: price,
+        addedAt: new Date().toISOString()
+    };
+}
+
+window._cdAddToCart = function() {
+    if (!state.img || !state.imgDataUrl) { showToast('먼저 이미지를 업로드해주세요'); return; }
+    const item = buildCartItem();
+    if (!item) return;
+    const cart = getCart();
+    cart.push(item);
+    saveCart(cart);
+    window._cpUpdateCartUI();
+    showToast('장바구니에 담았습니다 (' + cart.length + '개)');
+    setTimeout(window._cpCartOpen, 400);
+};
+
+window._cdBuyNow = function() {
+    if (!state.img || !state.imgDataUrl) { showToast('먼저 이미지를 업로드해주세요'); return; }
+    const item = buildCartItem();
+    if (!item) return;
+    // 임시로 cart에 추가 후 즉시 체크아웃
+    const cart = getCart();
+    cart.push(item);
+    saveCart(cart);
+    window._cpUpdateCartUI();
+    window._cpOpenCheckout();
+};
+
+window._cpOpenCheckout = function() {
+    const cart = getCart();
+    if (cart.length === 0) return;
+    // 요약 렌더
+    const list = document.getElementById('coItemList');
+    list.innerHTML = cart.map(function(it){
+        const opts = [it.fabricName, it.imageSize, it.qtyLabel, it.finish!=='raw'?FINISH_LABELS[it.finish]:''].filter(Boolean).join(' · ');
+        return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + it.price.toLocaleString() + '원</div></div>';
+    }).join('');
+    document.getElementById('coTotalAmt').textContent = calcCartTotal().toLocaleString() + '원';
+    document.getElementById('checkoutOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+};
+
+window._cpCloseCheckout = function() {
+    document.getElementById('checkoutOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+// 체크아웃 → vip_orders 등록 + 이미지들 업로드
+window._cpSubmitOrder = async function() {
+    const name = (document.getElementById('coName').value||'').trim();
+    const phone = (document.getElementById('coPhone').value||'').trim();
+    const email = (document.getElementById('coEmail').value||'').trim();
+    const zip = (document.getElementById('coZip').value||'').trim();
+    const addr1 = (document.getElementById('coAddr1').value||'').trim();
+    const addr2 = (document.getElementById('coAddr2').value||'').trim();
+    const memo = (document.getElementById('coMemo').value||'').trim();
+    const payMethod = (document.querySelector('input[name="payMethod"]:checked')||{}).value || 'bank';
+
+    if (!name) { alert('받으시는 분 성함을 입력해주세요.'); return; }
+    if (!phone) { alert('연락처를 입력해주세요.'); return; }
+    if (!addr1) { alert('배송지를 입력해주세요.'); return; }
+
+    const cart = getCart();
+    if (cart.length === 0) return;
+
+    const btn = document.getElementById('coSubmitBtn');
+    btn.disabled = true;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
+
+    try {
+        const sb = window.supabase ? window.supabase.createClient(
+            'https://qinvtnhiidtmrzosyvys.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+        ) : null;
+        if (!sb) throw new Error('연결 실패');
+
+        // 디자인 이미지들 업로드
+        const uploadedFiles = [];
+        for (let i = 0; i < cart.length; i++) {
+            const it = cart[i];
+            if (!it.imgDataUrl) continue;
+            const m = it.imgDataUrl.match(/^data:(.+?);base64,(.+)$/);
+            if (!m) continue;
+            const mime = m[1], b64 = m[2];
+            const bin = atob(b64);
+            const arr = new Uint8Array(bin.length);
+            for (let j=0; j<bin.length; j++) arr[j] = bin.charCodeAt(j);
+            const blob = new Blob([arr], { type: mime });
+            const ext = (mime.split('/')[1]||'png').replace(/[^a-z0-9]/gi,'');
+            const path = 'cotton-print/orders/' + Date.now() + '_' + i + '.' + ext;
+            const { error: upErr } = await sb.storage.from('orders').upload(path, blob);
+            if (!upErr) {
+                const u = sb.storage.from('orders').getPublicUrl(path).data.publicUrl;
+                uploadedFiles.push({ name: it.imgFileName || ('item' + (i+1)), url: u, type: mime });
+            }
+        }
+
+        const total = calcCartTotal();
+        const lines = cart.map(function(it,i){
+            return (i+1)+'. '+it.title+'\n   - '+it.fabricName+'\n   - 이미지 '+it.imageSize+' | 레이아웃 '+it.layout+' | '+it.qtyLabel+' | 마감: '+(FINISH_LABELS[it.finish]||it.finish)+'\n   - '+it.price.toLocaleString()+'원';
+        }).join('\n');
+
+        const fullAddr = '['+zip+'] '+addr1+' '+addr2;
+        const memoText = '[Cotton Print 주문]\n결제: '+(payMethod==='bank'?'무통장 입금':'카드결제 (담당자 연락 후 처리)')+'\n주소: '+fullAddr+'\n메모: '+(memo||'없음')+'\n이메일: '+(email||'없음')+'\n\n=== 주문 상품 ===\n'+lines+'\n\n합계: '+total.toLocaleString()+'원';
+
+        await sb.from('vip_orders').insert({
+            customer_name: name,
+            customer_phone: phone,
+            preferred_manager: '본사담당자',
+            memo: memoText,
+            files: uploadedFiles.length ? uploadedFiles : null,
+            status: 'pending'
+        });
+
+        // 카트 비우기
+        saveCart([]);
+        window._cpUpdateCartUI();
+        window._cpCloseCheckout();
+        window._cpCartClose();
+
+        // 완료 안내
+        if (payMethod === 'bank') {
+            alert('✅ 주문이 접수되었습니다!\n\n[입금 안내]\n농협 351-1234-5678-90 (주)카멜레온프린팅\n금액: ' + total.toLocaleString() + '원\n\n* 입금 확인 후 영업일 내 제작 시작됩니다.\n* 담당자가 영업일 1~2일 내 연락드립니다.\n* 문의: 031-366-1984');
+        } else {
+            alert('✅ 주문이 접수되었습니다!\n\n카드결제 진행을 위해 담당자가 영업일 1~2일 내 연락드립니다.\n금액: ' + total.toLocaleString() + '원\n* 문의: 031-366-1984');
+        }
+
+        // 폼 초기화
+        ['coName','coPhone','coEmail','coZip','coAddr1','coAddr2','coMemo'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=''; });
+    } catch(e) {
+        alert('주문 처리 실패: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+};
+
 // ────────────────────────────────────────────────
-// 주문 → cafe2626.com 장바구니
+// (구) 주문 → 메인몰 리다이렉트 (디자이너 패턴 자동로드 시 사용 가능)
 // ────────────────────────────────────────────────
 window._cdSubmitOrder = async function() {
     if (!state.img || !state.imgDataUrl) { showToast('먼저 이미지를 업로드해주세요'); return; }
@@ -493,5 +796,6 @@ updateFabricDetail();
 updateSizeLabels();
 updatePrice();
 autoLoadPatternFromUrl();
+if (window._cpUpdateCartUI) window._cpUpdateCartUI();
 
 })();
