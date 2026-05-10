@@ -11,6 +11,8 @@
 // ════════════════════════════════════════════════════
 const HOEBAE_UNIT_PRICE = 15000;
 const HOEBAE_AREA_CM2 = 100 * 100; // 1 m² = 10,000 cm²
+const ROLL_MAX_WIDTH_CM = 130;     // 대폭 한계 — 초과 시 이어박기
+const SEAM_EXTRA_KRW = 10000;      // 이어박기 추가비 (130cm 초과 시, 1회 부과)
 
 // 원단 8종 (가격 동일, 회배 단가 사용)
 const FABRIC_TYPES = {
@@ -101,7 +103,9 @@ const state = {
     // 3) 부자재 (선택, 1회 가격)
     accCode: '',
     accName: '',
-    accExtra: 0
+    accExtra: 0,
+    // 4) 이어박기 (130cm 초과 시 자동 +10,000원)
+    seamExtra: 0
 };
 
 // 언어별 원단/색상 이름 매핑 (i18n 사전과 동기화)
@@ -370,11 +374,16 @@ window._cdCalcHoebae = function() {
     let w = parseFloat(wEl.value) || 130;
     let h = parseFloat(hEl.value) || 100;
     let q = parseInt(qEl.value) || 1;
-    if (w > 130) { w = 130; wEl.value = 130; showToast('가로는 최대 130cm입니다'); }
+    // 130cm 초과 허용 — 이어박기 처리 (상한 1000cm 안전장치)
+    if (w > 1000) { w = 1000; wEl.value = 1000; }
     if (w < 10) w = 10;
     if (h < 10) h = 10;
     if (q < 1) q = 1;
     state.orderWcm = w; state.orderHcm = h; state.orderQty = q;
+    // 이어박기 자동 결정
+    state.seamExtra = (w > ROLL_MAX_WIDTH_CM) ? SEAM_EXTRA_KRW : 0;
+    const seamEl = document.getElementById('seamNotice');
+    if (seamEl) seamEl.style.display = state.seamExtra > 0 ? '' : 'none';
     const rawHoebae = calcHoebae();
     const hoebae = Math.max(1, rawHoebae); // 최소 1배 청구
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
@@ -413,7 +422,7 @@ function updatePrice() {
     const hoebae = calcBillableHoebae();      // 청구용 (최소 1)
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
     const finishPerItem = Math.round((state.finishExtra || 0) * hoebae); // 회배 비례
-    const otherPerItem = (state.hookExtra || 0) + (state.accExtra || 0);
+    const otherPerItem = (state.hookExtra || 0) + (state.accExtra || 0) + (state.seamExtra || 0);
     const perItem = itemPrice + finishPerItem + otherPerItem;
     const subtotal = perItem * state.orderQty;
     const disc = getVolumeDiscount(state.orderQty);
@@ -427,6 +436,7 @@ function updatePrice() {
     extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + hoebae.toFixed(2) + ' = ' + cdFmtPrice(finishPerItem) : ''));
     if (state.hookCode) extraParts.push((window.cdT?window.cdT('hook'):'고리') + ': ' + state.hookName + ' (' + cdFmtPrice(state.hookExtra||0) + ')');
     if (state.accCode) extraParts.push((window.cdT?window.cdT('acc'):'부자재') + ': ' + state.accName + ' (' + cdFmtPrice(state.accExtra||0) + ')');
+    if (state.seamExtra > 0) extraParts.push((window.cdT?window.cdT('seam_label'):'이어박기 (대폭 초과)') + ' (+' + cdFmtPrice(state.seamExtra) + ')');
     document.getElementById('pFinish').innerHTML = extraParts.join('<br>');
 
     const dRow = document.getElementById('pDiscountRow');
@@ -467,9 +477,15 @@ window._cdOnSizeInput = function(which) {
             wInput.value = w;
         }
     }
-    // 1300mm 폭 경고
+    // 패턴 한 타일 폭 경고 (이미지 타일 사이즈)
     const w = parseFloat(wInput.value) || 0;
-    if (w > 130) showToast('롤원단 최대폭은 130cm입니다');
+    if (w > 130) {
+        var lang = window.__CD_LANG || 'ko';
+        var msg = lang === 'ja' ? 'パターンタイルの最大幅は130cmです'
+                : lang === 'en' ? 'Max tile width is 130cm'
+                : '패턴 타일의 최대 폭은 130cm입니다';
+        showToast(msg);
+    }
     window._cdRender();
 };
 
@@ -623,6 +639,7 @@ window._cpUpdateCartUI = function() {
         } else {
             body.innerHTML = cart.map(function(it, i) {
                 const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
+                var seamLbl = (window.cdT?window.cdT('seam_label'):'이어박기 (대폭 초과)');
                 const opts = [
                     it.fabricName,
                     '출력 ' + sz,
@@ -630,7 +647,8 @@ window._cpUpdateCartUI = function() {
                     it.qtyLabel,
                     (it.finishCode && it.finishCode !== 'raw' && it.finishCode !== 'none') ? '마감: ' + (it.finishName || '') : (it.finishCode === 'raw' ? '가재단' : null),
                     it.hookCode ? '고리: ' + (it.hookName||'') : null,
-                    it.accCode ? '부자재: ' + (it.accName||'') : null
+                    it.accCode ? '부자재: ' + (it.accName||'') : null,
+                    (it.seamExtra && it.seamExtra > 0) ? seamLbl + ' (+' + cdFmtPrice(it.seamExtra) + ')' : null
                 ].filter(Boolean).join(' · ');
                 return '<div class="cart-item">' +
                     '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
@@ -691,7 +709,7 @@ function buildCartItem() {
     const hoebae = Math.max(1, rawHoebae);
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
     const finishPerItem = Math.round((state.finishExtra||0) * hoebae);
-    const otherPerItem = (state.hookExtra||0) + (state.accExtra||0);
+    const otherPerItem = (state.hookExtra||0) + (state.accExtra||0) + (state.seamExtra||0);
     const subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
     const disc = getVolumeDiscount(state.orderQty);
     const discountAmt = Math.round(subtotal * disc.pct / 100);
@@ -726,6 +744,8 @@ function buildCartItem() {
         finishCode: state.finishCode, finishName: state.finishName, finishUnit: state.finishExtra || 0, finishTotal: finishPerItem,
         hookCode: state.hookCode, hookName: state.hookName, hookExtra: state.hookExtra || 0,
         accCode: state.accCode, accName: state.accName, accExtra: state.accExtra || 0,
+        seamExtra: state.seamExtra || 0,
+        oversize: state.orderWcm > ROLL_MAX_WIDTH_CM,
         subtotal: subtotal,
         discountPct: disc.pct,
         discountAmt: discountAmt,
@@ -889,6 +909,7 @@ window._cpSubmitOrder = async function() {
                     if (it.finishCode) arr.push({ type:'finish', code:it.finishCode, name:it.finishName, price:it.finishExtra||0 });
                     if (it.hookCode) arr.push({ type:'hook', code:it.hookCode, name:it.hookName, price:it.hookExtra||0 });
                     if (it.accCode) arr.push({ type:'accessory', code:it.accCode, name:it.accName, price:it.accExtra||0 });
+                    if (it.seamExtra && it.seamExtra > 0) arr.push({ type:'seam', code:'seam_join', name:'이어박기 (대폭 130cm 초과)', price:it.seamExtra });
                     return arr;
                 })(),
                 unit_price: it.unitPrice,

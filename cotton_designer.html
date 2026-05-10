@@ -69,13 +69,15 @@ window.__CD_I18N = {
     aspect_lock: { ko:'비율 유지', ja:'比率固定', en:'Lock ratio' },
     width_cm: { ko:'가로 (cm)', ja:'横 (cm)', en:'Width (cm)' },
     height_cm: { ko:'세로 (cm)', ja:'縦 (cm)', en:'Height (cm)' },
-    img_hint: { ko:'<span data-cdi18n="img_hint">롤원단 최대폭 130cm. 비율 유지 켜면 가로 입력 시 세로 자동 조정.</span>', ja:'ロール生地最大幅130cm。比率固定オン時、横入力で縦自動調整。', en:'Max roll width 130cm. With lock on, height auto-scales when you enter width.' },
-    side_output: { ko:'<span data-cdi18n="side_output">출력 사이즈 (실제 출력)</span>', ja:'出力サイズ (実寸)', en:'Output Size (actual)' },
-    width_max: { ko:'가로 (cm) — 최대 130', ja:'横 (cm) — 最大130', en:'Width (cm) — max 130' },
+    img_hint: { ko:'롤원단 최대폭 130cm. 비율 유지 켜면 가로 입력 시 세로 자동 조정.', ja:'ロール生地最大幅130cm。比率固定オン時、横入力で縦自動調整。', en:'Max roll width 130cm. With lock on, height auto-scales when you enter width.' },
+    side_output: { ko:'출력 사이즈 (실제 출력)', ja:'出力サイズ (実寸)', en:'Output Size (actual)' },
+    width_max: { ko:'가로 (cm)', ja:'横 (cm)', en:'Width (cm)' },
     height_unl: { ko:'세로 (cm) — 무제한', ja:'縦 (cm) — 無制限', en:'Height (cm) — unlimited' },
     hoebae_label: { ko:'회배 (1m² 기준)', ja:'回杯 (1m²基準)', en:'Units (1m² base)' },
     hoebae_price: { ko:'회배 단가 × 회배 수', ja:'単価 × 数量', en:'Unit price × count' },
-    hoebae_hint: { ko:'<span data-cdi18n="hoebae_hint">회배 = 가로(cm) × 세로(cm) ÷ 10,000 (1m² 기준). 최소 1배. 회배당 15,000원 + 마감도 회배 비례', ja:'回杯 = 横×縦 ÷ 10,000 (1m²基準)。最低1。回杯あたり15,000ウォン + 仕上げも回杯比例', en:'Units = (W × H) ÷ 10,000 (1m² base). Min 1. 15,000 KRW per unit + finish scales with units' },
+    hoebae_hint: { ko:'회배 = 가로(cm) × 세로(cm) ÷ 10,000 (1m² 기준). 최소 1배. 회배당 15,000원 + 마감도 회배 비례 (예: 130×100cm = 1.3회배 → 오버록 5,000×1.3 = 6,500원)', ja:'回杯 = 横×縦 ÷ 10,000 (1m²基準)。最低1。回杯あたり15,000ウォン + 仕上げも回杯比例 (例: 130×100cm = 1.3回杯 → オーバーロック 5,000×1.3 = 6,500ウォン)', en:'Units = (W × H) ÷ 10,000 (1m² base). Min 1. 15,000 KRW per unit + finish scales with units (e.g. 130×100cm = 1.3 units → Overlock 5,000×1.3 = 6,500 KRW)' },
+    seam_notice: { ko:'⚠️ 130cm 초과 시 이어박기 처리됩니다 (+10,000원)', ja:'⚠️ 130cm超は継ぎ縫い処理となります (+1,000円)', en:'⚠️ Widths over 130cm require seam joining (+$10)' },
+    seam_label: { ko:'이어박기 (대폭 초과)', ja:'継ぎ縫い (幅超過)', en:'Seam joining (oversize)' },
     side_finish: { ko:'원단 마감', ja:'生地仕上げ', en:'Fabric Finishing' },
     finish_required: { ko:'필수 / 제곱미터당', ja:'必須 / m²あたり', en:'Required / per m²' },
     finish_roll: { ko:'롤인쇄', ja:'ロール印刷', en:'Roll Print' },
@@ -701,14 +703,15 @@ a { text-decoration: none; color: inherit; }
             </div>
             <div class="size-controls">
                 <div class="size-input-group">
-                    <label data-cdi18n="width_max">가로 (cm) — 최대 130</label>
-                    <input type="number" class="size-input" id="orderWcm" value="130" min="10" max="130" step="1" oninput="window._cdCalcHoebae()">
+                    <label data-cdi18n="width_max">가로 (cm)</label>
+                    <input type="number" class="size-input" id="orderWcm" value="130" min="10" max="1000" step="1" oninput="window._cdCalcHoebae()">
                 </div>
                 <div class="size-input-group">
                     <label data-cdi18n="height_unl">세로 (cm) — 무제한</label>
                     <input type="number" class="size-input" id="orderHcm" value="100" min="10" step="1" oninput="window._cdCalcHoebae()">
                 </div>
             </div>
+            <div id="seamNotice" data-cdi18n="seam_notice" style="display:none; margin-top:8px; padding:8px 10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:6px; font-size:11px; font-weight:700; color:#92400e;">⚠️ 130cm 초과 시 이어박기 처리됩니다 (+10,000원)</div>
             <div style="margin-top:10px; padding:12px; background:var(--cream); border-radius:8px; font-size:13px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                     <span style="color:var(--text-light);" data-cdi18n="hoebae_label">회배 (1m² 기준)</span>
@@ -721,8 +724,7 @@ a { text-decoration: none; color: inherit; }
             </div>
             <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
                 <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
-                <span data-cdi18n="hoebae_hint">회배 = 가로(cm) × 세로(cm) ÷ 10,000 (1m² 기준). 최소 1배.
-                회배당 15,000원 + 마감도 회배 비례 (예: 130×100cm = 1.3회배 → 오버록 5,000×1.3 = 6,500원)</span>
+                <span data-cdi18n="hoebae_hint">회배 = 가로(cm) × 세로(cm) ÷ 10,000 (1m² 기준). 최소 1배. 회배당 15,000원 + 마감도 회배 비례 (예: 130×100cm = 1.3회배 → 오버록 5,000×1.3 = 6,500원)</span>
             </div>
         </div>
 
@@ -1024,6 +1026,6 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=16"></script>
+<script src="cotton_designer.js?v=17"></script>
 </body>
 </html>
