@@ -2417,8 +2417,26 @@ document.addEventListener('DOMContentLoaded', function() {
 .cp-home-card .cp-author { font-size:10px; color:#78350f; }
 .cp-home-grid::-webkit-scrollbar { height:6px; }
 .cp-home-grid::-webkit-scrollbar-thumb { background:#f3ead4; border-radius:3px; }
+
+/* 모바일: 우측 오버플로우 차단 + 화살표 숨김 */
+#bizDealSection { overflow-x:hidden; }
+#bizDealSection .hotdeal-scroll-wrap { position:relative; max-width:100%; overflow:hidden; }
+#bizDealSection .cp-home-grid { width:100%; max-width:100%; box-sizing:border-box; -webkit-overflow-scrolling:touch; }
 @media (max-width:768px) {
+    #bizDealSection { padding:0 12px; }
+    #bizDealSection .hotdeal-arrow { display:none !important; }
+    #bizDealSection .hotdeal-header { flex-direction:column; align-items:flex-start; }
+    #bizDealSection .hotdeal-header > div:last-child { width:100%; overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; }
+    #bizDealSection .hotdeal-header > div:last-child a { flex-shrink:0; font-size:11px !important; padding:8px 12px !important; }
+    #bizDealSection .cp-home-grid { padding:8px 0 12px !important; gap:10px !important; }
     .cp-home-card { width:140px; }
+    #cpHomeChips { padding:0 !important; gap:6px !important; }
+    .cp-home-chip { padding:6px 10px; font-size:11px; }
+}
+@media (max-width:480px) {
+    .cp-home-card { width:120px; }
+    .cp-home-card .cp-meta { padding:8px 10px; }
+    .cp-home-card .cp-name { font-size:11px; }
 }
 </style>
 
