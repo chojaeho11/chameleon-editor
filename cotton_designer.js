@@ -11,20 +11,22 @@ const HOEBAE_UNIT_PRICE = 15000;
 const HOEBAE_AREA_MM2 = 1300 * 1000; // = 1,300,000 mm²
 
 // admin_products / admin_categories 동기화 결과 — 런타임에 채워짐
-let DB_FABRICS = []; // [{ code, name, group, img, addons:[...] }]
-let DB_GROUPS = {};  // group_label -> [products]
+let DB_FABRICS = [];     // 패브릭만
+let DB_ACCESSORIES = []; // 부자재 (집게링/봉/벨크로 등 — 마감 옵션으로 활용)
+let DB_GROUPS = {};      // group_label -> [products]
 
 // 원단 키워드로 그룹 분류 (대분류)
+// null 반환 = 노출 안 함, '__accessory__' = 부자재(마감 옵션 후보)
 function classifyGroup(p) {
     const n = (p.name || '').toLowerCase();
-    if (/광목|면|cotton|cb/i.test(n) || (p.code||'').startsWith('cb')) return '면/광목';
-    if (/쉬폰|chiffon/.test(n)) return '쉬폰/실크';
-    if (/실크|silk/.test(n)) return '쉬폰/실크';
+    // 부자재 (집게/링/고리/걸이/봉/벨크로/아일릿/마감/시접/배접/재단/행거)
+    if (/집게|링|고리|걸이|봉|벨크로|아일릿|마감|시접|배접|재단|행거|클립|받침|스탠드/.test(n)) return '__accessory__';
+    if (/광목|면\b|cotton|cb/i.test(n) || (p.code||'').startsWith('cb')) return '면/광목';
+    if (/쉬폰|chiffon|실크|silk/.test(n)) return '쉬폰/실크';
     if (/레이온|rayon|인견/.test(n)) return '레이온/인견';
-    if (/폴리|폴리에스터|oxford|옥스포드/.test(n)) return '폴리/옥스포드';
+    if (/폴리|polyester|oxford|옥스포드/.test(n)) return '폴리/옥스포드';
     if (/스티커|점착|sticker/.test(n)) return '점착/스티커';
-    if (/벨크로|아일릿|봉|마감|시접|배접|재단/.test(n)) return '__finish__'; // 마감 부자재 분리
-    return '기타 패브릭';
+    return null; // 미분류 → 패브릭 탭에 노출하지 않음
 }
 
 // 상태
@@ -146,15 +148,19 @@ async function loadDbFabrics() {
             (cb||[]).forEach(p => { if (!seen.has(p.code)) products.push(p); });
         } catch(e) {}
 
-        DB_FABRICS = products
+        const classified = products
             .filter(p => !(p.code||'').startsWith('ua_'))
             .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
             .map(p => Object.assign(p, { group: classifyGroup(p) }));
 
+        // 부자재 별도 보관 (마감 옵션에 추가)
+        DB_ACCESSORIES = classified.filter(p => p.group === '__accessory__');
+        // 패브릭만: null/__accessory__ 제외
+        DB_FABRICS = classified.filter(p => p.group && p.group !== '__accessory__');
+
         // 그룹별 묶기
         DB_GROUPS = {};
         DB_FABRICS.forEach(p => {
-            if (p.group === '__finish__') return; // 마감 부자재는 그룹탭에서 제외
             (DB_GROUPS[p.group] = DB_GROUPS[p.group] || []).push(p);
         });
 
@@ -225,17 +231,28 @@ function renderFinishOptions() {
     const f = getFabric();
     const wrap = document.getElementById('finishOptions');
     if (!wrap) return;
+
+    // ── addons 정규화 (배열/객체/문자열 모두 처리) ──
+    let raw = f ? f.addons : null;
+    if (typeof raw === 'string') {
+        try { raw = JSON.parse(raw); } catch(e) { raw = null; }
+    }
     let addons = [];
-    try { addons = Array.isArray(f && f.addons) ? f.addons : (typeof f?.addons === 'string' ? JSON.parse(f.addons) : []); }
-    catch(e) { addons = []; }
+    if (Array.isArray(raw)) addons = raw;
+    else if (raw && typeof raw === 'object') addons = Object.values(raw);
 
     const opts = [
-        { code: 'none', name: '마감 없음', price: 0, sub: '생지 그대로 컷팅', isDefault: true }
+        { code: 'none', name: '마감 없음', price: 0, sub: '생지 그대로 컷팅' }
     ];
     addons.forEach(a => {
-        // addon 형식: {name, price} 또는 {name, price_kr, price_jp, price_us}
-        const price = a.price || a.price_kr || 0;
-        opts.push({ code: (a.code||a.name||'opt').toString(), name: a.name || '옵션', price: parseInt(price)||0, sub: a.desc||'' });
+        if (!a || typeof a !== 'object') return;
+        const price = a.price || a.price_kr || a.amount || 0;
+        opts.push({ code: (a.code||a.name||'opt').toString(), name: a.name || a.label || '옵션', price: parseInt(price)||0, sub: a.desc||a.description||'' });
+    });
+
+    // DB의 부자재(집게링, 봉, 벨크로 등)도 마감 옵션으로 추가
+    DB_ACCESSORIES.forEach(acc => {
+        opts.push({ code: acc.code, name: acc.name, price: parseInt(acc.price)||0, sub: '부자재' });
     });
 
     wrap.innerHTML = opts.map((o, i) => `
@@ -245,7 +262,6 @@ function renderFinishOptions() {
             <span class="fin-opt-price">${o.price>0?'+'+o.price.toLocaleString()+'원':'+0원'}</span>
         </label>
     `).join('');
-    // 첫 옵션을 state에 적용
     state.finishCode = 'none';
     state.finishName = '마감 없음';
     state.finishExtra = 0;
@@ -352,23 +368,19 @@ window._cdOnFinishChange = function() {
 // ────────────────────────────────────────────────
 window._cdRender = function() {
     if (!state.img) return;
-    const f = getFabric();
-    if (!f) return;
 
     state.imgWcm = parseFloat(document.getElementById('imgWcm').value) || 10;
     state.imgHcm = parseFloat(document.getElementById('imgHcm').value) || 10;
 
-    // 캔버스 사이즈 결정 (가로 max 800px, 비율 유지)
-    const fabricW = state.qty === 'sample' ? 54 : f.width_cm;
-    const fabricH = state.qty === 'sample' ? 45 :
-                    state.qty === 'custom' ? Math.min(state.customQty, 5) * f.height_per_ma_cm :
-                    f.height_per_ma_cm;
-    const maxW = 800, maxH = 660;
+    // 출력 사이즈를 cm 단위로 (state.orderWmm/Hmm은 mm)
+    const fabricW = (state.orderWmm || 1300) / 10;
+    const fabricH = (state.orderHmm || 1000) / 10;
+    const maxW = 780, maxH = 620;
     const scaleByW = maxW / fabricW;
     const scaleByH = maxH / fabricH;
     const pxPerCm = Math.min(scaleByW, scaleByH);
-    const cw = Math.floor(fabricW * pxPerCm);
-    const ch = Math.floor(fabricH * pxPerCm);
+    const cw = Math.max(120, Math.floor(fabricW * pxPerCm));
+    const ch = Math.max(120, Math.floor(fabricH * pxPerCm));
 
     const canvas = document.getElementById('fabricCanvas');
     canvas.width = cw; canvas.height = ch;
