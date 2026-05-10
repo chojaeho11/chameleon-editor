@@ -27,11 +27,31 @@ const COLOR_LABELS = { white: '화이트', natural: '네츄럴', ivory: '백아�
 
 // 대량 할인 정책 (수량 기준)
 function getVolumeDiscount(qty) {
-    if (qty >= 100) return { pct: 30, label: '100마+ 30%↓' };
-    if (qty >= 50)  return { pct: 20, label: '50마+ 20%↓' };
-    if (qty >= 10)  return { pct: 10, label: '10마+ 10%↓' };
+    if (qty >= 100) return { pct: 30, label: '100+ 30%↓' };
+    if (qty >= 50)  return { pct: 20, label: '50+ 20%↓' };
+    if (qty >= 10)  return { pct: 10, label: '10+ 10%↓' };
     return { pct: 0, label: '' };
 }
+
+// ════════════════════════════════════════════════════
+// 통화 변환 (KRW → JPY/USD)
+// JPY: 1,000원 = 100엔 (rate 0.1)
+// USD: 1,000원 = $1 (rate 0.001)
+// ════════════════════════════════════════════════════
+function cdFmtPrice(krw) {
+    var n = Math.round(krw || 0);
+    var lang = window.__CD_LANG || 'ko';
+    if (lang === 'ja') {
+        var jpy = Math.round(n * 0.1);
+        return '¥' + jpy.toLocaleString();
+    }
+    if (lang === 'en') {
+        var usd = Math.round(n * 0.001 * 100) / 100;
+        return '$' + usd.toFixed(2);
+    }
+    return n.toLocaleString() + '원';
+}
+window.cdFmtPrice = cdFmtPrice;
 
 // admin_products / admin_categories 동기화 결과 — 런타임에 채워짐
 let DB_FABRICS = [];     // 패브릭만
@@ -295,8 +315,8 @@ window._cdCalcHoebae = function() {
     const rawHoebae = calcHoebae();
     const hoebae = Math.max(1, rawHoebae); // 최소 1배 청구
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    document.getElementById('hoebaeAmount').textContent = hoebae.toFixed(2) + ' 회배' + (rawHoebae < 1 ? ' (최소 1배)' : '');
-    document.getElementById('hoebaePrice').textContent = itemPrice.toLocaleString() + '원';
+    document.getElementById('hoebaeAmount').textContent = hoebae.toFixed(2) + ' 회배' + (rawHoebae < 1 ? ' (min 1)' : '');
+    document.getElementById('hoebaePrice').textContent = cdFmtPrice(itemPrice);
     updateSizeLabels();
     updatePrice();
     window._cdRender();
@@ -337,31 +357,32 @@ function updatePrice() {
     const discountAmt = Math.round(subtotal * disc.pct / 100);
     const total = subtotal - discountAmt;
 
-    document.getElementById('pUnit').textContent = itemPrice.toLocaleString() + '원 (' + hoebae.toFixed(2) + '회배)';
-    document.getElementById('pQty').textContent = state.orderQty + '개';
+    document.getElementById('pUnit').textContent = cdFmtPrice(itemPrice) + ' (' + hoebae.toFixed(2) + 'x)';
+    document.getElementById('pQty').textContent = state.orderQty;
 
     const extraParts = [];
-    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + hoebae.toFixed(2) + '회배 = ' + finishPerItem.toLocaleString() + '원' : ''));
-    if (state.hookCode) extraParts.push('고리: ' + state.hookName + ' (' + (state.hookExtra||0).toLocaleString() + '원)');
-    if (state.accCode) extraParts.push('부자재: ' + state.accName + ' (' + (state.accExtra||0).toLocaleString() + '원)');
+    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + hoebae.toFixed(2) + ' = ' + cdFmtPrice(finishPerItem) : ''));
+    if (state.hookCode) extraParts.push((window.cdT?window.cdT('hook'):'고리') + ': ' + state.hookName + ' (' + cdFmtPrice(state.hookExtra||0) + ')');
+    if (state.accCode) extraParts.push((window.cdT?window.cdT('acc'):'부자재') + ': ' + state.accName + ' (' + cdFmtPrice(state.accExtra||0) + ')');
     document.getElementById('pFinish').innerHTML = extraParts.join('<br>');
 
     const dRow = document.getElementById('pDiscountRow');
     if (disc.pct > 0) {
         dRow.style.display = '';
-        document.getElementById('pDiscBadge').textContent = disc.label;
-        document.getElementById('pDiscount').textContent = '-' + discountAmt.toLocaleString() + '원';
+        var bd = document.getElementById('pDiscBadge'); if (bd) bd.textContent = disc.label;
+        document.getElementById('pDiscount').textContent = '-' + cdFmtPrice(discountAmt);
     } else {
         dRow.style.display = 'none';
     }
 
     // 고리/부자재 헤더 요약 표시
+    var noneText = window.cdT ? window.cdT('none_selected') : '선택 안 함';
     const hs = document.getElementById('hookSummary');
-    if (hs) hs.textContent = state.hookCode ? state.hookName + ' (+' + (state.hookExtra||0).toLocaleString() + ')' : '선택 안 함';
+    if (hs) hs.textContent = state.hookCode ? state.hookName + ' (+' + cdFmtPrice(state.hookExtra||0) + ')' : noneText;
     const as = document.getElementById('accSummary');
-    if (as) as.textContent = state.accCode ? state.accName + ' (+' + (state.accExtra||0).toLocaleString() + ')' : '선택 안 함';
+    if (as) as.textContent = state.accCode ? state.accName + ' (+' + cdFmtPrice(state.accExtra||0) + ')' : noneText;
 
-    document.getElementById('pTotal').textContent = total.toLocaleString() + '원';
+    document.getElementById('pTotal').textContent = cdFmtPrice(total);
 }
 
 // ────────────────────────────────────────────────
@@ -530,7 +551,7 @@ window._cpUpdateCartUI = function() {
         else { badge.style.display = 'none'; }
     }
     if (inline) inline.textContent = cart.length ? '(' + cart.length + ')' : '';
-    if (totalAmt) totalAmt.textContent = calcCartTotal().toLocaleString() + '원';
+    if (totalAmt) totalAmt.textContent = cdFmtPrice(calcCartTotal());
     if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
 
     if (body) {
@@ -554,7 +575,7 @@ window._cpUpdateCartUI = function() {
                         '<div class="cart-item-name">' + it.title + '</div>' +
                         '<div class="cart-item-opts">' + opts + '</div>' +
                         '<div class="cart-item-bottom">' +
-                            '<span class="cart-item-price">' + (it.price||0).toLocaleString() + '원</span>' +
+                            '<span class="cart-item-price">' + cdFmtPrice(it.price||0) + '</span>' +
                             '<button class="cart-item-remove" onclick="window._cpCartRemove(' + i + ')"><i class="fa-solid fa-trash"></i> 삭제</button>' +
                         '</div>' +
                     '</div>' +
@@ -684,9 +705,9 @@ window._cpOpenCheckout = function() {
         if (it.hookCode) parts.push('고리: '+it.hookName);
         if (it.accCode) parts.push('부자재: '+it.accName);
         const opts = parts.filter(Boolean).join(' · ');
-        return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + it.price.toLocaleString() + '원</div></div>';
+        return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + cdFmtPrice(it.price) + '</div></div>';
     }).join('');
-    document.getElementById('coTotalAmt').textContent = calcCartTotal().toLocaleString() + '원';
+    document.getElementById('coTotalAmt').textContent = cdFmtPrice(calcCartTotal());
     document.getElementById('checkoutOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
 };
@@ -861,7 +882,7 @@ window._cpSubmitOrder = async function() {
         ['coName','coPhone','coEmail','coZip','coAddr1','coAddr2','coMemo'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=''; });
         // 입금 안내 모달 표시
         document.getElementById('biOrderId').textContent = '#' + newOrderId;
-        document.getElementById('biAmount').textContent = total.toLocaleString() + '원';
+        document.getElementById('biAmount').textContent = cdFmtPrice(total);
         document.getElementById('bankInfoOverlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     } catch(e) {
