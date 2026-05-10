@@ -19,11 +19,13 @@ Setup:
 """
 
 import os
+import re
 import sys
 import io
 import time
 import base64
 import random
+import secrets
 import argparse
 from pathlib import Path
 from datetime import datetime
@@ -422,9 +424,11 @@ def generate_one(category: str, output_dir: Path, dry_run: bool = False) -> dict
     print(" ✓")
 
     # 로컬 저장 (디버그/검증용)
+    # 파일명은 순수 ASCII만 — Supabase Storage가 비ASCII 키를 거부함
+    # 한글 제목 정보는 DB의 name 필드에 그대로 저장되니 손실 없음
     ts = int(time.time())
-    safe_title = "".join(c if c.isalnum() else "_" for c in title)[:30]
-    base = f"{category}_{ts}_{safe_title}"
+    rand = secrets.token_hex(3)  # 6 hex chars — 충돌 방지
+    base = f"{category}_{ts}_{rand}"
     tile_path = output_dir / f"{base}.jpg"
     tile.save(tile_path, "JPEG", quality=92)
     preview = make_2x2_preview(tile)
