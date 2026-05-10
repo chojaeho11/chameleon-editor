@@ -5,10 +5,12 @@
 'use strict';
 
 // ════════════════════════════════════════════════════
-// 회배 단가 (1회배 = 130×100cm = 1.3 m²)
+// 회배 단가 (1회배 = 1 m² = 100×100cm)
+// 130×100cm = 1.3회배, 100×50cm = 0.5회배 등 비례 계산
+// 최소 1회배 (1m² 미만은 1로 처리)
 // ════════════════════════════════════════════════════
 const HOEBAE_UNIT_PRICE = 15000;
-const HOEBAE_AREA_CM2 = 130 * 100;
+const HOEBAE_AREA_CM2 = 100 * 100; // 1 m² = 10,000 cm²
 
 // 원단 8종 (가격 동일, 회배 단가 사용)
 const FABRIC_TYPES = {
@@ -290,9 +292,10 @@ window._cdCalcHoebae = function() {
     if (h < 10) h = 10;
     if (q < 1) q = 1;
     state.orderWcm = w; state.orderHcm = h; state.orderQty = q;
-    const hoebae = calcHoebae();
+    const rawHoebae = calcHoebae();
+    const hoebae = Math.max(1, rawHoebae); // 최소 1배 청구
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    document.getElementById('hoebaeAmount').textContent = hoebae.toFixed(2) + ' 회배';
+    document.getElementById('hoebaeAmount').textContent = hoebae.toFixed(2) + ' 회배' + (rawHoebae < 1 ? ' (최소 1배)' : '');
     document.getElementById('hoebaePrice').textContent = itemPrice.toLocaleString() + '원';
     updateSizeLabels();
     updatePrice();
@@ -317,17 +320,16 @@ window._cdToggleCollapse = function(id, head) {
     if (card) card.classList.toggle('open', !open);
 };
 
-// 면적(m²) — 1m² 미만은 1로 침
-function calcAreaM2() {
-    const cm2 = (state.orderWcm || 0) * (state.orderHcm || 0);
-    return Math.max(1, Math.ceil(cm2 / 10000));
+// 회배 (최소 1배) — 1m² 미만은 1로 처리
+function calcBillableHoebae() {
+    return Math.max(1, calcHoebae());
 }
 
 function updatePrice() {
-    const hoebae = calcHoebae();
+    const rawHoebae = calcHoebae();           // 표시용 (실제 비율)
+    const hoebae = calcBillableHoebae();      // 청구용 (최소 1)
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    const areaM2 = calcAreaM2();
-    const finishPerItem = (state.finishExtra || 0) * areaM2; // m²당 × 면적
+    const finishPerItem = Math.round((state.finishExtra || 0) * hoebae); // 회배 비례
     const otherPerItem = (state.hookExtra || 0) + (state.accExtra || 0);
     const perItem = itemPrice + finishPerItem + otherPerItem;
     const subtotal = perItem * state.orderQty;
@@ -339,7 +341,7 @@ function updatePrice() {
     document.getElementById('pQty').textContent = state.orderQty + '개';
 
     const extraParts = [];
-    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + areaM2 + 'm² = ' + finishPerItem.toLocaleString() + '원' : ''));
+    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + hoebae.toFixed(2) + '회배 = ' + finishPerItem.toLocaleString() + '원' : ''));
     if (state.hookCode) extraParts.push('고리: ' + state.hookName + ' (' + (state.hookExtra||0).toLocaleString() + '원)');
     if (state.accCode) extraParts.push('부자재: ' + state.accName + ' (' + (state.accExtra||0).toLocaleString() + '원)');
     document.getElementById('pFinish').innerHTML = extraParts.join('<br>');
@@ -601,10 +603,10 @@ function captureThumbDataUrl() {
 function buildCartItem() {
     const f = getFabric();
     if (!f) { showToast('원단을 선택해주세요'); return null; }
-    const hoebae = calcHoebae();
+    const rawHoebae = calcHoebae();
+    const hoebae = Math.max(1, rawHoebae);
     const itemPrice = Math.round(hoebae * HOEBAE_UNIT_PRICE);
-    const areaM2 = calcAreaM2();
-    const finishPerItem = (state.finishExtra||0) * areaM2;
+    const finishPerItem = Math.round((state.finishExtra||0) * hoebae);
     const otherPerItem = (state.hookExtra||0) + (state.accExtra||0);
     const subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
     const disc = getVolumeDiscount(state.orderQty);
