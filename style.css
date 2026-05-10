@@ -6113,8 +6113,8 @@ html, body { -webkit-font-smoothing: antialiased; }
 /* ─── 카드형 섹션 래퍼 ─── */
 .hotdeal-wrapper {
     max-width: 1200px !important;
-    margin: 18px auto !important;
-    padding: 28px 28px !important;
+    margin: 14px auto !important;
+    padding: 20px 22px !important;
     background: #fff !important;
     border: 1px solid var(--dr-line) !important;
     border-radius: var(--dr-radius-lg) !important;
@@ -6123,20 +6123,36 @@ html, body { -webkit-font-smoothing: antialiased; }
 }
 .hotdeal-wrapper:hover { box-shadow: var(--dr-shadow-md) !important; }
 .hotdeal-wrapper > .hotdeal-header h2 {
-    font-size: 26px !important;
+    font-size: 18px !important;
     font-weight: 900 !important;
     letter-spacing: -.02em !important;
     color: var(--dr-ink) !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 4px !important;
 }
 .hotdeal-wrapper > .hotdeal-header p {
     color: var(--dr-ink-2) !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
 }
 @media (max-width: 768px) {
-    .hotdeal-wrapper { padding: 18px 14px !important; border-radius: 18px !important; margin: 12px auto !important; }
-    .hotdeal-wrapper > .hotdeal-header h2 { font-size: 20px !important; }
+    .hotdeal-wrapper { padding: 14px 12px !important; border-radius: 16px !important; margin: 10px auto !important; }
+    .hotdeal-wrapper > .hotdeal-header h2 { font-size: 16px !important; }
+    .hotdeal-wrapper > .hotdeal-header p { font-size: 12px !important; }
 }
+
+/* ─── 빈 그리드는 자리 차지하지 않게 (상품 미로드 시 옹졸하지 않도록) ─── */
+.hotdeal-grid:empty { display: none !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; }
+.hotdeal-scroll-wrap:has(.hotdeal-grid:empty) { display: none !important; }
+/* 캐러셀 화살표도 빈 그리드면 숨김 */
+.hotdeal-grid:empty + .hotdeal-arrow,
+.hotdeal-grid:empty ~ .hotdeal-arrow { display: none !important; }
+/* 상품이 비어있고 자체 추가 컨텐츠도 없으면 섹션 자체를 숨김
+   (단, bizDealSection은 카테고리 chip + 패턴 캐러셀이 따로 있어 제외) */
+#printServiceSection:has(.hotdeal-grid:empty),
+#goodsSection:has(.hotdeal-grid:empty),
+#paperDisplaySection:has(.hotdeal-grid:empty),
+#wholesaleBoardSection:has(.hotdeal-grid:empty),
+#popularSection:has(.hotdeal-grid:empty),
+#hotDealSection:has(.hotdeal-grid:empty) { display: none !important; }
 
 /* 컬러 배경 섹션은 흰 카드 + 살짝 컬러 헤일로로 통일 */
 #printServiceSection,
