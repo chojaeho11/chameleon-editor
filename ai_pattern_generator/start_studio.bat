@@ -1,22 +1,39 @@
 @echo off
-REM Cotton Pattern Studio launcher
-REM 더블클릭하면 GUI 실행. 가상환경 자동 활성화 + 의존성 자동 설치.
-
+chcp 65001 >nul
+setlocal
 cd /d "%~dp0"
 
-REM 가상환경 없으면 생성
+REM Cotton Pattern Studio launcher (ASCII-only, no Korean comments)
+
 if not exist ".venv\Scripts\python.exe" (
-    echo [setup] 가상환경 생성 중...
+    echo [setup] Creating Python virtual environment...
     python -m venv .venv
     if errorlevel 1 (
-        echo [error] python을 찾을 수 없습니다. https://python.org 에서 설치하세요.
+        echo.
+        echo [error] Could not create venv. Is Python installed?
+        echo Install from: https://www.python.org/downloads/
         pause
         exit /b 1
     )
-    echo [setup] 의존성 설치 중...
-    ".venv\Scripts\python.exe" -m pip install --upgrade pip
+
+    echo [setup] Installing dependencies (this takes 1-2 minutes)...
+    ".venv\Scripts\python.exe" -m pip install --upgrade pip --quiet
     ".venv\Scripts\python.exe" -m pip install -r requirements.txt
+    if errorlevel 1 (
+        echo.
+        echo [error] Failed to install dependencies.
+        pause
+        exit /b 1
+    )
+    echo [setup] Done.
+    echo.
 )
 
-REM GUI 실행 (콘솔창 안 보이게)
-start "" ".venv\Scripts\pythonw.exe" pattern_studio_gui.py
+REM Use pythonw if available (no console window), else fall back to python
+if exist ".venv\Scripts\pythonw.exe" (
+    start "" ".venv\Scripts\pythonw.exe" pattern_studio_gui.py
+) else (
+    ".venv\Scripts\python.exe" pattern_studio_gui.py
+)
+
+endlocal
