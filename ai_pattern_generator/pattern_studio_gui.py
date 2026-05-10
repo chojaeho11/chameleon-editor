@@ -20,6 +20,7 @@ import os
 import sys
 import json
 import queue
+import webbrowser
 import threading
 import subprocess
 from pathlib import Path
@@ -28,6 +29,11 @@ from typing import Optional, Dict
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
+
+# ── 외부 링크 ──
+SUPABASE_SECRETS_URL = "https://supabase.com/dashboard/project/qinvtnhiidtmrzosyvys/functions/secrets"
+SUPABASE_API_KEYS_URL = "https://supabase.com/dashboard/project/qinvtnhiidtmrzosyvys/settings/api"
+OPENAI_KEYS_URL = "https://platform.openai.com/api-keys"
 
 
 HERE = Path(__file__).parent.resolve()
@@ -184,18 +190,39 @@ class PatternStudioApp(tk.Tk):
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
 
         # API 키 카드
-        keys_card = self._make_card(left, "🔑 API 키")
+        keys_card = self._make_card(left, "🔑 API 키 (한 번만 입력 → 자동 저장)")
         keys_card.pack(fill="x", pady=(0, 10))
 
-        ttk.Label(keys_card, text="OpenAI API Key", style="Card.TLabel").pack(anchor="w", padx=14, pady=(8, 2))
+        # OpenAI Key
+        oai_row = ttk.Frame(keys_card, style="Card.TFrame")
+        oai_row.pack(fill="x", padx=14, pady=(8, 2))
+        ttk.Label(oai_row, text="OpenAI API Key", style="Card.TLabel").pack(side="left")
+        ttk.Button(oai_row, text="🌐 Supabase에서 복사", command=lambda: webbrowser.open(SUPABASE_SECRETS_URL),
+                   style="Save.TButton").pack(side="right")
+        ttk.Button(oai_row, text="🌐 OpenAI에서 발급", command=lambda: webbrowser.open(OPENAI_KEYS_URL),
+                   style="Save.TButton").pack(side="right", padx=(0, 4))
         self.openai_var = tk.StringVar()
         self.openai_entry = ttk.Entry(keys_card, textvariable=self.openai_var, show="•", width=50)
         self.openai_entry.pack(fill="x", padx=14, pady=(0, 8))
 
-        ttk.Label(keys_card, text="Supabase Service Role Key (anon 아님!)", style="Card.TLabel").pack(anchor="w", padx=14, pady=(2, 2))
+        # Supabase Key
+        sb_row = ttk.Frame(keys_card, style="Card.TFrame")
+        sb_row.pack(fill="x", padx=14, pady=(2, 2))
+        ttk.Label(sb_row, text="Supabase Service Role Key (anon 아님!)", style="Card.TLabel").pack(side="left")
+        ttk.Button(sb_row, text="🌐 Supabase에서 복사", command=lambda: webbrowser.open(SUPABASE_API_KEYS_URL),
+                   style="Save.TButton").pack(side="right")
         self.sb_var = tk.StringVar()
         self.sb_entry = ttk.Entry(keys_card, textvariable=self.sb_var, show="•", width=50)
         self.sb_entry.pack(fill="x", padx=14, pady=(0, 8))
+
+        # 안내 문구
+        note = tk.Label(keys_card,
+                        text="ℹ Supabase Edge Secrets는 보안상 외부 자동 조회 불가합니다.\n"
+                             "  '🌐 Supabase에서 복사' 버튼을 누르면 페이지가 열립니다.\n"
+                             "  → OPENAI_API_KEY 행 우측 ⋮ 메뉴 → Reveal → 복사 → 위에 붙여넣기.",
+                        bg=COLORS["card"], fg=COLORS["muted"],
+                        font=("Segoe UI", 8), anchor="w", justify="left")
+        note.pack(fill="x", padx=14, pady=(0, 4))
 
         key_btns = ttk.Frame(keys_card, style="Card.TFrame")
         key_btns.pack(fill="x", padx=14, pady=(0, 12))
@@ -203,6 +230,8 @@ class PatternStudioApp(tk.Tk):
                    style="Save.TButton").pack(side="left")
         ttk.Button(key_btns, text="💾 .env에 저장", command=self._save_keys,
                    style="Save.TButton").pack(side="left", padx=(8, 0))
+        ttk.Button(key_btns, text="🖥 바탕화면 바로가기 만들기", command=self._install_shortcut,
+                   style="Save.TButton").pack(side="right")
 
         # 옵션 카드
         opts_card = self._make_card(left, "⚙ 실행 옵션")
@@ -340,6 +369,33 @@ class PatternStudioApp(tk.Tk):
         new_show = "•" if showing else ""
         self.openai_entry.config(show=new_show)
         self.sb_entry.config(show=new_show)
+
+    def _install_shortcut(self):
+        """바탕화면에 'Cotton Pattern Studio' 바로가기 생성"""
+        if os.name != "nt":
+            messagebox.showinfo("알림", "Windows에서만 동작합니다.")
+            return
+        installer = HERE / "install_desktop_shortcut.py"
+        if not installer.exists():
+            messagebox.showerror("파일 누락", f"{installer.name}을 찾을 수 없습니다.")
+            return
+        try:
+            res = subprocess.run(
+                [sys.executable, str(installer)],
+                cwd=str(HERE),
+                capture_output=True, text=True, encoding="utf-8", errors="replace",
+                timeout=20,
+            )
+            if res.returncode == 0:
+                self._log_line("✓ 바탕화면 바로가기 생성됨", "ok")
+                messagebox.showinfo("완료", "바탕화면에 'Cotton Pattern Studio' 바로가기를 만들었습니다.\n"
+                                            "다음부터는 더블클릭으로 바로 실행할 수 있습니다.")
+            else:
+                self._log_line(f"✗ 바로가기 생성 실패:\n{res.stderr}", "err")
+                messagebox.showerror("실패", res.stderr or "알 수 없는 에러")
+        except Exception as e:
+            self._log_line(f"✗ 바로가기 생성 실패: {e}", "err")
+            messagebox.showerror("실패", str(e))
 
     def _set_all_cats(self, value: bool):
         for v in self.cat_vars.values():
