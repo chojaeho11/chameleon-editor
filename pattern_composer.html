@@ -259,7 +259,8 @@ input[type=color] { flex:1; height:26px; border:1px solid var(--border); border-
     function thumbUrl(url, w) {
         if (!url) return '';
         const t = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-        return t + (t.indexOf('?') >= 0 ? '&' : '?') + 'width=' + w + '&resize=cover&quality=72';
+        // contain 사용 — 단일 객체 PNG가 잘리지 않게
+        return t + (t.indexOf('?') >= 0 ? '&' : '?') + 'width=' + w + '&resize=contain&quality=72';
     }
 
     async function loadLibrary(reset) {
