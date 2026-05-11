@@ -147,10 +147,12 @@ function getFabric() {
     const isCotton = t.isCotton;
     const localizedName = getLangFabricName(state.fabricType);
     const colorLabel = isCotton ? (' (' + getLangColorName(state.fabricColor) + ')') : '';
+    // 2026-05-11: 설명도 현재 언어로 (pickFabricDesc는 FABRIC_TYPES 원본에서 꺼냄)
+    const localizedDesc = pickFabricDesc(t);
     return {
         code: state.fabricCode,
         name: localizedName + colorLabel,
-        desc: t.desc,
+        desc: localizedDesc,
         isCotton: isCotton,
         type: state.fabricType,
         color: isCotton ? state.fabricColor : null
@@ -412,11 +414,37 @@ function renderAccessoryOptions() {
     }).join('');
 }
 
+// 2026-05-11: 원단 종류·색상별 스왓치 (실사 이미지 대신 색 + 아이콘)
+const FABRIC_SWATCH = {
+    // cotton 4종은 선택 색상으로 결정되므로 여기선 fallback만 (실제 사용은 아래 colorBg)
+    cotton20: { icon: 'fa-grip-lines',    accent: '#78350f' },
+    cotton30: { icon: 'fa-grip-lines',    accent: '#78350f' },
+    cotton16: { icon: 'fa-grip-lines',    accent: '#78350f' },
+    cotton10: { icon: 'fa-grip-lines',    accent: '#78350f' },
+    chiffon:  { bg: 'linear-gradient(135deg,#fef9e7 0%,#fef3c7 100%)', icon: 'fa-feather',       accent: '#a16207' },
+    oxford:   { bg: 'linear-gradient(135deg,#d4d4aa 0%,#a3a380 100%)', icon: 'fa-shirt',         accent: '#3f3f1f' },
+    rayon:    { bg: 'linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%)', icon: 'fa-water',         accent: '#1e3a8a' },
+    linen:    { bg: 'linear-gradient(135deg,#ede4d3 0%,#d4c5a0 100%)', icon: 'fa-leaf',          accent: '#5b3a1a' }
+};
+const COTTON_COLOR_BG = { white: '#ffffff', natural: '#e7d8b8', ivory: '#f5ecd3' };
+
 function updateFabricDetail() {
     const f = getFabric();
     if (!f) return;
     const img = document.getElementById('fabricImg');
-    if (img) img.style.background = '#f5f5f4';
+    if (img) {
+        var sw = FABRIC_SWATCH[state.fabricType] || {};
+        var bg;
+        if (f.isCotton) bg = COTTON_COLOR_BG[state.fabricColor] || '#ffffff';
+        else bg = sw.bg || '#f5f5f4';
+        img.style.background = bg;
+        img.style.border = '1px solid #d6d3d1';
+        img.style.display = 'flex';
+        img.style.alignItems = 'center';
+        img.style.justifyContent = 'center';
+        img.style.boxShadow = 'inset 0 0 12px rgba(0,0,0,0.05)';
+        img.innerHTML = '<i class="fa-solid ' + (sw.icon || 'fa-scroll') + '" style="font-size:28px; color:' + (sw.accent || '#78350f') + '; opacity:0.55;"></i>';
+    }
     // 2026-05-11: 현재 언어로 원단 이름/설명 표시 + 최대폭 라벨도 i18n
     var nm = pickFabricName(f);
     var ds = pickFabricDesc(f);
