@@ -645,7 +645,8 @@ async function submitPdSample() {
 </style>
 
 <!-- 카테고리 둘러보기 (Printtree 스타일 — 둥근 카테고리 아이콘) -->
-<section style="max-width:1100px; margin:48px auto 30px; padding:0 24px;">
+<!-- 2026-05-11: 상단 카테고리 픽토그램 + 칩 필터 제거 — 검색창 하나로 통합 -->
+<section style="display:none; max-width:1100px; margin:48px auto 30px; padding:0 24px;">
     <div style="text-align:center; margin-bottom:32px;">
         <div style="font-size:11px; letter-spacing:6px; color:var(--accent); font-weight:700; margin-bottom:8px;">FABRIC CATEGORIES</div>
         <h2 style="font-size:28px; font-weight:900; color:var(--brown-dark);" data-i18n="cat_section_title">원단 카테고리</h2>
@@ -721,18 +722,19 @@ async function submitPdSample() {
         </button>
     </div>
 
-    <!-- 카테고리 필터 칩 -->
-    <div id="patternFilterChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; padding:4px 0;">
-        <button class="pf-chip pf-chip-active" data-cat="" onclick="cpFilterByCat('', this)" data-i18n="chip_all">전체</button>
-        <button class="pf-chip" data-cat="animal" onclick="cpFilterByCat('animal', this)" data-i18n="cat_animal">동물</button>
-        <button class="pf-chip" data-cat="plant" onclick="cpFilterByCat('plant', this)" data-i18n="cat_plant">식물</button>
-        <button class="pf-chip" data-cat="people" onclick="cpFilterByCat('people', this)" data-i18n="cat_people">사람</button>
-        <button class="pf-chip" data-cat="modern" onclick="cpFilterByCat('modern', this)" data-i18n="cat_modern">모던</button>
-        <button class="pf-chip" data-cat="scenery" onclick="cpFilterByCat('scenery', this)" data-i18n="cat_scenery">풍경</button>
-        <button class="pf-chip" data-cat="typo" onclick="cpFilterByCat('typo', this)" data-i18n="cat_typo">타이포</button>
-        <button class="pf-chip" data-cat="kids" onclick="cpFilterByCat('kids', this)" data-i18n="cat_kids">키즈</button>
-        <button class="pf-chip" data-cat="etc" onclick="cpFilterByCat('etc', this)" data-i18n="cat_etc">기타</button>
+    <!-- 패턴 검색창 (칩 필터 제거 후 유일한 필터) -->
+    <div style="margin:0 auto 22px; max-width:560px;">
+        <div style="position:relative;">
+            <input id="patternSearchInput" type="text" placeholder="패턴 검색 (이름, 디자이너, 키워드)" data-i18n-placeholder="search_ph" style="width:100%; padding:14px 50px 14px 20px; border:1.5px solid var(--cream-dark); border-radius:50px; font-size:14px; font-family:inherit; background:#fff; color:var(--brown-dark); outline:none; transition:border-color 0.2s;" onkeydown="if(event.key==='Enter') cpSearchPatterns()" oninput="clearTimeout(window._cpSearchT); window._cpSearchT = setTimeout(cpSearchPatterns, 300)">
+            <button onclick="cpSearchPatterns()" style="position:absolute; top:50%; right:6px; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; border:none; background:var(--brown-dark); color:#fde047; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
     </div>
+
+    <!-- 칩 필터 제거됨 (2026-05-11) — 자리만 보존 (cpFilterByCat 호출이 남아있을 수 있어 빈 컨테이너로 유지) -->
+    <div id="patternFilterChips" style="display:none;"></div>
+
     <div id="patternGallery" style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px;">
         <div style="grid-column:1/-1; padding:60px 20px; text-align:center; color:var(--text-light); font-size:13px;">
             <i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:var(--brown); margin-bottom:10px;"></i>
@@ -742,16 +744,6 @@ async function submitPdSample() {
 
     <!-- 페이지네이션 -->
     <div id="patternPager" style="display:flex; justify-content:center; align-items:center; gap:6px; margin-top:24px; flex-wrap:wrap;"></div>
-
-    <!-- 패턴 검색창 -->
-    <div style="margin-top:24px; max-width:520px; margin-left:auto; margin-right:auto;">
-        <div style="position:relative;">
-            <input id="patternSearchInput" type="text" placeholder="패턴 검색 (이름, 디자이너, 키워드)" data-i18n-placeholder="search_ph" style="width:100%; padding:14px 50px 14px 18px; border:1.5px solid var(--cream-dark); border-radius:50px; font-size:14px; font-family:inherit; background:#fff; color:var(--brown-dark); outline:none; transition:border-color 0.2s;" onkeydown="if(event.key==='Enter') cpSearchPatterns()">
-            <button onclick="cpSearchPatterns()" style="position:absolute; top:50%; right:6px; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; border:none; background:var(--brown-dark); color:#fde047; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-        </div>
-    </div>
 </section>
 <style>
 @media (max-width:1024px) { #patternGallery { grid-template-columns:repeat(4,1fr) !important; } }
@@ -832,6 +824,16 @@ async function submitPdSample() {
             <div style="margin-top:14px; padding:10px 14px; background:#fafaf9; border-radius:8px; font-size:11px; color:var(--text-light); line-height:1.6;" data-i18n-html="up_either_hint">
                 <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
                 썸네일 또는 원본 파일 중 <b>하나만 올려도 됩니다</b>. 원본이 이미지(JPG/PNG)면 자동으로 썸네일도 됩니다.
+            </div>
+
+            <!-- PNG 투명 배경 + 배경색 선택 안내 (2026-05-11 추가) -->
+            <div style="margin-top:10px; padding:12px 14px; background:linear-gradient(135deg,#ecfeff,#cffafe); border:1.5px solid #06b6d4; border-radius:10px; font-size:12px; color:#0e7490; line-height:1.65;" data-i18n-html="up_png_hint">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i>
+                <b>패턴은 자동으로 만들어집니다.</b> 미리 타일링된 이미지가 아니라, <b>배경 없는 PNG</b> 또는 <b>단색 배경의 잘리지 않은 원본 이미지</b> 한 장만 올려주세요.
+                시스템이 이걸 정방향·미러·벽돌·다이아 등 5가지 레이아웃으로 자동 배치합니다.
+                <br><br>
+                <i class="fa-solid fa-palette" style="color:#0891b2;"></i>
+                <b>투명 PNG를 올리면, 고객이 상세 페이지에서 직접 배경색을 골라 인쇄할 수 있어요</b> (화이트·블랙·아이보리·파스텔·세이지·머스타드 등 + 자유 컬러 선택).
             </div>
 
             <!-- 폼 정보 -->
@@ -2256,6 +2258,16 @@ up_orig_title: { ko:'원본 파일 (선택)', ja:'原本ファイル (任意)', 
 up_orig_sub: { ko:'AI · PSD · PDF · TIFF · JPG · PNG · 최대 200MB', ja:'AI/PSD/PDF/TIFF/JPG/PNG・最大200MB', en:'AI/PSD/PDF/TIFF/JPG/PNG · Max 200MB', zh:'AI/PSD/PDF · 最大200MB', ar:'AI/PSD/PDF · 200MB', es:'AI/PSD/PDF · max 200MB', de:'AI/PSD/PDF · max 200MB', fr:'AI/PSD/PDF · max 200MB' },
 up_orig_btn: { ko:'클릭하여 원본 파일 선택', ja:'クリックして選択', en:'Click to select original', zh:'点击选择原始文件', ar:'انقر للاختيار', es:'Click para seleccionar', de:'Klicken zum Auswahlen', fr:'Cliquer pour selectionner' },
 up_either_hint: { ko:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> 썸네일 또는 원본 파일 중 <b>하나만 올려도 됩니다</b>. 원본이 이미지(JPG/PNG)면 자동으로 썸네일도 됩니다.', ja:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> サムネイルまたは原本のいずれか<b>1つだけでOK</b>。原本が画像なら自動でサムネイルにもなります。', en:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Upload <b>either</b> a thumbnail OR an original file. If original is an image, it doubles as the thumbnail.', zh:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> 缩略图或原始文件，<b>上传一个即可</b>', ar:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> ارفع مصغرة <b>او</b> ملف اصلي', es:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Sube miniatura <b>o</b> archivo original', de:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Vorschaubild <b>oder</b> Original', fr:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Vignette <b>ou</b> fichier original' },
+up_png_hint: {
+    ko:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>패턴은 자동으로 만들어집니다.</b> 미리 타일링된 이미지가 아니라, <b>배경 없는 PNG</b> 또는 <b>단색 배경의 잘리지 않은 원본 이미지</b> 한 장만 올려주세요. 시스템이 정방향·미러·벽돌·다이아 등 5가지 레이아웃으로 자동 배치합니다.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>투명 PNG를 올리면, 고객이 상세 페이지에서 직접 배경색을 골라 인쇄할 수 있어요</b> (화이트·블랙·아이보리·파스텔·세이지·머스타드 등 + 자유 컬러 선택).',
+    ja:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>パターンは自動生成されます。</b>タイリング済み画像ではなく、<b>背景なしのPNG</b>または<b>単色背景のトリミングされていないオリジナル画像</b>を1枚アップロードしてください。システムが正方向・ミラー・ブリック・ダイヤなど5種類のレイアウトで自動配置します。<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>透明PNGを上げれば、お客様が詳細ページで背景色を自由に選べます</b>（ホワイト・ブラック・アイボリー・パステル・セージ・マスタードなど + 自由カラー）。',
+    en:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>The pattern is generated automatically.</b> Upload <b>one transparent PNG</b> or <b>one uncropped image on a solid background</b> — not a pre-tiled pattern. The system tiles it into 5 layouts (basic / mirror / half-brick / half-drop / centered).<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>If you upload a transparent PNG, customers can pick their own background color on the detail page</b> (white, black, ivory, pastel, sage, mustard, etc. + custom color picker).',
+    zh:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>图案自动生成。</b>请上传<b>透明背景PNG</b>或<b>纯色背景的完整原图</b>一张，系统会自动平铺为5种排列。<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>上传透明PNG时，客户可在详情页自由选择背景色</b>。',
+    ar:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>النمط يُنشأ تلقائياً.</b> ارفع <b>PNG شفاف</b> أو <b>صورة أصلية بخلفية واحدة</b>، والنظام يرتبها بـ5 تخطيطات.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>PNG الشفاف يتيح للعميل اختيار لون الخلفية في صفحة التفاصيل.</b>',
+    es:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>El patrón se genera automáticamente.</b> Sube <b>un PNG transparente</b> o <b>una imagen original con fondo sólido</b> — el sistema la tile en 5 disposiciones.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>Con PNG transparente, el cliente elige el color de fondo en el detalle.</b>',
+    de:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>Das Muster wird automatisch erzeugt.</b> Laden Sie <b>ein transparentes PNG</b> oder <b>ein unbeschnittenes Bild mit einfarbigem Hintergrund</b> hoch — das System kachelt es in 5 Layouts.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>Bei transparentem PNG wählt der Kunde die Hintergrundfarbe selbst.</b>',
+    fr:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>Le motif est généré automatiquement.</b> Téléchargez <b>un PNG transparent</b> ou <b>une image originale sur fond uni</b> — le système la dispose en 5 mises en page.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>Avec un PNG transparent, le client choisit la couleur de fond.</b>'
+},
 up_pattern_name: { ko:'패턴명', ja:'パターン名', en:'Pattern Name', zh:'图案名称', ar:'اسم النمط', es:'Nombre del patron', de:'Mustername', fr:'Nom du motif' },
 up_pattern_name_ph: { ko:'예: 빈티지 플로럴 #03', ja:'例: ビンテージフローラル #03', en:'e.g. Vintage Floral #03', zh:'例: 复古花卉 #03', ar:'مثال', es:'ej. Floral Vintage', de:'z.B. Vintage Blumen', fr:'ex: Floral Vintage' },
 up_category: { ko:'카테고리', ja:'カテゴリー', en:'Category', zh:'类别', ar:'الفئة', es:'Categoria', de:'Kategorie', fr:'Categorie' },

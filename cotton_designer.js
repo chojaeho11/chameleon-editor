@@ -84,6 +84,7 @@ const state = {
     fabricColor: 'white',             // 면 종류일 때만 사용
     fabricCode: 'cotton20_white',     // 합성 코드 (orders.items 저장용)
     layout: 'basic',
+    bgColor: '#ffffff',               // 캔버스 배경색 (투명 PNG 패턴용 — 2026-05-11)
     orderWcm: 130,
     orderHcm: 100,
     orderQty: 1,
@@ -365,6 +366,25 @@ window._cdSelectLayout = function(name) {
     window._cdRender();
 };
 
+// ────────────────────────────────────────────────
+// 배경색 선택 (2026-05-11 — 투명 PNG 패턴용)
+// ────────────────────────────────────────────────
+window._cdSelectBgColor = function(hex, btnEl) {
+    if (!hex) return;
+    state.bgColor = hex;
+    // 스와치 active 표시 동기화
+    document.querySelectorAll('.bg-sw').forEach(el => {
+        el.classList.toggle('active', el.dataset.color && el.dataset.color.toLowerCase() === hex.toLowerCase());
+    });
+    if (btnEl && btnEl.classList) btnEl.classList.add('active');
+    // 컬러피커 input + hex 라벨 동기화
+    const picker = document.getElementById('bgColorPicker');
+    if (picker && picker.value !== hex) picker.value = hex;
+    const hexLabel = document.getElementById('bgColorHex');
+    if (hexLabel) hexLabel.textContent = hex;
+    window._cdRender();
+};
+
 // ════════════════════════════════════════════════════
 // 회배 계산기 + 수량
 // ════════════════════════════════════════════════════
@@ -583,7 +603,7 @@ window._cdRender = function() {
     const canvas = document.getElementById('fabricCanvas');
     canvas.width = cw; canvas.height = ch;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = state.bgColor || '#ffffff';
     ctx.fillRect(0, 0, cw, ch);
 
     const tileW = state.imgWcm * pxPerCm;
@@ -778,6 +798,7 @@ function buildCartItem() {
         unitPrice: itemPrice,
         imageSize: state.imgWcm + '×' + state.imgHcm + 'cm',
         layout: state.layout,
+        bgColor: state.bgColor || '#ffffff',  // 2026-05-11: 배경색 (투명 PNG 패턴 인쇄용)
         qtyValue: state.orderQty,
         qtyLabel: state.orderQty + '개',
         finishCode: state.finishCode, finishName: state.finishName, finishUnit: state.finishExtra || 0, finishTotal: finishPerItem,
@@ -942,6 +963,7 @@ window._cpSubmitOrder = async function() {
                 height_cm: it.orderHcm,
                 hoebae: it.hoebae,
                 layout: it.layout,
+                bg_color: it.bgColor || '#ffffff',  // 2026-05-11: 배경색 (투명 PNG 패턴 인쇄용)
                 qty: it.qtyValue,
                 addons: (function(){
                     const arr = [];
