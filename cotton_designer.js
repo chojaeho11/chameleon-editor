@@ -899,9 +899,18 @@ function buildCartItem() {
         rawHoebae: rawHoebae,
         unitPrice: itemPrice,
         imageSize: state.imgWcm + '×' + state.imgHcm + 'cm',
+        // 2026-05-11: 패턴 셀 크기 — pattern_spec.cell_cm 으로 정확히 흘러가도록 명시.
+        // 이전엔 imageSize 문자열만 있어서 작업지시서에 'undefined×undefined' 표시되던 버그 fix.
+        imgWcm: state.imgWcm,
+        imgHcm: state.imgHcm,
         layout: state.layout,
         bgColor: state.bgColor || '#ffffff',  // 2026-05-11: 배경색 (투명 PNG 패턴 인쇄용)
         imgScale: state.imgScale != null ? state.imgScale : 1.0,  // 2026-05-11: 셀 내 이미지 비율
+        // 2026-05-11: 마켓플레이스 자동로드 케이스 — 작가 원본 URL이 이미 storage에 있음.
+        // localStorage 직렬화 시 큰 dataURL이 잘려나가더라도 이 URL은 짧아서 안전.
+        designerPatternId:  state.designerPatternId || null,
+        designerName:       state.designerName || null,
+        designerOriginalUrl: state.designerOriginalUrl || null,
         qtyValue: state.orderQty,
         qtyLabel: state.orderQty + '개',
         finishCode: state.finishCode, finishName: state.finishName, finishUnit: state.finishExtra || 0, finishTotal: finishPerItem,
@@ -1056,13 +1065,18 @@ window._cpSubmitOrder = async function() {
         const total = calcCartTotal();
         // orders.items: 통합주문관리에서 인식할 수 있는 형식으로
         const items = cart.map(function(it, idx){
-            // 2026-05-11: 한 아이템에 매핑된 작가 원본 이미지 — uploadedFiles 인덱스로 매칭
-            //   imgDataUrl이 없으면 업로드도 안 됐으니 artwork_url은 null.
-            //   이 매칭은 정확하진 않지만 (skip된 아이템이 있을 수 있음) 일반적인 경우 1:1로 맞음.
+            // 2026-05-11: 한 아이템에 매핑된 작가 원본 이미지.
+            //   1순위: 새로 업로드된 storage URL (직접 업로드 케이스)
+            //   2순위: 마켓플레이스 자동로드 시 이미 storage에 있는 원본 URL (designerOriginalUrl)
+            //   둘 다 없으면 null — 작업지시서에 '-' 로 표시
             var artworkUrl = null, artworkName = null;
             if (it.imgDataUrl && uploadedFiles[idx]) {
                 artworkUrl  = uploadedFiles[idx].url;
                 artworkName = uploadedFiles[idx].name;
+            } else if (it.designerOriginalUrl) {
+                // 마켓 자동로드 — 원본은 user_patterns storage 에 이미 있음
+                artworkUrl  = it.designerOriginalUrl;
+                artworkName = it.imgFileName || (it.designerName ? it.designerName + '_pattern.png' : 'designer_pattern.png');
             }
             return {
                 product_code: it.fabricCode,
