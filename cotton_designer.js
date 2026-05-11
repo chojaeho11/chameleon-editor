@@ -731,21 +731,38 @@ window._cdRender = function() {
     state.imgWcm = parseFloat(document.getElementById('imgWcm').value) || 10;
     state.imgHcm = parseFloat(document.getElementById('imgHcm').value) || 10;
 
-    // 출력 사이즈 (cm)
+    // 출력 사이즈 (cm) — 가용 폭 자동 감지
     const fabricW = state.orderWcm || 130;
     const fabricH = state.orderHcm || 100;
-    const maxW = 780, maxH = 620;
+    const previewArea = document.getElementById('previewArea');
+    const containerW = previewArea ? previewArea.clientWidth : window.innerWidth;
+    const isMobile = window.innerWidth <= 768;
+    // ruler(22) + gap(2) + padding(12) + border 여유 = 약 40~50px
+    const maxW = Math.max(280, Math.min(containerW - 50, isMobile ? 900 : 1100));
+    const maxH = isMobile ? 540 : 760;
     const scaleByW = maxW / fabricW;
     const scaleByH = maxH / fabricH;
     const pxPerCm = Math.min(scaleByW, scaleByH);
     const cw = Math.max(120, Math.floor(fabricW * pxPerCm));
     const ch = Math.max(120, Math.floor(fabricH * pxPerCm));
 
+    // 2026-05-11: DPR 적용 — 캔버스 내부 픽셀을 디바이스 픽셀에 맞춰 크게, CSS는 cw/ch
+    //   결과: 레티나/HiDPI 화면에서 또렷, 일반 화면에서도 1:1 매칭으로 흐림 제거
     const canvas = document.getElementById('fabricCanvas');
-    canvas.width = cw; canvas.height = ch;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(cw * dpr);
+    canvas.height = Math.round(ch * dpr);
+    canvas.style.width = cw + 'px';
+    canvas.style.height = ch + 'px';
     const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.fillStyle = state.bgColor || '#ffffff';
     ctx.fillRect(0, 0, cw, ch);
+
+    // 줄자 그리기 (캔버스 dimensions 결정 후)
+    drawRulers(cw, ch, pxPerCm, fabricW, fabricH);
 
     const tileW = state.imgWcm * pxPerCm;
     const tileH = state.imgHcm * pxPerCm;
@@ -812,6 +829,79 @@ window._cdRender = function() {
     ctx.lineWidth = 1;
     ctx.strokeRect(0.5, 0.5, cw - 1, ch - 1);
 };
+
+// 2026-05-11: 줄자 (눈금자) — 캔버스 상단 가로, 좌측 세로
+//  - 1cm 간격 minor tick (짧음)
+//  - 5cm 간격 medium tick (중간)
+//  - 10cm 간격 major tick (길음 + 숫자 라벨)
+function drawRulers(cw, ch, pxPerCm, fabricW, fabricH) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+    // ---- 상단 줄자 ----
+    const rT = document.getElementById('rulerTop');
+    if (rT) {
+        const rh = 18;
+        rT.width = Math.round(cw * dpr);
+        rT.height = Math.round(rh * dpr);
+        rT.style.width = cw + 'px';
+        rT.style.height = rh + 'px';
+        const rc = rT.getContext('2d');
+        rc.setTransform(dpr, 0, 0, dpr, 0, 0);
+        rc.clearRect(0, 0, cw, rh);
+        rc.fillStyle = '#faf6ed'; rc.fillRect(0, 0, cw, rh);
+        rc.strokeStyle = '#78350f'; rc.fillStyle = '#451a03';
+        rc.font = '9px -apple-system,system-ui,sans-serif';
+        rc.textAlign = 'center'; rc.textBaseline = 'bottom';
+        for (let cm = 0; cm <= fabricW; cm++) {
+            const x = Math.round(cm * pxPerCm) + 0.5;
+            let tickH = 3;
+            if (cm % 10 === 0) tickH = 9;
+            else if (cm % 5 === 0) tickH = 6;
+            rc.beginPath();
+            rc.moveTo(x, rh);
+            rc.lineTo(x, rh - tickH);
+            rc.stroke();
+            if (cm % 10 === 0 && cm > 0) {
+                rc.fillText(cm.toString(), x, rh - 10);
+            }
+        }
+    }
+
+    // ---- 좌측 줄자 ----
+    const rL = document.getElementById('rulerLeft');
+    if (rL) {
+        const rw = 22;
+        rL.width = Math.round(rw * dpr);
+        rL.height = Math.round(ch * dpr);
+        rL.style.width = rw + 'px';
+        rL.style.height = ch + 'px';
+        const lc = rL.getContext('2d');
+        lc.setTransform(dpr, 0, 0, dpr, 0, 0);
+        lc.clearRect(0, 0, rw, ch);
+        lc.fillStyle = '#faf6ed'; lc.fillRect(0, 0, rw, ch);
+        lc.strokeStyle = '#78350f'; lc.fillStyle = '#451a03';
+        lc.font = '9px -apple-system,system-ui,sans-serif';
+        lc.textAlign = 'right'; lc.textBaseline = 'middle';
+        for (let cm = 0; cm <= fabricH; cm++) {
+            const y = Math.round(cm * pxPerCm) + 0.5;
+            let tickW = 3;
+            if (cm % 10 === 0) tickW = 9;
+            else if (cm % 5 === 0) tickW = 6;
+            lc.beginPath();
+            lc.moveTo(rw, y);
+            lc.lineTo(rw - tickW, y);
+            lc.stroke();
+            if (cm % 10 === 0 && cm > 0) {
+                lc.save();
+                lc.translate(rw - 11, y);
+                lc.rotate(-Math.PI / 2);
+                lc.textAlign = 'center';
+                lc.fillText(cm.toString(), 0, 0);
+                lc.restore();
+            }
+        }
+    }
+}
 
 // ════════════════════════════════════════════════
 // 🛒 cotton-print 자체 장바구니 (localStorage)
@@ -1350,8 +1440,9 @@ async function autoLoadPatternFromUrl() {
         const { data, error } = await sb.from('user_patterns').select('*').eq('id', patternId).single();
         if (error || !data) return;
 
-        // 썸네일 URL을 이미지로 자동 로드
-        const url = data.thumb_url;
+        // 2026-05-11: 미리보기 선명도 — 원본 URL 우선 (썸네일은 폴백)
+        //   썸네일은 Supabase image transform으로 작게 리사이즈된 저해상도라 큰 캔버스에서 깨져 보임.
+        const url = data.original_url || data.thumb_url;
         if (!url) return;
 
         showToast('🎨 디자이너 패턴 "' + (data.name || '') + '" 로드 중...');
@@ -1418,5 +1509,13 @@ setTimeout(function(){
 }, 200);
 autoLoadPatternFromUrl();
 if (window._cpUpdateCartUI) window._cpUpdateCartUI();
+
+// 2026-05-11: 창 크기 변경 시 캔버스/줄자 재렌더 (모바일 회전 대응)
+let _cdResizeT = null;
+window.addEventListener('resize', function(){
+    if (!state.img) return;
+    clearTimeout(_cdResizeT);
+    _cdResizeT = setTimeout(function(){ window._cdRender(); }, 120);
+});
 
 })();

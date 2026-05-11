@@ -349,19 +349,33 @@ a { text-decoration: none; color: inherit; }
 }
 
 .preview-area {
-    flex: 1; display: none; flex-direction: column; align-items: stretch; justify-content: flex-start;
+    flex: 1; display: none; flex-direction: column; align-items: center; justify-content: flex-start;
     position: relative; padding-top: 4px;
 }
 .preview-area.active { display: flex; }
-/* 2026-05-11: 캔버스 풀폭화 — 상/좌 사이즈 라벨 제거, 프레임 패딩 최소화 */
+/* 2026-05-11: 줄자(rulers) + DPR-aware 캔버스 — 좌/상에 cm 눈금 표시 */
 .fabric-frame {
     background: #fff; padding: 6px; border-radius: 8px;
     box-shadow: 0 4px 20px rgba(69,26,3,0.08);
-    position: relative; width: 100%;
+    display: grid;
+    grid-template-columns: 22px auto;
+    grid-template-rows: 18px auto;
+    gap: 2px;
+    width: fit-content; max-width: 100%;
+    margin: 0 auto;
+}
+.ruler-corner {
+    background: var(--cream); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: var(--brown); font-weight: 700;
+}
+.ruler-top, .ruler-left {
+    display: block; background: var(--cream); border-radius: 3px;
 }
 .fabric-canvas {
-    display: block; width: 100%; max-width: 100%; height: auto;
+    display: block;
     background: #fff; border: 1px solid var(--border);
+    max-width: 100%; /* DPR scaling handles crispness; style.width set in JS */
 }
 /* 캔버스 아래 W×H 표시 (2026-05-11 추가 — 좌/상 라벨 제거 대체) */
 .fabric-dim-below {
@@ -688,9 +702,12 @@ a { text-decoration: none; color: inherit; }
         <!-- 미리보기 (이미지 업로드 후) -->
         <div class="preview-area" id="previewArea">
             <div class="fabric-frame">
+                <div class="ruler-corner">cm</div>
+                <canvas id="rulerTop" class="ruler-top"></canvas>
+                <canvas id="rulerLeft" class="ruler-left"></canvas>
                 <canvas id="fabricCanvas" class="fabric-canvas" width="800" height="660"></canvas>
             </div>
-            <!-- 2026-05-11: 캔버스 아래 W×H 표시 (상/좌 라벨 제거 대체) -->
+            <!-- 캔버스 아래 W×H 총합 (줄자가 cm 눈금 표시, 이 줄은 합계 요약) -->
             <div class="fabric-dim-below" id="fabricDimBelow">
                 <span data-cdi18n="canvas_dim">가로 × 세로</span> : <b id="dimW">130</b> cm × <b id="dimH">100</b> cm
             </div>
@@ -1145,6 +1162,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=31"></script>
+<script src="cotton_designer.js?v=32"></script>
 </body>
 </html>
