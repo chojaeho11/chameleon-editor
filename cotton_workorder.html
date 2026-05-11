@@ -42,6 +42,27 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
 .item-spec .val { color:#1f2937; font-weight:600; }
 .item-spec .val b { color:var(--accent); }
 
+/* 2026-05-11: 부자재/마감 그룹별 박스 */
+.opt-grid { grid-column:1/-1; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed #d1d5db; }
+.opt-box { padding:8px 10px; border-radius:6px; border-left:3px solid; font-size:11px; line-height:1.5; }
+.opt-box .opt-head { font-weight:800; font-size:10px; letter-spacing:0.5px; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
+.opt-box .opt-val { color:#1f2937; font-weight:700; }
+.opt-box .opt-empty { color:#9ca3af; font-weight:500; font-style:italic; }
+.opt-finish    { background:#fef3c7; border-color:#f59e0b; }   .opt-finish .opt-head    { color:#92400e; }
+.opt-hook      { background:#dbeafe; border-color:#3b82f6; }   .opt-hook .opt-head      { color:#1e40af; }
+.opt-accessory { background:#dcfce7; border-color:#22c55e; }   .opt-accessory .opt-head { color:#166534; }
+.opt-seam      { background:#fee2e2; border-color:#dc2626; }   .opt-seam .opt-head      { color:#991b1b; }
+
+/* 패턴 인쇄 정보 (cotton-print 전용) — 인쇄팀이 한눈에 보는 박스 */
+.pattern-info { grid-column:1/-1; margin-top:10px; padding:10px 12px; background:#f0fdfa; border-left:3px solid #14b8a6; border-radius:6px; font-size:11px; }
+.pattern-info .pi-head { font-weight:800; color:#0f766e; margin-bottom:4px; letter-spacing:0.5px; }
+.pattern-info .pi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px 12px; }
+.pattern-info .pi-grid > div b { color:#0d9488; font-weight:800; }
+.pattern-info .bg-chip { display:inline-block; width:14px; height:14px; border:1px solid #cbd5e1; border-radius:3px; vertical-align:middle; margin-right:4px; }
+
+/* 위험/주의 경고 */
+.warn-strip { grid-column:1/-1; margin-top:8px; padding:7px 12px; background:#fee2e2; border:1px solid #fca5a5; border-radius:4px; font-size:11px; color:#991b1b; font-weight:700; }
+
 .summary { background:var(--brown-dark); color:#fde047; padding:14px 18px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
 .summary .lbl { font-size:13px; font-weight:700; opacity:0.9; }
 .summary .amt { font-size:24px; font-weight:900; }
@@ -175,11 +196,71 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         const items = order.items || [];
         document.getElementById('woItemCount').textContent = items.length;
         const list = document.getElementById('woItemList');
+        // 2026-05-11: addons를 type별로 분류해서 그룹 박스로 표시 — 인쇄/배송/커팅팀이 한 눈에 보도록
+        const TYPE_META = {
+            finish:    { label:'패브릭 마감',   icon:'fa-scissors',          cls:'opt-finish' },
+            hook:      { label:'고리/걸이',     icon:'fa-link',              cls:'opt-hook' },
+            accessory: { label:'부자재/받침대', icon:'fa-cube',              cls:'opt-accessory' },
+            seam:      { label:'이어박기',      icon:'fa-triangle-exclamation', cls:'opt-seam' },
+        };
+        function addonGroupHtml(addons) {
+            const buckets = { finish:[], hook:[], accessory:[], seam:[] };
+            const other = [];
+            (addons||[]).forEach(a => {
+                const t = a.type;
+                if (buckets[t]) buckets[t].push(a);
+                else if (a.name) other.push(a);
+            });
+            const cards = Object.keys(buckets).map(t => {
+                const meta = TYPE_META[t];
+                const arr = buckets[t];
+                if (arr.length === 0) {
+                    // 마감/고리는 빈 자리도 보여주면 작업자가 "옵션 없음"을 확인 가능
+                    if (t === 'finish' || t === 'hook') {
+                        return `<div class="opt-box ${meta.cls}"><div class="opt-head"><i class="fa-solid ${meta.icon}"></i> ${meta.label}</div><div class="opt-empty">선택 안 함</div></div>`;
+                    }
+                    return '';
+                }
+                const valHtml = arr.map(a => {
+                    const priceLabel = a.price ? ` <span style="color:#6b7280; font-weight:600;">(+${fmt(a.price)}원)</span>` : '';
+                    return `${a.name||a.code||'-'}${priceLabel}`;
+                }).join('<br>');
+                return `<div class="opt-box ${meta.cls}"><div class="opt-head"><i class="fa-solid ${meta.icon}"></i> ${meta.label}</div><div class="opt-val">${valHtml}</div></div>`;
+            }).filter(Boolean).join('');
+            const otherCard = other.length ? `<div class="opt-box opt-accessory"><div class="opt-head"><i class="fa-solid fa-ellipsis"></i> 기타</div><div class="opt-val">${other.map(a => a.name).join('<br>')}</div></div>` : '';
+            return cards + otherCard;
+        }
+
+        // 패턴 spec → cotton-print 인쇄팀이 보는 정보 박스
+        function patternSpecHtml(spec) {
+            if (!spec || !spec.cell_cm) return '';
+            const bg = spec.bg_color || '#ffffff';
+            const isTrans = (bg === 'transparent');
+            const bgSwatch = isTrans
+                ? '<span class="bg-chip" style="background:repeating-conic-gradient(#cbd5e1 0% 25%, #fff 0% 50%) 0 0/6px 6px;"></span>'
+                : `<span class="bg-chip" style="background:${bg};"></span>`;
+            const scalePct = Math.round((spec.image_scale != null ? spec.image_scale : 1) * 100);
+            return `
+                <div class="pattern-info">
+                    <div class="pi-head"><i class="fa-solid fa-palette"></i> 패턴 인쇄 데이터</div>
+                    <div class="pi-grid">
+                        <div>한 셀: <b>${spec.cell_cm.w}×${spec.cell_cm.h} cm</b></div>
+                        <div>레이아웃: <b>${spec.layout || '-'}</b></div>
+                        <div>배경색: ${bgSwatch}<b>${bg}</b></div>
+                        <div>이미지 비율: <b>${scalePct}%</b></div>
+                        <div>원단 폭: <b>${spec.fabric_cm?.w || '?'} cm</b></div>
+                        <div>원본: <b>${spec.artwork_filename || '-'}</b></div>
+                    </div>
+                </div>`;
+        }
+
         list.innerHTML = items.map((it, i) => {
             const thumb = fileMap[i] || '';
-            const addons = (it.addons||[]).map(a => `${a.name}${a.price?' (+'+fmt(a.price)+'원)':''}`).join(', ');
             const widthCm = it.width_cm || (it.width_mm? it.width_mm/10 : '-');
             const heightCm = it.height_cm || (it.height_mm? it.height_mm/10 : '-');
+            const opts = addonGroupHtml(it.addons);
+            const pinfo = patternSpecHtml(it.pattern_spec);
+            const oversize = (it.width_cm && it.width_cm > 130) ? '<div class="warn-strip"><i class="fa-solid fa-triangle-exclamation"></i> 대폭 130cm 초과 — 이어박기 필수</div>' : '';
             return `<div class="item">
                 <div class="item-head">
                     <div class="name">${i+1}. ${it.product_name || it.fabric || '제작 항목'}</div>
@@ -195,8 +276,10 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         <div class="lbl">레이아웃</div><div class="val">${it.layout || '-'}</div>
                         <div class="lbl">수량</div><div class="val"><b>${it.qty || 1}개</b></div>
                         <div class="lbl">단가 (출력)</div><div class="val">${fmt(it.unit_price)}원</div>
-                        <div class="lbl">옵션</div><div class="val">${addons || '-'}</div>
                     </div>
+                    ${oversize}
+                    ${pinfo}
+                    <div class="opt-grid">${opts || '<div class="opt-empty" style="grid-column:1/-1;">옵션 정보 없음</div>'}</div>
                 </div>
             </div>`;
         }).join('');
