@@ -273,7 +273,8 @@ input[type=color] { flex:1; height:26px; border:1px solid var(--border); border-
         // user_patterns (이미 graphic PNG 시드 됨)에서 검색
         let q = sb.from('user_patterns').select('id,name,thumb_url,original_url')
             .eq('status','approved')
-            .order('created_at',{ascending:false})
+            // 2026-05-11: ascending=true — 시드 INSERT 순서가 곧 library 최신순. cotton_print.html과 동일.
+            .order('created_at',{ascending:true})
             .range(from, to);
         if (_libQuery) {
             const s = _libQuery.replace(/'/g, "''");

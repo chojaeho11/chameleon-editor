@@ -1215,7 +1215,10 @@ async function submitPdSample() {
             var q = sb.from('user_patterns')
                 .select('*', { count: 'exact' })
                 .eq('status','approved')
-                .order('created_at', { ascending: false })
+                // 2026-05-11: ascending=true — 시드 INSERT 순서가 library 최신순이므로
+                //   created_at ASC = 가장 이른 INSERT = 가장 최신 library 자산 (의도된 동작).
+                //   RLS/trigger로 created_at 직접 갱신이 막혀 있어 정렬 방향으로 우회.
+                .order('created_at', { ascending: true })
                 .range(from, to);
             if (_currentCat) q = q.eq('category', _currentCat);
             if (_currentSearch) {
