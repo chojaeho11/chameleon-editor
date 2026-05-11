@@ -156,6 +156,11 @@ window.__CD_I18N = {
     color_ivory: { ko:'백아이보리', ja:'アイボリー', en:'Ivory' },
     side_output_max: { ko:'대폭 130cm', ja:'最大幅130cm', en:'Max width 130cm' },
     preview_meta: { ko:'대폭 1300mm 롤 원단에 디자인이 인쇄됩니다. 길이는 무제한입니다.', ja:'最大幅1300mmのロール生地に印刷されます。長さは無制限です。', en:'Printed on roll fabric up to 1300mm wide. Length is unlimited.' },
+    qty_unit: { ko:'개', ja:'個', en:'pcs' },
+    bank_ok: { ko:'확인', ja:'確認', en:'OK' },
+    canvas_dim: { ko:'가로 × 세로', ja:'横 × 縦', en:'Width × Height' },
+    footer_brand: { ko:'(주)카멜레온프린팅 · 패브릭 인쇄 전문', ja:'(株)カメレオンプリンティング・ファブリックプリント専門', en:'Chameleon Printing Co. · Fabric printing specialists' },
+    footer_mall: { ko:'메인 인쇄 쇼핑몰', ja:'メイン印刷ショップ', en:'Main print shop' },
     p_discount: { ko:'대량 할인', ja:'大量割引', en:'Volume discount' },
     hook: { ko:'고리', ja:'吊り具', en:'Hook' },
     acc: { ko:'부자재', ja:'付属品', en:'Accessory' },
@@ -344,29 +349,27 @@ a { text-decoration: none; color: inherit; }
 }
 
 .preview-area {
-    flex: 1; display: none; flex-direction: column; align-items: center; justify-content: flex-start;
-    position: relative; padding-top: 12px;
+    flex: 1; display: none; flex-direction: column; align-items: stretch; justify-content: flex-start;
+    position: relative; padding-top: 4px;
 }
 .preview-area.active { display: flex; }
+/* 2026-05-11: 캔버스 풀폭화 — 상/좌 사이즈 라벨 제거, 프레임 패딩 최소화 */
 .fabric-frame {
-    background: #fff; padding: 16px; border-radius: 8px;
+    background: #fff; padding: 6px; border-radius: 8px;
     box-shadow: 0 4px 20px rgba(69,26,3,0.08);
-    position: relative;
+    position: relative; width: 100%;
 }
 .fabric-canvas {
-    display: block; max-width: 100%;
+    display: block; width: 100%; max-width: 100%; height: auto;
     background: #fff; border: 1px solid var(--border);
 }
-.fabric-size-label {
-    position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
-    font-size: 11px; color: var(--brown); font-weight: 700; background: var(--cream);
-    padding: 3px 10px; border-radius: 50px; border: 1px solid var(--cream-dark); white-space: nowrap;
+/* 캔버스 아래 W×H 표시 (2026-05-11 추가 — 좌/상 라벨 제거 대체) */
+.fabric-dim-below {
+    margin-top: 10px; text-align: center;
+    font-size: 12px; color: var(--brown); font-weight: 700;
+    letter-spacing: 0.3px;
 }
-.fabric-side-label {
-    position: absolute; top: 50%; left: -36px; transform: translateY(-50%) rotate(-90deg);
-    font-size: 11px; color: var(--brown); font-weight: 700; background: var(--cream);
-    padding: 3px 10px; border-radius: 50px; border: 1px solid var(--cream-dark); white-space: nowrap;
-}
+.fabric-dim-below b { color: var(--brown-dark); font-weight: 800; }
 .fabric-roll-img {
     margin-top: 8px; width: 100%; max-width: 720px; height: 60px;
     background: linear-gradient(180deg, #f5e6c8 0%, #e8d4a8 50%, #d4ba80 100%);
@@ -685,9 +688,11 @@ a { text-decoration: none; color: inherit; }
         <!-- 미리보기 (이미지 업로드 후) -->
         <div class="preview-area" id="previewArea">
             <div class="fabric-frame">
-                <div class="fabric-size-label" id="topSizeLabel">110cm</div>
-                <div class="fabric-side-label" id="sideSizeLabel">91cm</div>
                 <canvas id="fabricCanvas" class="fabric-canvas" width="800" height="660"></canvas>
+            </div>
+            <!-- 2026-05-11: 캔버스 아래 W×H 표시 (상/좌 라벨 제거 대체) -->
+            <div class="fabric-dim-below" id="fabricDimBelow">
+                <span data-cdi18n="canvas_dim">가로 × 세로</span> : <b id="dimW">130</b> cm × <b id="dimH">100</b> cm
             </div>
             <div class="preview-meta" id="previewMeta" data-cdi18n="preview_meta">대폭 1300mm 롤 원단에 디자인이 인쇄됩니다. 길이는 무제한입니다.</div>
         </div>
@@ -970,7 +975,7 @@ a { text-decoration: none; color: inherit; }
                 <button onclick="window._cdQtyChg(-1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">−</button>
                 <input type="number" id="orderQty" value="1" min="1" max="999" style="flex:1; text-align:center; border:1px solid var(--cream-dark); border-radius:8px; padding:8px; font-size:15px; font-weight:700;" oninput="window._cdCalcHoebae()">
                 <button onclick="window._cdQtyChg(1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">+</button>
-                <span style="font-size:12px; color:var(--text-light);">개</span>
+                <span style="font-size:12px; color:var(--text-light);" data-cdi18n="qty_unit">개</span>
             </div>
         </div>
 
@@ -990,7 +995,7 @@ a { text-decoration: none; color: inherit; }
                 <i class="fa-solid fa-bolt"></i> &nbsp;<span data-cdi18n="btn_buynow">바로 주문하기</span>
             </button>
             <div class="help-link">
-                <span data-cdi18n="help_link">도움이 필요하신가요?</span> <a href="tel:031-366-1984">📞 031-366-1984</a>
+                <span data-cdi18n="help_link">도움이 필요하신가요?</span> <a href="mailto:cafe2626@naver.com">✉️ cafe2626@naver.com</a>
             </div>
         </div>
     </aside>
@@ -1062,11 +1067,8 @@ a { text-decoration: none; color: inherit; }
             </div>
 
             <div style="display:flex; gap:8px;">
-                <a href="tel:031-366-1984" style="flex:1; padding:12px; background:#fff; border:1.5px solid #d6d3d1; border-radius:10px; color:#78350f; text-align:center; font-weight:700; font-size:13px; text-decoration:none;">
-                    <i class="fa-solid fa-phone" style="color:#b45309;"></i> &nbsp;031-366-1984
-                </a>
                 <button onclick="window._cpCloseBankInfo()" style="flex:1; padding:12px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; border:none; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer; font-family:inherit;">
-                    <i class="fa-solid fa-check"></i> &nbsp;확인
+                    <i class="fa-solid fa-check"></i> &nbsp;<span data-cdi18n="bank_ok">확인</span>
                 </button>
             </div>
         </div>
@@ -1128,8 +1130,8 @@ a { text-decoration: none; color: inherit; }
 </div>
 
 <footer class="footer">
-    Cotton Print · (주)카멜레온프린팅 · 패브릭 인쇄 전문<br>
-    <a href="https://www.cafe2626.com">cafe2626.com</a> · 메인 인쇄 쇼핑몰
+    Cotton Print · <span data-cdi18n="footer_brand">(주)카멜레온프린팅 · 패브릭 인쇄 전문</span><br>
+    <a href="https://www.cafe2626.com">cafe2626.com</a> · <span data-cdi18n="footer_mall">메인 인쇄 쇼핑몰</span>
 </footer>
 
 <!-- 2026-05-11: PDF/AI/PSD 클라이언트 변환용 라이브러리
@@ -1143,6 +1145,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=29"></script>
+<script src="cotton_designer.js?v=30"></script>
 </body>
 </html>

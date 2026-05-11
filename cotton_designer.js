@@ -16,16 +16,20 @@ const SEAM_EXTRA_KRW = 10000;      // 이어박기 추가비 (130cm 초과 시, 
 const HALF_HOEBAE_PRICE = 8000;    // 반마(0.5회배 이하) 특가
 
 // 원단 8종 (가격 동일, 회배 단가 사용)
+// 2026-05-11: name_ja/en + desc_ja/en 추가 — 일본/미국 사이트 번역
 const FABRIC_TYPES = {
-    cotton20: { name: '면20수 평직', isCotton: true, desc: '얇고 일반적인 20수 평직. 의류·인테리어 소품 활용 좋음.' },
-    cotton30: { name: '면30수 평직', isCotton: true, desc: '얇고 부드러운 30수 평직. 통기성 좋아 여름 의류 적합.' },
-    cotton16: { name: '면16수 평직', isCotton: true, desc: '두께감 있는 16수. 가방·파우치·러너 등 적합.' },
-    cotton10: { name: '면10수 평직', isCotton: true, desc: '두꺼운 10수. 백월·매장 디스플레이·인테리어용.' },
-    chiffon:  { name: '쉬폰', isCotton: false, desc: '얇고 비치는 원단. 커튼·드레스·드레이프 적합.' },
-    oxford:   { name: '옥스포드', isCotton: false, desc: '내구성 뛰어난 폴리. 가방·실외 디스플레이용.' },
-    rayon:    { name: '레이온/인견', isCotton: false, desc: '시원한 인견 원단. 여름 의류·블라우스 적합.' },
-    linen:    { name: '린넨', isCotton: false, desc: '천연 린넨. 고급 인테리어·식탁보·앞치마.' }
+    cotton20: { name: '면20수 평직', name_ja:'コットン20番 平織', name_en:'Cotton 20s Plain', isCotton: true, desc: '얇고 일반적인 20수 평직. 의류·인테리어 소품 활용 좋음.', desc_ja:'薄く一般的な20番平織。衣類・インテリア小物に最適。', desc_en:'Thin standard 20s plain weave. Great for apparel and interior items.' },
+    cotton30: { name: '면30수 평직', name_ja:'コットン30番 平織', name_en:'Cotton 30s Plain', isCotton: true, desc: '얇고 부드러운 30수 평직. 통기성 좋아 여름 의류 적합.', desc_ja:'薄く柔らかい30番平織。通気性が良く夏物衣類に最適。', desc_en:'Thin soft 30s plain weave. Breathable — ideal for summer apparel.' },
+    cotton16: { name: '면16수 평직', name_ja:'コットン16番 平織', name_en:'Cotton 16s Plain', isCotton: true, desc: '두께감 있는 16수. 가방·파우치·러너 등 적합.', desc_ja:'厚みのある16番。バッグ・ポーチ・テーブルランナーに最適。', desc_en:'Medium-weight 16s. Bags, pouches, runners.' },
+    cotton10: { name: '면10수 평직', name_ja:'コットン10番 平織', name_en:'Cotton 10s Plain', isCotton: true, desc: '두꺼운 10수. 백월·매장 디스플레이·인테리어용.', desc_ja:'厚手の10番。バックウォール・店舗ディスプレイ・インテリア向け。', desc_en:'Heavyweight 10s. Backdrops, retail displays, interiors.' },
+    chiffon:  { name: '쉬폰', name_ja:'シフォン', name_en:'Chiffon', isCotton: false, desc: '얇고 비치는 원단. 커튼·드레스·드레이프 적합.', desc_ja:'薄く透ける生地。カーテン・ドレス・ドレープに最適。', desc_en:'Sheer thin fabric. Curtains, dresses, draping.' },
+    oxford:   { name: '옥스포드', name_ja:'オックスフォード', name_en:'Oxford', isCotton: false, desc: '내구성 뛰어난 폴리. 가방·실외 디스플레이용.', desc_ja:'耐久性に優れたポリエステル。バッグ・屋外ディスプレイ向け。', desc_en:'Durable polyester. Bags and outdoor displays.' },
+    rayon:    { name: '레이온/인견', name_ja:'レーヨン', name_en:'Rayon', isCotton: false, desc: '시원한 인견 원단. 여름 의류·블라우스 적합.', desc_ja:'涼しいレーヨン生地。夏物衣類・ブラウスに最適。', desc_en:'Cool rayon fabric. Summer wear and blouses.' },
+    linen:    { name: '린넨', name_ja:'リネン', name_en:'Linen', isCotton: false, desc: '천연 린넨. 고급 인테리어·식탁보·앞치마.', desc_ja:'天然リネン。高級インテリア・テーブルクロス・エプロン。', desc_en:'Natural linen. Premium interiors, tablecloths, aprons.' }
 };
+// 현재 언어로 원단 이름/설명 꺼내기
+function pickFabricName(f){ var L = window.__CD_LANG||'ko'; if (L==='ja' && f.name_ja) return f.name_ja; if (L==='en' && f.name_en) return f.name_en; return f.name; }
+function pickFabricDesc(f){ var L = window.__CD_LANG||'ko'; if (L==='ja' && f.desc_ja) return f.desc_ja; if (L==='en' && f.desc_en) return f.desc_en; return f.desc; }
 const COLOR_LABELS = { white: '화이트', natural: '네츄럴', ivory: '백아이보리' };
 
 // 대량 할인 정책 (수량 기준)
@@ -413,7 +417,11 @@ function updateFabricDetail() {
     if (!f) return;
     const img = document.getElementById('fabricImg');
     if (img) img.style.background = '#f5f5f4';
-    document.getElementById('fabricDesc').innerHTML = `<b>${f.name}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${f.desc} · 대폭 130cm</div>`;
+    // 2026-05-11: 현재 언어로 원단 이름/설명 표시 + 최대폭 라벨도 i18n
+    var nm = pickFabricName(f);
+    var ds = pickFabricDesc(f);
+    var maxLbl = window.cdT ? (window.cdT('side_output_max') || '대폭 130cm') : '대폭 130cm';
+    document.getElementById('fabricDesc').innerHTML = `<b>${nm}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${ds} · ${maxLbl}</div>`;
 }
 
 // 마감 옵션 가격 라벨 동적 갱신 (언어/통화)
@@ -448,8 +456,14 @@ function renderFinishOptions() {
 // 페이지 로드 시 한 번 + 언어 변경 시 자동 호출됨 (cdSwitchLang은 페이지 새로고침이라 아래 로직 불필요)
 
 function updateSizeLabels() {
-    document.getElementById('topSizeLabel').textContent = state.orderWcm.toFixed(0) + 'cm';
-    document.getElementById('sideSizeLabel').textContent = state.orderHcm.toFixed(0) + 'cm';
+    // 2026-05-11: 상/좌 라벨 제거 — 캔버스 아래 "가로 × 세로 : W × H" 형식 (dimW/dimH spans)
+    var w = state.orderWcm.toFixed(0);
+    var h = state.orderHcm.toFixed(0);
+    var dW = document.getElementById('dimW'); if (dW) dW.textContent = w;
+    var dH = document.getElementById('dimH'); if (dH) dH.textContent = h;
+    // 레거시 ID 참조 안전장치 (다른 코드에서 호출돼도 깨지지 않게)
+    var top = document.getElementById('topSizeLabel'); if (top) top.textContent = w + 'cm';
+    var side = document.getElementById('sideSizeLabel'); if (side) side.textContent = h + 'cm';
 }
 
 // ────────────────────────────────────────────────
@@ -651,7 +665,9 @@ window._cdOnFinishChange = function() {
     if (!checked) return;
     const label = checked.closest('.fin-opt');
     state.finishCode = checked.value;
-    state.finishName = label.dataset.name || label.querySelector('b').textContent;
+    // 2026-05-11: i18n 적용된 <b> 텍스트 우선 (한국어 dataset.name 폴백)
+    var b = label.querySelector('b');
+    state.finishName = (b && b.textContent.trim()) || label.dataset.name || '';
     state.finishExtra = parseInt(label.dataset.extra || '0', 10);
     updatePrice();
 };
@@ -661,7 +677,9 @@ window._cdOnHookChange = function() {
     if (!checked) return;
     const label = checked.closest('.fin-opt');
     state.hookCode = checked.value || '';
-    state.hookName = label.dataset.name || (state.hookCode ? label.querySelector('b').textContent : '');
+    // 2026-05-11: 번역된 <b> 우선
+    var b = label.querySelector('b');
+    state.hookName = state.hookCode ? ((b && b.textContent.trim()) || label.dataset.name || '') : '';
     state.hookExtra = parseInt(label.dataset.extra || '0', 10);
     updatePrice();
 };
@@ -1363,7 +1381,13 @@ loadDbFabrics().then(() => {
     if (window._cdCalcHoebae) window._cdCalcHoebae();
 });
 // i18n 적용 후 한 번 더 (ui i18n 적용된 후 가격 라벨 다시)
-setTimeout(function(){ renderFinishOptions(); updateFabricDetail(); updatePrice(); }, 200);
+// 2026-05-11: _cdOnFinishChange도 호출 — state.finishName을 번역된 텍스트로 동기화
+setTimeout(function(){
+    renderFinishOptions();
+    updateFabricDetail();
+    if (window._cdOnFinishChange) window._cdOnFinishChange();
+    updatePrice();
+}, 200);
 autoLoadPatternFromUrl();
 if (window._cpUpdateCartUI) window._cpUpdateCartUI();
 
