@@ -892,6 +892,8 @@ async function submitPdSample() {
 .pattern-name { font-size:13px; font-weight:800; color:var(--brown-dark); margin-bottom:4px; line-height:1.3; }
 .pattern-author { font-size:11px; color:var(--text-light); }
 .pattern-cat-badge { display:inline-block; font-size:9px; font-weight:700; color:var(--brown); background:var(--cream); padding:2px 7px; border-radius:50px; margin-bottom:6px; letter-spacing:0.5px; }
+/* 2026-05-11: 한국 전화번호(031)는 해외(JP/EN/...) 페이지에서 숨김 */
+html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
 </style>
 <script>
 (function(){
@@ -1141,9 +1143,19 @@ async function submitPdSample() {
     });
 
     // 등록된 패턴 갤러리 로드 (status='approved'만)
+    // 2026-05-11: i18n 적용 — 카테고리 뱃지를 현재 언어로 표시 (JP=動物/植物 등, EN=Animal/Plant 등)
     var CAT_LABELS = { animal:'동물', plant:'식물', people:'사람', modern:'모던', scenery:'풍경', typo:'타이포', kids:'키즈', etc:'기타',
         // 구 카테고리 호환 (자동 매핑)
         floral:'식물', natural:'식물', stripe:'모던', dot:'모던', geometric:'모던' };
+    // 구 카테고리 → 신 카테고리 코드 매핑 (i18n 키 생성용)
+    var CAT_CODE_MAP = { floral:'plant', natural:'plant', stripe:'modern', dot:'modern', geometric:'modern' };
+    function getCatLabel(cat) {
+        if (!cat) return '';
+        var code = CAT_CODE_MAP[cat] || cat;
+        var i18n = (typeof t === 'function') ? t('cat_' + code) : '';
+        if (i18n) return i18n;
+        return CAT_LABELS[cat] || cat;
+    }
 
     var _currentCat = '';
     var _currentPage = 1;
@@ -1236,7 +1248,7 @@ async function submitPdSample() {
                 return;
             }
             grid.innerHTML = data.map(function(p){
-                var cat = CAT_LABELS[p.category] || p.category || '';
+                var cat = getCatLabel(p.category);
                 var rawThumb = p.thumb_url || (p.mockup_urls && p.mockup_urls[0]) || 'https://placehold.co/400?text=Pattern';
                 // 2026-05-11: Supabase image transform으로 320px 리사이즈 → 50KB↓ (3배 가속)
                 //   /storage/v1/object/public/... → /storage/v1/render/image/public/...?width=320&resize=contain&quality=72
@@ -1292,10 +1304,10 @@ async function submitPdSample() {
             <span style="color:var(--text-light); font-size:12px; font-weight:500;" data-i18n="cp_hours_closed">(토·일·공휴일 휴무)</span>
         </div>
         <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--cream-dark); display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap;">
-            <a href="tel:0313661984" style="color:var(--brown-dark); font-weight:800; font-size:15px; text-decoration:none;">
+            <a href="tel:0313661984" class="cp-kr-only-phone" style="color:var(--brown-dark); font-weight:800; font-size:15px; text-decoration:none;">
                 <i class="fa-solid fa-phone" style="color:var(--accent);"></i> 031-366-1984
             </a>
-            <span style="color:#d6d3d1;">·</span>
+            <span class="cp-kr-only-phone" style="color:#d6d3d1;">·</span>
             <a href="mailto:design@chameleon.design" style="color:var(--brown-dark); font-weight:700; font-size:14px; text-decoration:none;">
                 <i class="fa-solid fa-envelope" style="color:var(--accent);"></i> design@chameleon.design
             </a>
@@ -1760,7 +1772,7 @@ window.addEventListener('message', function(e){
             <div>
                 <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_contact_title">문의</div>
                 <div style="font-size:12px; line-height:1.9;">
-                    <div><i class="fa-solid fa-phone" style="color:#fb7185; width:16px;"></i> <a href="tel:0313661984" style="color:#cbd5e1; text-decoration:none;">031-366-1984</a></div>
+                    <div class="cp-kr-only-phone"><i class="fa-solid fa-phone" style="color:#fb7185; width:16px;"></i> <a href="tel:0313661984" style="color:#cbd5e1; text-decoration:none;">031-366-1984</a></div>
                     <div><i class="fa-solid fa-envelope" style="color:#fb7185; width:16px;"></i> <a href="mailto:design@chameleon.design" style="color:#cbd5e1; text-decoration:none; word-break:break-all;">design@chameleon.design</a></div>
                     <div><i class="fa-solid fa-clock" style="color:#fb7185; width:16px;"></i> <span data-i18n="footer_hours">평일 09:00~18:00</span></div>
                 </div>
