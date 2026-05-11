@@ -385,8 +385,9 @@ export default {
         // ========== cotton-print.com 전용 도메인 라우팅 ==========
         // 패브릭 인쇄 전문 서브사이트
         if (url.hostname.includes('cotton-print.com')) {
-            // /designer → cotton_designer.html (이미지 → 패턴 디자이너)
-            if (path === 'designer' || path === 'designer.html') {
+            // /designer 또는 /cotton-designer → cotton_designer.html (이미지 → 패턴 디자이너)
+            // 2026-05-11: cafe2626.com 마켓 카드가 'cotton-designer' 별칭을 쓰므로 여기서도 동일 처리.
+            if (path === 'designer' || path === 'designer.html' || path === 'cotton-designer' || path === 'cotton-designer.html') {
                 const rewriteUrl = new URL('/cotton_designer.html', url.origin);
                 let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
                 if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {

@@ -383,7 +383,7 @@ img, video, canvas { max-width: 100%; height: auto; }
             <i class="fa-solid fa-store" style="margin-right:6px;color:var(--accent);"></i><span data-i18n="logo_main_link">인쇄종합몰 바로가기</span>
         </a>
         <nav class="nav-links">
-            <a href="/designer" style="color:var(--accent); font-weight:900;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="nav_designer">내원단 만들기</span></a>
+            <a href="/cotton-designer" style="color:var(--accent); font-weight:900;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="nav_designer">내원단 만들기</span></a>
             <a href="#patternFilterChips" data-i18n="nav_designs">유저 디자인</a>
             <a href="#reviewSection" data-i18n="nav_reviews">고객 후기</a>
             <!-- 국기 언어 전환 -->
@@ -615,7 +615,7 @@ async function submitPdSample() {
 
 <!-- 내 원단 만들기 CTA -->
 <section style="max-width:1100px; margin:48px auto 0; padding:0 24px;">
-    <a href="/designer" style="display:block; background:linear-gradient(135deg, #fde047 0%, #facc15 100%); border-radius:20px; padding:36px 32px; text-decoration:none; color:var(--brown-dark); position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(180,83,9,0.15);">
+    <a href="/cotton-designer" style="display:block; background:linear-gradient(135deg, #fde047 0%, #facc15 100%); border-radius:20px; padding:36px 32px; text-decoration:none; color:var(--brown-dark); position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(180,83,9,0.15);">
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>
                 <div style="font-size:11px; letter-spacing:4px; font-weight:900; margin-bottom:8px; opacity:0.7;">— MAKE YOUR OWN FABRICS —</div>
@@ -1245,7 +1245,9 @@ async function submitPdSample() {
                     (rawThumb.indexOf('?') >= 0 ? '&' : '?') + 'width=320&resize=contain&quality=72';
                 var author = p.author ? '<div class="pattern-author"><i class="fa-solid fa-user-pen" style="font-size:9px; opacity:0.7;"></i> ' + p.author + '</div>' : '';
                 var langSfx = window._cpLangSuffix || '';
-                var href = '/designer?pattern=' + encodeURIComponent(p.id) + langSfx;
+                // 2026-05-11: '/designer' → '/cotton-designer' — cafe2626.com에서 '/designer'는 SPA가 product 코드로 해석함.
+                //   '/cotton-designer'는 STANDALONE_PAGES 별칭으로 양쪽 호스트에서 cotton_designer.html을 직접 서빙.
+                var href = '/cotton-designer?pattern=' + encodeURIComponent(p.id) + langSfx;
                 // 2026-05-11: <div onclick>에서 <a href>로 변경 — 트래킹 방지/캐시 깨짐/JS 에러 등으로
                 //   onclick이 안 먹는 환경에서도 네이티브 네비게이션은 100% 동작.
                 return '<a href="' + href + '" class="pattern-card" data-pid="' + p.id + '">' +
@@ -1267,7 +1269,7 @@ async function submitPdSample() {
     // 패턴 상세 (목업 슬라이드 라이트박스)
     window.openPatternDetail = function(patternId) {
         var langSfx = window._cpLangSuffix || '';
-        location.href = '/designer?pattern=' + encodeURIComponent(patternId) + langSfx;
+        location.href = '/cotton-designer?pattern=' + encodeURIComponent(patternId) + langSfx;
     };
 
     document.addEventListener('DOMContentLoaded', function(){
