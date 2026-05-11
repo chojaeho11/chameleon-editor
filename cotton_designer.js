@@ -931,21 +931,34 @@ window._cpUpdateCartUI = function() {
     if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
 
     if (body) {
+        // 2026-05-11: 모든 라벨 i18n 적용 — 카트 드로어 안의 한국어 문구 제거
+        var T = function(k, fb){ return (window.cdT && window.cdT(k)) || fb; };
+        var L = {
+            empty:      T('cart_empty', '장바구니가 비어있습니다'),
+            empty_sub:  T('cart_empty_sub', '디자인을 완성하고 장바구니에 담아보세요'),
+            output:     T('cart_output', '출력'),
+            unit:       T('unit_hoebae', '회배'),
+            finish:     T('cart_finish', '마감'),
+            hook:       T('cart_hook', '고리'),
+            acc:        T('cart_acc', '부자재'),
+            remove:     T('cart_remove', '삭제'),
+            raw:        T('finish_raw', '가재단'),
+            seam:       T('seam_label', '이어박기 (대폭 초과)')
+        };
         if (cart.length === 0) {
-            body.innerHTML = '<div class="cart-empty"><i class="fa-regular fa-folder-open"></i><div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;">장바구니가 비어있습니다</div><div style="font-size:12px;">디자인을 완성하고 장바구니에 담아보세요</div></div>';
+            body.innerHTML = '<div class="cart-empty"><i class="fa-regular fa-folder-open"></i><div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;">' + L.empty + '</div><div style="font-size:12px;">' + L.empty_sub + '</div></div>';
         } else {
             body.innerHTML = cart.map(function(it, i) {
                 const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
-                var seamLbl = (window.cdT?window.cdT('seam_label'):'이어박기 (대폭 초과)');
                 const opts = [
                     it.fabricName,
-                    '출력 ' + sz,
-                    it.hoebae ? it.hoebae.toFixed(2) + '회배' : null,
+                    L.output + ' ' + sz,
+                    it.hoebae ? it.hoebae.toFixed(2) + L.unit : null,
                     it.qtyLabel,
-                    (it.finishCode && it.finishCode !== 'raw' && it.finishCode !== 'none') ? '마감: ' + (it.finishName || '') : (it.finishCode === 'raw' ? '가재단' : null),
-                    it.hookCode ? '고리: ' + (it.hookName||'') : null,
-                    it.accCode ? '부자재: ' + (it.accName||'') : null,
-                    (it.seamExtra && it.seamExtra > 0) ? seamLbl + ' (+' + cdFmtPrice(it.seamExtra) + ')' : null
+                    (it.finishCode && it.finishCode !== 'raw' && it.finishCode !== 'none') ? L.finish + ': ' + (it.finishName || '') : (it.finishCode === 'raw' ? L.raw : null),
+                    it.hookCode ? L.hook + ': ' + (it.hookName||'') : null,
+                    it.accCode ? L.acc + ': ' + (it.accName||'') : null,
+                    (it.seamExtra && it.seamExtra > 0) ? L.seam + ' (+' + cdFmtPrice(it.seamExtra) + ')' : null
                 ].filter(Boolean).join(' · ');
                 return '<div class="cart-item">' +
                     '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
@@ -954,7 +967,7 @@ window._cpUpdateCartUI = function() {
                         '<div class="cart-item-opts">' + opts + '</div>' +
                         '<div class="cart-item-bottom">' +
                             '<span class="cart-item-price">' + cdFmtPrice(it.price||0) + '</span>' +
-                            '<button class="cart-item-remove" onclick="window._cpCartRemove(' + i + ')"><i class="fa-solid fa-trash"></i> 삭제</button>' +
+                            '<button class="cart-item-remove" onclick="window._cpCartRemove(' + i + ')"><i class="fa-solid fa-trash"></i> ' + L.remove + '</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -1048,7 +1061,7 @@ function buildCartItem() {
         designerName:       state.designerName || null,
         designerOriginalUrl: state.designerOriginalUrl || null,
         qtyValue: state.orderQty,
-        qtyLabel: state.orderQty + '개',
+        qtyLabel: state.orderQty + (window.cdT ? (window.cdT('qty_unit') || '개') : '개'),
         finishCode: state.finishCode, finishName: state.finishName, finishUnit: state.finishExtra || 0, finishTotal: finishPerItem,
         hookCode: state.hookCode, hookName: state.hookName, hookExtra: state.hookExtra || 0,
         accCode: state.accCode, accName: state.accName, accExtra: state.accExtra || 0,
