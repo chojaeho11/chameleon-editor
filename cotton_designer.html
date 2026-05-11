@@ -59,10 +59,11 @@ window.__CD_I18N = {
     main_btn: { ko:'메인으로', ja:'メインへ', en:'Main' },
     canvas_title: { ko:'실제 출력될 사이즈와 배치 미리보기', ja:'実際の出力サイズとレイアウトプレビュー', en:'Print preview · actual size & layout' },
     btn_reset: { ko:'다시 올리기', ja:'再アップロード', en:'Re-upload' },
+    btn_shrink: { ko:'이미지 축소', ja:'画像縮小', en:'Shrink' },
     btn_replace: { ko:'이미지 변경', ja:'画像を変更', en:'Change image' },
     upload_title: { ko:'이미지를 올려주세요', ja:'画像をアップロード', en:'Upload your image' },
     upload_hint: { ko:'여기를 클릭하거나 파일을 끌어다 놓으세요<br>업로드한 이미지가 자동으로 패턴이 되어 원단에 출력됩니다', ja:'クリックまたはドロップしてください<br>アップロードした画像が自動でパターン化され生地に印刷されます', en:'Click here or drag a file<br>Your image becomes a repeating pattern on the fabric' },
-    upload_formats: { ko:'JPG · PNG · AI · PDF · PSD · TIF · 50MB 이하', ja:'JPG・PNG・AI・PDF・PSD・TIF・50MB以下', en:'JPG / PNG / AI / PDF / PSD / TIF · max 50MB' },
+    upload_formats: { ko:'JPG · PNG · PDF · AI · PSD · 50MB 이하 (자동 변환)', ja:'JPG・PNG・PDF・AI・PSD・50MB以下（自動変換）', en:'JPG / PNG / PDF / AI / PSD · max 50MB (auto-convert)' },
     side_fabric: { ko:'원단 선택', ja:'生地を選ぶ', en:'Select Fabric' },
     side_color: { ko:'색상 선택', ja:'色を選ぶ', en:'Color' },
     side_image_size: { ko:'이미지 사이즈 (한 패턴 단위)', ja:'画像サイズ (1パターン)', en:'Image size (one tile)' },
@@ -596,6 +597,11 @@ a { text-decoration: none; color: inherit; }
                 <button class="canvas-tool-btn" onclick="window._cdResetImage()" id="btnReset" style="display:none;">
                     <i class="fa-solid fa-rotate-left"></i> <span data-cdi18n="btn_reset">다시 올리기</span>
                 </button>
+                <!-- 2026-05-11: 이미지 축소 버튼 — 셀(반복 단위) 크기는 그대로, 이미지만 비례 축소.
+                       클릭마다 10%씩 작아지고 30%까지 가면 100%로 사이클. -->
+                <button class="canvas-tool-btn" onclick="window._cdShrinkImage()" id="btnShrink" style="display:none;" title="셀 크기는 유지하고 이미지만 작게 (클릭마다 -10%)">
+                    <i class="fa-solid fa-down-left-and-up-right-to-center"></i> <span data-cdi18n="btn_shrink">이미지 축소</span> <span id="shrinkPct" style="font-weight:700; color:var(--accent); margin-left:2px;">100%</span>
+                </button>
                 <button class="canvas-tool-btn" onclick="document.getElementById('btnUpload').click()" id="btnReplace" style="display:none;">
                     <i class="fa-solid fa-image"></i> <span data-cdi18n="btn_replace">이미지 변경</span>
                 </button>
@@ -612,7 +618,7 @@ a { text-decoration: none; color: inherit; }
                 여기를 클릭하거나 파일을 끌어다 놓으세요<br>
                 업로드한 이미지가 자동으로 패턴이 되어 원단에 출력됩니다
             </div>
-            <div class="upload-formats" data-cdi18n="upload_formats">JPG · PNG · AI · PDF · PSD · TIF · 50MB 이하</div>
+            <div class="upload-formats" data-cdi18n="upload_formats">JPG · PNG · PDF · AI · PSD · 50MB 이하 (자동 변환)</div>
         </div>
 
         <!-- 미리보기 (이미지 업로드 후) -->
@@ -626,7 +632,7 @@ a { text-decoration: none; color: inherit; }
             <div class="preview-meta" id="previewMeta">대폭 1300mm 롤 원단에 디자인이 인쇄됩니다. 길이는 무제한입니다.</div>
         </div>
 
-        <input type="file" id="btnUpload" accept="image/*,application/pdf,.ai,.psd,.tif,.tiff" style="display:none;" onchange="window._cdUploadImage(this.files)">
+        <input type="file" id="btnUpload" accept="image/*,application/pdf,.pdf,.ai,.psd,.eps,.tif,.tiff" style="display:none;" onchange="window._cdUploadImage(this.files)">
     </div>
 
     <!-- 우측: 옵션 사이드바 -->
@@ -1067,6 +1073,17 @@ a { text-decoration: none; color: inherit; }
     <a href="tel:031-366-1984">031-366-1984</a>
 </footer>
 
-<script src="cotton_designer.js?v=22"></script>
+<!-- 2026-05-11: PDF/AI/PSD 클라이언트 변환용 라이브러리
+       PDF.js: PDF 첫 페이지 → 이미지 (Adobe Illustrator AI 파일도 PDF 호환이라 처리됨)
+       ag-psd: 포토샵 PSD composite 추출 → 이미지 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-psd@22.5.0/dist/bundle.js"></script>
+<script>
+// PDF.js worker 경로 — 로드 직후 한 번만 설정
+if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+</script>
+<script src="cotton_designer.js?v=23"></script>
 </body>
 </html>

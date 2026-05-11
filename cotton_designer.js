@@ -85,6 +85,7 @@ const state = {
     fabricCode: 'cotton20_white',     // 합성 코드 (orders.items 저장용)
     layout: 'basic',
     bgColor: '#ffffff',               // 캔버스 배경색 (투명 PNG 패턴용 — 2026-05-11)
+    imgScale: 1.0,                    // 패턴 셀 내 이미지 비율 (1.0 = 셀 가득, 0.3 = 30%만; 2026-05-11)
     orderWcm: 130,
     orderHcm: 100,
     orderQty: 1,
@@ -179,23 +180,56 @@ function calcHoebae() {
 }
 
 // ────────────────────────────────────────────────
-// 이미지 업로드
+// 이미지 업로드 — PDF/AI(PDF 호환)/PSD 자동 변환 지원 (2026-05-11)
 // ────────────────────────────────────────────────
-window._cdUploadImage = function(files) {
+window._cdUploadImage = async function(files) {
     if (!files || !files.length) return;
     const file = files[0];
-    if (!file.type.startsWith('image/')) {
-        showToast('이미지 파일만 업로드 가능합니다 (PDF/AI는 별도 문의)');
-        return;
-    }
     if (file.size > 50 * 1024 * 1024) {
         showToast('50MB 이하 파일만 업로드 가능합니다');
         return;
     }
     state.imgFileName = file.name;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        state.imgDataUrl = e.target.result;
+    const name = (file.name || '').toLowerCase();
+
+    // 변환이 필요한 포맷 → DataURL 직접 생성
+    try {
+        let dataUrl = null;
+
+        if (name.endsWith('.pdf') || name.endsWith('.ai') || file.type === 'application/pdf') {
+            showToast('PDF/AI 파일 변환 중...');
+            dataUrl = await convertPdfToDataUrl(file);
+        }
+        else if (name.endsWith('.psd')) {
+            showToast('PSD 파일 변환 중...');
+            dataUrl = await convertPsdToDataUrl(file);
+        }
+        else if (name.endsWith('.eps')) {
+            showToast('EPS는 직접 변환이 어렵습니다. AI나 PDF로 저장 후 다시 업로드해주세요.');
+            return;
+        }
+        else if (name.endsWith('.tif') || name.endsWith('.tiff')) {
+            showToast('TIF/TIFF는 PNG나 JPG로 저장 후 다시 업로드해주세요.');
+            return;
+        }
+        else if (!file.type.startsWith('image/')) {
+            showToast('지원하지 않는 파일 형식입니다. JPG/PNG/PDF/AI/PSD를 사용해주세요.');
+            return;
+        }
+        else {
+            // 일반 이미지 — FileReader 직진
+            dataUrl = await new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = e => resolve(e.target.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        if (!dataUrl) { showToast('파일 변환에 실패했습니다.'); return; }
+
+        // 공통: dataUrl → Image → state 반영
+        state.imgDataUrl = dataUrl;
         const img = new Image();
         img.onload = function() {
             state.img = img;
@@ -208,24 +242,85 @@ window._cdUploadImage = function(files) {
             document.getElementById('previewArea').classList.add('active');
             document.getElementById('btnReset').style.display = '';
             document.getElementById('btnReplace').style.display = '';
+            const bs = document.getElementById('btnShrink'); if (bs) bs.style.display = '';
             document.getElementById('orderBtn').disabled = false;
             const buyNowBtn = document.getElementById('buyNowBtn');
             if (buyNowBtn) buyNowBtn.disabled = false;
+            // imgScale 초기화
+            state.imgScale = 1.0;
+            const pct = document.getElementById('shrinkPct'); if (pct) pct.textContent = '100%';
             window._cdRender();
+            showToast('✅ 업로드 완료');
         };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+        img.onerror = function() { showToast('변환된 이미지를 표시할 수 없습니다'); };
+        img.src = dataUrl;
+
+    } catch (err) {
+        console.error('[upload] error:', err);
+        showToast('파일 변환 실패: ' + (err && err.message || err));
+    }
 };
+
+// PDF/AI → PNG dataURL (PDF.js · 첫 페이지만)
+async function convertPdfToDataUrl(file) {
+    if (!window.pdfjsLib) throw new Error('PDF.js 라이브러리 로드 실패');
+    const buf = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    const page = await pdf.getPage(1);
+    // 인쇄 품질을 위해 scale 2.5 (대형 출력 대비)
+    const viewport = page.getViewport({ scale: 2.5 });
+    const c = document.createElement('canvas');
+    c.width = Math.min(viewport.width, 4000);   // 4000px 상한 (메모리 보호)
+    c.height = Math.min(viewport.height, 4000);
+    // viewport가 4000 넘으면 다시 scale 보정
+    if (viewport.width > 4000 || viewport.height > 4000) {
+        const k = 4000 / Math.max(viewport.width, viewport.height);
+        const v2 = page.getViewport({ scale: 2.5 * k });
+        c.width = v2.width; c.height = v2.height;
+        await page.render({ canvasContext: c.getContext('2d'), viewport: v2 }).promise;
+    } else {
+        await page.render({ canvasContext: c.getContext('2d'), viewport: viewport }).promise;
+    }
+    return c.toDataURL('image/png');
+}
+
+// PSD → PNG dataURL (ag-psd · composite 사용)
+async function convertPsdToDataUrl(file) {
+    if (!window.agPsd) throw new Error('ag-psd 라이브러리 로드 실패');
+    const buf = await file.arrayBuffer();
+    const psd = window.agPsd.readPsd(buf, { skipLayerImageData: true, skipThumbnail: true });
+    if (!psd.canvas) throw new Error('PSD에 composite 이미지가 없습니다 (포토샵에서 "Maximize compatibility" 켜고 다시 저장해주세요)');
+    return psd.canvas.toDataURL('image/png');
+}
 
 window._cdResetImage = function() {
     state.img = null; state.imgDataUrl = null; state.imgFileName = '';
+    state.imgScale = 1.0;
     document.getElementById('uploadZone').style.display = '';
     document.getElementById('previewArea').classList.remove('active');
     document.getElementById('btnReset').style.display = 'none';
     document.getElementById('btnReplace').style.display = 'none';
+    const bs = document.getElementById('btnShrink'); if (bs) bs.style.display = 'none';
     document.getElementById('orderBtn').disabled = true;
     document.getElementById('btnUpload').value = '';
+    const pct = document.getElementById('shrinkPct'); if (pct) pct.textContent = '100%';
+};
+
+// 2026-05-11: 이미지 축소 — 셀(반복 단위) 좌표/크기는 그대로, 셀 내부 이미지만 축소.
+//   클릭마다 -10%, 30%까지 가면 다음 클릭 시 100%로 사이클.
+window._cdShrinkImage = function() {
+    const steps = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3];
+    const cur = state.imgScale || 1.0;
+    // 현재값에 가장 가까운 step의 인덱스
+    let idx = 0;
+    for (let i = 0; i < steps.length; i++) {
+        if (Math.abs(steps[i] - cur) < 0.05) { idx = i; break; }
+    }
+    idx = (idx + 1) % steps.length;
+    state.imgScale = steps[idx];
+    const pct = document.getElementById('shrinkPct');
+    if (pct) pct.textContent = Math.round(state.imgScale * 100) + '%';
+    window._cdRender();
 };
 
 // 드래그앤드롭
@@ -610,16 +705,22 @@ window._cdRender = function() {
     const tileH = state.imgHcm * pxPerCm;
     if (tileW < 2 || tileH < 2) return;
 
+    // 2026-05-11: imgScale — 셀 좌표/크기는 그대로, 셀 내부 이미지만 비례 축소.
+    //   결과: 객체 사이 여백이 생기는 듬성듬성한 패턴.
+    const sc = state.imgScale || 1.0;
+    const drawW = tileW * sc, drawH = tileH * sc;
+    const padX = (tileW - drawW) / 2, padY = (tileH - drawH) / 2;
+
     const layout = state.layout;
 
     if (layout === 'centered') {
         const x = (cw - tileW) / 2, y = (ch - tileH) / 2;
-        ctx.drawImage(state.img, x, y, tileW, tileH);
+        ctx.drawImage(state.img, x + padX, y + padY, drawW, drawH);
     }
     else if (layout === 'basic') {
         for (let y = 0; y < ch; y += tileH) {
             for (let x = 0; x < cw; x += tileW) {
-                ctx.drawImage(state.img, x, y, tileW, tileH);
+                ctx.drawImage(state.img, x + padX, y + padY, drawW, drawH);
             }
         }
     }
@@ -630,7 +731,7 @@ window._cdRender = function() {
             const x = c * tileW;
             const offsetY = (c % 2) * (tileH / 2);
             for (let y = -tileH; y < ch; y += tileH) {
-                ctx.drawImage(state.img, x, y + offsetY, tileW, tileH);
+                ctx.drawImage(state.img, x + padX, y + offsetY + padY, drawW, drawH);
             }
         }
     }
@@ -641,7 +742,7 @@ window._cdRender = function() {
             const y = r * tileH;
             const offsetX = (r % 2) * (tileW / 2);
             for (let x = -tileW; x < cw; x += tileW) {
-                ctx.drawImage(state.img, x + offsetX, y, tileW, tileH);
+                ctx.drawImage(state.img, x + offsetX + padX, y + padY, drawW, drawH);
             }
         }
     }
@@ -651,9 +752,10 @@ window._cdRender = function() {
             for (let c = 0; c < cols; c++) {
                 const flipX = c % 2 === 1, flipY = r % 2 === 1;
                 ctx.save();
-                ctx.translate(c * tileW + (flipX ? tileW : 0), r * tileH + (flipY ? tileH : 0));
+                // 셀 중심으로 이동 후 flip
+                ctx.translate(c * tileW + tileW/2, r * tileH + tileH/2);
                 ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-                ctx.drawImage(state.img, 0, 0, tileW, tileH);
+                ctx.drawImage(state.img, -drawW/2, -drawH/2, drawW, drawH);
                 ctx.restore();
             }
         }
