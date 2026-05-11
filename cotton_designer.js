@@ -1130,67 +1130,6 @@ function showToast(msg) {
 }
 
 // ────────────────────────────────────────────────
-// URL ?from=composer 자동 로드 (패턴 컴포저에서 진입)
-//   sessionStorage 'cp_composed_image' (PNG data URL) + 'cp_composed_bg' (#hex) 사용
-//   2026-05-11: pattern_composer.html에서 'goOrder' 클릭 시 호출
-// ────────────────────────────────────────────────
-function autoLoadFromComposer() {
-    const params = new URLSearchParams(location.search);
-    if (params.get('from') !== 'composer') return false;
-
-    let dataUrl, bg;
-    try {
-        dataUrl = sessionStorage.getItem('cp_composed_image');
-        bg = sessionStorage.getItem('cp_composed_bg') || '#ffffff';
-    } catch (e) { return false; }
-    if (!dataUrl) return false;
-
-    showToast('🎨 컴포저에서 만든 패턴 로드 중...');
-    const img = new Image();
-    img.onload = function() {
-        state.img = img;
-        state.imgDataUrl = dataUrl;
-        state.imgFileName = 'composed_pattern_' + Date.now() + '.png';
-        state.bgColor = (bg === 'transparent') ? '#ffffff' : bg;  // designer는 투명 미지원 → 화이트 폴백
-        // 13:10 (1300×1000) 비율 — 캔버스를 한 단위로 'Centered' 레이아웃이 자연스러움
-        const ratio = img.width / img.height;
-        state.imgWcm = 130;  // 원단 폭 전체에 한 번 인쇄
-        state.imgHcm = Math.round(130 / ratio * 10) / 10;
-        const wEl = document.getElementById('imgWcm'); if (wEl) wEl.value = state.imgWcm;
-        const hEl = document.getElementById('imgHcm'); if (hEl) hEl.value = state.imgHcm;
-        state.layout = 'centered';  // 기본을 'Centered'로 (한 번만 인쇄)
-        document.querySelectorAll('.layout-btn').forEach(el => el.classList.toggle('active', el.dataset.layout === 'centered'));
-        // 배경색 스와치 동기화
-        document.querySelectorAll('.bg-sw').forEach(el => el.classList.toggle('active', el.dataset.color && el.dataset.color.toLowerCase() === state.bgColor.toLowerCase()));
-        const picker = document.getElementById('bgColorPicker'); if (picker) picker.value = state.bgColor;
-        const hexL = document.getElementById('bgColorHex'); if (hexL) hexL.textContent = state.bgColor;
-        // UI 상태 전환
-        const uz = document.getElementById('uploadZone'); if (uz) uz.style.display = 'none';
-        const pa = document.getElementById('previewArea'); if (pa) pa.classList.add('active');
-        const br = document.getElementById('btnReset'); if (br) br.style.display = '';
-        const brp = document.getElementById('btnReplace'); if (brp) brp.style.display = '';
-        const ob = document.getElementById('orderBtn'); if (ob) ob.disabled = false;
-        // 컴포저 배지
-        const previewArea = document.getElementById('previewArea');
-        if (previewArea && !document.getElementById('designerBadge')) {
-            const badge = document.createElement('div');
-            badge.id = 'designerBadge';
-            badge.style.cssText = 'position:absolute; top:12px; left:12px; background:linear-gradient(135deg,#fde047,#facc15); color:#451a03; padding:6px 12px; border-radius:50px; font-size:11px; font-weight:800; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.25);';
-            badge.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> 컴포저에서 생성한 패턴';
-            previewArea.style.position = 'relative';
-            previewArea.appendChild(badge);
-        }
-        window._cdRender();
-        showToast('✅ 패턴 로드 완료! 원단을 선택하고 사이즈를 조정해보세요.');
-        // sessionStorage 정리 (다른 탭에서 더이상 안 보이도록)
-        try { sessionStorage.removeItem('cp_composed_image'); sessionStorage.removeItem('cp_composed_bg'); } catch (e) {}
-    };
-    img.onerror = function() { showToast('패턴 이미지 로드 실패'); };
-    img.src = dataUrl;
-    return true;
-}
-
-// ────────────────────────────────────────────────
 // URL ?pattern=ID 자동 로드 (디자이너 마켓플레이스에서 진입)
 // ────────────────────────────────────────────────
 async function autoLoadPatternFromUrl() {
@@ -1280,10 +1219,7 @@ loadDbFabrics().then(() => {
 });
 // i18n 적용 후 한 번 더 (ui i18n 적용된 후 가격 라벨 다시)
 setTimeout(function(){ renderFinishOptions(); updateFabricDetail(); updatePrice(); }, 200);
-// 컴포저에서 진입했으면 먼저 처리, 아니면 ?pattern= 시도
-if (!autoLoadFromComposer()) {
-    autoLoadPatternFromUrl();
-}
+autoLoadPatternFromUrl();
 if (window._cpUpdateCartUI) window._cpUpdateCartUI();
 
 })();
