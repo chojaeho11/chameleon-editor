@@ -1259,9 +1259,12 @@ window._cpSubmitOrder = async function() {
                     layout:      it.layout,                              // centered / basic / halfdrop / halfbrick / mirror
                     bg_color:    it.bgColor || '#ffffff',                // 캔버스 배경 — 투명 PNG일 때 보임
                     image_scale: it.imgScale != null ? it.imgScale : 1.0, // 셀 내 이미지 비율 (1.0~0.3)
+                    finish_code: it.finishCode || 'roll',                // 2026-05-11: 마감 종류 — cutline 시스템이 칼선 모양 결정
+                    finish_name: it.finishName || '',                    // 마감 표시명 (작업지시서용)
+                    hook_code:   it.hookCode || '',                      // 고리 옵션 (있을 때만)
                     artwork_filename: artworkName,                       // 원본 파일명 (정보 폴더의 _01.png 등)
                     artwork_url:      artworkUrl,                        // 원본 직접 다운로드 URL (Supabase Storage)
-                    notes: 'See pattern_render.py — Pillow tiling per layout × image_scale × bg_color. Use --dpi 60 for 130cm fabric print.'
+                    notes: 'See fabric_pattern.py — output: {material}/{code}_N_print.pdf (with dombo+barcode) + _cutline.ai (vector). Use --dpi 60.'
                 }
             };
         });

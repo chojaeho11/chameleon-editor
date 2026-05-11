@@ -403,6 +403,18 @@ function buildOrderMemo(order: any): string {
   items.forEach((it: any, idx: number) => {
     const ps = it.pattern_spec;
     if (ps && ps.cell_cm) {
+      // 2026-05-11: finish_code/hook_code 명시 — fabric_pattern.py 가 칼선 모양 결정
+      //   ps 안에 이미 finish_code 있으면 그걸 우선, 없으면 item-level 에서 추출
+      const finishCode = ps.finish_code || it.finish_code || it.finishCode
+        || (Array.isArray(it.options)
+              ? (it.options.find((o: any) => o?.type === 'finish')?.code || '')
+              : '')
+        || 'roll';
+      const hookCode = ps.hook_code || it.hook_code || it.hookCode
+        || (Array.isArray(it.options)
+              ? (it.options.find((o: any) => o?.type === 'hook')?.code || '')
+              : '')
+        || '';
       patternItems.push({
         index: idx,
         product_code: it.product_code,
@@ -410,6 +422,8 @@ function buildOrderMemo(order: any): string {
         fabric: it.fabric,
         qty: it.qty,
         ...ps,
+        finish_code: finishCode,
+        hook_code: hookCode,
       });
     }
   });
