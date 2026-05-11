@@ -353,17 +353,19 @@ a { text-decoration: none; color: inherit; }
     position: relative; padding-top: 4px;
 }
 .preview-area.active { display: flex; }
-/* 2026-05-11: 줄자(rulers) + DPR-aware 캔버스 — 좌/상에 cm 눈금 표시 */
+/* 2026-05-11: 줄자(rulers) + DPR-aware 캔버스 — 좌/상에 cm 눈금 표시
+   v=33: 좌·우 대칭 그리드 — 우측에도 동일 폭 빈 칼럼을 둬서 캔버스가 시각적으로 가운데 오게 함 */
 .fabric-frame {
     background: #fff; padding: 6px; border-radius: 8px;
     box-shadow: 0 4px 20px rgba(69,26,3,0.08);
     display: grid;
-    grid-template-columns: 22px auto;
+    grid-template-columns: 22px auto 22px;
     grid-template-rows: 18px auto;
     gap: 2px;
     width: fit-content; max-width: 100%;
     margin: 0 auto;
 }
+.fabric-frame > .ruler-spacer { background: transparent; }
 .ruler-corner {
     background: var(--cream); border-radius: 4px;
     display: flex; align-items: center; justify-content: center;
@@ -704,8 +706,10 @@ a { text-decoration: none; color: inherit; }
             <div class="fabric-frame">
                 <div class="ruler-corner">cm</div>
                 <canvas id="rulerTop" class="ruler-top"></canvas>
+                <div class="ruler-spacer"></div>
                 <canvas id="rulerLeft" class="ruler-left"></canvas>
                 <canvas id="fabricCanvas" class="fabric-canvas" width="800" height="660"></canvas>
+                <div class="ruler-spacer"></div>
             </div>
             <!-- 캔버스 아래 W×H 총합 (줄자가 cm 눈금 표시, 이 줄은 합계 요약) -->
             <div class="fabric-dim-below" id="fabricDimBelow">
@@ -1011,9 +1015,6 @@ a { text-decoration: none; color: inherit; }
             <button class="order-btn" id="buyNowBtn" onclick="window._cdBuyNow()" disabled style="margin-top:8px; background:#fff; color:var(--brown-dark); border:1.5px solid var(--brown-dark);">
                 <i class="fa-solid fa-bolt"></i> &nbsp;<span data-cdi18n="btn_buynow">바로 주문하기</span>
             </button>
-            <div class="help-link">
-                <span data-cdi18n="help_link">도움이 필요하신가요?</span> <a href="mailto:cafe2626@naver.com">✉️ cafe2626@naver.com</a>
-            </div>
         </div>
     </aside>
 </div>
@@ -1162,6 +1163,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=32"></script>
+<script src="cotton_designer.js?v=33"></script>
 </body>
 </html>

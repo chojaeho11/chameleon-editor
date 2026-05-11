@@ -737,8 +737,8 @@ window._cdRender = function() {
     const previewArea = document.getElementById('previewArea');
     const containerW = previewArea ? previewArea.clientWidth : window.innerWidth;
     const isMobile = window.innerWidth <= 768;
-    // ruler(22) + gap(2) + padding(12) + border 여유 = 약 40~50px
-    const maxW = Math.max(280, Math.min(containerW - 50, isMobile ? 900 : 1100));
+    // 좌·우 ruler(22 each) + gap(2 each) + frame padding(12) + 여유 ≈ 64px
+    const maxW = Math.max(260, Math.min(containerW - 64, isMobile ? 900 : 1100));
     const maxH = isMobile ? 540 : 760;
     const scaleByW = maxW / fabricW;
     const scaleByH = maxH / fabricH;
