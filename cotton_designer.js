@@ -1127,6 +1127,18 @@ window._cpSubmitOrder = async function() {
         if (orderErr) throw orderErr;
         const newOrderId = orderData[0].id;
 
+        // ★★ 2026-05-11: Google Drive 자동 동기화 — cotton-print 주문 흐름에서 누락되어 있던 트리거.
+        //   무통장(status=접수됨) → 폴더 즉시 생성. 카드(status=임시작성) → Edge Function이 알아서 스킵하고
+        //   결제 완료 시 confirm-payment / success.html 트리거가 재호출하므로 멱등성 보장됨.
+        try {
+            sb.functions.invoke('sync-order-to-drive', { body: { order_id: newOrderId } })
+                .then(function(r){
+                    if (r && r.error) console.warn('[drive sync] failed:', r.error.message || r.error);
+                    else console.log('[drive sync]', r && r.data && (r.data.customer_folder_url || r.data.skipped) || r);
+                })
+                .catch(function(e){ console.warn('[drive sync] enqueue failed:', e && e.message || e); });
+        } catch(e) { console.warn('[drive sync] try failed:', e && e.message || e); }
+
         // 3) 결제 분기 — 언어별 PG 자동 분기
         if (payMethod === 'card') {
             saveCart([]);
