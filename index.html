@@ -1257,12 +1257,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // 흘러가는 배너 숨김
     if (scrollBanner) { scrollBanner.style.display = 'none'; }
 
-    // 구독 → 리뷰 위
+    // 구독 → 리뷰 위 (못 찾으면 cursor 다음으로 폴백 — 2026-05-11: 사용자 보고 "구독 섹션이 사라짐" 대응)
     var subSec = document.getElementById('subscriptionSection');
-    var reviewSec = ss.querySelector('.review-section');
-    var reviewRef = reviewSec;
-    while (reviewRef && reviewRef.parentNode !== ss) reviewRef = reviewRef.parentNode;
-    if (subSec && reviewRef) { ss.insertBefore(subSec, reviewRef); }
+    if (subSec) {
+        var reviewSec = ss.querySelector('.review-section');
+        var reviewRef = reviewSec;
+        while (reviewRef && reviewRef.parentNode !== ss) reviewRef = reviewRef.parentNode;
+        if (reviewRef) {
+            ss.insertBefore(subSec, reviewRef);
+        } else if (cursor) {
+            // 폴백: 리뷰 섹션을 못 찾으면 마지막 cursor (인기 상품 등) 뒤로
+            moveAfter(subSec, cursor);
+            cursor = subSec;
+        }
+        // 안전망: 강제로 보이게 (display:none 같은 외부 간섭 방지)
+        subSec.style.display = '';
+    }
 
     } catch(e) { console.error('섹션 재배치 오류:', e); }
 });
@@ -2400,18 +2410,32 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="cp-home-chip" data-cat="etc" data-cpkey="etc" onclick="loadCpHomePatterns('etc', this)">기타</button>
     </div>
 
-    <!-- 패턴 캐러셀 -->
-    <div class="hotdeal-scroll-wrap" style="margin-top:14px;">
-        <button class="hotdeal-arrow hotdeal-arrow-left" style="display:flex;" onclick="scrollHotdeal('cpHomePatterns',-1)"><i class="fa-solid fa-chevron-left"></i></button>
-        <div id="cpHomePatterns" class="hotdeal-grid cp-home-grid" style="display:flex; overflow-x:auto; gap:14px; padding:8px 4px 16px; scroll-behavior:smooth; scrollbar-width:thin;">
-            <div style="padding:60px 20px; text-align:center; color:#78350f; flex:1;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
-                <div style="margin-top:8px; font-size:13px;">패턴 불러오는 중...</div>
-            </div>
+    <!-- 2026-05-11: 좌우 캐러셀 → 5×2 그리드 + 검색창 + 페이지네이션 (5페이지 단위) -->
+    <!-- 패턴 검색창 -->
+    <div style="margin:14px auto 0; max-width:520px; padding:0 4px;">
+        <div style="position:relative;">
+            <input id="cpHomeSearch" type="text" placeholder="패턴 검색 (이름, 디자이너, 키워드)"
+                   style="width:100%; padding:11px 44px 11px 16px; border:1.5px solid #f3ead4; border-radius:50px; font-size:13px; font-family:inherit; background:#fff; color:#451a03; outline:none; transition:border-color 0.2s;"
+                   onkeydown="if(event.key==='Enter') window._cpHomeSearch()"
+                   oninput="clearTimeout(window._cpHomeSearchT); window._cpHomeSearchT = setTimeout(window._cpHomeSearch, 300)">
+            <button onclick="window._cpHomeSearch()" style="position:absolute; top:50%; right:5px; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:#451a03; color:#fde047; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:12px;"></i>
+            </button>
         </div>
-        <button class="hotdeal-arrow hotdeal-arrow-right" style="display:flex;" onclick="scrollHotdeal('cpHomePatterns',1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
-    <div style="text-align:right; margin-top:8px; padding-right:8px;">
+
+    <!-- 패턴 그리드 (5×2 = 10개) -->
+    <div id="cpHomePatterns" class="cp-home-grid-fixed">
+        <div style="grid-column:1/-1; padding:60px 20px; text-align:center; color:#78350f;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
+            <div style="margin-top:8px; font-size:13px;">패턴 불러오는 중...</div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 (5페이지 단위) -->
+    <div id="cpHomePager" style="display:flex; justify-content:center; align-items:center; gap:6px; margin-top:18px; flex-wrap:wrap;"></div>
+
+    <div style="text-align:right; margin-top:10px; padding-right:8px;">
         <a href="https://www.cotton-print.com#patternFilterChips" target="_blank" class="cp-home-link cp-link-all" style="font-size:12px; color:#b45309; font-weight:700; text-decoration:none;"><span id="cpHomeAllBtn">전체 패턴 보기</span> <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></a>
     </div>
 </div>
@@ -2490,27 +2514,40 @@ document.addEventListener('DOMContentLoaded', function() {
 .cp-home-chip { padding:7px 14px; border:1.5px solid #f3ead4; background:#fff; color:#78350f; font-size:12px; font-weight:700; border-radius:50px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s; }
 .cp-home-chip:hover { background:#fef9e7; border-color:#fde047; }
 .cp-home-chip-active { background:#451a03 !important; color:#fde047 !important; border-color:#451a03 !important; }
-.cp-home-card { flex:0 0 auto; width:200px; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(69,26,3,0.08); border:1px solid #f3ead4; transition:all 0.25s; cursor:pointer; text-decoration:none; color:inherit; }
-.cp-home-card:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(69,26,3,0.14); }
-.cp-home-card .cp-thumb { aspect-ratio:1; background:#f5f5f4; overflow:hidden; }
-.cp-home-card .cp-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
-.cp-home-card:hover .cp-thumb img { transform:scale(1.05); }
+
+/* 2026-05-11: 5×2 = 10개 고정 그리드 (캐러셀 폐기) */
+.cp-home-grid-fixed { display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-top:14px; padding:8px 4px; }
+.cp-home-card { display:block; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(69,26,3,0.08); border:1px solid #f3ead4; transition:all 0.25s; cursor:pointer; text-decoration:none; color:inherit; }
+.cp-home-card:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(69,26,3,0.14); color:inherit; text-decoration:none; }
+.cp-home-card:visited { color:inherit; text-decoration:none; }
+.cp-home-card .cp-thumb { aspect-ratio:1; background:#fdfaf3; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:8px; }
+.cp-home-card .cp-thumb img { max-width:100%; max-height:100%; object-fit:contain; transition:transform 0.4s; }
+.cp-home-card:hover .cp-thumb img { transform:scale(1.06); }
 .cp-home-card .cp-meta { padding:10px 12px; }
 .cp-home-card .cp-cat { display:inline-block; font-size:9px; font-weight:700; color:#78350f; background:#faf6ed; padding:2px 6px; border-radius:50px; margin-bottom:4px; letter-spacing:0.5px; }
 .cp-home-card .cp-name { font-size:12px; font-weight:800; color:#451a03; margin-bottom:2px; line-height:1.3; }
 .cp-home-card .cp-author { font-size:10px; color:#78350f; }
-.cp-home-grid::-webkit-scrollbar { height:6px; }
-.cp-home-grid::-webkit-scrollbar-thumb { background:#f3ead4; border-radius:3px; }
-.cp-home-grid { -webkit-overflow-scrolling:touch; }
 
-/* 모바일 — 화살표만 숨기고, 다른 레이아웃은 그대로 (자연스럽게 wrap 됨) */
+/* 페이지네이션 (5페이지 단위 표시) */
+.cp-page-btn { min-width:34px; height:34px; padding:0 10px; border:1px solid #f3ead4; background:#fff; color:#451a03; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+.cp-page-btn:hover:not(:disabled) { background:#fef9e7; border-color:#fde047; }
+.cp-page-btn:disabled { opacity:0.4; cursor:not-allowed; }
+.cp-page-btn.active { background:#451a03; color:#fde047; border-color:#451a03; }
+.cp-page-ellipsis { color:#78350f; padding:0 4px; opacity:0.6; }
+
+/* 모바일: 5열 → 3열 (768) → 2열 (480) */
+@media (max-width:1024px) {
+    .cp-home-grid-fixed { grid-template-columns:repeat(4, 1fr); }
+}
 @media (max-width:768px) {
-    #bizDealSection .hotdeal-arrow { display:none !important; }
-    .cp-home-card { width:160px; }
+    .cp-home-grid-fixed { grid-template-columns:repeat(3, 1fr); gap:10px; }
     .cp-home-chip { padding:6px 12px; font-size:11px; }
+    .cp-page-btn { min-width:30px; height:30px; font-size:12px; }
 }
 @media (max-width:480px) {
-    .cp-home-card { width:140px; }
+    .cp-home-grid-fixed { grid-template-columns:repeat(2, 1fr); }
+    .cp-home-card .cp-meta { padding:8px 10px; }
+    .cp-home-card .cp-name { font-size:11px; }
 }
 </style>
 
@@ -2520,34 +2557,62 @@ document.addEventListener('DOMContentLoaded', function() {
     var SB_KEY_CP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
     var CP_LABELS = { animal:'동물', plant:'식물', people:'사람', modern:'모던', scenery:'풍경', typo:'타이포', kids:'키즈', etc:'기타', floral:'식물', natural:'식물', stripe:'모던', dot:'모던', geometric:'모던' };
 
+    // 2026-05-11: 5×2 그리드 + 페이지네이션 + 검색 지원
+    var _cpHomeCat = '';
+    var _cpHomeSearch = '';
+    var _cpHomePage = 1;
+    var CP_PAGE_SIZE = 10;          // 5×2 = 10개
+    var CP_PAGE_WINDOW = 5;          // 페이지 번호 한 번에 5개씩
+
     window.loadCpHomePatterns = async function(cat, btn) {
+        if (typeof cat !== 'undefined') _cpHomeCat = cat || '';
         if (btn) {
             document.querySelectorAll('.cp-home-chip').forEach(function(c){ c.classList.remove('cp-home-chip-active'); });
             btn.classList.add('cp-home-chip-active');
+            _cpHomePage = 1;     // 카테고리 변경 시 첫 페이지로
         }
         var grid = document.getElementById('cpHomePatterns');
+        var pager = document.getElementById('cpHomePager');
         if (!grid) return;
-        grid.innerHTML = '<div style="padding:60px 20px; text-align:center; color:#78350f; flex:1;"><i class="fa-solid fa-spinner fa-spin" style="font-size:20px;"></i></div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; padding:60px 20px; text-align:center; color:#78350f;"><i class="fa-solid fa-spinner fa-spin" style="font-size:20px;"></i></div>';
+        if (pager) pager.innerHTML = '';
         try {
             if (typeof window.supabase === 'undefined') {
-                grid.innerHTML = '<div style="padding:30px; color:#dc2626; flex:1;">Supabase 로딩 중...</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; padding:30px; color:#dc2626;">Supabase 로딩 중...</div>';
                 return;
             }
             var sb = window.supabase.createClient(SB_URL_CP, SB_KEY_CP);
-            var q = sb.from('user_patterns').select('id, name, category, author, thumb_url').eq('status','approved').order('created_at',{ascending:false}).limit(10);
-            if (cat) q = q.eq('category', cat);
+            var from = (_cpHomePage - 1) * CP_PAGE_SIZE;
+            var to = from + CP_PAGE_SIZE - 1;
+            // ASC 정렬: 시드 INSERT 순서가 library 최신순이므로 ASC = 최신 라이브러리 먼저 (cotton_print.html과 동일)
+            // created_at 컷오프로 옛 시드 (페이즐리 46 등) 자동 숨김
+            var q = sb.from('user_patterns')
+                .select('id, name, category, author, thumb_url', { count: 'exact' })
+                .eq('status','approved')
+                .gte('created_at', '2026-05-11T00:00:00Z')
+                .order('created_at',{ascending:true})
+                .range(from, to);
+            if (_cpHomeCat) q = q.eq('category', _cpHomeCat);
+            if (_cpHomeSearch) {
+                var s = _cpHomeSearch.replace(/'/g, "''");
+                q = q.or('name.ilike.%' + s + '%,author.ilike.%' + s + '%,description.ilike.%' + s + '%');
+            }
             var res = await q;
             var data = res.data || [];
+            var total = res.count || 0;
             if (data.length === 0) {
-                grid.innerHTML = '<div style="padding:50px 20px; text-align:center; color:#78350f; flex:1;"><i class="fa-solid fa-palette" style="font-size:32px; opacity:0.3;"></i><div style="margin-top:10px; font-size:13px;">해당 카테고리 패턴이 아직 없습니다</div></div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; padding:50px 20px; text-align:center; color:#78350f;"><i class="fa-solid fa-palette" style="font-size:32px; opacity:0.3;"></i><div style="margin-top:10px; font-size:13px;">' + (_cpHomeSearch ? '검색 결과가 없습니다' : '해당 카테고리 패턴이 아직 없습니다') + '</div></div>';
                 return;
             }
             grid.innerHTML = data.map(function(p){
                 var label = CP_LABELS[p.category] || p.category || '';
-                var thumb = p.thumb_url || 'https://placehold.co/300?text=Pattern';
+                var rawThumb = p.thumb_url || 'https://placehold.co/300?text=Pattern';
+                // Supabase 이미지 변환으로 240px 리사이즈 (단일 객체 PNG는 contain)
+                var thumb = rawThumb.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
+                    + (rawThumb.indexOf('?') >= 0 ? '&' : '?') + 'width=240&resize=contain&quality=72';
                 var langSfx = window._cpHomeLang ? ('&lang=' + window._cpHomeLang) : '';
-                return '<a href="https://www.cotton-print.com/designer?pattern=' + p.id + langSfx + '" target="_blank" class="cp-home-card">' +
-                    '<div class="cp-thumb"><img src="' + thumb + '" loading="lazy" alt="' + (p.name||'') + '" onerror="this.closest(\'.cp-home-card\').style.display=\'none\'"></div>' +
+                return '<a href="https://www.cotton-print.com/cotton-designer?pattern=' + p.id + langSfx + '" target="_blank" class="cp-home-card">' +
+                    '<div class="cp-thumb"><img src="' + thumb + '" loading="lazy" decoding="async" alt="' + (p.name||'').replace(/"/g,'&quot;') + '" onerror="this.onerror=null; this.src=\'' + rawThumb.replace(/'/g, "\\'") + '\'"></div>' +
                     '<div class="cp-meta">' +
                         (label ? '<div class="cp-cat">' + label + '</div>' : '') +
                         '<div class="cp-name">' + (p.name||'(이름 없음)') + '</div>' +
@@ -2555,11 +2620,55 @@ document.addEventListener('DOMContentLoaded', function() {
                     '</div>' +
                 '</a>';
             }).join('');
+            renderCpHomePager(total);
         } catch(e) {
             console.error('[cp home patterns]', e);
-            grid.innerHTML = '<div style="padding:30px; color:#dc2626; flex:1;">패턴 로드 실패</div>';
+            grid.innerHTML = '<div style="grid-column:1/-1; padding:30px; color:#dc2626;">패턴 로드 실패</div>';
         }
     };
+
+    window._cpHomeSearch = function() {
+        var v = (document.getElementById('cpHomeSearch').value || '').trim();
+        _cpHomeSearch = v;
+        _cpHomePage = 1;
+        loadCpHomePatterns();
+    };
+    window._cpHomeGoPage = function(p) {
+        _cpHomePage = p;
+        loadCpHomePatterns();
+        // 그리드 위로 스크롤
+        var grid = document.getElementById('cpHomePatterns');
+        if (grid) grid.scrollIntoView({behavior:'smooth', block:'start'});
+    };
+
+    function renderCpHomePager(totalCount) {
+        var pager = document.getElementById('cpHomePager');
+        if (!pager) return;
+        var totalPages = Math.max(1, Math.ceil(totalCount / CP_PAGE_SIZE));
+        if (totalPages <= 1) { pager.innerHTML = ''; return; }
+        // 5페이지 윈도우: 현재 페이지가 속한 5의 묶음. 예: 페이지 1~5는 1-5 보임, 6~10은 6-10 보임.
+        var blockIdx = Math.floor((_cpHomePage - 1) / CP_PAGE_WINDOW);
+        var blockStart = blockIdx * CP_PAGE_WINDOW + 1;
+        var blockEnd = Math.min(totalPages, blockStart + CP_PAGE_WINDOW - 1);
+        var html = '';
+        // 처음 ◀◀
+        html += '<button class="cp-page-btn" onclick="_cpHomeGoPage(1)"' + (_cpHomePage===1?' disabled':'') + '><i class="fa-solid fa-angles-left"></i></button>';
+        // 이전 블록 ◀
+        var prevBlockPage = Math.max(1, blockStart - 1);
+        html += '<button class="cp-page-btn" onclick="_cpHomeGoPage(' + prevBlockPage + ')"' + (blockStart===1?' disabled':'') + '><i class="fa-solid fa-chevron-left"></i></button>';
+        // 페이지 번호 5개
+        for (var i = blockStart; i <= blockEnd; i++) {
+            html += '<button class="cp-page-btn ' + (i===_cpHomePage?'active':'') + '" onclick="_cpHomeGoPage(' + i + ')">' + i + '</button>';
+        }
+        // 다음 블록 ▶
+        var nextBlockPage = Math.min(totalPages, blockEnd + 1);
+        html += '<button class="cp-page-btn" onclick="_cpHomeGoPage(' + nextBlockPage + ')"' + (blockEnd===totalPages?' disabled':'') + '><i class="fa-solid fa-chevron-right"></i></button>';
+        // 끝 ▶▶
+        html += '<button class="cp-page-btn" onclick="_cpHomeGoPage(' + totalPages + ')"' + (_cpHomePage===totalPages?' disabled':'') + '><i class="fa-solid fa-angles-right"></i></button>';
+        // 총 개수
+        html += '<span style="margin-left:12px; font-size:11px; color:#78350f;">총 ' + totalCount + '개 · ' + _cpHomePage + '/' + totalPages + ' 페이지</span>';
+        pager.innerHTML = html;
+    }
 
     // 페이지 로드 시 자동 첫 로딩
     function init(){
