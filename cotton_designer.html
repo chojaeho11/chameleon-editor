@@ -233,6 +233,48 @@ a { text-decoration: none; color: inherit; }
 .cd-flag:hover { border-color:var(--cream-dark); background:var(--cream); }
 .cd-flag.active { border-color:var(--brown); background:var(--cream); }
 
+/* === 모바일 (≤768px) 헤더 정리 === */
+@media (max-width:768px) {
+    .brand-band { padding: 10px 14px; }
+    .brand-band-inner {
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+    }
+    .brand-logo {
+        font-size: 14px;
+        letter-spacing: 2px;
+        text-align: center;
+    }
+    /* 로고 아래 줄: 언어 국기 + 액션 버튼 */
+    .brand-band-inner > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .cd-lang-flags { gap: 3px !important; }
+    .cd-flag { width: 30px; height: 30px; font-size: 17px; }
+    /* 장바구니 / 메인으로: 글씨 숨기고 아이콘만 */
+    .brand-back span[data-cdi18n] { display: none; }
+    .brand-back i { margin-right: 0 !important; }
+    .brand-back {
+        padding: 7px 11px;
+        min-width: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #cartIconBtn i { margin-right: 0 !important; }
+    #cartIconBtn { padding: 7px 11px; min-width: 38px; }
+}
+@media (max-width:380px) {
+    .brand-logo { font-size: 13px; letter-spacing: 1.5px; }
+    .cd-flag { width: 26px; height: 26px; font-size: 15px; }
+    .brand-back, #cartIconBtn { padding: 6px 9px; min-width: 32px; }
+}
+
 /* === 메인 레이아웃 === */
 .designer-wrap {
     max-width: 1400px; margin: 0 auto; padding: 24px;
@@ -252,15 +294,33 @@ a { text-decoration: none; color: inherit; }
 .canvas-header {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    gap: 8px; flex-wrap: wrap;
 }
 .canvas-title { font-size: 14px; font-weight: 700; color: var(--brown-dark); }
-.canvas-tools { display: flex; gap: 8px; }
+.canvas-tools { display: flex; gap: 8px; flex-wrap: wrap; }
 .canvas-tool-btn {
     padding: 6px 12px; font-size: 12px; font-weight: 700;
     background: var(--cream); border: 1px solid var(--cream-dark);
     border-radius: 6px; color: var(--brown); cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 4px;
 }
 .canvas-tool-btn:hover { background: var(--cream-dark); }
+
+/* 모바일: 캔버스 도구 버튼 한 줄에 가로 글씨 유지 (좁으면 wrap) */
+@media (max-width:768px) {
+    .canvas-header { flex-direction: column; align-items: stretch; gap: 10px; }
+    .canvas-tools {
+        justify-content: center;
+        gap: 6px;
+    }
+    .canvas-tool-btn {
+        font-size: 11px;
+        padding: 7px 10px;
+        flex: 0 0 auto;
+        min-width: 0;
+    }
+}
 
 .upload-zone {
     flex: 1; display: flex; flex-direction: column;
@@ -1084,6 +1144,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=26"></script>
+<script src="cotton_designer.js?v=27"></script>
 </body>
 </html>
