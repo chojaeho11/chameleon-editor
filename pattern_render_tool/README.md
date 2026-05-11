@@ -1,4 +1,84 @@
-# 패턴 재조합 도구
+# 인쇄 데이터 생성 도구
+
+주문이 들어오면 `다크팩토리 / 고객주문 / {날짜}_{고객명} /` 폴더에 원본 디자인과 `_정보.txt`가 자동으로 떨어집니다. 이 도구들이 그 폴더를 읽어 **인쇄팀이 바로 출력 가능한 PDF/SVG**를 만들어줍니다.
+
+## 두 가지 스크립트
+
+### 1. `pattern_render.py` — 패브릭 패턴 (cotton-print)
+원본 이미지 1장을 5개 레이아웃(centered/basic/halfdrop/halfbrick/mirror)으로 타일링해 고해상도 PNG 생성. 자세한 사용법은 아래 "패브릭 패턴" 섹션.
+
+### 2. `make_print_files.py` — 정형 칼선 제품 (허니콤보드/가벽/배너) ★ 신규
+주문의 제품 카테고리를 자동 식별해 **돔보(코너 크롭마크) + 외곽 칼선 + 정보 라벨**이 들어간 SVG/PDF 생성. Illustrator/Inkscape에서 레이어 그대로 열림.
+
+```bash
+python make_print_files.py 4월27일_조재호/CT_2826_조재호_정보.txt
+```
+
+생성 결과:
+- `TEST_honeycomb_print.svg`   — 인쇄용 (artwork + marks 레이어) · Illustrator에서 레이어 그대로 열림
+- `TEST_honeycomb_cutline.svg` — 칼선 단독 (커팅 머신 전송용)
+- `TEST_honeycomb_print.pdf`   — 2페이지 (page 1: 인쇄, page 2: 컷팅)
+
+지원 제품 카테고리:
+| 템플릿 | 대상 제품 | 상태 |
+|---|---|---|
+| `honeycomb` | 허니콤보드 가벽 4종 · 종이가벽 · 배너 (정형 사각/라운드) | ✅ 가용 |
+| `fabric`    | 패브릭 패턴 (pattern_render.py 사용 권장) | ✅ 가용 |
+| `keyring`   | 키링/등신대 (이미지 → 매끄러운 외곽 트레이싱) | 🚧 미구현 |
+| `banner`    | 배너 (자유 인쇄) | honeycomb로 통합 |
+
+## 패키지 구조
+
+```
+pattern_render_tool/
+├─ common/
+│  ├─ marks.py         ← 돔보 / 레지스트레이션 / 정보 라벨 공용 함수
+│  └─ layers.py        ← PrintJob 컨테이너 + SVG/PDF 출력
+├─ templates/
+│  └─ honeycomb.py     ← 가벽/종이가벽/배너 정형 칼선
+├─ product_registry.py ← admin_products.code → template 매핑
+├─ make_print_files.py ← 정형 제품 CLI (★ 신규)
+├─ pattern_render.py   ← 패브릭 패턴 CLI (기존)
+└─ README.md
+```
+
+## 설치
+
+```bash
+pip install Pillow reportlab
+```
+- `Pillow` — 이미지 처리 (필수)
+- `reportlab` — PDF 출력 (`--no-pdf` 옵션 쓰면 미설치 가능)
+
+## 옵션
+
+```bash
+make_print_files.py 정보.txt
+   --item N            # 주문에 여러 아이템 있을 때 인덱스 (기본 0)
+   --template NAME     # 자동 라우팅 무시 (honeycomb / fabric)
+   --round 10          # 칼선 라운드 코너 mm (기본 0 = 직각)
+   --out-dir DIR       # 출력 폴더 (기본: 정보.txt 옆)
+   --artwork PATH      # 원본 이미지 직접 지정
+   --no-pdf / --no-svg # 둘 중 하나만 출력
+```
+
+## 마크 종류
+
+생성되는 SVG/PDF에 자동 포함되는 마크:
+
+| 마크 | 위치 | 용도 |
+|---|---|---|
+| **코너 크롭마크 (돔보)** | 아트워크 네 모서리 바깥 | 재단 기준 |
+| **레지스트레이션 마크 (+)** | 페이지 네 모서리 | 다색 인쇄 정합 |
+| **정보 라벨** | 페이지 하단 중앙 | `#주문번호  고객명  제품  사이즈  수량  날짜` |
+| **컷라인** | 마젠타 (#FF00FF) | 커팅 머신 |
+| **V-cut 라인** | 시안 (#00FFFF), 옵션 | 가벽 접힘선 |
+
+색상은 일러스트레이터에서 "Spot Color (Magenta=Cut, Cyan=V-Cut)"로 흔히 쓰는 관례 그대로.
+
+---
+
+# 패턴 재조합 (cotton-print) — pattern_render.py
 
 cotton-print 주문 시 작가의 **원본 이미지 1장 + 패턴 메타데이터**만 저장하고, 인쇄 시점에 원하는 해상도로 합성하기 위한 데스크탑 스크립트.
 
