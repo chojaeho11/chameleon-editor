@@ -1257,24 +1257,31 @@ document.addEventListener('DOMContentLoaded', function() {
     // 흘러가는 배너 숨김
     if (scrollBanner) { scrollBanner.style.display = 'none'; }
 
-    // 구독 → 리뷰 위 (못 찾으면 cursor 다음으로 폴백 — 2026-05-11: 사용자 보고 "구독 섹션이 사라짐" 대응)
+    // 2026-05-11: 구독 섹션 → footer 바로 위로 강제 이동
+    //   이전엔 review-section 위에 두었으나 사용자 환경에서 안 보이는 케이스 발생.
+    //   footer-wrap 직전 = 페이지 맨 아래 = 어떤 재배치/CSS 충돌이 있어도 확실히 보이는 위치.
     var subSec = document.getElementById('subscriptionSection');
-    if (subSec) {
-        var reviewSec = ss.querySelector('.review-section');
-        var reviewRef = reviewSec;
-        while (reviewRef && reviewRef.parentNode !== ss) reviewRef = reviewRef.parentNode;
-        if (reviewRef) {
-            ss.insertBefore(subSec, reviewRef);
-        } else if (cursor) {
-            // 폴백: 리뷰 섹션을 못 찾으면 마지막 cursor (인기 상품 등) 뒤로
-            moveAfter(subSec, cursor);
-            cursor = subSec;
-        }
-        // 안전망: 강제로 보이게 (display:none 같은 외부 간섭 방지)
+    var footerWrap = document.querySelector('.footer-wrap');
+    if (subSec && footerWrap && footerWrap.parentNode) {
+        footerWrap.parentNode.insertBefore(subSec, footerWrap);
         subSec.style.display = '';
+        subSec.style.visibility = 'visible';
     }
 
     } catch(e) { console.error('섹션 재배치 오류:', e); }
+});
+
+// 안전망: window.load 시점에 한 번 더 확인 (메인 페이지 재진입/SPA 라우팅 대응)
+window.addEventListener('load', function() {
+    try {
+        var subSec = document.getElementById('subscriptionSection');
+        var footerWrap = document.querySelector('.footer-wrap');
+        if (subSec && footerWrap && footerWrap.parentNode && subSec.nextElementSibling !== footerWrap) {
+            footerWrap.parentNode.insertBefore(subSec, footerWrap);
+            subSec.style.display = '';
+            subSec.style.visibility = 'visible';
+        }
+    } catch(e) {}
 });
 </script>
 
