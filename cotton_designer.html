@@ -750,6 +750,33 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
+        <!-- 레이아웃 (2026-05-11: 이미지 사이즈 위로 이동 — 패턴 배치 먼저 선택) -->
+        <div class="side-card">
+            <div class="side-card-title" data-cdi18n="side_layout">레이아웃</div>
+            <div class="layouts">
+                <div class="layout-btn" data-layout="centered" onclick="window._cdSelectLayout('centered')">
+                    <div class="layout-preview" style="font-size:18px;">R</div>
+                    <div class="layout-name">Centered</div>
+                </div>
+                <div class="layout-btn active" data-layout="basic" onclick="window._cdSelectLayout('basic')">
+                    <div class="layout-preview">RR<br>RR</div>
+                    <div class="layout-name">Basic</div>
+                </div>
+                <div class="layout-btn" data-layout="halfdrop" onclick="window._cdSelectLayout('halfdrop')">
+                    <div class="layout-preview" style="text-align:left; padding-left:6px; line-height:0.85;">R&nbsp;R<br>&nbsp;R<br>R&nbsp;R</div>
+                    <div class="layout-name">Half-Drop</div>
+                </div>
+                <div class="layout-btn" data-layout="halfbrick" onclick="window._cdSelectLayout('halfbrick')">
+                    <div class="layout-preview" style="line-height:0.85;">RR<br>&nbsp;R<br>RR</div>
+                    <div class="layout-name">Half-Brick</div>
+                </div>
+                <div class="layout-btn" data-layout="mirror" onclick="window._cdSelectLayout('mirror')">
+                    <div class="layout-preview">R<span style="display:inline-block;transform:scaleX(-1)">R</span><br><span style="display:inline-block;transform:scaleY(-1)">R</span><span style="display:inline-block;transform:scale(-1,-1)">R</span></div>
+                    <div class="layout-name">Mirror</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 이미지 사이즈 -->
         <div class="side-card">
             <div class="side-card-title">
@@ -936,33 +963,6 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 레이아웃 -->
-        <div class="side-card">
-            <div class="side-card-title" data-cdi18n="side_layout">레이아웃</div>
-            <div class="layouts">
-                <div class="layout-btn" data-layout="centered" onclick="window._cdSelectLayout('centered')">
-                    <div class="layout-preview" style="font-size:18px;">R</div>
-                    <div class="layout-name">Centered</div>
-                </div>
-                <div class="layout-btn active" data-layout="basic" onclick="window._cdSelectLayout('basic')">
-                    <div class="layout-preview">RR<br>RR</div>
-                    <div class="layout-name">Basic</div>
-                </div>
-                <div class="layout-btn" data-layout="halfdrop" onclick="window._cdSelectLayout('halfdrop')">
-                    <div class="layout-preview" style="text-align:left; padding-left:6px; line-height:0.85;">R&nbsp;R<br>&nbsp;R<br>R&nbsp;R</div>
-                    <div class="layout-name">Half-Drop</div>
-                </div>
-                <div class="layout-btn" data-layout="halfbrick" onclick="window._cdSelectLayout('halfbrick')">
-                    <div class="layout-preview" style="line-height:0.85;">RR<br>&nbsp;R<br>RR</div>
-                    <div class="layout-name">Half-Brick</div>
-                </div>
-                <div class="layout-btn" data-layout="mirror" onclick="window._cdSelectLayout('mirror')">
-                    <div class="layout-preview">R<span style="display:inline-block;transform:scaleX(-1)">R</span><br><span style="display:inline-block;transform:scaleY(-1)">R</span><span style="display:inline-block;transform:scale(-1,-1)">R</span></div>
-                    <div class="layout-name">Mirror</div>
-                </div>
-            </div>
-        </div>
-
         <!-- 수량 -->
         <div class="side-card">
             <div class="side-card-title" data-cdi18n="side_qty">주문 수량</div>
@@ -1144,6 +1144,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=27"></script>
+<script src="cotton_designer.js?v=28"></script>
 </body>
 </html>

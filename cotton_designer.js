@@ -1332,18 +1332,13 @@ async function autoLoadPatternFromUrl() {
                 document.getElementById('previewArea').classList.add('active');
                 document.getElementById('btnReset').style.display = '';
                 document.getElementById('btnReplace').style.display = '';
+                // 2026-05-11: 마켓 자동로드 시에도 이미지 축소 버튼 표시 (직접 업로드와 동일)
+                const _bs = document.getElementById('btnShrink'); if (_bs) _bs.style.display = '';
                 document.getElementById('orderBtn').disabled = false;
+                const _bn = document.getElementById('buyNowBtn'); if (_bn) _bn.disabled = false;
 
-                // 디자이너 패턴 배지 추가
-                const previewArea = document.getElementById('previewArea');
-                if (previewArea && !document.getElementById('designerBadge')) {
-                    const badge = document.createElement('div');
-                    badge.id = 'designerBadge';
-                    badge.style.cssText = 'position:absolute; top:12px; left:12px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; padding:6px 12px; border-radius:50px; font-size:11px; font-weight:800; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.25);';
-                    badge.innerHTML = '<i class="fa-solid fa-palette"></i> ' + (data.author ? data.author + ' · ' : '') + (data.name || 'Designer Pattern');
-                    previewArea.style.position = 'relative';
-                    previewArea.appendChild(badge);
-                }
+                // 2026-05-11: 디자이너 패턴 배지 제거 (사용자 요청 — 캔버스 위에 떠있는 둥근 라벨이 거슬림)
+                // 패턴 이름은 캔버스 헤더 영역에 자연스럽게 노출되도록 별도 처리하거나 그냥 토스트로만 안내.
 
                 window._cdRender();
                 showToast('✅ 패턴 로드 완료! 원단을 선택하고 사이즈를 조정해보세요.');
