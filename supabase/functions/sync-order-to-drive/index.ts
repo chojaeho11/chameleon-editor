@@ -396,6 +396,45 @@ function buildOrderMemo(order: any): string {
     lines.push("");
   }
 
+  // ★ 2026-05-11: 패턴 재조합 (Python/Claude용 메타) — cotton-print 주문일 때만 출력
+  //   원본 이미지 1장 + 이 spec 블록만 있으면 pattern_render.py 로 어떤 해상도로든 재조합 가능.
+  //   섹션 헤더는 정규식으로 잘라쓰기 좋게 고정 — "[PATTERN_RENDER_SPEC]"
+  const patternItems: any[] = [];
+  items.forEach((it: any, idx: number) => {
+    const ps = it.pattern_spec;
+    if (ps && ps.cell_cm) {
+      patternItems.push({
+        index: idx,
+        product_code: it.product_code,
+        product_name: it.product_name,
+        fabric: it.fabric,
+        qty: it.qty,
+        ...ps,
+      });
+    }
+  });
+  if (patternItems.length > 0) {
+    lines.push(sub);
+    lines.push("[패턴 정보 — 사람용 요약]");
+    patternItems.forEach((p: any, i: number) => {
+      lines.push(`아이템 ${i + 1}: ${p.product_name || p.product_code || '-'}`);
+      lines.push(`  원단:       ${p.fabric_cm.w} × ${p.fabric_cm.h} cm`);
+      lines.push(`  패턴 셀:    ${p.cell_cm.w} × ${p.cell_cm.h} cm`);
+      lines.push(`  레이아웃:   ${p.layout}`);
+      lines.push(`  배경색:     ${p.bg_color}`);
+      lines.push(`  이미지 비율: ${Math.round((p.image_scale ?? 1) * 100)}%`);
+      lines.push(`  원본 파일:  ${p.artwork_filename || '(미상)'}`);
+      lines.push("");
+    });
+    lines.push(sub);
+    lines.push("[PATTERN_RENDER_SPEC]");
+    lines.push("# 이 JSON 블록을 pattern_render.py 가 자동 파싱해 패턴을 재합성합니다.");
+    lines.push("# Claude(또는 다른 AI)에게 '이 메모로 패턴 재조합해줘'라고 하면 본 블록만 봐도 충분합니다.");
+    lines.push(JSON.stringify({ spec_version: 1, items: patternItems }, null, 2));
+    lines.push("[/PATTERN_RENDER_SPEC]");
+    lines.push("");
+  }
+
   lines.push(sub);
   lines.push("[원본 주문 데이터 (JSON)]");
   lines.push(JSON.stringify(order, null, 2));

@@ -901,6 +901,7 @@ function buildCartItem() {
         imageSize: state.imgWcm + '×' + state.imgHcm + 'cm',
         layout: state.layout,
         bgColor: state.bgColor || '#ffffff',  // 2026-05-11: 배경색 (투명 PNG 패턴 인쇄용)
+        imgScale: state.imgScale != null ? state.imgScale : 1.0,  // 2026-05-11: 셀 내 이미지 비율
         qtyValue: state.orderQty,
         qtyLabel: state.orderQty + '개',
         finishCode: state.finishCode, finishName: state.finishName, finishUnit: state.finishExtra || 0, finishTotal: finishPerItem,
@@ -1054,7 +1055,15 @@ window._cpSubmitOrder = async function() {
 
         const total = calcCartTotal();
         // orders.items: 통합주문관리에서 인식할 수 있는 형식으로
-        const items = cart.map(function(it){
+        const items = cart.map(function(it, idx){
+            // 2026-05-11: 한 아이템에 매핑된 작가 원본 이미지 — uploadedFiles 인덱스로 매칭
+            //   imgDataUrl이 없으면 업로드도 안 됐으니 artwork_url은 null.
+            //   이 매칭은 정확하진 않지만 (skip된 아이템이 있을 수 있음) 일반적인 경우 1:1로 맞음.
+            var artworkUrl = null, artworkName = null;
+            if (it.imgDataUrl && uploadedFiles[idx]) {
+                artworkUrl  = uploadedFiles[idx].url;
+                artworkName = uploadedFiles[idx].name;
+            }
             return {
                 product_code: it.fabricCode,
                 product_name: it.title,
@@ -1077,7 +1086,20 @@ window._cpSubmitOrder = async function() {
                 })(),
                 unit_price: it.unitPrice,
                 price: it.price,
-                source: 'cotton-print'
+                source: 'cotton-print',
+                // 2026-05-11: 패턴 재조합 메타 — 다크팩토리 정보.txt 와 Python 스크립트에서 사용.
+                //   원본 1장 + 이 spec만 있으면 어떤 해상도로든 패턴 재현 가능.
+                pattern_spec: {
+                    version: 1,
+                    fabric_cm:   { w: it.orderWcm, h: it.orderHcm },     // 출력 원단 (130x100 등)
+                    cell_cm:     { w: it.imgWcm,   h: it.imgHcm   },     // 한 패턴 단위 크기
+                    layout:      it.layout,                              // centered / basic / halfdrop / halfbrick / mirror
+                    bg_color:    it.bgColor || '#ffffff',                // 캔버스 배경 — 투명 PNG일 때 보임
+                    image_scale: it.imgScale != null ? it.imgScale : 1.0, // 셀 내 이미지 비율 (1.0~0.3)
+                    artwork_filename: artworkName,                       // 원본 파일명 (정보 폴더의 _01.png 등)
+                    artwork_url:      artworkUrl,                        // 원본 직접 다운로드 URL (Supabase Storage)
+                    notes: 'See pattern_render.py — Pillow tiling per layout × image_scale × bg_color. Use --dpi 60 for 130cm fabric print.'
+                }
             };
         });
 
