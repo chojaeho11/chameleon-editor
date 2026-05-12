@@ -310,7 +310,7 @@
 .so-cart-close:hover { background: rgba(255,255,255,0.25); }
 .so-cart-body { flex: 1; overflow-y: auto; padding: 16px 20px; background: #faf6ed; }
 
-/* 2026-05-13: 스크롤바 연한 하늘색 (회색 대신) — simple_order 본체 + 카트 드로어 모두 */
+/* 2026-05-13: 스크롤바 매우 연한 하늘색 */
 .so-cart-body::-webkit-scrollbar,
 .so-right::-webkit-scrollbar,
 .so-left::-webkit-scrollbar,
@@ -323,25 +323,25 @@
 .so-left::-webkit-scrollbar-track,
 .so-modal::-webkit-scrollbar-track,
 .so-overlay::-webkit-scrollbar-track {
-    background: #eef6ff;
+    background: #f0f9ff;
 }
 .so-cart-body::-webkit-scrollbar-thumb,
 .so-right::-webkit-scrollbar-thumb,
 .so-left::-webkit-scrollbar-thumb,
 .so-modal::-webkit-scrollbar-thumb,
 .so-overlay::-webkit-scrollbar-thumb {
-    background: #93c5fd; border-radius: 8px; border: 2px solid #eef6ff;
+    background: #bfdbfe; border-radius: 8px; border: 2px solid #f0f9ff;
 }
 .so-cart-body::-webkit-scrollbar-thumb:hover,
 .so-right::-webkit-scrollbar-thumb:hover,
 .so-left::-webkit-scrollbar-thumb:hover,
 .so-modal::-webkit-scrollbar-thumb:hover,
 .so-overlay::-webkit-scrollbar-thumb:hover {
-    background: #60a5fa;
+    background: #93c5fd;
 }
 /* Firefox */
 .so-cart-body, .so-right, .so-left, .so-modal, .so-overlay {
-    scrollbar-color: #93c5fd #eef6ff;
+    scrollbar-color: #bfdbfe #f0f9ff;
     scrollbar-width: thin;
 }
 .so-cart-empty {
@@ -790,28 +790,30 @@
       </div>
     </div>
 
-    <!-- 카트 드로어 (우측 슬라이드) -->
-    <div class="so-cart-drawer-overlay" id="soCartOverlay" onclick="window._soToggleCart(false)"></div>
-    <div class="so-cart-drawer" id="soCartDrawer">
-      <div class="so-cart-head">
-        <h3>🛒 ${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
-        <button class="so-cart-close" onclick="window._soToggleCart(false)">×</button>
-      </div>
-      <!-- 2026-05-12: 크로스도메인 카트 배너 (cart_sync.js 가 채움) -->
-      <div id="cartCrossBanner" style="display:none;"></div>
-      <div class="so-cart-body" id="soCartList">
-        <!-- 카트 아이템 동적 렌더 -->
-      </div>
-      <div class="so-cart-foot">
-        <div class="so-cart-total">
-          <span class="so-cart-total-label">${tr('총 결제금액', '合計', 'Total')}</span>
-          <span class="so-cart-total-amt" id="soCartTotalAmt">0원</span>
-        </div>
-        <button class="so-cart-checkout-btn" id="soCartCheckoutBtn" onclick="window._soGoCheckout()" disabled>
-          ${tr('주문하기', '注文する', 'Checkout')}
-        </button>
-      </div>
+    <!-- 2026-05-13: 카트 드로어를 simpleOrderModal 외부로 분리 — stacking context 문제 해결 -->
+  </div>
+</div>
+
+<!-- 카트 드로어 (우측 슬라이드) — simpleOrderModal 바깥. 메인 nav(60000) 위에 떠야 하므로 별도 stacking context. -->
+<div class="so-cart-drawer-overlay" id="soCartOverlay" onclick="window._soToggleCart(false)"></div>
+<div class="so-cart-drawer" id="soCartDrawer">
+  <div class="so-cart-head">
+    <h3>🛒 ${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
+    <button class="so-cart-close" onclick="window._soToggleCart(false)">×</button>
+  </div>
+  <!-- 2026-05-12: 크로스도메인 카트 배너 (cart_sync.js 가 채움) -->
+  <div id="cartCrossBanner" style="display:none;"></div>
+  <div class="so-cart-body" id="soCartList">
+    <!-- 카트 아이템 동적 렌더 -->
+  </div>
+  <div class="so-cart-foot">
+    <div class="so-cart-total">
+      <span class="so-cart-total-label">${tr('총 결제금액', '合計', 'Total')}</span>
+      <span class="so-cart-total-amt" id="soCartTotalAmt">0원</span>
     </div>
+    <button class="so-cart-checkout-btn" id="soCartCheckoutBtn" onclick="window._soGoCheckout()" disabled>
+      ${tr('주문하기', '注文する', 'Checkout')}
+    </button>
   </div>
 </div>
 
