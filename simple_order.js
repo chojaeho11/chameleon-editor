@@ -1922,20 +1922,22 @@
     }
 
     function calcCartItemPrice(item) {
-        // _simple 우선 (간편 주문에서 담은 거)
-        if (item._simple) {
-            const tier = getDiscountTier(item.qty || 1);
-            const unit = item._simple.unit || (item.product && item.product.price) || 0;
-            const subtotal = unit * (item.qty || 1);
-            const discount = Math.round(subtotal * tier.pct / 100);
-            return { unit, subtotal, discount, final: subtotal - discount, tierPct: tier.pct };
-        }
-        // 일반 카트 아이템 (다른 흐름에서 담은 거)
-        const p = item.product || {};
-        const unit = p.price || 0;
+        // 2026-05-13: _soCalcItemPrice 와 동일 로직 사용 — 가벽/addon/shipping/PRO 할인 모두 반영
+        const isWall = !!(item.wallSize);
         const qty = item.qty || 1;
+        const unit = (item._simple && item._simple.unit) || (item.product && item.product.price) || 0;
         const subtotal = unit * qty;
-        return { unit, subtotal, discount: 0, final: subtotal, tierPct: 0 };
+        let tierPct = 0;
+        if (!isWall) {
+            const tier = getDiscountTier(qty);
+            tierPct = tier.pct;
+        }
+        const discount = Math.round(subtotal * tierPct / 100);
+        // final 은 _soCalcItemPrice 통해 정확히 계산 (addon + shipping + PRO 할인 포함)
+        const final = (typeof _soCalcItemPrice === 'function')
+            ? _soCalcItemPrice(item)
+            : subtotal - discount;
+        return { unit, subtotal, discount, final, tierPct };
     }
 
     function renderSoCart() {
