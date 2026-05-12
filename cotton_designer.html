@@ -1067,10 +1067,11 @@ a { text-decoration: none; color: inherit; }
                 <div class="price-row" id="pDiscountRow" style="display:none;"><span data-cdi18n="p_discount">대량 할인</span><span id="pDiscount" style="color:#dc2626;">-0원</span></div>
                 <div class="price-row total"><span data-cdi18n="p_total">합계</span><span id="pTotal">15,000원</span></div>
             </div>
-            <button class="order-btn" id="orderBtn" onclick="window._cdAddToCart()" disabled>
+            <!-- 2026-05-12: disabled 제거 — 파일 없을 때도 클릭하면 기존 카트 보기 -->
+            <button class="order-btn" id="orderBtn" onclick="window._cdAddToCart()">
                 <i class="fa-solid fa-cart-plus"></i> &nbsp;<span data-cdi18n="btn_cart">장바구니에 담기</span>
             </button>
-            <button class="order-btn" id="buyNowBtn" onclick="window._cdBuyNow()" disabled style="margin-top:8px; background:#fff; color:var(--brown-dark); border:1.5px solid var(--brown-dark);">
+            <button class="order-btn" id="buyNowBtn" onclick="window._cdBuyNow()" style="margin-top:8px; background:#fff; color:var(--brown-dark); border:1.5px solid var(--brown-dark);">
                 <i class="fa-solid fa-bolt"></i> &nbsp;<span data-cdi18n="btn_buynow">바로 주문하기</span>
             </button>
         </div>
@@ -1221,6 +1222,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=38"></script>
+<script src="cotton_designer.js?v=39"></script>
 </body>
 </html>

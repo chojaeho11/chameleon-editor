@@ -1086,7 +1086,11 @@ function buildCartItem() {
 }
 
 window._cdAddToCart = function() {
-    if (!state.img || !state.imgDataUrl) { showToast(window.cdT?window.cdT("alert_no_image"):"먼저 이미지를 업로드해주세요"); return; }
+    // 2026-05-12: UX 개선 — 파일 없이 클릭 시 그냥 카트 드로어 열기 (기존 카트 확인용)
+    if (!state.img || !state.imgDataUrl) {
+        if (window._cpCartOpen) window._cpCartOpen();
+        return;
+    }
     const item = buildCartItem();
     if (!item) return;
     const cart = getCart();
@@ -1098,7 +1102,11 @@ window._cdAddToCart = function() {
 };
 
 window._cdBuyNow = function() {
-    if (!state.img || !state.imgDataUrl) { showToast(window.cdT?window.cdT("alert_no_image"):"먼저 이미지를 업로드해주세요"); return; }
+    // 2026-05-12: 파일 없이 클릭 시 → 카트 드로어 열기 (기존 카트 → 결제하기)
+    if (!state.img || !state.imgDataUrl) {
+        if (window._cpCartOpen) window._cpCartOpen();
+        return;
+    }
     const item = buildCartItem();
     if (!item) return;
     // 2026-05-12: 최소주문금액 사전 검증 (장바구니 + 이번 아이템)
