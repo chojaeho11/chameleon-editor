@@ -281,43 +281,11 @@
         }
     }
 
-    // ── Cross-domain summary banner (rendered into #cartCrossBanner if present) ──
+    // 2026-05-12: 도메인 통합 — cross-domain banner 제거 (같은 origin이라 불필요).
+    // 이제 모든 항목이 한 카트에 통합 렌더되므로 "다른 사이트" 라는 개념 자체가 사라짐.
     function renderCrossDomainBanner() {
         var host = document.getElementById('cartCrossBanner');
-        if (!host) return;
-        var others = _unified.filter(function (it) {
-            return it && it.__source && it.__source !== SOURCE;
-        });
-        if (!others.length) { host.innerHTML = ''; host.style.display = 'none'; return; }
-        // Group by source
-        var groups = {};
-        others.forEach(function (it) {
-            var src = it.__source || 'unknown';
-            groups[src] = (groups[src] || 0) + 1;
-        });
-        var labels = {
-            'cotton-print': IS_COTTON ? '패브릭' : 'cotton-print.com',
-            'main': '일반상품 (종이매대·명함·허니콤보드 등)'
-        };
-        var siblingUrl = '';
-        if (IS_COTTON) siblingUrl = 'https://cafe2626.com/?sid=' + SID + '#cart';
-        else siblingUrl = 'https://cotton-print.com/cotton_designer.html?sid=' + SID;
-        var parts = Object.keys(groups).map(function (k) {
-            return (labels[k] || k) + ' ' + groups[k] + '개';
-        }).join(', ');
-        host.style.display = 'block';
-        host.innerHTML =
-            '<div style="padding:10px 12px; background:#fff7e6; border:1px solid #ffd18f; ' +
-            'border-radius:8px; font-size:12px; color:#7a4a00; margin:8px; display:flex; ' +
-            'align-items:center; gap:8px; justify-content:space-between;">' +
-                '<div>' +
-                    '<i class="fa-solid fa-link" style="margin-right:6px;"></i>' +
-                    '다른 사이트 장바구니: <b>' + parts + '</b>' +
-                '</div>' +
-                '<a href="' + siblingUrl + '" style="color:#b35900; font-weight:700; text-decoration:underline;">' +
-                    '보러가기 →' +
-                '</a>' +
-            '</div>';
+        if (host) { host.innerHTML = ''; host.style.display = 'none'; }
     }
 
     // ── Init ─────────────────────────────────────────────

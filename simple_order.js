@@ -1324,11 +1324,22 @@
         const titleCountEl = document.getElementById('soCartCountTitle');
         const checkBtn = document.getElementById('soCartCheckoutBtn');
         if (!list || !totalEl) return;
-        const cart = readCart();
-        countEl && (countEl.textContent = cart.length);
-        titleCountEl && (titleCountEl.textContent = '(' + cart.length + ')');
 
-        if (cart.length === 0) {
+        // 2026-05-12: 통합 카트 — 패브릭 + 일반상품 둘 다 렌더
+        const allItems = (typeof _soReadAllCart === 'function')
+            ? _soReadAllCart()
+            : (function(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch(e){ return []; } })();
+        const isFab = function (it) {
+            return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+        };
+        const fabricItems  = allItems.filter(isFab);
+        const generalItems = allItems.filter(function (it) { return !isFab(it); });
+        const totalCount = allItems.length;
+
+        countEl && (countEl.textContent = totalCount);
+        titleCountEl && (titleCountEl.textContent = '(' + totalCount + ')');
+
+        if (totalCount === 0) {
             list.innerHTML = '<div class="so-cart-empty"><i>🛒</i>' +
                 tr('장바구니가 비어있습니다', 'カートは空です', 'Your cart is empty') +
                 '</div>';
@@ -1338,41 +1349,93 @@
         }
 
         let totalAmt = 0;
-        list.innerHTML = cart.map((item, idx) => {
-            const calc = calcCartItemPrice(item);
-            totalAmt += calc.final;
-            const thumb = item.thumb || (item.product && item.product.img) || '';
-            const meta = [];
-            if (calc.tierPct > 0) meta.push(`${calc.tierPct}% ${tr('할인', '割引', 'off')}`);
-            if (item.fileName) meta.push(`📎 ${escapeHtml(item.fileName)}`);
-            return `
-            <div class="so-cart-item">
-                ${thumb
-                    ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" />`
-                    : `<div class="so-cart-item-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;">📦</div>`}
-                <div class="so-cart-item-info">
-                    <div class="so-cart-item-name">${escapeHtml(fmtCartName(item))}</div>
-                    <div class="so-cart-item-meta">${meta.join(' · ')}</div>
-                    <div class="so-cart-item-bottom">
-                        <div class="so-cart-qty-controls">
-                            <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${idx}, -1)">−</button>
-                            <input type="number" class="so-cart-qty-input" min="1" max="9999"
-                                value="${item.qty || 1}"
-                                onchange="window._soCartQtySet(${idx}, this.value)" />
-                            <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${idx}, 1)">+</button>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="so-cart-item-price">${fmtPrice(calc.final)}</span>
-                            <button class="so-cart-item-remove" onclick="window._soCartRemove(${idx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
+        const sections = [];
+
+        // 일반상품 섹션
+        if (generalItems.length > 0) {
+            const genHtml = generalItems.map((item) => {
+                const idx = allItems.indexOf(item); // 전체 카트 인덱스 (qty 조절 핸들러용 — 이제 일반 카트 인덱스로 변환 필요)
+                const genIdx = generalItems.indexOf(item); // 일반상품 카트 인덱스
+                const calc = calcCartItemPrice(item);
+                totalAmt += calc.final;
+                const thumb = item.thumb || (item.product && item.product.img) || '';
+                const meta = [];
+                if (calc.tierPct > 0) meta.push(`${calc.tierPct}% ${tr('할인', '割引', 'off')}`);
+                if (item.fileName) meta.push(`📎 ${escapeHtml(item.fileName)}`);
+                return `
+                <div class="so-cart-item">
+                    ${thumb
+                        ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" />`
+                        : `<div class="so-cart-item-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;">📦</div>`}
+                    <div class="so-cart-item-info">
+                        <div class="so-cart-item-name">${escapeHtml(fmtCartName(item))}</div>
+                        <div class="so-cart-item-meta">${meta.join(' · ')}</div>
+                        <div class="so-cart-item-bottom">
+                            <div class="so-cart-qty-controls">
+                                <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${genIdx}, -1)">−</button>
+                                <input type="number" class="so-cart-qty-input" min="1" max="9999"
+                                    value="${item.qty || 1}"
+                                    onchange="window._soCartQtySet(${genIdx}, this.value)" />
+                                <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${genIdx}, 1)">+</button>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="so-cart-item-price">${fmtPrice(calc.final)}</span>
+                                <button class="so-cart-item-remove" onclick="window._soCartRemove(${genIdx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+            sections.push(genHtml);
+        }
+
+        // 패브릭 섹션 (2026-05-12: 같은 카트 안에 함께 표시)
+        if (fabricItems.length > 0) {
+            sections.push('<div style="font-size:11px; font-weight:800; color:#64748b; margin:10px 0 6px;">✂️ ' + tr('패브릭', 'ファブリック', 'Fabric') + '</div>');
+            const fabHtml = fabricItems.map((it) => {
+                const sz = it.orderSize || ((it.orderWcm || (it.orderWmm/10)) + '×' + (it.orderHcm || (it.orderHmm/10)) + 'cm');
+                const opts = [it.fabricName, '출력 ' + sz, it.qtyLabel, it.finishName ? '마감: ' + it.finishName : ''].filter(Boolean).join(' · ');
+                const thumb = it.thumbDataUrl || it.img || '';
+                const allIdx = allItems.indexOf(it);
+                totalAmt += (it.price || 0);
+                return `
+                <div class="so-cart-item">
+                    ${thumb
+                        ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" />`
+                        : `<div class="so-cart-item-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;">✂️</div>`}
+                    <div class="so-cart-item-info">
+                        <div class="so-cart-item-name">${escapeHtml(it.title || it.fabricName || '패브릭')}</div>
+                        <div class="so-cart-item-meta">${escapeHtml(opts)}</div>
+                        <div class="so-cart-item-bottom">
+                            <span></span>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="so-cart-item-price">${fmtPrice(it.price || 0)}</span>
+                                <button class="so-cart-item-remove" onclick="window._soRemoveFabricItem(${allIdx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            sections.push(fabHtml);
+        }
+
+        list.innerHTML = sections.join('');
         totalEl.textContent = fmtPrice(totalAmt);
         if (checkBtn) checkBtn.disabled = false;
     }
+
+    // 2026-05-12: 카트 드로어에서 패브릭 항목 삭제
+    window._soRemoveFabricItem = function (allIdx) {
+        try {
+            var all = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || [];
+            if (!all[allIdx]) return;
+            all.splice(allIdx, 1);
+            localStorage.setItem('chameleon_cart_current', JSON.stringify(all));
+            renderSoCart();
+        } catch (e) {}
+    };
 
     window._soCartQtyChg = function(idx, delta) {
         const cart = readCart();
