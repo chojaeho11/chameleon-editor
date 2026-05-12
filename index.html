@@ -852,7 +852,7 @@ if ('caches' in window) {
                 </div>
                 <button type="button" onclick="window._mgrQuoteOrder()" style="padding:14px 28px; background:linear-gradient(135deg, #b45309, #78350f); color:#fde047; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 4px 12px rgba(120,53,15,0.3); transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">⚡ 주문하기</button>
             </div>
-            <div style="font-size:11px; color:#a16207; margin-top:8px; text-align:center;">최소 10,000원 이상 • 입력 즉시 결제창이 열립니다</div>
+            <div style="font-size:11px; color:#a16207; margin-top:8px; text-align:center;">최소 1,000원부터 • 입력 즉시 결제창이 열립니다</div>
         </div>
     </div>
     </div><!-- /.hero-section -->
@@ -868,8 +868,8 @@ if ('caches' in window) {
         window._mgrQuoteOrder = function() {
             var inp = document.getElementById('mgrQuoteAmount');
             var amount = parseInt((inp && inp.value || '').replace(/[^\d]/g, ''), 10) || 0;
-            if (amount < 10000) {
-                alert('최소 10,000원 이상 입력해주세요.\n담당 매니저와 상담하신 견적 금액을 입력하세요.');
+            if (amount < 1000) {
+                alert('최소 1,000원부터 입력 가능합니다.\n담당 매니저와 상담하신 견적 금액을 입력하세요.');
                 if (inp) inp.focus();
                 return;
             }
@@ -7104,7 +7104,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=30"></script>
+<script src="/simple_order.js?v=31"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=9"></script>
 

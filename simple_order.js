@@ -2230,10 +2230,25 @@
             alert('장바구니가 비어있습니다.');
             return;
         }
-        // 항목 요약 렌더
+        _renderCheckoutSummary();
+        document.getElementById('soCheckoutOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+
+    // 2026-05-13: 주문 요약 렌더 (별도 분리 — 항목 삭제 후 재호출용)
+    function _renderCheckoutSummary() {
+        var cart = _soReadAllCart();
         var list = document.getElementById('soCoItemList');
+        if (!list) return;
+        if (cart.length === 0) {
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:#9ca3af; font-size:13px;">장바구니가 비어있습니다</div>';
+            document.getElementById('soCoTotalAmt').textContent = _soFormatPrice(0);
+            var subBtn = document.getElementById('soCoSubmitBtn');
+            if (subBtn) subBtn.disabled = true;
+            return;
+        }
         var total = 0;
-        list.innerHTML = cart.map(function (it) {
+        list.innerHTML = cart.map(function (it, idx) {
             var name, opts;
             if (_soIsFabricItem(it)) {
                 name = it.title || it.fabricName || '패브릭';
@@ -2245,15 +2260,31 @@
             }
             var p = _soCalcItemPrice(it);
             total += p;
-            return '<div class="so-co-summary-item">' +
-                '<div class="so-co-summary-item-name">' + name + '</div>' +
+            return '<div class="so-co-summary-item" style="position:relative;">' +
+                '<button type="button" onclick="window._soRemoveCheckoutItem(' + idx + ')" title="삭제" ' +
+                  'style="position:absolute; top:6px; right:6px; width:22px; height:22px; padding:0; border:none; background:transparent; color:#9ca3af; font-size:16px; cursor:pointer; border-radius:50%; line-height:1;" ' +
+                  'onmouseover="this.style.background=\'#fee2e2\'; this.style.color=\'#dc2626\';" ' +
+                  'onmouseout="this.style.background=\'transparent\'; this.style.color=\'#9ca3af\';">×</button>' +
+                '<div class="so-co-summary-item-name" style="padding-right:24px;">' + name + '</div>' +
                 '<div class="so-co-summary-item-opts">' + opts + '</div>' +
                 '<div class="so-co-summary-item-price">' + _soFormatPrice(p) + '</div>' +
                 '</div>';
         }).join('');
         document.getElementById('soCoTotalAmt').textContent = _soFormatPrice(total);
-        document.getElementById('soCheckoutOverlay').classList.add('open');
-        document.body.style.overflow = 'hidden';
+        var subBtn2 = document.getElementById('soCoSubmitBtn');
+        if (subBtn2) subBtn2.disabled = false;
+    }
+
+    // 2026-05-13: 주문 요약에서 항목 삭제
+    window._soRemoveCheckoutItem = function (idx) {
+        try {
+            var cart = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || [];
+            if (idx >= 0 && idx < cart.length) {
+                cart.splice(idx, 1);
+                localStorage.setItem('chameleon_cart_current', JSON.stringify(cart));
+            }
+        } catch (e) {}
+        _renderCheckoutSummary();
     };
 
     window._soCloseCheckout = function () {
