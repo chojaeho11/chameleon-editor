@@ -113,36 +113,58 @@
     function injectStyles() {
         if (document.getElementById('so-styles')) return;
         const css = `
+/* 풀스크린 오버레이 — 패브릭 디자이너처럼 화면 가득 */
 .so-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 50000;
-    display: none; align-items: center; justify-content: center; padding: 16px;
-    backdrop-filter: blur(3px);
+    position: fixed; inset: 0; background: #faf6ed; z-index: 50000;
+    display: none;
 }
-.so-overlay.open { display: flex; }
+.so-overlay.open { display: block; }
 .so-modal {
-    background: var(--cream, #faf6ed); border-radius: 16px; width: 920px; max-width: 100%;
-    max-height: 94vh; overflow: hidden; display: flex; flex-direction: column;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    background: #faf6ed;
+    width: 100%; height: 100%;
+    max-height: none; max-width: none;
+    border-radius: 0; box-shadow: none;
+    display: flex; flex-direction: column; overflow: hidden;
     font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
 }
 .so-head {
-    padding: 14px 22px; display: flex; align-items: center; justify-content: space-between;
-    background: #fff; border-bottom: 1px solid #f1f1f1; flex-shrink: 0;
+    padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+    background: #fff; border-bottom: 1px solid #ede4d3; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(69,26,3,0.06);
 }
-.so-head h2 { margin: 0; font-size: 17px; font-weight: 800; color: #1a1a1a; }
-.so-head .so-prod-name-top { font-size: 13px; color: #888; margin-left: 8px; font-weight: 500; }
+.so-head-left { display: flex; align-items: center; gap: 14px; }
+.so-brand {
+    font-size: 18px; font-weight: 900; color: #451a03;
+    letter-spacing: 0.5px;
+}
+.so-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; background: #fef7e6; border: 1px solid #e7e5e4;
+    border-radius: 50px; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: #78350f;
+    font-family: inherit; transition: all 0.2s;
+}
+.so-back:hover { background: #fde68a; }
+.so-head h2 {
+    margin: 0; font-size: 15px; font-weight: 700; color: #78350f;
+}
 .so-close {
-    width: 30px; height: 30px; border: none; background: #f5f5f5; border-radius: 50%;
-    cursor: pointer; font-size: 18px; color: #555;
+    width: 34px; height: 34px; border: 1px solid #e7e5e4; background: #fff;
+    border-radius: 50%; cursor: pointer; font-size: 18px; color: #555;
 }
-.so-close:hover { background: #e5e5e5; }
+.so-close:hover { background: #f5f5f5; }
 
-.so-body { display: flex; gap: 0; flex: 1; overflow: hidden; }
+.so-body {
+    display: flex; gap: 24px; flex: 1; overflow: hidden;
+    padding: 24px 28px;
+    max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box;
+}
 
 /* 좌측: 큰 업로드 영역 */
 .so-left {
-    flex: 1.5; background: #fff; padding: 20px; overflow-y: auto;
+    flex: 1.5; background: #fff; padding: 24px; overflow-y: auto;
     display: flex; flex-direction: column;
+    border-radius: 14px; border: 1px solid #ede4d3;
 }
 .so-prod-banner {
     display: flex; gap: 12px; padding-bottom: 14px; margin-bottom: 14px;
@@ -205,8 +227,8 @@
 
 /* 우측: 옵션 패널 */
 .so-right {
-    flex: 1; background: var(--cream, #faf6ed); padding: 20px;
-    overflow-y: auto; min-width: 280px;
+    flex: 1; background: #faf6ed; padding: 0;
+    overflow-y: auto; min-width: 320px; max-width: 420px;
     display: flex; flex-direction: column; gap: 14px;
 }
 .so-section {
@@ -277,18 +299,24 @@
 }
 .so-status.err { background: #fef2f2; color: #991b1b; }
 
-/* 모바일 — 세로 스택 */
+/* 모바일 — 세로 스택, 풀스크린 유지 */
 @media (max-width: 768px) {
-    .so-modal { width: 100%; max-height: 100vh; border-radius: 12px 12px 0 0; }
-    .so-body { flex-direction: column; }
-    .so-left { padding: 16px; }
-    .so-right { padding: 16px; min-width: 0; }
-    .so-upload { min-height: 200px; padding: 24px 12px; }
-    .so-upload-icon { font-size: 38px; }
-    .so-upload-title { font-size: 14px; }
+    .so-head { padding: 12px 16px; }
+    .so-brand { font-size: 16px; }
+    .so-back { padding: 6px 10px; font-size: 12px; }
+    .so-head h2 { display: none; }
+    .so-body {
+        flex-direction: column; gap: 14px;
+        padding: 14px; overflow-y: auto;
+    }
+    .so-left { padding: 16px; border-radius: 12px; }
+    .so-right { padding: 0; min-width: 0; max-width: none; }
+    .so-upload { min-height: 220px; padding: 24px 12px; }
+    .so-upload-icon { font-size: 40px; }
+    .so-upload-title { font-size: 15px; }
     .so-prod-banner { padding-bottom: 10px; margin-bottom: 10px; }
     .so-prod-img { width: 52px; height: 52px; }
-    .so-prod-name { font-size: 14px; }
+    .so-prod-name { font-size: 15px; }
 }
         `;
         const st = document.createElement('style');
@@ -300,11 +328,17 @@
     function injectModal() {
         if (document.getElementById('simpleOrderModal')) return;
         const html = `
-<div id="simpleOrderModal" class="so-overlay" onclick="if(event.target===this)window.closeSimpleOrderModal()">
+<div id="simpleOrderModal" class="so-overlay">
   <div class="so-modal">
     <div class="so-head">
-      <h2>${tr('상품 주문', '商品注文', 'Order')}</h2>
-      <button class="so-close" onclick="window.closeSimpleOrderModal()">×</button>
+      <div class="so-head-left">
+        <button class="so-back" onclick="window.closeSimpleOrderModal()" title="${tr('메인으로', 'メインへ', 'Back')}">
+          ← ${tr('메인으로', 'メインへ', 'Back')}
+        </button>
+        <span class="so-brand">Chameleon</span>
+        <h2>${tr('상품 주문', '商品注文', 'Order')}</h2>
+      </div>
+      <button class="so-close" onclick="window.closeSimpleOrderModal()" title="${tr('닫기', '閉じる', 'Close')}">×</button>
     </div>
 
     <div class="so-body">
@@ -741,5 +775,5 @@
         injectStyles(); injectModal(); setupRouting();
     }
 
-    console.log('[simple_order] v=4 (2-column layout) loaded. window.openSimpleOrderModal(code) available.');
+    console.log('[simple_order] v=5 (fullscreen 2-column layout) loaded. window.openSimpleOrderModal(code) available.');
 })();
