@@ -638,13 +638,25 @@
           </div>
         </div>
 
-        <div class="so-upload-section-label">${tr('📤 디자인 파일 업로드', '📤 デザインファイルをアップロード', '📤 Upload design file')}</div>
+        <div class="so-upload-section-label" id="soUploadLabel">${tr('📤 디자인 파일 업로드', '📤 デザインファイルをアップロード', '📤 Upload design file')}</div>
         <div id="soUpload" class="so-upload" onclick="document.getElementById('soFile').click()">
           <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
           <div class="so-upload-icon">📤</div>
-          <div class="so-upload-title">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
+          <div class="so-upload-title" id="soUploadTitle">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
           <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
           <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
+        </div>
+
+        <!-- 2026-05-13: 양면 선택 시 뒷면 파일 업로드 영역 (가벽 양면만) -->
+        <div id="soBackUploadWrap" style="display:none; margin-top:14px;">
+          <div class="so-upload-section-label">${tr('📤 뒷면 디자인 파일 업로드', '📤 裏面ファイル', '📤 Upload BACK side file')}</div>
+          <div id="soBackUpload" class="so-upload" onclick="document.getElementById('soBackFile').click()">
+            <input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
+            <div class="so-upload-icon">📤</div>
+            <div class="so-upload-title">${tr('뒷면 이미지를 올려주세요', '裏面画像をアップロード', 'Upload back side')}</div>
+            <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
+            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
+          </div>
         </div>
       </div>
 
@@ -683,7 +695,7 @@
               <option value="8">8 m</option>
             </select>
           </div>
-          <div style="display:flex; gap:8px; align-items:center;">
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
             <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('세로', '縦', 'Height')}</label>
             <select id="soWallHeight" class="so-input" onchange="window._soUpdatePrice();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
               <option value="2">2 m</option>
@@ -691,6 +703,14 @@
               <option value="2.4" selected>2.4 m</option>
               <option value="3">3 m</option>
             </select>
+          </div>
+          <!-- 2026-05-13: 단면 / 양면 선택 -->
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('인쇄면', '印刷面', 'Side')}</label>
+            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')" style="padding:8px 10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('단면', '片面', 'Single')}</button>
+              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')" style="padding:8px 10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('양면 (가격 2배)', '両面 (2倍)', 'Double (x2)')}</button>
+            </div>
           </div>
         </div>
 
@@ -895,6 +915,19 @@
             dz.classList.remove('dragover');
             handleFile(e.dataTransfer.files[0]);
         };
+        // 2026-05-13: 뒷면 파일 (양면 가벽용)
+        const bfi = document.getElementById('soBackFile');
+        const bdz = document.getElementById('soBackUpload');
+        if (bfi) bfi.onchange = e => window._soOnBackFileChange(e.target.files);
+        if (bdz) {
+            bdz.ondragover = e => { e.preventDefault(); bdz.classList.add('dragover'); };
+            bdz.ondragleave = () => bdz.classList.remove('dragover');
+            bdz.ondrop = e => {
+                e.preventDefault();
+                bdz.classList.remove('dragover');
+                window._soOnBackFileChange(e.dataTransfer.files);
+            };
+        }
     }
 
     // PDF.js 지연 로드 — 사용자가 PDF 업로드 시점에만 로드
@@ -1187,7 +1220,10 @@
     }
 
     function updateButtons() {
-        const ready = !!(state.product && state.file && state.qty > 0);
+        // 2026-05-13: 양면 가벽이면 뒷면 파일도 필수
+        const needBack = !!(state.isWall && state.wallSide === 'double');
+        const backOk = !needBack || !!state.fileBack;
+        const ready = !!(state.product && state.file && state.qty > 0 && backOk);
         const btnC = document.getElementById('soBtnCart');
         const btnB = document.getElementById('soBtnBuy');
         if (btnC) btnC.disabled = !ready;
@@ -1201,20 +1237,27 @@
         if (!state.product) return;
         const unit = pickPrice(state.product);
         let qty, subtotal;
-        // 2026-05-13: 가벽 세로 3m 인 경우 +50,000원
+        // 2026-05-13: 가벽 세로 3m → 가로 m당 +50,000원 + 양면 2배
         let heightExtra = 0;
         if (state.isWall) {
             qty = state.wallWidth || 1;
             state.qty = qty;
             subtotal = unit * qty;
-            if (parseFloat(state.wallHeight) === 3) heightExtra = 50000;
+            // 양면이면 가격 2배 (인쇄 비용)
+            if (state.wallSide === 'double') {
+                subtotal *= 2;
+            }
+            // 세로 3m: 가로 m당 +5만원 (양면이면 2배)
+            if (parseFloat(state.wallHeight) === 3) {
+                heightExtra = 50000 * qty;
+                if (state.wallSide === 'double') heightExtra *= 2;
+            }
             state.wallHeightExtra = heightExtra;
         } else {
             state.wallHeightExtra = 0;
             qty = state.qty;
             subtotal = unit * qty;
         }
-        // 2026-05-13: 수량 할인 제거 (사용자 정책 변경)
         const tierPct = 0;
         const discount = 0;
         // 옵션별 breakdown (이름 + 가격)
@@ -1260,18 +1303,25 @@
         const showRow = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; };
 
         if (state.isWall) {
-            setText('soUnit', fmtPrice(unit) + ' × ' + qty + 'm = ' + fmtPrice(subtotal));
-            setText('soUnitLabel', tr('단가', '単価', 'Unit'));
+            var sideLabel = (state.wallSide === 'double') ? ' (양면 ×2)' : '';
+            var unitSubLabel = (state.wallSide === 'double')
+                ? fmtPrice(unit) + ' × ' + qty + 'm × 2면 = ' + fmtPrice(subtotal)
+                : fmtPrice(unit) + ' × ' + qty + 'm = ' + fmtPrice(subtotal);
+            setText('soUnit', unitSubLabel);
+            setText('soUnitLabel', tr('단가', '単価', 'Unit') + sideLabel);
             showRow('soWallSizeRow', true);
-            setText('soWallSizeText', qty + 'm × ' + (state.wallHeight || 2.4) + 'm');
+            setText('soWallSizeText', qty + 'm × ' + (state.wallHeight || 2.4) + 'm' + ((state.wallSide === 'double') ? ' · 양면' : ' · 단면'));
         } else {
             setText('soUnit', fmtPrice(unit));
             showRow('soWallSizeRow', false);
         }
-        // 옵션 breakdown 라인 + 세로 3m 추가 옵션
+        // 옵션 breakdown 라인 + 세로 3m 추가 옵션 (가로 m × 5만, 양면이면 2배)
         var bdHtml = addonBreakdownLines.join('');
         if (heightExtra > 0) {
-            bdHtml += '<div class="so-price-row"><span>· ' + tr('세로 3m 추가', '縦3m追加', '+3m height') + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
+            var hLabel = (state.wallSide === 'double')
+                ? '· 세로 3m 추가 (5만 × ' + qty + 'm × 2면)'
+                : '· 세로 3m 추가 (5만 × ' + qty + 'm)';
+            bdHtml += '<div class="so-price-row"><span>' + hLabel + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
         }
         setHTML('soAddonBreakdown', bdHtml);
         // 2026-05-13: 구매금액 할인 라인 (구간 적용 시만)
@@ -1526,6 +1576,37 @@
         recalc();
     };
 
+    // 2026-05-13: 단면/양면 선택
+    window._soPickSide = function (side) {
+        state.wallSide = (side === 'double') ? 'double' : 'single';
+        document.querySelectorAll('.so-side-btn').forEach(function (b) {
+            var on = b.dataset.side === state.wallSide;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#4338ca' : '#fff';
+            b.style.color = on ? '#fff' : '#451a03';
+            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+        });
+        var backWrap = document.getElementById('soBackUploadWrap');
+        if (backWrap) backWrap.style.display = (state.wallSide === 'double') ? '' : 'none';
+        recalc();
+        updateButtons();
+    };
+
+    // 2026-05-13: 뒷면 파일 변경 핸들러
+    window._soOnBackFileChange = function (files) {
+        if (!files || !files.length) return;
+        var f = files[0];
+        state.fileBack = f;
+        // 미리보기 (작게)
+        try {
+            var nameEl = document.querySelector('#soBackUpload .so-upload-title');
+            if (nameEl) nameEl.textContent = '✅ ' + f.name;
+            var hintEl = document.querySelector('#soBackUpload .so-upload-hint');
+            if (hintEl) hintEl.textContent = (f.size / 1024 / 1024).toFixed(2) + ' MB';
+        } catch (e) {}
+        updateButtons();
+    };
+
     // 2026-05-13: 추가 옵션 체크박스 토글
     window._soToggleAddon = function (inp) {
         var code = inp.dataset.addonCode;
@@ -1731,6 +1812,9 @@
         state.addonQuantities = {};
         state.wallWidth = 3;   // 기본 가로 3m
         state.wallHeight = 2.4; // 기본 세로 2.4m
+        state.wallSide = 'single'; // single / double — 양면이면 가격 2배
+        state.fileBack = null;
+        state.fileBackData = null;
         state.itemNote = '';
         state.shipMethod = 'self_pickup';
         state.scheduleDate = '';
@@ -1753,6 +1837,16 @@
         // 가벽 사이즈 폼 초기값 동기화
         var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = '3';
         var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = '2.4';
+        // 2026-05-13: 단면/양면 초기화 (단면)
+        document.querySelectorAll('.so-side-btn').forEach(function (b) {
+            var on = b.dataset.side === 'single';
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#4338ca' : '#fff';
+            b.style.color = on ? '#fff' : '#451a03';
+            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+        });
+        var backWrap = document.getElementById('soBackUploadWrap');
+        if (backWrap) backWrap.style.display = 'none';
         // 2026-05-13: 배송 버튼 초기화 (self_pickup active)
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             b.classList.toggle('active', b.dataset.ship === 'self_pickup');
@@ -1789,12 +1883,17 @@
     // 카트 / 주문
     // ─────────────────────────────────────────────
     async function uploadFile() {
+        return uploadFileGeneric(state.file);
+    }
+    // 2026-05-13: 임의 파일 업로드 (앞면/뒷면 공용)
+    async function uploadFileGeneric(file) {
         const sb = getSb();
         if (!sb) throw new Error('Supabase not available');
-        const ts = Date.now();
-        const safeName = (state.file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+        if (!file) throw new Error('No file');
+        const ts = Date.now() + '_' + Math.floor(Math.random() * 10000);
+        const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = 'simple_order/' + ts + '_' + safeName;
-        const { error } = await sb.storage.from('design').upload(path, state.file);
+        const { error } = await sb.storage.from('design').upload(path, file);
         if (error) throw error;
         const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
         return { path, url: pub };
@@ -1860,6 +1959,13 @@
             addonQuantities: Object.assign({}, state.addonQuantities || {}),
             // 2026-05-13: 가벽 사이즈 (가로/세로 m)
             wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
+            // 2026-05-13: 단면/양면 (가벽만)
+            wallSide: state.isWall ? (state.wallSide || 'single') : null,
+            // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
+            backFileName: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.name : null,
+            backFileType: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.type : null,
+            backFileSize: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.size : null,
+            _backFileBlob: (state.wallSide === 'double' && state.fileBack) ? state.fileBack : null,  // 임시 — 결제 시 업로드
             // 2026-05-13: 전달사항 (제작 요청)
             itemNote: itemNote,
             // 2026-05-13: 시공/배송 일정 (가벽/포토존만)
@@ -1906,7 +2012,21 @@
         showStatus(tr('📤 파일 업로드 중...', '📤 アップロード中...', '📤 Uploading...'), 'ok');
         try {
             const { url, path } = await uploadFile();
+            // 2026-05-13: 양면 가벽이면 뒷면 파일도 같이 업로드
+            let backUrl = null, backPath = null;
+            if (state.wallSide === 'double' && state.fileBack) {
+                showStatus(tr('📤 뒷면 파일 업로드 중...', '📤 裏面ファイル...', '📤 Uploading back...'), 'ok');
+                const backResult = await uploadFileGeneric(state.fileBack);
+                backUrl = backResult.url;
+                backPath = backResult.path;
+            }
             const item = buildCartItem(url, path);
+            // 뒷면 파일 URL 부착 (localStorage 호환 — Blob 직접 저장 안 함)
+            if (backUrl) {
+                item.backFileUrl = backUrl;
+                item.backFilePath = backPath;
+                delete item._backFileBlob;
+            }
             const cart = readCart();
             cart.push(item);
             writeCart(cart);
@@ -2205,10 +2325,15 @@
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
         var subtotal = unit * qty;
+        // 가벽 양면 → 가격 2배
+        var isDouble = (it.wallSide === 'double');
+        if (isDouble) subtotal *= 2;
         var base = subtotal;
-        // 가벽 세로 3m → +50,000
+        // 가벽 세로 3m → 가로 m당 +5만 (양면이면 2배)
         if (it.wallSize && parseFloat(it.wallSize.h_m) === 3) {
-            base += 50000;
+            var hExtra = 50000 * qty;
+            if (isDouble) hExtra *= 2;
+            base += hExtra;
         }
         // addon 가격
         if (it.selectedAddons && window.ADDON_DB) {
@@ -2429,7 +2554,11 @@
                 var fileUrl  = it.originalUrl || it.fileUrl || it.thumb || null;
                 var fileName = it.fileName || ((it.product && it.product.name) || 'item') + '.png';
                 var fileType = it.mimeType || 'image/png';
-                if (fileUrl) orderFiles.push({ name: fileName, url: fileUrl, type: fileType });
+                if (fileUrl) orderFiles.push({ name: '[앞면] ' + fileName, url: fileUrl, type: fileType });
+                // 2026-05-13: 양면 가벽이면 뒷면 파일도 orders.files 에 포함
+                if (it.backFileUrl) {
+                    orderFiles.push({ name: '[뒷면] ' + (it.backFileName || 'back.png'), url: it.backFileUrl, type: it.backFileType || 'image/png' });
+                }
                 var wallSizeMm = null;
                 if (it.wallSize) {
                     wallSizeMm = {
@@ -2448,11 +2577,15 @@
                     source: 'cafe2626',
                     addons: addons,
                     wall_size: it.wallSize || null,           // 가벽 사이즈 (m 단위)
+                    wall_side: it.wallSide || null,           // single / double (양면이면 가격 2배)
                     item_note: it.itemNote || '',             // 전달사항 (제작 요청)
                     shipping: it.shipping || null,            // 시공/배송 일정 + 철거
                     file_url: fileUrl,
                     file_name: fileName,
                     file_path: it.filePath || null,
+                    back_file_url: it.backFileUrl || null,   // 뒷면 (양면 가벽만)
+                    back_file_name: it.backFileName || null,
+                    back_file_path: it.backFilePath || null,
                     artwork_url: fileUrl,
                     artwork_filename: fileName
                 };
@@ -2483,9 +2616,15 @@
                 var pname = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
                 var lines = ['#' + (idx + 1) + ' ' + pname + ' x ' + (it.qty || 1)];
                 if (it.wallSize) {
-                    lines.push('  · 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm');
+                    var sideLbl = (it.wallSide === 'double') ? ' / 양면 (가격 2배)' : ' / 단면';
+                    lines.push('  · 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm' + sideLbl);
                     if (parseFloat(it.wallSize.h_m) === 3) {
-                        lines.push('  · 세로 3m 추가: +50,000원');
+                        var hWidth = it.wallSize.w_m || 1;
+                        var hExtra = 50000 * hWidth * (it.wallSide === 'double' ? 2 : 1);
+                        lines.push('  · 세로 3m 추가 (5만 × ' + hWidth + 'm' + (it.wallSide === 'double' ? ' × 2면' : '') + '): +' + hExtra.toLocaleString() + '원');
+                    }
+                    if (it.backFileUrl) {
+                        lines.push('  · 뒷면 파일: ' + (it.backFileName || it.backFileUrl));
                     }
                 }
                 if (it.selectedAddons && window.ADDON_DB) {
