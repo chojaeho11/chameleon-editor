@@ -354,13 +354,18 @@ async function loadDbFabrics() {
     ) : null;
     if (!sb) return;
     try {
-        const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', '22222');
-        const codes = (subCats||[]).map(c => c.code);
-        let products = [];
-        if (codes.length > 0) {
-            const { data } = await sb.from('admin_products').select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order').in('category', codes);
-            products = data || [];
-        }
+        const r1 = await sb.from('admin_categories').select('code').eq('top_category_code', '22222');
+        if (r1.error) return; // 무해 — 하드코딩 부자재로 충분
+        const subCats = r1.data || [];
+        // 2026-05-12: 빈 코드 / 공백 / 콤마 포함 코드 필터링 — PostgREST IN 절 깨짐 방지
+        const codes = subCats.map(c => (c.code || '').trim())
+                              .filter(c => c && !c.includes(',') && !c.includes('(') && !c.includes(')'));
+        if (codes.length === 0) return;
+        const r2 = await sb.from('admin_products')
+            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order')
+            .in('category', codes);
+        if (r2.error) return;
+        const products = r2.data || [];
         const classified = products
             .filter(p => !(p.code||'').startsWith('ua_'))
             .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
@@ -368,7 +373,12 @@ async function loadDbFabrics() {
 
         DB_ACCESSORIES = classified.filter(p => p.group === '__accessory__');
         renderAccessoryOptions();
-    } catch(e) { console.error('[loadDbFabrics]', e); }
+    } catch(e) {
+        // 부자재는 HTML에 하드코딩돼 있어 DB 실패해도 동작에 영향 없음
+        if (e && e.message && !/aborted/i.test(e.message)) {
+            console.warn('[loadDbFabrics] DB 부자재 로드 실패 (하드코딩 유지):', e.message);
+        }
+    }
 }
 
 // 고리 옵션 렌더 (DB_HOOKS) — DB 고리 추가 항목 (HTML 하드코딩 7개 외)
