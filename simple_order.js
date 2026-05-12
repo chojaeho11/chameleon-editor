@@ -1454,6 +1454,25 @@
         return /포토존|글씨|photo\s*zone|letter\s*sign/i.test(name);
     }
 
+    // 2026-05-13: 허니콤보드 카테고리 감지 (hb_* — 가벽/박스/자유인쇄커팅/원판 등 전체)
+    function _soIsHoneycombProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        if (code.startsWith('hb_')) return true;
+        if (cat.indexOf('hb_') === 0 || cat.indexOf('honeycomb') >= 0) return true;
+        if (name.indexOf('허니콤') >= 0 || name.indexOf('honeycomb') >= 0) return true;
+        return false;
+    }
+
+    // 2026-05-13: 배송만 (시공 없이) 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 상품
+    // 수도권 배송 10만 / 지방 용차 20만 / 묶음배송 무료 옵션 노출
+    function _soUsesDeliveryShipping(p) {
+        if (!p) return false;
+        return _soIsHoneycombProduct(p) && !_soIsWallProduct(p);
+    }
+
     // 2026-05-13: 허니콤 박스 감지 (hb_bx_*)
     // 가로×세로×높이 입력 → calculateBoxPrice 로 자동 계산 (product.price = 시트당 단가)
     function _soIsBoxProduct(p) {
@@ -2165,16 +2184,17 @@
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
         var qtySec = document.getElementById('soQtySection');
         if (qtySec) qtySec.style.display = state.isWall ? 'none' : '';
-        // 시공/배송 일정 섹션 (가벽·포토존·자유인쇄커팅 모두 표시)
+        // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
+        state.isDeliveryOnly = _soUsesDeliveryShipping(p);
+        // 시공/배송 일정 섹션 (가벽·포토존·배송전용 허니콤 모두 표시)
         var schedSec = document.getElementById('soScheduleSection');
-        if (schedSec) schedSec.style.display = (state.isWall || state.isPhotozone || state.isCutPrint) ? '' : 'none';
-        // 2026-05-13: 자유인쇄커팅이면 시공 옵션 숨기고 배송 옵션만 표시 + 묶음배송 버튼 표시
-        var installShipKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
+        if (schedSec) schedSec.style.display = (state.isWall || state.isPhotozone || state.isDeliveryOnly) ? '' : 'none';
+        // 2026-05-13: 배송전용 허니콤이면 시공 옵션 숨기고 배송 옵션만 표시 + 묶음배송 버튼 표시
         var deliveryShipKeys = ['metro_delivery', 'regional_delivery'];
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             var k = b.dataset.ship;
-            if (state.isCutPrint) {
-                // 자유인쇄커팅: self_pickup + delivery 만 표시
+            if (state.isDeliveryOnly) {
+                // 가벽 외 허니콤: self_pickup + delivery 만 표시
                 if (k === 'self_pickup' || deliveryShipKeys.indexOf(k) >= 0) b.style.display = '';
                 else b.style.display = 'none';
             } else {
@@ -2187,10 +2207,10 @@
             b.style.opacity = '1';
             b.style.pointerEvents = '';
         });
-        // 묶음배송 버튼 (자유인쇄커팅만)
+        // 묶음배송 버튼 (배송전용 허니콤 전체)
         var bundleBtn = document.getElementById('soBundleShipBtn');
         if (bundleBtn) {
-            bundleBtn.style.display = state.isCutPrint ? '' : 'none';
+            bundleBtn.style.display = state.isDeliveryOnly ? '' : 'none';
             bundleBtn.style.background = '#f0fdf4';
             bundleBtn.style.color = '#15803d';
             bundleBtn.style.borderStyle = 'dashed';
