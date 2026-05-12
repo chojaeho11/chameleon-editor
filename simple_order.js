@@ -95,21 +95,38 @@
         const lang = getLang();
         if (lang === 'ja' && p.name_jp) return p.name_jp;
         if (lang === 'en' && p.name_us) return p.name_us;
-        return p.name_kr || p.name || '';
+        // 사이즈 표기 () 제거 — 깔끔한 이름만
+        const raw = p.name_kr || p.name || '';
+        return raw.replace(/\s*\([\d.,]+\s*[×xX]\s*[\d.,]+\s*(ft|in|mm|cm|m)\)/gi, '').trim();
     }
     function pickDesc(p) {
         const lang = getLang();
-        if (lang === 'ja' && p.description_jp) return p.description_jp;
-        if (lang === 'en' && p.description_us) return p.description_us;
-        return p.description_kr || p.description || '';
+        let raw = '';
+        if (lang === 'ja' && p.description_jp) raw = p.description_jp;
+        else if (lang === 'en' && p.description_us) raw = p.description_us;
+        else raw = p.description_kr || p.description || '';
+        return raw;
+    }
+    // 2026-05-12: description 이 HTML 마크업인 경우가 많아 — 텍스트만 추출 + 축약
+    function pickDescPlain(p, maxLen) {
+        const raw = pickDesc(p);
+        if (!raw) return '';
+        const stripped = String(raw)
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+            .replace(/\s+/g, ' ').trim();
+        const limit = maxLen || 120;
+        if (stripped.length > limit) return stripped.slice(0, limit) + '…';
+        return stripped;
     }
     function pickPrice(p) {
-        const lang = getLang();
-        if (lang === 'ja' && p.price_jp) return p.price_jp * 10;  // JPY→KRW 환산 안 함, 원 단위로 fmtPrice가 처리
         return p.price || 0;
     }
     function pickImg(p) {
-        return p.image_url || p.image_kr || p.image || p.thumb_url || '';
+        // admin_products 의 실제 이미지 필드는 'img' — 우선 사용
+        return p.img || p.image_url || p.image_kr || p.image || p.thumb_url || '';
     }
 
     // ─────────────────────────────────────────────
@@ -437,11 +454,18 @@
 
         // 2) 렌더
         document.getElementById('soName').textContent = pickName(p);
-        document.getElementById('soDesc').textContent = pickDesc(p);
+        // 2026-05-12: description 은 HTML 마크업인 경우가 많아 — 텍스트만 짧게 추출
+        document.getElementById('soDesc').textContent = pickDescPlain(p, 120);
         const img = document.getElementById('soImg');
         const imgUrl = pickImg(p);
-        if (imgUrl) { img.src = imgUrl; img.style.display = ''; }
-        else { img.style.display = 'none'; }
+        if (imgUrl) {
+            img.src = imgUrl;
+            img.style.display = '';
+            // 이미지 로드 실패 시 자동 숨김
+            img.onerror = () => { img.style.display = 'none'; };
+        } else {
+            img.style.display = 'none';
+        }
         document.getElementById('soQty').value = 1;
         state.qty = 1;
         recalc();
