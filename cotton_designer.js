@@ -1158,6 +1158,91 @@ window._cpCartOpen = function() {
         document.addEventListener('DOMContentLoaded', init);
     } else { init(); }
 })();
+
+// ════════════════════════════════════════════════════
+// 2026-05-13: 카테고리 nav 동적 로드 — admin_top_categories 에서 (메인 페이지와 동일)
+// 각 버튼 클릭 → 메인페이지(/) navigate + sessionStorage 에 코드 저장
+// main.js 가 pendingTopCat 보고 productPickerModal 자동 열어 해당 탭 클릭
+// ════════════════════════════════════════════════════
+(function populateCdCategoryNav() {
+    var _populated = false;
+    async function populate() {
+        var navEl = document.getElementById('cdCategoryNav');
+        if (!navEl || _populated) return;
+        var sb = window.sb || window.__unified_sb;
+        if (!sb && window.supabase && window.supabase.createClient) {
+            try {
+                sb = window.supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+                );
+                window.__unified_sb = sb;
+            } catch (e) {}
+        }
+        if (!sb) { setTimeout(populate, 300); return; }
+        try {
+            var res = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
+            var topCats = res && res.data;
+            if (!topCats || !topCats.length) return;
+            var lang = window.__CD_LANG || 'ko';
+            navEl.innerHTML = '<div style="display:inline-flex; gap:8px; align-items:center;">' +
+                topCats.map(function (top) {
+                    var name = top.name;
+                    if (lang === 'ja' && top.name_jp) name = top.name_jp;
+                    else if (lang === 'en' && top.name_us) name = top.name_us;
+                    var safe = String(name || '').replace(/[<>"'&]/g, function (c) {
+                        return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
+                    });
+                    // 패브릭 카테고리(22222) 는 현재 페이지 — active 강조
+                    var isFabric = (top.code === '22222');
+                    var bg = isFabric ? '#dbeafe' : '#f3f4f6';
+                    var color = isFabric ? '#1d4ed8' : '#374151';
+                    var weight = isFabric ? '700' : '600';
+                    return '<button type="button" class="cd-nav-btn" data-top-code="' + String(top.code || '').replace(/"/g,'&quot;') + '" ' +
+                        'style="display:inline-block; padding:8px 14px; border-radius:20px; background:' + bg + '; color:' + color + '; border:none; cursor:pointer; font-size:13px; font-weight:' + weight + '; white-space:nowrap; transition:all 0.15s;" ' +
+                        (isFabric ? '' :
+                            'onmouseover="this.style.background=\'#dbeafe\'; this.style.color=\'#1d4ed8\';" ' +
+                            'onmouseout="this.style.background=\'#f3f4f6\'; this.style.color=\'#374151\';"') +
+                        '>' + safe + '</button>';
+                }).join('') +
+                '</div>';
+            // 클릭 핸들러
+            navEl.querySelectorAll('.cd-nav-btn').forEach(function (btn) {
+                btn.onclick = function () {
+                    var code = btn.dataset.topCode;
+                    // 패브릭은 현재 페이지 — 아무 동작 없음 (또는 새로고침)
+                    if (code === '22222') {
+                        // 이미 /fabric 에 있음 — scroll to top
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        return;
+                    }
+                    // 특수 케이스 (메인 페이지의 분기와 동일)
+                    var langMap = { ja:'ja', en:'en', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'ko' };
+                    var psLang = langMap[lang] || '';
+                    if (code === 'paper_display') {
+                        location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '');
+                        return;
+                    }
+                    if (code === 'Wholesale Board Prices') {
+                        location.href = '/raw-board' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '');
+                        return;
+                    }
+                    if (code === 'user_artwork') {
+                        location.href = '/#artworkMarketBanner';
+                        return;
+                    }
+                    // 일반 카테고리: 메인 페이지로 + sessionStorage 에 코드
+                    try { sessionStorage.setItem('pendingTopCat', code); } catch (e) {}
+                    location.href = '/';
+                };
+            });
+            _populated = true;
+        } catch (e) { console.warn('[cd-nav]', e); }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', populate);
+    } else { populate(); }
+})();
 window._cpCartClose = function() {
     document.getElementById('cartOverlay').classList.remove('open');
     document.getElementById('cartDrawer').classList.remove('open');
