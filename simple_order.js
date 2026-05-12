@@ -615,13 +615,41 @@
         const buf = await file.arrayBuffer();
         const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
         const page = await pdf.getPage(1);
-        // 미리보기는 적당한 해상도 (모달 안 표시용)
+        // PDF 페이지의 실제 사이즈 (pt 단위 → mm 변환)
+        const vp1 = page.getViewport({ scale: 1 });
+        const widthMm = vp1.width * 25.4 / 72;
+        const heightMm = vp1.height * 25.4 / 72;
+        // 렌더 — 적당한 해상도 (모달 미리보기용)
         const viewport = page.getViewport({ scale: 1.5 });
         const canvas = document.createElement('canvas');
         canvas.width = Math.round(viewport.width);
         canvas.height = Math.round(viewport.height);
         await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-        return canvas.toDataURL('image/png');
+        return {
+            dataUrl: canvas.toDataURL('image/png'),
+            widthMm: Math.round(widthMm),
+            heightMm: Math.round(heightMm),
+        };
+    }
+
+    // 이미지 (PNG/JPG) — 픽셀 사이즈만 추출 (DPI 불명 — 환산 불가)
+    function imageDataUrlWithDims(file) {
+        return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = e => {
+                const dataUrl = e.target.result;
+                const i = new Image();
+                i.onload = () => resolve({
+                    dataUrl: dataUrl,
+                    widthPx: i.naturalWidth,
+                    heightPx: i.naturalHeight,
+                });
+                i.onerror = () => resolve({ dataUrl: dataUrl, widthPx: 0, heightPx: 0 });
+                i.src = dataUrl;
+            };
+            r.onerror = reject;
+            r.readAsDataURL(file);
+        });
     }
 
     async function handleFile(file) {
@@ -640,19 +668,26 @@
         }
         state.file = file;
         state.thumbDataUrl = null;
+        state.fileWidthMm = null;
+        state.fileHeightMm = null;
+        state.fileWidthPx = null;
+        state.fileHeightPx = null;
+        state.fileKind = isPdf ? 'pdf' : (isPng ? 'png' : 'jpg');
 
         try {
-            if (isPng || isJpg) {
-                state.thumbDataUrl = await new Promise((resolve, reject) => {
-                    const r = new FileReader();
-                    r.onload = e => resolve(e.target.result);
-                    r.onerror = reject;
-                    r.readAsDataURL(file);
-                });
-            } else if (isPdf) {
+            if (isPdf) {
                 showStatus(tr('PDF 미리보기 변환 중...', 'PDFプレビュー変換中...', 'Converting PDF preview...'), 'ok');
-                state.thumbDataUrl = await pdfFirstPageToDataUrl(file);
+                const r = await pdfFirstPageToDataUrl(file);
+                state.thumbDataUrl = r.dataUrl;
+                state.fileWidthMm = r.widthMm;
+                state.fileHeightMm = r.heightMm;
                 hideStatus();
+            } else {
+                // PNG / JPG
+                const r = await imageDataUrlWithDims(file);
+                state.thumbDataUrl = r.dataUrl;
+                state.fileWidthPx = r.widthPx;
+                state.fileHeightPx = r.heightPx;
             }
         } catch (e) {
             console.warn('[simple_order] thumb 생성 실패:', e);
@@ -666,15 +701,30 @@
         if (!zone) return;
         zone.classList.add('done');
 
-        // 상품 인쇄 사이즈 (mm 단위)
+        // 1) 사이즈 결정 — 우선순위:
+        //    PDF면: PDF 페이지의 실제 mm
+        //    PNG/JPG면: 이미지 픽셀 → 300 DPI 가정해 mm 환산 (인쇄용 표준 가정)
+        //    추출 실패 시: 상품 스펙 (p.w_mm/h_mm), 그것도 없으면 기본 300×600
         const p = state.product || {};
-        const w_mm = p.w_mm || 300;
-        const h_mm = p.h_mm || 600;
-        const w_cm = w_mm / 10;
-        const h_cm = h_mm / 10;
+        let w_mm, h_mm, sizeSource;
+        if (state.fileWidthMm && state.fileHeightMm) {
+            w_mm = state.fileWidthMm;
+            h_mm = state.fileHeightMm;
+            sizeSource = 'pdf';
+        } else if (state.fileWidthPx && state.fileHeightPx) {
+            // 300 DPI 가정: px / 300 * 25.4 = mm
+            w_mm = Math.round(state.fileWidthPx / 300 * 25.4);
+            h_mm = Math.round(state.fileHeightPx / 300 * 25.4);
+            sizeSource = 'img300';
+        } else {
+            w_mm = p.w_mm || 300;
+            h_mm = p.h_mm || 600;
+            sizeSource = 'product';
+        }
+        const w_cm = (w_mm / 10).toFixed(1).replace(/\.0$/, '');
+        const h_cm = (h_mm / 10).toFixed(1).replace(/\.0$/, '');
 
-        // 프리뷰 영역 — 인쇄 사이즈 비율에 맞춰 프레임
-        //   max-width 500px / max-height 460px 안에서 비율 맞춤
+        // 2) 프리뷰 영역 — 파일 비율에 맞춰 프레임 크기 결정
         const aspectRatio = w_mm / h_mm;
         const maxW = 500;
         const maxH = 460;
@@ -684,29 +734,50 @@
             frameH = maxH;
             frameW = frameH * aspectRatio;
         }
+        frameW = Math.round(frameW);
+        frameH = Math.round(frameH);
 
         const thumbHtml = state.thumbDataUrl
-            ? `<img src="${state.thumbDataUrl}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" />`
+            ? `<img src="${state.thumbDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" />`
             : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:48px;color:#dc2626;">📄</div>`;
 
         const sizeMB = (state.file.size / 1024 / 1024).toFixed(2);
 
+        // 사이즈 출처에 따라 라벨 다르게
+        let sizeLabelHtml;
+        if (sizeSource === 'pdf') {
+            sizeLabelHtml = `📐 ${tr('파일 사이즈', 'ファイルサイズ', 'File size')}: <b>${w_cm} × ${h_cm} cm</b> <span style="opacity:0.7;font-size:11px;">(${w_mm} × ${h_mm} mm, PDF)</span>`;
+        } else if (sizeSource === 'img300') {
+            sizeLabelHtml = `📐 ${tr('파일 사이즈', 'ファイルサイズ', 'File size')}: <b>${w_cm} × ${h_cm} cm</b> <span style="opacity:0.7;font-size:11px;">(${state.fileWidthPx} × ${state.fileHeightPx} px @ 300 DPI 가정)</span>`;
+        } else {
+            sizeLabelHtml = `📐 ${tr('출력 사이즈', '出力サイズ', 'Print size')}: <b>${w_cm} × ${h_cm} cm</b>`;
+        }
+
+        // 상품 기본 사이즈와 차이 비교 (있는 경우)
+        let mismatchHtml = '';
+        if (p.w_mm && p.h_mm && (sizeSource === 'pdf' || sizeSource === 'img300')) {
+            const prodW = p.w_mm, prodH = p.h_mm;
+            const wDiff = Math.abs(w_mm - prodW) / prodW;
+            const hDiff = Math.abs(h_mm - prodH) / prodH;
+            if (wDiff > 0.05 || hDiff > 0.05) {
+                mismatchHtml = `<div style="font-size:11px;color:#dc2626;margin-top:4px;text-align:center;">⚠️ ${tr('상품 권장 사이즈', '推奨サイズ', 'Recommended')}: ${prodW/10} × ${prodH/10} cm</div>`;
+            }
+        }
+
         zone.innerHTML = `
             <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
 
-            <!-- 인쇄 사이즈 라벨 + 줄자 -->
+            <!-- 사이즈 라벨 -->
             <div class="so-size-label-row">
-                <span class="so-size-tag">📐 ${tr('실제 출력 사이즈', '実際の出力サイズ', 'Actual print size')}: <b>${w_cm} × ${h_cm} cm</b></span>
+                <span class="so-size-tag">${sizeLabelHtml}</span>
+                ${mismatchHtml}
             </div>
 
-            <!-- 프레임 (인쇄 사이즈 비율) + 줄자 -->
+            <!-- 프레임 + 줄자 -->
             <div class="so-print-frame-wrap">
-                <!-- 상단 줄자 -->
                 <div class="so-ruler so-ruler-top" data-width="${w_cm}" style="width:${frameW}px;"></div>
                 <div style="display:flex; align-items:flex-start;">
-                    <!-- 좌측 줄자 -->
                     <div class="so-ruler so-ruler-left" data-height="${h_cm}" style="height:${frameH}px;"></div>
-                    <!-- 인쇄 영역 -->
                     <div class="so-print-frame" style="width:${frameW}px; height:${frameH}px;">
                         ${thumbHtml}
                     </div>
@@ -729,7 +800,7 @@
         `;
         zone.onclick = null;
         wireUploadEvents();
-        drawRulers(w_cm, h_cm, frameW, frameH);
+        drawRulers(parseFloat(w_cm), parseFloat(h_cm), frameW, frameH);
         updateButtons();
     }
 
@@ -1293,5 +1364,5 @@
         injectStyles(); injectModal(); setupRouting();
     }
 
-    console.log('[simple_order] v=6 (PDF preview + ruler + cart drawer + category home) loaded.');
+    console.log('[simple_order] v=7 (actual file size detection for frame/ruler) loaded.');
 })();
