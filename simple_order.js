@@ -651,7 +651,7 @@
         <div id="soBackUploadWrap" style="display:none; margin-top:20px; padding:14px; background:#ede9fe; border:2px solid #7c3aed; border-radius:14px;">
           <div class="so-upload-section-label" style="color:#5b21b6; font-weight:800;">📤 ${tr('뒷면 디자인 파일 업로드', '裏面デザインファイル', 'Upload BACK side design file')}</div>
           <div id="soBackUpload" class="so-upload" onclick="document.getElementById('soBackFile').click()" style="background:#fff; max-width:none;">
-            <input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
+            <input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soOnBackFileChange(this.files)" style="display:none" />
             <div class="so-upload-icon" style="color:#7c3aed;">📤</div>
             <div class="so-upload-title">${tr('뒷면 이미지를 올려주세요', '裏面画像をアップロード', 'Upload back side')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
@@ -709,7 +709,7 @@
             <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('인쇄면', '印刷面', 'Side')}</label>
             <div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
               <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')" style="padding:8px 10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('단면', '片面', 'Single')}</button>
-              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')" style="padding:8px 10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('양면 (가격 2배)', '両面 (2倍)', 'Double (x2)')}</button>
+              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')" style="padding:8px 10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('양면', '両面', 'Double')}</button>
             </div>
           </div>
         </div>
@@ -1066,7 +1066,7 @@
         // 2) 프리뷰 영역 — 파일 비율에 맞춰 프레임 크기 결정
         const aspectRatio = w_mm / h_mm;
         const maxW = 500;
-        const maxH = 460;
+        const maxH = 300;
         let frameW = maxW;
         let frameH = frameW / aspectRatio;
         if (frameH > maxH) {
@@ -1629,7 +1629,7 @@
         }
         thumbHtml += '</div>';
         zone.innerHTML =
-            '<input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />' +
+            '<input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soOnBackFileChange(this.files)" style="display:none" />' +
             thumbHtml +
             '<div style="font-weight:700; color:#451a03; font-size:13px;">✅ ' + safe + '</div>' +
             '<div style="font-size:11px; color:#6b7280; margin-top:2px;">' + sizeMB + ' MB</div>' +
@@ -2662,7 +2662,7 @@
                 var pname = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
                 var lines = ['#' + (idx + 1) + ' ' + pname + ' x ' + (it.qty || 1)];
                 if (it.wallSize) {
-                    var sideLbl = (it.wallSide === 'double') ? ' / 양면 (가격 2배)' : ' / 단면';
+                    var sideLbl = (it.wallSide === 'double') ? ' / 양면' : ' / 단면';
                     lines.push('  · 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm' + sideLbl);
                     if (parseFloat(it.wallSize.h_m) === 3) {
                         var hWidth = it.wallSize.w_m || 1;
