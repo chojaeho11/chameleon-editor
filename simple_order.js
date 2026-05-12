@@ -285,13 +285,13 @@
 
 /* 카트 드로어 — 우측 슬라이드 */
 .so-cart-drawer-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50100;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 80000;
     display: none; opacity: 0; transition: opacity 0.25s;
 }
 .so-cart-drawer-overlay.open { display: block; opacity: 1; }
 .so-cart-drawer {
     position: fixed; right: 0; top: 0; height: 100%; width: 440px;
-    max-width: 100%; background: #fff; z-index: 50101;
+    max-width: 100%; background: #fff; z-index: 80001;
     box-shadow: -8px 0 40px rgba(0,0,0,0.2);
     transform: translateX(100%); transition: transform 0.3s ease;
     display: flex; flex-direction: column;
@@ -724,8 +724,17 @@
 
         <div class="so-section so-price-box">
           <div class="so-section-title">${tr('가격', '価格', 'Price')}</div>
-          <div class="so-price-row"><span>${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
-          <div class="so-price-row discount"><span>${tr('수량 할인', '数量割引', 'Discount')} <span class="so-tier-tag" id="soTier">0%</span></span><span id="soDisc">-0원</span></div>
+          <div class="so-price-row"><span id="soUnitLabel">${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
+          <!-- 가벽 사이즈 라인 (가벽 상품만) -->
+          <div class="so-price-row" id="soWallSizeRow" style="display:none;"><span>${tr('가벽 사이즈', '壁面サイズ', 'Wall')}</span><span id="soWallSizeText">-</span></div>
+          <!-- 옵션별 라인 (동적) -->
+          <div id="soAddonBreakdown"></div>
+          <!-- 수량 할인 (가벽 아닐 때만) -->
+          <div class="so-price-row discount" id="soQtyDiscRow"><span>${tr('수량 할인', '数量割引', 'Discount')} <span class="so-tier-tag" id="soTier">0%</span></span><span id="soDisc">-0원</span></div>
+          <!-- 구독자 할인 (PRO 회원) -->
+          <div class="so-price-row discount" id="soProDiscRow" style="display:none;"><span>${tr('PRO 구독자 할인', 'PRO会員割引', 'PRO discount')} <span class="so-tier-tag" style="background:#7c3aed; color:#fff;">10%</span></span><span id="soProDisc">-0원</span></div>
+          <!-- 배송/시공 라인 -->
+          <div class="so-price-row" id="soShipRow" style="display:none;"><span id="soShipLabel">${tr('배송/시공', '配送', 'Shipping')}</span><span id="soShipAmount">-</span></div>
           <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
         </div>
 
@@ -1156,7 +1165,7 @@
         const unit = pickPrice(state.product);
         let qty, subtotal, tierPct, discount;
         if (state.isWall) {
-            // 2026-05-13: 가벽은 가로(m) 만큼이 수량, 수량 할인 없음
+            // 2026-05-13: 가벽 — 가로(m) = 수량, 수량 할인 없음
             qty = state.wallWidth || 1;
             state.qty = qty;
             subtotal = unit * qty;
@@ -1169,28 +1178,64 @@
             tierPct = tier.pct;
             discount = Math.round(subtotal * tierPct / 100);
         }
-        // 2026-05-13: 추가 옵션(addon) 가격 합산
+        // 옵션별 breakdown (이름 + 가격)
+        const addonBreakdownLines = [];
         let addonTotal = 0;
         try {
             Object.values(state.selectedAddons || {}).forEach(function (code) {
-                var addon = (window.ADDON_DB || {})[code];
+                const addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
-                var aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
-                addonTotal += (addon.price || 0) * aQty;
+                const aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+                const line = (addon.price || 0) * aQty;
+                addonTotal += line;
+                let nm = addon.name || code;
+                addonBreakdownLines.push(
+                    '<div class="so-price-row"><span>· ' + nm + ' × ' + aQty + '</span><span>+' + fmtPrice(line) + '</span></div>'
+                );
             });
         } catch (e) {}
-        const final = subtotal - discount + addonTotal;
 
+        // 배송/시공 비용 (야간 시간 보정 포함)
+        const shipFee = _soComputeShipFee();
+        state.shipFee = shipFee;
+
+        // 구독자 할인 (PRO 회원): 상품가 + 옵션 = 할인 적용 대상. 배송은 제외.
+        const isPro = !!window.isProSubscriber;
+        const beforePro = subtotal - discount + addonTotal;
+        const proDiscount = isPro ? Math.round(beforePro * 0.10) : 0;
+
+        const final = beforePro - proDiscount + shipFee;
+
+        // 렌더
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        const setHTML = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+        const showRow = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; };
+
         if (state.isWall) {
-            // 단가 자리에 "단가 × 가로(m)" 표시
             setText('soUnit', fmtPrice(unit) + ' × ' + qty + 'm = ' + fmtPrice(subtotal));
+            setText('soUnitLabel', tr('단가', '単価', 'Unit'));
+            showRow('soWallSizeRow', true);
+            setText('soWallSizeText', qty + 'm × ' + (state.wallHeight || 2.4) + 'm');
         } else {
             setText('soUnit', fmtPrice(unit));
+            showRow('soWallSizeRow', false);
         }
+        // 옵션 breakdown 라인
+        setHTML('soAddonBreakdown', addonBreakdownLines.join(''));
+        // 수량 할인: 가벽이면 행 숨김 (0% 표시 제거)
+        showRow('soQtyDiscRow', !state.isWall && tierPct > 0);
         setText('soDisc', '-' + fmtPrice(discount));
-        setText('soTotal', fmtPrice(final));
         setText('soTier', tierPct + '%');
+        // 구독자 할인
+        showRow('soProDiscRow', proDiscount > 0);
+        setText('soProDisc', '-' + fmtPrice(proDiscount));
+        // 배송/시공
+        showRow('soShipRow', shipFee > 0);
+        var shipName = (window.SHIP_OPTS && window.SHIP_OPTS[state.shipMethod] && window.SHIP_OPTS[state.shipMethod].label_ko) || '';
+        setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
+        setText('soShipAmount', '+' + fmtPrice(shipFee));
+        // 합계
+        setText('soTotal', fmtPrice(final));
 
         // 활성 티어 하이라이트
         const tbl = document.getElementById('soTierTable');
@@ -1219,7 +1264,7 @@
         return /포토존|글씨|photo\s*zone|letter\s*sign/i.test(name);
     }
 
-    // 2026-05-13: 배송 옵션별 가격 + breakdown 정보
+    // 2026-05-13: 배송 옵션별 가격 + breakdown 정보 (window 노출 — recalc 가 라벨 사용)
     var SHIP_OPTS = {
         self_pickup:          { fee: 0,      label_ko: '직접 수령',           parts: [] },
         metro_install:        { fee: 100000, label_ko: '수도권 설치',         parts: [['수도권 설치', 100000]] },
@@ -1228,6 +1273,34 @@
         regional_truck:       { fee: 200000, label_ko: '지방 용차배송',       parts: [['지방 용차배송', 200000]] },
         regional_install:     { fee: 700000, label_ko: '지방 설치배송',       parts: [['지방 설치배송', 700000]] }
     };
+    window.SHIP_OPTS = SHIP_OPTS;
+
+    // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
+    function _soComputeShipFee() {
+        var method = state.shipMethod || 'self_pickup';
+        var opt = SHIP_OPTS[method] || SHIP_OPTS.self_pickup;
+        var baseFee = opt.fee || 0;
+        // 시간이 야간 이고 옵션이 metro_install 이면 → 20만원 (야간/주말 설치 가격으로 자동 업그레이드)
+        var timeEl = document.getElementById('soScheduleTime');
+        var timeVal = timeEl ? timeEl.value : '';
+        var dateEl = document.getElementById('soScheduleDate');
+        var dateVal = dateEl ? dateEl.value : '';
+        var isWeekend = false;
+        if (dateVal) {
+            try {
+                var dow = new Date(dateVal + 'T00:00:00').getDay();
+                isWeekend = (dow === 0 || dow === 6);
+            } catch (e) {}
+        }
+        var nightOrWeekend = (timeVal === 'night') || isWeekend;
+        if (method === 'metro_install' && nightOrWeekend) {
+            baseFee = 200000;
+            state._shipUpgradeReason = '야간/주말 설치';
+        } else {
+            state._shipUpgradeReason = null;
+        }
+        return baseFee;
+    }
 
     // 2026-05-13: 영업일 기준 N일 후 (주말 제외) — YYYY-MM-DD
     function _soAddBusinessDays(startDate, days) {
@@ -1275,23 +1348,30 @@
         _soUpdateShipBreakdown();
     };
 
-    // 2026-05-13: 가격 breakdown 박스 갱신
+    // 2026-05-13: 가격 breakdown 박스 갱신 (시간 변경 등에서 호출)
     window._soUpdateShipBreakdown = function () {
         var box = document.getElementById('soShipBreakdown');
         if (!box) return;
         var opt = SHIP_OPTS[state.shipMethod];
-        if (!opt || !opt.parts || !opt.parts.length) { box.innerHTML = ''; return; }
+        if (!opt || !opt.parts || !opt.parts.length) { box.innerHTML = ''; recalc(); return; }
         var sd = document.getElementById('soScheduleDate');
         var st = document.getElementById('soScheduleTime');
         var rd = document.getElementById('soRemovalDate');
         var rt = document.getElementById('soRemovalTime');
+        // 야간/주말 자동 보정 (수도권 설치만)
+        var actualFee = _soComputeShipFee();
+        var parts = opt.parts.slice();
+        if (state.shipMethod === 'metro_install' && actualFee === 200000) {
+            parts = [['수도권 야간/주말 설치 (자동 적용)', 200000]];
+        }
         var lines = [];
         lines.push('<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📋 ' + tr('비용 안내', '料金案内', 'Cost') + '</div>');
-        opt.parts.forEach(function (p) {
+        parts.forEach(function (p) {
             lines.push('<div style="display:flex; justify-content:space-between;"><span>· ' + p[0] + '</span><span style="font-weight:700;">' + fmtPrice(p[1]) + '</span></div>');
         });
-        if (opt.parts.length > 1) {
-            lines.push('<div style="display:flex; justify-content:space-between; border-top:1px solid #c7d2fe; padding-top:4px; margin-top:4px;"><span style="font-weight:800;">' + tr('합계', '合計', 'Total') + '</span><span style="font-weight:900; color:#dc2626;">' + fmtPrice(opt.fee) + '</span></div>');
+        if (parts.length > 1) {
+            var sum = parts.reduce(function (s, p) { return s + p[1]; }, 0);
+            lines.push('<div style="display:flex; justify-content:space-between; border-top:1px solid #c7d2fe; padding-top:4px; margin-top:4px;"><span style="font-weight:800;">' + tr('합계', '合計', 'Total') + '</span><span style="font-weight:900; color:#dc2626;">' + fmtPrice(sum) + '</span></div>');
         }
         if (sd && sd.value) {
             var timeLabel = { am:'오전', pm:'오후', night:'야간', any:'시간상관없음', '':'시간 미지정' }[st ? st.value : ''] || '';
@@ -1302,22 +1382,13 @@
             lines.push('<div style="font-size:11px;">🔧 ' + tr('철거', '撤去', 'Removal') + ': ' + rd.value + (rTimeLabel ? ' / ' + rTimeLabel : '') + '</div>');
         }
         box.innerHTML = lines.join('');
+        // 가격 박스도 재계산 (배송비 반영)
+        recalc();
     };
 
     function recalcWithShipping() {
-        var opt = SHIP_OPTS[state.shipMethod] || SHIP_OPTS.self_pickup;
-        state.shipFee = opt.fee || 0;
+        // recalc() 가 _soComputeShipFee() 로 직접 가격 계산하므로 여기서는 그냥 호출만
         recalc();
-        // 합계에 배송비 추가
-        if (state.shipFee > 0) {
-            try {
-                var totalEl = document.getElementById('soTotal');
-                if (totalEl) {
-                    var currentTotal = parseInt(totalEl.textContent.replace(/[^\d]/g, '')) || 0;
-                    totalEl.textContent = fmtPrice(currentTotal + state.shipFee) + ' (' + tr('배송포함', '配送込', 'incl. ship') + ')';
-                }
-            } catch (e) {}
-        }
     }
 
     // 2026-05-13: 가벽 전용 기본 옵션 (admin_addons 데이터 없어도 강제 표시)
@@ -1689,9 +1760,12 @@
         var rtEl = document.getElementById('soRemovalTime');
         var shipping = null;
         if (state.shipMethod && state.shipMethod !== 'self_pickup') {
+            // 2026-05-13: 야간/주말 자동 보정된 실제 fee 사용
+            var actualFee = (typeof _soComputeShipFee === 'function') ? _soComputeShipFee() : (state.shipFee || 0);
             shipping = {
                 method: state.shipMethod,
-                fee: state.shipFee || 0,
+                fee: actualFee,
+                upgrade_reason: state._shipUpgradeReason || null,
                 delivery_date: sdEl ? sdEl.value : '',
                 delivery_time: stEl ? stEl.value : '',
                 removal_date: rdEl ? rdEl.value : '',
@@ -2068,16 +2142,19 @@
         if (_soIsFabricItem(it)) return it.price || 0;
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
-        // 수량 할인 (1-2 0%, 3-9 20%, 10-100 30%, 101-500 40%, 501+ 50%)
+        // 가벽 여부 판정 (item 에 wallSize 가 있으면 가벽)
+        var isWall = !!(it.wallSize);
         var tierPct = 0;
-        if (qty >= 501) tierPct = 50;
-        else if (qty >= 101) tierPct = 40;
-        else if (qty >= 10) tierPct = 30;
-        else if (qty >= 3) tierPct = 20;
+        if (!isWall) {
+            if (qty >= 501) tierPct = 50;
+            else if (qty >= 101) tierPct = 40;
+            else if (qty >= 10) tierPct = 30;
+            else if (qty >= 3) tierPct = 20;
+        }
         var subtotal = unit * qty;
         var discount = Math.round(subtotal * tierPct / 100);
         var base = subtotal - discount;
-        // 2026-05-13: addon 가격 (각 addon 의 자체 수량 반영)
+        // addon 가격
         if (it.selectedAddons && window.ADDON_DB) {
             Object.values(it.selectedAddons).forEach(function (code) {
                 var addon = window.ADDON_DB[code];
@@ -2085,6 +2162,14 @@
                 var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
                 base += (addon.price || 0) * aQty;
             });
+        }
+        // 2026-05-13: PRO 구독자 10% 할인 (상품가+옵션 까지만, 배송 제외)
+        if (window.isProSubscriber) {
+            base = base - Math.round(base * 0.10);
+        }
+        // 2026-05-13: 시공/배송비 합산 (item.shipping.fee)
+        if (it.shipping && it.shipping.fee) {
+            base += (it.shipping.fee || 0);
         }
         return base;
     }
