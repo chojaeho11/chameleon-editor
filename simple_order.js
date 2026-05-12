@@ -1647,6 +1647,14 @@
         } catch (e) { console.warn('[so-nav]', e); }
     }
 
+    // 2026-05-13: 외부 코드 (매니저 견적 빠른 주문 등) 가 결제 모달을 띄우기 전 DOM 준비
+    window._soEnsureModalReady = function () {
+        if (!document.getElementById('simpleOrderModal')) {
+            injectStyles();
+            injectModal();
+        }
+    };
+
     window.openSimpleOrderModal = async function(productCode, productData) {
         injectStyles();
         injectModal();
