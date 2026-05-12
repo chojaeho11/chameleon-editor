@@ -733,6 +733,35 @@
           </div>
         </div>
 
+        <!-- 2026-05-13: 허니콤 박스 사이즈 입력 (가로×세로×높이 mm → 자동 단가 계산) -->
+        <div class="so-section" id="soBoxSizeSection" style="display:none;">
+          <div class="so-section-title">📦 ${tr('박스 사이즈 입력', 'ボックスサイズ入力', 'Box Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(mm)</span></div>
+          <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+            <div style="flex:1; text-align:center;">
+              <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '幅 (W)', 'Width (W)')}</div>
+              <input type="number" id="soBoxW" value="400" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
+                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+            </div>
+            <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
+            <div style="flex:1; text-align:center;">
+              <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('높이 (H)', '高さ (H)', 'Height (H)')}</div>
+              <input type="number" id="soBoxH" value="400" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
+                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+            </div>
+            <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
+            <div style="flex:1; text-align:center;">
+              <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('깊이 (D)', '奥行 (D)', 'Depth (D)')}</div>
+              <input type="number" id="soBoxD" value="400" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
+                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+            </div>
+          </div>
+          <div id="soBoxCalcResult" style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:10px; text-align:center;">
+            <div style="font-size:11px; color:#6366f1; font-weight:700; margin-bottom:4px;">💰 ${tr('박스 단가', 'ボックス単価', 'Box unit price')}</div>
+            <div id="soBoxUnitPrice" style="font-size:20px; font-weight:900; color:#1e1b4b;">-</div>
+            <div id="soBoxSheetInfo" style="font-size:10px; color:#64748b; margin-top:4px;"></div>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 상품별 추가 옵션 (admin_addons) -->
         <div class="so-section" id="soAddonSection" style="display:none;">
           <div class="so-section-title">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
@@ -1289,6 +1318,12 @@
             qty = state.qty || 1;
             subtotal = unit * qty;
             state.wallHeightExtra = 0;
+        } else if (state.isBox) {
+            // 허니콤 박스: 가로/세로/높이로 계산된 박스 단가 사용
+            unit = state.boxUnitPrice || 0;
+            qty = state.qty || 1;
+            subtotal = unit * qty;
+            state.wallHeightExtra = 0;
         } else {
             state.wallHeightExtra = 0;
             qty = state.qty;
@@ -1352,6 +1387,11 @@
             setText('soUnitLabel', tr('단가', '単価', 'Unit') + ' (' + cutLabel + ')');
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
+        } else if (state.isBox) {
+            var dimStr = (state.boxW || 0) + '×' + (state.boxH || 0) + '×' + (state.boxD || 0) + 'mm';
+            setText('soUnitLabel', tr('박스 단가', 'ボックス単価', 'Box unit') + ' (' + dimStr + ')');
+            setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
+            showRow('soWallSizeRow', false);
         } else {
             // 2026-05-13: 일반 상품 — 라벨을 단순 "단가"로 리셋 (이전 가벽 상태 잔존 방지)
             setText('soUnitLabel', tr('단가', '単価', 'Unit'));
@@ -1412,6 +1452,30 @@
         if (!p) return false;
         const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
         return /포토존|글씨|photo\s*zone|letter\s*sign/i.test(name);
+    }
+
+    // 2026-05-13: 허니콤 박스 감지 (hb_bx_*)
+    // 가로×세로×높이 입력 → calculateBoxPrice 로 자동 계산 (product.price = 시트당 단가)
+    function _soIsBoxProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        if (code.startsWith('hb_bx')) return true;
+        if (/허니콤\s*박스|honeycomb\s*box/i.test(name)) return true;
+        return false;
+    }
+
+    // 2026-05-13: 박스 가격 계산 (box-nesting.js 동적 임포트)
+    var _soBoxCalcModule = null;
+    async function _soLoadBoxCalc() {
+        if (_soBoxCalcModule) return _soBoxCalcModule;
+        try {
+            _soBoxCalcModule = await import('./box-nesting.js?v=434');
+            return _soBoxCalcModule;
+        } catch (e) {
+            console.warn('[simple_order] box-nesting load failed:', e);
+            return null;
+        }
     }
 
     // 2026-05-13: 허니콤 자유인쇄커팅 감지 (hb_pt_* 또는 제품명에 "자유인쇄")
@@ -1659,6 +1723,58 @@
     };
     window._soUpdatePrice = function () {
         state.wallHeight = parseFloat(document.getElementById('soWallHeight') && document.getElementById('soWallHeight').value) || 2.4;
+        recalc();
+    };
+
+    // 2026-05-13: 박스 사이즈 변경 → 단가 자동 계산
+    window._soOnBoxDimsChange = async function () {
+        var wEl = document.getElementById('soBoxW');
+        var hEl = document.getElementById('soBoxH');
+        var dEl = document.getElementById('soBoxD');
+        if (!wEl || !hEl || !dEl) return;
+        var w = parseInt(wEl.value, 10) || 0;
+        var h = parseInt(hEl.value, 10) || 0;
+        var d = parseInt(dEl.value, 10) || 0;
+        state.boxW = w; state.boxH = h; state.boxD = d;
+        var unitEl = document.getElementById('soBoxUnitPrice');
+        var infoEl = document.getElementById('soBoxSheetInfo');
+        if (w < 50 || h < 50 || d < 50) {
+            if (unitEl) unitEl.textContent = '-';
+            if (infoEl) infoEl.textContent = '';
+            state.boxUnitPrice = 0;
+            recalc();
+            return;
+        }
+        var mod = await _soLoadBoxCalc();
+        if (!mod || !mod.calculateBoxPrice) return;
+        var pricePerSheet = pickPrice(state.product) || 0;
+        var r = mod.calculateBoxPrice(w, h, d, pricePerSheet);
+        if (r.error) {
+            if (unitEl) {
+                unitEl.style.fontSize = '13px';
+                unitEl.textContent = tr('면이 시트(2400×1200mm)보다 큽니다', '面がシート(2400×1200mm)より大きい', 'Face exceeds sheet (2400×1200mm)');
+            }
+            if (infoEl) infoEl.textContent = '';
+            state.boxUnitPrice = 0;
+            state.boxNesting = null;
+            recalc();
+            return;
+        }
+        state.boxUnitPrice = r.totalPrice;
+        state.boxNesting = { sheetCount: r.sheetCount, setsPerSheet: r.setsPerSheet };
+        if (unitEl) {
+            unitEl.style.fontSize = '20px';
+            unitEl.textContent = fmtPrice(r.totalPrice);
+        }
+        if (infoEl) {
+            var sheetLabel = tr('시트', 'シート', 'Sheet');
+            var setLabel = tr('세트/시트', 'セット/シート', 'sets/sheet');
+            if (r.setsPerSheet > 1) {
+                infoEl.textContent = sheetLabel + ': ' + r.sheetCount + ' (' + r.setsPerSheet + ' ' + setLabel + ')';
+            } else {
+                infoEl.textContent = sheetLabel + ': ' + r.sheetCount;
+            }
+        }
         recalc();
     };
 
@@ -2024,11 +2140,28 @@
         state.isCutPrint = _soIsCutPrintProduct(p);
         state.cutSize = 'full';
         state.bundleShipping = false;
+        // 2026-05-13: 허니콤 박스 감지 (hb_bx_*) — 가로/세로/높이로 동적 가격
+        state.isBox = _soIsBoxProduct(p);
+        state.boxW = parseInt(p.width_mm || 400, 10) || 400;
+        state.boxH = parseInt(p.height_mm || 400, 10) || 400;
+        state.boxD = 400;
+        state.boxUnitPrice = 0;
+        state.boxNesting = null;
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
         // 자유인쇄커팅 사이즈 섹션
         var cutSec = document.getElementById('soCutPrintSizeSection');
         if (cutSec) cutSec.style.display = state.isCutPrint ? '' : 'none';
+        // 박스 사이즈 입력 섹션 + 초기 계산
+        var boxSec = document.getElementById('soBoxSizeSection');
+        if (boxSec) boxSec.style.display = state.isBox ? '' : 'none';
+        if (state.isBox) {
+            var bwEl = document.getElementById('soBoxW'); if (bwEl) bwEl.value = state.boxW;
+            var bhEl = document.getElementById('soBoxH'); if (bhEl) bhEl.value = state.boxH;
+            var bdEl = document.getElementById('soBoxD'); if (bdEl) bdEl.value = state.boxD;
+            // 초기 가격 계산 (비동기)
+            if (typeof window._soOnBoxDimsChange === 'function') window._soOnBoxDimsChange();
+        }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
         var qtySec = document.getElementById('soQtySection');
         if (qtySec) qtySec.style.display = state.isWall ? 'none' : '';
@@ -2211,6 +2344,8 @@
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             bundleShipping: !!state.bundleShipping,
+            // 2026-05-13: 허니콤 박스 사이즈 + 계산된 단가 (장바구니/주문관리에서 재계산 안전 보존)
+            boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
             // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
             backFileName: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.name : null,
             backFileType: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.type : null,
@@ -2577,6 +2712,10 @@
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
         if (it.cutPrint) {
             unit = (it.cutPrint.size === 'half') ? 100000 : 150000;
+        }
+        // 2026-05-13: 허니콤 박스 — 저장된 박스 단가 사용 (가로×세로×높이로 산출된 값)
+        if (it.boxSize && typeof it.boxSize.unit === 'number') {
+            unit = it.boxSize.unit;
         }
         var subtotal = unit * qty;
         // 가벽 양면 → 가격 2배

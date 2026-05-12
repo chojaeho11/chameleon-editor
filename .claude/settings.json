@@ -134,7 +134,10 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing; \\($r.Content -split \"`n\" | Select-String -Pattern \"simple_order\\\\.js\\\\?v=\" -SimpleMatch | Select-Object -First 3\\))",
       "PowerShell($r = Invoke-WebRequest -Uri \"https://f68f0efb.chameleon-print.pages.dev/?nocache=$\\(Get-Random\\)\" -UseBasicParsing; \\($r.Content | Select-String -Pattern \"simple_order\\\\.js\\\\?v=\\\\d+\"\\).Matches | ForEach-Object { $_.Value })",
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \\($r.Content | Select-String -Pattern \"simple_order\\\\.js\\\\?v=\\\\d+\"\\).Matches | ForEach-Object { $_.Value } } catch { Write-Output \"Error: $_\" })",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"wall v37: front frame 420x220 + back PDF thumbnail render\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"wall v37: front frame 420x220 + back PDF thumbnail render\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cut-print v38: full/half pricing + delivery-only ship + bundle toggle\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\" -File -Name)",
+      "PowerShell(head -30)"
     ],
     "additionalDirectories": [
       "\\tmp"
