@@ -1201,14 +1201,21 @@
         if (!state.product) return;
         const unit = pickPrice(state.product);
         let qty, subtotal, tierPct, discount;
+        // 2026-05-13: 가벽 세로 3m 인 경우 +50,000원
+        let heightExtra = 0;
         if (state.isWall) {
-            // 2026-05-13: 가벽 — 가로(m) = 수량, 수량 할인 없음
             qty = state.wallWidth || 1;
             state.qty = qty;
             subtotal = unit * qty;
             tierPct = 0;
             discount = 0;
+            // 세로(높이)가 3m 면 가격 +50,000
+            if (parseFloat(state.wallHeight) === 3) {
+                heightExtra = 50000;
+            }
+            state.wallHeightExtra = heightExtra;
         } else {
+            state.wallHeightExtra = 0;
             qty = state.qty;
             subtotal = unit * qty;
             const tier = getDiscountTier(qty);
@@ -1236,9 +1243,9 @@
         const shipFee = _soComputeShipFee();
         state.shipFee = shipFee;
 
-        // 구독자 할인 (PRO 회원): 상품가 + 옵션 = 할인 적용 대상. 배송은 제외.
+        // 구독자 할인 (PRO 회원): 상품가 + 옵션 + 세로3m옵션 = 할인 적용 대상. 배송은 제외.
         const isPro = !!window.isProSubscriber;
-        const beforePro = subtotal - discount + addonTotal;
+        const beforePro = subtotal - discount + addonTotal + heightExtra;
         const proDiscount = isPro ? Math.round(beforePro * 0.10) : 0;
 
         const final = beforePro - proDiscount + shipFee;
@@ -1257,8 +1264,12 @@
             setText('soUnit', fmtPrice(unit));
             showRow('soWallSizeRow', false);
         }
-        // 옵션 breakdown 라인
-        setHTML('soAddonBreakdown', addonBreakdownLines.join(''));
+        // 옵션 breakdown 라인 + 세로 3m 추가 옵션
+        var bdHtml = addonBreakdownLines.join('');
+        if (heightExtra > 0) {
+            bdHtml += '<div class="so-price-row"><span>· ' + tr('세로 3m 추가', '縦3m追加', '+3m height') + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
+        }
+        setHTML('soAddonBreakdown', bdHtml);
         // 수량 할인: 가벽이면 행 숨김 (0% 표시 제거)
         showRow('soQtyDiscRow', !state.isWall && tierPct > 0);
         setText('soDisc', '-' + fmtPrice(discount));
@@ -2201,6 +2212,10 @@
         var subtotal = unit * qty;
         var discount = Math.round(subtotal * tierPct / 100);
         var base = subtotal - discount;
+        // 가벽 세로 3m → +50,000
+        if (isWall && it.wallSize && parseFloat(it.wallSize.h_m) === 3) {
+            base += 50000;
+        }
         // addon 가격
         if (it.selectedAddons && window.ADDON_DB) {
             Object.values(it.selectedAddons).forEach(function (code) {
@@ -2210,11 +2225,11 @@
                 base += (addon.price || 0) * aQty;
             });
         }
-        // 2026-05-13: PRO 구독자 10% 할인 (상품가+옵션 까지만, 배송 제외)
+        // PRO 구독자 10% 할인 (상품가+옵션 까지만, 배송 제외)
         if (window.isProSubscriber) {
             base = base - Math.round(base * 0.10);
         }
-        // 2026-05-13: 시공/배송비 합산 (item.shipping.fee)
+        // 시공/배송비 합산
         if (it.shipping && it.shipping.fee) {
             base += (it.shipping.fee || 0);
         }
@@ -2421,7 +2436,12 @@
                 if (_soIsFabricItem(it)) return; // 패브릭은 별도 처리
                 var pname = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
                 var lines = ['#' + (idx + 1) + ' ' + pname + ' x ' + (it.qty || 1)];
-                if (it.wallSize) lines.push('  · 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm');
+                if (it.wallSize) {
+                    lines.push('  · 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm');
+                    if (parseFloat(it.wallSize.h_m) === 3) {
+                        lines.push('  · 세로 3m 추가: +50,000원');
+                    }
+                }
                 if (it.selectedAddons && window.ADDON_DB) {
                     Object.values(it.selectedAddons).forEach(function (code) {
                         var a = window.ADDON_DB[code];
