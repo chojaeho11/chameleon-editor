@@ -1339,20 +1339,18 @@
     };
 
     // ─────────────────────────────────────────────
-    // 자동 라우팅 (일반 상품 → 간편 모달)
+    // 자동 라우팅 — 2026-05-12: 모든 상품 통일된 simple_order 모달로
+    // 사용자 결정: "모든 카테고리 모든 제품의 상세페이지와 장바구니 인터페이스를 통일"
+    // 비상시에만 기존 #choiceModal 로 복귀하도록 __SO_FALLBACK_TO_LEGACY 플래그 남김.
     // ─────────────────────────────────────────────
     function isComplexProduct(code, product) {
-        if (window.__SO_ROUTE_ALL_OFF) return true;
-        if (!code) return false;
-        const c = String(code).toUpperCase();
-        if (/^HW\d+/.test(c)) return true;
-        if (/^(HD|HB|HY|HP|HR|HT|HS|GB|GW)/.test(c)) return true;
-        if (c.startsWith('DESIGN_FEE') || c.startsWith('UA_')) return true;
-        if (product) {
-            const cat = String(product.category || '').toLowerCase();
-            if (cat === 'honeycomb_wall' || cat === 'wall' || cat === 'banner') return true;
+        // 명시적으로 레거시 모달로 보낼 때만 (특정 코드만 일시적으로 예외 처리하고 싶을 때)
+        if (window.__SO_FALLBACK_TO_LEGACY) {
+            if (!code) return false;
+            const c = String(code).toUpperCase();
+            if (c.startsWith('DESIGN_FEE') || c.startsWith('UA_')) return true; // 디자인비/업로드는 예외
         }
-        return false;
+        return false; // 기본: 전부 simple_order 통일
     }
 
     function setupRouting(retries) {
@@ -1370,7 +1368,7 @@
             if (isComplexProduct(key, prod)) return _orig.apply(this, arguments);
             return window.openSimpleOrderModal(key, prod);
         };
-        console.log('[simple_order] showChoiceModal 래핑 완료 — 일반 상품은 간편모달로 자동 라우팅 (해제: window.__SO_ROUTE_ALL_OFF=true 후 새로고침)');
+        console.log('[simple_order] 통일 모달 라우팅 활성화 — 모든 상품이 simple_order 모달 사용 (비상복귀: window.__SO_FALLBACK_TO_LEGACY=true)');
     }
 
     if (document.readyState === 'loading') {

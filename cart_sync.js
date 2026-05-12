@@ -185,7 +185,9 @@
         if (!c) return Promise.resolve();
         var row, conflict;
         if (_userId) {
-            row = { user_id: _userId, session_id: SID, items: items, updated_at: new Date().toISOString() };
+            // 로그인 상태: user_id 만으로 키잉. session_id 는 row 에서 제외하여
+            // 익명 세션 행(session_id=SID, user_id=NULL)과의 unique 충돌 회피 (23505).
+            row = { user_id: _userId, items: items, updated_at: new Date().toISOString() };
             conflict = 'user_id';
         } else {
             row = { session_id: SID, items: items, updated_at: new Date().toISOString() };
@@ -196,6 +198,19 @@
                 if (res.error) console.warn('[cart_sync] push', res.error);
             })
             .catch(function (e) { console.warn('[cart_sync] push exc', e); });
+    }
+
+    // 로그인 직후: 익명 세션 행(session_id=SID, user_id=NULL)을 삭제하여 orphan 정리
+    function cleanupAnonRow() {
+        var c = sb();
+        if (!c || !_userId || !SID) return Promise.resolve();
+        return c.from('carts').delete().eq('session_id', SID).is('user_id', null)
+            .then(function (res) {
+                if (res.error && res.error.code !== 'PGRST116') {
+                    console.warn('[cart_sync] cleanupAnonRow', res.error);
+                }
+            })
+            .catch(function (e) { console.warn('[cart_sync] cleanupAnonRow exc', e); });
     }
 
     var pushTimer = null;
@@ -332,7 +347,12 @@
             // 3) Write back domain-filtered view to native key
             rebuildLocalFromUnified();
             // 4) If we had local items not yet on server, push them
-            if (!serverItems || serverItems.length !== _unified.length) schedulePush();
+            //    + 로그인 상태면 익명 orphan 행 정리 (23505 에러 예방)
+            if (_userId) {
+                cleanupAnonRow().then(function () { schedulePush(); });
+            } else if (!serverItems || serverItems.length !== _unified.length) {
+                schedulePush();
+            }
             // 5) Patch outbound sibling links
             patchLinksOnce();
             var obs = new MutationObserver(patchLinksOnce);
@@ -345,13 +365,15 @@
                         var newUid = session && session.user ? session.user.id : null;
                         if (newUid !== _userId) {
                             _userId = newUid;
-                            // Re-pull with new key
-                            pull().then(function (items) {
-                                if (items) {
-                                    _unified = mergeServerLocal(items, _unified);
-                                    rebuildLocalFromUnified();
-                                }
-                            });
+                            // Re-pull with new key + cleanup anon orphan on login
+                            (newUid ? cleanupAnonRow() : Promise.resolve())
+                                .then(function () { return pull(); })
+                                .then(function (items) {
+                                    if (items) {
+                                        _unified = mergeServerLocal(items, _unified);
+                                        rebuildLocalFromUnified();
+                                    }
+                                });
                         }
                     });
                 }

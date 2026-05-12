@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cafe2626/0101/3355 + cotton-print 공유) -->
-<script src="/cart_sync.js?v=5"></script>
+<script src="/cart_sync.js?v=6"></script>
 <!-- Toss Payments SDK (한국 카드결제) -->
 <script src="https://js.tosspayments.com/v1/payment"></script>
 <!-- Stripe (해외 결제) -->
@@ -688,6 +688,36 @@ a { text-decoration: none; color: inherit; }
     </div>
 </div>
 
+<!-- 2026-05-12: 카테고리 네비게이션 — 메인 사이트의 카테고리로 이동 -->
+<nav class="cp-category-nav" style="background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 20px; overflow-x:auto; white-space:nowrap;">
+    <div style="display:inline-flex; gap:8px; align-items:center;">
+        <a href="/?_p=honeycomb" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600; transition:all 0.15s;" onmouseover="this.style.background='#dbeafe'; this.style.color='#1d4ed8';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#374151';">
+            <i class="fa-solid fa-cubes" style="margin-right:6px;"></i><span data-cdi18n="cat_honeycomb">허니콤보드</span>
+        </a>
+        <a href="/?_p=paper-stand" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;" onmouseover="this.style.background='#dbeafe'; this.style.color='#1d4ed8';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#374151';">
+            <i class="fa-solid fa-box" style="margin-right:6px;"></i><span data-cdi18n="cat_paper_stand">종이매대</span>
+        </a>
+        <a href="/fabric" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#dbeafe; color:#1d4ed8; text-decoration:none; font-size:13px; font-weight:700;">
+            <i class="fa-solid fa-scissors" style="margin-right:6px;"></i><span data-cdi18n="cat_fabric">패브릭</span>
+        </a>
+        <a href="/?_p=biz-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;" onmouseover="this.style.background='#dbeafe'; this.style.color='#1d4ed8';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#374151';">
+            <i class="fa-solid fa-id-card" style="margin-right:6px;"></i><span data-cdi18n="cat_biz">광고인쇄·명함</span>
+        </a>
+        <a href="/?_p=acrylic-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;" onmouseover="this.style.background='#dbeafe'; this.style.color='#1d4ed8';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#374151';">
+            <i class="fa-solid fa-square" style="margin-right:6px;"></i><span data-cdi18n="cat_acrylic">아크릴</span>
+        </a>
+        <a href="/?_p=foamex-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;" onmouseover="this.style.background='#dbeafe'; this.style.color='#1d4ed8';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#374151';">
+            <i class="fa-solid fa-layer-group" style="margin-right:6px;"></i><span data-cdi18n="cat_foamex">사인물</span>
+        </a>
+        <a href="/?_p=goods" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;" onmouseover="this.style.background='#dbeafe'; this.style.color='#1d4ed8';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#374151';">
+            <i class="fa-solid fa-gift" style="margin-right:6px;"></i><span data-cdi18n="cat_goods">굿즈</span>
+        </a>
+        <a href="/?_p=tshirt-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;" onmouseover="this.style.background='#dbeafe'; this.style.color='#1d4ed8';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#374151';">
+            <i class="fa-solid fa-shirt" style="margin-right:6px;"></i><span data-cdi18n="cat_tshirt">티셔츠</span>
+        </a>
+    </div>
+</nav>
+
 <!-- 메인 디자이너 -->
 <div class="designer-wrap">
 
@@ -1228,6 +1258,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=42"></script>
+<script src="/cotton_designer.js?v=43"></script>
 </body>
 </html>

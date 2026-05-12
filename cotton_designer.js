@@ -955,12 +955,32 @@ function saveCart(c) {
     } catch (e) {}
 }
 
+// 2026-05-12: 통합 카트 — 같은 localStorage 안의 일반상품 항목도 함께 노출
+function getAllCartItems() {
+    try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; }
+    catch (e) { return []; }
+}
+function _isFabricItem(it) {
+    return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+}
+function getGeneralItems() {
+    if (CART_KEY !== 'chameleon_cart_current') return [];
+    return getAllCartItems().filter(function (it) { return !_isFabricItem(it); });
+}
+
 function calcCartTotal() {
-    return getCart().reduce(function(s, it) { return s + (it.price || 0); }, 0);
+    var fabricTotal = getCart().reduce(function(s, it) { return s + (it.price || 0); }, 0);
+    var genTotal = getGeneralItems().reduce(function(s, it) {
+        var base = (it.product && it.product.price || 0) * (it.qty || 1);
+        return s + base;
+    }, 0);
+    return fabricTotal + genTotal;
 }
 
 window._cpUpdateCartUI = function() {
     const cart = getCart();
+    const gen = getGeneralItems();
+    const totalCount = cart.length + gen.length;
     const badge = document.getElementById('cartBadge');
     const inline = document.getElementById('cartCountInline');
     const body = document.getElementById('cartBody');
@@ -968,12 +988,12 @@ window._cpUpdateCartUI = function() {
     const checkoutBtn = document.getElementById('cartCheckoutBtn');
 
     if (badge) {
-        if (cart.length > 0) { badge.style.display = 'flex'; badge.textContent = cart.length; }
+        if (totalCount > 0) { badge.style.display = 'flex'; badge.textContent = totalCount; }
         else { badge.style.display = 'none'; }
     }
-    if (inline) inline.textContent = cart.length ? '(' + cart.length + ')' : '';
+    if (inline) inline.textContent = totalCount ? '(' + totalCount + ')' : '';
     if (totalAmt) totalAmt.textContent = cdFmtPrice(calcCartTotal());
-    if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+    if (checkoutBtn) checkoutBtn.disabled = totalCount === 0;
 
     if (body) {
         // 2026-05-11: 모든 라벨 i18n 적용 — 카트 드로어 안의 한국어 문구 제거
@@ -990,35 +1010,78 @@ window._cpUpdateCartUI = function() {
             raw:        T('finish_raw', '가재단'),
             seam:       T('seam_label', '이어박기 (대폭 초과)')
         };
-        if (cart.length === 0) {
+        if (cart.length === 0 && gen.length === 0) {
             body.innerHTML = '<div class="cart-empty"><i class="fa-regular fa-folder-open"></i><div style="font-weight:700; color:var(--brown-dark); margin-bottom:4px;">' + L.empty + '</div><div style="font-size:12px;">' + L.empty_sub + '</div></div>';
         } else {
-            body.innerHTML = cart.map(function(it, i) {
-                const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
-                const opts = [
-                    it.fabricName,
-                    L.output + ' ' + sz,
-                    it.hoebae ? it.hoebae.toFixed(2) + L.unit : null,
-                    it.qtyLabel,
-                    (it.finishCode && it.finishCode !== 'raw' && it.finishCode !== 'none') ? L.finish + ': ' + (it.finishName || '') : (it.finishCode === 'raw' ? L.raw : null),
-                    it.hookCode ? L.hook + ': ' + (it.hookName||'') : null,
-                    it.accCode ? L.acc + ': ' + (it.accName||'') : null,
-                    (it.seamExtra && it.seamExtra > 0) ? L.seam + ' (+' + cdFmtPrice(it.seamExtra) + ')' : null
-                ].filter(Boolean).join(' · ');
-                return '<div class="cart-item">' +
-                    '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
-                    '<div class="cart-item-info">' +
-                        '<div class="cart-item-name">' + it.title + '</div>' +
-                        '<div class="cart-item-opts">' + opts + '</div>' +
-                        '<div class="cart-item-bottom">' +
-                            '<span class="cart-item-price">' + cdFmtPrice(it.price||0) + '</span>' +
-                            '<button class="cart-item-remove" onclick="window._cpCartRemove(' + i + ')"><i class="fa-solid fa-trash"></i> ' + L.remove + '</button>' +
+            // 패브릭 섹션
+            var fabricHtml = '';
+            if (cart.length > 0) {
+                fabricHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:4px 0 8px;"><i class="fa-solid fa-scissors" style="margin-right:6px;"></i>패브릭</div>' +
+                cart.map(function(it, i) {
+                    const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
+                    const opts = [
+                        it.fabricName,
+                        L.output + ' ' + sz,
+                        it.hoebae ? it.hoebae.toFixed(2) + L.unit : null,
+                        it.qtyLabel,
+                        (it.finishCode && it.finishCode !== 'raw' && it.finishCode !== 'none') ? L.finish + ': ' + (it.finishName || '') : (it.finishCode === 'raw' ? L.raw : null),
+                        it.hookCode ? L.hook + ': ' + (it.hookName||'') : null,
+                        it.accCode ? L.acc + ': ' + (it.accName||'') : null,
+                        (it.seamExtra && it.seamExtra > 0) ? L.seam + ' (+' + cdFmtPrice(it.seamExtra) + ')' : null
+                    ].filter(Boolean).join(' · ');
+                    return '<div class="cart-item">' +
+                        '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
+                        '<div class="cart-item-info">' +
+                            '<div class="cart-item-name">' + it.title + '</div>' +
+                            '<div class="cart-item-opts">' + opts + '</div>' +
+                            '<div class="cart-item-bottom">' +
+                                '<span class="cart-item-price">' + cdFmtPrice(it.price||0) + '</span>' +
+                                '<button class="cart-item-remove" onclick="window._cpCartRemove(' + i + ')"><i class="fa-solid fa-trash"></i> ' + L.remove + '</button>' +
+                            '</div>' +
                         '</div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
+                    '</div>';
+                }).join('');
+            }
+            // 일반상품 섹션 (2026-05-12: 통합 카트)
+            var genHtml = '';
+            if (gen.length > 0) {
+                genHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:12px 0 8px;"><i class="fa-solid fa-box" style="margin-right:6px;"></i>일반상품</div>' +
+                gen.map(function(it, gi) {
+                    var name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
+                    var qty = it.qty || 1;
+                    var price = ((it.product && it.product.price) || 0) * qty;
+                    var thumb = it.thumb || (it.product && it.product.img) || 'https://placehold.co/80?text=Item';
+                    return '<div class="cart-item">' +
+                        '<img class="cart-item-thumb" src="' + thumb + '" alt="">' +
+                        '<div class="cart-item-info">' +
+                            '<div class="cart-item-name">' + name + '</div>' +
+                            '<div class="cart-item-opts">' + qty + '개</div>' +
+                            '<div class="cart-item-bottom">' +
+                                '<span class="cart-item-price">' + cdFmtPrice(price) + '</span>' +
+                                '<button class="cart-item-remove" onclick="window._cpRemoveGeneralCartItem(' + gi + ')"><i class="fa-solid fa-trash"></i> ' + L.remove + '</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+            body.innerHTML = fabricHtml + genHtml;
         }
     }
+};
+
+// 2026-05-12: 통합 카트 — cotton_designer 드로어에서 일반상품 삭제
+window._cpRemoveGeneralCartItem = function (genIdx) {
+    var all = getAllCartItems();
+    var generalItems = all.filter(function (it) { return !_isFabricItem(it); });
+    if (!generalItems[genIdx]) return;
+    var targetCartId = generalItems[genIdx].__cart_id;
+    var filtered = all.filter(function (it) {
+        if (_isFabricItem(it)) return true;
+        // 같은 __cart_id 면 제거; 없으면 첫 매칭
+        return targetCartId ? (it.__cart_id !== targetCartId) : (it !== generalItems[genIdx]);
+    });
+    try { localStorage.setItem(CART_KEY, JSON.stringify(filtered)); } catch (e) {}
+    window._cpUpdateCartUI();
 };
 
 window._cpCartOpen = function() {

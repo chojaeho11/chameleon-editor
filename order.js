@@ -284,6 +284,13 @@ export async function initOrderSystem() {
     window.renderCart = renderCart;
     window.fetchUserDiscountRate = fetchUserDiscountRate;
 
+    // 2026-05-12: 통합 카트 — 패브릭 항목 삭제 헬퍼
+    window._removeFabricCartItem = function (idx) {
+        if (cartData[idx]) cartData.splice(idx, 1);
+        try { localStorage.setItem('chameleon_cart_current', JSON.stringify(cartData)); } catch (e) {}
+        renderCart();
+    };
+
     const btnViewCart = document.getElementById("btnViewCart");
     if (btnViewCart) {
         btnViewCart.onclick = function() {
@@ -2544,11 +2551,52 @@ function renderCart() {
     // 일괄 업로드 파일은 노란 박스 안에 별도 렌더 (메인 리스트와 분리)
     renderBulkUploadFiles();
 
-    // 메인 리스트 비어있는지 판단할 때 file_upload는 제외
+    // 2026-05-12: 통합 카트 — 패브릭 항목 (cotton_designer 가 담은 것) 렌더
+    // 일반상품은 item.product 가 있고, 패브릭은 __source==='cotton-print' 또는 orderWcm 등 fabric 필드
+    function _isFabricCartItem(it) {
+        return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+    }
+    const _fabricItems = cartData.filter(_isFabricCartItem);
+    if (_fabricItems.length > 0) {
+        const fabricSection = document.createElement('div');
+        fabricSection.style.cssText = 'margin-bottom:20px;';
+        fabricSection.innerHTML =
+            '<div style="font-size:13px; font-weight:800; color:#64748b; margin-bottom:10px; padding-left:4px;">' +
+            '<i class="fa-solid fa-scissors" style="margin-right:6px;"></i>패브릭</div>';
+        _fabricItems.forEach((fab, fIdx) => {
+            const fabIdx = cartData.indexOf(fab);
+            const sz = fab.orderSize || ((fab.orderWcm || (fab.orderWmm/10)) + '×' + (fab.orderHcm || (fab.orderHmm/10)) + 'cm');
+            const opts = [fab.fabricName, '출력 ' + sz, fab.finishName].filter(Boolean).join(' · ');
+            const price = (fab.price || 0).toLocaleString() + '원';
+            const thumb = fab.img || fab.thumb || 'https://placehold.co/80?text=Fabric';
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#fff; border-radius:12px; margin-bottom:12px; border:1px solid #e2e8f0; padding:12px; display:flex; gap:12px; align-items:center;';
+            card.innerHTML =
+                '<img src="' + thumb + '" style="width:60px; height:60px; object-fit:cover; border-radius:8px; flex-shrink:0;">' +
+                '<div style="flex:1; min-width:0;">' +
+                    '<div style="font-weight:700; color:#1e293b; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (fab.productName || fab.fabricName || '패브릭') + '</div>' +
+                    '<div style="font-size:12px; color:#64748b; margin-bottom:6px;">' + opts + '</div>' +
+                    '<div style="font-weight:800; color:#dc2626;">' + price + '</div>' +
+                '</div>' +
+                '<button onclick="window._removeFabricCartItem(' + fabIdx + ')" style="background:transparent; border:1px solid #cbd5e1; color:#94a3b8; padding:6px 10px; border-radius:8px; cursor:pointer; flex-shrink:0;" title="삭제">' +
+                    '<i class="fa-solid fa-trash"></i></button>';
+            fabricSection.appendChild(card);
+            grandTotal += (fab.price || 0);
+            grandProductTotal += (fab.price || 0);
+        });
+        listArea.appendChild(fabricSection);
+    }
+
+    // 메인 리스트 비어있는지 판단할 때 file_upload는 제외 + 패브릭 별도 카운트
     const _hasMainItems = cartData.some(it => it.product && it.type !== 'file_upload');
-    if(!_hasMainItems) {
+    if(!_hasMainItems && _fabricItems.length === 0) {
         listArea.innerHTML = `<div style="text-align:center; padding:60px 0; color:#94a3b8;">${window.t('msg_cart_empty')}</div>`;
         updateSummary(0, 0, 0); return;
+    }
+    if (!_hasMainItems && _fabricItems.length > 0) {
+        // 패브릭만 있어도 summary 업데이트하고 종료 (일반상품 렌더 루프 건너뜀)
+        updateSummary(grandProductTotal, grandAddonTotal, grandTotal);
+        return;
     }
 
     // 기존 장바구니 데이터 보강: name_jp/name_us 없으면 PRODUCT_DB에서 채움
