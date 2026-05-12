@@ -1309,22 +1309,12 @@
     }
 
     window._soGoCheckout = function() {
-        // 2026-05-12: 같은 페이지에 cartPage div 가 있으면 그대로 열어서 결제. 없으면 메인 사이트로.
+        // 2026-05-12: 항상 메인 페이지의 cartPage 로 navigate (확실하게 결제 화면 열기)
+        // ?product 페이지에서 같은 페이지 cartPage 활성화는 페이지 내부 state 와 충돌 가능 →
+        // 깨끗하게 메인 페이지로 reload 하여 main.js 의 ?cart=open 핸들러가 처리하도록.
         window._soToggleCart(false);
         if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
-        setTimeout(function () {
-            var cp = document.getElementById('cartPage');
-            if (cp) {
-                // cartData 와 localStorage 동기화 후 카트 페이지 표시
-                if (window.renderCart) { try { window.renderCart(); } catch (e) {} }
-                cp.style.display = 'block';
-                document.body.classList.remove('editor-active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                // cartPage 가 없는 컨텍스트 (e.g. cotton_designer 단독 페이지) — 메인으로 이동
-                location.href = '/?cart=open';
-            }
-        }, 150);
+        location.href = '/?cart=open';
     };
 
     // 카테고리 라벨 매핑 (한국어 사이트 기준)

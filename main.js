@@ -63,26 +63,34 @@ window.addEventListener("DOMContentLoaded", async () => {
         try { initAuth(); } catch(e) { console.warn('⚠️ Auth init failed:', e); }
         try { initOrderSystem(); } catch(e) { console.warn('⚠️ OrderSystem init failed:', e); }
 
-        // 2026-05-12: ?cart=open URL 파라미터 처리 — simple_order 또는 cotton_designer 의
-        // "주문하기" 버튼 후 자동으로 카트 페이지(결제 단계) 열기
+        // 2026-05-12: ?cart=open URL 파라미터 처리 — simple_order/cotton_designer 의
+        // "주문하기" 버튼 후 자동으로 카트 페이지(결제 단계) 열기. cartPage 가 DOM 에 만들어지는
+        // 시점이 변동 가능하므로 재시도 루프로 견고하게.
         try {
             const _qsCart = new URLSearchParams(location.search).get('cart');
             if (_qsCart === 'open') {
-                setTimeout(function () {
-                    if (window.renderCart) { try { window.renderCart(); } catch (e) {} }
+                let _cartRetry = 0;
+                const _tryOpenCart = function () {
                     const cp = document.getElementById('cartPage');
                     if (cp) {
+                        if (window.renderCart) { try { window.renderCart(); } catch (e) {} }
                         cp.style.display = 'block';
+                        cp.style.zIndex = '99999';
                         document.body.classList.remove('editor-active');
                         window.scrollTo(0, 0);
+                        console.log('[main] cart=open → cartPage 표시 완료');
+                        // URL 정리 (뒤로가기 시 무한 루프 방지)
+                        try {
+                            const u = new URL(location.href);
+                            u.searchParams.delete('cart');
+                            history.replaceState(null, '', u.toString());
+                        } catch (e) {}
+                        return;
                     }
-                    // URL 정리 (뒤로가기 시 무한 루프 방지)
-                    try {
-                        const u = new URL(location.href);
-                        u.searchParams.delete('cart');
-                        history.replaceState(null, '', u.toString());
-                    } catch (e) {}
-                }, 500);
+                    if (_cartRetry++ < 20) setTimeout(_tryOpenCart, 200);
+                    else console.warn('[main] cartPage 찾을 수 없음 — DOM 에 #cartPage 없음');
+                };
+                setTimeout(_tryOpenCart, 100);
             }
         } catch (e) {}
 
