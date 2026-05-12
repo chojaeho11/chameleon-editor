@@ -1426,9 +1426,18 @@
         if (!list || !totalEl) return;
 
         // 2026-05-12: 통합 카트 — 패브릭 + 일반상품 둘 다 렌더
-        const allItems = (typeof _soReadAllCart === 'function')
+        let allItems = (typeof _soReadAllCart === 'function')
             ? _soReadAllCart()
             : (function(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch(e){ return []; } })();
+        // 빈/손상된 항목 방어 필터 (cart_sync 가 놓친 케이스)
+        const _isValidItem = function (it) {
+            if (!it || typeof it !== 'object') return false;
+            if (it.fabricCode || it.fabricName || it.title || it.orderWcm != null) return true;
+            if (it.product && (it.product.code || it.product.name)) return true;
+            if (it.productCode || it.productName) return true;
+            return false;
+        };
+        allItems = allItems.filter(_isValidItem);
         const isFab = function (it) {
             return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
         };

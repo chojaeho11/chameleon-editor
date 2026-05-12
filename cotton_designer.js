@@ -925,7 +925,17 @@ const CART_KEY = (function () {
 })();
 function getCart() {
     try {
-        var arr = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+        var arr = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+        // 빈/손상 항목 (undefined 같은) 방어 필터
+        arr = arr.filter(function (it) {
+            if (!it || typeof it !== 'object') return false;
+            // 패브릭 항목 최소 식별: title/fabricName/fabricCode/orderWcm 중 하나
+            if (it.fabricCode || it.fabricName || it.title || it.orderWcm != null) return true;
+            // 일반 상품: product 또는 productCode
+            if (it.product && (it.product.code || it.product.name)) return true;
+            if (it.productCode || it.productName) return true;
+            return false;
+        });
         // 통합 카트일 경우 패브릭 아이템만 필터 (다른 일반상품 items 분리 렌더)
         if (CART_KEY === 'chameleon_cart_current') {
             return arr.filter(function (it) {
@@ -956,8 +966,18 @@ function saveCart(c) {
 }
 
 // 2026-05-12: 통합 카트 — 같은 localStorage 안의 일반상품 항목도 함께 노출
+function _isValidCartItem(it) {
+    if (!it || typeof it !== 'object') return false;
+    if (it.fabricCode || it.fabricName || it.title || it.orderWcm != null) return true;
+    if (it.product && (it.product.code || it.product.name)) return true;
+    if (it.productCode || it.productName) return true;
+    return false;
+}
 function getAllCartItems() {
-    try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; }
+    try {
+        var arr = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+        return arr.filter(_isValidCartItem); // 빈/손상 항목 방어
+    }
     catch (e) { return []; }
 }
 function _isFabricItem(it) {

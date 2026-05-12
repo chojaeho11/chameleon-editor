@@ -126,6 +126,17 @@
         return it;
     }
 
+    // 2026-05-12: 빈/손상된 카트 항목 식별 — 표시 가능한 최소 필드 검증
+    // 패브릭: title/fabricName/fabricCode/orderWcm 중 하나는 있어야 함
+    // 일반: product (object) 또는 productCode/productName 중 하나
+    function isValidCartItem(it) {
+        if (!it || typeof it !== 'object') return false;
+        if (it.fabricCode || it.fabricName || it.title || it.orderWcm != null) return true;
+        if (it.product && typeof it.product === 'object' && (it.product.code || it.product.name)) return true;
+        if (it.productCode || it.productName) return true;
+        return false;
+    }
+
     // ── Unified cache (all sources) ──────────────────────
     // Mirror of server state + any local items not yet pushed.
     var _unified = [];
@@ -239,15 +250,21 @@
 
     // ── localStorage interceptor ─────────────────────────
     // 2026-05-12: 도메인 통합 — localStorage 가 곧 unified cart. setItem 발생 시
-    // 통째로 _unified 갱신 후 서버 push. source 별 분리 로직 불필요 (각 항목의 __source 는
-    // 정보 태그로만 유지).
+    // 통째로 _unified 갱신 후 서버 push. invalid 항목은 자동 제거.
     var __origLocalSet = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, value) {
         if (key !== LOCAL_KEY) return __origLocalSet(key, value);
-        __origLocalSet(key, value);
         var mine = [];
         try { mine = JSON.parse(value || '[]') || []; } catch (e) {}
+        // invalid 항목 (빈 객체, undefined, null) 제거
+        var before = mine.length;
+        mine = mine.filter(isValidCartItem);
+        if (mine.length !== before) {
+            console.warn('[cart_sync] invalid 카트 항목 ' + (before - mine.length) + '개 자동 정리');
+        }
         mine.forEach(tagItem); // __cart_id 부여 (server merge 용), 기존 __source 는 보존
+        // cleanup 결과를 다시 localStorage 에 (loop 방지: __origLocalSet 직접 호출)
+        __origLocalSet(key, JSON.stringify(mine));
         _unified = mine;
         schedulePush();
     };
@@ -302,6 +319,15 @@
             return pull();
         }).then(function (serverItems) {
             var local = readLocal();
+            // 2026-05-12: invalid 항목 자동 정리 (서버/로컬 양쪽)
+            if (Array.isArray(serverItems)) {
+                var sb1 = serverItems.length;
+                serverItems = serverItems.filter(isValidCartItem);
+                if (serverItems.length !== sb1) console.warn('[cart_sync] server invalid 항목 ' + (sb1 - serverItems.length) + '개 정리');
+            }
+            var lb1 = local.length;
+            local = local.filter(isValidCartItem);
+            if (local.length !== lb1) console.warn('[cart_sync] local invalid 항목 ' + (lb1 - local.length) + '개 정리');
             local.forEach(tagItem);
             _unified = mergeServerLocal(serverItems, local);
             // 3) Write back domain-filtered view to native key
