@@ -762,6 +762,29 @@
           </div>
         </div>
 
+        <!-- 2026-05-13: 사이즈 입력 → 면적 × 단가 자동계산 (현수막·실사출력 등) -->
+        <div class="so-section" id="soCustomSizeSection" style="display:none;">
+          <div class="so-section-title">📐 ${tr('사이즈 입력', 'サイズ入力', 'Size Input')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
+          <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+            <div style="flex:1; text-align:center;">
+              <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
+              <input type="number" id="soCustomW" value="100" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
+                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+            </div>
+            <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
+            <div style="flex:1; text-align:center;">
+              <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('세로 (H)', '縦 (H)', 'Height (H)')}</div>
+              <input type="number" id="soCustomH" value="60" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
+                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+            </div>
+          </div>
+          <div id="soCustomCalcResult" style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #fbbf24; border-radius:10px; text-align:center;">
+            <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:4px;">💰 ${tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)')}</div>
+            <div id="soCustomUnitPrice" style="font-size:20px; font-weight:900; color:#451a03;">-</div>
+            <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 상품별 추가 옵션 (admin_addons) -->
         <div class="so-section" id="soAddonSection" style="display:none;">
           <div class="so-section-title">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
@@ -1330,6 +1353,12 @@
             qty = state.qty || 1;
             subtotal = unit * qty;
             state.wallHeightExtra = 0;
+        } else if (state.isCustomSize) {
+            // 현수막·실사출력 등 면적 기반: 계산된 단가 × 수량
+            unit = state.customUnitPrice || 0;
+            qty = state.qty || 1;
+            subtotal = unit * qty;
+            state.wallHeightExtra = 0;
         } else {
             state.wallHeightExtra = 0;
             qty = state.qty;
@@ -1396,6 +1425,11 @@
         } else if (state.isBox) {
             var dimStr = (state.boxW || 0) + '×' + (state.boxH || 0) + '×' + (state.boxD || 0) + 'mm';
             setText('soUnitLabel', tr('박스 단가', 'ボックス単価', 'Box unit') + ' (' + dimStr + ')');
+            setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
+            showRow('soWallSizeRow', false);
+        } else if (state.isCustomSize) {
+            var custDim = (state.customW || 0) + '×' + (state.customH || 0) + 'cm';
+            setText('soUnitLabel', tr('단가', '単価', 'Unit') + ' (' + custDim + ')');
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         } else {
@@ -1482,6 +1516,21 @@
     function _soUsesDeliveryShipping(p) {
         if (!p) return false;
         return _soIsHoneycombProduct(p) && !_soIsWallProduct(p);
+    }
+
+    // 2026-05-13: 사이즈 입력 → 면적 × 단가 (m²) 자동 계산 상품 — 현수막·실사출력 등
+    // admin_products.is_custom_size = true 이면서 가벽/박스/자유인쇄커팅 처럼 자체 UI가 없는 상품
+    function _soIsCustomSizeProduct(p) {
+        if (!p) return false;
+        // 가벽·박스·자유인쇄커팅 은 별도 사이즈 UI 사용
+        if (_soIsWallProduct(p)) return false;
+        if (_soIsBoxProduct(p)) return false;
+        if (_soIsCutPrintProduct(p)) return false;
+        // is_custom_size 또는 width_mm/height_mm 있고 name 에 현수막/배너/실사출력
+        if (p.is_custom_size === true) return true;
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        if (/현수막|배너|실사\s*출력|시트지|광고\s*인쇄|banner|hyunsumak/i.test(name)) return true;
+        return false;
     }
 
     // 2026-05-13: 포맥스/폼보드 감지 (대형택배 3만원)
@@ -1797,6 +1846,42 @@
     };
     window._soUpdatePrice = function () {
         state.wallHeight = parseFloat(document.getElementById('soWallHeight') && document.getElementById('soWallHeight').value) || 2.4;
+        recalc();
+    };
+
+    // 2026-05-13: 사용자 정의 사이즈 변경 → 면적 × 단가 (현수막·실사출력 등)
+    // 공식: area_m² × per_m²_rate, 최소 product.price (1m² 미만은 평방미터당 단가 그대로 적용)
+    window._soOnCustomDimsChange = function () {
+        var wEl = document.getElementById('soCustomW');
+        var hEl = document.getElementById('soCustomH');
+        if (!wEl || !hEl) return;
+        var wCm = parseInt(wEl.value, 10) || 0;
+        var hCm = parseInt(hEl.value, 10) || 0;
+        state.customW = wCm;
+        state.customH = hCm;
+        var unitEl = document.getElementById('soCustomUnitPrice');
+        var infoEl = document.getElementById('soCustomAreaInfo');
+        if (wCm < 10 || hCm < 10) {
+            if (unitEl) unitEl.textContent = '-';
+            if (infoEl) infoEl.textContent = '';
+            state.customUnitPrice = 0;
+            recalc();
+            return;
+        }
+        var perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
+        var areaM2 = (wCm / 100) * (hCm / 100);
+        var raw = areaM2 * perSqm;
+        var calcPrice = Math.round(raw / 10) * 10;
+        // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장
+        if (calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
+        state.customUnitPrice = calcPrice;
+        state.customAreaM2 = areaM2;
+        if (unitEl) unitEl.textContent = fmtPrice(calcPrice);
+        if (infoEl) {
+            infoEl.textContent =
+                wCm + '×' + hCm + 'cm · ' +
+                areaM2.toFixed(2) + 'm² × ' + fmtPrice(perSqm) + '/m²';
+        }
         recalc();
     };
 
@@ -2236,6 +2321,18 @@
             // 초기 가격 계산 (비동기)
             if (typeof window._soOnBoxDimsChange === 'function') window._soOnBoxDimsChange();
         }
+        // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
+        state.isCustomSize = _soIsCustomSizeProduct(p);
+        state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
+        state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
+        state.customUnitPrice = 0;
+        var custSec = document.getElementById('soCustomSizeSection');
+        if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
+        if (state.isCustomSize) {
+            var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
+            var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
+            if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+        }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
         var qtySec = document.getElementById('soQtySection');
         if (qtySec) qtySec.style.display = state.isWall ? 'none' : '';
@@ -2438,6 +2535,8 @@
             bundleShipping: !!state.bundleShipping,
             // 2026-05-13: 허니콤 박스 사이즈 + 계산된 단가 (장바구니/주문관리에서 재계산 안전 보존)
             boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
+            // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — W×H cm + 계산된 단가
+            customSize: state.isCustomSize ? { w_cm: state.customW, h_cm: state.customH, unit: state.customUnitPrice, area_m2: state.customAreaM2 } : null,
             // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
             backFileName: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.name : null,
             backFileType: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.type : null,
@@ -2808,6 +2907,10 @@
         // 2026-05-13: 허니콤 박스 — 저장된 박스 단가 사용 (가로×세로×높이로 산출된 값)
         if (it.boxSize && typeof it.boxSize.unit === 'number') {
             unit = it.boxSize.unit;
+        }
+        // 2026-05-13: 사용자 정의 사이즈 (현수막 등) — 저장된 단가 사용
+        if (it.customSize && typeof it.customSize.unit === 'number') {
+            unit = it.customSize.unit;
         }
         var subtotal = unit * qty;
         // 가벽 양면 → 가격 2배
