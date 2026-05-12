@@ -100,9 +100,10 @@ const state = {
     imgDataUrl: null,
     imgFileName: '',
     // 1) 원단 마감 (필수, 기본 롤인쇄, m²당 가격)
-    finishCode: 'roll',
-    finishName: '롤인쇄',
-    finishExtra: 0,                   // 단가/m²
+    // 2026-05-12: 기본 마감 = 오버록 (롤인쇄 옵션 제거)
+    finishCode: 'overlock',
+    finishName: '오버록',
+    finishExtra: 5000,                // 단가/m² (회배 비례)
     // 2) 고리 (선택, 1회 가격)
     hookCode: '',
     hookName: '',
@@ -191,35 +192,34 @@ function calcHoebae() {
 window._cdUploadImage = async function(files) {
     if (!files || !files.length) return;
     const file = files[0];
-    if (file.size > 50 * 1024 * 1024) {
-        showToast('50MB 이하 파일만 업로드 가능합니다');
+    // 2026-05-12: 업로드 제한 — PDF/PNG/JPG 만, 10MB 이하
+    const name = (file.name || '').toLowerCase();
+    const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
+    const isPng = name.endsWith('.png') || file.type === 'image/png';
+    const isJpg = name.endsWith('.jpg') || name.endsWith('.jpeg') || file.type === 'image/jpeg';
+    if (!(isPdf || isPng || isJpg)) {
+        showToast(window.cdT ? window.cdT('upload_bad_type')
+                  : 'PDF · PNG · JPG 파일만 업로드 가능합니다.');
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        showToast(window.cdT ? window.cdT('upload_too_big')
+                  : '10MB를 초과합니다. 더 작은 파일로 업로드해주세요.');
         return;
     }
     state.imgFileName = file.name;
-    const name = (file.name || '').toLowerCase();
 
     // 변환이 필요한 포맷 → DataURL 직접 생성
     try {
         let dataUrl = null;
 
-        if (name.endsWith('.pdf') || name.endsWith('.ai') || file.type === 'application/pdf') {
-            showToast('PDF/AI 파일 변환 중...');
+        if (isPdf) {
+            showToast('PDF 변환 중...');
             dataUrl = await convertPdfToDataUrl(file);
         }
-        else if (name.endsWith('.psd')) {
-            showToast('PSD 파일 변환 중...');
-            dataUrl = await convertPsdToDataUrl(file);
-        }
-        else if (name.endsWith('.eps')) {
-            showToast('EPS는 직접 변환이 어렵습니다. AI나 PDF로 저장 후 다시 업로드해주세요.');
-            return;
-        }
-        else if (name.endsWith('.tif') || name.endsWith('.tiff')) {
-            showToast('TIF/TIFF는 PNG나 JPG로 저장 후 다시 업로드해주세요.');
-            return;
-        }
         else if (!file.type.startsWith('image/')) {
-            showToast('지원하지 않는 파일 형식입니다. JPG/PNG/PDF/AI/PSD를 사용해주세요.');
+            showToast(window.cdT ? window.cdT('upload_bad_type')
+                      : 'PDF · PNG · JPG 파일만 업로드 가능합니다.');
             return;
         }
         else {
@@ -1091,17 +1091,36 @@ window._cdBuyNow = function() {
     if (!state.img || !state.imgDataUrl) { showToast(window.cdT?window.cdT("alert_no_image"):"먼저 이미지를 업로드해주세요"); return; }
     const item = buildCartItem();
     if (!item) return;
-    // 임시로 cart에 추가 후 즉시 체크아웃
+    // 2026-05-12: 최소주문금액 사전 검증 (장바구니 + 이번 아이템)
     const cart = getCart();
+    const projectedTotal = cart.reduce(function(s, it){ return s + (it.price||0); }, 0) + (item.price||0);
+    if (!checkMinOrderAmount(projectedTotal)) return;
+    // 통과 — cart에 추가 후 즉시 체크아웃
     cart.push(item);
     saveCart(cart);
     window._cpUpdateCartUI();
     window._cpOpenCheckout();
 };
 
+// 2026-05-12: 최소주문금액 검증 — 패브릭 주문 100,000원 이상 (KR), JP 사이트는 면제(홍보)
+const MIN_ORDER_KRW = 100000;
+function checkMinOrderAmount(total_krw) {
+    var lang = window.__CD_LANG || 'ko';
+    if (lang === 'ja') return true;   // JP 홍보 기간 — 제한 없음
+    if (total_krw < MIN_ORDER_KRW) {
+        var msg = (window.cdT && window.cdT('min_order_block')) ||
+                  '패브릭 주문은 최소 100,000원부터 가능합니다.\n10만원 이하는 도매사이트(cafe2626.com)에서 주문해주세요.';
+        if (typeof window.alert === 'function') window.alert(msg);
+        return false;
+    }
+    return true;
+}
+
 window._cpOpenCheckout = function() {
     const cart = getCart();
     if (cart.length === 0) return;
+    // 2026-05-12: 최소주문금액 검증 (장바구니 합계 기준)
+    if (!checkMinOrderAmount(calcCartTotal())) return;
     // 요약 렌더
     const list = document.getElementById('coItemList');
     list.innerHTML = cart.map(function(it){

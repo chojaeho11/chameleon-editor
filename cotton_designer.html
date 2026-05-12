@@ -63,7 +63,9 @@ window.__CD_I18N = {
     btn_replace: { ko:'이미지 변경', ja:'画像を変更', en:'Change image' },
     upload_title: { ko:'이미지를 올려주세요', ja:'画像をアップロード', en:'Upload your image' },
     upload_hint: { ko:'여기를 클릭하거나 파일을 끌어다 놓으세요<br>업로드한 이미지가 자동으로 패턴이 되어 원단에 출력됩니다', ja:'クリックまたはドロップしてください<br>アップロードした画像が自動でパターン化され生地に印刷されます', en:'Click here or drag a file<br>Your image becomes a repeating pattern on the fabric' },
-    upload_formats: { ko:'JPG · PNG · PDF · AI · PSD · 50MB 이하 (자동 변환)', ja:'JPG・PNG・PDF・AI・PSD・50MB以下（自動変換）', en:'JPG / PNG / PDF / AI / PSD · max 50MB (auto-convert)' },
+    upload_formats: { ko:'PDF · PNG · JPG · 10MB 이하만 업로드 가능', ja:'PDF・PNG・JPG・10MB以下のみアップロード可能', en:'PDF / PNG / JPG · max 10MB only' },
+    upload_too_big: { ko:'10MB를 초과합니다. 더 작은 파일로 업로드해주세요.', ja:'10MBを超えます。より小さいファイルでアップロードしてください。', en:'Exceeds 10MB. Please upload a smaller file.' },
+    upload_bad_type: { ko:'PDF · PNG · JPG 파일만 업로드 가능합니다.', ja:'PDF・PNG・JPGファイルのみアップロード可能です。', en:'Only PDF / PNG / JPG files are allowed.' },
     side_fabric: { ko:'원단 선택', ja:'生地を選ぶ', en:'Select Fabric' },
     side_color: { ko:'색상 선택', ja:'色を選ぶ', en:'Color' },
     side_image_size: { ko:'이미지 사이즈 (한 패턴 단위)', ja:'画像サイズ (1パターン)', en:'Image size (one tile)' },
@@ -96,6 +98,9 @@ window.__CD_I18N = {
     finish_rolledhem_sub: { ko:'고급 접어박기', ja:'高級折り縫い', en:'Premium fold-stitch' },
     side_hook: { ko:'고리가 필요하신가요?', ja:'吊り具は必要ですか？', en:'Need hanging hooks?' },
     side_acc: { ko:'부자재가 필요하신가요?', ja:'付属品は必要ですか？', en:'Need accessories?' },
+    acc_thread_color: { ko:'실색상 변경', ja:'糸の色変更', en:'Thread color change' },
+    acc_thread_color_sub: { ko:'기본 외 컬러 마감사', ja:'標準以外のカラー糸', en:'Non-default color thread' },
+    min_order_block: { ko:'패브릭 주문은 최소 100,000원부터 가능합니다.\n10만원 이하는 도매사이트(cafe2626.com)에서 주문해주세요.', en:'Fabric orders require a minimum of 100,000 KRW. For smaller orders, please use the wholesale site cafe2626.com.' },
     optional: { ko:'선택 안 해도 됩니다', ja:'なしでもOK', en:'Optional' },
     none_selected: { ko:'선택 안 함', ja:'選択なし', en:'None' },
     hook_top_string: { ko:'상단 끈 고리', ja:'上部ひも掛け', en:'Top String Loop' },
@@ -703,7 +708,7 @@ a { text-decoration: none; color: inherit; }
                 여기를 클릭하거나 파일을 끌어다 놓으세요<br>
                 업로드한 이미지가 자동으로 패턴이 되어 원단에 출력됩니다
             </div>
-            <div class="upload-formats" data-cdi18n="upload_formats">JPG · PNG · PDF · AI · PSD · 50MB 이하 (자동 변환)</div>
+            <div class="upload-formats" data-cdi18n="upload_formats">PDF · PNG · JPG · 10MB 이하만 업로드 가능</div>
         </div>
 
         <!-- 미리보기 (이미지 업로드 후) -->
@@ -723,7 +728,7 @@ a { text-decoration: none; color: inherit; }
             <div class="preview-meta" id="previewMeta" data-cdi18n="preview_meta">대폭 1300mm 롤 원단에 디자인이 인쇄됩니다. 길이는 무제한입니다.</div>
         </div>
 
-        <input type="file" id="btnUpload" accept="image/*,application/pdf,.pdf,.ai,.psd,.eps,.tif,.tiff" style="display:none;" onchange="window._cdUploadImage(this.files)">
+        <input type="file" id="btnUpload" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none;" onchange="window._cdUploadImage(this.files)">
     </div>
 
     <!-- 우측: 옵션 사이드바 -->
@@ -873,18 +878,9 @@ a { text-decoration: none; color: inherit; }
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" data-cdi18n="finish_required">필수 / 제곱미터당</span>
             </div>
             <div id="finishOptions" style="display:flex; flex-direction:column; gap:6px;">
-                <label class="fin-opt" data-finish="roll" data-name="롤인쇄" data-extra="0">
-                    <input type="radio" name="finish" value="roll" checked onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="finish_roll">롤인쇄</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_roll_sub">기본·미가공</span></span>
-                    <span class="fin-opt-price">+0원/회배</span>
-                </label>
-                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="3000">
-                    <input type="radio" name="finish" value="raw" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="finish_raw">가재단</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_raw_sub">사이즈 정밀 컷팅</span></span>
-                    <span class="fin-opt-price">+3,000원/회배</span>
-                </label>
+                <!-- 2026-05-12: 순서 변경 — 오버록(기본)/인터록/말아박기/가재단. 롤인쇄는 옵션에서 제외 -->
                 <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="5000">
-                    <input type="radio" name="finish" value="overlock" onchange="window._cdOnFinishChange()">
+                    <input type="radio" name="finish" value="overlock" checked onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_overlock">오버록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_overlock_sub">올풀림 방지</span></span>
                     <span class="fin-opt-price">+5,000원/회배</span>
                 </label>
@@ -897,6 +893,11 @@ a { text-decoration: none; color: inherit; }
                     <input type="radio" name="finish" value="rolledhem" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_rolledhem">말아박기</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_rolledhem_sub">고급 접어박기</span></span>
                     <span class="fin-opt-price">+8,000원/회배</span>
+                </label>
+                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="3000">
+                    <input type="radio" name="finish" value="raw" onchange="window._cdOnFinishChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="finish_raw">가재단</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_raw_sub">사이즈 정밀 컷팅</span></span>
+                    <span class="fin-opt-price">+3,000원/회배</span>
                 </label>
             </div>
         </div>
@@ -962,6 +963,12 @@ a { text-decoration: none; color: inherit; }
                     <input type="radio" name="accessory" value="" checked onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
                     <span class="fin-opt-price">+0원</span>
+                </label>
+                <!-- 2026-05-12: 실색상 변경 옵션 — 항상 최상위에 노출 -->
+                <label class="fin-opt" data-acc="thread_color" data-name="실색상 변경" data-extra="2000">
+                    <input type="radio" name="accessory" value="thread_color" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_thread_color">실색상 변경</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_thread_color_sub">기본 외 컬러 마감사</span></span>
+                    <span class="fin-opt-price">+2,000원</span>
                 </label>
                 <div id="accessoryExtraList" style="display:contents;"></div>
             </div>
@@ -1168,6 +1175,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=35"></script>
+<script src="cotton_designer.js?v=36"></script>
 </body>
 </html>
