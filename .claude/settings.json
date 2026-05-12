@@ -120,7 +120,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=26: calcCartItemPrice delegates to _soCalcItemPrice\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=27: z-index 90000+ + sky-blue scrollbars\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=28: cart drawer outside modal + paler scrollbars\" 2>&1)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=29: redirect to / after order \\(not /mypage\\)\" 2>&1)"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=29: redirect to / after order \\(not /mypage\\)\" 2>&1)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Home: manager quote quick-order card \\(simple_order v=30\\)\" 2>&1)"
     ],
     "additionalDirectories": [
       "\\tmp"

@@ -1297,9 +1297,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(advisorPanel);
     }
 
-    // 히어로 바로 다음: 바로가기 버튼 → 챗봇
+    // 히어로 바로 다음: 매니저 견적 카드 → 바로가기 버튼 → 챗봇
     var shortcutBtns = document.getElementById('advShortcutBtns');
+    var mgrQuoteHero = document.getElementById('mgrQuoteHero');
     var cursor = hero;
+    // 2026-05-13: 매니저 견적 빠른 주문 카드를 hero 바로 아래 고정
+    if (mgrQuoteHero) { moveAfter(mgrQuoteHero, cursor); cursor = mgrQuoteHero; }
     if (shortcutBtns) { moveAfter(shortcutBtns, cursor); cursor = shortcutBtns; }
     [chatbotWrap, couponBanner, btnWrap].forEach(function(el) {
         if (el) { moveAfter(el, cursor); cursor = el; }
@@ -7101,7 +7104,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./my-design.js?v=434"></script>
 <script type="module" src="./ppt-mode.js?v=434"></script>
-<script type="module" src="./main.js?v=439"></script>
+<script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=30"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
