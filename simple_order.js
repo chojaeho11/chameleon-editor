@@ -1062,12 +1062,25 @@
         };
     }
 
+    // 2026-05-12: 도메인 통합 — 패브릭(__source='cotton-print') 항목은 cotton_designer 드로어에서 렌더,
+    // simple_order 드로어는 일반 상품만 표시. 쓰기 시 패브릭 항목은 그대로 보존.
+    function isFabricItem(it) {
+        return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+    }
     function readCart() {
-        try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }
-        catch (e) { return []; }
+        try {
+            var all = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+            return all.filter(function (it) { return !isFabricItem(it); });
+        } catch (e) { return []; }
     }
     function writeCart(arr) {
-        try { localStorage.setItem(CART_KEY, JSON.stringify(arr)); } catch (e) {}
+        try {
+            // 기존 패브릭 항목 보존 + 새 일반상품 배열 머지
+            var existing = [];
+            try { existing = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch (e) {}
+            var fabrics = existing.filter(isFabricItem);
+            localStorage.setItem(CART_KEY, JSON.stringify(fabrics.concat(arr || [])));
+        } catch (e) {}
     }
 
     async function doAddToCart() {

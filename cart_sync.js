@@ -32,9 +32,17 @@
     var SUPABASE_URL  = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
+    // 2026-05-12: 도메인 통합 — cafe 도메인의 /fabric, /cotton-designer 경로도 IS_COTTON 처리
+    // 이렇게 하면 같은 origin 안에서 패브릭 카트와 일반 카트가 chameleon_cart_current 라는 단일 키를
+    // 공유하면서도 __source 태그로 구분되어 각 렌더러가 자기 항목만 렌더 가능.
     var HOST = (location.hostname || '').toLowerCase();
-    var IS_COTTON = HOST.indexOf('cotton-print') >= 0;
-    var LOCAL_KEY = IS_COTTON ? 'cp_cart_v1' : 'chameleon_cart_current';
+    var PATH = (location.pathname || '').toLowerCase();
+    var IS_COTTON_HOST = HOST.indexOf('cotton-print') >= 0;
+    var IS_COTTON_PATH = PATH.indexOf('/fabric') === 0 || PATH.indexOf('/cotton-designer') === 0 ||
+                          PATH.indexOf('cotton_designer') >= 0;
+    var IS_COTTON = IS_COTTON_HOST || IS_COTTON_PATH;
+    // cotton-print.com 레거시 도메인은 cp_cart_v1 유지, cafe 도메인의 /fabric 은 chameleon_cart_current 공유
+    var LOCAL_KEY = IS_COTTON_HOST ? 'cp_cart_v1' : 'chameleon_cart_current';
     var SOURCE    = IS_COTTON ? 'cotton-print' : 'main';
     var SID_KEY   = 'unified_cart_sid';
 

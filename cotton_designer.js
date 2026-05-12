@@ -914,11 +914,46 @@ function drawRulers(cw, ch, pxPerCm, fabricW, fabricH) {
 }
 
 // ════════════════════════════════════════════════
-// 🛒 cotton-print 자체 장바구니 (localStorage)
+// 🛒 패브릭 장바구니 (localStorage)
+// 2026-05-12: 도메인 통합 — cafe2626/0101/3355 같은 origin 에 있을 때는 메인 카트(chameleon_cart_current)
+// 와 같은 키 사용 → 로그인·카트 자연스럽게 공유. cotton-print.com (구 도메인) 에서는 legacy 키 유지.
 // ════════════════════════════════════════════════
-const CART_KEY = 'cp_cart_v1';
-function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return []; } }
-function saveCart(c) { try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
+const CART_KEY = (function () {
+    var h = (location.hostname || '').toLowerCase();
+    if (h.indexOf('cotton-print') >= 0) return 'cp_cart_v1';  // legacy
+    return 'chameleon_cart_current';                            // 통합
+})();
+function getCart() {
+    try {
+        var arr = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+        // 통합 카트일 경우 패브릭 아이템만 필터 (다른 일반상품 items 분리 렌더)
+        if (CART_KEY === 'chameleon_cart_current') {
+            return arr.filter(function (it) {
+                return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+            });
+        }
+        return arr;
+    } catch (e) { return []; }
+}
+function saveCart(c) {
+    try {
+        if (CART_KEY === 'chameleon_cart_current') {
+            // 통합 카트: 기존 일반상품 보존하고 패브릭 항목만 교체
+            var existing = [];
+            try { existing = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch (e) {}
+            var others = existing.filter(function (it) {
+                return !(it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null));
+            });
+            var tagged = (c || []).map(function (it) {
+                if (it && !it.__source) it.__source = 'cotton-print';
+                return it;
+            });
+            localStorage.setItem(CART_KEY, JSON.stringify(others.concat(tagged)));
+        } else {
+            localStorage.setItem(CART_KEY, JSON.stringify(c));
+        }
+    } catch (e) {}
+}
 
 function calcCartTotal() {
     return getCart().reduce(function(s, it) { return s + (it.price || 0); }, 0);
@@ -996,75 +1031,45 @@ window._cpCartOpen = function() {
 };
 
 // ════════════════════════════════════════════════════
-// 2026-05-12: Supabase Google 로그인 — cafe2626 와 user_id 일치시켜 크로스도메인 카트 합치기
+// 2026-05-12: 도메인 통합 — 메인 사이트 로그인 상태를 헤더에 비치기 (별도 OAuth 없음)
+// cafe2626/0101/3355 같은 origin 에 있을 때는 메인의 supabase 세션을 그대로 사용.
+// 로그인 안 되어 있으면 메인 사이트 로그인 페이지로 안내.
 // ════════════════════════════════════════════════════
-(function setupCpAuth() {
+(function syncCpLoginUI() {
     function getSb() {
         if (window.sb && typeof window.sb.from === 'function') return window.sb;
-        if (!window.supabase || !window.supabase.createClient) return null;
-        try {
-            // cart_sync 와 동일 클라이언트 재사용
-            if (window.__unified_sb) return window.__unified_sb;
-            window.__unified_sb = window.supabase.createClient(
-                'https://qinvtnhiidtmrzosyvys.supabase.co',
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
-            );
-            return window.__unified_sb;
-        } catch (e) { return null; }
+        if (window.__unified_sb) return window.__unified_sb;
+        return null; // cart_sync.js 가 세팅한 client 재사용. 따로 만들지 않음.
     }
-
-    async function refreshLoginUI() {
+    async function refresh() {
         var sb = getSb();
-        if (!sb) return;
+        var loginLink = document.getElementById('cpLoginLink');
+        if (!loginLink) return;
+        if (!sb) { setTimeout(refresh, 300); return; }
         try {
             var r = await sb.auth.getSession();
             var session = r && r.data && r.data.session;
             var label = document.getElementById('cpLoginLabel');
-            var btn = document.getElementById('cpLoginBtn');
-            if (!btn || !label) return;
             if (session && session.user) {
-                var email = (session.user.email || '').split('@')[0];
-                label.textContent = email + ' (로그아웃)';
-                btn.onclick = function () { window._cpSignOut(); };
+                // 로그인됨 — 버튼 숨김 (메인 사이트와 마찬가지로 헤더는 카트만 표시)
+                loginLink.style.display = 'none';
             } else {
-                label.textContent = '로그인';
-                btn.onclick = function () { window._cpSignIn(); };
+                // 로그인 필요 — 메인 사이트 로그인 페이지로
+                loginLink.style.display = '';
+                if (label) label.textContent = '로그인';
+                loginLink.href = '/login?return=' + encodeURIComponent(location.pathname + location.search);
             }
         } catch (e) {}
     }
-
-    window._cpSignIn = async function () {
-        var sb = getSb();
-        if (!sb) { alert('잠시 후 다시 시도해주세요'); return; }
-        try {
-            await sb.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: location.href }
-            });
-        } catch (e) {
-            console.error('[cp_signin]', e);
-            alert('로그인 실패: ' + (e.message || e));
-        }
-    };
-
-    window._cpSignOut = async function () {
-        var sb = getSb();
-        if (!sb) return;
-        try {
-            await sb.auth.signOut();
-            // localStorage 카트는 유지 (익명 세션으로 계속 사용)
-            location.reload();
-        } catch (e) { console.error('[cp_signout]', e); }
-    };
-
-    // 초기 + auth 변경 시 UI 갱신
     function init() {
+        refresh();
         var sb = getSb();
-        if (!sb) { setTimeout(init, 200); return; }
-        refreshLoginUI();
-        try {
-            sb.auth.onAuthStateChange(function () { refreshLoginUI(); });
-        } catch (e) {}
+        if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function') {
+            try { sb.auth.onAuthStateChange(refresh); } catch (e) {}
+        } else {
+            // sb 가 아직 준비 안 됨 — 잠시 후 재시도
+            setTimeout(init, 500);
+        }
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

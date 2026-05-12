@@ -382,58 +382,45 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
-        // ========== cotton-print.com 전용 도메인 라우팅 ==========
-        // 패브릭 인쇄 전문 서브사이트
+        // ========== cotton-print.com → cafe 도메인 통합 (2026-05-12) ==========
+        // 사용자 결정: 도메인 4개를 하나의 사이트처럼 통합. cotton-print.com 의 디자이너는
+        // 언어별 cafe 도메인의 /fabric 경로로 301 redirect. 로그인·카트가 같은 origin 에서
+        // 자연스럽게 공유되어 "한 번 로그인 → 모든 곳에서 사용" 이 실현됨.
         if (url.hostname.includes('cotton-print.com')) {
-            // /designer 또는 /cotton-designer → cotton_designer.html (이미지 → 패턴 디자이너)
-            // 2026-05-11: cafe2626.com 마켓 카드가 'cotton-designer' 별칭을 쓰므로 여기서도 동일 처리.
-            if (path === 'designer' || path === 'designer.html' || path === 'cotton-designer' || path === 'cotton-designer.html') {
-                const rewriteUrl = new URL('/cotton_designer.html', url.origin);
-                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
-                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
-                    const loc = new URL(resp.headers.get('Location'), url.origin);
-                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
-                }
-                const h = new Headers(resp.headers);
-                h.set('Cache-Control', 'public, max-age=300, s-maxage=300');
-                return new Response(resp.body, { status: 200, headers: h });
+            // 언어 결정: ?lang= URL 파라미터 > Accept-Language > 기본 KR
+            const langParam = (url.searchParams.get('lang') || '').toLowerCase();
+            const al = (request.headers.get('Accept-Language') || '').toLowerCase();
+            let cafeHost = 'www.cafe2626.com';
+            if (langParam === 'ja' || langParam === 'jp') cafeHost = 'www.cafe0101.com';
+            else if (langParam === 'en' || langParam === 'us') cafeHost = 'www.cafe3355.com';
+            else if (!langParam) {
+                if (al.startsWith('ja')) cafeHost = 'www.cafe0101.com';
+                else if (al.startsWith('en')) cafeHost = 'www.cafe3355.com';
             }
-            // /mypage → cotton_mypage.html (디자이너 마이페이지)
-            if (path === 'mypage' || path === 'mypage.html' || path === 'designer-mypage') {
-                const rewriteUrl = new URL('/cotton_mypage.html', url.origin);
-                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
-                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
-                    const loc = new URL(resp.headers.get('Location'), url.origin);
-                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
-                }
-                const h = new Headers(resp.headers);
-                h.set('Cache-Control', 'no-cache');
-                return new Response(resp.body, { status: 200, headers: h });
+
+            // 자산 (JS/CSS/이미지 등) 은 그대로 ASSETS 에서 — Cloudflare Pages 동일 프로젝트
+            const isAsset = path.includes('.') && (
+                path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.png') ||
+                path.endsWith('.jpg') || path.endsWith('.svg') || path.endsWith('.ico') ||
+                path.endsWith('.txt') || path.endsWith('.xml') || path.endsWith('.mp4') ||
+                path.endsWith('.json') || path.endsWith('.webp') || path.endsWith('.woff') ||
+                path.endsWith('.woff2') || path.endsWith('.ttf')
+            );
+            if (isAsset) return await env.ASSETS.fetch(request);
+
+            // 경로별 매핑 → 새 canonical 경로
+            let targetPath;
+            if (path === 'designer' || path === 'designer.html' ||
+                path === 'cotton-designer' || path === 'cotton-designer.html') {
+                targetPath = '/fabric';                       // 디자이너 → /fabric
+            } else if (path === 'mypage' || path === 'mypage.html' || path === 'designer-mypage') {
+                targetPath = '/mypage';                       // 마이페이지 → 통합 마이페이지
+            } else if (path === '' || path === 'index.html') {
+                targetPath = '/fabric';                       // 랜딩 → /fabric (디자이너 통합)
+            } else {
+                targetPath = '/' + path;                      // 기타 경로 그대로 cafe 도메인으로
             }
-            // 루트 → cotton_print.html 직접 서빙
-            if (path === '' || path === 'index.html') {
-                const rewriteUrl = new URL('/cotton_print.html', url.origin);
-                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
-                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
-                    const loc = new URL(resp.headers.get('Location'), url.origin);
-                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
-                }
-                const h = new Headers(resp.headers);
-                h.set('Cache-Control', 'public, max-age=300, s-maxage=300');
-                return new Response(resp.body, { status: 200, headers: h });
-            }
-            // /sitemap.xml, /robots.txt, /favicon.ico, /version.txt, /mascot-character.png 등
-            // 정적 파일은 그대로 ASSETS에서 가져옴
-            if (path === 'sitemap.xml' || path === 'robots.txt' || path === 'favicon.ico' ||
-                path === 'version.txt' || path.includes('.') && !path.startsWith('?')) {
-                // 자산 그대로 (cotton_print.js 등)
-                if (path === 'cotton_print.js' || path === 'cotton_designer.js' || path === 'cotton.mp4' || path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.svg') || path.endsWith('.ico') || path.endsWith('.txt') || path.endsWith('.xml') || path.endsWith('.mp4')) {
-                    return await env.ASSETS.fetch(request);
-                }
-            }
-            // 그 외 모든 경로는 메인 cafe2626.com 으로 301 리다이렉트
-            // (cotton-print.com은 패브릭 랜딩 단일 페이지로 운영)
-            const target = 'https://www.cafe2626.com/' + path + url.search;
+            const target = 'https://' + cafeHost + targetPath + url.search;
             return Response.redirect(target, 301);
         }
 
@@ -916,6 +903,9 @@ ${hreflangTags('/editor')}
             'franchise': '/franchise.html',
             'cotton-print': '/cotton_print.html',
             'cotton-designer': '/cotton_designer.html',
+            // 2026-05-12: 도메인 통합 — /fabric 이 패브릭 디자이너의 새 canonical 경로
+            'fabric': '/cotton_designer.html',
+            'fabric-designer': '/cotton_designer.html',
         };
         if (STANDALONE_PAGES[path]) {
             const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);
