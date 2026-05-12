@@ -487,6 +487,20 @@
       </div>
     </div>
 
+    <!-- 2026-05-12: 카테고리 네비게이션 — 다른 카테고리로 이동 -->
+    <nav class="so-category-nav" style="background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 20px; overflow-x:auto; white-space:nowrap; flex-shrink:0;">
+      <div style="display:inline-flex; gap:8px; align-items:center;">
+        <a href="/?_p=honeycomb" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🧱 ${tr('허니콤보드', 'ハニカム', 'Honeycomb')}</a>
+        <a href="/?_p=paper-stand" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">📦 ${tr('종이매대', '紙什器', 'Paper stand')}</a>
+        <a href="/fabric" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">✂️ ${tr('패브릭', 'ファブリック', 'Fabric')}</a>
+        <a href="/?_p=biz-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">📇 ${tr('명함·전단', '名刺・チラシ', 'Biz print')}</a>
+        <a href="/?_p=acrylic-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🟫 ${tr('아크릴', 'アクリル', 'Acrylic')}</a>
+        <a href="/?_p=foamex-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🪧 ${tr('사인물', '看板', 'Signage')}</a>
+        <a href="/?_p=goods" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🎁 ${tr('굿즈', 'グッズ', 'Goods')}</a>
+        <a href="/?_p=tshirt-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">👕 ${tr('티셔츠', 'Tシャツ', 'T-shirt')}</a>
+      </div>
+    </nav>
+
     <div class="so-body">
       <!-- 좌측: 큰 파일 업로드 -->
       <div class="so-left">
@@ -537,6 +551,10 @@
         <div id="soStatus" class="so-status"></div>
 
         <div class="so-actions">
+          <!-- 2026-05-12: 장바구니 보기 버튼 — 담지 않고 현재 카트만 열어보기 -->
+          <button class="so-btn" id="soBtnViewCart" onclick="window._soToggleCart(true)" style="background:#fff; color:#92400e; border:2px solid #f59e0b; font-weight:700;">
+            👀 ${tr('장바구니 보기', 'カートを見る', 'View cart')}
+          </button>
           <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
             🛒 ${tr('장바구니에 담기', 'カートに追加', 'Add to cart')}
           </button>
@@ -1291,15 +1309,22 @@
     }
 
     window._soGoCheckout = function() {
-        // 카트 드로어 닫고 메인 사이트의 카트/체크아웃 페이지로
+        // 2026-05-12: 같은 페이지에 cartPage div 가 있으면 그대로 열어서 결제. 없으면 메인 사이트로.
         window._soToggleCart(false);
-        try {
-            if (window.openCartPanel) window.openCartPanel();
-            else if (window.toggleCart) window.toggleCart(true);
-            else location.href = '/?cart=open';
-        } catch (e) {
-            location.href = '/?cart=open';
-        }
+        if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
+        setTimeout(function () {
+            var cp = document.getElementById('cartPage');
+            if (cp) {
+                // cartData 와 localStorage 동기화 후 카트 페이지 표시
+                if (window.renderCart) { try { window.renderCart(); } catch (e) {} }
+                cp.style.display = 'block';
+                document.body.classList.remove('editor-active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // cartPage 가 없는 컨텍스트 (e.g. cotton_designer 단독 페이지) — 메인으로 이동
+                location.href = '/?cart=open';
+            }
+        }, 150);
     };
 
     // 카테고리 라벨 매핑 (한국어 사이트 기준)

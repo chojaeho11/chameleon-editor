@@ -2920,6 +2920,13 @@ function updateSummary(prodTotal, addonTotal, total) {
     let hasExcludedItem = false;
 
     cartData.forEach(item => {
+        // 2026-05-12: fabric 항목 (item.product 없음) 은 별도 가산 처리, 일반 로직 skip
+        if (!item.product) {
+            // 패브릭/기타 product-less 항목: item.price 직접 사용
+            const fPrice = item.price || 0;
+            // baseTotal 만 가산, 할인 등은 패스
+            return; // 합계 계산은 updateSummary 의 호출자에서 별도 처리
+        }
         const prodCat = item.product ? item.product.category : '';
 
         // PRO 구독자는 제외 카테고리도 등급할인 대상에 포함

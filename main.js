@@ -63,6 +63,29 @@ window.addEventListener("DOMContentLoaded", async () => {
         try { initAuth(); } catch(e) { console.warn('⚠️ Auth init failed:', e); }
         try { initOrderSystem(); } catch(e) { console.warn('⚠️ OrderSystem init failed:', e); }
 
+        // 2026-05-12: ?cart=open URL 파라미터 처리 — simple_order 또는 cotton_designer 의
+        // "주문하기" 버튼 후 자동으로 카트 페이지(결제 단계) 열기
+        try {
+            const _qsCart = new URLSearchParams(location.search).get('cart');
+            if (_qsCart === 'open') {
+                setTimeout(function () {
+                    if (window.renderCart) { try { window.renderCart(); } catch (e) {} }
+                    const cp = document.getElementById('cartPage');
+                    if (cp) {
+                        cp.style.display = 'block';
+                        document.body.classList.remove('editor-active');
+                        window.scrollTo(0, 0);
+                    }
+                    // URL 정리 (뒤로가기 시 무한 루프 방지)
+                    try {
+                        const u = new URL(location.href);
+                        u.searchParams.delete('cart');
+                        history.replaceState(null, '', u.toString());
+                    } catch (e) {}
+                }, 500);
+            }
+        } catch (e) {}
+
         // 1-2. 마이페이지 버튼 연결
         const btnMyPage = document.getElementById("btnMyLibrary");
         if (btnMyPage) {
