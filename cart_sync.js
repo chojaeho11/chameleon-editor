@@ -140,29 +140,54 @@
     }
 
     // ── Server ops ───────────────────────────────────────
+    // Key by user_id if logged in (cross-domain auto-sync), else by session_id.
+    var _userId = null;
+    function getUserId() {
+        var c = sb();
+        if (!c || !c.auth || typeof c.auth.getSession !== 'function') return Promise.resolve(null);
+        return c.auth.getSession()
+            .then(function (r) {
+                return r && r.data && r.data.session && r.data.session.user
+                    ? r.data.session.user.id : null;
+            })
+            .catch(function () { return null; });
+    }
+
     function pull() {
         var c = sb();
         if (!c) return Promise.resolve(null);
-        return c.from('carts').select('items').eq('session_id', SID).maybeSingle()
-            .then(function (res) {
-                if (res.error) {
-                    if (res.error.code !== 'PGRST116') console.warn('[cart_sync] pull', res.error);
-                    return null;
-                }
-                return res.data ? (res.data.items || []) : null;
-            })
-            .catch(function (e) { console.warn('[cart_sync] pull exc', e); return null; });
+        // Prefer user_id (cross-domain shared) over session_id (per-device).
+        var q;
+        if (_userId) {
+            q = c.from('carts').select('items').eq('user_id', _userId).maybeSingle();
+        } else {
+            q = c.from('carts').select('items').eq('session_id', SID).maybeSingle();
+        }
+        return q.then(function (res) {
+            if (res.error) {
+                if (res.error.code !== 'PGRST116') console.warn('[cart_sync] pull', res.error);
+                return null;
+            }
+            return res.data ? (res.data.items || []) : null;
+        }).catch(function (e) { console.warn('[cart_sync] pull exc', e); return null; });
     }
 
     function push(items) {
         var c = sb();
         if (!c) return Promise.resolve();
-        return c.from('carts').upsert(
-            { session_id: SID, items: items, updated_at: new Date().toISOString() },
-            { onConflict: 'session_id' }
-        ).then(function (res) {
-            if (res.error) console.warn('[cart_sync] push', res.error);
-        }).catch(function (e) { console.warn('[cart_sync] push exc', e); });
+        var row, conflict;
+        if (_userId) {
+            row = { user_id: _userId, session_id: SID, items: items, updated_at: new Date().toISOString() };
+            conflict = 'user_id';
+        } else {
+            row = { session_id: SID, items: items, updated_at: new Date().toISOString() };
+            conflict = 'session_id';
+        }
+        return c.from('carts').upsert(row, { onConflict: conflict })
+            .then(function (res) {
+                if (res.error) console.warn('[cart_sync] push', res.error);
+            })
+            .catch(function (e) { console.warn('[cart_sync] push exc', e); });
     }
 
     var pushTimer = null;
@@ -285,19 +310,44 @@
     function init() {
         if (_initialized) return;
         _initialized = true;
-        // 1) Load server state
-        pull().then(function (serverItems) {
+        // 1) Resolve logged-in user_id (cross-domain shared key)
+        getUserId().then(function (uid) {
+            _userId = uid;
+            if (uid) console.log('[cart_sync] using user_id key:', uid);
+            else      console.log('[cart_sync] anonymous session key:', SID);
+            // 2) Load server state
+            return pull();
+        }).then(function (serverItems) {
             var local = readLocal();
             local.forEach(tagItem);
             _unified = mergeServerLocal(serverItems, local);
-            // 2) Write back domain-filtered view to native key
+            // 3) Write back domain-filtered view to native key
             rebuildLocalFromUnified();
-            // 3) If we had local items not yet on server, push them
+            // 4) If we had local items not yet on server, push them
             if (!serverItems || serverItems.length !== _unified.length) schedulePush();
-            // 4) Patch outbound sibling links
+            // 5) Patch outbound sibling links
             patchLinksOnce();
             var obs = new MutationObserver(patchLinksOnce);
             try { obs.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+            // 6) Re-sync when auth state changes (login/logout)
+            try {
+                var c = sb();
+                if (c && c.auth && typeof c.auth.onAuthStateChange === 'function') {
+                    c.auth.onAuthStateChange(function (_event, session) {
+                        var newUid = session && session.user ? session.user.id : null;
+                        if (newUid !== _userId) {
+                            _userId = newUid;
+                            // Re-pull with new key
+                            pull().then(function (items) {
+                                if (items) {
+                                    _unified = mergeServerLocal(items, _unified);
+                                    rebuildLocalFromUnified();
+                                }
+                            });
+                        }
+                    });
+                }
+            } catch (e) {}
         });
     }
 
