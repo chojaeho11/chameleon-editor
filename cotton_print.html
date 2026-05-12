@@ -1087,13 +1087,52 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
             // 3) 목업 (자동 생성 제거 — 어드민이 이후 수동 처리)
             var mockups = [];
 
+            // 2026-05-12: 자동번역 — 사용자 입력 언어 기준으로 다른 언어로 번역해 합쳐 저장.
+            //   예: 입력 "해달" (ko) → 저장 "해달, sea otter, ラッコ" (검색 친화적, 시드 스타일과 일치)
+            statusEl.textContent = __L({ko:'번역 중...', ja:'翻訳中...', en:'Translating...'});
+            var nameMulti = name;
+            var descMulti = desc;
+            try {
+                var sourceLang = (__lang === 'ja') ? 'ja' : (__lang === 'en') ? 'en' : 'ko';
+                var targetLangs = ['ko','ja','en'].filter(function(l){ return l !== sourceLang; });
+                var calls = [
+                    sb.functions.invoke('translate', {
+                        body: { text: name, sourceLang: sourceLang, targetLangs: targetLangs }
+                    })
+                ];
+                if (desc) {
+                    calls.push(sb.functions.invoke('translate', {
+                        body: { text: desc, sourceLang: sourceLang, targetLangs: targetLangs }
+                    }));
+                }
+                var results = await Promise.all(calls);
+                var nameTr = (results[0] && results[0].data && results[0].data.translations) || {};
+                var descTr = (results[1] && results[1].data && results[1].data.translations) || {};
+                // 순서: ko, ja, en (시드 패턴과 일치)
+                var orderLangs = ['ko','ja','en'];
+                var nameParts = orderLangs.map(function(l){
+                    if (l === sourceLang) return name;
+                    return (nameTr[l] || '').trim();
+                }).filter(Boolean);
+                nameMulti = nameParts.join(', ');
+                if (desc) {
+                    var descParts = orderLangs.map(function(l){
+                        if (l === sourceLang) return desc;
+                        return (descTr[l] || '').trim();
+                    }).filter(Boolean);
+                    descMulti = descParts.join(' · ');
+                }
+            } catch (trErr) {
+                console.warn('[translate] 실패 — 원문만 저장:', trErr);
+            }
+
             // 4) DB 등록 (user_patterns 테이블 — 즉시 노출, 부적절 시 어드민이 사후 비공개)
             statusEl.textContent = __L({ko:'등록 중...', ja:'登録中...', en:'Registering...'});
             var insertRes = await sb.from('user_patterns').insert({
-                name: name,
+                name: nameMulti,
                 category: cat,
                 author: author || null,
-                description: desc || null,
+                description: descMulti || null,
                 original_url: origUrl,
                 thumb_url: thumbUrl,
                 mockup_urls: mockups,
@@ -1223,13 +1262,10 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
             var q = sb.from('user_patterns')
                 .select('*', { count: 'exact' })
                 .eq('status','approved')
-                // 2026-05-11: 옛 시드(예: '페이즐리 46', 2026-05-10) 자동 숨김 — RLS로 admin DELETE/UPDATE 모두
-                //   막혀있어 시야에서만 빼는 게 가장 안전. 새 시드 + 향후 사용자 업로드는 2026-05-11 이후라 영향 없음.
+                // 옛 시드(2026-05-10) 자동 숨김
                 .gte('created_at', '2026-05-11T00:00:00Z')
-                // ascending=true — 시드 INSERT 순서가 library 최신순이므로
-                //   created_at ASC = 가장 이른 INSERT = 가장 최신 library 자산 (의도된 동작).
-                //   RLS/trigger로 created_at 직접 갱신이 막혀 있어 정렬 방향으로 우회.
-                .order('created_at', { ascending: true })
+                // 2026-05-12: 새로 업로드된 패턴이 제일 앞으로 — 일반적인 최신순 정렬
+                .order('created_at', { ascending: false })
                 .range(from, to);
             if (_currentCat) q = q.eq('category', _currentCat);
             if (_currentSearch) {

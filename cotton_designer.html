@@ -100,7 +100,18 @@ window.__CD_I18N = {
     side_acc: { ko:'부자재가 필요하신가요?', ja:'付属品は必要ですか？', en:'Need accessories?' },
     acc_thread_color: { ko:'실색상 변경', ja:'糸の色変更', en:'Thread color change' },
     acc_thread_color_sub: { ko:'기본 외 컬러 마감사', ja:'標準以外のカラー糸', en:'Non-default color thread' },
-    min_order_block: { ko:'패브릭 주문은 최소 100,000원부터 가능합니다.\n10만원 이하는 도매사이트(cafe2626.com)에서 주문해주세요.', en:'Fabric orders require a minimum of 100,000 KRW. For smaller orders, please use the wholesale site cafe2626.com.' },
+    acc_rod_30: { ko:'목봉 30cm', ja:'木棒 30cm', en:'Wood rod 30cm' },
+    acc_rod_50: { ko:'목봉 50cm', ja:'木棒 50cm', en:'Wood rod 50cm' },
+    acc_rod_100: { ko:'목봉 100cm', ja:'木棒 100cm', en:'Wood rod 100cm' },
+    acc_rod_130: { ko:'목봉 130cm', ja:'木棒 130cm', en:'Wood rod 130cm' },
+    acc_rod_sub: { ko:'상단 봉 끼움용', ja:'上部ロッド挿入用', en:'Top rod insert' },
+    acc_opp_pack: { ko:'OPP 개별포장', ja:'OPP個別包装', en:'OPP individual pack' },
+    acc_opp_sub: { ko:'투명 비닐 포장', ja:'透明ビニール包装', en:'Clear poly bag' },
+    acc_press_rod: { ko:'압축봉', ja:'圧縮ロッド', en:'Tension rod' },
+    acc_press_sub: { ko:'탄성 압축 봉', ja:'伸縮性ロッド', en:'Elastic tension' },
+    acc_ring_hook: { ko:'링고리', ja:'リング金具', en:'Ring hook' },
+    acc_ring_sub: { ko:'상단 걸이용 링', ja:'上部吊り下げリング', en:'Top hanging ring' },
+    min_order_block: { ko:'패브릭 주문은 최소 10만원부터 가능합니다.', en:'Fabric orders require a minimum of 100,000 KRW.' },
     optional: { ko:'선택 안 해도 됩니다', ja:'なしでもOK', en:'Optional' },
     none_selected: { ko:'선택 안 함', ja:'選択なし', en:'None' },
     hook_top_string: { ko:'상단 끈 고리', ja:'上部ひも掛け', en:'Top String Loop' },
@@ -813,6 +824,33 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
+        <!-- 배경색 (2026-05-12: 레이아웃 바로 아래로 이동 — 시각 옵션 같이) -->
+        <div class="side-card" id="bgColorCard">
+            <div class="side-card-title" data-cdi18n="side_bgcolor">배경색</div>
+            <div style="font-size:11px; color:var(--text-light); line-height:1.5; margin-bottom:10px;" data-cdi18n="side_bgcolor_desc">투명 PNG 패턴일 때 배경색이 보입니다. 일반 이미지는 가려질 수 있어요.</div>
+            <div class="bg-swatches" id="bgSwatches">
+                <button type="button" class="bg-sw active" data-color="#ffffff" style="background:#ffffff; border:1.5px solid #d6d3d1;" title="화이트" onclick="window._cdSelectBgColor('#ffffff', this)"></button>
+                <button type="button" class="bg-sw" data-color="#1f2937" style="background:#1f2937;" title="차콜" onclick="window._cdSelectBgColor('#1f2937', this)"></button>
+                <button type="button" class="bg-sw" data-color="#000000" style="background:#000000;" title="블랙" onclick="window._cdSelectBgColor('#000000', this)"></button>
+                <button type="button" class="bg-sw" data-color="#fef3c7" style="background:#fef3c7;" title="아이보리" onclick="window._cdSelectBgColor('#fef3c7', this)"></button>
+                <button type="button" class="bg-sw" data-color="#fde68a" style="background:#fde68a;" title="머스타드 라이트" onclick="window._cdSelectBgColor('#fde68a', this)"></button>
+                <button type="button" class="bg-sw" data-color="#facc15" style="background:#facc15;" title="머스타드" onclick="window._cdSelectBgColor('#facc15', this)"></button>
+                <button type="button" class="bg-sw" data-color="#fca5a5" style="background:#fca5a5;" title="피치" onclick="window._cdSelectBgColor('#fca5a5', this)"></button>
+                <button type="button" class="bg-sw" data-color="#f9a8d4" style="background:#f9a8d4;" title="핑크" onclick="window._cdSelectBgColor('#f9a8d4', this)"></button>
+                <button type="button" class="bg-sw" data-color="#c4b5fd" style="background:#c4b5fd;" title="라벤더" onclick="window._cdSelectBgColor('#c4b5fd', this)"></button>
+                <button type="button" class="bg-sw" data-color="#93c5fd" style="background:#93c5fd;" title="베이비블루" onclick="window._cdSelectBgColor('#93c5fd', this)"></button>
+                <button type="button" class="bg-sw" data-color="#86efac" style="background:#86efac;" title="민트" onclick="window._cdSelectBgColor('#86efac', this)"></button>
+                <button type="button" class="bg-sw" data-color="#a3a380" style="background:#a3a380;" title="세이지" onclick="window._cdSelectBgColor('#a3a380', this)"></button>
+                <button type="button" class="bg-sw" data-color="#78350f" style="background:#78350f;" title="브라운" onclick="window._cdSelectBgColor('#78350f', this)"></button>
+                <button type="button" class="bg-sw" data-color="#d6d3d1" style="background:#d6d3d1;" title="라이트 그레이" onclick="window._cdSelectBgColor('#d6d3d1', this)"></button>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px; background:#fafaf9; border-radius:8px;">
+                <span style="font-size:11px; font-weight:700; color:var(--brown-dark);" data-cdi18n="side_bgcolor_custom">직접 선택</span>
+                <input type="color" id="bgColorPicker" value="#ffffff" oninput="window._cdSelectBgColor(this.value, null)" style="flex:1; height:28px; border:1px solid var(--cream-dark); border-radius:6px; padding:0; cursor:pointer; background:transparent;">
+                <code id="bgColorHex" style="font-size:11px; color:var(--brown); font-family:monospace;">#ffffff</code>
+            </div>
+        </div>
+
         <!-- 이미지 사이즈 -->
         <div class="side-card">
             <div class="side-card-title">
@@ -964,40 +1002,48 @@ a { text-decoration: none; color: inherit; }
                     <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
                     <span class="fin-opt-price">+0원</span>
                 </label>
-                <!-- 2026-05-12: 실색상 변경 옵션 — 항상 최상위에 노출 -->
+                <!-- 2026-05-12: 하드코딩 부자재 — 실색상 / 목봉 / OPP / 압축봉 / 링고리 -->
                 <label class="fin-opt" data-acc="thread_color" data-name="실색상 변경" data-extra="2000">
                     <input type="radio" name="accessory" value="thread_color" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_thread_color">실색상 변경</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_thread_color_sub">기본 외 컬러 마감사</span></span>
                     <span class="fin-opt-price">+2,000원</span>
                 </label>
+                <label class="fin-opt" data-acc="rod_30" data-name="목봉 30cm" data-extra="1500">
+                    <input type="radio" name="accessory" value="rod_30" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_30">목봉 30cm</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_rod_sub">상단 봉 끼움용</span></span>
+                    <span class="fin-opt-price">+1,500원</span>
+                </label>
+                <label class="fin-opt" data-acc="rod_50" data-name="목봉 50cm" data-extra="2500">
+                    <input type="radio" name="accessory" value="rod_50" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_50">목봉 50cm</b></span>
+                    <span class="fin-opt-price">+2,500원</span>
+                </label>
+                <label class="fin-opt" data-acc="rod_100" data-name="목봉 100cm" data-extra="4000">
+                    <input type="radio" name="accessory" value="rod_100" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_100">목봉 100cm</b></span>
+                    <span class="fin-opt-price">+4,000원</span>
+                </label>
+                <label class="fin-opt" data-acc="rod_130" data-name="목봉 130cm" data-extra="5000">
+                    <input type="radio" name="accessory" value="rod_130" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_130">목봉 130cm</b></span>
+                    <span class="fin-opt-price">+5,000원</span>
+                </label>
+                <label class="fin-opt" data-acc="opp_pack" data-name="OPP 개별포장" data-extra="1000">
+                    <input type="radio" name="accessory" value="opp_pack" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_opp_pack">OPP 개별포장</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_opp_sub">투명 비닐 포장</span></span>
+                    <span class="fin-opt-price">+1,000원</span>
+                </label>
+                <label class="fin-opt" data-acc="press_rod" data-name="압축봉" data-extra="3000">
+                    <input type="radio" name="accessory" value="press_rod" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_press_rod">압축봉</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_press_sub">탄성 압축 봉</span></span>
+                    <span class="fin-opt-price">+3,000원</span>
+                </label>
+                <label class="fin-opt" data-acc="ring_hook" data-name="링고리" data-extra="1500">
+                    <input type="radio" name="accessory" value="ring_hook" onchange="window._cdOnAccessoryChange()">
+                    <span class="fin-opt-label"><b data-cdi18n="acc_ring_hook">링고리</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_ring_sub">상단 걸이용 링</span></span>
+                    <span class="fin-opt-price">+1,500원</span>
+                </label>
                 <div id="accessoryExtraList" style="display:contents;"></div>
-            </div>
-        </div>
-
-        <!-- 배경색 (2026-05-11 추가 — 투명 PNG 패턴용) -->
-        <div class="side-card" id="bgColorCard">
-            <div class="side-card-title" data-cdi18n="side_bgcolor">배경색</div>
-            <div style="font-size:11px; color:var(--text-light); line-height:1.5; margin-bottom:10px;" data-cdi18n="side_bgcolor_desc">투명 PNG 패턴일 때 배경색이 보입니다. 일반 이미지는 가려질 수 있어요.</div>
-            <div class="bg-swatches" id="bgSwatches">
-                <button type="button" class="bg-sw active" data-color="#ffffff" style="background:#ffffff; border:1.5px solid #d6d3d1;" title="화이트" onclick="window._cdSelectBgColor('#ffffff', this)"></button>
-                <button type="button" class="bg-sw" data-color="#1f2937" style="background:#1f2937;" title="차콜" onclick="window._cdSelectBgColor('#1f2937', this)"></button>
-                <button type="button" class="bg-sw" data-color="#000000" style="background:#000000;" title="블랙" onclick="window._cdSelectBgColor('#000000', this)"></button>
-                <button type="button" class="bg-sw" data-color="#fef3c7" style="background:#fef3c7;" title="아이보리" onclick="window._cdSelectBgColor('#fef3c7', this)"></button>
-                <button type="button" class="bg-sw" data-color="#fde68a" style="background:#fde68a;" title="머스타드 라이트" onclick="window._cdSelectBgColor('#fde68a', this)"></button>
-                <button type="button" class="bg-sw" data-color="#facc15" style="background:#facc15;" title="머스타드" onclick="window._cdSelectBgColor('#facc15', this)"></button>
-                <button type="button" class="bg-sw" data-color="#fca5a5" style="background:#fca5a5;" title="피치" onclick="window._cdSelectBgColor('#fca5a5', this)"></button>
-                <button type="button" class="bg-sw" data-color="#f9a8d4" style="background:#f9a8d4;" title="핑크" onclick="window._cdSelectBgColor('#f9a8d4', this)"></button>
-                <button type="button" class="bg-sw" data-color="#c4b5fd" style="background:#c4b5fd;" title="라벤더" onclick="window._cdSelectBgColor('#c4b5fd', this)"></button>
-                <button type="button" class="bg-sw" data-color="#93c5fd" style="background:#93c5fd;" title="베이비블루" onclick="window._cdSelectBgColor('#93c5fd', this)"></button>
-                <button type="button" class="bg-sw" data-color="#86efac" style="background:#86efac;" title="민트" onclick="window._cdSelectBgColor('#86efac', this)"></button>
-                <button type="button" class="bg-sw" data-color="#a3a380" style="background:#a3a380;" title="세이지" onclick="window._cdSelectBgColor('#a3a380', this)"></button>
-                <button type="button" class="bg-sw" data-color="#78350f" style="background:#78350f;" title="브라운" onclick="window._cdSelectBgColor('#78350f', this)"></button>
-                <button type="button" class="bg-sw" data-color="#d6d3d1" style="background:#d6d3d1;" title="라이트 그레이" onclick="window._cdSelectBgColor('#d6d3d1', this)"></button>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px; background:#fafaf9; border-radius:8px;">
-                <span style="font-size:11px; font-weight:700; color:var(--brown-dark);" data-cdi18n="side_bgcolor_custom">직접 선택</span>
-                <input type="color" id="bgColorPicker" value="#ffffff" oninput="window._cdSelectBgColor(this.value, null)" style="flex:1; height:28px; border:1px solid var(--cream-dark); border-radius:6px; padding:0; cursor:pointer; background:transparent;">
-                <code id="bgColorHex" style="font-size:11px; color:var(--brown); font-family:monospace;">#ffffff</code>
             </div>
         </div>
 
@@ -1175,6 +1221,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=36"></script>
+<script src="cotton_designer.js?v=37"></script>
 </body>
 </html>

@@ -1109,7 +1109,7 @@ function checkMinOrderAmount(total_krw) {
     if (lang === 'ja') return true;   // JP 홍보 기간 — 제한 없음
     if (total_krw < MIN_ORDER_KRW) {
         var msg = (window.cdT && window.cdT('min_order_block')) ||
-                  '패브릭 주문은 최소 100,000원부터 가능합니다.\n10만원 이하는 도매사이트(cafe2626.com)에서 주문해주세요.';
+                  '패브릭 주문은 최소 10만원부터 가능합니다.';
         if (typeof window.alert === 'function') window.alert(msg);
         return false;
     }
