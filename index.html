@@ -832,9 +832,8 @@ if ('caches' in window) {
             <h1 class="hero-title" data-i18n="hero_title">허니콤보드 인쇄·가벽·디스플레이 전문 — 카멜레온프린팅</h1>
             <img src="/mascot-character.png" class="hero-mascot" alt="Chameleon mascot" width="160" height="160">
         </div>
-    </div>
 
-    <!-- 2026-05-13: 매니저 견적 빠른 주문 — 메인 페이지 상단 -->
+    <!-- 2026-05-13: 매니저 견적 빠른 주문 — hero-section 내부 자식으로 두어 reorder 영향 안 받음 -->
     <div id="mgrQuoteHero" style="max-width:760px; margin:8px auto 24px; padding:0 16px;">
         <div style="background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:1.5px solid #fbbf24; border-radius:16px; padding:20px 24px; box-shadow:0 6px 20px -8px rgba(251,191,36,0.4);">
             <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
@@ -856,6 +855,7 @@ if ('caches' in window) {
             <div style="font-size:11px; color:#a16207; margin-top:8px; text-align:center;">최소 10,000원 이상 • 입력 즉시 결제창이 열립니다</div>
         </div>
     </div>
+    </div><!-- /.hero-section -->
     <script>
     (function() {
         // 매니저 견적 빠른 주문 — 금액 입력 시 천단위 콤마 자동
@@ -1297,12 +1297,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(advisorPanel);
     }
 
-    // 히어로 바로 다음: 매니저 견적 카드 → 바로가기 버튼 → 챗봇
+    // 2026-05-13: 매니저 견적 카드는 hero-section 내부 자식이라 별도 reorder 불필요 (자동으로 hero 와 함께)
+    // 히어로 바로 다음: 바로가기 버튼 → 챗봇
     var shortcutBtns = document.getElementById('advShortcutBtns');
-    var mgrQuoteHero = document.getElementById('mgrQuoteHero');
     var cursor = hero;
-    // 2026-05-13: 매니저 견적 빠른 주문 카드를 hero 바로 아래 고정
-    if (mgrQuoteHero) { moveAfter(mgrQuoteHero, cursor); cursor = mgrQuoteHero; }
     if (shortcutBtns) { moveAfter(shortcutBtns, cursor); cursor = shortcutBtns; }
     [chatbotWrap, couponBanner, btnWrap].forEach(function(el) {
         if (el) { moveAfter(el, cursor); cursor = el; }
