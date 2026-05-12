@@ -555,10 +555,9 @@
       </div>
     </div>
 
-    <!-- 2026-05-12: 카테고리 네비게이션 — admin_top_categories 에서 동적 로드, 메인 페이지와 완전 동일 -->
-    <nav class="so-category-nav" id="soCategoryNav" style="background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 20px; overflow-x:auto; white-space:nowrap; flex-shrink:0;">
-      <div style="display:inline-flex; gap:8px; align-items:center; color:#9ca3af; font-size:12px;">로딩 중…</div>
-    </nav>
+    <!-- 2026-05-13: 자체 카테고리 nav 제거 — 메인 페이지의 #topCatMenu (z-index 60000) 가 위에서 표시됨 -->
+    <!-- simple_order 본문이 메인 nav 와 안 겹치도록 상단 padding 약간 확보 -->
+    <div style="height:46px; flex-shrink:0;"></div>
 
     <div class="so-body">
       <!-- 좌측: 큰 파일 업로드 -->
@@ -1082,9 +1081,9 @@
         if (sh) sh.style.display = 'none';
     }
 
-    // 2026-05-12: 카테고리 nav 동적 로드 — 메인 페이지의 #topCategoryTabs 와 동일한 데이터 (admin_top_categories)
-    // 각 버튼 클릭 → simple_order 닫고 window.openTopMenu(code, name) 호출. 특수 케이스는 location.href.
-    var _soNavPopulated = false;
+    // 2026-05-13: 자체 카테고리 nav 제거 — 메인 페이지의 #topCatMenu 가 z-index 60000 으로
+    // simple_order overlay 위에서 표시됨. 별도 nav 코드 불필요.
+    var _soNavPopulated = false;  // (사용 안 함, 호환성 유지)
     async function populateSoCategoryNav() {
         var navEl = document.getElementById('soCategoryNav');
         if (!navEl || _soNavPopulated) return;
@@ -1174,7 +1173,7 @@
     window.openSimpleOrderModal = async function(productCode, productData) {
         injectStyles();
         injectModal();
-        populateSoCategoryNav();  // 2026-05-12: 카테고리 nav 채우기 (한 번만)
+        // 2026-05-13: 자체 nav 제거 — 메인의 #topCatMenu 가 z-index 60000 으로 표시됨
         state = { product: null, file: null, thumbDataUrl: null, qty: 1 };
 
         let p = productData;

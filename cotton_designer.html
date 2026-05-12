@@ -688,10 +688,23 @@ a { text-decoration: none; color: inherit; }
     </div>
 </div>
 
-<!-- 2026-05-13: 카테고리 네비게이션 — admin_top_categories 에서 동적 로드 (메인 페이지와 100% 동일) -->
-<nav class="cp-category-nav" id="cdCategoryNav" style="background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 20px; overflow-x:auto; white-space:nowrap;">
-    <div style="display:inline-flex; gap:8px; align-items:center; color:#9ca3af; font-size:12px;">로딩 중…</div>
-</nav>
+<!-- 2026-05-13: 메인 페이지 #topCatMenu 와 동일한 보라색 nav bar -->
+<div id="topCatMenu" style="width:100%; background:#4338ca; border-bottom:none; padding:0; position:relative; left:0; right:0;">
+    <div style="width:100%; margin:0 auto; display:flex; align-items:center; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:0 16px;" id="topCatMenuTrack"></div>
+</div>
+<style>
+#topCatMenuTrack::-webkit-scrollbar { display:none; }
+#topCatMenu .tcm-btn {
+    flex-shrink:0; padding:12px 14px; font-size:13px; font-weight:700; color:rgba(255,255,255,0.8);
+    background:none; border:none; cursor:pointer; white-space:nowrap; position:relative;
+    transition:color 0.2s;
+}
+#topCatMenu .tcm-btn:hover { color:#fff; }
+#topCatMenu .tcm-btn.active { color:#fff; }
+@media (max-width:768px) {
+    #topCatMenu .tcm-btn { padding:10px 14px; font-size:13px; }
+}
+</style>
 
 <!-- 메인 디자이너 -->
 <div class="designer-wrap">
@@ -1233,6 +1246,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=45"></script>
+<script src="/cotton_designer.js?v=46"></script>
 </body>
 </html>
