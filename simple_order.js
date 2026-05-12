@@ -599,6 +599,50 @@
           </div>
         </div>
 
+        <!-- 2026-05-13: 가벽 카테고리 전용 사이즈 입력 (가로 m 단위) + 자동 안내 -->
+        <div class="so-section" id="soWallSizeSection" style="display:none;">
+          <div class="so-section-title">${tr('가벽 사이즈', '壁面サイズ', 'Wall size')}</div>
+          <div style="background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; padding:10px 12px; font-size:11px; color:#92400e; margin-bottom:10px; line-height:1.5;">
+            📐 ${tr('가로 1m 단위 / 세로 2 · 2.2 · 2.4 · 3m', '横 1m単位 / 縦 2 · 2.2 · 2.4 · 3m', 'Width per 1m / Height 2, 2.2, 2.4, 3m')}<br>
+            🎨 ${tr('작업은 1/10 사이즈로 부탁드립니다', 'デザインは1/10サイズで', 'Please work at 1/10 scale')}
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+            <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('가로', '横', 'Width')}</label>
+            <select id="soWallWidth" class="so-input" onchange="window._soUpdateAddonQty(); window._soUpdatePrice();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+              <option value="1">1 m</option>
+              <option value="2">2 m</option>
+              <option value="3" selected>3 m</option>
+              <option value="4">4 m</option>
+              <option value="5">5 m</option>
+              <option value="6">6 m</option>
+              <option value="7">7 m</option>
+              <option value="8">8 m</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('세로', '縦', 'Height')}</label>
+            <select id="soWallHeight" class="so-input" onchange="window._soUpdatePrice();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+              <option value="2">2 m</option>
+              <option value="2.2">2.2 m</option>
+              <option value="2.4" selected>2.4 m</option>
+              <option value="3">3 m</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 2026-05-13: 상품별 추가 옵션 (admin_addons) -->
+        <div class="so-section" id="soAddonSection" style="display:none;">
+          <div class="so-section-title">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
+          <div id="soAddonList" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+
+        <!-- 2026-05-13: 전달사항 (제작 요청사항) -->
+        <div class="so-section">
+          <div class="so-section-title">${tr('전달사항 (선택)', '備考 (任意)', 'Notes (optional)')}</div>
+          <textarea id="soItemNote" placeholder="${tr('예: 색상 강조, 특정 부분 수정 요청 등', '例：色の強調、特定部分の修正要望など', 'e.g., emphasize color, request specific changes')}" rows="3"
+            style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+        </div>
+
         <div class="so-section so-price-box">
           <div class="so-section-title">${tr('가격', '価格', 'Price')}</div>
           <div class="so-price-row"><span>${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
@@ -1034,7 +1078,17 @@
         const subtotal = unit * state.qty;
         const tier = getDiscountTier(state.qty);
         const discount = Math.round(subtotal * tier.pct / 100);
-        const final = subtotal - discount;
+        // 2026-05-13: 추가 옵션(addon) 가격 합산
+        let addonTotal = 0;
+        try {
+            Object.values(state.selectedAddons || {}).forEach(function (code) {
+                var addon = (window.ADDON_DB || {})[code];
+                if (!addon) return;
+                var qty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+                addonTotal += (addon.price || 0) * qty;
+            });
+        } catch (e) {}
+        const final = subtotal - discount + addonTotal;
 
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
         setText('soUnit', fmtPrice(unit));
@@ -1050,6 +1104,106 @@
             });
         }
     }
+
+    // 2026-05-13: 가벽 카테고리 감지 (hb_dw_*, hb_display_wall, 또는 product.name 에 "가벽")
+    function _soIsWallProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        const name = (p.name || '') + ' ' + (p.name_us || '');
+        if (code.startsWith('hb_dw') || cat === 'hb_display_wall') return true;
+        if (name.indexOf('가벽') >= 0 || name.toLowerCase().indexOf('display wall') >= 0) return true;
+        return false;
+    }
+
+    // 2026-05-13: 상품의 admin_addons 옵션을 우측 패널에 체크박스로 렌더
+    async function _soPopulateAddons(p) {
+        const sec = document.getElementById('soAddonSection');
+        const list = document.getElementById('soAddonList');
+        if (!sec || !list) return;
+        list.innerHTML = '';
+        sec.style.display = 'none';
+
+        if (!p || !p.addons) return;
+        // p.addons 가 array 또는 csv string 모두 지원
+        var codes = Array.isArray(p.addons) ? p.addons : String(p.addons).split(',');
+        codes = codes.map(function (c) { return String(c || '').trim(); }).filter(Boolean);
+        if (!codes.length) return;
+
+        // ADDON_DB 가 아직 로드 안 됐으면 한 번 더 시도
+        if (!window.ADDON_DB || !Object.keys(window.ADDON_DB).length) {
+            // 그냥 표시 안 함 (다음 모달 열 때 채워짐)
+            console.warn('[simple_order] ADDON_DB not loaded yet');
+            return;
+        }
+
+        var lang = window.__CD_LANG || (window.SITE_CONFIG && window.SITE_CONFIG.LANG) || 'ko';
+        var html = '';
+        var anyVisible = false;
+        codes.forEach(function (code) {
+            var a = window.ADDON_DB[code];
+            if (!a) return;
+            anyVisible = true;
+            var name = a.display_name || a.name || code;
+            if (lang === 'ja' && a.name_jp) name = a.name_jp;
+            else if (lang === 'en' && a.name_us) name = a.name_us;
+            var price = a.price || 0;
+            var safe = String(name).replace(/[<>"'&]/g, function (c) {
+                return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
+            });
+            // 조명 (가로 m당 1개) 같은 경우 자동 수량 표시
+            var isLight = /조명|light|lamp/i.test(name);
+            var autoQtyNote = (state.isWall && isLight)
+                ? ' <span style="font-size:10px; color:#92400e; font-weight:700;">(' + tr('가로 1m당 1개', '横1mあたり1個', 'per 1m width') + ')</span>'
+                : '';
+            html += '<label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #e7e5e4; border-radius:8px; cursor:pointer; font-size:13px; background:#fff;">' +
+                '<input type="checkbox" data-addon-code="' + String(code).replace(/"/g,'&quot;') + '" data-addon-light="' + (isLight && state.isWall ? '1' : '0') + '" onchange="window._soToggleAddon(this)" style="margin:0;">' +
+                '<span style="flex:1; font-weight:600; color:#451a03;">' + safe + autoQtyNote + '</span>' +
+                '<span style="font-weight:800; color:#dc2626; font-size:12px;">+' + fmtPrice(price) + '</span>' +
+                '</label>';
+        });
+        if (anyVisible) {
+            list.innerHTML = html;
+            sec.style.display = '';
+        }
+    }
+
+    // 2026-05-13: 가벽 가로 변경 시 조명 옵션 수량 자동 재계산
+    window._soUpdateAddonQty = function () {
+        var wallW = parseFloat(document.getElementById('soWallWidth') && document.getElementById('soWallWidth').value) || 1;
+        state.wallWidth = wallW;
+        state.wallHeight = parseFloat(document.getElementById('soWallHeight') && document.getElementById('soWallHeight').value) || 2.4;
+        // 조명 (data-addon-light="1") 의 수량을 가로(m)로 set
+        var lightInputs = document.querySelectorAll('#soAddonList input[data-addon-light="1"]');
+        lightInputs.forEach(function (inp) {
+            var code = inp.dataset.addonCode;
+            if (inp.checked) {
+                state.addonQuantities[code] = wallW;
+            }
+        });
+        recalc();
+    };
+    window._soUpdatePrice = function () {
+        state.wallHeight = parseFloat(document.getElementById('soWallHeight') && document.getElementById('soWallHeight').value) || 2.4;
+        recalc();
+    };
+
+    // 2026-05-13: 추가 옵션 체크박스 토글
+    window._soToggleAddon = function (inp) {
+        var code = inp.dataset.addonCode;
+        var isLight = inp.dataset.addonLight === '1';
+        if (!state.selectedAddons) state.selectedAddons = {};
+        if (!state.addonQuantities) state.addonQuantities = {};
+        if (inp.checked) {
+            state.selectedAddons[code] = code;
+            // 조명이면 가로(m) 수량, 아니면 1개
+            state.addonQuantities[code] = isLight ? (state.wallWidth || 1) : 1;
+        } else {
+            delete state.selectedAddons[code];
+            delete state.addonQuantities[code];
+        }
+        recalc();
+    };
 
     window._soQtyChg = function(delta) {
         const input = document.getElementById('soQty');
@@ -1220,6 +1374,22 @@
 
         document.getElementById('soQty').value = 1;
         state.qty = 1;
+        // 2026-05-13: 가벽 카테고리 감지 + 추가 옵션 / 노트 초기화
+        state.selectedAddons = {};
+        state.addonQuantities = {};
+        state.wallWidth = 3;   // 기본 가로 3m
+        state.wallHeight = 2.4; // 기본 세로 2.4m
+        state.itemNote = '';
+        var noteEl = document.getElementById('soItemNote'); if (noteEl) noteEl.value = '';
+
+        // 가벽 카테고리 감지 (hb_dw_* 또는 hb_display_wall 등)
+        state.isWall = _soIsWallProduct(p);
+        var wallSec = document.getElementById('soWallSizeSection');
+        if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
+
+        // 상품 추가 옵션 로드 (admin_addons 매칭)
+        await _soPopulateAddons(p);
+
         recalc();
         updateButtons();
         resetUploadZone();
@@ -1267,6 +1437,9 @@
     function buildCartItem(fileUrl, filePath) {
         const p = state.product;
         const calc = calcFinal();
+        // 2026-05-13: 전달사항 + 선택된 addon + 가벽 사이즈 정보 캡처
+        var noteEl = document.getElementById('soItemNote');
+        var itemNote = noteEl ? (noteEl.value || '').trim() : '';
         return {
             uid: Date.now(),
             product: {
@@ -1291,8 +1464,12 @@
             thumb: state.thumbDataUrl,
             isOpen: false,
             qty: state.qty,
-            selectedAddons: [],
-            addonQuantities: {},
+            selectedAddons: Object.assign({}, state.selectedAddons || {}),
+            addonQuantities: Object.assign({}, state.addonQuantities || {}),
+            // 2026-05-13: 가벽 사이즈 (가로/세로 m)
+            wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
+            // 2026-05-13: 전달사항 (제작 요청)
+            itemNote: itemNote,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: calc.tierPct, discount: calc.discount, final: calc.final },
         };
     }
@@ -1629,12 +1806,24 @@
     }
     function _soCalcItemPrice(it) {
         if (_soIsFabricItem(it)) return it.price || 0;
-        var base = ((it.product && it.product.price) || 0) * (it.qty || 1);
-        // 부가 옵션 (간단)
+        var qty = it.qty || 1;
+        var unit = (it.product && it.product.price) || 0;
+        // 수량 할인 (1-2 0%, 3-9 20%, 10-100 30%, 101-500 40%, 501+ 50%)
+        var tierPct = 0;
+        if (qty >= 501) tierPct = 50;
+        else if (qty >= 101) tierPct = 40;
+        else if (qty >= 10) tierPct = 30;
+        else if (qty >= 3) tierPct = 20;
+        var subtotal = unit * qty;
+        var discount = Math.round(subtotal * tierPct / 100);
+        var base = subtotal - discount;
+        // 2026-05-13: addon 가격 (각 addon 의 자체 수량 반영)
         if (it.selectedAddons && window.ADDON_DB) {
             Object.values(it.selectedAddons).forEach(function (code) {
                 var addon = window.ADDON_DB[code];
-                if (addon) base += (addon.price || 0) * (it.qty || 1);
+                if (!addon) return;
+                var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
+                base += (addon.price || 0) * aQty;
             });
         }
         return base;
@@ -1736,31 +1925,50 @@
                     };
                 }
                 // 일반 상품 — buildCartItem 에서 originalUrl(storage URL) + filePath 저장됨
+                // 2026-05-13: addon (수량 자동 포함), 가벽 사이즈, 전달사항 모두 캡처
                 var addons = [];
                 if (it.selectedAddons && window.ADDON_DB) {
                     Object.values(it.selectedAddons).forEach(function (code) {
                         var a = window.ADDON_DB[code];
-                        if (a) addons.push({ type: 'addon', code: code, name: a.display_name || a.name, price: a.price || 0 });
+                        if (!a) return;
+                        var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
+                        addons.push({
+                            type: 'addon',
+                            code: code,
+                            name: a.display_name || a.name,
+                            qty: aQty,
+                            price: a.price || 0,
+                            total: (a.price || 0) * aQty
+                        });
                     });
                 }
                 var fileUrl  = it.originalUrl || it.fileUrl || it.thumb || null;
                 var fileName = it.fileName || ((it.product && it.product.name) || 'item') + '.png';
                 var fileType = it.mimeType || 'image/png';
                 if (fileUrl) orderFiles.push({ name: fileName, url: fileUrl, type: fileType });
+                var wallSizeMm = null;
+                if (it.wallSize) {
+                    wallSizeMm = {
+                        width_mm: Math.round((it.wallSize.w_m || 0) * 1000),
+                        height_mm: Math.round((it.wallSize.h_m || 0) * 1000)
+                    };
+                }
                 return {
                     product_code: (it.product && it.product.code) || '',
                     product_name: (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || ''),
                     qty: it.qty || 1,
-                    width_mm: it.width || (it.product && it.product.w_mm) || null,
-                    height_mm: it.height || (it.product && it.product.h_mm) || null,
+                    width_mm: (wallSizeMm && wallSizeMm.width_mm) || it.width || (it.product && it.product.w_mm) || null,
+                    height_mm: (wallSizeMm && wallSizeMm.height_mm) || it.height || (it.product && it.product.h_mm) || null,
                     unit_price: (it.product && it.product.price) || 0,
                     price: _soCalcItemPrice(it),
                     source: 'cafe2626',
                     addons: addons,
-                    file_url: fileUrl,           // 단일 파일 URL (item 별)
+                    wall_size: it.wallSize || null,           // 가벽 사이즈 (m 단위)
+                    item_note: it.itemNote || '',             // 전달사항 (제작 요청)
+                    file_url: fileUrl,
                     file_name: fileName,
                     file_path: it.filePath || null,
-                    artwork_url: fileUrl,        // 통합주문관리 호환 키
+                    artwork_url: fileUrl,
                     artwork_filename: fileName
                 };
             });
@@ -1774,10 +1982,29 @@
                     loggedInEmail = sess.data.session.user.email;
                 }
             } catch (e) {}
+            // 2026-05-13: admin_note 에 각 항목별 옵션·전달사항·가벽사이즈 요약 포함 (관리자 가독성)
+            var itemSummaries = [];
+            cart.forEach(function (it, idx) {
+                if (_soIsFabricItem(it)) return; // 패브릭은 별도 처리
+                var pname = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
+                var lines = ['#' + (idx + 1) + ' ' + pname + ' x ' + (it.qty || 1)];
+                if (it.wallSize) lines.push('  · 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm');
+                if (it.selectedAddons && window.ADDON_DB) {
+                    Object.values(it.selectedAddons).forEach(function (code) {
+                        var a = window.ADDON_DB[code];
+                        if (!a) return;
+                        var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
+                        lines.push('  · ' + (a.display_name || a.name) + ' x ' + aQty + ' = ' + (((a.price || 0) * aQty).toLocaleString()) + '원');
+                    });
+                }
+                if (it.itemNote) lines.push('  · 전달사항: ' + it.itemNote);
+                itemSummaries.push(lines.join('\n'));
+            });
             var adminNote =
                 '[간편주문] 결제수단: ' + (payMethod === 'bank' ? '무통장입금' : '카드결제') +
                 '\n이메일: ' + (email || loggedInEmail || '없음') +
-                (memo ? '\n배송메모: ' + memo : '');
+                (memo ? '\n배송메모: ' + memo : '') +
+                (itemSummaries.length ? '\n\n=== 상품별 옵션·요청 ===\n' + itemSummaries.join('\n\n') : '');
 
             // 2026-05-12: 패브릭 (_cpSubmitOrder) 와 동일 schema 사용 — orders 테이블 컬럼 일치
             var orderRow = {

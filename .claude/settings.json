@@ -111,7 +111,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Cart: drop invalid items defense in depth\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=20: nav clicks open productPickerModal\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Unify category nav across all screens \\(cotton_designer + simple_order + main\\)\" 2>&1)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Delete custom pill navs, use main topCatMenu purple bar everywhere\" 2>&1)"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Delete custom pill navs, use main topCatMenu purple bar everywhere\" 2>&1)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Nav: tcm-btn click triggers topCatDropdown \\(not productPickerModal\\)\" 2>&1)"
     ],
     "additionalDirectories": [
       "\\tmp"
