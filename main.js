@@ -64,40 +64,24 @@ window.addEventListener("DOMContentLoaded", async () => {
         try { initOrderSystem(); } catch(e) { console.warn('⚠️ OrderSystem init failed:', e); }
 
         // 2026-05-13: simple_order/cotton_designer 카테고리 nav 에서 sessionStorage 에 저장한 코드 처리
-        // → productPickerModal 자동 열고 해당 카테고리 탭 클릭 → sub-카테고리 + 상품 카드 표시
+        // → 메인 페이지의 #topCatMenu 의 해당 .tcm-btn 자동 클릭 → 드롭다운 (sub-카테고리 + 상품 그리드) 표시
         try {
             const pendingCat = sessionStorage.getItem('pendingTopCat');
             if (pendingCat) {
                 sessionStorage.removeItem('pendingTopCat');
                 let _catRetry = 0;
-                const _tryOpenAndClick = function () {
-                    // 1) renderQuickMenu 완료 후 topCategoryTabs 에 .cat-tab 이 생성됨
-                    const origTab = document.querySelector('#topCategoryTabs .cat-tab[data-top-code="' + CSS.escape(pendingCat) + '"]');
-                    if (!origTab) {
-                        if (_catRetry++ < 30) return setTimeout(_tryOpenAndClick, 250);
-                        console.warn('[main] cat-tab[' + pendingCat + '] 못 찾음');
+                const _tryClickTcmBtn = function () {
+                    const tcmBtn = document.querySelector('#topCatMenuTrack .tcm-btn[data-top-code="' + CSS.escape(pendingCat) + '"]');
+                    if (tcmBtn) {
+                        tcmBtn.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+                        setTimeout(function(){ tcmBtn.click(); }, 100);
+                        console.log('[main] pendingTopCat → #topCatMenu .tcm-btn 클릭:', pendingCat);
                         return;
                     }
-                    // 2) productPickerModal 열기 → 모달 안에 탭 복제됨
-                    if (typeof window.openProductPickerModal === 'function') {
-                        window.openProductPickerModal();
-                        // 3) 모달 내 탭 클릭 (DOM 복제 완료 대기)
-                        setTimeout(function () {
-                            const modalTab = document.querySelector('#modalCategoryTabs .cat-tab[data-top-code="' + CSS.escape(pendingCat) + '"]');
-                            if (modalTab) {
-                                modalTab.click();
-                                console.log('[main] pendingTopCat → productPickerModal 탭 클릭:', pendingCat);
-                            } else {
-                                origTab.click();
-                                console.log('[main] pendingTopCat → 원본 탭 클릭 (modal copy 없음):', pendingCat);
-                            }
-                        }, 300);
-                    } else {
-                        origTab.click();
-                        console.log('[main] pendingTopCat → 원본 탭 클릭:', pendingCat);
-                    }
+                    if (_catRetry++ < 30) setTimeout(_tryClickTcmBtn, 250);
+                    else console.warn('[main] tcm-btn[' + pendingCat + '] 못 찾음 — renderQuickMenu 가 #topCatMenu 를 채우지 않은 듯');
                 };
-                setTimeout(_tryOpenAndClick, 400);
+                setTimeout(_tryClickTcmBtn, 400);
             }
         } catch (e) {}
 

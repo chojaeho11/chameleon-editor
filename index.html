@@ -728,7 +728,7 @@ if ('caches' in window) {
 #topCatDropdown {
     position:absolute; top:100%; left:0; right:0; background:#fff;
     box-shadow:0 8px 24px rgba(0,0,0,0.12); border-top:1px solid #eee;
-    padding:20px 24px; display:none; z-index:25001; max-width:1200px; margin:0 auto;
+    padding:20px 24px; display:none; z-index:60001; max-width:1200px; margin:0 auto;
 }
 #topCatDropdown .tcd-sub {
     display:inline-block; padding:8px 14px; margin:4px; font-size:13px; color:#444;
@@ -7024,7 +7024,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./my-design.js?v=434"></script>
 <script type="module" src="./ppt-mode.js?v=434"></script>
-<script type="module" src="./main.js?v=438"></script>
+<script type="module" src="./main.js?v=439"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=21"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
@@ -9689,6 +9689,7 @@ async function renderQuickMenu() {
                 if (CURRENT_LANG === 'de') tName = top.name_de || top.name_us || tName;
                 if (CURRENT_LANG === 'fr') tName = top.name_fr || top.name_us || tName;
                 btn.textContent = tName;
+                btn.dataset.topCode = top.code;  // 2026-05-13: selector 로 찾기 위해 추가
                 btn.onclick = () => {
                     // ★ 종이매대 → paper-stand 페이지로 이동
                     if (top.code === 'paper_display') {
