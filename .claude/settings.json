@@ -126,7 +126,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Manager quote card inside hero-section \\(proper DOM nesting\\)\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=31: summary item delete + min quote 1,000\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=32: wall height 3m +50,000 KRW\" 2>&1)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=33: amount discount + PRO stack, qty discount removed\" 2>&1)"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=33: amount discount + PRO stack, qty discount removed\" 2>&1)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=34: wall height extra x width + single/double side\" 2>&1)"
     ],
     "additionalDirectories": [
       "\\tmp"

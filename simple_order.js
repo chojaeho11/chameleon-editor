@@ -648,11 +648,11 @@
         </div>
 
         <!-- 2026-05-13: 양면 선택 시 뒷면 파일 업로드 영역 (가벽 양면만) -->
-        <div id="soBackUploadWrap" style="display:none; margin-top:14px;">
-          <div class="so-upload-section-label">${tr('📤 뒷면 디자인 파일 업로드', '📤 裏面ファイル', '📤 Upload BACK side file')}</div>
-          <div id="soBackUpload" class="so-upload" onclick="document.getElementById('soBackFile').click()">
+        <div id="soBackUploadWrap" style="display:none; margin-top:20px; padding:14px; background:#ede9fe; border:2px solid #7c3aed; border-radius:14px;">
+          <div class="so-upload-section-label" style="color:#5b21b6; font-weight:800;">📤 ${tr('뒷면 디자인 파일 업로드', '裏面デザインファイル', 'Upload BACK side design file')}</div>
+          <div id="soBackUpload" class="so-upload" onclick="document.getElementById('soBackFile').click()" style="background:#fff; max-width:none;">
             <input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
-            <div class="so-upload-icon">📤</div>
+            <div class="so-upload-icon" style="color:#7c3aed;">📤</div>
             <div class="so-upload-title">${tr('뒷면 이미지를 올려주세요', '裏面画像をアップロード', 'Upload back side')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
             <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
@@ -1592,20 +1592,66 @@
         updateButtons();
     };
 
-    // 2026-05-13: 뒷면 파일 변경 핸들러
+    // 2026-05-13: 뒷면 파일 변경 핸들러 — 미리보기 포함
     window._soOnBackFileChange = function (files) {
         if (!files || !files.length) return;
         var f = files[0];
+        var name = (f.name || '').toLowerCase();
+        var isPdf = name.endsWith('.pdf') || f.type === 'application/pdf';
+        var isPng = name.endsWith('.png') || f.type === 'image/png';
+        var isJpg = name.endsWith('.jpg') || name.endsWith('.jpeg') || f.type === 'image/jpeg';
+        if (!(isPdf || isPng || isJpg)) {
+            alert('PDF · PNG · JPG 파일만 가능합니다.');
+            return;
+        }
+        if (f.size > MAX_FILE_BYTES) {
+            alert('10MB를 초과합니다.');
+            return;
+        }
         state.fileBack = f;
-        // 미리보기 (작게)
-        try {
-            var nameEl = document.querySelector('#soBackUpload .so-upload-title');
-            if (nameEl) nameEl.textContent = '✅ ' + f.name;
-            var hintEl = document.querySelector('#soBackUpload .so-upload-hint');
-            if (hintEl) hintEl.textContent = (f.size / 1024 / 1024).toFixed(2) + ' MB';
-        } catch (e) {}
-        updateButtons();
+        renderBackUploadDone();
     };
+
+    function renderBackUploadDone() {
+        var zone = document.getElementById('soBackUpload');
+        if (!zone || !state.fileBack) return;
+        zone.classList.add('done');
+        var f = state.fileBack;
+        var sizeMB = (f.size / 1024 / 1024).toFixed(2);
+        var safe = (typeof escapeHtml === 'function') ? escapeHtml(f.name) : String(f.name).replace(/[<>"'&]/g, function(c){
+            return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
+        });
+        var thumbHtml = '<div class="so-back-thumb" style="margin-bottom:8px; min-height:80px; display:flex; align-items:center; justify-content:center;">';
+        if (f.type === 'application/pdf') {
+            thumbHtml += '<div style="font-size:42px; color:#dc2626;">📄</div>';
+        } else {
+            thumbHtml += '<div style="font-size:42px; color:#9ca3af;">🖼️</div>';
+        }
+        thumbHtml += '</div>';
+        zone.innerHTML =
+            '<input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />' +
+            thumbHtml +
+            '<div style="font-weight:700; color:#451a03; font-size:13px;">✅ ' + safe + '</div>' +
+            '<div style="font-size:11px; color:#6b7280; margin-top:2px;">' + sizeMB + ' MB</div>' +
+            '<button type="button" onclick="event.stopPropagation();document.getElementById(\'soBackFile\').click()" ' +
+              'style="margin-top:8px; padding:5px 12px; border:1px solid #d1d5db; background:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-family:inherit;">변경</button>';
+        zone.onclick = null;
+        // 이미지면 미리보기 표시
+        if (f.type !== 'application/pdf') {
+            try {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var thumb = zone.querySelector('.so-back-thumb');
+                    if (thumb) {
+                        thumb.innerHTML = '<img src="' + e.target.result + '" style="max-width:200px; max-height:160px; object-fit:contain; display:block;" />';
+                    }
+                };
+                reader.readAsDataURL(f);
+            } catch (e) {}
+        }
+        wireUploadEvents();
+        updateButtons();
+    }
 
     // 2026-05-13: 추가 옵션 체크박스 토글
     window._soToggleAddon = function (inp) {
