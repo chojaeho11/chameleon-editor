@@ -63,6 +63,28 @@ window.addEventListener("DOMContentLoaded", async () => {
         try { initAuth(); } catch(e) { console.warn('⚠️ Auth init failed:', e); }
         try { initOrderSystem(); } catch(e) { console.warn('⚠️ OrderSystem init failed:', e); }
 
+        // 2026-05-12: simple_order 카테고리 nav 에서 sessionStorage 에 저장한 코드 처리
+        // → 해당 카테고리 탭 자동 클릭 → sub-카테고리 + 상품 카드 표시
+        try {
+            const pendingCat = sessionStorage.getItem('pendingTopCat');
+            if (pendingCat) {
+                sessionStorage.removeItem('pendingTopCat');
+                let _catRetry = 0;
+                const _tryClickCat = function () {
+                    const btn = document.querySelector('.cat-tab[data-top-code="' + CSS.escape(pendingCat) + '"]');
+                    if (btn) {
+                        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(function(){ btn.click(); }, 200);
+                        console.log('[main] pendingTopCat → 카테고리 탭 클릭:', pendingCat);
+                        return;
+                    }
+                    if (_catRetry++ < 30) setTimeout(_tryClickCat, 250);
+                    else console.warn('[main] cat-tab[' + pendingCat + '] 못 찾음');
+                };
+                setTimeout(_tryClickCat, 300);
+            }
+        } catch (e) {}
+
         // 2026-05-12: ?cart=open URL 파라미터 처리 — simple_order/cotton_designer 의
         // "주문하기" 버튼 후 자동으로 카트 페이지(결제 단계) 열기. cartPage 가 DOM 에 만들어지는
         // 시점이 변동 가능하므로 재시도 루프로 견고하게.

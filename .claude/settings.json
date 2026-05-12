@@ -107,7 +107,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=15: files + Drive sync + card flow\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=16: card payment KR=Toss JP/US=Stripe\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=17: dynamic category nav with openTopMenu drilldown\" 2>&1)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=18: no double-add + loading shield\" 2>&1)"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=18: no double-add + loading shield\" 2>&1)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Cart: drop invalid items defense in depth\" 2>&1)"
     ],
     "additionalDirectories": [
       "\\tmp"

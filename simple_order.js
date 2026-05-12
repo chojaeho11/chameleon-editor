@@ -1117,15 +1117,15 @@
                         safe + '</button>';
                 }).join('') +
                 '</div>';
-            // 클릭 핸들러 wire — shield 로 전환 깜빡임 가리기
+            // 2026-05-12: 클릭 핸들러 — productPickerModal 열고 해당 카테고리 탭 자동 클릭.
+            // 사용자가 봤던 정상 화면 (sub-카테고리 + 상품 카드들) 이 그 모달 안에 표시됨.
             navEl.querySelectorAll('.so-nav-btn').forEach(function(btn){
-                btn.onclick = async function(){
+                btn.onclick = function(){
                     var code = btn.dataset.topCode;
-                    var label = btn.textContent;
-                    _showLoadingShield();  // 전환 동안 화면 가림
+                    _showLoadingShield();
                     var cl = window.CURRENT_LANG || lang;
                     var langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko'};
-                    // 특수 케이스 — 페이지 navigate (shield 그대로 두고 unload)
+                    // 특수 케이스 — 별도 페이지 navigate
                     if (code === 'paper_display') {
                         var psLang = langMap[cl] || '';
                         location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '');
@@ -1144,15 +1144,26 @@
                         location.href = '/#artworkMarketBanner';
                         return;
                     }
-                    // 일반 — openTopMenu 호출 후 simple_order 닫기 + shield 제거
-                    if (typeof window.openTopMenu === 'function') {
-                        try {
-                            await window.openTopMenu(code, label);
-                        } catch (e) { console.warn('[so-nav] openTopMenu', e); }
-                        if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
-                        _hideLoadingShield();
+                    // 일반 카테고리: productPickerModal 열기 + 해당 탭 자동 클릭 + simple_order 닫기
+                    if (typeof window.openProductPickerModal === 'function') {
+                        try { window.openProductPickerModal(); } catch (e) { console.warn('[so-nav]', e); }
+                        // 모달 내 탭 클릭 (DOM 복제 완료 대기 위해 약간 지연)
+                        setTimeout(function(){
+                            var modalTab = document.querySelector('#modalCategoryTabs .cat-tab[data-top-code="' + (CSS && CSS.escape ? CSS.escape(code) : code.replace(/"/g,'\\"')) + '"]');
+                            if (modalTab) {
+                                modalTab.click();
+                            } else {
+                                // 모달 탭이 아직 없으면 원본 탭 클릭으로 fallback
+                                var origTab = document.querySelector('#topCategoryTabs .cat-tab[data-top-code="' + (CSS && CSS.escape ? CSS.escape(code) : code.replace(/"/g,'\\"')) + '"]');
+                                if (origTab) origTab.click();
+                            }
+                            if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
+                            _hideLoadingShield();
+                        }, 250);
                     } else {
-                        location.href = '/?top=' + encodeURIComponent(code);
+                        // openProductPickerModal 없으면 메인페이지 navigate + sessionStorage
+                        try { sessionStorage.setItem('pendingTopCat', code); } catch (e) {}
+                        location.href = '/';
                     }
                 };
             });
