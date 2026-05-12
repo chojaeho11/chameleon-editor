@@ -555,18 +555,9 @@
       </div>
     </div>
 
-    <!-- 2026-05-12: 카테고리 네비게이션 — 다른 카테고리로 이동 -->
-    <nav class="so-category-nav" style="background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 20px; overflow-x:auto; white-space:nowrap; flex-shrink:0;">
-      <div style="display:inline-flex; gap:8px; align-items:center;">
-        <a href="/?_p=honeycomb" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🧱 ${tr('허니콤보드', 'ハニカム', 'Honeycomb')}</a>
-        <a href="/?_p=paper-stand" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">📦 ${tr('종이매대', '紙什器', 'Paper stand')}</a>
-        <a href="/fabric" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">✂️ ${tr('패브릭', 'ファブリック', 'Fabric')}</a>
-        <a href="/?_p=biz-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">📇 ${tr('명함·전단', '名刺・チラシ', 'Biz print')}</a>
-        <a href="/?_p=acrylic-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🟫 ${tr('아크릴', 'アクリル', 'Acrylic')}</a>
-        <a href="/?_p=foamex-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🪧 ${tr('사인물', '看板', 'Signage')}</a>
-        <a href="/?_p=goods" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">🎁 ${tr('굿즈', 'グッズ', 'Goods')}</a>
-        <a href="/?_p=tshirt-print" style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; text-decoration:none; font-size:13px; font-weight:600;">👕 ${tr('티셔츠', 'Tシャツ', 'T-shirt')}</a>
-      </div>
+    <!-- 2026-05-12: 카테고리 네비게이션 — admin_top_categories 에서 동적 로드, 메인 페이지와 완전 동일 -->
+    <nav class="so-category-nav" id="soCategoryNav" style="background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 20px; overflow-x:auto; white-space:nowrap; flex-shrink:0;">
+      <div style="display:inline-flex; gap:8px; align-items:center; color:#9ca3af; font-size:12px;">로딩 중…</div>
     </nav>
 
     <div class="so-body">
@@ -1075,9 +1066,87 @@
     // ─────────────────────────────────────────────
     // 모달 열기 / 닫기
     // ─────────────────────────────────────────────
+    // 2026-05-12: 카테고리 nav 동적 로드 — 메인 페이지의 #topCategoryTabs 와 동일한 데이터 (admin_top_categories)
+    // 각 버튼 클릭 → simple_order 닫고 window.openTopMenu(code, name) 호출. 특수 케이스는 location.href.
+    var _soNavPopulated = false;
+    async function populateSoCategoryNav() {
+        var navEl = document.getElementById('soCategoryNav');
+        if (!navEl || _soNavPopulated) return;
+        var sb = getSb();
+        if (!sb) return;
+        try {
+            var res = await sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true });
+            var topCats = res && res.data;
+            if (!topCats || !topCats.length) return;
+            var lang = (function(){
+                if (window.CURRENT_LANG) return window.CURRENT_LANG;
+                var h = (location.hostname || '').toLowerCase();
+                if (h.indexOf('cafe0101') >= 0) return 'ja';
+                if (h.indexOf('cafe3355') >= 0) return 'en';
+                return 'ko';
+            })();
+            navEl.innerHTML = '<div style="display:inline-flex; gap:8px; align-items:center;">' +
+                topCats.map(function(top){
+                    var name = top.name;
+                    if (lang === 'ja' && top.name_jp) name = top.name_jp;
+                    else if (lang === 'en' && top.name_us) name = top.name_us;
+                    else if (lang === 'zh' && top.name_cn) name = top.name_cn;
+                    var safe = String(name || '').replace(/[<>"'&]/g, function(c){
+                        return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
+                    });
+                    return '<button type="button" class="so-nav-btn" data-top-code="' + String(top.code || '').replace(/"/g,'&quot;') + '" ' +
+                        'style="display:inline-block; padding:8px 14px; border-radius:20px; background:#f3f4f6; color:#374151; border:none; cursor:pointer; font-size:13px; font-weight:700; white-space:nowrap; transition:all 0.15s;" ' +
+                        'onmouseover="this.style.background=\'#dbeafe\'; this.style.color=\'#1d4ed8\';" ' +
+                        'onmouseout="this.style.background=\'#f3f4f6\'; this.style.color=\'#374151\';">' +
+                        safe + '</button>';
+                }).join('') +
+                '</div>';
+            // 클릭 핸들러 wire — simple_order 닫고 메인의 openTopMenu 호출
+            navEl.querySelectorAll('.so-nav-btn').forEach(function(btn){
+                btn.onclick = function(){
+                    var code = btn.dataset.topCode;
+                    var label = btn.textContent;
+                    // 1) simple_order 모달 닫기
+                    if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
+                    // 2) 특수 케이스 (메인 페이지의 renderQuickMenu 분기와 동일)
+                    var cl = window.CURRENT_LANG || lang;
+                    var langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko'};
+                    if (code === 'paper_display') {
+                        var psLang = langMap[cl] || '';
+                        location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '');
+                        return;
+                    }
+                    if (code === 'Wholesale Board Prices') {
+                        var rbLang = langMap[cl] || '';
+                        location.href = '/raw-board' + (rbLang && rbLang !== 'ko' ? '?lang=' + rbLang : '');
+                        return;
+                    }
+                    if (code === '22222') {
+                        // 패브릭 — 도메인 통합 후 /fabric (cotton-print.com 별도 도메인 X)
+                        location.href = '/fabric';
+                        return;
+                    }
+                    if (code === 'user_artwork') {
+                        location.href = '/#artworkMarketBanner';
+                        return;
+                    }
+                    // 3) 일반 카테고리 — openTopMenu 호출 (메인의 카테고리 모달 표시)
+                    if (typeof window.openTopMenu === 'function') {
+                        setTimeout(function(){ window.openTopMenu(code, label); }, 150);
+                    } else {
+                        // openTopMenu 없으면 메인 페이지로 이동 + top 파라미터
+                        location.href = '/?top=' + encodeURIComponent(code);
+                    }
+                };
+            });
+            _soNavPopulated = true;
+        } catch (e) { console.warn('[so-nav]', e); }
+    }
+
     window.openSimpleOrderModal = async function(productCode, productData) {
         injectStyles();
         injectModal();
+        populateSoCategoryNav();  // 2026-05-12: 카테고리 nav 채우기 (한 번만)
         state = { product: null, file: null, thumbDataUrl: null, qty: 1 };
 
         let p = productData;
