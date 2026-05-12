@@ -203,27 +203,165 @@
 /* 업로드 완료 상태 */
 .so-upload.done {
     border: 1.5px solid #16a34a; background: #f0fdf4;
-    cursor: default;
+    cursor: default; padding: 20px;
+    justify-content: flex-start; align-items: center;
 }
-.so-upload.done .so-upload-icon { color: #16a34a; font-size: 36px; }
+
+/* 인쇄 사이즈 라벨 */
+.so-size-label-row { width: 100%; text-align: center; margin-bottom: 12px; }
+.so-size-tag {
+    display: inline-block; padding: 6px 14px; background: #fff;
+    border: 1px solid #16a34a; border-radius: 50px; font-size: 12px;
+    color: #166534; font-weight: 700;
+}
+.so-size-tag b { color: #15803d; }
+
+/* 프레임 + 줄자 래퍼 */
+.so-print-frame-wrap {
+    display: flex; flex-direction: column; align-items: flex-start;
+    margin: 0 auto 12px; padding-left: 22px; padding-top: 22px;
+    position: relative;
+}
+.so-print-frame {
+    border: 1.5px solid #78350f; background: #fff;
+    box-shadow: 0 6px 20px rgba(69,26,3,0.12);
+    overflow: hidden; position: relative;
+}
+
+/* 줄자 (cm 눈금) */
+.so-ruler {
+    position: relative; background: #fef7e6; flex-shrink: 0;
+}
+.so-ruler-top {
+    height: 22px;
+    border-bottom: 1px solid #d6d3d1;
+    margin-left: 22px; /* 좌측 줄자 폭만큼 들여 */
+}
+.so-ruler-left {
+    width: 22px;
+    border-right: 1px solid #d6d3d1;
+    margin-top: 0;
+}
+.so-ruler-tick {
+    position: absolute; left: 0; bottom: 0;
+    width: 1px; height: 5px; background: #78350f;
+}
+.so-ruler-tick.major { height: 9px; background: #451a03; }
+.so-ruler-tick.vertical {
+    position: absolute; top: 0; right: 0; left: auto; bottom: auto;
+    width: 5px; height: 1px;
+}
+.so-ruler-tick.vertical.major { width: 9px; }
+.so-ruler-label {
+    position: absolute; left: 2px; top: -2px;
+    font-size: 9px; color: #451a03; font-weight: 700;
+}
+.so-ruler-label.vertical {
+    position: absolute; right: 6px; left: auto; top: -6px;
+    font-size: 9px; color: #451a03; font-weight: 700;
+    transform: none;
+}
+
+/* 파일 정보 카드 */
 .so-file-preview {
-    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
     background: #fff; border: 1px solid #d1fae5; border-radius: 10px;
-    margin-bottom: 10px; text-align: left; max-width: 100%;
+    margin-top: 6px; text-align: left; max-width: 540px; width: 100%;
 }
-.so-file-thumb {
-    width: 56px; height: 56px; border-radius: 8px; background: #f5f5f5;
-    object-fit: cover; flex-shrink: 0; border: 1px solid #e5e5e5;
+.so-file-icon {
+    width: 44px; height: 44px; border-radius: 8px; background: #f0fdf4;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    flex-shrink: 0;
 }
 .so-file-info { flex: 1; min-width: 0; }
 .so-file-name { font-size: 13px; font-weight: 700; color: #1a1a1a; word-break: break-all; }
 .so-file-size { font-size: 11px; color: #888; margin-top: 2px; }
 .so-file-change {
     border: 1px solid #d6d3d1; background: #fff; color: #78350f; font-weight: 700;
-    padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px;
     font-family: inherit; flex-shrink: 0;
 }
 .so-file-change:hover { background: #fef7e6; }
+
+/* 카트 드로어 — 우측 슬라이드 */
+.so-cart-drawer-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50100;
+    display: none; opacity: 0; transition: opacity 0.25s;
+}
+.so-cart-drawer-overlay.open { display: block; opacity: 1; }
+.so-cart-drawer {
+    position: fixed; right: 0; top: 0; height: 100%; width: 440px;
+    max-width: 100%; background: #fff; z-index: 50101;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.2);
+    transform: translateX(100%); transition: transform 0.3s ease;
+    display: flex; flex-direction: column;
+}
+.so-cart-drawer.open { transform: translateX(0); }
+.so-cart-head {
+    padding: 16px 20px; border-bottom: 1px solid #ede4d3;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #451a03, #78350f); color: #fde047;
+}
+.so-cart-head h3 { margin: 0; font-size: 17px; font-weight: 800; }
+.so-cart-close {
+    width: 30px; height: 30px; border: none; background: rgba(255,255,255,0.15);
+    color: #fde047; border-radius: 50%; cursor: pointer; font-size: 18px;
+}
+.so-cart-close:hover { background: rgba(255,255,255,0.25); }
+.so-cart-body { flex: 1; overflow-y: auto; padding: 16px 20px; background: #faf6ed; }
+.so-cart-empty {
+    text-align: center; padding: 40px 20px; color: #888; font-size: 13px;
+}
+.so-cart-empty i { font-size: 48px; opacity: 0.4; display: block; margin-bottom: 10px; }
+.so-cart-item {
+    display: flex; gap: 12px; padding: 12px; background: #fff;
+    border-radius: 10px; border: 1px solid #ede4d3; margin-bottom: 10px;
+}
+.so-cart-item-thumb {
+    width: 64px; height: 64px; border-radius: 8px; background: #f5f5f5;
+    object-fit: cover; flex-shrink: 0; border: 1px solid #eaeaea;
+}
+.so-cart-item-info { flex: 1; min-width: 0; }
+.so-cart-item-name { font-size: 13px; font-weight: 700; color: #1a1a1a; line-height: 1.3; margin-bottom: 4px; }
+.so-cart-item-meta { font-size: 11px; color: #888; line-height: 1.5; }
+.so-cart-item-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px;
+}
+.so-cart-qty-controls { display: flex; align-items: center; gap: 4px; }
+.so-cart-qty-btn {
+    width: 24px; height: 24px; border: 1px solid #d6d3d1; background: #fff;
+    border-radius: 4px; cursor: pointer; font-weight: 800; color: #451a03;
+    font-size: 13px; padding: 0;
+}
+.so-cart-qty-input {
+    width: 40px; height: 24px; text-align: center; border: 1px solid #d6d3d1;
+    border-radius: 4px; font-weight: 700; font-size: 12px; font-family: inherit;
+}
+.so-cart-item-price { font-size: 13px; font-weight: 800; color: #451a03; }
+.so-cart-item-remove {
+    background: none; border: none; color: #dc2626; font-size: 11px; cursor: pointer;
+    padding: 2px 4px;
+}
+.so-cart-foot {
+    padding: 16px 20px; border-top: 1px solid #ede4d3; background: #fff;
+}
+.so-cart-total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+}
+.so-cart-total-label { font-size: 14px; font-weight: 700; color: #78350f; }
+.so-cart-total-amt { font-size: 22px; font-weight: 900; color: #451a03; }
+.so-cart-checkout-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, #451a03, #78350f); color: #fde047;
+    font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.so-cart-checkout-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (max-width: 480px) {
+    .so-cart-drawer { width: 100%; }
+}
 
 /* 우측: 옵션 패널 */
 .so-right {
@@ -333,12 +471,20 @@
     <div class="so-head">
       <div class="so-head-left">
         <button class="so-back" onclick="window.closeSimpleOrderModal()" title="${tr('메인으로', 'メインへ', 'Back')}">
-          ← ${tr('메인으로', 'メインへ', 'Back')}
+          ← ${tr('메인으로', 'メインへ', 'Main')}
+        </button>
+        <button class="so-back so-cat-home" id="soCatHome" style="display:none" onclick="window._soBackToCategory()" title="${tr('카테고리 목록', 'カテゴリー一覧', 'Category list')}">
+          📂 <span id="soCatHomeLabel"></span>
         </button>
         <span class="so-brand">Chameleon</span>
-        <h2>${tr('상품 주문', '商品注文', 'Order')}</h2>
+        <h2 id="soHeadTitle">${tr('상품 주문', '商品注文', 'Order')}</h2>
       </div>
-      <button class="so-close" onclick="window.closeSimpleOrderModal()" title="${tr('닫기', '閉じる', 'Close')}">×</button>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="so-back" id="soCartBtn" onclick="window._soToggleCart(true)" title="${tr('장바구니', 'カート', 'Cart')}">
+          🛒 <span id="soCartCount">0</span>
+        </button>
+        <button class="so-close" onclick="window.closeSimpleOrderModal()" title="${tr('닫기', '閉じる', 'Close')}">×</button>
+      </div>
     </div>
 
     <div class="so-body">
@@ -400,6 +546,27 @@
         </div>
       </div>
     </div>
+
+    <!-- 카트 드로어 (우측 슬라이드) -->
+    <div class="so-cart-drawer-overlay" id="soCartOverlay" onclick="window._soToggleCart(false)"></div>
+    <div class="so-cart-drawer" id="soCartDrawer">
+      <div class="so-cart-head">
+        <h3>🛒 ${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
+        <button class="so-cart-close" onclick="window._soToggleCart(false)">×</button>
+      </div>
+      <div class="so-cart-body" id="soCartList">
+        <!-- 카트 아이템 동적 렌더 -->
+      </div>
+      <div class="so-cart-foot">
+        <div class="so-cart-total">
+          <span class="so-cart-total-label">${tr('총 결제금액', '合計', 'Total')}</span>
+          <span class="so-cart-total-amt" id="soCartTotalAmt">0원</span>
+        </div>
+        <button class="so-cart-checkout-btn" id="soCartCheckoutBtn" onclick="window._soGoCheckout()" disabled>
+          ${tr('주문하기', '注文する', 'Checkout')}
+        </button>
+      </div>
+    </div>
   </div>
 </div>
         `;
@@ -424,7 +591,40 @@
         };
     }
 
-    function handleFile(file) {
+    // PDF.js 지연 로드 — 사용자가 PDF 업로드 시점에만 로드
+    function loadPdfJs() {
+        if (typeof window.pdfjsLib !== 'undefined') return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            s.onload = () => {
+                if (window.pdfjsLib) {
+                    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                }
+                resolve();
+            };
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    async function pdfFirstPageToDataUrl(file) {
+        await loadPdfJs();
+        if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
+        const buf = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+        const page = await pdf.getPage(1);
+        // 미리보기는 적당한 해상도 (모달 안 표시용)
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        return canvas.toDataURL('image/png');
+    }
+
+    async function handleFile(file) {
         if (!file) return;
         const name = (file.name || '').toLowerCase();
         const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
@@ -439,45 +639,141 @@
             return;
         }
         state.file = file;
-        // 이미지는 썸네일 dataUrl, PDF는 아이콘 사용
-        if (isPng || isJpg) {
-            const r = new FileReader();
-            r.onload = e => {
-                state.thumbDataUrl = e.target.result;
-                renderUploadDone();
-            };
-            r.readAsDataURL(file);
-        } else {
+        state.thumbDataUrl = null;
+
+        try {
+            if (isPng || isJpg) {
+                state.thumbDataUrl = await new Promise((resolve, reject) => {
+                    const r = new FileReader();
+                    r.onload = e => resolve(e.target.result);
+                    r.onerror = reject;
+                    r.readAsDataURL(file);
+                });
+            } else if (isPdf) {
+                showStatus(tr('PDF 미리보기 변환 중...', 'PDFプレビュー変換中...', 'Converting PDF preview...'), 'ok');
+                state.thumbDataUrl = await pdfFirstPageToDataUrl(file);
+                hideStatus();
+            }
+        } catch (e) {
+            console.warn('[simple_order] thumb 생성 실패:', e);
             state.thumbDataUrl = null;
-            renderUploadDone();
         }
+        renderUploadDone();
     }
 
     function renderUploadDone() {
         const zone = document.getElementById('soUpload');
         if (!zone) return;
         zone.classList.add('done');
+
+        // 상품 인쇄 사이즈 (mm 단위)
+        const p = state.product || {};
+        const w_mm = p.w_mm || 300;
+        const h_mm = p.h_mm || 600;
+        const w_cm = w_mm / 10;
+        const h_cm = h_mm / 10;
+
+        // 프리뷰 영역 — 인쇄 사이즈 비율에 맞춰 프레임
+        //   max-width 500px / max-height 460px 안에서 비율 맞춤
+        const aspectRatio = w_mm / h_mm;
+        const maxW = 500;
+        const maxH = 460;
+        let frameW = maxW;
+        let frameH = frameW / aspectRatio;
+        if (frameH > maxH) {
+            frameH = maxH;
+            frameW = frameH * aspectRatio;
+        }
+
         const thumbHtml = state.thumbDataUrl
-            ? `<img class="so-file-thumb" src="${state.thumbDataUrl}" alt="" />`
-            : `<div class="so-file-thumb" style="display:flex;align-items:center;justify-content:center;font-size:24px;color:#dc2626;">📄</div>`;
+            ? `<img src="${state.thumbDataUrl}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" />`
+            : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:48px;color:#dc2626;">📄</div>`;
+
         const sizeMB = (state.file.size / 1024 / 1024).toFixed(2);
+
         zone.innerHTML = `
             <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
-            <div class="so-file-preview" style="width:100%;max-width:420px;">
-                ${thumbHtml}
+
+            <!-- 인쇄 사이즈 라벨 + 줄자 -->
+            <div class="so-size-label-row">
+                <span class="so-size-tag">📐 ${tr('실제 출력 사이즈', '実際の出力サイズ', 'Actual print size')}: <b>${w_cm} × ${h_cm} cm</b></span>
+            </div>
+
+            <!-- 프레임 (인쇄 사이즈 비율) + 줄자 -->
+            <div class="so-print-frame-wrap">
+                <!-- 상단 줄자 -->
+                <div class="so-ruler so-ruler-top" data-width="${w_cm}" style="width:${frameW}px;"></div>
+                <div style="display:flex; align-items:flex-start;">
+                    <!-- 좌측 줄자 -->
+                    <div class="so-ruler so-ruler-left" data-height="${h_cm}" style="height:${frameH}px;"></div>
+                    <!-- 인쇄 영역 -->
+                    <div class="so-print-frame" style="width:${frameW}px; height:${frameH}px;">
+                        ${thumbHtml}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 파일 정보 카드 -->
+            <div class="so-file-preview">
+                <div class="so-file-icon">${state.file.type === 'application/pdf' ? '📄' : '🖼️'}</div>
                 <div class="so-file-info">
                     <div class="so-file-name">${escapeHtml(state.file.name)}</div>
                     <div class="so-file-size">${sizeMB} MB</div>
                 </div>
                 <button class="so-file-change" onclick="event.stopPropagation();document.getElementById('soFile').click()">${tr('변경', '変更', 'Change')}</button>
             </div>
+
             <div style="font-size:12px;color:#16a34a;font-weight:700;margin-top:6px;">
                 ✅ ${tr('파일 업로드 준비 완료', 'ファイル準備完了', 'File ready')}
             </div>
         `;
-        zone.onclick = null;  // 영역 클릭 → 입력 활성화 안 함 (변경 버튼으로만)
+        zone.onclick = null;
         wireUploadEvents();
+        drawRulers(w_cm, h_cm, frameW, frameH);
         updateButtons();
+    }
+
+    // 줄자 그리기 — canvas로 cm 눈금
+    function drawRulers(widthCm, heightCm, frameW, frameH) {
+        const topRuler = document.querySelector('.so-ruler-top');
+        const leftRuler = document.querySelector('.so-ruler-left');
+        if (!topRuler || !leftRuler) return;
+
+        // 상단 줄자
+        topRuler.innerHTML = '';
+        const pxPerCmW = frameW / widthCm;
+        for (let cm = 0; cm <= widthCm; cm++) {
+            const tick = document.createElement('div');
+            const isMajor = cm % 5 === 0;
+            const isLabel = cm % 10 === 0 || (widthCm <= 30 && cm % 5 === 0);
+            tick.className = 'so-ruler-tick ' + (isMajor ? 'major' : 'minor');
+            tick.style.left = (cm * pxPerCmW) + 'px';
+            if (isLabel && cm > 0) {
+                const lbl = document.createElement('span');
+                lbl.className = 'so-ruler-label';
+                lbl.textContent = cm;
+                tick.appendChild(lbl);
+            }
+            topRuler.appendChild(tick);
+        }
+
+        // 좌측 줄자
+        leftRuler.innerHTML = '';
+        const pxPerCmH = frameH / heightCm;
+        for (let cm = 0; cm <= heightCm; cm++) {
+            const tick = document.createElement('div');
+            const isMajor = cm % 5 === 0;
+            const isLabel = cm % 10 === 0 || (heightCm <= 30 && cm % 5 === 0);
+            tick.className = 'so-ruler-tick vertical ' + (isMajor ? 'major' : 'minor');
+            tick.style.top = (cm * pxPerCmH) + 'px';
+            if (isLabel && cm > 0) {
+                const lbl = document.createElement('span');
+                lbl.className = 'so-ruler-label vertical';
+                lbl.textContent = cm;
+                tick.appendChild(lbl);
+            }
+            leftRuler.appendChild(tick);
+        }
     }
 
     function resetUploadZone() {
@@ -600,12 +896,32 @@
         if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
         else { img.style.display = 'none'; }
 
+        // 카테고리 홈 버튼 (있을 때만 표시)
+        const catBtn = document.getElementById('soCatHome');
+        const catLabel = document.getElementById('soCatHomeLabel');
+        const catName = getCategoryLabel(p.category);
+        if (catBtn && catName) {
+            catBtn.style.display = '';
+            if (catLabel) catLabel.textContent = catName;
+        } else if (catBtn) {
+            catBtn.style.display = 'none';
+        }
+        // 헤더 제목에 상품명 (보조)
+        const headTitle = document.getElementById('soHeadTitle');
+        if (headTitle) headTitle.textContent = pickName(p);
+
         document.getElementById('soQty').value = 1;
         state.qty = 1;
         recalc();
         updateButtons();
         resetUploadZone();
         hideStatus();
+
+        // 카트 카운트 갱신
+        try {
+            const c = readCart().length;
+            const cc = document.getElementById('soCartCount'); if (cc) cc.textContent = c;
+        } catch (e) {}
 
         document.getElementById('simpleOrderModal').classList.add('open');
         document.body.style.overflow = 'hidden';
@@ -715,21 +1031,223 @@
 
     window._soAddCart = async function() {
         const ok = await doAddToCart();
-        if (ok) setTimeout(() => window.closeSimpleOrderModal(), 900);
+        if (ok) {
+            // 카트 드로어를 우측에서 슬라이드해서 보여줌 (모달은 그대로 유지)
+            renderSoCart();
+            setTimeout(() => window._soToggleCart(true), 200);
+        }
     };
 
     window._soBuyNow = async function() {
         const ok = await doAddToCart();
         if (!ok) return;
+        // 카트 드로어 슬라이드 + 자동 체크아웃 진행
+        renderSoCart();
+        window._soToggleCart(true);
+    };
+
+    // ─────────────────────────────────────────────
+    // 카트 드로어 — 우측 슬라이드 + 아이템 목록 + 수량 조절
+    // ─────────────────────────────────────────────
+    window._soToggleCart = function(open) {
+        const ov = document.getElementById('soCartOverlay');
+        const dr = document.getElementById('soCartDrawer');
+        if (!ov || !dr) return;
+        if (open === undefined) open = !dr.classList.contains('open');
+        if (open) {
+            ov.classList.add('open');
+            dr.classList.add('open');
+            renderSoCart();
+        } else {
+            ov.classList.remove('open');
+            dr.classList.remove('open');
+        }
+    };
+
+    function fmtCartName(item) {
+        if (!item) return '-';
+        const p = item.product || {};
+        const lang = getLang();
+        if (lang === 'ja' && p.name_jp) return p.name_jp;
+        if (lang === 'en' && p.name_us) return p.name_us;
+        return p.name || p.name_kr || '-';
+    }
+
+    function calcCartItemPrice(item) {
+        // _simple 우선 (간편 주문에서 담은 거)
+        if (item._simple) {
+            const tier = getDiscountTier(item.qty || 1);
+            const unit = item._simple.unit || (item.product && item.product.price) || 0;
+            const subtotal = unit * (item.qty || 1);
+            const discount = Math.round(subtotal * tier.pct / 100);
+            return { unit, subtotal, discount, final: subtotal - discount, tierPct: tier.pct };
+        }
+        // 일반 카트 아이템 (다른 흐름에서 담은 거)
+        const p = item.product || {};
+        const unit = p.price || 0;
+        const qty = item.qty || 1;
+        const subtotal = unit * qty;
+        return { unit, subtotal, discount: 0, final: subtotal, tierPct: 0 };
+    }
+
+    function renderSoCart() {
+        const list = document.getElementById('soCartList');
+        const totalEl = document.getElementById('soCartTotalAmt');
+        const countEl = document.getElementById('soCartCount');
+        const titleCountEl = document.getElementById('soCartCountTitle');
+        const checkBtn = document.getElementById('soCartCheckoutBtn');
+        if (!list || !totalEl) return;
+        const cart = readCart();
+        countEl && (countEl.textContent = cart.length);
+        titleCountEl && (titleCountEl.textContent = '(' + cart.length + ')');
+
+        if (cart.length === 0) {
+            list.innerHTML = '<div class="so-cart-empty"><i>🛒</i>' +
+                tr('장바구니가 비어있습니다', 'カートは空です', 'Your cart is empty') +
+                '</div>';
+            totalEl.textContent = fmtPrice(0);
+            if (checkBtn) checkBtn.disabled = true;
+            return;
+        }
+
+        let totalAmt = 0;
+        list.innerHTML = cart.map((item, idx) => {
+            const calc = calcCartItemPrice(item);
+            totalAmt += calc.final;
+            const thumb = item.thumb || (item.product && item.product.img) || '';
+            const meta = [];
+            if (calc.tierPct > 0) meta.push(`${calc.tierPct}% ${tr('할인', '割引', 'off')}`);
+            if (item.fileName) meta.push(`📎 ${escapeHtml(item.fileName)}`);
+            return `
+            <div class="so-cart-item">
+                ${thumb
+                    ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" />`
+                    : `<div class="so-cart-item-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;">📦</div>`}
+                <div class="so-cart-item-info">
+                    <div class="so-cart-item-name">${escapeHtml(fmtCartName(item))}</div>
+                    <div class="so-cart-item-meta">${meta.join(' · ')}</div>
+                    <div class="so-cart-item-bottom">
+                        <div class="so-cart-qty-controls">
+                            <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${idx}, -1)">−</button>
+                            <input type="number" class="so-cart-qty-input" min="1" max="9999"
+                                value="${item.qty || 1}"
+                                onchange="window._soCartQtySet(${idx}, this.value)" />
+                            <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${idx}, 1)">+</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="so-cart-item-price">${fmtPrice(calc.final)}</span>
+                            <button class="so-cart-item-remove" onclick="window._soCartRemove(${idx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+        totalEl.textContent = fmtPrice(totalAmt);
+        if (checkBtn) checkBtn.disabled = false;
+    }
+
+    window._soCartQtyChg = function(idx, delta) {
+        const cart = readCart();
+        if (!cart[idx]) return;
+        cart[idx].qty = Math.max(1, Math.min(9999, (cart[idx].qty || 1) + delta));
+        // _simple 가격 재계산
+        if (cart[idx]._simple) {
+            const unit = cart[idx]._simple.unit;
+            const qty = cart[idx].qty;
+            const tier = getDiscountTier(qty);
+            cart[idx]._simple.subtotal = unit * qty;
+            cart[idx]._simple.discountPct = tier.pct;
+            cart[idx]._simple.discount = Math.round(unit * qty * tier.pct / 100);
+            cart[idx]._simple.final = cart[idx]._simple.subtotal - cart[idx]._simple.discount;
+        }
+        writeCart(cart);
+        syncWindowCart(cart);
+        renderSoCart();
+    };
+
+    window._soCartQtySet = function(idx, val) {
+        const cart = readCart();
+        if (!cart[idx]) return;
+        cart[idx].qty = Math.max(1, Math.min(9999, parseInt(val) || 1));
+        if (cart[idx]._simple) {
+            const unit = cart[idx]._simple.unit;
+            const qty = cart[idx].qty;
+            const tier = getDiscountTier(qty);
+            cart[idx]._simple.subtotal = unit * qty;
+            cart[idx]._simple.discountPct = tier.pct;
+            cart[idx]._simple.discount = Math.round(unit * qty * tier.pct / 100);
+            cart[idx]._simple.final = cart[idx]._simple.subtotal - cart[idx]._simple.discount;
+        }
+        writeCart(cart);
+        syncWindowCart(cart);
+        renderSoCart();
+    };
+
+    window._soCartRemove = function(idx) {
+        const cart = readCart();
+        cart.splice(idx, 1);
+        writeCart(cart);
+        syncWindowCart(cart);
+        renderSoCart();
+    };
+
+    function syncWindowCart(cart) {
+        try {
+            if (Array.isArray(window.cartData)) {
+                window.cartData.length = 0;
+                cart.forEach(i => window.cartData.push(i));
+            }
+            if (window.renderCart) window.renderCart();
+        } catch (e) {}
+    }
+
+    window._soGoCheckout = function() {
+        // 카트 드로어 닫고 메인 사이트의 카트/체크아웃 페이지로
+        window._soToggleCart(false);
         try {
             if (window.openCartPanel) window.openCartPanel();
             else if (window.toggleCart) window.toggleCart(true);
-            else if (window.showCart) window.showCart();
             else location.href = '/?cart=open';
         } catch (e) {
             location.href = '/?cart=open';
         }
-        setTimeout(() => window.closeSimpleOrderModal(), 300);
+    };
+
+    // 카테고리 라벨 매핑 (한국어 사이트 기준)
+    const CATEGORY_LABELS_KR = {
+        'paper_display': '종이매대', 'honeycomb_board': '허니콤보드',
+        'business_card': '명함', 'leaflet': '전단', 'poster': '포스터',
+        'goods': '굿즈', 'sticker': '스티커', 'banner': '배너',
+        'paper_stand': '종이매대',
+    };
+    function getCategoryLabel(code) {
+        if (!code) return '';
+        const lang = getLang();
+        const kr = CATEGORY_LABELS_KR[code] || '';
+        if (lang === 'ja') {
+            return ({'paper_display':'紙陳列棚', 'honeycomb_board':'ハニカムボード',
+                    'business_card':'名刺', 'leaflet':'チラシ', 'poster':'ポスター',
+                    'goods':'グッズ', 'sticker':'ステッカー', 'banner':'バナー',
+                    'paper_stand':'紙陳列棚'}[code]) || kr;
+        }
+        if (lang === 'en') {
+            return ({'paper_display':'Paper display', 'honeycomb_board':'Honeycomb board',
+                    'business_card':'Business card', 'leaflet':'Leaflet', 'poster':'Poster',
+                    'goods':'Goods', 'sticker':'Sticker', 'banner':'Banner',
+                    'paper_stand':'Paper display'}[code]) || kr;
+        }
+        return kr;
+    }
+
+    window._soBackToCategory = function() {
+        const p = state.product;
+        if (!p || !p.category) {
+            window.closeSimpleOrderModal();
+            return;
+        }
+        // 카테고리 페이지로 — 메인 페이지 + category 파라미터
+        location.href = '/?category=' + encodeURIComponent(p.category);
     };
 
     // ─────────────────────────────────────────────
@@ -775,5 +1293,5 @@
         injectStyles(); injectModal(); setupRouting();
     }
 
-    console.log('[simple_order] v=5 (fullscreen 2-column layout) loaded. window.openSimpleOrderModal(code) available.');
+    console.log('[simple_order] v=6 (PDF preview + ruler + cart drawer + category home) loaded.');
 })();
