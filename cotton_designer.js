@@ -994,6 +994,82 @@ window._cpCartOpen = function() {
     // 2026-05-12: 크로스도메인 배너 렌더 (cart_sync.js)
     try { if (window.cartSync && window.cartSync.renderBanner) window.cartSync.renderBanner(); } catch (e) {}
 };
+
+// ════════════════════════════════════════════════════
+// 2026-05-12: Supabase Google 로그인 — cafe2626 와 user_id 일치시켜 크로스도메인 카트 합치기
+// ════════════════════════════════════════════════════
+(function setupCpAuth() {
+    function getSb() {
+        if (window.sb && typeof window.sb.from === 'function') return window.sb;
+        if (!window.supabase || !window.supabase.createClient) return null;
+        try {
+            // cart_sync 와 동일 클라이언트 재사용
+            if (window.__unified_sb) return window.__unified_sb;
+            window.__unified_sb = window.supabase.createClient(
+                'https://qinvtnhiidtmrzosyvys.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+            );
+            return window.__unified_sb;
+        } catch (e) { return null; }
+    }
+
+    async function refreshLoginUI() {
+        var sb = getSb();
+        if (!sb) return;
+        try {
+            var r = await sb.auth.getSession();
+            var session = r && r.data && r.data.session;
+            var label = document.getElementById('cpLoginLabel');
+            var btn = document.getElementById('cpLoginBtn');
+            if (!btn || !label) return;
+            if (session && session.user) {
+                var email = (session.user.email || '').split('@')[0];
+                label.textContent = email + ' (로그아웃)';
+                btn.onclick = function () { window._cpSignOut(); };
+            } else {
+                label.textContent = '로그인';
+                btn.onclick = function () { window._cpSignIn(); };
+            }
+        } catch (e) {}
+    }
+
+    window._cpSignIn = async function () {
+        var sb = getSb();
+        if (!sb) { alert('잠시 후 다시 시도해주세요'); return; }
+        try {
+            await sb.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: location.href }
+            });
+        } catch (e) {
+            console.error('[cp_signin]', e);
+            alert('로그인 실패: ' + (e.message || e));
+        }
+    };
+
+    window._cpSignOut = async function () {
+        var sb = getSb();
+        if (!sb) return;
+        try {
+            await sb.auth.signOut();
+            // localStorage 카트는 유지 (익명 세션으로 계속 사용)
+            location.reload();
+        } catch (e) { console.error('[cp_signout]', e); }
+    };
+
+    // 초기 + auth 변경 시 UI 갱신
+    function init() {
+        var sb = getSb();
+        if (!sb) { setTimeout(init, 200); return; }
+        refreshLoginUI();
+        try {
+            sb.auth.onAuthStateChange(function () { refreshLoginUI(); });
+        } catch (e) {}
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else { init(); }
+})();
 window._cpCartClose = function() {
     document.getElementById('cartOverlay').classList.remove('open');
     document.getElementById('cartDrawer').classList.remove('open');

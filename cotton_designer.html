@@ -681,6 +681,10 @@ a { text-decoration: none; color: inherit; }
                 <i class="fa-solid fa-cart-shopping" style="margin-right:6px;"></i><span data-cdi18n="cart_btn">장바구니</span>
                 <span id="cartBadge" style="position:absolute; top:-6px; right:-6px; background:#dc2626; color:#fff; min-width:20px; height:20px; border-radius:10px; font-size:11px; font-weight:800; display:none; align-items:center; justify-content:center; padding:0 6px;">0</span>
             </button>
+            <!-- 2026-05-12: 로그인 버튼 — 같은 Google 계정으로 cafe2626 와 user_id 일치 → 카트 자동 합쳐짐 -->
+            <button class="brand-back" id="cpLoginBtn" onclick="window._cpSignIn && window._cpSignIn()" style="cursor:pointer; border:1px solid var(--cream-dark); background:#fff;">
+                <i class="fa-brands fa-google" style="margin-right:6px; color:#ea4335;"></i><span id="cpLoginLabel">로그인</span>
+            </button>
             <a href="/" class="brand-back"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i><span data-cdi18n="main_btn">메인으로</span></a>
         </div>
     </div>
@@ -1226,6 +1230,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="cotton_designer.js?v=39"></script>
+<script src="cotton_designer.js?v=40"></script>
 </body>
 </html>

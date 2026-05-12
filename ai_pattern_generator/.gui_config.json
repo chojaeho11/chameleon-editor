@@ -3,6 +3,7 @@
   "per_category": 1,
   "sleep": 8,
   "quality": "medium",
+  "backend": "replicate",
   "dry_run": false,
   "categories": [
     "animal",
