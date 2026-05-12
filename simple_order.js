@@ -714,6 +714,25 @@
           </div>
         </div>
 
+        <!-- 2026-05-13: 허니콤 자유인쇄커팅 사이즈 (한판/반판) -->
+        <div class="so-section" id="soCutPrintSizeSection" style="display:none;">
+          <div class="so-section-title">${tr('재단 사이즈', 'カットサイズ', 'Cut size')}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button type="button" class="so-cut-btn active" data-cut="full" onclick="window._soPickCutSize('full')"
+              style="padding:14px 10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.4;">
+              ${tr('한판', 'フル', 'Full')}<br>
+              <span style="font-size:11px; font-weight:600; opacity:0.9;">2400 × 1200</span><br>
+              <span style="font-size:13px; font-weight:800;">150,000${tr('원', '円', 'KRW')}</span>
+            </button>
+            <button type="button" class="so-cut-btn" data-cut="half" onclick="window._soPickCutSize('half')"
+              style="padding:14px 10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.4;">
+              ${tr('반판 이내', 'ハーフ以内', 'Half or less')}<br>
+              <span style="font-size:11px; font-weight:600; color:#6b7280;">1200×1200 / 600×2400</span><br>
+              <span style="font-size:13px; font-weight:800;">100,000${tr('원', '円', 'KRW')}</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 상품별 추가 옵션 (admin_addons) -->
         <div class="so-section" id="soAddonSection" style="display:none;">
           <div class="so-section-title">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
@@ -731,7 +750,18 @@
             <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">🔧 ${tr('수도권 설치+철거', '首都圏設置+撤去', 'Metro install+remove')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">🛻 ${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">🚛 ${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
+            <!-- 2026-05-13: 자유인쇄커팅 전용 (시공 없이 배송만) -->
+            <button type="button" class="so-ship-btn" data-ship="metro_delivery" onclick="window._soPickShip('metro_delivery')" style="display:none;">📦 ${tr('수도권 배송', '首都圏配送', 'Metro delivery')}<br><span style="font-size:11px; opacity:0.8;">100,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">📦 ${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">200,000${tr('원', '円', 'KRW')}</span></button>
           </div>
+          <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
+          <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
+            style="display:none; width:100%; padding:12px 14px; margin-bottom:12px; border:2px dashed #16a34a; background:#f0fdf4; color:#15803d; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.2s;">
+            📦 ${tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items')}
+            <div style="font-size:11px; font-weight:600; color:#16a34a; margin-top:4px;">
+              ${tr('다른 허니콤 상품에서 배송을 선택한 경우 무료', '他のハニカム商品の配送と一緒', 'Free if another honeycomb item has shipping')}
+            </div>
+          </button>
           <!-- 배송일 / 시공 시간 -->
           <div id="soScheduleDateWrap" style="display:none;">
             <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">📅 ${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
@@ -1235,7 +1265,7 @@
     // ─────────────────────────────────────────────
     function recalc() {
         if (!state.product) return;
-        const unit = pickPrice(state.product);
+        let unit = pickPrice(state.product);
         let qty, subtotal;
         // 2026-05-13: 가벽 세로 3m → 가로 m당 +50,000원 + 양면 2배
         let heightExtra = 0;
@@ -1253,6 +1283,12 @@
                 if (state.wallSide === 'double') heightExtra *= 2;
             }
             state.wallHeightExtra = heightExtra;
+        } else if (state.isCutPrint) {
+            // 자유인쇄커팅: 한판 15만, 반판 10만 (수량은 곱셈)
+            unit = (state.cutSize === 'half') ? 100000 : 150000;
+            qty = state.qty || 1;
+            subtotal = unit * qty;
+            state.wallHeightExtra = 0;
         } else {
             state.wallHeightExtra = 0;
             qty = state.qty;
@@ -1311,7 +1347,14 @@
             setText('soUnitLabel', tr('단가', '単価', 'Unit') + sideLabel);
             showRow('soWallSizeRow', true);
             setText('soWallSizeText', qty + 'm × ' + (state.wallHeight || 2.4) + 'm' + ((state.wallSide === 'double') ? ' · 양면' : ' · 단면'));
+        } else if (state.isCutPrint) {
+            var cutLabel = (state.cutSize === 'half') ? tr('반판 이내', 'ハーフ', 'Half') : tr('한판', 'フル', 'Full');
+            setText('soUnitLabel', tr('단가', '単価', 'Unit') + ' (' + cutLabel + ')');
+            setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
+            showRow('soWallSizeRow', false);
         } else {
+            // 2026-05-13: 일반 상품 — 라벨을 단순 "단가"로 리셋 (이전 가벽 상태 잔존 방지)
+            setText('soUnitLabel', tr('단가', '単価', 'Unit'));
             setText('soUnit', fmtPrice(unit));
             showRow('soWallSizeRow', false);
         }
@@ -1331,11 +1374,16 @@
         // 구독자 할인
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
-        // 배송/시공
-        showRow('soShipRow', shipFee > 0);
-        var shipName = (window.SHIP_OPTS && window.SHIP_OPTS[state.shipMethod] && window.SHIP_OPTS[state.shipMethod].label_ko) || '';
+        // 배송/시공 (묶음배송이면 0원이어도 표시)
+        showRow('soShipRow', shipFee > 0 || !!state.bundleShipping);
+        var shipName;
+        if (state.bundleShipping) {
+            shipName = tr('다른 제품과 묶음배송', '合わせて配送', 'Bundled');
+        } else {
+            shipName = (window.SHIP_OPTS && window.SHIP_OPTS[state.shipMethod] && window.SHIP_OPTS[state.shipMethod].label_ko) || '';
+        }
         setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
-        setText('soShipAmount', '+' + fmtPrice(shipFee));
+        setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         // 합계
         setText('soTotal', fmtPrice(final));
 
@@ -1366,6 +1414,17 @@
         return /포토존|글씨|photo\s*zone|letter\s*sign/i.test(name);
     }
 
+    // 2026-05-13: 허니콤 자유인쇄커팅 감지 (hb_pt_* 또는 제품명에 "자유인쇄")
+    // 한판(2400×1200) 15만 · 반판(1200×1200 or 600×2400) 10만, 시공X, 배송만
+    function _soIsCutPrintProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        if (code.startsWith('hb_pt')) return true;
+        if (/자유\s*인쇄|free\s*print|free\s*cut/i.test(name)) return true;
+        return false;
+    }
+
     // 2026-05-13: 배송 옵션별 가격 + breakdown 정보 (window 노출 — recalc 가 라벨 사용)
     var SHIP_OPTS = {
         self_pickup:          { fee: 0,      label_ko: '직접 수령',           parts: [] },
@@ -1373,12 +1432,22 @@
         metro_weekend:        { fee: 200000, label_ko: '수도권 야간/주말 설치', parts: [['수도권 야간/주말 설치', 200000]] },
         metro_install_removal:{ fee: 300000, label_ko: '수도권 설치+철거',     parts: [['수도권 설치', 100000], ['수도권 철거', 200000]] },
         regional_truck:       { fee: 200000, label_ko: '지방 용차배송',       parts: [['지방 용차배송', 200000]] },
-        regional_install:     { fee: 700000, label_ko: '지방 설치배송',       parts: [['지방 설치배송', 700000]] }
+        regional_install:     { fee: 700000, label_ko: '지방 설치배송',       parts: [['지방 설치배송', 700000]] },
+        // 2026-05-13: 허니콤 자유인쇄커팅용 (시공 없이 배송만)
+        metro_delivery:       { fee: 100000, label_ko: '수도권 배송',         parts: [['수도권 배송', 100000]] },
+        regional_delivery:    { fee: 200000, label_ko: '지방 배송',           parts: [['지방 배송', 200000]] },
+        // 2026-05-13: 다른 제품과 묶음배송 (이 상품 자체 배송비는 0)
+        bundle_shipping:      { fee: 0,      label_ko: '다른 제품과 묶음배송', parts: [] }
     };
     window.SHIP_OPTS = SHIP_OPTS;
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-05-13: 묶음배송 모드면 이 상품의 배송비는 0
+        if (state.bundleShipping) {
+            state._shipUpgradeReason = null;
+            return 0;
+        }
         var method = state.shipMethod || 'self_pickup';
         var opt = SHIP_OPTS[method] || SHIP_OPTS.self_pickup;
         var baseFee = opt.fee || 0;
@@ -1423,14 +1492,31 @@
     // 2026-05-13: 시공/배송 버튼 클릭
     window._soPickShip = function (method) {
         state.shipMethod = method;
+        // 2026-05-13: 사용자가 일반 ship 버튼을 누르면 묶음배송 모드 해제
+        if (state.bundleShipping && method !== 'bundle_shipping') {
+            state.bundleShipping = false;
+            var bBtn = document.getElementById('soBundleShipBtn');
+            if (bBtn) {
+                bBtn.style.background = '#f0fdf4';
+                bBtn.style.color = '#15803d';
+                bBtn.style.borderStyle = 'dashed';
+                bBtn.innerHTML = '📦 ' + tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items') +
+                    '<div style="font-size:11px; font-weight:600; color:#16a34a; margin-top:4px;">' +
+                    tr('다른 허니콤 상품에서 배송을 선택한 경우 무료', '他のハニカム商品の配送と一緒', 'Free if another honeycomb item has shipping') +
+                    '</div>';
+            }
+        }
         // 버튼 active 상태 토글
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             b.classList.toggle('active', b.dataset.ship === method);
+            b.style.opacity = '1';
+            b.style.pointerEvents = '';
         });
         var dateWrap = document.getElementById('soScheduleDateWrap');
         var remWrap = document.getElementById('soRemovalWrap');
-        // self_pickup 이면 날짜·시간 안 보임
-        if (dateWrap) dateWrap.style.display = (method === 'self_pickup') ? 'none' : '';
+        // self_pickup 또는 단순 배송(metro/regional_delivery)이면 날짜·시간 안 보임 (시공 옵션만 일정 필요)
+        var needsSchedule = !(method === 'self_pickup' || method === 'metro_delivery' || method === 'regional_delivery' || method === 'bundle_shipping');
+        if (dateWrap) dateWrap.style.display = needsSchedule ? '' : 'none';
         // 철거 옵션 (수도권 설치+철거 시만)
         if (remWrap) remWrap.style.display = (method === 'metro_install_removal') ? '' : 'none';
         // 배송 희망일 최소값 = 오늘 + 영업일 3일
@@ -1573,6 +1659,55 @@
     };
     window._soUpdatePrice = function () {
         state.wallHeight = parseFloat(document.getElementById('soWallHeight') && document.getElementById('soWallHeight').value) || 2.4;
+        recalc();
+    };
+
+    // 2026-05-13: 자유인쇄커팅 사이즈 선택 (한판 15만 / 반판 10만)
+    window._soPickCutSize = function (size) {
+        state.cutSize = (size === 'half') ? 'half' : 'full';
+        document.querySelectorAll('.so-cut-btn').forEach(function (b) {
+            var on = b.dataset.cut === state.cutSize;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#4338ca' : '#fff';
+            b.style.color = on ? '#fff' : '#451a03';
+            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+        });
+        recalc();
+    };
+
+    // 2026-05-13: 다른 제품과 묶음배송 토글
+    window._soToggleBundle = function () {
+        state.bundleShipping = !state.bundleShipping;
+        var btn = document.getElementById('soBundleShipBtn');
+        if (btn) {
+            if (state.bundleShipping) {
+                btn.style.background = '#16a34a';
+                btn.style.color = '#fff';
+                btn.style.borderStyle = 'solid';
+                btn.innerHTML = '✅ ' + tr('다른 제품과 묶음배송 (선택됨)', '合わせて配送 (選択中)', 'Bundled with other items (selected)') +
+                    '<div style="font-size:11px; font-weight:600; color:#dcfce7; margin-top:4px;">' +
+                    tr('이 상품의 배송비는 0원으로 계산됩니다', 'この商品の配送費は0円', 'Shipping fee for this item is 0') +
+                    '</div>';
+                // 묶음배송 켜면 다른 ship 버튼 비활성화
+                state.shipMethod = 'bundle_shipping';
+            } else {
+                btn.style.background = '#f0fdf4';
+                btn.style.color = '#15803d';
+                btn.style.borderStyle = 'dashed';
+                btn.innerHTML = '📦 ' + tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items') +
+                    '<div style="font-size:11px; font-weight:600; color:#16a34a; margin-top:4px;">' +
+                    tr('다른 허니콤 상품에서 배송을 선택한 경우 무료', '他のハニカム商品の配送と一緒', 'Free if another honeycomb item has shipping') +
+                    '</div>';
+                state.shipMethod = 'self_pickup';
+            }
+        }
+        // ship 버튼 active 상태 동기화
+        document.querySelectorAll('.so-ship-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.ship === state.shipMethod);
+            // 묶음배송 모드일 때 ship 버튼 비활성화 (시각만)
+            b.style.opacity = state.bundleShipping ? '0.5' : '1';
+            b.style.pointerEvents = state.bundleShipping ? 'none' : '';
+        });
         recalc();
     };
 
@@ -1885,17 +2020,59 @@
         // 가벽 카테고리 감지 (hb_dw_* 또는 hb_display_wall 등)
         state.isWall = _soIsWallProduct(p);
         state.isPhotozone = _soIsPhotozoneProduct(p);
+        // 2026-05-13: 허니콤 자유인쇄커팅 감지 (hb_pt_*)
+        state.isCutPrint = _soIsCutPrintProduct(p);
+        state.cutSize = 'full';
+        state.bundleShipping = false;
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
+        // 자유인쇄커팅 사이즈 섹션
+        var cutSec = document.getElementById('soCutPrintSizeSection');
+        if (cutSec) cutSec.style.display = state.isCutPrint ? '' : 'none';
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
         var qtySec = document.getElementById('soQtySection');
         if (qtySec) qtySec.style.display = state.isWall ? 'none' : '';
-        // 시공/배송 일정 섹션 (가벽 또는 글씨포토존)
+        // 시공/배송 일정 섹션 (가벽·포토존·자유인쇄커팅 모두 표시)
         var schedSec = document.getElementById('soScheduleSection');
-        if (schedSec) schedSec.style.display = (state.isWall || state.isPhotozone) ? '' : 'none';
+        if (schedSec) schedSec.style.display = (state.isWall || state.isPhotozone || state.isCutPrint) ? '' : 'none';
+        // 2026-05-13: 자유인쇄커팅이면 시공 옵션 숨기고 배송 옵션만 표시 + 묶음배송 버튼 표시
+        var installShipKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
+        var deliveryShipKeys = ['metro_delivery', 'regional_delivery'];
+        document.querySelectorAll('.so-ship-btn').forEach(function (b) {
+            var k = b.dataset.ship;
+            if (state.isCutPrint) {
+                // 자유인쇄커팅: self_pickup + delivery 만 표시
+                if (k === 'self_pickup' || deliveryShipKeys.indexOf(k) >= 0) b.style.display = '';
+                else b.style.display = 'none';
+            } else {
+                // 가벽/포토존: 기존 시공 옵션 표시, delivery 옵션 숨김
+                if (deliveryShipKeys.indexOf(k) >= 0) b.style.display = 'none';
+                else b.style.display = '';
+            }
+            // active/opacity 초기화
+            b.classList.toggle('active', k === 'self_pickup');
+            b.style.opacity = '1';
+            b.style.pointerEvents = '';
+        });
+        // 묶음배송 버튼 (자유인쇄커팅만)
+        var bundleBtn = document.getElementById('soBundleShipBtn');
+        if (bundleBtn) {
+            bundleBtn.style.display = state.isCutPrint ? '' : 'none';
+            bundleBtn.style.background = '#f0fdf4';
+            bundleBtn.style.color = '#15803d';
+            bundleBtn.style.borderStyle = 'dashed';
+        }
         // 가벽 사이즈 폼 초기값 동기화
         var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = '3';
         var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = '2.4';
+        // 2026-05-13: 자유인쇄커팅 사이즈 초기화 (한판)
+        document.querySelectorAll('.so-cut-btn').forEach(function (b) {
+            var on = b.dataset.cut === 'full';
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#4338ca' : '#fff';
+            b.style.color = on ? '#fff' : '#451a03';
+            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+        });
         // 2026-05-13: 단면/양면 초기화 (단면)
         document.querySelectorAll('.so-side-btn').forEach(function (b) {
             var on = b.dataset.side === 'single';
@@ -1977,7 +2154,18 @@
         var rdEl = document.getElementById('soRemovalDate');
         var rtEl = document.getElementById('soRemovalTime');
         var shipping = null;
-        if (state.shipMethod && state.shipMethod !== 'self_pickup') {
+        // 2026-05-13: 묶음배송이면 별도 처리 — fee 0, method='bundle_shipping'
+        if (state.bundleShipping) {
+            shipping = {
+                method: 'bundle_shipping',
+                fee: 0,
+                upgrade_reason: null,
+                delivery_date: '',
+                delivery_time: '',
+                removal_date: '',
+                removal_time: ''
+            };
+        } else if (state.shipMethod && state.shipMethod !== 'self_pickup') {
             // 2026-05-13: 야간/주말 자동 보정된 실제 fee 사용
             var actualFee = (typeof _soComputeShipFee === 'function') ? _soComputeShipFee() : (state.shipFee || 0);
             shipping = {
@@ -2020,6 +2208,9 @@
             wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
             // 2026-05-13: 단면/양면 (가벽만)
             wallSide: state.isWall ? (state.wallSide || 'single') : null,
+            // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
+            cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
+            bundleShipping: !!state.bundleShipping,
             // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
             backFileName: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.name : null,
             backFileType: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.type : null,
@@ -2383,6 +2574,10 @@
         if (_soIsFabricItem(it)) return it.price || 0;
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
+        // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
+        if (it.cutPrint) {
+            unit = (it.cutPrint.size === 'half') ? 100000 : 150000;
+        }
         var subtotal = unit * qty;
         // 가벽 양면 → 가격 2배
         var isDouble = (it.wallSide === 'double');
@@ -2404,8 +2599,10 @@
             });
         }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
-        // 시공/배송비 합산
-        if (it.shipping && it.shipping.fee) {
+        // 시공/배송비 합산 (묶음배송이면 0)
+        if (it.bundleShipping) {
+            // skip — 배송비 0
+        } else if (it.shipping && it.shipping.fee) {
             base += (it.shipping.fee || 0);
         }
         return base;
