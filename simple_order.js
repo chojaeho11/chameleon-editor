@@ -554,6 +554,8 @@
         <h3>🛒 ${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
         <button class="so-cart-close" onclick="window._soToggleCart(false)">×</button>
       </div>
+      <!-- 2026-05-12: 크로스도메인 카트 배너 (cart_sync.js 가 채움) -->
+      <div id="cartCrossBanner" style="display:none;"></div>
       <div class="so-cart-body" id="soCartList">
         <!-- 카트 아이템 동적 렌더 -->
       </div>
@@ -1129,6 +1131,8 @@
             ov.classList.add('open');
             dr.classList.add('open');
             renderSoCart();
+            // 2026-05-12: 크로스도메인 배너 렌더 (cart_sync.js)
+            try { if (window.cartSync && window.cartSync.renderBanner) window.cartSync.renderBanner(); } catch (e) {}
         } else {
             ov.classList.remove('open');
             dr.classList.remove('open');

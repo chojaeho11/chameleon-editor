@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cafe2626/0101/3355 + cotton-print 공유) -->
+<script src="./cart_sync.js?v=1"></script>
 <!-- Toss Payments SDK (한국 카드결제) -->
 <script src="https://js.tosspayments.com/v1/payment"></script>
 <!-- Stripe (해외 결제) -->
@@ -1087,6 +1089,8 @@ a { text-decoration: none; color: inherit; }
         <h3><i class="fa-solid fa-cart-shopping"></i> <span data-cdi18n="cart_drawer_title">장바구니</span> <span id="cartCountInline" style="font-size:13px; color:var(--text-light); font-weight:400; margin-left:6px;"></span></h3>
         <button onclick="window._cpCartClose()">&times;</button>
     </div>
+    <!-- 2026-05-12: 크로스도메인 카트 배너 (cart_sync.js 가 채움) -->
+    <div id="cartCrossBanner" style="display:none;"></div>
     <div class="cart-body" id="cartBody">
         <div class="cart-empty">
             <i class="fa-regular fa-folder-open"></i>

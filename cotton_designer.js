@@ -991,6 +991,8 @@ window._cpCartOpen = function() {
     document.getElementById('cartDrawer').classList.add('open');
     document.body.style.overflow = 'hidden';
     window._cpUpdateCartUI();
+    // 2026-05-12: 크로스도메인 배너 렌더 (cart_sync.js)
+    try { if (window.cartSync && window.cartSync.renderBanner) window.cartSync.renderBanner(); } catch (e) {}
 };
 window._cpCartClose = function() {
     document.getElementById('cartOverlay').classList.remove('open');
