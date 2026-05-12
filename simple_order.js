@@ -1,22 +1,21 @@
-/* simple_order.js — 간편 주문 모달
+/* simple_order.js — 간편 주문 모달 (v=4 — 2단 레이아웃: 좌 업로드 / 우 옵션)
  *
  * 사용:
- *   <script src="simple_order.js?v=1"></script>
+ *   <script src="simple_order.js?v=4"></script>
  *   window.openSimpleOrderModal(productCode)   ← 어디서든 호출 가능
  *
- * 특징:
- *   - 자체 모달 HTML + CSS 주입 (외부 의존 없음)
- *   - 파일 업로드 (PDF / PNG / JPG, 최대 10MB) — 패브릭 디자이너와 동일 정책
- *   - 수량 선택 + 자동 할인 가격 계산 (수량 할인 테이블)
- *   - 장바구니 / 바로 주문 두 버튼
- *   - 기존 cart 시스템과 통합 (localStorage chameleon_cart_current + window.renderCart)
+ * 디자인 가이드:
+ *   - 패브릭 디자이너(cotton_designer)와 동일한 레이아웃 패턴
+ *   - 좌측: 큰 파일 업로드 + 미리보기 영역
+ *   - 우측: 상품 정보 + 수량 + 가격 + 장바구니/주문 버튼
+ *   - 모바일: 세로로 스택
+ *
+ * 카트 통합:
+ *   - 기존 chameleon_cart_current localStorage + window.renderCart()
+ *   - 다양한 종류의 상품이 같은 카트에 누적됨
  *
  * 할인 테이블 (수량 기준):
- *   1-2개     : 0%
- *   3-9개     : 20%
- *   10-100개  : 30%
- *   101-500개 : 40%
- *   501+개    : 50%
+ *   1-2개 0% / 3-9개 20% / 10-100개 30% / 101-500개 40% / 501+개 50%
  */
 (function() {
     'use strict';
@@ -25,7 +24,7 @@
     window.__SO_LOADED = true;
 
     // ─────────────────────────────────────────────
-    // 상수 & 상태
+    // 상수
     // ─────────────────────────────────────────────
     const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -40,12 +39,7 @@
         { min: 501, max: Infinity, pct: 50 },
     ];
 
-    let state = {
-        product: null,
-        file: null,
-        thumbDataUrl: null,
-        qty: 1,
-    };
+    let state = { product: null, file: null, thumbDataUrl: null, qty: 1 };
 
     let _sb = null;
     function getSb() {
@@ -75,9 +69,7 @@
     }
 
     function getDiscountTier(qty) {
-        for (const t of DISCOUNT_TIERS) {
-            if (qty >= t.min && qty <= t.max) return t;
-        }
+        for (const t of DISCOUNT_TIERS) if (qty >= t.min && qty <= t.max) return t;
         return DISCOUNT_TIERS[0];
     }
 
@@ -89,48 +81,34 @@
     }
 
     // ─────────────────────────────────────────────
-    // 다국어 상품 정보 헬퍼
+    // 상품 정보 헬퍼 (다국어 + HTML 제거)
     // ─────────────────────────────────────────────
     function pickName(p) {
         const lang = getLang();
         if (lang === 'ja' && p.name_jp) return p.name_jp;
         if (lang === 'en' && p.name_us) return p.name_us;
-        // 사이즈 표기 () 제거 — 깔끔한 이름만
         const raw = p.name_kr || p.name || '';
         return raw.replace(/\s*\([\d.,]+\s*[×xX]\s*[\d.,]+\s*(ft|in|mm|cm|m)\)/gi, '').trim();
     }
-    function pickDesc(p) {
+    function pickDescPlain(p, maxLen) {
         const lang = getLang();
         let raw = '';
         if (lang === 'ja' && p.description_jp) raw = p.description_jp;
         else if (lang === 'en' && p.description_us) raw = p.description_us;
         else raw = p.description_kr || p.description || '';
-        return raw;
-    }
-    // 2026-05-12: description 이 HTML 마크업인 경우가 많아 — 텍스트만 추출 + 축약
-    function pickDescPlain(p, maxLen) {
-        const raw = pickDesc(p);
         if (!raw) return '';
-        const stripped = String(raw)
+        const s = String(raw)
             .replace(/<[^>]+>/g, ' ')
-            .replace(/&nbsp;/g, ' ')
-            .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+            .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
             .replace(/\s+/g, ' ').trim();
-        const limit = maxLen || 120;
-        if (stripped.length > limit) return stripped.slice(0, limit) + '…';
-        return stripped;
+        const limit = maxLen || 150;
+        return s.length > limit ? s.slice(0, limit) + '…' : s;
     }
-    function pickPrice(p) {
-        return p.price || 0;
-    }
-    function pickImg(p) {
-        // admin_products 의 실제 이미지 필드는 'img' — 우선 사용
-        return p.img || p.image_url || p.image_kr || p.image || p.thumb_url || '';
-    }
+    function pickPrice(p) { return p.price || 0; }
+    function pickImg(p) { return p.img || p.image_url || p.image_kr || p.image || p.thumb_url || ''; }
 
     // ─────────────────────────────────────────────
-    // 모달 HTML + CSS 주입
+    // CSS + 모달 HTML 주입
     // ─────────────────────────────────────────────
     function injectStyles() {
         if (document.getElementById('so-styles')) return;
@@ -142,81 +120,145 @@
 }
 .so-overlay.open { display: flex; }
 .so-modal {
-    background: #fff; border-radius: 18px; width: 520px; max-width: 100%;
-    max-height: 92vh; overflow-y: auto;
+    background: var(--cream, #faf6ed); border-radius: 16px; width: 920px; max-width: 100%;
+    max-height: 94vh; overflow: hidden; display: flex; flex-direction: column;
     box-shadow: 0 24px 60px rgba(0,0,0,0.4);
     font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
 }
 .so-head {
-    padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid #f1f1f1;
+    padding: 14px 22px; display: flex; align-items: center; justify-content: space-between;
+    background: #fff; border-bottom: 1px solid #f1f1f1; flex-shrink: 0;
 }
-.so-head h2 { margin: 0; font-size: 18px; font-weight: 800; color: #1a1a1a; }
+.so-head h2 { margin: 0; font-size: 17px; font-weight: 800; color: #1a1a1a; }
+.so-head .so-prod-name-top { font-size: 13px; color: #888; margin-left: 8px; font-weight: 500; }
 .so-close {
-    width: 32px; height: 32px; border: none; background: #f5f5f5; border-radius: 50%;
-    cursor: pointer; font-size: 20px; color: #555;
+    width: 30px; height: 30px; border: none; background: #f5f5f5; border-radius: 50%;
+    cursor: pointer; font-size: 18px; color: #555;
 }
 .so-close:hover { background: #e5e5e5; }
-.so-body { padding: 18px 22px; }
-.so-prod-row { display: flex; gap: 14px; margin-bottom: 16px; }
+
+.so-body { display: flex; gap: 0; flex: 1; overflow: hidden; }
+
+/* 좌측: 큰 업로드 영역 */
+.so-left {
+    flex: 1.5; background: #fff; padding: 20px; overflow-y: auto;
+    display: flex; flex-direction: column;
+}
+.so-prod-banner {
+    display: flex; gap: 12px; padding-bottom: 14px; margin-bottom: 14px;
+    border-bottom: 1px solid #f1f1f1;
+}
 .so-prod-img {
-    width: 92px; height: 92px; border-radius: 10px; background: #f5f5f5;
+    width: 64px; height: 64px; border-radius: 8px; background: #f5f5f5;
     object-fit: cover; flex-shrink: 0;
 }
 .so-prod-meta { flex: 1; min-width: 0; }
-.so-prod-name { font-size: 15px; font-weight: 800; color: #1a1a1a; margin: 4px 0; line-height: 1.3; }
-.so-prod-desc { font-size: 12px; color: #666; line-height: 1.5; }
-.so-section-label { font-size: 12px; font-weight: 800; color: #444; margin: 14px 0 6px; }
+.so-prod-name { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; line-height: 1.3; }
+.so-prod-desc { font-size: 11.5px; color: #777; line-height: 1.5; }
+
+.so-upload-section-label {
+    font-size: 12px; font-weight: 800; color: #444;
+    margin: 0 0 10px;
+}
 .so-upload {
-    border: 2px dashed #d6d3d1; border-radius: 12px; padding: 24px 16px;
-    text-align: center; cursor: pointer; background: #fafaf9;
+    flex: 1; min-height: 320px;
+    border: 2px dashed #d6d3d1; border-radius: 14px; padding: 32px 16px;
+    text-align: center; cursor: pointer; background: var(--cream, #faf6ed);
     transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
-.so-upload:hover, .so-upload.dragover { border-color: #b45309; background: #fef7e6; }
-.so-upload-icon { font-size: 32px; color: #b45309; }
-.so-upload-title { font-size: 13px; font-weight: 700; color: #451a03; margin-top: 6px; }
-.so-upload-hint { font-size: 11px; color: #888; margin-top: 4px; }
-.so-upload-done {
-    border: 1px solid #16a34a; background: #f0fdf4;
+.so-upload:hover, .so-upload.dragover {
+    border-color: #b45309; background: #fef7e6;
 }
-.so-upload-done .so-upload-icon { color: #16a34a; }
+.so-upload-icon { font-size: 48px; color: #b45309; margin-bottom: 12px; }
+.so-upload-title { font-size: 16px; font-weight: 800; color: #451a03; margin-bottom: 6px; }
+.so-upload-hint { font-size: 12px; color: #888; line-height: 1.6; }
+.so-upload-formats {
+    margin-top: 12px; display: inline-block; background: #fff; border: 1px solid #e7e5e4;
+    padding: 4px 12px; border-radius: 50px; font-size: 11px; color: #78350f; font-weight: 700;
+}
+
+/* 업로드 완료 상태 */
+.so-upload.done {
+    border: 1.5px solid #16a34a; background: #f0fdf4;
+    cursor: default;
+}
+.so-upload.done .so-upload-icon { color: #16a34a; font-size: 36px; }
+.so-file-preview {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    background: #fff; border: 1px solid #d1fae5; border-radius: 10px;
+    margin-bottom: 10px; text-align: left; max-width: 100%;
+}
+.so-file-thumb {
+    width: 56px; height: 56px; border-radius: 8px; background: #f5f5f5;
+    object-fit: cover; flex-shrink: 0; border: 1px solid #e5e5e5;
+}
+.so-file-info { flex: 1; min-width: 0; }
+.so-file-name { font-size: 13px; font-weight: 700; color: #1a1a1a; word-break: break-all; }
+.so-file-size { font-size: 11px; color: #888; margin-top: 2px; }
+.so-file-change {
+    border: 1px solid #d6d3d1; background: #fff; color: #78350f; font-weight: 700;
+    padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+    font-family: inherit; flex-shrink: 0;
+}
+.so-file-change:hover { background: #fef7e6; }
+
+/* 우측: 옵션 패널 */
+.so-right {
+    flex: 1; background: var(--cream, #faf6ed); padding: 20px;
+    overflow-y: auto; min-width: 280px;
+    display: flex; flex-direction: column; gap: 14px;
+}
+.so-section {
+    background: #fff; border: 1px solid #e7e5e4; border-radius: 10px;
+    padding: 14px;
+}
+.so-section-title {
+    font-size: 12px; font-weight: 800; color: #451a03;
+    margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+}
 .so-qty-row {
-    display: flex; align-items: center; gap: 12px;
-    background: #fafaf9; border-radius: 10px; padding: 12px; margin-top: 6px;
+    display: flex; align-items: center; gap: 10px; background: #fafaf9;
+    border-radius: 10px; padding: 8px;
 }
 .so-qty-btn {
-    width: 38px; height: 38px; border-radius: 10px; border: 1px solid #d6d3d1;
-    background: #fff; cursor: pointer; font-size: 18px; font-weight: 900; color: #451a03;
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid #d6d3d1;
+    background: #fff; cursor: pointer; font-size: 16px; font-weight: 900; color: #451a03;
 }
 .so-qty-btn:hover { background: #f5f5f5; }
 .so-qty-input {
-    flex: 1; height: 38px; border: 1px solid #d6d3d1; border-radius: 10px;
+    flex: 1; height: 36px; border: 1px solid #d6d3d1; border-radius: 8px;
     text-align: center; font-size: 15px; font-weight: 700; padding: 0 8px;
     font-family: inherit;
 }
 .so-qty-unit { font-size: 12px; color: #888; }
-.so-price-box {
-    background: linear-gradient(135deg, #fef7e6, #fafaf9);
-    border: 1px solid #fde68a; border-radius: 12px;
-    padding: 14px 16px; margin-top: 16px;
+
+.so-tier-table {
+    background: #fafaf9; border-radius: 8px; padding: 8px 10px;
+    margin-top: 10px; font-size: 10.5px; color: #475569; line-height: 1.6;
+    display: flex; flex-wrap: wrap; gap: 4px 10px;
 }
-.so-price-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #555; margin: 4px 0; }
+.so-tier-table b { color: #1e293b; font-weight: 700; }
+.so-tier-table .active { background: #fde68a; padding: 1px 5px; border-radius: 4px; color: #78350f; }
+
+.so-price-box .so-price-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: #555; margin: 4px 0;
+}
 .so-price-row.discount span:last-child { color: #dc2626; font-weight: 700; }
-.so-price-row.total { font-size: 17px; font-weight: 900; color: #451a03; padding-top: 8px; border-top: 1px dashed #d6d3d1; margin-top: 8px; }
-.so-discount-tier-tag {
+.so-price-row.total {
+    font-size: 18px; font-weight: 900; color: #451a03;
+    padding-top: 10px; border-top: 1px dashed #d6d3d1; margin-top: 10px;
+}
+.so-tier-tag {
     display: inline-block; font-size: 10px; font-weight: 800;
     background: #fde68a; color: #92400e; padding: 2px 7px; border-radius: 50px;
     margin-left: 6px;
 }
-.so-discount-table {
-    background: #f8fafc; border-radius: 8px; padding: 8px 10px;
-    margin-top: 10px; font-size: 10.5px; color: #475569; line-height: 1.6;
-    display: flex; flex-wrap: wrap; gap: 4px 12px;
-}
-.so-discount-table b { color: #1e293b; font-weight: 700; }
-.so-actions { display: flex; gap: 8px; margin-top: 18px; }
+
+.so-actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
 .so-btn {
-    flex: 1; padding: 14px; border: none; border-radius: 12px; cursor: pointer;
+    padding: 14px; border: none; border-radius: 10px; cursor: pointer;
     font-size: 14px; font-weight: 800; font-family: inherit; transition: all 0.2s;
 }
 .so-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -228,15 +270,25 @@
     background: linear-gradient(135deg, #451a03, #78350f); color: #fde047;
 }
 .so-btn-buy:hover:not(:disabled) { filter: brightness(1.1); }
-.so-loading { position: relative; pointer-events: none; opacity: 0.6; }
+
 .so-status {
-    margin-top: 10px; padding: 10px; background: #f0fdf4; border-radius: 8px;
+    padding: 10px; background: #f0fdf4; border-radius: 8px;
     font-size: 12px; color: #166534; display: none;
 }
 .so-status.err { background: #fef2f2; color: #991b1b; }
-@media (max-width: 600px) {
-    .so-modal { width: 100%; border-radius: 12px 12px 0 0; max-height: 100vh; }
-    .so-prod-img { width: 72px; height: 72px; }
+
+/* 모바일 — 세로 스택 */
+@media (max-width: 768px) {
+    .so-modal { width: 100%; max-height: 100vh; border-radius: 12px 12px 0 0; }
+    .so-body { flex-direction: column; }
+    .so-left { padding: 16px; }
+    .so-right { padding: 16px; min-width: 0; }
+    .so-upload { min-height: 200px; padding: 24px 12px; }
+    .so-upload-icon { font-size: 38px; }
+    .so-upload-title { font-size: 14px; }
+    .so-prod-banner { padding-bottom: 10px; margin-bottom: 10px; }
+    .so-prod-img { width: 52px; height: 52px; }
+    .so-prod-name { font-size: 14px; }
 }
         `;
         const st = document.createElement('style');
@@ -251,58 +303,68 @@
 <div id="simpleOrderModal" class="so-overlay" onclick="if(event.target===this)window.closeSimpleOrderModal()">
   <div class="so-modal">
     <div class="so-head">
-      <h2 id="soTitle">${tr('상품 주문', '商品注文', 'Order Product')}</h2>
+      <h2>${tr('상품 주문', '商品注文', 'Order')}</h2>
       <button class="so-close" onclick="window.closeSimpleOrderModal()">×</button>
     </div>
+
     <div class="so-body">
-      <div class="so-prod-row">
-        <img id="soImg" class="so-prod-img" src="" alt="" />
-        <div class="so-prod-meta">
-          <div id="soName" class="so-prod-name">-</div>
-          <div id="soDesc" class="so-prod-desc"></div>
+      <!-- 좌측: 큰 파일 업로드 -->
+      <div class="so-left">
+        <div class="so-prod-banner">
+          <img id="soImg" class="so-prod-img" alt="" />
+          <div class="so-prod-meta">
+            <div id="soName" class="so-prod-name">-</div>
+            <div id="soDesc" class="so-prod-desc"></div>
+          </div>
+        </div>
+
+        <div class="so-upload-section-label">${tr('📤 디자인 파일 업로드', '📤 デザインファイルをアップロード', '📤 Upload design file')}</div>
+        <div id="soUpload" class="so-upload" onclick="document.getElementById('soFile').click()">
+          <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
+          <div class="so-upload-icon">📤</div>
+          <div class="so-upload-title">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
+          <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
+          <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
         </div>
       </div>
 
-      <div class="so-section-label">${tr('📤 디자인 파일', '📤 デザインファイル', '📤 Design file')}</div>
-      <div id="soUpload" class="so-upload" onclick="document.getElementById('soFile').click()">
-        <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
-        <div class="so-upload-icon">📁</div>
-        <div class="so-upload-title">${tr('파일을 선택하거나 끌어다 놓으세요', 'ファイルを選択またはドロップ', 'Click or drop a file')}</div>
-        <div class="so-upload-hint">${tr('PDF · PNG · JPG · 최대 10MB', 'PDF · PNG · JPG · 最大10MB', 'PDF · PNG · JPG · max 10MB')}</div>
-      </div>
+      <!-- 우측: 옵션 + 가격 + 버튼 -->
+      <div class="so-right">
+        <div class="so-section">
+          <div class="so-section-title">${tr('주문 수량', '注文数量', 'Quantity')}</div>
+          <div class="so-qty-row">
+            <button class="so-qty-btn" onclick="window._soQtyChg(-1)">−</button>
+            <input type="number" id="soQty" class="so-qty-input" value="1" min="1" max="9999" oninput="window._soOnQtyInput()" />
+            <button class="so-qty-btn" onclick="window._soQtyChg(1)">+</button>
+            <span class="so-qty-unit">${tr('개', '個', 'pcs')}</span>
+          </div>
+          <div class="so-tier-table" id="soTierTable">
+            <div data-tier="0"><b>1-2</b>${tr('개', '個', 'pcs')} 0%</div>
+            <div data-tier="20"><b>3-9</b>${tr('개', '個', 'pcs')} 20%</div>
+            <div data-tier="30"><b>10-100</b>${tr('개', '個', 'pcs')} 30%</div>
+            <div data-tier="40"><b>101-500</b>${tr('개', '個', 'pcs')} 40%</div>
+            <div data-tier="50"><b>501+</b>${tr('개', '個', 'pcs')} 50%</div>
+          </div>
+        </div>
 
-      <div class="so-section-label">${tr('수량', '数量', 'Quantity')}</div>
-      <div class="so-qty-row">
-        <button class="so-qty-btn" onclick="window._soQtyChg(-1)">−</button>
-        <input type="number" id="soQty" class="so-qty-input" value="1" min="1" max="9999" oninput="window._soOnQtyInput()" />
-        <button class="so-qty-btn" onclick="window._soQtyChg(1)">+</button>
-        <span class="so-qty-unit">${tr('개', '個', 'pcs')}</span>
-      </div>
+        <div class="so-section so-price-box">
+          <div class="so-section-title">${tr('가격', '価格', 'Price')}</div>
+          <div class="so-price-row"><span>${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
+          <div class="so-price-row discount"><span>${tr('수량 할인', '数量割引', 'Discount')} <span class="so-tier-tag" id="soTier">0%</span></span><span id="soDisc">-0원</span></div>
+          <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
+        </div>
 
-      <div class="so-price-box">
-        <div class="so-price-row"><span>${tr('단가', '単価', 'Unit price')}</span><span id="soUnit">-</span></div>
-        <div class="so-price-row discount"><span>${tr('수량 할인', '数量割引', 'Volume discount')} <span class="so-discount-tier-tag" id="soTier">-</span></span><span id="soDisc">-0원</span></div>
-        <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
-      </div>
+        <div id="soStatus" class="so-status"></div>
 
-      <div class="so-discount-table">
-        <div><b>1-2</b>${tr('개', '個', 'pcs')} 0%</div>
-        <div><b>3-9</b>${tr('개', '個', 'pcs')} 20%</div>
-        <div><b>10-100</b>${tr('개', '個', 'pcs')} 30%</div>
-        <div><b>101-500</b>${tr('개', '個', 'pcs')} 40%</div>
-        <div><b>501+</b>${tr('개', '個', 'pcs')} 50%</div>
+        <div class="so-actions">
+          <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
+            🛒 ${tr('장바구니에 담기', 'カートに追加', 'Add to cart')}
+          </button>
+          <button class="so-btn so-btn-buy" id="soBtnBuy" onclick="window._soBuyNow()" disabled>
+            ⚡ ${tr('바로 주문하기', '今すぐ注文', 'Order now')}
+          </button>
+        </div>
       </div>
-
-      <div class="so-actions">
-        <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
-          🛒 ${tr('장바구니', 'カート追加', 'Add to cart')}
-        </button>
-        <button class="so-btn so-btn-buy" id="soBtnBuy" onclick="window._soBuyNow()" disabled>
-          ⚡ ${tr('바로 주문', '今すぐ注文', 'Order now')}
-        </button>
-      </div>
-
-      <div id="soStatus" class="so-status"></div>
     </div>
   </div>
 </div>
@@ -312,23 +374,20 @@
     }
 
     // ─────────────────────────────────────────────
-    // 파일 업로드 이벤트
+    // 파일 업로드
     // ─────────────────────────────────────────────
     function wireUploadEvents() {
-        const fileInput = document.getElementById('soFile');
-        const dropZone = document.getElementById('soUpload');
-        if (!fileInput || !dropZone) return;
-        fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
-        dropZone.addEventListener('dragover', e => {
+        const fi = document.getElementById('soFile');
+        const dz = document.getElementById('soUpload');
+        if (!fi || !dz) return;
+        fi.onchange = e => handleFile(e.target.files[0]);
+        dz.ondragover = e => { e.preventDefault(); dz.classList.add('dragover'); };
+        dz.ondragleave = () => dz.classList.remove('dragover');
+        dz.ondrop = e => {
             e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-        dropZone.addEventListener('drop', e => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
+            dz.classList.remove('dragover');
             handleFile(e.dataTransfer.files[0]);
-        });
+        };
     }
 
     function handleFile(file) {
@@ -346,23 +405,60 @@
             return;
         }
         state.file = file;
-        const reader = new FileReader();
-        reader.onload = e => { state.thumbDataUrl = e.target.result; };
-        reader.readAsDataURL(file);
+        // 이미지는 썸네일 dataUrl, PDF는 아이콘 사용
+        if (isPng || isJpg) {
+            const r = new FileReader();
+            r.onload = e => {
+                state.thumbDataUrl = e.target.result;
+                renderUploadDone();
+            };
+            r.readAsDataURL(file);
+        } else {
+            state.thumbDataUrl = null;
+            renderUploadDone();
+        }
+    }
 
+    function renderUploadDone() {
         const zone = document.getElementById('soUpload');
-        zone.classList.add('so-upload-done');
+        if (!zone) return;
+        zone.classList.add('done');
+        const thumbHtml = state.thumbDataUrl
+            ? `<img class="so-file-thumb" src="${state.thumbDataUrl}" alt="" />`
+            : `<div class="so-file-thumb" style="display:flex;align-items:center;justify-content:center;font-size:24px;color:#dc2626;">📄</div>`;
+        const sizeMB = (state.file.size / 1024 / 1024).toFixed(2);
         zone.innerHTML = `
-            <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf" style="display:none" />
-            <div class="so-upload-icon">✅</div>
-            <div class="so-upload-title">${escapeHtml(file.name)}</div>
-            <div class="so-upload-hint">${(file.size / 1024 / 1024).toFixed(1)} MB — ${tr('클릭해서 다른 파일 선택', 'クリックで別ファイル選択', 'Click to change file')}</div>
+            <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
+            <div class="so-file-preview" style="width:100%;max-width:420px;">
+                ${thumbHtml}
+                <div class="so-file-info">
+                    <div class="so-file-name">${escapeHtml(state.file.name)}</div>
+                    <div class="so-file-size">${sizeMB} MB</div>
+                </div>
+                <button class="so-file-change" onclick="event.stopPropagation();document.getElementById('soFile').click()">${tr('변경', '変更', 'Change')}</button>
+            </div>
+            <div style="font-size:12px;color:#16a34a;font-weight:700;margin-top:6px;">
+                ✅ ${tr('파일 업로드 준비 완료', 'ファイル準備完了', 'File ready')}
+            </div>
+        `;
+        zone.onclick = null;  // 영역 클릭 → 입력 활성화 안 함 (변경 버튼으로만)
+        wireUploadEvents();
+        updateButtons();
+    }
+
+    function resetUploadZone() {
+        const zone = document.getElementById('soUpload');
+        if (!zone) return;
+        zone.classList.remove('done');
+        zone.innerHTML = `
+            <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
+            <div class="so-upload-icon">📤</div>
+            <div class="so-upload-title">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
+            <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
+            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
         `;
         zone.onclick = () => document.getElementById('soFile').click();
-        // 이벤트 다시 와이어 (innerHTML로 교체됐으니까)
-        const fi = document.getElementById('soFile');
-        if (fi) fi.addEventListener('change', e => handleFile(e.target.files[0]));
-        updateButtons();
+        wireUploadEvents();
     }
 
     function escapeHtml(s) {
@@ -378,13 +474,17 @@
         el.textContent = msg;
         el.classList.toggle('err', kind === 'err');
     }
+    function hideStatus() {
+        const el = document.getElementById('soStatus');
+        if (el) { el.style.display = 'none'; el.textContent = ''; }
+    }
 
     function updateButtons() {
         const ready = !!(state.product && state.file && state.qty > 0);
-        const cart = document.getElementById('soBtnCart');
-        const buy = document.getElementById('soBtnBuy');
-        if (cart) cart.disabled = !ready;
-        if (buy) buy.disabled = !ready;
+        const btnC = document.getElementById('soBtnCart');
+        const btnB = document.getElementById('soBtnBuy');
+        if (btnC) btnC.disabled = !ready;
+        if (btnB) btnB.disabled = !ready;
     }
 
     // ─────────────────────────────────────────────
@@ -398,11 +498,19 @@
         const discount = Math.round(subtotal * tier.pct / 100);
         const final = subtotal - discount;
 
-        document.getElementById('soUnit').textContent = fmtPrice(unit);
-        document.getElementById('soDisc').textContent = '-' + fmtPrice(discount);
-        document.getElementById('soTotal').textContent = fmtPrice(final);
-        const tierEl = document.getElementById('soTier');
-        if (tierEl) tierEl.textContent = tier.pct + '%';
+        const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        setText('soUnit', fmtPrice(unit));
+        setText('soDisc', '-' + fmtPrice(discount));
+        setText('soTotal', fmtPrice(final));
+        setText('soTier', tier.pct + '%');
+
+        // 활성 티어 하이라이트
+        const tbl = document.getElementById('soTierTable');
+        if (tbl) {
+            tbl.querySelectorAll('[data-tier]').forEach(el => {
+                el.classList.toggle('active', parseInt(el.dataset.tier) === tier.pct);
+            });
+        }
     }
 
     window._soQtyChg = function(delta) {
@@ -430,13 +538,12 @@
         injectModal();
         state = { product: null, file: null, thumbDataUrl: null, qty: 1 };
 
-        // 1) 상품 데이터 — 전달된 거 우선, 없으면 캐시, 없으면 DB
         let p = productData;
         if (!p && window.PRODUCT_DB && window.PRODUCT_DB[productCode]) p = window.PRODUCT_DB[productCode];
         if (!p) {
             const sb = getSb();
             if (!sb) {
-                showStatus(tr('상품 정보를 불러올 수 없습니다.', '商品情報を取得できません。', 'Failed to load product info.'), 'err');
+                showStatus(tr('상품 정보를 불러올 수 없습니다.', '商品情報を取得できません。', 'Failed to load.'), 'err');
                 document.getElementById('simpleOrderModal').classList.add('open');
                 return;
             }
@@ -452,40 +559,19 @@
         }
         state.product = p;
 
-        // 2) 렌더
         document.getElementById('soName').textContent = pickName(p);
-        // 2026-05-12: description 은 HTML 마크업인 경우가 많아 — 텍스트만 짧게 추출
-        document.getElementById('soDesc').textContent = pickDescPlain(p, 120);
+        document.getElementById('soDesc').textContent = pickDescPlain(p, 150);
         const img = document.getElementById('soImg');
         const imgUrl = pickImg(p);
-        if (imgUrl) {
-            img.src = imgUrl;
-            img.style.display = '';
-            // 이미지 로드 실패 시 자동 숨김
-            img.onerror = () => { img.style.display = 'none'; };
-        } else {
-            img.style.display = 'none';
-        }
+        if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
+        else { img.style.display = 'none'; }
+
         document.getElementById('soQty').value = 1;
         state.qty = 1;
         recalc();
         updateButtons();
-
-        // 업로드 영역 초기화 (이전 파일 흔적 제거)
-        const zone = document.getElementById('soUpload');
-        if (zone) {
-            zone.classList.remove('so-upload-done');
-            zone.innerHTML = `
-                <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
-                <div class="so-upload-icon">📁</div>
-                <div class="so-upload-title">${tr('파일을 선택하거나 끌어다 놓으세요', 'ファイルを選択またはドロップ', 'Click or drop a file')}</div>
-                <div class="so-upload-hint">${tr('PDF · PNG · JPG · 최대 10MB', 'PDF · PNG · JPG · 最大10MB', 'PDF · PNG · JPG · max 10MB')}</div>
-            `;
-            zone.onclick = () => document.getElementById('soFile').click();
-            wireUploadEvents();
-        }
-        const statusEl = document.getElementById('soStatus');
-        if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+        resetUploadZone();
+        hideStatus();
 
         document.getElementById('simpleOrderModal').classList.add('open');
         document.body.style.overflow = 'hidden';
@@ -498,7 +584,7 @@
     };
 
     // ─────────────────────────────────────────────
-    // 장바구니 / 주문
+    // 카트 / 주문
     // ─────────────────────────────────────────────
     async function uploadFile() {
         const sb = getSb();
@@ -506,7 +592,7 @@
         const ts = Date.now();
         const safeName = (state.file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = 'simple_order/' + ts + '_' + safeName;
-        const { data, error } = await sb.storage.from('design').upload(path, state.file);
+        const { error } = await sb.storage.from('design').upload(path, state.file);
         if (error) throw error;
         const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
         return { path, url: pub };
@@ -536,6 +622,7 @@
                 category: p.category,
                 w_mm: p.w_mm,
                 h_mm: p.h_mm,
+                img: pickImg(p),
             },
             type: 'file_upload',
             fileName: state.file.name,
@@ -548,14 +635,7 @@
             qty: state.qty,
             selectedAddons: [],
             addonQuantities: {},
-            // 간편 주문에서 계산한 가격 정보 (디버그/표시용)
-            _simple: {
-                unit: calc.unit,
-                subtotal: calc.subtotal,
-                discountPct: calc.tierPct,
-                discount: calc.discount,
-                final: calc.final,
-            },
+            _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: calc.tierPct, discount: calc.discount, final: calc.final },
         };
     }
 
@@ -569,29 +649,26 @@
 
     async function doAddToCart() {
         if (!state.product || !state.file) return false;
-        const btn1 = document.getElementById('soBtnCart');
-        const btn2 = document.getElementById('soBtnBuy');
-        if (btn1) btn1.disabled = true;
-        if (btn2) btn2.disabled = true;
-        showStatus(tr('파일 업로드 중...', 'アップロード中...', 'Uploading...'), 'ok');
+        const btnC = document.getElementById('soBtnCart');
+        const btnB = document.getElementById('soBtnBuy');
+        if (btnC) btnC.disabled = true;
+        if (btnB) btnB.disabled = true;
+        showStatus(tr('📤 파일 업로드 중...', '📤 アップロード中...', '📤 Uploading...'), 'ok');
         try {
             const { url, path } = await uploadFile();
             const item = buildCartItem(url, path);
             const cart = readCart();
             cart.push(item);
             writeCart(cart);
-            // 기존 cartData 갱신 (order.js 모듈)
             try {
                 if (Array.isArray(window.cartData)) {
                     window.cartData.length = 0;
                     cart.forEach(i => window.cartData.push(i));
                 }
             } catch (e) {}
-            // 기존 UI 갱신
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
-            showStatus(tr('✅ 장바구니에 담겼습니다.', '✅ カートに追加しました。', '✅ Added to cart.'), 'ok');
-            // Google Ads 추적 (있으면)
             try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(); } catch (e) {}
+            showStatus(tr('✅ 장바구니에 담겼습니다.', '✅ カートに追加しました。', '✅ Added to cart.'), 'ok');
             return true;
         } catch (e) {
             console.error('[simple_order] addToCart error', e);
@@ -604,23 +681,17 @@
 
     window._soAddCart = async function() {
         const ok = await doAddToCart();
-        if (ok) {
-            setTimeout(() => window.closeSimpleOrderModal(), 800);
-        }
+        if (ok) setTimeout(() => window.closeSimpleOrderModal(), 900);
     };
 
     window._soBuyNow = async function() {
         const ok = await doAddToCart();
         if (!ok) return;
-        // 카트 패널 / 체크아웃 열기 (기존 시스템)
         try {
             if (window.openCartPanel) window.openCartPanel();
             else if (window.toggleCart) window.toggleCart(true);
             else if (window.showCart) window.showCart();
-            else {
-                // 폴백 — 카트 페이지 이동
-                location.href = '/?cart=open';
-            }
+            else location.href = '/?cart=open';
         } catch (e) {
             location.href = '/?cart=open';
         }
@@ -628,21 +699,15 @@
     };
 
     // ─────────────────────────────────────────────
-    // 자동 라우팅 — 일반 상품은 showChoiceModal 대신 간편 모달로
+    // 자동 라우팅 (일반 상품 → 간편 모달)
     // ─────────────────────────────────────────────
-    //   복잡 상품(사이즈 변형, 배너, 등신대 등)은 기존 모달 유지.
-    //   윈도우 변수 __SO_ROUTE_ALL_OFF = true 로 설정하면 라우팅 끔.
     function isComplexProduct(code, product) {
-        if (window.__SO_ROUTE_ALL_OFF) return true;   // 강제 비활성화
+        if (window.__SO_ROUTE_ALL_OFF) return true;
         if (!code) return false;
         const c = String(code).toUpperCase();
-        // 허니콤 가벽 (HW20/22/24/30) — 사이즈 선택 필요
         if (/^HW\d+/.test(c)) return true;
-        // 등신대 / 배너 / 자유인쇄 시리즈 (별도 UI 필요)
         if (/^(HD|HB|HY|HP|HR|HT|HS|GB|GW)/.test(c)) return true;
-        // 디자인비 / 사용자 어드밴스드 / 커스텀
         if (c.startsWith('DESIGN_FEE') || c.startsWith('UA_')) return true;
-        // 카테고리 기반 (있으면)
         if (product) {
             const cat = String(product.category || '').toLowerCase();
             if (cat === 'honeycomb_wall' || cat === 'wall' || cat === 'banner') return true;
@@ -653,40 +718,28 @@
     function setupRouting(retries) {
         retries = retries || 0;
         if (typeof window.showChoiceModal !== 'function') {
-            if (retries < 50) {  // 5초 동안 100ms 간격 폴
-                setTimeout(() => setupRouting(retries + 1), 100);
-            }
+            if (retries < 50) setTimeout(() => setupRouting(retries + 1), 100);
             return;
         }
         if (window.__SO_WRAPPED) return;
         window.__SO_WRAPPED = true;
         const _orig = window.showChoiceModal;
-        window._origShowChoiceModal = _orig;   // 디버그용
+        window._origShowChoiceModal = _orig;
         window.showChoiceModal = function(key) {
             const prod = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
-            if (isComplexProduct(key, prod)) {
-                return _orig.apply(this, arguments);
-            }
-            // 간편 모달로 라우팅
+            if (isComplexProduct(key, prod)) return _orig.apply(this, arguments);
             return window.openSimpleOrderModal(key, prod);
         };
         console.log('[simple_order] showChoiceModal 래핑 완료 — 일반 상품은 간편모달로 자동 라우팅 (해제: window.__SO_ROUTE_ALL_OFF=true 후 새로고침)');
     }
 
-    // ─────────────────────────────────────────────
-    // 초기화 — DOM 준비되면 스타일/모달 + 라우팅 설정
-    // ─────────────────────────────────────────────
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            injectStyles();
-            injectModal();
-            setupRouting();
+            injectStyles(); injectModal(); setupRouting();
         });
     } else {
-        injectStyles();
-        injectModal();
-        setupRouting();
+        injectStyles(); injectModal(); setupRouting();
     }
 
-    console.log('[simple_order] v=2 loaded. window.openSimpleOrderModal(code) available.');
+    console.log('[simple_order] v=4 (2-column layout) loaded. window.openSimpleOrderModal(code) available.');
 })();
