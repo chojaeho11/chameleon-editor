@@ -2454,11 +2454,11 @@
                     '예금주: (주)카멜레온프린팅\n\n' +
                     '입금 후 영업일 내 제작이 시작됩니다.'
                 );
-                // 카트 비우기 + shield 로 전환 가림 + mypage 이동
+                // 카트 비우기 + shield 로 전환 가림 + 메인 화면으로 이동
                 try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
                 _showLoadingShield();
                 window._soCloseCheckout();
-                setTimeout(function () { location.href = '/mypage'; }, 600);
+                setTimeout(function () { location.href = '/'; }, 600);
                 return;
             }
 
