@@ -582,7 +582,7 @@
 
       <!-- 우측: 옵션 + 가격 + 버튼 -->
       <div class="so-right">
-        <div class="so-section">
+        <div class="so-section" id="soQtySection">
           <div class="so-section-title">${tr('주문 수량', '注文数量', 'Quantity')}</div>
           <div class="so-qty-row">
             <button class="so-qty-btn" onclick="window._soQtyChg(-1)">−</button>
@@ -634,6 +634,52 @@
         <div class="so-section" id="soAddonSection" style="display:none;">
           <div class="so-section-title">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
           <div id="soAddonList" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+
+        <!-- 2026-05-13: 시공/배송 일정 (가벽·포토존 카테고리만) -->
+        <div class="so-section" id="soScheduleSection" style="display:none;">
+          <div class="so-section-title">${tr('시공/배송 일정', '施工/配送日程', 'Installation/Delivery')}</div>
+          <div style="font-size:11px; color:#6b7280; margin-bottom:8px;">${tr('수도권 1일, 지방 2-3일 소요', '首都圏1日、地方2-3日', 'Metro 1d, regional 2-3d')}</div>
+          <!-- 배송 옵션 -->
+          <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="metro_install" onchange="window._soOnShipChange()"> 🚚 ${tr('수도권 설치 (10만원)', '首都圏設置 (10万)', 'Metro install (₩100k)')}</label>
+            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="metro_install_removal" onchange="window._soOnShipChange()"> 🔧 ${tr('수도권 설치+철거 (20만원)', '首都圏設置+撤去 (20万)', 'Metro install+removal (₩200k)')}</label>
+            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="regional_truck" onchange="window._soOnShipChange()"> 🛻 ${tr('지방 용차배송 (70만원)', '地方トラック配送 (70万)', 'Regional truck (₩700k)')}</label>
+            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="self_pickup" onchange="window._soOnShipChange()" checked> 🏪 ${tr('직접 수령', '直接受取', 'Self pickup')}</label>
+          </div>
+          <!-- 배송일 / 시공 시간 -->
+          <div id="soScheduleDateWrap" style="display:none;">
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 희망일', '配送希望日', 'Delivery date')}</label>
+              <input type="date" id="soScheduleDate" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 시간대', '配送時間帯', 'Time')}</label>
+              <select id="soScheduleTime" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+                <option value="">${tr('시간 선택', '時間選択', 'Select')}</option>
+                <option value="am">🌅 ${tr('오전 (08-12)', '午前 (08-12)', 'AM (08-12)')}</option>
+                <option value="pm">☀️ ${tr('오후 (12-18)', '午後 (12-18)', 'PM (12-18)')}</option>
+                <option value="night">🌙 ${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
+                <option value="any">📅 ${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
+              </select>
+            </div>
+          </div>
+          <!-- 철거일 / 철거 시간 (수도권 설치+철거 옵션 선택 시) -->
+          <div id="soRemovalWrap" style="display:none; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; padding:10px; margin-top:8px;">
+            <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:6px;">🔧 ${tr('철거 일정 (야간만 가능)', '撤去日程 (夜間のみ)', 'Removal (night only)')}</div>
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 희망일', '撤去希望日', 'Date')}</label>
+              <input type="date" id="soRemovalDate" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 시간', '撤去時間', 'Time')}</label>
+              <select id="soRemovalTime" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+                <option value="">${tr('시간 선택', '時間選択', 'Select')}</option>
+                <option value="night">🌙 ${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
+                <option value="any">📅 ${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- 2026-05-13: 전달사항 (제작 요청사항) -->
@@ -1075,32 +1121,49 @@
     function recalc() {
         if (!state.product) return;
         const unit = pickPrice(state.product);
-        const subtotal = unit * state.qty;
-        const tier = getDiscountTier(state.qty);
-        const discount = Math.round(subtotal * tier.pct / 100);
+        let qty, subtotal, tierPct, discount;
+        if (state.isWall) {
+            // 2026-05-13: 가벽은 가로(m) 만큼이 수량, 수량 할인 없음
+            qty = state.wallWidth || 1;
+            state.qty = qty;
+            subtotal = unit * qty;
+            tierPct = 0;
+            discount = 0;
+        } else {
+            qty = state.qty;
+            subtotal = unit * qty;
+            const tier = getDiscountTier(qty);
+            tierPct = tier.pct;
+            discount = Math.round(subtotal * tierPct / 100);
+        }
         // 2026-05-13: 추가 옵션(addon) 가격 합산
         let addonTotal = 0;
         try {
             Object.values(state.selectedAddons || {}).forEach(function (code) {
                 var addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
-                var qty = (state.addonQuantities && state.addonQuantities[code]) || 1;
-                addonTotal += (addon.price || 0) * qty;
+                var aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+                addonTotal += (addon.price || 0) * aQty;
             });
         } catch (e) {}
         const final = subtotal - discount + addonTotal;
 
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        setText('soUnit', fmtPrice(unit));
+        if (state.isWall) {
+            // 단가 자리에 "단가 × 가로(m)" 표시
+            setText('soUnit', fmtPrice(unit) + ' × ' + qty + 'm = ' + fmtPrice(subtotal));
+        } else {
+            setText('soUnit', fmtPrice(unit));
+        }
         setText('soDisc', '-' + fmtPrice(discount));
         setText('soTotal', fmtPrice(final));
-        setText('soTier', tier.pct + '%');
+        setText('soTier', tierPct + '%');
 
         // 활성 티어 하이라이트
         const tbl = document.getElementById('soTierTable');
         if (tbl) {
             tbl.querySelectorAll('[data-tier]').forEach(el => {
-                el.classList.toggle('active', parseInt(el.dataset.tier) === tier.pct);
+                el.classList.toggle('active', parseInt(el.dataset.tier) === tierPct);
             });
         }
     }
@@ -1114,6 +1177,51 @@
         if (code.startsWith('hb_dw') || cat === 'hb_display_wall') return true;
         if (name.indexOf('가벽') >= 0 || name.toLowerCase().indexOf('display wall') >= 0) return true;
         return false;
+    }
+
+    // 2026-05-13: 글씨 포토존 감지 (제품명에 "포토존" 또는 "photo zone")
+    function _soIsPhotozoneProduct(p) {
+        if (!p) return false;
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        return /포토존|글씨|photo\s*zone|letter\s*sign/i.test(name);
+    }
+
+    // 2026-05-13: 시공/배송 라디오 변경 핸들러
+    window._soOnShipChange = function () {
+        var checked = document.querySelector('input[name="soShip"]:checked');
+        var v = checked ? checked.value : 'self_pickup';
+        state.shipMethod = v;
+        var dateWrap = document.getElementById('soScheduleDateWrap');
+        var remWrap = document.getElementById('soRemovalWrap');
+        // self_pickup 이면 날짜·시간 안 보임
+        if (dateWrap) dateWrap.style.display = (v === 'self_pickup') ? 'none' : '';
+        // 철거 옵션 (수도권 설치+철거 선택 시만)
+        if (remWrap) remWrap.style.display = (v === 'metro_install_removal') ? '' : 'none';
+        // 배송 가격 추가 (실제 합계에 반영)
+        recalcWithShipping();
+    };
+
+    function recalcWithShipping() {
+        // shipping fee 계산
+        var shipFee = 0;
+        switch (state.shipMethod) {
+            case 'metro_install': shipFee = 100000; break;
+            case 'metro_install_removal': shipFee = 200000; break;
+            case 'regional_truck': shipFee = 700000; break;
+            default: shipFee = 0;
+        }
+        state.shipFee = shipFee;
+        recalc();
+        // 합계에 배송비 추가 (recalc 의 final 에 더하기)
+        if (shipFee > 0) {
+            try {
+                var totalEl = document.getElementById('soTotal');
+                if (totalEl) {
+                    var currentTotal = parseInt(totalEl.textContent.replace(/[^\d]/g, '')) || 0;
+                    totalEl.textContent = fmtPrice(currentTotal + shipFee) + ' (' + tr('배송포함', '配送込', 'incl. ship') + ')';
+                }
+            } catch (e) {}
+        }
     }
 
     // 2026-05-13: 상품의 admin_addons 옵션을 우측 패널에 체크박스로 렌더
@@ -1380,12 +1488,32 @@
         state.wallWidth = 3;   // 기본 가로 3m
         state.wallHeight = 2.4; // 기본 세로 2.4m
         state.itemNote = '';
+        state.shipMethod = 'self_pickup';
+        state.scheduleDate = '';
+        state.scheduleTime = '';
+        state.removalDate = '';
+        state.removalTime = '';
         var noteEl = document.getElementById('soItemNote'); if (noteEl) noteEl.value = '';
 
         // 가벽 카테고리 감지 (hb_dw_* 또는 hb_display_wall 등)
         state.isWall = _soIsWallProduct(p);
+        state.isPhotozone = _soIsPhotozoneProduct(p);
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
+        // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
+        var qtySec = document.getElementById('soQtySection');
+        if (qtySec) qtySec.style.display = state.isWall ? 'none' : '';
+        // 시공/배송 일정 섹션 (가벽 또는 글씨포토존)
+        var schedSec = document.getElementById('soScheduleSection');
+        if (schedSec) schedSec.style.display = (state.isWall || state.isPhotozone) ? '' : 'none';
+        // 가벽 사이즈 폼 초기값 동기화
+        var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = '3';
+        var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = '2.4';
+        // 배송 라디오 초기화 (self_pickup)
+        var radios = document.querySelectorAll('input[name="soShip"]');
+        radios.forEach(function (r) { r.checked = (r.value === 'self_pickup'); });
+        var dateWrap = document.getElementById('soScheduleDateWrap'); if (dateWrap) dateWrap.style.display = 'none';
+        var remWrap = document.getElementById('soRemovalWrap'); if (remWrap) remWrap.style.display = 'none';
 
         // 상품 추가 옵션 로드 (admin_addons 매칭)
         await _soPopulateAddons(p);
@@ -1437,9 +1565,24 @@
     function buildCartItem(fileUrl, filePath) {
         const p = state.product;
         const calc = calcFinal();
-        // 2026-05-13: 전달사항 + 선택된 addon + 가벽 사이즈 정보 캡처
+        // 2026-05-13: 전달사항 + 선택된 addon + 가벽 사이즈 정보 + 시공/배송 일정 캡처
         var noteEl = document.getElementById('soItemNote');
         var itemNote = noteEl ? (noteEl.value || '').trim() : '';
+        var sdEl = document.getElementById('soScheduleDate');
+        var stEl = document.getElementById('soScheduleTime');
+        var rdEl = document.getElementById('soRemovalDate');
+        var rtEl = document.getElementById('soRemovalTime');
+        var shipping = null;
+        if (state.shipMethod && state.shipMethod !== 'self_pickup') {
+            shipping = {
+                method: state.shipMethod,
+                fee: state.shipFee || 0,
+                delivery_date: sdEl ? sdEl.value : '',
+                delivery_time: stEl ? stEl.value : '',
+                removal_date: rdEl ? rdEl.value : '',
+                removal_time: rtEl ? rtEl.value : ''
+            };
+        }
         return {
             uid: Date.now(),
             product: {
@@ -1463,13 +1606,15 @@
             filePath: filePath,
             thumb: state.thumbDataUrl,
             isOpen: false,
-            qty: state.qty,
+            qty: state.isWall ? (state.wallWidth || 1) : state.qty,
             selectedAddons: Object.assign({}, state.selectedAddons || {}),
             addonQuantities: Object.assign({}, state.addonQuantities || {}),
             // 2026-05-13: 가벽 사이즈 (가로/세로 m)
             wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
             // 2026-05-13: 전달사항 (제작 요청)
             itemNote: itemNote,
+            // 2026-05-13: 시공/배송 일정 (가벽/포토존만)
+            shipping: shipping,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: calc.tierPct, discount: calc.discount, final: calc.final },
         };
     }
@@ -1965,6 +2110,7 @@
                     addons: addons,
                     wall_size: it.wallSize || null,           // 가벽 사이즈 (m 단위)
                     item_note: it.itemNote || '',             // 전달사항 (제작 요청)
+                    shipping: it.shipping || null,            // 시공/배송 일정 + 철거
                     file_url: fileUrl,
                     file_name: fileName,
                     file_path: it.filePath || null,
@@ -1982,8 +2128,15 @@
                     loggedInEmail = sess.data.session.user.email;
                 }
             } catch (e) {}
-            // 2026-05-13: admin_note 에 각 항목별 옵션·전달사항·가벽사이즈 요약 포함 (관리자 가독성)
+            // 2026-05-13: admin_note 에 각 항목별 옵션·전달사항·가벽사이즈·시공일정 요약 포함
             var itemSummaries = [];
+            var totalShippingFee = 0;
+            var shipLabel = {
+                metro_install: '수도권 설치 (10만원)',
+                metro_install_removal: '수도권 설치+철거 (20만원)',
+                regional_truck: '지방 용차배송 (70만원)',
+                self_pickup: '직접 수령'
+            };
             cart.forEach(function (it, idx) {
                 if (_soIsFabricItem(it)) return; // 패브릭은 별도 처리
                 var pname = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
@@ -1998,12 +2151,21 @@
                     });
                 }
                 if (it.itemNote) lines.push('  · 전달사항: ' + it.itemNote);
+                if (it.shipping) {
+                    lines.push('  · 시공/배송: ' + (shipLabel[it.shipping.method] || it.shipping.method));
+                    if (it.shipping.delivery_date) lines.push('    - 배송: ' + it.shipping.delivery_date + ' ' + (it.shipping.delivery_time || ''));
+                    if (it.shipping.removal_date) lines.push('    - 철거: ' + it.shipping.removal_date + ' ' + (it.shipping.removal_time || ''));
+                    totalShippingFee += (it.shipping.fee || 0);
+                }
                 itemSummaries.push(lines.join('\n'));
             });
+            // 배송비를 total 에 합산
+            total += totalShippingFee;
             var adminNote =
                 '[간편주문] 결제수단: ' + (payMethod === 'bank' ? '무통장입금' : '카드결제') +
                 '\n이메일: ' + (email || loggedInEmail || '없음') +
                 (memo ? '\n배송메모: ' + memo : '') +
+                (totalShippingFee > 0 ? '\n배송/시공비: ' + totalShippingFee.toLocaleString() + '원' : '') +
                 (itemSummaries.length ? '\n\n=== 상품별 옵션·요청 ===\n' + itemSummaries.join('\n\n') : '');
 
             // 2026-05-12: 패브릭 (_cpSubmitOrder) 와 동일 schema 사용 — orders 테이블 컬럼 일치
