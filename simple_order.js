@@ -604,17 +604,65 @@
     };
 
     // ─────────────────────────────────────────────
-    // 초기화 — DOM 준비되면 스타일/모달 미리 주입
+    // 자동 라우팅 — 일반 상품은 showChoiceModal 대신 간편 모달로
+    // ─────────────────────────────────────────────
+    //   복잡 상품(사이즈 변형, 배너, 등신대 등)은 기존 모달 유지.
+    //   윈도우 변수 __SO_ROUTE_ALL_OFF = true 로 설정하면 라우팅 끔.
+    function isComplexProduct(code, product) {
+        if (window.__SO_ROUTE_ALL_OFF) return true;   // 강제 비활성화
+        if (!code) return false;
+        const c = String(code).toUpperCase();
+        // 허니콤 가벽 (HW20/22/24/30) — 사이즈 선택 필요
+        if (/^HW\d+/.test(c)) return true;
+        // 등신대 / 배너 / 자유인쇄 시리즈 (별도 UI 필요)
+        if (/^(HD|HB|HY|HP|HR|HT|HS|GB|GW)/.test(c)) return true;
+        // 디자인비 / 사용자 어드밴스드 / 커스텀
+        if (c.startsWith('DESIGN_FEE') || c.startsWith('UA_')) return true;
+        // 카테고리 기반 (있으면)
+        if (product) {
+            const cat = String(product.category || '').toLowerCase();
+            if (cat === 'honeycomb_wall' || cat === 'wall' || cat === 'banner') return true;
+        }
+        return false;
+    }
+
+    function setupRouting(retries) {
+        retries = retries || 0;
+        if (typeof window.showChoiceModal !== 'function') {
+            if (retries < 50) {  // 5초 동안 100ms 간격 폴
+                setTimeout(() => setupRouting(retries + 1), 100);
+            }
+            return;
+        }
+        if (window.__SO_WRAPPED) return;
+        window.__SO_WRAPPED = true;
+        const _orig = window.showChoiceModal;
+        window._origShowChoiceModal = _orig;   // 디버그용
+        window.showChoiceModal = function(key) {
+            const prod = window.PRODUCT_DB ? window.PRODUCT_DB[key] : null;
+            if (isComplexProduct(key, prod)) {
+                return _orig.apply(this, arguments);
+            }
+            // 간편 모달로 라우팅
+            return window.openSimpleOrderModal(key, prod);
+        };
+        console.log('[simple_order] showChoiceModal 래핑 완료 — 일반 상품은 간편모달로 자동 라우팅 (해제: window.__SO_ROUTE_ALL_OFF=true 후 새로고침)');
+    }
+
+    // ─────────────────────────────────────────────
+    // 초기화 — DOM 준비되면 스타일/모달 + 라우팅 설정
     // ─────────────────────────────────────────────
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             injectStyles();
             injectModal();
+            setupRouting();
         });
     } else {
         injectStyles();
         injectModal();
+        setupRouting();
     }
 
-    console.log('[simple_order] v=1 loaded. window.openSimpleOrderModal(code) available.');
+    console.log('[simple_order] v=2 loaded. window.openSimpleOrderModal(code) available.');
 })();
