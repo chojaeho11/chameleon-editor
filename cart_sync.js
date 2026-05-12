@@ -82,9 +82,14 @@
     }
     var SID = readSid();
 
-    // ── Supabase client (lazy) ───────────────────────────
+    // ── Supabase client (lazy, reuse existing) ───────────
+    // Reuse window.sb if present (avoids "Multiple GoTrueClient instances" warning).
     function sb() {
+        // 1) Page may already have an authenticated client (window.sb)
+        if (window.sb && typeof window.sb.from === 'function') return window.sb;
+        // 2) Cached our own
         if (window.__unified_sb) return window.__unified_sb;
+        // 3) Build a fresh one only as last resort
         if (!window.supabase || !window.supabase.createClient) return null;
         try {
             window.__unified_sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -306,8 +311,19 @@
     }
 
     function start() {
-        // Need window.supabase and document.body
-        waitFor(init, function () { return window.supabase && document.body; });
+        // Prefer reusing window.sb (created by config.js). Wait up to ~3s for it.
+        // Fall back to building our own from window.supabase if not available.
+        var tries = 0;
+        var t = setInterval(function () {
+            var haveSb = window.sb && typeof window.sb.from === 'function';
+            var haveUmd = window.supabase && window.supabase.createClient;
+            if (document.body && (haveSb || (tries > 30 && haveUmd))) {
+                clearInterval(t);
+                init();
+            }
+            tries++;
+            if (tries > 60) { clearInterval(t); init(); /* try anyway */ }
+        }, 100);
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start);

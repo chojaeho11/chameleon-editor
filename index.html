@@ -5998,8 +5998,9 @@ async function handleSubReturn() {
                         // 활성 상태 로드: chatbot_knowledge._managers 의 is_active
                         var inactiveSet = new Set();
                         try {
-                            var sb = window.sb || window.supabase;
-                            if (sb) {
+                            // 2026-05-12: window.supabase 는 UMD 네임스페이스(createClient 만 있음) — fallback 제거
+                            var sb = window.sb;
+                            if (sb && typeof sb.from === 'function') {
                                 var r = await sb.from('chatbot_knowledge').select('question,is_active').eq('category','_managers');
                                 if (r && r.data) {
                                     r.data.forEach(function(row){
@@ -7027,7 +7028,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="./simple_order.js?v=7"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
-<script src="./cart_sync.js?v=1"></script>
+<script src="./cart_sync.js?v=2"></script>
 
 <script type="module">
     import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=434";
