@@ -650,6 +650,12 @@
 </div>
 
 <!-- 2026-05-12: 빠른 결제 모달 (패브릭과 동일한 단순 결제) -->
+<!-- 2026-05-12: 모달 전환 시 background 깜빡임 방지용 loading shield -->
+<div id="soLoadingShield" style="position:fixed; inset:0; background:#faf6ed; z-index:99999; display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px;">
+  <div style="font-size:42px; color:#78350f;"><i class="fa-solid fa-spinner fa-spin"></i></div>
+  <div style="font-size:13px; color:#78350f; font-weight:700;">${tr('잠시만 기다려주세요...', 'お待ちください...', 'Please wait...')}</div>
+</div>
+
 <div id="soCheckoutOverlay" class="so-co-overlay" style="display:none;">
   <div class="so-co-card">
     <button class="so-co-close" onclick="window._soCloseCheckout()" aria-label="Close">×</button>
@@ -1066,6 +1072,16 @@
     // ─────────────────────────────────────────────
     // 모달 열기 / 닫기
     // ─────────────────────────────────────────────
+    // 2026-05-12: 화면 전환 시 background 깜빡임 방지
+    function _showLoadingShield() {
+        var sh = document.getElementById('soLoadingShield');
+        if (sh) sh.style.display = 'flex';
+    }
+    function _hideLoadingShield() {
+        var sh = document.getElementById('soLoadingShield');
+        if (sh) sh.style.display = 'none';
+    }
+
     // 2026-05-12: 카테고리 nav 동적 로드 — 메인 페이지의 #topCategoryTabs 와 동일한 데이터 (admin_top_categories)
     // 각 버튼 클릭 → simple_order 닫고 window.openTopMenu(code, name) 호출. 특수 케이스는 location.href.
     var _soNavPopulated = false;
@@ -1101,16 +1117,15 @@
                         safe + '</button>';
                 }).join('') +
                 '</div>';
-            // 클릭 핸들러 wire — simple_order 닫고 메인의 openTopMenu 호출
+            // 클릭 핸들러 wire — shield 로 전환 깜빡임 가리기
             navEl.querySelectorAll('.so-nav-btn').forEach(function(btn){
-                btn.onclick = function(){
+                btn.onclick = async function(){
                     var code = btn.dataset.topCode;
                     var label = btn.textContent;
-                    // 1) simple_order 모달 닫기
-                    if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
-                    // 2) 특수 케이스 (메인 페이지의 renderQuickMenu 분기와 동일)
+                    _showLoadingShield();  // 전환 동안 화면 가림
                     var cl = window.CURRENT_LANG || lang;
                     var langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko'};
+                    // 특수 케이스 — 페이지 navigate (shield 그대로 두고 unload)
                     if (code === 'paper_display') {
                         var psLang = langMap[cl] || '';
                         location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '');
@@ -1122,7 +1137,6 @@
                         return;
                     }
                     if (code === '22222') {
-                        // 패브릭 — 도메인 통합 후 /fabric (cotton-print.com 별도 도메인 X)
                         location.href = '/fabric';
                         return;
                     }
@@ -1130,11 +1144,14 @@
                         location.href = '/#artworkMarketBanner';
                         return;
                     }
-                    // 3) 일반 카테고리 — openTopMenu 호출 (메인의 카테고리 모달 표시)
+                    // 일반 — openTopMenu 호출 후 simple_order 닫기 + shield 제거
                     if (typeof window.openTopMenu === 'function') {
-                        setTimeout(function(){ window.openTopMenu(code, label); }, 150);
+                        try {
+                            await window.openTopMenu(code, label);
+                        } catch (e) { console.warn('[so-nav] openTopMenu', e); }
+                        if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
+                        _hideLoadingShield();
                     } else {
-                        // openTopMenu 없으면 메인 페이지로 이동 + top 파라미터
                         location.href = '/?top=' + encodeURIComponent(code);
                     }
                 };
@@ -1291,8 +1308,16 @@
         } catch (e) {}
     }
 
+    // 2026-05-12: 중복 호출 방지 (빠른 더블 클릭 또는 외부 트리거 중복)
+    var _soInFlight = false;
+
     async function doAddToCart() {
+        if (_soInFlight) {
+            console.warn('[simple_order] doAddToCart 이미 진행 중 — 중복 호출 무시');
+            return false;
+        }
         if (!state.product || !state.file) return false;
+        _soInFlight = true;
         const btnC = document.getElementById('soBtnCart');
         const btnB = document.getElementById('soBtnBuy');
         if (btnC) btnC.disabled = true;
@@ -1304,10 +1329,13 @@
             const cart = readCart();
             cart.push(item);
             writeCart(cart);
+            // 2026-05-12: 중복 push 방지 — writeCart 후 localStorage 가 cart_sync 의 tagItem 으로
+            // __cart_id 부여됨. cartData 도 그 최신 상태로 sync 해야 renderCart 가 중복 push 안 함.
             try {
                 if (Array.isArray(window.cartData)) {
+                    var freshAll = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
                     window.cartData.length = 0;
-                    cart.forEach(i => window.cartData.push(i));
+                    freshAll.forEach(function (i) { window.cartData.push(i); });
                 }
             } catch (e) {}
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
@@ -1320,10 +1348,12 @@
             return false;
         } finally {
             updateButtons();
+            _soInFlight = false;
         }
     }
 
     window._soAddCart = async function() {
+        if (_soInFlight) return;
         const ok = await doAddToCart();
         if (ok) {
             // 카트 드로어를 우측에서 슬라이드해서 보여줌 (모달은 그대로 유지)
@@ -1333,6 +1363,7 @@
     };
 
     window._soBuyNow = async function() {
+        if (_soInFlight) return;
         const ok = await doAddToCart();
         if (!ok) return;
         // 카트 드로어 슬라이드 + 자동 체크아웃 진행
@@ -1774,20 +1805,19 @@
                     '예금주: (주)카멜레온프린팅\n\n' +
                     '입금 후 영업일 내 제작이 시작됩니다.'
                 );
-                // 카트 비우기
+                // 카트 비우기 + shield 로 전환 가림 + mypage 이동
                 try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
-                // 모달 닫기
+                _showLoadingShield();
                 window._soCloseCheckout();
-                if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
-                // 마이페이지로 이동
-                setTimeout(function () { location.href = '/mypage'; }, 800);
+                setTimeout(function () { location.href = '/mypage'; }, 600);
                 return;
             }
 
-            // 카드 결제: 한국=Toss, 해외=Stripe (패브릭과 동일 분기)
+            // 카드 결제: shield 로 전환 화면 가리고 한국=Toss, 해외=Stripe
             try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+            _showLoadingShield();
             window._soCloseCheckout();
-            if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
+            // simple_order 모달은 closeSimpleOrderModal 생략 — shield 가 위를 가리므로 background 안 보임
 
             var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
             var host = (location.hostname || '').toLowerCase();
@@ -1800,8 +1830,8 @@
                 location.href = '/cotton_checkout.html?order_id=' + newOrderId;
             } else {
                 // 해외: Stripe (lang 파라미터로 일본/영어 결제 메시지 분기)
-                var lang = (country === 'JP') ? 'ja' : 'en';
-                location.href = '/cotton_stripe_checkout.html?order_id=' + newOrderId + '&lang=' + lang;
+                var clang = (country === 'JP') ? 'ja' : 'en';
+                location.href = '/cotton_stripe_checkout.html?order_id=' + newOrderId + '&lang=' + clang;
             }
         } catch (e) {
             console.error('[_soSubmitOrder]', e);
