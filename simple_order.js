@@ -782,6 +782,8 @@
             <!-- 2026-05-13: 자유인쇄커팅 전용 (시공 없이 배송만) -->
             <button type="button" class="so-ship-btn" data-ship="metro_delivery" onclick="window._soPickShip('metro_delivery')" style="display:none;">📦 ${tr('수도권 배송', '首都圏配送', 'Metro delivery')}<br><span style="font-size:11px; opacity:0.8;">100,000${tr('원', '円', 'KRW')}</span></button>
             <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">📦 ${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">200,000${tr('원', '円', 'KRW')}</span></button>
+            <!-- 2026-05-13: 택배배송 (배너·인스타판넬만, 2장 묶음 3만원) -->
+            <button type="button" class="so-ship-btn" data-ship="parcel_shipping" onclick="window._soPickShip('parcel_shipping')" style="display:none;">📮 ${tr('택배배송', '宅配便', 'Parcel')}<br><span style="font-size:11px; opacity:0.8;">30,000${tr('원', '円', 'KRW')} / ${tr('2장 묶음', '2枚まとめ', '2 per box')}</span></button>
           </div>
           <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
           <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
@@ -1421,6 +1423,11 @@
             shipName = tr('다른 제품과 묶음배송', '合わせて配送', 'Bundled');
         } else {
             shipName = (window.SHIP_OPTS && window.SHIP_OPTS[state.shipMethod] && window.SHIP_OPTS[state.shipMethod].label_ko) || '';
+            // 2026-05-13: 택배배송이면 박스 수 표시 (qty/2 올림)
+            if (state.shipMethod === 'parcel_shipping' && qty > 0) {
+                var boxes = Math.ceil(qty / 2);
+                shipName += ' · ' + boxes + tr('박스 (2장 묶음)', '箱 (2枚まとめ)', ' boxes (2 per)');
+            }
         }
         setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
         setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
@@ -1473,6 +1480,20 @@
         return _soIsHoneycombProduct(p) && !_soIsWallProduct(p);
     }
 
+    // 2026-05-13: 택배배송 가능 상품 — 허니콤보드배너(hb_bn_*) + 인스타판넬(hb_insta / lll0 / 0ll / lllllp / ppp)
+    // 택배 1박스에 2장 묶음 가능 → 가격 = ceil(qty/2) × 30,000원
+    function _soIsParcelShipProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        if (code.startsWith('hb_bn')) return true;        // 허니콤배너 단/양면/연결형
+        if (cat === 'hb_insta' || cat.indexOf('insta') >= 0) return true;
+        if (['lll0', '0ll', 'lllllp', 'ppp'].indexOf(code) >= 0) return true;
+        if (/배너|banner|인스타\s*판넬|instagram\s*panel|photo\s*booth/i.test(name)) return true;
+        return false;
+    }
+
     // 2026-05-13: 허니콤 박스 감지 (hb_bx_*)
     // 가로×세로×높이 입력 → calculateBoxPrice 로 자동 계산 (product.price = 시트당 단가)
     function _soIsBoxProduct(p) {
@@ -1520,7 +1541,9 @@
         metro_delivery:       { fee: 100000, label_ko: '수도권 배송',         parts: [['수도권 배송', 100000]] },
         regional_delivery:    { fee: 200000, label_ko: '지방 배송',           parts: [['지방 배송', 200000]] },
         // 2026-05-13: 다른 제품과 묶음배송 (이 상품 자체 배송비는 0)
-        bundle_shipping:      { fee: 0,      label_ko: '다른 제품과 묶음배송', parts: [] }
+        bundle_shipping:      { fee: 0,      label_ko: '다른 제품과 묶음배송', parts: [] },
+        // 2026-05-13: 택배배송 (배너·인스타판넬만) — 2장 묶음 = 3만원, 3장 이상은 ceil(qty/2)*3만
+        parcel_shipping:      { fee: 30000,  label_ko: '택배배송',           parts: [['택배배송 (2장 묶음)', 30000]] }
     };
     window.SHIP_OPTS = SHIP_OPTS;
 
@@ -1534,6 +1557,13 @@
         var method = state.shipMethod || 'self_pickup';
         var opt = SHIP_OPTS[method] || SHIP_OPTS.self_pickup;
         var baseFee = opt.fee || 0;
+        // 2026-05-13: 택배배송은 2장당 3만원 (qty 1~2 = 3만, 3~4 = 6만, ...)
+        if (method === 'parcel_shipping') {
+            var q = state.qty || 1;
+            baseFee = Math.ceil(q / 2) * 30000;
+            state._shipUpgradeReason = (q > 2) ? ('택배 ' + Math.ceil(q / 2) + '박스 (2장씩 묶음)') : null;
+            return baseFee;
+        }
         // 시간이 야간 이고 옵션이 metro_install 이면 → 20만원 (야간/주말 설치 가격으로 자동 업그레이드)
         var timeEl = document.getElementById('soScheduleTime');
         var timeVal = timeEl ? timeEl.value : '';
@@ -1597,8 +1627,8 @@
         });
         var dateWrap = document.getElementById('soScheduleDateWrap');
         var remWrap = document.getElementById('soRemovalWrap');
-        // self_pickup 또는 단순 배송(metro/regional_delivery)이면 날짜·시간 안 보임 (시공 옵션만 일정 필요)
-        var needsSchedule = !(method === 'self_pickup' || method === 'metro_delivery' || method === 'regional_delivery' || method === 'bundle_shipping');
+        // self_pickup 또는 단순 배송(metro/regional_delivery·parcel)이면 날짜·시간 안 보임 (시공 옵션만 일정 필요)
+        var needsSchedule = !(method === 'self_pickup' || method === 'metro_delivery' || method === 'regional_delivery' || method === 'parcel_shipping' || method === 'bundle_shipping');
         if (dateWrap) dateWrap.style.display = needsSchedule ? '' : 'none';
         // 철거 옵션 (수도권 설치+철거 시만)
         if (remWrap) remWrap.style.display = (method === 'metro_install_removal') ? '' : 'none';
@@ -2186,20 +2216,24 @@
         if (qtySec) qtySec.style.display = state.isWall ? 'none' : '';
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
         state.isDeliveryOnly = _soUsesDeliveryShipping(p);
+        // 2026-05-13: 택배배송 가능 (배너·인스타판넬)
+        state.isParcelShip = _soIsParcelShipProduct(p);
         // 시공/배송 일정 섹션 (가벽·포토존·배송전용 허니콤 모두 표시)
         var schedSec = document.getElementById('soScheduleSection');
         if (schedSec) schedSec.style.display = (state.isWall || state.isPhotozone || state.isDeliveryOnly) ? '' : 'none';
         // 2026-05-13: 배송전용 허니콤이면 시공 옵션 숨기고 배송 옵션만 표시 + 묶음배송 버튼 표시
         var deliveryShipKeys = ['metro_delivery', 'regional_delivery'];
+        var parcelShipKey = 'parcel_shipping';
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             var k = b.dataset.ship;
             if (state.isDeliveryOnly) {
                 // 가벽 외 허니콤: self_pickup + delivery 만 표시
                 if (k === 'self_pickup' || deliveryShipKeys.indexOf(k) >= 0) b.style.display = '';
+                else if (k === parcelShipKey) b.style.display = state.isParcelShip ? '' : 'none';
                 else b.style.display = 'none';
             } else {
-                // 가벽/포토존: 기존 시공 옵션 표시, delivery 옵션 숨김
-                if (deliveryShipKeys.indexOf(k) >= 0) b.style.display = 'none';
+                // 가벽/포토존: 기존 시공 옵션 표시, delivery/parcel 옵션 숨김
+                if (deliveryShipKeys.indexOf(k) >= 0 || k === parcelShipKey) b.style.display = 'none';
                 else b.style.display = '';
             }
             // active/opacity 초기화
