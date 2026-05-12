@@ -1590,8 +1590,14 @@
             var total = cart.reduce(function (s, it) { return s + _soCalcItemPrice(it); }, 0);
 
             // 카트 항목 → orders.items 형식 (관리자 페이지에서 인식)
+            // 동시에 orderRow.files 도 채우기 위해 파일 정보 수집
+            var orderFiles = [];
             var items = cart.map(function (it) {
                 if (_soIsFabricItem(it)) {
+                    // 패브릭 항목 — 마켓플레이스 원본 또는 업로드 디자인 URL
+                    var fabUrl  = it.designerOriginalUrl || it.imgUrl || null;
+                    var fabName = it.imgFileName || (it.title || it.fabricName || 'fabric') + '.png';
+                    if (fabUrl) orderFiles.push({ name: fabName, url: fabUrl, type: 'image/png' });
                     return {
                         product_code: it.fabricCode,
                         product_name: it.title || it.fabricName,
@@ -1601,6 +1607,8 @@
                         qty: it.qtyValue || 1,
                         price: it.price || 0,
                         source: 'cotton-print',
+                        artwork_url: fabUrl,
+                        artwork_filename: fabName,
                         addons: [
                             it.finishCode ? { type: 'finish', code: it.finishCode, name: it.finishName, price: it.finishExtra || 0 } : null,
                             it.hookCode ? { type: 'hook', code: it.hookCode, name: it.hookName, price: it.hookExtra || 0 } : null,
@@ -1608,7 +1616,7 @@
                         ].filter(Boolean)
                     };
                 }
-                // 일반 상품
+                // 일반 상품 — buildCartItem 에서 originalUrl(storage URL) + filePath 저장됨
                 var addons = [];
                 if (it.selectedAddons && window.ADDON_DB) {
                     Object.values(it.selectedAddons).forEach(function (code) {
@@ -1616,17 +1624,25 @@
                         if (a) addons.push({ type: 'addon', code: code, name: a.display_name || a.name, price: a.price || 0 });
                     });
                 }
+                var fileUrl  = it.originalUrl || it.fileUrl || it.thumb || null;
+                var fileName = it.fileName || ((it.product && it.product.name) || 'item') + '.png';
+                var fileType = it.mimeType || 'image/png';
+                if (fileUrl) orderFiles.push({ name: fileName, url: fileUrl, type: fileType });
                 return {
                     product_code: (it.product && it.product.code) || '',
                     product_name: (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || ''),
                     qty: it.qty || 1,
-                    width_mm: it.width || null,
-                    height_mm: it.height || null,
+                    width_mm: it.width || (it.product && it.product.w_mm) || null,
+                    height_mm: it.height || (it.product && it.product.h_mm) || null,
                     unit_price: (it.product && it.product.price) || 0,
                     price: _soCalcItemPrice(it),
                     source: 'cafe2626',
                     addons: addons,
-                    file_url: it.thumb || null
+                    file_url: fileUrl,           // 단일 파일 URL (item 별)
+                    file_name: fileName,
+                    file_path: it.filePath || null,
+                    artwork_url: fileUrl,        // 통합주문관리 호환 키
+                    artwork_filename: fileName
                 };
             });
 
@@ -1658,19 +1674,32 @@
                 discount_amount: 0,
                 items: items,
                 site_code: 'KR',
-                files: null,
+                files: orderFiles.length ? orderFiles : null,
                 admin_note: adminNote
             };
 
             var { data: insertedOrder, error: insertErr } = await sb.from('orders').insert([orderRow]).select().single();
             if (insertErr) throw insertErr;
 
+            var newOrderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
+
+            // 2026-05-12: Google Drive 동기화 트리거 (패브릭과 동일)
+            // 무통장(status=접수됨) → 즉시 폴더 생성. 카드(status=임시작성) → Edge Function 이 skip,
+            // 결제 완료 시 confirm-payment 등에서 재호출 (멱등성)
+            try {
+                sb.functions.invoke('sync-order-to-drive', { body: { order_id: newOrderId } })
+                    .then(function (r) {
+                        if (r && r.error) console.warn('[drive sync] failed:', r.error.message || r.error);
+                        else console.log('[drive sync]', (r && r.data) || r);
+                    })
+                    .catch(function (e) { console.warn('[drive sync] enqueue failed:', e && e.message || e); });
+            } catch (e) { console.warn('[drive sync] try failed:', e && e.message || e); }
+
             // 무통장: 안내 메시지 + 카트 비우기
             if (payMethod === 'bank') {
-                var orderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
                 alert(
                     '주문이 접수되었습니다!\n\n' +
-                    '주문번호: ' + (orderId || '확인중') + '\n' +
+                    '주문번호: #' + (newOrderId || '확인중') + '\n' +
                     '입금하실 금액: ' + _soFormatPrice(total) + '\n\n' +
                     '국민은행 647701-04-277763\n' +
                     '예금주: (주)카멜레온프린팅\n\n' +
@@ -1686,14 +1715,11 @@
                 return;
             }
 
-            // 카드: Toss 결제창 (간단 안내 — 추후 토스 SDK 연동)
-            alert(
-                '주문번호: ' + (insertedOrder && insertedOrder.id || '확인중') + '\n' +
-                '결제 금액: ' + _soFormatPrice(total) + '\n\n' +
-                '카드 결제 연동은 곧 지원 예정입니다. 당분간 무통장 입금을 이용해주세요.'
-            );
-            btn.disabled = false;
-            btn.innerHTML = origLabel;
+            // 카드: 패브릭과 동일하게 cotton_checkout.html 사용 (Toss SDK 처리)
+            try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+            window._soCloseCheckout();
+            if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
+            location.href = '/cotton_checkout.html?order_id=' + newOrderId;
         } catch (e) {
             console.error('[_soSubmitOrder]', e);
             alert('주문 처리 중 오류: ' + (e.message || e));

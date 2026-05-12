@@ -102,7 +102,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Unified checkout: category nav, view-cart button, real checkout flow\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Checkout: always navigate to ?cart=open + retry loop\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Quick checkout modal \\(simple_order v=12\\)\" 2>&1)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Unified cart drawer + no cross-domain banner\" 2>&1)"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Unified cart drawer + no cross-domain banner\" 2>&1)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=14: orders schema match fabric flow\" 2>&1)"
     ],
     "additionalDirectories": [
       "\\tmp"
