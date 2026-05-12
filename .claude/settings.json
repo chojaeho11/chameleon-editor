@@ -99,7 +99,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Absolute script paths for /fabric \\(v=42, v=5\\)\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Unified cart + category nav + simple_order for all products\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cart_sync v=7: drop source filter, merge stale cartData\" 2>&1)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Unified checkout: category nav, view-cart button, real checkout flow\" 2>&1)"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Unified checkout: category nav, view-cart button, real checkout flow\" 2>&1)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"Checkout: always navigate to ?cart=open + retry loop\" 2>&1)"
     ],
     "additionalDirectories": [
       "\\tmp"

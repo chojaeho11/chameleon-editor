@@ -363,6 +363,74 @@
     .so-cart-drawer { width: 100%; }
 }
 
+/* 2026-05-12: 빠른 결제 모달 (패브릭과 동일 스타일) */
+.so-co-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
+    z-index: 60000; display: none; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.so-co-overlay.open { display: flex !important; }
+.so-co-card {
+    width: 100%; max-width: 960px; height: 100%; max-height: 720px;
+    background: #fff; border-radius: 16px; display: flex; overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35); position: relative;
+}
+.so-co-close {
+    position: absolute; top: 12px; right: 14px; width: 36px; height: 36px;
+    background: rgba(255,255,255,0.9); border: 1px solid #e5e7eb; border-radius: 50%;
+    font-size: 20px; cursor: pointer; z-index: 1; line-height: 1;
+}
+.so-co-form {
+    flex: 1; padding: 30px 35px; overflow-y: auto; background: #fff;
+}
+.so-co-section { margin-bottom: 16px; }
+.so-co-label {
+    display: block; font-size: 12px; font-weight: 800; color: #451a03;
+    margin-bottom: 6px;
+}
+.so-co-input {
+    width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+    font-size: 14px; box-sizing: border-box; transition: border-color 0.15s;
+}
+.so-co-input:focus { outline: none; border-color: #f59e0b; }
+.so-co-row { display: flex; gap: 8px; }
+.so-co-row > .so-co-input { flex: 1; }
+.so-co-pay-opts { display: flex; flex-direction: column; gap: 6px; }
+.so-co-pay-opt {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; transition: all 0.15s;
+}
+.so-co-pay-opt:has(input:checked) { border-color: #f59e0b; background: #fef3c7; }
+.so-co-summary {
+    width: 320px; padding: 24px 20px; background: #faf6ed;
+    display: flex; flex-direction: column; border-left: 1px solid #e7e5e4;
+}
+.so-co-summary-item {
+    background: #fff; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+    font-size: 12px;
+}
+.so-co-summary-item-name { font-weight: 700; color: #451a03; margin-bottom: 4px; }
+.so-co-summary-item-opts { font-size: 11px; color: #6b7280; margin-bottom: 4px; }
+.so-co-summary-item-price { font-weight: 800; color: #dc2626; text-align: right; }
+.so-co-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-top: 2px solid #d6d3d1; margin-bottom: 10px;
+}
+.so-co-total-amt { font-size: 22px; font-weight: 900; color: #dc2626; }
+.so-co-submit-btn {
+    width: 100%; padding: 14px; background: #451a03; color: #fde047;
+    border: none; border-radius: 10px; font-size: 15px; font-weight: 800;
+    cursor: pointer; transition: all 0.15s;
+}
+.so-co-submit-btn:hover { background: #78350f; }
+.so-co-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+    .so-co-card { flex-direction: column; max-height: 95vh; }
+    .so-co-summary { width: 100%; border-left: none; border-top: 1px solid #e7e5e4; }
+}
+
 /* 우측: 옵션 패널 */
 .so-right {
     flex: 1; background: #faf6ed; padding: 0;
@@ -587,6 +655,59 @@
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 2026-05-12: 빠른 결제 모달 (패브릭과 동일한 단순 결제) -->
+<div id="soCheckoutOverlay" class="so-co-overlay" style="display:none;">
+  <div class="so-co-card">
+    <button class="so-co-close" onclick="window._soCloseCheckout()" aria-label="Close">×</button>
+    <div class="so-co-form">
+      <h3 style="margin:0 0 4px; font-size:22px; font-weight:800; color:#451a03;">${tr('주문 정보 입력', '注文情報入力', 'Order details')}</h3>
+      <div class="so-co-sub" style="font-size:13px; color:#6b7280; margin-bottom:20px;">${tr('정확히 입력해주세요.', '正確に入力してください。', 'Please fill in carefully.')}</div>
+      <div class="so-co-section">
+        <span class="so-co-label">${tr('받으시는 분', 'お受取人', 'Recipient')} <span style="color:#dc2626;">*</span></span>
+        <input id="soCoName" class="so-co-input" placeholder="${tr('홍길동', '山田太郎', 'Full name')}">
+      </div>
+      <div class="so-co-section">
+        <span class="so-co-label">${tr('연락처', '連絡先', 'Phone')} <span style="color:#dc2626;">*</span></span>
+        <div class="so-co-row">
+          <input id="soCoPhone" class="so-co-input" placeholder="010-0000-0000">
+          <input id="soCoEmail" class="so-co-input" type="email" placeholder="${tr('이메일 (선택)', 'メール (任意)', 'Email (optional)')}">
+        </div>
+      </div>
+      <div class="so-co-section">
+        <span class="so-co-label">${tr('배송지', 'お届け先', 'Shipping address')} <span style="color:#dc2626;">*</span></span>
+        <input id="soCoZip" class="so-co-input" placeholder="${tr('우편번호', '郵便番号', 'ZIP')}" style="width:160px; margin-bottom:6px;">
+        <input id="soCoAddr1" class="so-co-input" placeholder="${tr('기본 주소', '住所', 'Address line 1')}" style="margin-bottom:6px;">
+        <input id="soCoAddr2" class="so-co-input" placeholder="${tr('상세 주소 (동/호수)', '建物名・部屋番号', 'Address line 2')}">
+      </div>
+      <div class="so-co-section">
+        <span class="so-co-label">${tr('배송 메모 (선택)', '配送メモ (任意)', 'Delivery note (optional)')}</span>
+        <input id="soCoMemo" class="so-co-input" placeholder="${tr('예: 부재 시 경비실에 맡겨주세요', '例: 不在時は管理人室へ', 'e.g. Leave at front desk if absent')}">
+      </div>
+      <div class="so-co-section">
+        <span class="so-co-label">${tr('결제 방법', 'お支払い方法', 'Payment method')}</span>
+        <div class="so-co-pay-opts">
+          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" checked> 🏦 ${tr('무통장 입금', '銀行振込', 'Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리', 'すぐ処理', 'Instant')}</span></label>
+          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="card"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
+        </div>
+      </div>
+    </div>
+    <aside class="so-co-summary">
+      <h4 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#451a03;">${tr('주문 요약', '注文要約', 'Order summary')}</h4>
+      <div id="soCoItemList" style="flex:1; overflow-y:auto; margin-bottom:12px;"></div>
+      <div class="so-co-total">
+        <span style="font-size:13px; color:#6b7280; font-weight:700;">${tr('합계', '合計', 'Total')}</span>
+        <span class="so-co-total-amt" id="soCoTotalAmt">0원</span>
+      </div>
+      <button class="so-co-submit-btn" id="soCoSubmitBtn" onclick="window._soSubmitOrder()">
+        ✓ ${tr('주문 완료하기', '注文を確定', 'Place order')}
+      </button>
+      <div style="font-size:10px; color:#9ca3af; text-align:center; margin-top:8px;">
+        ${tr('결제 확인 후 영업일 내 제작 시작', '入金確認後、営業日内に製作開始', 'Production starts after payment confirmation')}
+      </div>
+    </aside>
   </div>
 </div>
         `;
@@ -1308,13 +1429,210 @@
         } catch (e) {}
     }
 
-    window._soGoCheckout = function() {
-        // 2026-05-12: 항상 메인 페이지의 cartPage 로 navigate (확실하게 결제 화면 열기)
-        // ?product 페이지에서 같은 페이지 cartPage 활성화는 페이지 내부 state 와 충돌 가능 →
-        // 깨끗하게 메인 페이지로 reload 하여 main.js 의 ?cart=open 핸들러가 처리하도록.
+    window._soGoCheckout = function () {
+        // 2026-05-12: 패브릭처럼 빠른 결제 모달 띄우기 — cartPage 우회
         window._soToggleCart(false);
-        if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
-        location.href = '/?cart=open';
+        window._soOpenCheckout();
+    };
+
+    // ─────────────────────────────────────────────
+    // 2026-05-12: 빠른 결제 모달 (패브릭과 동일 흐름)
+    // ─────────────────────────────────────────────
+    function _soReadAllCart() {
+        try { return JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || []; }
+        catch (e) { return []; }
+    }
+    function _soIsFabricItem(it) {
+        return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+    }
+    function _soCalcItemPrice(it) {
+        if (_soIsFabricItem(it)) return it.price || 0;
+        var base = ((it.product && it.product.price) || 0) * (it.qty || 1);
+        // 부가 옵션 (간단)
+        if (it.selectedAddons && window.ADDON_DB) {
+            Object.values(it.selectedAddons).forEach(function (code) {
+                var addon = window.ADDON_DB[code];
+                if (addon) base += (addon.price || 0) * (it.qty || 1);
+            });
+        }
+        return base;
+    }
+    function _soFormatPrice(krw) {
+        return Math.round(krw || 0).toLocaleString() + '원';
+    }
+
+    window._soOpenCheckout = function () {
+        var cart = _soReadAllCart();
+        if (cart.length === 0) {
+            alert('장바구니가 비어있습니다.');
+            return;
+        }
+        // 항목 요약 렌더
+        var list = document.getElementById('soCoItemList');
+        var total = 0;
+        list.innerHTML = cart.map(function (it) {
+            var name, opts;
+            if (_soIsFabricItem(it)) {
+                name = it.title || it.fabricName || '패브릭';
+                var sz = it.orderSize || ((it.orderWcm || (it.orderWmm/10)) + '×' + (it.orderHcm || (it.orderHmm/10)) + 'cm');
+                opts = [it.fabricName, '출력 ' + sz, it.qtyLabel, it.finishName ? ('마감: ' + it.finishName) : ''].filter(Boolean).join(' · ');
+            } else {
+                name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
+                opts = (it.qty || 1) + '개';
+            }
+            var p = _soCalcItemPrice(it);
+            total += p;
+            return '<div class="so-co-summary-item">' +
+                '<div class="so-co-summary-item-name">' + name + '</div>' +
+                '<div class="so-co-summary-item-opts">' + opts + '</div>' +
+                '<div class="so-co-summary-item-price">' + _soFormatPrice(p) + '</div>' +
+                '</div>';
+        }).join('');
+        document.getElementById('soCoTotalAmt').textContent = _soFormatPrice(total);
+        document.getElementById('soCheckoutOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window._soCloseCheckout = function () {
+        document.getElementById('soCheckoutOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    };
+
+    window._soSubmitOrder = async function () {
+        var name = (document.getElementById('soCoName').value || '').trim();
+        var phone = (document.getElementById('soCoPhone').value || '').trim();
+        var email = (document.getElementById('soCoEmail').value || '').trim();
+        var zip = (document.getElementById('soCoZip').value || '').trim();
+        var addr1 = (document.getElementById('soCoAddr1').value || '').trim();
+        var addr2 = (document.getElementById('soCoAddr2').value || '').trim();
+        var memo = (document.getElementById('soCoMemo').value || '').trim();
+        var payMethod = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'bank';
+
+        if (!name)  { alert('받으시는 분 성함을 입력해주세요.'); return; }
+        if (!phone) { alert('연락처를 입력해주세요.'); return; }
+        if (!addr1) { alert('배송지를 입력해주세요.'); return; }
+
+        var cart = _soReadAllCart();
+        if (cart.length === 0) return;
+
+        var btn = document.getElementById('soCoSubmitBtn');
+        btn.disabled = true;
+        var origLabel = btn.innerHTML;
+        btn.innerHTML = '⏳ 처리 중...';
+
+        try {
+            var sb = getSb();
+            if (!sb) throw new Error('Supabase 연결 실패');
+
+            var total = cart.reduce(function (s, it) { return s + _soCalcItemPrice(it); }, 0);
+
+            // 카트 항목 → orders.items 형식 (관리자 페이지에서 인식)
+            var items = cart.map(function (it) {
+                if (_soIsFabricItem(it)) {
+                    return {
+                        product_code: it.fabricCode,
+                        product_name: it.title || it.fabricName,
+                        fabric: it.fabricName,
+                        width_cm: it.orderWcm,
+                        height_cm: it.orderHcm,
+                        qty: it.qtyValue || 1,
+                        price: it.price || 0,
+                        source: 'cotton-print',
+                        addons: [
+                            it.finishCode ? { type: 'finish', code: it.finishCode, name: it.finishName, price: it.finishExtra || 0 } : null,
+                            it.hookCode ? { type: 'hook', code: it.hookCode, name: it.hookName, price: it.hookExtra || 0 } : null,
+                            it.accCode ? { type: 'accessory', code: it.accCode, name: it.accName, price: it.accExtra || 0 } : null
+                        ].filter(Boolean)
+                    };
+                }
+                // 일반 상품
+                var addons = [];
+                if (it.selectedAddons && window.ADDON_DB) {
+                    Object.values(it.selectedAddons).forEach(function (code) {
+                        var a = window.ADDON_DB[code];
+                        if (a) addons.push({ type: 'addon', code: code, name: a.display_name || a.name, price: a.price || 0 });
+                    });
+                }
+                return {
+                    product_code: (it.product && it.product.code) || '',
+                    product_name: (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || ''),
+                    qty: it.qty || 1,
+                    width_mm: it.width || null,
+                    height_mm: it.height || null,
+                    unit_price: (it.product && it.product.price) || 0,
+                    price: _soCalcItemPrice(it),
+                    source: 'cafe2626',
+                    addons: addons,
+                    file_url: it.thumb || null
+                };
+            });
+
+            var fullAddr = (zip ? '[' + zip + '] ' : '') + addr1 + ' ' + addr2;
+            var adminNote =
+                '[간편주문] 결제수단: ' + (payMethod === 'bank' ? '무통장입금' : '카드결제') +
+                '\n이메일: ' + (email || '없음') +
+                (memo ? '\n배송메모: ' + memo : '');
+
+            var orderRow = {
+                order_date: new Date().toISOString(),
+                manager_name: name,
+                phone: phone,
+                address: fullAddr,
+                request_note: memo || '',
+                items: items,
+                total_amount: total,
+                payment_method: payMethod,
+                admin_note: adminNote,
+                status: payMethod === 'bank' ? '입금대기' : '결제대기'
+            };
+
+            // user_id 가 있으면 같이 기록 (로그인 사용자)
+            try {
+                var sess = await sb.auth.getSession();
+                if (sess && sess.data && sess.data.session && sess.data.session.user) {
+                    orderRow.user_id = sess.data.session.user.id;
+                    orderRow.email = sess.data.session.user.email || email || null;
+                }
+            } catch (e) {}
+
+            var { data: insertedOrder, error: insertErr } = await sb.from('orders').insert(orderRow).select().single();
+            if (insertErr) throw insertErr;
+
+            // 무통장: 안내 메시지 + 카트 비우기
+            if (payMethod === 'bank') {
+                var orderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
+                alert(
+                    '주문이 접수되었습니다!\n\n' +
+                    '주문번호: ' + (orderId || '확인중') + '\n' +
+                    '입금하실 금액: ' + _soFormatPrice(total) + '\n\n' +
+                    '국민은행 647701-04-277763\n' +
+                    '예금주: (주)카멜레온프린팅\n\n' +
+                    '입금 후 영업일 내 제작이 시작됩니다.'
+                );
+                // 카트 비우기
+                try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+                // 모달 닫기
+                window._soCloseCheckout();
+                if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
+                // 마이페이지로 이동
+                setTimeout(function () { location.href = '/mypage'; }, 800);
+                return;
+            }
+
+            // 카드: Toss 결제창 (간단 안내 — 추후 토스 SDK 연동)
+            alert(
+                '주문번호: ' + (insertedOrder && insertedOrder.id || '확인중') + '\n' +
+                '결제 금액: ' + _soFormatPrice(total) + '\n\n' +
+                '카드 결제 연동은 곧 지원 예정입니다. 당분간 무통장 입금을 이용해주세요.'
+            );
+            btn.disabled = false;
+            btn.innerHTML = origLabel;
+        } catch (e) {
+            console.error('[_soSubmitOrder]', e);
+            alert('주문 처리 중 오류: ' + (e.message || e));
+            btn.disabled = false;
+            btn.innerHTML = origLabel;
+        }
     };
 
     // 카테고리 라벨 매핑 (한국어 사이트 기준)
