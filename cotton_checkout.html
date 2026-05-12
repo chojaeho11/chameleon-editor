@@ -37,7 +37,8 @@ p { font-size:13px; color:var(--brown); line-height:1.7; }
         <div style="font-size:42px; color:#dc2626; margin:24px 0;"><i class="fa-solid fa-circle-exclamation"></i></div>
         <h2>결제 진행 오류</h2>
         <div class="err" id="errMsg"></div>
-        <a href="https://www.cotton-print.com/designer" class="btn"><i class="fa-solid fa-arrow-left"></i> 디자이너로 돌아가기</a>
+        <!-- 2026-05-12: 일반/패브릭 모두 같은 페이지를 쓰므로 history.back() 또는 / 로 -->
+        <a href="javascript:history.length>1?history.back():location.href='/'" class="btn"><i class="fa-solid fa-arrow-left"></i> 돌아가기</a>
     </div>
 </div>
 <script>

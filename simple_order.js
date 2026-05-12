@@ -1715,11 +1715,25 @@
                 return;
             }
 
-            // 카드: 패브릭과 동일하게 cotton_checkout.html 사용 (Toss SDK 처리)
+            // 카드 결제: 한국=Toss, 해외=Stripe (패브릭과 동일 분기)
             try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
             window._soCloseCheckout();
             if (window.closeSimpleOrderModal) window.closeSimpleOrderModal();
-            location.href = '/cotton_checkout.html?order_id=' + newOrderId;
+
+            var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+            var host = (location.hostname || '').toLowerCase();
+            if (!country || country === 'KR') {
+                if (host.indexOf('cafe0101') >= 0) country = 'JP';
+                else if (host.indexOf('cafe3355') >= 0) country = 'US';
+            }
+            if (country === 'KR') {
+                // 한국: Toss
+                location.href = '/cotton_checkout.html?order_id=' + newOrderId;
+            } else {
+                // 해외: Stripe (lang 파라미터로 일본/영어 결제 메시지 분기)
+                var lang = (country === 'JP') ? 'ja' : 'en';
+                location.href = '/cotton_stripe_checkout.html?order_id=' + newOrderId + '&lang=' + lang;
+            }
         } catch (e) {
             console.error('[_soSubmitOrder]', e);
             alert('주문 처리 중 오류: ' + (e.message || e));
