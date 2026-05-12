@@ -116,7 +116,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=22 Phase 1: wall size + addons + item notes\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=23: wall pricing by width + delivery schedule\" 2>&1)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=24: ship prices, button UI, breakdown, wall guide\" 2>&1)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=25: z-index, night upgrade, price breakdown, PRO discount\" 2>&1)"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=25: z-index, night upgrade, price breakdown, PRO discount\" 2>&1)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"simple_order v=26: calcCartItemPrice delegates to _soCalcItemPrice\" 2>&1)"
     ],
     "additionalDirectories": [
       "\\tmp"

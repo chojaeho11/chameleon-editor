@@ -285,13 +285,13 @@
 
 /* 카트 드로어 — 우측 슬라이드 */
 .so-cart-drawer-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 80000;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90000;
     display: none; opacity: 0; transition: opacity 0.25s;
 }
 .so-cart-drawer-overlay.open { display: block; opacity: 1; }
 .so-cart-drawer {
     position: fixed; right: 0; top: 0; height: 100%; width: 440px;
-    max-width: 100%; background: #fff; z-index: 80001;
+    max-width: 100%; background: #fff; z-index: 90001;
     box-shadow: -8px 0 40px rgba(0,0,0,0.2);
     transform: translateX(100%); transition: transform 0.3s ease;
     display: flex; flex-direction: column;
@@ -309,6 +309,41 @@
 }
 .so-cart-close:hover { background: rgba(255,255,255,0.25); }
 .so-cart-body { flex: 1; overflow-y: auto; padding: 16px 20px; background: #faf6ed; }
+
+/* 2026-05-13: 스크롤바 연한 하늘색 (회색 대신) — simple_order 본체 + 카트 드로어 모두 */
+.so-cart-body::-webkit-scrollbar,
+.so-right::-webkit-scrollbar,
+.so-left::-webkit-scrollbar,
+.so-modal::-webkit-scrollbar,
+.so-overlay::-webkit-scrollbar {
+    width: 10px; height: 10px;
+}
+.so-cart-body::-webkit-scrollbar-track,
+.so-right::-webkit-scrollbar-track,
+.so-left::-webkit-scrollbar-track,
+.so-modal::-webkit-scrollbar-track,
+.so-overlay::-webkit-scrollbar-track {
+    background: #eef6ff;
+}
+.so-cart-body::-webkit-scrollbar-thumb,
+.so-right::-webkit-scrollbar-thumb,
+.so-left::-webkit-scrollbar-thumb,
+.so-modal::-webkit-scrollbar-thumb,
+.so-overlay::-webkit-scrollbar-thumb {
+    background: #93c5fd; border-radius: 8px; border: 2px solid #eef6ff;
+}
+.so-cart-body::-webkit-scrollbar-thumb:hover,
+.so-right::-webkit-scrollbar-thumb:hover,
+.so-left::-webkit-scrollbar-thumb:hover,
+.so-modal::-webkit-scrollbar-thumb:hover,
+.so-overlay::-webkit-scrollbar-thumb:hover {
+    background: #60a5fa;
+}
+/* Firefox */
+.so-cart-body, .so-right, .so-left, .so-modal, .so-overlay {
+    scrollbar-color: #93c5fd #eef6ff;
+    scrollbar-width: thin;
+}
 .so-cart-empty {
     text-align: center; padding: 40px 20px; color: #888; font-size: 13px;
 }
