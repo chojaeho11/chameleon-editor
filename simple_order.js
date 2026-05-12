@@ -784,6 +784,10 @@
             <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">📦 ${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">200,000${tr('원', '円', 'KRW')}</span></button>
             <!-- 2026-05-13: 택배배송 (배너·인스타판넬만, 2장 묶음 3만원) -->
             <button type="button" class="so-ship-btn" data-ship="parcel_shipping" onclick="window._soPickShip('parcel_shipping')" style="display:none;">📮 ${tr('택배배송', '宅配便', 'Parcel')}<br><span style="font-size:11px; opacity:0.8;">30,000${tr('원', '円', 'KRW')} / ${tr('2장 묶음', '2枚まとめ', '2 per box')}</span></button>
+            <!-- 2026-05-13: 포맥스·폼보드 대형택배 (3만원) -->
+            <button type="button" class="so-ship-btn" data-ship="large_parcel" onclick="window._soPickShip('large_parcel')" style="display:none;">📦 ${tr('대형택배', '大型宅配', 'Large parcel')}<br><span style="font-size:11px; opacity:0.8;">30,000${tr('원', '円', 'KRW')}</span></button>
+            <!-- 2026-05-13: 일반 인쇄물 소형 묶음택배 (5천원) -->
+            <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">📨 ${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">5,000${tr('원', '円', 'KRW')}</span></button>
           </div>
           <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
           <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
@@ -1480,6 +1484,22 @@
         return _soIsHoneycombProduct(p) && !_soIsWallProduct(p);
     }
 
+    // 2026-05-13: 포맥스/폼보드 감지 (대형택배 3만원)
+    function _soIsForexFoamProduct(p) {
+        if (!p) return false;
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        return /포맥스|폼보드|forex|foam\s*board|pvc\s*foam/i.test(name);
+    }
+
+    // 2026-05-13: 일반 인쇄물 감지 (광고/상업/홈/굿즈/기타) — 허니콤·포맥스·폼보드 제외 모든 상품
+    // 패브릭은 자체 designer, 종이매대는 자체 페이지라 simple_order 에 들어오지 않음
+    function _soIsGeneralPrintProduct(p) {
+        if (!p) return false;
+        if (_soIsHoneycombProduct(p)) return false;
+        if (_soIsForexFoamProduct(p)) return false;
+        return true;
+    }
+
     // 2026-05-13: 택배배송 가능 상품 — 허니콤보드배너(hb_bn_*) + 인스타판넬(hb_insta / lll0 / 0ll / lllllp / ppp)
     // 택배 1박스에 2장 묶음 가능 → 가격 = ceil(qty/2) × 30,000원
     function _soIsParcelShipProduct(p) {
@@ -1543,7 +1563,11 @@
         // 2026-05-13: 다른 제품과 묶음배송 (이 상품 자체 배송비는 0)
         bundle_shipping:      { fee: 0,      label_ko: '다른 제품과 묶음배송', parts: [] },
         // 2026-05-13: 택배배송 (배너·인스타판넬만) — 2장 묶음 = 3만원, 3장 이상은 ceil(qty/2)*3만
-        parcel_shipping:      { fee: 30000,  label_ko: '택배배송',           parts: [['택배배송 (2장 묶음)', 30000]] }
+        parcel_shipping:      { fee: 30000,  label_ko: '택배배송',           parts: [['택배배송 (2장 묶음)', 30000]] },
+        // 2026-05-13: 포맥스·폼보드 대형택배 (3만원 고정)
+        large_parcel:         { fee: 30000,  label_ko: '대형택배',           parts: [['대형택배', 30000]] },
+        // 2026-05-13: 일반 인쇄물 묶음 소형택배 (5천원, 모든 수량 동일)
+        small_parcel:         { fee: 5000,   label_ko: '묶음 소형택배',     parts: [['묶음 소형택배', 5000]] }
     };
     window.SHIP_OPTS = SHIP_OPTS;
 
@@ -1627,8 +1651,9 @@
         });
         var dateWrap = document.getElementById('soScheduleDateWrap');
         var remWrap = document.getElementById('soRemovalWrap');
-        // self_pickup 또는 단순 배송(metro/regional_delivery·parcel)이면 날짜·시간 안 보임 (시공 옵션만 일정 필요)
-        var needsSchedule = !(method === 'self_pickup' || method === 'metro_delivery' || method === 'regional_delivery' || method === 'parcel_shipping' || method === 'bundle_shipping');
+        // self_pickup 또는 단순 배송/택배(metro/regional_delivery·parcel·large/small_parcel)이면 날짜·시간 안 보임
+        var noScheduleMethods = ['self_pickup', 'metro_delivery', 'regional_delivery', 'parcel_shipping', 'large_parcel', 'small_parcel', 'bundle_shipping'];
+        var needsSchedule = noScheduleMethods.indexOf(method) < 0;
         if (dateWrap) dateWrap.style.display = needsSchedule ? '' : 'none';
         // 철거 옵션 (수도권 설치+철거 시만)
         if (remWrap) remWrap.style.display = (method === 'metro_install_removal') ? '' : 'none';
@@ -2218,33 +2243,46 @@
         state.isDeliveryOnly = _soUsesDeliveryShipping(p);
         // 2026-05-13: 택배배송 가능 (배너·인스타판넬)
         state.isParcelShip = _soIsParcelShipProduct(p);
-        // 시공/배송 일정 섹션 (가벽·포토존·배송전용 허니콤 모두 표시)
+        // 2026-05-13: 포맥스/폼보드 (대형택배 3만)
+        state.isForexFoam = _soIsForexFoamProduct(p);
+        // 2026-05-13: 일반 인쇄물 (광고/상업/홈/굿즈/기타) — 5천원 묶음 소형택배
+        state.isGeneralPrint = _soIsGeneralPrintProduct(p) && !state.isForexFoam;
+        // 시공/배송 일정 섹션 — 가벽·포토존·배송전용허니콤·포맥스폼보드·일반인쇄물 모두 표시 (사실상 모든 상품)
         var schedSec = document.getElementById('soScheduleSection');
-        if (schedSec) schedSec.style.display = (state.isWall || state.isPhotozone || state.isDeliveryOnly) ? '' : 'none';
-        // 2026-05-13: 배송전용 허니콤이면 시공 옵션 숨기고 배송 옵션만 표시 + 묶음배송 버튼 표시
-        var deliveryShipKeys = ['metro_delivery', 'regional_delivery'];
-        var parcelShipKey = 'parcel_shipping';
+        var anyShipScope = state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint;
+        if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
+        // 2026-05-13: 카테고리별 ship 버튼 화이트리스트
+        var installKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
+        var hbDeliveryKeys = ['metro_delivery', 'regional_delivery'];
+        var allowed; // 노출할 ship 버튼 키 집합
+        if (state.isWall || state.isPhotozone) {
+            // 가벽/포토존 — 시공 옵션
+            allowed = ['self_pickup'].concat(installKeys);
+        } else if (state.isDeliveryOnly) {
+            // 가벽 외 허니콤 — 수도권/지방 배송 (+ 배너·인스타판넬이면 택배도)
+            allowed = ['self_pickup'].concat(hbDeliveryKeys);
+            if (state.isParcelShip) allowed.push('parcel_shipping');
+        } else if (state.isForexFoam) {
+            // 포맥스·폼보드 — 대형택배만
+            allowed = ['self_pickup', 'large_parcel'];
+        } else if (state.isGeneralPrint) {
+            // 일반 인쇄물 — 묶음 소형택배만
+            allowed = ['self_pickup', 'small_parcel'];
+        } else {
+            allowed = ['self_pickup'];
+        }
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             var k = b.dataset.ship;
-            if (state.isDeliveryOnly) {
-                // 가벽 외 허니콤: self_pickup + delivery 만 표시
-                if (k === 'self_pickup' || deliveryShipKeys.indexOf(k) >= 0) b.style.display = '';
-                else if (k === parcelShipKey) b.style.display = state.isParcelShip ? '' : 'none';
-                else b.style.display = 'none';
-            } else {
-                // 가벽/포토존: 기존 시공 옵션 표시, delivery/parcel 옵션 숨김
-                if (deliveryShipKeys.indexOf(k) >= 0 || k === parcelShipKey) b.style.display = 'none';
-                else b.style.display = '';
-            }
-            // active/opacity 초기화
+            b.style.display = (allowed.indexOf(k) >= 0) ? '' : 'none';
             b.classList.toggle('active', k === 'self_pickup');
             b.style.opacity = '1';
             b.style.pointerEvents = '';
         });
-        // 묶음배송 버튼 (배송전용 허니콤 전체)
+        // 묶음배송 버튼 — 가벽·포토존 제외 모두 표시
         var bundleBtn = document.getElementById('soBundleShipBtn');
         if (bundleBtn) {
-            bundleBtn.style.display = state.isDeliveryOnly ? '' : 'none';
+            var showBundle = state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint;
+            bundleBtn.style.display = showBundle ? '' : 'none';
             bundleBtn.style.background = '#f0fdf4';
             bundleBtn.style.color = '#15803d';
             bundleBtn.style.borderStyle = 'dashed';

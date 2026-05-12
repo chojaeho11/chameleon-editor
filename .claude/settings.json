@@ -138,7 +138,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cut-print v38: full/half pricing + delivery-only ship + bundle toggle\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\" -File -Name)",
       "PowerShell(head -30)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"ship v40: all honeycomb-except-wall = delivery-only + bundle\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"ship v40: all honeycomb-except-wall = delivery-only + bundle\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"ship v41: parcel 30k/2 for banner + insta panel\")"
     ],
     "additionalDirectories": [
       "\\tmp"
