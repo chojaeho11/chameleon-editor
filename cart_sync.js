@@ -131,11 +131,9 @@
     var _unified = [];
 
     function rebuildLocalFromUnified() {
-        // Domain stores only its own __source items in its native localStorage key.
-        var mine = _unified.filter(function (it) {
-            return it && (it.__source === SOURCE || !it.__source && SOURCE === 'main');
-        });
-        writeLocalRaw(mine);
+        // 2026-05-12: 도메인 통합 — 같은 origin 안에서는 모든 항목을 통째로 보존.
+        // 각 페이지의 렌더러가 알아서 필터링 (패브릭/일반)하므로 cart_sync 는 분리 안 함.
+        writeLocalRaw(_unified.slice());
         notifyRender();
     }
 
@@ -240,24 +238,18 @@
     }
 
     // ── localStorage interceptor ─────────────────────────
-    // Captures writes to the native cart key, replaces "my" items in unified,
-    // keeps other-source items untouched, then pushes.
+    // 2026-05-12: 도메인 통합 — localStorage 가 곧 unified cart. setItem 발생 시
+    // 통째로 _unified 갱신 후 서버 push. source 별 분리 로직 불필요 (각 항목의 __source 는
+    // 정보 태그로만 유지).
     var __origLocalSet = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, value) {
         if (key !== LOCAL_KEY) return __origLocalSet(key, value);
-        // Persist raw
         __origLocalSet(key, value);
-        // Update unified
         var mine = [];
         try { mine = JSON.parse(value || '[]') || []; } catch (e) {}
-        mine.forEach(tagItem);
-        var others = _unified.filter(function (it) {
-            return it && it.__source && it.__source !== SOURCE;
-        });
-        _unified = others.concat(mine);
+        mine.forEach(tagItem); // __cart_id 부여 (server merge 용), 기존 __source 는 보존
+        _unified = mine;
         schedulePush();
-        // Update cross-domain banner without recursing
-        try { renderCrossDomainBanner(); } catch (e) {}
     };
 
     // ── Cross-domain link rewriting ──────────────────────
