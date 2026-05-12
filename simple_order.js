@@ -1631,34 +1631,38 @@
             });
 
             var fullAddr = (zip ? '[' + zip + '] ' : '') + addr1 + ' ' + addr2;
+            // 로그인 사용자 정보 조회 (admin_note 에 기록)
+            var loggedInEmail = null;
+            try {
+                var sess = await sb.auth.getSession();
+                if (sess && sess.data && sess.data.session && sess.data.session.user) {
+                    loggedInEmail = sess.data.session.user.email;
+                }
+            } catch (e) {}
             var adminNote =
                 '[간편주문] 결제수단: ' + (payMethod === 'bank' ? '무통장입금' : '카드결제') +
-                '\n이메일: ' + (email || '없음') +
+                '\n이메일: ' + (email || loggedInEmail || '없음') +
                 (memo ? '\n배송메모: ' + memo : '');
 
+            // 2026-05-12: 패브릭 (_cpSubmitOrder) 와 동일 schema 사용 — orders 테이블 컬럼 일치
             var orderRow = {
                 order_date: new Date().toISOString(),
                 manager_name: name,
                 phone: phone,
                 address: fullAddr,
                 request_note: memo || '',
-                items: items,
+                status: payMethod === 'bank' ? '접수됨' : '임시작성',
+                payment_status: payMethod === 'bank' ? '입금대기' : '미결제',
+                payment_method: payMethod === 'bank' ? '무통장입금' : '카드',
                 total_amount: total,
-                payment_method: payMethod,
-                admin_note: adminNote,
-                status: payMethod === 'bank' ? '입금대기' : '결제대기'
+                discount_amount: 0,
+                items: items,
+                site_code: 'KR',
+                files: null,
+                admin_note: adminNote
             };
 
-            // user_id 가 있으면 같이 기록 (로그인 사용자)
-            try {
-                var sess = await sb.auth.getSession();
-                if (sess && sess.data && sess.data.session && sess.data.session.user) {
-                    orderRow.user_id = sess.data.session.user.id;
-                    orderRow.email = sess.data.session.user.email || email || null;
-                }
-            } catch (e) {}
-
-            var { data: insertedOrder, error: insertErr } = await sb.from('orders').insert(orderRow).select().single();
+            var { data: insertedOrder, error: insertErr } = await sb.from('orders').insert([orderRow]).select().single();
             if (insertErr) throw insertErr;
 
             // 무통장: 안내 메시지 + 카트 비우기
