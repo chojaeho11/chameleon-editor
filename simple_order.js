@@ -363,6 +363,25 @@
     .so-cart-drawer { width: 100%; }
 }
 
+/* 2026-05-13: 시공/배송 버튼형 옵션 */
+.so-ship-btn {
+    padding: 14px 10px; border: 2px solid #e7e5e4; border-radius: 10px;
+    background: #fff; color: #451a03; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; text-align: center; line-height: 1.4;
+    font-family: inherit;
+}
+.so-ship-btn:hover { background: #faf6ed; border-color: #d4b896; }
+.so-ship-btn.active {
+    background: #4338ca; border-color: #4338ca; color: #fff;
+    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.25);
+}
+.so-wall-info-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 50px;
+    background: #fff7e6; color: #b35900; font-size: 12px; font-weight: 700;
+    border: 1px solid #ffd18f; white-space: nowrap;
+}
+
 /* 2026-05-12: 빠른 결제 모달 (패브릭과 동일 스타일) */
 .so-co-overlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
@@ -567,6 +586,20 @@
           <div class="so-prod-meta">
             <div id="soName" class="so-prod-name">-</div>
             <div id="soDesc" class="so-prod-desc"></div>
+            <!-- 2026-05-13: 가벽 상품 전용 안내 (버튼 형태) — 일반 설명 대신 표시 -->
+            <div id="soWallGuide" style="display:none; margin-top:10px;">
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <span class="so-wall-info-btn">📐 ${tr('가로 1m 단위', '横 1m単位', 'Width per 1m')}</span>
+                <span class="so-wall-info-btn">📏 ${tr('세로 2 · 2.2 · 2.4 · 3m', '縦 2/2.2/2.4/3m', 'Height 2/2.2/2.4/3m')}</span>
+                <span class="so-wall-info-btn">🎨 ${tr('작업은 1/10 사이즈', 'デザイン1/10サイズ', '1/10 scale design')}</span>
+                <span class="so-wall-info-btn">📄 ${tr('파일은 PDF로', 'PDFファイルで', 'PDF file please')}</span>
+              </div>
+              <div style="font-size:12px; color:#451a03; margin-top:10px; line-height:1.6; background:#faf6ed; padding:10px 12px; border-radius:8px; border-left:3px solid #b35900;">
+                ${tr('허니콤 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2m / 2.2m / 2.4m / 3m 중 선택하실 수 있습니다.', 'ハニカム壁は横1m単位で製作されます。横は1m〜8m、縦は2/2.2/2.4/3mから選択。', 'Honeycomb walls are produced in 1m width units. Width 1m-8m, height 2/2.2/2.4/3m.')}<br><br>
+                <b>${tr('🎨 디자인 작업', 'デザイン', 'Design')}:</b> ${tr('실제 사이즈의 1/10로 작업해주세요. 예: 3m × 2.4m 가벽 → 30cm × 24cm 작업.', '実サイズの1/10で作業。例：3m×2.4m → 30cm×24cm。', 'Work at 1/10 of actual size. e.g., 3m × 2.4m wall → 30cm × 24cm.')}<br>
+                <b>${tr('📄 파일 형식', 'ファイル形式', 'Format')}:</b> ${tr('PDF 권장 (인쇄 품질 최상). PNG/JPG 도 가능.', 'PDF推奨。PNG/JPGも可。', 'PDF recommended. PNG/JPG also OK.')}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -599,13 +632,9 @@
           </div>
         </div>
 
-        <!-- 2026-05-13: 가벽 카테고리 전용 사이즈 입력 (가로 m 단위) + 자동 안내 -->
+        <!-- 2026-05-13: 가벽 카테고리 전용 사이즈 입력 (가로 m 단위). 안내는 좌측 #soWallGuide 로 이동 -->
         <div class="so-section" id="soWallSizeSection" style="display:none;">
           <div class="so-section-title">${tr('가벽 사이즈', '壁面サイズ', 'Wall size')}</div>
-          <div style="background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; padding:10px 12px; font-size:11px; color:#92400e; margin-bottom:10px; line-height:1.5;">
-            📐 ${tr('가로 1m 단위 / 세로 2 · 2.2 · 2.4 · 3m', '横 1m単位 / 縦 2 · 2.2 · 2.4 · 3m', 'Width per 1m / Height 2, 2.2, 2.4, 3m')}<br>
-            🎨 ${tr('작업은 1/10 사이즈로 부탁드립니다', 'デザインは1/10サイズで', 'Please work at 1/10 scale')}
-          </div>
           <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
             <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('가로', '横', 'Width')}</label>
             <select id="soWallWidth" class="so-input" onchange="window._soUpdateAddonQty(); window._soUpdatePrice();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
@@ -636,26 +665,28 @@
           <div id="soAddonList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
-        <!-- 2026-05-13: 시공/배송 일정 (가벽·포토존 카테고리만) -->
+        <!-- 2026-05-13: 시공/배송 일정 (가벽·포토존 카테고리만) — 버튼형 디자인 + 가격 자동 breakdown -->
         <div class="so-section" id="soScheduleSection" style="display:none;">
-          <div class="so-section-title">${tr('시공/배송 일정', '施工/配送日程', 'Installation/Delivery')}</div>
-          <div style="font-size:11px; color:#6b7280; margin-bottom:8px;">${tr('수도권 1일, 지방 2-3일 소요', '首都圏1日、地方2-3日', 'Metro 1d, regional 2-3d')}</div>
-          <!-- 배송 옵션 -->
-          <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
-            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="metro_install" onchange="window._soOnShipChange()"> 🚚 ${tr('수도권 설치 (10만원)', '首都圏設置 (10万)', 'Metro install (₩100k)')}</label>
-            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="metro_install_removal" onchange="window._soOnShipChange()"> 🔧 ${tr('수도권 설치+철거 (20만원)', '首都圏設置+撤去 (20万)', 'Metro install+removal (₩200k)')}</label>
-            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="regional_truck" onchange="window._soOnShipChange()"> 🛻 ${tr('지방 용차배송 (70만원)', '地方トラック配送 (70万)', 'Regional truck (₩700k)')}</label>
-            <label class="so-co-pay-opt" style="font-size:12px;"><input type="radio" name="soShip" value="self_pickup" onchange="window._soOnShipChange()" checked> 🏪 ${tr('직접 수령', '直接受取', 'Self pickup')}</label>
+          <div class="so-section-title">${tr('시공/배송 옵션', '施工/配送オプション', 'Install/Delivery')}</div>
+          <!-- 배송 옵션 (버튼형 — 가격 라벨 없이 깔끔하게) -->
+          <div id="soShipBtnGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <button type="button" class="so-ship-btn" data-ship="self_pickup" onclick="window._soPickShip('self_pickup')">🏪 ${tr('직접 수령', '直接受取', 'Self pickup')}</button>
+            <button type="button" class="so-ship-btn" data-ship="metro_install" onclick="window._soPickShip('metro_install')">🚚 ${tr('수도권 설치', '首都圏設置', 'Metro install')}</button>
+            <button type="button" class="so-ship-btn" data-ship="metro_weekend" onclick="window._soPickShip('metro_weekend')">🌙 ${tr('수도권 야간/주말 설치', '首都圏夜間/週末', 'Metro night/wkd')}</button>
+            <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">🔧 ${tr('수도권 설치+철거', '首都圏設置+撤去', 'Metro install+remove')}</button>
+            <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">🛻 ${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
+            <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">🚛 ${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
           </div>
           <!-- 배송일 / 시공 시간 -->
           <div id="soScheduleDateWrap" style="display:none;">
+            <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">📅 ${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
               <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 희망일', '配送希望日', 'Delivery date')}</label>
-              <input type="date" id="soScheduleDate" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+              <input type="date" id="soScheduleDate" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
             </div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
-              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 시간대', '配送時間帯', 'Time')}</label>
-              <select id="soScheduleTime" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 시간', '配送時間', 'Time')}</label>
+              <select id="soScheduleTime" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
                 <option value="">${tr('시간 선택', '時間選択', 'Select')}</option>
                 <option value="am">🌅 ${tr('오전 (08-12)', '午前 (08-12)', 'AM (08-12)')}</option>
                 <option value="pm">☀️ ${tr('오후 (12-18)', '午後 (12-18)', 'PM (12-18)')}</option>
@@ -663,22 +694,24 @@
                 <option value="any">📅 ${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
               </select>
             </div>
-          </div>
-          <!-- 철거일 / 철거 시간 (수도권 설치+철거 옵션 선택 시) -->
-          <div id="soRemovalWrap" style="display:none; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; padding:10px; margin-top:8px;">
-            <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:6px;">🔧 ${tr('철거 일정 (야간만 가능)', '撤去日程 (夜間のみ)', 'Removal (night only)')}</div>
-            <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 희망일', '撤去希望日', 'Date')}</label>
-              <input type="date" id="soRemovalDate" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+            <!-- 철거 일정 (수도권 설치+철거 선택 시만) -->
+            <div id="soRemovalWrap" style="display:none; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; padding:10px; margin-bottom:10px;">
+              <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:6px;">🔧 ${tr('철거 일정 (야간만 가능)', '撤去日程 (夜間のみ)', 'Removal (night only)')}</div>
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 희망일', '撤去希望日', 'Date')}</label>
+                <input type="date" id="soRemovalDate" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 시간', '撤去時間', 'Time')}</label>
+                <select id="soRemovalTime" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+                  <option value="">${tr('시간 선택', '時間選択', 'Select')}</option>
+                  <option value="night">🌙 ${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
+                  <option value="any">📅 ${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
+                </select>
+              </div>
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 시간', '撤去時間', 'Time')}</label>
-              <select id="soRemovalTime" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
-                <option value="">${tr('시간 선택', '時間選択', 'Select')}</option>
-                <option value="night">🌙 ${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
-                <option value="any">📅 ${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
-              </select>
-            </div>
+            <!-- 가격 breakdown 자동 표시 -->
+            <div id="soShipBreakdown" style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:10px 12px; font-size:12px; color:#3730a3; line-height:1.7;"></div>
           </div>
         </div>
 
@@ -1186,43 +1219,114 @@
         return /포토존|글씨|photo\s*zone|letter\s*sign/i.test(name);
     }
 
-    // 2026-05-13: 시공/배송 라디오 변경 핸들러
-    window._soOnShipChange = function () {
-        var checked = document.querySelector('input[name="soShip"]:checked');
-        var v = checked ? checked.value : 'self_pickup';
-        state.shipMethod = v;
+    // 2026-05-13: 배송 옵션별 가격 + breakdown 정보
+    var SHIP_OPTS = {
+        self_pickup:          { fee: 0,      label_ko: '직접 수령',           parts: [] },
+        metro_install:        { fee: 100000, label_ko: '수도권 설치',         parts: [['수도권 설치', 100000]] },
+        metro_weekend:        { fee: 200000, label_ko: '수도권 야간/주말 설치', parts: [['수도권 야간/주말 설치', 200000]] },
+        metro_install_removal:{ fee: 300000, label_ko: '수도권 설치+철거',     parts: [['수도권 설치', 100000], ['수도권 철거', 200000]] },
+        regional_truck:       { fee: 200000, label_ko: '지방 용차배송',       parts: [['지방 용차배송', 200000]] },
+        regional_install:     { fee: 700000, label_ko: '지방 설치배송',       parts: [['지방 설치배송', 700000]] }
+    };
+
+    // 2026-05-13: 영업일 기준 N일 후 (주말 제외) — YYYY-MM-DD
+    function _soAddBusinessDays(startDate, days) {
+        var d = new Date(startDate);
+        var added = 0;
+        while (added < days) {
+            d.setDate(d.getDate() + 1);
+            var dow = d.getDay();
+            if (dow !== 0 && dow !== 6) added++;
+        }
+        // 로컬 타임존 YYYY-MM-DD
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + dd;
+    }
+
+    // 2026-05-13: 시공/배송 버튼 클릭
+    window._soPickShip = function (method) {
+        state.shipMethod = method;
+        // 버튼 active 상태 토글
+        document.querySelectorAll('.so-ship-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.ship === method);
+        });
         var dateWrap = document.getElementById('soScheduleDateWrap');
         var remWrap = document.getElementById('soRemovalWrap');
         // self_pickup 이면 날짜·시간 안 보임
-        if (dateWrap) dateWrap.style.display = (v === 'self_pickup') ? 'none' : '';
-        // 철거 옵션 (수도권 설치+철거 선택 시만)
-        if (remWrap) remWrap.style.display = (v === 'metro_install_removal') ? '' : 'none';
-        // 배송 가격 추가 (실제 합계에 반영)
+        if (dateWrap) dateWrap.style.display = (method === 'self_pickup') ? 'none' : '';
+        // 철거 옵션 (수도권 설치+철거 시만)
+        if (remWrap) remWrap.style.display = (method === 'metro_install_removal') ? '' : 'none';
+        // 배송 희망일 최소값 = 오늘 + 영업일 3일
+        var sd = document.getElementById('soScheduleDate');
+        if (sd) {
+            var minD = _soAddBusinessDays(new Date(), 3);
+            sd.min = minD;
+            if (!sd.value || sd.value < minD) sd.value = minD;
+        }
+        var rd = document.getElementById('soRemovalDate');
+        if (rd) {
+            var minR = _soAddBusinessDays(new Date(), 3);
+            rd.min = minR;
+            if (!rd.value || rd.value < minR) rd.value = minR;
+        }
         recalcWithShipping();
+        _soUpdateShipBreakdown();
+    };
+
+    // 2026-05-13: 가격 breakdown 박스 갱신
+    window._soUpdateShipBreakdown = function () {
+        var box = document.getElementById('soShipBreakdown');
+        if (!box) return;
+        var opt = SHIP_OPTS[state.shipMethod];
+        if (!opt || !opt.parts || !opt.parts.length) { box.innerHTML = ''; return; }
+        var sd = document.getElementById('soScheduleDate');
+        var st = document.getElementById('soScheduleTime');
+        var rd = document.getElementById('soRemovalDate');
+        var rt = document.getElementById('soRemovalTime');
+        var lines = [];
+        lines.push('<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📋 ' + tr('비용 안내', '料金案内', 'Cost') + '</div>');
+        opt.parts.forEach(function (p) {
+            lines.push('<div style="display:flex; justify-content:space-between;"><span>· ' + p[0] + '</span><span style="font-weight:700;">' + fmtPrice(p[1]) + '</span></div>');
+        });
+        if (opt.parts.length > 1) {
+            lines.push('<div style="display:flex; justify-content:space-between; border-top:1px solid #c7d2fe; padding-top:4px; margin-top:4px;"><span style="font-weight:800;">' + tr('합계', '合計', 'Total') + '</span><span style="font-weight:900; color:#dc2626;">' + fmtPrice(opt.fee) + '</span></div>');
+        }
+        if (sd && sd.value) {
+            var timeLabel = { am:'오전', pm:'오후', night:'야간', any:'시간상관없음', '':'시간 미지정' }[st ? st.value : ''] || '';
+            lines.push('<div style="margin-top:6px; font-size:11px;">🚚 ' + tr('배송', '配送', 'Ship') + ': ' + sd.value + (timeLabel ? ' / ' + timeLabel : '') + '</div>');
+        }
+        if (state.shipMethod === 'metro_install_removal' && rd && rd.value) {
+            var rTimeLabel = { night:'야간', any:'시간상관없음', '':'시간 미지정' }[rt ? rt.value : ''] || '';
+            lines.push('<div style="font-size:11px;">🔧 ' + tr('철거', '撤去', 'Removal') + ': ' + rd.value + (rTimeLabel ? ' / ' + rTimeLabel : '') + '</div>');
+        }
+        box.innerHTML = lines.join('');
     };
 
     function recalcWithShipping() {
-        // shipping fee 계산
-        var shipFee = 0;
-        switch (state.shipMethod) {
-            case 'metro_install': shipFee = 100000; break;
-            case 'metro_install_removal': shipFee = 200000; break;
-            case 'regional_truck': shipFee = 700000; break;
-            default: shipFee = 0;
-        }
-        state.shipFee = shipFee;
+        var opt = SHIP_OPTS[state.shipMethod] || SHIP_OPTS.self_pickup;
+        state.shipFee = opt.fee || 0;
         recalc();
-        // 합계에 배송비 추가 (recalc 의 final 에 더하기)
-        if (shipFee > 0) {
+        // 합계에 배송비 추가
+        if (state.shipFee > 0) {
             try {
                 var totalEl = document.getElementById('soTotal');
                 if (totalEl) {
                     var currentTotal = parseInt(totalEl.textContent.replace(/[^\d]/g, '')) || 0;
-                    totalEl.textContent = fmtPrice(currentTotal + shipFee) + ' (' + tr('배송포함', '配送込', 'incl. ship') + ')';
+                    totalEl.textContent = fmtPrice(currentTotal + state.shipFee) + ' (' + tr('배송포함', '配送込', 'incl. ship') + ')';
                 }
             } catch (e) {}
         }
     }
+
+    // 2026-05-13: 가벽 전용 기본 옵션 (admin_addons 데이터 없어도 강제 표시)
+    var WALL_DEFAULT_ADDONS = [
+        { code: '__wall_light',   name: '조명 추가',     name_jp: '照明追加',   name_us: 'Lighting',      price: 50000, isLight: true,
+          desc: '가로 1m당 1개 자동 추가 (개당 5만원)' },
+        { code: '__wall_support', name: '보조 받침대',   name_jp: '補助スタンド', name_us: 'Support stand', price: 80000,
+          desc: '가벽 안정성 강화' }
+    ];
 
     // 2026-05-13: 상품의 admin_addons 옵션을 우측 패널에 체크박스로 렌더
     async function _soPopulateAddons(p) {
@@ -1232,48 +1336,51 @@
         list.innerHTML = '';
         sec.style.display = 'none';
 
-        if (!p || !p.addons) return;
-        // p.addons 가 array 또는 csv string 모두 지원
-        var codes = Array.isArray(p.addons) ? p.addons : String(p.addons).split(',');
-        codes = codes.map(function (c) { return String(c || '').trim(); }).filter(Boolean);
-        if (!codes.length) return;
-
-        // ADDON_DB 가 아직 로드 안 됐으면 한 번 더 시도
-        if (!window.ADDON_DB || !Object.keys(window.ADDON_DB).length) {
-            // 그냥 표시 안 함 (다음 모달 열 때 채워짐)
-            console.warn('[simple_order] ADDON_DB not loaded yet');
-            return;
-        }
-
         var lang = window.__CD_LANG || (window.SITE_CONFIG && window.SITE_CONFIG.LANG) || 'ko';
-        var html = '';
-        var anyVisible = false;
-        codes.forEach(function (code) {
-            var a = window.ADDON_DB[code];
-            if (!a) return;
-            anyVisible = true;
-            var name = a.display_name || a.name || code;
+
+        // 가벽 상품: 전용 옵션 강제 표시 (조명·보조받침대). admin_addons 비어있어도 OK.
+        var renderList = [];
+        if (state.isWall) {
+            WALL_DEFAULT_ADDONS.forEach(function (a) {
+                // window.ADDON_DB 에도 등록 → 가격 계산 통합
+                window.ADDON_DB = window.ADDON_DB || {};
+                window.ADDON_DB[a.code] = a;
+                renderList.push(a);
+            });
+        }
+        // 추가로 admin_products.addons 에 정의된 일반 addon 도 표시
+        if (p && p.addons) {
+            var codes = Array.isArray(p.addons) ? p.addons : String(p.addons).split(',');
+            codes.map(function (c) { return String(c || '').trim(); }).filter(Boolean).forEach(function (code) {
+                var a = (window.ADDON_DB || {})[code];
+                if (a && renderList.indexOf(a) < 0) renderList.push(a);
+            });
+        }
+        if (!renderList.length) return;
+
+        var html = renderList.map(function (a) {
+            var name = a.name || a.code;
             if (lang === 'ja' && a.name_jp) name = a.name_jp;
             else if (lang === 'en' && a.name_us) name = a.name_us;
             var price = a.price || 0;
             var safe = String(name).replace(/[<>"'&]/g, function (c) {
                 return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
             });
-            // 조명 (가로 m당 1개) 같은 경우 자동 수량 표시
-            var isLight = /조명|light|lamp/i.test(name);
-            var autoQtyNote = (state.isWall && isLight)
-                ? ' <span style="font-size:10px; color:#92400e; font-weight:700;">(' + tr('가로 1m당 1개', '横1mあたり1個', 'per 1m width') + ')</span>'
-                : '';
-            html += '<label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #e7e5e4; border-radius:8px; cursor:pointer; font-size:13px; background:#fff;">' +
-                '<input type="checkbox" data-addon-code="' + String(code).replace(/"/g,'&quot;') + '" data-addon-light="' + (isLight && state.isWall ? '1' : '0') + '" onchange="window._soToggleAddon(this)" style="margin:0;">' +
-                '<span style="flex:1; font-weight:600; color:#451a03;">' + safe + autoQtyNote + '</span>' +
-                '<span style="font-weight:800; color:#dc2626; font-size:12px;">+' + fmtPrice(price) + '</span>' +
+            var descSafe = a.desc ? String(a.desc).replace(/[<>"'&]/g, function (c) {
+                return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
+            }) : '';
+            var isLight = a.isLight === true || /조명|light|lamp/i.test(name);
+            return '<label style="display:flex; align-items:center; gap:8px; padding:10px 12px; border:2px solid #e7e5e4; border-radius:10px; cursor:pointer; font-size:13px; background:#fff; transition:all 0.15s;">' +
+                '<input type="checkbox" data-addon-code="' + String(a.code).replace(/"/g,'&quot;') + '" data-addon-light="' + (isLight && state.isWall ? '1' : '0') + '" onchange="window._soToggleAddon(this)" style="margin:0; width:16px; height:16px;">' +
+                '<div style="flex:1;">' +
+                  '<div style="font-weight:700; color:#451a03;">' + safe + '</div>' +
+                  (descSafe ? '<div style="font-size:11px; color:#6b7280; margin-top:2px;">' + descSafe + '</div>' : '') +
+                '</div>' +
+                '<span style="font-weight:800; color:#dc2626; font-size:13px;">+' + fmtPrice(price) + '</span>' +
                 '</label>';
-        });
-        if (anyVisible) {
-            list.innerHTML = html;
-            sec.style.display = '';
-        }
+        }).join('');
+        list.innerHTML = html;
+        sec.style.display = '';
     }
 
     // 2026-05-13: 가벽 가로 변경 시 조명 옵션 수량 자동 재계산
@@ -1461,6 +1568,12 @@
 
         document.getElementById('soName').textContent = pickName(p);
         document.getElementById('soDesc').textContent = pickDescPlain(p, 150);
+        // 2026-05-13: 가벽이면 일반 설명 숨기고 가벽 전용 안내 카드 표시
+        var descEl = document.getElementById('soDesc');
+        var wallGuide = document.getElementById('soWallGuide');
+        var isWallNow = _soIsWallProduct(p);
+        if (descEl) descEl.style.display = isWallNow ? 'none' : '';
+        if (wallGuide) wallGuide.style.display = isWallNow ? '' : 'none';
         const img = document.getElementById('soImg');
         const imgUrl = pickImg(p);
         if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
@@ -1509,11 +1622,13 @@
         // 가벽 사이즈 폼 초기값 동기화
         var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = '3';
         var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = '2.4';
-        // 배송 라디오 초기화 (self_pickup)
-        var radios = document.querySelectorAll('input[name="soShip"]');
-        radios.forEach(function (r) { r.checked = (r.value === 'self_pickup'); });
+        // 2026-05-13: 배송 버튼 초기화 (self_pickup active)
+        document.querySelectorAll('.so-ship-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.ship === 'self_pickup');
+        });
         var dateWrap = document.getElementById('soScheduleDateWrap'); if (dateWrap) dateWrap.style.display = 'none';
         var remWrap = document.getElementById('soRemovalWrap'); if (remWrap) remWrap.style.display = 'none';
+        var bdBox = document.getElementById('soShipBreakdown'); if (bdBox) bdBox.innerHTML = '';
 
         // 상품 추가 옵션 로드 (admin_addons 매칭)
         await _soPopulateAddons(p);
@@ -2133,8 +2248,10 @@
             var totalShippingFee = 0;
             var shipLabel = {
                 metro_install: '수도권 설치 (10만원)',
-                metro_install_removal: '수도권 설치+철거 (20만원)',
-                regional_truck: '지방 용차배송 (70만원)',
+                metro_weekend: '수도권 야간/주말 설치 (20만원)',
+                metro_install_removal: '수도권 설치+철거 (10+20=30만원)',
+                regional_truck: '지방 용차배송 (20만원)',
+                regional_install: '지방 설치배송 (70만원)',
                 self_pickup: '직접 수령'
             };
             cart.forEach(function (it, idx) {
