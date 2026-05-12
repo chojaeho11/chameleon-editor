@@ -39,7 +39,7 @@
         { min: 501, max: Infinity, pct: 50 },
     ];
 
-    let state = { product: null, file: null, thumbDataUrl: null, qty: 1 };
+    let state = { product: null, file: null, fileBack: null, thumbDataUrl: null, thumbDataUrlBack: null, qty: 1 };
 
     let _sb = null;
     function getSb() {
@@ -1065,8 +1065,8 @@
 
         // 2) 프리뷰 영역 — 파일 비율에 맞춰 프레임 크기 결정
         const aspectRatio = w_mm / h_mm;
-        const maxW = 500;
-        const maxH = 300;
+        const maxW = 420;
+        const maxH = 220;
         let frameW = maxW;
         let frameH = frameW / aspectRatio;
         if (frameH > maxH) {
@@ -1077,7 +1077,7 @@
         frameH = Math.round(frameH);
 
         const thumbHtml = state.thumbDataUrl
-            ? `<img src="${state.thumbDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+            ? `<img src="${state.thumbDataUrl}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;background:#fff;" />`
             : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:48px;color:#dc2626;">📄</div>`;
 
         const sizeMB = (state.file.size / 1024 / 1024).toFixed(2);
@@ -1593,7 +1593,7 @@
     };
 
     // 2026-05-13: 뒷면 파일 변경 핸들러 — 미리보기 포함
-    window._soOnBackFileChange = function (files) {
+    window._soOnBackFileChange = async function (files) {
         if (!files || !files.length) return;
         var f = files[0];
         var name = (f.name || '').toLowerCase();
@@ -1609,6 +1609,21 @@
             return;
         }
         state.fileBack = f;
+        state.thumbDataUrlBack = null;
+        // 일단 빠르게 placeholder 표시
+        renderBackUploadDone();
+        // PDF면 PDF.js 로 첫 페이지 → dataURL (앞면과 동일한 처리)
+        try {
+            if (isPdf) {
+                var r = await pdfFirstPageToDataUrl(f);
+                state.thumbDataUrlBack = r.dataUrl;
+            } else {
+                var r2 = await imageDataUrlWithDims(f);
+                state.thumbDataUrlBack = r2.dataUrl;
+            }
+        } catch (e) {
+            console.warn('[simple_order] back thumb 생성 실패:', e);
+        }
         renderBackUploadDone();
     };
 
@@ -1621,34 +1636,32 @@
         var safe = (typeof escapeHtml === 'function') ? escapeHtml(f.name) : String(f.name).replace(/[<>"'&]/g, function(c){
             return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
         });
-        var thumbHtml = '<div class="so-back-thumb" style="margin-bottom:8px; min-height:80px; display:flex; align-items:center; justify-content:center;">';
-        if (f.type === 'application/pdf') {
-            thumbHtml += '<div style="font-size:42px; color:#dc2626;">📄</div>';
+        // 썸네일 — dataUrl 있으면 이미지, 없으면 (변환 중) 아이콘
+        var thumbInner;
+        if (state.thumbDataUrlBack) {
+            thumbInner = '<img src="' + state.thumbDataUrlBack + '" style="max-width:100%; max-height:100%; object-fit:contain; display:block; background:#fff;" />';
+        } else if (f.type === 'application/pdf') {
+            thumbInner = '<div style="font-size:36px; color:#dc2626;">📄</div><div style="font-size:11px; color:#6b7280; margin-top:4px;">변환 중...</div>';
         } else {
-            thumbHtml += '<div style="font-size:42px; color:#9ca3af;">🖼️</div>';
+            thumbInner = '<div style="font-size:36px; color:#9ca3af;">🖼️</div>';
         }
-        thumbHtml += '</div>';
+        var thumbHtml =
+            '<div class="so-back-thumb" style="' +
+              'width:280px; max-width:100%; height:200px; ' +
+              'margin:0 auto 10px; ' +
+              'background:#fff; border:1.5px solid #7c3aed; border-radius:8px; ' +
+              'display:flex; align-items:center; justify-content:center; ' +
+              'overflow:hidden; padding:8px; box-sizing:border-box;">' +
+              thumbInner +
+            '</div>';
         zone.innerHTML =
             '<input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soOnBackFileChange(this.files)" style="display:none" />' +
             thumbHtml +
-            '<div style="font-weight:700; color:#451a03; font-size:13px;">✅ ' + safe + '</div>' +
-            '<div style="font-size:11px; color:#6b7280; margin-top:2px;">' + sizeMB + ' MB</div>' +
+            '<div style="font-weight:700; color:#451a03; font-size:13px; text-align:center;">✅ ' + safe + '</div>' +
+            '<div style="font-size:11px; color:#6b7280; margin-top:2px; text-align:center;">' + sizeMB + ' MB</div>' +
             '<button type="button" onclick="event.stopPropagation();document.getElementById(\'soBackFile\').click()" ' +
-              'style="margin-top:8px; padding:5px 12px; border:1px solid #d1d5db; background:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-family:inherit;">변경</button>';
+              'style="display:block; margin:8px auto 0; padding:5px 12px; border:1px solid #d1d5db; background:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-family:inherit;">변경</button>';
         zone.onclick = null;
-        // 이미지면 미리보기 표시
-        if (f.type !== 'application/pdf') {
-            try {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    var thumb = zone.querySelector('.so-back-thumb');
-                    if (thumb) {
-                        thumb.innerHTML = '<img src="' + e.target.result + '" style="max-width:200px; max-height:160px; object-fit:contain; display:block;" />';
-                    }
-                };
-                reader.readAsDataURL(f);
-            } catch (e) {}
-        }
         wireUploadEvents();
         updateButtons();
     }
@@ -1801,7 +1814,7 @@
         injectStyles();
         injectModal();
         // 2026-05-13: 자체 nav 제거 — 메인의 #topCatMenu 가 z-index 60000 으로 표시됨
-        state = { product: null, file: null, thumbDataUrl: null, qty: 1 };
+        state = { product: null, file: null, fileBack: null, thumbDataUrl: null, thumbDataUrlBack: null, qty: 1 };
 
         let p = productData;
         if (!p && window.PRODUCT_DB && window.PRODUCT_DB[productCode]) p = window.PRODUCT_DB[productCode];
