@@ -2269,8 +2269,14 @@
         if (!state.addonQuantities) state.addonQuantities = {};
         if (inp.checked) {
             state.selectedAddons[code] = code;
-            // 조명이면 가로(m) 수량, 아니면 1개
-            state.addonQuantities[code] = isLight ? (state.wallWidth || 1) : 1;
+            // 조명이면 가로(m), 아크릴 굿즈면 제품 수량과 동일, 그 외는 1개
+            if (isLight) {
+                state.addonQuantities[code] = state.wallWidth || 1;
+            } else if (state.isAcrylicGoods) {
+                state.addonQuantities[code] = state.qty || 1;
+            } else {
+                state.addonQuantities[code] = 1;
+            }
         } else {
             delete state.selectedAddons[code];
             delete state.addonQuantities[code];
@@ -2278,12 +2284,23 @@
         recalc();
     };
 
+    // 2026-05-14: 아크릴 굿즈 — 제품 수량 변경 시 체크된 모든 부자재 수량을 제품 수량과 동일하게 동기화
+    function _soSyncAcrylicAddonQty() {
+        if (!state.isAcrylicGoods) return;
+        if (!state.selectedAddons || !state.addonQuantities) return;
+        var newQty = state.qty || 1;
+        Object.keys(state.selectedAddons).forEach(function (code) {
+            state.addonQuantities[code] = newQty;
+        });
+    }
+
     window._soQtyChg = function(delta) {
         const input = document.getElementById('soQty');
         const cur = parseInt(input.value) || 1;
         const next = Math.max(1, Math.min(9999, cur + delta));
         input.value = next;
         state.qty = next;
+        _soSyncAcrylicAddonQty();
         recalc();
     };
 
@@ -2292,6 +2309,7 @@
         const v = Math.max(1, Math.min(9999, parseInt(input.value) || 1));
         if (v !== parseInt(input.value)) input.value = v;
         state.qty = v;
+        _soSyncAcrylicAddonQty();
         recalc();
     };
 
