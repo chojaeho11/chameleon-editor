@@ -124,7 +124,8 @@ button, input, textarea, select { font-family: inherit; }
 }
 .hero-section::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(180deg, rgba(12,10,9,0.35) 0%, rgba(12,10,9,0.6) 100%);
+    /* 2026-05-14: 어두운 오버레이 — 영상 위 글씨 가독성 + cotton_print 와 동일한 톤 */
+    background: linear-gradient(180deg, rgba(12,10,9,0.55) 0%, rgba(12,10,9,0.78) 100%);
     z-index: 1;
 }
 .hero-section > div, .hero-section > h1, .hero-section > p {
@@ -6708,5 +6709,60 @@ footer, .site-footer { padding-top: 28px !important; }
 }
 #startTplSearch:focus { border-color: var(--dr-purple-deep) !important; }
 
+/* ─────────────────────────────────────────────────────────────────────
+   2026-05-14: 메인 hero — cotton_print 스타일 (CHAMELEON 흰색 + PRINTING 황금)
+   line 6108 의 보라색 그라데이션 override
+   ───────────────────────────────────────────────────────────────────── */
+.hero-section .hero-title {
+    font-family: 'Anton', 'Black Han Sans', 'Noto Sans KR', sans-serif !important;
+}
+.hero-section .hero-title span {
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+    color: #fff !important;
+    font-family: 'Anton', 'Black Han Sans', 'Noto Sans KR', sans-serif !important;
+    letter-spacing: 4px !important;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.5) !important;
+    filter: none !important;
+    font-size: 96px !important;
+    line-height: 1 !important;
+}
+.hero-section .hero-title span b.ht-prn {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde047 30%, #facc15 60%, #f59e0b 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    padding-left: 14px;
+    font-weight: 900;
+    font-family: inherit !important;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
+}
+@media (max-width: 768px) {
+    .hero-section .hero-title span { font-size: 48px !important; letter-spacing: 2px !important; }
+    .hero-section .hero-title span b.ht-prn { padding-left: 8px; }
+}
 
+/* 2026-05-14: 메인 3 바로가기 버튼 — 간격 확대 + 색감 차분하게 */
+#advShortcutBtns .adv-ext-grid {
+    gap: 14px !important;
+    max-width: 980px;
+    margin: 0 auto;
+}
+#advShortcutBtns .adv-ext-btn {
+    font-size: 15px !important;
+    padding: 24px 6px !important;
+    letter-spacing: 0.5px;
+}
+/* 매니저 연결 — 무지개 감속 (2.2s → 4s) + 글로우 줄임 */
+#advShortcutBtns .adv-ext-btn.adv-ext-btn-pulse {
+    animation: mgrConnGradient 4s linear infinite, mgrConnPulse 2.2s ease-in-out infinite !important;
+}
+/* 제품검색 — 무지개 더 부드럽게 (5s → 7s) */
+#advShortcutBtns .adv-ext-btn.adv-ext-btn-rainbow {
+    animation: rainbowFlow 7s linear infinite !important;
+}
+@media (max-width: 768px) {
+    #advShortcutBtns .adv-ext-grid { gap: 8px !important; }
+    #advShortcutBtns .adv-ext-btn { font-size: 12px !important; padding: 18px 2px !important; }
+}
 
