@@ -839,8 +839,8 @@ if ('caches' in window) {
             <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
                 <div style="font-size:32px; line-height:1;">💬</div>
                 <div style="flex:1;">
-                    <div style="font-size:15px; font-weight:800; color:#78350f; margin-bottom:4px;">매니저 견적 빠른 주문</div>
-                    <div style="font-size:12px; color:#92400e; line-height:1.5;">담당 매니저와 통화·상담한 견적 금액을 입력하고 바로 결제하세요.</div>
+                    <div id="mgrQuoteTitle" style="font-size:15px; font-weight:800; color:#78350f; margin-bottom:4px;">매니저 견적 빠른 주문</div>
+                    <div id="mgrQuoteDesc" style="font-size:12px; color:#92400e; line-height:1.5;">담당 매니저와 통화·상담한 견적 금액을 입력하고 바로 결제하세요.</div>
                 </div>
             </div>
             <div style="display:flex; gap:10px; align-items:center;">
@@ -848,13 +848,43 @@ if ('caches' in window) {
                     <input type="text" id="mgrQuoteAmount" placeholder="견적 금액 (원)" inputmode="numeric"
                         oninput="window._mgrQuoteFormat(this)"
                         style="width:100%; padding:14px 16px 14px 16px; padding-right:40px; border:2px solid #fbbf24; border-radius:10px; font-size:16px; font-weight:700; color:#451a03; background:#fff; box-sizing:border-box; font-family:inherit;">
-                    <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:13px; color:#92400e; font-weight:800;">원</span>
+                    <span id="mgrQuoteUnit" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:13px; color:#92400e; font-weight:800;">원</span>
                 </div>
-                <button type="button" onclick="window._mgrQuoteOrder()" style="padding:14px 28px; background:linear-gradient(135deg, #b45309, #78350f); color:#fde047; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 4px 12px rgba(120,53,15,0.3); transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">⚡ 주문하기</button>
+                <button id="mgrQuoteBtn" type="button" onclick="window._mgrQuoteOrder()" style="padding:14px 28px; background:linear-gradient(135deg, #b45309, #78350f); color:#fde047; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 4px 12px rgba(120,53,15,0.3); transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">⚡ 주문하기</button>
             </div>
-            <div style="font-size:11px; color:#a16207; margin-top:8px; text-align:center;">최소 1,000원부터 • 입력 즉시 결제창이 열립니다</div>
+            <div id="mgrQuoteHint" style="font-size:11px; color:#a16207; margin-top:8px; text-align:center;">최소 1,000원부터 • 입력 즉시 결제창이 열립니다</div>
         </div>
     </div>
+    <script>
+    // 2026-05-13: 매니저 견적 카드 다국어 (홈페이지 hero 안에 인라인)
+    (function(){
+        function _mqLang(){
+            var u = new URLSearchParams(location.search);
+            return u.get('lang') ||
+                (location.hostname.indexOf('cafe0101.com') >= 0 ? 'ja' :
+                 (location.hostname.indexOf('cafe3355.com') >= 0 || location.hostname.indexOf('chameleon.design') >= 0) ? 'en' :
+                 (window.CURRENT_LANG || 'kr'));
+        }
+        var L = _mqLang();
+        var T = {
+            kr: { title:'매니저 견적 빠른 주문', desc:'담당 매니저와 통화·상담한 견적 금액을 입력하고 바로 결제하세요.', ph:'견적 금액 (원)', unit:'원', btn:'⚡ 주문하기', hint:'최소 1,000원부터 • 입력 즉시 결제창이 열립니다' },
+            ja: { title:'マネージャー見積もり クイック注文', desc:'担当マネージャーと相談した見積金額を入力して、すぐにご決済ください。', ph:'見積金額 (円)', unit:'円', btn:'⚡ 注文する', hint:'最低100円から • 入力後すぐに決済画面が開きます' },
+            en: { title:'Manager Quote Quick Order', desc:'Enter the quote amount discussed with your manager and pay immediately.', ph:'Quote amount ($)', unit:'$', btn:'⚡ Order', hint:'Minimum $1 • Checkout opens immediately' },
+            es: { title:'Pedido Rápido con Cotización', desc:'Ingrese el monto acordado con su gerente y pague inmediatamente.', ph:'Monto (€)', unit:'€', btn:'⚡ Pedir', hint:'Mínimo €1 • Pago inmediato' },
+            de: { title:'Manager-Angebot Schnellbestellung', desc:'Geben Sie den mit Ihrem Manager besprochenen Betrag ein und bezahlen Sie sofort.', ph:'Betrag (€)', unit:'€', btn:'⚡ Bestellen', hint:'Mindestens €1 • Sofortige Bezahlung' },
+            fr: { title:'Commande rapide avec devis', desc:'Entrez le montant convenu avec votre responsable et payez immédiatement.', ph:'Montant (€)', unit:'€', btn:'⚡ Commander', hint:'Minimum €1 • Paiement immédiat' },
+            zh: { title:'经理报价快速下单', desc:'输入与负责经理协商的报价金额，立即付款。', ph:'报价金额 (元)', unit:'元', btn:'⚡ 下单', hint:'最低5元起 • 立即开启付款' }
+        };
+        var t = T[L] || T.kr;
+        function $(id){ return document.getElementById(id); }
+        if ($('mgrQuoteTitle')) $('mgrQuoteTitle').textContent = t.title;
+        if ($('mgrQuoteDesc'))  $('mgrQuoteDesc').textContent  = t.desc;
+        if ($('mgrQuoteAmount')) $('mgrQuoteAmount').setAttribute('placeholder', t.ph);
+        if ($('mgrQuoteUnit'))  $('mgrQuoteUnit').textContent  = t.unit;
+        if ($('mgrQuoteBtn'))   $('mgrQuoteBtn').textContent   = t.btn;
+        if ($('mgrQuoteHint'))  $('mgrQuoteHint').textContent  = t.hint;
+    })();
+    </script>
     </div><!-- /.hero-section -->
     <script>
     (function() {
@@ -864,15 +894,51 @@ if ('caches' in window) {
             if (!raw) { inp.value = ''; return; }
             inp.value = parseInt(raw, 10).toLocaleString();
         };
+        // 2026-05-13: 입력값(현지통화) → KRW 환산 (1,000원 = 100¥ / $1 / €1 / 5위안)
+        function _mqGetLang() {
+            var u = new URLSearchParams(location.search);
+            return u.get('lang') ||
+                (location.hostname.indexOf('cafe0101.com') >= 0 ? 'ja' :
+                 (location.hostname.indexOf('cafe3355.com') >= 0 || location.hostname.indexOf('chameleon.design') >= 0) ? 'en' :
+                 (window.CURRENT_LANG || 'kr'));
+        }
+        function _mqToKrw(inputAmount) {
+            var l = _mqGetLang();
+            if (l === 'ja') return Math.round(inputAmount * 10);       // 100엔 → 1000원
+            if (l === 'en') return Math.round(inputAmount * 1000);     // $1 → 1000원
+            if (l === 'es' || l === 'de' || l === 'fr') return Math.round(inputAmount * 1000); // €1 → 1000원
+            if (l === 'zh') return Math.round(inputAmount * 200);      // 5위안 → 1000원
+            return inputAmount;                                         // kr/ar 그대로
+        }
+        function _mqMinLocal() {
+            var l = _mqGetLang();
+            if (l === 'ja') return 100;
+            if (l === 'en' || l === 'es' || l === 'de' || l === 'fr') return 1;
+            if (l === 'zh') return 5;
+            return 1000;
+        }
+        function _mqMinAlert() {
+            var l = _mqGetLang();
+            if (l === 'ja') return '最低100円から入力可能です。\nマネージャーと相談した金額を入力してください。';
+            if (l === 'en') return 'Minimum $1.\nEnter the quote amount discussed with your manager.';
+            if (l === 'es') return 'Mínimo €1.\nIngrese el monto acordado con su gerente.';
+            if (l === 'de') return 'Mindestens €1.\nGeben Sie den mit Ihrem Manager besprochenen Betrag ein.';
+            if (l === 'fr') return 'Minimum €1.\nEntrez le montant convenu avec votre responsable.';
+            if (l === 'zh') return '最低5元起。\n请输入与经理协商的金额。';
+            return '최소 1,000원부터 입력 가능합니다.\n담당 매니저와 상담하신 견적 금액을 입력하세요.';
+        }
+
         // 주문 버튼 클릭 → simple_order 결제 모달 띄우기
         window._mgrQuoteOrder = function() {
             var inp = document.getElementById('mgrQuoteAmount');
-            var amount = parseInt((inp && inp.value || '').replace(/[^\d]/g, ''), 10) || 0;
-            if (amount < 1000) {
-                alert('최소 1,000원부터 입력 가능합니다.\n담당 매니저와 상담하신 견적 금액을 입력하세요.');
+            var entered = parseInt((inp && inp.value || '').replace(/[^\d]/g, ''), 10) || 0;
+            if (entered < _mqMinLocal()) {
+                alert(_mqMinAlert());
                 if (inp) inp.focus();
                 return;
             }
+            // 입력값(현지통화) → KRW 변환 (DB·결제는 KRW 기준)
+            var amountKrw = _mqToKrw(entered);
             // simple_order 의 결제 모달 띄우기 위해 모달 DOM 준비
             if (typeof window._soEnsureModalReady === 'function') {
                 window._soEnsureModalReady();
@@ -882,8 +948,8 @@ if ('caches' in window) {
                 uid: Date.now(),
                 product: {
                     code: 'manager_quote_' + Date.now(),
-                    name: '매니저 견적 주문 (' + amount.toLocaleString() + '원)',
-                    price: amount,
+                    name: '매니저 견적 주문 (' + amountKrw.toLocaleString() + '원)',
+                    price: amountKrw,
                     category: 'manager_quote',
                     img: '/mascot-character.png'
                 },
@@ -892,7 +958,7 @@ if ('caches' in window) {
                 selectedAddons: {},
                 addonQuantities: {},
                 itemNote: '담당 매니저 견적 상담 후 빠른 주문',
-                _simple: { unit: amount, subtotal: amount, discount: 0, final: amount, tierPct: 0 }
+                _simple: { unit: amountKrw, subtotal: amountKrw, discount: 0, final: amountKrw, tierPct: 0 }
             };
             try {
                 var cart = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || [];
@@ -7104,7 +7170,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=46"></script>
+<script src="/simple_order.js?v=47"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=9"></script>
 

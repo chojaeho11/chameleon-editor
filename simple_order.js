@@ -57,6 +57,7 @@
                 window.CURRENT_LANG || 'kr');
     }
 
+    // 2026-05-13: 통화 변환 — 1000원 기준 ja:100엔 / en,es,de,fr:1$/€ / zh:5위안 / ar:1리얄
     function fmtPrice(amt) {
         const lang = getLang();
         const v = Math.max(0, Math.round(amt || 0));
@@ -64,6 +65,15 @@
         if (lang === 'en') {
             const usd = v * 0.001;
             return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2);
+        }
+        if (lang === 'es' || lang === 'de' || lang === 'fr') {
+            const eur = v * 0.001;
+            return eur >= 10 ? '€' + Math.round(eur).toLocaleString() : '€' + eur.toFixed(2);
+        }
+        if (lang === 'zh') return '¥' + Math.round(v * 0.005).toLocaleString();
+        if (lang === 'ar') {
+            const sar = v * 0.003;
+            return sar >= 10 ? Math.round(sar).toLocaleString() + ' ر.س' : sar.toFixed(2) + ' ر.س';
         }
         return v.toLocaleString() + '원';
     }
@@ -672,9 +682,9 @@
           </div>
           <!-- 2026-05-13: 수량 할인 제거 → 구매금액 할인으로 교체 -->
           <div class="so-tier-table" id="soTierTable">
-            <div data-amt-tier="10"><b>100만+</b> 10%</div>
-            <div data-amt-tier="20"><b>500만+</b> 20%</div>
-            <div data-amt-tier="30"><b>1000만+</b> 30%</div>
+            <div data-amt-tier="10"><b>${fmtPrice(1000000)}+</b> 10%</div>
+            <div data-amt-tier="20"><b>${fmtPrice(5000000)}+</b> 20%</div>
+            <div data-amt-tier="30"><b>${fmtPrice(10000000)}+</b> 30%</div>
             <div style="background:#ede9fe; color:#5b21b6; font-weight:800;">${tr('PRO 구독자', 'PRO会員', 'PRO')} 10%</div>
           </div>
         </div>
@@ -722,13 +732,13 @@
               style="padding:14px 10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.4;">
               ${tr('한판', 'フル', 'Full')}<br>
               <span style="font-size:11px; font-weight:600; opacity:0.9;">2400 × 1200</span><br>
-              <span style="font-size:13px; font-weight:800;">150,000${tr('원', '円', 'KRW')}</span>
+              <span style="font-size:13px; font-weight:800;">${fmtPrice(150000)}</span>
             </button>
             <button type="button" class="so-cut-btn" data-cut="half" onclick="window._soPickCutSize('half')"
               style="padding:14px 10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.4;">
               ${tr('반판 이내', 'ハーフ以内', 'Half or less')}<br>
               <span style="font-size:11px; font-weight:600; color:#6b7280;">1200×1200 / 600×2400</span><br>
-              <span style="font-size:13px; font-weight:800;">100,000${tr('원', '円', 'KRW')}</span>
+              <span style="font-size:13px; font-weight:800;">${fmtPrice(100000)}</span>
             </button>
           </div>
         </div>
@@ -790,19 +800,19 @@
           <div class="so-section-title">🦵 ${tr('받침대 옵션', 'スタンドオプション', 'Stand option')}</div>
           <div id="soBaseStandList" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
             <button type="button" class="so-base-btn active" data-base="none" onclick="window._soPickBaseStand('none')"
-              style="padding:10px 8px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('받침대 없음', 'なし', 'No stand')}<br><span style="font-size:11px; font-weight:600; opacity:0.9;">0${tr('원', '円', 'KRW')}</span></button>
+              style="padding:10px 8px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('받침대 없음', 'なし', 'No stand')}<br><span style="font-size:11px; font-weight:600; opacity:0.9;">${fmtPrice(0)}</span></button>
             <button type="button" class="so-base-btn" data-base="a4" onclick="window._soPickBaseStand('a4')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A4 이하용 받침대', 'A4以下', 'A4 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+3,000${tr('원', '円', 'KRW')}</span></button>
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A4 이하용 받침대', 'A4以下スタンド', 'A4 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(3000)}</span></button>
             <button type="button" class="so-base-btn" data-base="a3" onclick="window._soPickBaseStand('a3')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A3 이하용 받침대', 'A3以下', 'A3 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+5,000${tr('원', '円', 'KRW')}</span></button>
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A3 이하용 받침대', 'A3以下スタンド', 'A3 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(5000)}</span></button>
             <button type="button" class="so-base-btn" data-base="a2" onclick="window._soPickBaseStand('a2')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A2 이하용 받침대', 'A2以下', 'A2 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+10,000${tr('원', '円', 'KRW')}</span></button>
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A2 이하용 받침대', 'A2以下スタンド', 'A2 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(10000)}</span></button>
             <button type="button" class="so-base-btn" data-base="rear" onclick="window._soPickBaseStand('rear')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('등신대용 후면받침', '等身大 背面支持', 'Life-size rear')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+20,000${tr('원', '円', 'KRW')}</span></button>
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('등신대용 후면받침', '等身大 背面支持', 'Life-size rear')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(20000)}</span></button>
             <button type="button" class="so-base-btn" data-base="banner_small" onclick="window._soPickBaseStand('banner_small')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('배너형 (가로 ≤60cm)', 'バナー型 ≤60cm', 'Banner ≤60cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+20,000${tr('원', '円', 'KRW')}</span></button>
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('배너형 (가로 ≤60cm)', 'バナー型 ≤60cm', 'Banner ≤60cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(20000)}</span></button>
             <button type="button" class="so-base-btn" data-base="banner_large" onclick="window._soPickBaseStand('banner_large')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4; grid-column:span 2;">${tr('배너형 (가로 ≥70cm)', 'バナー型 ≥70cm', 'Banner ≥70cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+50,000${tr('원', '円', 'KRW')}</span></button>
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4; grid-column:span 2;">${tr('배너형 (가로 ≥70cm)', 'バナー型 ≥70cm', 'Banner ≥70cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(50000)}</span></button>
           </div>
         </div>
 
@@ -824,16 +834,16 @@
             <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">🛻 ${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">🚛 ${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
             <!-- 2026-05-13: 자유인쇄커팅 전용 (시공 없이 배송만) -->
-            <button type="button" class="so-ship-btn" data-ship="metro_delivery" onclick="window._soPickShip('metro_delivery')" style="display:none;">📦 ${tr('수도권 배송', '首都圏配送', 'Metro delivery')}<br><span style="font-size:11px; opacity:0.8;">100,000${tr('원', '円', 'KRW')}</span></button>
-            <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">📦 ${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">200,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="metro_delivery" onclick="window._soPickShip('metro_delivery')" style="display:none;">📦 ${tr('수도권 배송', '首都圏配送', 'Metro delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(100000)}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">📦 ${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(200000)}</span></button>
             <!-- 2026-05-13: 택배배송 (배너·인스타판넬만, 2장 묶음 3만원) -->
-            <button type="button" class="so-ship-btn" data-ship="parcel_shipping" onclick="window._soPickShip('parcel_shipping')" style="display:none;">📮 ${tr('택배배송', '宅配便', 'Parcel')}<br><span style="font-size:11px; opacity:0.8;">30,000${tr('원', '円', 'KRW')} / ${tr('2장 묶음', '2枚まとめ', '2 per box')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="parcel_shipping" onclick="window._soPickShip('parcel_shipping')" style="display:none;">📮 ${tr('택배배송', '宅配便', 'Parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(30000)} / ${tr('2장 묶음', '2枚まとめ', '2 per box')}</span></button>
             <!-- 2026-05-13: 포맥스·폼보드 대형택배 (3만원) -->
-            <button type="button" class="so-ship-btn" data-ship="large_parcel" onclick="window._soPickShip('large_parcel')" style="display:none;">📦 ${tr('대형택배', '大型宅配', 'Large parcel')}<br><span style="font-size:11px; opacity:0.8;">30,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="large_parcel" onclick="window._soPickShip('large_parcel')" style="display:none;">📦 ${tr('대형택배', '大型宅配', 'Large parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(30000)}</span></button>
             <!-- 2026-05-13: 일반 인쇄물 소형 묶음택배 (5천원) -->
-            <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">📨 ${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">5,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">📨 ${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(5000)}</span></button>
             <!-- 2026-05-13: 등신대·자유인쇄커팅 컴팩트 택배 (60×40 이하, 1만원) -->
-            <button type="button" class="so-ship-btn" data-ship="compact_parcel" onclick="window._soPickShip('compact_parcel')" style="display:none;">📬 ${tr('택배배송 (60×40 이하)', '宅配 ≤60×40', 'Parcel ≤60×40')}<br><span style="font-size:11px; opacity:0.8;">10,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="compact_parcel" onclick="window._soPickShip('compact_parcel')" style="display:none;">📬 ${tr('택배배송 (60×40 이하)', '宅配 ≤60×40', 'Parcel ≤60×40')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(10000)}</span></button>
           </div>
           <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
           <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
@@ -3133,8 +3143,9 @@
             grandTotal: grandTotal
         };
     }
+    // 2026-05-13: 카트 합계 등 — fmtPrice 와 동일하게 통화 변환
     function _soFormatPrice(krw) {
-        return Math.round(krw || 0).toLocaleString() + '원';
+        return fmtPrice(krw || 0);
     }
 
     window._soOpenCheckout = function () {

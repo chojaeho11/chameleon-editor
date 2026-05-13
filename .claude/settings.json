@@ -144,7 +144,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v44: exclude manager quote items from cart discount\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v45: standee+cut-print base stand options + 60x40 compact parcel 10k\")",
       "Bash(Get-ChildItem -Path . -Name -Recurse -Include \"*.html\", \"*.js\")",
-      "Bash(Select-Object -First 30)"
+      "Bash(Select-Object -First 30)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v46: raw-board ��� unit price 2x frontend override\")"
     ],
     "additionalDirectories": [
       "\\tmp"
