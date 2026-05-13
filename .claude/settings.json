@@ -164,7 +164,8 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/admin_m_secret_882?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'product_name'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, \"it0.product_name\"\\).Count)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: label manager-quote orders + product_code fallback\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: skip file-placeholder + tighten fabric category match\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: sub-category breakdown \\(honeycomb wall/box/banner split\\)\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: sub-category breakdown \\(honeycomb wall/box/banner split\\)\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: merge ��Ÿ+���ΰ��� + fix qty double-count + broaden fabric\")"
     ],
     "additionalDirectories": [
       "\\tmp"
