@@ -561,21 +561,38 @@ export function renderShortcutButtons(containerId) {
     container.innerHTML = `
         <style>
         .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
-        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;box-sizing:border-box;}
-        /* 2026-05-13: 버튼 높이 약 2배 (padding 14→28) + 폰트 한 단계 키움 */
-        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#6366f1;color:#fff;text-decoration:none;padding:28px 4px;border-radius:14px;font-size:16px;font-weight:800;border:none;cursor:pointer;transition:all 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;}
+        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;box-sizing:border-box;}
+        /* 2026-05-13: 알약(pill) 모양 + 살짝 낮은 높이 + 버튼별 그라데이션 */
+        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;text-decoration:none;padding:22px 4px;border-radius:999px;font-size:16px;font-weight:800;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;overflow:hidden;position:relative;}
         .adv-ext-btn i{flex-shrink:0;font-size:18px;}
-        .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
-        /* 매니저 연결 — 빠르게 흐르는 그라데이션 (눈에 잘 띄도록) */
-        @keyframes mgrConnGradient { 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
-        @keyframes mgrConnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(244,114,182,0.5),0 6px 18px rgba(217,70,239,0.45);} 50%{box-shadow:0 0 0 6px rgba(244,114,182,0),0 8px 24px rgba(217,70,239,0.7);} }
-        .adv-ext-btn.adv-ext-btn-pulse{
-            background:linear-gradient(90deg,#ec4899,#f59e0b,#10b981,#3b82f6,#8b5cf6,#ec4899);
-            background-size:200% 100%;
-            animation:mgrConnGradient 2s linear infinite, mgrConnPulse 1.4s ease-in-out infinite;
-            color:#fff;
+        .adv-ext-btn:hover{transform:translateY(-1px);}
+
+        /* 디자인 에디터 — 검정 그라데이션 (정적, 입체감) */
+        .adv-ext-btn.adv-ext-btn-design{
+            background:linear-gradient(135deg,#000000 0%,#3f3f46 40%,#52525b 60%,#18181b 100%);
+            box-shadow:0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
         }
-        .adv-ext-btn.adv-ext-btn-pulse:hover{background-position:100% 50%;color:#fff!important;background:linear-gradient(90deg,#ec4899,#f59e0b,#10b981,#3b82f6,#8b5cf6,#ec4899)!important;background-size:200% 100%!important;}
+        .adv-ext-btn.adv-ext-btn-design:hover{box-shadow:0 10px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.18);}
+
+        /* 매니저 연결 — 보라 그라데이션 (흐르는 애니메이션 + glow ring) */
+        @keyframes mgrConnGradient { 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
+        @keyframes mgrConnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(168,85,247,0.55),0 6px 18px rgba(124,58,237,0.5);} 50%{box-shadow:0 0 0 8px rgba(168,85,247,0),0 10px 26px rgba(124,58,237,0.7);} }
+        .adv-ext-btn.adv-ext-btn-pulse{
+            background:linear-gradient(90deg,#4c1d95,#7c3aed,#a855f7,#c084fc,#a855f7,#7c3aed,#4c1d95);
+            background-size:200% 100%;
+            animation:mgrConnGradient 2.2s linear infinite, mgrConnPulse 1.4s ease-in-out infinite;
+        }
+        .adv-ext-btn.adv-ext-btn-pulse:hover{animation-play-state:running;}
+
+        /* 제품검색 — 무지개 그라데이션 (천천히 흐르는 애니메이션) */
+        @keyframes rainbowFlow { 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
+        .adv-ext-btn.adv-ext-btn-rainbow{
+            background:linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899,#ef4444);
+            background-size:200% 100%;
+            animation:rainbowFlow 5s linear infinite;
+            box-shadow:0 6px 18px rgba(99,102,241,0.35);
+        }
+        .adv-ext-btn.adv-ext-btn-rainbow:hover{box-shadow:0 10px 26px rgba(99,102,241,0.55);}
 
         /* Single services hub banner */
         @keyframes dmBandPulse { 0%,100%{text-shadow:0 0 16px rgba(186,230,253,0.55);} 50%{text-shadow:0 0 28px rgba(186,230,253,0.95),0 0 8px rgba(186,230,253,0.6);} }
@@ -607,8 +624,8 @@ export function renderShortcutButtons(containerId) {
         .tg-hub-cta i{transition:transform 0.22s;}
 
         @media(max-width:768px){
-            .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:6px;}
-            .adv-ext-btn{padding:22px 2px;font-size:13px;gap:4px;border-radius:12px;}
+            .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:8px;}
+            .adv-ext-btn{padding:18px 2px;font-size:13px;gap:4px;border-radius:999px;}
             .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
             .dm-hub-band{font-size:28px;letter-spacing:-1px;}
             .dm-hub-title{font-size:14px;}
@@ -623,13 +640,13 @@ export function renderShortcutButtons(containerId) {
         </style>
         <div class="adv-ext-wrap">
             <div class="adv-ext-grid">
-                <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn">
+                <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn adv-ext-btn-design">
                     <i class="fa-solid fa-pen-ruler"></i> ${t.self_design}
                 </a>
                 <a href="javascript:void(0)" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()" class="adv-ext-btn adv-ext-btn-pulse">
                     <i class="fa-solid fa-headset"></i> ${t.quick_quote}
                 </a>
-                <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn">
+                <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn adv-ext-btn-rainbow">
                     <i class="fa-solid fa-magnifying-glass"></i> ${t.product_search}
                 </a>
             </div>

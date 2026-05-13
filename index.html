@@ -1171,7 +1171,7 @@ if ('caches' in window) {
                 <span class="aid-title">✨ AI 디자인 스튜디오</span>
                 <span id="aiDesignQuota" class="aid-badge">무료 사용</span>
             </div>
-            <div class="aid-lead"><b>원하는 디자인을 마음껏 해보세요.</b> 수정할 부분이 있다면 에디터에서 수정하세요.</div>
+            <div class="aid-lead"><b>간단한 프롬프트만 입력하세요.</b> 최상위 AI 모델이 옆 예시와 같은 고퀄리티 디자인을 자동으로 만들어드립니다. 결과는 에디터에서 자유롭게 수정할 수 있어요.</div>
             <div class="aid-layout">
                 <div class="aid-left">
                     <!-- 1) 사이즈 선택 -->
@@ -1203,7 +1203,7 @@ if ('caches' in window) {
                 <div class="aid-right">
                     <div id="aiDesignResult" class="aid-preview">
                         <div class="aid-preview-empty">
-                            <img src="/ai-img.png?v=1" alt="예시 디자인" class="aid-example-img">
+                            <img src="/ai-img.png?v=2" alt="예시 디자인" class="aid-example-img">
                             <div class="aid-example-caption">
                                 <div class="main">예시 - 간단한 프롬프트만으로 예시와 같은 고퀄리티 디자인이 만들어집니다.</div>
                                 <div class="sub">최상위 인공지능 이미지 생성 모델로 <b>약 3분정도 시간이 소요됩니다.</b><br>조금만 기다려주세요.</div>
@@ -9035,7 +9035,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=449').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=450').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
         import('./ai-design-hero.js?v=28').catch(e => console.warn('AI design hero init skipped:', e));

@@ -169,7 +169,10 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: full order.total_amount �� main product category\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: split shipping + design fee into own categories \\(������ stays with parent\\)\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hero: swap AI/buttons order + rename + 2x height + pulse manager + ai-img\")",
-      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; $line981 = \\(\\($r.Content -split \"`n\"\\)[978..985]\\) -join '|'; $line1165 = \\(\\($r.Content -split \"`n\"\\)[1165..1170]\\) -join '|'; \"L979-985: $line981\"; \"L1165-1170: $line1165\")"
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; $line981 = \\(\\($r.Content -split \"`n\"\\)[978..985]\\) -join '|'; $line1165 = \\(\\($r.Content -split \"`n\"\\)[1165..1170]\\) -join '|'; \"L979-985: $line981\"; \"L1165-1170: $line1165\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hero: aiDesignHero explicitly placed after advShortcutBtns in reorder script\")",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \\($r.Content | Select-String -Pattern 'ai-img\\\\.png'\\).Matches.Count; \\($r.Content | Select-String -Pattern '9555\\\\.png'\\).Matches.Count; \\($r.Content | Select-String -Pattern 'aiDesignHero'\\).Matches.Count; \"advShortcutBtns line:\"; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'id=\"advShortcutBtns\"'\\).Count)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \\($r.Content | Select-String -Pattern '카멜레온과 케데'\\).Matches.Count; \\($r.Content | Select-String -Pattern '간단한 프롬프트만으로'\\).Matches.Count; \\($r.Content | Select-String -Pattern '약 3분정도 시간이 소요됩니다'\\).Matches.Count)"
     ],
     "additionalDirectories": [
       "\\tmp"
