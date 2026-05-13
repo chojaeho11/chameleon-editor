@@ -157,7 +157,8 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja\" -UseBasicParsing; \\($r.Content | Select-String -Pattern 'data-cdi18n'\\).Matches | ForEach-Object { $_.Value } | Select-Object -First 5)",
       "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja\" -UseBasicParsing; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'data-cdi18n'\\).Count)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v48: addon i18n + wall side label + fabric route lang preservation\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v49: drop 100k min order + fabric cart i18n labels\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v49: drop 100k min order + fabric cart i18n labels\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cotton v48: queue uploads/cart clicks before JS loads\")"
     ],
     "additionalDirectories": [
       "\\tmp"
