@@ -408,19 +408,44 @@ export default {
             );
             if (isAsset) return await env.ASSETS.fetch(request);
 
-            // 경로별 매핑 → 새 canonical 경로
+            // 2026-05-13: 랜딩 페이지는 cotton-print.com 도메인 그대로 유지 (proxy/rewrite)
+            //   - 301 redirect 하면 URL 이 cafe2626.com 으로 바뀜 → 사용자 불만
+            //   - env.ASSETS.fetch() 로 cotton_print.html 을 직접 서빙 → URL 은 cotton-print.com 유지
+            //   - 단, 로그인·카트는 cafe 도메인 origin 에 있으므로 login-required 경로는 redirect 유지
+            if (path === '' || path === 'index.html') {
+                const rewriteUrl = new URL('/cotton_print.html', url.origin);
+                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
+                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
+                    const loc = new URL(resp.headers.get('Location'), url.origin);
+                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+                }
+                const hdrs = new Headers(resp.headers);
+                hdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+                return new Response(resp.body, { status: resp.status, headers: hdrs });
+            }
+            if (path === 'cotton-print' || path === 'cotton-print.html' ||
+                path === 'fabric' || path === 'fabric-print') {
+                // 같은 랜딩 페이지의 대체 경로들 — 그대로 서빙
+                const rewriteUrl = new URL('/cotton_print.html', url.origin);
+                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
+                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
+                    const loc = new URL(resp.headers.get('Location'), url.origin);
+                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+                }
+                const hdrs = new Headers(resp.headers);
+                hdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+                return new Response(resp.body, { status: resp.status, headers: hdrs });
+            }
+
+            // 경로별 매핑 → 새 canonical 경로 (로그인·카트 필요한 페이지만 cafe 도메인으로 301)
             let targetPath;
             if (path === 'designer' || path === 'designer.html' ||
                 path === 'cotton-designer' || path === 'cotton-designer.html') {
-                targetPath = '/fabric';                       // 디자이너 → /fabric (cotton_designer.html)
+                targetPath = '/fabric';                       // 디자이너 → /fabric (로그인·카트 필요)
             } else if (path === 'mypage' || path === 'mypage.html' || path === 'designer-mypage') {
-                targetPath = '/mypage';                       // 마이페이지 → 통합 마이페이지
-            } else if (path === '' || path === 'index.html') {
-                // 2026-05-13: 랜딩 → /cotton-print (cotton_print.html — 비즈니스 랜딩 페이지)
-                // 사용자 요청: www.cotton-print.com 접속 시 디자이너가 아닌 랜딩 페이지가 떠야 함
-                targetPath = '/cotton-print';
+                targetPath = '/mypage';                       // 마이페이지 → 통합 (로그인 필요)
             } else {
-                targetPath = '/' + path;                      // 기타 경로 그대로 cafe 도메인으로
+                targetPath = '/' + path;
             }
             const target = 'https://' + cafeHost + targetPath + url.search;
             return Response.redirect(target, 301);
