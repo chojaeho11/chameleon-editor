@@ -393,8 +393,8 @@ export function renderShortcutButtons(containerId) {
     // Localized labels
     const L = {
         kr: {
-            self_design: '셀프디자인',
-            quick_quote: '빠른견적서',
+            self_design: '디자인 에디터',
+            quick_quote: '매니저 연결',
             product_search: '제품검색',
             // ── Design Market banner (left) ──
             hub_title: '세상에 모든 서비스를 밴드하다',
@@ -416,8 +416,8 @@ export function renderShortcutButtons(containerId) {
             tg_cta: '가맹 문의하기'
         },
         ja: {
-            self_design: 'セルフデザイン',
-            quick_quote: 'クイック見積',
+            self_design: 'デザインエディタ',
+            quick_quote: 'マネージャーと相談',
             product_search: '商品検索',
             hub_title: '世界中のサービスをバンドする',
             hub_sub: 'デザイン · 人材 · コミュニティ · 中古マーケット',
@@ -436,8 +436,8 @@ export function renderShortcutButtons(containerId) {
             tg_cta: '加盟お問い合わせ'
         },
         en: {
-            self_design: 'Self Design',
-            quick_quote: 'Quick Quote',
+            self_design: 'Design Editor',
+            quick_quote: 'Talk to Manager',
             product_search: 'Search',
             hub_title: 'Band every service in the world',
             hub_sub: 'Design · Talent · Community · Marketplace',
@@ -456,8 +456,8 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'Franchise Inquiry'
         },
         zh: {
-            self_design: '自助设计',
-            quick_quote: '快速报价',
+            self_design: '设计编辑器',
+            quick_quote: '联系经理',
             product_search: '产品搜索',
             hub_title: '联结世界上所有的服务',
             hub_sub: '设计 · 人才 · 社群 · 二手市场',
@@ -476,8 +476,8 @@ export function renderShortcutButtons(containerId) {
             tg_cta: '加盟咨询'
         },
         ar: {
-            self_design: 'تصميم ذاتي',
-            quick_quote: 'عرض سريع',
+            self_design: 'محرر التصميم',
+            quick_quote: 'تواصل مع المدير',
             product_search: 'بحث المنتجات',
             hub_title: 'اجمع كل خدمات العالم معاً',
             hub_sub: 'التصميم · المواهب · المجتمع · السوق المستعمل',
@@ -496,8 +496,8 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'استفسار الامتياز'
         },
         es: {
-            self_design: 'Autodiseño',
-            quick_quote: 'Cotización rápida',
+            self_design: 'Editor de Diseño',
+            quick_quote: 'Hablar con Gerente',
             product_search: 'Buscar',
             hub_title: 'Conecta todos los servicios del mundo',
             hub_sub: 'Diseño · Talento · Comunidad · Mercado',
@@ -516,8 +516,8 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'Consulta Franquicia'
         },
         de: {
-            self_design: 'Selbstdesign',
-            quick_quote: 'Schnellangebot',
+            self_design: 'Design-Editor',
+            quick_quote: 'Manager kontaktieren',
             product_search: 'Suche',
             hub_title: 'Alle Dienste der Welt verbinden',
             hub_sub: 'Design · Talente · Community · Secondhand',
@@ -536,8 +536,8 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'Franchise-Anfrage'
         },
         fr: {
-            self_design: 'Conception',
-            quick_quote: 'Devis rapide',
+            self_design: 'Éditeur de Design',
+            quick_quote: 'Contacter le Manager',
             product_search: 'Recherche',
             hub_title: 'Relier tous les services du monde',
             hub_sub: 'Design · Talents · Communauté · Marché',
@@ -561,10 +561,21 @@ export function renderShortcutButtons(containerId) {
     container.innerHTML = `
         <style>
         .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
-        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;box-sizing:border-box;}
-        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:#6366f1;color:#fff;text-decoration:none;padding:14px 2px;border-radius:14px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;}
-        .adv-ext-btn i{flex-shrink:0;}
+        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;box-sizing:border-box;}
+        /* 2026-05-13: 버튼 높이 약 2배 (padding 14→28) + 폰트 한 단계 키움 */
+        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#6366f1;color:#fff;text-decoration:none;padding:28px 4px;border-radius:14px;font-size:16px;font-weight:800;border:none;cursor:pointer;transition:all 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;}
+        .adv-ext-btn i{flex-shrink:0;font-size:18px;}
         .adv-ext-btn:hover{background:#eab308!important;color:#1e293b!important;transform:translateY(-1px);}
+        /* 매니저 연결 — 빠르게 흐르는 그라데이션 (눈에 잘 띄도록) */
+        @keyframes mgrConnGradient { 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
+        @keyframes mgrConnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(244,114,182,0.5),0 6px 18px rgba(217,70,239,0.45);} 50%{box-shadow:0 0 0 6px rgba(244,114,182,0),0 8px 24px rgba(217,70,239,0.7);} }
+        .adv-ext-btn.adv-ext-btn-pulse{
+            background:linear-gradient(90deg,#ec4899,#f59e0b,#10b981,#3b82f6,#8b5cf6,#ec4899);
+            background-size:200% 100%;
+            animation:mgrConnGradient 2s linear infinite, mgrConnPulse 1.4s ease-in-out infinite;
+            color:#fff;
+        }
+        .adv-ext-btn.adv-ext-btn-pulse:hover{background-position:100% 50%;color:#fff!important;background:linear-gradient(90deg,#ec4899,#f59e0b,#10b981,#3b82f6,#8b5cf6,#ec4899)!important;background-size:200% 100%!important;}
 
         /* Single services hub banner */
         @keyframes dmBandPulse { 0%,100%{text-shadow:0 0 16px rgba(186,230,253,0.55);} 50%{text-shadow:0 0 28px rgba(186,230,253,0.95),0 0 8px rgba(186,230,253,0.6);} }
@@ -596,8 +607,8 @@ export function renderShortcutButtons(containerId) {
         .tg-hub-cta i{transition:transform 0.22s;}
 
         @media(max-width:768px){
-            .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:4px;}
-            .adv-ext-btn{padding:11px 1px;font-size:11px;gap:3px;border-radius:12px;}
+            .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:6px;}
+            .adv-ext-btn{padding:22px 2px;font-size:13px;gap:4px;border-radius:12px;}
             .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
             .dm-hub-band{font-size:28px;letter-spacing:-1px;}
             .dm-hub-title{font-size:14px;}
@@ -615,8 +626,8 @@ export function renderShortcutButtons(containerId) {
                 <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn">
                     <i class="fa-solid fa-pen-ruler"></i> ${t.self_design}
                 </a>
-                <a href="javascript:void(0)" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()" class="adv-ext-btn">
-                    <i class="fa-solid fa-file-invoice"></i> ${t.quick_quote}
+                <a href="javascript:void(0)" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()" class="adv-ext-btn adv-ext-btn-pulse">
+                    <i class="fa-solid fa-headset"></i> ${t.quick_quote}
                 </a>
                 <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn">
                     <i class="fa-solid fa-magnifying-glass"></i> ${t.product_search}

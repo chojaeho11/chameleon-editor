@@ -166,7 +166,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: skip file-placeholder + tighten fabric category match\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: sub-category breakdown \\(honeycomb wall/box/banner split\\)\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: merge ��Ÿ+���ΰ��� + fix qty double-count + broaden fabric\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: full order.total_amount �� main product category\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: full order.total_amount �� main product category\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: split shipping + design fee into own categories \\(������ stays with parent\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp"
