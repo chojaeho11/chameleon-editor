@@ -2561,6 +2561,10 @@ window.addEventListener('load', function() {
             <a href="/fabric" class="cp-home-link cp-link-designer" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(69,26,3,0.2);">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="cpHomeBtn1">내원단 만들기</span>
             </a>
+            <!-- 2026-05-13: 패브릭 무료 샘플 신청 — /cotton-print?sample=1 (모달 자동 열기) -->
+            <a href="/cotton-print?sample=1" class="cp-home-link cp-link-sample" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#ec4899,#db2777); color:#fff; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(236,72,153,0.3);">
+                <i class="fa-solid fa-gift"></i> <span id="cpHomeBtnSample">패브릭 무료 샘플 신청</span>
+            </a>
             <!-- 2026-05-13: 디자이너 패턴 컬렉션 버튼 삭제 (사용자 요청) -->
             <!-- 2026-05-13: 등록하고 판매하세요 → 패턴 업로드 모달 직접 열기 (/cotton-print?upload=1) -->
             <a href="/cotton-print?upload=1" class="cp-home-link cp-link-sell" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#fde047,#facc15); color:#451a03; font-size:13px; font-weight:800; text-decoration:none;">
@@ -2615,21 +2619,21 @@ window.addEventListener('load', function() {
 // Cotton Print 섹션 다국어 적용 + 모든 cotton-print.com 링크에 ?lang= 부착
 (function(){
     var DICT = {
-        kr: { badge:'패브릭 사업부', desc:'대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓', btn1:'내원단 만들기', btn2:'디자이너 패턴 컬렉션', btn3:'등록하고 판매하세요', allBtn:'전체 패턴 보기',
+        kr: { badge:'패브릭 사업부', desc:'대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓', btn1:'내원단 만들기', btn2:'디자이너 패턴 컬렉션', btn3:'등록하고 판매하세요', btnSample:'패브릭 무료 샘플 신청', allBtn:'전체 패턴 보기',
               chips:{all:'전체',animal:'동물',plant:'식물',people:'사람',modern:'모던',scenery:'풍경',typo:'타이포',kids:'키즈',etc:'기타'} },
-        ja: { badge:'ファブリック事業部', desc:'最大幅130cm ロール生地 · 回杯あたり¥1,500 · デザイナーパターンマーケット', btn1:'生地デザイン', btn2:'デザイナーコレクション', btn3:'登録して販売', allBtn:'すべてのパターンを見る',
+        ja: { badge:'ファブリック事業部', desc:'最大幅130cm ロール生地 · 回杯あたり¥1,500 · デザイナーパターンマーケット', btn1:'生地デザイン', btn2:'デザイナーコレクション', btn3:'登録して販売', btnSample:'無料サンプル請求', allBtn:'すべてのパターンを見る',
               chips:{all:'すべて',animal:'動物',plant:'植物',people:'人物',modern:'モダン',scenery:'風景',typo:'タイポ',kids:'キッズ',etc:'その他'} },
-        en: { badge:'Fabric Division', desc:'Wide 130cm roll · $15/unit · Designer Pattern Marketplace', btn1:'Design My Fabric', btn2:'Designer Collection', btn3:'Upload & Sell', allBtn:'View All Patterns',
+        en: { badge:'Fabric Division', desc:'Wide 130cm roll · $15/unit · Designer Pattern Marketplace', btn1:'Design My Fabric', btn2:'Designer Collection', btn3:'Upload & Sell', btnSample:'Free Fabric Sample', allBtn:'View All Patterns',
               chips:{all:'All',animal:'Animal',plant:'Plant',people:'People',modern:'Modern',scenery:'Scenery',typo:'Typo',kids:'Kids',etc:'Etc'} },
-        zh: { badge:'面料事业部', desc:'幅宽130cm 卷布 · 每单位 ¥75 · 设计师图案市场', btn1:'设计我的布料', btn2:'设计师图案合集', btn3:'上传并销售', allBtn:'查看所有图案',
+        zh: { badge:'面料事业部', desc:'幅宽130cm 卷布 · 每单位 ¥75 · 设计师图案市场', btn1:'设计我的布料', btn2:'设计师图案合集', btn3:'上传并销售', btnSample:'免费样品申请', allBtn:'查看所有图案',
               chips:{all:'全部',animal:'动物',plant:'植物',people:'人物',modern:'现代',scenery:'风景',typo:'字体',kids:'儿童',etc:'其他'} },
-        ar: { badge:'قسم النسيج', desc:'عرض 130 سم · 15$/وحدة · سوق انماط المصممين', btn1:'صمم قماشي', btn2:'مجموعة المصممين', btn3:'حمّل وبع', allBtn:'كل الانماط',
+        ar: { badge:'قسم النسيج', desc:'عرض 130 سم · 15$/وحدة · سوق انماط المصممين', btn1:'صمم قماشي', btn2:'مجموعة المصممين', btn3:'حمّل وبع', btnSample:'عينة مجانية', allBtn:'كل الانماط',
               chips:{all:'الكل',animal:'حيوانات',plant:'نباتات',people:'اشخاص',modern:'حديث',scenery:'مناظر',typo:'طباعة',kids:'اطفال',etc:'اخرى'} },
-        es: { badge:'Division Tela', desc:'130 cm rollo · $15/unidad · Mercado de Disenadores', btn1:'Disenar Mi Tela', btn2:'Coleccion Disenadores', btn3:'Subir y Vender', allBtn:'Ver todos los patrones',
+        es: { badge:'Division Tela', desc:'130 cm rollo · $15/unidad · Mercado de Disenadores', btn1:'Disenar Mi Tela', btn2:'Coleccion Disenadores', btn3:'Subir y Vender', btnSample:'Muestra Gratis', allBtn:'Ver todos los patrones',
               chips:{all:'Todo',animal:'Animal',plant:'Planta',people:'Personas',modern:'Moderno',scenery:'Paisaje',typo:'Tipografia',kids:'Ninos',etc:'Otros'} },
-        de: { badge:'Stoff-Abteilung', desc:'130cm Rolle · $15/Einheit · Designer-Marktplatz', btn1:'Stoff entwerfen', btn2:'Designer-Kollektion', btn3:'Hochladen & Verkaufen', allBtn:'Alle Muster',
+        de: { badge:'Stoff-Abteilung', desc:'130cm Rolle · $15/Einheit · Designer-Marktplatz', btn1:'Stoff entwerfen', btn2:'Designer-Kollektion', btn3:'Hochladen & Verkaufen', btnSample:'Gratis-Muster', allBtn:'Alle Muster',
               chips:{all:'Alle',animal:'Tier',plant:'Pflanze',people:'Mensch',modern:'Modern',scenery:'Landschaft',typo:'Typo',kids:'Kinder',etc:'Sonst.'} },
-        fr: { badge:'Division Tissu', desc:'Largeur 130cm · $15/unite · Marche des designers', btn1:'Concevoir mon tissu', btn2:'Collection de designers', btn3:'Uploader & Vendre', allBtn:'Voir tous les motifs',
+        fr: { badge:'Division Tissu', desc:'Largeur 130cm · $15/unite · Marche des designers', btn1:'Concevoir mon tissu', btn2:'Collection de designers', btn3:'Uploader & Vendre', btnSample:'Échantillon Gratuit', allBtn:'Voir tous les motifs',
               chips:{all:'Tous',animal:'Animal',plant:'Plante',people:'Personne',modern:'Moderne',scenery:'Paysage',typo:'Typographie',kids:'Enfants',etc:'Autres'} }
     };
     function applyCpHomeI18n() {
@@ -2644,6 +2648,7 @@ window.addEventListener('load', function() {
         setTxt('cpHomeBtn1', t.btn1);
         setTxt('cpHomeBtn2', t.btn2);
         setTxt('cpHomeBtn3', t.btn3);
+        setTxt('cpHomeBtnSample', t.btnSample);
         setTxt('cpHomeAllBtn', t.allBtn);
         // 카테고리 칩
         document.querySelectorAll('.cp-home-chip').forEach(function(c){

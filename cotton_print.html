@@ -1246,6 +1246,28 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
         } catch (e) { console.warn('[upload-auto-open]', e); }
     })();
 
+    // 2026-05-13: ?sample=1 또는 #sample 로 진입 시 무료 패브릭 샘플 신청 모달 자동 열기
+    //   (메인 페이지의 "패브릭 무료 샘플 신청" 버튼이 /cotton-print?sample=1 로 연결됨)
+    (function _autoOpenSample(){
+        try {
+            var u = new URLSearchParams(location.search);
+            var wantOpen = u.get('sample') === '1' || location.hash === '#sample';
+            if (!wantOpen) return;
+            var tryOpen = function(retry){
+                if (typeof window.openPdSampleRequest === 'function') {
+                    window.openPdSampleRequest();
+                } else if (retry > 0) {
+                    setTimeout(function(){ tryOpen(retry - 1); }, 100);
+                }
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function(){ tryOpen(20); });
+            } else {
+                tryOpen(20);
+            }
+        } catch (e) { console.warn('[sample-auto-open]', e); }
+    })();
+
     // 등록된 패턴 갤러리 로드 (status='approved'만)
     // 2026-05-11: i18n 적용 — 카테고리 뱃지를 현재 언어로 표시 (JP=動物/植物 등, EN=Animal/Plant 등)
     var CAT_LABELS = { animal:'동물', plant:'식물', people:'사람', modern:'모던', scenery:'풍경', typo:'타이포', kids:'키즈', etc:'기타',
