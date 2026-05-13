@@ -6838,6 +6838,63 @@ footer, .site-footer { padding-top: 28px !important; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────
+   2026-05-14: 해외 사이트(JP/US)는 매니저 견적 카드 숨김 + 타이틀 키움
+   사용자 요청: "해외는 상담사가 별도로 없으므로 이부분은 빼고 타이틀을 키워줘"
+   ───────────────────────────────────────────────────────────────────── */
+html[data-site="JP"] #mgrQuoteHero,
+html[data-site="US"] #mgrQuoteHero {
+    display: none !important;
+}
+html[data-site="JP"] .hero-section,
+html[data-site="US"] .hero-section {
+    min-height: 540px !important;
+    padding: 110px 24px 90px !important;
+}
+html[data-site="JP"] .hero-section .hero-title,
+html[data-site="US"] .hero-section .hero-title {
+    margin-bottom: 0 !important;
+}
+html[data-site="JP"] .hero-section .hero-title .hero-tagline,
+html[data-site="US"] .hero-section .hero-title .hero-tagline {
+    font-size: 15px !important;
+    margin-bottom: 28px !important;
+    letter-spacing: 6px !important;
+}
+html[data-site="JP"] .hero-section .hero-title span,
+html[data-site="US"] .hero-section .hero-title span {
+    font-size: 112px !important;
+    letter-spacing: 5px !important;
+    line-height: 1.05 !important;
+}
+html[data-site="JP"] .hero-section .hero-title .hero-min-order,
+html[data-site="US"] .hero-section .hero-title .hero-min-order {
+    font-size: 16px !important;
+    margin-top: 32px !important;
+}
+@media (max-width: 768px) {
+    html[data-site="JP"] .hero-section,
+    html[data-site="US"] .hero-section {
+        min-height: 360px !important;
+        padding: 60px 16px 48px !important;
+    }
+    html[data-site="JP"] .hero-section .hero-title span,
+    html[data-site="US"] .hero-section .hero-title span {
+        font-size: 56px !important;
+        letter-spacing: 2px !important;
+    }
+    html[data-site="JP"] .hero-section .hero-title .hero-tagline,
+    html[data-site="US"] .hero-section .hero-title .hero-tagline {
+        font-size: 11px !important;
+        margin-bottom: 14px !important;
+    }
+    html[data-site="JP"] .hero-section .hero-title .hero-min-order,
+    html[data-site="US"] .hero-section .hero-title .hero-min-order {
+        font-size: 12px !important;
+        margin-top: 18px !important;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
    2026-05-14: 3 바로가기 버튼 — 통일된 차분한 스타일 (무지개 애니메이션 제거)
    디자인 에디터: 진한 잉크, 매니저 연결: 황금 (가장 중요 CTA), 제품검색: cream outlined
    ───────────────────────────────────────────────────────────────────── */

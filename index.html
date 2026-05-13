@@ -561,6 +561,8 @@ window.loadEditorLibraries = function() {
         if (h.indexOf('cafe0101') !== -1) code = 'JP';
         else if (h.indexOf('chameleon.design') !== -1) code = 'US';
         window.__SITE_CODE = code;
+        // 2026-05-14: 해외 사이트는 매니저 견적 카드 숨기고 타이틀 키움 (CSS 분기용 data 속성)
+        try { document.documentElement.setAttribute('data-site', code); } catch(e) {}
     })();
 
     // 1. 프로젝트 버전
