@@ -826,14 +826,10 @@ async function submitPdSample() {
                 썸네일 또는 원본 파일 중 <b>하나만 올려도 됩니다</b>. 원본이 이미지(JPG/PNG)면 자동으로 썸네일도 됩니다.
             </div>
 
-            <!-- PNG 투명 배경 + 배경색 선택 안내 (2026-05-11 추가) -->
-            <div style="margin-top:10px; padding:12px 14px; background:linear-gradient(135deg,#ecfeff,#cffafe); border:1.5px solid #06b6d4; border-radius:10px; font-size:12px; color:#0e7490; line-height:1.65;" data-i18n-html="up_png_hint">
-                <i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i>
-                <b>패턴은 자동으로 만들어집니다.</b> 미리 타일링된 이미지가 아니라, <b>배경 없는 PNG</b> 또는 <b>단색 배경의 잘리지 않은 원본 이미지</b> 한 장만 올려주세요.
-                시스템이 이걸 정방향·미러·벽돌·다이아 등 5가지 레이아웃으로 자동 배치합니다.
-                <br><br>
-                <i class="fa-solid fa-palette" style="color:#0891b2;"></i>
-                <b>투명 PNG를 올리면, 고객이 상세 페이지에서 직접 배경색을 골라 인쇄할 수 있어요</b> (화이트·블랙·아이보리·파스텔·세이지·머스타드 등 + 자유 컬러 선택).
+            <!-- 2026-05-13: PNG 투명 배경 안내 — 한 줄 큼지막한 메시지로 단순화 (사용자 요청) -->
+            <div style="margin-top:10px; padding:16px 18px; background:linear-gradient(135deg,#ecfeff,#cffafe); border:1.5px solid #06b6d4; border-radius:12px; font-size:15px; color:#0e7490; line-height:1.6; font-weight:800; text-align:center;" data-i18n-html="up_png_hint">
+                <i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i>
+                배경이 없는 PNG 이미지를 올리면 고객이 배경색을 선택할 수 있어 <span style="color:#dc2626;">더 많은 판매</span>를 할 수 있어요.
             </div>
 
             <!-- 폼 정보 — 2026-05-13: 단순화. 패턴명만 입력하면 됨 (디자이너=로그인 ID, 카테고리/설명 제거) -->
@@ -854,7 +850,7 @@ async function submitPdSample() {
                     <input type="checkbox" id="upPatternAgree" style="margin-top:3px;">
                     <span style="font-size:11px; color:#78350f; line-height:1.5;" data-i18n="up_agree">본 패턴은 본인 창작물이며, 카멜레온프린팅의 패브릭 인쇄 판매에 사용 동의합니다 (저작권은 작가에게 귀속).</span>
                 </label>
-                <button onclick="submitPatternUpload()" style="width:100%; padding:14px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:1px;">
+                <button id="upPatternSubmitBtn" onclick="submitPatternUpload(event)" style="width:100%; padding:14px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:1px;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="up_submit_btn">패턴 등록하기</span>
                 </button>
                 <div id="upPatternStatus" style="margin-top:10px; font-size:12px; color:var(--brown-dark); text-align:center;"></div>
@@ -1009,7 +1005,7 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
         ctx.fillRect(0,0,c.width,c.height);
     }
 
-    window.submitPatternUpload = async function() {
+    window.submitPatternUpload = async function(ev) {
         // 다른 IIFE 스코프의 LANG/t() 의존성 제거 — window.__PS_LANG 직접 사용
         var __lang = window.__PS_LANG || 'ko';
         var __t = function(k){
@@ -1064,7 +1060,8 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
             _origFile = _thumbFile;
         }
 
-        var btn = event.target.closest('button');
+        // 2026-05-13: ev 인자 우선, 없으면 ID 폴백 (event 전역이 없는 strict 환경에서 TypeError 방지)
+        var btn = (ev && ev.target && ev.target.closest && ev.target.closest('button')) || document.getElementById('upPatternSubmitBtn');
         var uploadingTxt = __L({ko:'업로드 중...', ja:'アップロード中...', en:'Uploading...'});
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + uploadingTxt; }
 
@@ -2380,14 +2377,14 @@ up_orig_sub: { ko:'AI · PSD · PDF · TIFF · JPG · PNG · 최대 200MB', ja:'
 up_orig_btn: { ko:'클릭하여 원본 파일 선택', ja:'クリックして選択', en:'Click to select original', zh:'点击选择原始文件', ar:'انقر للاختيار', es:'Click para seleccionar', de:'Klicken zum Auswahlen', fr:'Cliquer pour selectionner' },
 up_either_hint: { ko:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> 썸네일 또는 원본 파일 중 <b>하나만 올려도 됩니다</b>. 원본이 이미지(JPG/PNG)면 자동으로 썸네일도 됩니다.', ja:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> サムネイルまたは原本のいずれか<b>1つだけでOK</b>。原本が画像なら自動でサムネイルにもなります。', en:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Upload <b>either</b> a thumbnail OR an original file. If original is an image, it doubles as the thumbnail.', zh:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> 缩略图或原始文件，<b>上传一个即可</b>', ar:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> ارفع مصغرة <b>او</b> ملف اصلي', es:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Sube miniatura <b>o</b> archivo original', de:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Vorschaubild <b>oder</b> Original', fr:'<i class="fa-solid fa-circle-info" style="color:var(--accent);"></i> Vignette <b>ou</b> fichier original' },
 up_png_hint: {
-    ko:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>패턴은 자동으로 만들어집니다.</b> 미리 타일링된 이미지가 아니라, <b>배경 없는 PNG</b> 또는 <b>단색 배경의 잘리지 않은 원본 이미지</b> 한 장만 올려주세요. 시스템이 정방향·미러·벽돌·다이아 등 5가지 레이아웃으로 자동 배치합니다.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>투명 PNG를 올리면, 고객이 상세 페이지에서 직접 배경색을 골라 인쇄할 수 있어요</b> (화이트·블랙·아이보리·파스텔·세이지·머스타드 등 + 자유 컬러 선택).',
-    ja:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>パターンは自動生成されます。</b>タイリング済み画像ではなく、<b>背景なしのPNG</b>または<b>単色背景のトリミングされていないオリジナル画像</b>を1枚アップロードしてください。システムが正方向・ミラー・ブリック・ダイヤなど5種類のレイアウトで自動配置します。<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>透明PNGを上げれば、お客様が詳細ページで背景色を自由に選べます</b>（ホワイト・ブラック・アイボリー・パステル・セージ・マスタードなど + 自由カラー）。',
-    en:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>The pattern is generated automatically.</b> Upload <b>one transparent PNG</b> or <b>one uncropped image on a solid background</b> — not a pre-tiled pattern. The system tiles it into 5 layouts (basic / mirror / half-brick / half-drop / centered).<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>If you upload a transparent PNG, customers can pick their own background color on the detail page</b> (white, black, ivory, pastel, sage, mustard, etc. + custom color picker).',
-    zh:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>图案自动生成。</b>请上传<b>透明背景PNG</b>或<b>纯色背景的完整原图</b>一张，系统会自动平铺为5种排列。<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>上传透明PNG时，客户可在详情页自由选择背景色</b>。',
-    ar:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>النمط يُنشأ تلقائياً.</b> ارفع <b>PNG شفاف</b> أو <b>صورة أصلية بخلفية واحدة</b>، والنظام يرتبها بـ5 تخطيطات.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>PNG الشفاف يتيح للعميل اختيار لون الخلفية في صفحة التفاصيل.</b>',
-    es:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>El patrón se genera automáticamente.</b> Sube <b>un PNG transparente</b> o <b>una imagen original con fondo sólido</b> — el sistema la tile en 5 disposiciones.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>Con PNG transparente, el cliente elige el color de fondo en el detalle.</b>',
-    de:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>Das Muster wird automatisch erzeugt.</b> Laden Sie <b>ein transparentes PNG</b> oder <b>ein unbeschnittenes Bild mit einfarbigem Hintergrund</b> hoch — das System kachelt es in 5 Layouts.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>Bei transparentem PNG wählt der Kunde die Hintergrundfarbe selbst.</b>',
-    fr:'<i class="fa-solid fa-wand-magic-sparkles" style="color:#0891b2;"></i> <b>Le motif est généré automatiquement.</b> Téléchargez <b>un PNG transparent</b> ou <b>une image originale sur fond uni</b> — le système la dispose en 5 mises en page.<br><br><i class="fa-solid fa-palette" style="color:#0891b2;"></i> <b>Avec un PNG transparent, le client choisit la couleur de fond.</b>'
+    ko:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> 배경이 없는 PNG 이미지를 올리면 고객이 배경색을 선택할 수 있어 <span style="color:#dc2626;">더 많은 판매</span>를 할 수 있어요.',
+    ja:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> 背景なしのPNGをアップロードすると、お客様が背景色を選べるので <span style="color:#dc2626;">より多く販売</span>できます。',
+    en:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> Upload a transparent PNG and customers can pick their own background color — <span style="color:#dc2626;">more sales</span>.',
+    zh:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> 上传透明背景PNG，客户可自选底色，<span style="color:#dc2626;">销量更高</span>。',
+    ar:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> ارفع PNG شفاف ليختار العميل لون الخلفية — <span style="color:#dc2626;">مبيعات أعلى</span>.',
+    es:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> Sube un PNG transparente y el cliente elige su color de fondo — <span style="color:#dc2626;">más ventas</span>.',
+    de:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> Lade ein transparentes PNG hoch — Kunden wählen die Hintergrundfarbe selbst und du verkaufst <span style="color:#dc2626;">mehr</span>.',
+    fr:'<i class="fa-solid fa-palette" style="color:#0891b2; margin-right:6px;"></i> Téléchargez un PNG transparent : les clients choisissent la couleur de fond et vous <span style="color:#dc2626;">vendez plus</span>.'
 },
 up_pattern_name: { ko:'패턴명', ja:'パターン名', en:'Pattern Name', zh:'图案名称', ar:'اسم النمط', es:'Nombre del patron', de:'Mustername', fr:'Nom du motif' },
 up_pattern_name_ph: { ko:'예: 빈티지 플로럴 #03', ja:'例: ビンテージフローラル #03', en:'e.g. Vintage Floral #03', zh:'例: 复古花卉 #03', ar:'مثال', es:'ej. Floral Vintage', de:'z.B. Vintage Blumen', fr:'ex: Floral Vintage' },
