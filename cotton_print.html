@@ -1180,6 +1180,27 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
     document.addEventListener('click', function(e){
         if (e.target.id === 'patternUploadModal') window.closePatternUploadModal();
     });
+    // 2026-05-13: ?upload=1 또는 #upload 로 진입 시 자동으로 패턴 업로드 모달 열기
+    // (메인 페이지의 "등록하고 판매하세요" 버튼이 /cotton-print?upload=1 로 연결됨)
+    (function _autoOpenUpload(){
+        try {
+            var u = new URLSearchParams(location.search);
+            var wantOpen = u.get('upload') === '1' || location.hash === '#upload';
+            if (!wantOpen) return;
+            var tryOpen = function(retry){
+                if (typeof window.openPatternUploadModal === 'function' && document.getElementById('patternUploadModal')) {
+                    window.openPatternUploadModal();
+                } else if (retry > 0) {
+                    setTimeout(function(){ tryOpen(retry - 1); }, 100);
+                }
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function(){ tryOpen(20); });
+            } else {
+                tryOpen(20);
+            }
+        } catch (e) { console.warn('[upload-auto-open]', e); }
+    })();
 
     // 등록된 패턴 갤러리 로드 (status='approved'만)
     // 2026-05-11: i18n 적용 — 카테고리 뱃지를 현재 언어로 표시 (JP=動物/植物 등, EN=Animal/Plant 등)
