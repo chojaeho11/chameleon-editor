@@ -9051,7 +9051,18 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=450').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
+        import('./advisor-panel.js?v=450').then(m => {
+            if (m.initAdvisorPanel) m.initAdvisorPanel();
+            if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
+            // 2026-05-14: 해외(JP/US)는 노랑 매니저 연결 버튼을 hero-section 안쪽 하단으로 이동
+            try {
+                if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') {
+                    var _pulseBtn = document.querySelector('#advShortcutBtns .adv-ext-btn-pulse');
+                    var _hero = document.querySelector('.hero-section');
+                    if (_pulseBtn && _hero) _hero.appendChild(_pulseBtn);
+                }
+            } catch(e) {}
+        }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
         import('./ai-design-hero.js?v=29').catch(e => console.warn('AI design hero init skipped:', e));

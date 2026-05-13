@@ -6910,31 +6910,68 @@ html[data-site="US"] .hero-section .hero-title .hero-min-order {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   2026-05-14: 3 버튼 레이아웃 변경 — 매니저 연결을 위에 따로(넓게),
-   디자인 에디터 + 제품검색을 아래 2 컬럼
-   사용자 요청: "가운데 매니저 연결을 위로 따로 올려줘. 아래 버튼 2개 위쪽에 노랑버튼 넓게"
+   2026-05-14: KR — 원래 3컬럼 유지 (사용자 요청: "한국어버전은 원래대로 좋아")
+   해외(JP/US) — 노란 매니저 연결 버튼은 JS로 hero 내부로 이동되고,
+                  남은 디자인/제품검색은 2컬럼으로 표시
    ───────────────────────────────────────────────────────────────────── */
-#advShortcutBtns .adv-ext-grid {
+html[data-site="JP"] #advShortcutBtns .adv-ext-grid,
+html[data-site="US"] #advShortcutBtns .adv-ext-grid {
     grid-template-columns: 1fr 1fr !important;
-    grid-template-areas:
-        "pulse pulse"
-        "design rainbow" !important;
+    grid-template-areas: none !important;
     gap: 12px !important;
 }
-#advShortcutBtns .adv-ext-btn.adv-ext-btn-pulse { grid-area: pulse; }
-#advShortcutBtns .adv-ext-btn.adv-ext-btn-design { grid-area: design; }
-#advShortcutBtns .adv-ext-btn.adv-ext-btn-rainbow { grid-area: rainbow; }
-/* 위 노란 매니저 연결 버튼 — 살짝 더 키워 강조 */
-#advShortcutBtns .adv-ext-btn.adv-ext-btn-pulse {
-    padding: 26px 18px !important;
-    font-size: 17px !important;
-    letter-spacing: 1px;
+
+/* hero 내부로 이동된 매니저 연결 버튼 — JP/US 만 */
+html[data-site="JP"] .hero-section .adv-ext-btn-pulse,
+html[data-site="US"] .hero-section .adv-ext-btn-pulse {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    max-width: 460px;
+    width: calc(100% - 32px);
+    margin: 30px auto 0 !important;
+    padding: 20px 28px !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    border-radius: 999px !important;
+    color: #fff !important;
+    text-decoration: none !important;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    z-index: 4;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #b45309 100%) !important;
+    box-shadow: 0 10px 32px -8px rgba(251,191,36,0.6), inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(251,191,36,0.4) !important;
+    letter-spacing: 0.5px;
+    animation: none !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+}
+html[data-site="JP"] .hero-section .adv-ext-btn-pulse:hover,
+html[data-site="US"] .hero-section .adv-ext-btn-pulse:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px -6px rgba(251,191,36,0.75), inset 0 1px 0 rgba(255,255,255,0.3), 0 0 0 1px rgba(251,191,36,0.55) !important;
+}
+
+/* PC 에서 해외 3버튼이 너무 큼 → 줄여서 보기좋게 */
+@media (min-width: 769px) {
+    html[data-site="JP"] #advShortcutBtns .adv-ext-btn,
+    html[data-site="US"] #advShortcutBtns .adv-ext-btn {
+        padding: 16px 12px !important;
+        font-size: 14px !important;
+    }
+    html[data-site="JP"] .hero-section .adv-ext-btn-pulse,
+    html[data-site="US"] .hero-section .adv-ext-btn-pulse {
+        padding: 18px 28px !important;
+        font-size: 15px !important;
+    }
 }
 @media (max-width: 768px) {
-    #advShortcutBtns .adv-ext-grid { gap: 8px !important; }
-    #advShortcutBtns .adv-ext-btn.adv-ext-btn-pulse {
-        padding: 20px 12px !important;
+    html[data-site="JP"] .hero-section .adv-ext-btn-pulse,
+    html[data-site="US"] .hero-section .adv-ext-btn-pulse {
+        padding: 18px 20px !important;
         font-size: 14px !important;
+        margin-top: 24px !important;
     }
 }
 
