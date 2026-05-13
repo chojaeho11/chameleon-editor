@@ -141,7 +141,10 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"ship v40: all honeycomb-except-wall = delivery-only + bundle\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"ship v41: parcel 30k/2 for banner + insta panel\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"ship v42: large parcel 30k for forex/foam, small parcel 5k for general print\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v44: exclude manager quote items from cart discount\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v44: exclude manager quote items from cart discount\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v45: standee+cut-print base stand options + 60x40 compact parcel 10k\")",
+      "Bash(Get-ChildItem -Path . -Name -Recurse -Include \"*.html\", \"*.js\")",
+      "Bash(Select-Object -First 30)"
     ],
     "additionalDirectories": [
       "\\tmp"

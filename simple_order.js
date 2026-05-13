@@ -1385,6 +1385,10 @@
         } else {
             state.wallHeightExtra = 0;
             qty = state.qty;
+            // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (DB 등록가가 단면과 동일하므로 프론트 보정)
+            if (state.isRawBoardDouble) {
+                unit = unit * 2;
+            }
             subtotal = unit * qty;
         }
         const tierPct = 0;
@@ -1470,8 +1474,11 @@
             showRow('soWallSizeRow', false);
         } else {
             // 2026-05-13: 일반 상품 — 라벨을 단순 "단가"로 리셋 (이전 가벽 상태 잔존 방지)
-            setText('soUnitLabel', tr('단가', '単価', 'Unit'));
-            setText('soUnit', fmtPrice(unit));
+            // 원판 양면이면 (양면 ×2) 라벨 표시
+            var unitLabel = tr('단가', '単価', 'Unit');
+            if (state.isRawBoardDouble) unitLabel += ' ' + tr('(양면 ×2)', '(両面 ×2)', '(2-side ×2)');
+            setText('soUnitLabel', unitLabel);
+            setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         }
         // 옵션 breakdown 라인 + 세로 3m 추가 옵션 (가로 m × 5만, 양면이면 2배)
@@ -1552,6 +1559,25 @@
     function _soUsesDeliveryShipping(p) {
         if (!p) return false;
         return _soIsHoneycombProduct(p) && !_soIsWallProduct(p);
+    }
+
+    // 2026-05-13: 허니콤보드 원판인쇄 감지 (Wholesale Board Prices · 이름에 "원판" 포함)
+    function _soIsRawBoardProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        if (cat === 'wholesale board prices' || cat.indexOf('raw') >= 0 || cat.indexOf('원판') >= 0) return true;
+        if (code.startsWith('hb_rb') || code.startsWith('hb_raw')) return true;
+        if (/원판|raw\s*board|raw\s*sheet/i.test(name)) return true;
+        return false;
+    }
+
+    // 2026-05-13: 원판인쇄 양면 여부 (이름에 "양면" 포함 시)
+    function _soIsRawBoardDoubleSided(p) {
+        if (!_soIsRawBoardProduct(p)) return false;
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        return /양면|double.?sided|two.?side/i.test(name);
     }
 
     // 2026-05-13: 등신대 감지 (hb_ss_*, hb_pi_5, hb_point*, acr_crt_stand_*, 또는 이름에 등신대)
@@ -2400,6 +2426,10 @@
             // 초기 가격 계산 (비동기)
             if (typeof window._soOnBoxDimsChange === 'function') window._soOnBoxDimsChange();
         }
+        // 2026-05-13: 허니콤보드 원판인쇄 — 양면이면 단가 2배 자동
+        state.isRawBoard = _soIsRawBoardProduct(p);
+        state.isRawBoardDouble = _soIsRawBoardDoubleSided(p);
+
         // 2026-05-13: 받침대 옵션이 필요한 상품 (등신대 + 자유인쇄커팅)
         state.needsBaseStand = _soNeedsBaseStand(p);
         state.baseStand = 'none';
@@ -2633,6 +2663,8 @@
             boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
             // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — W×H cm + 계산된 단가
             customSize: state.isCustomSize ? { w_cm: state.customW, h_cm: state.customH, unit: state.customUnitPrice, area_m2: state.customAreaM2 } : null,
+            // 2026-05-13: 허니콤보드 원판인쇄 양면 플래그 (단가 2배 재계산용)
+            rawBoardDouble: !!state.isRawBoardDouble,
             // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
             baseStand: (state.baseStand && state.baseStand !== 'none') ? {
                 key: state.baseStand,
@@ -3013,6 +3045,10 @@
         // 2026-05-13: 사용자 정의 사이즈 (현수막 등) — 저장된 단가 사용
         if (it.customSize && typeof it.customSize.unit === 'number') {
             unit = it.customSize.unit;
+        }
+        // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (재계산 안전)
+        if (it.rawBoardDouble || (it.product && _soIsRawBoardDoubleSided(it.product))) {
+            unit = unit * 2;
         }
         var subtotal = unit * qty;
         // 가벽 양면 → 가격 2배
