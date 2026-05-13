@@ -158,7 +158,10 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja\" -UseBasicParsing; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'data-cdi18n'\\).Count)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v48: addon i18n + wall side label + fabric route lang preservation\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v49: drop 100k min order + fabric cart i18n labels\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cotton v48: queue uploads/cart clicks before JS loads\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cotton v48: queue uploads/cart clicks before JS loads\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: recognize product_name field in real-time order list\")",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/admin_m_secret_882?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \\($r.Content | Select-String -Pattern \"product_name\"\\).Matches.Count)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/admin_m_secret_882?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'product_name'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, \"it0.product_name\"\\).Count)"
     ],
     "additionalDirectories": [
       "\\tmp"
