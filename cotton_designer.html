@@ -217,6 +217,40 @@ function applyCdI18n() {
     var t = window.cdT('page_title'); if (t) document.title = t;
 }
 window.addEventListener('DOMContentLoaded', applyCdI18n);
+
+// 2026-05-13: cotton_designer.js 가 아직 안 올라온 상태에서 사용자가 버튼/업로드를 누르면
+// TypeError 발생 → 대기열에 쌓아두고 스크립트 로드 시 자동 재실행
+(function(){
+    function _pending() { window.__cdPendingCalls = window.__cdPendingCalls || []; return window.__cdPendingCalls; }
+    function _queue(name, args) {
+        // 실제 함수가 이미 정의돼 있으면 즉시 실행
+        var fn = window[name];
+        if (typeof fn === 'function' && fn !== window['__cdStub_' + name]) {
+            return fn.apply(null, args);
+        }
+        _pending().push({ name: name, args: args });
+    }
+    function _makeStub(name) {
+        var stub = function() { _queue(name, Array.prototype.slice.call(arguments)); };
+        window['__cdStub_' + name] = stub;
+        return stub;
+    }
+    // 자주 호출되는 진입점들에 안전한 스텁 설치
+    ['_cpCartOpen', '_cdUploadImage'].forEach(function(n){
+        if (typeof window[n] !== 'function') window[n] = _makeStub(n);
+    });
+    // 스크립트 로드 후 대기열 비움
+    window.__cdFlushPending = function() {
+        var q = _pending();
+        while (q.length) {
+            var c = q.shift();
+            var fn = window[c.name];
+            if (typeof fn === 'function' && fn !== window['__cdStub_' + c.name]) {
+                try { fn.apply(null, c.args); } catch (e) { console.warn('[cd-queue]', c.name, e); }
+            }
+        }
+    };
+})();
 </script>
 <style>
 :root {
@@ -1246,6 +1280,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=47"></script>
+<script src="/cotton_designer.js?v=48"></script>
 </body>
 </html>

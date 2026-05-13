@@ -1824,4 +1824,8 @@ window.addEventListener('resize', function(){
     _cdResizeT = setTimeout(function(){ window._cdRender(); }, 120);
 });
 
+// 2026-05-13: 스크립트 로드 전에 사용자가 누른 버튼/업로드 이벤트 (cotton_designer.html 의
+// 인라인 스텁이 대기열에 쌓아둔 것) 을 비움 → 첫 클릭이 무시되지 않도록
+try { if (typeof window.__cdFlushPending === 'function') window.__cdFlushPending(); } catch (e) {}
+
 })();
