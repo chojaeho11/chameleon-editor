@@ -836,34 +836,19 @@ async function submitPdSample() {
                 <b>투명 PNG를 올리면, 고객이 상세 페이지에서 직접 배경색을 골라 인쇄할 수 있어요</b> (화이트·블랙·아이보리·파스텔·세이지·머스타드 등 + 자유 컬러 선택).
             </div>
 
-            <!-- 폼 정보 -->
+            <!-- 폼 정보 — 2026-05-13: 단순화. 패턴명만 입력하면 됨 (디자이너=로그인 ID, 카테고리/설명 제거) -->
             <div style="background:#fff; border-radius:14px; padding:20px; margin-top:16px; border:1px solid var(--cream-dark);">
                 <div style="margin-bottom:12px;">
-                    <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;"><span data-i18n="up_pattern_name">패턴명</span> <span style="color:#dc2626;">*</span></label>
+                    <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;"><span data-i18n="up_pattern_name">패턴명</span> <span style="color:#dc2626;">*</span> <span style="font-size:11px; color:var(--text-light); font-weight:400;" data-i18n="up_pattern_name_hint">(키워드로 자동 사용 · 한·일·영 자동 번역)</span></label>
                     <input id="upPatternName" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: 빈티지 플로럴 #03" data-i18n-placeholder="up_pattern_name_ph">
                 </div>
-                <div style="display:flex; gap:10px; margin-bottom:12px;">
-                    <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;" data-i18n="up_category">카테고리</label>
-                        <select id="upPatternCat" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit; background:#fff;">
-                            <option value="animal" data-i18n="cat_animal">동물</option>
-                            <option value="plant" data-i18n="cat_plant">식물</option>
-                            <option value="people" data-i18n="cat_people">사람</option>
-                            <option value="modern" data-i18n="cat_modern">모던</option>
-                            <option value="scenery" data-i18n="cat_scenery">풍경</option>
-                            <option value="typo" data-i18n="cat_typo">타이포</option>
-                            <option value="kids" data-i18n="cat_kids">키즈</option>
-                            <option value="etc" data-i18n="cat_etc">기타</option>
-                        </select>
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;" data-i18n="up_designer_name">디자이너명</label>
-                        <input id="upPatternAuthor" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="작가명/스튜디오" data-i18n-placeholder="up_designer_name_ph">
-                    </div>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:12px; font-weight:700; color:var(--brown-dark); display:block; margin-bottom:6px;" data-i18n="up_desc">패턴 설명 / 키워드</label>
-                    <textarea id="upPatternDesc" rows="2" style="width:100%; padding:11px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" placeholder="예: 보태니컬 빈티지, 카페 인테리어용, 흙톤 5색 조합" data-i18n-placeholder="up_desc_ph"></textarea>
+                <!-- 카테고리·디자이너명·설명 입력 폼 제거 (사용자 요청): 디자이너 = 로그인한 사용자 ID, 카테고리 = 기타 자동, 설명 = 패턴명을 그대로 키워드로 사용 -->
+                <input type="hidden" id="upPatternCat" value="etc">
+                <input type="hidden" id="upPatternAuthor" value="">
+                <input type="hidden" id="upPatternDesc" value="">
+                <div id="upPatternLoginInfo" style="display:none; padding:10px 14px; background:#ecfeff; border:1px solid #06b6d4; border-radius:8px; margin-bottom:12px; font-size:12px; color:#0e7490; line-height:1.5;">
+                    <i class="fa-solid fa-circle-info"></i> <span data-i18n="up_login_info">로그인한 계정으로 등록됩니다. 패턴 판매 수익 10%가 이 계정에 자동 적립됩니다.</span>
+                    <div id="upPatternLoginName" style="font-weight:800; color:#0c4a6e; margin-top:4px;"></div>
                 </div>
                 <label style="display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:#fef3c7; border-radius:8px; margin-bottom:14px; cursor:pointer;">
                     <input type="checkbox" id="upPatternAgree" style="margin-top:3px;">
@@ -1036,9 +1021,8 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
         };
         var __L = function(map){ return map[__lang] || map.ko || ''; };
         var name = document.getElementById('upPatternName').value.trim();
-        var cat = document.getElementById('upPatternCat').value;
-        var author = document.getElementById('upPatternAuthor').value.trim();
-        var desc = document.getElementById('upPatternDesc').value.trim();
+        var cat = (document.getElementById('upPatternCat') && document.getElementById('upPatternCat').value) || 'etc';
+        var desc = '';  // 2026-05-13: 설명 필드 제거 — 패턴명을 키워드로 사용
         var agree = document.getElementById('upPatternAgree').checked;
         var statusEl = document.getElementById('upPatternStatus');
 
@@ -1046,6 +1030,30 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
         // 원본 또는 썸네일 둘 중 하나만 있으면 OK
         if (!_origFile && !_thumbFile) { alert(__L({ko:'썸네일 또는 원본 파일 중 하나는 필수입니다.', ja:'サムネイルまたは原本ファイルが必要です。', en:'Either a thumbnail or an original file is required.'})); return; }
         if (!agree) { alert(__L({ko:'저작권 동의가 필요합니다.', ja:'著作権同意が必要です。', en:'Copyright agreement is required.'})); return; }
+
+        // 2026-05-13: 로그인한 사용자 ID 기반 — 디자이너명·user_id 자동 결정 (RLS 정책: auth.uid() 필요)
+        var _sbLogin = window.supabase ? window.supabase.createClient(
+            'https://qinvtnhiidtmrzosyvys.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+        ) : null;
+        var _session = null;
+        try { var _r = await _sbLogin.auth.getSession(); _session = _r && _r.data && _r.data.session; } catch(_){}
+        if (!_session || !_session.user) {
+            alert(__L({
+                ko:'패턴 등록은 로그인이 필요합니다. 로그인 후 다시 시도해주세요.\n(판매수익 10% 적립을 위해 본인 계정 인증이 필요합니다.)',
+                ja:'パターン登録にはログインが必要です。\n(売上10%還元のため、本人認証が必要です。)',
+                en:'Pattern upload requires login.\n(Your account is needed to credit the 10% royalty.)'
+            }));
+            // 메인 사이트 로그인 페이지로 이동 (?login=1)
+            location.href = '/?login=1';
+            return;
+        }
+        var _user = _session.user;
+        var _userId = _user.id;
+        // author = 로그인 displayName 또는 email 앞부분
+        var author = (_user.user_metadata && (_user.user_metadata.name || _user.user_metadata.full_name)) ||
+                     (_user.email ? _user.email.split('@')[0] : '') ||
+                     _userId.slice(0, 8);
 
         // 원본이 이미지이고 썸네일 없으면 → 원본을 썸네일로도 사용
         if (_origFile && !_thumbFile && /^image\//.test(_origFile.type)) {
@@ -1061,10 +1069,8 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + uploadingTxt; }
 
         try {
-            var sb = window.supabase ? window.supabase.createClient(
-                'https://qinvtnhiidtmrzosyvys.supabase.co',
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
-            ) : null;
+            // 2026-05-13: 위에서 인증된 _sbLogin (auth 세션 포함) 사용 — RLS 정책 통과
+            var sb = _sbLogin;
             if (!sb) throw new Error('연결 실패');
 
             var ts = Date.now();
@@ -1128,10 +1134,12 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
 
             // 4) DB 등록 (user_patterns 테이블 — 즉시 노출, 부적절 시 어드민이 사후 비공개)
             statusEl.textContent = __L({ko:'등록 중...', ja:'登録中...', en:'Registering...'});
+            // 2026-05-13: user_id 포함 — RLS 정책 (auth.uid() = user_id) 통과, 적립금 귀속 명확
             var insertRes = await sb.from('user_patterns').insert({
                 name: nameMulti,
                 category: cat,
                 author: author || null,
+                user_id: _userId,
                 description: descMulti || null,
                 original_url: origUrl,
                 thumb_url: thumbUrl,
@@ -1144,7 +1152,7 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
             var doneMsg = { ko:'✅ 등록 완료! 카탈로그에 즉시 노출됩니다. 디자이너 마이페이지에서 디자이너명 "' + (author||name) + '"으로 로그인하세요.', ja:'✅ 登録完了！カタログに即時表示されます。デザイナーマイページで「' + (author||name) + '」でログインしてください。', en:'✅ Registered! Now visible in catalog. Log in to Designer My Page with name "' + (author||name) + '".', zh:'✅ 已登记！立即显示在目录中。', ar:'✅ تم التسجيل', es:'✅ Registrado', de:'✅ Registriert', fr:'✅ Enregistre' };
             statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">' + (doneMsg[__lang]||doneMsg.ko) + '</span>';
             // 폼 초기화 (안전 가드)
-            ['upPatternName','upPatternAuthor','upPatternDesc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+            ['upPatternName'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
             var oName = document.getElementById('upOriginalName'); if (oName) oName.textContent = '';
             var tInfo = document.getElementById('upThumbInfo'); if (tInfo) tInfo.textContent = '';
             var ag = document.getElementById('upPatternAgree'); if (ag) ag.checked = false;
@@ -1171,6 +1179,32 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
     window.openPatternUploadModal = function() {
         document.getElementById('patternUploadModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        // 2026-05-13: 로그인 정보 자동 표시 (디자이너명 = 로그인 ID 안내)
+        (async function _showLoginInfo(){
+            try {
+                var sb = window.supabase ? window.supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+                ) : null;
+                if (!sb) return;
+                var s = await sb.auth.getSession();
+                var u = s && s.data && s.data.session && s.data.session.user;
+                var box = document.getElementById('upPatternLoginInfo');
+                var nameEl = document.getElementById('upPatternLoginName');
+                if (!box || !nameEl) return;
+                if (u) {
+                    var dispName = (u.user_metadata && (u.user_metadata.name || u.user_metadata.full_name)) ||
+                                   (u.email ? u.email.split('@')[0] : '') || u.id.slice(0,8);
+                    nameEl.innerHTML = '<i class="fa-solid fa-user-check" style="color:#0891b2;"></i> ' + dispName + ' <span style="font-weight:500; color:#0e7490;">(' + (u.email || u.id.slice(0,8)) + ')</span>';
+                    box.style.display = '';
+                } else {
+                    nameEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <span style="color:#dc2626;">로그인이 필요합니다 — <a href="/?login=1" style="color:#dc2626; text-decoration:underline;">로그인 페이지로</a></span>';
+                    box.style.display = '';
+                    box.style.background = '#fef2f2';
+                    box.style.borderColor = '#fca5a5';
+                }
+            } catch(e) { console.warn('[upload-modal-login-info]', e); }
+        })();
     };
     window.closePatternUploadModal = function() {
         document.getElementById('patternUploadModal').style.display = 'none';
