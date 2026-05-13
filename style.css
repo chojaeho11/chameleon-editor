@@ -6106,13 +6106,10 @@ html, body { -webkit-font-smoothing: antialiased; }
     letter-spacing: -0.045em !important;
     line-height: 1.05 !important;
 }
+/* 2026-05-14: 보라-마젠타 그라데이션 무효화 — hero EOF 블록에서 cream 톤 + 잉크/황금으로 재정의 */
 .hero-title span {
-    font-size: 84px !important;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 55%, #ec4899 100%) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    filter: drop-shadow(0 6px 24px rgba(139,92,246,.18));
+    /* font-size 만 유지하고 색은 EOF 블록에서 결정 */
+    font-size: 72px;
 }
 .hero-title .hero-tagline {
     font-size: 32px !important;
@@ -6719,8 +6716,8 @@ footer, .site-footer { padding-top: 28px !important; }
     text-align: center !important;
     margin-bottom: 0 !important;
     position: relative !important;
-    overflow: hidden !important;
-    min-height: auto !important;
+    overflow: visible !important;
+    min-height: 480px !important;
     /* cream 베이스 + 따뜻한 골드 라디얼 글로우 (영상 대체) */
     background:
         radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251,191,36,0.12) 0%, transparent 65%),
@@ -6775,8 +6772,10 @@ footer, .site-footer { padding-top: 28px !important; }
     filter: none !important;
     font-size: 72px !important;
     line-height: 1.05 !important;
-    display: inline-block;
+    display: block !important;          /* inline-block 이면 가끔 다른 inline 룰과 충돌 → block 으로 강제 */
     white-space: nowrap;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 .hero-section .hero-title span b.ht-prn {
     background: linear-gradient(135deg, #f59e0b 0%, #b45309 50%, #78350f 100%) !important;
