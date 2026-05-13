@@ -1633,6 +1633,23 @@
         if (p.is_custom_size === true) return true;
         const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
         if (/현수막|배너|실사\s*출력|시트지|광고\s*인쇄|banner|hyunsumak/i.test(name)) return true;
+        // 2026-05-14: 아크릴 굿즈 (키링·코롯도·키홀더 등) — 소형이지만 cm² 단가 계산
+        if (_soIsAcrylicGoodsProduct(p)) return true;
+        return false;
+    }
+
+    // 2026-05-14: 아크릴 굿즈 감지 (키링·코롯도·아크릴 굿즈 등)
+    // - code prefix: gds_acr / gds_kr / acr_kr
+    // - 이름: 키링/코롯도/아크릴 키홀더/keyring/korotto
+    // 이런 제품은 5cm×5cm 같은 소형 사이즈가 정상 → min 1cm 허용 + 고리/부자재 자동 표시
+    function _soIsAcrylicGoodsProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        if (/^gds_acr|^gds_kr|^acr_kr|^acr_g/.test(code)) return true;
+        if (/^(gds_acr|acrylic_goods|acrylic|굿즈|goods)$/.test(cat)) return true;
+        if (/아크릴\s*키링|아크릴\s*키홀더|아크릴\s*굿즈|아크릴\s*스탠드|코롯도|korotto|acrylic\s*(keyring|charm|stand|goods|holder|tag)/i.test(name)) return true;
         return false;
     }
 
@@ -1912,6 +1929,21 @@
                 if (a && renderList.indexOf(a) < 0) renderList.push(a);
             });
         }
+        // 2026-05-14: 아크릴 굿즈 — 고리/부자재 자동 포함 (admin_products.addons 비어있어도 ADDON_DB 에서 매칭)
+        // cat_code 가 hook/accessory/strap 류 이거나, 이름/코드에 고리·키링·스트랩 키워드 매칭
+        if (state.isAcrylicGoods && window.ADDON_DB) {
+            var hookCatRe = /^(hook|acc|accessor|strap|chain|keyring|kring|ring|tag|charm|고리|부자재|스트랩)/i;
+            var hookNameRe = /고리|스트랩|체인|hook|strap|chain|carabiner|keyring|key\s*ring|키링|키홀더|charm|tag|볼체인|jump\s*ring|ball\s*chain/i;
+            Object.keys(window.ADDON_DB).forEach(function (k) {
+                var a = window.ADDON_DB[k];
+                if (!a) return;
+                var ac = (a.cat_code || a.category || '').toLowerCase();
+                var an = ((a.name || '') + ' ' + (a.name_us || '') + ' ' + (a.code || '')).toLowerCase();
+                if ((hookCatRe.test(ac) || hookNameRe.test(an)) && renderList.indexOf(a) < 0) {
+                    renderList.push(a);
+                }
+            });
+        }
         if (!renderList.length) return;
 
         var html = renderList.map(function (a) {
@@ -1975,7 +2007,10 @@
         state.customH = hCm;
         var unitEl = document.getElementById('soCustomUnitPrice');
         var infoEl = document.getElementById('soCustomAreaInfo');
-        if (wCm < 10 || hCm < 10) {
+        // 2026-05-14: 아크릴 굿즈는 5cm×5cm 같은 소형이 정상 → min 1cm 허용 (현수막·배너만 min 10cm)
+        var isAcrGoods = state.isAcrylicGoods;
+        var minDim = isAcrGoods ? 1 : 10;
+        if (wCm < minDim || hCm < minDim) {
             if (unitEl) unitEl.textContent = '-';
             if (infoEl) infoEl.textContent = '';
             state.customUnitPrice = 0;
@@ -1986,15 +2021,26 @@
         var areaM2 = (wCm / 100) * (hCm / 100);
         var raw = areaM2 * perSqm;
         var calcPrice = Math.round(raw / 10) * 10;
-        // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장
-        if (calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
+        // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장 — 현수막용
+        if (!isAcrGoods && calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
+        // 아크릴 굿즈 — 최소 100원 (사이즈 1×1cm 같은 극단값 방지)
+        if (isAcrGoods && calcPrice < 100) calcPrice = 100;
         state.customUnitPrice = calcPrice;
         state.customAreaM2 = areaM2;
         if (unitEl) unitEl.textContent = fmtPrice(calcPrice);
         if (infoEl) {
-            infoEl.textContent =
-                wCm + '×' + hCm + 'cm · ' +
-                areaM2.toFixed(2) + 'm² × ' + fmtPrice(perSqm) + '/m²';
+            if (isAcrGoods) {
+                // 아크릴 굿즈 — cm² 단위로 표시 (m² 보다 직관적)
+                var areaCm2 = wCm * hCm;
+                var perCm2 = perSqm / 10000; // m² → cm² 환산
+                infoEl.textContent =
+                    wCm + '×' + hCm + 'cm · ' +
+                    areaCm2 + 'cm² × ' + fmtPrice(Math.round(perCm2)) + '/cm²';
+            } else {
+                infoEl.textContent =
+                    wCm + '×' + hCm + 'cm · ' +
+                    areaM2.toFixed(2) + 'm² × ' + fmtPrice(perSqm) + '/m²';
+            }
         }
         recalc();
     };
@@ -2472,6 +2518,8 @@
 
         // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
         state.isCustomSize = _soIsCustomSizeProduct(p);
+        // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
+        state.isAcrylicGoods = _soIsAcrylicGoodsProduct(p);
         state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
         state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
         state.customUnitPrice = 0;
