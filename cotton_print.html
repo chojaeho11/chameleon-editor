@@ -490,48 +490,48 @@ function openPdSampleRequest() {
     <div style="background:#fff; border-radius:18px; width:560px; max-width:95%; max-height:92vh; overflow-y:auto; box-shadow:0 24px 70px rgba(0,0,0,0.35);">
         <div style="background:linear-gradient(135deg,#451a03,#78350f); padding:26px; border-radius:18px 18px 0 0; text-align:center; color:#faf6ed;">
             <div style="font-size:11px; letter-spacing:5px; color:#fde047; font-weight:700; margin-bottom:6px;">— FREE FABRIC SAMPLE —</div>
-            <h3 style="margin:0; font-size:22px; font-weight:900;"><i class="fa-solid fa-gift" style="color:#fde047;"></i> 무료 샘플 + 업자 회원가입</h3>
-            <p style="margin:8px 0 0; font-size:12px; opacity:0.85;">정보 입력 → 자동 회원가입 → 샘플 무료 발송</p>
+            <h3 style="margin:0; font-size:22px; font-weight:900;"><i class="fa-solid fa-gift" style="color:#fde047;"></i> <span data-i18n="smp_title">무료 샘플 + 업자 회원가입</span></h3>
+            <p style="margin:8px 0 0; font-size:12px; opacity:0.85;" data-i18n="smp_subtitle">정보 입력 → 자동 회원가입 → 샘플 무료 발송</p>
         </div>
         <div style="padding:24px;">
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">성함 / 담당자명 <span style="color:#dc2626;">*</span></label>
-                    <input id="pdSampleName" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: 홍길동">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;"><span data-i18n="smp_name">성함 / 담당자명</span> <span style="color:#dc2626;">*</span></label>
+                    <input id="pdSampleName" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: 홍길동" data-i18n-placeholder="smp_name_ph">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">회사명 / 상호 <span style="color:#dc2626;">*</span></label>
-                    <input id="pdSampleCompany" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: (주)ABC 패브릭">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;"><span data-i18n="smp_company">회사명 / 상호</span> <span style="color:#dc2626;">*</span></label>
+                    <input id="pdSampleCompany" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="예: (주)ABC 패브릭" data-i18n-placeholder="smp_company_ph">
                 </div>
             </div>
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">휴대전화 <span style="color:#dc2626;">*</span></label>
-                    <input id="pdSamplePhone" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="010-0000-0000">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;"><span data-i18n="smp_phone">휴대전화</span> <span style="color:#dc2626;">*</span></label>
+                    <input id="pdSamplePhone" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="010-0000-0000" data-i18n-placeholder="smp_phone_ph">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">이메일 (로그인 ID)</label>
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;" data-i18n="smp_email">이메일 (로그인 ID)</label>
                     <input id="pdSampleEmail" type="email" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
                 </div>
             </div>
             <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">샘플 받을 주소 <span style="color:#dc2626;">*</span></label>
-                <input id="pdSampleZip" style="width:130px; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; margin-bottom:6px;" placeholder="우편번호">
-                <input id="pdSampleAddr1" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; margin-bottom:6px;" placeholder="기본주소 (도로명/지번)">
-                <input id="pdSampleAddr2" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="상세주소 (동/호수)">
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;"><span data-i18n="smp_addr">샘플 받을 주소</span> <span style="color:#dc2626;">*</span></label>
+                <input id="pdSampleZip" style="width:130px; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; margin-bottom:6px;" placeholder="우편번호" data-i18n-placeholder="smp_zip_ph">
+                <input id="pdSampleAddr1" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; margin-bottom:6px;" placeholder="기본주소 (도로명/지번)" data-i18n-placeholder="smp_addr1_ph">
+                <input id="pdSampleAddr2" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="상세주소 (동/호수)" data-i18n-placeholder="smp_addr2_ph">
             </div>
             <div style="margin-bottom:14px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;">관심 원단 / 요청사항</label>
-                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" placeholder="예: 광목 30수, 옥스포드, 쉬폰 — 매장 디스플레이 용도 / 월 1,000m 예상"></textarea>
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px; color:#451a03;" data-i18n="smp_memo">관심 원단 / 요청사항</label>
+                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" placeholder="예: 광목 30수, 옥스포드, 쉬폰 — 매장 디스플레이 용도 / 월 1,000m 예상" data-i18n-placeholder="smp_memo_ph"></textarea>
             </div>
             <label style="display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:#fef3c7; border-radius:8px; margin-bottom:14px; cursor:pointer;">
                 <input type="checkbox" id="pdSampleAgree" style="margin-top:3px;">
-                <span style="font-size:12px; color:#78350f; line-height:1.5;">개인정보 수집·이용 동의 (회원가입 및 샘플 발송 목적, 보유기간 5년)</span>
+                <span style="font-size:12px; color:#78350f; line-height:1.5;" data-i18n="smp_agree">개인정보 수집·이용 동의 (회원가입 및 샘플 발송 목적, 보유기간 5년)</span>
             </label>
-            <button onclick="submitPdSample()" style="width:100%; padding:15px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:1px;">
-                <i class="fa-solid fa-paper-plane"></i> 회원가입 + 샘플 신청
+            <button id="pdSampleSubmitBtn" onclick="submitPdSample()" style="width:100%; padding:15px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:1px;">
+                <i class="fa-solid fa-paper-plane"></i> <span data-i18n="smp_submit">회원가입 + 샘플 신청</span>
             </button>
-            <button onclick="document.getElementById('pdSampleModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:6px; font-family:inherit;">닫기</button>
+            <button onclick="document.getElementById('pdSampleModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:6px; font-family:inherit;" data-i18n="smp_close">닫기</button>
         </div>
     </div>
 </div>
@@ -2327,6 +2327,26 @@ footer_designer_mypage: {
     ko:'디자이너 마이페이지', ja:'デザイナーマイページ', en:'Designer Dashboard', zh:'设计师中心',
     ar:'لوحة المصمم', es:'Panel del Disenador', de:'Designer-Dashboard', fr:'Espace Designer'
 },
+// 2026-05-13: 무료 샘플 신청 모달 i18n
+smp_title: { ko:'무료 샘플 + 업자 회원가입', ja:'無料サンプル + 事業者会員登録', en:'Free Sample + Business Signup', zh:'免费样品 + 商家注册', ar:'عينة مجانية + تسجيل تجاري', es:'Muestra Gratis + Registro', de:'Gratis-Muster + Anmeldung', fr:'Échantillon Gratuit + Inscription' },
+smp_subtitle: { ko:'정보 입력 → 자동 회원가입 → 샘플 무료 발송', ja:'情報入力 → 自動会員登録 → サンプル無料発送', en:'Fill info → auto signup → free sample shipped', zh:'输入信息 → 自动注册 → 免费寄样', ar:'املأ المعلومات → تسجيل تلقائي → شحن مجاني', es:'Datos → registro auto → muestra gratis', de:'Daten → Auto-Anmeldung → Gratis-Versand', fr:'Infos → inscription auto → envoi gratuit' },
+smp_name: { ko:'성함 / 담당자명', ja:'お名前 / ご担当者名', en:'Name / Contact Person', zh:'姓名 / 负责人', ar:'الاسم / المسؤول', es:'Nombre / Contacto', de:'Name / Ansprechpartner', fr:'Nom / Contact' },
+smp_name_ph: { ko:'예: 홍길동', ja:'例：山田太郎', en:'e.g. John Doe', zh:'例：张三', ar:'مثال: محمد', es:'ej. Juan Pérez', de:'z.B. Max Mustermann', fr:'ex: Jean Dupont' },
+smp_company: { ko:'회사명 / 상호', ja:'会社名 / 商号', en:'Company / Brand', zh:'公司名 / 商号', ar:'الشركة / العلامة', es:'Empresa / Marca', de:'Firma / Marke', fr:'Entreprise / Marque' },
+smp_company_ph: { ko:'예: (주)ABC 패브릭', ja:'例：株式会社ABCファブリック', en:'e.g. ABC Fabric Inc.', zh:'例：ABC面料有限公司', ar:'مثال: شركة ABC', es:'ej. ABC Fabric SA', de:'z.B. ABC Fabric GmbH', fr:'ex: ABC Fabric SARL' },
+smp_phone: { ko:'휴대전화', ja:'携帯電話', en:'Mobile Phone', zh:'手机', ar:'الهاتف', es:'Móvil', de:'Mobiltelefon', fr:'Mobile' },
+smp_phone_ph: { ko:'010-0000-0000', ja:'090-0000-0000', en:'+1 555-0000', zh:'138-0000-0000', ar:'05-0000-0000', es:'+34 000-000-000', de:'+49 000 0000000', fr:'+33 0 00 00 00 00' },
+smp_email: { ko:'이메일 (로그인 ID)', ja:'メールアドレス (ログインID)', en:'Email (Login ID)', zh:'邮箱 (登录ID)', ar:'البريد الإلكتروني', es:'Email (ID inicio)', de:'E-Mail (Login-ID)', fr:'Email (ID connexion)' },
+smp_addr: { ko:'샘플 받을 주소', ja:'サンプル送付先住所', en:'Sample Shipping Address', zh:'样品收货地址', ar:'عنوان الشحن', es:'Dirección de Envío', de:'Versandadresse', fr:'Adresse de Livraison' },
+smp_zip_ph: { ko:'우편번호', ja:'郵便番号', en:'ZIP / Postal Code', zh:'邮编', ar:'الرمز البريدي', es:'Código Postal', de:'PLZ', fr:'Code Postal' },
+smp_addr1_ph: { ko:'기본주소 (도로명/지번)', ja:'住所 (都道府県・市区町村)', en:'Street Address', zh:'详细地址', ar:'العنوان', es:'Dirección', de:'Straße', fr:'Adresse' },
+smp_addr2_ph: { ko:'상세주소 (동/호수)', ja:'建物名・部屋番号', en:'Apt / Suite', zh:'门牌号', ar:'الشقة', es:'Apto / Piso', de:'Wohnung', fr:'Apt' },
+smp_memo: { ko:'관심 원단 / 요청사항', ja:'希望生地 / リクエスト', en:'Fabric Interest / Notes', zh:'感兴趣的面料 / 备注', ar:'الأقمشة المطلوبة', es:'Telas de Interés', de:'Interesse / Notiz', fr:'Tissus / Notes' },
+smp_memo_ph: { ko:'예: 광목 30수, 옥스포드, 쉬폰 — 매장 디스플레이 용도 / 월 1,000m 예상', ja:'例：コットン30番、オックスフォード、シフォン — 店舗ディスプレイ用 / 月1,000m予定', en:'e.g. Cotton 30s, Oxford, Chiffon — store display use / ~1,000m monthly', zh:'例：30支棉、牛津布、雪纺 — 店铺展示用 / 月1000m', ar:'مثال: قطن 30, أكسفورد, شيفون', es:'ej. Algodón 30s, Oxford, Chifón', de:'z.B. Baumwolle 30, Oxford, Chiffon', fr:'ex: Coton 30, Oxford, Mousseline' },
+smp_agree: { ko:'개인정보 수집·이용 동의 (회원가입 및 샘플 발송 목적, 보유기간 5년)', ja:'個人情報の収集・利用に同意 (会員登録・サンプル発送目的、5年間保管)', en:'I agree to the collection and use of personal info (for signup & sample delivery, 5-year retention)', zh:'同意收集与使用个人信息 (用于注册及寄样，保留5年)', ar:'أوافق على جمع البيانات الشخصية', es:'Acepto la recolección de datos personales', de:'Ich stimme der Datenerhebung zu', fr:'J\'accepte la collecte de données personnelles' },
+smp_submit: { ko:'회원가입 + 샘플 신청', ja:'会員登録 + サンプル申込', en:'Sign Up + Request Sample', zh:'注册 + 申请样品', ar:'تسجيل + طلب عينة', es:'Registrar + Pedir Muestra', de:'Anmelden + Muster anfordern', fr:'S\'inscrire + Demander Échantillon' },
+smp_close: { ko:'닫기', ja:'閉じる', en:'Close', zh:'关闭', ar:'إغلاق', es:'Cerrar', de:'Schließen', fr:'Fermer' },
+
 // ── Cotton Print 신규 섹션 ──
 cp_hero_sample: {
     ko:'무료 패브릭 샘플 요청', ja:'無料ファブリックサンプル請求', en:'Request Free Fabric Sample',

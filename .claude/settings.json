@@ -190,7 +190,8 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"https://b1996a09.chameleon-print.pages.dev/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \"Status: $\\($r.StatusCode\\)\"; \"Length: $\\($r.Content.Length\\)\"; \\($r.Content | Select-String -Pattern \"config\\\\.js\\\\?v=\"\\).Matches.Count; \\($r.Content | Select-String -Pattern \"window\\\\.sb\"\\).Matches.Count)",
       "PowerShell(git checkout 1591ae4 -- index.html; \"Restored\"; \\(Get-Item \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\\\\index.html\"\\).Length)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"fix: restore index.html UTF-8 no-BOM\")",
-      "PowerShell($r = Invoke-WebRequest -Uri \"https://229dc206.chameleon-print.pages.dev/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \"Status: $\\($r.StatusCode\\)\"; \"Length: $\\($r.Content.Length\\)\"; $b = $r.RawContent.ToCharArray\\(\\)[0..2]; \"First 3 chars: '$\\($b -join ''\\)'\"; \\($r.Content | Select-String -Pattern '카멜레온'\\).Matches.Count)"
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://229dc206.chameleon-print.pages.dev/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \"Status: $\\($r.StatusCode\\)\"; \"Length: $\\($r.Content.Length\\)\"; $b = $r.RawContent.ToCharArray\\(\\)[0..2]; \"First 3 chars: '$\\($b -join ''\\)'\"; \\($r.Content | Select-String -Pattern '카멜레온'\\).Matches.Count)",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"home/cp: free fabric sample button -> /cotton-print?sample=1 auto-open\")"
     ],
     "additionalDirectories": [
       "\\tmp"

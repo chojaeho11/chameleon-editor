@@ -2590,7 +2590,7 @@ window.addEventListener('load', function() {
     <!-- 패턴 검색창 -->
     <div style="margin:14px auto 0; max-width:520px; padding:0 4px;">
         <div style="position:relative;">
-            <input id="cpHomeSearch" type="text" placeholder="패턴 검색 (이름, 디자이너, 키워드)"
+            <input id="cpHomeSearch" type="text" placeholder="패턴 검색 (이름, 디자이너, 키워드)" data-cp-search-ph
                    style="width:100%; padding:11px 44px 11px 16px; border:1.5px solid #f3ead4; border-radius:50px; font-size:13px; font-family:inherit; background:#fff; color:#451a03; outline:none; transition:border-color 0.2s;"
                    onkeydown="if(event.key==='Enter') window._cpHomeSearch()"
                    oninput="clearTimeout(window._cpHomeSearchT); window._cpHomeSearchT = setTimeout(window._cpHomeSearch, 300)">
@@ -2619,21 +2619,21 @@ window.addEventListener('load', function() {
 // Cotton Print 섹션 다국어 적용 + 모든 cotton-print.com 링크에 ?lang= 부착
 (function(){
     var DICT = {
-        kr: { badge:'패브릭 사업부', desc:'대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓', btn1:'내원단 만들기', btn2:'디자이너 패턴 컬렉션', btn3:'등록하고 판매하세요', btnSample:'패브릭 무료 샘플 신청', allBtn:'전체 패턴 보기',
+        kr: { badge:'패브릭 사업부', desc:'대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓', btn1:'내원단 만들기', btn2:'디자이너 패턴 컬렉션', btn3:'등록하고 판매하세요', btnSample:'패브릭 무료 샘플 신청', allBtn:'전체 패턴 보기', searchPh:'패턴 검색 (이름, 디자이너, 키워드)',
               chips:{all:'전체',animal:'동물',plant:'식물',people:'사람',modern:'모던',scenery:'풍경',typo:'타이포',kids:'키즈',etc:'기타'} },
-        ja: { badge:'ファブリック事業部', desc:'最大幅130cm ロール生地 · 回杯あたり¥1,500 · デザイナーパターンマーケット', btn1:'生地デザイン', btn2:'デザイナーコレクション', btn3:'登録して販売', btnSample:'無料サンプル請求', allBtn:'すべてのパターンを見る',
+        ja: { badge:'ファブリック事業部', desc:'最大幅130cm ロール生地 · 回杯あたり¥1,500 · デザイナーパターンマーケット', btn1:'生地デザイン', btn2:'デザイナーコレクション', btn3:'登録して販売', btnSample:'無料サンプル請求', allBtn:'すべてのパターンを見る', searchPh:'パターン検索 (名前·デザイナー·キーワード)',
               chips:{all:'すべて',animal:'動物',plant:'植物',people:'人物',modern:'モダン',scenery:'風景',typo:'タイポ',kids:'キッズ',etc:'その他'} },
-        en: { badge:'Fabric Division', desc:'Wide 130cm roll · $15/unit · Designer Pattern Marketplace', btn1:'Design My Fabric', btn2:'Designer Collection', btn3:'Upload & Sell', btnSample:'Free Fabric Sample', allBtn:'View All Patterns',
+        en: { badge:'Fabric Division', desc:'Wide 130cm roll · $15/unit · Designer Pattern Marketplace', btn1:'Design My Fabric', btn2:'Designer Collection', btn3:'Upload & Sell', btnSample:'Free Fabric Sample', allBtn:'View All Patterns', searchPh:'Search patterns (name, designer, keyword)',
               chips:{all:'All',animal:'Animal',plant:'Plant',people:'People',modern:'Modern',scenery:'Scenery',typo:'Typo',kids:'Kids',etc:'Etc'} },
-        zh: { badge:'面料事业部', desc:'幅宽130cm 卷布 · 每单位 ¥75 · 设计师图案市场', btn1:'设计我的布料', btn2:'设计师图案合集', btn3:'上传并销售', btnSample:'免费样品申请', allBtn:'查看所有图案',
+        zh: { badge:'面料事业部', desc:'幅宽130cm 卷布 · 每单位 ¥75 · 设计师图案市场', btn1:'设计我的布料', btn2:'设计师图案合集', btn3:'上传并销售', btnSample:'免费样品申请', allBtn:'查看所有图案', searchPh:'搜索图案 (名称、设计师、关键词)',
               chips:{all:'全部',animal:'动物',plant:'植物',people:'人物',modern:'现代',scenery:'风景',typo:'字体',kids:'儿童',etc:'其他'} },
-        ar: { badge:'قسم النسيج', desc:'عرض 130 سم · 15$/وحدة · سوق انماط المصممين', btn1:'صمم قماشي', btn2:'مجموعة المصممين', btn3:'حمّل وبع', btnSample:'عينة مجانية', allBtn:'كل الانماط',
+        ar: { badge:'قسم النسيج', desc:'عرض 130 سم · 15$/وحدة · سوق انماط المصممين', btn1:'صمم قماشي', btn2:'مجموعة المصممين', btn3:'حمّل وبع', btnSample:'عينة مجانية', allBtn:'كل الانماط', searchPh:'بحث الأنماط (الاسم، المصمم، الكلمة)',
               chips:{all:'الكل',animal:'حيوانات',plant:'نباتات',people:'اشخاص',modern:'حديث',scenery:'مناظر',typo:'طباعة',kids:'اطفال',etc:'اخرى'} },
-        es: { badge:'Division Tela', desc:'130 cm rollo · $15/unidad · Mercado de Disenadores', btn1:'Disenar Mi Tela', btn2:'Coleccion Disenadores', btn3:'Subir y Vender', btnSample:'Muestra Gratis', allBtn:'Ver todos los patrones',
+        es: { badge:'Division Tela', desc:'130 cm rollo · $15/unidad · Mercado de Disenadores', btn1:'Disenar Mi Tela', btn2:'Coleccion Disenadores', btn3:'Subir y Vender', btnSample:'Muestra Gratis', allBtn:'Ver todos los patrones', searchPh:'Buscar patrones (nombre, diseñador, palabra)',
               chips:{all:'Todo',animal:'Animal',plant:'Planta',people:'Personas',modern:'Moderno',scenery:'Paisaje',typo:'Tipografia',kids:'Ninos',etc:'Otros'} },
-        de: { badge:'Stoff-Abteilung', desc:'130cm Rolle · $15/Einheit · Designer-Marktplatz', btn1:'Stoff entwerfen', btn2:'Designer-Kollektion', btn3:'Hochladen & Verkaufen', btnSample:'Gratis-Muster', allBtn:'Alle Muster',
+        de: { badge:'Stoff-Abteilung', desc:'130cm Rolle · $15/Einheit · Designer-Marktplatz', btn1:'Stoff entwerfen', btn2:'Designer-Kollektion', btn3:'Hochladen & Verkaufen', btnSample:'Gratis-Muster', allBtn:'Alle Muster', searchPh:'Muster suchen (Name, Designer, Stichwort)',
               chips:{all:'Alle',animal:'Tier',plant:'Pflanze',people:'Mensch',modern:'Modern',scenery:'Landschaft',typo:'Typo',kids:'Kinder',etc:'Sonst.'} },
-        fr: { badge:'Division Tissu', desc:'Largeur 130cm · $15/unite · Marche des designers', btn1:'Concevoir mon tissu', btn2:'Collection de designers', btn3:'Uploader & Vendre', btnSample:'Échantillon Gratuit', allBtn:'Voir tous les motifs',
+        fr: { badge:'Division Tissu', desc:'Largeur 130cm · $15/unite · Marche des designers', btn1:'Concevoir mon tissu', btn2:'Collection de designers', btn3:'Uploader & Vendre', btnSample:'Échantillon Gratuit', allBtn:'Voir tous les motifs', searchPh:'Rechercher motifs (nom, designer, mot-clé)',
               chips:{all:'Tous',animal:'Animal',plant:'Plante',people:'Personne',modern:'Moderne',scenery:'Paysage',typo:'Typographie',kids:'Enfants',etc:'Autres'} }
     };
     function applyCpHomeI18n() {
@@ -2649,6 +2649,9 @@ window.addEventListener('load', function() {
         setTxt('cpHomeBtn2', t.btn2);
         setTxt('cpHomeBtn3', t.btn3);
         setTxt('cpHomeBtnSample', t.btnSample);
+        // 검색창 placeholder 다국어 적용
+        var srch = document.querySelector('[data-cp-search-ph]');
+        if (srch && t.searchPh) srch.setAttribute('placeholder', t.searchPh);
         setTxt('cpHomeAllBtn', t.allBtn);
         // 카테고리 칩
         document.querySelectorAll('.cp-home-chip').forEach(function(c){
@@ -2783,8 +2786,8 @@ window.addEventListener('load', function() {
                 grid.innerHTML = '<div style="grid-column:1/-1; padding:50px 20px; text-align:center; color:#78350f;"><i class="fa-solid fa-palette" style="font-size:32px; opacity:0.3;"></i><div style="margin-top:10px; font-size:13px;">' + (_cpHomeSearch ? '검색 결과가 없습니다' : '해당 카테고리 패턴이 아직 없습니다') + '</div></div>';
                 return;
             }
+            // 2026-05-13: 패턴 카드 카테고리 뱃지 제거 (사용자 요청) — 다국어 사이트에서 한글로 잘못 노출되던 문제 해결
             grid.innerHTML = data.map(function(p){
-                var label = CP_LABELS[p.category] || p.category || '';
                 var rawThumb = p.thumb_url || 'https://placehold.co/300?text=Pattern';
                 // Supabase 이미지 변환으로 240px 리사이즈 (단일 객체 PNG는 contain)
                 var thumb = rawThumb.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
@@ -2793,8 +2796,7 @@ window.addEventListener('load', function() {
                 return '<a href="https://www.cotton-print.com/cotton-designer?pattern=' + p.id + langSfx + '" target="_blank" class="cp-home-card">' +
                     '<div class="cp-thumb"><img src="' + thumb + '" loading="lazy" decoding="async" alt="' + (p.name||'').replace(/"/g,'&quot;') + '" onerror="this.onerror=null; this.src=\'' + rawThumb.replace(/'/g, "\\'") + '\'"></div>' +
                     '<div class="cp-meta">' +
-                        (label ? '<div class="cp-cat">' + label + '</div>' : '') +
-                        '<div class="cp-name">' + (p.name||'(이름 없음)') + '</div>' +
+                        '<div class="cp-name">' + (p.name||'') + '</div>' +
                         (p.author ? '<div class="cp-author"><i class="fa-solid fa-user-pen" style="font-size:8px;"></i> ' + p.author + '</div>' : '') +
                     '</div>' +
                 '</a>';
