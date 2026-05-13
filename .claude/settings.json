@@ -192,7 +192,10 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"fix: restore index.html UTF-8 no-BOM\")",
       "PowerShell($r = Invoke-WebRequest -Uri \"https://229dc206.chameleon-print.pages.dev/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \"Status: $\\($r.StatusCode\\)\"; \"Length: $\\($r.Content.Length\\)\"; $b = $r.RawContent.ToCharArray\\(\\)[0..2]; \"First 3 chars: '$\\($b -join ''\\)'\"; \\($r.Content | Select-String -Pattern '카멜레온'\\).Matches.Count)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"home/cp: free fabric sample button -> /cotton-print?sample=1 auto-open\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"i18n: sample modal 8 langs + remove pattern card category badge\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"i18n: sample modal 8 langs + remove pattern card category badge\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hero: cotton.mp4 bg video + CHAMELEON PRINTING title \\(8 langs\\)\")",
+      "PowerShell(\"Cleaned\")",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'hero-bg-video'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'CHAMELEON PRINTING'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'class=\"hero-section\"'\\).Count)"
     ],
     "additionalDirectories": [
       "\\tmp"
