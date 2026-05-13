@@ -6707,8 +6707,8 @@ footer, .site-footer { padding-top: 28px !important; }
 #startTplSearch:focus { border-color: var(--dr-purple-deep) !important; }
 
 /* ─────────────────────────────────────────────────────────────────────
-   2026-05-14: 메인 hero 풀 재설계 — 영상 제거, 차분한 cream 톤, 세련된 타이포그래피
-   사용자 요청: "영상은 빼고 멋있게 디자인해줘. 클로드 디자인을 이용 세련되고 멋진"
+   2026-05-14: 메인 hero — 백그라운드 영상 (어둡게) + 흰색 타이틀 + 골드 PRINTING
+   사용자 요청: "백그라운드로 영상 아주 어둡게, 카멜레온 흰색, PRINTING 그라데이션, 나머지 흰색"
    ───────────────────────────────────────────────────────────────────── */
 .hero-section {
     width: 100% !important;
@@ -6716,34 +6716,44 @@ footer, .site-footer { padding-top: 28px !important; }
     text-align: center !important;
     margin-bottom: 0 !important;
     position: relative !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     min-height: 480px !important;
-    /* cream 베이스 + 따뜻한 골드 라디얼 글로우 (영상 대체) */
+    background: #0a0a0a !important;
+}
+/* 백그라운드 영상 — 전체 채우기 */
+.hero-section .hero-video {
+    position: absolute !important;
+    top: 0; left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: 0 !important;
+    pointer-events: none;
+    opacity: 0.55;
+}
+/* 어두운 오버레이 — 영상 위에 덮어서 텍스트 가독성 확보 */
+.hero-section .hero-video-overlay {
+    position: absolute !important;
+    inset: 0;
+    z-index: 1 !important;
+    pointer-events: none;
     background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251,191,36,0.12) 0%, transparent 65%),
-        radial-gradient(ellipse 60% 80% at 100% 100%, rgba(180,83,9,0.06) 0%, transparent 60%),
-        linear-gradient(180deg, #fefcf5 0%, #faf6ed 100%) !important;
+        radial-gradient(ellipse 70% 50% at 50% 40%, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.65) 100%),
+        linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.75) 100%);
 }
-/* hero ::before — 미세 노이즈 텍스처 (옵션, 빈티지 종이 느낌) */
-.hero-section::before {
-    content: ''; position: absolute; inset: 0; pointer-events: none;
-    background-image:
-        repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(120,53,15,0.015) 2px, rgba(120,53,15,0.015) 3px);
-    z-index: 0;
-}
-.hero-section::after { display: none !important; }
-.hero-section > * { position: relative; z-index: 2; }
+.hero-section::before, .hero-section::after { display: none !important; }
+.hero-section > *:not(.hero-video):not(.hero-video-overlay) { position: relative; z-index: 2; }
 
-/* 데코 라인 — 타이틀 위에 얇은 골드 라인 + 작은 다이아몬드 */
+/* 데코 라인 — 어두운 영상 위 골드 라인 */
 .hero-section .hero-deco-line {
     width: 80px; height: 1px; margin: 0 auto 22px;
-    background: linear-gradient(90deg, transparent, #b45309 50%, transparent);
+    background: linear-gradient(90deg, transparent, #fbbf24 50%, transparent);
     position: relative;
 }
 .hero-section .hero-deco-line::after {
     content: ''; position: absolute; left: 50%; top: 50%;
-    width: 6px; height: 6px; background: #b45309; transform: translate(-50%,-50%) rotate(45deg);
-    box-shadow: 0 0 0 3px #faf6ed;
+    width: 6px; height: 6px; background: #fbbf24; transform: translate(-50%,-50%) rotate(45deg);
+    box-shadow: 0 0 0 3px rgba(10,10,10,0.9), 0 0 12px rgba(251,191,36,0.5);
 }
 
 /* 타이틀 */
@@ -6756,60 +6766,64 @@ footer, .site-footer { padding-top: 28px !important; }
     display: block;
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif !important;
     font-size: 12px !important;
-    color: #b45309 !important;
+    color: #fef3c7 !important;
     font-weight: 700 !important;
     margin-bottom: 18px !important;
     letter-spacing: 4px !important;
     text-transform: uppercase;
+    opacity: 0.92;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 .hero-section .hero-title span {
     background: none !important;
     -webkit-text-fill-color: initial !important;
-    color: #1c1917 !important;
+    color: #ffffff !important;
     font-family: 'Anton', 'Black Han Sans', 'Noto Sans KR', sans-serif !important;
     letter-spacing: 3px !important;
-    text-shadow: none !important;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4) !important;
     filter: none !important;
     font-size: 72px !important;
     line-height: 1.05 !important;
-    display: block !important;          /* inline-block 이면 가끔 다른 inline 룰과 충돌 → block 으로 강제 */
+    display: block !important;
     white-space: nowrap;
     visibility: visible !important;
     opacity: 1 !important;
 }
 .hero-section .hero-title span b.ht-prn {
-    background: linear-gradient(135deg, #f59e0b 0%, #b45309 50%, #78350f 100%) !important;
+    background: linear-gradient(135deg, #fde68a 0%, #fbbf24 35%, #f59e0b 70%, #b45309 100%) !important;
     -webkit-background-clip: text !important;
     background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     padding-left: 14px;
     font-weight: 900;
     font-family: inherit !important;
-    filter: drop-shadow(0 4px 12px rgba(180,83,9,0.18));
+    filter: drop-shadow(0 4px 16px rgba(251,191,36,0.45));
+    text-shadow: none !important;
 }
 .hero-section .hero-title .hero-min-order {
     display: block;
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif !important;
     font-size: 13px !important;
-    color: #78350f !important;
+    color: #ffffff !important;
     margin-top: 22px !important;
     font-weight: 500 !important;
     font-style: normal !important;
     letter-spacing: 0;
-    opacity: 0.85;
+    opacity: 0.88;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 .hero-section .hero-mascot { display: none !important; }
 
-/* 매니저 견적 카드 — cream 배경 위에서 따뜻한 amber/gold 카드로 강조 */
+/* 매니저 견적 카드 — 어두운 영상 위에서도 잘 보이게 amber/gold 카드 강조 */
 #mgrQuoteHero {
     margin-top: 28px !important;
     position: relative;
     z-index: 4 !important;
 }
 #mgrQuoteHero > div {
-    backdrop-filter: none !important;
-    background: linear-gradient(135deg, #fef9e7 0%, #fed7aa 100%) !important;
-    box-shadow: 0 16px 48px -12px rgba(180,83,9,0.25), 0 0 0 1px rgba(251,191,36,0.45) !important;
+    backdrop-filter: blur(6px) !important;
+    background: linear-gradient(135deg, rgba(254,249,231,0.97) 0%, rgba(254,215,170,0.97) 100%) !important;
+    box-shadow: 0 16px 48px -8px rgba(0,0,0,0.55), 0 0 0 1px rgba(251,191,36,0.6) !important;
     border-color: #fbbf24 !important;
 }
 

@@ -828,7 +828,11 @@ if ('caches' in window) {
     </noscript>
 
     <div class="hero-section">
-        <!-- 2026-05-14: 영상 제거 + cream 톤 우아한 정적 hero (사용자 요청: "영상은 빼고 멋있게") -->
+        <!-- 2026-05-14: 백그라운드 영상 복귀 (어둡게) + CHAMELEON 흰색 / PRINTING 그라데이션 -->
+        <video class="hero-video" autoplay muted loop playsinline preload="auto">
+            <source src="cotton.mp4" type="video/mp4">
+        </video>
+        <div class="hero-video-overlay"></div>
         <div class="hero-deco-line"></div>
         <div style="position:relative;">
             <h1 class="hero-title" data-i18n="hero_title"><small class="hero-tagline">업자를 위한 도매인쇄몰</small><span>CHAMELEON<b class="ht-prn">PRINTING</b></span><em class="hero-min-order">담당 매니저와 상담한 금액을 입력하고 쉽게 주문하세요</em></h1>
