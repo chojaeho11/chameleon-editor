@@ -1930,16 +1930,24 @@
             });
         }
         // 2026-05-14: 아크릴 굿즈 — 고리/부자재 자동 포함 (admin_products.addons 비어있어도 ADDON_DB 에서 매칭)
-        // cat_code 가 hook/accessory/strap 류 이거나, 이름/코드에 고리·키링·스트랩 키워드 매칭
+        // 매칭 기준 (어느 하나라도 부합하면 포함):
+        //   1) addon_categories.name 이 고리/부자재/스트랩/hook/accessory 류
+        //   2) addon.name / name_us / name_kr / code 에 고리·링·키링·스트랩·체인 등 키워드
         if (state.isAcrylicGoods && window.ADDON_DB) {
-            var hookCatRe = /^(hook|acc|accessor|strap|chain|keyring|kring|ring|tag|charm|고리|부자재|스트랩)/i;
-            var hookNameRe = /고리|스트랩|체인|hook|strap|chain|carabiner|keyring|key\s*ring|키링|키홀더|charm|tag|볼체인|jump\s*ring|ball\s*chain/i;
+            var hookNameRe = /(^|[^가-힣])고리|링고리|오링|원형링|체인|스트랩|볼체인|키링|키홀더|키체인|손목|넥|목걸이|버클|hook|ring|strap|chain|carabiner|keyring|key\s*ring|key\s*chain|charm|tag|jump\s*ring|ball\s*chain|lobster|fob/i;
+            var hookCatRe = /고리|부자재|스트랩|체인|키링|hook|ring|strap|chain|accessor|charm|tag/i;
+            var catDB = window.ADDON_CAT_DB || {};
             Object.keys(window.ADDON_DB).forEach(function (k) {
                 var a = window.ADDON_DB[k];
                 if (!a) return;
-                var ac = (a.cat_code || a.category || '').toLowerCase();
-                var an = ((a.name || '') + ' ' + (a.name_us || '') + ' ' + (a.code || '')).toLowerCase();
-                if ((hookCatRe.test(ac) || hookNameRe.test(an)) && renderList.indexOf(a) < 0) {
+                // addon_categories.name 으로 카테고리명 조회
+                var catCode = a.category_code || a.cat_code || a.category || '';
+                var catEntry = catCode ? catDB[catCode] : null;
+                var catName = catEntry ? (catEntry.name || catEntry.name_kr || catEntry.display_name || '') : '';
+                var nm = ((a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '') + ' ' + (a.code || '')).toLowerCase();
+                var catMatch = catName && hookCatRe.test(catName);
+                var nameMatch = hookNameRe.test(nm);
+                if ((catMatch || nameMatch) && renderList.indexOf(a) < 0) {
                     renderList.push(a);
                 }
             });
@@ -2520,8 +2528,17 @@
         state.isCustomSize = _soIsCustomSizeProduct(p);
         // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
         state.isAcrylicGoods = _soIsAcrylicGoodsProduct(p);
-        state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
-        state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
+        // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
+        if (state.isAcrylicGoods) {
+            state.customW = parseInt(p.width_mm ? p.width_mm/10 : 5, 10) || 5;
+            state.customH = parseInt(p.height_mm ? p.height_mm/10 : 5, 10) || 5;
+            // width_mm 이 100mm (1cm) 같은 너무 큰 값으로 잘못 저장된 경우는 5로 강제
+            if (state.customW > 30) state.customW = 5;
+            if (state.customH > 30) state.customH = 5;
+        } else {
+            state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
+            state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
+        }
         state.customUnitPrice = 0;
         var custSec = document.getElementById('soCustomSizeSection');
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';

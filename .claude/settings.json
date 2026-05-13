@@ -200,7 +200,8 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hero look: white CHAMELEON + gold PRINTING + darker overlay + calmer buttons\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hero: mgrQuote visible + title 72/56 + min-height auto + mascot hidden\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"redesign: cream hero \\(no video\\) + calm buttons + ?sid URL cleanup\")",
-      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'CHAMELEON'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'mgrQuoteHero'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'hero-bg-video'\\).Count)"
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'CHAMELEON'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'mgrQuoteHero'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'hero-bg-video'\\).Count)",
+      "Bash(powershell -NoProfile -Command \"\\(Get-Content index.html -Raw\\) -replace 'config\\\\.js\\\\?v=435', 'config.js?v=436' | Set-Content index.html -NoNewline -Encoding utf8NoBOM\")"
     ],
     "additionalDirectories": [
       "\\tmp"

@@ -271,6 +271,8 @@ async function loadSystemData() {
                 }
                 ADDON_DB[item.code] = { ...item, display_name: dName, price: dbPrice };
             });
+            // 2026-05-14: 비-모듈 스크립트(simple_order.js)에서도 ADDON_DB 사용 → window 노출
+            window.ADDON_DB = ADDON_DB;
         }
         PRODUCT_DB = {};
     } catch(e) {
