@@ -167,7 +167,9 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: sub-category breakdown \\(honeycomb wall/box/banner split\\)\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: merge ��Ÿ+���ΰ��� + fix qty double-count + broaden fabric\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: full order.total_amount �� main product category\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: split shipping + design fee into own categories \\(������ stays with parent\\)\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"admin secret_882: split shipping + design fee into own categories \\(������ stays with parent\\)\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hero: swap AI/buttons order + rename + 2x height + pulse manager + ai-img\")",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; $line981 = \\(\\($r.Content -split \"`n\"\\)[978..985]\\) -join '|'; $line1165 = \\(\\($r.Content -split \"`n\"\\)[1165..1170]\\) -join '|'; \"L979-985: $line981\"; \"L1165-1170: $line1165\")"
     ],
     "additionalDirectories": [
       "\\tmp"

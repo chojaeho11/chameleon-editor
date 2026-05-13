@@ -1364,10 +1364,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 2026-05-13: 매니저 견적 카드는 hero-section 내부 자식이라 별도 reorder 불필요 (자동으로 hero 와 함께)
-    // 히어로 바로 다음: 바로가기 버튼 → 챗봇
+    // 히어로 바로 다음: 3 바로가기 버튼 (디자인에디터/매니저연결/제품검색 + BAND + WITH) → AI 디자인 → 챗봇
     var shortcutBtns = document.getElementById('advShortcutBtns');
+    var aiDesignHero = document.getElementById('aiDesignHero');
     var cursor = hero;
     if (shortcutBtns) { moveAfter(shortcutBtns, cursor); cursor = shortcutBtns; }
+    if (aiDesignHero) { moveAfter(aiDesignHero, cursor); cursor = aiDesignHero; }
     [chatbotWrap, couponBanner, btnWrap].forEach(function(el) {
         if (el) { moveAfter(el, cursor); cursor = el; }
     });
