@@ -6711,35 +6711,79 @@ footer, .site-footer { padding-top: 28px !important; }
 
 /* ─────────────────────────────────────────────────────────────────────
    2026-05-14: 메인 hero — cotton_print 스타일 (CHAMELEON 흰색 + PRINTING 황금)
-   line 6108 의 보라색 그라데이션 override
+   레이아웃 재정비: 타이틀 위쪽 정렬 + mgrQuote 카드 안 가려지게 충분한 공간 + 마스코트 깔끔 배치
    ───────────────────────────────────────────────────────────────────── */
+.hero-section {
+    padding: 60px 20px 50px !important;
+    min-height: auto !important;
+}
 .hero-section .hero-title {
     font-family: 'Anton', 'Black Han Sans', 'Noto Sans KR', sans-serif !important;
+    margin-bottom: 24px !important;
+    font-size: 56px !important;          /* 76px → 56px (덜 부담스러움) */
+}
+.hero-section .hero-title .hero-tagline {
+    font-size: 18px !important;          /* 32px → 18px (보조 톤) */
+    color: #faf6ed !important;
+    font-weight: 700 !important;
+    margin-bottom: 14px !important;
+    letter-spacing: 0.5px !important;
+    opacity: 0.9;
 }
 .hero-section .hero-title span {
     background: none !important;
     -webkit-text-fill-color: initial !important;
     color: #fff !important;
     font-family: 'Anton', 'Black Han Sans', 'Noto Sans KR', sans-serif !important;
-    letter-spacing: 4px !important;
-    text-shadow: 0 4px 24px rgba(0,0,0,0.5) !important;
+    letter-spacing: 3px !important;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
     filter: none !important;
-    font-size: 96px !important;
-    line-height: 1 !important;
+    font-size: 72px !important;          /* 84px → 72px */
+    line-height: 1.05 !important;
+    display: inline-block;
+    white-space: nowrap;
 }
 .hero-section .hero-title span b.ht-prn {
     background: linear-gradient(135deg, #fef3c7 0%, #fde047 30%, #facc15 60%, #f59e0b 100%) !important;
     -webkit-background-clip: text !important;
     background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
-    padding-left: 14px;
+    padding-left: 12px;
     font-weight: 900;
     font-family: inherit !important;
     filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
 }
+.hero-section .hero-title .hero-min-order {
+    font-size: 12px !important;
+    color: rgba(254,243,199,0.85) !important;
+    margin-top: 18px !important;
+    font-weight: 500 !important;
+}
+
+/* 마스코트 — cotton_print 히어로처럼 깔끔하게 숨김 (타이틀과 mgrQuote 가 주인공) */
+.hero-section .hero-mascot {
+    display: none !important;
+}
+
+/* 매니저 견적 카드 — hero 안에서 잘 보이게 (글래스 효과 + 위로 띄움) */
+#mgrQuoteHero {
+    margin-top: 8px !important;
+    position: relative;
+    z-index: 4 !important;
+}
+#mgrQuoteHero > div {
+    backdrop-filter: blur(8px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(251,191,36,0.4) !important;
+}
+
 @media (max-width: 768px) {
-    .hero-section .hero-title span { font-size: 48px !important; letter-spacing: 2px !important; }
-    .hero-section .hero-title span b.ht-prn { padding-left: 8px; }
+    .hero-section { padding: 36px 16px 28px !important; }
+    .hero-section .hero-title { font-size: 30px !important; margin-bottom: 16px !important; }
+    .hero-section .hero-title .hero-tagline { font-size: 13px !important; margin-bottom: 8px !important; }
+    .hero-section .hero-title span { font-size: 40px !important; letter-spacing: 1.5px !important; }
+    .hero-section .hero-title span b.ht-prn { padding-left: 6px; }
+    .hero-section .hero-title .hero-min-order { font-size: 11px !important; margin-top: 12px !important; }
+    .hero-section .hero-mascot { display: none !important; }
 }
 
 /* 2026-05-14: 메인 3 바로가기 버튼 — 간격 확대 + 색감 차분하게 */
