@@ -46,18 +46,22 @@ export function initConfig() {
             } else {
             }
             
-            // 2. 세션 상태 확인 + 데이터 로드 병렬 실행 (10초 타임아웃)
+            // 2. 세션 상태 확인 + 데이터 로드 병렬 실행 (25초 타임아웃 — 크로스링크 콜드스타트 대응)
+            // 2026-05-13: 10s → 25s. cotton-print.com / cafe domain 간 이동 시 초기 Supabase 콜드스타트가
+            // 10s 안에 응답 안 와서 패턴/상품 로딩이 무한 스피너로 멈추던 문제 완화.
             const _timeout = (ms) => new Promise((_, rej) => setTimeout(() => rej(new Error('DB timeout')), ms));
             let sessionResult, session = null;
             try {
                 [sessionResult] = await Promise.race([
                     Promise.all([ sb.auth.getSession(), loadSystemData() ]),
-                    _timeout(10000).then(() => { throw new Error('DB timeout'); })
+                    _timeout(25000).then(() => { throw new Error('DB timeout'); })
                 ]);
                 session = sessionResult?.data?.session || null;
             } catch(e) {
                 console.warn('⚠️ DB 초기화 타임아웃 — 오프라인 모드로 진행:', e.message);
             }
+            // 글로벌 노출 — 다른 모듈이 새 client 생성 안 하고 재사용 (Multiple GoTrueClient 경고 제거)
+            if (sb) window.sb = sb;
             updateUserSession(session);
 
             // 2-1. ★ 소셜 로그인 리다이렉트 후 복원 (getSession으로 세션 확인된 경우)
