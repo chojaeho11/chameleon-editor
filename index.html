@@ -2756,13 +2756,13 @@ window.addEventListener('load', function() {
             var sb = window.supabase.createClient(SB_URL_CP, SB_KEY_CP);
             var from = (_cpHomePage - 1) * CP_PAGE_SIZE;
             var to = from + CP_PAGE_SIZE - 1;
-            // ASC 정렬: 시드 INSERT 순서가 library 최신순이므로 ASC = 최신 라이브러리 먼저 (cotton_print.html과 동일)
+            // 2026-05-13: 최신 등록 패턴이 먼저 보이도록 DESC 정렬 (사용자 요청)
             // created_at 컷오프로 옛 시드 (페이즐리 46 등) 자동 숨김
             var q = sb.from('user_patterns')
                 .select('id, name, category, author, thumb_url', { count: 'exact' })
                 .eq('status','approved')
                 .gte('created_at', '2026-05-11T00:00:00Z')
-                .order('created_at',{ascending:true})
+                .order('created_at',{ascending:false})
                 .range(from, to);
             if (_cpHomeCat) q = q.eq('category', _cpHomeCat);
             if (_cpHomeSearch) {
@@ -9038,7 +9038,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=450').then(m => { if (m.initAdvisorPanel) m.initAdvisorPanel(); if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns'); }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화
-        import('./ai-design-hero.js?v=28').catch(e => console.warn('AI design hero init skipped:', e));
+        import('./ai-design-hero.js?v=29').catch(e => console.warn('AI design hero init skipped:', e));
 
         // Photo Studio는 advisor-panel.js에 통합됨
 

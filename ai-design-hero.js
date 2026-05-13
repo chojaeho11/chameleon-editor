@@ -15,11 +15,12 @@ function aiGetLang() {
 const AI_I18N = {
     kr: {
         title: '✨ AI 디자인 스튜디오', free:'무료 사용', hint:'GPT-5.5 · 영문 텍스트 · 에디터에서 한글 편집',
-        lead: '<b>원하는 디자인을 마음껏 해보세요.</b> 수정할 부분이 있다면 에디터에서 수정하세요.',
+        lead: '<b>간단한 프롬프트만 입력하세요.</b> 최상위 AI 모델이 옆 예시와 같은 고퀄리티 디자인을 자동으로 만들어드립니다. 결과는 에디터에서 자유롭게 수정할 수 있어요.',
         s1:'① 사이즈 선택', s2:'② 제목', s3:'③ 작은 글씨', optional:'(선택)', required:'(필수)',
         titlePh:'제목 (예: 악마는 프라다를 입는다, 50% SALE)', promptPh:'부제·태그라인·전화번호 등 (없으면 비워두세요)',
-        uploadBtn:'첨부이미지 (4장까지)', genBtn:'🎨 AI 디자인 생성하기', genBtnLoading:'⏳ 생성중...', previewHint:'미리보기 · 곧 또렷해집니다', emptyMain:'예시 — "카멜레온과 케데헌 콜라보" 글씨만으로 멋진 포스터가 만들어집니다.',
-        emptySub:'다운받은 후 패브릭 또는 종이에 인쇄해 보세요.<br>세상 하나뿐인 나만의 작품을 만들어요. <b>고화질 엔진으로 약 3분 정도 소요됩니다.</b>',
+        uploadBtn:'첨부이미지 (4장까지)', genBtn:'🎨 AI 디자인 생성하기', genBtnLoading:'⏳ 생성중...', previewHint:'미리보기 · 곧 또렷해집니다',
+        emptyMain:'예시 - 간단한 프롬프트만으로 예시와 같은 고퀄리티 디자인이 만들어집니다.',
+        emptySub:'최상위 인공지능 이미지 생성 모델로 <b>약 3분정도 시간이 소요됩니다.</b><br>조금만 기다려주세요.',
         loadMain:'AI가 디자인을 생성중입니다', loadSub:'고화질 엔진으로 약 3분 정도 소요됩니다. 잠시만 기다려 주세요.',
         editBtn:'✏️ 에디터로 추가편집', dlBtn:'💾 고화질 다운로드', customPick:'직접 선택',
         sizes:{auto:'자동',square:'정사각형',portrait:'세로',story:'스토리',land:'가로',wide:'와이드',autoDim:'AI 선택'}
@@ -144,9 +145,18 @@ window.selectAiSize = function(key) {
 };
 
 function relocateAiPanel() {
+    // 2026-05-13: aiDesignHero 를 3개 바로가기 버튼(advShortcutBtns) 바로 다음에 위치시킴
+    // (이전엔 .hero-section 바로 다음에 강제 이동 → 사용자가 요청한 "버튼이 AI 위" 가 깨졌음)
     const panel = document.getElementById('aiDesignHero');
+    if (!panel) return;
+    const shortcuts = document.getElementById('advShortcutBtns');
+    if (shortcuts && shortcuts.parentNode && panel.previousElementSibling !== shortcuts) {
+        shortcuts.parentNode.insertBefore(panel, shortcuts.nextSibling);
+        return;
+    }
+    // shortcuts 가 아직 없으면 fallback: 히어로 바로 다음
     const hero = document.querySelector('#startScreen .hero-section') || document.querySelector('.hero-section');
-    if (panel && hero && hero.parentNode && panel.previousElementSibling !== hero) {
+    if (hero && hero.parentNode && panel.previousElementSibling !== hero) {
         hero.parentNode.insertBefore(panel, hero.nextSibling);
     }
 }

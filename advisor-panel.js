@@ -567,28 +567,28 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-btn i{flex-shrink:0;font-size:18px;}
         .adv-ext-btn:hover{transform:translateY(-1px);}
 
-        /* 디자인 에디터 — 검정 그라데이션 (정적, 입체감) */
+        /* 디자인 에디터 — 검정 그라데이션 (45도, 정적, 입체감) */
         .adv-ext-btn.adv-ext-btn-design{
-            background:linear-gradient(135deg,#000000 0%,#3f3f46 40%,#52525b 60%,#18181b 100%);
+            background:linear-gradient(45deg,#000000 0%,#3f3f46 40%,#52525b 60%,#18181b 100%);
             box-shadow:0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
         }
         .adv-ext-btn.adv-ext-btn-design:hover{box-shadow:0 10px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.18);}
 
-        /* 매니저 연결 — 보라 그라데이션 (흐르는 애니메이션 + glow ring) */
-        @keyframes mgrConnGradient { 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
+        /* 매니저 연결 — 보라 그라데이션 (45도, 흐르는 애니메이션 + glow ring) */
+        @keyframes mgrConnGradient { 0%{background-position:0% 0%;} 100%{background-position:200% 200%;} }
         @keyframes mgrConnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(168,85,247,0.55),0 6px 18px rgba(124,58,237,0.5);} 50%{box-shadow:0 0 0 8px rgba(168,85,247,0),0 10px 26px rgba(124,58,237,0.7);} }
         .adv-ext-btn.adv-ext-btn-pulse{
-            background:linear-gradient(90deg,#4c1d95,#7c3aed,#a855f7,#c084fc,#a855f7,#7c3aed,#4c1d95);
-            background-size:200% 100%;
+            background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#c084fc,#a855f7,#7c3aed,#4c1d95);
+            background-size:200% 200%;
             animation:mgrConnGradient 2.2s linear infinite, mgrConnPulse 1.4s ease-in-out infinite;
         }
         .adv-ext-btn.adv-ext-btn-pulse:hover{animation-play-state:running;}
 
-        /* 제품검색 — 무지개 그라데이션 (천천히 흐르는 애니메이션) */
-        @keyframes rainbowFlow { 0%{background-position:0% 50%;} 100%{background-position:200% 50%;} }
+        /* 제품검색 — 무지개 그라데이션 (45도, 천천히 흐르는 애니메이션) */
+        @keyframes rainbowFlow { 0%{background-position:0% 0%;} 100%{background-position:200% 200%;} }
         .adv-ext-btn.adv-ext-btn-rainbow{
-            background:linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899,#ef4444);
-            background-size:200% 100%;
+            background:linear-gradient(45deg,#ef4444,#f59e0b,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899,#ef4444);
+            background-size:200% 200%;
             animation:rainbowFlow 5s linear infinite;
             box-shadow:0 6px 18px rgba(99,102,241,0.35);
         }
