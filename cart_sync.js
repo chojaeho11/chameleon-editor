@@ -77,6 +77,13 @@
             var fromUrl = p.get('sid');
             if (fromUrl && /^[a-f0-9-]{30,40}$/i.test(fromUrl)) {
                 try { localStorage.setItem(SID_KEY, fromUrl); } catch (e) {}
+                // 2026-05-14: 읽고 나면 URL 에서 sid 파라미터 제거 (주소창 깔끔하게)
+                try {
+                    p.delete('sid');
+                    var qs = p.toString();
+                    var newUrl = location.pathname + (qs ? '?' + qs : '') + location.hash;
+                    history.replaceState(null, '', newUrl);
+                } catch (e) {}
                 return fromUrl;
             }
         } catch (e) {}

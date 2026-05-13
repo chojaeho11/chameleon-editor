@@ -828,13 +828,10 @@ if ('caches' in window) {
     </noscript>
 
     <div class="hero-section">
-        <!-- 2026-05-13: 코튼프린트 hero 와 동일한 cotton.mp4 배경영상 -->
-        <video class="hero-bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-            <source src="/cotton.mp4" type="video/mp4">
-        </video>
-        <div style="position:relative; display:inline-block;">
+        <!-- 2026-05-14: 영상 제거 + cream 톤 우아한 정적 hero (사용자 요청: "영상은 빼고 멋있게") -->
+        <div class="hero-deco-line"></div>
+        <div style="position:relative;">
             <h1 class="hero-title" data-i18n="hero_title"><small class="hero-tagline">업자를 위한 도매인쇄몰</small><span>CHAMELEON<b class="ht-prn">PRINTING</b></span><em class="hero-min-order">담당 매니저와 상담한 금액을 입력하고 쉽게 주문하세요</em></h1>
-            <img src="/mascot-character.png" class="hero-mascot" alt="Chameleon mascot" width="160" height="160">
         </div>
 
     <!-- 2026-05-13: 매니저 견적 빠른 주문 — hero-section 내부 자식으로 두어 reorder 영향 안 받음 -->
@@ -7187,7 +7184,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=49"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
-<script src="/cart_sync.js?v=9"></script>
+<script src="/cart_sync.js?v=10"></script>
 
 <script type="module">
     import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=434";
