@@ -1929,27 +1929,19 @@
                 if (a && renderList.indexOf(a) < 0) renderList.push(a);
             });
         }
-        // 2026-05-14: 아크릴 굿즈 — 고리/부자재 자동 포함 (admin_products.addons 비어있어도 ADDON_DB 에서 매칭)
-        // 매칭 기준 (어느 하나라도 부합하면 포함):
-        //   1) addon_categories.name 이 고리/부자재/스트랩/hook/accessory 류
-        //   2) addon.name / name_us / name_kr / code 에 고리·링·키링·스트랩·체인 등 키워드
+        // 2026-05-14: 아크릴 굿즈 — 키링용 부자재만 자동 포함 (ADDON_DB 스캔)
+        // 화이트리스트: 와이어링/키링/오링/볼체인/랍스터/jump ring 등 키링 전용 명칭
+        // 블랙리스트: 봉/조명/글루건/받침대/타공/멜빵/텐션/허니콤 등 가벽·배너 전용 → 무조건 제외
         if (state.isAcrylicGoods && window.ADDON_DB) {
-            var hookNameRe = /(^|[^가-힣])고리|링고리|오링|원형링|체인|스트랩|볼체인|키링|키홀더|키체인|손목|넥|목걸이|버클|hook|ring|strap|chain|carabiner|keyring|key\s*ring|key\s*chain|charm|tag|jump\s*ring|ball\s*chain|lobster|fob/i;
-            var hookCatRe = /고리|부자재|스트랩|체인|키링|hook|ring|strap|chain|accessor|charm|tag/i;
-            var catDB = window.ADDON_CAT_DB || {};
+            var keyringWhiteRe = /와이어\s*링|wire\s*ring|키링|key\s*ring|key\s*chain|keyring|키체인|오링|원형\s*링|o-?ring|볼\s*체인|ball\s*chain|랍스터|lobster|jump\s*ring|메탈\s*링|metal\s*ring|키홀더|key\s*holder|핸드폰\s*고리|폰\s*고리|버블링|크리스탈\s*링/i;
+            var bannerBlackRe = /봉|조명|글루건|받침대|타공|아일렛|eyelet|멜빵|텐션|tension|허니콤|honeycomb|광고|배너(?!\s*키링)|banner(?!\s*key)|가벽|wall\s*panel|상단끈|하단끈|마감|finish|POP|판넬|panel|글루|grout|매대|stand(?!ee)|히터|heat|박스|box/i;
             Object.keys(window.ADDON_DB).forEach(function (k) {
                 var a = window.ADDON_DB[k];
                 if (!a) return;
-                // addon_categories.name 으로 카테고리명 조회
-                var catCode = a.category_code || a.cat_code || a.category || '';
-                var catEntry = catCode ? catDB[catCode] : null;
-                var catName = catEntry ? (catEntry.name || catEntry.name_kr || catEntry.display_name || '') : '';
                 var nm = ((a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '') + ' ' + (a.code || '')).toLowerCase();
-                var catMatch = catName && hookCatRe.test(catName);
-                var nameMatch = hookNameRe.test(nm);
-                if ((catMatch || nameMatch) && renderList.indexOf(a) < 0) {
-                    renderList.push(a);
-                }
+                if (bannerBlackRe.test(nm)) return;        // 가벽·배너용 → 제외
+                if (!keyringWhiteRe.test(nm)) return;      // 키링 키워드 미부합 → 제외
+                if (renderList.indexOf(a) < 0) renderList.push(a);
             });
         }
         if (!renderList.length) return;
@@ -1970,9 +1962,20 @@
                 return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
             }) : '';
             var isLight = a.isLight === true || /조명|light|lamp/i.test(name);
-            return '<label style="display:flex; align-items:center; gap:8px; padding:10px 12px; border:2px solid #e7e5e4; border-radius:10px; cursor:pointer; font-size:13px; background:#fff; transition:all 0.15s;">' +
+            // 2026-05-14: 원형 썸네일 — admin_addons.img_url 사용, 없으면 작은 점 아이콘
+            var imgUrl = a.img_url || a.image_url || a.thumb_url || '';
+            var imgHtml;
+            if (imgUrl) {
+                imgHtml = '<img src="' + String(imgUrl).replace(/"/g,'&quot;') +
+                    '" loading="lazy" alt="" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1.5px solid #e7d6b8; background:#fff; flex-shrink:0;" ' +
+                    'onerror="this.style.display=&quot;none&quot;">';
+            } else {
+                imgHtml = '<span style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#fef3c7,#fed7aa); display:inline-flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🔗</span>';
+            }
+            return '<label style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:2px solid #e7e5e4; border-radius:12px; cursor:pointer; font-size:13px; background:#fff; transition:all 0.15s;">' +
                 '<input type="checkbox" data-addon-code="' + String(a.code).replace(/"/g,'&quot;') + '" data-addon-light="' + (isLight && state.isWall ? '1' : '0') + '" onchange="window._soToggleAddon(this)" style="margin:0; width:16px; height:16px;">' +
-                '<div style="flex:1;">' +
+                imgHtml +
+                '<div style="flex:1; min-width:0;">' +
                   '<div style="font-weight:700; color:#451a03;">' + safe + '</div>' +
                   (descSafe ? '<div style="font-size:11px; color:#6b7280; margin-top:2px;">' + descSafe + '</div>' : '') +
                 '</div>' +
