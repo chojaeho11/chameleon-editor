@@ -727,7 +727,9 @@ window._cdOnAccessoryChange = function() {
     if (!checked) return;
     const label = checked.closest('.fin-opt');
     state.accCode = checked.value || '';
-    state.accName = label.dataset.name || (state.accCode ? label.querySelector('b').textContent : '');
+    // 2026-05-13: 번역된 <b> 우선 (i18n 적용 후 텍스트), dataset.name 은 KR 폴백
+    var b = label.querySelector('b');
+    state.accName = state.accCode ? ((b && b.textContent.trim()) || label.dataset.name || '') : '';
     state.accExtra = parseInt(label.dataset.extra || '0', 10);
     updatePrice();
 };
@@ -1359,17 +1361,8 @@ window._cdBuyNow = function() {
     window._cpOpenCheckout();
 };
 
-// 2026-05-12: 최소주문금액 검증 — 패브릭 주문 100,000원 이상 (KR), JP 사이트는 면제(홍보)
-const MIN_ORDER_KRW = 100000;
-function checkMinOrderAmount(total_krw) {
-    var lang = window.__CD_LANG || 'ko';
-    if (lang === 'ja') return true;   // JP 홍보 기간 — 제한 없음
-    if (total_krw < MIN_ORDER_KRW) {
-        var msg = (window.cdT && window.cdT('min_order_block')) ||
-                  '패브릭 주문은 최소 10만원부터 가능합니다.';
-        if (typeof window.alert === 'function') window.alert(msg);
-        return false;
-    }
+// 2026-05-13: 최소주문금액 제도 폐지 — 사용자 결정 (KR/JP/EN 모두 제한 없음)
+function checkMinOrderAmount(_total_krw) {
     return true;
 }
 
@@ -1380,10 +1373,31 @@ window._cpOpenCheckout = function() {
     if (!checkMinOrderAmount(calcCartTotal())) return;
     // 요약 렌더
     const list = document.getElementById('coItemList');
+    // 2026-05-13: 체크아웃 요약 라벨 다국어 (마감/고리/부자재/출력) + 옵션명 코드 기반 i18n 폴백
+    var _cdL = (window.__CD_LANG || 'ko');
+    var _LT = {
+        ko: { out:'출력', fin:'마감', hook:'고리', acc:'부자재', raw:'가재단' },
+        ja: { out:'出力', fin:'仕上げ', hook:'ストラップ', acc:'付属品', raw:'仮裁断' },
+        en: { out:'Print', fin:'Finish', hook:'Strap', acc:'Accessory', raw:'Pre-cut' }
+    };
+    var L = _LT[_cdL] || _LT.ko;
+    // 코드 → i18n key 로 번역 시도 (저장된 name 이 한국어인 경우 보정)
+    function _trByCode(prefix, code, fallback) {
+        if (!code) return fallback || '';
+        var key = prefix + '_' + code;
+        if (window.cdT) {
+            var t = window.cdT(key);
+            if (t) return t;
+        }
+        return fallback || '';
+    }
     list.innerHTML = cart.map(function(it){
-        const parts = [it.fabricName, '출력 ' + (it.orderSize||''), it.qtyLabel, '마감: '+(it.finishName||'가재단')];
-        if (it.hookCode) parts.push('고리: '+it.hookName);
-        if (it.accCode) parts.push('부자재: '+it.accName);
+        var finTxt = _trByCode('finish', it.finishCode, it.finishName || L.raw);
+        var hookTxt = _trByCode('hook', it.hookCode, it.hookName);
+        var accTxt = _trByCode('acc', it.accCode, it.accName);
+        const parts = [it.fabricName, L.out + ' ' + (it.orderSize||''), it.qtyLabel, L.fin + ': ' + finTxt];
+        if (it.hookCode) parts.push(L.hook + ': ' + hookTxt);
+        if (it.accCode) parts.push(L.acc + ': ' + accTxt);
         const opts = parts.filter(Boolean).join(' · ');
         return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + cdFmtPrice(it.price) + '</div></div>';
     }).join('');

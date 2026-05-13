@@ -3356,10 +3356,10 @@ async function processOrderSubmission() {
 
     const _cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
 
-    // ★ 최소 주문금액 100,000원 (천원단위 주문상품 21355677 예외, 디자인비 예외)
-    const MIN_ORDER_KRW = 100000;
-    const isExempt = _isDesignFeeOnlyCart() || cartData.some(item => item.product && (String(item.product.code) === '21355677' || String(item.product.product_key) === '21355677' || String(item.product.id) === '21355677'));
-    if (!isExempt && rawTotal < MIN_ORDER_KRW) {
+    // 2026-05-13: 최소 주문금액 제도 폐지 (사용자 결정) — 항상 통과
+    const MIN_ORDER_KRW = 0;
+    const isExempt = true;
+    if (false) {
         const lang = CURRENT_LANG;
         const minAmounts = { kr: '100,000원', ja: '10,000円', en: '$100', zh: '¥700', ar: '100 دولار', es: '$100', de: '100€', fr: '100€' };
         const titles = { kr: '최소 주문금액 안내', ja: '最低注文金額のご案内', en: 'Minimum Order Notice', zh: '最低订购金额提示', ar: 'إشعار الحد الأدنى للطلب', es: 'Aviso de pedido mínimo', de: 'Mindestbestellwert', fr: 'Montant minimum de commande' };
