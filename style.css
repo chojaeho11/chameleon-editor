@@ -6838,6 +6838,16 @@ footer, .site-footer { padding-top: 28px !important; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────
+   2026-05-14: 고객센터 — KR은 전화번호, 해외(JP/US)는 Channel Talk
+   사용자 요청: "한국 고객센터 전화번호 031-366-1984 해외는 그냥 지금 상태로 둬"
+   ───────────────────────────────────────────────────────────────────── */
+.cs-center .cs-contact-overseas { display: none; }
+html[data-site="JP"] .cs-center .cs-contact-kr,
+html[data-site="US"] .cs-center .cs-contact-kr { display: none; }
+html[data-site="JP"] .cs-center .cs-contact-overseas,
+html[data-site="US"] .cs-center .cs-contact-overseas { display: inline; }
+
+/* ─────────────────────────────────────────────────────────────────────
    2026-05-14: 해외 사이트(JP/US)는 매니저 견적 카드 숨김 + 타이틀 키움
    사용자 요청: "해외는 상담사가 별도로 없으므로 이부분은 빼고 타이틀을 키워줘"
    ───────────────────────────────────────────────────────────────────── */
