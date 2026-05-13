@@ -2942,11 +2942,21 @@
         return base;
     }
 
+    // 2026-05-13: 매니저 견적 주문 항목 감지 — 할인 중복 방지 (매니저가 이미 할인된 금액을 입력)
+    function _soIsManagerQuoteItem(it) {
+        if (!it) return false;
+        if (it.type === 'manager_quote') return true;
+        if (it.product && it.product.category === 'manager_quote') return true;
+        if (it.product && typeof it.product.code === 'string' && it.product.code.indexOf('manager_quote_') === 0) return true;
+        return false;
+    }
+
     // 2026-05-13: 카트 전체 합계 + 할인 계산 (구매금액 + 구독자 중복)
     function _soCalcCartTotal(cart) {
         if (!Array.isArray(cart)) cart = [];
-        var taxBase = 0;     // 상품가 + 옵션 + 세로 3m (할인 적용 대상)
-        var shipTotal = 0;   // 배송비 (할인 미적용)
+        var taxBase = 0;          // 할인 적용 대상 (일반 상품가 + 옵션)
+        var nonDiscountBase = 0;  // 할인 비적용 (매니저 견적 — 이미 협의가)
+        var shipTotal = 0;        // 배송비 (할인 미적용)
         cart.forEach(function (it) {
             if (_soIsFabricItem(it)) {
                 taxBase += (it.price || 0);
@@ -2954,7 +2964,12 @@
             }
             var subPrice = _soCalcItemPrice(it);
             var shipFee = (it.shipping && it.shipping.fee) || 0;
-            taxBase += (subPrice - shipFee);
+            // 2026-05-13: 매니저 견적 주문은 할인 대상에서 제외 (담당자가 이미 할인 반영)
+            if (_soIsManagerQuoteItem(it)) {
+                nonDiscountBase += (subPrice - shipFee);
+            } else {
+                taxBase += (subPrice - shipFee);
+            }
             shipTotal += shipFee;
         });
         var amountPct = 0;
@@ -2964,9 +2979,10 @@
         var proPct = window.isProSubscriber ? 10 : 0;
         var amountDisc = Math.round(taxBase * amountPct / 100);
         var proDisc = Math.round(taxBase * proPct / 100);
-        var grandTotal = taxBase - amountDisc - proDisc + shipTotal;
+        var grandTotal = taxBase + nonDiscountBase - amountDisc - proDisc + shipTotal;
         return {
             taxBase: taxBase,
+            nonDiscountBase: nonDiscountBase,
             shipTotal: shipTotal,
             amountPct: amountPct,
             amountDisc: amountDisc,
