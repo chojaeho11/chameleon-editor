@@ -145,7 +145,17 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v45: standee+cut-print base stand options + 60x40 compact parcel 10k\")",
       "Bash(Get-ChildItem -Path . -Name -Recurse -Include \"*.html\", \"*.js\")",
       "Bash(Select-Object -First 30)",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v46: raw-board ��� unit price 2x frontend override\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v46: raw-board ��� unit price 2x frontend override\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"v47: currency conversion every price + EUR/CNY + mgr quote i18n\")",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe0101.com/fabric?lang=ja&nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \\($r.Content -split \"`n\" | Select-String -Pattern \"window.__CD_LANG\" -SimpleMatch | Select-Object -First 5\\))",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe0101.com/fabric?lang=ja&nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \\($r.Content -split \"`n\" | Select-String -Pattern 'data-cdi18n=\"canvas_title\"|data-cdi18n=\"cart_btn\"|이미지를 올려' -SimpleMatch | Select-Object -First 8\\))",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe0101.com/fabric?lang=ja&nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; $r.Content.Length; \\($r.Content | Select-String -Pattern \"data-cdi18n\"\\).Matches.Count)",
+      "PowerShell($local = Get-Content \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\\\\cotton_designer.html\" -Raw; $local.Length)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja&nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; $r.Content.Length; \\($r.Content | Select-String -Pattern \"data-cdi18n\"\\).Matches.Count; \\($r.Content | Select-String -Pattern \"장바구니|cart_btn\"\\).Matches.Count)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja\" -UseBasicParsing; $r.Content.Substring\\(0, 500\\))",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja\" -UseBasicParsing; \\($r.Content -split \"`n\" | Select-String -Pattern \"내원단 만들기\" | Measure-Object -Line\\).Lines; \"DocLines: $\\($r.Content -split \"`n\" | Measure-Object -Line | Select-Object -ExpandProperty Lines\\)\")",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja\" -UseBasicParsing; \\($r.Content | Select-String -Pattern 'data-cdi18n'\\).Matches | ForEach-Object { $_.Value } | Select-Object -First 5)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://4ff31dde.chameleon-print.pages.dev/fabric?lang=ja\" -UseBasicParsing; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'data-cdi18n'\\).Count)"
     ],
     "additionalDirectories": [
       "\\tmp"

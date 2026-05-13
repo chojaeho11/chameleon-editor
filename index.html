@@ -7170,7 +7170,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=47"></script>
+<script src="/simple_order.js?v=48"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=9"></script>
 
@@ -9741,15 +9741,11 @@ async function renderQuickMenu() {
                     location.href = '/raw-board' + (rbLang && rbLang !== 'ko' ? '?lang=' + rbLang : '');
                     return;
                 }
-                // ★ 패브릭 인쇄 → cotton-print.com 별도 사이트로 이동 (한국어만)
+                // ★ 패브릭 인쇄 → /fabric (cotton_designer.html) — 2026-05-13: 도메인 통합 후 같은 사이트 내 라우트, lang 보존
                 if (top.code === '22222') {
-                    if (CURRENT_LANG === 'ko' || !CURRENT_LANG || CURRENT_LANG === 'kr') {
-                        location.href = 'https://www.cotton-print.com/';
-                    } else {
-                        const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
-                        const fbLang = langMap[CURRENT_LANG];
-                        location.href = '/fabric-print' + (fbLang ? '?lang=' + fbLang : '');
-                    }
+                    const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko',ko:'ko'};
+                    const fbLang = langMap[CURRENT_LANG] || '';
+                    location.href = '/fabric' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
                     return;
                 }
                 // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
@@ -9849,17 +9845,11 @@ async function renderQuickMenu() {
                         location.href = '/raw-board' + (rbLang ? '?lang=' + rbLang : '');
                         return;
                     }
-                    // ★ 패브릭 인쇄 → cotton-print.com 별도 사이트로 이동
-                    // 한국어만 cotton-print.com (단일 언어 운영), 다국어는 메인몰 카테고리 페이지로
+                    // ★ 패브릭 인쇄 → /fabric (cotton_designer.html) — 2026-05-13: 도메인 통합 후 같은 사이트 내 라우트, lang 보존
                     if (top.code === '22222') {
-                        if (CURRENT_LANG === 'ko' || !CURRENT_LANG) {
-                            location.href = 'https://www.cotton-print.com/';
-                        } else {
-                            // JP/EN 등은 cafe2626/cafe0101/cafe3355 의 /fabric-print 카테고리 페이지로
-                            const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
-                            const fbLang = langMap[CURRENT_LANG];
-                            location.href = '/fabric-print' + (fbLang ? '?lang=' + fbLang : '');
-                        }
+                        const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko',ko:'ko'};
+                        const fbLang = langMap[CURRENT_LANG] || '';
+                        location.href = '/fabric' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
                         return;
                     }
                     const wasActive = btn.classList.contains('active');

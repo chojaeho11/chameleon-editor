@@ -1459,14 +1459,16 @@
         const showRow = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; };
 
         if (state.isWall) {
-            var sideLabel = (state.wallSide === 'double') ? ' (양면 ×2)' : '';
+            var sideLabel = (state.wallSide === 'double') ? ' ' + tr('(양면 ×2)', '(両面 ×2)', '(Double ×2)') : '';
+            var faceTxt = tr('2면', '2面', '2 sides');
             var unitSubLabel = (state.wallSide === 'double')
-                ? fmtPrice(unit) + ' × ' + qty + 'm × 2면 = ' + fmtPrice(subtotal)
+                ? fmtPrice(unit) + ' × ' + qty + 'm × ' + faceTxt + ' = ' + fmtPrice(subtotal)
                 : fmtPrice(unit) + ' × ' + qty + 'm = ' + fmtPrice(subtotal);
             setText('soUnit', unitSubLabel);
             setText('soUnitLabel', tr('단가', '単価', 'Unit') + sideLabel);
             showRow('soWallSizeRow', true);
-            setText('soWallSizeText', qty + 'm × ' + (state.wallHeight || 2.4) + 'm' + ((state.wallSide === 'double') ? ' · 양면' : ' · 단면'));
+            var sideTxt = (state.wallSide === 'double') ? tr('양면', '両面', 'Double') : tr('단면', '片面', 'Single');
+            setText('soWallSizeText', qty + 'm × ' + (state.wallHeight || 2.4) + 'm · ' + sideTxt);
         } else if (state.isCutPrint) {
             var cutLabel = (state.cutSize === 'half') ? tr('반판 이내', 'ハーフ', 'Half') : tr('한판', 'フル', 'Full');
             setText('soUnitLabel', tr('단가', '単価', 'Unit') + ' (' + cutLabel + ')');
@@ -1494,9 +1496,11 @@
         // 옵션 breakdown 라인 + 세로 3m 추가 옵션 (가로 m × 5만, 양면이면 2배)
         var bdHtml = addonBreakdownLines.join('');
         if (heightExtra > 0) {
+            var hPrefix = '· ' + tr('세로 3m 추가', '縦3m追加', 'Height 3m extra');
+            var hUnit = fmtPrice(50000);
             var hLabel = (state.wallSide === 'double')
-                ? '· 세로 3m 추가 (5만 × ' + qty + 'm × 2면)'
-                : '· 세로 3m 추가 (5만 × ' + qty + 'm)';
+                ? hPrefix + ' (' + hUnit + ' × ' + qty + 'm × ' + tr('2면', '2面', '2 sides') + ')'
+                : hPrefix + ' (' + hUnit + ' × ' + qty + 'm)';
             bdHtml += '<div class="so-price-row"><span>' + hLabel + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
         }
         setHTML('soAddonBreakdown', bdHtml);
@@ -1870,9 +1874,13 @@
     // 2026-05-13: 가벽 전용 기본 옵션 (admin_addons 데이터 없어도 강제 표시)
     var WALL_DEFAULT_ADDONS = [
         { code: '__wall_light',   name: '조명 추가',     name_jp: '照明追加',   name_us: 'Lighting',      price: 50000, isLight: true,
-          desc: '가로 1m당 1개 자동 추가 (개당 5만원)' },
+          desc: '가로 1m당 1개 자동 추가 (개당 5만원)',
+          desc_jp: '横1mごとに1個自動追加 (1個あたり¥5,000)',
+          desc_us: 'Auto-add 1 per meter width ($50 each)' },
         { code: '__wall_support', name: '보조 받침대',   name_jp: '補助スタンド', name_us: 'Support stand', price: 80000,
-          desc: '가벽 안정성 강화' }
+          desc: '가벽 안정성 강화',
+          desc_jp: '壁面の安定性強化',
+          desc_us: 'Reinforces wall stability' }
     ];
 
     // 2026-05-13: 상품의 admin_addons 옵션을 우측 패널에 체크박스로 렌더
@@ -1883,7 +1891,8 @@
         list.innerHTML = '';
         sec.style.display = 'none';
 
-        var lang = window.__CD_LANG || (window.SITE_CONFIG && window.SITE_CONFIG.LANG) || 'ko';
+        // 2026-05-13: getLang() (kr/ja/en/es/de/fr/zh) 사용 — 기존 'ko' 디폴트가 cafe0101 에서 미작동
+        var lang = getLang();
 
         // 가벽 상품: 전용 옵션 강제 표시 (조명·보조받침대). admin_addons 비어있어도 OK.
         var renderList = [];
@@ -1908,12 +1917,16 @@
         var html = renderList.map(function (a) {
             var name = a.name || a.code;
             if (lang === 'ja' && a.name_jp) name = a.name_jp;
-            else if (lang === 'en' && a.name_us) name = a.name_us;
+            else if ((lang === 'en' || lang === 'es' || lang === 'de' || lang === 'fr' || lang === 'zh' || lang === 'ar') && a.name_us) name = a.name_us;
             var price = a.price || 0;
             var safe = String(name).replace(/[<>"'&]/g, function (c) {
                 return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
             });
-            var descSafe = a.desc ? String(a.desc).replace(/[<>"'&]/g, function (c) {
+            // 2026-05-13: desc 도 다국어 (desc_jp/desc_us 있으면 사용, 없으면 desc fallback)
+            var descTxt = a.desc || '';
+            if (lang === 'ja' && a.desc_jp) descTxt = a.desc_jp;
+            else if ((lang === 'en' || lang === 'es' || lang === 'de' || lang === 'fr' || lang === 'zh' || lang === 'ar') && a.desc_us) descTxt = a.desc_us;
+            var descSafe = descTxt ? String(descTxt).replace(/[<>"'&]/g, function (c) {
                 return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
             }) : '';
             var isLight = a.isLight === true || /조명|light|lamp/i.test(name);
@@ -2293,7 +2306,9 @@
                         return;
                     }
                     if (code === '22222') {
-                        location.href = '/fabric';
+                        // 2026-05-13: lang 보존 (cafe0101 → ja, cafe3355 → en, 그 외 ?lang= 명시)
+                        var fbLang = langMap[cl] || '';
+                        location.href = '/fabric' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
                         return;
                     }
                     if (code === 'user_artwork') {
