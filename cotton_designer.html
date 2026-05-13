@@ -43,6 +43,14 @@ window.addEventListener('DOMContentLoaded', function(){
         var cardRadio = document.querySelector('input[name="payMethod"][value="card"]');
         if (cardRadio) cardRadio.checked = true;
     }
+    // 2026-05-13: 종합인쇄몰 바로가기 — 언어별 cafe 도메인 메인홈으로
+    var mall = document.getElementById('brandMallLink');
+    if (mall) {
+        var mallHost = (cur === 'ja') ? 'https://www.cafe0101.com/'
+                     : (cur === 'en') ? 'https://www.cafe3355.com/'
+                     : 'https://www.cafe2626.com/';
+        mall.setAttribute('href', mallHost);
+    }
     // 모든 내부 링크에 lang 자동 부착 (cotton_print.html과 동일 로직)
     if (cur && cur !== 'ko') {
         document.querySelectorAll('a[href]').forEach(function(a){
@@ -59,6 +67,7 @@ window.__CD_I18N = {
     page_title: { ko:'내원단 만들기 - Cotton Print', ja:'ファブリックデザイナー - Cotton Print', en:'Fabric Designer - Cotton Print' },
     cart_btn: { ko:'장바구니', ja:'カート', en:'Cart' },
     main_btn: { ko:'메인으로', ja:'メインへ', en:'Main' },
+    mall_btn: { ko:'종합인쇄몰 바로가기', ja:'総合印刷モール', en:'Print Mall' },
     canvas_title: { ko:'실제 출력될 사이즈와 배치 미리보기', ja:'実際の出力サイズとレイアウトプレビュー', en:'Print preview · actual size & layout' },
     btn_reset: { ko:'다시 올리기', ja:'再アップロード', en:'Re-upload' },
     btn_shrink: { ko:'이미지 축소', ja:'画像縮小', en:'Shrink' },
@@ -283,8 +292,34 @@ a { text-decoration: none; color: inherit; }
     display: flex; align-items: center; justify-content: space-between;
 }
 .brand-logo {
-    font-family: Georgia, serif; font-size: 22px; font-weight: 900;
-    color: var(--brown-dark); letter-spacing: 4px; text-transform: uppercase;
+    /* 2026-05-13: 고딕(sans-serif) + 작게 + 클릭 가능 + cotton-print.com 으로 이동 */
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px; font-weight: 900;
+    color: var(--brown-dark); letter-spacing: 1.5px; text-transform: uppercase;
+    text-decoration: none; padding: 6px 4px; transition: opacity 0.2s;
+}
+.brand-logo:hover { opacity: 0.7; }
+.brand-logo-icon { font-size: 16px; }
+/* 종합인쇄몰 바로가기 — 알약(pill) 형태 */
+.brand-mall-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px; border-radius: 999px;
+    background: linear-gradient(135deg, #451a03, #78350f);
+    color: #fde047; font-size: 12px; font-weight: 800;
+    text-decoration: none; transition: all 0.2s;
+    box-shadow: 0 3px 10px rgba(69,26,3,0.25);
+    margin-left: 10px;
+    font-family: 'Noto Sans KR', 'Pretendard', sans-serif;
+    white-space: nowrap;
+}
+.brand-mall-link:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(69,26,3,0.4); }
+.brand-mall-link i { font-size: 11px; }
+@media (max-width: 768px) {
+    .brand-logo { font-size: 13px; letter-spacing: 1px; }
+    .brand-mall-link { padding: 6px 12px; font-size: 11px; }
+    .brand-mall-link span { display: none; }
+    .brand-mall-link::after { content: '🏠'; }
 }
 .brand-back {
     font-size: 13px; color: var(--brown); font-weight: 700;
@@ -703,7 +738,16 @@ a { text-decoration: none; color: inherit; }
 <!-- 상단 미색 띠 -->
 <div class="brand-band">
     <div class="brand-band-inner">
-        <a href="/" class="brand-logo">COTTON PRINT</a>
+        <!-- 2026-05-13: 로고 → cotton-print.com 으로 이동, 옆에 종합인쇄몰 바로가기 알약버튼 -->
+        <div style="display:flex; align-items:center; flex-wrap:wrap;">
+            <a href="https://www.cotton-print.com/" class="brand-logo" title="Cotton Print">
+                <span>COTTON PRINT</span>
+            </a>
+            <a id="brandMallLink" href="https://www.cafe2626.com/" class="brand-mall-link" title="종합인쇄몰">
+                <i class="fa-solid fa-store"></i>
+                <span data-cdi18n="mall_btn">종합인쇄몰 바로가기</span>
+            </a>
+        </div>
         <div style="display:flex; align-items:center; gap:10px;">
             <!-- 국기 언어 전환 -->
             <div class="cd-lang-flags" style="display:flex; gap:4px;">

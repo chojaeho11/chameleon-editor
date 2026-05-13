@@ -180,7 +180,10 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hide #aiDesignHero \\(display:none\\) ? 504 from ai-design-gen edge fn\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"pattern-upload: fix event ReferenceError + shorter PNG hint\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"pattern-upload: retry without user_id when column missing \\(PGRST204\\)\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"route: cotton-print.com root -> /cotton-print landing page\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"route: cotton-print.com root -> /cotton-print landing page\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cotton-print.com root: ASSETS proxy \\(no redirect\\) so URL stays in address bar\")",
+      "PowerShell(try { $r1 = Invoke-WebRequest -Uri \"https://cotton-print.com/\" -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 15 } catch { $r1 = $_.Exception.Response }; \"cotton-print.com:\"; if \\($r1\\) { \"  Status: $\\($r1.StatusCode\\)\"; \"  Location: $\\($r1.Headers.Location\\)\" }; \"---\"; try { $r2 = Invoke-WebRequest -Uri \"https://www.cotton-print.com/\" -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 15 } catch { $r2 = $_.Exception.Response }; \"www.cotton-print.com:\"; if \\($r2\\) { \"  Status: $\\($r2.StatusCode\\)\"; \"  Location: $\\($r2.Headers.Location\\)\" })",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cotton-print.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 15; \"Status: $\\($r.StatusCode\\)\"; \"ContentLength: $\\($r.Content.Length\\)\"; \"Title: $\\(\\(\\($r.Content -split \"`n\"\\) | Select-String -Pattern '<title>' | Select-Object -First 1\\).Line.Trim\\(\\)\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp"
