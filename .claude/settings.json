@@ -175,7 +175,8 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; \\($r.Content | Select-String -Pattern '카멜레온과 케데'\\).Matches.Count; \\($r.Content | Select-String -Pattern '간단한 프롬프트만으로'\\).Matches.Count; \\($r.Content | Select-String -Pattern '약 3분정도 시간이 소요됩니다'\\).Matches.Count)",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"advisor v450: pill buttons + black/purple/rainbow gradients + aid-lead rewrite\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"fix: relocateAiPanel anchor to advShortcutBtns + 45deg gradients + DESC patterns\")",
-      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cp home: remove gallery btn, route upload btn to /cotton-print?upload=1\")"
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"cp home: remove gallery btn, route upload btn to /cotton-print?upload=1\")",
+      "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"pattern-upload: login-based author + simplified form + RLS migration\")"
     ],
     "additionalDirectories": [
       "\\tmp"
