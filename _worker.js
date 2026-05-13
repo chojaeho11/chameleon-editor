@@ -412,11 +412,13 @@ export default {
             let targetPath;
             if (path === 'designer' || path === 'designer.html' ||
                 path === 'cotton-designer' || path === 'cotton-designer.html') {
-                targetPath = '/fabric';                       // 디자이너 → /fabric
+                targetPath = '/fabric';                       // 디자이너 → /fabric (cotton_designer.html)
             } else if (path === 'mypage' || path === 'mypage.html' || path === 'designer-mypage') {
                 targetPath = '/mypage';                       // 마이페이지 → 통합 마이페이지
             } else if (path === '' || path === 'index.html') {
-                targetPath = '/fabric';                       // 랜딩 → /fabric (디자이너 통합)
+                // 2026-05-13: 랜딩 → /cotton-print (cotton_print.html — 비즈니스 랜딩 페이지)
+                // 사용자 요청: www.cotton-print.com 접속 시 디자이너가 아닌 랜딩 페이지가 떠야 함
+                targetPath = '/cotton-print';
             } else {
                 targetPath = '/' + path;                      // 기타 경로 그대로 cafe 도메인으로
             }
