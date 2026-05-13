@@ -785,6 +785,27 @@
           </div>
         </div>
 
+        <!-- 2026-05-13: 받침대 옵션 (등신대 + 자유인쇄커팅) -->
+        <div class="so-section" id="soBaseStandSection" style="display:none;">
+          <div class="so-section-title">🦵 ${tr('받침대 옵션', 'スタンドオプション', 'Stand option')}</div>
+          <div id="soBaseStandList" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <button type="button" class="so-base-btn active" data-base="none" onclick="window._soPickBaseStand('none')"
+              style="padding:10px 8px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('받침대 없음', 'なし', 'No stand')}<br><span style="font-size:11px; font-weight:600; opacity:0.9;">0${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-base-btn" data-base="a4" onclick="window._soPickBaseStand('a4')"
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A4 이하용 받침대', 'A4以下', 'A4 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+3,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-base-btn" data-base="a3" onclick="window._soPickBaseStand('a3')"
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A3 이하용 받침대', 'A3以下', 'A3 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+5,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-base-btn" data-base="a2" onclick="window._soPickBaseStand('a2')"
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A2 이하용 받침대', 'A2以下', 'A2 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+10,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-base-btn" data-base="rear" onclick="window._soPickBaseStand('rear')"
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('등신대용 후면받침', '等身大 背面支持', 'Life-size rear')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+20,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-base-btn" data-base="banner_small" onclick="window._soPickBaseStand('banner_small')"
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('배너형 (가로 ≤60cm)', 'バナー型 ≤60cm', 'Banner ≤60cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+20,000${tr('원', '円', 'KRW')}</span></button>
+            <button type="button" class="so-base-btn" data-base="banner_large" onclick="window._soPickBaseStand('banner_large')"
+              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4; grid-column:span 2;">${tr('배너형 (가로 ≥70cm)', 'バナー型 ≥70cm', 'Banner ≥70cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+50,000${tr('원', '円', 'KRW')}</span></button>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 상품별 추가 옵션 (admin_addons) -->
         <div class="so-section" id="soAddonSection" style="display:none;">
           <div class="so-section-title">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
@@ -811,6 +832,8 @@
             <button type="button" class="so-ship-btn" data-ship="large_parcel" onclick="window._soPickShip('large_parcel')" style="display:none;">📦 ${tr('대형택배', '大型宅配', 'Large parcel')}<br><span style="font-size:11px; opacity:0.8;">30,000${tr('원', '円', 'KRW')}</span></button>
             <!-- 2026-05-13: 일반 인쇄물 소형 묶음택배 (5천원) -->
             <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">📨 ${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">5,000${tr('원', '円', 'KRW')}</span></button>
+            <!-- 2026-05-13: 등신대·자유인쇄커팅 컴팩트 택배 (60×40 이하, 1만원) -->
+            <button type="button" class="so-ship-btn" data-ship="compact_parcel" onclick="window._soPickShip('compact_parcel')" style="display:none;">📬 ${tr('택배배송 (60×40 이하)', '宅配 ≤60×40', 'Parcel ≤60×40')}<br><span style="font-size:11px; opacity:0.8;">10,000${tr('원', '円', 'KRW')}</span></button>
           </div>
           <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
           <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
@@ -1383,6 +1406,19 @@
             });
         } catch (e) {}
 
+        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
+        var baseStandFee = 0;
+        if (state.baseStand && state.baseStand !== 'none' && BASE_STAND_OPTS[state.baseStand]) {
+            var bOpt = BASE_STAND_OPTS[state.baseStand];
+            baseStandFee = bOpt.fee || 0;
+            if (baseStandFee > 0) {
+                addonTotal += baseStandFee;
+                addonBreakdownLines.push(
+                    '<div class="so-price-row"><span>🦵 ' + bOpt.label_ko + '</span><span>+' + fmtPrice(baseStandFee) + '</span></div>'
+                );
+            }
+        }
+
         // 배송/시공 비용 (야간 시간 보정 포함)
         const shipFee = _soComputeShipFee();
         state.shipFee = shipFee;
@@ -1518,6 +1554,33 @@
         return _soIsHoneycombProduct(p) && !_soIsWallProduct(p);
     }
 
+    // 2026-05-13: 등신대 감지 (hb_ss_*, hb_pi_5, hb_point*, acr_crt_stand_*, 또는 이름에 등신대)
+    function _soIsStandeeProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        if (code.startsWith('hb_ss') || code.startsWith('hb_point')) return true;
+        if (code === 'hb_pi_5' || code.startsWith('acr_crt_stand')) return true;
+        if (/등신대|standee|life-?size|cardboard\s*cutout/i.test(name)) return true;
+        return false;
+    }
+
+    // 2026-05-13: 받침대 옵션이 필요한 상품 — 등신대 + 자유인쇄커팅
+    function _soNeedsBaseStand(p) {
+        return _soIsStandeeProduct(p) || _soIsCutPrintProduct(p);
+    }
+
+    // 2026-05-13: 받침대 옵션 카탈로그
+    var BASE_STAND_OPTS = {
+        none:         { fee: 0,     label_ko: '받침대 없음',                label_jp: 'なし',           label_us: 'No stand' },
+        a4:           { fee: 3000,  label_ko: 'A4 이하용 받침대',            label_jp: 'A4以下 スタンド',  label_us: 'A4 stand' },
+        a3:           { fee: 5000,  label_ko: 'A3 이하용 받침대',            label_jp: 'A3以下 スタンド',  label_us: 'A3 stand' },
+        a2:           { fee: 10000, label_ko: 'A2 이하용 받침대',            label_jp: 'A2以下 スタンド',  label_us: 'A2 stand' },
+        rear:         { fee: 20000, label_ko: '등신대용 후면받침',           label_jp: '等身大 背面支持',  label_us: 'Life-size rear support' },
+        banner_small: { fee: 20000, label_ko: '가로 60cm 이하 배너형 받침',   label_jp: 'バナー型 ≤60cm',   label_us: 'Banner ≤60cm' },
+        banner_large: { fee: 50000, label_ko: '가로 70cm 이상 배너형 받침',   label_jp: 'バナー型 ≥70cm',   label_us: 'Banner ≥70cm' }
+    };
+
     // 2026-05-13: 사이즈 입력 → 면적 × 단가 (m²) 자동 계산 상품 — 현수막·실사출력 등
     // admin_products.is_custom_size = true 이면서 가벽/박스/자유인쇄커팅 처럼 자체 UI가 없는 상품
     function _soIsCustomSizeProduct(p) {
@@ -1616,7 +1679,9 @@
         // 2026-05-13: 포맥스·폼보드 대형택배 (3만원 고정)
         large_parcel:         { fee: 30000,  label_ko: '대형택배',           parts: [['대형택배', 30000]] },
         // 2026-05-13: 일반 인쇄물 묶음 소형택배 (5천원, 모든 수량 동일)
-        small_parcel:         { fee: 5000,   label_ko: '묶음 소형택배',     parts: [['묶음 소형택배', 5000]] }
+        small_parcel:         { fee: 5000,   label_ko: '묶음 소형택배',     parts: [['묶음 소형택배', 5000]] },
+        // 2026-05-13: 등신대·자유인쇄커팅 택배 (60×40cm 이하, 1만원)
+        compact_parcel:       { fee: 10000,  label_ko: '택배배송 (60×40cm 이하)', parts: [['택배배송 60×40 이하', 10000]] }
     };
     window.SHIP_OPTS = SHIP_OPTS;
 
@@ -1701,7 +1766,7 @@
         var dateWrap = document.getElementById('soScheduleDateWrap');
         var remWrap = document.getElementById('soRemovalWrap');
         // self_pickup 또는 단순 배송/택배(metro/regional_delivery·parcel·large/small_parcel)이면 날짜·시간 안 보임
-        var noScheduleMethods = ['self_pickup', 'metro_delivery', 'regional_delivery', 'parcel_shipping', 'large_parcel', 'small_parcel', 'bundle_shipping'];
+        var noScheduleMethods = ['self_pickup', 'metro_delivery', 'regional_delivery', 'parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel', 'bundle_shipping'];
         var needsSchedule = noScheduleMethods.indexOf(method) < 0;
         if (dateWrap) dateWrap.style.display = needsSchedule ? '' : 'none';
         // 철거 옵션 (수도권 설치+철거 시만)
@@ -1934,6 +1999,20 @@
                 infoEl.textContent = sheetLabel + ': ' + r.sheetCount;
             }
         }
+        recalc();
+    };
+
+    // 2026-05-13: 받침대 옵션 선택 (등신대·자유인쇄커팅)
+    window._soPickBaseStand = function (key) {
+        if (!BASE_STAND_OPTS[key]) key = 'none';
+        state.baseStand = key;
+        document.querySelectorAll('.so-base-btn').forEach(function (b) {
+            var on = b.dataset.base === key;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#4338ca' : '#fff';
+            b.style.color = on ? '#fff' : '#451a03';
+            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+        });
         recalc();
     };
 
@@ -2321,6 +2400,21 @@
             // 초기 가격 계산 (비동기)
             if (typeof window._soOnBoxDimsChange === 'function') window._soOnBoxDimsChange();
         }
+        // 2026-05-13: 받침대 옵션이 필요한 상품 (등신대 + 자유인쇄커팅)
+        state.needsBaseStand = _soNeedsBaseStand(p);
+        state.baseStand = 'none';
+        var baseSec = document.getElementById('soBaseStandSection');
+        if (baseSec) baseSec.style.display = state.needsBaseStand ? '' : 'none';
+        // 받침대 버튼 초기화
+        document.querySelectorAll('.so-base-btn').forEach(function (b) {
+            var on = b.dataset.base === 'none';
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#4338ca' : '#fff';
+            b.style.color = on ? '#fff' : '#451a03';
+            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+        });
+        state.isStandee = _soIsStandeeProduct(p);
+
         // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
         state.isCustomSize = _soIsCustomSizeProduct(p);
         state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
@@ -2359,6 +2453,8 @@
             // 가벽 외 허니콤 — 수도권/지방 배송 (+ 배너·인스타판넬이면 택배도)
             allowed = ['self_pickup'].concat(hbDeliveryKeys);
             if (state.isParcelShip) allowed.push('parcel_shipping');
+            // 등신대·자유인쇄커팅이면 60×40 컴팩트 택배도 추가
+            if (state.isStandee || _soIsCutPrintProduct(p)) allowed.push('compact_parcel');
         } else if (state.isForexFoam) {
             // 포맥스·폼보드 — 대형택배만
             allowed = ['self_pickup', 'large_parcel'];
@@ -2537,6 +2633,12 @@
             boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
             // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — W×H cm + 계산된 단가
             customSize: state.isCustomSize ? { w_cm: state.customW, h_cm: state.customH, unit: state.customUnitPrice, area_m2: state.customAreaM2 } : null,
+            // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
+            baseStand: (state.baseStand && state.baseStand !== 'none') ? {
+                key: state.baseStand,
+                fee: (BASE_STAND_OPTS[state.baseStand] && BASE_STAND_OPTS[state.baseStand].fee) || 0,
+                label: (BASE_STAND_OPTS[state.baseStand] && BASE_STAND_OPTS[state.baseStand].label_ko) || ''
+            } : null,
             // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
             backFileName: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.name : null,
             backFileType: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.type : null,
@@ -2931,6 +3033,10 @@
                 var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
                 base += (addon.price || 0) * aQty;
             });
+        }
+        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
+        if (it.baseStand && typeof it.baseStand.fee === 'number') {
+            base += it.baseStand.fee;
         }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
         // 시공/배송비 합산 (묶음배송이면 0)
