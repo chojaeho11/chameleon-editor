@@ -1372,13 +1372,41 @@ if ('caches' in window) {
                 cartItems.forEach(function (ci, i) {
                     console.log('  cartItem[' + i + ']:', { price: ci.price, qty: ci.qty, source: ci.source, product_price: ci.product?.price, __redistributed: ci.__redistributed });
                 });
-                try { localStorage.setItem('chameleon_cart_current', JSON.stringify(cartItems)); } catch(e){}
-                // 진단: localStorage 에 실제로 저장된 값 확인 (cart_sync 인터셉터 후)
+                // 2026-05-14: cart_sync 의 init pull 이 비동기로 끝나면 localStorage 를 서버 상태로 덮어씀
+                //   → 내가 방금 쓴 redistributed 가격이 사라지는 RACE CONDITION
+                //   → 해결: setItem 을 3 회 반복 + cartSync.forceSync push 로 서버 상태도 내 카트로 강제
+                //     pull 이 어느 시점에 끼어들어도 결과적으로 내 데이터가 살아남도록
+                var KEY = 'chameleon_cart_current';
+                var serialized = JSON.stringify(cartItems);
+                async function _writeAndVerify() {
+                    for (var attempt = 0; attempt < 6; attempt++) {
+                        try { localStorage.setItem(KEY, serialized); } catch (e) {}
+                        // 200ms 대기 후 검증 — 그 사이 init pull 이 끼어들었으면 다시 씀
+                        await new Promise(function (r) { setTimeout(r, 200); });
+                        var stored = [];
+                        try { stored = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) {}
+                        var ok = stored.length === cartItems.length
+                                && stored[0] && cartItems[0]
+                                && Math.abs((Number(stored[0].price)||0) - (Number(cartItems[0].price)||0)) < 1;
+                        console.log('[payPendingQuote] write attempt #' + (attempt + 1) + ' stuck:', ok, 'stored[0].price=', stored[0]?.price, 'expected=', cartItems[0]?.price);
+                        if (ok) return true;
+                    }
+                    return false;
+                }
+                await _writeAndVerify();
+                // 서버 상태도 내 카트로 강제 (이후 어떤 pull 도 내 데이터 반환)
                 try {
-                    var stored = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]');
-                    console.log('[payPendingQuote] localStorage after setItem (', stored.length, 'items):');
-                    stored.forEach(function (s, i) {
-                        console.log('  stored[' + i + ']:', { price: s.price, qty: s.qty, source: s.source, product_price: s.product?.price, __redistributed: s.__redistributed, __cart_id: s.__cart_id });
+                    if (window.cartSync && typeof window.cartSync.forceSync === 'function') {
+                        await window.cartSync.forceSync();
+                        console.log('[payPendingQuote] cartSync.forceSync 완료');
+                    }
+                } catch (e) { console.warn('[payPendingQuote] forceSync failed:', e); }
+                // 최종 검증
+                try {
+                    var finalStored = JSON.parse(localStorage.getItem(KEY) || '[]');
+                    console.log('[payPendingQuote] 최종 localStorage (', finalStored.length, 'items):');
+                    finalStored.forEach(function (s, i) {
+                        console.log('  final[' + i + ']:', { price: s.price, qty: s.qty, source: s.source, product_price: s.product?.price, __redistributed: s.__redistributed });
                     });
                 } catch (e) {}
 
