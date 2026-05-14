@@ -213,7 +213,12 @@ window.__CD_I18N = {
     ship_label:       { ko:'택배 배송', ja:'宅配便', en:'Shipping' },
     ship_fee:         { ko:'5,000원', ja:'1,000円', en:'$10' },
     samplebook_label: { ko:'무료 샘플북 신청', ja:'無料サンプルブック申請', en:'Free Sample Book' },
-    samplebook_sub:   { ko:'원단 주문 시 신청 가능', ja:'生地ご注文時にお申込み可', en:'Available with fabric order' }
+    samplebook_sub:   { ko:'원단 주문 시 신청 가능', ja:'生地ご注文時にお申込み可', en:'Available with fabric order' },
+    // 2026-05-14: 대량 구매 할인 안내 (10+ 10% / 100+ 20% / 500+ 30%)
+    bulk_title: { ko:'대량 구매 할인', ja:'まとめ買い割引', en:'Bulk Discount' },
+    bulk_t10:   { ko:'10개+', ja:'10個+', en:'10+' },
+    bulk_t100:  { ko:'100개+', ja:'100個+', en:'100+' },
+    bulk_t500:  { ko:'500개+', ja:'500個+', en:'500+' }
 };
 window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.ko || ''; };
 function applyCdI18n() {
@@ -1205,6 +1210,26 @@ a { text-decoration: none; color: inherit; }
                 <input type="number" id="orderQty" value="1" min="1" max="999" style="flex:1; text-align:center; border:1px solid var(--cream-dark); border-radius:8px; padding:8px; font-size:15px; font-weight:700;" oninput="window._cdCalcHoebae()">
                 <button onclick="window._cdQtyChg(1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">+</button>
                 <span style="font-size:12px; color:var(--text-light);" data-cdi18n="qty_unit">개</span>
+            </div>
+            <!-- 2026-05-14: 대량 할인 안내 (수량 입력 바로 아래) -->
+            <div style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%); border:1.5px solid #f97316; border-radius:8px;">
+                <div style="font-size:11px; font-weight:900; color:#9a3412; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-tags"></i> <span data-cdi18n="bulk_title">대량 구매 할인</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; font-size:11px; text-align:center;">
+                    <div style="background:#fff; border-radius:6px; padding:6px 4px;">
+                        <div style="color:#c2410c; font-weight:800;" data-cdi18n="bulk_t10">10개+</div>
+                        <div style="color:#ea580c; font-weight:900; font-size:13px;">-10%</div>
+                    </div>
+                    <div style="background:#fff; border-radius:6px; padding:6px 4px;">
+                        <div style="color:#c2410c; font-weight:800;" data-cdi18n="bulk_t100">100개+</div>
+                        <div style="color:#ea580c; font-weight:900; font-size:13px;">-20%</div>
+                    </div>
+                    <div style="background:#fff; border-radius:6px; padding:6px 4px;">
+                        <div style="color:#c2410c; font-weight:800;" data-cdi18n="bulk_t500">500개+</div>
+                        <div style="color:#ea580c; font-weight:900; font-size:13px;">-30%</div>
+                    </div>
+                </div>
             </div>
         </div>
 
