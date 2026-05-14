@@ -839,7 +839,6 @@ if ('caches' in window) {
         <div style="position:relative;">
             <h1 class="hero-title" data-i18n="hero_title"><small class="hero-tagline">업자를 위한 도매인쇄몰</small><span>CHAMELEON<b class="ht-prn">PRINTING</b></span><em class="hero-min-order">담당 매니저와 상담하고 정확한 결제창을 받아보세요</em></h1>
         </div>
-    </div><!-- /.hero-section — 2026-05-14: mgrQuoteHero 를 hero 바깥으로 이동, 모바일 클리핑 회피 -->
 
     <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널 (추후 여기에 결제창 표시) -->
     <div id="mgrQuoteHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
@@ -965,6 +964,7 @@ if ('caches' in window) {
         if ($('mgrQuoteHint'))  $('mgrQuoteHint').textContent  = t.hint;
     })();
     </script>
+    </div><!-- /.hero-section -->
     <script>
     (function() {
         // 매니저 견적 빠른 주문 — 금액 입력 시 천단위 콤마 자동
@@ -1197,16 +1197,13 @@ if ('caches' in window) {
 
         // 2026-05-14: 배너 위치 — hero-section 바깥 직후 (overflow:hidden 클리핑 방지)
         // hero-section 의 overflow:hidden 안에 넣으면 영상 영역 밖으로 안 나가서 가려짐
-        // 2026-05-14: mgrQuoteHero 를 hero 바깥으로 옮긴 후 — anchor 는 mgrQuoteHero (있으면) 그 다음, 없으면 hero 다음
         function positionAboveBand() {
             var wrap = document.getElementById('pendingQuoteBanner');
             var hero = document.querySelector('.hero-section');
             if (!wrap || !hero || !hero.parentNode) return;
-            var anchor = document.getElementById('mgrQuoteHero') || hero;
-            if (anchor.parentNode !== hero.parentNode) anchor = hero;
-            // anchor 바로 다음 sibling 으로 이동
-            if (wrap.previousElementSibling !== anchor) {
-                anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+            // hero-section 바로 다음 sibling 으로 이동 (3 바로가기 버튼 위)
+            if (wrap.previousElementSibling !== hero) {
+                hero.parentNode.insertBefore(wrap, hero.nextSibling);
             }
         }
 
@@ -1875,16 +1872,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(advisorPanel);
     }
 
-    // 2026-05-14: mgrQuoteHero (매니저 견적 카드) 를 hero-section 바깥으로 이동했으므로
-    //   reorder 시퀀스에도 명시적으로 hero 바로 다음에 위치시킨다.
-    //   순서: hero → [매니저 견적 카드] → [매니저 견적 결제 배너] → 3 바로가기 버튼 → AI 디자인 → 챗봇
-    var mgrQuoteHero = document.getElementById('mgrQuoteHero');
+    // 2026-05-13: 매니저 견적 카드는 hero-section 내부 자식이라 별도 reorder 불필요 (자동으로 hero 와 함께)
+    // 히어로 바로 다음: [매니저 견적 결제 배너] → 3 바로가기 버튼 → AI 디자인 → 챗봇
     var shortcutBtns = document.getElementById('advShortcutBtns');
     var aiDesignHero = document.getElementById('aiDesignHero');
     var pendingBanner = document.getElementById('pendingQuoteBanner');
     var cursor = hero;
-    if (mgrQuoteHero) { moveAfter(mgrQuoteHero, cursor); cursor = mgrQuoteHero; }
-    // 2026-05-14: 매니저 견적 결제 배너 — 매니저 견적 카드 바로 다음
+    // 2026-05-14: 매니저 견적 결제 배너 — hero 바로 다음 (3버튼 위에 표시)
     if (pendingBanner) { moveAfter(pendingBanner, cursor); cursor = pendingBanner; }
     if (shortcutBtns) { moveAfter(shortcutBtns, cursor); cursor = shortcutBtns; }
     if (aiDesignHero) { moveAfter(aiDesignHero, cursor); cursor = aiDesignHero; }
