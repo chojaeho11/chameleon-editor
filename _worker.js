@@ -446,7 +446,11 @@ export default {
                 targetPath = '/' + path;
             }
             const target = 'https://' + cafeHost + targetPath + url.search;
-            return Response.redirect(target, 301);
+            // 2026-05-14: 301 → 302 — 브라우저(특히 모바일) 가 301 을 영구 캐싱하면 우리가 라우팅 로직
+            //   바꿔도 사용자 디바이스는 옛 매핑을 그대로 따라감. 모바일에서 이미 영문(cafe3355)
+            //   으로 캐시된 사용자가 새 KR 라우팅을 받으려면 캐시 클리어 또는 임시 302 가 필요.
+            //   302 는 매번 서버에 물어보므로 향후 라우팅 변경 시에도 안전.
+            return Response.redirect(target, 302);
         }
 
         // ========== SITEMAP PROXY (for Google Search Console) ==========
