@@ -581,27 +581,38 @@ window._cdCalcHoebae = function() {
     if (h < 10) h = 10;
     if (q < 1) q = 1;
     // 2026-05-14: centered 모드 (패브릭포스터) — 출력 사이즈 변경 시 이미지 사이즈도 동일하게 + 비율 유지.
-    //             변경된 한 축으로부터 다른 축을 imgAspect 로 자동 계산해서 4개 필드 다 묶음.
+    //   ★ 중요: 사용자가 image 인풋에 타이핑 중일 때 _cdCalcHoebae 가 호출되면, 이 함수가
+    //     imgW/imgH 인풋 값을 clamp 결과로 덮어쓰지 않아야 함. 안 그러면 사용자가 '2' 타이핑 →
+    //     w < 10 clamp → iW.value = 10 → 사용자가 '0' 이어 타이핑 → '100' 으로 바뀌는 버그 발생.
+    //   따라서 aspect 재계산이 실제로 일어났을 때만 image 인풋 sync.
+    let _ctSyncImg = false;
     if (state.layout === 'centered' && state.imgAspect) {
-        // 변경 감지 — state 의 이전 값과 비교해서 어느 쪽이 바뀌었는지
         const prevW = state.orderWcm, prevH = state.orderHcm;
         if (w !== prevW && h === prevH) {
-            // 가로 변경 → 세로 자동
-            h = Math.round((w / state.imgAspect) * 10) / 10;
-            if (h < 10) h = 10;
-            hEl.value = h;
+            // 가로만 변경 → 세로 자동 (출력 가로 변경 케이스)
+            const newH = Math.round((w / state.imgAspect) * 10) / 10;
+            if (newH >= 10) {
+                h = newH;
+                hEl.value = h;
+                _ctSyncImg = true;
+            }
         } else if (h !== prevH && w === prevW) {
-            // 세로 변경 → 가로 자동
-            w = Math.round((h * state.imgAspect) * 10) / 10;
-            if (w < 10) w = 10;
-            wEl.value = w;
+            // 세로만 변경 → 가로 자동
+            const newW = Math.round((h * state.imgAspect) * 10) / 10;
+            if (newW >= 10 && newW <= 1000) {
+                w = newW;
+                wEl.value = w;
+                _ctSyncImg = true;
+            }
         }
-        // 이미지 사이즈도 동기화
-        state.imgWcm = w; state.imgHcm = h;
-        const iW = document.getElementById('imgWcm'); if (iW) iW.value = w;
-        const iH = document.getElementById('imgHcm'); if (iH) iH.value = h;
     }
     state.orderWcm = w; state.orderHcm = h; state.orderQty = q;
+    // 이미지 인풋 sync — aspect 재계산이 일어났을 때만 (사용자가 image 인풋에 타이핑 중일 땐 X).
+    if (_ctSyncImg) {
+        state.imgWcm = w; state.imgHcm = h;
+        const iW = document.getElementById('imgWcm'); if (iW && document.activeElement !== iW) iW.value = w;
+        const iH = document.getElementById('imgHcm'); if (iH && document.activeElement !== iH) iH.value = h;
+    }
     // 이어박기 자동 결정
     state.seamExtra = (w > ROLL_MAX_WIDTH_CM) ? SEAM_EXTRA_KRW : 0;
     const seamEl = document.getElementById('seamNotice');
