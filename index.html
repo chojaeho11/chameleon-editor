@@ -938,9 +938,15 @@ if ('caches' in window) {
                 }
             })();
             </script>
-            <div id="mgrQuoteHint" style="font-size:12px; color:#a16207; text-align:center; line-height:1.5;">
-                ☎️ <b>전화 상담 → 매니저가 파일·금액 확정</b> → 결제 URL 받으시면 이곳에 결제창이 자동으로 표시됩니다
+            <!-- 2026-05-14: 사용자 요청 — hint 텍스트 자리에 "개인결제창" 버튼.
+                 클릭 시 결제대기/디자인작업중 VIP 카드 전체를 모달로 모아 표시. -->
+            <div style="text-align:center; margin-top:4px;">
+                <button type="button" id="mgrOpenPersonalPay" onclick="window._openPersonalPayModal()" style="padding:11px 26px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(180,83,9,0.45); letter-spacing:0.5px;">
+                    📋 개인결제창
+                </button>
             </div>
+            <!-- 기존 hint 는 i18n 스크립트 호환 위해 빈 노드로 유지 (텍스트 자체는 사용자 요청에 따라 제거) -->
+            <div id="mgrQuoteHint" style="display:none;"></div>
         </div>
     </div>
     <script>
@@ -1071,6 +1077,22 @@ if ('caches' in window) {
     <!-- 2026-05-14: 매니저가 생성한 상담 완료 결제창 — ?quote=ID 또는 자동 매칭으로 표시 -->
     <!-- 상단 여백 64px: hero 영상이 충분히 보인 후 카드 등장. 폭/패딩은 .hotdeal-grid 부모(.section)와 동일 -->
     <div id="pendingQuoteBanner" style="display:none; max-width:1280px; margin:64px auto 28px; padding:0 20px;"></div>
+
+    <!-- 2026-05-14: "개인결제창" 모달 — 매니저 카드의 버튼 클릭 시 결제대기/디자인작업중 VIP 카드 모음 표시 -->
+    <div id="personalPayModal" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.78); z-index:99990; padding:20px; overflow-y:auto; backdrop-filter:blur(4px);" onclick="if(event.target===this)window._closePersonalPayModal()">
+        <div style="max-width:1280px; margin:40px auto; background:#fff; border-radius:16px; padding:24px 20px; position:relative; box-shadow:0 24px 64px -16px rgba(0,0,0,0.5);">
+            <button type="button" onclick="window._closePersonalPayModal()" aria-label="close" style="position:absolute; top:12px; right:12px; width:36px; height:36px; background:#f3f4f6; border:none; border-radius:50%; font-size:20px; font-weight:700; color:#374151; cursor:pointer; line-height:1;">×</button>
+            <div style="display:flex; align-items:center; gap:8px; justify-content:center; margin:0 0 18px;">
+                <span style="font-size:22px;">📋</span>
+                <h2 id="personalPayModalTitle" style="margin:0; font-size:20px; font-weight:900; color:#111827; letter-spacing:-0.01em;">개인결제창</h2>
+            </div>
+            <div id="personalPayModalGrid" class="hotdeal-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;"></div>
+            <div id="personalPayModalEmpty" style="display:none; text-align:center; padding:48px 16px; color:#6b7280; font-size:14px;">
+                현재 결제 대기 중인 견적이 없습니다.<br>
+                <span style="font-size:12px; color:#9ca3af;">매니저와 상담 후 발급된 결제 URL 로 들어오시거나, 로그인 후 다시 확인해주세요.</span>
+            </div>
+        </div>
+    </div>
     <script>
     (function(){
         // 2026-05-14: 여러 매니저 견적 동시 표시 — localStorage 에 ID 배열로 저장
@@ -1311,6 +1333,48 @@ if ('caches' in window) {
                 '</style>';
             wrap.style.display = '';
         }
+
+        // 2026-05-14: "개인결제창" 모달 — 매니저 카드의 버튼이 호출.
+        //   기존 #pendingQuoteBanner 그리드 (이미 렌더된 결제대기/디자인작업중 VIP 카드) 를
+        //   모달 안 그리드로 그대로 클론. 카드의 inline onclick 은 window._payPendingQuote /
+        //   window._markDesignComplete 를 문자열로 참조하므로 클론 후에도 정상 동작.
+        window._openPersonalPayModal = function () {
+            var modal = document.getElementById('personalPayModal');
+            var banner = document.getElementById('pendingQuoteBanner');
+            var grid = document.getElementById('personalPayModalGrid');
+            var empty = document.getElementById('personalPayModalEmpty');
+            if (!modal || !grid) return;
+            var bannerGrid = banner ? banner.querySelector('.hotdeal-grid, #pendingQuoteGrid') : null;
+            if (bannerGrid && bannerGrid.children.length > 0) {
+                grid.innerHTML = bannerGrid.innerHTML;
+                grid.style.display = 'grid';
+                if (empty) empty.style.display = 'none';
+            } else {
+                grid.innerHTML = '';
+                grid.style.display = 'none';
+                if (empty) empty.style.display = 'block';
+            }
+            // 카드의 inline onclick (window._payPendingQuote / _markDesignComplete) 가 bubble 되면
+            //   modal 자체도 닫아준다 — simple_order 결제 모달이 그 위에 열림.
+            grid.onclick = function (e) {
+                var card = e.target.closest && e.target.closest('.hotdeal-card');
+                if (card) setTimeout(function () { window._closePersonalPayModal(); }, 80);
+            };
+            modal.style.display = 'block';
+            try { document.body.style.overflow = 'hidden'; } catch (e) {}
+        };
+        window._closePersonalPayModal = function () {
+            var modal = document.getElementById('personalPayModal');
+            if (modal) modal.style.display = 'none';
+            try { document.body.style.overflow = ''; } catch (e) {}
+        };
+        // ESC 키로 닫기
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                var modal = document.getElementById('personalPayModal');
+                if (modal && modal.style.display === 'block') window._closePersonalPayModal();
+            }
+        });
 
         // 2026-05-14: 결제 버튼 → 직접 Toss 가 아닌 simple_order 결제창 열기
         // (사용자 요청: 카드결제와 계좌이체 + 고객정보 입력하는 이전 페이지가 나오게)
