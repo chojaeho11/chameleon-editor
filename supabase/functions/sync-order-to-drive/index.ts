@@ -16,15 +16,19 @@
 // 폴더 구조:
 //   {루트(다크팩토리)}/
 //     고객주문/
-//       {고객명}_{YYYY-MM-DD}/                           ← 고객명 + 주문일 (같은 고객 같은 날은 누적)
+//       {YYYY-MM-DD}_{고객명}/                           ← 주문일 + 고객명
 //         {코드}_{주문번호}_{고객명}_01.{ext}            ← 디자인 파일들
 //         {코드}_{주문번호}_{고객명}_02.{ext}
 //         {코드}_{주문번호}_{고객명}_정보.txt            ← 주문 전체 정보
-//     작업지시서/                                        ← 평면적 누적
-//       {코드}_{주문번호}_{고객명}_작업지시서.pdf
-//       {코드}_{주문번호}_{고객명}_견적서.pdf
+//         .design_complete                                ← 관리자가 데이터작업완료 누르면 생성. 파이썬 칼선 도구가 이 파일 존재만 보고 처리.
+//     끝난작업/                                          ← 칼선 작업 후 파이썬 도구가 고객 폴더를 여기로 이동 (TS 함수는 폴더만 미리 보장)
 //
-// 파일이 없어도 폴더는 생성됨.
+// 폴더 색상:
+//   design_complete=true  → 초록 (#16a765)
+//   design_complete=false → 빨강 (#f83a22)   ← 파일 유무와 무관
+//
+// 2026-05-14: 사용자 요청 — 색상 기준을 "파일 유무" 에서 "관리자 데이터작업완료 클릭 여부"로 변경.
+//             그리고 기존 "작업지시서" 평면 폴더는 작업지시서 HTML 페이지(/workorder.html) 로 대체됐으므로 제거.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -35,8 +39,10 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ORDER_DOC_FOLDER_NAME = "작업지시서";
+// 2026-05-14: ORDER_DOC_FOLDER_NAME 제거 — 작업지시서 폴더는 더 이상 생성/관리 안 함.
 const CUSTOMER_ORDERS_FOLDER_NAME = "고객주문";
+const DONE_FOLDER_NAME = "끝난작업";   // 칼선 처리 후 파이썬이 고객 폴더 이동시키는 곳
+const DESIGN_COMPLETE_MARKER = ".design_complete";   // 빈 마커 파일
 
 // ── 폴더/파일 이름 정리 (OS 금지 문자만 제거, 한글/괄호는 유지) ──
 function sanitize(s: string): string {
@@ -189,6 +195,40 @@ async function setFolderColor(folderId: string, colorHex: string, token: string)
 // 색상 코드
 const COLOR_HAS_FILES = "#16a765";  // 초록 — 고객 파일 있음
 const COLOR_EMPTY = "#f83a22";      // 빨강 — 메모만 있음 (고객 파일 미입력)
+
+// 2026-05-14: 관리자 "데이터작업완료" 마커 — 고객 폴더 안에 빈 .design_complete 파일을 만들거나/지운다.
+//   파이썬 칼선 도구가 이 파일 존재 여부만 보고 처리 여부를 결정하므로 Supabase 자격증명 불필요.
+async function ensureDesignCompleteMarker(folderId: string, token: string): Promise<void> {
+  // 이미 존재하면 skip
+  const findUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${DESIGN_COMPLETE_MARKER}' and '${folderId}' in parents and trashed=false`)}&fields=files(id,name)&pageSize=1&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const fr = await fetch(findUrl, { headers: { Authorization: `Bearer ${token}` } });
+  if (fr.ok) {
+    const fj = await fr.json();
+    if ((fj.files || []).length > 0) return;
+  }
+  const empty = new Uint8Array(0);
+  await uploadFile(DESIGN_COMPLETE_MARKER, folderId, "application/octet-stream", empty, token);
+}
+
+async function removeDesignCompleteMarker(folderId: string, token: string): Promise<number> {
+  const findUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${DESIGN_COMPLETE_MARKER}' and '${folderId}' in parents and trashed=false`)}&fields=files(id,name)&pageSize=10&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const fr = await fetch(findUrl, { headers: { Authorization: `Bearer ${token}` } });
+  if (!fr.ok) return 0;
+  const fj = await fr.json();
+  let removed = 0;
+  for (const f of (fj.files || [])) {
+    try { await trashItem(f.id, token); removed++; } catch (_) {}
+  }
+  return removed;
+}
+
+async function folderHasDesignCompleteMarker(folderId: string, token: string): Promise<boolean> {
+  const findUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${DESIGN_COMPLETE_MARKER}' and '${folderId}' in parents and trashed=false`)}&fields=files(id)&pageSize=1&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const fr = await fetch(findUrl, { headers: { Authorization: `Bearer ${token}` } });
+  if (!fr.ok) return false;
+  const fj = await fr.json();
+  return (fj.files || []).length > 0;
+}
 
 // ── Drive: 빈 폴더 마킹 — 색상 빨강 + modifiedTime을 1970으로 (수정날짜 정렬 시 맨 아래로) ──
 //    Drive UI에서 "수정 날짜 ↓" 정렬 시 빈 폴더는 자동으로 하단에 모이고
@@ -484,8 +524,8 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
 
-    // ★ 모드: 'refresh_colors' — 고객주문 폴더 안 모든 customer 폴더 색상을 현재 파일 상태에 맞게 갱신
-    //    수동으로 Drive에 파일을 넣은 후 호출하면 색상이 업데이트됨
+    // ★ 모드: 'refresh_colors' — 고객주문 폴더 안 모든 customer 폴더 색상을 현재 design_complete 마커에 맞게 갱신.
+    //    2026-05-14: 사용자 요청 — 파일 유무 → 마커 파일(.design_complete) 존재 여부 기준으로 변경.
     if (body?.mode === 'refresh_colors') {
       const token = await withRetry("auth", () => getAccessToken(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN));
       const ordersFolderId = await findFolderByName(CUSTOMER_ORDERS_FOLDER_NAME, ROOT_ID, token);
@@ -499,18 +539,13 @@ serve(async (req) => {
       const results: any[] = [];
       for (const folder of customerFolders) {
         try {
-          const children = await listFolderChildren(folder.id, token);
-          const designFiles = children.filter((f: any) =>
-            f.mimeType !== "application/vnd.google-apps.folder" &&
-            !(f.name || "").endsWith("_정보.txt")
-          );
-          const targetColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
-          if (designFiles.length > 0) {
-            await setFolderColor(folder.id, targetColor, token);
+          const hasMarker = await folderHasDesignCompleteMarker(folder.id, token);
+          if (hasMarker) {
+            await setFolderColor(folder.id, COLOR_HAS_FILES, token);
           } else {
             await markFolderEmpty(folder.id, token);
           }
-          results.push({ name: folder.name, design_files: designFiles.length, color: targetColor });
+          results.push({ name: folder.name, design_complete: hasMarker, color: hasMarker ? COLOR_HAS_FILES : COLOR_EMPTY });
         } catch (e: any) {
           results.push({ name: folder.name, error: String(e?.message || e) });
         }
@@ -714,20 +749,17 @@ serve(async (req) => {
           if (r.ok) {
             const j = await r.json();
             if ((j.files || []).length > 0) {
-              console.log(`[drive sync] already synced — memo "${expectedMemoName}" exists, applying color and skipping order=${orderId}`);
-              // 이미 sync된 폴더에도 색상은 갱신 (디자인 파일이 추후 추가됐을 수 있음)
+              console.log(`[drive sync] already synced — memo "${expectedMemoName}" exists, applying color/marker and skipping order=${orderId}`);
+              // 2026-05-14: design_complete 기반으로 색상/마커 갱신.
               let appliedColor = "";
               try {
-                const finalFiles = await listFolderChildren(customerFolderForCheck, token);
-                const designFiles = finalFiles.filter((f: any) =>
-                  f.mimeType !== "application/vnd.google-apps.folder" &&
-                  !(f.name || "").endsWith("_정보.txt")
-                );
-                appliedColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
-                if (designFiles.length > 0) {
-                  await setFolderColor(customerFolderForCheck, appliedColor, token);
+                const isDesignDone = !!order.design_complete;
+                if (isDesignDone) {
+                  try { await ensureDesignCompleteMarker(customerFolderForCheck, token); } catch (_) {}
+                  try { await setFolderColor(customerFolderForCheck, COLOR_HAS_FILES, token); appliedColor = COLOR_HAS_FILES; } catch (_) {}
                 } else {
-                  await markFolderEmpty(customerFolderForCheck, token);
+                  try { await removeDesignCompleteMarker(customerFolderForCheck, token); } catch (_) {}
+                  try { await markFolderEmpty(customerFolderForCheck, token); appliedColor = COLOR_EMPTY; } catch (_) {}
                 }
               } catch (colorErr: any) {
                 console.warn(`[drive sync] skip-path color update failed: ${colorErr?.message || colorErr}`);
@@ -739,6 +771,7 @@ serve(async (req) => {
                 customer_folder_id: customerFolderForCheck,
                 customer_folder_url: folderUrl,
                 folder_color: appliedColor,
+                design_complete: !!order.design_complete,
               }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
           }
@@ -749,11 +782,13 @@ serve(async (req) => {
     }
 
     // 4) 폴더 트리 준비:
-    //    {ROOT}/고객주문/{고객명}_{주문일}/   + {ROOT}/작업지시서/
+    //    {ROOT}/고객주문/{고객명}_{주문일}/   + {ROOT}/끝난작업/ (파이썬이 이동시킬 곳, 미리 보장)
+    // 2026-05-14: 작업지시서 평면 폴더 생성 제거 — workorder.html 페이지로 대체됨.
     const customerOrdersFolderId = await withRetry("customerOrdersFolder", () => findOrCreateFolder(CUSTOMER_ORDERS_FOLDER_NAME, ROOT_ID, token));
     const customerFolderId = await withRetry("customerFolder", () => findOrCreateFolder(customerFolderName, customerOrdersFolderId, token));
-    const orderDocFolderId = await withRetry("orderDocFolder", () => findOrCreateFolder(ORDER_DOC_FOLDER_NAME, ROOT_ID, token));
-    console.log(`[drive sync] folders ready: ${CUSTOMER_ORDERS_FOLDER_NAME}/${customerFolderName} (${customerFolderId}), ${ORDER_DOC_FOLDER_NAME} (${orderDocFolderId})`);
+    // 끝난작업 폴더는 한 번만 보장 (fire-and-forget, 실패해도 sync 자체엔 영향 없음)
+    withRetry("doneFolder", () => findOrCreateFolder(DONE_FOLDER_NAME, ROOT_ID, token)).catch((e: any) => console.warn(`[drive sync] 끝난작업 folder ensure failed: ${e?.message || e}`));
+    console.log(`[drive sync] folders ready: ${CUSTOMER_ORDERS_FOLDER_NAME}/${customerFolderName} (${customerFolderId})`);
 
     // 4-2) ★ 고객이 미리 만들어둔 {고객명} 폴더 (날짜 접두사 없음) 자동 병합
     //      예: 고객이 "진기효" 폴더에 큰 파일 업로드 → 주문 시 "4월27일_진기효"로 자동 이전
@@ -786,17 +821,12 @@ serve(async (req) => {
       console.warn(`[drive sync] manual folder merge skipped: ${e?.message || e}`);
     }
 
-    // 5) 파일 분류
+    // 5) 파일 분류 — 디자인 파일만 업로드 대상.
+    //    2026-05-14: 작업지시서 폴더 제거 — order_sheet/quotation 타입은 더 이상 Drive로 업로드하지 않음.
+    //                작업지시서는 /workorder.html?id=NNN HTML 페이지로 직접 조회.
     const allFiles = (Array.isArray(order.files) ? order.files : [])
-      .filter((f: any) => f && f.url && f.type !== "_error_log");
-
-    // type 기준 분리: order_sheet / quotation 은 작업지시서 폴더로, 나머지는 디자인 폴더로
-    const orderDocs: any[] = [];
-    const designs: any[] = [];
-    for (const f of allFiles) {
-      if (f.type === "order_sheet" || f.type === "quotation") orderDocs.push(f);
-      else designs.push(f);
-    }
+      .filter((f: any) => f && f.url && f.type !== "_error_log" && f.type !== "order_sheet" && f.type !== "quotation");
+    const designs: any[] = allFiles;
 
     const filesUploaded: string[] = [];
     const fileErrors: { name: string; error: string }[] = [];
@@ -823,25 +853,8 @@ serve(async (req) => {
       }
     }
 
-    // 7) 작업지시서/견적서 업로드: {코드}_{주문번호}_{고객명}_작업지시서.pdf 등
-    for (const f of orderDocs) {
-      const label = f.type === "order_sheet" ? "작업지시서" : "견적서";
-      try {
-        await withRetry(`download ${f.name}`, async () => {
-          const r = await fetch(f.url);
-          if (!r.ok) throw new Error(`fetch ${f.url}: ${r.status}`);
-          const buf = new Uint8Array(await r.arrayBuffer());
-          const mime = r.headers.get("content-type") || "application/pdf";
-          const ext = extractExt(f.name, f.url, mime);
-          const newName = `${baseName}_${label}.${ext}`;
-          await withRetry(`upload ${newName}`, () => uploadFile(newName, orderDocFolderId, mime, buf, token));
-          filesUploaded.push(newName);
-        });
-      } catch (e: any) {
-        console.error(`[drive sync] order doc failed: ${f.name} — ${e?.message || e}`);
-        fileErrors.push({ name: f.name, error: String(e?.message || e) });
-      }
-    }
+    // 7) 작업지시서/견적서 업로드: 2026-05-14 제거됨.
+    //    /workorder.html?id=NNN (Cotton: /cotton_workorder.html) HTML 페이지로 대체.
 
     // 8) 정보 메모 (txt) — 항상 생성, 고객 폴더({날짜}/{고객명}/) 안에 저장
     try {
@@ -869,46 +882,42 @@ serve(async (req) => {
       console.warn(`[drive sync] customer folder dedup failed: ${e?.message || e}`);
     }
 
-    // 9-2) ★ 파일 레벨 dedup: 같은 이름 파일이 여러 개 있으면 오래된 것만 남기고 정리
-    //      이중 트리거로 인한 race condition으로 동일 파일이 여러 번 업로드된 경우 자동 정리
+    // 9-2) ★ 파일 레벨 dedup: 고객 폴더만 (작업지시서 폴더 제거됨)
     try {
       const trashedCustomer = await dedupFilesInFolder(finalCustomerFolderId, token);
-      const trashedOrderDoc = await dedupFilesInFolder(orderDocFolderId, token);
-      if (trashedCustomer + trashedOrderDoc > 0) {
-        console.log(`[drive sync] file dedup cleaned: customer=${trashedCustomer}, orderDoc=${trashedOrderDoc}`);
+      if (trashedCustomer > 0) {
+        console.log(`[drive sync] file dedup cleaned: customer=${trashedCustomer}`);
       }
     } catch (e: any) {
       console.warn(`[drive sync] file dedup failed: ${e?.message || e}`);
     }
 
-    // 9-3) ★ 폴더 색상 마킹: 고객 디자인 파일이 있으면 초록, 메모만 있으면 빨강
-    //      (Drive UI에서 한눈에 어떤 폴더에 고객 파일이 들어있는지 확인 가능)
+    // 9-3) ★ 폴더 색상 마킹 + design_complete 마커 파일.
+    //   2026-05-14: 파일 유무 → order.design_complete 기준으로 변경.
+    //   design_complete=true: 초록 + .design_complete 마커 파일 ON
+    //   design_complete=false: 빨강 + 마커 OFF
     let folderColorApplied = "";
+    let markerState: "added" | "removed" | "kept" | "error" = "kept";
     try {
-      const finalFiles = await listFolderChildren(finalCustomerFolderId, token);
-      // 메모(.txt)와 폴더 제외한 디자인 파일 카운트
-      const designFiles = finalFiles.filter((f: any) =>
-        f.mimeType !== "application/vnd.google-apps.folder" &&
-        !(f.name || "").endsWith("_정보.txt")
-      );
-      const targetColor = designFiles.length > 0 ? COLOR_HAS_FILES : COLOR_EMPTY;
-      try {
-        if (designFiles.length > 0) {
-          await setFolderColor(finalCustomerFolderId, targetColor, token);
-        } else {
-          await markFolderEmpty(finalCustomerFolderId, token);
-        }
-        folderColorApplied = targetColor;
-        console.log(`[drive sync] folder color set: ${targetColor} (${designFiles.length} design files)`);
-      } catch (colorErr: any) {
-        console.warn(`[drive sync] folder color set failed: ${colorErr?.message || colorErr}`);
+      const isDesignDone = !!order.design_complete;
+      if (isDesignDone) {
+        try { await ensureDesignCompleteMarker(finalCustomerFolderId, token); markerState = "added"; }
+        catch (mErr: any) { markerState = "error"; console.warn(`[drive sync] marker add failed: ${mErr?.message || mErr}`); }
+        try { await setFolderColor(finalCustomerFolderId, COLOR_HAS_FILES, token); folderColorApplied = COLOR_HAS_FILES; }
+        catch (cErr: any) { console.warn(`[drive sync] color GREEN failed: ${cErr?.message || cErr}`); }
+        console.log(`[drive sync] folder marked DESIGN COMPLETE — green + marker`);
+      } else {
+        try { const removed = await removeDesignCompleteMarker(finalCustomerFolderId, token); if (removed > 0) markerState = "removed"; }
+        catch (mErr: any) { console.warn(`[drive sync] marker remove failed: ${mErr?.message || mErr}`); }
+        try { await markFolderEmpty(finalCustomerFolderId, token); folderColorApplied = COLOR_EMPTY; }
+        catch (cErr: any) { console.warn(`[drive sync] color RED failed: ${cErr?.message || cErr}`); }
+        console.log(`[drive sync] folder marked PENDING — red, marker removed`);
       }
     } catch (e: any) {
-      console.warn(`[drive sync] folder color check failed: ${e?.message || e}`);
+      console.warn(`[drive sync] color/marker step failed: ${e?.message || e}`);
     }
 
     const customerFolderUrl = `https://drive.google.com/drive/folders/${finalCustomerFolderId}`;
-    const orderDocFolderUrl = `https://drive.google.com/drive/folders/${orderDocFolderId}`;
     console.log(`[drive sync] done order=${orderId} customer=${customer} files=${filesUploaded.length}/${allFiles.length + 1} url=${customerFolderUrl}`);
 
     return new Response(JSON.stringify({
@@ -917,10 +926,10 @@ serve(async (req) => {
       customer_folder_name: customerFolderName,
       customer_folder_id: finalCustomerFolderId,
       customer_folder_url: customerFolderUrl,
-      order_doc_folder_id: orderDocFolderId,
-      order_doc_folder_url: orderDocFolderUrl,
       merged_from_manual: mergedFromManual,
       folder_color: folderColorApplied,
+      design_complete: !!order.design_complete,
+      design_complete_marker: markerState,
       files_uploaded: filesUploaded.length,
       files_failed: fileErrors.length,
       file_errors: fileErrors,
