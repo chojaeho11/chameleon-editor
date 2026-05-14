@@ -887,6 +887,8 @@ if ('caches' in window) {
                             var bi = FIELD.findIndex(function(n){ return (b.question||'').includes(n); });
                             return ai - bi;
                         });
+                        // FIELD 이름 필터 결과가 비어있으면 (DB 등록명이 다를 수도) 전체 활성 매니저 사용
+                        if (rows.length === 0) rows = (data || []).filter(function(r){ return r.is_active !== false; });
                         var html = rows.map(function(r){
                             var phone = '';
                             try { phone = (JSON.parse(r.answer || '{}').phone || '').toString(); } catch(e){}
@@ -907,8 +909,18 @@ if ('caches' in window) {
                                 '<b style="color:#b45309; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
                                 '</a>';
                         }).join('');
-                        if (html) slot.innerHTML = html;
-                    } catch (e) { console.warn('[mgrPhones] load failed:', e); }
+                        // DB 에 매니저 등록 안 됐으면 슬롯 자체를 제거 (본사 카드만 남음 + auto-fit 으로 가운데 정렬)
+                        if (html) {
+                            slot.innerHTML = html;
+                        } else {
+                            slot.remove();
+                            console.warn('[mgrPhones] chatbot_knowledge._managers 에 매니저 미등록 — 본사 카드만 표시');
+                        }
+                    } catch (e) {
+                        console.warn('[mgrPhones] load failed:', e);
+                        var slot2 = document.getElementById('mgrPhoneSlot');
+                        if (slot2) slot2.remove();
+                    }
                 }
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function(){ setTimeout(loadMgrPhones, 500); });
@@ -1090,16 +1102,21 @@ if ('caches' in window) {
         function fmtKR(n) { try { return (Number(n)||0).toLocaleString('ko-KR') + '원'; } catch(e){ return n + '원'; } }
         function esc(s) { return String(s||'').replace(/[<>"'&]/g, function(c){return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];}); }
 
-        // 배너를 BAND 바로 위에 위치시킴 — advisor-panel 이 .dm-hub-banner 를 #advShortcutBtns 에 렌더 후 호출
+        // 2026-05-14: 배너를 매니저 견적 전화 패널 바로 아래 위치시킴
+        // (사용자 요청: 메인 페이지 매니저 견적 카드 바로 아래에 결제창 표시)
         function positionAboveBand() {
             var wrap = document.getElementById('pendingQuoteBanner');
-            var shortcut = document.getElementById('advShortcutBtns');
-            if (!wrap || !shortcut) return;
-            var band = shortcut.querySelector('.dm-hub-banner');
-            if (band && band.parentNode === shortcut && wrap.parentNode !== shortcut) {
-                shortcut.insertBefore(wrap, band);
-            } else if (band && band.parentNode === shortcut && wrap.previousElementSibling !== shortcut.querySelector('.adv-ext-grid')) {
-                shortcut.insertBefore(wrap, band);
+            var mgrPanel = document.getElementById('mgrQuoteHero');
+            var hero = document.querySelector('.hero-section');
+            if (!wrap) return;
+            // 1순위: mgrQuoteHero 바로 다음 (KR 한정으로 전화 패널이 있을 때)
+            if (mgrPanel && mgrPanel.parentNode && wrap.previousElementSibling !== mgrPanel) {
+                mgrPanel.parentNode.insertBefore(wrap, mgrPanel.nextSibling);
+                return;
+            }
+            // 2순위: 해외 사이트 등 mgrPanel 숨겨진 경우 — hero-section 바로 다음 (3버튼 위)
+            if (hero && hero.parentNode && wrap.previousElementSibling !== hero) {
+                hero.parentNode.insertBefore(wrap, hero.nextSibling);
             }
         }
 
