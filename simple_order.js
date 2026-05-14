@@ -1065,6 +1065,21 @@
       <div style="font-size:10px; color:#9ca3af; text-align:center; margin-top:8px;">
         ${tr('결제 확인 후 영업일 내 제작 시작', '入金確認後、営業日内に製作開始', 'Production starts after payment confirmation')}
       </div>
+      <!-- 2026-05-14: 관리자/매니저 전용 — 본인이 결제하지 않고 고객에게 결제 URL 발송 -->
+      <button id="soCoMgrQuoteBtn" type="button" onclick="window._soCreateMgrQuote(this)" style="display:none; width:100%; margin-top:10px; padding:14px 20px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);">
+        🎁 ${tr('고객 결제창 만들어주기 (매니저)', 'お客様用決済リンク作成 (マネージャー)', 'Create customer payment link (Manager)')}
+      </button>
+      <div id="soCoMgrQuoteHint" style="display:none; font-size:10px; color:#92400e; text-align:center; margin-top:6px;">
+        ☎️ 위 카트 그대로 고객에게 결제 URL 만 발송됩니다. 받는사람 = 고객명, 연락처 = 고객 휴대폰
+      </div>
+      <div id="soCoMgrQuoteResult" style="display:none; margin-top:12px; padding:12px; background:#dcfce7; border:1.5px solid #22c55e; border-radius:10px;">
+        <div style="font-weight:800; color:#15803d; margin-bottom:6px; font-size:12px;">✅ 결제 URL 생성됨!</div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input id="soCoMgrQuoteUrl" type="text" readonly style="flex:1; padding:8px 10px; border:1.5px solid #86efac; border-radius:6px; font-size:11px; background:#fff; font-family:monospace; color:#15803d;">
+          <button onclick="window._soCopyMgrQuoteUrl(this)" style="padding:8px 12px; background:#15803d; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📋</button>
+        </div>
+        <div style="font-size:10px; color:#166534; margin-top:6px;">고객에게 카톡/문자로 전송하세요</div>
+      </div>
     </aside>
   </div>
 </div>
@@ -3463,6 +3478,16 @@
         document.body.style.overflow = 'hidden';
         // 2026-05-14: 결제수단 초기상태 동기화 (해외 사이트는 증빙 박스 숨김, 한국은 표시)
         if (typeof window._soOnPayMethodChange === 'function') window._soOnPayMethodChange();
+        // 2026-05-14: 관리자/매니저 로그인 시 '고객 결제창 만들어주기' 버튼 노출
+        try {
+            var isAdm = !!window.isAdmin;
+            var btn = document.getElementById('soCoMgrQuoteBtn');
+            var hint = document.getElementById('soCoMgrQuoteHint');
+            var res = document.getElementById('soCoMgrQuoteResult');
+            if (btn) btn.style.display = isAdm ? '' : 'none';
+            if (hint) hint.style.display = isAdm ? '' : 'none';
+            if (res) res.style.display = 'none';
+        } catch (e) {}
     };
 
     // 2026-05-13: 주문 요약 렌더 — 항목 + 할인 breakdown + 합계
@@ -3643,6 +3668,114 @@
             alert('견적서 생성 오류: ' + (e.message || e));
         } finally {
             if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origLabel; }
+        }
+    };
+
+    // 2026-05-14: 관리자/매니저가 본인 결제 대신 고객 결제 URL 만 생성 — 카트 그대로
+    window._soCreateMgrQuote = async function (btnEl) {
+        var name = (document.getElementById('soCoName').value || '').trim();
+        var phone = (document.getElementById('soCoPhone').value || '').trim();
+        var zip = (document.getElementById('soCoZip').value || '').trim();
+        var addr1 = (document.getElementById('soCoAddr1').value || '').trim();
+        var addr2 = (document.getElementById('soCoAddr2').value || '').trim();
+        var memo = (document.getElementById('soCoMemo').value || '').trim();
+        if (!name) { alert('고객명(받으시는 분)을 입력해주세요.'); return; }
+        if (!phone) { alert('고객 연락처를 입력해주세요.'); return; }
+        var cart = _soReadAllCart();
+        if (cart.length === 0) { alert('카트가 비어있습니다.'); return; }
+        var origLabel = btnEl ? btnEl.innerHTML : '';
+        try {
+            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '⏳ 생성 중...'; }
+            var sb = getSb();
+            if (!sb) throw new Error('Supabase 연결 실패');
+            var cartCalc = _soCalcCartTotal(cart);
+            var total = cartCalc.grandTotal;
+            var orderFiles = [];
+            var items = cart.map(function (it) {
+                if (_soIsFabricItem(it)) {
+                    var fabUrl = it.designerOriginalUrl || it.imgUrl || null;
+                    var fabName = it.imgFileName || (it.title || it.fabricName || 'fabric') + '.png';
+                    if (fabUrl) orderFiles.push({ name: fabName, url: fabUrl, type: 'image/png' });
+                    return {
+                        product_code: it.fabricCode,
+                        product_name: it.title || it.fabricName,
+                        fabric: it.fabricName,
+                        width_cm: it.orderWcm, height_cm: it.orderHcm,
+                        qty: it.qtyValue || 1, price: it.price || 0,
+                        source: 'cotton-print', artwork_url: fabUrl, artwork_filename: fabName,
+                        addons: [
+                            it.finishCode ? { type: 'finish', code: it.finishCode, name: it.finishName, price: it.finishExtra || 0 } : null,
+                            it.hookCode ? { type: 'hook', code: it.hookCode, name: it.hookName, price: it.hookExtra || 0 } : null,
+                            it.accCode ? { type: 'accessory', code: it.accCode, name: it.accName, price: it.accExtra || 0 } : null
+                        ].filter(Boolean)
+                    };
+                }
+                var addons = [];
+                if (it.selectedAddons && window.ADDON_DB) {
+                    Object.values(it.selectedAddons).forEach(function (code) {
+                        var a = window.ADDON_DB[code]; if (!a) return;
+                        var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
+                        addons.push({ type: 'addon', code: code, name: a.display_name || a.name, qty: aQty, price: a.price || 0, total: (a.price || 0) * aQty });
+                    });
+                }
+                var fileUrl = it.originalUrl || it.fileUrl || it.thumb || null;
+                var fileName = it.fileName || ((it.product && it.product.name) || 'item') + '.png';
+                if (fileUrl) orderFiles.push({ name: '[앞면] ' + fileName, url: fileUrl, type: it.mimeType || 'image/png' });
+                if (it.backFileUrl) orderFiles.push({ name: '[뒷면] ' + (it.backFileName || 'back.png'), url: it.backFileUrl, type: it.backFileType || 'image/png' });
+                return Object.assign({}, it, { addons: addons, productName: (it.product && it.product.name) || it.productName || '상품' });
+            });
+            var fullAddr = [zip ? '(' + zip + ')' : '', addr1, addr2].filter(Boolean).join(' ');
+            var mgrEmail = '';
+            try { var { data: sess } = await sb.auth.getUser(); mgrEmail = sess?.user?.email || ''; } catch (e) {}
+            var orderRow = {
+                order_date: new Date().toISOString(),
+                manager_name: name,
+                phone: phone,
+                address: fullAddr,
+                request_note: memo || '',
+                status: '접수됨',
+                payment_status: '상담대기',
+                payment_method: null,
+                total_amount: total,
+                discount_amount: 0,
+                items: items,
+                site_code: 'KR',
+                files: orderFiles.length ? orderFiles : null,
+                admin_note: '[MANAGER_QUOTE] manager=' + (mgrEmail || 'unknown') + '\n매니저 카트 기반 결제창 생성 — 고객 결제 대기'
+            };
+            var { data: inserted, error: insErr } = await sb.from('orders').insert([orderRow]).select().single();
+            if (insErr) { console.error('[soCreateMgrQuote]', insErr); alert('결제창 생성 실패: ' + (insErr.message || insErr)); return; }
+            var newId = inserted.id;
+            // Drive 동기화 fire-and-forget
+            try { sb.functions.invoke('sync-order-to-drive', { body: { order_id: newId } }).catch(function(){}); } catch (e) {}
+            // URL 표시
+            var domain = location.hostname.indexOf('cafe2626') >= 0 ? 'https://www.cafe2626.com' : location.origin;
+            var quoteUrl = domain + '/?quote=' + encodeURIComponent(newId);
+            var urlInp = document.getElementById('soCoMgrQuoteUrl');
+            var resBox = document.getElementById('soCoMgrQuoteResult');
+            if (urlInp) urlInp.value = quoteUrl;
+            if (resBox) resBox.style.display = '';
+            // 카트 비우기 (이 카트는 매니저 작업용 — 다음 매니저 견적을 위해 깨끗이)
+            try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+            if (btnEl) { btnEl.innerHTML = '✅ 생성 완료 — URL 복사하여 고객에게 전송'; }
+        } catch (e) {
+            console.error('[soCreateMgrQuote]', e);
+            alert('오류: ' + (e.message || e));
+            if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origLabel; }
+        }
+    };
+
+    window._soCopyMgrQuoteUrl = async function (btn) {
+        var inp = document.getElementById('soCoMgrQuoteUrl');
+        if (!inp) return;
+        try {
+            await navigator.clipboard.writeText(inp.value);
+            var orig = btn.innerHTML;
+            btn.innerHTML = '✓';
+            setTimeout(function () { btn.innerHTML = orig; }, 1500);
+        } catch (e) {
+            inp.select(); document.execCommand('copy');
+            alert('URL 이 복사되었습니다.');
         }
     };
 
