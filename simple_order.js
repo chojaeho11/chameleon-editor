@@ -2915,6 +2915,7 @@
         return uploadFileGeneric(state.file);
     }
     // 2026-05-13: 임의 파일 업로드 (앞면/뒷면 공용)
+    // 2026-05-14: 60초 타임아웃 — 네트워크 hang 시 영구히 _soInFlight 가 true 로 남는 문제 방지
     async function uploadFileGeneric(file) {
         const sb = getSb();
         if (!sb) throw new Error('Supabase not available');
@@ -2922,7 +2923,11 @@
         const ts = Date.now() + '_' + Math.floor(Math.random() * 10000);
         const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = 'simple_order/' + ts + '_' + safeName;
-        const { error } = await sb.storage.from('design').upload(path, file);
+        var uploadPromise = sb.storage.from('design').upload(path, file);
+        var timeoutPromise = new Promise(function (_, reject) {
+            setTimeout(function () { reject(new Error('업로드 시간 초과 (60초) — 네트워크 확인 후 재시도')); }, 60000);
+        });
+        const { error } = await Promise.race([uploadPromise, timeoutPromise]);
         if (error) throw error;
         const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
         return { path, url: pub };
@@ -3056,9 +3061,29 @@
     async function doAddToCart() {
         if (_soInFlight) {
             console.warn('[simple_order] doAddToCart 이미 진행 중 — 중복 호출 무시');
+            showStatus(tr('⏳ 이전 업로드가 진행 중입니다. 잠시만 기다려주세요.', '⏳ アップロード中...', '⏳ Previous upload in progress...'), 'warn');
             return false;
         }
-        if (!state.product || !state.file) return false;
+        if (!state.product) {
+            console.warn('[simple_order] state.product 미설정 — 상품 정보가 로드 안 됨');
+            showStatus(tr('❌ 상품 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.', '商品情報を読み込み中...', 'Loading product info...'), 'err');
+            return false;
+        }
+        if (!state.file) {
+            console.warn('[simple_order] state.file 미설정 — 파일을 먼저 업로드해야 함');
+            showStatus(tr('❌ 디자인 파일을 먼저 업로드해주세요.', '📁 デザインファイルをアップロードしてください。', 'Please upload a design file first.'), 'err');
+            // 업로드 영역 강조 (사용자가 어디 클릭해야 할지 명확히)
+            try {
+                var dz = document.getElementById('soUpload');
+                if (dz) {
+                    dz.style.boxShadow = '0 0 0 4px rgba(220,38,38,0.4)';
+                    setTimeout(function () { dz.style.boxShadow = ''; }, 2000);
+                    dz.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } catch (e) {}
+            return false;
+        }
+        console.log('[simple_order] doAddToCart 시작 — 상품:', state.product?.code, '파일:', state.file?.name);
         _soInFlight = true;
         const btnC = document.getElementById('soBtnCart');
         const btnB = document.getElementById('soBtnBuy');
