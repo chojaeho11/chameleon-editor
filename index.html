@@ -997,6 +997,129 @@ if ('caches' in window) {
     <!-- ★ 2026-05-13: 바로가기 버튼 + BAND + WITH 배너 (AI 디자인 생성기 위로 이동) -->
     <div id="advShortcutBtns" style="width:100%; margin:10px 0 8px 0;"></div>
 
+    <!-- 2026-05-14: 매니저가 생성한 상담 완료 결제창 — ?quote=ID 또는 자동 매칭으로 표시 -->
+    <div id="pendingQuoteBanner" style="display:none; max-width:1100px; margin:0 auto 16px; padding:0 16px;"></div>
+    <script>
+    (function(){
+        // 매니저 견적 결제창 표시 — URL ?quote=ORDER_ID 우선, 없으면 localStorage 캐시
+        async function loadPendingQuote() {
+            try {
+                var u = new URLSearchParams(location.search);
+                var quoteId = u.get('quote') || '';
+                // localStorage 폴백 — 한 번 본 quote는 재방문해도 결제 전까지 계속 보임
+                if (!quoteId) {
+                    try { quoteId = localStorage.getItem('cm_pending_quote') || ''; } catch(e){}
+                }
+                if (!quoteId) return;
+                // Supabase 모듈 로드 대기
+                var sb = window.sb;
+                if (!sb) {
+                    try {
+                        var mod = await import('./config.js?v=436');
+                        sb = mod.sb || window.sb;
+                    } catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
+                }
+                if (!sb) return;
+                var { data: order, error } = await sb
+                    .from('orders')
+                    .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at')
+                    .eq('id', quoteId)
+                    .maybeSingle();
+                if (error || !order) { console.warn('[mgrQuote banner] order not found:', quoteId); return; }
+                // 결제 완료된 quote 는 표시 안 함
+                if (order.payment_status && order.payment_status !== '상담대기' && order.payment_status !== '미결제') {
+                    try { localStorage.removeItem('cm_pending_quote'); } catch(e){}
+                    return;
+                }
+                // ?quote= 으로 처음 방문 → localStorage 에 저장 (URL 사라져도 다음 방문에도 표시)
+                try { localStorage.setItem('cm_pending_quote', String(order.id)); } catch(e){}
+                renderPendingQuoteBanner(order);
+            } catch (e) { console.warn('[mgrQuote banner] init failed:', e); }
+        }
+
+        function fmtKR(n) { try { return (Number(n)||0).toLocaleString('ko-KR') + '원'; } catch(e){ return n + '원'; } }
+        function esc(s) { return String(s||'').replace(/[<>"'&]/g, function(c){return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];}); }
+
+        // 배너를 BAND 바로 위에 위치시킴 — advisor-panel 이 .dm-hub-banner 를 #advShortcutBtns 에 렌더 후 호출
+        function positionAboveBand() {
+            var wrap = document.getElementById('pendingQuoteBanner');
+            var shortcut = document.getElementById('advShortcutBtns');
+            if (!wrap || !shortcut) return;
+            var band = shortcut.querySelector('.dm-hub-banner');
+            if (band && band.parentNode === shortcut && wrap.parentNode !== shortcut) {
+                shortcut.insertBefore(wrap, band);
+            } else if (band && band.parentNode === shortcut && wrap.previousElementSibling !== shortcut.querySelector('.adv-ext-grid')) {
+                shortcut.insertBefore(wrap, band);
+            }
+        }
+
+        function renderPendingQuoteBanner(order) {
+            var wrap = document.getElementById('pendingQuoteBanner');
+            if (!wrap) return;
+            // BAND 바로 위로 이동 (advisor-panel 렌더 후 시점 보장)
+            positionAboveBand();
+            // BAND 가 아직 렌더 안됐을 수 있으므로 짧게 재시도
+            setTimeout(positionAboveBand, 600);
+            setTimeout(positionAboveBand, 1500);
+            var items = order.items || [];
+            var files = order.files || [];
+            var itemsHtml = items.map(function (it, idx) {
+                var n = (it.product && it.product.name) || it.productName || ('상품 #' + (idx+1));
+                var q = it.qty || 1;
+                var p = it.product_price || it.price || (it.product && it.product.price) || 0;
+                return '<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #fef3c7; font-size:13px;">' +
+                    '<div style="flex:1; min-width:0;"><span style="font-weight:700; color:#451a03;">' + esc(n) + '</span> <span style="color:#92400e; font-size:11px;">× ' + q + '</span></div>' +
+                    '<div style="font-weight:700; color:#78350f; white-space:nowrap; margin-left:12px;">' + fmtKR(p * q) + '</div>' +
+                    '</div>';
+            }).join('');
+            var fileLinks = (files || []).filter(function (f) {
+                // 작업지시서·견적서 같은 시스템 파일 제외, 고객 디자인 파일만
+                return f && f.url && f.type !== 'order_sheet' && f.type !== 'quotation' && f.type !== '_error_log';
+            }).map(function (f) {
+                var nm = esc(f.name || '파일');
+                return '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1.5px solid #fbbf24; border-radius:999px; font-size:11px; color:#78350f; font-weight:700; text-decoration:none; margin:2px;">' +
+                    '<i class="fa-solid fa-paperclip"></i> ' + nm + '</a>';
+            }).join('');
+            var customerName = order.manager_name || '고객';
+            wrap.innerHTML =
+                '<div style="background:linear-gradient(135deg, #fef9e7 0%, #fed7aa 100%); border:2px solid #fbbf24; border-radius:16px; padding:18px 20px; box-shadow:0 8px 24px -8px rgba(251,191,36,0.45); position:relative;">' +
+                  '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">' +
+                    '<div style="font-size:28px;">💬</div>' +
+                    '<div style="flex:1;">' +
+                      '<div style="font-size:14px; font-weight:900; color:#78350f;">' + esc(customerName) + ' 고객님 — 상담 완료</div>' +
+                      '<div style="font-size:12px; color:#92400e;">담당 매니저와 상담한 내용입니다. 아래 내용을 확인하시고 결제 부탁드립니다.</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div style="background:#fff; border-radius:10px; padding:10px 14px; margin-bottom:10px;">' + itemsHtml + '</div>' +
+                  (fileLinks ? '<div style="margin-bottom:10px;">📎 ' + fileLinks + '</div>' : '') +
+                  '<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 14px; background:#451a03; color:#fde047; border-radius:10px; margin-bottom:12px;">' +
+                    '<span style="font-size:13px; font-weight:700;">합계</span>' +
+                    '<span style="font-size:18px; font-weight:900;">' + fmtKR(order.total_amount || 0) + '</span>' +
+                  '</div>' +
+                  '<button type="button" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; padding:14px 20px; background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #b45309 100%); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);">⚡ 결제하기</button>' +
+                  '<div style="font-size:10px; color:#a16207; margin-top:8px; text-align:center;">결제 후 본사에서 작업이 시작됩니다.</div>' +
+                '</div>';
+            wrap.style.display = '';
+        }
+
+        // 결제 버튼 → 한국=Toss, 해외=Stripe
+        window._payPendingQuote = function (orderId) {
+            if (!orderId) return;
+            var host = (location.hostname || '').toLowerCase();
+            var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || (host.indexOf('cafe0101')>=0?'JP':host.indexOf('cafe3355')>=0?'US':'KR');
+            if (country === 'KR') location.href = '/cotton_checkout.html?order_id=' + encodeURIComponent(orderId);
+            else location.href = '/cotton_stripe_checkout.html?order_id=' + encodeURIComponent(orderId) + '&lang=' + (country==='JP'?'ja':'en');
+        };
+
+        // DOMContentLoaded 후 + Supabase 가 준비될 때까지 짧게 대기 후 실행
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () { setTimeout(loadPendingQuote, 800); });
+        } else {
+            setTimeout(loadPendingQuote, 800);
+        }
+    })();
+    </script>
+
     <!-- ★ AI 디자인 생성기 (타이틀 바로 아래) -->
     <style>
         #aiDesignHero { max-width:1100px; margin:16px auto 20px; padding:0 4px; box-sizing:border-box; width:100%; }
