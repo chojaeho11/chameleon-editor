@@ -6828,13 +6828,19 @@ footer, .site-footer { padding-top: 28px !important; }
 }
 
 @media (max-width: 768px) {
-    .hero-section { padding: 44px 16px 32px !important; }
+    /* 2026-05-14: 모바일에서 매니저 견적 카드(#mgrQuoteHero) 가 hero-section 안에 있어
+       5개 매니저 버튼이 1열로 stacking 되면 hero-section 의 overflow:hidden + min-height 박스 밖으로
+       빠져나가는 부분(지숙/연두 버튼)이 잘려보였음.
+       hero-video 는 position:absolute width/height 100% 이라 overflow:visible 로 풀어도 영상이 새지 않음. */
+    .hero-section { padding: 44px 16px 32px !important; overflow: visible !important; min-height: 0 !important; }
     .hero-section .hero-deco-line { margin-bottom: 16px; width: 60px; }
     .hero-section .hero-title { font-size: 30px !important; margin-bottom: 18px !important; }
     .hero-section .hero-title .hero-tagline { font-size: 10px !important; letter-spacing: 3px !important; margin-bottom: 10px !important; }
     .hero-section .hero-title span { font-size: 40px !important; letter-spacing: 1.5px !important; }
     .hero-section .hero-title span b.ht-prn { padding-left: 6px; }
     .hero-section .hero-title .hero-min-order { font-size: 11px !important; margin-top: 14px !important; }
+    /* 매니저 견적 카드 — 모바일에서 hero-section 바닥보다 살짝 위에서 끝나도록 마진 확보 */
+    #mgrQuoteHero { margin-bottom: 16px !important; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────
