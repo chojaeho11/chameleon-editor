@@ -1064,39 +1064,66 @@ if ('caches' in window) {
     <div id="pendingQuoteBanner" style="display:none; max-width:1280px; margin:64px auto 28px; padding:0 20px;"></div>
     <script>
     (function(){
-        // 매니저 견적 결제창 표시 — URL ?quote=ORDER_ID 우선, 없으면 localStorage 캐시
+        // 2026-05-14: 여러 매니저 견적 동시 표시 — localStorage 에 ID 배열로 저장
+        function _getPendingIds() {
+            try {
+                var raw = localStorage.getItem('cm_pending_quotes') || '[]';
+                var arr = JSON.parse(raw);
+                if (Array.isArray(arr)) return arr;
+            } catch (e) {}
+            // 구버전 단일 키 호환
+            try {
+                var legacy = localStorage.getItem('cm_pending_quote');
+                if (legacy) return [legacy];
+            } catch (e) {}
+            return [];
+        }
+        function _addPendingId(id) {
+            if (!id) return;
+            var arr = _getPendingIds();
+            if (arr.indexOf(String(id)) < 0) arr.push(String(id));
+            try { localStorage.setItem('cm_pending_quotes', JSON.stringify(arr)); } catch (e) {}
+        }
+        function _removePendingId(id) {
+            var arr = _getPendingIds().filter(function (x) { return String(x) !== String(id); });
+            try { localStorage.setItem('cm_pending_quotes', JSON.stringify(arr)); } catch (e) {}
+        }
+        // ?quote=ID 로 들어오면 그 ID 도 결제대기 목록에 추가 + 누적된 모든 미결제 quote 표시
         async function loadPendingQuote() {
             try {
                 var u = new URLSearchParams(location.search);
                 var quoteId = u.get('quote') || '';
-                // localStorage 폴백 — 한 번 본 quote는 재방문해도 결제 전까지 계속 보임
-                if (!quoteId) {
-                    try { quoteId = localStorage.getItem('cm_pending_quote') || ''; } catch(e){}
-                }
-                if (!quoteId) return;
-                // Supabase 모듈 로드 대기
+                if (quoteId) _addPendingId(quoteId);
+                var allIds = _getPendingIds();
+                if (allIds.length === 0) return;
                 var sb = window.sb;
                 if (!sb) {
-                    try {
-                        var mod = await import('./config.js?v=436');
-                        sb = mod.sb || window.sb;
-                    } catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
+                    try { var mod = await import('./config.js?v=436'); sb = mod.sb || window.sb; }
+                    catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
                 }
                 if (!sb) return;
-                var { data: order, error } = await sb
+                var { data: orders, error } = await sb
                     .from('orders')
                     .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at')
-                    .eq('id', quoteId)
-                    .maybeSingle();
-                if (error || !order) { console.warn('[mgrQuote banner] order not found:', quoteId); return; }
-                // 결제 완료된 quote 는 표시 안 함
-                if (order.payment_status && order.payment_status !== '상담대기' && order.payment_status !== '미결제') {
-                    try { localStorage.removeItem('cm_pending_quote'); } catch(e){}
-                    return;
-                }
-                // ?quote= 으로 처음 방문 → localStorage 에 저장 (URL 사라져도 다음 방문에도 표시)
-                try { localStorage.setItem('cm_pending_quote', String(order.id)); } catch(e){}
-                renderPendingQuoteBanner(order);
+                    .in('id', allIds);
+                if (error) { console.warn('[mgrQuote banner] fetch err:', error); return; }
+                var active = [];
+                (orders || []).forEach(function (o) {
+                    // 결제 완료/취소된 quote 는 목록에서 자동 정리
+                    if (o.payment_status && o.payment_status !== '상담대기' && o.payment_status !== '미결제') {
+                        _removePendingId(o.id);
+                        return;
+                    }
+                    if (o.status === '취소' || o.status === '취소요청') { _removePendingId(o.id); return; }
+                    active.push(o);
+                });
+                // 존재하지 않는 ID (DB 에서 삭제됨) 도 정리
+                var foundIds = (orders || []).map(function (o) { return String(o.id); });
+                allIds.forEach(function (id) { if (foundIds.indexOf(String(id)) < 0) _removePendingId(id); });
+                if (active.length === 0) return;
+                // 최신순 정렬
+                active.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+                renderPendingQuoteBanner(active);
             } catch (e) { console.warn('[mgrQuote banner] init failed:', e); }
         }
 
@@ -1115,41 +1142,41 @@ if ('caches' in window) {
             }
         }
 
-        function renderPendingQuoteBanner(order) {
+        // 단일 order 또는 order 배열 받기 (다중 결제대기 카드 지원)
+        function renderPendingQuoteBanner(ordersInput) {
             var wrap = document.getElementById('pendingQuoteBanner');
             if (!wrap) return;
             positionAboveBand();
             setTimeout(positionAboveBand, 600);
             setTimeout(positionAboveBand, 1500);
-            // 2026-05-14: 고객 결제 카드 — .hotdeal-card 와 동일 클래스/구조 사용
-            // 이미지: 주문의 첫 번째 상품 이미지 (대표 상품) + 결제대기 배지
-            var customerName = order.manager_name || '고객';
-            var items = order.items || [];
-            // 대표상품 이미지 — 첫 번째 item.product.img, 없으면 placeholder
-            var primary = items[0] || {};
-            var primaryProd = primary.product || {};
-            var imgUrl = primaryProd.img || primaryProd.img_url || primary.imgUrl
-                || 'https://placehold.co/400x400/fef3c7/78350f?text=' + encodeURIComponent('상담 완료');
-            var itemCount = items.length;
-            var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
-            var primaryName = primaryProd.name || primary.productName || '주문상품';
-
-            var card =
-                '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')">' +
-                  '<div class="hotdeal-img-box">' +
-                    '<img src="' + esc(imgUrl) + '" alt="' + esc(primaryName) + '" loading="lazy" onerror="this.src=\'https://placehold.co/400x400/fef3c7/78350f?text=Order\'">' +
-                    // HOT 배지 자리에 결제대기 배지 (제품 카드와 동일 위치/형태)
-                    '<div style="position:absolute; top:10px; left:10px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; box-shadow:0 2px 6px rgba(120,53,15,0.25);">💬 결제대기</div>' +
-                  '</div>' +
-                  '<div class="hotdeal-info">' +
-                    '<div class="hotdeal-title" style="color:#78350f !important;">' + esc(customerName) + ' 고객님</div>' +
-                    '<div class="hotdeal-meta" style="color:#92400e; font-size:11px;">' + esc(primaryName) + esc(moreSuffix) + '</div>' +
-                    '<div class="hotdeal-price" style="color:#b45309 !important;">' + fmtKR(order.total_amount || 0) + '</div>' +
-                    '<button type="button" onclick="event.stopPropagation(); window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>' +
-                  '</div>' +
-                '</div>';
+            var ordersArr = Array.isArray(ordersInput) ? ordersInput : [ordersInput];
+            var cardsHtml = ordersArr.map(function (order) {
+                var customerName = order.manager_name || '고객';
+                var items = order.items || [];
+                var primary = items[0] || {};
+                var primaryProd = primary.product || {};
+                var imgUrl = primaryProd.img || primaryProd.img_url || primary.imgUrl
+                    || 'https://placehold.co/400x400/fef3c7/78350f?text=' + encodeURIComponent('상담 완료');
+                var itemCount = items.length;
+                var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
+                var primaryName = primaryProd.name || primary.productName || '주문상품';
+                return (
+                    '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')">' +
+                      '<div class="hotdeal-img-box">' +
+                        '<img src="' + esc(imgUrl) + '" alt="' + esc(primaryName) + '" loading="lazy" onerror="this.src=\'https://placehold.co/400x400/fef3c7/78350f?text=Order\'">' +
+                        '<div style="position:absolute; top:10px; left:10px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; box-shadow:0 2px 6px rgba(120,53,15,0.25);">💬 결제대기</div>' +
+                      '</div>' +
+                      '<div class="hotdeal-info">' +
+                        '<div class="hotdeal-title" style="color:#78350f !important;">' + esc(customerName) + ' 고객님</div>' +
+                        '<div class="hotdeal-meta" style="color:#92400e; font-size:11px;">' + esc(primaryName) + esc(moreSuffix) + '</div>' +
+                        '<div class="hotdeal-price" style="color:#b45309 !important;">' + fmtKR(order.total_amount || 0) + '</div>' +
+                        '<button type="button" onclick="event.stopPropagation(); window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>' +
+                      '</div>' +
+                    '</div>'
+                );
+            }).join('');
             wrap.innerHTML =
-                '<div id="pendingQuoteGrid" class="hotdeal-grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:20px;">' + card + '</div>' +
+                '<div id="pendingQuoteGrid" class="hotdeal-grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:20px;">' + cardsHtml + '</div>' +
                 '<style>' +
                 '@media (max-width:1279px) { #pendingQuoteGrid { grid-template-columns:repeat(4, 1fr) !important; } }' +
                 '@media (max-width:768px) { #pendingQuoteGrid { grid-template-columns:repeat(3, 1fr) !important; } }' +
@@ -7447,7 +7474,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=64"></script>
+<script src="/simple_order.js?v=65"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=10"></script>
 

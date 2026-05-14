@@ -3771,7 +3771,14 @@
             var resBox = document.getElementById('soCoMgrQuoteResult');
             if (urlInp) urlInp.value = quoteUrl;
             if (resBox) resBox.style.display = '';
-            // 카트 비우기 (이 카트는 매니저 작업용 — 다음 매니저 견적을 위해 깨끗이)
+            // 2026-05-14: 생성된 quote ID 를 결제대기 목록에 누적 (매니저가 여러 개 만들면 홈에 모두 표시)
+            try {
+                var raw = localStorage.getItem('cm_pending_quotes') || '[]';
+                var arr = JSON.parse(raw); if (!Array.isArray(arr)) arr = [];
+                if (arr.indexOf(String(newId)) < 0) arr.push(String(newId));
+                localStorage.setItem('cm_pending_quotes', JSON.stringify(arr));
+            } catch (e) {}
+            // 카트 비우기 (다음 견적을 위해 깨끗이)
             try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
             if (btnEl) { btnEl.innerHTML = '✅ 생성 완료 — URL 복사하여 고객에게 전송'; }
         } catch (e) {
