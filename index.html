@@ -1335,19 +1335,38 @@ if ('caches' in window) {
                         var w = (Number(it.qty) || 1) / qtySum;
                         resolvedPrice = Math.round(orderTotal * w);
                     }
-                    return Object.assign({}, it, {
+                    var patched = Object.assign({}, it, {
                         uid: Date.now() + idx,
                         price: resolvedPrice,
-                        // 일반 상품도 _soCalcItemPrice 가 product.price*qty 를 쓰니까, qty=1 로 맞춰 price 직접 적용
-                        qty: needRedistribute ? 1 : (Number(it.qty) || 1),
-                        product: needRedistribute && it.product ? Object.assign({}, it.product, { price: resolvedPrice }) : it.product,
-                        // fabric 마커 강제 (price 가 line total 로 직접 동작하도록)
-                        source: needRedistribute && !it.source ? (it.product_code || it.fabric ? 'cotton-print' : it.source) : it.source,
                         originalUrl: f[idx] ? f[idx].url : (it.originalUrl || null),
                         fileName: f[idx] ? f[idx].name : (it.fileName || ''),
                         mimeType: f[idx] ? f[idx].type : (it.mimeType || 'image/png'),
                         __pendingQuoteId: order.id
                     });
+                    if (needRedistribute) {
+                        // 재분배된 가격이 _soCalcItemPrice 에서 직접 LINE total 로 동작하도록:
+                        //   - qty=1, product.price=share → unit*qty=share
+                        //   - wallSize/wallSide/cutPrint/customSize/rawBoardDouble/baseStand 제거
+                        //     (이 필드들이 살아있으면 _soCalcItemPrice 가 ×2 / +50000 / 박스단가 등 추가 계산함)
+                        //   - 또는 source='cotton-print' 로 강제 fabric 분기 → it.price 직접 반환
+                        patched.qty = 1;
+                        if (patched.product) patched.product = Object.assign({}, patched.product, { price: resolvedPrice });
+                        // 가벽/박스/현수막/원판/받침대 가격 가산 제거 (이미 orderTotal 에 포함된 값)
+                        patched.wallSize = null;
+                        patched.wallSide = 'single';
+                        patched.cutPrint = null;
+                        patched.boxSize = null;
+                        patched.customSize = null;
+                        patched.rawBoardDouble = false;
+                        patched.baseStand = null;
+                        patched.shipping = null;
+                        patched.selectedAddons = {};
+                        patched.addonQuantities = {};
+                        // fabric 분기로 가도록 source 태그 (it.price 가 그대로 line total 로 반환됨)
+                        patched.source = 'cotton-print';
+                        patched.__redistributed = true;
+                    }
+                    return patched;
                 });
                 console.log('[payPendingQuote] orderTotal:', orderTotal, 'estSum:', estSum, 'redistribute:', needRedistribute, 'items:', cartItems);
                 try { localStorage.setItem('chameleon_cart_current', JSON.stringify(cartItems)); } catch(e){}
