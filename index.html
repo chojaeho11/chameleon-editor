@@ -1078,18 +1078,22 @@ if ('caches' in window) {
     <!-- 상단 여백 64px: hero 영상이 충분히 보인 후 카드 등장. 폭/패딩은 .hotdeal-grid 부모(.section)와 동일 -->
     <div id="pendingQuoteBanner" style="display:none; max-width:1280px; margin:64px auto 28px; padding:0 20px;"></div>
 
-    <!-- 2026-05-14: "개인결제창" 모달 — 매니저 카드의 버튼 클릭 시 결제대기/디자인작업중 VIP 카드 모음 표시 -->
-    <div id="personalPayModal" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.78); z-index:99990; padding:20px; overflow-y:auto; backdrop-filter:blur(4px);" onclick="if(event.target===this)window._closePersonalPayModal()">
-        <div style="max-width:1280px; margin:40px auto; background:#fff; border-radius:16px; padding:24px 20px; position:relative; box-shadow:0 24px 64px -16px rgba(0,0,0,0.5);">
-            <button type="button" onclick="window._closePersonalPayModal()" aria-label="close" style="position:absolute; top:12px; right:12px; width:36px; height:36px; background:#f3f4f6; border:none; border-radius:50%; font-size:20px; font-weight:700; color:#374151; cursor:pointer; line-height:1;">×</button>
-            <div style="display:flex; align-items:center; gap:8px; justify-content:center; margin:0 0 18px;">
+    <!-- 2026-05-14: "개인결제창" 모달 — 매니저 카드의 버튼 클릭 시 결제대기/디자인작업중 VIP 카드 모음 표시.
+         z-index 1000000 — .topbar (99999) 위로 — nav 가 모달 가리지 않도록.
+         flex column 구조 — 헤더(타이틀+닫기버튼) 고정, 본문만 내부 스크롤. -->
+    <div id="personalPayModal" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.78); z-index:1000000; padding:20px; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); box-sizing:border-box;" onclick="if(event.target===this)window._closePersonalPayModal()">
+        <div style="max-width:1280px; max-height:calc(100vh - 40px); margin:0 auto; background:#fff; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 64px -16px rgba(0,0,0,0.5);">
+            <div style="flex-shrink:0; background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 20px; display:flex; align-items:center; justify-content:center; gap:8px; position:relative;">
                 <span style="font-size:22px;">📋</span>
                 <h2 id="personalPayModalTitle" style="margin:0; font-size:20px; font-weight:900; color:#111827; letter-spacing:-0.01em;">개인결제창</h2>
+                <button type="button" onclick="window._closePersonalPayModal()" aria-label="close" style="position:absolute; top:50%; right:14px; transform:translateY(-50%); width:36px; height:36px; background:#f3f4f6; border:none; border-radius:50%; font-size:22px; font-weight:700; color:#374151; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;">×</button>
             </div>
-            <div id="personalPayModalGrid" class="hotdeal-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;"></div>
-            <div id="personalPayModalEmpty" style="display:none; text-align:center; padding:48px 16px; color:#6b7280; font-size:14px;">
-                현재 결제 대기 중인 견적이 없습니다.<br>
-                <span style="font-size:12px; color:#9ca3af;">매니저와 상담 후 발급된 결제 URL 로 들어오시거나, 로그인 후 다시 확인해주세요.</span>
+            <div style="flex:1; min-height:0; overflow-y:auto; padding:20px;">
+                <div id="personalPayModalGrid" class="hotdeal-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;"></div>
+                <div id="personalPayModalEmpty" style="display:none; text-align:center; padding:48px 16px; color:#6b7280; font-size:14px;">
+                    현재 결제 대기 중인 견적이 없습니다.<br>
+                    <span style="font-size:12px; color:#9ca3af;">매니저와 상담 후 발급된 결제 URL 로 들어오시거나, 로그인 후 다시 확인해주세요.</span>
+                </div>
             </div>
         </div>
     </div>
