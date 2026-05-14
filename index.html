@@ -1351,29 +1351,31 @@ if ('caches' in window) {
                         mimeType: f[idx] ? f[idx].type : (it.mimeType || 'image/png'),
                         __pendingQuoteId: order.id
                     });
-                    if (needRedistribute) {
-                        // 재분배된 가격이 _soCalcItemPrice 에서 직접 LINE total 로 동작하도록:
-                        //   - qty=1, product.price=share → unit*qty=share
-                        //   - wallSize/wallSide/cutPrint/customSize/rawBoardDouble/baseStand 제거
-                        //     (이 필드들이 살아있으면 _soCalcItemPrice 가 ×2 / +50000 / 박스단가 등 추가 계산함)
-                        //   - 또는 source='cotton-print' 로 강제 fabric 분기 → it.price 직접 반환
-                        patched.qty = 1;
-                        if (patched.product) patched.product = Object.assign({}, patched.product, { price: resolvedPrice });
-                        // 가벽/박스/현수막/원판/받침대 가격 가산 제거 (이미 orderTotal 에 포함된 값)
-                        patched.wallSize = null;
-                        patched.wallSide = 'single';
-                        patched.cutPrint = null;
-                        patched.boxSize = null;
-                        patched.customSize = null;
-                        patched.rawBoardDouble = false;
-                        patched.baseStand = null;
-                        patched.shipping = null;
-                        patched.selectedAddons = {};
-                        patched.addonQuantities = {};
-                        // fabric 분기로 가도록 source 태그 (it.price 가 그대로 line total 로 반환됨)
-                        patched.source = 'cotton-print';
-                        patched.__redistributed = true;
-                    }
+                    // 2026-05-14: needRedistribute 여부와 무관하게 — 매니저견적 주문은 항상
+                    //   "resolvedPrice = LINE total" 가 되도록 정규화한다.
+                    //
+                    //   예전엔 redistribute=true 일 때만 fabric 분기로 강제했는데, 그 결과
+                    //   redistribute=false (estSum 이 이미 일치) 경로에서 it.product 가 비어있으면
+                    //   _soCalcItemPrice 가 unit=0 으로 보고 합계 0원이 떴음 (윤덕수 케이스).
+                    //
+                    //   해결: 항상 qty=1, source='cotton-print' 강제 → _soIsFabricItem=true →
+                    //         _soCalcItemPrice 가 it.price 를 곧바로 LINE total 로 반환.
+                    //         가벽 양면 / 박스 단가 / 자유인쇄 사이즈 등 가격 가산 필드도 제거하여
+                    //         이미 orderTotal 에 포함된 금액이 이중 가산되지 않게 함.
+                    patched.qty = 1;
+                    if (patched.product) patched.product = Object.assign({}, patched.product, { price: resolvedPrice });
+                    patched.wallSize = null;
+                    patched.wallSide = 'single';
+                    patched.cutPrint = null;
+                    patched.boxSize = null;
+                    patched.customSize = null;
+                    patched.rawBoardDouble = false;
+                    patched.baseStand = null;
+                    patched.shipping = null;
+                    patched.selectedAddons = {};
+                    patched.addonQuantities = {};
+                    patched.source = 'cotton-print';
+                    patched.__redistributed = needRedistribute;
                     return patched;
                 });
                 console.log('[payPendingQuote] orderTotal:', orderTotal, 'estSum:', estSum, 'redistribute:', needRedistribute, 'qtySum:', qtySum);
