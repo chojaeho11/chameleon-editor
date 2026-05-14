@@ -1009,8 +1009,8 @@
       <div class="so-co-section">
         <span class="so-co-label">${tr('결제 방법', 'お支払い方法', 'Payment method')}</span>
         <div class="so-co-pay-opts">
-          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" checked onchange="window._soOnPayMethodChange()"> 🏦 ${tr('무통장 입금', '銀行振込', 'Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리', 'すぐ処理', 'Instant')}</span></label>
-          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="card" onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
+          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="card" checked onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
+          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" onchange="window._soOnPayMethodChange()"> 🏦 ${tr('무통장 입금', '銀行振込', 'Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리', 'すぐ処理', 'Instant')}</span></label>
         </div>
       </div>
 
