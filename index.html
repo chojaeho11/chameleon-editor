@@ -1121,31 +1121,35 @@ if ('caches' in window) {
             positionAboveBand();
             setTimeout(positionAboveBand, 600);
             setTimeout(positionAboveBand, 1500);
-            // 2026-05-14: 고객 결제 카드 — 메인 상품 카드 (hotdeal-card) 와 동일 비주얼
-            // 이미지 영역 (gradient + 큰 💬) + HOT 위치에 '결제대기' 배지 + 하단 정보 영역
+            // 2026-05-14: 고객 결제 카드 — .hotdeal-card 와 동일 클래스/구조 사용
+            // 이미지: 주문의 첫 번째 상품 이미지 (대표 상품) + 결제대기 배지
             var customerName = order.manager_name || '고객';
-            var orderShortId = String(order.id || '').substring(0, 6).toUpperCase();
+            var items = order.items || [];
+            // 대표상품 이미지 — 첫 번째 item.product.img, 없으면 placeholder
+            var primary = items[0] || {};
+            var primaryProd = primary.product || {};
+            var imgUrl = primaryProd.img || primaryProd.img_url || primary.imgUrl
+                || 'https://placehold.co/400x400/fef3c7/78350f?text=' + encodeURIComponent('상담 완료');
+            var itemCount = items.length;
+            var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
+            var primaryName = primaryProd.name || primary.productName || '주문상품';
+
             var card =
-                '<div style="background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px -6px rgba(120,53,15,0.25); border:1px solid #fed7aa; position:relative;">' +
-                  // HOT 배지 위치에 '결제대기' 배지
-                  '<div style="position:absolute; top:10px; left:10px; z-index:2; padding:4px 10px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:10px; font-weight:900; border-radius:50px; box-shadow:0 2px 8px rgba(120,53,15,0.3);">💬 결제대기</div>' +
-                  // 상단 이미지 영역 (gradient + 큰 💬 — 상품 이미지 자리)
-                  '<div style="aspect-ratio:1/1; background:linear-gradient(135deg,#fef9e7 0%,#fed7aa 50%,#fbbf24 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:#78350f;">' +
-                    '<div style="font-size:48px; line-height:1;">📞</div>' +
-                    '<div style="font-size:11px; font-weight:800; letter-spacing:1px;">상담 완료</div>' +
-                    '<div style="font-size:9px; color:#92400e; font-family:monospace;">#' + orderShortId + '</div>' +
+                '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')">' +
+                  '<div class="hotdeal-img-box">' +
+                    '<img src="' + esc(imgUrl) + '" alt="' + esc(primaryName) + '" loading="lazy" onerror="this.src=\'https://placehold.co/400x400/fef3c7/78350f?text=Order\'">' +
+                    // HOT 배지 자리에 결제대기 배지 (제품 카드와 동일 위치/형태)
+                    '<div style="position:absolute; top:10px; left:10px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; box-shadow:0 2px 6px rgba(120,53,15,0.25);">💬 결제대기</div>' +
                   '</div>' +
-                  // 하단 정보 영역
-                  '<div style="padding:12px 14px;">' +
-                    '<div style="font-size:14px; font-weight:900; color:#451a03; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + esc(customerName) + ' 고객님</div>' +
-                    '<div style="font-size:10px; color:#92400e; margin-bottom:10px;">결제창</div>' +
-                    '<div style="font-size:18px; font-weight:900; color:#b45309; margin-bottom:10px;">' + fmtKR(order.total_amount || 0) + '</div>' +
-                    '<button type="button" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; padding:10px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>' +
+                  '<div class="hotdeal-info">' +
+                    '<div class="hotdeal-title" style="color:#78350f !important;">' + esc(customerName) + ' 고객님</div>' +
+                    '<div class="hotdeal-meta" style="color:#92400e; font-size:11px;">' + esc(primaryName) + esc(moreSuffix) + '</div>' +
+                    '<div class="hotdeal-price" style="color:#b45309 !important;">' + fmtKR(order.total_amount || 0) + '</div>' +
+                    '<button type="button" onclick="event.stopPropagation(); window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>' +
                   '</div>' +
                 '</div>';
-            // 메인 제품 그리드(.hotdeal-grid)와 동일 비례: 1280+ 5col, 1024-1279 4col, 768- 2col, mobile 1col
             wrap.innerHTML =
-                '<div id="pendingQuoteGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:20px;">' + card + '</div>' +
+                '<div id="pendingQuoteGrid" class="hotdeal-grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:20px;">' + card + '</div>' +
                 '<style>' +
                 '@media (max-width:1279px) { #pendingQuoteGrid { grid-template-columns:repeat(4, 1fr) !important; } }' +
                 '@media (max-width:768px) { #pendingQuoteGrid { grid-template-columns:repeat(3, 1fr) !important; } }' +
