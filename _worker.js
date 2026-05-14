@@ -387,16 +387,14 @@ export default {
         // 언어별 cafe 도메인의 /fabric 경로로 301 redirect. 로그인·카트가 같은 origin 에서
         // 자연스럽게 공유되어 "한 번 로그인 → 모든 곳에서 사용" 이 실현됨.
         if (url.hostname.includes('cotton-print.com')) {
-            // 언어 결정: ?lang= URL 파라미터 > Accept-Language > 기본 KR
+            // 언어 결정: ?lang= URL 파라미터 만 인정. 기본 KR (cafe2626).
+            // 2026-05-14: Accept-Language 기반 자동 라우팅 제거 — 모바일 브라우저가 'en-US,ko;q=0.9'
+            //   같은 헤더 보내서 startsWith('en') 매치 → cafe3355.com 으로 잘못 리다이렉트되던 버그.
+            //   cotton-print.com 은 한국 패브릭 서비스라 명시적 lang 선택이 없으면 무조건 KR.
             const langParam = (url.searchParams.get('lang') || '').toLowerCase();
-            const al = (request.headers.get('Accept-Language') || '').toLowerCase();
             let cafeHost = 'www.cafe2626.com';
             if (langParam === 'ja' || langParam === 'jp') cafeHost = 'www.cafe0101.com';
             else if (langParam === 'en' || langParam === 'us') cafeHost = 'www.cafe3355.com';
-            else if (!langParam) {
-                if (al.startsWith('ja')) cafeHost = 'www.cafe0101.com';
-                else if (al.startsWith('en')) cafeHost = 'www.cafe3355.com';
-            }
 
             // 자산 (JS/CSS/이미지 등) 은 그대로 ASSETS 에서 — Cloudflare Pages 동일 프로젝트
             const isAsset = path.includes('.') && (

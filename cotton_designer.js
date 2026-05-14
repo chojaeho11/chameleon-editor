@@ -82,12 +82,19 @@ function classifyGroup(p) {
     return null;
 }
 
+// 2026-05-14: ?mode=poster 진입 시 — 1장짜리 포스터 모드.
+//   '내원단(자동패턴)' 과 같은 상세페이지를 공유. layout 만 centered 로 기본 선택해서
+//   사용자가 입력한 사이즈로 1장 인쇄에 가장 가까운 상태로 시작하도록.
+//   (자동 패턴 반복이 아닌 단일 이미지 출력 의도)
+const _cdQsMode = (function(){ try { return new URLSearchParams(location.search).get('mode') || ''; } catch(_) { return ''; } })();
+const _cdIsPosterMode = _cdQsMode === 'poster';
+
 // 상태
 const state = {
     fabricType: 'cotton20',           // 8종 중 1
     fabricColor: 'white',             // 면 종류일 때만 사용
     fabricCode: 'cotton20_white',     // 합성 코드 (orders.items 저장용)
-    layout: 'basic',
+    layout: _cdIsPosterMode ? 'centered' : 'basic',
     bgColor: '#ffffff',               // 캔버스 배경색 (투명 PNG 패턴용 — 2026-05-11)
     imgScale: 1.0,                    // 패턴 셀 내 이미지 비율 (1.0 = 셀 가득, 0.3 = 30%만; 2026-05-11)
     orderWcm: 130,

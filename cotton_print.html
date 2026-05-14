@@ -382,7 +382,7 @@ img, video, canvas { max-width: 100%; height: auto; }
 <header class="site-header">
     <div class="header-inner">
         <a id="logoLink" href="https://www.cafe2626.com" target="_blank" class="logo">
-            <i class="fa-solid fa-store" style="margin-right:6px;color:var(--accent);"></i><span data-i18n="logo_main_link">인쇄종합몰 바로가기</span>
+            <i class="fa-solid fa-store" style="margin-right:6px;color:var(--accent);"></i><span data-i18n="logo_main_link">인쇄종합몰</span>
         </a>
         <nav class="nav-links">
             <a href="/cotton-designer" style="color:var(--accent); font-weight:900;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="nav_designer">내원단 만들기</span></a>
@@ -615,20 +615,15 @@ async function submitPdSample() {
 }
 </script>
 
-<!-- 내 원단 만들기 CTA -->
-<section style="max-width:1100px; margin:48px auto 0; padding:0 24px;">
-    <a href="/cotton-designer" style="display:block; background:linear-gradient(135deg, #fde047 0%, #facc15 100%); border-radius:20px; padding:36px 32px; text-decoration:none; color:var(--brown-dark); position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(180,83,9,0.15);">
+<!-- 2026-05-14: CTA 2장 — 노란(내원단/자동패턴) + 하늘(패브릭포스터/1장 그대로) -->
+<section style="max-width:1100px; margin:48px auto 0; padding:0 24px; display:flex; flex-direction:column; gap:16px;">
+    <!-- 내 원단 만들기 (자동 패턴) -->
+    <a href="/cotton-designer" style="display:block; background:linear-gradient(135deg, #fde047 0%, #facc15 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:var(--brown-dark); position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(180,83,9,0.15);">
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>
-                <div style="font-size:11px; letter-spacing:4px; font-weight:900; margin-bottom:8px; opacity:0.7;">— MAKE YOUR OWN FABRICS —</div>
-                <h2 style="font-size:32px; font-weight:900; line-height:1.2; margin:0 0 10px; letter-spacing:-1px;" data-i18n-html="cta_yellow_title">
-                    이미지 한 장으로<br>
-                    <span style="color:var(--accent);">나만의 패턴 원단</span> 만들기
+                <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px;" data-i18n="cta_yellow_title">
+                    배경없는 PNG파일 또는 PDF파일을 올리세요. 자동패턴 및 배경색을 만들 수 있습니다.
                 </h2>
-                <p style="font-size:14px; line-height:1.7; opacity:0.85;" data-i18n-html="cta_yellow_desc">
-                    내 사진/일러스트 업로드 → 자동 패턴 생성 → 원단 사이즈 선택 → 주문<br>
-                    5가지 레이아웃 (Centered · Basic · Half-Drop · Half-Brick · Mirror)
-                </p>
             </div>
             <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
                 <div style="background:var(--brown-dark); color:#fde047; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(69,26,3,0.3); white-space:nowrap;">
@@ -638,11 +633,28 @@ async function submitPdSample() {
             </div>
         </div>
     </a>
+
+    <!-- 패브릭 포스터 (1장 그대로 인쇄) -->
+    <a href="/cotton-designer?mode=poster" style="display:block; background:linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:#0c4a6e; position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(14,116,144,0.15);">
+        <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
+            <div>
+                <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px;" data-i18n="cta_poster_title">
+                    이미지를 올리고 인쇄할 가로 또는 세로 사이즈를 적어주세요.
+                </h2>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
+                <div style="background:#0c4a6e; color:#bae6fd; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(12,74,110,0.3); white-space:nowrap;">
+                    <i class="fa-solid fa-image"></i> &nbsp;<span data-i18n="cta_poster_btn">패브릭포스터</span>
+                </div>
+                <div style="font-size:11px; color:#075985; opacity:0.7;" data-i18n="cta_poster_sample">1장 그대로 인쇄</div>
+            </div>
+        </div>
+    </a>
 </section>
 <style>
 @media (max-width:768px) {
     .cta-grid { grid-template-columns:1fr !important; text-align:center; }
-    .cta-grid h2 { font-size:24px !important; }
+    .cta-grid h2 { font-size:16px !important; }
 }
 </style>
 
@@ -2381,7 +2393,7 @@ cp_hero_cta: {
     de:'Nutzer-Designs ansehen', fr:'Voir les designs utilisateurs'
 },
 logo_main_link: {
-    ko:'인쇄종합몰 바로가기', ja:'印刷総合モール', en:'Main Print Mall',
+    ko:'인쇄종합몰', ja:'印刷総合モール', en:'Main Print Mall',
     zh:'综合印刷商城', ar:'متجر الطباعة الرئيسي', es:'Tienda Principal',
     de:'Haupt-Druckshop', fr:'Boutique Principale'
 },
@@ -2389,25 +2401,28 @@ nav_designer: { ko:'내원단 만들기', ja:'生地デザイン', en:'Design My
 nav_designs: { ko:'유저 디자인', ja:'ユーザーデザイン', en:'User Designs', zh:'用户设计', ar:'تصاميم المستخدمين', es:'Disenos', de:'Designs', fr:'Designs' },
 nav_reviews: { ko:'고객 후기', ja:'お客様レビュー', en:'Reviews', zh:'客户评价', ar:'المراجعات', es:'Resenas', de:'Bewertungen', fr:'Avis' },
 cta_yellow_title: {
-    ko:'이미지 한 장으로<br><span style="color:var(--accent);">나만의 패턴 원단</span> 만들기',
-    ja:'画像1枚から<br><span style="color:var(--accent);">あなただけのパターン生地</span>を作る',
-    en:'Create Your Own<br><span style="color:var(--accent);">Pattern Fabric</span> from One Image',
-    zh:'用一张图片<br><span style="color:var(--accent);">制作专属图案布料</span>',
-    ar:'<span style="color:var(--accent);">قماش بنمط</span> خاص بك من صورة واحدة',
-    es:'Crea tu propio<br><span style="color:var(--accent);">tejido con patron</span> desde una imagen',
-    de:'Aus einem Bild<br><span style="color:var(--accent);">eigenes Musterstoff</span> erstellen',
-    fr:'Cree ton propre<br><span style="color:var(--accent);">tissu a motif</span> a partir d\'une image'
+    ko:'배경없는 PNG파일 또는 PDF파일을 올리세요. 자동패턴 및 배경색을 만들 수 있습니다.',
+    ja:'背景なしのPNG/PDFをアップロード。自動パターン化と背景色設定が可能です。',
+    en:'Upload a PNG/PDF without background. Auto-pattern + background color supported.',
+    zh:'上传无背景的PNG/PDF文件。可自动生成图案并设置背景色。',
+    ar:'ارفع ملف PNG/PDF بدون خلفية. نمط تلقائي ولون خلفية متاحان.',
+    es:'Sube PNG/PDF sin fondo. Patrón automático y color de fondo disponibles.',
+    de:'PNG/PDF ohne Hintergrund hochladen. Auto-Muster + Hintergrundfarbe möglich.',
+    fr:'Téléchargez PNG/PDF sans fond. Motif auto + couleur de fond disponibles.'
 },
-cta_yellow_desc: {
-    ko:'내 사진/일러스트 업로드 → 자동 패턴 생성 → 원단 사이즈 선택 → 주문<br>5가지 레이아웃 (Centered · Basic · Half-Drop · Half-Brick · Mirror)',
-    ja:'画像をアップロード → 自動パターン化 → サイズ選択 → 注文<br>5種レイアウト',
-    en:'Upload image → auto-pattern → choose size → order<br>5 layouts',
-    zh:'上传图片 → 自动生成图案 → 选择尺寸 → 下单',
-    ar:'ارفع الصورة ← نمط تلقائي ← اطلب',
-    es:'Sube imagen → patron auto → pedir',
-    de:'Bild hochladen → Auto-Muster → bestellen',
-    fr:'Charger image → motif auto → commander'
+cta_yellow_desc: { ko:'', ja:'', en:'', zh:'', ar:'', es:'', de:'', fr:'' },
+cta_poster_title: {
+    ko:'이미지를 올리고 인쇄할 가로 또는 세로 사이즈를 적어주세요.',
+    ja:'画像をアップロードして、横または縦の印刷サイズを入力してください。',
+    en:'Upload an image and enter the desired print width or height.',
+    zh:'上传图片，输入打印的横向或纵向尺寸。',
+    ar:'ارفع صورة وأدخل العرض أو الارتفاع المطلوب للطباعة.',
+    es:'Sube una imagen e introduce el ancho o alto de impresión.',
+    de:'Bild hochladen und gewünschte Druckbreite oder -höhe eingeben.',
+    fr:'Téléchargez une image et indiquez la largeur ou hauteur d\'impression.'
 },
+cta_poster_btn: { ko:'패브릭포스터', ja:'ファブリックポスター', en:'Fabric Poster', zh:'布艺海报', ar:'ملصق قماش', es:'Póster de Tela', de:'Stoffposter', fr:'Affiche en tissu' },
+cta_poster_sample: { ko:'1장 그대로 인쇄', ja:'1枚そのまま印刷', en:'Print as single sheet', zh:'单张原样打印', ar:'طباعة كصفحة واحدة', es:'Imprimir como hoja única', de:'Als Einzelblatt drucken', fr:'Imprimer en feuille unique' },
 cta_yellow_btn: { ko:'내원단 만들기', ja:'デザイナーを開く', en:'Open Designer', zh:'打开设计师', ar:'افتح المصمم', es:'Abrir Disenador', de:'Designer offnen', fr:'Ouvrir Designer' },
 cta_yellow_sample: { ko:'샘플 9,460원부터', ja:'サンプル¥946〜', en:'Samples from $9.46', zh:'样品 $9.46起', ar:'عينات من $9.46', es:'Muestras desde $9.46', de:'Muster ab $9.46', fr:'Echantillons des $9.46' },
 cat_section_title: { ko:'원단 카테고리', ja:'生地カテゴリー', en:'Fabric Categories', zh:'面料类别', ar:'فئات القماش', es:'Categorias de Tela', de:'Stoff-Kategorien', fr:'Categories de Tissu' },
