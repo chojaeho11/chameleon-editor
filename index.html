@@ -7190,7 +7190,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=53"></script>
+<script src="/simple_order.js?v=54"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=10"></script>
 
@@ -9238,9 +9238,13 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                 price: Number(p.price) || 0,
                 price_jp: p.price_jp, price_us: p.price_us,
                 w: p.width_mm, h: p.height_mm,
-                img: p.img_url,
+                width_mm: p.width_mm, height_mm: p.height_mm,
+                img: p.img_url, img_url: p.img_url,
                 addons: p.addons ? p.addons.split(',') : [],
-                category: p.category
+                category: p.category,
+                cutline_url: p.cutline_url || '',
+                mockup_url: p.mockup_url || '',
+                code: p.code
             };
 
             const card = document.createElement('div');
@@ -9311,7 +9315,7 @@ async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitC
         products.forEach(function(p) {
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             var loc = getLocalizedData(p);
-            window.PRODUCT_DB[p.code] = { name:loc.name, name_jp:p.name_jp||'', name_us:p.name_us||'', price:Number(p.price)||0, price_jp:p.price_jp, price_us:p.price_us, w:p.width_mm, h:p.height_mm, img:p.img_url, addons:p.addons?p.addons.split(','):[], category:p.category };
+            window.PRODUCT_DB[p.code] = { name:loc.name, name_jp:p.name_jp||'', name_us:p.name_us||'', price:Number(p.price)||0, price_jp:p.price_jp, price_us:p.price_us, w:p.width_mm, h:p.height_mm, width_mm:p.width_mm, height_mm:p.height_mm, img:p.img_url, img_url:p.img_url, addons:p.addons?p.addons.split(','):[], category:p.category, cutline_url:p.cutline_url||'', mockup_url:p.mockup_url||'', code:p.code };
             var card = document.createElement('div');
             card.className = 'hotdeal-card';
             var rawImg = p.img_url || 'https://via.placeholder.com/300?text=No+Image';

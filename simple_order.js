@@ -648,6 +648,20 @@
           </div>
         </div>
 
+        <!-- 2026-05-14: 칼선 도안 제공 안내 + 다운로드 (admin_products.cutline_url 있을 때만 표시) -->
+        <div id="soCutlineDownload" style="display:none; margin-bottom:14px; padding:14px 16px; background:linear-gradient(135deg,#fef9e7 0%,#fed7aa 100%); border:1.5px solid #fbbf24; border-radius:14px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:26px;">✂️</span>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:800; color:#78350f; font-size:13px;">${tr('칼선 도안 제공', '型抜きテンプレート提供', 'Die-cut template available')}</div>
+              <div style="font-size:11px; color:#92400e; margin-top:2px;">${tr('이 제품 전용 칼선 템플릿을 다운받아 디자인에 맞춰주세요.', 'この商品専用の型抜きテンプレートをダウンロードしてデザインしてください。', 'Download the die-cut template for this product to align your design.')}</div>
+            </div>
+            <a id="soCutlineDownloadBtn" href="#" download target="_blank" rel="noopener" style="flex-shrink:0; padding:10px 16px; background:linear-gradient(135deg,#b45309 0%,#78350f 100%); color:#fde047; border-radius:999px; font-size:12px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(120,53,15,0.3); white-space:nowrap;">
+              <i class="fa-solid fa-download"></i> ${tr('칼선 다운받기', 'ダウンロード', 'Download')}
+            </a>
+          </div>
+        </div>
+
         <div class="so-upload-section-label" id="soUploadLabel">${tr('📤 디자인 파일 업로드', '📤 デザインファイルをアップロード', '📤 Upload design file')}</div>
         <div id="soUpload" class="so-upload" onclick="document.getElementById('soFile').click()">
           <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
@@ -2464,6 +2478,25 @@
         const imgUrl = pickImg(p);
         if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
         else { img.style.display = 'none'; }
+
+        // 2026-05-14: 칼선 도안 다운로드 — admin_products.cutline_url 있을 때만 표시
+        var cutWrap = document.getElementById('soCutlineDownload');
+        var cutBtn = document.getElementById('soCutlineDownloadBtn');
+        var cutlineUrl = p.cutline_url || p.cutlineUrl || '';
+        if (cutWrap && cutBtn) {
+            if (cutlineUrl) {
+                cutBtn.href = cutlineUrl;
+                // 파일명 추출 — URL 끝부분 또는 제품코드_cutline 기본값
+                try {
+                    var pathPart = cutlineUrl.split('?')[0].split('#')[0];
+                    var fileName = pathPart.substring(pathPart.lastIndexOf('/') + 1) || ((p.code || 'cutline') + '_cutline');
+                    cutBtn.setAttribute('download', fileName);
+                } catch(e) { cutBtn.setAttribute('download', ''); }
+                cutWrap.style.display = '';
+            } else {
+                cutWrap.style.display = 'none';
+            }
+        }
 
         // 카테고리 홈 버튼 (있을 때만 표시)
         const catBtn = document.getElementById('soCatHome');
