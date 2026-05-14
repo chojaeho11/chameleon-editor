@@ -1422,6 +1422,11 @@ window._cpOpenCheckout = function() {
                 var { data: sess } = await sb2.auth.getUser();
                 var em = sess?.user?.email || '';
                 if (em && ADMIN_EMAILS.indexOf(em) >= 0) { isAdm = true; window.isAdmin = true; }
+                // profiles.role 'admin' 또는 'manager' 도 허용 (스태프 목록 매니저 자동 매칭)
+                if (!isAdm && sess?.user?.id) {
+                    var { data: prof } = await sb2.from('profiles').select('role').eq('id', sess.user.id).single();
+                    if (prof && (prof.role === 'admin' || prof.role === 'manager')) { isAdm = true; window.isAdmin = true; }
+                }
             } catch (e) {}
         }
         if (btn) btn.style.display = isAdm ? '' : 'none';

@@ -873,7 +873,7 @@ if ('caches' in window) {
                     try {
                         var sb = window.sb;
                         if (!sb) {
-                            try { var mod = await import('./config.js?v=437'); sb = mod.sb || window.sb; } catch(e){}
+                            try { var mod = await import('./config.js?v=438'); sb = mod.sb || window.sb; } catch(e){}
                         }
                         if (!sb) { console.warn('[mgrPhones] sb 미초기화'); return; }
                         var { data, error } = await sb.from('chatbot_knowledge')
@@ -1097,7 +1097,7 @@ if ('caches' in window) {
                 if (quoteId) _addPendingId(quoteId);
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=437'); sb = mod.sb || window.sb; }
+                    try { var mod = await import('./config.js?v=438'); sb = mod.sb || window.sb; }
                     catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
                 }
                 if (!sb) return;
@@ -1113,6 +1113,14 @@ if ('caches' in window) {
                         if (em && ADMIN_EMAILS.indexOf(em) >= 0) {
                             isAdm = true;
                             window.isAdmin = true;
+                        }
+                        // profiles.role 'admin' 또는 'manager' 도 허용 (스태프 매니저 자동)
+                        if (!isAdm && sess?.user?.id) {
+                            var { data: prof } = await sb.from('profiles').select('role').eq('id', sess.user.id).single();
+                            if (prof && (prof.role === 'admin' || prof.role === 'manager')) {
+                                isAdm = true;
+                                window.isAdmin = true;
+                            }
                         }
                     } catch (e) {}
                 }
@@ -1269,7 +1277,7 @@ if ('caches' in window) {
                 // 1) 주문의 items 를 카트에 로드
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=437'); sb = mod.sb || window.sb; } catch(e){}
+                    try { var mod = await import('./config.js?v=438'); sb = mod.sb || window.sb; } catch(e){}
                 }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var { data: order, error } = await sb
@@ -7540,7 +7548,7 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
-<script type="module" src="./config.js?v=437"></script>
+<script type="module" src="./config.js?v=438"></script>
 <script type="module" src="./canvas-core.js?v=434"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
@@ -8792,7 +8800,7 @@ window.filterFxCards = function(cat, btn) {
     import { canvas, setMaxLimits } from './canvas-core.js?v=434';
     import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=461'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=434';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=437';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=438';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -13827,7 +13835,7 @@ if (w >= 20 && h >= 20) {
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=437')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=438')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -13879,7 +13887,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=437')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=438')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -16925,7 +16933,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=437';
+    import { sb, initConfig } from './config.js?v=438';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {

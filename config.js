@@ -292,8 +292,32 @@ function updateUserSession(session) {
         // ★ [핵심] window 객체에도 심어서 index.html이 바로 쓰게 함
         window.currentUser = session.user;
 
+        // 1차: 이메일 화이트리스트 (즉시 확인)
         isAdmin = ADMIN_EMAILS.includes(currentUser.email);
         window.isAdmin = isAdmin;
+
+        // 2차: profiles.role 비동기 확인 (admin 또는 manager 면 isAdmin=true)
+        // → 스태프 목록 (admin_staff) 의 manager 들이 자기 ID 로 로그인 시 자동 활성화
+        sb.from('profiles').select('role').eq('id', currentUser.id).single()
+            .then(function (res) {
+                if (res && res.data && (res.data.role === 'admin' || res.data.role === 'manager')) {
+                    isAdmin = true;
+                    window.isAdmin = true;
+                    // 매니저 권한 활성 직후 UI 갱신 (있는 경우)
+                    var btnReg = document.getElementById('btnRegisterTemplate');
+                    if (btnReg) btnReg.style.display = 'flex';
+                    // 결제창의 매니저 버튼도 즉시 노출 (열려있을 때)
+                    var mqBtn = document.getElementById('soCoMgrQuoteBtn');
+                    if (mqBtn) mqBtn.style.display = '';
+                    var mqHint = document.getElementById('soCoMgrQuoteHint');
+                    if (mqHint) mqHint.style.display = '';
+                    var fmqBtn = document.getElementById('coMgrQuoteBtn');
+                    if (fmqBtn) fmqBtn.style.display = '';
+                    var fmqHint = document.getElementById('coMgrQuoteHint');
+                    if (fmqHint) fmqHint.style.display = '';
+                }
+            })
+            .catch(function () {});
 
         if(isAdmin) {
             const btnReg = document.getElementById("btnRegisterTemplate");
