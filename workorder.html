@@ -336,15 +336,20 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 ? `<div class="opt-grid">${boxes.join('')}</div>`
                 : `<div class="opt-grid"><div class="opt-empty" style="grid-column:1/-1;">기본 사양 — 추가 옵션 없음</div></div>`;
 
-            // 추가 파일들 (item 당 첫 파일 외 나머지)
-            const extraFiles = customerFiles.length > 1 && i === 0
-                ? customerFiles.slice(1).map(f => `<div>
-                    <div class="ef-thumb"><img src="${esc(f.url)}" alt="${esc(f.name || '')}"></div>
-                    <div class="ef-name">${esc(f.name || '')}</div>
-                </div>`).join('')
-                : '';
+            // 추가 파일들 — 첨부 파일 수가 아이템 수보다 많을 때만, 잉여분을 첫 아이템 아래 표시.
+            //   각 아이템은 customerFiles[i] 를 자기 썸네일로 이미 사용하므로 그 외 잉여만 노출.
+            //   2026-05-14: 이전 로직이 customerFiles.slice(1) 로 무조건 두번째부터 노출하면서
+            //               아이템2의 썸네일이 동시에 아이템1의 "추가파일"로 중복 표시되는 버그 수정.
+            const extraStart = items.length;
+            const extraFilesArr = (i === 0 && customerFiles.length > extraStart)
+                ? customerFiles.slice(extraStart)
+                : [];
+            const extraFiles = extraFilesArr.map(f => `<div>
+                <div class="ef-thumb"><img src="${esc(f.url)}" alt="${esc(f.name || '')}"></div>
+                <div class="ef-name">${esc(f.name || '')}</div>
+            </div>`).join('');
             const extraFilesHtml = extraFiles ? `<div class="extra-files">
-                <div class="ef-head"><i class="fa-solid fa-images"></i> 추가 첨부 파일 (${customerFiles.length - 1}건)</div>
+                <div class="ef-head"><i class="fa-solid fa-images"></i> 추가 첨부 파일 (${extraFilesArr.length}건)</div>
                 <div class="ef-list">${extraFiles}</div>
             </div>` : '';
 
