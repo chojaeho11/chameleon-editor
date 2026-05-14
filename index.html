@@ -922,12 +922,19 @@ if ('caches' in window) {
                         if (slot2) slot2.remove();
                     }
                 }
-                // 2026-05-14: 인위적 500ms 딜레이 제거 — 모바일 로딩 속도 개선.
-                //   loadMgrPhones 자체에 window.sb 미초기화 시 import('./config.js') fallback 있음.
+                // 2026-05-14: window.sb 준비될 때까지 폴링 후 실행 — 모바일에서 인위적 setTimeout 없이
+                //   초기화 끝나는 즉시 매니저 전화 로드. 최대 8초 후 fallback (sb 안 와도 함수 내부에서 처리).
+                function _whenSb(cb) {
+                    var deadline = Date.now() + 8000;
+                    (function poll(){
+                        if (window.sb || Date.now() > deadline) { cb(); return; }
+                        setTimeout(poll, 100);
+                    })();
+                }
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', loadMgrPhones);
+                    document.addEventListener('DOMContentLoaded', function(){ _whenSb(loadMgrPhones); });
                 } else {
-                    loadMgrPhones();
+                    _whenSb(loadMgrPhones);
                 }
             })();
             </script>
@@ -1469,11 +1476,17 @@ if ('caches' in window) {
             // 매니저가 만든 카드결제 우선 (기본 카드결제 그대로)
         }
 
-        // 2026-05-14: 인위적 1500ms 딜레이 제거 — 모바일 로딩 속도 개선.
-        //   loadPendingQuote 자체에 window.sb 미초기화 시 import('./config.js') fallback 있고
-        //   sb.auth.getUser 가 비동기라 auth 늦은 case 는 retry (3.5초 후) 가 커버.
+        // 2026-05-14: window.sb 준비될 때까지 폴링 (max 8s) — 모바일에서 인위적 setTimeout 없이
+        //   sb 가 main.js initConfig 로 만들어지는 즉시 배너 로드. retry 는 auth 늦은 경우 백업.
+        function _whenSb2(cb) {
+            var deadline = Date.now() + 8000;
+            (function poll(){
+                if (window.sb || Date.now() > deadline) { cb(); return; }
+                setTimeout(poll, 100);
+            })();
+        }
         function _scheduleLoad() {
-            loadPendingQuote();
+            _whenSb2(loadPendingQuote);
             setTimeout(function () {
                 // 1차에서 빈 결과였고 관리자였을 가능성 — auth 늦게 들어왔으면 재조회
                 var wrap = document.getElementById('pendingQuoteBanner');
@@ -1481,7 +1494,7 @@ if ('caches' in window) {
                     console.log('[mgrQuote banner] retry — auth was late');
                     loadPendingQuote();
                 }
-            }, 3500);
+            }, 4500);
         }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', _scheduleLoad);
@@ -7695,7 +7708,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./my-design.js?v=434"></script>
 <script type="module" src="./ppt-mode.js?v=434"></script>
-<script type="module" src="./main.js?v=440"></script>
+<script type="module" src="./main.js?v=441"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=70"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->

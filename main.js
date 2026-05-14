@@ -51,8 +51,19 @@ window.addEventListener("DOMContentLoaded", async () => {
     const startScreen = document.getElementById("startScreen");
     const mainEditor = document.getElementById("mainEditor");
 
+    // 2026-05-14: 홈 페이지 (편집 흐름 X) 에서는 #loading 오버레이 안 띄움.
+    //   모바일 셀룰러에서 initConfig 가 길어지면 (콜드스타트 25초까지 대기)
+    //   사용자가 무한 스피너만 보던 문제 해결.
+    //   editor flow (마이페이지→편집, 장바구니 재오픈, 소셜로그인 후 복원) 일 때만 스피너 ON.
+    let _hasEditorFlow = false;
     try {
-        if(loading) loading.style.display = 'flex';
+        _hasEditorFlow = !!(localStorage.getItem('load_design_id')
+                          || localStorage.getItem('open_cart_on_load')
+                          || sessionStorage.getItem('_pendingEditorAction'));
+    } catch(e) {}
+
+    try {
+        if (_hasEditorFlow && loading) loading.style.display = 'flex';
 
         // 1. 필수 설정 (Supabase, 인증, 상품 데이터)
         window.loadProductFixedTemplate = loadProductFixedTemplate;
