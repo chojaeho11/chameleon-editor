@@ -1183,20 +1183,58 @@ if ('caches' in window) {
             setTimeout(positionAboveBand, 600);
             setTimeout(positionAboveBand, 1500);
             var ordersArr = Array.isArray(ordersInput) ? ordersInput : [ordersInput];
+            // 2026-05-14: 결제대기 카드 placeholder — 검정/골드 VIP 카드 스타일 SVG (한글 인코딩 문제 X)
+            // 매니저 견적 = 1:1 맞춤 결제이므로 일반 상품이미지 보다 'VIP 카드' 느낌이 더 잘 어울림
+            function vipCardSvg(label) {
+                // 검정 배경 + 빨간 코너 트림 + 골드 VIP 텍스트 — 두번째 스크린샷의 평택문화원 VIP카드 비주얼 차용
+                var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">' +
+                  '<defs>' +
+                    '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">' +
+                      '<stop offset="0" stop-color="#1c1917"/>' +
+                      '<stop offset="0.5" stop-color="#0a0a0a"/>' +
+                      '<stop offset="1" stop-color="#1c1917"/>' +
+                    '</linearGradient>' +
+                    '<linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">' +
+                      '<stop offset="0" stop-color="#fde047"/>' +
+                      '<stop offset="0.5" stop-color="#f59e0b"/>' +
+                      '<stop offset="1" stop-color="#b45309"/>' +
+                    '</linearGradient>' +
+                    '<linearGradient id="red" x1="0" y1="0" x2="1" y2="1">' +
+                      '<stop offset="0" stop-color="#dc2626"/>' +
+                      '<stop offset="1" stop-color="#991b1b"/>' +
+                    '</linearGradient>' +
+                  '</defs>' +
+                  '<rect width="400" height="400" fill="url(#bg)"/>' +
+                  // 빨간 모서리 트림
+                  '<path d="M 0 0 L 130 0 L 0 130 Z" fill="url(#red)"/>' +
+                  '<path d="M 400 400 L 270 400 L 400 270 Z" fill="url(#red)"/>' +
+                  // 카드 라인
+                  '<rect x="50" y="110" width="300" height="180" rx="10" fill="none" stroke="url(#gold)" stroke-width="2" opacity="0.6"/>' +
+                  // VIP 큰 텍스트
+                  '<text x="200" y="200" font-family="Georgia,serif" font-size="72" font-weight="900" fill="url(#gold)" text-anchor="middle" letter-spacing="8">VIP</text>' +
+                  '<text x="200" y="232" font-family="Pretendard,sans-serif" font-size="11" fill="#fde047" text-anchor="middle" letter-spacing="6" opacity="0.85">PREMIUM PAYMENT</text>' +
+                  // 하단 #orderId
+                  '<text x="200" y="270" font-family="monospace" font-size="10" fill="#fbbf24" text-anchor="middle" opacity="0.7">' + (label || '') + '</text>' +
+                  '</svg>';
+                return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+            }
             var cardsHtml = ordersArr.map(function (order) {
                 var customerName = order.manager_name || '고객';
                 var items = order.items || [];
                 var primary = items[0] || {};
                 var primaryProd = primary.product || {};
+                var orderShort = String(order.id || '').substring(0, 8).toUpperCase();
+                // 우선순위: 매니저가 등록한 상품 img → 없으면 VIP 카드 SVG (한글 깨짐 없음)
                 var imgUrl = primaryProd.img || primaryProd.img_url || primary.imgUrl
-                    || 'https://placehold.co/400x400/fef3c7/78350f?text=' + encodeURIComponent('상담 완료');
+                    || vipCardSvg('#' + orderShort);
                 var itemCount = items.length;
                 var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
                 var primaryName = primaryProd.name || primary.productName || '주문상품';
+                var fallbackImg = vipCardSvg('#' + orderShort).replace(/"/g, '&quot;');
                 return (
                     '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')">' +
                       '<div class="hotdeal-img-box">' +
-                        '<img src="' + esc(imgUrl) + '" alt="' + esc(primaryName) + '" loading="lazy" onerror="this.src=\'https://placehold.co/400x400/fef3c7/78350f?text=Order\'">' +
+                        '<img src="' + esc(imgUrl) + '" alt="' + esc(primaryName) + '" loading="lazy" onerror="this.src=&quot;' + fallbackImg + '&quot;">' +
                         '<div style="position:absolute; top:10px; left:10px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; box-shadow:0 2px 6px rgba(120,53,15,0.25);">💬 결제대기</div>' +
                       '</div>' +
                       '<div class="hotdeal-info">' +
