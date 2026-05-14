@@ -1127,23 +1127,31 @@ if ('caches' in window) {
                 console.log('[mgrQuote banner] start — quoteId:', quoteId, 'localStorage IDs:', allIds, 'isAdmin:', isAdm);
 
                 var orders = null, error = null;
-                if (isAdm) {
-                    // 관리자 — 상담대기 OR (결제완료 + 디자인 미완료) 둘 다 조회
-                    var resA = await sb
-                        .from('orders')
-                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at, design_complete, design_complete_at')
-                        .or('payment_status.eq.상담대기,and(payment_status.eq.결제완료,design_complete.is.false)')
-                        .order('created_at', { ascending: false })
-                        .limit(30);
-                    orders = resA.data; error = resA.error;
-                    console.log('[mgrQuote banner] admin fetched', orders?.length, 'orders (pending pay OR pending design)');
-                } else if (allIds.length > 0) {
-                    // 일반 고객 — localStorage 기반 본인 quote 만
-                    var resB = await sb
-                        .from('orders')
-                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at, design_complete, design_complete_at')
-                        .in('id', allIds);
-                    orders = resB.data; error = resB.error;
+                // 2026-05-14: design_complete 컬럼이 아직 마이그레이션 안 됐을 수도 있음 — graceful fallback
+                async function _selectOrders(withDesignCols) {
+                    var cols = 'id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at';
+                    if (withDesignCols) cols += ', design_complete, design_complete_at';
+                    if (isAdm) {
+                        var q = sb.from('orders').select(cols);
+                        if (withDesignCols) {
+                            q = q.or('payment_status.eq.상담대기,and(payment_status.eq.결제완료,design_complete.is.false)');
+                        } else {
+                            q = q.in('payment_status', ['상담대기', '결제완료', '미결제', '입금대기']);
+                        }
+                        return await q.order('created_at', { ascending: false }).limit(30);
+                    }
+                    return await sb.from('orders').select(cols).in('id', allIds);
+                }
+                if (!isAdm && allIds.length === 0) {
+                    // 비관리자 + localStorage 비어있음 → 조회할 ID 없음
+                } else {
+                    var res = await _selectOrders(true);
+                    if (res.error && /design_complete/i.test(res.error.message || '')) {
+                        console.warn('[mgrQuote banner] design_complete 컬럼 미존재 — fallback 으로 재조회');
+                        res = await _selectOrders(false);
+                    }
+                    orders = res.data; error = res.error;
+                    console.log('[mgrQuote banner] fetched', orders?.length, 'orders, isAdmin:', isAdm);
                 }
                 if (!orders) return;
                 if (error) { console.warn('[mgrQuote banner] fetch err:', error); return; }

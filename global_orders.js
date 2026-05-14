@@ -1648,7 +1648,7 @@ window.loadOrders = async () => {
         }
 
         let query = sb.from('orders')
-            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info, design_complete, design_complete_at, design_complete_by', { count: 'exact' })
+            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info' + (window.__hasDesignCompleteCol === false ? '' : ', design_complete, design_complete_at, design_complete_by'), { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
@@ -1697,7 +1697,20 @@ window.loadOrders = async () => {
 
         const from = (currentPage - 1) * itemsPerPage;
         const to = from + itemsPerPage - 1;
-        const { data, error, count } = await query.range(from, to);
+        let { data, error, count } = await query.range(from, to);
+
+        // 2026-05-14: design_complete 컬럼 미존재 시 (마이그레이션 전) graceful 재조회
+        if (error && /design_complete/i.test(error.message || '')) {
+            console.warn('[loadOrders] design_complete 컬럼 미존재 — fallback 으로 재조회');
+            window.__hasDesignCompleteCol = false;
+            // 재구축 — design 컬럼 제거된 select
+            let q2 = sb.from('orders')
+                .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info', { count: 'exact' })
+                .order('created_at', { ascending: false })
+                .neq('status', '임시작성').neq('status', '관리자차단');
+            const fb = await q2.range(from, to);
+            data = fb.data; error = fb.error; count = fb.count;
+        }
 
         if (error) throw error;
 
