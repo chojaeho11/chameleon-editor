@@ -840,35 +840,40 @@ if ('caches' in window) {
             <h1 class="hero-title" data-i18n="hero_title"><small class="hero-tagline">업자를 위한 도매인쇄몰</small><span>CHAMELEON<b class="ht-prn">PRINTING</b></span><em class="hero-min-order">담당 매니저와 상담하고 정확한 결제창을 받아보세요</em></h1>
         </div>
 
-    <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널로 변경 (정확한 파일/금액 매니저 결제창 생성) -->
-    <div id="mgrQuoteHero" style="max-width:760px; margin:8px auto 24px; padding:0 16px;">
-        <div style="background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:1.5px solid #fbbf24; border-radius:16px; padding:20px 24px; box-shadow:0 6px 20px -8px rgba(251,191,36,0.4);">
-            <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
-                <div style="font-size:32px; line-height:1;">📞</div>
-                <div style="flex:1;">
-                    <div id="mgrQuoteTitle" style="font-size:15px; font-weight:800; color:#78350f; margin-bottom:4px;">매니저 견적 빠른 주문</div>
+    <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널 (추후 여기에 결제창 표시) -->
+    <div id="mgrQuoteHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
+        <div style="background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:1.5px solid #fbbf24; border-radius:16px; padding:22px 28px; box-shadow:0 6px 20px -8px rgba(251,191,36,0.4);">
+            <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
+                <div style="font-size:32px; line-height:1; flex-shrink:0;">📞</div>
+                <div style="flex:1; min-width:0;">
+                    <div id="mgrQuoteTitle" style="font-size:16px; font-weight:800; color:#78350f; margin-bottom:4px;">매니저 견적 빠른 주문</div>
                     <div id="mgrQuoteDesc" style="font-size:12px; color:#92400e; line-height:1.5;">담당 매니저와 통화·상담 후, 매니저가 정확한 상품·파일·금액으로 결제창을 만들어드립니다.</div>
                 </div>
             </div>
-            <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:6px; margin-bottom:10px;">
-                <a href="tel:031-366-1984" style="display:flex; align-items:center; gap:6px; padding:9px 12px; background:#fff; border:1.5px solid #fbbf24; border-radius:8px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700;">
-                    <span style="font-size:13px;">🏢</span><span>본사 <b style="color:#b45309;">031-366-1984</b></span>
+            <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px;">
+                <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fbbf24; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🏢</span><span>본사</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">031-366-1984</b>
                 </a>
-                <a href="tel:010-0000-0001" style="display:flex; align-items:center; gap:6px; padding:9px 12px; background:#fff; border:1.5px solid #fed7aa; border-radius:8px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700;">
-                    <span style="font-size:13px;">👤</span><span>강은미 <b style="color:#b45309;">010-0000-0001</b></span>
+                <a href="tel:010-0000-0001" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>강은미</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0001</b>
                 </a>
-                <a href="tel:010-0000-0002" style="display:flex; align-items:center; gap:6px; padding:9px 12px; background:#fff; border:1.5px solid #fed7aa; border-radius:8px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700;">
-                    <span style="font-size:13px;">👤</span><span>조지숙 <b style="color:#b45309;">010-0000-0002</b></span>
+                <a href="tel:010-0000-0002" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>조지숙</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0002</b>
                 </a>
-                <a href="tel:010-0000-0003" style="display:flex; align-items:center; gap:6px; padding:9px 12px; background:#fff; border:1.5px solid #fed7aa; border-radius:8px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700;">
-                    <span style="font-size:13px;">👤</span><span>박성희 <b style="color:#b45309;">010-0000-0003</b></span>
+                <a href="tel:010-0000-0003" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>박성희</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0003</b>
                 </a>
-                <a href="tel:010-0000-0004" style="display:flex; align-items:center; gap:6px; padding:9px 12px; background:#fff; border:1.5px solid #fed7aa; border-radius:8px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700;">
-                    <span style="font-size:13px;">👤</span><span>최연두 <b style="color:#b45309;">010-0000-0004</b></span>
+                <a href="tel:010-0000-0004" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>최연두</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0004</b>
                 </a>
             </div>
-            <div id="mgrQuoteHint" style="font-size:11px; color:#a16207; text-align:center; line-height:1.5;">
-                ☎️ <b>전화 상담 → 매니저가 파일·금액 확정</b> → 아래에 결제창이 자동으로 표시됩니다
+            <div id="mgrQuoteHint" style="font-size:12px; color:#a16207; text-align:center; line-height:1.5;">
+                ☎️ <b>전화 상담 → 매니저가 파일·금액 확정</b> → 결제 URL 받으시면 이곳에 결제창이 자동으로 표시됩니다
             </div>
         </div>
     </div>
