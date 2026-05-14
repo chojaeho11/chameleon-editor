@@ -1289,31 +1289,45 @@ if ('caches' in window) {
 
                 // 2) 카트에 items 복원 (simple_order 의 readCart 와 호환되는 shape)
                 //    매니저가 만든 items 그대로 — 일반 상품 shape (product, qty, ...)
-                // 2026-05-14: 일부 fabric 주문은 items 에 price 필드가 없어서 카트 총액이 0원으로 표시됨
-                //   → order.total_amount 를 items 에 비례 분배 (price 누락된 경우)
+                // 2026-05-14: items 에 price 필드가 없으면 order.total_amount 를 items 에 비례 분배
+                //   → 카트 합계가 order.total_amount 와 일치하도록 강제 (fabric, 일반 모두)
                 var rawItems = order.items || [];
                 var orderTotal = Number(order.total_amount) || 0;
-                var hasAnyPrice = rawItems.some(function (it) { return Number(it.price) > 0 || (it.product && Number(it.product.price) > 0); });
                 var qtySum = rawItems.reduce(function (s, it) { return s + (Number(it.qty) || 1); }, 0) || 1;
+                // 현재 items 에서 _soCalcItemPrice 가 산출할 합계 추정 (fabric: it.price, 일반: product.price*qty)
+                function _estLineTotal(it) {
+                    if (it.source === 'cotton-print' || it.fabric || it.fabricCode) return Number(it.price) || 0;
+                    var unit = (it.product && Number(it.product.price)) || Number(it.price) || 0;
+                    return unit * (Number(it.qty) || 1);
+                }
+                var estSum = rawItems.reduce(function (s, it) { return s + _estLineTotal(it); }, 0);
+                // 카트 합계가 0 인데 order.total_amount 는 있으면 → 각 item.price 를 비례 분배
+                var needRedistribute = (estSum <= 0 && orderTotal > 0);
                 var cartItems = rawItems.map(function (it, idx) {
                     var f = (order.files || []).filter(function(x){
                         return x && x.url && x.type !== 'order_sheet' && x.type !== 'quotation' && x.type !== '_error_log';
                     });
-                    // price 보정: 없으면 order.total_amount 를 qty 비례 분배
                     var resolvedPrice = Number(it.price) || (it.product && Number(it.product.price)) || 0;
-                    if (!hasAnyPrice && orderTotal > 0) {
+                    if (needRedistribute) {
+                        // qty 비례로 LINE 합계 분배 (fabric 의 it.price 가 LINE 합계 의미라서 그대로 적용 가능)
                         var w = (Number(it.qty) || 1) / qtySum;
-                        resolvedPrice = Math.round(orderTotal * w / (Number(it.qty) || 1));
+                        resolvedPrice = Math.round(orderTotal * w);
                     }
                     return Object.assign({}, it, {
                         uid: Date.now() + idx,
                         price: resolvedPrice,
+                        // 일반 상품도 _soCalcItemPrice 가 product.price*qty 를 쓰니까, qty=1 로 맞춰 price 직접 적용
+                        qty: needRedistribute ? 1 : (Number(it.qty) || 1),
+                        product: needRedistribute && it.product ? Object.assign({}, it.product, { price: resolvedPrice }) : it.product,
+                        // fabric 마커 강제 (price 가 line total 로 직접 동작하도록)
+                        source: needRedistribute && !it.source ? (it.product_code || it.fabric ? 'cotton-print' : it.source) : it.source,
                         originalUrl: f[idx] ? f[idx].url : (it.originalUrl || null),
                         fileName: f[idx] ? f[idx].name : (it.fileName || ''),
                         mimeType: f[idx] ? f[idx].type : (it.mimeType || 'image/png'),
-                        __pendingQuoteId: order.id  // 결제 시 UPDATE 대상 표시
+                        __pendingQuoteId: order.id
                     });
                 });
+                console.log('[payPendingQuote] orderTotal:', orderTotal, 'estSum:', estSum, 'redistribute:', needRedistribute, 'items:', cartItems);
                 try { localStorage.setItem('chameleon_cart_current', JSON.stringify(cartItems)); } catch(e){}
 
                 // 3) 결제창 열기 위해 simple_order 모달이 준비됐는지 확인 후 호출
