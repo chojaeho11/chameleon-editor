@@ -1648,7 +1648,7 @@ window.loadOrders = async () => {
         }
 
         let query = sb.from('orders')
-            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info', { count: 'exact' })
+            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info, design_complete, design_complete_at, design_complete_by', { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
@@ -1893,6 +1893,9 @@ window.loadOrders = async () => {
                         ${(order.admin_note||'').includes('[MANAGER_QUOTE]') && !['칼선작업','제작중','완료됨','발송완료','배송완료'].includes(order.status)
                             ? `<button type="button" onclick="event.stopPropagation();window.openMgrQuoteEditor && window.openMgrQuoteEditor('${order.id}')" style="display:inline-block; margin-top:3px; padding:3px 7px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:9px; font-weight:800; border-radius:50px; border:none; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="매니저 견적 — 칼선작업 이전까지 수정 가능"><i class="fa-solid fa-pen-to-square"></i> 수정</button>`
                             : ''}
+                        ${order.design_complete
+                            ? `<div style="margin-top:3px; padding:3px 7px; background:#dcfce7; color:#15803d; font-size:9px; font-weight:800; border-radius:50px; letter-spacing:0.3px; display:inline-block;" title="${order.design_complete_at ? new Date(order.design_complete_at).toLocaleString('ko-KR') : ''} — ${(order.design_complete_by||'').replace(/"/g,'&quot;')}"><i class="fa-solid fa-check-circle"></i> 디자인완료</div>`
+                            : `<button type="button" onclick="event.stopPropagation();window.toggleDesignComplete && window.toggleDesignComplete('${order.id}', this)" style="display:inline-block; margin-top:3px; padding:3px 7px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; font-size:9px; font-weight:800; border-radius:50px; border:none; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="디자인 파일 작업이 완료되어 다크팩토리에서 칼선/출력 시작해도 OK 라는 신호"><i class="fa-solid fa-paper-plane"></i> 데이터작업완료</button>`}
                     </td>
                     
                     <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${i.productName || '상품'} (${i.qty})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${i.productName || '상품'} (${i.qty})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
@@ -3233,6 +3236,41 @@ window.recoverMissingDocs = async () => {
 
     log(`\n🎉 완료! 성공: ${success}건, 실패: ${fail}건`);
     log('새로고침하면 반영됩니다.');
+};
+
+// ================================================================
+// 2026-05-14: 데이터작업완료 토글 — 디자인 파일 준비 끝 → 다크팩토리로 신호 전달
+// 사용자 요청: "데이터작업완료 버튼이 눌러지면 그 데이터가 다크팩토리로 넘어오면 좋겠어"
+window.toggleDesignComplete = async function (orderId, btnEl) {
+    if (!orderId) return;
+    if (!confirm('이 주문의 디자인 작업이 모두 완료되었습니까?\n\n완료 표시 후:\n• 다크팩토리 (Google Drive) 폴더에 최종 파일이 동기화됩니다\n• 칼선 작업(자동/수동) 진행 가능\n\n* 디자인이 아직 미완성이면 취소를 누르세요.')) return;
+    var origLabel = btnEl ? btnEl.innerHTML : '';
+    try {
+        if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 처리중'; }
+        var managerEmail = '';
+        try { var { data: sess } = await sb.auth.getUser(); managerEmail = sess?.user?.email || ''; } catch (e) {}
+        var { error } = await sb.from('orders').update({
+            design_complete: true,
+            design_complete_at: new Date().toISOString(),
+            design_complete_by: managerEmail || 'admin'
+        }).eq('id', orderId);
+        if (error) { console.error('[toggleDesignComplete] update failed:', error); alert('실패: ' + (error.message || error)); return; }
+        // 다크팩토리 (Drive) 동기화 재실행 — 최종 파일로 갱신
+        try {
+            sb.functions.invoke('sync-order-to-drive', { body: { order_id: orderId, design_finalized: true } })
+                .then(function (r) {
+                    if (r && r.error) console.warn('[drive sync] failed:', r.error.message || r.error);
+                    else console.log('[drive sync] design finalized for', orderId, r?.data);
+                })
+                .catch(function (e) { console.warn('[drive sync] failed:', e?.message || e); });
+        } catch (e) { console.warn('[drive sync] try failed:', e); }
+        showToast && showToast('✅ 디자인 완료 → 다크팩토리 동기화 시작', 'success');
+        if (typeof window.loadOrders === 'function') { try { window.loadOrders(); } catch (e) {} }
+    } catch (e) {
+        console.error('[toggleDesignComplete]', e);
+        alert('오류: ' + (e.message || e));
+        if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origLabel; }
+    }
 };
 
 // ================================================================

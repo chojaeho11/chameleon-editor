@@ -1128,20 +1128,20 @@ if ('caches' in window) {
 
                 var orders = null, error = null;
                 if (isAdm) {
-                    // 관리자 — DB 에서 직접 모든 상담대기 매니저견적 조회 (localStorage 의존 X)
+                    // 관리자 — 상담대기 OR (결제완료 + 디자인 미완료) 둘 다 조회
                     var resA = await sb
                         .from('orders')
-                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at')
-                        .eq('payment_status', '상담대기')
+                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at, design_complete, design_complete_at')
+                        .or('payment_status.eq.상담대기,and(payment_status.eq.결제완료,design_complete.is.false)')
                         .order('created_at', { ascending: false })
-                        .limit(20);
+                        .limit(30);
                     orders = resA.data; error = resA.error;
-                    console.log('[mgrQuote banner] admin fetched', orders?.length, 'orders');
+                    console.log('[mgrQuote banner] admin fetched', orders?.length, 'orders (pending pay OR pending design)');
                 } else if (allIds.length > 0) {
                     // 일반 고객 — localStorage 기반 본인 quote 만
                     var resB = await sb
                         .from('orders')
-                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at')
+                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at, design_complete, design_complete_at')
                         .in('id', allIds);
                     orders = resB.data; error = resB.error;
                 }
@@ -1150,12 +1150,17 @@ if ('caches' in window) {
 
                 var active = [];
                 (orders || []).forEach(function (o) {
-                    if (o.payment_status && o.payment_status !== '상담대기' && o.payment_status !== '미결제') {
+                    // 결제 완료 & 디자인 완료 → 더 이상 배너에 표시 X
+                    if (o.payment_status === '결제완료' && o.design_complete) {
+                        if (!isAdm) _removePendingId(o.id);
+                        return;
+                    }
+                    // 그 외 결제 상태 변화 (취소 등)
+                    if (o.payment_status && !['상담대기','미결제','결제완료','입금대기'].includes(o.payment_status)) {
                         if (!isAdm) _removePendingId(o.id);
                         return;
                     }
                     if (o.status === '취소' || o.status === '취소요청') { if (!isAdm) _removePendingId(o.id); return; }
-                    // 2026-05-14: 0원 / 빈 items 카드 숨김 (미완성 견적 상태로 매니저가 정리 필요)
                     if (!o.total_amount || o.total_amount <= 0) { return; }
                     if (!o.items || o.items.length === 0) { return; }
                     active.push(o);
@@ -1247,17 +1252,27 @@ if ('caches' in window) {
                 var itemCount = items.length;
                 var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
                 var fallbackImg = imgUrl.replace(/"/g, '&quot;');
+                // 2026-05-14: 결제완료 + 디자인 미완료 → '데이터작업완료' 버튼으로 전환
+                var isPaid = order.payment_status === '결제완료';
+                var badgeLabel = isPaid ? '🎨 디자인작업중' : '💬 결제대기';
+                var badgeBg = isPaid ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#fbbf24,#b45309)';
+                var actionBtnHtml = isPaid
+                    ? '<button type="button" onclick="event.stopPropagation(); window._markDesignComplete(\'' + esc(order.id) + '\', this)" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(16,185,129,0.5);">📦 데이터작업완료</button>'
+                    : '<button type="button" onclick="event.stopPropagation(); window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>';
+                var cardClick = isPaid
+                    ? 'window._markDesignComplete(\'' + esc(order.id) + '\')'
+                    : 'window._payPendingQuote(\'' + esc(order.id) + '\')';
                 return (
-                    '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')">' +
+                    '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="' + cardClick + '">' +
                       '<div class="hotdeal-img-box">' +
                         '<img src="' + esc(imgUrl) + '" alt="' + esc(primaryName) + '" loading="lazy" onerror="this.src=&quot;' + fallbackImg + '&quot;">' +
-                        '<div style="position:absolute; top:10px; left:10px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; box-shadow:0 2px 6px rgba(120,53,15,0.25);">💬 결제대기</div>' +
+                        '<div style="position:absolute; top:10px; left:10px; background:' + badgeBg + '; color:#fff; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; box-shadow:0 2px 6px rgba(120,53,15,0.25);">' + badgeLabel + '</div>' +
                       '</div>' +
                       '<div class="hotdeal-info">' +
                         '<div class="hotdeal-title" style="color:#78350f !important;">' + esc(customerName) + ' 고객님</div>' +
                         '<div class="hotdeal-meta" style="color:#92400e; font-size:11px;">' + esc(primaryName) + esc(moreSuffix) + '</div>' +
-                        '<div class="hotdeal-price" style="color:#b45309 !important;">' + fmtKR(order.total_amount || 0) + '</div>' +
-                        '<button type="button" onclick="event.stopPropagation(); window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>' +
+                        '<div class="hotdeal-price" style="color:' + (isPaid ? '#059669' : '#b45309') + ' !important;">' + fmtKR(order.total_amount || 0) + (isPaid ? ' ✓' : '') + '</div>' +
+                        actionBtnHtml +
                       '</div>' +
                     '</div>'
                 );
@@ -1358,6 +1373,41 @@ if ('caches' in window) {
             } catch (e) {
                 console.error('[payPendingQuote]', e);
                 alert('결제창 로드 오류: ' + (e.message || e));
+            }
+        };
+
+        // 2026-05-14: 고객 또는 매니저가 디자인 작업 완료를 신호 → 다크팩토리 (Drive) 동기화 트리거
+        window._markDesignComplete = async function (orderId, btnEl) {
+            if (!orderId) return;
+            if (!confirm('디자인 작업이 모두 완료되었습니까?\n\n완료 표시 후:\n• 본사에서 칼선/출력 작업 시작 가능\n• 다크팩토리 폴더에 최종 파일 동기화\n\n* 아직 디자인 미완성이면 취소를 누르세요.')) return;
+            var origLabel = btnEl ? btnEl.innerHTML : '';
+            try {
+                if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '⏳ 처리중...'; }
+                var sb = window.sb;
+                if (!sb) { try { var mod = await import('./config.js?v=438'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { alert('Supabase 연결 실패'); return; }
+                var em = '';
+                try { var { data: sess } = await sb.auth.getUser(); em = sess?.user?.email || ''; } catch (e) {}
+                var { error } = await sb.from('orders').update({
+                    design_complete: true,
+                    design_complete_at: new Date().toISOString(),
+                    design_complete_by: em || 'customer'
+                }).eq('id', orderId);
+                if (error) { alert('실패: ' + (error.message || error)); return; }
+                // 다크팩토리 동기화 트리거 (최종 파일 마커)
+                try {
+                    sb.functions.invoke('sync-order-to-drive', { body: { order_id: orderId, design_finalized: true } })
+                        .then(function (r) { console.log('[drive sync] design finalized', r?.data || r); })
+                        .catch(function (e) { console.warn('[drive sync] failed:', e?.message || e); });
+                } catch (e) {}
+                // 카드 사라짐
+                try { _removePendingId(orderId); } catch (e) {}
+                alert('✅ 데이터작업완료!\n본사에서 칼선/출력 작업이 진행됩니다.');
+                location.reload();
+            } catch (e) {
+                console.error('[markDesignComplete]', e);
+                alert('오류: ' + (e.message || e));
+                if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origLabel; }
             }
         };
 
