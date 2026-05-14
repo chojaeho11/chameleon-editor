@@ -3492,6 +3492,13 @@
     // 2026-05-12: 빠른 결제 모달 (패브릭과 동일 흐름)
     // ─────────────────────────────────────────────
     function _soReadAllCart() {
+        // 2026-05-14: 매니저견적 결제 진입 (?quote=ID → _payPendingQuote) 일 때
+        //   cart_sync 의 비동기 pull 이 localStorage 를 덮어쓰는 race 를 피하려고
+        //   window.__pendingQuoteItemsOverride 에 직접 redistributed cart 를 담아두면
+        //   여기서 그걸 우선 반환 (결제 완료/취소 시 _payPendingQuote 측이 clear)
+        if (Array.isArray(window.__pendingQuoteItemsOverride) && window.__pendingQuoteItemsOverride.length > 0) {
+            return window.__pendingQuoteItemsOverride.slice();
+        }
         try { return JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || []; }
         catch (e) { return []; }
     }
@@ -3710,6 +3717,8 @@
     window._soCloseCheckout = function () {
         document.getElementById('soCheckoutOverlay').classList.remove('open');
         document.body.style.overflow = '';
+        // 2026-05-14: 매니저견적 override 정리
+        try { delete window.__pendingQuoteItemsOverride; } catch (e) {}
     };
 
     // 2026-05-14: 결제수단 토글 — 무통장이면 증빙 박스 표시, 카드면 숨김 (KR 한정)
