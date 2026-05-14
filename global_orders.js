@@ -1887,7 +1887,9 @@ window.loadOrders = async () => {
                         <div style="cursor:pointer;margin-top:2px;" onclick="event.stopPropagation();openOrderMemo('${order.id}')" title="${(order.admin_note||'').replace(/"/g,'&quot;').replace(/\n/g,' ')}">
                             ${order.admin_note ? '<span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;font-size:10px;line-height:18px;text-align:center;font-weight:bold;">✉</span>' : '<span style="font-size:14px;opacity:0.3;">💬</span>'}
                         </div>
-                        ${(order.admin_note||'').includes('[COTTON-PRINT]') || (order.admin_note||'').includes('[Cotton Print') ? `<a href="/cotton_workorder.html?id=${order.id}" target="_blank" style="display:inline-block; margin-top:4px; padding:3px 7px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:9px; font-weight:800; border-radius:50px; text-decoration:none; letter-spacing:0.3px;" title="Cotton Print 작업지시서 보기/인쇄" onclick="event.stopPropagation();"><i class="fa-solid fa-file-lines"></i> 작업지시서</a>` : ''}
+                        ${(order.admin_note||'').includes('[COTTON-PRINT]') || (order.admin_note||'').includes('[Cotton Print')
+                            ? `<a href="/cotton_workorder.html?id=${order.id}" target="_blank" style="display:inline-block; margin-top:4px; padding:3px 7px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:9px; font-weight:800; border-radius:50px; text-decoration:none; letter-spacing:0.3px;" title="Cotton Print 작업지시서 보기/인쇄" onclick="event.stopPropagation();"><i class="fa-solid fa-file-lines"></i> 작업지시서</a>`
+                            : `<button type="button" onclick="event.stopPropagation();window.openWorkOrderFresh('${order.id}', this)" style="display:inline-block; margin-top:4px; padding:3px 7px; background:linear-gradient(135deg,#1d4ed8,#1e3a8a); color:#fef3c7; font-size:9px; font-weight:800; border-radius:50px; border:none; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="DB 에서 즉시 재생성 — 백지 방지"><i class="fa-solid fa-file-lines"></i> 작업지시서</button>`}
                     </td>
                     
                     <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${i.productName || '상품'} (${i.qty})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${i.productName || '상품'} (${i.qty})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
@@ -3228,6 +3230,68 @@ window.recoverMissingDocs = async () => {
 
     log(`\n🎉 완료! 성공: ${success}건, 실패: ${fail}건`);
     log('새로고침하면 반영됩니다.');
+};
+
+// ================================================================
+// 2026-05-14: 작업지시서 즉시 재생성 — DB 에서 최신 데이터로 PDF 생성하여 새 탭에서 열기
+// 사용자 요청: "오늘 주문부터 작업지시서가 백지로 들어옴. 작업지시서는 패브릭처럼 주문번호 아래에 따로"
+// 주문 시점에 생성된 order_sheet.pdf 가 비어있어도 (혹은 누락돼도) 이 함수로 즉시 만들어 볼 수 있음.
+window.openWorkOrderFresh = async function (orderId, btnEl) {
+    if (!orderId) return;
+    var origLabel = btnEl ? btnEl.innerHTML : '';
+    try {
+        if (btnEl) {
+            btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 생성중';
+            btnEl.disabled = true;
+        }
+        // 1) jsPDF + addon DB + material cache 로드 (이미 로드됐으면 캐시 히트)
+        await loadJsPDF();
+        const addonDB = await _rcLoadAddons();
+        if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
+
+        // 2) 주문 조회
+        const { data: order, error } = await sb
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single();
+        if (error || !order) {
+            alert('주문을 찾을 수 없습니다: ' + (error?.message || orderId));
+            return;
+        }
+        if (!order.items || order.items.length === 0) {
+            alert('주문에 상품 항목이 없습니다. (작업지시서 생성 불가)');
+            return;
+        }
+
+        // 3) 작업지시서 PDF 생성 (저장 안 함 — 즉시 보기 전용)
+        const blob = await generateRecoveryOrderSheet(order, addonDB);
+        if (!blob) {
+            alert('작업지시서 생성 실패. 콘솔 확인.');
+            return;
+        }
+
+        // 4) blob URL 로 새 탭 열기
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
+        if (!win) {
+            // 팝업 차단 시 다운로드 폴백
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `작업지시서_${orderId}.pdf`;
+            a.click();
+        }
+        // 30 초 후 URL 해제 (탭에서 로드 완료될 시간 충분)
+        setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+    } catch (e) {
+        console.error('[openWorkOrderFresh] 실패:', e);
+        alert('작업지시서 재생성 오류: ' + (e.message || e));
+    } finally {
+        if (btnEl) {
+            btnEl.innerHTML = origLabel;
+            btnEl.disabled = false;
+        }
+    }
 };
 
 // ================================================================
