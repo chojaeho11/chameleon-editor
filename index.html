@@ -1155,6 +1155,9 @@ if ('caches' in window) {
                         return;
                     }
                     if (o.status === '취소' || o.status === '취소요청') { if (!isAdm) _removePendingId(o.id); return; }
+                    // 2026-05-14: 0원 / 빈 items 카드 숨김 (미완성 견적 상태로 매니저가 정리 필요)
+                    if (!o.total_amount || o.total_amount <= 0) { return; }
+                    if (!o.items || o.items.length === 0) { return; }
                     active.push(o);
                 });
                 if (!isAdm) {
@@ -1286,13 +1289,25 @@ if ('caches' in window) {
 
                 // 2) 카트에 items 복원 (simple_order 의 readCart 와 호환되는 shape)
                 //    매니저가 만든 items 그대로 — 일반 상품 shape (product, qty, ...)
-                var cartItems = (order.items || []).map(function (it, idx) {
-                    // 파일은 order.files 에서 매칭 (단순히 첫번째 파일을 첫번째 item 에 부착)
+                // 2026-05-14: 일부 fabric 주문은 items 에 price 필드가 없어서 카트 총액이 0원으로 표시됨
+                //   → order.total_amount 를 items 에 비례 분배 (price 누락된 경우)
+                var rawItems = order.items || [];
+                var orderTotal = Number(order.total_amount) || 0;
+                var hasAnyPrice = rawItems.some(function (it) { return Number(it.price) > 0 || (it.product && Number(it.product.price) > 0); });
+                var qtySum = rawItems.reduce(function (s, it) { return s + (Number(it.qty) || 1); }, 0) || 1;
+                var cartItems = rawItems.map(function (it, idx) {
                     var f = (order.files || []).filter(function(x){
                         return x && x.url && x.type !== 'order_sheet' && x.type !== 'quotation' && x.type !== '_error_log';
                     });
+                    // price 보정: 없으면 order.total_amount 를 qty 비례 분배
+                    var resolvedPrice = Number(it.price) || (it.product && Number(it.product.price)) || 0;
+                    if (!hasAnyPrice && orderTotal > 0) {
+                        var w = (Number(it.qty) || 1) / qtySum;
+                        resolvedPrice = Math.round(orderTotal * w / (Number(it.qty) || 1));
+                    }
                     return Object.assign({}, it, {
                         uid: Date.now() + idx,
+                        price: resolvedPrice,
                         originalUrl: f[idx] ? f[idx].url : (it.originalUrl || null),
                         fileName: f[idx] ? f[idx].name : (it.fileName || ''),
                         mimeType: f[idx] ? f[idx].type : (it.mimeType || 'image/png'),
