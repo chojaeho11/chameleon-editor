@@ -4008,10 +4008,33 @@
             // 2026-05-14: 무통장 입금 증빙 정보 (세금계산서/현금영수증) — 관리자 페이지 receipt_info 컬럼과 연결
             if (receiptInfo) orderRow.receipt_info = receiptInfo;
 
-            var { data: insertedOrder, error: insertErr } = await sb.from('orders').insert([orderRow]).select().single();
-            if (insertErr) throw insertErr;
-
-            var newOrderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
+            // 2026-05-14: 매니저 견적 결제 (?quote=ID 로 들어온 경우) → 기존 주문 UPDATE
+            var insertedOrder, insertErr, newOrderId;
+            if (window._soPendingQuoteId) {
+                var pendingId = window._soPendingQuoteId;
+                // 상담대기 → 정상 결제 흐름으로 전환: address 등 고객 입력 보강 + payment_method/status 갱신
+                var updateRow = {
+                    address: fullAddr || orderRow.address,
+                    request_note: memo || orderRow.request_note,
+                    status: payMethod === 'bank' ? '접수됨' : '임시작성',
+                    payment_status: payMethod === 'bank' ? '입금대기' : '미결제',
+                    payment_method: orderRow.payment_method
+                };
+                if (receiptInfo) updateRow.receipt_info = receiptInfo;
+                var upRes = await sb.from('orders').update(updateRow).eq('id', pendingId).select().single();
+                insertedOrder = upRes.data; insertErr = upRes.error;
+                if (insertErr) throw insertErr;
+                newOrderId = pendingId;
+                // 다음 주문에 영향 안 가도록 해제
+                try { delete window._soPendingQuoteId; delete window._soPendingQuoteCustomerName; delete window._soPendingQuoteCustomerPhone; delete window._soPendingQuoteAddress; } catch(e){}
+                // 매니저가 만든 quote 의 localStorage 캐시 제거
+                try { localStorage.removeItem('cm_pending_quote'); } catch(e){}
+            } else {
+                var insRes = await sb.from('orders').insert([orderRow]).select().single();
+                insertedOrder = insRes.data; insertErr = insRes.error;
+                if (insertErr) throw insertErr;
+                newOrderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
+            }
 
             // 2026-05-12: Google Drive 동기화 트리거 (패브릭과 동일)
             // 무통장(status=접수됨) → 즉시 폴더 생성. 카드(status=임시작성) → Edge Function 이 skip,

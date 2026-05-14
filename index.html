@@ -1120,37 +1120,108 @@ if ('caches' in window) {
             positionAboveBand();
             setTimeout(positionAboveBand, 600);
             setTimeout(positionAboveBand, 1500);
-            // 2026-05-14: 고객 결제 카드 — 1 고객 = 1 칸, 한 줄에 4칸 (간단하게)
-            // 보이는 것: '누구누구 고객님 결제창' + 금액 + 결제하기 버튼만
+            // 2026-05-14: 고객 결제 카드 — 메인 상품 카드 (hotdeal-card) 와 동일 비주얼
+            // 이미지 영역 (gradient + 큰 💬) + HOT 위치에 '결제대기' 배지 + 하단 정보 영역
             var customerName = order.manager_name || '고객';
+            var orderShortId = String(order.id || '').substring(0, 6).toUpperCase();
             var card =
-                '<div style="background:linear-gradient(135deg,#fef9e7 0%,#fed7aa 100%); border:2px solid #fbbf24; border-radius:14px; padding:16px 14px; box-shadow:0 8px 20px -6px rgba(251,191,36,0.45); display:flex; flex-direction:column; gap:10px;">' +
-                  '<div style="text-align:center;">' +
-                    '<div style="font-size:22px; margin-bottom:4px;">💬</div>' +
-                    '<div style="font-size:13px; font-weight:900; color:#78350f; line-height:1.3;">' + esc(customerName) + ' 고객님</div>' +
-                    '<div style="font-size:10px; font-weight:700; color:#92400e; margin-top:2px;">결제창</div>' +
+                '<div style="background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px -6px rgba(120,53,15,0.25); border:1px solid #fed7aa; position:relative;">' +
+                  // HOT 배지 위치에 '결제대기' 배지
+                  '<div style="position:absolute; top:10px; left:10px; z-index:2; padding:4px 10px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:10px; font-weight:900; border-radius:50px; box-shadow:0 2px 8px rgba(120,53,15,0.3);">💬 결제대기</div>' +
+                  // 상단 이미지 영역 (gradient + 큰 💬 — 상품 이미지 자리)
+                  '<div style="aspect-ratio:1/1; background:linear-gradient(135deg,#fef9e7 0%,#fed7aa 50%,#fbbf24 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:#78350f;">' +
+                    '<div style="font-size:48px; line-height:1;">📞</div>' +
+                    '<div style="font-size:11px; font-weight:800; letter-spacing:1px;">상담 완료</div>' +
+                    '<div style="font-size:9px; color:#92400e; font-family:monospace;">#' + orderShortId + '</div>' +
                   '</div>' +
-                  '<div style="text-align:center; padding:10px 8px; background:#451a03; color:#fde047; border-radius:10px;">' +
-                    '<div style="font-size:18px; font-weight:900; white-space:nowrap;">' + fmtKR(order.total_amount || 0) + '</div>' +
+                  // 하단 정보 영역
+                  '<div style="padding:12px 14px;">' +
+                    '<div style="font-size:14px; font-weight:900; color:#451a03; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + esc(customerName) + ' 고객님</div>' +
+                    '<div style="font-size:10px; color:#92400e; margin-bottom:10px;">결제창</div>' +
+                    '<div style="font-size:18px; font-weight:900; color:#b45309; margin-bottom:10px;">' + fmtKR(order.total_amount || 0) + '</div>' +
+                    '<button type="button" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; padding:10px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>' +
                   '</div>' +
-                  '<button type="button" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; padding:11px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 12px -3px rgba(251,191,36,0.55);">⚡ 결제하기</button>' +
                 '</div>';
-            // 4칸 grid — 카드 1개 시 첫 칸만 채워짐 (좌측 정렬)
             wrap.innerHTML =
-                '<div id="pendingQuoteGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">' + card + '</div>' +
+                '<div id="pendingQuoteGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">' + card + '</div>' +
                 '<style>@media (max-width:768px) { #pendingQuoteGrid { grid-template-columns:repeat(2, 1fr) !important; } }' +
                 '@media (max-width:480px) { #pendingQuoteGrid { grid-template-columns:1fr !important; } }</style>';
             wrap.style.display = '';
         }
 
-        // 결제 버튼 → 한국=Toss, 해외=Stripe
-        window._payPendingQuote = function (orderId) {
+        // 2026-05-14: 결제 버튼 → 직접 Toss 가 아닌 simple_order 결제창 열기
+        // (사용자 요청: 카드결제와 계좌이체 + 고객정보 입력하는 이전 페이지가 나오게)
+        window._payPendingQuote = async function (orderId) {
             if (!orderId) return;
-            var host = (location.hostname || '').toLowerCase();
-            var country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || (host.indexOf('cafe0101')>=0?'JP':host.indexOf('cafe3355')>=0?'US':'KR');
-            if (country === 'KR') location.href = '/cotton_checkout.html?order_id=' + encodeURIComponent(orderId);
-            else location.href = '/cotton_stripe_checkout.html?order_id=' + encodeURIComponent(orderId) + '&lang=' + (country==='JP'?'ja':'en');
+            try {
+                // 1) 주문의 items 를 카트에 로드
+                var sb = window.sb;
+                if (!sb) {
+                    try { var mod = await import('./config.js?v=436'); sb = mod.sb || window.sb; } catch(e){}
+                }
+                if (!sb) { alert('Supabase 연결 실패'); return; }
+                var { data: order, error } = await sb
+                    .from('orders').select('*').eq('id', orderId).maybeSingle();
+                if (error || !order) { alert('주문을 찾을 수 없습니다.'); return; }
+
+                // 2) 카트에 items 복원 (simple_order 의 readCart 와 호환되는 shape)
+                //    매니저가 만든 items 그대로 — 일반 상품 shape (product, qty, ...)
+                var cartItems = (order.items || []).map(function (it, idx) {
+                    // 파일은 order.files 에서 매칭 (단순히 첫번째 파일을 첫번째 item 에 부착)
+                    var f = (order.files || []).filter(function(x){
+                        return x && x.url && x.type !== 'order_sheet' && x.type !== 'quotation' && x.type !== '_error_log';
+                    });
+                    return Object.assign({}, it, {
+                        uid: Date.now() + idx,
+                        originalUrl: f[idx] ? f[idx].url : (it.originalUrl || null),
+                        fileName: f[idx] ? f[idx].name : (it.fileName || ''),
+                        mimeType: f[idx] ? f[idx].type : (it.mimeType || 'image/png'),
+                        __pendingQuoteId: order.id  // 결제 시 UPDATE 대상 표시
+                    });
+                });
+                try { localStorage.setItem('chameleon_cart_current', JSON.stringify(cartItems)); } catch(e){}
+
+                // 3) 결제창 열기 위해 simple_order 모달이 준비됐는지 확인 후 호출
+                window._soPendingQuoteId = order.id;
+                window._soPendingQuoteCustomerName = order.manager_name || '';
+                window._soPendingQuoteCustomerPhone = order.phone || '';
+                window._soPendingQuoteAddress = order.address || '';
+
+                if (typeof window._soOpenCheckout === 'function') {
+                    // simple_order 가 로드되어 있음
+                    window._soOpenCheckout();
+                    setTimeout(_fillPendingQuoteCheckout, 300);
+                } else {
+                    // simple_order 미로드 — 동적 로드 후 호출
+                    if (typeof window.openSimpleOrderModal === 'function') {
+                        // dummy 호출 (모달 inject 트리거)
+                        // 또는 setTimeout 으로 대기
+                    }
+                    setTimeout(function(){
+                        if (typeof window._soOpenCheckout === 'function') {
+                            window._soOpenCheckout();
+                            setTimeout(_fillPendingQuoteCheckout, 300);
+                        } else {
+                            alert('결제창 로드 중 — 잠시 후 다시 시도해주세요.');
+                        }
+                    }, 800);
+                }
+            } catch (e) {
+                console.error('[payPendingQuote]', e);
+                alert('결제창 로드 오류: ' + (e.message || e));
+            }
         };
+
+        // 결제창 폼 사전 채우기 (고객명/연락처/주소 — 매니저가 입력한 값)
+        function _fillPendingQuoteCheckout() {
+            var n = document.getElementById('soCoName');
+            var p = document.getElementById('soCoPhone');
+            var a1 = document.getElementById('soCoAddr1');
+            if (n && window._soPendingQuoteCustomerName) n.value = window._soPendingQuoteCustomerName;
+            if (p && window._soPendingQuoteCustomerPhone) p.value = window._soPendingQuoteCustomerPhone;
+            if (a1 && window._soPendingQuoteAddress) a1.value = window._soPendingQuoteAddress;
+            // 매니저가 만든 카드결제 우선 (기본 카드결제 그대로)
+        }
 
         // DOMContentLoaded 후 + Supabase 가 준비될 때까지 짧게 대기 후 실행
         if (document.readyState === 'loading') {
@@ -7367,7 +7438,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=63"></script>
+<script src="/simple_order.js?v=64"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=10"></script>
 
