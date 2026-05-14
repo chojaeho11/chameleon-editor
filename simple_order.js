@@ -841,7 +841,7 @@
           <div class="so-section-title">${tr('시공/배송 옵션', '施工/配送オプション', 'Install/Delivery')}</div>
           <!-- 배송 옵션 (버튼형 — 가격 라벨 없이 깔끔하게) -->
           <div id="soShipBtnGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-            <button type="button" class="so-ship-btn" data-ship="self_pickup" onclick="window._soPickShip('self_pickup')">🏪 ${tr('직접 수령', '直接受取', 'Self pickup')}</button>
+            <button type="button" class="so-ship-btn" data-ship="self_pickup" onclick="window._soPickShip('self_pickup')">🏪 ${tr('본사 방문 수령', '本社受取', 'HQ pickup')}</button>
             <button type="button" class="so-ship-btn" data-ship="metro_install" onclick="window._soPickShip('metro_install')">🚚 ${tr('수도권 설치', '首都圏設置', 'Metro install')}</button>
             <button type="button" class="so-ship-btn" data-ship="metro_weekend" onclick="window._soPickShip('metro_weekend')">🌙 ${tr('수도권 야간/주말 설치', '首都圏夜間/週末', 'Metro night/wkd')}</button>
             <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">🔧 ${tr('수도권 설치+철거', '首都圏設置+撤去', 'Metro install+remove')}</button>
@@ -1869,7 +1869,7 @@
 
     // 2026-05-13: 배송 옵션별 가격 + breakdown 정보 (window 노출 — recalc 가 라벨 사용)
     var SHIP_OPTS = {
-        self_pickup:          { fee: 0,      label_ko: '직접 수령',           parts: [] },
+        self_pickup:          { fee: 0,      label_ko: '본사 방문 수령',      parts: [] },
         metro_install:        { fee: 100000, label_ko: '수도권 설치',         parts: [['수도권 설치', 100000]] },
         metro_weekend:        { fee: 200000, label_ko: '수도권 야간/주말 설치', parts: [['수도권 야간/주말 설치', 200000]] },
         metro_install_removal:{ fee: 300000, label_ko: '수도권 설치+철거',     parts: [['수도권 설치', 100000], ['수도권 철거', 200000]] },
@@ -2790,10 +2790,17 @@
         } else {
             allowed = ['self_pickup'];
         }
+        // 2026-05-14: 택배 옵션이 있는 상품은 택배를 기본 선택 (본사 방문 대신)
+        var parcelKeys = ['parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel'];
+        var defaultShip = 'self_pickup';
+        for (var pi = 0; pi < parcelKeys.length; pi++) {
+            if (allowed.indexOf(parcelKeys[pi]) >= 0) { defaultShip = parcelKeys[pi]; break; }
+        }
+        state.shipMethod = defaultShip;
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             var k = b.dataset.ship;
             b.style.display = (allowed.indexOf(k) >= 0) ? '' : 'none';
-            b.classList.toggle('active', k === 'self_pickup');
+            b.classList.toggle('active', k === defaultShip);
             b.style.opacity = '1';
             b.style.pointerEvents = '';
         });
@@ -2838,9 +2845,9 @@
         // 2026-05-14: 강화 골판지 가벽은 기본 양면 → 뒷면 업로드 영역 즉시 표시
         var backWrap = document.getElementById('soBackUploadWrap');
         if (backWrap) backWrap.style.display = (state.isReinforcedWall) ? '' : 'none';
-        // 2026-05-13: 배송 버튼 초기화 (self_pickup active)
+        // 2026-05-13/14: 배송 버튼 시각 상태 — state.shipMethod (위 default 결정 결과) 와 동기화
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
-            b.classList.toggle('active', b.dataset.ship === 'self_pickup');
+            b.classList.toggle('active', b.dataset.ship === state.shipMethod);
         });
         var dateWrap = document.getElementById('soScheduleDateWrap'); if (dateWrap) dateWrap.style.display = 'none';
         var remWrap = document.getElementById('soRemovalWrap'); if (remWrap) remWrap.style.display = 'none';
@@ -3780,7 +3787,7 @@
                 metro_install_removal: '수도권 설치+철거 (10+20=30만원)',
                 regional_truck: '지방 용차배송 (20만원)',
                 regional_install: '지방 설치배송 (70만원)',
-                self_pickup: '직접 수령'
+                self_pickup: '본사 방문 수령'
             };
             cart.forEach(function (it, idx) {
                 if (_soIsFabricItem(it)) return; // 패브릭은 별도 처리
