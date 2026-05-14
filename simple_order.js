@@ -728,8 +728,8 @@
               <option value="3">3 m</option>
             </select>
           </div>
-          <!-- 2026-05-13: 단면 / 양면 선택 -->
-          <div style="display:flex; gap:8px; align-items:center;">
+          <!-- 2026-05-13: 단면 / 양면 선택 (2026-05-14: 일부 가벽 변종은 숨김 — 허니콤 가벽만 표시) -->
+          <div id="soWallSideRow" style="display:flex; gap:8px; align-items:center;">
             <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('인쇄면', '印刷面', 'Side')}</label>
             <div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
               <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')" style="padding:8px 10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('단면', '片面', 'Single')}</button>
@@ -1566,32 +1566,51 @@
     }
 
     // 2026-05-14: 가벽 사이즈 select 옵션 재구성
-    // - regular wall: 가로 1~8m, 세로 2/2.2/2.4/3m (기본 가로 3, 세로 2.4)
-    // - partition  : 가로 1~10m, 세로 1.2/1.0/0.8m (기본 가로 3, 세로 1.2)
-    function _soRebuildWallSizeOptions(isPartition) {
+    // - regular wall   : 가로 1~8m, 세로 2/2.2/2.4/3m (기본 가로 3, 세로 2.4)
+    // - partition      : 가로 1~10m, 세로 1.2/1.0/0.8m (기본 가로 3, 세로 1.2)
+    // - reinforced     : 가로 1m 고정, 세로 2.2m 고정 (강화 골판지)
+    function _soRebuildWallSizeOptions(variant) {
         var wEl = document.getElementById('soWallWidth');
         var hEl = document.getElementById('soWallHeight');
         if (!wEl || !hEl) return;
-        var widthMax = isPartition ? 10 : 8;
-        var wOpts = '';
-        for (var i = 1; i <= widthMax; i++) {
-            wOpts += '<option value="' + i + '"' + (i === 3 ? ' selected' : '') + '>' + i + ' m</option>';
+
+        var widths, heights;
+        if (variant === 'reinforced') {
+            widths = [{ v: '1', label: '1 m', selected: true }];
+            heights = [{ v: '2.2', label: '2.2 m', selected: true }];
+        } else if (variant === 'partition') {
+            widths = [];
+            for (var p = 1; p <= 10; p++) widths.push({ v: String(p), label: p + ' m', selected: p === 3 });
+            heights = [{ v: '1.2', label: '1.2 m', selected: true }, { v: '1', label: '1.0 m' }, { v: '0.8', label: '0.8 m' }];
+        } else {
+            widths = [];
+            for (var w = 1; w <= 8; w++) widths.push({ v: String(w), label: w + ' m', selected: w === 3 });
+            heights = [{ v: '2', label: '2 m' }, { v: '2.2', label: '2.2 m' }, { v: '2.4', label: '2.4 m', selected: true }, { v: '3', label: '3 m' }];
         }
-        wEl.innerHTML = wOpts;
-        var heights = isPartition
-            ? [{ v: '1.2', label: '1.2 m', selected: true }, { v: '1', label: '1.0 m' }, { v: '0.8', label: '0.8 m' }]
-            : [{ v: '2', label: '2 m' }, { v: '2.2', label: '2.2 m' }, { v: '2.4', label: '2.4 m', selected: true }, { v: '3', label: '3 m' }];
-        var hOpts = heights.map(function (h) {
-            return '<option value="' + h.v + '"' + (h.selected ? ' selected' : '') + '>' + h.label + '</option>';
-        }).join('');
-        hEl.innerHTML = hOpts;
+        var mkOpts = function (arr) {
+            return arr.map(function (o) {
+                return '<option value="' + o.v + '"' + (o.selected ? ' selected' : '') + '>' + o.label + '</option>';
+            }).join('');
+        };
+        wEl.innerHTML = mkOpts(widths);
+        hEl.innerHTML = mkOpts(heights);
+        // 옵션이 1개뿐이면 비활성화 (강화 골판지)
+        wEl.disabled = (variant === 'reinforced');
+        hEl.disabled = (variant === 'reinforced');
 
         // 가이드 카드 chip / 본문 범위 텍스트도 동시 업데이트
         var chip = document.getElementById('soWallChipHeight');
         var range = document.getElementById('soWallGuideRange');
         var lang = getLang();
         var fmtLine = function(kr, ja, en) { return lang === 'ja' ? ja : (/^(en|us)$/i.test(lang) || lang === 'en' ? en : (/(es|de|fr|zh|ar)/i.test(lang) ? en : kr)); };
-        if (isPartition) {
+        if (variant === 'reinforced') {
+            if (chip) chip.innerHTML = '📏 ' + fmtLine('1m × 2.2m 고정', '1m × 2.2m 固定', 'Fixed 1m × 2.2m');
+            if (range) range.textContent = fmtLine(
+                '강화 골판지 가벽은 1m × 2.2m 사이즈로 고정 제작되며, 기본 양면 인쇄입니다.',
+                '強化段ボール壁は1m×2.2mサイズ固定で、両面印刷が標準です。',
+                'Reinforced corrugated walls ship fixed at 1m × 2.2m with double-sided print by default.'
+            );
+        } else if (variant === 'partition') {
             if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 1.2 · 1.0 · 0.8m', '縦 1.2/1.0/0.8m', 'Height 1.2/1.0/0.8m');
             if (range) range.textContent = fmtLine(
                 '파티션 가림막은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 10m까지 선택 가능하며, 세로는 1.2m / 1.0m / 0.8m 중 선택하실 수 있습니다.',
@@ -1620,6 +1639,24 @@
         if (/^hb_par|^hb_dw_par|^hb_pt_par|^partition/i.test(code)) return true;
         if (/partition|hb_par/.test(cat)) return true;
         if (/파티션|가림막|간이\s*가벽|partition\s*screen|partition\s*wall|room\s*divider/i.test(name)) return true;
+        return false;
+    }
+
+    // 2026-05-14: 강화 골판지 가벽 — 양면 고정 + 사이즈 1m × 2.2m 고정
+    function _soIsReinforcedWall(p) {
+        if (!p) return false;
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        return /강화\s*골판지|골판지\s*가벽|corrugated\s*wall|reinforced\s*corrugated/i.test(name);
+    }
+
+    // 2026-05-14: 단면 전용 가벽 변종 (병풍형 / 지붕형 / 파티션 가림막)
+    // 인쇄면 선택 UI 숨김 + wallSide='single' 고정
+    function _soIsSingleSideWall(p) {
+        if (!p) return false;
+        if (_soIsPartitionProduct(p)) return true;
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        if (/병풍|byeongpung|folding\s*wall|folding\s*partition/i.test(name)) return true;
+        if (/지붕|roof|gable|tent\s*wall/i.test(name)) return true;
         return false;
     }
 
@@ -2559,14 +2596,19 @@
         // 2026-05-13: 가벽 카테고리 감지 + 추가 옵션 / 노트 초기화
         state.selectedAddons = {};
         state.addonQuantities = {};
-        // 2026-05-14: 파티션 가림막은 기본값이 다름 — 1.2m × 3m
+        // 2026-05-14: 가벽 변종 분기 — 파티션 / 강화 골판지 / 단면 전용 / 기본
         state.isPartition = _soIsPartitionProduct(p);
-        if (state.isPartition) {
-            state.wallWidth = 3;     // 기본 가로 3m (1~10m 범위)
-            state.wallHeight = 1.2;  // 기본 세로 1.2m (1.2/1.0/0.8 중)
+        state.isReinforcedWall = _soIsReinforcedWall(p);
+        state.isSingleSideWall = state.isReinforcedWall ? false : _soIsSingleSideWall(p);
+        if (state.isReinforcedWall) {
+            state.wallWidth = 1;      // 1m 고정
+            state.wallHeight = 2.2;   // 2.2m 고정
+        } else if (state.isPartition) {
+            state.wallWidth = 3;      // 기본 가로 3m (1~10m 범위)
+            state.wallHeight = 1.2;   // 기본 세로 1.2m
         } else {
-            state.wallWidth = 3;     // 기본 가로 3m
-            state.wallHeight = 2.4;  // 기본 세로 2.4m
+            state.wallWidth = 3;
+            state.wallHeight = 2.4;
         }
         state.wallSide = 'single'; // single / double — 양면이면 가격 2배
         state.fileBack = null;
@@ -2595,9 +2637,28 @@
         state.boxNesting = null;
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
-        // 2026-05-14: 파티션이면 가로 1~10m / 세로 1.2·1.0·0.8m 로 옵션 재구성
+        // 2026-05-14: 가벽 변종별 옵션 재구성 + 인쇄면 UI 토글
         if (state.isWall) {
-            _soRebuildWallSizeOptions(state.isPartition);
+            var variant = state.isReinforcedWall ? 'reinforced'
+                        : state.isPartition ? 'partition'
+                        : 'default';
+            _soRebuildWallSizeOptions(variant);
+            // 인쇄면 row: 허니콤 가벽 (기본 변종) 만 표시
+            var sideRow = document.getElementById('soWallSideRow');
+            if (sideRow) {
+                sideRow.style.display = (state.isReinforcedWall || state.isPartition || state.isSingleSideWall) ? 'none' : '';
+            }
+            // wallSide 강제 세팅 — 강화 골판지=양면, 단면 전용=단면, 기본=단면
+            if (state.isReinforcedWall) state.wallSide = 'double';
+            else state.wallSide = 'single';
+            // 단면/양면 버튼 활성화 표시도 동기화 (보이지 않더라도 안전하게)
+            document.querySelectorAll('.so-side-btn').forEach(function (b) {
+                var on = b.dataset.side === state.wallSide;
+                b.classList.toggle('active', on);
+                b.style.background = on ? '#4338ca' : '#fff';
+                b.style.color = on ? '#fff' : '#451a03';
+                b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+            });
         }
         // 자유인쇄커팅 사이즈 섹션
         var cutSec = document.getElementById('soCutPrintSizeSection');
@@ -2707,9 +2768,19 @@
             bundleBtn.style.color = '#15803d';
             bundleBtn.style.borderStyle = 'dashed';
         }
-        // 가벽 사이즈 폼 초기값 동기화 (파티션은 세로 1.2m, 일반 가벽은 2.4m)
-        var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = '3';
-        var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = state.isPartition ? '1.2' : '2.4';
+        // 가벽 사이즈 폼 초기값 동기화 — 변종별 기본값 매칭
+        var wwEl = document.getElementById('soWallWidth');
+        var whEl = document.getElementById('soWallHeight');
+        if (state.isReinforcedWall) {
+            if (wwEl) wwEl.value = '1';
+            if (whEl) whEl.value = '2.2';
+        } else if (state.isPartition) {
+            if (wwEl) wwEl.value = '3';
+            if (whEl) whEl.value = '1.2';
+        } else {
+            if (wwEl) wwEl.value = '3';
+            if (whEl) whEl.value = '2.4';
+        }
         // 2026-05-13: 자유인쇄커팅 사이즈 초기화 (한판)
         document.querySelectorAll('.so-cut-btn').forEach(function (b) {
             var on = b.dataset.cut === 'full';
