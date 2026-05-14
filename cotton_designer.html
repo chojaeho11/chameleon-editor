@@ -746,8 +746,9 @@ a { text-decoration: none; color: inherit; }
 <div class="brand-band">
     <div class="brand-band-inner">
         <!-- 2026-05-13: 로고 → cotton-print.com 으로 이동, 옆에 종합인쇄몰 바로가기 알약버튼 -->
+        <!-- 2026-05-14: 현재 ?lang= 파라미터를 cotton-print.com 으로 그대로 전달 → JP/US 페이지에서 로고 클릭 시 KR 로 가는 버그 fix -->
         <div style="display:flex; align-items:center; flex-wrap:wrap;">
-            <a href="https://www.cotton-print.com/" class="brand-logo" title="Cotton Print">
+            <a id="brandLogoLink" href="https://www.cotton-print.com/" class="brand-logo" title="Cotton Print">
                 <span>COTTON PRINT</span>
             </a>
             <a id="brandMallLink" href="https://www.cafe2626.com/" class="brand-mall-link" title="종합인쇄몰">
@@ -755,6 +756,25 @@ a { text-decoration: none; color: inherit; }
                 <span data-cdi18n="mall_btn">종합인쇄몰 바로가기</span>
             </a>
         </div>
+        <script>
+        // 2026-05-14: 현재 페이지의 lang 을 로고 href 에도 부착 → JP 사용자가 로고 누를 때 JP 로 복귀
+        (function () {
+            try {
+                var l = new URLSearchParams(location.search).get('lang') || '';
+                if (!l) return;
+                var a = document.getElementById('brandLogoLink');
+                if (a) a.href = 'https://www.cotton-print.com/?lang=' + encodeURIComponent(l);
+                var b = document.getElementById('brandMallLink');
+                if (b) {
+                    // 종합인쇄몰도 같은 언어로
+                    var mallHost = l === 'ja' || l === 'jp' ? 'www.cafe0101.com' :
+                                   l === 'en' || l === 'us' ? 'www.cafe3355.com' :
+                                   'www.cafe2626.com';
+                    b.href = 'https://' + mallHost + '/';
+                }
+            } catch (e) {}
+        })();
+        </script>
         <div style="display:flex; align-items:center; gap:10px;">
             <!-- 국기 언어 전환 -->
             <div class="cd-lang-flags" style="display:flex; gap:4px;">

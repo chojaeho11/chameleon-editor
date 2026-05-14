@@ -1071,13 +1071,28 @@ function getGeneralItems() {
     return getAllCartItems().filter(function (it) { return !_isFabricItem(it); });
 }
 
+// 2026-05-14: 택배비 — 사이트별 KRW 고정 (KR 5000, JP 10000 = ¥1000, US 10000 = $10).
+//   카트에 아이템이 1개 이상일 때만 부과. 매니저 견적 등 일부 흐름에서는 별도 처리될 수 있음.
+function getShippingFeeKrw() {
+    try {
+        var cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+        var lang = (window.__CD_LANG || '').toLowerCase();
+        if (cc === 'JP' || lang === 'ja') return 10000;   // ¥1,000
+        if (cc === 'US' || lang === 'en') return 10000;   // $10
+        return 5000;                                      // 기본 KR — ₩5,000
+    } catch (_) { return 5000; }
+}
+
 function calcCartTotal() {
     var fabricTotal = getCart().reduce(function(s, it) { return s + (it.price || 0); }, 0);
     var genTotal = getGeneralItems().reduce(function(s, it) {
         var base = (it.product && it.product.price || 0) * (it.qty || 1);
         return s + base;
     }, 0);
-    return fabricTotal + genTotal;
+    var subtotal = fabricTotal + genTotal;
+    // 카트 비어있으면 택배비 X
+    if (subtotal <= 0) return 0;
+    return subtotal + getShippingFeeKrw();
 }
 
 window._cpUpdateCartUI = function() {
@@ -1167,7 +1182,15 @@ window._cpUpdateCartUI = function() {
                     '</div>';
                 }).join('');
             }
-            body.innerHTML = fabricHtml + genHtml;
+            // 2026-05-14: 카트 안에 택배비 라인 — total 에 합산되므로 사용자가 명확히 인지하도록 표시
+            var ship = (cart.length > 0 || gen.length > 0) ? getShippingFeeKrw() : 0;
+            var shipHtml = ship > 0
+                ? '<div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; margin-top:8px; border-top:1px dashed #d6d3d1; font-size:13px;">' +
+                    '<span style="color:#15803d; font-weight:800;"><i class="fa-solid fa-truck-fast" style="margin-right:6px;"></i>' + T('ship_label','택배 배송') + '</span>' +
+                    '<span style="color:#166534; font-weight:900;">+' + cdFmtPrice(ship) + '</span>' +
+                  '</div>'
+                : '';
+            body.innerHTML = fabricHtml + genHtml + shipHtml;
         }
     }
 };
