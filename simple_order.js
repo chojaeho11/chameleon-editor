@@ -1902,17 +1902,8 @@
         recalc();
     }
 
-    // 2026-05-13: 가벽 전용 기본 옵션 (admin_addons 데이터 없어도 강제 표시)
-    var WALL_DEFAULT_ADDONS = [
-        { code: '__wall_light',   name: '조명 추가',     name_jp: '照明追加',   name_us: 'Lighting',      price: 50000, isLight: true,
-          desc: '가로 1m당 1개 자동 추가 (개당 5만원)',
-          desc_jp: '横1mごとに1個自動追加 (1個あたり¥5,000)',
-          desc_us: 'Auto-add 1 per meter width ($50 each)' },
-        { code: '__wall_support', name: '보조 받침대',   name_jp: '補助スタンド', name_us: 'Support stand', price: 80000,
-          desc: '가벽 안정성 강화',
-          desc_jp: '壁面の安定性強化',
-          desc_us: 'Reinforces wall stability' }
-    ];
+    // 2026-05-14: WALL_DEFAULT_ADDONS (조명추가/보조받침대 하드코딩) 제거.
+    // 관리자가 admin_addons 에 등록하므로 더 이상 코드에 박아둘 필요 없음. (사용자 요청)
 
     // 2026-05-13: 상품의 admin_addons 옵션을 우측 패널에 체크박스로 렌더
     async function _soPopulateAddons(p) {
@@ -1925,17 +1916,8 @@
         // 2026-05-13: getLang() (kr/ja/en/es/de/fr/zh) 사용 — 기존 'ko' 디폴트가 cafe0101 에서 미작동
         var lang = getLang();
 
-        // 가벽 상품: 전용 옵션 강제 표시 (조명·보조받침대). admin_addons 비어있어도 OK.
         var renderList = [];
-        if (state.isWall) {
-            WALL_DEFAULT_ADDONS.forEach(function (a) {
-                // window.ADDON_DB 에도 등록 → 가격 계산 통합
-                window.ADDON_DB = window.ADDON_DB || {};
-                window.ADDON_DB[a.code] = a;
-                renderList.push(a);
-            });
-        }
-        // 추가로 admin_products.addons 에 정의된 일반 addon 도 표시
+        // admin_products.addons 에 정의된 일반 addon 표시
         if (p && p.addons) {
             var codes = Array.isArray(p.addons) ? p.addons : String(p.addons).split(',');
             codes.map(function (c) { return String(c || '').trim(); }).filter(Boolean).forEach(function (code) {
