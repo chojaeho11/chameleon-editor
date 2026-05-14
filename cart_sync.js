@@ -180,22 +180,23 @@
             .catch(function () { return null; });
     }
 
+    // 2026-05-14: 삭제 영구화를 위해 updated_at 도 함께 pull. 비교로 last-write-wins.
     function pull() {
         var c = sb();
         if (!c) return Promise.resolve(null);
-        // Prefer user_id (cross-domain shared) over session_id (per-device).
         var q;
         if (_userId) {
-            q = c.from('carts').select('items').eq('user_id', _userId).maybeSingle();
+            q = c.from('carts').select('items,updated_at').eq('user_id', _userId).maybeSingle();
         } else {
-            q = c.from('carts').select('items').eq('session_id', SID).maybeSingle();
+            q = c.from('carts').select('items,updated_at').eq('session_id', SID).maybeSingle();
         }
         return q.then(function (res) {
             if (res.error) {
                 if (res.error.code !== 'PGRST116') console.warn('[cart_sync] pull', res.error);
                 return null;
             }
-            return res.data ? (res.data.items || []) : null;
+            if (!res.data) return null;
+            return { items: res.data.items || [], updatedAt: res.data.updated_at || null };
         }).catch(function (e) { console.warn('[cart_sync] pull exc', e); return null; });
     }
 
@@ -241,40 +242,54 @@
         }, 350);
     }
 
-    // ── Merge logic ──────────────────────────────────────
-    function mergeServerLocal(serverItems, localItems) {
-        var byId = new Map();
-        (serverItems || []).forEach(function (it) {
-            if (!it) return;
-            tagItem(it);
-            byId.set(it.__cart_id, it);
-        });
-        (localItems || []).forEach(function (it) {
-            if (!it) return;
-            tagItem(it);
-            // local wins (most recent intent on this device)
-            byId.set(it.__cart_id, it);
-        });
-        return Array.from(byId.values());
+    // 2026-05-14: merge-by-id 제거. 삭제가 표현 안 돼서 옛 아이템이 부활하던 버그.
+    //   대신 last-write-wins by timestamp — pickFreshState(server, local) 사용.
+    var LOCAL_TS_KEY = 'chameleon_cart_updated_at';
+    function readLocalTs() {
+        var v = localStorage.getItem(LOCAL_TS_KEY) || '';
+        return v ? Date.parse(v) : 0;
+    }
+    function writeLocalTs(iso) {
+        try { __origLocalSet(LOCAL_TS_KEY, iso); } catch (e) {}
+    }
+    // server: {items, updatedAt} | null   local: Array
+    // 반환: { items: Array, source: 'server'|'local', tsIso: string }
+    function pickFreshState(server, localItems) {
+        var serverTs = server && server.updatedAt ? Date.parse(server.updatedAt) : 0;
+        var localTs = readLocalTs();
+        var nowIso = new Date().toISOString();
+        // 1. 서버 없거나 비어있으면 → local 채택
+        if (!server || !Array.isArray(server.items) || server.items.length === 0) {
+            return { items: localItems || [], source: 'local', tsIso: localTs ? new Date(localTs).toISOString() : nowIso };
+        }
+        // 2. local 비어있으면 → server 채택
+        if (!localItems || localItems.length === 0) {
+            return { items: server.items, source: 'server', tsIso: server.updatedAt || nowIso };
+        }
+        // 3. 양쪽 다 있으면 timestamp 비교
+        if (localTs > serverTs) {
+            return { items: localItems, source: 'local', tsIso: new Date(localTs).toISOString() };
+        }
+        return { items: server.items, source: 'server', tsIso: server.updatedAt || nowIso };
     }
 
     // ── localStorage interceptor ─────────────────────────
     // 2026-05-12: 도메인 통합 — localStorage 가 곧 unified cart. setItem 발생 시
     // 통째로 _unified 갱신 후 서버 push. invalid 항목은 자동 제거.
+    // 2026-05-14: 변경 발생 시 LOCAL_TS_KEY 도 갱신 → 다음 pull 에서 last-write-wins 비교.
     var __origLocalSet = localStorage.setItem.bind(localStorage);
     localStorage.setItem = function (key, value) {
         if (key !== LOCAL_KEY) return __origLocalSet(key, value);
         var mine = [];
         try { mine = JSON.parse(value || '[]') || []; } catch (e) {}
-        // invalid 항목 (빈 객체, undefined, null) 제거
         var before = mine.length;
         mine = mine.filter(isValidCartItem);
         if (mine.length !== before) {
             console.warn('[cart_sync] invalid 카트 항목 ' + (before - mine.length) + '개 자동 정리');
         }
-        mine.forEach(tagItem); // __cart_id 부여 (server merge 용), 기존 __source 는 보존
-        // cleanup 결과를 다시 localStorage 에 (loop 방지: __origLocalSet 직접 호출)
+        mine.forEach(tagItem);
         __origLocalSet(key, JSON.stringify(mine));
+        writeLocalTs(new Date().toISOString());
         _unified = mine;
         schedulePush();
     };
@@ -327,26 +342,33 @@
             else      console.log('[cart_sync] anonymous session key:', SID);
             // 2) Load server state
             return pull();
-        }).then(function (serverItems) {
+        }).then(function (serverState) {
+            // serverState: { items, updatedAt } | null (옛 pull 시그니처와 호환)
+            if (Array.isArray(serverState)) serverState = { items: serverState, updatedAt: null };
             var local = readLocal();
             // 2026-05-12: invalid 항목 자동 정리 (서버/로컬 양쪽)
-            if (Array.isArray(serverItems)) {
-                var sb1 = serverItems.length;
-                serverItems = serverItems.filter(isValidCartItem);
-                if (serverItems.length !== sb1) console.warn('[cart_sync] server invalid 항목 ' + (sb1 - serverItems.length) + '개 정리');
+            if (serverState && Array.isArray(serverState.items)) {
+                var sb1 = serverState.items.length;
+                serverState.items = serverState.items.filter(isValidCartItem);
+                if (serverState.items.length !== sb1) console.warn('[cart_sync] server invalid 항목 ' + (sb1 - serverState.items.length) + '개 정리');
             }
             var lb1 = local.length;
             local = local.filter(isValidCartItem);
             if (local.length !== lb1) console.warn('[cart_sync] local invalid 항목 ' + (lb1 - local.length) + '개 정리');
             local.forEach(tagItem);
-            _unified = mergeServerLocal(serverItems, local);
-            // 3) Write back domain-filtered view to native key
+            // 2026-05-14: last-write-wins by timestamp — 옛 merge-by-id 는 삭제가 부활하던 버그.
+            var picked = pickFreshState(serverState, local);
+            _unified = picked.items;
+            console.log('[cart_sync] init —', picked.source, '/', _unified.length, 'items @', picked.tsIso);
+            // 로컬에 timestamp 가 없거나 server 가 더 최신이면 ts 동기화
+            writeLocalTs(picked.tsIso);
             rebuildLocalFromUnified();
-            // 4) If we had local items not yet on server, push them
-            //    + 로그인 상태면 익명 orphan 행 정리 (23505 에러 예방)
+            // local 이 더 최신이면 즉시 push, 아니면 anon orphan 정리만
             if (_userId) {
-                cleanupAnonRow().then(function () { schedulePush(); });
-            } else if (!serverItems || serverItems.length !== _unified.length) {
+                cleanupAnonRow().then(function () {
+                    if (picked.source === 'local') schedulePush();
+                });
+            } else if (picked.source === 'local') {
                 schedulePush();
             }
             // 5) Patch outbound sibling links
@@ -364,11 +386,13 @@
                             // Re-pull with new key + cleanup anon orphan on login
                             (newUid ? cleanupAnonRow() : Promise.resolve())
                                 .then(function () { return pull(); })
-                                .then(function (items) {
-                                    if (items) {
-                                        _unified = mergeServerLocal(items, _unified);
-                                        rebuildLocalFromUnified();
-                                    }
+                                .then(function (serverState) {
+                                    if (!serverState) return;
+                                    if (Array.isArray(serverState)) serverState = { items: serverState, updatedAt: null };
+                                    var picked = pickFreshState(serverState, _unified);
+                                    _unified = picked.items;
+                                    writeLocalTs(picked.tsIso);
+                                    rebuildLocalFromUnified();
                                 });
                         }
                     });
