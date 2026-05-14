@@ -1230,13 +1230,12 @@ if ('caches' in window) {
                 var primaryProd = primary.product || {};
                 var primaryName = primaryProd.name || primary.productName || primary.product_name || '주문상품';
                 if (isFabric && primary.fabric) primaryName = (primary.product_name || primary.title || primaryName);
-                // 이미지 우선순위 — 패브릭은 artwork_url 사용 가능
-                var imgUrl = primaryProd.img || primaryProd.img_url || primary.imgUrl
-                    || primary.artwork_url || primary.thumb
-                    || vipCardSvg(isFabric ? 'FABRIC #' + orderShort : '#' + orderShort);
+                // 2026-05-14: 사용자 요청 — VIP 카드 SVG 를 결제대기 카드 대표 이미지로 항상 사용
+                // (실제 상품 이미지는 결제 페이지에서 확인 가능, 메인 홈에서는 VIP 느낌 통일)
+                var imgUrl = vipCardSvg(isFabric ? 'FABRIC #' + orderShort : '#' + orderShort);
                 var itemCount = items.length;
                 var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
-                var fallbackImg = vipCardSvg(isFabric ? 'FABRIC #' + orderShort : '#' + orderShort).replace(/"/g, '&quot;');
+                var fallbackImg = imgUrl.replace(/"/g, '&quot;');
                 return (
                     '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')">' +
                       '<div class="hotdeal-img-box">' +
