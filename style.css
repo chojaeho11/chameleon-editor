@@ -6860,6 +6860,23 @@ footer, .site-footer { padding-top: 28px !important; }
         color: #92400e;
         font-weight: 700;
     }
+
+    /* 2026-05-14: 추가 컴팩트화 — 📞 아이콘 / 부가설명 / 하단 힌트 모두 숨김.
+       사용자 요청: "검정색 안으로 다 들어오게" → hero-section 박스 안에 카드 전체 fit.
+       PC 는 영향 없음. */
+    /* 📞 아이콘 (헤더 flex 의 첫 child) */
+    #mgrQuoteHero > div > div:first-child > div:first-child { display: none !important; }
+    /* 헤더 컨테이너 — 아이콘 빠진 후 margin 축소, 제목만 가운데 표시 */
+    #mgrQuoteHero > div > div:first-child { margin-bottom: 10px !important; }
+    #mgrQuoteTitle { text-align: center !important; margin-bottom: 0 !important; }
+    /* 부가 설명 (제목 아래) */
+    #mgrQuoteDesc { display: none !important; }
+    /* 하단 힌트 ("최소 1,000원부터...") */
+    #mgrQuoteHint { display: none !important; }
+    /* 카드 내부 패딩 축소 */
+    #mgrQuoteHero > div { padding: 14px 16px !important; }
+    /* 카드 바깥 margin 도 살짝 축소 */
+    #mgrQuoteHero { margin: 4px auto 12px !important; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────
