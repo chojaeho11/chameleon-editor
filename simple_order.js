@@ -3117,7 +3117,11 @@
     // 2026-05-12: 도메인 통합 — 패브릭(__source='cotton-print') 항목은 cotton_designer 드로어에서 렌더,
     // simple_order 드로어는 일반 상품만 표시. 쓰기 시 패브릭 항목은 그대로 보존.
     function isFabricItem(it) {
-        return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+        if (!it) return false;
+        // 2026-05-14: source(DB) / fabric+product_code (orders.items 모양) 도 인식
+        return it.__source === 'cotton-print' || it.source === 'cotton-print'
+            || it.fabricCode || (it.fabric && (it.product_code || it.product_name))
+            || it.orderWcm != null || it.width_cm != null;
     }
     function readCart() {
         try {
@@ -3492,7 +3496,14 @@
         catch (e) { return []; }
     }
     function _soIsFabricItem(it) {
-        return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null);
+        if (!it) return false;
+        // 2026-05-14: 매니저견적 주문에서 복원한 fabric items 도 인식
+        //   - __source (cart_sync 태그) / source (DB orders.items 의 단일 필드) 둘 다 cotton-print
+        //   - fabricCode (_cdAddToCart 모양) 또는 product_code+fabric (_cpSubmitOrder 모양)
+        //   - orderWcm (cart 모양) 또는 width_cm (DB 모양)
+        return it.__source === 'cotton-print' || it.source === 'cotton-print'
+            || it.fabricCode || (it.fabric && (it.product_code || it.product_name))
+            || it.orderWcm != null || it.width_cm != null;
     }
     function _soCalcItemPrice(it) {
         if (_soIsFabricItem(it)) return it.price || 0;
