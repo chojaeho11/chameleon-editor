@@ -2797,8 +2797,9 @@
             b.style.color = on ? '#fff' : '#451a03';
             b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
         });
+        // 2026-05-14: 강화 골판지 가벽은 기본 양면 → 뒷면 업로드 영역 즉시 표시
         var backWrap = document.getElementById('soBackUploadWrap');
-        if (backWrap) backWrap.style.display = 'none';
+        if (backWrap) backWrap.style.display = (state.isReinforcedWall) ? '' : 'none';
         // 2026-05-13: 배송 버튼 초기화 (self_pickup active)
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             b.classList.toggle('active', b.dataset.ship === 'self_pickup');
