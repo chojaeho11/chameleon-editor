@@ -34,9 +34,10 @@ function pickFabricDesc(f){ var L = window.__CD_LANG||'ko'; if (L==='ja' && f.de
 const COLOR_LABELS = { white: '화이트', natural: '네츄럴', ivory: '백아이보리' };
 
 // 대량 할인 정책 (수량 기준)
+// 2026-05-14: 사용자 요청 — 10+ 10% / 100+ 20% / 500+ 30%
 function getVolumeDiscount(qty) {
-    if (qty >= 100) return { pct: 30, label: '100+ 30%↓' };
-    if (qty >= 50)  return { pct: 20, label: '50+ 20%↓' };
+    if (qty >= 500) return { pct: 30, label: '500+ 30%↓' };
+    if (qty >= 100) return { pct: 20, label: '100+ 20%↓' };
     if (qty >= 10)  return { pct: 10, label: '10+ 10%↓' };
     return { pct: 0, label: '' };
 }
