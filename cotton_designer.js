@@ -1414,7 +1414,7 @@ window._cpOpenCheckout = function() {
         var isAdm = !!window.isAdmin;
         if (!isAdm && window.supabase) {
             try {
-                var ADMIN_EMAILS = ['korea900as@gmail.com', 'ceo@test.com'];
+                var ADMIN_EMAILS = ['korea900as@gmail.com', 'ceo@test.com', 'scr3257@naver.com'];
                 var sb2 = window.supabase.createClient(
                     'https://qinvtnhiidtmrzosyvys.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'

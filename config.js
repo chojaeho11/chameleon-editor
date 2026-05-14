@@ -12,7 +12,13 @@ export let ADDON_DB = {};
 export let ADDON_CAT_DB = {};
 export let PRODUCT_DB = {};
 
-const ADMIN_EMAILS = ["korea900as@gmail.com", "ceo@test.com"];
+// 2026-05-14: 매니저 계정 추가 — 박성희 (scr3257@naver.com)
+// 다른 매니저 (강은미/조지숙/최연두) 추가 시 여기에 한 줄씩
+const ADMIN_EMAILS = [
+    "korea900as@gmail.com",   // 본사
+    "ceo@test.com",           // 테스트
+    "scr3257@naver.com"       // 박성희 매니저
+];
 let initPromise = null;
 
 // =================================================================
