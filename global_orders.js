@@ -3244,10 +3244,13 @@ window.openWorkOrderFresh = async function (orderId, btnEl) {
             btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 생성중';
             btnEl.disabled = true;
         }
+        console.log('[openWorkOrderFresh] 시작 — orderId:', orderId);
+
         // 1) jsPDF + addon DB + material cache 로드 (이미 로드됐으면 캐시 히트)
         await loadJsPDF();
         const addonDB = await _rcLoadAddons();
         if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
+        console.log('[openWorkOrderFresh] 라이브러리/캐시 로드 완료');
 
         // 2) 주문 조회
         const { data: order, error } = await sb
@@ -3259,9 +3262,36 @@ window.openWorkOrderFresh = async function (orderId, btnEl) {
             alert('주문을 찾을 수 없습니다: ' + (error?.message || orderId));
             return;
         }
+        console.log('[openWorkOrderFresh] 주문 로드:', { id: order.id, items_len: order.items?.length, manager: order.manager_name });
         if (!order.items || order.items.length === 0) {
             alert('주문에 상품 항목이 없습니다. (작업지시서 생성 불가)');
             return;
+        }
+
+        // 2.5) 각 item.product 정합성 진단 (백지 원인 추적)
+        const missing = [];
+        order.items.forEach((it, idx) => {
+            if (!it.product) {
+                missing.push({ idx, productName: it.productName, qty: it.qty, type: it.type });
+            }
+        });
+        if (missing.length > 0) {
+            console.warn('[openWorkOrderFresh] product 누락 항목:', missing);
+            // product 누락 항목 자동 보정 — productName/qty 만으로 최소 product 구성
+            order.items = order.items.map(it => {
+                if (it.product) return it;
+                return Object.assign({}, it, {
+                    product: {
+                        name: it.productName || it.product_name || '상품',
+                        code: it.productCode || '-',
+                        price: it.price || 0,
+                        img: '',
+                        w_mm: it.width || 0,
+                        h_mm: it.height || 0
+                    }
+                });
+            });
+            console.log('[openWorkOrderFresh] product 보정 완료 —', missing.length, '건');
         }
 
         // 3) 작업지시서 PDF 생성 (저장 안 함 — 즉시 보기 전용)
@@ -3270,6 +3300,7 @@ window.openWorkOrderFresh = async function (orderId, btnEl) {
             alert('작업지시서 생성 실패. 콘솔 확인.');
             return;
         }
+        console.log('[openWorkOrderFresh] PDF blob 생성 완료 — size:', blob.size);
 
         // 4) blob URL 로 새 탭 열기
         const url = URL.createObjectURL(blob);
