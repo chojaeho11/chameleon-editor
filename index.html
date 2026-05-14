@@ -1089,40 +1089,73 @@ if ('caches' in window) {
             try { localStorage.setItem('cm_pending_quotes', JSON.stringify(arr)); } catch (e) {}
         }
         // ?quote=ID 로 들어오면 그 ID 도 결제대기 목록에 추가 + 누적된 모든 미결제 quote 표시
+        // 관리자/매니저 (window.isAdmin) 는 localStorage 없이도 DB 의 모든 상담대기 quote 자동 조회
         async function loadPendingQuote() {
             try {
                 var u = new URLSearchParams(location.search);
                 var quoteId = u.get('quote') || '';
                 if (quoteId) _addPendingId(quoteId);
-                var allIds = _getPendingIds();
-                if (allIds.length === 0) return;
                 var sb = window.sb;
                 if (!sb) {
                     try { var mod = await import('./config.js?v=436'); sb = mod.sb || window.sb; }
                     catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
                 }
                 if (!sb) return;
-                var { data: orders, error } = await sb
-                    .from('orders')
-                    .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at')
-                    .in('id', allIds);
+
+                var allIds = _getPendingIds();
+                var isAdm = !!window.isAdmin;
+                // 인증이 아직 비동기 진행중이면 sb.auth 로 직접 확인
+                if (!isAdm) {
+                    try {
+                        var ADMIN_EMAILS = ['korea900as@gmail.com', 'ceo@test.com'];
+                        var { data: sess } = await sb.auth.getUser();
+                        var em = sess?.user?.email || '';
+                        if (em && ADMIN_EMAILS.indexOf(em) >= 0) {
+                            isAdm = true;
+                            window.isAdmin = true;
+                        }
+                    } catch (e) {}
+                }
+                console.log('[mgrQuote banner] start — quoteId:', quoteId, 'localStorage IDs:', allIds, 'isAdmin:', isAdm);
+
+                var orders = null, error = null;
+                if (isAdm) {
+                    // 관리자 — DB 에서 직접 모든 상담대기 매니저견적 조회 (localStorage 의존 X)
+                    var resA = await sb
+                        .from('orders')
+                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at')
+                        .eq('payment_status', '상담대기')
+                        .order('created_at', { ascending: false })
+                        .limit(20);
+                    orders = resA.data; error = resA.error;
+                    console.log('[mgrQuote banner] admin fetched', orders?.length, 'orders');
+                } else if (allIds.length > 0) {
+                    // 일반 고객 — localStorage 기반 본인 quote 만
+                    var resB = await sb
+                        .from('orders')
+                        .select('id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at')
+                        .in('id', allIds);
+                    orders = resB.data; error = resB.error;
+                }
+                if (!orders) return;
                 if (error) { console.warn('[mgrQuote banner] fetch err:', error); return; }
+
                 var active = [];
                 (orders || []).forEach(function (o) {
-                    // 결제 완료/취소된 quote 는 목록에서 자동 정리
                     if (o.payment_status && o.payment_status !== '상담대기' && o.payment_status !== '미결제') {
-                        _removePendingId(o.id);
+                        if (!isAdm) _removePendingId(o.id);
                         return;
                     }
-                    if (o.status === '취소' || o.status === '취소요청') { _removePendingId(o.id); return; }
+                    if (o.status === '취소' || o.status === '취소요청') { if (!isAdm) _removePendingId(o.id); return; }
                     active.push(o);
                 });
-                // 존재하지 않는 ID (DB 에서 삭제됨) 도 정리
-                var foundIds = (orders || []).map(function (o) { return String(o.id); });
-                allIds.forEach(function (id) { if (foundIds.indexOf(String(id)) < 0) _removePendingId(id); });
-                if (active.length === 0) return;
-                // 최신순 정렬
+                if (!isAdm) {
+                    var foundIds = (orders || []).map(function (o) { return String(o.id); });
+                    allIds.forEach(function (id) { if (foundIds.indexOf(String(id)) < 0) _removePendingId(id); });
+                }
+                if (active.length === 0) { console.log('[mgrQuote banner] no active pending quotes'); return; }
                 active.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+                console.log('[mgrQuote banner] rendering', active.length, 'cards');
                 renderPendingQuoteBanner(active);
             } catch (e) { console.warn('[mgrQuote banner] init failed:', e); }
         }
@@ -1259,11 +1292,23 @@ if ('caches' in window) {
             // 매니저가 만든 카드결제 우선 (기본 카드결제 그대로)
         }
 
-        // DOMContentLoaded 후 + Supabase 가 준비될 때까지 짧게 대기 후 실행
+        // DOMContentLoaded 후 + Supabase auth 가 준비될 때까지 대기 후 실행
+        // 1.5초 후 1차 시도, 4초 후 재시도 (auth 아직 진행중일 가능성)
+        function _scheduleLoad() {
+            setTimeout(loadPendingQuote, 1500);
+            setTimeout(function () {
+                // 1차에서 빈 결과였고 관리자였을 가능성 — auth 늦게 들어왔으면 재조회
+                var wrap = document.getElementById('pendingQuoteBanner');
+                if (wrap && wrap.style.display === 'none' && (window.isAdmin || window.currentUser)) {
+                    console.log('[mgrQuote banner] retry — auth was late');
+                    loadPendingQuote();
+                }
+            }, 4000);
+        }
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function () { setTimeout(loadPendingQuote, 800); });
+            document.addEventListener('DOMContentLoaded', _scheduleLoad);
         } else {
-            setTimeout(loadPendingQuote, 800);
+            _scheduleLoad();
         }
     })();
     </script>
