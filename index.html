@@ -1368,8 +1368,19 @@ if ('caches' in window) {
                     }
                     return patched;
                 });
-                console.log('[payPendingQuote] orderTotal:', orderTotal, 'estSum:', estSum, 'redistribute:', needRedistribute, 'items:', cartItems);
+                console.log('[payPendingQuote] orderTotal:', orderTotal, 'estSum:', estSum, 'redistribute:', needRedistribute, 'qtySum:', qtySum);
+                cartItems.forEach(function (ci, i) {
+                    console.log('  cartItem[' + i + ']:', { price: ci.price, qty: ci.qty, source: ci.source, product_price: ci.product?.price, __redistributed: ci.__redistributed });
+                });
                 try { localStorage.setItem('chameleon_cart_current', JSON.stringify(cartItems)); } catch(e){}
+                // 진단: localStorage 에 실제로 저장된 값 확인 (cart_sync 인터셉터 후)
+                try {
+                    var stored = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]');
+                    console.log('[payPendingQuote] localStorage after setItem (', stored.length, 'items):');
+                    stored.forEach(function (s, i) {
+                        console.log('  stored[' + i + ']:', { price: s.price, qty: s.qty, source: s.source, product_price: s.product?.price, __redistributed: s.__redistributed, __cart_id: s.__cart_id });
+                    });
+                } catch (e) {}
 
                 // 3) 결제창 열기 위해 simple_order 모달이 준비됐는지 확인 후 호출
                 window._soPendingQuoteId = order.id;
