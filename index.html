@@ -1331,7 +1331,10 @@ if ('caches' in window) {
                 '@media (max-width:768px) { #pendingQuoteGrid { grid-template-columns:repeat(3, 1fr) !important; } }' +
                 '@media (max-width:480px) { #pendingQuoteGrid { grid-template-columns:repeat(2, 1fr) !important; } }' +
                 '</style>';
-            wrap.style.display = '';
+            // 2026-05-14: 사용자 요청 — 메인 페이지에는 카드 노출 안 함.
+            //   카드 HTML 은 #pendingQuoteBanner 안에 렌더되지만 banner 는 display:none 유지.
+            //   "개인결제창" 버튼이 모달로 클론해서 보여줌.
+            wrap.style.display = 'none';
         }
 
         // 2026-05-14: "개인결제창" 모달 — 매니저 카드의 버튼이 호출.
