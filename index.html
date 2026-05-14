@@ -922,10 +922,12 @@ if ('caches' in window) {
                         if (slot2) slot2.remove();
                     }
                 }
+                // 2026-05-14: 인위적 500ms 딜레이 제거 — 모바일 로딩 속도 개선.
+                //   loadMgrPhones 자체에 window.sb 미초기화 시 import('./config.js') fallback 있음.
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', function(){ setTimeout(loadMgrPhones, 500); });
+                    document.addEventListener('DOMContentLoaded', loadMgrPhones);
                 } else {
-                    setTimeout(loadMgrPhones, 500);
+                    loadMgrPhones();
                 }
             })();
             </script>
@@ -1467,10 +1469,11 @@ if ('caches' in window) {
             // 매니저가 만든 카드결제 우선 (기본 카드결제 그대로)
         }
 
-        // DOMContentLoaded 후 + Supabase auth 가 준비될 때까지 대기 후 실행
-        // 1.5초 후 1차 시도, 4초 후 재시도 (auth 아직 진행중일 가능성)
+        // 2026-05-14: 인위적 1500ms 딜레이 제거 — 모바일 로딩 속도 개선.
+        //   loadPendingQuote 자체에 window.sb 미초기화 시 import('./config.js') fallback 있고
+        //   sb.auth.getUser 가 비동기라 auth 늦은 case 는 retry (3.5초 후) 가 커버.
         function _scheduleLoad() {
-            setTimeout(loadPendingQuote, 1500);
+            loadPendingQuote();
             setTimeout(function () {
                 // 1차에서 빈 결과였고 관리자였을 가능성 — auth 늦게 들어왔으면 재조회
                 var wrap = document.getElementById('pendingQuoteBanner');
@@ -1478,7 +1481,7 @@ if ('caches' in window) {
                     console.log('[mgrQuote banner] retry — auth was late');
                     loadPendingQuote();
                 }
-            }, 4000);
+            }, 3500);
         }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', _scheduleLoad);
