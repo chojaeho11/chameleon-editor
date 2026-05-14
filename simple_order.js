@@ -1009,9 +1009,47 @@
       <div class="so-co-section">
         <span class="so-co-label">${tr('결제 방법', 'お支払い方法', 'Payment method')}</span>
         <div class="so-co-pay-opts">
-          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" checked> 🏦 ${tr('무통장 입금', '銀行振込', 'Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리', 'すぐ処理', 'Instant')}</span></label>
-          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="card"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
+          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" checked onchange="window._soOnPayMethodChange()"> 🏦 ${tr('무통장 입금', '銀行振込', 'Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리', 'すぐ処理', 'Instant')}</span></label>
+          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="card" onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
         </div>
+      </div>
+
+      <!-- 2026-05-14: 무통장 입금 — 증빙 서류 선택 (KR 전용, 세금계산서/현금영수증) -->
+      <div class="so-co-section" id="soCoReceiptBox">
+        <span class="so-co-label">📄 ${tr('증빙 서류 선택 (선택)', '証憑書類選択 (任意)', 'Tax document (optional)')}</span>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+          <label style="cursor:pointer;"><input type="radio" name="soRcptType" value="none" checked onchange="window._soOnReceiptTypeChange()"> ${tr('발행안함', '発行しない', 'None')}</label>
+          <label style="cursor:pointer;"><input type="radio" name="soRcptType" value="tax_invoice" onchange="window._soOnReceiptTypeChange()"> ${tr('세금계산서', '税金計算書', 'Tax invoice')}</label>
+          <label style="cursor:pointer;"><input type="radio" name="soRcptType" value="cash_receipt_biz" onchange="window._soOnReceiptTypeChange()"> ${tr('현금영수증 (지출증빙)', '現金領収証 (事業)', 'Cash receipt (business)')}</label>
+          <label style="cursor:pointer;"><input type="radio" name="soRcptType" value="cash_receipt_personal" onchange="window._soOnReceiptTypeChange()"> ${tr('현금영수증 (개인소득공제)', '現金領収証 (個人)', 'Cash receipt (personal)')}</label>
+        </div>
+        <!-- 세금계산서 입력 폼 -->
+        <div id="soTaxInvoiceFields" style="display:none; margin-top:10px; padding:12px; background:#fff; border-radius:8px; border:1px solid #e7d6b8;">
+          <div style="font-weight:800; margin-bottom:8px; color:#78350f; font-size:12px;">${tr('세금계산서 정보', '税金計算書 情報', 'Tax invoice info')}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div><label style="font-size:11px; color:#6b7280;">${tr('사업자번호', '事業者番号', 'Biz reg no.')} *</label><input type="text" id="soRcptBizNumber" class="so-co-input" placeholder="000-00-00000"></div>
+            <div><label style="font-size:11px; color:#6b7280;">${tr('회사명', '会社名', 'Company')} *</label><input type="text" id="soRcptCompany" class="so-co-input" placeholder="${tr('주식회사 예시', '株式会社例', 'ABC Co., Ltd.')}"></div>
+            <div><label style="font-size:11px; color:#6b7280;">${tr('대표자명', '代表者名', 'Representative')} *</label><input type="text" id="soRcptRepName" class="so-co-input" placeholder="${tr('홍길동', '山田太郎', 'John Doe')}"></div>
+            <div><label style="font-size:11px; color:#6b7280;">${tr('업태', '業態', 'Biz type')}</label><input type="text" id="soRcptBizType" class="so-co-input" placeholder="${tr('서비스', 'サービス', 'Service')}"></div>
+            <div><label style="font-size:11px; color:#6b7280;">${tr('종목', '種目', 'Biz category')}</label><input type="text" id="soRcptBizCategory" class="so-co-input" placeholder="${tr('인쇄', '印刷', 'Printing')}"></div>
+            <div><label style="font-size:11px; color:#6b7280;">${tr('이메일', 'メール', 'Email')} *</label><input type="email" id="soRcptEmail" class="so-co-input" placeholder="tax@company.com"></div>
+          </div>
+          <div style="margin-top:8px;"><label style="font-size:11px; color:#6b7280;">${tr('사업장 주소', '事業所住所', 'Biz address')}</label><input type="text" id="soRcptBizAddress" class="so-co-input" placeholder="${tr('서울시 강남구...', '東京都...', 'City, address...')}"></div>
+        </div>
+        <!-- 현금영수증 입력 폼 -->
+        <div id="soCashReceiptFields" style="display:none; margin-top:10px; padding:12px; background:#fff; border-radius:8px; border:1px solid #e7d6b8;">
+          <div style="font-weight:800; margin-bottom:8px; color:#78350f; font-size:12px;">${tr('현금영수증 정보', '現金領収証 情報', 'Cash receipt info')}</div>
+          <label style="font-size:11px; color:#6b7280;" id="soCashReceiptLabel">${tr('식별번호 (사업자번호 또는 핸드폰번호)', '識別番号', 'ID number')} *</label>
+          <input type="text" id="soRcptIdNumber" class="so-co-input" placeholder="000-00-00000 / 010-0000-0000">
+        </div>
+      </div>
+
+      <!-- 2026-05-14: 견적서 다운로드 (결제 전 미리보기) -->
+      <div class="so-co-section">
+        <button type="button" onclick="window._soDownloadQuotePreview(this)"
+          style="width:100%; padding:12px 16px; background:#fff; color:#78350f; border:2px solid #fbbf24; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit;">
+          <i class="fa-solid fa-file-invoice"></i> ${tr('견적서 미리 다운받기', '見積書ダウンロード', 'Download quotation preview')}
+        </button>
       </div>
     </div>
     <aside class="so-co-summary">
@@ -3416,6 +3454,8 @@
         _renderCheckoutSummary();
         document.getElementById('soCheckoutOverlay').classList.add('open');
         document.body.style.overflow = 'hidden';
+        // 2026-05-14: 결제수단 초기상태 동기화 (해외 사이트는 증빙 박스 숨김, 한국은 표시)
+        if (typeof window._soOnPayMethodChange === 'function') window._soOnPayMethodChange();
     };
 
     // 2026-05-13: 주문 요약 렌더 — 항목 + 할인 breakdown + 합계
@@ -3494,6 +3534,111 @@
         document.body.style.overflow = '';
     };
 
+    // 2026-05-14: 결제수단 토글 — 무통장이면 증빙 박스 표시, 카드면 숨김 (KR 한정)
+    window._soOnPayMethodChange = function () {
+        var pay = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'bank';
+        var box = document.getElementById('soCoReceiptBox');
+        if (!box) return;
+        // 한국만 노출 (해외는 카드 결제만 사용 → 증빙 메뉴 자체 숨김)
+        var isKR = (window.__SITE_CODE || 'KR') === 'KR';
+        box.style.display = (pay === 'bank' && isKR) ? '' : 'none';
+    };
+
+    // 2026-05-14: 증빙 타입 토글 (세금계산서 / 현금영수증 입력 폼 표시)
+    window._soOnReceiptTypeChange = function () {
+        var t = (document.querySelector('input[name="soRcptType"]:checked') || {}).value || 'none';
+        var taxFs = document.getElementById('soTaxInvoiceFields');
+        var cashFs = document.getElementById('soCashReceiptFields');
+        if (taxFs) taxFs.style.display = (t === 'tax_invoice') ? 'block' : 'none';
+        if (cashFs) cashFs.style.display = (t === 'cash_receipt_biz' || t === 'cash_receipt_personal') ? 'block' : 'none';
+        var label = document.getElementById('soCashReceiptLabel');
+        var input = document.getElementById('soRcptIdNumber');
+        if (label && input) {
+            if (t === 'cash_receipt_biz') {
+                label.textContent = '사업자번호 *';
+                input.placeholder = '000-00-00000';
+            } else if (t === 'cash_receipt_personal') {
+                label.textContent = '핸드폰번호 *';
+                input.placeholder = '010-0000-0000';
+            }
+        }
+    };
+
+    // 2026-05-14: 증빙 정보 수집 (orderRow.receipt_info 로 저장 → 관리자 페이지에서 표시)
+    function _soCollectReceiptInfo() {
+        var box = document.getElementById('soCoReceiptBox');
+        if (!box || box.style.display === 'none') return null;
+        var t = (document.querySelector('input[name="soRcptType"]:checked') || {}).value || 'none';
+        if (t === 'none') return { type: 'none' };
+        if (t === 'tax_invoice') {
+            var biz = (document.getElementById('soRcptBizNumber').value || '').trim();
+            var company = (document.getElementById('soRcptCompany').value || '').trim();
+            var rep = (document.getElementById('soRcptRepName').value || '').trim();
+            var em = (document.getElementById('soRcptEmail').value || '').trim();
+            if (!biz || !company || !rep || !em) { alert('세금계산서 필수 항목을 모두 입력해주세요. (사업자번호/회사명/대표자명/이메일)'); return false; }
+            return {
+                type: t,
+                biz_number: biz, company_name: company, rep_name: rep, email: em,
+                biz_type: (document.getElementById('soRcptBizType').value || '').trim(),
+                biz_category: (document.getElementById('soRcptBizCategory').value || '').trim(),
+                biz_address: (document.getElementById('soRcptBizAddress').value || '').trim()
+            };
+        }
+        var idNum = (document.getElementById('soRcptIdNumber').value || '').trim();
+        if (!idNum) { alert('현금영수증 식별번호를 입력해주세요.'); return false; }
+        return { type: t, id_number: idNum };
+    }
+
+    // 2026-05-14: 견적서 미리보기 다운로드 — 현재 카트 + 입력 폼 기반 PDF 생성
+    window._soDownloadQuotePreview = async function (btnEl) {
+        var origLabel = btnEl ? btnEl.innerHTML : '';
+        try {
+            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 생성중'; }
+            var cart = _soReadAllCart();
+            if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
+
+            // export.js 동적 import (ES module)
+            var mod = await import('./export.js?v=292');
+            if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
+
+            var name = (document.getElementById('soCoName').value || '').trim() || '-';
+            var phone = (document.getElementById('soCoPhone').value || '').trim();
+            var zip = (document.getElementById('soCoZip').value || '').trim();
+            var addr1 = (document.getElementById('soCoAddr1').value || '').trim();
+            var addr2 = (document.getElementById('soCoAddr2').value || '').trim();
+            var memo = (document.getElementById('soCoMemo').value || '').trim();
+            var fullAddr = [zip ? '(' + zip + ')' : '', addr1, addr2].filter(Boolean).join(' ');
+
+            var cartCalc = _soCalcCartTotal(cart);
+            var orderInfo = {
+                id: '미리보기',
+                manager: name, phone: phone, address: fullAddr,
+                note: memo, date: '',
+                shippingFee: 0
+            };
+
+            // window.cartData 와 동일한 shape 으로 변환 (export.js 가 item.product 참조)
+            // simple_order cart 의 일반 항목은 이미 product 객체를 가지고 있음
+            var pdfCart = cart.filter(function (it) { return !!it.product || it.fabricCode; });
+            var blob = await mod.generateQuotationPDF(orderInfo, pdfCart, 0, 0);
+            if (!blob) { alert('견적서 생성 실패. 콘솔 확인.'); return; }
+
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = '견적서_미리보기_' + Date.now() + '.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+        } catch (e) {
+            console.error('[_soDownloadQuotePreview]', e);
+            alert('견적서 생성 오류: ' + (e.message || e));
+        } finally {
+            if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origLabel; }
+        }
+    };
+
     window._soSubmitOrder = async function () {
         var name = (document.getElementById('soCoName').value || '').trim();
         var phone = (document.getElementById('soCoPhone').value || '').trim();
@@ -3507,6 +3652,14 @@
         if (!name)  { alert('받으시는 분 성함을 입력해주세요.'); return; }
         if (!phone) { alert('연락처를 입력해주세요.'); return; }
         if (!addr1) { alert('배송지를 입력해주세요.'); return; }
+
+        // 2026-05-14: 무통장 입금 + KR 한정으로 증빙 정보 수집 (선택)
+        var receiptInfo = null;
+        if (payMethod === 'bank') {
+            var collected = _soCollectReceiptInfo();
+            if (collected === false) return; // 필수 미입력 → 사용자에게 알림 후 중단
+            if (collected && collected.type && collected.type !== 'none') receiptInfo = collected;
+        }
 
         var cart = _soReadAllCart();
         if (cart.length === 0) return;
@@ -3696,6 +3849,8 @@
                 files: orderFiles.length ? orderFiles : null,
                 admin_note: adminNote
             };
+            // 2026-05-14: 무통장 입금 증빙 정보 (세금계산서/현금영수증) — 관리자 페이지 receipt_info 컬럼과 연결
+            if (receiptInfo) orderRow.receipt_info = receiptInfo;
 
             var { data: insertedOrder, error: insertErr } = await sb.from('orders').insert([orderRow]).select().single();
             if (insertErr) throw insertErr;
