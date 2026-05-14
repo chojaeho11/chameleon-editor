@@ -1102,20 +1102,14 @@ if ('caches' in window) {
         function fmtKR(n) { try { return (Number(n)||0).toLocaleString('ko-KR') + '원'; } catch(e){ return n + '원'; } }
         function esc(s) { return String(s||'').replace(/[<>"'&]/g, function(c){return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];}); }
 
-        // 2026-05-14: 배너를 매니저 견적 전화 패널 바로 아래 위치시킴
-        // (사용자 요청: 메인 페이지 매니저 견적 카드 바로 아래에 결제창 표시)
+        // 2026-05-14: 배너 위치 — hero-section 바깥 직후 (overflow:hidden 클리핑 방지)
+        // hero-section 의 overflow:hidden 안에 넣으면 영상 영역 밖으로 안 나가서 가려짐
         function positionAboveBand() {
             var wrap = document.getElementById('pendingQuoteBanner');
-            var mgrPanel = document.getElementById('mgrQuoteHero');
             var hero = document.querySelector('.hero-section');
-            if (!wrap) return;
-            // 1순위: mgrQuoteHero 바로 다음 (KR 한정으로 전화 패널이 있을 때)
-            if (mgrPanel && mgrPanel.parentNode && wrap.previousElementSibling !== mgrPanel) {
-                mgrPanel.parentNode.insertBefore(wrap, mgrPanel.nextSibling);
-                return;
-            }
-            // 2순위: 해외 사이트 등 mgrPanel 숨겨진 경우 — hero-section 바로 다음 (3버튼 위)
-            if (hero && hero.parentNode && wrap.previousElementSibling !== hero) {
+            if (!wrap || !hero || !hero.parentNode) return;
+            // hero-section 바로 다음 sibling 으로 이동 (3 바로가기 버튼 위)
+            if (wrap.previousElementSibling !== hero) {
                 hero.parentNode.insertBefore(wrap, hero.nextSibling);
             }
         }
@@ -1572,10 +1566,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 2026-05-13: 매니저 견적 카드는 hero-section 내부 자식이라 별도 reorder 불필요 (자동으로 hero 와 함께)
-    // 히어로 바로 다음: 3 바로가기 버튼 (디자인에디터/매니저연결/제품검색 + BAND + WITH) → AI 디자인 → 챗봇
+    // 히어로 바로 다음: [매니저 견적 결제 배너] → 3 바로가기 버튼 → AI 디자인 → 챗봇
     var shortcutBtns = document.getElementById('advShortcutBtns');
     var aiDesignHero = document.getElementById('aiDesignHero');
+    var pendingBanner = document.getElementById('pendingQuoteBanner');
     var cursor = hero;
+    // 2026-05-14: 매니저 견적 결제 배너 — hero 바로 다음 (3버튼 위에 표시)
+    if (pendingBanner) { moveAfter(pendingBanner, cursor); cursor = pendingBanner; }
     if (shortcutBtns) { moveAfter(shortcutBtns, cursor); cursor = shortcutBtns; }
     if (aiDesignHero) { moveAfter(aiDesignHero, cursor); cursor = aiDesignHero; }
     [chatbotWrap, couponBanner, btnWrap].forEach(function(el) {
@@ -7390,7 +7387,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=440"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=62"></script>
+<script src="/simple_order.js?v=63"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=10"></script>
 

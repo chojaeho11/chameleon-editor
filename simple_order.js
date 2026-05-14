@@ -123,18 +123,20 @@
     function injectStyles() {
         if (document.getElementById('so-styles')) return;
         const css = `
-/* 풀스크린 오버레이 — 패브릭 디자이너처럼 화면 가득 */
+/* 풀스크린 오버레이 — 자연스러운 페이지 스크롤 (사용자 요청: 칸마다 스크롤 X) */
 .so-overlay {
     position: fixed; inset: 0; background: #faf6ed; z-index: 50000;
     display: none;
+    overflow-y: auto;          /* 페이지 전체 스크롤 */
+    -webkit-overflow-scrolling: touch;
 }
 .so-overlay.open { display: block; }
 .so-modal {
     background: #faf6ed;
-    width: 100%; height: 100%;
+    width: 100%; min-height: 100%;
     max-height: none; max-width: none;
     border-radius: 0; box-shadow: none;
-    display: flex; flex-direction: column; overflow: hidden;
+    display: flex; flex-direction: column;
     font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
 }
 .so-head {
@@ -165,14 +167,15 @@
 .so-close:hover { background: #f5f5f5; }
 
 .so-body {
-    display: flex; gap: 24px; flex: 1; overflow: hidden;
+    display: flex; gap: 24px;
     padding: 24px 28px;
     max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    align-items: flex-start;
 }
 
-/* 좌측: 큰 업로드 영역 */
+/* 좌측: 큰 업로드 영역 — 페이지 스크롤 시 자연스럽게 늘어남 */
 .so-left {
-    flex: 1.5; background: #fff; padding: 24px; overflow-y: auto;
+    flex: 1.5; background: #fff; padding: 24px;
     display: flex; flex-direction: column;
     border-radius: 14px; border: 1px solid #ede4d3;
 }
@@ -428,15 +431,21 @@
 }
 
 /* 2026-05-12: 빠른 결제 모달 (패브릭과 동일 스타일) */
+/* 2026-05-14: 결제창 — 칸마다 스크롤이 아닌 페이지 전체 스크롤 (사용자 요청) */
 .so-co-overlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
-    z-index: 60000; display: none; align-items: center; justify-content: center;
+    z-index: 60000; display: none;
+    overflow-y: auto;        /* 페이지 스크롤 */
+    -webkit-overflow-scrolling: touch;
     padding: 20px;
+    box-sizing: border-box;
 }
-.so-co-overlay.open { display: flex !important; }
+.so-co-overlay.open { display: block !important; }
 .so-co-card {
-    width: 100%; max-width: 960px; height: 100%; max-height: 720px;
-    background: #fff; border-radius: 16px; display: flex; overflow: hidden;
+    width: 100%; max-width: 960px;
+    margin: 20px auto;       /* 가운데 정렬 + 위아래 여백 */
+    height: auto; max-height: none;   /* 내용만큼 자연스럽게 늘어남 */
+    background: #fff; border-radius: 16px; display: flex; overflow: visible;
     box-shadow: 0 25px 60px rgba(0,0,0,0.35); position: relative;
 }
 .so-co-close {
@@ -445,7 +454,8 @@
     font-size: 20px; cursor: pointer; z-index: 1; line-height: 1;
 }
 .so-co-form {
-    flex: 1; padding: 30px 35px; overflow-y: auto; background: #fff;
+    flex: 1; padding: 30px 35px; background: #fff;
+    /* overflow-y 제거 — 페이지 스크롤 사용 */
 }
 .so-co-section { margin-bottom: 16px; }
 .so-co-label {
@@ -469,6 +479,7 @@
 .so-co-summary {
     width: 320px; padding: 24px 20px; background: #faf6ed;
     display: flex; flex-direction: column; border-left: 1px solid #e7e5e4;
+    /* 페이지 스크롤 사용 — 내부 max-height 없음, 자연스럽게 길어짐 */
 }
 .so-co-summary-item {
     background: #fff; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
@@ -491,15 +502,20 @@
 .so-co-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 @media (max-width: 768px) {
-    .so-co-card { flex-direction: column; max-height: 95vh; }
+    .so-co-card { flex-direction: column; max-height: none; margin: 10px auto; }
+    .so-co-form { padding: 20px 18px; }
     .so-co-summary { width: 100%; border-left: none; border-top: 1px solid #e7e5e4; }
+    .so-body { flex-direction: column; padding: 16px; gap: 16px; }
+    .so-right { position: static; width: 100%; max-width: none; }
 }
 
-/* 우측: 옵션 패널 */
+/* 우측: 옵션 패널 — 페이지 스크롤 사용 (내부 스크롤 제거) */
 .so-right {
     flex: 1; background: #faf6ed; padding: 0;
-    overflow-y: auto; min-width: 320px; max-width: 420px;
+    min-width: 320px; max-width: 420px;
     display: flex; flex-direction: column; gap: 14px;
+    position: sticky; top: 70px;     /* PC 에서 옵션 패널만 상단 고정 (페이지 스크롤은 자유) */
+    align-self: flex-start;
 }
 .so-section {
     background: #fff; border: 1px solid #e7e5e4; border-radius: 10px;
@@ -1054,7 +1070,7 @@
     </div>
     <aside class="so-co-summary">
       <h4 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#451a03;">${tr('주문 요약', '注文要約', 'Order summary')}</h4>
-      <div id="soCoItemList" style="flex:1; overflow-y:auto; margin-bottom:12px;"></div>
+      <div id="soCoItemList" style="flex:1; margin-bottom:12px;"></div>
       <div class="so-co-total">
         <span style="font-size:13px; color:#6b7280; font-weight:700;">${tr('합계', '合計', 'Total')}</span>
         <span class="so-co-total-amt" id="soCoTotalAmt">0원</span>
