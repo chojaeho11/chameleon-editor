@@ -1060,7 +1060,8 @@ if ('caches' in window) {
     <div id="advShortcutBtns" style="width:100%; margin:10px 0 8px 0;"></div>
 
     <!-- 2026-05-14: 매니저가 생성한 상담 완료 결제창 — ?quote=ID 또는 자동 매칭으로 표시 -->
-    <div id="pendingQuoteBanner" style="display:none; max-width:1100px; margin:48px auto 20px; padding:0 16px;"></div>
+    <!-- 상단 여백 64px: hero 영상이 충분히 보인 후 카드 등장. 폭/패딩은 .hotdeal-grid 부모(.section)와 동일 -->
+    <div id="pendingQuoteBanner" style="display:none; max-width:1280px; margin:64px auto 28px; padding:0 20px;"></div>
     <script>
     (function(){
         // 매니저 견적 결제창 표시 — URL ?quote=ORDER_ID 우선, 없으면 localStorage 캐시
@@ -1142,10 +1143,14 @@ if ('caches' in window) {
                     '<button type="button" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; padding:10px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>' +
                   '</div>' +
                 '</div>';
+            // 메인 제품 그리드(.hotdeal-grid)와 동일 비례: 1280+ 5col, 1024-1279 4col, 768- 2col, mobile 1col
             wrap.innerHTML =
-                '<div id="pendingQuoteGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">' + card + '</div>' +
-                '<style>@media (max-width:768px) { #pendingQuoteGrid { grid-template-columns:repeat(2, 1fr) !important; } }' +
-                '@media (max-width:480px) { #pendingQuoteGrid { grid-template-columns:1fr !important; } }</style>';
+                '<div id="pendingQuoteGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:20px;">' + card + '</div>' +
+                '<style>' +
+                '@media (max-width:1279px) { #pendingQuoteGrid { grid-template-columns:repeat(4, 1fr) !important; } }' +
+                '@media (max-width:768px) { #pendingQuoteGrid { grid-template-columns:repeat(3, 1fr) !important; } }' +
+                '@media (max-width:480px) { #pendingQuoteGrid { grid-template-columns:repeat(2, 1fr) !important; } }' +
+                '</style>';
             wrap.style.display = '';
         }
 

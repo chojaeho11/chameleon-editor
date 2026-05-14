@@ -6712,12 +6712,12 @@ footer, .site-footer { padding-top: 28px !important; }
    ───────────────────────────────────────────────────────────────────── */
 .hero-section {
     width: 100% !important;
-    padding: 80px 24px 64px !important;
+    padding: 80px 24px 100px !important;       /* 하단 패딩 64 → 100 — 영상이 mgrQuote 아래로 더 보이게 */
     text-align: center !important;
     margin-bottom: 0 !important;
     position: relative !important;
     overflow: hidden !important;
-    min-height: 480px !important;
+    min-height: 560px !important;              /* 480 → 560 — 영상 영역 확대 */
     background: #0a0a0a !important;
 }
 /* 백그라운드 영상 — 전체 채우기 */
