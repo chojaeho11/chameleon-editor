@@ -855,23 +855,68 @@ if ('caches' in window) {
                     <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🏢</span><span>본사</span></div>
                     <b style="color:#b45309; font-size:13px; white-space:nowrap;">031-366-1984</b>
                 </a>
-                <a href="tel:010-0000-0001" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>강은미</span></div>
-                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0001</b>
-                </a>
-                <a href="tel:010-0000-0002" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>조지숙</span></div>
-                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0002</b>
-                </a>
-                <a href="tel:010-0000-0003" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>박성희</span></div>
-                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0003</b>
-                </a>
-                <a href="tel:010-0000-0004" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>최연두</span></div>
-                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">010-0000-0004</b>
-                </a>
+                <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 (loadMgrPhones) -->
+                <div id="mgrPhoneSlot" style="display:contents;">
+                    <!-- 로드 전 스켈레톤 placeholder -->
+                    <div style="padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:#78350f;">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:#78350f;">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:#78350f;">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:#78350f;">⌛ 로딩중...</div>
+                </div>
             </div>
+            <script>
+            // 2026-05-14: 매니저 전화번호 DB 동적 로드 (chatbot_knowledge.category='_managers')
+            (function(){
+                async function loadMgrPhones() {
+                    var slot = document.getElementById('mgrPhoneSlot');
+                    if (!slot) return;
+                    try {
+                        var sb = window.sb;
+                        if (!sb) {
+                            try { var mod = await import('./config.js?v=436'); sb = mod.sb || window.sb; } catch(e){}
+                        }
+                        if (!sb) { console.warn('[mgrPhones] sb 미초기화'); return; }
+                        var { data, error } = await sb.from('chatbot_knowledge')
+                            .select('question, answer, is_active, keywords')
+                            .eq('category', '_managers');
+                        if (error || !data) { console.warn('[mgrPhones] fetch 실패:', error); return; }
+                        var FIELD = ['은미','성희','지숙','연두'];
+                        var rows = (data || []).filter(function(r){ return FIELD.some(function(n){ return (r.question||'').includes(n); }); });
+                        rows.sort(function(a,b){
+                            var ai = FIELD.findIndex(function(n){ return (a.question||'').includes(n); });
+                            var bi = FIELD.findIndex(function(n){ return (b.question||'').includes(n); });
+                            return ai - bi;
+                        });
+                        var html = rows.map(function(r){
+                            var phone = '';
+                            try { phone = (JSON.parse(r.answer || '{}').phone || '').toString(); } catch(e){}
+                            // keywords 도 fallback (저장 형식이 다를 수 있음)
+                            if (!phone && r.keywords) phone = String(r.keywords).replace(/[^0-9-]/g, '');
+                            var phoneFmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+                            var tel = phone.replace(/-/g, '');
+                            var off = r.is_active === false;
+                            var nm = (r.question || '').replace(/[<>"'&]/g, '');
+                            if (off) {
+                                return '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#f1f5f9; border:1.5px solid #cbd5e1; border-radius:10px; color:#94a3b8; font-size:12px; font-weight:700; text-align:center; opacity:0.6;">' +
+                                    '<div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🌴</span><span style="text-decoration:line-through;">' + nm + '</span></div>' +
+                                    '<span style="font-size:11px;">휴가중</span>' +
+                                    '</div>';
+                            }
+                            return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">' +
+                                '<div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">👤</span><span>' + nm + '</span></div>' +
+                                '<b style="color:#b45309; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
+                                '</a>';
+                        }).join('');
+                        if (html) slot.innerHTML = html;
+                    } catch (e) { console.warn('[mgrPhones] load failed:', e); }
+                }
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function(){ setTimeout(loadMgrPhones, 500); });
+                } else {
+                    setTimeout(loadMgrPhones, 500);
+                }
+            })();
+            </script>
             <div id="mgrQuoteHint" style="font-size:12px; color:#a16207; text-align:center; line-height:1.5;">
                 ☎️ <b>전화 상담 → 매니저가 파일·금액 확정</b> → 결제 URL 받으시면 이곳에 결제창이 자동으로 표시됩니다
             </div>
