@@ -1081,8 +1081,8 @@ if ('caches' in window) {
     <!-- 2026-05-14: "개인결제창" 모달 — 매니저 카드의 버튼 클릭 시 결제대기/디자인작업중 VIP 카드 모음 표시.
          z-index 1000000 — .topbar (99999) 위로 — nav 가 모달 가리지 않도록.
          flex column 구조 — 헤더(타이틀+닫기버튼) 고정, 본문만 내부 스크롤. -->
-    <div id="personalPayModal" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.78); z-index:1000000; padding:20px; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); box-sizing:border-box;" onclick="if(event.target===this)window._closePersonalPayModal()">
-        <div style="max-width:1280px; max-height:calc(100vh - 40px); margin:0 auto; background:#fff; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 64px -16px rgba(0,0,0,0.5);">
+    <div id="personalPayModal" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.78); z-index:1000000; padding:90px 20px 30px; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); box-sizing:border-box;" onclick="if(event.target===this)window._closePersonalPayModal()">
+        <div style="max-width:1280px; max-height:calc(100vh - 120px); margin:0 auto; background:#fff; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 64px -16px rgba(0,0,0,0.5);">
             <div style="flex-shrink:0; background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 20px; display:flex; align-items:center; justify-content:center; gap:8px; position:relative;">
                 <span style="font-size:22px;">📋</span>
                 <h2 id="personalPayModalTitle" style="margin:0; font-size:20px; font-weight:900; color:#111827; letter-spacing:-0.01em;">개인결제창</h2>
@@ -7781,7 +7781,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=441"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=70"></script>
+<script src="/simple_order.js?v=71"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=11"></script>
 

@@ -434,10 +434,12 @@
 /* 2026-05-14: 결제창 — 페이지 전체 스크롤 + 사방 라운딩 + 위아래 여백 */
 .so-co-overlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
-    z-index: 60000; display: none;
+    /* 2026-05-14: z-index 60000 → 1000000 — .topbar(99999) 위로 띄워 nav 가
+       결제창 가리지 않도록. padding-top 40 → 90 — 상단 더 내려서 여유 확보. */
+    z-index: 1000000; display: none;
     overflow-y: auto;        /* 페이지 스크롤 */
     -webkit-overflow-scrolling: touch;
-    padding: 40px 20px;      /* 상하 40px 여백 — 카드가 화면에 딱 붙지 않음 */
+    padding: 90px 20px 40px;
     box-sizing: border-box;
 }
 .so-co-overlay.open { display: block !important; }
@@ -504,7 +506,7 @@
 .so-co-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 @media (max-width: 768px) {
-    .so-co-overlay { padding: 20px 12px; }   /* 모바일은 좌우만 좁게, 상하 여백 유지 */
+    .so-co-overlay { padding: 70px 12px 30px; }   /* 모바일은 좌우만 좁게, 상단 더 여유 */
     .so-co-card { flex-direction: column; max-height: none; margin: 0 auto; border-radius: 16px; }
     .so-co-form { padding: 20px 18px; }
     .so-co-summary { width: 100%; border-left: none; border-top: 1px solid #e7e5e4; }
