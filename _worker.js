@@ -382,6 +382,20 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
+        // ========== 2026-05-14: cached 301 lock-in 구제 ==========
+        // 이전 코드가 cotton-print.com → cafe3355(EN)/cafe0101(JP) 으로 301 리다이렉트를 보냈고,
+        // 브라우저(특히 모바일) 가 그 301 을 영구 캐싱. 이제 라우팅 fix 가 적용돼도 옛 사용자는
+        // 자기 캐시 따라 잘못된 도메인에 도달함. Referer 가 cotton-print.com 이면 그 잘못된
+        // redirect 의 결과라고 판단 → 같은 path 로 cafe2626(KR) 에 302 리다이렉트.
+        //
+        // 진짜 US/JP 직접 방문자 (북마크/검색/주소창) 는 Referer 가 cotton-print.com 이 아니므로 영향 X.
+        if (url.hostname.includes('cafe3355.com') || url.hostname.includes('cafe0101.com')) {
+            const referer = request.headers.get('Referer') || '';
+            if (referer.includes('cotton-print.com')) {
+                return Response.redirect('https://www.cafe2626.com' + url.pathname + url.search, 302);
+            }
+        }
+
         // ========== cotton-print.com → cafe 도메인 통합 (2026-05-12) ==========
         // 사용자 결정: 도메인 4개를 하나의 사이트처럼 통합. cotton-print.com 의 디자이너는
         // 언어별 cafe 도메인의 /fabric 경로로 301 redirect. 로그인·카트가 같은 origin 에서
