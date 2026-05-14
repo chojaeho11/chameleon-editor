@@ -94,8 +94,8 @@ window.__CD_I18N = {
     hoebae_hint: { ko:'회배 = 가로(cm) × 세로(cm) ÷ 10,000 (1m² 기준). 단가: 0.5회배(반마) 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원. 마감도 회배 비례.', ja:'回杯 = 横×縦 ÷ 10,000 (1m²基準)。単価: 0.5回杯(半マ)以下 800円 / 1回杯未満 1,500円 / 1回杯以上 回杯×1,500円。仕上げも回杯比例。', en:'Units = (W × H) ÷ 10,000 (1m² base). Price: ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units. Finish scales with units.' },
     seam_notice: { ko:'⚠️ 130cm 초과 시 이어박기 처리됩니다 (+10,000원)', ja:'⚠️ 130cm超は継ぎ縫い処理となります (+1,000円)', en:'⚠️ Widths over 130cm require seam joining (+$10)' },
     seam_label: { ko:'이어박기 (대폭 초과)', ja:'継ぎ縫い (幅超過)', en:'Seam joining (oversize)' },
-    tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 8,000원 특가로 구매 가능합니다', ja:'🎉 0.5回杯(半マ)以下は800円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $8' },
-    tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(15,000원)으로 청구됩니다', ja:'ℹ️ 1回杯未満は1回杯価格(1,500円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($15)' },
+    tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 6,000원 특가로 구매 가능합니다', ja:'🎉 0.5回杯(半マ)以下は600円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $6' },
+    tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(10,000원)으로 청구됩니다', ja:'ℹ️ 1回杯未満は1回杯価格(1,000円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($10)' },
     tier_pricing_hint: { ko:'단가: 0.5회배 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원', ja:'単価: 0.5回杯以下 800円 / 1回杯未満 1,500円 / 1回杯以上 回杯×1,500円', en:'Pricing: ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units' },
     side_finish: { ko:'원단 마감', ja:'生地仕上げ', en:'Fabric Finishing' },
     finish_required: { ko:'필수 / 제곱미터당', ja:'必須 / m²あたり', en:'Required / per m²' },
@@ -208,7 +208,12 @@ window.__CD_I18N = {
     alert_address_required: { ko:'배송지를 입력해주세요.', ja:'配送先を入力してください。', en:'Please enter shipping address.' },
     alert_added_to_cart: { ko:'장바구니에 담았습니다', ja:'カートに追加しました', en:'Added to cart' },
     alert_order_failed: { ko:'주문 처리 실패', ja:'注文失敗', en:'Order failed' },
-    no_accessory: { ko:'현재 등록된 부자재가 없습니다', ja:'現在登録されている付属品がありません', en:'No accessories registered yet' }
+    no_accessory: { ko:'현재 등록된 부자재가 없습니다', ja:'現在登録されている付属品がありません', en:'No accessories registered yet' },
+    // 2026-05-14: 택배비 / 무료샘플북
+    ship_label:       { ko:'택배 배송', ja:'宅配便', en:'Shipping' },
+    ship_fee:         { ko:'5,000원', ja:'1,000円', en:'$10' },
+    samplebook_label: { ko:'무료 샘플북 신청', ja:'無料サンプルブック申請', en:'Free Sample Book' },
+    samplebook_sub:   { ko:'원단 주문 시 신청 가능', ja:'生地ご注文時にお申込み可', en:'Available with fabric order' }
 };
 window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.ko || ''; };
 function applyCdI18n() {
@@ -1019,25 +1024,26 @@ a { text-decoration: none; color: inherit; }
             </div>
             <div id="finishOptions" style="display:flex; flex-direction:column; gap:6px;">
                 <!-- 2026-05-12: 순서 변경 — 오버록(기본)/인터록/말아박기/가재단. 롤인쇄는 옵션에서 제외 -->
-                <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="5000">
+                <!-- 2026-05-14: 마감 가격 인하 — 오버록 5000→3000, 인터록 7000→4000, 말아박기 8000→4000, 가재단 3000→1000 -->
+                <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="3000">
                     <input type="radio" name="finish" value="overlock" checked onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_overlock">오버록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_overlock_sub">올풀림 방지</span></span>
-                    <span class="fin-opt-price">+5,000원/회배</span>
+                    <span class="fin-opt-price">+3,000원/회배</span>
                 </label>
-                <label class="fin-opt" data-finish="interlock" data-name="인터록" data-extra="7000">
+                <label class="fin-opt" data-finish="interlock" data-name="인터록" data-extra="4000">
                     <input type="radio" name="finish" value="interlock" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_interlock">인터록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_interlock_sub">튼튼한 이중 마감</span></span>
-                    <span class="fin-opt-price">+7,000원/회배</span>
+                    <span class="fin-opt-price">+4,000원/회배</span>
                 </label>
-                <label class="fin-opt" data-finish="rolledhem" data-name="말아박기" data-extra="8000">
+                <label class="fin-opt" data-finish="rolledhem" data-name="말아박기" data-extra="4000">
                     <input type="radio" name="finish" value="rolledhem" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_rolledhem">말아박기</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_rolledhem_sub">고급 접어박기</span></span>
-                    <span class="fin-opt-price">+8,000원/회배</span>
+                    <span class="fin-opt-price">+4,000원/회배</span>
                 </label>
-                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="3000">
+                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="1000">
                     <input type="radio" name="finish" value="raw" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_raw">가재단</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_raw_sub">사이즈 정밀 컷팅</span></span>
-                    <span class="fin-opt-price">+3,000원/회배</span>
+                    <span class="fin-opt-price">+1,000원/회배</span>
                 </label>
             </div>
         </div>
@@ -1110,42 +1116,64 @@ a { text-decoration: none; color: inherit; }
                     <span class="fin-opt-label"><b data-cdi18n="acc_thread_color">실색상 변경</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_thread_color_sub">기본 외 컬러 마감사</span></span>
                     <span class="fin-opt-price">+2,000원</span>
                 </label>
-                <label class="fin-opt" data-acc="rod_30" data-name="목봉 30cm" data-extra="1500">
+                <!-- 2026-05-14: 목봉 3배 인상 / OPP 1000→300 / 압축봉 3000→5000 / 링고리 1500→500 -->
+                <label class="fin-opt" data-acc="rod_30" data-name="목봉 30cm" data-extra="4500">
                     <input type="radio" name="accessory" value="rod_30" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_rod_30">목봉 30cm</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_rod_sub">상단 봉 끼움용</span></span>
-                    <span class="fin-opt-price">+1,500원</span>
+                    <span class="fin-opt-price">+4,500원</span>
                 </label>
-                <label class="fin-opt" data-acc="rod_50" data-name="목봉 50cm" data-extra="2500">
+                <label class="fin-opt" data-acc="rod_50" data-name="목봉 50cm" data-extra="7500">
                     <input type="radio" name="accessory" value="rod_50" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_rod_50">목봉 50cm</b></span>
-                    <span class="fin-opt-price">+2,500원</span>
+                    <span class="fin-opt-price">+7,500원</span>
                 </label>
-                <label class="fin-opt" data-acc="rod_100" data-name="목봉 100cm" data-extra="4000">
+                <label class="fin-opt" data-acc="rod_100" data-name="목봉 100cm" data-extra="12000">
                     <input type="radio" name="accessory" value="rod_100" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_rod_100">목봉 100cm</b></span>
-                    <span class="fin-opt-price">+4,000원</span>
+                    <span class="fin-opt-price">+12,000원</span>
                 </label>
-                <label class="fin-opt" data-acc="rod_130" data-name="목봉 130cm" data-extra="5000">
+                <label class="fin-opt" data-acc="rod_130" data-name="목봉 130cm" data-extra="15000">
                     <input type="radio" name="accessory" value="rod_130" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_rod_130">목봉 130cm</b></span>
-                    <span class="fin-opt-price">+5,000원</span>
+                    <span class="fin-opt-price">+15,000원</span>
                 </label>
-                <label class="fin-opt" data-acc="opp_pack" data-name="OPP 개별포장" data-extra="1000">
+                <label class="fin-opt" data-acc="opp_pack" data-name="OPP 개별포장" data-extra="300">
                     <input type="radio" name="accessory" value="opp_pack" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_opp_pack">OPP 개별포장</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_opp_sub">투명 비닐 포장</span></span>
-                    <span class="fin-opt-price">+1,000원</span>
+                    <span class="fin-opt-price">+300원</span>
                 </label>
-                <label class="fin-opt" data-acc="press_rod" data-name="압축봉" data-extra="3000">
+                <label class="fin-opt" data-acc="press_rod" data-name="압축봉" data-extra="5000">
                     <input type="radio" name="accessory" value="press_rod" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_press_rod">압축봉</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_press_sub">탄성 압축 봉</span></span>
-                    <span class="fin-opt-price">+3,000원</span>
+                    <span class="fin-opt-price">+5,000원</span>
                 </label>
-                <label class="fin-opt" data-acc="ring_hook" data-name="링고리" data-extra="1500">
+                <label class="fin-opt" data-acc="ring_hook" data-name="링고리" data-extra="500">
                     <input type="radio" name="accessory" value="ring_hook" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_ring_hook">링고리</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_ring_sub">상단 걸이용 링</span></span>
-                    <span class="fin-opt-price">+1,500원</span>
+                    <span class="fin-opt-price">+500원</span>
                 </label>
                 <div id="accessoryExtraList" style="display:contents;"></div>
+            </div>
+        </div>
+
+        <!-- 2026-05-14: 택배비 + 무료샘플북 (2열) — 가격 카드 직전 -->
+        <div class="side-card">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <!-- 택배비 (초록) -->
+                <div style="background:#dcfce7; border:1.5px solid #16a34a; border-radius:10px; padding:14px 12px; text-align:center;">
+                    <div style="font-size:11px; font-weight:800; color:#15803d; margin-bottom:4px;">
+                        <i class="fa-solid fa-truck-fast"></i> <span data-cdi18n="ship_label">택배 배송</span>
+                    </div>
+                    <div style="font-size:17px; font-weight:900; color:#166534;" data-cdi18n="ship_fee">5,000원</div>
+                </div>
+                <!-- 무료 샘플북 (하늘) -->
+                <label style="background:#e0f2fe; border:1.5px solid #0ea5e9; border-radius:10px; padding:10px 12px; cursor:pointer; display:flex; flex-direction:column; gap:2px; text-align:center;">
+                    <div style="font-size:11px; font-weight:800; color:#0369a1; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <input type="checkbox" id="sampleBookCheck" style="margin:0; accent-color:#0ea5e9;" onchange="window._cdOnSampleBookChange && window._cdOnSampleBookChange()">
+                        <i class="fa-solid fa-book"></i> <span data-cdi18n="samplebook_label">무료 샘플북 신청</span>
+                    </div>
+                    <div style="font-size:10px; color:#075985; line-height:1.3;" data-cdi18n="samplebook_sub">원단 주문 시 신청 가능</div>
+                </label>
             </div>
         </div>
 

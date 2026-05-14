@@ -9,11 +9,12 @@
 // 130×100cm = 1.3회배, 100×50cm = 0.5회배 등 비례 계산
 // 최소 1회배 (1m² 미만은 1로 처리)
 // ════════════════════════════════════════════════════
-const HOEBAE_UNIT_PRICE = 15000;
+// 2026-05-14: 원단 가격 인하 — 1마 15000→10000, 반마 8000→6000
+const HOEBAE_UNIT_PRICE = 10000;
 const HOEBAE_AREA_CM2 = 100 * 100; // 1 m² = 10,000 cm²
 const ROLL_MAX_WIDTH_CM = 130;     // 대폭 한계 — 초과 시 이어박기
 const SEAM_EXTRA_KRW = 10000;      // 이어박기 추가비 (130cm 초과 시, 1회 부과)
-const HALF_HOEBAE_PRICE = 8000;    // 반마(0.5회배 이하) 특가
+const HALF_HOEBAE_PRICE = 6000;    // 반마(0.5회배 이하) 특가
 
 // 원단 8종 (가격 동일, 회배 단가 사용)
 // 2026-05-11: name_ja/en + desc_ja/en 추가 — 일본/미국 사이트 번역
@@ -106,6 +107,8 @@ const state = {
     img: null,
     imgDataUrl: null,
     imgFileName: '',
+    // 2026-05-14: 무료 샘플북 신청 (체크 시 주문 정보에 플래그 저장)
+    sampleBook: false,
     // 1) 원단 마감 (필수, 기본 롤인쇄, m²당 가격)
     // 2026-05-12: 기본 마감 = 오버록 (롤인쇄 옵션 제거)
     finishCode: 'overlock',
@@ -632,11 +635,11 @@ window._cdCalcHoebae = function() {
         if (tier === 'half') {
             tierEl.style.display = '';
             tierEl.dataset.cdi18n = 'tier_half_notice';
-            tierEl.textContent = window.cdT ? window.cdT('tier_half_notice') : '🎉 0.5회배(반마) 이하는 8,000원 특가';
+            tierEl.textContent = window.cdT ? window.cdT('tier_half_notice') : '🎉 0.5회배(반마) 이하는 6,000원 특가';
         } else if (tier === 'min') {
             tierEl.style.display = '';
             tierEl.dataset.cdi18n = 'tier_min_notice';
-            tierEl.textContent = window.cdT ? window.cdT('tier_min_notice') : 'ℹ️ 1회배 미만은 1회배(15,000원)로 청구됩니다';
+            tierEl.textContent = window.cdT ? window.cdT('tier_min_notice') : 'ℹ️ 1회배 미만은 1회배(10,000원)로 청구됩니다';
         } else {
             tierEl.style.display = 'none';
         }
@@ -1400,9 +1403,17 @@ function buildCartItem() {
         discountPct: disc.pct,
         discountAmt: discountAmt,
         price: price,
+        // 2026-05-14: 무료 샘플북 신청 플래그 — 주문 정보 텍스트에 포함되어 다크팩토리로 동기화됨.
+        sampleBook: !!state.sampleBook,
         addedAt: new Date().toISOString()
     };
 }
+
+// 2026-05-14: 샘플북 체크박스 핸들러 — state 동기화만 (가격 영향 X, 주문 시 메모로 들어감)
+window._cdOnSampleBookChange = function () {
+    const el = document.getElementById('sampleBookCheck');
+    state.sampleBook = !!(el && el.checked);
+};
 
 window._cdAddToCart = function() {
     // 2026-05-12: UX 개선 — 파일 없이 클릭 시 그냥 카트 드로어 열기 (기존 카트 확인용)
