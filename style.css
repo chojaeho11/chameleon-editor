@@ -6835,6 +6835,31 @@ footer, .site-footer { padding-top: 28px !important; }
     .hero-section .hero-title span { font-size: 40px !important; letter-spacing: 1.5px !important; }
     .hero-section .hero-title span b.ht-prn { padding-left: 6px; }
     .hero-section .hero-title .hero-min-order { font-size: 11px !important; margin-top: 14px !important; }
+
+    /* 2026-05-14: 모바일 — 매니저 전화 버튼 컴팩트화
+       PC 는 2줄(아이콘+이름 위 / 전화번호 아래) 그대로 두고, 모바일에서만 1줄 "이름 - 전화번호".
+       이렇게 해야 본사 + 4 매니저(은미/성희/지숙/연두) 5개 버튼이 hero-section 박스 안에 다 들어옴.
+       #mgrPhoneSlot 은 display:contents 라 자식 a/div 가 그리드 직계처럼 동작 — 두 부모 다 셀렉터 매칭.
+       구조: <a>|<div> > <div>(아이콘 span + 이름 span) + <b>(전화번호) */
+    :is(#mgrPhoneList, #mgrPhoneSlot) > a,
+    :is(#mgrPhoneList, #mgrPhoneSlot) > div {
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 9px 10px !important;
+    }
+    /* 아이콘 (🏢 / 👤 / 🌴) 숨김 */
+    :is(#mgrPhoneList, #mgrPhoneSlot) > a > div > span:first-child,
+    :is(#mgrPhoneList, #mgrPhoneSlot) > div > div > span:first-child { display: none !important; }
+    /* "이름" 우측에 " -" 구분자 (이름과 전화번호 사이) */
+    :is(#mgrPhoneList, #mgrPhoneSlot) > a > div::after,
+    :is(#mgrPhoneList, #mgrPhoneSlot) > div > div::after {
+        content: ' -';
+        margin-left: 2px;
+        color: #92400e;
+        font-weight: 700;
+    }
 }
 
 /* ─────────────────────────────────────────────────────────────────────
