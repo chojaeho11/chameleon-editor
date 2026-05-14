@@ -274,6 +274,7 @@ window.showSection = function(){};
                         <option value="none">미지정</option>
                     </select>
                     <button class="btn btn-primary" onclick="resetPage();loadOrders()"><i class="fa-solid fa-magnifying-glass"></i> 조회</button>
+                    <button class="btn btn-primary" onclick="window.openMgrQuoteCreator()" style="font-weight:700; font-size:12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none;">📝 고객 결제창 만들기</button>
                     <button class="btn btn-outline" onclick="document.getElementById('recoveryPanel').style.display=document.getElementById('recoveryPanel').style.display==='none'?'block':'none'" style="font-weight:600; font-size:12px;">🔧 문서복구</button>
                     <button class="btn btn-outline" onclick="refreshDriveColors(this)" style="font-weight:600; font-size:12px;" title="고객주문 폴더에 수동으로 파일 추가했을 때 색상 갱신">🎨 Drive 색상 갱신</button>
                     <button id="autoDownloadBtn" class="btn btn-outline" onclick="toggleAutoDownload()" style="font-weight:600; font-size:12px;">📥 자동다운 OFF</button>
@@ -573,6 +574,69 @@ async function updateSideBadges() {
     } catch(e) {}
 }
 setInterval(updateSideBadges, 30000);
+</script>
+
+<!-- 2026-05-14: 매니저 — 고객 결제창 만들기 (manager_quote.js 동적 로드) -->
+<div id="mgrQuoteCreatorModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.55); z-index:50000; justify-content:center; align-items:center; padding:20px; box-sizing:border-box;">
+    <div style="background:#fff; border-radius:14px; max-width:780px; width:100%; max-height:92vh; overflow-y:auto; padding:24px 28px; position:relative; box-shadow:0 24px 64px -12px rgba(0,0,0,0.4);">
+        <button onclick="document.getElementById('mgrQuoteCreatorModal').style.display='none'" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:28px; cursor:pointer; color:#94a3b8; line-height:1;">&times;</button>
+        <h2 style="margin:0 0 6px; font-size:20px; font-weight:800; color:#451a03;">📝 고객 결제창 만들기</h2>
+        <div style="font-size:12px; color:#6b7280; margin-bottom:18px;">상담 완료된 고객에게 결제창 URL 을 전송합니다. URL 받으신 고객이 메인 홈에 접속하면 결제 배너가 자동 표시됩니다.</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+            <div>
+                <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:4px;">고객명 *</label>
+                <input id="mqCustName" type="text" placeholder="홍길동" style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:4px;">고객 연락처</label>
+                <input id="mqCustPhone" type="text" placeholder="010-0000-0000" style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; box-sizing:border-box;">
+            </div>
+        </div>
+
+        <div style="background:#fef9e7; border:1.5px solid #fbbf24; border-radius:10px; padding:14px; margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <strong style="font-size:13px; color:#78350f;">📦 상품 항목</strong>
+                <button type="button" onclick="window._mqAddRow()" style="padding:5px 12px; background:#b45309; color:#fde047; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">+ 추가</button>
+            </div>
+            <div id="mqItemsList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div style="font-size:11px; color:#92400e; margin-top:8px;">* 상품명·수량·단가만 채워도 결제창 생성 가능. DB 의 admin_products 코드 입력 시 자동 매칭됩니다.</div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:6px;">📎 디자인 파일 업로드 (여러 파일 선택 가능)</label>
+            <input id="mqFiles" type="file" multiple accept=".png,.jpg,.jpeg,.pdf,.ai,.psd,.zip" style="width:100%; padding:8px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:12px; background:#f9fafb;">
+            <div id="mqFileList" style="font-size:11px; color:#6b7280; margin-top:6px;"></div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:4px;">상담 메모 (요청사항)</label>
+            <textarea id="mqMemo" rows="2" placeholder="예: 배송 희망일, 옵션 등" style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:#451a03; color:#fde047; border-radius:10px; margin-bottom:14px;">
+            <span style="font-size:13px; font-weight:700;">합계 (자동계산)</span>
+            <span id="mqTotal" style="font-size:20px; font-weight:900;">0원</span>
+        </div>
+
+        <button id="mqCreateBtn" type="button" onclick="window._mqCreateQuote(this)" style="width:100%; padding:14px 20px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);">
+            ⚡ 결제창 생성하기
+        </button>
+
+        <div id="mqResultBox" style="display:none; margin-top:14px; padding:14px; background:#dcfce7; border:1.5px solid #22c55e; border-radius:10px;">
+            <div style="font-weight:800; color:#15803d; margin-bottom:6px;">✅ 결제창 생성 완료!</div>
+            <div style="font-size:11px; color:#166534; margin-bottom:8px;">아래 URL 을 고객에게 카카오톡/문자로 전송하세요.</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input id="mqResultUrl" type="text" readonly style="flex:1; padding:10px 12px; border:1.5px solid #86efac; border-radius:8px; font-size:12px; background:#fff; font-family:monospace; color:#15803d;">
+                <button onclick="window._mqCopyUrl(this)" style="padding:10px 14px; background:#15803d; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">📋 복사</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { sb, currentUser, ADDON_DB } from './global_config.js?v=434';
+import './manager_quote.js?v=1';
 </script>
 
 </body>
