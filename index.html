@@ -1312,20 +1312,19 @@ if ('caches' in window) {
 
                 // 2) 카트에 items 복원 (simple_order 의 readCart 와 호환되는 shape)
                 //    매니저가 만든 items 그대로 — 일반 상품 shape (product, qty, ...)
-                // 2026-05-14: items 에 price 필드가 없으면 order.total_amount 를 items 에 비례 분배
-                //   → 카트 합계가 order.total_amount 와 일치하도록 강제 (fabric, 일반 모두)
+                // 2026-05-14: items 합계가 order.total_amount 와 다르면 강제 일치시킴
+                //   order.total_amount 가 진실 (매니저가 고객에게 약속한 금액)
                 var rawItems = order.items || [];
                 var orderTotal = Number(order.total_amount) || 0;
                 var qtySum = rawItems.reduce(function (s, it) { return s + (Number(it.qty) || 1); }, 0) || 1;
-                // 현재 items 에서 _soCalcItemPrice 가 산출할 합계 추정 (fabric: it.price, 일반: product.price*qty)
                 function _estLineTotal(it) {
                     if (it.source === 'cotton-print' || it.fabric || it.fabricCode) return Number(it.price) || 0;
                     var unit = (it.product && Number(it.product.price)) || Number(it.price) || 0;
                     return unit * (Number(it.qty) || 1);
                 }
                 var estSum = rawItems.reduce(function (s, it) { return s + _estLineTotal(it); }, 0);
-                // 카트 합계가 0 인데 order.total_amount 는 있으면 → 각 item.price 를 비례 분배
-                var needRedistribute = (estSum <= 0 && orderTotal > 0);
+                // 합계 불일치 (>10원 차이) 면 비례 분배로 강제 일치 — 매니저견적은 항상 order.total_amount 가 진실
+                var needRedistribute = (orderTotal > 0 && Math.abs(estSum - orderTotal) > 10);
                 var cartItems = rawItems.map(function (it, idx) {
                     var f = (order.files || []).filter(function(x){
                         return x && x.url && x.type !== 'order_sheet' && x.type !== 'quotation' && x.type !== '_error_log';
