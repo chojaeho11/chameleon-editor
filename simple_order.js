@@ -584,6 +584,51 @@
     font-size: 12px; color: #166534; display: none;
 }
 .so-status.err { background: #fef2f2; color: #991b1b; }
+.so-status.warn { background: #fef3c7; color: #92400e; }
+
+/* 2026-05-14: 업로드 중 풀스크린 오버레이 — 진행상태 명확히 + 더블클릭 방지 */
+.so-upload-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.7);
+    z-index: 70000; display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+}
+.so-upload-overlay.open { display: flex !important; }
+.so-upload-overlay-box {
+    background: #fff; border-radius: 18px; padding: 32px 40px;
+    max-width: 420px; width: calc(100% - 40px);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+    text-align: center;
+}
+.so-upload-spinner {
+    width: 64px; height: 64px; margin: 0 auto 18px;
+    border: 5px solid #fef3c7;
+    border-top-color: #b45309;
+    border-radius: 50%;
+    animation: so-spin 0.9s linear infinite;
+}
+@keyframes so-spin { to { transform: rotate(360deg); } }
+.so-upload-title {
+    font-size: 17px; font-weight: 900; color: #451a03; margin-bottom: 8px;
+}
+.so-upload-desc {
+    font-size: 13px; color: #92400e; line-height: 1.6;
+}
+.so-upload-bar {
+    margin: 18px 0 6px; height: 6px; background: #fef3c7; border-radius: 6px;
+    overflow: hidden; position: relative;
+}
+.so-upload-bar::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+    animation: so-bar 1.4s linear infinite;
+}
+@keyframes so-bar {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+.so-upload-step {
+    font-size: 11px; color: #b45309; font-weight: 700; margin-top: 4px;
+}
 
 /* 모바일 — 세로 스택, 풀스크린 유지 */
 @media (max-width: 768px) {
@@ -993,6 +1038,19 @@
 <div id="soLoadingShield" style="position:fixed; inset:0; background:#faf6ed; z-index:99999; display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px;">
   <div style="font-size:42px; color:#78350f;"><i class="fa-solid fa-spinner fa-spin"></i></div>
   <div style="font-size:13px; color:#78350f; font-weight:700;">${tr('잠시만 기다려주세요...', 'お待ちください...', 'Please wait...')}</div>
+</div>
+
+<!-- 2026-05-14: 업로드 중 풀스크린 오버레이 (스피너 + 진행바 + 메시지) -->
+<div id="soUploadOverlay" class="so-upload-overlay">
+  <div class="so-upload-overlay-box">
+    <div class="so-upload-spinner"></div>
+    <div class="so-upload-title" id="soUploadOverlayTitle">${tr('파일 업로드 중...', 'アップロード中...', 'Uploading file...')}</div>
+    <div class="so-upload-desc" id="soUploadOverlayDesc">
+      ${tr('파일을 서버에 업로드하고 있어요. 잠시만 기다려주세요. 페이지를 닫지 마세요.', 'ファイルをアップロード中です。閉じないでください。', 'Uploading your file. Please wait — do not close the page.')}
+    </div>
+    <div class="so-upload-bar"></div>
+    <div class="so-upload-step" id="soUploadOverlayStep">${tr('업로드 진행중', '進行中', 'In progress...')}</div>
+  </div>
 </div>
 
 <div id="soCheckoutOverlay" class="so-co-overlay" style="display:none;">
@@ -1409,6 +1467,25 @@
         return String(s || '').replace(/[&<>"']/g, c => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[c]));
+    }
+
+    // 2026-05-14: 업로드 진행 오버레이 — title/step 으로 단계 표시
+    function showUploadOverlay(title, step) {
+        var o = document.getElementById('soUploadOverlay');
+        if (!o) return;
+        var t = document.getElementById('soUploadOverlayTitle');
+        var s = document.getElementById('soUploadOverlayStep');
+        if (t && title) t.textContent = title;
+        if (s) s.textContent = step || tr('업로드 진행중', '進行中', 'In progress...');
+        o.classList.add('open');
+    }
+    function updateUploadStep(step) {
+        var s = document.getElementById('soUploadOverlayStep');
+        if (s && step) s.textContent = step;
+    }
+    function hideUploadOverlay() {
+        var o = document.getElementById('soUploadOverlay');
+        if (o) o.classList.remove('open');
     }
 
     function showStatus(msg, kind) {
@@ -3061,7 +3138,13 @@
     async function doAddToCart() {
         if (_soInFlight) {
             console.warn('[simple_order] doAddToCart 이미 진행 중 — 중복 호출 무시');
-            showStatus(tr('⏳ 이전 업로드가 진행 중입니다. 잠시만 기다려주세요.', '⏳ アップロード中...', '⏳ Previous upload in progress...'), 'warn');
+            // 풀스크린 오버레이로 진행상태 명확히 표시 (사용자가 클릭 멈춤)
+            showUploadOverlay(
+                tr('이전 업로드가 진행 중입니다', '前のアップロード進行中', 'Previous upload in progress'),
+                tr('잠시만 기다려주세요... (페이지 닫지 마세요)', 'お待ちください...', 'Please wait...')
+            );
+            // 4초 후 자동 닫기 (사용자에게 시각적 피드백 후 사라짐)
+            setTimeout(hideUploadOverlay, 4000);
             return false;
         }
         if (!state.product) {
@@ -3089,17 +3172,24 @@
         const btnB = document.getElementById('soBtnBuy');
         if (btnC) btnC.disabled = true;
         if (btnB) btnB.disabled = true;
+        // 2026-05-14: 풀스크린 업로드 오버레이 표시 — 더블클릭 / 페이지 이탈 방지
+        showUploadOverlay(
+            tr('파일 업로드 중...', 'アップロード中...', 'Uploading file...'),
+            tr('1/2 디자인 파일 업로드 중', '1/2 ファイル', '1/2 design file')
+        );
         showStatus(tr('📤 파일 업로드 중...', '📤 アップロード中...', '📤 Uploading...'), 'ok');
         try {
             const { url, path } = await uploadFile();
             // 2026-05-13: 양면 가벽이면 뒷면 파일도 같이 업로드
             let backUrl = null, backPath = null;
             if (state.wallSide === 'double' && state.fileBack) {
+                updateUploadStep(tr('2/2 뒷면 파일 업로드 중', '2/2 裏面ファイル', '2/2 back side'));
                 showStatus(tr('📤 뒷면 파일 업로드 중...', '📤 裏面ファイル...', '📤 Uploading back...'), 'ok');
                 const backResult = await uploadFileGeneric(state.fileBack);
                 backUrl = backResult.url;
                 backPath = backResult.path;
             }
+            updateUploadStep(tr('장바구니에 추가 중...', 'カート追加中...', 'Adding to cart...'));
             const item = buildCartItem(url, path);
             // 뒷면 파일 URL 부착 (localStorage 호환 — Blob 직접 저장 안 함)
             if (backUrl) {
@@ -3128,6 +3218,7 @@
             showStatus(tr('실패: ', '失敗: ', 'Failed: ') + (e.message || e), 'err');
             return false;
         } finally {
+            hideUploadOverlay();
             updateButtons();
             _soInFlight = false;
         }
