@@ -247,8 +247,24 @@ window._cdUploadImage = async function(files) {
         img.onload = function() {
             state.img = img;
             state.imgAspect = img.width / img.height;
-            state.imgWcm = 10;
-            state.imgHcm = Math.round(10 / state.imgAspect * 10) / 10;
+            // 2026-05-14: layout=='centered' (패브릭포스터) 일 때 — 실제 파일 픽셀 사이즈를
+            //   96 DPI 기준으로 cm 환산, 원단폭 130cm 초과하면 비율 유지하며 축소.
+            //   그리고 출력 사이즈(orderWcm/Hcm) 도 이미지 사이즈와 동일하게 맞춰서 "꽉차게" 표시.
+            if (state.layout === 'centered') {
+                const PX_PER_CM = 96 / 2.54;   // 브라우저 표준 96 DPI
+                let wCm = img.width / PX_PER_CM;
+                let hCm = img.height / PX_PER_CM;
+                if (wCm > 130) { hCm = hCm * (130 / wCm); wCm = 130; }
+                state.imgWcm = Math.round(wCm * 10) / 10;
+                state.imgHcm = Math.round(hCm * 10) / 10;
+                state.orderWcm = state.imgWcm;
+                state.orderHcm = state.imgHcm;
+                const oW = document.getElementById('orderWcm'); if (oW) oW.value = state.orderWcm;
+                const oH = document.getElementById('orderHcm'); if (oH) oH.value = state.orderHcm;
+            } else {
+                state.imgWcm = 10;
+                state.imgHcm = Math.round(10 / state.imgAspect * 10) / 10;
+            }
             document.getElementById('imgWcm').value = state.imgWcm;
             document.getElementById('imgHcm').value = state.imgHcm;
             document.getElementById('uploadZone').style.display = 'none';
@@ -515,8 +531,18 @@ function updateSizeLabels() {
 // 레이아웃 선택
 // ────────────────────────────────────────────────
 window._cdSelectLayout = function(name) {
+    const prev = state.layout;
     state.layout = name;
     document.querySelectorAll('.layout-btn').forEach(el => el.classList.toggle('active', el.dataset.layout === name));
+    // 2026-05-14: 다른 레이아웃 → centered 전환 시 이미지 사이즈에 출력 사이즈를 맞춤 (꽉차게).
+    //   이미 centered 였거나 이미지 미로드면 skip.
+    if (name === 'centered' && prev !== 'centered' && state.img && state.imgAspect) {
+        state.orderWcm = state.imgWcm;
+        state.orderHcm = state.imgHcm;
+        const oW = document.getElementById('orderWcm'); if (oW) oW.value = state.orderWcm;
+        const oH = document.getElementById('orderHcm'); if (oH) oH.value = state.orderHcm;
+        if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
+    }
     window._cdRender();
 };
 
@@ -554,6 +580,27 @@ window._cdCalcHoebae = function() {
     if (w < 10) w = 10;
     if (h < 10) h = 10;
     if (q < 1) q = 1;
+    // 2026-05-14: centered 모드 (패브릭포스터) — 출력 사이즈 변경 시 이미지 사이즈도 동일하게 + 비율 유지.
+    //             변경된 한 축으로부터 다른 축을 imgAspect 로 자동 계산해서 4개 필드 다 묶음.
+    if (state.layout === 'centered' && state.imgAspect) {
+        // 변경 감지 — state 의 이전 값과 비교해서 어느 쪽이 바뀌었는지
+        const prevW = state.orderWcm, prevH = state.orderHcm;
+        if (w !== prevW && h === prevH) {
+            // 가로 변경 → 세로 자동
+            h = Math.round((w / state.imgAspect) * 10) / 10;
+            if (h < 10) h = 10;
+            hEl.value = h;
+        } else if (h !== prevH && w === prevW) {
+            // 세로 변경 → 가로 자동
+            w = Math.round((h * state.imgAspect) * 10) / 10;
+            if (w < 10) w = 10;
+            wEl.value = w;
+        }
+        // 이미지 사이즈도 동기화
+        state.imgWcm = w; state.imgHcm = h;
+        const iW = document.getElementById('imgWcm'); if (iW) iW.value = w;
+        const iH = document.getElementById('imgHcm'); if (iH) iH.value = h;
+    }
     state.orderWcm = w; state.orderHcm = h; state.orderQty = q;
     // 이어박기 자동 결정
     state.seamExtra = (w > ROLL_MAX_WIDTH_CM) ? SEAM_EXTRA_KRW : 0;
@@ -673,6 +720,8 @@ function updatePrice() {
 
 // ────────────────────────────────────────────────
 // 비율 유지 (가로 입력 → 세로 자동, 세로 입력 → 가로 자동)
+// 2026-05-14: layout=='centered' (패브릭포스터) 일 때 — 이미지 사이즈 변경이 출력 사이즈에도
+//             동일하게 반영 (imgWcm == orderWcm, imgHcm == orderHcm). 4개 필드 모두 한 비율로 묶임.
 // ────────────────────────────────────────────────
 window._cdOnSizeInput = function(which) {
     const wInput = document.getElementById('imgWcm');
@@ -698,6 +747,17 @@ window._cdOnSizeInput = function(which) {
                 : lang === 'en' ? 'Max tile width is 130cm'
                 : '패턴 타일의 최대 폭은 130cm입니다';
         showToast(msg);
+    }
+    // 2026-05-14: centered 레이아웃 = 패브릭포스터 모드 → 출력 사이즈 동기화
+    if (state.layout === 'centered') {
+        const newW = parseFloat(wInput.value) || 0;
+        const newH = parseFloat(hInput.value) || 0;
+        const oW = document.getElementById('orderWcm');
+        const oH = document.getElementById('orderHcm');
+        if (oW && newW > 0) oW.value = newW;
+        if (oH && newH > 0) oH.value = newH;
+        state.orderWcm = newW; state.orderHcm = newH;
+        if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
     }
     window._cdRender();
 };
