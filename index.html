@@ -1127,16 +1127,19 @@ if ('caches' in window) {
                 console.log('[mgrQuote banner] start — quoteId:', quoteId, 'localStorage IDs:', allIds, 'isAdmin:', isAdm);
 
                 var orders = null, error = null;
+                // 2026-05-14: 통합주문관리 '결제완료' 탭 + '결제전' 탭 과 동일한 status 필터 적용
+                //   → 제작중/완료/배송 단계로 넘어간 주문은 더 이상 메인 배너에 표시 안 함
+                var PRE_PROD_STATUSES = ['접수됨', '파일처리중', '접수대기', '제작준비'];
                 // 2026-05-14: design_complete 컬럼이 아직 마이그레이션 안 됐을 수도 있음 — graceful fallback
                 async function _selectOrders(withDesignCols) {
                     var cols = 'id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at';
                     if (withDesignCols) cols += ', design_complete, design_complete_at';
                     if (isAdm) {
-                        var q = sb.from('orders').select(cols);
+                        var q = sb.from('orders').select(cols).in('status', PRE_PROD_STATUSES);
                         if (withDesignCols) {
-                            q = q.or('payment_status.eq.상담대기,and(payment_status.eq.결제완료,design_complete.is.false)');
+                            q = q.or('payment_status.eq.상담대기,payment_status.eq.미결제,payment_status.eq.입금대기,and(payment_status.in.(결제완료,입금확인),design_complete.is.false)');
                         } else {
-                            q = q.in('payment_status', ['상담대기', '결제완료', '미결제', '입금대기']);
+                            q = q.in('payment_status', ['상담대기', '결제완료', '입금확인', '미결제', '입금대기']);
                         }
                         return await q.order('created_at', { ascending: false }).limit(30);
                     }
@@ -1158,17 +1161,22 @@ if ('caches' in window) {
 
                 var active = [];
                 (orders || []).forEach(function (o) {
-                    // 결제 완료 & 디자인 완료 → 더 이상 배너에 표시 X
-                    if (o.payment_status === '결제완료' && o.design_complete) {
+                    // 2026-05-14: 통합주문관리 '결제완료' / '결제전' 탭 과 동일한 status 화이트리스트
+                    //   → 제작중/칼선작업/완료됨/발송완료/배송완료/취소 등은 메인 배너에서 제외
+                    if (!o.status || PRE_PROD_STATUSES.indexOf(o.status) < 0) {
                         if (!isAdm) _removePendingId(o.id);
                         return;
                     }
-                    // 그 외 결제 상태 변화 (취소 등)
-                    if (o.payment_status && !['상담대기','미결제','결제완료','입금대기'].includes(o.payment_status)) {
+                    // 결제 완료(또는 입금확인) & 디자인 완료 → 더 이상 배너에 표시 X
+                    if ((o.payment_status === '결제완료' || o.payment_status === '입금확인') && o.design_complete) {
                         if (!isAdm) _removePendingId(o.id);
                         return;
                     }
-                    if (o.status === '취소' || o.status === '취소요청') { if (!isAdm) _removePendingId(o.id); return; }
+                    // 그 외 결제 상태 변화 (취소 등) — 결제완료 탭 + 결제전 탭에 속한 payment_status 만 허용
+                    if (o.payment_status && !['상담대기','미결제','결제완료','입금확인','입금대기'].includes(o.payment_status)) {
+                        if (!isAdm) _removePendingId(o.id);
+                        return;
+                    }
                     if (!o.total_amount || o.total_amount <= 0) { return; }
                     if (!o.items || o.items.length === 0) { return; }
                     active.push(o);
@@ -1260,8 +1268,8 @@ if ('caches' in window) {
                 var itemCount = items.length;
                 var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
                 var fallbackImg = imgUrl.replace(/"/g, '&quot;');
-                // 2026-05-14: 결제완료 + 디자인 미완료 → '데이터작업완료' 버튼으로 전환
-                var isPaid = order.payment_status === '결제완료';
+                // 2026-05-14: 결제완료/입금확인 + 디자인 미완료 → '데이터작업완료' 버튼으로 전환
+                var isPaid = order.payment_status === '결제완료' || order.payment_status === '입금확인';
                 var badgeLabel = isPaid ? '🎨 디자인작업중' : '💬 결제대기';
                 var badgeBg = isPaid ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#fbbf24,#b45309)';
                 var actionBtnHtml = isPaid
