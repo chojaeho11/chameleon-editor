@@ -431,21 +431,23 @@
 }
 
 /* 2026-05-12: 빠른 결제 모달 (패브릭과 동일 스타일) */
-/* 2026-05-14: 결제창 — 칸마다 스크롤이 아닌 페이지 전체 스크롤 (사용자 요청) */
+/* 2026-05-14: 결제창 — 페이지 전체 스크롤 + 사방 라운딩 + 위아래 여백 */
 .so-co-overlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
     z-index: 60000; display: none;
     overflow-y: auto;        /* 페이지 스크롤 */
     -webkit-overflow-scrolling: touch;
-    padding: 20px;
+    padding: 40px 20px;      /* 상하 40px 여백 — 카드가 화면에 딱 붙지 않음 */
     box-sizing: border-box;
 }
 .so-co-overlay.open { display: block !important; }
 .so-co-card {
     width: 100%; max-width: 960px;
-    margin: 20px auto;       /* 가운데 정렬 + 위아래 여백 */
+    margin: 0 auto;
     height: auto; max-height: none;   /* 내용만큼 자연스럽게 늘어남 */
-    background: #fff; border-radius: 16px; display: flex; overflow: visible;
+    background: #fff;
+    border-radius: 20px;     /* 16 → 20px 사방 라운딩 강화 */
+    display: flex; overflow: hidden;  /* 자식이 둥근 모서리에 맞춰 클립됨 */
     box-shadow: 0 25px 60px rgba(0,0,0,0.35); position: relative;
 }
 .so-co-close {
@@ -502,7 +504,8 @@
 .so-co-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 @media (max-width: 768px) {
-    .so-co-card { flex-direction: column; max-height: none; margin: 10px auto; }
+    .so-co-overlay { padding: 20px 12px; }   /* 모바일은 좌우만 좁게, 상하 여백 유지 */
+    .so-co-card { flex-direction: column; max-height: none; margin: 0 auto; border-radius: 16px; }
     .so-co-form { padding: 20px 18px; }
     .so-co-summary { width: 100%; border-left: none; border-top: 1px solid #e7e5e4; }
     .so-body { flex-direction: column; padding: 16px; gap: 16px; }
