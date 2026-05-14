@@ -55,6 +55,41 @@ function sanitize(s: string): string {
     .slice(0, 80) || "unknown";
 }
 
+// 2026-05-14: print_symbol 추론 — admin_products.print_symbol 이 비어있을 때
+//   상품명/코드 키워드로 카테고리 prefix 를 추측해서 칼선 도구가 자동 분류할 수 있게 함.
+//   매핑 출처: cutline.py 의 _ALL_FOLDER_PREFIXES (HW20/HD/HB/HR/HT/HS/HY/HP/FG.../GW/GB/HC/HX/PP/SA/SP/SB/SAU)
+function inferPrintSymbol(item: any): string {
+  if (!item) return "";
+  const product = item.product || {};
+  const nameRaw = String(product.name || item.productName || item.product_name || "");
+  const codeRaw = String(product.code || "");
+  const cat = String(product.category || "").toLowerCase();
+  const name = (nameRaw + " " + codeRaw + " " + cat).toLowerCase();
+
+  // 골판지 가벽/배너 먼저 (가벽/배너 키워드보다 우선)
+  if (/골판/.test(name) && /가벽/.test(name)) return "GW";
+  if (/골판/.test(name) && /배너/.test(name)) return "GB";
+
+  // 허니콤 가벽 — 높이별
+  if (/가벽|wall/.test(name)) {
+    const h = name.match(/(?:^|[^0-9])(20|22|24|30)(?:[^0-9]|m\b|미터)/);
+    return h ? `HW${h[1]}` : "HW20";
+  }
+  if (/등신대/.test(name)) return "HD";
+  if (/연결.*배너|연결형\s*배너/.test(name)) return "HY";
+  if (/병풍/.test(name)) return "HP";
+  if (/배너|현수막/.test(name)) return "HB";
+  if (/자유\s*인쇄.*커팅|자유인쇄커팅/.test(name)) return "HR";
+  if (/글씨\s*커팅/.test(name)) return "HT";
+  if (/고객\s*칼선/.test(name)) return "HS";
+  // 패브릭/코튼
+  if (/코튼|cotton|패브릭|fabric|면20수|폴리에스터|폴리|린넨|광목/.test(name)) return "FG20N";
+  // 코드 자체가 이미 우리 prefix 로 시작하면 그대로 사용
+  const m = codeRaw.toUpperCase().match(/^(HW(?:20|22|24|30)|HD|HR|HT|HS|HB|HY|HP|GW|GB|HC|HX|PP|SA|SP|SB|SAU|FG\w*|FO|FC|FB|FRN|SH|SM)/);
+  if (m) return m[1];
+  return "";
+}
+
 // ── KST(서울 시간) 기준 오늘 날짜 YYYY-MM-DD ──
 function todayKST(): string {
   const now = new Date();
@@ -707,7 +742,12 @@ serve(async (req) => {
     }
 
     // 2) 명명 정보 추출
-    //    상품의 print_symbol(예: "HB")을 우선 사용, 없으면 product.code(예: "hb_bn_1") fallback
+    //    print_symbol 우선순위:
+    //    1. admin_products.print_symbol (DB 등록값)
+    //    2. inferPrintSymbol — 상품명 키워드 (가벽/배너/등신대/패브릭...) 로 추론
+    //    3. product.code 자체가 prefix 로 시작하면 그대로
+    //    4. 마지막 fallback "PRODUCT" — 칼선 도구 가 인식 못 하지만 최소 식별 가능
+    //    2026-05-14: 사용자 요청 — 파일/폴더 prefix 가 항상 HW/HB/HD/HR 등 칼선 도구가 인식하는 형태로 나가야 함.
     const firstItem = Array.isArray(order.items) ? order.items[0] : null;
     const productCode = firstItem?.product?.code || "";
     let printSymbol = "";
@@ -719,6 +759,10 @@ serve(async (req) => {
         .maybeSingle();
       printSymbol = (prod?.print_symbol || "").trim();
     }
+    // DB 비어있으면 키워드 추론
+    if (!printSymbol) {
+      printSymbol = inferPrintSymbol(firstItem);
+    }
     const code = sanitize(printSymbol || productCode || firstItem?.product?.name || "PRODUCT");
     const customerRaw = order.manager_name || "GUEST";
     const customer = sanitize(customerRaw);
@@ -729,7 +773,10 @@ serve(async (req) => {
       : todayKST();
     // 폴더명용 짧은 한국어 날짜 (예: 4월27일)
     const orderDateShort = toKoreanShortDate(orderDateStr);
-    const customerFolderName = sanitize(`${orderDateShort}_${customerRaw}`);
+    // 2026-05-14: 고객 폴더명에도 카테고리 prefix 포함 → 칼선 도구가 parse_customer_folder_name 으로 자동 분류 가능.
+    //   prefix 가 추론 가능하면 "{prefix}_{날짜}_{고객명}", 아니면 기존대로 "{날짜}_{고객명}".
+    const folderPrefix = printSymbol && printSymbol !== "PRODUCT" ? `${printSymbol}_` : "";
+    const customerFolderName = sanitize(`${folderPrefix}${orderDateShort}_${customerRaw}`);
     const baseName = `${code}_${orderNo}_${customer}`;  // 파일 prefix
 
     // 3) Drive 토큰 (OAuth refresh_token 기반)
