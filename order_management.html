@@ -635,8 +635,8 @@ setInterval(updateSideBadges, 30000);
 </div>
 
 <script type="module">
-import { sb, currentUser, ADDON_DB } from './global_config.js?v=434';
-import './manager_quote.js?v=2';
+// 2026-05-14: manager_quote.js 가 sb 를 import 하므로 여기선 모듈 동적 로드만 (named export 충돌 방지)
+import './manager_quote.js?v=3';
 </script>
 
 </body>
