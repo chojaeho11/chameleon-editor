@@ -1404,6 +1404,154 @@ window._cpOpenCheckout = function() {
     document.getElementById('coTotalAmt').textContent = cdFmtPrice(calcCartTotal());
     document.getElementById('checkoutOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
+    // 2026-05-14: 관리자/매니저 로그인 시 '고객 결제창 만들어주기' 버튼 노출 (패브릭)
+    // window.isAdmin 폴백 — sb.auth.getUser() + ADMIN_EMAILS 검사 (cross-domain 대비)
+    (async function () {
+        var btn = document.getElementById('coMgrQuoteBtn');
+        var hint = document.getElementById('coMgrQuoteHint');
+        var res = document.getElementById('coMgrQuoteResult');
+        if (res) res.style.display = 'none';
+        var isAdm = !!window.isAdmin;
+        if (!isAdm && window.supabase) {
+            try {
+                var ADMIN_EMAILS = ['korea900as@gmail.com', 'ceo@test.com'];
+                var sb2 = window.supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+                );
+                var { data: sess } = await sb2.auth.getUser();
+                var em = sess?.user?.email || '';
+                if (em && ADMIN_EMAILS.indexOf(em) >= 0) { isAdm = true; window.isAdmin = true; }
+            } catch (e) {}
+        }
+        if (btn) btn.style.display = isAdm ? '' : 'none';
+        if (hint) hint.style.display = isAdm ? '' : 'none';
+    })();
+};
+
+// 2026-05-14: 패브릭 카트 기반 매니저 견적 (고객 결제창) 생성
+window._cpCreateMgrQuote = async function (btnEl) {
+    var name = (document.getElementById('coName').value || '').trim();
+    var phone = (document.getElementById('coPhone').value || '').trim();
+    var zip = (document.getElementById('coZip').value || '').trim();
+    var addr1 = (document.getElementById('coAddr1').value || '').trim();
+    var addr2 = (document.getElementById('coAddr2').value || '').trim();
+    var memo = (document.getElementById('coMemo').value || '').trim();
+    if (!name) { alert('고객명(받으시는 분)을 입력해주세요.'); return; }
+    if (!phone) { alert('고객 연락처를 입력해주세요.'); return; }
+    var cart = getCart();
+    if (cart.length === 0) { alert('패브릭 카트가 비어있습니다.'); return; }
+    var origLabel = btnEl ? btnEl.innerHTML : '';
+    try {
+        if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '⏳ 생성 중...'; }
+        var sb = window.supabase ? window.supabase.createClient(
+            'https://qinvtnhiidtmrzosyvys.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+        ) : null;
+        if (!sb) throw new Error('Supabase 연결 실패');
+        // 디자인 이미지 업로드
+        var uploadedFiles = [];
+        for (var i = 0; i < cart.length; i++) {
+            var it = cart[i];
+            if (!it.imgDataUrl) continue;
+            var m = it.imgDataUrl.match(/^data:(.+?);base64,(.+)$/);
+            if (!m) continue;
+            var mime = m[1], b64 = m[2];
+            var bin = atob(b64);
+            var arr = new Uint8Array(bin.length);
+            for (var j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+            var blob = new Blob([arr], { type: mime });
+            var ext = (mime.split('/')[1] || 'png').replace(/[^a-z0-9]/gi, '');
+            var path = 'cotton-print/manager_quotes/' + Date.now() + '_' + i + '.' + ext;
+            var { error: upErr } = await sb.storage.from('orders').upload(path, blob);
+            if (!upErr) {
+                var u = sb.storage.from('orders').getPublicUrl(path).data.publicUrl;
+                uploadedFiles.push({ name: it.imgFileName || ('fabric' + (i + 1)), url: u, type: mime });
+            }
+        }
+        var total = calcCartTotal();
+        var items = cart.map(function (it, idx) {
+            var artworkUrl = null, artworkName = null;
+            if (it.imgDataUrl && uploadedFiles[idx]) {
+                artworkUrl = uploadedFiles[idx].url;
+                artworkName = uploadedFiles[idx].name;
+            } else if (it.designerOriginalUrl) {
+                artworkUrl = it.designerOriginalUrl;
+                artworkName = it.imgFileName || 'designer_pattern.png';
+            }
+            return {
+                product_code: it.fabricCode,
+                product_name: it.title,
+                fabric: it.fabricName,
+                width_mm: it.width_mm || Math.round((it.orderWcm || 130) * 10),
+                height_mm: it.height_mm || Math.round((it.orderHcm || 100) * 10),
+                width_cm: it.orderWcm, height_cm: it.orderHcm,
+                qty: it.qtyValue, price: it.price || 0,
+                source: 'cotton-print',
+                artwork_url: artworkUrl, artwork_filename: artworkName,
+                addons: [
+                    it.finishCode ? { type: 'finish', code: it.finishCode, name: it.finishName, price: it.finishExtra || 0 } : null,
+                    it.hookCode ? { type: 'hook', code: it.hookCode, name: it.hookName, price: it.hookExtra || 0 } : null,
+                    it.accCode ? { type: 'accessory', code: it.accCode, name: it.accName, price: it.accExtra || 0 } : null
+                ].filter(Boolean)
+            };
+        });
+        var fullAddr = [zip ? '(' + zip + ')' : '', addr1, addr2].filter(Boolean).join(' ');
+        var mgrEmail = '';
+        try { var { data: sess } = await sb.auth.getUser(); mgrEmail = sess?.user?.email || ''; } catch (e) {}
+        var orderRow = {
+            order_date: new Date().toISOString(),
+            manager_name: name,
+            phone: phone,
+            address: fullAddr,
+            request_note: memo || '',
+            status: '접수됨',
+            payment_status: '상담대기',
+            payment_method: null,
+            total_amount: total,
+            discount_amount: 0,
+            items: items,
+            site_code: 'KR',
+            files: uploadedFiles.length ? uploadedFiles : null,
+            admin_note: '[MANAGER_QUOTE] [Cotton Print] manager=' + (mgrEmail || 'unknown') + '\n패브릭 매니저 카트 기반 결제창 생성 — 고객 결제 대기'
+        };
+        var { data: inserted, error: insErr } = await sb.from('orders').insert([orderRow]).select().single();
+        if (insErr) { console.error('[cpCreateMgrQuote]', insErr); alert('결제창 생성 실패: ' + (insErr.message || insErr)); return; }
+        var newId = inserted.id;
+        try { sb.functions.invoke('sync-order-to-drive', { body: { order_id: newId } }).catch(function(){}); } catch (e) {}
+        var quoteUrl = 'https://www.cafe2626.com/?quote=' + encodeURIComponent(newId);
+        var urlInp = document.getElementById('coMgrQuoteUrl');
+        var resBox = document.getElementById('coMgrQuoteResult');
+        if (urlInp) urlInp.value = quoteUrl;
+        if (resBox) resBox.style.display = '';
+        // 결제대기 목록에 누적
+        try {
+            var raw = localStorage.getItem('cm_pending_quotes') || '[]';
+            var pendingArr = JSON.parse(raw); if (!Array.isArray(pendingArr)) pendingArr = [];
+            if (pendingArr.indexOf(String(newId)) < 0) pendingArr.push(String(newId));
+            localStorage.setItem('cm_pending_quotes', JSON.stringify(pendingArr));
+        } catch (e) {}
+        // 패브릭 카트 비우기 (cotton-print 도메인 기준)
+        try { saveCart([]); window._cpUpdateCartUI && window._cpUpdateCartUI(); } catch (e) {}
+        if (btnEl) { btnEl.innerHTML = '✅ 생성 완료 — URL 복사하여 고객에게 전송'; }
+    } catch (e) {
+        console.error('[cpCreateMgrQuote]', e);
+        alert('오류: ' + (e.message || e));
+        if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origLabel; }
+    }
+};
+
+window._cpCopyMgrQuoteUrl = async function (btn) {
+    var inp = document.getElementById('coMgrQuoteUrl');
+    if (!inp) return;
+    try {
+        await navigator.clipboard.writeText(inp.value);
+        var orig = btn.innerHTML; btn.innerHTML = '✓';
+        setTimeout(function () { btn.innerHTML = orig; }, 1500);
+    } catch (e) {
+        inp.select(); document.execCommand('copy');
+        alert('URL 이 복사되었습니다.');
+    }
 };
 
 window._cpCloseCheckout = function() {

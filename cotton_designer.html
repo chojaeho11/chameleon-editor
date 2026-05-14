@@ -1304,6 +1304,21 @@ a { text-decoration: none; color: inherit; }
             <div style="font-size:10px; color:var(--text-light); text-align:center; margin-top:8px;" data-cdi18n="co_note">
                 결제완료 확인 후 영업일 내 제작 시작됩니다
             </div>
+            <!-- 2026-05-14: 관리자/매니저 전용 — 패브릭 카트 기반 고객 결제창 생성 -->
+            <button id="coMgrQuoteBtn" type="button" onclick="window._cpCreateMgrQuote(this)" style="display:none; width:100%; margin-top:10px; padding:14px 20px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);">
+                🎁 고객 결제창 만들어주기 (매니저)
+            </button>
+            <div id="coMgrQuoteHint" style="display:none; font-size:10px; color:#92400e; text-align:center; margin-top:6px;">
+                ☎️ 패브릭 카트 그대로 고객에게 결제 URL 만 발송됩니다.
+            </div>
+            <div id="coMgrQuoteResult" style="display:none; margin-top:12px; padding:12px; background:#dcfce7; border:1.5px solid #22c55e; border-radius:10px;">
+                <div style="font-weight:800; color:#15803d; margin-bottom:6px; font-size:12px;">✅ 결제 URL 생성됨!</div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <input id="coMgrQuoteUrl" type="text" readonly style="flex:1; padding:8px 10px; border:1.5px solid #86efac; border-radius:6px; font-size:11px; background:#fff; font-family:monospace; color:#15803d;">
+                    <button onclick="window._cpCopyMgrQuoteUrl(this)" style="padding:8px 12px; background:#15803d; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📋</button>
+                </div>
+                <div style="font-size:10px; color:#166534; margin-top:6px;">고객에게 카톡/문자로 전송하세요</div>
+            </div>
         </aside>
     </div>
 </div>
@@ -1324,6 +1339,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=48"></script>
+<script src="/cotton_designer.js?v=49"></script>
 </body>
 </html>

@@ -1222,15 +1222,21 @@ if ('caches' in window) {
                 var customerName = order.manager_name || '고객';
                 var items = order.items || [];
                 var primary = items[0] || {};
-                var primaryProd = primary.product || {};
                 var orderShort = String(order.id || '').substring(0, 8).toUpperCase();
-                // 우선순위: 매니저가 등록한 상품 img → 없으면 VIP 카드 SVG (한글 깨짐 없음)
+                // 2026-05-14: 패브릭 / 일반 상품 shape 둘 다 정상 표시
+                //   - 일반: { product: {name, img, ...}, productName, ... }
+                //   - 패브릭: { product_name, fabric, source:'cotton-print', artwork_url, width_cm, height_cm, ... }
+                var isFabric = (primary.source === 'cotton-print') || !!primary.fabric || !!primary.fabricCode;
+                var primaryProd = primary.product || {};
+                var primaryName = primaryProd.name || primary.productName || primary.product_name || '주문상품';
+                if (isFabric && primary.fabric) primaryName = (primary.product_name || primary.title || primaryName);
+                // 이미지 우선순위 — 패브릭은 artwork_url 사용 가능
                 var imgUrl = primaryProd.img || primaryProd.img_url || primary.imgUrl
-                    || vipCardSvg('#' + orderShort);
+                    || primary.artwork_url || primary.thumb
+                    || vipCardSvg(isFabric ? 'FABRIC #' + orderShort : '#' + orderShort);
                 var itemCount = items.length;
                 var moreSuffix = itemCount > 1 ? ' 외 ' + (itemCount - 1) + '건' : '';
-                var primaryName = primaryProd.name || primary.productName || '주문상품';
-                var fallbackImg = vipCardSvg('#' + orderShort).replace(/"/g, '&quot;');
+                var fallbackImg = vipCardSvg(isFabric ? 'FABRIC #' + orderShort : '#' + orderShort).replace(/"/g, '&quot;');
                 return (
                     '<div class="hotdeal-card" style="cursor:pointer; position:relative;" onclick="window._payPendingQuote(\'' + esc(order.id) + '\')">' +
                       '<div class="hotdeal-img-box">' +
