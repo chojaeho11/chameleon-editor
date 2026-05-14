@@ -633,14 +633,14 @@
             <div id="soDesc" class="so-prod-desc"></div>
             <!-- 2026-05-13: 가벽 상품 전용 안내 (버튼 형태) — 일반 설명 대신 표시 -->
             <div id="soWallGuide" style="display:none; margin-top:10px;">
-              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <div id="soWallGuideChips" style="display:flex; flex-wrap:wrap; gap:6px;">
                 <span class="so-wall-info-btn">📐 ${tr('가로 1m 단위', '横 1m単位', 'Width per 1m')}</span>
-                <span class="so-wall-info-btn">📏 ${tr('세로 2 · 2.2 · 2.4 · 3m', '縦 2/2.2/2.4/3m', 'Height 2/2.2/2.4/3m')}</span>
+                <span class="so-wall-info-btn" id="soWallChipHeight">📏 ${tr('세로 2 · 2.2 · 2.4 · 3m', '縦 2/2.2/2.4/3m', 'Height 2/2.2/2.4/3m')}</span>
                 <span class="so-wall-info-btn">🎨 ${tr('작업은 1/10 사이즈', 'デザイン1/10サイズ', '1/10 scale design')}</span>
                 <span class="so-wall-info-btn">📄 ${tr('파일은 PDF로', 'PDFファイルで', 'PDF file please')}</span>
               </div>
-              <div style="font-size:12px; color:#451a03; margin-top:10px; line-height:1.6; background:#faf6ed; padding:10px 12px; border-radius:8px; border-left:3px solid #b35900;">
-                ${tr('허니콤 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2m / 2.2m / 2.4m / 3m 중 선택하실 수 있습니다.', 'ハニカム壁は横1m単位で製作されます。横は1m〜8m、縦は2/2.2/2.4/3mから選択。', 'Honeycomb walls are produced in 1m width units. Width 1m-8m, height 2/2.2/2.4/3m.')}<br><br>
+              <div id="soWallGuideText" style="font-size:12px; color:#451a03; margin-top:10px; line-height:1.6; background:#faf6ed; padding:10px 12px; border-radius:8px; border-left:3px solid #b35900;">
+                <span id="soWallGuideRange">${tr('허니콤 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2m / 2.2m / 2.4m / 3m 중 선택하실 수 있습니다.', 'ハニカム壁は横1m単位で製作されます。横は1m〜8m、縦は2/2.2/2.4/3mから選択。', 'Honeycomb walls are produced in 1m width units. Width 1m-8m, height 2/2.2/2.4/3m.')}</span><br><br>
                 <b>${tr('🎨 디자인 작업', 'デザイン', 'Design')}:</b> ${tr('실제 사이즈의 1/10로 작업해주세요. 예: 3m × 2.4m 가벽 → 30cm × 24cm 작업.', '実サイズの1/10で作業。例：3m×2.4m → 30cm×24cm。', 'Work at 1/10 of actual size. e.g., 3m × 2.4m wall → 30cm × 24cm.')}<br>
                 <b>${tr('📄 파일 형식', 'ファイル形式', 'Format')}:</b> ${tr('PDF 권장 (인쇄 품질 최상). PNG/JPG 도 가능.', 'PDF推奨。PNG/JPGも可。', 'PDF recommended. PNG/JPG also OK.')}
               </div>
@@ -1560,6 +1560,66 @@
         const name = (p.name || '') + ' ' + (p.name_us || '');
         if (code.startsWith('hb_dw') || cat === 'hb_display_wall') return true;
         if (name.indexOf('가벽') >= 0 || name.toLowerCase().indexOf('display wall') >= 0) return true;
+        // 2026-05-14: 파티션 가림막도 가벽 UI 사용 (사이즈/시공옵션 동일 골격)
+        if (_soIsPartitionProduct(p)) return true;
+        return false;
+    }
+
+    // 2026-05-14: 가벽 사이즈 select 옵션 재구성
+    // - regular wall: 가로 1~8m, 세로 2/2.2/2.4/3m (기본 가로 3, 세로 2.4)
+    // - partition  : 가로 1~10m, 세로 1.2/1.0/0.8m (기본 가로 3, 세로 1.2)
+    function _soRebuildWallSizeOptions(isPartition) {
+        var wEl = document.getElementById('soWallWidth');
+        var hEl = document.getElementById('soWallHeight');
+        if (!wEl || !hEl) return;
+        var widthMax = isPartition ? 10 : 8;
+        var wOpts = '';
+        for (var i = 1; i <= widthMax; i++) {
+            wOpts += '<option value="' + i + '"' + (i === 3 ? ' selected' : '') + '>' + i + ' m</option>';
+        }
+        wEl.innerHTML = wOpts;
+        var heights = isPartition
+            ? [{ v: '1.2', label: '1.2 m', selected: true }, { v: '1', label: '1.0 m' }, { v: '0.8', label: '0.8 m' }]
+            : [{ v: '2', label: '2 m' }, { v: '2.2', label: '2.2 m' }, { v: '2.4', label: '2.4 m', selected: true }, { v: '3', label: '3 m' }];
+        var hOpts = heights.map(function (h) {
+            return '<option value="' + h.v + '"' + (h.selected ? ' selected' : '') + '>' + h.label + '</option>';
+        }).join('');
+        hEl.innerHTML = hOpts;
+
+        // 가이드 카드 chip / 본문 범위 텍스트도 동시 업데이트
+        var chip = document.getElementById('soWallChipHeight');
+        var range = document.getElementById('soWallGuideRange');
+        var lang = getLang();
+        var fmtLine = function(kr, ja, en) { return lang === 'ja' ? ja : (/^(en|us)$/i.test(lang) || lang === 'en' ? en : (/(es|de|fr|zh|ar)/i.test(lang) ? en : kr)); };
+        if (isPartition) {
+            if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 1.2 · 1.0 · 0.8m', '縦 1.2/1.0/0.8m', 'Height 1.2/1.0/0.8m');
+            if (range) range.textContent = fmtLine(
+                '파티션 가림막은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 10m까지 선택 가능하며, 세로는 1.2m / 1.0m / 0.8m 중 선택하실 수 있습니다.',
+                'パーティション目隠しは横1m単位で製作されます。横は1m〜10m、縦は1.2/1.0/0.8mから選択。',
+                'Partition screens are produced in 1m width units. Width 1m-10m, height 1.2/1.0/0.8m.'
+            );
+        } else {
+            if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 2 · 2.2 · 2.4 · 3m', '縦 2/2.2/2.4/3m', 'Height 2/2.2/2.4/3m');
+            if (range) range.textContent = fmtLine(
+                '허니콤 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2m / 2.2m / 2.4m / 3m 중 선택하실 수 있습니다.',
+                'ハニカム壁は横1m単位で製作されます。横は1m〜8m、縦は2/2.2/2.4/3mから選択。',
+                'Honeycomb walls are produced in 1m width units. Width 1m-8m, height 2/2.2/2.4/3m.'
+            );
+        }
+    }
+
+    // 2026-05-14: 허니콤보드 파티션 가림막 감지
+    // - code: hb_par_* / hb_dw_par_* / 또는 admin 이 다른 코드로 등록한 경우 이름으로 매칭
+    // - name: '파티션 가림막' / 'partition' / 'screen' / '간이 가벽'
+    // 가로 1~10m (가벽 1~8m 보다 넓음), 세로 1.2m / 1.0m / 0.8m (가벽 2~3m 와 다름)
+    function _soIsPartitionProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        if (/^hb_par|^hb_dw_par|^hb_pt_par|^partition/i.test(code)) return true;
+        if (/partition|hb_par/.test(cat)) return true;
+        if (/파티션|가림막|간이\s*가벽|partition\s*screen|partition\s*wall|room\s*divider/i.test(name)) return true;
         return false;
     }
 
@@ -2499,8 +2559,15 @@
         // 2026-05-13: 가벽 카테고리 감지 + 추가 옵션 / 노트 초기화
         state.selectedAddons = {};
         state.addonQuantities = {};
-        state.wallWidth = 3;   // 기본 가로 3m
-        state.wallHeight = 2.4; // 기본 세로 2.4m
+        // 2026-05-14: 파티션 가림막은 기본값이 다름 — 1.2m × 3m
+        state.isPartition = _soIsPartitionProduct(p);
+        if (state.isPartition) {
+            state.wallWidth = 3;     // 기본 가로 3m (1~10m 범위)
+            state.wallHeight = 1.2;  // 기본 세로 1.2m (1.2/1.0/0.8 중)
+        } else {
+            state.wallWidth = 3;     // 기본 가로 3m
+            state.wallHeight = 2.4;  // 기본 세로 2.4m
+        }
         state.wallSide = 'single'; // single / double — 양면이면 가격 2배
         state.fileBack = null;
         state.fileBackData = null;
@@ -2528,6 +2595,10 @@
         state.boxNesting = null;
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
+        // 2026-05-14: 파티션이면 가로 1~10m / 세로 1.2·1.0·0.8m 로 옵션 재구성
+        if (state.isWall) {
+            _soRebuildWallSizeOptions(state.isPartition);
+        }
         // 자유인쇄커팅 사이즈 섹션
         var cutSec = document.getElementById('soCutPrintSizeSection');
         if (cutSec) cutSec.style.display = state.isCutPrint ? '' : 'none';
@@ -2636,9 +2707,9 @@
             bundleBtn.style.color = '#15803d';
             bundleBtn.style.borderStyle = 'dashed';
         }
-        // 가벽 사이즈 폼 초기값 동기화
+        // 가벽 사이즈 폼 초기값 동기화 (파티션은 세로 1.2m, 일반 가벽은 2.4m)
         var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = '3';
-        var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = '2.4';
+        var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = state.isPartition ? '1.2' : '2.4';
         // 2026-05-13: 자유인쇄커팅 사이즈 초기화 (한판)
         document.querySelectorAll('.so-cut-btn').forEach(function (b) {
             var on = b.dataset.cut === 'full';
