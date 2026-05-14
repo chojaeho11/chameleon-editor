@@ -3018,6 +3018,13 @@ async function generateRecoveryOrderSheet(order, addonDB) {
     await _rcLoadFont(doc);
 
     const items = order.items || [];
+    // 2026-05-14: 고객 첨부 파일 fallback — item.thumb / originalUrl 이 비어있을 때
+    //   order.files (시스템 파일 제외 — order_sheet/quotation/_error_log) 에서 같은 index 의
+    //   고객 파일 url 을 작업지시서 디자인 미리보기에 넣어준다.
+    //   사용자 보고: 통합주문관리 '주문 파일 관리' 에는 이미지가 있는데 작업지시서엔 '이미지 없음' 표시됨.
+    const customerFiles = (order.files || []).filter(function (f) {
+        return f && f.url && f.type !== 'order_sheet' && f.type !== 'quotation' && f.type !== '_error_log';
+    });
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (!item.product) continue;
@@ -3118,13 +3125,25 @@ async function generateRecoveryOrderSheet(order, addonDB) {
         doc.setFontSize(9); doc.setTextColor(136,136,136);
         doc.text('< 디자인 시안 확인 >', 105, imgBoxY-2, {align:'center'});
 
-        // 이미지 로드 시도: thumb → originalUrl
+        // 이미지 로드 시도: item.thumb → item.originalUrl → item.uploadedFiles[0] →
+        //   order.files[i] (고객이 주문 단계에서 업로드한 파일).
+        // 2026-05-14: 마지막 fallback 으로 customerFiles[i] 추가 — 주문 파일 관리에는
+        //   이미지가 있는데 작업지시서엔 '이미지 없음' 떴던 증상 보강.
         let imgData = null;
         if (item.thumb) {
             imgData = await _rcLoadImage(item.thumb);
         }
         if (!imgData && item.originalUrl) {
             imgData = await _rcLoadImage(item.originalUrl);
+        }
+        if (!imgData && item.uploadedFiles && item.uploadedFiles[0]) {
+            const uf = item.uploadedFiles[0];
+            if (uf.thumb)        imgData = await _rcLoadImage(uf.thumb);
+            if (!imgData && uf.originalUrl) imgData = await _rcLoadImage(uf.originalUrl);
+            if (!imgData && uf.url) imgData = await _rcLoadImage(uf.url);
+        }
+        if (!imgData && customerFiles[i] && customerFiles[i].url) {
+            imgData = await _rcLoadImage(customerFiles[i].url);
         }
 
         if (imgData) {
