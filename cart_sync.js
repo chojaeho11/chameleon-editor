@@ -141,6 +141,9 @@
         if (it.fabricCode || it.fabricName || it.title || it.orderWcm != null) return true;
         if (it.product && typeof it.product === 'object' && (it.product.code || it.product.name)) return true;
         if (it.productCode || it.productName) return true;
+        // 2026-05-14: 매니저견적 주문에서 복원한 fabric/일반 항목 (snake_case 또는 source 태그) 호환
+        if (it.product_name || it.product_code) return true;
+        if (it.source === 'cotton-print' && (it.fabric || it.artwork_url)) return true;
         return false;
     }
 
