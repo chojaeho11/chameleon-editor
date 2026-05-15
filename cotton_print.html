@@ -644,6 +644,14 @@ async function submitPdSample() {
 // 2026-05-15: 원단제공 인쇄 접수 — 고객이 원단을 보내면 인쇄만 (1마 1,500원)
 //   접수 시 vip_orders 에 [QQ:롤원단] 마커로 등록 → Global Admin VIP 대량주문에 노출.
 // ════════════════════════════════════════════════════
+// 다른 IIFE 스코프의 t()/LANG 의존성 제거 — window.__PS_I18N / __PS_LANG 직접 사용
+function _rfT(key) {
+    var dict = window.__PS_I18N || {};
+    var entry = dict[key];
+    if (!entry) return '';
+    var lang = window.__PS_LANG || 'ko';
+    return entry[lang] || entry['ko'] || '';
+}
 function openRollFabricRequest() {
     var m = document.getElementById('rollFabricModal');
     if (m) m.style.display = 'flex';
@@ -659,13 +667,13 @@ async function submitRollFabricRequest() {
     var memo  = (document.getElementById('rfMemo').value || '').trim();
     var agree = document.getElementById('rfAgree').checked;
 
-    if (!name) { alert(t('rf_alert_name')); return; }
-    if (!phone) { alert(t('rf_alert_phone')); return; }
-    if (!agree) { alert(t('rf_alert_agree')); return; }
+    if (!name) { alert(_rfT('rf_alert_name')); return; }
+    if (!phone) { alert(_rfT('rf_alert_phone')); return; }
+    if (!agree) { alert(_rfT('rf_alert_agree')); return; }
 
     var btn = event && event.target ? event.target.closest('button') : null;
     var origLabel = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('rf_submitting'); }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + _rfT('rf_submitting'); }
 
     try {
         var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
@@ -693,11 +701,11 @@ async function submitRollFabricRequest() {
         });
 
         document.getElementById('rollFabricModal').style.display = 'none';
-        alert(t('rf_alert_done'));
+        alert(_rfT('rf_alert_done'));
         ['rfName','rfCompany','rfPhone','rfEmail','rfYards','rfFabric','rfAddr','rfMemo'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
         document.getElementById('rfAgree').checked = false;
     } catch(e) {
-        alert(t('rf_alert_err') + (e.message || e));
+        alert(_rfT('rf_alert_err') + (e.message || e));
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
     }
