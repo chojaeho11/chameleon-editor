@@ -1753,10 +1753,10 @@
             for (var p = 1; p <= 10; p++) widths.push({ v: String(p), label: p + ' m', selected: p === 3 });
             heights = [{ v: '1.2', label: '1.2 m', selected: true }, { v: '1', label: '1.0 m' }, { v: '0.8', label: '0.8 m' }];
         } else if (variant === 'folding') {
-            // 2026-05-15: 병풍형 — 가로 1m 단위 (1~8m), 세로 2.2m 고정
+            // 2026-05-15: 병풍형 — 가로 1m 단위 (1~8m), 세로 2.2m / 2.4m 중 선택 (동일 가격)
             widths = [];
             for (var f = 1; f <= 8; f++) widths.push({ v: String(f), label: f + ' m', selected: f === 3 });
-            heights = [{ v: '2.2', label: '2.2 m', selected: true }];
+            heights = [{ v: '2.2', label: '2.2 m', selected: true }, { v: '2.4', label: '2.4 m' }];
         } else {
             widths = [];
             for (var w = 1; w <= 8; w++) widths.push({ v: String(w), label: w + ' m', selected: w === 3 });
@@ -1769,9 +1769,9 @@
         };
         wEl.innerHTML = mkOpts(widths);
         hEl.innerHTML = mkOpts(heights);
-        // 옵션이 1개뿐이면 비활성화 (강화 골판지: 가로/세로 모두, 병풍형: 세로만)
+        // 옵션이 1개뿐이면 비활성화 (강화 골판지: 가로/세로 모두)
         wEl.disabled = (variant === 'reinforced');
-        hEl.disabled = (variant === 'reinforced' || variant === 'folding');
+        hEl.disabled = (variant === 'reinforced');
 
         // 가이드 카드 chip / 본문 범위 텍스트도 동시 업데이트
         var chip = document.getElementById('soWallChipHeight');
@@ -1793,11 +1793,11 @@
                 'Partition screens are produced in 1m width units. Width 1m-10m, height 1.2/1.0/0.8m.'
             );
         } else if (variant === 'folding') {
-            if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 2.2m 고정', '縦 2.2m 固定', 'Fixed 2.2m height');
+            if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 2.2 · 2.4m (동일 가격)', '縦 2.2/2.4m (同価格)', 'Height 2.2 / 2.4m (same price)');
             if (range) range.textContent = fmtLine(
-                '병풍형 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2.2m로 고정 제작됩니다.',
-                '屏風型壁は横1m単位で製作されます。横は1m〜8m、縦は2.2m固定です。',
-                'Folding-screen walls are produced in 1m width units. Width 1m-8m, height fixed at 2.2m.'
+                '병풍형 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2.2m / 2.4m 중 선택하실 수 있습니다 (동일 가격).',
+                '屏風型壁は横1m単位で製作されます。横は1m〜8m、縦は2.2m / 2.4mから選択(同価格)。',
+                'Folding-screen walls are produced in 1m width units. Width 1m-8m, height 2.2m or 2.4m (same price).'
             );
         } else {
             if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 2 · 2.2 · 2.4 · 3m', '縦 2/2.2/2.4/3m', 'Height 2/2.2/2.4/3m');
