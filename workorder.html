@@ -229,10 +229,39 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         show('woDeliveryDate', deliveryDate);
 
         // admin_note (관리자 메모)
+        // 2026-05-15: 가독성 개선 — 상품별 옵션 블록(▣) 을 카드 형태로 분리 렌더.
         if (order.admin_note) {
             const note = document.getElementById('woAdminNote');
             note.style.display = '';
-            note.innerHTML = '<b>관리자 메모:</b><br>' + esc(order.admin_note).replace(/\n/g, '<br>');
+            const raw = order.admin_note || '';
+            // 상품별 블록 분리 — '=== 상품별 옵션·요청 ===' 마커 이전이 헤더, 이후가 항목들
+            const splitIdx = raw.indexOf('=== 상품별 옵션·요청 ===');
+            let headerPart = raw, itemPart = '';
+            if (splitIdx >= 0) {
+                headerPart = raw.slice(0, splitIdx).trim();
+                itemPart = raw.slice(splitIdx + '=== 상품별 옵션·요청 ==='.length).trim();
+            }
+            // 헤더 라인들 (간편주문/결제수단/이메일 등)
+            const headerHtml = headerPart
+                ? '<div style="font-size:13px; line-height:1.7; color:#451a03;">' +
+                  esc(headerPart).replace(/\n/g, '<br>') + '</div>'
+                : '';
+            // 상품별 블록 — '▣' 로 시작하는 블록을 분리
+            let itemsHtml = '';
+            if (itemPart) {
+                const blocks = itemPart.split(/\n(?=▣\s)/).map(s => s.trim()).filter(Boolean);
+                itemsHtml = '<div style="margin-top:14px; font-size:12px; font-weight:800; color:#92400e;">📋 상품별 옵션·요청</div>' +
+                    blocks.map(block => {
+                        const firstNl = block.indexOf('\n');
+                        const title = firstNl >= 0 ? block.slice(0, firstNl) : block;
+                        const body = firstNl >= 0 ? block.slice(firstNl + 1) : '';
+                        return '<div style="margin-top:10px; padding:12px 14px; background:#fff; border:1px solid #fbbf24; border-radius:10px; box-shadow:0 2px 6px rgba(180,83,9,0.08);">' +
+                            '<div style="font-weight:800; color:#78350f; margin-bottom:6px;">' + esc(title.replace(/^▣\s/, '')) + '</div>' +
+                            (body ? '<div style="font-size:12px; line-height:1.85; color:#451a03; white-space:pre-wrap;">' + esc(body) + '</div>' : '') +
+                        '</div>';
+                    }).join('');
+            }
+            note.innerHTML = '<b>관리자 메모</b>' + (headerHtml ? '<div style="margin-top:6px;">' + headerHtml + '</div>' : '') + itemsHtml;
         }
 
         // 고객 파일 (시스템 파일 제외)

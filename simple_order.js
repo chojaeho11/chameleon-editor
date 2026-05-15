@@ -3599,15 +3599,20 @@
             };
         } else if (state.shipMethod && state.shipMethod !== 'self_pickup') {
             // 2026-05-13: 야간/주말 자동 보정된 실제 fee 사용
+            // 2026-05-15: 일정 무관 메소드 (단순 배송/택배 등) 면 delivery/removal date 강제 비움.
+            //   기존엔 DOM input 값이 stale 로 남아있어 작업지시서에 엉뚱한 철거일자가 찍히던 버그.
             var actualFee = (typeof _soComputeShipFee === 'function') ? _soComputeShipFee() : (state.shipFee || 0);
+            var _noScheduleSet = ['metro_delivery','regional_delivery','parcel_shipping','large_parcel','small_parcel','compact_parcel','pd_bulk_free','pd_parcel_1','pd_parcel_2'];
+            var _needsSchedule = _noScheduleSet.indexOf(state.shipMethod) < 0;
+            var _needsRemoval = state.shipMethod === 'metro_install_removal';
             shipping = {
                 method: state.shipMethod,
                 fee: actualFee,
                 upgrade_reason: state._shipUpgradeReason || null,
-                delivery_date: sdEl ? sdEl.value : '',
-                delivery_time: stEl ? stEl.value : '',
-                removal_date: rdEl ? rdEl.value : '',
-                removal_time: rtEl ? rtEl.value : ''
+                delivery_date: _needsSchedule && sdEl ? sdEl.value : '',
+                delivery_time: _needsSchedule && stEl ? stEl.value : '',
+                removal_date: _needsRemoval && rdEl ? rdEl.value : '',
+                removal_time: _needsRemoval && rtEl ? rtEl.value : ''
             };
         }
         return {
@@ -4690,45 +4695,86 @@
                 }
             } catch (e) {}
             // 2026-05-13: admin_note 에 각 항목별 옵션·전달사항·가벽사이즈·시공일정 요약 포함
+            // 2026-05-15: shipLabel 누락 메소드 보강 (metro/regional_delivery, pd_*, parcel_* 등) +
+            //             철거 행은 실제로 철거 있는 메소드(metro_install_removal) 에서만 표시.
             var itemSummaries = [];
             var totalShippingFee = 0;
             var shipLabel = {
-                metro_install: '수도권 설치 (10만원)',
-                metro_weekend: '수도권 야간/주말 설치 (20만원)',
+                self_pickup:           '본사 방문 수령 (무료)',
+                metro_install:         '수도권 설치 (10만원)',
+                metro_weekend:         '수도권 야간/주말 설치 (20만원)',
                 metro_install_removal: '수도권 설치+철거 (10+20=30만원)',
-                regional_truck: '지방 용차배송 (20만원)',
-                regional_install: '지방 설치배송 (70만원)',
-                self_pickup: '본사 방문 수령'
+                regional_truck:        '지방 용차배송 (20만원)',
+                regional_install:      '지방 설치배송 (70만원)',
+                metro_delivery:        '수도권 배송 (10만원)',
+                regional_delivery:     '지방 배송 (20만원)',
+                bundle_shipping:       '다른 제품과 묶음배송 (무료)',
+                parcel_shipping:       '택배배송 (2장 묶음 3만원)',
+                large_parcel:          '대형택배 (3만원)',
+                small_parcel:          '묶음 소형택배 (5천원)',
+                compact_parcel:        '택배배송 60×40 이하 (1만원)',
+                pd_bulk_free:          '100개 이상 무료배송',
+                pd_parcel_1:           '1개씩 포장 택배배송 (3만원/개)',
+                pd_parcel_2:           '2개씩 포장 택배배송 (1.5만원/2개)'
             };
+            // 일정(배송일자/시간) 이 의미 있는 메소드만 안내 — 단순 배송/택배는 일정 무관
+            var _shipWithSchedule = ['metro_install','metro_weekend','metro_install_removal','regional_truck','regional_install'];
             cart.forEach(function (it, idx) {
                 if (_soIsFabricItem(it)) return; // 패브릭은 별도 처리
                 var pname = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
-                var lines = ['#' + (idx + 1) + ' ' + pname + ' x ' + (it.qty || 1)];
+                var lines = ['▣ #' + (idx + 1) + ' ' + pname + ' × ' + (it.qty || 1)];
                 if (it.wallSize) {
                     var sideLbl = (it.wallSide === 'double') ? ' / 양면' : ' / 단면';
-                    lines.push('  · 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm' + sideLbl);
+                    lines.push('   📐 가벽 사이즈: ' + it.wallSize.w_m + 'm × ' + it.wallSize.h_m + 'm' + sideLbl);
                     if (parseFloat(it.wallSize.h_m) === 3) {
                         var hWidth = it.wallSize.w_m || 1;
                         var hExtra = 50000 * hWidth * (it.wallSide === 'double' ? 2 : 1);
-                        lines.push('  · 세로 3m 추가 (5만 × ' + hWidth + 'm' + (it.wallSide === 'double' ? ' × 2면' : '') + '): +' + hExtra.toLocaleString() + '원');
+                        lines.push('   ➕ 세로 3m 추가 (5만 × ' + hWidth + 'm' + (it.wallSide === 'double' ? ' × 2면' : '') + '): +' + hExtra.toLocaleString() + '원');
                     }
                     if (it.backFileUrl) {
-                        lines.push('  · 뒷면 파일: ' + (it.backFileName || it.backFileUrl));
+                        lines.push('   🖼 뒷면 파일: ' + (it.backFileName || it.backFileUrl));
                     }
+                }
+                if (it.customSize && it.customSize.w_cm) {
+                    lines.push('   📐 사이즈: ' + it.customSize.w_cm + 'cm × ' + it.customSize.h_cm + 'cm');
+                }
+                if (it.boxSize && it.boxSize.w) {
+                    lines.push('   📦 박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
+                }
+                if (it.cutPrint && it.cutPrint.size) {
+                    lines.push('   ✂️ 재단: ' + (it.cutPrint.size === 'half' ? '반판 이내' : '한판'));
                 }
                 if (it.selectedAddons && window.ADDON_DB) {
                     Object.values(it.selectedAddons).forEach(function (code) {
                         var a = window.ADDON_DB[code];
                         if (!a) return;
                         var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
-                        lines.push('  · ' + (a.display_name || a.name) + ' x ' + aQty + ' = ' + (((a.price || 0) * aQty).toLocaleString()) + '원');
+                        lines.push('   ➕ ' + (a.display_name || a.name) + ' × ' + aQty + ' = ' + (((a.price || 0) * aQty).toLocaleString()) + '원');
                     });
                 }
-                if (it.itemNote) lines.push('  · 전달사항: ' + it.itemNote);
+                if (it.baseStand && it.baseStand.label) {
+                    lines.push('   🦵 받침대: ' + it.baseStand.label + (it.baseStand.fee > 0 ? ' (+' + it.baseStand.fee.toLocaleString() + '원)' : ''));
+                }
+                if (it.itemNote) lines.push('   💬 전달사항: ' + it.itemNote);
                 if (it.shipping) {
-                    lines.push('  · 시공/배송: ' + (shipLabel[it.shipping.method] || it.shipping.method));
-                    if (it.shipping.delivery_date) lines.push('    - 배송: ' + it.shipping.delivery_date + ' ' + (it.shipping.delivery_time || ''));
-                    if (it.shipping.removal_date) lines.push('    - 철거: ' + it.shipping.removal_date + ' ' + (it.shipping.removal_time || ''));
+                    var _m = it.shipping.method;
+                    lines.push('   🚚 시공/배송: ' + (shipLabel[_m] || _m));
+                    // 배송/시공 일정은 의미 있는 메소드만 표시
+                    if (_shipWithSchedule.indexOf(_m) >= 0) {
+                        if (it.shipping.delivery_date) {
+                            var _dTime = it.shipping.delivery_time === 'am' ? '오전' :
+                                         it.shipping.delivery_time === 'pm' ? '오후' :
+                                         it.shipping.delivery_time === 'night' ? '야간' :
+                                         it.shipping.delivery_time === 'any' ? '시간상관없음' : (it.shipping.delivery_time || '');
+                            lines.push('       📅 ' + (_m === 'self_pickup' ? '수령일' : '배송/시공일') + ': ' + it.shipping.delivery_date + (_dTime ? ' (' + _dTime + ')' : ''));
+                        }
+                        // 철거는 metro_install_removal 에만
+                        if (_m === 'metro_install_removal' && it.shipping.removal_date) {
+                            var _rTime = it.shipping.removal_time === 'night' ? '야간' :
+                                         it.shipping.removal_time === 'any' ? '시간상관없음' : (it.shipping.removal_time || '');
+                            lines.push('       🔧 철거일: ' + it.shipping.removal_date + (_rTime ? ' (' + _rTime + ')' : ''));
+                        }
+                    }
                     totalShippingFee += (it.shipping.fee || 0);
                 }
                 itemSummaries.push(lines.join('\n'));
