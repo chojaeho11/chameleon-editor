@@ -1638,8 +1638,8 @@
         // 2026-05-13: 양면 가벽이면 뒷면 파일도 필수
         const needBack = !!(state.isWall && state.wallSide === 'double');
         const backOk = !needBack || !!state.fileBack;
-        // 2026-05-15: 원판 상품은 인쇄 없음 — 디자인 파일 없이도 주문 가능
-        const fileOk = state.isRawBoard ? true : !!state.file;
+        // 2026-05-15: 원판·금액주문은 인쇄/파일 없이도 주문 가능
+        const fileOk = (state.isRawBoard || state.isAmountOrder) ? true : !!state.file;
         const ready = !!(state.product && fileOk && state.qty > 0 && backOk);
         const btnC = document.getElementById('soBtnCart');
         const btnB = document.getElementById('soBtnBuy');
@@ -1736,16 +1736,17 @@
         // 2026-05-13: 할인 정책 — 구매금액 할인 + 구독자 할인 (중복 가능)
         // 100만+ 10%, 500만+ 20%, 1000만+ 30%, PRO 구독자 +10%
         // 적용 대상: 상품가 + 옵션 + 세로 3m 옵션 (배송 제외)
-        // 2026-05-15: 원판은 할인 없음 (제품 단순 발송 — 인쇄/제작 없음)
+        // 2026-05-15: 원판·금액주문은 할인 없음 (단순 발송 / 입력 금액 그대로 결제)
         const taxBase = subtotal + addonTotal + heightExtra;
+        const _noDisc = state.isRawBoard || state.isAmountOrder;
         let amountPct = 0;
-        if (!state.isRawBoard) {
+        if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
             else if (taxBase >= 5000000) amountPct = 20;
             else if (taxBase >= 1000000) amountPct = 10;
         }
         const isPro = !!window.isProSubscriber;
-        const proPct = (isPro && !state.isRawBoard) ? 10 : 0;
+        const proPct = (isPro && !_noDisc) ? 10 : 0;
         const totalDiscPct = amountPct + proPct;
         const amountDiscount = Math.round(taxBase * amountPct / 100);
         const proDiscount = Math.round(taxBase * proPct / 100);
@@ -2010,6 +2011,14 @@
     function _soUsesDeliveryShipping(p) {
         if (!p) return false;
         return _soIsHoneycombProduct(p) && !_soIsWallProduct(p);
+    }
+
+    // 2026-05-15: 금액주문 (천원단위/1원단위 맞춤 금액 주문) 감지 — 상품코드 21355677.
+    //   수량 무제한 + 할인·배송·이미지업로드 전부 불필요. 입력 금액 그대로 결제.
+    function _soIsAmountOrder(p) {
+        if (!p) return false;
+        var code = (p.code || '').toString();
+        return code === '21355677' || code === '21355677_copy';
     }
 
     // 2026-05-13: 허니콤보드 원판인쇄 감지 (Wholesale Board Prices · 이름에 "원판" 포함)
@@ -2962,7 +2971,9 @@
     window._soQtyChg = function(delta) {
         const input = document.getElementById('soQty');
         const cur = parseInt(input.value) || 1;
-        const next = Math.max(1, Math.min(9999, cur + delta));
+        // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
+        const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
+        const next = Math.max(1, Math.min(_qtyMax, cur + delta));
         input.value = next;
         state.qty = next;
         _soSyncAcrylicAddonQty();
@@ -2977,7 +2988,9 @@
 
     window._soOnQtyInput = function() {
         const input = document.getElementById('soQty');
-        const v = Math.max(1, Math.min(9999, parseInt(input.value) || 1));
+        // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
+        const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
+        const v = Math.max(1, Math.min(_qtyMax, parseInt(input.value) || 1));
         if (v !== parseInt(input.value)) input.value = v;
         state.qty = v;
         _soSyncAcrylicAddonQty();
@@ -3306,17 +3319,28 @@
         state.isRawBoardDouble = _soIsRawBoardDoubleSided(p);
         // 2026-05-15: 종이매대 상품 — 배송옵션 5종 + 담당자 안내 카드
         state.isPaperDisplay = _soIsPaperDisplayProduct(p);
-        // 2026-05-15: 원판 상품은 인쇄 없이 발송 — 업로드 영역, 전달사항, 수량할인 안내, 양면 라벨, 디자인 관련 UI 숨김
+        // 2026-05-15: 금액주문 (21355677) — 수량 무제한 + 할인·배송·이미지 전부 불필요
+        state.isAmountOrder = _soIsAmountOrder(p);
+        // 2026-05-15: 원판/금액주문은 인쇄 없이 발송 — 업로드 영역, 전달사항, 수량할인 안내, 양면 라벨 등 숨김
+        var _hideUpload = state.isRawBoard || state.isAmountOrder;
         var _rb_uploadWrap = document.getElementById('soUploadWrap');
         var _rb_uploadLabel = document.getElementById('soUploadLabel');
         var _rb_notice = document.getElementById('soRawBoardNotice');
         var _rb_tier = document.getElementById('soTierTable');
         var _rb_note = document.getElementById('soItemNoteSection');
-        if (_rb_uploadWrap) _rb_uploadWrap.style.display = state.isRawBoard ? 'none' : '';
-        if (_rb_uploadLabel) _rb_uploadLabel.style.display = state.isRawBoard ? 'none' : '';
+        if (_rb_uploadWrap) _rb_uploadWrap.style.display = _hideUpload ? 'none' : '';
+        if (_rb_uploadLabel) _rb_uploadLabel.style.display = _hideUpload ? 'none' : '';
         if (_rb_notice) _rb_notice.style.display = state.isRawBoard ? '' : 'none';
-        if (_rb_tier) _rb_tier.style.display = state.isRawBoard ? 'none' : '';
-        if (_rb_note) _rb_note.style.display = state.isRawBoard ? 'none' : '';
+        if (_rb_tier) _rb_tier.style.display = _hideUpload ? 'none' : '';
+        if (_rb_note) _rb_note.style.display = _hideUpload ? 'none' : '';
+        // 2026-05-15: 금액주문 — 시공/배송 섹션 자체 숨김, 수량 input max 무제한(천만)
+        var _amtSchedSec = document.getElementById('soScheduleSection');
+        if (state.isAmountOrder) {
+            if (_amtSchedSec) _amtSchedSec.style.display = 'none';
+            state.shipMethod = 'self_pickup';
+            var _amtQtyInput = document.getElementById('soQty');
+            if (_amtQtyInput) _amtQtyInput.max = '99999999';
+        }
 
         // 2026-05-13: 받침대 옵션이 필요한 상품 (등신대 + 자유인쇄커팅)
         state.needsBaseStand = _soNeedsBaseStand(p);
@@ -3369,7 +3393,8 @@
         state.isGeneralPrint = _soIsGeneralPrintProduct(p) && !state.isForexFoam;
         // 시공/배송 일정 섹션 — 가벽·포토존·배송전용허니콤·포맥스폼보드·일반인쇄물·종이매대 모두 표시
         var schedSec = document.getElementById('soScheduleSection');
-        var anyShipScope = state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay;
+        // 2026-05-15: 금액주문은 배송 개념 자체가 없음 — 시공/배송 섹션 강제 숨김
+        var anyShipScope = !state.isAmountOrder && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         // 2026-05-13: 카테고리별 ship 버튼 화이트리스트
         var installKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
@@ -3666,8 +3691,10 @@
                 img: pickImg(p),
             },
             type: 'file_upload',
-            // 2026-05-15: 원판은 파일 없이도 주문 가능 — fileName/mimeType null safe
-            fileName: state.file ? state.file.name : (state.isRawBoard ? '(원판 발송 — 파일 없음)' : ''),
+            // 2026-05-15: 원판·금액주문은 파일 없이도 주문 가능 — fileName/mimeType null safe
+            fileName: state.file ? state.file.name
+                : (state.isRawBoard ? '(원판 발송 — 파일 없음)'
+                : (state.isAmountOrder ? '(금액주문 — 파일 없음)' : '')),
             mimeType: state.file ? state.file.type : '',
             fileData: null,
             originalUrl: fileUrl,
@@ -3767,8 +3794,8 @@
             showStatus(tr('❌ 상품 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.', '商品情報を読み込み中...', 'Loading product info...'), 'err');
             return false;
         }
-        // 2026-05-15: 원판 상품은 디자인 파일 검증 스킵 (인쇄 없이 발송)
-        if (!state.isRawBoard && !state.file) {
+        // 2026-05-15: 원판·금액주문은 디자인 파일 검증 스킵 (인쇄 없이 발송 / 입력 금액 그대로)
+        if (!state.isRawBoard && !state.isAmountOrder && !state.file) {
             console.warn('[simple_order] state.file 미설정 — 파일을 먼저 업로드해야 함');
             showStatus(tr('❌ 디자인 파일을 먼저 업로드해주세요.', '📁 デザインファイルをアップロードしてください。', 'Please upload a design file first.'), 'err');
             // 업로드 영역 강조 (사용자가 어디 클릭해야 할지 명확히)
@@ -3789,24 +3816,25 @@
         if (btnC) btnC.disabled = true;
         if (btnB) btnB.disabled = true;
         // 2026-05-14: 풀스크린 업로드 오버레이 표시 — 더블클릭 / 페이지 이탈 방지
-        // 2026-05-15: 원판은 파일 업로드 없음 — 오버레이 라벨도 다르게
+        // 2026-05-15: 원판·금액주문은 파일 업로드 없음 — 오버레이 라벨도 다르게
+        var _noFileFlow = state.isRawBoard || state.isAmountOrder;
         showUploadOverlay(
-            state.isRawBoard
+            _noFileFlow
                 ? tr('장바구니에 담는 중...', 'カートに追加中...', 'Adding to cart...')
                 : tr('파일 업로드 중...', 'アップロード中...', 'Uploading file...'),
-            state.isRawBoard
+            _noFileFlow
                 ? tr('잠시만 기다려주세요', 'お待ちください', 'Please wait')
                 : tr('1/2 디자인 파일 업로드 중', '1/2 ファイル', '1/2 design file')
         );
         showStatus(
-            state.isRawBoard
+            _noFileFlow
                 ? tr('📦 장바구니 처리 중...', '📦 カート処理中...', '📦 Processing...')
                 : tr('📤 파일 업로드 중...', '📤 アップロード中...', '📤 Uploading...'),
             'ok'
         );
         try {
-            // 2026-05-15: 원판은 디자인 파일 업로드 스킵 (인쇄 없음)
-            const { url, path } = state.isRawBoard ? { url: null, path: null } : await uploadFile();
+            // 2026-05-15: 원판·금액주문은 디자인 파일 업로드 스킵
+            const { url, path } = _noFileFlow ? { url: null, path: null } : await uploadFile();
             // 2026-05-13: 양면 가벽이면 뒷면 파일도 같이 업로드
             let backUrl = null, backPath = null;
             if (state.wallSide === 'double' && state.fileBack) {
@@ -4259,8 +4287,8 @@
             var subPrice = _soCalcItemPrice(it);
             var shipFee = (it.shipping && it.shipping.fee) || 0;
             // 2026-05-13: 매니저 견적 주문은 할인 대상에서 제외 (담당자가 이미 할인 반영)
-            // 2026-05-15: 원판(Wholesale Board Prices) — 단순 제품 발송이므로 수량/구독 할인 제외
-            if (_soIsManagerQuoteItem(it) || (it.product && _soIsRawBoardProduct(it.product))) {
+            // 2026-05-15: 원판 / 금액주문 — 단순 발송·입력 금액 그대로이므로 수량/구독 할인 제외
+            if (_soIsManagerQuoteItem(it) || (it.product && (_soIsRawBoardProduct(it.product) || _soIsAmountOrder(it.product)))) {
                 nonDiscountBase += (subPrice - shipFee);
             } else {
                 taxBase += (subPrice - shipFee);
