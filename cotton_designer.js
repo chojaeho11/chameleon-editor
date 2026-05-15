@@ -1186,7 +1186,13 @@ window._cpUpdateCartUI = function() {
             if (gen.length > 0) {
                 genHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:12px 0 8px;"><i class="fa-solid fa-box" style="margin-right:6px;"></i>' + T('cart_section_general', '일반상품') + '</div>' +
                 gen.map(function(it, gi) {
-                    var name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
+                    // 2026-05-15: 일반상품 카트 이름 — 현재 언어 우선 사용 (JP 사이트에서 한국어 이름 잔존 방지)
+                    var _cnLang = window.__CD_LANG || 'ko';
+                    var _p = it.product || {};
+                    var name = '';
+                    if (_cnLang === 'ja') name = _p.name_jp || _p.name_ja || _p.name || _p.name_us || it.productName || '商品';
+                    else if (_cnLang === 'en') name = _p.name_us || _p.name_en || _p.name || it.productName || 'Product';
+                    else name = _p.name || _p.name_kr || it.productName || '상품';
                     var qty = it.qty || 1;
                     var price = ((it.product && it.product.price) || 0) * qty;
                     var thumb = it.thumb || (it.product && it.product.img) || 'https://placehold.co/80?text=Item';
@@ -1194,7 +1200,7 @@ window._cpUpdateCartUI = function() {
                         '<img class="cart-item-thumb" src="' + thumb + '" alt="">' +
                         '<div class="cart-item-info">' +
                             '<div class="cart-item-name">' + name + '</div>' +
-                            '<div class="cart-item-opts">' + qty + '개</div>' +
+                            '<div class="cart-item-opts">' + qty + (window.cdT ? (window.cdT('qty_unit') || '개') : '개') + '</div>' +
                             '<div class="cart-item-bottom">' +
                                 '<span class="cart-item-price">' + cdFmtPrice(price) + '</span>' +
                                 '<button class="cart-item-remove" onclick="window._cpRemoveGeneralCartItem(' + gi + ')"><i class="fa-solid fa-trash"></i> ' + L.remove + '</button>' +
@@ -1535,7 +1541,9 @@ window._cdAddToCart = async function() {
     cart.push(item);
     saveCart(cart);
     window._cpUpdateCartUI();
-    showToast('장바구니에 담았습니다 (' + cart.length + '개)');
+    showToast((window.cdT && window.cdT('cart_added_toast')
+        ? window.cdT('cart_added_toast').replace('{n}', cart.length)
+        : '장바구니에 담았습니다 (' + cart.length + '개)'));
     setTimeout(window._cpCartOpen, 400);
 };
 
@@ -2155,7 +2163,7 @@ async function autoLoadPatternFromUrl() {
                 // 패턴 이름은 캔버스 헤더 영역에 자연스럽게 노출되도록 별도 처리하거나 그냥 토스트로만 안내.
 
                 window._cdRender();
-                showToast('✅ 패턴 로드 완료! 원단을 선택하고 사이즈를 조정해보세요.');
+                showToast(window.cdT ? window.cdT('pattern_loaded_toast') : '✅ 패턴 로드 완료! 원단을 선택하고 사이즈를 조정해보세요.');
             };
             img.src = e.target.result;
         };

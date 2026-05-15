@@ -1365,7 +1365,14 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
         // Next
         html += '<button class="cp-page-btn" onclick="cpGoToPage(' + (_currentPage+1) + ')"' + (_currentPage===totalPages ? ' disabled' : '') + '><i class="fa-solid fa-chevron-right"></i></button>';
         // Total label
-        html += '<span style="margin-left:14px; font-size:12px; color:var(--text-light);">총 ' + totalCount + '개 · ' + _currentPage + '/' + totalPages + ' 페이지</span>';
+        // 2026-05-15: 다국어 라벨 (cotton-printer.com 일본어 페이지에서 한국어 잔존하던 버그 보강)
+        var _pgL = window.__PS_LANG || 'ko';
+        var _totalLabel =
+            _pgL === 'ja' ? '全 ' + totalCount + '件 · ' + _currentPage + '/' + totalPages + ' ページ' :
+            (_pgL === 'en' || _pgL === 'zh' || _pgL === 'ar' || _pgL === 'es' || _pgL === 'de' || _pgL === 'fr')
+                ? 'Total ' + totalCount + ' · ' + _currentPage + '/' + totalPages
+                : '총 ' + totalCount + '개 · ' + _currentPage + '/' + totalPages + ' 페이지';
+        html += '<span style="margin-left:14px; font-size:12px; color:var(--text-light);">' + _totalLabel + '</span>';
         pager.innerHTML = html;
     }
 
