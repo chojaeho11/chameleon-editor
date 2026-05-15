@@ -10165,10 +10165,15 @@ async function loadScrollBanner() {
             return;
         }
         // ★ 패브릭 인쇄 → https://www.cotton-print.com/ (모든 언어, 해외는 ?lang= 부착)
+        // 2026-05-15: JP 는 cotton-printer.com (전용 도메인) 으로
         if (topCode === '22222') {
             const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko',ko:'ko'};
             const fbLang = langMap[CURRENT_LANG] || '';
-            location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
+            if (fbLang === 'ja') {
+                location.href = 'https://www.cotton-printer.com/';
+            } else {
+                location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
+            }
             return;
         }
         if (!sb) { console.warn("[openTopMenu] sb가 아직 초기화되지 않음"); return; }
@@ -10445,10 +10450,15 @@ async function renderQuickMenu() {
                     return;
                 }
                 // ★ 패브릭 인쇄 → https://www.cotton-print.com/ (2026-05-14: 별도 도메인으로 이동, 해외는 ?lang=)
+                // 2026-05-15: JP 는 cotton-printer.com (전용 도메인) 으로
                 if (top.code === '22222') {
                     const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko',ko:'ko'};
                     const fbLang = langMap[CURRENT_LANG] || '';
-                    location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
+                    if (fbLang === 'ja') {
+                        location.href = 'https://www.cotton-printer.com/';
+                    } else {
+                        location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
+                    }
                     return;
                 }
                 // ★ 고객작품판매 → 마켓플레이스 섹션으로 스크롤
@@ -10549,10 +10559,15 @@ async function renderQuickMenu() {
                         return;
                     }
                     // ★ 패브릭 인쇄 → https://www.cotton-print.com/ (2026-05-14: 별도 도메인으로 이동, 해외는 ?lang=)
+                    // 2026-05-15: JP 는 cotton-printer.com (전용 도메인) 으로
                     if (top.code === '22222') {
                         const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko',ko:'ko'};
                         const fbLang = langMap[CURRENT_LANG] || '';
-                        location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
+                        if (fbLang === 'ja') {
+                            location.href = 'https://www.cotton-printer.com/';
+                        } else {
+                            location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
+                        }
                         return;
                     }
                     const wasActive = btn.classList.contains('active');
