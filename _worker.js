@@ -389,23 +389,27 @@ export default {
         // redirect 의 결과라고 판단 → 같은 path 로 cafe2626(KR) 에 302 리다이렉트.
         //
         // 진짜 US/JP 직접 방문자 (북마크/검색/주소창) 는 Referer 가 cotton-print.com 이 아니므로 영향 X.
+        // 2026-05-15: substring 매칭이라 cotton-printer.com 까지 잘못 잡히던 버그 — 정확한 도메인 매칭으로 변경.
         if (url.hostname.includes('cafe3355.com') || url.hostname.includes('cafe0101.com')) {
             const referer = request.headers.get('Referer') || '';
-            if (referer.includes('cotton-print.com')) {
+            // cotton-print.com 만 매치 (cotton-printer.com 은 정상 JP 도메인이라 제외)
+            if (/\bcotton-print\.com\b/.test(referer) && !referer.includes('cotton-printer.com')) {
                 return Response.redirect('https://www.cafe2626.com' + url.pathname + url.search, 302);
             }
         }
 
-        // ========== cotton-print.com → cafe 도메인 통합 (2026-05-12) ==========
+        // ========== cotton-print.com / cotton-printer.com → cafe 도메인 통합 (2026-05-12) ==========
         // 사용자 결정: 도메인 4개를 하나의 사이트처럼 통합. cotton-print.com 의 디자이너는
         // 언어별 cafe 도메인의 /fabric 경로로 301 redirect. 로그인·카트가 같은 origin 에서
         // 자연스럽게 공유되어 "한 번 로그인 → 모든 곳에서 사용" 이 실현됨.
-        if (url.hostname.includes('cotton-print.com')) {
-            // 언어 결정: ?lang= URL 파라미터 만 인정. 기본 KR (cafe2626).
+        // 2026-05-15: cotton-printer.com — 일본 cotton-print 전용 도메인. 같은 라우팅 + JP 강제.
+        const _isCottonPrinter = url.hostname.includes('cotton-printer.com');
+        if (url.hostname.includes('cotton-print.com') || _isCottonPrinter) {
+            // 언어 결정: cotton-printer.com 은 무조건 JP. cotton-print.com 은 ?lang= URL 파라미터 만 인정 (기본 KR).
             // 2026-05-14: Accept-Language 기반 자동 라우팅 제거 — 모바일 브라우저가 'en-US,ko;q=0.9'
             //   같은 헤더 보내서 startsWith('en') 매치 → cafe3355.com 으로 잘못 리다이렉트되던 버그.
             //   cotton-print.com 은 한국 패브릭 서비스라 명시적 lang 선택이 없으면 무조건 KR.
-            const langParam = (url.searchParams.get('lang') || '').toLowerCase();
+            const langParam = _isCottonPrinter ? 'ja' : (url.searchParams.get('lang') || '').toLowerCase();
             let cafeHost = 'www.cafe2626.com';
             if (langParam === 'ja' || langParam === 'jp') cafeHost = 'www.cafe0101.com';
             else if (langParam === 'en' || langParam === 'us') cafeHost = 'www.cafe3355.com';
