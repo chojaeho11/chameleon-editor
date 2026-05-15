@@ -967,6 +967,69 @@ if ('caches' in window) {
             <div id="mgrQuoteHint" style="display:none;"></div>
         </div>
     </div>
+
+    <!-- 2026-05-15: 해외(JP/US) 전용 — 글로벌 지사 안내 카드 + 해외가맹점 모집 버튼.
+         KR 에서는 CSS 로 숨김. mgrQuoteHero 와 동일한 노랑 카드 스타일. -->
+    <div id="overseasBranchHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
+        <div style="background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:1.5px solid #fbbf24; border-radius:16px; padding:22px 28px; box-shadow:0 6px 20px -8px rgba(251,191,36,0.4);">
+            <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
+                <div style="font-size:32px; line-height:1; flex-shrink:0;">🌐</div>
+                <div style="flex:1; min-width:0;">
+                    <div id="overseasBranchTitle" style="font-size:16px; font-weight:800; color:#78350f; margin-bottom:4px;">글로벌 지사 안내</div>
+                    <div id="overseasBranchDesc" style="font-size:12px; color:#92400e; line-height:1.5;">전 세계 어디서나 가까운 지사로 문의하세요. 현지 언어로 상담드립니다.</div>
+                </div>
+            </div>
+            <div id="overseasBranchList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px;">
+                <a href="tel:09053970420" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🇯🇵</span><span data-ob-key="jp">일본지사 나나미</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">090-5397-0420</b>
+                </a>
+                <a href="tel:212617901092" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🇲🇦</span><span data-ob-key="ma">모로코지사 히바</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">212-617-901-092</b>
+                </a>
+                <a href="tel:0313661984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fbbf24; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🇰🇷</span><span data-ob-key="kr">한국사무실</span></div>
+                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">031-366-1984</b>
+                </a>
+            </div>
+            <div style="display:flex; justify-content:center; align-items:center; margin-top:6px;">
+                <a href="/franchise" id="overseasFranchiseBtn" style="padding:11px 22px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(180,83,9,0.45); letter-spacing:0.5px; white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+                    🤝 <span id="overseasFranchiseBtnLabel">해외가맹점 모집</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <script>
+    // 2026-05-15: 해외 지사 카드 다국어 (간단 인라인)
+    (function(){
+        var host = location.hostname || '';
+        var u = new URLSearchParams(location.search);
+        var lang = u.get('lang') ||
+            (host.indexOf('cafe0101.com') >= 0 ? 'ja' :
+             (host.indexOf('cafe3355.com') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
+             (window.CURRENT_LANG || 'kr'));
+        var T = {
+            kr: { title:'글로벌 지사 안내', desc:'전 세계 어디서나 가까운 지사로 문의하세요. 현지 언어로 상담드립니다.', jp:'일본지사 나나미', ma:'모로코지사 히바', kr:'한국사무실', btn:'해외가맹점 모집' },
+            ja: { title:'グローバル支社のご案内', desc:'世界中どこからでも、お近くの支社へお問い合わせください。現地語でご対応いたします。', jp:'日本支社 ナナミ', ma:'モロッコ支社 ヒバ', kr:'韓国本社', btn:'海外加盟店募集' },
+            en: { title:'Global Branches', desc:'Reach our local branch from anywhere in the world — local language support.', jp:'Japan — Nanami', ma:'Morocco — Hiba', kr:'Korea Head Office', btn:'Overseas Franchise' },
+            zh: { title:'全球分公司', desc:'世界各地均可联系最近的分公司，本地语言服务。', jp:'日本分公司 娜娜美', ma:'摩洛哥分公司 希巴', kr:'韩国总部', btn:'海外加盟招募' },
+            es: { title:'Sucursales Globales', desc:'Contacte con la sucursal más cercana desde cualquier parte del mundo.', jp:'Japón — Nanami', ma:'Marruecos — Hiba', kr:'Oficina Corea', btn:'Franquicia Internacional' },
+            de: { title:'Globale Niederlassungen', desc:'Erreichen Sie von überall die nächste Niederlassung — lokaler Support.', jp:'Japan — Nanami', ma:'Marokko — Hiba', kr:'Korea Büro', btn:'Internationale Franchise' },
+            fr: { title:'Filiales Mondiales', desc:'Contactez la filiale la plus proche partout dans le monde — support local.', jp:'Japon — Nanami', ma:'Maroc — Hiba', kr:'Bureau Corée', btn:'Franchise Internationale' },
+            ar: { title:'الفروع العالمية', desc:'تواصل مع أقرب فرع لك من أي مكان في العالم — دعم بلغتك المحلية.', jp:'فرع اليابان — ناNAمي', ma:'فرع المغرب — هبة', kr:'مكتب كوريا', btn:'الامتياز الدولي' }
+        };
+        var t = T[lang] || T.kr;
+        function $(id){ return document.getElementById(id); }
+        if ($('overseasBranchTitle')) $('overseasBranchTitle').textContent = t.title;
+        if ($('overseasBranchDesc'))  $('overseasBranchDesc').textContent  = t.desc;
+        if ($('overseasFranchiseBtnLabel')) $('overseasFranchiseBtnLabel').textContent = t.btn;
+        document.querySelectorAll('#overseasBranchList [data-ob-key]').forEach(function(el){
+            var k = el.getAttribute('data-ob-key');
+            if (t[k]) el.textContent = t[k];
+        });
+    })();
+    </script>
     <script>
     // 2026-05-13: 매니저 견적 카드 다국어 (홈페이지 hero 안에 인라인)
     (function(){
@@ -9665,14 +9728,8 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./advisor-panel.js?v=450').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
-            // 2026-05-14: 해외(JP/US)는 노랑 매니저 연결 버튼을 hero-section 안쪽 하단으로 이동
-            try {
-                if (window.__SITE_CODE && window.__SITE_CODE !== 'KR') {
-                    var _pulseBtn = document.querySelector('#advShortcutBtns .adv-ext-btn-pulse');
-                    var _hero = document.querySelector('.hero-section');
-                    if (_pulseBtn && _hero) _hero.appendChild(_pulseBtn);
-                }
-            } catch(e) {}
+            // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
+            // (이전: JP/US 에서 매니저 연결 버튼만 hero 안으로 이동했었음 — 제거)
         }).catch(e => console.warn('Advisor panel init skipped:', e));
 
         // AI 디자인 생성기 초기화

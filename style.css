@@ -6908,59 +6908,18 @@ html[data-site="US"] .cs-center .cs-contact-overseas { display: inline; }
 /* ─────────────────────────────────────────────────────────────────────
    2026-05-14: 해외 사이트(JP/US)는 매니저 견적 카드 숨김 + 타이틀 키움
    사용자 요청: "해외는 상담사가 별도로 없으므로 이부분은 빼고 타이틀을 키워줘"
+   2026-05-15: 해외는 매니저 견적 대신 #overseasBranchHero (글로벌 지사 안내) 표시
    ───────────────────────────────────────────────────────────────────── */
 html[data-site="JP"] #mgrQuoteHero,
 html[data-site="US"] #mgrQuoteHero {
     display: none !important;
 }
-html[data-site="JP"] .hero-section,
-html[data-site="US"] .hero-section {
-    min-height: 480px !important;
-    padding: 90px 24px 80px !important;
-}
-html[data-site="JP"] .hero-section .hero-title,
-html[data-site="US"] .hero-section .hero-title {
-    margin-bottom: 0 !important;
-}
-html[data-site="JP"] .hero-section .hero-title .hero-tagline,
-html[data-site="US"] .hero-section .hero-title .hero-tagline {
-    font-size: 13px !important;
-    margin-bottom: 22px !important;
-    letter-spacing: 5px !important;
-}
-html[data-site="JP"] .hero-section .hero-title span,
-html[data-site="US"] .hero-section .hero-title span {
-    font-size: 76px !important;
-    letter-spacing: 3.5px !important;
-    line-height: 1.05 !important;
-}
-html[data-site="JP"] .hero-section .hero-title .hero-min-order,
-html[data-site="US"] .hero-section .hero-title .hero-min-order {
-    font-size: 14px !important;
-    margin-top: 26px !important;
-}
-@media (max-width: 768px) {
-    html[data-site="JP"] .hero-section,
-    html[data-site="US"] .hero-section {
-        min-height: 320px !important;
-        padding: 52px 16px 42px !important;
-    }
-    html[data-site="JP"] .hero-section .hero-title span,
-    html[data-site="US"] .hero-section .hero-title span {
-        font-size: 44px !important;
-        letter-spacing: 2px !important;
-    }
-    html[data-site="JP"] .hero-section .hero-title .hero-tagline,
-    html[data-site="US"] .hero-section .hero-title .hero-tagline {
-        font-size: 10px !important;
-        margin-bottom: 12px !important;
-    }
-    html[data-site="JP"] .hero-section .hero-title .hero-min-order,
-    html[data-site="US"] .hero-section .hero-title .hero-min-order {
-        font-size: 11px !important;
-        margin-top: 16px !important;
-    }
-}
+/* KR 에서는 해외 지사 카드 숨김 */
+#overseasBranchHero { display: none; }
+html[data-site="JP"] #overseasBranchHero,
+html[data-site="US"] #overseasBranchHero { display: block; }
+/* 2026-05-15: 해외도 KR 과 동일한 hero 크기/레이아웃 — 별도 enlargement 제거.
+   (이전: 매니저 카드 숨김에 맞춰 hero 를 키웠으나, 이제 해외 지사 카드를 표시하므로 원복) */
 
 /* ─────────────────────────────────────────────────────────────────────
    2026-05-14: 모바일 — CHAMELEON / PRINTING 자동 2줄 처리 (한 줄로 넘침 방지)
@@ -6978,70 +6937,10 @@ html[data-site="US"] .hero-section .hero-title .hero-min-order {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   2026-05-14: KR — 원래 3컬럼 유지 (사용자 요청: "한국어버전은 원래대로 좋아")
-   해외(JP/US) — 노란 매니저 연결 버튼은 JS로 hero 내부로 이동되고,
-                  남은 디자인/제품검색은 2컬럼으로 표시
+   2026-05-15: 해외(JP/US)도 KR 처럼 3 바로가기 버튼(디자인에디터/매니저연결/제품검색)을
+               글로벌 지사 카드 아래에 동일한 3컬럼 그리드로 표시.
+               (이전: 매니저 연결을 hero 안으로 이동 + 2컬럼 — 제거)
    ───────────────────────────────────────────────────────────────────── */
-html[data-site="JP"] #advShortcutBtns .adv-ext-grid,
-html[data-site="US"] #advShortcutBtns .adv-ext-grid {
-    grid-template-columns: 1fr 1fr !important;
-    grid-template-areas: none !important;
-    gap: 12px !important;
-}
-
-/* hero 내부로 이동된 매니저 연결 버튼 — JP/US 만 */
-html[data-site="JP"] .hero-section .adv-ext-btn-pulse,
-html[data-site="US"] .hero-section .adv-ext-btn-pulse {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    max-width: 460px;
-    width: calc(100% - 32px);
-    margin: 30px auto 0 !important;
-    padding: 20px 28px !important;
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    border-radius: 999px !important;
-    color: #fff !important;
-    text-decoration: none !important;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    z-index: 4;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #b45309 100%) !important;
-    box-shadow: 0 10px 32px -8px rgba(251,191,36,0.6), inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(251,191,36,0.4) !important;
-    letter-spacing: 0.5px;
-    animation: none !important;
-    transition: transform 0.2s, box-shadow 0.2s !important;
-}
-html[data-site="JP"] .hero-section .adv-ext-btn-pulse:hover,
-html[data-site="US"] .hero-section .adv-ext-btn-pulse:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 36px -6px rgba(251,191,36,0.75), inset 0 1px 0 rgba(255,255,255,0.3), 0 0 0 1px rgba(251,191,36,0.55) !important;
-}
-
-/* PC 에서 해외 3버튼이 너무 큼 → 줄여서 보기좋게 */
-@media (min-width: 769px) {
-    html[data-site="JP"] #advShortcutBtns .adv-ext-btn,
-    html[data-site="US"] #advShortcutBtns .adv-ext-btn {
-        padding: 16px 12px !important;
-        font-size: 14px !important;
-    }
-    html[data-site="JP"] .hero-section .adv-ext-btn-pulse,
-    html[data-site="US"] .hero-section .adv-ext-btn-pulse {
-        padding: 18px 28px !important;
-        font-size: 15px !important;
-    }
-}
-@media (max-width: 768px) {
-    html[data-site="JP"] .hero-section .adv-ext-btn-pulse,
-    html[data-site="US"] .hero-section .adv-ext-btn-pulse {
-        padding: 18px 20px !important;
-        font-size: 14px !important;
-        margin-top: 24px !important;
-    }
-}
 
 /* ─────────────────────────────────────────────────────────────────────
    2026-05-14: 3 바로가기 버튼 — 통일된 차분한 스타일 (무지개 애니메이션 제거)
