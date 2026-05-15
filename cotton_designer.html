@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cafe2626/0101/3355 + cotton-print 공유) -->
-<script src="/cart_sync.js?v=13"></script>
+<script src="/cart_sync.js?v=14"></script>
 <!-- Toss Payments SDK (한국 카드결제) -->
 <script src="https://js.tosspayments.com/v1/payment"></script>
 <!-- Stripe (해외 결제) -->
@@ -24,13 +24,52 @@
     var p = new URLSearchParams(location.search);
     var langParam = p.get('lang');
     var h = location.hostname;
-    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
+    // 2026-05-15: cotton-printer.com — 일본 cotton-print 전용 도메인 (광고/SEO 용 깔끔한 URL)
+    var hostLang =
+        h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer.com')>=0 ? 'ja' :
+        (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) ? 'en' :
+        'ko';
     var lang = langParam || hostLang;
     if (['ko','ja','en'].indexOf(lang) < 0) lang = 'ko';
     window.__CD_LANG = lang;
     document.documentElement.lang = lang;
+    // 2026-05-15: cotton-printer.com 에서는 ?lang= 파라미터가 URL 에 남지 않도록 정리 (이미 도메인이 JP 라서 불필요)
+    if (h.indexOf('cotton-printer.com') >= 0 && langParam) {
+        try {
+            p.delete('lang');
+            var qs = p.toString();
+            history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+        } catch (e) {}
+    }
+    // 2026-05-15: cotton-printer.com 에서는 canonical 을 JP 도메인으로 동적 변경
+    if (h.indexOf('cotton-printer.com') >= 0) {
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                var canon = document.querySelector('link[rel="canonical"]');
+                if (canon) canon.href = 'https://www.cotton-printer.com' + location.pathname;
+            } catch (e) {}
+        });
+    }
 })();
 window.cdSwitchLang = function(lang) {
+    // 2026-05-15: 언어 전환 — JP 는 cotton-printer.com 으로, 그 외는 cotton-print.com 으로 (도메인 자동 매핑)
+    var h = location.hostname;
+    var isCottonPrint = h.indexOf('cotton-print') >= 0 || h.indexOf('cotton-printer') >= 0;
+    if (isCottonPrint) {
+        if (lang === 'ja') {
+            location.href = 'https://www.cotton-printer.com' + location.pathname;
+            return;
+        }
+        if (lang === 'ko') {
+            location.href = 'https://www.cotton-print.com' + location.pathname;
+            return;
+        }
+        if (lang === 'en') {
+            location.href = 'https://www.cotton-print.com' + location.pathname + '?lang=en';
+            return;
+        }
+    }
+    // 기본: 현재 도메인에서 ?lang= 만 갱신 (cafe2626/0101/3355 같은 정해진 도메인)
     var url = new URL(location.href);
     url.searchParams.set('lang', lang);
     location.href = url.toString();
@@ -769,12 +808,20 @@ a { text-decoration: none; color: inherit; }
         </div>
         <script>
         // 2026-05-14: 현재 페이지의 lang 을 로고 href 에도 부착 → JP 사용자가 로고 누를 때 JP 로 복귀
+        // 2026-05-15: JP 언어면 cotton-printer.com (전용 JP 도메인) 으로, 그 외엔 cotton-print.com 으로
         (function () {
             try {
-                var l = new URLSearchParams(location.search).get('lang') || '';
-                if (!l) return;
+                var l = (window.__CD_LANG || new URLSearchParams(location.search).get('lang') || '').toLowerCase();
                 var a = document.getElementById('brandLogoLink');
-                if (a) a.href = 'https://www.cotton-print.com/?lang=' + encodeURIComponent(l);
+                if (a) {
+                    if (l === 'ja' || l === 'jp') {
+                        a.href = 'https://www.cotton-printer.com/';
+                    } else if (l === 'en' || l === 'us') {
+                        a.href = 'https://www.cotton-print.com/?lang=en';
+                    } else {
+                        a.href = 'https://www.cotton-print.com/';
+                    }
+                }
                 var b = document.getElementById('brandMallLink');
                 if (b) {
                     // 종합인쇄몰도 같은 언어로

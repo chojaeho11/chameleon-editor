@@ -25,12 +25,35 @@
     var params = new URLSearchParams(location.search);
     var langParam = params.get('lang');
     var h = location.hostname;
-    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
+    // 2026-05-15: cotton-printer.com — JP 전용 도메인 (광고/SEO 용)
+    var hostLang =
+        h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer.com')>=0 ? 'ja' :
+        (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) ? 'en' :
+        'ko';
     var lang = langParam || hostLang;
     var supported = ['ko','ja','en','zh','ar','es','de','fr'];
     if(supported.indexOf(lang)<0) lang='ko';
     window.__PS_LANG = lang;
     document.documentElement.lang = lang;
+    // cotton-printer.com 에서는 lang 파라미터가 URL 에 남지 않도록 정리
+    if (h.indexOf('cotton-printer.com') >= 0 && langParam) {
+        try {
+            params.delete('lang');
+            var qs = params.toString();
+            history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+        } catch (e) {}
+    }
+    // 2026-05-15: canonical / og:url — JP 도메인이면 cotton-printer.com 으로 동적 변경 (SEO)
+    if (h.indexOf('cotton-printer.com') >= 0) {
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                var canon = document.querySelector('link[rel="canonical"]');
+                if (canon) canon.href = 'https://www.cotton-printer.com' + location.pathname;
+                var og = document.querySelector('meta[property="og:url"]');
+                if (og) og.content = 'https://www.cotton-printer.com' + location.pathname;
+            } catch (e) {}
+        });
+    }
 })();
 </script>
 <link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co" crossorigin>
@@ -2696,20 +2719,28 @@ function buildLangSelector() {
 }
 
 function addHreflangTags() {
+    // 2026-05-15: 도메인 분리 — JP 는 cotton-printer.com (전용 도메인) 으로,
+    // 그 외는 cotton-print.com?lang=... 으로 hreflang 표시.
     var supported = ['ko','ja','en','zh','ar','es','de','fr'];
-    var base = location.origin + location.pathname;
+    var path = location.pathname;
     supported.forEach(function(code) {
         var link = document.createElement('link');
         link.rel = 'alternate';
         link.hreflang = code;
-        link.href = base + '?lang=' + code;
+        if (code === 'ja') {
+            link.href = 'https://www.cotton-printer.com' + path;
+        } else if (code === 'ko') {
+            link.href = 'https://www.cotton-print.com' + path;
+        } else {
+            link.href = 'https://www.cotton-print.com' + path + '?lang=' + code;
+        }
         document.head.appendChild(link);
     });
-    // x-default
+    // x-default → 한국어 (메인)
     var def = document.createElement('link');
     def.rel = 'alternate';
     def.hreflang = 'x-default';
-    def.href = base;
+    def.href = 'https://www.cotton-print.com' + path;
     document.head.appendChild(def);
 }
 

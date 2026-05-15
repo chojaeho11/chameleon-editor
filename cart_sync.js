@@ -48,6 +48,7 @@
 
     var SIBLINGS = [
         'cotton-print.com',
+        'cotton-printer.com',  // 2026-05-15: 일본 cotton-print 전용 도메인
         'cafe2626.com',
         'cafe0101.com',
         'cafe3355.com'
