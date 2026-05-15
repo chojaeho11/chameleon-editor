@@ -3400,7 +3400,10 @@
         var installKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
         var hbDeliveryKeys = ['metro_delivery', 'regional_delivery'];
         var allowed; // 노출할 ship 버튼 키 집합
-        if (state.isWall || state.isPhotozone) {
+        if (state.isAmountOrder) {
+            // 2026-05-15: 금액주문 — 배송 개념 없음. 입력 금액 그대로 (배송비 포함된 금액).
+            allowed = ['self_pickup'];
+        } else if (state.isWall || state.isPhotozone) {
             // 가벽/포토존 — 시공 옵션
             allowed = ['self_pickup'].concat(installKeys);
         } else if (state.isPaperDisplay) {
