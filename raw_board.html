@@ -416,20 +416,21 @@ async function submitPdSample() {
 <!-- 영상 소개 1: 허니콤보드 원판부터 포장재까지 -->
 <section class="video-section" style="max-width:1000px; margin:0 auto; padding:48px 24px 32px; display:flex; align-items:center; gap:40px;">
     <div class="video-text" style="flex:0 0 360px; padding-left:40px;">
-        <h2 style="font-size:32px; font-weight:900; line-height:1.3; color:#1e293b; margin-bottom:20px; word-break:keep-all;">
+        <h2 data-i18n-html="raw_hero_h2" style="font-size:32px; font-weight:900; line-height:1.3; color:#1e293b; margin-bottom:20px; word-break:keep-all;">
             허니콤보드<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">원판부터 포장재까지</em>
         </h2>
-        <p style="font-size:16px; color:#64748b; line-height:1.8; margin-bottom:20px;">
+        <p data-i18n-html="raw_hero_p" style="font-size:16px; color:#64748b; line-height:1.8; margin-bottom:20px;">
             전시부스, 팝업스토어, 상업 인테리어 공간.<br>
             친환경 허니콤보드를 원판 재단 인쇄 포장재까지.<br>
             <b style="color:#6366f1;">전세계 어디나 무료로 배송됩니다.</b>
         </p>
         <div style="font-size:13px; color:#475569; line-height:1.7; margin-bottom:24px; background:#f8fafc; padding:10px 14px; border-radius:10px; border:1px solid #e2e8f0;">
-            <div>🇰🇷 한국 사무실 <a href="tel:0313661984" style="color:#1e293b;font-weight:700;text-decoration:none;">031-366-1984</a></div>
-            <div>🇬🇧 English / 🇯🇵 日本語 <a href="tel:+821034913535" style="color:#1e293b;font-weight:700;text-decoration:none;">+82 10 3491 3535</a></div>
+            <div>🇰🇷 <span data-i18n="raw_contact_kr">한국 사무실</span> <a href="tel:0313661984" style="color:#1e293b;font-weight:700;text-decoration:none;">031-366-1984</a></div>
+            <div>🇯🇵 <span data-i18n="raw_contact_jp">일본지사 나나미</span> <a href="tel:09053970420" style="color:#1e293b;font-weight:700;text-decoration:none;">090-5397-0420</a></div>
+            <div>🇬🇧 English / 🇨🇳 中文 <a href="tel:+821034913535" style="color:#1e293b;font-weight:700;text-decoration:none;">+82 10 3491 3535</a></div>
             <div>🇸🇦 العربية / 🇫🇷 Français <a href="tel:+212617901092" style="color:#1e293b;font-weight:700;text-decoration:none;">+212 617 901 092</a></div>
         </div>
-        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" style="display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:50px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.3); transition:all 0.3s;">
+        <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" data-i18n-html="raw_hero_btn" style="display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:50px; border:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.3); transition:all 0.3s;">
             허니콤보드 원판구매 <i class="fa-solid fa-arrow-down"></i>
         </button>
     </div>
@@ -846,6 +847,45 @@ btn_view_products_down: {
     es:'Ver Productos <i class="fa-solid fa-arrow-down"></i>',
     de:'Produkte ansehen <i class="fa-solid fa-arrow-down"></i>',
     fr:'Voir les Produits <i class="fa-solid fa-arrow-down"></i>'
+},
+// ── Raw Board Hero (원판부터 포장재까지 섹션) — 2026-05-15: 다국어 추가 ──
+raw_hero_h2: {
+    ko:'허니콤보드<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">원판부터 포장재까지</em>',
+    ja:'ハニカムボード<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">原板から包装材まで</em>',
+    en:'Honeycomb Board<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">From Raw Sheets to Packaging</em>',
+    zh:'蜂窝板<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">从原板到包装</em>',
+    ar:'لوح خلية النحل<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">من الألواح الخام إلى التغليف</em>',
+    es:'Tablero Panal<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Del Bruto al Embalaje</em>',
+    de:'Wabenplatte<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Vom Rohling bis zur Verpackung</em>',
+    fr:'Panneau Nid d\'Abeille<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Du Brut à l\'Emballage</em>'
+},
+raw_hero_p: {
+    ko:'전시부스, 팝업스토어, 상업 인테리어 공간.<br>친환경 허니콤보드를 원판 재단 인쇄 포장재까지.<br><b style="color:#6366f1;">전세계 어디나 무료로 배송됩니다.</b>',
+    ja:'展示ブース、ポップアップストア、商業インテリア空間。<br>エコハニカムボードを原板裁断・印刷・包装材まで。<br><b style="color:#6366f1;">世界中どこでも無料で配送します。</b>',
+    en:'Exhibition booths, pop-up stores, commercial interior spaces.<br>Eco-friendly honeycomb boards — raw sheets, cutting, printing, and packaging.<br><b style="color:#6366f1;">Free shipping anywhere in the world.</b>',
+    zh:'展览展位、快闪店、商业内饰空间。<br>环保蜂窝板，从原板裁切印刷到包装材。<br><b style="color:#6366f1;">全球任何地方均可免费配送。</b>',
+    ar:'أكشاك المعارض، المتاجر المنبثقة، المساحات التجارية الداخلية.<br>ألواح خلية النحل الصديقة للبيئة - من الألواح الخام إلى القص والطباعة والتغليف.<br><b style="color:#6366f1;">شحن مجاني إلى أي مكان في العالم.</b>',
+    es:'Stands de exposición, pop-up stores, espacios comerciales.<br>Tableros panal ecológicos: brutos, cortados, impresos y empaquetados.<br><b style="color:#6366f1;">Envío gratuito a cualquier parte del mundo.</b>',
+    de:'Messestände, Pop-up-Stores, gewerbliche Innenräume.<br>Umweltfreundliche Wabenplatten — Rohlinge, Zuschnitt, Druck und Verpackung.<br><b style="color:#6366f1;">Kostenloser Versand weltweit.</b>',
+    fr:'Stands d\'exposition, pop-up stores, espaces commerciaux.<br>Panneaux nid d\'abeille écologiques — brut, découpe, impression et emballage.<br><b style="color:#6366f1;">Livraison gratuite partout dans le monde.</b>'
+},
+raw_hero_btn: {
+    ko:'허니콤보드 원판구매 <i class="fa-solid fa-arrow-down"></i>',
+    ja:'ハニカムボード原板を購入 <i class="fa-solid fa-arrow-down"></i>',
+    en:'Buy Raw Honeycomb Boards <i class="fa-solid fa-arrow-down"></i>',
+    zh:'购买蜂窝原板 <i class="fa-solid fa-arrow-down"></i>',
+    ar:'شراء ألواح خلية النحل الخام <i class="fa-solid fa-arrow-down"></i>',
+    es:'Comprar Tablero Bruto <i class="fa-solid fa-arrow-down"></i>',
+    de:'Wabenplatten-Rohware kaufen <i class="fa-solid fa-arrow-down"></i>',
+    fr:'Acheter le Panneau Brut <i class="fa-solid fa-arrow-down"></i>'
+},
+raw_contact_kr: {
+    ko:'한국 사무실', ja:'韓国オフィス', en:'Korea Office', zh:'韩国办公室',
+    ar:'مكتب كوريا', es:'Oficina Corea', de:'Korea Büro', fr:'Bureau Corée'
+},
+raw_contact_jp: {
+    ko:'일본지사 나나미', ja:'日本支社 ナナミ', en:'Japan Branch · Nanami', zh:'日本分公司 娜娜美',
+    ar:'فرع اليابان · ناNAمي', es:'Sucursal Japón · Nanami', de:'Japan-Niederlassung · Nanami', fr:'Filiale Japon · Nanami'
 },
 // ── Products Section ──
 section_products_title: {
