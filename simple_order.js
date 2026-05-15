@@ -304,8 +304,10 @@
     display: none; opacity: 0; transition: opacity 0.25s;
 }
 .so-cart-drawer-overlay.open { display: block; opacity: 1; }
+/* 2026-05-15: 모바일 — 100%/100vh 는 브라우저 크롬 영역 포함 → 결제 버튼이 화면 밖.
+   100dvh(동적 뷰포트)로 실제 보이는 높이에 맞춰 결제 버튼이 항상 보이게. */
 .so-cart-drawer {
-    position: fixed; right: 0; top: 0; height: 100%; width: 440px;
+    position: fixed; right: 0; top: 0; height: 100vh; height: 100dvh; width: 440px;
     max-width: 100%; background: #fff; z-index: 90001;
     box-shadow: -8px 0 40px rgba(0,0,0,0.2);
     transform: translateX(100%); transition: transform 0.3s ease;
@@ -316,6 +318,7 @@
     padding: 16px 20px; border-bottom: 1px solid #ede4d3;
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(135deg, #451a03, #78350f); color: #fde047;
+    flex-shrink: 0;
 }
 .so-cart-head h3 { margin: 0; font-size: 17px; font-weight: 800; }
 .so-cart-close {
@@ -323,7 +326,7 @@
     color: #fde047; border-radius: 50%; cursor: pointer; font-size: 18px;
 }
 .so-cart-close:hover { background: rgba(255,255,255,0.25); }
-.so-cart-body { flex: 1; overflow-y: auto; padding: 16px 20px; background: #faf6ed; }
+.so-cart-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 20px; background: #faf6ed; }
 
 /* 2026-05-13: 스크롤바 매우 연한 하늘색 */
 .so-cart-body::-webkit-scrollbar,
@@ -395,6 +398,7 @@
 }
 .so-cart-foot {
     padding: 16px 20px; border-top: 1px solid #ede4d3; background: #fff;
+    flex-shrink: 0; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 .so-cart-total {
     display: flex; justify-content: space-between; align-items: baseline;
