@@ -1738,6 +1738,7 @@
     // - regular wall   : 가로 1~8m, 세로 2/2.2/2.4/3m (기본 가로 3, 세로 2.4)
     // - partition      : 가로 1~10m, 세로 1.2/1.0/0.8m (기본 가로 3, 세로 1.2)
     // - reinforced     : 가로 1m 고정, 세로 2.2m 고정 (강화 골판지)
+    // - folding        : 가로 1~8m (1m 단위), 세로 2.2m 고정 (병풍형) — 2026-05-15
     function _soRebuildWallSizeOptions(variant) {
         var wEl = document.getElementById('soWallWidth');
         var hEl = document.getElementById('soWallHeight');
@@ -1751,6 +1752,11 @@
             widths = [];
             for (var p = 1; p <= 10; p++) widths.push({ v: String(p), label: p + ' m', selected: p === 3 });
             heights = [{ v: '1.2', label: '1.2 m', selected: true }, { v: '1', label: '1.0 m' }, { v: '0.8', label: '0.8 m' }];
+        } else if (variant === 'folding') {
+            // 2026-05-15: 병풍형 — 가로 1m 단위 (1~8m), 세로 2.2m 고정
+            widths = [];
+            for (var f = 1; f <= 8; f++) widths.push({ v: String(f), label: f + ' m', selected: f === 3 });
+            heights = [{ v: '2.2', label: '2.2 m', selected: true }];
         } else {
             widths = [];
             for (var w = 1; w <= 8; w++) widths.push({ v: String(w), label: w + ' m', selected: w === 3 });
@@ -1763,9 +1769,9 @@
         };
         wEl.innerHTML = mkOpts(widths);
         hEl.innerHTML = mkOpts(heights);
-        // 옵션이 1개뿐이면 비활성화 (강화 골판지)
+        // 옵션이 1개뿐이면 비활성화 (강화 골판지: 가로/세로 모두, 병풍형: 세로만)
         wEl.disabled = (variant === 'reinforced');
-        hEl.disabled = (variant === 'reinforced');
+        hEl.disabled = (variant === 'reinforced' || variant === 'folding');
 
         // 가이드 카드 chip / 본문 범위 텍스트도 동시 업데이트
         var chip = document.getElementById('soWallChipHeight');
@@ -1785,6 +1791,13 @@
                 '파티션 가림막은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 10m까지 선택 가능하며, 세로는 1.2m / 1.0m / 0.8m 중 선택하실 수 있습니다.',
                 'パーティション目隠しは横1m単位で製作されます。横は1m〜10m、縦は1.2/1.0/0.8mから選択。',
                 'Partition screens are produced in 1m width units. Width 1m-10m, height 1.2/1.0/0.8m.'
+            );
+        } else if (variant === 'folding') {
+            if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 2.2m 고정', '縦 2.2m 固定', 'Fixed 2.2m height');
+            if (range) range.textContent = fmtLine(
+                '병풍형 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2.2m로 고정 제작됩니다.',
+                '屏風型壁は横1m単位で製作されます。横は1m〜8m、縦は2.2m固定です。',
+                'Folding-screen walls are produced in 1m width units. Width 1m-8m, height fixed at 2.2m.'
             );
         } else {
             if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 2 · 2.2 · 2.4 · 3m', '縦 2/2.2/2.4/3m', 'Height 2/2.2/2.4/3m');
@@ -1827,6 +1840,13 @@
         if (/병풍|byeongpung|folding\s*wall|folding\s*partition/i.test(name)) return true;
         if (/지붕|roof|gable|tent\s*wall/i.test(name)) return true;
         return false;
+    }
+
+    // 2026-05-15: 병풍형 가벽 — 가로 1m 단위, 세로 2.2m 고정
+    function _soIsFoldingScreenWall(p) {
+        if (!p) return false;
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        return /병풍|byeongpung|folding\s*wall|folding\s*partition|folding\s*screen/i.test(name);
     }
 
     // 2026-05-13: 글씨 포토존 감지 (제품명에 "포토존" 또는 "photo zone")
@@ -2827,6 +2847,7 @@
         // 2026-05-14: 가벽 변종 분기 — 파티션 / 강화 골판지 / 단면 전용 / 기본
         state.isPartition = _soIsPartitionProduct(p);
         state.isReinforcedWall = _soIsReinforcedWall(p);
+        state.isFoldingWall = _soIsFoldingScreenWall(p);
         state.isSingleSideWall = state.isReinforcedWall ? false : _soIsSingleSideWall(p);
         if (state.isReinforcedWall) {
             state.wallWidth = 1;      // 1m 고정
@@ -2869,6 +2890,7 @@
         if (state.isWall) {
             var variant = state.isReinforcedWall ? 'reinforced'
                         : state.isPartition ? 'partition'
+                        : state.isFoldingWall ? 'folding'
                         : 'default';
             _soRebuildWallSizeOptions(variant);
             // 인쇄면 row: 허니콤 가벽 (기본 변종) 만 표시
@@ -3053,6 +3075,10 @@
         } else if (state.isPartition) {
             if (wwEl) wwEl.value = '3';
             if (whEl) whEl.value = '1.2';
+        } else if (state.isFoldingWall) {
+            // 2026-05-15: 병풍형 — 가로 3m 기본 (1m 단위 선택), 세로 2.2m 고정
+            if (wwEl) wwEl.value = '3';
+            if (whEl) whEl.value = '2.2';
         } else {
             if (wwEl) wwEl.value = '3';
             if (whEl) whEl.value = '2.4';
