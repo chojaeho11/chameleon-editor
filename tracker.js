@@ -27,6 +27,9 @@
     // ── 도메인 → site_domain 매핑 ──
     function detectSiteDomain() {
         var h = (location.hostname || '').toLowerCase();
+        // 2026-05-15: cotton-printer.com (일본 패브릭) 먼저 매칭 — cotton-print.com 보다 앞에 둬야
+        //   substring 오인은 없지만 명시적 분리 위해 우선 처리.
+        if (h.indexOf('cotton-printer.com') >= 0) return 'cotton-printer.com';
         if (h.indexOf('cotton-print.com') >= 0)  return 'cotton-print.com';
         if (h.indexOf('cafe2626.com') >= 0)       return 'cafe2626.com';
         if (h.indexOf('cafe0101.com') >= 0)       return 'cafe0101.com';
@@ -82,8 +85,10 @@
 
         // 같은 도메인 → 내부 이동 (추적 skip)
         if (refHost && refHost === location.hostname.toLowerCase()) return '__INTERNAL__';
-        // 형제 도메인 (cafe2626/0101/3355/cotton-print) 도 내부 이동 취급
-        var siblingDomains = ['cafe2626.com', 'cafe0101.com', 'cafe3355.com', 'cotton-print.com', 'chameleon.design'];
+        // 형제 도메인 (cafe2626/0101/3355/cotton-print/cotton-printer) 도 내부 이동 취급
+        // 2026-05-15: cotton-printer.com 누락 → cotton-printer 내부 이동이 외부유입으로
+        //   잘못 집계되던 버그 fix (cotton-print.com 은 substring 으로 안 잡힘).
+        var siblingDomains = ['cafe2626.com', 'cafe0101.com', 'cafe3355.com', 'cotton-print.com', 'cotton-printer.com', 'chameleon.design'];
         for (var i = 0; i < siblingDomains.length; i++) {
             if (refHost.indexOf(siblingDomains[i]) >= 0) return '__INTERNAL__';
         }
@@ -120,6 +125,9 @@
             if (refHost.indexOf('yahoo.') >= 0) return 'Yahoo Search (자연검색)';
             if (refHost.indexOf('duckduckgo') >= 0) return 'DuckDuckGo Search (자연검색)';
             // SNS
+            // 2026-05-15: Threads 를 instagram. 보다 먼저 — 안드로이드 Threads 앱은 referrer 를
+            //   android-app://com.instagram.barcelona 로 보내 'instagram.' 에 먼저 잡혀 인스타로 오분류됨.
+            if (refHost.indexOf('threads.') >= 0 || refHost.indexOf('barcelona') >= 0) return 'Threads (SNS)';
             if (refHost.indexOf('instagram.') >= 0) return 'Instagram (SNS)';
             if (refHost.indexOf('facebook.') >= 0 || refHost.indexOf('fb.') >= 0) return 'Facebook (SNS)';
             if (refHost.indexOf('youtube.') >= 0 || refHost.indexOf('youtu.be') >= 0) return 'YouTube (SNS)';
@@ -127,7 +135,6 @@
             if (refHost.indexOf('twitter.') >= 0 || refHost.indexOf('x.com') >= 0 || refHost.indexOf('t.co') >= 0) return 'Twitter/X (SNS)';
             if (refHost.indexOf('pinterest.') >= 0) return 'Pinterest (SNS)';
             if (refHost.indexOf('line.me') >= 0) return 'LINE (메신저)';
-            if (refHost.indexOf('threads.') >= 0) return 'Threads (SNS)';
             // 블로그 플랫폼
             if (refHost.indexOf('tistory.') >= 0) return '[Blog] tistory|' + refHost;
             if (refHost.indexOf('blog.naver.') >= 0) return '[Blog] naver|' + refHost;
