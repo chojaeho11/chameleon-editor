@@ -1135,7 +1135,7 @@ window._cpUpdateCartUI = function() {
             // 패브릭 섹션
             var fabricHtml = '';
             if (cart.length > 0) {
-                fabricHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:4px 0 8px;"><i class="fa-solid fa-scissors" style="margin-right:6px;"></i>패브릭</div>' +
+                fabricHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:4px 0 8px;"><i class="fa-solid fa-scissors" style="margin-right:6px;"></i>' + T('cart_section_fabric', '패브릭') + '</div>' +
                 cart.map(function(it, i) {
                     const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
                     const opts = [
@@ -1164,7 +1164,7 @@ window._cpUpdateCartUI = function() {
             // 일반상품 섹션 (2026-05-12: 통합 카트)
             var genHtml = '';
             if (gen.length > 0) {
-                genHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:12px 0 8px;"><i class="fa-solid fa-box" style="margin-right:6px;"></i>일반상품</div>' +
+                genHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:12px 0 8px;"><i class="fa-solid fa-box" style="margin-right:6px;"></i>' + T('cart_section_general', '일반상품') + '</div>' +
                 gen.map(function(it, gi) {
                     var name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
                     var qty = it.qty || 1;
