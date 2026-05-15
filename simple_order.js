@@ -3575,6 +3575,39 @@
         return { unit, subtotal, discount, final: subtotal - discount, tierPct: tier.pct };
     }
 
+    // 2026-05-15: 카트 썸네일 축소 — localStorage quota 초과 방지.
+    //   기존엔 업로드 원본 dataURL(~1MB+)을 통째로 thumb 에 저장 → 가벽 등 여러 개 담으면
+    //   localStorage 5MB 초과로 writeCart 가 silently 실패 → "담겼습니다" 뜨지만 실제 저장 안 됨.
+    //   원본은 이미 Supabase Storage 에 업로드돼서 originalUrl 로 보존되므로, 카트엔 작은 미리보기만.
+    function _soShrinkThumb(dataUrl, maxPx) {
+        return new Promise(function (resolve) {
+            if (!dataUrl || typeof dataUrl !== 'string' || dataUrl.indexOf('data:image') !== 0) {
+                resolve(dataUrl || null); return;
+            }
+            // 이미 충분히 작으면 그대로 (60KB 미만)
+            if (dataUrl.length < 60 * 1024) { resolve(dataUrl); return; }
+            try {
+                var img = new Image();
+                img.onload = function () {
+                    try {
+                        var mx = maxPx || 220;
+                        var w = img.naturalWidth || img.width || mx;
+                        var h = img.naturalHeight || img.height || mx;
+                        var scale = Math.min(1, mx / Math.max(w, h));
+                        var cw = Math.max(1, Math.round(w * scale));
+                        var ch = Math.max(1, Math.round(h * scale));
+                        var cv = document.createElement('canvas');
+                        cv.width = cw; cv.height = ch;
+                        cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+                        resolve(cv.toDataURL('image/jpeg', 0.7));
+                    } catch (e) { resolve(null); }
+                };
+                img.onerror = function () { resolve(null); };
+                img.src = dataUrl;
+            } catch (e) { resolve(null); }
+        });
+    }
+
     function buildCartItem(fileUrl, filePath) {
         const p = state.product;
         const calc = calcFinal();
@@ -3637,7 +3670,8 @@
             fileData: null,
             originalUrl: fileUrl,
             filePath: filePath,
-            thumb: state.thumbDataUrl || null,
+            // 2026-05-15: 카트엔 축소 썸네일만 — 원본은 originalUrl(Storage) 로 보존
+            thumb: state._cartThumb || (state.isRawBoard ? (pickImg(state.product) || null) : null),
             isOpen: false,
             qty: state.isWall ? (state.wallWidth || 1) : state.qty,
             selectedAddons: Object.assign({}, state.selectedAddons || {}),
@@ -3696,7 +3730,19 @@
             try { existing = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch (e) {}
             var fabrics = existing.filter(isFabricItem);
             localStorage.setItem(CART_KEY, JSON.stringify(fabrics.concat(arr || [])));
-        } catch (e) {}
+        } catch (e) {
+            // 2026-05-15: localStorage quota 초과 — 조용히 실패하면 "담겼습니다" 뜨고 실제 저장 안 됨.
+            //   썸네일 축소 후에도 초과하면 사용자에게 명확히 알림 + throw 로 doAddToCart 가 실패 처리.
+            var isQuota = e && (e.name === 'QuotaExceededError' || /quota|exceeded|storage/i.test(e.message || ''));
+            console.error('[simple_order] writeCart 실패' + (isQuota ? ' (localStorage quota 초과)' : ''), e);
+            if (isQuota) {
+                throw new Error(tr(
+                    '장바구니 저장공간이 가득 찼습니다. 일부 항목을 삭제하거나 주문을 완료한 후 다시 시도해주세요.',
+                    'カートの保存容量がいっぱいです。一部の項目を削除してから再度お試しください。',
+                    'Cart storage is full. Please remove some items or complete the order first.'
+                ));
+            }
+        }
     }
 
     // 2026-05-12: 중복 호출 방지 (빠른 더블 클릭 또는 외부 트리거 중복)
@@ -3769,6 +3815,8 @@
                 backPath = backResult.path;
             }
             updateUploadStep(tr('장바구니에 추가 중...', 'カート追加中...', 'Adding to cart...'));
+            // 2026-05-15: 카트 저장 전 썸네일 축소 — localStorage quota 초과로 카트가 silently 사라지던 버그 fix
+            state._cartThumb = await _soShrinkThumb(state.thumbDataUrl, 220);
             const item = buildCartItem(url, path);
             // 뒷면 파일 URL 부착 (localStorage 호환 — Blob 직접 저장 안 함)
             if (backUrl) {
