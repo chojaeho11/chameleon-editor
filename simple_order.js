@@ -213,11 +213,13 @@
     padding: 4px 12px; border-radius: 50px; font-size: 11px; color: #78350f; font-weight: 700;
 }
 
-/* 업로드 완료 상태 */
+/* 업로드 완료 상태 — 2026-05-15: 파일에 맞춰 가변 높이, 그림이 시원하게 보이도록 */
 .so-upload.done {
     border: 1.5px solid #16a34a; background: #f0fdf4;
     cursor: default; padding: 20px;
     justify-content: flex-start; align-items: center;
+    min-height: 0; /* done 상태는 콘텐츠 높이에 맞춰서 늘었다 줄었다 */
+    height: auto;
 }
 
 /* 인쇄 사이즈 라벨 */
@@ -1396,14 +1398,24 @@
         const h_cm = (h_mm / 10).toFixed(1).replace(/\.0$/, '');
 
         // 2) 프리뷰 영역 — 파일 비율에 맞춰 프레임 크기 결정
+        // 2026-05-15: 업로드 영역을 가변형으로 — 컨테이너 폭에 맞춰 그림이 꽉 차게 보이도록
+        // 좌우 padding 40px (좌측 줄자 22px + 여백) + 안전 마진 고려
         const aspectRatio = w_mm / h_mm;
-        const maxW = 420;
-        const maxH = 220;
+        const zoneEl = document.getElementById('soUpload');
+        const zoneInnerW = zoneEl ? Math.max(280, (zoneEl.clientWidth || 800) - 60) : 800;
+        const maxW = Math.min(900, zoneInnerW);   // 가로 최대 — 컨테이너 폭 따라감
+        const maxH = Math.min(900, Math.round(maxW * 1.3)); // 세로 최대 — 가로의 1.3배 (긴 PDF도 시원하게)
         let frameW = maxW;
         let frameH = frameW / aspectRatio;
         if (frameH > maxH) {
             frameH = maxH;
             frameW = frameH * aspectRatio;
+        }
+        // 너무 작아지지 않도록 (정사각/가로 긴 파일에서 최소 200×200 보장)
+        if (frameW < 240) {
+            const scale = 240 / frameW;
+            frameW = 240;
+            frameH = Math.round(frameH * scale);
         }
         frameW = Math.round(frameW);
         frameH = Math.round(frameH);
@@ -2631,6 +2643,11 @@
         }
         state.fileBack = f;
         state.thumbDataUrlBack = null;
+        // 2026-05-15: 뒷면도 파일 사이즈를 측정 (가변형 프레임용)
+        state.fileBackWidthMm = null;
+        state.fileBackHeightMm = null;
+        state.fileBackWidthPx = null;
+        state.fileBackHeightPx = null;
         // 일단 빠르게 placeholder 표시
         renderBackUploadDone();
         // PDF면 PDF.js 로 첫 페이지 → dataURL (앞면과 동일한 처리)
@@ -2638,9 +2655,13 @@
             if (isPdf) {
                 var r = await pdfFirstPageToDataUrl(f);
                 state.thumbDataUrlBack = r.dataUrl;
+                state.fileBackWidthMm = r.widthMm;
+                state.fileBackHeightMm = r.heightMm;
             } else {
                 var r2 = await imageDataUrlWithDims(f);
                 state.thumbDataUrlBack = r2.dataUrl;
+                state.fileBackWidthPx = r2.widthPx;
+                state.fileBackHeightPx = r2.heightPx;
             }
         } catch (e) {
             console.warn('[simple_order] back thumb 생성 실패:', e);
@@ -2657,10 +2678,28 @@
         var safe = (typeof escapeHtml === 'function') ? escapeHtml(f.name) : String(f.name).replace(/[<>"'&]/g, function(c){
             return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
         });
+        // 2026-05-15: 뒷면도 파일 비율에 맞춰 가변형 프레임 — 앞면과 동일 로직
+        var w_mm, h_mm;
+        if (state.fileBackWidthMm && state.fileBackHeightMm) {
+            w_mm = state.fileBackWidthMm; h_mm = state.fileBackHeightMm;
+        } else if (state.fileBackWidthPx && state.fileBackHeightPx) {
+            w_mm = state.fileBackWidthPx; h_mm = state.fileBackHeightPx; // 비율만 쓰면 됨
+        } else {
+            w_mm = 300; h_mm = 200;
+        }
+        var aspectRatio = w_mm / h_mm;
+        var zoneInnerW = Math.max(280, (zone.clientWidth || 700) - 40);
+        var maxW = Math.min(800, zoneInnerW);
+        var maxH = Math.min(900, Math.round(maxW * 1.3));
+        var frameW = maxW;
+        var frameH = frameW / aspectRatio;
+        if (frameH > maxH) { frameH = maxH; frameW = frameH * aspectRatio; }
+        if (frameW < 220) { var s = 220 / frameW; frameW = 220; frameH = Math.round(frameH * s); }
+        frameW = Math.round(frameW); frameH = Math.round(frameH);
         // 썸네일 — dataUrl 있으면 이미지, 없으면 (변환 중) 아이콘
         var thumbInner;
         if (state.thumbDataUrlBack) {
-            thumbInner = '<img src="' + state.thumbDataUrlBack + '" style="max-width:100%; max-height:100%; object-fit:contain; display:block; background:#fff;" />';
+            thumbInner = '<img src="' + state.thumbDataUrlBack + '" style="width:100%; height:100%; object-fit:contain; display:block; background:#fff;" />';
         } else if (f.type === 'application/pdf') {
             thumbInner = '<div style="font-size:36px; color:#dc2626;">📄</div><div style="font-size:11px; color:#6b7280; margin-top:4px;">변환 중...</div>';
         } else {
@@ -2668,11 +2707,11 @@
         }
         var thumbHtml =
             '<div class="so-back-thumb" style="' +
-              'width:280px; max-width:100%; height:200px; ' +
+              'width:' + frameW + 'px; height:' + frameH + 'px; max-width:100%; ' +
               'margin:0 auto 10px; ' +
               'background:#fff; border:1.5px solid #7c3aed; border-radius:8px; ' +
               'display:flex; align-items:center; justify-content:center; ' +
-              'overflow:hidden; padding:8px; box-sizing:border-box;">' +
+              'overflow:hidden; padding:0; box-sizing:border-box;">' +
               thumbInner +
             '</div>';
         zone.innerHTML =
