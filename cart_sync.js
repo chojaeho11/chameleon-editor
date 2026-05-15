@@ -235,13 +235,64 @@
     }
 
     var pushTimer = null;
+    // 2026-05-15: debounce 350ms → 120ms — 페이지 네비게이션 race window 단축.
+    //   고객 리포트: 빠르게 다음 상품으로 이동하면 1차 add 가 서버에 안 올라가던 케이스.
     function schedulePush() {
         if (pushTimer) clearTimeout(pushTimer);
         pushTimer = setTimeout(function () {
             pushTimer = null;
             push(_unified.slice());
-        }, 350);
+        }, 120);
     }
+
+    // 2026-05-15: 페이지 떠날 때 sendBeacon 으로 강제 flush.
+    //   debounce 안에 있던 push 를 fetch() 로 보내면 페이지 unload 와 함께 abort 됨.
+    //   sendBeacon 은 brower 가 navigation 후에도 백그라운드로 완료 보장.
+    function flushOnUnload() {
+        try {
+            if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
+            if (!_unified || !_unified.length && !readLocal().length) {
+                // _unified 도 비고 local 도 비어있으면 빈 상태 push (= 비움)
+            }
+            var c = sb();
+            if (!c) return;
+            var row;
+            if (_userId) row = { user_id: _userId, items: _unified.slice(), updated_at: new Date().toISOString() };
+            else        row = { session_id: SID, items: _unified.slice(), updated_at: new Date().toISOString() };
+            // sendBeacon 으로 직접 PostgREST endpoint 에 POST (upsert via Prefer header).
+            //   anonkey/auth 가 필요하므로 Blob 으로 직렬화하면 header 못 붙임 → 일반 fetch keepalive 로 시도.
+            var body = JSON.stringify(row);
+            var url = SUPABASE_URL + '/rest/v1/carts?on_conflict=' + (_userId ? 'user_id' : 'session_id');
+            var hdrs = {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON,
+                'Prefer': 'resolution=merge-duplicates,return=minimal'
+            };
+            // 인증 토큰이 있으면 첨부 — 로그인 유저 카트는 RLS 의해 본인 user_id 만 통과
+            try {
+                var sess = c && c.auth && typeof c.auth.getSession === 'function' ? null : null;
+                // 동기 컨텍스트라 토큰을 즉시 얻기 어려움 → localStorage 에서 직접 추출
+                var tokenRaw = localStorage.getItem('sb-qinvtnhiidtmrzosyvys-auth-token');
+                if (tokenRaw) {
+                    var parsed = JSON.parse(tokenRaw);
+                    var at = parsed && parsed.access_token;
+                    if (at) hdrs['Authorization'] = 'Bearer ' + at;
+                }
+            } catch (e) {}
+            if (typeof fetch === 'function') {
+                fetch(url, { method: 'POST', headers: hdrs, body: body, keepalive: true })
+                    .catch(function () {});
+            }
+        } catch (e) { /* swallow — best effort */ }
+    }
+    // pagehide 가 unload 보다 모바일 Safari 호환성 좋음. visibilitychange(hidden) 도 함께
+    try {
+        window.addEventListener('pagehide', flushOnUnload, { capture: true });
+        window.addEventListener('beforeunload', flushOnUnload, { capture: true });
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') flushOnUnload();
+        }, { capture: true });
+    } catch (e) {}
 
     // 2026-05-14: merge-by-id 제거. 삭제가 표현 안 돼서 옛 아이템이 부활하던 버그.
     //   대신 last-write-wins by timestamp — pickFreshState(server, local) 사용.
