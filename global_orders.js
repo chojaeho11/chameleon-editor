@@ -17,6 +17,43 @@ let _isPrivileged = false;
 })();
 window.isPrivilegedAdmin = () => _isPrivileged;
 
+// 2026-05-15: 주문 내역 칼럼 라벨 — 패브릭/허니콤/종이매대 등 카테고리 + 상품명 보강.
+//   기존엔 i.productName (camelCase) 만 봤는데 simple_order 가 product_name (snake_case) 로
+//   저장해서 항상 빈값 → '상품 (10)' 만 표시되던 버그. 카테고리 prefix 도 추가해 한눈에 식별 가능.
+function _omItemLabel(it) {
+    if (!it) return '상품';
+    // 1) 다양한 이름 필드 — productName / product_name / product.name 모두 인식
+    var name = it.productName || it.product_name ||
+               (it.product && (it.product.name || it.product.name_kr)) ||
+               it.title || '';
+    name = (name || '').toString().trim();
+    // 2) 카테고리 자동 감지 (prefix)
+    var code = ((it.product && it.product.code) || it.product_code || it.code || '').toString().toLowerCase();
+    var cat  = ((it.product && it.product.category) || it.product_category || it.category || '').toString().toLowerCase();
+    var src  = (it.source || it.__source || '').toString().toLowerCase();
+    var isFabric = src === 'cotton-print' || !!it.fabricCode || it.orderWcm != null || !!it.fabric;
+    var prefix = '';
+    if (isFabric) prefix = '🧵 패브릭';
+    else if (code.indexOf('hb_dw') === 0 || cat === 'hb_display_wall' || /가벽/.test(name)) prefix = '🧱 허니콤 가벽';
+    else if (code.indexOf('hb_rb') === 0 || code.indexOf('hb_raw') === 0 || /원판|raw\s*board/i.test(name)) prefix = '📋 허니콤보드 원판';
+    else if (code.indexOf('hb_bx') === 0 || /허니콤\s*박스|honeycomb\s*box/i.test(name)) prefix = '📦 허니콤 박스';
+    else if (code.indexOf('hb_ss') === 0 || code.indexOf('hb_point') === 0 || /등신대|standee/i.test(name)) prefix = '🧍 등신대';
+    else if (code.indexOf('hb_') === 0 || /허니콤|honeycomb/i.test(name)) prefix = '🟫 허니콤보드';
+    else if (code.indexOf('pd_') === 0 || cat === 'paper_display' || /종이매대|paper\s*display/i.test(name)) prefix = '🗂 종이매대';
+    else if (/배너|banner/i.test(name)) prefix = '🚩 배너';
+    else if (/현수막|placard/i.test(name)) prefix = '🪧 현수막';
+    else if (/아크릴|acrylic/i.test(name)) prefix = '💎 아크릴';
+    else if (/포맥스|foamex|폼\s*보드|foam\s*board/i.test(name)) prefix = '🪟 폼/포맥스';
+    else if (/티셔츠|tshirt|t-shirt/i.test(name)) prefix = '👕 티셔츠';
+    else if (/매니저\s*견적|manager\s*quote/i.test(name) || it.type === 'manager_quote') prefix = '💼 매니저견적';
+    // 3) 라벨 조합 — 이름 있으면 prefix · name, 없으면 prefix 만, 둘 다 없으면 '상품'
+    if (prefix && name) return prefix + ' · ' + name;
+    if (prefix) return prefix;
+    if (name) return name;
+    return '상품';
+}
+window._omItemLabel = _omItemLabel;
+
 // [추천인] 무통장입금 확인 시 추천인 적립
 async function creditReferralBonus(orderId) {
     try {
@@ -1911,7 +1948,7 @@ window.loadOrders = async () => {
                             : `<button type="button" onclick="event.stopPropagation();window.toggleDesignComplete && window.toggleDesignComplete('${order.id}', this)" style="display:inline-block; margin-top:3px; padding:3px 7px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; font-size:9px; font-weight:800; border-radius:50px; border:none; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="디자인 파일 작업이 완료되어 다크팩토리에서 칼선/출력 시작해도 OK 라는 신호"><i class="fa-solid fa-paper-plane"></i> 데이터작업완료</button>`}
                     </td>
                     
-                    <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${i.productName || '상품'} (${i.qty})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${i.productName || '상품'} (${i.qty})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
+                    <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${_omItemLabel(i)} (${i.qty || 1})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${_omItemLabel(i)} (${i.qty || 1})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
                     
                     <td style="text-align:right;">${fmtAmt(total)}</td>
                     <td style="text-align:right; color:#ef4444;">${fmtAmt(order.discount_amount || 0)}</td>
