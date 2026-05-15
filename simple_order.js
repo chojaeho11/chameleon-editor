@@ -737,6 +737,22 @@
           <div class="so-prod-meta">
             <div id="soName" class="so-prod-name">-</div>
             <div id="soDesc" class="so-prod-desc"></div>
+            <!-- 2026-05-15: 종이매대 상품 전용 안내 — 일반 설명 대신 표시 -->
+            <div id="soPaperDisplayNotice" style="display:none; margin-top:10px; padding:14px 16px; background:linear-gradient(135deg,#fef3c7 0%,#fed7aa 100%); border:1.5px solid #fbbf24; border-radius:12px; color:#78350f; font-size:13px; line-height:1.6;">
+              <div style="font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:18px;">📞</span>
+                <span id="soPdNoticeTitle">${tr('담당자에게 전화해서 칼선을 받은 후 작업해서 올려주세요', '担当者に電話してカットラインを受け取ってから作業してアップロードしてください', 'Please call our staff to receive the die-cut template, then prepare your design and upload.')}</span>
+              </div>
+              <div id="soPdBranchContacts" style="display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px;">
+                <a href="tel:0313661984" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇰🇷 <span>${tr('한국사무실', '韓国本社', 'Korea HQ')}</span> <b style="color:#b45309;">031-366-1984</b></a>
+                <a href="tel:09053970420" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇯🇵 <span>${tr('일본지사 나나미', '日本支社 ナナミ', 'Japan · Nanami')}</span> <b style="color:#b45309;">090-5397-0420</b></a>
+                <a href="tel:212617901092" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇲🇦 <span>${tr('모로코지사 히바', 'モロッコ支社 ヒバ', 'Morocco · Hiba')}</span> <b style="color:#b45309;">212-617-901-092</b></a>
+              </div>
+              <div style="font-size:12px; font-weight:700; color:#92400e; display:flex; align-items:center; gap:6px;">
+                <span>🌐</span>
+                <span>${tr('해외 배송은 FOB 방식으로 배송됩니다.', '海外配送はFOB方式で発送されます。', 'International orders are shipped on FOB terms.')}</span>
+              </div>
+            </div>
             <!-- 2026-05-13: 가벽 상품 전용 안내 (버튼 형태) — 일반 설명 대신 표시 -->
             <div id="soWallGuide" style="display:none; margin-top:10px;">
               <div id="soWallGuideChips" style="display:flex; flex-wrap:wrap; gap:6px;">
@@ -983,7 +999,15 @@
             <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">📨 ${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(5000)}</span></button>
             <!-- 2026-05-13: 등신대·자유인쇄커팅 컴팩트 택배 (60×40 이하, 1만원) -->
             <button type="button" class="so-ship-btn" data-ship="compact_parcel" onclick="window._soPickShip('compact_parcel')" style="display:none;">📬 ${tr('택배배송 (60×40 이하)', '宅配 ≤60×40', 'Parcel ≤60×40')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(10000)}</span></button>
+            <!-- 2026-05-15: 종이매대 전용 — 1개씩 / 2개씩 택배 (수량 곱셈) -->
+            <button type="button" class="so-ship-btn" data-ship="pd_parcel_1" onclick="window._soPickShip('pd_parcel_1')" style="display:none;">📦 ${tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box')}<br><span style="font-size:11px; opacity:0.85;" class="so-ship-dynamic-1">${fmtPrice(30000)} / ${tr('개', '個', 'each')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="pd_parcel_2" onclick="window._soPickShip('pd_parcel_2')" style="display:none;">📦 ${tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box')}<br><span style="font-size:11px; opacity:0.85;" class="so-ship-dynamic-2">${fmtPrice(15000)} / 2${tr('개', '個', 'pcs')}</span></button>
           </div>
+          <!-- 2026-05-15: 종이매대 전용 — 100개 이상 무료배송 (크게 표시) -->
+          <button type="button" class="so-ship-btn so-ship-pd-bulk" data-ship="pd_bulk_free" onclick="window._soPickShip('pd_bulk_free')" style="display:none; width:100%; margin-bottom:12px; padding:16px 18px; font-size:15px; font-weight:900; border-radius:14px; background:linear-gradient(135deg,#10b981 0%, #059669 100%); color:#fff; border:none; cursor:pointer; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); letter-spacing:0.3px;">
+            🎁 ${tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs')}
+            <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('대량 주문 시 자동 적용 (수도권/지방 동일)', '大量注文時に自動適用', 'Auto-applied for bulk orders')}</div>
+          </button>
           <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
           <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
             style="display:none; width:100%; padding:12px 14px; margin-bottom:12px; border:2px dashed #16a34a; background:#f0fdf4; color:#15803d; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.2s;">
@@ -1897,6 +1921,26 @@
         }
     }
 
+    // 2026-05-15: 종이매대 감지 — 코드가 pd_* 로 시작하거나, top_category_code 가 paper_display
+    //   배송 옵션이 다름: 100개 이상 무료배송 / 1개씩(3만 × qty) / 2개씩(1.5만 × ceil(qty/2)) /
+    //   수도권 용차 10만 / 지방 용차 20만. 칼선은 담당자 통해 받음 (인쇄 데이터 검증 후 작업).
+    function _soIsPaperDisplayProduct(p) {
+        if (!p) return false;
+        var code = (p.code || '').toLowerCase();
+        var cat = (p.category || '').toLowerCase();
+        var name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        if (code.indexOf('pd_') === 0) return true;
+        if (cat === 'paper_display' || cat.indexOf('paper-display') >= 0 || cat.indexOf('paper_display') >= 0) return true;
+        try {
+            if (typeof window._getTopCategoryCode === 'function' && p.category) {
+                var top = String(window._getTopCategoryCode(p.category) || '').toLowerCase();
+                if (top === 'paper_display' || top.indexOf('paper') >= 0 || top.indexOf('종이매대') >= 0) return true;
+            }
+        } catch (e) {}
+        if (/종이매대|paper\s*display|paper\s*stand|cardboard\s*display/i.test(name)) return true;
+        return false;
+    }
+
     // 2026-05-14: 허니콤보드 파티션 가림막 감지
     // - code: hb_par_* / hb_dw_par_* / 또는 admin 이 다른 코드로 등록한 경우 이름으로 매칭
     // - name: '파티션 가림막' / 'partition' / 'screen' / '간이 가벽'
@@ -2154,7 +2198,11 @@
         // 2026-05-13: 일반 인쇄물 묶음 소형택배 (5천원, 모든 수량 동일)
         small_parcel:         { fee: 5000,   label_ko: '묶음 소형택배',     parts: [['묶음 소형택배', 5000]] },
         // 2026-05-13: 등신대·자유인쇄커팅 택배 (60×40cm 이하, 1만원)
-        compact_parcel:       { fee: 10000,  label_ko: '택배배송 (60×40cm 이하)', parts: [['택배배송 60×40 이하', 10000]] }
+        compact_parcel:       { fee: 10000,  label_ko: '택배배송 (60×40cm 이하)', parts: [['택배배송 60×40 이하', 10000]] },
+        // 2026-05-15: 종이매대 전용 — 동적 가격
+        pd_bulk_free:         { fee: 0,      label_ko: '100개 이상 무료배송', parts: [] },
+        pd_parcel_1:          { fee: 30000,  label_ko: '1개씩 포장 택배배송', parts: [['1개씩 포장 택배배송 (3만원/개)', 30000]] },
+        pd_parcel_2:          { fee: 15000,  label_ko: '2개씩 포장 택배배송', parts: [['2개씩 포장 택배배송 (1.5만원/2개)', 15000]] }
     };
     window.SHIP_OPTS = SHIP_OPTS;
 
@@ -2174,6 +2222,16 @@
                 var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
                 return totalRawQty >= 10 ? 0 : 100000;
             }
+        }
+        // 2026-05-15: 종이매대 — 100개 이상 무료, 1개씩(3만/개), 2개씩(1.5만/2개), 수도권 용차 10만, 지방 용차 20만
+        if (state.isPaperDisplay) {
+            state._shipUpgradeReason = null;
+            var pdQ = parseInt(state.qty, 10) || 1;
+            if (method === 'self_pickup' || method === 'pd_bulk_free') return 0;
+            if (method === 'pd_parcel_1') return 30000 * pdQ;
+            if (method === 'pd_parcel_2') return 15000 * Math.ceil(pdQ / 2);
+            if (method === 'metro_delivery') return 100000;
+            if (method === 'regional_delivery') return 200000;
         }
         var opt = SHIP_OPTS[method] || SHIP_OPTS.self_pickup;
         var baseFee = opt.fee || 0;
@@ -2224,6 +2282,26 @@
 
     // 2026-05-13: 시공/배송 버튼 클릭
     window._soPickShip = function (method) {
+        // 2026-05-15: 종이매대 100개 이상 무료배송 — 100개 미만 시 자동 수량 보정
+        if (method === 'pd_bulk_free' && state.isPaperDisplay) {
+            var curQ = parseInt(state.qty, 10) || 1;
+            if (curQ < 100) {
+                var ok = window.confirm(tr(
+                    '100개 이상 주문 시 무료배송됩니다. 수량을 100개로 변경할까요?',
+                    '100個以上で無料配送です。数量を100個に変更しますか？',
+                    'Free shipping requires 100+ pcs. Set quantity to 100?'
+                ));
+                if (ok) {
+                    state.qty = 100;
+                    var qIn = document.getElementById('soQty');
+                    if (qIn) qIn.value = 100;
+                    if (typeof _soSyncAcrylicAddonQty === 'function') _soSyncAcrylicAddonQty();
+                    if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
+                } else {
+                    return; // 수량 안 늘리면 pd_bulk_free 선택 취소
+                }
+            }
+        }
         state.shipMethod = method;
         // 2026-05-13: 사용자가 일반 ship 버튼을 누르면 묶음배송 모드 해제
         if (state.bundleShipping && method !== 'bundle_shipping') {
@@ -2248,7 +2326,8 @@
         var dateWrap = document.getElementById('soScheduleDateWrap');
         var remWrap = document.getElementById('soRemovalWrap');
         // self_pickup 또는 단순 배송/택배(metro/regional_delivery·parcel·large/small_parcel)이면 날짜·시간 안 보임
-        var noScheduleMethods = ['self_pickup', 'metro_delivery', 'regional_delivery', 'parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel', 'bundle_shipping'];
+        // 2026-05-15: 종이매대 전용 ship method 들도 schedule 안 필요
+        var noScheduleMethods = ['self_pickup', 'metro_delivery', 'regional_delivery', 'parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel', 'bundle_shipping', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2'];
         var needsSchedule = noScheduleMethods.indexOf(method) < 0;
         if (dateWrap) dateWrap.style.display = needsSchedule ? '' : 'none';
         // 철거 옵션 (수도권 설치+철거 시만)
@@ -2299,6 +2378,54 @@
                     tr('지방 배송은 택배기사가 배송비를 수령합니다.',
                        '配送ドライバーに直接お支払いください。',
                        'Pay the delivery driver directly.') + '</div>';
+            } else {
+                box.innerHTML = '';
+            }
+            recalc();
+            return;
+        }
+        // 2026-05-15: 종이매대 — 배송 옵션별 안내 (100개 무료 / 1개씩 × qty / 2개씩 × ceil(qty/2))
+        if (state.isPaperDisplay) {
+            var pdQ = parseInt(state.qty, 10) || 1;
+            var m = state.shipMethod;
+            if (m === 'pd_bulk_free') {
+                if (pdQ >= 100) {
+                    box.innerHTML = '<div style="font-weight:800; color:#14532d;">🎁 ' +
+                        tr('무료배송 (현재 ' + pdQ + '개 ≥ 100)',
+                           '無料配送 (現在 ' + pdQ + '個 ≥ 100)',
+                           'Free shipping (' + pdQ + ' pcs ≥ 100)') + '</div>';
+                } else {
+                    var pdNeed = 100 - pdQ;
+                    box.innerHTML = '<div style="font-weight:800; color:#92400e; margin-bottom:4px;">⚠️ ' +
+                        tr('무료배송 미적용 — ' + pdNeed + '개 더 필요',
+                           '無料配送未適用 — あと' + pdNeed + '個',
+                           'Free shipping requires ' + pdNeed + ' more pcs') + '</div>' +
+                        '<div style="font-size:11px; color:#92400e;">' +
+                        tr('수량을 100개 이상으로 늘리면 자동 적용됩니다.',
+                           '数量を100個以上にすると自動適用されます。',
+                           'Reaches 100 pcs to apply automatically.') + '</div>';
+                }
+            } else if (m === 'pd_parcel_1') {
+                var pd1Total = 30000 * pdQ;
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📦 ' +
+                    tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box') + '</div>' +
+                    '<div style="display:flex; justify-content:space-between; font-size:12px;"><span>· ' +
+                    fmtPrice(30000) + ' × ' + pdQ + tr('개', '個', ' pcs') +
+                    '</span><span style="font-weight:800; color:#dc2626;">' + fmtPrice(pd1Total) + '</span></div>';
+            } else if (m === 'pd_parcel_2') {
+                var pd2Boxes = Math.ceil(pdQ / 2);
+                var pd2Total = 15000 * pd2Boxes;
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📦 ' +
+                    tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box') + '</div>' +
+                    '<div style="display:flex; justify-content:space-between; font-size:12px;"><span>· ' +
+                    fmtPrice(15000) + ' × ' + pd2Boxes + tr('박스 (2개씩)', '箱 (2個ずつ)', ' boxes (2 each)') +
+                    '</span><span style="font-weight:800; color:#dc2626;">' + fmtPrice(pd2Total) + '</span></div>';
+            } else if (m === 'metro_delivery') {
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b;">🚚 ' +
+                    tr('수도권 용차배송', '首都圏トラック配送', 'Metro truck') + ' · ' + fmtPrice(100000) + '</div>';
+            } else if (m === 'regional_delivery') {
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b;">🛻 ' +
+                    tr('지방 용차배송', '地方トラック配送', 'Regional truck') + ' · ' + fmtPrice(200000) + '</div>';
             } else {
                 box.innerHTML = '';
             }
@@ -2610,6 +2737,48 @@
     };
 
     // 2026-05-13: 단면/양면 선택
+    // 2026-05-15: 종이매대 — 1개씩/2개씩 택배 버튼 라벨에 (단가 × 수량 = 총액) 표시
+    //   pd_bulk_free 도 qty<100 이면 "현재 N개 — 100개 이상 시 무료" 식으로 안내.
+    window._soUpdatePdParcelLabels = function () {
+        if (!state.isPaperDisplay) return;
+        var q = parseInt(state.qty, 10) || 1;
+        var btn1 = document.querySelector('.so-ship-btn[data-ship="pd_parcel_1"]');
+        var btn2 = document.querySelector('.so-ship-btn[data-ship="pd_parcel_2"]');
+        var btnBulk = document.querySelector('.so-ship-btn[data-ship="pd_bulk_free"]');
+        if (btn1) {
+            var total1 = 30000 * q;
+            btn1.innerHTML = '📦 ' + tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box') +
+                '<br><span style="font-size:11px; opacity:0.9; font-weight:600;">' +
+                fmtPrice(30000) + ' × ' + q + tr('개', '個', 'pcs') + ' = ' + fmtPrice(total1) + '</span>';
+        }
+        if (btn2) {
+            var boxes = Math.ceil(q / 2);
+            var total2 = 15000 * boxes;
+            btn2.innerHTML = '📦 ' + tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box') +
+                '<br><span style="font-size:11px; opacity:0.9; font-weight:600;">' +
+                fmtPrice(15000) + ' × ' + boxes + tr('박스', '箱', ' boxes') + ' = ' + fmtPrice(total2) + '</span>';
+        }
+        if (btnBulk) {
+            if (q >= 100) {
+                btnBulk.innerHTML = '🎁 ' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
+                    '<div style="font-size:12px; font-weight:700; margin-top:4px; opacity:0.95;">' +
+                    tr('✅ 현재 ' + q + '개 — 무료배송 적용 가능', '✅ ' + q + '個 — 適用可能', '✅ ' + q + ' pcs — eligible') + '</div>';
+                btnBulk.disabled = false;
+                btnBulk.style.opacity = '1';
+                btnBulk.style.cursor = 'pointer';
+            } else {
+                btnBulk.innerHTML = '🎁 ' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
+                    '<div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.9;">' +
+                    tr('현재 ' + q + '개 — 100개 이상 시 자동 적용',
+                       '現在 ' + q + '個 — 100個以上で適用',
+                       'Currently ' + q + ' — applies at 100+ pcs') + '</div>';
+                // 시각적으로 dim 처리, 그러나 클릭은 가능 (수량 자동 보정)
+                btnBulk.style.opacity = '0.85';
+                btnBulk.style.cursor = 'pointer';
+            }
+        }
+    };
+
     window._soPickSide = function (side) {
         state.wallSide = (side === 'double') ? 'double' : 'single';
         document.querySelectorAll('.so-side-btn').forEach(function (b) {
@@ -2767,8 +2936,12 @@
         state.qty = next;
         _soSyncAcrylicAddonQty();
         recalc();
-        // 2026-05-15: 원판은 수량에 따라 무료배송 기준이 바뀌므로 breakdown 박스도 갱신
+        // 2026-05-15: 원판/종이매대는 수량에 따라 배송비/라벨이 바뀜
         if (state.isRawBoard && typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+        if (state.isPaperDisplay) {
+            if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
+            if (typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+        }
     };
 
     window._soOnQtyInput = function() {
@@ -2778,8 +2951,12 @@
         state.qty = v;
         _soSyncAcrylicAddonQty();
         recalc();
-        // 2026-05-15: 원판은 수량에 따라 무료배송 기준이 바뀌므로 breakdown 박스도 갱신
+        // 2026-05-15: 원판/종이매대는 수량에 따라 배송비/라벨이 바뀜
         if (state.isRawBoard && typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+        if (state.isPaperDisplay) {
+            if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
+            if (typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+        }
     };
 
     // ─────────────────────────────────────────────
@@ -2924,11 +3101,15 @@
         document.getElementById('soName').textContent = pickName(p);
         document.getElementById('soDesc').textContent = pickDescPlain(p, 150);
         // 2026-05-13: 가벽이면 일반 설명 숨기고 가벽 전용 안내 카드 표시
+        // 2026-05-15: 종이매대면 일반 설명 숨기고 담당자 칼선/FOB 안내 카드 표시
         var descEl = document.getElementById('soDesc');
         var wallGuide = document.getElementById('soWallGuide');
+        var pdNotice = document.getElementById('soPaperDisplayNotice');
         var isWallNow = _soIsWallProduct(p);
-        if (descEl) descEl.style.display = isWallNow ? 'none' : '';
+        var isPdNow = _soIsPaperDisplayProduct(p);
+        if (descEl) descEl.style.display = (isWallNow || isPdNow) ? 'none' : '';
         if (wallGuide) wallGuide.style.display = isWallNow ? '' : 'none';
+        if (pdNotice) pdNotice.style.display = isPdNow ? '' : 'none';
         const img = document.getElementById('soImg');
         const imgUrl = pickImg(p);
         if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
@@ -3092,6 +3273,8 @@
         // 2026-05-13: 허니콤보드 원판인쇄 — 양면이면 단가 2배 자동
         state.isRawBoard = _soIsRawBoardProduct(p);
         state.isRawBoardDouble = _soIsRawBoardDoubleSided(p);
+        // 2026-05-15: 종이매대 상품 — 배송옵션 5종 + 담당자 안내 카드
+        state.isPaperDisplay = _soIsPaperDisplayProduct(p);
         // 2026-05-15: 원판 상품은 인쇄 없이 발송 — 업로드 영역, 전달사항, 수량할인 안내, 양면 라벨, 디자인 관련 UI 숨김
         var _rb_uploadWrap = document.getElementById('soUploadWrap');
         var _rb_uploadLabel = document.getElementById('soUploadLabel');
@@ -3153,9 +3336,9 @@
         state.isForexFoam = _soIsForexFoamProduct(p);
         // 2026-05-13: 일반 인쇄물 (광고/상업/홈/굿즈/기타) — 5천원 묶음 소형택배
         state.isGeneralPrint = _soIsGeneralPrintProduct(p) && !state.isForexFoam;
-        // 시공/배송 일정 섹션 — 가벽·포토존·배송전용허니콤·포맥스폼보드·일반인쇄물 모두 표시 (사실상 모든 상품)
+        // 시공/배송 일정 섹션 — 가벽·포토존·배송전용허니콤·포맥스폼보드·일반인쇄물·종이매대 모두 표시
         var schedSec = document.getElementById('soScheduleSection');
-        var anyShipScope = state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint;
+        var anyShipScope = state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay;
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         // 2026-05-13: 카테고리별 ship 버튼 화이트리스트
         var installKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
@@ -3164,6 +3347,9 @@
         if (state.isWall || state.isPhotozone) {
             // 가벽/포토존 — 시공 옵션
             allowed = ['self_pickup'].concat(installKeys);
+        } else if (state.isPaperDisplay) {
+            // 2026-05-15: 종이매대 — 100개 이상 무료 / 1개씩(3만/개) / 2개씩(1.5만/2개) / 수도권 용차 10만 / 지방 용차 20만
+            allowed = ['self_pickup', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2', 'metro_delivery', 'regional_delivery'];
         } else if (state.isRawBoard) {
             // 2026-05-15: 원판 — 본사 방문 / 수도권 배송 / 지방 배송 (착불) 만
             allowed = ['self_pickup', 'metro_delivery', 'regional_delivery'];
@@ -3183,10 +3369,15 @@
             allowed = ['self_pickup'];
         }
         // 2026-05-14: 택배 옵션이 있는 상품은 택배를 기본 선택 (본사 방문 대신)
+        // 2026-05-15: 종이매대 — qty >= 100 이면 pd_bulk_free, 아니면 pd_parcel_2 (가장 저렴) 기본
         var parcelKeys = ['parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel'];
         var defaultShip = 'self_pickup';
-        for (var pi = 0; pi < parcelKeys.length; pi++) {
-            if (allowed.indexOf(parcelKeys[pi]) >= 0) { defaultShip = parcelKeys[pi]; break; }
+        if (state.isPaperDisplay) {
+            defaultShip = ((parseInt(state.qty, 10) || 1) >= 100) ? 'pd_bulk_free' : 'pd_parcel_2';
+        } else {
+            for (var pi = 0; pi < parcelKeys.length; pi++) {
+                if (allowed.indexOf(parcelKeys[pi]) >= 0) { defaultShip = parcelKeys[pi]; break; }
+            }
         }
         state.shipMethod = defaultShip;
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
@@ -3212,6 +3403,16 @@
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' +
                     tr('착불 (수령 시 결제)', '着払い (受取時)', 'Cash on delivery') + '</span>';
             }
+        } else if (state.isPaperDisplay) {
+            // 2026-05-15: 종이매대 — 수도권/지방 용차배송 라벨
+            if (_rb_metroBtn) {
+                _rb_metroBtn.innerHTML = '🚚 ' + tr('수도권 용차배송', '首都圏トラック配送', 'Metro truck') +
+                    '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' + fmtPrice(100000) + '</span>';
+            }
+            if (_rb_regBtn) {
+                _rb_regBtn.innerHTML = '🛻 ' + tr('지방 용차배송', '地方トラック配送', 'Regional truck') +
+                    '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' + fmtPrice(200000) + '</span>';
+            }
         } else {
             // 일반 모드 라벨 복원 (다른 상품 전환 시 잔존 방지)
             if (_rb_metroBtn) {
@@ -3223,10 +3424,16 @@
                     '<br><span style="font-size:11px; opacity:0.8;">' + fmtPrice(200000) + '</span>';
             }
         }
-        // 묶음배송 버튼 — 가벽·포토존 제외 모두 표시 (원판은 묶음 개념 자체 없음 — 숨김)
+        // 2026-05-15: 종이매대 — 100개 이상 무료배송 버튼 표시 (큰 그라데이션 버튼) + 1/2개씩 택배 라벨 동적
+        var _pd_bulkBtn = document.querySelector('.so-ship-btn[data-ship="pd_bulk_free"]');
+        if (_pd_bulkBtn) _pd_bulkBtn.style.display = state.isPaperDisplay ? '' : 'none';
+        if (state.isPaperDisplay && typeof window._soUpdatePdParcelLabels === 'function') {
+            window._soUpdatePdParcelLabels();
+        }
+        // 묶음배송 버튼 — 가벽·포토존·원판·종이매대 제외 모두 표시
         var bundleBtn = document.getElementById('soBundleShipBtn');
         if (bundleBtn) {
-            var showBundle = !state.isRawBoard && (state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint);
+            var showBundle = !state.isRawBoard && !state.isPaperDisplay && (state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint);
             bundleBtn.style.display = showBundle ? '' : 'none';
             bundleBtn.style.background = '#f0fdf4';
             bundleBtn.style.color = '#15803d';
@@ -3281,8 +3488,9 @@
         await _soPopulateAddons(p);
 
         recalc();
-        // 2026-05-15: 원판은 모달 열리자마자 배송 안내 박스 표시 (무료 기준 / 착불 안내)
-        if (state.isRawBoard && typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+        // 2026-05-15: 원판 / 종이매대는 모달 열리자마자 배송 안내 박스 표시
+        if ((state.isRawBoard || state.isPaperDisplay) && typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+        if (state.isPaperDisplay && typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
         updateButtons();
         resetUploadZone();
         hideStatus();
