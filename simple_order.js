@@ -4467,18 +4467,21 @@
             var memo = (document.getElementById('soCoMemo').value || '').trim();
             var fullAddr = [zip ? '(' + zip + ')' : '', addr1, addr2].filter(Boolean).join(' ');
 
+            // 2026-05-15: 견적서에도 실제 할인율·배송비 반영 (이전엔 0 하드코딩 → 100만+ 할인 누락).
             var cartCalc = _soCalcCartTotal(cart);
+            // 구매금액 할인 + PRO 할인 합산 비율 (export.js 는 0~1 rate 사용)
+            var _quoteDiscRate = ((cartCalc.amountPct || 0) + (cartCalc.proPct || 0)) / 100;
             var orderInfo = {
                 id: '미리보기',
                 manager: name, phone: phone, address: fullAddr,
                 note: memo, date: '',
-                shippingFee: 0
+                shippingFee: cartCalc.shipTotal || 0
             };
 
             // window.cartData 와 동일한 shape 으로 변환 (export.js 가 item.product 참조)
             // simple_order cart 의 일반 항목은 이미 product 객체를 가지고 있음
             var pdfCart = cart.filter(function (it) { return !!it.product || it.fabricCode; });
-            var blob = await mod.generateQuotationPDF(orderInfo, pdfCart, 0, 0);
+            var blob = await mod.generateQuotationPDF(orderInfo, pdfCart, _quoteDiscRate, 0);
             if (!blob) { alert('견적서 생성 실패. 콘솔 확인.'); return; }
 
             var url = URL.createObjectURL(blob);
