@@ -941,9 +941,25 @@ if ('caches' in window) {
             })();
             </script>
             <!-- 2026-05-14: 사용자 요청 — hint 텍스트 자리에 "개인결제창" 버튼.
-                 클릭 시 결제대기/디자인작업중 VIP 카드 전체를 모달로 모아 표시. -->
-            <div style="text-align:center; margin-top:4px;">
-                <button type="button" id="mgrOpenPersonalPay" onclick="window._openPersonalPayModal()" style="padding:11px 26px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(180,83,9,0.45); letter-spacing:0.5px;">
+                 클릭 시 결제대기/디자인작업중 VIP 카드 전체를 모달로 모아 표시.
+                 2026-05-15: 옆에 "금액 주문" 입력 + 주문하기 버튼 복원 — 매니저와 통화 후
+                 합의된 금액을 직접 입력해서 즉시 결제 모달을 띄우는 빠른 경로. -->
+            <div id="mgrQuoteActions" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; margin-top:6px;">
+                <!-- 금액 입력 + 주문하기 (좌측 그룹) -->
+                <div style="display:flex; align-items:center; gap:6px; background:#fff; border:1.5px solid #fbbf24; border-radius:10px; padding:4px 4px 4px 12px; box-shadow:0 4px 12px -4px rgba(251,191,36,0.3);">
+                    <input id="mgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
+                           placeholder="견적 금액 (원)"
+                           oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}"
+                           style="border:none; outline:none; font-size:14px; font-weight:700; color:#78350f; width:130px; text-align:right; padding:6px 0; background:transparent;">
+                    <span id="mgrQuoteUnit" style="font-size:12px; color:#92400e; font-weight:700; padding-right:4px;">원</span>
+                    <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()"
+                            style="padding:9px 18px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
+                        ⚡ 주문하기
+                    </button>
+                </div>
+                <!-- 개인결제창 (우측) -->
+                <button type="button" id="mgrOpenPersonalPay" onclick="window._openPersonalPayModal()" style="padding:11px 22px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(180,83,9,0.45); letter-spacing:0.5px; white-space:nowrap;">
                     📋 개인결제창
                 </button>
             </div>
