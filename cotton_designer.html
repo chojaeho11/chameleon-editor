@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cafe2626/0101/3355 + cotton-print 공유) -->
-<script src="/cart_sync.js?v=12"></script>
+<script src="/cart_sync.js?v=13"></script>
 <!-- Toss Payments SDK (한국 카드결제) -->
 <script src="https://js.tosspayments.com/v1/payment"></script>
 <!-- Stripe (해외 결제) -->
@@ -151,6 +151,8 @@ window.__CD_I18N = {
     cart_empty_sub: { ko:'디자인을 완성하고 장바구니에 담아보세요', ja:'デザインを完成させてカートに追加してください', en:'Complete your design and add it to cart' },
     cart_section_fabric: { ko:'패브릭', ja:'ファブリック', en:'Fabric' },
     cart_section_general: { ko:'일반상품', ja:'一般商品', en:'General products' },
+    cart_clear_all: { ko:'전체 비우기', ja:'すべて削除', en:'Clear all' },
+    cart_clear_confirm: { ko:'장바구니의 모든 항목을 삭제할까요?', ja:'カートのすべてのアイテムを削除しますか？', en:'Remove all items from cart?' },
     cart_total: { ko:'총 결제금액', ja:'お支払い合計', en:'Order Total' },
     cart_checkout: { ko:'주문하기', ja:'注文する', en:'Checkout' },
     co_title: { ko:'주문 정보 입력', ja:'注文情報', en:'Order Info' },
@@ -1262,7 +1264,12 @@ a { text-decoration: none; color: inherit; }
 <aside class="cart-drawer" id="cartDrawer">
     <div class="cart-head">
         <h3><i class="fa-solid fa-cart-shopping"></i> <span data-cdi18n="cart_drawer_title">장바구니</span> <span id="cartCountInline" style="font-size:13px; color:var(--text-light); font-weight:400; margin-left:6px;"></span></h3>
-        <button onclick="window._cpCartClose()">&times;</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button id="cartClearAllBtn" onclick="window._cpCartClearAll()" title="" data-cdi18n-title="cart_clear_all" style="background:transparent; border:1px solid #fecaca; color:#dc2626; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">
+                🗑 <span data-cdi18n="cart_clear_all">전체 비우기</span>
+            </button>
+            <button onclick="window._cpCartClose()" style="font-size:22px; background:none; border:none; cursor:pointer; color:#6b7280;">&times;</button>
+        </div>
     </div>
     <!-- 2026-05-12: 크로스도메인 카트 배너 (cart_sync.js 가 채움) -->
     <div id="cartCrossBanner" style="display:none;"></div>
@@ -1280,6 +1287,10 @@ a { text-decoration: none; color: inherit; }
         </div>
         <button class="cart-checkout-btn" id="cartCheckoutBtn" onclick="window._cpOpenCheckout()" disabled>
             <i class="fa-solid fa-bag-shopping"></i> &nbsp;<span data-cdi18n="cart_checkout">주문하기</span>
+        </button>
+        <!-- 2026-05-15: 전체 비우기 — phantom 항목 복원 문제 보강용 명시적 비움 -->
+        <button id="cartClearAllBtn" onclick="window._cpCartClearAll()" style="margin-top:8px; width:100%; padding:9px 12px; border:1px solid #e2e8f0; background:#fff; color:#94a3b8; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; display:none;">
+            <i class="fa-regular fa-trash-can"></i> <span data-cdi18n="cart_clear_all">전체 비우기</span>
         </button>
     </div>
 </aside>
@@ -1416,6 +1427,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=52"></script>
+<script src="/cotton_designer.js?v=53"></script>
 </body>
 </html>

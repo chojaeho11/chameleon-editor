@@ -262,7 +262,13 @@
         if (!server || !Array.isArray(server.items) || server.items.length === 0) {
             return { items: localItems || [], source: 'local', tsIso: localTs ? new Date(localTs).toISOString() : nowIso };
         }
-        // 2. local 비어있으면 → server 채택
+        // 2026-05-15: local 이 비어있어도 ts 가 server 보다 최신이면 "의도적 비움" 으로 간주.
+        //   이전 버그 — 결제 끝낸 직후나 수동 전체비움 후에도 다음 페이지로드 시 server 의 옛 항목이 부활.
+        //   이제는 localTs 가 더 신선하면 빈 상태를 보존하고, 다음 push 에서 server 도 비워짐.
+        if ((!localItems || localItems.length === 0) && localTs > serverTs) {
+            return { items: [], source: 'local', tsIso: new Date(localTs).toISOString() };
+        }
+        // 2. local 비어있으면 → server 채택 (ts 없거나 server 가 더 최신인 경우)
         if (!localItems || localItems.length === 0) {
             return { items: server.items, source: 'server', tsIso: server.updatedAt || nowIso };
         }
@@ -271,6 +277,24 @@
             return { items: localItems, source: 'local', tsIso: new Date(localTs).toISOString() };
         }
         return { items: server.items, source: 'server', tsIso: server.updatedAt || nowIso };
+    }
+
+    // 2026-05-15: 30일 이상 묵은 항목 자동 정리.
+    //   addedAt (패브릭) / uid (timestamp, 일반상품 simple_order) 둘 다 인식.
+    //   user_id 키잉이라 옛 세션·옛 기기에서 추가된 항목이 영원히 살아있던 문제 보강.
+    var STALE_AGE_MS = 30 * 24 * 3600 * 1000; // 30 days
+    function isStaleCartItem(it) {
+        if (!it || typeof it !== 'object') return false;
+        var ts = 0;
+        // 1) 명시적 addedAt (cotton-print fabric item)
+        if (it.addedAt) ts = Date.parse(it.addedAt);
+        // 2) simple_order item: uid 는 Date.now()
+        if (!ts && typeof it.uid === 'number' && it.uid > 1e12) ts = it.uid;
+        if (!ts && typeof it.uid === 'string' && /^\d{13}/.test(it.uid)) ts = parseInt(it.uid, 10);
+        // 3) item-level updated_at
+        if (!ts && it.updated_at) ts = Date.parse(it.updated_at);
+        if (!ts) return false; // 타임스탬프 추적 불가 → 보존 (안전)
+        return (Date.now() - ts) > STALE_AGE_MS;
     }
 
     // ── localStorage interceptor ─────────────────────────
@@ -347,14 +371,19 @@
             if (Array.isArray(serverState)) serverState = { items: serverState, updatedAt: null };
             var local = readLocal();
             // 2026-05-12: invalid 항목 자동 정리 (서버/로컬 양쪽)
+            // 2026-05-15: + 30일 이상 묵은 stale 항목 자동 정리 — phantom 카트 항목 누적 방지
             if (serverState && Array.isArray(serverState.items)) {
                 var sb1 = serverState.items.length;
-                serverState.items = serverState.items.filter(isValidCartItem);
-                if (serverState.items.length !== sb1) console.warn('[cart_sync] server invalid 항목 ' + (sb1 - serverState.items.length) + '개 정리');
+                serverState.items = serverState.items
+                    .filter(isValidCartItem)
+                    .filter(function(it) { return !isStaleCartItem(it); });
+                if (serverState.items.length !== sb1) console.warn('[cart_sync] server 항목 ' + (sb1 - serverState.items.length) + '개 정리 (invalid 또는 30일+)');
             }
             var lb1 = local.length;
-            local = local.filter(isValidCartItem);
-            if (local.length !== lb1) console.warn('[cart_sync] local invalid 항목 ' + (lb1 - local.length) + '개 정리');
+            local = local
+                .filter(isValidCartItem)
+                .filter(function(it) { return !isStaleCartItem(it); });
+            if (local.length !== lb1) console.warn('[cart_sync] local 항목 ' + (lb1 - local.length) + '개 정리 (invalid 또는 30일+)');
             local.forEach(tagItem);
             // 2026-05-14: last-write-wins by timestamp — 옛 merge-by-id 는 삭제가 부활하던 버그.
             var picked = pickFreshState(serverState, local);
@@ -429,6 +458,20 @@
         document.addEventListener('DOMContentLoaded', start);
     } else { start(); }
 
+    // 2026-05-15: 카트 전체 비우기 — 한 함수로 모든 항목 제거 + 서버 동기화
+    //   부분 비움 (소스별 정리) 가 누적시키는 phantom 항목 문제 해결.
+    function clearAllCart() {
+        _unified = [];
+        var nowIso = new Date().toISOString();
+        writeLocalTs(nowIso);
+        writeLocalRaw([]);
+        // 서버 즉시 push (350ms 디바운스 우회)
+        if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
+        push([]);
+        return Promise.resolve();
+    }
+    window._clearAllCart = clearAllCart;
+
     // ── Public API ───────────────────────────────────────
     window.cartSync = {
         sid: function () { return SID; },
@@ -452,6 +495,7 @@
             _unified = others.concat(local);
             return push(_unified.slice());
         },
+        clearAll: clearAllCart,
         linkToSibling: function (url) { return attachSid(url); },
         renderBanner: renderCrossDomainBanner,
         _debug: function () { return { sid: SID, unified: _unified, source: SOURCE, key: LOCAL_KEY }; }

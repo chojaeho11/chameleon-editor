@@ -1113,6 +1113,9 @@ window._cpUpdateCartUI = function() {
     if (inline) inline.textContent = totalCount ? '(' + totalCount + ')' : '';
     if (totalAmt) totalAmt.textContent = cdFmtPrice(calcCartTotal());
     if (checkoutBtn) checkoutBtn.disabled = totalCount === 0;
+    // 2026-05-15: 전체 비우기 버튼 — 아이템이 1개 이상일 때만 표시
+    var clearBtn = document.getElementById('cartClearAllBtn');
+    if (clearBtn) clearBtn.style.display = totalCount > 0 ? '' : 'none';
 
     if (body) {
         // 2026-05-11: 모든 라벨 i18n 적용 — 카트 드로어 안의 한국어 문구 제거
@@ -1347,6 +1350,21 @@ window._cpCartRemove = function(i) {
     const cart = getCart();
     cart.splice(i, 1);
     saveCart(cart);
+    window._cpUpdateCartUI();
+};
+// 2026-05-15: 전체 비우기 — fabric + 일반상품 모두 제거 + 서버 동기화 (cart_sync.clearAll)
+window._cpCartClearAll = function() {
+    var msg = (window.cdT && window.cdT('cart_clear_confirm')) || '장바구니의 모든 항목을 삭제할까요?';
+    if (!window.confirm(msg)) return;
+    try {
+        if (window.cartSync && typeof window.cartSync.clearAll === 'function') {
+            window.cartSync.clearAll();
+        } else {
+            // fallback — 직접 localStorage 처리
+            try { localStorage.setItem(CART_KEY, '[]'); } catch (e) {}
+            try { localStorage.setItem('chameleon_cart_updated_at', new Date().toISOString()); } catch (e) {}
+        }
+    } catch (e) { console.warn('[clearAll]', e); }
     window._cpUpdateCartUI();
 };
 

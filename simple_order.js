@@ -1118,6 +1118,10 @@
     <button class="so-cart-checkout-btn" id="soCartCheckoutBtn" onclick="window._soGoCheckout()" disabled>
       ${tr('주문하기', '注文する', 'Checkout')}
     </button>
+    <!-- 2026-05-15: 전체 비우기 — phantom 카트 항목 정리용 -->
+    <button id="soCartClearAllBtn" onclick="window._soCartClearAll()" style="display:none; margin-top:8px; width:100%; padding:9px 12px; border:1px solid #e2e8f0; background:#fff; color:#94a3b8; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit;">
+      🗑 ${tr('전체 비우기', 'すべて削除', 'Clear all')}
+    </button>
   </div>
 </div>
 
@@ -3890,12 +3894,29 @@
         return { unit, subtotal, discount, final, tierPct };
     }
 
+    // 2026-05-15: 전체 비우기 — fabric + 일반상품 모두 + 서버 동기화
+    window._soCartClearAll = function () {
+        var msg = tr('장바구니의 모든 항목을 삭제할까요?', 'カートのすべてのアイテムを削除しますか？', 'Remove all items from cart?');
+        if (!window.confirm(msg)) return;
+        try {
+            if (window.cartSync && typeof window.cartSync.clearAll === 'function') {
+                window.cartSync.clearAll();
+            } else {
+                try { localStorage.setItem(CART_KEY, '[]'); } catch (e) {}
+                try { localStorage.setItem('chameleon_cart_updated_at', new Date().toISOString()); } catch (e) {}
+            }
+        } catch (e) { console.warn('[so clearAll]', e); }
+        renderSoCart();
+        try { if (window._cpUpdateCartUI) window._cpUpdateCartUI(); } catch (e) {}
+    };
+
     function renderSoCart() {
         const list = document.getElementById('soCartList');
         const totalEl = document.getElementById('soCartTotalAmt');
         const countEl = document.getElementById('soCartCount');
         const titleCountEl = document.getElementById('soCartCountTitle');
         const checkBtn = document.getElementById('soCartCheckoutBtn');
+        const clearAllBtn = document.getElementById('soCartClearAllBtn');
         if (!list || !totalEl) return;
 
         // 2026-05-12: 통합 카트 — 패브릭 + 일반상품 둘 다 렌더
@@ -3927,8 +3948,10 @@
                 '</div>';
             totalEl.textContent = fmtPrice(0);
             if (checkBtn) checkBtn.disabled = true;
+            if (clearAllBtn) clearAllBtn.style.display = 'none';
             return;
         }
+        if (clearAllBtn) clearAllBtn.style.display = '';
 
         let totalAmt = 0;
         const sections = [];
