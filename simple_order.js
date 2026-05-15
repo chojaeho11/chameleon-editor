@@ -591,6 +591,44 @@
 .so-status.err { background: #fef2f2; color: #991b1b; }
 .so-status.warn { background: #fef3c7; color: #92400e; }
 
+/* 2026-05-15: 업로드 영역 바로 아래에 표시되는 파일 에러 — 크고 진하게 */
+.so-upload-error {
+    margin-top: 12px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 2px solid #ef4444;
+    border-radius: 12px;
+    color: #991b1b;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 16px -6px rgba(239,68,68,0.45);
+    animation: soUploadErrShake 0.45s ease;
+}
+.so-upload-error[hidden], .so-upload-error[style*="display:none"], .so-upload-error[style*="display: none"] {
+    display: none !important;
+}
+.so-upload-error .so-upload-error-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.so-upload-error .so-upload-error-text {
+    flex: 1;
+    line-height: 1.45;
+    word-break: keep-all;
+}
+@keyframes soUploadErrShake {
+    0%   { transform: translateX(0); }
+    20%  { transform: translateX(-6px); }
+    40%  { transform: translateX(5px); }
+    60%  { transform: translateX(-3px); }
+    80%  { transform: translateX(2px); }
+    100% { transform: translateX(0); }
+}
+
 /* 2026-05-14: 업로드 중 풀스크린 오버레이 — 진행상태 명확히 + 더블클릭 방지 */
 .so-upload-overlay {
     position: fixed; inset: 0; background: rgba(15,23,42,0.7);
@@ -748,6 +786,12 @@
                  '印刷・デザイン無しで、選択された原板をそのままお届けします。デザインファイル不要。',
                  'Selected boards are shipped as-is without printing or design. No file upload needed.')}
           </div>
+        </div>
+
+        <!-- 2026-05-15: 업로드 영역 바로 아래 — 파일 사이즈 초과 등 업로드 에러를 즉시·크게 표시 -->
+        <div id="soUploadError" class="so-upload-error" style="display:none;">
+          <span class="so-upload-error-icon">⚠️</span>
+          <span class="so-upload-error-text" id="soUploadErrorText"></span>
         </div>
 
         <!-- 2026-05-13: 양면 선택 시 뒷면 파일 업로드 영역 (가벽 양면만) -->
@@ -1282,9 +1326,17 @@
             return;
         }
         if (file.size > MAX_FILE_BYTES) {
-            showStatus(tr('10MB를 초과합니다.', '10MBを超えます。', 'Exceeds 10MB.'), 'err');
+            var sizeMb = (file.size / 1024 / 1024).toFixed(1);
+            showStatus(
+                tr('업로드한 파일이 ' + sizeMb + 'MB 입니다. 10MB 이하로 줄여서 다시 올려주세요.',
+                   'アップロードしたファイルは ' + sizeMb + 'MB です。10MB以下に縮小して再アップロードしてください。',
+                   'Uploaded file is ' + sizeMb + 'MB. Please reduce to 10MB or less and try again.'),
+                'err'
+            );
             return;
         }
+        // 2026-05-15: 유효한 파일이 선택되면 직전 업로드 에러 표시 정리
+        hideUploadError();
         state.file = file;
         state.thumbDataUrl = null;
         state.fileWidthMm = null;
@@ -1508,15 +1560,39 @@
 
     function showStatus(msg, kind) {
         const el = document.getElementById('soStatus');
-        if (!el) return;
-        el.style.display = 'block';
-        el.textContent = msg;
-        el.classList.toggle('err', kind === 'err');
+        if (el) {
+            el.style.display = 'block';
+            el.textContent = msg;
+            el.classList.toggle('err', kind === 'err');
+        }
+        // 2026-05-15: 업로드 관련 에러는 업로드 영역 바로 아래에도 큰 배너로 동시 표시.
+        // 우측 패널 가격박스 아래의 작은 toast 는 사용자가 못 보고 결제 직전에 좌측 위로 다시 스크롤하므로,
+        // 파일/업로드 에러는 좌측 이미지 영역 바로 아래에 강조 표시.
+        if (kind === 'err' && /파일|이미지|MB|용량|업로드|file|upload|size|exceed|초과|PDF|PNG|JPG|디자인/i.test(msg || '')) {
+            showUploadError(msg);
+        }
     }
     function hideStatus() {
         const el = document.getElementById('soStatus');
         if (el) { el.style.display = 'none'; el.textContent = ''; }
+        hideUploadError();
     }
+
+    // 2026-05-15: 업로드 영역 바로 아래 인라인 에러 — 사용자가 즉시 인식 가능한 큰 빨간 배너
+    function showUploadError(msg) {
+        var wrap = document.getElementById('soUploadError');
+        var txt  = document.getElementById('soUploadErrorText');
+        if (!wrap || !txt) return;
+        txt.textContent = msg || '';
+        wrap.style.display = 'flex';
+        // 화면에 보이도록 스크롤 (모달 내부 스크롤)
+        try { wrap.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }
+    function hideUploadError() {
+        var wrap = document.getElementById('soUploadError');
+        if (wrap) wrap.style.display = 'none';
+    }
+    window._soHideUploadError = hideUploadError;
 
     function updateButtons() {
         // 2026-05-13: 양면 가벽이면 뒷면 파일도 필수
@@ -2546,11 +2622,11 @@
         var isPng = name.endsWith('.png') || f.type === 'image/png';
         var isJpg = name.endsWith('.jpg') || name.endsWith('.jpeg') || f.type === 'image/jpeg';
         if (!(isPdf || isPng || isJpg)) {
-            alert('PDF · PNG · JPG 파일만 가능합니다.');
+            showStatus(tr('뒷면: PDF · PNG · JPG 파일만 가능합니다.', '裏面: PDF・PNG・JPGのみ可能です。', 'Back side: Only PDF / PNG / JPG allowed.'), 'err');
             return;
         }
         if (f.size > MAX_FILE_BYTES) {
-            alert('10MB를 초과합니다.');
+            showStatus(tr('뒷면 파일이 10MB를 초과합니다.', '裏面ファイルが10MBを超えます。', 'Back side file exceeds 10MB.'), 'err');
             return;
         }
         state.fileBack = f;
