@@ -1812,7 +1812,8 @@
         if (state.bundleShipping) {
             shipName = tr('다른 제품과 묶음배송', '合わせて配送', 'Bundled');
         } else {
-            shipName = (window.SHIP_OPTS && window.SHIP_OPTS[state.shipMethod] && window.SHIP_OPTS[state.shipMethod].label_ko) || '';
+            // 2026-05-15: SHIP_OPTS.label_ko 대신 현재 언어로 변환 (가격 박스에 한국어 잔존 방지)
+            shipName = _soShipMethodLabel(state.shipMethod);
             // 2026-05-13: 택배배송이면 박스 수 표시 (qty/2 올림)
             if (state.shipMethod === 'parcel_shipping' && qty > 0) {
                 var boxes = Math.ceil(qty / 2);
@@ -2205,6 +2206,32 @@
         pd_parcel_2:          { fee: 15000,  label_ko: '2개씩 포장 택배배송', parts: [['2개씩 포장 택배배송 (1.5만원/2개)', 15000]] }
     };
     window.SHIP_OPTS = SHIP_OPTS;
+
+    // 2026-05-15: 배송 방법 라벨 — 현재 언어로 변환 (SHIP_OPTS.label_ko 가 그대로 노출되던 버그 보강)
+    function _soShipMethodLabel(method) {
+        switch (method) {
+            case 'self_pickup':           return tr('본사 방문 수령',          '本社受取',           'HQ pickup');
+            case 'metro_install':         return tr('수도권 설치',             '首都圏設置',         'Metro install');
+            case 'metro_weekend':         return tr('수도권 야간/주말 설치',   '首都圏夜間/週末設置', 'Metro night/weekend install');
+            case 'metro_install_removal': return tr('수도권 설치+철거',        '首都圏設置+撤去',     'Metro install + removal');
+            case 'regional_truck':        return tr('지방 용차배송',           '地方トラック配送',   'Regional truck delivery');
+            case 'regional_install':      return tr('지방 설치배송',           '地方設置配送',       'Regional install + delivery');
+            case 'metro_delivery':        return tr('수도권 배송',             '首都圏配送',         'Metro delivery');
+            case 'regional_delivery':     return tr('지방 배송',               '地方配送',           'Regional delivery');
+            case 'bundle_shipping':       return tr('다른 제품과 묶음배송',    '他商品と合わせて配送', 'Bundled with other items');
+            case 'parcel_shipping':       return tr('택배배송',                '宅配便',             'Parcel');
+            case 'large_parcel':          return tr('대형택배',                '大型宅配',           'Large parcel');
+            case 'small_parcel':          return tr('묶음 소형택배',           '小型宅配 (まとめ)',   'Small parcel (bundled)');
+            case 'compact_parcel':        return tr('택배배송 (60×40cm 이하)', '宅配 (60×40cm以下)', 'Parcel (≤60×40cm)');
+            case 'pd_bulk_free':          return tr('100개 이상 무료배송',     '100個以上 無料配送', 'Free shipping (100+ pcs)');
+            case 'pd_parcel_1':           return tr('1개씩 포장 택배배송',     '1個ずつ宅配',         'Parcel · 1 per box');
+            case 'pd_parcel_2':           return tr('2개씩 포장 택배배송',     '2個ずつ宅配',         'Parcel · 2 per box');
+            default:
+                // 정의되지 않은 값은 SHIP_OPTS.label_ko fallback (호환성)
+                return (window.SHIP_OPTS && window.SHIP_OPTS[method] && window.SHIP_OPTS[method].label_ko) || '';
+        }
+    }
+    window._soShipMethodLabel = _soShipMethodLabel;
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
