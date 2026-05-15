@@ -1842,7 +1842,26 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 else _qtyDiscRate2 = 0.20;
             }
 
-            const rawTotal = (pdfPrice || 0) * (item.qty || 1);
+            // 2026-05-15: simple_order 가벽 (wallSize, wallSide) — recalc()과 동일한 면적/양면/세로3m 가산.
+            //   기존엔 단순 pdfPrice × qty 라 단면/세로3m 무시되어 견적서 금액이 결제 금액보다 작게 나옴.
+            let rawTotal;
+            let _wallSizeLine = '';
+            if (item.wallSize && item.wallSize.w_m) {
+                const _wM = parseFloat(item.wallSize.w_m) || 1;
+                const _hM = parseFloat(item.wallSize.h_m) || 0;
+                const _sideMult = (item.wallSide === 'double') ? 2 : 1;
+                const _baseSubtotal = (pdfPrice || 0) * _wM * _sideMult;
+                // 세로 3m면 가로 m당 +50,000원 (양면이면 ×2) — recalc() 와 동일
+                const _heightExtra = (_hM === 3) ? 50000 * _wM * _sideMult : 0;
+                rawTotal = _baseSubtotal + _heightExtra;
+                // 규격/옵션 칼럼에 가벽 사이즈/면 표시
+                const _sideLbl = (item.wallSide === 'double') ? '양면' : '단면';
+                _wallSizeLine = `${_wM}m × ${_hM}m · ${_sideLbl}`
+                    + (_heightExtra > 0 ? `\n세로 3m 추가 +${(50000 * _wM * _sideMult).toLocaleString()}원` : '');
+                pdfOptionLabel = _wallSizeLine;
+            } else {
+                rawTotal = (pdfPrice || 0) * (item.qty || 1);
+            }
             const _qtyDiscAmt2 = Math.floor(rawTotal * _qtyDiscRate2 / 100) * 100;
             const pTotal = rawTotal - _qtyDiscAmt2;
             totalAmt += pTotal;
