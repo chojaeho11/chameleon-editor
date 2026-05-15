@@ -203,7 +203,8 @@ function calcHoebae() {
 window._cdUploadImage = async function(files) {
     if (!files || !files.length) return;
     const file = files[0];
-    // 2026-05-12: 업로드 제한 — PDF/PNG/JPG 만, 10MB 이하
+    // 2026-05-12: 업로드 제한 — PDF/PNG/JPG 만
+    // 2026-05-15: 10MB → 50MB (simple_order 와 동일 — Supabase Storage 안정 한계)
     const name = (file.name || '').toLowerCase();
     const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
     const isPng = name.endsWith('.png') || file.type === 'image/png';
@@ -213,9 +214,9 @@ window._cdUploadImage = async function(files) {
                   : 'PDF · PNG · JPG 파일만 업로드 가능합니다.');
         return;
     }
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > 50 * 1024 * 1024) {
         showToast(window.cdT ? window.cdT('upload_too_big')
-                  : '10MB를 초과합니다. 더 작은 파일로 업로드해주세요.');
+                  : '50MB를 초과합니다. 더 작은 파일로 업로드해주세요.');
         return;
     }
     state.imgFileName = file.name;

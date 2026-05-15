@@ -76,8 +76,8 @@ window.__CD_I18N = {
     btn_replace: { ko:'이미지 변경', ja:'画像を変更', en:'Change image' },
     upload_title: { ko:'이미지를 올려주세요', ja:'画像をアップロード', en:'Upload your image' },
     upload_hint: { ko:'여기를 클릭하거나 파일을 끌어다 놓으세요<br>업로드한 이미지가 자동으로 패턴이 되어 원단에 출력됩니다', ja:'クリックまたはドロップしてください<br>アップロードした画像が自動でパターン化され生地に印刷されます', en:'Click here or drag a file<br>Your image becomes a repeating pattern on the fabric' },
-    upload_formats: { ko:'PDF · PNG · JPG · 10MB 이하만 업로드 가능', ja:'PDF・PNG・JPG・10MB以下のみアップロード可能', en:'PDF / PNG / JPG · max 10MB only' },
-    upload_too_big: { ko:'10MB를 초과합니다. 더 작은 파일로 업로드해주세요.', ja:'10MBを超えます。より小さいファイルでアップロードしてください。', en:'Exceeds 10MB. Please upload a smaller file.' },
+    upload_formats: { ko:'PDF · PNG · JPG · 50MB 이하만 업로드 가능', ja:'PDF・PNG・JPG・50MB以下のみアップロード可能', en:'PDF / PNG / JPG · max 50MB only' },
+    upload_too_big: { ko:'50MB를 초과합니다. 더 작은 파일로 업로드해주세요.', ja:'50MBを超えます。より小さいファイルでアップロードしてください。', en:'Exceeds 50MB. Please upload a smaller file.' },
     upload_bad_type: { ko:'PDF · PNG · JPG 파일만 업로드 가능합니다.', ja:'PDF・PNG・JPGファイルのみアップロード可能です。', en:'Only PDF / PNG / JPG files are allowed.' },
     side_fabric: { ko:'원단 선택', ja:'生地を選ぶ', en:'Select Fabric' },
     side_color: { ko:'색상 선택', ja:'色を選ぶ', en:'Color' },
@@ -857,7 +857,7 @@ a { text-decoration: none; color: inherit; }
                 여기를 클릭하거나 파일을 끌어다 놓으세요<br>
                 업로드한 이미지가 자동으로 패턴이 되어 원단에 출력됩니다
             </div>
-            <div class="upload-formats" data-cdi18n="upload_formats">PDF · PNG · JPG · 10MB 이하만 업로드 가능</div>
+            <div class="upload-formats" data-cdi18n="upload_formats">PDF · PNG · JPG · 50MB 이하만 업로드 가능</div>
         </div>
 
         <!-- 미리보기 (이미지 업로드 후) -->
@@ -1429,6 +1429,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=55"></script>
+<script src="/cotton_designer.js?v=56"></script>
 </body>
 </html>
