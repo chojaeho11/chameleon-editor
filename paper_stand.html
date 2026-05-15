@@ -11,7 +11,9 @@
     var params = new URLSearchParams(location.search);
     var langParam = params.get('lang');
     var h = location.hostname;
-    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
+    // 2026-05-15: cafe3355.com 은 종이매대 전용 도메인 — 기본 한국어 (URL ?lang= 따름).
+    //   chameleon.design 만 영어 기본 (US 사이트).
+    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('chameleon.design')>=0)?'en':'ko';
     var lang = langParam || hostLang;
     var supported = ['ko','ja','en','zh','ar','es','de','fr'];
     if(supported.indexOf(lang)<0) lang='ko';

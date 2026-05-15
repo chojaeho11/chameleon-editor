@@ -382,6 +382,33 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
+        // ========== 2026-05-15: cafe3355.com → 종이매대(paper-stand) 전용 도메인 ==========
+        // 사용자 결정: cafe3355.com 은 더 이상 US 사이트 아님 (US 는 chameleon.design).
+        //   Hexalite(원판) 도메인처럼 cafe3355.com 전체를 paper_stand 랜딩 전용으로 서빙.
+        //   언어는 URL ?lang= 따름 (기본 한국어 — paper_stand.html 의 hostLang 처리).
+        //   다른 cafe3355 로직(referer 가드 등)보다 먼저 가로채야 함.
+        if (url.hostname.includes('cafe3355.com')) {
+            const isAsset3355 = path.includes('.') && (
+                path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.png') ||
+                path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.svg') ||
+                path.endsWith('.ico') || path.endsWith('.txt') || path.endsWith('.xml') ||
+                path.endsWith('.mp4') || path.endsWith('.json') || path.endsWith('.webp') ||
+                path.endsWith('.woff') || path.endsWith('.woff2') || path.endsWith('.ttf') ||
+                path.endsWith('.gif')
+            );
+            if (isAsset3355) return await env.ASSETS.fetch(request);
+            // 모든 비-자산 경로 → paper_stand.html 프록시 (URL 은 cafe3355.com 유지)
+            const psRewrite = new URL('/paper_stand.html', url.origin);
+            let psResp = await env.ASSETS.fetch(new Request(psRewrite.toString(), request));
+            if ((psResp.status === 308 || psResp.status === 301) && psResp.headers.get('Location')) {
+                const loc = new URL(psResp.headers.get('Location'), url.origin);
+                psResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+            }
+            const psHdrs = new Headers(psResp.headers);
+            psHdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            return new Response(psResp.body, { status: psResp.status, headers: psHdrs });
+        }
+
         // ========== 2026-05-14: cached 301 lock-in 구제 ==========
         // 이전 코드가 cotton-print.com → cafe3355(EN)/cafe0101(JP) 으로 301 리다이렉트를 보냈고,
         // 브라우저(특히 모바일) 가 그 301 을 영구 캐싱. 이제 라우팅 fix 가 적용돼도 옛 사용자는
