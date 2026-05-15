@@ -659,13 +659,13 @@ async function submitRollFabricRequest() {
     var memo  = (document.getElementById('rfMemo').value || '').trim();
     var agree = document.getElementById('rfAgree').checked;
 
-    if (!name) { alert('성함을 입력해주세요.'); return; }
-    if (!phone) { alert('연락처를 입력해주세요.'); return; }
-    if (!agree) { alert('안내사항 확인 및 개인정보 수집·이용에 동의해주세요.'); return; }
+    if (!name) { alert(t('rf_alert_name')); return; }
+    if (!phone) { alert(t('rf_alert_phone')); return; }
+    if (!agree) { alert(t('rf_alert_agree')); return; }
 
     var btn = event && event.target ? event.target.closest('button') : null;
     var origLabel = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 접수 중...'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('rf_submitting'); }
 
     try {
         var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
@@ -693,11 +693,11 @@ async function submitRollFabricRequest() {
         });
 
         document.getElementById('rollFabricModal').style.display = 'none';
-        alert('✅ 원단제공 인쇄 접수가 완료되었습니다!\n담당자가 영업일 1~2일 내에 연락드립니다.\n원단을 보내주시면 3마 시험인쇄 후 확인받고 전체 롤을 인쇄합니다.');
+        alert(t('rf_alert_done'));
         ['rfName','rfCompany','rfPhone','rfEmail','rfYards','rfFabric','rfAddr','rfMemo'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
         document.getElementById('rfAgree').checked = false;
     } catch(e) {
-        alert('접수 오류: ' + (e.message || e));
+        alert(t('rf_alert_err') + (e.message || e));
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
     }
@@ -708,12 +708,12 @@ async function submitRollFabricRequest() {
 <div id="rollFabricModal" class="modal-bg" style="z-index:30000; display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); padding:16px; overflow-y:auto;">
     <div style="background:#fff; border-radius:18px; width:480px; max-width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.4);">
         <div style="background:linear-gradient(135deg,#451a03,#78350f); padding:20px 24px; border-radius:18px 18px 0 0;">
-            <h3 style="margin:0; color:#fde047; font-size:18px; font-weight:900;"><i class="fa-solid fa-scroll"></i> 원단제공 인쇄 접수</h3>
-            <p style="margin:6px 0 0; color:#fde68a; font-size:12px;">고객님 원단에 인쇄만 — 100마 이상 롤원단 · 1마 기준 1,500원</p>
+            <h3 style="margin:0; color:#fde047; font-size:18px; font-weight:900;"><i class="fa-solid fa-scroll"></i> <span data-i18n="rf_title">원단제공 인쇄 접수</span></h3>
+            <p style="margin:6px 0 0; color:#fde68a; font-size:12px;" data-i18n="rf_subtitle">고객님 원단에 인쇄만 — 100마 이상 롤원단 · 1마 기준 1,500원</p>
         </div>
         <div style="padding:20px 24px;">
             <!-- 안내사항 -->
-            <div style="background:#fef3c7; border:1px solid #fbbf24; border-radius:10px; padding:12px 14px; font-size:12px; color:#78350f; line-height:1.75; margin-bottom:16px;">
+            <div data-i18n-html="rf_notice" style="background:#fef3c7; border:1px solid #fbbf24; border-radius:10px; padding:12px 14px; font-size:12px; color:#78350f; line-height:1.75; margin-bottom:16px;">
                 <b style="display:block; margin-bottom:4px;">📋 접수 전 꼭 확인해주세요</b>
                 · 원단을 직접 보내주셔야 하며, 인쇄된 원단은 <b>착불택배</b>로 보내드립니다.<br>
                 · 고가의 <b>실크원단은 접수가 불가</b>합니다.<br>
@@ -724,46 +724,46 @@ async function submitRollFabricRequest() {
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
                 <div>
-                    <label style="font-size:12px; font-weight:700; color:#451a03;">성함 *</label>
-                    <input id="rfName" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: 홍길동">
+                    <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_name">성함 *</label>
+                    <input id="rfName" data-i18n-placeholder="rf_ph_name" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: 홍길동">
                 </div>
                 <div>
-                    <label style="font-size:12px; font-weight:700; color:#451a03;">회사명</label>
-                    <input id="rfCompany" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: (주)ABC">
+                    <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_company">회사명</label>
+                    <input id="rfCompany" data-i18n-placeholder="rf_ph_company" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: (주)ABC">
                 </div>
                 <div>
-                    <label style="font-size:12px; font-weight:700; color:#451a03;">연락처 *</label>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_phone">연락처 *</label>
                     <input id="rfPhone" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="010-0000-0000">
                 </div>
                 <div>
-                    <label style="font-size:12px; font-weight:700; color:#451a03;">이메일 (선택)</label>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_email">이메일 (선택)</label>
                     <input id="rfEmail" type="email" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="email@company.com">
                 </div>
                 <div>
-                    <label style="font-size:12px; font-weight:700; color:#451a03;">예상 수량 (마)</label>
-                    <input id="rfYards" type="number" min="100" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="100 이상">
+                    <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_yards">예상 수량 (마)</label>
+                    <input id="rfYards" type="number" min="100" data-i18n-placeholder="rf_ph_yards" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="100 이상">
                 </div>
                 <div>
-                    <label style="font-size:12px; font-weight:700; color:#451a03;">원단 종류</label>
-                    <input id="rfFabric" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: 면20수 평직">
+                    <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_fabric">원단 종류</label>
+                    <input id="rfFabric" data-i18n-placeholder="rf_ph_fabric" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: 면20수 평직">
                 </div>
             </div>
             <div style="margin-bottom:8px;">
-                <label style="font-size:12px; font-weight:700; color:#451a03;">원단 회신받을 주소</label>
-                <input id="rfAddr" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="인쇄된 원단을 착불로 받으실 주소">
+                <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_addr">원단 회신받을 주소</label>
+                <input id="rfAddr" data-i18n-placeholder="rf_ph_addr" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="인쇄된 원단을 착불로 받으실 주소">
             </div>
             <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; color:#451a03;">요청메모</label>
-                <textarea id="rfMemo" rows="2" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;" placeholder="디자인 파일·색상·기타 요청사항"></textarea>
+                <label style="font-size:12px; font-weight:700; color:#451a03;" data-i18n="rf_label_memo">요청메모</label>
+                <textarea id="rfMemo" rows="2" data-i18n-placeholder="rf_ph_memo" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;" placeholder="디자인 파일·색상·기타 요청사항"></textarea>
             </div>
             <label style="display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#52525b; margin-bottom:14px;">
                 <input type="checkbox" id="rfAgree" style="margin-top:3px;">
-                <span>위 안내사항을 확인했으며, 접수를 위한 개인정보 수집·이용에 동의합니다.</span>
+                <span data-i18n="rf_agree">위 안내사항을 확인했으며, 접수를 위한 개인정보 수집·이용에 동의합니다.</span>
             </label>
             <button onclick="submitRollFabricRequest()" style="width:100%; padding:15px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.5px;">
-                <i class="fa-solid fa-paper-plane"></i> 원단제공 인쇄 접수하기
+                <i class="fa-solid fa-paper-plane"></i> <span data-i18n="rf_submit">원단제공 인쇄 접수하기</span>
             </button>
-            <button onclick="document.getElementById('rollFabricModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:6px; font-family:inherit;">닫기</button>
+            <button onclick="document.getElementById('rollFabricModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:6px; font-family:inherit;" data-i18n="rf_close">닫기</button>
         </div>
     </div>
 </div>
@@ -2553,10 +2553,80 @@ cp_hero_cta: {
     de:'Nutzer-Designs ansehen', fr:'Voir les designs utilisateurs'
 },
 cp_roll_print_btn: {
-    ko:'원단제공 인쇄 · 1마 1,500원', ja:'生地持込印刷 · 1m 1,500ウォン', en:'Print on Your Fabric · 1,500/yd',
-    zh:'自带面料印刷 · 每码1,500韩元', ar:'الطباعة على قماشك · 1,500/ياردة', es:'Imprimir en Tu Tela · 1,500/yd',
-    de:'Druck auf Ihrem Stoff · 1.500/m', fr:'Impression sur Votre Tissu · 1 500/m'
+    ko:'원단제공 인쇄 · 1마 1,500원', ja:'生地持込印刷 · 1m 150円', en:'Print on Your Fabric · $15/yd',
+    zh:'自带面料印刷 · $15/码', ar:'الطباعة على قماشك · 15$/ياردة', es:'Imprimir en Tu Tela · $15/yd',
+    de:'Druck auf Ihrem Stoff · $15/m', fr:'Impression sur Votre Tissu · $15/m'
 },
+rf_title: {
+    ko:'원단제공 인쇄 접수', ja:'生地持込印刷のお申込み', en:'Print-on-Your-Fabric Request',
+    zh:'自带面料印刷申请', ar:'طلب الطباعة على قماشك', es:'Solicitud de Impresión en Tu Tela',
+    de:'Druck-auf-Ihrem-Stoff Anfrage', fr:'Demande d\'Impression sur Votre Tissu'
+},
+rf_subtitle: {
+    ko:'고객님 원단에 인쇄만 — 100마 이상 롤원단 · 1마 기준 1,500원',
+    ja:'お客様の生地に印刷のみ — 100m以上のロール生地 · 1mあたり150円',
+    en:'We print on your own fabric — roll fabric 100yd+ · $15 per yard',
+    zh:'仅在您的面料上印刷 — 100码以上整卷 · 每码$15',
+    ar:'نطبع على قماشك الخاص — لفة 100 ياردة فأكثر · 15$ لكل ياردة',
+    es:'Imprimimos en tu propia tela — rollo de 100yd+ · $15 por yarda',
+    de:'Wir drucken auf Ihren Stoff — Rollenware ab 100m · $15 pro Meter',
+    fr:'Nous imprimons sur votre tissu — rouleau 100m+ · 15$ par mètre'
+},
+rf_notice: {
+    ko:'<b style="display:block; margin-bottom:4px;">📋 접수 전 꼭 확인해주세요</b>· 원단을 직접 보내주셔야 하며, 인쇄된 원단은 <b>착불택배</b>로 보내드립니다.<br>· 고가의 <b>실크원단은 접수가 불가</b>합니다.<br>· 원단 종류에 따라 잉크가 번져 보일 수 있습니다.<br>· <b>발수코팅원단 등 특수원단은 인쇄가 되지 않을 수 있습니다.</b><br>· 접수 시 먼저 <b>3마 정도를 시험인쇄</b>해 보내드리고, 확인 후 전체 롤을 인쇄합니다.<br>· <b>도매업자 전용</b> 원단인쇄로 <b>1롤이 최소 수량</b>입니다.',
+    ja:'<b style="display:block; margin-bottom:4px;">📋 お申込み前に必ずご確認ください</b>· 生地はお客様ご自身で送付いただき、印刷後の生地は<b>着払い宅配</b>でお送りします。<br>· 高価な<b>シルク生地はお受けできません</b>。<br>· 生地の種類によりインクがにじんで見えることがあります。<br>· <b>撥水加工生地など特殊生地は印刷できない場合があります。</b><br>· お申込み時にまず<b>3mほど試験印刷</b>してお送りし、ご確認後にロール全体を印刷します。<br>· <b>卸売業者専用</b>の生地印刷で、<b>1ロールが最小数量</b>です。',
+    en:'<b style="display:block; margin-bottom:4px;">📋 Please review before requesting</b>· You ship us your fabric; the printed fabric is returned by <b>freight-collect (COD) courier</b>.<br>· Expensive <b>silk fabric cannot be accepted</b>.<br>· Ink may appear to bleed depending on the fabric type.<br>· <b>Special fabrics such as water-repellent coated fabric may not print.</b><br>· We first <b>test-print about 3 yards</b> and send it for your approval, then print the full roll.<br>· This is a <b>wholesalers-only</b> service — <b>1 roll is the minimum order</b>.',
+    zh:'<b style="display:block; margin-bottom:4px;">📋 申请前请务必确认</b>· 需由您寄送面料，印刷后的面料以<b>到付快递</b>寄回。<br>· 昂贵的<b>真丝面料无法受理</b>。<br>· 视面料种类不同，墨水可能出现晕染。<br>· <b>防水涂层面料等特殊面料可能无法印刷。</b><br>· 受理时先<b>试印约3码</b>寄给您确认，确认后再印刷整卷。<br>· 此为<b>批发商专用</b>面料印刷，<b>1卷为最低数量</b>。',
+    ar:'<b style="display:block; margin-bottom:4px;">📋 يرجى المراجعة قبل الطلب</b>· ترسل لنا قماشك، ويُعاد القماش المطبوع عبر <b>شحن الدفع عند الاستلام</b>.<br>· لا يمكن قبول <b>قماش الحرير</b> الباهظ.<br>· قد يبدو الحبر متداخلاً حسب نوع القماش.<br>· <b>قد لا تُطبع الأقمشة الخاصة مثل القماش المطلي المقاوم للماء.</b><br>· نقوم أولاً <b>بطباعة تجريبية لنحو 3 ياردات</b> ونرسلها للموافقة، ثم نطبع اللفة كاملة.<br>· هذه خدمة <b>لتجار الجملة فقط</b> — <b>الحد الأدنى لفة واحدة</b>.',
+    es:'<b style="display:block; margin-bottom:4px;">📋 Revise antes de solicitar</b>· Usted nos envía su tela; la tela impresa se devuelve por <b>mensajería contra reembolso (COD)</b>.<br>· No se acepta <b>tela de seda</b> costosa.<br>· La tinta puede parecer correrse según el tipo de tela.<br>· <b>Telas especiales como las recubiertas repelentes al agua pueden no imprimirse.</b><br>· Primero <b>imprimimos una prueba de unas 3 yardas</b> y la enviamos para su aprobación, luego imprimimos el rollo completo.<br>· Servicio <b>solo para mayoristas</b> — <b>1 rollo es el mínimo</b>.',
+    de:'<b style="display:block; margin-bottom:4px;">📋 Bitte vor der Anfrage prüfen</b>· Sie senden uns Ihren Stoff; der bedruckte Stoff wird per <b>Nachnahme-Versand</b> zurückgeschickt.<br>· Teurer <b>Seidenstoff kann nicht angenommen werden</b>.<br>· Je nach Stoffart kann die Tinte verlaufen wirken.<br>· <b>Spezialstoffe wie wasserabweisend beschichtete Stoffe lassen sich evtl. nicht bedrucken.</b><br>· Wir machen zuerst einen <b>Testdruck von ca. 3 Metern</b> zur Freigabe, dann drucken wir die ganze Rolle.<br>· Service <b>nur für Großhändler</b> — <b>1 Rolle ist die Mindestmenge</b>.',
+    fr:'<b style="display:block; margin-bottom:4px;">📋 À vérifier avant la demande</b>· Vous nous envoyez votre tissu ; le tissu imprimé est renvoyé en <b>livraison contre remboursement</b>.<br>· Le <b>tissu de soie</b> coûteux ne peut être accepté.<br>· L\'encre peut sembler baver selon le type de tissu.<br>· <b>Les tissus spéciaux comme les tissus enduits déperlants peuvent ne pas s\'imprimer.</b><br>· Nous faisons d\'abord un <b>essai d\'environ 3 mètres</b> pour validation, puis imprimons le rouleau entier.<br>· Service <b>réservé aux grossistes</b> — <b>1 rouleau minimum</b>.'
+},
+rf_label_name: { ko:'성함 *', ja:'お名前 *', en:'Name *', zh:'姓名 *', ar:'الاسم *', es:'Nombre *', de:'Name *', fr:'Nom *' },
+rf_label_company: { ko:'회사명', ja:'会社名', en:'Company', zh:'公司名称', ar:'الشركة', es:'Empresa', de:'Firma', fr:'Société' },
+rf_label_phone: { ko:'연락처 *', ja:'連絡先 *', en:'Phone *', zh:'联系电话 *', ar:'الهاتف *', es:'Teléfono *', de:'Telefon *', fr:'Téléphone *' },
+rf_label_email: { ko:'이메일 (선택)', ja:'メール (任意)', en:'Email (optional)', zh:'邮箱 (选填)', ar:'البريد الإلكتروني (اختياري)', es:'Correo (opcional)', de:'E-Mail (optional)', fr:'E-mail (facultatif)' },
+rf_label_yards: { ko:'예상 수량 (마)', ja:'予定数量 (m)', en:'Est. quantity (yd)', zh:'预计数量 (码)', ar:'الكمية المتوقعة (ياردة)', es:'Cantidad est. (yd)', de:'Geschätzte Menge (m)', fr:'Quantité est. (m)' },
+rf_label_fabric: { ko:'원단 종류', ja:'生地の種類', en:'Fabric type', zh:'面料种类', ar:'نوع القماش', es:'Tipo de tela', de:'Stoffart', fr:'Type de tissu' },
+rf_label_addr: { ko:'원단 회신받을 주소', ja:'生地の返送先住所', en:'Return address for fabric', zh:'面料寄回地址', ar:'عنوان إرجاع القماش', es:'Dirección de devolución de la tela', de:'Rücksendeadresse für Stoff', fr:'Adresse de retour du tissu' },
+rf_label_memo: { ko:'요청메모', ja:'ご要望メモ', en:'Request notes', zh:'需求备注', ar:'ملاحظات الطلب', es:'Notas de solicitud', de:'Anmerkungen', fr:'Remarques' },
+rf_ph_name: { ko:'예: 홍길동', ja:'例: 山田太郎', en:'e.g. John Smith', zh:'例: 张三', ar:'مثال: أحمد', es:'ej. Juan Pérez', de:'z.B. Max Mustermann', fr:'ex. Jean Dupont' },
+rf_ph_company: { ko:'예: (주)ABC', ja:'例: 株式会社ABC', en:'e.g. ABC Co., Ltd.', zh:'例: ABC公司', ar:'مثال: شركة ABC', es:'ej. ABC S.A.', de:'z.B. ABC GmbH', fr:'ex. ABC SARL' },
+rf_ph_yards: { ko:'100 이상', ja:'100以上', en:'100 or more', zh:'100以上', ar:'100 أو أكثر', es:'100 o más', de:'100 oder mehr', fr:'100 ou plus' },
+rf_ph_fabric: { ko:'예: 면20수 평직', ja:'例: 綿20番手 平織', en:'e.g. cotton 20s plain weave', zh:'例: 棉20支平纹', ar:'مثال: قطن 20 نسج عادي', es:'ej. algodón 20s tafetán', de:'z.B. Baumwolle 20s Leinwandbindung', fr:'ex. coton 20s armure toile' },
+rf_ph_addr: { ko:'인쇄된 원단을 착불로 받으실 주소', ja:'印刷後の生地を着払いで受け取る住所', en:'Address to receive printed fabric (COD)', zh:'接收印刷面料的地址 (到付)', ar:'عنوان استلام القماش المطبوع (الدفع عند الاستلام)', es:'Dirección para recibir la tela impresa (COD)', de:'Adresse zum Empfang des bedruckten Stoffs (Nachnahme)', fr:'Adresse de réception du tissu imprimé (contre remboursement)' },
+rf_ph_memo: { ko:'디자인 파일·색상·기타 요청사항', ja:'デザインファイル・色・その他ご要望', en:'Design file, colors, other requests', zh:'设计文件·颜色·其他需求', ar:'ملف التصميم، الألوان، طلبات أخرى', es:'Archivo de diseño, colores, otras solicitudes', de:'Designdatei, Farben, sonstige Wünsche', fr:'Fichier de design, couleurs, autres demandes' },
+rf_agree: {
+    ko:'위 안내사항을 확인했으며, 접수를 위한 개인정보 수집·이용에 동의합니다.',
+    ja:'上記の案内事項を確認し、お申込みのための個人情報の収集・利用に同意します。',
+    en:'I have read the notice above and agree to the collection and use of my personal information for this request.',
+    zh:'我已阅读以上须知，并同意为本次申请收集和使用我的个人信息。',
+    ar:'لقد قرأت الإشعار أعلاه وأوافق على جمع واستخدام معلوماتي الشخصية لهذا الطلب.',
+    es:'He leído el aviso anterior y acepto la recopilación y uso de mis datos personales para esta solicitud.',
+    de:'Ich habe den obigen Hinweis gelesen und stimme der Erhebung und Nutzung meiner personenbezogenen Daten für diese Anfrage zu.',
+    fr:'J\'ai lu l\'avis ci-dessus et j\'accepte la collecte et l\'utilisation de mes données personnelles pour cette demande.'
+},
+rf_submit: {
+    ko:'원단제공 인쇄 접수하기', ja:'生地持込印刷を申し込む', en:'Submit Fabric-Print Request',
+    zh:'提交自带面料印刷申请', ar:'إرسال طلب الطباعة على القماش', es:'Enviar Solicitud de Impresión',
+    de:'Druckanfrage absenden', fr:'Envoyer la Demande d\'Impression'
+},
+rf_close: { ko:'닫기', ja:'閉じる', en:'Close', zh:'关闭', ar:'إغلاق', es:'Cerrar', de:'Schließen', fr:'Fermer' },
+rf_alert_name: { ko:'성함을 입력해주세요.', ja:'お名前を入力してください。', en:'Please enter your name.', zh:'请输入姓名。', ar:'يرجى إدخال اسمك.', es:'Por favor ingrese su nombre.', de:'Bitte geben Sie Ihren Namen ein.', fr:'Veuillez saisir votre nom.' },
+rf_alert_phone: { ko:'연락처를 입력해주세요.', ja:'連絡先を入力してください。', en:'Please enter your phone number.', zh:'请输入联系电话。', ar:'يرجى إدخال رقم هاتفك.', es:'Por favor ingrese su teléfono.', de:'Bitte geben Sie Ihre Telefonnummer ein.', fr:'Veuillez saisir votre téléphone.' },
+rf_alert_agree: { ko:'안내사항 확인 및 개인정보 수집·이용에 동의해주세요.', ja:'案内事項の確認および個人情報の収集・利用に同意してください。', en:'Please confirm the notice and agree to the use of your personal information.', zh:'请确认须知并同意个人信息收集与使用。', ar:'يرجى تأكيد الإشعار والموافقة على استخدام معلوماتك الشخصية.', es:'Confirme el aviso y acepte el uso de sus datos personales.', de:'Bitte bestätigen Sie den Hinweis und stimmen Sie der Nutzung Ihrer Daten zu.', fr:'Veuillez confirmer l\'avis et accepter l\'utilisation de vos données.' },
+rf_alert_done: {
+    ko:'✅ 원단제공 인쇄 접수가 완료되었습니다!\n담당자가 영업일 1~2일 내에 연락드립니다.\n원단을 보내주시면 3마 시험인쇄 후 확인받고 전체 롤을 인쇄합니다.',
+    ja:'✅ 生地持込印刷のお申込みが完了しました！\n担当者が営業日1~2日以内にご連絡します。\n生地をお送りいただくと、3m試験印刷後にご確認のうえ全体ロールを印刷します。',
+    en:'✅ Your fabric-print request has been received!\nOur staff will contact you within 1-2 business days.\nOnce you ship the fabric, we test-print 3 yards for approval, then print the full roll.',
+    zh:'✅ 自带面料印刷申请已受理！\n负责人将在1~2个工作日内与您联系。\n寄出面料后，我们先试印3码供您确认，再印刷整卷。',
+    ar:'✅ تم استلام طلب الطباعة على قماشك!\nسيتواصل معك فريقنا خلال 1-2 يوم عمل.\nبعد إرسال القماش، نطبع 3 ياردات تجريبية للموافقة ثم نطبع اللفة كاملة.',
+    es:'✅ ¡Su solicitud de impresión en tela ha sido recibida!\nNuestro personal le contactará en 1-2 días hábiles.\nUna vez envíe la tela, imprimimos 3 yardas de prueba para aprobación y luego el rollo completo.',
+    de:'✅ Ihre Stoffdruck-Anfrage ist eingegangen!\nUnser Team meldet sich innerhalb von 1-2 Werktagen.\nNach Erhalt des Stoffs drucken wir 3 Meter zur Freigabe und dann die ganze Rolle.',
+    fr:'✅ Votre demande d\'impression sur tissu a été reçue !\nNotre équipe vous contactera sous 1-2 jours ouvrés.\nDès réception du tissu, nous imprimons 3 mètres d\'essai pour validation, puis le rouleau entier.'
+},
+rf_alert_err: { ko:'접수 오류: ', ja:'お申込みエラー: ', en:'Request error: ', zh:'受理错误: ', ar:'خطأ في الطلب: ', es:'Error de solicitud: ', de:'Anfragefehler: ', fr:'Erreur de demande : ' },
+rf_submitting: { ko:'접수 중...', ja:'送信中...', en:'Submitting...', zh:'提交中...', ar:'جارٍ الإرسال...', es:'Enviando...', de:'Wird gesendet...', fr:'Envoi...' },
 logo_main_link: {
     ko:'인쇄종합몰', ja:'印刷総合モール', en:'Main Print Mall',
     zh:'综合印刷商城', ar:'متجر الطباعة الرئيسي', es:'Tienda Principal',
