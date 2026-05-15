@@ -679,8 +679,9 @@ async function submitRollFabricRequest() {
         var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
         if (!sb) throw new Error('연결 실패');
 
-        // [QQ:롤원단] 마커 → Global Admin VIP 대량주문에서 '롤원단' 카테고리로 표시
-        var memoText = '[QQ:롤원단]\n' +
+        // [QQ:롤원단|국가] 마커 → Global Admin VIP 대량주문에서 '롤원단' 카테고리 + 국기 표시
+        var _rfCountry = ({ ko:'KR', ja:'JP', en:'US', zh:'CN', ar:'SA', es:'ES', de:'DE', fr:'FR' })[window.__PS_LANG || 'ko'] || 'KR';
+        var memoText = '[QQ:롤원단|' + _rfCountry + ']\n' +
             '■ 원단제공 인쇄 접수 (1마 1,500원 · 100마 이상)\n' +
             '회사: ' + (company || '미입력') + '\n' +
             '연락처: ' + phone + '\n' +

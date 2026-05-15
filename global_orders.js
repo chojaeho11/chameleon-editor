@@ -1362,7 +1362,10 @@ window.loadVipOrders = async () => {
             const lockedBy = lockMatch ? lockMatch[2] : null;
             if (lockMatch) rawMemo = rawMemo.replace(lockMatch[0], '');
             const qqMatch = rawMemo.match(/^\[QQ:([^\]]+)\]\n?/);
-            const qqCategory = qqMatch ? qqMatch[1] : null;
+            // 마커: [QQ:카테고리] 또는 [QQ:카테고리|국가코드] (예: [QQ:롤원단|JP])
+            const qqParts = qqMatch ? qqMatch[1].split('|') : [];
+            const qqCategory = qqParts.length ? qqParts[0] : null;
+            const qqCountry = qqParts.length > 1 ? qqParts[1] : null;
             const cleanMemo = qqMatch ? rawMemo.replace(qqMatch[0], '') : rawMemo;
             const unlocked = lockMatch ? sessionStorage.getItem('vipUnlock_' + item.id) === '1' : true;
 
@@ -1376,8 +1379,13 @@ window.loadVipOrders = async () => {
                 : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
 
             const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777', '롤원단':'#0d9488' }[qqCategory] || '#475569';
+            // 국가 표시 — 해외 접수만 국기 배지 (KR/국내는 표시 안 함)
+            const COUNTRY_FLAG = { KR:'🇰🇷', JP:'🇯🇵', US:'🇺🇸', CN:'🇨🇳', SA:'🇸🇦', ES:'🇪🇸', DE:'🇩🇪', FR:'🇫🇷' };
+            const countryBadge = (qqCountry && qqCountry !== 'KR')
+                ? `<span class="badge" style="background:#1e293b;color:#fff;font-weight:800;padding:4px 8px;margin-left:4px;border:1px solid #475569;">${COUNTRY_FLAG[qqCountry] || ''} ${qqCountry}</span>`
+                : '';
             const catBadgeCell = qqCategory
-                ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span>`
+                ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span>${countryBadge}`
                 : `<span style="color:#94a3b8;">-</span>`;
 
             // 모든 VIP 행: 컴팩트 표시 + 상세보기 팝업 (QQ 여부 무관)
@@ -1512,7 +1520,9 @@ window.openVipDetail = async (id) => {
     const lockPwB64 = lockMatch ? lockMatch[1] : null;
     if (lockMatch) memo = memo.replace(lockMatch[0], '');
     const qqMatch = memo.match(/^\[QQ:([^\]]+)\]\n?/);
-    const qqCategory = qqMatch ? qqMatch[1] : '';
+    const qqParts = qqMatch ? qqMatch[1].split('|') : [];
+    const qqCategory = qqParts.length ? qqParts[0] : '';
+    const qqCountry = qqParts.length > 1 ? qqParts[1] : null;
     if (qqMatch) memo = memo.replace(qqMatch[0], '');
 
     // 잠금 상태 → 매번 비번 확인 (세션 캐시 사용 안 함)
@@ -1544,7 +1554,11 @@ window.openVipDetail = async (id) => {
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;';
         document.body.appendChild(modal);
     }
-    const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777' }[qqCategory] || '#475569';
+    const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777', '롤원단':'#0d9488' }[qqCategory] || '#475569';
+    const _CF = { KR:'🇰🇷', JP:'🇯🇵', US:'🇺🇸', CN:'🇨🇳', SA:'🇸🇦', ES:'🇪🇸', DE:'🇩🇪', FR:'🇫🇷' };
+    const countryBadgeDetail = (qqCountry && qqCountry !== 'KR')
+        ? `<span class="badge" style="background:#1e293b;color:#fff;font-weight:800;padding:6px 12px;font-size:14px;border:1px solid #475569;">${_CF[qqCountry] || ''} ${qqCountry}</span>`
+        : '';
     const lockBtn = lockMatch
         ? `<button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-weight:700;" onclick="unlockVipPermanent(${id})">🔓 잠금 해제</button>`
         : `<button class="btn btn-sm" style="background:#312e81;color:#fff;border:none;font-weight:700;" onclick="document.getElementById('vipDetailModal').remove();assignQQAndLock(${id})">🔒 담당자 지정 + 잠금</button>`;
@@ -1554,6 +1568,7 @@ window.openVipDetail = async (id) => {
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #312e81;">
                 <div style="display:flex;align-items:center;gap:10px;">
                     ${qqCategory ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:6px 14px;font-size:14px;">🚀 ${qqCategory}</span>` : ''}
+                    ${countryBadgeDetail}
                     <span style="color:#fbbf24;font-weight:800;">VIP 문의 상세</span>
                 </div>
                 <button onclick="document.getElementById('vipDetailModal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;">&times;</button>
