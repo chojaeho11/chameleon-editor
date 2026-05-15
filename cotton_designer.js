@@ -1050,7 +1050,19 @@ function saveCart(c) {
         } else {
             localStorage.setItem(CART_KEY, JSON.stringify(c));
         }
-    } catch (e) {}
+    } catch (e) {
+        // 2026-05-15: localStorage quota 초과 (큰 이미지 dataUrl 누적) — 조용히 실패 대신 사용자 알림.
+        //   add-to-cart 시점에 storage 업로드 보강했지만 fallback 으로 dataUrl 가 남아있는 경우 대비.
+        var isQuota = e && (e.name === 'QuotaExceededError' || /quota|storage/i.test(e.message || ''));
+        if (isQuota) {
+            console.error('[saveCart] localStorage quota 초과 — 큰 이미지로 카트 저장 실패', e);
+            if (typeof showToast === 'function') {
+                showToast(window.cdT ? (window.cdT('alert_cart_full') || '카트가 가득 찼습니다. 일부 항목을 삭제 후 다시 시도해주세요.') : '카트가 가득 찼습니다. 일부 항목을 삭제 후 다시 시도해주세요.', 'error');
+            }
+        } else {
+            console.warn('[saveCart] failed', e);
+        }
+    }
 }
 
 // 2026-05-12: 통합 카트 — 같은 localStorage 안의 일반상품 항목도 함께 노출
@@ -1461,7 +1473,53 @@ window._cdOnSampleBookChange = function () {
     state.sampleBook = !!(el && el.checked);
 };
 
-window._cdAddToCart = function() {
+// 2026-05-15: localStorage 5MB 한계 회피 — 큰 imgDataUrl 은 Storage 에 미리 업로드 후 URL 만 보관.
+//   기존엔 1MB 넘는 패턴이 base64 로 ~1.3MB 차지 → 여러 개 담으면 quota 초과로 saveCart 가
+//   silently 실패하던 버그. 이제 add-to-cart 시점에 업로드해서 localStorage 사용량을 작게 유지.
+async function _cdPersistItemImage(item) {
+    if (!item) return item;
+    // 마켓플레이스 패턴 — 이미 storage 에 있는 URL 사용, base64 는 버림
+    if (item.designerOriginalUrl) {
+        item.cartImageUrl = item.designerOriginalUrl;
+        item.imgDataUrl = '';
+        return item;
+    }
+    if (!item.imgDataUrl || typeof item.imgDataUrl !== 'string') return item;
+    // 200KB 이하면 localStorage 에 그대로 둠 (네트워크 라운드트립 회피)
+    if (item.imgDataUrl.length < 200 * 1024) return item;
+    var sb = (window.sb && typeof window.sb.from === 'function') ? window.sb : null;
+    if (!sb && window.supabase && window.supabase.createClient) {
+        try {
+            sb = window.supabase.createClient(
+                'https://qinvtnhiidtmrzosyvys.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+            );
+        } catch (e) {}
+    }
+    if (!sb) return item; // 업로드 불가 — 그대로 진행 (saveCart 실패 가능)
+    try {
+        var m = item.imgDataUrl.match(/^data:(.+?);base64,(.+)$/);
+        if (!m) return item;
+        var mime = m[1], b64 = m[2];
+        var bin = atob(b64);
+        var arr = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        var blob = new Blob([arr], { type: mime });
+        var ext = (mime.split('/')[1] || 'png').replace(/[^a-z0-9]/gi, '');
+        var path = 'cotton-print/cart/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+        var up = await sb.storage.from('orders').upload(path, blob);
+        if (up && !up.error) {
+            var pub = sb.storage.from('orders').getPublicUrl(path);
+            item.cartImageUrl = pub && pub.data && pub.data.publicUrl || '';
+            item.imgDataUrl = ''; // localStorage 부담 제거
+        } else if (up && up.error) {
+            console.warn('[cd cart upload]', up.error);
+        }
+    } catch (e) { console.warn('[cd cart upload exc]', e); }
+    return item;
+}
+
+window._cdAddToCart = async function() {
     // 2026-05-12: UX 개선 — 파일 없이 클릭 시 그냥 카트 드로어 열기 (기존 카트 확인용)
     if (!state.img || !state.imgDataUrl) {
         if (window._cpCartOpen) window._cpCartOpen();
@@ -1469,6 +1527,9 @@ window._cdAddToCart = function() {
     }
     const item = buildCartItem();
     if (!item) return;
+    // 2026-05-15: 큰 이미지는 미리 Storage 에 올려 localStorage quota 초과 방지
+    showToast(window.cdT ? (window.cdT('saving') || '저장 중...') : '저장 중...');
+    await _cdPersistItemImage(item);
     const cart = getCart();
     cart.push(item);
     saveCart(cart);
@@ -1477,7 +1538,7 @@ window._cdAddToCart = function() {
     setTimeout(window._cpCartOpen, 400);
 };
 
-window._cdBuyNow = function() {
+window._cdBuyNow = async function() {
     // 2026-05-12: 파일 없이 클릭 시 → 카트 드로어 열기 (기존 카트 → 결제하기)
     if (!state.img || !state.imgDataUrl) {
         if (window._cpCartOpen) window._cpCartOpen();
@@ -1489,6 +1550,8 @@ window._cdBuyNow = function() {
     const cart = getCart();
     const projectedTotal = cart.reduce(function(s, it){ return s + (it.price||0); }, 0) + (item.price||0);
     if (!checkMinOrderAmount(projectedTotal)) return;
+    showToast(window.cdT ? (window.cdT('saving') || '저장 중...') : '저장 중...');
+    await _cdPersistItemImage(item);
     // 통과 — cart에 추가 후 즉시 체크아웃
     cart.push(item);
     saveCart(cart);
@@ -1590,9 +1653,14 @@ window._cpCreateMgrQuote = async function (btnEl) {
         ) : null;
         if (!sb) throw new Error('Supabase 연결 실패');
         // 디자인 이미지 업로드
+        // 2026-05-15: cartImageUrl 있으면 재업로드 스킵 (add-to-cart 시점에 이미 올림)
         var uploadedFiles = [];
         for (var i = 0; i < cart.length; i++) {
             var it = cart[i];
+            if (it.cartImageUrl) {
+                uploadedFiles.push({ name: it.imgFileName || ('fabric' + (i + 1)), url: it.cartImageUrl, type: 'image/png' });
+                continue;
+            }
             if (!it.imgDataUrl) continue;
             var m = it.imgDataUrl.match(/^data:(.+?);base64,(.+)$/);
             if (!m) continue;
@@ -1611,8 +1679,12 @@ window._cpCreateMgrQuote = async function (btnEl) {
         }
         var total = calcCartTotal();
         var items = cart.map(function (it, idx) {
+            // 2026-05-15: cartImageUrl → uploadedFiles → designerOriginalUrl 우선순위
             var artworkUrl = null, artworkName = null;
-            if (it.imgDataUrl && uploadedFiles[idx]) {
+            if (it.cartImageUrl) {
+                artworkUrl = it.cartImageUrl;
+                artworkName = it.imgFileName || ('fabric' + (idx + 1));
+            } else if (it.imgDataUrl && uploadedFiles[idx]) {
                 artworkUrl = uploadedFiles[idx].url;
                 artworkName = uploadedFiles[idx].name;
             } else if (it.designerOriginalUrl) {
@@ -1769,9 +1841,15 @@ window._cpSubmitOrder = async function() {
         if (!sb) throw new Error('연결 실패');
 
         // 1) 디자인 이미지 업로드 (각 카트 아이템)
+        // 2026-05-15: add-to-cart 시점에 이미 storage 에 올린 cartImageUrl 이 있으면 그대로 사용 → 재업로드 스킵.
         const uploadedFiles = [];
         for (let i = 0; i < cart.length; i++) {
             const it = cart[i];
+            // 이미 storage 에 업로드돼서 URL 보관 중이면 그대로 사용
+            if (it.cartImageUrl) {
+                uploadedFiles.push({ name: it.imgFileName || ('item' + (i+1)), url: it.cartImageUrl, type: 'image/png' });
+                continue;
+            }
             if (!it.imgDataUrl) continue;
             const m = it.imgDataUrl.match(/^data:(.+?);base64,(.+)$/);
             if (!m) continue;
@@ -1796,8 +1874,12 @@ window._cpSubmitOrder = async function() {
             //   1순위: 새로 업로드된 storage URL (직접 업로드 케이스)
             //   2순위: 마켓플레이스 자동로드 시 이미 storage에 있는 원본 URL (designerOriginalUrl)
             //   둘 다 없으면 null — 작업지시서에 '-' 로 표시
+            // 2026-05-15: cartImageUrl (add-to-cart 시 업로드한 URL) → imgDataUrl 신규 업로드 → designerOriginalUrl
             var artworkUrl = null, artworkName = null;
-            if (it.imgDataUrl && uploadedFiles[idx]) {
+            if (it.cartImageUrl) {
+                artworkUrl  = it.cartImageUrl;
+                artworkName = it.imgFileName || ('item' + (idx + 1));
+            } else if (it.imgDataUrl && uploadedFiles[idx]) {
                 artworkUrl  = uploadedFiles[idx].url;
                 artworkName = uploadedFiles[idx].name;
             } else if (it.designerOriginalUrl) {
