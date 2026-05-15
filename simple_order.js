@@ -2887,10 +2887,11 @@
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
         // 2026-05-14: 가벽 변종별 옵션 재구성 + 인쇄면 UI 토글
+        // 2026-05-15: 병풍형은 partition 보다 우선 (제품명에 '병풍' 있으면 무조건 folding)
         if (state.isWall) {
             var variant = state.isReinforcedWall ? 'reinforced'
-                        : state.isPartition ? 'partition'
                         : state.isFoldingWall ? 'folding'
+                        : state.isPartition ? 'partition'
                         : 'default';
             _soRebuildWallSizeOptions(variant);
             // 인쇄면 row: 허니콤 가벽 (기본 변종) 만 표시
@@ -3069,16 +3070,17 @@
         // 가벽 사이즈 폼 초기값 동기화 — 변종별 기본값 매칭
         var wwEl = document.getElementById('soWallWidth');
         var whEl = document.getElementById('soWallHeight');
+        // 2026-05-15: 병풍형은 partition 보다 우선 처리 (제품명에 '병풍' 있으면 세로 2.2m 고정)
         if (state.isReinforcedWall) {
             if (wwEl) wwEl.value = '1';
+            if (whEl) whEl.value = '2.2';
+        } else if (state.isFoldingWall) {
+            // 병풍형 — 가로 3m 기본 (1m 단위 선택), 세로 2.2m 고정
+            if (wwEl) wwEl.value = '3';
             if (whEl) whEl.value = '2.2';
         } else if (state.isPartition) {
             if (wwEl) wwEl.value = '3';
             if (whEl) whEl.value = '1.2';
-        } else if (state.isFoldingWall) {
-            // 2026-05-15: 병풍형 — 가로 3m 기본 (1m 단위 선택), 세로 2.2m 고정
-            if (wwEl) wwEl.value = '3';
-            if (whEl) whEl.value = '2.2';
         } else {
             if (wwEl) wwEl.value = '3';
             if (whEl) whEl.value = '2.4';
