@@ -468,6 +468,10 @@ const COTTON_COLOR_BG = { white: '#ffffff', natural: '#e7d8b8', ivory: '#f5ecd3'
 function updateFabricDetail() {
     const f = getFabric();
     if (!f) return;
+    // 2026-05-15: 색상 선택 영역 가시성 동기화 — 페이지 첫 로드 시 cotton 기본인데도 숨겨져 있던 버그 보강.
+    //   기존엔 _cdSelectFabricType 안에서만 토글돼서 사용자가 한 번 클릭해야 보임.
+    var _colorWrap = document.getElementById('fabricColorWrap');
+    if (_colorWrap) _colorWrap.style.display = f.isCotton ? '' : 'none';
     const img = document.getElementById('fabricImg');
     if (img) {
         var sw = FABRIC_SWATCH[state.fabricType] || {};
