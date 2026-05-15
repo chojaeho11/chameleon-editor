@@ -364,9 +364,46 @@
             console.warn('[cart_sync] invalid 카트 항목 ' + (before - mine.length) + '개 자동 정리');
         }
         mine.forEach(tagItem);
-        __origLocalSet(key, JSON.stringify(mine));
-        writeLocalTs(new Date().toISOString());
+        // 2026-05-15: localStorage quota 초과 방어.
+        //   가벽 등 큰 base64 thumb 가 쌓이면 5MB 한도 초과 → __origLocalSet 이 QuotaExceededError.
+        //   기존엔 이 예외가 writeCart 의 빈 catch 로 조용히 삼켜져 항목이 "안 담기던" 버그.
+        //   이제: (1) _unified 는 메모리상 먼저 갱신 → 서버 push 는 정상 (서버엔 저장됨)
+        //         (2) 무거운 필드(thumb/imgDataUrl/fileData) 를 떼고 재시도 → localStorage 라도 보존
+        //         (3) 그래도 실패하면 사용자에게 토스트 경고
         _unified = mine;
+        writeLocalTs(new Date().toISOString());
+        var _saved = false;
+        try {
+            __origLocalSet(key, JSON.stringify(mine));
+            _saved = true;
+        } catch (e1) {
+            // 1차 실패 — 무거운 인라인 데이터 제거 후 재시도 (서버엔 _unified 원본이 push 됨)
+            try {
+                var slim = mine.map(function (it) {
+                    if (!it || typeof it !== 'object') return it;
+                    var copy = {};
+                    for (var k in it) {
+                        if (!Object.prototype.hasOwnProperty.call(it, k)) continue;
+                        var v = it[k];
+                        // 큰 data: URL 문자열은 localStorage 에서 제외 (서버 _unified 엔 남음)
+                        if (typeof v === 'string' && v.length > 8000 && /^data:/.test(v)) continue;
+                        copy[k] = v;
+                    }
+                    return copy;
+                });
+                __origLocalSet(key, JSON.stringify(slim));
+                _saved = true;
+                console.warn('[cart_sync] localStorage quota — 큰 썸네일 제거 후 저장 (서버엔 원본 보존)');
+            } catch (e2) {
+                console.error('[cart_sync] localStorage 저장 실패 (quota 초과). 서버 동기화는 계속 시도됨.', e2);
+                try {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('카트 용량이 가득 찼습니다. 일부 항목 삭제 후 다시 시도해주세요.', 'error');
+                    }
+                } catch (e3) {}
+            }
+        }
+        // 저장 성공/실패와 무관하게 서버 push 는 진행 (서버가 진실의 원천)
         schedulePush();
     };
 
