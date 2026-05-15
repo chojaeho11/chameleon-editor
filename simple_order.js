@@ -28,7 +28,7 @@
     // ─────────────────────────────────────────────
     const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-    const MAX_FILE_BYTES = 10 * 1024 * 1024;
+    const MAX_FILE_BYTES = 50 * 1024 * 1024; // 2026-05-15: 10MB → 50MB (Supabase Storage 안정 한계)
     const CART_KEY = 'chameleon_cart_current';
 
     const DISCOUNT_TIERS = [
@@ -774,7 +774,7 @@
           <div class="so-upload-icon">📤</div>
           <div class="so-upload-title" id="soUploadTitle">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
           <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
-          <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
+          <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
         </div>
         </div>
         <!-- 2026-05-15: 원판 상품 — 인쇄 없음 안내 (인쇄 영역 대체) -->
@@ -802,7 +802,7 @@
             <div class="so-upload-icon" style="color:#7c3aed;">📤</div>
             <div class="so-upload-title">${tr('뒷면 이미지를 올려주세요', '裏面画像をアップロード', 'Upload back side')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
-            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
+            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
           </div>
         </div>
       </div>
@@ -1328,9 +1328,9 @@
         if (file.size > MAX_FILE_BYTES) {
             var sizeMb = (file.size / 1024 / 1024).toFixed(1);
             showStatus(
-                tr('업로드한 파일이 ' + sizeMb + 'MB 입니다. 10MB 이하로 줄여서 다시 올려주세요.',
-                   'アップロードしたファイルは ' + sizeMb + 'MB です。10MB以下に縮小して再アップロードしてください。',
-                   'Uploaded file is ' + sizeMb + 'MB. Please reduce to 10MB or less and try again.'),
+                tr('업로드한 파일이 ' + sizeMb + 'MB 입니다. 50MB 이하로 줄여서 다시 올려주세요.',
+                   'アップロードしたファイルは ' + sizeMb + 'MB です。50MB以下に縮小して再アップロードしてください。',
+                   'Uploaded file is ' + sizeMb + 'MB. Please reduce to 50MB or less and try again.'),
                 'err'
             );
             return;
@@ -1527,7 +1527,7 @@
             <div class="so-upload-icon">📤</div>
             <div class="so-upload-title">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
-            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 10MB 이하', 'PDF・PNG・JPG・10MB以下', 'PDF / PNG / JPG · max 10MB')}</div>
+            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
         `;
         zone.onclick = () => document.getElementById('soFile').click();
         wireUploadEvents();
@@ -2626,7 +2626,7 @@
             return;
         }
         if (f.size > MAX_FILE_BYTES) {
-            showStatus(tr('뒷면 파일이 10MB를 초과합니다.', '裏面ファイルが10MBを超えます。', 'Back side file exceeds 10MB.'), 'err');
+            showStatus(tr('뒷면 파일이 50MB를 초과합니다.', '裏面ファイルが50MBを超えます。', 'Back side file exceeds 50MB.'), 'err');
             return;
         }
         state.fileBack = f;
