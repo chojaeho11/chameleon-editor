@@ -3461,10 +3461,12 @@
         if (state.isPaperDisplay && typeof window._soUpdatePdParcelLabels === 'function') {
             window._soUpdatePdParcelLabels();
         }
-        // 묶음배송 버튼 — 가벽·포토존·원판·종이매대 제외 모두 표시
+        // 묶음배송 버튼 — 원판·종이매대 제외 모두 표시
+        // 2026-05-15: 허니콤 가벽·포토존도 다른 제품과 묶음배송 가능하도록 포함 (사용자 요청).
         var bundleBtn = document.getElementById('soBundleShipBtn');
         if (bundleBtn) {
-            var showBundle = !state.isRawBoard && !state.isPaperDisplay && (state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint);
+            var showBundle = !state.isRawBoard && !state.isPaperDisplay &&
+                (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint);
             bundleBtn.style.display = showBundle ? '' : 'none';
             bundleBtn.style.background = '#f0fdf4';
             bundleBtn.style.color = '#15803d';
