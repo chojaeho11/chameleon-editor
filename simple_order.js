@@ -2935,22 +2935,59 @@
         else { img.style.display = 'none'; }
 
         // 2026-05-14: 칼선 도안 다운로드 — admin_products.cutline_url 있을 때만 표시
+        // 2026-05-15: cutline_url 가 비어있을 때 Storage products/cutlines/${code}_* 에서 직접 찾는 fallback 추가
+        //              (관리자가 파일은 올렸으나 URL 저장이 실패한 케이스 — 종이매대 등에서 보고됨)
         var cutWrap = document.getElementById('soCutlineDownload');
         var cutBtn = document.getElementById('soCutlineDownloadBtn');
         var cutlineUrl = p.cutline_url || p.cutlineUrl || '';
-        if (cutWrap && cutBtn) {
-            if (cutlineUrl) {
-                cutBtn.href = cutlineUrl;
-                // 파일명 추출 — URL 끝부분 또는 제품코드_cutline 기본값
+        console.log('[cutline] product=' + (p.code || '?') + ' cutline_url=' + (cutlineUrl || '(empty)'));
+        var _applyCutline = function (url) {
+            if (!cutWrap || !cutBtn) return;
+            if (!url) { cutWrap.style.display = 'none'; return; }
+            cutBtn.href = url;
+            try {
+                var pathPart = url.split('?')[0].split('#')[0];
+                var fileName = pathPart.substring(pathPart.lastIndexOf('/') + 1) || ((p.code || 'cutline') + '_cutline');
+                cutBtn.setAttribute('download', fileName);
+            } catch(e) { cutBtn.setAttribute('download', ''); }
+            cutWrap.style.display = '';
+        };
+        if (cutlineUrl) {
+            _applyCutline(cutlineUrl);
+        } else if (p.code) {
+            // Storage fallback — products/cutlines/{code}_*.{pdf|ai|png|jpg|zip} 자동 탐지
+            (async function () {
                 try {
-                    var pathPart = cutlineUrl.split('?')[0].split('#')[0];
-                    var fileName = pathPart.substring(pathPart.lastIndexOf('/') + 1) || ((p.code || 'cutline') + '_cutline');
-                    cutBtn.setAttribute('download', fileName);
-                } catch(e) { cutBtn.setAttribute('download', ''); }
-                cutWrap.style.display = '';
-            } else {
-                cutWrap.style.display = 'none';
-            }
+                    var _sb = getSb();
+                    if (!_sb || !_sb.storage) { _applyCutline(''); return; }
+                    var listRes = await _sb.storage.from('products').list('cutlines', {
+                        limit: 100,
+                        search: p.code + '_'
+                    });
+                    var files = (listRes && listRes.data) || [];
+                    // 정확히 `${code}_` 로 시작하는 파일만 필터 (search 옵션이 prefix 가 아니므로 한 번 더 검증)
+                    var match = files.filter(function (f) {
+                        return f && f.name && f.name.indexOf(p.code + '_') === 0;
+                    }).sort(function (a, b) {
+                        // 최신 업로드 우선 (파일명 끝 timestamp 기준 내림차순)
+                        return (b.name || '').localeCompare(a.name || '');
+                    })[0];
+                    if (match) {
+                        var pub = _sb.storage.from('products').getPublicUrl('cutlines/' + match.name);
+                        var url = pub && pub.data ? pub.data.publicUrl : '';
+                        console.log('[cutline] storage fallback hit:', match.name, '→', url);
+                        _applyCutline(url);
+                    } else {
+                        console.log('[cutline] storage fallback miss for', p.code);
+                        _applyCutline('');
+                    }
+                } catch (e) {
+                    console.warn('[cutline] storage fallback err', e);
+                    _applyCutline('');
+                }
+            })();
+        } else {
+            _applyCutline('');
         }
 
         // 카테고리 홈 버튼 (있을 때만 표시)
