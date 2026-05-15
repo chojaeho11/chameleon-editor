@@ -483,9 +483,15 @@ window._cottonSearch = function(){
             <i class="fa-solid fa-circle-info" style="margin-right:6px; color:#fde047;"></i>
             <span data-i18n="cp_hero_min_order">최소 주문금액 10만원 · 업자 전용 (소량 구매 불가)</span>
         </p>
-        <button onclick="document.querySelector('#patternFilterChips')?.scrollIntoView({behavior:'smooth', block:'start'})" style="display:inline-flex; align-items:center; gap:8px; padding:16px 40px; border-radius:50px; border:none; background:#faf6ed; color:#451a03; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35); transition:all 0.3s;">
-            <span data-i18n="cp_hero_cta">유저 디자인 보기</span> <i class="fa-solid fa-arrow-down"></i>
-        </button>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+            <button onclick="document.querySelector('#patternFilterChips')?.scrollIntoView({behavior:'smooth', block:'start'})" style="display:inline-flex; align-items:center; gap:8px; padding:16px 32px; border-radius:50px; border:none; background:#faf6ed; color:#451a03; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35); transition:all 0.3s;">
+                <span data-i18n="cp_hero_cta">유저 디자인 보기</span> <i class="fa-solid fa-arrow-down"></i>
+            </button>
+            <!-- 2026-05-15: 원단제공 인쇄 접수 — 고객이 원단을 보내면 인쇄만 (1마 1,500원) -->
+            <button onclick="openRollFabricRequest()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#b45309,#78350f); color:#fde047; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35); transition:all 0.3s;">
+                <i class="fa-solid fa-scroll"></i> <span data-i18n="cp_roll_print_btn">원단제공 인쇄 · 1마 1,500원</span>
+            </button>
+        </div>
     </div>
 </section>
 <style>
@@ -636,7 +642,134 @@ async function submitPdSample() {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 회원가입 + 샘플 신청'; }
     }
 }
+
+// ════════════════════════════════════════════════════
+// 2026-05-15: 원단제공 인쇄 접수 — 고객이 원단을 보내면 인쇄만 (1마 1,500원)
+//   접수 시 vip_orders 에 [QQ:롤원단] 마커로 등록 → Global Admin VIP 대량주문에 노출.
+// ════════════════════════════════════════════════════
+function openRollFabricRequest() {
+    var m = document.getElementById('rollFabricModal');
+    if (m) m.style.display = 'flex';
+}
+async function submitRollFabricRequest() {
+    var name  = (document.getElementById('rfName').value || '').trim();
+    var company = (document.getElementById('rfCompany').value || '').trim();
+    var phone = (document.getElementById('rfPhone').value || '').trim();
+    var email = (document.getElementById('rfEmail').value || '').trim();
+    var yards = (document.getElementById('rfYards').value || '').trim();
+    var fabric = (document.getElementById('rfFabric').value || '').trim();
+    var addr  = (document.getElementById('rfAddr').value || '').trim();
+    var memo  = (document.getElementById('rfMemo').value || '').trim();
+    var agree = document.getElementById('rfAgree').checked;
+
+    if (!name) { alert('성함을 입력해주세요.'); return; }
+    if (!phone) { alert('연락처를 입력해주세요.'); return; }
+    if (!agree) { alert('안내사항 확인 및 개인정보 수집·이용에 동의해주세요.'); return; }
+
+    var btn = event && event.target ? event.target.closest('button') : null;
+    var origLabel = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 접수 중...'; }
+
+    try {
+        var sb = window.supabase ? window.supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null;
+        if (!sb) throw new Error('연결 실패');
+
+        // [QQ:롤원단] 마커 → Global Admin VIP 대량주문에서 '롤원단' 카테고리로 표시
+        var memoText = '[QQ:롤원단]\n' +
+            '■ 원단제공 인쇄 접수 (1마 1,500원 · 100마 이상)\n' +
+            '회사: ' + (company || '미입력') + '\n' +
+            '연락처: ' + phone + '\n' +
+            '이메일: ' + (email || '미입력') + '\n' +
+            '예상 수량: ' + (yards ? yards + '마' : '미입력') + '\n' +
+            '원단 종류: ' + (fabric || '미입력') + '\n' +
+            '원단 보내실 주소(회신지): ' + (addr || '미입력') + '\n' +
+            '요청메모: ' + (memo || '없음') + '\n' +
+            '— 고객이 원단 발송 → 3마 시험인쇄 → 확인 후 전체 롤 인쇄 → 착불 회송';
+
+        await sb.from('vip_orders').insert({
+            customer_name: name + (company ? ' (' + company + ')' : ''),
+            customer_phone: phone,
+            preferred_manager: '본사담당자',
+            memo: memoText,
+            files: null,
+            status: '대기중'
+        });
+
+        document.getElementById('rollFabricModal').style.display = 'none';
+        alert('✅ 원단제공 인쇄 접수가 완료되었습니다!\n담당자가 영업일 1~2일 내에 연락드립니다.\n원단을 보내주시면 3마 시험인쇄 후 확인받고 전체 롤을 인쇄합니다.');
+        ['rfName','rfCompany','rfPhone','rfEmail','rfYards','rfFabric','rfAddr','rfMemo'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+        document.getElementById('rfAgree').checked = false;
+    } catch(e) {
+        alert('접수 오류: ' + (e.message || e));
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+    }
+}
 </script>
+
+<!-- 2026-05-15: 원단제공 인쇄 접수 모달 -->
+<div id="rollFabricModal" class="modal-bg" style="z-index:30000; display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); padding:16px; overflow-y:auto;">
+    <div style="background:#fff; border-radius:18px; width:480px; max-width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.4);">
+        <div style="background:linear-gradient(135deg,#451a03,#78350f); padding:20px 24px; border-radius:18px 18px 0 0;">
+            <h3 style="margin:0; color:#fde047; font-size:18px; font-weight:900;"><i class="fa-solid fa-scroll"></i> 원단제공 인쇄 접수</h3>
+            <p style="margin:6px 0 0; color:#fde68a; font-size:12px;">고객님 원단에 인쇄만 — 100마 이상 롤원단 · 1마 기준 1,500원</p>
+        </div>
+        <div style="padding:20px 24px;">
+            <!-- 안내사항 -->
+            <div style="background:#fef3c7; border:1px solid #fbbf24; border-radius:10px; padding:12px 14px; font-size:12px; color:#78350f; line-height:1.75; margin-bottom:16px;">
+                <b style="display:block; margin-bottom:4px;">📋 접수 전 꼭 확인해주세요</b>
+                · 원단을 직접 보내주셔야 하며, 인쇄된 원단은 <b>착불택배</b>로 보내드립니다.<br>
+                · 고가의 <b>실크원단은 접수가 불가</b>합니다.<br>
+                · 원단 종류에 따라 잉크가 번져 보일 수 있습니다.<br>
+                · <b>발수코팅원단 등 특수원단은 인쇄가 되지 않을 수 있습니다.</b><br>
+                · 접수 시 먼저 <b>3마 정도를 시험인쇄</b>해 보내드리고, 확인 후 전체 롤을 인쇄합니다.<br>
+                · <b>도매업자 전용</b> 원단인쇄로 <b>1롤이 최소 수량</b>입니다.
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;">성함 *</label>
+                    <input id="rfName" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: 홍길동">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;">회사명</label>
+                    <input id="rfCompany" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: (주)ABC">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;">연락처 *</label>
+                    <input id="rfPhone" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="010-0000-0000">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;">이메일 (선택)</label>
+                    <input id="rfEmail" type="email" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="email@company.com">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;">예상 수량 (마)</label>
+                    <input id="rfYards" type="number" min="100" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="100 이상">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#451a03;">원단 종류</label>
+                    <input id="rfFabric" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="예: 면20수 평직">
+                </div>
+            </div>
+            <div style="margin-bottom:8px;">
+                <label style="font-size:12px; font-weight:700; color:#451a03;">원단 회신받을 주소</label>
+                <input id="rfAddr" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" placeholder="인쇄된 원단을 착불로 받으실 주소">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; color:#451a03;">요청메모</label>
+                <textarea id="rfMemo" rows="2" style="width:100%; padding:11px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;" placeholder="디자인 파일·색상·기타 요청사항"></textarea>
+            </div>
+            <label style="display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#52525b; margin-bottom:14px;">
+                <input type="checkbox" id="rfAgree" style="margin-top:3px;">
+                <span>위 안내사항을 확인했으며, 접수를 위한 개인정보 수집·이용에 동의합니다.</span>
+            </label>
+            <button onclick="submitRollFabricRequest()" style="width:100%; padding:15px; border:none; border-radius:10px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.5px;">
+                <i class="fa-solid fa-paper-plane"></i> 원단제공 인쇄 접수하기
+            </button>
+            <button onclick="document.getElementById('rollFabricModal').style.display='none'" style="width:100%; padding:10px; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer; margin-top:6px; font-family:inherit;">닫기</button>
+        </div>
+    </div>
+</div>
 
 <!-- 2026-05-14: CTA 2장 — 노란(내원단/자동패턴) + 하늘(패브릭포스터/1장 그대로) -->
 <section style="max-width:1100px; margin:48px auto 0; padding:0 24px; display:flex; flex-direction:column; gap:16px;">
@@ -2421,6 +2554,11 @@ cp_hero_cta: {
     ko:'유저 디자인 보기', ja:'ユーザーデザインを見る', en:'Browse User Designs',
     zh:'浏览用户设计', ar:'تصفح تصاميم المستخدمين', es:'Ver Disenos de Usuarios',
     de:'Nutzer-Designs ansehen', fr:'Voir les designs utilisateurs'
+},
+cp_roll_print_btn: {
+    ko:'원단제공 인쇄 · 1마 1,500원', ja:'生地持込印刷 · 1m 1,500ウォン', en:'Print on Your Fabric · 1,500/yd',
+    zh:'自带面料印刷 · 每码1,500韩元', ar:'الطباعة على قماشك · 1,500/ياردة', es:'Imprimir en Tu Tela · 1,500/yd',
+    de:'Druck auf Ihrem Stoff · 1.500/m', fr:'Impression sur Votre Tissu · 1 500/m'
 },
 logo_main_link: {
     ko:'인쇄종합몰', ja:'印刷総合モール', en:'Main Print Mall',

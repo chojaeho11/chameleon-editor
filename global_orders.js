@@ -1375,7 +1375,7 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
                 : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
 
-            const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777' }[qqCategory] || '#475569';
+            const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777', '롤원단':'#0d9488' }[qqCategory] || '#475569';
             const catBadgeCell = qqCategory
                 ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span>`
                 : `<span style="color:#94a3b8;">-</span>`;
