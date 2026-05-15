@@ -1876,12 +1876,25 @@
     }
 
     // 2026-05-13: 허니콤보드 원판인쇄 감지 (Wholesale Board Prices · 이름에 "원판" 포함)
+    // 2026-05-15: top_category_code 까지 확인 — admin_products.category 는 sub-category 라
+    //              상위 카테고리 'Wholesale Board Prices' 매칭이 누락되던 문제 보강.
     function _soIsRawBoardProduct(p) {
         if (!p) return false;
         const code = (p.code || '').toLowerCase();
         const cat = (p.category || '').toLowerCase();
         const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        // sub-category 또는 top-category 가 'Wholesale Board Prices' / 'raw' / '원판'
         if (cat === 'wholesale board prices' || cat.indexOf('raw') >= 0 || cat.indexOf('원판') >= 0) return true;
+        // top-category 조회 — globalSubCats 에서 sub→top 매핑
+        try {
+            if (typeof window._getTopCategoryCode === 'function' && p.category) {
+                var top = window._getTopCategoryCode(p.category);
+                if (top) {
+                    var topL = String(top).toLowerCase();
+                    if (topL === 'wholesale board prices' || topL.indexOf('raw') >= 0 || topL.indexOf('원판') >= 0) return true;
+                }
+            }
+        } catch (e) {}
         if (code.startsWith('hb_rb') || code.startsWith('hb_raw')) return true;
         if (/원판|raw\s*board|raw\s*sheet/i.test(name)) return true;
         return false;
