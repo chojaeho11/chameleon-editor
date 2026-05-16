@@ -186,7 +186,7 @@ select option{background:#1d1640;}
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
-  var state = { user:null, franchise:null, products:[], selected:{}, logoUrl:'', activeCat:'ALL', topMap:{}, subToTop:{} };
+  var state = { user:null, franchise:null, products:[], selected:{}, logoUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
 
   function toast(msg, kind){
     var t = document.createElement('div');
@@ -223,7 +223,8 @@ select option{background:#1d1640;}
     } catch(e){ console.warn('franchise load', e); }
     state.franchise = fr;
 
-    // 접근 권한 — 테스트 계정 또는 활성 가맹점 구독
+    // 접근 권한 — 테스트 계정 또는 활성 가맹점 구독.
+    // 2026-05-16: 구독 여부와 무관하게 입장·체험 허용. 저장(btnSave)만 구독자로 제한.
     var hasAccess = isTest || !!fr;
     if (!hasAccess){
       try {
@@ -239,13 +240,13 @@ select option{background:#1d1640;}
         });
       } catch(e){ console.warn('sub check', e); }
     }
+    state.hasAccess = hasAccess;
 
     $('topRight').innerHTML = '<span style="font-size:13px;color:#9b94c4;margin-right:10px;">'
-      + email + (isTest?' <span class="badge-test">TEST</span>':'') + '</span>'
+      + email + (isTest ? ' <span class="badge-test">TEST</span>'
+                : (hasAccess ? '' : ' <span class="badge-test" style="background:rgba(96,165,250,0.16);color:#93c5fd;border-color:rgba(96,165,250,0.4);">체험 모드</span>')) + '</span>'
       + '<button class="btn btn-ghost btn-sm" id="btnLogout2">로그아웃</button>';
     var lo2 = $('btnLogout2'); if (lo2) lo2.onclick = logout;
-
-    if (!hasAccess){ show('screenNeedSub'); return; }
 
     // 슬러그 프리픽스 (현재 도메인 기준)
     $('slugPre').textContent = location.origin.replace(/^https?:\/\//,'') + '/store/';
@@ -479,6 +480,13 @@ select option{background:#1d1640;}
   $('fSlug').addEventListener('input', function(){ this.value = slugify(this.value); });
 
   $('btnSave').onclick = async function(){
+    // 2026-05-16: 비구독자는 체험만 — 저장 시 구독 안내
+    if (!state.hasAccess){
+      if (confirm('저장은 가맹점 구독 회원만 가능합니다.\n지금 입력하신 내용은 체험용이며 저장되지 않습니다.\n\n구독 요금제를 확인하시겠습니까?')) {
+        location.href = '/franchise#join';
+      }
+      return;
+    }
     var slug = slugify($('fSlug').value);
     var company = $('fCompany').value.trim();
     var phone = $('fPhone').value.trim();

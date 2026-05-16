@@ -196,7 +196,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
             <h1 id="txtHeroH1"></h1>
             <p class="fr-hero-sub" id="txtHeroSub"></p>
             <div class="fr-hero-ctas">
-                <a href="#inquiry" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> <span id="txtCtaInquiry"></span></a>
+                <a href="#join" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> <span id="txtCtaInquiry"></span></a>
                 <a href="#phones" class="btn-ghost"><i class="fa-solid fa-phone"></i> <span id="txtCtaCall"></span></a>
             </div>
         </div>
@@ -237,7 +237,10 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         <p class="fr-section-sub" id="txtJoinSub"></p>
         <div class="fr-grid-3" id="frJoinPlans"></div>
         <p class="fr-join-note" id="txtJoinNote"></p>
-        <p style="text-align:center;margin-top:16px;"><a id="txtJoinAdmin" href="/franchise-admin" style="color:#a855f7;font-weight:800;font-size:14px;text-decoration:none;"></a></p>
+        <div style="text-align:center;margin-top:24px;">
+            <a id="txtJoinAdmin" href="/franchise-admin" style="display:inline-flex;align-items:center;gap:10px;padding:17px 42px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:17px;font-weight:900;text-decoration:none;box-shadow:0 12px 32px rgba(124,58,237,0.55);"></a>
+            <p id="txtJoinTry" style="margin-top:12px;font-size:13px;color:#9ca3af;"></p>
+        </div>
     </div>
 </section>
 
@@ -374,56 +377,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     </div>
 </section>
 
-<!-- Inquiry form -->
-<section id="inquiry" class="fr-section fr-form-wrap">
-    <div class="container">
-        <h2 class="fr-section-title" id="txtFormH2"></h2>
-        <p class="fr-section-sub" id="txtFormSub"></p>
-
-        <form class="fr-form" id="frForm">
-            <div class="grid">
-                <div class="row">
-                    <label for="frName" id="lblName"></label>
-                    <input id="frName" name="name" type="text" required>
-                </div>
-                <div class="row">
-                    <label for="frCountry" id="lblCountry"></label>
-                    <input id="frCountry" name="country" type="text" required>
-                </div>
-            </div>
-            <div class="grid">
-                <div class="row">
-                    <label for="frEmail" id="lblEmail"></label>
-                    <input id="frEmail" name="email" type="email" required>
-                </div>
-                <div class="row">
-                    <label for="frPhone" id="lblPhone"></label>
-                    <input id="frPhone" name="phone" type="tel">
-                </div>
-            </div>
-            <div class="row">
-                <label for="frCompany" id="lblCompany"></label>
-                <input id="frCompany" name="company" type="text">
-            </div>
-            <div class="row">
-                <label for="frExp" id="lblExp"></label>
-                <select id="frExp" name="experience">
-                    <option value=""></option>
-                    <option value="none"></option>
-                    <option value="print"></option>
-                    <option value="sign"></option>
-                    <option value="retail"></option>
-                    <option value="other"></option>
-                </select>
-            </div>
-            <div class="row">
-                <label for="frMsg" id="lblMsg"></label>
-                <textarea id="frMsg" name="message" rows="4"></textarea>
-            </div>
-            <button type="submit" class="fr-submit" id="btnSubmit"></button>
-        </form>
-    </div>
-</section>
+<!-- 2026-05-16: 가입신청 폼 제거 — 가입은 '내 홈페이지 만들기'(/franchise-admin) 에서 -->
 
 <footer class="fr-footer">
     <div class="container">
@@ -1311,11 +1265,24 @@ function showToast(msg, type){
     if (note) note.textContent = t.note;
     var adminLink = document.getElementById('txtJoinAdmin');
     if (adminLink) {
-        var AL = { ko:'이미 가맹점 회원이신가요? 관리자 페이지로 →', ja:'すでに加盟店会員ですか？ 管理ページへ →',
-            en:'Already a member? Go to your admin page →', zh:'已是加盟会员？进入管理页面 →',
-            ar:'عضو بالفعل؟ انتقل إلى صفحة الإدارة →', es:'¿Ya eres miembro? Ir al panel de administración →',
-            de:'Bereits Mitglied? Zur Verwaltungsseite →', fr:'Déjà membre ? Accéder à votre espace admin →' };
+        var AL = { ko:'🏠 내 홈페이지 만들기', ja:'🏠 自分のホームページを作る', en:'🏠 Build My Website',
+            zh:'🏠 创建我的官网', ar:'🏠 أنشئ موقعي', es:'🏠 Crear Mi Sitio Web',
+            de:'🏠 Meine Website erstellen', fr:'🏠 Créer Mon Site Web' };
         adminLink.textContent = AL[fl] || AL.ko;
+    }
+    var tryLine = document.getElementById('txtJoinTry');
+    if (tryLine) {
+        var TL = {
+            ko:'구독 전이라도 들어가서 자유롭게 체험할 수 있습니다. 저장은 구독 후 가능합니다.',
+            ja:'ご契約前でも入って自由に体験できます。保存はご契約後に可能です。',
+            en:'You can enter and explore freely even before subscribing. Saving is available after subscription.',
+            zh:'订阅前也可进入自由体验。保存功能需订阅后开放。',
+            ar:'يمكنك الدخول والتجربة بحرية حتى قبل الاشتراك. الحفظ متاح بعد الاشتراك.',
+            es:'Puede entrar y explorar libremente incluso antes de suscribirse. Guardar está disponible tras la suscripción.',
+            de:'Sie können auch vor dem Abo frei hineinschauen und testen. Speichern ist nach dem Abo möglich.',
+            fr:'Vous pouvez entrer et explorer librement même avant l\'abonnement. L\'enregistrement est disponible après l\'abonnement.'
+        };
+        tryLine.textContent = TL[fl] || TL.ko;
     }
     var plans = [
         { key:'monthly',  name:t.monthly,  price:pr.m, per:t.perM, best:false },
@@ -1334,18 +1301,10 @@ function showToast(msg, type){
     grid.addEventListener('click', function(e){
         var b = e.target.closest('.fr-join-cta');
         if (!b) return;
-        // Phase 1: 가입 신청 폼으로 이동 + 선택 요금제를 문의내용에 기록
-        var label = b.getAttribute('data-label') || '';
-        var msg = document.getElementById('frMsg');
-        if (msg) {
-            var tag = '[가맹점 가입 희망 요금제: ' + label + '] ';
-            if (msg.value.indexOf('[가맹점 가입 희망 요금제') === -1) msg.value = tag + msg.value;
-            else msg.value = msg.value.replace(/\[가맹점 가입 희망 요금제:[^\]]*\]\s*/, tag);
-        }
-        var sec = document.getElementById('inquiry');
-        if (sec) sec.scrollIntoView({ behavior:'smooth' });
-        var nm = document.getElementById('frName');
-        if (nm) setTimeout(function(){ nm.focus(); }, 500);
+        // 2026-05-16: 요금제 클릭 → 가맹점 관리자(홈페이지 만들기) 로 이동. 저장 시 구독 안내.
+        var plan = b.getAttribute('data-plan') || '';
+        try { sessionStorage.setItem('_fr_plan_pick', plan); } catch(e2){}
+        location.href = '/franchise-admin';
     });
 })();
 </script>
