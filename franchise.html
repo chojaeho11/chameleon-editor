@@ -216,6 +216,30 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     </div>
 </section>
 
+<!-- 2026-05-16: 가맹점 구독 요금제 -->
+<style>
+.fr-join-card{position:relative;background:rgba(255,255,255,0.04);border:1.5px solid rgba(167,139,250,0.25);border-radius:18px;padding:34px 24px 28px;text-align:center;transition:transform .2s,border-color .2s;}
+.fr-join-card:hover{transform:translateY(-3px);border-color:rgba(167,139,250,0.6);}
+.fr-join-card.best{border-color:#fbbf24;background:rgba(251,191,36,0.06);}
+.fr-join-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1430;font-size:12px;font-weight:900;padding:5px 16px;border-radius:999px;letter-spacing:.5px;}
+.fr-join-name{font-size:16px;font-weight:800;color:#c4b5fd;margin-bottom:10px;}
+.fr-join-card.best .fr-join-name{color:#fbbf24;}
+.fr-join-price{font-size:34px;font-weight:900;color:#fff;margin-bottom:18px;line-height:1;}
+.fr-join-price small{font-size:14px;font-weight:600;color:#9ca3af;margin-left:4px;}
+.fr-join-cta{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:filter .2s;font-family:inherit;}
+.fr-join-card.best .fr-join-cta{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1430;}
+.fr-join-cta:hover{filter:brightness(1.1);}
+.fr-join-note{max-width:760px;margin:26px auto 0;font-size:13px;color:#9ca3af;line-height:1.7;text-align:center;}
+</style>
+<section class="fr-section" id="join">
+    <div class="container">
+        <h2 class="fr-section-title" id="txtJoinTitle"></h2>
+        <p class="fr-section-sub" id="txtJoinSub"></p>
+        <div class="fr-grid-3" id="frJoinPlans"></div>
+        <p class="fr-join-note" id="txtJoinNote"></p>
+    </div>
+</section>
+
 <!-- World map of franchise locations -->
 <section class="fr-section fr-globe">
     <div class="container">
@@ -414,55 +438,54 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 const L = {
     ko:{
         langLabel:'한국어',
-        badge:'⚡ 무자본 · 가맹비 0원 · 지역 독점',
-        heroH1:['<span class="hl">동네 광고사</span>에서 멈추지 마세요','카멜레온과 함께 성장해요'],
-        heroSub:'현수막 플로터 한 대와 작은 작업 공간이면 충분합니다. 허니콤보드 가벽·골판지·배너·종이매대 — 반제품으로 받아서 실사 출력만 붙여 납품하는 독점 가맹 파트너 프로그램.',
-        ctaInquiry:'지금 가맹 문의',
+        badge:'⚡ 월 3만원 · 가맹비 0원 · 당신 회사만의 홈페이지',
+        heroH1:['<span class="hl">월 3만원</span>으로','당신 회사만의 홈페이지를 가지세요'],
+        heroSub:'카멜레온프린팅의 모든 시스템을 그대로 — 상호와 전화번호만 사장님 것으로 바꾸면 완전한 내 홈페이지가 됩니다. 고객이 결제하면 본사가 받아 제작하고, 완료 후 수수료 20%를 제외한 금액을 송금해 드립니다.',
+        ctaInquiry:'가맹점 가입하기',
         ctaCall:'바로 통화',
-        catsH2:'가맹점 <span class="hl">전용 제품</span>',
-        catsSub:'<b>반제품은 인쇄가 되어 있지 않습니다.</b> 커팅만 되어 있으므로 실사출력 장비를 이용하여 붙여서 사용이 가능합니다. 반제품의 사이즈는 기재된 사이즈로 변경이 불가합니다. 디지털 커터가 있으신 가맹점은 허니콤보드 <b>원판을 구매하여 직접 커팅</b>하면 더 저렴합니다(원판 크기 1400×2200). 파트너에게만 공급하는 라인업으로 <b>일반 구매자는 구매 불가능</b>합니다. 한국 (평택·부산항)까지 선적해 드리며 이후는 <b>FOB 방식</b>으로 직접 인도해야 합니다. 이 외 다른 모든 제품은 원하시는 방식으로 배송되며 배송비는 별도 부가됩니다.',
+        catsH2:'<span class="hl">취급 제품</span>은 사장님이 직접 선택',
+        catsSub:'본사가 등록하는 전체 제품 중에서, 사장님이 가진 장비로 만들 수 있는 제품을 골라 홈페이지에 노출하세요. 아래는 가맹점이 가져갈 수 있는 제품 예시입니다. <b>일반 구매자는 구매할 수 없는</b> 가맹점 전용 라인업도 포함됩니다.',
         catsLoading:'제품을 불러오는 중...',
-        catsEmpty:'등록된 전용 제품이 없습니다. 담당자에게 문의해주세요.',
-        pitchHl:'지금은 <span class="hl">온라인 판매 시대</span>,<br><span class="midline">당신에게도 강력한 홈페이지가 필요합니다</span>',
-        pitchSub:'<span class="em">카멜레온과 똑같은 홈페이지를 만들어 드립니다.</span> 카멜레온의 상품을 도매가격으로 공급받고 당신만의 상품도 올릴 수 있습니다. 로고와 전화번호를 바꾸세요. 당신의 홈페이지가 만들어집니다.',
-        p1t:'가맹비 0원 · 초기 재고 부담 없음',
-        p1d:'<b>반제품을 소량 구매하세요.</b> 출력해서 붙이면 커팅기 없이도 허니콤보드 가벽과 배너를 만들 수 있습니다. <span class="hl-inline">(완제품가격의 1/3 수준)</span> 고가 장비가 필요한 제품들은 무료 샘플을 보여주시고 카멜레온이 만들어서 보내드립니다. <i>(종이매대, 패브릭, 굿즈, 인쇄물)</i>',
-        p2t:'전 세계 어디서든 반제품 수령',
-        p2d:'허니콤 가벽·골판지·배너·종이매대·패브릭 샘플이 커팅 완료 상태로 FOB 선적. 귀사는 실사 출력만 붙여서 판매. 해상운송료·관세는 현지 결제.',
-        p3t:'독점 지역 — 지금 선점하세요',
-        p3d:'<b>강력한 홈페이지가 있다면 당신도 대기업 CEO입니다.</b> 쇼핑몰 초기 세팅비용 <span class="hl-inline">500만원</span> · 월 관리비 <span class="hl-inline">100만원</span>으로 <b>연매출 100억</b>에 도전하세요. 지역당 1개 파트너만 선발됩니다.',
-        globeTitle:'전 세계로 흐르는 <span class="hl">카멜레온 물류 네트워크</span>',
-        globeSub:'아시아 · 유럽 · 미주 · 아프리카 · 오세아니아 — 매일 반제품이 전 세계 파트너에게 흘러갑니다',
-        detailH2:'<span class="hl">가맹점 프로그램</span> 전체 안내',
+        catsEmpty:'등록된 제품이 없습니다. 담당자에게 문의해주세요.',
+        pitchHl:'<span class="hl">단 3단계</span>면 끝<br><span class="midline">완전히 사장님만의 홈페이지가 만들어집니다</span>',
+        pitchSub:'복잡한 절차 없습니다. 가입하고, 제품을 고르고, 홍보하세요. 놀라운 성과가 기다립니다.',
+        p1t:'1 · 상호와 전화번호를 등록하세요',
+        p1d:'관리자 페이지에서 사장님의 <b>상호와 전화번호</b>를 등록하세요. 카멜레온프린팅의 모든 시스템을 그대로 사용하지만, 화면에 보이는 것은 <b>사장님의 홈페이지</b>가 됩니다.',
+        p2t:'2 · 취급할 제품을 체크하세요',
+        p2d:'가지고 계신 <b>장비로 만들 수 있는 제품을 체크</b>하세요. 본사가 올린 상품 정보를 그대로 가져와 사장님 홈페이지에 등록·노출할 수 있습니다.',
+        p3t:'3 · 이제 홍보하고 판매하세요',
+        p3d:'완전히 사장님만의 홈페이지가 완성됐습니다. 홍보하고 판매하세요. <b>카멜레온도 전 세계 유튜버·인플루언서를 활용해</b> 사장님의 홈페이지를 함께 홍보해 드립니다.',
+        globeTitle:'전 세계로 흐르는 <span class="hl">카멜레온 네트워크</span>',
+        globeSub:'아시아 · 유럽 · 미주 · 아프리카 · 오세아니아 — 가맹점과 본사가 함께 성장합니다',
+        detailH2:'<span class="hl">가맹점 프로그램</span> 작동 방식',
         detailSub:'반드시 읽어주세요 — 이 비즈니스의 본질을 담았습니다',
-        detailBody:`<p>현수막을 출력하는 장비가 있으신가요? 저희와 같이 성장해요. <strong>전 세계 어디서나 반제품을 받아 실사 출력 후 붙여서 납품할 수 있도록 반제품을 제공</strong>합니다. 허니콤보드 가벽과 골판지 가벽, 배너 등의 제품을 커팅만 되어 있는 상태로 제공받아 출력물을 붙여서 판매하세요.</p>
-<p><span class="highlight">비싼 장비 없이도 카멜레온프린팅의 모든 제품을 판매</span>할 수 있습니다. 카멜레온프린팅의 핫제품인 종이매대와 패브릭 샘플도 <strong>무상으로 보내드립니다</strong>. 샘플을 보여주고 오더를 받으세요.</p>
-<p>대량 주문은 <strong>말레이시아·한국·모로코 공장</strong>에서 제작하여 세계 어느 곳보다도 저렴하게 공급합니다.</p>
-<p><strong>가맹비 없음. 초기 물량 제한 없음.</strong> 소량의 샘플을 구매하여 영업하세요. 샘플 반제품 가격은 홈페이지에 기재된 가격의 <span class="highlight">50%</span>에 공급됩니다.</p>
-<p>배송은 <strong>FOB 방식</strong>으로 배에 선적까지 해드리고, 이후 해상운송료와 항구에서 귀사까지의 운임·세금은 가맹점에서 직접 결제하면 됩니다.</p>`,
-        b1t:'필요한 것은 단 세 가지',
-        b1d:'약 1,000달러짜리 중고 플로터, 작은 작업 공간, 그리고 열정. 그게 전부입니다.',
-        b2t:'연매출 100만불 달성 시 홈페이지 무상 복제',
-        b2d:'관리자 페이지를 포함한 카멜레온프린팅의 모든 기능을 귀사 도메인에 복제해 드립니다.',
-        b3t:'기존 전시 인쇄 사업자에게 최적',
-        b3d:'가맹비 없이 무자본으로 세계적으로 각광받는 허니콤보드 사업을 지역 독점으로 확보할 수 있습니다.',
-        b4t:'지금 서두르세요 — 지역당 1개만',
-        b4d:'각 지역에 1개의 가맹점만을 무료로 제공합니다. 먼저 문의하는 파트너가 지역을 선점합니다.',
-        b5t:'카멜레온과 파트너가 되세요',
-        b5d:'자본금은 필요 없습니다. 당신을 부자로 안내합니다. 지금 가맹된 업체들의 평균 매출액을 확인하세요.',
-        b6t:'마진 구조: 50%',
-        b6d:'샘플 반제품 가격이 홈페이지 가격의 50%. 출력·설치 마진을 더하면 대부분 50%를 확보할 수 있습니다.',
-        testH2:'<span class="hl">전 세계 파트너</span>들의 이야기',
+        detailBody:`<p><strong>월 3만원(3,000엔 / 30불) 구독으로, 카멜레온프린팅과 똑같은 홈페이지를 사장님 회사 이름으로 가질 수 있습니다.</strong> 로고와 상호, 전화번호를 바꾸면 그 순간부터 사장님만의 홈페이지입니다.</p>
+<p><span class="highlight">고객은 사장님의 홈페이지에서 주문하고 결제합니다.</span> 결제는 카멜레온프린팅의 결제 시스템으로 연결되어 본사가 받습니다. 제작·납품이 완료되면 <strong>본사가 수수료 20%를 제외한 금액을 사장님께 송금</strong>해 드립니다.</p>
+<p>가맹점 전용 관리자 페이지에서 상호·연락처를 등록하고, 본사의 전체 제품 중 <strong>취급할 제품을 직접 선택</strong>할 수 있습니다. 선택한 제품만 사장님 홈페이지에 노출됩니다.</p>
+<p>카멜레온은 사장님을 혼자 두지 않습니다. <strong>전 세계 유튜버와 인플루언서를 활용해 사장님의 홈페이지를 함께 홍보</strong>해 드립니다.</p>`,
+        b1t:'필요한 것은 월 3만원, 그게 전부',
+        b1d:'가맹비 0원. 초기 재고 부담 없음. 월 3만원(또는 연·평생) 구독만으로 사장님 회사의 홈페이지가 운영됩니다.',
+        b2t:'본사의 모든 시스템을 그대로',
+        b2d:'주문·결제·디자인 에디터·견적 등 카멜레온프린팅의 모든 기능을 사장님 홈페이지에서 그대로 사용합니다.',
+        b3t:'취급 제품은 사장님이 선택',
+        b3d:'본사가 등록한 전체 제품 중 원하는 제품만 골라 노출하세요. 가진 장비로 만들 수 있는 제품 위주로 구성하면 됩니다.',
+        b4t:'결제는 본사, 송금은 수수료 20% 제외',
+        b4d:'고객 결제는 본사 결제 시스템으로 처리됩니다. 제작·납품이 완료되면 본사가 수수료 20%를 제외한 금액을 송금해 드립니다.',
+        b5t:'카멜레온이 함께 홍보합니다',
+        b5d:'전 세계 유튜버·인플루언서 네트워크로 사장님의 홈페이지를 함께 홍보합니다. 혼자가 아닙니다.',
+        b6t:'지역 우선권 — 지금 선점하세요',
+        b6d:'먼저 가입하는 가맹점에게 지역 우선권을 드립니다. 지금 시작하세요.',
+        testH2:'<span class="hl">전 세계 가맹점</span>들의 이야기',
         testSub:'실제 운영 중인 가맹점주들의 후기 (익명 처리된 평균 매출 공개)',
         phonesH2:'언제든 전화주세요',
         phonesSub:'4개 언어로 담당자가 직접 상담해드립니다',
-        formH2:'<span class="hl">가맹 문의</span> 접수',
-        formSub:'영업일 기준 48시간 이내에 담당자가 연락드립니다',
+        formH2:'<span class="hl">가맹점 가입</span> 신청',
+        formSub:'영업일 기준 48시간 이내에 담당자가 연락드려 관리자 페이지 개설을 도와드립니다',
         lblName:'이름',
         lblCountry:'국가',
         lblEmail:'이메일',
         lblPhone:'전화번호 (선택)',
-        lblCompany:'회사명 (선택)',
+        lblCompany:'회사명/상호 (선택)',
         lblExp:'경험',
         expBlank:'선택해주세요',
         expNone:'인쇄 경험 없음',
@@ -471,8 +494,8 @@ const L = {
         expRetail:'유통·소매업',
         expOther:'기타',
         lblMsg:'문의 내용 (선택)',
-        btnSubmit:'문의 보내기',
-        msgOk:'문의가 접수되었습니다. 48시간 내에 연락드리겠습니다.',
+        btnSubmit:'가입 신청 보내기',
+        msgOk:'가입 신청이 접수되었습니다. 48시간 내에 연락드리겠습니다.',
         msgErr:'전송 실패. 잠시 후 다시 시도해주세요.'
     },
     ja:{
@@ -1224,6 +1247,95 @@ function showToast(msg, type){
             btn.disabled = false;
             btn.textContent = origLabel;
         }
+    });
+})();
+
+// ============== 가맹점 구독 요금제 (Phase 1) ==============
+(function(){
+    var fl = (new URLSearchParams(location.search).get('lang') || window.__FR_LANG || 'ko').toLowerCase();
+    var J = {
+        ko:{ title:'가맹점 <span class="hl">구독 요금제</span>', sub:'월 3만원으로 시작하세요. 구독 중에는 사장님 회사의 홈페이지가 계속 운영됩니다.',
+             monthly:'월간 구독', annual:'연간 구독', lifetime:'평생 구독', perM:'/월', perY:'/년', perL:'1회 결제 · 평생',
+             cta:'이 요금제로 가입', best:'인기',
+             note:'가입 신청 후 담당자가 가맹점 전용 관리자 페이지 개설을 도와드립니다. 고객 결제는 본사 결제 시스템으로 처리되며, 제작·납품 완료 시 수수료 20%를 제외한 금액을 송금해 드립니다.' },
+        ja:{ title:'加盟店 <span class="hl">サブスク料金</span>', sub:'月3,000円から。サブスク中は貴社のホームページが運営され続けます。',
+             monthly:'月額', annual:'年額', lifetime:'永久', perM:'/月', perY:'/年', perL:'1回決済 · 永久',
+             cta:'このプランで加盟', best:'人気',
+             note:'お申込み後、担当者が加盟店専用の管理ページ開設をサポートします。お客様の決済は本社の決済システムで処理され、製作・納品完了時に手数料20%を差し引いた金額をお振込みします。' },
+        en:{ title:'Franchise <span class="hl">Subscription Plans</span>', sub:'Start from $30/month. Your company homepage stays live while subscribed.',
+             monthly:'Monthly', annual:'Annual', lifetime:'Lifetime', perM:'/mo', perY:'/yr', perL:'one-time · forever',
+             cta:'Join with this plan', best:'POPULAR',
+             note:'After applying, our staff helps you open your franchise admin page. Customer payments are processed through HQ; once production/delivery is complete, HQ remits the amount minus a 20% commission.' },
+        zh:{ title:'加盟 <span class="hl">订阅套餐</span>', sub:'每月¥200起。订阅期间，您公司的网站持续运营。',
+             monthly:'月付', annual:'年付', lifetime:'终身', perM:'/月', perY:'/年', perL:'一次付费 · 终身',
+             cta:'选择此套餐加盟', best:'热门',
+             note:'申请后，我们的工作人员将协助您开通加盟管理页面。客户付款通过总部处理，制作交付完成后，总部扣除20%佣金后汇款给您。' },
+        ar:{ title:'<span class="hl">باقات اشتراك</span> الامتياز', sub:'ابدأ من 30$ شهريًا. يبقى موقع شركتك نشطًا طوال فترة الاشتراك.',
+             monthly:'شهري', annual:'سنوي', lifetime:'مدى الحياة', perM:'/شهر', perY:'/سنة', perL:'دفعة واحدة · للأبد',
+             cta:'انضم بهذه الباقة', best:'الأكثر شيوعًا',
+             note:'بعد التقديم، يساعدك فريقنا في فتح صفحة إدارة الامتياز. تتم معالجة مدفوعات العملاء عبر المركز الرئيسي، وعند اكتمال الإنتاج والتسليم يحوّل المركز المبلغ بعد خصم عمولة 20%.' },
+        es:{ title:'<span class="hl">Planes de Suscripción</span> de Franquicia', sub:'Desde €28/mes. Tu web de empresa sigue activa mientras estés suscrito.',
+             monthly:'Mensual', annual:'Anual', lifetime:'De por vida', perM:'/mes', perY:'/año', perL:'pago único · para siempre',
+             cta:'Unirse con este plan', best:'POPULAR',
+             note:'Tras solicitarlo, nuestro equipo te ayuda a abrir tu página de administración. Los pagos de clientes se procesan por la central; al completar producción y entrega, la central remite el importe menos una comisión del 20%.' },
+        de:{ title:'Franchise-<span class="hl">Abopläne</span>', sub:'Ab 28€/Monat. Ihre Firmen-Website bleibt während des Abos online.',
+             monthly:'Monatlich', annual:'Jährlich', lifetime:'Lebenslang', perM:'/Mo', perY:'/Jahr', perL:'Einmalzahlung · für immer',
+             cta:'Mit diesem Plan beitreten', best:'BELIEBT',
+             note:'Nach der Anmeldung hilft unser Team beim Einrichten Ihrer Franchise-Verwaltungsseite. Kundenzahlungen laufen über die Zentrale; nach Produktion/Lieferung überweist die Zentrale den Betrag abzüglich 20% Provision.' },
+        fr:{ title:'<span class="hl">Forfaits d\'Abonnement</span> Franchise', sub:'À partir de 28€/mois. Le site de votre entreprise reste en ligne pendant l\'abonnement.',
+             monthly:'Mensuel', annual:'Annuel', lifetime:'À vie', perM:'/mois', perY:'/an', perL:'paiement unique · à vie',
+             cta:'Rejoindre avec ce forfait', best:'POPULAIRE',
+             note:'Après votre demande, notre équipe vous aide à ouvrir votre page d\'administration. Les paiements clients passent par le siège ; une fois la production/livraison terminée, le siège verse le montant moins une commission de 20%.' }
+    };
+    var PRICES = {
+        ko:{m:'₩30,000',y:'₩165,000',l:'₩330,000'},
+        ja:{m:'¥3,000',y:'¥16,500',l:'¥33,000'},
+        en:{m:'$30',y:'$165',l:'$330'},
+        zh:{m:'¥200',y:'¥1,100',l:'¥2,200'},
+        ar:{m:'$30',y:'$165',l:'$330'},
+        es:{m:'€28',y:'€154',l:'€310'},
+        de:{m:'€28',y:'€154',l:'€310'},
+        fr:{m:'28€',y:'154€',l:'310€'}
+    };
+    var t = J[fl] || J.ko;
+    var pr = PRICES[fl] || PRICES.ko;
+    var ttl = document.getElementById('txtJoinTitle');
+    var sub = document.getElementById('txtJoinSub');
+    var note = document.getElementById('txtJoinNote');
+    var grid = document.getElementById('frJoinPlans');
+    if (!grid) return;
+    if (ttl) ttl.innerHTML = t.title;
+    if (sub) sub.textContent = t.sub;
+    if (note) note.textContent = t.note;
+    var plans = [
+        { key:'monthly',  name:t.monthly,  price:pr.m, per:t.perM, best:false },
+        { key:'annual',   name:t.annual,   price:pr.y, per:t.perY, best:true  },
+        { key:'lifetime', name:t.lifetime, price:pr.l, per:t.perL, best:false }
+    ];
+    plans.forEach(function(pl){
+        var card = document.createElement('div');
+        card.className = 'fr-join-card' + (pl.best ? ' best' : '');
+        card.innerHTML = (pl.best ? '<div class="fr-join-badge">' + t.best + '</div>' : '')
+            + '<div class="fr-join-name">' + pl.name + '</div>'
+            + '<div class="fr-join-price">' + pl.price + '<small>' + pl.per + '</small></div>'
+            + '<button class="fr-join-cta" data-plan="' + pl.key + '" data-label="' + pl.name + '">' + t.cta + '</button>';
+        grid.appendChild(card);
+    });
+    grid.addEventListener('click', function(e){
+        var b = e.target.closest('.fr-join-cta');
+        if (!b) return;
+        // Phase 1: 가입 신청 폼으로 이동 + 선택 요금제를 문의내용에 기록
+        var label = b.getAttribute('data-label') || '';
+        var msg = document.getElementById('frMsg');
+        if (msg) {
+            var tag = '[가맹점 가입 희망 요금제: ' + label + '] ';
+            if (msg.value.indexOf('[가맹점 가입 희망 요금제') === -1) msg.value = tag + msg.value;
+            else msg.value = msg.value.replace(/\[가맹점 가입 희망 요금제:[^\]]*\]\s*/, tag);
+        }
+        var sec = document.getElementById('inquiry');
+        if (sec) sec.scrollIntoView({ behavior:'smooth' });
+        var nm = document.getElementById('frName');
+        if (nm) setTimeout(function(){ nm.focus(); }, 500);
     });
 })();
 </script>
