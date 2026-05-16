@@ -1598,5 +1598,7 @@
   "cart_request_ph": "요청사항을 입력해주세요 (선택)",
   "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> 파일은 각 상품의 <b style=\"color:#dc2626;\">📎 파일 첨부</b> 버튼으로 PDF 또는 이미지를 첨부해 주세요.",
   "cart_bulk_upload": "파일 일괄 업로드",
-  "cart_design_request": "디자인이 없으시면 의뢰해주세요"
+  "cart_design_request": "디자인이 없으시면 의뢰해주세요",
+  "img_tool_lock": "배경고정",
+  "img_tool_beauty": "보정"
 }

@@ -692,6 +692,8 @@ if ('caches' in window) {
             var qs = new URLSearchParams(location.search);
             var wantEditor = qs.get('editor') === '1';
             var wantSearch = qs.get('search') === '1';
+            // 2026-05-16: 에디터 전용 진입(?editor=1) — 탑바를 디자인 다운로드 전용으로
+            if (wantEditor) { try { document.body.classList.add('editor-designonly'); } catch(e){} }
             if (!wantEditor && !wantSearch) return;
             var tries = 0;
             var iv = setInterval(function(){
@@ -712,7 +714,20 @@ if ('caches' in window) {
     <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
 </button>
 
+<!-- 2026-05-16: 에디터 전용 진입 시 탑바 다운로드 버튼 -->
+<button class="btn" id="editorTopDownload" onclick="if(window.quickDownloadPng)window.quickDownloadPng();" style="display:none; margin-right:5px; background:#059669; border:none; color:#fff; padding:8px 20px; border-radius:8px; font-weight:700;">
+    <i class="fa-solid fa-download"></i> <span data-i18n="btn_download" style="margin-left:4px;">다운로드</span>
+</button>
+
 <style>
+    /* 2026-05-16: 에디터 전용 모드 — 탑바를 디자인 다운로드 전용으로 정리 */
+    body.editor-designonly #btnHomeTop,
+    body.editor-designonly #btnOrderTop,
+    body.editor-designonly #btnLoginBtn,
+    body.editor-designonly #btnMyLibrary,
+    body.editor-designonly #btnOrderTracking,
+    body.editor-designonly #siteNavBar { display:none !important; }
+    body.editor-designonly #editorTopDownload { display:inline-flex !important; align-items:center; }
     @keyframes purchaseBtnGradient {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }

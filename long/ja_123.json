@@ -1599,6 +1599,8 @@
   "dsm_size_error": "幅と高さを正しく入力してください。",
   "dsm_editor_error": "エディターの読み込み中にエラーが発生しました。",
   "img_tool_replace": "差し替え",
+  "img_tool_lock": "背景固定",
+  "img_tool_beauty": "補正",
   "btn_crop_canvas": "切り抜き",
   "menu_retouch": "補正",
   "panel_retouch": "ポートレート補正",

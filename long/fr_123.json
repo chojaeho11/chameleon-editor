@@ -1963,5 +1963,7 @@
   "cart_request_ph": "Entrez vos remarques (optionnel)",
   "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Joignez les fichiers via le bouton <b style=\"color:#dc2626;\">📎 Joindre</b> de chaque produit en PDF ou image.",
   "cart_bulk_upload": "Télécharger les fichiers en lot",
-  "cart_design_request": "Pas de design ? Faites une demande"
+  "cart_design_request": "Pas de design ? Faites une demande",
+  "img_tool_lock": "Verrouiller",
+  "img_tool_beauty": "Retouche"
 }

@@ -1963,5 +1963,7 @@
   "cart_request_ph": "Anmerkungen eingeben (optional)",
   "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Dateien bitte uber den <b style=\"color:#dc2626;\">📎 Datei anhangen</b> Button als PDF oder Bild hochladen.",
   "cart_bulk_upload": "Dateien gesammelt hochladen",
-  "cart_design_request": "Kein Design? Jetzt beauftragen"
+  "cart_design_request": "Kein Design? Jetzt beauftragen",
+  "img_tool_lock": "Hintergrund sperren",
+  "img_tool_beauty": "Korrektur"
 }

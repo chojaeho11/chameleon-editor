@@ -1963,5 +1963,7 @@
   "cart_request_ph": "Ingrese solicitudes (opcional)",
   "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> Adjunte archivos con el boton <b style=\"color:#dc2626;\">📎 Adjuntar</b> de cada producto como PDF o imagen.",
   "cart_bulk_upload": "Subir archivos en lote",
-  "cart_design_request": "¿Sin diseño? Solicítelo aquí"
+  "cart_design_request": "¿Sin diseño? Solicítelo aquí",
+  "img_tool_lock": "Fijar fondo",
+  "img_tool_beauty": "Retoque"
 }
