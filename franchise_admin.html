@@ -45,6 +45,10 @@ select option{background:#1d1640;}
 .prod-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
 .prod-toolbar input{flex:1;min-width:160px;}
 .prod-count{font-size:13px;font-weight:800;color:#c4b5fd;}
+.cat-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.cat-chip{padding:7px 13px;border-radius:999px;border:1.5px solid rgba(167,139,250,0.3);background:rgba(255,255,255,0.04);color:#cfc8ee;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.cat-chip:hover{border-color:rgba(167,139,250,0.6);}
+.cat-chip.on{background:linear-gradient(135deg,#7c3aed,#a855f7);border-color:transparent;color:#fff;}
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:460px;overflow-y:auto;padding:4px;}
 .prod-item{position:relative;border:1.5px solid rgba(167,139,250,0.22);border-radius:11px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,0.03);transition:border-color .15s;}
 .prod-item:hover{border-color:rgba(167,139,250,0.55);}
@@ -135,10 +139,11 @@ select option{background:#1d1640;}
       <div class="desc">카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.</div>
       <div class="prod-toolbar">
         <input type="text" id="prodSearch" placeholder="제품 검색…">
-        <button class="btn btn-ghost btn-sm" id="btnSelectAll">전체 선택</button>
+        <button class="btn btn-ghost btn-sm" id="btnSelectAll">현재 목록 전체선택</button>
         <button class="btn btn-ghost btn-sm" id="btnClearAll">전체 해제</button>
         <span class="prod-count" id="prodCount">0개 선택</span>
       </div>
+      <div class="cat-chips" id="catChips"></div>
       <div class="prod-grid" id="prodGrid"><div style="color:#9b94c4;font-size:13px;padding:20px;">제품을 불러오는 중…</div></div>
     </div>
 
@@ -161,7 +166,7 @@ select option{background:#1d1640;}
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
-  var state = { user:null, franchise:null, products:[], selected:{}, logoUrl:'' };
+  var state = { user:null, franchise:null, products:[], selected:{}, logoUrl:'', activeCat:'ALL', topMap:{}, subToTop:{} };
 
   function toast(msg, kind){
     var t = document.createElement('div');
@@ -267,29 +272,76 @@ select option{background:#1d1640;}
   }
   $('btnLogout1').onclick = logout;
 
-  // ===== 3. 제품 목록 =====
+  // ===== 3. 제품 목록 (카테고리별) =====
+  async function loadCategories(){
+    var topMap = {}, subToTop = {};
+    try {
+      var tc = await sb.from('admin_top_categories').select('code,name,sort_order').order('sort_order',{ascending:true});
+      (tc.data||[]).forEach(function(t){ topMap[t.code] = t.name || t.code; });
+    } catch(e){ console.warn('topcat load', e); }
+    try {
+      var sc = await sb.from('admin_categories').select('code,name,top_category_code');
+      (sc.data||[]).forEach(function(c){
+        subToTop[c.code] = c.top_category_code || null;
+        if (!c.top_category_code && !topMap[c.code]) topMap[c.code] = c.name || c.code;
+      });
+    } catch(e){ console.warn('subcat load', e); }
+    state.topMap = topMap; state.subToTop = subToTop;
+  }
+  function productTopCat(p){
+    var cat = p.category || '';
+    var top = state.subToTop[cat];
+    if (top && state.topMap[top]) return top;
+    if (state.topMap[cat]) return cat;       // category 자체가 상위 카테고리
+    return '_etc';
+  }
+
   async function loadProducts(){
     try {
+      await loadCategories();
       var r = await sb.from('admin_products')
-        .select('code,name,name_jp,name_us,price,img_url,category,partner_status,partner_id')
+        .select('code,name,name_jp,name_us,price,img_url,category,partner_id')
         .order('sort_order',{ascending:true})
-        .limit(500);
+        .limit(800);
       if (r.error) throw r.error;
       // 본사 제품만 — 파트너 등록 상품 제외
       state.products = (r.data||[]).filter(function(p){ return !p.partner_id; });
+      state.products.forEach(function(p){ p._top = productTopCat(p); });
+      renderChips();
       renderProducts();
     } catch(e){
       $('prodGrid').innerHTML = '<div style="color:#ef4444;font-size:13px;padding:20px;">제품을 불러오지 못했습니다: '+(e.message||e)+'</div>';
     }
   }
 
-  function renderProducts(){
+  function renderChips(){
+    var counts = {};
+    state.products.forEach(function(p){ counts[p._top] = (counts[p._top]||0)+1; });
+    var html = '<div class="cat-chip'+(state.activeCat==='ALL'?' on':'')+'" data-cat="ALL">전체 ('+state.products.length+')</div>';
+    Object.keys(state.topMap).forEach(function(code){
+      if (!counts[code]) return;
+      html += '<div class="cat-chip'+(state.activeCat===code?' on':'')+'" data-cat="'+code+'">'+state.topMap[code]+' ('+counts[code]+')</div>';
+    });
+    if (counts['_etc']) html += '<div class="cat-chip'+(state.activeCat==='_etc'?' on':'')+'" data-cat="_etc">기타 ('+counts['_etc']+')</div>';
+    var chips = $('catChips');
+    chips.innerHTML = html;
+    chips.querySelectorAll('.cat-chip').forEach(function(c){
+      c.onclick = function(){ state.activeCat = c.dataset.cat; renderChips(); renderProducts(); };
+    });
+  }
+
+  function filteredProducts(){
     var q = ($('prodSearch').value||'').toLowerCase().trim();
-    var grid = $('prodGrid');
-    var list = state.products.filter(function(p){
+    return state.products.filter(function(p){
+      if (state.activeCat !== 'ALL' && p._top !== state.activeCat) return false;
       if (!q) return true;
       return ((p.name||'')+(p.name_us||'')+(p.code||'')).toLowerCase().indexOf(q) >= 0;
     });
+  }
+
+  function renderProducts(){
+    var grid = $('prodGrid');
+    var list = filteredProducts();
     if (!list.length){ grid.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:20px;">제품이 없습니다.</div>'; updateCount(); return; }
     grid.innerHTML = '';
     list.forEach(function(p){
@@ -317,7 +369,7 @@ select option{background:#1d1640;}
   }
   $('prodSearch').addEventListener('input', renderProducts);
   $('btnSelectAll').onclick = function(){
-    state.products.forEach(function(p){ state.selected[p.code]=true; });
+    filteredProducts().forEach(function(p){ state.selected[p.code]=true; });
     renderProducts();
   };
   $('btnClearAll').onclick = function(){ state.selected = {}; renderProducts(); };
