@@ -395,7 +395,7 @@ export function renderShortcutButtons(containerId) {
     // Localized labels
     const L = {
         kr: {
-            self_design: '디자인 에디터',
+            self_design: '디자인 에디터 — 캔바보다 쉬운 강력한 무료 에디터',
             quick_quote: '매니저 연결',
             product_search: '제품검색',
             // ── Design Market banner (left) ──
@@ -418,7 +418,7 @@ export function renderShortcutButtons(containerId) {
             tg_cta: '가맹 문의하기'
         },
         ja: {
-            self_design: 'デザインエディタ',
+            self_design: 'デザインエディタ — Canvaより簡単で強力な無料エディタ',
             quick_quote: 'マネージャーと相談',
             product_search: '商品検索',
             hub_title: '世界中のサービスをバンドする',
@@ -438,7 +438,7 @@ export function renderShortcutButtons(containerId) {
             tg_cta: '加盟お問い合わせ'
         },
         en: {
-            self_design: 'Design Editor',
+            self_design: 'Design Editor — A powerful free editor, easier than Canva',
             quick_quote: 'Talk to Manager',
             product_search: 'Search',
             hub_title: 'Band every service in the world',
@@ -458,7 +458,7 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'Franchise Inquiry'
         },
         zh: {
-            self_design: '设计编辑器',
+            self_design: '设计编辑器 — 比Canva更简单的强大免费编辑器',
             quick_quote: '联系经理',
             product_search: '产品搜索',
             hub_title: '联结世界上所有的服务',
@@ -478,7 +478,7 @@ export function renderShortcutButtons(containerId) {
             tg_cta: '加盟咨询'
         },
         ar: {
-            self_design: 'محرر التصميم',
+            self_design: 'محرر التصميم — محرر مجاني قوي أسهل من Canva',
             quick_quote: 'تواصل مع المدير',
             product_search: 'بحث المنتجات',
             hub_title: 'اجمع كل خدمات العالم معاً',
@@ -498,7 +498,7 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'استفسار الامتياز'
         },
         es: {
-            self_design: 'Editor de Diseño',
+            self_design: 'Editor de Diseño — Potente editor gratis, más fácil que Canva',
             quick_quote: 'Hablar con Gerente',
             product_search: 'Buscar',
             hub_title: 'Conecta todos los servicios del mundo',
@@ -518,7 +518,7 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'Consulta Franquicia'
         },
         de: {
-            self_design: 'Design-Editor',
+            self_design: 'Design-Editor — Starker Gratis-Editor, einfacher als Canva',
             quick_quote: 'Manager kontaktieren',
             product_search: 'Suche',
             hub_title: 'Alle Dienste der Welt verbinden',
@@ -538,7 +538,7 @@ export function renderShortcutButtons(containerId) {
             tg_cta: 'Franchise-Anfrage'
         },
         fr: {
-            self_design: 'Éditeur de Design',
+            self_design: 'Éditeur de Design — Éditeur gratuit puissant, plus simple que Canva',
             quick_quote: 'Contacter le Manager',
             product_search: 'Recherche',
             hub_title: 'Relier tous les services du monde',
@@ -565,7 +565,7 @@ export function renderShortcutButtons(containerId) {
         .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
         /* 2026-05-16: 제품검색 제거 — 디자인 에디터 버튼만. BAND/WITH 배너처럼 큰 풀폭 버튼 */
         .adv-ext-grid{display:block;width:100%;box-sizing:border-box;}
-        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;text-decoration:none;padding:22px 26px;border-radius:18px;font-size:18px;font-weight:900;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;position:relative;}
+        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;text-decoration:none;padding:20px 26px;border-radius:18px;font-size:18px;font-weight:900;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;width:100%;box-sizing:border-box;white-space:normal;text-align:center;line-height:1.35;position:relative;}
         .adv-ext-btn i{flex-shrink:0;font-size:20px;}
         .adv-ext-btn:hover{transform:translateY(-1px);}
 
@@ -626,7 +626,7 @@ export function renderShortcutButtons(containerId) {
         .tg-hub-cta i{transition:transform 0.22s;}
 
         @media(max-width:768px){
-            .adv-ext-btn{padding:18px 20px;font-size:15px;gap:8px;border-radius:16px;}
+            .adv-ext-btn{padding:16px 18px;font-size:15px;gap:8px;border-radius:16px;}
             .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
             .dm-hub-band{font-size:28px;letter-spacing:-1px;}
             .dm-hub-title{font-size:14px;}
