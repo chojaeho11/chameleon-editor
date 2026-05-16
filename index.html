@@ -859,6 +859,12 @@ if ('caches' in window) {
             var M = { kr:'매니저 연결', ja:'マネージャーと相談', en:'Talk to Manager', zh:'联系经理', es:'Hablar con un gerente', de:'Mit Manager sprechen', fr:'Parler au responsable', ar:'تواصل مع المدير' };
             var el = document.getElementById('heroMgrConnectLabel');
             if (el && M[lang]) el.textContent = M[lang];
+            // 2026-05-16: 한국은 아래 '매니저 견적 빠른 주문' 카드가 있어 hero 버튼 숨김 (해외만 노출)
+            var btn = document.getElementById('heroMgrConnectBtn');
+            if (btn && (lang === 'kr' || lang === 'ko')) {
+                var wrap = btn.parentElement;
+                if (wrap) wrap.style.display = 'none';
+            }
         })();
         </script>
 
