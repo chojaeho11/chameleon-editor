@@ -563,11 +563,10 @@ export function renderShortcutButtons(containerId) {
     container.innerHTML = `
         <style>
         .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
-        /* 2026-05-16: 제품검색 제거 — 디자인 에디터 버튼만, 가운데 정렬 + 컴팩트 */
-        .adv-ext-grid{display:flex;justify-content:center;gap:10px;width:100%;box-sizing:border-box;}
-        /* 알약(pill) 모양 + 버튼별 그라데이션 */
-        .adv-ext-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#fff;text-decoration:none;padding:14px 38px;border-radius:999px;font-size:15px;font-weight:800;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;box-sizing:border-box;white-space:nowrap;position:relative;}
-        .adv-ext-btn i{flex-shrink:0;font-size:17px;}
+        /* 2026-05-16: 제품검색 제거 — 디자인 에디터 버튼만. BAND/WITH 배너처럼 큰 풀폭 버튼 */
+        .adv-ext-grid{display:block;width:100%;box-sizing:border-box;}
+        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;text-decoration:none;padding:22px 26px;border-radius:18px;font-size:18px;font-weight:900;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;position:relative;}
+        .adv-ext-btn i{flex-shrink:0;font-size:20px;}
         .adv-ext-btn:hover{transform:translateY(-1px);}
 
         /* 디자인 에디터 — 검정 그라데이션 (45도, 정적, 입체감) */
@@ -627,8 +626,7 @@ export function renderShortcutButtons(containerId) {
         .tg-hub-cta i{transition:transform 0.22s;}
 
         @media(max-width:768px){
-            .adv-ext-grid{gap:8px;}
-            .adv-ext-btn{padding:13px 30px;font-size:14px;gap:6px;border-radius:999px;}
+            .adv-ext-btn{padding:18px 20px;font-size:15px;gap:8px;border-radius:16px;}
             .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
             .dm-hub-band{font-size:28px;letter-spacing:-1px;}
             .dm-hub-title{font-size:14px;}
