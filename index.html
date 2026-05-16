@@ -975,24 +975,11 @@ if ('caches' in window) {
             <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
                 <div style="font-size:32px; line-height:1; flex-shrink:0;">🌐</div>
                 <div style="flex:1; min-width:0;">
-                    <div id="overseasBranchTitle" style="font-size:16px; font-weight:800; color:#78350f; margin-bottom:4px;">글로벌 지사 안내</div>
-                    <div id="overseasBranchDesc" style="font-size:12px; color:#92400e; line-height:1.5;">전 세계 어디서나 가까운 지사로 문의하세요. 현지 언어로 상담드립니다.</div>
+                    <div id="overseasBranchTitle" style="font-size:16px; font-weight:800; color:#78350f; margin-bottom:4px;">해외 파트너 모집</div>
+                    <div id="overseasBranchDesc" style="font-size:12px; color:#92400e; line-height:1.5;">전 세계 어디서나 카멜레온프린팅의 가맹 파트너로 함께하세요. 현지 언어로 상담해 드립니다.</div>
                 </div>
             </div>
-            <div id="overseasBranchList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px;">
-                <a href="tel:09053970420" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🇯🇵</span><span data-ob-key="jp">일본지사 나나미</span></div>
-                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">090-5397-0420</b>
-                </a>
-                <a href="tel:212617901092" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🇲🇦</span><span data-ob-key="ma">모로코지사 히바</span></div>
-                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">212-617-901-092</b>
-                </a>
-                <a href="tel:0313661984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1.5px solid #fbbf24; border-radius:10px; text-decoration:none; color:#78350f; font-size:12px; font-weight:700; text-align:center; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🇰🇷</span><span data-ob-key="kr">한국사무실</span></div>
-                    <b style="color:#b45309; font-size:13px; white-space:nowrap;">031-366-1984</b>
-                </a>
-            </div>
+            <!-- 2026-05-16: 해외몰 — 지사 전화번호 카드 제거, 파트너 신청 버튼만 유지 -->
             <div style="display:flex; justify-content:center; align-items:center; margin-top:6px;">
                 <a href="/franchise" id="overseasFranchiseBtn" style="padding:11px 22px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(180,83,9,0.45); letter-spacing:0.5px; white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
                     🤝 <span id="overseasFranchiseBtnLabel">해외가맹점 모집</span>
@@ -1010,14 +997,14 @@ if ('caches' in window) {
              (host.indexOf('cafe3355.com') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
              (window.CURRENT_LANG || 'kr'));
         var T = {
-            kr: { title:'글로벌 지사 안내', desc:'전 세계 어디서나 가까운 지사로 문의하세요. 현지 언어로 상담드립니다.', jp:'일본지사 나나미', ma:'모로코지사 히바', kr:'한국사무실', btn:'해외가맹점 모집' },
-            ja: { title:'グローバル支社のご案内', desc:'世界中どこからでも、お近くの支社へお問い合わせください。現地語でご対応いたします。', jp:'日本支社 ナナミ', ma:'モロッコ支社 ヒバ', kr:'韓国本社', btn:'海外加盟店募集' },
-            en: { title:'Global Branches', desc:'Reach our local branch from anywhere in the world — local language support.', jp:'Japan — Nanami', ma:'Morocco — Hiba', kr:'Korea Head Office', btn:'Overseas Franchise' },
-            zh: { title:'全球分公司', desc:'世界各地均可联系最近的分公司，本地语言服务。', jp:'日本分公司 娜娜美', ma:'摩洛哥分公司 希巴', kr:'韩国总部', btn:'海外加盟招募' },
-            es: { title:'Sucursales Globales', desc:'Contacte con la sucursal más cercana desde cualquier parte del mundo.', jp:'Japón — Nanami', ma:'Marruecos — Hiba', kr:'Oficina Corea', btn:'Franquicia Internacional' },
-            de: { title:'Globale Niederlassungen', desc:'Erreichen Sie von überall die nächste Niederlassung — lokaler Support.', jp:'Japan — Nanami', ma:'Marokko — Hiba', kr:'Korea Büro', btn:'Internationale Franchise' },
-            fr: { title:'Filiales Mondiales', desc:'Contactez la filiale la plus proche partout dans le monde — support local.', jp:'Japon — Nanami', ma:'Maroc — Hiba', kr:'Bureau Corée', btn:'Franchise Internationale' },
-            ar: { title:'الفروع العالمية', desc:'تواصل مع أقرب فرع لك من أي مكان في العالم — دعم بلغتك المحلية.', jp:'فرع اليابان — ناNAمي', ma:'فرع المغرب — هبة', kr:'مكتب كوريا', btn:'الامتياز الدولي' }
+            kr: { title:'해외 파트너 모집', desc:'전 세계 어디서나 카멜레온프린팅의 가맹 파트너로 함께하세요. 현지 언어로 상담해 드립니다.', btn:'해외가맹점 모집' },
+            ja: { title:'海外パートナー募集', desc:'世界中どこからでもカメレオンプリンティングの加盟パートナーになりませんか。現地語でご相談を承ります。', btn:'海外加盟店募集' },
+            en: { title:'Become Our Partner', desc:'Join Chameleon Printing as a franchise partner from anywhere in the world — local language support.', btn:'Overseas Franchise' },
+            zh: { title:'海外合作伙伴招募', desc:'欢迎世界各地的伙伴加入Chameleon Printing成为加盟伙伴，提供本地语言咨询。', btn:'海外加盟招募' },
+            es: { title:'Conviértete en Socio', desc:'Únase a Chameleon Printing como socio de franquicia desde cualquier parte del mundo — soporte en su idioma.', btn:'Franquicia Internacional' },
+            de: { title:'Partner werden', desc:'Werden Sie weltweit Franchise-Partner von Chameleon Printing — Beratung in Ihrer Sprache.', btn:'Internationale Franchise' },
+            fr: { title:'Devenez Partenaire', desc:'Rejoignez Chameleon Printing comme partenaire franchisé depuis le monde entier — support local.', btn:'Franchise Internationale' },
+            ar: { title:'كن شريكنا', desc:'انضم إلى Chameleon Printing كشريك امتياز من أي مكان في العالم — دعم بلغتك المحلية.', btn:'الامتياز الدولي' }
         };
         var t = T[lang] || T.kr;
         function $(id){ return document.getElementById(id); }
