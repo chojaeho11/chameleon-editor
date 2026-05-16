@@ -657,7 +657,37 @@ if ('caches' in window) {
     <div class="ctx-item" id="ctxLock"><i class="fa-solid fa-lock"></i> <span data-i18n="ctx_lock">잠금 (Lock)</span></div>
 </div>
 <div class="topbar">
-        <div class="brand" onclick="window.goHome()"><i class="fa-solid fa-palette"></i> Chameleon</div>
+        <div class="brand" id="siteBrand" onclick="window.goHome()"><i class="fa-solid fa-palette"></i> Chameleon</div>
+        <script>
+        // 2026-05-16: 가맹점 스토어 경유(_franchise_ref) 시 — 헤더 브랜드를 가맹점 로고/상호로 교체.
+        //   고객이 /store/{slug} 에서 상품을 눌러 주문 페이지로 와도 사장님 홈페이지처럼 보이게.
+        (function(){
+            var ref = '';
+            try { ref = sessionStorage.getItem('_franchise_ref') || ''; } catch(e){}
+            if (!ref) { try { ref = (new URLSearchParams(location.search).get('fr')||'').toLowerCase().replace(/[^a-z0-9-]/g,''); } catch(e){} }
+            if (!ref) return;
+            var SUPA = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+            var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+            fetch(SUPA + '/rest/v1/franchises?slug=eq.' + encodeURIComponent(ref) + '&select=company_name,logo_url,slug,phone&limit=1', {
+                headers: { apikey: KEY, Authorization: 'Bearer ' + KEY }
+            }).then(function(r){ return r.json(); }).then(function(rows){
+                if (!rows || !rows.length) return;
+                var f = rows[0];
+                window.__FRANCHISE = f;
+                var tries = 0;
+                (function apply(){
+                    var b = document.getElementById('siteBrand');
+                    if (!b){ if (tries++ < 30) setTimeout(apply, 300); return; }
+                    var logo = f.logo_url
+                        ? '<img src="' + f.logo_url + '" alt="" style="height:30px;max-width:130px;object-fit:contain;vertical-align:middle;border-radius:6px;background:#fff;padding:2px;">'
+                        : '<i class="fa-solid fa-store"></i>';
+                    b.innerHTML = logo + ' ' + (f.company_name || '');
+                    b.onclick = function(){ location.href = '/store/' + f.slug; };
+                    if (f.company_name) document.title = f.company_name;
+                })();
+            }).catch(function(){});
+        })();
+        </script>
         
         <div class="template-tabs" style="display:none;">
         </div>
