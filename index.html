@@ -9399,7 +9399,9 @@ window.getTinyThumb = function(url, size = 150) {
     } else if (_langHostname.includes('cafe2626.com') || _langHostname.includes('cafe2626')) {
         detectedLang = 'kr'; // 한국 도메인: 항상 한국어
     } else if (_langHostname.includes('cafe3355.com') || _langHostname.includes('chameleon.design')) {
-        if (!detectedLang) detectedLang = 'en'; // 미국 도메인: lang 파라미터 없으면 영어
+        // 미국/글로벌 도메인: 한국어는 cafe2626.com 전용 도메인에서만 — lang 이 없거나
+        // ko/kr 로 들어와도(로그인·에디터 흐름이 잘못 붙인 경우) 영어로 고정.
+        if (!detectedLang || detectedLang === 'ko' || detectedLang === 'kr') detectedLang = 'en';
     } else if (!detectedLang) {
         detectedLang = 'kr'; // 그 외 파라미터 없으면 한국어
     }
@@ -9409,6 +9411,8 @@ window.getTinyThumb = function(url, size = 150) {
     if (CURRENT_LANG === 'jp') CURRENT_LANG = 'ja';
     if (CURRENT_LANG === 'us') CURRENT_LANG = 'en';
     if (CURRENT_LANG === 'cn') CURRENT_LANG = 'zh';
+    // ko(표준 코드) → kr(내부 코드/번역파일명) 정규화 — long/ko_*.json 404 방지
+    if (CURRENT_LANG === 'ko') CURRENT_LANG = 'kr';
     window.CURRENT_LANG = CURRENT_LANG;
 
     console.log(`🌍 접속 모드: ${CURRENT_LANG} (Domain: ${window.location.hostname})`);
