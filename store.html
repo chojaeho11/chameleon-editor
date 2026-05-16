@@ -129,7 +129,7 @@ img{display:block;}
     if (codes.length){
       try {
         var pr = await sb.from('admin_products')
-          .select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order')
+          .select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,is_custom_size')
           .in('code', codes).order('sort_order',{ascending:true});
         if (!pr.error) products = pr.data || [];
       } catch(e){ console.warn('products', e); }
@@ -202,9 +202,17 @@ img{display:block;}
 
     // 카테고리별 섹션 — 허니콤보드(topMap sort_order 순)부터 아래로 쭉, 기타 마지막
     function cardHtml(p){
-      var nm = p[ccy.n] || p.name || p.code;
+      var nm = (p[ccy.n] || p.name || p.code).replace(/<br\s*\/?>/gi,' ');
       var pv = p[ccy.f] || p.price || 0;
       var price = pv ? (ccy.s + Number(pv).toLocaleString()) : '가격 문의';
+      // 면적가(회배당) 상품 — 1m² 단가 대신 5×5cm 기준가 표시 (아크릴·스티커)
+      var _cat = (p.category||'').toLowerCase();
+      var _nm = ((p.name||'')+' '+(p.name_us||'')).toLowerCase();
+      if (p.is_custom_size === true && pv > 0 && (
+            /^acr/.test(_cat) || _cat === 'acrylic' ||
+            _cat.indexOf('sticker') >= 0 || /스티커|sticker/i.test(_nm))) {
+        price = ccy.s + Math.round(Number(pv) * 25 / 10000).toLocaleString() + '~';
+      }
       var img = p.img_url || 'https://placehold.co/400?text=No+Image';
       return '<a class="st-card" href="/?product='+encodeURIComponent(p.code)+'&fr='+encodeURIComponent(slug)+'">'
         + '<img class="ci" src="'+esc(img)+'" loading="lazy" onerror="this.src=\'https://placehold.co/400?text=No+Image\'">'
