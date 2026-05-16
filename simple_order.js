@@ -1651,9 +1651,10 @@
     function updateButtons() {
         // 2026-05-13: 양면 가벽이면 뒷면 파일도 필수
         const needBack = !!(state.isWall && state.wallSide === 'double');
-        const backOk = !needBack || !!state.fileBack;
-        // 2026-05-15: 원판·금액주문은 인쇄/파일 없이도 주문 가능
-        const fileOk = (state.isRawBoard || state.isAmountOrder) ? true : !!state.file;
+        // 2026-05-16: 파일 업로드는 선택사항 — 파일 없이도 주문 가능.
+        //   단, 앞면 파일을 올린 양면 가벽은 뒷면도 함께 올려야 함.
+        const backOk = !needBack || !state.file || !!state.fileBack;
+        const fileOk = true;
         const ready = !!(state.product && fileOk && state.qty > 0 && backOk);
         const btnC = document.getElementById('soBtnCart');
         const btnB = document.getElementById('soBtnBuy');
@@ -3834,7 +3835,8 @@
         if (btnB) btnB.disabled = true;
         // 2026-05-14: 풀스크린 업로드 오버레이 표시 — 더블클릭 / 페이지 이탈 방지
         // 2026-05-15: 원판·금액주문은 파일 업로드 없음 — 오버레이 라벨도 다르게
-        var _noFileFlow = state.isRawBoard || state.isAmountOrder;
+        // 2026-05-16: 파일을 올리지 않은 경우도 파일 업로드 스킵 (선택사항)
+        var _noFileFlow = state.isRawBoard || state.isAmountOrder || !state.file;
         showUploadOverlay(
             _noFileFlow
                 ? tr('장바구니에 담는 중...', 'カートに追加中...', 'Adding to cart...')
