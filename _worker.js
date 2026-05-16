@@ -993,6 +993,18 @@ ${hreflangTags('/editor')}
             'fabric': '/cotton_designer.html',
             'fabric-designer': '/cotton_designer.html',
         };
+        // 가맹점 스토어 — /store/{slug} (slug 무관, 동적 — store.html 이 slug 읽어 렌더)
+        if (path.indexOf('store/') === 0 && path.length > 6) {
+            const stoUrl = new URL('/store.html', url.origin);
+            let stoResp = await env.ASSETS.fetch(new Request(stoUrl.toString(), request));
+            if ((stoResp.status === 308 || stoResp.status === 301) && stoResp.headers.get('Location')) {
+                const loc = new URL(stoResp.headers.get('Location'), url.origin);
+                stoResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+            }
+            const stoHeaders = new Headers(stoResp.headers);
+            stoHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            return new Response(stoResp.body, { status: 200, headers: stoHeaders });
+        }
         if (STANDALONE_PAGES[path]) {
             const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);
             let stResp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));

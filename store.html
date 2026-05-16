@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로딩 중…</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#f5f6fa;color:#1e2233;-webkit-text-size-adjust:100%;}
+a{text-decoration:none;color:inherit;}
+img{display:block;}
+.st-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #eceaf3;box-shadow:0 2px 12px rgba(30,27,75,0.05);}
+.st-header-in{max-width:1140px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.st-brand{display:flex;align-items:center;gap:12px;min-width:0;}
+.st-brand img{height:42px;max-width:160px;object-fit:contain;border-radius:8px;}
+.st-brand .nm{font-size:18px;font-weight:900;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.st-callbtn{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:800;font-size:14px;padding:10px 18px;border-radius:999px;white-space:nowrap;}
+.st-hero{background:linear-gradient(135deg,#2e1065,#4c1d95 45%,#7c3aed);color:#fff;}
+.st-hero-in{max-width:1140px;margin:0 auto;padding:48px 20px 54px;text-align:center;}
+.st-hero .tag{display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;margin-bottom:16px;letter-spacing:.3px;}
+.st-hero h1{font-size:34px;font-weight:900;line-height:1.25;letter-spacing:-0.5px;}
+.st-hero p{margin-top:12px;font-size:15px;color:#d8ccff;line-height:1.6;}
+.st-hero .meta{margin-top:18px;font-size:14px;font-weight:700;color:#e9e2ff;}
+.st-wrap{max-width:1140px;margin:0 auto;padding:34px 20px 70px;}
+.st-secttl{font-size:20px;font-weight:900;margin-bottom:4px;}
+.st-sectsub{font-size:13px;color:#7c7795;margin-bottom:18px;}
+.st-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.st-chip{padding:8px 15px;border-radius:999px;border:1.5px solid #e1ddef;background:#fff;color:#4b4669;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+.st-chip:hover{border-color:#a855f7;}
+.st-chip.on{background:linear-gradient(135deg,#7c3aed,#a855f7);border-color:transparent;color:#fff;}
+.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;}
+.st-card{background:#fff;border:1px solid #eceaf3;border-radius:16px;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 4px 16px rgba(30,27,75,0.06);}
+.st-card:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(124,58,237,0.16);}
+.st-card .ci{width:100%;aspect-ratio:1;object-fit:cover;background:#f0eef7;}
+.st-card .cb{padding:14px 15px 16px;}
+.st-card .cn{font-size:14px;font-weight:700;line-height:1.4;min-height:38px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.st-card .cp{margin-top:8px;font-size:17px;font-weight:900;color:#7c3aed;}
+.st-card .cgo{margin-top:10px;font-size:12px;font-weight:800;color:#a855f7;}
+.st-foot{background:#1e1b3a;color:#b9b3d6;}
+.st-foot-in{max-width:1140px;margin:0 auto;padding:30px 20px;font-size:13px;line-height:1.8;}
+.st-foot .fc{color:#fff;font-weight:800;font-size:15px;margin-bottom:6px;}
+.st-foot .pw{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);font-size:12px;color:#8a84ad;}
+.st-center{max-width:440px;margin:90px auto;text-align:center;padding:0 20px;}
+.st-center .ic{font-size:54px;margin-bottom:14px;}
+.st-center h1{font-size:22px;font-weight:900;margin-bottom:10px;}
+.st-center p{font-size:14px;color:#7c7795;line-height:1.7;}
+.st-center a{display:inline-block;margin-top:20px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:800;padding:12px 24px;border-radius:10px;font-size:14px;}
+#stLoading{text-align:center;padding:120px 0;color:#9b94c4;font-size:15px;}
+@media(max-width:600px){
+  .st-hero h1{font-size:25px;}
+  .st-hero-in{padding:38px 18px 42px;}
+  .st-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
+  .st-card .cn{font-size:13px;}
+}
+</style>
+</head>
+<body>
+<div id="stLoading">스토어를 불러오는 중…</div>
+<div id="stApp" style="display:none;"></div>
+
+<script>
+(function(){
+  'use strict';
+  var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  var m = location.pathname.match(/\/store\/([^\/?#]+)/);
+  var slug = m ? decodeURIComponent(m[1]).toLowerCase().trim() : '';
+
+  var CCY = { KR:{s:'₩',f:'price',n:'name'}, JP:{s:'¥',f:'price_jp',n:'name_jp'},
+              US:{s:'$',f:'price_us',n:'name_us'} };
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  function notFound(msg){
+    document.getElementById('stLoading').style.display='none';
+    var app = document.getElementById('stApp');
+    app.style.display='block';
+    app.innerHTML = '<div class="st-center"><div class="ic">🔍</div>'
+      + '<h1>매장을 찾을 수 없습니다</h1>'
+      + '<p>' + esc(msg||'요청하신 가맹점 스토어가 존재하지 않거나 준비 중입니다.') + '</p>'
+      + '<a href="/franchise">가맹점 안내 보기</a></div>';
+    document.title = '매장을 찾을 수 없습니다';
+  }
+
+  async function run(){
+    if (!slug){ notFound(); return; }
+    var fr = null;
+    try {
+      var r = await sb.from('franchises').select('*').eq('slug', slug).maybeSingle();
+      if (r.error) throw r.error;
+      fr = r.data;
+    } catch(e){ notFound('스토어 정보를 불러오지 못했습니다.'); return; }
+    if (!fr){ notFound(); return; }
+    if (fr.status === 'suspended'){ notFound('현재 운영이 중단된 매장입니다.'); return; }
+
+    var codes = Array.isArray(fr.selected_products) ? fr.selected_products : [];
+    var products = [];
+    if (codes.length){
+      try {
+        var pr = await sb.from('admin_products')
+          .select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order')
+          .in('code', codes).order('sort_order',{ascending:true});
+        if (!pr.error) products = pr.data || [];
+      } catch(e){ console.warn('products', e); }
+    }
+
+    // 카테고리명
+    var topMap = {}, subToTop = {};
+    try {
+      var tc = await sb.from('admin_top_categories').select('code,name,sort_order').order('sort_order',{ascending:true});
+      (tc.data||[]).forEach(function(t){ topMap[t.code]=t.name||t.code; });
+      var sc = await sb.from('admin_categories').select('code,name,top_category_code');
+      (sc.data||[]).forEach(function(c){ subToTop[c.code]=c.top_category_code||null; if(!c.top_category_code&&!topMap[c.code])topMap[c.code]=c.name||c.code; });
+    } catch(e){}
+    function topOf(p){ var t=subToTop[p.category]; if(t&&topMap[t])return t; if(topMap[p.category])return p.category; return '_etc'; }
+    products.forEach(function(p){ p._top = topOf(p); });
+
+    render(fr, products, topMap);
+  }
+
+  function render(fr, products, topMap){
+    var ccy = CCY[fr.country] || CCY.KR;
+    var company = fr.company_name || '가맹점 스토어';
+    var phone = fr.phone || '';
+    var telHref = phone.replace(/[^0-9+]/g,'');
+
+    document.title = company + ' — 공식 온라인 스토어';
+
+    var logoHtml = fr.logo_url
+      ? '<img src="'+esc(fr.logo_url)+'" alt="'+esc(company)+'">'
+      : '';
+    var callHtml = phone
+      ? '<a class="st-callbtn" href="tel:'+esc(telHref)+'">📞 '+esc(phone)+'</a>'
+      : '';
+
+    // 카테고리 칩
+    var counts = {};
+    products.forEach(function(p){ counts[p._top]=(counts[p._top]||0)+1; });
+    var chips = '<div class="st-chip on" data-cat="ALL">전체 ('+products.length+')</div>';
+    Object.keys(topMap).forEach(function(code){
+      if(!counts[code]) return;
+      chips += '<div class="st-chip" data-cat="'+esc(code)+'">'+esc(topMap[code])+' ('+counts[code]+')</div>';
+    });
+    if (counts['_etc']) chips += '<div class="st-chip" data-cat="_etc">기타 ('+counts['_etc']+')</div>';
+
+    var app = document.getElementById('stApp');
+    app.innerHTML =
+      '<header class="st-header"><div class="st-header-in">'
+      + '<div class="st-brand">'+logoHtml+'<div class="nm">'+esc(company)+'</div></div>'
+      + callHtml
+      + '</div></header>'
+      + '<section class="st-hero"><div class="st-hero-in">'
+      + '<div class="tag">✨ 카멜레온프린팅 공식 가맹점</div>'
+      + '<h1>'+esc(company)+'</h1>'
+      + '<p>허니콤보드 · 패브릭 · 광고인쇄물 · 굿즈 — 원하는 제품을 주문하세요.</p>'
+      + (phone?'<div class="meta">📞 주문 문의 '+esc(phone)+'</div>':'')
+      + '</div></section>'
+      + '<div class="st-wrap">'
+      + '<div class="st-secttl">취급 제품</div>'
+      + '<div class="st-sectsub">제품을 선택하면 주문 페이지로 이동합니다.</div>'
+      + (products.length>1 ? '<div class="st-chips" id="stChips">'+chips+'</div>' : '')
+      + '<div class="st-grid" id="stGrid"></div>'
+      + (products.length?'':'<p style="color:#9b94c4;font-size:14px;padding:30px 0;">아직 등록된 제품이 없습니다.</p>')
+      + '</div>'
+      + '<footer class="st-foot"><div class="st-foot-in">'
+      + '<div class="fc">'+esc(company)+'</div>'
+      + (phone?'<div>📞 '+esc(phone)+'</div>':'')
+      + (fr.email?'<div>✉️ '+esc(fr.email)+'</div>':'')
+      + '<div class="pw">Powered by Chameleon Printing · 본 스토어의 결제·제작은 카멜레온프린팅 시스템으로 안전하게 처리됩니다.</div>'
+      + '</div></footer>';
+
+    document.getElementById('stLoading').style.display='none';
+    app.style.display='block';
+
+    var activeCat = 'ALL';
+    function drawGrid(){
+      var grid = document.getElementById('stGrid');
+      var list = products.filter(function(p){ return activeCat==='ALL' || p._top===activeCat; });
+      grid.innerHTML = list.map(function(p){
+        var nm = p[ccy.n] || p.name || p.code;
+        var pv = p[ccy.f] || p.price || 0;
+        var price = pv ? (ccy.s + Number(pv).toLocaleString()) : '가격 문의';
+        var img = p.img_url || 'https://placehold.co/400?text=No+Image';
+        return '<a class="st-card" href="/?product='+encodeURIComponent(p.code)+'&fr='+encodeURIComponent(slug)+'">'
+          + '<img class="ci" src="'+esc(img)+'" loading="lazy" onerror="this.src=\'https://placehold.co/400?text=No+Image\'">'
+          + '<div class="cb"><div class="cn">'+esc(nm)+'</div>'
+          + '<div class="cp">'+price+'</div>'
+          + '<div class="cgo">주문하기 →</div></div></a>';
+      }).join('');
+    }
+    drawGrid();
+
+    var chipBox = document.getElementById('stChips');
+    if (chipBox){
+      chipBox.addEventListener('click', function(e){
+        var c = e.target.closest('.st-chip'); if(!c) return;
+        activeCat = c.dataset.cat;
+        chipBox.querySelectorAll('.st-chip').forEach(function(x){ x.classList.toggle('on', x===c); });
+        drawGrid();
+      });
+    }
+  }
+
+  run();
+})();
+</script>
+</body>
+</html>
