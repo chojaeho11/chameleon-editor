@@ -1255,6 +1255,16 @@
 </div>
         `;
         document.body.insertAdjacentHTML('beforeend', html);
+        // 2026-05-16: 주문수량·사이즈입력 섹션을 전달사항 아래(가격 바로 위)로 이동
+        try {
+            const priceBox = document.querySelector('#simpleOrderModal .so-price-box');
+            if (priceBox && priceBox.parentNode) {
+                ['soQtySection', 'soWallSizeSection', 'soCutPrintSizeSection', 'soBoxSizeSection', 'soCustomSizeSection'].forEach(id => {
+                    const sec = document.getElementById(id);
+                    if (sec) priceBox.parentNode.insertBefore(sec, priceBox);
+                });
+            }
+        } catch (e) { console.warn('[simple_order] 섹션 재배치 실패', e); }
         wireUploadEvents();
     }
 
