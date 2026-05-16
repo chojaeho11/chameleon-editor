@@ -842,6 +842,26 @@ if ('caches' in window) {
             <h1 class="hero-title" data-i18n="hero_title"><small class="hero-tagline">업자를 위한 도매인쇄몰</small><span>CHAMELEON<b class="ht-prn">PRINTING</b></span><em class="hero-min-order">담당 매니저와 상담하고 정확한 결제창을 받아보세요</em></h1>
         </div>
 
+        <!-- 2026-05-16: 매니저 연결 버튼 — hero(검정 영상) 안으로. 하단 바로가기에서 이전됨 -->
+        <div style="position:relative; z-index:4; display:flex; justify-content:center; margin:4px auto 2px; padding:0 16px;">
+            <a href="javascript:void(0)" id="heroMgrConnectBtn" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()"
+               style="display:inline-flex; align-items:center; justify-content:center; gap:9px; padding:15px 40px; border-radius:999px; color:#fff; font-size:16px; font-weight:800; text-decoration:none; cursor:pointer; background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#7c3aed,#4c1d95); background-size:200% 200%; box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 30px rgba(124,58,237,0.6); white-space:nowrap;">
+                <i class="fa-solid fa-headset"></i> <span id="heroMgrConnectLabel">매니저 연결</span>
+            </a>
+        </div>
+        <script>
+        (function(){
+            var u = new URLSearchParams(location.search);
+            var lang = u.get('lang') ||
+                (location.hostname.indexOf('cafe0101.com') >= 0 ? 'ja' :
+                 (location.hostname.indexOf('cafe3355.com') >= 0 || location.hostname.indexOf('chameleon.design') >= 0) ? 'en' :
+                 (window.CURRENT_LANG || 'kr'));
+            var M = { kr:'매니저 연결', ja:'マネージャーと相談', en:'Talk to Manager', zh:'联系经理', es:'Hablar con un gerente', de:'Mit Manager sprechen', fr:'Parler au responsable', ar:'تواصل مع المدير' };
+            var el = document.getElementById('heroMgrConnectLabel');
+            if (el && M[lang]) el.textContent = M[lang];
+        })();
+        </script>
+
     <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널 (추후 여기에 결제창 표시) -->
     <div id="mgrQuoteHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
         <div style="background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:1.5px solid #fbbf24; border-radius:16px; padding:22px 28px; box-shadow:0 6px 20px -8px rgba(251,191,36,0.4);">
@@ -7077,9 +7097,7 @@ async function handleSubReturn() {
                             <span id="cartFinalTotal">-</span>
                         </div>
 
-                        <div id="minOrderNotice" style="margin-top:14px; background:linear-gradient(135deg,#fffbeb,#fef3c7); border:1.5px solid #f59e0b; border-radius:10px; padding:10px 14px; text-align:center;">
-                            <span style="font-size:12px; color:#92400e; line-height:1.5;" data-i18n="min_order_notice">업자만을 위한 도매 쇼핑몰입니다. 최소 주문금액이 있는만큼 품질과 가격으로 보답하겠습니다. 소액 주문량이 너무 폭주하여 최소 주문금액을 설정하였습니다. 양해 부탁드립니다.</span>
-                        </div>
+                        <!-- 2026-05-16: 최소 주문금액 제도 폐지 — 안내 배너 제거 -->
                         <button id="btnGoCheckout" class="btn-round primary" style="margin-top:10px; width:100%; height: 50px; font-size: 16px;">
                             💳 <span data-i18n="btn_do_checkout">결제하기</span>
                         </button>

@@ -561,7 +561,7 @@ export function renderShortcutButtons(containerId) {
     container.innerHTML = `
         <style>
         .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
-        .adv-ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;box-sizing:border-box;}
+        .adv-ext-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;box-sizing:border-box;}
         /* 2026-05-13: 알약(pill) 모양 + 살짝 낮은 높이 + 버튼별 그라데이션 */
         .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;text-decoration:none;padding:22px 4px;border-radius:999px;font-size:16px;font-weight:800;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;overflow:hidden;position:relative;}
         .adv-ext-btn i{flex-shrink:0;font-size:18px;}
@@ -624,7 +624,7 @@ export function renderShortcutButtons(containerId) {
         .tg-hub-cta i{transition:transform 0.22s;}
 
         @media(max-width:768px){
-            .adv-ext-grid{grid-template-columns:repeat(3,1fr);gap:8px;}
+            .adv-ext-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
             .adv-ext-btn{padding:18px 2px;font-size:13px;gap:4px;border-radius:999px;}
             .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
             .dm-hub-band{font-size:28px;letter-spacing:-1px;}
@@ -643,9 +643,7 @@ export function renderShortcutButtons(containerId) {
                 <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn adv-ext-btn-design">
                     <i class="fa-solid fa-pen-ruler"></i> ${t.self_design}
                 </a>
-                <a href="javascript:void(0)" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()" class="adv-ext-btn adv-ext-btn-pulse">
-                    <i class="fa-solid fa-headset"></i> ${t.quick_quote}
-                </a>
+                <!-- 2026-05-16: 매니저 연결 버튼은 hero(영상) 안으로 이전 — 하단은 에디터+검색 2개만 -->
                 <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn adv-ext-btn-rainbow">
                     <i class="fa-solid fa-magnifying-glass"></i> ${t.product_search}
                 </a>

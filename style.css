@@ -5610,7 +5610,8 @@ html[lang="ja"] .hero-title {
     letter-spacing: -0.04em !important;
 }
 html[lang="ja"] .hero-title span {
-    font-size: 38px !important;
+    /* 2026-05-16: 미국(en)과 동일 크기로 — CHAMELEON PRINTING 은 라틴 브랜드라 일본어 축소 불필요 */
+    font-size: 72px !important;
     font-weight: 900 !important;
 }
 html[lang="ja"] .hero-desc {
@@ -5672,7 +5673,8 @@ html[lang="ja"] .product-detail-render div {
         line-height: 1.1 !important;
     }
     html[lang="ja"] .hero-title span {
-        font-size: 20px !important;
+        /* 2026-05-16: 모바일도 미국과 동일 크기 */
+        font-size: 40px !important;
         font-weight: 900 !important;
     }
     html[lang="ja"] .hero-desc {
