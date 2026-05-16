@@ -10002,9 +10002,16 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                     : `${p.width_mm} x ${p.height_mm}mm`)
                 : 'Option';
 
-            // 2026-05-16: 키링 등 면적가 상품 — 카드에 1m² 단가 대신 5×5cm 기준가로 표시 (비싸 보이지 않게)
+            // 2026-05-16: 키링·아크릴 굿즈만 5×5cm 기준가로 표시 (허니콤·스티커 등 일반 면적상품 제외)
             let cardPrice = formattedPrice, cardSize = sizeText;
-            if (p.is_custom_size === true && p.width_mm > 0 && p.height_mm > 0 && Number(p.price) > 0) {
+            const _agCode = (p.code || '').toLowerCase();
+            const _agCat = (p.category || '').toLowerCase();
+            const _agName = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+            const _isAcrylicGoods =
+                /^gds_acr|^gds_kr|^acr_kr|^acr_g/.test(_agCode) ||
+                /^(gds_acr|acrylic_goods|acrylic|굿즈|goods)$/.test(_agCat) ||
+                /아크릴\s*키링|아크릴\s*키홀더|아크릴\s*굿즈|아크릴\s*스탠드|코롯도|korotto|acrylic\s*(keyring|charm|stand|goods|holder|tag)/i.test(_agName);
+            if (_isAcrylicGoods && p.is_custom_size === true && p.width_mm > 0 && p.height_mm > 0 && Number(p.price) > 0) {
                 const _areaCm2 = (p.width_mm / 10) * (p.height_mm / 10);
                 if (_areaCm2 > 0) {
                     const _small = Math.round(Number(p.price) / _areaCm2 * 25); // 5×5cm = 25cm²
