@@ -4885,6 +4885,8 @@
                 (itemSummaries.length ? '\n\n=== 상품별 옵션·요청 ===\n' + itemSummaries.join('\n\n') : '');
 
             // 2026-05-12: 패브릭 (_cpSubmitOrder) 와 동일 schema 사용 — orders 테이블 컬럼 일치
+            // 2026-05-16: 가맹점 스토어(/store/{slug}) 경유 주문 — fr 태그 + 본사 중계수수료 20%
+            var _frSlug2 = (function(){ try { return sessionStorage.getItem('_franchise_ref') || null; } catch(e){ return null; } })();
             var orderRow = {
                 order_date: new Date().toISOString(),
                 manager_name: name,
@@ -4898,6 +4900,8 @@
                 discount_amount: 0,
                 items: items,
                 site_code: 'KR',
+                franchise_slug: _frSlug2,
+                franchise_commission: _frSlug2 ? Math.round((total||0)*0.20) : null,
                 files: orderFiles.length ? orderFiles : null,
                 admin_note: adminNote
             };
