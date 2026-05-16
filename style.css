@@ -6901,11 +6901,13 @@ footer, .site-footer { padding-top: 28px !important; }
    2026-05-14: 고객센터 — KR은 전화번호, 해외(JP/US)는 Channel Talk
    사용자 요청: "한국 고객센터 전화번호 031-366-1984 해외는 그냥 지금 상태로 둬"
    ───────────────────────────────────────────────────────────────────── */
-.cs-center .cs-contact-overseas { display: none; }
+/* 2026-05-16: JP은 나나미 직통번호, US는 Channel Talk */
+.cs-center .cs-contact-overseas,
+.cs-center .cs-contact-jp { display: none; }
 html[data-site="JP"] .cs-center .cs-contact-kr,
 html[data-site="US"] .cs-center .cs-contact-kr { display: none; }
-html[data-site="JP"] .cs-center .cs-contact-overseas,
 html[data-site="US"] .cs-center .cs-contact-overseas { display: inline; }
+html[data-site="JP"] .cs-center .cs-contact-jp { display: inline; }
 
 /* ─────────────────────────────────────────────────────────────────────
    2026-05-14: 해외 사이트(JP/US)는 매니저 견적 카드 숨김 + 타이틀 키움
