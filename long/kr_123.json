@@ -1600,5 +1600,10 @@
   "cart_bulk_upload": "파일 일괄 업로드",
   "cart_design_request": "디자인이 없으시면 의뢰해주세요",
   "img_tool_lock": "배경고정",
-  "img_tool_beauty": "보정"
+  "img_tool_beauty": "보정",
+  "label_text_outline": "테두리",
+  "btn_outline_off": "테두리 켜기",
+  "btn_outline_on": "테두리 끄기",
+  "menu_make_menuboard": "메뉴판 만들기",
+  "ph_effect_search": "검색..."
 }

@@ -1965,5 +1965,10 @@
   "cart_bulk_upload": "Dateien gesammelt hochladen",
   "cart_design_request": "Kein Design? Jetzt beauftragen",
   "img_tool_lock": "Hintergrund sperren",
-  "img_tool_beauty": "Korrektur"
+  "img_tool_beauty": "Korrektur",
+  "label_text_outline": "Umrandung",
+  "btn_outline_off": "Umrandung an",
+  "btn_outline_on": "Umrandung aus",
+  "menu_make_menuboard": "Menütafel erstellen",
+  "ph_effect_search": "Suchen..."
 }

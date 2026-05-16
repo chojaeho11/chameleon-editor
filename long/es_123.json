@@ -1965,5 +1965,10 @@
   "cart_bulk_upload": "Subir archivos en lote",
   "cart_design_request": "¿Sin diseño? Solicítelo aquí",
   "img_tool_lock": "Fijar fondo",
-  "img_tool_beauty": "Retoque"
+  "img_tool_beauty": "Retoque",
+  "label_text_outline": "Contorno",
+  "btn_outline_off": "Activar contorno",
+  "btn_outline_on": "Desactivar contorno",
+  "menu_make_menuboard": "Crear menú",
+  "ph_effect_search": "Buscar..."
 }

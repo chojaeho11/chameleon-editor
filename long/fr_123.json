@@ -1965,5 +1965,10 @@
   "cart_bulk_upload": "Télécharger les fichiers en lot",
   "cart_design_request": "Pas de design ? Faites une demande",
   "img_tool_lock": "Verrouiller",
-  "img_tool_beauty": "Retouche"
+  "img_tool_beauty": "Retouche",
+  "label_text_outline": "Contour",
+  "btn_outline_off": "Activer le contour",
+  "btn_outline_on": "Désactiver le contour",
+  "menu_make_menuboard": "Créer un menu",
+  "ph_effect_search": "Rechercher..."
 }

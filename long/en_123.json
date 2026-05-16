@@ -1997,5 +1997,10 @@
   "cart_bulk_upload": "Bulk File Upload",
   "cart_design_request": "Need a design? Request one here",
   "img_tool_lock": "Lock",
-  "img_tool_beauty": "Retouch"
+  "img_tool_beauty": "Retouch",
+  "label_text_outline": "Outline",
+  "btn_outline_off": "Outline On",
+  "btn_outline_on": "Outline Off",
+  "menu_make_menuboard": "Make Menu Board",
+  "ph_effect_search": "Search..."
 }

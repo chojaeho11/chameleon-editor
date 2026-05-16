@@ -1963,5 +1963,10 @@
   "cart_bulk_upload": "批量上传文件",
   "cart_design_request": "没有设计？请委托设计",
   "img_tool_lock": "锁定背景",
-  "img_tool_beauty": "修饰"
+  "img_tool_beauty": "修饰",
+  "label_text_outline": "描边",
+  "btn_outline_off": "开启描边",
+  "btn_outline_on": "关闭描边",
+  "menu_make_menuboard": "制作菜单板",
+  "ph_effect_search": "搜索..."
 }

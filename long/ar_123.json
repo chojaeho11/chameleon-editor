@@ -1966,5 +1966,10 @@
   "cart_bulk_upload": "رفع الملفات دفعة واحدة",
   "cart_design_request": "ليس لديك تصميم؟ اطلب تصميمًا",
   "img_tool_lock": "تثبيت الخلفية",
-  "img_tool_beauty": "تحسين"
+  "img_tool_beauty": "تحسين",
+  "label_text_outline": "حدود",
+  "btn_outline_off": "تفعيل الحدود",
+  "btn_outline_on": "إيقاف الحدود",
+  "menu_make_menuboard": "إنشاء قائمة",
+  "ph_effect_search": "بحث..."
 }

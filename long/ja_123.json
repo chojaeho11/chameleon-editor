@@ -1994,5 +1994,10 @@
   "cart_request_ph": "ご要望を入力してください（任意）",
   "cart_file_notice": "<i class=\"fa-solid fa-circle-info\"></i> ファイルは各商品の <b style=\"color:#dc2626;\">📎 ファイル添付</b> ボタンからPDFまたは画像を添付してください。",
   "cart_bulk_upload": "ファイル一括アップロード",
-  "cart_design_request": "デザインがない方はご依頼ください"
+  "cart_design_request": "デザインがない方はご依頼ください",
+  "label_text_outline": "縁取り",
+  "btn_outline_off": "縁取りオン",
+  "btn_outline_on": "縁取りオフ",
+  "menu_make_menuboard": "メニュー表作成",
+  "ph_effect_search": "検索..."
 }

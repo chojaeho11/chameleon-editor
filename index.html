@@ -5368,11 +5368,11 @@ async function handleSubReturn() {
                 <!-- 메뉴 만들기 -->
                 <button class="btn-round" onclick="window.applyNewWizard && window.applyNewWizard('menu')" style="width:100%; margin-bottom:12px; display:flex; align-items:center; justify-content:center; height:38px; background:#f97316; color:#fff; border:none; font-weight:bold; border-radius:8px;">
                     <i class="fa-solid fa-utensils" style="margin-right:6px;"></i>
-                    <span style="font-size:13px;">메뉴판 만들기</span>
+                    <span style="font-size:13px;" data-i18n="menu_make_menuboard">메뉴판 만들기</span>
                 </button>
                 <!-- 글씨효과 PNG 갤러리 -->
                 <div style="font-size:11px; font-weight:600; color:#94a3b8; margin:8px 0 6px; text-transform:uppercase; letter-spacing:0.5px;">Text Effects</div>
-                <input type="text" id="textEffectSearch" placeholder="검색..." onkeyup="if(event.key==='Enter'){window._teSearchKw=this.value;window._tePage=0;window._teRenderPage();}" style="width:100%; box-sizing:border-box; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; margin-bottom:6px; outline:none;">
+                <input type="text" id="textEffectSearch" placeholder="검색..." data-i18n-placeholder="ph_effect_search" onkeyup="if(event.key==='Enter'){window._teSearchKw=this.value;window._tePage=0;window._teRenderPage();}" style="width:100%; box-sizing:border-box; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; margin-bottom:6px; outline:none;">
                 <div id="textEffectGallery" style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; min-height:40px;">
                     <div style="grid-column:1/-1; text-align:center; color:#ccc; font-size:11px; padding:10px 0;">로딩 중...</div>
                 </div>
@@ -6314,7 +6314,7 @@ async function handleSubReturn() {
     <span onclick="window.pcTextColor('#FACC15')" class="pc-tq-color" data-color="#FACC15" style="width:22px; height:22px; border-radius:50%; background:#FACC15; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
     <span onclick="window.pcTextColor('#22C55E')" class="pc-tq-color" data-color="#22C55E" style="width:22px; height:22px; border-radius:50%; background:#22C55E; border:1.5px solid transparent; cursor:pointer; display:inline-block;"></span>
     <span style="width:1px; height:20px; background:#e2e8f0; margin:0 2px;"></span>
-    <button onclick="window._toggleTextOutline && window._toggleTextOutline()" id="pcTextOutlineBtn" title="테두리 토글" style="border:1.5px solid #cbd5e1; background:#fff; color:#64748b; height:30px; padding:0 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;">⬜ 테두리</button>
+    <button onclick="window._toggleTextOutline && window._toggleTextOutline()" id="pcTextOutlineBtn" title="테두리 토글" style="border:1.5px solid #cbd5e1; background:#fff; color:#64748b; height:30px; padding:0 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;">⬜ <span data-i18n="label_text_outline">테두리</span></button>
 </div>
 <div id="mobileTextEditor" style="display:none;">
     <div class="m-text-header">
@@ -6346,7 +6346,7 @@ async function handleSubReturn() {
         <span onclick="window.setMobileTextColor('#3B82F6')" class="m-color-dot" style="background:#3B82F6;" data-color="#3B82F6"></span>
         <span onclick="window.setMobileTextColor('#FACC15')" class="m-color-dot" style="background:#FACC15;" data-color="#FACC15"></span>
         <span onclick="window.setMobileTextColor('#22C55E')" class="m-color-dot" style="background:#22C55E;" data-color="#22C55E"></span>
-        <button onclick="window._toggleTextOutline && window._toggleTextOutline()" id="mobileTextOutlineBtn" style="margin-left:auto; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">⬜ 테두리</button>
+        <button onclick="window._toggleTextOutline && window._toggleTextOutline()" id="mobileTextOutlineBtn" style="margin-left:auto; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">⬜ <span data-i18n="label_text_outline">테두리</span></button>
     </div>
 </div>
 <div id="templateActionModal" class="modal-bg" style="z-index: 20000;">
@@ -8300,15 +8300,17 @@ window.filterFxCards = function(cat, btn) {
                 document.getElementById('pcTextOutlineBtn'),
                 document.getElementById('mobileTextOutlineBtn')
             ].filter(Boolean);
+            const _T = window.t || function(k,d){ return d; };
+            const _outline = _T('label_text_outline','테두리');
             btns.forEach(btn => {
                 const isPanelBtn = btn.id === 'textPanelOutlineBtn';
                 if (on) {
-                    btn.textContent = isPanelBtn ? '테두리 끄기' : '⬛ 테두리';
+                    btn.textContent = isPanelBtn ? _T('btn_outline_on','테두리 끄기') : ('⬛ ' + _outline);
                     btn.style.background = '#6366f1';
                     btn.style.color = '#fff';
                     btn.style.borderColor = '#6366f1';
                 } else {
-                    btn.textContent = isPanelBtn ? '테두리 켜기' : '⬜ 테두리';
+                    btn.textContent = isPanelBtn ? _T('btn_outline_off','테두리 켜기') : ('⬜ ' + _outline);
                     btn.style.background = '#fff';
                     btn.style.color = '#64748b';
                     btn.style.borderColor = '#cbd5e1';
