@@ -175,24 +175,27 @@ input:focus{border-color:#3b82f6;}
     state.settlements.forEach(function(s){(setByFr[s.franchise_slug]=setByFr[s.franchise_slug]||[]).push(s);});
 
     function sums(slug){
-      var elig=0,paid=0;
+      var elig=0,req=0,paid=0;
       (setByFr[slug]||[]).forEach(function(s){
         var p=Number(s.payout_amount||0);
-        if(s.status==='paid') paid+=p; else elig+=p;
+        if(s.status==='paid') paid+=p;
+        else if(s.status==='requested') req+=p;
+        else elig+=p;
       });
-      return {elig:elig,paid:paid};
+      return {elig:elig,req:req,paid:paid,owed:elig+req};
     }
 
-    var gSales=0,gElig=0,gPaid=0;
+    var gSales=0,gOwed=0,gReq=0,gPaid=0;
     state.franchises.forEach(function(f){
       (byFr[f.slug]||[]).forEach(function(o){gSales+=Number(o.total_amount||0);});
-      var s=sums(f.slug); gElig+=s.elig; gPaid+=s.paid;
+      var s=sums(f.slug); gOwed+=s.owed; gReq+=s.req; gPaid+=s.paid;
     });
 
     $('sumRow').innerHTML=
       '<div class="sum-box"><div class="k">가맹점</div><div class="v">'+state.franchises.length+'개</div></div>'
       +'<div class="sum-box"><div class="k">총 가맹점 매출</div><div class="v">'+won(gSales)+'</div></div>'
-      +'<div class="sum-box"><div class="k">미정산 (송금 대기)</div><div class="v gold">'+won(gElig)+'</div></div>'
+      +'<div class="sum-box"><div class="k">🔔 정산 요청</div><div class="v gold">'+won(gReq)+'</div></div>'
+      +'<div class="sum-box"><div class="k">미정산 합계</div><div class="v gold">'+won(gOwed)+'</div></div>'
       +'<div class="sum-box"><div class="k">기송금 누계</div><div class="v green">'+won(gPaid)+'</div></div>';
 
     if(!state.franchises.length){$('frList').innerHTML='<div class="empty">등록된 가맹점이 없습니다.</div>';return;}
@@ -207,17 +210,19 @@ input:focus{border-color:#3b82f6;}
         var d=o.order_date?new Date(o.order_date).toLocaleDateString():'-';
         return '<tr><td>'+d+'</td><td>#'+o.id+'</td><td>'+won(p.amt)+'</td><td>'+won(p.payout)+'</td><td>'+(p.done?'✅ 완료':esc(o.status||'진행중'))+'</td></tr>';
       }).join('');
-      return '<div class="fr-card">'
+      var reqBadge = s.req>0 ? '<span style="background:rgba(251,191,36,0.18);color:#fbbf24;border:1px solid rgba(251,191,36,0.45);font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;margin-left:8px;">🔔 정산요청 '+won(s.req)+'</span>' : '';
+      return '<div class="fr-card"'+(s.req>0?' style="border-color:rgba(251,191,36,0.5);"':'')+'>'
         +'<div class="fr-card-top">'
-          +'<div class="fr-card-name">'+esc(f.company_name||f.slug)+'<small>/store/'+esc(f.slug)+' · 주문 '+ords.length+'건</small></div>'
-          +(s.elig>0
-              ? '<button class="btn btn-gold btn-sm" data-pay="'+esc(f.slug)+'" data-amt="'+s.elig+'">💸 미정산 '+won(s.elig)+' 송금완료 처리</button>'
+          +'<div class="fr-card-name">'+esc(f.company_name||f.slug)+'<small>/store/'+esc(f.slug)+' · 주문 '+ords.length+'건</small>'+reqBadge+'</div>'
+          +(s.owed>0
+              ? '<button class="btn btn-gold btn-sm" data-pay="'+esc(f.slug)+'" data-amt="'+s.owed+'">💸 '+won(s.owed)+' 송금완료 처리</button>'
               : '<span style="font-size:13px;color:#4ade80;font-weight:800;">정산 완료</span>')
         +'</div>'
         +'<div class="fr-nums">'
           +'<div class="fr-num"><div class="k">매출</div><div class="v">'+won(sales)+'</div></div>'
           +'<div class="fr-num"><div class="k">완료주문</div><div class="v">'+doneN+'건</div></div>'
-          +'<div class="fr-num"><div class="k">미정산</div><div class="v out">'+won(s.elig)+'</div></div>'
+          +'<div class="fr-num"><div class="k">정산 요청중</div><div class="v out">'+won(s.req)+'</div></div>'
+          +'<div class="fr-num"><div class="k">미정산(요청전)</div><div class="v">'+won(s.elig)+'</div></div>'
           +'<div class="fr-num"><div class="k">기송금</div><div class="v paid">'+won(s.paid)+'</div></div>'
         +'</div>'
         +(ords.length?'<div class="tg" data-tg="'+esc(f.slug)+'">▸ 주문 내역 보기 ('+ords.length+')</div>'
@@ -244,7 +249,7 @@ input:focus{border-color:#3b82f6;}
     btn.disabled=true; btn.textContent='처리 중…';
     try{
       var r=await sb.from('franchise_settlements').update({status:'paid'})
-        .eq('franchise_slug',slug).eq('status','eligible');
+        .eq('franchise_slug',slug).in('status',['eligible','requested']);
       if(r.error) throw r.error;
       toast('송금 완료 처리됨','ok');
       await loadAll();

@@ -209,25 +209,17 @@
             <div class="nav-label">🌐 서비스 종합관리</div>
             <li class="nav-item" onclick="showSection('sec-community-hub', this)"><i class="fa-solid fa-grip"></i> 서비스 대시보드</li>
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자인 마켓</li>
-            <li class="nav-item" onclick="showSection('sec-production-partners', this)"><i class="fa-solid fa-industry"></i> 출력 파트너</li>
-            <li class="nav-item" onclick="showSection('sec-franchise-inquiries', this); if(window.loadFranchiseInquiries) loadFranchiseInquiries();"><i class="fa-solid fa-handshake"></i> 가맹 문의</li>
+            <!-- 2026-05-16: '가맹 문의' → '가맹점 정산'(franchise-hq) 로 변경. 출력 파트너 메뉴 제거 -->
+            <li class="nav-item" onclick="window.open('/franchise-hq','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-handshake" style="color:#a78bfa;"></i> 🤝 가맹점 정산</li>
             <li class="nav-item" onclick="showSection('sec-cotton-patterns', this); if(window.loadCpPatterns) loadCpPatterns();" style="background:linear-gradient(90deg,#451a03 0%,#78350f 100%); color:#fde047;"><i class="fa-solid fa-shirt" style="color:#fde047;"></i> 🧵 Cotton Print 패턴 마켓</li>
-
-            <div class="nav-label">Marketing</div>
-            <li class="nav-item" onclick="window.open('marketing_bot.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-robot" style="color:#a78bfa;"></i> 🤖 마케팅 봇</li>
 
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
 
-            <div class="nav-label">Community</div>
-            <li class="nav-item" onclick="showSection('sec-comments', this)" style="display:none;"><i class="fa-solid fa-comments"></i> 최근 댓글</li>
-            <li class="nav-item" onclick="showSection('sec-review-gen', this)"><i class="fa-solid fa-star"></i> AI 리뷰 생성</li>
-            <li class="nav-item" onclick="showSection('sec-shorts', this)"><i class="fa-brands fa-youtube"></i> 쇼츠 영상 관리</li>
-
             <div class="nav-label">Management</div>
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
             <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
-            <li class="nav-item" onclick="showSection('sec-safetx', this); loadSafeTxAdmin();"><i class="fa-solid fa-building-columns"></i> 안전거래 송금</li>
+            <!-- 2026-05-16: 미사용 메뉴 제거 — 마케팅 봇 / AI 리뷰 생성 / 쇼츠 영상 관리 / 안전거래 송금 / 출력 파트너 -->
 
             <div class="nav-label">Assets</div>
             <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 & 로고</li>

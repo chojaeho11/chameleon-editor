@@ -269,41 +269,51 @@ select option{background:#1d1640;}
     var card = $('cardOrders');
     if (!fr || !fr.slug){ if(card) card.style.display='none'; return; }
     if (card) card.style.display='';
-    var listEl = $('ordList'), sumEl = $('ordSummary');
+    var listEl = $('ordList');
     listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">불러오는 중…</div>';
+    var orders = [], settlements = [];
     try {
       var r = await sb.from('orders')
         .select('id,order_date,total_amount,franchise_commission,status,payment_status')
         .eq('franchise_slug', fr.slug)
         .order('order_date',{ascending:false}).limit(200);
-      if (r.error) throw r.error;
-      renderOrders(r.data || []);
-    } catch(e){
-      sumEl.innerHTML = '';
-      listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;line-height:1.6;">'
-        + '아직 주문 내역이 없거나, 주문 조회 권한 설정이 필요합니다.<br>'
-        + '<span style="color:#7c7795;font-size:12px;">고객이 /store/' + (fr.slug||'') + ' 에서 주문하면 여기에 표시됩니다.</span></div>';
-    }
+      if (!r.error) orders = r.data || [];
+    } catch(e){ console.warn('orders', e); }
+    try {
+      var s = await sb.from('franchise_settlements').select('*')
+        .eq('franchise_slug', fr.slug).order('created_at',{ascending:false}).limit(300);
+      if (!s.error) settlements = s.data || [];
+    } catch(e){ console.warn('settlements', e); }
+    renderOrders(orders, settlements);
   }
-  function renderOrders(orders){
+  function renderOrders(orders, settlements){
     var sumEl = $('ordSummary'), listEl = $('ordList');
-    var totSales=0, totPayout=0, eligPayout=0, doneN=0;
-    orders.forEach(function(o){
-      var amt = Number(o.total_amount||0);
-      var comm = (o.franchise_commission!=null) ? Number(o.franchise_commission) : Math.round(amt*0.20);
-      var payout = amt - comm;
-      var done = DONE_STATUS.indexOf(o.status) >= 0;
-      totSales += amt; totPayout += payout;
-      if (done){ eligPayout += payout; doneN++; }
+    var elig=0, req=0, paid=0;
+    settlements.forEach(function(s){
+      var p = Number(s.payout_amount||0);
+      if (s.status==='paid') paid+=p;
+      else if (s.status==='requested') req+=p;
+      else elig+=p;
     });
+    var totSales=0;
+    orders.forEach(function(o){ totSales += Number(o.total_amount||0); });
     sumEl.innerHTML =
       '<div class="ord-sum-box"><div class="k">총 주문</div><div class="v">'+orders.length+'건</div></div>'
       + '<div class="ord-sum-box"><div class="k">총 매출</div><div class="v">'+won(totSales)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">정산 예정 (완료 '+doneN+'건)</div><div class="v gold">'+won(eligPayout)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">진행중 포함 총 정산액</div><div class="v">'+won(totPayout)+'</div></div>';
+      + '<div class="ord-sum-box"><div class="k">미정산 (정산 가능)</div><div class="v gold">'+won(elig)+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">정산 요청중</div><div class="v">'+won(req)+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">기송금</div><div class="v">'+won(paid)+'</div></div>';
+    var reqHtml = '';
+    if (elig > 0){
+      reqHtml = '<button class="btn btn-pri" id="btnReqSettle" style="margin:2px 0 14px;">💸 미정산 '+won(elig)+' 정산 요청하기</button>';
+    } else if (req > 0){
+      reqHtml = '<div style="margin:2px 0 14px;font-size:13px;color:#fbbf24;font-weight:700;">🔔 정산 요청이 접수되었습니다 — 본사 송금 처리 대기중 ('+won(req)+')</div>';
+    } else if (!settlements.length){
+      reqHtml = '<div style="margin:2px 0 14px;font-size:12px;color:#7c7795;">완료된 주문이 생기면 정산 가능 금액이 표시됩니다.</div>';
+    }
     if (!orders.length){
-      listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">아직 주문이 없습니다.</div>';
-      return;
+      listEl.innerHTML = reqHtml + '<div style="color:#9b94c4;font-size:13px;padding:14px;">아직 주문이 없습니다.</div>';
+      bindReq(); return;
     }
     var rows = orders.map(function(o){
       var amt = Number(o.total_amount||0);
@@ -316,9 +326,29 @@ select option{background:#1d1640;}
         + '<td style="font-weight:800;color:#c4b5fd;">'+won(payout)+'</td>'
         + '<td><span class="ord-st '+(done?'done':'prog')+'">'+(done?'정산대상':(o.status||'진행중'))+'</span></td></tr>';
     }).join('');
-    listEl.innerHTML = '<table class="ord-table"><thead><tr>'
+    listEl.innerHTML = reqHtml + '<table class="ord-table"><thead><tr>'
       + '<th>주문일</th><th>주문번호</th><th>주문금액</th><th>수수료 20%</th><th>정산금액</th><th>상태</th>'
       + '</tr></thead><tbody>'+rows+'</tbody></table>';
+    bindReq();
+  }
+  function bindReq(){
+    var b = $('btnReqSettle');
+    if (!b) return;
+    b.onclick = async function(){
+      if (!state.franchise || !state.franchise.slug) return;
+      if (!confirm('완료된 주문의 정산을 본사에 요청합니다.\n본사가 수수료 20%를 제외한 금액을 송금해 드립니다.\n\n정산을 요청할까요?')) return;
+      b.disabled = true; b.textContent = '요청 중…';
+      try {
+        var r = await sb.from('franchise_settlements').update({ status:'requested' })
+          .eq('franchise_slug', state.franchise.slug).eq('status','eligible');
+        if (r.error) throw r.error;
+        toast('정산 요청이 접수되었습니다','ok');
+        loadOrders();
+      } catch(e){
+        toast('정산 요청 실패: ' + (e.message||e), 'err');
+        b.disabled = false; b.textContent = '💸 정산 요청하기';
+      }
+    };
   }
 
   function fillForm(){

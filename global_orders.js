@@ -1700,7 +1700,7 @@ window.loadOrders = async () => {
         }
 
         let query = sb.from('orders')
-            .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info' + (window.__hasDesignCompleteCol === false ? '' : ', design_complete, design_complete_at, design_complete_by'), { count: 'exact' })
+            .select('id, franchise_slug, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info' + (window.__hasDesignCompleteCol === false ? '' : ', design_complete, design_complete_at, design_complete_by'), { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
@@ -1757,7 +1757,7 @@ window.loadOrders = async () => {
             window.__hasDesignCompleteCol = false;
             // 재구축 — design 컬럼 제거된 select
             let q2 = sb.from('orders')
-                .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info', { count: 'exact' })
+                .select('id, franchise_slug, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info', { count: 'exact' })
                 .order('created_at', { ascending: false })
                 .neq('status', '임시작성').neq('status', '관리자차단');
             const fb = await q2.range(from, to);
@@ -1784,6 +1784,16 @@ window.loadOrders = async () => {
             if(sumRevenue) sumRevenue.innerText = '0원';
             showLoading(false); return;
         }
+
+        // 2026-05-16: 가맹점 주문 — slug → 상호 매핑 (배지 표시용)
+        const _frMap = {};
+        try {
+            const _frSlugs = [...new Set(data.map(o => o.franchise_slug).filter(Boolean))];
+            if (_frSlugs.length) {
+                const { data: _frRows } = await sb.from('franchises').select('slug, company_name').in('slug', _frSlugs);
+                (_frRows || []).forEach(f => { _frMap[f.slug] = f.company_name || f.slug; });
+            }
+        } catch(e) { console.warn('[loadOrders] franchise map', e); }
 
         data.forEach(order => {
             const items = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
@@ -1940,7 +1950,7 @@ window.loadOrders = async () => {
             tbody.innerHTML += `
                 <tr>
                     <td style="text-align:center;"><input type="checkbox" class="row-chk" value="${order.id}"></td>
-                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}" style="cursor:pointer;" onclick="fixSiteCode('${order.id}')" title="클릭하여 변경">${site === 'STORE' ? '스토어' : site === 'GODO' ? '고도몰' : site}</span>${(pmLower.includes('stripe') && site === 'KR') ? '<div style="font-size:9px;color:#ef4444;">⚠️오류?</div>' : ''}</td>
+                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}" style="cursor:pointer;" onclick="fixSiteCode('${order.id}')" title="클릭하여 변경">${site === 'STORE' ? '스토어' : site === 'GODO' ? '고도몰' : site}</span>${(pmLower.includes('stripe') && site === 'KR') ? '<div style="font-size:9px;color:#ef4444;">⚠️오류?</div>' : ''}${order.franchise_slug ? `<div style="margin-top:3px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;line-height:1.3;" title="가맹점 주문 · /store/${order.franchise_slug}">🏪 ${_frMap[order.franchise_slug] || order.franchise_slug}</div>` : ''}</td>
                     <td style="text-align:center; line-height:1.2;">
                         <span style="color:#334155;">${orderDate}</span>
                         ${deliveryHtml}
