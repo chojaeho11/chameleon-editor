@@ -413,9 +413,9 @@ export function renderShortcutButtons(containerId) {
             partner_cta: '파트너 등록',
             // ── TOGETHER / franchise banner ──
             tg_word: 'WITH',
-            tg_title: '가맹비무료. 카멜레온과 함께 부자되기',
-            tg_sub: '자본금없이 기존 광고사가 매출 10배 올리는법',
-            tg_cta: '가맹 문의하기'
+            tg_title: '클릭 몇 번이면 나만의 홈페이지가 쉽게 만들어집니다',
+            tg_sub: '카멜레온프린팅의 모든 제품을 사장님만의 홈페이지에서 판매하세요. 수천만원이 드는 에디터 홈페이지를 월 3만원에.',
+            tg_cta: '쇼핑몰 만들기'
         },
         ja: {
             self_design: 'デザインエディタ — Canvaより簡単で強力な無料エディタ',
@@ -433,9 +433,9 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'パートナー登録',
             tg_word: 'WITH',
-            tg_title: '加盟金無料。カメレオンと共に富を築こう',
-            tg_sub: '資本金なしで既存の広告代理店が売上を10倍に上げる方法',
-            tg_cta: '加盟お問い合わせ'
+            tg_title: '数クリックで自分だけのホームページが簡単に完成',
+            tg_sub: 'カメレオンプリンティングの全製品を貴社のホームページで販売。数千万ウォン規模のエディタ付きサイトが月3,000円。',
+            tg_cta: 'ショップを作る'
         },
         en: {
             self_design: 'Design Editor — A powerful free editor, easier than Canva',
@@ -453,9 +453,9 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Join as Partner',
             tg_word: 'WITH',
-            tg_title: '$0 franchise fee. Build wealth with Chameleon',
-            tg_sub: 'How existing ad agencies 10x their revenue with zero capital',
-            tg_cta: 'Franchise Inquiry'
+            tg_title: 'Build your own website in just a few clicks',
+            tg_sub: 'Sell Chameleon Printing\'s entire product range on your own site. An editor-powered site worth a fortune — for $30/month.',
+            tg_cta: 'Build My Shop'
         },
         zh: {
             self_design: '设计编辑器 — 比Canva更简单的强大免费编辑器',
@@ -473,9 +473,9 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: '成为合作伙伴',
             tg_word: 'WITH',
-            tg_title: '加盟费0元，与卡米利翁一起致富',
-            tg_sub: '零资本让现有广告公司营收翻10倍的方法',
-            tg_cta: '加盟咨询'
+            tg_title: '点击几下，轻松拥有专属官网',
+            tg_sub: '在您专属的官网销售卡米利翁的全部产品。价值数千万的编辑器官网，每月仅¥200。',
+            tg_cta: '创建商城'
         },
         ar: {
             self_design: 'محرر التصميم — محرر مجاني قوي أسهل من Canva',
@@ -493,9 +493,9 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'انضم كشريك',
             tg_word: 'WITH',
-            tg_title: 'رسوم امتياز صفر. ابنِ ثروتك مع كاميليون',
-            tg_sub: 'كيف تضاعف وكالات الإعلان القائمة إيراداتها 10 أضعاف بدون رأس مال',
-            tg_cta: 'استفسار الامتياز'
+            tg_title: 'أنشئ موقعك الخاص ببضع نقرات',
+            tg_sub: 'بِع كامل منتجات كاميليون على موقعك الخاص. موقع بمحرر تصميم بقيمة باهظة — مقابل 30$ شهريًا.',
+            tg_cta: 'أنشئ متجرك'
         },
         es: {
             self_design: 'Editor de Diseño — Potente editor gratis, más fácil que Canva',
@@ -513,9 +513,9 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Ser Socio',
             tg_word: 'WITH',
-            tg_title: 'Franquicia $0. Hágase rico con Chameleon',
-            tg_sub: 'Cómo las agencias existentes multiplican x10 sus ingresos sin capital',
-            tg_cta: 'Consulta Franquicia'
+            tg_title: 'Crea tu propia web con unos clics',
+            tg_sub: 'Vende toda la gama de Chameleon Printing en tu propia web. Una web con editor que costaría una fortuna — por 28€/mes.',
+            tg_cta: 'Crear Mi Tienda'
         },
         de: {
             self_design: 'Design-Editor — Starker Gratis-Editor, einfacher als Canva',
@@ -533,9 +533,9 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Partner werden',
             tg_word: 'WITH',
-            tg_title: 'Franchise 0€. Werden Sie reich mit Chameleon',
-            tg_sub: 'Wie bestehende Werbeagenturen ohne Kapital ihren Umsatz verzehnfachen',
-            tg_cta: 'Franchise-Anfrage'
+            tg_title: 'Erstellen Sie Ihre Website mit wenigen Klicks',
+            tg_sub: 'Verkaufen Sie das gesamte Chameleon-Sortiment auf Ihrer eigenen Website. Eine Editor-Website im Wert von Tausenden — für 28€/Monat.',
+            tg_cta: 'Shop erstellen'
         },
         fr: {
             self_design: 'Éditeur de Design — Éditeur gratuit puissant, plus simple que Canva',
@@ -553,9 +553,9 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Devenir Partenaire',
             tg_word: 'WITH',
-            tg_title: 'Franchise 0€. Devenez riche avec Chameleon',
-            tg_sub: 'Comment les agences existantes multiplient x10 leurs revenus sans capital',
-            tg_cta: 'Demande de franchise'
+            tg_title: 'Créez votre propre site en quelques clics',
+            tg_sub: 'Vendez toute la gamme de Chameleon Printing sur votre propre site. Un site avec éditeur valant une fortune — pour 28€/mois.',
+            tg_cta: 'Créer Ma Boutique'
         }
     };
     const t = L[lang] || L.en;
