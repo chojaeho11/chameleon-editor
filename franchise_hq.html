@@ -49,7 +49,17 @@ input:focus{border-color:#3b82f6;}
 .fr-orders table{width:100%;border-collapse:collapse;font-size:12px;}
 .fr-orders th{text-align:left;padding:6px 6px;color:#7e8aac;font-weight:700;}
 .fr-orders td{padding:6px 6px;border-top:1px solid rgba(96,165,250,0.08);color:#c3cce5;}
-.tg{cursor:pointer;color:#60a5fa;font-weight:700;font-size:12px;user-select:none;}
+.tg,.tgm{cursor:pointer;color:#60a5fa;font-weight:700;font-size:12px;user-select:none;}
+.tgm{display:inline-block;margin-top:6px;}
+.fr-msg{margin-top:8px;border-top:1px solid rgba(96,165,250,0.13);padding-top:10px;}
+.fr-msg-thread{max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;margin-bottom:9px;}
+.fr-msg-b{max-width:80%;padding:8px 11px;border-radius:11px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.fr-msg-b.hq{align-self:flex-end;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-bottom-right-radius:3px;}
+.fr-msg-b.fr{align-self:flex-start;background:rgba(255,255,255,0.06);color:#e8ecf7;border:1px solid rgba(96,165,250,0.2);border-bottom-left-radius:3px;}
+.fr-msg-b .mt{display:block;font-size:9px;opacity:0.6;margin-top:3px;}
+.fr-msg-empty{color:#7e8aac;font-size:12px;padding:14px 0;text-align:center;}
+.fr-msg-in{display:flex;gap:7px;align-items:stretch;}
+.fr-msg-in textarea{flex:1;padding:9px;border:1.5px solid rgba(96,165,250,0.3);border-radius:8px;background:rgba(255,255,255,0.05);color:#e8ecf7;font-size:12px;font-family:inherit;resize:vertical;outline:none;}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1a1f3a;border:1px solid rgba(96,165,250,0.4);color:#e8ecf7;padding:13px 22px;border-radius:11px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,0.5);}
 .toast.err{border-color:#ef4444;} .toast.ok{border-color:#22c55e;}
 .empty{color:#94a0c0;font-size:14px;padding:30px 0;text-align:center;}
@@ -99,7 +109,7 @@ input:focus{border-color:#3b82f6;}
   var DONE_STATUS=['완료됨','완료','구매확정','배송완료','발송완료'];
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
   var $=function(id){return document.getElementById(id);};
-  var state={user:null,franchises:[],orders:[],settlements:[]};
+  var state={user:null,franchises:[],orders:[],settlements:[],messages:[]};
 
   function won(n){return '₩'+Number(n||0).toLocaleString();}
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -158,6 +168,10 @@ input:focus{border-color:#3b82f6;}
       var st=await sb.from('franchise_settlements').select('*').order('created_at',{ascending:false}).limit(2000);
       state.settlements=st.data||[];
     }catch(e){state.settlements=[];}
+    try{
+      var mg=await sb.from('franchise_messages').select('*').order('created_at',{ascending:true}).limit(3000);
+      state.messages=mg.data||[];
+    }catch(e){state.messages=[];}
     render();
   }
 
@@ -200,6 +214,9 @@ input:focus{border-color:#3b82f6;}
 
     if(!state.franchises.length){$('frList').innerHTML='<div class="empty">등록된 가맹점이 없습니다.</div>';return;}
 
+    var msgByFr={};
+    state.messages.forEach(function(m){(msgByFr[m.franchise_slug]=msgByFr[m.franchise_slug]||[]).push(m);});
+
     $('frList').innerHTML=state.franchises.map(function(f){
       var ords=byFr[f.slug]||[];
       var sales=0,doneN=0;
@@ -229,6 +246,21 @@ input:focus{border-color:#3b82f6;}
             +'<div class="fr-orders" id="ord-'+esc(f.slug)+'" style="display:none;">'
             +'<table><thead><tr><th>주문일</th><th>번호</th><th>주문액</th><th>정산액</th><th>상태</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
           :'')
+        +(function(){
+            var ms=msgByFr[f.slug]||[];
+            var unread=ms.length && ms[ms.length-1].sender==='franchise';
+            var th=ms.length ? ms.map(function(m){
+              var hq=m.sender==='hq';
+              var t=m.created_at?new Date(m.created_at).toLocaleString():'';
+              return '<div class="fr-msg-b '+(hq?'hq':'fr')+'">'+esc(m.body)+'<span class="mt">'+(hq?'본사':'🏪 가맹점')+' · '+t+'</span></div>';
+            }).join('') : '<div class="fr-msg-empty">아직 메시지가 없습니다.</div>';
+            return '<div class="tgm" data-mtg="'+esc(f.slug)+'">💬 메시지 ('+ms.length+')'+(unread?' 🔴':'')+'</div>'
+              +'<div class="fr-msg" id="msg-'+esc(f.slug)+'" style="display:none;">'
+              +'<div class="fr-msg-thread">'+th+'</div>'
+              +'<div class="fr-msg-in"><textarea id="min-'+esc(f.slug)+'" rows="2" placeholder="가맹점에 답장…"></textarea>'
+              +'<button class="btn btn-pri btn-sm" data-msgsend="'+esc(f.slug)+'">전송</button></div>'
+              +'</div>';
+          })()
       +'</div>';
     }).join('');
 
@@ -238,9 +270,34 @@ input:focus{border-color:#3b82f6;}
         if(box){var v=box.style.display==='none';box.style.display=v?'block':'none';t.textContent=(v?'▾':'▸')+t.textContent.slice(1);}
       };
     });
+    $('frList').querySelectorAll('[data-mtg]').forEach(function(t){
+      t.onclick=function(){
+        var box=$('msg-'+t.dataset.mtg);
+        if(box) box.style.display = box.style.display==='none' ? 'block' : 'none';
+      };
+    });
     $('frList').querySelectorAll('[data-pay]').forEach(function(b){
       b.onclick=function(){ doPayout(b.dataset.pay, Number(b.dataset.amt), b); };
     });
+    $('frList').querySelectorAll('[data-msgsend]').forEach(function(b){
+      b.onclick=function(){ hqSendMsg(b.dataset.msgsend, b); };
+    });
+  }
+
+  async function hqSendMsg(slug, btn){
+    var ta=$('min-'+slug);
+    var body=ta?ta.value.trim():'';
+    if(!body) return;
+    btn.disabled=true; btn.textContent='전송 중…';
+    try{
+      var r=await sb.from('franchise_messages').insert({franchise_slug:slug,sender:'hq',body:body});
+      if(r.error) throw r.error;
+      toast('메시지 전송됨','ok');
+      await loadAll();
+    }catch(e){
+      toast('전송 실패: '+(e.message||e),'err');
+      btn.disabled=false; btn.textContent='전송';
+    }
   }
 
   async function doPayout(slug, amount, btn){
