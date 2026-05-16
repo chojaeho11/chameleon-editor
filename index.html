@@ -7308,13 +7308,14 @@ async function handleSubReturn() {
             </label>
             <script>if(window.SITE_CONFIG && SITE_CONFIG.COUNTRY !== 'KR'){var _bk=document.getElementById('payMethodBank');if(_bk)_bk.style.display='none';}</script>
 
-            <label class="pay-method-item" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
+            <label class="pay-method-item" id="payMethodDeposit" style="display:flex; align-items:center; padding:10px; border:1px solid #ddd; border-radius:8px; cursor:pointer;">
                 <input type="radio" name="paymentMethod" value="deposit" style="margin-right:10px; accent-color:#6366f1;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
                     <span data-i18n="label_deposit_use">💰 나의 예치금 사용</span>
                     <span id="myCurrentDepositDisplay" style="font-weight:bold; color:#6366f1;" data-i18n="label_balance_loading">(잔액 조회중...)</span>
                 </div>
             </label>
+            <script>if(window.SITE_CONFIG && SITE_CONFIG.COUNTRY !== 'KR'){var _dp=document.getElementById('payMethodDeposit');if(_dp)_dp.style.display='none';}</script>
         </div>
 
 

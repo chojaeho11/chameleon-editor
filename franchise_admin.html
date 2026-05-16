@@ -160,6 +160,28 @@ select option{background:#1d1640;}
         <span class="lb"><span data-i18n="taglineLabel">홈페이지 소개 문구</span> <small data-i18n="taglineSmall">— 스토어 상단에 표시되는 한 줄 소개</small></span>
         <input type="text" id="fTagline" maxlength="120" data-i18n-ph="taglinePh" placeholder="예: 우리 동네 광고·인쇄, 빠르고 정확하게 — 로컬스토리">
       </label>
+      <label class="fld">
+        <span class="lb"><span data-i18n="heroBadgeLabel">상단 배지 문구</span> <small data-i18n="heroBadgeSmall">— 비워두면 기본 문구가 표시됩니다</small></span>
+        <input type="text" id="fHeroBadge" maxlength="60" data-i18n-ph="heroBadgePh" placeholder="✨ 카멜레온프린팅 공식 가맹점">
+      </label>
+      <div class="row2">
+        <label class="fld"><span class="lb" data-i18n="heroModeLabel">상단 배경</span>
+          <select id="fHeroMode">
+            <option value="default" data-i18n="heroModeDefault">기본 (보라 그라데이션)</option>
+            <option value="color" data-i18n="heroModeColor">단색 지정</option>
+            <option value="image" data-i18n="heroModeImage">이미지 업로드</option>
+          </select>
+        </label>
+        <label class="fld" id="heroColorWrap" style="display:none;"><span class="lb" data-i18n="heroColorLabel">배경 색상</span>
+          <input type="color" id="fHeroColor" value="#4c1d95" style="width:100%;height:42px;padding:3px;border:1.5px solid rgba(167,139,250,0.3);border-radius:9px;background:rgba(255,255,255,0.05);cursor:pointer;">
+        </label>
+        <label class="fld" id="heroImageWrap" style="display:none;"><span class="lb" data-i18n="heroImageLabel">배경 이미지</span>
+          <input type="file" id="fHeroImageFile" accept="image/*" style="font-size:12px;color:#9b94c4;padding:9px 0;">
+        </label>
+      </div>
+      <div id="heroImgPreview" style="display:none;margin-top:-4px;margin-bottom:14px;">
+        <img id="heroImg" style="height:70px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);">
+      </div>
     </div>
 
     <div class="card">
@@ -210,7 +232,7 @@ select option{background:#1d1640;}
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
-  var state = { user:null, franchise:null, allFranchises:[], products:[], selected:{}, logoUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
+  var state = { user:null, franchise:null, allFranchises:[], products:[], selected:{}, logoUrl:'', heroImageUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
 
   // ===== i18n =====
   var LANG = (function(){
@@ -260,7 +282,11 @@ select option{background:#1d1640;}
       whoMe:'나', whoHQ:'🏢 본사', msgSendFail:'메시지 전송 실패: ', msgNeedSave:'먼저 홈페이지 정보를 저장하세요.',
       odOrder:'주문', odDate:'주문일', odCust:'고객', odAddr:'배송지', odStatus:'상태', odPay:'결제', odAmount:'주문금액',
       odItems:'[주문 내역]', odNoItems:'내역 없음', itemProduct:'상품',
-      frMine:'내 홈페이지', frNew:'+ 새 홈페이지 만들기'
+      frMine:'내 홈페이지', frNew:'+ 새 홈페이지 만들기',
+      heroBadgeLabel:'상단 배지 문구', heroBadgeSmall:'— 비워두면 기본 문구가 표시됩니다', heroBadgePh:'✨ 카멜레온프린팅 공식 가맹점',
+      heroModeLabel:'상단 배경', heroModeDefault:'기본 (보라 그라데이션)', heroModeColor:'단색 지정', heroModeImage:'이미지 업로드',
+      heroColorLabel:'배경 색상', heroImageLabel:'배경 이미지',
+      heroImgTooBig:'이미지는 5MB 이하로 올려주세요.', heroImgUploading:'배경 이미지 업로드 중…', heroImgDone:'배경 이미지 업로드 완료'
     },
     ja:{
       adminTitle:'加盟店管理者', loading:'読み込み中…',
@@ -301,7 +327,11 @@ select option{background:#1d1640;}
       whoMe:'私', whoHQ:'🏢 本社', msgSendFail:'メッセージ送信失敗: ', msgNeedSave:'先にホームページ情報を保存してください。',
       odOrder:'注文', odDate:'注文日', odCust:'お客様', odAddr:'お届け先', odStatus:'状態', odPay:'決済', odAmount:'注文金額',
       odItems:'[注文内訳]', odNoItems:'内訳なし', itemProduct:'商品',
-      frMine:'マイホームページ', frNew:'+ 新しいホームページを作成'
+      frMine:'マイホームページ', frNew:'+ 新しいホームページを作成',
+      heroBadgeLabel:'上部バッジ文言', heroBadgeSmall:'— 空欄の場合は既定の文言が表示されます', heroBadgePh:'✨ カメレオンプリンティング公式加盟店',
+      heroModeLabel:'上部背景', heroModeDefault:'既定 (紫グラデーション)', heroModeColor:'単色を指定', heroModeImage:'画像をアップロード',
+      heroColorLabel:'背景色', heroImageLabel:'背景画像',
+      heroImgTooBig:'画像は5MB以下でアップロードしてください。', heroImgUploading:'背景画像をアップロード中…', heroImgDone:'背景画像のアップロード完了'
     },
     en:{
       adminTitle:'Franchise Admin', loading:'Loading…',
@@ -342,7 +372,11 @@ select option{background:#1d1640;}
       whoMe:'Me', whoHQ:'🏢 HQ', msgSendFail:'Failed to send message: ', msgNeedSave:'Save your homepage info first.',
       odOrder:'Order', odDate:'Date', odCust:'Customer', odAddr:'Address', odStatus:'Status', odPay:'Payment', odAmount:'Amount',
       odItems:'[Order items]', odNoItems:'No items', itemProduct:'Item',
-      frMine:'My homepage', frNew:'+ Create new homepage'
+      frMine:'My homepage', frNew:'+ Create new homepage',
+      heroBadgeLabel:'Top badge text', heroBadgeSmall:'— leave blank for the default text', heroBadgePh:'✨ Official Chameleon Printing Partner',
+      heroModeLabel:'Header background', heroModeDefault:'Default (purple gradient)', heroModeColor:'Solid color', heroModeImage:'Upload image',
+      heroColorLabel:'Background color', heroImageLabel:'Background image',
+      heroImgTooBig:'Image must be 5MB or smaller.', heroImgUploading:'Uploading background image…', heroImgDone:'Background image uploaded'
     }
   };
   var T = DICT[LANG] || DICT.en;
@@ -652,9 +686,24 @@ select option{background:#1d1640;}
     $('fTagline').value = f.tagline || '';
     state.logoUrl = f.logo_url || '';
     if (state.logoUrl){ $('logoImg').src = state.logoUrl; $('logoPreview').style.display='block'; }
+    else { $('logoPreview').style.display='none'; }
+    // 홈페이지 디자인 (상단 배지·배경)
+    $('fHeroBadge').value = f.hero_badge || '';
+    $('fHeroColor').value = f.hero_color || '#4c1d95';
+    state.heroImageUrl = f.hero_image || '';
+    $('fHeroMode').value = f.hero_image ? 'image' : (f.hero_color ? 'color' : 'default');
+    if (state.heroImageUrl){ $('heroImg').src = state.heroImageUrl; }
+    updateHeroMode();
     state.selected = {};
     (f.selected_products || []).forEach(function(c){ state.selected[c] = true; });
   }
+  function updateHeroMode(){
+    var mode = $('fHeroMode').value;
+    $('heroColorWrap').style.display = (mode==='color') ? '' : 'none';
+    $('heroImageWrap').style.display = (mode==='image') ? '' : 'none';
+    $('heroImgPreview').style.display = (mode==='image' && state.heroImageUrl) ? 'block' : 'none';
+  }
+  $('fHeroMode').addEventListener('change', updateHeroMode);
 
   // ===== 2. 로그인 =====
   $('btnLogin').onclick = async function(){
@@ -812,6 +861,27 @@ select option{background:#1d1640;}
     }
   });
 
+  // ===== 상단 배경 이미지 업로드 =====
+  $('fHeroImageFile').addEventListener('change', async function(){
+    var file = this.files && this.files[0];
+    if (!file) return;
+    if (file.size > 5*1024*1024){ toast(T.heroImgTooBig,'err'); return; }
+    toast(T.heroImgUploading);
+    try {
+      var ext = (file.name.split('.').pop()||'jpg').toLowerCase();
+      var path = 'franchise/' + state.user.id + '/hero_' + Date.now() + '.' + ext;
+      var up = await sb.storage.from(LOGO_BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
+      if (up.error) throw up.error;
+      var pub = sb.storage.from(LOGO_BUCKET).getPublicUrl(path);
+      state.heroImageUrl = pub.data.publicUrl;
+      $('heroImg').src = state.heroImageUrl;
+      $('heroImgPreview').style.display = 'block';
+      toast(T.heroImgDone,'ok');
+    } catch(e){
+      toast(T.logoFail + (e.message||e) + T.logoFailTail,'err');
+    }
+  });
+
   // ===== 5. 저장 =====
   function slugify(v){ return (v||'').toLowerCase().replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,''); }
 
@@ -859,14 +929,22 @@ select option{background:#1d1640;}
         country: $('fCountry').value,
         tagline: $('fTagline').value.trim() || null,
         logo_url: state.logoUrl || null,
+        hero_badge: $('fHeroBadge').value.trim() || null,
+        hero_color: ($('fHeroMode').value==='color') ? $('fHeroColor').value : null,
+        hero_image: ($('fHeroMode').value==='image') ? (state.heroImageUrl||null) : null,
         selected_products: Object.keys(state.selected),
         updated_at: new Date().toISOString()
       };
-      var res;
-      if (existing && existing.id){
-        res = await sb.from('franchises').update(payload).eq('id', existing.id).select().maybeSingle();
-      } else {
-        res = await sb.from('franchises').insert(payload).select().maybeSingle();
+      async function _doSave(pl){
+        return (existing && existing.id)
+          ? await sb.from('franchises').update(pl).eq('id', existing.id).select().maybeSingle()
+          : await sb.from('franchises').insert(pl).select().maybeSingle();
+      }
+      var res = await _doSave(payload);
+      // hero_* 컬럼이 아직 DB에 없으면 해당 필드 제외 후 재시도
+      if (res.error && /hero_(badge|color|image)|does not exist/i.test(res.error.message||'')){
+        delete payload.hero_badge; delete payload.hero_color; delete payload.hero_image;
+        res = await _doSave(payload);
       }
       if (res.error) throw res.error;
       state.franchise = res.data;
