@@ -1473,7 +1473,7 @@
         if (sizeSource === 'pdf') {
             sizeLabelHtml = `📐 ${tr('파일 사이즈', 'ファイルサイズ', 'File size')}: <b>${w_cm} × ${h_cm} cm</b> <span style="opacity:0.7;font-size:11px;">(${w_mm} × ${h_mm} mm, PDF)</span>`;
         } else if (sizeSource === 'img300') {
-            sizeLabelHtml = `📐 ${tr('파일 사이즈', 'ファイルサイズ', 'File size')}: <b>${w_cm} × ${h_cm} cm</b> <span style="opacity:0.7;font-size:11px;">(${state.fileWidthPx} × ${state.fileHeightPx} px @ 300 DPI 가정)</span>`;
+            sizeLabelHtml = `📐 ${tr('파일 사이즈', 'ファイルサイズ', 'File size')}: <b>${w_cm} × ${h_cm} cm</b> <span style="opacity:0.7;font-size:11px;">(${state.fileWidthPx} × ${state.fileHeightPx} px @ 300 DPI ${tr('가정', '想定', 'assumed')})</span>`;
         } else {
             sizeLabelHtml = `📐 ${tr('출력 사이즈', '出力サイズ', 'Print size')}: <b>${w_cm} × ${h_cm} cm</b>`;
         }
