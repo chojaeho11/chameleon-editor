@@ -167,37 +167,41 @@ input:focus{border-color:#3b82f6;}
     return {amt:amt,comm:comm,payout:amt-comm,done:DONE_STATUS.indexOf(o.status)>=0};
   }
 
+  // franchise_settlements 가 원장(ledger) — 주문 완료 시 DB 트리거가 status='eligible' 행을 자동 생성.
+  //   미정산 = eligible 합계, 기송금 = paid 합계. 송금완료 = eligible → paid 업데이트.
   function render(){
-    var byFr={};
+    var byFr={}, setByFr={};
     state.orders.forEach(function(o){(byFr[o.franchise_slug]=byFr[o.franchise_slug]||[]).push(o);});
-    var paidByFr={};
-    state.settlements.forEach(function(s){
-      if(s.status==='paid') paidByFr[s.franchise_slug]=(paidByFr[s.franchise_slug]||0)+Number(s.payout_amount||0);
-    });
+    state.settlements.forEach(function(s){(setByFr[s.franchise_slug]=setByFr[s.franchise_slug]||[]).push(s);});
 
-    var gSales=0,gEligible=0,gPaid=0,gOutstanding=0;
+    function sums(slug){
+      var elig=0,paid=0;
+      (setByFr[slug]||[]).forEach(function(s){
+        var p=Number(s.payout_amount||0);
+        if(s.status==='paid') paid+=p; else elig+=p;
+      });
+      return {elig:elig,paid:paid};
+    }
+
+    var gSales=0,gElig=0,gPaid=0;
     state.franchises.forEach(function(f){
-      var ords=byFr[f.slug]||[];
-      ords.forEach(function(o){var p=payoutOf(o);gSales+=p.amt;if(p.done)gEligible+=p.payout;});
-      gPaid+=(paidByFr[f.slug]||0);
+      (byFr[f.slug]||[]).forEach(function(o){gSales+=Number(o.total_amount||0);});
+      var s=sums(f.slug); gElig+=s.elig; gPaid+=s.paid;
     });
-    gOutstanding=gEligible-gPaid;
 
     $('sumRow').innerHTML=
       '<div class="sum-box"><div class="k">가맹점</div><div class="v">'+state.franchises.length+'개</div></div>'
       +'<div class="sum-box"><div class="k">총 가맹점 매출</div><div class="v">'+won(gSales)+'</div></div>'
-      +'<div class="sum-box"><div class="k">정산 대상액 (완료주문 80%)</div><div class="v gold">'+won(gEligible)+'</div></div>'
-      +'<div class="sum-box"><div class="k">기송금</div><div class="v green">'+won(gPaid)+'</div></div>'
-      +'<div class="sum-box"><div class="k">미정산 잔액</div><div class="v gold">'+won(gOutstanding)+'</div></div>';
+      +'<div class="sum-box"><div class="k">미정산 (송금 대기)</div><div class="v gold">'+won(gElig)+'</div></div>'
+      +'<div class="sum-box"><div class="k">기송금 누계</div><div class="v green">'+won(gPaid)+'</div></div>';
 
     if(!state.franchises.length){$('frList').innerHTML='<div class="empty">등록된 가맹점이 없습니다.</div>';return;}
 
     $('frList').innerHTML=state.franchises.map(function(f){
       var ords=byFr[f.slug]||[];
-      var sales=0,eligible=0,doneN=0;
-      ords.forEach(function(o){var p=payoutOf(o);sales+=p.amt;if(p.done){eligible+=p.payout;doneN++;}});
-      var paid=paidByFr[f.slug]||0;
-      var outstanding=eligible-paid;
+      var sales=0,doneN=0;
+      ords.forEach(function(o){sales+=Number(o.total_amount||0);if(DONE_STATUS.indexOf(o.status)>=0)doneN++;});
+      var s=sums(f.slug);
       var rows=ords.slice(0,40).map(function(o){
         var p=payoutOf(o);
         var d=o.order_date?new Date(o.order_date).toLocaleDateString():'-';
@@ -206,16 +210,15 @@ input:focus{border-color:#3b82f6;}
       return '<div class="fr-card">'
         +'<div class="fr-card-top">'
           +'<div class="fr-card-name">'+esc(f.company_name||f.slug)+'<small>/store/'+esc(f.slug)+' · 주문 '+ords.length+'건</small></div>'
-          +(outstanding>0
-              ? '<button class="btn btn-gold btn-sm" data-pay="'+esc(f.slug)+'" data-amt="'+outstanding+'">💸 미정산 '+won(outstanding)+' 송금완료 처리</button>'
+          +(s.elig>0
+              ? '<button class="btn btn-gold btn-sm" data-pay="'+esc(f.slug)+'" data-amt="'+s.elig+'">💸 미정산 '+won(s.elig)+' 송금완료 처리</button>'
               : '<span style="font-size:13px;color:#4ade80;font-weight:800;">정산 완료</span>')
         +'</div>'
         +'<div class="fr-nums">'
           +'<div class="fr-num"><div class="k">매출</div><div class="v">'+won(sales)+'</div></div>'
           +'<div class="fr-num"><div class="k">완료주문</div><div class="v">'+doneN+'건</div></div>'
-          +'<div class="fr-num"><div class="k">정산대상</div><div class="v">'+won(eligible)+'</div></div>'
-          +'<div class="fr-num"><div class="k">기송금</div><div class="v paid">'+won(paid)+'</div></div>'
-          +'<div class="fr-num"><div class="k">미정산</div><div class="v out">'+won(outstanding)+'</div></div>'
+          +'<div class="fr-num"><div class="k">미정산</div><div class="v out">'+won(s.elig)+'</div></div>'
+          +'<div class="fr-num"><div class="k">기송금</div><div class="v paid">'+won(s.paid)+'</div></div>'
         +'</div>'
         +(ords.length?'<div class="tg" data-tg="'+esc(f.slug)+'">▸ 주문 내역 보기 ('+ords.length+')</div>'
             +'<div class="fr-orders" id="ord-'+esc(f.slug)+'" style="display:none;">'
@@ -237,21 +240,16 @@ input:focus{border-color:#3b82f6;}
 
   async function doPayout(slug, amount, btn){
     if(amount<=0) return;
-    if(!confirm('['+slug+'] 가맹점에 '+won(amount)+' 송금 완료로 기록할까요?\n(실제 계좌이체는 별도로 진행하세요)')) return;
-    btn.disabled=true; btn.textContent='기록 중…';
+    if(!confirm('['+slug+'] 가맹점에 '+won(amount)+' 송금 완료로 처리할까요?\n(실제 계좌이체는 별도로 진행하세요)')) return;
+    btn.disabled=true; btn.textContent='처리 중…';
     try{
-      var r=await sb.from('franchise_settlements').insert({
-        franchise_slug:slug,
-        payout_amount:amount,
-        commission_amount:Math.round(amount/0.8*0.2),
-        order_amount:Math.round(amount/0.8),
-        status:'paid'
-      });
+      var r=await sb.from('franchise_settlements').update({status:'paid'})
+        .eq('franchise_slug',slug).eq('status','eligible');
       if(r.error) throw r.error;
-      toast('송금 완료 기록됨','ok');
+      toast('송금 완료 처리됨','ok');
       await loadAll();
     }catch(e){
-      toast('기록 실패: '+(e.message||e),'err');
+      toast('처리 실패: '+(e.message||e),'err');
       btn.disabled=false;
     }
   }
