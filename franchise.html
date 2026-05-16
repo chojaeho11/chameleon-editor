@@ -237,6 +237,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         <p class="fr-section-sub" id="txtJoinSub"></p>
         <div class="fr-grid-3" id="frJoinPlans"></div>
         <p class="fr-join-note" id="txtJoinNote"></p>
+        <p style="text-align:center;margin-top:16px;"><a id="txtJoinAdmin" href="/franchise-admin" style="color:#a855f7;font-weight:800;font-size:14px;text-decoration:none;"></a></p>
     </div>
 </section>
 
@@ -1308,6 +1309,14 @@ function showToast(msg, type){
     if (ttl) ttl.innerHTML = t.title;
     if (sub) sub.textContent = t.sub;
     if (note) note.textContent = t.note;
+    var adminLink = document.getElementById('txtJoinAdmin');
+    if (adminLink) {
+        var AL = { ko:'이미 가맹점 회원이신가요? 관리자 페이지로 →', ja:'すでに加盟店会員ですか？ 管理ページへ →',
+            en:'Already a member? Go to your admin page →', zh:'已是加盟会员？进入管理页面 →',
+            ar:'عضو بالفعل؟ انتقل إلى صفحة الإدارة →', es:'¿Ya eres miembro? Ir al panel de administración →',
+            de:'Bereits Mitglied? Zur Verwaltungsseite →', fr:'Déjà membre ? Accéder à votre espace admin →' };
+        adminLink.textContent = AL[fl] || AL.ko;
+    }
     var plans = [
         { key:'monthly',  name:t.monthly,  price:pr.m, per:t.perM, best:false },
         { key:'annual',   name:t.annual,   price:pr.y, per:t.perY, best:true  },

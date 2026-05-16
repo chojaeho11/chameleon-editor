@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>가맹점 관리자 · Chameleon Printing</title>
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:linear-gradient(160deg,#140f29,#1d1640);color:#ece9f7;min-height:100vh;-webkit-text-size-adjust:100%;}
+a{color:inherit;}
+.wrap{max-width:980px;margin:0 auto;padding:24px 18px 80px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0 22px;border-bottom:1px solid rgba(167,139,250,0.18);margin-bottom:26px;}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:18px;}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px;padding:12px 20px;transition:filter .15s,transform .15s;}
+.btn:hover{filter:brightness(1.1);}
+.btn-pri{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;}
+.btn-gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1430;}
+.btn-ghost{background:rgba(255,255,255,0.07);color:#ece9f7;border:1px solid rgba(167,139,250,0.3);}
+.btn-sm{padding:8px 14px;font-size:13px;}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.22);border-radius:16px;padding:24px;margin-bottom:18px;}
+.card h2{font-size:16px;font-weight:900;margin-bottom:4px;}
+.card .desc{font-size:13px;color:#9b94c4;margin-bottom:18px;line-height:1.6;}
+label.fld{display:block;margin-bottom:14px;}
+label.fld .lb{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:#cfc8ee;}
+label.fld .lb small{color:#9b94c4;font-weight:500;}
+input[type=text],input[type=email],input[type=tel],input[type=password],select{
+  width:100%;padding:12px 13px;border:1.5px solid rgba(167,139,250,0.3);border-radius:9px;
+  background:rgba(255,255,255,0.05);color:#ece9f7;font-size:14px;font-family:inherit;outline:none;}
+input:focus,select:focus{border-color:#a855f7;}
+select option{background:#1d1640;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.hint{font-size:12px;color:#9b94c4;margin-top:5px;line-height:1.5;}
+.slugbox{display:flex;align-items:center;gap:0;}
+.slugbox .pre{padding:12px 10px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(167,139,250,0.3);border-right:none;border-radius:9px 0 0 9px;font-size:13px;color:#9b94c4;white-space:nowrap;}
+.slugbox input{border-radius:0 9px 9px 0;}
+#screenLogin,#screenNeedSub,#screenDash,#loadingScreen{display:none;}
+.center-box{max-width:400px;margin:60px auto;text-align:center;}
+.center-box .ic{font-size:46px;margin-bottom:14px;}
+.center-box h1{font-size:21px;font-weight:900;margin-bottom:10px;}
+.center-box p{font-size:14px;color:#9b94c4;line-height:1.7;margin-bottom:22px;}
+.prod-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.prod-toolbar input{flex:1;min-width:160px;}
+.prod-count{font-size:13px;font-weight:800;color:#c4b5fd;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:460px;overflow-y:auto;padding:4px;}
+.prod-item{position:relative;border:1.5px solid rgba(167,139,250,0.22);border-radius:11px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,0.03);transition:border-color .15s;}
+.prod-item:hover{border-color:rgba(167,139,250,0.55);}
+.prod-item.on{border-color:#fbbf24;background:rgba(251,191,36,0.08);}
+.prod-item .pimg{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#1d1640;}
+.prod-item .pmeta{padding:8px 9px;}
+.prod-item .pname{font-size:12px;font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.prod-item .pprice{font-size:11px;color:#9b94c4;margin-top:3px;}
+.prod-item .pchk{position:absolute;top:7px;right:7px;width:22px;height:22px;border-radius:6px;background:rgba(20,15,41,0.85);border:1.5px solid rgba(167,139,250,0.5);display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;}
+.prod-item.on .pchk{background:#fbbf24;border-color:#fbbf24;color:#1a1430;}
+.savebar{position:sticky;bottom:0;background:linear-gradient(0deg,#140f29 70%,transparent);padding:16px 0 6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#241b4d;border:1px solid rgba(167,139,250,0.4);color:#ece9f7;padding:13px 22px;border-radius:11px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,0.5);}
+.toast.err{border-color:#ef4444;}
+.toast.ok{border-color:#22c55e;}
+.badge-test{font-size:11px;font-weight:800;background:rgba(251,191,36,0.16);color:#fbbf24;border:1px solid rgba(251,191,36,0.4);padding:3px 9px;border-radius:999px;}
+.statusline{font-size:13px;color:#9b94c4;margin-top:8px;}
+.statusline b{color:#c4b5fd;}
+@media(max-width:560px){.row2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="dot">🦎</span> 가맹점 관리자</div>
+    <div id="topRight"></div>
+  </div>
+
+  <div id="loadingScreen" style="display:block;text-align:center;padding:80px 0;color:#9b94c4;">불러오는 중…</div>
+
+  <!-- 로그인 -->
+  <div id="screenLogin">
+    <div class="center-box">
+      <div class="ic">🔐</div>
+      <h1>가맹점 관리자 로그인</h1>
+      <p>카멜레온프린팅 계정으로 로그인하세요.<br>아직 계정이 없다면 먼저 가입이 필요합니다.</p>
+      <label class="fld"><span class="lb">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
+      <label class="fld"><span class="lb">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
+      <button class="btn btn-pri" id="btnLogin" style="width:100%;">로그인</button>
+      <p style="margin-top:16px;font-size:13px;">가맹점 가입이 필요하신가요? <a href="/franchise" style="color:#c4b5fd;font-weight:700;">가맹 안내 보기</a></p>
+    </div>
+  </div>
+
+  <!-- 구독 필요 -->
+  <div id="screenNeedSub">
+    <div class="center-box">
+      <div class="ic">💳</div>
+      <h1>가맹점 구독이 필요합니다</h1>
+      <p>가맹점 관리자 페이지는 가맹점 구독 회원만 사용할 수 있습니다.<br>월 3만원부터 시작하세요.</p>
+      <a class="btn btn-gold" href="/franchise#join" style="width:100%;">가맹점 구독 요금제 보기</a>
+      <p style="margin-top:16px;font-size:13px;"><a id="btnLogout1" href="javascript:void(0)" style="color:#9b94c4;">로그아웃</a></p>
+    </div>
+  </div>
+
+  <!-- 대시보드 -->
+  <div id="screenDash">
+    <div class="card">
+      <h2>① 홈페이지 정보</h2>
+      <div class="desc">고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.</div>
+      <label class="fld">
+        <span class="lb">홈페이지 주소 <small>— 영문 소문자·숫자·하이픈만</small></span>
+        <div class="slugbox"><span class="pre" id="slugPre">.../store/</span><input type="text" id="fSlug" placeholder="my-shop" maxlength="40"></div>
+        <div class="hint">고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.</div>
+      </label>
+      <label class="fld"><span class="lb">상호 (회사명) *</span><input type="text" id="fCompany" placeholder="예: 행복광고기획" maxlength="60"></label>
+      <div class="row2">
+        <label class="fld"><span class="lb">대표 전화번호 *</span><input type="tel" id="fPhone" placeholder="예: 031-000-0000"></label>
+        <label class="fld"><span class="lb">이메일</span><input type="email" id="fEmail" placeholder="contact@company.com"></label>
+      </div>
+      <div class="row2">
+        <label class="fld"><span class="lb">국가</span>
+          <select id="fCountry">
+            <option value="KR">대한민국</option><option value="JP">일본</option><option value="US">미국</option>
+            <option value="CN">중국</option><option value="SA">사우디</option><option value="ES">스페인</option>
+            <option value="DE">독일</option><option value="FR">프랑스</option>
+          </select>
+        </label>
+        <label class="fld"><span class="lb">로고 <small>— 정사각 이미지 권장</small></span>
+          <input type="file" id="fLogoFile" accept="image/*" style="font-size:12px;color:#9b94c4;padding:9px 0;">
+        </label>
+      </div>
+      <div id="logoPreview" style="display:none;margin-top:-4px;">
+        <img id="logoImg" style="height:54px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);background:#fff;padding:4px;">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>② 판매할 제품 선택</h2>
+      <div class="desc">카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.</div>
+      <div class="prod-toolbar">
+        <input type="text" id="prodSearch" placeholder="제품 검색…">
+        <button class="btn btn-ghost btn-sm" id="btnSelectAll">전체 선택</button>
+        <button class="btn btn-ghost btn-sm" id="btnClearAll">전체 해제</button>
+        <span class="prod-count" id="prodCount">0개 선택</span>
+      </div>
+      <div class="prod-grid" id="prodGrid"><div style="color:#9b94c4;font-size:13px;padding:20px;">제품을 불러오는 중…</div></div>
+    </div>
+
+    <div class="savebar">
+      <button class="btn btn-pri" id="btnSave">💾 저장</button>
+      <button class="btn btn-ghost" id="btnPreview">🔗 내 홈페이지 보기</button>
+      <span class="statusline" id="saveStatus"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+  // 테스트 전용 — 구독 없이도 전체 기능 사용 가능
+  var TEST_EMAILS = ['korea900as@gmail.com'];
+  var LOGO_BUCKET = 'franchise-logos';
+
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var $ = function(id){ return document.getElementById(id); };
+  var state = { user:null, franchise:null, products:[], selected:{}, logoUrl:'' };
+
+  function toast(msg, kind){
+    var t = document.createElement('div');
+    t.className = 'toast ' + (kind||'');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 4000);
+  }
+  function show(id){
+    ['loadingScreen','screenLogin','screenNeedSub','screenDash'].forEach(function(s){
+      var el=$(s); if(el) el.style.display = (s===id)?'block':'none';
+    });
+  }
+
+  // ===== 1. 초기화 =====
+  async function init(){
+    show('loadingScreen');
+    var sess = null;
+    try { sess = (await sb.auth.getSession()).data.session; } catch(e){}
+    if (!sess || !sess.user){ show('screenLogin'); return; }
+    state.user = sess.user;
+    await afterLogin();
+  }
+
+  async function afterLogin(){
+    var email = (state.user.email||'').toLowerCase();
+    var isTest = TEST_EMAILS.indexOf(email) >= 0;
+
+    // 가맹점 레코드 조회
+    var fr = null;
+    try {
+      var r = await sb.from('franchises').select('*').eq('owner_id', state.user.id).maybeSingle();
+      fr = r.data;
+    } catch(e){ console.warn('franchise load', e); }
+    state.franchise = fr;
+
+    // 접근 권한 — 테스트 계정 또는 활성 가맹점 구독
+    var hasAccess = isTest || !!fr;
+    if (!hasAccess){
+      try {
+        var s = await sb.from('subscriptions').select('plan_type,status,current_period_end').eq('user_id', state.user.id);
+        var subs = s.data || [];
+        hasAccess = subs.some(function(x){
+          var p = x.plan_type||'';
+          if (p.indexOf('franchise') !== 0) return false;
+          if (p === 'franchise_lifetime') return true;
+          var okStatus = (x.status==='active' || x.status==='trialing');
+          var notExpired = !x.current_period_end || new Date(x.current_period_end) > new Date();
+          return okStatus && notExpired;
+        });
+      } catch(e){ console.warn('sub check', e); }
+    }
+
+    $('topRight').innerHTML = '<span style="font-size:13px;color:#9b94c4;margin-right:10px;">'
+      + email + (isTest?' <span class="badge-test">TEST</span>':'') + '</span>'
+      + '<button class="btn btn-ghost btn-sm" id="btnLogout2">로그아웃</button>';
+    var lo2 = $('btnLogout2'); if (lo2) lo2.onclick = logout;
+
+    if (!hasAccess){ show('screenNeedSub'); return; }
+
+    // 슬러그 프리픽스 (현재 도메인 기준)
+    $('slugPre').textContent = location.origin.replace(/^https?:\/\//,'') + '/store/';
+
+    fillForm();
+    show('screenDash');
+    loadProducts();
+  }
+
+  function fillForm(){
+    var f = state.franchise || {};
+    $('fSlug').value = f.slug || '';
+    $('fCompany').value = f.company_name || '';
+    $('fPhone').value = f.phone || '';
+    $('fEmail').value = f.email || state.user.email || '';
+    $('fCountry').value = f.country || 'KR';
+    state.logoUrl = f.logo_url || '';
+    if (state.logoUrl){ $('logoImg').src = state.logoUrl; $('logoPreview').style.display='block'; }
+    state.selected = {};
+    (f.selected_products || []).forEach(function(c){ state.selected[c] = true; });
+  }
+
+  // ===== 2. 로그인 =====
+  $('btnLogin').onclick = async function(){
+    var em = $('loginEmail').value.trim();
+    var pw = $('loginPw').value;
+    if (!em || !pw){ toast('이메일과 비밀번호를 입력하세요.','err'); return; }
+    this.disabled = true; this.textContent = '로그인 중…';
+    try {
+      var r = await sb.auth.signInWithPassword({ email:em, password:pw });
+      if (r.error) throw r.error;
+      state.user = r.data.user;
+      await afterLogin();
+    } catch(e){
+      toast('로그인 실패: ' + (e.message||e), 'err');
+      this.disabled = false; this.textContent = '로그인';
+    }
+  };
+  $('loginPw').addEventListener('keydown', function(e){ if(e.key==='Enter') $('btnLogin').click(); });
+
+  async function logout(){
+    try { await sb.auth.signOut(); } catch(e){}
+    location.reload();
+  }
+  $('btnLogout1').onclick = logout;
+
+  // ===== 3. 제품 목록 =====
+  async function loadProducts(){
+    try {
+      var r = await sb.from('admin_products')
+        .select('code,name,name_jp,name_us,price,img_url,category,partner_status,partner_id')
+        .order('sort_order',{ascending:true})
+        .limit(500);
+      if (r.error) throw r.error;
+      // 본사 제품만 — 파트너 등록 상품 제외
+      state.products = (r.data||[]).filter(function(p){ return !p.partner_id; });
+      renderProducts();
+    } catch(e){
+      $('prodGrid').innerHTML = '<div style="color:#ef4444;font-size:13px;padding:20px;">제품을 불러오지 못했습니다: '+(e.message||e)+'</div>';
+    }
+  }
+
+  function renderProducts(){
+    var q = ($('prodSearch').value||'').toLowerCase().trim();
+    var grid = $('prodGrid');
+    var list = state.products.filter(function(p){
+      if (!q) return true;
+      return ((p.name||'')+(p.name_us||'')+(p.code||'')).toLowerCase().indexOf(q) >= 0;
+    });
+    if (!list.length){ grid.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:20px;">제품이 없습니다.</div>'; updateCount(); return; }
+    grid.innerHTML = '';
+    list.forEach(function(p){
+      var on = !!state.selected[p.code];
+      var d = document.createElement('div');
+      d.className = 'prod-item' + (on?' on':'');
+      d.dataset.code = p.code;
+      var img = p.img_url || 'https://placehold.co/300?text=No+Image';
+      d.innerHTML = '<div class="pchk">✓</div>'
+        + '<img class="pimg" src="'+img+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Image\'">'
+        + '<div class="pmeta"><div class="pname">'+(p.name||p.code)+'</div>'
+        + '<div class="pprice">'+(p.price?('₩'+Number(p.price).toLocaleString()):'')+'</div></div>';
+      d.onclick = function(){
+        if (state.selected[p.code]) delete state.selected[p.code];
+        else state.selected[p.code] = true;
+        d.classList.toggle('on');
+        updateCount();
+      };
+      grid.appendChild(d);
+    });
+    updateCount();
+  }
+  function updateCount(){
+    $('prodCount').textContent = Object.keys(state.selected).length + '개 선택';
+  }
+  $('prodSearch').addEventListener('input', renderProducts);
+  $('btnSelectAll').onclick = function(){
+    state.products.forEach(function(p){ state.selected[p.code]=true; });
+    renderProducts();
+  };
+  $('btnClearAll').onclick = function(){ state.selected = {}; renderProducts(); };
+
+  // ===== 4. 로고 업로드 =====
+  $('fLogoFile').addEventListener('change', async function(){
+    var file = this.files && this.files[0];
+    if (!file) return;
+    if (file.size > 3*1024*1024){ toast('로고는 3MB 이하로 올려주세요.','err'); return; }
+    toast('로고 업로드 중…');
+    try {
+      var ext = (file.name.split('.').pop()||'png').toLowerCase();
+      var path = (state.user.id) + '/logo_' + Date.now() + '.' + ext;
+      var up = await sb.storage.from(LOGO_BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
+      if (up.error) throw up.error;
+      var pub = sb.storage.from(LOGO_BUCKET).getPublicUrl(path);
+      state.logoUrl = pub.data.publicUrl;
+      $('logoImg').src = state.logoUrl;
+      $('logoPreview').style.display = 'block';
+      toast('로고 업로드 완료','ok');
+    } catch(e){
+      toast('로고 업로드 실패: ' + (e.message||e) + ' — 관리자에게 문의하세요.','err');
+    }
+  });
+
+  // ===== 5. 저장 =====
+  function slugify(v){ return (v||'').toLowerCase().replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,''); }
+
+  $('fSlug').addEventListener('input', function(){ this.value = slugify(this.value); });
+
+  $('btnSave').onclick = async function(){
+    var slug = slugify($('fSlug').value);
+    var company = $('fCompany').value.trim();
+    var phone = $('fPhone').value.trim();
+    if (!slug || slug.length < 3){ toast('홈페이지 주소(slug)는 3자 이상 영문/숫자로 입력하세요.','err'); return; }
+    if (!company){ toast('상호를 입력하세요.','err'); return; }
+    if (!phone){ toast('대표 전화번호를 입력하세요.','err'); return; }
+
+    this.disabled = true; this.textContent = '저장 중…';
+    $('saveStatus').textContent = '';
+    try {
+      // slug 중복 체크 (본인 제외)
+      var dup = await sb.from('franchises').select('id,owner_id').eq('slug', slug).maybeSingle();
+      if (dup.data && dup.data.owner_id !== state.user.id){
+        throw new Error('이미 사용 중인 홈페이지 주소입니다. 다른 주소를 입력하세요.');
+      }
+      var payload = {
+        owner_id: state.user.id,
+        slug: slug,
+        company_name: company,
+        phone: phone,
+        email: $('fEmail').value.trim() || null,
+        country: $('fCountry').value,
+        logo_url: state.logoUrl || null,
+        selected_products: Object.keys(state.selected),
+        updated_at: new Date().toISOString()
+      };
+      var res;
+      if (state.franchise && state.franchise.id){
+        res = await sb.from('franchises').update(payload).eq('id', state.franchise.id).select().maybeSingle();
+      } else {
+        res = await sb.from('franchises').insert(payload).select().maybeSingle();
+      }
+      if (res.error) throw res.error;
+      state.franchise = res.data;
+      $('saveStatus').innerHTML = '저장됨 · 홈페이지 주소: <b>/store/' + slug + '</b>';
+      toast('저장되었습니다','ok');
+    } catch(e){
+      toast('저장 실패: ' + (e.message||e), 'err');
+    } finally {
+      this.disabled = false; this.textContent = '💾 저장';
+    }
+  };
+
+  $('btnPreview').onclick = function(){
+    var slug = slugify($('fSlug').value);
+    if (!slug){ toast('먼저 홈페이지 주소를 입력하고 저장하세요.','err'); return; }
+    window.open('/store/' + slug, '_blank');
+  };
+
+  init();
+})();
+</script>
+</body>
+</html>
