@@ -2516,32 +2516,15 @@ function renderCart() {
     const _minNotice = document.getElementById('minOrderNotice');
     if (_minNotice) _minNotice.style.display = _designOnly ? 'none' : '';
 
-    // ★ renderCart 진입 시 localStorage와 cartData 동기화 (모듈 버전 불일치 방어)
-    // 2026-05-12: cartData 가 비어있을 때만이 아니라, localStorage 에 cartData 에 없는 항목이
-    // 있으면 머지 (다른 페이지/탭에서 추가된 패브릭 등 동기화)
+    // ★ renderCart 진입 시 cartData 를 localStorage 기준으로 통째 재구성 (모듈 버전 불일치 방어)
+    // 2026-05-16: 기존 merge-add(추가만) 방식 → phantom 항목 부활 버그.
+    //   localStorage(=cart_sync 통합 저장소, 서버 동기화)를 단일 진실원천으로 삼아
+    //   cartData 를 매번 통째로 맞춘다. 삭제가 stale cartData 인스턴스에도 확실히 반영됨.
     try {
         const stored = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]');
-        if (Array.isArray(stored) && stored.length > 0) {
-            if (cartData.length === 0) {
-                stored.forEach(item => cartData.push(item));
-            } else {
-                // cartData 에 없는 새 항목 (__cart_id 기준) 만 추가
-                const existingIds = new Set(cartData.map(it => it && it.__cart_id).filter(Boolean));
-                stored.forEach(item => {
-                    if (item && item.__cart_id && !existingIds.has(item.__cart_id)) {
-                        cartData.push(item);
-                    } else if (item && !item.__cart_id) {
-                        // __cart_id 없는 fallback: 이미 같은 객체 reference 가 없으면 추가
-                        const dup = cartData.some(c => c === item);
-                        if (!dup) {
-                            // 패브릭 항목인지 빠른 식별 (없으면 추가)
-                            const isFab = item.__source === 'cotton-print' || item.fabricCode || item.orderWcm != null;
-                            const fabDup = isFab && cartData.some(c => c.__source === 'cotton-print' && JSON.stringify(c) === JSON.stringify(item));
-                            if (!fabDup) cartData.push(item);
-                        }
-                    }
-                });
-            }
+        if (Array.isArray(stored)) {
+            cartData.length = 0;
+            stored.forEach(item => cartData.push(item));
         }
     } catch(e) {}
 
