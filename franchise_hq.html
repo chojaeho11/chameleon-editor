@@ -109,7 +109,7 @@ input:focus{border-color:#3b82f6;}
   var DONE_STATUS=['완료됨','완료','구매확정','배송완료','발송완료'];
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
   var $=function(id){return document.getElementById(id);};
-  var state={user:null,franchises:[],orders:[],settlements:[],messages:[]};
+  var state={user:null,franchises:[],orders:[],settlements:[],messages:[],reviews:[]};
 
   function won(n){return '₩'+Number(n||0).toLocaleString();}
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -172,6 +172,10 @@ input:focus{border-color:#3b82f6;}
       var mg=await sb.from('franchise_messages').select('*').order('created_at',{ascending:true}).limit(3000);
       state.messages=mg.data||[];
     }catch(e){state.messages=[];}
+    try{
+      var rv=await sb.from('franchise_order_reviews').select('*').order('created_at',{ascending:false}).limit(3000);
+      state.reviews=rv.data||[];
+    }catch(e){state.reviews=[];}
     render();
   }
 
@@ -216,6 +220,8 @@ input:focus{border-color:#3b82f6;}
 
     var msgByFr={};
     state.messages.forEach(function(m){(msgByFr[m.franchise_slug]=msgByFr[m.franchise_slug]||[]).push(m);});
+    var revByFr={};
+    state.reviews.forEach(function(r){(revByFr[r.franchise_slug]=revByFr[r.franchise_slug]||[]).push(r);});
 
     $('frList').innerHTML=state.franchises.map(function(f){
       var ords=byFr[f.slug]||[];
@@ -261,6 +267,24 @@ input:focus{border-color:#3b82f6;}
               +'<button class="btn btn-pri btn-sm" data-msgsend="'+esc(f.slug)+'">전송</button></div>'
               +'</div>';
           })()
+        +(function(){
+            var rv=revByFr[f.slug]||[];
+            var probN=rv.filter(function(x){return x.received_ok===false;}).length;
+            var rated=rv.filter(function(x){return x.rating;});
+            var avg=rated.length?(rated.reduce(function(a,x){return a+Number(x.rating||0);},0)/rated.length).toFixed(1):'-';
+            var th=rv.length?rv.map(function(x){
+              var ok=x.received_ok!==false;
+              var t=x.created_at?new Date(x.created_at).toLocaleDateString():'';
+              return '<div style="padding:7px 0;border-top:1px solid rgba(96,165,250,0.1);font-size:12px;">'
+                +'<span style="font-weight:800;color:'+(ok?'#4ade80':'#f87171')+';">'+(ok?'✅ 정상수령':'⚠️ 문제')+'</span>'
+                +(x.rating?' <span style="color:#fbbf24;">'+'★'.repeat(x.rating)+'</span>':'')
+                +' <span style="color:#7e8aac;">주문#'+x.order_id+' · '+t+'</span>'
+                +(x.comment?'<div style="color:#c3cce5;margin-top:2px;">'+esc(x.comment)+'</div>':'')
+                +'</div>';
+            }).join(''):'<div class="fr-msg-empty">아직 고객 후기가 없습니다.</div>';
+            return '<div class="tgm" data-rtg="'+esc(f.slug)+'">⭐ 고객 후기 ('+rv.length+(rated.length?' · 평균 '+avg:'')+')'+(probN>0?' <span style="color:#f87171;font-weight:800;">⚠️ 문제 '+probN+'</span>':'')+'</div>'
+              +'<div class="fr-msg" id="rev-'+esc(f.slug)+'" style="display:none;">'+th+'</div>';
+          })()
       +'</div>';
     }).join('');
 
@@ -273,6 +297,12 @@ input:focus{border-color:#3b82f6;}
     $('frList').querySelectorAll('[data-mtg]').forEach(function(t){
       t.onclick=function(){
         var box=$('msg-'+t.dataset.mtg);
+        if(box) box.style.display = box.style.display==='none' ? 'block' : 'none';
+      };
+    });
+    $('frList').querySelectorAll('[data-rtg]').forEach(function(t){
+      t.onclick=function(){
+        var box=$('rev-'+t.dataset.rtg);
         if(box) box.style.display = box.style.display==='none' ? 'block' : 'none';
       };
     });

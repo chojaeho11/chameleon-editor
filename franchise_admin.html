@@ -338,10 +338,10 @@ select option{background:#1d1640;}
     if (card) card.style.display='';
     var listEl = $('ordList');
     listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">불러오는 중…</div>';
-    var orders = [], settlements = [];
+    var orders = [], settlements = [], reviews = [];
     try {
       var r = await sb.from('orders')
-        .select('id,order_date,total_amount,franchise_commission,status,payment_status')
+        .select('id,order_date,total_amount,franchise_commission,status,payment_status,manager_name,phone,address,items')
         .eq('franchise_slug', fr.slug)
         .order('order_date',{ascending:false}).limit(200);
       if (!r.error) orders = r.data || [];
@@ -351,9 +351,32 @@ select option{background:#1d1640;}
         .eq('franchise_slug', fr.slug).order('created_at',{ascending:false}).limit(300);
       if (!s.error) settlements = s.data || [];
     } catch(e){ console.warn('settlements', e); }
-    renderOrders(orders, settlements);
+    try {
+      var rv = await sb.from('franchise_order_reviews').select('*')
+        .eq('franchise_slug', fr.slug).limit(300);
+      if (!rv.error) reviews = rv.data || [];
+    } catch(e){ console.warn('reviews', e); }
+    state._frOrders = orders;
+    renderOrders(orders, settlements, reviews);
   }
-  function renderOrders(orders, settlements){
+  function _itemsText(o){
+    var items = (typeof o.items==='string' ? (function(){try{return JSON.parse(o.items||'[]');}catch(e){return [];}})() : (o.items||[]));
+    return items.map(function(it){
+      var n=(it.product&&it.product.name)||it.productName||it.product_name||it.name||'상품';
+      return n+' ('+(it.qty||1)+')';
+    }).join(', ');
+  }
+  function showOrderDetail(id){
+    var o = (state._frOrders||[]).filter(function(x){return String(x.id)===String(id);})[0];
+    if (!o) return;
+    var d = o.order_date ? new Date(o.order_date).toLocaleString() : '-';
+    alert('주문 #'+o.id+'\n주문일: '+d+'\n고객: '+(o.manager_name||'-')+' / '+(o.phone||'-')
+      +'\n배송지: '+(o.address||'-')
+      +'\n상태: '+(o.status||'-')+' · 결제: '+(o.payment_status||'-')
+      +'\n주문금액: ₩'+Number(o.total_amount||0).toLocaleString()
+      +'\n\n[주문 내역]\n'+(_itemsText(o)||'내역 없음'));
+  }
+  function renderOrders(orders, settlements, reviews){
     var sumEl = $('ordSummary'), listEl = $('ordList');
     var elig=0, req=0, paid=0;
     settlements.forEach(function(s){
@@ -382,20 +405,33 @@ select option{background:#1d1640;}
       listEl.innerHTML = reqHtml + '<div style="color:#9b94c4;font-size:13px;padding:14px;">아직 주문이 없습니다.</div>';
       bindReq(); return;
     }
+    var revByOrder = {};
+    (reviews||[]).forEach(function(x){ revByOrder[x.order_id] = x; });
     var rows = orders.map(function(o){
       var amt = Number(o.total_amount||0);
       var comm = (o.franchise_commission!=null) ? Number(o.franchise_commission) : Math.round(amt*0.20);
       var payout = amt - comm;
       var done = DONE_STATUS.indexOf(o.status) >= 0;
       var d = o.order_date ? new Date(o.order_date).toLocaleDateString() : '-';
-      return '<tr><td>'+d+'</td><td>#'+o.id+'</td><td>'+won(amt)+'</td>'
+      var rev = revByOrder[o.id];
+      var revCell = rev
+        ? (rev.received_ok === false
+            ? '<span class="ord-st" style="background:rgba(239,68,68,0.16);color:#f87171;">⚠️ 문제</span>'
+            : '<span class="ord-st done">✅ 수령'+(rev.rating?' '+'★'.repeat(rev.rating):'')+'</span>')
+        : '<span style="color:#7c7795;font-size:11px;">대기</span>';
+      return '<tr style="cursor:pointer;" data-oid="'+o.id+'" title="클릭하여 주문 상세 보기">'
+        + '<td>'+d+'</td><td>#'+o.id+'</td><td>'+won(amt)+'</td>'
         + '<td style="color:#9b94c4;">-'+won(comm)+'</td>'
         + '<td style="font-weight:800;color:#c4b5fd;">'+won(payout)+'</td>'
-        + '<td><span class="ord-st '+(done?'done':'prog')+'">'+(done?'정산대상':(o.status||'진행중'))+'</span></td></tr>';
+        + '<td><span class="ord-st '+(done?'done':'prog')+'">'+(done?'정산대상':(o.status||'진행중'))+'</span></td>'
+        + '<td>'+revCell+'</td></tr>';
     }).join('');
     listEl.innerHTML = reqHtml + '<table class="ord-table"><thead><tr>'
-      + '<th>주문일</th><th>주문번호</th><th>주문금액</th><th>수수료 20%</th><th>정산금액</th><th>상태</th>'
+      + '<th>주문일</th><th>주문번호</th><th>주문금액</th><th>수수료 20%</th><th>정산금액</th><th>상태</th><th>고객확인</th>'
       + '</tr></thead><tbody>'+rows+'</tbody></table>';
+    listEl.querySelectorAll('tr[data-oid]').forEach(function(tr){
+      tr.onclick = function(){ showOrderDetail(tr.dataset.oid); };
+    });
     bindReq();
   }
   function bindReq(){

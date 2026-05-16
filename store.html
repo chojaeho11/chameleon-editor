@@ -45,6 +45,26 @@ img{display:block;}
 .st-card .cn{font-size:14px;font-weight:700;line-height:1.4;min-height:38px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .st-card .cp{margin-top:8px;font-size:17px;font-weight:900;color:#7c3aed;}
 .st-card .cgo{margin-top:10px;font-size:12px;font-weight:800;color:#a855f7;}
+.st-rev{margin-top:46px;padding-top:34px;border-top:1px solid #ece8f6;}
+.st-rev-lookup{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.st-rev-lookup input{flex:1;min-width:200px;padding:13px 14px;border:1.5px solid #e1ddef;border-radius:10px;font-size:14px;}
+.st-rev-lookup button{padding:13px 24px;border:none;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:800;font-size:14px;cursor:pointer;}
+.st-rev-order{border:1px solid #eceaf3;border-radius:14px;padding:16px 18px;margin-bottom:14px;background:#fff;box-shadow:0 4px 14px rgba(30,27,75,0.05);}
+.st-rev-order .roh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:14px;font-weight:700;}
+.st-rev-order .ro-items{font-size:12.5px;color:#6b6785;margin-top:5px;line-height:1.5;}
+.st-stars{display:inline-flex;gap:2px;font-size:26px;cursor:pointer;user-select:none;}
+.st-stars .s{color:#d8d3e8;}
+.st-stars .s.on{color:#fbbf24;}
+.st-rev-form{margin-top:12px;padding-top:12px;border-top:1px solid #f0eef7;}
+.st-rev-form textarea{width:100%;padding:10px;border:1.5px solid #e1ddef;border-radius:9px;font-size:13px;font-family:inherit;resize:vertical;margin-top:9px;box-sizing:border-box;}
+.st-rev-btns{display:flex;gap:8px;margin:9px 0;flex-wrap:wrap;}
+.st-rev-btns button{padding:9px 16px;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;border:1.5px solid #e1ddef;background:#fff;color:#4b4669;}
+.st-rev-btns button.ok.sel{background:#16a34a;color:#fff;border-color:#16a34a;}
+.st-rev-btns button.bad.sel{background:#ef4444;color:#fff;border-color:#ef4444;}
+.st-rev-submit{padding:11px 26px;border:none;border-radius:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:800;font-size:13px;cursor:pointer;}
+.st-rev-done{margin-top:10px;font-size:13px;font-weight:700;padding:9px 12px;border-radius:8px;}
+.st-rev-done.ok{background:#dcfce7;color:#15803d;}
+.st-rev-done.bad{background:#fee2e2;color:#b91c1c;}
 .st-foot{background:#1e1b3a;color:#b9b3d6;}
 .st-foot-in{max-width:1140px;margin:0 auto;padding:30px 20px;font-size:13px;line-height:1.8;}
 .st-foot .fc{color:#fff;font-weight:800;font-size:15px;margin-bottom:6px;}
@@ -163,6 +183,12 @@ img{display:block;}
       + '<div class="st-sectsub">제품을 선택하면 주문 페이지로 이동합니다.</div>'
       + '<div id="stGrid"></div>'
       + (products.length?'':'<p style="color:#9b94c4;font-size:14px;padding:30px 0;">아직 등록된 제품이 없습니다.</p>')
+      + '<div class="st-rev">'
+      + '<div class="st-secttl">📦 주문 수령 확인 · 후기</div>'
+      + '<div class="st-sectsub">주문 시 입력한 전화번호로 조회하여, 제품을 잘 받으셨는지 확인하고 후기를 남겨주세요.</div>'
+      + '<div class="st-rev-lookup"><input id="revPhone" type="tel" placeholder="주문 시 전화번호 입력"><button id="revLookupBtn">내 주문 조회</button></div>'
+      + '<div id="revResult"></div>'
+      + '</div>'
       + '</div>'
       + '<footer class="st-foot"><div class="st-foot-in">'
       + '<div class="fc">'+esc(company)+'</div>'
@@ -201,6 +227,110 @@ img{display:block;}
       if (groups['_etc'] && groups['_etc'].length) html += section('기타', groups['_etc']);
       grid.innerHTML = html;
     })();
+
+    // ===== 주문 수령 확인 · 후기 =====
+    var DONE_ST = ['완료됨','완료','구매확정','배송완료','발송완료'];
+    var revBtn = document.getElementById('revLookupBtn');
+    if (revBtn){
+      revBtn.onclick = lookupOrders;
+      document.getElementById('revPhone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupOrders(); });
+    }
+    async function lookupOrders(){
+      var phone = (document.getElementById('revPhone').value||'').replace(/[^0-9]/g,'');
+      var res = document.getElementById('revResult');
+      if (phone.length < 8){ res.innerHTML = '<p style="color:#ef4444;font-size:13px;">전화번호를 정확히 입력해주세요.</p>'; return; }
+      res.innerHTML = '<p style="color:#9b94c4;font-size:13px;">조회 중…</p>';
+      try {
+        var r = await sb.from('orders')
+          .select('id,order_date,total_amount,status,items,phone')
+          .eq('franchise_slug', slug).order('order_date',{ascending:false}).limit(80);
+        var mine = (r.data||[]).filter(function(o){ return String(o.phone||'').replace(/[^0-9]/g,'') === phone; });
+        if (!mine.length){ res.innerHTML = '<p style="color:#7c7795;font-size:13px;">해당 전화번호로 조회된 주문이 없습니다. 주문 시 입력한 번호를 확인해주세요.</p>'; return; }
+        var revMap = {};
+        try {
+          var rv = await sb.from('franchise_order_reviews').select('*')
+            .eq('franchise_slug', slug).in('order_id', mine.map(function(o){return o.id;}));
+          (rv.data||[]).forEach(function(x){ revMap[x.order_id] = x; });
+        } catch(e){}
+        renderRevOrders(mine, revMap, phone);
+      } catch(e){
+        res.innerHTML = '<p style="color:#ef4444;font-size:13px;">조회 실패: '+esc(e.message||e)+'</p>';
+      }
+    }
+    function renderRevOrders(orders, revMap, phone){
+      var res = document.getElementById('revResult');
+      res.innerHTML = orders.map(function(o){
+        var items = (typeof o.items==='string' ? (JSON.parse(o.items||'[]')) : (o.items||[]));
+        var itemTxt = items.map(function(it){
+          var n = (it.product && (it.product.name)) || it.productName || it.product_name || it.name || '상품';
+          return n + ' (' + (it.qty||1) + ')';
+        }).join(', ') || '주문 내역';
+        var d = o.order_date ? new Date(o.order_date).toLocaleDateString() : '';
+        var rev = revMap[o.id];
+        var body;
+        if (rev){
+          body = '<div class="st-rev-done '+(rev.received_ok?'ok':'bad')+'">'
+            + (rev.received_ok ? '✅ 정상 수령 확인 완료' : '⚠️ 문제 접수됨 — 본사가 확인합니다')
+            + (rev.rating ? ' · 평점 '+rev.rating+'점' : '')
+            + (rev.comment ? '<div style="font-weight:500;margin-top:4px;">'+esc(rev.comment)+'</div>' : '')
+            + '</div>';
+        } else {
+          body = '<div class="st-rev-form" data-oid="'+o.id+'">'
+            + '<div style="font-size:13px;font-weight:700;margin-bottom:4px;">제품을 받으셨나요?</div>'
+            + '<div class="st-rev-btns">'
+            + '<button type="button" class="ok" data-ok="1">✅ 정상 수령</button>'
+            + '<button type="button" class="bad" data-ok="0">⚠️ 문제 있음</button>'
+            + '</div>'
+            + '<div style="font-size:13px;font-weight:700;">평점</div>'
+            + '<div class="st-stars">' + [1,2,3,4,5].map(function(n){return '<span class="s" data-star="'+n+'">★</span>';}).join('') + '</div>'
+            + '<textarea rows="2" placeholder="후기 또는 문제 내용을 적어주세요 (선택)"></textarea>'
+            + '<div style="margin-top:9px;"><button type="button" class="st-rev-submit">후기 등록</button></div>'
+            + '</div>';
+        }
+        return '<div class="st-rev-order">'
+          + '<div class="roh"><span>주문 #'+o.id+'</span><span>'+esc(d)+' · ₩'+Number(o.total_amount||0).toLocaleString()+'</span></div>'
+          + '<div class="ro-items">'+esc(itemTxt)+'</div>'
+          + body
+          + '</div>';
+      }).join('');
+      // wire forms
+      res.querySelectorAll('.st-rev-form').forEach(function(f){
+        var okv = null, star = 0;
+        f.querySelectorAll('[data-ok]').forEach(function(b){
+          b.onclick = function(){
+            okv = b.getAttribute('data-ok') === '1';
+            f.querySelectorAll('[data-ok]').forEach(function(x){ x.classList.remove('sel'); });
+            b.classList.add('sel');
+          };
+        });
+        var stars = f.querySelectorAll('[data-star]');
+        stars.forEach(function(s){
+          s.onclick = function(){
+            star = parseInt(s.getAttribute('data-star'),10);
+            stars.forEach(function(x){ x.classList.toggle('on', parseInt(x.getAttribute('data-star'),10) <= star); });
+          };
+        });
+        f.querySelector('.st-rev-submit').onclick = async function(){
+          if (okv === null){ alert('정상 수령 또는 문제 있음을 선택해주세요.'); return; }
+          var btn = this; btn.disabled = true; btn.textContent = '등록 중…';
+          try {
+            var ins = await sb.from('franchise_order_reviews').insert({
+              order_id: parseInt(f.getAttribute('data-oid'),10),
+              franchise_slug: slug,
+              customer_phone: phone,
+              received_ok: okv,
+              rating: star || null,
+              comment: (f.querySelector('textarea').value||'').trim() || null
+            });
+            if (ins.error) throw ins.error;
+            lookupOrders();
+          } catch(e){
+            alert('후기 등록 실패: ' + (e.message||e));
+            btn.disabled = false; btn.textContent = '후기 등록';
+          }
+        };
+      });
+    }
   }
 
   run();
