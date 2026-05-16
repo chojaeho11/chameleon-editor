@@ -232,7 +232,7 @@ select option{background:#1d1640;}
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
-  var state = { user:null, franchise:null, allFranchises:[], products:[], selected:{}, logoUrl:'', heroImageUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
+  var state = { user:null, franchise:null, allFranchises:[], theme:{}, products:[], selected:{}, logoUrl:'', heroImageUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
 
   // ===== i18n =====
   var LANG = (function(){
@@ -433,6 +433,15 @@ select option{background:#1d1640;}
     } catch(e){ console.warn('franchise load', e); }
     state.franchise = fr;
 
+    // 홈페이지 테마(상단 배지·배경) 로드 — DB 컬럼 대신 스토리지 JSON
+    state.theme = {};
+    if (fr && fr.slug){
+      try {
+        var tjr = await fetch(SB_URL + '/storage/v1/object/public/' + LOGO_BUCKET + '/franchise/themes/' + encodeURIComponent(fr.slug) + '.json?_t=' + Date.now());
+        if (tjr.ok) state.theme = (await tjr.json()) || {};
+      } catch(e){}
+    }
+
     // 접근 권한 — 테스트 계정 또는 활성 가맹점 구독.
     // 2026-05-16: 구독 여부와 무관하게 입장·체험 허용. 저장(btnSave)만 구독자로 제한.
     var hasAccess = isTest || !!fr;
@@ -493,6 +502,7 @@ select option{background:#1d1640;}
     var nb = el.querySelector('button[data-new]');
     if (nb) nb.onclick = function(){
       state.franchise = null;
+      state.theme = {};
       fillForm();
       $('fSlug').value=''; $('logoPreview').style.display='none';
       $('saveStatus').textContent='';
@@ -687,11 +697,12 @@ select option{background:#1d1640;}
     state.logoUrl = f.logo_url || '';
     if (state.logoUrl){ $('logoImg').src = state.logoUrl; $('logoPreview').style.display='block'; }
     else { $('logoPreview').style.display='none'; }
-    // 홈페이지 디자인 (상단 배지·배경)
-    $('fHeroBadge').value = f.hero_badge || '';
-    $('fHeroColor').value = f.hero_color || '#4c1d95';
-    state.heroImageUrl = f.hero_image || '';
-    $('fHeroMode').value = f.hero_image ? 'image' : (f.hero_color ? 'color' : 'default');
+    // 홈페이지 디자인 (상단 배지·배경) — 테마 JSON
+    var th = state.theme || {};
+    $('fHeroBadge').value = th.badge || '';
+    $('fHeroColor').value = th.color || '#4c1d95';
+    state.heroImageUrl = th.image || '';
+    $('fHeroMode').value = th.mode || (th.image ? 'image' : (th.color ? 'color' : 'default'));
     if (state.heroImageUrl){ $('heroImg').src = state.heroImageUrl; }
     updateHeroMode();
     state.selected = {};
@@ -929,25 +940,27 @@ select option{background:#1d1640;}
         country: $('fCountry').value,
         tagline: $('fTagline').value.trim() || null,
         logo_url: state.logoUrl || null,
-        hero_badge: $('fHeroBadge').value.trim() || null,
-        hero_color: ($('fHeroMode').value==='color') ? $('fHeroColor').value : null,
-        hero_image: ($('fHeroMode').value==='image') ? (state.heroImageUrl||null) : null,
         selected_products: Object.keys(state.selected),
         updated_at: new Date().toISOString()
       };
-      async function _doSave(pl){
-        return (existing && existing.id)
-          ? await sb.from('franchises').update(pl).eq('id', existing.id).select().maybeSingle()
-          : await sb.from('franchises').insert(pl).select().maybeSingle();
-      }
-      var res = await _doSave(payload);
-      // hero_* 컬럼이 아직 DB에 없으면 해당 필드 제외 후 재시도
-      if (res.error && /hero_(badge|color|image)|does not exist/i.test(res.error.message||'')){
-        delete payload.hero_badge; delete payload.hero_color; delete payload.hero_image;
-        res = await _doSave(payload);
-      }
+      var res = (existing && existing.id)
+        ? await sb.from('franchises').update(payload).eq('id', existing.id).select().maybeSingle()
+        : await sb.from('franchises').insert(payload).select().maybeSingle();
       if (res.error) throw res.error;
       state.franchise = res.data;
+
+      // 홈페이지 테마(상단 배지·배경) 저장 — DB 컬럼 대신 스토리지 JSON
+      try {
+        var theme = {
+          badge: $('fHeroBadge').value.trim() || '',
+          mode: $('fHeroMode').value,
+          color: $('fHeroColor').value,
+          image: state.heroImageUrl || ''
+        };
+        state.theme = theme;
+        var tblob = new Blob([JSON.stringify(theme)], { type:'application/json' });
+        await sb.storage.from(LOGO_BUCKET).upload('franchise/themes/'+slug+'.json', tblob, { upsert:true, cacheControl:'60', contentType:'application/json' });
+      } catch(e){ console.warn('theme save', e); }
       // allFranchises 갱신 + 테스트 계정 스위처 다시 그리기
       var fi = state.allFranchises.findIndex(function(x){ return x.id===res.data.id; });
       if (fi >= 0) state.allFranchises[fi] = res.data;

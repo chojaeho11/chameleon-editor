@@ -1180,7 +1180,7 @@
         <span class="so-co-label">${tr('결제 방법', 'お支払い方法', 'Payment method')}</span>
         <div class="so-co-pay-opts">
           <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="card" checked onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
-          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" onchange="window._soOnPayMethodChange()"> 🏦 ${tr('무통장 입금', '銀行振込', 'Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리', 'すぐ処理', 'Instant')}</span></label>
+          ${ (window.__SITE_CODE||'KR')==='KR' ? '<label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" onchange="window._soOnPayMethodChange()"> 🏦 '+tr('무통장 입금','銀行振込','Bank transfer')+' <span style="color:#9ca3af; margin-left:auto; font-size:11px;">'+tr('즉시 처리','すぐ処理','Instant')+'</span></label>' : '' }
         </div>
       </div>
 
@@ -1240,15 +1240,15 @@
         🎁 ${tr('고객 결제창 만들어주기 (매니저)', 'お客様用決済リンク作成 (マネージャー)', 'Create customer payment link (Manager)')}
       </button>
       <div id="soCoMgrQuoteHint" style="display:none; font-size:10px; color:#92400e; text-align:center; margin-top:6px;">
-        ☎️ 위 카트 그대로 고객에게 결제 URL 만 발송됩니다. 받는사람 = 고객명, 연락처 = 고객 휴대폰
+        ☎️ ${tr('위 카트 그대로 고객에게 결제 URL 만 발송됩니다. 받는사람 = 고객명, 연락처 = 고객 휴대폰', '上記カートのまま決済URLのみ送信されます。宛先=顧客名、連絡先=顧客の携帯', 'Only a payment URL is sent to the customer with this cart. Recipient = customer name, contact = customer phone')}
       </div>
       <div id="soCoMgrQuoteResult" style="display:none; margin-top:12px; padding:12px; background:#dcfce7; border:1.5px solid #22c55e; border-radius:10px;">
-        <div style="font-weight:800; color:#15803d; margin-bottom:6px; font-size:12px;">✅ 결제 URL 생성됨!</div>
+        <div style="font-weight:800; color:#15803d; margin-bottom:6px; font-size:12px;">✅ ${tr('결제 URL 생성됨!', '決済URLを生成しました！', 'Payment URL created!')}</div>
         <div style="display:flex; gap:6px; align-items:center;">
           <input id="soCoMgrQuoteUrl" type="text" readonly style="flex:1; padding:8px 10px; border:1.5px solid #86efac; border-radius:6px; font-size:11px; background:#fff; font-family:monospace; color:#15803d;">
           <button onclick="window._soCopyMgrQuoteUrl(this)" style="padding:8px 12px; background:#15803d; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📋</button>
         </div>
-        <div style="font-size:10px; color:#166534; margin-top:6px;">고객에게 카톡/문자로 전송하세요</div>
+        <div style="font-size:10px; color:#166534; margin-top:6px;">${tr('고객에게 카톡/문자로 전송하세요', 'お客様にメッセージで送信してください', 'Send this to the customer by message')}</div>
       </div>
     </aside>
   </div>
@@ -4379,8 +4379,8 @@
                 var sz = it.orderSize || ((it.orderWcm || (it.orderWmm/10)) + '×' + (it.orderHcm || (it.orderHmm/10)) + 'cm');
                 opts = [it.fabricName, '출력 ' + sz, it.qtyLabel, it.finishName ? ('마감: ' + it.finishName) : ''].filter(Boolean).join(' · ');
             } else {
-                name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
-                opts = (it.qty || 1) + '개';
+                name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || tr('상품','商品','Item'));
+                opts = (it.qty || 1) + tr('개','個',' pcs');
             }
             var p = _soCalcItemPrice(it);
             return '<div class="so-co-summary-item" style="position:relative;">' +
@@ -4399,15 +4399,15 @@
         var discHtml = '';
         if (calc.amountPct > 0 || calc.proPct > 0 || calc.shipTotal > 0) {
             discHtml = '<div style="margin:10px 0; padding:10px 12px; background:#fff; border-radius:10px; font-size:12px; line-height:1.7;">' +
-                '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>소계 (상품+옵션)</span><span>' + _soFormatPrice(calc.taxBase) + '</span></div>';
+                '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('소계 (상품+옵션)','小計 (商品+オプション)','Subtotal (item + option)') + '</span><span>' + _soFormatPrice(calc.taxBase) + '</span></div>';
             if (calc.amountPct > 0) {
-                discHtml += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· 구매금액 ' + calc.amountPct + '% 할인</span><span>-' + _soFormatPrice(calc.amountDisc) + '</span></div>';
+                discHtml += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('구매금액','購入金額','Volume') + ' ' + calc.amountPct + '% ' + tr('할인','割引','off') + '</span><span>-' + _soFormatPrice(calc.amountDisc) + '</span></div>';
             }
             if (calc.proPct > 0) {
-                discHtml += '<div style="display:flex; justify-content:space-between; color:#7c3aed;"><span>· PRO 구독자 10% 할인</span><span>-' + _soFormatPrice(calc.proDisc) + '</span></div>';
+                discHtml += '<div style="display:flex; justify-content:space-between; color:#7c3aed;"><span>· ' + tr('PRO 구독자 10% 할인','PRO会員 10%割引','PRO member 10% off') + '</span><span>-' + _soFormatPrice(calc.proDisc) + '</span></div>';
             }
             if (calc.shipTotal > 0) {
-                discHtml += '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>+ 배송/시공비</span><span>+' + _soFormatPrice(calc.shipTotal) + '</span></div>';
+                discHtml += '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('+ 배송/시공비','+ 配送/施工費','+ Shipping/Install') + '</span><span>+' + _soFormatPrice(calc.shipTotal) + '</span></div>';
             }
             discHtml += '</div>';
         }

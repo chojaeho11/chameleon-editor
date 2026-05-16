@@ -199,6 +199,13 @@ img{display:block;}
     LANG = langOf(fr.country); T = DICT[LANG];
     if (fr.status === 'suspended'){ notFound(T.suspended); return; }
 
+    // 홈페이지 테마(상단 배지·배경) — 스토리지 JSON
+    var theme = {};
+    try {
+      var tj = await fetch(SB_URL + '/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(slug) + '.json?_t=' + Date.now());
+      if (tj.ok) theme = (await tj.json()) || {};
+    } catch(e){}
+
     var codes = Array.isArray(fr.selected_products) ? fr.selected_products : [];
     var products = [];
     if (codes.length){
@@ -221,10 +228,11 @@ img{display:block;}
     function topOf(p){ var t=subToTop[p.category]; if(t&&topMap[t])return t; if(topMap[p.category])return p.category; return '_etc'; }
     products.forEach(function(p){ p._top = topOf(p); });
 
-    render(fr, products, topMap);
+    render(fr, products, topMap, theme);
   }
 
-  function render(fr, products, topMap){
+  function render(fr, products, topMap, theme){
+    theme = theme || {};
     var ccy = CCY[fr.country] || CCY.KR;
     var company = fr.company_name || T.storeFallback;
     var phone = fr.phone || '';
@@ -240,14 +248,14 @@ img{display:block;}
       ? '<a class="st-callbtn" href="tel:'+esc(telHref)+'">📞 '+esc(phone)+'</a>'
       : '';
 
-    // 히어로 배경 — 가맹점이 지정한 이미지/색상 우선
+    // 히어로 배경 — 가맹점이 지정한 이미지/색상 우선 (테마 JSON)
     var heroStyle = '';
-    if (fr.hero_image){
-      heroStyle = ' style="background-image:linear-gradient(rgba(15,8,40,0.48),rgba(15,8,40,0.58)),url(\''+esc(fr.hero_image)+'\');background-size:cover;background-position:center;"';
-    } else if (fr.hero_color){
-      heroStyle = ' style="background:'+esc(fr.hero_color)+';"';
+    if (theme.mode === 'image' && theme.image){
+      heroStyle = ' style="background-image:linear-gradient(rgba(15,8,40,0.48),rgba(15,8,40,0.58)),url(\''+esc(theme.image)+'\');background-size:cover;background-position:center;"';
+    } else if (theme.mode === 'color' && theme.color){
+      heroStyle = ' style="background:'+esc(theme.color)+';"';
     }
-    var badgeText = (fr.hero_badge && String(fr.hero_badge).trim()) ? fr.hero_badge : T.officialBadge;
+    var badgeText = (theme.badge && String(theme.badge).trim()) ? theme.badge : T.officialBadge;
 
     var app = document.getElementById('stApp');
     app.innerHTML =
