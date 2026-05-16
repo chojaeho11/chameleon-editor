@@ -95,22 +95,22 @@ select option{background:#1d1640;}
 <body>
 <div class="wrap">
   <div class="topbar">
-    <div class="brand"><span class="dot">🦎</span> 가맹점 관리자</div>
+    <div class="brand"><span class="dot">🦎</span> <span data-i18n="adminTitle">가맹점 관리자</span></div>
     <div id="topRight"></div>
   </div>
 
-  <div id="loadingScreen" style="display:block;text-align:center;padding:80px 0;color:#9b94c4;">불러오는 중…</div>
+  <div id="loadingScreen" data-i18n="loading" style="display:block;text-align:center;padding:80px 0;color:#9b94c4;">불러오는 중…</div>
 
   <!-- 로그인 -->
   <div id="screenLogin">
     <div class="center-box">
       <div class="ic">🔐</div>
-      <h1>가맹점 관리자 로그인</h1>
-      <p>카멜레온프린팅 계정으로 로그인하세요.<br>아직 계정이 없다면 먼저 가입이 필요합니다.</p>
-      <label class="fld"><span class="lb">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
-      <label class="fld"><span class="lb">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
-      <button class="btn btn-pri" id="btnLogin" style="width:100%;">로그인</button>
-      <p style="margin-top:16px;font-size:13px;">가맹점 가입이 필요하신가요? <a href="/franchise" style="color:#c4b5fd;font-weight:700;">가맹 안내 보기</a></p>
+      <h1 data-i18n="loginTitle">가맹점 관리자 로그인</h1>
+      <p data-i18n="loginDesc">카멜레온프린팅 계정으로 로그인하세요.<br>아직 계정이 없다면 먼저 가입이 필요합니다.</p>
+      <label class="fld"><span class="lb" data-i18n="email">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
+      <label class="fld"><span class="lb" data-i18n="password">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
+      <button class="btn btn-pri" id="btnLogin" data-i18n="login" style="width:100%;">로그인</button>
+      <p style="margin-top:16px;font-size:13px;"><span data-i18n="needJoinQ">가맹점 가입이 필요하신가요?</span> <a href="/franchise" data-i18n="joinGuide" style="color:#c4b5fd;font-weight:700;">가맹 안내 보기</a></p>
     </div>
   </div>
 
@@ -118,37 +118,38 @@ select option{background:#1d1640;}
   <div id="screenNeedSub">
     <div class="center-box">
       <div class="ic">💳</div>
-      <h1>가맹점 구독이 필요합니다</h1>
-      <p>가맹점 관리자 페이지는 가맹점 구독 회원만 사용할 수 있습니다.<br>월 3만원부터 시작하세요.</p>
-      <a class="btn btn-gold" href="/franchise#join" style="width:100%;">가맹점 구독 요금제 보기</a>
-      <p style="margin-top:16px;font-size:13px;"><a id="btnLogout1" href="javascript:void(0)" style="color:#9b94c4;">로그아웃</a></p>
+      <h1 data-i18n="subTitle">가맹점 구독이 필요합니다</h1>
+      <p data-i18n="subDesc">가맹점 관리자 페이지는 가맹점 구독 회원만 사용할 수 있습니다.<br>월 3만원부터 시작하세요.</p>
+      <a class="btn btn-gold" href="/franchise#join" data-i18n="viewPlans" style="width:100%;">가맹점 구독 요금제 보기</a>
+      <p style="margin-top:16px;font-size:13px;"><a id="btnLogout1" href="javascript:void(0)" data-i18n="logout" style="color:#9b94c4;">로그아웃</a></p>
     </div>
   </div>
 
   <!-- 대시보드 -->
   <div id="screenDash">
+    <div id="frSwitcher" style="display:none;"></div>
     <div class="card">
-      <h2>① 홈페이지 정보</h2>
-      <div class="desc">고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.</div>
+      <h2 data-i18n="c1Title">① 홈페이지 정보</h2>
+      <div class="desc" data-i18n="c1Desc">고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.</div>
       <label class="fld">
-        <span class="lb">홈페이지 주소 <small>— 영문 소문자·숫자·하이픈만</small></span>
+        <span class="lb"><span data-i18n="slugLabel">홈페이지 주소</span> <small data-i18n="slugSmall">— 영문 소문자·숫자·하이픈만</small></span>
         <div class="slugbox"><span class="pre" id="slugPre">.../store/</span><input type="text" id="fSlug" placeholder="my-shop" maxlength="40"></div>
-        <div class="hint">고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.</div>
+        <div class="hint" data-i18n="slugHint">고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.</div>
       </label>
-      <label class="fld"><span class="lb">상호 (회사명) *</span><input type="text" id="fCompany" placeholder="예: 행복광고기획" maxlength="60"></label>
+      <label class="fld"><span class="lb" data-i18n="companyLabel">상호 (회사명) *</span><input type="text" id="fCompany" data-i18n-ph="companyPh" placeholder="예: 행복광고기획" maxlength="60"></label>
       <div class="row2">
-        <label class="fld"><span class="lb">대표 전화번호 *</span><input type="tel" id="fPhone" placeholder="예: 031-000-0000"></label>
-        <label class="fld"><span class="lb">이메일</span><input type="email" id="fEmail" placeholder="contact@company.com"></label>
+        <label class="fld"><span class="lb" data-i18n="phoneLabel">대표 전화번호 *</span><input type="tel" id="fPhone" data-i18n-ph="phonePh" placeholder="예: 031-000-0000"></label>
+        <label class="fld"><span class="lb" data-i18n="emailLabel">이메일</span><input type="email" id="fEmail" placeholder="contact@company.com"></label>
       </div>
       <div class="row2">
-        <label class="fld"><span class="lb">국가</span>
+        <label class="fld"><span class="lb" data-i18n="countryLabel">국가</span>
           <select id="fCountry">
-            <option value="KR">대한민국</option><option value="JP">일본</option><option value="US">미국</option>
-            <option value="CN">중국</option><option value="SA">사우디</option><option value="ES">스페인</option>
-            <option value="DE">독일</option><option value="FR">프랑스</option>
+            <option value="KR" data-i18n="co_KR">대한민국</option><option value="JP" data-i18n="co_JP">일본</option><option value="US" data-i18n="co_US">미국</option>
+            <option value="CN" data-i18n="co_CN">중국</option><option value="SA" data-i18n="co_SA">사우디</option><option value="ES" data-i18n="co_ES">스페인</option>
+            <option value="DE" data-i18n="co_DE">독일</option><option value="FR" data-i18n="co_FR">프랑스</option>
           </select>
         </label>
-        <label class="fld"><span class="lb">로고 <small>— 정사각 이미지 권장</small></span>
+        <label class="fld"><span class="lb"><span data-i18n="logoLabel">로고</span> <small data-i18n="logoSmall">— 정사각 이미지 권장</small></span>
           <input type="file" id="fLogoFile" accept="image/*" style="font-size:12px;color:#9b94c4;padding:9px 0;">
         </label>
       </div>
@@ -156,43 +157,43 @@ select option{background:#1d1640;}
         <img id="logoImg" style="height:54px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);background:#fff;padding:4px;">
       </div>
       <label class="fld">
-        <span class="lb">홈페이지 소개 문구 <small>— 스토어 상단에 표시되는 한 줄 소개</small></span>
-        <input type="text" id="fTagline" maxlength="120" placeholder="예: 우리 동네 광고·인쇄, 빠르고 정확하게 — 로컬스토리">
+        <span class="lb"><span data-i18n="taglineLabel">홈페이지 소개 문구</span> <small data-i18n="taglineSmall">— 스토어 상단에 표시되는 한 줄 소개</small></span>
+        <input type="text" id="fTagline" maxlength="120" data-i18n-ph="taglinePh" placeholder="예: 우리 동네 광고·인쇄, 빠르고 정확하게 — 로컬스토리">
       </label>
     </div>
 
     <div class="card">
-      <h2>② 판매할 제품 선택</h2>
-      <div class="desc">카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.</div>
+      <h2 data-i18n="c2Title">② 판매할 제품 선택</h2>
+      <div class="desc" data-i18n="c2Desc">카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.</div>
       <div class="prod-toolbar">
-        <input type="text" id="prodSearch" placeholder="제품 검색…">
-        <button class="btn btn-ghost btn-sm" id="btnSelectAll">현재 목록 전체선택</button>
-        <button class="btn btn-ghost btn-sm" id="btnClearAll">전체 해제</button>
+        <input type="text" id="prodSearch" data-i18n-ph="searchPh" placeholder="제품 검색…">
+        <button class="btn btn-ghost btn-sm" id="btnSelectAll" data-i18n="selectAll">현재 목록 전체선택</button>
+        <button class="btn btn-ghost btn-sm" id="btnClearAll" data-i18n="clearAll">전체 해제</button>
         <span class="prod-count" id="prodCount">0개 선택</span>
       </div>
-      <div id="prodGrid"><div style="color:#9b94c4;font-size:13px;padding:20px;">제품을 불러오는 중…</div></div>
+      <div id="prodGrid"><div style="color:#9b94c4;font-size:13px;padding:20px;" data-i18n="loadingProd">제품을 불러오는 중…</div></div>
     </div>
 
     <div class="card" id="cardOrders">
-      <h2>③ 주문 · 정산 현황</h2>
-      <div class="desc">고객이 사장님 스토어에서 주문한 내역입니다. 결제는 본사가 대행하며, 제작·납품 완료 시 <b>중계수수료 20%를 제외한 금액</b>을 정산해 드립니다.</div>
+      <h2 data-i18n="c3Title">③ 주문 · 정산 현황</h2>
+      <div class="desc" data-i18n="c3Desc">고객이 사장님 스토어에서 주문한 내역입니다. 결제는 본사가 대행하며, 제작·납품 완료 시 <b>중계수수료 20%를 제외한 금액</b>을 정산해 드립니다.</div>
       <div id="ordSummary" class="ord-summary"></div>
       <div style="overflow-x:auto;"><div id="ordList"></div></div>
     </div>
 
     <div class="card" id="cardMsg">
-      <h2>④ 본사와 메시지</h2>
-      <div class="desc">본사 담당자와 주고받는 메시지입니다. 정산·제작·배송 등 문의를 이메일처럼 남기고 답변을 받으세요.</div>
+      <h2 data-i18n="c4Title">④ 본사와 메시지</h2>
+      <div class="desc" data-i18n="c4Desc">본사 담당자와 주고받는 메시지입니다. 정산·제작·배송 등 문의를 이메일처럼 남기고 답변을 받으세요.</div>
       <div id="msgThread" class="msg-thread"></div>
       <div class="msg-input">
-        <textarea id="msgBody" rows="2" placeholder="본사에 보낼 메시지를 입력하세요…"></textarea>
-        <button class="btn btn-pri" id="btnMsgSend">보내기</button>
+        <textarea id="msgBody" rows="2" data-i18n-ph="msgPh" placeholder="본사에 보낼 메시지를 입력하세요…"></textarea>
+        <button class="btn btn-pri" id="btnMsgSend" data-i18n="send">보내기</button>
       </div>
     </div>
 
     <div class="savebar">
-      <button class="btn btn-pri" id="btnSave">💾 저장</button>
-      <button class="btn btn-ghost" id="btnPreview">🔗 내 홈페이지 보기</button>
+      <button class="btn btn-pri" id="btnSave" data-i18n="save">💾 저장</button>
+      <button class="btn btn-ghost" id="btnPreview" data-i18n="preview">🔗 내 홈페이지 보기</button>
       <span class="statusline" id="saveStatus"></span>
     </div>
   </div>
@@ -209,7 +210,154 @@ select option{background:#1d1640;}
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
-  var state = { user:null, franchise:null, products:[], selected:{}, logoUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
+  var state = { user:null, franchise:null, allFranchises:[], products:[], selected:{}, logoUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
+
+  // ===== i18n =====
+  var LANG = (function(){
+    var p = new URLSearchParams(location.search).get('lang');
+    if (p){ p = p.toLowerCase(); if (p==='ko') p='kr'; }
+    var h = location.hostname || '';
+    var l = p || (h.indexOf('cafe0101')>=0 ? 'ja' : (h.indexOf('cafe2626')>=0 ? 'kr' : 'en'));
+    return (l==='kr'||l==='ja') ? l : 'en';
+  })();
+  var DICT = {
+    kr:{
+      adminTitle:'가맹점 관리자', loading:'불러오는 중…',
+      loginTitle:'가맹점 관리자 로그인', loginDesc:'카멜레온프린팅 계정으로 로그인하세요.<br>아직 계정이 없다면 먼저 가입이 필요합니다.',
+      email:'이메일', password:'비밀번호', login:'로그인',
+      needJoinQ:'가맹점 가입이 필요하신가요?', joinGuide:'가맹 안내 보기',
+      subTitle:'가맹점 구독이 필요합니다', subDesc:'가맹점 관리자 페이지는 가맹점 구독 회원만 사용할 수 있습니다.<br>월 3만원부터 시작하세요.',
+      viewPlans:'가맹점 구독 요금제 보기', logout:'로그아웃',
+      c1Title:'① 홈페이지 정보', c1Desc:'고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.',
+      slugLabel:'홈페이지 주소', slugSmall:'— 영문 소문자·숫자·하이픈만', slugHint:'고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.',
+      companyLabel:'상호 (회사명) *', companyPh:'예: 행복광고기획',
+      phoneLabel:'대표 전화번호 *', phonePh:'예: 031-000-0000', emailLabel:'이메일', countryLabel:'국가',
+      co_KR:'대한민국', co_JP:'일본', co_US:'미국', co_CN:'중국', co_SA:'사우디', co_ES:'스페인', co_DE:'독일', co_FR:'프랑스',
+      logoLabel:'로고', logoSmall:'— 정사각 이미지 권장',
+      taglineLabel:'홈페이지 소개 문구', taglineSmall:'— 스토어 상단에 표시되는 한 줄 소개', taglinePh:'예: 우리 동네 광고·인쇄, 빠르고 정확하게 — 로컬스토리',
+      c2Title:'② 판매할 제품 선택', c2Desc:'카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.',
+      searchPh:'제품 검색…', selectAll:'현재 목록 전체선택', clearAll:'전체 해제', loadingProd:'제품을 불러오는 중…', noProd:'제품이 없습니다.',
+      c3Title:'③ 주문 · 정산 현황', c3Desc:'고객이 사장님 스토어에서 주문한 내역입니다. 결제는 본사가 대행하며, 제작·납품 완료 시 <b>중계수수료 20%를 제외한 금액</b>을 정산해 드립니다.',
+      c4Title:'④ 본사와 메시지', c4Desc:'본사 담당자와 주고받는 메시지입니다. 정산·제작·배송 등 문의를 이메일처럼 남기고 답변을 받으세요.',
+      msgPh:'본사에 보낼 메시지를 입력하세요…', send:'보내기', save:'💾 저장', preview:'🔗 내 홈페이지 보기',
+      trialMode:'체험 모드', saving:'저장 중…', saved:'저장되었습니다', savedAddr:'저장됨 · 홈페이지 주소: ', saveFail:'저장 실패: ',
+      slugErr:'홈페이지 주소(slug)는 3자 이상 영문/숫자로 입력하세요.', companyErr:'상호를 입력하세요.', phoneErr:'대표 전화번호를 입력하세요.',
+      slugDup:'이미 사용 중인 홈페이지 주소입니다. 다른 주소를 입력하세요.',
+      needSubSave:'저장은 가맹점 구독 회원만 가능합니다.\n지금 입력하신 내용은 체험용이며 저장되지 않습니다.\n\n구독 요금제를 확인하시겠습니까?',
+      previewErr:'먼저 홈페이지 주소를 입력하고 저장하세요.',
+      loginEmpty:'이메일과 비밀번호를 입력하세요.', loggingIn:'로그인 중…', loginFail:'로그인 실패: ',
+      logoTooBig:'로고는 3MB 이하로 올려주세요.', logoUploading:'로고 업로드 중…', logoDone:'로고 업로드 완료', logoFail:'로고 업로드 실패: ',
+      logoFailTail:' — 관리자에게 문의하세요.',
+      sumOrders:'총 주문', sumSales:'총 매출', sumEligible:'미정산 (정산 가능)', sumRequested:'정산 요청중', sumPaid:'기송금',
+      unitCount:'건', reqSettleBtn:'정산 요청하기', reqSettlePrefix:'💸 미정산 ', reqSettleSuffix:' 정산 요청하기',
+      reqPending:'🔔 정산 요청이 접수되었습니다 — 본사 송금 처리 대기중', reqNone:'완료된 주문이 생기면 정산 가능 금액이 표시됩니다.',
+      noOrders:'아직 주문이 없습니다.', loadingShort:'불러오는 중…',
+      thDate:'주문일', thNo:'주문번호', thAmt:'주문금액', thFee:'수수료 20%', thPayout:'정산금액', thStatus:'상태', thReview:'고객확인',
+      stDone:'정산대상', stProg:'진행중', revProblem:'⚠️ 문제', revReceived:'✅ 수령', revWait:'대기', rowTip:'클릭하여 주문 상세 보기',
+      settleConfirm:'완료된 주문의 정산을 본사에 요청합니다.\n본사가 수수료 20%를 제외한 금액을 송금해 드립니다.\n\n정산을 요청할까요?',
+      requesting:'요청 중…', settleDone:'정산 요청이 접수되었습니다', settleFail:'정산 요청 실패: ',
+      etc:'기타', msgNone:'아직 메시지가 없습니다. 본사에 문의를 남겨보세요.', msgFail:'메시지를 불러올 수 없습니다.',
+      whoMe:'나', whoHQ:'🏢 본사', msgSendFail:'메시지 전송 실패: ', msgNeedSave:'먼저 홈페이지 정보를 저장하세요.',
+      odOrder:'주문', odDate:'주문일', odCust:'고객', odAddr:'배송지', odStatus:'상태', odPay:'결제', odAmount:'주문금액',
+      odItems:'[주문 내역]', odNoItems:'내역 없음', itemProduct:'상품',
+      frMine:'내 홈페이지', frNew:'+ 새 홈페이지 만들기'
+    },
+    ja:{
+      adminTitle:'加盟店管理者', loading:'読み込み中…',
+      loginTitle:'加盟店管理者ログイン', loginDesc:'カメレオンプリンティングのアカウントでログインしてください。<br>アカウントがない場合はまず登録が必要です。',
+      email:'メール', password:'パスワード', login:'ログイン',
+      needJoinQ:'加盟店登録が必要ですか？', joinGuide:'加盟案内を見る',
+      subTitle:'加盟店サブスクが必要です', subDesc:'加盟店管理者ページは加盟店サブスク会員のみ利用できます。<br>月3万ウォンから。',
+      viewPlans:'サブスク料金を見る', logout:'ログアウト',
+      c1Title:'① ホームページ情報', c1Desc:'お客様に表示される会社情報です。商号・ロゴ・連絡先がホームページに表示されます。',
+      slugLabel:'ホームページアドレス', slugSmall:'— 半角英数字・ハイフンのみ', slugHint:'お客様が訪問するホームページアドレスです。登録後の変更は難しいので慎重に決めてください。',
+      companyLabel:'商号 (会社名) *', companyPh:'例: 幸せ広告企画',
+      phoneLabel:'代表電話番号 *', phonePh:'例: 03-0000-0000', emailLabel:'メール', countryLabel:'国',
+      co_KR:'韓国', co_JP:'日本', co_US:'アメリカ', co_CN:'中国', co_SA:'サウジアラビア', co_ES:'スペイン', co_DE:'ドイツ', co_FR:'フランス',
+      logoLabel:'ロゴ', logoSmall:'— 正方形画像推奨',
+      taglineLabel:'ホームページ紹介文', taglineSmall:'— ストア上部に表示される一行紹介', taglinePh:'例: 地域の広告・印刷をスピーディーに — ローカルストーリー',
+      c2Title:'② 販売する製品の選択', c2Desc:'カメレオンの全製品から、お持ちの設備で<b>製作可能な製品</b>を選んでチェックしてください。チェックした製品のみホームページに表示されます。',
+      searchPh:'製品検索…', selectAll:'表示中をすべて選択', clearAll:'すべて解除', loadingProd:'製品を読み込み中…', noProd:'製品がありません。',
+      c3Title:'③ 注文・精算状況', c3Desc:'お客様がストアで注文した内訳です。決済は本社が代行し、製作・納品完了時に<b>仲介手数料20%を除いた金額</b>を精算します。',
+      c4Title:'④ 本社とのメッセージ', c4Desc:'本社担当者とのメッセージです。精算・製作・配送などの問い合わせをメールのように残せます。',
+      msgPh:'本社へのメッセージを入力…', send:'送信', save:'💾 保存', preview:'🔗 ホームページを見る',
+      trialMode:'体験モード', saving:'保存中…', saved:'保存しました', savedAddr:'保存完了 · アドレス: ', saveFail:'保存失敗: ',
+      slugErr:'ホームページアドレスは3文字以上の半角英数字で入力してください。', companyErr:'商号を入力してください。', phoneErr:'代表電話番号を入力してください。',
+      slugDup:'すでに使用中のアドレスです。別のアドレスを入力してください。',
+      needSubSave:'保存は加盟店サブスク会員のみ可能です。\n入力した内容は体験用で保存されません。\n\nサブスク料金を確認しますか？',
+      previewErr:'先にホームページアドレスを入力して保存してください。',
+      loginEmpty:'メールとパスワードを入力してください。', loggingIn:'ログイン中…', loginFail:'ログイン失敗: ',
+      logoTooBig:'ロゴは3MB以下でアップロードしてください。', logoUploading:'ロゴをアップロード中…', logoDone:'ロゴのアップロード完了', logoFail:'ロゴのアップロード失敗: ',
+      logoFailTail:' — 管理者にお問い合わせください。',
+      sumOrders:'総注文', sumSales:'総売上', sumEligible:'未精算 (精算可能)', sumRequested:'精算リクエスト中', sumPaid:'送金済み',
+      unitCount:'件', reqSettleBtn:'精算をリクエスト', reqSettlePrefix:'💸 未精算 ', reqSettleSuffix:' の精算をリクエスト',
+      reqPending:'🔔 精算リクエストを受け付けました — 本社の送金処理待ち', reqNone:'完了した注文が発生すると精算可能額が表示されます。',
+      noOrders:'まだ注文がありません。', loadingShort:'読み込み中…',
+      thDate:'注文日', thNo:'注文番号', thAmt:'注文金額', thFee:'手数料20%', thPayout:'精算金額', thStatus:'状態', thReview:'お客様確認',
+      stDone:'精算対象', stProg:'進行中', revProblem:'⚠️ 問題', revReceived:'✅ 受取', revWait:'待機', rowTip:'クリックして注文詳細を表示',
+      settleConfirm:'完了した注文の精算を本社にリクエストします。\n本社が手数料20%を除いた金額を送金します。\n\n精算をリクエストしますか？',
+      requesting:'リクエスト中…', settleDone:'精算リクエストを受け付けました', settleFail:'精算リクエスト失敗: ',
+      etc:'その他', msgNone:'まだメッセージがありません。本社に問い合わせを残してみましょう。', msgFail:'メッセージを読み込めません。',
+      whoMe:'私', whoHQ:'🏢 本社', msgSendFail:'メッセージ送信失敗: ', msgNeedSave:'先にホームページ情報を保存してください。',
+      odOrder:'注文', odDate:'注文日', odCust:'お客様', odAddr:'お届け先', odStatus:'状態', odPay:'決済', odAmount:'注文金額',
+      odItems:'[注文内訳]', odNoItems:'内訳なし', itemProduct:'商品',
+      frMine:'マイホームページ', frNew:'+ 新しいホームページを作成'
+    },
+    en:{
+      adminTitle:'Franchise Admin', loading:'Loading…',
+      loginTitle:'Franchise Admin Login', loginDesc:'Sign in with your Chameleon Printing account.<br>If you don’t have one, please sign up first.',
+      email:'Email', password:'Password', login:'Sign In',
+      needJoinQ:'Need to join as a franchise?', joinGuide:'View franchise info',
+      subTitle:'Franchise Subscription Required', subDesc:'The franchise admin page is for subscribed members only.<br>Plans start at ₩30,000/month.',
+      viewPlans:'View subscription plans', logout:'Log out',
+      c1Title:'1. Homepage Info', c1Desc:'Your company info shown to customers. Name, logo and contact appear on your homepage.',
+      slugLabel:'Homepage Address', slugSmall:'— lowercase letters, numbers, hyphens only', slugHint:'The address customers will visit. Hard to change later — choose carefully.',
+      companyLabel:'Business Name *', companyPh:'e.g. Happy Ad Studio',
+      phoneLabel:'Phone Number *', phonePh:'e.g. 555-000-0000', emailLabel:'Email', countryLabel:'Country',
+      co_KR:'South Korea', co_JP:'Japan', co_US:'United States', co_CN:'China', co_SA:'Saudi Arabia', co_ES:'Spain', co_DE:'Germany', co_FR:'France',
+      logoLabel:'Logo', logoSmall:'— square image recommended',
+      taglineLabel:'Homepage Tagline', taglineSmall:'— a one-line intro shown at the top of your store', taglinePh:'e.g. Fast, reliable local printing — Local Story',
+      c2Title:'2. Select Products to Sell', c2Desc:'From all Chameleon products, check the ones <b>you can produce</b> with your equipment. Only checked products appear on your homepage.',
+      searchPh:'Search products…', selectAll:'Select all shown', clearAll:'Clear all', loadingProd:'Loading products…', noProd:'No products.',
+      c3Title:'3. Orders & Settlement', c3Desc:'Orders placed by customers in your store. HQ handles payment; on completion you receive the amount <b>minus a 20% brokerage fee</b>.',
+      c4Title:'4. Messages with HQ', c4Desc:'Messages with your HQ contact. Leave questions about settlement, production or delivery and get replies.',
+      msgPh:'Type a message to HQ…', send:'Send', save:'💾 Save', preview:'🔗 View my homepage',
+      trialMode:'Trial Mode', saving:'Saving…', saved:'Saved', savedAddr:'Saved · homepage address: ', saveFail:'Save failed: ',
+      slugErr:'Homepage address must be at least 3 letters/numbers.', companyErr:'Enter your business name.', phoneErr:'Enter your phone number.',
+      slugDup:'That homepage address is already in use. Please choose another.',
+      needSubSave:'Saving is for franchise subscribers only.\nWhat you entered is for trial and will not be saved.\n\nView subscription plans?',
+      previewErr:'Enter and save your homepage address first.',
+      loginEmpty:'Enter your email and password.', loggingIn:'Signing in…', loginFail:'Login failed: ',
+      logoTooBig:'Logo must be 3MB or smaller.', logoUploading:'Uploading logo…', logoDone:'Logo uploaded', logoFail:'Logo upload failed: ',
+      logoFailTail:' — please contact the administrator.',
+      sumOrders:'Total orders', sumSales:'Total sales', sumEligible:'Unsettled (available)', sumRequested:'Settlement requested', sumPaid:'Paid out',
+      unitCount:'', reqSettleBtn:'Request settlement', reqSettlePrefix:'💸 Request settlement of ', reqSettleSuffix:'',
+      reqPending:'🔔 Settlement request received — awaiting HQ payout', reqNone:'Available settlement appears once orders are completed.',
+      noOrders:'No orders yet.', loadingShort:'Loading…',
+      thDate:'Date', thNo:'Order #', thAmt:'Amount', thFee:'Fee 20%', thPayout:'Payout', thStatus:'Status', thReview:'Customer',
+      stDone:'Settleable', stProg:'In progress', revProblem:'⚠️ Issue', revReceived:'✅ Received', revWait:'Pending', rowTip:'Click to view order details',
+      settleConfirm:'Request settlement of completed orders from HQ.\nHQ will send the amount minus the 20% fee.\n\nRequest settlement?',
+      requesting:'Requesting…', settleDone:'Settlement request received', settleFail:'Settlement request failed: ',
+      etc:'Other', msgNone:'No messages yet. Leave an inquiry for HQ.', msgFail:'Could not load messages.',
+      whoMe:'Me', whoHQ:'🏢 HQ', msgSendFail:'Failed to send message: ', msgNeedSave:'Save your homepage info first.',
+      odOrder:'Order', odDate:'Date', odCust:'Customer', odAddr:'Address', odStatus:'Status', odPay:'Payment', odAmount:'Amount',
+      odItems:'[Order items]', odNoItems:'No items', itemProduct:'Item',
+      frMine:'My homepage', frNew:'+ Create new homepage'
+    }
+  };
+  var T = DICT[LANG] || DICT.en;
+  function applyI18n(){
+    document.documentElement.lang = (LANG==='kr'?'ko':LANG);
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var v = T[el.getAttribute('data-i18n')];
+      if (v != null) el.innerHTML = v;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
+      var v = T[el.getAttribute('data-i18n-ph')];
+      if (v != null) el.placeholder = v;
+    });
+    document.title = T.adminTitle + ' · Chameleon Printing';
+  }
 
   function toast(msg, kind){
     var t = document.createElement('div');
@@ -226,6 +374,7 @@ select option{background:#1d1640;}
 
   // ===== 1. 초기화 =====
   async function init(){
+    applyI18n();
     show('loadingScreen');
     var sess = null;
     try { sess = (await sb.auth.getSession()).data.session; } catch(e){}
@@ -238,11 +387,15 @@ select option{background:#1d1640;}
     var email = (state.user.email||'').toLowerCase();
     var isTest = TEST_EMAILS.indexOf(email) >= 0;
 
-    // 가맹점 레코드 조회
+    // 가맹점 레코드 조회 — 테스트 계정은 여러 개 보유 가능
     var fr = null;
     try {
-      var r = await sb.from('franchises').select('*').eq('owner_id', state.user.id).maybeSingle();
-      fr = r.data;
+      var r = await sb.from('franchises').select('*').eq('owner_id', state.user.id).order('updated_at',{ascending:false});
+      var rows = r.data || [];
+      state.allFranchises = rows;
+      var urlSlug = new URLSearchParams(location.search).get('slug');
+      if (urlSlug) fr = rows.filter(function(x){ return x.slug===urlSlug; })[0] || null;
+      if (!fr) fr = rows[0] || null;
     } catch(e){ console.warn('franchise load', e); }
     state.franchise = fr;
 
@@ -267,8 +420,8 @@ select option{background:#1d1640;}
 
     $('topRight').innerHTML = '<span style="font-size:13px;color:#9b94c4;margin-right:10px;">'
       + email + (isTest ? ' <span class="badge-test">TEST</span>'
-                : (hasAccess ? '' : ' <span class="badge-test" style="background:rgba(96,165,250,0.16);color:#93c5fd;border-color:rgba(96,165,250,0.4);">체험 모드</span>')) + '</span>'
-      + '<button class="btn btn-ghost btn-sm" id="btnLogout2">로그아웃</button>';
+                : (hasAccess ? '' : ' <span class="badge-test" style="background:rgba(96,165,250,0.16);color:#93c5fd;border-color:rgba(96,165,250,0.4);">' + T.trialMode + '</span>')) + '</span>'
+      + '<button class="btn btn-ghost btn-sm" id="btnLogout2">' + T.logout + '</button>';
     var lo2 = $('btnLogout2'); if (lo2) lo2.onclick = logout;
 
     // 슬러그 프리픽스 (현재 도메인 기준)
@@ -276,9 +429,44 @@ select option{background:#1d1640;}
 
     fillForm();
     show('screenDash');
+    renderFrSwitcher(isTest);
     loadProducts();
     loadOrders();
     loadMessages();
+  }
+
+  // 테스트 계정용 — 보유한 여러 홈페이지 전환 + 새로 만들기
+  function renderFrSwitcher(isTest){
+    var el = $('frSwitcher');
+    if (!el) return;
+    if (!isTest){ el.style.display='none'; return; }
+    var rows = state.allFranchises || [];
+    var cur = state.franchise;
+    var html = '<div class="card" style="padding:14px 16px;">'
+      + '<div style="font-size:12px;color:#9b94c4;margin-bottom:8px;">' + T.frMine + ' (' + rows.length + ')</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    rows.forEach(function(f){
+      var on = cur && cur.slug===f.slug;
+      html += '<button class="btn btn-sm ' + (on?'btn-pri':'btn-ghost') + '" data-slug="' + escA(f.slug) + '">' + escA(f.company_name||f.slug) + '</button>';
+    });
+    html += '<button class="btn btn-sm btn-gold" data-new="1">' + T.frNew + '</button>';
+    html += '</div></div>';
+    el.innerHTML = html;
+    el.style.display='block';
+    el.querySelectorAll('button[data-slug]').forEach(function(b){
+      b.onclick = function(){ location.href = '/franchise-admin?slug=' + encodeURIComponent(b.dataset.slug); };
+    });
+    var nb = el.querySelector('button[data-new]');
+    if (nb) nb.onclick = function(){
+      state.franchise = null;
+      fillForm();
+      $('fSlug').value=''; $('logoPreview').style.display='none';
+      $('saveStatus').textContent='';
+      renderProducts();
+      loadOrders(); loadMessages();
+      renderFrSwitcher(true);
+      $('fSlug').focus();
+    };
   }
 
   // ===== 본사 메시지 (이메일형) =====
@@ -288,22 +476,22 @@ select option{background:#1d1640;}
     if (!fr || !fr.slug){ if(card) card.style.display='none'; return; }
     if (card) card.style.display='';
     var thread = $('msgThread');
-    thread.innerHTML = '<div class="msg-empty">불러오는 중…</div>';
+    thread.innerHTML = '<div class="msg-empty">' + T.loadingShort + '</div>';
     try {
       var r = await sb.from('franchise_messages').select('*')
         .eq('franchise_slug', fr.slug).order('created_at',{ascending:true}).limit(300);
       if (r.error) throw r.error;
       renderMessages(r.data || []);
     } catch(e){
-      thread.innerHTML = '<div class="msg-empty">메시지를 불러올 수 없습니다. (' + (e.message||e) + ')</div>';
+      thread.innerHTML = '<div class="msg-empty">' + T.msgFail + ' (' + (e.message||e) + ')</div>';
     }
   }
   function renderMessages(msgs){
     var thread = $('msgThread');
-    if (!msgs.length){ thread.innerHTML = '<div class="msg-empty">아직 메시지가 없습니다. 본사에 문의를 남겨보세요.</div>'; return; }
+    if (!msgs.length){ thread.innerHTML = '<div class="msg-empty">' + T.msgNone + '</div>'; return; }
     thread.innerHTML = msgs.map(function(m){
       var mine = m.sender === 'franchise';
-      var who = mine ? '나' : '🏢 본사';
+      var who = mine ? T.whoMe : T.whoHQ;
       var t = m.created_at ? new Date(m.created_at).toLocaleString() : '';
       return '<div class="msg-bubble '+(mine?'me':'them')+'">'+escA(m.body)
         + '<span class="mt">'+who+' · '+t+'</span></div>';
@@ -312,7 +500,7 @@ select option{background:#1d1640;}
   }
   $('btnMsgSend').onclick = async function(){
     var fr = state.franchise;
-    if (!fr || !fr.slug){ toast('먼저 홈페이지 정보를 저장하세요.','err'); return; }
+    if (!fr || !fr.slug){ toast(T.msgNeedSave,'err'); return; }
     var body = $('msgBody').value.trim();
     if (!body) return;
     this.disabled = true;
@@ -322,7 +510,7 @@ select option{background:#1d1640;}
       $('msgBody').value = '';
       await loadMessages();
     } catch(e){
-      toast('메시지 전송 실패: ' + (e.message||e), 'err');
+      toast(T.msgSendFail + (e.message||e), 'err');
     } finally {
       this.disabled = false;
     }
@@ -337,7 +525,7 @@ select option{background:#1d1640;}
     if (!fr || !fr.slug){ if(card) card.style.display='none'; return; }
     if (card) card.style.display='';
     var listEl = $('ordList');
-    listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">불러오는 중…</div>';
+    listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">' + T.loadingShort + '</div>';
     var orders = [], settlements = [], reviews = [];
     try {
       var r = await sb.from('orders')
@@ -362,7 +550,7 @@ select option{background:#1d1640;}
   function _itemsText(o){
     var items = (typeof o.items==='string' ? (function(){try{return JSON.parse(o.items||'[]');}catch(e){return [];}})() : (o.items||[]));
     return items.map(function(it){
-      var n=(it.product&&it.product.name)||it.productName||it.product_name||it.name||'상품';
+      var n=(it.product&&it.product.name)||it.productName||it.product_name||it.name||T.itemProduct;
       return n+' ('+(it.qty||1)+')';
     }).join(', ');
   }
@@ -370,11 +558,11 @@ select option{background:#1d1640;}
     var o = (state._frOrders||[]).filter(function(x){return String(x.id)===String(id);})[0];
     if (!o) return;
     var d = o.order_date ? new Date(o.order_date).toLocaleString() : '-';
-    alert('주문 #'+o.id+'\n주문일: '+d+'\n고객: '+(o.manager_name||'-')+' / '+(o.phone||'-')
-      +'\n배송지: '+(o.address||'-')
-      +'\n상태: '+(o.status||'-')+' · 결제: '+(o.payment_status||'-')
-      +'\n주문금액: ₩'+Number(o.total_amount||0).toLocaleString()
-      +'\n\n[주문 내역]\n'+(_itemsText(o)||'내역 없음'));
+    alert(T.odOrder+' #'+o.id+'\n'+T.odDate+': '+d+'\n'+T.odCust+': '+(o.manager_name||'-')+' / '+(o.phone||'-')
+      +'\n'+T.odAddr+': '+(o.address||'-')
+      +'\n'+T.odStatus+': '+(o.status||'-')+' · '+T.odPay+': '+(o.payment_status||'-')
+      +'\n'+T.odAmount+': ₩'+Number(o.total_amount||0).toLocaleString()
+      +'\n\n'+T.odItems+'\n'+(_itemsText(o)||T.odNoItems));
   }
   function renderOrders(orders, settlements, reviews){
     var sumEl = $('ordSummary'), listEl = $('ordList');
@@ -388,21 +576,21 @@ select option{background:#1d1640;}
     var totSales=0;
     orders.forEach(function(o){ totSales += Number(o.total_amount||0); });
     sumEl.innerHTML =
-      '<div class="ord-sum-box"><div class="k">총 주문</div><div class="v">'+orders.length+'건</div></div>'
-      + '<div class="ord-sum-box"><div class="k">총 매출</div><div class="v">'+won(totSales)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">미정산 (정산 가능)</div><div class="v gold">'+won(elig)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">정산 요청중</div><div class="v">'+won(req)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">기송금</div><div class="v">'+won(paid)+'</div></div>';
+      '<div class="ord-sum-box"><div class="k">'+T.sumOrders+'</div><div class="v">'+orders.length+T.unitCount+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">'+T.sumSales+'</div><div class="v">'+won(totSales)+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">'+T.sumEligible+'</div><div class="v gold">'+won(elig)+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">'+T.sumRequested+'</div><div class="v">'+won(req)+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">'+T.sumPaid+'</div><div class="v">'+won(paid)+'</div></div>';
     var reqHtml = '';
     if (elig > 0){
-      reqHtml = '<button class="btn btn-pri" id="btnReqSettle" style="margin:2px 0 14px;">💸 미정산 '+won(elig)+' 정산 요청하기</button>';
+      reqHtml = '<button class="btn btn-pri" id="btnReqSettle" style="margin:2px 0 14px;">'+T.reqSettlePrefix+won(elig)+T.reqSettleSuffix+'</button>';
     } else if (req > 0){
-      reqHtml = '<div style="margin:2px 0 14px;font-size:13px;color:#fbbf24;font-weight:700;">🔔 정산 요청이 접수되었습니다 — 본사 송금 처리 대기중 ('+won(req)+')</div>';
+      reqHtml = '<div style="margin:2px 0 14px;font-size:13px;color:#fbbf24;font-weight:700;">'+T.reqPending+' ('+won(req)+')</div>';
     } else if (!settlements.length){
-      reqHtml = '<div style="margin:2px 0 14px;font-size:12px;color:#7c7795;">완료된 주문이 생기면 정산 가능 금액이 표시됩니다.</div>';
+      reqHtml = '<div style="margin:2px 0 14px;font-size:12px;color:#7c7795;">'+T.reqNone+'</div>';
     }
     if (!orders.length){
-      listEl.innerHTML = reqHtml + '<div style="color:#9b94c4;font-size:13px;padding:14px;">아직 주문이 없습니다.</div>';
+      listEl.innerHTML = reqHtml + '<div style="color:#9b94c4;font-size:13px;padding:14px;">'+T.noOrders+'</div>';
       bindReq(); return;
     }
     var revByOrder = {};
@@ -416,18 +604,18 @@ select option{background:#1d1640;}
       var rev = revByOrder[o.id];
       var revCell = rev
         ? (rev.received_ok === false
-            ? '<span class="ord-st" style="background:rgba(239,68,68,0.16);color:#f87171;">⚠️ 문제</span>'
-            : '<span class="ord-st done">✅ 수령'+(rev.rating?' '+'★'.repeat(rev.rating):'')+'</span>')
-        : '<span style="color:#7c7795;font-size:11px;">대기</span>';
-      return '<tr style="cursor:pointer;" data-oid="'+o.id+'" title="클릭하여 주문 상세 보기">'
+            ? '<span class="ord-st" style="background:rgba(239,68,68,0.16);color:#f87171;">'+T.revProblem+'</span>'
+            : '<span class="ord-st done">'+T.revReceived+(rev.rating?' '+'★'.repeat(rev.rating):'')+'</span>')
+        : '<span style="color:#7c7795;font-size:11px;">'+T.revWait+'</span>';
+      return '<tr style="cursor:pointer;" data-oid="'+o.id+'" title="'+T.rowTip+'">'
         + '<td>'+d+'</td><td>#'+o.id+'</td><td>'+won(amt)+'</td>'
         + '<td style="color:#9b94c4;">-'+won(comm)+'</td>'
         + '<td style="font-weight:800;color:#c4b5fd;">'+won(payout)+'</td>'
-        + '<td><span class="ord-st '+(done?'done':'prog')+'">'+(done?'정산대상':(o.status||'진행중'))+'</span></td>'
+        + '<td><span class="ord-st '+(done?'done':'prog')+'">'+(done?T.stDone:(o.status||T.stProg))+'</span></td>'
         + '<td>'+revCell+'</td></tr>';
     }).join('');
     listEl.innerHTML = reqHtml + '<table class="ord-table"><thead><tr>'
-      + '<th>주문일</th><th>주문번호</th><th>주문금액</th><th>수수료 20%</th><th>정산금액</th><th>상태</th><th>고객확인</th>'
+      + '<th>'+T.thDate+'</th><th>'+T.thNo+'</th><th>'+T.thAmt+'</th><th>'+T.thFee+'</th><th>'+T.thPayout+'</th><th>'+T.thStatus+'</th><th>'+T.thReview+'</th>'
       + '</tr></thead><tbody>'+rows+'</tbody></table>';
     listEl.querySelectorAll('tr[data-oid]').forEach(function(tr){
       tr.onclick = function(){ showOrderDetail(tr.dataset.oid); };
@@ -439,17 +627,17 @@ select option{background:#1d1640;}
     if (!b) return;
     b.onclick = async function(){
       if (!state.franchise || !state.franchise.slug) return;
-      if (!confirm('완료된 주문의 정산을 본사에 요청합니다.\n본사가 수수료 20%를 제외한 금액을 송금해 드립니다.\n\n정산을 요청할까요?')) return;
-      b.disabled = true; b.textContent = '요청 중…';
+      if (!confirm(T.settleConfirm)) return;
+      b.disabled = true; b.textContent = T.requesting;
       try {
         var r = await sb.from('franchise_settlements').update({ status:'requested' })
           .eq('franchise_slug', state.franchise.slug).eq('status','eligible');
         if (r.error) throw r.error;
-        toast('정산 요청이 접수되었습니다','ok');
+        toast(T.settleDone,'ok');
         loadOrders();
       } catch(e){
-        toast('정산 요청 실패: ' + (e.message||e), 'err');
-        b.disabled = false; b.textContent = '💸 정산 요청하기';
+        toast(T.settleFail + (e.message||e), 'err');
+        b.disabled = false; b.textContent = '💸 ' + T.reqSettleBtn;
       }
     };
   }
@@ -472,16 +660,16 @@ select option{background:#1d1640;}
   $('btnLogin').onclick = async function(){
     var em = $('loginEmail').value.trim();
     var pw = $('loginPw').value;
-    if (!em || !pw){ toast('이메일과 비밀번호를 입력하세요.','err'); return; }
-    this.disabled = true; this.textContent = '로그인 중…';
+    if (!em || !pw){ toast(T.loginEmpty,'err'); return; }
+    this.disabled = true; this.textContent = T.loggingIn;
     try {
       var r = await sb.auth.signInWithPassword({ email:em, password:pw });
       if (r.error) throw r.error;
       state.user = r.data.user;
       await afterLogin();
     } catch(e){
-      toast('로그인 실패: ' + (e.message||e), 'err');
-      this.disabled = false; this.textContent = '로그인';
+      toast(T.loginFail + (e.message||e), 'err');
+      this.disabled = false; this.textContent = T.login;
     }
   };
   $('loginPw').addEventListener('keydown', function(e){ if(e.key==='Enter') $('btnLogin').click(); });
@@ -529,7 +717,7 @@ select option{background:#1d1640;}
       state.products.forEach(function(p){ p._top = productTopCat(p); });
       renderProducts();
     } catch(e){
-      $('prodGrid').innerHTML = '<div style="color:#ef4444;font-size:13px;padding:20px;">제품을 불러오지 못했습니다: '+(e.message||e)+'</div>';
+      $('prodGrid').innerHTML = '<div style="color:#ef4444;font-size:13px;padding:20px;">'+T.loadingProd+' ('+(e.message||e)+')</div>';
     }
   }
 
@@ -567,7 +755,7 @@ select option{background:#1d1640;}
   function renderProducts(){
     var grid = $('prodGrid');
     var list = filteredProducts();
-    if (!list.length){ grid.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:20px;">제품이 없습니다.</div>'; updateCount(); return; }
+    if (!list.length){ grid.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:20px;">'+T.noProd+'</div>'; updateCount(); return; }
     var groups = {};
     list.forEach(function(p){ (groups[p._top] = groups[p._top] || []).push(p); });
     var html = '';
@@ -578,8 +766,8 @@ select option{background:#1d1640;}
     Object.keys(state.topMap).forEach(function(code){
       var g = groups[code]; if (g && g.length) html += section(state.topMap[code], g);
     });
-    if (groups['_etc'] && groups['_etc'].length) html += section('기타', groups['_etc']);
-    grid.innerHTML = html || '<div style="color:#9b94c4;font-size:13px;padding:20px;">제품이 없습니다.</div>';
+    if (groups['_etc'] && groups['_etc'].length) html += section(T.etc, groups['_etc']);
+    grid.innerHTML = html || '<div style="color:#9b94c4;font-size:13px;padding:20px;">'+T.noProd+'</div>';
     grid.querySelectorAll('.prod-item').forEach(function(d){
       d.onclick = function(){
         var code = d.dataset.code;
@@ -592,7 +780,9 @@ select option{background:#1d1640;}
     updateCount();
   }
   function updateCount(){
-    $('prodCount').textContent = Object.keys(state.selected).length + '개 선택';
+    $('prodCount').textContent = (LANG==='en'
+        ? Object.keys(state.selected).length + ' selected'
+        : Object.keys(state.selected).length + (LANG==='ja'?'件選択':'개 선택'));
   }
   $('prodSearch').addEventListener('input', renderProducts);
   $('btnSelectAll').onclick = function(){
@@ -605,8 +795,8 @@ select option{background:#1d1640;}
   $('fLogoFile').addEventListener('change', async function(){
     var file = this.files && this.files[0];
     if (!file) return;
-    if (file.size > 3*1024*1024){ toast('로고는 3MB 이하로 올려주세요.','err'); return; }
-    toast('로고 업로드 중…');
+    if (file.size > 3*1024*1024){ toast(T.logoTooBig,'err'); return; }
+    toast(T.logoUploading);
     try {
       var ext = (file.name.split('.').pop()||'png').toLowerCase();
       var path = 'franchise/' + state.user.id + '/logo_' + Date.now() + '.' + ext;
@@ -616,9 +806,9 @@ select option{background:#1d1640;}
       state.logoUrl = pub.data.publicUrl;
       $('logoImg').src = state.logoUrl;
       $('logoPreview').style.display = 'block';
-      toast('로고 업로드 완료','ok');
+      toast(T.logoDone,'ok');
     } catch(e){
-      toast('로고 업로드 실패: ' + (e.message||e) + ' — 관리자에게 문의하세요.','err');
+      toast(T.logoFail + (e.message||e) + T.logoFailTail,'err');
     }
   });
 
@@ -630,7 +820,7 @@ select option{background:#1d1640;}
   $('btnSave').onclick = async function(){
     // 2026-05-16: 비구독자는 체험만 — 저장 시 구독 안내
     if (!state.hasAccess){
-      if (confirm('저장은 가맹점 구독 회원만 가능합니다.\n지금 입력하신 내용은 체험용이며 저장되지 않습니다.\n\n구독 요금제를 확인하시겠습니까?')) {
+      if (confirm(T.needSubSave)) {
         location.href = '/franchise#join';
       }
       return;
@@ -638,20 +828,28 @@ select option{background:#1d1640;}
     var slug = slugify($('fSlug').value);
     var company = $('fCompany').value.trim();
     var phone = $('fPhone').value.trim();
-    if (!slug || slug.length < 3){ toast('홈페이지 주소(slug)는 3자 이상 영문/숫자로 입력하세요.','err'); return; }
-    if (!company){ toast('상호를 입력하세요.','err'); return; }
-    if (!phone){ toast('대표 전화번호를 입력하세요.','err'); return; }
+    if (!slug || slug.length < 3){ toast(T.slugErr,'err'); return; }
+    if (!company){ toast(T.companyErr,'err'); return; }
+    if (!phone){ toast(T.phoneErr,'err'); return; }
 
-    this.disabled = true; this.textContent = '저장 중…';
+    this.disabled = true; this.textContent = T.saving;
     $('saveStatus').textContent = '';
     try {
       // slug 중복 체크 (본인 제외)
       var dup = await sb.from('franchises').select('id,owner_id').eq('slug', slug).maybeSingle();
       if (dup.data && dup.data.owner_id !== state.user.id){
-        throw new Error('이미 사용 중인 홈페이지 주소입니다. 다른 주소를 입력하세요.');
+        throw new Error(T.slugDup);
       }
-      // 한 계정당 홈페이지 1개 — 저장 직전 소유 가맹점 재확인 후 update, 없으면 insert
-      var existing = await sb.from('franchises').select('id').eq('owner_id', state.user.id).maybeSingle();
+      // 테스트 계정은 여러 홈페이지 생성 가능 — slug 기준으로 수정/신규 판단
+      var isTestSave = TEST_EMAILS.indexOf((state.user.email||'').toLowerCase()) >= 0;
+      var existing = null;
+      if (dup.data && dup.data.owner_id === state.user.id){
+        existing = { id: dup.data.id };          // 이 slug 가맹점 수정
+      } else if (!isTestSave){
+        var owned = await sb.from('franchises').select('id').eq('owner_id', state.user.id).maybeSingle();
+        existing = owned.data || null;           // 일반 계정: 1계정 1홈페이지
+      }
+      // isTestSave && 신규 slug → existing=null → 새 홈페이지 insert
       var payload = {
         owner_id: state.user.id,
         slug: slug,
@@ -665,25 +863,31 @@ select option{background:#1d1640;}
         updated_at: new Date().toISOString()
       };
       var res;
-      if (existing.data && existing.data.id){
-        res = await sb.from('franchises').update(payload).eq('id', existing.data.id).select().maybeSingle();
+      if (existing && existing.id){
+        res = await sb.from('franchises').update(payload).eq('id', existing.id).select().maybeSingle();
       } else {
         res = await sb.from('franchises').insert(payload).select().maybeSingle();
       }
       if (res.error) throw res.error;
       state.franchise = res.data;
-      $('saveStatus').innerHTML = '저장됨 · 홈페이지 주소: <b>/store/' + slug + '</b>';
-      toast('저장되었습니다','ok');
+      // allFranchises 갱신 + 테스트 계정 스위처 다시 그리기
+      var fi = state.allFranchises.findIndex(function(x){ return x.id===res.data.id; });
+      if (fi >= 0) state.allFranchises[fi] = res.data;
+      else state.allFranchises.unshift(res.data);
+      renderFrSwitcher(isTestSave);
+      loadOrders(); loadMessages();
+      $('saveStatus').innerHTML = T.savedAddr + '<b>/store/' + slug + '</b>';
+      toast(T.saved,'ok');
     } catch(e){
-      toast('저장 실패: ' + (e.message||e), 'err');
+      toast(T.saveFail + (e.message||e), 'err');
     } finally {
-      this.disabled = false; this.textContent = '💾 저장';
+      this.disabled = false; this.textContent = T.save;
     }
   };
 
   $('btnPreview').onclick = function(){
     var slug = slugify($('fSlug').value);
-    if (!slug){ toast('먼저 홈페이지 주소를 입력하고 저장하세요.','err'); return; }
+    if (!slug){ toast(T.previewErr,'err'); return; }
     window.open('/store/' + slug, '_blank');
   };
 
