@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>본사 가맹점 정산 · Chameleon Printing</title>
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:linear-gradient(160deg,#0f1729,#1a1f3a);color:#e8ecf7;min-height:100vh;}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 18px 80px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0 22px;border-bottom:1px solid rgba(96,165,250,0.18);margin-bottom:24px;}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:18px;}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#2563eb);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:9px;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px;padding:11px 18px;transition:filter .15s;}
+.btn:hover{filter:brightness(1.1);}
+.btn-pri{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;}
+.btn-ghost{background:rgba(255,255,255,0.07);color:#e8ecf7;border:1px solid rgba(96,165,250,0.3);}
+.btn-sm{padding:8px 13px;font-size:13px;}
+.btn-gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1430;}
+.btn:disabled{opacity:0.5;cursor:default;filter:none;}
+.center-box{max-width:400px;margin:70px auto;text-align:center;}
+.center-box .ic{font-size:46px;margin-bottom:14px;}
+.center-box h1{font-size:21px;font-weight:900;margin-bottom:10px;}
+.center-box p{font-size:14px;color:#94a0c0;line-height:1.7;margin-bottom:20px;}
+label.fld{display:block;margin-bottom:13px;text-align:left;}
+label.fld .lb{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:#c3cce5;}
+input[type=email],input[type=password]{width:100%;padding:12px 13px;border:1.5px solid rgba(96,165,250,0.3);border-radius:9px;background:rgba(255,255,255,0.05);color:#e8ecf7;font-size:14px;font-family:inherit;outline:none;}
+input:focus{border-color:#3b82f6;}
+#screenLogin,#screenDenied,#screenDash,#loadingScreen{display:none;}
+.sum-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.sum-box{background:rgba(255,255,255,0.04);border:1px solid rgba(96,165,250,0.2);border-radius:13px;padding:16px 18px;}
+.sum-box .k{font-size:12px;color:#94a0c0;margin-bottom:6px;}
+.sum-box .v{font-size:22px;font-weight:900;}
+.sum-box .v.gold{color:#fbbf24;}
+.sum-box .v.green{color:#4ade80;}
+.fr-card{background:rgba(255,255,255,0.04);border:1px solid rgba(96,165,250,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px;}
+.fr-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.fr-card-name{font-size:16px;font-weight:900;}
+.fr-card-name small{color:#94a0c0;font-weight:600;font-size:12px;margin-left:6px;}
+.fr-nums{display:flex;gap:20px;flex-wrap:wrap;margin:14px 0 4px;}
+.fr-num .k{font-size:11px;color:#94a0c0;margin-bottom:3px;}
+.fr-num .v{font-size:16px;font-weight:800;}
+.fr-num .v.out{color:#fbbf24;}
+.fr-num .v.paid{color:#4ade80;}
+.fr-orders{margin-top:12px;border-top:1px solid rgba(96,165,250,0.13);padding-top:10px;font-size:12px;color:#94a0c0;}
+.fr-orders table{width:100%;border-collapse:collapse;font-size:12px;}
+.fr-orders th{text-align:left;padding:6px 6px;color:#7e8aac;font-weight:700;}
+.fr-orders td{padding:6px 6px;border-top:1px solid rgba(96,165,250,0.08);color:#c3cce5;}
+.tg{cursor:pointer;color:#60a5fa;font-weight:700;font-size:12px;user-select:none;}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1a1f3a;border:1px solid rgba(96,165,250,0.4);color:#e8ecf7;padding:13px 22px;border-radius:11px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,0.5);}
+.toast.err{border-color:#ef4444;} .toast.ok{border-color:#22c55e;}
+.empty{color:#94a0c0;font-size:14px;padding:30px 0;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="dot">🏢</span> 본사 가맹점 정산</div>
+    <div id="topRight"></div>
+  </div>
+
+  <div id="loadingScreen" style="display:block;text-align:center;padding:80px 0;color:#94a0c0;">불러오는 중…</div>
+
+  <div id="screenLogin">
+    <div class="center-box">
+      <div class="ic">🔐</div>
+      <h1>본사 관리자 로그인</h1>
+      <p>가맹점 정산 관리는 본사 관리자만 접근할 수 있습니다.</p>
+      <label class="fld"><span class="lb">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
+      <label class="fld"><span class="lb">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
+      <button class="btn btn-pri" id="btnLogin" style="width:100%;">로그인</button>
+    </div>
+  </div>
+
+  <div id="screenDenied">
+    <div class="center-box">
+      <div class="ic">🚫</div>
+      <h1>접근 권한이 없습니다</h1>
+      <p>이 페이지는 본사 관리자 전용입니다.</p>
+      <a class="btn btn-ghost" id="btnLogout1" href="javascript:void(0)">로그아웃</a>
+    </div>
+  </div>
+
+  <div id="screenDash">
+    <div class="sum-row" id="sumRow"></div>
+    <div id="frList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+  var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+  var ADMIN_EMAILS=['korea900as@gmail.com'];
+  var DONE_STATUS=['완료됨','완료','구매확정','배송완료','발송완료'];
+  var sb=window.supabase.createClient(SB_URL,SB_KEY);
+  var $=function(id){return document.getElementById(id);};
+  var state={user:null,franchises:[],orders:[],settlements:[]};
+
+  function won(n){return '₩'+Number(n||0).toLocaleString();}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function toast(m,k){var t=document.createElement('div');t.className='toast '+(k||'');t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},4000);}
+  function show(id){['loadingScreen','screenLogin','screenDenied','screenDash'].forEach(function(s){var e=$(s);if(e)e.style.display=(s===id)?'block':'none';});}
+
+  async function init(){
+    show('loadingScreen');
+    var sess=null;
+    try{sess=(await sb.auth.getSession()).data.session;}catch(e){}
+    if(!sess||!sess.user){show('screenLogin');return;}
+    state.user=sess.user;
+    await afterLogin();
+  }
+  async function afterLogin(){
+    var email=(state.user.email||'').toLowerCase();
+    $('topRight').innerHTML='<span style="font-size:13px;color:#94a0c0;margin-right:10px;">'+esc(email)+'</span>'
+      +'<button class="btn btn-ghost btn-sm" id="btnLogout2">로그아웃</button>';
+    var lo=$('btnLogout2'); if(lo) lo.onclick=logout;
+    if(ADMIN_EMAILS.indexOf(email)<0){show('screenDenied');return;}
+    show('loadingScreen');
+    await loadAll();
+    show('screenDash');
+  }
+  async function logout(){try{await sb.auth.signOut();}catch(e){}location.reload();}
+  $('btnLogout1').onclick=logout;
+
+  $('btnLogin').onclick=async function(){
+    var em=$('loginEmail').value.trim(), pw=$('loginPw').value;
+    if(!em||!pw){toast('이메일과 비밀번호를 입력하세요.','err');return;}
+    this.disabled=true;this.textContent='로그인 중…';
+    try{
+      var r=await sb.auth.signInWithPassword({email:em,password:pw});
+      if(r.error) throw r.error;
+      state.user=r.data.user;
+      await afterLogin();
+    }catch(e){
+      toast('로그인 실패: '+(e.message||e),'err');
+      this.disabled=false;this.textContent='로그인';
+    }
+  };
+  $('loginPw').addEventListener('keydown',function(e){if(e.key==='Enter')$('btnLogin').click();});
+
+  async function loadAll(){
+    try{
+      var fr=await sb.from('franchises').select('id,slug,company_name,phone,status').order('created_at',{ascending:true});
+      state.franchises=fr.data||[];
+    }catch(e){state.franchises=[];}
+    try{
+      var od=await sb.from('orders')
+        .select('id,order_date,total_amount,franchise_commission,franchise_slug,status')
+        .not('franchise_slug','is',null).order('order_date',{ascending:false}).limit(2000);
+      state.orders=od.data||[];
+    }catch(e){state.orders=[];}
+    try{
+      var st=await sb.from('franchise_settlements').select('*').order('created_at',{ascending:false}).limit(2000);
+      state.settlements=st.data||[];
+    }catch(e){state.settlements=[];}
+    render();
+  }
+
+  function payoutOf(o){
+    var amt=Number(o.total_amount||0);
+    var comm=(o.franchise_commission!=null)?Number(o.franchise_commission):Math.round(amt*0.20);
+    return {amt:amt,comm:comm,payout:amt-comm,done:DONE_STATUS.indexOf(o.status)>=0};
+  }
+
+  function render(){
+    var byFr={};
+    state.orders.forEach(function(o){(byFr[o.franchise_slug]=byFr[o.franchise_slug]||[]).push(o);});
+    var paidByFr={};
+    state.settlements.forEach(function(s){
+      if(s.status==='paid') paidByFr[s.franchise_slug]=(paidByFr[s.franchise_slug]||0)+Number(s.payout_amount||0);
+    });
+
+    var gSales=0,gEligible=0,gPaid=0,gOutstanding=0;
+    state.franchises.forEach(function(f){
+      var ords=byFr[f.slug]||[];
+      ords.forEach(function(o){var p=payoutOf(o);gSales+=p.amt;if(p.done)gEligible+=p.payout;});
+      gPaid+=(paidByFr[f.slug]||0);
+    });
+    gOutstanding=gEligible-gPaid;
+
+    $('sumRow').innerHTML=
+      '<div class="sum-box"><div class="k">가맹점</div><div class="v">'+state.franchises.length+'개</div></div>'
+      +'<div class="sum-box"><div class="k">총 가맹점 매출</div><div class="v">'+won(gSales)+'</div></div>'
+      +'<div class="sum-box"><div class="k">정산 대상액 (완료주문 80%)</div><div class="v gold">'+won(gEligible)+'</div></div>'
+      +'<div class="sum-box"><div class="k">기송금</div><div class="v green">'+won(gPaid)+'</div></div>'
+      +'<div class="sum-box"><div class="k">미정산 잔액</div><div class="v gold">'+won(gOutstanding)+'</div></div>';
+
+    if(!state.franchises.length){$('frList').innerHTML='<div class="empty">등록된 가맹점이 없습니다.</div>';return;}
+
+    $('frList').innerHTML=state.franchises.map(function(f){
+      var ords=byFr[f.slug]||[];
+      var sales=0,eligible=0,doneN=0;
+      ords.forEach(function(o){var p=payoutOf(o);sales+=p.amt;if(p.done){eligible+=p.payout;doneN++;}});
+      var paid=paidByFr[f.slug]||0;
+      var outstanding=eligible-paid;
+      var rows=ords.slice(0,40).map(function(o){
+        var p=payoutOf(o);
+        var d=o.order_date?new Date(o.order_date).toLocaleDateString():'-';
+        return '<tr><td>'+d+'</td><td>#'+o.id+'</td><td>'+won(p.amt)+'</td><td>'+won(p.payout)+'</td><td>'+(p.done?'✅ 완료':esc(o.status||'진행중'))+'</td></tr>';
+      }).join('');
+      return '<div class="fr-card">'
+        +'<div class="fr-card-top">'
+          +'<div class="fr-card-name">'+esc(f.company_name||f.slug)+'<small>/store/'+esc(f.slug)+' · 주문 '+ords.length+'건</small></div>'
+          +(outstanding>0
+              ? '<button class="btn btn-gold btn-sm" data-pay="'+esc(f.slug)+'" data-amt="'+outstanding+'">💸 미정산 '+won(outstanding)+' 송금완료 처리</button>'
+              : '<span style="font-size:13px;color:#4ade80;font-weight:800;">정산 완료</span>')
+        +'</div>'
+        +'<div class="fr-nums">'
+          +'<div class="fr-num"><div class="k">매출</div><div class="v">'+won(sales)+'</div></div>'
+          +'<div class="fr-num"><div class="k">완료주문</div><div class="v">'+doneN+'건</div></div>'
+          +'<div class="fr-num"><div class="k">정산대상</div><div class="v">'+won(eligible)+'</div></div>'
+          +'<div class="fr-num"><div class="k">기송금</div><div class="v paid">'+won(paid)+'</div></div>'
+          +'<div class="fr-num"><div class="k">미정산</div><div class="v out">'+won(outstanding)+'</div></div>'
+        +'</div>'
+        +(ords.length?'<div class="tg" data-tg="'+esc(f.slug)+'">▸ 주문 내역 보기 ('+ords.length+')</div>'
+            +'<div class="fr-orders" id="ord-'+esc(f.slug)+'" style="display:none;">'
+            +'<table><thead><tr><th>주문일</th><th>번호</th><th>주문액</th><th>정산액</th><th>상태</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+          :'')
+      +'</div>';
+    }).join('');
+
+    $('frList').querySelectorAll('.tg').forEach(function(t){
+      t.onclick=function(){
+        var box=$('ord-'+t.dataset.tg);
+        if(box){var v=box.style.display==='none';box.style.display=v?'block':'none';t.textContent=(v?'▾':'▸')+t.textContent.slice(1);}
+      };
+    });
+    $('frList').querySelectorAll('[data-pay]').forEach(function(b){
+      b.onclick=function(){ doPayout(b.dataset.pay, Number(b.dataset.amt), b); };
+    });
+  }
+
+  async function doPayout(slug, amount, btn){
+    if(amount<=0) return;
+    if(!confirm('['+slug+'] 가맹점에 '+won(amount)+' 송금 완료로 기록할까요?\n(실제 계좌이체는 별도로 진행하세요)')) return;
+    btn.disabled=true; btn.textContent='기록 중…';
+    try{
+      var r=await sb.from('franchise_settlements').insert({
+        franchise_slug:slug,
+        payout_amount:amount,
+        commission_amount:Math.round(amount/0.8*0.2),
+        order_amount:Math.round(amount/0.8),
+        status:'paid'
+      });
+      if(r.error) throw r.error;
+      toast('송금 완료 기록됨','ok');
+      await loadAll();
+    }catch(e){
+      toast('기록 실패: '+(e.message||e),'err');
+      btn.disabled=false;
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
