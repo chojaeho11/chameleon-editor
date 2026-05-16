@@ -10002,22 +10002,20 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                     : `${p.width_mm} x ${p.height_mm}mm`)
                 : 'Option';
 
-            // 2026-05-16: 키링·아크릴 굿즈만 5×5cm 기준가로 표시 (허니콤·스티커 등 일반 면적상품 제외)
+            // 2026-05-16: 면적가(회배당) 상품 — 카드에 1m² 단가 대신 5×5cm 기준가 표시
+            // 적용: 아크릴 굿즈(acr*)·아크릴판(acrylic)·스티커(pp_sticker). 허니콤·현수막 등은 제외
             let cardPrice = formattedPrice, cardSize = sizeText;
-            const _agCode = (p.code || '').toLowerCase();
             const _agCat = (p.category || '').toLowerCase();
             const _agName = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
-            const _isAcrylicGoods =
-                /^gds_acr|^gds_kr|^acr_kr|^acr_g/.test(_agCode) ||
-                /^(gds_acr|acrylic_goods|acrylic|굿즈|goods)$/.test(_agCat) ||
-                /아크릴\s*키링|아크릴\s*키홀더|아크릴\s*굿즈|아크릴\s*스탠드|코롯도|korotto|acrylic\s*(keyring|charm|stand|goods|holder|tag)/i.test(_agName);
-            if (_isAcrylicGoods && p.is_custom_size === true && p.width_mm > 0 && p.height_mm > 0 && Number(p.price) > 0) {
-                const _areaCm2 = (p.width_mm / 10) * (p.height_mm / 10);
-                if (_areaCm2 > 0) {
-                    const _small = Math.round(Number(p.price) / _areaCm2 * 25); // 5×5cm = 25cm²
-                    cardPrice = (window.formatCurrency ? window.formatCurrency(_small) : Number(_small).toLocaleString() + '원') + '~';
-                    cardSize = (window._isUSsite && window._isUSsite()) ? '2 x 2 in~' : '5 x 5cm~';
-                }
+            const _is5cmArea = p.is_custom_size === true && Number(p.price) > 0 && (
+                /^acr/.test(_agCat) || _agCat === 'acrylic' ||
+                _agCat.indexOf('sticker') >= 0 || /스티커|sticker/i.test(_agName)
+            );
+            if (_is5cmArea) {
+                // p.price = m²당 단가. 5×5cm = 25cm², 1m² = 10000cm²
+                const _small = Math.max(100, Math.round(Number(p.price) * 25 / 10000));
+                cardPrice = (window.formatCurrency ? window.formatCurrency(_small) : Number(_small).toLocaleString() + '원') + '~';
+                cardSize = (window._isUSsite && window._isUSsite()) ? '2 x 2 in~' : '5 x 5cm~';
             }
 
             // 뱃지 색상
