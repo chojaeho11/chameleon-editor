@@ -45,6 +45,15 @@
     }
 })();
 
+// 2026-05-16: 가맹점 스토어(/store/{slug}) 유입 — ?fr= 슬러그를 세션에 저장.
+//   주문 생성 시 order.js 가 이 값을 읽어 orders.franchise_slug 로 귀속시킴.
+(function(){
+    try {
+        var fr = new URLSearchParams(location.search).get('fr');
+        if (fr) sessionStorage.setItem('_franchise_ref', fr.toLowerCase().replace(/[^a-z0-9-]/g,''));
+    } catch(e){}
+})();
+
 // [버전 체크] 캐시된 구버전 HTML 감지 시 강제 새로고침
 (function(){
     var CV = '20260305b';

@@ -66,6 +66,17 @@ select option{background:#1d1640;}
 .badge-test{font-size:11px;font-weight:800;background:rgba(251,191,36,0.16);color:#fbbf24;border:1px solid rgba(251,191,36,0.4);padding:3px 9px;border-radius:999px;}
 .statusline{font-size:13px;color:#9b94c4;margin-top:8px;}
 .statusline b{color:#c4b5fd;}
+.ord-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
+.ord-sum-box{background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.2);border-radius:11px;padding:13px 15px;}
+.ord-sum-box .k{font-size:12px;color:#9b94c4;margin-bottom:5px;}
+.ord-sum-box .v{font-size:18px;font-weight:900;color:#ece9f7;}
+.ord-sum-box .v.gold{color:#fbbf24;}
+.ord-table{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
+.ord-table th{text-align:left;padding:9px 8px;color:#9b94c4;font-weight:700;border-bottom:1px solid rgba(167,139,250,0.22);font-size:12px;}
+.ord-table td{padding:10px 8px;border-bottom:1px solid rgba(167,139,250,0.1);}
+.ord-st{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+.ord-st.done{background:rgba(34,197,94,0.16);color:#4ade80;}
+.ord-st.prog{background:rgba(251,191,36,0.14);color:#fbbf24;}
 @media(max-width:560px){.row2{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -145,6 +156,13 @@ select option{background:#1d1640;}
       </div>
       <div class="cat-chips" id="catChips"></div>
       <div class="prod-grid" id="prodGrid"><div style="color:#9b94c4;font-size:13px;padding:20px;">제품을 불러오는 중…</div></div>
+    </div>
+
+    <div class="card" id="cardOrders">
+      <h2>③ 주문 · 정산 현황</h2>
+      <div class="desc">고객이 사장님 스토어에서 주문한 내역입니다. 결제는 본사가 대행하며, 제작·납품 완료 시 <b>중계수수료 20%를 제외한 금액</b>을 정산해 드립니다.</div>
+      <div id="ordSummary" class="ord-summary"></div>
+      <div style="overflow-x:auto;"><div id="ordList"></div></div>
     </div>
 
     <div class="savebar">
@@ -233,6 +251,67 @@ select option{background:#1d1640;}
     fillForm();
     show('screenDash');
     loadProducts();
+    loadOrders();
+  }
+
+  // ===== 주문 · 정산 현황 =====
+  var DONE_STATUS = ['완료됨','완료','구매확정','배송완료','발송완료'];
+  function won(n){ return '₩' + Number(n||0).toLocaleString(); }
+  async function loadOrders(){
+    var fr = state.franchise;
+    var card = $('cardOrders');
+    if (!fr || !fr.slug){ if(card) card.style.display='none'; return; }
+    if (card) card.style.display='';
+    var listEl = $('ordList'), sumEl = $('ordSummary');
+    listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">불러오는 중…</div>';
+    try {
+      var r = await sb.from('orders')
+        .select('id,order_date,total_amount,franchise_commission,status,payment_status')
+        .eq('franchise_slug', fr.slug)
+        .order('order_date',{ascending:false}).limit(200);
+      if (r.error) throw r.error;
+      renderOrders(r.data || []);
+    } catch(e){
+      sumEl.innerHTML = '';
+      listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;line-height:1.6;">'
+        + '아직 주문 내역이 없거나, 주문 조회 권한 설정이 필요합니다.<br>'
+        + '<span style="color:#7c7795;font-size:12px;">고객이 /store/' + (fr.slug||'') + ' 에서 주문하면 여기에 표시됩니다.</span></div>';
+    }
+  }
+  function renderOrders(orders){
+    var sumEl = $('ordSummary'), listEl = $('ordList');
+    var totSales=0, totPayout=0, eligPayout=0, doneN=0;
+    orders.forEach(function(o){
+      var amt = Number(o.total_amount||0);
+      var comm = (o.franchise_commission!=null) ? Number(o.franchise_commission) : Math.round(amt*0.20);
+      var payout = amt - comm;
+      var done = DONE_STATUS.indexOf(o.status) >= 0;
+      totSales += amt; totPayout += payout;
+      if (done){ eligPayout += payout; doneN++; }
+    });
+    sumEl.innerHTML =
+      '<div class="ord-sum-box"><div class="k">총 주문</div><div class="v">'+orders.length+'건</div></div>'
+      + '<div class="ord-sum-box"><div class="k">총 매출</div><div class="v">'+won(totSales)+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">정산 예정 (완료 '+doneN+'건)</div><div class="v gold">'+won(eligPayout)+'</div></div>'
+      + '<div class="ord-sum-box"><div class="k">진행중 포함 총 정산액</div><div class="v">'+won(totPayout)+'</div></div>';
+    if (!orders.length){
+      listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">아직 주문이 없습니다.</div>';
+      return;
+    }
+    var rows = orders.map(function(o){
+      var amt = Number(o.total_amount||0);
+      var comm = (o.franchise_commission!=null) ? Number(o.franchise_commission) : Math.round(amt*0.20);
+      var payout = amt - comm;
+      var done = DONE_STATUS.indexOf(o.status) >= 0;
+      var d = o.order_date ? new Date(o.order_date).toLocaleDateString() : '-';
+      return '<tr><td>'+d+'</td><td>#'+o.id+'</td><td>'+won(amt)+'</td>'
+        + '<td style="color:#9b94c4;">-'+won(comm)+'</td>'
+        + '<td style="font-weight:800;color:#c4b5fd;">'+won(payout)+'</td>'
+        + '<td><span class="ord-st '+(done?'done':'prog')+'">'+(done?'정산대상':(o.status||'진행중'))+'</span></td></tr>';
+    }).join('');
+    listEl.innerHTML = '<table class="ord-table"><thead><tr>'
+      + '<th>주문일</th><th>주문번호</th><th>주문금액</th><th>수수료 20%</th><th>정산금액</th><th>상태</th>'
+      + '</tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   function fillForm(){

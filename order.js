@@ -3854,6 +3854,10 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         finalRequestNote = (request || '') + `\n##REF:${_refId}:${_refEmail}##`;
     }
 
+    // 2026-05-16: 가맹점 스토어(/store/{slug}) 경유 주문 — fr 태그 + 본사 중계수수료 20%
+    const _frSlug = (function(){ try { return sessionStorage.getItem('_franchise_ref') || null; } catch(e){ return null; } })();
+    const _frCommission = _frSlug ? Math.round((finalPayAmount || 0) * 0.20) : null;
+
     const { data: orderData, error: orderError } = await sb.from('orders').insert([{
         user_id: currentUser?.id,
         order_date: new Date().toISOString(),
@@ -3874,6 +3878,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         discount_amount: useMileage,
         items: itemsToSave,
         site_code: _siteCode,
+        franchise_slug: _frSlug,
+        franchise_commission: _frCommission,
         staff_manager_id: window.tempOrderInfo?.staffManagerId || null,
         admin_note: (() => {
             let note = '';
