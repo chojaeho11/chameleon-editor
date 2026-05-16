@@ -12400,6 +12400,19 @@ window.showChoiceModal = async function(key) {
     modal.style.display = 'flex';
     window._relatedProductsLoading = false; // 추천상품 플래그 리셋
 
+    // 2026-05-16: 상세페이지 — 사이즈입력·인쇄비·주문수량을 합계(최종견적) 바로 위로 이동
+    if (isCustom && !_isPromo && !_isBooklet) {
+        try {
+            const _totalEl = modalBox.querySelector('[data-npc="total"]');
+            if (_totalEl && _totalEl.parentNode) {
+                ['size', 'estimate', 'qtyLabel', 'qty'].forEach(npc => {
+                    const el = modalBox.querySelector('[data-npc="' + npc + '"]');
+                    if (el) _totalEl.parentNode.insertBefore(el, _totalEl);
+                });
+            }
+        } catch (e) { console.warn('[상세페이지] 사이즈/수량 재배치 실패', e); }
+    }
+
     // ★ 책자 상품: 위자드 초기 계산 + 통화 포맷터 설정
     if (_isBooklet) {
         window._bkFmtPrice = formatPriceSimple;
