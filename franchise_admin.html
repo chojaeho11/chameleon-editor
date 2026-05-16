@@ -715,6 +715,10 @@ select option{background:#1d1640;}
     $('heroImgPreview').style.display = (mode==='image' && state.heroImageUrl) ? 'block' : 'none';
   }
   $('fHeroMode').addEventListener('change', updateHeroMode);
+  // 국가 변경 시 — 제품 이름·가격·카테고리명을 해당 국가 기준으로 다시 표시
+  $('fCountry').addEventListener('change', function(){
+    if (state.products && state.products.length) loadProducts();
+  });
 
   // ===== 2. 로그인 =====
   $('btnLogin').onclick = async function(){
@@ -741,17 +745,23 @@ select option{background:#1d1640;}
   $('btnLogout1').onclick = logout;
 
   // ===== 3. 제품 목록 (카테고리별) =====
+  function catLoc(o){
+    var c = frCountry();
+    if (c==='JP') return o.name_jp || o.name || o.code;
+    if (c==='KR') return o.name || o.code;
+    return o.name_us || o.name || o.code;
+  }
   async function loadCategories(){
     var topMap = {}, subToTop = {};
     try {
-      var tc = await sb.from('admin_top_categories').select('code,name,sort_order').order('sort_order',{ascending:true});
-      (tc.data||[]).forEach(function(t){ topMap[t.code] = t.name || t.code; });
+      var tc = await sb.from('admin_top_categories').select('code,name,name_jp,name_us,sort_order').order('sort_order',{ascending:true});
+      (tc.data||[]).forEach(function(t){ topMap[t.code] = catLoc(t); });
     } catch(e){ console.warn('topcat load', e); }
     try {
-      var sc = await sb.from('admin_categories').select('code,name,top_category_code');
+      var sc = await sb.from('admin_categories').select('code,name,name_jp,name_us,top_category_code');
       (sc.data||[]).forEach(function(c){
         subToTop[c.code] = c.top_category_code || null;
-        if (!c.top_category_code && !topMap[c.code]) topMap[c.code] = c.name || c.code;
+        if (!c.top_category_code && !topMap[c.code]) topMap[c.code] = catLoc(c);
       });
     } catch(e){ console.warn('subcat load', e); }
     state.topMap = topMap; state.subToTop = subToTop;
@@ -791,18 +801,35 @@ select option{background:#1d1640;}
     });
   }
 
+  // 가맹점 국가 기준 — 통화/이름 현지화
+  var FR_CUR = { KR:{s:'₩',r:1}, JP:{s:'¥',r:0.1}, US:{s:'$',r:0.001}, CN:{s:'¥',r:0.05},
+                 SA:{s:'$',r:0.001}, ES:{s:'€',r:0.001}, DE:{s:'€',r:0.001}, FR:{s:'€',r:0.001} };
+  function frCountry(){ return ($('fCountry') && $('fCountry').value) || (state.franchise && state.franchise.country) || 'KR'; }
+  function frCur(){ return FR_CUR[frCountry()] || FR_CUR.KR; }
+  function frLocName(p){
+    var c = frCountry();
+    if (c==='JP') return p.name_jp || p.name || p.code;
+    if (c==='KR') return p.name || p.code;
+    return p.name_us || p.name || p.code;
+  }
+  function frPriceKRW(krw){
+    var cur = frCur();
+    return cur.s + Math.round(Number(krw||0) * cur.r).toLocaleString();
+  }
+
   function cardHtml(p){
     var on = !!state.selected[p.code];
     var img = p.img_url || 'https://placehold.co/300?text=No+Image';
-    var nm = String(p.name||p.code).replace(/<br\s*\/?>/gi,' ');
-    var priceTxt = p.price ? ('₩'+Number(p.price).toLocaleString()) : '';
+    var nm = String(frLocName(p)).replace(/<br\s*\/?>/gi,' ');
+    var cur = frCur();
+    var priceTxt = p.price ? frPriceKRW(p.price) : '';
     // 면적가(회배당) 상품 — 1m² 단가 대신 5×5cm 기준가 표시 (아크릴·스티커)
     var _cat = (p.category||'').toLowerCase();
     var _nm = ((p.name||'')+' '+(p.name_us||'')).toLowerCase();
     if (p.is_custom_size === true && Number(p.price) > 0 && (
           /^acr/.test(_cat) || _cat === 'acrylic' ||
           _cat.indexOf('sticker') >= 0 || /스티커|sticker/i.test(_nm))) {
-      priceTxt = '₩'+Math.round(Number(p.price)*25/10000).toLocaleString()+'~';
+      priceTxt = cur.s + Math.round(Number(p.price) * cur.r * 25 / 10000).toLocaleString() + '~';
     }
     return '<div class="prod-item'+(on?' on':'')+'" data-code="'+escA(p.code)+'">'
       + '<div class="pchk">✓</div>'
