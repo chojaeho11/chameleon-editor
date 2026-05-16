@@ -560,107 +560,78 @@ export function renderShortcutButtons(containerId) {
     };
     const t = L[lang] || L.en;
 
+    // 2026-05-16: 에디터 카드 — 제목/부제 (BAND/WITH 와 동일한 카드 구조)
+    var EDT = {
+        kr:{ title:'디자인 에디터', sub:'캔바보다 쉬운 강력한 무료 에디터' },
+        ja:{ title:'デザインエディタ', sub:'Canvaより簡単で強力な無料エディタ' },
+        en:{ title:'Design Editor', sub:'A powerful free editor, easier than Canva' },
+        zh:{ title:'设计编辑器', sub:'比Canva更简单的强大免费编辑器' },
+        ar:{ title:'محرر التصميم', sub:'محرر مجاني قوي أسهل من Canva' },
+        es:{ title:'Editor de Diseño', sub:'Editor gratuito potente, más fácil que Canva' },
+        de:{ title:'Design-Editor', sub:'Starker Gratis-Editor, einfacher als Canva' },
+        fr:{ title:'Éditeur de Design', sub:'Éditeur gratuit puissant, plus simple que Canva' }
+    };
+    var edt = EDT[lang] || EDT.en;
+
     container.innerHTML = `
         <style>
-        .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
-        /* 2026-05-16: 제품검색 제거 — 디자인 에디터 버튼만. BAND/WITH 배너처럼 큰 풀폭 버튼 */
-        .adv-ext-grid{display:block;width:100%;box-sizing:border-box;}
-        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;text-decoration:none;padding:20px 26px;border-radius:18px;font-size:18px;font-weight:900;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;width:100%;box-sizing:border-box;white-space:normal;text-align:center;line-height:1.35;position:relative;}
-        .adv-ext-btn i{flex-shrink:0;font-size:20px;}
-        .adv-ext-btn:hover{transform:translateY(-1px);}
-
-        /* 디자인 에디터 — 검정 그라데이션 (45도, 정적, 입체감) */
-        .adv-ext-btn.adv-ext-btn-design{
-            background:linear-gradient(45deg,#000000 0%,#3f3f46 40%,#52525b 60%,#18181b 100%);
-            box-shadow:0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
-        }
-        .adv-ext-btn.adv-ext-btn-design:hover{box-shadow:0 10px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.18);}
-
-        /* 매니저 연결 — 보라 그라데이션 (45도, 흐르는 애니메이션 + glow ring) */
-        @keyframes mgrConnGradient { 0%{background-position:0% 0%;} 100%{background-position:200% 200%;} }
-        @keyframes mgrConnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(168,85,247,0.55),0 6px 18px rgba(124,58,237,0.5);} 50%{box-shadow:0 0 0 8px rgba(168,85,247,0),0 10px 26px rgba(124,58,237,0.7);} }
-        .adv-ext-btn.adv-ext-btn-pulse{
-            background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#c084fc,#a855f7,#7c3aed,#4c1d95);
-            background-size:200% 200%;
-            animation:mgrConnGradient 2.2s linear infinite, mgrConnPulse 1.4s ease-in-out infinite;
-        }
-        .adv-ext-btn.adv-ext-btn-pulse:hover{animation-play-state:running;}
-
-        /* 제품검색 — 무지개 그라데이션 (45도, 천천히 흐르는 애니메이션) */
-        @keyframes rainbowFlow { 0%{background-position:0% 0%;} 100%{background-position:200% 200%;} }
-        .adv-ext-btn.adv-ext-btn-rainbow{
-            background:linear-gradient(45deg,#ef4444,#f59e0b,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899,#ef4444);
-            background-size:200% 200%;
-            animation:rainbowFlow 5s linear infinite;
-            box-shadow:0 6px 18px rgba(99,102,241,0.35);
-        }
-        .adv-ext-btn.adv-ext-btn-rainbow:hover{box-shadow:0 10px 26px rgba(99,102,241,0.55);}
-
-        /* Single services hub banner */
-        @keyframes dmBandPulse { 0%,100%{text-shadow:0 0 16px rgba(186,230,253,0.55);} 50%{text-shadow:0 0 28px rgba(186,230,253,0.95),0 0 8px rgba(186,230,253,0.6);} }
-        .dm-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#fff;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 8px 28px rgba(0,0,0,0.28);border:1.5px solid rgba(255,255,255,0.12);background:linear-gradient(90deg,#2e1065 0%,#4c1d95 25%,#6d28d9 55%,#7c3aed 80%,#059669 100%);}
-        .dm-hub-band{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#bae6fd;font-size:38px;font-weight:900;letter-spacing:-1px;font-family:'Arial Black','Helvetica',sans-serif;animation:dmBandPulse 2.4s ease-in-out infinite;position:relative;z-index:3;}
-        .dm-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
-        .dm-hub-banner::before{content:'';position:absolute;top:-50px;right:-50px;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,0.2) 0%,transparent 70%);pointer-events:none;}
-        .dm-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(16,185,129,0.15) 0%,transparent 70%);pointer-events:none;}
-        .dm-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
-        .dm-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,0.3);line-height:1.25;}
-        .dm-hub-sub{font-size:16px;font-weight:700;color:#bae6fd;line-height:1.5;letter-spacing:0.2px;}
-        .dm-hub-cta{flex-shrink:0;background:#fff;color:#1e1b4b;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;min-width:190px;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,0.18);transition:all 0.22s;position:relative;z-index:2;}
-        .dm-hub-banner:hover .dm-hub-cta{background:#fbbf24;color:#1e1b4b;transform:scale(1.04);box-shadow:0 6px 20px rgba(251,191,36,0.5);}
-        .dm-hub-banner:hover .dm-hub-cta i{transform:translateX(3px);}
-        .dm-hub-cta i{transition:transform 0.22s;}
-        /* WITH / franchise banner — very light sky-blue with blue text/button */
-        @keyframes tgGlow { 0%,100%{text-shadow:0 0 18px rgba(147,197,253,0.55),0 0 6px rgba(59,130,246,0.35);} 50%{text-shadow:0 0 32px rgba(147,197,253,0.95),0 0 10px rgba(59,130,246,0.6);} }
-        .tg-hub-banner{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:22px;width:100%;border-radius:18px;padding:20px 26px;text-decoration:none;color:#1e3a8a;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;box-sizing:border-box;box-shadow:0 6px 22px rgba(59,130,246,0.18);border:1.5px solid rgba(147,197,253,0.45);background:linear-gradient(90deg,#f0f9ff 0%,#e0f2fe 40%,#dbeafe 75%,#eff6ff 100%);}
-        .tg-hub-banner:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(59,130,246,0.28);}
-        .tg-hub-banner::before{content:'';position:absolute;top:-80px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(147,197,253,0.45) 0%,transparent 70%);pointer-events:none;}
-        .tg-hub-banner::after{content:'';position:absolute;bottom:-60px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(191,219,254,0.5) 0%,transparent 70%);pointer-events:none;}
-        .tg-hub-word{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#1d4ed8;font-size:38px;font-weight:900;letter-spacing:-1px;font-family:'Arial Black','Helvetica',sans-serif;animation:tgGlow 2.4s ease-in-out infinite;position:relative;z-index:3;line-height:1;text-shadow:0 2px 0 rgba(255,255,255,0.55);}
-        .tg-hub-text{flex:1;min-width:0;position:relative;z-index:2;}
-        .tg-hub-title{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;color:#1e3a8a;line-height:1.25;}
-        .tg-hub-sub{font-size:13px;color:#1d4ed8;line-height:1.55;font-weight:700;}
-        .tg-hub-cta{flex-shrink:0;background:#1d4ed8;color:#fff;padding:12px 22px;border-radius:999px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;min-width:190px;box-sizing:border-box;box-shadow:0 4px 14px rgba(29,78,216,0.35);transition:all 0.22s;position:relative;z-index:2;}
-        .tg-hub-banner:hover .tg-hub-cta{background:#1e40af;color:#dbeafe;transform:scale(1.04);box-shadow:0 6px 20px rgba(29,78,216,0.55);}
-        .tg-hub-banner:hover .tg-hub-cta i{transform:translateX(3px);}
-        .tg-hub-cta i{transition:transform 0.22s;}
-
+        /* 2026-05-16: 코튼프린트 스타일 — 동일 크기 3카드 (에디터 보라 / BAND 노랑 / WITH 하늘) */
+        .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;}
+        .cta3-card{position:relative;display:flex;align-items:center;gap:22px;width:100%;border-radius:18px;padding:22px 26px;text-decoration:none;cursor:pointer;box-sizing:border-box;box-shadow:0 8px 26px rgba(0,0,0,0.18);transition:transform .22s,box-shadow .22s;border:1.5px solid rgba(255,255,255,0.16);overflow:hidden;}
+        .cta3-card:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.3);}
+        .cta3-word{flex-shrink:0;font-size:36px;font-weight:900;font-family:'Arial Black','Helvetica',sans-serif;letter-spacing:-1px;line-height:1;}
+        .cta3-text{flex:1;min-width:0;}
+        .cta3-title{font-size:18px;font-weight:900;letter-spacing:-0.4px;line-height:1.25;margin-bottom:5px;}
+        .cta3-sub{font-size:14px;font-weight:700;line-height:1.5;}
+        .cta3-btn{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:14px 24px;border-radius:999px;font-size:14px;font-weight:800;white-space:nowrap;min-width:180px;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,0.2);transition:transform .2s;}
+        .cta3-card:hover .cta3-btn{transform:scale(1.04);}
+        .cta3-editor{background:linear-gradient(90deg,#2e1065 0%,#4c1d95 32%,#6d28d9 66%,#7c3aed 100%);}
+        .cta3-editor .cta3-word{color:#c4b5fd;}
+        .cta3-editor .cta3-title{color:#fff;}
+        .cta3-editor .cta3-sub{color:#d8ccff;}
+        .cta3-editor .cta3-btn{background:#fff;color:#4c1d95;}
+        .cta3-band{background:linear-gradient(90deg,#f59e0b 0%,#fbbf24 50%,#fcd34d 100%);}
+        .cta3-band .cta3-word{color:#fff;text-shadow:0 2px 8px rgba(124,45,0,0.25);}
+        .cta3-band .cta3-title{color:#3a2600;}
+        .cta3-band .cta3-sub{color:#7a5500;}
+        .cta3-band .cta3-btn{background:#1e1b4b;color:#fff;}
+        .cta3-with{background:linear-gradient(90deg,#7dd3fc 0%,#38bdf8 55%,#0ea5e9 100%);}
+        .cta3-with .cta3-word{color:#fff;text-shadow:0 2px 8px rgba(3,55,90,0.3);}
+        .cta3-with .cta3-title{color:#0c3a52;}
+        .cta3-with .cta3-sub{color:#075985;}
+        .cta3-with .cta3-btn{background:#0c4a6e;color:#fff;}
         @media(max-width:768px){
-            .adv-ext-btn{padding:16px 18px;font-size:15px;gap:8px;border-radius:16px;}
-            .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
-            .dm-hub-band{font-size:28px;letter-spacing:-1px;}
-            .dm-hub-title{font-size:14px;}
-            .dm-hub-sub{font-size:13px;}
-            .dm-hub-cta{display:none;}
-            .tg-hub-banner{padding:16px 18px;border-radius:16px;gap:12px;}
-            .tg-hub-word{font-size:22px;letter-spacing:-1px;}
-            .tg-hub-title{font-size:14px;}
-            .tg-hub-sub{font-size:12px;}
-            .tg-hub-cta{display:none;}
+            .cta3-card{gap:12px;padding:15px 15px;border-radius:15px;}
+            .cta3-word{font-size:22px;}
+            .cta3-title{font-size:13.5px;}
+            .cta3-sub{font-size:11.5px;}
+            .cta3-btn{min-width:0;padding:11px 13px;font-size:12px;}
         }
         </style>
         <div class="adv-ext-wrap">
-            <div class="adv-ext-grid">
-                <!-- 2026-05-16: 제품검색 버튼 제거 — 디자인 에디터만 -->
-                <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn adv-ext-btn-design">
-                    <i class="fa-solid fa-pen-ruler"></i> ${t.self_design}
-                </a>
+            <div class="cta3-card cta3-editor" onclick="window._advOpenEditor&&window._advOpenEditor()">
+                <div class="cta3-word">EDITOR</div>
+                <div class="cta3-text">
+                    <div class="cta3-title">${edt.title}</div>
+                    <div class="cta3-sub">${edt.sub}</div>
+                </div>
+                <div class="cta3-btn"><i class="fa-solid fa-pen-ruler"></i> Design Editor</div>
             </div>
-            <a href="${location.origin}/services" class="dm-hub-banner" target="_blank">
-                <div class="dm-hub-band">BAND</div>
-                <div class="dm-hub-text">
-                    <div class="dm-hub-title">${t.hub_title}</div>
-                    <div class="dm-hub-sub">${t.hub_sub}</div>
+            <a href="${location.origin}/services" target="_blank" class="cta3-card cta3-band">
+                <div class="cta3-word">BAND</div>
+                <div class="cta3-text">
+                    <div class="cta3-title">${t.hub_title}</div>
+                    <div class="cta3-sub">${t.hub_sub}</div>
                 </div>
-                <div class="dm-hub-cta">${t.hub_cta} <i class="fa-solid fa-arrow-right"></i></div>
+                <div class="cta3-btn">${t.hub_cta} <i class="fa-solid fa-arrow-right"></i></div>
             </a>
-            <a href="${location.origin}/franchise" class="tg-hub-banner">
-                <div class="tg-hub-word">${t.tg_word}</div>
-                <div class="tg-hub-text">
-                    <div class="tg-hub-title">${t.tg_title}</div>
-                    <div class="tg-hub-sub">${t.tg_sub}</div>
+            <a href="${location.origin}/franchise" class="cta3-card cta3-with">
+                <div class="cta3-word">WITH</div>
+                <div class="cta3-text">
+                    <div class="cta3-title">${t.tg_title}</div>
+                    <div class="cta3-sub">${t.tg_sub}</div>
                 </div>
-                <div class="tg-hub-cta">${t.tg_cta} <i class="fa-solid fa-arrow-right"></i></div>
+                <div class="cta3-btn">${t.tg_cta} <i class="fa-solid fa-arrow-right"></i></div>
             </a>
         </div>
     `;
