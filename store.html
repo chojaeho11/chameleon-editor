@@ -31,6 +31,8 @@ img{display:block;}
 .st-chip{padding:8px 15px;border-radius:999px;border:1.5px solid #e1ddef;background:#fff;color:#4b4669;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
 .st-chip:hover{border-color:#a855f7;}
 .st-chip.on{background:linear-gradient(135deg,#7c3aed,#a855f7);border-color:transparent;color:#fff;}
+.st-cat-header{font-size:19px;font-weight:900;color:#1e2233;margin:32px 0 15px;padding-bottom:9px;border-bottom:2px solid #ece8f6;}
+.st-cat-header:first-child{margin-top:6px;}
 .st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;}
 .st-card{background:#fff;border:1px solid #eceaf3;border-radius:16px;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 4px 16px rgba(30,27,75,0.06);}
 .st-card:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(124,58,237,0.16);}
@@ -138,16 +140,6 @@ img{display:block;}
       ? '<a class="st-callbtn" href="tel:'+esc(telHref)+'">📞 '+esc(phone)+'</a>'
       : '';
 
-    // 카테고리 칩
-    var counts = {};
-    products.forEach(function(p){ counts[p._top]=(counts[p._top]||0)+1; });
-    var chips = '<div class="st-chip on" data-cat="ALL">전체 ('+products.length+')</div>';
-    Object.keys(topMap).forEach(function(code){
-      if(!counts[code]) return;
-      chips += '<div class="st-chip" data-cat="'+esc(code)+'">'+esc(topMap[code])+' ('+counts[code]+')</div>';
-    });
-    if (counts['_etc']) chips += '<div class="st-chip" data-cat="_etc">기타 ('+counts['_etc']+')</div>';
-
     var app = document.getElementById('stApp');
     app.innerHTML =
       '<header class="st-header"><div class="st-header-in">'
@@ -163,8 +155,7 @@ img{display:block;}
       + '<div class="st-wrap">'
       + '<div class="st-secttl">취급 제품</div>'
       + '<div class="st-sectsub">제품을 선택하면 주문 페이지로 이동합니다.</div>'
-      + (products.length>1 ? '<div class="st-chips" id="stChips">'+chips+'</div>' : '')
-      + '<div class="st-grid" id="stGrid"></div>'
+      + '<div id="stGrid"></div>'
       + (products.length?'':'<p style="color:#9b94c4;font-size:14px;padding:30px 0;">아직 등록된 제품이 없습니다.</p>')
       + '</div>'
       + '<footer class="st-foot"><div class="st-foot-in">'
@@ -177,33 +168,33 @@ img{display:block;}
     document.getElementById('stLoading').style.display='none';
     app.style.display='block';
 
-    var activeCat = 'ALL';
-    function drawGrid(){
+    // 카테고리별 섹션 — 허니콤보드(topMap sort_order 순)부터 아래로 쭉, 기타 마지막
+    function cardHtml(p){
+      var nm = p[ccy.n] || p.name || p.code;
+      var pv = p[ccy.f] || p.price || 0;
+      var price = pv ? (ccy.s + Number(pv).toLocaleString()) : '가격 문의';
+      var img = p.img_url || 'https://placehold.co/400?text=No+Image';
+      return '<a class="st-card" href="/?product='+encodeURIComponent(p.code)+'&fr='+encodeURIComponent(slug)+'">'
+        + '<img class="ci" src="'+esc(img)+'" loading="lazy" onerror="this.src=\'https://placehold.co/400?text=No+Image\'">'
+        + '<div class="cb"><div class="cn">'+esc(nm)+'</div>'
+        + '<div class="cp">'+price+'</div>'
+        + '<div class="cgo">주문하기 →</div></div></a>';
+    }
+    (function drawSections(){
       var grid = document.getElementById('stGrid');
-      var list = products.filter(function(p){ return activeCat==='ALL' || p._top===activeCat; });
-      grid.innerHTML = list.map(function(p){
-        var nm = p[ccy.n] || p.name || p.code;
-        var pv = p[ccy.f] || p.price || 0;
-        var price = pv ? (ccy.s + Number(pv).toLocaleString()) : '가격 문의';
-        var img = p.img_url || 'https://placehold.co/400?text=No+Image';
-        return '<a class="st-card" href="/?product='+encodeURIComponent(p.code)+'&fr='+encodeURIComponent(slug)+'">'
-          + '<img class="ci" src="'+esc(img)+'" loading="lazy" onerror="this.src=\'https://placehold.co/400?text=No+Image\'">'
-          + '<div class="cb"><div class="cn">'+esc(nm)+'</div>'
-          + '<div class="cp">'+price+'</div>'
-          + '<div class="cgo">주문하기 →</div></div></a>';
-      }).join('');
-    }
-    drawGrid();
-
-    var chipBox = document.getElementById('stChips');
-    if (chipBox){
-      chipBox.addEventListener('click', function(e){
-        var c = e.target.closest('.st-chip'); if(!c) return;
-        activeCat = c.dataset.cat;
-        chipBox.querySelectorAll('.st-chip').forEach(function(x){ x.classList.toggle('on', x===c); });
-        drawGrid();
+      var groups = {};
+      products.forEach(function(p){ (groups[p._top]=groups[p._top]||[]).push(p); });
+      var html = '';
+      function section(name, g){
+        return '<div class="st-cat-header">'+esc(name)+'</div>'
+             + '<div class="st-grid">'+g.map(cardHtml).join('')+'</div>';
+      }
+      Object.keys(topMap).forEach(function(code){
+        var g = groups[code]; if (g && g.length) html += section(topMap[code], g);
       });
-    }
+      if (groups['_etc'] && groups['_etc'].length) html += section('기타', groups['_etc']);
+      grid.innerHTML = html;
+    })();
   }
 
   run();
