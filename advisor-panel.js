@@ -262,8 +262,10 @@ window._advOpenEditor = function() {
     };
     const L = labels[lang] || labels['en'];
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
-    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;max-width:320px;width:90%;text-align:center;box-sizing:border-box;">'
+    // 2026-05-16: 홈페이지가 비쳐 보이지 않도록 — 에디터 화면처럼 꽉 찬 어두운 배경
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#13111f 0%,#1f1b33 100%);display:flex;align-items:center;justify-content:center;';
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;max-width:340px;width:90%;text-align:center;box-sizing:border-box;box-shadow:0 30px 80px rgba(0,0,0,0.6);">'
+        + '<div style="font-size:13px;font-weight:800;color:#7c3aed;letter-spacing:1px;margin-bottom:6px;">DESIGN EDITOR</div>'
         + '<div style="font-size:16px;font-weight:800;margin-bottom:16px;">' + L.title + '</div>'
         + '<div style="display:flex;gap:8px;margin-bottom:12px;">'
         + '<input id="_advEdW" type="number" placeholder="' + L.wPh + '" style="width:0;flex:1;min-width:0;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:center;box-sizing:border-box;">'
@@ -561,10 +563,11 @@ export function renderShortcutButtons(containerId) {
     container.innerHTML = `
         <style>
         .adv-ext-wrap{max-width:1100px;margin:0 auto;padding:0 4px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;}
-        .adv-ext-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;box-sizing:border-box;}
-        /* 2026-05-13: 알약(pill) 모양 + 살짝 낮은 높이 + 버튼별 그라데이션 */
-        .adv-ext-btn{display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;text-decoration:none;padding:22px 4px;border-radius:999px;font-size:16px;font-weight:800;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;width:100%;box-sizing:border-box;white-space:nowrap;min-width:0;overflow:hidden;position:relative;}
-        .adv-ext-btn i{flex-shrink:0;font-size:18px;}
+        /* 2026-05-16: 제품검색 제거 — 디자인 에디터 버튼만, 가운데 정렬 + 컴팩트 */
+        .adv-ext-grid{display:flex;justify-content:center;gap:10px;width:100%;box-sizing:border-box;}
+        /* 알약(pill) 모양 + 버튼별 그라데이션 */
+        .adv-ext-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#fff;text-decoration:none;padding:14px 38px;border-radius:999px;font-size:15px;font-weight:800;border:none;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;box-sizing:border-box;white-space:nowrap;position:relative;}
+        .adv-ext-btn i{flex-shrink:0;font-size:17px;}
         .adv-ext-btn:hover{transform:translateY(-1px);}
 
         /* 디자인 에디터 — 검정 그라데이션 (45도, 정적, 입체감) */
@@ -624,8 +627,8 @@ export function renderShortcutButtons(containerId) {
         .tg-hub-cta i{transition:transform 0.22s;}
 
         @media(max-width:768px){
-            .adv-ext-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
-            .adv-ext-btn{padding:18px 2px;font-size:13px;gap:4px;border-radius:999px;}
+            .adv-ext-grid{gap:8px;}
+            .adv-ext-btn{padding:13px 30px;font-size:14px;gap:6px;border-radius:999px;}
             .dm-hub-banner{padding:16px 18px;border-radius:16px;flex-direction:row;text-align:left;gap:12px;}
             .dm-hub-band{font-size:28px;letter-spacing:-1px;}
             .dm-hub-title{font-size:14px;}
@@ -640,12 +643,9 @@ export function renderShortcutButtons(containerId) {
         </style>
         <div class="adv-ext-wrap">
             <div class="adv-ext-grid">
+                <!-- 2026-05-16: 제품검색 버튼 제거 — 디자인 에디터만 -->
                 <a href="javascript:void(0)" onclick="window._advOpenEditor&&window._advOpenEditor()" class="adv-ext-btn adv-ext-btn-design">
                     <i class="fa-solid fa-pen-ruler"></i> ${t.self_design}
-                </a>
-                <!-- 2026-05-16: 매니저 연결 버튼은 hero(영상) 안으로 이전 — 하단은 에디터+검색 2개만 -->
-                <a href="javascript:void(0)" onclick="if(window.openProductPickerModal)window.openProductPickerModal()" class="adv-ext-btn adv-ext-btn-rainbow">
-                    <i class="fa-solid fa-magnifying-glass"></i> ${t.product_search}
                 </a>
             </div>
             <a href="${location.origin}/services" class="dm-hub-banner" target="_blank">
