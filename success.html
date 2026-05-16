@@ -98,6 +98,14 @@
             }
         }
 
+        // 2026-05-16: 가맹점 스토어 경유 주문이면 홈 대신 가맹점 스토어로 복귀
+        function _frHome() {
+            var f = '';
+            try { f = sessionStorage.getItem('_franchise_ref') || ''; } catch(e){}
+            if (f) return '/store/' + f;
+            return "/" + (window.location.hostname.includes('cafe0101') ? '?lang=ja' : window.location.hostname.includes('cafe3355') ? '?lang=en' : '');
+        }
+
         async function processSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const dbId = urlParams.get("db_id");
@@ -107,7 +115,7 @@
 
             if (!dbId) {
                 showToast("Missing order information.", "error");
-                window.location.href = "/" + (window.location.hostname.includes('cafe0101') ? '?lang=ja' : window.location.hostname.includes('cafe3355') ? '?lang=en' : '');
+                window.location.href = _frHome();
                 return;
             }
 
@@ -268,7 +276,7 @@
                     });
                 } catch(e) {}
 
-                setTimeout(() => window.location.href = "index.html", 1500);
+                setTimeout(() => window.location.href = _frHome(), 1500);
 
             } catch (e) {
                 console.error("Payment verification error:", e);
@@ -308,7 +316,7 @@
 
                 setTimeout(() => {
                     showToast("결제 승인에 실패했습니다. 카드 정보를 확인 후 다시 시도해주세요.", "error");
-                    window.location.href = "/" + (window.location.hostname.includes('cafe0101') ? '?lang=ja' : window.location.hostname.includes('cafe3355') ? '?lang=en' : '');
+                    window.location.href = _frHome();
                 }, 3000);
             }
         }
