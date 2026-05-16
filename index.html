@@ -687,6 +687,20 @@ if ('caches' in window) {
                 })();
             }).catch(function(){});
         })();
+        // 2026-05-16: 가맹점 스토어에서 ?editor=1 / ?search=1 로 들어오면 해당 기능 자동 실행
+        (function(){
+            var qs = new URLSearchParams(location.search);
+            var wantEditor = qs.get('editor') === '1';
+            var wantSearch = qs.get('search') === '1';
+            if (!wantEditor && !wantSearch) return;
+            var tries = 0;
+            var iv = setInterval(function(){
+                tries++;
+                if (wantEditor && typeof window._advOpenEditor === 'function'){ clearInterval(iv); try{ window._advOpenEditor(); }catch(e){} return; }
+                if (wantSearch && typeof window.openProductPickerModal === 'function'){ clearInterval(iv); try{ window.openProductPickerModal(); }catch(e){} return; }
+                if (tries > 80) clearInterval(iv);
+            }, 300);
+        })();
         </script>
         
         <div class="template-tabs" style="display:none;">

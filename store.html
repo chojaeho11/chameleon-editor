@@ -24,6 +24,10 @@ img{display:block;}
 .st-hero h1{font-size:34px;font-weight:900;line-height:1.25;letter-spacing:-0.5px;}
 .st-hero p{margin-top:12px;font-size:15px;color:#d8ccff;line-height:1.6;}
 .st-hero .meta{margin-top:18px;font-size:14px;font-weight:700;color:#e9e2ff;}
+.st-tools{background:#fff;border-bottom:1px solid #eceaf3;}
+.st-tools-in{max-width:1140px;margin:0 auto;padding:14px 20px;display:flex;gap:12px;flex-wrap:wrap;}
+.st-tool{flex:1;min-width:150px;text-align:center;padding:14px;border-radius:12px;font-weight:800;font-size:14px;border:1.5px solid #e1ddef;color:#4b4669;background:#fbfaff;transition:all .15s;}
+.st-tool:hover{border-color:#a855f7;color:#7c3aed;}
 .st-wrap{max-width:1140px;margin:0 auto;padding:34px 20px 70px;}
 .st-secttl{font-size:20px;font-weight:900;margin-bottom:4px;}
 .st-sectsub{font-size:13px;color:#7c7795;margin-bottom:18px;}
@@ -149,9 +153,12 @@ img{display:block;}
       + '<section class="st-hero"><div class="st-hero-in">'
       + '<div class="tag">✨ 카멜레온프린팅 공식 가맹점</div>'
       + '<h1>'+esc(company)+'</h1>'
-      + '<p>허니콤보드 · 패브릭 · 광고인쇄물 · 굿즈 — 원하는 제품을 주문하세요.</p>'
-      + (phone?'<div class="meta">📞 주문 문의 '+esc(phone)+'</div>':'')
+      + '<p>'+esc(fr.tagline || '원하는 제품을 합리적인 가격에 주문하세요.')+'</p>'
       + '</div></section>'
+      + '<div class="st-tools"><div class="st-tools-in">'
+      + '<a class="st-tool" href="/?fr='+encodeURIComponent(slug)+'&editor=1">🎨 디자인 에디터</a>'
+      + '<a class="st-tool" href="/?fr='+encodeURIComponent(slug)+'&search=1">🔍 제품 검색</a>'
+      + '</div></div>'
       + '<div class="st-wrap">'
       + '<div class="st-secttl">취급 제품</div>'
       + '<div class="st-sectsub">제품을 선택하면 주문 페이지로 이동합니다.</div>'

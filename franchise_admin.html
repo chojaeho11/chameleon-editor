@@ -143,9 +143,13 @@ select option{background:#1d1640;}
           <input type="file" id="fLogoFile" accept="image/*" style="font-size:12px;color:#9b94c4;padding:9px 0;">
         </label>
       </div>
-      <div id="logoPreview" style="display:none;margin-top:-4px;">
+      <div id="logoPreview" style="display:none;margin-top:-4px;margin-bottom:14px;">
         <img id="logoImg" style="height:54px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);background:#fff;padding:4px;">
       </div>
+      <label class="fld">
+        <span class="lb">홈페이지 소개 문구 <small>— 스토어 상단에 표시되는 한 줄 소개</small></span>
+        <input type="text" id="fTagline" maxlength="120" placeholder="예: 우리 동네 광고·인쇄, 빠르고 정확하게 — 로컬스토리">
+      </label>
     </div>
 
     <div class="card">
@@ -182,7 +186,7 @@ select option{background:#1d1640;}
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
   // 테스트 전용 — 구독 없이도 전체 기능 사용 가능
   var TEST_EMAILS = ['korea900as@gmail.com'];
-  var LOGO_BUCKET = 'franchise-logos';
+  var LOGO_BUCKET = 'logos';  // 기존 공용 logos 버킷 사용 (franchise/ 하위 경로)
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
@@ -324,6 +328,7 @@ select option{background:#1d1640;}
     $('fPhone').value = f.phone || '';
     $('fEmail').value = f.email || state.user.email || '';
     $('fCountry').value = f.country || 'KR';
+    $('fTagline').value = f.tagline || '';
     state.logoUrl = f.logo_url || '';
     if (state.logoUrl){ $('logoImg').src = state.logoUrl; $('logoPreview').style.display='block'; }
     state.selected = {};
@@ -461,7 +466,7 @@ select option{background:#1d1640;}
     toast('로고 업로드 중…');
     try {
       var ext = (file.name.split('.').pop()||'png').toLowerCase();
-      var path = (state.user.id) + '/logo_' + Date.now() + '.' + ext;
+      var path = 'franchise/' + state.user.id + '/logo_' + Date.now() + '.' + ext;
       var up = await sb.storage.from(LOGO_BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
       if (up.error) throw up.error;
       var pub = sb.storage.from(LOGO_BUCKET).getPublicUrl(path);
@@ -502,6 +507,8 @@ select option{background:#1d1640;}
       if (dup.data && dup.data.owner_id !== state.user.id){
         throw new Error('이미 사용 중인 홈페이지 주소입니다. 다른 주소를 입력하세요.');
       }
+      // 한 계정당 홈페이지 1개 — 저장 직전 소유 가맹점 재확인 후 update, 없으면 insert
+      var existing = await sb.from('franchises').select('id').eq('owner_id', state.user.id).maybeSingle();
       var payload = {
         owner_id: state.user.id,
         slug: slug,
@@ -509,13 +516,14 @@ select option{background:#1d1640;}
         phone: phone,
         email: $('fEmail').value.trim() || null,
         country: $('fCountry').value,
+        tagline: $('fTagline').value.trim() || null,
         logo_url: state.logoUrl || null,
         selected_products: Object.keys(state.selected),
         updated_at: new Date().toISOString()
       };
       var res;
-      if (state.franchise && state.franchise.id){
-        res = await sb.from('franchises').update(payload).eq('id', state.franchise.id).select().maybeSingle();
+      if (existing.data && existing.data.id){
+        res = await sb.from('franchises').update(payload).eq('id', existing.data.id).select().maybeSingle();
       } else {
         res = await sb.from('franchises').insert(payload).select().maybeSingle();
       }
