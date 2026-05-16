@@ -9941,7 +9941,7 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         const _cacheKey = 'special_' + flagColumn + '_' + limitCount;
         const productsRaw = await window.cachedFetch(_cacheKey, 5, () =>
             sb.from('admin_products')
-                .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order')
+                .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order, is_custom_size')
                 .eq(flagColumn, true)
                 .order('sort_order', { ascending: true })
                 .limit(limitCount)
@@ -10000,7 +10000,18 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                     ? `${(p.width_mm/25.4).toFixed(1)} x ${(p.height_mm/25.4).toFixed(1)} in`
                     : `${p.width_mm} x ${p.height_mm}mm`)
                 : 'Option';
-            
+
+            // 2026-05-16: 키링 등 면적가 상품 — 카드에 1m² 단가 대신 5×5cm 기준가로 표시 (비싸 보이지 않게)
+            let cardPrice = formattedPrice, cardSize = sizeText;
+            if (p.is_custom_size === true && p.width_mm > 0 && p.height_mm > 0 && Number(p.price) > 0) {
+                const _areaCm2 = (p.width_mm / 10) * (p.height_mm / 10);
+                if (_areaCm2 > 0) {
+                    const _small = Math.round(Number(p.price) / _areaCm2 * 25); // 5×5cm = 25cm²
+                    cardPrice = (window.formatCurrency ? window.formatCurrency(_small) : Number(_small).toLocaleString() + '원') + '~';
+                    cardSize = (window._isUSsite && window._isUSsite()) ? '2 x 2 in~' : '5 x 5cm~';
+                }
+            }
+
             // 뱃지 색상
             const badgeColor = flagColumn === 'is_hot_deal' ? '#ef4444' : flagColumn === 'is_print_service' ? '#059669' : flagColumn === 'is_goods' ? '#db2777' : flagColumn === 'is_popular' ? '#dc2626' : flagColumn === 'is_paper_display' ? '#16a34a' : '#4f46e5';
             const badgeText = flagColumn === 'is_hot_deal' ? 'HOT' : flagColumn === 'is_print_service' ? 'PRINT' : flagColumn === 'is_goods' ? 'GOODS' : flagColumn === 'is_popular' ? 'BEST' : flagColumn === 'is_paper_display' ? 'PD' : 'BIZ';
@@ -10013,8 +10024,8 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                 </div>
                 <div class="hotdeal-info">
                     <div class="hotdeal-title">${name}</div>
-                    <div class="hotdeal-meta">${sizeText}</div>
-                    <div class="hotdeal-price">${formattedPrice}</div>
+                    <div class="hotdeal-meta">${cardSize}</div>
+                    <div class="hotdeal-price">${cardPrice}</div>
                 </div>
             `;
 
