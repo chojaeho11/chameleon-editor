@@ -1184,8 +1184,8 @@
       <div class="so-co-section">
         <span class="so-co-label">${tr('결제 방법', 'お支払い方法', 'Payment method')}</span>
         <div class="so-co-pay-opts">
-          <label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="card" checked onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
-          ${ (window.__SITE_CODE||'KR')==='KR' ? '<label class="so-co-pay-opt"><input type="radio" name="soPayMethod" value="bank" onchange="window._soOnPayMethodChange()"> 🏦 '+tr('무통장 입금','銀行振込','Bank transfer')+' <span style="color:#9ca3af; margin-left:auto; font-size:11px;">'+tr('즉시 처리','すぐ処理','Instant')+'</span></label>' : '' }
+          <label class="so-co-pay-opt" id="soCoPayCard"><input type="radio" name="soPayMethod" value="card" checked onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
+          <label class="so-co-pay-opt" id="soCoPayBank" style="${ (window.__SITE_CODE||'KR')==='KR' ? '' : 'display:none;' }"><input type="radio" name="soPayMethod" value="bank" onchange="window._soOnPayMethodChange()"> 🏦 ${tr('무통장 입금','銀行振込','Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리','すぐ処理','Instant')}</span></label>
         </div>
       </div>
 
@@ -3139,7 +3139,7 @@
         injectStyles();
         injectModal();
         // 2026-05-13: 자체 nav 제거 — 메인의 #topCatMenu 가 z-index 60000 으로 표시됨
-        state = { product: null, file: null, fileBack: null, thumbDataUrl: null, thumbDataUrlBack: null, qty: 1, frMargin: 0 };
+        state = { product: null, file: null, fileBack: null, thumbDataUrl: null, thumbDataUrlBack: null, qty: 1, frMargin: 0, frSlug: null, frBank: null, frHasPg: false };
 
         let p = productData;
         if (!p && window.PRODUCT_DB && window.PRODUCT_DB[productCode]) p = window.PRODUCT_DB[productCode];
@@ -3162,12 +3162,18 @@
         }
         state.product = p;
 
-        // 2026-05-17: 가맹점 스토어 경유 주문이면 해당 가맹점의 판매 마진율을 불러와 가격에 적용
+        // 2026-05-17: 가맹점 스토어 경유 주문 — 마진율 + 결제 정보(계좌·PG) 로드
         try {
             var _frRef = sessionStorage.getItem('_franchise_ref') || '';
             if (_frRef) {
+                state.frSlug = _frRef;
                 var _tj = await fetch('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(_frRef) + '.json?_t=' + Date.now());
-                if (_tj.ok) { var _th = await _tj.json(); state.frMargin = Number(_th && _th.margin) || 0; }
+                if (_tj.ok) {
+                    var _th = await _tj.json();
+                    state.frMargin = Number(_th && _th.margin) || 0;
+                    state.frBank = (_th && _th.bank && _th.bank.number) ? _th.bank : null;
+                    state.frHasPg = !!(_th && _th.pg && String(_th.pg).trim());
+                }
             }
         } catch (e) {}
 
@@ -4352,6 +4358,24 @@
         return fmtPrice(krw || 0);
     }
 
+    // 2026-05-17: 가맹점 주문 — 결제수단을 가맹점 계좌이체로 (가맹점 계좌가 등록된 경우)
+    function _soApplyFranchisePay() {
+        var card = document.getElementById('soCoPayCard');
+        var bank = document.getElementById('soCoPayBank');
+        if (!card || !bank) return;
+        var isKR = (window.__SITE_CODE || 'KR') === 'KR';
+        if (state.frSlug && state.frBank && state.frBank.number) {
+            // 가맹점 계좌가 있으면 — 그 계좌로 계좌이체만 (결제는 가맹점에게 직접 입금)
+            card.style.display = 'none';
+            bank.style.display = '';
+            var br = bank.querySelector('input'); if (br) br.checked = true;
+        } else {
+            // 비가맹점(또는 결제정보 미등록) — 기본 동작
+            card.style.display = '';
+            bank.style.display = isKR ? '' : 'none';
+            var cr = card.querySelector('input'); if (cr) cr.checked = true;
+        }
+    }
     window._soOpenCheckout = function () {
         var cart = _soReadAllCart();
         if (cart.length === 0) {
@@ -4361,6 +4385,7 @@
         _renderCheckoutSummary();
         document.getElementById('soCheckoutOverlay').classList.add('open');
         document.body.style.overflow = 'hidden';
+        _soApplyFranchisePay();
         // 2026-05-14: 결제수단 초기상태 동기화 (해외 사이트는 증빙 박스 숨김, 한국은 표시)
         if (typeof window._soOnPayMethodChange === 'function') window._soOnPayMethodChange();
         // 2026-05-14: 관리자/매니저 로그인 시 '고객 결제창 만들어주기' 버튼 노출
@@ -4976,19 +5001,23 @@
 
             // 무통장: 안내 메시지 + 카트 비우기
             if (payMethod === 'bank') {
+                // 2026-05-17: 가맹점 주문이면 가맹점 계좌로 안내
+                var _acct = (state.frBank && state.frBank.number)
+                    ? ((state.frBank.name || '') + ' ' + state.frBank.number + '\n' +
+                       tr('예금주', '口座名義', 'Account holder') + ': ' + (state.frBank.holder || ''))
+                    : '국민은행 647701-04-277763\n예금주: (주)카멜레온프린팅';
                 alert(
-                    '주문이 접수되었습니다!\n\n' +
-                    '주문번호: #' + (newOrderId || '확인중') + '\n' +
-                    '입금하실 금액: ' + _soFormatPrice(total) + '\n\n' +
-                    '국민은행 647701-04-277763\n' +
-                    '예금주: (주)카멜레온프린팅\n\n' +
-                    '입금 후 영업일 내 제작이 시작됩니다.'
+                    tr('주문이 접수되었습니다!', 'ご注文を受け付けました！', 'Your order has been received!') + '\n\n' +
+                    tr('주문번호', '注文番号', 'Order #') + ': #' + (newOrderId || '...') + '\n' +
+                    tr('입금하실 금액', 'お振込金額', 'Amount to transfer') + ': ' + _soFormatPrice(total) + '\n\n' +
+                    _acct + '\n\n' +
+                    tr('입금 후 영업일 내 제작이 시작됩니다.', 'ご入金後、営業日内に製作を開始します。', 'Production starts within business days of payment.')
                 );
-                // 카트 비우기 + shield 로 전환 가림 + 메인 화면으로 이동
+                // 카트 비우기 + shield 로 전환 가림 + 화면 이동
                 try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
                 _showLoadingShield();
                 window._soCloseCheckout();
-                setTimeout(function () { location.href = '/'; }, 600);
+                setTimeout(function () { location.href = state.frSlug ? ('/store/' + state.frSlug) : '/'; }, 600);
                 return;
             }
 
