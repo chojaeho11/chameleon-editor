@@ -258,8 +258,8 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     <div class="container">
         <h2 class="fr-section-title" id="txtJoinTitle"></h2>
         <p class="fr-section-sub" id="txtJoinSub"></p>
-        <div class="fr-grid-3" id="frJoinPlans" style="display:none;"></div>
-        <p class="fr-join-note" id="txtJoinNote" style="display:none;"></p>
+        <div class="fr-grid-3" id="frJoinPlans"></div>
+        <p class="fr-join-note" id="txtJoinNote"></p>
         <div style="text-align:center;margin-top:24px;">
             <a id="txtJoinAdmin" href="/franchise-admin" style="display:inline-flex;align-items:center;gap:10px;padding:17px 42px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:17px;font-weight:900;text-decoration:none;box-shadow:0 12px 32px rgba(124,58,237,0.55);"></a>
             <p id="txtJoinTry" style="margin-top:12px;font-size:13px;color:#9ca3af;"></p>
@@ -1260,38 +1260,38 @@ function showToast(msg, type){
 (function(){
     var fl = (new URLSearchParams(location.search).get('lang') || window.__FR_LANG || 'ko').toLowerCase();
     var J = {
-        ko:{ title:'지금 바로 <span class="hl">무료로 시작</span>하세요', sub:'가입비도 구독료도 없습니다. 아래 버튼을 눌러 사장님 회사의 홈페이지를 무료로 만들어 보세요.',
+        ko:{ title:'구독 없이 <span class="hl">6개월 무료</span> 사용', sub:'가입비 없이 지금 바로 쇼핑몰을 만들 수 있습니다. 6개월간 무료로 운영하고, 이후에는 아래 요금제 중 하나를 구독하면 홈페이지가 계속 정상 운영됩니다.',
              monthly:'월간 구독', annual:'연간 구독', lifetime:'평생 구독', perM:'/월', perY:'/년', perL:'1회 결제 · 평생',
-             cta:'이 요금제로 가입', best:'인기',
-             note:'구독 후 가맹점 전용 관리자 페이지에서 상호·로고·연락처를 등록하고 홈페이지를 구성합니다. 고객 결제는 본사 결제 시스템이 대행하며, 제작·납품은 사장님이 직접 하고 본사는 중계수수료 20%를 받습니다. 원재료·소모품·장비는 본사가 저렴하게 공급합니다.' },
-        ja:{ title:'加盟店 <span class="hl">サブスク料金</span>', sub:'月3,000円から。サブスク中は貴社のホームページが運営され続けます。',
+             cta:'이 요금제로 구독', best:'인기',
+             note:'6개월 무료 기간이 끝나면 구독해야 홈페이지가 정상 운영됩니다. 고객 결제는 사장님이 등록한 계좌·PG로 직접 받고, 제작·납품도 사장님이 직접 합니다. 원재료·소모품·장비는 본사가 저렴하게 공급합니다.' },
+        ja:{ title:'<span class="hl">6ヶ月無料</span>でご利用', sub:'登録料なしで今すぐショップを作成できます。6ヶ月間は無料で運営、その後は下記プランのいずれかをご契約いただくとホームページが継続して正常に運営されます。',
              monthly:'月額', annual:'年額', lifetime:'永久', perM:'/月', perY:'/年', perL:'1回決済 · 永久',
-             cta:'このプランで加盟', best:'人気',
-             note:'お申込み後、担当者が加盟店専用の管理ページ開設をサポートします。お客様の決済は本社の決済システムで処理され、製作・納品完了時に手数料20%を差し引いた金額をお振込みします。' },
-        en:{ title:'Franchise <span class="hl">Subscription Plans</span>', sub:'Start from $30/month. Your company homepage stays live while subscribed.',
+             cta:'このプランで契約', best:'人気',
+             note:'6ヶ月の無料期間が終了すると、ご契約後にホームページが正常に運営されます。お客様の決済は貴社が登録した口座・PGで直接受け取り、製作・納品も貴社が直接行います。原材料・消耗品・設備は本社が安価に供給します。' },
+        en:{ title:'<span class="hl">6 Months Free</span> — No Subscription', sub:'Build your store right now with no signup fee. Run it free for 6 months; after that, subscribe to one of the plans below to keep your homepage running.',
              monthly:'Monthly', annual:'Annual', lifetime:'Lifetime', perM:'/mo', perY:'/yr', perL:'one-time · forever',
-             cta:'Join with this plan', best:'POPULAR',
-             note:'After applying, our staff helps you open your franchise admin page. Customer payments are processed through HQ; once production/delivery is complete, HQ remits the amount minus a 20% commission.' },
-        zh:{ title:'加盟 <span class="hl">订阅套餐</span>', sub:'每月¥200起。订阅期间，您公司的网站持续运营。',
+             cta:'Subscribe to this plan', best:'POPULAR',
+             note:'After the 6-month free period, a subscription is required for your homepage to keep operating normally. Customer payments go directly to your own bank account / PG, and you handle production and delivery yourself. HQ supplies raw materials, consumables and equipment at low cost.' },
+        zh:{ title:'<span class="hl">6个月免费</span> · 无需订阅', sub:'无注册费，立即创建您的商城。免费运营6个月，之后订阅下列任一套餐即可让网站持续正常运营。',
              monthly:'月付', annual:'年付', lifetime:'终身', perM:'/月', perY:'/年', perL:'一次付费 · 终身',
-             cta:'选择此套餐加盟', best:'热门',
-             note:'申请后，我们的工作人员将协助您开通加盟管理页面。客户付款通过总部处理，制作交付完成后，总部扣除20%佣金后汇款给您。' },
-        ar:{ title:'<span class="hl">باقات اشتراك</span> الامتياز', sub:'ابدأ من 30$ شهريًا. يبقى موقع شركتك نشطًا طوال فترة الاشتراك.',
+             cta:'订阅此套餐', best:'热门',
+             note:'6个月免费期结束后，需订阅才能让网站持续正常运营。客户付款直接进入您登记的账户/PG，制作与交付由您自行处理。总部以低价供应原材料、耗材和设备。' },
+        ar:{ title:'<span class="hl">6 أشهر مجانًا</span> — بدون اشتراك', sub:'أنشئ متجرك الآن دون رسوم تسجيل. شغّله مجانًا لمدة 6 أشهر، وبعدها اشترك في إحدى الباقات أدناه لإبقاء موقعك يعمل.',
              monthly:'شهري', annual:'سنوي', lifetime:'مدى الحياة', perM:'/شهر', perY:'/سنة', perL:'دفعة واحدة · للأبد',
-             cta:'انضم بهذه الباقة', best:'الأكثر شيوعًا',
-             note:'بعد التقديم، يساعدك فريقنا في فتح صفحة إدارة الامتياز. تتم معالجة مدفوعات العملاء عبر المركز الرئيسي، وعند اكتمال الإنتاج والتسليم يحوّل المركز المبلغ بعد خصم عمولة 20%.' },
-        es:{ title:'<span class="hl">Planes de Suscripción</span> de Franquicia', sub:'Desde €28/mes. Tu web de empresa sigue activa mientras estés suscrito.',
+             cta:'اشترك في هذه الباقة', best:'الأكثر شيوعًا',
+             note:'بعد فترة الـ 6 أشهر المجانية، يلزم الاشتراك لاستمرار تشغيل موقعك بشكل طبيعي. تذهب مدفوعات العملاء مباشرة إلى حسابك / مزود الدفع الخاص بك، وتتولى أنت الإنتاج والتسليم. يوفّر المركز الرئيسي المواد الخام والمستهلكات والمعدات بأسعار منخفضة.' },
+        es:{ title:'<span class="hl">6 Meses Gratis</span> — Sin Suscripción', sub:'Crea tu tienda ahora mismo sin cuota de registro. Úsala gratis 6 meses; después, suscríbete a uno de los planes para mantener tu web activa.',
              monthly:'Mensual', annual:'Anual', lifetime:'De por vida', perM:'/mes', perY:'/año', perL:'pago único · para siempre',
-             cta:'Unirse con este plan', best:'POPULAR',
-             note:'Tras solicitarlo, nuestro equipo te ayuda a abrir tu página de administración. Los pagos de clientes se procesan por la central; al completar producción y entrega, la central remite el importe menos una comisión del 20%.' },
-        de:{ title:'Franchise-<span class="hl">Abopläne</span>', sub:'Ab 28€/Monat. Ihre Firmen-Website bleibt während des Abos online.',
+             cta:'Suscribirse a este plan', best:'POPULAR',
+             note:'Tras el periodo gratuito de 6 meses, se requiere una suscripción para que tu web siga funcionando con normalidad. Los pagos de clientes van directamente a tu cuenta / PG, y tú gestionas la producción y entrega. La central suministra materias primas, consumibles y equipos a bajo coste.' },
+        de:{ title:'<span class="hl">6 Monate gratis</span> — ohne Abo', sub:'Erstellen Sie Ihren Shop sofort ohne Anmeldegebühr. 6 Monate kostenlos nutzen; danach eines der Pakete abonnieren, damit Ihre Website weiterläuft.',
              monthly:'Monatlich', annual:'Jährlich', lifetime:'Lebenslang', perM:'/Mo', perY:'/Jahr', perL:'Einmalzahlung · für immer',
-             cta:'Mit diesem Plan beitreten', best:'BELIEBT',
-             note:'Nach der Anmeldung hilft unser Team beim Einrichten Ihrer Franchise-Verwaltungsseite. Kundenzahlungen laufen über die Zentrale; nach Produktion/Lieferung überweist die Zentrale den Betrag abzüglich 20% Provision.' },
-        fr:{ title:'<span class="hl">Forfaits d\'Abonnement</span> Franchise', sub:'À partir de 28€/mois. Le site de votre entreprise reste en ligne pendant l\'abonnement.',
+             cta:'Dieses Paket abonnieren', best:'BELIEBT',
+             note:'Nach den 6 kostenlosen Monaten ist ein Abo erforderlich, damit Ihre Website normal weiterläuft. Kundenzahlungen gehen direkt auf Ihr Konto / Ihren PG, und Sie übernehmen Produktion und Lieferung selbst. Die Zentrale liefert Rohstoffe, Verbrauchsmaterial und Geräte günstig.' },
+        fr:{ title:'<span class="hl">6 mois gratuits</span> — sans abonnement', sub:'Créez votre boutique dès maintenant sans frais d\'inscription. Utilisez-la gratuitement 6 mois ; ensuite, abonnez-vous à l\'un des forfaits pour que votre site reste actif.',
              monthly:'Mensuel', annual:'Annuel', lifetime:'À vie', perM:'/mois', perY:'/an', perL:'paiement unique · à vie',
-             cta:'Rejoindre avec ce forfait', best:'POPULAIRE',
-             note:'Après votre demande, notre équipe vous aide à ouvrir votre page d\'administration. Les paiements clients passent par le siège ; une fois la production/livraison terminée, le siège verse le montant moins une commission de 20%.' }
+             cta:'S\'abonner à ce forfait', best:'POPULAIRE',
+             note:'Après la période gratuite de 6 mois, un abonnement est requis pour que votre site continue de fonctionner normalement. Les paiements clients vont directement sur votre compte / PG, et vous gérez vous-même la production et la livraison. Le siège fournit matières premières, consommables et équipements à bas prix.' }
     };
     var PRICES = {
         ko:{m:'₩30,000',y:'₩165,000',l:'₩330,000'},
@@ -1323,14 +1323,14 @@ function showToast(msg, type){
     var tryLine = document.getElementById('txtJoinTry');
     if (tryLine) {
         var TL = {
-            ko:'구독 전이라도 들어가서 자유롭게 체험할 수 있습니다. 저장은 구독 후 가능합니다.',
-            ja:'ご契約前でも入って自由に体験できます。保存はご契約後に可能です。',
-            en:'You can enter and explore freely even before subscribing. Saving is available after subscription.',
-            zh:'订阅前也可进入自由体验。保存功能需订阅后开放。',
-            ar:'يمكنك الدخول والتجربة بحرية حتى قبل الاشتراك. الحفظ متاح بعد الاشتراك.',
-            es:'Puede entrar y explorar libremente incluso antes de suscribirse. Guardar está disponible tras la suscripción.',
-            de:'Sie können auch vor dem Abo frei hineinschauen und testen. Speichern ist nach dem Abo möglich.',
-            fr:'Vous pouvez entrer et explorer librement même avant l\'abonnement. L\'enregistrement est disponible après l\'abonnement.'
+            ko:'지금 바로 무료로 홈페이지를 만들고 6개월간 사용해 보세요. 6개월 이후에는 구독이 필요합니다.',
+            ja:'今すぐ無料でホームページを作成し、6ヶ月間ご利用ください。6ヶ月以降はご契約が必要です。',
+            en:'Build your homepage for free right now and use it for 6 months. After 6 months a subscription is required.',
+            zh:'立即免费创建您的网站并使用6个月。6个月后需要订阅。',
+            ar:'أنشئ موقعك مجانًا الآن واستخدمه لمدة 6 أشهر. بعد 6 أشهر يلزم الاشتراك.',
+            es:'Crea tu web gratis ahora mismo y úsala durante 6 meses. Tras 6 meses se requiere una suscripción.',
+            de:'Erstellen Sie Ihre Website jetzt kostenlos und nutzen Sie sie 6 Monate. Nach 6 Monaten ist ein Abo erforderlich.',
+            fr:'Créez votre site gratuitement dès maintenant et utilisez-le pendant 6 mois. Après 6 mois, un abonnement est requis.'
         };
         tryLine.textContent = TL[fl] || TL.ko;
     }
