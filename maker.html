@@ -42,11 +42,12 @@ select{padding:6px 9px;border-radius:7px;background:#172033;color:#e8edf7;border
 .toast.err{border-color:rgba(239,68,68,0.5);color:#fca5a5;}
 .toast.ok{border-color:rgba(34,197,94,0.5);color:#86efac;}
 a{color:#93c5fd;}
+html[dir="rtl"] .fld{text-align:right;}
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div class="brand">🛠️ 제조사 발주 관리</div>
+  <div class="brand" id="brand">🛠️ 제조사 발주 관리</div>
   <div id="topRight"></div>
 </div>
 <div id="loadingScreen" style="text-align:center;padding:80px 0;color:#8ea3c4;">불러오는 중…</div>
@@ -54,21 +55,21 @@ a{color:#93c5fd;}
 <div id="screenLogin" style="display:none;">
   <div class="center-box">
     <div class="ic">🔐</div>
-    <h1>제조사 로그인</h1>
-    <p>제조사로 등록하신 카멜레온프린팅 계정으로 로그인하세요.</p>
-    <label class="fld"><span class="lb">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
-    <label class="fld"><span class="lb">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
+    <h1 id="loginTitle">제조사 로그인</h1>
+    <p id="loginDesc">제조사로 등록하신 카멜레온프린팅 계정으로 로그인하세요.</p>
+    <label class="fld"><span class="lb" id="lbEmail">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
+    <label class="fld"><span class="lb" id="lbPw">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
     <button class="btn btn-pri" id="btnLogin" style="width:100%;">로그인</button>
-    <p style="margin-top:14px;font-size:13px;">아직 제조사 등록 전인가요? <a href="/partner-register">제조사로 등록하기</a></p>
+    <p style="margin-top:14px;font-size:13px;"><span id="notYet">아직 제조사 등록 전인가요?</span> <a href="/partner-register" id="regLink1">제조사로 등록하기</a></p>
   </div>
 </div>
 
 <div id="screenNoPartner" style="display:none;">
   <div class="center-box">
     <div class="ic">📋</div>
-    <h1>제조사 등록이 필요합니다</h1>
-    <p>이 계정으로 등록된 제조사 정보가 없습니다. 먼저 제조사 등록을 완료해 주세요.</p>
-    <a class="btn btn-pri" href="/partner-register" style="display:inline-block;text-decoration:none;">제조사로 등록하기</a>
+    <h1 id="noPartnerTitle">제조사 등록이 필요합니다</h1>
+    <p id="noPartnerDesc">이 계정으로 등록된 제조사 정보가 없습니다. 먼저 제조사 등록을 완료해 주세요.</p>
+    <a class="btn btn-pri" href="/partner-register" id="regLink2" style="display:inline-block;text-decoration:none;">제조사로 등록하기</a>
   </div>
 </div>
 
@@ -79,8 +80,8 @@ a{color:#93c5fd;}
       <div class="desc" id="mkInfo"></div>
     </div>
     <div class="card">
-      <h2>📥 발주 수신함</h2>
-      <div class="desc">같은 국가의 드랍쉬퍼가 보낸 제작 발주입니다. 드랍쉬퍼가 공급가를 선결제하면 제작·배송(설치)을 진행해 주세요. 상태를 변경하면 드랍쉬퍼에게 표시됩니다.</div>
+      <h2 id="inboxTitle">📥 발주 수신함</h2>
+      <div class="desc" id="inboxDesc">같은 국가의 드랍쉬퍼가 보낸 제작 발주입니다. 드랍쉬퍼가 공급가를 선결제하면 제작·배송(설치)을 진행해 주세요. 상태를 변경하면 드랍쉬퍼에게 표시됩니다.</div>
       <div id="poList"><div style="color:#8ea3c4;font-size:13px;">불러오는 중…</div></div>
     </div>
   </div>
@@ -89,12 +90,149 @@ a{color:#93c5fd;}
 <script>
 (function(){
   'use strict';
+
+  // ===== i18n =====
+  var LANG = (function(){
+    var p = (new URLSearchParams(location.search).get('lang')||'').toLowerCase();
+    if (p==='kr') p='ko';
+    if (p==='jp') p='ja';
+    if (p==='cn') p='zh';
+    if (p==='us') p='en';
+    var supported = ['ko','ja','en','zh','ar','es','de','fr'];
+    if (supported.indexOf(p)>=0) return p;
+    var h = location.hostname||'';
+    return h.indexOf('cafe0101')>=0 ? 'ja' : (h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0) ? 'en' : 'ko';
+  })();
+  var D = {
+    ko:{ title:'제조사 발주 관리 · Chameleon Printing', brand:'🛠️ 제조사 발주 관리', loading:'불러오는 중…',
+      loginTitle:'제조사 로그인', loginDesc:'제조사로 등록하신 카멜레온프린팅 계정으로 로그인하세요.',
+      email:'이메일', password:'비밀번호', login:'로그인', loggingIn:'로그인 중…',
+      notYet:'아직 제조사 등록 전인가요?', registerMaker:'제조사로 등록하기',
+      noPartnerTitle:'제조사 등록이 필요합니다', noPartnerDesc:'이 계정으로 등록된 제조사 정보가 없습니다. 먼저 제조사 등록을 완료해 주세요.',
+      inboxTitle:'📥 발주 수신함', inboxDesc:'같은 국가의 드랍쉬퍼가 보낸 제작 발주입니다. 드랍쉬퍼가 공급가를 선결제하면 제작·배송(설치)을 진행해 주세요. 상태를 변경하면 드랍쉬퍼에게 표시됩니다.',
+      noOrders:'아직 받은 발주가 없습니다.', noCountry:'국가 정보가 없습니다.', companyFallback:'제조사',
+      logout:'로그아웃', pendingNote:' — 본사 승인 후 발주가 표시됩니다.',
+      poFrom:'발주: ', poNote:'메모: ', poInstall:'📦 설치·배송 — ', poStatusChange:'상태 변경',
+      toastSaved:'상태가 변경되었습니다', toastSaveFail:'변경 실패: ', toastNeedLogin:'이메일과 비밀번호를 입력하세요.', toastLoginFail:'로그인 실패: ',
+      st:{new:'신규',accepted:'접수함',making:'제작중',done:'완료'},
+      status:{pending:'승인 대기',verified:'검증됨',active:'활성',suspended:'정지'}, locale:'ko-KR' },
+    ja:{ title:'製造社 発注管理 · Chameleon Printing', brand:'🛠️ 製造社 発注管理', loading:'読み込み中…',
+      loginTitle:'製造社ログイン', loginDesc:'製造社として登録したカメレオンプリンティングのアカウントでログインしてください。',
+      email:'メール', password:'パスワード', login:'ログイン', loggingIn:'ログイン中…',
+      notYet:'まだ製造社登録前ですか？', registerMaker:'製造社として登録する',
+      noPartnerTitle:'製造社登録が必要です', noPartnerDesc:'このアカウントで登録された製造社情報がありません。先に製造社登録を完了してください。',
+      inboxTitle:'📥 発注受信箱', inboxDesc:'同じ国のドロップシッパーから届いた製作発注です。ドロップシッパーが供給価格を前払いしたら、製作・配送(設置)を進めてください。状態を変更するとドロップシッパーに表示されます。',
+      noOrders:'まだ受信した発注はありません。', noCountry:'国情報がありません。', companyFallback:'製造社',
+      logout:'ログアウト', pendingNote:' — 本社の承認後に発注が表示されます。',
+      poFrom:'発注元: ', poNote:'メモ: ', poInstall:'📦 設置・配送 — ', poStatusChange:'状態変更',
+      toastSaved:'状態を変更しました', toastSaveFail:'変更失敗: ', toastNeedLogin:'メールとパスワードを入力してください。', toastLoginFail:'ログイン失敗: ',
+      st:{new:'新規',accepted:'受付',making:'製作中',done:'完了'},
+      status:{pending:'承認待ち',verified:'検証済み',active:'有効',suspended:'停止'}, locale:'ja-JP' },
+    en:{ title:'Manufacturer Order Management · Chameleon Printing', brand:'🛠️ Manufacturer Orders', loading:'Loading…',
+      loginTitle:'Manufacturer Login', loginDesc:'Log in with the Chameleon Printing account you registered as a manufacturer.',
+      email:'Email', password:'Password', login:'Log in', loggingIn:'Logging in…',
+      notYet:'Not registered as a manufacturer yet?', registerMaker:'Register as a manufacturer',
+      noPartnerTitle:'Manufacturer registration required', noPartnerDesc:'No manufacturer is registered to this account. Please complete manufacturer registration first.',
+      inboxTitle:'📥 Order Inbox', inboxDesc:'Production orders sent by dropshippers in the same country. Once the dropshipper prepays the supply price, proceed with production and delivery (installation). Status changes are shown to the dropshipper.',
+      noOrders:'No orders received yet.', noCountry:'No country information.', companyFallback:'Manufacturer',
+      logout:'Log out', pendingNote:' — Orders appear after HQ approval.',
+      poFrom:'From: ', poNote:'Note: ', poInstall:'📦 Install / delivery — ', poStatusChange:'Change status',
+      toastSaved:'Status updated', toastSaveFail:'Update failed: ', toastNeedLogin:'Enter your email and password.', toastLoginFail:'Login failed: ',
+      st:{new:'New',accepted:'Accepted',making:'Producing',done:'Done'},
+      status:{pending:'Pending approval',verified:'Verified',active:'Active',suspended:'Suspended'}, locale:'en-US' },
+    zh:{ title:'制造商订单管理 · Chameleon Printing', brand:'🛠️ 制造商订单', loading:'加载中…',
+      loginTitle:'制造商登录', loginDesc:'请使用您注册为制造商的卡米利翁印刷账户登录。',
+      email:'邮箱', password:'密码', login:'登录', loggingIn:'登录中…',
+      notYet:'还未注册为制造商？', registerMaker:'注册为制造商',
+      noPartnerTitle:'需要注册制造商', noPartnerDesc:'此账户未注册制造商信息。请先完成制造商注册。',
+      inboxTitle:'📥 订单收件箱', inboxDesc:'这是同一国家的代发货商发来的制作订单。代发货商预付供货价后，请进行制作与配送（安装）。状态变更后将显示给代发货商。',
+      noOrders:'暂无收到的订单。', noCountry:'无国家信息。', companyFallback:'制造商',
+      logout:'登出', pendingNote:' — 总部审批后将显示订单。',
+      poFrom:'下单方: ', poNote:'备注: ', poInstall:'📦 安装·配送 — ', poStatusChange:'更改状态',
+      toastSaved:'状态已更新', toastSaveFail:'更新失败: ', toastNeedLogin:'请输入邮箱和密码。', toastLoginFail:'登录失败: ',
+      st:{new:'新',accepted:'已接受',making:'制作中',done:'完成'},
+      status:{pending:'待审批',verified:'已验证',active:'活跃',suspended:'已停用'}, locale:'zh-CN' },
+    ar:{ title:'إدارة طلبات المصنّع · Chameleon Printing', brand:'🛠️ طلبات المصنّع', loading:'جارٍ التحميل…',
+      loginTitle:'تسجيل دخول المصنّع', loginDesc:'سجّل الدخول بحساب كاميليون للطباعة الذي سجّلته كمصنّع.',
+      email:'البريد الإلكتروني', password:'كلمة المرور', login:'تسجيل الدخول', loggingIn:'جارٍ تسجيل الدخول…',
+      notYet:'لم تسجّل كمصنّع بعد؟', registerMaker:'التسجيل كمصنّع',
+      noPartnerTitle:'التسجيل كمصنّع مطلوب', noPartnerDesc:'لا يوجد مصنّع مسجّل بهذا الحساب. يرجى إكمال تسجيل المصنّع أولاً.',
+      inboxTitle:'📥 صندوق الطلبات', inboxDesc:'طلبات إنتاج أرسلها الدروبشيبر في نفس البلد. بمجرد أن يدفع الدروبشيبر سعر التوريد مقدمًا، تابع الإنتاج والتسليم (التركيب). تظهر تغييرات الحالة للدروبشيبر.',
+      noOrders:'لا توجد طلبات مستلمة بعد.', noCountry:'لا توجد معلومات عن البلد.', companyFallback:'المصنّع',
+      logout:'تسجيل الخروج', pendingNote:' — تظهر الطلبات بعد موافقة المركز الرئيسي.',
+      poFrom:'من: ', poNote:'ملاحظة: ', poInstall:'📦 التركيب/التوصيل — ', poStatusChange:'تغيير الحالة',
+      toastSaved:'تم تحديث الحالة', toastSaveFail:'فشل التحديث: ', toastNeedLogin:'أدخل بريدك الإلكتروني وكلمة المرور.', toastLoginFail:'فشل تسجيل الدخول: ',
+      st:{new:'جديد',accepted:'مقبول',making:'قيد الإنتاج',done:'مكتمل'},
+      status:{pending:'بانتظار الموافقة',verified:'موثّق',active:'نشط',suspended:'موقوف'}, locale:'ar' },
+    es:{ title:'Gestión de pedidos del fabricante · Chameleon Printing', brand:'🛠️ Pedidos del fabricante', loading:'Cargando…',
+      loginTitle:'Acceso de fabricante', loginDesc:'Inicie sesión con la cuenta de Chameleon Printing registrada como fabricante.',
+      email:'Correo', password:'Contraseña', login:'Acceder', loggingIn:'Accediendo…',
+      notYet:'¿Aún no registrado como fabricante?', registerMaker:'Registrarse como fabricante',
+      noPartnerTitle:'Se requiere registro de fabricante', noPartnerDesc:'No hay ningún fabricante registrado en esta cuenta. Complete primero el registro de fabricante.',
+      inboxTitle:'📥 Bandeja de pedidos', inboxDesc:'Pedidos de producción enviados por dropshippers del mismo país. Cuando el dropshipper pague por adelantado el precio de suministro, proceda con la producción y la entrega (instalación). Los cambios de estado se muestran al dropshipper.',
+      noOrders:'Aún no se han recibido pedidos.', noCountry:'Sin información de país.', companyFallback:'Fabricante',
+      logout:'Salir', pendingNote:' — Los pedidos aparecen tras la aprobación de la central.',
+      poFrom:'De: ', poNote:'Nota: ', poInstall:'📦 Instalación/entrega — ', poStatusChange:'Cambiar estado',
+      toastSaved:'Estado actualizado', toastSaveFail:'Error al actualizar: ', toastNeedLogin:'Introduzca su correo y contraseña.', toastLoginFail:'Error de acceso: ',
+      st:{new:'Nuevo',accepted:'Aceptado',making:'Produciendo',done:'Hecho'},
+      status:{pending:'Pendiente de aprobación',verified:'Verificado',active:'Activo',suspended:'Suspendido'}, locale:'es-ES' },
+    de:{ title:'Hersteller-Auftragsverwaltung · Chameleon Printing', brand:'🛠️ Hersteller-Aufträge', loading:'Wird geladen…',
+      loginTitle:'Hersteller-Login', loginDesc:'Melden Sie sich mit dem als Hersteller registrierten Chameleon-Printing-Konto an.',
+      email:'E-Mail', password:'Passwort', login:'Anmelden', loggingIn:'Anmeldung…',
+      notYet:'Noch nicht als Hersteller registriert?', registerMaker:'Als Hersteller registrieren',
+      noPartnerTitle:'Hersteller-Registrierung erforderlich', noPartnerDesc:'Diesem Konto ist kein Hersteller zugeordnet. Bitte schließen Sie zuerst die Hersteller-Registrierung ab.',
+      inboxTitle:'📥 Auftragseingang', inboxDesc:'Produktionsaufträge von Dropshippern im selben Land. Sobald der Dropshipper den Lieferpreis vorausbezahlt, fahren Sie mit Produktion und Lieferung (Montage) fort. Statusänderungen werden dem Dropshipper angezeigt.',
+      noOrders:'Noch keine Aufträge erhalten.', noCountry:'Keine Länderinformation.', companyFallback:'Hersteller',
+      logout:'Abmelden', pendingNote:' — Aufträge erscheinen nach Freigabe durch die Zentrale.',
+      poFrom:'Von: ', poNote:'Notiz: ', poInstall:'📦 Montage/Lieferung — ', poStatusChange:'Status ändern',
+      toastSaved:'Status aktualisiert', toastSaveFail:'Aktualisierung fehlgeschlagen: ', toastNeedLogin:'Bitte E-Mail und Passwort eingeben.', toastLoginFail:'Anmeldung fehlgeschlagen: ',
+      st:{new:'Neu',accepted:'Angenommen',making:'In Produktion',done:'Fertig'},
+      status:{pending:'Genehmigung ausstehend',verified:'Verifiziert',active:'Aktiv',suspended:'Gesperrt'}, locale:'de-DE' },
+    fr:{ title:'Gestion des commandes fabricant · Chameleon Printing', brand:'🛠️ Commandes fabricant', loading:'Chargement…',
+      loginTitle:'Connexion fabricant', loginDesc:'Connectez-vous avec le compte Chameleon Printing enregistré comme fabricant.',
+      email:'E-mail', password:'Mot de passe', login:'Se connecter', loggingIn:'Connexion…',
+      notYet:'Pas encore enregistré comme fabricant ?', registerMaker:'S\'enregistrer comme fabricant',
+      noPartnerTitle:'Inscription fabricant requise', noPartnerDesc:'Aucun fabricant n\'est enregistré sur ce compte. Veuillez d\'abord compléter l\'inscription fabricant.',
+      inboxTitle:'📥 Boîte de réception des commandes', inboxDesc:'Commandes de production envoyées par les dropshippers du même pays. Une fois que le dropshipper a prépayé le prix de fourniture, procédez à la production et à la livraison (installation). Les changements de statut sont affichés au dropshipper.',
+      noOrders:'Aucune commande reçue pour le moment.', noCountry:'Aucune information de pays.', companyFallback:'Fabricant',
+      logout:'Déconnexion', pendingNote:' — Les commandes apparaissent après validation du siège.',
+      poFrom:'De : ', poNote:'Note : ', poInstall:'📦 Installation/livraison — ', poStatusChange:'Changer le statut',
+      toastSaved:'Statut mis à jour', toastSaveFail:'Échec de la mise à jour : ', toastNeedLogin:'Saisissez votre e-mail et votre mot de passe.', toastLoginFail:'Échec de connexion : ',
+      st:{new:'Nouveau',accepted:'Accepté',making:'En production',done:'Terminé'},
+      status:{pending:'En attente d\'approbation',verified:'Vérifié',active:'Actif',suspended:'Suspendu'}, locale:'fr-FR' }
+  };
+  var T = D[LANG] || D.ko;
+
   var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
   var state = { user:null, partner:null };
-  var ST = { new:'신규', accepted:'접수함', making:'제작중', done:'완료' };
+  var ST = T.st;
+
+  // apply static i18n
+  document.documentElement.lang = (LANG==='ko'?'ko':LANG);
+  if (LANG==='ar') document.documentElement.dir = 'rtl';
+  document.title = T.title;
+  function setTxt(id,v){ var e=$(id); if(e) e.textContent=v; }
+  setTxt('brand',T.brand);
+  setTxt('loadingScreen',T.loading);
+  setTxt('loginTitle',T.loginTitle);
+  setTxt('loginDesc',T.loginDesc);
+  setTxt('lbEmail',T.email);
+  setTxt('lbPw',T.password);
+  setTxt('btnLogin',T.login);
+  setTxt('notYet',T.notYet);
+  setTxt('regLink1',T.registerMaker);
+  setTxt('regLink2',T.registerMaker);
+  setTxt('noPartnerTitle',T.noPartnerTitle);
+  setTxt('noPartnerDesc',T.noPartnerDesc);
+  setTxt('inboxTitle',T.inboxTitle);
+  setTxt('inboxDesc',T.inboxDesc);
+  $('poList').innerHTML='<div style="color:#8ea3c4;font-size:13px;">'+T.loading+'</div>';
+  // keep lang on register link
+  $('regLink1').href='/partner-register?lang='+LANG;
+  $('regLink2').href='/partner-register?lang='+LANG;
 
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   // 국가 문자열 → 표준 코드 (드랍쉬퍼/제조사 국가 표기가 달라도 매칭되도록)
@@ -127,25 +265,25 @@ a{color:#93c5fd;}
     var p=(r&&r.data&&r.data[0])||null;
     if(!p){ show('screenNoPartner'); return; }
     state.partner=p;
-    $('topRight').innerHTML='<span style="font-size:13px;color:#8ea3c4;margin-right:10px;">'+esc(state.user.email||'')+'</span><button class="btn btn-ghost btn-sm" id="btnLogout">로그아웃</button>';
+    $('topRight').innerHTML='<span style="font-size:13px;color:#8ea3c4;margin-right:10px;">'+esc(state.user.email||'')+'</span><button class="btn btn-ghost btn-sm" id="btnLogout">'+esc(T.logout)+'</button>';
     $('btnLogout').onclick=async function(){ try{await sb.auth.signOut();}catch(e){} location.reload(); };
-    var statusLabel={pending:'승인 대기',verified:'검증됨',active:'활성',suspended:'정지'}[p.status]||p.status||'';
-    $('mkCompany').textContent='🛠️ '+(p.company_name||'제조사');
-    $('mkInfo').textContent=(p.country||'')+' · '+statusLabel+(p.status!=='active'&&p.status!=='verified'?' — 본사 승인 후 발주가 표시됩니다.':'');
+    var statusLabel=(T.status[p.status])||p.status||'';
+    $('mkCompany').textContent='🛠️ '+(p.company_name||T.companyFallback);
+    $('mkInfo').textContent=(p.country||'')+' · '+statusLabel+(p.status!=='active'&&p.status!=='verified'?T.pendingNote:'');
     show('screenDash');
     loadOrders();
   }
   async function loadOrders(){
     var box=$('poList');
     var country=ctryCode(state.partner.country);
-    if(!country){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;">국가 정보가 없습니다.</div>'; return; }
+    if(!country){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;">'+esc(T.noCountry)+'</div>'; return; }
     var dir='porders/'+country;
     var files=[];
     try{
       var lr=await sb.storage.from('logos').list(dir,{limit:300});
       files=(lr.data||[]).filter(function(f){ return f.name&&f.name.indexOf('.json')>0; });
     }catch(e){}
-    if(!files.length){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;padding:8px 0;">아직 받은 발주가 없습니다.</div>'; return; }
+    if(!files.length){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;padding:8px 0;">'+esc(T.noOrders)+'</div>'; return; }
     var orders=[];
     for(var i=0;i<files.length;i++){
       try{
@@ -156,20 +294,20 @@ a{color:#93c5fd;}
     }
     // 이 제조사로 지정된 발주만 표시 (mfg_id 없는 구버전 발주는 호환 위해 노출)
     orders = orders.filter(function(o){ return !o.mfg_id || o.mfg_id === state.partner.id; });
-    if(!orders.length){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;padding:8px 0;">아직 받은 발주가 없습니다.</div>'; return; }
+    if(!orders.length){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;padding:8px 0;">'+esc(T.noOrders)+'</div>'; return; }
     orders.sort(function(a,b){ return (b.created||'').localeCompare(a.created||''); });
     box.innerHTML=orders.map(function(o){
-      var d=o.created?new Date(o.created).toLocaleString('ko-KR',{dateStyle:'short',timeStyle:'short'}):'';
+      var d=o.created?new Date(o.created).toLocaleString(T.locale,{dateStyle:'short',timeStyle:'short'}):'';
       var st=o.status||'new';
       return '<div class="po">'
         +'<div class="poh"><span style="color:#8ea3c4;">'+esc(d)+'</span>'
         +'<span class="pst '+st+'">'+(ST[st]||st)+'</span></div>'
         +'<div class="pi">'+esc(o.item||'-')+' <span style="font-size:13px;color:#93c5fd;">× '+(o.qty||1)+'</span></div>'
-        +'<div class="pm">발주: '+esc(o.drop_company||o.drop_slug||'-')+(o.drop_phone?' · '+esc(o.drop_phone):'')+'</div>'
-        +(o.note?'<div class="pm">메모: '+esc(o.note)+'</div>':'')
-        +'<div class="pcust">📦 설치·배송 — '+esc(o.cust_name||'-')+' / '+esc(o.cust_phone||'-')+'<br>'+esc(o.cust_addr||'-')+'</div>'
+        +'<div class="pm">'+esc(T.poFrom)+esc(o.drop_company||o.drop_slug||'-')+(o.drop_phone?' · '+esc(o.drop_phone):'')+'</div>'
+        +(o.note?'<div class="pm">'+esc(T.poNote)+esc(o.note)+'</div>':'')
+        +'<div class="pcust">'+esc(T.poInstall)+esc(o.cust_name||'-')+' / '+esc(o.cust_phone||'-')+'<br>'+esc(o.cust_addr||'-')+'</div>'
         +'<div style="margin-top:10px;display:flex;align-items:center;gap:8px;">'
-        +'<span style="font-size:12px;color:#8ea3c4;">상태 변경</span>'
+        +'<span style="font-size:12px;color:#8ea3c4;">'+esc(T.poStatusChange)+'</span>'
         +'<select data-file="'+esc(o._file)+'">'
         +['new','accepted','making','done'].map(function(s){ return '<option value="'+s+'"'+(s===st?' selected':'')+'>'+ST[s]+'</option>'; }).join('')
         +'</select></div>'
@@ -185,21 +323,21 @@ a{color:#93c5fd;}
           var blob=new Blob([JSON.stringify(save)],{type:'application/json'});
           var up=await sb.storage.from('logos').upload(dir+'/'+sel.dataset.file,blob,{upsert:true,contentType:'application/json'});
           if(up.error) throw up.error;
-          toast('상태가 변경되었습니다','ok');
-        }catch(e){ toast('변경 실패: '+(e.message||e),'err'); }
+          toast(T.toastSaved,'ok');
+        }catch(e){ toast(T.toastSaveFail+(e.message||e),'err'); }
       };
     });
   }
   $('btnLogin').onclick=async function(){
     var em=$('loginEmail').value.trim(), pw=$('loginPw').value;
-    if(!em||!pw){ toast('이메일과 비밀번호를 입력하세요.','err'); return; }
-    this.disabled=true; this.textContent='로그인 중…';
+    if(!em||!pw){ toast(T.toastNeedLogin,'err'); return; }
+    this.disabled=true; this.textContent=T.loggingIn;
     try{
       var r=await sb.auth.signInWithPassword({email:em,password:pw});
       if(r.error) throw r.error;
       state.user=r.data.user;
       await afterLogin();
-    }catch(e){ toast('로그인 실패: '+(e.message||e),'err'); this.disabled=false; this.textContent='로그인'; }
+    }catch(e){ toast(T.toastLoginFail+(e.message||e),'err'); this.disabled=false; this.textContent=T.login; }
   };
   $('loginPw').addEventListener('keydown',function(e){ if(e.key==='Enter') $('btnLogin').click(); });
   init();
