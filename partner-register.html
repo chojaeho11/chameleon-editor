@@ -624,7 +624,6 @@ async function checkAuth() {
         document.getElementById('authLoggedOut').style.display = 'none';
         document.getElementById('authLoggedIn').style.display = 'block';
         document.getElementById('userEmail').textContent = currentUser.email;
-        document.getElementById('fEmail').value = currentUser.email;
         enableForm(true);
     } else {
         currentUser = null;
