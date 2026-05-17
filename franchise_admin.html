@@ -189,6 +189,25 @@ select option{background:#1d1640;}
     </div>
 
     <div class="card">
+      <h2 data-i18n="payTitle">② 결제 정보</h2>
+      <div class="desc" data-i18n="payDesc">고객 결제는 본사를 거치지 않고 사장님께 직접 들어옵니다.</div>
+      <div class="row2">
+        <label class="fld"><span class="lb" data-i18n="bankName">은행명</span><input type="text" id="fBankName" maxlength="40"></label>
+        <label class="fld"><span class="lb" data-i18n="bankHolder">예금주</span><input type="text" id="fBankHolder" maxlength="40"></label>
+      </div>
+      <label class="fld"><span class="lb" data-i18n="bankNumber">계좌번호</span><input type="text" id="fBankNumber" maxlength="40"></label>
+      <label class="fld">
+        <span class="lb"><span data-i18n="pgLabel">카드결제 (PG) 연동</span> <small data-i18n="pgSmall">— PG사 가입 후 정보를 입력하면 카드결제가 켜집니다</small></span>
+        <textarea id="fPgInfo" rows="3" data-i18n-ph="pgPh" placeholder="" style="width:100%;padding:11px;border:1.5px solid rgba(167,139,250,0.3);border-radius:9px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
+      </label>
+      <div id="pgStatusBadge" style="font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;display:inline-block;margin-top:2px;"></div>
+      <label class="fld" style="margin-top:14px;">
+        <span class="lb"><span data-i18n="domainLabel">사용자 도메인 (선택)</span> <small data-i18n="domainSmall">— 직접 구입한 도메인을 연결하려면 입력하세요</small></span>
+        <input type="text" id="fDomain" maxlength="120" data-i18n-ph="domainPh" placeholder="">
+      </label>
+    </div>
+
+    <div class="card">
       <h2 data-i18n="c2Title">② 판매할 제품 선택</h2>
       <div class="desc" data-i18n="c2Desc">카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.</div>
       <div class="prod-toolbar">
@@ -263,7 +282,7 @@ select option{background:#1d1640;}
       taglineLabel:'홈페이지 소개 문구', taglineSmall:'— 스토어 상단에 표시되는 한 줄 소개', taglinePh:'예: 우리 동네 광고·인쇄, 빠르고 정확하게 — 로컬스토리',
       c2Title:'② 판매할 제품 선택', c2Desc:'카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.',
       searchPh:'제품 검색…', selectAll:'현재 목록 전체선택', clearAll:'전체 해제', loadingProd:'제품을 불러오는 중…', noProd:'제품이 없습니다.',
-      c3Title:'③ 주문 · 정산 현황', c3Desc:'고객이 사장님 스토어에서 주문한 내역입니다. 결제는 본사가 대행하며, 제작·납품 완료 시 <b>중계수수료 20%를 제외한 금액</b>을 정산해 드립니다.',
+      c3Title:'④ 주문 현황', c3Desc:'고객이 사장님 스토어에서 주문한 내역입니다. 결제(계좌이체·카드)는 등록하신 계좌·PG로 <b>사장님께 직접 입금</b>되며, 본사 중계수수료는 없습니다.',
       c4Title:'④ 본사와 메시지', c4Desc:'본사 담당자와 주고받는 메시지입니다. 정산·제작·배송 등 문의를 이메일처럼 남기고 답변을 받으세요.',
       msgPh:'본사에 보낼 메시지를 입력하세요…', send:'보내기', save:'💾 저장', preview:'🔗 내 홈페이지 보기',
       trialMode:'체험 모드', saving:'저장 중…', saved:'저장되었습니다', savedAddr:'저장됨 · 홈페이지 주소: ', saveFail:'저장 실패: ',
@@ -291,7 +310,13 @@ select option{background:#1d1640;}
       heroModeLabel:'상단 배경', heroModeDefault:'기본 (보라 그라데이션)', heroModeColor:'단색 지정', heroModeImage:'이미지 업로드',
       heroColorLabel:'배경 색상', heroImageLabel:'배경 이미지',
       heroImgTooBig:'이미지는 5MB 이하로 올려주세요.', heroImgUploading:'배경 이미지 업로드 중…', heroImgDone:'배경 이미지 업로드 완료',
-      marginLabel:'판매 마진율 (%)', marginSmall:'— 본사 가격에 붙는 이익률 · 예: 10 → 고객에게 10% 인상된 가격으로 표시'
+      marginLabel:'판매 마진율 (%)', marginSmall:'— 본사 가격에 붙는 이익률 · 예: 10 → 고객에게 10% 인상된 가격으로 표시',
+      payTitle:'② 결제 정보', payDesc:'고객 결제는 본사를 거치지 않고 사장님께 직접 들어옵니다. 계좌를 등록하면 계좌이체 주문을, PG(카드결제)사에 직접 가입한 뒤 가맹점 정보를 입력하면 카드결제를 받을 수 있습니다. 본사는 결제를 대행하지 않으므로 중계수수료가 없습니다.',
+      bankLabel:'입금 계좌 (계좌이체용)', bankName:'은행명', bankNumber:'계좌번호', bankHolder:'예금주',
+      pgLabel:'카드결제 (PG) 연동', pgSmall:'— 토스페이먼츠·스트라이프 등 PG사에 직접 가입 후 가맹점 정보를 입력하면 카드결제가 켜집니다',
+      pgPh:'예: 토스페이먼츠 / 가맹점ID(MID) / API키 / 담당자 연락처를 적어주세요',
+      pgStatusOff:'계좌이체만 가능', pgStatusOn:'✅ 카드결제 활성화됨',
+      domainLabel:'사용자 도메인 (선택)', domainSmall:'— 직접 구입한 도메인을 연결하려면 입력하세요 (연결은 본사가 처리)', domainPh:'예: www.myshop.com'
     },
     ja:{
       adminTitle:'加盟店管理者', loading:'読み込み中…',
@@ -309,7 +334,7 @@ select option{background:#1d1640;}
       taglineLabel:'ホームページ紹介文', taglineSmall:'— ストア上部に表示される一行紹介', taglinePh:'例: 地域の広告・印刷をスピーディーに — ローカルストーリー',
       c2Title:'② 販売する製品の選択', c2Desc:'カメレオンの全製品から、お持ちの設備で<b>製作可能な製品</b>を選んでチェックしてください。チェックした製品のみホームページに表示されます。',
       searchPh:'製品検索…', selectAll:'表示中をすべて選択', clearAll:'すべて解除', loadingProd:'製品を読み込み中…', noProd:'製品がありません。',
-      c3Title:'③ 注文・精算状況', c3Desc:'お客様がストアで注文した内訳です。決済は本社が代行し、製作・納品完了時に<b>仲介手数料20%を除いた金額</b>を精算します。',
+      c3Title:'④ 注文状況', c3Desc:'お客様がストアで注文した内訳です。決済(銀行振込・カード)は登録した口座・PGへ<b>店舗様へ直接入金</b>され、本社の仲介手数料はありません。',
       c4Title:'④ 本社とのメッセージ', c4Desc:'本社担当者とのメッセージです。精算・製作・配送などの問い合わせをメールのように残せます。',
       msgPh:'本社へのメッセージを入力…', send:'送信', save:'💾 保存', preview:'🔗 ホームページを見る',
       trialMode:'体験モード', saving:'保存中…', saved:'保存しました', savedAddr:'保存完了 · アドレス: ', saveFail:'保存失敗: ',
@@ -337,7 +362,13 @@ select option{background:#1d1640;}
       heroModeLabel:'上部背景', heroModeDefault:'既定 (紫グラデーション)', heroModeColor:'単色を指定', heroModeImage:'画像をアップロード',
       heroColorLabel:'背景色', heroImageLabel:'背景画像',
       heroImgTooBig:'画像は5MB以下でアップロードしてください。', heroImgUploading:'背景画像をアップロード中…', heroImgDone:'背景画像のアップロード完了',
-      marginLabel:'販売マージン率 (%)', marginSmall:'— 本社価格に上乗せする利益率 · 例: 10 → 顧客には10%値上げした価格で表示'
+      marginLabel:'販売マージン率 (%)', marginSmall:'— 本社価格に上乗せする利益率 · 例: 10 → 顧客には10%値上げした価格で表示',
+      payTitle:'② 決済情報', payDesc:'お客様の決済は本社を経由せず、店舗様へ直接入金されます。口座を登録すると振込注文を、PG(カード決済)会社に直接加入して加盟店情報を入力するとカード決済を受けられます。本社は決済を代行しないため仲介手数料はありません。',
+      bankLabel:'振込口座 (銀行振込用)', bankName:'銀行名', bankNumber:'口座番号', bankHolder:'口座名義',
+      pgLabel:'カード決済 (PG) 連携', pgSmall:'— Stripe等のPG会社に直接加入後、加盟店情報を入力するとカード決済がオンになります',
+      pgPh:'例: Stripe / 加盟店ID(MID) / APIキー / 担当者連絡先を記入してください',
+      pgStatusOff:'銀行振込のみ', pgStatusOn:'✅ カード決済 有効',
+      domainLabel:'独自ドメイン (任意)', domainSmall:'— 購入したドメインを接続するには入力してください (接続は本社が対応)', domainPh:'例: www.myshop.com'
     },
     en:{
       adminTitle:'Franchise Admin', loading:'Loading…',
@@ -355,7 +386,7 @@ select option{background:#1d1640;}
       taglineLabel:'Homepage Tagline', taglineSmall:'— a one-line intro shown at the top of your store', taglinePh:'e.g. Fast, reliable local printing — Local Story',
       c2Title:'2. Select Products to Sell', c2Desc:'From all Chameleon products, check the ones <b>you can produce</b> with your equipment. Only checked products appear on your homepage.',
       searchPh:'Search products…', selectAll:'Select all shown', clearAll:'Clear all', loadingProd:'Loading products…', noProd:'No products.',
-      c3Title:'3. Orders & Settlement', c3Desc:'Orders placed by customers in your store. HQ handles payment; on completion you receive the amount <b>minus a 20% brokerage fee</b>.',
+      c3Title:'4. Orders', c3Desc:'Orders placed by customers in your store. Payments (bank transfer / card) go <b>directly to you</b> via the account and PG you registered — there is no HQ brokerage fee.',
       c4Title:'4. Messages with HQ', c4Desc:'Messages with your HQ contact. Leave questions about settlement, production or delivery and get replies.',
       msgPh:'Type a message to HQ…', send:'Send', save:'💾 Save', preview:'🔗 View my homepage',
       trialMode:'Trial Mode', saving:'Saving…', saved:'Saved', savedAddr:'Saved · homepage address: ', saveFail:'Save failed: ',
@@ -383,7 +414,13 @@ select option{background:#1d1640;}
       heroModeLabel:'Header background', heroModeDefault:'Default (purple gradient)', heroModeColor:'Solid color', heroModeImage:'Upload image',
       heroColorLabel:'Background color', heroImageLabel:'Background image',
       heroImgTooBig:'Image must be 5MB or smaller.', heroImgUploading:'Uploading background image…', heroImgDone:'Background image uploaded',
-      marginLabel:'Sales margin (%)', marginSmall:'— markup added to the base price · e.g. 10 → customers see prices raised by 10%'
+      marginLabel:'Sales margin (%)', marginSmall:'— markup added to the base price · e.g. 10 → customers see prices raised by 10%',
+      payTitle:'2. Payment Info', payDesc:'Customer payments go directly to you, not through HQ. Register a bank account to accept bank transfers, and once you sign up with a PG (card processor) yourself and enter your merchant details, you can accept card payments. HQ does not process payments, so there is no brokerage fee.',
+      bankLabel:'Bank account (for transfers)', bankName:'Bank', bankNumber:'Account number', bankHolder:'Account holder',
+      pgLabel:'Card payment (PG) link', pgSmall:'— sign up with a PG (Stripe, etc.) yourself, then enter your merchant info to turn on card payments',
+      pgPh:'e.g. Stripe / Merchant ID (MID) / API key / contact',
+      pgStatusOff:'Bank transfer only', pgStatusOn:'✅ Card payment enabled',
+      domainLabel:'Custom domain (optional)', domainSmall:'— enter a domain you purchased to connect it (HQ handles the connection)', domainPh:'e.g. www.myshop.com'
     }
   };
   var T = DICT[LANG] || DICT.en;
@@ -621,40 +658,21 @@ select option{background:#1d1640;}
       +'\n\n'+T.odItems+'\n'+(_itemsText(o)||T.odNoItems));
   }
   function renderOrders(orders, settlements, reviews){
+    // 2026-05-17: 중계수수료·정산 제거 — 결제는 가맹점 계좌·PG로 직접 입금
     var sumEl = $('ordSummary'), listEl = $('ordList');
-    var elig=0, req=0, paid=0;
-    settlements.forEach(function(s){
-      var p = Number(s.payout_amount||0);
-      if (s.status==='paid') paid+=p;
-      else if (s.status==='requested') req+=p;
-      else elig+=p;
-    });
     var totSales=0;
     orders.forEach(function(o){ totSales += Number(o.total_amount||0); });
     sumEl.innerHTML =
       '<div class="ord-sum-box"><div class="k">'+T.sumOrders+'</div><div class="v">'+orders.length+T.unitCount+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">'+T.sumSales+'</div><div class="v">'+won(totSales)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">'+T.sumEligible+'</div><div class="v gold">'+won(elig)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">'+T.sumRequested+'</div><div class="v">'+won(req)+'</div></div>'
-      + '<div class="ord-sum-box"><div class="k">'+T.sumPaid+'</div><div class="v">'+won(paid)+'</div></div>';
-    var reqHtml = '';
-    if (elig > 0){
-      reqHtml = '<button class="btn btn-pri" id="btnReqSettle" style="margin:2px 0 14px;">'+T.reqSettlePrefix+won(elig)+T.reqSettleSuffix+'</button>';
-    } else if (req > 0){
-      reqHtml = '<div style="margin:2px 0 14px;font-size:13px;color:#fbbf24;font-weight:700;">'+T.reqPending+' ('+won(req)+')</div>';
-    } else if (!settlements.length){
-      reqHtml = '<div style="margin:2px 0 14px;font-size:12px;color:#7c7795;">'+T.reqNone+'</div>';
-    }
+      + '<div class="ord-sum-box"><div class="k">'+T.sumSales+'</div><div class="v">'+won(totSales)+'</div></div>';
     if (!orders.length){
-      listEl.innerHTML = reqHtml + '<div style="color:#9b94c4;font-size:13px;padding:14px;">'+T.noOrders+'</div>';
-      bindReq(); return;
+      listEl.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px;">'+T.noOrders+'</div>';
+      return;
     }
     var revByOrder = {};
     (reviews||[]).forEach(function(x){ revByOrder[x.order_id] = x; });
     var rows = orders.map(function(o){
       var amt = Number(o.total_amount||0);
-      var comm = (o.franchise_commission!=null) ? Number(o.franchise_commission) : Math.round(amt*0.20);
-      var payout = amt - comm;
       var done = DONE_STATUS.indexOf(o.status) >= 0;
       var d = o.order_date ? new Date(o.order_date).toLocaleDateString() : '-';
       var rev = revByOrder[o.id];
@@ -665,18 +683,15 @@ select option{background:#1d1640;}
         : '<span style="color:#7c7795;font-size:11px;">'+T.revWait+'</span>';
       return '<tr style="cursor:pointer;" data-oid="'+o.id+'" title="'+T.rowTip+'">'
         + '<td>'+d+'</td><td>#'+o.id+'</td><td>'+won(amt)+'</td>'
-        + '<td style="color:#9b94c4;">-'+won(comm)+'</td>'
-        + '<td style="font-weight:800;color:#c4b5fd;">'+won(payout)+'</td>'
         + '<td><span class="ord-st '+(done?'done':'prog')+'">'+(done?T.stDone:(o.status||T.stProg))+'</span></td>'
         + '<td>'+revCell+'</td></tr>';
     }).join('');
-    listEl.innerHTML = reqHtml + '<table class="ord-table"><thead><tr>'
-      + '<th>'+T.thDate+'</th><th>'+T.thNo+'</th><th>'+T.thAmt+'</th><th>'+T.thFee+'</th><th>'+T.thPayout+'</th><th>'+T.thStatus+'</th><th>'+T.thReview+'</th>'
+    listEl.innerHTML = '<table class="ord-table"><thead><tr>'
+      + '<th>'+T.thDate+'</th><th>'+T.thNo+'</th><th>'+T.thAmt+'</th><th>'+T.thStatus+'</th><th>'+T.thReview+'</th>'
       + '</tr></thead><tbody>'+rows+'</tbody></table>';
     listEl.querySelectorAll('tr[data-oid]').forEach(function(tr){
       tr.onclick = function(){ showOrderDetail(tr.dataset.oid); };
     });
-    bindReq();
   }
   function bindReq(){
     var b = $('btnReqSettle');
@@ -717,10 +732,27 @@ select option{background:#1d1640;}
     $('fHeroMode').value = th.mode || (th.image ? 'image' : (th.color ? 'color' : 'default'));
     if (state.heroImageUrl){ $('heroImg').src = state.heroImageUrl; }
     $('fMargin').value = (th.margin != null) ? th.margin : 0;
+    // 결제 정보 (계좌·PG·도메인)
+    var bk = th.bank || {};
+    $('fBankName').value = bk.name || '';
+    $('fBankNumber').value = bk.number || '';
+    $('fBankHolder').value = bk.holder || '';
+    $('fPgInfo').value = th.pg || '';
+    $('fDomain').value = th.domain || '';
+    updatePgBadge();
     updateHeroMode();
     state.selected = {};
     (f.selected_products || []).forEach(function(c){ state.selected[c] = true; });
   }
+  function updatePgBadge(){
+    var b = $('pgStatusBadge');
+    if (!b) return;
+    var on = !!(($('fPgInfo').value || '').trim());
+    b.textContent = on ? T.pgStatusOn : T.pgStatusOff;
+    b.style.background = on ? 'rgba(34,197,94,0.16)' : 'rgba(148,163,184,0.16)';
+    b.style.color = on ? '#4ade80' : '#9b94c4';
+  }
+  $('fPgInfo').addEventListener('input', updatePgBadge);
   function updateHeroMode(){
     var mode = $('fHeroMode').value;
     $('heroColorWrap').style.display = (mode==='color') ? '' : 'none';
@@ -996,7 +1028,10 @@ select option{background:#1d1640;}
           mode: $('fHeroMode').value,
           color: $('fHeroColor').value,
           image: state.heroImageUrl || '',
-          margin: Math.max(0, parseFloat($('fMargin').value) || 0)
+          margin: Math.max(0, parseFloat($('fMargin').value) || 0),
+          bank: { name:$('fBankName').value.trim(), number:$('fBankNumber').value.trim(), holder:$('fBankHolder').value.trim() },
+          pg: $('fPgInfo').value.trim(),
+          domain: $('fDomain').value.trim()
         };
         state.theme = theme;
         var tblob = new Blob([JSON.stringify(theme)], { type:'application/json' });

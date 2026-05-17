@@ -3839,7 +3839,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
 
     // 2026-05-16: 가맹점 스토어(/store/{slug}) 경유 주문 — fr 태그 + 본사 중계수수료 20%
     const _frSlug = (function(){ try { return sessionStorage.getItem('_franchise_ref') || null; } catch(e){ return null; } })();
-    const _frCommission = _frSlug ? Math.round((finalPayAmount || 0) * 0.20) : null;
+    // 2026-05-17: 중계수수료 폐지 — 결제는 가맹점 계좌·PG로 직접 입금, 본사 수수료 0
+    const _frCommission = _frSlug ? 0 : null;
 
     const { data: orderData, error: orderError } = await sb.from('orders').insert([{
         user_id: currentUser?.id,

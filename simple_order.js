@@ -4927,7 +4927,7 @@
                 items: items,
                 site_code: 'KR',
                 franchise_slug: _frSlug2,
-                franchise_commission: _frSlug2 ? Math.round((total||0)*0.20) : null,
+                franchise_commission: _frSlug2 ? 0 : null,
                 files: orderFiles.length ? orderFiles : null,
                 admin_note: adminNote
             };
