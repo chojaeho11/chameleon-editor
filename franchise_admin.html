@@ -328,7 +328,8 @@ select option{background:#1d1640;}
       pgStatusOff:'계좌이체만 가능', pgStatusOn:'✅ 카드결제 활성화됨',
       domainLabel:'사용자 도메인 (선택)', domainSmall:'— 직접 구입한 도메인을 연결하려면 입력하세요 (연결은 본사가 처리)', domainPh:'예: www.myshop.com',
       myProdTitle:'🏷️ 내 제품 등록 (자체 상품)', myProdDesc:'카멜레온 제품 외에 사장님이 직접 제작·배송하는 자체 상품을 등록할 수 있습니다. 등록한 상품은 스토어에 함께 노출되며, 주문·제작·배송은 사장님이 직접 처리합니다.',
-      myProdAdd:'+ 제품 추가', myProdNamePh:'제품명', myProdPricePh:'가격', myProdEmpty:'아직 등록한 자체 상품이 없습니다. 아래 버튼으로 추가하세요.', myProdImg:'사진'
+      myProdAdd:'+ 제품 추가', myProdNamePh:'제품명', myProdPricePh:'가격', myProdEmpty:'아직 등록한 자체 상품이 없습니다. 아래 버튼으로 추가하세요.', myProdImg:'사진',
+      myProdDescPh:'상세 설명 (간단하게)', myProdOptTitle:'옵션 — 고객이 선택하면 가격에 추가됩니다', myProdOptNamePh:'옵션명 (예: 라미네이팅)', myProdOptPricePh:'추가금액', myProdAddOpt:'+ 옵션 추가'
     },
     ja:{
       adminTitle:'加盟店管理者', loading:'読み込み中…',
@@ -383,7 +384,8 @@ select option{background:#1d1640;}
       pgStatusOff:'銀行振込のみ', pgStatusOn:'✅ カード決済 有効',
       domainLabel:'独自ドメイン (任意)', domainSmall:'— 購入したドメインを接続するには入力してください (接続は本社が対応)', domainPh:'例: www.myshop.com',
       myProdTitle:'🏷️ 自社商品の登録', myProdDesc:'カメレオン製品以外に、店舗様が直接製作・配送する自社商品を登録できます。登録した商品はストアに一緒に表示され、注文・製作・配送は店舗様が直接対応します。',
-      myProdAdd:'+ 商品を追加', myProdNamePh:'商品名', myProdPricePh:'価格', myProdEmpty:'登録した自社商品がまだありません。下のボタンで追加してください。', myProdImg:'写真'
+      myProdAdd:'+ 商品を追加', myProdNamePh:'商品名', myProdPricePh:'価格', myProdEmpty:'登録した自社商品がまだありません。下のボタンで追加してください。', myProdImg:'写真',
+      myProdDescPh:'詳細説明 (簡単に)', myProdOptTitle:'オプション — 選択すると価格に追加されます', myProdOptNamePh:'オプション名 (例: ラミネート)', myProdOptPricePh:'追加金額', myProdAddOpt:'+ オプション追加'
     },
     en:{
       adminTitle:'Franchise Admin', loading:'Loading…',
@@ -438,7 +440,8 @@ select option{background:#1d1640;}
       pgStatusOff:'Bank transfer only', pgStatusOn:'✅ Card payment enabled',
       domainLabel:'Custom domain (optional)', domainSmall:'— enter a domain you purchased to connect it (HQ handles the connection)', domainPh:'e.g. www.myshop.com',
       myProdTitle:'🏷️ Register Your Own Products', myProdDesc:'Besides Chameleon products, you can register your own items that you produce and ship yourself. They appear in your store, and you handle ordering, production and delivery directly.',
-      myProdAdd:'+ Add product', myProdNamePh:'Product name', myProdPricePh:'Price', myProdEmpty:'No own products yet. Use the button below to add one.', myProdImg:'Photo'
+      myProdAdd:'+ Add product', myProdNamePh:'Product name', myProdPricePh:'Price', myProdEmpty:'No own products yet. Use the button below to add one.', myProdImg:'Photo',
+      myProdDescPh:'Short description', myProdOptTitle:'Options — added to the price when the customer selects them', myProdOptNamePh:'Option name (e.g. Lamination)', myProdOptPricePh:'Extra price', myProdAddOpt:'+ Add option'
     }
   };
   var T = DICT[LANG] || DICT.en;
@@ -773,14 +776,19 @@ select option{background:#1d1640;}
     $('fBankHolder').value = bk.holder || '';
     $('fPgInfo').value = th.pg || '';
     $('fDomain').value = th.domain || '';
-    state.myProducts = Array.isArray(th.customProducts) ? th.customProducts.map(function(p){ return {id:p.id,name:p.name,price:p.price,img:p.img}; }) : [];
+    state.myProducts = Array.isArray(th.customProducts) ? th.customProducts.map(function(p){
+      return { id:p.id, name:p.name, price:p.price, desc:p.desc||'',
+        images: Array.isArray(p.images) ? p.images.slice() : (p.img ? [p.img] : []),
+        options: Array.isArray(p.options) ? p.options.map(function(o){ return {name:o.name,price:o.price}; }) : [] };
+    }) : [];
     updatePgBadge();
     renderMyProducts();
     updateHeroMode();
     state.selected = {};
     (f.selected_products || []).forEach(function(c){ state.selected[c] = true; });
   }
-  // ===== 자체 제품 등록 =====
+  // ===== 자체 제품 등록 (상세설명 + 옵션 + 사진 최대 5장) =====
+  var _mpInpBase = 'padding:9px;border:1.5px solid rgba(167,139,250,0.3);border-radius:8px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;font-family:inherit;';
   function renderMyProducts(){
     var box = $('myProdList');
     if (!box) return;
@@ -788,39 +796,64 @@ select option{background:#1d1640;}
       box.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px 0;">' + T.myProdEmpty + '</div>';
       return;
     }
-    box.innerHTML = state.myProducts.map(function(p, i){
-      return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(167,139,250,0.12);">'
-        + '<div class="mp-thumb" data-i="' + i + '" title="' + escA(T.myProdImg) + '" style="width:50px;height:50px;flex-shrink:0;border-radius:8px;border:1.5px dashed rgba(167,139,250,0.45);background-size:cover;background-position:center;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9b94c4;">' + (p.img ? '' : '+') + '</div>'
-        + '<input class="mp-name" data-i="' + i + '" placeholder="' + escA(T.myProdNamePh) + '" value="' + escA(p.name||'') + '" style="flex:2;min-width:0;padding:9px;border:1.5px solid rgba(167,139,250,0.3);border-radius:8px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;">'
-        + '<input class="mp-price" data-i="' + i + '" type="number" min="0" placeholder="' + escA(T.myProdPricePh) + '" value="' + (p.price!=null?p.price:'') + '" style="width:110px;flex-shrink:0;padding:9px;border:1.5px solid rgba(167,139,250,0.3);border-radius:8px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;">'
-        + '<button class="mp-del btn btn-ghost btn-sm" data-i="' + i + '" style="flex-shrink:0;color:#f87171;">×</button>'
+    box.innerHTML = state.myProducts.map(function(p, pi){
+      var imgs = (p.images||[]).map(function(im, ii){
+        return '<div style="position:relative;width:54px;height:54px;flex-shrink:0;border-radius:8px;background:#000 url(\''+im+'\') center/cover no-repeat;">'
+          + '<span class="mp-imgx" data-pi="'+pi+'" data-ii="'+ii+'" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:#ef4444;color:#fff;border-radius:50%;font-size:12px;line-height:18px;text-align:center;cursor:pointer;">×</span></div>';
+      }).join('');
+      var addSlot = (p.images||[]).length < 5
+        ? '<div class="mp-imgadd" data-pi="'+pi+'" style="width:54px;height:54px;flex-shrink:0;border-radius:8px;border:1.5px dashed rgba(167,139,250,0.45);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;color:#9b94c4;">+</div>' : '';
+      var opts = (p.options||[]).map(function(o, oi){
+        return '<div style="display:flex;gap:6px;margin-top:5px;">'
+          + '<input class="mp-optname" data-pi="'+pi+'" data-oi="'+oi+'" placeholder="'+escA(T.myProdOptNamePh)+'" value="'+escA(o.name||'')+'" style="flex:2;min-width:0;'+_mpInpBase+'">'
+          + '<input class="mp-optprice" data-pi="'+pi+'" data-oi="'+oi+'" type="number" min="0" placeholder="'+escA(T.myProdOptPricePh)+'" value="'+(o.price!=null?o.price:'')+'" style="width:100px;flex-shrink:0;'+_mpInpBase+'">'
+          + '<button class="mp-optdel" data-pi="'+pi+'" data-oi="'+oi+'" style="flex-shrink:0;background:rgba(239,68,68,0.13);color:#f87171;border:none;border-radius:8px;width:34px;cursor:pointer;font-size:15px;">×</button></div>';
+      }).join('');
+      return '<div style="border:1px solid rgba(167,139,250,0.22);border-radius:12px;padding:13px;margin-bottom:12px;">'
+        + '<div style="font-size:11px;color:#9b94c4;margin-bottom:6px;">'+escA(T.myProdImg)+' — 1~5</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">'+imgs+addSlot+'</div>'
+        + '<div style="display:flex;gap:8px;margin-bottom:6px;">'
+        +   '<input class="mp-name" data-pi="'+pi+'" placeholder="'+escA(T.myProdNamePh)+'" value="'+escA(p.name||'')+'" style="flex:2;min-width:0;'+_mpInpBase+'">'
+        +   '<input class="mp-price" data-pi="'+pi+'" type="number" min="0" placeholder="'+escA(T.myProdPricePh)+'" value="'+(p.price!=null?p.price:'')+'" style="width:110px;flex-shrink:0;'+_mpInpBase+'">'
+        +   '<button class="mp-del" data-pi="'+pi+'" style="flex-shrink:0;background:rgba(239,68,68,0.13);color:#f87171;border:none;border-radius:8px;width:38px;cursor:pointer;font-size:16px;">×</button>'
+        + '</div>'
+        + '<textarea class="mp-desc" data-pi="'+pi+'" rows="2" placeholder="'+escA(T.myProdDescPh)+'" style="width:100%;box-sizing:border-box;resize:vertical;'+_mpInpBase+'">'+escA(p.desc||'')+'</textarea>'
+        + '<div style="margin-top:9px;font-size:12px;font-weight:700;color:#c4b5fd;">'+escA(T.myProdOptTitle)+'</div>'
+        + opts
+        + '<button class="mp-addopt" data-pi="'+pi+'" style="margin-top:7px;background:rgba(167,139,250,0.13);color:#c4b5fd;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">'+escA(T.myProdAddOpt)+'</button>'
         + '</div>';
     }).join('');
-    box.querySelectorAll('.mp-thumb').forEach(function(el){
-      var p = state.myProducts[el.dataset.i];
-      if (p && p.img){ el.style.backgroundImage = 'url(' + p.img + ')'; }
-      el.onclick = function(){ _mpUploadTarget = parseInt(el.dataset.i, 10); $('myProdFileInput').click(); };
-    });
-    box.querySelectorAll('.mp-name').forEach(function(el){ el.oninput = function(){ state.myProducts[el.dataset.i].name = el.value; }; });
-    box.querySelectorAll('.mp-price').forEach(function(el){ el.oninput = function(){ state.myProducts[el.dataset.i].price = parseFloat(el.value)||0; }; });
-    box.querySelectorAll('.mp-del').forEach(function(el){ el.onclick = function(){ state.myProducts.splice(parseInt(el.dataset.i,10),1); renderMyProducts(); }; });
+    function pidx(el){ return parseInt(el.dataset.pi,10); }
+    box.querySelectorAll('.mp-imgadd').forEach(function(el){ el.onclick = function(){ _mpUploadTarget = pidx(el); $('myProdFileInput').click(); }; });
+    box.querySelectorAll('.mp-imgx').forEach(function(el){ el.onclick = function(){ state.myProducts[pidx(el)].images.splice(parseInt(el.dataset.ii,10),1); renderMyProducts(); }; });
+    box.querySelectorAll('.mp-name').forEach(function(el){ el.oninput = function(){ state.myProducts[pidx(el)].name = el.value; }; });
+    box.querySelectorAll('.mp-price').forEach(function(el){ el.oninput = function(){ state.myProducts[pidx(el)].price = parseFloat(el.value)||0; }; });
+    box.querySelectorAll('.mp-desc').forEach(function(el){ el.oninput = function(){ state.myProducts[pidx(el)].desc = el.value; }; });
+    box.querySelectorAll('.mp-del').forEach(function(el){ el.onclick = function(){ state.myProducts.splice(pidx(el),1); renderMyProducts(); }; });
+    box.querySelectorAll('.mp-optname').forEach(function(el){ el.oninput = function(){ state.myProducts[pidx(el)].options[el.dataset.oi].name = el.value; }; });
+    box.querySelectorAll('.mp-optprice').forEach(function(el){ el.oninput = function(){ state.myProducts[pidx(el)].options[el.dataset.oi].price = parseFloat(el.value)||0; }; });
+    box.querySelectorAll('.mp-optdel').forEach(function(el){ el.onclick = function(){ state.myProducts[pidx(el)].options.splice(parseInt(el.dataset.oi,10),1); renderMyProducts(); }; });
+    box.querySelectorAll('.mp-addopt').forEach(function(el){ el.onclick = function(){ state.myProducts[pidx(el)].options.push({name:'',price:0}); renderMyProducts(); }; });
   }
   $('btnAddMyProd').onclick = function(){
-    state.myProducts.push({ id:'mp_'+Date.now(), name:'', price:0, img:'' });
+    state.myProducts.push({ id:'mp_'+Date.now(), name:'', price:0, desc:'', images:[], options:[] });
     renderMyProducts();
   };
   $('myProdFileInput').addEventListener('change', async function(){
     var file = this.files && this.files[0];
     this.value = '';
-    if (!file || _mpUploadTarget == null || !state.myProducts[_mpUploadTarget]) return;
+    var p = (_mpUploadTarget != null) ? state.myProducts[_mpUploadTarget] : null;
+    if (!file || !p) return;
+    if ((p.images||[]).length >= 5) return;
     if (file.size > 5*1024*1024){ toast(T.heroImgTooBig,'err'); return; }
     toast(T.logoUploading);
     try {
       var ext = (file.name.split('.').pop()||'jpg').toLowerCase();
-      var path = 'franchise/' + state.user.id + '/prod_' + Date.now() + '.' + ext;
+      var path = 'franchise/' + state.user.id + '/prod_' + Date.now() + '_' + Math.random().toString(36).slice(2,6) + '.' + ext;
       var up = await sb.storage.from(LOGO_BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
       if (up.error) throw up.error;
-      state.myProducts[_mpUploadTarget].img = sb.storage.from(LOGO_BUCKET).getPublicUrl(path).data.publicUrl;
+      if (!Array.isArray(p.images)) p.images = [];
+      p.images.push(sb.storage.from(LOGO_BUCKET).getPublicUrl(path).data.publicUrl);
       renderMyProducts();
       toast(T.logoDone,'ok');
     } catch(e){ toast(T.logoFail + (e.message||e),'err'); }
@@ -1115,7 +1148,11 @@ select option{background:#1d1640;}
           pg: $('fPgInfo').value.trim(),
           domain: $('fDomain').value.trim(),
           customProducts: (state.myProducts || []).filter(function(p){ return (p.name||'').trim(); }).map(function(p){
-            return { id:p.id||('mp_'+Date.now()+Math.random().toString(36).slice(2,6)), name:(p.name||'').trim(), price:Math.max(0,parseFloat(p.price)||0), img:p.img||'' };
+            return { id:p.id||('mp_'+Date.now()+Math.random().toString(36).slice(2,6)),
+              name:(p.name||'').trim(), price:Math.max(0,parseFloat(p.price)||0),
+              desc:(p.desc||'').trim(),
+              images:(p.images||[]).slice(0,5),
+              options:(p.options||[]).filter(function(o){ return (o.name||'').trim(); }).map(function(o){ return {name:(o.name||'').trim(),price:Math.max(0,parseFloat(o.price)||0)}; }) };
           })
         };
         state.theme = theme;
