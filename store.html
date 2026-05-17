@@ -118,7 +118,11 @@ img{display:block;}
       revOkDone:'✅ 정상 수령 확인 완료', revBadDone:'⚠️ 문제 접수됨 — 본사가 확인합니다', ratingWord:'평점 ', ratingUnit:'점',
       receivedQ:'제품을 받으셨나요?', revOk:'✅ 정상 수령', revBad:'⚠️ 문제 있음', rating:'평점',
       reviewPh:'후기 또는 문제 내용을 적어주세요 (선택)', reviewSubmit:'후기 등록',
-      pickReceived:'정상 수령 또는 문제 있음을 선택해주세요.', submitting:'등록 중…', reviewFail:'후기 등록 실패: '
+      pickReceived:'정상 수령 또는 문제 있음을 선택해주세요.', submitting:'등록 중…', reviewFail:'후기 등록 실패: ',
+      ownProducts:'단독 상품', ownProductsSub:'이 매장에서만 만나보실 수 있는 상품입니다.',
+      orderGuideTitle:'주문 안내', qtyLabel:'수량', totalLabel:'합계',
+      bankGuide:'아래 계좌로 입금하신 뒤 연락처로 알려주시면 제작·배송해 드립니다.',
+      noBankGuide:'주문은 아래 연락처로 문의해 주세요.', bankAccLabel:'입금 계좌', closeBtn:'닫기'
     },
     ja:{
       notFoundTitle:'店舗が見つかりません', notFoundMsg:'お探しの加盟店ストアは存在しないか準備中です。',
@@ -137,7 +141,11 @@ img{display:block;}
       revOkDone:'✅ 正常受取の確認完了', revBadDone:'⚠️ 問題を受付 — 本社が確認します', ratingWord:'評価 ', ratingUnit:'点',
       receivedQ:'製品を受け取りましたか？', revOk:'✅ 正常受取', revBad:'⚠️ 問題あり', rating:'評価',
       reviewPh:'レビューまたは問題内容をご記入ください (任意)', reviewSubmit:'レビューを登録',
-      pickReceived:'正常受取または問題ありを選択してください。', submitting:'登録中…', reviewFail:'レビュー登録失敗: '
+      pickReceived:'正常受取または問題ありを選択してください。', submitting:'登録中…', reviewFail:'レビュー登録失敗: ',
+      ownProducts:'当店オリジナル商品', ownProductsSub:'この店舗だけの商品です。',
+      orderGuideTitle:'ご注文方法', qtyLabel:'数量', totalLabel:'合計',
+      bankGuide:'下記口座へお振込後、連絡先までご連絡いただければ製作・配送いたします。',
+      noBankGuide:'ご注文は下記連絡先までお問い合わせください。', bankAccLabel:'振込口座', closeBtn:'閉じる'
     },
     en:{
       notFoundTitle:'Store Not Found', notFoundMsg:'The store you requested does not exist or is being prepared.',
@@ -156,7 +164,11 @@ img{display:block;}
       revOkDone:'✅ Receipt confirmed', revBadDone:'⚠️ Issue reported — HQ will review', ratingWord:'Rating ', ratingUnit:'',
       receivedQ:'Did you receive your product?', revOk:'✅ Received OK', revBad:'⚠️ Has a problem', rating:'Rating',
       reviewPh:'Write a review or describe the issue (optional)', reviewSubmit:'Submit review',
-      pickReceived:'Please select received OK or has a problem.', submitting:'Submitting…', reviewFail:'Failed to submit review: '
+      pickReceived:'Please select received OK or has a problem.', submitting:'Submitting…', reviewFail:'Failed to submit review: ',
+      ownProducts:'Store-exclusive items', ownProductsSub:'Products available only at this store.',
+      orderGuideTitle:'How to order', qtyLabel:'Quantity', totalLabel:'Total',
+      bankGuide:'Transfer to the account below, then contact us and we will produce and ship your order.',
+      noBankGuide:'Please contact us using the details below to order.', bankAccLabel:'Bank account', closeBtn:'Close'
     }
   };
   function langOf(country){ return country==='JP' ? 'ja' : (country==='KR' ? 'kr' : 'en'); }
@@ -280,7 +292,7 @@ img{display:block;}
       + '<div class="st-secttl">'+esc(T.products)+'</div>'
       + '<div class="st-sectsub">'+esc(T.productsSub)+'</div>'
       + '<div id="stGrid"></div>'
-      + (products.length?'':'<p style="color:#9b94c4;font-size:14px;padding:30px 0;">'+esc(T.noProducts)+'</p>')
+      + ((products.length || (theme.customProducts||[]).length)?'':'<p style="color:#9b94c4;font-size:14px;padding:30px 0;">'+esc(T.noProducts)+'</p>')
       + '<div class="st-rev">'
       + '<div class="st-secttl">'+esc(T.reviewTitle)+'</div>'
       + '<div class="st-sectsub">'+esc(T.reviewSub)+'</div>'
@@ -318,6 +330,57 @@ img{display:block;}
         + '<div class="cp">'+price+'</div>'
         + '<div class="cgo">'+esc(T.orderNow)+'</div></div></a>';
     }
+    // 가맹점 자체 등록 상품 카드 (주문은 가맹점이 직접 처리)
+    function customCardHtml(p, idx){
+      var img = p.img || 'https://placehold.co/400?text=No+Image';
+      var price = (p.price > 0) ? (ccy.s + Number(p.price).toLocaleString()) : T.priceAsk;
+      return '<div class="st-card" data-cp="'+idx+'" style="cursor:pointer;">'
+        + '<img class="ci" src="'+esc(img)+'" loading="lazy" onerror="this.src=\'https://placehold.co/400?text=No+Image\'">'
+        + '<div class="cb"><div class="cn">'+esc(p.name||'')+'</div>'
+        + '<div class="cp">'+price+'</div>'
+        + '<div class="cgo">'+esc(T.orderNow)+'</div></div></div>';
+    }
+    function openCustomOrder(p){
+      if (!p) return;
+      var qty = 1;
+      var bank = theme.bank || {};
+      var hasBank = !!(bank.number && String(bank.number).trim());
+      var ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,8,40,0.62);z-index:300;display:flex;align-items:center;justify-content:center;padding:18px;';
+      ov.onclick = function(e){ if (e.target===ov) document.body.removeChild(ov); };
+      var qbtn = 'width:32px;height:32px;border:1.5px solid #e1ddef;background:#fff;border-radius:8px;font-size:18px;font-weight:800;cursor:pointer;color:#4b4669;';
+      function draw(){
+        var total = (Number(p.price)||0) * qty;
+        var bankHtml = hasBank
+          ? '<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:14px;margin-top:14px;font-size:13px;line-height:1.7;">'
+            + '<div style="font-weight:800;color:#5b21b6;margin-bottom:4px;">'+esc(T.bankAccLabel)+'</div>'
+            + esc(bank.name||'')+' <b>'+esc(bank.number||'')+'</b>'+(bank.holder?(' ('+esc(bank.holder)+')'):'')
+            + '<div style="color:#6b6785;margin-top:6px;">'+esc(T.bankGuide)+'</div></div>'
+          : '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:14px;margin-top:14px;font-size:13px;color:#9a3412;">'+esc(T.noBankGuide)+'</div>';
+        var phoneHtml = fr.phone ? '<div style="margin-top:10px;font-size:15px;font-weight:800;text-align:center;">📞 <a href="tel:'+esc(String(fr.phone).replace(/[^0-9+]/g,''))+'" style="color:#7c3aed;">'+esc(fr.phone)+'</a></div>' : '';
+        ov.innerHTML = '<div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:22px;max-height:90vh;overflow-y:auto;">'
+          + (p.img?'<img src="'+esc(p.img)+'" style="width:100%;border-radius:12px;margin-bottom:12px;">':'')
+          + '<div style="font-size:19px;font-weight:900;">'+esc(p.name||'')+'</div>'
+          + '<div style="font-size:13px;color:#7c7795;margin:12px 0 4px;font-weight:800;">'+esc(T.orderGuideTitle)+'</div>'
+          + '<div style="display:flex;align-items:center;gap:10px;margin:10px 0;">'
+          +   '<span style="font-size:13px;font-weight:700;flex:1;">'+esc(T.qtyLabel)+'</span>'
+          +   '<button class="cpq" data-d="-1" style="'+qbtn+'">−</button>'
+          +   '<span style="font-weight:800;min-width:28px;text-align:center;">'+qty+'</span>'
+          +   '<button class="cpq" data-d="1" style="'+qbtn+'">+</button>'
+          + '</div>'
+          + '<div style="display:flex;justify-content:space-between;font-size:17px;font-weight:900;border-top:1px solid #eee;padding-top:12px;">'
+          +   '<span>'+esc(T.totalLabel)+'</span><span style="color:#7c3aed;">'+ccy.s+total.toLocaleString()+'</span></div>'
+          + bankHtml + phoneHtml
+          + '<button class="cpClose" style="width:100%;margin-top:16px;padding:12px;border:none;border-radius:10px;background:#1e1b3a;color:#fff;font-weight:800;font-size:14px;cursor:pointer;">'+esc(T.closeBtn)+'</button>'
+          + '</div>';
+        ov.querySelectorAll('.cpq').forEach(function(b){
+          b.onclick = function(){ qty = Math.max(1, qty + parseInt(b.dataset.d,10)); draw(); };
+        });
+        ov.querySelector('.cpClose').onclick = function(){ document.body.removeChild(ov); };
+      }
+      draw();
+      document.body.appendChild(ov);
+    }
     (function drawSections(){
       var grid = document.getElementById('stGrid');
       var groups = {};
@@ -331,7 +394,17 @@ img{display:block;}
         var g = groups[code]; if (g && g.length) html += section(topMap[code], g);
       });
       if (groups['_etc'] && groups['_etc'].length) html += section(T.etc, groups['_etc']);
+      // 가맹점 자체 상품 섹션
+      var cps = theme.customProducts || [];
+      if (cps.length){
+        html += '<div class="st-cat-header">'+esc(T.ownProducts)+'</div>';
+        html += '<div class="st-sectsub" style="margin-top:-8px;">'+esc(T.ownProductsSub)+'</div>';
+        html += '<div class="st-grid">'+cps.map(function(p,i){ return customCardHtml(p,i); }).join('')+'</div>';
+      }
       grid.innerHTML = html;
+      grid.querySelectorAll('[data-cp]').forEach(function(el){
+        el.onclick = function(){ openCustomOrder(cps[parseInt(el.dataset.cp,10)]); };
+      });
     })();
 
     // ===== 주문 수령 확인 · 후기 =====

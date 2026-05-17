@@ -219,6 +219,14 @@ select option{background:#1d1640;}
       <div id="prodGrid"><div style="color:#9b94c4;font-size:13px;padding:20px;" data-i18n="loadingProd">제품을 불러오는 중…</div></div>
     </div>
 
+    <div class="card">
+      <h2 data-i18n="myProdTitle">🏷️ 내 제품 등록 (자체 상품)</h2>
+      <div class="desc" data-i18n="myProdDesc">카멜레온 제품 외에 사장님이 직접 제작·배송하는 자체 상품을 등록할 수 있습니다.</div>
+      <div id="myProdList"></div>
+      <button class="btn btn-ghost btn-sm" id="btnAddMyProd" data-i18n="myProdAdd" style="margin-top:10px;">+ 제품 추가</button>
+      <input type="file" id="myProdFileInput" accept="image/*" style="display:none;">
+    </div>
+
     <div class="card" id="cardOrders">
       <h2 data-i18n="c3Title">③ 주문 · 정산 현황</h2>
       <div class="desc" data-i18n="c3Desc">고객이 사장님 스토어에서 주문한 내역입니다. 결제는 본사가 대행하며, 제작·납품 완료 시 <b>중계수수료 20%를 제외한 금액</b>을 정산해 드립니다.</div>
@@ -255,7 +263,8 @@ select option{background:#1d1640;}
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
-  var state = { user:null, franchise:null, allFranchises:[], theme:{}, products:[], selected:{}, logoUrl:'', heroImageUrl:'', activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
+  var state = { user:null, franchise:null, allFranchises:[], theme:{}, products:[], selected:{}, logoUrl:'', heroImageUrl:'', myProducts:[], activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
+  var _mpUploadTarget = null;  // 자체 제품 이미지 업로드 대상 인덱스
 
   // ===== i18n =====
   var LANG = (function(){
@@ -316,7 +325,9 @@ select option{background:#1d1640;}
       pgLabel:'카드결제 (PG) 연동', pgSmall:'— 토스페이먼츠·스트라이프 등 PG사에 직접 가입 후 가맹점 정보를 입력하면 카드결제가 켜집니다',
       pgPh:'예: 토스페이먼츠 / 가맹점ID(MID) / API키 / 담당자 연락처를 적어주세요',
       pgStatusOff:'계좌이체만 가능', pgStatusOn:'✅ 카드결제 활성화됨',
-      domainLabel:'사용자 도메인 (선택)', domainSmall:'— 직접 구입한 도메인을 연결하려면 입력하세요 (연결은 본사가 처리)', domainPh:'예: www.myshop.com'
+      domainLabel:'사용자 도메인 (선택)', domainSmall:'— 직접 구입한 도메인을 연결하려면 입력하세요 (연결은 본사가 처리)', domainPh:'예: www.myshop.com',
+      myProdTitle:'🏷️ 내 제품 등록 (자체 상품)', myProdDesc:'카멜레온 제품 외에 사장님이 직접 제작·배송하는 자체 상품을 등록할 수 있습니다. 등록한 상품은 스토어에 함께 노출되며, 주문·제작·배송은 사장님이 직접 처리합니다.',
+      myProdAdd:'+ 제품 추가', myProdNamePh:'제품명', myProdPricePh:'가격', myProdEmpty:'아직 등록한 자체 상품이 없습니다. 아래 버튼으로 추가하세요.', myProdImg:'사진'
     },
     ja:{
       adminTitle:'加盟店管理者', loading:'読み込み中…',
@@ -368,7 +379,9 @@ select option{background:#1d1640;}
       pgLabel:'カード決済 (PG) 連携', pgSmall:'— Stripe等のPG会社に直接加入後、加盟店情報を入力するとカード決済がオンになります',
       pgPh:'例: Stripe / 加盟店ID(MID) / APIキー / 担当者連絡先を記入してください',
       pgStatusOff:'銀行振込のみ', pgStatusOn:'✅ カード決済 有効',
-      domainLabel:'独自ドメイン (任意)', domainSmall:'— 購入したドメインを接続するには入力してください (接続は本社が対応)', domainPh:'例: www.myshop.com'
+      domainLabel:'独自ドメイン (任意)', domainSmall:'— 購入したドメインを接続するには入力してください (接続は本社が対応)', domainPh:'例: www.myshop.com',
+      myProdTitle:'🏷️ 自社商品の登録', myProdDesc:'カメレオン製品以外に、店舗様が直接製作・配送する自社商品を登録できます。登録した商品はストアに一緒に表示され、注文・製作・配送は店舗様が直接対応します。',
+      myProdAdd:'+ 商品を追加', myProdNamePh:'商品名', myProdPricePh:'価格', myProdEmpty:'登録した自社商品がまだありません。下のボタンで追加してください。', myProdImg:'写真'
     },
     en:{
       adminTitle:'Franchise Admin', loading:'Loading…',
@@ -420,7 +433,9 @@ select option{background:#1d1640;}
       pgLabel:'Card payment (PG) link', pgSmall:'— sign up with a PG (Stripe, etc.) yourself, then enter your merchant info to turn on card payments',
       pgPh:'e.g. Stripe / Merchant ID (MID) / API key / contact',
       pgStatusOff:'Bank transfer only', pgStatusOn:'✅ Card payment enabled',
-      domainLabel:'Custom domain (optional)', domainSmall:'— enter a domain you purchased to connect it (HQ handles the connection)', domainPh:'e.g. www.myshop.com'
+      domainLabel:'Custom domain (optional)', domainSmall:'— enter a domain you purchased to connect it (HQ handles the connection)', domainPh:'e.g. www.myshop.com',
+      myProdTitle:'🏷️ Register Your Own Products', myProdDesc:'Besides Chameleon products, you can register your own items that you produce and ship yourself. They appear in your store, and you handle ordering, production and delivery directly.',
+      myProdAdd:'+ Add product', myProdNamePh:'Product name', myProdPricePh:'Price', myProdEmpty:'No own products yet. Use the button below to add one.', myProdImg:'Photo'
     }
   };
   var T = DICT[LANG] || DICT.en;
@@ -739,11 +754,59 @@ select option{background:#1d1640;}
     $('fBankHolder').value = bk.holder || '';
     $('fPgInfo').value = th.pg || '';
     $('fDomain').value = th.domain || '';
+    state.myProducts = Array.isArray(th.customProducts) ? th.customProducts.map(function(p){ return {id:p.id,name:p.name,price:p.price,img:p.img}; }) : [];
     updatePgBadge();
+    renderMyProducts();
     updateHeroMode();
     state.selected = {};
     (f.selected_products || []).forEach(function(c){ state.selected[c] = true; });
   }
+  // ===== 자체 제품 등록 =====
+  function renderMyProducts(){
+    var box = $('myProdList');
+    if (!box) return;
+    if (!state.myProducts.length){
+      box.innerHTML = '<div style="color:#9b94c4;font-size:13px;padding:14px 0;">' + T.myProdEmpty + '</div>';
+      return;
+    }
+    box.innerHTML = state.myProducts.map(function(p, i){
+      return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(167,139,250,0.12);">'
+        + '<div class="mp-thumb" data-i="' + i + '" title="' + escA(T.myProdImg) + '" style="width:50px;height:50px;flex-shrink:0;border-radius:8px;border:1.5px dashed rgba(167,139,250,0.45);background-size:cover;background-position:center;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9b94c4;">' + (p.img ? '' : '+') + '</div>'
+        + '<input class="mp-name" data-i="' + i + '" placeholder="' + escA(T.myProdNamePh) + '" value="' + escA(p.name||'') + '" style="flex:2;min-width:0;padding:9px;border:1.5px solid rgba(167,139,250,0.3);border-radius:8px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;">'
+        + '<input class="mp-price" data-i="' + i + '" type="number" min="0" placeholder="' + escA(T.myProdPricePh) + '" value="' + (p.price!=null?p.price:'') + '" style="width:110px;flex-shrink:0;padding:9px;border:1.5px solid rgba(167,139,250,0.3);border-radius:8px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;">'
+        + '<button class="mp-del btn btn-ghost btn-sm" data-i="' + i + '" style="flex-shrink:0;color:#f87171;">×</button>'
+        + '</div>';
+    }).join('');
+    box.querySelectorAll('.mp-thumb').forEach(function(el){
+      var p = state.myProducts[el.dataset.i];
+      if (p && p.img){ el.style.backgroundImage = 'url(' + p.img + ')'; }
+      el.onclick = function(){ _mpUploadTarget = parseInt(el.dataset.i, 10); $('myProdFileInput').click(); };
+    });
+    box.querySelectorAll('.mp-name').forEach(function(el){ el.oninput = function(){ state.myProducts[el.dataset.i].name = el.value; }; });
+    box.querySelectorAll('.mp-price').forEach(function(el){ el.oninput = function(){ state.myProducts[el.dataset.i].price = parseFloat(el.value)||0; }; });
+    box.querySelectorAll('.mp-del').forEach(function(el){ el.onclick = function(){ state.myProducts.splice(parseInt(el.dataset.i,10),1); renderMyProducts(); }; });
+  }
+  $('btnAddMyProd').onclick = function(){
+    state.myProducts.push({ id:'mp_'+Date.now(), name:'', price:0, img:'' });
+    renderMyProducts();
+  };
+  $('myProdFileInput').addEventListener('change', async function(){
+    var file = this.files && this.files[0];
+    this.value = '';
+    if (!file || _mpUploadTarget == null || !state.myProducts[_mpUploadTarget]) return;
+    if (file.size > 5*1024*1024){ toast(T.heroImgTooBig,'err'); return; }
+    toast(T.logoUploading);
+    try {
+      var ext = (file.name.split('.').pop()||'jpg').toLowerCase();
+      var path = 'franchise/' + state.user.id + '/prod_' + Date.now() + '.' + ext;
+      var up = await sb.storage.from(LOGO_BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
+      if (up.error) throw up.error;
+      state.myProducts[_mpUploadTarget].img = sb.storage.from(LOGO_BUCKET).getPublicUrl(path).data.publicUrl;
+      renderMyProducts();
+      toast(T.logoDone,'ok');
+    } catch(e){ toast(T.logoFail + (e.message||e),'err'); }
+  });
+
   function updatePgBadge(){
     var b = $('pgStatusBadge');
     if (!b) return;
@@ -1031,7 +1094,10 @@ select option{background:#1d1640;}
           margin: Math.max(0, parseFloat($('fMargin').value) || 0),
           bank: { name:$('fBankName').value.trim(), number:$('fBankNumber').value.trim(), holder:$('fBankHolder').value.trim() },
           pg: $('fPgInfo').value.trim(),
-          domain: $('fDomain').value.trim()
+          domain: $('fDomain').value.trim(),
+          customProducts: (state.myProducts || []).filter(function(p){ return (p.name||'').trim(); }).map(function(p){
+            return { id:p.id||('mp_'+Date.now()+Math.random().toString(36).slice(2,6)), name:(p.name||'').trim(), price:Math.max(0,parseFloat(p.price)||0), img:p.img||'' };
+          })
         };
         state.theme = theme;
         var tblob = new Blob([JSON.stringify(theme)], { type:'application/json' });
