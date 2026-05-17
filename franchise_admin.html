@@ -448,7 +448,8 @@ select option{background:#1d1640;}
 
     // 접근 권한 — 테스트 계정 또는 활성 가맹점 구독.
     // 2026-05-16: 구독 여부와 무관하게 입장·체험 허용. 저장(btnSave)만 구독자로 제한.
-    var hasAccess = isTest || !!fr;
+    // 2026-05-17: 홈페이지 생성·저장 무료화 — 로그인한 누구나 무료로 사용 가능
+    var hasAccess = true;
     if (!hasAccess){
       try {
         var s = await sb.from('subscriptions').select('plan_type,status,current_period_end').eq('user_id', state.user.id);
