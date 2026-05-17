@@ -154,6 +154,9 @@ a{color:#93c5fd;}
         if(jr.ok){ var o=await jr.json(); o._file=files[i].name; orders.push(o); }
       }catch(e){}
     }
+    // 이 제조사로 지정된 발주만 표시 (mfg_id 없는 구버전 발주는 호환 위해 노출)
+    orders = orders.filter(function(o){ return !o.mfg_id || o.mfg_id === state.partner.id; });
+    if(!orders.length){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;padding:8px 0;">아직 받은 발주가 없습니다.</div>'; return; }
     orders.sort(function(a,b){ return (b.created||'').localeCompare(a.created||''); });
     box.innerHTML=orders.map(function(o){
       var d=o.created?new Date(o.created).toLocaleString('ko-KR',{dateStyle:'short',timeStyle:'short'}):'';

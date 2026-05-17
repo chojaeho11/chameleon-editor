@@ -627,7 +627,7 @@ select option{background:#1d1640;}
     var id='po_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
     var order={ id:id, created:new Date().toISOString(),
       drop_slug:fr.slug, drop_company:fr.company_name||'', drop_phone:fr.phone||'',
-      mfg_company:mfg.company_name||'', country:country,
+      mfg_id:mfg.id, mfg_company:mfg.company_name||'', country:country,
       item:item, qty:Math.max(1,parseInt($('poQty').value,10)||1),
       note:($('poNote').value||'').trim(),
       cust_name:($('poCustName').value||'').trim(), cust_phone:($('poCustPhone').value||'').trim(), cust_addr:($('poCustAddr').value||'').trim(),
