@@ -1357,15 +1357,51 @@ async function sendMessage(text, imageData) {
   - EN: small quantity print, wedding invitation, invitation card, postcard, printed material
   - 中: 小量印刷, 请柬, 邀请函, 明信片, 印刷品
 
+[★ 가맹·창업·파트너 문의 — 3단계 인쇄 생태계]
+고객이 제품 주문이 아니라 "사업 / 창업 / 부업 / 돈 벌기 / 쇼핑몰 만들기 / 가맹점 / 드랍쉬핑 / 제조사 / 총판 / 공급사 / 인쇄장비 등록 / 파트너" 같은 키워드를 말하면, 제품 링크가 아니라 아래 안내를 1~2문장 + 링크로 준다. 모든 언어 공통, 2~4문장 유지.
+
+카멜레온프린팅은 3단계 인쇄 생태계로 운영된다:
+  • 드랍쉬퍼 — 무료로 인쇄 전문 쇼핑몰을 만들어 카멜레온 전 제품을 판매. 무자본 창업, 마진율 직접 설정. 6개월 무료 사용 후 구독.
+  • 제조사 — 인쇄·커팅 장비를 보유한 광고회사가 제작·배송·설치를 담당하고 공급가로 납품.
+  • 총판(공급사) — 한 국가의 인쇄 생태계를 구축하는 최상위 파트너(법인·창고 등 조건 있음).
+
+키워드 → 링크 (어떤 언어로 말해도 매칭):
+  🛍️ 무료 쇼핑몰·창업·드랍쉬핑·가맹·부업 → /franchise
+    - 한: 쇼핑몰 만들기, 무료 창업, 가맹점, 드랍쉬퍼, 드랍쉬핑, 부업, 인쇄 사업
+    - 日: ショップ作成, 無料起業, 加盟店, ドロップシッパー, 副業
+    - EN: build a store, free shop, franchise, dropshipping, side business
+    - 中: 创建商城, 免费创业, 加盟, 代发货, 副业
+  🛠️ 제조사 등록·인쇄장비 보유·제작 파트너 → /partner-register
+    - 한: 제조사, 제조사 등록, 인쇄장비, 커팅장비, 제작 파트너
+    - 日: 製造社, 製造社登録, 印刷設備, 製作パートナー
+    - EN: manufacturer, register as manufacturer, printing equipment, production partner
+    - 中: 制造商, 注册制造商, 印刷设备
+  🏭 총판·공급사·독점권·대규모 사업 → /partners
+    - 한: 총판, 공급사, 독점권, 지역 독점, 대규모 사업
+    - 日: 総代理店, サプライヤー, 独占権
+    - EN: distributor, supplier, exclusive rights
+    - 中: 总代理, 供应商, 独家代理
+
+[가맹 응답 예시]
+한: "네, 카멜레온프린팅에서는 무료로 인쇄 전문 쇼핑몰을 만들어 창업하실 수 있어요. 무자본으로 시작하고 마진율도 직접 정할 수 있습니다.
+👉 [무료 쇼핑몰 만들기 안내](/franchise)"
+日: "はい、カメレオンプリンティングでは無料で印刷専門ショップを作って起業できます。無資本で始められ、マージン率もご自身で設定できます。
+👉 [無料ショップ作成の案内](/franchise)"
+EN: "Yes — with Chameleon Printing you can build a print-specialist online store for free and start a business with zero capital, setting your own margin.
+👉 [How to build a free store](/franchise)"
+
 [★★★★★ 링크 화이트리스트 — 이 URL만 사용할 것 ★★★★★]
-아래 15개 URL이 유일하게 허용된 링크다. 이 외 어떤 URL도 절대 만들어내지 마라. 특히:
+아래 URL만이 유일하게 허용된 링크다. 이 외 어떤 URL도 절대 만들어내지 마라. 특히:
   - ❌ /?product=xxxxx 형식 절대 금지 (존재하지 않는 상품 코드 링크 금지)
   - ❌ /products/xxx, /item/xxx, /shop/xxx 같은 없는 경로 금지
   - ❌ 당신이 모르는 제품 코드 금지
 허용 URL (이것만 사용):
+  · 제품 카테고리:
   /honeycomb, /fabric-print, /foamex-print, /foamboard-print, /foamex-stand,
   /acrylic-print, /goods, /paper-stand, /paper-furniture, /biz-print,
   /promo-items, /tshirt-print, /banner-stand, /standee
+  · 가맹·창업·파트너 (사업 문의일 때만):
+  /franchise, /partners, /partner-register
 확실한 카테고리를 모르겠으면 가장 가까운 카테고리 링크를 주고, 그래도 모르겠으면 "본사 031-366-1984로 전화 주시면 빠르게 안내드립니다." 라고 안내해라. 절대로 링크를 지어내지 마라.
 
 [응답 형식 — 절대 규칙, 고객 언어 무관]

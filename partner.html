@@ -468,10 +468,13 @@
 
     // 번역 파일 로딩 + data-i18n 적용
     async function loadPartnerTranslations() {
-        const c = SITE_COUNTRY();
         const langMap = { 'KR': 'kr', 'JP': 'ja', 'US': 'en', 'CN': 'zh', 'AR': 'ar', 'ES': 'es', 'DE': 'de', 'FR': 'fr' };
-        const lang = langMap[c] || 'kr';
+        // URL ?lang= 파라미터 우선 (없으면 사이트 국가 기준)
+        const qp = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+        const qpMap = { ko:'kr', kr:'kr', jp:'ja', ja:'ja', us:'en', en:'en', cn:'zh', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr' };
+        const lang = qpMap[qp] || langMap[SITE_COUNTRY()] || 'kr';
         if (lang === 'kr') return; // 한국어는 기본값
+        if (lang === 'ar') document.documentElement.dir = 'rtl';
 
         try {
             const res = await fetch(`long/${lang}_123.json?t=${Date.now()}`);

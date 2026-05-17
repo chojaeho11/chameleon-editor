@@ -96,8 +96,20 @@ img{display:block;}
   var m = location.pathname.match(/\/store\/([^\/?#]+)/);
   var slug = m ? decodeURIComponent(m[1]).toLowerCase().trim() : '';
 
-  var CCY = { KR:{s:'₩',f:'price',n:'name'}, JP:{s:'¥',f:'price_jp',n:'name_jp'},
-              US:{s:'$',f:'price_us',n:'name_us'} };
+  // 통화: KR/JP/US 는 전용 가격 컬럼(price/price_jp/price_us)을 그대로 사용(rate 1).
+  // CN/SA/ES/DE/FR 는 전용 컬럼이 없어 KRW 기준가(price)를 환율로 환산해 표시.
+  // rate = 제품 기준가(price)에 곱해 표시가를 만드는 배수 (전용 컬럼 사용 시 1)
+  // krw  = orders 테이블에 KRW로 저장된 금액(total_amount)을 현지 통화로 환산하는 배수
+  var CCY = {
+    KR:{s:'₩',f:'price',   n:'name',    rate:1, krw:1},
+    JP:{s:'¥',f:'price_jp',n:'name_jp', rate:1, krw:0.1},
+    US:{s:'$',f:'price_us',n:'name_us', rate:1, krw:0.001},
+    CN:{s:'¥',  f:'price', n:'name_us', rate:0.0067,  krw:0.0067},
+    SA:{s:'ر.س ',f:'price',n:'name_us', rate:0.00375, krw:0.00375},
+    ES:{s:'€',  f:'price', n:'name_us', rate:0.0009, krw:0.0009, post:true},
+    DE:{s:'€',  f:'price', n:'name_us', rate:0.0009, krw:0.0009, post:true},
+    FR:{s:'€',  f:'price', n:'name_us', rate:0.0009, krw:0.0009, post:true}
+  };
 
   // ===== i18n =====
   var DICT = {
@@ -326,8 +338,9 @@ img{display:block;}
   function locName(o){
     if (!o) return '';
     if (LANG==='ja') return o.name_jp || o.name || o.code;
-    if (LANG==='en') return o.name_us || o.name || o.code;
-    return o.name || o.code;
+    if (LANG==='kr') return o.name || o.code;
+    // zh/ar/es/de/fr 는 전용 제품명 컬럼이 없어 영문명(name_us)을 사용
+    return o.name_us || o.name || o.code;
   }
 
   function notFound(msg){
@@ -408,7 +421,14 @@ img{display:block;}
 
   function render(fr, products, topMap, theme){
     theme = theme || {};
-    var ccy = CCY[fr.country] || CCY.KR;
+    var ccy = CCY[String(fr.country||'').toUpperCase()] || CCY.KR;
+    // 통화 표시 — 1 미만 소액은 소수점 2자리, 그 외는 반올림. 유로권은 기호를 뒤에.
+    function fmtPrice(v){
+      v = Number(v) || 0;
+      var n = (v > 0 && v < 100) ? (Math.round(v*100)/100) : Math.round(v);
+      n = n.toLocaleString();
+      return ccy.post ? (n + ' ' + ccy.s) : (ccy.s + n);
+    }
     var company = fr.company_name || T.storeFallback;
     var phone = fr.phone || '';
     var telHref = phone.replace(/[^0-9+]/g,'');
@@ -476,16 +496,16 @@ img{display:block;}
 
     var _margin = Number(theme.margin) || 0;  // 가맹점 판매 마진율 (%)
     function cardHtml(p){
-      var nm = (p[ccy.n] || p.name || p.code).replace(/<br\s*\/?>/gi,' ');
-      var pv = (p[ccy.f] || p.price || 0) * (1 + _margin/100);
-      var price = pv ? (ccy.s + Math.round(pv).toLocaleString()) : T.priceAsk;
+      var nm = (p[ccy.n] || p.name_us || p.name || p.code).replace(/<br\s*\/?>/gi,' ');
+      var pv = (p[ccy.f] || p.price || 0) * (ccy.rate || 1) * (1 + _margin/100);
+      var price = pv ? fmtPrice(pv) : T.priceAsk;
       // 면적가(회배당) 상품 — 1m² 단가 대신 5×5cm 기준가 표시 (아크릴·스티커)
       var _cat = (p.category||'').toLowerCase();
       var _nm = ((p.name||'')+' '+(p.name_us||'')).toLowerCase();
       if (p.is_custom_size === true && pv > 0 && (
             /^acr/.test(_cat) || _cat === 'acrylic' ||
             _cat.indexOf('sticker') >= 0 || /스티커|sticker/i.test(_nm))) {
-        price = ccy.s + Math.round(Number(pv) * 25 / 10000).toLocaleString() + '~';
+        price = fmtPrice(Number(pv) * 25 / 10000) + '~';
       }
       var img = p.img_url || 'https://placehold.co/400?text=No+Image';
       return '<a class="st-card" href="/?product='+encodeURIComponent(p.code)+'&fr='+encodeURIComponent(slug)+'">'
@@ -498,7 +518,7 @@ img{display:block;}
     function customCardHtml(p, idx){
       var imgs = (p.images && p.images.length) ? p.images : (p.img ? [p.img] : []);
       var img = imgs[0] || 'https://placehold.co/400?text=No+Image';
-      var price = (p.price > 0) ? (ccy.s + Number(p.price).toLocaleString()) : T.priceAsk;
+      var price = (p.price > 0) ? fmtPrice(Number(p.price)) : T.priceAsk;
       return '<div class="st-card" data-cp="'+idx+'" style="cursor:pointer;">'
         + '<img class="ci" src="'+esc(img)+'" loading="lazy" onerror="this.src=\'https://placehold.co/400?text=No+Image\'">'
         + '<div class="cb"><div class="cn">'+esc(p.name||'')+'</div>'
@@ -528,7 +548,7 @@ img{display:block;}
             return '<label style="display:flex;align-items:center;gap:8px;padding:9px 11px;border:1.5px solid '+(sel[i]?'#a855f7':'#e1ddef')+';border-radius:9px;margin-bottom:6px;cursor:pointer;font-size:13px;">'
               + '<input type="checkbox" class="cpo" data-i="'+i+'" '+(sel[i]?'checked':'')+' style="width:16px;height:16px;accent-color:#7c3aed;">'
               + '<span style="flex:1;">'+esc(o.name||'')+'</span>'
-              + '<span style="font-weight:800;color:#7c3aed;">+'+ccy.s+(Number(o.price)||0).toLocaleString()+'</span></label>';
+              + '<span style="font-weight:800;color:#7c3aed;">+'+fmtPrice(Number(o.price)||0)+'</span></label>';
           }).join('') + '</div>' : '';
         var guideHtml = '';
         if (showGuide){
@@ -554,7 +574,7 @@ img{display:block;}
           +   '<button class="cpq" data-d="1" style="'+qbtn+'">+</button>'
           + '</div>'
           + '<div style="display:flex;justify-content:space-between;font-size:17px;font-weight:900;border-top:1px solid #eee;padding-top:12px;">'
-          +   '<span>'+esc(T.totalLabel)+'</span><span style="color:#7c3aed;">'+ccy.s+total.toLocaleString()+'</span></div>'
+          +   '<span>'+esc(T.totalLabel)+'</span><span style="color:#7c3aed;">'+fmtPrice(total)+'</span></div>'
           + actionHtml + guideHtml
           + '<button class="cpClose" style="width:100%;margin-top:10px;padding:11px;border:none;border-radius:10px;background:#1e1b3a;color:#fff;font-weight:800;font-size:13px;cursor:pointer;">'+esc(T.closeBtn)+'</button>'
           + '</div>';
@@ -652,7 +672,7 @@ img{display:block;}
             + '</div>';
         }
         return '<div class="st-rev-order">'
-          + '<div class="roh"><span>'+esc(T.orderNo)+o.id+'</span><span>'+esc(d)+' · '+(ccy.s)+Number(o.total_amount||0).toLocaleString()+'</span></div>'
+          + '<div class="roh"><span>'+esc(T.orderNo)+o.id+'</span><span>'+esc(d)+' · '+fmtPrice(Number(o.total_amount||0)*(ccy.krw||1))+'</span></div>'
           + '<div class="ro-items">'+esc(itemTxt)+'</div>'
           + body
           + '</div>';
