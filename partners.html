@@ -340,7 +340,8 @@ a{color:inherit;}
   function closeForm(){ $('ov').classList.remove('on'); }
 
   $('t1Apply').onclick = function(){ openForm('supplier'); };
-  $('t2Apply').onclick = function(){ openForm('manufacturer'); };
+  // 제조사 = 출력·시공 파트너 — 정식 등록 페이지(production_partners)로 연결
+  $('t2Apply').onclick = function(){ location.href = '/partner-register'; };
   $('fCancel').onclick = closeForm;
   $('ov').onclick = function(e){ if (e.target === $('ov')) closeForm(); };
 
