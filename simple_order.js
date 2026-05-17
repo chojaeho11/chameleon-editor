@@ -114,7 +114,12 @@
         const limit = maxLen || 150;
         return s.length > limit ? s.slice(0, limit) + '…' : s;
     }
-    function pickPrice(p) { return p.price || 0; }
+    // 2026-05-17: 가맹점 스토어 경유 시 판매 마진율 적용 (state.frMargin %)
+    function pickPrice(p) {
+        var base = (p && p.price) || 0;
+        var m = (typeof state !== 'undefined' && state && state.frMargin) || 0;
+        return m > 0 ? Math.round(base * (1 + m / 100)) : base;
+    }
     function pickImg(p) { return p.img || p.image_url || p.image_kr || p.image || p.thumb_url || ''; }
 
     // ─────────────────────────────────────────────
@@ -3134,7 +3139,7 @@
         injectStyles();
         injectModal();
         // 2026-05-13: 자체 nav 제거 — 메인의 #topCatMenu 가 z-index 60000 으로 표시됨
-        state = { product: null, file: null, fileBack: null, thumbDataUrl: null, thumbDataUrlBack: null, qty: 1 };
+        state = { product: null, file: null, fileBack: null, thumbDataUrl: null, thumbDataUrlBack: null, qty: 1, frMargin: 0 };
 
         let p = productData;
         if (!p && window.PRODUCT_DB && window.PRODUCT_DB[productCode]) p = window.PRODUCT_DB[productCode];
@@ -3156,6 +3161,15 @@
             window.PRODUCT_DB[productCode] = p;
         }
         state.product = p;
+
+        // 2026-05-17: 가맹점 스토어 경유 주문이면 해당 가맹점의 판매 마진율을 불러와 가격에 적용
+        try {
+            var _frRef = sessionStorage.getItem('_franchise_ref') || '';
+            if (_frRef) {
+                var _tj = await fetch('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(_frRef) + '.json?_t=' + Date.now());
+                if (_tj.ok) { var _th = await _tj.json(); state.frMargin = Number(_th && _th.margin) || 0; }
+            }
+        } catch (e) {}
 
         document.getElementById('soName').textContent = pickName(p);
         document.getElementById('soDesc').textContent = pickDescPlain(p, 150);

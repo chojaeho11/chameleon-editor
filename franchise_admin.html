@@ -182,6 +182,10 @@ select option{background:#1d1640;}
       <div id="heroImgPreview" style="display:none;margin-top:-4px;margin-bottom:14px;">
         <img id="heroImg" style="height:70px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);">
       </div>
+      <label class="fld">
+        <span class="lb"><span data-i18n="marginLabel">판매 마진율 (%)</span> <small data-i18n="marginSmall">— 본사 가격에 붙는 이익률</small></span>
+        <input type="number" id="fMargin" min="0" max="500" step="1" value="0" placeholder="0">
+      </label>
     </div>
 
     <div class="card">
@@ -286,7 +290,8 @@ select option{background:#1d1640;}
       heroBadgeLabel:'상단 배지 문구', heroBadgeSmall:'— 비워두면 기본 문구가 표시됩니다', heroBadgePh:'✨ 카멜레온프린팅 공식 가맹점',
       heroModeLabel:'상단 배경', heroModeDefault:'기본 (보라 그라데이션)', heroModeColor:'단색 지정', heroModeImage:'이미지 업로드',
       heroColorLabel:'배경 색상', heroImageLabel:'배경 이미지',
-      heroImgTooBig:'이미지는 5MB 이하로 올려주세요.', heroImgUploading:'배경 이미지 업로드 중…', heroImgDone:'배경 이미지 업로드 완료'
+      heroImgTooBig:'이미지는 5MB 이하로 올려주세요.', heroImgUploading:'배경 이미지 업로드 중…', heroImgDone:'배경 이미지 업로드 완료',
+      marginLabel:'판매 마진율 (%)', marginSmall:'— 본사 가격에 붙는 이익률 · 예: 10 → 고객에게 10% 인상된 가격으로 표시'
     },
     ja:{
       adminTitle:'加盟店管理者', loading:'読み込み中…',
@@ -331,7 +336,8 @@ select option{background:#1d1640;}
       heroBadgeLabel:'上部バッジ文言', heroBadgeSmall:'— 空欄の場合は既定の文言が表示されます', heroBadgePh:'✨ カメレオンプリンティング公式加盟店',
       heroModeLabel:'上部背景', heroModeDefault:'既定 (紫グラデーション)', heroModeColor:'単色を指定', heroModeImage:'画像をアップロード',
       heroColorLabel:'背景色', heroImageLabel:'背景画像',
-      heroImgTooBig:'画像は5MB以下でアップロードしてください。', heroImgUploading:'背景画像をアップロード中…', heroImgDone:'背景画像のアップロード完了'
+      heroImgTooBig:'画像は5MB以下でアップロードしてください。', heroImgUploading:'背景画像をアップロード中…', heroImgDone:'背景画像のアップロード完了',
+      marginLabel:'販売マージン率 (%)', marginSmall:'— 本社価格に上乗せする利益率 · 例: 10 → 顧客には10%値上げした価格で表示'
     },
     en:{
       adminTitle:'Franchise Admin', loading:'Loading…',
@@ -376,7 +382,8 @@ select option{background:#1d1640;}
       heroBadgeLabel:'Top badge text', heroBadgeSmall:'— leave blank for the default text', heroBadgePh:'✨ Official Chameleon Printing Partner',
       heroModeLabel:'Header background', heroModeDefault:'Default (purple gradient)', heroModeColor:'Solid color', heroModeImage:'Upload image',
       heroColorLabel:'Background color', heroImageLabel:'Background image',
-      heroImgTooBig:'Image must be 5MB or smaller.', heroImgUploading:'Uploading background image…', heroImgDone:'Background image uploaded'
+      heroImgTooBig:'Image must be 5MB or smaller.', heroImgUploading:'Uploading background image…', heroImgDone:'Background image uploaded',
+      marginLabel:'Sales margin (%)', marginSmall:'— markup added to the base price · e.g. 10 → customers see prices raised by 10%'
     }
   };
   var T = DICT[LANG] || DICT.en;
@@ -709,6 +716,7 @@ select option{background:#1d1640;}
     state.heroImageUrl = th.image || '';
     $('fHeroMode').value = th.mode || (th.image ? 'image' : (th.color ? 'color' : 'default'));
     if (state.heroImageUrl){ $('heroImg').src = state.heroImageUrl; }
+    $('fMargin').value = (th.margin != null) ? th.margin : 0;
     updateHeroMode();
     state.selected = {};
     (f.selected_products || []).forEach(function(c){ state.selected[c] = true; });
@@ -987,7 +995,8 @@ select option{background:#1d1640;}
           badge: $('fHeroBadge').value.trim() || '',
           mode: $('fHeroMode').value,
           color: $('fHeroColor').value,
-          image: state.heroImageUrl || ''
+          image: state.heroImageUrl || '',
+          margin: Math.max(0, parseFloat($('fMargin').value) || 0)
         };
         state.theme = theme;
         var tblob = new Blob([JSON.stringify(theme)], { type:'application/json' });

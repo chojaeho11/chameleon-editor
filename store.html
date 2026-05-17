@@ -298,10 +298,11 @@ img{display:block;}
     document.getElementById('stLoading').style.display='none';
     app.style.display='block';
 
+    var _margin = Number(theme.margin) || 0;  // 가맹점 판매 마진율 (%)
     function cardHtml(p){
       var nm = (p[ccy.n] || p.name || p.code).replace(/<br\s*\/?>/gi,' ');
-      var pv = p[ccy.f] || p.price || 0;
-      var price = pv ? (ccy.s + Number(pv).toLocaleString()) : T.priceAsk;
+      var pv = (p[ccy.f] || p.price || 0) * (1 + _margin/100);
+      var price = pv ? (ccy.s + Math.round(pv).toLocaleString()) : T.priceAsk;
       // 면적가(회배당) 상품 — 1m² 단가 대신 5×5cm 기준가 표시 (아크릴·스티커)
       var _cat = (p.category||'').toLowerCase();
       var _nm = ((p.name||'')+' '+(p.name_us||'')).toLowerCase();
