@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>제조사 발주 관리 · Chameleon Printing</title>
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:linear-gradient(160deg,#0f1424,#172033);color:#e8edf7;min-height:100vh;}
+.wrap{max-width:920px;margin:0 auto;padding:0 18px 80px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px;max-width:920px;margin:0 auto;}
+.brand{font-size:18px;font-weight:900;}
+.btn{border:none;border-radius:9px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;padding:9px 14px;}
+.btn-pri{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;}
+.btn-ghost{background:rgba(255,255,255,0.07);color:#9fb3d1;border:1px solid rgba(96,165,250,0.25);}
+.btn-sm{padding:6px 11px;font-size:12px;}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(96,165,250,0.18);border-radius:16px;padding:20px;margin-bottom:16px;}
+.card h2{font-size:17px;font-weight:900;margin-bottom:6px;}
+.desc{font-size:13px;color:#8ea3c4;margin-bottom:14px;line-height:1.6;}
+.center-box{max-width:380px;margin:70px auto;text-align:center;}
+.center-box .ic{font-size:48px;margin-bottom:12px;}
+.center-box h1{font-size:21px;font-weight:900;margin-bottom:8px;}
+.center-box p{font-size:14px;color:#8ea3c4;line-height:1.7;margin-bottom:16px;}
+.fld{display:block;margin-bottom:12px;text-align:left;}
+.fld .lb{display:block;font-size:12px;font-weight:700;color:#93c5fd;margin-bottom:5px;}
+.fld input{width:100%;padding:11px;border:1.5px solid rgba(96,165,250,0.3);border-radius:9px;background:rgba(255,255,255,0.05);color:#e8edf7;font-size:13px;outline:none;}
+.po{border:1px solid rgba(96,165,250,0.2);border-radius:12px;padding:14px;margin-bottom:10px;background:rgba(255,255,255,0.03);}
+.po .poh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;}
+.po .pi{font-size:15px;font-weight:800;margin:6px 0;}
+.po .pm{font-size:12.5px;color:#9fb3d1;line-height:1.7;}
+.po .pcust{margin-top:8px;padding:8px 10px;background:rgba(59,130,246,0.1);border-radius:8px;font-size:12.5px;line-height:1.7;}
+.pst{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;}
+.pst.new{background:rgba(251,191,36,0.18);color:#fcd34d;}
+.pst.accepted{background:rgba(96,165,250,0.18);color:#93c5fd;}
+.pst.making{background:rgba(168,85,247,0.18);color:#d8b4fe;}
+.pst.done{background:rgba(34,197,94,0.18);color:#86efac;}
+select{padding:6px 9px;border-radius:7px;background:#172033;color:#e8edf7;border:1px solid rgba(96,165,250,0.3);font-size:12px;font-family:inherit;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid rgba(96,165,250,0.4);color:#e8edf7;padding:12px 20px;border-radius:11px;font-size:13px;font-weight:700;z-index:200;}
+.toast.err{border-color:rgba(239,68,68,0.5);color:#fca5a5;}
+.toast.ok{border-color:rgba(34,197,94,0.5);color:#86efac;}
+a{color:#93c5fd;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">🛠️ 제조사 발주 관리</div>
+  <div id="topRight"></div>
+</div>
+<div id="loadingScreen" style="text-align:center;padding:80px 0;color:#8ea3c4;">불러오는 중…</div>
+
+<div id="screenLogin" style="display:none;">
+  <div class="center-box">
+    <div class="ic">🔐</div>
+    <h1>제조사 로그인</h1>
+    <p>제조사로 등록하신 카멜레온프린팅 계정으로 로그인하세요.</p>
+    <label class="fld"><span class="lb">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
+    <label class="fld"><span class="lb">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
+    <button class="btn btn-pri" id="btnLogin" style="width:100%;">로그인</button>
+    <p style="margin-top:14px;font-size:13px;">아직 제조사 등록 전인가요? <a href="/partner-register">제조사로 등록하기</a></p>
+  </div>
+</div>
+
+<div id="screenNoPartner" style="display:none;">
+  <div class="center-box">
+    <div class="ic">📋</div>
+    <h1>제조사 등록이 필요합니다</h1>
+    <p>이 계정으로 등록된 제조사 정보가 없습니다. 먼저 제조사 등록을 완료해 주세요.</p>
+    <a class="btn btn-pri" href="/partner-register" style="display:inline-block;text-decoration:none;">제조사로 등록하기</a>
+  </div>
+</div>
+
+<div id="screenDash" style="display:none;">
+  <div class="wrap">
+    <div class="card">
+      <h2 id="mkCompany"></h2>
+      <div class="desc" id="mkInfo"></div>
+    </div>
+    <div class="card">
+      <h2>📥 발주 수신함</h2>
+      <div class="desc">같은 국가의 드랍쉬퍼가 보낸 제작 발주입니다. 드랍쉬퍼가 공급가를 선결제하면 제작·배송(설치)을 진행해 주세요. 상태를 변경하면 드랍쉬퍼에게 표시됩니다.</div>
+      <div id="poList"><div style="color:#8ea3c4;font-size:13px;">불러오는 중…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var $ = function(id){ return document.getElementById(id); };
+  var state = { user:null, partner:null };
+  var ST = { new:'신규', accepted:'접수함', making:'제작중', done:'완료' };
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  // 국가 문자열 → 표준 코드 (드랍쉬퍼/제조사 국가 표기가 달라도 매칭되도록)
+  function ctryCode(s){
+    s=(s||'').toString().toLowerCase().trim();
+    if(/kr|korea|한국|대한민국/.test(s))return'KR';
+    if(/jp|japan|日本|일본/.test(s))return'JP';
+    if(/us|usa|united states|america|미국/.test(s))return'US';
+    if(/cn|china|中国|중국/.test(s))return'CN';
+    if(/sa|saudi|사우디/.test(s))return'SA';
+    if(/es|spain|españa|스페인/.test(s))return'ES';
+    if(/de|german|deutsch|독일/.test(s))return'DE';
+    if(/fr|france|프랑스/.test(s))return'FR';
+    return (s||'').toUpperCase().slice(0,2)||'KR';
+  }
+  function toast(m,k){ var t=document.createElement('div'); t.className='toast '+(k||''); t.textContent=m; document.body.appendChild(t); setTimeout(function(){t.remove();},3800); }
+  function show(id){ ['loadingScreen','screenLogin','screenNoPartner','screenDash'].forEach(function(s){ var e=$(s); if(e) e.style.display=(s===id)?'block':'none'; }); }
+
+  async function init(){
+    show('loadingScreen');
+    var sess=null;
+    try{ sess=(await sb.auth.getSession()).data.session; }catch(e){}
+    if(!sess||!sess.user){ show('screenLogin'); return; }
+    state.user=sess.user;
+    await afterLogin();
+  }
+  async function afterLogin(){
+    var r;
+    try{ r=await sb.from('production_partners').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(1); }catch(e){}
+    var p=(r&&r.data&&r.data[0])||null;
+    if(!p){ show('screenNoPartner'); return; }
+    state.partner=p;
+    $('topRight').innerHTML='<span style="font-size:13px;color:#8ea3c4;margin-right:10px;">'+esc(state.user.email||'')+'</span><button class="btn btn-ghost btn-sm" id="btnLogout">로그아웃</button>';
+    $('btnLogout').onclick=async function(){ try{await sb.auth.signOut();}catch(e){} location.reload(); };
+    var statusLabel={pending:'승인 대기',verified:'검증됨',active:'활성',suspended:'정지'}[p.status]||p.status||'';
+    $('mkCompany').textContent='🛠️ '+(p.company_name||'제조사');
+    $('mkInfo').textContent=(p.country||'')+' · '+statusLabel+(p.status!=='active'&&p.status!=='verified'?' — 본사 승인 후 발주가 표시됩니다.':'');
+    show('screenDash');
+    loadOrders();
+  }
+  async function loadOrders(){
+    var box=$('poList');
+    var country=ctryCode(state.partner.country);
+    if(!country){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;">국가 정보가 없습니다.</div>'; return; }
+    var dir='porders/'+country;
+    var files=[];
+    try{
+      var lr=await sb.storage.from('logos').list(dir,{limit:300});
+      files=(lr.data||[]).filter(function(f){ return f.name&&f.name.indexOf('.json')>0; });
+    }catch(e){}
+    if(!files.length){ box.innerHTML='<div style="color:#8ea3c4;font-size:13px;padding:8px 0;">아직 받은 발주가 없습니다.</div>'; return; }
+    var orders=[];
+    for(var i=0;i<files.length;i++){
+      try{
+        var u=SB_URL+'/storage/v1/object/public/logos/'+dir+'/'+encodeURIComponent(files[i].name)+'?_t='+Date.now();
+        var jr=await fetch(u);
+        if(jr.ok){ var o=await jr.json(); o._file=files[i].name; orders.push(o); }
+      }catch(e){}
+    }
+    orders.sort(function(a,b){ return (b.created||'').localeCompare(a.created||''); });
+    box.innerHTML=orders.map(function(o){
+      var d=o.created?new Date(o.created).toLocaleString('ko-KR',{dateStyle:'short',timeStyle:'short'}):'';
+      var st=o.status||'new';
+      return '<div class="po">'
+        +'<div class="poh"><span style="color:#8ea3c4;">'+esc(d)+'</span>'
+        +'<span class="pst '+st+'">'+(ST[st]||st)+'</span></div>'
+        +'<div class="pi">'+esc(o.item||'-')+' <span style="font-size:13px;color:#93c5fd;">× '+(o.qty||1)+'</span></div>'
+        +'<div class="pm">발주: '+esc(o.drop_company||o.drop_slug||'-')+(o.drop_phone?' · '+esc(o.drop_phone):'')+'</div>'
+        +(o.note?'<div class="pm">메모: '+esc(o.note)+'</div>':'')
+        +'<div class="pcust">📦 설치·배송 — '+esc(o.cust_name||'-')+' / '+esc(o.cust_phone||'-')+'<br>'+esc(o.cust_addr||'-')+'</div>'
+        +'<div style="margin-top:10px;display:flex;align-items:center;gap:8px;">'
+        +'<span style="font-size:12px;color:#8ea3c4;">상태 변경</span>'
+        +'<select data-file="'+esc(o._file)+'">'
+        +['new','accepted','making','done'].map(function(s){ return '<option value="'+s+'"'+(s===st?' selected':'')+'>'+ST[s]+'</option>'; }).join('')
+        +'</select></div>'
+        +'</div>';
+    }).join('');
+    box.querySelectorAll('select[data-file]').forEach(function(sel){
+      sel.onchange=async function(){
+        var o=orders.filter(function(x){return x._file===sel.dataset.file;})[0];
+        if(!o) return;
+        o.status=sel.value;
+        var save={}; Object.keys(o).forEach(function(k){ if(k!=='_file') save[k]=o[k]; });
+        try{
+          var blob=new Blob([JSON.stringify(save)],{type:'application/json'});
+          var up=await sb.storage.from('logos').upload(dir+'/'+sel.dataset.file,blob,{upsert:true,contentType:'application/json'});
+          if(up.error) throw up.error;
+          toast('상태가 변경되었습니다','ok');
+        }catch(e){ toast('변경 실패: '+(e.message||e),'err'); }
+      };
+    });
+  }
+  $('btnLogin').onclick=async function(){
+    var em=$('loginEmail').value.trim(), pw=$('loginPw').value;
+    if(!em||!pw){ toast('이메일과 비밀번호를 입력하세요.','err'); return; }
+    this.disabled=true; this.textContent='로그인 중…';
+    try{
+      var r=await sb.auth.signInWithPassword({email:em,password:pw});
+      if(r.error) throw r.error;
+      state.user=r.data.user;
+      await afterLogin();
+    }catch(e){ toast('로그인 실패: '+(e.message||e),'err'); this.disabled=false; this.textContent='로그인'; }
+  };
+  $('loginPw').addEventListener('keydown',function(e){ if(e.key==='Enter') $('btnLogin').click(); });
+  init();
+})();
+</script>
+</body>
+</html>

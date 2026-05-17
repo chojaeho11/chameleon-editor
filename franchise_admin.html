@@ -244,6 +244,12 @@ select option{background:#1d1640;}
       </div>
     </div>
 
+    <div class="card" id="cardMfgOrder" style="display:none;">
+      <h2 data-i18n="poTitle">⑤ 제조사 발주</h2>
+      <div class="desc" data-i18n="poDesc">고객 상담이 끝나면 같은 국가의 제조사에 제작을 발주하세요.</div>
+      <div id="mfgOrderBody"></div>
+    </div>
+
     <div class="savebar">
       <button class="btn btn-pri" id="btnSave" data-i18n="save">💾 저장</button>
       <button class="btn btn-ghost" id="btnPreview" data-i18n="preview">🔗 내 홈페이지 보기</button>
@@ -329,7 +335,13 @@ select option{background:#1d1640;}
       domainLabel:'사용자 도메인 (선택)', domainSmall:'— 직접 구입한 도메인을 연결하려면 입력하세요 (연결은 본사가 처리)', domainPh:'예: www.myshop.com',
       myProdTitle:'🏷️ 내 제품 등록 (자체 상품)', myProdDesc:'카멜레온 제품 외에 사장님이 직접 제작·배송하는 자체 상품을 등록할 수 있습니다. 등록한 상품은 스토어에 함께 노출되며, 주문·제작·배송은 사장님이 직접 처리합니다.',
       myProdAdd:'+ 제품 추가', myProdNamePh:'제품명', myProdPricePh:'가격', myProdEmpty:'아직 등록한 자체 상품이 없습니다. 아래 버튼으로 추가하세요.', myProdImg:'사진',
-      myProdDescPh:'상세 설명 (간단하게)', myProdOptTitle:'옵션 — 고객이 선택하면 가격에 추가됩니다', myProdOptNamePh:'옵션명 (예: 라미네이팅)', myProdOptPricePh:'추가금액', myProdAddOpt:'+ 옵션 추가'
+      myProdDescPh:'상세 설명 (간단하게)', myProdOptTitle:'옵션 — 고객이 선택하면 가격에 추가됩니다', myProdOptNamePh:'옵션명 (예: 라미네이팅)', myProdOptPricePh:'추가금액', myProdAddOpt:'+ 옵션 추가',
+      poTitle:'⑤ 제조사 발주', poDesc:'고객 상담이 끝나면 같은 국가의 제조사에 제작을 발주하세요. 공급가를 선결제하면 제조사가 제작·배송(설치)을 진행합니다.',
+      poNoMfg:'현재 국가에 등록·승인된 제조사가 없습니다. 본사에 문의해 주세요.', poMfgLabel:'연결된 제조사',
+      poItem:'제작 품목·내용', poItemPh:'예: 허니콤보드 배너 1800×600', poQty:'수량', poCustName:'고객명', poCustPhone:'고객 연락처', poCustAddr:'설치·배송 주소', poNote:'메모 (선택)',
+      poSubmit:'📤 제조사에 발주하기', poErr:'제작 품목을 입력하세요.', poSending:'전송 중…',
+      poSent:'발주가 전송되었습니다. 아래 제조사 계좌로 공급가를 선결제해 주세요.', poBankLabel:'공급가 입금 계좌 (제조사)',
+      poMyTitle:'내 발주 내역', poEmpty:'발주 내역이 없습니다.', poStatus:{new:'신규',accepted:'접수됨',making:'제작중',done:'완료'}
     },
     ja:{
       adminTitle:'加盟店管理者', loading:'読み込み中…',
@@ -385,7 +397,13 @@ select option{background:#1d1640;}
       domainLabel:'独自ドメイン (任意)', domainSmall:'— 購入したドメインを接続するには入力してください (接続は本社が対応)', domainPh:'例: www.myshop.com',
       myProdTitle:'🏷️ 自社商品の登録', myProdDesc:'カメレオン製品以外に、店舗様が直接製作・配送する自社商品を登録できます。登録した商品はストアに一緒に表示され、注文・製作・配送は店舗様が直接対応します。',
       myProdAdd:'+ 商品を追加', myProdNamePh:'商品名', myProdPricePh:'価格', myProdEmpty:'登録した自社商品がまだありません。下のボタンで追加してください。', myProdImg:'写真',
-      myProdDescPh:'詳細説明 (簡単に)', myProdOptTitle:'オプション — 選択すると価格に追加されます', myProdOptNamePh:'オプション名 (例: ラミネート)', myProdOptPricePh:'追加金額', myProdAddOpt:'+ オプション追加'
+      myProdDescPh:'詳細説明 (簡単に)', myProdOptTitle:'オプション — 選択すると価格に追加されます', myProdOptNamePh:'オプション名 (例: ラミネート)', myProdOptPricePh:'追加金額', myProdAddOpt:'+ オプション追加',
+      poTitle:'⑤ メーカーへ発注', poDesc:'お客様との相談が終わったら、同じ国のメーカーに製作を発注してください。供給価格を前払いするとメーカーが製作・配送(施工)を行います。',
+      poNoMfg:'現在の国に登録・承認されたメーカーがありません。本社にお問い合わせください。', poMfgLabel:'連携メーカー',
+      poItem:'製作品目・内容', poItemPh:'例: ハニカムボードバナー 1800×600', poQty:'数量', poCustName:'お客様名', poCustPhone:'お客様連絡先', poCustAddr:'施工・配送先', poNote:'メモ (任意)',
+      poSubmit:'📤 メーカーに発注', poErr:'製作品目を入力してください。', poSending:'送信中…',
+      poSent:'発注を送信しました。下記メーカー口座へ供給価格を前払いしてください。', poBankLabel:'供給価格 振込口座 (メーカー)',
+      poMyTitle:'発注履歴', poEmpty:'発注履歴がありません。', poStatus:{new:'新規',accepted:'受付',making:'製作中',done:'完了'}
     },
     en:{
       adminTitle:'Franchise Admin', loading:'Loading…',
@@ -441,7 +459,13 @@ select option{background:#1d1640;}
       domainLabel:'Custom domain (optional)', domainSmall:'— enter a domain you purchased to connect it (HQ handles the connection)', domainPh:'e.g. www.myshop.com',
       myProdTitle:'🏷️ Register Your Own Products', myProdDesc:'Besides Chameleon products, you can register your own items that you produce and ship yourself. They appear in your store, and you handle ordering, production and delivery directly.',
       myProdAdd:'+ Add product', myProdNamePh:'Product name', myProdPricePh:'Price', myProdEmpty:'No own products yet. Use the button below to add one.', myProdImg:'Photo',
-      myProdDescPh:'Short description', myProdOptTitle:'Options — added to the price when the customer selects them', myProdOptNamePh:'Option name (e.g. Lamination)', myProdOptPricePh:'Extra price', myProdAddOpt:'+ Add option'
+      myProdDescPh:'Short description', myProdOptTitle:'Options — added to the price when the customer selects them', myProdOptNamePh:'Option name (e.g. Lamination)', myProdOptPricePh:'Extra price', myProdAddOpt:'+ Add option',
+      poTitle:'5. Order from Manufacturer', poDesc:'After a customer consultation, order production from a manufacturer in your country. Pre-pay the supply price and the manufacturer produces and delivers (installs).',
+      poNoMfg:'No approved manufacturer in your country yet. Please contact HQ.', poMfgLabel:'Linked manufacturer',
+      poItem:'Item / details', poItemPh:'e.g. Honeycomb banner 1800×600', poQty:'Qty', poCustName:'Customer name', poCustPhone:'Customer phone', poCustAddr:'Install / delivery address', poNote:'Note (optional)',
+      poSubmit:'📤 Send order to manufacturer', poErr:'Enter the item to produce.', poSending:'Sending…',
+      poSent:'Order sent. Pre-pay the supply price to the manufacturer account below.', poBankLabel:'Supply-price account (manufacturer)',
+      poMyTitle:'My orders', poEmpty:'No orders yet.', poStatus:{new:'New',accepted:'Accepted',making:'Producing',done:'Done'}
     }
   };
   var T = DICT[LANG] || DICT.en;
@@ -546,6 +570,106 @@ select option{background:#1d1640;}
     loadProducts();
     loadOrders();
     loadMessages();
+    loadMfgOrder();
+  }
+
+  // ===== 제조사 발주 (드랍쉬퍼 → 같은 국가 제조사) =====
+  function ctryCode(s){
+    s=(s||'').toString().toLowerCase().trim();
+    if(/kr|korea|한국|대한민국/.test(s))return'KR';
+    if(/jp|japan|日本|일본/.test(s))return'JP';
+    if(/us|usa|united states|america|미국/.test(s))return'US';
+    if(/cn|china|中国|중국/.test(s))return'CN';
+    if(/sa|saudi|사우디/.test(s))return'SA';
+    if(/es|spain|españa|스페인/.test(s))return'ES';
+    if(/de|german|deutsch|독일/.test(s))return'DE';
+    if(/fr|france|프랑스/.test(s))return'FR';
+    return (s||'').toUpperCase().slice(0,2)||'KR';
+  }
+  async function loadMfgOrder(){
+    var card=$('cardMfgOrder'), body=$('mfgOrderBody');
+    if(!card||!body) return;
+    var fr=state.franchise;
+    if(!fr||!fr.slug){ card.style.display='none'; return; }
+    card.style.display='';
+    var country=fr.country||'KR';
+    body.innerHTML='<div style="color:#9b94c4;font-size:13px;">'+T.loadingShort+'</div>';
+    var mfg=null;
+    try{
+      var r=await sb.from('production_partners').select('*').limit(300);
+      var list=(r.data||[]).filter(function(p){ return ctryCode(p.country)===country && (p.status==='active'||p.status==='verified'); });
+      mfg=list[0]||null;
+    }catch(e){ console.warn('mfg load',e); }
+    if(!mfg){ body.innerHTML='<div style="color:#9b94c4;font-size:13px;">'+T.poNoMfg+'</div>'; return; }
+    state._mfg=mfg;
+    body.innerHTML=
+       '<div style="font-size:13px;color:#c4b5fd;margin-bottom:12px;"><b>'+escA(T.poMfgLabel)+':</b> '+escA(mfg.company_name||'')+' ('+escA(mfg.country||'')+')</div>'
+      +'<label class="fld"><span class="lb">'+escA(T.poItem)+'</span><input type="text" id="poItem" placeholder="'+escA(T.poItemPh)+'"></label>'
+      +'<div class="row2"><label class="fld"><span class="lb">'+escA(T.poQty)+'</span><input type="number" id="poQty" min="1" value="1"></label>'
+      +'<label class="fld"><span class="lb">'+escA(T.poCustName)+'</span><input type="text" id="poCustName"></label></div>'
+      +'<div class="row2"><label class="fld"><span class="lb">'+escA(T.poCustPhone)+'</span><input type="tel" id="poCustPhone"></label>'
+      +'<label class="fld"><span class="lb">'+escA(T.poCustAddr)+'</span><input type="text" id="poCustAddr"></label></div>'
+      +'<label class="fld"><span class="lb">'+escA(T.poNote)+'</span><input type="text" id="poNote"></label>'
+      +'<button class="btn btn-pri" id="btnPoSend">'+escA(T.poSubmit)+'</button>'
+      +'<div id="poResult" style="margin-top:10px;"></div>'
+      +'<div style="margin-top:20px;font-size:13px;font-weight:800;color:#c4b5fd;">'+escA(T.poMyTitle)+'</div>'
+      +'<div id="poMyList" style="margin-top:8px;"></div>';
+    $('btnPoSend').onclick=sendPo;
+    loadMyPo();
+  }
+  async function sendPo(){
+    var fr=state.franchise, mfg=state._mfg;
+    if(!fr||!mfg) return;
+    var item=($('poItem').value||'').trim();
+    if(!item){ toast(T.poErr,'err'); return; }
+    var country=fr.country||'KR';
+    var btn=$('btnPoSend'); btn.disabled=true; btn.textContent=T.poSending;
+    var id='po_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    var order={ id:id, created:new Date().toISOString(),
+      drop_slug:fr.slug, drop_company:fr.company_name||'', drop_phone:fr.phone||'',
+      mfg_company:mfg.company_name||'', country:country,
+      item:item, qty:Math.max(1,parseInt($('poQty').value,10)||1),
+      note:($('poNote').value||'').trim(),
+      cust_name:($('poCustName').value||'').trim(), cust_phone:($('poCustPhone').value||'').trim(), cust_addr:($('poCustAddr').value||'').trim(),
+      status:'new' };
+    try{
+      var blob=new Blob([JSON.stringify(order)],{type:'application/json'});
+      var up=await sb.storage.from(LOGO_BUCKET).upload('porders/'+country+'/'+id+'.json',blob,{upsert:true,contentType:'application/json'});
+      if(up.error) throw up.error;
+      var acc=mfg.bank_account?('<div style="margin-top:6px;font-size:13px;">'+escA(mfg.bank_name||'')+' <b>'+escA(mfg.bank_account||'')+'</b>'+(mfg.bank_holder?(' ('+escA(mfg.bank_holder)+')'):'')+'</div>'):'';
+      $('poResult').innerHTML='<div style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:12px;font-size:13px;color:#86efac;">'
+        +escA(T.poSent)+'<div style="color:#c4b5fd;font-weight:700;margin-top:8px;">'+escA(T.poBankLabel)+'</div>'+acc+'</div>';
+      $('poItem').value=''; $('poNote').value=''; $('poCustName').value=''; $('poCustPhone').value=''; $('poCustAddr').value='';
+      toast(T.poSent,'ok');
+      loadMyPo();
+    }catch(e){ toast((T.saveFail||'')+(e.message||e),'err'); }
+    btn.disabled=false; btn.textContent=T.poSubmit;
+  }
+  async function loadMyPo(){
+    var box=$('poMyList'); if(!box) return;
+    var fr=state.franchise; var country=fr.country||'KR';
+    var files=[];
+    try{
+      var lr=await sb.storage.from(LOGO_BUCKET).list('porders/'+country,{limit:300});
+      files=(lr.data||[]).filter(function(f){ return f.name&&f.name.indexOf('.json')>0; });
+    }catch(e){}
+    var mine=[];
+    for(var i=0;i<files.length;i++){
+      try{
+        var u=SB_URL+'/storage/v1/object/public/'+LOGO_BUCKET+'/porders/'+country+'/'+encodeURIComponent(files[i].name)+'?_t='+Date.now();
+        var jr=await fetch(u);
+        if(jr.ok){ var o=await jr.json(); if(o.drop_slug===fr.slug) mine.push(o); }
+      }catch(e){}
+    }
+    if(!mine.length){ box.innerHTML='<div style="color:#9b94c4;font-size:12px;">'+T.poEmpty+'</div>'; return; }
+    mine.sort(function(a,b){ return (b.created||'').localeCompare(a.created||''); });
+    box.innerHTML=mine.map(function(o){
+      var d=o.created?new Date(o.created).toLocaleDateString():'';
+      var st=(T.poStatus&&T.poStatus[o.status])||o.status||'';
+      return '<div style="border:1px solid rgba(167,139,250,0.18);border-radius:9px;padding:9px 11px;margin-bottom:6px;font-size:12.5px;">'
+        +'<b>'+escA(o.item||'')+'</b> ×'+(o.qty||1)+' <span style="color:#9b94c4;">· '+escA(d)+'</span>'
+        +' <span style="float:right;color:#c4b5fd;font-weight:700;">'+escA(st)+'</span></div>';
+    }).join('');
   }
 
   // 테스트 계정용 — 보유한 여러 홈페이지 전환 + 새로 만들기
@@ -593,7 +717,7 @@ select option{background:#1d1640;}
       $('fSlug').value=''; $('logoPreview').style.display='none';
       $('saveStatus').textContent='';
       renderProducts();
-      loadOrders(); loadMessages();
+      loadOrders(); loadMessages(); loadMfgOrder();
       renderFrSwitcher(true);
       $('fSlug').focus();
     };
