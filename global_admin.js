@@ -122,7 +122,7 @@ window.loadFranchiseInquiries = async () => {
 
         const esc = (s) => (s == null ? '' : String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         const langFlag = { ko:'🇰🇷', ja:'🇯🇵', en:'🇺🇸', zh:'🇨🇳', ar:'🇸🇦', es:'🇪🇸', de:'🇩🇪', fr:'🇫🇷' };
-        const expLabel = { none:'경험없음', print:'디지털인쇄', sign:'사인업', retail:'유통', other:'기타' };
+        const expLabel = { none:'경험없음', print:'디지털인쇄', sign:'사인업', retail:'유통', other:'기타', supplier:'🏭 공급사 신청', manufacturer:'🛠️ 제조사 신청' };
         const statusColors = { new:['#fef3c7','#92400e','신규'], contacted:['#dbeafe','#1e40af','연락완료'], qualified:['#d1fae5','#065f46','적격'], rejected:['#fee2e2','#991b1b','거절'], closed:['#f1f5f9','#475569','종결'] };
 
         body.innerHTML = data.map(row => {
