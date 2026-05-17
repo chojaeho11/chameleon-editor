@@ -302,6 +302,7 @@
         <i class="fas fa-check-circle"></i>
         <h2 id="successTitle"></h2>
         <p id="successMsg"></p>
+        <a href="/maker" id="successToMaker" style="display:inline-block;margin-top:18px;padding:13px 30px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:800;font-size:14px;text-decoration:none;"></a>
     </div>
 </div>
 
@@ -375,6 +376,7 @@ const I18N = {
     submitting: {ko:'등록 중...',ja:'登録中...',en:'Submitting...',zh:'提交中...',ar:'جاري التقديم...',es:'Enviando...',de:'Wird gesendet...',fr:'Envoi en cours...'},
     success_title: {ko:'등록이 완료되었습니다!',ja:'登録が完了しました！',en:'Registration Complete!',zh:'注册完成！',ar:'تم التسجيل بنجاح!',es:'Registro completado!',de:'Registrierung abgeschlossen!',fr:'Inscription terminee!'},
     success_msg: {ko:'관리자 확인 후 활성화됩니다. 이메일로 결과를 안내드리겠습니다.',ja:'管理者の確認後に有効化されます。メールで結果をお知らせします。',en:'Your account will be activated after admin review. We will notify you by email.',zh:'管理员审核后将激活您的账户。我们将通过电子邮件通知您结果。',ar:'سيتم تفعيل حسابك بعد مراجعة المسؤول. سنبلغك بالنتيجة عبر البريد الإلكتروني.',es:'Su cuenta se activara tras la revision del administrador. Le notificaremos por correo.',de:'Ihr Konto wird nach Pruefung aktiviert. Wir benachrichtigen Sie per E-Mail.',fr:'Votre compte sera active apres verification. Nous vous informerons par e-mail.'},
+    success_to_maker: {ko:'🛠️ 제조사 관리 페이지로 이동',ja:'🛠️ メーカー管理ページへ',en:'🛠️ Go to manufacturer dashboard',zh:'🛠️ 前往制造商管理页面',ar:'🛠️ لوحة تحكم المصنّع',es:'🛠️ Panel del fabricante',de:'🛠️ Zum Hersteller-Dashboard',fr:'🛠️ Tableau de bord fabricant'},
     error_agree: {ko:'수수료 5% 동의가 필요합니다',ja:'手数料5%への同意が必要です',en:'You must agree to the 5% commission',zh:'您必须同意5%佣金',ar:'يجب الموافقة على عمولة 5%',es:'Debe aceptar la comision del 5%',de:'Sie muessen der 5% Gebuehr zustimmen',fr:'Vous devez accepter la commission de 5%'},
     error_required: {ko:'필수 항목을 모두 입력해주세요',ja:'必須項目をすべて入力してください',en:'Please fill in all required fields',zh:'请填写所有必填字段',ar:'يرجى ملء جميع الحقول المطلوبة',es:'Complete todos los campos obligatorios',de:'Bitte fuellen Sie alle Pflichtfelder aus',fr:'Veuillez remplir tous les champs obligatoires'},
     error_caps: {ko:'최소 1개 이상의 생산 카테고리를 선택해주세요',ja:'少なくとも1つの生産カテゴリを選択してください',en:'Please select at least one production category',zh:'请至少选择一个生产类别',ar:'يرجى اختيار فئة إنتاج واحدة على الأقل',es:'Seleccione al menos una categoria',de:'Bitte wahlen Sie mindestens eine Kategorie',fr:'Veuillez selectionner au moins une categorie'}
@@ -614,6 +616,7 @@ function translatePage() {
     document.getElementById('btnSubmit').textContent = t('submit');
     document.getElementById('successTitle').textContent = t('success_title');
     document.getElementById('successMsg').textContent = t('success_msg');
+    document.getElementById('successToMaker').textContent = t('success_to_maker');
 }
 
 // ===== Auth =====
