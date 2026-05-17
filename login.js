@@ -108,10 +108,10 @@ export function initAuth() {
 
     // 국가별 소셜 로그인 버튼 표시
     const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    // KR: 카카오 표시 (기본), JP: LINE 표시, 해외: Apple 표시
+    // KR: 카카오 표시 (기본), JP: Apple 표시(LINE 숨김), 해외: Apple 표시
     if (country === 'JP') {
         if (btnKakao) btnKakao.style.display = 'none';
-        if (btnLine) btnLine.style.display = 'flex';
+        if (btnLine) btnLine.style.display = 'none';
         if (btnApple) btnApple.style.display = 'flex';
     } else if (country !== 'KR') {
         if (btnKakao) btnKakao.style.display = 'none';
