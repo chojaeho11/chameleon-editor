@@ -413,8 +413,8 @@ export function renderShortcutButtons(containerId) {
             partner_cta: '파트너 등록',
             // ── TOGETHER / franchise banner ──
             tg_word: 'WITH',
-            tg_title: '클릭 몇 번이면 나만의 홈페이지가 쉽게 만들어집니다',
-            tg_sub: '카멜레온프린팅의 모든 제품을 사장님만의 홈페이지에서 판매하세요. 수천만원이 드는 에디터 홈페이지를 월 3만원에.',
+            tg_title: '몇 번의 클릭으로 강력한 에디터를 탑재한 무료 쇼핑몰 제작',
+            tg_sub: '인쇄장비가 있다면 제조사로 등록. 자본이 없어도 괜찮아요. 무료로 내 홈페이지를 만들고 판매하세요.',
             tg_cta: '쇼핑몰 만들기'
         },
         ja: {
@@ -433,8 +433,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'パートナー登録',
             tg_word: 'WITH',
-            tg_title: '数クリックで自分だけのホームページが簡単に完成',
-            tg_sub: 'カメレオンプリンティングの全製品を貴社のホームページで販売。数千万ウォン規模のエディタ付きサイトが月3,000円。',
+            tg_title: '数クリックで強力なエディタ搭載の無料ショップを制作',
+            tg_sub: '印刷設備があればメーカー登録。資本がなくても大丈夫。無料で自分のホームページを作って販売しましょう。',
             tg_cta: 'ショップを作る'
         },
         en: {
@@ -453,8 +453,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Join as Partner',
             tg_word: 'WITH',
-            tg_title: 'Build your own website in just a few clicks',
-            tg_sub: 'Sell Chameleon Printing\'s entire product range on your own site. An editor-powered site worth a fortune — for $30/month.',
+            tg_title: 'Build a free shop with a powerful editor in a few clicks',
+            tg_sub: 'Have printing equipment? Register as a manufacturer. No capital needed — build your free site and start selling.',
             tg_cta: 'Build My Shop'
         },
         zh: {
@@ -473,8 +473,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: '成为合作伙伴',
             tg_word: 'WITH',
-            tg_title: '点击几下，轻松拥有专属官网',
-            tg_sub: '在您专属的官网销售卡米利翁的全部产品。价值数千万的编辑器官网，每月仅¥200。',
+            tg_title: '点击几下，打造搭载强大编辑器的免费商城',
+            tg_sub: '有印刷设备？注册为制造商。没有资本也没关系——免费创建您的网站并开始销售。',
             tg_cta: '创建商城'
         },
         ar: {
@@ -493,8 +493,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'انضم كشريك',
             tg_word: 'WITH',
-            tg_title: 'أنشئ موقعك الخاص ببضع نقرات',
-            tg_sub: 'بِع كامل منتجات كاميليون على موقعك الخاص. موقع بمحرر تصميم بقيمة باهظة — مقابل 30$ شهريًا.',
+            tg_title: 'أنشئ متجرًا مجانيًا بمحرر قوي ببضع نقرات',
+            tg_sub: 'لديك معدات طباعة؟ سجّل كمصنّع. لا حاجة لرأس مال — أنشئ موقعك المجاني وابدأ البيع.',
             tg_cta: 'أنشئ متجرك'
         },
         es: {
@@ -513,8 +513,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Ser Socio',
             tg_word: 'WITH',
-            tg_title: 'Crea tu propia web con unos clics',
-            tg_sub: 'Vende toda la gama de Chameleon Printing en tu propia web. Una web con editor que costaría una fortuna — por 28€/mes.',
+            tg_title: 'Crea una tienda gratis con un editor potente en unos clics',
+            tg_sub: '¿Tiene equipo de impresión? Regístrese como fabricante. Sin capital — cree su sitio gratis y empiece a vender.',
             tg_cta: 'Crear Mi Tienda'
         },
         de: {
@@ -533,8 +533,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Partner werden',
             tg_word: 'WITH',
-            tg_title: 'Erstellen Sie Ihre Website mit wenigen Klicks',
-            tg_sub: 'Verkaufen Sie das gesamte Chameleon-Sortiment auf Ihrer eigenen Website. Eine Editor-Website im Wert von Tausenden — für 28€/Monat.',
+            tg_title: 'Erstellen Sie mit wenigen Klicks einen kostenlosen Shop mit starkem Editor',
+            tg_sub: 'Haben Sie Druckgeräte? Registrieren Sie sich als Hersteller. Kein Kapital nötig — erstellen Sie Ihre kostenlose Website und verkaufen Sie.',
             tg_cta: 'Shop erstellen'
         },
         fr: {
@@ -553,8 +553,8 @@ export function renderShortcutButtons(containerId) {
             partner_desc: '',
             partner_cta: 'Devenir Partenaire',
             tg_word: 'WITH',
-            tg_title: 'Créez votre propre site en quelques clics',
-            tg_sub: 'Vendez toute la gamme de Chameleon Printing sur votre propre site. Un site avec éditeur valant une fortune — pour 28€/mois.',
+            tg_title: 'Créez une boutique gratuite avec un éditeur puissant en quelques clics',
+            tg_sub: 'Vous avez du matériel d\'impression ? Inscrivez-vous comme fabricant. Sans capital — créez votre site gratuit et vendez.',
             tg_cta: 'Créer Ma Boutique'
         }
     };
