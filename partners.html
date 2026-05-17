@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partner Recruitment · Chameleon Printing</title>
+<meta name="description" content="Chameleon Printing global printing-ecosystem partner recruitment — Supplier / Manufacturer / Dropshipper.">
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:linear-gradient(165deg,#0f0a23,#1b1340 55%,#241a52);color:#ece9f7;min-height:100vh;-webkit-text-size-adjust:100%;}
+a{color:inherit;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 90px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;max-width:1080px;margin:0 auto;}
+.brand{font-size:19px;font-weight:900;letter-spacing:-0.3px;}
+.brand .dot{filter:drop-shadow(0 0 8px rgba(168,85,247,0.6));}
+.langsel{display:flex;gap:4px;}
+.langsel button{background:rgba(255,255,255,0.06);border:1px solid rgba(167,139,250,0.25);color:#c4b5fd;font-size:11px;font-weight:800;padding:5px 9px;border-radius:7px;cursor:pointer;}
+.langsel button.on{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+.hero{text-align:center;padding:54px 20px 36px;}
+.hero .eyebrow{display:inline-block;background:rgba(168,85,247,0.16);border:1px solid rgba(168,85,247,0.4);color:#d8b4fe;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;margin-bottom:18px;}
+.hero h1{font-size:38px;font-weight:900;line-height:1.25;letter-spacing:-0.8px;}
+.hero h1 .g{background:linear-gradient(120deg,#c4b5fd,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero p{margin-top:16px;font-size:15px;color:#b9b0e0;line-height:1.7;max-width:680px;margin-left:auto;margin-right:auto;}
+.flow{display:flex;align-items:stretch;gap:10px;justify-content:center;flex-wrap:wrap;margin:34px 0 10px;}
+.flow .step{flex:1;min-width:150px;background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.2);border-radius:14px;padding:16px 14px;text-align:center;}
+.flow .step .n{font-size:11px;font-weight:800;color:#a78bfa;}
+.flow .step .t{font-size:16px;font-weight:900;margin:4px 0 6px;}
+.flow .step .d{font-size:12px;color:#9b94c4;line-height:1.6;}
+.flow .arrow{display:flex;align-items:center;color:#7c6fae;font-size:20px;font-weight:900;}
+.tier{background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.22);border-radius:20px;padding:30px 28px;margin-top:26px;}
+.tier.gold{border-color:rgba(251,191,36,0.4);background:linear-gradient(160deg,rgba(251,191,36,0.07),rgba(255,255,255,0.03));}
+.tier.indigo{border-color:rgba(129,140,248,0.4);}
+.tier-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.tier-badge{font-size:12px;font-weight:900;padding:5px 12px;border-radius:999px;}
+.tier.gold .tier-badge{background:rgba(251,191,36,0.18);color:#fcd34d;border:1px solid rgba(251,191,36,0.45);}
+.tier.indigo .tier-badge{background:rgba(129,140,248,0.18);color:#c7d2fe;border:1px solid rgba(129,140,248,0.45);}
+.tier.sky .tier-badge{background:rgba(56,189,248,0.16);color:#7dd3fc;border:1px solid rgba(56,189,248,0.4);}
+.tier h2{font-size:25px;font-weight:900;letter-spacing:-0.5px;}
+.tier .lead{margin-top:12px;font-size:14px;color:#cdc6ea;line-height:1.75;}
+.tier .req-title{margin-top:20px;font-size:13px;font-weight:800;color:#a78bfa;}
+.tier ul{margin:10px 0 0;padding-left:0;list-style:none;}
+.tier li{font-size:13.5px;color:#d6d0ee;line-height:1.6;padding:7px 0 7px 26px;position:relative;border-top:1px solid rgba(167,139,250,0.1);}
+.tier li:first-child{border-top:none;}
+.tier li::before{content:'✔';position:absolute;left:0;top:7px;color:#a78bfa;font-weight:900;}
+.tier .apply-btn{margin-top:22px;display:inline-flex;align-items:center;gap:8px;border:none;border-radius:12px;padding:14px 30px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;}
+.tier.gold .apply-btn{background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;}
+.tier.indigo .apply-btn{background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;}
+.tier.sky .apply-btn{background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;text-decoration:none;}
+.note{font-size:12px;color:#8b84ad;margin-top:10px;}
+/* form modal */
+.ov{position:fixed;inset:0;background:rgba(8,5,20,0.72);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto;}
+.ov.on{display:flex;}
+.fbox{background:#1b1440;border:1px solid rgba(167,139,250,0.3);border-radius:20px;max-width:500px;width:100%;padding:26px;}
+.fbox h3{font-size:20px;font-weight:900;margin-bottom:4px;}
+.fbox .sub{font-size:13px;color:#9b94c4;margin-bottom:18px;}
+.fld{display:block;margin-bottom:13px;}
+.fld .lb{display:block;font-size:12px;font-weight:700;color:#c4b5fd;margin-bottom:5px;}
+.fld input,.fld select,.fld textarea{width:100%;padding:11px;border:1.5px solid rgba(167,139,250,0.3);border-radius:9px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;font-family:inherit;outline:none;}
+.fld textarea{resize:vertical;}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#a855f7;}
+.fld select option{background:#1b1440;}
+.fbtns{display:flex;gap:8px;margin-top:8px;}
+.fbtns button{flex:1;padding:13px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
+.btn-cancel{background:rgba(255,255,255,0.07);color:#c4b5fd;}
+.btn-submit{background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;}
+.fmsg{font-size:13px;font-weight:700;text-align:center;margin-top:10px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e1b3a;border:1px solid rgba(167,139,250,0.4);color:#ece9f7;padding:13px 22px;border-radius:12px;font-size:13px;font-weight:700;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,0.4);}
+.toast.err{border-color:rgba(239,68,68,0.5);color:#fca5a5;}
+.toast.ok{border-color:rgba(34,197,94,0.5);color:#86efac;}
+@media(max-width:600px){.hero h1{font-size:28px;}.tier{padding:24px 18px;}.flow .arrow{display:none;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot">🦎</span> Chameleon Printing</div>
+  <div class="langsel" id="langSel"></div>
+</div>
+
+<div class="hero">
+  <div class="eyebrow" id="hEyebrow">🌍 글로벌 인쇄 생태계 파트너 모집</div>
+  <h1 id="hTitle"></h1>
+  <p id="hDesc"></p>
+  <div class="flow" id="hFlow"></div>
+</div>
+
+<div class="wrap">
+  <!-- 공급사 -->
+  <div class="tier gold">
+    <div class="tier-head">
+      <span class="tier-badge" id="t1Badge">TIER 1</span>
+      <h2 id="t1Title"></h2>
+    </div>
+    <div class="lead" id="t1Lead"></div>
+    <div class="req-title" id="t1ReqT"></div>
+    <ul id="t1Req"></ul>
+    <button class="apply-btn" id="t1Apply"></button>
+    <div class="note" id="t1Note"></div>
+  </div>
+
+  <!-- 제조사 -->
+  <div class="tier indigo">
+    <div class="tier-head">
+      <span class="tier-badge" id="t2Badge">TIER 2</span>
+      <h2 id="t2Title"></h2>
+    </div>
+    <div class="lead" id="t2Lead"></div>
+    <div class="req-title" id="t2ReqT"></div>
+    <ul id="t2Req"></ul>
+    <button class="apply-btn" id="t2Apply"></button>
+    <div class="note" id="t2Note"></div>
+  </div>
+
+  <!-- 드랍쉬퍼 -->
+  <div class="tier sky">
+    <div class="tier-head">
+      <span class="tier-badge" id="t3Badge">TIER 3</span>
+      <h2 id="t3Title"></h2>
+    </div>
+    <div class="lead" id="t3Lead"></div>
+    <a class="apply-btn" id="t3Apply" href="/franchise-admin"></a>
+    <div class="note" id="t3Note"></div>
+  </div>
+</div>
+
+<!-- 신청 모달 -->
+<div class="ov" id="ov">
+  <div class="fbox">
+    <h3 id="fTitle"></h3>
+    <div class="sub" id="fSub"></div>
+    <label class="fld"><span class="lb" id="lCompany"></span><input type="text" id="fCompany" maxlength="80"></label>
+    <label class="fld"><span class="lb" id="lName"></span><input type="text" id="fName" maxlength="40"></label>
+    <div style="display:flex;gap:10px;">
+      <label class="fld" style="flex:1;"><span class="lb" id="lCountry"></span>
+        <select id="fCountry"></select>
+      </label>
+      <label class="fld" style="flex:1;"><span class="lb" id="lPhone"></span><input type="tel" id="fPhone" maxlength="30"></label>
+    </div>
+    <label class="fld"><span class="lb" id="lEmail"></span><input type="email" id="fEmail" maxlength="80"></label>
+    <!-- 공급사 전용 -->
+    <div id="supFields">
+      <div style="display:flex;gap:10px;">
+        <label class="fld" style="flex:1;"><span class="lb" id="lCorp"></span>
+          <select id="fCorp"></select>
+        </label>
+        <label class="fld" style="flex:1;"><span class="lb" id="lFactory"></span><input type="number" id="fFactory" min="0" placeholder="0"></label>
+      </div>
+    </div>
+    <!-- 제조사 전용 -->
+    <div id="mfgFields">
+      <label class="fld"><span class="lb" id="lBiz"></span>
+        <select id="fBiz"></select>
+      </label>
+    </div>
+    <label class="fld"><span class="lb" id="lDetail"></span><textarea id="fDetail" rows="4"></textarea></label>
+    <div class="fbtns">
+      <button class="btn-cancel" id="fCancel"></button>
+      <button class="btn-submit" id="fSubmit"></button>
+    </div>
+    <div class="fmsg" id="fMsg" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var $ = function(id){ return document.getElementById(id); };
+
+  var DICT = {
+    kr:{
+      eyebrow:'🌍 글로벌 인쇄 생태계 파트너 모집',
+      title:'각 나라에 <span class="g">인쇄 생태계</span>를<br>함께 세울 파트너를 찾습니다',
+      desc:'카멜레온프린팅은 공급사 → 제조사 → 드랍쉬퍼로 이어지는 3단계 인쇄 생태계를 전 세계에 구축합니다. 자재 생산부터 제작, 판매까지 — 사장님의 규모에 맞는 단계로 함께하세요.',
+      flow:[['공급사','자재·장비 생산과 국가 독점 유통'],['제조사','자재를 받아 제작·납품'],['드랍쉬퍼','홈페이지로 판매']],
+      t1Title:'공급사 (Supplier)',
+      t1Lead:'한 국가 전체의 인쇄 생태계를 카멜레온과 함께 구축하는 최상위 파트너입니다. 허니콤보드·인쇄 자재 생산과 장비 유통에 대한 <b>국가 독점권</b>을 가지며, 그 나라의 제조사·드랍쉬퍼에게 자재와 장비를 공급합니다.',
+      t1ReqT:'지원 자격',
+      t1Req:['이미 법인 구조를 갖춘 기업','최소 1,000평 이상의 공장 보유','허니콤보드·자재 생산 또는 장비 유통이 가능한 인프라','해당 국가의 인쇄 생태계 구축에 대한 장기 비전'],
+      t1Apply:'🏭 공급사 신청하기',
+      t1Note:'독점권이 부여되므로 국가별 1개사 선정 — 본사 심사 후 개별 협의로 진행됩니다.',
+      t2Title:'제조사 (Manufacturer)',
+      t2Lead:'공급사로부터 자재를 납품받아 실제 제품을 제작·공급하는 파트너입니다. 필요 시 장비를 구입할 수 있으며, 납품사 역할을 병행할 수 있습니다. <b>재료비 대비 약 50%의 마진</b>으로 운영됩니다.',
+      t2ReqT:'지원 자격',
+      t2Req:['현재 광고사 또는 인쇄회사를 운영 중','제작 설비 보유 (또는 장비 구입 의향)','공급사 자재로 제작·납품 가능','납품사 역할 병행 가능'],
+      t2Apply:'🛠️ 제조사 신청하기',
+      t2Note:'본사 심사 후 해당 국가 공급사와 연결해 드립니다.',
+      t3Title:'드랍쉬퍼 (Dropshipper)',
+      t3Lead:'장비 없이도 시작할 수 있는 단계입니다. 카멜레온의 전 제품을 사장님만의 홈페이지에서 판매하세요. 홈페이지 제작은 <b>무료</b>이며, 마진율도 직접 설정합니다.',
+      t3Apply:'🚀 무료로 홈페이지 만들기',
+      t3Note:'지금 바로 시작할 수 있습니다 — 가입·홈페이지 제작 무료.',
+      fSupTitle:'공급사 신청', fMfgTitle:'제조사 신청',
+      fSupSub:'아래 정보를 남겨주시면 본사 담당자가 연락드립니다.',
+      fMfgSub:'아래 정보를 남겨주시면 본사 담당자가 연락드립니다.',
+      lCompany:'회사명 *', lName:'담당자명 *', lCountry:'국가 *', lPhone:'전화번호', lEmail:'이메일 *',
+      lCorp:'법인 설립 여부', corpOpts:['선택','법인 설립 완료','개인사업자','설립 예정'],
+      lFactory:'공장 규모 (평)',
+      lBiz:'현재 운영 사업', bizOpts:['선택','광고회사','인쇄회사','광고+인쇄','기타'],
+      lDetailSup:'보유 인프라·생산 능력·비전을 적어주세요', lDetailMfg:'보유 장비·제작 가능 품목을 적어주세요',
+      cancel:'취소', submit:'신청 제출',
+      errReq:'회사명·담당자명·이메일을 입력해주세요.', sending:'제출 중…',
+      done:'신청이 접수되었습니다. 본사 담당자가 곧 연락드립니다.', fail:'제출 실패: '
+    },
+    ja:{
+      eyebrow:'🌍 グローバル印刷エコシステム パートナー募集',
+      title:'各国に<span class="g">印刷エコシステム</span>を<br>共に築くパートナーを募集します',
+      desc:'カメレオンプリンティングは サプライヤー → メーカー → ドロップシッパー の3段階の印刷エコシステムを世界中に構築します。資材生産から製作・販売まで、規模に合った段階でご参加ください。',
+      flow:[['サプライヤー','資材・設備の生産と国家独占流通'],['メーカー','資材を受け製作・納品'],['ドロップシッパー','ホームページで販売']],
+      t1Title:'サプライヤー (Supplier)',
+      t1Lead:'一国全体の印刷エコシステムをカメレオンと共に構築する最上位パートナーです。ハニカムボード・印刷資材の生産と設備流通に対する<b>国家独占権</b>を持ち、その国のメーカー・ドロップシッパーへ資材と設備を供給します。',
+      t1ReqT:'応募資格',
+      t1Req:['すでに法人格を有する企業','最低1,000坪以上の工場を保有','ハニカムボード・資材生産または設備流通が可能なインフラ','当該国の印刷エコシステム構築への長期ビジョン'],
+      t1Apply:'🏭 サプライヤーに申請',
+      t1Note:'独占権が付与されるため国ごとに1社選定 — 本社審査後、個別協議で進めます。',
+      t2Title:'メーカー (Manufacturer)',
+      t2Lead:'サプライヤーから資材を納品され、実際の製品を製作・供給するパートナーです。必要に応じて設備を購入でき、納品社の役割も兼ねられます。<b>材料費に対し約50%のマージン</b>で運営します。',
+      t2ReqT:'応募資格',
+      t2Req:['現在、広告会社または印刷会社を運営中','製作設備を保有 (または購入意向)','サプライヤー資材で製作・納品が可能','納品社の役割を兼業可能'],
+      t2Apply:'🛠️ メーカーに申請',
+      t2Note:'本社審査後、当該国のサプライヤーとお繋ぎします。',
+      t3Title:'ドロップシッパー (Dropshipper)',
+      t3Lead:'設備がなくても始められる段階です。カメレオンの全製品をあなたのホームページで販売できます。ホームページ制作は<b>無料</b>、マージン率もご自身で設定します。',
+      t3Apply:'🚀 無料でホームページを作る',
+      t3Note:'今すぐ始められます — 登録・ホームページ制作は無料。',
+      fSupTitle:'サプライヤー申請', fMfgTitle:'メーカー申請',
+      fSupSub:'下記情報をご記入いただければ本社担当者がご連絡します。',
+      fMfgSub:'下記情報をご記入いただければ本社担当者がご連絡します。',
+      lCompany:'会社名 *', lName:'担当者名 *', lCountry:'国 *', lPhone:'電話番号', lEmail:'メール *',
+      lCorp:'法人設立の有無', corpOpts:['選択','法人設立済み','個人事業主','設立予定'],
+      lFactory:'工場規模 (坪)',
+      lBiz:'現在の事業', bizOpts:['選択','広告会社','印刷会社','広告+印刷','その他'],
+      lDetailSup:'保有インフラ・生産能力・ビジョンをご記入ください', lDetailMfg:'保有設備・製作可能品目をご記入ください',
+      cancel:'キャンセル', submit:'申請を送信',
+      errReq:'会社名・担当者名・メールを入力してください。', sending:'送信中…',
+      done:'申請を受け付けました。本社担当者より追ってご連絡します。', fail:'送信失敗: '
+    },
+    en:{
+      eyebrow:'🌍 Global Printing-Ecosystem Partner Recruitment',
+      title:'We’re looking for partners to build a<br><span class="g">printing ecosystem</span> in every country',
+      desc:'Chameleon Printing builds a 3-tier printing ecosystem worldwide: Supplier → Manufacturer → Dropshipper. From raw materials to production to sales — join at the tier that fits your scale.',
+      flow:[['Supplier','Material & equipment production, national distribution'],['Manufacturer','Produces & delivers from materials'],['Dropshipper','Sells via a homepage']],
+      t1Title:'Supplier',
+      t1Lead:'The top-tier partner that builds a country’s entire printing ecosystem with Chameleon. Holds <b>national exclusive rights</b> for honeycomb-board / printing-material production and equipment distribution, and supplies materials and equipment to the manufacturers and dropshippers in that country.',
+      t1ReqT:'Requirements',
+      t1Req:['An established corporation','Owns a factory of at least 1,000 pyeong (~3,300 m²)','Infrastructure for honeycomb-board / material production or equipment distribution','A long-term vision for building the country’s printing ecosystem'],
+      t1Apply:'🏭 Apply as a Supplier',
+      t1Note:'Exclusive rights are granted — one company per country, after HQ review and individual negotiation.',
+      t2Title:'Manufacturer',
+      t2Lead:'A partner that receives materials from the supplier and produces and delivers the actual products. May purchase equipment as needed and can also act as a delivery partner. Operates on roughly a <b>50% margin over material cost</b>.',
+      t2ReqT:'Requirements',
+      t2Req:['Currently runs an advertising or printing company','Owns production equipment (or intends to purchase)','Able to produce & deliver using supplier materials','Can also serve as a delivery partner'],
+      t2Apply:'🛠️ Apply as a Manufacturer',
+      t2Note:'After HQ review we connect you with the supplier in your country.',
+      t3Title:'Dropshipper',
+      t3Lead:'A tier you can start with no equipment. Sell Chameleon’s full product range on your own homepage. Building the homepage is <b>free</b>, and you set your own margin.',
+      t3Apply:'🚀 Create your free homepage',
+      t3Note:'You can start right now — signup and homepage are free.',
+      fSupTitle:'Supplier Application', fMfgTitle:'Manufacturer Application',
+      fSupSub:'Leave your details and an HQ representative will contact you.',
+      fMfgSub:'Leave your details and an HQ representative will contact you.',
+      lCompany:'Company *', lName:'Contact name *', lCountry:'Country *', lPhone:'Phone', lEmail:'Email *',
+      lCorp:'Incorporation status', corpOpts:['Select','Incorporated','Sole proprietor','Planning to incorporate'],
+      lFactory:'Factory size (pyeong)',
+      lBiz:'Current business', bizOpts:['Select','Advertising company','Printing company','Advertising + printing','Other'],
+      lDetailSup:'Describe your infrastructure, production capacity and vision', lDetailMfg:'Describe your equipment and the items you can produce',
+      cancel:'Cancel', submit:'Submit application',
+      errReq:'Please enter company, contact name and email.', sending:'Sending…',
+      done:'Your application has been received. An HQ representative will contact you soon.', fail:'Submission failed: '
+    }
+  };
+  var COUNTRIES = ['Korea','Japan','USA','China','Saudi Arabia','Spain','Germany','France','Other'];
+
+  var LANG = (function(){
+    var p = new URLSearchParams(location.search).get('lang');
+    if (p){ p = p.toLowerCase(); if (p==='ko') p='kr'; }
+    var h = location.hostname || '';
+    var l = p || (h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe2626')>=0?'kr':'en'));
+    return (l==='kr'||l==='ja') ? l : 'en';
+  })();
+  var T = DICT[LANG];
+  var curType = 'supplier';
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function toast(msg, kind){
+    var t = document.createElement('div');
+    t.className = 'toast ' + (kind||'');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 4200);
+  }
+
+  function render(){
+    document.documentElement.lang = (LANG==='kr'?'ko':LANG);
+    $('hEyebrow').textContent = T.eyebrow;
+    $('hTitle').innerHTML = T.title;
+    $('hDesc').textContent = T.desc;
+    $('hFlow').innerHTML = T.flow.map(function(s,i){
+      return (i>0?'<div class="arrow">→</div>':'')
+        + '<div class="step"><div class="n">STEP '+(i+1)+'</div><div class="t">'+esc(s[0])+'</div><div class="d">'+esc(s[1])+'</div></div>';
+    }).join('');
+    $('t1Title').textContent = T.t1Title; $('t1Lead').innerHTML = T.t1Lead;
+    $('t1ReqT').textContent = T.t1ReqT; $('t1Req').innerHTML = T.t1Req.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+    $('t1Apply').textContent = T.t1Apply; $('t1Note').textContent = T.t1Note;
+    $('t2Title').textContent = T.t2Title; $('t2Lead').innerHTML = T.t2Lead;
+    $('t2ReqT').textContent = T.t2ReqT; $('t2Req').innerHTML = T.t2Req.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+    $('t2Apply').textContent = T.t2Apply; $('t2Note').textContent = T.t2Note;
+    $('t3Title').textContent = T.t3Title; $('t3Lead').innerHTML = T.t3Lead;
+    $('t3Apply').textContent = T.t3Apply; $('t3Note').textContent = T.t3Note;
+    $('lCompany').textContent = T.lCompany; $('lName').textContent = T.lName;
+    $('lCountry').textContent = T.lCountry; $('lPhone').textContent = T.lPhone; $('lEmail').textContent = T.lEmail;
+    $('lCorp').textContent = T.lCorp; $('lFactory').textContent = T.lFactory; $('lBiz').textContent = T.lBiz;
+    $('fCancel').textContent = T.cancel; $('fSubmit').textContent = T.submit;
+    $('fCountry').innerHTML = COUNTRIES.map(function(c){return '<option>'+c+'</option>';}).join('');
+    $('fCorp').innerHTML = T.corpOpts.map(function(c){return '<option>'+esc(c)+'</option>';}).join('');
+    $('fBiz').innerHTML = T.bizOpts.map(function(c){return '<option>'+esc(c)+'</option>';}).join('');
+    $('langSel').innerHTML = ['kr','ja','en'].map(function(l){
+      return '<button data-l="'+l+'" class="'+(l===LANG?'on':'')+'">'+({kr:'한국어',ja:'日本語',en:'EN'}[l])+'</button>';
+    }).join('');
+    $('langSel').querySelectorAll('button').forEach(function(b){
+      b.onclick = function(){ location.search = '?lang=' + b.dataset.l; };
+    });
+  }
+
+  function openForm(type){
+    curType = type;
+    var sup = type === 'supplier';
+    $('fTitle').textContent = sup ? T.fSupTitle : T.fMfgTitle;
+    $('fSub').textContent = sup ? T.fSupSub : T.fMfgSub;
+    $('supFields').style.display = sup ? '' : 'none';
+    $('mfgFields').style.display = sup ? 'none' : '';
+    $('lDetail').textContent = sup ? T.lDetailSup : T.lDetailMfg;
+    $('fMsg').style.display = 'none';
+    $('fSubmit').disabled = false;
+    ['fCompany','fName','fPhone','fEmail','fFactory','fDetail'].forEach(function(id){ $(id).value=''; });
+    $('ov').classList.add('on');
+  }
+  function closeForm(){ $('ov').classList.remove('on'); }
+
+  $('t1Apply').onclick = function(){ openForm('supplier'); };
+  $('t2Apply').onclick = function(){ openForm('manufacturer'); };
+  $('fCancel').onclick = closeForm;
+  $('ov').onclick = function(e){ if (e.target === $('ov')) closeForm(); };
+
+  $('fSubmit').onclick = async function(){
+    var company = $('fCompany').value.trim();
+    var name = $('fName').value.trim();
+    var email = $('fEmail').value.trim();
+    if (!company || !name || !email){ toast(T.errReq, 'err'); return; }
+    var sup = curType === 'supplier';
+    var detail = sup
+      ? ('[공급사 신청]\n법인설립: ' + $('fCorp').value + '\n공장규모(평): ' + ($('fFactory').value || '-') + '\n상세: ' + $('fDetail').value.trim())
+      : ('[제조사 신청]\n운영사업: ' + $('fBiz').value + '\n장비/품목: ' + $('fDetail').value.trim());
+    this.disabled = true; this.textContent = T.sending;
+    try {
+      var r = await sb.from('franchise_inquiries').insert({
+        name: name,
+        company: company,
+        country: $('fCountry').value,
+        email: email,
+        phone: $('fPhone').value.trim() || null,
+        experience: curType,          // 'supplier' | 'manufacturer'
+        message: detail,
+        lang_submitted: (LANG==='kr'?'ko':LANG),
+        page_url: location.href,
+        status: 'new'
+      });
+      if (r.error) throw r.error;
+      $('fMsg').textContent = T.done;
+      $('fMsg').style.color = '#86efac';
+      $('fMsg').style.display = 'block';
+      toast(T.done, 'ok');
+      setTimeout(closeForm, 2600);
+    } catch(e){
+      toast(T.fail + (e.message||e), 'err');
+      this.disabled = false; this.textContent = T.submit;
+    }
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

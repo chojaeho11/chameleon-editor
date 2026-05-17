@@ -598,7 +598,7 @@ export default {
             // Skip admin/internal paths
             const skipPaths = ['board', 'mypage', 'success', 'fail', 'partner', 'global_admin', 'driver', 'admin_m_secret_882', 'marketing_bot', 'franchise-admin', 'franchise-hq'];
             // 정적 랜딩 페이지 경로는 동적 prerender 스킵 (정적 HTML이 우선)
-            const STATIC_LANDING_PATHS = ['paper-stand', 'raw-board', 'franchise'];
+            const STATIC_LANDING_PATHS = ['paper-stand', 'raw-board', 'franchise', 'partners'];
             if (!skipPaths.includes(path) && !STATIC_LANDING_PATHS.includes(path)) {
                 // Pages with custom-built HTML (no SPA route → skip Prerender.io)
                 const CUSTOM_LANDING = ['editor'];
@@ -988,6 +988,7 @@ ${hreflangTags('/editor')}
             'franchise': '/franchise.html',
             'franchise-admin': '/franchise_admin.html',
             'franchise-hq': '/franchise_hq.html',
+            'partners': '/partners.html',
             'cotton-print': '/cotton_print.html',
             'cotton-designer': '/cotton_designer.html',
             // 2026-05-12: 도메인 통합 — /fabric 이 패브릭 디자이너의 새 canonical 경로

@@ -211,6 +211,8 @@
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자인 마켓</li>
             <!-- 2026-05-16: '가맹 문의' → '가맹점 정산'(franchise-hq) 로 변경. 출력 파트너 메뉴 제거 -->
             <li class="nav-item" onclick="window.open('/franchise-hq','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-handshake" style="color:#a78bfa;"></i> 🤝 가맹점 정산</li>
+            <!-- 2026-05-17: 공급사·제조사 모집 신청 접수함 (partners.html → franchise_inquiries) -->
+            <li class="nav-item" onclick="showSection('sec-franchise-inquiries', this); if(window.loadFranchiseInquiries) loadFranchiseInquiries();" style="color:#fcd34d;"><i class="fa-solid fa-industry" style="color:#fcd34d;"></i> 🏭 공급사·제조사 신청</li>
             <li class="nav-item" onclick="showSection('sec-cotton-patterns', this); if(window.loadCpPatterns) loadCpPatterns();" style="background:linear-gradient(90deg,#451a03 0%,#78350f 100%); color:#fde047;"><i class="fa-solid fa-shirt" style="color:#fde047;"></i> 🧵 Cotton Print 패턴 마켓</li>
 
             <div class="nav-label">Product & Stock</div>
@@ -671,10 +673,15 @@
 <!-- ===== 가맹점 문의 관리 ===== -->
 <div id="sec-franchise-inquiries" class="section">
     <div class="card" style="margin-bottom:20px;border-left:5px solid #6366f1;">
-        <h3 style="margin-top:0;color:#6366f1;">🤝 가맹 문의 접수함</h3>
-        <p style="font-size:12px;color:#64748b;margin:0 0 10px 0;">franchise.html 페이지에서 접수된 가맹 문의 목록입니다.</p>
+        <h3 style="margin-top:0;color:#6366f1;">🏭 공급사·제조사 신청 접수함</h3>
+        <p style="font-size:12px;color:#64748b;margin:0 0 10px 0;">/partners 페이지에서 접수된 공급사·제조사 파트너 신청 목록입니다. (회사/경험 열에 supplier=공급사 / manufacturer=제조사 표시)</p>
         <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
             <button class="btn btn-outline btn-sm" onclick="loadFranchiseInquiries()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+            <select id="fiFilterType" onchange="loadFranchiseInquiries()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
+                <option value="">전체 구분</option>
+                <option value="supplier">🏭 공급사</option>
+                <option value="manufacturer">🛠️ 제조사</option>
+            </select>
             <select id="fiFilterStatus" onchange="loadFranchiseInquiries()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
                 <option value="">전체 상태</option>
                 <option value="new">신규</option>

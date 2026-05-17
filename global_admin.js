@@ -104,10 +104,12 @@ window.loadFranchiseInquiries = async () => {
 
     const statusFilter = document.getElementById('fiFilterStatus')?.value || '';
     const langFilter = document.getElementById('fiFilterLang')?.value || '';
+    const typeFilter = document.getElementById('fiFilterType')?.value || '';
     try {
         let q = sb.from('franchise_inquiries').select('*').order('created_at', { ascending: false }).limit(500);
         if (statusFilter) q = q.eq('status', statusFilter);
         if (langFilter) q = q.eq('lang_submitted', langFilter);
+        if (typeFilter) q = q.eq('experience', typeFilter);  // 2026-05-17: supplier/manufacturer 구분
         const { data, error } = await q;
         if (error) throw error;
 
