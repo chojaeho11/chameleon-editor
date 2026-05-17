@@ -341,7 +341,8 @@ select option{background:#1d1640;}
       poItem:'제작 품목·내용', poItemPh:'예: 허니콤보드 배너 1800×600', poQty:'수량', poCustName:'고객명', poCustPhone:'고객 연락처', poCustAddr:'설치·배송 주소', poNote:'메모 (선택)',
       poSubmit:'📤 제조사에 발주하기', poErr:'제작 품목을 입력하세요.', poSending:'전송 중…',
       poSent:'발주가 전송되었습니다. 아래 제조사 계좌로 공급가를 선결제해 주세요.', poBankLabel:'공급가 입금 계좌 (제조사)',
-      poMyTitle:'내 발주 내역', poEmpty:'발주 내역이 없습니다.', poStatus:{new:'신규',accepted:'접수됨',making:'제작중',done:'완료'}
+      poMyTitle:'내 발주 내역', poEmpty:'발주 내역이 없습니다.', poStatus:{new:'신규',accepted:'접수됨',making:'제작중',done:'완료'},
+      poPickMfg:'발주할 제조사를 선택하세요 — 위치와 평점을 보고 신뢰할 곳을 고르세요', poRatingNone:'평점 없음', poOrdersN:'발주 {n}건', poSelect:'이 제조사 선택', poChangeMfg:'↺ 제조사 다시 선택', poRate:'평점 남기기', poRated:'평가 완료', poRateDone:'평가가 등록되었습니다'
     },
     ja:{
       adminTitle:'加盟店管理者', loading:'読み込み中…',
@@ -403,7 +404,8 @@ select option{background:#1d1640;}
       poItem:'製作品目・内容', poItemPh:'例: ハニカムボードバナー 1800×600', poQty:'数量', poCustName:'お客様名', poCustPhone:'お客様連絡先', poCustAddr:'施工・配送先', poNote:'メモ (任意)',
       poSubmit:'📤 メーカーに発注', poErr:'製作品目を入力してください。', poSending:'送信中…',
       poSent:'発注を送信しました。下記メーカー口座へ供給価格を前払いしてください。', poBankLabel:'供給価格 振込口座 (メーカー)',
-      poMyTitle:'発注履歴', poEmpty:'発注履歴がありません。', poStatus:{new:'新規',accepted:'受付',making:'製作中',done:'完了'}
+      poMyTitle:'発注履歴', poEmpty:'発注履歴がありません。', poStatus:{new:'新規',accepted:'受付',making:'製作中',done:'完了'},
+      poPickMfg:'発注するメーカーを選択 — 所在地と評価で信頼できる先を選べます', poRatingNone:'評価なし', poOrdersN:'発注 {n}件', poSelect:'このメーカーを選択', poChangeMfg:'↺ メーカーを選び直す', poRate:'評価する', poRated:'評価済み', poRateDone:'評価を登録しました'
     },
     en:{
       adminTitle:'Franchise Admin', loading:'Loading…',
@@ -465,7 +467,8 @@ select option{background:#1d1640;}
       poItem:'Item / details', poItemPh:'e.g. Honeycomb banner 1800×600', poQty:'Qty', poCustName:'Customer name', poCustPhone:'Customer phone', poCustAddr:'Install / delivery address', poNote:'Note (optional)',
       poSubmit:'📤 Send order to manufacturer', poErr:'Enter the item to produce.', poSending:'Sending…',
       poSent:'Order sent. Pre-pay the supply price to the manufacturer account below.', poBankLabel:'Supply-price account (manufacturer)',
-      poMyTitle:'My orders', poEmpty:'No orders yet.', poStatus:{new:'New',accepted:'Accepted',making:'Producing',done:'Done'}
+      poMyTitle:'My orders', poEmpty:'No orders yet.', poStatus:{new:'New',accepted:'Accepted',making:'Producing',done:'Done'},
+      poPickMfg:'Choose a manufacturer — compare location and rating to pick a trusted one', poRatingNone:'No ratings', poOrdersN:'{n} orders', poSelect:'Select', poChangeMfg:'↺ Change manufacturer', poRate:'Rate', poRated:'Rated', poRateDone:'Your rating has been saved'
     }
   };
   var T = DICT[LANG] || DICT.en;
@@ -586,6 +589,33 @@ select option{background:#1d1640;}
     if(/fr|france|프랑스/.test(s))return'FR';
     return (s||'').toUpperCase().slice(0,2)||'KR';
   }
+  function _stars(avg){ var f=Math.max(0,Math.min(5,Math.round(avg))); return '★★★★★'.slice(0,f)+'☆☆☆☆☆'.slice(0,5-f); }
+  async function _poLoadCountryOrders(country){
+    var files=[];
+    try{
+      var lr=await sb.storage.from(LOGO_BUCKET).list('porders/'+country,{limit:400});
+      files=(lr.data||[]).filter(function(f){ return f.name&&f.name.indexOf('.json')>0; });
+    }catch(e){}
+    var out=[];
+    for(var i=0;i<files.length;i++){
+      try{
+        var u=SB_URL+'/storage/v1/object/public/'+LOGO_BUCKET+'/porders/'+country+'/'+encodeURIComponent(files[i].name)+'?_t='+Date.now();
+        var jr=await fetch(u);
+        if(jr.ok){ var o=await jr.json(); o._file=files[i].name; out.push(o); }
+      }catch(e){}
+    }
+    return out;
+  }
+  function _poComputeRstat(){
+    var rstat={};
+    (state._poOrders||[]).forEach(function(o){
+      if(!o.mfg_id) return;
+      rstat[o.mfg_id]=rstat[o.mfg_id]||{sum:0,n:0,orders:0};
+      rstat[o.mfg_id].orders++;
+      if(o.rating>0){ rstat[o.mfg_id].sum+=Number(o.rating); rstat[o.mfg_id].n++; }
+    });
+    state._poRstat=rstat;
+  }
   async function loadMfgOrder(){
     var card=$('cardMfgOrder'), body=$('mfgOrderBody');
     if(!card||!body) return;
@@ -593,17 +623,54 @@ select option{background:#1d1640;}
     if(!fr||!fr.slug){ card.style.display='none'; return; }
     card.style.display='';
     var country=fr.country||'KR';
+    state._poCountry=country;
+    state._mfg=null;
     body.innerHTML='<div style="color:#9b94c4;font-size:13px;">'+T.loadingShort+'</div>';
-    var mfg=null;
+    var mfgs=[];
     try{
       var r=await sb.from('production_partners').select('*').limit(300);
-      var list=(r.data||[]).filter(function(p){ return ctryCode(p.country)===country && (p.status==='active'||p.status==='verified'); });
-      mfg=list[0]||null;
+      mfgs=(r.data||[]).filter(function(p){ return ctryCode(p.country)===country && (p.status==='active'||p.status==='verified'); });
     }catch(e){ console.warn('mfg load',e); }
-    if(!mfg){ body.innerHTML='<div style="color:#9b94c4;font-size:13px;">'+T.poNoMfg+'</div>'; return; }
-    state._mfg=mfg;
+    state._mfgs=mfgs;
+    state._poOrders=await _poLoadCountryOrders(country);
+    _poComputeRstat();
+    if(!mfgs.length){ body.innerHTML='<div style="color:#9b94c4;font-size:13px;">'+T.poNoMfg+'</div>'; return; }
+    if(mfgs.length===1) state._mfg=mfgs[0];
+    renderMfgPick();
+  }
+  function renderMfgPick(){
+    var body=$('mfgOrderBody');
+    if(state._mfg){ renderMfgForm(); return; }
+    var html='<div style="font-size:13px;color:#c4b5fd;font-weight:800;margin-bottom:10px;">'+escA(T.poPickMfg)+'</div>';
+    state._mfgs.forEach(function(m){
+      var rs=(state._poRstat||{})[m.id]||{sum:0,n:0,orders:0};
+      var avg=rs.n?(rs.sum/rs.n):0;
+      var rt=rs.n?('<span style="color:#fbbf24;">'+_stars(avg)+'</span> <b>'+avg.toFixed(1)+'</b>'):('<span style="color:#7c7795;">'+escA(T.poRatingNone)+'</span>');
+      var loc=[m.city,m.country].filter(Boolean).join(', ');
+      html+='<div style="border:1px solid rgba(167,139,250,0.22);border-radius:11px;padding:13px;margin-bottom:8px;">'
+        +'<div style="font-weight:800;font-size:14px;">'+escA(m.company_name||'')+'</div>'
+        +'<div style="font-size:12px;color:#9b94c4;margin-top:4px;">📍 '+escA(loc||'-')+'</div>'
+        +'<div style="font-size:12.5px;margin-top:4px;">'+rt+' <span style="color:#7c7795;font-size:11px;">· '+escA(T.poOrdersN.replace('{n}',rs.orders))+'</span></div>'
+        +'<button class="po-pick btn btn-pri btn-sm" data-mid="'+escA(String(m.id))+'" style="margin-top:9px;">'+escA(T.poSelect)+'</button>'
+        +'</div>';
+    });
+    body.innerHTML=html;
+    body.querySelectorAll('.po-pick').forEach(function(b){
+      b.onclick=function(){ state._mfg=state._mfgs.filter(function(x){return String(x.id)===b.dataset.mid;})[0]; renderMfgPick(); };
+    });
+  }
+  function renderMfgForm(){
+    var body=$('mfgOrderBody'), mfg=state._mfg;
+    var rs=(state._poRstat||{})[mfg.id]||{sum:0,n:0,orders:0};
+    var avg=rs.n?(rs.sum/rs.n):0;
+    var rt=rs.n?('<span style="color:#fbbf24;">'+_stars(avg)+' '+avg.toFixed(1)+'</span>'):('<span style="color:#7c7795;">'+escA(T.poRatingNone)+'</span>');
+    var loc=[mfg.city,mfg.country].filter(Boolean).join(', ');
     body.innerHTML=
-       '<div style="font-size:13px;color:#c4b5fd;margin-bottom:12px;"><b>'+escA(T.poMfgLabel)+':</b> '+escA(mfg.company_name||'')+' ('+escA(mfg.country||'')+')</div>'
+       '<div style="border:1px solid rgba(167,139,250,0.25);border-radius:11px;padding:12px;margin-bottom:14px;">'
+      +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;">'
+      +'<b style="font-size:14px;">'+escA(mfg.company_name||'')+'</b>'
+      +(state._mfgs.length>1?'<button class="btn btn-ghost btn-sm" id="btnPoChangeMfg">'+escA(T.poChangeMfg)+'</button>':'')+'</div>'
+      +'<div style="font-size:12px;color:#9b94c4;margin-top:5px;">📍 '+escA(loc||'-')+' · '+rt+'</div></div>'
       +'<label class="fld"><span class="lb">'+escA(T.poItem)+'</span><input type="text" id="poItem" placeholder="'+escA(T.poItemPh)+'"></label>'
       +'<div class="row2"><label class="fld"><span class="lb">'+escA(T.poQty)+'</span><input type="number" id="poQty" min="1" value="1"></label>'
       +'<label class="fld"><span class="lb">'+escA(T.poCustName)+'</span><input type="text" id="poCustName"></label></div>'
@@ -615,14 +682,15 @@ select option{background:#1d1640;}
       +'<div style="margin-top:20px;font-size:13px;font-weight:800;color:#c4b5fd;">'+escA(T.poMyTitle)+'</div>'
       +'<div id="poMyList" style="margin-top:8px;"></div>';
     $('btnPoSend').onclick=sendPo;
-    loadMyPo();
+    var ch=$('btnPoChangeMfg'); if(ch) ch.onclick=function(){ state._mfg=null; renderMfgPick(); };
+    renderMyPo();
   }
   async function sendPo(){
     var fr=state.franchise, mfg=state._mfg;
     if(!fr||!mfg) return;
     var item=($('poItem').value||'').trim();
     if(!item){ toast(T.poErr,'err'); return; }
-    var country=fr.country||'KR';
+    var country=state._poCountry||fr.country||'KR';
     var btn=$('btnPoSend'); btn.disabled=true; btn.textContent=T.poSending;
     var id='po_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
     var order={ id:id, created:new Date().toISOString(),
@@ -631,7 +699,7 @@ select option{background:#1d1640;}
       item:item, qty:Math.max(1,parseInt($('poQty').value,10)||1),
       note:($('poNote').value||'').trim(),
       cust_name:($('poCustName').value||'').trim(), cust_phone:($('poCustPhone').value||'').trim(), cust_addr:($('poCustAddr').value||'').trim(),
-      status:'new' };
+      status:'new', rating:0 };
     try{
       var blob=new Blob([JSON.stringify(order)],{type:'application/json'});
       var up=await sb.storage.from(LOGO_BUCKET).upload('porders/'+country+'/'+id+'.json',blob,{upsert:true,contentType:'application/json'});
@@ -641,35 +709,52 @@ select option{background:#1d1640;}
         +escA(T.poSent)+'<div style="color:#c4b5fd;font-weight:700;margin-top:8px;">'+escA(T.poBankLabel)+'</div>'+acc+'</div>';
       $('poItem').value=''; $('poNote').value=''; $('poCustName').value=''; $('poCustPhone').value=''; $('poCustAddr').value='';
       toast(T.poSent,'ok');
-      loadMyPo();
+      order._file=id+'.json'; state._poOrders.push(order); _poComputeRstat();
+      renderMyPo();
     }catch(e){ toast((T.saveFail||'')+(e.message||e),'err'); }
     btn.disabled=false; btn.textContent=T.poSubmit;
   }
-  async function loadMyPo(){
+  function renderMyPo(){
     var box=$('poMyList'); if(!box) return;
-    var fr=state.franchise; var country=fr.country||'KR';
-    var files=[];
-    try{
-      var lr=await sb.storage.from(LOGO_BUCKET).list('porders/'+country,{limit:300});
-      files=(lr.data||[]).filter(function(f){ return f.name&&f.name.indexOf('.json')>0; });
-    }catch(e){}
-    var mine=[];
-    for(var i=0;i<files.length;i++){
-      try{
-        var u=SB_URL+'/storage/v1/object/public/'+LOGO_BUCKET+'/porders/'+country+'/'+encodeURIComponent(files[i].name)+'?_t='+Date.now();
-        var jr=await fetch(u);
-        if(jr.ok){ var o=await jr.json(); if(o.drop_slug===fr.slug) mine.push(o); }
-      }catch(e){}
-    }
+    var fr=state.franchise;
+    var mine=(state._poOrders||[]).filter(function(o){ return o.drop_slug===fr.slug; });
     if(!mine.length){ box.innerHTML='<div style="color:#9b94c4;font-size:12px;">'+T.poEmpty+'</div>'; return; }
     mine.sort(function(a,b){ return (b.created||'').localeCompare(a.created||''); });
     box.innerHTML=mine.map(function(o){
       var d=o.created?new Date(o.created).toLocaleDateString():'';
       var st=(T.poStatus&&T.poStatus[o.status])||o.status||'';
+      var rateHtml='';
+      if(o.status==='done'){
+        if(o.rating>0){
+          rateHtml='<div style="margin-top:5px;color:#fbbf24;font-size:13px;">'+_stars(o.rating)+' <span style="color:#7c7795;font-size:11px;">'+escA(T.poRated)+'</span></div>';
+        }else{
+          rateHtml='<div style="margin-top:5px;font-size:13px;"><span style="color:#9b94c4;font-size:11px;">'+escA(T.poRate)+': </span>'
+            +[1,2,3,4,5].map(function(s){ return '<span class="po-rate" data-file="'+escA(o._file||'')+'" data-s="'+s+'" style="cursor:pointer;color:#7c7795;font-size:17px;">★</span>'; }).join('')+'</div>';
+        }
+      }
       return '<div style="border:1px solid rgba(167,139,250,0.18);border-radius:9px;padding:9px 11px;margin-bottom:6px;font-size:12.5px;">'
         +'<b>'+escA(o.item||'')+'</b> ×'+(o.qty||1)+' <span style="color:#9b94c4;">· '+escA(d)+'</span>'
-        +' <span style="float:right;color:#c4b5fd;font-weight:700;">'+escA(st)+'</span></div>';
+        +' <span style="float:right;color:#c4b5fd;font-weight:700;">'+escA(st)+'</span>'
+        +rateHtml+'</div>';
     }).join('');
+    box.querySelectorAll('.po-rate').forEach(function(el){
+      el.onclick=function(){ rateOrder(el.dataset.file, parseInt(el.dataset.s,10)); };
+    });
+  }
+  async function rateOrder(file, score){
+    var country=state._poCountry;
+    var o=(state._poOrders||[]).filter(function(x){return x._file===file;})[0];
+    if(!o||!country) return;
+    o.rating=score;
+    var save={}; Object.keys(o).forEach(function(k){ if(k!=='_file') save[k]=o[k]; });
+    try{
+      var blob=new Blob([JSON.stringify(save)],{type:'application/json'});
+      var up=await sb.storage.from(LOGO_BUCKET).upload('porders/'+country+'/'+file,blob,{upsert:true,contentType:'application/json'});
+      if(up.error) throw up.error;
+      _poComputeRstat();
+      renderMyPo();
+      toast(T.poRateDone,'ok');
+    }catch(e){ o.rating=0; toast((T.saveFail||'')+(e.message||e),'err'); }
   }
 
   // 테스트 계정용 — 보유한 여러 홈페이지 전환 + 새로 만들기
