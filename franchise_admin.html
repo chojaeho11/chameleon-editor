@@ -315,6 +315,7 @@ select option{background:#1d1640;}
       odOrder:'주문', odDate:'주문일', odCust:'고객', odAddr:'배송지', odStatus:'상태', odPay:'결제', odAmount:'주문금액',
       odItems:'[주문 내역]', odNoItems:'내역 없음', itemProduct:'상품',
       frMine:'내 홈페이지', frNew:'+ 새 홈페이지 만들기',
+      frDelete:'🗑 현재 홈페이지 삭제', frDeleteConfirm:"'{n}' 홈페이지를 삭제할까요? 되돌릴 수 없습니다.", frDeleted:'홈페이지가 삭제되었습니다.',
       heroBadgeLabel:'상단 배지 문구', heroBadgeSmall:'— 비워두면 기본 문구가 표시됩니다', heroBadgePh:'✨ 카멜레온프린팅 공식 가맹점',
       heroModeLabel:'상단 배경', heroModeDefault:'기본 (보라 그라데이션)', heroModeColor:'단색 지정', heroModeImage:'이미지 업로드',
       heroColorLabel:'배경 색상', heroImageLabel:'배경 이미지',
@@ -369,6 +370,7 @@ select option{background:#1d1640;}
       odOrder:'注文', odDate:'注文日', odCust:'お客様', odAddr:'お届け先', odStatus:'状態', odPay:'決済', odAmount:'注文金額',
       odItems:'[注文内訳]', odNoItems:'内訳なし', itemProduct:'商品',
       frMine:'マイホームページ', frNew:'+ 新しいホームページを作成',
+      frDelete:'🗑 現在のホームページを削除', frDeleteConfirm:'「{n}」ホームページを削除しますか？元に戻せません。', frDeleted:'ホームページを削除しました。',
       heroBadgeLabel:'上部バッジ文言', heroBadgeSmall:'— 空欄の場合は既定の文言が表示されます', heroBadgePh:'✨ カメレオンプリンティング公式加盟店',
       heroModeLabel:'上部背景', heroModeDefault:'既定 (紫グラデーション)', heroModeColor:'単色を指定', heroModeImage:'画像をアップロード',
       heroColorLabel:'背景色', heroImageLabel:'背景画像',
@@ -423,6 +425,7 @@ select option{background:#1d1640;}
       odOrder:'Order', odDate:'Date', odCust:'Customer', odAddr:'Address', odStatus:'Status', odPay:'Payment', odAmount:'Amount',
       odItems:'[Order items]', odNoItems:'No items', itemProduct:'Item',
       frMine:'My homepage', frNew:'+ Create new homepage',
+      frDelete:'🗑 Delete current homepage', frDeleteConfirm:'Delete the "{n}" homepage? This cannot be undone.', frDeleted:'Homepage deleted.',
       heroBadgeLabel:'Top badge text', heroBadgeSmall:'— leave blank for the default text', heroBadgePh:'✨ Official Chameleon Printing Partner',
       heroModeLabel:'Header background', heroModeDefault:'Default (purple gradient)', heroModeColor:'Solid color', heroModeImage:'Upload image',
       heroColorLabel:'Background color', heroImageLabel:'Background image',
@@ -557,12 +560,28 @@ select option{background:#1d1640;}
       html += '<button class="btn btn-sm ' + (on?'btn-pri':'btn-ghost') + '" data-slug="' + escA(f.slug) + '">' + escA(f.company_name||f.slug) + '</button>';
     });
     html += '<button class="btn btn-sm btn-gold" data-new="1">' + T.frNew + '</button>';
-    html += '</div></div>';
+    html += '</div>';
+    if (cur && cur.id){
+      html += '<div style="margin-top:10px;"><button class="btn btn-sm" id="frDelBtn" style="background:rgba(239,68,68,0.13);color:#f87171;border-color:rgba(239,68,68,0.3);">' + T.frDelete + '</button></div>';
+    }
+    html += '</div>';
     el.innerHTML = html;
     el.style.display='block';
     el.querySelectorAll('button[data-slug]').forEach(function(b){
       b.onclick = function(){ location.href = '/franchise-admin?slug=' + encodeURIComponent(b.dataset.slug); };
     });
+    var delB = el.querySelector('#frDelBtn');
+    if (delB) delB.onclick = async function(){
+      if (!cur || !cur.id) return;
+      if (!confirm(T.frDeleteConfirm.replace('{n}', cur.company_name || cur.slug))) return;
+      delB.disabled = true;
+      try {
+        var r = await sb.from('franchises').delete().eq('id', cur.id);
+        if (r.error) throw r.error;
+        toast(T.frDeleted, 'ok');
+        setTimeout(function(){ location.href = '/franchise-admin'; }, 800);
+      } catch(e){ toast(T.saveFail + (e.message||e), 'err'); delB.disabled = false; }
+    };
     var nb = el.querySelector('button[data-new]');
     if (nb) nb.onclick = function(){
       state.franchise = null;
