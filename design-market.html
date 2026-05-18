@@ -5539,16 +5539,19 @@ async function showMyRequestDetail(requestId) {
                     </div>
                 </div>`;
 
-            // If payment is pending, show pay now button + manual confirm fallback
+            // 결제 대기 — 디자인 마켓 전용 결제 페이지로 이동 (실결제: 카드 PG / 무통장)
             if (_ps === 'pending') {
                 _myDetailFinalHtml += `
                 <div style="padding:14px 16px;background:#fff;border:1.5px dashed #f59e0b;border-radius:12px;text-align:center;margin-bottom:12px;">
                     <div style="font-size:13px;color:#92400e;margin-bottom:10px;font-weight:700;">${LANG==='en'?'Complete payment to start the project':LANG==='ja'?'プロジェクトを開始するには決済を完了してください':'작업을 시작하려면 결제를 완료해주세요'}</div>
-                    <button class="pay-now-btn" onclick="openPaymentModal('${r.id}','${_selBid2.id}',${_selBid2.price},()=>showMyRequestDetail('${r.id}'))"><i class="fa-solid fa-credit-card"></i> ${_p3Label('pay_now_btn')}</button>
-                    <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #fde68a;font-size:11px;color:#92400e;line-height:1.6;">
-                        ${LANG==='en'?'Already paid via the cart but still showing as pending? Click below to manually confirm.':LANG==='ja'?'カートで決済したのにまだ「決済待ち」と表示される場合は下のボタンを押してください。':'카트로 결제했는데 여전히 "결제대기중"으로 보이면 아래 버튼을 눌러 수동으로 확인하세요.'}
-                        <br><button onclick="manualConfirmPayment('${_selBid2.id}','${r.id}')" style="margin-top:8px;background:#fff;border:1.5px solid #f59e0b;color:#92400e;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-check-circle"></i> ${LANG==='en'?'I already paid - confirm':LANG==='ja'?'決済済み - 確認する':'결제 완료 확인'}</button>
-                    </div>
+                    <button class="pay-now-btn" onclick="location.href='/design-pay?bid=${_selBid2.id}&lang=${LANG}'"><i class="fa-solid fa-credit-card"></i> ${_p3Label('pay_now_btn')}</button>
+                </div>`;
+            }
+            // 무통장 입금 — 관리자 입금확인 대기
+            if (_ps === 'bank_pending') {
+                _myDetailFinalHtml += `
+                <div style="padding:14px 16px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;text-align:center;margin-bottom:12px;font-size:13px;color:#92400e;font-weight:700;">
+                    <i class="fa-solid fa-hourglass-half"></i> ${LANG==='en'?'Bank transfer submitted — awaiting admin confirmation. The designer starts once your deposit is confirmed.':LANG==='ja'?'銀行振込を申請しました — 管理者の入金確認待ちです。確認後にデザイナーが作業を開始します。':'무통장 입금 신청 완료 — 관리자 입금확인 대기 중입니다. 입금이 확인되면 디자이너가 작업을 시작합니다.'}
                 </div>`;
             }
 

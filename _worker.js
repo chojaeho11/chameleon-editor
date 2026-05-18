@@ -992,6 +992,7 @@ ${hreflangTags('/editor')}
             'partner-register': '/partner-register.html',
             'partner': '/partner.html',
             'maker': '/maker.html',
+            'design-pay': '/design-pay.html',
             'cotton-print': '/cotton_print.html',
             'cotton-designer': '/cotton_designer.html',
             // 2026-05-12: 도메인 통합 — /fabric 이 패브릭 디자이너의 새 canonical 경로

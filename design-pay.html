@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>디자인 마켓 결제 · Chameleon</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#f1f0f7;color:#1e293b;min-height:100vh;}
+.wrap{max-width:680px;margin:0 auto;padding:24px 16px 80px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.brand{font-size:17px;font-weight:900;color:#7c3aed;}
+.card{background:#fff;border:1px solid #e7e4f3;border-radius:16px;padding:22px;margin-bottom:16px;box-shadow:0 6px 20px rgba(76,29,149,0.06);}
+.card h2{font-size:16px;font-weight:900;margin-bottom:12px;}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:7px 0;border-bottom:1px dashed #ece9f6;}
+.row:last-child{border-bottom:none;}
+.row .k{color:#6b7280;}
+.row .v{font-weight:700;text-align:right;}
+.amt{font-size:30px;font-weight:900;color:#7c3aed;text-align:center;margin:6px 0 2px;}
+.amt-lbl{text-align:center;font-size:12px;color:#9ca3af;margin-bottom:6px;}
+.fld{margin-bottom:12px;}
+.fld label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:5px;}
+.fld input{width:100%;padding:11px;border:1.5px solid #ddd6f3;border-radius:9px;font-size:14px;outline:none;font-family:inherit;}
+.fld input:focus{border-color:#a855f7;}
+.tabs{display:flex;gap:8px;margin-bottom:14px;}
+.tab{flex:1;padding:11px;border:1.5px solid #ddd6f3;background:#fff;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;color:#64748b;}
+.tab.active{border-color:#7c3aed;background:#7c3aed;color:#fff;}
+.btn{width:100%;padding:14px;border:none;border-radius:11px;font-weight:900;font-size:15px;cursor:pointer;font-family:inherit;}
+.btn-pri{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;}
+.btn-ghost{background:#fff;color:#7c3aed;border:1.5px solid #c4b5fd;}
+.btn:disabled{opacity:.55;cursor:default;}
+.bankbox{background:#f8f6ff;border:1px solid #e2dcf6;border-radius:10px;padding:14px;font-size:13px;line-height:2;margin:10px 0;}
+.bankbox .mono{font-family:ui-monospace,Menlo,monospace;font-weight:800;}
+.note{font-size:11px;color:#94a3b8;line-height:1.7;margin-top:10px;}
+.center-msg{max-width:380px;margin:80px auto;text-align:center;}
+.center-msg .ic{font-size:46px;margin-bottom:12px;}
+.center-msg h1{font-size:20px;font-weight:900;margin-bottom:8px;}
+.center-msg p{font-size:14px;color:#64748b;line-height:1.7;margin-bottom:16px;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 20px;border-radius:11px;font-size:13px;font-weight:700;z-index:200;}
+.toast.err{background:#dc2626;}
+.toast.ok{background:#16a34a;}
+.docbox{display:none;}
+@media print{
+  body{background:#fff;}
+  .noprint{display:none !important;}
+  .docbox{display:block;}
+  .wrap{max-width:100%;}
+}
+.doc{border:1px solid #cbd5e1;border-radius:8px;padding:24px;}
+.doc h1{font-size:22px;text-align:center;margin-bottom:18px;letter-spacing:6px;}
+.doc table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}
+.doc td,.doc th{border:1px solid #cbd5e1;padding:8px 10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar noprint">
+    <div class="brand">🎨 <span id="brandTxt">디자인 마켓 결제</span></div>
+    <a href="/design-market" style="font-size:13px;color:#7c3aed;text-decoration:none;" id="backLink">← 디자인 마켓</a>
+  </div>
+  <div id="loadingScreen" style="text-align:center;padding:80px 0;color:#8b85a8;">불러오는 중…</div>
+  <div id="errScreen" style="display:none;"></div>
+  <div id="payScreen" style="display:none;"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+  var sb = supabase.createClient(SB_URL, SB_KEY);
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ===== i18n (kr/ja/en) =====
+  var LANG = (function(){
+    var p = (new URLSearchParams(location.search).get('lang')||'').toLowerCase();
+    if (p==='ko') p='kr'; if (p==='jp') p='ja';
+    if (['kr','ja','en'].indexOf(p)>=0) return p;
+    var h = location.hostname||'';
+    return h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe2626')>=0?'kr':'en');
+  })();
+  var T = ({
+    kr:{ brand:'디자인 마켓 결제', back:'← 디자인 마켓', loading:'불러오는 중…',
+      needLogin:'로그인이 필요합니다', needLoginDesc:'결제를 진행하려면 로그인해 주세요.', goLogin:'로그인하러 가기',
+      notFound:'결제 정보를 찾을 수 없습니다', notFoundDesc:'유효하지 않은 입찰이거나 이미 처리된 결제입니다.',
+      notOwner:'본인 의뢰만 결제할 수 있습니다', notOwnerDesc:'이 의뢰의 작성자 계정으로 로그인해 주세요.',
+      already:'이미 결제가 진행된 건입니다', alreadyDesc:'디자인 마켓에서 진행 상태를 확인해 주세요.',
+      quoteTitle:'견적 내용', request:'의뢰', designer:'디자이너', timeline:'작업 기간',
+      days:'일', amountLbl:'결제 금액', payerTitle:'결제자 정보', payerName:'이름', payerPhone:'연락처',
+      method:'결제 방법', card:'💳 카드 결제', bank:'🏦 무통장 입금',
+      cardNote:'카드 결제 페이지로 이동합니다. 결제가 완료되면 디자이너가 작업을 시작합니다.',
+      cardBtn:'카드로 결제하기', bankNote:'아래 계좌로 입금 후, 입금자 이름을 적어 신청해 주세요. 관리자가 입금을 확인하면 디자이너가 작업을 시작합니다.',
+      depositor:'입금자 이름', depositorPh:'입금하실 분 성함 (주문자와 다를 경우)',
+      bankBtn:'무통장 입금 신청', bankAcc:'입금 계좌',
+      quoteBtn:'📄 견적서 인쇄 / PDF 저장', toMarket:'디자인 마켓으로',
+      bankDone:'무통장 입금 신청이 접수되었습니다', bankDoneDesc:'관리자가 입금을 확인하면 결제완료 처리되고 디자이너에게 작업 시작 신호가 전달됩니다. 입금 확인 전까지는 "입금확인중" 상태로 표시됩니다.',
+      receiptBtn:'🧾 영수증(접수증) 인쇄 / PDF 저장',
+      errName:'이름과 연락처를 입력해 주세요.', errDepositor:'입금자 이름을 입력해 주세요.',
+      docQuote:'견 적 서', docReceipt:'결제 접수증', docNo:'문서번호', docDate:'발행일',
+      docClient:'결제자', docItem:'항목', docAmount:'금액', docMethodBank:'무통장 입금(입금확인 대기)',
+      docIssuer:'발행', processing:'처리 중…' },
+    ja:{ brand:'デザインマーケット決済', back:'← デザインマーケット', loading:'読み込み中…',
+      needLogin:'ログインが必要です', needLoginDesc:'決済を進めるにはログインしてください。', goLogin:'ログインする',
+      notFound:'決済情報が見つかりません', notFoundDesc:'無効な入札か、すでに処理済みの決済です。',
+      notOwner:'ご自身の依頼のみ決済できます', notOwnerDesc:'この依頼の作成者アカウントでログインしてください。',
+      already:'すでに決済が進行中です', alreadyDesc:'デザインマーケットで進行状況をご確認ください。',
+      quoteTitle:'見積内容', request:'依頼', designer:'デザイナー', timeline:'作業期間',
+      days:'日', amountLbl:'決済金額', payerTitle:'決済者情報', payerName:'お名前', payerPhone:'連絡先',
+      method:'お支払い方法', card:'💳 カード決済', bank:'🏦 銀行振込',
+      cardNote:'カード決済ページに移動します。決済完了後、デザイナーが作業を開始します。',
+      cardBtn:'カードで決済', bankNote:'下記口座へお振込後、振込名義をご記入のうえ申請してください。管理者が入金を確認するとデザイナーが作業を開始します。',
+      depositor:'振込名義', depositorPh:'お振込される方のお名前',
+      bankBtn:'銀行振込を申請', bankAcc:'振込先口座',
+      quoteBtn:'📄 見積書を印刷 / PDF保存', toMarket:'デザインマーケットへ',
+      bankDone:'銀行振込の申請を受け付けました', bankDoneDesc:'管理者が入金を確認すると決済完了となり、デザイナーに作業開始の合図が送られます。確認前は「入金確認中」と表示されます。',
+      receiptBtn:'🧾 受付証を印刷 / PDF保存',
+      errName:'お名前と連絡先をご入力ください。', errDepositor:'振込名義をご入力ください。',
+      docQuote:'見 積 書', docReceipt:'決済受付証', docNo:'文書番号', docDate:'発行日',
+      docClient:'決済者', docItem:'項目', docAmount:'金額', docMethodBank:'銀行振込(入金確認待ち)',
+      docIssuer:'発行', processing:'処理中…' },
+    en:{ brand:'Design Market Payment', back:'← Design Market', loading:'Loading…',
+      needLogin:'Login required', needLoginDesc:'Please log in to continue with payment.', goLogin:'Go to login',
+      notFound:'Payment info not found', notFoundDesc:'This bid is invalid or the payment was already processed.',
+      notOwner:'You can only pay for your own request', notOwnerDesc:'Please log in with the account that posted this request.',
+      already:'Payment already in progress', alreadyDesc:'Please check the status in the Design Market.',
+      quoteTitle:'Quotation', request:'Request', designer:'Designer', timeline:'Timeline',
+      days:'days', amountLbl:'Payment amount', payerTitle:'Payer info', payerName:'Name', payerPhone:'Phone',
+      method:'Payment method', card:'💳 Card', bank:'🏦 Bank transfer',
+      cardNote:'You will be taken to the card payment page. Once paid, the designer starts working.',
+      cardBtn:'Pay by card', bankNote:'Transfer to the account below, then submit with the depositor name. The designer starts once an admin confirms your transfer.',
+      depositor:'Depositor name', depositorPh:'Name of the person transferring',
+      bankBtn:'Submit bank transfer', bankAcc:'Bank account',
+      quoteBtn:'📄 Print / Save quotation PDF', toMarket:'Back to Design Market',
+      bankDone:'Bank transfer request received', bankDoneDesc:'Once an admin confirms your transfer, the payment is completed and the designer is notified to start. Until then it shows as "Awaiting deposit confirmation".',
+      receiptBtn:'🧾 Print / Save receipt PDF',
+      errName:'Please enter your name and phone.', errDepositor:'Please enter the depositor name.',
+      docQuote:'QUOTATION', docReceipt:'PAYMENT RECEIPT', docNo:'Doc No.', docDate:'Issued',
+      docClient:'Payer', docItem:'Item', docAmount:'Amount', docMethodBank:'Bank transfer (awaiting confirmation)',
+      docIssuer:'Issued by', processing:'Processing…' }
+  })[LANG];
+
+  var PLATFORM_BANK = { bank:'KB국민은행', account:'123-456-7890123', holder:'(주)카멜레온프린팅' };
+  var CCY = { KR:'₩', JP:'¥', US:'$', CN:'¥', SA:'ر.س', ES:'€', DE:'€', FR:'€' };
+
+  document.documentElement.lang = (LANG==='kr'?'ko':LANG);
+  document.title = T.brand + ' · Chameleon';
+  $('brandTxt').textContent = T.brand;
+  $('backLink').textContent = T.back;
+  $('loadingScreen').textContent = T.loading;
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function toast(m,k){ var t=document.createElement('div'); t.className='toast '+(k||''); t.textContent=m; document.body.appendChild(t); setTimeout(function(){t.remove();},3600); }
+  function show(id){ ['loadingScreen','errScreen','payScreen'].forEach(function(s){ var e=$(s); if(e) e.style.display=(s===id)?'block':'none'; }); }
+  function money(n, country){ var sym = CCY[(country||'KR').toUpperCase()] || '₩'; return sym + (Math.round(Number(n)||0)).toLocaleString(); }
+  function centerMsg(ic,title,desc,btnLabel,btnHref){
+    show('errScreen');
+    $('errScreen').innerHTML = '<div class="center-msg"><div class="ic">'+ic+'</div><h1>'+esc(title)+'</h1><p>'+esc(desc)+'</p>'
+      + (btnLabel ? '<a class="btn btn-pri" style="display:inline-block;text-decoration:none;" href="'+btnHref+'">'+esc(btnLabel)+'</a>' : '') + '</div>';
+  }
+
+  var state = { bid:null, request:null, user:null, country:'KR' };
+
+  async function init(){
+    var bidId = new URLSearchParams(location.search).get('bid');
+    if (!bidId){ centerMsg('🔍', T.notFound, T.notFoundDesc, T.toMarket, '/design-market'); return; }
+
+    var sess = null;
+    try { sess = (await sb.auth.getSession()).data.session; } catch(e){}
+    if (!sess || !sess.user){
+      // 로그인 후 이 결제 페이지로 복귀
+      try { sessionStorage.setItem('_dm_return', location.href); } catch(e){}
+      centerMsg('🔐', T.needLogin, T.needLoginDesc, T.goLogin, '/index.html');
+      return;
+    }
+    state.user = sess.user;
+
+    var br = await sb.from('design_bids')
+      .select('*, designer_profiles:designer_id(display_name, photo_url)')
+      .eq('id', bidId).maybeSingle();
+    if (br.error || !br.data){ centerMsg('🔍', T.notFound, T.notFoundDesc, T.toMarket, '/design-market'); return; }
+    state.bid = br.data;
+
+    // 이미 결제 진행/완료된 건은 차단 (실결제 없는 중복 결제 방지)
+    var ps = state.bid.payment_status;
+    if (ps && ['paid','bank_pending','completed_pending_files','released'].indexOf(ps) >= 0){
+      centerMsg('✅', T.already, T.alreadyDesc, T.toMarket, '/design-market'); return;
+    }
+
+    var rr = await sb.from('design_requests').select('*').eq('id', state.bid.request_id).maybeSingle();
+    if (rr.error || !rr.data){ centerMsg('🔍', T.notFound, T.notFoundDesc, T.toMarket, '/design-market'); return; }
+    state.request = rr.data;
+    state.country = (state.request.country || 'KR').toUpperCase();
+
+    // 본인 의뢰만 결제 가능
+    if (state.request.customer_id && state.request.customer_id !== state.user.id){
+      centerMsg('🚫', T.notOwner, T.notOwnerDesc, T.toMarket, '/design-market'); return;
+    }
+
+    renderPay();
+  }
+
+  function renderPay(){
+    var b = state.bid, r = state.request;
+    var amount = Number(b.price) || 0;
+    var designerName = (b.designer_profiles && b.designer_profiles.display_name) || '-';
+    show('payScreen');
+    $('payScreen').innerHTML =
+      '<div class="card">'
+      +  '<h2>'+esc(T.quoteTitle)+'</h2>'
+      +  '<div class="row"><span class="k">'+esc(T.request)+'</span><span class="v">'+esc(r.title||'-')+'</span></div>'
+      +  '<div class="row"><span class="k">'+esc(T.designer)+'</span><span class="v">'+esc(designerName)+'</span></div>'
+      +  (b.timeline_days?'<div class="row"><span class="k">'+esc(T.timeline)+'</span><span class="v">'+esc(b.timeline_days)+' '+esc(T.days)+'</span></div>':'')
+      +  '<div class="amt-lbl" style="margin-top:10px;">'+esc(T.amountLbl)+'</div>'
+      +  '<div class="amt">'+money(amount, state.country)+'</div>'
+      +  '<button class="btn btn-ghost noprint" style="margin-top:10px;" onclick="window._dmPrintQuote()">'+esc(T.quoteBtn)+'</button>'
+      + '</div>'
+      + '<div class="card noprint">'
+      +  '<h2>'+esc(T.payerTitle)+'</h2>'
+      +  '<div class="fld"><label>'+esc(T.payerName)+'</label><input type="text" id="payName" value="'+esc((state.user.user_metadata&&state.user.user_metadata.name)||'')+'"></div>'
+      +  '<div class="fld"><label>'+esc(T.payerPhone)+'</label><input type="tel" id="payPhone" value="'+esc(r.phone||'')+'"></div>'
+      + '</div>'
+      + '<div class="card noprint">'
+      +  '<h2>'+esc(T.method)+'</h2>'
+      +  '<div class="tabs">'
+      +    '<button class="tab active" id="tabCard" onclick="window._dmTab(\'card\')">'+esc(T.card)+'</button>'
+      +    '<button class="tab" id="tabBank" onclick="window._dmTab(\'bank\')">'+esc(T.bank)+'</button>'
+      +  '</div>'
+      +  '<div id="paneCard">'
+      +    '<div class="note">'+esc(T.cardNote)+'</div>'
+      +    '<button class="btn btn-pri" style="margin-top:12px;" id="btnCard" onclick="window._dmPayCard()">'+esc(T.cardBtn)+'</button>'
+      +  '</div>'
+      +  '<div id="paneBank" style="display:none;">'
+      +    '<div class="bankbox">'
+      +      '<div>'+esc(T.bankAcc)+': <b>'+esc(PLATFORM_BANK.bank)+'</b></div>'
+      +      '<div class="mono">'+esc(PLATFORM_BANK.account)+'</div>'
+      +      '<div>'+esc(PLATFORM_BANK.holder)+'</div>'
+      +      '<div><b>'+money(amount,state.country)+'</b></div>'
+      +    '</div>'
+      +    '<div class="fld"><label>'+esc(T.depositor)+'</label><input type="text" id="payDepositor" placeholder="'+esc(T.depositorPh)+'"></div>'
+      +    '<div class="note">'+esc(T.bankNote)+'</div>'
+      +    '<button class="btn btn-pri" style="margin-top:12px;" id="btnBank" onclick="window._dmPayBank()">'+esc(T.bankBtn)+'</button>'
+      +  '</div>'
+      + '</div>'
+      + '<div class="docbox" id="docBox"></div>';
+  }
+
+  window._dmTab = function(which){
+    $('tabCard').classList.toggle('active', which==='card');
+    $('tabBank').classList.toggle('active', which==='bank');
+    $('paneCard').style.display = which==='card' ? 'block' : 'none';
+    $('paneBank').style.display = which==='bank' ? 'block' : 'none';
+  };
+
+  function _payerInfo(){
+    var name = ($('payName').value||'').trim();
+    var phone = ($('payPhone').value||'').trim();
+    return { name:name, phone:phone };
+  }
+
+  // orders 테이블에 디자인 결제용 주문 행 생성
+  async function _createOrder(method, depositor){
+    var amount = Number(state.bid.price)||0;
+    var p = _payerInfo();
+    var row = {
+      order_date: new Date().toISOString(),
+      manager_name: p.name || '-',
+      phone: p.phone || '',
+      address: 'Design Market',
+      request_note: 'DesignMarket bid#'+state.bid.id+' / '+(state.request.title||''),
+      status: method==='bank' ? '접수됨' : '임시작성',
+      payment_status: method==='bank' ? '입금대기' : '미결제',
+      payment_method: method==='bank' ? '무통장입금' : '카드',
+      depositor_name: method==='bank' ? (depositor||p.name) : null,
+      total_amount: amount,
+      discount_amount: 0,
+      items: [{ name:'디자인 의뢰 결제 — '+(state.request.title||''), price:amount, qty:1,
+                design_bid_id:state.bid.id, design_request_id:state.request.id }],
+      site_code: (state.country==='JP'?'JP':(state.country==='US'?'US':'KR'))
+    };
+    var ins = await sb.from('orders').insert(row).select('id').single();
+    if (ins.error) throw ins.error;
+    return ins.data.id;
+  }
+
+  // ===== 카드 결제 — 실제 PG(cotton_checkout) 로 이동 =====
+  window._dmPayCard = async function(){
+    var p = _payerInfo();
+    if (!p.name || !p.phone){ toast(T.errName,'err'); return; }
+    var btn = $('btnCard'); btn.disabled = true; btn.textContent = T.processing;
+    try {
+      var orderId = await _createOrder('card');
+      // 디자인 입찰을 결제 대기 상태로 표시
+      try { await sb.from('design_bids').update({ status:'selected', payment_status:'pending' }).eq('id', state.bid.id); } catch(e){}
+      // success.html 이 결제 성공 후 이 입찰을 paid 처리하도록 스택에 저장
+      try {
+        var pend = JSON.parse(localStorage.getItem('dm_pending_design_bids')||'[]');
+        pend.push({ bidId: state.bid.id, requestId: state.request.id });
+        localStorage.setItem('dm_pending_design_bids', JSON.stringify(pend));
+      } catch(e){}
+      // 한국=Toss, 해외=Stripe — 메인 결제 시스템 재사용
+      if (state.country==='JP' || state.country==='US'){
+        location.href = '/cotton_stripe_checkout.html?order_id='+orderId+'&lang='+(state.country==='JP'?'ja':'en');
+      } else {
+        location.href = '/cotton_checkout.html?order_id='+orderId;
+      }
+    } catch(e){
+      console.error('[design-pay card]', e);
+      toast((e.message||e), 'err');
+      btn.disabled = false; btn.textContent = T.cardBtn;
+    }
+  };
+
+  // ===== 무통장 입금 — 입금대기 등록, 관리자 확인 대기 =====
+  window._dmPayBank = async function(){
+    var p = _payerInfo();
+    if (!p.name || !p.phone){ toast(T.errName,'err'); return; }
+    var depositor = ($('payDepositor').value||'').trim();
+    if (!depositor){ toast(T.errDepositor,'err'); return; }
+    var btn = $('btnBank'); btn.disabled = true; btn.textContent = T.processing;
+    try {
+      var orderId = await _createOrder('bank', depositor);
+      // 입찰: 입금확인 대기 (관리자 승인 전까지 paid 아님)
+      var up = await sb.from('design_bids').update({
+        status:'selected', payment_status:'bank_pending',
+        bank_depositor: depositor, bank_order_id: orderId
+      }).eq('id', state.bid.id);
+      // bank_depositor/bank_order_id 컬럼이 없으면 payment_status 만이라도 반영
+      if (up.error){
+        await sb.from('design_bids').update({ status:'selected', payment_status:'bank_pending' }).eq('id', state.bid.id);
+      }
+      _renderBankDone(orderId, depositor);
+    } catch(e){
+      console.error('[design-pay bank]', e);
+      toast((e.message||e), 'err');
+      btn.disabled = false; btn.textContent = T.bankBtn;
+    }
+  };
+
+  function _renderBankDone(orderId, depositor){
+    var amount = Number(state.bid.price)||0;
+    show('payScreen');
+    $('payScreen').innerHTML =
+      '<div class="card" style="text-align:center;">'
+      + '<div style="font-size:44px;margin-bottom:8px;">🧾</div>'
+      + '<h2 style="font-size:18px;">'+esc(T.bankDone)+'</h2>'
+      + '<p style="font-size:13px;color:#64748b;line-height:1.8;margin:10px 0 16px;">'+esc(T.bankDoneDesc)+'</p>'
+      + '<div class="row"><span class="k">'+esc(T.request)+'</span><span class="v">'+esc(state.request.title||'-')+'</span></div>'
+      + '<div class="row"><span class="k">'+esc(T.depositor)+'</span><span class="v">'+esc(depositor)+'</span></div>'
+      + '<div class="row"><span class="k">'+esc(T.amountLbl)+'</span><span class="v">'+money(amount,state.country)+'</span></div>'
+      + '<div class="bankbox" style="text-align:left;margin-top:14px;">'
+      +   '<div>'+esc(T.bankAcc)+': <b>'+esc(PLATFORM_BANK.bank)+'</b></div>'
+      +   '<div class="mono">'+esc(PLATFORM_BANK.account)+'</div>'
+      +   '<div>'+esc(PLATFORM_BANK.holder)+'</div>'
+      + '</div>'
+      + '<button class="btn btn-ghost noprint" style="margin-top:14px;" onclick="window._dmPrintReceipt(\''+orderId+'\',\''+esc(depositor)+'\')">'+esc(T.receiptBtn)+'</button>'
+      + '<a class="btn btn-pri noprint" style="margin-top:10px;display:block;text-decoration:none;" href="/design-market">'+esc(T.toMarket)+'</a>'
+      + '</div>'
+      + '<div class="docbox" id="docBox"></div>';
+  }
+
+  // ===== 견적서 / 영수증 인쇄 =====
+  function _docHtml(kind, orderId, depositor){
+    var b = state.bid, r = state.request;
+    var amount = Number(b.price)||0;
+    var designerName = (b.designer_profiles && b.designer_profiles.display_name) || '-';
+    var p = (function(){ try { return _payerInfo(); } catch(e){ return {name:'-'}; } })();
+    var title = kind==='receipt' ? T.docReceipt : T.docQuote;
+    var no = (kind==='receipt'?'DMR-':'DMQ-') + (orderId || b.id);
+    var rows = '<tr><th>'+esc(T.docItem)+'</th><th style="text-align:right;">'+esc(T.docAmount)+'</th></tr>'
+      + '<tr><td>'+esc(r.title||'-')+' / '+esc(T.designer)+': '+esc(designerName)+'</td>'
+      + '<td style="text-align:right;">'+money(amount,state.country)+'</td></tr>'
+      + '<tr><td style="text-align:right;font-weight:800;">Total</td>'
+      + '<td style="text-align:right;font-weight:800;">'+money(amount,state.country)+'</td></tr>';
+    return '<div class="doc"><h1>'+esc(title)+'</h1>'
+      + '<div style="font-size:12px;color:#475569;line-height:1.9;">'
+      +   '<div>'+esc(T.docNo)+': '+esc(no)+'</div>'
+      +   '<div>'+esc(T.docDate)+': '+new Date().toLocaleDateString()+'</div>'
+      +   '<div>'+esc(T.docClient)+': '+esc(p.name||'-')+'</div>'
+      +   (kind==='receipt'?'<div>'+esc(T.method)+': '+esc(T.docMethodBank)+(depositor?' / '+esc(depositor):'')+'</div>':'')
+      + '</div>'
+      + '<table>'+rows+'</table>'
+      + '<div style="margin-top:18px;font-size:12px;color:#475569;">'+esc(T.docIssuer)+': (주)카멜레온프린팅 · Chameleon Printing</div>'
+      + '</div>';
+  }
+  window._dmPrintQuote = function(){ $('docBox').innerHTML = _docHtml('quote'); window.print(); };
+  window._dmPrintReceipt = function(orderId, depositor){ $('docBox').innerHTML = _docHtml('receipt', orderId, depositor); window.print(); };
+
+  init();
+})();
+</script>
+</body>
+</html>

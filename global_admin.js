@@ -79,6 +79,7 @@ window.showSection = (secId, navEl) => {
             break;
         case 'sec-withdrawals': if(window.loadWithdrawals) window.loadWithdrawals(); break;
         case 'sec-design-withdrawals': if(window.loadDesignWithdrawals) window.loadDesignWithdrawals(); break;
+        case 'sec-design-orders': if(window.loadDesignOrders) window.loadDesignOrders(); break;
         case 'sec-tasks': if(window.loadDailyTasks) window.loadDailyTasks(); break;
         case 'sec-live-chat': if(window.lcLoadRooms) window.lcLoadRooms(); if(window.lcLoadQuickReplies) window.lcLoadQuickReplies(); break;
         case 'sec-chatbot': if(window.cbShowTab) window.cbShowTab('knowledge'); break;

@@ -922,6 +922,89 @@ const _DW_COUNTRY_FLAG = {
     SA:'🇸🇦', MA:'🇲🇦', SG:'🇸🇬', VN:'🇻🇳', TH:'🇹🇭'
 };
 
+// ═══ 디자인마켓 주문·결제 관리 ═══
+function _doEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+window.loadDesignOrders = async () => {
+    const tbody = document.getElementById('designOrderListBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">로딩 중...</td></tr>';
+    const statusFilter = document.getElementById('doFilterStatus')?.value || '';
+    try {
+        let q = sb.from('design_bids')
+            .select('id, request_id, designer_id, price, payment_status, status, client_completed_at, final_design_urls, created_at')
+            .not('payment_status', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(150);
+        if (statusFilter) q = q.eq('payment_status', statusFilter);
+        const { data: bids, error } = await q;
+        if (error) throw error;
+        if (!bids || !bids.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">조건에 맞는 주문이 없습니다.</td></tr>';
+            return;
+        }
+        const reqIds = [...new Set(bids.map(b => b.request_id).filter(Boolean))];
+        const desIds = [...new Set(bids.map(b => b.designer_id).filter(Boolean))];
+        const { data: reqs } = await sb.from('design_requests').select('id, title, customer_id').in('id', reqIds);
+        const reqMap = {}; (reqs || []).forEach(r => reqMap[r.id] = r);
+        const custIds = [...new Set((reqs || []).map(r => r.customer_id).filter(Boolean))];
+        const { data: dps } = await sb.from('designer_profiles').select('id, display_name').in('id', desIds);
+        const dpMap = {}; (dps || []).forEach(d => dpMap[d.id] = d);
+        const { data: profs } = await sb.from('profiles').select('id, username, email').in('id', [...custIds, ...desIds]);
+        const profMap = {}; (profs || []).forEach(p => profMap[p.id] = p);
+
+        const pill = (bg, fg, txt) => `<span style="background:${bg};color:${fg};padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;">${txt}</span>`;
+        tbody.innerHTML = '';
+        bids.forEach(b => {
+            const req = reqMap[b.request_id] || {};
+            const cust = profMap[req.customer_id] || {};
+            const des = dpMap[b.designer_id] || profMap[b.designer_id] || {};
+            const custName = cust.username || cust.email || '-';
+            const desName = des.display_name || des.username || '-';
+            const hasFiles = Array.isArray(b.final_design_urls) && b.final_design_urls.length > 0;
+            const ps = b.payment_status;
+            let badge;
+            if (ps === 'bank_pending') badge = pill('#fef3c7', '#92400e', '🟡 입금확인 대기');
+            else if (ps === 'pending') badge = pill('#e0e7ff', '#3730a3', '⏳ 결제 대기');
+            else if (ps === 'paid') badge = b.client_completed_at
+                ? pill('#dbeafe', '#1e40af', '✅ 고객 완료확인 · 시안대기')
+                : pill('#dcfce7', '#166534', '💰 결제완료 · 디자인 진행중');
+            else if (ps === 'completed_pending_files') badge = pill('#dbeafe', '#1e40af', '✅ 고객 완료확인 · 시안대기');
+            else if (ps === 'released') badge = pill('#ede9fe', '#5b21b6', '📦 시안업로드 · 정산완료');
+            else badge = pill('#f1f5f9', '#475569', _doEsc(ps));
+            const sub = hasFiles ? `<div style="font-size:10px;color:#7c3aed;margin-top:3px;">📎 디자이너 시안 ${b.final_design_urls.length}개 업로드됨</div>` : '';
+            let action = '<span style="color:#cbd5e1;">-</span>';
+            if (ps === 'bank_pending') action = `<button class="btn btn-sm" style="background:#16a34a;color:#fff;border:none;" onclick="confirmDesignBankPayment('${b.id}', this)"><i class="fa-solid fa-check"></i> 입금확인</button>`;
+            const dt = b.created_at ? new Date(b.created_at).toLocaleDateString('ko-KR') : '-';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="font-size:11px;">${dt}</td>`
+                + `<td style="font-size:12px;">${_doEsc(req.title || '-')}</td>`
+                + `<td style="font-size:12px;">${_doEsc(custName)}</td>`
+                + `<td style="font-size:12px;">${_doEsc(desName)}</td>`
+                + `<td style="text-align:right;font-size:12px;font-weight:800;">${(Number(b.price) || 0).toLocaleString()}원</td>`
+                + `<td>${badge}${sub}</td>`
+                + `<td style="text-align:center;">${action}</td>`;
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#dc2626;">오류: ${_doEsc(e.message || e)}</td></tr>`;
+    }
+};
+
+window.confirmDesignBankPayment = async (bidId, btn) => {
+    if (!confirm('이 건의 무통장 입금을 확인하고 결제완료 처리할까요?\n결제완료 시 디자이너에게 작업 시작 신호가 전달됩니다.')) return;
+    if (btn) btn.disabled = true;
+    try {
+        const { error } = await sb.from('design_bids').update({ payment_status: 'paid' }).eq('id', bidId);
+        if (error) throw error;
+        alert('입금 확인 완료 — 결제완료 처리되었습니다.');
+        loadDesignOrders();
+    } catch (e) {
+        alert('처리 실패: ' + (e.message || e));
+        if (btn) btn.disabled = false;
+    }
+};
+
 window.loadDesignWithdrawals = async () => {
     const tbody = document.getElementById('designWithdrawalListBody');
     if (!tbody) return;
