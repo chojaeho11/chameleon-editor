@@ -1739,6 +1739,17 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         let pdfPrice = item.product.price;
         let pdfOptionLabel = TEXT.opt_default;
 
+        // ★ 2026-05-18: 면적가(현수막 등)·박스·자유인쇄커팅은 카트에 저장된 실제 산출 단가를 사용.
+        //    item.product.price 는 m² 단가/기본가라 그대로 쓰면 견적서 금액이 결제 금액과 어긋남.
+        if (item.cutPrint) {
+            pdfPrice = (item.cutPrint.size === 'half') ? 100000 : 150000;
+        } else if (item.boxSize && typeof item.boxSize.unit === 'number') {
+            pdfPrice = item.boxSize.unit;
+        } else if (item.customSize && typeof item.customSize.unit === 'number') {
+            pdfPrice = item.customSize.unit;
+        }
+        if (item.rawBoardDouble) pdfPrice = pdfPrice * 2;
+
         // ★ 가벽: 벽면 상세 표시 (extraFields 또는 product 내부에서 읽기)
         const _wallPanelsList = item._wallPanels || (item.product && item.product._wallPanels) || null;
         const _hasWallPanels = _wallPanelsList && _wallPanelsList.length > 0;
