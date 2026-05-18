@@ -1189,6 +1189,13 @@
         </div>
       </div>
 
+      <!-- 2026-05-18: 무통장 입금 — 입금자 이름 (주문자와 다를 수 있어 별도 입력) -->
+      <div class="so-co-section" id="soCoDepositorBox" style="display:none;">
+        <span class="so-co-label">🧾 ${tr('입금자 이름', '振込名義', 'Depositor name')}</span>
+        <input type="text" id="soCoDepositor" class="so-co-input" placeholder="${tr('입금하실 분 성함 (미입력 시 주문자명으로 처리)', 'お振込される方のお名前 (未入力時は注文者名)', 'Name on the bank transfer (defaults to orderer)')}">
+        <span style="font-size:11px; color:#ef4444; margin-top:4px; display:block;">${tr('* 입금자명이 주문자명과 다르면 꼭 입력해주세요. 입금 확인이 빨라집니다.', '* 振込名義が注文者名と異なる場合は必ずご記入ください。', '* Enter this if the depositor differs from the orderer — it speeds up payment confirmation.')}</span>
+      </div>
+
       <!-- 2026-05-14: 무통장 입금 — 증빙 서류 선택 (KR 전용, 세금계산서/현금영수증) -->
       <div class="so-co-section" id="soCoReceiptBox">
         <span class="so-co-label">📄 ${tr('증빙 서류 선택 (선택)', '証憑書類選択 (任意)', 'Tax document (optional)')}</span>
@@ -4482,10 +4489,12 @@
     window._soOnPayMethodChange = function () {
         var pay = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'bank';
         var box = document.getElementById('soCoReceiptBox');
-        if (!box) return;
         // 한국만 노출 (해외는 카드 결제만 사용 → 증빙 메뉴 자체 숨김)
         var isKR = (window.__SITE_CODE || 'KR') === 'KR';
-        box.style.display = (pay === 'bank' && isKR) ? '' : 'none';
+        if (box) box.style.display = (pay === 'bank' && isKR) ? '' : 'none';
+        // 입금자 이름 — 무통장 입금이면 표시 (가맹점 해외 계좌이체 포함)
+        var depBox = document.getElementById('soCoDepositorBox');
+        if (depBox) depBox.style.display = (pay === 'bank') ? '' : 'none';
     };
 
     // 2026-05-14: 증빙 타입 토글 (세금계산서 / 현금영수증 입력 폼 표시)
@@ -4717,10 +4726,14 @@
 
         // 2026-05-14: 무통장 입금 + KR 한정으로 증빙 정보 수집 (선택)
         var receiptInfo = null;
+        // 2026-05-18: 무통장 입금자 이름 (주문자명과 다를 수 있음) — 미입력 시 주문자명 사용
+        var depositorName = '';
         if (payMethod === 'bank') {
             var collected = _soCollectReceiptInfo();
             if (collected === false) return; // 필수 미입력 → 사용자에게 알림 후 중단
             if (collected && collected.type && collected.type !== 'none') receiptInfo = collected;
+            var _depEl = document.getElementById('soCoDepositor');
+            depositorName = (_depEl && _depEl.value || '').trim() || name;
         }
 
         var cart = _soReadAllCart();
@@ -4947,6 +4960,7 @@
                 status: payMethod === 'bank' ? '접수됨' : '임시작성',
                 payment_status: payMethod === 'bank' ? '입금대기' : '미결제',
                 payment_method: payMethod === 'bank' ? '무통장입금' : '카드',
+                depositor_name: payMethod === 'bank' ? depositorName : null,
                 total_amount: total,
                 discount_amount: 0,
                 items: items,
@@ -4972,6 +4986,7 @@
                     payment_method: orderRow.payment_method
                 };
                 if (receiptInfo) updateRow.receipt_info = receiptInfo;
+                if (payMethod === 'bank') updateRow.depositor_name = depositorName;
                 var upRes = await sb.from('orders').update(updateRow).eq('id', pendingId).select().single();
                 insertedOrder = upRes.data; insertErr = upRes.error;
                 if (insertErr) throw insertErr;
