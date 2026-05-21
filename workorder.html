@@ -310,7 +310,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const dashIdx = productName.indexOf(' — ');
                 productName = koName + (dashIdx >= 0 ? productName.slice(dashIdx) : '');
             }
-            // 2) 원단(패브릭) 항목 — fabricType 기반 KR 명 + 색상
+            // 2) 원단(패브릭) 항목 — fabricType 기반 KR 명 + 색상 (장바구니 단계)
             if (it.fabricType && FABRIC_KO[it.fabricType]) {
                 let base = FABRIC_KO[it.fabricType];
                 if (it.fabricColor && FABRIC_COLOR_KO[it.fabricColor]) base += ' (' + FABRIC_COLOR_KO[it.fabricColor] + ')';
@@ -318,14 +318,31 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const dashIdx = productName.indexOf(' — ');
                 productName = base + (dashIdx >= 0 ? productName.slice(dashIdx) : '');
             }
+            // 3) 원단 (저장된 주문 cotton-print 소스) — product_code 'cotton20_white' 파싱
+            if (it.source === 'cotton-print' && it.product_code) {
+                const _parts = String(it.product_code).split('_');
+                const _ftype = _parts[0];
+                if (FABRIC_KO[_ftype]) {
+                    let base = FABRIC_KO[_ftype];
+                    if (_parts[1] && FABRIC_COLOR_KO[_parts[1]]) base += ' (' + FABRIC_COLOR_KO[_parts[1]] + ')';
+                    else if (_parts[1]) base += ' (' + _parts[1] + ')';
+                    const dashIdx = productName.indexOf(' — ');
+                    productName = base + (dashIdx >= 0 ? productName.slice(dashIdx) : '');
+                }
+            }
             const wMm = product.w_mm || product.width_mm || it.width || 0;
             const hMm = product.h_mm || product.height_mm || it.height || 0;
             const qty = it.qty || 1;
             const unit = product.price || it.price || 0;
             const lineTotal = it.price || (unit * qty);
 
-            // 썸네일 — fallback chain (패브릭 디자이너는 thumbDataUrl/imgDataUrl 사용)
-            let thumbUrl = it.thumb || it.thumbDataUrl || it.originalUrl || it.imgDataUrl || '';
+            // 썸네일 — fallback chain
+            // 일반 주문: thumb / originalUrl / uploadedFiles
+            // 패브릭(cotton-print): artwork_url / pattern_spec.artwork_url / cartImageUrl
+            // 패브릭 카트 단계: thumbDataUrl / imgDataUrl (base64)
+            let thumbUrl = it.thumb || it.thumbDataUrl || it.originalUrl || it.imgDataUrl
+                        || it.artwork_url || it.cartImageUrl || it.designerOriginalUrl
+                        || (it.pattern_spec && it.pattern_spec.artwork_url) || '';
             if (!thumbUrl && it.uploadedFiles && it.uploadedFiles[0]) {
                 const uf = it.uploadedFiles[0];
                 thumbUrl = uf.thumb || uf.originalUrl || uf.url || '';
