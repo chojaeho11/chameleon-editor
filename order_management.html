@@ -277,6 +277,7 @@ window.showSection = function(){};
                     <!-- 2026-05-14: 모달 기반 직접 입력은 폐기 — 매니저는 홈 → 카트 → 결제창에서 '고객 결제창 만들어주기' 버튼 사용 -->
                     <!-- 기존 매니저견적 주문의 '✏ 수정' 버튼은 주문번호 컬럼에서 그대로 사용 가능 -->
                     <button class="btn btn-outline" onclick="document.getElementById('recoveryPanel').style.display=document.getElementById('recoveryPanel').style.display==='none'?'block':'none'" style="font-weight:600; font-size:12px;">🔧 문서복구</button>
+                    <button class="btn btn-outline" onclick="(function(){var p=document.getElementById('stripeRecoveryPanel');p.style.display=p.style.display==='none'?'block':'none';})()" style="font-weight:600; font-size:12px; background:#f5f3ff; color:#7c3aed; border-color:#c4b5fd;">💳 Stripe 주문복구</button>
                     <button class="btn btn-outline" onclick="refreshDriveColors(this)" style="font-weight:600; font-size:12px;" title="고객주문 폴더에 수동으로 파일 추가했을 때 색상 갱신">🎨 Drive 색상 갱신</button>
                     <button id="autoDownloadBtn" class="btn btn-outline" onclick="toggleAutoDownload()" style="font-weight:600; font-size:12px;">📥 자동다운 OFF</button>
                     <span id="autoDownloadStatus" style="font-size:11px; color:#64748b; display:none;"></span>
@@ -288,6 +289,29 @@ window.showSection = function(){};
                         <button class="btn btn-primary btn-sm" onclick="recoverMissingDocs()" style="font-weight:700;">일괄 복구 실행</button>
                     </div>
                     <div id="recoveryLog" style="max-height:200px; overflow-y:auto; font-size:12px; color:#78350f; font-family:monospace; background:#fef3c7; padding:8px; border-radius:4px;"></div>
+                </div>
+
+                <!-- 2026-05-21: Stripe 결제완료 미반영 주문 복구 — 전용 패널 (문서복구와 분리) -->
+                <div id="stripeRecoveryPanel" style="display:none; background:#faf5ff; border:1.5px solid #c4b5fd; padding:14px 18px; border-radius:8px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+                        <span style="font-weight:800; color:#5b21b6; font-size:14px;">💳 Stripe 결제완료 미반영 주문 복구</span>
+                        <input type="number" id="stripeRecoverDays" value="3" min="1" max="365" style="width:60px; padding:5px 7px; border:1px solid #c4b5fd; border-radius:4px; font-size:13px;">
+                        <span style="font-size:12px; color:#5b21b6;">일 이내</span>
+                        <select id="stripeRecoverSite" style="padding:5px 7px; border:1px solid #c4b5fd; border-radius:4px; font-size:13px;">
+                            <option value="JP" selected>🇯🇵 JP (일본)</option>
+                            <option value="US">🇺🇸 US (미국)</option>
+                            <option value="">🌏 전체 사이트</option>
+                            <option value="KR">🇰🇷 KR (한국)</option>
+                            <option value="__fr__">🏬 가맹점만</option>
+                        </select>
+                        <button class="btn btn-sm" onclick="loadStripeStuckOrders()" style="background:#7c3aed; color:#fff; font-weight:800; padding:7px 14px; font-size:13px;">🔍 누락 주문 찾기</button>
+                        <a href="https://dashboard.stripe.com/payments" target="_blank" style="font-size:12px; color:#7c3aed; text-decoration:underline; font-weight:700;">↗ Stripe 대시보드</a>
+                    </div>
+                    <p style="font-size:12px; color:#5b21b6; line-height:1.7; margin:0 0 10px; background:#ede9fe; padding:8px 12px; border-radius:6px;">
+                        <b>일본/미국/가맹점 해외 PG 결제는 success.html 을 거치지 않아 '임시작성' 상태로 남을 수 있습니다.</b><br>
+                        ① [🔍 누락 주문 찾기] 클릭 → ② [↗ Stripe 대시보드] 에서 실제 결제 성공 여부 확인 → ③ 매칭되는 건만 [✅ 결제완료 처리] 클릭.
+                    </p>
+                    <div id="stripeRecoveryList" style="font-size:12px; background:#fff; border:1px solid #ddd6fe; border-radius:6px; padding:4px;"></div>
                 </div>
                 <div id="excelExportRow" style="display:none;" class="toolbar-row">
                     <span style="font-weight:700;font-size:14px;">매출정산 엑셀:</span>
