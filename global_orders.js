@@ -3243,6 +3243,17 @@ async function generateRecoveryOrderSheet(order, addonDB) {
     return doc.output('blob');
 }
 
+// ───── 국가별 빠른 검색 버튼 ─────
+window.setCountryQuick = function(value, btn){
+    var sel = document.getElementById('filterSite');
+    if (sel) sel.value = value;
+    document.querySelectorAll('#countryQuickBar .cq-btn').forEach(function(b){
+        b.classList.toggle('cq-active', b === btn);
+    });
+    if (typeof window.resetPage === 'function') window.resetPage();
+    if (typeof window.loadOrders === 'function') window.loadOrders();
+};
+
 // ───── Stripe 결제완료 미반영 주문 복구 ─────
 // JP/US/가맹점 해외PG 주문이 cotton-print.com 으로 리다이렉트되어 success.html 을
 // 거치지 않은 결과 '임시작성' 으로 남은 건들을 관리자가 수동 확인 후 복구.
