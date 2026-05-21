@@ -293,14 +293,30 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             } catch (e) { console.warn('[workorder] product KR name lookup failed:', e); }
         }
 
+        // 2026-05-22: 패브릭(원단) 항목은 admin_products 에 없고 cotton_designer.js 의 FABRIC_TYPES 에만 정의됨.
+        // 작업지시서는 KR 명으로 표기하기 위해 동일 맵을 여기 복제.
+        const FABRIC_KO = {
+            cotton20: '면20수 평직', cotton30: '면30수 평직', cotton16: '면16수 평직', cotton10: '면10수 평직',
+            chiffon: '쉬폰', oxford: '옥스포드', rayon: '레이온/인견', linen: '린넨'
+        };
+        const FABRIC_COLOR_KO = { white: '화이트', natural: '네츄럴', ivory: '백아이보리' };
+
         list.innerHTML = items.map((it, i) => {
             const product = it.product || {};
-            let productName = product.name || it.productName || it.product_name || '상품';
-            // 한글 제품명이 있으면 교체 — 원본 이름의 " — <파일ID>" 같은 접미사는 보존
+            let productName = product.name || it.productName || it.product_name || it.title || it.fabricName || '상품';
+            // 1) admin_products 한글명 (일반 상품)
             const koName = productKoNameMap[product.code || it.product_code];
             if (koName) {
                 const dashIdx = productName.indexOf(' — ');
                 productName = koName + (dashIdx >= 0 ? productName.slice(dashIdx) : '');
+            }
+            // 2) 원단(패브릭) 항목 — fabricType 기반 KR 명 + 색상
+            if (it.fabricType && FABRIC_KO[it.fabricType]) {
+                let base = FABRIC_KO[it.fabricType];
+                if (it.fabricColor && FABRIC_COLOR_KO[it.fabricColor]) base += ' (' + FABRIC_COLOR_KO[it.fabricColor] + ')';
+                else if (it.fabricColor) base += ' (' + it.fabricColor + ')';
+                const dashIdx = productName.indexOf(' — ');
+                productName = base + (dashIdx >= 0 ? productName.slice(dashIdx) : '');
             }
             const wMm = product.w_mm || product.width_mm || it.width || 0;
             const hMm = product.h_mm || product.height_mm || it.height || 0;
@@ -308,8 +324,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             const unit = product.price || it.price || 0;
             const lineTotal = it.price || (unit * qty);
 
-            // 썸네일 — fallback chain: thumb → originalUrl → uploadedFiles[0] → order.files[i]
-            let thumbUrl = it.thumb || it.originalUrl || '';
+            // 썸네일 — fallback chain (패브릭 디자이너는 thumbDataUrl/imgDataUrl 사용)
+            let thumbUrl = it.thumb || it.thumbDataUrl || it.originalUrl || it.imgDataUrl || '';
             if (!thumbUrl && it.uploadedFiles && it.uploadedFiles[0]) {
                 const uf = it.uploadedFiles[0];
                 thumbUrl = uf.thumb || uf.originalUrl || uf.url || '';
