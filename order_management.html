@@ -288,17 +288,15 @@ window.showSection = function(){};
                     <div id="action-buttons" style="margin-left:auto; display:flex; gap:6px;"></div>
                 </div>
 
-                <!-- 2026-05-22: 국가별 빠른 검색 버튼 -->
+                <!-- 2026-05-22: 국가별 빠른 검색 버튼 (통합) -->
                 <div id="countryQuickBar" style="display:flex; gap:6px; flex-wrap:wrap; padding:8px 0; align-items:center;">
                     <span style="font-size:12px; font-weight:700; color:#475569; margin-right:4px;">🌏 국가별 검색:</span>
                     <button class="cq-btn cq-active" data-v="all" onclick="setCountryQuick('all', this)">🌏 전체</button>
                     <button class="cq-btn" data-v="KR" onclick="setCountryQuick('KR', this)">🇰🇷 한국</button>
-                    <button class="cq-btn" data-v="JP" onclick="setCountryQuick('JP', this)">🇯🇵 일본 (라벨)</button>
-                    <button class="cq-btn" data-v="__jp_text__" onclick="setCountryQuick('__jp_text__', this)">🇯🇵 일본어 이름</button>
-                    <button class="cq-btn" data-v="US" onclick="setCountryQuick('US', this)">🇺🇸 미국 (라벨)</button>
-                    <button class="cq-btn" data-v="__en_text__" onclick="setCountryQuick('__en_text__', this)">🇺🇸 영문 이름</button>
-                    <button class="cq-btn" data-v="__overseas_text__" onclick="setCountryQuick('__overseas_text__', this)" style="background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border-color:#7c3aed;">🌐 해외 주문 전체</button>
-                    <button class="cq-btn" data-v="__overseas__" onclick="setCountryQuick('__overseas__', this)">🌐 해외 라벨만</button>
+                    <button class="cq-btn" data-v="__jp__" onclick="setCountryQuick('__jp__', this)">🇯🇵 일본</button>
+                    <button class="cq-btn" data-v="__us__" onclick="setCountryQuick('__us__', this)">🇺🇸 미국</button>
+                    <button class="cq-btn" data-v="__overseas_pay__" onclick="setCountryQuick('__overseas_pay__', this)" style="background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border-color:#7c3aed;">🌐 해외 결제 (Stripe)</button>
+                    <button class="cq-btn" data-v="__fr__" onclick="setCountryQuick('__fr__', this)" style="background:#ede9fe; color:#5b21b6; border-color:#c4b5fd;">🏬 가맹점</button>
                 </div>
                 <style>
                     .cq-btn{padding:7px 13px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; border-radius:999px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s;}
@@ -319,7 +317,7 @@ window.showSection = function(){};
                 <div id="stripeRecoveryPanel" style="display:none; background:#faf5ff; border:1.5px solid #c4b5fd; padding:14px 18px; border-radius:8px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
                         <span style="font-weight:800; color:#5b21b6; font-size:14px;">💳 Stripe 결제완료 미반영 주문 복구</span>
-                        <input type="number" id="stripeRecoverDays" value="3" min="1" max="365" style="width:60px; padding:5px 7px; border:1px solid #c4b5fd; border-radius:4px; font-size:13px;">
+                        <input type="number" id="stripeRecoverDays" value="14" min="1" max="365" style="width:60px; padding:5px 7px; border:1px solid #c4b5fd; border-radius:4px; font-size:13px;">
                         <span style="font-size:12px; color:#5b21b6;">일 이내</span>
                         <select id="stripeRecoverSite" style="padding:5px 7px; border:1px solid #c4b5fd; border-radius:4px; font-size:13px;">
                             <option value="__overseas_text__" selected>🌐 해외 주문 전체 (감지)</option>

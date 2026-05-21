@@ -1743,20 +1743,21 @@ window.loadOrders = async () => {
                 query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%`);
             }
         }
-        // 국가별 필터 — 옛 simple_order.js 버그로 모든 주문이 KR 로 저장되어 있어
-        // 이름·연락처·site_code 를 함께 보고 해외 주문을 찾을 수 있게 다중 모드 지원
-        if (siteFilter === '__jp_text__') {
-            // 일본어 문자(히라가나/가타카나/한자) 이름/주소/입금자
-            query = query.or('manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯],depositor_name.match.[ぁ-ヿ一-龯]');
-        } else if (siteFilter === '__en_text__') {
-            // 영문 이름 — Latin 알파벳으로 시작하고 한글 없음
-            query = query.filter('manager_name', 'match', '^[A-Za-z][^가-힣]*$');
-        } else if (siteFilter === '__overseas__') {
-            // site_code 가 해외 (JP/US/CN/SA/ES/DE/FR)
-            query = query.in('site_code', ['JP', 'US', 'CN', 'SA', 'ES', 'DE', 'FR']);
-        } else if (siteFilter === '__overseas_text__') {
-            // 해외 site_code 또는 일본어/영문 이름이 포함된 주문 (KR 로 잘못 저장된 해외 주문 포함)
-            query = query.or('site_code.in.(JP,US,CN,SA,ES,DE,FR),manager_name.match.[ぁ-ヿ一-龯],manager_name.match.^[A-Za-z][^가-힣]*$');
+        // 국가별 필터 — 라벨(site_code) + 이름 감지 + 결제수단을 통합해 한 버튼으로 처리.
+        // 사유: 옛 simple_order.js 버그로 해외 주문도 site_code='KR' 로 저장됐고,
+        //       Stripe 결제는 본질적으로 해외 결제이므로 같이 묶음.
+        if (siteFilter === '__jp__' || siteFilter === '__jp_text__') {
+            // 일본: site_code=JP 또는 일본어 이름/주소
+            query = query.or('site_code.eq.JP,manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯]');
+        } else if (siteFilter === '__us__' || siteFilter === '__en_text__') {
+            // 미국: site_code=US 또는 영문 이름
+            query = query.or('site_code.eq.US,manager_name.match.^[A-Za-z][^가-힣]*$');
+        } else if (siteFilter === '__overseas_pay__' || siteFilter === '__overseas_text__' || siteFilter === '__overseas__') {
+            // 해외 결제 = Stripe 결제 또는 해외 site_code 또는 일본어/영문 이름 (가맹점 제외하지 않음)
+            query = query.or('payment_method.ilike.*Stripe*,site_code.in.(JP,US,CN,SA,ES,DE,FR),manager_name.match.[ぁ-ヿ一-龯],manager_name.match.^[A-Za-z][^가-힣]*$');
+        } else if (siteFilter === '__fr__') {
+            // 가맹점 주문만 (franchise_slug 가 있는 주문)
+            query = query.not('franchise_slug', 'is', null);
         } else if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
         if (managerFilter === 'none') query = query.is('staff_manager_id', null);
         else if (managerFilter !== 'all') query = query.eq('staff_manager_id', managerFilter);
