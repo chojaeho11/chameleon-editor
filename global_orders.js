@@ -1743,10 +1743,20 @@ window.loadOrders = async () => {
                 query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%`);
             }
         }
+        // 국가별 필터 — 옛 simple_order.js 버그로 모든 주문이 KR 로 저장되어 있어
+        // 이름·연락처·site_code 를 함께 보고 해외 주문을 찾을 수 있게 다중 모드 지원
         if (siteFilter === '__jp_text__') {
-            // 일본어 문자(히라가나/가타카나/한자) 가 이름·주소·입금자명에 포함된 주문
-            // (site_code 가 KR 로 잘못 저장된 옛 일본 주문까지 잡기 위함)
+            // 일본어 문자(히라가나/가타카나/한자) 이름/주소/입금자
             query = query.or('manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯],depositor_name.match.[ぁ-ヿ一-龯]');
+        } else if (siteFilter === '__en_text__') {
+            // 영문 이름 — Latin 알파벳으로 시작하고 한글 없음
+            query = query.filter('manager_name', 'match', '^[A-Za-z][^가-힣]*$');
+        } else if (siteFilter === '__overseas__') {
+            // site_code 가 해외 (JP/US/CN/SA/ES/DE/FR)
+            query = query.in('site_code', ['JP', 'US', 'CN', 'SA', 'ES', 'DE', 'FR']);
+        } else if (siteFilter === '__overseas_text__') {
+            // 해외 site_code 또는 일본어/영문 이름이 포함된 주문 (KR 로 잘못 저장된 해외 주문 포함)
+            query = query.or('site_code.in.(JP,US,CN,SA,ES,DE,FR),manager_name.match.[ぁ-ヿ一-龯],manager_name.match.^[A-Za-z][^가-힣]*$');
         } else if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
         if (managerFilter === 'none') query = query.is('staff_manager_id', null);
         else if (managerFilter !== 'all') query = query.eq('staff_manager_id', managerFilter);
@@ -3256,8 +3266,16 @@ window.loadStripeStuckOrders = async () => {
             .limit(300);
         if (siteSel === '__fr__') q = q.not('franchise_slug', 'is', null);
         else if (siteSel === '__jp_text__') {
-            // 일본어 문자가 이름/주소/입금자명에 들어간 주문 (옛 KR-라벨 일본 주문 잡기)
             q = q.or('manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯],depositor_name.match.[ぁ-ヿ一-龯]');
+        }
+        else if (siteSel === '__en_text__') {
+            q = q.filter('manager_name', 'match', '^[A-Za-z][^가-힣]*$');
+        }
+        else if (siteSel === '__overseas__') {
+            q = q.in('site_code', ['JP', 'US', 'CN', 'SA', 'ES', 'DE', 'FR']);
+        }
+        else if (siteSel === '__overseas_text__') {
+            q = q.or('site_code.in.(JP,US,CN,SA,ES,DE,FR),manager_name.match.[ぁ-ヿ一-龯],manager_name.match.^[A-Za-z][^가-힣]*$');
         }
         else if (siteSel) q = q.eq('site_code', siteSel);
         const { data, error } = await q;
@@ -3310,9 +3328,11 @@ window.recoverStripeOrder = async (orderId, btn) => {
         const { data: cur } = await sb.from('orders').select('admin_note, manager_name, address, site_code').eq('id', orderId).single();
         const stamp = new Date().toLocaleString('ko-KR');
         let auditNote = '[복구] Stripe 결제완료 수동 처리 — ' + stamp;
-        // 일본어 문자가 이름/주소에 있으면 site_code 도 JP 로 교정 (옛 simple_order.js 버그로 KR로 잘못 저장된 일본 주문)
-        const haystack = (cur?.manager_name || '') + ' ' + (cur?.address || '');
+        // 이름/주소 기반 site_code 자동 교정 (옛 simple_order.js 버그로 KR로 잘못 저장된 해외 주문 보정)
+        const name = cur?.manager_name || '';
+        const haystack = name + ' ' + (cur?.address || '');
         const looksJp = /[ぁ-ヿ一-龯]/.test(haystack);
+        const looksEn = !/[가-힣ぁ-ヿ一-龯]/.test(name) && /^[A-Za-z]/.test(name.trim());
         const updates = {
             status: '접수됨',
             payment_status: '결제완료',
@@ -3321,6 +3341,9 @@ window.recoverStripeOrder = async (orderId, btn) => {
         if (looksJp && cur?.site_code !== 'JP') {
             updates.site_code = 'JP';
             auditNote += ' / site_code KR→JP 자동 교정';
+        } else if (looksEn && cur?.site_code !== 'US') {
+            updates.site_code = 'US';
+            auditNote += ' / site_code KR→US 자동 교정';
         }
         updates.admin_note = (cur?.admin_note ? (cur.admin_note + '\n') : '') + auditNote;
         const { error } = await sb.from('orders').update(updates).eq('id', orderId);
