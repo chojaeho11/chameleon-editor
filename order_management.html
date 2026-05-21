@@ -282,6 +282,7 @@ window.showSection = function(){};
                     <!-- 기존 매니저견적 주문의 '✏ 수정' 버튼은 주문번호 컬럼에서 그대로 사용 가능 -->
                     <button class="btn btn-outline" onclick="document.getElementById('recoveryPanel').style.display=document.getElementById('recoveryPanel').style.display==='none'?'block':'none'" style="font-weight:600; font-size:12px;">🔧 문서복구</button>
                     <button class="btn btn-outline" onclick="(function(){var p=document.getElementById('stripeRecoveryPanel');p.style.display=p.style.display==='none'?'block':'none';})()" style="font-weight:600; font-size:12px; background:#f5f3ff; color:#7c3aed; border-color:#c4b5fd;">💳 Stripe 주문복구</button>
+                    <button class="btn btn-outline" onclick="(function(){var p=document.getElementById('subsPanel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block') loadSubscriptions();})()" style="font-weight:600; font-size:12px; background:#fefce8; color:#a16207; border-color:#fde047;">⭐ PRO 구독</button>
                     <button class="btn btn-outline" onclick="refreshDriveColors(this)" style="font-weight:600; font-size:12px;" title="고객주문 폴더에 수동으로 파일 추가했을 때 색상 갱신">🎨 Drive 색상 갱신</button>
                     <button id="autoDownloadBtn" class="btn btn-outline" onclick="toggleAutoDownload()" style="font-weight:600; font-size:12px;">📥 자동다운 OFF</button>
                     <span id="autoDownloadStatus" style="font-size:11px; color:#64748b; display:none;"></span>
@@ -339,6 +340,33 @@ window.showSection = function(){};
                     </p>
                     <div id="stripeRecoveryList" style="font-size:12px; background:#fff; border:1px solid #ddd6fe; border-radius:6px; padding:4px;"></div>
                 </div>
+
+                <!-- 2026-05-22: PRO 구독 관리 패널 (subscriptions 테이블 — Stripe 정기결제) -->
+                <div id="subsPanel" style="display:none; background:#fefce8; border:1.5px solid #fde047; padding:14px 18px; border-radius:8px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+                        <span style="font-weight:800; color:#a16207; font-size:14px;">⭐ PRO 구독 / 가맹 (Stripe 정기결제)</span>
+                        <select id="subFilterStatus" onchange="loadSubscriptions()" style="padding:5px 7px; border:1px solid #fde047; border-radius:4px; font-size:13px;">
+                            <option value="">전체 상태</option>
+                            <option value="active" selected>✅ 활성 (active)</option>
+                            <option value="past_due">⚠️ 결제실패 (past_due)</option>
+                            <option value="canceled">❌ 취소됨 (canceled)</option>
+                            <option value="trialing">🆓 체험중 (trialing)</option>
+                        </select>
+                        <select id="subFilterPlan" onchange="loadSubscriptions()" style="padding:5px 7px; border:1px solid #fde047; border-radius:4px; font-size:13px;">
+                            <option value="">전체 플랜</option>
+                            <option value="__pro__">⭐ PRO (월/연)</option>
+                            <option value="__franchise__">🏬 가맹점 플랜</option>
+                            <option value="lifetime">♾️ 평생</option>
+                        </select>
+                        <button class="btn btn-sm" onclick="loadSubscriptions()" style="background:#a16207; color:#fff; font-weight:800; padding:7px 14px; font-size:13px;">🔍 조회</button>
+                        <a href="https://dashboard.stripe.com/subscriptions" target="_blank" style="font-size:12px; color:#a16207; text-decoration:underline; font-weight:700;">↗ Stripe 구독 대시보드</a>
+                    </div>
+                    <p style="font-size:12px; color:#78350f; line-height:1.7; margin:0 0 10px; background:#fef9c3; padding:8px 12px; border-radius:6px;">
+                        PRO 구독·가맹 플랜은 Stripe 정기결제로만 처리되며 <b>orders 테이블이 아닌 subscriptions 테이블</b>에 저장됩니다. 그래서 주문 목록에는 안 잡힙니다 — 여기서 따로 확인하세요.
+                    </p>
+                    <div id="subsList" style="font-size:12px; background:#fff; border:1px solid #fde047; border-radius:6px; padding:4px;"></div>
+                </div>
+
                 <div id="excelExportRow" style="display:none;" class="toolbar-row">
                     <span style="font-weight:700;font-size:14px;">매출정산 엑셀:</span>
                     <input type="month" id="excelMonth" class="input-text" style="width:150px;" value="2026-01">

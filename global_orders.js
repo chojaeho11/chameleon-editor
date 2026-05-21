@@ -3244,6 +3244,106 @@ async function generateRecoveryOrderSheet(order, addonDB) {
     return doc.output('blob');
 }
 
+// ───── 미결제 견적-취소 처리 (Stripe 누락 목록에서 숨김) ─────
+// 실제로 결제하지 않은 견적-만-받은 주문을 status='관리자차단' 으로 숨김 처리.
+// (메인 주문 목록도 '관리자차단' 은 자동으로 필터링됨)
+window.dismissUnpaidOrder = async (orderId, btn) => {
+    if (!confirm(`주문 #${orderId} 은 실제 카드결제 없이 견적만 받고 취소된 건이 맞나요?\n\n확인 시 '관리자차단' 상태로 변경되어 목록에서 사라집니다. (Stripe 대시보드에서 결제 성공이 있다면 절대 누르지 마세요.)`)) return;
+    if (btn) btn.disabled = true;
+    try {
+        const { data: cur } = await sb.from('orders').select('admin_note').eq('id', orderId).single();
+        const stamp = new Date().toLocaleString('ko-KR');
+        const newNote = (cur?.admin_note ? (cur.admin_note + '\n') : '') + '[숨김] 견적만 받고 미결제 — ' + stamp;
+        const { error } = await sb.from('orders').update({
+            status: '관리자차단',
+            payment_status: '주문취소',
+            admin_note: newNote
+        }).eq('id', orderId);
+        if (error) throw error;
+        loadStripeStuckOrders();
+    } catch (e) {
+        alert('처리 실패: ' + (e.message || e));
+        if (btn) btn.disabled = false;
+    }
+};
+
+// ───── PRO 구독 / 가맹 (subscriptions 테이블 Stripe 정기결제) ─────
+window.loadSubscriptions = async () => {
+    const list = document.getElementById('subsList');
+    if (!list) return;
+    list.innerHTML = '<div style="padding:14px; color:#78350f;">불러오는 중...</div>';
+    const stFilter = document.getElementById('subFilterStatus')?.value || '';
+    const pFilter = document.getElementById('subFilterPlan')?.value || '';
+    try {
+        let q = sb.from('subscriptions')
+            .select('id, user_id, plan_type, status, current_period_end, stripe_subscription_id, created_at, updated_at')
+            .order('created_at', { ascending: false })
+            .limit(500);
+        if (stFilter) q = q.eq('status', stFilter);
+        if (pFilter === '__pro__') q = q.in('plan_type', ['pro_monthly', 'pro_annual', 'monthly', 'annual', 'pro']);
+        else if (pFilter === '__franchise__') q = q.in('plan_type', ['franchise_monthly', 'franchise_annual', 'franchise_lifetime']);
+        else if (pFilter === 'lifetime') q = q.in('plan_type', ['lifetime', 'franchise_lifetime', 'pro_lifetime']);
+        const { data: subs, error } = await q;
+        if (error) throw error;
+        if (!subs || !subs.length) {
+            list.innerHTML = '<div style="padding:14px; color:#94a3b8;">조건에 맞는 구독이 없습니다.</div>';
+            return;
+        }
+        // 사용자 정보 join
+        const userIds = [...new Set(subs.map(s => s.user_id).filter(Boolean))];
+        const { data: profs } = await sb.from('profiles').select('id, username, email').in('id', userIds);
+        const profMap = {}; (profs || []).forEach(p => profMap[p.id] = p);
+
+        const stPill = (s) => {
+            if (s === 'active') return '<span style="background:#dcfce7;color:#166534;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;">✅ 활성</span>';
+            if (s === 'past_due') return '<span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;">⚠️ 결제실패</span>';
+            if (s === 'canceled') return '<span style="background:#fee2e2;color:#b91c1c;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;">❌ 취소</span>';
+            if (s === 'trialing') return '<span style="background:#dbeafe;color:#1e40af;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;">🆓 체험중</span>';
+            return '<span style="background:#f1f5f9;color:#475569;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;">' + _srEsc(s || '-') + '</span>';
+        };
+        const planLabel = (p) => {
+            if (!p) return '-';
+            if (/lifetime/i.test(p)) return '♾️ ' + p;
+            if (/franchise/i.test(p)) return '🏬 ' + p;
+            return '⭐ ' + p;
+        };
+
+        const totalActive = subs.filter(s => s.status === 'active').length;
+        const summary = `<div style="padding:8px 10px; font-size:12px; color:#78350f; background:#fef9c3; border-bottom:1px solid #fde68a;">조회 ${subs.length}건 · 활성 <b>${totalActive}</b>건</div>`;
+        const rows = subs.map(s => {
+            const u = profMap[s.user_id] || {};
+            const name = u.username || u.email || '(미상)';
+            const email = u.email || '-';
+            const created = s.created_at ? new Date(s.created_at).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+            const expire = s.current_period_end ? new Date(s.current_period_end).toLocaleDateString('ko-KR') : '-';
+            const stripeLink = s.stripe_subscription_id
+                ? `<a href="https://dashboard.stripe.com/subscriptions/${_srEsc(s.stripe_subscription_id)}" target="_blank" style="color:#7c3aed; text-decoration:underline; font-family:monospace; font-size:11px;">${_srEsc(s.stripe_subscription_id.slice(0, 14))}…</a>`
+                : '<span style="color:#cbd5e1;">-</span>';
+            return `<tr style="border-bottom:1px solid #fef3c7;">
+                <td style="padding:7px;">${_srEsc(created)}</td>
+                <td style="padding:7px;">${_srEsc(name)}</td>
+                <td style="padding:7px; font-family:monospace; font-size:11px;">${_srEsc(email)}</td>
+                <td style="padding:7px; font-weight:700;">${planLabel(s.plan_type)}</td>
+                <td style="padding:7px;">${stPill(s.status)}</td>
+                <td style="padding:7px;">${_srEsc(expire)}</td>
+                <td style="padding:7px;">${stripeLink}</td>
+            </tr>`;
+        }).join('');
+        list.innerHTML = summary + `<table style="width:100%; font-size:12px; background:#fff; border-collapse:collapse;">
+            <thead><tr style="background:#fef3c7;">
+                <th style="padding:7px; text-align:left;">가입일시</th>
+                <th style="padding:7px; text-align:left;">이름</th>
+                <th style="padding:7px; text-align:left;">이메일</th>
+                <th style="padding:7px; text-align:left;">플랜</th>
+                <th style="padding:7px; text-align:left;">상태</th>
+                <th style="padding:7px; text-align:left;">갱신일</th>
+                <th style="padding:7px; text-align:left;">Stripe</th>
+            </tr></thead><tbody>${rows}</tbody></table>`;
+    } catch (e) {
+        list.innerHTML = `<div style="padding:14px; color:#dc2626;">오류: ${_srEsc(e.message || e)}</div>`;
+    }
+};
+
 // ───── 국가별 빠른 검색 버튼 ─────
 window.setCountryQuick = function(value, btn){
     var sel = document.getElementById('filterSite');
@@ -3309,8 +3409,9 @@ window.loadStripeStuckOrders = async () => {
                 <td style="padding:7px; font-family:monospace;">${_srEsc(o.phone || '-')}</td>
                 <td style="padding:7px; text-align:right; font-weight:800;">${(Number(o.total_amount) || 0).toLocaleString()}원</td>
                 <td style="padding:7px;">${fr}</td>
-                <td style="padding:7px; text-align:center;">
-                    <button class="btn btn-sm" style="background:#16a34a; color:#fff; padding:5px 10px; font-weight:700; font-size:11px;" onclick="recoverStripeOrder(${o.id}, this)">✅ 결제완료 처리</button>
+                <td style="padding:7px; text-align:center; white-space:nowrap;">
+                    <button class="btn btn-sm" style="background:#16a34a; color:#fff; padding:5px 10px; font-weight:700; font-size:11px; margin-right:4px;" onclick="recoverStripeOrder(${o.id}, this)" title="Stripe 결제 성공 확인 후 결제완료로 처리">✅ 결제완료로 처리</button>
+                    <button class="btn btn-sm" style="background:#fff; color:#dc2626; padding:5px 8px; font-weight:700; font-size:11px; border:1px solid #fca5a5;" onclick="dismissUnpaidOrder(${o.id}, this)" title="실제 결제 안 한 견적만 받은 건 — 목록에서 숨김 처리">🚫 미결제(취소)</button>
                 </td>
             </tr>`;
         }).join('');
