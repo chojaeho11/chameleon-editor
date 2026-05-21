@@ -3229,6 +3229,95 @@ async function generateRecoveryOrderSheet(order, addonDB) {
     return doc.output('blob');
 }
 
+// ───── Stripe 결제완료 미반영 주문 복구 ─────
+// JP/US/가맹점 해외PG 주문이 cotton-print.com 으로 리다이렉트되어 success.html 을
+// 거치지 않은 결과 '임시작성' 으로 남은 건들을 관리자가 수동 확인 후 복구.
+function _srEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+window.loadStripeStuckOrders = async () => {
+    const list = document.getElementById('stripeRecoveryList');
+    if (!list) return;
+    list.innerHTML = '<div style="padding:14px; color:#78350f;">불러오는 중...</div>';
+    const days = Math.max(1, Math.min(365, parseInt(document.getElementById('stripeRecoverDays').value, 10) || 60));
+    const siteSel = document.getElementById('stripeRecoverSite').value || '';
+    const cutoffIso = new Date(Date.now() - days * 86400000).toISOString();
+    const maxIso = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    try {
+        let q = sb.from('orders')
+            .select('id, created_at, site_code, manager_name, phone, total_amount, payment_method, items, franchise_slug, admin_note')
+            .eq('status', '임시작성')
+            .gte('created_at', cutoffIso)
+            .lte('created_at', maxIso)
+            .order('created_at', { ascending: false })
+            .limit(300);
+        if (siteSel === '__fr__') q = q.not('franchise_slug', 'is', null);
+        else if (siteSel) q = q.eq('site_code', siteSel);
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!data || !data.length) {
+            list.innerHTML = '<div style="padding:14px; color:#16a34a; font-weight:700;">✅ 조건에 맞는 누락 주문이 없습니다.</div>';
+            return;
+        }
+        const rows = data.map(o => {
+            const dt = new Date(o.created_at).toLocaleString('ko-KR', { dateStyle:'short', timeStyle:'short' });
+            const site = o.site_code || '-';
+            const siteColor = site === 'JP' ? '#dc2626' : site === 'US' ? '#eab308' : site === 'KR' ? '#1e40af' : '#475569';
+            const fr = o.franchise_slug ? `<span style="background:#ede9fe; color:#5b21b6; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:800;">🏬 ${_srEsc(o.franchise_slug)}</span>` : '';
+            return `<tr style="border-bottom:1px solid #fef3c7;">
+                <td style="padding:7px;">${dt}</td>
+                <td style="padding:7px; font-family:monospace; font-weight:700;">#${o.id}</td>
+                <td style="padding:7px;"><span style="color:${siteColor}; font-weight:800;">${site}</span></td>
+                <td style="padding:7px;">${_srEsc(o.manager_name || '-')}</td>
+                <td style="padding:7px; font-family:monospace;">${_srEsc(o.phone || '-')}</td>
+                <td style="padding:7px; text-align:right; font-weight:800;">${(Number(o.total_amount) || 0).toLocaleString()}원</td>
+                <td style="padding:7px;">${fr}</td>
+                <td style="padding:7px; text-align:center;">
+                    <button class="btn btn-sm" style="background:#16a34a; color:#fff; padding:5px 10px; font-weight:700; font-size:11px;" onclick="recoverStripeOrder(${o.id}, this)">✅ 결제완료 처리</button>
+                </td>
+            </tr>`;
+        }).join('');
+        list.innerHTML = `<div style="padding:6px 8px; font-size:11px; color:#78350f; background:#fef9c3; border-bottom:1px solid #fde68a;">총 <b>${data.length}</b>건 발견. <b>Stripe 대시보드에서 결제 성공 여부를 확인한 뒤</b> 처리하세요.</div>
+        <table style="width:100%; font-size:12px; background:#fff; border-collapse:collapse;">
+            <thead><tr style="background:#fef3c7;">
+                <th style="padding:7px; text-align:left;">일시</th>
+                <th style="padding:7px; text-align:left;">주문번호</th>
+                <th style="padding:7px; text-align:left;">사이트</th>
+                <th style="padding:7px; text-align:left;">고객</th>
+                <th style="padding:7px; text-align:left;">연락처</th>
+                <th style="padding:7px; text-align:right;">금액</th>
+                <th style="padding:7px; text-align:left;">가맹점</th>
+                <th style="padding:7px; text-align:center;">처리</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    } catch (e) {
+        list.innerHTML = `<div style="padding:14px; color:#dc2626;">오류: ${_srEsc(e.message || e)}</div>`;
+    }
+};
+
+window.recoverStripeOrder = async (orderId, btn) => {
+    if (!confirm(`주문 #${orderId} 을(를) Stripe 결제완료로 처리할까요?\n\n반드시 Stripe 대시보드(dashboard.stripe.com/payments)에서 해당 주문번호의 결제가 성공했는지 먼저 확인하세요. 실결제가 없는데 처리하면 미결제 주문이 진행됩니다.`)) return;
+    if (btn) btn.disabled = true;
+    try {
+        const { data: cur } = await sb.from('orders').select('admin_note').eq('id', orderId).single();
+        const stamp = new Date().toLocaleString('ko-KR');
+        const newNote = (cur?.admin_note ? (cur.admin_note + '\n') : '') + '[복구] Stripe 결제완료 수동 처리 — ' + stamp;
+        const { error } = await sb.from('orders').update({
+            status: '접수됨',
+            payment_status: '결제완료',
+            payment_method: 'Stripe Card (수동복구)',
+            admin_note: newNote
+        }).eq('id', orderId);
+        if (error) throw error;
+        showToast && showToast(`#${orderId} 복구 완료`, 'success');
+        loadStripeStuckOrders();
+        if (window.loadOrders) window.loadOrders();
+    } catch (e) {
+        alert('복구 실패: ' + (e.message || e));
+        if (btn) btn.disabled = false;
+    }
+};
+
 // ───── 복구 실행 (기존 복구 문서 삭제 후 재생성) ─────
 window.recoverMissingDocs = async () => {
     const logEl = document.getElementById('recoveryLog');
