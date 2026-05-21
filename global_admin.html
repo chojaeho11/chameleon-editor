@@ -338,10 +338,11 @@
                                 <input type="date" id="filterDeliveryDate" class="input-text" style="width:130px; height:32px; border:none; background:transparent;" onchange="resetPage(); loadOrders()">
                                 <i class="fa-solid fa-xmark" style="cursor:pointer; color:#999;" onclick="document.getElementById('filterDeliveryDate').value=''; resetPage(); loadOrders();" title="초기화"></i>
                             </div>
-                            <select id="filterSite" class="input-text" style="width:130px; font-weight:bold;" onchange="resetPage(); loadOrders()">
+                            <select id="filterSite" class="input-text" style="width:160px; font-weight:bold;" onchange="resetPage(); loadOrders()">
                                 <option value="all">🌏 전체 국가</option>
                                 <option value="KR">🇰🇷 한국</option>
                                 <option value="JP">🇯🇵 일본</option>
+                                <option value="__jp_text__">🇯🇵 일본어 이름 감지</option>
                                 <option value="US">🇺🇸 미국</option>
                                 <option value="STORE">🟢 스마트스토어</option>
                                 <option value="GODO">🟣 고도몰</option>
@@ -369,7 +370,8 @@
                                 <input type="number" id="stripeRecoverDays" value="3" min="1" max="365" style="width:60px; padding:5px 7px; border:1px solid #c4b5fd; border-radius:4px; font-size:13px;">
                                 <span style="font-size:12px; color:#5b21b6;">일 이내</span>
                                 <select id="stripeRecoverSite" style="padding:5px 7px; border:1px solid #c4b5fd; border-radius:4px; font-size:13px;">
-                                    <option value="JP" selected>🇯🇵 JP (일본)</option>
+                                    <option value="__jp_text__" selected>🇯🇵 일본어 이름 감지 (KR로 잘못 저장된 건 포함)</option>
+                                    <option value="JP">🇯🇵 JP (site_code=JP)</option>
                                     <option value="US">🇺🇸 US (미국)</option>
                                     <option value="">🌏 전체 사이트</option>
                                     <option value="KR">🇰🇷 KR (한국)</option>

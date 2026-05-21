@@ -1743,7 +1743,11 @@ window.loadOrders = async () => {
                 query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%`);
             }
         }
-        if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
+        if (siteFilter === '__jp_text__') {
+            // 일본어 문자(히라가나/가타카나/한자) 가 이름·주소·입금자명에 포함된 주문
+            // (site_code 가 KR 로 잘못 저장된 옛 일본 주문까지 잡기 위함)
+            query = query.or('manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯],depositor_name.match.[ぁ-ヿ一-龯]');
+        } else if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
         if (managerFilter === 'none') query = query.is('staff_manager_id', null);
         else if (managerFilter !== 'all') query = query.eq('staff_manager_id', managerFilter);
 
@@ -3251,6 +3255,10 @@ window.loadStripeStuckOrders = async () => {
             .order('created_at', { ascending: false })
             .limit(300);
         if (siteSel === '__fr__') q = q.not('franchise_slug', 'is', null);
+        else if (siteSel === '__jp_text__') {
+            // 일본어 문자가 이름/주소/입금자명에 들어간 주문 (옛 KR-라벨 일본 주문 잡기)
+            q = q.or('manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯],depositor_name.match.[ぁ-ヿ一-龯]');
+        }
         else if (siteSel) q = q.eq('site_code', siteSel);
         const { data, error } = await q;
         if (error) throw error;
@@ -3299,17 +3307,25 @@ window.recoverStripeOrder = async (orderId, btn) => {
     if (!confirm(`주문 #${orderId} 을(를) Stripe 결제완료로 처리할까요?\n\n반드시 Stripe 대시보드(dashboard.stripe.com/payments)에서 해당 주문번호의 결제가 성공했는지 먼저 확인하세요. 실결제가 없는데 처리하면 미결제 주문이 진행됩니다.`)) return;
     if (btn) btn.disabled = true;
     try {
-        const { data: cur } = await sb.from('orders').select('admin_note').eq('id', orderId).single();
+        const { data: cur } = await sb.from('orders').select('admin_note, manager_name, address, site_code').eq('id', orderId).single();
         const stamp = new Date().toLocaleString('ko-KR');
-        const newNote = (cur?.admin_note ? (cur.admin_note + '\n') : '') + '[복구] Stripe 결제완료 수동 처리 — ' + stamp;
-        const { error } = await sb.from('orders').update({
+        let auditNote = '[복구] Stripe 결제완료 수동 처리 — ' + stamp;
+        // 일본어 문자가 이름/주소에 있으면 site_code 도 JP 로 교정 (옛 simple_order.js 버그로 KR로 잘못 저장된 일본 주문)
+        const haystack = (cur?.manager_name || '') + ' ' + (cur?.address || '');
+        const looksJp = /[ぁ-ヿ一-龯]/.test(haystack);
+        const updates = {
             status: '접수됨',
             payment_status: '결제완료',
-            payment_method: 'Stripe Card (수동복구)',
-            admin_note: newNote
-        }).eq('id', orderId);
+            payment_method: 'Stripe Card (수동복구)'
+        };
+        if (looksJp && cur?.site_code !== 'JP') {
+            updates.site_code = 'JP';
+            auditNote += ' / site_code KR→JP 자동 교정';
+        }
+        updates.admin_note = (cur?.admin_note ? (cur.admin_note + '\n') : '') + auditNote;
+        const { error } = await sb.from('orders').update(updates).eq('id', orderId);
         if (error) throw error;
-        showToast && showToast(`#${orderId} 복구 완료`, 'success');
+        showToast && showToast(`#${orderId} 복구 완료${looksJp ? ' (JP)' : ''}`, 'success');
         loadStripeStuckOrders();
         if (window.loadOrders) window.loadOrders();
     } catch (e) {
