@@ -282,9 +282,26 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('woItemCount').textContent = items.length;
         const list = document.getElementById('woItemList');
 
+        // 2026-05-22: 작업지시서는 한국에서 인쇄하므로 제품명을 항상 한국어로.
+        // 주문 시점의 product.name 은 고객 언어(JP/EN 등) 로 저장되어 있어 admin_products 에서 한글명을 재조회.
+        const productCodes = [...new Set(items.map(it => (it.product && it.product.code) || it.product_code).filter(Boolean))];
+        const productKoNameMap = {};
+        if (productCodes.length) {
+            try {
+                const { data: prods } = await sb.from('admin_products').select('code, name').in('code', productCodes);
+                (prods || []).forEach(p => { if (p && p.code) productKoNameMap[p.code] = p.name; });
+            } catch (e) { console.warn('[workorder] product KR name lookup failed:', e); }
+        }
+
         list.innerHTML = items.map((it, i) => {
             const product = it.product || {};
-            const productName = product.name || it.productName || it.product_name || '상품';
+            let productName = product.name || it.productName || it.product_name || '상품';
+            // 한글 제품명이 있으면 교체 — 원본 이름의 " — <파일ID>" 같은 접미사는 보존
+            const koName = productKoNameMap[product.code || it.product_code];
+            if (koName) {
+                const dashIdx = productName.indexOf(' — ');
+                productName = koName + (dashIdx >= 0 ? productName.slice(dashIdx) : '');
+            }
             const wMm = product.w_mm || product.width_mm || it.width || 0;
             const hMm = product.h_mm || product.height_mm || it.height || 0;
             const qty = it.qty || 1;
