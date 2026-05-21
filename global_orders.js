@@ -1704,7 +1704,13 @@ window.loadOrders = async () => {
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
-        query = query.neq('status', '임시작성').neq('status', '관리자차단');
+        // 2026-05-22: 국가/해외 필터 사용 시에는 임시작성(Stripe 누락 후보) 도 표시
+        const _overseaModes = ['__jp__','__us__','__overseas_pay__','__overseas_text__','__overseas__','__jp_text__','__en_text__'];
+        if (_overseaModes.includes(siteFilter)) {
+            query = query.neq('status', '관리자차단');
+        } else {
+            query = query.neq('status', '임시작성').neq('status', '관리자차단');
+        }
 
         // 필터 적용 (고도몰 스타일 세부 탭)
         if (currentOrderStatus === '전체') {
