@@ -94,15 +94,21 @@ function showError(msg) {
         const stripe = Stripe(STRIPE_PK);
 
         // Edge function: create-stripe-session
-        // cancel_url을 cotton-print 홈으로 → Stripe 좌측 상단 "Chameleon Printing" 클릭 시 홈으로 복귀
-        const homeUrl = 'https://www.cotton-print.com/?lang=' + lang;
+        // 2026-05-18: success/cancel URL 을 호출 도메인 기준(location.origin)으로 설정.
+        //   이전엔 cotton-print.com 으로 하드코딩 — cafe0101/cafe3355(가맹점·해외) 결제가
+        //   Stripe 성공 후 success.html(verify-stripe-payment) 을 거치지 않아 주문이
+        //   '임시작성' 으로 남아 관리자에 표시되지 않던 버그.
+        const homeUrl = location.origin + '/?lang=' + lang;
+        // success.html 의 Stripe 분기가 db_id + session_id 를 사용
+        // session_id={CHECKOUT_SESSION_ID} 는 create-stripe-session edge function 이 자동으로 부착
+        const successUrl = location.origin + '/success.html?db_id=' + order.id + '&lang=' + lang;
         const { data: sess, error: sErr } = await sb.functions.invoke('create-stripe-session', {
             body: {
                 amount: localAmount,
                 currency: currency,
                 order_id: order.id,
                 cancel_url: homeUrl,
-                success_url: 'https://www.cotton-print.com/?paid=1&order_id=' + order.id + '&lang=' + lang
+                success_url: successUrl
             }
         });
         if (sErr) throw sErr;

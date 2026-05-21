@@ -4256,6 +4256,17 @@
             || it.fabricCode || (it.fabric && (it.product_code || it.product_name))
             || it.orderWcm != null || it.width_cm != null;
     }
+    // 2026-05-18: site_code 결정 — JP/US 사이트에서 들어온 주문이 admin에 KR 로 잡혀 보이지 않던 버그 해결
+    function _soGetSiteCode() {
+        if (window.__SITE_CODE && ['KR','JP','US'].indexOf(window.__SITE_CODE) >= 0) return window.__SITE_CODE;
+        var c = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+        if (c && ['KR','JP','US'].indexOf(c) >= 0) return c;
+        var h = (location.hostname || '').toLowerCase();
+        if (h.indexOf('cafe0101') >= 0) return 'JP';
+        if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return 'US';
+        return 'KR';
+    }
+
     function _soCalcItemPrice(it) {
         if (_soIsFabricItem(it)) return it.price || 0;
         var qty = it.qty || 1;
@@ -4663,7 +4674,7 @@
                 total_amount: total,
                 discount_amount: 0,
                 items: items,
-                site_code: 'KR',
+                site_code: _soGetSiteCode(),
                 files: orderFiles.length ? orderFiles : null,
                 admin_note: '[MANAGER_QUOTE] manager=' + (mgrEmail || 'unknown') + '\n매니저 카트 기반 결제창 생성 — 고객 결제 대기'
             };
@@ -4964,7 +4975,7 @@
                 total_amount: total,
                 discount_amount: 0,
                 items: items,
-                site_code: 'KR',
+                site_code: _soGetSiteCode(),
                 franchise_slug: _frSlug2,
                 franchise_commission: _frSlug2 ? 0 : null,
                 files: orderFiles.length ? orderFiles : null,
