@@ -296,7 +296,8 @@ body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background
       // success.html 이 결제 성공 후 이 입찰을 paid 처리하도록 스택에 저장
       try {
         var pend = JSON.parse(localStorage.getItem('dm_pending_design_bids')||'[]');
-        pend.push({ bidId: state.bid.id, requestId: state.request.id });
+        // orderId + ts 포함 — design-market 재시도가 실결제(주문 결제완료)를 검증할 수 있도록
+        pend.push({ bidId: state.bid.id, requestId: state.request.id, orderId: orderId, ts: Date.now() });
         localStorage.setItem('dm_pending_design_bids', JSON.stringify(pend));
       } catch(e){}
       // 한국=Toss, 해외=Stripe — 메인 결제 시스템 재사용

@@ -4175,25 +4175,38 @@ async function _retryPendingDesignBidPayments() {
             return;
         }
         const stillPending = [];
+        const _now = Date.now();
         for (const p of pending) {
+            // ★ 2026-05-22: 실결제 검증 — 연결된 주문이 실제 결제완료일 때만 마킹.
+            //   (카드 결제를 시작했다 중단한 미결제 건이 결제완료로 잘못 처리되던 버그 수정)
+            let verified = false;
+            if (p.orderId) {
+                try {
+                    const { data: ord } = await sb.from('orders')
+                        .select('payment_status').eq('id', p.orderId).maybeSingle();
+                    if (ord && ['결제완료', '입금확인', 'paid'].includes(ord.payment_status)) verified = true;
+                } catch (e) {}
+            }
+            if (!verified) {
+                // 미검증(미결제·주문없음) → 마킹 안 함. orderId 있고 24h 이내면 보관(추후 결제 가능), 아니면 폐기.
+                if (p.orderId && p.ts && (_now - p.ts < 86400000)) stillPending.push(p);
+                continue;
+            }
             try {
                 const { error } = await sb.rpc('mark_design_bid_paid', {
                     _bid_id: p.bidId,
                     _method: 'cart',
-                    _order_id: null
+                    _order_id: p.orderId || null
                 });
                 if (error) {
-                    // If it's an "already paid" idempotent no-op, drop it. Otherwise keep.
                     const msg = (error.message || '').toLowerCase();
                     if (msg.includes('already')) continue;
                     stillPending.push(p);
-                    console.warn('[design-market] retry mark_paid failed, keeping:', p.bidId, error.message);
                 } else {
-                    console.log('[design-market] retry marked bid paid:', p.bidId);
+                    console.log('[design-market] retry marked bid paid (verified):', p.bidId);
                 }
             } catch (innerErr) {
                 stillPending.push(p);
-                console.warn('[design-market] retry exception:', innerErr);
             }
         }
         if (stillPending.length === 0) {
