@@ -937,8 +937,26 @@ if ('caches' in window) {
         })();
         </script>
 
-    <!-- 2026-05-22: 일본 LINE 문의 카드 — hero-section(overflow:hidden) 안에 있으면 메인 영상/내용을 가려서
-         hero 바깥(아래)로 이동함. 아래 '/.hero-section' 다음에 위치. -->
+    <!-- 2026-05-22: 일본 LINE 문의 카드 (cafe0101 / lang=ja 만) — 컴팩트하게 (메인 가림 방지) -->
+    <div id="jpLineContact" style="display:none; max-width:560px; margin:8px auto 0; padding:0 16px;">
+        <div style="background:#fff; border:1.5px solid #06C755; border-radius:12px; padding:10px 14px; box-shadow:0 6px 16px -10px rgba(6,199,85,0.45); display:flex; align-items:center; gap:12px; justify-content:center;">
+            <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:64px; height:64px; border-radius:8px; flex-shrink:0; border:1px solid #e5e7eb;">
+            <div style="text-align:left; min-width:0;">
+                <div style="font-size:14px; font-weight:900; color:#06C755; margin-bottom:2px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                <div style="font-size:11.5px; color:#555; line-height:1.5;">ご注文・お見積もりはLINEが便利。<br>QRから友だち追加してください。</div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var u = new URLSearchParams(location.search);
+        var lang = u.get('lang') || (location.hostname.indexOf('cafe0101') >= 0 ? 'ja' : (window.__SITE_CODE === 'JP' ? 'ja' : ''));
+        if (lang === 'ja' || lang === 'jp') {
+            var el = document.getElementById('jpLineContact');
+            if (el) el.style.display = '';
+        }
+    })();
+    </script>
 
     <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널 (추후 여기에 결제창 표시) -->
     <div id="mgrQuoteHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
@@ -1146,28 +1164,6 @@ if ('caches' in window) {
     })();
     </script>
     </div><!-- /.hero-section -->
-
-    <!-- 2026-05-22: 일본 LINE 문의 카드 — hero 바깥(아래)에 배치해 메인 영상/내용 가림 방지. cafe0101/lang=ja 만 표시 -->
-    <div id="jpLineContact" style="display:none; max-width:1100px; margin:16px auto 0; padding:0 16px;">
-        <div style="background:#fff; border:2px solid #06C755; border-radius:16px; padding:18px 24px; box-shadow:0 8px 24px -10px rgba(6,199,85,0.5); display:flex; align-items:center; gap:22px; flex-wrap:wrap; justify-content:center;">
-            <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:112px; height:112px; border-radius:12px; flex-shrink:0; border:1px solid #e5e7eb;">
-            <div style="text-align:center; min-width:200px;">
-                <div style="font-size:18px; font-weight:900; color:#06C755; margin-bottom:8px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせください</div>
-                <div style="font-size:13.5px; color:#444; line-height:1.8;">ご注文・お見積もり・ご相談は<b>LINE</b>が便利です。<br>QRコードを読み取って友だち追加してください。</div>
-            </div>
-        </div>
-    </div>
-    <script>
-    (function(){
-        var u = new URLSearchParams(location.search);
-        var lang = u.get('lang') || (location.hostname.indexOf('cafe0101') >= 0 ? 'ja' : (window.__SITE_CODE === 'JP' ? 'ja' : ''));
-        if (lang === 'ja' || lang === 'jp') {
-            var el = document.getElementById('jpLineContact');
-            if (el) el.style.display = '';
-        }
-    })();
-    </script>
-
     <script>
     (function() {
         // 매니저 견적 빠른 주문 — 금액 입력 시 천단위 콤마 자동
