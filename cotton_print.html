@@ -469,24 +469,24 @@ window._cottonSearch = function(){
     </video>
     <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(12,10,9,0.3) 0%, rgba(12,10,9,0.55) 100%);"></div>
     <div class="hero-content" style="position:relative; z-index:2; padding:80px 24px 60px; max-width:960px; margin:0 auto; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-        <button class="hero-badge" style="cursor:pointer; border:1.5px solid #fde047; background:rgba(255,255,255,0.12); color:#fde047; font-family:inherit; font-weight:800; padding:8px 20px; border-radius:50px; font-size:13px; backdrop-filter:blur(8px); margin-bottom:28px;" onclick="openPdSampleRequest()">
-            <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 패브릭 샘플 요청</span>
-        </button>
         <h1 class="cotton-title" style="font-family:'Anton','Black Han Sans','Noto Sans KR',sans-serif; font-size:96px; font-weight:900; line-height:1; margin:0 0 22px; letter-spacing:4px; filter:drop-shadow(0 6px 18px rgba(0,0,0,0.5));">
             <span style="color:#fff; text-shadow:0 4px 24px rgba(0,0,0,0.4);">COTTON</span>
             <span style="background:linear-gradient(135deg,#fef3c7 0%,#fde047 30%,#facc15 60%,#f59e0b 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; padding-left:14px;">PRINT</span>
         </h1>
-        <p style="color:#faf6ed; font-size:22px; font-weight:700; line-height:1.5; margin:0 0 12px; text-shadow:0 2px 12px rgba(0,0,0,0.5); letter-spacing:-0.5px;" data-i18n="cp_hero_subtitle">
+        <p style="color:#faf6ed; font-size:22px; font-weight:700; line-height:1.5; margin:0 0 14px; text-shadow:0 2px 12px rgba(0,0,0,0.5); letter-spacing:-0.5px;" data-i18n="cp_hero_subtitle">
             도매업자를 위한 고품격 프린팅 시스템
         </p>
-        <p style="color:rgba(254,243,199,0.9); font-size:14px; font-weight:500; line-height:1.6; margin:0 0 36px; text-shadow:0 2px 8px rgba(0,0,0,0.5); border:1px solid rgba(254,243,199,0.35); padding:8px 18px; border-radius:50px; backdrop-filter:blur(6px); background:rgba(0,0,0,0.18);">
-            <i class="fa-solid fa-circle-info" style="margin-right:6px; color:#fde047;"></i>
-            <span data-i18n="cp_hero_min_order">최소 주문금액 10만원 · 업자 전용 (소량 구매 불가)</span>
-        </p>
+        <!-- 2026-05-22: 30% 할인 배지 제거. 원단제공 인쇄(1m 150円)을 위로 이동 — 컴팩트 배지 -->
+        <button onclick="openRollFabricRequest()" class="hero-badge" style="cursor:pointer; border:1.5px solid rgba(255,255,255,0.55); background:rgba(0,0,0,0.25); color:#fff; font-family:inherit; font-weight:800; padding:9px 22px; border-radius:50px; font-size:14px; backdrop-filter:blur(8px); margin:4px 0 30px;">
+            <i class="fa-solid fa-scroll" style="color:#fde047;"></i> <span data-i18n="cp_roll_print_btn">원단제공 인쇄 · 1마 1,500원</span>
+        </button>
+        <!-- 2026-05-22: CTA — 무료 샘플 받기 + LINE 문의 -->
         <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
-            <!-- 2026-05-15: 원단제공 인쇄 접수 — 고객이 원단을 보내면 인쇄만 (1마 1,500원) -->
-            <button onclick="openRollFabricRequest()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 32px; border-radius:50px; border:none; background:#ffffff; color:#000000; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35); transition:all 0.3s;">
-                <i class="fa-solid fa-scroll"></i> <span data-i18n="cp_roll_print_btn">원단제공 인쇄 · 1마 1,500원</span>
+            <button onclick="openPdSampleRequest()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 30px; border-radius:50px; border:none; background:linear-gradient(135deg,#fde047,#f59e0b); color:#451a03; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+                <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 패브릭 샘플 요청</span>
+            </button>
+            <button onclick="openLineContact()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 30px; border-radius:50px; border:none; background:#06C755; color:#fff; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(6,199,85,0.4);">
+                <i class="fa-brands fa-line"></i> <span data-i18n="cp_hero_line">LINEで問い合わせ</span>
             </button>
         </div>
     </div>
@@ -511,6 +511,26 @@ window._cottonSearch = function(){
 function openPdSampleRequest() {
     document.getElementById('pdSampleModal').style.display = 'flex';
 }
+// 2026-05-22: LINE 문의 — QR 모달 표시
+function openLineContact() {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; padding:20px;';
+    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#fff; border-radius:16px; padding:24px; max-width:320px; width:100%; text-align:center;';
+    box.innerHTML = '<div style="font-size:18px; font-weight:900; color:#06C755; margin-bottom:14px;"><i class="fa-brands fa-line"></i> LINE</div>'
+        + '<img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:200px; height:200px; border-radius:12px; border:1px solid #e5e7eb;">'
+        + '<div style="font-size:13px; color:#555; margin-top:12px; line-height:1.7;">QRコードを読み取って友だち追加してください。</div>';
+    var btn = document.createElement('button');
+    btn.textContent = '閉じる';
+    btn.style.cssText = 'margin-top:16px; padding:10px 24px; background:#06C755; color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer;';
+    btn.addEventListener('click', close);
+    box.appendChild(btn);
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+}
+window.openLineContact = openLineContact;
 </script>
 
 <!-- 무료 샘플 요청 + 회원가입 통합 모달 (업자 전용) -->
@@ -2543,6 +2563,11 @@ cp_hero_cta: {
     ko:'유저 디자인 보기', ja:'ユーザーデザインを見る', en:'Browse User Designs',
     zh:'浏览用户设计', ar:'تصفح تصاميم المستخدمين', es:'Ver Disenos de Usuarios',
     de:'Nutzer-Designs ansehen', fr:'Voir les designs utilisateurs'
+},
+cp_hero_line: {
+    ko:'LINE 문의', ja:'LINEで問い合わせ', en:'Contact via LINE',
+    zh:'LINE咨询', ar:'تواصل عبر LINE', es:'Consultar por LINE',
+    de:'Kontakt via LINE', fr:'Contact via LINE'
 },
 cp_roll_print_btn: {
     ko:'원단제공 인쇄 · 1마 1,500원', ja:'生地持込印刷 · 1m 150円', en:'Print on Your Fabric · $15/yd',
