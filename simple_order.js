@@ -969,28 +969,22 @@
 
         <!-- 2026-05-13: 받침대 옵션 (등신대 + 자유인쇄커팅) -->
         <div class="so-section" id="soBaseStandSection" style="display:none;">
-          <div class="so-section-title">🦵 ${tr('받침대 옵션', 'スタンドオプション', 'Stand option')}</div>
-          <div id="soBaseStandList" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-            <button type="button" class="so-base-btn active" data-base="none" onclick="window._soPickBaseStand('none')"
-              style="padding:10px 8px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('받침대 없음', 'なし', 'No stand')}<br><span style="font-size:11px; font-weight:600; opacity:0.9;">${fmtPrice(0)}</span></button>
-            <button type="button" class="so-base-btn" data-base="a4" onclick="window._soPickBaseStand('a4')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A4 이하용 받침대', 'A4以下スタンド', 'A4 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(3000)}</span></button>
-            <button type="button" class="so-base-btn" data-base="a3" onclick="window._soPickBaseStand('a3')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A3 이하용 받침대', 'A3以下スタンド', 'A3 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(5000)}</span></button>
-            <button type="button" class="so-base-btn" data-base="a2" onclick="window._soPickBaseStand('a2')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('A2 이하용 받침대', 'A2以下スタンド', 'A2 stand')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(10000)}</span></button>
-            <button type="button" class="so-base-btn" data-base="rear" onclick="window._soPickBaseStand('rear')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('등신대용 후면받침', '等身大 背面支持', 'Life-size rear')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(20000)}</span></button>
-            <button type="button" class="so-base-btn" data-base="banner_small" onclick="window._soPickBaseStand('banner_small')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4;">${tr('배너형 (가로 ≤60cm)', 'バナー型 ≤60cm', 'Banner ≤60cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(20000)}</span></button>
-            <button type="button" class="so-base-btn" data-base="banner_large" onclick="window._soPickBaseStand('banner_large')"
-              style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4; grid-column:span 2;">${tr('배너형 (가로 ≥70cm)', 'バナー型 ≥70cm', 'Banner ≥70cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(50000)}</span></button>
-          </div>
-          <!-- 2026-05-22: 받침대 수량 — 한 대지에 여러 개 들어가는 경우 (받침대 선택 시 표시) -->
-          <div id="soBaseStandQtyRow" style="display:none; align-items:center; gap:8px; margin-top:8px;">
-            <span style="font-size:12px; color:#451a03; font-weight:700;">${tr('받침대 수량', 'スタンド数量', 'Stand qty')}</span>
-            <input type="number" id="soBaseStandQty" min="1" value="1" oninput="window._soSetBaseStandQty(this)" style="width:64px; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700;">
-            <span style="font-size:11px; color:#9ca3af;">${tr('개', '個', 'pcs')}</span>
+          <div class="so-section-title">🦵 ${tr('받침대 옵션 (여러 종류·수량 선택 가능)', 'スタンドオプション (複数選択可)', 'Stand options (multiple types & qty)')}</div>
+          <!-- 2026-05-22: 받침대도 추가옵션처럼 체크박스+수량 (예: A4 3개 + 배너형 2개) -->
+          <div id="soBaseStandList" style="display:flex; flex-direction:column; gap:6px;">
+          ${[
+            {k:'a4', label:tr('A4 이하용 받침대','A4以下スタンド','A4 stand'), fee:3000},
+            {k:'a3', label:tr('A3 이하용 받침대','A3以下スタンド','A3 stand'), fee:5000},
+            {k:'a2', label:tr('A2 이하용 받침대','A2以下スタンド','A2 stand'), fee:10000},
+            {k:'rear', label:tr('등신대용 후면받침','等身大 背面支持','Life-size rear'), fee:20000},
+            {k:'banner_small', label:tr('배너형 (가로 ≤60cm)','バナー型 ≤60cm','Banner ≤60cm'), fee:20000},
+            {k:'banner_large', label:tr('배너형 (가로 ≥70cm)','バナー型 ≥70cm','Banner ≥70cm'), fee:50000}
+          ].map(function(o){ return '<label style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:2px solid #e7e5e4; border-radius:12px; cursor:pointer; font-size:13px; background:#fff;">'
+            + '<input type="checkbox" data-bs-key="'+o.k+'" onchange="window._soToggleBaseStand(this)" style="margin:0; width:16px; height:16px;">'
+            + '<div style="flex:1; min-width:0;"><div style="font-weight:700; color:#451a03;">'+o.label+'</div></div>'
+            + '<input type="number" min="1" value="1" data-bs-qty-key="'+o.k+'" onclick="event.stopPropagation();" oninput="window._soSetBaseStandTypeQty(this)" title="수량" style="width:50px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700; flex-shrink:0;">'
+            + '<span style="font-weight:800; color:#dc2626; font-size:13px; flex-shrink:0;">+'+fmtPrice(o.fee)+'</span>'
+            + '</label>'; }).join('')}
           </div>
         </div>
 
@@ -1776,18 +1770,22 @@
             });
         } catch (e) {}
 
-        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅) — 2026-05-22: 수량 반영
+        // 2026-05-13: 받침대 옵션 — 2026-05-22: 다중 종류·수량 합산
         var baseStandFee = 0;
-        if (state.baseStand && state.baseStand !== 'none' && BASE_STAND_OPTS[state.baseStand]) {
-            var bOpt = BASE_STAND_OPTS[state.baseStand];
-            var bQty = state.baseStandQty || 1;
-            baseStandFee = (bOpt.fee || 0) * bQty;
-            if (baseStandFee > 0) {
-                addonTotal += baseStandFee;
-                addonBreakdownLines.push(
-                    '<div class="so-price-row"><span>🦵 ' + bOpt.label_ko + (bQty > 1 ? ' × ' + bQty : '') + '</span><span>+' + fmtPrice(baseStandFee) + '</span></div>'
-                );
-            }
+        if (state.baseStands) {
+            Object.keys(state.baseStands).forEach(function (bk) {
+                var bOpt = BASE_STAND_OPTS[bk];
+                if (!bOpt) return;
+                var bQty = state.baseStands[bk] || 1;
+                var bLine = (bOpt.fee || 0) * bQty;
+                if (bLine > 0) {
+                    baseStandFee += bLine;
+                    addonTotal += bLine;
+                    addonBreakdownLines.push(
+                        '<div class="so-price-row"><span>🦵 ' + bOpt.label_ko + (bQty > 1 ? ' × ' + bQty : '') + '</span><span>+' + fmtPrice(bLine) + '</span></div>'
+                    );
+                }
+            });
         }
 
         // 배송/시공 비용 (야간 시간 보정 포함)
@@ -2780,34 +2778,36 @@
     };
 
     // 2026-05-13: 받침대 옵션 선택 (등신대·자유인쇄커팅)
-    window._soPickBaseStand = function (key) {
-        if (!BASE_STAND_OPTS[key]) key = 'none';
-        state.baseStand = key;
-        document.querySelectorAll('.so-base-btn').forEach(function (b) {
-            var on = b.dataset.base === key;
-            b.classList.toggle('active', on);
-            b.style.background = on ? '#4338ca' : '#fff';
-            b.style.color = on ? '#fff' : '#451a03';
-            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
-        });
-        // 2026-05-22: 받침대 수량 입력칸 — 받침대 선택 시만 표시
-        var qRow = document.getElementById('soBaseStandQtyRow');
-        if (qRow) qRow.style.display = (key !== 'none') ? 'flex' : 'none';
-        if (key === 'none') {
-            state.baseStandQty = 1;
-            var qEl0 = document.getElementById('soBaseStandQty'); if (qEl0) qEl0.value = 1;
-        } else if (!state.baseStandQty || state.baseStandQty < 1) {
-            state.baseStandQty = 1;
-            var qEl1 = document.getElementById('soBaseStandQty'); if (qEl1) qEl1.value = 1;
+    // 2026-05-22: 받침대 다중 선택 (key→qty) — 여러 종류·수량 (예: A4 3개 + 배너형 2개). 추가옵션과 동일 방식.
+    window._soToggleBaseStand = function (inp) {
+        var key = inp.dataset.bsKey;
+        if (!state.baseStands) state.baseStands = {};
+        var lbl = inp.closest('label');
+        var qInp = lbl ? lbl.querySelector('input[data-bs-qty-key]') : null;
+        if (inp.checked) {
+            state.baseStands[key] = (qInp && parseInt(qInp.value, 10) > 0) ? parseInt(qInp.value, 10) : 1;
+            if (qInp) qInp.value = state.baseStands[key];
+        } else {
+            delete state.baseStands[key];
+            if (qInp) qInp.value = 1;
         }
         recalc();
     };
-
-    // 2026-05-22: 받침대 수량 직접 입력
-    window._soSetBaseStandQty = function (inp) {
+    window._soSetBaseStandTypeQty = function (inp) {
+        var key = inp.dataset.bsQtyKey;
         var q = Math.max(1, parseInt(inp.value, 10) || 1);
         inp.value = q;
-        state.baseStandQty = q;
+        if (!state.baseStands) state.baseStands = {};
+        var lbl = inp.closest('label');
+        var cb = lbl ? lbl.querySelector('input[type=checkbox][data-bs-key]') : null;
+        if (cb && !cb.checked) cb.checked = true;
+        state.baseStands[key] = q;
+        recalc();
+    };
+    // 레거시 호환 (혹시 남은 단일 호출) — 다중 맵으로 흡수
+    window._soPickBaseStand = function (key) {
+        if (!state.baseStands) state.baseStands = {};
+        if (key && key !== 'none' && BASE_STAND_OPTS[key]) state.baseStands[key] = state.baseStands[key] || 1;
         recalc();
     };
 
@@ -3478,21 +3478,12 @@
 
         // 2026-05-13: 받침대 옵션이 필요한 상품 (등신대 + 자유인쇄커팅)
         state.needsBaseStand = _soNeedsBaseStand(p);
-        state.baseStand = 'none';
-        state.baseStandQty = 1; // 2026-05-22: 받침대 수량 초기화
+        state.baseStands = {}; // 2026-05-22: 받침대 다중 선택 초기화
         var baseSec = document.getElementById('soBaseStandSection');
         if (baseSec) baseSec.style.display = state.needsBaseStand ? '' : 'none';
-        // 받침대 버튼 초기화
-        document.querySelectorAll('.so-base-btn').forEach(function (b) {
-            var on = b.dataset.base === 'none';
-            b.classList.toggle('active', on);
-            b.style.background = on ? '#4338ca' : '#fff';
-            b.style.color = on ? '#fff' : '#451a03';
-            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
-        });
-        // 받침대 수량 입력칸 초기화 (받침대 없음 → 숨김)
-        var _bsQRow = document.getElementById('soBaseStandQtyRow'); if (_bsQRow) _bsQRow.style.display = 'none';
-        var _bsQEl = document.getElementById('soBaseStandQty'); if (_bsQEl) _bsQEl.value = 1;
+        // 받침대 체크박스/수량 초기화
+        document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function (cb) { cb.checked = false; });
+        document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function (qi) { qi.value = 1; });
         state.isStandee = _soIsStandeeProduct(p);
 
         // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
@@ -3860,12 +3851,17 @@
             // 2026-05-13: 허니콤보드 원판인쇄 양면 플래그 (단가 2배 재계산용)
             rawBoardDouble: !!state.isRawBoardDouble,
             // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
-            baseStand: (state.baseStand && state.baseStand !== 'none') ? {
-                key: state.baseStand,
-                fee: (BASE_STAND_OPTS[state.baseStand] && BASE_STAND_OPTS[state.baseStand].fee) || 0,
-                qty: state.baseStandQty || 1,
-                label: (BASE_STAND_OPTS[state.baseStand] && BASE_STAND_OPTS[state.baseStand].label_ko) || ''
-            } : null,
+            // 2026-05-22: 받침대 다중 — 배열로 저장 [{key,fee,qty,label}, ...]
+            baseStands: (function () {
+                var arr = [];
+                if (state.baseStands) {
+                    Object.keys(state.baseStands).forEach(function (bk) {
+                        var o = BASE_STAND_OPTS[bk]; if (!o) return;
+                        arr.push({ key: bk, fee: o.fee || 0, qty: state.baseStands[bk] || 1, label: o.label_ko || '' });
+                    });
+                }
+                return arr.length ? arr : null;
+            })(),
             // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
             backFileName: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.name : null,
             backFileType: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.type : null,
@@ -4414,8 +4410,10 @@
                 base += (addon.price || 0) * aQty;
             });
         }
-        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅) — 2026-05-22: 수량 반영
-        if (it.baseStand && typeof it.baseStand.fee === 'number') {
+        // 2026-05-13: 받침대 옵션 — 2026-05-22: 다중 종류·수량 합산 (+ 레거시 단일 호환)
+        if (Array.isArray(it.baseStands)) {
+            it.baseStands.forEach(function (b) { base += (b.fee || 0) * (b.qty || 1); });
+        } else if (it.baseStand && typeof it.baseStand.fee === 'number') {
             base += it.baseStand.fee * (it.baseStand.qty || 1);
         }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
@@ -5185,7 +5183,12 @@
                         lines.push('   ➕ ' + (a.display_name || a.name) + ' × ' + aQty + ' = ' + (((a.price || 0) * aQty).toLocaleString()) + '원');
                     });
                 }
-                if (it.baseStand && it.baseStand.label) {
+                if (Array.isArray(it.baseStands)) {
+                    it.baseStands.forEach(function (b) {
+                        var _q = b.qty || 1;
+                        lines.push('   🦵 받침대: ' + (b.label || b.key) + (_q > 1 ? ' × ' + _q : '') + (b.fee > 0 ? ' (+' + ((b.fee * _q).toLocaleString()) + '원)' : ''));
+                    });
+                } else if (it.baseStand && it.baseStand.label) {
                     var _bsQ = it.baseStand.qty || 1;
                     lines.push('   🦵 받침대: ' + it.baseStand.label + (_bsQ > 1 ? ' × ' + _bsQ : '') + (it.baseStand.fee > 0 ? ' (+' + ((it.baseStand.fee * _bsQ).toLocaleString()) + '원)' : ''));
                 }

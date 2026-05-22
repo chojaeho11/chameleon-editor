@@ -2015,15 +2015,18 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             });
         }
 
-        // 2026-05-22: 등신대·자유인쇄커팅 받침대(뒷받침) — 수량 반영 (한 대지에 여러 개).
-        if (item.baseStand && Number(item.baseStand.fee) > 0) {
-            let bsPrice = Number(item.baseStand.fee);
-            const bsQty = Number(item.baseStand.qty) || 1;
+        // 2026-05-22: 받침대(뒷받침) — 다중 종류·수량 (배열) + 레거시 단일 호환.
+        var _bsList = Array.isArray(item.baseStands) ? item.baseStands
+                    : (item.baseStand && Number(item.baseStand.fee) > 0 ? [item.baseStand] : []);
+        _bsList.forEach(function (bs) {
+            if (!bs || !(Number(bs.fee) > 0)) return;
+            let bsPrice = Number(bs.fee);
+            const bsQty = Number(bs.qty) || 1;
             if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')) { if (_cr && _cr.JP) bsPrice = Math.round(bsPrice * _cr.JP); }
             else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') { if (_cr && _cr.US) bsPrice = Math.round(bsPrice * _cr.US * 100) / 100; }
             const bsTotal = bsPrice * bsQty;
             totalAmt += bsTotal;
-            const bsName = "└ " + (item.baseStand.label || (TEXT.opt_add || '받침대'));
+            const bsName = "└ " + (bs.label || (TEXT.opt_add || '받침대'));
             const splitBs = doc.splitTextToSize(bsName, nameColWidth - 4);
             const bsHeight = Math.max(8, 4 + (splitBs.length * 5));
             curX = 15;
@@ -2035,7 +2038,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             drawCell(doc, curX, y, cols[5], bsHeight, formatCurrencyForPDF(bsTotal), 'right');
             y += bsHeight;
             if(y > 260) { doc.addPage(); y = 20; }
-        }
+        });
 
         // 2026-05-22: 이 항목(상품+옵션+받침)이 할인 비적용이면 그 합을 누적해 할인 base 에서 제외.
         if (_isAmountDiscExempt) nonDiscountableAmt += (totalAmt - _beforeItemAmt);
