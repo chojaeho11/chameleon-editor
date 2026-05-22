@@ -11414,6 +11414,18 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             window.PRODUCT_DB[productCode] = product;
 
+            // 2026-05-22: 패브릭 상품 딥링크/광고 → 패브릭 디자인 메인(/fabric)으로.
+            //   원단류는 상위 카테고리 '22222'. 이름 기반 폴백도 함께(카테고리 매핑 미로드 대비).
+            try {
+                var _fbTop = '';
+                try { if (window._getTopCategoryCode) _fbTop = window._getTopCategoryCode(product.category) || ''; } catch (e) {}
+                var _fbTxt = ((product.name || '') + ' ' + (product.name_jp || '') + ' ' + (product.name_us || '') + ' ' + (product.category || '')).toLowerCase();
+                if (_fbTop === '22222' || /패브릭|fabric|원단|生地|布|ファブリック|textile|텍스타일/.test(_fbTxt)) {
+                    location.replace('/fabric' + (currentLang ? ('?lang=' + currentLang) : ''));
+                    return;
+                }
+            } catch (e) {}
+
             // ★ [SEO] 제품 로드 후 메타태그 + JSON-LD 업데이트 (DB 실제 이미지/가격 반영)
             (function updateProductSEO() {
                 var cc = window._SEO_CC || 'KR';
