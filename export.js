@@ -1741,18 +1741,25 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         // 2026-05-22: 패브릭(cotton-print) 항목은 product 객체가 없어 견적서에서 누락되던 버그.
         //   fabricCode/title 로 합성 product 를 만들어 포함 (단가 = 라인총액/수량, 할인 중복 방지).
         if (!item.product) {
-            if (item.fabricCode || item.fabricName || item.title) {
+            // 2026-05-22: 패브릭 항목 — cart shape(fabricCode/title/orderWcm) 과
+            //   DB복원 shape(product_code/fabric/width_cm) 둘 다 인식해야 견적서 누락 안 됨.
+            var _isFab = item.fabricCode || item.fabricName || item.title || item.product_name
+                || item.fabric || item.orderWcm != null || item.width_cm != null
+                || item.source === 'cotton-print' || item.__source === 'cotton-print';
+            if (_isFab) {
                 var _fq = item.qtyValue || item.qty || 1;
                 var _fline = item.price || item.subtotal || 0;
                 var _funit = _fq > 0 ? Math.round(_fline / _fq) : _fline;
-                var _fname = item.title || item.fabricName || '원단';
+                var _fname = item.title || item.fabricName || item.product_name || item.fabric || '원단';
+                var _fwmm = item.width_mm || (item.orderWcm ? Math.round(item.orderWcm * 10) : (item.width_cm ? Math.round(item.width_cm * 10) : 0));
+                var _fhmm = item.height_mm || (item.orderHcm ? Math.round(item.orderHcm * 10) : (item.height_cm ? Math.round(item.height_cm * 10) : 0));
                 item = Object.assign({}, item, {
                     qty: _fq,
                     product: {
                         name: _fname, name_jp: _fname, name_us: _fname,
-                        price: _funit, code: item.fabricCode || '',
-                        w_mm: item.width_mm || (item.orderWcm ? Math.round(item.orderWcm * 10) : 0),
-                        h_mm: item.height_mm || (item.orderHcm ? Math.round(item.orderHcm * 10) : 0),
+                        price: _funit, code: item.fabricCode || item.product_code || '',
+                        w_mm: _fwmm,
+                        h_mm: _fhmm,
                         _calculated_price: true   // export 의 수량할인 재적용 방지 (이미 반영된 가격)
                     }
                 });

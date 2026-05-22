@@ -4587,7 +4587,10 @@
 
             // window.cartData 와 동일한 shape 으로 변환 (export.js 가 item.product 참조)
             // simple_order cart 의 일반 항목은 이미 product 객체를 가지고 있음
-            var pdfCart = cart.filter(function (it) { return !!it.product || it.fabricCode; });
+            // 2026-05-22: 패브릭 누락 버그 — 기존 it.fabricCode 만 보면 DB복원/동기화된 패브릭
+            //   (source/orderWcm 만 있고 fabricCode 없는 shape)이 견적서에서 빠짐.
+            //   요약(_renderCheckoutSummary)과 동일하게 _soIsFabricItem 으로 판별.
+            var pdfCart = cart.filter(function (it) { return !!it.product || _soIsFabricItem(it); });
             var blob = await mod.generateQuotationPDF(orderInfo, pdfCart, _quoteDiscRate, 0);
             if (!blob) { alert('견적서 생성 실패. 콘솔 확인.'); return; }
 
