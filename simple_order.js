@@ -4479,6 +4479,12 @@
             var html = '';
             if (w.useMileage > 0) html += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('마일리지 사용','マイル使用','Mileage') + '</span><span>-' + _soFormatPrice(w.useMileage) + '</span></div>';
             if (w.useDeposit > 0) html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
+            // 2026-05-22: 예치금/마일리지가 주문금액보다 모자라면 — 남은 금액은 카드/무통장으로 결제.
+            if ((w.useMileage > 0 || w.useDeposit > 0) && finalAmt > 0) {
+                var _pm = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'card';
+                var _pmLabel = _pm === 'bank' ? tr('무통장 입금','銀行振込','Bank transfer') : tr('카드','カード','Card');
+                html += '<div style="display:flex; justify-content:space-between; color:#111827; font-weight:700; border-top:1px dashed #e5e7eb; margin-top:4px; padding-top:4px;"><span>' + _pmLabel + ' ' + tr('결제','決済','payment') + '</span><span>' + _soFormatPrice(finalAmt) + '</span></div>';
+            }
             bd.innerHTML = html;
         }
     }
@@ -4616,6 +4622,8 @@
         // 입금자 이름 — 무통장 입금이면 표시 (가맹점 해외 계좌이체 포함)
         var depBox = document.getElementById('soCoDepositorBox');
         if (depBox) depBox.style.display = (pay === 'bank') ? '' : 'none';
+        // 2026-05-22: 결제수단 바뀌면 잔액 차감 후 카드/무통장 결제액 라벨 갱신
+        if (typeof _soApplyWalletToTotal === 'function') _soApplyWalletToTotal();
     };
 
     // 2026-05-14: 증빙 타입 토글 (세금계산서 / 현금영수증 입력 폼 표시)
