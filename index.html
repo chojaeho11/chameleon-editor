@@ -4050,6 +4050,43 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
 </div>
 </div>
 
+<!-- 2026-05-22: PRO 구독 가격 통화 변환 (일본=¥, 미국=$ 등) — ₩ 하드코딩 보정. 결제금액은 서버(country)가 결정. -->
+<script>
+(function(){
+    function cc(){ return window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR'; }
+    function fmtSub(krw){
+        var c = cc();
+        var rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || { KR:1, JP:0.1, US:0.001, CN:0.05, AR:0.001, ES:0.001, DE:0.001, FR:0.001 };
+        var rate = rates[c] || 1;
+        var sym = (c==='JP'||c==='CN') ? '¥' : (c==='US'||c==='AR') ? '$' : (c==='ES'||c==='DE'||c==='FR') ? '€' : '₩';
+        return sym + Math.round(krw * rate).toLocaleString();
+    }
+    function per(krLbl, jaLbl, enLbl){ var c = cc(); return c==='JP'?jaLbl : c==='KR'?krLbl : enLbl; }
+    function setAll(id, html){ var els = document.querySelectorAll('[id="'+id+'"]'); for (var i=0;i<els.length;i++) els[i].innerHTML = html; }
+    function apply(){
+        var pm = '<small>' + per('/월','/月','/mo') + '</small>';
+        var py = '<small>' + per('/년','/年','/yr') + '</small>';
+        setAll('subPriceMonthly', fmtSub(30000) + pm);
+        setAll('subPriceAnnual', fmtSub(165000) + py);
+        setAll('subPriceLifetime', fmtSub(330000));
+        setAll('subPopupPriceMonthly', fmtSub(30000) + pm);
+        setAll('subPopupPriceAnnual', fmtSub(165000) + py);
+        setAll('subPopupPriceLifetime', fmtSub(330000));
+    }
+    function start(retry){
+        retry = retry || 0;
+        if (!window.__SITE_CODE && !(window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) && retry < 30) {
+            return setTimeout(function(){ start(retry + 1); }, 100);
+        }
+        apply();
+        setTimeout(apply, 600);   // 클론/지연 렌더 대비
+        setTimeout(apply, 1800);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ start(0); });
+    else start(0);
+})();
+</script>
+
 <!-- 구독 유도 모달 (프리미엄 템플릿 클릭 시) -->
 <div id="subUpsellModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100002; justify-content:center; align-items:center; padding:16px;">
     <div style="background:#fff; border-radius:20px; max-width:400px; width:100%; padding:40px 30px; text-align:center; animation:scSlideUp 0.3s ease;">
