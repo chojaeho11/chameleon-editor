@@ -4591,13 +4591,24 @@
             if (!blob) { alert('견적서 생성 실패. 콘솔 확인.'); return; }
 
             var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = '견적서_미리보기_' + Date.now() + '.pdf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+            // 2026-05-22: 모바일은 다운로드 대신 새 탭으로 열기 — 같은 탭을 덮어 뒤로가기 시
+            //   주문(체크아웃)이 처음부터 다시 시작되던 문제 방지.
+            var _isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+            if (_isMobile) {
+                var w = window.open(url, '_blank');
+                if (!w) { // 팝업 차단 시 다운로드 폴백
+                    var a0 = document.createElement('a'); a0.href = url; a0.download = '견적서_' + Date.now() + '.pdf';
+                    document.body.appendChild(a0); a0.click(); document.body.removeChild(a0);
+                }
+            } else {
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = '견적서_미리보기_' + Date.now() + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+            setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
         } catch (e) {
             console.error('[_soDownloadQuotePreview]', e);
             alert('견적서 생성 오류: ' + (e.message || e));

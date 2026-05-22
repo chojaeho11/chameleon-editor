@@ -267,12 +267,13 @@
                 document.getElementById('title').innerText = "Payment Successful!";
                 document.getElementById('desc').innerText = "Redirecting...";
 
-                // 장바구니 비우기
+                // 장바구니 비우기 (패브릭 cotton-printer.com 의 cp_cart_v1 포함)
                 try {
                     localStorage.removeItem('chameleon_cart_current');
                     localStorage.removeItem('chameleon_cart_guest');
+                    localStorage.removeItem('cp_cart_v1');
                     Object.keys(localStorage).forEach(key => {
-                        if (key.startsWith('chameleon_cart_')) localStorage.removeItem(key);
+                        if (key.startsWith('chameleon_cart_') || key.startsWith('cp_cart')) localStorage.removeItem(key);
                     });
                 } catch(e) {}
 

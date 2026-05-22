@@ -1731,7 +1731,28 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     const _cr = window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE;
     let totalAmt = 0; let no = 1;
     cartItems.forEach(item => {
-        if (!item.product) return;
+        // 2026-05-22: 패브릭(cotton-print) 항목은 product 객체가 없어 견적서에서 누락되던 버그.
+        //   fabricCode/title 로 합성 product 를 만들어 포함 (단가 = 라인총액/수량, 할인 중복 방지).
+        if (!item.product) {
+            if (item.fabricCode || item.fabricName || item.title) {
+                var _fq = item.qtyValue || item.qty || 1;
+                var _fline = item.price || item.subtotal || 0;
+                var _funit = _fq > 0 ? Math.round(_fline / _fq) : _fline;
+                var _fname = item.title || item.fabricName || '원단';
+                item = Object.assign({}, item, {
+                    qty: _fq,
+                    product: {
+                        name: _fname, name_jp: _fname, name_us: _fname,
+                        price: _funit, code: item.fabricCode || '',
+                        w_mm: item.width_mm || (item.orderWcm ? Math.round(item.orderWcm * 10) : 0),
+                        h_mm: item.height_mm || (item.orderHcm ? Math.round(item.orderHcm * 10) : 0),
+                        _calculated_price: true   // export 의 수량할인 재적용 방지 (이미 반영된 가격)
+                    }
+                });
+            } else {
+                return;
+            }
+        }
 
         // 다국어 상품명/가격 선택 로직
         // price는 항상 KRW 등가 (addProductToCartDirectly에서 역환산 완료)
