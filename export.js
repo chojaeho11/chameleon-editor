@@ -1736,6 +1736,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 
     const _cr = window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE;
     let totalAmt = 0; let no = 1;
+    let nonDiscountableAmt = 0; // 2026-05-22: 구매금액 할인 비적용 항목 합계 (금액주문/원판)
     cartItems.forEach(item => {
         // 2026-05-22: 패브릭(cotton-print) 항목은 product 객체가 없어 견적서에서 누락되던 버그.
         //   fabricCode/title 로 합성 product 를 만들어 포함 (단가 = 라인총액/수량, 할인 중복 방지).
@@ -1759,6 +1760,21 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 return;
             }
         }
+
+        // 2026-05-22: 구매금액 할인 비적용 항목 판별 — simple_order _soCalcCartTotal 과 동일하게
+        //   금액주문(21355677)·원판(raw board)은 할인 base 에서 제외. (그래야 견적서 할인액=결제 할인액)
+        var _ndCode = String((item.product && item.product.code) || '');
+        var _ndCat = String((item.product && item.product.category) || '').toLowerCase();
+        var _ndTop = '';
+        try { if (window._getTopCategoryCode && item.product && item.product.category) _ndTop = String(window._getTopCategoryCode(item.product.category) || '').toLowerCase(); } catch (e) {}
+        var _ndName = (((item.product && item.product.name) || '') + ' ' + ((item.product && item.product.name_kr) || '') + ' ' + ((item.product && item.product.name_us) || '')).toLowerCase();
+        var _isAmtOrder = _ndCode === '21355677' || _ndCode === '21355677_copy';
+        var _isRawBoard = _ndCat === 'wholesale board prices' || _ndCat.indexOf('raw') >= 0 || _ndCat.indexOf('원판') >= 0
+            || _ndTop === 'wholesale board prices' || _ndTop.indexOf('raw') >= 0 || _ndTop.indexOf('원판') >= 0
+            || _ndCode.toLowerCase().indexOf('hb_rb') === 0 || _ndCode.toLowerCase().indexOf('hb_raw') === 0
+            || /원판|raw\s*board|raw\s*sheet/.test(_ndName);
+        var _isAmountDiscExempt = _isAmtOrder || _isRawBoard;
+        var _beforeItemAmt = totalAmt;
 
         // 다국어 상품명/가격 선택 로직
         // price는 항상 KRW 등가 (addProductToCartDirectly에서 역환산 완료)
@@ -2009,6 +2025,9 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             y += bsHeight;
             if(y > 260) { doc.addPage(); y = 20; }
         }
+
+        // 2026-05-22: 이 항목(상품+옵션+받침)이 할인 비적용이면 그 합을 누적해 할인 base 에서 제외.
+        if (_isAmountDiscExempt) nonDiscountableAmt += (totalAmt - _beforeItemAmt);
     });
 
     y += 5;
@@ -2021,8 +2040,11 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             if (_cr.US) shippingFee = Math.round(shippingFee * _cr.US * 100) / 100;
         }
     }
-    const afterRateDiscount = Math.floor(totalAmt * (1 - discountRate));
-    const rateDiscountAmt = totalAmt - afterRateDiscount;
+    // 2026-05-22: 할인은 '할인 적용 대상(discountBase)' 에만 — 금액주문/원판 제외.
+    //   기존엔 totalAmt 전체에 적용해 견적서 할인액이 결제(_soCalcCartTotal)보다 컸음.
+    const _discountBase = Math.max(0, totalAmt - nonDiscountableAmt);
+    const rateDiscountAmt = Math.round(_discountBase * discountRate);
+    const afterRateDiscount = totalAmt - rateDiscountAmt;
     const finalAmt = afterRateDiscount - usedMileage + shippingFee;
     
     // [수정] 부가세 계산 (일본 10%, 한국 10%)
