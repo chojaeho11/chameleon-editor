@@ -522,6 +522,49 @@ function _cdApplyFabricChipPhotos() {
 }
 window._cdApplyFabricChipPhotos = _cdApplyFabricChipPhotos;
 
+// 2026-05-22: 원단 칩에 마우스 호버 / 터치 시 특징 툴팁 (KR·JP·EN — FABRIC_TYPES 다국어 설명 사용)
+function _cdInitFabricTooltips() {
+    var tip = document.getElementById('cdFabricTip');
+    if (!tip) {
+        tip = document.createElement('div');
+        tip.id = 'cdFabricTip';
+        tip.style.cssText = 'position:fixed; z-index:100000; max-width:240px; background:#1f2937; color:#fff; padding:10px 12px; border-radius:10px; font-size:12px; line-height:1.55; box-shadow:0 8px 24px rgba(0,0,0,0.3); pointer-events:none; opacity:0; transition:opacity .15s; display:none;';
+        document.body.appendChild(tip);
+    }
+    function showTip(chip) {
+        var f = FABRIC_TYPES[chip.dataset.fab];
+        if (!f) return;
+        tip.innerHTML = '<div style="font-weight:800; margin-bottom:3px;">' + pickFabricName(f) + '</div><div style="opacity:0.92;">' + pickFabricDesc(f) + '</div>';
+        tip.style.display = 'block';
+        var r = chip.getBoundingClientRect();
+        var tw = tip.offsetWidth, th = tip.offsetHeight;
+        var left = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, window.innerWidth - tw - 8));
+        var top = r.top - th - 10;
+        if (top < 8) top = r.bottom + 10; // 위 공간 없으면 아래로
+        tip.style.left = left + 'px';
+        tip.style.top = top + 'px';
+        requestAnimationFrame(function () { tip.style.opacity = '1'; });
+    }
+    function hideTip() {
+        tip.style.opacity = '0';
+        setTimeout(function () { if (tip.style.opacity === '0') tip.style.display = 'none'; }, 160);
+    }
+    document.querySelectorAll('.fabric-type[data-fab]').forEach(function (chip) {
+        if (chip.__cdTipBound) return;
+        chip.__cdTipBound = true;
+        chip.addEventListener('mouseenter', function () { showTip(chip); });
+        chip.addEventListener('mouseleave', hideTip);
+        chip.addEventListener('touchstart', function () { showTip(chip); }, { passive: true });
+    });
+    if (!document.__cdTipDocBound) {
+        document.__cdTipDocBound = true;
+        document.addEventListener('touchstart', function (e) {
+            if (!(e.target.closest && e.target.closest('.fabric-type[data-fab]'))) hideTip();
+        }, { passive: true });
+    }
+}
+window._cdInitFabricTooltips = _cdInitFabricTooltips;
+
 function updateFabricDetail() {
     const f = getFabric();
     if (!f) return;
@@ -2189,6 +2232,7 @@ window._cpSubmitOrder = async function() {
         // 3) 결제 분기 — 언어별 PG 자동 분기
         if (payMethod === 'card') {
             saveCart([]);
+            try { window.cartSync && window.cartSync.forceSync && window.cartSync.forceSync(); } catch (e) {} // 서버 즉시 동기화 (리다이렉트 전 비움 반영)
             window._cpUpdateCartUI();
             var lang = window.__CD_LANG || 'ko';
             if (lang === 'ko') {
@@ -2203,6 +2247,7 @@ window._cpSubmitOrder = async function() {
 
         // 4) 무통장입금: 예쁜 모달로 안내
         saveCart([]);
+        try { window.cartSync && window.cartSync.forceSync && window.cartSync.forceSync(); } catch (e) {} // 서버 즉시 동기화
         window._cpUpdateCartUI();
         window._cpCloseCheckout();
         window._cpCartClose();
@@ -2395,6 +2440,7 @@ loadDbFabrics().then(() => {
     renderFinishOptions(); // 마감/고리/부자재 가격 라벨 동적 갱신 (언어/통화)
     updateFabricDetail(); // 원단 상세 텍스트도 새로 적용
     if (window._cdApplyFabricChipPhotos) _cdApplyFabricChipPhotos(); // 칩 썸네일 (사진 있으면)
+    if (window._cdInitFabricTooltips) _cdInitFabricTooltips(); // 호버/터치 시 원단 특징 툴팁
     if (window._cdCalcHoebae) window._cdCalcHoebae();
 });
 // i18n 적용 후 한 번 더 (ui i18n 적용된 후 가격 라벨 다시)

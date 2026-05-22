@@ -268,7 +268,10 @@
                 document.getElementById('desc').innerText = "Redirecting...";
 
                 // 장바구니 비우기 (패브릭 cotton-printer.com 의 cp_cart_v1 포함)
+                // 2026-05-22: 서버(cart_sync)까지 비워야 다음 방문 시 주문한 상품이 되살아나지 않음.
                 try {
+                    if (window._clearAllCart) { try { window._clearAllCart(); } catch(e) {} }
+                    if (window.cartSync && window.cartSync.clearAll) { try { window.cartSync.clearAll(); } catch(e) {} }
                     localStorage.removeItem('chameleon_cart_current');
                     localStorage.removeItem('chameleon_cart_guest');
                     localStorage.removeItem('cp_cart_v1');

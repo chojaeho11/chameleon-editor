@@ -3820,6 +3820,8 @@
             itemNote: itemNote,
             // 2026-05-13: 시공/배송 일정 (가벽/포토존만)
             shipping: shipping,
+            // 2026-05-22: 디자인 파일 없이 주문 (이미지 추후 전달) 표시
+            artworkLater: !!state.artworkLater,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: calc.tierPct, discount: calc.discount, final: calc.final },
         };
     }
@@ -3881,20 +3883,28 @@
             showStatus(tr('❌ 상품 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.', '商品情報を読み込み中...', 'Loading product info...'), 'err');
             return false;
         }
-        // 2026-05-15: 원판·금액주문은 디자인 파일 검증 스킵 (인쇄 없이 발송 / 입력 금액 그대로)
+        // 2026-05-22: 디자인 파일은 선택사항 — 패브릭과 동일하게 파일 없이도 주문 가능 (이미지 추후 전달).
+        //   원판·금액주문은 원래 파일 불필요. 그 외 상품은 파일 미첨부 시 확인창만 띄우고 진행.
+        state.artworkLater = false;
         if (!state.isRawBoard && !state.isAmountOrder && !state.file) {
-            console.warn('[simple_order] state.file 미설정 — 파일을 먼저 업로드해야 함');
-            showStatus(tr('❌ 디자인 파일을 먼저 업로드해주세요.', '📁 デザインファイルをアップロードしてください。', 'Please upload a design file first.'), 'err');
-            // 업로드 영역 강조 (사용자가 어디 클릭해야 할지 명확히)
-            try {
-                var dz = document.getElementById('soUpload');
-                if (dz) {
-                    dz.style.boxShadow = '0 0 0 4px rgba(220,38,38,0.4)';
-                    setTimeout(function () { dz.style.boxShadow = ''; }, 2000);
-                    dz.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            } catch (e) {}
-            return false;
+            var _noFileMsg = tr(
+                '디자인 파일 없이 주문하시겠어요?\n이미지는 주문 후 이메일 등으로 전달하실 수 있습니다.',
+                'デザインファイルなしで注文しますか？\n画像はご注文後にメール等でお送りいただけます。',
+                'Order without a design file?\nYou can send the image later by email after ordering.'
+            );
+            if (!window.confirm(_noFileMsg)) {
+                // 취소 — 업로드 영역 강조
+                try {
+                    var dz = document.getElementById('soUpload');
+                    if (dz) {
+                        dz.style.boxShadow = '0 0 0 4px rgba(220,38,38,0.4)';
+                        setTimeout(function () { dz.style.boxShadow = ''; }, 2000);
+                        dz.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } catch (e) {}
+                return false;
+            }
+            state.artworkLater = true;
         }
         console.log('[simple_order] doAddToCart 시작 — 상품:', state.product?.code, '파일:', state.file?.name);
         _soInFlight = true;
@@ -5009,6 +5019,7 @@
                     addons: addons,
                     wall_size: it.wallSize || null,           // 가벽 사이즈 (m 단위)
                     wall_side: it.wallSide || null,           // single / double (양면이면 가격 2배)
+                    artwork_later: !!it.artworkLater,         // 2026-05-22: 이미지 추후 전달(파일 미첨부) 주문
                     item_note: it.itemNote || '',             // 전달사항 (제작 요청)
                     shipping: it.shipping || null,            // 시공/배송 일정 + 철거
                     file_url: fileUrl,
@@ -5232,7 +5243,7 @@
 
             // 2026-05-22: 마일리지/예치금으로 전액 결제됨 — 카드/무통장 불필요. 완료 안내 후 종료.
             if (_fullyCovered) {
-                try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+                try { localStorage.setItem('chameleon_cart_current', '[]'); if (window._clearAllCart) window._clearAllCart(); } catch (e) {}
                 alert(
                     tr('주문이 완료되었습니다!', 'ご注文が完了しました！', 'Your order is complete!') + '\n\n' +
                     tr('주문번호', '注文番号', 'Order #') + ': #' + (newOrderId || '...') + '\n' +
@@ -5261,7 +5272,7 @@
                     tr('입금 후 영업일 내 제작이 시작됩니다.', 'ご入金後、営業日内に製作を開始します。', 'Production starts within business days of payment.')
                 );
                 // 카트 비우기 + shield 로 전환 가림 + 화면 이동
-                try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+                try { localStorage.setItem('chameleon_cart_current', '[]'); if (window._clearAllCart) window._clearAllCart(); } catch (e) {}
                 _showLoadingShield();
                 window._soCloseCheckout();
                 setTimeout(function () { location.href = state.frSlug ? ('/store/' + state.frSlug) : '/'; }, 600);
@@ -5269,7 +5280,7 @@
             }
 
             // 카드 결제: shield 로 전환 화면 가리고 한국=Toss, 해외=Stripe
-            try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+            try { localStorage.setItem('chameleon_cart_current', '[]'); if (window._clearAllCart) window._clearAllCart(); } catch (e) {}
             _showLoadingShield();
             window._soCloseCheckout();
             // simple_order 모달은 closeSimpleOrderModal 생략 — shield 가 위를 가리므로 background 안 보임
