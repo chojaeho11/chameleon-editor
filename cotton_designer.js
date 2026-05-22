@@ -1700,7 +1700,7 @@ window._cdBuyNow = async function() {
         _it2.title = (_it2.fabricName || _it2.title || '원단') + ' — ' + _later2;
         var _c2 = getCart(); _c2.push(_it2); saveCart(_c2);
         window._cpUpdateCartUI();
-        window._cpOpenCheckout();
+        window._cpGoCheckout();
         return;
     }
     const item = buildCartItem();
@@ -1715,6 +1715,16 @@ window._cdBuyNow = async function() {
     cart.push(item);
     saveCart(cart);
     window._cpUpdateCartUI();
+    window._cpGoCheckout();
+};
+
+// 2026-05-22: 결제창 라우터 — cafe2626 에선 통합 결제창(_soOpenCheckout: 패브릭+일반+마일리지 한 번에),
+//   단독 패브릭 도메인(cotton-print/printer.com)에선 simple_order 미로드 → 패브릭 전용(_cpOpenCheckout).
+window._cpGoCheckout = function () {
+    try { if (window._cpCartClose) window._cpCartClose(); } catch (e) {}
+    if (typeof window._soOpenCheckout === 'function' && document.getElementById('soCheckoutOverlay')) {
+        try { window._soOpenCheckout(); return; } catch (e) { console.warn('[cpGoCheckout] _soOpenCheckout 실패, 패브릭 전용으로', e); }
+    }
     window._cpOpenCheckout();
 };
 

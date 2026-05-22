@@ -1364,7 +1364,7 @@ a { text-decoration: none; color: inherit; }
             <span class="cart-total-label" data-cdi18n="cart_total">총 결제금액</span>
             <span class="cart-total-amt" id="cartTotalAmt">0원</span>
         </div>
-        <button class="cart-checkout-btn" id="cartCheckoutBtn" onclick="window._cpOpenCheckout()" disabled>
+        <button class="cart-checkout-btn" id="cartCheckoutBtn" onclick="window._cpGoCheckout()" disabled>
             <i class="fa-solid fa-bag-shopping"></i> &nbsp;<span data-cdi18n="cart_checkout">주문하기</span>
         </button>
         <!-- 2026-05-15: 전체 비우기 — phantom 항목 복원 문제 보강용 명시적 비움 -->
@@ -1510,6 +1510,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=63"></script>
+<script src="/cotton_designer.js?v=64"></script>
 </body>
 </html>

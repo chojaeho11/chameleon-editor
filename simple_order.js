@@ -4404,6 +4404,12 @@
             }
             shipTotal += shipFee;
         });
+        // 2026-05-22: 패브릭은 별도 택배 발송 — 플랫 배송비 1회 가산 (cotton_designer getShippingFeeKrw 와 동일).
+        //   패브릭 결제를 통합 결제창으로 라우팅해도 배송비가 누락되지 않도록.
+        if (cart.some(_soIsFabricItem)) {
+            var _siteC = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
+            shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
+        }
         var amountPct = 0;
         if (taxBase >= 10000000) amountPct = 30;
         else if (taxBase >= 5000000) amountPct = 20;
@@ -4952,26 +4958,50 @@
             var orderFiles = [];
             var items = cart.map(function (it) {
                 if (_soIsFabricItem(it)) {
-                    // 패브릭 항목 — 마켓플레이스 원본 또는 업로드 디자인 URL
-                    var fabUrl  = it.designerOriginalUrl || it.imgUrl || null;
+                    // 패브릭 항목 — _cpSubmitOrder 와 동일 schema (이미지/패턴/이어박기 누락 방지)
+                    // 2026-05-22: cartImageUrl(업로드 디자인) 우선 — 기존엔 누락되어 디자인 이미지가 사라지던 버그.
+                    var fabUrl  = it.cartImageUrl || it.designerOriginalUrl || it.imgUrl || it.artwork_url || null;
                     var fabName = it.imgFileName || (it.title || it.fabricName || 'fabric') + '.png';
                     if (fabUrl) orderFiles.push({ name: fabName, url: fabUrl, type: 'image/png' });
                     return {
-                        product_code: it.fabricCode,
-                        product_name: it.title || it.fabricName,
-                        fabric: it.fabricName,
-                        width_cm: it.orderWcm,
-                        height_cm: it.orderHcm,
-                        qty: it.qtyValue || 1,
+                        product_code: it.fabricCode || it.product_code,
+                        product_name: it.title || it.fabricName || it.product_name,
+                        fabric: it.fabricName || it.fabric,
+                        width_mm: it.width_mm || (it.orderWcm ? Math.round(it.orderWcm * 10) : null),
+                        height_mm: it.height_mm || (it.orderHcm ? Math.round(it.orderHcm * 10) : null),
+                        width_cm: it.orderWcm != null ? it.orderWcm : it.width_cm,
+                        height_cm: it.orderHcm != null ? it.orderHcm : it.height_cm,
+                        hoebae: it.hoebae,
+                        layout: it.layout,
+                        bg_color: it.bgColor || '#ffffff',
+                        qty: it.qtyValue || it.qty || 1,
+                        unit_price: it.unitPrice,
                         price: it.price || 0,
                         source: 'cotton-print',
                         artwork_url: fabUrl,
                         artwork_filename: fabName,
-                        addons: [
-                            it.finishCode ? { type: 'finish', code: it.finishCode, name: it.finishName, price: it.finishExtra || 0 } : null,
-                            it.hookCode ? { type: 'hook', code: it.hookCode, name: it.hookName, price: it.hookExtra || 0 } : null,
-                            it.accCode ? { type: 'accessory', code: it.accCode, name: it.accName, price: it.accExtra || 0 } : null
-                        ].filter(Boolean)
+                        artwork_later: !!it.artworkLater,
+                        addons: (function () {
+                            var arr = [];
+                            if (it.finishCode) arr.push({ type: 'finish', code: it.finishCode, name: it.finishName, price: it.finishExtra || 0 });
+                            if (it.hookCode) arr.push({ type: 'hook', code: it.hookCode, name: it.hookName, price: it.hookExtra || 0 });
+                            if (it.accCode) arr.push({ type: 'accessory', code: it.accCode, name: it.accName, price: it.accExtra || 0 });
+                            if (it.seamExtra && it.seamExtra > 0) arr.push({ type: 'seam', code: 'seam_join', name: '이어박기 (대폭 130cm 초과)', price: it.seamExtra });
+                            return arr;
+                        })(),
+                        pattern_spec: it.pattern_spec || {
+                            version: 1,
+                            fabric_cm: { w: it.orderWcm, h: it.orderHcm },
+                            cell_cm: { w: it.imgWcm, h: it.imgHcm },
+                            layout: it.layout,
+                            bg_color: it.bgColor || '#ffffff',
+                            image_scale: it.imgScale != null ? it.imgScale : 1.0,
+                            finish_code: it.finishCode || 'roll',
+                            finish_name: it.finishName || '',
+                            hook_code: it.hookCode || '',
+                            artwork_filename: fabName,
+                            artwork_url: fabUrl
+                        }
                     };
                 }
                 // 일반 상품 — buildCartItem 에서 originalUrl(storage URL) + filePath 저장됨
