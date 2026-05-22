@@ -330,8 +330,11 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     productName = base + (dashIdx >= 0 ? productName.slice(dashIdx) : '');
                 }
             }
-            const wMm = product.w_mm || product.width_mm || it.width || 0;
-            const hMm = product.h_mm || product.height_mm || it.height || 0;
+            // 사이즈 — 패브릭은 width_mm/height_mm 또는 width_cm/height_cm 에 저장
+            const wMm = product.w_mm || product.width_mm || it.width_mm || it.width
+                     || (it.width_cm ? Math.round(it.width_cm * 10) : 0) || 0;
+            const hMm = product.h_mm || product.height_mm || it.height_mm || it.height
+                     || (it.height_cm ? Math.round(it.height_cm * 10) : 0) || 0;
             const qty = it.qty || 1;
             const unit = product.price || it.price || 0;
             const lineTotal = it.price || (unit * qty);
@@ -394,14 +397,40 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     addonsArr.push({ code, qty: q });
                 });
             }
+            // cotton-print 마감/고리/부자재 — it.addons 배열 ({type,code,name,price})
+            if (Array.isArray(it.addons)) {
+                it.addons.forEach(a => {
+                    if (a && (a.name || a.code)) addonsArr.push({ code: a.code, qty: 1, label: a.name });
+                });
+            }
+
+            // 패브릭 패턴 정보 (cotton-print) — pattern_spec
+            let fabricHtml = '';
+            const ps = it.pattern_spec;
+            if (it.source === 'cotton-print' || ps) {
+                const parts = [];
+                if (ps && ps.fabric_cm) parts.push(`<div>출력 원단: <b>${ps.fabric_cm.w || '?'} × ${ps.fabric_cm.h || '?'} cm</b></div>`);
+                else if (it.width_cm || it.height_cm) parts.push(`<div>출력 원단: <b>${it.width_cm || '?'} × ${it.height_cm || '?'} cm</b></div>`);
+                if (ps && ps.cell_cm) parts.push(`<div>패턴 한 셀: <b>${ps.cell_cm.w || '?'} × ${ps.cell_cm.h || '?'} cm</b></div>`);
+                if (ps && ps.layout) parts.push(`<div>배치: <b>${esc(ps.layout)}</b></div>`);
+                if (ps && ps.image_scale != null) parts.push(`<div>이미지 비율: <b>${Math.round(ps.image_scale * 100)}%</b></div>`);
+                if (ps && ps.bg_color) parts.push(`<div>배경색: <b>${esc(ps.bg_color)}</b></div>`);
+                if (ps && ps.finish_name) parts.push(`<div>마감: <b>${esc(ps.finish_name)}</b></div>`);
+                if (ps && ps.artwork_filename) parts.push(`<div>원본 파일: <b>${esc(ps.artwork_filename)}</b></div>`);
+                if (parts.length) fabricHtml = parts.join('');
+            }
 
             // 옵션 박스들 빌드
             const boxes = [];
-            // 부자재/옵션
+            // 패브릭 패턴/원단 정보 (cotton-print) — 맨 위에 표시
+            if (fabricHtml) {
+                boxes.push(`<div class="opt-box opt-custom"><div class="opt-head"><i class="fa-solid fa-palette"></i> 원단 / 패턴 사양</div><div class="opt-val">${fabricHtml}</div></div>`);
+            }
+            // 부자재/옵션 (마감 포함)
             if (addonsArr.length > 0) {
                 boxes.push(`<div class="opt-box opt-addon">
-                    <div class="opt-head"><i class="fa-solid fa-cube"></i> 부자재 / 옵션</div>
-                    <div class="opt-val">${addonsArr.map(a => esc(addonLabel(a.code, a.qty))).join('<br>')}</div>
+                    <div class="opt-head"><i class="fa-solid fa-cube"></i> 마감 / 부자재 / 옵션</div>
+                    <div class="opt-val">${addonsArr.map(a => esc(a.label || addonLabel(a.code, a.qty))).join('<br>')}</div>
                 </div>`);
             }
             if (wallHtml) boxes.push(`<div class="opt-box opt-wall"><div class="opt-head"><i class="fa-solid fa-border-all"></i> 가벽 정보</div><div class="opt-val">${wallHtml}</div></div>`);
