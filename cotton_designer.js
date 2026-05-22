@@ -1826,6 +1826,67 @@ window._cpCopyMgrQuoteUrl = async function (btn) {
     }
 };
 
+// 2026-05-22: 패브릭 견적서 다운로드 — 현재 패브릭 카트 + 입력 폼 기반 PDF 생성.
+//   export.js generateQuotationPDF 가 fabricCode 항목을 합성 product 로 처리(라인총액 = it.price).
+//   언어/통화: window.__CD_LANG 로 export.js CURRENT_LANG_CODE 결정, CURRENCY_RATE 폴백 주입.
+window._cpDownloadQuote = async function (btnEl) {
+    var origLabel = btnEl ? btnEl.innerHTML : '';
+    try {
+        var cart = getCart();
+        if (!cart || cart.length === 0) {
+            alert(window.cdT ? window.cdT('cart_empty') : '장바구니가 비어있습니다.');
+            return;
+        }
+        if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ' + (window.cdT ? window.cdT('processing') : '생성중'); }
+
+        // cotton_designer.html 은 site-config.js 를 안 불러와 SITE_CONFIG 가 없을 수 있음.
+        // export.js 가 _cr.JP/_cr.US 로 KRW→현지통화 환산하므로 환율표만 보장.
+        if (!window.SITE_CONFIG) window.SITE_CONFIG = {};
+        if (!window.SITE_CONFIG.CURRENCY_RATE) window.SITE_CONFIG.CURRENCY_RATE = { KR: 1, JP: 0.1, US: 0.001 };
+
+        var mod = await import('./export.js?v=434');
+        if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
+
+        var gv = function (id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+        var name = gv('coName') || '-';
+        var phone = gv('coPhone');
+        var zip = gv('coZip'), addr1 = gv('coAddr1'), addr2 = gv('coAddr2');
+        var memo = gv('coMemo');
+        var fullAddr = [zip ? '(' + zip + ')' : '', addr1, addr2].filter(Boolean).join(' ');
+
+        var orderInfo = {
+            id: '미리보기',
+            manager: name, phone: phone, address: fullAddr,
+            note: memo, date: '',
+            shippingFee: getShippingFeeKrw()
+        };
+
+        // 패브릭 항목은 it.price 가 KRW 라인총액(수량 포함). export.js 가 합성 product 로 처리.
+        var blob = await mod.generateQuotationPDF(orderInfo, cart, 0, 0);
+        if (!blob) { alert('견적서 생성 실패. 콘솔을 확인하세요.'); return; }
+
+        var url = URL.createObjectURL(blob);
+        var _isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        if (_isMobile) {
+            var w = window.open(url, '_blank');
+            if (!w) {
+                var a0 = document.createElement('a'); a0.href = url; a0.download = 'quote_' + Date.now() + '.pdf';
+                document.body.appendChild(a0); a0.click(); document.body.removeChild(a0);
+            }
+        } else {
+            var a = document.createElement('a');
+            a.href = url; a.download = 'quote_' + Date.now() + '.pdf';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+        setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+    } catch (e) {
+        console.error('[_cpDownloadQuote]', e);
+        alert('견적서 생성 오류: ' + (e.message || e));
+    } finally {
+        if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origLabel; }
+    }
+};
+
 window._cpCloseCheckout = function() {
     document.getElementById('checkoutOverlay').classList.remove('open');
     document.body.style.overflow = '';

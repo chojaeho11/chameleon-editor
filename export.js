@@ -46,7 +46,10 @@ const urlParams = new URLSearchParams(window.location.search);
 let _exportLang = urlParams.get('lang');
 if (!_exportLang) {
     const _eh = window.location.hostname;
-    if (_eh.includes('cafe0101.com')) _exportLang = 'ja';
+    // 2026-05-22: cotton-printer.com(JP 패브릭)·cotton-print.com(KR 패브릭) 도메인은 hostname 으로
+    //   언어가 안 잡혀 견적서가 항상 KRW 로 나오던 문제. window.__CD_LANG 를 우선 사용.
+    if (window.__CD_LANG) _exportLang = (window.__CD_LANG === 'ko' ? 'kr' : window.__CD_LANG);
+    else if (_eh.includes('cafe0101.com') || _eh.includes('cotton-printer.com')) _exportLang = 'ja';
     else if (_eh.includes('cafe3355.com') || _eh.includes('chameleon.design')) _exportLang = 'us';
     else _exportLang = 'kr';
 }

@@ -215,6 +215,7 @@ window.__CD_I18N = {
     co_summary: { ko:'주문 요약', ja:'注文まとめ', en:'Order Summary' },
     co_total: { ko:'합계', ja:'合計', en:'Total' },
     co_submit: { ko:'주문 완료하기', ja:'注文を確定', en:'Place Order' },
+    co_quote_dl: { ko:'견적서 다운로드', ja:'見積書ダウンロード', en:'Download Quote' },
     co_note: { ko:'결제완료 확인 후 영업일 내 제작 시작됩니다', ja:'お支払い確認後、営業日内に製作開始', en:'Production starts after payment confirmed (business days)' },
     fab_cotton20: { ko:'면20수', ja:'コットン20番', en:'Cotton 20s' },
     fab_cotton30: { ko:'면30수', ja:'コットン30番', en:'Cotton 30s' },
@@ -1467,6 +1468,10 @@ a { text-decoration: none; color: inherit; }
             <button class="co-submit-btn" id="coSubmitBtn" onclick="window._cpSubmitOrder()">
                 <i class="fa-solid fa-paper-plane"></i> &nbsp;<span data-cdi18n="co_submit">주문 완료하기</span>
             </button>
+            <!-- 2026-05-22: 패브릭 견적서 다운로드 (export.js generateQuotationPDF) -->
+            <button id="coQuoteDlBtn" type="button" onclick="window._cpDownloadQuote(this)" style="width:100%; margin-top:8px; padding:12px 20px; background:#fff; color:#0ea5e9; border:1.5px solid #0ea5e9; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">
+                <i class="fa-solid fa-file-arrow-down"></i> &nbsp;<span data-cdi18n="co_quote_dl">견적서 다운로드</span>
+            </button>
             <div style="font-size:10px; color:var(--text-light); text-align:center; margin-top:8px;" data-cdi18n="co_note">
                 결제완료 확인 후 영업일 내 제작 시작됩니다
             </div>
@@ -1505,6 +1510,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=57"></script>
+<script src="/cotton_designer.js?v=58"></script>
 </body>
 </html>
